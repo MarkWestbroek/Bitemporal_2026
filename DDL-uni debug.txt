@@ -1,0 +1,2424 @@
+Package
+{
+ name="Zandbak MW"
+ namespaceroot="true"
+ Package
+{
+  name="[Fysiek] herstel V4"
+Package
+{
+  name="tbv presentatie"
+ 
+Table
+{
+  XRef{namespace="DDL Uni" name="Table" source="{9B0A6D48-42D2-91FD-B82D-EBD1559E27F8}"}
+  version="1.0"
+  scope="Public"
+  multiplicity=""
+  status="Proposed"
+  persistence=""
+  arguments=""
+  phase="1.0"
+  visibility=""
+  cardinality=""
+  alias=""
+  complexity="1"
+  abstract="1"
+  author="DBXWWE"
+  ntype="0"
+  concurrency=""
+  name="{representatie}"
+  language="PostgreSQL"
+  
+  
+ 
+  
+  
+  
+ 
+ 
+ Column
+ {
+  scope="Public"
+  container=""
+  default=""
+  upperbound="1"
+  alias=""
+  derived="0"
+  lowerbound="1"
+  notes=""
+  name="{representatie}_id"
+  type=" 
+int"
+  
+  
+  notes="
+"
+  
+  
+  
+  
+   NotNull
+  
+ }
+ 
+ 
+ 
+ 
+ 
+ Column
+ {
+  scope="Public"
+  container=""
+  default=""
+  upperbound="1"
+  alias=""
+  derived="1"
+  lowerbound="1"
+  notes="Dit is de naam van de {representatie}."
+  name="naam"
+  type=" 
+varchar()"
+  stereotype="afgeleid"
+  
+  notes="- Afgeleide kolom!
+Dit is de naam van de {representatie}."
+  
+  
+  
+  
+   NotNull
+  
+ }
+ 
+ 
+ 
+ 
+  
+  
+  
+  
+  
+  
+  notes=""
+  
+ PrimaryKey
+ {
+   
+ 
+  
+  
+   Column
+   {
+    name="{representatie}_id"
+    type="integer"
+    
+    autonumber {
+     Startnum="1"
+     Increment="1"
+    }
+   }
+  
+ 
+ 
+ }
+  
+  
+  
+  
+  
+}  
+ 
+}
+
+Package
+{
+  name="Meta"
+ 
+Table
+{
+  XRef{namespace="DDL Uni" name="Table" source="{B788C30A-4BC4-24D6-AEAD-44468508EE69}"}
+  version="1.0"
+  scope="Public"
+  multiplicity=""
+  status="Proposed"
+  persistence=""
+  arguments=""
+  phase="1.0"
+  visibility=""
+  cardinality=""
+  alias=""
+  complexity="1"
+  abstract="1"
+  author="dbxwwe"
+  ntype="0"
+  concurrency=""
+  name="{_representatie}"
+  language="PostgreSQL"
+  
+  
+ 
+  
+  
+  
+ 
+ 
+ Column
+ {
+  scope="Private"
+  container=""
+  default=""
+  upperbound="1"
+  alias=""
+  derived="0"
+  lowerbound="1"
+  notes=""
+  name="naam"
+  type=" 
+varchar"
+  
+  
+  notes="
+"
+  
+  
+  
+  
+   NotNull
+  
+ }
+ 
+ 
+ 
+ 
+  
+  
+  
+  
+  
+  
+  notes=""
+  
+ PrimaryKey
+ {
+   
+ 
+  
+  
+   Column
+   {
+    name="{_representatie}_id"
+    type="integer"
+    
+    autonumber {
+     Startnum="1"
+     Increment="1"
+    }
+   }
+  
+ 
+ 
+ }
+  
+  
+  
+  
+  
+}  
+ 
+ 
+ 
+ 
+ 
+}
+
+Package
+{
+  name="Opgave"
+Table
+{
+  XRef{namespace="DDL Uni" name="Table" source="{A780DE04-944E-1BB9-BFD5-F714D2DD9EF9}"}
+  version="1.0"
+  scope="Public"
+  multiplicity=""
+  status="Proposed"
+  persistence=""
+  arguments=""
+  phase="1.0"
+  visibility=""
+  cardinality=""
+  alias=""
+  complexity="1"
+  author="dbxwwe"
+  ntype="0"
+  concurrency=""
+  name="ambtshalve_correctie_opgave"
+  language="PostgreSQL"
+  
+  
+  
+ 
+ 
+ 
+  
+   
+ 
+ 
+  
+  
+    
+  notes=""
+  
+ PrimaryKey
+ {
+   
+ 
+  
+  
+   Column
+   {
+    name="ambtshalve_correctie_opgave_id"
+    type="integer"
+    
+    autonumber {
+     Startnum="1"
+     Increment="1"
+    }
+   }
+  
+ 
+ 
+ }
+  
+  
+  
+  
+  
+}  
+ 
+
+Table
+{
+  XRef{namespace="DDL Uni" name="Table" source="{9CA94858-43EF-8E2A-83FA-9B9D88DE65E0}"}
+  version="1.0"
+  scope="Public"
+  multiplicity=""
+  status="Proposed"
+  persistence=""
+  arguments=""
+  phase="1.0"
+  visibility=""
+  cardinality=""
+  alias=""
+  complexity="1"
+  author="dbxwwe"
+  ntype="0"
+  concurrency=""
+  name="ambtshalve_herstel_opgave"
+  language="PostgreSQL"
+  
+  
+  
+ 
+ 
+ 
+  
+   
+ 
+ 
+  
+  
+    
+  notes=""
+  
+ PrimaryKey
+ {
+   
+ 
+  
+  
+   Column
+   {
+    name="ambtshalve_herstel_opgave_id"
+    type="integer"
+    
+    autonumber {
+     Startnum="1"
+     Increment="1"
+    }
+   }
+  
+ 
+ 
+ }
+  
+  
+  
+  
+  
+}  
+ 
+
+ 
+Table
+{
+  XRef{namespace="DDL Uni" name="Table" source="{94DDFD38-7649-FE24-A855-2154E4A66A2A}"}
+  version="1.0"
+  scope="Public"
+  multiplicity=""
+  status="Proposed"
+  persistence=""
+  arguments=""
+  phase="1.0"
+  visibility=""
+  cardinality=""
+  alias=""
+  complexity="1"
+  abstract="1"
+  author="dbxwwe"
+  ntype="0"
+  concurrency=""
+  name="ambtshalve_opgave"
+  language="PostgreSQL"
+  
+  
+ 
+  
+  
+ 
+ 
+ 
+  
+   
+ 
+ 
+ 
+ 
+   
+ 
+ 
+ 
+ 
+ 
+ 
+   
+ 
+ 
+ 
+ 
+  
+  
+  
+  
+  notes="<u>AmbtshalveCorrectieOpgave</u> 
+ 
+ 
+ <u>AmbtshalveHerstelOpgave</u>"
+  
+ PrimaryKey
+ {
+   
+ 
+  
+  
+   Column
+   {
+    name="ambtshalve_opgave_id"
+    type="integer"
+    
+    autonumber {
+     Startnum="1"
+     Increment="1"
+    }
+   }
+  
+ 
+ 
+ }
+  
+  
+  
+  
+  
+}  
+ 
+
+Table
+{
+  XRef{namespace="DDL Uni" name="Table" source="{835BB0D4-ACFF-9101-8CE5-D75886D2A481}"}
+  version="1.0"
+  scope="Public"
+  multiplicity=""
+  status="Proposed"
+  persistence=""
+  arguments=""
+  phase="1.0"
+  visibility=""
+  cardinality=""
+  alias=""
+  complexity="1"
+  author="dbxwwe"
+  ntype="0"
+  concurrency=""
+  name="correctie_opgave"
+  language="PostgreSQL"
+  
+  
+  
+ 
+ 
+ 
+  
+   
+ 
+ 
+  
+  
+    
+  notes=""
+  
+ PrimaryKey
+ {
+   
+ 
+  
+  
+   Column
+   {
+    name="correctie_opgave_id"
+    type="integer"
+    
+    autonumber {
+     Startnum="1"
+     Increment="1"
+    }
+   }
+  
+ 
+ 
+ }
+  
+  
+  
+  
+  
+}  
+ 
+
+Table
+{
+  XRef{namespace="DDL Uni" name="Table" source="{94C7CD4B-016B-D497-895E-74246A28CD78}"}
+  version="1.0"
+  scope="Public"
+  multiplicity=""
+  status="Proposed"
+  persistence=""
+  arguments=""
+  phase="1.0"
+  visibility=""
+  cardinality=""
+  alias=""
+  complexity="1"
+  author="dbxwwe"
+  ntype="0"
+  concurrency=""
+  name="gewone_opgave"
+  language="PostgreSQL"
+  
+  
+  
+ 
+ 
+ 
+  
+   
+ 
+   
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+   
+ 
+ 
+ 
+ 
+  
+  
+    
+  notes=""
+  
+ PrimaryKey
+ {
+   
+ 
+  
+  
+   Column
+   {
+    name="gewone_opgave_id"
+    type="integer"
+    
+    autonumber {
+     Startnum="1"
+     Increment="1"
+    }
+   }
+  
+ 
+ 
+ }
+  
+  
+  
+  
+  
+}  
+ 
+
+Table
+{
+  XRef{namespace="DDL Uni" name="Table" source="{909302C6-6536-9819-B5C6-D4FDEE957616}"}
+  version="1.0"
+  scope="Public"
+  multiplicity=""
+  status="Proposed"
+  persistence=""
+  arguments=""
+  phase="1.0"
+  visibility=""
+  cardinality=""
+  alias=""
+  complexity="1"
+  author="dbxwwe"
+  ntype="0"
+  concurrency=""
+  name="herstel_opgave"
+  language="PostgreSQL"
+  
+  
+  
+ 
+ 
+ 
+  
+   
+ 
+ 
+  
+  
+    
+  notes=""
+  
+ PrimaryKey
+ {
+   
+ 
+  
+  
+   Column
+   {
+    name="herstel_opgave_id"
+    type="integer"
+    
+    autonumber {
+     Startnum="1"
+     Increment="1"
+    }
+   }
+  
+ 
+ 
+ }
+  
+  
+  
+  
+  
+}  
+ 
+
+ 
+Table
+{
+  XRef{namespace="DDL Uni" name="Table" source="{B33441FE-A358-DA3F-B22E-044BAC3932E8}"}
+  version="1.0"
+  scope="Public"
+  multiplicity=""
+  status="Proposed"
+  persistence=""
+  arguments=""
+  phase="1.0"
+  visibility=""
+  cardinality=""
+  alias=""
+  complexity="1"
+  abstract="1"
+  author="dbxwwe"
+  ntype="0"
+  concurrency=""
+  name="opgave"
+  language="PostgreSQL"
+  
+  
+ 
+  
+  
+ 
+ 
+ 
+  
+   
+ 
+   
+ 
+   
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+   
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+   
+ 
+ 
+ 
+ 
+   
+ 
+ 
+ 
+ 
+ 
+ 
+   
+ 
+ 
+ 
+ 
+ 
+ 
+  
+  
+  
+  
+  notes="<u>GewoneOpgave</u> 
+ 
+ 
+ <u>AmbtshalveOpgave</u>"
+  
+ PrimaryKey
+ {
+   
+ 
+  
+  
+   Column
+   {
+    name="opgave_id"
+    type="integer"
+    
+    autonumber {
+     Startnum="1"
+     Increment="1"
+    }
+   }
+  
+ 
+ 
+ }
+  
+  
+  
+  
+  
+}  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ ForeignKey
+ {
+  XRef{namespace="DDL Uni" name="FK1" source="{AF770338-B10D-FEFE-B70B-5708B401D374}"}
+  Source
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{B33441FE-A358-DA3F-B22E-044BAC3932E8}"}
+   
+   
+   
+   
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="gebeurtenis_id"
+   
+   type="integer"
+  }
+ 
+  }
+  
+  Target
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{8150C9AD-23EF-3D50-B1E8-F67CB237CF61}"}
+   
+   
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="gebeurtenis_id"
+   
+   type="integer"
+  }
+ 
+  }
+ }
+ 
+}
+
+Package
+{
+  name="Gebeurtenis"
+Table
+{
+  XRef{namespace="DDL Uni" name="Table" source="{89452E5A-6E49-5639-82C6-1E311EE39ED2}"}
+  version="1.0"
+  scope="Public"
+  multiplicity=""
+  status="Proposed"
+  persistence=""
+  arguments=""
+  phase="1.0"
+  visibility=""
+  cardinality=""
+  alias=""
+  complexity="1"
+  author="dbxwwe"
+  ntype="0"
+  concurrency=""
+  name="correctie"
+  language="PostgreSQL"
+  
+  
+  
+ 
+ 
+ 
+  
+   
+ 
+ 
+  
+  
+    
+  notes="Een Correctie corrigeert de vastlegging van één of meer GegevensElementen. 
+Daarbij worden de gecorrigeerde GegevensElementen 'doorgehaald' <i>(zoals dat heet)</i>. <u>De relatie tussen het gecorrigeerde en het corrigererende GegevensElement (of GegevensElementen indien eenduidig samenhangend </u><i><u>- lees: in één tabel -</u></i><u> vastgelegd) wordt vastgelegd.</u>"
+  
+ PrimaryKey
+ {
+   
+ 
+  
+  
+   Column
+   {
+    name="correctie_id"
+    type="integer"
+    
+    autonumber {
+     Startnum="1"
+     Increment="1"
+    }
+   }
+  
+ 
+ 
+ }
+  
+  
+  
+  
+  
+}  
+ 
+ 
+ 
+ 
+ ForeignKey
+ {
+  XRef{namespace="DDL Uni" name="FK1" source="{98DD2ADA-FFFB-F41E-84BF-7E196BF4A451}"}
+  Source
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{89452E5A-6E49-5639-82C6-1E311EE39ED2}"}
+   
+    name="corrigeert"
+   
+   
+    multiplicity="0..*"
+   
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="gecorrigeerde registratie"
+   
+   type="integer"
+  }
+ 
+  }
+  
+  Target
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{A14A8B9E-1281-1D78-BCD1-07EB7DABF0E3}"}
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="gecorrigeerde registratie"
+   
+   type="integer"
+  }
+ 
+  }
+ }
+ 
+
+Table
+{
+  XRef{namespace="DDL Uni" name="Table" source="{8150C9AD-23EF-3D50-B1E8-F67CB237CF61}"}
+  version="1.0"
+  scope="Public"
+  multiplicity=""
+  status="Proposed"
+  persistence=""
+  arguments=""
+  phase="1.0"
+  visibility=""
+  cardinality=""
+  alias=""
+  complexity="1"
+  author="dbxwwe"
+  ntype="0"
+  concurrency=""
+  name="gebeurtenis"
+  language="PostgreSQL"
+  
+  
+  
+  
+ 
+ 
+ Column
+ {
+  scope="Private"
+  container=""
+  default=""
+  upperbound="1"
+  alias=""
+  derived="0"
+  lowerbound="1"
+  notes=""
+  name="datum"
+  type=" 
+date"
+  
+  
+  notes="
+"
+  
+  
+  
+  
+   NotNull
+  
+ }
+ 
+ 
+ 
+ 
+ 
+ Column
+ {
+  scope="Private"
+  container=""
+  default=""
+  upperbound="1"
+  alias=""
+  derived="0"
+  lowerbound="1"
+  notes=""
+  name="naam"
+  type=" 
+varchar(200)"
+  
+  
+  notes="
+"
+  
+  
+  
+  
+   NotNull
+  
+ }
+ 
+ 
+ 
+ 
+ 
+ Column
+ {
+  scope="Private"
+  container=""
+  default=""
+  upperbound="1"
+  alias=""
+  derived="0"
+  lowerbound="1"
+  notes=""
+  name="opmerking"
+  type=" 
+varchar(200)"
+  
+  
+  notes="
+"
+  
+  
+  
+  
+   NotNull
+  
+ }
+ 
+ 
+ 
+ 
+  
+  
+  
+  
+    
+  notes=""
+  
+ PrimaryKey
+ {
+   
+ 
+  
+  
+   Column
+   {
+    name="gebeurtenis_id"
+    type="integer"
+    
+    autonumber {
+     Startnum="1"
+     Increment="1"
+    }
+   }
+  
+ 
+ 
+ }
+  
+  
+  
+  
+  
+}  
+ 
+ 
+ 
+ 
+
+Table
+{
+  XRef{namespace="DDL Uni" name="Table" source="{B2EB3F59-FA59-3210-BAC4-30D03580D184}"}
+  version="1.0"
+  scope="Public"
+  multiplicity=""
+  status="Proposed"
+  persistence=""
+  arguments=""
+  phase="1.0"
+  visibility=""
+  cardinality=""
+  alias=""
+  complexity="1"
+  author="dbxwwe"
+  ntype="0"
+  concurrency=""
+  name="ongedaanmaking"
+  language="PostgreSQL"
+  
+  
+  
+ 
+ 
+ 
+  
+   
+ 
+ 
+  
+  
+    
+  notes="Een ongedaanmaking maakt een Registratie of Correctie ongedaan.
+Dit betekent dat ook de nieuwe of gewijzigde {Representaties} ongedaan gemaakt worden. Dat deze op de formele tijdslijn hebben bestaan (geregistreerd geweest zijn) blijft uiteraard bekend.
+
+N.B.: wanneer een registratie 1 of meer {Representaties} had beëindigd of doorgehaald, moeten ook deze beëindigingen of doorhalingen weer ongedaan gemaakt worden.
+
+<i>Praktisch gezien is het nu in het handelsregister zo dat er in plaats van de registratie (of correctie) ongedaan te maken, er een herstel-registratie wordt geconstrueerd, die alle gegevens bevat van voor de ongedaan gemaakte registratie.</i>"
+  
+ PrimaryKey
+ {
+   
+ 
+  
+  
+   Column
+   {
+    name="ongedaanmaking_id"
+    type="integer"
+    
+    autonumber {
+     Startnum="1"
+     Increment="1"
+    }
+   }
+  
+ 
+ 
+ }
+  
+  
+  
+  
+  
+}  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+  Table
+  {
+   XRef{namespace="DDL Uni" name="LinkTable" source="{BFD36AB9-F191-6123-A650-4F923BC49132}"}
+   
+    name="JoinwijzigingToongedaanmaking"
+   
+   language="PostgreSQL"
+   
+   
+   PrimaryKey
+   {
+    Column
+    {
+     name="ongedaanmaking_id"
+     type="integer"
+    }
+    Column
+    {
+     name="wijziging_id"
+     type="integer"
+    }
+   }
+  }
+   
+  ForeignKey
+  {
+   XRef{namespace="DDL Uni" name="FK1" source="{BFD36AB9-F191-6123-A650-4F923BC49132}"}
+   Source
+   {
+    XRef{namespace="DDL Uni" name="LinkTable" source="{BFD36AB9-F191-6123-A650-4F923BC49132}"}
+    name="ongedaanmaking"
+    
+     multiplicity="0..*"
+    
+    Column
+    {
+     name="ongedaanmaking_id"
+     type="integer"
+    }
+   }
+   
+   Target
+   {
+    XRef{namespace="DDL Uni" name="Table" source="{B2EB3F59-FA59-3210-BAC4-30D03580D184}"}
+    Column
+    {
+     name="ongedaanmaking_id"
+     type="integer"
+    }
+   }
+  }
+  
+  ForeignKey
+  {
+   XRef{namespace="DDL Uni" name="FK2" source="{BFD36AB9-F191-6123-A650-4F923BC49132}"}
+   Source
+   {
+    XRef{namespace="DDL Uni" name="LinkTable" source="{BFD36AB9-F191-6123-A650-4F923BC49132}"}
+    name="wijziging"
+    
+     multiplicity="0..*"
+    
+    Column
+    {
+     name="wijziging_id"
+     type="integer"
+    }
+   }
+   
+   Target
+   {
+    XRef{namespace="DDL Uni" name="Table" source="{B565DE69-7553-3C91-8298-F39F47FA618D}"}
+    Column
+    {
+     name="wijziging_id"
+     type="integer"
+    }
+   }
+  }
+ 
+ 
+ 
+ 
+ ForeignKey
+ {
+  XRef{namespace="DDL Uni" name="FK1" source="{A3E3F36B-F790-68BC-905D-92CE16726666}"}
+  Source
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{B2EB3F59-FA59-3210-BAC4-30D03580D184}"}
+   
+   
+    name="maakt ongedaan"
+   
+   
+   
+    multiplicity="1"
+   
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="ongedaan gemaakte registratie"
+   
+   type="integer"
+  }
+ 
+  }
+  
+  Target
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{A14A8B9E-1281-1D78-BCD1-07EB7DABF0E3}"}
+   
+   
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="ongedaan gemaakte registratie"
+   
+   type="integer"
+  }
+ 
+  }
+ }
+ 
+ 
+ 
+ ForeignKey
+ {
+  XRef{namespace="DDL Uni" name="FK1" source="{A004C00C-E923-DB67-B0E1-626A339C5867}"}
+  Source
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{B2EB3F59-FA59-3210-BAC4-30D03580D184}"}
+   
+   
+    name="herstelt"
+   
+   
+   
+    multiplicity="0..1"
+   
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="herstelde registratie"
+   
+   type="integer"
+  }
+ 
+  }
+  
+  Target
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{A14A8B9E-1281-1D78-BCD1-07EB7DABF0E3}"}
+   
+   
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="herstelde registratie"
+   
+   type="integer"
+  }
+ 
+  }
+ }
+ 
+
+Table
+{
+  XRef{namespace="DDL Uni" name="Table" source="{A14A8B9E-1281-1D78-BCD1-07EB7DABF0E3}"}
+  version="1.0"
+  scope="Public"
+  multiplicity=""
+  status="Proposed"
+  persistence=""
+  arguments=""
+  phase="1.0"
+  visibility=""
+  cardinality=""
+  alias=""
+  complexity="1"
+  author="dbxwwe"
+  ntype="0"
+  concurrency=""
+  name="registratie"
+  language="PostgreSQL"
+  
+  
+  
+  
+ 
+ 
+ Column
+ {
+  scope="Private"
+  container=""
+  default=""
+  upperbound="1"
+  alias=""
+  derived="0"
+  lowerbound="1"
+  notes=""
+  name="opmerking"
+  type=" 
+varchar(200)"
+  
+  
+  notes="
+"
+  
+  
+  
+  
+   NotNull
+  
+ }
+ 
+ 
+ 
+ 
+ 
+ Column
+ {
+  scope="Private"
+  container=""
+  default=""
+  upperbound="1"
+  alias=""
+  derived="0"
+  lowerbound="1"
+  notes=""
+  name="tijdstip"
+  type=" 
+char(26)"
+  
+  
+  notes="
+"
+  
+  
+  
+  
+   NotNull
+  
+ }
+ 
+ 
+ 
+ 
+  
+   
+ 
+   
+ 
+ 
+ 
+ 
+ 
+ 
+   
+ 
+ 
+ 
+ 
+  
+  
+    
+  notes=""
+  
+ PrimaryKey
+ {
+   
+ 
+  
+  
+   Column
+   {
+    name="registratie_id"
+    type="integer"
+    
+    autonumber {
+     Startnum="1"
+     Increment="1"
+    }
+   }
+  
+ 
+ 
+ }
+  
+  
+  
+  
+  
+}  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ ForeignKey
+ {
+  XRef{namespace="DDL Uni" name="FK1" source="{8BE2507E-D24E-15F1-902B-D5324C52080B}"}
+  Source
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{A14A8B9E-1281-1D78-BCD1-07EB7DABF0E3}"}
+   
+    name="registreert volgens"
+   
+   
+    multiplicity="0..*"
+   
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="opgave_id"
+   
+   type="integer"
+  }
+ 
+  }
+  
+  Target
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{B33441FE-A358-DA3F-B22E-044BAC3932E8}"}
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="opgave_id"
+   
+   type="integer"
+  }
+ 
+  }
+ }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+}
+
+Package
+{
+  name="LGM"
+Table
+{
+  XRef{namespace="DDL Uni" name="Table" source="{984E08F9-5D24-6EBE-B89A-C84D116F82F5}"}
+  version="1.0"
+  scope="Public"
+  multiplicity=""
+  status="Proposed"
+  persistence=""
+  arguments=""
+  phase="1.0"
+  visibility=""
+  cardinality=""
+  alias=""
+  complexity="1"
+  author="dbxwwe"
+  ntype="0"
+  concurrency=""
+  name="o"
+  language="PostgreSQL"
+  
+  
+  
+  
+ 
+ 
+ Column
+ {
+  scope="Private"
+  container=""
+  default=""
+  upperbound="1"
+  alias=""
+  derived="0"
+  lowerbound="1"
+  notes=""
+  name="waarde"
+  type=" 
+varchar"
+  
+  
+  notes="
+"
+  
+  
+  
+  
+   NotNull
+  
+ }
+ 
+ 
+ 
+ 
+  
+  
+  
+  
+    
+  notes=""
+  
+ PrimaryKey
+ {
+   
+ 
+  
+  
+   Column
+   {
+    name="o_id"
+    type="integer"
+    
+    autonumber {
+     Startnum="1"
+     Increment="1"
+    }
+   }
+  
+ 
+ 
+ }
+  
+  
+  
+  
+  
+}  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ ForeignKey
+ {
+  XRef{namespace="DDL Uni" name="FK1" source="{AFBF3F29-974E-275E-8E2C-BAA4E9DC98F3}"}
+  Source
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{984E08F9-5D24-6EBE-B89A-C84D116F82F5}"}
+   
+   
+    multiplicity="0..*"
+   
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="x_id"
+   
+   type="integer"
+  }
+ 
+  }
+  
+  Target
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{ADEB06DF-E4AF-2F5E-9512-E8B6A211A873}"}
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="x_id"
+   
+   type="integer"
+  }
+ 
+  }
+ }
+ 
+
+Table
+{
+  XRef{namespace="DDL Uni" name="Table" source="{ADEB06DF-E4AF-2F5E-9512-E8B6A211A873}"}
+  version="1.0"
+  scope="Public"
+  multiplicity=""
+  status="Proposed"
+  persistence=""
+  arguments=""
+  phase="1.0"
+  visibility=""
+  cardinality=""
+  alias=""
+  complexity="1"
+  author="dbxwwe"
+  ntype="0"
+  concurrency=""
+  name="x"
+  language="PostgreSQL"
+  
+  
+  
+  
+ 
+ 
+ Column
+ {
+  scope="Private"
+  container=""
+  default=""
+  upperbound="1"
+  alias=""
+  derived="0"
+  lowerbound="1"
+  notes=""
+  name="waarde_van_x"
+  type=" 
+varchar(200)"
+  
+  
+  notes="
+"
+  
+  
+  
+  
+   NotNull
+  
+ }
+ 
+ 
+ 
+ 
+  
+  
+  
+  
+    
+  notes=""
+  
+ PrimaryKey
+ {
+   
+ 
+  
+  
+   Column
+   {
+    name="x_id"
+    type="integer"
+    
+    autonumber {
+     Startnum="1"
+     Increment="1"
+    }
+   }
+  
+ 
+ 
+ }
+  
+  
+  
+  
+  
+}  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+}
+Table
+{
+  XRef{namespace="DDL Uni" name="Table" source="{B301FF3B-BAD3-5AF0-BAEA-CFCC9DEDC9D5}"}
+  version="1.0"
+  scope="Public"
+  multiplicity=""
+  status="Proposed"
+  persistence=""
+  arguments=""
+  phase="1.0"
+  visibility=""
+  cardinality=""
+  alias=""
+  complexity="1"
+  author="dbxwwe"
+  ntype="0"
+  concurrency=""
+  name="afvoer"
+  language="PostgreSQL"
+  
+  
+  
+ 
+ 
+ 
+  
+   
+ 
+ 
+  
+  
+    
+  notes=""
+  
+ PrimaryKey
+ {
+   
+ 
+  
+  
+   Column
+   {
+    name="afvoer_id"
+    type="integer"
+    
+    autonumber {
+     Startnum="1"
+     Increment="1"
+    }
+   }
+  
+ 
+ 
+ }
+  
+  
+  
+  
+  
+}  
+ 
+
+Table
+{
+  XRef{namespace="DDL Uni" name="Table" source="{93076345-4F13-8304-AF8F-C7BAA37867F0}"}
+  version="1.0"
+  scope="Public"
+  multiplicity=""
+  status="Proposed"
+  persistence=""
+  arguments=""
+  phase="1.0"
+  visibility=""
+  cardinality=""
+  alias=""
+  complexity="1"
+  author="User"
+  ntype="0"
+  concurrency=""
+  name="meta"
+  language="PostgreSQL"
+  
+  
+  
+ 
+ 
+ 
+  
+  
+  
+  
+    
+  notes=""
+  
+ PrimaryKey
+ {
+   
+ 
+  
+  
+   Column
+   {
+    name="meta_id"
+    type="integer"
+    
+    autonumber {
+     Startnum="1"
+     Increment="1"
+    }
+   }
+  
+ 
+ 
+ }
+  
+  
+  
+  
+  
+}  
+ 
+
+Table
+{
+  XRef{namespace="DDL Uni" name="Table" source="{A8C00B59-E6FD-7176-92A5-ED4602748F04}"}
+  version="1.0"
+  scope="Public"
+  multiplicity=""
+  status="Proposed"
+  persistence=""
+  arguments=""
+  phase="1.0"
+  visibility=""
+  cardinality=""
+  alias=""
+  complexity="1"
+  author="dbxwwe"
+  ntype="0"
+  concurrency=""
+  name="opvoer"
+  language="PostgreSQL"
+  
+  
+  
+ 
+ 
+ 
+  
+   
+ 
+ 
+  
+  
+    
+  notes=""
+  
+ PrimaryKey
+ {
+   
+ 
+  
+  
+   Column
+   {
+    name="opvoer_id"
+    type="integer"
+    
+    autonumber {
+     Startnum="1"
+     Increment="1"
+    }
+   }
+  
+ 
+ 
+ }
+  
+  
+  
+  
+  
+}  
+ 
+
+ 
+Table
+{
+  XRef{namespace="DDL Uni" name="Table" source="{B565DE69-7553-3C91-8298-F39F47FA618D}"}
+  version="1.0"
+  scope="Public"
+  multiplicity=""
+  status="Proposed"
+  persistence=""
+  arguments=""
+  phase="1.0"
+  visibility=""
+  cardinality=""
+  alias=""
+  complexity="1"
+  abstract="1"
+  author="dbxwwe"
+  ntype="0"
+  concurrency=""
+  name="wijziging"
+  language="PostgreSQL"
+  
+  
+ 
+  
+  
+  
+ 
+ 
+ Column
+ {
+  scope="Private"
+  container=""
+  default=""
+  upperbound="1"
+  alias=""
+  derived="0"
+  lowerbound="1"
+  notes="de naam van de {Representatie} die gewijzigd is geworden."
+  name="representatienaam"
+  type=" 
+varchar"
+  
+  
+  notes="
+de naam van de {Representatie} die gewijzigd is geworden."
+  
+  
+  
+  
+   NotNull
+  
+ }
+ 
+ 
+ 
+ 
+ 
+ Column
+ {
+  scope="Private"
+  container=""
+  default=""
+  upperbound="1"
+  alias=""
+  derived="1"
+  lowerbound="1"
+  notes="Het tijdstip van de Registratie."
+  name="tijdstip"
+  type=" 
+char(26)"
+  stereotype="afgeleid"
+  
+  notes="- Afgeleide kolom!
+Het tijdstip van de Registratie."
+  
+  
+  
+  
+   NotNull
+  
+ }
+ 
+ 
+ 
+ 
+  
+   
+ 
+   
+ 
+ 
+ 
+ 
+ 
+ 
+   
+ 
+ 
+ 
+ 
+  
+  
+  
+  
+  notes="<u>Opvoer</u> 
+ 
+ 
+ <u>Afvoer</u>"
+  
+ PrimaryKey
+ {
+   
+ 
+  
+  
+   Column
+   {
+    name="wijziging_id"
+    type="integer"
+    
+    autonumber {
+     Startnum="1"
+     Increment="1"
+    }
+   }
+  
+ 
+ 
+ }
+  
+  
+  
+  
+  
+}  
+ 
+ 
+ 
+ 
+ ForeignKey
+ {
+  XRef{namespace="DDL Uni" name="FK1" source="{8575FC65-4DD2-56A5-907F-BCA031D52D63}"}
+  Source
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{B565DE69-7553-3C91-8298-F39F47FA618D}"}
+   
+    name="FK_ongedaanmaking"
+   
+   
+    multiplicity="1..*"
+   
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="ongedaanmaking"
+   
+   type="integer"
+  }
+ 
+  }
+  
+  Target
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{B2EB3F59-FA59-3210-BAC4-30D03580D184}"}
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="ongedaanmaking"
+   
+   type="integer"
+  }
+ 
+  }
+ }
+ 
+ 
+ 
+ ForeignKey
+ {
+  XRef{namespace="DDL Uni" name="FK1" source="{87F8691C-FE17-10C9-85B9-765FB4273406}"}
+  Source
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{B565DE69-7553-3C91-8298-F39F47FA618D}"}
+   
+   
+   
+   
+    multiplicity="0..1"
+   
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="o_id"
+   
+   type="integer"
+  }
+ 
+  }
+  
+  Target
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{984E08F9-5D24-6EBE-B89A-C84D116F82F5}"}
+   
+   
+    multiplicity="1"
+   
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="o_id"
+   
+   type="integer"
+  }
+ 
+  }
+ }
+ 
+ 
+ 
+ 
+ 
+ 
+  Table
+  {
+   XRef{namespace="DDL Uni" name="LinkTable" source="{BFD36AB9-F191-6123-A650-4F923BC49132}"}
+   
+    name="JoinwijzigingToongedaanmaking"
+   
+   language="PostgreSQL"
+   
+   
+   PrimaryKey
+   {
+    Column
+    {
+     name="ongedaanmaking_id"
+     type="integer"
+    }
+    Column
+    {
+     name="wijziging_id"
+     type="integer"
+    }
+   }
+  }
+   
+  ForeignKey
+  {
+   XRef{namespace="DDL Uni" name="FK1" source="{BFD36AB9-F191-6123-A650-4F923BC49132}"}
+   Source
+   {
+    XRef{namespace="DDL Uni" name="LinkTable" source="{BFD36AB9-F191-6123-A650-4F923BC49132}"}
+    name="ongedaanmaking"
+    
+     multiplicity="0..*"
+    
+    Column
+    {
+     name="ongedaanmaking_id"
+     type="integer"
+    }
+   }
+   
+   Target
+   {
+    XRef{namespace="DDL Uni" name="Table" source="{B2EB3F59-FA59-3210-BAC4-30D03580D184}"}
+    Column
+    {
+     name="ongedaanmaking_id"
+     type="integer"
+    }
+   }
+  }
+  
+  ForeignKey
+  {
+   XRef{namespace="DDL Uni" name="FK2" source="{BFD36AB9-F191-6123-A650-4F923BC49132}"}
+   Source
+   {
+    XRef{namespace="DDL Uni" name="LinkTable" source="{BFD36AB9-F191-6123-A650-4F923BC49132}"}
+    name="wijziging"
+    
+     multiplicity="0..*"
+    
+    Column
+    {
+     name="wijziging_id"
+     type="integer"
+    }
+   }
+   
+   Target
+   {
+    XRef{namespace="DDL Uni" name="Table" source="{B565DE69-7553-3C91-8298-F39F47FA618D}"}
+    Column
+    {
+     name="wijziging_id"
+     type="integer"
+    }
+   }
+  }
+ 
+ 
+ 
+ 
+ 
+ ForeignKey
+ {
+  XRef{namespace="DDL Uni" name="FK1" source="{8E3E1519-68C4-EB07-B37C-1A5855C91FBF}"}
+  Source
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{B565DE69-7553-3C91-8298-F39F47FA618D}"}
+   
+   
+    multiplicity="0..*"
+   
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="registratie_id"
+   
+   type="integer"
+  }
+ 
+  }
+  
+  Target
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{A14A8B9E-1281-1D78-BCD1-07EB7DABF0E3}"}
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="registratie_id"
+   
+   type="integer"
+  }
+ 
+  }
+ }
+ 
+ 
+ 
+ 
+ ForeignKey
+ {
+  XRef{namespace="DDL Uni" name="FK1" source="{BA714086-F53A-B3C9-8B48-B4604E9578A4}"}
+  Source
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{B565DE69-7553-3C91-8298-F39F47FA618D}"}
+   
+   
+   
+   
+    multiplicity="1..*"
+   
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="{_representatie}_id"
+   
+   type="integer"
+  }
+ 
+  }
+  
+  Target
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{B788C30A-4BC4-24D6-AEAD-44468508EE69}"}
+   
+   
+    multiplicity="1"
+   
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="{_representatie}_id"
+   
+   type="integer"
+  }
+ 
+  }
+ }
+ 
+ 
+ 
+ ForeignKey
+ {
+  XRef{namespace="DDL Uni" name="FK1" source="{9C94E532-86E9-2AEC-AA2C-F5E7E1255956}"}
+  Source
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{B565DE69-7553-3C91-8298-F39F47FA618D}"}
+   
+   
+   
+   
+    multiplicity="0..1"
+   
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="x_id"
+   
+   type="integer"
+  }
+ 
+  }
+  
+  Target
+  {
+   XRef{namespace="DDL Uni" name="Table" source="{ADEB06DF-E4AF-2F5E-9512-E8B6A211A873}"}
+   
+   
+    multiplicity="1"
+   
+   
+    
+ 
+ 
+ 
+  Column
+  {
+   
+    name="x_id"
+   
+   type="integer"
+  }
+ 
+  }
+ }
+ 
+}
+}
