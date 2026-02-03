@@ -4,31 +4,26 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/uptrace/bun"
 
 	//"github.com/zaahidali/task_manager_api_with_bun/model" // we imported the model here
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/model"
 )
 
-var DB *bun.DB
-
-func HomePage(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{"message": "Welcome to the Bitemp Go API"})
-}
+//var DB *bun.DB
 
 func GetTests(ctx *gin.Context) {
-	// Create a slice to store the retrieved Tests
-	var Tests []model.Test
+	// Create a slice to store the retrieved tests
+	var tests []model.Test
 
 	// Execute the database query to retrieve Tests using Go bun
-	err := DB.NewSelect().Model(&Tests).Scan(ctx.Request.Context())
+	err := DB.NewSelect().Model(&tests).Scan(ctx.Request.Context())
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Return the retrieved Tests in the response
-	ctx.JSON(http.StatusOK, gin.H{"Tests": Tests})
+	ctx.JSON(http.StatusOK, gin.H{"Tests": tests})
 }
 
 func GetTest(c *gin.Context) {
@@ -40,10 +35,10 @@ func GetTest(c *gin.Context) {
 		return
 	}
 
-	task := &model.Test{}
+	test := &model.Test{}
 
 	// Fetch specific record from the database using Go bun
-	err := DB.NewSelect().Model(task).Where("id = ?", testID).Scan(c.Request.Context())
+	err := DB.NewSelect().Model(test).Where("id = ?", testID).Scan(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -54,7 +49,7 @@ func GetTest(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, task)
+	c.JSON(http.StatusOK, test)
 }
 
 func UpdateTest(ctx *gin.Context) {
@@ -75,8 +70,7 @@ func UpdateTest(ctx *gin.Context) {
 
 	// Update the test record in the database using Go bun
 	_, err := DB.NewUpdate().Model(updatedTest).
-		Set("title = ?", updatedTest.Title).
-		Set("description = ?", updatedTest.Description).
+		Set("name = ?", updatedTest.Name).
 		Where("id = ?", testID).
 		Exec(ctx.Request.Context())
 
