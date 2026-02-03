@@ -33,12 +33,12 @@ func main() {
 	defer db.Close()
 
 	// Create the "tasks" table in the database if it doesn't exist
-	err = createTasksTable(db)
+	err = createTables(db)
 	if err != nil {
 		fmt.Println("Failed to create table:", err)
 		return
 	}
-	fmt.Println("created Tasks table successfully")
+	fmt.Println("Tables created successfully")
 
 	// Add a query hook for logging
 	db.AddQueryHook(bundebug.NewQueryHook(
@@ -58,12 +58,22 @@ func main() {
 	handlers.DB = db
 	router := gin.Default()
 
+	//Tasks routes
 	router.GET("/", handlers.HomePage)
 	router.GET("/tasks", handlers.GetTasks)
 	router.GET("/tasks/:id", handlers.GetTask)
 	router.DELETE("/tasks/:id", handlers.RemoveTask)
 	router.POST("/tasks", handlers.AddTask)
 	router.PUT("/tasks/:id", handlers.UpdateTask)
+
+	//Test routes
+	router.GET("/tests", handlers.GetTests)
+	router.GET("/tests/:id", handlers.GetTest)
+	router.DELETE("/tests/:id", handlers.RemoveTest)
+	router.POST("/tests", handlers.AddTest)
+	router.PUT("/tests/:id", handlers.UpdateTest)
+
+	//run the server
 	router.Run()
 }
 
@@ -72,15 +82,19 @@ func connectToDatabase() (*bun.DB, error) {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
 		// Default DSN for local development
-		dsn = "postgres://postgres:1234@localhost:5432/bitemp_go_api?sslmode=disable"
+		dsn = "postgres://postgres:1234@localhost:5432/bitemp_go_db?sslmode=disable"
 	}
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 	db := bun.NewDB(sqldb, pgdialect.New())
 	return db, nil
 }
 
-func createTasksTable(db *bun.DB) error {
+func createTables(db *bun.DB) error {
 	ctx := context.Background()
 	_, err := db.NewCreateTable().Model((*model.Task)(nil)).IfNotExists().Exec(ctx)
+	if err != nil {
+		return err
+	}
+	_, err = db.NewCreateTable().Model((*model.Test)(nil)).IfNotExists().Exec(ctx)
 	return err
 }
