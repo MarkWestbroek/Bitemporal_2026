@@ -1,13 +1,13 @@
-version: '3.8'
+
 
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: bitemp-go-api
+    container_name: bitemp-go-db
     environment:
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-1234}
-      POSTGRES_DB: ${DB_NAME:-bitemp_go_api}
+      POSTGRES_DB: ${DB_NAME:-bitemp_go_db}
     ports:
       - "5432:5432"
     volumes:
