@@ -44,6 +44,30 @@ This project showcases the implementation of a **Task Manager REST API** using G
 
 5. Access the API at `http://localhost:8080` and start managing your tasks!
 
+## Build & Docker
+
+Use these commands to build the Docker image with embedded build metadata and to run/recreate containers.
+
+- Build with `docker compose` (Linux/mac):
+
+  ```bash
+  docker compose build --no-cache --build-arg COMMIT=$(git rev-parse --short HEAD) --build-arg BUILD_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)" api
+  docker compose up -d --force-recreate --build
+  ```
+
+- Build with PowerShell:
+
+  ```powershell
+  $commit = (git rev-parse --short HEAD)
+  $bt = (Get-Date -Format s)
+  docker compose build --no-cache --build-arg COMMIT=$commit --build-arg BUILD_TIME=$bt api
+  docker compose up -d --force-recreate --build
+  ```
+
+- Verify the running version:
+  - Check the container logs for the startup message: `docker logs bitemp-go-api` and look for `build commit:` output.
+  - Or call the new endpoint: `curl http://localhost:8080/version` which returns JSON with `commit` and `build_time`.
+
 ## Contributing
 
 Contributions are welcome! If you find any issues or have suggestions for improvement, please create a new issue or submit a pull request.

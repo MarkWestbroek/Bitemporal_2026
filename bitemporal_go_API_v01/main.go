@@ -59,6 +59,17 @@ func main() {
 	fmt.Println("Connected successfully to the database")
 
 	handlers.DB = db
+
+	// Create router and register routes
+	router := NewRouter()
+
+	//run the server
+	router.Run()
+
+}
+
+// NewRouter creates and returns a Gin engine with all routes registered.
+func NewRouter() *gin.Engine {
 	router := gin.Default()
 
 	//Tasks routes
@@ -76,8 +87,12 @@ func main() {
 	router.POST("/tests", handlers.AddTest)
 	router.PUT("/tests/:id", handlers.UpdateTest)
 
-	//run the server
-	router.Run()
+	// Version endpoint
+	router.GET("/version", func(c *gin.Context) {
+		c.JSON(200, gin.H{"commit": commit, "build_time": buildTime})
+	})
+
+	return router
 }
 
 func connectToDatabase() (*bun.DB, error) {
