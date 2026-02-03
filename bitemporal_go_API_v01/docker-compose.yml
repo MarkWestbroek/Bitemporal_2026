@@ -21,7 +21,11 @@ services:
       - task_manager_network
 
   api:
-    build: .
+    build:
+      context: .
+      args:
+        COMMIT: ${COMMIT:-local}
+        BUILD_TIME: ${BUILD_TIME:-dev}
     container_name: bitemp-go-api
     environment:
       DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASSWORD:-1234}@postgres:5432/${DB_NAME:-bitemp_go_api}?sslmode=disable

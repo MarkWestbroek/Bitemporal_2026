@@ -16,8 +16,12 @@ RUN go mod download
 # Copy the source code
 COPY . .
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o bitemp-go-api .
+# Build metadata (commit/time) - set via build args and embedded into binary
+ARG COMMIT=dev
+ARG BUILD_TIME=dev
+
+# Build the application with ldflags to embed metadata
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X 'main.commit=${COMMIT}' -X 'main.buildTime=${BUILD_TIME}'" -o bitemp-go-api .
 
 # Final stage
 FROM alpine:latest

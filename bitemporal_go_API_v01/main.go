@@ -19,9 +19,12 @@ import (
 )
 
 var db *bun.DB
+var commit = "dev"
+var buildTime = "dev"
 
 func main() {
 	fmt.Println("Bitemp Go API Project")
+	fmt.Printf("build commit: %s, build time: %s\n", commit, buildTime)
 
 	// Establish a connection to the PostgreSQL database
 	db, err := connectToDatabase()
