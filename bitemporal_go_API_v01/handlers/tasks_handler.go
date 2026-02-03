@@ -5,13 +5,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/uptrace/bun"
-	"github.com/zaahidali/task_manager_api_with_bun/model" // we imported the model here
+
+	//"github.com/zaahidali/task_manager_api_with_bun/model" // we imported the model here
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/model"
 )
 
 var DB *bun.DB
 
 func HomePage(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{"message": "Welcome to the Task Manager API"})
+	ctx.JSON(http.StatusOK, gin.H{"message": "Welcome to the Bitemp Go API"})
 }
 
 func GetTasks(ctx *gin.Context) {

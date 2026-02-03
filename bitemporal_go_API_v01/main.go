@@ -12,14 +12,16 @@ import (
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/extra/bundebug"
 
-	"github.com/zaahidali/task_manager_api_with_bun/handlers"
-	"github.com/zaahidali/task_manager_api_with_bun/model"
+	//"github.com/zaahidali/task_manager_api_with_bun/handlers"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/handlers"
+	//"github.com/zaahidali/task_manager_api_with_bun/model"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/model"
 )
 
 var db *bun.DB
 
 func main() {
-	fmt.Println("Task Manager API Project")
+	fmt.Println("Bitemp Go API Project")
 
 	// Establish a connection to the PostgreSQL database
 	db, err := connectToDatabase()
@@ -70,7 +72,7 @@ func connectToDatabase() (*bun.DB, error) {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
 		// Default DSN for local development
-		dsn = "postgres://postgres:1234@localhost:5432/task_manager_api_with_bun?sslmode=disable"
+		dsn = "postgres://postgres:1234@localhost:5432/bitemp_go_api?sslmode=disable"
 	}
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 	db := bun.NewDB(sqldb, pgdialect.New())

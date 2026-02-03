@@ -17,7 +17,7 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o task-manager-api .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o bitemp-go-api .
 
 # Final stage
 FROM alpine:latest
@@ -29,10 +29,10 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 
 # Copy the binary from builder stage
-COPY --from=builder /app/task-manager-api .
+COPY --from=builder /app/bitemp-go-api .
 
 # Expose port 8080 (default Gin port)
 EXPOSE 8080
 
 # Run the application
-CMD ["./task-manager-api"]
+CMD ["./bitemp-go-api"]

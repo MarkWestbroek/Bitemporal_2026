@@ -3,11 +3,11 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: task_manager_db
+    container_name: bitemp-go-api
     environment:
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-1234}
-      POSTGRES_DB: ${DB_NAME:-task_manager_api_with_bun}
+      POSTGRES_DB: ${DB_NAME:-bitemp_go_api}
     ports:
       - "5432:5432"
     volumes:
@@ -22,9 +22,9 @@ services:
 
   api:
     build: .
-    container_name: task_manager_api
+    container_name: bitemp-go-api
     environment:
-      DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASSWORD:-1234}@postgres:5432/${DB_NAME:-task_manager_api_with_bun}?sslmode=disable
+      DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASSWORD:-1234}@postgres:5432/${DB_NAME:-bitemp_go_api}?sslmode=disable
     ports:
       - "8080:8080"
     depends_on:
