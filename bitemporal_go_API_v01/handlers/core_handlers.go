@@ -8,6 +8,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// TODO: full entity get and post to include all fields, not just ID.
+// This will require changes to the model structs and the handlers
+// to bind JSON to the full struct instead of just an ID field.
+// The current implementation is a simplified version for demonstration purposes.
+
 /*
 Updated MakeGetEntitiesHandler in core_handlers.go to:
 	-Parse query params page (default 1) and size (default 20, capped at 100).
@@ -21,123 +26,6 @@ Why this approach
 -Returning has_more avoids an extra COUNT query and is efficient for common use cases.
 */
 
-func GetEntities[T any](entity_name string, entities []T, ctx *gin.Context) {
-	// Create a slice to store the retrieved entities
-	//var entities []T
-
-	// Execute the database query to retrieve entities using Go bun
-	err := DB.NewSelect().Model(&entities).Scan(ctx.Request.Context())
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Return the retrieved entities in the response
-	ctx.JSON(http.StatusOK, gin.H{entity_name: entities})
-}
-
-func GetEntity[T model.HasID](entity_name string, entity T, c *gin.Context) {
-	entityID := c.Param("id")
-
-	// Check if the entity ID is empty
-	if entityID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID must be present"})
-		return
-	}
-
-	//var entity T
-
-	// Fetch specific record from the database using Go bun
-	err := DB.NewSelect().Model(&entity).Where("id = ?", entityID).Scan(c.Request.Context())
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	if entity.GetID() == "" {
-		c.JSON(http.StatusNotFound, gin.H{"message": entity_name + " not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, entity)
-}
-
-/*
-func UpdateTest(ctx *gin.Context) {
-	testID := ctx.Param("id")
-
-	if testID == "" {
-		ctx.JSON(http.StatusNoContent, gin.H{"error": "ID must be present"})
-		return
-	}
-
-	updatedTest := &model.Test{}
-
-	// Bind JSON body to the updatedTest struct
-	if err := ctx.ShouldBindJSON(updatedTest); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Update the test record in the database using Go bun
-	_, err := DB.NewUpdate().Model(updatedTest).
-		Set("name = ?", updatedTest.Name).
-		Where("id = ?", testID).
-		Exec(ctx.Request.Context())
-
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, gin.H{"message": "Task updated"})
-}
-
-func RemoveTest(ctx *gin.Context) {
-	testID := ctx.Param("id")
-
-	test := &model.Test{}
-
-	// Delete specific test record from the database
-	res, err := DB.NewDelete().Model(test).Where("id = ?", testID).Exec(ctx.Request.Context())
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Check if any rows were affected by the delete operation
-	if rowsAffected > 0 {
-		ctx.JSON(http.StatusOK, gin.H{"message": "Test removed"})
-	} else {
-		ctx.JSON(http.StatusNotFound, gin.H{"message": "Test not found"})
-	}
-}
-*/
-
-func AddEntity[T model.HasID](entity_name string, newEntity T, ctx *gin.Context) {
-	//newEntity := &model.Test{}
-
-	if err := ctx.ShouldBindJSON(&newEntity); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Insert the new test record into the database
-	_, err := DB.NewInsert().Model(newEntity).Exec(ctx.Request.Context())
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	ctx.JSON(http.StatusCreated, gin.H{"message": entity_name + " created"})
-}
-
 // MakeAddEntityHandler returns a gin.HandlerFunc that creates a fresh zero-value entity
 // for each request and inserts it into the DB after binding JSON.
 func MakeAddEntityHandler[T model.HasID](entity_name string) gin.HandlerFunc {
@@ -148,6 +36,22 @@ func MakeAddEntityHandler[T model.HasID](entity_name string) gin.HandlerFunc {
 			return
 		}
 
+		/*
+			NewInsert is a convenience method on baseQuery that creates and returns a
+			new *InsertQuery already bound to the baseQuery's database handle and connection.
+			Internally it calls NewInsertQuery(q.db) to create the query and then .Conn(q.conn)
+			to attach the same connection/transaction context.
+			The returned InsertQuery is intended for fluent chaining (e.g.,
+			NewInsert().Model(m).Exec(ctx)).
+			Model(...) sets the payload on the InsertQuery and Exec(...) uses scanOrExec to
+			either scan results into provided destinations or execute the insert, depending on whether dest args are present.
+
+			Gotchas: NewInsert does not set a model — you must call Model
+			before Exec if you expect data to be inserted/scanned. If q.conn is nil,
+			Conn(nil) behavior depends on its implementation (it may fall back to using the DB directly).
+			Exec delegates to scanOrExec, so check that function for how destination presence,
+			errors, and result/scan semantics are handled.
+		*/
 		_, err := DB.NewInsert().Model(&newEntity).Exec(c.Request.Context())
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

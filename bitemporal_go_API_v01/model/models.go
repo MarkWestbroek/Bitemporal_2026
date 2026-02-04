@@ -5,6 +5,21 @@ import (
 	"time"
 )
 
+// HasID allows generic handlers to access an entity's ID
+type HasID interface {
+	GetID() string
+}
+
+func (a A) GetID() string             { return a.ID }
+func (b B) GetID() string             { return b.ID }
+func (r Rel_A_B) GetID() string       { return fmt.Sprintf("%d", r.ID) }
+func (au A_U) GetID() string          { return fmt.Sprintf("%d", au.Rel_ID) }
+func (av A_V) GetID() string          { return fmt.Sprintf("%d", av.Rel_ID) }
+func (bx B_X) GetID() string          { return fmt.Sprintf("%d", bx.Rel_ID) }
+func (by B_Y) GetID() string          { return fmt.Sprintf("%d", by.Rel_ID) }
+func (reg Registratie) GetID() string { return fmt.Sprintf("%d", reg.ID) }
+func (wij Wijziging) GetID() string   { return fmt.Sprintf("%d", wij.ID) }
+
 // Entiteiten
 type A struct {
 	ID     string     `json:"id"`
@@ -22,21 +37,6 @@ type B struct {
 	//Einde   *time.Time `json:"einde,omitempty"`
 }
 
-// HasID allows generic handlers to access an entity's ID
-type HasID interface {
-	GetID() string
-}
-
-func (a A) GetID() string             { return a.ID }
-func (b B) GetID() string             { return b.ID }
-func (r Rel_A_B) GetID() string       { return fmt.Sprintf("%d", r.ID) }
-func (au A_U) GetID() string          { return fmt.Sprintf("%d", au.ID) }
-func (av A_V) GetID() string          { return fmt.Sprintf("%d", av.ID) }
-func (bx B_X) GetID() string          { return fmt.Sprintf("%d", bx.ID) }
-func (by B_Y) GetID() string          { return fmt.Sprintf("%d", by.ID) }
-func (reg Registratie) GetID() string { return fmt.Sprintf("%d", reg.ID) }
-func (wij Wijziging) GetID() string   { return fmt.Sprintf("%d", wij.ID) }
-
 // Relaties
 type Rel_A_B struct {
 	ID   int    `json:"id"`
@@ -49,32 +49,32 @@ type Rel_A_B struct {
 // Gegevenselementen
 // A (1) - (1) U
 type A_U struct {
-	ID   int    `json:"rel_id"`
-	A_ID string `json:"a_id"`
-	Aaa  string `json:"aaa"`
-	Bbb  string `json:"bbb"`
+	Rel_ID int    `json:"rel_id"`
+	A_ID   string `json:"a_id"`
+	Aaa    string `json:"aaa"`
+	Bbb    string `json:"bbb"`
 }
 
 // A (1) - (*) V
 type A_V struct {
-	ID   int    `json:"rel_id"`
-	A_ID string `json:"a_id"`
-	Ccc  string `json:"ccc"`
+	Rel_ID int    `json:"rel_id"`
+	A_ID   string `json:"a_id"`
+	Ccc    string `json:"ccc"`
 }
 
 // B (1) - (1) X
 type B_X struct {
-	ID   int    `json:"rel_id"`
-	B_ID string `json:"b_id"`
-	Fff  string `json:"fff"`
-	Ggg  string `json:"ggg"`
+	Rel_ID int    `json:"rel_id"`
+	B_ID   string `json:"b_id"`
+	Fff    string `json:"fff"`
+	Ggg    string `json:"ggg"`
 }
 
 // B (1) - (1) Y
 type B_Y struct {
-	ID   int    `json:"rel_id"`
-	B_ID string `json:"b_id"`
-	Hhh  string `json:"hhh"`
+	Rel_ID int    `json:"rel_id"`
+	B_ID   string `json:"b_id"`
+	Hhh    string `json:"hhh"`
 }
 
 // Wijziging zit tussen Registratie en om het even welke representatie in
