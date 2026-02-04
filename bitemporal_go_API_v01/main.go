@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"os"
@@ -12,12 +11,9 @@ import (
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/extra/bundebug"
 
-	//"github.com/zaahidali/task_manager_api_with_bun/handlers"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/dbsetup"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/handlers"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/routes"
-
-	//"github.com/zaahidali/task_manager_api_with_bun/model"
-	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/model"
 )
 
 var db *bun.DB
@@ -34,16 +30,16 @@ func main() {
 		fmt.Println("Failed to connect to the database:", err)
 		return
 	}
-	fmt.Println("connected to the database")
+	fmt.Println("Succesfully connected to the database.")
 	defer db.Close()
 
 	// Create the "tasks" table in the database if it doesn't exist
-	err = createTables(db)
+	err = dbsetup.CreateTables(db)
 	if err != nil {
 		fmt.Println("Failed to create table:", err)
 		return
 	}
-	fmt.Println("Tables created successfully")
+	fmt.Println("Table(s) created successfully or they were already present.")
 
 	// Add a query hook for logging
 	db.AddQueryHook(bundebug.NewQueryHook(
@@ -58,7 +54,7 @@ func main() {
 		return
 	}
 	// Connection successful
-	fmt.Println("Connected successfully to the database")
+	fmt.Println("Succesfully connected to the database.")
 
 	handlers.DB = db
 
@@ -99,14 +95,4 @@ func connectToDatabase() (*bun.DB, error) {
 	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 	db := bun.NewDB(sqldb, pgdialect.New())
 	return db, nil
-}
-
-func createTables(db *bun.DB) error {
-	ctx := context.Background()
-	_, err := db.NewCreateTable().Model((*model.Task)(nil)).IfNotExists().Exec(ctx)
-	if err != nil {
-		return err
-	}
-	_, err = db.NewCreateTable().Model((*model.Test)(nil)).IfNotExists().Exec(ctx)
-	return err
 }
