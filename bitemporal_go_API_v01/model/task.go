@@ -9,8 +9,3 @@ type Task struct {
 	DueDate     time.Time `json:"due_date"`
 	Status      string    `json:"status"`
 }
-
-type Test struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}

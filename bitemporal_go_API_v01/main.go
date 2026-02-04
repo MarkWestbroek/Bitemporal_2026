@@ -14,6 +14,8 @@ import (
 
 	//"github.com/zaahidali/task_manager_api_with_bun/handlers"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/handlers"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/routes"
+
 	//"github.com/zaahidali/task_manager_api_with_bun/model"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/model"
 )
@@ -72,24 +74,16 @@ func main() {
 func NewRouter() *gin.Engine {
 	router := gin.Default()
 
-	//Tasks routes
+	//Homepage
 	router.GET("/", handlers.HomePage)
-	router.GET("/tasks", handlers.GetTasks)
-	router.GET("/tasks/:id", handlers.GetTask)
-	router.DELETE("/tasks/:id", handlers.RemoveTask)
-	router.POST("/tasks", handlers.AddTask)
-	router.PUT("/tasks/:id", handlers.UpdateTask)
-
-	//Test routes
-	router.GET("/tests", handlers.GetTests)
-	router.GET("/tests/:id", handlers.GetTest)
-	router.DELETE("/tests/:id", handlers.RemoveTest)
-	router.POST("/tests", handlers.AddTest)
-	router.PUT("/tests/:id", handlers.UpdateTest)
 
 	// Version endpoint
 	router.GET("/version", func(c *gin.Context) {
 		c.JSON(200, gin.H{"commit": commit, "build_time": buildTime})
+
+		//Add all routes
+		routes.AddRoutes(router)
+
 	})
 
 	return router
