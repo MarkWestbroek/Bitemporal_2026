@@ -76,11 +76,10 @@ func NewRouter() *gin.Engine {
 	// Version endpoint
 	router.GET("/version", func(c *gin.Context) {
 		c.JSON(200, gin.H{"commit": commit, "build_time": buildTime})
-
-		//Add all routes
-		routes.AddRoutes(router)
-
 	})
+
+	//Add all routes
+	routes.AddRoutes(router)
 
 	return router
 }

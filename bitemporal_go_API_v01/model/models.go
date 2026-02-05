@@ -22,7 +22,7 @@ func (wij Wijziging) GetID() string   { return fmt.Sprintf("%d", wij.ID) }
 
 // Entiteiten
 type A struct {
-	ID     string     `json:"id"`
+	ID     string     `json:"id" bun:"id,pk"`
 	Opvoer *time.Time `json:"opvoer,omitempty"` // afgeleid van registratie tijdstip opvoer
 	Afvoer *time.Time `json:"afvoer,omitempty"` // afgeleid van registratie tijdstip afvoer
 	//Aanvang *time.Time `json:"aanvang,omitempty"` // afgeleid van A_Aanvang
@@ -30,7 +30,7 @@ type A struct {
 }
 
 type B struct {
-	ID     string     `json:"id"`
+	ID     string     `json:"id" bun:"id,pk"`
 	Opvoer *time.Time `json:"opvoer,omitempty"`
 	Afvoer *time.Time `json:"afvoer,omitempty"`
 	//Aanvang *time.Time `json:"aanvang,omitempty"`
@@ -39,7 +39,7 @@ type B struct {
 
 // Relaties
 type Rel_A_B struct {
-	ID   int    `json:"id"`
+	ID   int    `json:"id" bun:"id,pk"`
 	A_ID string `json:"a_id"`
 	B_ID string `json:"b_id"`
 	//Aanvang *time.Time `json:"aanvang,omitempty"`
@@ -49,7 +49,7 @@ type Rel_A_B struct {
 // Gegevenselementen
 // A (1) - (1) U
 type A_U struct {
-	Rel_ID int    `json:"rel_id"`
+	Rel_ID int    `json:"rel_id" bun:"rel_id,pk"`
 	A_ID   string `json:"a_id"`
 	Aaa    string `json:"aaa"`
 	Bbb    string `json:"bbb"`
@@ -57,14 +57,14 @@ type A_U struct {
 
 // A (1) - (*) V
 type A_V struct {
-	Rel_ID int    `json:"rel_id"`
+	Rel_ID int    `json:"rel_id" bun:"rel_id,pk"`
 	A_ID   string `json:"a_id"`
 	Ccc    string `json:"ccc"`
 }
 
 // B (1) - (1) X
 type B_X struct {
-	Rel_ID int    `json:"rel_id"`
+	Rel_ID int    `json:"rel_id" bun:"rel_id,pk"`
 	B_ID   string `json:"b_id"`
 	Fff    string `json:"fff"`
 	Ggg    string `json:"ggg"`
@@ -72,14 +72,14 @@ type B_X struct {
 
 // B (1) - (1) Y
 type B_Y struct {
-	Rel_ID int    `json:"rel_id"`
+	Rel_ID int    `json:"rel_id" bun:"rel_id,pk"`
 	B_ID   string `json:"b_id"`
 	Hhh    string `json:"hhh"`
 }
 
 // Wijziging zit tussen Registratie en om het even welke representatie in
 type Wijziging struct {
-	ID                int       `json:"id"`
+	ID                int       `json:"id" bun:"id,pk"`
 	Wijzigingstype    string    `json:"wijzigingstype"`
 	RegistratieID     int       `json:"registratie_id"`
 	Representatienaam string    `json:"representatienaam"`
@@ -89,7 +89,7 @@ type Wijziging struct {
 
 // Registratie, Correctie, Ongedaanmaking
 type Registratie struct {
-	ID                         int       `json:"id"`
+	ID                         int       `json:"id" bun:"id,pk"`
 	Registratietype            string    `json:"registratietype"`
 	Tijdstip                   time.Time `json:"tijdstip"`
 	Opmerking                  *string   `json:"opmerking,omitempty"`
