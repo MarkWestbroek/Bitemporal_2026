@@ -1,0 +1,13 @@
+type User struct {
+    ID       int64     `bun:"id,pk,autoincrement"`
+    Name     string    `bun:"name"`
+    // De relatie: 'has-many' vertelt Bun dat er meerdere artikelen bij deze user horen.
+    Articles []Article `bun:"rel:has-many,join:id=author_id"`
+}
+
+type Article struct {
+    ID       int64  `bun:"id,pk,autoincrement"`
+    Title    string `bun:"title"`
+    Content  string `bun:"content"`
+    AuthorID int64  `bun:"author_id"`
+}
