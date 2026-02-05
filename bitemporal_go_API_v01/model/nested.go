@@ -7,10 +7,22 @@ import (
 )
 
 type User struct {
-	ID   int64  `bun:"id,pk,autoincrement"`
-	Name string `bun:"name"`
-	// De relatie: 'has-many' vertelt Bun dat er meerdere artikelen bij deze user horen.
-	Articles []Article `bun:"rel:has-many,join:id=author_id"`
+    ID       int64     `bun:"id,pk,autoincrement"`
+    Name     string    `bun:"name"`
+    
+    // De bestaande 1-op-veel relatie
+    Articles []Article `bun:"rel:has-many,join:id=author_id"`
+    
+    // De nieuwe 1-op-1 relatie
+    // Let op: 'rel:has-one' omdat de FK (user_id) in de CV tabel staat
+    CV       *CV       `bun:"rel:has-one,join:id=user_id"`
+}
+
+type CV struct {
+    ID        int64  `bun:"id,pk,autoincrement"`
+    Education string `bun:"education"`
+    Experience string `bun:"experience"`
+    UserID    int64  `bun:"user_id"` // De foreign key
 }
 
 type Article struct {
