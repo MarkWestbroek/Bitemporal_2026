@@ -36,11 +36,11 @@ func GetUser(db *bun.DB) ([]User, error) {
 	ctx := context.Background()
 	users := make([]User, 0)
 
-	err := db.NewSelect().
-		Model(&users).
-		Relation("Articles"). // Gebruik de naam van het veld in de struct
-		Order("user.id ASC").
-		Scan(ctx)
+err := db.NewSelect().
+    Model(&users).
+    Relation("Articles"). // Laad alle artikelen
+    Relation("CV").       // Laad ook het CV
+    Scan(ctx)
 
 	if err != nil {
 		return nil, err
