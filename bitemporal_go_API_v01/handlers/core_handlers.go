@@ -99,7 +99,12 @@ func MakeGetEntitiesHandler[T any](entity_name string) gin.HandlerFunc {
 		offset := (page - 1) * size
 
 		var entities []T
-		err := DB.NewSelect().Model(&entities).Limit(size).Offset(offset).Scan(c.Request.Context())
+		err := DB.NewSelect().
+			Model(&entities). // laadt alleen de entiteiten, zonder gerelateerde gegevenselementen
+			Limit(size).
+			Offset(offset).
+			Scan(c.Request.
+				Context())
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
