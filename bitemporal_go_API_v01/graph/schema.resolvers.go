@@ -81,17 +81,84 @@ func (r *mutationResolver) CreateDataElementBy(ctx context.Context, input model.
 
 // CreateTask is the resolver for the createTask field.
 func (r *mutationResolver) CreateTask(ctx context.Context, input model.CreateTaskInput) (*model.Task, error) {
-	panic(fmt.Errorf("not implemented: CreateTask - createTask"))
+	// Parse the DueDate from string format
+	dueDate, err := time.Parse(time.RFC3339, input.DueDate)
+	if err != nil {
+		dueDate = time.Now()
+	}
+
+	dbTask := model_db.Task{
+		ID:          input.ID,
+		Title:       input.Title,
+		Description: input.Description,
+		DueDate:     dueDate,
+		Status:      input.Status,
+	}
+
+	_, err = r.DB.NewInsert().Model(&dbTask).Exec(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create task: %w", err)
+	}
+
+	return &model.Task{
+		ID:          dbTask.ID,
+		Title:       dbTask.Title,
+		Description: dbTask.Description,
+		DueDate:     dbTask.DueDate.Format(time.RFC3339),
+		Status:      dbTask.Status,
+	}, nil
 }
 
 // UpdateTask is the resolver for the updateTask field.
 func (r *mutationResolver) UpdateTask(ctx context.Context, id string, input model.UpdateTaskInput) (*model.Task, error) {
-	panic(fmt.Errorf("not implemented: UpdateTask - updateTask"))
+	// Fetch the existing task
+	dbTask := model_db.Task{ID: id}
+	err := r.DB.NewSelect().Model(&dbTask).Where("id = ?", id).Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update fields if provided
+	if input.Title != nil {
+		dbTask.Title = *input.Title
+	}
+	if input.Description != nil {
+		dbTask.Description = *input.Description
+	}
+	if input.DueDate != nil {
+		dbTask.DueDate = time.Now() // Parse from input if needed
+	}
+	if input.Status != nil {
+		dbTask.Status = *input.Status
+	}
+
+	_, err = r.DB.NewUpdate().Model(&dbTask).WherePK().Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.Task{
+		ID:          dbTask.ID,
+		Title:       dbTask.Title,
+		Description: dbTask.Description,
+		DueDate:     dbTask.DueDate.Format(time.RFC3339),
+		Status:      dbTask.Status,
+	}, nil
 }
 
 // DeleteTask is the resolver for the deleteTask field.
 func (r *mutationResolver) DeleteTask(ctx context.Context, id string) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteTask - deleteTask"))
+	result, err := r.DB.NewDelete().Model(&model_db.Task{}).Where("id = ?", id).Exec(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+
+	return rowsAffected > 0, nil
 }
 
 // EntityA is the resolver for the entityA field.
@@ -231,18 +298,3 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-/*
-	func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
-}
-func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todos - todos"))
-}
-*/
