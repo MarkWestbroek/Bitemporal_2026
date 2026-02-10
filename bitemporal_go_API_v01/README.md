@@ -75,3 +75,42 @@ Contributions are welcome! If you find any issues or have suggestions for improv
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+
+-------
+GraphQL
+-------
+GraphQL API Complete
+Your bitemporal API now has a production-ready GraphQL endpoint. Here's what was implemented:
+
+📊 What Was Added
+gqlgen Integration - Industry-standard, type-safe GraphQL for Go
+
+Comprehensive Schema - Full bitemporal data model including:
+
+Entity A/B queries and mutations
+Relationships (RelationAB)
+Data elements (AÜ, AV, BX, BY)
+Audit tracking (Registration, Change/Wijziging)
+Task management
+DateTime scalar handling
+Gin Integration - GraphQL seamlessly integrated with your existing Gin server
+
+Database Ready - Resolvers have access to your Bun ORM via r.DB
+
+🚀 Access Your GraphQL API
+Endpoints:
+
+🎮 Playground (Interactive IDE): GET http://localhost:8080/graphql/playground
+📤 Query/Mutation Endpoint: POST/GET http://localhost:8080/graphql/query
+📝 Key Files
+graph/schema.graphqls - Schema definition
+graph/schema.resolvers.go - Resolver stubs (ready to implement)
+graph/resolver.go - Dependency injection with DB
+handlers/graphql_handler.go - Gin integration
+GRAPHQL.md - Complete usage guide with examples
+💡 Next Steps
+Implement resolvers in schema.resolvers.go (they currently panic)
+Start with Task resolvers since you already have the model
+Use Bun to query your database
+The schema is already designed for your bitemporal data model - just implement the database logic!

@@ -78,6 +78,11 @@ func NewRouter() *gin.Engine {
 		c.JSON(200, gin.H{"commit": commit, "build_time": buildTime})
 	})
 
+	// GraphQL endpoint
+	router.GET("/graphql/playground", handlers.PlaygroundHandler())
+	router.POST("/graphql/query", handlers.GraphQLHandler())
+	router.GET("/graphql/query", handlers.GraphQLHandler())
+
 	//Add all routes
 	routes.AddRoutes(router)
 
