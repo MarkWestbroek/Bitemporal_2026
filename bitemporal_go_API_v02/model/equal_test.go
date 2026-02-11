@@ -7,10 +7,10 @@ import (
 )
 
 func TestEqualPrimitives(t *testing.T) {
-	if !Equal[string]("x", "x") {
+	if !Equal("x", "x") {
 		t.Fatal("expected strings to be equal")
 	}
-	if Equal[int](1, 2) {
+	if Equal(1, 2) {
 		t.Fatal("expected ints to be not equal")
 	}
 }

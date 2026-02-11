@@ -16,7 +16,32 @@ import (
 
 // CreateEntityA is the resolver for the createEntityA field.
 func (r *mutationResolver) CreateEntityA(ctx context.Context, input model.CreateEntityAInput) (*model.EntityA, error) {
-	panic(fmt.Errorf("not implemented: CreateEntityA - createEntityA"))
+	now := time.Now()
+	dbEntity := model_db.A{
+		ID:     input.ID,
+		Opvoer: &now,
+	}
+
+	_, err := r.DB.NewInsert().Model(&dbEntity).Exec(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create entity A: %w", err)
+	}
+
+	var opvoer, afvoer *string
+	if dbEntity.Opvoer != nil {
+		formatted := dbEntity.Opvoer.Format(time.RFC3339)
+		opvoer = &formatted
+	}
+	if dbEntity.Afvoer != nil {
+		formatted := dbEntity.Afvoer.Format(time.RFC3339)
+		afvoer = &formatted
+	}
+
+	return &model.EntityA{
+		ID:     dbEntity.ID,
+		Opvoer: opvoer,
+		Afvoer: afvoer,
+	}, nil
 }
 
 // UpdateEntityA is the resolver for the updateEntityA field.
@@ -163,7 +188,27 @@ func (r *mutationResolver) DeleteTask(ctx context.Context, id string) (bool, err
 
 // EntityA is the resolver for the entityA field.
 func (r *queryResolver) EntityA(ctx context.Context, id string) (*model.EntityA, error) {
-	panic(fmt.Errorf("not implemented: EntityA - entityA"))
+	var dbEntity model_db.A
+	err := r.DB.NewSelect().Model(&dbEntity).Where("id = ?", id).Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert DB model to GraphQL model
+	var opvoer, afvoer *string
+	if dbEntity.Opvoer != nil {
+		formatted := dbEntity.Opvoer.Format(time.RFC3339)
+		opvoer = &formatted
+	}
+	if dbEntity.Afvoer != nil {
+		formatted := dbEntity.Afvoer.Format(time.RFC3339)
+		afvoer = &formatted
+	}
+	return &model.EntityA{
+		ID:     dbEntity.ID,
+		Opvoer: opvoer,
+		Afvoer: afvoer,
+	}, nil
 }
 
 // AllEntitiesA is the resolver for the allEntitiesA field.
