@@ -116,6 +116,7 @@ Use Bun to query your database
 The schema is already designed for your bitemporal data model - just implement the database logic!
 
 
+## HOW TO USE
 POST Task is done via:
 
 {
@@ -128,7 +129,7 @@ POST Task is done via:
 and does:
 INSERT INTO "tasks" ("id", "title", "description", "due_date", "status") VALUES ('1', 'De eerste taak', 'bjksdajk jk kjads', '0001-01-01 00:00:00+00:00', 'Al weer klaar')
 
-TRYING:
+POSTEN van Full<Entiteit> (hier A) werkt als volgt:
 
     {
         "id": "3",
@@ -146,3 +147,22 @@ TRYING:
             }
         ]
     }
+
+
+ ## TO DO
+ 1
+ full handlers uitbreiden met meer dan één relatie (array en itereren)
+
+ 2
+ Autonumber IDs ipv via POST
+ 
+ 3
+ Speciaal Registratie (POST) endpoint dat het volgende doet:
+ - post registratie (onthoudt ID en tijdstip)
+ - post gegevens (met reg_tijdstip in opvoer; opvoer kan altijd maar 1x, maar kan worden leeggemaakt bij ongedaanmaking van de opvoerende-registratie)
+    * onthoudt id's of stop ze in de structs
+ - post records in tussentabel wijziging (heel specifiek met soft links)
+ - doe van alles met eerdere records bij ongedaanmaking en correctie (ingewikkeld)
+
+4
+transactie over bovenstaande

@@ -63,4 +63,18 @@ func AddRoutes(router *gin.Engine) {
 	router.GET("/full/as/:id", handlers.MakeGetFullEntityHandler[model.Full_A]("A", "Vs"))
 	router.POST("/full/as", handlers.MakeAddFullEntityHandler[model.Full_A]("Full_A", "Vs"))
 
+	router.GET("/full/bs", handlers.MakeGetFullEntitiesHandler[model.Full_B]("Bs", "Xs"))
+	router.GET("/full/bs/:id", handlers.MakeGetFullEntityHandler[model.Full_B]("B", "Xs"))
+	router.POST("/full/bs", handlers.MakeAddFullEntityHandler[model.Full_B]("Full_B", "Xs"))
+
+	// Bitemporal registration, correction and undoing routes
+	// see README.md for details and examples
+	router.POST("/registreer/as", handlers.MakeRegisterFullEntityHandler[model.Full_A]("Full_A", "Vs"))
+	//	router.POST("/full/as/:id", handlers.MakeCorrectFullEntityHandler[model.Full_A]("Full_A", "Vs"))
+	//	router.POST("/full/as/:id/undo", handlers.MakeUndoFullEntityHandler[model.Full_A]("Full_A", "Vs"))
+	router.POST("/registreer/bs", handlers.MakeRegisterFullEntityHandler[model.Full_B]("Full_B", "Xs"))
+
+	//router.POST("/register/:entity", handlers.RegisterEntity)
+	//router.POST("/correct/:entity/:id", handlers.CorrectEntity)
+	//router.POST("/undo/:entity/:id", handlers.UndoEntity)
 }
