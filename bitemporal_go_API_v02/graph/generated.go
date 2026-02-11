@@ -14,7 +14,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/graph/model"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v02/graph/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -1051,7 +1051,7 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Mutation_createDataElementAU_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateDataElementAUInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐCreateDataElementAUInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateDataElementAUInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐCreateDataElementAUInput)
 	if err != nil {
 		return nil, err
 	}
@@ -1062,7 +1062,7 @@ func (ec *executionContext) field_Mutation_createDataElementAU_args(ctx context.
 func (ec *executionContext) field_Mutation_createDataElementAV_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateDataElementAVInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐCreateDataElementAVInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateDataElementAVInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐCreateDataElementAVInput)
 	if err != nil {
 		return nil, err
 	}
@@ -1073,7 +1073,7 @@ func (ec *executionContext) field_Mutation_createDataElementAV_args(ctx context.
 func (ec *executionContext) field_Mutation_createDataElementBX_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateDataElementBXInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐCreateDataElementBXInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateDataElementBXInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐCreateDataElementBXInput)
 	if err != nil {
 		return nil, err
 	}
@@ -1084,7 +1084,7 @@ func (ec *executionContext) field_Mutation_createDataElementBX_args(ctx context.
 func (ec *executionContext) field_Mutation_createDataElementBY_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateDataElementBYInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐCreateDataElementBYInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateDataElementBYInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐCreateDataElementBYInput)
 	if err != nil {
 		return nil, err
 	}
@@ -1095,7 +1095,7 @@ func (ec *executionContext) field_Mutation_createDataElementBY_args(ctx context.
 func (ec *executionContext) field_Mutation_createEntityA_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateEntityAInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐCreateEntityAInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateEntityAInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐCreateEntityAInput)
 	if err != nil {
 		return nil, err
 	}
@@ -1106,7 +1106,7 @@ func (ec *executionContext) field_Mutation_createEntityA_args(ctx context.Contex
 func (ec *executionContext) field_Mutation_createEntityB_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateEntityBInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐCreateEntityBInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateEntityBInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐCreateEntityBInput)
 	if err != nil {
 		return nil, err
 	}
@@ -1117,7 +1117,7 @@ func (ec *executionContext) field_Mutation_createEntityB_args(ctx context.Contex
 func (ec *executionContext) field_Mutation_createRelationAB_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateRelationABInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐCreateRelationABInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateRelationABInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐCreateRelationABInput)
 	if err != nil {
 		return nil, err
 	}
@@ -1128,7 +1128,7 @@ func (ec *executionContext) field_Mutation_createRelationAB_args(ctx context.Con
 func (ec *executionContext) field_Mutation_createTask_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateTaskInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐCreateTaskInput)
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateTaskInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐCreateTaskInput)
 	if err != nil {
 		return nil, err
 	}
@@ -1188,7 +1188,7 @@ func (ec *executionContext) field_Mutation_updateDataElementAU_args(ctx context.
 		return nil, err
 	}
 	args["relId"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateDataElementAUInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐUpdateDataElementAUInput)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateDataElementAUInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐUpdateDataElementAUInput)
 	if err != nil {
 		return nil, err
 	}
@@ -1204,7 +1204,7 @@ func (ec *executionContext) field_Mutation_updateEntityA_args(ctx context.Contex
 		return nil, err
 	}
 	args["id"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateEntityAInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐUpdateEntityAInput)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateEntityAInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐUpdateEntityAInput)
 	if err != nil {
 		return nil, err
 	}
@@ -1220,7 +1220,7 @@ func (ec *executionContext) field_Mutation_updateEntityB_args(ctx context.Contex
 		return nil, err
 	}
 	args["id"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateEntityBInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐUpdateEntityBInput)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateEntityBInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐUpdateEntityBInput)
 	if err != nil {
 		return nil, err
 	}
@@ -1236,7 +1236,7 @@ func (ec *executionContext) field_Mutation_updateTask_args(ctx context.Context, 
 		return nil, err
 	}
 	args["id"] = arg0
-	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateTaskInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐUpdateTaskInput)
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNUpdateTaskInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐUpdateTaskInput)
 	if err != nil {
 		return nil, err
 	}
@@ -1719,7 +1719,7 @@ func (ec *executionContext) _Change_registration(ctx context.Context, field grap
 			return obj.Registration, nil
 		},
 		nil,
-		ec.marshalNRegistration2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐRegistration,
+		ec.marshalNRegistration2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐRegistration,
 		true,
 		true,
 	)
@@ -2257,7 +2257,7 @@ func (ec *executionContext) _EntityA_dataElementAU(ctx context.Context, field gr
 			return obj.DataElementAu, nil
 		},
 		nil,
-		ec.marshalODataElementAU2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementAu,
+		ec.marshalODataElementAU2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementAu,
 		true,
 		false,
 	)
@@ -2296,7 +2296,7 @@ func (ec *executionContext) _EntityA_dataElementsAV(ctx context.Context, field g
 			return obj.DataElementsAv, nil
 		},
 		nil,
-		ec.marshalNDataElementAV2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementAvᚄ,
+		ec.marshalNDataElementAV2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementAvᚄ,
 		true,
 		true,
 	)
@@ -2333,7 +2333,7 @@ func (ec *executionContext) _EntityA_relations(ctx context.Context, field graphq
 			return obj.Relations, nil
 		},
 		nil,
-		ec.marshalNRelationAB2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐRelationAbᚄ,
+		ec.marshalNRelationAB2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐRelationAbᚄ,
 		true,
 		true,
 	)
@@ -2461,7 +2461,7 @@ func (ec *executionContext) _EntityB_dataElementBX(ctx context.Context, field gr
 			return obj.DataElementBx, nil
 		},
 		nil,
-		ec.marshalODataElementBX2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementBx,
+		ec.marshalODataElementBX2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementBx,
 		true,
 		false,
 	)
@@ -2500,7 +2500,7 @@ func (ec *executionContext) _EntityB_dataElementBY(ctx context.Context, field gr
 			return obj.DataElementBy, nil
 		},
 		nil,
-		ec.marshalODataElementBY2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementBy,
+		ec.marshalODataElementBY2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementBy,
 		true,
 		false,
 	)
@@ -2537,7 +2537,7 @@ func (ec *executionContext) _EntityB_relations(ctx context.Context, field graphq
 			return obj.Relations, nil
 		},
 		nil,
-		ec.marshalNRelationAB2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐRelationAbᚄ,
+		ec.marshalNRelationAB2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐRelationAbᚄ,
 		true,
 		true,
 	)
@@ -2579,7 +2579,7 @@ func (ec *executionContext) _Mutation_createEntityA(ctx context.Context, field g
 			return ec.resolvers.Mutation().CreateEntityA(ctx, fc.Args["input"].(model.CreateEntityAInput))
 		},
 		nil,
-		ec.marshalNEntityA2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityA,
+		ec.marshalNEntityA2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityA,
 		true,
 		true,
 	)
@@ -2634,7 +2634,7 @@ func (ec *executionContext) _Mutation_updateEntityA(ctx context.Context, field g
 			return ec.resolvers.Mutation().UpdateEntityA(ctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateEntityAInput))
 		},
 		nil,
-		ec.marshalNEntityA2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityA,
+		ec.marshalNEntityA2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityA,
 		true,
 		true,
 	)
@@ -2730,7 +2730,7 @@ func (ec *executionContext) _Mutation_createEntityB(ctx context.Context, field g
 			return ec.resolvers.Mutation().CreateEntityB(ctx, fc.Args["input"].(model.CreateEntityBInput))
 		},
 		nil,
-		ec.marshalNEntityB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityB,
+		ec.marshalNEntityB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityB,
 		true,
 		true,
 	)
@@ -2785,7 +2785,7 @@ func (ec *executionContext) _Mutation_updateEntityB(ctx context.Context, field g
 			return ec.resolvers.Mutation().UpdateEntityB(ctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateEntityBInput))
 		},
 		nil,
-		ec.marshalNEntityB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityB,
+		ec.marshalNEntityB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityB,
 		true,
 		true,
 	)
@@ -2881,7 +2881,7 @@ func (ec *executionContext) _Mutation_createRelationAB(ctx context.Context, fiel
 			return ec.resolvers.Mutation().CreateRelationAb(ctx, fc.Args["input"].(model.CreateRelationABInput))
 		},
 		nil,
-		ec.marshalNRelationAB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐRelationAb,
+		ec.marshalNRelationAB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐRelationAb,
 		true,
 		true,
 	)
@@ -2975,7 +2975,7 @@ func (ec *executionContext) _Mutation_createDataElementAU(ctx context.Context, f
 			return ec.resolvers.Mutation().CreateDataElementAu(ctx, fc.Args["input"].(model.CreateDataElementAUInput))
 		},
 		nil,
-		ec.marshalNDataElementAU2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementAu,
+		ec.marshalNDataElementAU2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementAu,
 		true,
 		true,
 	)
@@ -3026,7 +3026,7 @@ func (ec *executionContext) _Mutation_updateDataElementAU(ctx context.Context, f
 			return ec.resolvers.Mutation().UpdateDataElementAu(ctx, fc.Args["relId"].(string), fc.Args["input"].(model.UpdateDataElementAUInput))
 		},
 		nil,
-		ec.marshalNDataElementAU2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementAu,
+		ec.marshalNDataElementAU2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementAu,
 		true,
 		true,
 	)
@@ -3077,7 +3077,7 @@ func (ec *executionContext) _Mutation_createDataElementAV(ctx context.Context, f
 			return ec.resolvers.Mutation().CreateDataElementAv(ctx, fc.Args["input"].(model.CreateDataElementAVInput))
 		},
 		nil,
-		ec.marshalNDataElementAV2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementAv,
+		ec.marshalNDataElementAV2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementAv,
 		true,
 		true,
 	)
@@ -3126,7 +3126,7 @@ func (ec *executionContext) _Mutation_createDataElementBX(ctx context.Context, f
 			return ec.resolvers.Mutation().CreateDataElementBx(ctx, fc.Args["input"].(model.CreateDataElementBXInput))
 		},
 		nil,
-		ec.marshalNDataElementBX2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementBx,
+		ec.marshalNDataElementBX2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementBx,
 		true,
 		true,
 	)
@@ -3177,7 +3177,7 @@ func (ec *executionContext) _Mutation_createDataElementBY(ctx context.Context, f
 			return ec.resolvers.Mutation().CreateDataElementBy(ctx, fc.Args["input"].(model.CreateDataElementBYInput))
 		},
 		nil,
-		ec.marshalNDataElementBY2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementBy,
+		ec.marshalNDataElementBY2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementBy,
 		true,
 		true,
 	)
@@ -3226,7 +3226,7 @@ func (ec *executionContext) _Mutation_createTask(ctx context.Context, field grap
 			return ec.resolvers.Mutation().CreateTask(ctx, fc.Args["input"].(model.CreateTaskInput))
 		},
 		nil,
-		ec.marshalNTask2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐTask,
+		ec.marshalNTask2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐTask,
 		true,
 		true,
 	)
@@ -3279,7 +3279,7 @@ func (ec *executionContext) _Mutation_updateTask(ctx context.Context, field grap
 			return ec.resolvers.Mutation().UpdateTask(ctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateTaskInput))
 		},
 		nil,
-		ec.marshalNTask2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐTask,
+		ec.marshalNTask2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐTask,
 		true,
 		true,
 	)
@@ -3373,7 +3373,7 @@ func (ec *executionContext) _Query_entityA(ctx context.Context, field graphql.Co
 			return ec.resolvers.Query().EntityA(ctx, fc.Args["id"].(string))
 		},
 		nil,
-		ec.marshalOEntityA2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityA,
+		ec.marshalOEntityA2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityA,
 		true,
 		false,
 	)
@@ -3428,7 +3428,7 @@ func (ec *executionContext) _Query_allEntitiesA(ctx context.Context, field graph
 			return ec.resolvers.Query().AllEntitiesA(ctx, fc.Args["limit"].(*int32), fc.Args["offset"].(*int32))
 		},
 		nil,
-		ec.marshalNEntityA2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityAᚄ,
+		ec.marshalNEntityA2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityAᚄ,
 		true,
 		true,
 	)
@@ -3483,7 +3483,7 @@ func (ec *executionContext) _Query_entityB(ctx context.Context, field graphql.Co
 			return ec.resolvers.Query().EntityB(ctx, fc.Args["id"].(string))
 		},
 		nil,
-		ec.marshalOEntityB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityB,
+		ec.marshalOEntityB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityB,
 		true,
 		false,
 	)
@@ -3538,7 +3538,7 @@ func (ec *executionContext) _Query_allEntitiesB(ctx context.Context, field graph
 			return ec.resolvers.Query().AllEntitiesB(ctx, fc.Args["limit"].(*int32), fc.Args["offset"].(*int32))
 		},
 		nil,
-		ec.marshalNEntityB2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityBᚄ,
+		ec.marshalNEntityB2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityBᚄ,
 		true,
 		true,
 	)
@@ -3593,7 +3593,7 @@ func (ec *executionContext) _Query_relationAB(ctx context.Context, field graphql
 			return ec.resolvers.Query().RelationAb(ctx, fc.Args["id"].(string))
 		},
 		nil,
-		ec.marshalORelationAB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐRelationAb,
+		ec.marshalORelationAB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐRelationAb,
 		true,
 		false,
 	)
@@ -3646,7 +3646,7 @@ func (ec *executionContext) _Query_allRelationsAB(ctx context.Context, field gra
 			return ec.resolvers.Query().AllRelationsAb(ctx, fc.Args["limit"].(*int32), fc.Args["offset"].(*int32))
 		},
 		nil,
-		ec.marshalNRelationAB2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐRelationAbᚄ,
+		ec.marshalNRelationAB2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐRelationAbᚄ,
 		true,
 		true,
 	)
@@ -3699,7 +3699,7 @@ func (ec *executionContext) _Query_dataElementAU(ctx context.Context, field grap
 			return ec.resolvers.Query().DataElementAu(ctx, fc.Args["relId"].(string))
 		},
 		nil,
-		ec.marshalODataElementAU2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementAu,
+		ec.marshalODataElementAU2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementAu,
 		true,
 		false,
 	)
@@ -3750,7 +3750,7 @@ func (ec *executionContext) _Query_dataElementsAU(ctx context.Context, field gra
 			return ec.resolvers.Query().DataElementsAu(ctx, fc.Args["aId"].(string))
 		},
 		nil,
-		ec.marshalNDataElementAU2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementAuᚄ,
+		ec.marshalNDataElementAU2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementAuᚄ,
 		true,
 		true,
 	)
@@ -3801,7 +3801,7 @@ func (ec *executionContext) _Query_dataElementAV(ctx context.Context, field grap
 			return ec.resolvers.Query().DataElementAv(ctx, fc.Args["relId"].(string))
 		},
 		nil,
-		ec.marshalODataElementAV2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementAv,
+		ec.marshalODataElementAV2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementAv,
 		true,
 		false,
 	)
@@ -3850,7 +3850,7 @@ func (ec *executionContext) _Query_dataElementsAV(ctx context.Context, field gra
 			return ec.resolvers.Query().DataElementsAv(ctx, fc.Args["aId"].(string))
 		},
 		nil,
-		ec.marshalNDataElementAV2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementAvᚄ,
+		ec.marshalNDataElementAV2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementAvᚄ,
 		true,
 		true,
 	)
@@ -3899,7 +3899,7 @@ func (ec *executionContext) _Query_dataElementBX(ctx context.Context, field grap
 			return ec.resolvers.Query().DataElementBx(ctx, fc.Args["relId"].(string))
 		},
 		nil,
-		ec.marshalODataElementBX2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementBx,
+		ec.marshalODataElementBX2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementBx,
 		true,
 		false,
 	)
@@ -3950,7 +3950,7 @@ func (ec *executionContext) _Query_dataElementBY(ctx context.Context, field grap
 			return ec.resolvers.Query().DataElementBy(ctx, fc.Args["relId"].(string))
 		},
 		nil,
-		ec.marshalODataElementBY2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementBy,
+		ec.marshalODataElementBY2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementBy,
 		true,
 		false,
 	)
@@ -3999,7 +3999,7 @@ func (ec *executionContext) _Query_registration(ctx context.Context, field graph
 			return ec.resolvers.Query().Registration(ctx, fc.Args["id"].(string))
 		},
 		nil,
-		ec.marshalORegistration2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐRegistration,
+		ec.marshalORegistration2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐRegistration,
 		true,
 		false,
 	)
@@ -4056,7 +4056,7 @@ func (ec *executionContext) _Query_allRegistrations(ctx context.Context, field g
 			return ec.resolvers.Query().AllRegistrations(ctx, fc.Args["limit"].(*int32), fc.Args["offset"].(*int32))
 		},
 		nil,
-		ec.marshalNRegistration2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐRegistrationᚄ,
+		ec.marshalNRegistration2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐRegistrationᚄ,
 		true,
 		true,
 	)
@@ -4113,7 +4113,7 @@ func (ec *executionContext) _Query_change(ctx context.Context, field graphql.Col
 			return ec.resolvers.Query().Change(ctx, fc.Args["id"].(string))
 		},
 		nil,
-		ec.marshalOChange2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐChange,
+		ec.marshalOChange2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐChange,
 		true,
 		false,
 	)
@@ -4170,7 +4170,7 @@ func (ec *executionContext) _Query_allChanges(ctx context.Context, field graphql
 			return ec.resolvers.Query().AllChanges(ctx, fc.Args["limit"].(*int32), fc.Args["offset"].(*int32))
 		},
 		nil,
-		ec.marshalNChange2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐChangeᚄ,
+		ec.marshalNChange2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐChangeᚄ,
 		true,
 		true,
 	)
@@ -4227,7 +4227,7 @@ func (ec *executionContext) _Query_task(ctx context.Context, field graphql.Colle
 			return ec.resolvers.Query().Task(ctx, fc.Args["id"].(string))
 		},
 		nil,
-		ec.marshalOTask2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐTask,
+		ec.marshalOTask2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐTask,
 		true,
 		false,
 	)
@@ -4280,7 +4280,7 @@ func (ec *executionContext) _Query_allTasks(ctx context.Context, field graphql.C
 			return ec.resolvers.Query().AllTasks(ctx, fc.Args["limit"].(*int32), fc.Args["offset"].(*int32))
 		},
 		nil,
-		ec.marshalNTask2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐTaskᚄ,
+		ec.marshalNTask2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐTaskᚄ,
 		true,
 		true,
 	)
@@ -4614,7 +4614,7 @@ func (ec *executionContext) _Registration_changes(ctx context.Context, field gra
 			return obj.Changes, nil
 		},
 		nil,
-		ec.marshalNChange2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐChangeᚄ,
+		ec.marshalNChange2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐChangeᚄ,
 		true,
 		true,
 	)
@@ -4746,7 +4746,7 @@ func (ec *executionContext) _RelationAB_entityA(ctx context.Context, field graph
 			return obj.EntityA, nil
 		},
 		nil,
-		ec.marshalNEntityA2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityA,
+		ec.marshalNEntityA2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityA,
 		true,
 		true,
 	)
@@ -4789,7 +4789,7 @@ func (ec *executionContext) _RelationAB_entityB(ctx context.Context, field graph
 			return obj.EntityB, nil
 		},
 		nil,
-		ec.marshalNEntityB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityB,
+		ec.marshalNEntityB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityB,
 		true,
 		true,
 	)
@@ -8345,7 +8345,7 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNChange2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐChangeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Change) graphql.Marshaler {
+func (ec *executionContext) marshalNChange2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐChangeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Change) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -8369,7 +8369,7 @@ func (ec *executionContext) marshalNChange2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNChange2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐChange(ctx, sel, v[i])
+			ret[i] = ec.marshalNChange2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐChange(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8389,7 +8389,7 @@ func (ec *executionContext) marshalNChange2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalNChange2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐChange(ctx context.Context, sel ast.SelectionSet, v *model.Change) graphql.Marshaler {
+func (ec *executionContext) marshalNChange2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐChange(ctx context.Context, sel ast.SelectionSet, v *model.Change) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8399,51 +8399,51 @@ func (ec *executionContext) marshalNChange2ᚖgithubᚗcomᚋMarkWestbroekᚋBit
 	return ec._Change(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNCreateDataElementAUInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐCreateDataElementAUInput(ctx context.Context, v any) (model.CreateDataElementAUInput, error) {
+func (ec *executionContext) unmarshalNCreateDataElementAUInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐCreateDataElementAUInput(ctx context.Context, v any) (model.CreateDataElementAUInput, error) {
 	res, err := ec.unmarshalInputCreateDataElementAUInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateDataElementAVInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐCreateDataElementAVInput(ctx context.Context, v any) (model.CreateDataElementAVInput, error) {
+func (ec *executionContext) unmarshalNCreateDataElementAVInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐCreateDataElementAVInput(ctx context.Context, v any) (model.CreateDataElementAVInput, error) {
 	res, err := ec.unmarshalInputCreateDataElementAVInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateDataElementBXInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐCreateDataElementBXInput(ctx context.Context, v any) (model.CreateDataElementBXInput, error) {
+func (ec *executionContext) unmarshalNCreateDataElementBXInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐCreateDataElementBXInput(ctx context.Context, v any) (model.CreateDataElementBXInput, error) {
 	res, err := ec.unmarshalInputCreateDataElementBXInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateDataElementBYInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐCreateDataElementBYInput(ctx context.Context, v any) (model.CreateDataElementBYInput, error) {
+func (ec *executionContext) unmarshalNCreateDataElementBYInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐCreateDataElementBYInput(ctx context.Context, v any) (model.CreateDataElementBYInput, error) {
 	res, err := ec.unmarshalInputCreateDataElementBYInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateEntityAInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐCreateEntityAInput(ctx context.Context, v any) (model.CreateEntityAInput, error) {
+func (ec *executionContext) unmarshalNCreateEntityAInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐCreateEntityAInput(ctx context.Context, v any) (model.CreateEntityAInput, error) {
 	res, err := ec.unmarshalInputCreateEntityAInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateEntityBInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐCreateEntityBInput(ctx context.Context, v any) (model.CreateEntityBInput, error) {
+func (ec *executionContext) unmarshalNCreateEntityBInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐCreateEntityBInput(ctx context.Context, v any) (model.CreateEntityBInput, error) {
 	res, err := ec.unmarshalInputCreateEntityBInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateRelationABInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐCreateRelationABInput(ctx context.Context, v any) (model.CreateRelationABInput, error) {
+func (ec *executionContext) unmarshalNCreateRelationABInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐCreateRelationABInput(ctx context.Context, v any) (model.CreateRelationABInput, error) {
 	res, err := ec.unmarshalInputCreateRelationABInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateTaskInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐCreateTaskInput(ctx context.Context, v any) (model.CreateTaskInput, error) {
+func (ec *executionContext) unmarshalNCreateTaskInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐCreateTaskInput(ctx context.Context, v any) (model.CreateTaskInput, error) {
 	res, err := ec.unmarshalInputCreateTaskInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNDataElementAU2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementAu(ctx context.Context, sel ast.SelectionSet, v model.DataElementAu) graphql.Marshaler {
+func (ec *executionContext) marshalNDataElementAU2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementAu(ctx context.Context, sel ast.SelectionSet, v model.DataElementAu) graphql.Marshaler {
 	return ec._DataElementAU(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNDataElementAU2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementAuᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DataElementAu) graphql.Marshaler {
+func (ec *executionContext) marshalNDataElementAU2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementAuᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DataElementAu) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -8467,7 +8467,7 @@ func (ec *executionContext) marshalNDataElementAU2ᚕᚖgithubᚗcomᚋMarkWestb
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNDataElementAU2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementAu(ctx, sel, v[i])
+			ret[i] = ec.marshalNDataElementAU2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementAu(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8487,7 +8487,7 @@ func (ec *executionContext) marshalNDataElementAU2ᚕᚖgithubᚗcomᚋMarkWestb
 	return ret
 }
 
-func (ec *executionContext) marshalNDataElementAU2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementAu(ctx context.Context, sel ast.SelectionSet, v *model.DataElementAu) graphql.Marshaler {
+func (ec *executionContext) marshalNDataElementAU2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementAu(ctx context.Context, sel ast.SelectionSet, v *model.DataElementAu) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8497,11 +8497,11 @@ func (ec *executionContext) marshalNDataElementAU2ᚖgithubᚗcomᚋMarkWestbroe
 	return ec._DataElementAU(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDataElementAV2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementAv(ctx context.Context, sel ast.SelectionSet, v model.DataElementAv) graphql.Marshaler {
+func (ec *executionContext) marshalNDataElementAV2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementAv(ctx context.Context, sel ast.SelectionSet, v model.DataElementAv) graphql.Marshaler {
 	return ec._DataElementAV(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNDataElementAV2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementAvᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DataElementAv) graphql.Marshaler {
+func (ec *executionContext) marshalNDataElementAV2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementAvᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DataElementAv) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -8525,7 +8525,7 @@ func (ec *executionContext) marshalNDataElementAV2ᚕᚖgithubᚗcomᚋMarkWestb
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNDataElementAV2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementAv(ctx, sel, v[i])
+			ret[i] = ec.marshalNDataElementAV2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementAv(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8545,7 +8545,7 @@ func (ec *executionContext) marshalNDataElementAV2ᚕᚖgithubᚗcomᚋMarkWestb
 	return ret
 }
 
-func (ec *executionContext) marshalNDataElementAV2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementAv(ctx context.Context, sel ast.SelectionSet, v *model.DataElementAv) graphql.Marshaler {
+func (ec *executionContext) marshalNDataElementAV2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementAv(ctx context.Context, sel ast.SelectionSet, v *model.DataElementAv) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8555,11 +8555,11 @@ func (ec *executionContext) marshalNDataElementAV2ᚖgithubᚗcomᚋMarkWestbroe
 	return ec._DataElementAV(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDataElementBX2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementBx(ctx context.Context, sel ast.SelectionSet, v model.DataElementBx) graphql.Marshaler {
+func (ec *executionContext) marshalNDataElementBX2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementBx(ctx context.Context, sel ast.SelectionSet, v model.DataElementBx) graphql.Marshaler {
 	return ec._DataElementBX(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNDataElementBX2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementBx(ctx context.Context, sel ast.SelectionSet, v *model.DataElementBx) graphql.Marshaler {
+func (ec *executionContext) marshalNDataElementBX2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementBx(ctx context.Context, sel ast.SelectionSet, v *model.DataElementBx) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8569,11 +8569,11 @@ func (ec *executionContext) marshalNDataElementBX2ᚖgithubᚗcomᚋMarkWestbroe
 	return ec._DataElementBX(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNDataElementBY2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementBy(ctx context.Context, sel ast.SelectionSet, v model.DataElementBy) graphql.Marshaler {
+func (ec *executionContext) marshalNDataElementBY2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementBy(ctx context.Context, sel ast.SelectionSet, v model.DataElementBy) graphql.Marshaler {
 	return ec._DataElementBY(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNDataElementBY2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementBy(ctx context.Context, sel ast.SelectionSet, v *model.DataElementBy) graphql.Marshaler {
+func (ec *executionContext) marshalNDataElementBY2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementBy(ctx context.Context, sel ast.SelectionSet, v *model.DataElementBy) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8599,11 +8599,11 @@ func (ec *executionContext) marshalNDateTime2string(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalNEntityA2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityA(ctx context.Context, sel ast.SelectionSet, v model.EntityA) graphql.Marshaler {
+func (ec *executionContext) marshalNEntityA2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityA(ctx context.Context, sel ast.SelectionSet, v model.EntityA) graphql.Marshaler {
 	return ec._EntityA(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNEntityA2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityAᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.EntityA) graphql.Marshaler {
+func (ec *executionContext) marshalNEntityA2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityAᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.EntityA) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -8627,7 +8627,7 @@ func (ec *executionContext) marshalNEntityA2ᚕᚖgithubᚗcomᚋMarkWestbroek�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNEntityA2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityA(ctx, sel, v[i])
+			ret[i] = ec.marshalNEntityA2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityA(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8647,7 +8647,7 @@ func (ec *executionContext) marshalNEntityA2ᚕᚖgithubᚗcomᚋMarkWestbroek�
 	return ret
 }
 
-func (ec *executionContext) marshalNEntityA2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityA(ctx context.Context, sel ast.SelectionSet, v *model.EntityA) graphql.Marshaler {
+func (ec *executionContext) marshalNEntityA2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityA(ctx context.Context, sel ast.SelectionSet, v *model.EntityA) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8657,11 +8657,11 @@ func (ec *executionContext) marshalNEntityA2ᚖgithubᚗcomᚋMarkWestbroekᚋBi
 	return ec._EntityA(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNEntityB2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityB(ctx context.Context, sel ast.SelectionSet, v model.EntityB) graphql.Marshaler {
+func (ec *executionContext) marshalNEntityB2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityB(ctx context.Context, sel ast.SelectionSet, v model.EntityB) graphql.Marshaler {
 	return ec._EntityB(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNEntityB2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityBᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.EntityB) graphql.Marshaler {
+func (ec *executionContext) marshalNEntityB2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityBᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.EntityB) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -8685,7 +8685,7 @@ func (ec *executionContext) marshalNEntityB2ᚕᚖgithubᚗcomᚋMarkWestbroek�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNEntityB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityB(ctx, sel, v[i])
+			ret[i] = ec.marshalNEntityB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityB(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8705,7 +8705,7 @@ func (ec *executionContext) marshalNEntityB2ᚕᚖgithubᚗcomᚋMarkWestbroek�
 	return ret
 }
 
-func (ec *executionContext) marshalNEntityB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityB(ctx context.Context, sel ast.SelectionSet, v *model.EntityB) graphql.Marshaler {
+func (ec *executionContext) marshalNEntityB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityB(ctx context.Context, sel ast.SelectionSet, v *model.EntityB) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8731,7 +8731,7 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) marshalNRegistration2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐRegistrationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Registration) graphql.Marshaler {
+func (ec *executionContext) marshalNRegistration2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐRegistrationᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Registration) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -8755,7 +8755,7 @@ func (ec *executionContext) marshalNRegistration2ᚕᚖgithubᚗcomᚋMarkWestbr
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNRegistration2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐRegistration(ctx, sel, v[i])
+			ret[i] = ec.marshalNRegistration2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐRegistration(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8775,7 +8775,7 @@ func (ec *executionContext) marshalNRegistration2ᚕᚖgithubᚗcomᚋMarkWestbr
 	return ret
 }
 
-func (ec *executionContext) marshalNRegistration2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐRegistration(ctx context.Context, sel ast.SelectionSet, v *model.Registration) graphql.Marshaler {
+func (ec *executionContext) marshalNRegistration2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐRegistration(ctx context.Context, sel ast.SelectionSet, v *model.Registration) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8785,11 +8785,11 @@ func (ec *executionContext) marshalNRegistration2ᚖgithubᚗcomᚋMarkWestbroek
 	return ec._Registration(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNRelationAB2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐRelationAb(ctx context.Context, sel ast.SelectionSet, v model.RelationAb) graphql.Marshaler {
+func (ec *executionContext) marshalNRelationAB2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐRelationAb(ctx context.Context, sel ast.SelectionSet, v model.RelationAb) graphql.Marshaler {
 	return ec._RelationAB(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNRelationAB2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐRelationAbᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RelationAb) graphql.Marshaler {
+func (ec *executionContext) marshalNRelationAB2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐRelationAbᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RelationAb) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -8813,7 +8813,7 @@ func (ec *executionContext) marshalNRelationAB2ᚕᚖgithubᚗcomᚋMarkWestbroe
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNRelationAB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐRelationAb(ctx, sel, v[i])
+			ret[i] = ec.marshalNRelationAB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐRelationAb(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8833,7 +8833,7 @@ func (ec *executionContext) marshalNRelationAB2ᚕᚖgithubᚗcomᚋMarkWestbroe
 	return ret
 }
 
-func (ec *executionContext) marshalNRelationAB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐRelationAb(ctx context.Context, sel ast.SelectionSet, v *model.RelationAb) graphql.Marshaler {
+func (ec *executionContext) marshalNRelationAB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐRelationAb(ctx context.Context, sel ast.SelectionSet, v *model.RelationAb) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8859,11 +8859,11 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNTask2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐTask(ctx context.Context, sel ast.SelectionSet, v model.Task) graphql.Marshaler {
+func (ec *executionContext) marshalNTask2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐTask(ctx context.Context, sel ast.SelectionSet, v model.Task) graphql.Marshaler {
 	return ec._Task(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTask2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐTaskᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Task) graphql.Marshaler {
+func (ec *executionContext) marshalNTask2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐTaskᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Task) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -8887,7 +8887,7 @@ func (ec *executionContext) marshalNTask2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBi
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNTask2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐTask(ctx, sel, v[i])
+			ret[i] = ec.marshalNTask2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐTask(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8907,7 +8907,7 @@ func (ec *executionContext) marshalNTask2ᚕᚖgithubᚗcomᚋMarkWestbroekᚋBi
 	return ret
 }
 
-func (ec *executionContext) marshalNTask2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐTask(ctx context.Context, sel ast.SelectionSet, v *model.Task) graphql.Marshaler {
+func (ec *executionContext) marshalNTask2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐTask(ctx context.Context, sel ast.SelectionSet, v *model.Task) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8917,22 +8917,22 @@ func (ec *executionContext) marshalNTask2ᚖgithubᚗcomᚋMarkWestbroekᚋBitem
 	return ec._Task(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNUpdateDataElementAUInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐUpdateDataElementAUInput(ctx context.Context, v any) (model.UpdateDataElementAUInput, error) {
+func (ec *executionContext) unmarshalNUpdateDataElementAUInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐUpdateDataElementAUInput(ctx context.Context, v any) (model.UpdateDataElementAUInput, error) {
 	res, err := ec.unmarshalInputUpdateDataElementAUInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateEntityAInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐUpdateEntityAInput(ctx context.Context, v any) (model.UpdateEntityAInput, error) {
+func (ec *executionContext) unmarshalNUpdateEntityAInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐUpdateEntityAInput(ctx context.Context, v any) (model.UpdateEntityAInput, error) {
 	res, err := ec.unmarshalInputUpdateEntityAInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateEntityBInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐUpdateEntityBInput(ctx context.Context, v any) (model.UpdateEntityBInput, error) {
+func (ec *executionContext) unmarshalNUpdateEntityBInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐUpdateEntityBInput(ctx context.Context, v any) (model.UpdateEntityBInput, error) {
 	res, err := ec.unmarshalInputUpdateEntityBInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNUpdateTaskInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐUpdateTaskInput(ctx context.Context, v any) (model.UpdateTaskInput, error) {
+func (ec *executionContext) unmarshalNUpdateTaskInput2githubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐUpdateTaskInput(ctx context.Context, v any) (model.UpdateTaskInput, error) {
 	res, err := ec.unmarshalInputUpdateTaskInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -9220,35 +9220,35 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOChange2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐChange(ctx context.Context, sel ast.SelectionSet, v *model.Change) graphql.Marshaler {
+func (ec *executionContext) marshalOChange2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐChange(ctx context.Context, sel ast.SelectionSet, v *model.Change) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Change(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODataElementAU2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementAu(ctx context.Context, sel ast.SelectionSet, v *model.DataElementAu) graphql.Marshaler {
+func (ec *executionContext) marshalODataElementAU2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementAu(ctx context.Context, sel ast.SelectionSet, v *model.DataElementAu) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DataElementAU(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODataElementAV2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementAv(ctx context.Context, sel ast.SelectionSet, v *model.DataElementAv) graphql.Marshaler {
+func (ec *executionContext) marshalODataElementAV2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementAv(ctx context.Context, sel ast.SelectionSet, v *model.DataElementAv) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DataElementAV(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODataElementBX2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementBx(ctx context.Context, sel ast.SelectionSet, v *model.DataElementBx) graphql.Marshaler {
+func (ec *executionContext) marshalODataElementBX2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementBx(ctx context.Context, sel ast.SelectionSet, v *model.DataElementBx) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._DataElementBX(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalODataElementBY2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐDataElementBy(ctx context.Context, sel ast.SelectionSet, v *model.DataElementBy) graphql.Marshaler {
+func (ec *executionContext) marshalODataElementBY2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐDataElementBy(ctx context.Context, sel ast.SelectionSet, v *model.DataElementBy) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -9273,14 +9273,14 @@ func (ec *executionContext) marshalODateTime2ᚖstring(ctx context.Context, sel 
 	return res
 }
 
-func (ec *executionContext) marshalOEntityA2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityA(ctx context.Context, sel ast.SelectionSet, v *model.EntityA) graphql.Marshaler {
+func (ec *executionContext) marshalOEntityA2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityA(ctx context.Context, sel ast.SelectionSet, v *model.EntityA) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._EntityA(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOEntityB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐEntityB(ctx context.Context, sel ast.SelectionSet, v *model.EntityB) graphql.Marshaler {
+func (ec *executionContext) marshalOEntityB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐEntityB(ctx context.Context, sel ast.SelectionSet, v *model.EntityB) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -9323,14 +9323,14 @@ func (ec *executionContext) marshalOInt2ᚖint32(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalORegistration2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐRegistration(ctx context.Context, sel ast.SelectionSet, v *model.Registration) graphql.Marshaler {
+func (ec *executionContext) marshalORegistration2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐRegistration(ctx context.Context, sel ast.SelectionSet, v *model.Registration) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._Registration(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalORelationAB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐRelationAb(ctx context.Context, sel ast.SelectionSet, v *model.RelationAb) graphql.Marshaler {
+func (ec *executionContext) marshalORelationAB2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐRelationAb(ctx context.Context, sel ast.SelectionSet, v *model.RelationAb) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -9355,7 +9355,7 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) marshalOTask2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v01ᚋgraphᚋmodelᚐTask(ctx context.Context, sel ast.SelectionSet, v *model.Task) graphql.Marshaler {
+func (ec *executionContext) marshalOTask2ᚖgithubᚗcomᚋMarkWestbroekᚋBitemporal_2026ᚋbitemporal_go_API_v02ᚋgraphᚋmodelᚐTask(ctx context.Context, sel ast.SelectionSet, v *model.Task) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

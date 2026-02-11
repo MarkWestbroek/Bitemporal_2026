@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/graph/model"
-	model_db "github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/model"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v02/graph/model"
+	model_db "github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v02/model"
 )
 
 // CreateEntityA is the resolver for the createEntityA field.

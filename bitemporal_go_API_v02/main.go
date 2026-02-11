@@ -16,7 +16,6 @@ import (
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v02/routes"
 )
 
-var db *bun.DB
 var commit = "dev"
 var buildTime = "dev"
 

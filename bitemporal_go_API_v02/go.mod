@@ -1,4 +1,4 @@
-module github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01
+module github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v02
 
 go 1.24.0
 
