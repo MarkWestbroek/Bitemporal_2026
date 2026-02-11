@@ -11,9 +11,9 @@ import (
 	"github.com/uptrace/bun/driver/pgdriver"
 	"github.com/uptrace/bun/extra/bundebug"
 
-	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/dbsetup"
-	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/handlers"
-	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/routes"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v02/dbsetup"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v02/handlers"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v02/routes"
 )
 
 var db *bun.DB
@@ -77,6 +77,11 @@ func NewRouter() *gin.Engine {
 	router.GET("/version", func(c *gin.Context) {
 		c.JSON(200, gin.H{"commit": commit, "build_time": buildTime})
 	})
+
+	// GraphQL endpoint
+	router.GET("/graphql/playground", handlers.PlaygroundHandler())
+	router.POST("/graphql/query", handlers.GraphQLHandler())
+	router.GET("/graphql/query", handlers.GraphQLHandler())
 
 	//Add all routes
 	routes.AddRoutes(router)

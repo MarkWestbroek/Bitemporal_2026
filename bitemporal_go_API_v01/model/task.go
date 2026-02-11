@@ -3,7 +3,7 @@ package model
 import "time"
 
 type Task struct {
-	ID          string    `json:"id" bun:"id,pk"`
+	ID          string    `json:"id"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
 	DueDate     time.Time `json:"due_date"`

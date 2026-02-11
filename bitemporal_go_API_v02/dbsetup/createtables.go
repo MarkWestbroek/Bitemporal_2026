@@ -3,7 +3,7 @@ package dbsetup
 import (
 	"context"
 
-	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/model"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v02/model"
 	"github.com/uptrace/bun"
 )
 

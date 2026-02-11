@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/handlers"
-	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/model"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v02/handlers"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v02/model"
 	"github.com/gin-gonic/gin"
 )
 

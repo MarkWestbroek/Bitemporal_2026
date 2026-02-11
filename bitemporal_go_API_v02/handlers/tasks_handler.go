@@ -7,7 +7,7 @@ import (
 	"github.com/uptrace/bun"
 
 	//"github.com/zaahidali/task_manager_api_with_bun/model" // we imported the model here
-	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/model"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v02/model"
 )
 
 var DB *bun.DB

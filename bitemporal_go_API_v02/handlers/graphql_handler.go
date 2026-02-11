@@ -6,7 +6,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v01/graph"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v02/graph"
 	"github.com/gin-gonic/gin"
 	"github.com/vektah/gqlparser/v2/ast"
 )
