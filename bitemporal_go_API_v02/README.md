@@ -153,6 +153,11 @@ POSTEN van Full<Entiteit> (hier A) werkt als volgt:
  1
  full handlers uitbreiden met meer dan één relatie (array en itereren)
 
+2
+materiële tijd toevoegen = aanvang en einde als mogelijke 'derde laag' diep 1-* relatie inbouwen in full material? handlers  
+of functie ipv de standaard insert waar je bij een post gewoon aanvang/einde meegeeft, maar bijzonder wegschrijft. Correctie en ongedaan making hebben het vooral moeilijk
+
+
  2
  Autonumber IDs ipv via POST
  
@@ -166,3 +171,6 @@ POSTEN van Full<Entiteit> (hier A) werkt als volgt:
 
 4
 transactie over bovenstaande
+
+5
+pbac, pep inbouwen
