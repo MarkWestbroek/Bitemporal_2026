@@ -61,6 +61,6 @@ func AddRoutes(router *gin.Engine) {
 	// Full entity routes
 	router.GET("/full/as", handlers.MakeGetFullEntitiesHandler[model.Full_A]("As", "Vs"))
 	router.GET("/full/as/:id", handlers.MakeGetFullEntityHandler[model.Full_A]("A", "Vs"))
-	//router.POST("/full/as", handlers.MakeAddEntityHandler[model.Full_A]("Full_A"))
+	router.POST("/full/as", handlers.MakeAddFullEntityHandler[model.Full_A]("Full_A", "Vs"))
 
 }

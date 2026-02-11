@@ -114,3 +114,35 @@ Implement resolvers in schema.resolvers.go (they currently panic)
 Start with Task resolvers since you already have the model
 Use Bun to query your database
 The schema is already designed for your bitemporal data model - just implement the database logic!
+
+
+POST Task is done via:
+
+{
+  "id": "1",
+  "title": "De eerste taak",
+  "description": "bjksdajk jk kjads",
+  "status": "Al weer klaar"
+}
+ 
+and does:
+INSERT INTO "tasks" ("id", "title", "description", "due_date", "status") VALUES ('1', 'De eerste taak', 'bjksdajk jk kjads', '0001-01-01 00:00:00+00:00', 'Al weer klaar')
+
+TRYING:
+
+    {
+        "id": "3",
+        "opvoer": "2026-02-11T19:00:00Z",
+        "vs": [
+            {
+                "rel_id": 3,
+                "a_id": "3",
+                "ccc": "eerste ccc op a=3"
+            },
+            {
+                "rel_id": 4,
+                "a_id": "3",
+                "ccc": "tweede ccc op a=3"
+            }
+        ]
+    }

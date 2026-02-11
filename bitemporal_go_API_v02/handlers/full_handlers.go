@@ -1,17 +1,90 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
+	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v02/model"
 	"github.com/gin-gonic/gin"
 )
 
-// TODO: full entity get and post to include all fields, not just ID.
-// This will require changes to the model structs and the handlers
-// to bind JSON to the full struct instead of just an ID field.
-// The current implementation is a simplified version for demonstration purposes.
+/* GENERAL TODO:
+Full entity get and post to include all fields, not just ID.
+This will require changes to the model structs and the handlers
+	to bind JSON to the full struct instead of just an ID field.
+The current implementation is a simplified version for demonstration purposes.
+*/
+
+// (CoPilot made) parseBunRelationTag extracts the foreign key field name from a bun relation tag
+// Expected format: bun:"rel:has-many,join:parent_field=child_field"
+// Returns the child_field (FK field name) and parent_field (PK field name)
+func parseBunRelationTag(tag string) (fkField string, pkField string, err error) {
+	// tag format example: "rel:has-many,join:id=a_id"
+	parts := strings.Split(tag, ",")
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if strings.HasPrefix(part, "join:") {
+			joinSpec := strings.TrimPrefix(part, "join:")
+			// joinSpec is now "id=a_id"
+			joinParts := strings.Split(joinSpec, "=")
+			if len(joinParts) == 2 {
+				pkField = strings.TrimSpace(joinParts[0]) // "id"
+				fkField = strings.TrimSpace(joinParts[1]) // "a_id"
+				return fkField, pkField, nil
+			}
+		}
+	}
+	return "", "", fmt.Errorf("join specification not found in bun tag")
+}
+
+// setForeignKeyOnRelatedEntity sets the FK field on a related entity to the parent ID
+func setForeignKeyOnRelatedEntity(relatedEntity reflect.Value, fkFieldName string, parentID string) error {
+	// The fkFieldName is the column name (like "a_id"), we need to find the Go field
+	// Try direct field lookup first (if FK field is named exactly like fkFieldName)
+	elem := relatedEntity
+	if elem.Kind() == reflect.Ptr {
+		elem = elem.Elem()
+	}
+
+	structType := elem.Type()
+
+	// Search for a field with matching bun tag or json tag that corresponds to fkFieldName
+	for i := 0; i < elem.NumField(); i++ {
+		field := structType.Field(i)
+
+		// Check bun tag
+		if bunTag := field.Tag.Get("bun"); bunTag != "" {
+			// Extract the column name from bun tag (first part before comma)
+			bunParts := strings.Split(bunTag, ",")
+			columnName := bunParts[0]
+			if columnName == fkFieldName {
+				fieldValue := elem.Field(i)
+				if fieldValue.CanSet() {
+					fieldValue.SetString(parentID)
+					return nil
+				}
+			}
+		}
+
+		// Check json tag
+		if jsonTag := field.Tag.Get("json"); jsonTag != "" {
+			jsonParts := strings.Split(jsonTag, ",")
+			jsonName := jsonParts[0]
+			if jsonName == fkFieldName {
+				fieldValue := elem.Field(i)
+				if fieldValue.CanSet() {
+					fieldValue.SetString(parentID)
+					return nil
+				}
+			}
+		}
+	}
+
+	return fmt.Errorf("FK field '%s' not found or cannot be set", fkFieldName)
+}
 
 // MakeGetFullEntitiesHandler returns a gin.HandlerFunc that retrieves entities of type T with pagination
 func MakeGetFullEntitiesHandler[T any](entity_name string, relation_name string) gin.HandlerFunc {
@@ -100,5 +173,106 @@ func MakeGetFullEntityHandler[T model.HasID](entity_name string, relation_name s
 		}
 
 		c.JSON(http.StatusOK, entity)
+	}
+}
+
+// MakeAddFullEntityHandler returns a gin.HandlerFunc that creates a fresh zero-value entity
+// for each request and inserts it into the DB after binding JSON.
+// This is to add the Full Entity, that is: including related data elements (that link to the entity by a FK)
+func MakeAddFullEntityHandler[T model.HasID](entity_name string, relation_name string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var newEntity T
+		if err := c.ShouldBindJSON(&newEntity); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		/*
+			NewInsert is a convenience method on baseQuery that creates and returns a
+			new *InsertQuery already bound to the baseQuery's database handle and connection.
+			Internally it calls NewInsertQuery(q.db) to create the query and then .Conn(q.conn)
+			to attach the same connection/transaction context.
+			The returned InsertQuery is intended for fluent chaining (e.g.,
+			NewInsert().Model(m).Exec(ctx)).
+			Model(...) sets the payload on the InsertQuery and Exec(...) uses scanOrExec to
+			either scan results into provided destinations or execute the insert, depending on whether dest args are present.
+
+			Gotchas: NewInsert does not set a model — you must call Model
+			before Exec if you expect data to be inserted/scanned. If q.conn is nil,
+			Conn(nil) behavior depends on its implementation (it may fall back to using the DB directly).
+			Exec delegates to scanOrExec, so check that function for how destination presence,
+			errors, and result/scan semantics are handled.
+		*/
+
+		// Insert the main entity first
+		_, err := DB.NewInsert().
+			Model(&newEntity).
+			Exec(c.Request.Context())
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Now handle related entities if relation_name is provided
+		if relation_name != "" {
+			entityValue := reflect.ValueOf(&newEntity).Elem()
+			entityType := entityValue.Type()
+
+			// Find the field by name
+			relField, found := entityType.FieldByName(relation_name)
+			if !found {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("relation field '%s' not found", relation_name)})
+				return
+			}
+
+			// Parse the bun tag to get FK info
+			bunTag := relField.Tag.Get("bun")
+			if bunTag == "" {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("bun tag not found on relation field '%s'", relation_name)})
+				return
+			}
+
+			fkField, _, err := parseBunRelationTag(bunTag)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to parse bun tag: %v", err)})
+				return
+			}
+
+			// Get the relation field value (should be a slice)
+			relatedValue := entityValue.FieldByName(relation_name)
+			if !relatedValue.IsValid() || relatedValue.IsZero() {
+				// No related entities to insert
+				c.JSON(http.StatusCreated, gin.H{"message": entity_name + " created"})
+				return
+			}
+
+			if relatedValue.Kind() != reflect.Slice {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("relation field '%s' is not a slice", relation_name)})
+				return
+			}
+
+			// Insert each related entity
+			parentID := newEntity.GetID()
+			for i := 0; i < relatedValue.Len(); i++ {
+				relatedEntity := relatedValue.Index(i)
+
+				// Set the FK on the related entity
+				if err := setForeignKeyOnRelatedEntity(relatedEntity, fkField, parentID); err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to set FK: %v", err)})
+					return
+				}
+
+				// Insert the related entity
+				_, err := DB.NewInsert().
+					Model(relatedEntity.Addr().Interface()).
+					Exec(c.Request.Context())
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to insert related entity: %v", err)})
+					return
+				}
+			}
+		}
+
+		c.JSON(http.StatusCreated, gin.H{"message": entity_name + " created"})
 	}
 }
