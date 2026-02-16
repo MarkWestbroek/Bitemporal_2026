@@ -11,7 +11,7 @@ import (
 )
 
 // handleOpvoerA processes an opvoer for Full_A or its data elements
-func handleOpvoerA(c *gin.Context, tx bun.Tx, opvoer *model.OpvoerAfvoerA, registratieID int, tijdstip time.Time) error {
+func handleOpvoerA(c *gin.Context, tx bun.Tx, opvoer *model.OpvoerAfvoerA, registratieID int64, tijdstip time.Time) error {
 	// Scenario 1: Opvoer van hele entiteit A met gegevenselementen
 	if opvoer.A != nil {
 		return handleOpvoerFullA(c, tx, opvoer.A, registratieID, tijdstip)
@@ -55,7 +55,7 @@ func handleOpvoerA(c *gin.Context, tx bun.Tx, opvoer *model.OpvoerAfvoerA, regis
 }
 
 // handleOpvoerFullA inserts Full_A entity with all its data elements
-func handleOpvoerFullA(c *gin.Context, tx bun.Tx, fullA *model.Full_A, registratieID int, tijdstip time.Time) error {
+func handleOpvoerFullA(c *gin.Context, tx bun.Tx, fullA *model.Full_A, registratieID int64, tijdstip time.Time) error {
 	// Set opvoer tijdstip
 	fullA.Opvoer = &tijdstip
 
@@ -106,7 +106,7 @@ func handleOpvoerFullA(c *gin.Context, tx bun.Tx, fullA *model.Full_A, registrat
 }
 
 // handleOpvoerA_U inserts A_U data element
-func handleOpvoerA_U(c *gin.Context, tx bun.Tx, u *model.A_U, registratieID int, tijdstip time.Time) error {
+func handleOpvoerA_U(c *gin.Context, tx bun.Tx, u *model.A_U, registratieID int64, tijdstip time.Time) error {
 	// Set opvoer tijdstip
 	u.Opvoer = &tijdstip
 
@@ -122,7 +122,7 @@ func handleOpvoerA_U(c *gin.Context, tx bun.Tx, u *model.A_U, registratieID int,
 }
 
 // handleOpvoerA_V inserts A_V data element
-func handleOpvoerA_V(c *gin.Context, tx bun.Tx, v *model.A_V, registratieID int, tijdstip time.Time) error {
+func handleOpvoerA_V(c *gin.Context, tx bun.Tx, v *model.A_V, registratieID int64, tijdstip time.Time) error {
 	// Set opvoer tijdstip
 	v.Opvoer = &tijdstip
 
@@ -138,7 +138,7 @@ func handleOpvoerA_V(c *gin.Context, tx bun.Tx, v *model.A_V, registratieID int,
 }
 
 // handleOpvoerRel_A_B inserts Rel_A_B relation
-func handleOpvoerRel_A_B(c *gin.Context, tx bun.Tx, rel *model.Rel_A_B, registratieID int, tijdstip time.Time) error {
+func handleOpvoerRel_A_B(c *gin.Context, tx bun.Tx, rel *model.Rel_A_B, registratieID int64, tijdstip time.Time) error {
 	// Set opvoer tijdstip
 	rel.Opvoer = &tijdstip
 
@@ -154,7 +154,7 @@ func handleOpvoerRel_A_B(c *gin.Context, tx bun.Tx, rel *model.Rel_A_B, registra
 }
 
 // handleAfvoerA processes an afvoer for Full_A or its data elements
-func handleAfvoerA(c *gin.Context, tx bun.Tx, afvoer *model.OpvoerAfvoerA, registratieID int, tijdstip time.Time) error {
+func handleAfvoerA(c *gin.Context, tx bun.Tx, afvoer *model.OpvoerAfvoerA, registratieID int64, tijdstip time.Time) error {
 	// Scenario 2: Afvoer van hele entiteit A (inclusief alle gegevenselementen)
 	if afvoer.A != nil {
 		return handleAfvoerFullA(c, tx, afvoer.A.ID, registratieID, tijdstip)
@@ -198,7 +198,7 @@ func handleAfvoerA(c *gin.Context, tx bun.Tx, afvoer *model.OpvoerAfvoerA, regis
 }
 
 // handleAfvoerFullA marks A entity and all its active data elements as afgevoerd
-func handleAfvoerFullA(c *gin.Context, tx bun.Tx, aID string, registratieID int, tijdstip time.Time) error {
+func handleAfvoerFullA(c *gin.Context, tx bun.Tx, aID string, registratieID int64, tijdstip time.Time) error {
 	// Update afvoer on A
 	_, err := tx.NewUpdate().
 		Model((*model.A)(nil)).
@@ -269,7 +269,7 @@ func handleAfvoerFullA(c *gin.Context, tx bun.Tx, aID string, registratieID int,
 }
 
 // handleAfvoerA_U marks A_U as afgevoerd
-func handleAfvoerA_U(c *gin.Context, tx bun.Tx, relID int, registratieID int, tijdstip time.Time) error {
+func handleAfvoerA_U(c *gin.Context, tx bun.Tx, relID int, registratieID int64, tijdstip time.Time) error {
 	// Update afvoer timestamp
 	_, err := tx.NewUpdate().
 		Model((*model.A_U)(nil)).
@@ -285,7 +285,7 @@ func handleAfvoerA_U(c *gin.Context, tx bun.Tx, relID int, registratieID int, ti
 }
 
 // handleAfvoerA_V marks A_V as afgevoerd
-func handleAfvoerA_V(c *gin.Context, tx bun.Tx, relID int, registratieID int, tijdstip time.Time) error {
+func handleAfvoerA_V(c *gin.Context, tx bun.Tx, relID int, registratieID int64, tijdstip time.Time) error {
 	// Update afvoer timestamp
 	_, err := tx.NewUpdate().
 		Model((*model.A_V)(nil)).
@@ -301,7 +301,7 @@ func handleAfvoerA_V(c *gin.Context, tx bun.Tx, relID int, registratieID int, ti
 }
 
 // handleAfvoerRel_A_B marks Rel_A_B as afgevoerd
-func handleAfvoerRel_A_B(c *gin.Context, tx bun.Tx, id int, registratieID int, tijdstip time.Time) error {
+func handleAfvoerRel_A_B(c *gin.Context, tx bun.Tx, id int, registratieID int64, tijdstip time.Time) error {
 	// Update afvoer timestamp
 	_, err := tx.NewUpdate().
 		Model((*model.Rel_A_B)(nil)).
@@ -317,7 +317,7 @@ func handleAfvoerRel_A_B(c *gin.Context, tx bun.Tx, id int, registratieID int, t
 }
 
 // handleOpvoerB processes an opvoer for Full_B or its data elements
-func handleOpvoerB(c *gin.Context, tx bun.Tx, opvoer *model.OpvoerAfvoerB, registratieID int, tijdstip time.Time) error {
+func handleOpvoerB(c *gin.Context, tx bun.Tx, opvoer *model.OpvoerAfvoerB, registratieID int64, tijdstip time.Time) error {
 	if opvoer.B != nil {
 		return handleOpvoerFullB(c, tx, opvoer.B, registratieID, tijdstip)
 	}
@@ -348,7 +348,7 @@ func handleOpvoerB(c *gin.Context, tx bun.Tx, opvoer *model.OpvoerAfvoerB, regis
 }
 
 // handleOpvoerFullB inserts Full_B entity with all its data elements
-func handleOpvoerFullB(c *gin.Context, tx bun.Tx, fullB *model.Full_B, registratieID int, tijdstip time.Time) error {
+func handleOpvoerFullB(c *gin.Context, tx bun.Tx, fullB *model.Full_B, registratieID int64, tijdstip time.Time) error {
 	fullB.Opvoer = &tijdstip
 
 	_, err := tx.NewInsert().
@@ -384,7 +384,7 @@ func handleOpvoerFullB(c *gin.Context, tx bun.Tx, fullB *model.Full_B, registrat
 }
 
 // handleOpvoerB_X inserts B_X data element
-func handleOpvoerB_X(c *gin.Context, tx bun.Tx, x *model.B_X, registratieID int, tijdstip time.Time) error {
+func handleOpvoerB_X(c *gin.Context, tx bun.Tx, x *model.B_X, registratieID int64, tijdstip time.Time) error {
 	// Set opvoer tijdstip
 	x.Opvoer = &tijdstip
 
@@ -399,7 +399,7 @@ func handleOpvoerB_X(c *gin.Context, tx bun.Tx, x *model.B_X, registratieID int,
 }
 
 // handleOpvoerB_Y inserts B_Y data element
-func handleOpvoerB_Y(c *gin.Context, tx bun.Tx, y *model.B_Y, registratieID int, tijdstip time.Time) error {
+func handleOpvoerB_Y(c *gin.Context, tx bun.Tx, y *model.B_Y, registratieID int64, tijdstip time.Time) error {
 	// Set opvoer tijdstip
 	y.Opvoer = &tijdstip
 
@@ -414,7 +414,7 @@ func handleOpvoerB_Y(c *gin.Context, tx bun.Tx, y *model.B_Y, registratieID int,
 }
 
 // handleAfvoerB processes an afvoer for Full_B or its data elements
-func handleAfvoerB(c *gin.Context, tx bun.Tx, afvoer *model.OpvoerAfvoerB, registratieID int, tijdstip time.Time) error {
+func handleAfvoerB(c *gin.Context, tx bun.Tx, afvoer *model.OpvoerAfvoerB, registratieID int64, tijdstip time.Time) error {
 	if afvoer.B != nil {
 		return handleAfvoerFullB(c, tx, afvoer.B.ID, registratieID, tijdstip)
 	}
@@ -445,7 +445,7 @@ func handleAfvoerB(c *gin.Context, tx bun.Tx, afvoer *model.OpvoerAfvoerB, regis
 }
 
 // handleAfvoerFullB marks B entity and all its active data elements as afgevoerd
-func handleAfvoerFullB(c *gin.Context, tx bun.Tx, bID string, registratieID int, tijdstip time.Time) error {
+func handleAfvoerFullB(c *gin.Context, tx bun.Tx, bID string, registratieID int64, tijdstip time.Time) error {
 	_, err := tx.NewUpdate().
 		Model((*model.B)(nil)).
 		Set("afvoer = ?", tijdstip).
@@ -495,7 +495,7 @@ func handleAfvoerFullB(c *gin.Context, tx bun.Tx, bID string, registratieID int,
 }
 
 // handleAfvoerB_X marks B_X as afgevoerd
-func handleAfvoerB_X(c *gin.Context, tx bun.Tx, relID int, registratieID int, tijdstip time.Time) error {
+func handleAfvoerB_X(c *gin.Context, tx bun.Tx, relID int, registratieID int64, tijdstip time.Time) error {
 	// Update afvoer timestamp
 	_, err := tx.NewUpdate().
 		Model((*model.B_X)(nil)).
@@ -510,7 +510,7 @@ func handleAfvoerB_X(c *gin.Context, tx bun.Tx, relID int, registratieID int, ti
 }
 
 // handleAfvoerB_Y marks B_Y as afgevoerd
-func handleAfvoerB_Y(c *gin.Context, tx bun.Tx, relID int, registratieID int, tijdstip time.Time) error {
+func handleAfvoerB_Y(c *gin.Context, tx bun.Tx, relID int, registratieID int64, tijdstip time.Time) error {
 	// Update afvoer timestamp
 	_, err := tx.NewUpdate().
 		Model((*model.B_Y)(nil)).
@@ -525,7 +525,7 @@ func handleAfvoerB_Y(c *gin.Context, tx bun.Tx, relID int, registratieID int, ti
 }
 
 // createWijziging creates a Wijziging record
-func createWijziging(c *gin.Context, tx bun.Tx, wijzigingstype model.WijzigingstypeEnum, registratieID int, representatienaam string, representatieID string, tijdstip time.Time) error {
+func createWijziging(c *gin.Context, tx bun.Tx, wijzigingstype model.WijzigingstypeEnum, registratieID int64, representatienaam string, representatieID string, tijdstip time.Time) error {
 	wijziging := model.Wijziging{
 		Wijzigingstype:    wijzigingstype,
 		RegistratieID:     registratieID,

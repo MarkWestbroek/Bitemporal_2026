@@ -116,9 +116,9 @@ type B_Y struct {
 // Wijziging zit tussen Registratie en om het even welke representatie in
 type Wijziging struct {
 	bun.BaseModel     `bun:"table:wijziging"`
-	ID                int                `json:"id" bun:"id,pk"`
+	ID                int64              `json:"id" bun:"id,pk,autoincrement"`
 	Wijzigingstype    WijzigingstypeEnum `json:"wijzigingstype"`
-	RegistratieID     int                `json:"registratie_id"`
+	RegistratieID     int64              `json:"registratie_id"`
 	Representatienaam string             `json:"representatienaam"`
 	RepresentatieID   string             `json:"representatie_id"` // Changed to string to support both numeric and string IDs
 	Tijdstip          time.Time          `json:"tijdstip"`         //afgeleid van registratie tijdstip
@@ -128,16 +128,13 @@ type WijzigingCompact struct {
 	Wijzigingstype WijzigingstypeEnum `json:"wijzigingstype"`
 }
 
-type Opvoer struct{}
-type Afvoer struct{}
-
 // Registratie, Correctie, Ongedaanmaking
 type Registratie struct {
 	bun.BaseModel              `bun:"table:registratie"`
-	ID                         int                 `json:"id" bun:"id,pk"`
+	ID                         int64               `json:"id" bun:"id,pk,autoincrement"`
 	Registratietype            RegistratietypeEnum `json:"registratietype"`
 	Tijdstip                   time.Time           `json:"tijdstip"`
 	Opmerking                  *string             `json:"opmerking,omitempty"`
-	CorrigeertRegistratieID    *int                `json:"corrigeert_registratie_id,omitempty"`
-	MaaktOngedaanRegistratieID *int                `json:"maakt_ongedaan_registratie_id,omitempty"`
+	CorrigeertRegistratieID    *int64              `json:"corrigeert_registratie_id,omitempty"`
+	MaaktOngedaanRegistratieID *int64              `json:"maakt_ongedaan_registratie_id,omitempty"`
 }

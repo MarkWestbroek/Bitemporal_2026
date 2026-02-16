@@ -1,0 +1,17 @@
+{
+  "registratie": {
+    "registratietype": "registratie",
+    "tijdstip": "2026-02-16T10:30:00Z",
+    "opmerking": "afvoer van entiteit A"
+  },
+  "wijzigingen": [
+    {
+      "afvoer":
+	  {
+        "a": {
+			"id": "1"
+		  }
+	  }
+    }
+  ]
+}

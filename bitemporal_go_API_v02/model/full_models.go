@@ -86,7 +86,7 @@ type OpvoerAfvoerB struct {
 */
 // Full_A includes all fields of A and its related entities (like Vs)
 type Full_A struct {
-	bun.BaseModel `bun:"table:as,alias:a"`
+	bun.BaseModel `bun:"table:a,alias:a"`
 	ID            string     `json:"id" bun:"id,pk"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"` // afgeleid van registratie tijdstip opvoer
 	Afvoer        *time.Time `json:"afvoer,omitempty"` // afgeleid van registratie tijdstip afvoer
@@ -115,7 +115,7 @@ type Full_A struct {
 */
 // Full_B includes all fields of B and its related entities (like Xs)
 type Full_B struct {
-	bun.BaseModel `bun:"table:bs,alias:b"`
+	bun.BaseModel `bun:"table:b,alias:b"`
 	ID            string     `json:"id" bun:"id,pk"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"` // afgeleid van registratie tijdstip opvoer
 	Afvoer        *time.Time `json:"afvoer,omitempty"` // afgeleid van registratie tijdstip afvoer
