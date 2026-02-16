@@ -117,95 +117,162 @@ The schema is already designed for your bitemporal data model - just implement t
 
 
 ## HOW TO USE
-POST Task is done via:
 
+### POST Task
+
+```json
 {
   "id": "1",
   "title": "De eerste taak",
   "description": "bjksdajk jk kjads",
   "status": "Al weer klaar"
 }
- 
-and does:
-INSERT INTO "tasks" ("id", "title", "description", "due_date", "status") VALUES ('1', 'De eerste taak', 'bjksdajk jk kjads', '0001-01-01 00:00:00+00:00', 'Al weer klaar')
+```
 
-POSTEN van Full<Entiteit> (hier A) werkt als volgt:
+This executes:
+```sql
+INSERT INTO "tasks" ("id", "title", "description", "due_date", "status") 
+VALUES ('1', 'De eerste taak', 'bjksdajk jk kjads', '0001-01-01 00:00:00+00:00', 'Al weer klaar')
+```
 
+### POST Full Entity (A)
+
+```json
+{
+  "id": "3",
+  "opvoer": "2026-02-11T19:00:00Z",
+  "vs": [
     {
-        "id": "3",
-        "opvoer": "2026-02-11T19:00:00Z",
-        "vs": [
-            {
-                "rel_id": 3,
-                "a_id": "3",
-                "ccc": "eerste ccc op a=3"
-            },
-            {
-                "rel_id": 4,
-                "a_id": "3",
-                "ccc": "tweede ccc op a=3"
-            }
-        ],
-        "us": [
-            {
-                "rel_id": 5,
-                "a_id": "3",
-                "aaa": "eerste aaa op a=3",
-                "bbb": "eerste bbb op a=3"
-            }
-        ]
+      "rel_id": 3,
+      "a_id": "3",
+      "ccc": "eerste ccc op a=3"
+    },
+    {
+      "rel_id": 4,
+      "a_id": "3",
+      "ccc": "tweede ccc op a=3"
     }
+  ],
+  "us": [
+    {
+      "rel_id": 5,
+      "a_id": "3",
+      "aaa": "eerste aaa op a=3",
+      "bbb": "eerste bbb op a=3"
+    }
+  ]
+}
+```
 
 ## REGISTRATION
+
 Via de endpoints:
-- /registreer/as
-- /registreer/bs
-kan het volgende gedaan worden:
-- Een entiteit (A of B) opvoeren, inclusief gegevenselementen (full A of full B, zoals boven)
-- Een entiteit afvoeren, inclusief alle geldige (niet afgevoerde) gegevenselementen
-- Gegevenselementen van een entiteit wijzigen (willekeurige combinatie van op- en afvoer) -> TODO: enkel- en meervoudigheids constraints kennen en afdwingen
+- `/registreer/as` - for entity A registration
+- `/registreer/bs` - for entity B registration
 
-Zie /json voor scenario's.
+You can perform:
+- Register an entity (A or B) with its data elements (Full A or Full B)
+- Deregister an entity, including all valid (not yet deregistered) data elements
+- Modify data elements of an entity (arbitrary combination of register and deregister operations)
+  - TODO: implement and enforce singularity/plurality constraints
 
-Voorbeeld:
+### Register Full Entity A
 
-   {
-   "registratie": {
-      "registratietype": "registratie",
-      "tijdstip": "2026-01-02T11:00:00Z",
-      "opmerking": "Initiële invoering van entiteit A"
-   },
-   "wijzigingen": [
-      {
-         "opvoer":
-      {
-         a{
-            "id": "5",
-            "us": [
+```json
+{
+  "registratie": {
+    "registratietype": "registratie",
+    "tijdstip": "2026-01-02T11:00:00Z",
+    "opmerking": "Initiële invoering van entiteit A"
+  },
+  "wijzigingen": [
+    {
+      "opvoer": {
+        "a": {
+          "id": "5",
+          "us": [
             {
-               "rel_id": 5,
-               "a_id": "5", -- eigenlijk vanzelfsprekend, namelijk a.id
-               "aaa": "a5",
-               "bbb": "b5"
+              "rel_id": 5,
+              "a_id": "5",
+              "aaa": "a5",
+              "bbb": "b5"
             }
-            ],
-            "vs": [
+          ],
+          "vs": [
             {
-               "rel_id": 7,
-               "a_id": "5", -- eigenlijk vanzelfsprekend
-               "ccc": "c5-1"
+              "rel_id": 7,
+              "a_id": "5",
+              "ccc": "c5-1"
             },
             {
-               "rel_id": 8,
-               "a_id": "5", -- eigenlijk vanzelfsprekend
-               "ccc": "c5-2"
+              "rel_id": 8,
+              "a_id": "5",
+              "ccc": "c5-2"
             }
-            ]
-         }
+          ]
+        }
       }
+    }
+  ]
+}
+```
+
+### Deregister Full Entity A
+
+```json
+{
+  "registratie": {
+    "registratietype": "registratie",
+    "tijdstip": "2026-02-16T10:30:00Z",
+    "opmerking": "Afvoer van entiteit A"
+  },
+  "wijzigingen": [
+    {
+      "afvoer": {
+        "a": {
+          "id": "5"
+        }
       }
-   ]
-   }
+    }
+  ]
+}
+```
+
+### Modify Data Elements
+
+Deregister U5 and register U6 for entity A:
+
+```json
+{
+  "registratie": {
+    "registratietype": "registratie",
+    "tijdstip": "2026-02-16T10:30:00Z",
+    "opmerking": "Afvoer van u5 en opvoer van u6 (zelfde moment, ongebroken formele tijdslijn)"
+  },
+  "wijzigingen": [
+    {
+      "afvoer": {
+        "u": {
+          "rel_id": 5,
+          "a_id": "5",
+          "aaa": "a5",
+          "bbb": "b5"
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "u": {
+          "rel_id": 6,
+          "a_id": "5",
+          "aaa": "a6",
+          "bbb": "b6"
+        }
+      }
+    }
+  ]
+}
+```
 
 ## DONE
  1
