@@ -162,18 +162,22 @@ POSTEN van Full<Entiteit> (hier A) werkt als volgt:
  full handlers uitbreiden met meer dan één relatie (array en itereren)
 
  ## TO DO
- 1
- full handlers uitbreiden met meer dan één laag diepe relaties (vanwege de materiele 'mickey mouse oortjes' aan mogelijk elk gegevenselement)
+1
+In modellen de materiële tijd toevoegen = aanvang en einde, Standaard element hergebruiken? Maar is foreign key per representatie, dus voor elke representatie een aparte {REP}_Aanvang + {REP}_Einde
 
 2
-materiële tijd toevoegen = aanvang en einde als mogelijke 'derde laag' diep 1-* relatie inbouwen in full material? handlers  
-of functie ipv de standaard insert waar je bij een post gewoon aanvang/einde meegeeft, maar bijzonder wegschrijft. Correctie en ongedaan making hebben het vooral moeilijk
+full handlers uitbreiden met meer dan één laag diepe relaties (vanwege bovenstaande mogelijke materiele 'mickey mouse oortjes' op entiteiten en gegevenselementen)
+
+5 Andere optie is iets slimmers dan dit
+
+6 plus functie ipv de standaard insert waar je bij een post gewoon aanvang/einde meegeeft, maar bijzonder wegschrijft. Correctie en ongedaan making hebben het vooral moeilijk
 
 
- 3
+
+ 10
  Autonumber IDs ipv via POST
  
- 4
+ 20
  Speciaal Registratie (POST) endpoint dat het volgende doet:
  - post registratie (onthoudt ID en tijdstip)
  - post gegevens (met reg_tijdstip in opvoer; opvoer kan altijd maar 1x, maar kan worden leeggemaakt bij ongedaanmaking van de opvoerende-registratie)
@@ -181,8 +185,8 @@ of functie ipv de standaard insert waar je bij een post gewoon aanvang/einde mee
  - post records in tussentabel wijziging (heel specifiek met soft links)
  - doe van alles met eerdere records bij ongedaanmaking en correctie (ingewikkeld)
 
-5
+30
 transactie over bovenstaande
 
-6
+40
 pbac, pep inbouwen
