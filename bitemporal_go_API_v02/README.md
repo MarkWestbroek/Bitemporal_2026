@@ -297,11 +297,10 @@ full handlers uitbreiden met meer dan één laag diepe relaties (vanwege bovenst
 6 plus functie ipv de standaard insert waar je bij een post gewoon aanvang/einde meegeeft, maar bijzonder wegschrijft. Correctie en ongedaan making hebben het vooral moeilijk
 
 
-
- 10
+10
  Autonumber IDs ipv via POST (registratie en wijziging zijn al autoincrement)
  
- 20
+20
  Speciaal Registratie (POST) endpoint dat het volgende doet:
  - registreer entiteit met GE'n of losse GE'n (DONE)
  - doe van alles met eerdere records bij ongedaanmaking en correctie (ingewikkeld?)
