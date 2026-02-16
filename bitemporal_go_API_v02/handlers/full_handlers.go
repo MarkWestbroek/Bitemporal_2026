@@ -87,7 +87,7 @@ func setForeignKeyOnRelatedEntity(relatedEntity reflect.Value, fkFieldName strin
 }
 
 // MakeGetFullEntitiesHandler returns a gin.HandlerFunc that retrieves entities of type T with pagination
-func MakeGetFullEntitiesHandler[T any](entity_name string, relation_name string) gin.HandlerFunc {
+func MakeGetFullEntitiesHandler[T any](entity_name string, relation_names []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		const (
 			defaultPage = 1
@@ -123,13 +123,17 @@ func MakeGetFullEntitiesHandler[T any](entity_name string, relation_name string)
 		offset := (page - 1) * size
 
 		var entities []T
-		err := DB.NewSelect().
-			Model(&entities).
-			Relation(relation_name). // laadt ook de gerelateerde gegevenselementen
+		query := DB.NewSelect().Model(&entities)
+
+		// Voeg alle relaties toe
+		for _, relation_name := range relation_names {
+			query = query.Relation(relation_name)
+		}
+
+		err := query.
 			Limit(size).
 			Offset(offset).
-			Scan(c.Request.
-				Context())
+			Scan(c.Request.Context())
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -147,7 +151,7 @@ func MakeGetFullEntitiesHandler[T any](entity_name string, relation_name string)
 }
 
 // MakeGetEntityHandler returns a gin.HandlerFunc that retrieves a single entity by id
-func MakeGetFullEntityHandler[T model.HasID](entity_name string, relation_name string) gin.HandlerFunc {
+func MakeGetFullEntityHandler[T model.HasID](entity_name string, relation_names []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		entityID := c.Param("id") // assuming the ID is a string; adjust if it's an int or another type
 		if entityID == "" {
@@ -156,12 +160,16 @@ func MakeGetFullEntityHandler[T model.HasID](entity_name string, relation_name s
 		}
 
 		var entity T
-		err := DB.NewSelect().
-			Model(&entity).
-			Relation(relation_name). // laadt ook de gerelateerde gegevenselementen
+		query := DB.NewSelect().Model(&entity)
+		
+		// Voeg alle relaties toe
+		for _, relation_name := range relation_names {
+			query = query.Relation(relation_name)
+		}
+		
+		err := query.
 			Where("id = ?", entityID).
-			Scan(c.Request.
-				Context())
+			Scan(c.Request.Context())
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -179,7 +187,7 @@ func MakeGetFullEntityHandler[T model.HasID](entity_name string, relation_name s
 // MakeAddFullEntityHandler returns a gin.HandlerFunc that creates a fresh zero-value entity
 // for each request and inserts it into the DB after binding JSON.
 // This is to add the Full Entity, that is: including related data elements (that link to the entity by a FK)
-func MakeAddFullEntityHandler[T model.HasID](entity_name string, relation_name string) gin.HandlerFunc {
+func MakeAddFullEntityHandler[T model.HasID](entity_name string, relation_names []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var newEntity T
 		if err := c.ShouldBindJSON(&newEntity); err != nil {
@@ -213,62 +221,64 @@ func MakeAddFullEntityHandler[T model.HasID](entity_name string, relation_name s
 			return
 		}
 
-		// Now handle related entities if relation_name is provided
-		if relation_name != "" {
+		// Now handle related entities if relation_names are provided
+		if len(relation_names) > 0 {
 			entityValue := reflect.ValueOf(&newEntity).Elem()
 			entityType := entityValue.Type()
-
-			// Find the field by name
-			relField, found := entityType.FieldByName(relation_name)
-			if !found {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("relation field '%s' not found", relation_name)})
-				return
-			}
-
-			// Parse the bun tag to get FK info
-			bunTag := relField.Tag.Get("bun")
-			if bunTag == "" {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("bun tag not found on relation field '%s'", relation_name)})
-				return
-			}
-
-			fkField, _, err := parseBunRelationTag(bunTag)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to parse bun tag: %v", err)})
-				return
-			}
-
-			// Get the relation field value (should be a slice)
-			relatedValue := entityValue.FieldByName(relation_name)
-			if !relatedValue.IsValid() || relatedValue.IsZero() {
-				// No related entities to insert
-				c.JSON(http.StatusCreated, gin.H{"message": entity_name + " created"})
-				return
-			}
-
-			if relatedValue.Kind() != reflect.Slice {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("relation field '%s' is not a slice", relation_name)})
-				return
-			}
-
-			// Insert each related entity
 			parentID := newEntity.GetID()
-			for i := 0; i < relatedValue.Len(); i++ {
-				relatedEntity := relatedValue.Index(i)
 
-				// Set the FK on the related entity
-				if err := setForeignKeyOnRelatedEntity(relatedEntity, fkField, parentID); err != nil {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to set FK: %v", err)})
+			// Itereer door alle relaties
+			for _, relation_name := range relation_names {
+				// Find the field by name
+				relField, found := entityType.FieldByName(relation_name)
+				if !found {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("relation field '%s' not found", relation_name)})
 					return
 				}
 
-				// Insert the related entity
-				_, err := DB.NewInsert().
-					Model(relatedEntity.Addr().Interface()).
-					Exec(c.Request.Context())
-				if err != nil {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to insert related entity: %v", err)})
+				// Parse the bun tag to get FK info
+				bunTag := relField.Tag.Get("bun")
+				if bunTag == "" {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("bun tag not found on relation field '%s'", relation_name)})
 					return
+				}
+
+				fkField, _, err := parseBunRelationTag(bunTag)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to parse bun tag: %v", err)})
+					return
+				}
+
+				// Get the relation field value (should be a slice)
+				relatedValue := entityValue.FieldByName(relation_name)
+				if !relatedValue.IsValid() || relatedValue.IsZero() {
+					// No related entities to insert for this relation, continue to next
+					continue
+				}
+
+				if relatedValue.Kind() != reflect.Slice {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("relation field '%s' is not a slice", relation_name)})
+					return
+				}
+
+				// Insert each related entity
+				for i := 0; i < relatedValue.Len(); i++ {
+					relatedEntity := relatedValue.Index(i)
+
+					// Set the FK on the related entity
+					if err := setForeignKeyOnRelatedEntity(relatedEntity, fkField, parentID); err != nil {
+						c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to set FK: %v", err)})
+						return
+					}
+
+					// Insert the related entity
+					_, err := DB.NewInsert().
+						Model(relatedEntity.Addr().Interface()).
+						Exec(c.Request.Context())
+					if err != nil {
+						c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to insert related entity: %v", err)})
+						return
+					}
 				}
 			}
 		}

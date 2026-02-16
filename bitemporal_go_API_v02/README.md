@@ -145,13 +145,26 @@ POSTEN van Full<Entiteit> (hier A) werkt als volgt:
                 "a_id": "3",
                 "ccc": "tweede ccc op a=3"
             }
+        ],
+        "us": [
+            {
+                "rel_id": 5,
+                "a_id": "3",
+                "aaa": "eerste aaa op a=3",
+                "bbb": "eerste bbb op a=3"
+            }
         ]
     }
 
 
- ## TO DO
+## DONE
  1
  full handlers uitbreiden met meer dan één relatie (array en itereren)
+
+
+ ## TO DO
+ 1
+ full handlers uitbreiden met meer dan één laag diepe relaties (vanwege de materiele 'mickey mouse oortjes' aan mogelijk elk gegevenselement)
 
  2
  Autonumber IDs ipv via POST
