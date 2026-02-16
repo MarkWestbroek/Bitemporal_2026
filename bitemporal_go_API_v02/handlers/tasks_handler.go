@@ -117,6 +117,9 @@ func RemoveTask(ctx *gin.Context) {
 func AddTask(ctx *gin.Context) {
 	newTask := &model.Task{}
 
+	// output request body for debugging as pretty JSON
+	LogRequestBodyAsJSON(ctx)
+
 	if err := ctx.ShouldBindJSON(&newTask); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

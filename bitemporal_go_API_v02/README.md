@@ -156,6 +156,55 @@ POSTEN van Full<Entiteit> (hier A) werkt als volgt:
         ]
     }
 
+## REGISTRATION
+Via de endpoints:
+- /registreer/as
+- /registreer/bs
+kan het volgende gedaan worden:
+- Een entiteit (A of B) opvoeren, inclusief gegevenselementen (full A of full B, zoals boven)
+- Een entiteit afvoeren, inclusief alle geldige (niet afgevoerde) gegevenselementen
+- Gegevenselementen van een entiteit wijzigen (willekeurige combinatie van op- en afvoer) -> TODO: enkel- en meervoudigheids constraints kennen en afdwingen
+
+Zie /json voor scenario's.
+
+Voorbeeld:
+{
+  "registratie": {
+    "registratietype": "registratie",
+    "tijdstip": "2026-01-02T11:00:00Z",
+    "opmerking": "Initiële invoering van entiteit A"
+  },
+  "wijzigingen": [
+    {
+      "opvoer":
+	  {
+        a{
+			"id": "5",
+			"us": [
+			  {
+				"rel_id": 5,
+				"a_id": "5", -- eigenlijk vanzelfsprekend, namelijk a.id
+				"aaa": "a5",
+				"bbb": "b5"
+			  }
+			],
+			"vs": [
+			  {
+				"rel_id": 7,
+				"a_id": "5", -- eigenlijk vanzelfsprekend
+				"ccc": "c5-1"
+			  },
+			  {
+				"rel_id": 8,
+				"a_id": "5", -- eigenlijk vanzelfsprekend
+				"ccc": "c5-2"
+			  }
+			]
+		  }
+	  }
+    }
+  ]
+}
 
 ## DONE
  1

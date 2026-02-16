@@ -161,12 +161,12 @@ func MakeGetFullEntityHandler[T model.HasID](entity_name string, relation_names 
 
 		var entity T
 		query := DB.NewSelect().Model(&entity)
-		
+
 		// Voeg alle relaties toe
 		for _, relation_name := range relation_names {
 			query = query.Relation(relation_name)
 		}
-		
+
 		err := query.
 			Where("id = ?", entityID).
 			Scan(c.Request.Context())
@@ -194,6 +194,9 @@ func MakeAddFullEntityHandler[T model.HasID](entity_name string, relation_names 
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+
+		// output request body for debugging as pretty JSON
+		LogRequestBodyAsJSON(c)
 
 		/*
 			NewInsert is a convenience method on baseQuery that creates and returns a

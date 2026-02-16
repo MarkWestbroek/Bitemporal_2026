@@ -59,20 +59,20 @@ func AddRoutes(router *gin.Engine) {
 	router.POST("/wijzigingen", handlers.MakeAddEntityHandler[model.Wijziging]("Wijziging"))
 
 	// Full entity routes
-	router.GET("/full/as", handlers.MakeGetFullEntitiesHandler[model.Full_A]("As", []string{"Us", "Vs"}))
-	router.GET("/full/as/:id", handlers.MakeGetFullEntityHandler[model.Full_A]("A", []string{"Us", "Vs"}))
-	router.POST("/full/as", handlers.MakeAddFullEntityHandler[model.Full_A]("Full_A", []string{"Us", "Vs"}))
+	router.GET("/full/as", handlers.MakeGetFullEntitiesHandler[model.Full_A]("As", []string{"Us", "Vs", "RelABs"}))
+	router.GET("/full/as/:id", handlers.MakeGetFullEntityHandler[model.Full_A]("A", []string{"Us", "Vs", "RelABs"}))
+	router.POST("/full/as", handlers.MakeAddFullEntityHandler[model.Full_A]("Full_A", []string{"Us", "Vs", "RelABs"}))
 
-	router.GET("/full/bs", handlers.MakeGetFullEntitiesHandler[model.Full_B]("Bs", []string{"Xs"}))
-	router.GET("/full/bs/:id", handlers.MakeGetFullEntityHandler[model.Full_B]("B", []string{"Xs"}))
-	router.POST("/full/bs", handlers.MakeAddFullEntityHandler[model.Full_B]("Full_B", []string{"Xs"}))
+	router.GET("/full/bs", handlers.MakeGetFullEntitiesHandler[model.Full_B]("Bs", []string{"Xs", "Ys"}))
+	router.GET("/full/bs/:id", handlers.MakeGetFullEntityHandler[model.Full_B]("B", []string{"Xs", "Ys"}))
+	router.POST("/full/bs", handlers.MakeAddFullEntityHandler[model.Full_B]("Full_B", []string{"Xs", "Ys"}))
 
 	// Bitemporal registration, correction and undoing routes
 	// see README.md for details and examples
-	router.POST("/registreer/as", handlers.MakeRegisterFullEntityHandler[model.Full_A]("Full_A", "Vs"))
+	router.POST("/registreer/as", handlers.MakeRegisterFullEntityHandlerA())
 	//	router.POST("/full/as/:id", handlers.MakeCorrectFullEntityHandler[model.Full_A]("Full_A", "Vs"))
 	//	router.POST("/full/as/:id/undo", handlers.MakeUndoFullEntityHandler[model.Full_A]("Full_A", "Vs"))
-	router.POST("/registreer/bs", handlers.MakeRegisterFullEntityHandler[model.Full_B]("Full_B", "Xs"))
+	router.POST("/registreer/bs", handlers.MakeRegisterFullEntityHandlerB())
 
 	//router.POST("/register/:entity", handlers.RegisterEntity)
 	//router.POST("/correct/:entity/:id", handlers.CorrectEntity)
