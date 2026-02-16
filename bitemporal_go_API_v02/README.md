@@ -168,43 +168,44 @@ kan het volgende gedaan worden:
 Zie /json voor scenario's.
 
 Voorbeeld:
-{
-  "registratie": {
-    "registratietype": "registratie",
-    "tijdstip": "2026-01-02T11:00:00Z",
-    "opmerking": "Initiële invoering van entiteit A"
-  },
-  "wijzigingen": [
-    {
-      "opvoer":
-	  {
-        a{
-			"id": "5",
-			"us": [
-			  {
-				"rel_id": 5,
-				"a_id": "5", -- eigenlijk vanzelfsprekend, namelijk a.id
-				"aaa": "a5",
-				"bbb": "b5"
-			  }
-			],
-			"vs": [
-			  {
-				"rel_id": 7,
-				"a_id": "5", -- eigenlijk vanzelfsprekend
-				"ccc": "c5-1"
-			  },
-			  {
-				"rel_id": 8,
-				"a_id": "5", -- eigenlijk vanzelfsprekend
-				"ccc": "c5-2"
-			  }
-			]
-		  }
-	  }
-    }
-  ]
-}
+
+   {
+   "registratie": {
+      "registratietype": "registratie",
+      "tijdstip": "2026-01-02T11:00:00Z",
+      "opmerking": "Initiële invoering van entiteit A"
+   },
+   "wijzigingen": [
+      {
+         "opvoer":
+      {
+         a{
+            "id": "5",
+            "us": [
+            {
+               "rel_id": 5,
+               "a_id": "5", -- eigenlijk vanzelfsprekend, namelijk a.id
+               "aaa": "a5",
+               "bbb": "b5"
+            }
+            ],
+            "vs": [
+            {
+               "rel_id": 7,
+               "a_id": "5", -- eigenlijk vanzelfsprekend
+               "ccc": "c5-1"
+            },
+            {
+               "rel_id": 8,
+               "a_id": "5", -- eigenlijk vanzelfsprekend
+               "ccc": "c5-2"
+            }
+            ]
+         }
+      }
+      }
+   ]
+   }
 
 ## DONE
  1
