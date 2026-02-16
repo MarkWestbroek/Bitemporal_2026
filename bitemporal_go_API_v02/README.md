@@ -275,8 +275,15 @@ Deregister U5 and register U6 for entity A:
 ```
 
 ## DONE
- 1
+1
  full handlers uitbreiden met meer dan één relatie (array en itereren)
+
+2
+ Speciaal Registratie (POST) endpoint dat het volgende doet:
+ - post registratie (onthoudt ID en tijdstip)
+ - post gegevens (met reg_tijdstip in opvoer; opvoer kan altijd maar 1x, maar kan worden leeggemaakt bij ongedaanmaking van de opvoerende-registratie)
+    * onthoudt id's of stop ze in de structs
+ - post records in tussentabel wijziging (heel specifiek met soft links)
 
  ## TO DO
 1
@@ -292,18 +299,15 @@ full handlers uitbreiden met meer dan één laag diepe relaties (vanwege bovenst
 
 
  10
- Autonumber IDs ipv via POST
+ Autonumber IDs ipv via POST (registratie en wijziging zijn al autoincrement)
  
  20
  Speciaal Registratie (POST) endpoint dat het volgende doet:
- - post registratie (onthoudt ID en tijdstip)
- - post gegevens (met reg_tijdstip in opvoer; opvoer kan altijd maar 1x, maar kan worden leeggemaakt bij ongedaanmaking van de opvoerende-registratie)
-    * onthoudt id's of stop ze in de structs
- - post records in tussentabel wijziging (heel specifiek met soft links)
- - doe van alles met eerdere records bij ongedaanmaking en correctie (ingewikkeld)
+ - registreer entiteit met GE'n of losse GE'n (DONE)
+ - doe van alles met eerdere records bij ongedaanmaking en correctie (ingewikkeld?)
 
 30
-transactie over bovenstaande
+transactie over bovenstaande (deels gedaan, bij een enkele registratie van A+GE'n)
 
 40
 pbac, pep inbouwen

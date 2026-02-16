@@ -2,7 +2,7 @@
   "registratie": {
     "ID": 1,
     "registratietype": "registratie",
-    "tijdstip": "2026-01-02T11:00:00Z",
+    "tijdstip": "2026-01-01T09:01:00Z",
     "opmerking": "Initiële opvoer van entiteit A inclusief onderliggende gegevenselementen"
   },
   "wijzigingen": [
