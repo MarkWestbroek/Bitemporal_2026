@@ -161,15 +161,19 @@ POSTEN van Full<Entiteit> (hier A) werkt als volgt:
  1
  full handlers uitbreiden met meer dan één relatie (array en itereren)
 
+ ## TO DO
+ 1
+ full handlers uitbreiden met meer dan één laag diepe relaties (vanwege de materiele 'mickey mouse oortjes' aan mogelijk elk gegevenselement)
+
 2
 materiële tijd toevoegen = aanvang en einde als mogelijke 'derde laag' diep 1-* relatie inbouwen in full material? handlers  
 of functie ipv de standaard insert waar je bij een post gewoon aanvang/einde meegeeft, maar bijzonder wegschrijft. Correctie en ongedaan making hebben het vooral moeilijk
 
 
- 2
+ 3
  Autonumber IDs ipv via POST
  
- 3
+ 4
  Speciaal Registratie (POST) endpoint dat het volgende doet:
  - post registratie (onthoudt ID en tijdstip)
  - post gegevens (met reg_tijdstip in opvoer; opvoer kan altijd maar 1x, maar kan worden leeggemaakt bij ongedaanmaking van de opvoerende-registratie)
@@ -177,8 +181,8 @@ of functie ipv de standaard insert waar je bij een post gewoon aanvang/einde mee
  - post records in tussentabel wijziging (heel specifiek met soft links)
  - doe van alles met eerdere records bij ongedaanmaking en correctie (ingewikkeld)
 
-4
+5
 transactie over bovenstaande
 
-5
+6
 pbac, pep inbouwen
