@@ -361,6 +361,8 @@ Deregister U5 and register U6 for entity A:
  - post records in tussentabel wijziging (heel specifiek met soft links)
 
  ## TO DO
+0 refactoren van de huidige ingewikkelde registreren code. (gegenned) Die is niet geparameteriseerd en warrig.
+
 1 In modellen de materiële tijd toevoegen = aanvang en einde, Standaard element hergebruiken? Maar is foreign key per representatie, dus voor elke representatie een aparte {REP}_Aanvang + {REP}_Einde
 
 2 Full handlers uitbreiden met meer dan één laag diepe relaties (vanwege bovenstaande mogelijke materiele 'mickey mouse oortjes' op entiteiten en gegevenselementen)
