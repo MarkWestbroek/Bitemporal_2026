@@ -19,33 +19,45 @@ func handleOpvoerA(c *gin.Context, tx bun.Tx, opvoer *model.OpvoerAfvoerA, regis
 
 	// Scenario 3: Opvoer van individuele gegevenselementen
 	if opvoer.U != nil {
-		return handleOpvoerA_U(c, tx, opvoer.U, registratieID, tijdstip)
+		return handleOpvoerElement(c, tx, opvoer.U, registratieID, tijdstip, "A_U", func(u *model.A_U, t *time.Time) {
+			u.Opvoer = t
+		})
 	}
 	if opvoer.V != nil {
-		return handleOpvoerA_V(c, tx, opvoer.V, registratieID, tijdstip)
+		return handleOpvoerElement(c, tx, opvoer.V, registratieID, tijdstip, "A_V", func(v *model.A_V, t *time.Time) {
+			v.Opvoer = t
+		})
 	}
 	if opvoer.Rel_A_B != nil {
-		return handleOpvoerRel_A_B(c, tx, opvoer.Rel_A_B, registratieID, tijdstip)
+		return handleOpvoerElement(c, tx, opvoer.Rel_A_B, registratieID, tijdstip, "Rel_A_B", func(rel *model.Rel_A_B, t *time.Time) {
+			rel.Opvoer = t
+		})
 	}
 
 	// Batch opvoer
 	if len(opvoer.Us) > 0 {
 		for _, u := range opvoer.Us {
-			if err := handleOpvoerA_U(c, tx, &u, registratieID, tijdstip); err != nil {
+			if err := handleOpvoerElement(c, tx, &u, registratieID, tijdstip, "A_U", func(item *model.A_U, t *time.Time) {
+				item.Opvoer = t
+			}); err != nil {
 				return err
 			}
 		}
 	}
 	if len(opvoer.Vs) > 0 {
 		for _, v := range opvoer.Vs {
-			if err := handleOpvoerA_V(c, tx, &v, registratieID, tijdstip); err != nil {
+			if err := handleOpvoerElement(c, tx, &v, registratieID, tijdstip, "A_V", func(item *model.A_V, t *time.Time) {
+				item.Opvoer = t
+			}); err != nil {
 				return err
 			}
 		}
 	}
 	if len(opvoer.Rel_A_Bs) > 0 {
 		for _, rel := range opvoer.Rel_A_Bs {
-			if err := handleOpvoerRel_A_B(c, tx, &rel, registratieID, tijdstip); err != nil {
+			if err := handleOpvoerElement(c, tx, &rel, registratieID, tijdstip, "Rel_A_B", func(item *model.Rel_A_B, t *time.Time) {
+				item.Opvoer = t
+			}); err != nil {
 				return err
 			}
 		}
@@ -77,7 +89,9 @@ func handleOpvoerFullA(c *gin.Context, tx bun.Tx, fullA *model.Full_A, registrat
 		if fullA.Us[i].A_ID == "" {
 			fullA.Us[i].A_ID = fullA.ID
 		}
-		if err := handleOpvoerA_U(c, tx, &fullA.Us[i], registratieID, tijdstip); err != nil {
+		if err := handleOpvoerElement(c, tx, &fullA.Us[i], registratieID, tijdstip, "A_U", func(item *model.A_U, t *time.Time) {
+			item.Opvoer = t
+		}); err != nil {
 			return err
 		}
 	}
@@ -87,7 +101,9 @@ func handleOpvoerFullA(c *gin.Context, tx bun.Tx, fullA *model.Full_A, registrat
 		if fullA.Vs[i].A_ID == "" {
 			fullA.Vs[i].A_ID = fullA.ID
 		}
-		if err := handleOpvoerA_V(c, tx, &fullA.Vs[i], registratieID, tijdstip); err != nil {
+		if err := handleOpvoerElement(c, tx, &fullA.Vs[i], registratieID, tijdstip, "A_V", func(item *model.A_V, t *time.Time) {
+			item.Opvoer = t
+		}); err != nil {
 			return err
 		}
 	}
@@ -97,7 +113,9 @@ func handleOpvoerFullA(c *gin.Context, tx bun.Tx, fullA *model.Full_A, registrat
 		if fullA.RelABs[i].A_ID == "" {
 			fullA.RelABs[i].A_ID = fullA.ID
 		}
-		if err := handleOpvoerRel_A_B(c, tx, &fullA.RelABs[i], registratieID, tijdstip); err != nil {
+		if err := handleOpvoerElement(c, tx, &fullA.RelABs[i], registratieID, tijdstip, "Rel_A_B", func(item *model.Rel_A_B, t *time.Time) {
+			item.Opvoer = t
+		}); err != nil {
 			return err
 		}
 	}
@@ -105,52 +123,18 @@ func handleOpvoerFullA(c *gin.Context, tx bun.Tx, fullA *model.Full_A, registrat
 	return nil
 }
 
-// handleOpvoerA_U inserts A_U data element
-func handleOpvoerA_U(c *gin.Context, tx bun.Tx, u *model.A_U, registratieID int64, tijdstip time.Time) error {
-	// Set opvoer tijdstip
-	u.Opvoer = &tijdstip
+// handleOpvoerElement inserts an opvoer entity and creates a wijziging record.
+func handleOpvoerElement[T model.HasID](c *gin.Context, tx bun.Tx, element *T, registratieID int64, tijdstip time.Time, representatienaam string, setOpvoer func(*T, *time.Time)) error {
+	setOpvoer(element, &tijdstip)
 
 	_, err := tx.NewInsert().
-		Model(u).
+		Model(element).
 		Exec(c.Request.Context())
 	if err != nil {
-		return fmt.Errorf("failed to insert A_U: %v", err)
+		return fmt.Errorf("failed to insert %s: %v", representatienaam, err)
 	}
 
-	// Create wijziging record
-	return createWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, "A_U", fmt.Sprintf("%d", u.Rel_ID), tijdstip)
-}
-
-// handleOpvoerA_V inserts A_V data element
-func handleOpvoerA_V(c *gin.Context, tx bun.Tx, v *model.A_V, registratieID int64, tijdstip time.Time) error {
-	// Set opvoer tijdstip
-	v.Opvoer = &tijdstip
-
-	_, err := tx.NewInsert().
-		Model(v).
-		Exec(c.Request.Context())
-	if err != nil {
-		return fmt.Errorf("failed to insert A_V: %v", err)
-	}
-
-	// Create wijziging record
-	return createWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, "A_V", fmt.Sprintf("%d", v.Rel_ID), tijdstip)
-}
-
-// handleOpvoerRel_A_B inserts Rel_A_B relation
-func handleOpvoerRel_A_B(c *gin.Context, tx bun.Tx, rel *model.Rel_A_B, registratieID int64, tijdstip time.Time) error {
-	// Set opvoer tijdstip
-	rel.Opvoer = &tijdstip
-
-	_, err := tx.NewInsert().
-		Model(rel).
-		Exec(c.Request.Context())
-	if err != nil {
-		return fmt.Errorf("failed to insert Rel_A_B: %v", err)
-	}
-
-	// Create wijziging record
-	return createWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, "Rel_A_B", fmt.Sprintf("%d", rel.ID), tijdstip)
+	return createWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, representatienaam, (*element).GetID(), tijdstip)
 }
 
 // handleAfvoerA processes an afvoer for Full_A or its data elements
@@ -323,22 +307,30 @@ func handleOpvoerB(c *gin.Context, tx bun.Tx, opvoer *model.OpvoerAfvoerB, regis
 	}
 
 	if opvoer.X != nil {
-		return handleOpvoerB_X(c, tx, opvoer.X, registratieID, tijdstip)
+		return handleOpvoerElement(c, tx, opvoer.X, registratieID, tijdstip, "B_X", func(x *model.B_X, t *time.Time) {
+			x.Opvoer = t
+		})
 	}
 	if opvoer.Y != nil {
-		return handleOpvoerB_Y(c, tx, opvoer.Y, registratieID, tijdstip)
+		return handleOpvoerElement(c, tx, opvoer.Y, registratieID, tijdstip, "B_Y", func(y *model.B_Y, t *time.Time) {
+			y.Opvoer = t
+		})
 	}
 
 	if len(opvoer.Xs) > 0 {
 		for _, x := range opvoer.Xs {
-			if err := handleOpvoerB_X(c, tx, &x, registratieID, tijdstip); err != nil {
+			if err := handleOpvoerElement(c, tx, &x, registratieID, tijdstip, "B_X", func(item *model.B_X, t *time.Time) {
+				item.Opvoer = t
+			}); err != nil {
 				return err
 			}
 		}
 	}
 	if len(opvoer.Ys) > 0 {
 		for _, y := range opvoer.Ys {
-			if err := handleOpvoerB_Y(c, tx, &y, registratieID, tijdstip); err != nil {
+			if err := handleOpvoerElement(c, tx, &y, registratieID, tijdstip, "B_Y", func(item *model.B_Y, t *time.Time) {
+				item.Opvoer = t
+			}); err != nil {
 				return err
 			}
 		}
@@ -366,7 +358,9 @@ func handleOpvoerFullB(c *gin.Context, tx bun.Tx, fullB *model.Full_B, registrat
 		if fullB.Xs[i].B_ID == "" {
 			fullB.Xs[i].B_ID = fullB.ID
 		}
-		if err := handleOpvoerB_X(c, tx, &fullB.Xs[i], registratieID, tijdstip); err != nil {
+		if err := handleOpvoerElement(c, tx, &fullB.Xs[i], registratieID, tijdstip, "B_X", func(item *model.B_X, t *time.Time) {
+			item.Opvoer = t
+		}); err != nil {
 			return err
 		}
 	}
@@ -375,42 +369,14 @@ func handleOpvoerFullB(c *gin.Context, tx bun.Tx, fullB *model.Full_B, registrat
 		if fullB.Ys[i].B_ID == "" {
 			fullB.Ys[i].B_ID = fullB.ID
 		}
-		if err := handleOpvoerB_Y(c, tx, &fullB.Ys[i], registratieID, tijdstip); err != nil {
+		if err := handleOpvoerElement(c, tx, &fullB.Ys[i], registratieID, tijdstip, "B_Y", func(item *model.B_Y, t *time.Time) {
+			item.Opvoer = t
+		}); err != nil {
 			return err
 		}
 	}
 
 	return nil
-}
-
-// handleOpvoerB_X inserts B_X data element
-func handleOpvoerB_X(c *gin.Context, tx bun.Tx, x *model.B_X, registratieID int64, tijdstip time.Time) error {
-	// Set opvoer tijdstip
-	x.Opvoer = &tijdstip
-
-	_, err := tx.NewInsert().
-		Model(x).
-		Exec(c.Request.Context())
-	if err != nil {
-		return fmt.Errorf("failed to insert B_X: %v", err)
-	}
-
-	return createWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, "B_X", fmt.Sprintf("%d", x.Rel_ID), tijdstip)
-}
-
-// handleOpvoerB_Y inserts B_Y data element
-func handleOpvoerB_Y(c *gin.Context, tx bun.Tx, y *model.B_Y, registratieID int64, tijdstip time.Time) error {
-	// Set opvoer tijdstip
-	y.Opvoer = &tijdstip
-
-	_, err := tx.NewInsert().
-		Model(y).
-		Exec(c.Request.Context())
-	if err != nil {
-		return fmt.Errorf("failed to insert B_Y: %v", err)
-	}
-
-	return createWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, "B_Y", fmt.Sprintf("%d", y.Rel_ID), tijdstip)
 }
 
 // handleAfvoerB processes an afvoer for Full_B or its data elements
