@@ -30,9 +30,6 @@ func CreateTables(db *bun.DB) error {
 	if err != nil {
 		return err
 	}
-	if err != nil {
-		return err
-	}
 
 	//Relations tables
 	_, err = db.NewCreateTable().Model((*model.Rel_A_B)(nil)).IfNotExists().Exec(ctx)

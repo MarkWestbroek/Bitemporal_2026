@@ -31,7 +31,7 @@ func MakeRegisterFullEntityHandlerA() gin.HandlerFunc {
 		// Step 1: Insert Registratie and get ID + Tijdstip
 		_, err = tx.NewInsert().
 			Model(&request.Registratie).
-			Returning("*").
+			Returning("id").
 			Exec(c.Request.Context())
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to insert registratie: %v", err)})
@@ -90,7 +90,7 @@ func MakeRegisterFullEntityHandlerB() gin.HandlerFunc {
 		// Step 1: Insert Registratie and get ID + Tijdstip
 		_, err = tx.NewInsert().
 			Model(&request.Registratie).
-			Returning("*").
+			Returning("id").
 			Exec(c.Request.Context())
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to insert registratie: %v", err)})

@@ -10,7 +10,7 @@
 	  {
         "u": {
 			"rel_id": 5,
-			"a_id": "5", -- niet meer vanzelfsprekend, namelijk de verwijzing naar de juiste entiteit A (met id = 5)
+			"a_id": "5",
 			"aaa": "a5",
 			"bbb": "b5"
 		  }
@@ -21,7 +21,7 @@
 	  {
         "u": {
 			"rel_id": 6,
-			"a_id": "5", -- niet meer vanzelfsprekend, namelijk de verwijzing naar de juiste entiteit A (met id = 5)
+			"a_id": "5",
 			"aaa": "a6",
 			"bbb": "b6"
 		  }

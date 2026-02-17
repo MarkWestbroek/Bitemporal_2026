@@ -44,6 +44,81 @@ This project showcases the implementation of a **Task Manager REST API** using G
 
 5. Access the API at `http://localhost:8080` and start managing your tasks!
 
+## Admin endpoint security
+
+The destructive endpoint for dropping all tables is:
+
+- `DELETE /admin/db/droptables/:password`
+
+You can configure the expected password with environment variable:
+
+- `ADMIN_DROP_PASSWORD`
+
+If `ADMIN_DROP_PASSWORD` is not set, the default fallback password is `1234`.
+
+You must also explicitly enable dropping with:
+
+- `ALLOW_DROP_TABLES=true`
+
+If `ALLOW_DROP_TABLES` is not `true`, the endpoint returns `403 Forbidden` and will not execute.
+
+### Call examples
+
+curl (local):
+
+```bash
+curl -X DELETE http://localhost:8080/admin/db/droptables/1234
+```
+
+Postman:
+
+- Method: `DELETE`
+- URL: `http://localhost:8080/admin/db/droptables/1234`
+- Body: none
+
+Expected responses:
+
+- `200 OK` → tables successfully dropped
+- `401 Unauthorized` → invalid password
+- `403 Forbidden` → dropping disabled (`ALLOW_DROP_TABLES` is not `true`)
+- `500 Internal Server Error` → database not initialized or drop operation failed
+
+## Safe production settings
+
+Recommended production configuration:
+
+- `APP_ENV=production`
+- `GIN_MODE=release`
+- `ALLOW_DROP_TABLES=false`
+- Set a strong custom `ADMIN_DROP_PASSWORD` (do not use `1234`)
+
+Notes:
+
+- On startup, the API logs whether dropping tables is enabled.
+- If dropping is enabled in production context (`APP_ENV=production` or `GIN_MODE=release`), the API logs a warning.
+
+### Example .env values
+
+Development (local only):
+
+```env
+APP_ENV=development
+GIN_MODE=debug
+ALLOW_DROP_TABLES=true
+ADMIN_DROP_PASSWORD=1234
+DATABASE_URL=postgres://postgres:1234@localhost:5432/bitemp_go_db?sslmode=disable
+```
+
+Production:
+
+```env
+APP_ENV=production
+GIN_MODE=release
+ALLOW_DROP_TABLES=false
+ADMIN_DROP_PASSWORD=use-a-long-random-secret
+DATABASE_URL=postgres://<user>:<strong-password>@<host>:5432/<db>?sslmode=require
+```
+
 ## Build & Docker
 
 Use these commands to build the Docker image with embedded build metadata and to run/recreate containers.
@@ -286,27 +361,22 @@ Deregister U5 and register U6 for entity A:
  - post records in tussentabel wijziging (heel specifiek met soft links)
 
  ## TO DO
-1
-In modellen de materiële tijd toevoegen = aanvang en einde, Standaard element hergebruiken? Maar is foreign key per representatie, dus voor elke representatie een aparte {REP}_Aanvang + {REP}_Einde
+1 In modellen de materiële tijd toevoegen = aanvang en einde, Standaard element hergebruiken? Maar is foreign key per representatie, dus voor elke representatie een aparte {REP}_Aanvang + {REP}_Einde
 
-2
-full handlers uitbreiden met meer dan één laag diepe relaties (vanwege bovenstaande mogelijke materiele 'mickey mouse oortjes' op entiteiten en gegevenselementen)
+2 Full handlers uitbreiden met meer dan één laag diepe relaties (vanwege bovenstaande mogelijke materiele 'mickey mouse oortjes' op entiteiten en gegevenselementen)
 
 5 Andere optie is iets slimmers dan dit
+6 plus functie ipv de standaard insert waar je bij een post gewoon aanvang/einde meegeeft, maar bijzonder wegschrijft. Correctie en ongedaanmaking hebben het vooral moeilijk
 
-6 plus functie ipv de standaard insert waar je bij een post gewoon aanvang/einde meegeeft, maar bijzonder wegschrijft. Correctie en ongedaan making hebben het vooral moeilijk
-
-
-10
- Autonumber IDs ipv via POST (registratie en wijziging zijn al autoincrement)
+10 Autonumber IDs ipv via POST (registratie en wijziging zijn al autoincrement) (Maar dit is misschien niet handig met testen)
  
-20
- Speciaal Registratie (POST) endpoint dat het volgende doet:
+20 Speciaal Registratie (POST) endpoint dat het volgende doet:
  - registreer entiteit met GE'n of losse GE'n (DONE)
  - doe van alles met eerdere records bij ongedaanmaking en correctie (ingewikkeld?)
 
-30
-transactie over bovenstaande (deels gedaan, bij een enkele registratie van A+GE'n)
+25 enkel- en meervoudigheid in een tag vastleggen (eigen tag? validatie tag?) in de modellen, zodat de /registreren/{entiteit} handler bij de opvoer van een nieuw enkelvoudig gegevenselement het actuele GE automatisch kan afvoeren
+ - is dit wel een taak van het register of moet dat hoger liggen?
 
-40
-pbac, pep inbouwen
+30 transactie over bovenstaande (deels gedaan, bij een enkele registratie van A+GE'n)
+
+40 pbac, pep inbouwen

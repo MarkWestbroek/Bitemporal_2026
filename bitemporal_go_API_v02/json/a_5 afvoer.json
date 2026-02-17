@@ -8,8 +8,8 @@
     {
       "afvoer":
 	  {
-        a{
-			"id": "5" -- indien a wordt afgevoerd, worden alle onderliggende gegevenselementen ook afgevoerd
+        "a": {
+      "id": "5"
 		  }
 	  }
     }

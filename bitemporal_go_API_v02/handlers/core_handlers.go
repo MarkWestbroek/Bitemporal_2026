@@ -137,7 +137,7 @@ func MakeGetEntityHandler[T model.HasID](entity_name string) gin.HandlerFunc {
 			return
 		}
 
-		if entity.GetID() == "" {
+		if isZeroID(entity.GetID()) {
 			c.JSON(http.StatusNotFound, gin.H{"message": entity_name + " not found"})
 			return
 		}

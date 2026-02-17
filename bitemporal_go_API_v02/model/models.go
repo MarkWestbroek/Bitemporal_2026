@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/uptrace/bun"
@@ -26,23 +25,23 @@ const (
 
 // HasID allows generic handlers to access an entity's ID
 type HasID interface {
-	GetID() string
+	GetID() any
 }
 
-func (a A) GetID() string             { return a.ID }
-func (b B) GetID() string             { return b.ID }
-func (r Rel_A_B) GetID() string       { return fmt.Sprintf("%d", r.ID) }
-func (au A_U) GetID() string          { return fmt.Sprintf("%d", au.Rel_ID) }
-func (av A_V) GetID() string          { return fmt.Sprintf("%d", av.Rel_ID) }
-func (bx B_X) GetID() string          { return fmt.Sprintf("%d", bx.Rel_ID) }
-func (by B_Y) GetID() string          { return fmt.Sprintf("%d", by.Rel_ID) }
-func (reg Registratie) GetID() string { return fmt.Sprintf("%d", reg.ID) }
-func (wij Wijziging) GetID() string   { return fmt.Sprintf("%d", wij.ID) }
+func (a A) GetID() any             { return a.ID }
+func (b B) GetID() any             { return b.ID }
+func (r Rel_A_B) GetID() any       { return r.ID }
+func (au A_U) GetID() any          { return au.Rel_ID }
+func (av A_V) GetID() any          { return av.Rel_ID }
+func (bx B_X) GetID() any          { return bx.Rel_ID }
+func (by B_Y) GetID() any          { return by.Rel_ID }
+func (reg Registratie) GetID() any { return reg.ID }
+func (wij Wijziging) GetID() any   { return wij.ID }
 
 // Entiteiten
 type A struct {
 	bun.BaseModel `bun:"table:a"`
-	ID            string     `json:"id" bun:"id,pk"`
+	ID            int        `json:"id" bun:"id,pk"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"` // afgeleid van registratie tijdstip opvoer
 	Afvoer        *time.Time `json:"afvoer,omitempty"` // afgeleid van registratie tijdstip afvoer
 	//Aanvang *time.Time `json:"aanvang,omitempty"` // afgeleid van A_Aanvang
@@ -51,7 +50,7 @@ type A struct {
 
 type B struct {
 	bun.BaseModel `bun:"table:b"`
-	ID            string     `json:"id" bun:"id,pk"`
+	ID            int        `json:"id" bun:"id,pk"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 	//Aanvang *time.Time `json:"aanvang,omitempty"`
@@ -62,8 +61,8 @@ type B struct {
 type Rel_A_B struct {
 	bun.BaseModel `bun:"table:rel_a_b"`
 	ID            int        `json:"id" bun:"id,pk"`
-	A_ID          string     `json:"a_id"`
-	B_ID          string     `json:"b_id"`
+	A_ID          int        `json:"a_id"`
+	B_ID          int        `json:"b_id"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 	//Aanvang *time.Time `json:"aanvang,omitempty"`
@@ -75,7 +74,7 @@ type Rel_A_B struct {
 type A_U struct {
 	bun.BaseModel `bun:"table:a_u"`
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
-	A_ID          string     `json:"a_id"`
+	A_ID          int        `json:"a_id"`
 	Aaa           string     `json:"aaa"`
 	Bbb           string     `json:"bbb"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
@@ -86,7 +85,7 @@ type A_U struct {
 type A_V struct {
 	bun.BaseModel `bun:"table:a_v"`
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
-	A_ID          string     `json:"a_id"`
+	A_ID          int        `json:"a_id"`
 	Ccc           string     `json:"ccc"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
@@ -96,7 +95,7 @@ type A_V struct {
 type B_X struct {
 	bun.BaseModel `bun:"table:b_x"`
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
-	B_ID          string     `json:"b_id"`
+	B_ID          int        `json:"b_id"`
 	Fff           string     `json:"fff"`
 	Ggg           string     `json:"ggg"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
@@ -107,7 +106,7 @@ type B_X struct {
 type B_Y struct {
 	bun.BaseModel `bun:"table:b_y"`
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
-	B_ID          string     `json:"b_id"`
+	B_ID          int        `json:"b_id"`
 	Hhh           string     `json:"hhh"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`

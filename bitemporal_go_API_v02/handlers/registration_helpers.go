@@ -80,13 +80,13 @@ func handleOpvoerFullA(c *gin.Context, tx bun.Tx, fullA *model.Full_A, registrat
 	}
 
 	// Create wijziging record for A
-	if err := createWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, "A", fullA.ID, tijdstip); err != nil {
+	if err := createWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, "A", fmt.Sprintf("%d", fullA.ID), tijdstip); err != nil {
 		return err
 	}
 
 	// Insert U's (fill in a_id if missing)
 	for i := range fullA.Us {
-		if fullA.Us[i].A_ID == "" {
+		if fullA.Us[i].A_ID == 0 {
 			fullA.Us[i].A_ID = fullA.ID
 		}
 		if err := handleOpvoerElement(c, tx, &fullA.Us[i], registratieID, tijdstip, "A_U", func(item *model.A_U, t *time.Time) {
@@ -98,7 +98,7 @@ func handleOpvoerFullA(c *gin.Context, tx bun.Tx, fullA *model.Full_A, registrat
 
 	// Insert V's (fill in a_id if missing)
 	for i := range fullA.Vs {
-		if fullA.Vs[i].A_ID == "" {
+		if fullA.Vs[i].A_ID == 0 {
 			fullA.Vs[i].A_ID = fullA.ID
 		}
 		if err := handleOpvoerElement(c, tx, &fullA.Vs[i], registratieID, tijdstip, "A_V", func(item *model.A_V, t *time.Time) {
@@ -110,7 +110,7 @@ func handleOpvoerFullA(c *gin.Context, tx bun.Tx, fullA *model.Full_A, registrat
 
 	// Insert Rel_A_B's (fill in a_id if missing)
 	for i := range fullA.RelABs {
-		if fullA.RelABs[i].A_ID == "" {
+		if fullA.RelABs[i].A_ID == 0 {
 			fullA.RelABs[i].A_ID = fullA.ID
 		}
 		if err := handleOpvoerElement(c, tx, &fullA.RelABs[i], registratieID, tijdstip, "Rel_A_B", func(item *model.Rel_A_B, t *time.Time) {
@@ -134,7 +134,7 @@ func handleOpvoerElement[T model.HasID](c *gin.Context, tx bun.Tx, element *T, r
 		return fmt.Errorf("failed to insert %s: %v", representatienaam, err)
 	}
 
-	return createWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, representatienaam, (*element).GetID(), tijdstip)
+	return createWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, representatienaam, fmt.Sprint((*element).GetID()), tijdstip)
 }
 
 // handleAfvoerA processes an afvoer for Full_A or its data elements
@@ -182,7 +182,7 @@ func handleAfvoerA(c *gin.Context, tx bun.Tx, afvoer *model.OpvoerAfvoerA, regis
 }
 
 // handleAfvoerFullA marks A entity and all its active data elements as afgevoerd
-func handleAfvoerFullA(c *gin.Context, tx bun.Tx, aID string, registratieID int64, tijdstip time.Time) error {
+func handleAfvoerFullA(c *gin.Context, tx bun.Tx, aID int, registratieID int64, tijdstip time.Time) error {
 	// Update afvoer on A
 	_, err := tx.NewUpdate().
 		Model((*model.A)(nil)).
@@ -194,7 +194,7 @@ func handleAfvoerFullA(c *gin.Context, tx bun.Tx, aID string, registratieID int6
 	}
 
 	// Create wijziging record for A
-	if err := createWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "A", aID, tijdstip); err != nil {
+	if err := createWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "A", fmt.Sprintf("%d", aID), tijdstip); err != nil {
 		return err
 	}
 
@@ -350,12 +350,12 @@ func handleOpvoerFullB(c *gin.Context, tx bun.Tx, fullB *model.Full_B, registrat
 		return fmt.Errorf("failed to insert B: %v", err)
 	}
 
-	if err := createWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, "B", fullB.ID, tijdstip); err != nil {
+	if err := createWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, "B", fmt.Sprintf("%d", fullB.ID), tijdstip); err != nil {
 		return err
 	}
 
 	for i := range fullB.Xs {
-		if fullB.Xs[i].B_ID == "" {
+		if fullB.Xs[i].B_ID == 0 {
 			fullB.Xs[i].B_ID = fullB.ID
 		}
 		if err := handleOpvoerElement(c, tx, &fullB.Xs[i], registratieID, tijdstip, "B_X", func(item *model.B_X, t *time.Time) {
@@ -366,7 +366,7 @@ func handleOpvoerFullB(c *gin.Context, tx bun.Tx, fullB *model.Full_B, registrat
 	}
 
 	for i := range fullB.Ys {
-		if fullB.Ys[i].B_ID == "" {
+		if fullB.Ys[i].B_ID == 0 {
 			fullB.Ys[i].B_ID = fullB.ID
 		}
 		if err := handleOpvoerElement(c, tx, &fullB.Ys[i], registratieID, tijdstip, "B_Y", func(item *model.B_Y, t *time.Time) {
@@ -411,7 +411,7 @@ func handleAfvoerB(c *gin.Context, tx bun.Tx, afvoer *model.OpvoerAfvoerB, regis
 }
 
 // handleAfvoerFullB marks B entity and all its active data elements as afgevoerd
-func handleAfvoerFullB(c *gin.Context, tx bun.Tx, bID string, registratieID int64, tijdstip time.Time) error {
+func handleAfvoerFullB(c *gin.Context, tx bun.Tx, bID int, registratieID int64, tijdstip time.Time) error {
 	_, err := tx.NewUpdate().
 		Model((*model.B)(nil)).
 		Set("afvoer = ?", tijdstip).
@@ -421,7 +421,7 @@ func handleAfvoerFullB(c *gin.Context, tx bun.Tx, bID string, registratieID int6
 		return fmt.Errorf("failed to update B afvoer: %v", err)
 	}
 
-	if err := createWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "B", bID, tijdstip); err != nil {
+	if err := createWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "B", fmt.Sprintf("%d", bID), tijdstip); err != nil {
 		return err
 	}
 

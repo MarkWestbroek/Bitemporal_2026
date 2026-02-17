@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
@@ -17,11 +18,18 @@ import (
 )
 
 var commit = "dev"
-var buildTime = "dev"
+var buildTime = "17 feb 2024"
 
 func main() {
+	loadDotEnvIfPresent()
+
 	fmt.Println("Bitemp Go API Project")
 	fmt.Printf("build commit: %s, build time: %s\n", commit, buildTime)
+	dropTablesEnabled := isDropTablesEnabled()
+	fmt.Printf("admin drop tables enabled: %t\n", dropTablesEnabled)
+	if dropTablesEnabled && isProductionEnvironment() {
+		fmt.Println("WARNING: ALLOW_DROP_TABLES=true while running in production context")
+	}
 
 	// Establish a connection to the PostgreSQL database
 	db, err := connectToDatabase()
@@ -65,6 +73,25 @@ func main() {
 
 }
 
+func loadDotEnvIfPresent() {
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("No .env file loaded (using existing environment variables)")
+	}
+}
+
+func isDropTablesEnabled() bool {
+	return os.Getenv("ALLOW_DROP_TABLES") == "true"
+}
+
+func isProductionEnvironment() bool {
+	if os.Getenv("APP_ENV") == "production" {
+		return true
+	}
+
+	return os.Getenv("GIN_MODE") == gin.ReleaseMode
+}
+
 // NewRouter creates and returns a Gin engine with all routes registered.
 func NewRouter() *gin.Engine {
 	router := gin.Default()
@@ -82,7 +109,11 @@ func NewRouter() *gin.Engine {
 	router.POST("/graphql/query", handlers.GraphQLHandler())
 	router.GET("/graphql/query", handlers.GraphQLHandler())
 
-	//Add all routes
+	// admin routes
+	router.DELETE("/admin/db/droptables/:password", handlers.DropTables)
+	router.POST("/admin/db/createtables", handlers.CreateTables)
+
+	//Add all functional routes
 	routes.AddRoutes(router)
 
 	return router

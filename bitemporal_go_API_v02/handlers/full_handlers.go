@@ -41,7 +41,7 @@ func parseBunRelationTag(tag string) (fkField string, pkField string, err error)
 }
 
 // setForeignKeyOnRelatedEntity sets the FK field on a related entity to the parent ID
-func setForeignKeyOnRelatedEntity(relatedEntity reflect.Value, fkFieldName string, parentID string) error {
+func setForeignKeyOnRelatedEntity(relatedEntity reflect.Value, fkFieldName string, parentID any) error {
 	// The fkFieldName is the column name (like "a_id"), we need to find the Go field
 	// Try direct field lookup first (if FK field is named exactly like fkFieldName)
 	elem := relatedEntity
@@ -63,8 +63,23 @@ func setForeignKeyOnRelatedEntity(relatedEntity reflect.Value, fkFieldName strin
 			if columnName == fkFieldName {
 				fieldValue := elem.Field(i)
 				if fieldValue.CanSet() {
-					fieldValue.SetString(parentID)
-					return nil
+					switch fieldValue.Kind() {
+					case reflect.String:
+						if typedID, ok := parentID.(string); ok {
+							fieldValue.SetString(typedID)
+							return nil
+						}
+						return fmt.Errorf("cannot assign parentID type %T to string FK '%s'", parentID, fkFieldName)
+					case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+						parentValue := reflect.ValueOf(parentID)
+						if !parentValue.IsValid() || !parentValue.Type().ConvertibleTo(fieldValue.Type()) {
+							return fmt.Errorf("cannot assign parentID type %T to int FK '%s'", parentID, fkFieldName)
+						}
+						fieldValue.Set(parentValue.Convert(fieldValue.Type()))
+						return nil
+					default:
+						return fmt.Errorf("unsupported FK field kind '%s' for field '%s'", fieldValue.Kind(), fkFieldName)
+					}
 				}
 			}
 		}
@@ -76,8 +91,23 @@ func setForeignKeyOnRelatedEntity(relatedEntity reflect.Value, fkFieldName strin
 			if jsonName == fkFieldName {
 				fieldValue := elem.Field(i)
 				if fieldValue.CanSet() {
-					fieldValue.SetString(parentID)
-					return nil
+					switch fieldValue.Kind() {
+					case reflect.String:
+						if typedID, ok := parentID.(string); ok {
+							fieldValue.SetString(typedID)
+							return nil
+						}
+						return fmt.Errorf("cannot assign parentID type %T to string FK '%s'", parentID, fkFieldName)
+					case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+						parentValue := reflect.ValueOf(parentID)
+						if !parentValue.IsValid() || !parentValue.Type().ConvertibleTo(fieldValue.Type()) {
+							return fmt.Errorf("cannot assign parentID type %T to int FK '%s'", parentID, fkFieldName)
+						}
+						fieldValue.Set(parentValue.Convert(fieldValue.Type()))
+						return nil
+					default:
+						return fmt.Errorf("unsupported FK field kind '%s' for field '%s'", fieldValue.Kind(), fkFieldName)
+					}
 				}
 			}
 		}
@@ -175,7 +205,7 @@ func MakeGetFullEntityHandler[T model.HasID](entity_name string, relation_names 
 			return
 		}
 
-		if entity.GetID() == "" {
+		if isZeroID(entity.GetID()) {
 			c.JSON(http.StatusNotFound, gin.H{"message": entity_name + " not found"})
 			return
 		}

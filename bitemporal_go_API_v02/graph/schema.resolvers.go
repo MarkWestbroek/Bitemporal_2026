@@ -8,6 +8,7 @@ package graph
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v02/graph/model"
@@ -17,12 +18,16 @@ import (
 // CreateEntityA is the resolver for the createEntityA field.
 func (r *mutationResolver) CreateEntityA(ctx context.Context, input model.CreateEntityAInput) (*model.EntityA, error) {
 	now := time.Now()
+	entityID, err := strconv.Atoi(input.ID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid entity A id: %w", err)
+	}
 	dbEntity := model_db.A{
-		ID:     input.ID,
+		ID:     entityID,
 		Opvoer: &now,
 	}
 
-	_, err := r.DB.NewInsert().Model(&dbEntity).Exec(ctx)
+	_, err = r.DB.NewInsert().Model(&dbEntity).Exec(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create entity A: %w", err)
 	}
@@ -38,7 +43,7 @@ func (r *mutationResolver) CreateEntityA(ctx context.Context, input model.Create
 	}
 
 	return &model.EntityA{
-		ID:     dbEntity.ID,
+		ID:     strconv.Itoa(dbEntity.ID),
 		Opvoer: opvoer,
 		Afvoer: afvoer,
 	}, nil
@@ -205,7 +210,7 @@ func (r *queryResolver) EntityA(ctx context.Context, id string) (*model.EntityA,
 		afvoer = &formatted
 	}
 	return &model.EntityA{
-		ID:     dbEntity.ID,
+		ID:     strconv.Itoa(dbEntity.ID),
 		Opvoer: opvoer,
 		Afvoer: afvoer,
 	}, nil

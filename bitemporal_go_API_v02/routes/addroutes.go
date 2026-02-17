@@ -6,6 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+/*
+Add functional REST routes to the provided router,
+including routes for entities, relations and data elements,
+as well as bitemporal registration, correction and undoing routes.
+*/
 func AddRoutes(router *gin.Engine) {
 	//add Tasks routes to router
 	router.GET("/tasks", handlers.GetTasks)
@@ -74,7 +79,20 @@ func AddRoutes(router *gin.Engine) {
 	//	router.POST("/full/as/:id/undo", handlers.MakeUndoFullEntityHandler[model.Full_A]("Full_A", "Vs"))
 	router.POST("/registreer/bs", handlers.MakeRegisterFullEntityHandlerB())
 
-	//router.POST("/register/:entity", handlers.RegisterEntity)
-	//router.POST("/correct/:entity/:id", handlers.CorrectEntity)
-	//router.POST("/undo/:entity/:id", handlers.UndoEntity)
+	/* IDEE
+	Idee voor een generieke registratie/correctie/ongedaanmaking route,
+	waarbij het entiteittype en de te corrigeren gegevenselementen in de URL worden meegegeven.
+	De body bevat dan de volledige nieuwe versie van de entiteit,
+	inclusief alle gegevenselementen.
+	De handler haalt de bestaande versie van de entiteit op,
+	vergelijkt deze met de nieuwe versie,
+	bepaalt welke gegevenselementen zijn gewijzigd
+	en maakt op basis daarvan de juiste Registratie en Wijziging records aan.
+	Deze aanpak vereist wel dat we in de handler kunnen bepalen
+	welke gegevenselementen bij welk entiteittype horen,
+	bijvoorbeeld door middel van een map of door gebruik te maken van reflectie.
+	*/
+	//router.POST("/registreer/:entity", handlers.RegisterEntity)
+	//router.POST("/corrigeer/:entity/:id", handlers.CorrectEntity)
+	//router.POST("/maakongedaan/:entity/:id", handlers.UndoEntity)
 }

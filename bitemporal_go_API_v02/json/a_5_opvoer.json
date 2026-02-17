@@ -8,12 +8,12 @@
     {
       "opvoer":
 	  {
-        a{
+		"a": {
 			"id": "5",
 			"us": [
 			  {
 				"rel_id": 5,
-				"a_id": "5", -- eigenlijk vanzelfsprekend, namelijk a.id
+				"a_id": "5",
 				"aaa": "a5",
 				"bbb": "b5"
 			  }
@@ -21,12 +21,12 @@
 			"vs": [
 			  {
 				"rel_id": 7,
-				"a_id": "5", -- eigenlijk vanzelfsprekend
+				"a_id": "5",
 				"ccc": "c5-1"
 			  },
 			  {
 				"rel_id": 8,
-				"a_id": "5", -- eigenlijk vanzelfsprekend
+				"a_id": "5",
 				"ccc": "c5-2"
 			  }
 			]
