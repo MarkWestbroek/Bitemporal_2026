@@ -1,6 +1,5 @@
 {
   "registratie": {
-    "ID": 1,
     "registratietype": "registratie",
     "tijdstip": "2026-01-01T09:01:00Z",
     "opmerking": "Initiële opvoer van entiteit A inclusief onderliggende gegevenselementen"
@@ -13,20 +12,18 @@
           "us": [
             {
               "rel_id": 1,
-              "a_id": "1",
               "aaa": "a1",
               "bbb": "b1"
+              "aanvang": "2025-10-07", 
             }
           ],
           "vs": [
             {
               "rel_id": 1,
-              "a_id": "1",
               "ccc": "c1-1"
             },
             {
               "rel_id": 2,
-              "a_id": "1",
               "ccc": "c1-2"
             }
           ]

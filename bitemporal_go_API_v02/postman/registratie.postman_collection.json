@@ -1,0 +1,224 @@
+{
+  "info": {
+    "name": "Bitemporal registratie",
+    "_postman_id": "c4b9b8b7-5d12-4c4d-b0ef-5c67b2a2c1f1",
+    "description": "Test requests voor /registreer/as en /registreer/bs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Registreer A (opvoer full A)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"tijdstip\": \"2026-01-02T11:00:00Z\",\n    \"opmerking\": \"Initiele invoering van entiteit A\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"a\": {\n          \"id\": \"5\",\n          \"us\": [\n            {\n              \"rel_id\": 5,\n              \"a_id\": \"5\",\n              \"aaa\": \"a5\",\n              \"bbb\": \"b5\"\n            }\n          ],\n          \"vs\": [\n            {\n              \"rel_id\": 7,\n              \"a_id\": \"5\",\n              \"ccc\": \"c5-1\"\n            },\n            {\n              \"rel_id\": 8,\n              \"a_id\": \"5\",\n              \"ccc\": \"c5-2\"\n            }\n          ]\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registreer/as",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "registreer",
+            "as"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Deregistreer A (afvoer full A)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"tijdstip\": \"2026-01-02T11:05:00Z\",\n    \"opmerking\": \"Afvoer van entiteit A\"\n  },\n  \"wijzigingen\": [\n    {\n      \"afvoer\": {\n        \"a\": {\n          \"id\": \"5\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registreer/as",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "registreer",
+            "as"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Wijzig A (afvoer U5 + opvoer U6)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"tijdstip\": \"2026-01-02T11:10:00Z\",\n    \"opmerking\": \"Afvoer van u5 en opvoer van u6\"\n  },\n  \"wijzigingen\": [\n    {\n      \"afvoer\": {\n        \"u\": {\n          \"rel_id\": 5,\n          \"a_id\": \"5\",\n          \"aaa\": \"a5\",\n          \"bbb\": \"b5\"\n        }\n      }\n    },\n    {\n      \"opvoer\": {\n        \"u\": {\n          \"rel_id\": 6,\n          \"a_id\": \"5\",\n          \"aaa\": \"a6\",\n          \"bbb\": \"b6\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registreer/as",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "registreer",
+            "as"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Wijzig A (opvoer rel_a_b)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"tijdstip\": \"2026-01-02T11:15:00Z\",\n    \"opmerking\": \"Opvoer relatie A-B\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"rel_a_b\": {\n          \"rel_id\": 101,\n          \"a_id\": \"5\",\n          \"b_id\": \"9\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registreer/as",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "registreer",
+            "as"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Registreer B (opvoer full B)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"tijdstip\": \"2026-01-02T12:00:00Z\",\n    \"opmerking\": \"Initiele invoering van entiteit B\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"b\": {\n          \"id\": \"9\",\n          \"xs\": [\n            {\n              \"rel_id\": 11,\n              \"b_id\": \"9\",\n              \"fff\": \"f9\",\n              \"ggg\": \"g9\"\n            }\n          ],\n          \"ys\": [\n            {\n              \"rel_id\": 21,\n              \"b_id\": \"9\",\n              \"hhh\": \"h9\"\n            }\n          ]\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registreer/bs",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "registreer",
+            "bs"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Deregistreer B (afvoer full B)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"tijdstip\": \"2026-01-02T12:05:00Z\",\n    \"opmerking\": \"Afvoer van entiteit B\"\n  },\n  \"wijzigingen\": [\n    {\n      \"afvoer\": {\n        \"b\": {\n          \"id\": \"9\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registreer/bs",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "registreer",
+            "bs"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Wijzig B (afvoer X11 + opvoer X12)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"tijdstip\": \"2026-01-02T12:10:00Z\",\n    \"opmerking\": \"Afvoer van x11 en opvoer van x12\"\n  },\n  \"wijzigingen\": [\n    {\n      \"afvoer\": {\n        \"x\": {\n          \"rel_id\": 11,\n          \"b_id\": \"9\",\n          \"fff\": \"f9\",\n          \"ggg\": \"g9\"\n        }\n      }\n    },\n    {\n      \"opvoer\": {\n        \"x\": {\n          \"rel_id\": 12,\n          \"b_id\": \"9\",\n          \"fff\": \"f9b\",\n          \"ggg\": \"g9b\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registreer/bs",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "registreer",
+            "bs"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Wijzig B (afvoer Y21 + opvoer Y22)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"tijdstip\": \"2026-01-02T12:15:00Z\",\n    \"opmerking\": \"Afvoer van y21 en opvoer van y22\"\n  },\n  \"wijzigingen\": [\n    {\n      \"afvoer\": {\n        \"y\": {\n          \"rel_id\": 21,\n          \"b_id\": \"9\",\n          \"hhh\": \"h9\"\n        }\n      }\n    },\n    {\n      \"opvoer\": {\n        \"y\": {\n          \"rel_id\": 22,\n          \"b_id\": \"9\",\n          \"hhh\": \"h9b\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registreer/bs",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "registreer",
+            "bs"
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    }
+  ]
+}
