@@ -1,0 +1,29 @@
+{
+  "registratie": {
+    "registratietype": "registratie",
+    "tijdstip": "2026-01-10T11:02:00Z",
+    "opmerking": "Afvoer van u1 en opvoer van u2 (zelfde moment, ongebroken formele tijdslijn)"
+  },
+  "wijzigingen": [
+    {
+      "afvoer":
+	  {
+        "u": {
+			"rel_id": 1,
+			"a_id": "1"
+		  }
+		}  
+	  },
+	  {
+	  "opvoer":
+	  {
+        "u": {
+			"rel_id": 2,
+			"a_id": "1",
+			"aaa": "aaa a1",
+			"bbb": "bbb a1"
+		  }
+		}	  
+	  }
+  ]
+}

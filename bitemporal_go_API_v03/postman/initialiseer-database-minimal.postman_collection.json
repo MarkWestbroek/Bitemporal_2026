@@ -1,0 +1,28 @@
+{
+  "info": {
+    "name": "Initialiseer database (minimal)",
+    "_postman_id": "9b3a9968-bc4c-4bdf-a282-1d9f084b6438",
+    "description": "Minimale collectie voor DB admin endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Admin - Drop tables",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "http://localhost:8080/admin/db/droptables/1234",
+        "description": "Drops all tables created by CreateTables. Requires ALLOW_DROP_TABLES=true."
+      }
+    },
+    {
+      "name": "Admin - Drop tables (wrong password)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "http://localhost:8080/admin/db/droptables/wrong-password",
+        "description": "Negative test. Expected: 401 Unauthorized."
+      }
+    }
+  ]
+}

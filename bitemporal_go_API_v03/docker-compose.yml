@@ -1,0 +1,49 @@
+
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: bitemp-go-db
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-1234}
+      POSTGRES_DB: ${DB_NAME:-bitemp_go_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - task_manager_network
+
+  api:
+    build:
+      context: .
+      args:
+        COMMIT: ${COMMIT:-local}
+        BUILD_TIME: ${BUILD_TIME:-dev}
+    container_name: bitemp-go-api
+    environment:
+      DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASSWORD:-1234}@postgres:5432/${DB_NAME:-bitemp_go_api}?sslmode=disable
+      APP_ENV: ${APP_ENV:-development}
+      GIN_MODE: ${GIN_MODE:-debug}
+      ALLOW_DROP_TABLES: ${ALLOW_DROP_TABLES:-false}
+      ADMIN_DROP_PASSWORD: ${ADMIN_DROP_PASSWORD:-1234}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - task_manager_network
+
+volumes:
+  postgres_data:
+
+networks:
+  task_manager_network:
+    driver: bridge
