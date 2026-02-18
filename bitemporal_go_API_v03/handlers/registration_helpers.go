@@ -3,12 +3,295 @@ package handlers
 import (
 	"database/sql"
 	"fmt"
+	"reflect"
+	"strings"
 	"time"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v03/model"
 	"github.com/gin-gonic/gin"
 	"github.com/uptrace/bun"
 )
+
+type onderliggendeRepresentatie struct {
+	Naam         string
+	Representatie model.FormeleRepresentatie
+}
+
+func verzamelOnderliggendeRepresentaties(entiteit model.FormeleRepresentatie) ([]onderliggendeRepresentatie, error) {
+	waarde := reflect.ValueOf(entiteit)
+	for waarde.Kind() == reflect.Ptr {
+		if waarde.IsNil() {
+			return nil, nil
+		}
+		waarde = waarde.Elem()
+	}
+
+	if waarde.Kind() != reflect.Struct {
+		return nil, nil
+	}
+
+	resultaat := make([]onderliggendeRepresentatie, 0)
+	for i := 0; i < waarde.NumField(); i++ {
+		veld := waarde.Field(i)
+		if veld.Kind() != reflect.Slice && veld.Kind() != reflect.Array {
+			continue
+		}
+
+		for j := 0; j < veld.Len(); j++ {
+			kindWaarde := veld.Index(j)
+			kindRep, ok := reflectWaardeNaarFormeleRepresentatie(kindWaarde)
+			if !ok {
+				continue
+			}
+
+			if err := zetEntiteitIDOpKindAlsLeeg(entiteit, kindRep); err != nil {
+				return nil, err
+			}
+
+			resultaat = append(resultaat, onderliggendeRepresentatie{
+				Naam:         representatienaamVoor(kindRep),
+				Representatie: kindRep,
+			})
+
+			if kindRep.Metatype() == model.MetatypeEntiteit {
+				nested, err := verzamelOnderliggendeRepresentaties(kindRep)
+				if err != nil {
+					return nil, err
+				}
+				resultaat = append(resultaat, nested...)
+			}
+		}
+	}
+
+	return resultaat, nil
+}
+
+func reflectWaardeNaarFormeleRepresentatie(waarde reflect.Value) (model.FormeleRepresentatie, bool) {
+	if !waarde.IsValid() {
+		return nil, false
+	}
+
+	if waarde.Kind() == reflect.Ptr && waarde.IsNil() {
+		return nil, false
+	}
+
+	if waarde.CanInterface() {
+		if rep, ok := waarde.Interface().(model.FormeleRepresentatie); ok {
+			return rep, true
+		}
+	}
+
+	if waarde.Kind() != reflect.Ptr && waarde.CanAddr() {
+		if rep, ok := waarde.Addr().Interface().(model.FormeleRepresentatie); ok {
+			return rep, true
+		}
+	}
+
+	return nil, false
+}
+
+func zetEntiteitIDOpKindAlsLeeg(entiteit model.FormeleRepresentatie, kind model.FormeleRepresentatie) error {
+	entiteitID, ok := anyNaarInt(entiteit.GetID())
+	if !ok {
+		return nil
+	}
+
+	kindWaarde := reflect.ValueOf(kind)
+	if kindWaarde.Kind() != reflect.Ptr || kindWaarde.IsNil() {
+		return nil
+	}
+
+	kindElem := kindWaarde.Elem()
+	if kindElem.Kind() != reflect.Struct {
+		return nil
+	}
+
+	entiteitCode := strings.ToUpper(representatieCode(entiteit))
+	fkVeld := kindElem.FieldByName(entiteitCode + "_ID")
+	if !fkVeld.IsValid() || !fkVeld.CanSet() {
+		return nil
+	}
+
+	switch fkVeld.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		if fkVeld.Int() == 0 {
+			fkVeld.SetInt(int64(entiteitID))
+		}
+	}
+
+	return nil
+}
+
+func anyNaarInt(v any) (int, bool) {
+	switch value := v.(type) {
+	case int:
+		return value, true
+	case int8:
+		return int(value), true
+	case int16:
+		return int(value), true
+	case int32:
+		return int(value), true
+	case int64:
+		return int(value), true
+	case uint:
+		return int(value), true
+	case uint8:
+		return int(value), true
+	case uint16:
+		return int(value), true
+	case uint32:
+		return int(value), true
+	case uint64:
+		return int(value), true
+	default:
+		return 0, false
+	}
+}
+
+func representatienaamVoor(rep model.FormeleRepresentatie) string {
+	switch rep.(type) {
+	case *model.A, *model.Full_A:
+		return "a"
+	case *model.B, *model.Full_B:
+		return "b"
+	case *model.Rel_A_B:
+		return "rel_a_b"
+	case *model.A_U:
+		return "u"
+	case *model.A_V:
+		return "v"
+	case *model.B_X:
+		return "x"
+	case *model.B_Y:
+		return "y"
+	default:
+		return strings.ToLower(representatieCode(rep))
+	}
+}
+
+func representatieCode(rep any) string {
+	t := reflect.TypeOf(rep)
+	for t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	naam := t.Name()
+	if strings.HasPrefix(naam, "Full_") {
+		return strings.TrimPrefix(naam, "Full_")
+	}
+	return naam
+}
+
+/*
+===================== GENERIEK===========================
+*/
+
+// handleRepresentatieOpvoer inserts an opvoer representatie and creates a wijziging record.
+func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratieID int64, opvoerTijdstip time.Time,
+	representatienaam string, representatie model.FormeleRepresentatie) error {
+
+	/* TODO
+	* Scenario 1: Opvoer van hele entiteit met eventueel onderliggende gegevenselementen en/of relaties
+	- eerst entiteit opvoeren met het bijbehehorende wijziging record
+	- itereren over onderliggende gegevenselementen/relaties en die ook opvoeren (met eigen wijziging records)
+	- N.B. : refereren aan de ID van de entiteit (TODO method maken SetEntiteitID) in de gegevenselementen/relaties, zodat die automatisch goed komt te staan in de database
+
+	* Scenario 2: Opvoer van individuele gegevenselementen/relaties
+	- alleen dat gegevenselement/relatie opvoeren, zonder dat de hele entiteit wordt aangeraakt
+	- ook hier moet een wijziging record worden gemaakt
+
+	*/
+
+	// dit is de basis insert van 1 element, maar relaties gaan niet vanzelf mee, dus die moeten we apart behandelen (zie handleOpvoerA en handleOpvoerB)
+	// ook moet er per gegevenselement/relatie een wijziging record worden gemaakt,
+	//  dus dat doen we ook niet automatisch in de database, maar apart in de code (zie handleOpvoerElement)
+	representatie.SetOpvoer(&opvoerTijdstip)
+
+	_, err := tx.NewInsert().
+		Model(representatie).
+		Exec(c.Request.Context())
+	if err != nil {
+		return fmt.Errorf("HANDLER: failed to insert %s: %v", representatienaam, err)
+	}
+
+	if representatie.Metatype() == model.MetatypeEntiteit {
+		// Bij opvoer van een hele entiteit,moeten ook alle onderliggende gegevenselementen/relaties verwerkt worden
+		kinderen, err := verzamelOnderliggendeRepresentaties(representatie)
+		if err != nil {
+			return fmt.Errorf("HANDLER: kon onderliggende representaties van %s niet bepalen: %v", representatienaam, err)
+		}
+
+		for _, kind := range kinderen {
+			if err := handleRepresentatieOpvoer(c, tx, registratieID, opvoerTijdstip, kind.Naam, kind.Representatie); err != nil {
+				return err
+			}
+		}
+	}
+
+	// Maak wijziging record aan
+	return persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID,
+		representatienaam, fmt.Sprint(representatie.GetID()), opvoerTijdstip)
+}
+
+func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, afvoerTijdstip time.Time,
+	representatienaam string, representatie model.FormeleRepresentatie) error {
+
+	/* Scenario 1: Afvoer van hele entiteit met eventueel onderliggende gegevenselementen en/of relaties
+	- eerst 'de entiteit afvoeren' (i.e.: het afgeleide veld "afvoer" UPDATEN in de DB)
+	- en het bijbehorende wijziging (afvoer) record maken
+	- itereren over onderliggende gegevenselementen/relaties en die ook afvoeren (met eigen wijziging records)
+
+	* Scenario 2: Afvoer van individuele gegevenselementen/relaties
+	- alleen dat gegevenselement/relatie afvoeren, zonder dat de hele entiteit wordt aangeraakt
+	- ook hier moet een wijziging record worden gemaakt
+
+	*/
+
+	// Update (afgeleide) afvoer van Representatie
+	_, err := tx.NewUpdate().
+		Model(representatie).
+		Set("afvoer = ?", afvoerTijdstip).
+		Where("id = ?", representatie.GetID()).
+		Exec(c.Request.Context())
+	if err != nil {
+		return fmt.Errorf("HANDLER: failed to update %s afvoer: %v", representatienaam, err)
+	}
+
+	// Maak wijziging record aan
+	return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
+		representatienaam, fmt.Sprint(representatie.GetID()), afvoerTijdstip)
+
+}
+
+/*
+===== Maak wijziging aan in wijzigingstabel ======
+*/
+func persisteerWijziging(c *gin.Context, tx bun.Tx, wijzigingstype model.WijzigingstypeEnum,
+	registratieID int64, representatienaam string, representatieID string, registratietijdstip time.Time) error {
+	wijziging := model.Wijziging{
+		Wijzigingstype:    wijzigingstype,
+		RegistratieID:     registratieID,
+		Representatienaam: representatienaam,
+		RepresentatieID:   representatieID,     // Now directly using string
+		Tijdstip:          registratietijdstip, //afgeleid van registratie tijdstip
+	}
+
+	_, err := tx.NewInsert().
+		Model(&wijziging).
+		Exec(c.Request.Context())
+	if err != nil {
+		return fmt.Errorf("failed to insert wijziging: %v", err)
+	}
+
+	return nil
+}
+
+/*
+==================================== NIET GENERIEK=========================================
+
+==== DEPRECATED: deze functies worden vervangen door bovenstaande generieke functies ======
+
+*/
 
 // handleOpvoerA processes an opvoer for Full_A or its data elements
 func handleOpvoerA(c *gin.Context, tx bun.Tx, opvoer *model.OpvoerAfvoerA, registratieID int64, tijdstip time.Time) error {
@@ -80,7 +363,7 @@ func handleOpvoerFullA(c *gin.Context, tx bun.Tx, fullA *model.Full_A, registrat
 	}
 
 	// Create wijziging record for A
-	if err := createWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, "A", fmt.Sprintf("%d", fullA.ID), tijdstip); err != nil {
+	if err := persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, "A", fmt.Sprintf("%d", fullA.ID), tijdstip); err != nil {
 		return err
 	}
 
@@ -124,7 +407,8 @@ func handleOpvoerFullA(c *gin.Context, tx bun.Tx, fullA *model.Full_A, registrat
 }
 
 // handleOpvoerElement inserts an opvoer entity and creates a wijziging record.
-func handleOpvoerElement[T model.HasID](c *gin.Context, tx bun.Tx, element *T, registratieID int64, tijdstip time.Time, representatienaam string, setOpvoer func(*T, *time.Time)) error {
+func handleOpvoerElement[T model.HasID](c *gin.Context, tx bun.Tx, element *T,
+	registratieID int64, tijdstip time.Time, representatienaam string, setOpvoer func(*T, *time.Time)) error {
 	setOpvoer(element, &tijdstip)
 
 	_, err := tx.NewInsert().
@@ -134,7 +418,7 @@ func handleOpvoerElement[T model.HasID](c *gin.Context, tx bun.Tx, element *T, r
 		return fmt.Errorf("failed to insert %s: %v", representatienaam, err)
 	}
 
-	return createWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, representatienaam, fmt.Sprint((*element).GetID()), tijdstip)
+	return persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, representatienaam, fmt.Sprint((*element).GetID()), tijdstip)
 }
 
 // handleAfvoerA processes an afvoer for Full_A or its data elements
@@ -194,7 +478,7 @@ func handleAfvoerFullA(c *gin.Context, tx bun.Tx, aID int, registratieID int64, 
 	}
 
 	// Create wijziging record for A
-	if err := createWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "A", fmt.Sprintf("%d", aID), tijdstip); err != nil {
+	if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "A", fmt.Sprintf("%d", aID), tijdstip); err != nil {
 		return err
 	}
 
@@ -265,7 +549,7 @@ func handleAfvoerA_U(c *gin.Context, tx bun.Tx, relID int, registratieID int64, 
 	}
 
 	// Create wijziging record
-	return createWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "A_U", fmt.Sprintf("%d", relID), tijdstip)
+	return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "A_U", fmt.Sprintf("%d", relID), tijdstip)
 }
 
 // handleAfvoerA_V marks A_V as afgevoerd
@@ -281,7 +565,7 @@ func handleAfvoerA_V(c *gin.Context, tx bun.Tx, relID int, registratieID int64, 
 	}
 
 	// Create wijziging record
-	return createWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "A_V", fmt.Sprintf("%d", relID), tijdstip)
+	return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "A_V", fmt.Sprintf("%d", relID), tijdstip)
 }
 
 // handleAfvoerRel_A_B marks Rel_A_B as afgevoerd
@@ -297,7 +581,7 @@ func handleAfvoerRel_A_B(c *gin.Context, tx bun.Tx, id int, registratieID int64,
 	}
 
 	// Create wijziging record
-	return createWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "Rel_A_B", fmt.Sprintf("%d", id), tijdstip)
+	return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "Rel_A_B", fmt.Sprintf("%d", id), tijdstip)
 }
 
 // handleOpvoerB processes an opvoer for Full_B or its data elements
@@ -350,7 +634,7 @@ func handleOpvoerFullB(c *gin.Context, tx bun.Tx, fullB *model.Full_B, registrat
 		return fmt.Errorf("failed to insert B: %v", err)
 	}
 
-	if err := createWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, "B", fmt.Sprintf("%d", fullB.ID), tijdstip); err != nil {
+	if err := persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, "B", fmt.Sprintf("%d", fullB.ID), tijdstip); err != nil {
 		return err
 	}
 
@@ -421,7 +705,7 @@ func handleAfvoerFullB(c *gin.Context, tx bun.Tx, bID int, registratieID int64, 
 		return fmt.Errorf("failed to update B afvoer: %v", err)
 	}
 
-	if err := createWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "B", fmt.Sprintf("%d", bID), tijdstip); err != nil {
+	if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "B", fmt.Sprintf("%d", bID), tijdstip); err != nil {
 		return err
 	}
 
@@ -472,7 +756,7 @@ func handleAfvoerB_X(c *gin.Context, tx bun.Tx, relID int, registratieID int64, 
 		return fmt.Errorf("failed to update B_X afvoer: %v", err)
 	}
 
-	return createWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "B_X", fmt.Sprintf("%d", relID), tijdstip)
+	return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "B_X", fmt.Sprintf("%d", relID), tijdstip)
 }
 
 // handleAfvoerB_Y marks B_Y as afgevoerd
@@ -487,25 +771,5 @@ func handleAfvoerB_Y(c *gin.Context, tx bun.Tx, relID int, registratieID int64, 
 		return fmt.Errorf("failed to update B_Y afvoer: %v", err)
 	}
 
-	return createWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "B_Y", fmt.Sprintf("%d", relID), tijdstip)
-}
-
-// createWijziging creates a Wijziging record
-func createWijziging(c *gin.Context, tx bun.Tx, wijzigingstype model.WijzigingstypeEnum, registratieID int64, representatienaam string, representatieID string, tijdstip time.Time) error {
-	wijziging := model.Wijziging{
-		Wijzigingstype:    wijzigingstype,
-		RegistratieID:     registratieID,
-		Representatienaam: representatienaam,
-		RepresentatieID:   representatieID, // Now directly using string
-		Tijdstip:          tijdstip,
-	}
-
-	_, err := tx.NewInsert().
-		Model(&wijziging).
-		Exec(c.Request.Context())
-	if err != nil {
-		return fmt.Errorf("failed to insert wijziging: %v", err)
-	}
-
-	return nil
+	return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "B_Y", fmt.Sprintf("%d", relID), tijdstip)
 }

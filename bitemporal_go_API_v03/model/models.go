@@ -7,40 +7,45 @@ import (
 )
 
 // GetID en Metatype methoden voor alle representaties
-func (a A) GetID() any               { return a.ID }
-func (a A) Metatype() Metatype       { return MetatypeEntiteit }
-func (b B) GetID() any               { return b.ID }
-func (b B) Metatype() Metatype       { return MetatypeEntiteit }
+// Entiteiten
+func (a A) GetID() any         { return a.ID }
+func (a A) Metatype() Metatype { return MetatypeEntiteit }
+func (a A) IsMaterieel() bool  { return true } // A heeft aanvang/einde, dus is materieel
+func (b B) GetID() any         { return b.ID }
+func (b B) Metatype() Metatype { return MetatypeEntiteit }
+func (b B) IsMaterieel() bool  { return true } // B heeft aanvang/einde, dus is materieel
+
+// Relaties
 func (r Rel_A_B) GetID() any         { return r.ID }
 func (r Rel_A_B) Metatype() Metatype { return MetatypeRelatie }
-func (au A_U) GetID() any            { return au.Rel_ID }
-func (au A_U) Metatype() Metatype    { return MetatypeGegevenselement }
-func (av A_V) GetID() any            { return av.Rel_ID }
-func (av A_V) Metatype() Metatype    { return MetatypeGegevenselement }
-func (bx B_X) GetID() any            { return bx.Rel_ID }
-func (bx B_X) Metatype() Metatype    { return MetatypeGegevenselement }
-func (by B_Y) GetID() any            { return by.Rel_ID }
-func (by B_Y) Metatype() Metatype    { return MetatypeGegevenselement }
+func (r Rel_A_B) IsMaterieel() bool  { return true } // Rel_A_B heeft aanvang/einde, dus is materieel
 
-// String methoden voor debuggen
-func (a A) String() string       { return RepresentatieToString(a) }
-func (b B) String() string       { return RepresentatieToString(b) }
-func (r Rel_A_B) String() string { return RepresentatieToString(r) }
-func (au A_U) String() string    { return RepresentatieToString(au) }
-func (av A_V) String() string    { return RepresentatieToString(av) }
-func (bx B_X) String() string    { return RepresentatieToString(bx) }
-func (by B_Y) String() string    { return RepresentatieToString(by) }
-func (a Full_A) String() string  { return RepresentatieToString(a) }
-func (b Full_B) String() string  { return RepresentatieToString(b) }
+// Gegevenselementen
+func (au A_U) GetID() any         { return au.Rel_ID }
+func (au A_U) Metatype() Metatype { return MetatypeGegevenselement }
+func (au A_U) IsMaterieel() bool  { return false } // A_U heeft geen aanvang/einde, dus is formeel
 
+func (av A_V) GetID() any         { return av.Rel_ID }
+func (av A_V) Metatype() Metatype { return MetatypeGegevenselement }
+func (av A_V) IsMaterieel() bool  { return false } // A_V heeft geen aanvang/einde, dus is formeel
+
+func (bx B_X) GetID() any         { return bx.Rel_ID }
+func (bx B_X) Metatype() Metatype { return MetatypeGegevenselement }
+func (bx B_X) IsMaterieel() bool  { return false } // B_X heeft geen aanvang/einde, dus is formeel
+
+func (by B_Y) GetID() any         { return by.Rel_ID }
+func (by B_Y) Metatype() Metatype { return MetatypeGegevenselement }
+func (by B_Y) IsMaterieel() bool  { return false } // B_Y heeft geen aanvang/einde, dus is formeel
+
+// Basis structs voor alle representaties
 // Entiteiten
 type A struct {
 	bun.BaseModel `bun:"table:a"`
 	ID            int        `json:"id" bun:"id,pk"`
-	Opvoer        *time.Time `json:"opvoer,omitempty"` // afgeleid van registratie tijdstip opvoer
-	Afvoer        *time.Time `json:"afvoer,omitempty"` // afgeleid van registratie tijdstip afvoer
-	//Aanvang *time.Time `json:"aanvang,omitempty"` // afgeleid van A_Aanvang
-	//Einde   *time.Time `json:"einde,omitempty"`   // afgeleid van A_Einde
+	Opvoer        *time.Time `json:"opvoer,omitempty"`  // afgeleid van registratie tijdstip opvoer
+	Afvoer        *time.Time `json:"afvoer,omitempty"`  // afgeleid van registratie tijdstip afvoer
+	Aanvang       *time.Time `json:"aanvang,omitempty"` // afgeleid van A_Aanvang
+	Einde         *time.Time `json:"einde,omitempty"`   // afgeleid van A_Einde
 }
 
 type B struct {
@@ -48,8 +53,8 @@ type B struct {
 	ID            int        `json:"id" bun:"id,pk"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
-	//Aanvang *time.Time `json:"aanvang,omitempty"`
-	//Einde   *time.Time `json:"einde,omitempty"`
+	Aanvang       *time.Time `json:"aanvang,omitempty"`
+	Einde         *time.Time `json:"einde,omitempty"`
 }
 
 // Relaties
@@ -60,8 +65,8 @@ type Rel_A_B struct {
 	B_ID          int        `json:"b_id"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
-	//Aanvang *time.Time `json:"aanvang,omitempty"`
-	//Einde   *time.Time `json:"einde,omitempty"`
+	Aanvang       *time.Time `json:"aanvang,omitempty"`
+	Einde         *time.Time `json:"einde,omitempty"`
 }
 
 // Gegevenselementen
@@ -106,3 +111,78 @@ type B_Y struct {
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
+
+// Opvoer / Afvoer (formele tijd) methoden voor formele tijd intereface implementatie
+func (a A) GetOpvoer() *time.Time   { return a.Opvoer }
+func (a *A) SetOpvoer(t *time.Time) { a.Opvoer = t }
+func (a A) GetAfvoer() *time.Time   { return a.Afvoer }
+func (a *A) SetAfvoer(t *time.Time) { a.Afvoer = t }
+
+func (b B) GetOpvoer() *time.Time   { return b.Opvoer }
+func (b *B) SetOpvoer(t *time.Time) { b.Opvoer = t }
+func (b B) GetAfvoer() *time.Time   { return b.Afvoer }
+func (b *B) SetAfvoer(t *time.Time) { b.Afvoer = t }
+
+func (r Rel_A_B) GetOpvoer() *time.Time   { return r.Opvoer }
+func (r *Rel_A_B) SetOpvoer(t *time.Time) { r.Opvoer = t }
+func (r Rel_A_B) GetAfvoer() *time.Time   { return r.Afvoer }
+func (r *Rel_A_B) SetAfvoer(t *time.Time) { r.Afvoer = t }
+
+func (au A_U) GetOpvoer() *time.Time   { return au.Opvoer }
+func (au *A_U) SetOpvoer(t *time.Time) { au.Opvoer = t }
+func (au A_U) GetAfvoer() *time.Time   { return au.Afvoer }
+func (au *A_U) SetAfvoer(t *time.Time) { au.Afvoer = t }
+
+func (av A_V) GetOpvoer() *time.Time   { return av.Opvoer }
+func (av *A_V) SetOpvoer(t *time.Time) { av.Opvoer = t }
+func (av A_V) GetAfvoer() *time.Time   { return av.Afvoer }
+func (av *A_V) SetAfvoer(t *time.Time) { av.Afvoer = t }
+
+func (bx B_X) GetOpvoer() *time.Time   { return bx.Opvoer }
+func (bx *B_X) SetOpvoer(t *time.Time) { bx.Opvoer = t }
+func (bx B_X) GetAfvoer() *time.Time   { return bx.Afvoer }
+func (bx *B_X) SetAfvoer(t *time.Time) { bx.Afvoer = t }
+
+func (by B_Y) GetOpvoer() *time.Time   { return by.Opvoer }
+func (by *B_Y) SetOpvoer(t *time.Time) { by.Opvoer = t }
+func (by B_Y) GetAfvoer() *time.Time   { return by.Afvoer }
+func (by *B_Y) SetAfvoer(t *time.Time) { by.Afvoer = t }
+
+func (a Full_A) GetOpvoer() *time.Time   { return a.Opvoer }
+func (a *Full_A) SetOpvoer(t *time.Time) { a.Opvoer = t }
+func (a Full_A) GetAfvoer() *time.Time   { return a.Afvoer }
+func (a *Full_A) SetAfvoer(t *time.Time) { a.Afvoer = t }
+
+func (b Full_B) GetOpvoer() *time.Time   { return b.Opvoer }
+func (b *Full_B) SetOpvoer(t *time.Time) { b.Opvoer = t }
+func (b Full_B) GetAfvoer() *time.Time   { return b.Afvoer }
+func (b *Full_B) SetAfvoer(t *time.Time) { b.Afvoer = t }
+
+// Aanvang / Einde (materiële tijd) methoden voor materiële tijd intereface implementatie
+func (a A) GetAanvang() *time.Time   { return a.Aanvang }
+func (a *A) SetAanvang(t *time.Time) { a.Aanvang = t }
+func (a A) GetEinde() *time.Time     { return a.Einde }
+func (a *A) SetEinde(t *time.Time)   { a.Einde = t }
+
+func (b B) GetAanvang() *time.Time   { return b.Aanvang }
+func (b *B) SetAanvang(t *time.Time) { b.Aanvang = t }
+func (b B) GetEinde() *time.Time     { return b.Einde }
+func (b *B) SetEinde(t *time.Time)   { b.Einde = t }
+
+func (r Rel_A_B) GetAanvang() *time.Time   { return r.Aanvang }
+func (r *Rel_A_B) SetAanvang(t *time.Time) { r.Aanvang = t }
+func (r Rel_A_B) GetEinde() *time.Time     { return r.Einde }
+func (r *Rel_A_B) SetEinde(t *time.Time)   { r.Einde = t }
+
+//TODO: als A_U, A_V, B_X, B_Y ook aanvang/einde krijgen, dan hier ook getters/setters toevoegen
+
+// String methoden voor debuggen
+func (a A) String() string       { return RepresentatieToString(a) }
+func (b B) String() string       { return RepresentatieToString(b) }
+func (r Rel_A_B) String() string { return RepresentatieToString(r) }
+func (au A_U) String() string    { return RepresentatieToString(au) }
+func (av A_V) String() string    { return RepresentatieToString(av) }
+func (bx B_X) String() string    { return RepresentatieToString(bx) }
+func (by B_Y) String() string    { return RepresentatieToString(by) }
+func (a Full_A) String() string  { return RepresentatieToString(a) }
+func (b Full_B) String() string  { return RepresentatieToString(b) }

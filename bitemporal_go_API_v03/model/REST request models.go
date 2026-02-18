@@ -56,7 +56,7 @@ func (rep *RepresentatiePlusNaam) UnmarshalJSON(data []byte) error {
 	}
 
 	if len(raw) != 1 {
-		return fmt.Errorf("opvoer/afvoer must contain exactly one representatie")
+		return fmt.Errorf("Er mag in opvoer/afvoer maar één representatie aanwezig zijn, maar er zijn %d gevonden", len(raw))
 	}
 
 	for representatienaam, payload := range raw {

@@ -19,6 +19,40 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 		// Output request body for debugging as pretty JSON
 		LogRequestBodyAsJSON(c)
 
+		// Start transaction
+		tx, err := DB.BeginTx(c.Request.Context(), nil)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to start transaction: %v", err)})
+			return
+		}
+		defer tx.Rollback()
+
+		// Step 1: Insert Registratie and get ID + Tijdstip
+		_, err = tx.NewInsert().
+			Model(&request.Registratie).
+			Returning("id").
+			Exec(c.Request.Context())
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to insert registratie: %v", err)})
+			return
+		}
+		registratieID := request.Registratie.ID
+		registratieTijdstip := request.Registratie.Tijdstip
+
+		/* check of er een param "ID" is meegegeven in de URL
+		dit is dan de ID van de entiteit waarop de registratie betrekking heeft,
+		en die we kunnen gebruiken voor:
+		- Afvoer van de gehele entiteit (in dat geval is deze ID gelijk aan de ID van de entiteit in de opvoer)
+		- wijziging op een of meer van de gegevenselementen van de entiteit (in dat geval is deze ID ook gelijk aan de ID van de entiteit,
+		en waarnaar het gegevenselement verwijst via haar (bijv.) a_ID of B_ID veld.
+		In de database is dit de FK naar de entiteit-tabel.
+		- Bij correctie van een bestaande registratie (in dat geval is deze ID ook gelijk aan de ID van de entiteit).
+		*/
+		if c.Param("id") != "" {
+			// we slaan deze ID op in de context zodat we er later bij kunnen
+			c.Set("entiteitID", c.Param("id"))
+		}
+
 		// TODO: hier komt de nieuwe aanpak van registratie, waarbij we de registratie en wijziging(en) in één endpoint verwerken
 		// we kunnen hierbij gebruik maken van de "entiteitID" param in de URL (optioneel) en/of de IDs in de opvoer/afvoer van de wijziging(en)
 		// om te bepalen op welke entiteit en/of gegevenselementen de registratie betrekking heeft
@@ -39,8 +73,49 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 				fmt.Println("HANDLER: geen representatie aanwezig in wijziging")
 			}
 
-			// process de wijziging
-			// TODO
+			if rep == nil || rep.Representatie == nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "wijziging bevat geen representatie"})
+				return
+			}
+
+			temporalRep, ok := rep.Representatie.(model.FormeleRepresentatie)
+			if !ok {
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("representatie %T ondersteunt geen opvoer/afvoer interface", rep.Representatie)})
+				return
+			}
+
+			// process de WIJZIGING
+			// kijk naar het metatype van de representatie
+			// als opvoer iets anders dan afvoer
+			// indien correctie of ongedaanmaking ook andere logica
+
+			// Handle REGISTRATIE / OPVOER scenario
+			switch true {
+			// OPVOER scenario's
+			case wijziging.Opvoer != nil:
+				if err := handleRepresentatieOpvoer(c, tx, registratieID, registratieTijdstip,
+					rep.Representatienaam, temporalRep); err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to handle opvoer van %s: %v", rep.Representatienaam, err)})
+					return
+				}
+			// AFVOER scenario's
+			case wijziging.Afvoer != nil:
+				if err := handleRepresentatieAfvoer(c, tx, registratieID, registratieTijdstip,
+					rep.Representatienaam, temporalRep); err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to handle afvoer van %s: %v", rep.Representatienaam, err)})
+					return
+				}
+			}
+
+			// Commit transaction
+			if err := tx.Commit(); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to commit transaction: %v", err)})
+				return
+			}
+
+			// Succes response
+			c.JSON(http.StatusCreated,
+				gin.H{"message": fmt.Sprintf("De registratie %d is succesvol verwerkt", registratieID)})
 
 		}
 
@@ -50,6 +125,11 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 	}
 
 }
+
+/* ===== HANDLER FUNCTIES NOG SPECIFIEK VOOR A OF B FLOW ====== */
+// DEPRECATED: deze functies worden vervangen door generieke functies
+// die op basis van de representatienaam en het metatype van de representatie
+// bepalen wat er precies moet gebeuren
 
 // MakeRegisterFullEntityHandlerA handles bitemporal registration for Full_A entities
 func MakeRegisterFullEntityHandlerA() gin.HandlerFunc {
