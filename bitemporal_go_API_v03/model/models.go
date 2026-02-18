@@ -6,6 +6,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
+// GetID en Metatype methoden voor alle representaties
 func (a A) GetID() any               { return a.ID }
 func (a A) Metatype() Metatype       { return MetatypeEntiteit }
 func (b B) GetID() any               { return b.ID }
@@ -20,6 +21,17 @@ func (bx B_X) GetID() any            { return bx.Rel_ID }
 func (bx B_X) Metatype() Metatype    { return MetatypeGegevenselement }
 func (by B_Y) GetID() any            { return by.Rel_ID }
 func (by B_Y) Metatype() Metatype    { return MetatypeGegevenselement }
+
+// String methoden voor debuggen
+func (a A) String() string       { return RepresentatieToString(a) }
+func (b B) String() string       { return RepresentatieToString(b) }
+func (r Rel_A_B) String() string { return RepresentatieToString(r) }
+func (au A_U) String() string    { return RepresentatieToString(au) }
+func (av A_V) String() string    { return RepresentatieToString(av) }
+func (bx B_X) String() string    { return RepresentatieToString(bx) }
+func (by B_Y) String() string    { return RepresentatieToString(by) }
+func (a Full_A) String() string  { return RepresentatieToString(a) }
+func (b Full_B) String() string  { return RepresentatieToString(b) }
 
 // Entiteiten
 type A struct {

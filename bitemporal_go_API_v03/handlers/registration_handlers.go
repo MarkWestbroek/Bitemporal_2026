@@ -32,9 +32,16 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 			} else if wijziging.Afvoer != nil {
 				rep = wijziging.Afvoer // geen specifieke representatie verwacht; daar dealen we later wel mee
 			}
+			// TEST: print recursief de representatie, inclusief onderliggende gegevenselementen/relaties
+			if rep != nil && rep.Representatie != nil {
+				fmt.Printf("HANDLER: representatienaam=%s\n%s", rep.Representatienaam, model.RepresentatieToString(rep.Representatie))
+			} else {
+				fmt.Println("HANDLER: geen representatie aanwezig in wijziging")
+			}
+
 			// process de wijziging
-			fmt.Printf("HANDLER: representatienaam=%s metatype=%s id=%v\n",
-				rep.Representatienaam, rep.Representatie.Metatype(), rep.Representatie.GetID())
+			// TODO
+
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "Received registration request",
