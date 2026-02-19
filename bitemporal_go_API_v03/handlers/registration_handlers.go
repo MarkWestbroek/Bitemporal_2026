@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v03/model"
 	"github.com/gin-gonic/gin"
@@ -11,6 +12,7 @@ import (
 
 func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		start := time.Now()
 		var request model.RegistreerRequest
 		if err := c.ShouldBindJSON(&request); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -128,9 +130,10 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 		}
 		committed = true
 
+		elapsedMs := time.Since(start).Milliseconds()
 		// Succes response
 		c.JSON(http.StatusCreated,
-			gin.H{"message": fmt.Sprintf("De registratie %d is succesvol verwerkt", registratieID)})
+			gin.H{"message": fmt.Sprintf("De registratie %d is succesvol verwerkt in %d ms", registratieID, elapsedMs)})
 
 	}
 
