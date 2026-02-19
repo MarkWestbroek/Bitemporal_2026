@@ -27,7 +27,9 @@ type WijzigingRequest struct {
 }
 
 /*
-De representatie (interface) plus een veld voor de naam van de representatie - (a, b, rel_a_b, u, v, x, y).
+De representatie (interface) plus velden voor:
+- de type-naam van de representatie (A, B, Rel_A_B, A_U, A_V, B_X, B_Y)
+- de JSON veldnaam in de request (a, b, rel_a_b, u, v, x, y)
 
 Deze struct heeft een custom UnmarshalJSON functie die de JSON data inspecteert, de representatienaam en payload eruit haalt,
 en op basis van de representatienaam de juiste struct (Full_A, Full_B, Rel_A_B, A_U, A_V, B_X of B_Y) unmarshal't.
@@ -42,7 +44,8 @@ Deze aanpak maakt het mogelijk om in de WijzigingRequest struct flexibele opvoer
 */
 type RepresentatiePlusNaam struct {
 	Representatie     Representatie `json:"-"`
-	Representatienaam string        `json:"-"`
+	Representatienaam string        `json:"-"` // Type-naam (bijv. A, B, A_U, Rel_A_B)
+	Veldnaam          string        `json:"-"` // JSON veldnaam (bijv. a, b, u, rel_a_b)
 }
 
 func (rep *RepresentatiePlusNaam) UnmarshalJSON(data []byte) error {
@@ -59,60 +62,69 @@ func (rep *RepresentatiePlusNaam) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("Er mag in opvoer/afvoer maar één representatie aanwezig zijn, maar er zijn %d gevonden", len(raw))
 	}
 
-	for representatienaam, payload := range raw {
+	for veldnaam, payload := range raw {
 		var representatie Representatie
+		var representatienaam string
 
-		switch representatienaam {
+		switch veldnaam {
 		case "a":
 			var value Full_A
 			if err := json.Unmarshal(payload, &value); err != nil {
 				return err
 			}
 			representatie = &value
+			representatienaam = "A"
 		case "b":
 			var value Full_B
 			if err := json.Unmarshal(payload, &value); err != nil {
 				return err
 			}
 			representatie = &value
+			representatienaam = "B"
 		case "rel_a_b":
 			var value Rel_A_B
 			if err := json.Unmarshal(payload, &value); err != nil {
 				return err
 			}
 			representatie = &value
+			representatienaam = "Rel_A_B"
 		case "u":
 			var value A_U
 			if err := json.Unmarshal(payload, &value); err != nil {
 				return err
 			}
 			representatie = &value
+			representatienaam = "A_U"
 		case "v":
 			var value A_V
 			if err := json.Unmarshal(payload, &value); err != nil {
 				return err
 			}
 			representatie = &value
+			representatienaam = "A_V"
 		case "x":
 			var value B_X
 			if err := json.Unmarshal(payload, &value); err != nil {
 				return err
 			}
 			representatie = &value
+			representatienaam = "B_X"
 		case "y":
 			var value B_Y
 			if err := json.Unmarshal(payload, &value); err != nil {
 				return err
 			}
 			representatie = &value
+			representatienaam = "B_Y"
 		default:
-			return fmt.Errorf("unsupported representatie key '%s'", representatienaam)
+			return fmt.Errorf("unsupported representatie key '%s'", veldnaam)
 		}
 
 		rep.Representatienaam = representatienaam
+		rep.Veldnaam = veldnaam
 		rep.Representatie = representatie
 
-		fmt.Printf("MODELS: representatienaam=%s metatype=%s id=%v\n", representatienaam, representatie.Metatype(), representatie.GetID())
+		fmt.Printf("MODELS: representatienaam=%s veldnaam=%s metatype=%s id=%v\n", representatienaam, veldnaam, representatie.Metatype(), representatie.GetID())
 	}
 
 	return nil

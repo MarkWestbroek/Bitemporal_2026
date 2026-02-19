@@ -13,7 +13,7 @@ import (
 )
 
 type onderliggendeRepresentatie struct {
-	Naam         string
+	Naam          string
 	Representatie model.FormeleRepresentatie
 }
 
@@ -49,7 +49,7 @@ func verzamelOnderliggendeRepresentaties(entiteit model.FormeleRepresentatie) ([
 			}
 
 			resultaat = append(resultaat, onderliggendeRepresentatie{
-				Naam:         representatienaamVoor(kindRep),
+				Naam:          representatienaamVoor(kindRep),
 				Representatie: kindRep,
 			})
 
@@ -150,24 +150,7 @@ func anyNaarInt(v any) (int, bool) {
 }
 
 func representatienaamVoor(rep model.FormeleRepresentatie) string {
-	switch rep.(type) {
-	case *model.A, *model.Full_A:
-		return "a"
-	case *model.B, *model.Full_B:
-		return "b"
-	case *model.Rel_A_B:
-		return "rel_a_b"
-	case *model.A_U:
-		return "u"
-	case *model.A_V:
-		return "v"
-	case *model.B_X:
-		return "x"
-	case *model.B_Y:
-		return "y"
-	default:
-		return strings.ToLower(representatieCode(rep))
-	}
+	return representatieCode(rep)
 }
 
 func representatieCode(rep any) string {
@@ -247,20 +230,88 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 
 	*/
 
-	// Update (afgeleide) afvoer van Representatie
-	_, err := tx.NewUpdate().
-		Model(representatie).
-		Set("afvoer = ?", afvoerTijdstip).
-		Where("id = ?", representatie.GetID()).
-		Exec(c.Request.Context())
-	if err != nil {
-		return fmt.Errorf("HANDLER: failed to update %s afvoer: %v", representatienaam, err)
+	meta, ok := model.GetTypeMeta(representatienaam)
+	if !ok {
+		return fmt.Errorf("HANDLER: onbekend type voor afvoer: %s", representatienaam)
 	}
 
-	// Maak wijziging record aan
-	return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
-		representatienaam, fmt.Sprint(representatie.GetID()), afvoerTijdstip)
+	if meta.Metatype != model.MetatypeEntiteit {
+		if err := updateAfvoerByID(c, tx, meta, representatie.GetID(), afvoerTijdstip); err != nil {
+			return err
+		}
+		return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
+			representatienaam, fmt.Sprint(representatie.GetID()), afvoerTijdstip)
+	}
 
+	if err := updateAfvoerByID(c, tx, meta, representatie.GetID(), afvoerTijdstip); err != nil {
+		return err
+	}
+	if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
+		representatienaam, fmt.Sprint(representatie.GetID()), afvoerTijdstip); err != nil {
+		return err
+	}
+
+	entiteitID, ok := anyNaarInt(representatie.GetID())
+	if !ok {
+		return fmt.Errorf("HANDLER: entiteit ID is geen int voor %s", representatienaam)
+	}
+
+	for _, rel := range meta.OnderliggendeGegevenselementen {
+		childMeta, ok := model.GetTypeMeta(rel.Doeltype)
+		if !ok {
+			return fmt.Errorf("HANDLER: unknown related type: %s", rel.Doeltype)
+		}
+
+		fkColumn := childMeta.EntiteitIDKolom
+		if fkColumn == "" {
+			return fmt.Errorf("HANDLER: no entity id column for %s", childMeta.Typenaam)
+		}
+
+		activeIDs, err := haalActieveIDsGegevenselementUitDB(c, tx, childMeta, fkColumn, entiteitID)
+		if err != nil {
+			return err
+		}
+
+		for _, id := range activeIDs {
+			if err := updateAfvoerByID(c, tx, childMeta, id, afvoerTijdstip); err != nil {
+				return err
+			}
+			if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
+				childMeta.Typenaam, fmt.Sprint(id), afvoerTijdstip); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+
+}
+
+func updateAfvoerByID(c *gin.Context, tx bun.Tx, meta model.TypeMeta, id any, afvoerTijdstip time.Time) error {
+	_, err := tx.NewUpdate().
+		Table(meta.Tabelnaam).
+		Set("afvoer = ?", afvoerTijdstip).
+		Where(fmt.Sprintf("%s = ?", meta.IDKolom), id).
+		Exec(c.Request.Context())
+	if err != nil {
+		return fmt.Errorf("HANDLER: failed to update %s afvoer: %v", meta.Typenaam, err)
+	}
+
+	return nil
+}
+
+func haalActieveIDsGegevenselementUitDB(c *gin.Context, tx bun.Tx, meta model.TypeMeta, fkColumn string, entiteitID int) ([]int, error) {
+	ids := make([]int, 0)
+	query := tx.NewSelect().
+		Table(meta.Tabelnaam).
+		Column(meta.IDKolom).
+		Where(fmt.Sprintf("%s = ?", fkColumn), entiteitID).
+		Where("afvoer IS NULL")
+	if err := query.Scan(c.Request.Context(), &ids); err != nil && err != sql.ErrNoRows {
+		return nil, fmt.Errorf("HANDLER: failed to query active %s records: %v", meta.Typenaam, err)
+	}
+
+	return ids, nil
 }
 
 /*

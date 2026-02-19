@@ -100,7 +100,7 @@ type Wijziging struct {
 	ID                int64              `json:"id" bun:"id,pk,autoincrement"`
 	Wijzigingstype    WijzigingstypeEnum `json:"wijzigingstype"`    // Opvoer of Afvoer
 	RegistratieID     int64              `json:"registratie_id"`    // verwijzing naar de registratie waarbij deze wijziging hoort
-	Representatienaam string             `json:"representatienaam"` // zachte link naar de representatie, zoals "a", "b", "rel_a_b", "u", "v", "x" of "y"
+	Representatienaam string             `json:"representatienaam"` // type-naam van de representatie, zoals "A", "B", "Rel_A_B", "A_U", "A_V", "B_X" of "B_Y"
 	RepresentatieID   string             `json:"representatie_id"`  // Bewust een string to support both numeric and string IDs, or for instance UUIDs
 	Tijdstip          time.Time          `json:"tijdstip"`          //afgeleid van registratie tijdstip
 	// TODO TIJDSTIP ook REGISTRATIETIJDSTIP noemen?

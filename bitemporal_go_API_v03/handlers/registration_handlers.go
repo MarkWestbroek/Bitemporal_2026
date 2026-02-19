@@ -25,7 +25,12 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to start transaction: %v", err)})
 			return
 		}
-		defer tx.Rollback()
+		committed := false
+		defer func() {
+			if !committed {
+				_ = tx.Rollback()
+			}
+		}()
 
 		// Step 1: Insert Registratie and get ID + Tijdstip
 		_, err = tx.NewInsert().
@@ -68,7 +73,7 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 			}
 			// TEST: print recursief de representatie, inclusief onderliggende gegevenselementen/relaties
 			if rep != nil && rep.Representatie != nil {
-				fmt.Printf("HANDLER: representatienaam=%s\n%s", rep.Representatienaam, model.RepresentatieToString(rep.Representatie))
+				fmt.Printf("HANDLER: representatienaam=%s veldnaam=%s\n%s", rep.Representatienaam, rep.Veldnaam, model.RepresentatieToString(rep.Representatie))
 			} else {
 				fmt.Println("HANDLER: geen representatie aanwezig in wijziging")
 			}
@@ -107,26 +112,39 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 				}
 			}
 
-			// Commit transaction
-			if err := tx.Commit(); err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to commit transaction: %v", err)})
-				return
-			}
-
-			// Succes response
-			c.JSON(http.StatusCreated,
-				gin.H{"message": fmt.Sprintf("De registratie %d is succesvol verwerkt", registratieID)})
-
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "Received registration request",
-			"registratie": request.Registratie, "wijzigingen": request.Wijzigingen})
+		// Commit transaction
+		if err := tx.Commit(); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to commit transaction: %v", err)})
+			return
+		}
+		committed = true
+
+		// Succes response
+		c.JSON(http.StatusCreated,
+			gin.H{"message": fmt.Sprintf("De registratie %d is succesvol verwerkt", registratieID)})
 
 	}
 
 }
 
-/* ===== HANDLER FUNCTIES NOG SPECIFIEK VOOR A OF B FLOW ====== */
+/*
+
+
+
+
+
+===== HANDLER FUNCTIES NOG SPECIFIEK VOOR A OF B FLOW ======
+
+
+
+
+
+
+
+
+*/
 // DEPRECATED: deze functies worden vervangen door generieke functies
 // die op basis van de representatienaam en het metatype van de representatie
 // bepalen wat er precies moet gebeuren
@@ -153,7 +171,12 @@ func MakeRegisterFullEntityHandlerA() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to start transaction: %v", err)})
 			return
 		}
-		defer tx.Rollback()
+		committed := false
+		defer func() {
+			if !committed {
+				_ = tx.Rollback()
+			}
+		}()
 
 		// Step 1: Insert Registratie and get ID + Tijdstip
 		_, err = tx.NewInsert().
@@ -215,6 +238,7 @@ func MakeRegisterFullEntityHandlerA() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to commit transaction: %v", err)})
 			return
 		}
+		committed = true
 
 		c.JSON(http.StatusCreated, gin.H{"message": "Registration completed successfully", "registratie_id": registratieID})
 	}
@@ -238,7 +262,12 @@ func MakeRegisterFullEntityHandlerB() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to start transaction: %v", err)})
 			return
 		}
-		defer tx.Rollback()
+		committed := false
+		defer func() {
+			if !committed {
+				_ = tx.Rollback()
+			}
+		}()
 
 		// Step 1: Insert Registratie and get ID + Tijdstip
 		_, err = tx.NewInsert().
@@ -286,6 +315,7 @@ func MakeRegisterFullEntityHandlerB() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to commit transaction: %v", err)})
 			return
 		}
+		committed = true
 
 		c.JSON(http.StatusCreated, gin.H{"message": "Registration completed successfully", "registratie_id": registratieID})
 	}
