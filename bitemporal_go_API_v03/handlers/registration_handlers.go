@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v03/model"
 	"github.com/gin-gonic/gin"
@@ -63,6 +64,8 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 		// om te bepalen op welke entiteit en/of gegevenselementen de registratie betrekking heeft
 
 		// Step 2: Process each wijziging
+		methode := strings.ToLower(c.Query("methode"))
+		useReflectie := methode == "reflectie"
 		for _, wijziging := range request.Wijzigingen {
 			var rep *model.RepresentatiePlusNaam
 			if wijziging.Opvoer != nil {
@@ -98,7 +101,11 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 			switch true {
 			// OPVOER scenario's
 			case wijziging.Opvoer != nil:
-				if err := handleRepresentatieOpvoer(c, tx, registratieID, registratieTijdstip,
+				handleOpvoer := handleRepresentatieOpvoerMeta
+				if useReflectie {
+					handleOpvoer = handleRepresentatieOpvoer
+				}
+				if err := handleOpvoer(c, tx, registratieID, registratieTijdstip,
 					rep.Representatienaam, temporalRep); err != nil {
 					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to handle opvoer van %s: %v", rep.Representatienaam, err)})
 					return

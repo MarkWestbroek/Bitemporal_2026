@@ -216,6 +216,83 @@ func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratieID int64, o
 		representatienaam, fmt.Sprint(representatie.GetID()), opvoerTijdstip)
 }
 
+// handleRepresentatieOpvoerMeta verwerkt opvoer via de metaregistry, zonder reflectie.
+func handleRepresentatieOpvoerMeta(c *gin.Context, tx bun.Tx, registratieID int64, opvoerTijdstip time.Time,
+	representatienaam string, representatie model.FormeleRepresentatie) error {
+	meta, ok := model.GetTypeMeta(representatienaam)
+	if !ok {
+		return fmt.Errorf("HANDLER: onbekend type voor opvoer: %s", representatienaam)
+	}
+
+	representatie.SetOpvoer(&opvoerTijdstip)
+	_, err := tx.NewInsert().
+		Model(representatie).
+		Exec(c.Request.Context())
+	if err != nil {
+		return fmt.Errorf("HANDLER: failed to insert %s: %v", representatienaam, err)
+	}
+
+	if err := persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID,
+		representatienaam, fmt.Sprint(representatie.GetID()), opvoerTijdstip); err != nil {
+		return err
+	}
+
+	if meta.Metatype != model.MetatypeEntiteit {
+		return nil
+	}
+
+	switch entiteit := representatie.(type) {
+	case *model.Full_A:
+		for i := range entiteit.Us {
+			if entiteit.Us[i].A_ID == 0 {
+				entiteit.Us[i].A_ID = entiteit.ID
+			}
+			if err := handleRepresentatieOpvoerMeta(c, tx, registratieID, opvoerTijdstip, "A_U", &entiteit.Us[i]); err != nil {
+				return err
+			}
+		}
+		for i := range entiteit.Vs {
+			if entiteit.Vs[i].A_ID == 0 {
+				entiteit.Vs[i].A_ID = entiteit.ID
+			}
+			if err := handleRepresentatieOpvoerMeta(c, tx, registratieID, opvoerTijdstip, "A_V", &entiteit.Vs[i]); err != nil {
+				return err
+			}
+		}
+		for i := range entiteit.RelABs {
+			if entiteit.RelABs[i].A_ID == 0 {
+				entiteit.RelABs[i].A_ID = entiteit.ID
+			}
+			if err := handleRepresentatieOpvoerMeta(c, tx, registratieID, opvoerTijdstip, "Rel_A_B", &entiteit.RelABs[i]); err != nil {
+				return err
+			}
+		}
+	case *model.Full_B:
+		for i := range entiteit.Xs {
+			if entiteit.Xs[i].B_ID == 0 {
+				entiteit.Xs[i].B_ID = entiteit.ID
+			}
+			if err := handleRepresentatieOpvoerMeta(c, tx, registratieID, opvoerTijdstip, "B_X", &entiteit.Xs[i]); err != nil {
+				return err
+			}
+		}
+		for i := range entiteit.Ys {
+			if entiteit.Ys[i].B_ID == 0 {
+				entiteit.Ys[i].B_ID = entiteit.ID
+			}
+			if err := handleRepresentatieOpvoerMeta(c, tx, registratieID, opvoerTijdstip, "B_Y", &entiteit.Ys[i]); err != nil {
+				return err
+			}
+		}
+	case *model.A, *model.B:
+		return nil
+	default:
+		return fmt.Errorf("HANDLER: unsupported entiteit type voor opvoer: %T", representatie)
+	}
+
+	return nil
+}
+
 func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, afvoerTijdstip time.Time,
 	representatienaam string, representatie model.FormeleRepresentatie) error {
 
