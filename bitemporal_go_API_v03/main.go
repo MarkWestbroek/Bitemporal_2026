@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -48,11 +49,12 @@ func main() {
 	}
 	fmt.Println("Table(s) created successfully or they were already present.")
 
-	// Add a query hook for logging
-	db.AddQueryHook(bundebug.NewQueryHook(
-		bundebug.WithVerbose(true),
-		bundebug.FromEnv("BUNDEBUG"),
-	))
+	// Add a query hook for logging only when explicitly enabled.
+	if isBunDebugEnabled() {
+		db.AddQueryHook(bundebug.NewQueryHook(
+			bundebug.WithVerbose(true),
+		))
+	}
 
 	// Ping the database to test the connection
 	err = db.Ping()
@@ -82,6 +84,11 @@ func loadDotEnvIfPresent() {
 
 func isDropTablesEnabled() bool {
 	return os.Getenv("ALLOW_DROP_TABLES") == "true"
+}
+
+func isBunDebugEnabled() bool {
+	v := strings.ToLower(strings.TrimSpace(os.Getenv("BUNDEBUG")))
+	return v == "1" || v == "true" || v == "yes" || v == "on"
 }
 
 func isProductionEnvironment() bool {

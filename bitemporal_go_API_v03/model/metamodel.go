@@ -17,6 +17,18 @@ type OnderliggendGegevenselement struct {
 	Momentvoorkomen Momentvoorkomen // enkelvoudig of meervoudig = het voorkomen op enig moment in de tijd
 }
 
+// OnderliggendeRepresentatie koppelt een typenaam aan een concrete FormeleRepresentatie.
+type OnderliggendeRepresentatie struct {
+	Typenaam      string
+	Representatie FormeleRepresentatie
+}
+
+// HeeftOnderliggendeGegevenselementen wordt geïmplementeerd door entiteitstypen
+// die hun onderliggende gegevenselementen/relaties kunnen teruggeven.
+type HeeftOnderliggendeGegevenselementen interface {
+	GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie
+}
+
 // TypeMeta holds metadata for a representatie type.
 type TypeMeta struct {
 	Typenaam    string
@@ -24,6 +36,12 @@ type TypeMeta struct {
 	IsMaterieel bool
 	Tabelnaam   string
 	IDKolom     string
+
+	// Veldnaam is the JSON field name used in REST requests (bijv. "a", "b", "rel_a_b", "u").
+	Veldnaam string
+
+	// Factory creates a new zero-value instance of the concrete Representatie struct.
+	Factory func() Representatie
 
 	// EntiteitIDKolom is the FK column pointing to the primary entiteit (if any).
 	EntiteitIDKolom string
@@ -46,6 +64,8 @@ var MetaRegistry = MetaRegistryType{
 		IsMaterieel:               true,
 		Tabelnaam:                 "a",
 		IDKolom:                   "id",
+		Veldnaam:                  "a",
+		Factory:                   func() Representatie { return &Full_A{} },
 		EntiteitIDKolom:           "",
 		SecondaireEntiteitIDKolom: "",
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -60,6 +80,8 @@ var MetaRegistry = MetaRegistryType{
 		IsMaterieel:               true,
 		Tabelnaam:                 "b",
 		IDKolom:                   "id",
+		Veldnaam:                  "b",
+		Factory:                   func() Representatie { return &Full_B{} },
 		EntiteitIDKolom:           "",
 		SecondaireEntiteitIDKolom: "",
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -73,6 +95,8 @@ var MetaRegistry = MetaRegistryType{
 		IsMaterieel:               true,
 		Tabelnaam:                 "rel_a_b",
 		IDKolom:                   "id",
+		Veldnaam:                  "rel_a_b",
+		Factory:                   func() Representatie { return &Rel_A_B{} },
 		EntiteitIDKolom:           "a_id",
 		SecondaireEntiteitIDKolom: "b_id",
 	},
@@ -82,6 +106,8 @@ var MetaRegistry = MetaRegistryType{
 		IsMaterieel:               false,
 		Tabelnaam:                 "a_u",
 		IDKolom:                   "rel_id",
+		Veldnaam:                  "u",
+		Factory:                   func() Representatie { return &A_U{} },
 		EntiteitIDKolom:           "a_id",
 		SecondaireEntiteitIDKolom: "",
 	},
@@ -91,6 +117,8 @@ var MetaRegistry = MetaRegistryType{
 		IsMaterieel:               false,
 		Tabelnaam:                 "a_v",
 		IDKolom:                   "rel_id",
+		Veldnaam:                  "v",
+		Factory:                   func() Representatie { return &A_V{} },
 		EntiteitIDKolom:           "a_id",
 		SecondaireEntiteitIDKolom: "",
 	},
@@ -100,6 +128,8 @@ var MetaRegistry = MetaRegistryType{
 		IsMaterieel:               false,
 		Tabelnaam:                 "b_x",
 		IDKolom:                   "rel_id",
+		Veldnaam:                  "x",
+		Factory:                   func() Representatie { return &B_X{} },
 		EntiteitIDKolom:           "b_id",
 		SecondaireEntiteitIDKolom: "",
 	},
@@ -109,6 +139,8 @@ var MetaRegistry = MetaRegistryType{
 		IsMaterieel:               false,
 		Tabelnaam:                 "b_y",
 		IDKolom:                   "rel_id",
+		Veldnaam:                  "y",
+		Factory:                   func() Representatie { return &B_Y{} },
 		EntiteitIDKolom:           "b_id",
 		SecondaireEntiteitIDKolom: "",
 	},
@@ -138,4 +170,14 @@ func (r MetaRegistryType) MustTypeMeta(typeName string) TypeMeta {
 		panic("unknown type: " + typeName)
 	}
 	return meta
+}
+
+// GetByVeldnaam zoekt een TypeMeta op basis van de JSON veldnaam (bijv. "a", "u", "rel_a_b").
+func (r MetaRegistryType) GetByVeldnaam(veldnaam string) (TypeMeta, bool) {
+	for _, meta := range r {
+		if meta.Veldnaam == veldnaam {
+			return meta, true
+		}
+	}
+	return TypeMeta{}, false
 }

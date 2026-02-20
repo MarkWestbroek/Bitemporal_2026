@@ -47,6 +47,94 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 		registratieID := request.Registratie.ID
 		registratieTijdstip := request.Registratie.Tijdstip
 
+		/*
+			CORRECTIE / ONGEDAANMAKING scenario's
+			-------------------------------------
+			CORRECTIE VOORWAARDEN:
+			- Registratietype = Correctie
+			- CorrigeertRegistratieID != nil
+			- Het tijdstip van de correctie is later dan dat van de te corrigeren registratie.
+			- // LATER // indien niet: zoek de eerste wijziging in de registratie, en kijk of die verwijst naar een gegevenselement dat gebruikt werd in andere registratie
+			- Een entiteit zelf kan niet gewijzigd worden, BEHALVE de materiele tijden (aanvang, einde)
+
+			PROBLEEM:
+			- een registratie kan nu meer dan één entiteit betreffen
+			- op zich zou hetzelfde formaat gebruikt kunnen worden voor correctie, bijv.:
+			{
+				"registratie": {
+					"registratietype": "correctie",
+					"tijdstip": "2026-01-12T11:00:00Z",
+					"opmerking": "Corrigeer U3 van entiteit A2",
+				},
+				"wijzigingen": [
+					{
+						"opvoer": {
+							"a": {
+								"id": 2,
+								"us": [
+									{
+										"rel_id": 3,
+										"aaa": "a2-correctie",
+										"bbb": "b2-correctie"
+									}
+								]
+							}
+						}
+					}
+				]
+			}
+
+			- in dit voorbeeld corrigeert de wijziging het gegevenselement U3 (id=3) van entiteit A2 (id=2)
+			- de handler voor deze correctie moet dus:
+			1. U3 afvoeren (op dezelfde manier als bij een normale afvoer, dus inclusief wijziging record) met registratietijdstip
+			2. U3 opnieuw opvoeren met de gecorrigeerde data, maar met een nieuwe ID... Dat is nu even lastig zonder auto-increment ID,
+			maar we zouden in de handler een nieuwe ID kunnen genereren (bijv. max bestaande ID + 1) voordat we de opvoer uitvoeren.
+			Deze nieuwe ID wordt dan ook gebruikt in de wijziging record voor de opvoer.
+			Een andere oplossing zou zijn om UUID's te gebruiken in plaats van auto-increment IDs,
+			zodat we al een ID kunnen genereren voordat we de opvoer uitvoeren.
+
+			In principe wil je ook een afgevoerd gegeven nog kunnen corrigeren. Dat lijkt raar (StUF sluit het bijv. uit),
+			maar het kan als het materieel is iig wel. Voor alleen een formeel gegevens is het wel gek.
+
+			RECURSIE:
+			- Een complexere correctie is eigenlijk een herhaling van zetten, maar dan
+			met meerdere gegevenselementen betreffende één of meerdere entiteiten.
+
+
+			ONGEDAANMAKING VOORWAARDEN:
+			- Registratietype = Ongedaanmaking
+			- MaaktOngedaanRegistratieID != nil
+			- Het tijdstip van de ongedaanmaking is later dan dat van de ongedaan te maken registratie.
+
+			ACTIES ONGEDAANMAKING:
+			- Bij ongedaanmaking maken we een nieuwe registratie aan met type "Ongedaanmaking"
+			en een verwijzing naar de te ongedaan maken registratie.
+			- In principe zou dat genoeg zijn,
+			maar we willen nog de afgeleide velden opvoer en afvoer in de ongedaangemaakte registratie opnieuw bepalen.
+			Hier zit wel complexiteit, omdat we dan feitelijk moeten tijdsreizen naar een tijdstip nèt voor de ongedaan gemaakte registratie,
+			en dan de toestand van opvoer/afvoer herstellen.
+			N.B.: het kan dus zijn dat de representatie in de ongedaan gemaakte registratie werd opgevoerd, en dus daarvoor niet bestond.
+			Dan moet gewoon de opvoer leeggemaakt worden.
+
+			Maar een ongedaanmaking van een ongedaanmaking of van een correctie is lastiger. Moet ik even over nadenken.
+
+
+
+
+		*/
+
+		/*
+			// Registratie, Correctie, Ongedaanmaking
+			type Registratie struct {
+				ID                         int64                `bun:"id,pk,autoincrement"` // auto-increment ID van de registratie
+				Registratietype            RegistratietypeEnum  // Registratie, Correctie, Ongedaanmaking
+				Tijdstip                   time.Time            // Het tijdstip van de registratie, correctie of ongedaanmaking
+				Opmerking                  *string              // optioneel veld voor extra informatie
+				CorrigeertRegistratieID    *int64               // bij correcties: verwijzing naar de registratie die gecorrigeerd wordt
+				MaaktOngedaanRegistratieID *int64               // bij ongedaanmakings: verwijzing naar de registratie die ongedaan wordt gemaakt
+			}
+		*/
+
 		/* check of er een param "ID" is meegegeven in de URL
 		dit is dan de ID van de entiteit waarop de registratie betrekking heeft,
 		en die we kunnen gebruiken voor:
@@ -82,10 +170,12 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 				rep = wijziging.Afvoer // geen specifieke representatie verwacht; daar dealen we later wel mee
 			}
 			// TEST: print recursief de representatie, inclusief onderliggende gegevenselementen/relaties
-			if rep != nil && rep.Representatie != nil {
-				fmt.Printf("HANDLER: representatienaam=%s veldnaam=%s\n%s", rep.Representatienaam, rep.Veldnaam, model.RepresentatieToString(rep.Representatie))
-			} else {
-				fmt.Println("HANDLER: geen representatie aanwezig in wijziging")
+			if debugLogsEnabled() {
+				if rep != nil && rep.Representatie != nil {
+					fmt.Printf("HANDLER: representatienaam=%s veldnaam=%s\n%s", rep.Representatienaam, rep.Veldnaam, model.RepresentatieToString(rep.Representatie))
+				} else {
+					fmt.Println("HANDLER: geen representatie aanwezig in wijziging")
+				}
 			}
 
 			if rep == nil || rep.Representatie == nil {

@@ -12,6 +12,10 @@ import (
 // LogRequestBodyAsJSON reads the request body, prints it as pretty JSON,
 // and resets the body so it can still be used by ShouldBindJSON
 func LogRequestBodyAsJSON(ctx *gin.Context) {
+	if !debugLogsEnabled() {
+		return
+	}
+
 	// Read the request body
 	body, err := io.ReadAll(ctx.Request.Body)
 	if err != nil {

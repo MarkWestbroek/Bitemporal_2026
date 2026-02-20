@@ -89,53 +89,15 @@ func handleRepresentatieOpvoerMeta(c *gin.Context, tx bun.Tx, registratieID int6
 		return nil
 	}
 
-	switch entiteit := representatie.(type) {
-	case *model.Full_A:
-		for i := range entiteit.Us {
-			if entiteit.Us[i].A_ID == 0 {
-				entiteit.Us[i].A_ID = entiteit.ID
-			}
-			if err := handleRepresentatieOpvoerMeta(c, tx, registratieID, opvoerTijdstip, "A_U", &entiteit.Us[i]); err != nil {
-				return err
-			}
+	onderliggendeRepresentaties, ok := representatie.(model.HeeftOnderliggendeGegevenselementen)
+	if !ok {
+		return fmt.Errorf("HANDLER: type %s geeft geen onderliggende gegevenselementen vrij", representatienaam)
+	}
+
+	for _, onderliggende := range onderliggendeRepresentaties.GeefOnderliggendeGegevenselementen() {
+		if err := handleRepresentatieOpvoerMeta(c, tx, registratieID, opvoerTijdstip, onderliggende.Typenaam, onderliggende.Representatie); err != nil {
+			return err
 		}
-		for i := range entiteit.Vs {
-			if entiteit.Vs[i].A_ID == 0 {
-				entiteit.Vs[i].A_ID = entiteit.ID
-			}
-			if err := handleRepresentatieOpvoerMeta(c, tx, registratieID, opvoerTijdstip, "A_V", &entiteit.Vs[i]); err != nil {
-				return err
-			}
-		}
-		for i := range entiteit.RelABs {
-			if entiteit.RelABs[i].A_ID == 0 {
-				entiteit.RelABs[i].A_ID = entiteit.ID
-			}
-			if err := handleRepresentatieOpvoerMeta(c, tx, registratieID, opvoerTijdstip, "Rel_A_B", &entiteit.RelABs[i]); err != nil {
-				return err
-			}
-		}
-	case *model.Full_B:
-		for i := range entiteit.Xs {
-			if entiteit.Xs[i].B_ID == 0 {
-				entiteit.Xs[i].B_ID = entiteit.ID
-			}
-			if err := handleRepresentatieOpvoerMeta(c, tx, registratieID, opvoerTijdstip, "B_X", &entiteit.Xs[i]); err != nil {
-				return err
-			}
-		}
-		for i := range entiteit.Ys {
-			if entiteit.Ys[i].B_ID == 0 {
-				entiteit.Ys[i].B_ID = entiteit.ID
-			}
-			if err := handleRepresentatieOpvoerMeta(c, tx, registratieID, opvoerTijdstip, "B_Y", &entiteit.Ys[i]); err != nil {
-				return err
-			}
-		}
-	case *model.A_basis, *model.B_basis:
-		return nil
-	default:
-		return fmt.Errorf("HANDLER: unsupported entiteit type voor opvoer: %T", representatie)
 	}
 
 	return nil

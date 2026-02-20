@@ -63,68 +63,23 @@ func (rep *RepresentatiePlusNaam) UnmarshalJSON(data []byte) error {
 	}
 
 	for veldnaam, payload := range raw {
-		var representatie Representatie
-		var representatienaam string
-
-		switch veldnaam {
-		case "a":
-			var value Full_A
-			if err := json.Unmarshal(payload, &value); err != nil {
-				return err
-			}
-			representatie = &value
-			representatienaam = "A"
-		case "b":
-			var value Full_B
-			if err := json.Unmarshal(payload, &value); err != nil {
-				return err
-			}
-			representatie = &value
-			representatienaam = "B"
-		case "rel_a_b":
-			var value Rel_A_B
-			if err := json.Unmarshal(payload, &value); err != nil {
-				return err
-			}
-			representatie = &value
-			representatienaam = "Rel_A_B"
-		case "u":
-			var value A_U
-			if err := json.Unmarshal(payload, &value); err != nil {
-				return err
-			}
-			representatie = &value
-			representatienaam = "A_U"
-		case "v":
-			var value A_V
-			if err := json.Unmarshal(payload, &value); err != nil {
-				return err
-			}
-			representatie = &value
-			representatienaam = "A_V"
-		case "x":
-			var value B_X
-			if err := json.Unmarshal(payload, &value); err != nil {
-				return err
-			}
-			representatie = &value
-			representatienaam = "B_X"
-		case "y":
-			var value B_Y
-			if err := json.Unmarshal(payload, &value); err != nil {
-				return err
-			}
-			representatie = &value
-			representatienaam = "B_Y"
-		default:
+		meta, ok := MetaRegistry.GetByVeldnaam(veldnaam)
+		if !ok {
 			return fmt.Errorf("unsupported representatie key '%s'", veldnaam)
 		}
 
-		rep.Representatienaam = representatienaam
+		representatie := meta.Factory()
+		if err := json.Unmarshal(payload, representatie); err != nil {
+			return err
+		}
+
+		rep.Representatienaam = meta.Typenaam
 		rep.Veldnaam = veldnaam
 		rep.Representatie = representatie
 
-		fmt.Printf("MODELS: representatienaam=%s veldnaam=%s metatype=%s id=%v\n", representatienaam, veldnaam, representatie.Metatype(), representatie.GetID())
+		if debugLogsEnabled() {
+			fmt.Printf("MODELS: representatienaam=%s veldnaam=%s metatype=%s id=%v\n", meta.Typenaam, veldnaam, representatie.Metatype(), representatie.GetID())
+		}
 	}
 
 	return nil

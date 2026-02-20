@@ -20,6 +20,55 @@ func (a Full_A) Metatype() Metatype { return MetatypeEntiteit }
 func (b Full_B) GetID() any         { return b.ID }
 func (b Full_B) Metatype() Metatype { return MetatypeEntiteit }
 
+// GeefOnderliggendeGegevenselementen returns all child representaties of A.
+func (a *Full_A) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0)
+
+	for i := range a.Us {
+		if a.Us[i].A_ID == 0 {
+			a.Us[i].A_ID = a.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_U", Representatie: &a.Us[i]})
+	}
+
+	for i := range a.Vs {
+		if a.Vs[i].A_ID == 0 {
+			a.Vs[i].A_ID = a.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_V", Representatie: &a.Vs[i]})
+	}
+
+	for i := range a.RelABs {
+		if a.RelABs[i].A_ID == 0 {
+			a.RelABs[i].A_ID = a.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Rel_A_B", Representatie: &a.RelABs[i]})
+	}
+
+	return result
+}
+
+// GeefOnderliggendeGegevenselementen returns all child representaties of B.
+func (b *Full_B) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0)
+
+	for i := range b.Xs {
+		if b.Xs[i].B_ID == 0 {
+			b.Xs[i].B_ID = b.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_X", Representatie: &b.Xs[i]})
+	}
+
+	for i := range b.Ys {
+		if b.Ys[i].B_ID == 0 {
+			b.Ys[i].B_ID = b.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_Y", Representatie: &b.Ys[i]})
+	}
+
+	return result
+}
+
 // Full_A includes all fields of A and its related entities (like Vs)
 type Full_A struct {
 	bun.BaseModel `bun:"table:a,alias:a"`
