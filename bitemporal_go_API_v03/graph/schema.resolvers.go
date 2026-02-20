@@ -22,7 +22,7 @@ func (r *mutationResolver) CreateEntityA(ctx context.Context, input model.Create
 	if err != nil {
 		return nil, fmt.Errorf("invalid entity A id: %w", err)
 	}
-	dbEntity := model_db.A{
+	dbEntity := model_db.A_basis{
 		ID:     entityID,
 		Opvoer: &now,
 	}
@@ -193,7 +193,7 @@ func (r *mutationResolver) DeleteTask(ctx context.Context, id string) (bool, err
 
 // EntityA is the resolver for the entityA field.
 func (r *queryResolver) EntityA(ctx context.Context, id string) (*model.EntityA, error) {
-	var dbEntity model_db.A
+	var dbEntity model_db.A_basis
 	err := r.DB.NewSelect().Model(&dbEntity).Where("id = ?", id).Scan(ctx)
 	if err != nil {
 		return nil, err

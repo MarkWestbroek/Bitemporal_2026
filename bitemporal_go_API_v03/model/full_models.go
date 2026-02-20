@@ -30,7 +30,7 @@ type Full_A struct {
 	//Einde   *time.Time `json:"einde,omitempty"`   // afgeleid van A_Einde
 
 	// De U's behorende bij A, 1-1 op enig moment (enkelvoudig: todo tag)
-	Us []A_U `bun:"rel:has-many,join:id=a_id"`
+	Us []A_U `bun:"rel:has-many,join:id=a_id" json:"us,omitempty"`
 
 	/*
 		De relatie: 'has-many' vertelt Bun dat er meerdere V 's bij deze A horen.
@@ -38,10 +38,10 @@ type Full_A struct {
 		Ik mweet nog niet hoe dat in bun of andere tag weer te geven. Dit gaat over validatie en niet over de DB,
 		dus misschien een andere tag in de struct die aangeeft dat deze relatie meervoudig is op enig moment.
 	*/
-	Vs []A_V `bun:"rel:has-many,join:id=a_id"`
+	Vs []A_V `bun:"rel:has-many,join:id=a_id" json:"vs,omitempty"`
 
 	//Relaties Rel_AB's bij A
-	RelABs []Rel_A_B `bun:"rel:has-many,join:id=a_id"`
+	RelABs []Rel_A_B `bun:"rel:has-many,join:id=a_id" json:"rel_abs,omitempty"`
 }
 
 // Full_B includes all fields of B and its related entities (like Xs)
@@ -54,7 +54,7 @@ type Full_B struct {
 	//Einde   *time.Time `json:"einde,omitempty"`   // afgeleid van A_Einde
 
 	// De X's behorende bij B, 1-1 op enig moment (enkelvoudig: todo tag)
-	Xs []B_X `bun:"rel:has-many,join:id=b_id"`
+	Xs []B_X `bun:"rel:has-many,join:id=b_id" json:"xs,omitempty"`
 	// De Y's behorende bij B, 1-1 op enig moment (enkelvoudig: todo tag)
-	Ys []B_Y `bun:"rel:has-many,join:id=b_id"`
+	Ys []B_Y `bun:"rel:has-many,join:id=b_id" json:"ys,omitempty"`
 }

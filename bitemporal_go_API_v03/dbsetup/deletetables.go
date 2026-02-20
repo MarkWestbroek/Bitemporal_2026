@@ -45,12 +45,12 @@ func DeleteTables(db *bun.DB) error {
 		return err
 	}
 
-	_, err = db.NewDropTable().Model((*model.B)(nil)).IfExists().Cascade().Exec(ctx)
+	_, err = db.NewDropTable().Model((*model.B_basis)(nil)).IfExists().Cascade().Exec(ctx)
 	if err != nil {
 		return err
 	}
 
-	_, err = db.NewDropTable().Model((*model.A)(nil)).IfExists().Cascade().Exec(ctx)
+	_, err = db.NewDropTable().Model((*model.A_basis)(nil)).IfExists().Cascade().Exec(ctx)
 	if err != nil {
 		return err
 	}

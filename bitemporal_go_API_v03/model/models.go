@@ -8,12 +8,12 @@ import (
 
 // GetID en Metatype methoden voor alle representaties
 // Entiteiten
-func (a A) GetID() any         { return a.ID }
-func (a A) Metatype() Metatype { return MetatypeEntiteit }
-func (a A) IsMaterieel() bool  { return true } // A heeft aanvang/einde, dus is materieel
-func (b B) GetID() any         { return b.ID }
-func (b B) Metatype() Metatype { return MetatypeEntiteit }
-func (b B) IsMaterieel() bool  { return true } // B heeft aanvang/einde, dus is materieel
+func (a A_basis) GetID() any         { return a.ID }
+func (a A_basis) Metatype() Metatype { return MetatypeEntiteit }
+func (a A_basis) IsMaterieel() bool  { return true } // A heeft aanvang/einde, dus is materieel
+func (b B_basis) GetID() any         { return b.ID }
+func (b B_basis) Metatype() Metatype { return MetatypeEntiteit }
+func (b B_basis) IsMaterieel() bool  { return true } // B heeft aanvang/einde, dus is materieel
 
 // Relaties
 func (r Rel_A_B) GetID() any         { return r.ID }
@@ -37,9 +37,15 @@ func (by B_Y) GetID() any         { return by.Rel_ID }
 func (by B_Y) Metatype() Metatype { return MetatypeGegevenselement }
 func (by B_Y) IsMaterieel() bool  { return false } // B_Y heeft geen aanvang/einde, dus is formeel
 
-// Basis structs voor alle representaties
+/* Basis structs voor alle representaties
+Dat is zonder de relatie van entiteit naar gegevenselementen en relaties.
+Wel met relatie terug van gegevenselementen/relaties naar entiteit.
+Daar ben ik eigenlijk nog niet blij mee, want dat is eigenlijk ook al een vorm van plumbing, maar het maakt de handlers wel simpeler.
+Deze structuren worden gebruikt voor zowel de database als de basis REST interacties.
+*/
+
 // Entiteiten
-type A struct {
+type A_basis struct {
 	bun.BaseModel `bun:"table:a"`
 	ID            int        `json:"id" bun:"id,pk"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`  // afgeleid van registratie tijdstip opvoer
@@ -48,7 +54,7 @@ type A struct {
 	Einde         *time.Time `json:"einde,omitempty"`   // afgeleid van A_Einde
 }
 
-type B struct {
+type B_basis struct {
 	bun.BaseModel `bun:"table:b"`
 	ID            int        `json:"id" bun:"id,pk"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
@@ -113,15 +119,15 @@ type B_Y struct {
 }
 
 // Opvoer / Afvoer (formele tijd) methoden voor formele tijd intereface implementatie
-func (a A) GetOpvoer() *time.Time   { return a.Opvoer }
-func (a *A) SetOpvoer(t *time.Time) { a.Opvoer = t }
-func (a A) GetAfvoer() *time.Time   { return a.Afvoer }
-func (a *A) SetAfvoer(t *time.Time) { a.Afvoer = t }
+func (a A_basis) GetOpvoer() *time.Time   { return a.Opvoer }
+func (a *A_basis) SetOpvoer(t *time.Time) { a.Opvoer = t }
+func (a A_basis) GetAfvoer() *time.Time   { return a.Afvoer }
+func (a *A_basis) SetAfvoer(t *time.Time) { a.Afvoer = t }
 
-func (b B) GetOpvoer() *time.Time   { return b.Opvoer }
-func (b *B) SetOpvoer(t *time.Time) { b.Opvoer = t }
-func (b B) GetAfvoer() *time.Time   { return b.Afvoer }
-func (b *B) SetAfvoer(t *time.Time) { b.Afvoer = t }
+func (b B_basis) GetOpvoer() *time.Time   { return b.Opvoer }
+func (b *B_basis) SetOpvoer(t *time.Time) { b.Opvoer = t }
+func (b B_basis) GetAfvoer() *time.Time   { return b.Afvoer }
+func (b *B_basis) SetAfvoer(t *time.Time) { b.Afvoer = t }
 
 func (r Rel_A_B) GetOpvoer() *time.Time   { return r.Opvoer }
 func (r *Rel_A_B) SetOpvoer(t *time.Time) { r.Opvoer = t }
@@ -159,15 +165,15 @@ func (b Full_B) GetAfvoer() *time.Time   { return b.Afvoer }
 func (b *Full_B) SetAfvoer(t *time.Time) { b.Afvoer = t }
 
 // Aanvang / Einde (materiële tijd) methoden voor materiële tijd intereface implementatie
-func (a A) GetAanvang() *time.Time   { return a.Aanvang }
-func (a *A) SetAanvang(t *time.Time) { a.Aanvang = t }
-func (a A) GetEinde() *time.Time     { return a.Einde }
-func (a *A) SetEinde(t *time.Time)   { a.Einde = t }
+func (a A_basis) GetAanvang() *time.Time   { return a.Aanvang }
+func (a *A_basis) SetAanvang(t *time.Time) { a.Aanvang = t }
+func (a A_basis) GetEinde() *time.Time     { return a.Einde }
+func (a *A_basis) SetEinde(t *time.Time)   { a.Einde = t }
 
-func (b B) GetAanvang() *time.Time   { return b.Aanvang }
-func (b *B) SetAanvang(t *time.Time) { b.Aanvang = t }
-func (b B) GetEinde() *time.Time     { return b.Einde }
-func (b *B) SetEinde(t *time.Time)   { b.Einde = t }
+func (b B_basis) GetAanvang() *time.Time   { return b.Aanvang }
+func (b *B_basis) SetAanvang(t *time.Time) { b.Aanvang = t }
+func (b B_basis) GetEinde() *time.Time     { return b.Einde }
+func (b *B_basis) SetEinde(t *time.Time)   { b.Einde = t }
 
 func (r Rel_A_B) GetAanvang() *time.Time   { return r.Aanvang }
 func (r *Rel_A_B) SetAanvang(t *time.Time) { r.Aanvang = t }
@@ -177,8 +183,8 @@ func (r *Rel_A_B) SetEinde(t *time.Time)   { r.Einde = t }
 //TODO: als A_U, A_V, B_X, B_Y ook aanvang/einde krijgen, dan hier ook getters/setters toevoegen
 
 // String methoden voor debuggen
-func (a A) String() string       { return RepresentatieToString(a) }
-func (b B) String() string       { return RepresentatieToString(b) }
+func (a A_basis) String() string { return RepresentatieToString(a) }
+func (b B_basis) String() string { return RepresentatieToString(b) }
 func (r Rel_A_B) String() string { return RepresentatieToString(r) }
 func (au A_U) String() string    { return RepresentatieToString(au) }
 func (av A_V) String() string    { return RepresentatieToString(av) }

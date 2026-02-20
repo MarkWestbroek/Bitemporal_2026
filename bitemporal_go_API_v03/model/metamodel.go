@@ -35,8 +35,11 @@ type TypeMeta struct {
 	OnderliggendeGegevenselementen []OnderliggendGegevenselement
 }
 
+// MetaRegistryType is a named map type for the meta model registry, enabling methods.
+type MetaRegistryType map[string]TypeMeta
+
 // MetaRegistry is the hardcoded meta model registry.
-var MetaRegistry = map[string]TypeMeta{
+var MetaRegistry = MetaRegistryType{
 	"A": {
 		Typenaam:                  "A",
 		Metatype:                  MetatypeEntiteit,
@@ -123,14 +126,14 @@ en je liever hard faalt.
 */
 
 // GetTypeMeta returns metadata for a type, if present.
-func GetTypeMeta(typeName string) (TypeMeta, bool) {
-	meta, ok := MetaRegistry[typeName]
+func (r MetaRegistryType) GetTypeMeta(typeName string) (TypeMeta, bool) {
+	meta, ok := r[typeName]
 	return meta, ok
 }
 
 // MustTypeMeta returns metadata for a type or panics if missing.
-func MustTypeMeta(typeName string) TypeMeta {
-	meta, ok := MetaRegistry[typeName]
+func (r MetaRegistryType) MustTypeMeta(typeName string) TypeMeta {
+	meta, ok := r[typeName]
 	if !ok {
 		panic("unknown type: " + typeName)
 	}

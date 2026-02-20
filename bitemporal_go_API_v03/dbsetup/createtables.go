@@ -22,11 +22,11 @@ func CreateTables(db *bun.DB) error {
 
 	//Entities tables
 	// Create the "A" table in the database if it doesn't exist
-	_, err = db.NewCreateTable().Model((*model.A)(nil)).IfNotExists().Exec(ctx)
+	_, err = db.NewCreateTable().Model((*model.A_basis)(nil)).IfNotExists().Exec(ctx)
 	if err != nil {
 		return err
 	}
-	_, err = db.NewCreateTable().Model((*model.B)(nil)).IfNotExists().Exec(ctx)
+	_, err = db.NewCreateTable().Model((*model.B_basis)(nil)).IfNotExists().Exec(ctx)
 	if err != nil {
 		return err
 	}

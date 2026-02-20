@@ -27,13 +27,13 @@ func AddRoutes(router *gin.Engine) {
 	router.PUT("/tests/:id", handlers.UpdateTest)
 
 	//Add Entities routes to router
-	router.GET("/as", handlers.MakeGetEntitiesHandler[model.A]("As"))
-	router.GET("/as/:id", handlers.MakeGetEntityHandler[model.A]("A"))
-	router.POST("/as", handlers.MakeAddEntityHandler[model.A]("A"))
+	router.GET("/as", handlers.MakeGetEntitiesHandler[model.A_basis]("As"))
+	router.GET("/as/:id", handlers.MakeGetEntityHandler[model.A_basis]("A"))
+	router.POST("/as", handlers.MakeAddEntityHandler[model.A_basis]("A"))
 
-	router.GET("/bs", handlers.MakeGetEntitiesHandler[model.B]("Bs"))
-	router.GET("/bs/:id", handlers.MakeGetEntityHandler[model.B]("B"))
-	router.POST("/bs", handlers.MakeAddEntityHandler[model.B]("B"))
+	router.GET("/bs", handlers.MakeGetEntitiesHandler[model.B_basis]("Bs"))
+	router.GET("/bs/:id", handlers.MakeGetEntityHandler[model.B_basis]("B"))
+	router.POST("/bs", handlers.MakeAddEntityHandler[model.B_basis]("B"))
 
 	// add relation routes
 	router.GET("/rel_a_bs", handlers.MakeGetEntitiesHandler[model.Rel_A_B]("Rel_A_Bs"))
@@ -74,10 +74,8 @@ func AddRoutes(router *gin.Engine) {
 
 	// Bitemporal registration, correction and undoing routes
 	// see README.md for details and examples
-	router.POST("/registreer/as", handlers.MakeRegisterFullEntityHandlerA())
-	//	router.POST("/full/as/:id", handlers.MakeCorrectFullEntityHandler[model.Full_A]("Full_A", "Vs"))
-	//	router.POST("/full/as/:id/undo", handlers.MakeUndoFullEntityHandler[model.Full_A]("Full_A", "Vs"))
-	router.POST("/registreer/bs", handlers.MakeRegisterFullEntityHandlerB())
+	router.POST("/registreer/as", handlers.MakeRegisterFullEntityHandlerA()) // DEPRECATED, use /registratie/ endpoint instead
+	router.POST("/registreer/bs", handlers.MakeRegisterFullEntityHandlerB()) // DEPRECATED, use /registratie/ endpoint instead
 
 	// met ID
 	//router.POST("/registreer/as/:id", handlers.MakeRegisterFullEntityHandlerAWithID())

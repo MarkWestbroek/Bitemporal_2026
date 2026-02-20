@@ -65,9 +65,14 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 		// we kunnen hierbij gebruik maken van de "entiteitID" param in de URL (optioneel) en/of de IDs in de opvoer/afvoer van de wijziging(en)
 		// om te bepalen op welke entiteit en/of gegevenselementen de registratie betrekking heeft
 
-		// Step 2: Process each wijziging
+		//Haal de "methode" query param op, die aangeeft of we de reflectie-based aanpak willen gebruiken
+		// of de aanpak waarbij we de 'metamap' gebruiken
+		// vermoedelijk is er verschil in afhandelingstijd, omdat reflectie meer overhead heeft,
+		// maar moeten we wel de metamap inrichten.
 		methode := strings.ToLower(c.Query("methode"))
 		useReflectie := methode == "reflectie"
+
+		// Step 2: Process each wijziging
 		for _, wijziging := range request.Wijzigingen {
 			var rep *model.RepresentatiePlusNaam
 			if wijziging.Opvoer != nil {
@@ -103,9 +108,11 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 			switch true {
 			// OPVOER scenario's
 			case wijziging.Opvoer != nil:
+				// ZONDER REFLECTIE
 				handleOpvoer := handleRepresentatieOpvoerMeta
+				// MET REFLECTIE
 				if useReflectie {
-					handleOpvoer = handleRepresentatieOpvoer
+					handleOpvoer = handleRepresentatieOpvoerMetReflectie
 				}
 				if err := handleOpvoer(c, tx, registratieID, registratieTijdstip,
 					rep.Representatienaam, temporalRep); err != nil {
