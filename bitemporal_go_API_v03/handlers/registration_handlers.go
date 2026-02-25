@@ -53,7 +53,10 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 		}
 
 		// TIJDELIJK: OVERWRITE registratietijdstip met een tijdstip gebaseerd op de registratie ID, zodat we oplopende tijdstippen hebben voor testdoeleinden
-		request.Registratie.Tijdstip = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC).Add(time.Duration(request.Registratie.ID) * time.Hour)
+		request.Registratie.Tijdstip = time.
+			Date(2026, 1, 1, 0, 0, 0, 0, time.UTC).
+			Add(time.Duration(request.Registratie.ID) * time.Hour).
+			Add(time.Microsecond * time.Duration(request.Registratie.ID)) //gimmick: laatste cijfer van de tijd is het ID van de registratie...
 		_, err = tx.NewUpdate().
 			Model(&request.Registratie).
 			Where("id = ?", request.Registratie.ID).
@@ -250,7 +253,7 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 		elapsedMs := time.Since(start).Milliseconds()
 		// Succes response
 		c.JSON(http.StatusCreated,
-			gin.H{"message": fmt.Sprintf("De registratie %d is succesvol verwerkt in %d ms", registratieID, elapsedMs)})
+			gin.H{"message": fmt.Sprintf("De registratie %d is succesvol verwerkt op %s in %d ms", registratieID, registratieTijdstip, elapsedMs)})
 
 	}
 

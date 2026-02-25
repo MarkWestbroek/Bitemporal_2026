@@ -1,13 +1,14 @@
-# Go Bun Task Manager API
+# Bitemporeel register met quasi-REST API v0.3
 
-This project showcases the implementation of a **Task Manager REST API** using Go Bun. It provides a complete CRUD (Create, Read, Update, Delete) functionality for managing tasks, with data persistence in a PostgreSQL database.
+This project showcases the implementation of a **Bitemporal Register API** using Go Bun. It provides CR (Create, Read) functionality for managing configurable data, with data persistence in a PostgreSQL database.
+In addition it allows to correct data (in fact correct registrations and the registered data) and to undo registrations.
 
 ## Features
 
-- Create, read, update, and delete tasks
-- Store tasks in a PostgreSQL database using Go Bun ORM
-- API endpoints for interacting with tasks
-- Error handling and validation of input data
+- Create, read configurable data
+- Store data in a PostgreSQL database using Go Bun ORM
+- API endpoints for interacting with data
+- Error handling and TODO validation of input data
 - Integration with Gin web framework for HTTP routing
 
 ## Requirements
@@ -20,7 +21,7 @@ This project showcases the implementation of a **Task Manager REST API** using G
 1. Clone the repository:
 
    ```shell
-   git clone https://github.com/zaahidali/Learn-go-language
+  git clone https://github.com/MarkWestbroek/Bitemporal_2026
    ```
 
 2. Install the dependencies:
@@ -267,7 +268,7 @@ You can perform:
           "id": "5",
           "us": [
             {
-              "rel_id": 5,
+              //"rel_id": 5, niet nodig bij PFK autoinc rel_id
               "a_id": "5",
               "aaa": "a5",
               "bbb": "b5"
@@ -275,12 +276,12 @@ You can perform:
           ],
           "vs": [
             {
-              "rel_id": 7,
+              //"rel_id": 7, idem
               "a_id": "5",
               "ccc": "c5-1"
             },
             {
-              "rel_id": 8,
+              //"rel_id": 8, idem
               "a_id": "5",
               "ccc": "c5-2"
             }
@@ -360,8 +361,26 @@ Deregister U5 and register U6 for entity A:
     * onthoudt id's of stop ze in de structs
  - post records in tussentabel wijziging (heel specifiek met soft links)
 
- ## TO DO
-0 refactoren van de huidige ingewikkelde registreren code. (gegenned) Die is niet geparameteriseerd en warrig.
+3 refactoren van de huidige ingewikkelde registreren code. (gegenned) Die is niet geparameteriseerd en warrig.
+
+4 Autoincrement van registratie en wijziging
+
+5 tijdelijk: registratietijdstip loopt per uur op samen met het registratienummer, zodat registraties altijd sequentieel gedaan worden
+
+6 MetaRegistry en structs zijn de enige files die bepalen welke data in het register zit! Registratie en Wijziging zijn 'plumbing'.
+
+7 nu is de geconfigureerde data A, B, A-B, en U, V, X en Y
+
+8 ook configureerbaar: het gegevenselementen en relaties krijgen een PFK die de entiteit-id en een relatief id combineert. Het _relatief_ id is autoincrement via een trigger. De code maakt de triggers aan bij createtables.
+
+9 enkel- en meervoudigheid in een tag vastleggen (eigen tag? validatie tag?) in de modellen, zodat de /registreren/{entiteit} handler bij de opvoer van een nieuw enkelvoudig gegevenselement het actuele GE automatisch kan afvoeren
+ - gedaan bij opvoer van een enkelvoudig gegevenselement: de eerder wordt afgevoerd
+ - bij het vinden van meerdere actieve GEs wordt een foutmelding gegeven (en niet opgevoerd / afgevoerd)
+
+ 10 elke request vormt een transactie
+
+
+## TODO
 
 1 In modellen de materiële tijd toevoegen = aanvang en einde, Standaard element hergebruiken? Maar is foreign key per representatie, dus voor elke representatie een aparte {REP}_Aanvang + {REP}_Einde
 
@@ -370,15 +389,10 @@ Deregister U5 and register U6 for entity A:
 5 Andere optie is iets slimmers dan dit
 6 plus functie ipv de standaard insert waar je bij een post gewoon aanvang/einde meegeeft, maar bijzonder wegschrijft. Correctie en ongedaanmaking hebben het vooral moeilijk
 
-10 Autonumber IDs ipv via POST (registratie en wijziging zijn al autoincrement) (Maar dit is misschien niet handig met testen)
- 
-20 Speciaal Registratie (POST) endpoint dat het volgende doet:
- - registreer entiteit met GE'n of losse GE'n (DONE)
- - doe van alles met eerdere records bij ongedaanmaking en correctie (ingewikkeld?)
+10 Autonumber Entiteit-IDs? Simpel maar wenselijk?
 
-25 enkel- en meervoudigheid in een tag vastleggen (eigen tag? validatie tag?) in de modellen, zodat de /registreren/{entiteit} handler bij de opvoer van een nieuw enkelvoudig gegevenselement het actuele GE automatisch kan afvoeren
- - is dit wel een taak van het register of moet dat hoger liggen?
+20 reeds afgevoerde records kunnen niet weer afgevoerd worden (kan nu wel, geen check)
 
-30 transactie over bovenstaande (deels gedaan, bij een enkele registratie van A+GE'n)
+30 ongedaanmaking en correctie
 
 40 pbac, pep inbouwen
