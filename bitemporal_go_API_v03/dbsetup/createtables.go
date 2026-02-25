@@ -9,6 +9,10 @@ import (
 
 func CreateTables(db *bun.DB) error {
 	ctx := context.Background()
+
+	// tasks en tests tabellen zijn er puur voor de demo,
+	//  die kunnen we later weer verwijderen,
+	// maar ze zijn handig om snel wat data in de DB te kunnen zetten en te testen
 	// Create the "tasks" table in the database if it doesn't exist
 	_, err := db.NewCreateTable().Model((*model.Task)(nil)).IfNotExists().Exec(ctx)
 	if err != nil {
@@ -20,39 +24,14 @@ func CreateTables(db *bun.DB) error {
 		return err
 	}
 
-	//Entities tables
-	// Create the "A" table in the database if it doesn't exist
-	_, err = db.NewCreateTable().Model((*model.A_basis)(nil)).IfNotExists().Exec(ctx)
-	if err != nil {
-		return err
-	}
-	_, err = db.NewCreateTable().Model((*model.B_basis)(nil)).IfNotExists().Exec(ctx)
-	if err != nil {
-		return err
-	}
-
-	//Relations tables
-	_, err = db.NewCreateTable().Model((*model.Rel_A_B)(nil)).IfNotExists().Exec(ctx)
-	if err != nil {
-		return err
-	}
-
-	//Data element tables
-	_, err = db.NewCreateTable().Model((*model.A_U)(nil)).IfNotExists().Exec(ctx)
-	if err != nil {
-		return err
-	}
-	_, err = db.NewCreateTable().Model((*model.A_V)(nil)).IfNotExists().Exec(ctx)
-	if err != nil {
-		return err
-	}
-
-	_, err = db.NewCreateTable().Model((*model.B_X)(nil)).IfNotExists().Exec(ctx)
-	if err != nil {
-		return err
-	}
-
-	_, err = db.NewCreateTable().Model((*model.B_Y)(nil)).IfNotExists().Exec(ctx)
+	/*
+		Maak de tabellen voor de model representaties aan,
+		 dus de entiteiten, relaties en gegevenselementen, typisch voor dit register.
+		Deze worden gespecificeerd in:
+		- model/metamodel.go (map)
+		- model/models.go (structs)
+	*/
+	err = createModelTables(ctx, db)
 	if err != nil {
 		return err
 	}

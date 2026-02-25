@@ -79,8 +79,9 @@ type Rel_A_B struct {
 // A (1) - (1) U
 type A_U struct {
 	bun.BaseModel `bun:"table:a_u"`
-	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
-	A_ID          int        `json:"a_id"`
+	A_ID          int        `json:"a_id" bun:"a_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk,autoincrement"` // autoincrement zal zijn via een triggerfunctie voor de relatieve ID
+	ParentA       *A_basis   `bun:"rel:belongs-to,join:a_id=id,on_delete:cascade"`
 	Aaa           string     `json:"aaa"`
 	Bbb           string     `json:"bbb"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
@@ -90,8 +91,9 @@ type A_U struct {
 // A (1) - (*) V
 type A_V struct {
 	bun.BaseModel `bun:"table:a_v"`
-	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
-	A_ID          int        `json:"a_id"`
+	A_ID          int        `json:"a_id" bun:"a_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentA       *A_basis   `bun:"rel:belongs-to,join:a_id=id,on_delete:cascade"`
 	Ccc           string     `json:"ccc"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
@@ -100,8 +102,9 @@ type A_V struct {
 // B (1) - (1) X
 type B_X struct {
 	bun.BaseModel `bun:"table:b_x"`
-	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
-	B_ID          int        `json:"b_id"`
+	B_ID          int        `json:"b_id" bun:"b_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentB       *B_basis   `bun:"rel:belongs-to,join:b_id=id,on_delete:cascade"`
 	Fff           string     `json:"fff"`
 	Ggg           string     `json:"ggg"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
@@ -111,8 +114,9 @@ type B_X struct {
 // B (1) - (1) Y
 type B_Y struct {
 	bun.BaseModel `bun:"table:b_y"`
-	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
-	B_ID          int        `json:"b_id"`
+	B_ID          int        `json:"b_id" bun:"b_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentB       *B_basis   `bun:"rel:belongs-to,join:b_id=id,on_delete:cascade"`
 	Hhh           string     `json:"hhh"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
@@ -120,7 +124,6 @@ type B_Y struct {
 
 // Opvoer / Afvoer (formele tijd) methoden voor formele tijd intereface implementatie
 func (a A_basis) GetOpvoer() *time.Time   { return a.Opvoer }
-func (a *A_basis) SetOpvoer(t *time.Time) { a.Opvoer = t }
 func (a A_basis) GetAfvoer() *time.Time   { return a.Afvoer }
 func (a *A_basis) SetAfvoer(t *time.Time) { a.Afvoer = t }
 

@@ -35,6 +35,13 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 			}
 		}()
 
+		/*
+			tijdelijk voor testen: maak het registratietijdstip gelijk aan
+			een tijdstip oplopende met het registratienummer.
+			Dat vergt wel eerst een insert van de registratie zonder tijdstip,
+			en dan een update met het tijdstip.
+		*/
+
 		// Step 1: Insert Registratie and get ID + Tijdstip
 		_, err = tx.NewInsert().
 			Model(&request.Registratie).
@@ -44,6 +51,19 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to insert registratie: %v", err)})
 			return
 		}
+
+		// TIJDELIJK: OVERWRITE registratietijdstip met een tijdstip gebaseerd op de registratie ID, zodat we oplopende tijdstippen hebben voor testdoeleinden
+		request.Registratie.Tijdstip = time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC).Add(time.Duration(request.Registratie.ID) * time.Hour)
+		_, err = tx.NewUpdate().
+			Model(&request.Registratie).
+			Where("id = ?", request.Registratie.ID).
+			Exec(c.Request.Context())
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to update registratie with tijdstip: %v", err)})
+			return
+		}
+
+		// set twee variabelen voor verder gebruik in de fuctie: registratieID en registratieTijdstip
 		registratieID := request.Registratie.ID
 		registratieTijdstip := request.Registratie.Tijdstip
 

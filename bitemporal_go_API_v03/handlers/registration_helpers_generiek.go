@@ -3,6 +3,8 @@ package handlers
 import (
 	"database/sql"
 	"fmt"
+	"reflect"
+	"strings"
 
 	"time"
 
@@ -37,6 +39,8 @@ func handleRepresentatieOpvoerMetReflectie(c *gin.Context, tx bun.Tx, registrati
 	representatie.SetOpvoer(&opvoerTijdstip)
 
 	// insert de top level representatie, dat moet namelijk sowieso
+	// Interessant: autoincrement ID's worden automatisch teruggezet in de struct,
+	// dus die kunnen we daarna gebruiken  voor de onderliggende gegevenselementen/relaties
 	_, err := tx.NewInsert().
 		Model(representatie).
 		Exec(c.Request.Context())
@@ -72,6 +76,22 @@ func handleRepresentatieOpvoerMeta(c *gin.Context, tx bun.Tx, registratieID int6
 		return fmt.Errorf("HANDLER: onbekend type voor opvoer: %s", representatienaam)
 	}
 
+	/* Indien geen entiteit:
+	- indien ENKELVOUDIG:
+	- 	zoek naar actieve (wel opvoer en geen afvoer) dezelfde gegevenselementen/relaties bij deze entiteit
+		(op basis van de ID van de entiteit in het gegevenselement/relatie record)
+	- 	als er één is: sluit deze af (update afvoer veld) en maak wijziging record aan
+	- 	als er meer dan één is: dat is een fout, want er mag maar één actief gegevenselement/relatie zijn bij enkelvoudig voorkomen
+	- -----> foutmelding geven en transactie afbreken.  <------
+
+	- vinden: bovenliggende tabel...
+	*/
+	if meta.Metatype != model.MetatypeEntiteit {
+		if err := sluitActieveEnkelvoudigeVoorgangersAf(c, tx, registratieID, opvoerTijdstip, representatienaam, representatie, meta); err != nil {
+			return err
+		}
+	}
+
 	representatie.SetOpvoer(&opvoerTijdstip)
 	_, err := tx.NewInsert().
 		Model(representatie).
@@ -89,6 +109,9 @@ func handleRepresentatieOpvoerMeta(c *gin.Context, tx bun.Tx, registratieID int6
 		return nil
 	}
 
+	/*
+		Indien onderliggend gegevenselementen/relaties (typisch bij entiteiten):
+	*/
 	onderliggendeRepresentaties, ok := representatie.(model.HeeftOnderliggendeGegevenselementen)
 	if !ok {
 		return fmt.Errorf("HANDLER: type %s geeft geen onderliggende gegevenselementen vrij", representatienaam)
@@ -250,4 +273,100 @@ func anyNaarInt(v any) (int, bool) {
 	default:
 		return 0, false
 	}
+}
+
+func sluitActieveEnkelvoudigeVoorgangersAf(c *gin.Context, tx bun.Tx, registratieID int64, registratietijdstip time.Time,
+	representatienaam string, representatie model.FormeleRepresentatie, meta model.TypeMeta) error {
+	if meta.Metatype == model.MetatypeEntiteit || meta.Momentvoorkomen != model.Enkelvoudig {
+		return nil
+	}
+
+	bovenliggendeRelatieMeta, ok := model.MetaRegistry.GetBovenliggendeRelatieMeta(meta.Typenaam)
+	if !ok {
+		return fmt.Errorf("HANDLER: geen bovenliggende entiteit gevonden voor type %s", representatienaam)
+	}
+
+	fkColumn := meta.EntiteitIDKolom
+	if fkColumn == "" {
+		return fmt.Errorf("HANDLER: geen entiteit FK-kolom geconfigureerd voor type %s", representatienaam)
+	}
+
+	entiteitID, err := haalIntWaardeVoorKolomUitRepresentatie(representatie, fkColumn)
+	if err != nil {
+		return fmt.Errorf("HANDLER: kon bovenliggende %s id niet bepalen voor %s: %v", bovenliggendeRelatieMeta.ParentType.Typenaam, representatienaam, err)
+	}
+	if entiteitID == 0 {
+		return fmt.Errorf("HANDLER: bovenliggende %s id ontbreekt voor %s", bovenliggendeRelatieMeta.ParentType.Typenaam, representatienaam)
+	}
+
+	activeIDs, err := haalActieveIDsGegevenselementUitDB(c, tx, meta, fkColumn, entiteitID)
+	if err != nil {
+		return err
+	}
+
+	if len(activeIDs) > 1 {
+		return fmt.Errorf("HANDLER: meerdere actieve %s records gevonden voor %s=%d (enkelvoudig verwacht)",
+			representatienaam, fkColumn, entiteitID)
+	}
+
+	for _, id := range activeIDs {
+		if err := updateAfvoerByID(c, tx, meta, id, registratietijdstip); err != nil {
+			return err
+		}
+		if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
+			representatienaam, fmt.Sprint(id), registratietijdstip); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func haalIntWaardeVoorKolomUitRepresentatie(representatie any, kolomnaam string) (int, error) {
+	value := reflect.ValueOf(representatie)
+	for value.Kind() == reflect.Pointer {
+		if value.IsNil() {
+			return 0, fmt.Errorf("lege representatie")
+		}
+		value = value.Elem()
+	}
+	if value.Kind() != reflect.Struct {
+		return 0, fmt.Errorf("representatie is geen struct")
+	}
+
+	typeInfo := value.Type()
+	normalizedKolom := normalizeVeldnaam(kolomnaam)
+
+	for i := 0; i < typeInfo.NumField(); i++ {
+		fieldType := typeInfo.Field(i)
+		fieldValue := value.Field(i)
+		if !fieldValue.CanInterface() {
+			continue
+		}
+
+		if normalizeVeldnaam(fieldType.Name) == normalizedKolom ||
+			normalizeVeldnaam(firstTagValue(fieldType.Tag.Get("json"))) == normalizedKolom ||
+			normalizeVeldnaam(firstTagValue(fieldType.Tag.Get("bun"))) == normalizedKolom {
+
+			result, ok := anyNaarInt(fieldValue.Interface())
+			if !ok {
+				return 0, fmt.Errorf("veld %s is geen integer", fieldType.Name)
+			}
+			return result, nil
+		}
+	}
+
+	return 0, fmt.Errorf("kolom %s niet gevonden in representatie", kolomnaam)
+}
+
+func firstTagValue(tag string) string {
+	if tag == "" {
+		return ""
+	}
+	parts := strings.Split(tag, ",")
+	return parts[0]
+}
+
+func normalizeVeldnaam(veld string) string {
+	return strings.ReplaceAll(strings.ToLower(strings.TrimSpace(veld)), "_", "")
 }

@@ -86,10 +86,11 @@ type Full_A struct {
 		Deze relatie is meervoudig op enig moment.
 		Ik mweet nog niet hoe dat in bun of andere tag weer te geven. Dit gaat over validatie en niet over de DB,
 		dus misschien een andere tag in de struct die aangeeft dat deze relatie meervoudig is op enig moment.
+		OPM: nu in de MetaRegistry opgenomen als Momentvoorkomen: Meervoudig.
 	*/
 	Vs []A_V `bun:"rel:has-many,join:id=a_id" json:"vs,omitempty"`
 
-	//Relaties Rel_AB's bij A
+	//Relaties Rel_AB's bij A (meervoudig op enig moment)
 	RelABs []Rel_A_B `bun:"rel:has-many,join:id=a_id" json:"rel_abs,omitempty"`
 }
 
