@@ -19,7 +19,7 @@ import (
 )
 
 var commit = "dev"
-var buildTime = "17 feb 2024"
+var buildTime = "26 feb 2024"
 
 func main() {
 	loadDotEnvIfPresent()
