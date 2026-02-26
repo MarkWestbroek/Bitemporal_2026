@@ -1,0 +1,17 @@
+dank. Kun je nu de MakeRegisterFullEntityHandler aanpassen zodat deze de json request ontvangt en de juiste structs daaraan bindt.
+
+Daarbij zie ik de volgende eventuele moeilijkheden:
+- als in een gegevenselement (U of V of rel_A_B, bij A) de a_id ontbreekt moet deze worden ingevuld vanuit A
+
+Daarna moet de handler het volgende doen:
+- altijd eerst de registratie vastleggen (insert) in de database. Het ID en het tijdstip onthouden.
+
+Scenario 1: bij een opvoer waarbij er een entiteit (bijv. A) de basis is
+- A inserten inclusief de onderliggende gegevenselementen (daartoe a_id aanvullen indien niet aanwezig)
+- bij elk record het opvoer tijdstip aanvullen met dat uit de registratie
+- per record een wijzigings record aanmaken (insert) via de Wijziging struct, waarbij het wijzigingstype "opvoer" is, de registratieID de id van de registratie, de representatienaam de naam van de struct die overeenkomt met het recordtype (dus A, U, V of rel_A_B in dit voorbeeld), de RepresentatieID de ID van representatie (entiteit of gegevenselement). dus van A het ID, U het rel_ID enz. Dat kan via de Get_ID() interface. Het Tijdstip is dat van de registratie.
+
+Scenario 2 is een afvoer van een entiteit (A of B in dit geval):
+- eigenlijk gebeurt er niets in de database, maar worden er wijzigings-records toegevoegd zoals boven, maar dan met het type "afvoer" voor: (1) A (id staat in de request), en (2) alle nog geldige gegevenselementen onder A, dus die nog niet zijn afgevoerd (belangrijk!), dus die geen afvoertijdstip hebben. Dat moet via een query naar de database. Van al deze records moet ook het afvoer-tijdstip op het tijdstip van de registratie worden gezet (nul of meerdere updates naar de db).
+
+Scenario 3 is dat van de wijziging in onderliggende gegevenselementen. Dat volgt hetzelfde patroon als 1 of 2, maar dan zonder de bovenliggende entiteit (A of B) te wijzigen.

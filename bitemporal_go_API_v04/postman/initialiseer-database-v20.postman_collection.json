@@ -1,0 +1,25 @@
+{
+  "info": {
+    "name": "Initialiseer database (v2.0 compat)",
+    "description": "Compatibele collectie voor VS Code Postman extensie import.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Admin - Drop tables",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "http://localhost:8080/admin/db/droptables/1234"
+      }
+    },
+    {
+      "name": "Admin - Drop tables (wrong password)",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "http://localhost:8080/admin/db/droptables/wrong-password"
+      }
+    }
+  ]
+}
