@@ -52,7 +52,7 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 			return
 		}
 
-		// TIJDELIJK: OVERWRITE registratietijdstip met een tijdstip gebaseerd op de registratie ID, zodat we oplopende tijdstippen hebben voor testdoeleinden
+		// TIJDELIJK: overwrite registratietijdstip met een tijdstip gebaseerd op de registratie ID, zodat we oplopende tijdstippen hebben voor testdoeleinden
 		request.Registratie.Tijdstip = time.
 			Date(2026, 1, 1, 0, 0, 0, 0, time.UTC).
 			Add(time.Duration(request.Registratie.ID) * time.Hour).
@@ -77,17 +77,37 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 			- Registratietype = Correctie
 			- CorrigeertRegistratieID != nil
 			- Het tijdstip van de correctie is later dan dat van de te corrigeren registratie.
-			- // LATER // indien niet: zoek de eerste wijziging in de registratie, en kijk of die verwijst naar een gegevenselement dat gebruikt werd in andere registratie
-			- Een entiteit zelf kan niet gewijzigd worden, BEHALVE de materiele tijden (aanvang, einde)
+			- Een entiteit zelf kan niet gewijzigd worden,
+					-> BEHALVE de materiele tijden (aanvang, einde)
 
-			PROBLEEM:
-			- een registratie kan nu meer dan één entiteit betreffen
-			- op zich zou hetzelfde formaat gebruikt kunnen worden voor correctie, bijv.:
+			N.B.:
+			- een registratie kan nu meer dan één entiteit betreffen (niet strikt REST dus)
+			- op zich zou hetzelfde formaat gebruikt kunnen worden voor correctie, zoals hieronder.
+			-- het id van de entiteit betekent dan 'betreft entiteit met ID x'
+			-- een correctie kan niet een opvoer in een afvoer veranderen ofzo: daar is ongedaanmaking voor.
+			-- een correctie kan dus alleen een opvoer corrigeren naar een andere opvoer, of een afvoer naar een andere afvoer
+			-- een correctie hoeft niet alle elementen in een registratie te corrigeren
+			--> ISSUE? wat met verplichte velden in de structs? Hebben we andere structs nodig voor correcties?
+
+			RESULTAAT:
+			- er is minimaal één nieuwe wijziging bijgekomen voor dat wat gecorrigeerd is
+			- het gecorrigeerde gegevenselement is afgevoerd (met een wijziging record van type 'afvoer' en het tijdstip van de correctie)
+			- er is een nieuw gegevenselement opgevoerd met de gecorrigeerde data, maar met een nieuwe ID
+			- het nieuwe ID moet worden terugggegeven in de response
+			-> ISSUE: geven we dus de hele request ongeveer terug, maar met gegeneerde ID's?
+			-> ISSUE: hoe weten we welk gegevenselement welke is bij meerdere. Maar misschien maakt dat niet uit.
+			--- denkexperiment: DING bevat NAMEN. naam1, naam2, naam3.
+			--- We corrigeren naam2 naar naam2b. naam2 wordt afgevoerd,
+			--- en naam2b wordt opgevoerd met een nieuwe ID.
+			--- In de response geven we naam2b terug met het nieuwe ID.
+
+			Voorbeeld correctie request body:
 			{
 				"registratie": {
 					"registratietype": "correctie",
 					"tijdstip": "2026-01-12T11:00:00Z",
 					"opmerking": "Corrigeer U3 van entiteit A2",
+					"corrigeertRegistratieID": 1
 				},
 				"wijzigingen": [
 					{
@@ -98,7 +118,28 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 									{
 										"rel_id": 3,
 										"aaa": "a2-correctie",
-										"bbb": "b2-correctie"
+										//"bbb": "b2-correctie" // stel dat we alleen aaa corrigeren, en bbb niet. Dan corrigeren we alleen aaa in de opvoer, en laten we bbb weg in de opvoer. In de database blijft bbb dan gelijk aan wat het was.
+									}
+								]
+							}
+						}
+					}
+				]
+			}
+
+			RESPONSE:
+			{
+				"message": "De registratie 2 is succesvol verwerkt op 2026-01-12T11:00:00Z in 123 ms",
+				"wijzigingen": [
+					{
+						"opvoer": {
+							"a": {
+								"id": 2,
+								"us": [
+									{
+										"rel_id": 4, // nieuwe ID voor de opgevoerde U3
+										"aaa": "a2-correctie",
+										//"bbb": "b2-correctie" // stel dat we alleen aaa corrigeren, en bbb niet. Dan corrigeren we alleen aaa in de opvoer, en laten we bbb weg in de opvoer. In de database blijft bbb dan gelijk aan wat het was.
 									}
 								]
 							}
