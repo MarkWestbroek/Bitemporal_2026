@@ -48,6 +48,26 @@ type RepresentatiePlusNaam struct {
 	Veldnaam          string        `json:"-"` // JSON veldnaam (bijv. a, b, u, rel_a_b)
 }
 
+func (rep RepresentatiePlusNaam) MarshalJSON() ([]byte, error) {
+	if rep.Representatie == nil {
+		return []byte("null"), nil
+	}
+
+	veldnaam := rep.Veldnaam
+	if veldnaam == "" && rep.Representatienaam != "" {
+		meta, ok := MetaRegistry.GetTypeMeta(rep.Representatienaam)
+		if ok {
+			veldnaam = meta.Veldnaam
+		}
+	}
+
+	if veldnaam == "" {
+		return nil, fmt.Errorf("cannot marshal representatie zonder veldnaam (typenaam=%s)", rep.Representatienaam)
+	}
+
+	return json.Marshal(map[string]Representatie{veldnaam: rep.Representatie})
+}
+
 func (rep *RepresentatiePlusNaam) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
 		return nil
