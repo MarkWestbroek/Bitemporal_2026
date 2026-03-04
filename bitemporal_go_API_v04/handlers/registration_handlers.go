@@ -292,7 +292,7 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 		committed = true
 
 		elapsedMs := time.Since(start).Milliseconds()
-		// Succes response
+		// Succes response inclusief de gewijzigde gegevens
 		c.JSON(http.StatusCreated,
 			gin.H{
 				"message":     fmt.Sprintf("De registratie %d is succesvol verwerkt op %s in %d ms", registratieID, registratieTijdstip, elapsedMs),
