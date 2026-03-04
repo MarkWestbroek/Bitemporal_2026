@@ -78,6 +78,7 @@ func handleRepresentatieOpvoerMeta(c *gin.Context, tx bun.Tx, registratieID int6
 
 	/* Indien geen entiteit:
 	- indien ENKELVOUDIG:
+	- sluitActieveEnkelvoudigeVoorgangersAf:
 	- 	zoek naar actieve (wel opvoer en geen afvoer) dezelfde gegevenselementen/relaties bij deze entiteit
 		(op basis van de ID van de entiteit in het gegevenselement/relatie record)
 	- 	als er één is: sluit deze af (update afvoer veld) en maak wijziging record aan
@@ -86,7 +87,7 @@ func handleRepresentatieOpvoerMeta(c *gin.Context, tx bun.Tx, registratieID int6
 
 	- vinden: bovenliggende tabel...
 	*/
-	if meta.Metatype != model.MetatypeEntiteit {
+	if meta.Metatype != model.MetatypeEntiteit && meta.Momentvoorkomen == model.Enkelvoudig {
 		if err := sluitActieveEnkelvoudigeVoorgangersAf(c, tx, registratieID, opvoerTijdstip, representatienaam, representatie, meta); err != nil {
 			return err
 		}
