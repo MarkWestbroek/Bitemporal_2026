@@ -267,23 +267,21 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 			switch true {
 			// OPVOER scenario's
 			case wijziging.Opvoer != nil:
-				// ZONDER REFLECTIE = de standaard aanpak
-				// deze is nu ook uitgebreid met correctie
-				handleOpvoer := handleRepresentatieOpvoerMeta
-				// MET REFLECTIE
-				// alleen voor vergelijking en testen van de aanpak met reflectie
 				if useReflectie {
-					handleOpvoer = handleRepresentatieOpvoerMetReflectie
-				}
-				if err := handleOpvoer(c, tx, request.Registratie,
-					rep.Representatienaam, temporalRep); err != nil {
+					if err := handleRepresentatieOpvoerMetReflectie(c, tx, request.Registratie,
+						rep.Representatienaam, temporalRep); err != nil {
+						c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to handle opvoer van %s: %v", rep.Representatienaam, err)})
+						return
+					}
+				} else if err := handleRepresentatieOpvoerMeta(c, tx, request.Registratie,
+					"", "", rep.Representatienaam, temporalRep); err != nil {
 					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to handle opvoer van %s: %v", rep.Representatienaam, err)})
 					return
 				}
 			// AFVOER scenario's
 			case wijziging.Afvoer != nil:
 				if err := handleRepresentatieAfvoer(c, tx, registratieID, registratieTijdstip,
-					rep.Representatienaam, temporalRep); err != nil {
+					"", "", rep.Representatienaam, temporalRep); err != nil {
 					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to handle afvoer van %s: %v", rep.Representatienaam, err)})
 					return
 				}

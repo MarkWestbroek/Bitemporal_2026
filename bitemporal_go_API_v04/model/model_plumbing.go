@@ -127,6 +127,7 @@ type Registratie struct {
 	Opmerking                  *string             `json:"opmerking,omitempty"`                     // optioneel veld voor extra informatie
 	CorrigeertRegistratieID    *int64              `json:"corrigeert_registratie_id,omitempty"`     // bij correcties: verwijzing naar de registratie die gecorrigeerd wordt
 	MaaktOngedaanRegistratieID *int64              `json:"maakt_ongedaan_registratie_id,omitempty"` // bij ongedaanmakings: verwijzing naar de registratie die ongedaan wordt gemaakt
+	Wijzigingen                []Wijziging         `json:"wijzigingen,omitempty" bun:"rel:has-many,join:id=registratie_id"`
 }
 
 func (reg Registratie) IsRegistratie() bool {

@@ -1,14 +1,17 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v04/model"
 	"github.com/gin-gonic/gin"
+	"github.com/uptrace/bun"
 )
 
 /* GENERAL TODO:
@@ -116,7 +119,338 @@ func setForeignKeyOnRelatedEntity(relatedEntity reflect.Value, fkFieldName strin
 	return fmt.Errorf("FK field '%s' not found or cannot be set", fkFieldName)
 }
 
-// MakeGetFullEntitiesHandler returns a gin.HandlerFunc that retrieves entities of type T with pagination
+// parsePeiltijdstipUitQuerystring leest optionele querystring parameters voor formele tijd.
+// Ondersteunt:
+//   - `peiltijdstip` in RFC3339/RFC3339Nano formaat
+//   - `t` als integer; die wordt vertaald naar hetzelfde patroon als in registratie:
+//     2026-01-01T00:00:00Z + t uren + t microseconden.
+//
+// Als beide ontbreken, retourneert de functie (nil, nil) en wordt geen tijdsfilter toegepast.
+// Als beide aanwezig zijn, krijgt `peiltijdstip` voorrang.
+// Bij ongeldig formaat retourneert de functie een error die direct als 400-antwoord
+// aan de client kan worden doorgegeven.
+func parsePeiltijdstipUitQuerystring(c *gin.Context) (*time.Time, error) {
+	peiltijdstipRaw := c.Query("peiltijdstip")
+	if peiltijdstipRaw != "" {
+		peiltijdstip, err := time.Parse(time.RFC3339Nano, peiltijdstipRaw)
+		if err != nil {
+			return nil, fmt.Errorf("invalid 'peiltijdstip' parameter, expected RFC3339/RFC3339Nano")
+		}
+		if debugLogsEnabled() {
+			fmt.Printf("HANDLER (full): peiltijdstip (querystring) = %s\n", peiltijdstip.Format(time.RFC3339Nano))
+		}
+
+		return &peiltijdstip, nil
+	}
+
+	tRaw := c.Query("t")
+	if tRaw == "" {
+		return nil, nil
+	}
+	t, err := strconv.Atoi(tRaw)
+	if err != nil {
+		return nil, fmt.Errorf("invalid 't' parameter, expected integer")
+	}
+
+	peiltijdstip := tijdstipUitT(t)
+	if debugLogsEnabled() {
+		fmt.Printf("HANDLER (full): peiltijdstip (afgeleid uit t=%d) = %s\n", t, peiltijdstip.Format(time.RFC3339Nano))
+	}
+
+	return &peiltijdstip, nil
+}
+
+func tijdstipUitT(t int) time.Time {
+	return time.
+		Date(2026, 1, 1, 0, 0, 0, 0, time.UTC).
+		Add(time.Duration(t) * time.Hour).
+		Add(time.Microsecond * time.Duration(t))
+}
+
+// parseRegistratieIntervalUitQuerystring leest optionele interval-params ta/tb.
+// - ta/tb zijn integers en worden met dezelfde t->tijdstip truc afgeleid.
+// - interval is inclusief: tijdstip >= ta en tijdstip <= tb.
+// - als slechts een van beide is gezet, wordt de andere grens open gelaten.
+// - als geen van beide gezet is, returnt de functie (nil, nil, nil).
+func parseRegistratieIntervalUitQuerystring(c *gin.Context) (*time.Time, *time.Time, error) {
+	taRaw := c.Query("ta")
+	tbRaw := c.Query("tb")
+	if taRaw == "" && tbRaw == "" {
+		return nil, nil, nil
+	}
+
+	var ta *time.Time
+	if taRaw != "" {
+		v, err := strconv.Atoi(taRaw)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid 'ta' parameter, expected integer")
+		}
+		t := tijdstipUitT(v)
+		ta = &t
+		if debugLogsEnabled() {
+			fmt.Printf("HANDLER (full): interval ta (afgeleid uit ta=%d) = %s\n", v, t.Format(time.RFC3339Nano))
+		}
+	}
+
+	var tb *time.Time
+	if tbRaw != "" {
+		v, err := strconv.Atoi(tbRaw)
+		if err != nil {
+			return nil, nil, fmt.Errorf("invalid 'tb' parameter, expected integer")
+		}
+		t := tijdstipUitT(v)
+		tb = &t
+		if debugLogsEnabled() {
+			fmt.Printf("HANDLER (full): interval tb (afgeleid uit tb=%d) = %s\n", v, t.Format(time.RFC3339Nano))
+		}
+	}
+
+	if ta != nil && tb != nil && ta.After(*tb) {
+		return nil, nil, fmt.Errorf("invalid interval: ta must be <= tb")
+	}
+
+	return ta, tb, nil
+}
+
+func parseRegistratietypesUitQuerystring(c *gin.Context) ([]model.RegistratietypeEnum, error) {
+	rawValues := c.QueryArray("type")
+	if len(rawValues) == 0 {
+		return nil, nil
+	}
+
+	types := make([]model.RegistratietypeEnum, 0)
+	seen := make(map[model.RegistratietypeEnum]bool)
+
+	for _, raw := range rawValues {
+		for _, part := range strings.Split(raw, ",") {
+			value := strings.ToLower(strings.TrimSpace(part))
+			if value == "" {
+				continue
+			}
+
+			var t model.RegistratietypeEnum
+			switch value {
+			case string(model.RegistratietypeRegistratie):
+				t = model.RegistratietypeRegistratie
+			case string(model.RegistratietypeCorrectie):
+				t = model.RegistratietypeCorrectie
+			case string(model.RegistratietypeOngedaanmaking):
+				t = model.RegistratietypeOngedaanmaking
+			default:
+				return nil, fmt.Errorf("invalid 'type' parameter value: %s", value)
+			}
+
+			if !seen[t] {
+				types = append(types, t)
+				seen[t] = true
+			}
+		}
+	}
+
+	if len(types) == 0 {
+		return nil, nil
+	}
+
+	return types, nil
+}
+
+func toonAfvoerInResponse(c *gin.Context) bool {
+	return c.Query("toonafvoer") == "1"
+}
+
+func removeAfvoerKeys(v any) any {
+	switch t := v.(type) {
+	case map[string]any:
+		delete(t, "afvoer")
+		for k, child := range t {
+			t[k] = removeAfvoerKeys(child)
+		}
+		return t
+	case []any:
+		for i, child := range t {
+			t[i] = removeAfvoerKeys(child)
+		}
+		return t
+	default:
+		return v
+	}
+}
+
+func sanitizeResponseWithoutAfvoer(payload any) (any, error) {
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	var generic any
+	if err := json.Unmarshal(b, &generic); err != nil {
+		return nil, err
+	}
+
+	return removeAfvoerKeys(generic), nil
+}
+
+func structNaarMap(v any) (map[string]any, error) {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+	result := make(map[string]any)
+	if err := json.Unmarshal(b, &result); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func entiteitNaamNaarFullPathSegment(entiteitnaam string) (string, bool) {
+	switch strings.ToUpper(strings.TrimSpace(entiteitnaam)) {
+	case "A":
+		return "as", true
+	case "B":
+		return "bs", true
+	default:
+		return "", false
+	}
+}
+
+func maakFullEntiteitLinksVoorRegistratie(reg model.Registratie) []map[string]string {
+	seen := make(map[string]bool)
+	links := make([]map[string]string, 0)
+
+	for _, wijziging := range reg.Wijzigingen {
+		if wijziging.Entiteitnaam == "" || wijziging.EntiteitID == "" {
+			continue
+		}
+		segment, ok := entiteitNaamNaarFullPathSegment(wijziging.Entiteitnaam)
+		if !ok {
+			continue
+		}
+		link := fmt.Sprintf("%s/%s", segment, wijziging.EntiteitID)
+		if !seen[link] {
+			seen[link] = true
+			links = append(links, map[string]string{"href": link})
+		}
+	}
+
+	return links
+}
+
+// MakeGetRegistratiesMetWijzigingenHandler returns registraties with child wijzigingen.
+// Bij peiltijdstip-filter geldt voor beide: tijdstip <= peiltijdstip.
+func MakeGetRegistratiesMetWijzigingenHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		const (
+			defaultPage = 1
+			defaultSize = 20
+			maxSize     = 100
+		)
+
+		page := defaultPage
+		size := defaultSize
+
+		if p := c.Query("page"); p != "" {
+			v, err := strconv.Atoi(p)
+			if err != nil || v <= 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid 'page' parameter"})
+				return
+			}
+			page = v
+		}
+
+		if s := c.Query("size"); s != "" {
+			v, err := strconv.Atoi(s)
+			if err != nil || v <= 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid 'size' parameter"})
+				return
+			}
+			if v > maxSize {
+				size = maxSize
+			} else {
+				size = v
+			}
+		}
+
+		offset := (page - 1) * size
+
+		ta, tb, err := parseRegistratieIntervalUitQuerystring(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		typeFilter, err := parseRegistratietypesUitQuerystring(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		peiltijdstip, err := parsePeiltijdstipUitQuerystring(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		registraties := make([]model.Registratie, 0)
+		query := DB.NewSelect().Model(&registraties)
+		if len(typeFilter) > 0 {
+			query = query.Where("registratietype IN (?)", bun.In(typeFilter))
+		}
+		if ta != nil || tb != nil {
+			if ta != nil {
+				query = query.Where("tijdstip >= ?", *ta)
+			}
+			if tb != nil {
+				query = query.Where("tijdstip <= ?", *tb)
+			}
+			query = query.Relation("Wijzigingen", func(relQuery *bun.SelectQuery) *bun.SelectQuery {
+				if ta != nil {
+					relQuery = relQuery.Where("tijdstip >= ?", *ta)
+				}
+				if tb != nil {
+					relQuery = relQuery.Where("tijdstip <= ?", *tb)
+				}
+				return relQuery
+			})
+		} else if peiltijdstip != nil {
+			query = query.Where("tijdstip <= ?", *peiltijdstip)
+			query = query.Relation("Wijzigingen", func(relQuery *bun.SelectQuery) *bun.SelectQuery {
+				return relQuery.Where("tijdstip <= ?", *peiltijdstip)
+			})
+		} else {
+			query = query.Relation("Wijzigingen")
+		}
+
+		err = query.
+			Limit(size).
+			Offset(offset).
+			Scan(c.Request.Context())
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		hasMore := len(registraties) == size
+		registratieResponses := make([]any, 0, len(registraties))
+		for _, reg := range registraties {
+			regMap, err := structNaarMap(reg)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to map registratie response: %v", err)})
+				return
+			}
+			regMap["full_entiteit_links"] = maakFullEntiteitLinksVoorRegistratie(reg)
+			registratieResponses = append(registratieResponses, regMap)
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"Registraties": registratieResponses,
+			"page":         page,
+			"size":         size,
+			"has_more":     hasMore,
+		})
+	}
+}
+
+// MakeGetFullEntitiesHandler returns a gin.HandlerFunc that retrieves entities of type T with pagination.
+// Als `peiltijdstip` is meegegeven, worden alleen records geretourneerd die op dat
+// formele tijdstip actief zijn: opvoer <= peiltijdstip en (afvoer IS NULL of afvoer > peiltijdstip).
 func MakeGetFullEntitiesHandler[T any](entity_name string, relation_names []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		const (
@@ -155,12 +489,29 @@ func MakeGetFullEntitiesHandler[T any](entity_name string, relation_names []stri
 		var entities []T
 		query := DB.NewSelect().Model(&entities)
 
-		// Voeg alle relaties toe
-		for _, relation_name := range relation_names {
-			query = query.Relation(relation_name)
+		peiltijdstip, err := parsePeiltijdstipUitQuerystring(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if peiltijdstip != nil {
+			query = query.Where("opvoer <= ?", *peiltijdstip).
+				Where("(afvoer IS NULL OR afvoer > ?)", *peiltijdstip)
 		}
 
-		err := query.
+		// Voeg alle relaties toe
+		for _, relation_name := range relation_names {
+			if peiltijdstip != nil {
+				query = query.Relation(relation_name, func(relQuery *bun.SelectQuery) *bun.SelectQuery {
+					return relQuery.Where("opvoer <= ?", *peiltijdstip).
+						Where("(afvoer IS NULL OR afvoer > ?)", *peiltijdstip)
+				})
+			} else {
+				query = query.Relation(relation_name)
+			}
+		}
+
+		err = query.
 			Limit(size).
 			Offset(offset).
 			Scan(c.Request.Context())
@@ -170,9 +521,17 @@ func MakeGetFullEntitiesHandler[T any](entity_name string, relation_names []stri
 		}
 
 		hasMore := len(entities) == size
+		responseEntities := any(entities)
+		if !toonAfvoerInResponse(c) {
+			responseEntities, err = sanitizeResponseWithoutAfvoer(entities)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to sanitize response: %v", err)})
+				return
+			}
+		}
 
 		c.JSON(http.StatusOK, gin.H{
-			entity_name: entities,
+			entity_name: responseEntities,
 			"page":      page,
 			"size":      size,
 			"has_more":  hasMore,
@@ -180,7 +539,9 @@ func MakeGetFullEntitiesHandler[T any](entity_name string, relation_names []stri
 	}
 }
 
-// MakeGetEntityHandler returns a gin.HandlerFunc that retrieves a single entity by id
+// MakeGetFullEntityHandler returns a gin.HandlerFunc that retrieves a single entity by id.
+// Als `peiltijdstip` is meegegeven, wordt dezelfde formele-tijd filter toegepast als
+// in MakeGetFullEntitiesHandler.
 func MakeGetFullEntityHandler[T model.HasID](entity_name string, relation_names []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		entityID := c.Param("id") // assuming the ID is a string; adjust if it's an int or another type
@@ -192,12 +553,29 @@ func MakeGetFullEntityHandler[T model.HasID](entity_name string, relation_names 
 		var entity T
 		query := DB.NewSelect().Model(&entity)
 
-		// Voeg alle relaties toe
-		for _, relation_name := range relation_names {
-			query = query.Relation(relation_name)
+		peiltijdstip, err := parsePeiltijdstipUitQuerystring(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if peiltijdstip != nil {
+			query = query.Where("opvoer <= ?", *peiltijdstip).
+				Where("(afvoer IS NULL OR afvoer > ?)", *peiltijdstip)
 		}
 
-		err := query.
+		// Voeg alle relaties toe
+		for _, relation_name := range relation_names {
+			if peiltijdstip != nil {
+				query = query.Relation(relation_name, func(relQuery *bun.SelectQuery) *bun.SelectQuery {
+					return relQuery.Where("opvoer <= ?", *peiltijdstip).
+						Where("(afvoer IS NULL OR afvoer > ?)", *peiltijdstip)
+				})
+			} else {
+				query = query.Relation(relation_name)
+			}
+		}
+
+		err = query.
 			Where("id = ?", entityID).
 			Scan(c.Request.Context())
 		if err != nil {
@@ -210,7 +588,16 @@ func MakeGetFullEntityHandler[T model.HasID](entity_name string, relation_names 
 			return
 		}
 
-		c.JSON(http.StatusOK, entity)
+		responseEntity := any(entity)
+		if !toonAfvoerInResponse(c) {
+			responseEntity, err = sanitizeResponseWithoutAfvoer(entity)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to sanitize response: %v", err)})
+				return
+			}
+		}
+
+		c.JSON(http.StatusOK, responseEntity)
 	}
 }
 

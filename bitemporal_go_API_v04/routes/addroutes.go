@@ -72,6 +72,9 @@ func AddRoutes(router *gin.Engine) {
 	router.GET("/full/bs/:id", handlers.MakeGetFullEntityHandler[model.Full_B]("B", []string{"Xs", "Ys"}))
 	router.POST("/full/bs", handlers.MakeAddFullEntityHandler[model.Full_B]("Full_B", []string{"Xs", "Ys"}))
 
+	// Get registratie met onderliggende wijzigingen
+	router.GET("/full/registraties", handlers.MakeGetRegistratiesMetWijzigingenHandler())
+
 	// Bitemporal registration, correction and undoing routes
 	// see README.md for details and examples
 	router.POST("/registreer/as", handlers.MakeRegisterFullEntityHandlerA()) // DEPRECATED, use /registratie/ endpoint instead
