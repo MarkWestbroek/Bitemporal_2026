@@ -17,8 +17,10 @@ en bevatten alle relevante data voor een entiteit, inclusief de gerelateerde geg
 // GetID methods
 func (a Full_A) GetID() any         { return a.ID }
 func (a Full_A) Metatype() Metatype { return MetatypeEntiteit }
+func (a *Full_A) ClearID()          { a.ID = 0 }
 func (b Full_B) GetID() any         { return b.ID }
 func (b Full_B) Metatype() Metatype { return MetatypeEntiteit }
+func (b *Full_B) ClearID()          { b.ID = 0 }
 
 // GeefOnderliggendeGegevenselementen returns all child representaties of A.
 func (a *Full_A) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {

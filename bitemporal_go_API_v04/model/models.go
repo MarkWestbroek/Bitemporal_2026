@@ -11,31 +11,39 @@ import (
 func (a A_basis) GetID() any         { return a.ID }
 func (a A_basis) Metatype() Metatype { return MetatypeEntiteit }
 func (a A_basis) IsMaterieel() bool  { return true } // A heeft aanvang/einde, dus is materieel
+func (a *A_basis) ClearID()          { a.ID = 0 }
+
 func (b B_basis) GetID() any         { return b.ID }
 func (b B_basis) Metatype() Metatype { return MetatypeEntiteit }
 func (b B_basis) IsMaterieel() bool  { return true } // B heeft aanvang/einde, dus is materieel
+func (b *B_basis) ClearID()          { b.ID = 0 }
 
 // Relaties
 func (r Rel_A_B) GetID() any         { return r.ID }
 func (r Rel_A_B) Metatype() Metatype { return MetatypeRelatie }
 func (r Rel_A_B) IsMaterieel() bool  { return true } // Rel_A_B heeft aanvang/einde, dus is materieel
+func (r *Rel_A_B) ClearID()          { r.ID = 0 }
 
 // Gegevenselementen
 func (au A_U) GetID() any         { return au.Rel_ID }
 func (au A_U) Metatype() Metatype { return MetatypeGegevenselement }
 func (au A_U) IsMaterieel() bool  { return false } // A_U heeft geen aanvang/einde, dus is formeel
+func (au *A_U) ClearID()          { au.Rel_ID = 0 }
 
 func (av A_V) GetID() any         { return av.Rel_ID }
 func (av A_V) Metatype() Metatype { return MetatypeGegevenselement }
 func (av A_V) IsMaterieel() bool  { return false } // A_V heeft geen aanvang/einde, dus is formeel
+func (av *A_V) ClearID()          { av.Rel_ID = 0 }
 
 func (bx B_X) GetID() any         { return bx.Rel_ID }
 func (bx B_X) Metatype() Metatype { return MetatypeGegevenselement }
 func (bx B_X) IsMaterieel() bool  { return false } // B_X heeft geen aanvang/einde, dus is formeel
+func (bx *B_X) ClearID()          { bx.Rel_ID = 0 }
 
 func (by B_Y) GetID() any         { return by.Rel_ID }
 func (by B_Y) Metatype() Metatype { return MetatypeGegevenselement }
 func (by B_Y) IsMaterieel() bool  { return false } // B_Y heeft geen aanvang/einde, dus is formeel
+func (by *B_Y) ClearID()          { by.Rel_ID = 0 }
 
 /* Basis structs voor alle representaties
 Dat is zonder de relatie van entiteit naar gegevenselementen en relaties.

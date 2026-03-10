@@ -160,6 +160,11 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 			In principe wil je ook een afgevoerd gegeven nog kunnen corrigeren. Dat lijkt raar (StUF sluit het bijv. uit),
 			maar het kan als het materieel is iig wel. Voor alleen een formeel gegevens is het wel gek.
 
+			Verder: wat bij een niet complete correctie van het gegevenselement?
+			bijv. alleen het veld "aaa" van U3 corrigeren, en niet het veld "bbb"?
+			Dan moet je dus eigenlijk ook de bestaande waarde van "bbb" ophalen en
+			meenemen in de opvoer van U3.
+
 			RECURSIE:
 			- Een complexere correctie is eigenlijk een herhaling van zetten, maar dan
 			met meerdere gegevenselementen betreffende één of meerdere entiteiten.
@@ -262,13 +267,15 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 			switch true {
 			// OPVOER scenario's
 			case wijziging.Opvoer != nil:
-				// ZONDER REFLECTIE
+				// ZONDER REFLECTIE = de standaard aanpak
+				// deze is nu ook uitgebreid met correctie
 				handleOpvoer := handleRepresentatieOpvoerMeta
 				// MET REFLECTIE
+				// alleen voor vergelijking en testen van de aanpak met reflectie
 				if useReflectie {
 					handleOpvoer = handleRepresentatieOpvoerMetReflectie
 				}
-				if err := handleOpvoer(c, tx, registratieID, registratieTijdstip,
+				if err := handleOpvoer(c, tx, request.Registratie,
 					rep.Representatienaam, temporalRep); err != nil {
 					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to handle opvoer van %s: %v", rep.Representatienaam, err)})
 					return

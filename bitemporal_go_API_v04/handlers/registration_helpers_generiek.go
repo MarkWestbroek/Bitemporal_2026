@@ -19,7 +19,7 @@ import (
 
 // handleRepresentatieOpvoerMetReflectie inserts an opvoer representatie and creates a wijziging record.
 // het gebruikt de vrij verbose reflectie code die Codex geschreven heeft...
-func handleRepresentatieOpvoerMetReflectie(c *gin.Context, tx bun.Tx, registratieID int64, opvoerTijdstip time.Time,
+func handleRepresentatieOpvoerMetReflectie(c *gin.Context, tx bun.Tx, registratie model.Registratie,
 	representatienaam string, representatie model.FormeleRepresentatie) error {
 
 	/*
@@ -36,7 +36,7 @@ func handleRepresentatieOpvoerMetReflectie(c *gin.Context, tx bun.Tx, registrati
 	// dit is de basis insert van 1 element, maar relaties gaan niet vanzelf mee, dus die moeten we apart behandelen (zie handleOpvoerA en handleOpvoerB)
 	// ook moet er per gegevenselement/relatie een wijziging record worden gemaakt,
 	//  dus dat doen we ook niet automatisch in de database, maar apart in de code (zie handleOpvoerElement)
-	representatie.SetOpvoer(&opvoerTijdstip)
+	representatie.SetOpvoer(&registratie.Tijdstip)
 
 	// insert de top level representatie, dat moet namelijk sowieso
 	// Interessant: autoincrement ID's worden automatisch teruggezet in de struct,
@@ -57,26 +57,76 @@ func handleRepresentatieOpvoerMetReflectie(c *gin.Context, tx bun.Tx, registrati
 		}
 
 		for _, kind := range kinderen {
-			if err := handleRepresentatieOpvoerMetReflectie(c, tx, registratieID, opvoerTijdstip, kind.Naam, kind.Representatie); err != nil {
+			if err := handleRepresentatieOpvoerMetReflectie(c, tx, registratie, kind.Naam, kind.Representatie); err != nil {
 				return err
 			}
 		}
 	}
 
 	// Maak wijziging record aan
-	return persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID,
-		representatienaam, fmt.Sprint(representatie.GetID()), opvoerTijdstip)
+	return persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratie.ID,
+		representatienaam, fmt.Sprint(representatie.GetID()), representatienaam, fmt.Sprint(representatie.GetID()), registratie.Tijdstip)
 }
 
-// handleRepresentatieOpvoerMeta verwerkt opvoer via de metaregistry, zonder reflectie.
-func handleRepresentatieOpvoerMeta(c *gin.Context, tx bun.Tx, registratieID int64, opvoerTijdstip time.Time,
+/*
+==== STANDAARD OPVOER ROUTINE ======
+
+handleRepresentatieOpvoerMeta verwerkt opvoer via de metaregistry, zonder reflectie.
+*/
+func handleRepresentatieOpvoerMeta(c *gin.Context, tx bun.Tx, registratie model.Registratie,
 	representatienaam string, representatie model.FormeleRepresentatie) error {
 	meta, ok := model.MetaRegistry.GetTypeMeta(representatienaam)
 	if !ok {
 		return fmt.Errorf("HANDLER: onbekend type voor opvoer: %s", representatienaam)
 	}
 
-	/* Indien geen entiteit:
+	/*
+		Eerste check moet zijn of het een correctie betreft. (N.B> dit is de opvoer routine)
+
+		Indien correctie:
+		- Indien Entiteit: dan betekent dat dit de betreffende entiteit is,
+			waarvan onderliggende gegevenselementen/relaties worden gecorrigeerd,
+			maar die zelf niet wordt gecorrigeerd (m.u.v. materiele tijd, maar dat zit nog niet in deze versie)
+		- de gecorrigeeerde rep (altijd een GE of REL trouwens) opzoeken in de DB (op basis van ID in wijziging record)
+		- reeds afgevoerd? (want dan mag er niet meer gecorrigeerd worden) -> foutmelding en transactie afbreken
+		- de rep afvoeren en wijziging aanmaken voor de afvoer
+		- N.B.: de gecorrigeerde rep teruggeven in de response is lastig en doen we nu niet
+		- de nieuwe gecorrigeerde rep opvoeren (deze krijgt een nieuw ID!) en wijziging aanmaken voor de opvoer
+		- verhaal over enkelvoudige voorgangers gaat ook niet op bij correctie!
+	*/
+
+	if debugLogsEnabled() {
+		fmt.Printf("HANDLER (meta opvoer): registratietype: %s\n", registratie.Registratietype)
+	}
+
+	/* ==== CORRECTIE ---- */
+	if registratie.IsCorrectie() && meta.Metatype != model.MetatypeEntiteit {
+		// get huidige waarde van het gegevenselement op basis van ID in wijziging record
+		huidigeRep, err := haalRepresentatieUitDB(c, tx, meta, representatie.GetID())
+		if err != nil {
+			return err
+		}
+		if debugLogsEnabled() {
+			fmt.Printf("HANDLER (meta opvoer): correctie: opgehaalde te corrigeren representatie (type=%s, id=%v)\n%s", representatienaam, representatie.GetID(), model.RepresentatieToString(huidigeRep))
+		}
+
+		// indien al afgevoerd, dan mag er niet meer gecorrigeerd worden
+		if huidigeRep.GetAfvoer() != nil {
+			return fmt.Errorf("HANDLER: kan %s met ID %v niet corrigeren, want deze is al afgevoerd op %v", representatienaam, representatie.GetID(), huidigeRep.GetAfvoer())
+		}
+		// voer huidige representatie af en maak wijziging record aan
+		if err := handleRepresentatieAfvoer(c, tx, registratie.ID, registratie.Tijdstip, representatienaam, huidigeRep); err != nil {
+			return fmt.Errorf("HANDLER: failed to afvoer existing %s for correction: %v", representatienaam, err)
+		}
+		// voer nieuwe representatie op en maak wijziging record aan
+		// -->>> code verderop wordt gebruikt!!!
+		// maak wel eerst de ID leeg
+		representatie.ClearID() // zorg dat er een nieuwe ID wordt toegekend bij het opvoeren van de gecorrigeerde versie
+	}
+
+	/* ======== GEWONE WIJZIGING, GEEN CORRECTIE ===========
+
+	Indien geen entiteit:
 	- indien ENKELVOUDIG:
 	- 	zoek naar actieve (wel opvoer en geen afvoer) dezelfde gegevenselementen/relaties bij deze entiteit
 		(op basis van de ID van de entiteit in het gegevenselement/relatie record)
@@ -86,44 +136,65 @@ func handleRepresentatieOpvoerMeta(c *gin.Context, tx bun.Tx, registratieID int6
 
 	- vinden: bovenliggende tabel...
 	*/
-	if meta.Metatype != model.MetatypeEntiteit {
-		if err := sluitActieveEnkelvoudigeVoorgangersAf(c, tx, registratieID, opvoerTijdstip, representatienaam, representatie, meta); err != nil {
+	// Niet indien correctie
+	if registratie.IsRegistratie() && meta.Metatype != model.MetatypeEntiteit && meta.Momentvoorkomen == model.Enkelvoudig {
+		if err := sluitActieveEnkelvoudigeVoorgangersAf(c, tx, registratie.ID, registratie.Tijdstip, representatienaam, representatie, meta); err != nil {
 			return err
 		}
 	}
 
-	representatie.SetOpvoer(&opvoerTijdstip)
-	_, err := tx.NewInsert().
-		Model(representatie).
-		Exec(c.Request.Context())
-	if err != nil {
-		return fmt.Errorf("HANDLER: failed to insert %s: %v", representatienaam, err)
-	}
+	/* ===== BEIDE, MAAR SKIP DE ENTITEIT BIJ CORRECTIE ========
+	Verder is de code voor registratie en correctie gelijk
+	*/
+	if !(registratie.IsCorrectie() && meta.Metatype == model.MetatypeEntiteit) {
+		representatie.SetOpvoer(&registratie.Tijdstip)
+		_, err := tx.NewInsert().
+			Model(representatie).
+			Exec(c.Request.Context())
+		if err != nil {
+			return fmt.Errorf("HANDLER: failed to insert %s: %v", representatienaam, err)
+		}
 
-	if err := persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID,
-		representatienaam, fmt.Sprint(representatie.GetID()), opvoerTijdstip); err != nil {
-		return err
-	}
+		// ** entiteit **
+		if meta.Metatype == model.MetatypeEntiteit {
+			if err := persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratie.ID,
+				representatienaam, fmt.Sprint(representatie.GetID()), "", "", registratie.Tijdstip); err != nil {
+				return err
+			}
+		} else {
+			// ** Geen entiteit **
+			// TODO: find bovenliggende entiteit naam en ID voor de wijziging record, nu nog deels placeholders
+			bovenliggendeRelatieMeta, ok := model.MetaRegistry.GetBovenliggendeRelatieMeta(representatienaam)
+			if !ok {
+				return fmt.Errorf("geen bovenliggende entiteit gevonden voor type %s", representatienaam)
+			}
+			entiteitnaam := bovenliggendeRelatieMeta.ParentType.Typenaam
+			entiteitID := "todo"
 
-	if meta.Metatype != model.MetatypeEntiteit {
-		return nil
+			if err := persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratie.ID,
+				entiteitnaam, entiteitID, representatienaam, fmt.Sprint(representatie.GetID()), registratie.Tijdstip); err != nil {
+				return err
+			}
+		}
 	}
 
 	/*
-		Indien onderliggend gegevenselementen/relaties (typisch bij entiteiten):
+		RECURSIE: Indien onderliggend gegevenselementen/relaties (typisch bij entiteiten):
 	*/
-	onderliggendeRepresentaties, ok := representatie.(model.HeeftOnderliggendeGegevenselementen)
-	if !ok {
-		return fmt.Errorf("HANDLER: type %s geeft geen onderliggende gegevenselementen vrij", representatienaam)
-	}
+	if meta.Metatype == model.MetatypeEntiteit {
+		onderliggendeRepresentaties, ok := representatie.(model.HeeftOnderliggendeGegevenselementen)
+		if !ok {
+			return fmt.Errorf("HANDLER: voor type %s vind ik geen onderliggende gegevenselementen in de metamap", representatienaam)
+		}
 
-	for _, onderliggende := range onderliggendeRepresentaties.GeefOnderliggendeGegevenselementen() {
-		if err := handleRepresentatieOpvoerMeta(c, tx, registratieID, opvoerTijdstip, onderliggende.Typenaam, onderliggende.Representatie); err != nil {
-			return err
+		for _, onderliggende := range onderliggendeRepresentaties.GeefOnderliggendeGegevenselementen() {
+			if err := handleRepresentatieOpvoerMeta(c, tx, registratie, onderliggende.Typenaam, onderliggende.Representatie); err != nil {
+				return err
+			}
 		}
 	}
-
 	return nil
+
 }
 
 func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, afvoerTijdstip time.Time,
@@ -149,17 +220,22 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 		if err := updateAfvoerByID(c, tx, meta, representatie.GetID(), afvoerTijdstip); err != nil {
 			return err
 		}
+		// TODO: find entiteit naam en ID
 		return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
-			representatienaam, fmt.Sprint(representatie.GetID()), afvoerTijdstip)
+			"todo", "todo", representatienaam, fmt.Sprint(representatie.GetID()), afvoerTijdstip)
 	}
 
+	// ENTITEIT AFVOER
 	if err := updateAfvoerByID(c, tx, meta, representatie.GetID(), afvoerTijdstip); err != nil {
 		return err
 	}
 	if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
-		representatienaam, fmt.Sprint(representatie.GetID()), afvoerTijdstip); err != nil {
+		representatienaam, fmt.Sprint(representatie.GetID()), "", "", afvoerTijdstip); err != nil {
 		return err
 	}
+
+	// bewaar entiteitnaam  en ID voor de volgende stappen (in wijziging)
+	entiteitnaam := representatienaam
 
 	// nodig omdat nu alle gegevenselementen/relaties van een entiteit een int ID_NAAR_ENTITEIT veld hebben?
 	entiteitID, ok := anyNaarInt(representatie.GetID()) // hulpfunctie om de ID als int te krijgen, ongeacht het type
@@ -188,7 +264,7 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 				return err
 			}
 			if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
-				childMeta.Typenaam, fmt.Sprint(id), afvoerTijdstip); err != nil {
+				entiteitnaam, fmt.Sprint(entiteitID), childMeta.Typenaam, fmt.Sprint(id), afvoerTijdstip); err != nil {
 				return err
 			}
 		}
@@ -211,6 +287,35 @@ func updateAfvoerByID(c *gin.Context, tx bun.Tx, meta model.TypeMeta, id any, af
 	return nil
 }
 
+func haalRepresentatieUitDB(c *gin.Context, tx bun.Tx, meta model.TypeMeta, id any) (model.FormeleRepresentatie, error) {
+	if isZeroID(id) {
+		return nil, fmt.Errorf("HANDLER: lege ID voor %s", meta.Typenaam)
+	}
+	if meta.DBFactory == nil {
+		return nil, fmt.Errorf("HANDLER: DBFactory ontbreekt voor type %s", meta.Typenaam)
+	}
+
+	repAny := meta.DBFactory()
+	rep, ok := repAny.(model.FormeleRepresentatie)
+	if !ok {
+		return nil, fmt.Errorf("HANDLER: DBFactory voor type %s levert geen FormeleRepresentatie (kreeg %T)", meta.Typenaam, repAny)
+	}
+
+	err := tx.NewSelect().
+		Model(rep).
+		Where(fmt.Sprintf("%s = ?", meta.IDKolom), id).
+		Limit(1).
+		Scan(c.Request.Context())
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("HANDLER: geen %s gevonden met %s=%v", meta.Typenaam, meta.IDKolom, id)
+		}
+		return nil, fmt.Errorf("HANDLER: ophalen van %s met %s=%v mislukt: %v", meta.Typenaam, meta.IDKolom, id, err)
+	}
+
+	return rep, nil
+}
+
 func haalActieveIDsGegevenselementUitDB(c *gin.Context, tx bun.Tx, meta model.TypeMeta, fkColumn string, entiteitID int) ([]int, error) {
 	ids := make([]int, 0)
 	query := tx.NewSelect().
@@ -229,12 +334,15 @@ func haalActieveIDsGegevenselementUitDB(c *gin.Context, tx bun.Tx, meta model.Ty
 ===== Maak wijziging aan in wijzigingstabel ======
 */
 func persisteerWijziging(c *gin.Context, tx bun.Tx, wijzigingstype model.WijzigingstypeEnum,
-	registratieID int64, representatienaam string, representatieID string, registratietijdstip time.Time) error {
+	registratieID int64, entiteitnaam string, entiteitID string,
+	representatienaam string, representatieID string, registratietijdstip time.Time) error {
 	wijziging := model.Wijziging{
 		Wijzigingstype:    wijzigingstype,
 		RegistratieID:     registratieID,
+		Entiteitnaam:      entiteitnaam,
+		EntiteitID:        entiteitID,
 		Representatienaam: representatienaam,
-		RepresentatieID:   representatieID,     // Now directly using string
+		RepresentatieID:   representatieID,
 		Tijdstip:          registratietijdstip, //afgeleid van registratie tijdstip
 	}
 
@@ -314,7 +422,7 @@ func sluitActieveEnkelvoudigeVoorgangersAf(c *gin.Context, tx bun.Tx, registrati
 			return err
 		}
 		if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
-			representatienaam, fmt.Sprint(id), registratietijdstip); err != nil {
+			bovenliggendeRelatieMeta.ParentType.Typenaam, fmt.Sprint(entiteitID), representatienaam, fmt.Sprint(id), registratietijdstip); err != nil {
 			return err
 		}
 	}

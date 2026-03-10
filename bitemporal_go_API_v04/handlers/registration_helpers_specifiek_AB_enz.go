@@ -87,7 +87,7 @@ func handleOpvoerFullA(c *gin.Context, tx bun.Tx, fullA *model.Full_A, registrat
 	}
 
 	// Create wijziging record for A
-	if err := persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, "A", fmt.Sprintf("%d", fullA.ID), tijdstip); err != nil {
+	if err := persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, "A", fmt.Sprintf("%d", fullA.ID), "A", fmt.Sprintf("%d", fullA.ID), tijdstip); err != nil {
 		return err
 	}
 
@@ -142,7 +142,7 @@ func handleOpvoerElement[T model.HasID](c *gin.Context, tx bun.Tx, element *T,
 		return fmt.Errorf("failed to insert %s: %v", representatienaam, err)
 	}
 
-	return persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, representatienaam, fmt.Sprint((*element).GetID()), tijdstip)
+	return persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, representatienaam, fmt.Sprint((*element).GetID()), representatienaam, fmt.Sprint((*element).GetID()), tijdstip)
 }
 
 // handleAfvoerA processes an afvoer for Full_A or its data elements
@@ -202,7 +202,7 @@ func handleAfvoerFullA(c *gin.Context, tx bun.Tx, aID int, registratieID int64, 
 	}
 
 	// Create wijziging record for A
-	if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "A", fmt.Sprintf("%d", aID), tijdstip); err != nil {
+	if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "A", fmt.Sprintf("%d", aID), "A", fmt.Sprintf("%d", aID), tijdstip); err != nil {
 		return err
 	}
 
@@ -273,7 +273,7 @@ func handleAfvoerA_U(c *gin.Context, tx bun.Tx, relID int, registratieID int64, 
 	}
 
 	// Create wijziging record
-	return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "A_U", fmt.Sprintf("%d", relID), tijdstip)
+	return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "A_U", fmt.Sprintf("%d", relID), "A_U", fmt.Sprintf("%d", relID), tijdstip)
 }
 
 // handleAfvoerA_V marks A_V as afgevoerd
@@ -289,7 +289,7 @@ func handleAfvoerA_V(c *gin.Context, tx bun.Tx, relID int, registratieID int64, 
 	}
 
 	// Create wijziging record
-	return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "A_V", fmt.Sprintf("%d", relID), tijdstip)
+	return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "A_V", fmt.Sprintf("%d", relID), "A_V", fmt.Sprintf("%d", relID), tijdstip)
 }
 
 // handleAfvoerRel_A_B marks Rel_A_B as afgevoerd
@@ -305,7 +305,7 @@ func handleAfvoerRel_A_B(c *gin.Context, tx bun.Tx, id int, registratieID int64,
 	}
 
 	// Create wijziging record
-	return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "Rel_A_B", fmt.Sprintf("%d", id), tijdstip)
+	return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "Rel_A_B", fmt.Sprintf("%d", id), "Rel_A_B", fmt.Sprintf("%d", id), tijdstip)
 }
 
 // handleOpvoerB processes an opvoer for Full_B or its data elements
@@ -358,7 +358,7 @@ func handleOpvoerFullB(c *gin.Context, tx bun.Tx, fullB *model.Full_B, registrat
 		return fmt.Errorf("failed to insert B: %v", err)
 	}
 
-	if err := persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, "B", fmt.Sprintf("%d", fullB.ID), tijdstip); err != nil {
+	if err := persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratieID, "B", fmt.Sprintf("%d", fullB.ID), "B", fmt.Sprintf("%d", fullB.ID), tijdstip); err != nil {
 		return err
 	}
 
@@ -429,7 +429,7 @@ func handleAfvoerFullB(c *gin.Context, tx bun.Tx, bID int, registratieID int64, 
 		return fmt.Errorf("failed to update B afvoer: %v", err)
 	}
 
-	if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "B", fmt.Sprintf("%d", bID), tijdstip); err != nil {
+	if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "B", fmt.Sprintf("%d", bID), "B", fmt.Sprintf("%d", bID), tijdstip); err != nil {
 		return err
 	}
 
@@ -480,7 +480,7 @@ func handleAfvoerB_X(c *gin.Context, tx bun.Tx, relID int, registratieID int64, 
 		return fmt.Errorf("failed to update B_X afvoer: %v", err)
 	}
 
-	return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "B_X", fmt.Sprintf("%d", relID), tijdstip)
+	return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "B_X", fmt.Sprintf("%d", relID), "B_X", fmt.Sprintf("%d", relID), tijdstip)
 }
 
 // handleAfvoerB_Y marks B_Y as afgevoerd
@@ -495,5 +495,5 @@ func handleAfvoerB_Y(c *gin.Context, tx bun.Tx, relID int, registratieID int64, 
 		return fmt.Errorf("failed to update B_Y afvoer: %v", err)
 	}
 
-	return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "B_Y", fmt.Sprintf("%d", relID), tijdstip)
+	return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID, "B_Y", fmt.Sprintf("%d", relID), "B_Y", fmt.Sprintf("%d", relID), tijdstip)
 }

@@ -19,6 +19,7 @@ type Representatie interface {
 type FormeleRepresentatie interface {
 	Representatie
 	HeeftOpvoerAfvoer
+	HeeftClearID
 }
 
 // MaterieleRepresentatie combineert de FormeleRepresentatie interface met aanvang/einde (materiële tijdslijn)
@@ -30,6 +31,10 @@ type MaterieleRepresentatie interface {
 // HasID allows generic handlers to access an entity's ID
 type HasID interface {
 	GetID() any
+}
+
+type HeeftClearID interface {
+	ClearID()
 }
 
 type Metatype string
@@ -100,6 +105,8 @@ type Wijziging struct {
 	ID                int64              `json:"id" bun:"id,pk,autoincrement"`
 	Wijzigingstype    WijzigingstypeEnum `json:"wijzigingstype"`    // Opvoer of Afvoer
 	RegistratieID     int64              `json:"registratie_id"`    // verwijzing naar de registratie waarbij deze wijziging hoort
+	Entiteitnaam      string             `json:"entiteitnaam"`      // type-naam van de eventueel bovenliggende entiteit, zoals "A" of "B"
+	EntiteitID        string             `json:"entiteit_id"`       // Bewust een string to support both numeric and string IDs, or for instance UUIDs
 	Representatienaam string             `json:"representatienaam"` // type-naam van de representatie, zoals "A", "B", "Rel_A_B", "A_U", "A_V", "B_X" of "B_Y"
 	RepresentatieID   string             `json:"representatie_id"`  // Bewust een string to support both numeric and string IDs, or for instance UUIDs
 	Tijdstip          time.Time          `json:"tijdstip"`          //afgeleid van registratie tijdstip
@@ -120,6 +127,18 @@ type Registratie struct {
 	Opmerking                  *string             `json:"opmerking,omitempty"`                     // optioneel veld voor extra informatie
 	CorrigeertRegistratieID    *int64              `json:"corrigeert_registratie_id,omitempty"`     // bij correcties: verwijzing naar de registratie die gecorrigeerd wordt
 	MaaktOngedaanRegistratieID *int64              `json:"maakt_ongedaan_registratie_id,omitempty"` // bij ongedaanmakings: verwijzing naar de registratie die ongedaan wordt gemaakt
+}
+
+func (reg Registratie) IsRegistratie() bool {
+	return reg.Registratietype == RegistratietypeRegistratie
+}
+
+func (reg Registratie) IsCorrectie() bool {
+	return reg.Registratietype == RegistratietypeCorrectie
+}
+
+func (reg Registratie) IsOngedaanmaking() bool {
+	return reg.Registratietype == RegistratietypeOngedaanmaking
 }
 
 // methodes op registratie en wijziging om ID te kunnen ophalen in de generic handlers
