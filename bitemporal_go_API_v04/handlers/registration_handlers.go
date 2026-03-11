@@ -187,10 +187,145 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 
 			Maar een ongedaanmaking van een ongedaanmaking of van een correctie is lastiger. Moet ik even over nadenken.
 
+			1 first things first: een ongedaanmaking van REG x:
+			- zoek de wijzigingen onder reg x op in de database
+			- voor elke wijziging: bepaal of het een opvoer of afvoer is, en welke representatie het betreft
+			- als het een opvoer is, dan moet het opvoertijdstip weer worden verwijderd uit het representatie record.
+				(let op: dit is NIET afvoeren, maar zoiets als ont-opvoeren!)
+			- als het een afvoer is, dan moet deze afvoer worden leeggemaakt in het representatie record (ont-afvoeren?)
+				(zo is het record weer geldig, of actueel geworden)
 
-
+			2 N.B. er moeten wel een paar checks gedaan worden
+			- check of de te ongedaan maken registratie niet al ongedaan is gemaakt. Dat kan geen twee keer. Indien zo: fout en transactie rollback.
+			- check of er tussen het oorspronkelijke registratiemoment en het ongedaanmakingsmoment geen correcties of andere wijzigingen
+				(correcties of een afvoer) zijn doorgevoerd op hetzelfde gegevenselement.
+				Dus de ongedaanmaking moet de laatste wijziging op dat gegevenselement zijn.
+				Als dat zo is: melden en rollback (ongedaanmaking wordt ook niet vastgelegd).
+				--> optie: een pacman-ongedaanmaking toestaan, waarbij alles wijzigingen na de te ongedaan maken registratie worden ongedaan gemaakt.
+					Dat is wel een stuk complexer, omdat je hele registraties ongedaan wilt maken. Dat wil je eigenlijk niet automatisch met allerlei zij-effecten.
+			- de registratie die ongedaan gemaakt wordt, is zelf een ongedaanmaking.
+				Dat is op zich te doen, want je doet dan gewoon weer het omgekeerde van de eerste ongedaanmaking. Een hergedaanmaking of zoiets :-).
+				Niet meteen bouwen.
 
 		*/
+
+		/* ====== ONGEDAANMAKING scenario ====== */
+		if request.Registratie.Registratietype == model.RegistratietypeOngedaanmaking {
+			// check of MaaktOngedaanRegistratieID is meegegeven
+			if request.Registratie.MaaktOngedaanRegistratieID == nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "De ongedaan te maken registratie moet worden meegegeven via 'maakt_ongedaan_registratie_id' (of alias 'MaaktOngedaanRegistratieID')"})
+				return
+			}
+
+			// check of de te ongedaan maken registratie bestaat
+			var ongedaanTeMakenRegistratie model.Registratie
+			err = DB.NewSelect().
+				Model(&ongedaanTeMakenRegistratie).
+				Where("id = ?", *request.Registratie.MaaktOngedaanRegistratieID).
+				Scan(c.Request.Context())
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("De te ongedaan maken registratie met ID %d bestaat niet", *request.Registratie.MaaktOngedaanRegistratieID)})
+				return
+			}
+
+			// check op afgeleid veld: deze registratie is al eerder ongedaan gemaakt.
+			if ongedaanTeMakenRegistratie.IsOngedaangemaakt {
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("De te ongedaan maken registratie met ID %d is al ongedaan gemaakt", ongedaanTeMakenRegistratie.ID)})
+				return
+			}
+
+			/* check of er sinds de te ongedaan maken registratie latere wijzigingen zijn gedaan op exact dezelfde elementen.
+			Als dat zo is, dan is ongedaanmaking niet toegestaan omdat de te ongedaan maken registratie dan niet meer de laatste wijziging is.
+			*/
+			var wijzigingenOnderTeOngedaanMakenRegistratie []model.Wijziging
+			err = DB.NewSelect().
+				Model(&wijzigingenOnderTeOngedaanMakenRegistratie).
+				Where("registratie_id = ?", ongedaanTeMakenRegistratie.ID).
+				Scan(c.Request.Context())
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Fout bij ophalen wijzigingen onder te ongedaan maken registratie: %v", err)})
+				return
+			}
+
+			for _, doelWijziging := range wijzigingenOnderTeOngedaanMakenRegistratie {
+				var latereWijzigingen []model.Wijziging
+				err = DB.NewSelect().
+					Model(&latereWijzigingen).
+					Where("registratie_id <> ?", ongedaanTeMakenRegistratie.ID).
+					Where("tijdstip > ?", ongedaanTeMakenRegistratie.Tijdstip).
+					Where("tijdstip <= ?", request.Registratie.Tijdstip).
+					Where("COALESCE(entiteitnaam, '') = ?", doelWijziging.Entiteitnaam).
+					Where("COALESCE(entiteit_id, '') = ?", doelWijziging.EntiteitID).
+					Where("COALESCE(representatienaam, '') = ?", doelWijziging.Representatienaam).
+					Where("COALESCE(representatie_id, '') = ?", doelWijziging.RepresentatieID).
+					Scan(c.Request.Context())
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Fout bij controleren op latere wijzigingen na registratie %d: %v", ongedaanTeMakenRegistratie.ID, err)})
+					return
+				}
+
+				if len(latereWijzigingen) > 0 {
+					c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Er zijn latere wijzigingen op hetzelfde gegevenselement; ongedaanmaking van registratie %d is daarom niet toegestaan. Doelwijziging: %v, latere wijzigingen: %v", ongedaanTeMakenRegistratie.ID, doelWijziging, latereWijzigingen)})
+					return
+				}
+			}
+
+			/* ### TODO ###
+			ONGEDAANMAKING VAN EEN ONGEDAANMAKING
+			- check of de te ongedaan maken registratie zelf een ongedaanmaking is
+			- dat is op zich te doen, want je doet dan gewoon weer het omgekeerde van de eerste ongedaanmaking. Een hergedaanmaking of zoiets :-).
+			- check of er wijzigingen zijn doorgevoerd sinds de ongedaanmaking die we nu willen ongedaan maken. Dat kan namelijk niet, want dan zou je een ongedaanmaking van een ongedaanmaking hebben die niet meer klopt.
+			*/
+			if ongedaanTeMakenRegistratie.IsOngedaanmaking() {
+				// voor nu: stop
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Ongedaan maken van een ongedaanmaking is nog niet mogelijk"})
+				return
+			}
+
+			/* MAAK NU ONGEDAAN (het betreft een registratie of correctie, beide functioneel gelijk, denk ik)
+			 zoek de wijzigingen onder reg x op in de database
+			- voor elke wijziging: bepaal of het een opvoer of afvoer is, en welke representatie het betreft
+			- als het een opvoer is, dan moet het opvoertijdstip weer worden verwijderd uit het representatie record.
+				(let op: dit is NIET afvoeren, maar zoiets als ont-opvoeren!)
+			- als het een afvoer is, dan moet deze afvoer worden leeggemaakt in het representatie record (ont-afvoeren?)
+				(zo is het record weer geldig, of actueel geworden)
+			*/
+
+			for _, wijziging := range wijzigingenOnderTeOngedaanMakenRegistratie {
+				// als opvoer, dan ont-opvoeren
+				if wijziging.Wijzigingstype == model.WijzigingstypeOpvoer {
+					if err := handleRepresentatieOntOpvoer(c, tx, wijziging); err != nil {
+						c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Fout bij ont-opvoeren van representatie: %v", err)})
+						return
+					}
+				} else if wijziging.Wijzigingstype == model.WijzigingstypeAfvoer {
+					if err := handleRepresentatieOntAfvoer(c, tx, wijziging); err != nil {
+						c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Fout bij ont-afvoeren van representatie: %v", err)})
+						return
+					}
+				}
+			}
+
+			// Markeer de ongedaan gemaakte registratie en al haar wijzigingen als afgeleid "ongedaan gemaakt".
+			if _, err = tx.NewUpdate().
+				Table("registratie").
+				Set("is_ongedaan_gemaakt = ?", true).
+				Where("id = ?", ongedaanTeMakenRegistratie.ID).
+				Exec(c.Request.Context()); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Fout bij markeren van registratie %d als ongedaan gemaakt: %v", ongedaanTeMakenRegistratie.ID, err)})
+				return
+			}
+
+			if _, err = tx.NewUpdate().
+				Table("wijziging").
+				Set("is_ongedaan_gemaakt = ?", true).
+				Where("registratie_id = ?", ongedaanTeMakenRegistratie.ID).
+				Exec(c.Request.Context()); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Fout bij markeren van wijzigingen onder registratie %d als ongedaan gemaakt: %v", ongedaanTeMakenRegistratie.ID, err)})
+				return
+			}
+
+		}
 
 		/*
 			// Registratie, Correctie, Ongedaanmaking

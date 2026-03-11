@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/uptrace/bun"
@@ -103,14 +104,14 @@ const (
 type Wijziging struct {
 	bun.BaseModel     `bun:"table:wijziging"`
 	ID                int64              `json:"id" bun:"id,pk,autoincrement"`
-	Wijzigingstype    WijzigingstypeEnum `json:"wijzigingstype"`    // Opvoer of Afvoer
-	RegistratieID     int64              `json:"registratie_id"`    // verwijzing naar de registratie waarbij deze wijziging hoort
-	Entiteitnaam      string             `json:"entiteitnaam"`      // type-naam van de eventueel bovenliggende entiteit, zoals "A" of "B"
-	EntiteitID        string             `json:"entiteit_id"`       // Bewust een string to support both numeric and string IDs, or for instance UUIDs
-	Representatienaam string             `json:"representatienaam"` // type-naam van de representatie, zoals "A", "B", "Rel_A_B", "A_U", "A_V", "B_X" of "B_Y"
-	RepresentatieID   string             `json:"representatie_id"`  // Bewust een string to support both numeric and string IDs, or for instance UUIDs
-	Tijdstip          time.Time          `json:"tijdstip"`          //afgeleid van registratie tijdstip
-	// TODO TIJDSTIP ook REGISTRATIETIJDSTIP noemen?
+	Wijzigingstype    WijzigingstypeEnum `json:"wijzigingstype"`                                         // Opvoer of Afvoer
+	RegistratieID     int64              `json:"registratie_id"`                                         // verwijzing naar de registratie waarbij deze wijziging hoort
+	Entiteitnaam      string             `json:"entiteitnaam"`                                           // type-naam van de eventueel bovenliggende entiteit, zoals "A" of "B"
+	EntiteitID        string             `json:"entiteit_id"`                                            // Bewust een string to support both numeric and string IDs, or for instance UUIDs
+	Representatienaam string             `json:"representatienaam"`                                      // type-naam van de representatie, zoals "A", "B", "Rel_A_B", "A_U", "A_V", "B_X" of "B_Y"
+	RepresentatieID   string             `json:"representatie_id"`                                       // Bewust een string to support both numeric and string IDs, or for instance UUIDs
+	Tijdstip          time.Time          `json:"tijdstip"`                                               //afgeleid van registratie tijdstip
+	IsOngedaangemaakt bool               `json:"is_ongedaangemaakt,omitempty" bun:"is_ongedaan_gemaakt"` // afgeleid (wordt op true gezet bij een ongedaanmaking van deze wijziging)
 }
 
 // not used (yet?)
@@ -122,11 +123,12 @@ type WijzigingCompact struct {
 type Registratie struct {
 	bun.BaseModel              `bun:"table:registratie"`
 	ID                         int64               `json:"id" bun:"id,pk,autoincrement"`
-	Registratietype            RegistratietypeEnum `json:"registratietype"`                         // Registratie, Correctie, Ongedaanmaking
-	Tijdstip                   time.Time           `json:"tijdstip"`                                // Het tijdstip van de registratie, correctie of ongedaanmaking
-	Opmerking                  *string             `json:"opmerking,omitempty"`                     // optioneel veld voor extra informatie
-	CorrigeertRegistratieID    *int64              `json:"corrigeert_registratie_id,omitempty"`     // bij correcties: verwijzing naar de registratie die gecorrigeerd wordt
-	MaaktOngedaanRegistratieID *int64              `json:"maakt_ongedaan_registratie_id,omitempty"` // bij ongedaanmakings: verwijzing naar de registratie die ongedaan wordt gemaakt
+	Registratietype            RegistratietypeEnum `json:"registratietype"`                                        // Registratie, Correctie, Ongedaanmaking
+	Tijdstip                   time.Time           `json:"tijdstip"`                                               // Het tijdstip van de registratie, correctie of ongedaanmaking
+	Opmerking                  *string             `json:"opmerking,omitempty"`                                    // optioneel veld voor extra informatie
+	CorrigeertRegistratieID    *int64              `json:"corrigeert_registratie_id,omitempty"`                    // bij correcties: verwijzing naar de registratie die gecorrigeerd wordt
+	MaaktOngedaanRegistratieID *int64              `json:"maakt_ongedaan_registratie_id,omitempty"`                // bij ongedaanmakings: verwijzing naar de registratie die ongedaan wordt gemaakt
+	IsOngedaangemaakt          bool                `json:"is_ongedaangemaakt,omitempty" bun:"is_ongedaan_gemaakt"` // afgeleid (wordt op true gezet bij een ongedaanmaking van deze registratie)
 	Wijzigingen                []Wijziging         `json:"wijzigingen,omitempty" bun:"rel:has-many,join:id=registratie_id"`
 }
 
@@ -140,6 +142,34 @@ func (reg Registratie) IsCorrectie() bool {
 
 func (reg Registratie) IsOngedaanmaking() bool {
 	return reg.Registratietype == RegistratietypeOngedaanmaking
+}
+
+// UnmarshalJSON accepteert zowel snake_case als Camel/PascalCase sleutelvarianten
+// voor compatibiliteit met bestaande clients.
+func (reg *Registratie) UnmarshalJSON(data []byte) error {
+	type registratieAlias Registratie
+	aux := struct {
+		registratieAlias
+		CorrigeertRegistratieIDCamel    *int64 `json:"CorrigeertRegistratieID"`
+		MaaktOngedaanRegistratieIDCamel *int64 `json:"MaaktOngedaanRegistratieID"`
+	}{
+		registratieAlias: registratieAlias(*reg),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	*reg = Registratie(aux.registratieAlias)
+
+	if reg.CorrigeertRegistratieID == nil && aux.CorrigeertRegistratieIDCamel != nil {
+		reg.CorrigeertRegistratieID = aux.CorrigeertRegistratieIDCamel
+	}
+	if reg.MaaktOngedaanRegistratieID == nil && aux.MaaktOngedaanRegistratieIDCamel != nil {
+		reg.MaaktOngedaanRegistratieID = aux.MaaktOngedaanRegistratieIDCamel
+	}
+
+	return nil
 }
 
 // methodes op registratie en wijziging om ID te kunnen ophalen in de generic handlers

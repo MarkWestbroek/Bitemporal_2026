@@ -14,6 +14,126 @@ import (
 	"github.com/uptrace/bun"
 )
 
+// handleRepresentatieOntOpvoer maakt een eerdere opvoer ongedaan door opvoer weer leeg te maken.
+// De Wijziging bevat string-ID's; daarom converteren we ID-waarden eerst naar het kolomtype uit de metaregistry/DBFactory.
+func handleRepresentatieOntOpvoer(c *gin.Context, tx bun.Tx, wijziging model.Wijziging) error {
+	typeName := wijziging.Representatienaam
+	targetIDRaw := wijziging.RepresentatieID
+
+	// Bij opvoer van een entiteit worden representatienaam/representatieID leeg opgeslagen;
+	// gebruik dan entiteitnaam/entiteitID als verwijzing naar het te herstellen record.
+	if typeName == "" {
+		typeName = wijziging.Entiteitnaam
+		targetIDRaw = wijziging.EntiteitID
+	}
+
+	if typeName == "" || targetIDRaw == "" {
+		return fmt.Errorf("HANDLER: ont-opvoer mist type of ID in wijziging %d", wijziging.ID)
+	}
+
+	meta, ok := model.MetaRegistry.GetTypeMeta(typeName)
+	if !ok {
+		return fmt.Errorf("HANDLER: onbekend type voor ont-opvoer: %s", typeName)
+	}
+
+	typedID, err := parseStringNaarKolomType(meta, meta.IDKolom, targetIDRaw)
+	if err != nil {
+		return fmt.Errorf("HANDLER: ongeldige ID voor ont-opvoer (%s.%s=%q): %v", meta.Tabelnaam, meta.IDKolom, targetIDRaw, err)
+	}
+
+	query := tx.NewUpdate().
+		Table(meta.Tabelnaam).
+		Set("opvoer = NULL").
+		Where(fmt.Sprintf("%s = ?", meta.IDKolom), typedID)
+
+	// Voor typen met PFK is de ID vaak alleen uniek binnen de bovenliggende entiteit.
+	if meta.HeeftPFK {
+		if meta.EntiteitIDKolom == "" {
+			return fmt.Errorf("HANDLER: type %s heeft PFK maar geen EntiteitIDKolom", meta.Typenaam)
+		}
+		if wijziging.EntiteitID == "" {
+			return fmt.Errorf("HANDLER: ont-opvoer voor %s vereist entiteitID in wijziging", meta.Typenaam)
+		}
+
+		typedEntiteitID, err := parseStringNaarKolomType(meta, meta.EntiteitIDKolom, wijziging.EntiteitID)
+		if err != nil {
+			return fmt.Errorf("HANDLER: ongeldige entiteitID voor ont-opvoer (%s.%s=%q): %v", meta.Tabelnaam, meta.EntiteitIDKolom, wijziging.EntiteitID, err)
+		}
+
+		query = query.Where(fmt.Sprintf("%s = ?", meta.EntiteitIDKolom), typedEntiteitID)
+	}
+
+	result, err := query.Exec(c.Request.Context())
+	if err != nil {
+		return fmt.Errorf("HANDLER: ont-opvoer update mislukt voor %s: %v", meta.Typenaam, err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err == nil && rows == 0 {
+		return fmt.Errorf("HANDLER: ont-opvoer vond geen record voor %s met sleutel uit wijziging %d", meta.Typenaam, wijziging.ID)
+	}
+
+	return nil
+}
+
+// handleRepresentatieOntAfvoer maakt een eerdere afvoer ongedaan door afvoer weer leeg te maken.
+func handleRepresentatieOntAfvoer(c *gin.Context, tx bun.Tx, wijziging model.Wijziging) error {
+	typeName := wijziging.Representatienaam
+	targetIDRaw := wijziging.RepresentatieID
+
+	if typeName == "" {
+		typeName = wijziging.Entiteitnaam
+		targetIDRaw = wijziging.EntiteitID
+	}
+
+	if typeName == "" || targetIDRaw == "" {
+		return fmt.Errorf("HANDLER: ont-afvoer mist type of ID in wijziging %d", wijziging.ID)
+	}
+
+	meta, ok := model.MetaRegistry.GetTypeMeta(typeName)
+	if !ok {
+		return fmt.Errorf("HANDLER: onbekend type voor ont-afvoer: %s", typeName)
+	}
+
+	typedID, err := parseStringNaarKolomType(meta, meta.IDKolom, targetIDRaw)
+	if err != nil {
+		return fmt.Errorf("HANDLER: ongeldige ID voor ont-afvoer (%s.%s=%q): %v", meta.Tabelnaam, meta.IDKolom, targetIDRaw, err)
+	}
+
+	query := tx.NewUpdate().
+		Table(meta.Tabelnaam).
+		Set("afvoer = NULL").
+		Where(fmt.Sprintf("%s = ?", meta.IDKolom), typedID)
+
+	if meta.HeeftPFK {
+		if meta.EntiteitIDKolom == "" {
+			return fmt.Errorf("HANDLER: type %s heeft PFK maar geen EntiteitIDKolom", meta.Typenaam)
+		}
+		if wijziging.EntiteitID == "" {
+			return fmt.Errorf("HANDLER: ont-afvoer voor %s vereist entiteitID in wijziging", meta.Typenaam)
+		}
+
+		typedEntiteitID, err := parseStringNaarKolomType(meta, meta.EntiteitIDKolom, wijziging.EntiteitID)
+		if err != nil {
+			return fmt.Errorf("HANDLER: ongeldige entiteitID voor ont-afvoer (%s.%s=%q): %v", meta.Tabelnaam, meta.EntiteitIDKolom, wijziging.EntiteitID, err)
+		}
+
+		query = query.Where(fmt.Sprintf("%s = ?", meta.EntiteitIDKolom), typedEntiteitID)
+	}
+
+	result, err := query.Exec(c.Request.Context())
+	if err != nil {
+		return fmt.Errorf("HANDLER: ont-afvoer update mislukt voor %s: %v", meta.Typenaam, err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err == nil && rows == 0 {
+		return fmt.Errorf("HANDLER: ont-afvoer vond geen record voor %s met sleutel uit wijziging %d", meta.Typenaam, wijziging.ID)
+	}
+
+	return nil
+}
+
 /*
 ===================== GENERIEK===========================
 */
@@ -550,4 +670,75 @@ func firstTagValue(tag string) string {
 
 func normalizeVeldnaam(veld string) string {
 	return strings.ReplaceAll(strings.ToLower(strings.TrimSpace(veld)), "_", "")
+}
+
+func parseStringNaarKolomType(meta model.TypeMeta, kolomnaam string, raw string) (any, error) {
+	if strings.TrimSpace(raw) == "" {
+		return nil, fmt.Errorf("lege waarde")
+	}
+
+	kolomType, err := vindKolomTypeInDBModel(meta, kolomnaam)
+	if err != nil {
+		return nil, err
+	}
+
+	for kolomType.Kind() == reflect.Pointer {
+		kolomType = kolomType.Elem()
+	}
+
+	switch kolomType.Kind() {
+	case reflect.String:
+		return raw, nil
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		parsed, err := strconv.ParseInt(raw, 10, kolomType.Bits())
+		if err != nil {
+			return nil, err
+		}
+		v := reflect.New(kolomType).Elem()
+		v.SetInt(parsed)
+		return v.Interface(), nil
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		parsed, err := strconv.ParseUint(raw, 10, kolomType.Bits())
+		if err != nil {
+			return nil, err
+		}
+		v := reflect.New(kolomType).Elem()
+		v.SetUint(parsed)
+		return v.Interface(), nil
+	default:
+		return raw, nil
+	}
+}
+
+func vindKolomTypeInDBModel(meta model.TypeMeta, kolomnaam string) (reflect.Type, error) {
+	if meta.DBFactory == nil {
+		return nil, fmt.Errorf("DBFactory ontbreekt voor type %s", meta.Typenaam)
+	}
+
+	rep := meta.DBFactory()
+	rv := reflect.ValueOf(rep)
+	for rv.Kind() == reflect.Pointer {
+		if rv.IsNil() {
+			return nil, fmt.Errorf("lege DBFactory representatie voor type %s", meta.Typenaam)
+		}
+		rv = rv.Elem()
+	}
+	if rv.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("DBFactory voor type %s levert geen struct", meta.Typenaam)
+	}
+
+	rt := rv.Type()
+	normalizedKolom := normalizeVeldnaam(kolomnaam)
+
+	for i := 0; i < rt.NumField(); i++ {
+		field := rt.Field(i)
+
+		if normalizeVeldnaam(field.Name) == normalizedKolom ||
+			normalizeVeldnaam(firstTagValue(field.Tag.Get("bun"))) == normalizedKolom ||
+			normalizeVeldnaam(firstTagValue(field.Tag.Get("json"))) == normalizedKolom {
+			return field.Type, nil
+		}
+	}
+
+	return nil, fmt.Errorf("kolom %s niet gevonden in DB model voor type %s", kolomnaam, meta.Typenaam)
 }
