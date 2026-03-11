@@ -377,11 +377,30 @@ Deregister U5 and register U6 for entity A:
  - gedaan bij opvoer van een enkelvoudig gegevenselement: de eerder wordt afgevoerd
  - bij het vinden van meerdere actieve GEs wordt een foutmelding gegeven (en niet opgevoerd / afgevoerd)
 
- 10 elke request vormt een transactie
+10 elke request vormt een transactie
+
+11 reeds afgevoerde records kunnen niet weer afgevoerd worden (todo: goed testen, maar geldt voor alles)
+
+12 ongedaanmaking en correctie
+
+
+
+## BUGS
+
+10 aan een ongedaan gemaakte U1 bij een ongedaan gemaakte A1 kan nu gewoon een nieuwe U worden toegevoegd...
+
+
 
 
 ## TODO
 
+10 
+
+
+50 Autonumber Entiteit-IDs? Simpel maar wenselijk?
+60 pbac, pep inbouwen
+
+## TO DO MATERIEEL = REDESIGN!
 1 In modellen de materiële tijd toevoegen = aanvang en einde, Standaard element hergebruiken? Maar is foreign key per representatie, dus voor elke representatie een aparte {REP}_Aanvang + {REP}_Einde
 
 2 Full handlers uitbreiden met meer dan één laag diepe relaties (vanwege bovenstaande mogelijke materiele 'mickey mouse oortjes' op entiteiten en gegevenselementen)
@@ -389,10 +408,3 @@ Deregister U5 and register U6 for entity A:
 5 Andere optie is iets slimmers dan dit
 6 plus functie ipv de standaard insert waar je bij een post gewoon aanvang/einde meegeeft, maar bijzonder wegschrijft. Correctie en ongedaanmaking hebben het vooral moeilijk
 
-10 Autonumber Entiteit-IDs? Simpel maar wenselijk?
-
-20 reeds afgevoerde records kunnen niet weer afgevoerd worden (kan nu wel, geen check)
-
-30 ongedaanmaking en correctie
-
-40 pbac, pep inbouwen

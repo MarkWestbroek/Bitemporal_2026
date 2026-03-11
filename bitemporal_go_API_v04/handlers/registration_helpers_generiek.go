@@ -138,63 +138,12 @@ func handleRepresentatieOntAfvoer(c *gin.Context, tx bun.Tx, wijziging model.Wij
 ===================== GENERIEK===========================
 */
 
-// handleRepresentatieOpvoerMetReflectie inserts an opvoer representatie and creates a wijziging record.
-// het gebruikt de vrij verbose reflectie code die Codex geschreven heeft...
-func handleRepresentatieOpvoerMetReflectie(c *gin.Context, tx bun.Tx, registratie model.Registratie,
-	representatienaam string, representatie model.FormeleRepresentatie) error {
-
-	/*
-		* Scenario 1: Opvoer van hele entiteit met eventueel onderliggende gegevenselementen en/of relaties
-		- eerst entiteit opvoeren met het bijbehehorende wijziging record
-		- itereren over onderliggende gegevenselementen/relaties en die ook opvoeren (met eigen wijziging records)
-		- N.B. : refereren aan de ID van de entiteit (TODO method maken SetEntiteitID) in de gegevenselementen/relaties, zodat die automatisch goed komt te staan in de database
-
-		* Scenario 2: Opvoer van individuele gegevenselementen/relaties
-		- alleen dat gegevenselement/relatie opvoeren, zonder dat de hele entiteit wordt aangeraakt
-		- ook hier moet een wijziging record worden gemaakt
-	*/
-
-	// dit is de basis insert van 1 element, maar relaties gaan niet vanzelf mee, dus die moeten we apart behandelen (zie handleOpvoerA en handleOpvoerB)
-	// ook moet er per gegevenselement/relatie een wijziging record worden gemaakt,
-	//  dus dat doen we ook niet automatisch in de database, maar apart in de code (zie handleOpvoerElement)
-	representatie.SetOpvoer(&registratie.Tijdstip)
-
-	// insert de top level representatie, dat moet namelijk sowieso
-	// Interessant: autoincrement ID's worden automatisch teruggezet in de struct,
-	// dus die kunnen we daarna gebruiken  voor de onderliggende gegevenselementen/relaties
-	_, err := tx.NewInsert().
-		Model(representatie).
-		Exec(c.Request.Context())
-	if err != nil {
-		return fmt.Errorf("HANDLER: failed to insert %s: %v", representatienaam, err)
-	}
-
-	// indien entiteit, behandel ook alle onderliggende gegevenselementen/relaties
-	if representatie.Metatype() == model.MetatypeEntiteit {
-		// dit kinderen verzamelen gaat via reflectie
-		kinderen, err := verzamelOnderliggendeRepresentatiesMbvReflectie(representatie)
-		if err != nil {
-			return fmt.Errorf("HANDLER: kon onderliggende representaties van %s niet bepalen: %v", representatienaam, err)
-		}
-
-		for _, kind := range kinderen {
-			if err := handleRepresentatieOpvoerMetReflectie(c, tx, registratie, kind.Naam, kind.Representatie); err != nil {
-				return err
-			}
-		}
-	}
-
-	// Maak wijziging record aan
-	return persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratie.ID,
-		representatienaam, fmt.Sprint(representatie.GetID()), representatienaam, fmt.Sprint(representatie.GetID()), registratie.Tijdstip)
-}
-
 /*
 ==== STANDAARD OPVOER ROUTINE ======
 
-handleRepresentatieOpvoerMeta verwerkt opvoer via de metaregistry, zonder reflectie.
+handleRepresentatieOpvoer verwerkt opvoer via de metaregistry.
 */
-func handleRepresentatieOpvoerMeta(c *gin.Context, tx bun.Tx, registratie model.Registratie,
+func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratie model.Registratie,
 	entiteitnaam string, entiteitID string, representatienaam string, representatie model.FormeleRepresentatie) error {
 	meta, ok := model.MetaRegistry.GetTypeMeta(representatienaam)
 	if !ok {
@@ -315,7 +264,7 @@ func handleRepresentatieOpvoerMeta(c *gin.Context, tx bun.Tx, registratie model.
 		}
 
 		for _, onderliggende := range onderliggendeRepresentaties.GeefOnderliggendeGegevenselementen() {
-			if err := handleRepresentatieOpvoerMeta(c, tx, registratie, entiteitnaam, entiteitID, onderliggende.Typenaam, onderliggende.Representatie); err != nil {
+			if err := handleRepresentatieOpvoer(c, tx, registratie, entiteitnaam, entiteitID, onderliggende.Typenaam, onderliggende.Representatie); err != nil {
 				return err
 			}
 		}
@@ -468,6 +417,7 @@ func haalActieveIDsGegevenselementUitDB(c *gin.Context, tx bun.Tx, meta model.Ty
 		Table(meta.Tabelnaam).
 		Column(meta.IDKolom).
 		Where(fmt.Sprintf("%s = ?", fkColumn), entiteitID).
+		Where("opvoer IS NOT NULL").
 		Where("afvoer IS NULL")
 	if err := query.Scan(c.Request.Context(), &ids); err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("HANDLER: failed to query active %s records: %v", meta.Typenaam, err)

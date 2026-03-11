@@ -47,7 +47,7 @@ func TestSluitActieveEnkelvoudigeVoorgangersAf_ClosesExistingActiveRecord(t *tes
 	tijdstip := time.Date(2026, 2, 25, 10, 0, 0, 0, time.UTC)
 
 	// SQL-volgorde: select actieve voorganger -> update afvoer -> insert wijziging.
-	mock.ExpectQuery(`SELECT .*FROM "a_u".*afvoer IS NULL`).
+	mock.ExpectQuery(`SELECT .*FROM "a_u".*opvoer IS NOT NULL.*afvoer IS NULL`).
 		WillReturnRows(sqlmock.NewRows([]string{"rel_id"}).AddRow(5))
 
 	mock.ExpectExec(`UPDATE "a_u" SET afvoer = .*WHERE \(rel_id = .*\)`).
@@ -103,7 +103,7 @@ func TestSluitActieveEnkelvoudigeVoorgangersAf_ErrorsOnMultipleActiveRecords(t *
 	tijdstip := time.Date(2026, 2, 25, 10, 0, 0, 0, time.UTC)
 
 	// Simuleer twee actieve voorgangers in het queryresultaat.
-	mock.ExpectQuery(`SELECT .*FROM "a_u".*afvoer IS NULL`).
+	mock.ExpectQuery(`SELECT .*FROM "a_u".*opvoer IS NOT NULL.*afvoer IS NULL`).
 		WillReturnRows(sqlmock.NewRows([]string{"rel_id"}).AddRow(5).AddRow(6))
 
 	err = sluitActieveEnkelvoudigeVoorgangersAf(ctx, tx, 42, tijdstip, "A_U", representatie, meta)
