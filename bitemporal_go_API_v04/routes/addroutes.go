@@ -12,13 +12,6 @@ including routes for entities, relations and data elements,
 as well as bitemporal registration, correction and undoing routes.
 */
 func AddRoutes(router *gin.Engine) {
-	//add Tasks routes to router
-	router.GET("/tasks", handlers.GetTasks)
-	router.GET("/tasks/:id", handlers.GetTask)
-	router.DELETE("/tasks/:id", handlers.RemoveTask)
-	router.POST("/tasks", handlers.AddTask)
-	router.PUT("/tasks/:id", handlers.UpdateTask)
-
 	//Add Tests routes to router
 	router.GET("/tests", handlers.GetTests)
 	router.GET("/tests/:id", handlers.GetTest)
@@ -75,15 +68,9 @@ func AddRoutes(router *gin.Engine) {
 	// Get registratie met onderliggende wijzigingen
 	router.GET("/full/registraties", handlers.MakeGetRegistratiesMetWijzigingenHandler())
 
-	// Bitemporal registration, correction and undoing routes
-	// see README.md for details and examples
-	router.POST("/registreer/as", handlers.MakeRegisterFullEntityHandlerA()) // DEPRECATED, use /registratie/ endpoint instead
-	router.POST("/registreer/bs", handlers.MakeRegisterFullEntityHandlerB()) // DEPRECATED, use /registratie/ endpoint instead
-
-	// met ID
-	//router.POST("/registreer/as/:id", handlers.MakeRegisterFullEntityHandlerAWithID())
-
-	// test met nieuwe aanpak
+	/* REGISTRATIE, CORRECTIE EN ONGEDAANMAKING ROUTES
+	Dit gaat allemaal via /registratie/ en de payload in de de body.
+	*/
 	router.POST("/registratie/", handlers.RegistreerMetNieuweAanpak())
 
 	/* IDEE
