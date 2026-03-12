@@ -108,6 +108,51 @@
         return Array.isArray(value) ? value : [];
       }
 
+      function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
+        const parsed = Number.parseInt(String(value), 10);
+        if (Number.isNaN(parsed)) {
+          return fallback;
+        }
+        return Math.max(0, parsed);
+      }
+
+      function vindAIdVanuitRegistratie(registratie, as) {
+        const wijzigingen = safeArray(registratie?.wijzigingen);
+        for (const wijziging of wijzigingen) {
+          const kandidaatId = wijziging?.entiteit_id;
+          if (kandidaatId === null || kandidaatId === undefined || kandidaatId === '') {
+            continue;
+          }
+
+          const kandidaatAlsString = String(kandidaatId);
+          const bestaatInAs = as.some((item) => String(item.id) === kandidaatAlsString);
+          if (bestaatInAs) {
+            return kandidaatAlsString;
+          }
+        }
+        return '';
+      }
+
+      function tUitRegistratieTijdstip(tijdstipRaw) {
+        if (!tijdstipRaw) {
+          return null;
+        }
+
+        const tijdstipMillis = Date.parse(tijdstipRaw);
+        const basisMillis = Date.parse('2026-01-01T00:00:00Z');
+        if (Number.isNaN(tijdstipMillis) || Number.isNaN(basisMillis)) {
+          return null;
+        }
+
+        const deltaMillis = tijdstipMillis - basisMillis;
+        const afgerondeUren = Math.round(deltaMillis / (60 * 60 * 1000));
+        if (afgerondeUren < 0) {
+          return null;
+        }
+
+        return afgerondeUren;
+      }
+
       function wijzigingKleur(wijzigingstype) {
         const type = String(wijzigingstype || '').toLowerCase();
         if (type === 'opvoer') {
@@ -122,6 +167,7 @@
       function App() {
         const [baseUrl, setBaseUrl] = useState(window.location.origin);
         const [t, setT] = useState(1);
+        const [registratieId, setRegistratieId] = useState(1);
         const [loading, setLoading] = useState(false);
         const [error, setError] = useState('');
         const [responseData, setResponseData] = useState(null);
@@ -129,31 +175,42 @@
         const [ongedaanGemaakteRegistratieData, setOngedaanGemaakteRegistratieData] = useState(null);
         const [selectedAId, setSelectedAId] = useState('');
 
-        async function loadData(tValue = t) {
+        async function loadData({ tValue = t, registratieIdValue = registratieId, selecteerVanuitRegistratie = false } = {}) {
           setLoading(true);
           setError('');
           try {
-            const asUrl = `${baseUrl}/full/as/?t=${encodeURIComponent(tValue)}`;
-            const registratieId = Math.max(0, Number.parseInt(String(tValue), 10) || 0);
-            const registratieByIdUrl = `${baseUrl}/full/registraties/${encodeURIComponent(registratieId)}`;
+            const doelRegistratieId = normaliseerNietNegatiefGeheelGetal(registratieIdValue, normaliseerNietNegatiefGeheelGetal(registratieId, 0));
+            const defaultPeilmoment = normaliseerNietNegatiefGeheelGetal(tValue, normaliseerNietNegatiefGeheelGetal(t, 0));
+            let peilmomentVoorAs = defaultPeilmoment;
 
-            const [asRes, registratieByIdRes] = await Promise.all([
-              fetch(asUrl),
-              fetch(registratieByIdUrl),
-            ]);
+            const registratieByIdUrl = `${baseUrl}/full/registraties/${encodeURIComponent(doelRegistratieId)}`;
+            const registratieByIdRes = await fetch(registratieByIdUrl);
 
-            if (!asRes.ok) {
-              throw new Error(`As HTTP ${asRes.status}: ${asRes.statusText}`);
-            }
             if (!registratieByIdRes.ok && registratieByIdRes.status !== 404) {
               throw new Error(`Registratie HTTP ${registratieByIdRes.status}: ${registratieByIdRes.statusText}`);
             }
 
-            const asJson = await asRes.json();
             let registratieJson = null;
             if (registratieByIdRes.ok) {
               registratieJson = await registratieByIdRes.json();
             }
+
+            if (selecteerVanuitRegistratie && registratieJson?.tijdstip) {
+              const afgeleidT = tUitRegistratieTijdstip(registratieJson.tijdstip);
+              if (afgeleidT !== null) {
+                peilmomentVoorAs = afgeleidT;
+                setT(afgeleidT);
+              }
+            }
+
+            const asUrl = `${baseUrl}/full/as/?t=${encodeURIComponent(peilmomentVoorAs)}`;
+            const asRes = await fetch(asUrl);
+
+            if (!asRes.ok) {
+              throw new Error(`As HTTP ${asRes.status}: ${asRes.statusText}`);
+            }
+
+            const asJson = await asRes.json();
 
             let ongedaanGemaakteRegistratieJson = null;
             if (registratieJson?.registratietype === 'ongedaanmaking' && registratieJson?.maakt_ongedaan_registratie_id) {
@@ -169,14 +226,20 @@
             setOngedaanGemaakteRegistratieData(ongedaanGemaakteRegistratieJson);
 
             const as = safeArray(asJson.As);
-            setSelectedAId((previousSelectedAId) => {
+            const aIdVanuitRegistratie = vindAIdVanuitRegistratie(registratieJson, as);
+
+            setSelectedAId((vorigeAId) => {
               if (as.length === 0) {
                 return '';
               }
 
-              const hasPrevious = as.some((item) => String(item.id) === String(previousSelectedAId));
-              if (hasPrevious) {
-                return String(previousSelectedAId);
+              if (selecteerVanuitRegistratie && aIdVanuitRegistratie) {
+                return aIdVanuitRegistratie;
+              }
+
+              const heeftVorigeNog = as.some((item) => String(item.id) === String(vorigeAId));
+              if (heeftVorigeNog) {
+                return String(vorigeAId);
               }
 
               return String(as[0].id);
@@ -192,18 +255,44 @@
           }
         }
 
+        function incrementRegistratieAndReload() {
+          if (loading) {
+            return;
+          }
+          const currentRegistratieId = normaliseerNietNegatiefGeheelGetal(registratieId, 0);
+          const nextRegistratieId = currentRegistratieId + 1;
+          setRegistratieId(nextRegistratieId);
+          loadData({ tValue: t, registratieIdValue: nextRegistratieId, selecteerVanuitRegistratie: true });
+        }
+
+        function decrementRegistratieAndReload() {
+          if (loading) {
+            return;
+          }
+          const currentRegistratieId = normaliseerNietNegatiefGeheelGetal(registratieId, 0);
+          const nextRegistratieId = Math.max(0, currentRegistratieId - 1);
+          setRegistratieId(nextRegistratieId);
+          loadData({ tValue: t, registratieIdValue: nextRegistratieId, selecteerVanuitRegistratie: true });
+        }
+
         function incrementTAndReload() {
-          const currentT = Number(t) || 0;
+          if (loading) {
+            return;
+          }
+          const currentT = normaliseerNietNegatiefGeheelGetal(t, 0);
           const nextT = currentT + 1;
           setT(nextT);
-          loadData(nextT);
+          loadData({ tValue: nextT, registratieIdValue: registratieId, selecteerVanuitRegistratie: false });
         }
 
         function decrementTAndReload() {
-          const currentT = Number(t) || 0;
+          if (loading) {
+            return;
+          }
+          const currentT = normaliseerNietNegatiefGeheelGetal(t, 0);
           const nextT = Math.max(0, currentT - 1);
           setT(nextT);
-          loadData(nextT);
+          loadData({ tValue: nextT, registratieIdValue: registratieId, selecteerVanuitRegistratie: false });
         }
 
         useEffect(() => {
@@ -219,10 +308,17 @@
 
             if (event.key === 'ArrowRight') {
               event.preventDefault();
+              incrementRegistratieAndReload();
+            }
+            if (event.key === 'ArrowLeft') {
+              event.preventDefault();
+              decrementRegistratieAndReload();
+            }
+            if (event.key === 'ArrowUp') {
+              event.preventDefault();
               incrementTAndReload();
             }
-
-            if (event.key === 'ArrowLeft') {
+            if (event.key === 'ArrowDown') {
               event.preventDefault();
               decrementTAndReload();
             }
@@ -230,13 +326,10 @@
 
           window.addEventListener('keydown', handleKeyDown);
           return () => window.removeEventListener('keydown', handleKeyDown);
-        }, [t, loading, baseUrl]);
+        }, [t, registratieId, loading]);
 
         const as = safeArray(responseData?.As);
-
-        const selectedA = useMemo(() => {
-          return as.find((item) => String(item.id) === String(selectedAId)) || null;
-        }, [as, selectedAId]);
+        const selectedA = useMemo(() => as.find((item) => String(item.id) === String(selectedAId)) || null, [as, selectedAId]);
 
         const us = safeArray(selectedA?.us);
         const vs = safeArray(selectedA?.vs);
@@ -253,66 +346,71 @@
         return (
           <div className="container">
             <h1>Bitemporal visualizer</h1>
-            <p className="muted">
-              Kies een peilmoment en een entiteit A. De visualisatie laat A met gekoppelde U- en V-representaties zien.
-            </p>
-            <p className="muted">Tip: gebruik ← voor t - 1 en → voor t + 1.</p>
+            <p className="muted">Kies peilmoment en registratie-id, en volg desgewenst een specifieke entiteit.</p>
+            <p className="muted">Tip: ←/→ navigeert registratie-id, ↑/↓ navigeert peilmoment t.</p>
 
             <div className="card">
-              <div className="controls">
+              <div className="controls" style={{ gridTemplateColumns: 'repeat(4, minmax(180px, 1fr))' }}>
                 <label>
                   API base URL
-                  <input
-                    value={baseUrl}
-                    onChange={(e) => setBaseUrl(e.target.value.trim())}
-                    placeholder="http://localhost:8080"
-                  />
+                  <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value.trim())} placeholder="http://localhost:8080" />
+                </label>
+
+                <label>
+                  Registratie-id
+                  <input type="number" value={registratieId} onChange={(e) => setRegistratieId(e.target.value)} min="0" step="1" />
                 </label>
 
                 <label>
                   Peilmoment (t)
-                  <input
-                    type="number"
-                    value={t}
-                    onChange={(e) => setT(e.target.value)}
-                    min="0"
-                    step="1"
-                  />
+                  <input type="number" value={t} onChange={(e) => setT(e.target.value)} min="0" step="1" />
                 </label>
 
                 <label>
                   Entiteit A
-                  <select
-                    value={selectedAId}
-                    onChange={(e) => setSelectedAId(e.target.value)}
-                    disabled={as.length === 0}
-                  >
+                  <select value={selectedAId} onChange={(e) => setSelectedAId(e.target.value)} disabled={as.length === 0}>
                     {as.length === 0 && <option value="">Geen resultaten</option>}
                     {as.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        A #{a.id}
-                      </option>
+                      <option key={a.id} value={a.id}>A #{a.id}</option>
                     ))}
                   </select>
                 </label>
               </div>
 
-              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                <button onClick={loadData} disabled={loading}>
+              <p className="muted" style={{ margin: 0 }}>
+                Huidige selectie: peilmoment t={normaliseerNietNegatiefGeheelGetal(t, 0)} | registratie-id={normaliseerNietNegatiefGeheelGetal(registratieId, 0)}
+              </p>
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <button onClick={() => loadData({ selecteerVanuitRegistratie: true })} disabled={loading}>
                   {loading ? 'Bezig met ophalen...' : 'Ophalen'}
-                </button>
-                <button onClick={decrementTAndReload} disabled={loading || Number(t) <= 0}>
-                  t - 1 en ophalen
-                </button>
-                <button onClick={incrementTAndReload} disabled={loading}>
-                  t + 1 en ophalen
                 </button>
               </div>
 
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(260px, 1fr))', gap: 12, marginTop: 10 }}>
+                <div>
+                  <p className="muted" style={{ margin: '0 0 6px' }}>1) Door registratie-id lopen (volgt entiteit in registratie)</p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={decrementRegistratieAndReload} disabled={loading || normaliseerNietNegatiefGeheelGetal(registratieId, 0) <= 0}>reg-id - 1</button>
+                    <button onClick={incrementRegistratieAndReload} disabled={loading}>reg-id + 1</button>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="muted" style={{ margin: '0 0 6px' }}>2) Door peilmoment lopen (houdt gekozen entiteit vast)</p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={decrementTAndReload} disabled={loading || normaliseerNietNegatiefGeheelGetal(t, 0) <= 0}>t - 1</button>
+                    <button onClick={incrementTAndReload} disabled={loading}>t + 1</button>
+                  </div>
+                </div>
+              </div>
+
+              <p className="muted" style={{ marginTop: 8, marginBottom: 0 }}>
+                Bij registratie-navigatie blijft de huidige entiteit staan als er geen match in de registratie zit.
+              </p>
+
               {error && <p style={{ color: '#dc2626' }}>Fout: {error}</p>}
-              {responseData?.has_more && (
-                <p className="muted">Let op: has_more=true, niet alle A-entiteiten zijn geladen.</p>
-              )}
+              {responseData?.has_more && <p className="muted">Let op: has_more=true, niet alle A-entiteiten zijn geladen.</p>}
             </div>
 
             <div className="row" style={{ marginTop: 16 }}>
@@ -320,11 +418,11 @@
                 <h2>{registratieTitel}</h2>
 
                 {!selectedRegistratie ? (
-                  <p className="muted">Geen registratie met id=t gevonden.</p>
+                  <p className="muted">Geen registratie met dit registratie-id gevonden.</p>
                 ) : (
                   <>
                     <p className="muted" style={{ margin: 0 }}>
-                      id={selectedRegistratie.id} | type={selectedRegistratie.registratietype} | tijdstip={selectedRegistratie.tijdstip}
+                      id={selectedRegistratie.id} | type={selectedRegistratie.registratietype} | tijdstip={selectedRegistratie.tijdstip} | peilmoment t={normaliseerNietNegatiefGeheelGetal(t, 0)}
                     </p>
 
                     <h3 style={{ marginTop: 12 }}>Visueel</h3>
@@ -350,9 +448,7 @@
                           );
                         })}
 
-                        {visualWijzigingen.length === 0 && (
-                          <text className="label" x="230" y="170">Geen wijzigingen onder deze registratie</text>
-                        )}
+                        {visualWijzigingen.length === 0 && <text className="label" x="230" y="170">Geen wijzigingen onder deze registratie</text>}
                       </svg>
                     )}
 
