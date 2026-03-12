@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Visualisatie tijdreizen - tijdslijn</title>
+    <style>
+      :root {
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      body {
+        margin: 0;
+        background: #f8fafc;
+        color: #0f172a;
+      }
+      .container {
+        max-width: 1700px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .page-title {
+        font-size: 26px;
+        margin: 0 0 8px;
+      }
+      .muted {
+        color: #475569;
+        font-size: 13px;
+      }
+      .card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 14px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      }
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(180px, 1fr));
+        gap: 12px;
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 14px;
+      }
+      input, button {
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 14px;
+      }
+      button {
+        cursor: pointer;
+        background: #0f172a;
+        color: white;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .timeline-scroll {
+        margin-top: 14px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+      }
+      .timeline-row {
+        display: inline-flex;
+        gap: 14px;
+        align-items: flex-start;
+      }
+      .timeline-column {
+        display: grid;
+        grid-template-rows: auto auto;
+        gap: 10px;
+        min-width: 340px;
+      }
+      .panel-title {
+        margin: 0 0 6px;
+        font-size: 15px;
+      }
+      .graph {
+        width: 100%;
+        height: 230px;
+        border: 1px dashed #cbd5e1;
+        border-radius: 10px;
+        background: #f8fafc;
+      }
+      .graph-rep {
+        min-height: 0;
+      }
+      .node {
+        fill: white;
+        stroke: #334155;
+        stroke-width: 1.2;
+      }
+      .edge {
+        stroke: #94a3b8;
+        stroke-width: 1.4;
+      }
+      .label {
+        font-size: 12px;
+        fill: #0f172a;
+      }
+      .label-strong {
+        font-size: 14px;
+        font-weight: 700;
+      }
+      @media (max-width: 900px) {
+        .controls {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+      const { useMemo, useState } = React;
+
+      function safeArray(value) {
+        return Array.isArray(value) ? value : [];
+      }
+
+      function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
+        const parsed = Number.parseInt(String(value), 10);
+        if (Number.isNaN(parsed)) {
+          return fallback;
+        }
+        return Math.max(0, parsed);
+      }
+
+      function tUitRegistratieTijdstip(tijdstipRaw) {
+        if (!tijdstipRaw) {
+          return null;
+        }
+        const tijdstipMillis = Date.parse(tijdstipRaw);
+        const basisMillis = Date.parse("2026-01-01T00:00:00Z");
+        if (Number.isNaN(tijdstipMillis) || Number.isNaN(basisMillis)) {
+          return null;
+        }
+        return Math.max(0, Math.round((tijdstipMillis - basisMillis) / (60 * 60 * 1000)));
+      }
+
+      function microsecondeIntVanTijdstip(tijdstipRaw) {
+        if (!tijdstipRaw) {
+          return 0;
+        }
+        const raw = String(tijdstipRaw);
+        const match = raw.match(/\.(\d+)/);
+        if (!match) {
+          return 0;
+        }
+        const fraction = match[1].slice(0, 6).padEnd(6, "0");
+        const parsed = Number.parseInt(fraction, 10);
+        return Number.isNaN(parsed) ? 0 : parsed;
+      }
+
+      function wijzigingKleur(wijzigingstype) {
+        const type = String(wijzigingstype || "").toLowerCase();
+        if (type === "opvoer") {
+          return "#dcfce7";
+        }
+        if (type === "afvoer") {
+          return "#ffedd5";
+        }
+        return "#f8fafc";
+      }
+
+      async function fetchAlleRegistraties(baseUrl) {
+        const size = 100;
+        let page = 1;
+        const result = [];
+        for (let i = 0; i < 30; i += 1) {
+          const url = `${baseUrl}/full/registraties?page=${page}&size=${size}`;
+          const res = await fetch(url);
+          if (!res.ok) {
+            throw new Error(`Registraties HTTP ${res.status}: ${res.statusText}`);
+          }
+          const json = await res.json();
+          const batch = safeArray(json.Registraties);
+          result.push(...batch);
+          if (!json.has_more || batch.length === 0) {
+            break;
+          }
+          page += 1;
+        }
+        return result;
+      }
+
+      async function fetchASnapshot(baseUrl, aId, t) {
+        if (t === null) {
+          return null;
+        }
+        const url = `${baseUrl}/full/as/${encodeURIComponent(aId)}?t=${encodeURIComponent(t)}`;
+        const res = await fetch(url);
+        if (!res.ok) {
+          return null;
+        }
+        const json = await res.json();
+        return json.A || json;
+      }
+
+      async function fetchRegistratieById(baseUrl, registratieId) {
+        const url = `${baseUrl}/full/registraties/${encodeURIComponent(registratieId)}`;
+        const res = await fetch(url);
+        if (!res.ok) {
+          return null;
+        }
+        const json = await res.json();
+        return json.Registratie || json;
+      }
+
+      function App() {
+        const [baseUrl, setBaseUrl] = useState(window.location.origin);
+        const [aId, setAId] = useState(1);
+        const [loading, setLoading] = useState(false);
+        const [error, setError] = useState("");
+        const [timelineItems, setTimelineItems] = useState([]);
+
+        const totaal = useMemo(() => timelineItems.length, [timelineItems]);
+
+        async function loadTimeline() {
+          setLoading(true);
+          setError("");
+          try {
+            const doelAId = normaliseerNietNegatiefGeheelGetal(aId, 1);
+            const registraties = await fetchAlleRegistraties(baseUrl);
+
+            const verrijkt = [];
+            for (const reg of registraties) {
+              const isOngedaanmaking = reg.registratietype === "ongedaanmaking";
+              let visualRegistratie = reg;
+              let visualWijzigingen = safeArray(reg.wijzigingen);
+
+              if (isOngedaanmaking && reg.maakt_ongedaan_registratie_id) {
+                const doelRegistratie = await fetchRegistratieById(baseUrl, reg.maakt_ongedaan_registratie_id);
+                if (doelRegistratie) {
+                  visualRegistratie = doelRegistratie;
+                  visualWijzigingen = safeArray(doelRegistratie.wijzigingen);
+                }
+              }
+
+              const relevanteWijzigingen = visualWijzigingen.filter((w) => {
+                const entiteitNaam = String(w.entiteitnaam || "").toUpperCase();
+                return entiteitNaam === "A" && String(w.entiteit_id) === String(doelAId);
+              });
+
+              if (relevanteWijzigingen.length === 0) {
+                continue;
+              }
+
+              const t = tUitRegistratieTijdstip(reg.tijdstip);
+              const aSnapshot = await fetchASnapshot(baseUrl, doelAId, t);
+
+              verrijkt.push({
+                registratie: reg,
+                visualRegistratie,
+                wijzigingen: relevanteWijzigingen,
+                t,
+                aSnapshot,
+                isOngedaanmaking,
+              });
+            }
+
+            verrijkt.sort((a, b) => {
+              const at = Date.parse(a.registratie.tijdstip || "");
+              const bt = Date.parse(b.registratie.tijdstip || "");
+              if (Number.isNaN(at) && Number.isNaN(bt)) return 0;
+              if (Number.isNaN(at)) return 1;
+              if (Number.isNaN(bt)) return -1;
+              if (at !== bt) return at - bt;
+              return Number(a.registratie.id || 0) - Number(b.registratie.id || 0);
+            });
+
+            setTimelineItems(verrijkt);
+          } catch (err) {
+            setError(err.message || "Onbekende fout bij ophalen tijdslijn");
+            setTimelineItems([]);
+          } finally {
+            setLoading(false);
+          }
+        }
+
+        return (
+          <div className="container">
+            <h1 className="page-title">Visualisatie tijdreizen (formele tijd) - tijdslijn</h1>
+            <p className="muted">Horizontale tijdslijn voor entiteit A met alleen registratie- en representatievisualisaties.</p>
+
+            <div className="card">
+              <div className="controls">
+                <label>
+                  API base URL
+                  <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value.trim())} placeholder="http://localhost:8080" />
+                </label>
+
+                <label>
+                  Entiteit A id
+                  <input type="number" min="0" step="1" value={aId} onChange={(e) => setAId(e.target.value)} />
+                </label>
+
+                <div style={{ alignSelf: "end" }}>
+                  <button onClick={loadTimeline} disabled={loading}>{loading ? "Bezig met ophalen..." : "Ophalen tijdslijn"}</button>
+                </div>
+
+                <div style={{ alignSelf: "end" }}>
+                  <a href="/viz/index.html" className="muted">Terug naar /viz</a>
+                </div>
+              </div>
+
+              {error && <p style={{ color: "#dc2626" }}>Fout: {error}</p>}
+              {!error && <p className="muted">Aantal kolommen: {totaal}</p>}
+            </div>
+
+            <div className="timeline-scroll">
+              <div className="timeline-row">
+                {timelineItems.map((item, index) => {
+                  const reg = item.registratie;
+                  const visualReg = item.visualRegistratie || reg;
+                  const wijzigingen = safeArray(item.wijzigingen);
+                  const a = item.aSnapshot;
+                  const us = safeArray(a?.us || a?.Us);
+                  const vs = safeArray(a?.vs || a?.Vs);
+                  const uEnkel = us.length > 0 ? us[0] : null;
+                  const regBottom = wijzigingen.length > 0 ? (64 + ((wijzigingen.length - 1) * 56) + 44) : 52;
+                  const regViewBoxHeight = Math.max(120, regBottom + 16);
+                  const vBottom = vs.length > 0 ? (118 + ((vs.length - 1) * 72) + 36) : 0;
+                  const aBottom = 168;
+                  const uBottom = uEnkel ? 78 : 0;
+                  const repViewBoxHeight = Math.max(220, Math.max(aBottom, uBottom, vBottom) + 24);
+                  const repSvgHeight = repViewBoxHeight;
+                  const registratieTitel = reg?.registratietype
+                    ? reg.registratietype.charAt(0).toUpperCase() + reg.registratietype.slice(1)
+                    : "Registratie";
+
+                  return (
+                    <div className="timeline-column" key={`col-${reg.id || index}`}>
+                      <div className="card">
+                        <h3 className="panel-title">{`${registratieTitel} ${reg.id}`}</h3>
+                        <svg className="graph" viewBox={`0 0 320 ${regViewBoxHeight}`} preserveAspectRatio="xMidYMin meet">
+                          <rect className="node" x="40" y="8" rx="8" width="240" height="44" style={{ fill: "#ecfeff" }} />
+                          <text className="label" x="270" y="22" textAnchor="end">t: {microsecondeIntVanTijdstip(visualReg.tijdstip)}</text>
+                          <text className="label" x="52" y="36">
+                            <tspan className="label-strong">Reg</tspan>
+                            {" id="}
+                            <tspan className="label-strong">{visualReg.id}</tspan>
+                            {` | type=${visualReg.registratietype}`}
+                          </text>
+
+                          {wijzigingen.map((w, i) => {
+                            const y = 64 + i * 56;
+                            const repLeeg = (w.representatienaam === null || w.representatienaam === undefined || w.representatienaam === "") &&
+                              (w.representatie_id === null || w.representatie_id === undefined || w.representatie_id === "");
+                            return (
+                              <g key={`w-${w.id || i}`}>
+                                <line className="edge" x1="160" y1="52" x2="160" y2={y - 2} />
+                                <rect className="node" x="14" y={y} rx="8" width="292" height="44" style={{ fill: wijzigingKleur(w.wijzigingstype) }} />
+                                <line x1="111" y1={y} x2="111" y2={y + 44} stroke="#cbd5e1" strokeWidth="1" />
+                                <line x1="208" y1={y} x2="208" y2={y + 44} stroke="#cbd5e1" strokeWidth="1" />
+                                <text className="label" x="24" y={y + 27}>{w.wijzigingstype}</text>
+                                <text className="label" x="120" y={y + 27}>
+                                  <tspan className="label-strong">A</tspan>
+                                  {": "}
+                                  <tspan className="label-strong">{w.entiteit_id}</tspan>
+                                </text>
+                                {!repLeeg && (
+                                  <text className="label" x="218" y={y + 27}>
+                                    <tspan className="label-strong">{w.representatienaam}</tspan>
+                                    {": "}
+                                    <tspan className="label-strong">{w.representatie_id}</tspan>
+                                  </text>
+                                )}
+                              </g>
+                            );
+                          })}
+
+                          {item.isOngedaanmaking && (
+                            <>
+                              <line x1="14" y1="8" x2="306" y2={regViewBoxHeight - 6} stroke="#dc2626" strokeWidth="4" strokeLinecap="round" />
+                              <line x1="306" y1="8" x2="14" y2={regViewBoxHeight - 6} stroke="#dc2626" strokeWidth="4" strokeLinecap="round" />
+                            </>
+                          )}
+                        </svg>
+                      </div>
+
+                      <div className="card">
+                        <h3 className="panel-title">Representaties</h3>
+                        {!a ? (
+                          <p className="muted">Geen snapshot beschikbaar.</p>
+                        ) : (
+                          <svg className="graph graph-rep" viewBox={`0 0 320 ${repViewBoxHeight}`} preserveAspectRatio="xMidYMin meet" style={{ height: `${repSvgHeight}px` }}>
+                            <g>
+                              <rect className="node" x="18" y="96" rx="8" width="118" height="72" style={{ fill: "#dbeafe" }} />
+                              <text className="label" x="130" y="110" textAnchor="end">opv: {a.opvoer ? microsecondeIntVanTijdstip(a.opvoer) : "-"}</text>
+                              <text className="label" x="28" y="128">
+                                <tspan className="label-strong">A</tspan>
+                                {" id="}
+                                <tspan className="label-strong">{a.id}</tspan>
+                              </text>
+                            </g>
+
+                            {uEnkel && (
+                              <g>
+                                <line className="edge" x1="136" y1="118" x2="186" y2="62" />
+                                <rect className="node" x="186" y="20" rx="8" width="124" height="58" />
+                                <text className="label" x="302" y="34" textAnchor="end">opv: {uEnkel.opvoer ? microsecondeIntVanTijdstip(uEnkel.opvoer) : "-"}</text>
+                                <text className="label" x="194" y="45">
+                                  <tspan className="label-strong">U</tspan>
+                                  {" rel_id="}
+                                  <tspan className="label-strong">{uEnkel.rel_id ?? "-"}</tspan>
+                                </text>
+                                <text className="label" x="194" y="63">{`${uEnkel.aaa ?? ""} | ${uEnkel.bbb ?? ""}`}</text>
+                              </g>
+                            )}
+
+                            {vs.map((v, i) => {
+                              const y = 118 + i * 72;
+                              return (
+                                <g key={`v-${v.rel_id || i}`}>
+                                  <line className="edge" x1="136" y1="132" x2="186" y2={y} />
+                                  <rect className="node" x="186" y={y - 22} rx="8" width="124" height="58" />
+                                  <text className="label" x="302" y={y - 8} textAnchor="end">opv: {v.opvoer ? microsecondeIntVanTijdstip(v.opvoer) : "-"}</text>
+                                  <text className="label" x="194" y={y + 4}>
+                                    <tspan className="label-strong">V</tspan>
+                                    {" rel_id="}
+                                    <tspan className="label-strong">{v.rel_id ?? "-"}</tspan>
+                                  </text>
+                                  <text className="label" x="194" y={y + 22}>ccc={v.ccc ?? ""}</text>
+                                </g>
+                              );
+                            })}
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>
