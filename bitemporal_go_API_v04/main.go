@@ -105,6 +105,7 @@ func NewRouter() *gin.Engine {
 
 	//Homepage
 	router.GET("/", handlers.HomePage)
+	router.Static("/viz", "./web")
 
 	// Version endpoint
 	router.GET("/version", func(c *gin.Context) {

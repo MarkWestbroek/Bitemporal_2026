@@ -67,6 +67,7 @@ func AddRoutes(router *gin.Engine) {
 
 	// Get registratie met onderliggende wijzigingen
 	router.GET("/full/registraties", handlers.MakeGetRegistratiesMetWijzigingenHandler())
+	router.GET("/full/registraties/:id", handlers.MakeGetRegistratieMetWijzigingenByIDHandler())
 
 	/* REGISTRATIE, CORRECTIE EN ONGEDAANMAKING ROUTES
 	Dit gaat allemaal via /registratie/ en de payload in de de body.

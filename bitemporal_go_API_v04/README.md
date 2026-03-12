@@ -45,6 +45,23 @@ In addition it allows to correct data (in fact correct registrations and the reg
 
 5. Access the API at `http://localhost:8080` and start managing your tasks!
 
+## Visualisatie (React, zonder build-tooling)
+
+Er is een eenvoudige visualisatiepagina beschikbaar op:
+
+- `http://localhost:8080/viz`
+
+Deze pagina:
+
+- haalt data op via `GET /full/as/?t=<peilmoment>`
+- laat je het peilmoment (`t`) kiezen
+- laat je een entiteit A kiezen uit de response
+- toont een grafische representatie van A met gekoppelde U- en V-records
+
+Opmerking:
+
+- De pagina gebruikt React via CDN (`unpkg`), dus internettoegang is nodig om de scripts te laden.
+
 ## Admin endpoint security
 
 The destructive endpoint for dropping all tables is:

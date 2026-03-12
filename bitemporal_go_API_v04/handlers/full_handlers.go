@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -313,6 +314,350 @@ func entiteitNaamNaarFullPathSegment(entiteitnaam string) (string, bool) {
 	}
 }
 
+func applyFormeleTijdFilterVoorModel(query *bun.SelectQuery, modelNaam string, peiltijdstip time.Time) *bun.SelectQuery {
+	const activeWijziging = string(model.WijzigingstypeOpvoer)
+
+	switch modelNaam {
+	case "Full_A":
+		return query.Where(`
+			(
+				SELECT w.wijzigingstype
+				FROM wijziging w
+				JOIN registratie reg ON reg.id = w.registratie_id
+				WHERE reg.tijdstip <= ?
+				  AND w.entiteitnaam = 'A'
+				  AND w.entiteit_id = a.id::text
+				  AND COALESCE(w.representatienaam, '') = ''
+				  AND NOT EXISTS (
+					SELECT 1
+					FROM registratie om
+					WHERE om.maakt_ongedaan_registratie_id = reg.id
+					  AND om.tijdstip <= ?
+				  )
+				ORDER BY reg.tijdstip DESC, w.id DESC
+				LIMIT 1
+			) = ?
+		`, peiltijdstip, peiltijdstip, activeWijziging)
+	case "Full_B":
+		return query.Where(`
+			(
+				SELECT w.wijzigingstype
+				FROM wijziging w
+				JOIN registratie reg ON reg.id = w.registratie_id
+				WHERE reg.tijdstip <= ?
+				  AND w.entiteitnaam = 'B'
+				  AND w.entiteit_id = b.id::text
+				  AND COALESCE(w.representatienaam, '') = ''
+				  AND NOT EXISTS (
+					SELECT 1
+					FROM registratie om
+					WHERE om.maakt_ongedaan_registratie_id = reg.id
+					  AND om.tijdstip <= ?
+				  )
+				ORDER BY reg.tijdstip DESC, w.id DESC
+				LIMIT 1
+			) = ?
+		`, peiltijdstip, peiltijdstip, activeWijziging)
+	case "A_U":
+		return query.Where(`
+			(
+				SELECT w.wijzigingstype
+				FROM wijziging w
+				JOIN registratie reg ON reg.id = w.registratie_id
+				WHERE reg.tijdstip <= ?
+				  AND w.entiteitnaam = 'A'
+				  AND w.entiteit_id = a_u.a_id::text
+				  AND w.representatienaam = 'A_U'
+				  AND w.representatie_id = a_u.rel_id::text
+				  AND NOT EXISTS (
+					SELECT 1
+					FROM registratie om
+					WHERE om.maakt_ongedaan_registratie_id = reg.id
+					  AND om.tijdstip <= ?
+				  )
+				ORDER BY reg.tijdstip DESC, w.id DESC
+				LIMIT 1
+			) = ?
+		`, peiltijdstip, peiltijdstip, activeWijziging)
+	case "A_V":
+		return query.Where(`
+			(
+				SELECT w.wijzigingstype
+				FROM wijziging w
+				JOIN registratie reg ON reg.id = w.registratie_id
+				WHERE reg.tijdstip <= ?
+				  AND w.entiteitnaam = 'A'
+				  AND w.entiteit_id = a_v.a_id::text
+				  AND w.representatienaam = 'A_V'
+				  AND w.representatie_id = a_v.rel_id::text
+				  AND NOT EXISTS (
+					SELECT 1
+					FROM registratie om
+					WHERE om.maakt_ongedaan_registratie_id = reg.id
+					  AND om.tijdstip <= ?
+				  )
+				ORDER BY reg.tijdstip DESC, w.id DESC
+				LIMIT 1
+			) = ?
+		`, peiltijdstip, peiltijdstip, activeWijziging)
+	case "B_X":
+		return query.Where(`
+			(
+				SELECT w.wijzigingstype
+				FROM wijziging w
+				JOIN registratie reg ON reg.id = w.registratie_id
+				WHERE reg.tijdstip <= ?
+				  AND w.entiteitnaam = 'B'
+				  AND w.entiteit_id = b_x.b_id::text
+				  AND w.representatienaam = 'B_X'
+				  AND w.representatie_id = b_x.rel_id::text
+				  AND NOT EXISTS (
+					SELECT 1
+					FROM registratie om
+					WHERE om.maakt_ongedaan_registratie_id = reg.id
+					  AND om.tijdstip <= ?
+				  )
+				ORDER BY reg.tijdstip DESC, w.id DESC
+				LIMIT 1
+			) = ?
+		`, peiltijdstip, peiltijdstip, activeWijziging)
+	case "B_Y":
+		return query.Where(`
+			(
+				SELECT w.wijzigingstype
+				FROM wijziging w
+				JOIN registratie reg ON reg.id = w.registratie_id
+				WHERE reg.tijdstip <= ?
+				  AND w.entiteitnaam = 'B'
+				  AND w.entiteit_id = b_y.b_id::text
+				  AND w.representatienaam = 'B_Y'
+				  AND w.representatie_id = b_y.rel_id::text
+				  AND NOT EXISTS (
+					SELECT 1
+					FROM registratie om
+					WHERE om.maakt_ongedaan_registratie_id = reg.id
+					  AND om.tijdstip <= ?
+				  )
+				ORDER BY reg.tijdstip DESC, w.id DESC
+				LIMIT 1
+			) = ?
+		`, peiltijdstip, peiltijdstip, activeWijziging)
+	case "Rel_A_B":
+		return query.Where(`
+			(
+				SELECT w.wijzigingstype
+				FROM wijziging w
+				JOIN registratie reg ON reg.id = w.registratie_id
+				WHERE reg.tijdstip <= ?
+				  AND w.entiteitnaam = 'A'
+				  AND w.entiteit_id = rel_a_b.a_id::text
+				  AND w.representatienaam = 'Rel_A_B'
+				  AND w.representatie_id = rel_a_b.id::text
+				  AND NOT EXISTS (
+					SELECT 1
+					FROM registratie om
+					WHERE om.maakt_ongedaan_registratie_id = reg.id
+					  AND om.tijdstip <= ?
+				  )
+				ORDER BY reg.tijdstip DESC, w.id DESC
+				LIMIT 1
+			) = ?
+		`, peiltijdstip, peiltijdstip, activeWijziging)
+	default:
+		return query.Where("opvoer <= ?", peiltijdstip).
+			Where("(afvoer IS NULL OR afvoer > ?)", peiltijdstip)
+	}
+}
+
+func modelNaamVoorRelatie(relatieNaam string) (string, bool) {
+	switch relatieNaam {
+	case "Us":
+		return "A_U", true
+	case "Vs":
+		return "A_V", true
+	case "RelABs":
+		return "Rel_A_B", true
+	case "Xs":
+		return "B_X", true
+	case "Ys":
+		return "B_Y", true
+	default:
+		return "", false
+	}
+}
+
+type laatsteWijzigingOpPeil struct {
+	Wijzigingstype      model.WijzigingstypeEnum `bun:"wijzigingstype"`
+	RegistratieTijdstip time.Time                `bun:"registratie_tijdstip"`
+}
+
+func haalLaatsteNietOngedaanGemaakteWijzigingOpPeil(
+	c *gin.Context,
+	entiteitnaam string,
+	entiteitID string,
+	representatienaam string,
+	representatieID string,
+	peiltijdstip time.Time,
+) (*laatsteWijzigingOpPeil, error) {
+	row := new(laatsteWijzigingOpPeil)
+	err := DB.NewSelect().
+		TableExpr("wijziging AS w").
+		ColumnExpr("w.wijzigingstype").
+		ColumnExpr("reg.tijdstip AS registratie_tijdstip").
+		Join("JOIN registratie AS reg ON reg.id = w.registratie_id").
+		Where("reg.tijdstip <= ?", peiltijdstip).
+		Where("w.entiteitnaam = ?", entiteitnaam).
+		Where("w.entiteit_id = ?", entiteitID).
+		Where("COALESCE(w.representatienaam, '') = ?", representatienaam).
+		Where("COALESCE(w.representatie_id, '') = ?", representatieID).
+		Where(`NOT EXISTS (
+			SELECT 1
+			FROM registratie AS om
+			WHERE om.maakt_ongedaan_registratie_id = reg.id
+			  AND om.tijdstip <= ?
+		)`, peiltijdstip).
+		OrderExpr("reg.tijdstip DESC, w.id DESC").
+		Limit(1).
+		Scan(c.Request.Context(), row)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return row, nil
+}
+
+func zetAfgeleideFormeleTijdVoorRepresentatie(
+	c *gin.Context,
+	representatie model.HeeftOpvoerAfvoer,
+	entiteitnaam string,
+	entiteitID string,
+	representatienaam string,
+	representatieID string,
+	peiltijdstip time.Time,
+) error {
+	wijziging, err := haalLaatsteNietOngedaanGemaakteWijzigingOpPeil(
+		c,
+		entiteitnaam,
+		entiteitID,
+		representatienaam,
+		representatieID,
+		peiltijdstip,
+	)
+	if err != nil {
+		return err
+	}
+
+	representatie.SetOpvoer(nil)
+	representatie.SetAfvoer(nil)
+
+	if wijziging == nil {
+		return nil
+	}
+
+	t := wijziging.RegistratieTijdstip
+	if wijziging.Wijzigingstype == model.WijzigingstypeOpvoer {
+		representatie.SetOpvoer(&t)
+	} else if wijziging.Wijzigingstype == model.WijzigingstypeAfvoer {
+		representatie.SetAfvoer(&t)
+	}
+
+	return nil
+}
+
+func vulAfgeleideFormeleTijdVoorFullA(c *gin.Context, entity *model.Full_A, peiltijdstip time.Time) error {
+	entiteitID := fmt.Sprint(entity.ID)
+
+	if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, entity, "A", entiteitID, "", "", peiltijdstip); err != nil {
+		return err
+	}
+
+	for i := range entity.Us {
+		repID := fmt.Sprint(entity.Us[i].Rel_ID)
+		if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, &entity.Us[i], "A", entiteitID, "A_U", repID, peiltijdstip); err != nil {
+			return err
+		}
+	}
+
+	for i := range entity.Vs {
+		repID := fmt.Sprint(entity.Vs[i].Rel_ID)
+		if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, &entity.Vs[i], "A", entiteitID, "A_V", repID, peiltijdstip); err != nil {
+			return err
+		}
+	}
+
+	for i := range entity.RelABs {
+		repID := fmt.Sprint(entity.RelABs[i].ID)
+		if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, &entity.RelABs[i], "A", entiteitID, "Rel_A_B", repID, peiltijdstip); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func vulAfgeleideFormeleTijdVoorFullB(c *gin.Context, entity *model.Full_B, peiltijdstip time.Time) error {
+	entiteitID := fmt.Sprint(entity.ID)
+
+	if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, entity, "B", entiteitID, "", "", peiltijdstip); err != nil {
+		return err
+	}
+
+	for i := range entity.Xs {
+		repID := fmt.Sprint(entity.Xs[i].Rel_ID)
+		if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, &entity.Xs[i], "B", entiteitID, "B_X", repID, peiltijdstip); err != nil {
+			return err
+		}
+	}
+
+	for i := range entity.Ys {
+		repID := fmt.Sprint(entity.Ys[i].Rel_ID)
+		if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, &entity.Ys[i], "B", entiteitID, "B_Y", repID, peiltijdstip); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func vulAfgeleideFormeleTijdVoorEntities[T any](c *gin.Context, entities []T, peiltijdstip time.Time) error {
+	for i := range entities {
+		switch entity := any(entities[i]).(type) {
+		case model.Full_A:
+			if err := vulAfgeleideFormeleTijdVoorFullA(c, &entity, peiltijdstip); err != nil {
+				return err
+			}
+			entities[i] = any(entity).(T)
+		case model.Full_B:
+			if err := vulAfgeleideFormeleTijdVoorFullB(c, &entity, peiltijdstip); err != nil {
+				return err
+			}
+			entities[i] = any(entity).(T)
+		}
+	}
+
+	return nil
+}
+
+func vulAfgeleideFormeleTijdVoorEntity[T any](c *gin.Context, entity *T, peiltijdstip time.Time) error {
+	switch typed := any(*entity).(type) {
+	case model.Full_A:
+		if err := vulAfgeleideFormeleTijdVoorFullA(c, &typed, peiltijdstip); err != nil {
+			return err
+		}
+		*entity = any(typed).(T)
+	case model.Full_B:
+		if err := vulAfgeleideFormeleTijdVoorFullB(c, &typed, peiltijdstip); err != nil {
+			return err
+		}
+		*entity = any(typed).(T)
+	}
+
+	return nil
+}
+
 func maakFullEntiteitLinksVoorRegistratie(reg model.Registratie) []map[string]string {
 	seen := make(map[string]bool)
 	links := make([]map[string]string, 0)
@@ -448,6 +793,46 @@ func MakeGetRegistratiesMetWijzigingenHandler() gin.HandlerFunc {
 	}
 }
 
+// MakeGetRegistratieMetWijzigingenByIDHandler returns one registratie by id with child wijzigingen.
+func MakeGetRegistratieMetWijzigingenByIDHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		idParam := c.Param("id")
+		if idParam == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ID must be present"})
+			return
+		}
+
+		if _, err := strconv.Atoi(idParam); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid 'id' parameter"})
+			return
+		}
+
+		var reg model.Registratie
+		err := DB.NewSelect().
+			Model(&reg).
+			Where("id = ?", idParam).
+			Relation("Wijzigingen").
+			Scan(c.Request.Context())
+		if err != nil {
+			if err == sql.ErrNoRows {
+				c.JSON(http.StatusNotFound, gin.H{"message": "Registratie not found"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		regMap, err := structNaarMap(reg)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to map registratie response: %v", err)})
+			return
+		}
+		regMap["full_entiteit_links"] = maakFullEntiteitLinksVoorRegistratie(reg)
+
+		c.JSON(http.StatusOK, regMap)
+	}
+}
+
 // MakeGetFullEntitiesHandler returns a gin.HandlerFunc that retrieves entities of type T with pagination.
 // Als `peiltijdstip` is meegegeven, worden alleen records geretourneerd die op dat
 // formele tijdstip actief zijn: opvoer <= peiltijdstip en (afvoer IS NULL of afvoer > peiltijdstip).
@@ -495,16 +880,21 @@ func MakeGetFullEntitiesHandler[T any](entity_name string, relation_names []stri
 			return
 		}
 		if peiltijdstip != nil {
-			query = query.Where("opvoer <= ?", *peiltijdstip).
-				Where("(afvoer IS NULL OR afvoer > ?)", *peiltijdstip)
+			modelNaam := reflect.TypeOf((*T)(nil)).Elem().Name()
+			query = applyFormeleTijdFilterVoorModel(query, modelNaam, *peiltijdstip)
 		}
 
 		// Voeg alle relaties toe
 		for _, relation_name := range relation_names {
 			if peiltijdstip != nil {
+				relatieNaam := relation_name
 				query = query.Relation(relation_name, func(relQuery *bun.SelectQuery) *bun.SelectQuery {
-					return relQuery.Where("opvoer <= ?", *peiltijdstip).
-						Where("(afvoer IS NULL OR afvoer > ?)", *peiltijdstip)
+					modelNaam, ok := modelNaamVoorRelatie(relatieNaam)
+					if !ok {
+						return relQuery.Where("opvoer <= ?", *peiltijdstip).
+							Where("(afvoer IS NULL OR afvoer > ?)", *peiltijdstip)
+					}
+					return applyFormeleTijdFilterVoorModel(relQuery, modelNaam, *peiltijdstip)
 				})
 			} else {
 				query = query.Relation(relation_name)
@@ -518,6 +908,13 @@ func MakeGetFullEntitiesHandler[T any](entity_name string, relation_names []stri
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
+		}
+
+		if peiltijdstip != nil {
+			if err := vulAfgeleideFormeleTijdVoorEntities(c, entities, *peiltijdstip); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to derive formele tijdstippen: %v", err)})
+				return
+			}
 		}
 
 		hasMore := len(entities) == size
@@ -559,16 +956,21 @@ func MakeGetFullEntityHandler[T model.HasID](entity_name string, relation_names 
 			return
 		}
 		if peiltijdstip != nil {
-			query = query.Where("opvoer <= ?", *peiltijdstip).
-				Where("(afvoer IS NULL OR afvoer > ?)", *peiltijdstip)
+			modelNaam := reflect.TypeOf((*T)(nil)).Elem().Name()
+			query = applyFormeleTijdFilterVoorModel(query, modelNaam, *peiltijdstip)
 		}
 
 		// Voeg alle relaties toe
 		for _, relation_name := range relation_names {
 			if peiltijdstip != nil {
+				relatieNaam := relation_name
 				query = query.Relation(relation_name, func(relQuery *bun.SelectQuery) *bun.SelectQuery {
-					return relQuery.Where("opvoer <= ?", *peiltijdstip).
-						Where("(afvoer IS NULL OR afvoer > ?)", *peiltijdstip)
+					modelNaam, ok := modelNaamVoorRelatie(relatieNaam)
+					if !ok {
+						return relQuery.Where("opvoer <= ?", *peiltijdstip).
+							Where("(afvoer IS NULL OR afvoer > ?)", *peiltijdstip)
+					}
+					return applyFormeleTijdFilterVoorModel(relQuery, modelNaam, *peiltijdstip)
 				})
 			} else {
 				query = query.Relation(relation_name)
@@ -581,6 +983,13 @@ func MakeGetFullEntityHandler[T model.HasID](entity_name string, relation_names 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
+		}
+
+		if peiltijdstip != nil {
+			if err := vulAfgeleideFormeleTijdVoorEntity(c, &entity, *peiltijdstip); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to derive formele tijdstippen: %v", err)})
+				return
+			}
 		}
 
 		if isZeroID(entity.GetID()) {
