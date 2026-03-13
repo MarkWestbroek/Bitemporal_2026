@@ -18,6 +18,11 @@ Belangrijke bronbestanden:
 - Bitemp2026-PG/HRv4 20 - alle o met opvoer en afvoer.sql
 - Bitemp2026-PG/HRv4 21b - actuele o met opvoer en afvoer.sql
 
+Belangrijke implementatiebestanden in v04:
+- bitemporal_go_API_v04/dbsetup/createviews.go
+- bitemporal_go_API_v04/dbsetup/createtables.go
+- bitemporal_go_API_v04/handlers/full_handlers.go
+
 ## 1. Uitleg van de principes (voor lezers nieuw in het domein)
 
 ## 1.1 Twee soorten tijd, maar nu alleen formeel
@@ -283,7 +288,9 @@ Deze sectie beschrijft hoe de formele tijdreisprincipes landen in de huidige Go 
 
 Belangrijk onderscheid:
 - De HRv4 SQL-bestanden tonen een klassieke view-opbouw (laag 1/2/3).
-- De v04 API implementeert dezelfde semantiek grotendeels inline in handler-query's op PostgreSQL.
+- De v04 API gebruikt nu een hybride aanpak:
+  - metadata-afleiding in Go (metamap)
+  - centrale SQL-objecten in PostgreSQL (view + peiltijd-functie)
 
 ## 4.1 Relevante endpoints
 
@@ -314,7 +321,15 @@ In registratie-overzicht:
 
 ## 4.3 Hoe GET /full/as en /full/bs formele tijd toepassen
 
-De kern zit in applyFormeleTijdFilterVoorModel (in handlers/full_handlers.go).
+De kern zit in applyFormeleTijdFilterVoorModel (in handlers/full_handlers.go),
+maar de feitelijke peiltijdlogica zit gecentraliseerd in de databasefunctie.
+
+Database-objecten:
+- vw_formele_wijziging_basis
+  - basisprojectie van wijziging + registratie
+- f_formele_wijziging_op_peil(p_peiltijdstip timestamptz)
+  - filtert op registratie_tijdstip <= peiltijdstip
+  - sluit ongedaan gemaakte registraties op peilmoment uit
 
 Voor elk model (Full_A, Full_B, A_U, A_V, B_X, B_Y, Rel_A_B):
 1. Zoek de laatste wijziging op of voor peiltijdstip.
@@ -323,17 +338,10 @@ Voor elk model (Full_A, Full_B, A_U, A_V, B_X, B_Y, Rel_A_B):
 
 Conceptueel patroon:
 ~~~sql
-SELECT w.wijzigingstype
-FROM wijziging w
-JOIN registratie reg ON reg.id = w.registratie_id
-WHERE reg.tijdstip <= :peil
-  AND ... matching op entiteit/representatie ...
-  AND NOT EXISTS (
-    SELECT 1 FROM registratie om
-    WHERE om.maakt_ongedaan_registratie_id = reg.id
-      AND om.tijdstip <= :peil
-  )
-ORDER BY reg.tijdstip DESC, w.id DESC
+SELECT v.wijzigingstype
+FROM f_formele_wijziging_op_peil(:peil) v
+WHERE ... matching op entiteit/representatie ...
+ORDER BY v.registratie_tijdstip DESC, v.wijziging_id DESC
 LIMIT 1
 ~~~
 
@@ -346,6 +354,10 @@ Dit is inhoudelijk equivalent aan de HRv4-opbouw:
 - niet-ongedaan-gemaakte wijzigingen bepalen,
 - vervolgens peiltijdstipfilter,
 - en daarna opvoer/afvoer-resolutie.
+
+Verschil met eerdere v04-versie:
+- de NOT EXISTS-logica staat niet meer dubbel in meerdere handlerqueries,
+- maar centraal in f_formele_wijziging_op_peil.
 
 ## 4.4 Afgeleide opvoer/afvoer in response
 
@@ -408,7 +420,29 @@ Voor DBA-onderhoud is het handig om v04 te lezen als twee lagen:
 1. Auditlaag (registratie/wijziging + ongedaanmakerelatie).
 2. As-of resolutielaag in query's (laatste geldige wijziging op peiltijdstip).
 
-Dat is semantisch dezelfde denklijn als in de HRv4 SQL-documenten, maar technisch anders verpakt (handler SQL in plaats van vaste views).
+Dat is semantisch dezelfde denklijn als in de HRv4 SQL-documenten,
+maar technisch nu als combinatie van:
+- metamap-afleiding in de applicatie,
+- en centrale DB-objecten (view + functie) voor de peiltijdlogica.
+
+## 4.9 Startup-aanmaak en performance
+
+Bij startup (CreateTables) gebeurt nu in volgorde:
+1. tabellen aanmaken,
+2. indexen voor formele tijdreisquery's,
+3. view en functie aanmaken/verversen.
+
+Indexen die nu idempotent worden aangemaakt:
+- idx_wijziging_formele_lookup
+- idx_wijziging_registratie_id
+- idx_registratie_ongedaan_peil
+- idx_registratie_tijdstip
+
+Doel van deze indexen:
+- sneller filteren op entiteit/representatie-combinatie,
+- sneller vinden van wijzigingen per registratie,
+- sneller evalueren van ongedaanmaking-op-peilmoment,
+- stabielere sortering op tijd/id in "laatste wijziging"-queries.
 
 ## 5. Runbook: formele tijdreis in de praktijk
 
@@ -432,6 +466,7 @@ curl "http://localhost:8080/full/as?peiltijdstip=2026-01-01T05:00:00.000005Z"
 
 Interpretatie:
 - De response bevat alleen A-records waarvan de laatste niet-ongedaan-gemaakte wijziging op peilmoment een Opvoer is.
+- Technisch loopt dit via f_formele_wijziging_op_peil(peiltijdstip) en niet meer via losse inline NOT EXISTS in elke query.
 - Zonder toonafvoer=1 worden afvoer-velden uit de JSON verwijderd.
 
 ## 5.2 Detailopvraag van 1 entiteit op peilmoment
@@ -472,6 +507,7 @@ curl "http://localhost:8080/full/registraties?t=5"
 Interpretatie:
 - Geeft registraties met onderliggende wijzigingen tot en met peilmoment.
 - Dit is audit-inzicht, niet direct de actuele representatiestand.
+- Dit endpoint gebruikt een eigen registratiefilterpad; de centrale peiltijd-functie wordt primair gebruikt in de full representatie-stand queries.
 
 ## 5.6 Auditweergave op interval
 

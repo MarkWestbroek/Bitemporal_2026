@@ -34,7 +34,7 @@ func TestZetAfgeleideFormeleTijdVoorRepresentatie_OpvoerBlijftGevuldOpPeilVoorLa
 	peiltijdstip := time.Date(2026, 1, 1, 1, 0, 0, 1000, time.UTC)
 	opvoerTijdstip := peiltijdstip
 
-	mock.ExpectQuery(`(?s)SELECT .*FROM wijziging AS w.*JOIN registratie AS reg ON reg.id = w.registratie_id.*ORDER BY reg.tijdstip DESC, w.id DESC.*LIMIT 1`).
+	mock.ExpectQuery(`(?s)SELECT .*FROM f_formele_wijziging_op_peil\(.*\) AS v.*ORDER BY v.registratie_tijdstip DESC, v.wijziging_id DESC.*LIMIT 1`).
 		WillReturnRows(sqlmock.NewRows([]string{"wijzigingstype", "registratie_tijdstip"}).
 			AddRow(string(model.WijzigingstypeOpvoer), opvoerTijdstip))
 

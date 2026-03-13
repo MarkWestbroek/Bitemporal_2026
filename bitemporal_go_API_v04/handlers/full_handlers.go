@@ -314,176 +314,116 @@ func entiteitNaamNaarFullPathSegment(entiteitnaam string) (string, bool) {
 	}
 }
 
+func typeMetaVoorModelNaam(modelNaam string) (model.TypeMeta, bool) {
+	for _, meta := range model.MetaRegistry {
+		if meta.Factory != nil {
+			factoryType := reflect.TypeOf(meta.Factory())
+			if factoryType != nil {
+				if factoryType.Kind() == reflect.Ptr {
+					factoryType = factoryType.Elem()
+				}
+				if factoryType.Name() == modelNaam {
+					return meta, true
+				}
+			}
+		}
+
+		if meta.DBFactory != nil {
+			dbType := reflect.TypeOf(meta.DBFactory())
+			if dbType != nil {
+				if dbType.Kind() == reflect.Ptr {
+					dbType = dbType.Elem()
+				}
+				if dbType.Name() == modelNaam {
+					return meta, true
+				}
+			}
+		}
+	}
+
+	return model.TypeMeta{}, false
+}
+
+func doeltypeVoorRelatierol(parentModelNaam string, relatieNaam string) (string, bool) {
+	parentMeta, ok := typeMetaVoorModelNaam(parentModelNaam)
+	if !ok {
+		return "", false
+	}
+
+	for _, rel := range parentMeta.OnderliggendeGegevenselementen {
+		if rel.Rolnaam == relatieNaam {
+			return rel.Doeltype, true
+		}
+	}
+
+	return "", false
+}
+
+type formeleTijdTarget struct {
+	Entiteitnaam        string
+	EntiteitIDExpr      string
+	Representatienaam   string
+	RepresentatieIDExpr string
+}
+
+func formeleTijdTargetVoorModel(modelNaam string) (formeleTijdTarget, error) {
+	meta, ok := typeMetaVoorModelNaam(modelNaam)
+	if !ok {
+		return formeleTijdTarget{}, fmt.Errorf("geen metamap-entry gevonden voor model %s", modelNaam)
+	}
+
+	if meta.Tabelnaam == "" || meta.IDKolom == "" {
+		return formeleTijdTarget{}, fmt.Errorf("onvolledige metamap voor %s: tabel of idkolom ontbreekt", meta.Typenaam)
+	}
+
+	if meta.Metatype == model.MetatypeEntiteit {
+		return formeleTijdTarget{
+			Entiteitnaam:        meta.Typenaam,
+			EntiteitIDExpr:      fmt.Sprintf("%s.%s::text", meta.Tabelnaam, meta.IDKolom),
+			Representatienaam:   "",
+			RepresentatieIDExpr: "''",
+		}, nil
+	}
+
+	bovenliggend, ok := model.MetaRegistry.GetBovenliggendeRelatieMeta(meta.Typenaam)
+	if !ok {
+		return formeleTijdTarget{}, fmt.Errorf("geen bovenliggende entiteit gevonden voor type %s", meta.Typenaam)
+	}
+	if meta.EntiteitIDKolom == "" {
+		return formeleTijdTarget{}, fmt.Errorf("entiteit FK ontbreekt in metamap voor type %s", meta.Typenaam)
+	}
+
+	return formeleTijdTarget{
+		Entiteitnaam:        bovenliggend.ParentType.Typenaam,
+		EntiteitIDExpr:      fmt.Sprintf("%s.%s::text", meta.Tabelnaam, meta.EntiteitIDKolom),
+		Representatienaam:   meta.Typenaam,
+		RepresentatieIDExpr: fmt.Sprintf("%s.%s::text", meta.Tabelnaam, meta.IDKolom),
+	}, nil
+}
+
 func applyFormeleTijdFilterVoorModel(query *bun.SelectQuery, modelNaam string, peiltijdstip time.Time) *bun.SelectQuery {
 	const activeWijziging = string(model.WijzigingstypeOpvoer)
-
-	switch modelNaam {
-	case "Full_A":
-		return query.Where(`
-			(
-				SELECT w.wijzigingstype
-				FROM wijziging w
-				JOIN registratie reg ON reg.id = w.registratie_id
-				WHERE reg.tijdstip <= ?
-				  AND w.entiteitnaam = 'A'
-				  AND w.entiteit_id = a.id::text
-				  AND COALESCE(w.representatienaam, '') = ''
-				  AND NOT EXISTS (
-					SELECT 1
-					FROM registratie om
-					WHERE om.maakt_ongedaan_registratie_id = reg.id
-					  AND om.tijdstip <= ?
-				  )
-				ORDER BY reg.tijdstip DESC, w.id DESC
-				LIMIT 1
-			) = ?
-		`, peiltijdstip, peiltijdstip, activeWijziging)
-	case "Full_B":
-		return query.Where(`
-			(
-				SELECT w.wijzigingstype
-				FROM wijziging w
-				JOIN registratie reg ON reg.id = w.registratie_id
-				WHERE reg.tijdstip <= ?
-				  AND w.entiteitnaam = 'B'
-				  AND w.entiteit_id = b.id::text
-				  AND COALESCE(w.representatienaam, '') = ''
-				  AND NOT EXISTS (
-					SELECT 1
-					FROM registratie om
-					WHERE om.maakt_ongedaan_registratie_id = reg.id
-					  AND om.tijdstip <= ?
-				  )
-				ORDER BY reg.tijdstip DESC, w.id DESC
-				LIMIT 1
-			) = ?
-		`, peiltijdstip, peiltijdstip, activeWijziging)
-	case "A_U":
-		return query.Where(`
-			(
-				SELECT w.wijzigingstype
-				FROM wijziging w
-				JOIN registratie reg ON reg.id = w.registratie_id
-				WHERE reg.tijdstip <= ?
-				  AND w.entiteitnaam = 'A'
-				  AND w.entiteit_id = a_u.a_id::text
-				  AND w.representatienaam = 'A_U'
-				  AND w.representatie_id = a_u.rel_id::text
-				  AND NOT EXISTS (
-					SELECT 1
-					FROM registratie om
-					WHERE om.maakt_ongedaan_registratie_id = reg.id
-					  AND om.tijdstip <= ?
-				  )
-				ORDER BY reg.tijdstip DESC, w.id DESC
-				LIMIT 1
-			) = ?
-		`, peiltijdstip, peiltijdstip, activeWijziging)
-	case "A_V":
-		return query.Where(`
-			(
-				SELECT w.wijzigingstype
-				FROM wijziging w
-				JOIN registratie reg ON reg.id = w.registratie_id
-				WHERE reg.tijdstip <= ?
-				  AND w.entiteitnaam = 'A'
-				  AND w.entiteit_id = a_v.a_id::text
-				  AND w.representatienaam = 'A_V'
-				  AND w.representatie_id = a_v.rel_id::text
-				  AND NOT EXISTS (
-					SELECT 1
-					FROM registratie om
-					WHERE om.maakt_ongedaan_registratie_id = reg.id
-					  AND om.tijdstip <= ?
-				  )
-				ORDER BY reg.tijdstip DESC, w.id DESC
-				LIMIT 1
-			) = ?
-		`, peiltijdstip, peiltijdstip, activeWijziging)
-	case "B_X":
-		return query.Where(`
-			(
-				SELECT w.wijzigingstype
-				FROM wijziging w
-				JOIN registratie reg ON reg.id = w.registratie_id
-				WHERE reg.tijdstip <= ?
-				  AND w.entiteitnaam = 'B'
-				  AND w.entiteit_id = b_x.b_id::text
-				  AND w.representatienaam = 'B_X'
-				  AND w.representatie_id = b_x.rel_id::text
-				  AND NOT EXISTS (
-					SELECT 1
-					FROM registratie om
-					WHERE om.maakt_ongedaan_registratie_id = reg.id
-					  AND om.tijdstip <= ?
-				  )
-				ORDER BY reg.tijdstip DESC, w.id DESC
-				LIMIT 1
-			) = ?
-		`, peiltijdstip, peiltijdstip, activeWijziging)
-	case "B_Y":
-		return query.Where(`
-			(
-				SELECT w.wijzigingstype
-				FROM wijziging w
-				JOIN registratie reg ON reg.id = w.registratie_id
-				WHERE reg.tijdstip <= ?
-				  AND w.entiteitnaam = 'B'
-				  AND w.entiteit_id = b_y.b_id::text
-				  AND w.representatienaam = 'B_Y'
-				  AND w.representatie_id = b_y.rel_id::text
-				  AND NOT EXISTS (
-					SELECT 1
-					FROM registratie om
-					WHERE om.maakt_ongedaan_registratie_id = reg.id
-					  AND om.tijdstip <= ?
-				  )
-				ORDER BY reg.tijdstip DESC, w.id DESC
-				LIMIT 1
-			) = ?
-		`, peiltijdstip, peiltijdstip, activeWijziging)
-	case "Rel_A_B":
-		return query.Where(`
-			(
-				SELECT w.wijzigingstype
-				FROM wijziging w
-				JOIN registratie reg ON reg.id = w.registratie_id
-				WHERE reg.tijdstip <= ?
-				  AND w.entiteitnaam = 'A'
-				  AND w.entiteit_id = rel_a_b.a_id::text
-				  AND w.representatienaam = 'Rel_A_B'
-				  AND w.representatie_id = rel_a_b.id::text
-				  AND NOT EXISTS (
-					SELECT 1
-					FROM registratie om
-					WHERE om.maakt_ongedaan_registratie_id = reg.id
-					  AND om.tijdstip <= ?
-				  )
-				ORDER BY reg.tijdstip DESC, w.id DESC
-				LIMIT 1
-			) = ?
-		`, peiltijdstip, peiltijdstip, activeWijziging)
-	default:
+	target, err := formeleTijdTargetVoorModel(modelNaam)
+	if err != nil {
+		if debugLogsEnabled() {
+			fmt.Printf("HANDLER (full): formele tijdfilter fallback voor model %s: %v\n", modelNaam, err)
+		}
 		return query.Where("opvoer <= ?", peiltijdstip).
 			Where("(afvoer IS NULL OR afvoer > ?)", peiltijdstip)
 	}
-}
 
-func modelNaamVoorRelatie(relatieNaam string) (string, bool) {
-	switch relatieNaam {
-	case "Us":
-		return "A_U", true
-	case "Vs":
-		return "A_V", true
-	case "RelABs":
-		return "Rel_A_B", true
-	case "Xs":
-		return "B_X", true
-	case "Ys":
-		return "B_Y", true
-	default:
-		return "", false
-	}
+	return query.Where(fmt.Sprintf(`
+		(
+			SELECT v.wijzigingstype
+			FROM f_formele_wijziging_op_peil(?) AS v
+			WHERE v.entiteitnaam = ?
+			  AND v.entiteit_id = %s
+			  AND v.representatienaam = ?
+			  AND v.representatie_id = %s
+			ORDER BY v.registratie_tijdstip DESC, v.wijziging_id DESC
+			LIMIT 1
+		) = ?
+	`, target.EntiteitIDExpr, target.RepresentatieIDExpr), peiltijdstip, target.Entiteitnaam, target.Representatienaam, activeWijziging)
 }
 
 type laatsteWijzigingOpPeil struct {
@@ -501,22 +441,14 @@ func haalLaatsteNietOngedaanGemaakteWijzigingOpPeil(
 ) (*laatsteWijzigingOpPeil, error) {
 	row := new(laatsteWijzigingOpPeil)
 	err := DB.NewSelect().
-		TableExpr("wijziging AS w").
-		ColumnExpr("w.wijzigingstype").
-		ColumnExpr("reg.tijdstip AS registratie_tijdstip").
-		Join("JOIN registratie AS reg ON reg.id = w.registratie_id").
-		Where("reg.tijdstip <= ?", peiltijdstip).
-		Where("w.entiteitnaam = ?", entiteitnaam).
-		Where("w.entiteit_id = ?", entiteitID).
-		Where("COALESCE(w.representatienaam, '') = ?", representatienaam).
-		Where("COALESCE(w.representatie_id, '') = ?", representatieID).
-		Where(`NOT EXISTS (
-			SELECT 1
-			FROM registratie AS om
-			WHERE om.maakt_ongedaan_registratie_id = reg.id
-			  AND om.tijdstip <= ?
-		)`, peiltijdstip).
-		OrderExpr("reg.tijdstip DESC, w.id DESC").
+		TableExpr("f_formele_wijziging_op_peil(?) AS v", peiltijdstip).
+		ColumnExpr("v.wijzigingstype").
+		ColumnExpr("v.registratie_tijdstip").
+		Where("v.entiteitnaam = ?", entiteitnaam).
+		Where("v.entiteit_id = ?", entiteitID).
+		Where("v.representatienaam = ?", representatienaam).
+		Where("v.representatie_id = ?", representatieID).
+		OrderExpr("v.registratie_tijdstip DESC, v.wijziging_id DESC").
 		Limit(1).
 		Scan(c.Request.Context(), row)
 	if err != nil {
@@ -887,14 +819,15 @@ func MakeGetFullEntitiesHandler[T any](entity_name string, relation_names []stri
 		// Voeg alle relaties toe
 		for _, relation_name := range relation_names {
 			if peiltijdstip != nil {
+				parentModelNaam := reflect.TypeOf((*T)(nil)).Elem().Name()
 				relatieNaam := relation_name
 				query = query.Relation(relation_name, func(relQuery *bun.SelectQuery) *bun.SelectQuery {
-					modelNaam, ok := modelNaamVoorRelatie(relatieNaam)
+					doeltype, ok := doeltypeVoorRelatierol(parentModelNaam, relatieNaam)
 					if !ok {
 						return relQuery.Where("opvoer <= ?", *peiltijdstip).
 							Where("(afvoer IS NULL OR afvoer > ?)", *peiltijdstip)
 					}
-					return applyFormeleTijdFilterVoorModel(relQuery, modelNaam, *peiltijdstip)
+					return applyFormeleTijdFilterVoorModel(relQuery, doeltype, *peiltijdstip)
 				})
 			} else {
 				query = query.Relation(relation_name)
@@ -963,14 +896,15 @@ func MakeGetFullEntityHandler[T model.HasID](entity_name string, relation_names 
 		// Voeg alle relaties toe
 		for _, relation_name := range relation_names {
 			if peiltijdstip != nil {
+				parentModelNaam := reflect.TypeOf((*T)(nil)).Elem().Name()
 				relatieNaam := relation_name
 				query = query.Relation(relation_name, func(relQuery *bun.SelectQuery) *bun.SelectQuery {
-					modelNaam, ok := modelNaamVoorRelatie(relatieNaam)
+					doeltype, ok := doeltypeVoorRelatierol(parentModelNaam, relatieNaam)
 					if !ok {
 						return relQuery.Where("opvoer <= ?", *peiltijdstip).
 							Where("(afvoer IS NULL OR afvoer > ?)", *peiltijdstip)
 					}
-					return applyFormeleTijdFilterVoorModel(relQuery, modelNaam, *peiltijdstip)
+					return applyFormeleTijdFilterVoorModel(relQuery, doeltype, *peiltijdstip)
 				})
 			} else {
 				query = query.Relation(relation_name)

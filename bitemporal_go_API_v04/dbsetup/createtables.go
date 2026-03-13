@@ -48,5 +48,17 @@ func CreateTables(db *bun.DB) error {
 	if err != nil {
 		return err
 	}
+
+	// Indexen voor formele tijdreisquery's
+	err = createFormeleTijdIndexes(ctx, db)
+	if err != nil {
+		return err
+	}
+
+	// Views voor formele tijdreisquery's
+	err = createFormeleTijdViews(ctx, db)
+	if err != nil {
+		return err
+	}
 	return nil
 }

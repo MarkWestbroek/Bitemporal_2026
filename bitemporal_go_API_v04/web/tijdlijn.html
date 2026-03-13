@@ -584,6 +584,7 @@
                   const registratieTitel = reg?.registratietype
                     ? reg.registratietype.charAt(0).toUpperCase() + reg.registratietype.slice(1)
                     : "Registratie";
+                  const registratieOpmerking = typeof reg?.opmerking === "string" ? reg.opmerking : "";
                   const highlights = highlightPerRegId.get(String(reg.id)) || [];
                   const highlightU = !!uEnkel && highlights.some((h) => h.soort === "U" && String(uEnkel.rel_id ?? "") === h.relId);
                   const highlightA = !!a && highlights.some((h) => h.soort === "A" && String(a.id ?? "") === h.entiteitId);
@@ -592,6 +593,11 @@
                     <div className="timeline-column" key={`col-${reg.id || index}`}>
                       <div className="card">
                         <h3 className="panel-title">{`${registratieTitel} ${reg.id}`}</h3>
+                        {!!registratieOpmerking && (
+                          <p className="muted" style={{ marginTop: -4, marginBottom: 10 }}>
+                            {registratieOpmerking}
+                          </p>
+                        )}
                         <svg className="graph" viewBox={`0 0 320 ${regRowViewBoxHeight}`} preserveAspectRatio="xMidYMin meet" style={{ height: `${regRowViewBoxHeight}px` }}>
                           <rect className="node" x="40" y="8" rx="8" width="240" height="44" style={{ fill: "#ecfeff" }} />
                           <text className="label" x="270" y="22" textAnchor="end">t: {microsecondeIntVanTijdstip(visualReg.tijdstip)}</text>

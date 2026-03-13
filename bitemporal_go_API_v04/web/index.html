@@ -368,6 +368,8 @@
         const registratieTitel = selectedRegistratie?.registratietype
           ? selectedRegistratie.registratietype.charAt(0).toUpperCase() + selectedRegistratie.registratietype.slice(1)
           : 'Registratie';
+        const registratieOpmerking = typeof selectedRegistratie?.opmerking === 'string' ? selectedRegistratie.opmerking : '';
+        const doelRegistratieOpmerking = typeof ongedaanGemaakteRegistratieData?.opmerking === 'string' ? ongedaanGemaakteRegistratieData.opmerking : '';
         const nadrukStyle = { fontWeight: 700, fontSize: '15px' };
         const nadrukStyleLinks = { fontWeight: 700, fontSize: '18px' };
         const grootKruisEindY = visualWijzigingen.length > 0
@@ -445,7 +447,14 @@
 
             <div className="row" style={{ marginTop: 16 }}>
               <div className="card">
-                <h2>{selectedRegistratie ? `${registratieTitel} ${selectedRegistratie.id}` : registratieTitel}</h2>
+                <h2>
+                  {selectedRegistratie ? `${registratieTitel} ${selectedRegistratie.id}` : registratieTitel}
+                  {!!registratieOpmerking && (
+                    <span className="muted" style={{ marginLeft: 10, fontWeight: 400, fontSize: '0.9em' }}>
+                      {registratieOpmerking}
+                    </span>
+                  )}
+                </h2>
 
                 {!selectedRegistratie ? (
                   <p className="muted">Geen registratie met dit registratie-id gevonden.</p>
@@ -518,6 +527,11 @@
                             <p className="muted" style={{ margin: 0 }}>
                               id={ongedaanGemaakteRegistratieData.id} | type={ongedaanGemaakteRegistratieData.registratietype} | tijdstip={microsecondeIntVanTijdstip(ongedaanGemaakteRegistratieData.tijdstip)}
                             </p>
+                            {!!doelRegistratieOpmerking && (
+                              <p className="muted" style={{ marginTop: 6, marginBottom: 0 }}>
+                                {doelRegistratieOpmerking}
+                              </p>
+                            )}
                             <h3 style={{ marginTop: 12 }}>Wijzigingen onder doelregistratie</h3>
                             <ul>
                               {ongedaanGemaakteWijzigingen.length === 0 && <li>Geen wijzigingen onder deze doelregistratie</li>}
