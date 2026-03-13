@@ -68,6 +68,12 @@
         display: inline-flex;
         gap: 14px;
         align-items: flex-start;
+        position: relative;
+      }
+      .timeline-overlay {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
       }
       .timeline-column {
         display: grid;
@@ -118,10 +124,11 @@
 
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script type="text/babel">
-      const { useMemo, useState } = React;
+      const { useEffect, useMemo, useRef, useState } = React;
 
       function safeArray(value) {
         return Array.isArray(value) ? value : [];
@@ -220,10 +227,218 @@
         const [baseUrl, setBaseUrl] = useState(window.location.origin);
         const [aId, setAId] = useState(1);
         const [loading, setLoading] = useState(false);
+        const [exporting, setExporting] = useState(false);
+        const [copying, setCopying] = useState(false);
         const [error, setError] = useState("");
         const [timelineItems, setTimelineItems] = useState([]);
+        const [overlayArrows, setOverlayArrows] = useState([]);
+        const timelineRowRef = useRef(null);
 
         const totaal = useMemo(() => timelineItems.length, [timelineItems]);
+        const regRowViewBoxHeight = useMemo(() => {
+          const maxBottom = timelineItems.reduce((acc, item) => {
+            const wijzigingen = safeArray(item.wijzigingen);
+            const bottom = wijzigingen.length > 0 ? (64 + ((wijzigingen.length - 1) * 56) + 44) : 52;
+            return Math.max(acc, bottom);
+          }, 0);
+          return Math.max(120, maxBottom + 16);
+        }, [timelineItems]);
+        const undoLinks = useMemo(() => {
+          const links = [];
+
+          for (const item of timelineItems) {
+            if (!item.isOngedaanmaking) {
+              continue;
+            }
+
+            const targetRegId = item.visualRegistratie?.id;
+            if (targetRegId === null || targetRegId === undefined) {
+              continue;
+            }
+
+            const wijzigingen = safeArray(item.wijzigingen);
+            wijzigingen.forEach((w, idx) => {
+              const type = String(w.wijzigingstype || "").toLowerCase();
+              if (type !== "opvoer") {
+                return;
+              }
+
+              const repNaam = String(w.representatienaam || "").toUpperCase();
+              const repId = String(w.representatie_id ?? "");
+              const entiteitId = String(w.entiteit_id ?? "");
+
+              let targetId = "";
+              if (repNaam.includes("_U") && repId !== "") {
+                targetId = `undo-target-u-${targetRegId}-${repId}`;
+              } else if (repNaam.includes("_V") && repId !== "") {
+                targetId = `undo-target-v-${targetRegId}-${repId}`;
+              } else if (entiteitId !== "") {
+                targetId = `undo-target-a-${targetRegId}-${entiteitId}`;
+              }
+
+              if (targetId === "") {
+                return;
+              }
+
+              links.push({
+                sourceId: `undo-src-${item.registratie.id}-${idx}`,
+                targetId,
+              });
+            });
+          }
+
+          return links;
+        }, [timelineItems]);
+
+        const highlightPerRegId = useMemo(() => {
+          const map = new Map();
+
+          for (const item of timelineItems) {
+            if (!item.isOngedaanmaking) {
+              continue;
+            }
+
+            const targetRegId = item.visualRegistratie?.id;
+            if (targetRegId === null || targetRegId === undefined) {
+              continue;
+            }
+
+            const key = String(targetRegId);
+            const huidig = map.get(key) || [];
+            const wijzigingen = safeArray(item.wijzigingen);
+
+            for (const w of wijzigingen) {
+              const type = String(w.wijzigingstype || "").toLowerCase();
+              if (type !== "opvoer") {
+                continue;
+              }
+
+              const repNaam = String(w.representatienaam || "").toUpperCase();
+              const repId = String(w.representatie_id ?? "");
+
+              if (repNaam.includes("_U") && repId !== "") {
+                huidig.push({ soort: "U", relId: repId });
+                continue;
+              }
+              if (repNaam.includes("_V") && repId !== "") {
+                huidig.push({ soort: "V", relId: repId });
+                continue;
+              }
+
+              const entiteitId = String(w.entiteit_id ?? "");
+              if (entiteitId !== "") {
+                huidig.push({ soort: "A", entiteitId });
+              }
+            }
+
+            if (huidig.length > 0) {
+              map.set(key, huidig);
+            }
+          }
+
+          return map;
+        }, [timelineItems]);
+
+        useEffect(() => {
+          const rowEl = timelineRowRef.current;
+          if (!rowEl) {
+            setOverlayArrows([]);
+            return;
+          }
+
+          const rowRect = rowEl.getBoundingClientRect();
+          const arrows = [];
+
+          for (const link of undoLinks) {
+            const sourceEl = document.getElementById(link.sourceId);
+            const targetEl = document.getElementById(link.targetId);
+            if (!sourceEl || !targetEl) {
+              continue;
+            }
+
+            const sourceRect = sourceEl.getBoundingClientRect();
+            const targetRect = targetEl.getBoundingClientRect();
+
+            arrows.push({
+              x1: sourceRect.left + (sourceRect.width / 2) - rowRect.left,
+              y1: sourceRect.top + (sourceRect.height / 2) - rowRect.top,
+              x2: targetRect.left + (targetRect.width / 2) - rowRect.left,
+              y2: targetRect.top - rowRect.top + 2,
+            });
+          }
+
+          setOverlayArrows(arrows);
+        }, [undoLinks, timelineItems]);
+
+        async function renderTimelineCanvas() {
+          const rowEl = timelineRowRef.current;
+          if (!rowEl) {
+            throw new Error("Geen visualisatie beschikbaar om te exporteren.");
+          }
+
+          if (!window.html2canvas) {
+            throw new Error("PNG-export niet beschikbaar: html2canvas niet geladen.");
+          }
+
+          return window.html2canvas(rowEl, {
+            backgroundColor: "#f8fafc",
+            useCORS: true,
+            scale: 2,
+            width: rowEl.scrollWidth,
+            height: rowEl.scrollHeight,
+            windowWidth: rowEl.scrollWidth,
+            windowHeight: rowEl.scrollHeight,
+          });
+        }
+
+        async function downloadTimelineAsPng() {
+          setError("");
+
+          setExporting(true);
+          try {
+            const canvas = await renderTimelineCanvas();
+
+            const link = document.createElement("a");
+            link.href = canvas.toDataURL("image/png");
+            link.download = `tijdlijn-a-${normaliseerNietNegatiefGeheelGetal(aId, 1)}.png`;
+            link.click();
+          } catch (err) {
+            setError(err.message || "Onbekende fout bij PNG-export");
+          } finally {
+            setExporting(false);
+          }
+        }
+
+        async function copyTimelineAsPng() {
+          setError("");
+
+          if (!navigator.clipboard || !window.ClipboardItem) {
+            setError("Kopieren naar klembord wordt niet ondersteund in deze browser/context.");
+            return;
+          }
+
+          setCopying(true);
+          try {
+            const canvas = await renderTimelineCanvas();
+            const blob = await new Promise((resolve, reject) => {
+              canvas.toBlob((result) => {
+                if (result) {
+                  resolve(result);
+                  return;
+                }
+                reject(new Error("PNG-conversie naar blob mislukt."));
+              }, "image/png");
+            });
+
+            await navigator.clipboard.write([
+              new window.ClipboardItem({ "image/png": blob }),
+            ]);
+          } catch (err) {
+            setError(err.message || "Onbekende fout bij kopieren naar klembord");
+          } finally {
+            setCopying(false);
+          }
+        }
 
         async function loadTimeline() {
           setLoading(true);
@@ -308,6 +523,15 @@
                   <button onClick={loadTimeline} disabled={loading}>{loading ? "Bezig met ophalen..." : "Ophalen tijdslijn"}</button>
                 </div>
 
+                <div style={{ alignSelf: "end", display: "flex", gap: 8 }}>
+                  <button onClick={downloadTimelineAsPng} disabled={loading || exporting || timelineItems.length === 0}>
+                    {exporting ? "PNG maken..." : "Download PNG"}
+                  </button>
+                  <button onClick={copyTimelineAsPng} disabled={loading || exporting || copying || timelineItems.length === 0}>
+                    {copying ? "Kopie maken..." : "Kopieer PNG"}
+                  </button>
+                </div>
+
                 <div style={{ alignSelf: "end" }}>
                   <a href="/viz/index.html" className="muted">Terug naar /viz</a>
                 </div>
@@ -318,7 +542,32 @@
             </div>
 
             <div className="timeline-scroll">
-              <div className="timeline-row">
+              <div className="timeline-row" ref={timelineRowRef}>
+                <svg className="timeline-overlay" width="100%" height="100%" preserveAspectRatio="none">
+                  <defs>
+                    <marker id="undoArrowGlobal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                      <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(220, 38, 38, 0.6)" />
+                    </marker>
+                  </defs>
+                  {overlayArrows.map((arrow, arrowIndex) => {
+                    const dx = Math.abs(arrow.x1 - arrow.x2);
+                    const bendNearEnd = Math.max(12, dx * 0.06);
+                    const c1x = arrow.x1 - 14;
+                    const c1y = arrow.y1 + 46;
+                    const c2x = arrow.x2 - bendNearEnd;
+                    const c2y = arrow.y2 - 64;
+                    return (
+                      <path
+                        key={`overlay-arrow-${arrowIndex}`}
+                        d={`M ${arrow.x1} ${arrow.y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${arrow.x2} ${arrow.y2}`}
+                        fill="none"
+                        stroke="rgba(220, 38, 38, 0.55)"
+                        strokeWidth="1.8"
+                        markerEnd="url(#undoArrowGlobal)"
+                      />
+                    );
+                  })}
+                </svg>
                 {timelineItems.map((item, index) => {
                   const reg = item.registratie;
                   const visualReg = item.visualRegistratie || reg;
@@ -327,8 +576,6 @@
                   const us = safeArray(a?.us || a?.Us);
                   const vs = safeArray(a?.vs || a?.Vs);
                   const uEnkel = us.length > 0 ? us[0] : null;
-                  const regBottom = wijzigingen.length > 0 ? (64 + ((wijzigingen.length - 1) * 56) + 44) : 52;
-                  const regViewBoxHeight = Math.max(120, regBottom + 16);
                   const vBottom = vs.length > 0 ? (118 + ((vs.length - 1) * 72) + 36) : 0;
                   const aBottom = 168;
                   const uBottom = uEnkel ? 78 : 0;
@@ -337,12 +584,15 @@
                   const registratieTitel = reg?.registratietype
                     ? reg.registratietype.charAt(0).toUpperCase() + reg.registratietype.slice(1)
                     : "Registratie";
+                  const highlights = highlightPerRegId.get(String(reg.id)) || [];
+                  const highlightU = !!uEnkel && highlights.some((h) => h.soort === "U" && String(uEnkel.rel_id ?? "") === h.relId);
+                  const highlightA = !!a && highlights.some((h) => h.soort === "A" && String(a.id ?? "") === h.entiteitId);
 
                   return (
                     <div className="timeline-column" key={`col-${reg.id || index}`}>
                       <div className="card">
                         <h3 className="panel-title">{`${registratieTitel} ${reg.id}`}</h3>
-                        <svg className="graph" viewBox={`0 0 320 ${regViewBoxHeight}`} preserveAspectRatio="xMidYMin meet">
+                        <svg className="graph" viewBox={`0 0 320 ${regRowViewBoxHeight}`} preserveAspectRatio="xMidYMin meet" style={{ height: `${regRowViewBoxHeight}px` }}>
                           <rect className="node" x="40" y="8" rx="8" width="240" height="44" style={{ fill: "#ecfeff" }} />
                           <text className="label" x="270" y="22" textAnchor="end">t: {microsecondeIntVanTijdstip(visualReg.tijdstip)}</text>
                           <text className="label" x="52" y="36">
@@ -362,7 +612,7 @@
                                 <rect className="node" x="14" y={y} rx="8" width="292" height="44" style={{ fill: wijzigingKleur(w.wijzigingstype) }} />
                                 <line x1="111" y1={y} x2="111" y2={y + 44} stroke="#cbd5e1" strokeWidth="1" />
                                 <line x1="208" y1={y} x2="208" y2={y + 44} stroke="#cbd5e1" strokeWidth="1" />
-                                <text className="label" x="24" y={y + 27}>{w.wijzigingstype}</text>
+                                <text id={item.isOngedaanmaking && String(w.wijzigingstype || "").toLowerCase() === "opvoer" ? `undo-src-${reg.id}-${i}` : undefined} className="label" x="24" y={y + 27}>{w.wijzigingstype}</text>
                                 <text className="label" x="120" y={y + 27}>
                                   <tspan className="label-strong">A</tspan>
                                   {": "}
@@ -381,8 +631,8 @@
 
                           {item.isOngedaanmaking && (
                             <>
-                              <line x1="14" y1="8" x2="306" y2={regViewBoxHeight - 6} stroke="#dc2626" strokeWidth="4" strokeLinecap="round" />
-                              <line x1="306" y1="8" x2="14" y2={regViewBoxHeight - 6} stroke="#dc2626" strokeWidth="4" strokeLinecap="round" />
+                              <line x1="14" y1="8" x2="306" y2={regRowViewBoxHeight - 6} stroke="#dc2626" strokeWidth="4" strokeLinecap="round" />
+                              <line x1="306" y1="8" x2="14" y2={regRowViewBoxHeight - 6} stroke="#dc2626" strokeWidth="4" strokeLinecap="round" />
                             </>
                           )}
                         </svg>
@@ -396,6 +646,7 @@
                           <svg className="graph graph-rep" viewBox={`0 0 320 ${repViewBoxHeight}`} preserveAspectRatio="xMidYMin meet" style={{ height: `${repSvgHeight}px` }}>
                             <g>
                               <rect className="node" x="18" y="96" rx="8" width="118" height="72" style={{ fill: "#dbeafe" }} />
+                              {highlightA && <ellipse id={`undo-target-a-${reg.id}-${a.id}`} cx="77" cy="132" rx="66" ry="42" fill="rgba(220, 38, 38, 0.18)" stroke="#dc2626" strokeWidth="2" />}
                               <text className="label" x="130" y="110" textAnchor="end">opv: {a.opvoer ? microsecondeIntVanTijdstip(a.opvoer) : "-"}</text>
                               <text className="label" x="28" y="128">
                                 <tspan className="label-strong">A</tspan>
@@ -408,6 +659,7 @@
                               <g>
                                 <line className="edge" x1="136" y1="118" x2="186" y2="62" />
                                 <rect className="node" x="186" y="20" rx="8" width="124" height="58" />
+                                {highlightU && <ellipse id={`undo-target-u-${reg.id}-${uEnkel.rel_id}`} cx="248" cy="49" rx="70" ry="34" fill="rgba(220, 38, 38, 0.18)" stroke="#dc2626" strokeWidth="2" />}
                                 <text className="label" x="302" y="34" textAnchor="end">opv: {uEnkel.opvoer ? microsecondeIntVanTijdstip(uEnkel.opvoer) : "-"}</text>
                                 <text className="label" x="194" y="45">
                                   <tspan className="label-strong">U</tspan>
@@ -420,10 +672,12 @@
 
                             {vs.map((v, i) => {
                               const y = 118 + i * 72;
+                              const vGeraakt = highlights.some((h) => h.soort === "V" && String(v.rel_id ?? "") === h.relId);
                               return (
                                 <g key={`v-${v.rel_id || i}`}>
                                   <line className="edge" x1="136" y1="132" x2="186" y2={y} />
                                   <rect className="node" x="186" y={y - 22} rx="8" width="124" height="58" />
+                                  {vGeraakt && <ellipse id={`undo-target-v-${reg.id}-${v.rel_id}`} cx="248" cy={y + 7} rx="70" ry="34" fill="rgba(220, 38, 38, 0.18)" stroke="#dc2626" strokeWidth="2" />}
                                   <text className="label" x="302" y={y - 8} textAnchor="end">opv: {v.opvoer ? microsecondeIntVanTijdstip(v.opvoer) : "-"}</text>
                                   <text className="label" x="194" y={y + 4}>
                                     <tspan className="label-strong">V</tspan>
