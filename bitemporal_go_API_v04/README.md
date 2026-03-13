@@ -403,6 +403,11 @@ Deregister U5 and register U6 for entity A:
 13 documenteer huidige formele tijdreisqueries
 14 maak ze A/B/U/V onafhankelijk (metamap): genereer op basis van de metamap (geparameteriseerde) views in de DB en gebruik die in de code
 
+14 react pagina's
+- onafhankelijk maken van A/B/U/V/X/Y
+- enkelvoudig meervoudig tonen (1 of *)
+- entiteit vette rand
+
 
 ## BUGS
 
@@ -415,9 +420,13 @@ Deregister U5 and register U6 for entity A:
 10 loop tijdsreizen nog eens na (KVK voorbeelden) want corrigeren is nu nog hetzelfde als wijzigen. Je hebt twee soorten tijdreizen (of 3).
 
 20 react pagina's
-- onafhankelijk maken van A/B/U/V/X/Y
+- enkelvoudig meervoudig tonen (1 of *)
 - corrigeert registratie lijntje tekenen?
+
 25 react pagina's uitbreiden met klikbare elementen, waarop je acties kunt doen: reg corrigeren, ongedaanmaken
+
+30 log alle requests en responses van /registratie/
+- alle opvragen nog maar even niet
 
 
 50 Autonumber Entiteit-IDs? Simpel maar wenselijk?

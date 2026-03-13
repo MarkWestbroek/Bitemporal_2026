@@ -521,7 +521,7 @@ func vulAfgeleideFormeleTijdVoorFullA(c *gin.Context, entity *model.Full_A, peil
 	}
 
 	for i := range entity.RelABs {
-		repID := fmt.Sprint(entity.RelABs[i].ID)
+		repID := fmt.Sprint(entity.RelABs[i].Rel_ID)
 		if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, &entity.RelABs[i], "A", entiteitID, "Rel_A_B", repID, peiltijdstip); err != nil {
 			return err
 		}

@@ -1,0 +1,1247 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bitemporal Visualizer (Schema)</title>
+    <style>
+      :root {
+        font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+      body {
+        margin: 0;
+        background: #f8fafc;
+        color: #0f172a;
+      }
+      .container {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      .card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      }
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(180px, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 14px;
+      }
+      input, select, button {
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 14px;
+      }
+      button {
+        cursor: pointer;
+        background: #0f172a;
+        color: white;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .muted {
+        color: #475569;
+        font-size: 13px;
+      }
+      .graph {
+        width: 100%;
+        min-height: 300px;
+        border: 1px dashed #cbd5e1;
+        border-radius: 12px;
+        background: #f8fafc;
+      }
+      .node {
+        fill: white;
+        stroke: #334155;
+        stroke-width: 1.2;
+      }
+      .edge {
+        stroke: #94a3b8;
+        stroke-width: 1.5;
+      }
+      .label {
+        font-size: 13px;
+        fill: #0f172a;
+      }
+      .label-lg {
+        font-size: 15px;
+      }
+      .label-left-lg {
+        font-size: 18px;
+      }
+      .page-title {
+        font-size: 26px;
+        margin: 0 0 8px;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: minmax(460px, 1fr) minmax(660px, 1.35fr);
+        gap: 16px;
+        margin-top: 16px;
+      }
+      ul {
+        margin: 8px 0 0;
+        padding-left: 20px;
+      }
+      @media (max-width: 900px) {
+        .controls,
+        .row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+      const { useEffect, useMemo, useState } = React;
+
+      function safeArray(value) {
+        return Array.isArray(value) ? value : [];
+      }
+
+      function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
+        const parsed = Number.parseInt(String(value), 10);
+        if (Number.isNaN(parsed)) {
+          return fallback;
+        }
+        return Math.max(0, parsed);
+      }
+
+      function vindEntiteitIdVanuitRegistratie(registratie, entiteiten, entiteitType) {
+        const wijzigingen = safeArray(registratie?.wijzigingen);
+        const doelType = String(entiteitType || '').toUpperCase();
+
+        for (const wijziging of wijzigingen) {
+          if (String(wijziging?.entiteitnaam || '').toUpperCase() !== doelType) {
+            continue;
+          }
+
+          const kandidaatId = wijziging?.entiteit_id;
+          if (kandidaatId === null || kandidaatId === undefined || kandidaatId === '') {
+            continue;
+          }
+
+          const kandidaatAlsString = String(kandidaatId);
+          const bestaat = entiteiten.some((item) => String(item.id) === kandidaatAlsString);
+          if (bestaat) {
+            return kandidaatAlsString;
+          }
+        }
+
+        return '';
+      }
+
+      function tUitRegistratieTijdstip(tijdstipRaw) {
+        if (!tijdstipRaw) {
+          return null;
+        }
+
+        const tijdstipMillis = Date.parse(tijdstipRaw);
+        const basisMillis = Date.parse('2026-01-01T00:00:00Z');
+        if (Number.isNaN(tijdstipMillis) || Number.isNaN(basisMillis)) {
+          return null;
+        }
+
+        const deltaMillis = tijdstipMillis - basisMillis;
+        const afgerondeUren = Math.round(deltaMillis / (60 * 60 * 1000));
+        if (afgerondeUren < 0) {
+          return null;
+        }
+
+        return afgerondeUren;
+      }
+
+      function wijzigingKleur(wijzigingstype) {
+        const type = String(wijzigingstype || '').toLowerCase();
+        if (type === 'opvoer') {
+          return '#eefcf2';
+        }
+        if (type === 'afvoer') {
+          return '#fff4e8';
+        }
+        return '#f8fafc';
+      }
+
+      function wijzigingPatroonId(wijzigingstype) {
+        const type = String(wijzigingstype || '').toLowerCase();
+        if (type === 'opvoer') {
+          return 'pat-opvoer';
+        }
+        if (type === 'afvoer') {
+          return 'pat-afvoer';
+        }
+        return 'pat-neutraal';
+      }
+
+      function afgeknotteHoekPad(x, y, width, height, hoek = 8) {
+        const h = Math.max(0, Math.min(hoek, Math.floor(Math.min(width, height) / 2)));
+        return [
+          `M ${x + h} ${y}`,
+          `L ${x + width - h} ${y}`,
+          `L ${x + width} ${y + h}`,
+          `L ${x + width} ${y + height - h}`,
+          `L ${x + width - h} ${y + height}`,
+          `L ${x + h} ${y + height}`,
+          `L ${x} ${y + height - h}`,
+          `L ${x} ${y + h}`,
+          'Z',
+        ].join(' ');
+      }
+
+      function microsecondeIntVanTijdstip(tijdstipRaw) {
+        if (!tijdstipRaw) {
+          return 0;
+        }
+
+        const raw = String(tijdstipRaw);
+        const match = raw.match(/\.(\d+)/);
+        if (!match) {
+          return 0;
+        }
+
+        const fraction = match[1].slice(0, 6).padEnd(6, '0');
+        const parsed = Number.parseInt(fraction, 10);
+        return Number.isNaN(parsed) ? 0 : parsed;
+      }
+
+      function endpointSegmentVoorEntiteit(entiteitType) {
+        return `${String(entiteitType || '').toLowerCase()}s`;
+      }
+
+      function responseKeyVoorEntiteiten(entiteitType, responseJson) {
+        const type = String(entiteitType || '');
+        const kandidaten = [
+          `${type}s`,
+          `${type.toUpperCase()}s`,
+          `${type.toLowerCase()}s`,
+        ];
+
+        for (const key of kandidaten) {
+          if (Array.isArray(responseJson?.[key])) {
+            return key;
+          }
+        }
+
+        const dynKey = Object.keys(responseJson || {}).find((k) => Array.isArray(responseJson[k]));
+        return dynKey || `${type}s`;
+      }
+
+      function isPrimitiveWaarde(value) {
+        return value === null || ['string', 'number', 'boolean'].includes(typeof value);
+      }
+
+      function veldEntries(record) {
+        return Object.entries(record || {}).filter(([, value]) => isPrimitiveWaarde(value));
+      }
+
+      function korteSamenvatting(record) {
+        const overSlaan = new Set(['id', 'rel_id', 'opvoer', 'afvoer', 'a_id', 'b_id']);
+        const parts = veldEntries(record)
+          .filter(([k]) => !overSlaan.has(k))
+          .slice(0, 2)
+          .map(([k, v]) => `${k}=${v ?? '-'}`);
+        if (parts.length === 0) {
+          return '-';
+        }
+        return parts.join(' | ');
+      }
+
+      function childArrayVoorRol(selectedEntiteit, rolnaam, jsonRolnaam) {
+        const directeKandidaten = [jsonRolnaam, rolnaam].filter(Boolean);
+        for (const kandidaat of directeKandidaten) {
+          const direct = selectedEntiteit?.[kandidaat];
+          if (Array.isArray(direct)) {
+            return direct;
+          }
+        }
+
+        const direct = selectedEntiteit?.[rolnaam];
+        if (Array.isArray(direct)) {
+          return direct;
+        }
+
+        const key = Object.keys(selectedEntiteit || {}).find((k) => k.toLowerCase() === String(rolnaam).toLowerCase());
+        if (!key) {
+          return [];
+        }
+        return safeArray(selectedEntiteit[key]);
+      }
+
+      function labelVoorChildType(doeltype, rolnaam) {
+        return String(doeltype || rolnaam || '?');
+      }
+
+      function donkerdereRandkleurVanHex(hexKleur, ratio = 0.62) {
+        const hex = String(hexKleur || '').trim().replace(/^#/, '');
+        if (!/^[0-9a-fA-F]{6}$/.test(hex)) {
+          return '#1e3a8a';
+        }
+
+        const r = Number.parseInt(hex.slice(0, 2), 16);
+        const g = Number.parseInt(hex.slice(2, 4), 16);
+        const b = Number.parseInt(hex.slice(4, 6), 16);
+
+        const donker = (n) => Math.max(0, Math.min(255, Math.round(n * ratio)));
+        const naarHex = (n) => n.toString(16).padStart(2, '0');
+
+        return `#${naarHex(donker(r))}${naarHex(donker(g))}${naarHex(donker(b))}`;
+      }
+
+      function leidEntiteitTypeAfUitKolomnaam(kolomnaam, beschikbareEntiteitTypen) {
+        const prefix = String(kolomnaam || '').split('_')[0].trim().toUpperCase();
+        if (!prefix) {
+          return '';
+        }
+        const bestaat = safeArray(beschikbareEntiteitTypen).some((item) => String(item?.typenaam || '').toUpperCase() === prefix);
+        return bestaat ? prefix : '';
+      }
+
+      function leidEntiteitTypeAfUitRegistratie(registratie, beschikbareEntiteitTypen) {
+        const wijzigingen = safeArray(registratie?.wijzigingen);
+        const beschikbareNamen = new Set(
+          safeArray(beschikbareEntiteitTypen)
+            .map((item) => String(item?.typenaam || '').trim())
+            .filter(Boolean)
+        );
+
+        for (const wijziging of wijzigingen) {
+          const kandidaat = String(wijziging?.entiteitnaam || '').trim();
+          if (kandidaat && beschikbareNamen.has(kandidaat)) {
+            return kandidaat;
+          }
+        }
+
+        return '';
+      }
+
+      async function fetchVizSchema(baseUrl) {
+        const res = await fetch(`${baseUrl}/api/viz/schema`);
+        if (!res.ok) {
+          throw new Error(`Schema HTTP ${res.status}: ${res.statusText}`);
+        }
+        return await res.json();
+      }
+
+      function App() {
+        const [baseUrl, setBaseUrl] = useState(window.location.origin);
+        const [entiteitType, setEntiteitType] = useState('A');
+        const [t, setT] = useState(1);
+        const [registratieId, setRegistratieId] = useState(1);
+        const [loading, setLoading] = useState(false);
+        const [error, setError] = useState('');
+        const [responseData, setResponseData] = useState(null);
+        const [responseKey, setResponseKey] = useState('As');
+        const [registratieData, setRegistratieData] = useState(null);
+        const [ongedaanGemaakteRegistratieData, setOngedaanGemaakteRegistratieData] = useState(null);
+        const [selectedEntiteitId, setSelectedEntiteitId] = useState('');
+        const [vizSchema, setVizSchema] = useState(null);
+        const [schemaError, setSchemaError] = useState('');
+        const [geselecteerdeRep, setGeselecteerdeRep] = useState(null); // { item, group }
+        const [actieOpmerking, setActieOpmerking] = useState('');
+        const [actieFormVelden, setActieFormVelden] = useState({});
+        const [actieBezig, setActieBezig] = useState(false);
+        const [actieResultaat, setActieResultaat] = useState(null); // { ok, bericht }
+
+        const entiteitTypen = useMemo(() => {
+          const allTypes = safeArray(vizSchema?.types);
+          return allTypes.filter((item) => String(item.metatype) === 'entiteit');
+        }, [vizSchema]);
+
+        const typeMetaByTypenaam = useMemo(() => {
+          const result = {};
+          safeArray(vizSchema?.types).forEach((item) => {
+            if (item?.typenaam) {
+              result[item.typenaam] = item;
+            }
+          });
+          return result;
+        }, [vizSchema]);
+
+        const selectedEntiteitMeta = useMemo(
+          () => entiteitTypen.find((item) => item.typenaam === entiteitType) || null,
+          [entiteitTypen, entiteitType]
+        );
+
+        const as = safeArray(responseData?.[responseKey]);
+        const selectedA = useMemo(() => as.find((item) => String(item.id) === String(selectedEntiteitId)) || null, [as, selectedEntiteitId]);
+
+        const childGroups = useMemo(() => {
+          const skeleton = safeArray(selectedEntiteitMeta?.onderliggende).map((child) => ({
+            typeMeta: typeMetaByTypenaam[child.doeltype] || null,
+            rolnaam: child.rolnaam,
+            jsonRolnaam: child.jsonRolnaam || '',
+            doeltype: child.doeltype,
+            metatype: String(typeMetaByTypenaam[child.doeltype]?.metatype || ''),
+            kleur: String(typeMetaByTypenaam[child.doeltype]?.kleur || ''),
+            secondaireEntiteitIDKolom: String(typeMetaByTypenaam[child.doeltype]?.secondaireEntiteitIDKolom || ''),
+            items: selectedA ? childArrayVoorRol(selectedA, child.rolnaam, child.jsonRolnaam) : [],
+          }));
+
+          if (skeleton.length > 0) {
+            return skeleton;
+          }
+
+          if (!selectedA) {
+            return [];
+          }
+
+          return Object.keys(selectedA)
+            .filter((k) => Array.isArray(selectedA[k]))
+            .map((k) => ({
+              rolnaam: k,
+              doeltype: String(k).replace(/s$/i, '').toUpperCase(),
+              metatype: '',
+              kleur: '',
+              secondaireEntiteitIDKolom: '',
+              items: safeArray(selectedA[k]),
+            }));
+        }, [selectedA, selectedEntiteitMeta, typeMetaByTypenaam]);
+
+        const childGroupsGesorteerd = useMemo(() => {
+          const rank = (group) => {
+            const metatype = String(group?.metatype || '').toLowerCase();
+            if (metatype === 'gegevenselement') {
+              return 1;
+            }
+            if (metatype === 'relatie') {
+              return 2;
+            }
+            return 3;
+          };
+
+          return [...childGroups].sort((a, b) => rank(a) - rank(b));
+        }, [childGroups]);
+
+        const geNodesVoorGrafiek = useMemo(() => {
+          const geGroups = childGroupsGesorteerd.filter((group) => String(group?.metatype || '').toLowerCase() !== 'relatie');
+          const nodes = [];
+          const startY = 65;
+          const binnenGroepStap = 74;
+          const tussenGroepMarge = 38;
+          let leftY = startY;
+          let rightY = startY;
+
+          geGroups.forEach((group, groupIndex) => {
+            const side = groupIndex % 2 === 0 ? 'left' : 'right';
+            const items = safeArray(group.items);
+
+            items.forEach((item, index) => {
+              const baseY = side === 'left' ? leftY : rightY;
+              nodes.push({
+                side,
+                y: baseY + (index * binnenGroepStap),
+                group,
+                item,
+                key: `${group.rolnaam}-${index}`,
+              });
+            });
+
+            const groephoogte = items.length > 0 ? (items.length * binnenGroepStap) : 0;
+            if (side === 'left') {
+              leftY += groephoogte + tussenGroepMarge;
+            } else {
+              rightY += groephoogte + tussenGroepMarge;
+            }
+          });
+
+          return nodes;
+        }, [childGroupsGesorteerd]);
+
+        const geGroepenVoorGrafiek = useMemo(() => {
+          const byKey = new Map();
+
+          geNodesVoorGrafiek.forEach((node) => {
+            const key = `${node.group.rolnaam}__${node.group.doeltype}`;
+            if (!byKey.has(key)) {
+              byKey.set(key, {
+                key,
+                side: node.side,
+                group: node.group,
+                ys: [],
+              });
+            }
+            byKey.get(key).ys.push(node.y);
+          });
+
+          return Array.from(byKey.values())
+            .map((group) => ({
+              ...group,
+              ys: [...group.ys].sort((a, b) => a - b),
+            }))
+            .sort((a, b) => {
+              if (a.side !== b.side) {
+                return a.side === 'left' ? -1 : 1;
+              }
+              return (a.ys[0] || 0) - (b.ys[0] || 0);
+            });
+        }, [geNodesVoorGrafiek]);
+
+        const geGroepenMetLayout = useMemo(() => {
+          const leftStartX = 248;
+          const leftMaxX = 320;
+          const rightStartX = 652;
+          const rightMinX = 580;
+          const inwardStep = 18;
+          const basisFromY = 64;
+          const anchorY = 80;
+
+          let leftIndex = 0;
+          let rightIndex = 0;
+
+          return geGroepenVoorGrafiek.map((group) => {
+            const isLeft = group.side === 'left';
+            const index = isLeft ? leftIndex : rightIndex;
+            const minY = group.ys[0] || basisFromY;
+            const fromY = index === 0 ? minY : anchorY;
+
+            let branchX;
+            if (isLeft) {
+              branchX = Math.min(leftStartX + (index * inwardStep), leftMaxX);
+              leftIndex += 1;
+            } else {
+              branchX = Math.max(rightStartX - (index * inwardStep), rightMinX);
+              rightIndex += 1;
+            }
+
+            return {
+              ...group,
+              sideIndex: index,
+              fromX: isLeft ? 330 : 570,
+              anchorY,
+              fromY,
+              targetX: isLeft ? 210 : 690,
+              branchX,
+            };
+          });
+        }, [geGroepenVoorGrafiek]);
+
+        const relatieNodesVoorGrafiek = useMemo(() => {
+          const relatieGroups = childGroupsGesorteerd.filter((group) => String(group?.metatype || '').toLowerCase() === 'relatie');
+          const nodes = [];
+          let relIndex = 0;
+          // Zelfde verticale afstand als tussen GE-groepen:
+          // effectieve box-gap = (binnenGroepStap + tussenGroepMarge) - boxHoogte.
+          const binnenGroepStap = 74;
+          const tussenGroepMarge = 38;
+          const geBoxHoogte = 60;
+          const centraleEntiteitBottomY = 120;
+          const relatieBoxHalveHoogte = 24;
+          const geGroepVerticaleGap = (binnenGroepStap + tussenGroepMarge) - geBoxHoogte;
+          const relatieTopY = centraleEntiteitBottomY + geGroepVerticaleGap;
+          const relatieStartY = relatieTopY + relatieBoxHalveHoogte;
+
+          relatieGroups.forEach((group) => {
+            safeArray(group.items).forEach((item, index) => {
+              const secondaireKolom = String(group?.secondaireEntiteitIDKolom || '');
+              const tweedeEntiteitID = secondaireKolom ? item?.[secondaireKolom] : null;
+              const tweedeEntiteitType = leidEntiteitTypeAfUitKolomnaam(secondaireKolom, entiteitTypen);
+              const tweedeEntiteitKleur = tweedeEntiteitType ? String(typeMetaByTypenaam[tweedeEntiteitType]?.kleur || '') : '';
+              const tweedeEntiteitRandkleur = tweedeEntiteitKleur ? donkerdereRandkleurVanHex(tweedeEntiteitKleur) : '#1e3a8a';
+              const tweedeEntiteitIDTekst = (tweedeEntiteitID === null || tweedeEntiteitID === undefined || tweedeEntiteitID === '') ? '' : String(tweedeEntiteitID);
+              const tweedeEntiteitLabel = (tweedeEntiteitID !== null && tweedeEntiteitID !== undefined && tweedeEntiteitID !== '')
+                ? `${tweedeEntiteitType || 'Ent'} id=${tweedeEntiteitID}`
+                : '';
+
+              nodes.push({
+                y: relatieStartY + (relIndex * 82),
+                group,
+                item,
+                tweedeEntiteitLabel,
+                tweedeEntiteitType,
+                tweedeEntiteitIDTekst,
+                tweedeEntiteitKleur,
+                tweedeEntiteitRandkleur,
+                key: `${group.rolnaam}-${index}`,
+              });
+              relIndex += 1;
+            });
+          });
+
+          return nodes;
+        }, [childGroupsGesorteerd, entiteitTypen]);
+
+        const svgHoogte = useMemo(() => {
+          const geBottom = geNodesVoorGrafiek.reduce((max, node) => Math.max(max, node.y + 32), 130);
+          const relBottom = relatieNodesVoorGrafiek.reduce((max, node) => Math.max(max, node.y + 50), 130);
+          return Math.max(350, Math.min(900, Math.max(geBottom, relBottom) + 24));
+        }, [geNodesVoorGrafiek, relatieNodesVoorGrafiek]);
+
+        useEffect(() => {
+          let cancelled = false;
+
+          async function loadSchema() {
+            setSchemaError('');
+            try {
+              const schema = await fetchVizSchema(baseUrl);
+              if (!cancelled) {
+                setVizSchema(schema);
+                const types = safeArray(schema?.types).filter((item) => String(item.metatype) === 'entiteit');
+                if (types.length > 0 && !types.some((item) => item.typenaam === entiteitType)) {
+                  setEntiteitType(types[0].typenaam);
+                }
+              }
+            } catch (err) {
+              if (!cancelled) {
+                setVizSchema(null);
+                setSchemaError(err instanceof Error ? err.message : String(err));
+              }
+            }
+          }
+
+          loadSchema();
+          return () => {
+            cancelled = true;
+          };
+        }, [baseUrl]);
+
+        async function loadData({ tValue = t, registratieIdValue = registratieId, selecteerVanuitRegistratie = false } = {}) {
+          let doelEntiteitType = entiteitType;
+          setLoading(true);
+          setError('');
+          try {
+            const doelRegistratieId = normaliseerNietNegatiefGeheelGetal(registratieIdValue, normaliseerNietNegatiefGeheelGetal(registratieId, 0));
+            const defaultPeilmoment = normaliseerNietNegatiefGeheelGetal(tValue, normaliseerNietNegatiefGeheelGetal(t, 0));
+            let peilmomentVoorEntiteiten = defaultPeilmoment;
+
+            const registratieByIdUrl = `${baseUrl}/full/registraties/${encodeURIComponent(doelRegistratieId)}`;
+            const registratieByIdRes = await fetch(registratieByIdUrl);
+
+            if (!registratieByIdRes.ok && registratieByIdRes.status !== 404) {
+              throw new Error(`Registratie HTTP ${registratieByIdRes.status}: ${registratieByIdRes.statusText}`);
+            }
+
+            let registratieJson = null;
+            if (registratieByIdRes.ok) {
+              registratieJson = await registratieByIdRes.json();
+            }
+
+            if (selecteerVanuitRegistratie && registratieJson?.tijdstip) {
+              const afgeleidT = tUitRegistratieTijdstip(registratieJson.tijdstip);
+              if (afgeleidT !== null) {
+                peilmomentVoorEntiteiten = afgeleidT;
+                setT(afgeleidT);
+              }
+            }
+
+            if (selecteerVanuitRegistratie && registratieJson) {
+              const afgeleidType = leidEntiteitTypeAfUitRegistratie(registratieJson, entiteitTypen);
+              if (afgeleidType) {
+                doelEntiteitType = afgeleidType;
+                if (afgeleidType !== entiteitType) {
+                  setEntiteitType(afgeleidType);
+                }
+              }
+            }
+
+            const segment = endpointSegmentVoorEntiteit(doelEntiteitType);
+            const entiteitenUrl = `${baseUrl}/full/${segment}/?t=${encodeURIComponent(peilmomentVoorEntiteiten)}`;
+            const entiteitenRes = await fetch(entiteitenUrl);
+
+            if (!entiteitenRes.ok) {
+              throw new Error(`Entiteiten HTTP ${entiteitenRes.status}: ${entiteitenRes.statusText}`);
+            }
+
+            const entiteitenJson = await entiteitenRes.json();
+            const entiteitenKey = responseKeyVoorEntiteiten(doelEntiteitType, entiteitenJson);
+            const entiteiten = safeArray(entiteitenJson?.[entiteitenKey]);
+
+            let ongedaanGemaakteRegistratieJson = null;
+            if (registratieJson?.registratietype === 'ongedaanmaking' && registratieJson?.maakt_ongedaan_registratie_id) {
+              const doelId = registratieJson.maakt_ongedaan_registratie_id;
+              const doelRes = await fetch(`${baseUrl}/full/registraties/${encodeURIComponent(doelId)}`);
+              if (doelRes.ok) {
+                ongedaanGemaakteRegistratieJson = await doelRes.json();
+              }
+            }
+
+            setResponseData(entiteitenJson);
+            setResponseKey(entiteitenKey);
+            setRegistratieData(registratieJson);
+            setOngedaanGemaakteRegistratieData(ongedaanGemaakteRegistratieJson);
+
+            const entiteitIdVanuitRegistratie = vindEntiteitIdVanuitRegistratie(registratieJson, entiteiten, doelEntiteitType);
+            setSelectedEntiteitId((vorigeEntiteitId) => {
+              if (entiteiten.length === 0) {
+                return '';
+              }
+
+              if (selecteerVanuitRegistratie && entiteitIdVanuitRegistratie) {
+                return entiteitIdVanuitRegistratie;
+              }
+
+              const heeftVorigeNog = entiteiten.some((item) => String(item.id) === String(vorigeEntiteitId));
+              if (heeftVorigeNog) {
+                return String(vorigeEntiteitId);
+              }
+
+              return String(entiteiten[0].id);
+            });
+          } catch (err) {
+            setError(err.message || 'Onbekende fout bij ophalen data');
+            setResponseData(null);
+            setResponseKey(`${String(doelEntiteitType || entiteitType || '').toUpperCase()}s`);
+            setRegistratieData(null);
+            setOngedaanGemaakteRegistratieData(null);
+            setSelectedEntiteitId('');
+          } finally {
+            setLoading(false);
+          }
+        }
+
+        function incrementRegistratieAndReload() {
+          if (loading) {
+            return;
+          }
+          const currentRegistratieId = normaliseerNietNegatiefGeheelGetal(registratieId, 0);
+          const nextRegistratieId = currentRegistratieId + 1;
+          setRegistratieId(nextRegistratieId);
+          loadData({ tValue: t, registratieIdValue: nextRegistratieId, selecteerVanuitRegistratie: true });
+        }
+
+        function decrementRegistratieAndReload() {
+          if (loading) {
+            return;
+          }
+          const currentRegistratieId = normaliseerNietNegatiefGeheelGetal(registratieId, 0);
+          const nextRegistratieId = Math.max(0, currentRegistratieId - 1);
+          setRegistratieId(nextRegistratieId);
+          loadData({ tValue: t, registratieIdValue: nextRegistratieId, selecteerVanuitRegistratie: true });
+        }
+
+        function incrementTAndReload() {
+          if (loading) {
+            return;
+          }
+          const currentT = normaliseerNietNegatiefGeheelGetal(t, 0);
+          const nextT = currentT + 1;
+          setT(nextT);
+          loadData({ tValue: nextT, registratieIdValue: registratieId, selecteerVanuitRegistratie: false });
+        }
+
+        function decrementTAndReload() {
+          if (loading) {
+            return;
+          }
+          const currentT = normaliseerNietNegatiefGeheelGetal(t, 0);
+          const nextT = Math.max(0, currentT - 1);
+          setT(nextT);
+          loadData({ tValue: nextT, registratieIdValue: registratieId, selecteerVanuitRegistratie: false });
+        }
+
+        const plumbingVelden = new Set(['rel_id', 'id', 'a_id', 'b_id', 'opvoer', 'afvoer']);
+
+        function selecteerRep(item, group) {
+          const bewerkbaar = {};
+          veldEntries(item)
+            .filter(([k]) => !plumbingVelden.has(k))
+            .forEach(([k, v]) => { bewerkbaar[k] = v ?? ''; });
+          setGeselecteerdeRep({ item, group });
+          setActieFormVelden(bewerkbaar);
+          setActieOpmerking('');
+          setActieResultaat(null);
+        }
+
+        async function voerActieUit(actie) {
+          if (!geselecteerdeRep) return;
+          const { item, group } = geselecteerdeRep;
+          const veldnaam = group.typeMeta?.veldnaam || group.doeltype.toLowerCase();
+          setActieBezig(true);
+          setActieResultaat(null);
+          try {
+            const opmerking = actieOpmerking.trim() || undefined;
+            const registratie = { registratietype: 'Registratie', ...(opmerking ? { opmerking } : {}) };
+            let wijzigingen;
+            if (actie === 'afvoer') {
+              wijzigingen = [{ afvoer: { [veldnaam]: { ...item } } }];
+            } else {
+              // corrigeer: afvoer oud + opvoer nieuw met aangepaste velden
+              const nieuwItem = { ...item };
+              Object.entries(actieFormVelden).forEach(([k, v]) => { nieuwItem[k] = v; });
+              wijzigingen = [
+                { afvoer: { [veldnaam]: { ...item } } },
+                { opvoer: { [veldnaam]: nieuwItem } },
+              ];
+            }
+            const res = await fetch(`${baseUrl}/registratie/`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ registratie, wijzigingen }),
+            });
+            const json = await res.json().catch(() => ({}));
+            if (res.ok) {
+              setActieResultaat({ ok: true, bericht: `${actie === 'afvoer' ? 'Afvoer' : 'Correctie'} geslaagd (registratie id=${json.registratie_id ?? '-'})` });
+              setGeselecteerdeRep(null);
+              await loadData();
+            } else {
+              setActieResultaat({ ok: false, bericht: json.error || `HTTP ${res.status}: ${res.statusText}` });
+            }
+          } catch (err) {
+            setActieResultaat({ ok: false, bericht: String(err?.message || err) });
+          } finally {
+            setActieBezig(false);
+          }
+        }
+
+        useEffect(() => {
+          loadData();
+        }, []);
+
+        // Reset selectie als entiteit wisselt
+        useEffect(() => {
+          setGeselecteerdeRep(null);
+          setActieResultaat(null);
+        }, [selectedEntiteitId]);
+
+        useEffect(() => {
+          function handleKeyDown(event) {
+            const tagName = event.target?.tagName || '';
+            if (tagName === 'INPUT' || tagName === 'SELECT' || tagName === 'TEXTAREA') {
+              return;
+            }
+
+            if (event.key === 'ArrowRight') {
+              event.preventDefault();
+              incrementRegistratieAndReload();
+            }
+            if (event.key === 'ArrowLeft') {
+              event.preventDefault();
+              decrementRegistratieAndReload();
+            }
+            if (event.key === 'ArrowUp') {
+              event.preventDefault();
+              incrementTAndReload();
+            }
+            if (event.key === 'ArrowDown') {
+              event.preventDefault();
+              decrementTAndReload();
+            }
+          }
+
+          window.addEventListener('keydown', handleKeyDown);
+          return () => window.removeEventListener('keydown', handleKeyDown);
+        }, [t, registratieId, loading, entiteitType]);
+
+        const selectedRegistratie = registratieData;
+        const selectedRegistratieWijzigingen = safeArray(registratieData?.wijzigingen);
+        const isOngedaanmaking = selectedRegistratie?.registratietype === 'ongedaanmaking';
+        const ongedaanGemaakteWijzigingen = safeArray(ongedaanGemaakteRegistratieData?.wijzigingen);
+        const visualRegistratie = isOngedaanmaking ? ongedaanGemaakteRegistratieData : selectedRegistratie;
+        const visualWijzigingen = isOngedaanmaking ? ongedaanGemaakteWijzigingen : selectedRegistratieWijzigingen;
+        const registratieTitel = selectedRegistratie?.registratietype
+          ? selectedRegistratie.registratietype.charAt(0).toUpperCase() + selectedRegistratie.registratietype.slice(1)
+          : 'Registratie';
+        const registratieOpmerking = typeof selectedRegistratie?.opmerking === 'string' ? selectedRegistratie.opmerking : '';
+        const doelRegistratieOpmerking = typeof ongedaanGemaakteRegistratieData?.opmerking === 'string' ? ongedaanGemaakteRegistratieData.opmerking : '';
+        const nadrukStyle = { fontWeight: 700, fontSize: '15px' };
+        const nadrukStyleLinks = { fontWeight: 700, fontSize: '18px' };
+        const centraleEntiteitLabelStyle = { fontWeight: 900, fontSize: '24px' };
+        const grootKruisEindY = visualWijzigingen.length > 0
+          ? 108 + ((visualWijzigingen.length - 1) * 92) + 84
+          : 82;
+        const registratieSvgHoogte = Math.max(200, grootKruisEindY + 30);
+
+        return (
+          <div className="container">
+            <h1 className="page-title">Visualisatie tijdreizen (formele tijd)</h1>
+            <p style={{ margin: '0 0 8px' }}>
+              <a className="muted" href="/viz/index.html">Open originele index</a>
+              {' | '}
+              <a className="muted" href="/viz/tijdlijn_schema.html">Open schema-tijdslijnvisualisatie</a>
+            </p>
+            <p className="muted">Kies registratie-id of peilmoment, en volg desgewenst een specifieke entiteit.
+              Tip: ←/→ navigeert registratie-id, ↑/↓ navigeert peilmoment t.</p>
+            <p className="muted" style={{ marginTop: 0 }}>
+              {schemaError
+                ? `Schema niet geladen: ${schemaError}`
+                : `Schema: ${vizSchema?.versie || '-'} | types: ${safeArray(vizSchema?.types).length}`}
+            </p>
+
+            <div className="card">
+              <div className="controls" style={{ gridTemplateColumns: 'repeat(5, minmax(180px, 1fr))' }}>
+                <label>
+                  API base URL
+                  <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value.trim())} placeholder="http://localhost:8080" />
+                </label>
+
+                <label>
+                  Entiteittype
+                  <select value={entiteitType} onChange={(e) => setEntiteitType(e.target.value)} disabled={entiteitTypen.length === 0}>
+                    {entiteitTypen.length === 0 && <option value="">Geen entiteittypen</option>}
+                    {entiteitTypen.map((meta) => (
+                      <option key={meta.typenaam} value={meta.typenaam}>{meta.typenaam}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  Registratie-id
+                  <input type="number" value={registratieId} onChange={(e) => setRegistratieId(e.target.value)} min="0" step="1" />
+                </label>
+
+                <label>
+                  Peilmoment (t)
+                  <input type="number" value={t} onChange={(e) => setT(e.target.value)} min="0" step="1" />
+                </label>
+
+                <label>
+                  Entiteit {entiteitType || '?'}
+                  <select value={selectedEntiteitId} onChange={(e) => setSelectedEntiteitId(e.target.value)} disabled={as.length === 0}>
+                    {as.length === 0 && <option value="">Geen resultaten</option>}
+                    {as.map((entiteit) => (
+                      <option key={entiteit.id} value={entiteit.id}>{entiteitType} #{entiteit.id}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(180px, 1fr))', gap: 12, marginTop: 10, alignItems: 'start' }}>
+                <div style={{ gridColumn: '3 / 4' }}>
+                  <p className="muted" style={{ margin: '0 0 6px' }}>1) Door registratie-id lopen (volgt entiteit in registratie)</p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={decrementRegistratieAndReload} disabled={loading || normaliseerNietNegatiefGeheelGetal(registratieId, 0) <= 0}>reg-id - 1</button>
+                    <button onClick={incrementRegistratieAndReload} disabled={loading}>reg-id + 1</button>
+                    <div className="muted">(Entiteit blijft staan bij geen match)</div>
+                  </div>
+                </div>
+
+                <div style={{ gridColumn: '4 / 5' }}>
+                  <p className="muted" style={{ margin: '0 0 6px' }}>2) Door peilmoment lopen (houdt gekozen entiteit vast)</p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={decrementTAndReload} disabled={loading || normaliseerNietNegatiefGeheelGetal(t, 0) <= 0}>t - 1</button>
+                    <button onClick={incrementTAndReload} disabled={loading}>t + 1</button>
+                  </div>
+                </div>
+
+                <div style={{ gridColumn: '5 / 6' }}>
+                  <p className="muted" style={{ margin: '0 0 6px' }}>3) Data ophalen</p>
+                  <button onClick={() => loadData({ selecteerVanuitRegistratie: true })} disabled={loading || !entiteitType}>
+                    {loading ? 'Bezig met ophalen...' : 'Ophalen'}
+                  </button>
+                </div>
+              </div>
+
+              {error && <p style={{ color: '#dc2626' }}>Fout: {error}</p>}
+              {responseData?.has_more && <p className="muted">Let op: has_more=true, niet alle entiteiten zijn geladen.</p>}
+            </div>
+
+            <p className="muted" style={{ margin: 0 }}>
+              Huidige selectie: type={entiteitType || '-'} | peilmoment t={normaliseerNietNegatiefGeheelGetal(t, 0)} | registratie-id={normaliseerNietNegatiefGeheelGetal(registratieId, 0)}
+            </p>
+
+            <div className="row" style={{ marginTop: 16 }}>
+              <div className="card">
+                <h2>
+                  {selectedRegistratie ? `${registratieTitel} ${selectedRegistratie.id}` : registratieTitel}
+                  {!!registratieOpmerking && (
+                    <span className="muted" style={{ marginLeft: 10, fontWeight: 400, fontSize: '0.9em' }}>
+                      {registratieOpmerking}
+                    </span>
+                  )}
+                </h2>
+
+                {!selectedRegistratie ? (
+                  <p className="muted">Geen registratie met dit registratie-id gevonden.</p>
+                ) : (
+                  <>
+                    {!visualRegistratie ? (
+                      <p className="muted">Geen registratie om te visualiseren.</p>
+                    ) : (
+                      <svg className="graph" viewBox={`0 0 760 ${registratieSvgHoogte}`} preserveAspectRatio="xMidYMid meet">
+                        <defs>
+                          <pattern id="pat-registratie" patternUnits="userSpaceOnUse" width="8" height="8">
+                            <rect width="8" height="8" fill="#f1f8ff" />
+                            <circle cx="2" cy="2" r="1.5" fill="#cee6f8" />
+                            <circle cx="6" cy="5" r="1.5" fill="#cee6f8" />
+                          </pattern>
+                          <pattern id="pat-opvoer" patternUnits="userSpaceOnUse" width="8" height="8">
+                            <rect width="8" height="8" fill="#eefcf2" />
+                            <circle cx="2" cy="2" r="1.5" fill="#beeece" />
+                            <circle cx="6" cy="5" r="1.5" fill="#beeece" />
+                          </pattern>
+                          <pattern id="pat-afvoer" patternUnits="userSpaceOnUse" width="8" height="8">
+                            <rect width="8" height="8" fill="#fff4e8" />
+                            <circle cx="2" cy="2" r="1.5" fill="#f5dcbc" />
+                            <circle cx="6" cy="5" r="1.5" fill="#f5dcbc" />
+                          </pattern>
+                          <pattern id="pat-neutraal" patternUnits="userSpaceOnUse" width="8" height="8">
+                            <rect width="8" height="8" fill="#f8fafc" />
+                            <circle cx="2" cy="2" r="1.5" fill="#dce8f0" />
+                            <circle cx="6" cy="5" r="1.5" fill="#dce8f0" />
+                          </pattern>
+                        </defs>
+                        <g>
+                          <path
+                            d={afgeknotteHoekPad(220, 10, 320, 72, 10)}
+                            style={{ fill: 'url(#pat-registratie)', stroke: '#334155', strokeWidth: 1.2 }}
+                          />
+                          <text className="label" x="532" y="26" textAnchor="end">t: {microsecondeIntVanTijdstip(visualRegistratie.tijdstip)}</text>
+                          <text className="label label-left-lg" x="236" y="37">
+                            <tspan style={nadrukStyleLinks}>Reg</tspan>
+                            {' id='}
+                            <tspan style={nadrukStyleLinks}>{visualRegistratie.id}</tspan>
+                            {` | type=${visualRegistratie.registratietype}`}
+                          </text>
+                        </g>
+
+                        {visualWijzigingen.map((w, index) => {
+                          const y = 108 + index * 92;
+                          return (
+                            <g key={`vwz-${w.id || index}`}>
+                              <line className="edge" x1="380" y1="82" x2="380" y2={y - 12} />
+                              <path
+                                d={afgeknotteHoekPad(90, y, 580, 84, 10)}
+                                style={{ fill: `url(#${wijzigingPatroonId(w.wijzigingstype)})`, stroke: '#334155', strokeWidth: 1.2 }}
+                              />
+                              <line x1="283" y1={y} x2="283" y2={y + 84} stroke="#cbd5e1" strokeWidth="1" />
+                              <line x1="476" y1={y} x2="476" y2={y + 84} stroke="#cbd5e1" strokeWidth="1" />
+                              <text className="label label-left-lg" x="106" y={y + 46}>{w.wijzigingstype}</text>
+                              <text className="label" x="299" y={y + 46}>
+                                {'entiteit='}
+                                <tspan style={nadrukStyle}>{w.entiteitnaam}</tspan>
+                                {': '}
+                                <tspan style={nadrukStyle}>{w.entiteit_id}</tspan>
+                              </text>
+                              {!((w.representatienaam === null || w.representatienaam === undefined || w.representatienaam === '') && (w.representatie_id === null || w.representatie_id === undefined || w.representatie_id === '')) && (
+                                <text className="label" x="492" y={y + 46}>
+                                  {'rep='}
+                                  <tspan style={(w.representatienaam === null || w.representatienaam === undefined || w.representatienaam === '') ? undefined : nadrukStyle}>
+                                    {w.representatienaam || '-'}
+                                  </tspan>
+                                  {': '}
+                                  <tspan style={(w.representatie_id === null || w.representatie_id === undefined || w.representatie_id === '') ? undefined : nadrukStyle}>
+                                    {w.representatie_id || '-'}
+                                  </tspan>
+                                </text>
+                              )}
+                            </g>
+                          );
+                        })}
+
+                        {isOngedaanmaking && (
+                          <>
+                            <line x1="92" y1="10" x2="668" y2={grootKruisEindY} stroke="#dc2626" strokeWidth="4" strokeLinecap="round" />
+                            <line x1="668" y1="10" x2="92" y2={grootKruisEindY} stroke="#dc2626" strokeWidth="4" strokeLinecap="round" />
+                          </>
+                        )}
+
+                        {visualWijzigingen.length === 0 && <text className="label" x="230" y="170">Geen wijzigingen onder deze registratie</text>}
+                      </svg>
+                    )}
+
+                    {isOngedaanmaking ? (
+                      <>
+                        <h3 style={{ marginTop: 12 }}>Ongedaan gemaakte registratie</h3>
+                        {!ongedaanGemaakteRegistratieData ? (
+                          <p className="muted">Doelregistratie niet gevonden.</p>
+                        ) : (
+                          <>
+                            <p className="muted" style={{ margin: 0 }}>
+                              id={ongedaanGemaakteRegistratieData.id} | type={ongedaanGemaakteRegistratieData.registratietype} | tijdstip={microsecondeIntVanTijdstip(ongedaanGemaakteRegistratieData.tijdstip)}
+                            </p>
+                            {!!doelRegistratieOpmerking && (
+                              <p className="muted" style={{ marginTop: 6, marginBottom: 0 }}>
+                                {doelRegistratieOpmerking}
+                              </p>
+                            )}
+                            <h3 style={{ marginTop: 12 }}>Wijzigingen onder doelregistratie</h3>
+                            <ul>
+                              {ongedaanGemaakteWijzigingen.length === 0 && <li>Geen wijzigingen onder deze doelregistratie</li>}
+                              {ongedaanGemaakteWijzigingen.map((w, index) => (
+                                <li key={`wz-doel-${w.id || index}`}>
+                                  {w.wijzigingstype} | entiteit={w.entiteitnaam}:{w.entiteit_id} | rep={w.representatienaam || '-'}:{w.representatie_id || '-'}
+                                </li>
+                              ))}
+                            </ul>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <h3 style={{ marginTop: 12 }}>Wijzigingen</h3>
+                        <ul>
+                          {selectedRegistratieWijzigingen.length === 0 && <li>Geen wijzigingen onder deze registratie</li>}
+                          {selectedRegistratieWijzigingen.map((w, index) => (
+                            <li key={`wz-${w.id || index}`}>
+                              {w.wijzigingstype} | entiteit={w.entiteitnaam}:{w.entiteit_id} | rep={w.representatienaam || '-'}:{w.representatie_id || '-'}
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+
+              <div className="card">
+                <h2>Representaties</h2>
+                {!selectedA ? (
+                  <p className="muted">Geen entiteit geselecteerd.</p>
+                ) : (
+                  <svg className="graph" viewBox={`0 0 900 ${svgHoogte}`} preserveAspectRatio="xMidYMid meet">
+                    {geGroepenMetLayout.map((group) => {
+                      const minY = group.ys[0] || group.fromY;
+                      const maxY = group.ys[group.ys.length - 1] || group.fromY;
+                      const vertTop = Math.min(group.fromY, minY);
+                      const vertBottom = Math.max(group.fromY, maxY);
+                      const heeftTopKnik = group.sideIndex > 0;
+                      const trunkTop = Math.min(group.fromY, group.anchorY);
+                      const trunkBottom = Math.max(group.fromY, group.anchorY);
+
+                      return (
+                        <g key={`ge-conn-${group.key}`}>
+                          {heeftTopKnik && (
+                            <line x1={group.fromX} y1={trunkTop} x2={group.fromX} y2={trunkBottom} style={{ stroke: '#94a3b8', strokeWidth: 1.5 }} />
+                          )}
+                          <line x1={group.fromX} y1={group.fromY} x2={group.branchX} y2={group.fromY} style={{ stroke: '#94a3b8', strokeWidth: 1.5 }} />
+                          <line x1={group.branchX} y1={vertTop} x2={group.branchX} y2={vertBottom} style={{ stroke: '#94a3b8', strokeWidth: 1.5 }} />
+                          {group.ys.map((y, i) => (
+                            <line key={`ge-conn-${group.key}-${i}`} x1={group.branchX} y1={y} x2={group.targetX} y2={y} style={{ stroke: '#94a3b8', strokeWidth: 1.5 }} />
+                          ))}
+                        </g>
+                      );
+                    })}
+
+                    {geNodesVoorGrafiek.map((node) => {
+                      const x = node.side === 'left' ? 30 : 690;
+                      const width = 180;
+                      const textX = node.side === 'left' ? 42 : 700;
+                      const nodeFill = node.group?.kleur || '#ffffff';
+
+                      return (
+                        <g key={node.key}>
+                          <rect x={x} y={node.y - 30} rx="8" width={width} height="60" style={{ fill: nodeFill, stroke: '#334155', strokeWidth: 1.2 }} />
+                          <text className="label label-lg" x={x + width - 8} y={node.y - 16} textAnchor="end">
+                            opv: {node.item.opvoer ? microsecondeIntVanTijdstip(node.item.opvoer) : '-'}
+                          </text>
+                          <text className="label label-lg" x={textX} y={node.y - 8}>
+                            <tspan style={nadrukStyle}>{labelVoorChildType(node.group.doeltype, node.group.rolnaam)}</tspan>
+                            {' rel_id='}
+                            <tspan style={nadrukStyle}>{node.item.rel_id ?? node.item.id ?? '-'}</tspan>
+                          </text>
+                          <text className="label label-lg" x={textX} y={node.y + 12}>{korteSamenvatting(node.item)}</text>
+                        </g>
+                      );
+                    })}
+
+                    <g>
+                      <rect className="node" x="330" y="40" rx="10" width="240" height="80" style={{ fill: selectedEntiteitMeta?.kleur || '#dbeafe', strokeWidth: 2.8 }} />
+                      <text className="label label-lg" x="562" y="56" textAnchor="end">opv: {selectedA.opvoer ? microsecondeIntVanTijdstip(selectedA.opvoer) : '-'}</text>
+                      <text className="label" x="345" y="74">
+                        <tspan style={centraleEntiteitLabelStyle}>{entiteitType || 'E'}</tspan>
+                        {' id='}
+                        <tspan style={centraleEntiteitLabelStyle}>{selectedA.id}</tspan>
+                      </text>
+                    </g>
+
+                    {relatieNodesVoorGrafiek.length > 0 && (
+                      <>
+                        <line
+                          x1="362"
+                          y1="120"
+                          x2="362"
+                          y2={relatieNodesVoorGrafiek[relatieNodesVoorGrafiek.length - 1].y}
+                          style={{ stroke: '#334155', strokeWidth: 2.8 }}
+                        />
+                      </>
+                    )}
+
+                    {relatieNodesVoorGrafiek.map((node) => {
+                      const centraleEntiteitRechts = 570;
+                      const relW = 180;
+                      const relX = centraleEntiteitRechts - relW;
+                      const relH = 54;
+                      const relFill = node.group?.kleur || '#fff7ed';
+                      const secondBoxW = 84;
+                      const secondBoxH = 24;
+                      const secondBoxX = relX + relW - secondBoxW - 8;
+                      const secondBoxY = node.y + 18;
+                      return (
+                        <g key={node.key}>
+                          <line x1="362" y1={node.y} x2={relX} y2={node.y} style={{ stroke: '#334155', strokeWidth: 2.8 }} />
+                          <rect x={relX} y={node.y - 24} rx="8" width={relW} height={relH} style={{ fill: relFill, stroke: '#7c2d12', strokeWidth: 2.8 }} />
+                          <text className="label" x={relX + relW - 8} y={node.y - 10} textAnchor="end">
+                            opv: {node.item.opvoer ? microsecondeIntVanTijdstip(node.item.opvoer) : '-'}
+                          </text>
+                          <text className="label label-lg" x={relX + 10} y={node.y - 6}>
+                            <tspan style={nadrukStyle}>{labelVoorChildType(node.group.doeltype, node.group.rolnaam)}</tspan>
+                            {' rel_id='}
+                            <tspan style={nadrukStyle}>{node.item.rel_id ?? node.item.id ?? '-'}</tspan>
+                          </text>
+                          <text className="label" x={relX + 10} y={node.y + 12}>{korteSamenvatting(node.item)}</text>
+                          {!!node.tweedeEntiteitLabel && (
+                            <>
+                              <rect x={secondBoxX} y={secondBoxY} rx="6" width={secondBoxW} height={secondBoxH} style={{ fill: node.tweedeEntiteitKleur || '#dbeafe', stroke: node.tweedeEntiteitRandkleur || '#1e3a8a', strokeWidth: 2 }} />
+                              <text className="label" x={secondBoxX + 6} y={secondBoxY + 16}>
+                                <tspan style={nadrukStyle}>{node.tweedeEntiteitType || 'Ent'}</tspan>
+                                {' id='}
+                                <tspan style={nadrukStyle}>{node.tweedeEntiteitIDTekst || '-'}</tspan>
+                              </text>
+                            </>
+                          )}
+                        </g>
+                      );
+                    })}
+
+                    {geNodesVoorGrafiek.length === 0 && relatieNodesVoorGrafiek.length === 0 && (
+                      <text className="label" x="300" y="240">Geen gegevenselementen of relaties onder deze entiteit</text>
+                    )}
+                  </svg>
+                )}
+              </div>
+            </div>
+
+            <div className="row" style={{ gridTemplateColumns: '1fr 1fr' }}>
+              {childGroups.length === 0 && (
+                <div className="card">
+                  <h3>Gegevenselement-details</h3>
+                  <ul>
+                    <li>Geen records</li>
+                  </ul>
+                </div>
+              )}
+
+              {childGroupsGesorteerd.map((group) => {
+                const typeLabel = labelVoorChildType(group.doeltype, group.rolnaam);
+                const items = safeArray(group.items);
+                return (
+                  <div className="card" key={`details-${group.rolnaam}`}>
+                    <h3>{typeLabel.toUpperCase()}-details</h3>
+                    <ul>
+                      {items.length === 0 && <li>Geen {typeLabel}-records</li>}
+                      {items.map((item, index) => (
+                        <li key={`${group.rolnaam}-${index}`}>
+                          {veldEntries(item).map(([k, v]) => `${k}=${v ?? '-'}`).join(' | ')}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+  </body>
+</html>

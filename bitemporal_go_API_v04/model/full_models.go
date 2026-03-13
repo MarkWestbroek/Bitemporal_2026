@@ -40,6 +40,13 @@ func (a *Full_A) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentat
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_V", Representatie: &a.Vs[i]})
 	}
 
+	for i := range a.Ws {
+		if a.Ws[i].A_ID == 0 {
+			a.Ws[i].A_ID = a.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_W", Representatie: &a.Ws[i]})
+	}
+
 	for i := range a.RelABs {
 		if a.RelABs[i].A_ID == 0 {
 			a.RelABs[i].A_ID = a.ID
@@ -91,6 +98,9 @@ type Full_A struct {
 		OPM: nu in de MetaRegistry opgenomen als Momentvoorkomen: Meervoudig.
 	*/
 	Vs []A_V `bun:"rel:has-many,join:id=a_id" json:"vs,omitempty"`
+
+	// De W's behorende bij A, meervoudig op enig moment
+	Ws []A_W `bun:"rel:has-many,join:id=a_id" json:"ws,omitempty"`
 
 	//Relaties Rel_AB's bij A (meervoudig op enig moment)
 	RelABs []Rel_A_B `bun:"rel:has-many,join:id=a_id" json:"rel_abs,omitempty"`

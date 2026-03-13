@@ -105,6 +105,7 @@ func NewRouter() *gin.Engine {
 
 	//Homepage
 	router.GET("/", handlers.HomePage)
+	router.GET("/api/viz/schema", handlers.MaakVizSchemaHandler())
 	router.Static("/viz", "./web")
 
 	// Version endpoint

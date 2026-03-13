@@ -42,9 +42,17 @@ func AddRoutes(router *gin.Engine) {
 	router.GET("/a_vs/:id", handlers.MakeGetEntityHandler[model.A_V]("A_V"))
 	router.POST("/a_vs", handlers.MakeAddEntityHandler[model.A_V]("A_V"))
 
+	router.GET("/a_ws", handlers.MakeGetEntitiesHandler[model.A_W]("A_Ws"))
+	router.GET("/a_ws/:id", handlers.MakeGetEntityHandler[model.A_W]("A_W"))
+	router.POST("/a_ws", handlers.MakeAddEntityHandler[model.A_W]("A_W"))
+
 	router.GET("/b_xs", handlers.MakeGetEntitiesHandler[model.B_X]("B_Xs"))
 	router.GET("/b_xs/:id", handlers.MakeGetEntityHandler[model.B_X]("B_X"))
 	router.POST("/b_xs", handlers.MakeAddEntityHandler[model.B_X]("B_X"))
+
+	router.GET("/b_ys", handlers.MakeGetEntitiesHandler[model.B_Y]("B_Ys"))
+	router.GET("/b_ys/:id", handlers.MakeGetEntityHandler[model.B_Y]("B_Y"))
+	router.POST("/b_ys", handlers.MakeAddEntityHandler[model.B_Y]("B_Y"))
 
 	// Registratie routes
 	router.GET("/registraties", handlers.MakeGetEntitiesHandler[model.Registratie]("Registraties"))
@@ -57,9 +65,9 @@ func AddRoutes(router *gin.Engine) {
 	router.POST("/wijzigingen", handlers.MakeAddEntityHandler[model.Wijziging]("Wijziging"))
 
 	// Full entity routes
-	router.GET("/full/as", handlers.MakeGetFullEntitiesHandler[model.Full_A]("As", []string{"Us", "Vs", "RelABs"}))
-	router.GET("/full/as/:id", handlers.MakeGetFullEntityHandler[model.Full_A]("A", []string{"Us", "Vs", "RelABs"}))
-	router.POST("/full/as", handlers.MakeAddFullEntityHandler[model.Full_A]("Full_A", []string{"Us", "Vs", "RelABs"}))
+	router.GET("/full/as", handlers.MakeGetFullEntitiesHandler[model.Full_A]("As", []string{"Us", "Vs", "Ws", "RelABs"}))
+	router.GET("/full/as/:id", handlers.MakeGetFullEntityHandler[model.Full_A]("A", []string{"Us", "Vs", "Ws", "RelABs"}))
+	router.POST("/full/as", handlers.MakeAddFullEntityHandler[model.Full_A]("Full_A", []string{"Us", "Vs", "Ws", "RelABs"}))
 
 	router.GET("/full/bs", handlers.MakeGetFullEntitiesHandler[model.Full_B]("Bs", []string{"Xs", "Ys"}))
 	router.GET("/full/bs/:id", handlers.MakeGetFullEntityHandler[model.Full_B]("B", []string{"Xs", "Ys"}))

@@ -190,6 +190,14 @@
         return Number.isNaN(parsed) ? 0 : parsed;
       }
 
+      async function fetchVizSchema(baseUrl) {
+        const res = await fetch(`${baseUrl}/api/viz/schema`);
+        if (!res.ok) {
+          throw new Error(`Schema HTTP ${res.status}: ${res.statusText}`);
+        }
+        return await res.json();
+      }
+
       function App() {
         const [baseUrl, setBaseUrl] = useState(window.location.origin);
         const [t, setT] = useState(1);
@@ -200,6 +208,32 @@
         const [registratieData, setRegistratieData] = useState(null);
         const [ongedaanGemaakteRegistratieData, setOngedaanGemaakteRegistratieData] = useState(null);
         const [selectedAId, setSelectedAId] = useState('');
+        const [vizSchema, setVizSchema] = useState(null);
+        const [schemaError, setSchemaError] = useState('');
+
+        useEffect(() => {
+          let cancelled = false;
+
+          async function loadSchema() {
+            setSchemaError('');
+            try {
+              const schema = await fetchVizSchema(baseUrl);
+              if (!cancelled) {
+                setVizSchema(schema);
+              }
+            } catch (err) {
+              if (!cancelled) {
+                setVizSchema(null);
+                setSchemaError(err instanceof Error ? err.message : String(err));
+              }
+            }
+          }
+
+          loadSchema();
+          return () => {
+            cancelled = true;
+          };
+        }, [baseUrl]);
 
         async function loadData({ tValue = t, registratieIdValue = registratieId, selecteerVanuitRegistratie = false } = {}) {
           setLoading(true);
@@ -382,6 +416,11 @@
             <p style={{ margin: '0 0 8px' }}><a className="muted" href="/viz/tijdlijn.html">Open tijdslijnvisualisatie</a></p>
             <p className="muted">Kies registratie-id of peilmoment, en volg desgewenst een specifieke entiteit.
               Tip: ←/→ navigeert registratie-id, ↑/↓ navigeert peilmoment t.</p>
+            <p className="muted" style={{ marginTop: 0 }}>
+              {schemaError
+                ? `Schema niet geladen: ${schemaError}`
+                : `Schema: ${vizSchema?.versie || '-'} | types: ${safeArray(vizSchema?.types).length}`}
+            </p>
 
             <div className="card">
               <div className="controls" style={{ gridTemplateColumns: 'repeat(4, minmax(180px, 1fr))' }}>
@@ -592,7 +631,6 @@
                         {' id='}
                         <tspan style={nadrukStyle}>{selectedA.id}</tspan>
                       </text>
-                      <text className="label label-lg" x="345" y="175">opvoer={selectedA.opvoer ? microsecondeIntVanTijdstip(selectedA.opvoer) : '-'}</text>
                     </g>
 
                     {vs.map((v, i) => {

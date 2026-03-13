@@ -13,6 +13,7 @@ const (
 // OnderliggendGegevenselement describes a related field on an entity and its multiplicity.
 type OnderliggendGegevenselement struct {
 	Rolnaam         string
+	JSONRolnaam     string
 	Doeltype        string
 	Momentvoorkomen Momentvoorkomen // enkelvoudig of meervoudig = het voorkomen op enig moment in de tijd
 }
@@ -39,6 +40,8 @@ type TypeMeta struct {
 	// ==== JSON ====
 	// Veldnaam is the JSON field name used in REST requests (bijv. "a", "b", "rel_a_b", "u").
 	Veldnaam string
+	// Kleur is een optionele visualisatiekleur (bijv. "#eef6ff").
+	Kleur string
 	// Factory creates a new zero-value instance of the concrete Representatie struct.
 	Factory func() Representatie
 

@@ -223,6 +223,14 @@
         return json.Registratie || json;
       }
 
+      async function fetchVizSchema(baseUrl) {
+        const res = await fetch(`${baseUrl}/api/viz/schema`);
+        if (!res.ok) {
+          throw new Error(`Schema HTTP ${res.status}: ${res.statusText}`);
+        }
+        return await res.json();
+      }
+
       function App() {
         const [baseUrl, setBaseUrl] = useState(window.location.origin);
         const [aId, setAId] = useState(1);
@@ -232,7 +240,33 @@
         const [error, setError] = useState("");
         const [timelineItems, setTimelineItems] = useState([]);
         const [overlayArrows, setOverlayArrows] = useState([]);
+        const [vizSchema, setVizSchema] = useState(null);
+        const [schemaError, setSchemaError] = useState("");
         const timelineRowRef = useRef(null);
+
+        useEffect(() => {
+          let cancelled = false;
+
+          async function loadSchema() {
+            setSchemaError("");
+            try {
+              const schema = await fetchVizSchema(baseUrl);
+              if (!cancelled) {
+                setVizSchema(schema);
+              }
+            } catch (err) {
+              if (!cancelled) {
+                setVizSchema(null);
+                setSchemaError(err instanceof Error ? err.message : String(err));
+              }
+            }
+          }
+
+          loadSchema();
+          return () => {
+            cancelled = true;
+          };
+        }, [baseUrl]);
 
         const totaal = useMemo(() => timelineItems.length, [timelineItems]);
         const regRowViewBoxHeight = useMemo(() => {
@@ -506,6 +540,11 @@
           <div className="container">
             <h1 className="page-title">Visualisatie tijdreizen (formele tijd) - tijdslijn</h1>
             <p className="muted">Horizontale tijdslijn voor entiteit A met alleen registratie- en representatievisualisaties.</p>
+            <p className="muted" style={{ marginTop: 0 }}>
+              {schemaError
+                ? `Schema niet geladen: ${schemaError}`
+                : `Schema: ${vizSchema?.versie || '-'} | types: ${safeArray(vizSchema?.types).length}`}
+            </p>
 
             <div className="card">
               <div className="controls">
