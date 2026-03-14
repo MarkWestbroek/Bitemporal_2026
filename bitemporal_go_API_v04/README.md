@@ -47,20 +47,33 @@ In addition it allows to correct data (in fact correct registrations and the reg
 
 ## Visualisatie (React, zonder build-tooling)
 
-Er is een eenvoudige visualisatiepagina beschikbaar op:
+De actieve visualisaties zijn nu de twee schema-varianten:
 
-- `http://localhost:8080/viz`
+- `http://localhost:8080/viz` of `http://localhost:8080/viz/index_schema.html`
+- `http://localhost:8080/viz/tijdlijn_schema.html`
 
-Deze pagina:
+De index-pagina:
 
-- haalt data op via `GET /full/as/?t=<peilmoment>`
-- laat je het peilmoment (`t`) kiezen
-- laat je een entiteit A kiezen uit de response
-- toont een grafische representatie van A met gekoppelde U- en V-records
+- haalt schema op via `GET /api/viz/schema`
+- toont entiteiten, gegroepeerde GEs en relaties op basis van het actuele schema
+- ondersteunt opvoeren van nieuwe entiteiten, registreren van wijzigingen, correcties en ongedaanmakingen
+- maakt `opv:`-waarden klikbaar zodat je direct naar de registratiedetails navigeert
+
+De tijdslijn-pagina:
+
+- toont alleen registraties die relevant zijn voor de gekozen entiteit
+- combineert registratie- en snapshotvisualisatie in een horizontale tijdslijn
+- visualiseert ongedaanmakingen met pijlen en highlights naar de ongedaan gemaakte representaties
+- ondersteunt `Download PNG` en `Kopieer PNG` voor export van de tijdslijn
+
+Verouderde pagina's blijven beschikbaar als archief:
+
+- `http://localhost:8080/viz/index_oud.html`
+- `http://localhost:8080/viz/tijdlijn_oud.html`
 
 Opmerking:
 
-- De pagina gebruikt React via CDN (`unpkg`), dus internettoegang is nodig om de scripts te laden.
+- De pagina's gebruiken React via CDN (`unpkg`), dus internettoegang is nodig om de scripts te laden.
 
 ## Admin endpoint security
 
@@ -428,6 +441,7 @@ Deregister U5 and register U6 for entity A:
 25 react pagina's uitbreiden met:
 - (latere!) ongedaangemaaktheid van regs tonen
 - enkel- meervoudigheid op formulier tonen
+- type is nu umber of string, terwijl in de struct int of float of string is: kan dat ook over naar typescript?
 - type tonen en verplichtheid
 - keuzelijsten, enums? hoe dat te doen?
 

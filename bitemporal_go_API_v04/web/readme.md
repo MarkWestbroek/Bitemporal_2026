@@ -2,6 +2,21 @@
 
 Dit document beschrijft de actieboxen in `index_schema.html`.
 
+## Actieve en verouderde pagina's
+
+Actief (te gebruiken):
+
+- `/viz` (redirect naar `/viz/index_schema.html`)
+- `/viz/index_schema.html`
+- `/viz/tijdlijn_schema.html`
+
+Verouderd (alleen archief):
+
+- `/viz/index.html` (deprecated entrypoint, redirect)
+- `/viz/tijdlijn.html` (deprecated entrypoint, redirect)
+- `/viz/index_oud.html` (oude implementatie)
+- `/viz/tijdlijn_oud.html` (oude implementatie)
+
 ## Overzicht
 
 Er zijn twee soorten actieboxen:
