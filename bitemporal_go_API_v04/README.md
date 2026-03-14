@@ -415,28 +415,41 @@ Deregister U5 and register U6 for entity A:
 
 10 loop tijdsreizen nog eens na (KVK voorbeelden) want corrigeren is nu nog hetzelfde als wijzigen. Je hebt twee soorten tijdreizen (of 3).
 
-20 react pagina's
+20 react met vite maken
+
+21 react pagina's
 - enkelvoudig meervoudig tonen (1 of *)
 - corrigeert registratie lijntje tekenen?
 
 25 react pagina's uitbreiden met:
 - (latere!) ongedaangemaaktheid van regs tonen
 - enkel- meervoudigheid op formulier tonen
-- type is nu umber of string, terwijl in de struct int of float of string is: kan dat ook over naar typescript?
-- type tonen en verplichtheid
-- keuzelijsten, enums? hoe dat te doen?
+- type is nu number of string (of bool of datetime), terwijl in de struct int of float of string (of book of datetime) is: kan dat ook over naar typescript? dus onderscheid geheel, gebroken getal
+- misschien al neigen naar OAS met format? Of hoe doet GraphQL dat?
+- in formulier het type, verplichtheid en enkel of meervoudigheid reflecteren
+- in formulier: soort invoerveld en validatie volgt type
+- in formulier, maar ook in het algemeen (zie LGM metamodel): keuzelijsten, enums? hoe dat te doen?
 
 30 log alle requests en responses van /registratie/
 - alle opvragen nog maar even niet
 
-
 50 Autonumber Entiteit-IDs? Simpel maar wenselijk?
-60 pbac, pep inbouwen
+
+60 pbac: wat is een goed policy formaat?
+61 pip maken op basis van metamodel?
+62 pep inbouwen
 
 ## TO DO MATERIEEL = REDESIGN!
 1 In modellen de materiële tijd toevoegen = aanvang en einde, Standaard element hergebruiken? Maar is foreign key per representatie, dus voor elke representatie een aparte {REP}_Aanvang + {REP}_Einde
 
 2 Full handlers uitbreiden met meer dan één laag diepe relaties (vanwege bovenstaande mogelijke materiele 'mickey mouse oortjes' op entiteiten en gegevenselementen)
+
+3 Dan heeft het GE een drievoudige PFK:
+- `entiteit-id`
+- `{ent}_{GE}.rel-id`
+- `{ent}_{GE}_data.versie`
+
+4 model reengineeren met toch een tussentabel tussen Entiteit en GE, vanwege materieel, en ook vanwege betere correctiemogelijkheid
 
 5 Andere optie is iets slimmers dan dit
 6 plus functie ipv de standaard insert waar je bij een post gewoon aanvang/einde meegeeft, maar bijzonder wegschrijft. Correctie en ongedaanmaking hebben het vooral moeilijk
