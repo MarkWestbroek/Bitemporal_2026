@@ -229,6 +229,11 @@ func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratie model.Regi
 			}
 		}
 
+		// Alleen ClearID() als de DB het ID toekent via autoincrement (RelatieveAutoincrement=true).
+		// Entiteiten hebben een door de gebruiker opgegeven ID en mogen niet worden leeggemaakt.
+		if meta.RelatieveAutoincrement {
+			representatie.ClearID()
+		}
 		representatie.SetOpvoer(&registratie.Tijdstip)
 		_, err := tx.NewInsert().
 			Model(representatie).

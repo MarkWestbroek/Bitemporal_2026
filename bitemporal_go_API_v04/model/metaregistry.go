@@ -18,7 +18,7 @@ var MetaRegistry = MetaRegistryType{
 		// Alleen voor gegevenselementen/relaties:
 		// die hebben een FK naar een of twee entiteiten
 		HeeftPFK:                  false,
-		RelatieveAutoincrement:    true,
+		RelatieveAutoincrement:    false,
 		EntiteitIDKolom:           "",
 		SecondaireEntiteitIDKolom: "",
 		// Alleen voor entiteiten: de onderliggende gegevenselementen/relaties
