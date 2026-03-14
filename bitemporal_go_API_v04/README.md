@@ -451,6 +451,7 @@ Deregister U5 and register U6 for entity A:
 
 4 model reengineeren met toch een tussentabel tussen Entiteit en GE, vanwege materieel, en ook vanwege betere correctiemogelijkheid
 
-5 Andere optie is iets slimmers dan dit
-6 plus functie ipv de standaard insert waar je bij een post gewoon aanvang/einde meegeeft, maar bijzonder wegschrijft. Correctie en ongedaanmaking hebben het vooral moeilijk
+5 hoe doe je dit API-technisch? Volg je het model strak, of plat je iets af?
+- dus maak je van aanvang of einde een sub-element, of zit het plat in een Ent/GE/Rel?
+- voordeel subelement is dat het duidelijker is dat je ook los kunt wijzigen of corrigeren
 
