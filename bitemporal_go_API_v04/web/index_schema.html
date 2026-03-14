@@ -76,6 +76,18 @@
         font-size: 13px;
         fill: #0f172a;
       }
+      .opv-link {
+        cursor: pointer;
+      }
+      .opv-link:hover {
+        text-decoration: underline;
+        fill: #1d4ed8;
+        animation: opvPulse 0.8s ease-in-out infinite alternate;
+      }
+      @keyframes opvPulse {
+        from { opacity: 1; }
+        to { opacity: 0.45; }
+      }
       .label-lg {
         font-size: 15px;
       }
@@ -112,7 +124,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script type="text/babel">
-      const { useEffect, useMemo, useState } = React;
+      const { useEffect, useMemo, useRef, useState } = React;
 
       function safeArray(value) {
         return Array.isArray(value) ? value : [];
@@ -221,6 +233,18 @@
         const fraction = match[1].slice(0, 6).padEnd(6, '0');
         const parsed = Number.parseInt(fraction, 10);
         return Number.isNaN(parsed) ? 0 : parsed;
+      }
+
+      function registratieIDUitOpvoerTijdstip(tijdstipRaw) {
+        const viaMicroseconde = microsecondeIntVanTijdstip(tijdstipRaw);
+        if (Number.isInteger(viaMicroseconde) && viaMicroseconde > 0) {
+          return viaMicroseconde;
+        }
+        const viaT = tUitRegistratieTijdstip(tijdstipRaw);
+        if (Number.isInteger(viaT) && viaT > 0) {
+          return viaT;
+        }
+        return 0;
       }
 
       function endpointSegmentVoorEntiteit(entiteitType) {
@@ -341,6 +365,14 @@
         return await res.json();
       }
 
+      async function fetchVizEntiteitMaxID(baseUrl, typeNaam) {
+        const res = await fetch(`${baseUrl}/api/viz/entiteit/${encodeURIComponent(typeNaam)}/max-id`);
+        if (!res.ok) {
+          throw new Error(`Max-id HTTP ${res.status}: ${res.statusText}`);
+        }
+        return await res.json();
+      }
+
       function App() {
         const [baseUrl, setBaseUrl] = useState(window.location.origin);
         const [entiteitType, setEntiteitType] = useState('A');
@@ -357,15 +389,36 @@
         const [schemaError, setSchemaError] = useState('');
         const [geselecteerdeRep, setGeselecteerdeRep] = useState(null); // { item, group }
         const [entiteitActieOpen, setEntiteitActieOpen] = useState(false);
+        const [nieuweEntiteitActieOpen, setNieuweEntiteitActieOpen] = useState(false);
+        const [nieuweEntiteitID, setNieuweEntiteitID] = useState('');
+        const [nieuweEntiteitIDInfo, setNieuweEntiteitIDInfo] = useState({ loading: false, maxId: null, nextId: null, error: '' });
         const [entiteitNieuweGegevens, setEntiteitNieuweGegevens] = useState([]); // [{ id, groupKey, values }]
         const [entiteitNieuweRelaties, setEntiteitNieuweRelaties] = useState([]); // [{ id, groupKey, values }]
+        const [nieuweEntiteitGegevens, setNieuweEntiteitGegevens] = useState([]); // [{ id, groupKey, values }]
+        const [nieuweEntiteitRelaties, setNieuweEntiteitRelaties] = useState([]); // [{ id, groupKey, values }]
         const [entiteitNieuweGegevensVolgendId, setEntiteitNieuweGegevensVolgendId] = useState(1);
         const [entiteitNieuweRelatiesVolgendId, setEntiteitNieuweRelatiesVolgendId] = useState(1);
+        const [nieuweEntiteitGegevensVolgendId, setNieuweEntiteitGegevensVolgendId] = useState(1);
+        const [nieuweEntiteitRelatiesVolgendId, setNieuweEntiteitRelatiesVolgendId] = useState(1);
         const [relatieSecondaireOpties, setRelatieSecondaireOpties] = useState({}); // groupKey -> { loading, ids, error }
         const [actieOpmerking, setActieOpmerking] = useState('');
+        const [nieuweEntiteitOpmerking, setNieuweEntiteitOpmerking] = useState('');
         const [actieFormVelden, setActieFormVelden] = useState({});
         const [actieBezig, setActieBezig] = useState(false);
+        const [nieuweEntiteitBezig, setNieuweEntiteitBezig] = useState(false);
         const [actieResultaat, setActieResultaat] = useState(null); // { ok, bericht }
+        const [nieuweEntiteitResultaat, setNieuweEntiteitResultaat] = useState(null); // { ok, bericht }
+
+        const nieuweEntiteitFormRef = useRef(null);
+        const registratieActieFormRef = useRef(null);
+
+        const [registratieActieOpen, setRegistratieActieOpen] = useState(false);
+        const [registratieActieBezig, setRegistratieActieBezig] = useState(false);
+        const [registratieActieResultaat, setRegistratieActieResultaat] = useState(null);
+        const [registratieActieOpmerking, setRegistratieActieOpmerking] = useState('');
+        const [registratieOngedaanBevestiging, setRegistratieOngedaanBevestiging] = useState(false);
+        const [registratieCorrigeerActief, setRegistratieCorrigeerActief] = useState(false);
+        const [registratieCorrigeerVelden, setRegistratieCorrigeerVelden] = useState({});
 
         const entiteitTypen = useMemo(() => {
           const allTypes = safeArray(vizSchema?.types);
@@ -707,8 +760,94 @@
           }
         }, [selectedA, selectedEntiteitMeta, entiteitType, entiteitNieuweGegevens, entiteitNieuweRelaties, actieOpmerking, gegevenselementGroepOpties, relatieGroepOpties]);
 
+        const nieuweEntiteitOpvoerPreview = useMemo(() => {
+          if (!selectedEntiteitMeta) return null;
+          try {
+            const entiteitVeldnaam = selectedEntiteitMeta.veldnaam || String(entiteitType || '').toLowerCase();
+            const opmerking = nieuweEntiteitOpmerking.trim() || undefined;
+            const registratie = { registratietype: 'registratie', ...(opmerking ? { opmerking } : {}) };
+            const idNummer = Number(nieuweEntiteitID);
+            if (!Number.isInteger(idNummer) || idNummer <= 0) {
+              throw new Error('Entiteit-id moet een positief geheel getal zijn.');
+            }
+
+            const wijzigingen = [{ opvoer: { [entiteitVeldnaam]: { id: idNummer } } }];
+
+            const alleRijen = [
+              ...nieuweEntiteitGegevens.map((row) => ({ row, opties: gegevenselementGroepOpties })),
+              ...nieuweEntiteitRelaties.map((row) => ({ row, opties: relatieGroepOpties })),
+            ];
+
+            alleRijen.forEach(({ row, opties }) => {
+              const optie = opties.find((o) => o.groupKey === row.groupKey);
+              if (!optie) throw new Error('Onbekend type in nieuwe-entiteit-opvoer.');
+              const item = {};
+              if (optie.entiteitIDKolom) item[optie.entiteitIDKolom] = idNummer;
+              safeArray(optie.veldDefinities).forEach((veld) => {
+                const raw = row?.values?.[veld.naam];
+                if (raw === undefined || raw === null || raw === '') return;
+                item[veld.naam] = coercedWaardeVoorType(raw, veld.type, `${optie.label}.${veld.naam}`);
+              });
+              wijzigingen.push({ opvoer: { [optie.geVeldnaam]: item } });
+            });
+
+            return { ok: true, payload: { registratie, wijzigingen } };
+          } catch (err) {
+            return { ok: false, fout: String(err?.message || err) };
+          }
+        }, [selectedEntiteitMeta, entiteitType, nieuweEntiteitOpmerking, nieuweEntiteitID, nieuweEntiteitGegevens, nieuweEntiteitRelaties, gegevenselementGroepOpties, relatieGroepOpties]);
+
         useEffect(() => {
-          if (!entiteitActieOpen) {
+          if (!nieuweEntiteitActieOpen || !entiteitType) {
+            return;
+          }
+
+          let cancelled = false;
+          setNieuweEntiteitIDInfo({ loading: true, maxId: null, nextId: null, error: '' });
+
+          fetchVizEntiteitMaxID(baseUrl, entiteitType)
+            .then((json) => {
+              if (cancelled) return;
+              const nextID = Number(json?.nextId || 1);
+              setNieuweEntiteitIDInfo({ loading: false, maxId: Number(json?.maxId || 0), nextId: nextID, error: '' });
+              setNieuweEntiteitID(String(nextID));
+            })
+            .catch((err) => {
+              if (cancelled) return;
+              setNieuweEntiteitIDInfo({ loading: false, maxId: null, nextId: null, error: String(err?.message || err) });
+            });
+
+          return () => {
+            cancelled = true;
+          };
+        }, [baseUrl, entiteitType, nieuweEntiteitActieOpen]);
+
+        useEffect(() => {
+          if (!nieuweEntiteitActieOpen) {
+            return;
+          }
+          const node = nieuweEntiteitFormRef.current;
+          if (!node || typeof node.scrollIntoView !== 'function') {
+            return;
+          }
+          node.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, [nieuweEntiteitActieOpen]);
+
+        useEffect(() => {
+          if (!registratieActieOpen) return;
+          const node = registratieActieFormRef.current;
+          if (!node || typeof node.scrollIntoView !== 'function') return;
+          node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, [registratieActieOpen]);
+
+        useEffect(() => {
+          setRegistratieActieOpen(false);
+          setRegistratieCorrigeerActief(false);
+          setRegistratieOngedaanBevestiging(false);
+        }, [registratieId]);
+
+        useEffect(() => {
+          if (!entiteitActieOpen && !nieuweEntiteitActieOpen) {
             return;
           }
 
@@ -747,7 +886,7 @@
                 }));
               });
           });
-        }, [baseUrl, entiteitActieOpen, relatieGroepOpties, relatieSecondaireOpties]);
+        }, [baseUrl, entiteitActieOpen, nieuweEntiteitActieOpen, relatieGroepOpties, relatieSecondaireOpties]);
 
         // Live preview voor de rep-actiebox (afvoer + correctie).
         const repActiePreview = useMemo(() => {
@@ -952,6 +1091,7 @@
             .filter(([k]) => !plumbingVelden.has(k))
             .forEach(([k, v]) => { bewerkbaar[k] = v ?? ''; });
           setEntiteitActieOpen(false);
+          setNieuweEntiteitActieOpen(false);
           setGeselecteerdeRep({ item, group });
           setActieFormVelden(bewerkbaar);
           setActieOpmerking('');
@@ -983,6 +1123,7 @@
           if (!selectedA) {
             return;
           }
+          setNieuweEntiteitActieOpen(false);
           setGeselecteerdeRep(null);
           setEntiteitActieOpen(true);
           setActieResultaat(null);
@@ -1054,6 +1195,225 @@
             : row)));
         }
 
+        function voegNieuweEntiteitGegevenRijToe(groupKey) {
+          const optie = gegevenselementGroepOpties.find((o) => o.groupKey === groupKey) || gegevenselementGroepOpties[0];
+          if (!optie) {
+            return;
+          }
+          setNieuweEntiteitGegevens((prev) => [...prev, {
+            id: nieuweEntiteitGegevensVolgendId,
+            groupKey: optie.groupKey,
+            values: initialiseerGeWaardenVoorOptie(optie),
+          }]);
+          setNieuweEntiteitGegevensVolgendId((prev) => prev + 1);
+        }
+
+        function voegNieuweEntiteitRelatieRijToe(groupKey) {
+          const optie = relatieGroepOpties.find((o) => o.groupKey === groupKey) || relatieGroepOpties[0];
+          if (!optie) {
+            return;
+          }
+          setNieuweEntiteitRelaties((prev) => [...prev, {
+            id: nieuweEntiteitRelatiesVolgendId,
+            groupKey: optie.groupKey,
+            values: initialiseerGeWaardenVoorOptie(optie),
+          }]);
+          setNieuweEntiteitRelatiesVolgendId((prev) => prev + 1);
+        }
+
+        function zoekGroupEnItemVoorWijziging(w) {
+          if (!w.representatienaam || !w.representatie_id) return null;
+          for (const group of childGroups) {
+            const typeNaam = String(group.doeltype || '').toLowerCase();
+            const rolNaam = String(group.rolnaam || '').toLowerCase();
+            const repNaam = String(w.representatienaam || '').toLowerCase();
+            if (typeNaam === repNaam || rolNaam === repNaam) {
+              const gevonden = group.items.find((item) => String(item.rel_id ?? item.id) === String(w.representatie_id));
+              if (gevonden) return { group, item: gevonden };
+            }
+          }
+          return null;
+        }
+
+        function openRegistratieActieBox() {
+          if (!selectedRegistratie) return;
+          setRegistratieCorrigeerActief(false);
+          setRegistratieOngedaanBevestiging(false);
+          setRegistratieActieResultaat(null);
+          setRegistratieActieOpmerking('');
+          setRegistratieActieOpen(true);
+        }
+
+        function openRegistratieCorrigeren() {
+          const initieleVelden = {};
+          selectedRegistratieWijzigingen
+            .filter((w) => w.wijzigingstype === 'opvoer' && w.representatienaam && w.representatie_id)
+            .forEach((w) => {
+              const match = zoekGroupEnItemVoorWijziging(w);
+              if (match) {
+                const bewerkbaar = {};
+                veldEntries(match.item)
+                  .filter(([k]) => !plumbingVelden.has(k))
+                  .forEach(([k, v]) => { bewerkbaar[k] = String(v ?? ''); });
+                initieleVelden[String(w.representatie_id)] = bewerkbaar;
+              }
+            });
+          setRegistratieCorrigeerVelden(initieleVelden);
+          setRegistratieCorrigeerActief(true);
+          setRegistratieActieResultaat(null);
+        }
+
+        async function voerRegistratieOngedaanMakingUit() {
+          if (!selectedRegistratie) return;
+          setRegistratieActieBezig(true);
+          setRegistratieActieResultaat(null);
+          try {
+            const opmerking = registratieActieOpmerking.trim() || undefined;
+            const payload = {
+              registratie: {
+                registratietype: 'ongedaanmaking',
+                maakt_ongedaan_registratie_id: selectedRegistratie.id,
+                ...(opmerking ? { opmerking } : {}),
+              },
+              wijzigingen: [],
+            };
+            const res = await fetch(`${baseUrl}/registratie/`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            });
+            const json = await res.json().catch(() => ({}));
+            if (res.ok) {
+              const nieuweRegistratieID = registratieIDUitResponse(json);
+              setRegistratieActieResultaat({ ok: true, bericht: `Ongedaanmaking geslaagd (nieuwe registratie id=${nieuweRegistratieID || '-'})` });
+              setRegistratieActieOpen(false);
+              setRegistratieOngedaanBevestiging(false);
+              if (nieuweRegistratieID > 0) {
+                setRegistratieId(nieuweRegistratieID);
+                await loadData({ tValue: t, registratieIdValue: nieuweRegistratieID, selecteerVanuitRegistratie: true });
+              } else {
+                await loadData();
+              }
+            } else {
+              setRegistratieActieResultaat({ ok: false, bericht: json.error || `HTTP ${res.status}: ${res.statusText}` });
+            }
+          } catch (err) {
+            setRegistratieActieResultaat({ ok: false, bericht: String(err?.message || err) });
+          } finally {
+            setRegistratieActieBezig(false);
+          }
+        }
+
+        async function voerRegistratieCorrectieUit() {
+          if (!selectedRegistratie) return;
+          setRegistratieActieBezig(true);
+          setRegistratieActieResultaat(null);
+          try {
+            const opmerking = registratieActieOpmerking.trim() || undefined;
+            const registratie = { registratietype: 'correctie', ...(opmerking ? { opmerking } : {}) };
+            const wijzigingen = selectedRegistratieWijzigingen
+              .filter((w) => w.wijzigingstype === 'opvoer' && w.representatienaam && w.representatie_id)
+              .map((w) => {
+                const match = zoekGroupEnItemVoorWijziging(w);
+                if (!match) return null;
+                const { group, item } = match;
+                if (item.afvoer != null && item.afvoer !== '' && item.afvoer !== 0) return null;
+                const veldnaam = group.typeMeta?.veldnaam || String(group.doeltype || w.representatienaam).toLowerCase();
+                const bewerkteVelden = registratieCorrigeerVelden[String(w.representatie_id)] || {};
+                const nieuwItem = { ...item };
+                Object.entries(bewerkteVelden).forEach(([k, v]) => {
+                  const origineel = item[k];
+                  if (typeof origineel === 'number') {
+                    const parsed = Number(v);
+                    nieuwItem[k] = Number.isNaN(parsed) ? v : parsed;
+                  } else if (typeof origineel === 'boolean') {
+                    nieuwItem[k] = v === 'true' || v === true;
+                  } else {
+                    nieuwItem[k] = v;
+                  }
+                });
+                return { opvoer: { [veldnaam]: nieuwItem } };
+              })
+              .filter(Boolean);
+            if (wijzigingen.length === 0) {
+              throw new Error('Geen corrigeerbare opvoer-wijzigingen gevonden (representaties zijn mogelijk afgevoerd of niet geladen).');
+            }
+            const res = await fetch(`${baseUrl}/registratie/`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ registratie, wijzigingen }),
+            });
+            const json = await res.json().catch(() => ({}));
+            if (res.ok) {
+              const nieuweRegistratieID = registratieIDUitResponse(json);
+              setRegistratieActieResultaat({ ok: true, bericht: `Correctie geslaagd (nieuwe registratie id=${nieuweRegistratieID || '-'})` });
+              setRegistratieActieOpen(false);
+              setRegistratieCorrigeerActief(false);
+              if (nieuweRegistratieID > 0) {
+                setRegistratieId(nieuweRegistratieID);
+                await loadData({ tValue: t, registratieIdValue: nieuweRegistratieID, selecteerVanuitRegistratie: true });
+              } else {
+                await loadData();
+              }
+            } else {
+              setRegistratieActieResultaat({ ok: false, bericht: json.error || `HTTP ${res.status}: ${res.statusText}` });
+            }
+          } catch (err) {
+            setRegistratieActieResultaat({ ok: false, bericht: String(err?.message || err) });
+          } finally {
+            setRegistratieActieBezig(false);
+          }
+        }
+
+        function openNieuweEntiteitActieBox() {
+          setGeselecteerdeRep(null);
+          setEntiteitActieOpen(false);
+          setActieResultaat(null);
+          setNieuweEntiteitResultaat(null);
+          setNieuweEntiteitActieOpen(true);
+          setSelectedEntiteitId('');
+          setRegistratieData(null);
+          setOngedaanGemaakteRegistratieData(null);
+          if (nieuweEntiteitGegevens.length === 0 && gegevenselementGroepOpties.length > 0) {
+            voegNieuweEntiteitGegevenRijToe(gegevenselementGroepOpties[0].groupKey);
+          }
+          if (nieuweEntiteitRelaties.length === 0 && relatieGroepOpties.length > 0) {
+            voegNieuweEntiteitRelatieRijToe(relatieGroepOpties[0].groupKey);
+          }
+        }
+
+        function veranderNieuweEntiteitGegevenRijType(rowId, nieuwGroupKey) {
+          const optie = gegevenselementGroepOpties.find((o) => o.groupKey === nieuwGroupKey);
+          if (!optie) {
+            return;
+          }
+          setNieuweEntiteitGegevens((prev) => prev.map((row) => (row.id === rowId
+            ? { ...row, groupKey: nieuwGroupKey, values: initialiseerGeWaardenVoorOptie(optie) }
+            : row)));
+        }
+
+        function veranderNieuweEntiteitRelatieRijType(rowId, nieuwGroupKey) {
+          const optie = relatieGroepOpties.find((o) => o.groupKey === nieuwGroupKey);
+          if (!optie) {
+            return;
+          }
+          setNieuweEntiteitRelaties((prev) => prev.map((row) => (row.id === rowId
+            ? { ...row, groupKey: nieuwGroupKey, values: initialiseerGeWaardenVoorOptie(optie) }
+            : row)));
+        }
+
+        function updateNieuweEntiteitGegevenRijVeld(rowId, veldnaam, waarde) {
+          setNieuweEntiteitGegevens((prev) => prev.map((row) => (row.id === rowId
+            ? { ...row, values: { ...(row.values || {}), [veldnaam]: waarde } }
+            : row)));
+        }
+
+        function updateNieuweEntiteitRelatieRijVeld(rowId, veldnaam, waarde) {
+          setNieuweEntiteitRelaties((prev) => prev.map((row) => (row.id === rowId
+            ? { ...row, values: { ...(row.values || {}), [veldnaam]: waarde } }
+            : row)));
+        }
+
         function coercedWaardeVoorType(rawValue, jsType, veldLabel) {
           if (jsType === 'number') {
             const parsed = Number(rawValue);
@@ -1066,6 +1426,21 @@
             return rawValue === true || rawValue === 'true';
           }
           return rawValue;
+        }
+
+        async function navigeerNaarRegistratieVanOpvoer(event, opvoerTijdstip) {
+          event.stopPropagation();
+          const registratieID = registratieIDUitOpvoerTijdstip(opvoerTijdstip);
+          if (!registratieID) {
+            return;
+          }
+          setRegistratieId(registratieID);
+          await loadData({ tValue: t, registratieIdValue: registratieID, selecteerVanuitRegistratie: true });
+        }
+
+        function registratieIDUitResponse(json) {
+          const kandidaat = Number(json?.registratie_id ?? json?.registratieId ?? 0);
+          return Number.isInteger(kandidaat) && kandidaat > 0 ? kandidaat : 0;
         }
 
         async function voerEntiteitActieUit(actie) {
@@ -1118,12 +1493,18 @@
             });
             const json = await res.json().catch(() => ({}));
             if (res.ok) {
-              setActieResultaat({ ok: true, bericht: `${actie === 'afvoer' ? 'Entiteit-afvoer' : 'GE-opvoer'} geslaagd (registratie id=${json.registratie_id ?? '-'})` });
+              const nieuweRegistratieID = registratieIDUitResponse(json);
+              setActieResultaat({ ok: true, bericht: `${actie === 'afvoer' ? 'Entiteit-afvoer' : 'GE-opvoer'} geslaagd (registratie id=${nieuweRegistratieID || '-'})` });
               if (actie !== 'afvoer') {
                 setEntiteitNieuweGegevens([]);
                 setEntiteitNieuweRelaties([]);
               }
-              await loadData();
+              if (nieuweRegistratieID > 0) {
+                setRegistratieId(nieuweRegistratieID);
+                await loadData({ tValue: t, registratieIdValue: nieuweRegistratieID, selecteerVanuitRegistratie: true });
+              } else {
+                await loadData();
+              }
             } else {
               setActieResultaat({ ok: false, bericht: json.error || `HTTP ${res.status}: ${res.statusText}` });
             }
@@ -1131,6 +1512,75 @@
             setActieResultaat({ ok: false, bericht: String(err?.message || err) });
           } finally {
             setActieBezig(false);
+          }
+        }
+
+        async function voerNieuweEntiteitActieUit() {
+          if (!selectedEntiteitMeta) return;
+          setNieuweEntiteitBezig(true);
+          setNieuweEntiteitResultaat(null);
+          try {
+            const entiteitVeldnaam = selectedEntiteitMeta.veldnaam || String(entiteitType || '').toLowerCase();
+            const idNummer = Number(nieuweEntiteitID);
+            if (!Number.isInteger(idNummer) || idNummer <= 0) {
+              throw new Error('Entiteit-id moet een positief geheel getal zijn.');
+            }
+
+            const opmerking = nieuweEntiteitOpmerking.trim() || undefined;
+            const registratie = { registratietype: 'registratie', ...(opmerking ? { opmerking } : {}) };
+            const wijzigingen = [{ opvoer: { [entiteitVeldnaam]: { id: idNummer } } }];
+
+            const alleRijen = [
+              ...nieuweEntiteitGegevens.map((row) => ({ row, opties: gegevenselementGroepOpties })),
+              ...nieuweEntiteitRelaties.map((row) => ({ row, opties: relatieGroepOpties })),
+            ];
+
+            alleRijen.forEach(({ row, opties }) => {
+              const optie = opties.find((o) => o.groupKey === row.groupKey);
+              if (!optie) {
+                throw new Error('Onbekend type in invoer.');
+              }
+              const item = {};
+              if (optie.entiteitIDKolom) {
+                item[optie.entiteitIDKolom] = idNummer;
+              }
+              safeArray(optie.veldDefinities).forEach((veld) => {
+                const raw = row?.values?.[veld.naam];
+                const isLeeg = raw === undefined || raw === null || raw === '';
+                if (isLeeg) {
+                  return;
+                }
+                item[veld.naam] = coercedWaardeVoorType(raw, veld.type, `${optie.label}.${veld.naam}`);
+              });
+              wijzigingen.push({ opvoer: { [optie.geVeldnaam]: item } });
+            });
+
+            const res = await fetch(`${baseUrl}/registratie/`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ registratie, wijzigingen }),
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok) {
+              throw new Error(json.error || `HTTP ${res.status}: ${res.statusText}`);
+            }
+
+            const nieuweRegistratieID = registratieIDUitResponse(json);
+            if (nieuweRegistratieID > 0) {
+              setRegistratieId(nieuweRegistratieID);
+              await loadData({ tValue: t, registratieIdValue: nieuweRegistratieID, selecteerVanuitRegistratie: true });
+            } else {
+              await loadData();
+            }
+
+            setNieuweEntiteitResultaat({ ok: true, bericht: `Nieuwe entiteit-opvoer geslaagd (registratie id=${nieuweRegistratieID || '-'})` });
+            setNieuweEntiteitActieOpen(false);
+            setNieuweEntiteitGegevens([]);
+            setNieuweEntiteitRelaties([]);
+          } catch (err) {
+            setNieuweEntiteitResultaat({ ok: false, bericht: String(err?.message || err) });
+          } finally {
+            setNieuweEntiteitBezig(false);
           }
         }
 
@@ -1170,9 +1620,15 @@
             });
             const json = await res.json().catch(() => ({}));
             if (res.ok) {
-              setActieResultaat({ ok: true, bericht: `${actie === 'afvoer' ? 'Afvoer' : 'Correctie'} geslaagd (registratie id=${json.registratie_id ?? '-'})` });
+              const nieuweRegistratieID = registratieIDUitResponse(json);
+              setActieResultaat({ ok: true, bericht: `${actie === 'afvoer' ? 'Afvoer' : 'Correctie'} geslaagd (registratie id=${nieuweRegistratieID || '-'})` });
               setGeselecteerdeRep(null);
-              await loadData();
+              if (nieuweRegistratieID > 0) {
+                setRegistratieId(nieuweRegistratieID);
+                await loadData({ tValue: t, registratieIdValue: nieuweRegistratieID, selecteerVanuitRegistratie: true });
+              } else {
+                await loadData();
+              }
             } else {
               setActieResultaat({ ok: false, bericht: json.error || `HTTP ${res.status}: ${res.statusText}` });
             }
@@ -1189,8 +1645,13 @@
 
         // Reset selectie als entiteit wisselt
         useEffect(() => {
+          const heeftGeselecteerdeEntiteit = String(selectedEntiteitId || '').trim() !== '';
           setGeselecteerdeRep(null);
           setEntiteitActieOpen(false);
+          // Bij lege selectie (bewust voor "nieuwe entiteit opvoeren") laten we deze box open.
+          if (heeftGeselecteerdeEntiteit) {
+            setNieuweEntiteitActieOpen(false);
+          }
           setEntiteitNieuweGegevens([]);
           setEntiteitNieuweRelaties([]);
           setActieResultaat(null);
@@ -1275,6 +1736,14 @@
                       <option key={meta.typenaam} value={meta.typenaam}>{meta.typenaam}</option>
                     ))}
                   </select>
+                  <button
+                    type="button"
+                    onClick={openNieuweEntiteitActieBox}
+                    disabled={loading || !entiteitType}
+                    style={{ marginTop: 4, background: '#0f766e' }}
+                  >
+                    + Nieuwe {entiteitType || 'entiteit'} opvoeren
+                  </button>
                 </label>
 
                 <label>
@@ -1328,6 +1797,196 @@
               {responseData?.has_more && <p className="muted">Let op: has_more=true, niet alle entiteiten zijn geladen.</p>}
             </div>
 
+            {nieuweEntiteitActieOpen && (
+              <div className="card" ref={nieuweEntiteitFormRef} style={{ marginTop: 12, border: '1.5px dashed #0f766e', background: '#f0fdfa' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <strong style={{ fontSize: 16 }}>Nieuwe entiteit {entiteitType} opvoeren</strong>
+                  <button
+                    onClick={() => { setNieuweEntiteitActieOpen(false); setNieuweEntiteitResultaat(null); }}
+                    style={{ background: 'transparent', color: '#475569', border: '1px solid #cbd5e1', padding: '3px 10px', fontSize: 13 }}
+                  >✕</button>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10, marginBottom: 10 }}>
+                  <label>
+                    Nieuwe {entiteitType}-id
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={nieuweEntiteitID}
+                      onChange={(e) => setNieuweEntiteitID(e.target.value)}
+                    />
+                  </label>
+                  <label>
+                    Opmerking
+                    <input value={nieuweEntiteitOpmerking} onChange={(e) => setNieuweEntiteitOpmerking(e.target.value)} placeholder="optioneel" />
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'end', gap: 8 }}>
+                    <button
+                      onClick={openNieuweEntiteitActieBox}
+                      disabled={nieuweEntiteitIDInfo.loading || !entiteitType}
+                      style={{ background: '#0f766e' }}
+                    >
+                      {nieuweEntiteitIDInfo.loading ? 'Zoeken...' : 'Zoek volgende vrije id'}
+                    </button>
+                    <span className="muted" style={{ fontSize: 12 }}>
+                      {nieuweEntiteitIDInfo.error
+                        ? `Fout: ${nieuweEntiteitIDInfo.error}`
+                        : (nieuweEntiteitIDInfo.nextId !== null
+                          ? `max=${nieuweEntiteitIDInfo.maxId ?? '-'} | suggestie=${nieuweEntiteitIDInfo.nextId}`
+                          : 'Geen id-suggestie geladen')}
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid #99f6e4', paddingTop: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <strong style={{ fontSize: 14 }}>Gegevenselementen toevoegen</strong>
+                    <button onClick={() => voegNieuweEntiteitGegevenRijToe(gegevenselementGroepOpties[0]?.groupKey)} disabled={nieuweEntiteitBezig || gegevenselementGroepOpties.length === 0}>+ GE-regel</button>
+                  </div>
+                  {nieuweEntiteitGegevens.map((row) => (
+                    <div key={`new-ge-${row.id}`} style={{ border: '1px solid #d1fae5', borderRadius: 8, padding: 10, marginBottom: 8, background: '#ffffff' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(170px, 260px) 1fr auto', gap: 8, alignItems: 'start' }}>
+                        <label>
+                          Type
+                          <select value={row.groupKey} onChange={(e) => veranderNieuweEntiteitGegevenRijType(row.id, e.target.value)}>
+                            {gegevenselementGroepOpties.map((optie) => (
+                              <option key={`new-ge-opt-${optie.groupKey}`} value={optie.groupKey}>{optie.label}</option>
+                            ))}
+                          </select>
+                        </label>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
+                          {(() => {
+                            const optie = gegevenselementGroepOpties.find((o) => o.groupKey === row.groupKey);
+                            const velden = safeArray(optie?.veldDefinities);
+                            if (velden.length === 0) return <span className="muted" style={{ fontSize: 12 }}>Geen veldinformatie beschikbaar.</span>;
+                            return velden.map((veld) => {
+                              const huidigeWaarde = row?.values?.[veld.naam] ?? '';
+                              if (veld.type === 'boolean') {
+                                return (
+                                  <label key={`new-ge-${row.id}-${veld.naam}`}>
+                                    {veld.naam}
+                                    <select value={String(huidigeWaarde)} onChange={(e) => updateNieuweEntiteitGegevenRijVeld(row.id, veld.naam, e.target.value)}>
+                                      <option value="">(leeg)</option>
+                                      <option value="true">true</option>
+                                      <option value="false">false</option>
+                                    </select>
+                                  </label>
+                                );
+                              }
+                              return (
+                                <label key={`new-ge-${row.id}-${veld.naam}`}>
+                                  {veld.naam}
+                                  <input
+                                    type={veld.type === 'number' ? 'number' : 'text'}
+                                    step={veld.type === 'number' ? 'any' : undefined}
+                                    value={String(huidigeWaarde)}
+                                    onChange={(e) => updateNieuweEntiteitGegevenRijVeld(row.id, veld.naam, e.target.value)}
+                                  />
+                                </label>
+                              );
+                            });
+                          })()}
+                        </div>
+                        <button onClick={() => setNieuweEntiteitGegevens((prev) => prev.filter((r) => r.id !== row.id))} disabled={nieuweEntiteitBezig} style={{ background: '#475569', alignSelf: 'end' }}>Verwijder</button>
+                      </div>
+                    </div>
+                  ))}
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '10px 0 8px' }}>
+                    <strong style={{ fontSize: 14 }}>Relaties toevoegen</strong>
+                    <button onClick={() => voegNieuweEntiteitRelatieRijToe(relatieGroepOpties[0]?.groupKey)} disabled={nieuweEntiteitBezig || relatieGroepOpties.length === 0}>+ Relatie-regel</button>
+                  </div>
+                  {nieuweEntiteitRelaties.map((row) => (
+                    <div key={`new-rel-${row.id}`} style={{ border: '1px solid #d1fae5', borderRadius: 8, padding: 10, marginBottom: 8, background: '#ffffff' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(170px, 260px) 1fr auto', gap: 8, alignItems: 'start' }}>
+                        <label>
+                          Type
+                          <select value={row.groupKey} onChange={(e) => veranderNieuweEntiteitRelatieRijType(row.id, e.target.value)}>
+                            {relatieGroepOpties.map((optie) => (
+                              <option key={`new-rel-opt-${optie.groupKey}`} value={optie.groupKey}>{optie.label}</option>
+                            ))}
+                          </select>
+                        </label>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
+                          {(() => {
+                            const optie = relatieGroepOpties.find((o) => o.groupKey === row.groupKey);
+                            const velden = safeArray(optie?.veldDefinities);
+                            if (velden.length === 0) return <span className="muted" style={{ fontSize: 12 }}>Geen veldinformatie beschikbaar.</span>;
+                            const secondaireInfo = relatieSecondaireOpties[row.groupKey] || { loading: false, ids: [], error: '' };
+                            return velden.map((veld) => {
+                              const huidigeWaarde = row?.values?.[veld.naam] ?? '';
+                              if (veld.naam === optie?.secondaireEntiteitIDKolom && safeArray(secondaireInfo.ids).length > 0) {
+                                return (
+                                  <label key={`new-rel-${row.id}-${veld.naam}`}>
+                                    {veld.naam}
+                                    <select value={String(huidigeWaarde)} onChange={(e) => updateNieuweEntiteitRelatieRijVeld(row.id, veld.naam, e.target.value)}>
+                                      <option value="">(kies id)</option>
+                                      {safeArray(secondaireInfo.ids).map((idOptie) => (
+                                        <option key={`new-rel-id-${row.id}-${idOptie}`} value={String(idOptie)}>{String(idOptie)}</option>
+                                      ))}
+                                    </select>
+                                  </label>
+                                );
+                              }
+                              if (veld.type === 'boolean') {
+                                return (
+                                  <label key={`new-rel-${row.id}-${veld.naam}`}>
+                                    {veld.naam}
+                                    <select value={String(huidigeWaarde)} onChange={(e) => updateNieuweEntiteitRelatieRijVeld(row.id, veld.naam, e.target.value)}>
+                                      <option value="">(leeg)</option>
+                                      <option value="true">true</option>
+                                      <option value="false">false</option>
+                                    </select>
+                                  </label>
+                                );
+                              }
+                              return (
+                                <label key={`new-rel-${row.id}-${veld.naam}`}>
+                                  {veld.naam}
+                                  <input
+                                    type={veld.type === 'number' ? 'number' : 'text'}
+                                    step={veld.type === 'number' ? 'any' : undefined}
+                                    value={String(huidigeWaarde)}
+                                    onChange={(e) => updateNieuweEntiteitRelatieRijVeld(row.id, veld.naam, e.target.value)}
+                                  />
+                                </label>
+                              );
+                            });
+                          })()}
+                        </div>
+                        <button onClick={() => setNieuweEntiteitRelaties((prev) => prev.filter((r) => r.id !== row.id))} disabled={nieuweEntiteitBezig} style={{ background: '#475569', alignSelf: 'end' }}>Verwijder</button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {nieuweEntiteitOpvoerPreview && (
+                    <div style={{ margin: '10px 0', borderRadius: 6, overflow: 'hidden', border: '1px solid #99f6e4' }}>
+                      <div style={{ background: '#ccfbf1', padding: '4px 10px', fontSize: 12, fontWeight: 600, color: '#115e59' }}>Preview: te versturen payload (nieuwe entiteit + onderliggende opvoer)</div>
+                      {nieuweEntiteitOpvoerPreview.ok
+                        ? <pre style={{ margin: 0, padding: '8px 10px', fontSize: 12, background: '#f0fdfa', overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{JSON.stringify(nieuweEntiteitOpvoerPreview.payload, null, 2)}</pre>
+                        : <p style={{ margin: 0, padding: '6px 10px', color: '#dc2626', fontSize: 12 }}>{nieuweEntiteitOpvoerPreview.fout}</p>
+                      }
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <button onClick={voerNieuweEntiteitActieUit} disabled={nieuweEntiteitBezig || !nieuweEntiteitOpvoerPreview?.ok} style={{ background: '#0f766e' }}>
+                      {nieuweEntiteitBezig ? 'Bezig...' : `Voer nieuwe ${entiteitType} op`}
+                    </button>
+                    <span className="muted" style={{ fontSize: 12 }}>Na succes wordt automatisch naar de nieuwe registratie gesprongen.</span>
+                  </div>
+                </div>
+
+                {nieuweEntiteitResultaat && (
+                  <p style={{ marginTop: 8, marginBottom: 0, color: nieuweEntiteitResultaat.ok ? '#166534' : '#dc2626', fontWeight: 600 }}>
+                    {nieuweEntiteitResultaat.bericht}
+                  </p>
+                )}
+              </div>
+            )}
+
             <p className="muted" style={{ margin: 0 }}>
               Huidige selectie: type={entiteitType || '-'} | peilmoment t={normaliseerNietNegatiefGeheelGetal(t, 0)} | registratie-id={normaliseerNietNegatiefGeheelGetal(registratieId, 0)}
             </p>
@@ -1373,7 +2032,8 @@
                             <circle cx="6" cy="5" r="1.5" fill="#dce8f0" />
                           </pattern>
                         </defs>
-                        <g>
+                        <g onClick={openRegistratieActieBox} style={{ cursor: 'pointer' }}>
+                          {registratieActieOpen && <rect x="217" y="7" rx="8" width="326" height="80" style={{ fill: 'none', stroke: '#1d4ed8', strokeWidth: 2.5, strokeDasharray: '5,3' }} />}
                           <path
                             d={afgeknotteHoekPad(220, 10, 320, 72, 10)}
                             style={{ fill: 'url(#pat-registratie)', stroke: '#334155', strokeWidth: 1.2 }}
@@ -1474,6 +2134,116 @@
                     )}
                   </>
                 )}
+
+                {registratieActieOpen && selectedRegistratie && (
+                  <div ref={registratieActieFormRef} style={{ marginTop: 14, padding: '12px 16px', border: '1.5px dashed #94a3b8', borderRadius: 10, background: '#f8fafc' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                      <strong style={{ fontSize: 15 }}>Registratie {selectedRegistratie.id} — acties</strong>
+                      <button
+                        onClick={() => { setRegistratieActieOpen(false); setRegistratieCorrigeerActief(false); setRegistratieOngedaanBevestiging(false); setRegistratieActieResultaat(null); }}
+                        style={{ background: 'transparent', color: '#475569', border: '1px solid #cbd5e1', padding: '3px 10px', fontSize: 13 }}
+                      >✕</button>
+                    </div>
+
+                    {selectedRegistratie.is_ongedaangemaakt ? (
+                      <p className="muted">Deze registratie is al ongedaan gemaakt en kan niet opnieuw worden gewijzigd.</p>
+                    ) : (
+                      <>
+                        <div style={{ marginBottom: 8 }}>
+                          <label style={{ display: 'block' }}>
+                            Opmerking (voor de nieuwe registratie)
+                            <input value={registratieActieOpmerking} onChange={(e) => setRegistratieActieOpmerking(e.target.value)} placeholder="optioneel" />
+                          </label>
+                        </div>
+
+                        <div style={{ marginBottom: 10 }}>
+                          {!registratieOngedaanBevestiging ? (
+                            <button onClick={() => setRegistratieOngedaanBevestiging(true)} disabled={registratieActieBezig} style={{ background: '#b91c1c' }}>
+                              Ongedaan maken
+                            </button>
+                          ) : (
+                            <div style={{ padding: '8px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8 }}>
+                              <p style={{ margin: '0 0 8px', color: '#b91c1c', fontWeight: 600 }}>&#9888; Let op! Deze actie kan (nog) niet ongedaan gemaakt worden :-)</p>
+                              <div style={{ display: 'flex', gap: 8 }}>
+                                <button onClick={voerRegistratieOngedaanMakingUit} disabled={registratieActieBezig} style={{ background: '#b91c1c' }}>
+                                  {registratieActieBezig ? 'Bezig...' : 'Bevestig ongedaan maken'}
+                                </button>
+                                <button
+                                  onClick={() => setRegistratieOngedaanBevestiging(false)}
+                                  disabled={registratieActieBezig}
+                                  style={{ background: 'transparent', border: '1px solid #cbd5e1', color: '#475569' }}
+                                >Annuleren</button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          {!registratieCorrigeerActief ? (
+                            <button onClick={openRegistratieCorrigeren} disabled={registratieActieBezig}>
+                              Corrigeren
+                            </button>
+                          ) : (
+                            <div style={{ padding: '8px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8 }}>
+                              <strong style={{ fontSize: 14 }}>Corrigeer velden</strong>
+                              {selectedRegistratieWijzigingen.filter((w) => w.wijzigingstype === 'opvoer' && w.representatienaam && w.representatie_id).length === 0 && (
+                                <p className="muted">Geen corrigeerbare opvoer-wijzigingen onder deze registratie.</p>
+                              )}
+                              {selectedRegistratieWijzigingen
+                                .filter((w) => w.wijzigingstype === 'opvoer' && w.representatienaam && w.representatie_id)
+                                .map((w) => {
+                                  const match = zoekGroupEnItemVoorWijziging(w);
+                                  const afgevoerd = match ? (match.item.afvoer != null && match.item.afvoer !== '' && match.item.afvoer !== 0) : false;
+                                  const veldnamen = match && !afgevoerd ? veldEntries(match.item).filter(([k]) => !plumbingVelden.has(k)).map(([k]) => k) : [];
+                                  return (
+                                    <div key={`${w.representatienaam}_${w.representatie_id}`} style={{ marginTop: 8 }}>
+                                      <strong style={{ fontSize: 13 }}>{w.representatienaam} #{w.representatie_id}</strong>
+                                      {!match ? (
+                                        <p className="muted" style={{ margin: '2px 0 0' }}>Huidige representatie niet beschikbaar in geladen data (laad een peilmoment waarop de rep actief is).</p>
+                                      ) : afgevoerd ? (
+                                        <p style={{ margin: '2px 0 0', color: '#dc2626', fontSize: 12 }}>Afgevoerd — corrigeren niet mogelijk.</p>
+                                      ) : (
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 6, marginTop: 4 }}>
+                                          {veldnamen.map((k) => (
+                                            <label key={k} style={{ fontSize: 13 }}>
+                                              {k}
+                                              <input
+                                                value={String(registratieCorrigeerVelden[String(w.representatie_id)]?.[k] ?? '')}
+                                                onChange={(e) => setRegistratieCorrigeerVelden((prev) => ({
+                                                  ...prev,
+                                                  [String(w.representatie_id)]: { ...(prev[String(w.representatie_id)] || {}), [k]: e.target.value },
+                                                }))}
+                                              />
+                                            </label>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                                <button onClick={voerRegistratieCorrectieUit} disabled={registratieActieBezig}>
+                                  {registratieActieBezig ? 'Bezig...' : 'Verstuur correctie'}
+                                </button>
+                                <button
+                                  onClick={() => { setRegistratieCorrigeerActief(false); setRegistratieActieResultaat(null); }}
+                                  disabled={registratieActieBezig}
+                                  style={{ background: 'transparent', border: '1px solid #cbd5e1', color: '#475569' }}
+                                >Annuleren</button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+
+                    {registratieActieResultaat && (
+                      <p style={{ marginTop: 8, marginBottom: 0, color: registratieActieResultaat.ok ? '#166534' : '#dc2626', fontWeight: 600 }}>
+                        {registratieActieResultaat.bericht}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="card">
@@ -1512,12 +2282,20 @@
                       const textX = node.side === 'left' ? 42 : 700;
                       const nodeFill = node.group?.kleur || '#ffffff';
                       const isSelected = geselecteerdeRep?.item === node.item;
+                      const opvoerRegistratieID = registratieIDUitOpvoerTijdstip(node.item.opvoer);
+                      const opvoerKlikbaar = isSelected && opvoerRegistratieID > 0;
 
                       return (
                         <g key={node.key} onClick={() => selecteerRep(node.item, node.group)} style={{ cursor: 'pointer' }}>
                           {isSelected && <rect x={x - 3} y={node.y - 33} rx="10" width={width + 6} height={66} style={{ fill: 'none', stroke: '#1d4ed8', strokeWidth: 2.5, strokeDasharray: '5,3' }} />}
                           <rect x={x} y={node.y - 30} rx="8" width={width} height="60" style={{ fill: nodeFill, stroke: '#334155', strokeWidth: 1.2 }} />
-                          <text className="label label-lg" x={x + width - 8} y={node.y - 16} textAnchor="end">
+                          <text
+                            className={`label label-lg ${opvoerKlikbaar ? 'opv-link' : ''}`}
+                            x={x + width - 8}
+                            y={node.y - 16}
+                            textAnchor="end"
+                            onClick={opvoerKlikbaar ? (event) => navigeerNaarRegistratieVanOpvoer(event, node.item.opvoer) : undefined}
+                          >
                             opv: {node.item.opvoer ? microsecondeIntVanTijdstip(node.item.opvoer) : '-'}
                           </text>
                           <text className="label label-lg" x={textX} y={node.y - 8}>
@@ -1530,16 +2308,26 @@
                       );
                     })}
 
+                    {(() => {
+                      const entOpvoerRegID = selectedA.opvoer ? registratieIDUitOpvoerTijdstip(selectedA.opvoer) : 0;
+                      const entOpvoerKlikbaar = entOpvoerRegID > 0;
+                      return (
                     <g onClick={openEntiteitActieBox} style={{ cursor: 'pointer' }}>
                       {entiteitActieOpen && <rect x="327" y="37" rx="12" width="246" height="86" style={{ fill: 'none', stroke: '#1d4ed8', strokeWidth: 2.5, strokeDasharray: '5,3' }} />}
                       <rect className="node" x="330" y="40" rx="10" width="240" height="80" style={{ fill: selectedEntiteitMeta?.kleur || '#dbeafe', strokeWidth: 2.8 }} />
-                      <text className="label label-lg" x="562" y="56" textAnchor="end">opv: {selectedA.opvoer ? microsecondeIntVanTijdstip(selectedA.opvoer) : '-'}</text>
+                      <text
+                        className={`label label-lg${entOpvoerKlikbaar ? ' opv-link' : ''}`}
+                        x="562" y="56" textAnchor="end"
+                        onClick={entOpvoerKlikbaar ? (event) => navigeerNaarRegistratieVanOpvoer(event, selectedA.opvoer) : undefined}
+                      >opv: {selectedA.opvoer ? microsecondeIntVanTijdstip(selectedA.opvoer) : '-'}</text>
                       <text className="label" x="345" y="74">
                         <tspan style={centraleEntiteitLabelStyle}>{entiteitType || 'E'}</tspan>
                         {' id='}
                         <tspan style={centraleEntiteitLabelStyle}>{selectedA.id}</tspan>
                       </text>
                     </g>
+                      );
+                    })()}
 
                     {relatieNodesVoorGrafiek.length > 0 && (
                       <>
@@ -1564,12 +2352,20 @@
                       const secondBoxX = relX + relW - secondBoxW - 8;
                       const secondBoxY = node.y + 18;
                       const isRelSelected = geselecteerdeRep?.item === node.item;
+                      const opvoerRegistratieID = registratieIDUitOpvoerTijdstip(node.item.opvoer);
+                      const opvoerKlikbaar = isRelSelected && opvoerRegistratieID > 0;
                       return (
                         <g key={node.key} onClick={() => selecteerRep(node.item, node.group)} style={{ cursor: 'pointer' }}>
                           {isRelSelected && <rect x={relX - 3} y={node.y - 27} rx="10" width={relW + 6} height={relH + 6} style={{ fill: 'none', stroke: '#1d4ed8', strokeWidth: 2.5, strokeDasharray: '5,3' }} />}
                           <line x1="362" y1={node.y} x2={relX} y2={node.y} style={{ stroke: '#334155', strokeWidth: 2.8 }} />
                           <rect x={relX} y={node.y - 24} rx="8" width={relW} height={relH} style={{ fill: relFill, stroke: '#7c2d12', strokeWidth: 2.8 }} />
-                          <text className="label" x={relX + relW - 8} y={node.y - 10} textAnchor="end">
+                          <text
+                            className={`label ${opvoerKlikbaar ? 'opv-link' : ''}`}
+                            x={relX + relW - 8}
+                            y={node.y - 10}
+                            textAnchor="end"
+                            onClick={opvoerKlikbaar ? (event) => navigeerNaarRegistratieVanOpvoer(event, node.item.opvoer) : undefined}
+                          >
                             opv: {node.item.opvoer ? microsecondeIntVanTijdstip(node.item.opvoer) : '-'}
                           </text>
                           <text className="label label-lg" x={relX + 10} y={node.y - 6}>

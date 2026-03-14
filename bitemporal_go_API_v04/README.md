@@ -407,7 +407,9 @@ Deregister U5 and register U6 for entity A:
 - onafhankelijk maken van A/B/U/V/X/Y
 - enkelvoudig meervoudig tonen (1 of *)
 - entiteit vette rand
-
+- uitbreiden met klikbare elementen, waarop je acties kunt doen: afvoeren, opvoeren, corrigeren
+- correctie van bepaalde reg mogelijk
+- ongedaanmaken van reg mogelijk (onder voorwaarden)
 
 ## BUGS
 
@@ -423,7 +425,11 @@ Deregister U5 and register U6 for entity A:
 - enkelvoudig meervoudig tonen (1 of *)
 - corrigeert registratie lijntje tekenen?
 
-25 react pagina's uitbreiden met klikbare elementen, waarop je acties kunt doen: reg corrigeren, ongedaanmaken
+25 react pagina's uitbreiden met:
+- (latere!) ongedaangemaaktheid van regs tonen
+- enkel- meervoudigheid op formulier tonen
+- type tonen en verplichtheid
+- keuzelijsten, enums? hoe dat te doen?
 
 30 log alle requests en responses van /registratie/
 - alle opvragen nog maar even niet

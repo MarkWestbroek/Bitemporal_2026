@@ -3,24 +3,203 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Schema-Driven Tijdlijn</title>
+    <title>Visualisatie tijdreizen - schema-tijdslijn</title>
     <style>
-      :root { font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-      body { margin: 0; background: #f8fafc; color: #0f172a; }
-      .container { max-width: 1700px; margin: 0 auto; padding: 20px; }
-      .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; }
-      .controls { display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 12px; }
-      label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
-      input, select, button { border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; font-size: 14px; }
-      button { background: #0f172a; color: #fff; cursor: pointer; }
-      .muted { color: #475569; font-size: 13px; }
-      .timeline { margin-top: 12px; overflow-x: auto; }
-      .row { display: inline-flex; gap: 12px; }
-      .col { min-width: 340px; display: grid; gap: 10px; }
-      pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
-      h1 { margin: 0 0 8px; font-size: 26px; }
-      h2 { margin: 0 0 8px; font-size: 17px; }
-      @media (max-width: 900px) { .controls { grid-template-columns: 1fr; } }
+      :root {
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --bg: #f8fafc;
+        --bg-accent: #eff6ff;
+        --surface: #ffffff;
+        --surface-soft: #f8fafc;
+        --border: #e2e8f0;
+        --border-strong: #cbd5e1;
+        --ink: #0f172a;
+        --muted: #475569;
+        --stroke: #334155;
+        --edge: #94a3b8;
+        --accent: #0f766e;
+        --accent-panel: #f0fdfa;
+        --accent-blue: #1d4ed8;
+        --entity-fill: #dbeafe;
+        --registration-fill: #ecfeff;
+        --opvoer-fill: #eefcf2;
+        --afvoer-fill: #fff4e8;
+        --neutral-fill: #f8fafc;
+      }
+      body {
+        margin: 0;
+        background: linear-gradient(180deg, var(--bg-accent) 0%, var(--bg) 180px);
+        color: var(--ink);
+      }
+      .container {
+        max-width: 1700px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .page-title {
+        font-size: 26px;
+        margin: 0 0 8px;
+      }
+      .muted {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      a.muted {
+        color: var(--muted);
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+      }
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(180px, 1fr));
+        gap: 12px;
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        font-size: 14px;
+      }
+      input, select, button {
+        border: 1px solid var(--border-strong);
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 14px;
+      }
+      button {
+        cursor: pointer;
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .timeline-scroll {
+        margin-top: 14px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+      }
+      .timeline-row {
+        display: inline-flex;
+        gap: 14px;
+        align-items: flex-start;
+        position: relative;
+      }
+      .timeline-overlay {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      .timeline-column {
+        display: grid;
+        grid-template-rows: auto auto;
+        gap: 10px;
+        min-width: 340px;
+      }
+      .panel-title {
+        margin: 0 0 6px;
+        font-size: 15px;
+        line-height: 1.2;
+        min-height: 1.2em;
+      }
+      .panel-title-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        flex-wrap: nowrap;
+        overflow: hidden;
+      }
+      .panel-title-main {
+        flex: 0 0 auto;
+        white-space: nowrap;
+      }
+      .panel-title-remark {
+        display: block;
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .graph {
+        width: 100%;
+        border: 1px dashed var(--border-strong);
+        border-radius: 10px;
+        background: var(--surface-soft);
+      }
+      .graph-rep {
+        min-height: 0;
+      }
+      .node {
+        fill: white;
+        stroke: var(--stroke);
+        stroke-width: 1.2;
+      }
+      .edge {
+        stroke: var(--edge);
+        stroke-width: 1.4;
+      }
+      .label {
+        font-size: 12px;
+        fill: var(--ink);
+      }
+      .label-strong {
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .summary-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .chip {
+        background: var(--accent-panel);
+        color: #115e59;
+        border: 1px solid #99f6e4;
+        border-radius: 999px;
+        padding: 4px 9px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .details-block {
+        margin-top: 10px;
+        border-top: 1px solid var(--border);
+        padding-top: 10px;
+      }
+      .details-block summary {
+        cursor: pointer;
+        color: var(--accent-blue);
+        font-size: 13px;
+        font-weight: 600;
+      }
+      pre {
+        margin: 8px 0 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 12px;
+        background: var(--surface-soft);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px;
+      }
+      .error-text {
+        color: #dc2626;
+      }
+      @media (max-width: 900px) {
+        .controls {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
   <body>
@@ -28,12 +207,14 @@
 
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script type="text/babel">
-      const { useEffect, useMemo, useState } = React;
+      const { useEffect, useMemo, useRef, useState } = React;
 
       function safeArray(v) { return Array.isArray(v) ? v : []; }
+
       function normInt(v, fallback = 0) {
         const n = Number.parseInt(String(v), 10);
         return Number.isNaN(n) ? fallback : Math.max(0, n);
@@ -53,8 +234,175 @@
         return Math.max(0, Math.round((ts - base) / (60 * 60 * 1000)));
       }
 
+      function microsecondeIntVanTijdstip(tijdstipRaw) {
+        if (!tijdstipRaw) return 0;
+        const raw = String(tijdstipRaw);
+        const match = raw.match(/\.(\d+)/);
+        if (!match) return 0;
+        const fraction = match[1].slice(0, 6).padEnd(6, "0");
+        const parsed = Number.parseInt(fraction, 10);
+        return Number.isNaN(parsed) ? 0 : parsed;
+      }
+
+      function wijzigingKleur(wijzigingstype) {
+        const type = String(wijzigingstype || "").toLowerCase();
+        if (type === "opvoer") return "var(--opvoer-fill)";
+        if (type === "afvoer") return "var(--afvoer-fill)";
+        return "var(--neutral-fill)";
+      }
+
+      function wijzigingPatroonId(wijzigingstype) {
+        const type = String(wijzigingstype || "").toLowerCase();
+        if (type === "opvoer") return "pat-opvoer";
+        if (type === "afvoer") return "pat-afvoer";
+        return "pat-neutraal";
+      }
+
       function endpointSegmentForEntityType(typeName) {
         return `${String(typeName || "").toLowerCase()}s`;
+      }
+
+      function isPrimitiveWaarde(value) {
+        return value === null || ["string", "number", "boolean"].includes(typeof value);
+      }
+
+      function veldEntries(record) {
+        return Object.entries(record || {}).filter(([, value]) => isPrimitiveWaarde(value));
+      }
+
+      function korteSamenvatting(record) {
+        const overSlaan = new Set(["id", "rel_id", "a_id", "b_id", "opvoer", "afvoer", "aanvang", "einde"]);
+        const parts = veldEntries(record)
+          .filter(([k]) => !overSlaan.has(k))
+          .slice(0, 2)
+          .map(([k, v]) => `${k}=${v ?? "-"}`);
+        return parts.length > 0 ? parts.join(" | ") : "-";
+      }
+
+      function donkerdereRandkleurVanHex(hexKleur, ratio = 0.62) {
+        const hex = String(hexKleur || "").trim().replace(/^#/, "");
+        if (!/^[0-9a-fA-F]{6}$/.test(hex)) {
+          return "#1e3a8a";
+        }
+        const r = Number.parseInt(hex.slice(0, 2), 16);
+        const g = Number.parseInt(hex.slice(2, 4), 16);
+        const b = Number.parseInt(hex.slice(4, 6), 16);
+        const donker = (n) => Math.max(0, Math.min(255, Math.round(n * ratio)));
+        const naarHex = (n) => n.toString(16).padStart(2, "0");
+        return `#${naarHex(donker(r))}${naarHex(donker(g))}${naarHex(donker(b))}`;
+      }
+
+      function leidEntiteitTypeAfUitKolomnaam(kolomnaam, beschikbareEntiteitTypen) {
+        const prefix = String(kolomnaam || "").split("_")[0].trim().toUpperCase();
+        if (!prefix) {
+          return "";
+        }
+        const bestaat = safeArray(beschikbareEntiteitTypen).some((item) => String(item?.typenaam || "").toUpperCase() === prefix);
+        return bestaat ? prefix : "";
+      }
+
+      function normaliseerIdComponent(value) {
+        return String(value ?? "")
+          .trim()
+          .replace(/\s+/g, "_")
+          .replace(/[^a-zA-Z0-9_\-]/g, "_");
+      }
+
+      function undoTargetEntId(regId, entiteitId) {
+        return `undo-target-ent-${normaliseerIdComponent(regId)}-${normaliseerIdComponent(entiteitId)}`;
+      }
+
+      function undoTargetRepId(regId, representatieNaam, representatieId) {
+        return `undo-target-rep-${normaliseerIdComponent(regId)}-${normaliseerIdComponent(String(representatieNaam || "").toUpperCase())}-${normaliseerIdComponent(representatieId)}`;
+      }
+
+      async function fetchAlleRegistraties(baseUrl) {
+        const size = 100;
+        let page = 1;
+        const result = [];
+        for (let i = 0; i < 30; i += 1) {
+          const json = await fetchJson(`${baseUrl}/full/registraties?page=${page}&size=${size}`);
+          const batch = safeArray(json?.Registraties);
+          result.push(...batch);
+          if (!json?.has_more || batch.length === 0) break;
+          page += 1;
+        }
+        return result;
+      }
+
+      async function fetchRegistratieById(baseUrl, registratieId) {
+        if (registratieId === null || registratieId === undefined || registratieId === "") {
+          return null;
+        }
+        const res = await fetch(`${baseUrl}/full/registraties/${encodeURIComponent(registratieId)}`);
+        if (!res.ok) {
+          return null;
+        }
+        const json = await res.json();
+        return json.Registratie || json;
+      }
+
+      function snapshotEntiteitUitPayload(payload, typeName) {
+        if (!payload || typeof payload !== "object") return null;
+        const direct = payload?.[typeName] ?? payload?.[String(typeName || "").toLowerCase()];
+        if (direct && typeof direct === "object" && !Array.isArray(direct)) return direct;
+        if (Object.prototype.hasOwnProperty.call(payload, "id")) return payload;
+        const eersteObject = Object.values(payload).find((value) => value && typeof value === "object" && !Array.isArray(value) && Object.prototype.hasOwnProperty.call(value, "id"));
+        return eersteObject || null;
+      }
+
+      function childArrayVoorRol(snapshot, child) {
+        const kandidaten = [child?.jsonRolnaam, child?.rolnaam]
+          .filter(Boolean)
+          .flatMap((naam) => [naam, String(naam).toLowerCase(), `${String(naam).toLowerCase()}s`]);
+        for (const kandidaat of kandidaten) {
+          const direct = snapshot?.[kandidaat];
+          if (Array.isArray(direct)) return direct;
+        }
+        const fallbackKey = Object.keys(snapshot || {}).find((key) => Array.isArray(snapshot?.[key]) && String(key).replace(/s$/i, "").toLowerCase() === String(child?.doeltype || "").toLowerCase());
+        return fallbackKey ? safeArray(snapshot?.[fallbackKey]) : [];
+      }
+
+      function buildChildGroups(snapshot, entityMeta, typeMetaByTypenaam) {
+        if (!snapshot) return [];
+        const skeleton = safeArray(entityMeta?.onderliggende).map((child) => ({
+          rolnaam: child.rolnaam,
+          jsonRolnaam: child.jsonRolnaam || "",
+          doeltype: child.doeltype,
+          typeMeta: typeMetaByTypenaam[child.doeltype] || null,
+          items: childArrayVoorRol(snapshot, child),
+        }));
+        if (skeleton.length > 0) return skeleton;
+        return Object.keys(snapshot)
+          .filter((key) => Array.isArray(snapshot[key]))
+          .map((key) => ({
+            rolnaam: key,
+            jsonRolnaam: key,
+            doeltype: String(key).replace(/s$/i, "").toUpperCase(),
+            typeMeta: null,
+            items: safeArray(snapshot[key]),
+          }));
+      }
+
+      function buildChildNodes(snapshot, entityMeta, typeMetaByTypenaam, entityTypes) {
+        const childGroups = buildChildGroups(snapshot, entityMeta, typeMetaByTypenaam);
+        return childGroups.flatMap((group) => safeArray(group.items).map((childItem, childIndex) => {
+          const secondaireKolom = String(group?.typeMeta?.secondaireEntiteitIDKolom || "");
+          const tweedeEntiteitID = secondaireKolom ? childItem?.[secondaireKolom] : null;
+          const tweedeEntiteitType = leidEntiteitTypeAfUitKolomnaam(secondaireKolom, entityTypes);
+          const tweedeEntiteitKleur = tweedeEntiteitType ? String(typeMetaByTypenaam[tweedeEntiteitType]?.kleur || "") : "";
+          const tweedeEntiteitRandkleur = tweedeEntiteitKleur ? donkerdereRandkleurVanHex(tweedeEntiteitKleur) : "#1e3a8a";
+          return {
+            group,
+            item: childItem,
+            isRelatie: String(group?.typeMeta?.metatype || "").toLowerCase() === "relatie",
+            tweedeEntiteitType,
+            tweedeEntiteitIDTekst: (tweedeEntiteitID === null || tweedeEntiteitID === undefined || tweedeEntiteitID === "") ? "" : String(tweedeEntiteitID),
+            tweedeEntiteitKleur,
+            tweedeEntiteitRandkleur,
+            key: `${group.rolnaam || group.doeltype || 'child'}-${childItem.rel_id ?? childItem.id ?? childIndex}`,
+          };
+        }));
       }
 
       function App() {
@@ -64,10 +412,154 @@
         const [entityType, setEntityType] = useState("A");
         const [entityId, setEntityId] = useState(1);
         const [loading, setLoading] = useState(false);
+        const [exporting, setExporting] = useState(false);
+        const [copying, setCopying] = useState(false);
         const [error, setError] = useState("");
         const [items, setItems] = useState([]);
+        const [overlayArrows, setOverlayArrows] = useState([]);
+        const timelineRowRef = useRef(null);
 
         const entityTypes = useMemo(() => safeArray(schema?.types).filter((x) => String(x.metatype) === "entiteit"), [schema]);
+        const typeMetaByTypenaam = useMemo(() => {
+          const result = {};
+          safeArray(schema?.types).forEach((typeMeta) => {
+            if (typeMeta?.typenaam) result[typeMeta.typenaam] = typeMeta;
+          });
+          return result;
+        }, [schema]);
+        const selectedEntityMeta = typeMetaByTypenaam[entityType] || null;
+
+        const uniformeRegViewBoxHeight = useMemo(() => {
+          const maxWijzigingen = items.reduce((acc, item) => Math.max(acc, safeArray(item?.wijzigingen).length), 0);
+          const laatsteRijOnderkant = maxWijzigingen > 0
+            ? 64 + ((maxWijzigingen - 1) * 56) + 44
+            : 52;
+          return Math.max(220, laatsteRijOnderkant + 16);
+        }, [items]);
+
+        const uniformeRepViewBoxHeight = useMemo(() => {
+          const entityY = 22;
+          const entityH = 82;
+          const geH = 52;
+          const geBinnenGroepGap = 12;
+          const geTussenGroepGap = 34;
+          const geBinnenGroepStap = geH + geBinnenGroepGap;
+          const geTussenGroepStap = geH + geTussenGroepGap;
+          const entityBottomY = entityY + entityH;
+
+          let maxHoogte = 240;
+          items.forEach((item) => {
+            const childNodes = buildChildNodes(item?.snapshot, selectedEntityMeta, typeMetaByTypenaam, entityTypes);
+            const geNodes = childNodes.filter((node) => !node.isRelatie);
+            const relatieNodes = childNodes.filter((node) => node.isRelatie);
+
+            const geNodesMetLayout = [];
+            let geCursorY = entityY;
+            geNodes.forEach((node, index) => {
+              const vorige = geNodes[index - 1] || null;
+              const zelfType = String(node.group?.doeltype || node.group?.rolnaam || "");
+              const vorigeType = String(vorige?.group?.doeltype || vorige?.group?.rolnaam || "");
+              if (index > 0) {
+                geCursorY += zelfType === vorigeType ? geBinnenGroepStap : geTussenGroepStap;
+              }
+              geNodesMetLayout.push({ ...node, y: geCursorY });
+            });
+
+            const geBottom = geNodesMetLayout.length > 0 ? geNodesMetLayout[geNodesMetLayout.length - 1].y + geH : entityBottomY;
+            const relStartY = Math.max(entityBottomY + 46, geNodesMetLayout.length > 0 ? geBottom + 20 + geTussenGroepGap : entityBottomY + 46);
+            const relStepY = 82;
+            const relBottom = relatieNodes.length > 0 ? relStartY + ((relatieNodes.length - 1) * relStepY) + 32 : entityBottomY;
+            const repViewBoxHeight = Math.max(240, geBottom + 18, relBottom + 24);
+            maxHoogte = Math.max(maxHoogte, repViewBoxHeight);
+          });
+
+          return maxHoogte;
+        }, [items, selectedEntityMeta, typeMetaByTypenaam, entityTypes]);
+
+        const undoLinks = useMemo(() => {
+          const links = [];
+          for (const item of items) {
+            if (!item?.isOngedaanmaking) {
+              continue;
+            }
+
+            const sourceRegId = item?.reg?.id;
+            const targetRegId = item?.visualRegistratie?.id;
+            if (sourceRegId === null || sourceRegId === undefined || targetRegId === null || targetRegId === undefined) {
+              continue;
+            }
+
+            safeArray(item?.wijzigingen).forEach((w, idx) => {
+              if (String(w?.wijzigingstype || "").toLowerCase() !== "opvoer") {
+                return;
+              }
+
+              const repNaam = String(w?.representatienaam || "").trim();
+              const repId = String(w?.representatie_id ?? "").trim();
+              const entId = String(w?.entiteit_id ?? "").trim();
+              let targetId = "";
+
+              if (repNaam && repId) {
+                targetId = undoTargetRepId(targetRegId, repNaam, repId);
+              } else if (entId) {
+                targetId = undoTargetEntId(targetRegId, entId);
+              }
+
+              if (!targetId) {
+                return;
+              }
+
+              links.push({
+                sourceId: `undo-src-${normaliseerIdComponent(sourceRegId)}-${idx}`,
+                targetId,
+              });
+            });
+          }
+          return links;
+        }, [items]);
+
+        const highlightPerRegId = useMemo(() => {
+          const map = new Map();
+
+          for (const item of items) {
+            if (!item?.isOngedaanmaking) {
+              continue;
+            }
+
+            const targetRegId = item?.visualRegistratie?.id;
+            if (targetRegId === null || targetRegId === undefined) {
+              continue;
+            }
+
+            const key = String(targetRegId);
+            const huidig = map.get(key) || [];
+
+            safeArray(item?.wijzigingen).forEach((w) => {
+              if (String(w?.wijzigingstype || "").toLowerCase() !== "opvoer") {
+                return;
+              }
+
+              const repNaam = String(w?.representatienaam || "").toUpperCase();
+              const repId = String(w?.representatie_id ?? "");
+              const entId = String(w?.entiteit_id ?? "");
+
+              if (repNaam && repId) {
+                huidig.push({ soort: "REP", repNaam, repId });
+                return;
+              }
+
+              if (entId) {
+                huidig.push({ soort: "ENT", entId });
+              }
+            });
+
+            if (huidig.length > 0) {
+              map.set(key, huidig);
+            }
+          }
+
+          return map;
+        }, [items]);
 
         useEffect(() => {
           let cancelled = false;
@@ -91,26 +583,147 @@
           return () => { cancelled = true; };
         }, [baseUrl]);
 
+        useEffect(() => {
+          const rowEl = timelineRowRef.current;
+          if (!rowEl) {
+            setOverlayArrows([]);
+            return;
+          }
+
+          const rowRect = rowEl.getBoundingClientRect();
+          const arrows = [];
+
+          for (const link of undoLinks) {
+            const sourceEl = document.getElementById(link.sourceId);
+            const targetEl = document.getElementById(link.targetId);
+            if (!sourceEl || !targetEl) {
+              continue;
+            }
+
+            const sourceRect = sourceEl.getBoundingClientRect();
+            const targetRect = targetEl.getBoundingClientRect();
+
+            arrows.push({
+              x1: sourceRect.left + (sourceRect.width / 2) - rowRect.left,
+              y1: sourceRect.top + (sourceRect.height / 2) - rowRect.top,
+              x2: targetRect.left + (targetRect.width / 2) - rowRect.left,
+              y2: targetRect.top - rowRect.top + 2,
+            });
+          }
+
+          setOverlayArrows(arrows);
+        }, [undoLinks, items]);
+
+        async function renderTimelineCanvas() {
+          const rowEl = timelineRowRef.current;
+          if (!rowEl) {
+            throw new Error("Geen visualisatie beschikbaar om te exporteren.");
+          }
+
+          if (!window.html2canvas) {
+            throw new Error("PNG-export niet beschikbaar: html2canvas niet geladen.");
+          }
+
+          return window.html2canvas(rowEl, {
+            backgroundColor: "#f8fafc",
+            useCORS: true,
+            scale: 2,
+            width: rowEl.scrollWidth,
+            height: rowEl.scrollHeight,
+            windowWidth: rowEl.scrollWidth,
+            windowHeight: rowEl.scrollHeight,
+            ignoreElements: (element) => element?.classList?.contains("export-exclude"),
+          });
+        }
+
+        async function downloadTimelineAsPng() {
+          setError("");
+          setExporting(true);
+          try {
+            const canvas = await renderTimelineCanvas();
+            const link = document.createElement("a");
+            link.href = canvas.toDataURL("image/png");
+            link.download = `tijdlijn-schema-${String(entityType || 'entiteit').toLowerCase()}-${normInt(entityId, 0)}.png`;
+            link.click();
+          } catch (err) {
+            setError(err?.message || "Onbekende fout bij PNG-export");
+          } finally {
+            setExporting(false);
+          }
+        }
+
+        async function copyTimelineAsPng() {
+          setError("");
+
+          if (!navigator.clipboard || !window.ClipboardItem) {
+            setError("Kopieren naar klembord wordt niet ondersteund in deze browser/context.");
+            return;
+          }
+
+          setCopying(true);
+          try {
+            const canvas = await renderTimelineCanvas();
+            const blob = await new Promise((resolve, reject) => {
+              canvas.toBlob((result) => {
+                if (result) {
+                  resolve(result);
+                  return;
+                }
+                reject(new Error("PNG-conversie naar blob mislukt."));
+              }, "image/png");
+            });
+
+            await navigator.clipboard.write([
+              new window.ClipboardItem({ "image/png": blob }),
+            ]);
+          } catch (err) {
+            setError(err?.message || "Onbekende fout bij kopieren naar klembord");
+          } finally {
+            setCopying(false);
+          }
+        }
+
         async function loadTimeline() {
           setLoading(true);
           setError("");
           try {
-            const regRes = await fetchJson(`${baseUrl}/full/registraties?page=1&size=100`);
-            const registraties = safeArray(regRes?.Registraties);
+            const registraties = await fetchAlleRegistraties(baseUrl);
             const seg = endpointSegmentForEntityType(entityType);
             const id = normInt(entityId, 0);
+            const entityTypeUpper = String(entityType || "").toUpperCase();
 
             const verrijkt = [];
             for (const reg of registraties) {
+              const isOngedaanmaking = String(reg?.registratietype || "").toLowerCase() === "ongedaanmaking";
+              let visualRegistratie = reg;
+              let visualWijzigingen = safeArray(reg?.wijzigingen);
+
+              if (isOngedaanmaking && reg?.maakt_ongedaan_registratie_id) {
+                const doelRegistratie = await fetchRegistratieById(baseUrl, reg.maakt_ongedaan_registratie_id);
+                if (doelRegistratie) {
+                  visualRegistratie = doelRegistratie;
+                  visualWijzigingen = safeArray(doelRegistratie?.wijzigingen);
+                }
+              }
+
+              const relevanteWijzigingen = visualWijzigingen.filter((w) => {
+                const entiteitNaam = String(w?.entiteitnaam || "").toUpperCase();
+                return entiteitNaam === entityTypeUpper && String(w?.entiteit_id ?? "") === String(id);
+              });
+
+              if (relevanteWijzigingen.length === 0) {
+                continue;
+              }
+
               const t = tUitRegistratieTijdstip(reg?.tijdstip);
               let snapshot = null;
               if (t !== null) {
                 const res = await fetch(`${baseUrl}/full/${seg}/${encodeURIComponent(id)}?t=${encodeURIComponent(t)}`);
                 if (res.ok) {
-                  snapshot = await res.json();
+                  snapshot = snapshotEntiteitUitPayload(await res.json(), entityType);
                 }
               }
-              verrijkt.push({ reg, t, snapshot });
+              verrijkt.push({ reg, visualRegistratie, wijzigingen: relevanteWijzigingen, t, snapshot, isOngedaanmaking });
             }
 
             verrijkt.sort((a, b) => {
@@ -132,8 +745,8 @@
 
         return (
           <div className="container">
-            <h1>Schema-driven tijdlijn (prototype)</h1>
-            <p className="muted"><a className="muted" href="/viz/tijdlijn.html">Terug naar huidige tijdlijn</a> | <a className="muted" href="/viz/index_schema.html">Open schema-index</a></p>
+            <h1 className="page-title">Visualisatie tijdreizen (formele tijd) - schema-tijdslijn</h1>
+            <p className="muted"><a className="muted" href="/viz/tijdlijn.html">Open bestaande tijdslijn</a> | <a className="muted" href="/viz/index_schema.html">Open schema-index</a></p>
             <p className="muted">
               {schemaError
                 ? `Schema niet geladen: ${schemaError}`
@@ -157,27 +770,286 @@
                   <input type="number" min="0" step="1" value={entityId} onChange={(e) => setEntityId(e.target.value)} />
                 </label>
                 <div style={{ alignSelf: "end" }}>
-                  <button onClick={loadTimeline} disabled={loading}>{loading ? "Bezig..." : "Ophalen tijdlijn"}</button>
+                  <button onClick={loadTimeline} disabled={loading}>{loading ? "Bezig met ophalen..." : "Ophalen tijdslijn"}</button>
+                </div>
+                <div style={{ alignSelf: "end", display: "flex", gap: 8 }}>
+                  <button onClick={downloadTimelineAsPng} disabled={loading || exporting || items.length === 0}>
+                    {exporting ? "PNG maken..." : "Download PNG"}
+                  </button>
+                  <button onClick={copyTimelineAsPng} disabled={loading || exporting || copying || items.length === 0}>
+                    {copying ? "Kopie maken..." : "Kopieer PNG"}
+                  </button>
                 </div>
               </div>
-              {error && <p style={{ color: "#dc2626" }}>Fout: {error}</p>}
+              {error && <p className="error-text">Fout: {error}</p>}
             </div>
 
-            <div className="timeline">
-              <div className="row">
-                {items.map((item, idx) => (
-                  <div className="col" key={`col-${item.reg?.id || idx}`}>
-                    <div className="card">
-                      <h2>Registratie {item.reg?.id ?? "-"}</h2>
-                      <p className="muted">type={item.reg?.registratietype || "-"} | t={item.t ?? "-"}</p>
-                      <pre>{JSON.stringify(item.reg || {}, null, 2)}</pre>
+            <div className="timeline-scroll">
+              <div className="timeline-row" ref={timelineRowRef}>
+                <svg className="timeline-overlay" width="100%" height="100%" preserveAspectRatio="none">
+                  <defs>
+                    <marker id="undoArrowSchema" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                      <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(220, 38, 38, 0.6)" />
+                    </marker>
+                  </defs>
+                  {overlayArrows.map((arrow, arrowIndex) => {
+                    const dx = Math.abs(arrow.x1 - arrow.x2);
+                    const bendNearEnd = Math.max(12, dx * 0.06);
+                    const c1x = arrow.x1 - 14;
+                    const c1y = arrow.y1 + 46;
+                    const c2x = arrow.x2 - bendNearEnd;
+                    const c2y = arrow.y2 - 64;
+                    return (
+                      <path
+                        key={`overlay-arrow-schema-${arrowIndex}`}
+                        d={`M ${arrow.x1} ${arrow.y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${arrow.x2} ${arrow.y2}`}
+                        fill="none"
+                        stroke="rgba(220, 38, 38, 0.55)"
+                        strokeWidth="1.8"
+                        markerEnd="url(#undoArrowSchema)"
+                      />
+                    );
+                  })}
+                </svg>
+                {items.map((item, idx) => {
+                  const reg = item.reg || {};
+                  const visualReg = item.visualRegistratie || reg;
+                  const highlights = highlightPerRegId.get(String(visualReg.id ?? "")) || [];
+                  const wijzigingen = safeArray(item.wijzigingen);
+                  const registratieTitel = reg?.registratietype
+                    ? reg.registratietype.charAt(0).toUpperCase() + reg.registratietype.slice(1)
+                    : "Registratie";
+                  const registratieOpmerking = typeof reg?.opmerking === "string" ? reg.opmerking : "";
+                  const regViewBoxHeight = uniformeRegViewBoxHeight;
+                  const childNodes = buildChildNodes(item.snapshot, selectedEntityMeta, typeMetaByTypenaam, entityTypes);
+                  const geNodes = childNodes.filter((node) => !node.isRelatie);
+                  const relatieNodes = childNodes.filter((node) => node.isRelatie);
+                  const entityX = 16;
+                  const entityY = 22;
+                  const entityW = 132;
+                  const entityH = 82;
+                  const geW = 114;
+                  const geH = 52;
+                  const geBinnenGroepGap = 12;
+                  const geTussenGroepGap = 34;
+                  const geBinnenGroepStap = geH + geBinnenGroepGap;
+                  const geTussenGroepStap = geH + geTussenGroepGap;
+                  const geNodesMetLayout = [];
+                  let geCursorY = entityY;
+                  geNodes.forEach((node, index) => {
+                    const vorige = geNodes[index - 1] || null;
+                    const zelfType = String(node.group?.doeltype || node.group?.rolnaam || "");
+                    const vorigeType = String(vorige?.group?.doeltype || vorige?.group?.rolnaam || "");
+                    if (index > 0) {
+                      geCursorY += zelfType === vorigeType ? geBinnenGroepStap : geTussenGroepStap;
+                    }
+                    geNodesMetLayout.push({ ...node, y: geCursorY });
+                  });
+                  const entityRight = entityX + entityW;
+                  const entityTopLineY = entityY + 26;
+                  const entityBottomY = entityY + entityH;
+                  const geBranchX = 166;
+                  const geX = 192;
+                  const geStartY = geNodesMetLayout.length > 0 ? geNodesMetLayout[0].y : 30;
+                  const relTrunkX = 42;
+                  const relX = 78;
+                  const relW = 152;
+                  const relH = 52;
+                  const geBottom = geNodesMetLayout.length > 0 ? geNodesMetLayout[geNodesMetLayout.length - 1].y + geH : entityBottomY;
+                  const relStartY = Math.max(entityBottomY + 46, geNodesMetLayout.length > 0 ? geBottom + 20 + geTussenGroepGap : entityBottomY + 46);
+                  const relStepY = 82;
+                  const repViewBoxHeight = uniformeRepViewBoxHeight;
+
+                  return (
+                    <div className="timeline-column" key={`col-${item.reg?.id || idx}`}>
+                      <div className="card">
+                        <h3 className="panel-title panel-title-row">
+                          <span className="panel-title-main">{`${registratieTitel} ${reg.id ?? "-"}`}</span>
+                          {!!registratieOpmerking && <span className="muted panel-title-remark" style={{ fontWeight: 400 }} title={registratieOpmerking}>{registratieOpmerking}</span>}
+                        </h3>
+                        <svg className="graph" viewBox={`0 0 320 ${regViewBoxHeight}`} preserveAspectRatio="xMidYMin meet" style={{ height: `${regViewBoxHeight}px` }}>
+                          <defs>
+                            <pattern id="pat-registratie" patternUnits="userSpaceOnUse" width="8" height="8">
+                              <rect width="8" height="8" fill="var(--registration-fill)" />
+                              <circle cx="2" cy="2" r="1.5" fill="#cee6f8" />
+                              <circle cx="6" cy="5" r="1.5" fill="#cee6f8" />
+                            </pattern>
+                            <pattern id="pat-opvoer" patternUnits="userSpaceOnUse" width="8" height="8">
+                              <rect width="8" height="8" fill="var(--opvoer-fill)" />
+                              <circle cx="2" cy="2" r="1.5" fill="#beeece" />
+                              <circle cx="6" cy="5" r="1.5" fill="#beeece" />
+                            </pattern>
+                            <pattern id="pat-afvoer" patternUnits="userSpaceOnUse" width="8" height="8">
+                              <rect width="8" height="8" fill="var(--afvoer-fill)" />
+                              <circle cx="2" cy="2" r="1.5" fill="#f5dcbc" />
+                              <circle cx="6" cy="5" r="1.5" fill="#f5dcbc" />
+                            </pattern>
+                            <pattern id="pat-neutraal" patternUnits="userSpaceOnUse" width="8" height="8">
+                              <rect width="8" height="8" fill="var(--neutral-fill)" />
+                              <circle cx="2" cy="2" r="1.5" fill="#dce8f0" />
+                              <circle cx="6" cy="5" r="1.5" fill="#dce8f0" />
+                            </pattern>
+                          </defs>
+                          <rect className="node" x="40" y="8" rx="8" width="240" height="44" style={{ fill: "url(#pat-registratie)" }} />
+                          <text className="label" x="270" y="22" textAnchor="end">t: {microsecondeIntVanTijdstip(visualReg.tijdstip)}</text>
+                          <text className="label" x="52" y="36">
+                            <tspan className="label-strong">Reg</tspan>
+                            {" id="}
+                            <tspan className="label-strong">{visualReg.id ?? "-"}</tspan>
+                            {` | type=${visualReg.registratietype || reg.registratietype || "-"}`}
+                          </text>
+
+                          {wijzigingen.map((w, i) => {
+                            const y = 64 + i * 56;
+                            const repLeeg = (w.representatienaam === null || w.representatienaam === undefined || w.representatienaam === "")
+                              && (w.representatie_id === null || w.representatie_id === undefined || w.representatie_id === "");
+                            return (
+                              <g key={`w-${w.id || i}`}>
+                                <line className="edge" x1="160" y1="52" x2="160" y2={y - 2} />
+                                <rect className="node" x="14" y={y} rx="8" width="292" height="44" style={{ fill: `url(#${wijzigingPatroonId(w.wijzigingstype)})` }} />
+                                <line x1="111" y1={y} x2="111" y2={y + 44} stroke="var(--border-strong)" strokeWidth="1" />
+                                <line x1="208" y1={y} x2="208" y2={y + 44} stroke="var(--border-strong)" strokeWidth="1" />
+                                <text id={item.isOngedaanmaking && String(w.wijzigingstype || "").toLowerCase() === "opvoer" ? `undo-src-${normaliseerIdComponent(reg.id)}-${i}` : undefined} className="label" x="24" y={y + 27}>{w.wijzigingstype || "-"}</text>
+                                <text className="label" x="120" y={y + 27}>
+                                  <tspan className="label-strong">{w.entiteitnaam || entityType || "E"}</tspan>
+                                  {": "}
+                                  <tspan className="label-strong">{w.entiteit_id ?? "-"}</tspan>
+                                </text>
+                                {!repLeeg && (
+                                  <text className="label" x="218" y={y + 27}>
+                                    <tspan className="label-strong">{w.representatienaam}</tspan>
+                                    {": "}
+                                    <tspan className="label-strong">{w.representatie_id}</tspan>
+                                  </text>
+                                )}
+                              </g>
+                            );
+                          })}
+
+                          {item.isOngedaanmaking && (
+                            <>
+                              <line x1="14" y1="8" x2="306" y2={regViewBoxHeight - 6} stroke="#dc2626" strokeWidth="4" strokeLinecap="round" />
+                              <line x1="306" y1="8" x2="14" y2={regViewBoxHeight - 6} stroke="#dc2626" strokeWidth="4" strokeLinecap="round" />
+                            </>
+                          )}
+                        </svg>
+                      </div>
+
+                      <div className="card">
+                        <h3 className="panel-title">Representaties</h3>
+                        {!item.snapshot ? (
+                          <svg className="graph graph-rep" viewBox={`0 0 320 ${repViewBoxHeight}`} preserveAspectRatio="xMidYMin meet" style={{ height: `${repViewBoxHeight}px` }}>
+                            <text className="label" x="160" y={Math.max(24, Math.round(repViewBoxHeight / 2))} textAnchor="middle" fill="var(--muted)">Geen snapshot beschikbaar.</text>
+                          </svg>
+                        ) : (
+                          <>
+                            <svg className="graph graph-rep" viewBox={`0 0 320 ${repViewBoxHeight}`} preserveAspectRatio="xMidYMin meet" style={{ height: `${repViewBoxHeight}px` }}>
+                              <g>
+                                <rect className="node" x={entityX} y={entityY} rx="10" width={entityW} height={entityH} style={{ fill: selectedEntityMeta?.kleur || "var(--entity-fill)", strokeWidth: 2.8 }} />
+                                {highlights.some((h) => h.soort === "ENT" && String(item.snapshot.id ?? normInt(entityId, 0)) === String(h.entId)) && (
+                                  <ellipse cx={entityX + (entityW / 2)} cy={entityY + (entityH / 2)} rx="78" ry="50" fill="rgba(220, 38, 38, 0.18)" stroke="#dc2626" strokeWidth="2" />
+                                )}
+                                <text className="label" x={entityX + entityW - 8} y={entityY + 18} textAnchor="end">opv: {item.snapshot.opvoer ? microsecondeIntVanTijdstip(item.snapshot.opvoer) : "-"}</text>
+                                <text id={undoTargetEntId(visualReg.id, item.snapshot.id ?? normInt(entityId, 0))} className="label" x={entityX + 14} y={entityY + 30}>
+                                  <tspan className="label-strong" style={{ fontSize: 18, fontWeight: 800 }}>{entityType || "E"}</tspan>
+                                  {" id="}
+                                  <tspan className="label-strong" style={{ fontSize: 18, fontWeight: 800 }}>{item.snapshot.id ?? normInt(entityId, 0)}</tspan>
+                                </text>
+                                <text className="label" x={entityX + 14} y={entityY + 54}>{korteSamenvatting(item.snapshot)}</text>
+                              </g>
+
+                              {geNodesMetLayout.length > 0 && (
+                                <>
+                                  <line className="edge" x1={entityRight} y1={entityTopLineY} x2={geBranchX} y2={entityTopLineY} style={{ stroke: "var(--edge)", strokeWidth: 1.8 }} />
+                                  <line className="edge" x1={geBranchX} y1={entityTopLineY} x2={geBranchX} y2={geNodesMetLayout[geNodesMetLayout.length - 1].y + 26} style={{ stroke: "var(--edge)", strokeWidth: 1.8 }} />
+                                </>
+                              )}
+
+                              {relatieNodes.length > 0 && (
+                                <>
+                                  <line className="edge" x1={relTrunkX} y1={entityBottomY} x2={relTrunkX} y2={relStartY + ((relatieNodes.length - 1) * relStepY) + 8} style={{ stroke: "var(--stroke)", strokeWidth: 2.8 }} />
+                                  <line className="edge" x1={relTrunkX} y1={entityBottomY} x2={entityX + 40} y2={entityBottomY} style={{ stroke: "var(--stroke)", strokeWidth: 2.8 }} />
+                                </>
+                              )}
+
+                              {geNodesMetLayout.map((childNode) => {
+                                const y = childNode.y;
+                                const { group, item: childItem } = childNode;
+                                const doelLabel = group.doeltype || group.rolnaam || "-";
+                                const nodeFill = group.typeMeta?.kleur || "var(--neutral-fill)";
+                                const isHighlighted = highlights.some((h) => h.soort === "REP"
+                                  && String(h.repNaam || "").toUpperCase() === String(doelLabel || "").toUpperCase()
+                                  && String(h.repId) === String(childItem.rel_id ?? childItem.id ?? ""));
+                                return (
+                                  <g key={childNode.key}>
+                                    <line className="edge" x1={geBranchX} y1={y + 26} x2={geX} y2={y + 26} style={{ stroke: "var(--edge)", strokeWidth: 1.8 }} />
+                                    <rect className="node" x={geX} y={y} rx="8" width={geW} height={geH} style={{ fill: nodeFill, stroke: "var(--stroke)", strokeWidth: 2.2 }} />
+                                    {isHighlighted && <ellipse cx={geX + (geW / 2)} cy={y + (geH / 2)} rx="66" ry="34" fill="rgba(220, 38, 38, 0.18)" stroke="#dc2626" strokeWidth="2" />}
+                                    <text className="label" x={geX + geW - 8} y={y + 14} textAnchor="end">opv: {childItem.opvoer ? microsecondeIntVanTijdstip(childItem.opvoer) : "-"}</text>
+                                    <text id={undoTargetRepId(visualReg.id, doelLabel, childItem.rel_id ?? childItem.id ?? "")} className="label" x={geX + 8} y={y + 22}>
+                                      <tspan className="label-strong">{doelLabel}</tspan>
+                                      {` #${childItem.rel_id ?? childItem.id ?? "-"}`}
+                                    </text>
+                                    <text className="label" x={geX + 8} y={y + 40}>{korteSamenvatting(childItem)}</text>
+                                  </g>
+                                );
+                              })}
+
+                              {relatieNodes.map((childNode, groupIndex) => {
+                                const y = relStartY + (groupIndex * relStepY);
+                                const { group, item: childItem } = childNode;
+                                const doelLabel = group.doeltype || group.rolnaam || "-";
+                                const isHighlighted = highlights.some((h) => h.soort === "REP"
+                                  && String(h.repNaam || "").toUpperCase() === String(doelLabel || "").toUpperCase()
+                                  && String(h.repId) === String(childItem.rel_id ?? childItem.id ?? ""));
+                                const secondBoxW = 72;
+                                const secondBoxH = 24;
+                                const secondBoxX = relX + relW - secondBoxW - 10;
+                                const secondBoxY = y + 16;
+                                return (
+                                  <g key={childNode.key}>
+                                    <line className="edge" x1={relTrunkX} y1={y + 8} x2={relX} y2={y + 8} style={{ stroke: "var(--stroke)", strokeWidth: 2.8 }} />
+                                    <rect className="node" x={relX} y={y - 20} rx="8" width={relW} height={relH} style={{ fill: group.typeMeta?.kleur || "#fff7ed", stroke: "#7c2d12", strokeWidth: 2.8 }} />
+                                    {isHighlighted && <ellipse cx={relX + (relW / 2)} cy={y + 6} rx="82" ry="34" fill="rgba(220, 38, 38, 0.18)" stroke="#dc2626" strokeWidth="2" />}
+                                    <text className="label" x={relX + relW - 8} y={y - 6} textAnchor="end">opv: {childItem.opvoer ? microsecondeIntVanTijdstip(childItem.opvoer) : "-"}</text>
+                                    <text id={undoTargetRepId(visualReg.id, doelLabel, childItem.rel_id ?? childItem.id ?? "")} className="label" x={relX + 12} y={y + 2}>
+                                      <tspan className="label-strong">{doelLabel}</tspan>
+                                      {` rel_id=${childItem.rel_id ?? childItem.id ?? "-"}`}
+                                    </text>
+                                    <text className="label" x={relX + 12} y={y + 22}>{korteSamenvatting(childItem)}</text>
+                                    {!!childNode.tweedeEntiteitIDTekst && (
+                                      <>
+                                        <rect x={secondBoxX} y={secondBoxY} rx="6" width={secondBoxW} height={secondBoxH} style={{ fill: childNode.tweedeEntiteitKleur || "var(--entity-fill)", stroke: childNode.tweedeEntiteitRandkleur || "#1e3a8a", strokeWidth: 2 }} />
+                                        <text className="label" x={secondBoxX + 6} y={secondBoxY + 16}>
+                                          <tspan className="label-strong">{childNode.tweedeEntiteitType || "Ent"}</tspan>
+                                          {" id="}
+                                          <tspan className="label-strong">{childNode.tweedeEntiteitIDTekst}</tspan>
+                                        </text>
+                                      </>
+                                    )}
+                                  </g>
+                                );
+                              })}
+                            </svg>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="card export-exclude" style={{ padding: 10 }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                          <details className="details-block" style={{ marginTop: 0, borderTop: "none", paddingTop: 0 }}>
+                            <summary>Ruwe registratie-data</summary>
+                            <pre>{JSON.stringify(reg, null, 2)}</pre>
+                          </details>
+                          <details className="details-block" style={{ marginTop: 0, borderTop: "none", paddingTop: 0 }}>
+                            <summary>Ruwe snapshot-data</summary>
+                            <pre>{JSON.stringify(item.snapshot || null, null, 2)}</pre>
+                          </details>
+                        </div>
+                      </div>
                     </div>
-                    <div className="card">
-                      <h2>Snapshot {entityType} #{normInt(entityId, 0)}</h2>
-                      <pre>{JSON.stringify(item.snapshot || null, null, 2)}</pre>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

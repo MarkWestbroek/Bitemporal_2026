@@ -421,8 +421,11 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 		// Succes response inclusief de gewijzigde gegevens
 		c.JSON(http.StatusCreated,
 			gin.H{
-				"message":     fmt.Sprintf("De registratie %d is succesvol verwerkt op %s in %d ms", registratieID, registratieTijdstip, elapsedMs),
-				"wijzigingen": request.Wijzigingen,
+				"message":        fmt.Sprintf("De registratie %d is succesvol verwerkt op %s in %d ms", registratieID, registratieTijdstip, elapsedMs),
+				"registratie_id": registratieID,
+				"registratieId":  registratieID,
+				"tijdstip":       registratieTijdstip,
+				"wijzigingen":    request.Wijzigingen,
 			})
 
 	}
