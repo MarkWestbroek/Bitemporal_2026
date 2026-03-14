@@ -35,6 +35,9 @@ WORKDIR /root/
 # Copy the binary from builder stage
 COPY --from=builder /app/bitemp-go-api .
 
+# Copy static web assets for /viz routes
+COPY --from=builder /app/web ./web
+
 # Expose port 8080 (default Gin port)
 EXPOSE 8080
 

@@ -153,6 +153,7 @@ DATABASE_URL=postgres://<user>:<strong-password>@<host>:5432/<db>?sslmode=requir
 ## Docker
 
 For Docker build/run/share instructions (without docker compose), see [docker.md](docker.md).
+For a short release flow, see [RELEASE.md](RELEASE.md).
 
 ## Contributing
 

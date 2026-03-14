@@ -2,6 +2,8 @@
 
 Deze handleiding beschrijft hoe je de API als losse Docker image bouwt en draait, terwijl PostgreSQL apart blijft draaien.
 
+Snelle releaseflow: zie ook [RELEASE.md](RELEASE.md).
+
 Doel:
 - API eenvoudig vervangen/upgraden.
 - Data behouden in een aparte database.
@@ -18,6 +20,25 @@ Voorbeelden van host in `DATABASE_URL`:
 - PostgreSQL op andere server: echte hostnaam of IP
 - PostgreSQL in andere container op zelfde network: containernaam
 
+## 1.1 Configuratie via `.env.docker` (aanrader)
+
+Voor Dockge/compose is het netter om credentials en tags in een env-bestand te zetten.
+
+Bestanden:
+- `.env.docker.example` (template)
+- `.env.docker` (jouw echte waarden, lokaal op server)
+
+Maak je lokale env-bestand:
+
+```bash
+cp .env.docker.example .env.docker
+```
+
+Pas daarna minimaal aan in `.env.docker`:
+- `POSTGRES_PASSWORD`
+- `ADMIN_DROP_PASSWORD`
+- eventueel `API_IMAGE`
+
 ## 2. Image bouwen
 
 Ga naar de map `bitemporal_go_API_v04` en build de image.
@@ -27,7 +48,7 @@ Ga naar de map `bitemporal_go_API_v04` en build de image.
 ```powershell
 $commit = (git rev-parse --short HEAD)
 $bt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-docker build --no-cache --build-arg COMMIT=$commit --build-arg BUILD_TIME=$bt -t bitemp-go-api:v04 .
+docker build --no-cache --build-arg COMMIT=$commit --build-arg BUILD_TIME=$bt -t bitemp-go-api:v04.00.01 .
 ```
 
 ### Bash
@@ -36,8 +57,11 @@ docker build --no-cache --build-arg COMMIT=$commit --build-arg BUILD_TIME=$bt -t
 docker build --no-cache \
   --build-arg COMMIT=$(git rev-parse --short HEAD) \
   --build-arg BUILD_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-  -t bitemp-go-api:v04 .
+  -t bitemp-go-api:v04.00.01 .
 ```
+
+Opmerking:
+- Build opnieuw na Dockerfile-wijzigingen (zoals `/web` static assets) en push een nieuwe tag.
 
 ## 3. API starten (zonder compose)
 
@@ -54,7 +78,7 @@ docker run -d --name bitemp-go-api \
   -e ALLOW_DROP_TABLES=false \
   -e ADMIN_DROP_PASSWORD="kies-een-sterk-geheim" \
   --restart unless-stopped \
-  bitemp-go-api:v04
+  bitemp-go-api:v04.00.01
 ```
 
 ### Voorbeeld: DB op aparte server
@@ -68,7 +92,7 @@ docker run -d --name bitemp-go-api \
   -e ALLOW_DROP_TABLES=false \
   -e ADMIN_DROP_PASSWORD="kies-een-sterk-geheim" \
   --restart unless-stopped \
-  bitemp-go-api:v04
+  bitemp-go-api:v04.00.01
 ```
 
 ## 4. Handige controlecommando's
@@ -92,10 +116,10 @@ curl http://localhost:8080/version
 Omdat de database apart staat, kun je de API-container veilig vervangen.
 
 ```powershell
-# 1) Nieuwe image bouwen (voorbeeld tag v05)
+# 1) Nieuwe image bouwen (voorbeeld tag v04.00.02)
 $commit = (git rev-parse --short HEAD)
 $bt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-docker build --no-cache --build-arg COMMIT=$commit --build-arg BUILD_TIME=$bt -t bitemp-go-api:v05 .
+docker build --no-cache --build-arg COMMIT=$commit --build-arg BUILD_TIME=$bt -t bitemp-go-api:v04.00.02 .
 
 # 2) Oude API stoppen/verwijderen
 docker rm -f bitemp-go-api
@@ -109,7 +133,7 @@ docker run -d --name bitemp-go-api \
   -e ALLOW_DROP_TABLES=false \
   -e ADMIN_DROP_PASSWORD="kies-een-sterk-geheim" \
   --restart unless-stopped \
-  bitemp-go-api:v05
+  bitemp-go-api:v04.00.02
 ```
 
 Bijv.
@@ -130,19 +154,19 @@ docker run -d --name bitemp-go-api
 ### Op bronmachine
 
 ```powershell
-docker save -o bitemp-go-api_v04.tar bitemp-go-api:v04
+docker save -o bitemp-go-api_v04.00.01.tar bitemp-go-api:v04.00.01
 ```
 
-Kopieer `bitemp-go-api_v04.tar` naar de doelmachine.
+Kopieer `bitemp-go-api_v04.00.01.tar` naar de doelmachine.
 
-NAS: \\TRUENAS\share\Docker\Bitemporal\bitemp-go-api_v04.tar
+NAS: \\TRUENAS\share\Docker\Bitemporal\bitemp-go-api_v04.00.01.tar
 
 
 ### Op doelmachine
 
 ```powershell
-docker load -i bitemp-go-api_v04.tar
-docker run -d --name bitemp-go-api -p 8080:8080 -e DATABASE_URL="postgres://USER:PASSWORD@DB_HOST:5432/DB_NAME?sslmode=require" -e APP_ENV=production -e GIN_MODE=release -e ALLOW_DROP_TABLES=false -e ADMIN_DROP_PASSWORD="sterk-geheim" --restart unless-stopped bitemp-go-api:v04
+docker load -i bitemp-go-api_v04.00.01.tar
+docker run -d --name bitemp-go-api -p 8080:8080 -e DATABASE_URL="postgres://USER:PASSWORD@DB_HOST:5432/DB_NAME?sslmode=require" -e APP_ENV=production -e GIN_MODE=release -e ALLOW_DROP_TABLES=false -e ADMIN_DROP_PASSWORD="sterk-geheim" --restart unless-stopped bitemp-go-api:v04.00.01
 ```
 
 bijv.:
@@ -155,7 +179,7 @@ docker run -d --name bitemp-go-api
   -e ALLOW_DROP_TABLES=false 
   -e ADMIN_DROP_PASSWORD="kies-een-sterk-geheim" 
   --restart unless-stopped 
-  bitemp-go-api:v04
+  bitemp-go-api:v04.00.01
 ```
 
 ## 7. Image delen via registry (aanrader)
@@ -163,21 +187,89 @@ docker run -d --name bitemp-go-api
 ### Tag en push
 
 ```powershell
-docker tag bitemp-go-api:v04 <registry-user>/bitemp-go-api:v04
-docker push <registry-user>/bitemp-go-api:v04
+docker tag bitemp-go-api:v04.00.01 <registry-user>/bitemp-go-api:v04.00.01
+docker push <registry-user>/bitemp-go-api:v04.00.01
 ```
 
-Gedaan: `markwestbroek/bitemp-go-api`
+Voorbeeld repository:
+- `markwestbroek/bitemp-go-api`
 
 ### Op server pull en run
 
 ```powershell
-docker pull <registry-user>/bitemp-go-api:v04
+docker pull <registry-user>/bitemp-go-api:v04.00.01
 docker rm -f bitemp-go-api
-docker run -d --name bitemp-go-api -p 8080:8080 -e DATABASE_URL="postgres://..." --restart unless-stopped <registry-user>/bitemp-go-api:v04
+docker run -d --name bitemp-go-api -p 8080:8080 -e DATABASE_URL="postgres://..." -e APP_ENV=production -e GIN_MODE=release -e ALLOW_DROP_TABLES=false -e ADMIN_DROP_PASSWORD="kies-een-sterk-geheim" --restart unless-stopped <registry-user>/bitemp-go-api:v04.00.01
 ```
 
-## 8. Veelvoorkomende fouten
+## 8. TrueNAS en Dockge (aanbevolen op server)
+
+Als je TrueNAS gebruikt met Dockge, gebruik dan 2 aparte stacks:
+- DB stack: `docker-compose.db-only.yml`
+- API stack: `docker-compose.api-only.yml`
+
+Zo blijft de database zelfstandig draaien en kun je de API los upgraden.
+
+### 8.1 Eenmalig: env-bestand klaarzetten
+
+```bash
+cp .env.docker.example .env.docker
+```
+
+Pas secrets aan in `.env.docker` voordat je deployt.
+
+### 8.2 Database stack deployen (eerst)
+
+Gebruik bestand:
+- `docker-compose.db-only.yml`
+
+Plak in Dockge of gebruik via CLI:
+
+```bash
+docker compose -f docker-compose.db-only.yml up -d
+```
+
+Controle:
+
+```bash
+docker logs --tail 100 bitemp-postgres
+docker exec -it bitemp-postgres pg_isready -U postgres -d bitemp_go_db
+```
+
+### 8.3 API stack deployen (daarna)
+
+Gebruik bestand:
+- `docker-compose.api-only.yml`
+
+Plak in Dockge of gebruik via CLI:
+
+```bash
+docker compose -f docker-compose.api-only.yml up -d
+```
+
+Belangrijk:
+- In deze opzet gebruikt de API als DB hostnaam: `bitemp-postgres`.
+- Dat werkt omdat beide stacks op dezelfde named network `bitemp-net` zitten.
+- De network `bitemp-net` wordt automatisch aangemaakt door compose (als die nog niet bestaat).
+- Beide stacks lezen variabelen uit `.env.docker`.
+
+### 8.4 Updaten in Dockge
+
+DB upgraden:
+1. Pas `image: postgres:...` aan in de DB stack.
+2. Redeploy de DB stack.
+
+API upgraden:
+1. Push nieuwe image tag (bijv. `v04.00.02`).
+2. Pas `image: markwestbroek/bitemp-go-api:v04.00.02` aan in de API stack.
+3. Redeploy de API stack.
+
+Voordeel:
+- API is eenvoudig vervangbaar.
+- Data blijft staan in volume van de DB stack.
+- Beheer via UI met behoud van reproduceerbare compose-config.
+
+## 9. Veelvoorkomende fouten
 
 ### Fout: containernaam bestaat al
 
@@ -199,7 +291,7 @@ Oplossing:
 - Gebruik een echte host in `DATABASE_URL`.
 - Voor Windows host vanuit container vaak: `host.docker.internal`.
 
-## 9. Security advies
+## 10. Security advies
 
 Gebruik in productie:
 - `APP_ENV=production`
@@ -208,3 +300,87 @@ Gebruik in productie:
 - Sterk `ADMIN_DROP_PASSWORD`
 - Sterke DB credentials
 - `sslmode=require` (of strenger) waar mogelijk
+
+Extra:
+- Commit geen `.env.docker` met echte secrets naar Git.
+
+## 11. Image lifecycle en opruimbeleid
+
+Om te voorkomen dat je Docker Hub-repo volloopt, gebruik een vast bewaarbeleid.
+
+Aanbevolen beleid:
+- Bewaar de laatste 10 versie-tags (bijv. `v04.00.01` t/m `v04.00.10`).
+- Bewaar altijd 1 bewezen rollback-tag naast de huidige productie-tag.
+- Verwijder pre-release/test-tags na validatie.
+
+Voorbeeld (huidig + rollback):
+- `current`: `v04.00.10`
+- `rollback`: `v04.00.09`
+
+### 11.1 Lokaal opruimen (build machine/server)
+
+Verwijder ongebruikte images:
+
+```bash
+docker image prune -a
+```
+
+Verwijder een specifieke oude tag:
+
+```bash
+docker rmi markwestbroek/bitemp-go-api:v04.00.01
+```
+
+### 11.2 Docker Hub opruimen (remote)
+
+Verwijder oude tags in Docker Hub UI:
+1. Open repository `markwestbroek/bitemp-go-api`.
+2. Ga naar tab `Tags`.
+3. Verwijder oude tags die buiten je bewaarbeleid vallen.
+
+Praktische routine per release:
+1. Push nieuwe tag.
+2. Update productie naar die tag.
+3. Houd vorige productietag als rollback.
+4. Verwijder tags ouder dan je afgesproken venster (bijv. ouder dan laatste 10).
+
+## 12. Release checklist (2 minuten)
+
+Gebruik dit bij elke nieuwe API-versie.
+
+### 12.1 Build en push
+
+```bash
+docker build --no-cache -t markwestbroek/bitemp-go-api:v04.00.02 .
+docker push markwestbroek/bitemp-go-api:v04.00.02
+```
+
+### 12.2 Tag in stack bijwerken
+
+Werk op de server in `.env.docker` bij:
+
+```dotenv
+API_IMAGE=markwestbroek/bitemp-go-api:v04.00.02
+```
+
+### 12.3 API redeployen
+
+```bash
+docker compose -f docker-compose.api-only.yml up -d
+```
+
+### 12.4 Smoke test
+
+```bash
+curl http://<server-ip>:8080/version
+curl http://<server-ip>:8080/viz/index_schema.html
+docker logs --tail 100 bitemp-go-api
+```
+
+### 12.5 Rollback (indien nodig)
+
+Zet `API_IMAGE` terug naar de vorige stabiele tag en redeploy opnieuw:
+
+```bash
+docker compose -f docker-compose.api-only.yml up -d
+```
