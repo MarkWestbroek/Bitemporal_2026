@@ -1,0 +1,61 @@
+body {
+        background: #f8fafc;
+        color: #0f172a;
+      }
+      .container {
+        max-width: 1600px;
+        padding: 24px;
+      }
+      .card {
+        padding: 16px;
+      }
+      .controls {
+        grid-template-columns: repeat(3, minmax(180px, 1fr));
+        margin-bottom: 16px;
+      }
+      button {
+        background: #0f172a;
+        border-color: #0f172a;
+        color: white;
+      }
+      .graph {
+        min-height: 300px;
+        border-radius: 12px;
+      }
+      .label {
+        font-size: 13px;
+      }
+      .opv-link {
+        cursor: pointer;
+      }
+      .opv-link:hover {
+        text-decoration: underline;
+        fill: #1d4ed8;
+        animation: opvPulse 0.8s ease-in-out infinite alternate;
+      }
+      @keyframes opvPulse {
+        from { opacity: 1; }
+        to { opacity: 0.45; }
+      }
+      .label-lg {
+        font-size: 15px;
+      }
+      .label-left-lg {
+        font-size: 18px;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: minmax(460px, 1fr) minmax(660px, 1.35fr);
+        gap: 16px;
+        margin-top: 16px;
+      }
+      ul {
+        margin: 8px 0 0;
+        padding-left: 20px;
+      }
+      @media (max-width: 900px) {
+        .controls,
+        .row {
+          grid-template-columns: 1fr;
+        }
+      }
