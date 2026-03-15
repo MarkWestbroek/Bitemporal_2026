@@ -1452,6 +1452,22 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
               return;
             }
 
+            if (event.key === 'Escape') {
+              if (geselecteerdeRep) {
+                setGeselecteerdeRep(null);
+                setActieResultaat(null);
+              } else if (entiteitActieOpen) {
+                setEntiteitActieOpen(false);
+                setActieResultaat(null);
+              } else if (registratieActieOpen) {
+                setRegistratieActieOpen(false);
+                setRegistratieCorrigeerActief(false);
+                setRegistratieOngedaanBevestiging(false);
+                setRegistratieActieResultaat(null);
+              }
+              return;
+            }
+
             if (event.key === 'ArrowRight') {
               event.preventDefault();
               incrementRegistratieAndReload();
@@ -1472,7 +1488,7 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
 
           window.addEventListener('keydown', handleKeyDown);
           return () => window.removeEventListener('keydown', handleKeyDown);
-        }, [t, registratieId, loading, entiteitType]);
+        }, [t, registratieId, loading, entiteitType, geselecteerdeRep, entiteitActieOpen, registratieActieOpen]);
 
         const selectedRegistratie = registratieData;
         const selectedRegistratieWijzigingen = safeArray(registratieData?.wijzigingen);
@@ -1793,30 +1809,6 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
                   </>
                 )}
 
-                {registratieActieOpen && selectedRegistratie && (
-                  <RegistratieActieBox
-                    registratieActieFormRef={registratieActieFormRef}
-                    selectedRegistratie={selectedRegistratie}
-                    setRegistratieActieOpen={setRegistratieActieOpen}
-                    setRegistratieCorrigeerActief={setRegistratieCorrigeerActief}
-                    setRegistratieOngedaanBevestiging={setRegistratieOngedaanBevestiging}
-                    setRegistratieActieResultaat={setRegistratieActieResultaat}
-                    registratieActieOpmerking={registratieActieOpmerking}
-                    setRegistratieActieOpmerking={setRegistratieActieOpmerking}
-                    registratieOngedaanBevestiging={registratieOngedaanBevestiging}
-                    registratieActieBezig={registratieActieBezig}
-                    voerRegistratieOngedaanMakingUit={voerRegistratieOngedaanMakingUit}
-                    registratieCorrigeerActief={registratieCorrigeerActief}
-                    openRegistratieCorrigeren={openRegistratieCorrigeren}
-                    selectedRegistratieWijzigingen={selectedRegistratieWijzigingen}
-                    zoekGroupEnItemVoorWijziging={zoekGroupEnItemVoorWijziging}
-                    plumbingVelden={plumbingVelden}
-                    registratieCorrigeerVelden={registratieCorrigeerVelden}
-                    setRegistratieCorrigeerVelden={setRegistratieCorrigeerVelden}
-                    voerRegistratieCorrectieUit={voerRegistratieCorrectieUit}
-                    registratieActieResultaat={registratieActieResultaat}
-                  />
-                )}
               </div>
 
               <div className="card">
@@ -1845,51 +1837,6 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
                     centraleEntiteitLabelStyle={centraleEntiteitLabelStyle}
                     relatieNodesVoorGrafiek={relatieNodesVoorGrafiek}
                   />
-
-                  {entiteitActieOpen && selectedA && (
-                    <EntiteitActieBox
-                      entiteitType={entiteitType}
-                      selectedA={selectedA}
-                      setEntiteitActieOpen={setEntiteitActieOpen}
-                      setActieResultaat={setActieResultaat}
-                      actieOpmerking={actieOpmerking}
-                      setActieOpmerking={setActieOpmerking}
-                      voerEntiteitActieUit={voerEntiteitActieUit}
-                      actieBezig={actieBezig}
-                      gegevenselementGroepOpties={gegevenselementGroepOpties}
-                      voegEntiteitGegevenToe={voegEntiteitGegevenToe}
-                      entiteitNieuweGegevens={entiteitNieuweGegevens}
-                      veranderEntiteitGegevenRijType={veranderEntiteitGegevenRijType}
-                      updateEntiteitGegevenRijVeld={updateEntiteitGegevenRijVeld}
-                      setEntiteitNieuweGegevens={setEntiteitNieuweGegevens}
-                      relatieGroepOpties={relatieGroepOpties}
-                      voegEntiteitRelatieToe={voegEntiteitRelatieToe}
-                      entiteitNieuweRelaties={entiteitNieuweRelaties}
-                      veranderEntiteitRelatieRijType={veranderEntiteitRelatieRijType}
-                      updateEntiteitRelatieRijVeld={updateEntiteitRelatieRijVeld}
-                      relatieSecondaireOpties={relatieSecondaireOpties}
-                      setEntiteitNieuweRelaties={setEntiteitNieuweRelaties}
-                      entiteitOpvoerPreview={entiteitOpvoerPreview}
-                      actieResultaat={actieResultaat}
-                      safeArray={safeArray}
-                    />
-                  )}
-
-                  {geselecteerdeRep && (
-                    <RepresentatieActieBox
-                      geselecteerdeRep={geselecteerdeRep}
-                      setGeselecteerdeRep={setGeselecteerdeRep}
-                      setActieResultaat={setActieResultaat}
-                      actieOpmerking={actieOpmerking}
-                      setActieOpmerking={setActieOpmerking}
-                      actieFormVelden={actieFormVelden}
-                      setActieFormVelden={setActieFormVelden}
-                      repActiePreview={repActiePreview}
-                      voerActieUit={voerActieUit}
-                      actieBezig={actieBezig}
-                      actieResultaat={actieResultaat}
-                    />
-                  )}
 
                   {actieResultaat && !geselecteerdeRep && (
                     <p style={{ marginTop: 8, color: actieResultaat.ok ? '#166534' : '#dc2626', fontWeight: 600 }}>
@@ -1929,6 +1876,108 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
                 );
               })}
             </div>
+
+            {registratieActieOpen && selectedRegistratie && (
+              <div
+                className="action-overlay-backdrop"
+                onClick={() => {
+                  setRegistratieActieOpen(false);
+                  setRegistratieCorrigeerActief(false);
+                  setRegistratieOngedaanBevestiging(false);
+                  setRegistratieActieResultaat(null);
+                }}
+              >
+                <div className="action-overlay-dialog" onClick={(event) => event.stopPropagation()}>
+                  <RegistratieActieBox
+                    registratieActieFormRef={registratieActieFormRef}
+                    selectedRegistratie={selectedRegistratie}
+                    setRegistratieActieOpen={setRegistratieActieOpen}
+                    setRegistratieCorrigeerActief={setRegistratieCorrigeerActief}
+                    setRegistratieOngedaanBevestiging={setRegistratieOngedaanBevestiging}
+                    setRegistratieActieResultaat={setRegistratieActieResultaat}
+                    registratieActieOpmerking={registratieActieOpmerking}
+                    setRegistratieActieOpmerking={setRegistratieActieOpmerking}
+                    registratieOngedaanBevestiging={registratieOngedaanBevestiging}
+                    registratieActieBezig={registratieActieBezig}
+                    voerRegistratieOngedaanMakingUit={voerRegistratieOngedaanMakingUit}
+                    registratieCorrigeerActief={registratieCorrigeerActief}
+                    openRegistratieCorrigeren={openRegistratieCorrigeren}
+                    selectedRegistratieWijzigingen={selectedRegistratieWijzigingen}
+                    zoekGroupEnItemVoorWijziging={zoekGroupEnItemVoorWijziging}
+                    plumbingVelden={plumbingVelden}
+                    registratieCorrigeerVelden={registratieCorrigeerVelden}
+                    setRegistratieCorrigeerVelden={setRegistratieCorrigeerVelden}
+                    voerRegistratieCorrectieUit={voerRegistratieCorrectieUit}
+                    registratieActieResultaat={registratieActieResultaat}
+                  />
+                </div>
+              </div>
+            )}
+
+            {entiteitActieOpen && selectedA && (
+              <div
+                className="action-overlay-backdrop"
+                onClick={() => {
+                  setEntiteitActieOpen(false);
+                  setActieResultaat(null);
+                }}
+              >
+                <div className="action-overlay-dialog" onClick={(event) => event.stopPropagation()}>
+                  <EntiteitActieBox
+                    entiteitType={entiteitType}
+                    selectedA={selectedA}
+                    setEntiteitActieOpen={setEntiteitActieOpen}
+                    setActieResultaat={setActieResultaat}
+                    actieOpmerking={actieOpmerking}
+                    setActieOpmerking={setActieOpmerking}
+                    voerEntiteitActieUit={voerEntiteitActieUit}
+                    actieBezig={actieBezig}
+                    gegevenselementGroepOpties={gegevenselementGroepOpties}
+                    voegEntiteitGegevenToe={voegEntiteitGegevenToe}
+                    entiteitNieuweGegevens={entiteitNieuweGegevens}
+                    veranderEntiteitGegevenRijType={veranderEntiteitGegevenRijType}
+                    updateEntiteitGegevenRijVeld={updateEntiteitGegevenRijVeld}
+                    setEntiteitNieuweGegevens={setEntiteitNieuweGegevens}
+                    relatieGroepOpties={relatieGroepOpties}
+                    voegEntiteitRelatieToe={voegEntiteitRelatieToe}
+                    entiteitNieuweRelaties={entiteitNieuweRelaties}
+                    veranderEntiteitRelatieRijType={veranderEntiteitRelatieRijType}
+                    updateEntiteitRelatieRijVeld={updateEntiteitRelatieRijVeld}
+                    relatieSecondaireOpties={relatieSecondaireOpties}
+                    setEntiteitNieuweRelaties={setEntiteitNieuweRelaties}
+                    entiteitOpvoerPreview={entiteitOpvoerPreview}
+                    actieResultaat={actieResultaat}
+                    safeArray={safeArray}
+                  />
+                </div>
+              </div>
+            )}
+
+            {geselecteerdeRep && (
+              <div
+                className="action-overlay-backdrop"
+                onClick={() => {
+                  setGeselecteerdeRep(null);
+                  setActieResultaat(null);
+                }}
+              >
+                <div className="action-overlay-dialog" onClick={(event) => event.stopPropagation()}>
+                  <RepresentatieActieBox
+                    geselecteerdeRep={geselecteerdeRep}
+                    setGeselecteerdeRep={setGeselecteerdeRep}
+                    setActieResultaat={setActieResultaat}
+                    actieOpmerking={actieOpmerking}
+                    setActieOpmerking={setActieOpmerking}
+                    actieFormVelden={actieFormVelden}
+                    setActieFormVelden={setActieFormVelden}
+                    repActiePreview={repActiePreview}
+                    voerActieUit={voerActieUit}
+                    actieBezig={actieBezig}
+                    actieResultaat={actieResultaat}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         );
       }

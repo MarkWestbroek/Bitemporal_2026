@@ -17,7 +17,7 @@ export default function IndexRegistratieVisual({
   return (
     <svg className="graph" viewBox={`0 0 760 ${registratieSvgHoogte}`} preserveAspectRatio="xMidYMid meet">
       <SvgPatternDefs includeRegistratie={true} registratieFill="#f1f8ff" />
-      <g onClick={openRegistratieActieBox} style={{ cursor: "pointer" }}>
+      <g className="actionable-svg-target" onClick={openRegistratieActieBox} style={{ cursor: "pointer" }}>
         {registratieActieOpen && <rect x="217" y="7" rx="8" width="326" height="80" style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2.5, strokeDasharray: "5,3" }} />}
         <path
           d={afgeknotteHoekPad(220, 10, 320, 72, 10)}

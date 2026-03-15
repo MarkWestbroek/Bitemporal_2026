@@ -33,6 +33,44 @@ body {
         fill: #1d4ed8;
         animation: opvPulse 0.8s ease-in-out infinite alternate;
       }
+      .actionable-svg-target path,
+      .actionable-svg-target rect,
+      .actionable-svg-target text {
+        transition: filter 140ms ease, transform 140ms ease, stroke-width 140ms ease;
+      }
+      .actionable-svg-target:hover path,
+      .actionable-svg-target:hover rect {
+        filter: drop-shadow(0 0 4px rgba(29, 78, 216, 0.32));
+      }
+      .actionable-svg-target:hover text {
+        fill: #1e3a8a;
+      }
+      .actionable-svg-target:hover {
+        transform: translateY(-1px);
+      }
+      .action-overlay-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+        background: rgba(15, 23, 42, 0.46);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .action-overlay-dialog {
+        width: min(980px, 96vw);
+        max-height: 88vh;
+        overflow: auto;
+        border-radius: 14px;
+        background: #ffffff;
+        box-shadow: 0 22px 54px rgba(2, 6, 23, 0.28);
+        border: 1px solid #cbd5e1;
+        padding: 10px;
+      }
+      .action-overlay-dialog > div {
+        margin-top: 0 !important;
+      }
       @keyframes opvPulse {
         from { opacity: 1; }
         to { opacity: 0.45; }

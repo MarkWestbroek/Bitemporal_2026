@@ -53,7 +53,7 @@ export default function IndexRepresentatieVisual({
         const opvoerKlikbaar = isSelected && opvoerRegistratieID > 0;
 
         return (
-          <g key={node.key} onClick={() => selecteerRep(node.item, node.group)} style={{ cursor: "pointer" }}>
+          <g className="actionable-svg-target" key={node.key} onClick={() => selecteerRep(node.item, node.group)} style={{ cursor: "pointer" }}>
             {isSelected && <rect x={x - 3} y={node.y - 33} rx="10" width={width + 6} height={66} style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2.5, strokeDasharray: "5,3" }} />}
             <rect x={x} y={node.y - 30} rx="8" width={width} height="60" style={{ fill: nodeFill, stroke: "#334155", strokeWidth: 1.2 }} />
             <text
@@ -79,7 +79,7 @@ export default function IndexRepresentatieVisual({
         const entOpvoerRegID = selectedA.opvoer ? registratieIDUitOpvoerTijdstip(selectedA.opvoer) : 0;
         const entOpvoerKlikbaar = entOpvoerRegID > 0;
         return (
-          <g onClick={openEntiteitActieBox} style={{ cursor: "pointer" }}>
+          <g className="actionable-svg-target" onClick={openEntiteitActieBox} style={{ cursor: "pointer" }}>
             {entiteitActieOpen && <rect x="327" y="37" rx="12" width="246" height="86" style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2.5, strokeDasharray: "5,3" }} />}
             <rect className="node" x="330" y="40" rx="10" width="240" height="80" style={{ fill: selectedEntiteitMeta?.kleur || "#dbeafe", strokeWidth: 2.8 }} />
             <text
@@ -122,7 +122,7 @@ export default function IndexRepresentatieVisual({
         const opvoerRegistratieID = registratieIDUitOpvoerTijdstip(node.item.opvoer);
         const opvoerKlikbaar = isRelSelected && opvoerRegistratieID > 0;
         return (
-          <g key={node.key} onClick={() => selecteerRep(node.item, node.group)} style={{ cursor: "pointer" }}>
+          <g className="actionable-svg-target" key={node.key} onClick={() => selecteerRep(node.item, node.group)} style={{ cursor: "pointer" }}>
             {isRelSelected && <rect x={relX - 3} y={node.y - 27} rx="10" width={relW + 6} height={relH + 6} style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2.5, strokeDasharray: "5,3" }} />}
             <line x1="362" y1={node.y} x2={relX} y2={node.y} style={{ stroke: "#334155", strokeWidth: 2.8 }} />
             <rect x={relX} y={node.y - 24} rx="8" width={relW} height={relH} style={{ fill: relFill, stroke: "#7c2d12", strokeWidth: 2.8 }} />
