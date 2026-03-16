@@ -1,0 +1,232 @@
+# Bitemporal Data Model GraphQL Schema
+
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+# ============ QUERIES ============
+type Query {
+  # Entity A queries
+  entityA(id: ID!): EntityA
+  allEntitiesA(limit: Int, offset: Int): [EntityA!]!
+  
+  # Entity B queries
+  entityB(id: ID!): EntityB
+  allEntitiesB(limit: Int, offset: Int): [EntityB!]!
+  
+  # Relationship queries
+  relationAB(id: ID!): RelationAB
+  allRelationsAB(limit: Int, offset: Int): [RelationAB!]!
+  
+  # Data element queries
+  dataElementAU(relId: ID!): DataElementAU
+  dataElementsAU(aId: ID!): [DataElementAU!]!
+  dataElementAV(relId: ID!): DataElementAV
+  dataElementsAV(aId: ID!): [DataElementAV!]!
+  dataElementBX(relId: ID!): DataElementBX
+  dataElementBY(relId: ID!): DataElementBY
+  
+  # Audit/Change tracking queries
+  registration(id: ID!): Registration
+  allRegistrations(limit: Int, offset: Int): [Registration!]!
+  change(id: ID!): Change
+  allChanges(limit: Int, offset: Int): [Change!]!
+  
+  # Task queries
+  task(id: ID!): Task
+  allTasks(limit: Int, offset: Int): [Task!]!
+}
+
+# ============ MUTATIONS ============
+type Mutation {
+  # Entity A mutations
+  createEntityA(input: CreateEntityAInput!): EntityA!
+  updateEntityA(id: ID!, input: UpdateEntityAInput!): EntityA!
+  deleteEntityA(id: ID!): Boolean!
+  
+  # Entity B mutations
+  createEntityB(input: CreateEntityBInput!): EntityB!
+  updateEntityB(id: ID!, input: UpdateEntityBInput!): EntityB!
+  deleteEntityB(id: ID!): Boolean!
+  
+  # Relationship mutations
+  createRelationAB(input: CreateRelationABInput!): RelationAB!
+  deleteRelationAB(id: ID!): Boolean!
+  
+  # Data element mutations
+  createDataElementAU(input: CreateDataElementAUInput!): DataElementAU!
+  updateDataElementAU(relId: ID!, input: UpdateDataElementAUInput!): DataElementAU!
+  
+  createDataElementAV(input: CreateDataElementAVInput!): DataElementAV!
+  
+  createDataElementBX(input: CreateDataElementBXInput!): DataElementBX!
+  createDataElementBY(input: CreateDataElementBYInput!): DataElementBY!
+  
+  # Task mutations
+  createTask(input: CreateTaskInput!): Task!
+  updateTask(id: ID!, input: UpdateTaskInput!): Task!
+  deleteTask(id: ID!): Boolean!
+}
+
+# ============ TYPES ============
+
+# Core Entity Types
+type EntityA {
+  id: ID!
+  opvoer: DateTime
+  afvoer: DateTime
+  dataElementAU: DataElementAU
+  dataElementsAV: [DataElementAV!]!
+  relations: [RelationAB!]!
+}
+
+type EntityB {
+  id: ID!
+  opvoer: DateTime
+  afvoer: DateTime
+  dataElementBX: DataElementBX
+  dataElementBY: DataElementBY
+  relations: [RelationAB!]!
+}
+
+# Relationship Types
+type RelationAB {
+  id: ID!
+  aId: ID!
+  bId: ID!
+  entityA: EntityA!
+  entityB: EntityB!
+}
+
+# Data Element Types
+type DataElementAU {
+  relId: ID!
+  aId: ID!
+  aaa: String!
+  bbb: String!
+}
+
+type DataElementAV {
+  relId: ID!
+  aId: ID!
+  ccc: String!
+}
+
+type DataElementBX {
+  relId: ID!
+  bId: ID!
+  fff: String!
+  ggg: String!
+}
+
+type DataElementBY {
+  relId: ID!
+  bId: ID!
+  hhh: String!
+}
+
+# Audit & Change Tracking
+type Registration {
+  id: ID!
+  registrationType: String!
+  timestamp: DateTime!
+  remark: String
+  correctsRegistrationId: ID
+  undoesRegistrationId: ID
+  changes: [Change!]!
+}
+
+type Change {
+  id: ID!
+  changeType: String!
+  registrationId: ID!
+  representationName: String!
+  representationId: ID!
+  timestamp: DateTime!
+  registration: Registration!
+}
+
+# Task Type
+type Task {
+  id: ID!
+  title: String!
+  description: String!
+  dueDate: DateTime!
+  status: String!
+}
+
+# ============ INPUT TYPES ============
+
+# Entity A Inputs
+input CreateEntityAInput {
+  id: ID!
+}
+
+input UpdateEntityAInput {
+  opvoer: DateTime
+  afvoer: DateTime
+}
+
+# Entity B Inputs
+input CreateEntityBInput {
+  id: ID!
+}
+
+input UpdateEntityBInput {
+  opvoer: DateTime
+  afvoer: DateTime
+}
+
+# Relationship Inputs
+input CreateRelationABInput {
+  aId: ID!
+  bId: ID!
+}
+
+# Data Element Inputs
+input CreateDataElementAUInput {
+  aId: ID!
+  aaa: String!
+  bbb: String!
+}
+
+input UpdateDataElementAUInput {
+  aaa: String
+  bbb: String
+}
+
+input CreateDataElementAVInput {
+  aId: ID!
+  ccc: String!
+}
+
+input CreateDataElementBXInput {
+  bId: ID!
+  fff: String!
+  ggg: String!
+}
+
+input CreateDataElementBYInput {
+  bId: ID!
+  hhh: String!
+}
+
+# Task Inputs
+input CreateTaskInput {
+  id: ID!
+  title: String!
+  description: String!
+  dueDate: DateTime!
+  status: String!
+}
+
+input UpdateTaskInput {
+  title: String
+  description: String
+  dueDate: DateTime
+  status: String
+}
+
+# ============ SCALARS ============
+scalar DateTime

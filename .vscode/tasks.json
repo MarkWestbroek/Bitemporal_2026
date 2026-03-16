@@ -12,7 +12,7 @@
                 "--host"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/bitemporal_go_API_v04/web/vite"
+                "cwd": "${workspaceFolder}/bitemporal_go_API_v05/web/vite"
             },
             "isBackground": true,
             "problemMatcher": {

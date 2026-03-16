@@ -1,0 +1,26 @@
+services:
+  bitemp-postgres:
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    container_name: bitemp-postgres-v05
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+      POSTGRES_DB: ${POSTGRES_DB:-bitemp_go_db_v05}
+    volumes:
+      - bitemp-pgdata:/var/lib/postgresql/data
+    networks:
+      - bitemp-net
+    # Alleen nodig als je ook vanaf buiten Docker direct op PostgreSQL wilt inloggen.
+    # Laat weg voor extra veiligheid.
+    # ports:
+    #   - "5432:5432"
+
+volumes:
+  bitemp-pgdata:
+
+networks:
+  bitemp-net:
+    name: bitemp-net

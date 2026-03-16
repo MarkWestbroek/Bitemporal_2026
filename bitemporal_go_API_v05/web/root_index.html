@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bitemporal Go API v05</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg-top: #f0f9ff;
+        --bg-bottom: #ecfeff;
+        --text: #0f172a;
+        --muted: #475569;
+        --card: #ffffff;
+        --line: #cbd5e1;
+        --brand: #0f766e;
+        --brand-soft: #ccfbf1;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Noto Sans", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(1200px 360px at 100% -20%, #bae6fd 0%, transparent 55%),
+          radial-gradient(900px 260px at -10% 110%, #99f6e4 0%, transparent 50%),
+          linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+        min-height: 100vh;
+      }
+
+      .wrap {
+        width: min(980px, calc(100vw - 28px));
+        margin: 22px auto 40px;
+      }
+
+      .hero {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.07);
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(24px, 2.6vw, 34px);
+      }
+
+      .subtitle {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .grid {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 16px;
+      }
+
+      .card h2 {
+        margin: 0 0 8px;
+        font-size: 18px;
+      }
+
+      .card p {
+        margin: 0 0 10px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      li {
+        margin: 8px 0;
+      }
+
+      a {
+        color: var(--brand);
+        text-decoration-thickness: 1.5px;
+        text-underline-offset: 2px;
+      }
+
+      .chips {
+        margin-top: 14px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .chip {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: var(--brand-soft);
+        border: 1px solid #99f6e4;
+        color: #134e4a;
+        text-decoration: none;
+        font-size: 13px;
+      }
+
+      .footer {
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media (max-width: 860px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="hero">
+        <h1>Bitemporal Go API v05</h1>
+        <p class="subtitle">
+          Welkom op de root van de API-server. Vanaf hier kun je direct naar de actieve visualisaties,
+          documentatie en projectinformatie.
+        </p>
+
+        <div class="chips">
+          <a class="chip" href="/viz/react/">Viz index (React + Vite)</a>
+          <a class="chip" href="/viz/react/tijdlijn.html">Viz tijdlijn (React + Vite)</a>
+          <a class="chip" href="/viz/react/registraties.html">Registraties replay (React + Vite)</a>
+          <a class="chip" href="/version">Version endpoint</a>
+          <a class="chip" href="/graphql/playground">GraphQL Playground</a>
+          <a class="chip" href="/api/viz/schema">Viz schema API</a>
+        </div>
+      </section>
+
+      <section class="grid" aria-label="Snelle links">
+        <article class="card">
+          <h2>Visualisaties</h2>
+          <p>Actieve React + Vite pagina's voor schema-overzicht en tijdlijn.</p>
+          <ul>
+            <li><a href="/viz/react/">Viz index (React + Vite)</a></li>
+            <li><a href="/viz/react/tijdlijn.html">Viz tijdlijn (React + Vite)</a></li>
+            <li><a href="/viz/react/registraties.html">Registraties replay (React + Vite)</a></li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h2>Handleiding viz</h2>
+          <p>Praktische en technische uitleg van de actieboxen en endpoint-koppelingen.</p>
+          <ul>
+            <li><a href="/docs/web/readme.md">Web viz handleiding (lokaal gerenderd)</a></li>
+            <li><a href="/docs">Alle markdown documenten</a></li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h2>GitHub project</h2>
+          <p>Broncode en algemene context van dit project.</p>
+          <ul>
+            <li><a href="https://github.com/MarkWestbroek/Bitemporal_2026" target="_blank" rel="noopener noreferrer">Project root op GitHub</a></li>
+            <li><a href="https://github.com/MarkWestbroek/Bitemporal_2026/tree/main/bitemporal_go_API_v05" target="_blank" rel="noopener noreferrer">Bitemporal Go API v05 map</a></li>
+            <li><a href="https://github.com/MarkWestbroek/Bitemporal_2026/blob/main/bitemporal_go_API_v05/README.md" target="_blank" rel="noopener noreferrer">Algemene README v05</a></li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h2>Aanvullend handig</h2>
+          <p>Voor beheer, debugging en release-checks.</p>
+          <ul>
+            <li><a href="/version">Runtime build info</a></li>
+            <li><a href="/graphql/playground">GraphQL playground</a></li>
+            <li><a href="/api/viz/schema">Viz schema endpoint</a></li>
+          </ul>
+        </article>
+      </section>
+
+      <p class="footer">Tip: bookmark deze pagina als startpunt voor beheer en demos.</p>
+    </main>
+  </body>
+</html>
