@@ -61,6 +61,8 @@ Submappen:
 - `components/actions/`
   - actiepanelen die gedeeld kunnen worden tussen index en tijdlijn
   - huidige componenten:
+    - `ActionFormParts.jsx`
+    - `NieuweEntiteitActieBox.jsx`
     - `RegistratieActieBox.jsx`
     - `EntiteitActieBox.jsx`
     - `RepresentatieActieBox.jsx`
@@ -136,6 +138,32 @@ Gedeelde/herbruikbare componenten:
 - `components/actions/*` is bedoeld voor hergebruik over meerdere pagina's.
 - `shared/SvgPatternDefs.jsx` en `shared/schemaUtils.js` zijn pagina-overstijgende bouwblokken.
 
+### 6.2.1 Actieformulieren en hergebruik
+
+De actie-overlays in de index-pagina zijn opgesplitst in:
+- `NieuweEntiteitActieBox.jsx`
+- `EntiteitActieBox.jsx`
+- `RegistratieActieBox.jsx`
+- `RepresentatieActieBox.jsx`
+
+De gedeelde formulieropbouw zit in:
+- `components/actions/ActionFormParts.jsx`
+
+Daarin zitten de centrale bouwstenen voor de editstijl:
+- `ActionBodyCard`
+- `ActionTopFields`
+- `ActionInlineField`
+- `ActionSection`
+- `ActionRowCard`
+- `ActionFieldsGrid`
+- `ActionLabeledEditorField`
+- `ActionFieldControl`
+- `ActionGroupedSections`
+
+Praktische regel:
+- aanpassingen aan de layout of basisgedrag van actieformulieren zoveel mogelijk in `ActionFormParts.jsx` doen
+- alleen domeinspecifieke flow in de losse `*ActieBox.jsx` componenten houden
+
 ### 6.3 Dataflow en state
 
 State-eigenaarschap:
@@ -189,6 +217,55 @@ Belangrijke response-verwachtingen in frontendlogica:
 - `fetchAlleRegistraties` verwacht `Registraties` + `has_more`.
 - Bij mutatieacties wordt registratie-id uit response afgeleid via helperlogica (`Registratie` en gerelateerde sleutelvarianten).
 - Voor entiteiten wordt response-key dynamisch bepaald (bijvoorbeeld `As`/`Bs`/... of andere array key).
+
+### 6.4.1 Schema-gedreven veldtypes en validatie
+
+De frontend gebruikt de veldmetadata uit `GET /api/viz/schema` actief voor formuliergedrag.
+
+Relevante veldeigenschappen uit het schema:
+- `naam`
+- `type`
+- `format`
+- `verplicht`
+- `autoIncrement`
+
+Type- en formatinformatie wordt in `IndexSchemaPage.jsx` doorgezet naar `veldDefinities` voor:
+- gegevenselementgroepen
+- relatiegroepen
+
+De centrale validatie en coercion zit in `ActionFormParts.jsx`:
+- `validatieMeldingVoorVeld(...)`
+- `coercedWaardeVoorVeld(...)`
+
+Wat dit nu concreet doet:
+- `integer` accepteert alleen gehele getallen
+- `number` accepteert alleen geldige decimale getallen
+- `boolean` wordt gestuurd via `true` / `false`
+- `string + format=date` valideert op `YYYY-MM-DD`
+- `string + format=date-time` valideert op datum+tijd invoer
+
+Belangrijk ontwerpprincipe:
+- live validatie in het formulier en coercion bij preview/submit gebruiken dezelfde centrale helpers
+- daardoor kan de UI niet iets "goedkeuren" wat later in de payloadopbouw alsnog stukloopt
+
+Gevolg voor onderhoud:
+- als backendtypes of formats veranderen, moet de frontend primair op deze centrale helperlaag worden aangepast, niet per actiebox apart
+
+Concreet voorbeeld:
+- `rel_id` of `b_id` met `type=integer`
+  - frontend accepteert alleen gehele getallen
+  - invoer zoals `1.5` of `abc` geeft direct een foutmelding
+  - payload bevat uiteindelijk een JSON number, niet een string
+- `www` met `type=number` en `format=float64`
+  - frontend accepteert decimale getallen
+  - invoer zoals `12.34` is geldig
+  - invoer zoals `12,34` of `abc` wordt afgekeurd
+- `bbb` met `type=boolean`
+  - frontend biedt alleen geldige boolean-invoer aan
+  - payload bevat uiteindelijk `true` of `false`, niet de strings `"true"` of `"false"`
+- `datum` met `type=string` en `format=date`
+  - frontend gebruikt datumvalidatie op `YYYY-MM-DD`
+  - ongeldige of incompleet getypte datums worden gemeld voordat submit plaatsvindt
 
 ### 6.5 Build/serve-koppeling
 

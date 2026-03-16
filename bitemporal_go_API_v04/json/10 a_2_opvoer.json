@@ -13,7 +13,7 @@
             {
               "rel_id": 3,
               "aaa": "a2",
-              "bbb": "b2"
+              "bbb": true
             }
           ],
           "vs": [

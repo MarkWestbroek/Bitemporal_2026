@@ -102,6 +102,20 @@
         return Math.max(0, parsed);
       }
 
+      function isNumeriekSchemaType(type) {
+        return type === 'number' || type === 'integer';
+      }
+
+      function stepVoorSchemaType(type) {
+        if (type === 'integer') {
+          return '1';
+        }
+        if (type === 'number') {
+          return 'any';
+        }
+        return undefined;
+      }
+
       function vindEntiteitIdVanuitRegistratie(registratie, entiteiten, entiteitType) {
         const wijzigingen = safeArray(registratie?.wijzigingen);
         const doelType = String(entiteitType || '').toUpperCase();
@@ -604,14 +618,7 @@
               safeArray(optie.veldDefinities).forEach((veld) => {
                 const raw = row?.values?.[veld.naam];
                 if (raw === undefined || raw === null || raw === '') return;
-                if (veld.type === 'number') {
-                  const parsed = Number(raw);
-                  item[veld.naam] = Number.isNaN(parsed) ? raw : parsed;
-                } else if (veld.type === 'boolean') {
-                  item[veld.naam] = raw === true || raw === 'true';
-                } else {
-                  item[veld.naam] = raw;
-                }
+                item[veld.naam] = coercedWaardeVoorType(raw, veld.type, `${optie.label}.${veld.naam}`);
               });
               return { opvoer: { [optie.geVeldnaam]: item } };
             });
@@ -1276,6 +1283,13 @@
         }
 
         function coercedWaardeVoorType(rawValue, jsType, veldLabel) {
+          if (jsType === 'integer') {
+            const parsed = Number(rawValue);
+            if (!Number.isInteger(parsed)) {
+              throw new Error(`Veld ${veldLabel} moet een geheel getal zijn.`);
+            }
+            return parsed;
+          }
           if (jsType === 'number') {
             const parsed = Number(rawValue);
             if (Number.isNaN(parsed)) {
@@ -1740,8 +1754,8 @@
                                 <label key={`new-ge-${row.id}-${veld.naam}`}>
                                   {veld.naam}
                                   <input
-                                    type={veld.type === 'number' ? 'number' : 'text'}
-                                    step={veld.type === 'number' ? 'any' : undefined}
+                                    type={isNumeriekSchemaType(veld.type) ? 'number' : 'text'}
+                                    step={stepVoorSchemaType(veld.type)}
                                     value={String(huidigeWaarde)}
                                     onChange={(e) => updateNieuweEntiteitGegevenRijVeld(row.id, veld.naam, e.target.value)}
                                   />
@@ -1807,8 +1821,8 @@
                                 <label key={`new-rel-${row.id}-${veld.naam}`}>
                                   {veld.naam}
                                   <input
-                                    type={veld.type === 'number' ? 'number' : 'text'}
-                                    step={veld.type === 'number' ? 'any' : undefined}
+                                    type={isNumeriekSchemaType(veld.type) ? 'number' : 'text'}
+                                    step={stepVoorSchemaType(veld.type)}
                                     value={String(huidigeWaarde)}
                                     onChange={(e) => updateNieuweEntiteitRelatieRijVeld(row.id, veld.naam, e.target.value)}
                                   />
@@ -2317,8 +2331,8 @@
                                       <label key={`${row.id}-${veld.naam}`}>
                                         {veld.naam}
                                         <input
-                                          type={veld.type === 'number' ? 'number' : 'text'}
-                                          step={veld.type === 'number' ? 'any' : undefined}
+                                          type={isNumeriekSchemaType(veld.type) ? 'number' : 'text'}
+                                          step={stepVoorSchemaType(veld.type)}
                                           value={String(huidigeWaarde)}
                                           onChange={(e) => updateEntiteitGegevenRijVeld(row.id, veld.naam, e.target.value)}
                                         />
@@ -2417,8 +2431,8 @@
                                       <label key={`rel-${row.id}-${veld.naam}`}>
                                         {veld.naam}
                                         <input
-                                          type={veld.type === 'number' ? 'number' : 'text'}
-                                          step={veld.type === 'number' ? 'any' : undefined}
+                                          type={isNumeriekSchemaType(veld.type) ? 'number' : 'text'}
+                                          step={stepVoorSchemaType(veld.type)}
                                           value={String(huidigeWaarde)}
                                           onChange={(e) => updateEntiteitRelatieRijVeld(row.id, veld.naam, e.target.value)}
                                         />

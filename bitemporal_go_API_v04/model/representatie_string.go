@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+var dateType = reflect.TypeOf(Date{})
+
 func RepresentatieToString(rep Representatie) string {
 	if rep == nil {
 		return "<nil representatie>"
@@ -55,6 +57,12 @@ func writeValueTree(builder *strings.Builder, label string, value reflect.Value,
 	if value.Type() == reflect.TypeOf(time.Time{}) {
 		t := value.Interface().(time.Time)
 		builder.WriteString(fmt.Sprintf("%s  %s=%s\n", indent, label, t.Format(time.RFC3339Nano)))
+		return
+	}
+
+	if value.Type() == dateType {
+		d := value.Interface().(Date)
+		builder.WriteString(fmt.Sprintf("%s  %s=%s\n", indent, label, d.String()))
 		return
 	}
 

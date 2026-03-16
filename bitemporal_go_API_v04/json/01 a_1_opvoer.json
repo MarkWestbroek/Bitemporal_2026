@@ -13,7 +13,7 @@
             {
               "rel_id": 1,
               "aaa": "a1",
-              "bbb": "b1",
+              "bbb": true,
               "aanvang": "2025-10-07"
             }
           ],

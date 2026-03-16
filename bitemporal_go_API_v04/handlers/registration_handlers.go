@@ -117,7 +117,7 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 									{
 										"rel_id": 3,
 										"aaa": "a2-correctie",
-										//"bbb": "b2-correctie" // stel dat we alleen aaa corrigeren, en bbb niet. Dan corrigeren we alleen aaa in de opvoer, en laten we bbb weg in de opvoer. In de database blijft bbb dan gelijk aan wat het was.
+										//"bbb": false // stel dat we alleen aaa corrigeren, en bbb niet. Dan corrigeren we alleen aaa in de opvoer, en laten we bbb weg in de opvoer. In de database blijft bbb dan gelijk aan wat het was.
 									}
 								]
 							}
@@ -138,7 +138,7 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 									{
 										"rel_id": 4, // nieuwe ID voor de opgevoerde U3
 										"aaa": "a2-correctie",
-										//"bbb": "b2-correctie" // stel dat we alleen aaa corrigeren, en bbb niet. Dan corrigeren we alleen aaa in de opvoer, en laten we bbb weg in de opvoer. In de database blijft bbb dan gelijk aan wat het was.
+										//"bbb": false // stel dat we alleen aaa corrigeren, en bbb niet. Dan corrigeren we alleen aaa in de opvoer, en laten we bbb weg in de opvoer. In de database blijft bbb dan gelijk aan wat het was.
 									}
 								]
 							}

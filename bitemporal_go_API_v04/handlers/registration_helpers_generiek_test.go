@@ -15,6 +15,10 @@ import (
 	"github.com/uptrace/bun/dialect/pgdialect"
 )
 
+func boolPtr(value bool) *bool {
+	return &value
+}
+
 func TestSluitActieveEnkelvoudigeVoorgangersAf_ClosesExistingActiveRecord(t *testing.T) {
 	// Given: een enkelvoudig gegevenselement met exact één actieve voorganger.
 	// When: de helper wordt uitgevoerd voor een nieuwe opvoer.
@@ -43,7 +47,7 @@ func TestSluitActieveEnkelvoudigeVoorgangersAf_ClosesExistingActiveRecord(t *tes
 		t.Fatal("expected metadata for A_U")
 	}
 
-	representatie := &model.A_U{A_ID: 1, Rel_ID: 999, Aaa: "nieuw", Bbb: "nieuw"}
+	representatie := &model.A_U{A_ID: 1, Rel_ID: 999, Aaa: "nieuw", Bbb: boolPtr(true)}
 	tijdstip := time.Date(2026, 2, 25, 10, 0, 0, 0, time.UTC)
 
 	// SQL-volgorde: select actieve voorganger -> update afvoer -> insert wijziging.
@@ -99,7 +103,7 @@ func TestSluitActieveEnkelvoudigeVoorgangersAf_ErrorsOnMultipleActiveRecords(t *
 		t.Fatal("expected metadata for A_U")
 	}
 
-	representatie := &model.A_U{A_ID: 1, Rel_ID: 999, Aaa: "nieuw", Bbb: "nieuw"}
+	representatie := &model.A_U{A_ID: 1, Rel_ID: 999, Aaa: "nieuw", Bbb: boolPtr(true)}
 	tijdstip := time.Date(2026, 2, 25, 10, 0, 0, 0, time.UTC)
 
 	// Simuleer twee actieve voorgangers in het queryresultaat.
@@ -152,7 +156,7 @@ func TestSluitActieveEnkelvoudigeVoorgangersAf_ErrorsOnMissingParentID(t *testin
 		t.Fatal("expected metadata for A_U")
 	}
 
-	representatie := &model.A_U{A_ID: 0, Rel_ID: 999, Aaa: "nieuw", Bbb: "nieuw"}
+	representatie := &model.A_U{A_ID: 0, Rel_ID: 999, Aaa: "nieuw", Bbb: boolPtr(true)}
 	tijdstip := time.Date(2026, 2, 25, 10, 0, 0, 0, time.UTC)
 
 	err = sluitActieveEnkelvoudigeVoorgangersAf(ctx, tx, 42, tijdstip, "A_U", representatie, meta)

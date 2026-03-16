@@ -50,7 +50,7 @@ export default function IndexRepresentatieVisual({
         const nodeFill = node.group?.kleur || "#ffffff";
         const isSelected = geselecteerdeRep?.item === node.item;
         const opvoerRegistratieID = registratieIDUitOpvoerTijdstip(node.item.opvoer);
-        const opvoerKlikbaar = isSelected && opvoerRegistratieID > 0;
+        const opvoerKlikbaar = opvoerRegistratieID > 0;
 
         return (
           <g className="actionable-svg-target" key={node.key} onClick={() => selecteerRep(node.item, node.group)} style={{ cursor: "pointer" }}>
@@ -120,7 +120,7 @@ export default function IndexRepresentatieVisual({
         const secondBoxY = node.y + 18;
         const isRelSelected = geselecteerdeRep?.item === node.item;
         const opvoerRegistratieID = registratieIDUitOpvoerTijdstip(node.item.opvoer);
-        const opvoerKlikbaar = isRelSelected && opvoerRegistratieID > 0;
+        const opvoerKlikbaar = opvoerRegistratieID > 0;
         return (
           <g className="actionable-svg-target" key={node.key} onClick={() => selecteerRep(node.item, node.group)} style={{ cursor: "pointer" }}>
             {isRelSelected && <rect x={relX - 3} y={node.y - 27} rx="10" width={relW + 6} height={relH + 6} style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2.5, strokeDasharray: "5,3" }} />}

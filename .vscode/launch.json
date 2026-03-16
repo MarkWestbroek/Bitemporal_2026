@@ -1,0 +1,38 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Frontend: Vite dev server",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "& \"C:\\Program Files\\nodejs\\npm.cmd\" run dev -- --host",
+            "cwd": "${workspaceFolder}/bitemporal_go_API_v04/web/vite"
+        },
+        {
+            "name": "Frontend: open in browser",
+            "type": "pwa-msedge",
+            "request": "launch",
+            "url": "http://localhost:5173/viz/react/",
+            "webRoot": "${workspaceFolder}/bitemporal_go_API_v04/web/vite",
+            "preLaunchTask": "vite: dev server"
+        },
+        {
+            "name": "Go API: debug",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/bitemporal_go_API_v04",
+            "cwd": "${workspaceFolder}/bitemporal_go_API_v04"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Start frontend and debug API",
+            "configurations": [
+                "Frontend: Vite dev server",
+                "Go API: debug"
+            ],
+            "stopAll": true
+        }
+    ]
+}

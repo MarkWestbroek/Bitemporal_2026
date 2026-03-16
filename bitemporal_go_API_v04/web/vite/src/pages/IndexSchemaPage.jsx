@@ -20,208 +20,242 @@ import IndexRepresentatieVisual from "../components/index/IndexRepresentatieVisu
 import RegistratieActieBox from "../components/actions/RegistratieActieBox";
 import EntiteitActieBox from "../components/actions/EntiteitActieBox";
 import RepresentatieActieBox from "../components/actions/RepresentatieActieBox";
+import NieuweEntiteitActieBox from "../components/actions/NieuweEntiteitActieBox";
+import { ActionTooltip } from "../components/actions/ActionFormParts";
+import { coercedWaardeVoorVeld } from "../components/actions/ActionFormParts";
+
+const TEMPORALE_PLUMBING_VELDEN = new Set(["opvoer", "afvoer", "aanvang", "einde"]);
+
+function isPlumbingVeld(naam, typeMeta) {
+  const k = String(naam).toLowerCase();
+  if (TEMPORALE_PLUMBING_VELDEN.has(k)) return true;
+  if (typeMeta?.entiteitIDKolom && k === String(typeMeta.entiteitIDKolom).toLowerCase()) return true;
+
+  if (import.meta.env.DEV && !Array.isArray(typeMeta?.velden)) {
+    const typeLabel = String(typeMeta?.typenaam || typeMeta?.doeltype || typeMeta?.veldnaam || "onbekend");
+    console.warn(
+      `[IndexSchemaPage] Geen schema-velddefinities voor type '${typeLabel}'. Veld '${String(naam)}' wordt beoordeeld zonder autoIncrement-informatie.`
+    );
+  }
+
+  const veldDef = safeArray(typeMeta?.velden).find((v) => v.naam === naam);
+  if (veldDef?.autoIncrement) return true;
+  return false;
+}
 
 function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
-        const parsed = Number.parseInt(String(value), 10);
-        if (Number.isNaN(parsed)) {
-          return fallback;
-        }
-        return Math.max(0, parsed);
+  const parsed = Number.parseInt(String(value), 10);
+  if (Number.isNaN(parsed)) {
+    return fallback;
+  }
+  return Math.max(0, parsed);
+}
+
+function vindEntiteitIdVanuitRegistratie(registratie, entiteiten, entiteitType) {
+  const wijzigingen = safeArray(registratie?.wijzigingen);
+  const doelType = String(entiteitType || "").toUpperCase();
+
+  for (const wijziging of wijzigingen) {
+    if (String(wijziging?.entiteitnaam || "").toUpperCase() !== doelType) {
+      continue;
+    }
+
+    const kandidaatId = wijziging?.entiteit_id;
+    if (kandidaatId === null || kandidaatId === undefined || kandidaatId === "") {
+      continue;
+    }
+
+    const kandidaatAlsString = String(kandidaatId);
+    const bestaat = entiteiten.some((item) => String(item.id) === kandidaatAlsString);
+    if (bestaat) {
+      return kandidaatAlsString;
+    }
+  }
+
+  return "";
+}
+
+function afgeknotteHoekPad(x, y, width, height, hoek = 8) {
+  const h = Math.max(0, Math.min(hoek, Math.floor(Math.min(width, height) / 2)));
+  return [
+    `M ${x + h} ${y}`,
+    `L ${x + width - h} ${y}`,
+    `L ${x + width} ${y + h}`,
+    `L ${x + width} ${y + height - h}`,
+    `L ${x + width - h} ${y + height}`,
+    `L ${x + h} ${y + height}`,
+    `L ${x} ${y + height - h}`,
+    `L ${x} ${y + h}`,
+    "Z",
+  ].join(" ");
+}
+
+function registratieIDUitOpvoerTijdstip(tijdstipRaw) {
+  const viaMicroseconde = microsecondeIntVanTijdstip(tijdstipRaw);
+  if (Number.isInteger(viaMicroseconde) && viaMicroseconde > 0) {
+    return viaMicroseconde;
+  }
+  const viaT = tUitRegistratieTijdstip(tijdstipRaw);
+  if (Number.isInteger(viaT) && viaT > 0) {
+    return viaT;
+  }
+  return 0;
+}
+
+function endpointSegmentVoorEntiteit(entiteitType) {
+  return `${String(entiteitType || "").toLowerCase()}s`;
+}
+
+function responseKeyVoorEntiteiten(entiteitType, responseJson) {
+  const type = String(entiteitType || "");
+  const kandidaten = [
+    `${type}s`,
+    `${type.toUpperCase()}s`,
+    `${type.toLowerCase()}s`,
+  ];
+
+  for (const key of kandidaten) {
+    if (Array.isArray(responseJson?.[key])) {
+      return key;
+    }
+  }
+
+  const dynKey = Object.keys(responseJson || {}).find((k) => Array.isArray(responseJson[k]));
+  return dynKey || `${type}s`;
+}
+
+function childArrayVoorRol(selectedEntiteit, rolnaam, jsonRolnaam) {
+  const directeKandidaten = [jsonRolnaam, rolnaam].filter(Boolean);
+  for (const kandidaat of directeKandidaten) {
+    const direct = selectedEntiteit?.[kandidaat];
+    if (Array.isArray(direct)) {
+      return direct;
+    }
+  }
+
+  const direct = selectedEntiteit?.[rolnaam];
+  if (Array.isArray(direct)) {
+    return direct;
+  }
+
+  const key = Object.keys(selectedEntiteit || {}).find((k) => k.toLowerCase() === String(rolnaam).toLowerCase());
+  if (!key) {
+    return [];
+  }
+  return safeArray(selectedEntiteit[key]);
+}
+
+function labelVoorChildType(doeltype, rolnaam) {
+  return String(doeltype || rolnaam || "?");
+}
+
+function leidEntiteitTypeAfUitRegistratie(registratie, beschikbareEntiteitTypen) {
+  const wijzigingen = safeArray(registratie?.wijzigingen);
+  const beschikbareNamen = new Set(
+    safeArray(beschikbareEntiteitTypen)
+      .map((item) => String(item?.typenaam || "").trim())
+      .filter(Boolean)
+  );
+
+  for (const wijziging of wijzigingen) {
+    const kandidaat = String(wijziging?.entiteitnaam || "").trim();
+    if (kandidaat && beschikbareNamen.has(kandidaat)) {
+      return kandidaat;
+    }
+  }
+
+  return "";
+}
+
+async function fetchVizSchema(baseUrl) {
+  const res = await fetch(`${baseUrl}/api/viz/schema`);
+  if (!res.ok) {
+    throw new Error(`Schema HTTP ${res.status}: ${res.statusText}`);
+  }
+  return await res.json();
+}
+
+async function fetchVizEntiteitMaxID(baseUrl, typeNaam) {
+  const res = await fetch(`${baseUrl}/api/viz/entiteit/${encodeURIComponent(typeNaam)}/max-id`);
+  if (!res.ok) {
+    throw new Error(`Max-id HTTP ${res.status}: ${res.statusText}`);
+  }
+  return await res.json();
+}
+
+export default function IndexSchemaPage() {
+  const [baseUrl, setBaseUrl] = useState(import.meta.env.VITE_API_BASE_URL || window.location.origin);
+  const [entiteitType, setEntiteitType] = useState("A");
+  const [t, setT] = useState(1);
+  const [registratieId, setRegistratieId] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [responseData, setResponseData] = useState(null);
+  const [responseKey, setResponseKey] = useState("As");
+  const [registratieData, setRegistratieData] = useState(null);
+  const [ongedaanGemaakteRegistratieData, setOngedaanGemaakteRegistratieData] = useState(null);
+  const [selectedEntiteitId, setSelectedEntiteitId] = useState("");
+  const [vizSchema, setVizSchema] = useState(null);
+  const [schemaError, setSchemaError] = useState("");
+  const [geselecteerdeRep, setGeselecteerdeRep] = useState(null);
+  const [entiteitActieOpen, setEntiteitActieOpen] = useState(false);
+  const [nieuweEntiteitActieOpen, setNieuweEntiteitActieOpen] = useState(false);
+  const [nieuweEntiteitID, setNieuweEntiteitID] = useState("");
+  const [nieuweEntiteitIDInfo, setNieuweEntiteitIDInfo] = useState({ loading: false, maxId: null, nextId: null, error: "" });
+  const [entiteitNieuweGegevens, setEntiteitNieuweGegevens] = useState([]);
+  const [entiteitNieuweRelaties, setEntiteitNieuweRelaties] = useState([]);
+  const [nieuweEntiteitGegevens, setNieuweEntiteitGegevens] = useState([]);
+  const [nieuweEntiteitRelaties, setNieuweEntiteitRelaties] = useState([]);
+  const [entiteitNieuweGegevensVolgendId, setEntiteitNieuweGegevensVolgendId] = useState(1);
+  const [entiteitNieuweRelatiesVolgendId, setEntiteitNieuweRelatiesVolgendId] = useState(1);
+  const [nieuweEntiteitGegevensVolgendId, setNieuweEntiteitGegevensVolgendId] = useState(1);
+  const [nieuweEntiteitRelatiesVolgendId, setNieuweEntiteitRelatiesVolgendId] = useState(1);
+  const [relatieSecondaireOpties, setRelatieSecondaireOpties] = useState({});
+  const [actieOpmerking, setActieOpmerking] = useState("");
+  const [nieuweEntiteitOpmerking, setNieuweEntiteitOpmerking] = useState("");
+  const [nieuweEntiteitOpmerkingAangepast, setNieuweEntiteitOpmerkingAangepast] = useState(false);
+  const [actieFormVelden, setActieFormVelden] = useState({});
+  const [actieBezig, setActieBezig] = useState(false);
+  const [nieuweEntiteitBezig, setNieuweEntiteitBezig] = useState(false);
+  const [actieResultaat, setActieResultaat] = useState(null);
+  const [nieuweEntiteitResultaat, setNieuweEntiteitResultaat] = useState(null);
+
+  const nieuweEntiteitFormRef = useRef(null);
+  const registratieActieFormRef = useRef(null);
+
+  const [registratieActieOpen, setRegistratieActieOpen] = useState(false);
+  const [registratieActieBezig, setRegistratieActieBezig] = useState(false);
+  const [registratieActieResultaat, setRegistratieActieResultaat] = useState(null);
+  const [registratieActieOpmerking, setRegistratieActieOpmerking] = useState("");
+  const [registratieOngedaanBevestiging, setRegistratieOngedaanBevestiging] = useState(false);
+  const [registratieCorrigeerActief, setRegistratieCorrigeerActief] = useState(false);
+  const [registratieCorrigeerVelden, setRegistratieCorrigeerVelden] = useState({});
+  const [overlayOffsets, setOverlayOffsets] = useState({
+    nieuweEntiteit: { x: 0, y: 0 },
+    registratie: { x: 0, y: 0 },
+    entiteit: { x: 0, y: 0 },
+    representatie: { x: 0, y: 0 },
+  });
+
+  const overlayDragRef = useRef(null);
+
+  const selectedRegistratie = registratieData;
+  const selectedRegistratieWijzigingen = safeArray(selectedRegistratie?.wijzigingen);
+
+  const entiteitTypen = useMemo(() => {
+    const allTypes = safeArray(vizSchema?.types);
+    return allTypes.filter((item) => String(item.metatype) === "entiteit");
+  }, [vizSchema]);
+
+  const typeMetaByTypenaam = useMemo(() => {
+    const result = {};
+    safeArray(vizSchema?.types).forEach((item) => {
+      if (item?.typenaam) {
+        result[item.typenaam] = item;
       }
-
-      function vindEntiteitIdVanuitRegistratie(registratie, entiteiten, entiteitType) {
-        const wijzigingen = safeArray(registratie?.wijzigingen);
-        const doelType = String(entiteitType || '').toUpperCase();
-
-        for (const wijziging of wijzigingen) {
-          if (String(wijziging?.entiteitnaam || '').toUpperCase() !== doelType) {
-            continue;
-          }
-
-          const kandidaatId = wijziging?.entiteit_id;
-          if (kandidaatId === null || kandidaatId === undefined || kandidaatId === '') {
-            continue;
-          }
-
-          const kandidaatAlsString = String(kandidaatId);
-          const bestaat = entiteiten.some((item) => String(item.id) === kandidaatAlsString);
-          if (bestaat) {
-            return kandidaatAlsString;
-          }
-        }
-
-        return '';
-      }
-
-      function afgeknotteHoekPad(x, y, width, height, hoek = 8) {
-        const h = Math.max(0, Math.min(hoek, Math.floor(Math.min(width, height) / 2)));
-        return [
-          `M ${x + h} ${y}`,
-          `L ${x + width - h} ${y}`,
-          `L ${x + width} ${y + h}`,
-          `L ${x + width} ${y + height - h}`,
-          `L ${x + width - h} ${y + height}`,
-          `L ${x + h} ${y + height}`,
-          `L ${x} ${y + height - h}`,
-          `L ${x} ${y + h}`,
-          'Z',
-        ].join(' ');
-      }
-
-      function registratieIDUitOpvoerTijdstip(tijdstipRaw) {
-        const viaMicroseconde = microsecondeIntVanTijdstip(tijdstipRaw);
-        if (Number.isInteger(viaMicroseconde) && viaMicroseconde > 0) {
-          return viaMicroseconde;
-        }
-        const viaT = tUitRegistratieTijdstip(tijdstipRaw);
-        if (Number.isInteger(viaT) && viaT > 0) {
-          return viaT;
-        }
-        return 0;
-      }
-
-      function endpointSegmentVoorEntiteit(entiteitType) {
-        return `${String(entiteitType || '').toLowerCase()}s`;
-      }
-
-      function responseKeyVoorEntiteiten(entiteitType, responseJson) {
-        const type = String(entiteitType || '');
-        const kandidaten = [
-          `${type}s`,
-          `${type.toUpperCase()}s`,
-          `${type.toLowerCase()}s`,
-        ];
-
-        for (const key of kandidaten) {
-          if (Array.isArray(responseJson?.[key])) {
-            return key;
-          }
-        }
-
-        const dynKey = Object.keys(responseJson || {}).find((k) => Array.isArray(responseJson[k]));
-        return dynKey || `${type}s`;
-      }
-
-      function childArrayVoorRol(selectedEntiteit, rolnaam, jsonRolnaam) {
-        const directeKandidaten = [jsonRolnaam, rolnaam].filter(Boolean);
-        for (const kandidaat of directeKandidaten) {
-          const direct = selectedEntiteit?.[kandidaat];
-          if (Array.isArray(direct)) {
-            return direct;
-          }
-        }
-
-        const direct = selectedEntiteit?.[rolnaam];
-        if (Array.isArray(direct)) {
-          return direct;
-        }
-
-        const key = Object.keys(selectedEntiteit || {}).find((k) => k.toLowerCase() === String(rolnaam).toLowerCase());
-        if (!key) {
-          return [];
-        }
-        return safeArray(selectedEntiteit[key]);
-      }
-
-      function labelVoorChildType(doeltype, rolnaam) {
-        return String(doeltype || rolnaam || '?');
-      }
-
-      function leidEntiteitTypeAfUitRegistratie(registratie, beschikbareEntiteitTypen) {
-        const wijzigingen = safeArray(registratie?.wijzigingen);
-        const beschikbareNamen = new Set(
-          safeArray(beschikbareEntiteitTypen)
-            .map((item) => String(item?.typenaam || '').trim())
-            .filter(Boolean)
-        );
-
-        for (const wijziging of wijzigingen) {
-          const kandidaat = String(wijziging?.entiteitnaam || '').trim();
-          if (kandidaat && beschikbareNamen.has(kandidaat)) {
-            return kandidaat;
-          }
-        }
-
-        return '';
-      }
-
-      async function fetchVizSchema(baseUrl) {
-        const res = await fetch(`${baseUrl}/api/viz/schema`);
-        if (!res.ok) {
-          throw new Error(`Schema HTTP ${res.status}: ${res.statusText}`);
-        }
-        return await res.json();
-      }
-
-      async function fetchVizEntiteitMaxID(baseUrl, typeNaam) {
-        const res = await fetch(`${baseUrl}/api/viz/entiteit/${encodeURIComponent(typeNaam)}/max-id`);
-        if (!res.ok) {
-          throw new Error(`Max-id HTTP ${res.status}: ${res.statusText}`);
-        }
-        return await res.json();
-      }
-
-      export default function IndexSchemaPage() {
-        const [baseUrl, setBaseUrl] = useState(import.meta.env.VITE_API_BASE_URL || window.location.origin);
-        const [entiteitType, setEntiteitType] = useState('A');
-        const [t, setT] = useState(1);
-        const [registratieId, setRegistratieId] = useState(1);
-        const [loading, setLoading] = useState(false);
-        const [error, setError] = useState('');
-        const [responseData, setResponseData] = useState(null);
-        const [responseKey, setResponseKey] = useState('As');
-        const [registratieData, setRegistratieData] = useState(null);
-        const [ongedaanGemaakteRegistratieData, setOngedaanGemaakteRegistratieData] = useState(null);
-        const [selectedEntiteitId, setSelectedEntiteitId] = useState('');
-        const [vizSchema, setVizSchema] = useState(null);
-        const [schemaError, setSchemaError] = useState('');
-        const [geselecteerdeRep, setGeselecteerdeRep] = useState(null); // { item, group }
-        const [entiteitActieOpen, setEntiteitActieOpen] = useState(false);
-        const [nieuweEntiteitActieOpen, setNieuweEntiteitActieOpen] = useState(false);
-        const [nieuweEntiteitID, setNieuweEntiteitID] = useState('');
-        const [nieuweEntiteitIDInfo, setNieuweEntiteitIDInfo] = useState({ loading: false, maxId: null, nextId: null, error: '' });
-        const [entiteitNieuweGegevens, setEntiteitNieuweGegevens] = useState([]); // [{ id, groupKey, values }]
-        const [entiteitNieuweRelaties, setEntiteitNieuweRelaties] = useState([]); // [{ id, groupKey, values }]
-        const [nieuweEntiteitGegevens, setNieuweEntiteitGegevens] = useState([]); // [{ id, groupKey, values }]
-        const [nieuweEntiteitRelaties, setNieuweEntiteitRelaties] = useState([]); // [{ id, groupKey, values }]
-        const [entiteitNieuweGegevensVolgendId, setEntiteitNieuweGegevensVolgendId] = useState(1);
-        const [entiteitNieuweRelatiesVolgendId, setEntiteitNieuweRelatiesVolgendId] = useState(1);
-        const [nieuweEntiteitGegevensVolgendId, setNieuweEntiteitGegevensVolgendId] = useState(1);
-        const [nieuweEntiteitRelatiesVolgendId, setNieuweEntiteitRelatiesVolgendId] = useState(1);
-        const [relatieSecondaireOpties, setRelatieSecondaireOpties] = useState({}); // groupKey -> { loading, ids, error }
-        const [actieOpmerking, setActieOpmerking] = useState('');
-        const [nieuweEntiteitOpmerking, setNieuweEntiteitOpmerking] = useState('');
-        const [actieFormVelden, setActieFormVelden] = useState({});
-        const [actieBezig, setActieBezig] = useState(false);
-        const [nieuweEntiteitBezig, setNieuweEntiteitBezig] = useState(false);
-        const [actieResultaat, setActieResultaat] = useState(null); // { ok, bericht }
-        const [nieuweEntiteitResultaat, setNieuweEntiteitResultaat] = useState(null); // { ok, bericht }
-
-        const nieuweEntiteitFormRef = useRef(null);
-        const registratieActieFormRef = useRef(null);
-
-        const [registratieActieOpen, setRegistratieActieOpen] = useState(false);
-        const [registratieActieBezig, setRegistratieActieBezig] = useState(false);
-        const [registratieActieResultaat, setRegistratieActieResultaat] = useState(null);
-        const [registratieActieOpmerking, setRegistratieActieOpmerking] = useState('');
-        const [registratieOngedaanBevestiging, setRegistratieOngedaanBevestiging] = useState(false);
-        const [registratieCorrigeerActief, setRegistratieCorrigeerActief] = useState(false);
-        const [registratieCorrigeerVelden, setRegistratieCorrigeerVelden] = useState({});
-
-        const entiteitTypen = useMemo(() => {
-          const allTypes = safeArray(vizSchema?.types);
-          return allTypes.filter((item) => String(item.metatype) === 'entiteit');
-        }, [vizSchema]);
-
-        const typeMetaByTypenaam = useMemo(() => {
-          const result = {};
-          safeArray(vizSchema?.types).forEach((item) => {
-            if (item?.typenaam) {
-              result[item.typenaam] = item;
-            }
-          });
-          return result;
-        }, [vizSchema]);
+    });
+    return result;
+  }, [vizSchema]);
 
         const selectedEntiteitMeta = useMemo(
           () => entiteitTypen.find((item) => item.typenaam === entiteitType) || null,
@@ -230,6 +264,58 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
 
         const as = safeArray(responseData?.[responseKey]);
         const selectedA = useMemo(() => as.find((item) => String(item.id) === String(selectedEntiteitId)) || null, [as, selectedEntiteitId]);
+
+        const startOverlayDrag = (overlayKey) => (event) => {
+          if (event.button !== 0) {
+            return;
+          }
+          const huidigOffset = overlayOffsets[overlayKey] || { x: 0, y: 0 };
+          overlayDragRef.current = {
+            overlayKey,
+            startX: event.clientX,
+            startY: event.clientY,
+            originX: huidigOffset.x,
+            originY: huidigOffset.y,
+          };
+          event.preventDefault();
+        };
+
+        const overlayDialogStyle = (overlayKey, extraStyle = null) => {
+          const offset = overlayOffsets[overlayKey] || { x: 0, y: 0 };
+          return {
+            transform: `translate(${offset.x}px, ${offset.y}px)`,
+            cursor: overlayDragRef.current?.overlayKey === overlayKey ? 'grabbing' : undefined,
+            ...extraStyle,
+          };
+        };
+
+        useEffect(() => {
+          const handleMouseMove = (event) => {
+            const dragState = overlayDragRef.current;
+            if (!dragState) {
+              return;
+            }
+
+            setOverlayOffsets((current) => ({
+              ...current,
+              [dragState.overlayKey]: {
+                x: dragState.originX + (event.clientX - dragState.startX),
+                y: dragState.originY + (event.clientY - dragState.startY),
+              },
+            }));
+          };
+
+          const stopDrag = () => {
+            overlayDragRef.current = null;
+          };
+
+          window.addEventListener('mousemove', handleMouseMove);
+          window.addEventListener('mouseup', stopDrag);
+          return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', stopDrag);
+          };
+        }, []);
 
         const childGroups = useMemo(() => {
           const skeleton = safeArray(selectedEntiteitMeta?.onderliggende).map((child) => ({
@@ -279,26 +365,44 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
         }, [childGroups]);
 
         const gegevenselementGroepOpties = useMemo(() => {
-          const overSlaan = new Set(['rel_id', 'id', 'a_id', 'b_id', 'opvoer', 'afvoer', 'aanvang', 'einde']);
           return childGroupsGesorteerd
             .filter((group) => String(group?.metatype || '').toLowerCase() === 'gegevenselement')
             .map((group) => {
               const groupKey = `${group.rolnaam}__${group.doeltype}`;
               const voorbeeld = safeArray(group.items)[0] || {};
+              const entKolom = String(group?.typeMeta?.entiteitIDKolom || '').toLowerCase();
+              const idKolom = String(group?.typeMeta?.idKolom || '').toLowerCase();
               const schemaVeldDefinities = safeArray(group?.typeMeta?.velden)
-                .filter((veld) => veld && !overSlaan.has(String(veld.naam || '').toLowerCase()))
+                .filter((veld) => {
+                  if (!veld) return false;
+                  const naam = String(veld.naam || '').toLowerCase();
+                  if (TEMPORALE_PLUMBING_VELDEN.has(naam)) return false;
+                  if (entKolom && naam === entKolom) return false;
+                  if (veld.autoIncrement) return false;
+                  return true;
+                })
                 .map((veld) => ({
                   naam: String(veld.naam || ''),
+                  description: String(veld.description || ''),
                   type: String(veld.type || 'string'),
+                  format: String(veld.format || ''),
+                  enum: safeArray(veld.enum).map((waarde) => String(waarde || '')).filter(Boolean),
                   defaultValue: '',
                   verplicht: Boolean(veld.verplicht),
                 }))
                 .filter((veld) => veld.naam);
               const afgeleideVeldDefinities = veldEntries(voorbeeld)
-                .filter(([k]) => !overSlaan.has(k))
+                .filter(([k]) => {
+                  const naam = k.toLowerCase();
+                  if (TEMPORALE_PLUMBING_VELDEN.has(naam)) return false;
+                  if (entKolom && naam === entKolom) return false;
+                  if (idKolom && naam === idKolom) return false;
+                  return true;
+                })
                 .map(([k, v]) => ({
                   naam: k,
                   type: typeof v,
+                  format: '',
                   defaultValue: v === null || v === undefined ? '' : String(v),
                 }));
               const veldDefinities = schemaVeldDefinities.length > 0 ? schemaVeldDefinities : afgeleideVeldDefinities;
@@ -314,33 +418,46 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
         }, [childGroupsGesorteerd]);
 
         const relatieGroepOpties = useMemo(() => {
-          const standaardOverSlaan = new Set(['rel_id', 'id', 'opvoer', 'afvoer', 'aanvang', 'einde']);
           return childGroupsGesorteerd
             .filter((group) => String(group?.metatype || '').toLowerCase() === 'relatie')
             .map((group) => {
               const groupKey = `${group.rolnaam}__${group.doeltype}`;
               const primaireKolom = String(group?.typeMeta?.entiteitIDKolom || '').toLowerCase();
               const secondaireKolom = String(group?.typeMeta?.secondaireEntiteitIDKolom || '');
-              const overSlaan = new Set(standaardOverSlaan);
-              if (primaireKolom) {
-                overSlaan.add(primaireKolom);
-              }
+              const idKolom = String(group?.typeMeta?.idKolom || '').toLowerCase();
 
               const voorbeeld = safeArray(group.items)[0] || {};
               const schemaVeldDefinities = safeArray(group?.typeMeta?.velden)
-                .filter((veld) => veld && !overSlaan.has(String(veld.naam || '').toLowerCase()))
+                .filter((veld) => {
+                  if (!veld) return false;
+                  const naam = String(veld.naam || '').toLowerCase();
+                  if (TEMPORALE_PLUMBING_VELDEN.has(naam)) return false;
+                  if (primaireKolom && naam === primaireKolom) return false;
+                  if (veld.autoIncrement) return false;
+                  return true;
+                })
                 .map((veld) => ({
                   naam: String(veld.naam || ''),
+                  description: String(veld.description || ''),
                   type: String(veld.type || 'string'),
+                  format: String(veld.format || ''),
+                  enum: safeArray(veld.enum).map((waarde) => String(waarde || '')).filter(Boolean),
                   defaultValue: '',
                   verplicht: Boolean(veld.verplicht),
                 }))
                 .filter((veld) => veld.naam);
               const afgeleideVeldDefinities = veldEntries(voorbeeld)
-                .filter(([k]) => !overSlaan.has(String(k).toLowerCase()))
+                .filter(([k]) => {
+                  const naam = k.toLowerCase();
+                  if (TEMPORALE_PLUMBING_VELDEN.has(naam)) return false;
+                  if (primaireKolom && naam === primaireKolom) return false;
+                  if (idKolom && naam === idKolom) return false;
+                  return true;
+                })
                 .map(([k, v]) => ({
                   naam: k,
                   type: typeof v,
+                  format: '',
                   defaultValue: v === null || v === undefined ? '' : String(v),
                 }));
               const veldDefinities = schemaVeldDefinities.length > 0 ? schemaVeldDefinities : afgeleideVeldDefinities;
@@ -531,14 +648,7 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
               safeArray(optie.veldDefinities).forEach((veld) => {
                 const raw = row?.values?.[veld.naam];
                 if (raw === undefined || raw === null || raw === '') return;
-                if (veld.type === 'number') {
-                  const parsed = Number(raw);
-                  item[veld.naam] = Number.isNaN(parsed) ? raw : parsed;
-                } else if (veld.type === 'boolean') {
-                  item[veld.naam] = raw === true || raw === 'true';
-                } else {
-                  item[veld.naam] = raw;
-                }
+                item[veld.naam] = coercedWaardeVoorVeld(raw, veld, `${optie.label}.${veld.naam}`);
               });
               return { opvoer: { [optie.geVeldnaam]: item } };
             });
@@ -574,7 +684,7 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
               safeArray(optie.veldDefinities).forEach((veld) => {
                 const raw = row?.values?.[veld.naam];
                 if (raw === undefined || raw === null || raw === '') return;
-                item[veld.naam] = coercedWaardeVoorType(raw, veld.type, `${optie.label}.${veld.naam}`);
+                item[veld.naam] = coercedWaardeVoorVeld(raw, veld, `${optie.label}.${veld.naam}`);
               });
               wijzigingen.push({ opvoer: { [optie.geVeldnaam]: item } });
             });
@@ -610,6 +720,18 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
           };
         }, [baseUrl, entiteitType, nieuweEntiteitActieOpen]);
 
+        const defaultNieuweEntiteitOpmerking = useMemo(() => {
+          const idTekst = String(nieuweEntiteitID || '').trim();
+          return `Nieuwe ${entiteitType || 'Entiteit'} = ${idTekst || '?'}`;
+        }, [entiteitType, nieuweEntiteitID]);
+
+        useEffect(() => {
+          if (!nieuweEntiteitActieOpen || nieuweEntiteitOpmerkingAangepast) {
+            return;
+          }
+          setNieuweEntiteitOpmerking(defaultNieuweEntiteitOpmerking);
+        }, [nieuweEntiteitActieOpen, nieuweEntiteitOpmerkingAangepast, defaultNieuweEntiteitOpmerking]);
+
         useEffect(() => {
           if (!nieuweEntiteitActieOpen) {
             return;
@@ -635,7 +757,8 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
         }, [registratieId]);
 
         useEffect(() => {
-          if (!entiteitActieOpen && !nieuweEntiteitActieOpen) {
+          const repIsRelatie = !!geselecteerdeRep && String(geselecteerdeRep.group?.metatype || '').toLowerCase() === 'relatie';
+          if (!entiteitActieOpen && !nieuweEntiteitActieOpen && !repIsRelatie && !registratieCorrigeerActief) {
             return;
           }
 
@@ -674,35 +797,63 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
                 }));
               });
           });
-        }, [baseUrl, entiteitActieOpen, nieuweEntiteitActieOpen, relatieGroepOpties, relatieSecondaireOpties]);
+        }, [baseUrl, entiteitActieOpen, nieuweEntiteitActieOpen, geselecteerdeRep, registratieCorrigeerActief, relatieGroepOpties, relatieSecondaireOpties]);
+
+        function bouwRepresentatieActiePayloads(item, group, actieVelden, opmerking) {
+          const veldnaam = group.typeMeta?.veldnaam || group.doeltype.toLowerCase();
+          const idKolom = String(group?.typeMeta?.idKolom || '');
+          const entiteitIDKolom = String(group?.typeMeta?.entiteitIDKolom || '');
+
+          const sleutelItem = {};
+          if (idKolom && item[idKolom] !== undefined) {
+            sleutelItem[idKolom] = item[idKolom];
+          }
+          if (entiteitIDKolom && item[entiteitIDKolom] !== undefined) {
+            sleutelItem[entiteitIDKolom] = item[entiteitIDKolom];
+          }
+          if (!idKolom && item.rel_id !== undefined) {
+            sleutelItem.rel_id = item.rel_id;
+          } else if (!idKolom && item.id !== undefined) {
+            sleutelItem.id = item.id;
+          }
+
+          const afvoerPayload = {
+            registratie: { registratietype: 'registratie', ...(opmerking ? { opmerking } : {}) },
+            wijzigingen: [{ afvoer: { [veldnaam]: sleutelItem } }],
+          };
+
+          const nieuwItem = { ...sleutelItem };
+          let heeftWijziging = false;
+          Object.entries(actieVelden || {}).forEach(([k, v]) => {
+            const origineel = item[k];
+            const veldDef = Array.isArray(group?.typeMeta?.velden)
+              ? (group.typeMeta.velden.find((veld) => veld.naam === k) || { naam: k, type: typeof origineel, format: '' })
+              : { naam: k, type: typeof origineel, format: '' };
+            let nieuw = coercedWaardeVoorVeld(v, veldDef, `${labelVoorChildType(group.doeltype, group.rolnaam)}.${k}`);
+            if (nieuw !== origineel) {
+              nieuwItem[k] = nieuw;
+              heeftWijziging = true;
+            }
+          });
+
+          const corrigeerPayload = {
+            registratie: { registratietype: 'correctie', ...(opmerking ? { opmerking } : {}) },
+            wijzigingen: [{ opvoer: { [veldnaam]: nieuwItem } }],
+          };
+
+          return { afvoerPayload, corrigeerPayload, heeftWijziging };
+        }
 
         // Live preview voor de rep-actiebox (afvoer + correctie).
         const repActiePreview = useMemo(() => {
           if (!geselecteerdeRep) return null;
           const { item, group } = geselecteerdeRep;
-          const veldnaam = group.typeMeta?.veldnaam || group.doeltype.toLowerCase();
           const opmerking = actieOpmerking.trim() || undefined;
           try {
-            const afvoerPayload = {
-              registratie: { registratietype: 'registratie', ...(opmerking ? { opmerking } : {}) },
-              wijzigingen: [{ afvoer: { [veldnaam]: { ...item } } }],
-            };
-            const nieuwItem = { ...item };
-            Object.entries(actieFormVelden).forEach(([k, v]) => {
-              const origineel = item[k];
-              if (typeof origineel === 'number') {
-                const parsed = Number(v);
-                nieuwItem[k] = Number.isNaN(parsed) ? v : parsed;
-              } else if (typeof origineel === 'boolean') {
-                nieuwItem[k] = v === 'true' || v === true;
-              } else {
-                nieuwItem[k] = v;
-              }
-            });
-            const corrigeerPayload = {
-              registratie: { registratietype: 'correctie', ...(opmerking ? { opmerking } : {}) },
-              wijzigingen: [{ opvoer: { [veldnaam]: nieuwItem } }],
-            };
+            const { afvoerPayload, corrigeerPayload, heeftWijziging } = bouwRepresentatieActiePayloads(item, group, actieFormVelden, opmerking);
+            if (!heeftWijziging) {
+              return { ok: false, fout: 'Geen gewijzigde velden voor correctie. Pas minimaal 1 veld aan.' };
+            }
             return { ok: true, afvoer: afvoerPayload, corrigeer: corrigeerPayload };
           } catch (err) {
             return { ok: false, fout: String(err?.message || err) };
@@ -871,12 +1022,11 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
           loadData({ tValue: nextT, registratieIdValue: registratieId, selecteerVanuitRegistratie: false });
         }
 
-        const plumbingVelden = new Set(['rel_id', 'id', 'a_id', 'b_id', 'opvoer', 'afvoer', 'aanvang', 'einde']);
-
         function selecteerRep(item, group) {
           const bewerkbaar = {};
+          const secondaireKolom = String(group?.typeMeta?.secondaireEntiteitIDKolom || '');
           veldEntries(item)
-            .filter(([k]) => !plumbingVelden.has(k))
+            .filter(([k]) => !isPlumbingVeld(k, group?.typeMeta))
             .forEach(([k, v]) => { bewerkbaar[k] = v ?? ''; });
           setEntiteitActieOpen(false);
           setNieuweEntiteitActieOpen(false);
@@ -892,6 +1042,28 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
             values[veld.naam] = veld.defaultValue;
           });
           return values;
+        }
+
+        function isMeervoudigOptie(optie) {
+          const mv = String(optie?.group?.typeMeta?.momentvoorkomen || optie?.group?.momentvoorkomen || '').toLowerCase();
+          return mv === 'meervoudig';
+        }
+
+        function bouwInitieleRijenVoorOpties(opties, startId) {
+          const rows = [];
+          let nextId = startId;
+          safeArray(opties).forEach((optie) => {
+            const aantal = isMeervoudigOptie(optie) ? 2 : 1;
+            for (let i = 0; i < aantal; i += 1) {
+              rows.push({
+                id: nextId,
+                groupKey: optie.groupKey,
+                values: initialiseerGeWaardenVoorOptie(optie),
+              });
+              nextId += 1;
+            }
+          });
+          return { rows, nextId };
         }
 
         function voegEntiteitGegevenRijToe(groupKey) {
@@ -1040,8 +1212,9 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
               const match = zoekGroupEnItemVoorWijziging(w);
               if (match) {
                 const bewerkbaar = {};
+                const secKolom = String(match.group?.typeMeta?.secondaireEntiteitIDKolom || '');
                 veldEntries(match.item)
-                  .filter(([k]) => !plumbingVelden.has(k))
+                  .filter(([k]) => !isPlumbingVeld(k, match.group?.typeMeta))
                   .forEach(([k, v]) => { bewerkbaar[k] = String(v ?? ''); });
                 initieleVelden[String(w.representatie_id)] = bewerkbaar;
               }
@@ -1050,6 +1223,65 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
           setRegistratieCorrigeerActief(true);
           setRegistratieActieResultaat(null);
         }
+
+        function bouwRegistratieCorrectiePayload(opmerking) {
+          const registratie = { registratietype: 'correctie', ...(opmerking ? { opmerking } : {}) };
+          const wijzigingen = selectedRegistratieWijzigingen
+            .filter((w) => w.wijzigingstype === 'opvoer' && w.representatienaam && w.representatie_id)
+            .map((w) => {
+              const match = zoekGroupEnItemVoorWijziging(w);
+              if (!match) return null;
+              const { group, item } = match;
+              if (item.afvoer != null && item.afvoer !== '' && item.afvoer !== 0) return null;
+              const veldnaam = group.typeMeta?.veldnaam || String(group.doeltype || w.representatienaam).toLowerCase();
+              const bewerkteVelden = registratieCorrigeerVelden[String(w.representatie_id)] || {};
+              const nieuwItem = {};
+              let heeftWijziging = false;
+
+              // Voor correctie moet de backend de bestaande representatie kunnen identificeren
+              // en de entiteit-context kunnen afleiden.
+              const idKolom = String(group?.typeMeta?.idKolom || '');
+              const entiteitIDKolom = String(group?.typeMeta?.entiteitIDKolom || '');
+              if (idKolom && item[idKolom] !== undefined) {
+                nieuwItem[idKolom] = item[idKolom];
+              }
+              if (entiteitIDKolom && item[entiteitIDKolom] !== undefined) {
+                nieuwItem[entiteitIDKolom] = item[entiteitIDKolom];
+              }
+
+              Object.entries(bewerkteVelden).forEach(([k, v]) => {
+                const origineel = item[k];
+                const veldDef = Array.isArray(group?.typeMeta?.velden)
+                  ? (group.typeMeta.velden.find((veld) => veld.naam === k) || { naam: k, type: typeof origineel, format: '' })
+                  : { naam: k, type: typeof origineel, format: '' };
+                let nieuw = coercedWaardeVoorVeld(v, veldDef, `${w.representatienaam}.${k}`);
+
+                if (nieuw !== origineel) {
+                  nieuwItem[k] = nieuw;
+                  heeftWijziging = true;
+                }
+              });
+              if (!heeftWijziging) return null;
+              return { opvoer: { [veldnaam]: nieuwItem } };
+            })
+            .filter(Boolean);
+
+          return { registratie, wijzigingen };
+        }
+
+        const registratieCorrectiePreview = useMemo(() => {
+          if (!selectedRegistratie || !registratieCorrigeerActief) return null;
+          try {
+            const opmerking = registratieActieOpmerking.trim() || undefined;
+            const payload = bouwRegistratieCorrectiePayload(opmerking);
+            if (payload.wijzigingen.length === 0) {
+              return { ok: false, fout: 'Geen gewijzigde velden gevonden voor correctie. Pas minimaal 1 veld aan.' };
+            }
+            return { ok: true, payload };
+          } catch (err) {
+            return { ok: false, fout: String(err?.message || err) };
+          }
+        }, [selectedRegistratie, registratieCorrigeerActief, registratieActieOpmerking, selectedRegistratieWijzigingen, registratieCorrigeerVelden]);
 
         async function voerRegistratieOngedaanMakingUit() {
           if (!selectedRegistratie) return;
@@ -1098,33 +1330,9 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
           setRegistratieActieResultaat(null);
           try {
             const opmerking = registratieActieOpmerking.trim() || undefined;
-            const registratie = { registratietype: 'correctie', ...(opmerking ? { opmerking } : {}) };
-            const wijzigingen = selectedRegistratieWijzigingen
-              .filter((w) => w.wijzigingstype === 'opvoer' && w.representatienaam && w.representatie_id)
-              .map((w) => {
-                const match = zoekGroupEnItemVoorWijziging(w);
-                if (!match) return null;
-                const { group, item } = match;
-                if (item.afvoer != null && item.afvoer !== '' && item.afvoer !== 0) return null;
-                const veldnaam = group.typeMeta?.veldnaam || String(group.doeltype || w.representatienaam).toLowerCase();
-                const bewerkteVelden = registratieCorrigeerVelden[String(w.representatie_id)] || {};
-                const nieuwItem = { ...item };
-                Object.entries(bewerkteVelden).forEach(([k, v]) => {
-                  const origineel = item[k];
-                  if (typeof origineel === 'number') {
-                    const parsed = Number(v);
-                    nieuwItem[k] = Number.isNaN(parsed) ? v : parsed;
-                  } else if (typeof origineel === 'boolean') {
-                    nieuwItem[k] = v === 'true' || v === true;
-                  } else {
-                    nieuwItem[k] = v;
-                  }
-                });
-                return { opvoer: { [veldnaam]: nieuwItem } };
-              })
-              .filter(Boolean);
+            const { registratie, wijzigingen } = bouwRegistratieCorrectiePayload(opmerking);
             if (wijzigingen.length === 0) {
-              throw new Error('Geen corrigeerbare opvoer-wijzigingen gevonden (representaties zijn mogelijk afgevoerd of niet geladen).');
+              throw new Error('Geen gewijzigde velden gevonden voor correctie. Pas minimaal 1 veld aan.');
             }
             const res = await fetch(`${baseUrl}/registratie/`, {
               method: 'POST',
@@ -1158,16 +1366,17 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
           setEntiteitActieOpen(false);
           setActieResultaat(null);
           setNieuweEntiteitResultaat(null);
+          setNieuweEntiteitOpmerkingAangepast(false);
           setNieuweEntiteitActieOpen(true);
           setSelectedEntiteitId('');
           setRegistratieData(null);
           setOngedaanGemaakteRegistratieData(null);
-          if (nieuweEntiteitGegevens.length === 0 && gegevenselementGroepOpties.length > 0) {
-            voegNieuweEntiteitGegevenRijToe(gegevenselementGroepOpties[0].groupKey);
-          }
-          if (nieuweEntiteitRelaties.length === 0 && relatieGroepOpties.length > 0) {
-            voegNieuweEntiteitRelatieRijToe(relatieGroepOpties[0].groupKey);
-          }
+          const geInit = bouwInitieleRijenVoorOpties(gegevenselementGroepOpties, 1);
+          const relInit = bouwInitieleRijenVoorOpties(relatieGroepOpties, 1);
+          setNieuweEntiteitGegevens(geInit.rows);
+          setNieuweEntiteitGegevensVolgendId(geInit.nextId);
+          setNieuweEntiteitRelaties(relInit.rows);
+          setNieuweEntiteitRelatiesVolgendId(relInit.nextId);
         }
 
         function veranderNieuweEntiteitGegevenRijType(rowId, nieuwGroupKey) {
@@ -1200,20 +1409,6 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
           setNieuweEntiteitRelaties((prev) => prev.map((row) => (row.id === rowId
             ? { ...row, values: { ...(row.values || {}), [veldnaam]: waarde } }
             : row)));
-        }
-
-        function coercedWaardeVoorType(rawValue, jsType, veldLabel) {
-          if (jsType === 'number') {
-            const parsed = Number(rawValue);
-            if (Number.isNaN(parsed)) {
-              throw new Error(`Veld ${veldLabel} moet een getal zijn.`);
-            }
-            return parsed;
-          }
-          if (jsType === 'boolean') {
-            return rawValue === true || rawValue === 'true';
-          }
-          return rawValue;
         }
 
         async function navigeerNaarRegistratieVanOpvoer(event, opvoerTijdstip) {
@@ -1268,7 +1463,7 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
                   if (isLeeg) {
                     return;
                   }
-                  item[veld.naam] = coercedWaardeVoorType(raw, veld.type, `${optie.label}.${veld.naam}`);
+                  item[veld.naam] = coercedWaardeVoorVeld(raw, veld, `${optie.label}.${veld.naam}`);
                 });
                 return { opvoer: { [optie.geVeldnaam]: item } };
               });
@@ -1338,7 +1533,7 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
                 if (isLeeg) {
                   return;
                 }
-                item[veld.naam] = coercedWaardeVoorType(raw, veld.type, `${optie.label}.${veld.naam}`);
+                item[veld.naam] = coercedWaardeVoorVeld(raw, veld, `${optie.label}.${veld.naam}`);
               });
               wijzigingen.push({ opvoer: { [optie.geVeldnaam]: item } });
             });
@@ -1375,31 +1570,22 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
         async function voerActieUit(actie) {
           if (!geselecteerdeRep) return;
           const { item, group } = geselecteerdeRep;
-          const veldnaam = group.typeMeta?.veldnaam || group.doeltype.toLowerCase();
           setActieBezig(true);
           setActieResultaat(null);
           try {
             const opmerking = actieOpmerking.trim() || undefined;
-            const registratietype = actie === 'corrigeer' ? 'correctie' : 'registratie';
-            const registratie = { registratietype, ...(opmerking ? { opmerking } : {}) };
             let wijzigingen;
+            let registratie;
+            const { afvoerPayload, corrigeerPayload, heeftWijziging } = bouwRepresentatieActiePayloads(item, group, actieFormVelden, opmerking);
             if (actie === 'afvoer') {
-              wijzigingen = [{ afvoer: { [veldnaam]: { ...item } } }];
+              registratie = afvoerPayload.registratie;
+              wijzigingen = afvoerPayload.wijzigingen;
             } else {
-              // corrigeer: alleen opvoer; de API voert de bestaande representatie zelf af
-              const nieuwItem = { ...item };
-              Object.entries(actieFormVelden).forEach(([k, v]) => {
-                const origineel = item[k];
-                if (typeof origineel === 'number') {
-                  const parsed = Number(v);
-                  nieuwItem[k] = Number.isNaN(parsed) ? v : parsed;
-                } else if (typeof origineel === 'boolean') {
-                  nieuwItem[k] = v === 'true' || v === true;
-                } else {
-                  nieuwItem[k] = v;
-                }
-              });
-              wijzigingen = [{ opvoer: { [veldnaam]: nieuwItem } }];
+              if (!heeftWijziging) {
+                throw new Error('Geen gewijzigde velden voor correctie. Pas minimaal 1 veld aan.');
+              }
+              registratie = corrigeerPayload.registratie;
+              wijzigingen = corrigeerPayload.wijzigingen;
             }
             const res = await fetch(`${baseUrl}/registratie/`, {
               method: 'POST',
@@ -1459,6 +1645,9 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
               } else if (entiteitActieOpen) {
                 setEntiteitActieOpen(false);
                 setActieResultaat(null);
+              } else if (nieuweEntiteitActieOpen) {
+                setNieuweEntiteitActieOpen(false);
+                setNieuweEntiteitResultaat(null);
               } else if (registratieActieOpen) {
                 setRegistratieActieOpen(false);
                 setRegistratieCorrigeerActief(false);
@@ -1488,10 +1677,8 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
 
           window.addEventListener('keydown', handleKeyDown);
           return () => window.removeEventListener('keydown', handleKeyDown);
-        }, [t, registratieId, loading, entiteitType, geselecteerdeRep, entiteitActieOpen, registratieActieOpen]);
+        }, [t, registratieId, loading, entiteitType, geselecteerdeRep, entiteitActieOpen, nieuweEntiteitActieOpen, registratieActieOpen]);
 
-        const selectedRegistratie = registratieData;
-        const selectedRegistratieWijzigingen = safeArray(registratieData?.wijzigingen);
         const isOngedaanmaking = selectedRegistratie?.registratietype === 'ongedaanmaking';
         const ongedaanGemaakteWijzigingen = safeArray(ongedaanGemaakteRegistratieData?.wijzigingen);
         const visualRegistratie = isOngedaanmaking ? ongedaanGemaakteRegistratieData : selectedRegistratie;
@@ -1539,192 +1726,67 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
             />
 
             {nieuweEntiteitActieOpen && (
-              <div className="card" ref={nieuweEntiteitFormRef} style={{ marginTop: 12, border: '1.5px dashed #0f766e', background: '#f0fdfa' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <strong style={{ fontSize: 16 }}>Nieuwe entiteit {entiteitType} opvoeren</strong>
-                  <button
-                    onClick={() => { setNieuweEntiteitActieOpen(false); setNieuweEntiteitResultaat(null); }}
-                    style={{ background: 'transparent', color: '#475569', border: '1px solid #cbd5e1', padding: '3px 10px', fontSize: 13 }}
-                  >✕</button>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10, marginBottom: 10 }}>
-                  <label>
-                    Nieuwe {entiteitType}-id
-                    <input
-                      type="number"
-                      min="1"
-                      step="1"
-                      value={nieuweEntiteitID}
-                      onChange={(e) => setNieuweEntiteitID(e.target.value)}
-                    />
-                  </label>
-                  <label>
-                    Opmerking
-                    <input value={nieuweEntiteitOpmerking} onChange={(e) => setNieuweEntiteitOpmerking(e.target.value)} placeholder="optioneel" />
-                  </label>
-                  <div style={{ display: 'flex', alignItems: 'end', gap: 8 }}>
-                    <button
-                      onClick={openNieuweEntiteitActieBox}
-                      disabled={nieuweEntiteitIDInfo.loading || !entiteitType}
-                      style={{ background: '#0f766e' }}
-                    >
-                      {nieuweEntiteitIDInfo.loading ? 'Zoeken...' : 'Zoek volgende vrije id'}
-                    </button>
-                    <span className="muted" style={{ fontSize: 12 }}>
-                      {nieuweEntiteitIDInfo.error
-                        ? `Fout: ${nieuweEntiteitIDInfo.error}`
-                        : (nieuweEntiteitIDInfo.nextId !== null
-                          ? `max=${nieuweEntiteitIDInfo.maxId ?? '-'} | suggestie=${nieuweEntiteitIDInfo.nextId}`
-                          : 'Geen id-suggestie geladen')}
+              <div
+                className="action-overlay-backdrop"
+                onClick={() => {
+                  setNieuweEntiteitActieOpen(false);
+                  setNieuweEntiteitResultaat(null);
+                }}
+              >
+                <div
+                  className="action-overlay-dialog"
+                  style={overlayDialogStyle('nieuweEntiteit', {
+                    borderColor: donkerdereRandkleurVanHex(selectedEntiteitMeta?.kleur || '#0f766e'),
+                  })}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <div
+                    className="action-overlay-drag-handle"
+                    onMouseDown={startOverlayDrag('nieuweEntiteit')}
+                    style={{
+                      background: selectedEntiteitMeta?.kleur || '#0f766e',
+                      borderColor: donkerdereRandkleurVanHex(selectedEntiteitMeta?.kleur || '#0f766e'),
+                      color: '#111827',
+                    }}
+                  >
+                    <span className="action-section-title">
+                      <span>Nieuwe entiteit {entiteitType} opvoeren</span>
+                      <ActionTooltip text={String(selectedEntiteitMeta?.description || "")} placement="below" />
                     </span>
+                    <button
+                      onMouseDown={(event) => event.stopPropagation()}
+                      onClick={() => { setNieuweEntiteitActieOpen(false); setNieuweEntiteitResultaat(null); }}
+                      style={{ background: 'transparent', color: '#111827', border: '1px solid rgba(15,23,42,0.28)', padding: '2px 10px', fontSize: 14, cursor: 'pointer', borderRadius: 5, flexShrink: 0 }}
+                    >✕</button>
                   </div>
+                  <NieuweEntiteitActieBox
+                    nieuweEntiteitFormRef={nieuweEntiteitFormRef}
+                    accentColor={donkerdereRandkleurVanHex(selectedEntiteitMeta?.kleur || '#0f766e')}
+                    entiteitType={entiteitType}
+                    nieuweEntiteitID={nieuweEntiteitID}
+                    setNieuweEntiteitID={setNieuweEntiteitID}
+                    nieuweEntiteitOpmerking={nieuweEntiteitOpmerking}
+                    setNieuweEntiteitOpmerking={setNieuweEntiteitOpmerking}
+                    setNieuweEntiteitOpmerkingAangepast={setNieuweEntiteitOpmerkingAangepast}
+                    nieuweEntiteitIDInfo={nieuweEntiteitIDInfo}
+                    gegevenselementGroepOpties={gegevenselementGroepOpties}
+                    relatieGroepOpties={relatieGroepOpties}
+                    nieuweEntiteitGegevens={nieuweEntiteitGegevens}
+                    setNieuweEntiteitGegevens={setNieuweEntiteitGegevens}
+                    nieuweEntiteitRelaties={nieuweEntiteitRelaties}
+                    setNieuweEntiteitRelaties={setNieuweEntiteitRelaties}
+                    voegNieuweEntiteitGegevenRijToe={voegNieuweEntiteitGegevenRijToe}
+                    updateNieuweEntiteitGegevenRijVeld={updateNieuweEntiteitGegevenRijVeld}
+                    voegNieuweEntiteitRelatieRijToe={voegNieuweEntiteitRelatieRijToe}
+                    updateNieuweEntiteitRelatieRijVeld={updateNieuweEntiteitRelatieRijVeld}
+                    relatieSecondaireOpties={relatieSecondaireOpties}
+                    isMeervoudigOptie={isMeervoudigOptie}
+                    nieuweEntiteitOpvoerPreview={nieuweEntiteitOpvoerPreview}
+                    voerNieuweEntiteitActieUit={voerNieuweEntiteitActieUit}
+                    nieuweEntiteitBezig={nieuweEntiteitBezig}
+                    nieuweEntiteitResultaat={nieuweEntiteitResultaat}
+                  />
                 </div>
-
-                <div style={{ borderTop: '1px solid #99f6e4', paddingTop: 10 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <strong style={{ fontSize: 14 }}>Gegevenselementen toevoegen</strong>
-                    <button onClick={() => voegNieuweEntiteitGegevenRijToe(gegevenselementGroepOpties[0]?.groupKey)} disabled={nieuweEntiteitBezig || gegevenselementGroepOpties.length === 0}>+ GE-regel</button>
-                  </div>
-                  {nieuweEntiteitGegevens.map((row) => (
-                    <div key={`new-ge-${row.id}`} style={{ border: '1px solid #d1fae5', borderRadius: 8, padding: 10, marginBottom: 8, background: '#ffffff' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(170px, 260px) 1fr auto', gap: 8, alignItems: 'start' }}>
-                        <label>
-                          Type
-                          <select value={row.groupKey} onChange={(e) => veranderNieuweEntiteitGegevenRijType(row.id, e.target.value)}>
-                            {gegevenselementGroepOpties.map((optie) => (
-                              <option key={`new-ge-opt-${optie.groupKey}`} value={optie.groupKey}>{optie.label}</option>
-                            ))}
-                          </select>
-                        </label>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
-                          {(() => {
-                            const optie = gegevenselementGroepOpties.find((o) => o.groupKey === row.groupKey);
-                            const velden = safeArray(optie?.veldDefinities);
-                            if (velden.length === 0) return <span className="muted" style={{ fontSize: 12 }}>Geen veldinformatie beschikbaar.</span>;
-                            return velden.map((veld) => {
-                              const huidigeWaarde = row?.values?.[veld.naam] ?? '';
-                              if (veld.type === 'boolean') {
-                                return (
-                                  <label key={`new-ge-${row.id}-${veld.naam}`}>
-                                    {veld.naam}
-                                    <select value={String(huidigeWaarde)} onChange={(e) => updateNieuweEntiteitGegevenRijVeld(row.id, veld.naam, e.target.value)}>
-                                      <option value="">(leeg)</option>
-                                      <option value="true">true</option>
-                                      <option value="false">false</option>
-                                    </select>
-                                  </label>
-                                );
-                              }
-                              return (
-                                <label key={`new-ge-${row.id}-${veld.naam}`}>
-                                  {veld.naam}
-                                  <input
-                                    type={veld.type === 'number' ? 'number' : 'text'}
-                                    step={veld.type === 'number' ? 'any' : undefined}
-                                    value={String(huidigeWaarde)}
-                                    onChange={(e) => updateNieuweEntiteitGegevenRijVeld(row.id, veld.naam, e.target.value)}
-                                  />
-                                </label>
-                              );
-                            });
-                          })()}
-                        </div>
-                        <button onClick={() => setNieuweEntiteitGegevens((prev) => prev.filter((r) => r.id !== row.id))} disabled={nieuweEntiteitBezig} style={{ background: '#475569', alignSelf: 'end' }}>Verwijder</button>
-                      </div>
-                    </div>
-                  ))}
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '10px 0 8px' }}>
-                    <strong style={{ fontSize: 14 }}>Relaties toevoegen</strong>
-                    <button onClick={() => voegNieuweEntiteitRelatieRijToe(relatieGroepOpties[0]?.groupKey)} disabled={nieuweEntiteitBezig || relatieGroepOpties.length === 0}>+ Relatie-regel</button>
-                  </div>
-                  {nieuweEntiteitRelaties.map((row) => (
-                    <div key={`new-rel-${row.id}`} style={{ border: '1px solid #d1fae5', borderRadius: 8, padding: 10, marginBottom: 8, background: '#ffffff' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(170px, 260px) 1fr auto', gap: 8, alignItems: 'start' }}>
-                        <label>
-                          Type
-                          <select value={row.groupKey} onChange={(e) => veranderNieuweEntiteitRelatieRijType(row.id, e.target.value)}>
-                            {relatieGroepOpties.map((optie) => (
-                              <option key={`new-rel-opt-${optie.groupKey}`} value={optie.groupKey}>{optie.label}</option>
-                            ))}
-                          </select>
-                        </label>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
-                          {(() => {
-                            const optie = relatieGroepOpties.find((o) => o.groupKey === row.groupKey);
-                            const velden = safeArray(optie?.veldDefinities);
-                            if (velden.length === 0) return <span className="muted" style={{ fontSize: 12 }}>Geen veldinformatie beschikbaar.</span>;
-                            const secondaireInfo = relatieSecondaireOpties[row.groupKey] || { loading: false, ids: [], error: '' };
-                            return velden.map((veld) => {
-                              const huidigeWaarde = row?.values?.[veld.naam] ?? '';
-                              if (veld.naam === optie?.secondaireEntiteitIDKolom && safeArray(secondaireInfo.ids).length > 0) {
-                                return (
-                                  <label key={`new-rel-${row.id}-${veld.naam}`}>
-                                    {veld.naam}
-                                    <select value={String(huidigeWaarde)} onChange={(e) => updateNieuweEntiteitRelatieRijVeld(row.id, veld.naam, e.target.value)}>
-                                      <option value="">(kies id)</option>
-                                      {safeArray(secondaireInfo.ids).map((idOptie) => (
-                                        <option key={`new-rel-id-${row.id}-${idOptie}`} value={String(idOptie)}>{String(idOptie)}</option>
-                                      ))}
-                                    </select>
-                                  </label>
-                                );
-                              }
-                              if (veld.type === 'boolean') {
-                                return (
-                                  <label key={`new-rel-${row.id}-${veld.naam}`}>
-                                    {veld.naam}
-                                    <select value={String(huidigeWaarde)} onChange={(e) => updateNieuweEntiteitRelatieRijVeld(row.id, veld.naam, e.target.value)}>
-                                      <option value="">(leeg)</option>
-                                      <option value="true">true</option>
-                                      <option value="false">false</option>
-                                    </select>
-                                  </label>
-                                );
-                              }
-                              return (
-                                <label key={`new-rel-${row.id}-${veld.naam}`}>
-                                  {veld.naam}
-                                  <input
-                                    type={veld.type === 'number' ? 'number' : 'text'}
-                                    step={veld.type === 'number' ? 'any' : undefined}
-                                    value={String(huidigeWaarde)}
-                                    onChange={(e) => updateNieuweEntiteitRelatieRijVeld(row.id, veld.naam, e.target.value)}
-                                  />
-                                </label>
-                              );
-                            });
-                          })()}
-                        </div>
-                        <button onClick={() => setNieuweEntiteitRelaties((prev) => prev.filter((r) => r.id !== row.id))} disabled={nieuweEntiteitBezig} style={{ background: '#475569', alignSelf: 'end' }}>Verwijder</button>
-                      </div>
-                    </div>
-                  ))}
-
-                  {nieuweEntiteitOpvoerPreview && (
-                    <div style={{ margin: '10px 0', borderRadius: 6, overflow: 'hidden', border: '1px solid #99f6e4' }}>
-                      <div style={{ background: '#ccfbf1', padding: '4px 10px', fontSize: 12, fontWeight: 600, color: '#115e59' }}>Preview: te versturen payload (nieuwe entiteit + onderliggende opvoer)</div>
-                      {nieuweEntiteitOpvoerPreview.ok
-                        ? <pre style={{ margin: 0, padding: '8px 10px', fontSize: 12, background: '#f0fdfa', overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{JSON.stringify(nieuweEntiteitOpvoerPreview.payload, null, 2)}</pre>
-                        : <p style={{ margin: 0, padding: '6px 10px', color: '#dc2626', fontSize: 12 }}>{nieuweEntiteitOpvoerPreview.fout}</p>
-                      }
-                    </div>
-                  )}
-
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                    <button onClick={voerNieuweEntiteitActieUit} disabled={nieuweEntiteitBezig || !nieuweEntiteitOpvoerPreview?.ok} style={{ background: '#0f766e' }}>
-                      {nieuweEntiteitBezig ? 'Bezig...' : `Voer nieuwe ${entiteitType} op`}
-                    </button>
-                    <span className="muted" style={{ fontSize: 12 }}>Na succes wordt automatisch naar de nieuwe registratie gesprongen.</span>
-                  </div>
-                </div>
-
-                {nieuweEntiteitResultaat && (
-                  <p style={{ marginTop: 8, marginBottom: 0, color: nieuweEntiteitResultaat.ok ? '#166534' : '#dc2626', fontWeight: 600 }}>
-                    {nieuweEntiteitResultaat.bericht}
-                  </p>
-                )}
               </div>
             )}
 
@@ -1887,9 +1949,35 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
                   setRegistratieActieResultaat(null);
                 }}
               >
-                <div className="action-overlay-dialog" onClick={(event) => event.stopPropagation()}>
+                <div
+                  className="action-overlay-dialog"
+                  style={overlayDialogStyle('registratie', {
+                    borderColor: donkerdereRandkleurVanHex(selectedEntiteitMeta?.kleur || '#64748b'),
+                  })}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <div
+                    className="action-overlay-drag-handle"
+                    onMouseDown={startOverlayDrag('registratie')}
+                    style={{
+                      background: selectedEntiteitMeta?.kleur || '#64748b',
+                      borderColor: donkerdereRandkleurVanHex(selectedEntiteitMeta?.kleur || '#64748b'),
+                      color: '#111827',
+                    }}
+                  >
+                    <span className="action-section-title">
+                      <span>Registratie {selectedRegistratie.id} - acties</span>
+                      <ActionTooltip text="Acties op de geselecteerde registratie, inclusief ongedaan maken en corrigeren van opvoer-wijzigingen." placement="below" />
+                    </span>
+                    <button
+                      onMouseDown={(event) => event.stopPropagation()}
+                      onClick={() => { setRegistratieActieOpen(false); setRegistratieCorrigeerActief(false); setRegistratieOngedaanBevestiging(false); setRegistratieActieResultaat(null); }}
+                      style={{ background: 'transparent', color: '#111827', border: '1px solid rgba(15,23,42,0.28)', padding: '2px 10px', fontSize: 14, cursor: 'pointer', borderRadius: 5, flexShrink: 0 }}
+                    >✕</button>
+                  </div>
                   <RegistratieActieBox
                     registratieActieFormRef={registratieActieFormRef}
+                    accentColor={donkerdereRandkleurVanHex(selectedEntiteitMeta?.kleur || '#64748b')}
                     selectedRegistratie={selectedRegistratie}
                     setRegistratieActieOpen={setRegistratieActieOpen}
                     setRegistratieCorrigeerActief={setRegistratieCorrigeerActief}
@@ -1904,10 +1992,11 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
                     openRegistratieCorrigeren={openRegistratieCorrigeren}
                     selectedRegistratieWijzigingen={selectedRegistratieWijzigingen}
                     zoekGroupEnItemVoorWijziging={zoekGroupEnItemVoorWijziging}
-                    plumbingVelden={plumbingVelden}
                     registratieCorrigeerVelden={registratieCorrigeerVelden}
                     setRegistratieCorrigeerVelden={setRegistratieCorrigeerVelden}
+                    relatieSecondaireOpties={relatieSecondaireOpties}
                     voerRegistratieCorrectieUit={voerRegistratieCorrectieUit}
+                    registratieCorrectiePreview={registratieCorrectiePreview}
                     registratieActieResultaat={registratieActieResultaat}
                   />
                 </div>
@@ -1922,8 +2011,34 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
                   setActieResultaat(null);
                 }}
               >
-                <div className="action-overlay-dialog" onClick={(event) => event.stopPropagation()}>
+                <div
+                  className="action-overlay-dialog"
+                  style={overlayDialogStyle('entiteit', {
+                    borderColor: donkerdereRandkleurVanHex(selectedEntiteitMeta?.kleur || '#64748b'),
+                  })}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <div
+                    className="action-overlay-drag-handle"
+                    onMouseDown={startOverlayDrag('entiteit')}
+                    style={{
+                      background: selectedEntiteitMeta?.kleur || '#64748b',
+                      borderColor: donkerdereRandkleurVanHex(selectedEntiteitMeta?.kleur || '#64748b'),
+                      color: '#111827',
+                    }}
+                  >
+                    <span className="action-section-title">
+                      <span>Entiteit {entiteitType} id={selectedA.id} - acties</span>
+                      <ActionTooltip text={String(selectedEntiteitMeta?.description || "")} placement="below" />
+                    </span>
+                    <button
+                      onMouseDown={(event) => event.stopPropagation()}
+                      onClick={() => { setEntiteitActieOpen(false); setActieResultaat(null); }}
+                      style={{ background: 'transparent', color: '#111827', border: '1px solid rgba(15,23,42,0.28)', padding: '2px 10px', fontSize: 14, cursor: 'pointer', borderRadius: 5, flexShrink: 0 }}
+                    >✕</button>
+                  </div>
                   <EntiteitActieBox
+                    accentColor={donkerdereRandkleurVanHex(selectedEntiteitMeta?.kleur || '#64748b')}
                     entiteitType={entiteitType}
                     selectedA={selectedA}
                     setEntiteitActieOpen={setEntiteitActieOpen}
@@ -1933,13 +2048,13 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
                     voerEntiteitActieUit={voerEntiteitActieUit}
                     actieBezig={actieBezig}
                     gegevenselementGroepOpties={gegevenselementGroepOpties}
-                    voegEntiteitGegevenToe={voegEntiteitGegevenToe}
+                    voegEntiteitGegevenRijToe={voegEntiteitGegevenRijToe}
                     entiteitNieuweGegevens={entiteitNieuweGegevens}
                     veranderEntiteitGegevenRijType={veranderEntiteitGegevenRijType}
                     updateEntiteitGegevenRijVeld={updateEntiteitGegevenRijVeld}
                     setEntiteitNieuweGegevens={setEntiteitNieuweGegevens}
                     relatieGroepOpties={relatieGroepOpties}
-                    voegEntiteitRelatieToe={voegEntiteitRelatieToe}
+                    voegEntiteitRelatieRijToe={voegEntiteitRelatieRijToe}
                     entiteitNieuweRelaties={entiteitNieuweRelaties}
                     veranderEntiteitRelatieRijType={veranderEntiteitRelatieRijType}
                     updateEntiteitRelatieRijVeld={updateEntiteitRelatieRijVeld}
@@ -1961,8 +2076,34 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
                   setActieResultaat(null);
                 }}
               >
-                <div className="action-overlay-dialog" onClick={(event) => event.stopPropagation()}>
+                <div
+                  className="action-overlay-dialog"
+                  style={overlayDialogStyle('representatie', {
+                    borderColor: donkerdereRandkleurVanHex(geselecteerdeRep?.group?.kleur || '#64748b'),
+                  })}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <div
+                    className="action-overlay-drag-handle"
+                    onMouseDown={startOverlayDrag('representatie')}
+                    style={{
+                      background: geselecteerdeRep?.group?.kleur || '#64748b',
+                      borderColor: donkerdereRandkleurVanHex(geselecteerdeRep?.group?.kleur || '#64748b'),
+                      color: '#111827',
+                    }}
+                  >
+                    <span className="action-section-title">
+                      <span>{geselecteerdeRep.group.doeltype} - rel_id={geselecteerdeRep.item.rel_id ?? geselecteerdeRep.item.id ?? '?'}</span>
+                      <ActionTooltip text={String(geselecteerdeRep?.group?.typeMeta?.description || "")} placement="below" />
+                    </span>
+                    <button
+                      onMouseDown={(event) => event.stopPropagation()}
+                      onClick={() => { setGeselecteerdeRep(null); setActieResultaat(null); }}
+                      style={{ background: 'transparent', color: '#111827', border: '1px solid rgba(15,23,42,0.28)', padding: '2px 10px', fontSize: 14, cursor: 'pointer', borderRadius: 5, flexShrink: 0 }}
+                    >✕</button>
+                  </div>
                   <RepresentatieActieBox
+                    accentColor={donkerdereRandkleurVanHex(geselecteerdeRep?.group?.kleur || '#64748b')}
                     geselecteerdeRep={geselecteerdeRep}
                     setGeselecteerdeRep={setGeselecteerdeRep}
                     setActieResultaat={setActieResultaat}
@@ -1974,6 +2115,8 @@ function normaliseerNietNegatiefGeheelGetal(value, fallback = 0) {
                     voerActieUit={voerActieUit}
                     actieBezig={actieBezig}
                     actieResultaat={actieResultaat}
+                    secondaireEntiteitIDKolom={String(geselecteerdeRep?.group?.typeMeta?.secondaireEntiteitIDKolom || '')}
+                    secondaireIds={safeArray(relatieSecondaireOpties[`${geselecteerdeRep?.group?.rolnaam}__${geselecteerdeRep?.group?.doeltype}`]?.ids)}
                   />
                 </div>
               </div>

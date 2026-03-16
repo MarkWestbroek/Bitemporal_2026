@@ -21,7 +21,7 @@
 			"rel_id": 2,
 			"a_id": "1",
 			"aaa": "aaa a1",
-			"bbb": "bbb a1"
+			"bbb": true
 		  }
 		}	  
 	  }

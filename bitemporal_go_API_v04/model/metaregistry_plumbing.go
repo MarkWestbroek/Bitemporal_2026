@@ -34,6 +34,7 @@ type HeeftOnderliggendeGegevenselementen interface {
 type TypeMeta struct {
 	// ==== UML ====
 	Typenaam    string
+	Description string
 	Metatype    Metatype
 	IsMaterieel bool
 

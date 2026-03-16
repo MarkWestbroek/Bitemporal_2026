@@ -12,7 +12,7 @@
 			"rel_id": 5,
 			"a_id": "5",
 			"aaa": "a5",
-			"bbb": "b5"
+			"bbb": true
 		  }
 		}  
 	  },
@@ -23,7 +23,7 @@
 			"rel_id": 6,
 			"a_id": "5",
 			"aaa": "a6",
-			"bbb": "b6"
+			"bbb": false
 		  }
 		}	  
 	  }

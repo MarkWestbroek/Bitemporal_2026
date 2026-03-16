@@ -15,7 +15,7 @@
 				"rel_id": 5,
 				"a_id": "5",
 				"aaa": "a5",
-				"bbb": "b5"
+				"bbb": true
 			  }
 			],
 			"vs": [

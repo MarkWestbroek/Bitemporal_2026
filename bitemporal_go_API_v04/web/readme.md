@@ -136,7 +136,7 @@ Voorbeeld (vereenvoudigd):
         "u": {
           "a_id": 1,
           "aaa": "u1",
-          "bbb": "u2"
+          "bbb": true
         }
       }
     },

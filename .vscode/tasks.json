@@ -1,0 +1,38 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "vite: dev server",
+            "type": "shell",
+            "command": "C:\\Program Files\\nodejs\\npm.cmd",
+            "args": [
+                "run",
+                "dev",
+                "--",
+                "--host"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/bitemporal_go_API_v04/web/vite"
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "custom",
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "^(.*)$",
+                    "file": 1,
+                    "message": 1
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^.*(VITE|vite).*$",
+                    "endsPattern": "^.*ready in.*$"
+                }
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        }
+    ]
+}

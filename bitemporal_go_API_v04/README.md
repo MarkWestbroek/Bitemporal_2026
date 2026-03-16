@@ -245,7 +245,7 @@ VALUES ('1', 'De eerste taak', 'bjksdajk jk kjads', '0001-01-01 00:00:00+00:00',
       "rel_id": 5,
       "a_id": "3",
       "aaa": "eerste aaa op a=3",
-      "bbb": "eerste bbb op a=3"
+      "bbb": true
     }
   ]
 }
@@ -282,7 +282,7 @@ You can perform:
               //"rel_id": 5, niet nodig bij PFK autoinc rel_id
               "a_id": "5",
               "aaa": "a5",
-              "bbb": "b5"
+              "bbb": true
             }
           ],
           "vs": [
@@ -343,7 +343,7 @@ Deregister U5 and register U6 for entity A:
           "rel_id": 5,
           "a_id": "5",
           "aaa": "a5",
-          "bbb": "b5"
+          "bbb": true
         }
       }
     },
@@ -353,7 +353,7 @@ Deregister U5 and register U6 for entity A:
           "rel_id": 6,
           "a_id": "5",
           "aaa": "a6",
-          "bbb": "b6"
+          "bbb": false
         }
       }
     }
@@ -404,10 +404,20 @@ Deregister U5 and register U6 for entity A:
 - uitbreiden met klikbare elementen, waarop je acties kunt doen: afvoeren, opvoeren, corrigeren
 - correctie van bepaalde reg mogelijk
 - ongedaanmaken van reg mogelijk (onder voorwaarden)
+- bij verstuur correctie van A en alleen wijzigen van 1 veld van de 7, alleen het gewijzigde veld corrigeren. Correctie mag een deelverzameling van een eerdere registratie zijn, qua welke velden worden gewijzigd.
+
+15 react met vite maken
+
+
 
 ## BUGS
 
+
+### API:
 10 aan een ongedaan gemaakte U1 bij een ongedaan gemaakte A1 kan nu gewoon een nieuwe U worden toegevoegd...
+
+### React
+- hergebruik formulier elementen
 
 
 
@@ -415,7 +425,6 @@ Deregister U5 and register U6 for entity A:
 
 10 loop tijdsreizen nog eens na (KVK voorbeelden) want corrigeren is nu nog hetzelfde als wijzigen. Je hebt twee soorten tijdreizen (of 3).
 
-20 react met vite maken
 
 21 react pagina's
 - enkelvoudig meervoudig tonen (1 of *)
@@ -426,7 +435,9 @@ Deregister U5 and register U6 for entity A:
 - enkel- meervoudigheid op formulier tonen
 - type is nu number of string (of bool of datetime), terwijl in de struct int of float of string (of book of datetime) is: kan dat ook over naar typescript? dus onderscheid geheel, gebroken getal
 - misschien al neigen naar OAS met format? Of hoe doet GraphQL dat?
-- in formulier het type, verplichtheid en enkel of meervoudigheid reflecteren
+
+- in formulier: groeperen op type
+- in formulier: het type, verplichtheid en enkel of meervoudigheid reflecteren
 - in formulier: soort invoerveld en validatie volgt type
 - in formulier, maar ook in het algemeen (zie LGM metamodel): keuzelijsten, enums? hoe dat te doen?
 

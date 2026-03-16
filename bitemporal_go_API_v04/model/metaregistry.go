@@ -5,6 +5,7 @@ var MetaRegistry = MetaRegistryType{
 	"A": {
 		// UML
 		Typenaam:    "A",
+		Description: "Entiteit A met materiele tijdlijn en onderliggende representaties U, V, W en Rel_A_B.",
 		Metatype:    MetatypeEntiteit,
 		IsMaterieel: true,
 		Kleur:       "#bfdbfe",
@@ -32,6 +33,7 @@ var MetaRegistry = MetaRegistryType{
 	"B": {
 		// UML
 		Typenaam:    "B",
+		Description: "Entiteit B met materiele tijdlijn en onderliggende representaties X en Y.",
 		Metatype:    MetatypeEntiteit,
 		IsMaterieel: true,
 		Kleur:       "#fecaca",
@@ -57,6 +59,7 @@ var MetaRegistry = MetaRegistryType{
 	"Rel_A_B": {
 		// UML
 		Typenaam:    "Rel_A_B",
+		Description: "Relatie tussen A en B, meervoudig voorkomend per A en met relatieve relatie-id.",
 		Metatype:    MetatypeRelatie,
 		IsMaterieel: true,
 		Kleur:       "#ede9fe",
@@ -78,6 +81,7 @@ var MetaRegistry = MetaRegistryType{
 	"A_U": {
 		// UML
 		Typenaam:    "A_U",
+		Description: "Enkelvoudig gegevenselement van A met formele tijdlijn.",
 		Metatype:    MetatypeGegevenselement,
 		IsMaterieel: false,
 		Kleur:       "#dbeafe",
@@ -99,6 +103,7 @@ var MetaRegistry = MetaRegistryType{
 	"A_V": {
 		// UML
 		Typenaam:    "A_V",
+		Description: "Meervoudig gegevenselement van A met onder andere een datumveld.",
 		Metatype:    MetatypeGegevenselement,
 		IsMaterieel: false,
 		Kleur:       "#c7f9cc",
@@ -120,6 +125,7 @@ var MetaRegistry = MetaRegistryType{
 	"A_W": {
 		// UML
 		Typenaam:    "A_W",
+		Description: "Meervoudig gegevenselement van A met numerieke waarden.",
 		Metatype:    MetatypeGegevenselement,
 		IsMaterieel: false,
 		Kleur:       "#bbf7d0",
@@ -141,6 +147,7 @@ var MetaRegistry = MetaRegistryType{
 	"B_X": {
 		// UML
 		Typenaam:    "B_X",
+		Description: "Enkelvoudig gegevenselement van B met twee tekstvelden.",
 		Metatype:    MetatypeGegevenselement,
 		IsMaterieel: false,
 		Kleur:       "#fdba74",
@@ -162,6 +169,7 @@ var MetaRegistry = MetaRegistryType{
 	"B_Y": {
 		// UML
 		Typenaam:    "B_Y",
+		Description: "Enkelvoudig gegevenselement van B met een tekstveld.",
 		Metatype:    MetatypeGegevenselement,
 		IsMaterieel: false,
 		Kleur:       "#fde68a",

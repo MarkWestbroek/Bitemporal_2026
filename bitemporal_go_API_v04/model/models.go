@@ -76,14 +76,23 @@ type B_basis struct {
 	Einde         *time.Time `json:"einde,omitempty"`
 }
 
+type RelABSoort string
+
+const (
+	RelABSoortLTT RelABSoort = "LTT"
+	RelABSoortLAT RelABSoort = "LAT"
+	RelABSoortLTA RelABSoort = "LTA"
+)
+
 // Relaties
 // Rel_A_B hoort primair bij A
 type Rel_A_B struct {
 	bun.BaseModel `bun:"table:rel_a_b"`
-	A_ID          int        `json:"a_id"`
-	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	A_ID          int        `json:"a_id" schema_desc:"ID van de A-entiteit waar deze relatie bij hoort"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk,autoincrement" schema_desc:"Relatieve ID van de relatie binnen A"`
 	ParentA       *A_basis   `json:"-" bun:"rel:belongs-to,join:a_id=id,on_delete:cascade"`
 	B_ID          int        `json:"b_id"`
+	Soort         RelABSoort `json:"soort" schema:"enum=LTT|LAT|LTA" schema_desc:"Soort relatie tussen A en B"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 	Aanvang       *time.Time `json:"aanvang,omitempty"`
@@ -98,7 +107,7 @@ type A_U struct {
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk,autoincrement"` // autoincrement zal zijn via een triggerfunctie voor de relatieve ID
 	ParentA       *A_basis   `json:"-" bun:"rel:belongs-to,join:a_id=id,on_delete:cascade"`
 	Aaa           string     `json:"aaa"`
-	Bbb           string     `json:"bbb"`
+	Bbb           *bool      `json:"bbb,omitempty"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
@@ -110,6 +119,7 @@ type A_V struct {
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk,autoincrement"`
 	ParentA       *A_basis   `json:"-" bun:"rel:belongs-to,join:a_id=id,on_delete:cascade"`
 	Ccc           string     `json:"ccc"`
+	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
@@ -120,7 +130,8 @@ type A_W struct {
 	A_ID          int        `json:"a_id" bun:"a_id,pk"`
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk,autoincrement"`
 	ParentA       *A_basis   `json:"-" bun:"rel:belongs-to,join:a_id=id,on_delete:cascade"`
-	Www           float64    `json:"www"`
+	Float         float64    `json:"float"`
+	Heel          int        `json:"heel"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
