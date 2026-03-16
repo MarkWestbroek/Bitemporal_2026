@@ -10,44 +10,36 @@ import (
 // Entiteiten
 func (a A_basis) GetID() any         { return a.ID }
 func (a A_basis) Metatype() Metatype { return MetatypeEntiteit }
-func (a A_basis) IsMaterieel() bool  { return true } // A heeft aanvang/einde, dus is materieel
 func (a *A_basis) ClearID()          { a.ID = 0 }
 
 func (b B_basis) GetID() any         { return b.ID }
 func (b B_basis) Metatype() Metatype { return MetatypeEntiteit }
-func (b B_basis) IsMaterieel() bool  { return true } // B heeft aanvang/einde, dus is materieel
 func (b *B_basis) ClearID()          { b.ID = 0 }
 
 // Relaties
 func (r Rel_A_B) GetID() any         { return r.Rel_ID }
 func (r Rel_A_B) Metatype() Metatype { return MetatypeRelatie }
-func (r Rel_A_B) IsMaterieel() bool  { return true } // Rel_A_B heeft aanvang/einde, dus is materieel
 func (r *Rel_A_B) ClearID()          { r.Rel_ID = 0 }
 
 // Gegevenselementen
 func (au A_U) GetID() any         { return au.Rel_ID }
 func (au A_U) Metatype() Metatype { return MetatypeGegevenselement }
-func (au A_U) IsMaterieel() bool  { return false } // A_U heeft geen aanvang/einde, dus is formeel
 func (au *A_U) ClearID()          { au.Rel_ID = 0 }
 
 func (av A_V) GetID() any         { return av.Rel_ID }
 func (av A_V) Metatype() Metatype { return MetatypeGegevenselement }
-func (av A_V) IsMaterieel() bool  { return false } // A_V heeft geen aanvang/einde, dus is formeel
 func (av *A_V) ClearID()          { av.Rel_ID = 0 }
 
 func (aw A_W) GetID() any         { return aw.Rel_ID }
 func (aw A_W) Metatype() Metatype { return MetatypeGegevenselement }
-func (aw A_W) IsMaterieel() bool  { return false } // A_W heeft geen aanvang/einde, dus is formeel
 func (aw *A_W) ClearID()          { aw.Rel_ID = 0 }
 
 func (bx B_X) GetID() any         { return bx.Rel_ID }
 func (bx B_X) Metatype() Metatype { return MetatypeGegevenselement }
-func (bx B_X) IsMaterieel() bool  { return false } // B_X heeft geen aanvang/einde, dus is formeel
 func (bx *B_X) ClearID()          { bx.Rel_ID = 0 }
 
 func (by B_Y) GetID() any         { return by.Rel_ID }
 func (by B_Y) Metatype() Metatype { return MetatypeGegevenselement }
-func (by B_Y) IsMaterieel() bool  { return false } // B_Y heeft geen aanvang/einde, dus is formeel
 func (by *B_Y) ClearID()          { by.Rel_ID = 0 }
 
 /* Basis structs voor alle representaties
@@ -63,8 +55,8 @@ type A_basis struct {
 	ID            int        `json:"id" bun:"id,pk"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`  // afgeleid van registratie tijdstip opvoer
 	Afvoer        *time.Time `json:"afvoer,omitempty"`  // afgeleid van registratie tijdstip afvoer
-	Aanvang       *time.Time `json:"aanvang,omitempty"` // afgeleid van A_Aanvang
-	Einde         *time.Time `json:"einde,omitempty"`   // afgeleid van A_Einde
+	Aanvang       *Aanvang   `json:"aanvang,omitempty"` // A_Aanvang in de DB, maar in de code via generieke routines
+	Einde         *Einde     `json:"einde,omitempty"`   // A_Einde in de DB, maar in de code via generieke routines
 }
 
 type B_basis struct {
@@ -72,8 +64,8 @@ type B_basis struct {
 	ID            int        `json:"id" bun:"id,pk"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
-	Aanvang       *time.Time `json:"aanvang,omitempty"`
-	Einde         *time.Time `json:"einde,omitempty"`
+	Aanvang       *Aanvang   `json:"aanvang,omitempty"`
+	Einde         *Einde     `json:"einde,omitempty"`
 }
 
 type RelABSoort string
@@ -95,8 +87,8 @@ type Rel_A_B struct {
 	Soort         RelABSoort `json:"soort" schema:"enum=LTT|LAT|LTA" schema_desc:"Soort relatie tussen A en B"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
-	Aanvang       *time.Time `json:"aanvang,omitempty"`
-	Einde         *time.Time `json:"einde,omitempty"`
+	Aanvang       *Aanvang   `json:"aanvang,omitempty"`
+	Einde         *Einde     `json:"einde,omitempty"`
 }
 
 // Gegevenselementen
@@ -211,20 +203,20 @@ func (b Full_B) GetAfvoer() *time.Time   { return b.Afvoer }
 func (b *Full_B) SetAfvoer(t *time.Time) { b.Afvoer = t }
 
 // Aanvang / Einde (materiële tijd) methoden voor materiële tijd intereface implementatie
-func (a A_basis) GetAanvang() *time.Time   { return a.Aanvang }
-func (a *A_basis) SetAanvang(t *time.Time) { a.Aanvang = t }
-func (a A_basis) GetEinde() *time.Time     { return a.Einde }
-func (a *A_basis) SetEinde(t *time.Time)   { a.Einde = t }
+func (a A_basis) GetAanvang() *time.Time   { return a.Aanvang.Aanvang }
+func (a *A_basis) SetAanvang(t *time.Time) { a.Aanvang.Aanvang = t }
+func (a A_basis) GetEinde() *time.Time     { return a.Einde.Einde }
+func (a *A_basis) SetEinde(t *time.Time)   { a.Einde.Einde = t }
 
-func (b B_basis) GetAanvang() *time.Time   { return b.Aanvang }
-func (b *B_basis) SetAanvang(t *time.Time) { b.Aanvang = t }
-func (b B_basis) GetEinde() *time.Time     { return b.Einde }
-func (b *B_basis) SetEinde(t *time.Time)   { b.Einde = t }
+func (b B_basis) GetAanvang() *time.Time   { return b.Aanvang.Aanvang }
+func (b *B_basis) SetAanvang(t *time.Time) { b.Aanvang.Aanvang = t }
+func (b B_basis) GetEinde() *time.Time     { return b.Einde.Einde }
+func (b *B_basis) SetEinde(t *time.Time)   { b.Einde.Einde = t }
 
-func (r Rel_A_B) GetAanvang() *time.Time   { return r.Aanvang }
-func (r *Rel_A_B) SetAanvang(t *time.Time) { r.Aanvang = t }
-func (r Rel_A_B) GetEinde() *time.Time     { return r.Einde }
-func (r *Rel_A_B) SetEinde(t *time.Time)   { r.Einde = t }
+func (r Rel_A_B) GetAanvang() *time.Time   { return r.Aanvang.Aanvang }
+func (r *Rel_A_B) SetAanvang(t *time.Time) { r.Aanvang.Aanvang = t }
+func (r Rel_A_B) GetEinde() *time.Time     { return r.Einde.Einde }
+func (r *Rel_A_B) SetEinde(t *time.Time)   { r.Einde.Einde = t }
 
 //TODO: als A_U, A_V, A_W, B_X, B_Y ook aanvang/einde krijgen, dan hier ook getters/setters toevoegen
 

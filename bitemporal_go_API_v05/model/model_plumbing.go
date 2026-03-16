@@ -67,6 +67,33 @@ type HeeftAanvangEinde interface {
 	SetEinde(*time.Time)
 }
 
+/*
+	 Materiele tijd plumbing (aanvang en einde)
+	 deze structs kunnen aan een representatie hangen
+	 in de database worden ze gerepresenteerd als aparte tabellen:
+		- dit vergt wel aparte database logica:
+			- bij het creeren van de tabellen moeten alle materiele representaties ook een aanvang en einde tabel krijgen
+			- bij het aanmaken van een representatie moeten er mogelijk ook aanvang en einde records worden aangemaakt
+			- het zijn geen verplichte velden, maar ze zijn standaard wel enkelvoudig
+			- ze volgen dus eigenlijk de logica van een enkelvoudig gegevenselement
+		- Aanvang en einde zijn dus zelf weer materiele elementen
+*/
+type Aanvang struct {
+	Entiteit_ID        int        `json:"entiteit_id"`
+	Gegevenselement_ID int        `json:"gegevenselement_id"`
+	Aanvang            *time.Time `json:"aanvang,omitempty"`
+	Opvoer             *time.Time `json:"opvoer,omitempty"`
+	Afvoer             *time.Time `json:"afvoer,omitempty"`
+}
+
+type Einde struct {
+	Entiteit_ID        int        `json:"entiteit_id"`
+	Gegevenselement_ID int        `json:"gegevenselement_id"`
+	Einde              *time.Time `json:"einde,omitempty"`
+	Opvoer             *time.Time `json:"opvoer,omitempty"`
+	Afvoer             *time.Time `json:"afvoer,omitempty"`
+}
+
 // helper functies voor type checks
 func IsEntiteit(v Metatyped) bool {
 	return v.Metatype() == MetatypeEntiteit
