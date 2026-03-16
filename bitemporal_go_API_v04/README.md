@@ -425,7 +425,6 @@ Deregister U5 and register U6 for entity A:
 
 10 loop tijdsreizen nog eens na (KVK voorbeelden) want corrigeren is nu nog hetzelfde als wijzigen. Je hebt twee soorten tijdreizen (of 3).
 
-
 21 react pagina's
 - enkelvoudig meervoudig tonen (1 of *)
 - corrigeert registratie lijntje tekenen?
@@ -443,6 +442,7 @@ Deregister U5 and register U6 for entity A:
 
 30 log alle requests en responses van /registratie/
 - alle opvragen nog maar even niet
+
 
 50 Autonumber Entiteit-IDs? Simpel maar wenselijk?
 

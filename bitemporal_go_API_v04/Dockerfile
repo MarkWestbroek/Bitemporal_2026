@@ -1,45 +1,56 @@
-# Build stage
-FROM golang:1.24-alpine AS builder
+# Frontend build stage
+FROM node:22-alpine AS frontend-builder
 
-# Install build dependencies
+WORKDIR /app/web/vite
+
+# Install frontend dependencies first for better layer caching
+COPY web/vite/package.json web/vite/package-lock.json ./
+RUN npm ci
+
+# Copy the frontend source and build static assets into /app/web/react
+COPY web/vite/ ./
+RUN npm run build
+
+# Go build stage
+FROM golang:1.24-alpine AS go-builder
+
 RUN apk add --no-cache git
 
-# Set working directory
 WORKDIR /app
 
-# Copy go mod files
 COPY go.mod go.sum ./
-
-# Download dependencies
 RUN go mod download
 
-# Copy the source code
 COPY . .
 
-# Build metadata (commit/time) - set via build args and embedded into binary
+# Replace the checked-in React build with the fresh container build output
+COPY --from=frontend-builder /app/web/react ./web/react
+
 ARG COMMIT=dev
 ARG BUILD_TIME=dev
 
-# Build the application with ldflags to embed metadata
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X 'main.commit=${COMMIT}' -X 'main.buildTime=${BUILD_TIME}'" -o bitemp-go-api .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X 'main.commit=${COMMIT}' -X 'main.buildTime=${BUILD_TIME}'" -o /out/bitemp-go-api .
 
-# Final stage
-FROM alpine:latest
+# Runtime stage
+FROM alpine:3.21
 
-# Install ca-certificates for HTTPS
 RUN apk --no-cache add ca-certificates
 
-# Set working directory
 WORKDIR /root/
 
-# Copy the binary from builder stage
-COPY --from=builder /app/bitemp-go-api .
+COPY --from=go-builder /out/bitemp-go-api ./bitemp-go-api
 
-# Copy static web assets for /viz routes
-COPY --from=builder /app/web ./web
+# Only copy runtime web assets served under /viz
+COPY --from=go-builder /app/web/index.html ./web/index.html
+COPY --from=go-builder /app/web/index_oud.html ./web/index_oud.html
+COPY --from=go-builder /app/web/index_schema.html ./web/index_schema.html
+COPY --from=go-builder /app/web/root_index.html ./web/root_index.html
+COPY --from=go-builder /app/web/tijdlijn.html ./web/tijdlijn.html
+COPY --from=go-builder /app/web/tijdlijn_oud.html ./web/tijdlijn_oud.html
+COPY --from=go-builder /app/web/tijdlijn_schema.html ./web/tijdlijn_schema.html
+COPY --from=go-builder /app/web/shared ./web/shared
+COPY --from=go-builder /app/web/react ./web/react
 
-# Expose port 8080 (default Gin port)
 EXPOSE 8080
 
-# Run the application
 CMD ["./bitemp-go-api"]

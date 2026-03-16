@@ -43,6 +43,12 @@ Pas daarna minimaal aan in `.env.docker`:
 
 Ga naar de map `bitemporal_go_API_v04` en build de image.
 
+De Dockerfile bouwt nu zelf:
+- de Go API binary
+- de React/Vite frontend naar statische assets in `web/react`
+
+Dus je hoeft vooraf lokaal geen `npm run build` meer te doen.
+
 ### PowerShell
 
 ```powershell
@@ -61,7 +67,9 @@ docker build --no-cache \
 ```
 
 Opmerking:
-- Build opnieuw na Dockerfile-wijzigingen (zoals `/web` static assets) en push een nieuwe tag.
+- De runtime-image bevat geen Node/Vite dev server.
+- Alleen de Go binary en de benodigde statische `/viz` assets worden meegenomen.
+- Build opnieuw na relevante frontend- of Dockerfile-wijzigingen en push een nieuwe tag.
 
 ## 3. API starten (zonder compose)
 
@@ -79,6 +87,24 @@ docker run -d --name bitemp-go-api \
   -e ADMIN_DROP_PASSWORD="kies-een-sterk-geheim" \
   --restart unless-stopped \
   bitemp-go-api:v04.00.01
+```
+
+In 1 regeL:
+```
+docker run -d --name bitemp-go-api -p 8080:8080 -e DATABASE_URL="postgres://postgres:1234@host.docker.internal:5432/bitemp_go_db?sslmode=disable" -e APP_ENV=production -e GIN_MODE=release -e ALLOW_DROP_TABLES=false -e ADMIN_DROP_PASSWORD="1234" --restart unless-stopped bitemp-go-api:test-docker
+```
+
+of met backticks:
+```
+docker run -d --name bitemp-go-api `
+  -p 8080:8080 `
+  -e DATABASE_URL="postgres://postgres:1234@host.docker.internal:5432/bitemp_go_db?sslmode=disable" `
+  -e APP_ENV=production `
+  -e GIN_MODE=release `
+  -e ALLOW_DROP_TABLES=false `
+  -e ADMIN_DROP_PASSWORD="1234" `
+  --restart unless-stopped `
+  bitemp-go-api:test-docker
 ```
 
 ### Voorbeeld: DB op aparte server
@@ -144,9 +170,9 @@ docker run -d --name bitemp-go-api
   -e APP_ENV=production 
   -e GIN_MODE=release 
   -e ALLOW_DROP_TABLES=false 
-  -e ADMIN_DROP_PASSWORD="kies-een-sterk-geheim" 
+  -e ADMIN_DROP_PASSWORD="1234" 
   --restart unless-stopped 
-  bitemp-go-api:v04
+  bitemp-go-api:v04.01.01
 ```
 
 ## 6. Image delen zonder registry (bestand)
@@ -154,10 +180,10 @@ docker run -d --name bitemp-go-api
 ### Op bronmachine
 
 ```powershell
-docker save -o bitemp-go-api_v04.00.01.tar bitemp-go-api:v04.00.01
+docker save -o bitemp-go-api_v04.00.01.tar bitemp-go-api:v04.00.02
 ```
 
-Kopieer `bitemp-go-api_v04.00.01.tar` naar de doelmachine.
+Kopieer `bitemp-go-api_v04.00.02.tar` naar de doelmachine.
 
 NAS: \\TRUENAS\share\Docker\Bitemporal\bitemp-go-api_v04.00.01.tar
 
@@ -193,6 +219,11 @@ docker push <registry-user>/bitemp-go-api:v04.00.01
 
 Voorbeeld repository:
 - `markwestbroek/bitemp-go-api`
+
+```
+docker tag bitemp-go-api:v04.01.01 markwestbroek/bitemp-go-api:v04.01.01
+docker push markwestbroek/bitemp-go-api:v04.01.01
+``
 
 ### Op server pull en run
 
