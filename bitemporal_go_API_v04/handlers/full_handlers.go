@@ -490,9 +490,10 @@ func zetAfgeleideFormeleTijdVoorRepresentatie(
 	}
 
 	t := wijziging.RegistratieTijdstip
-	if wijziging.Wijzigingstype == model.WijzigingstypeOpvoer {
+	switch wijziging.Wijzigingstype {
+	case model.WijzigingstypeOpvoer:
 		representatie.SetOpvoer(&t)
-	} else if wijziging.Wijzigingstype == model.WijzigingstypeAfvoer {
+	case model.WijzigingstypeAfvoer:
 		representatie.SetAfvoer(&t)
 	}
 

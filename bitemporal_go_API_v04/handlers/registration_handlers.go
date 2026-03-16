@@ -304,12 +304,13 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 
 			for _, wijziging := range wijzigingenOnderTeOngedaanMakenRegistratie {
 				// als opvoer, dan ont-opvoeren
-				if wijziging.Wijzigingstype == model.WijzigingstypeOpvoer {
+				switch wijziging.Wijzigingstype {
+				case model.WijzigingstypeOpvoer:
 					if err := handleRepresentatieOntOpvoer(c, tx, wijziging); err != nil {
 						c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Fout bij ont-opvoeren van representatie: %v", err)})
 						return
 					}
-				} else if wijziging.Wijzigingstype == model.WijzigingstypeAfvoer {
+				case model.WijzigingstypeAfvoer:
 					if err := handleRepresentatieOntAfvoer(c, tx, wijziging); err != nil {
 						c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Fout bij ont-afvoeren van representatie: %v", err)})
 						return
