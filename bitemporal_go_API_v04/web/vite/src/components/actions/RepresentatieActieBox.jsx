@@ -17,8 +17,11 @@ export default function RepresentatieActieBox({
   actieBezig,
   actieResultaat,
   secondaireEntiteitIDKolom,
+  secondaireInfo,
   secondaireIds,
 }) {
+  const effectieveSecondaireInfo = secondaireInfo || { ids: secondaireIds || [], loading: false, error: "" };
+
   return (
     <ActionBodyCard accentColor={accentColor}>
       <ActionTopFields>
@@ -35,23 +38,12 @@ export default function RepresentatieActieBox({
               veld={veldDef}
               value={String(v ?? "")}
               onChange={(waarde) => setActieFormVelden((prev) => ({ ...prev, [k]: waarde }))}
-              secondaireInfo={{ ids: secondaireIds || [], loading: false, error: "" }}
+              secondaireInfo={effectieveSecondaireInfo}
               secondaireKolom={secondaireEntiteitIDKolom}
             />
           </ActionInlineField>
         );})}
       </ActionTopFields>
-
-      {repActiePreview && (
-        <div style={{ margin: "2px 0 10px", borderRadius: 6, overflow: "hidden", border: `1px solid ${accentColor}` }}>
-          <div style={{ background: "#f8fafc", padding: "4px 10px", fontSize: 12, fontWeight: 600, color: "#475569" }}>Preview: Afvoeren</div>
-          {repActiePreview.ok
-            ? <pre style={{ margin: 0, padding: "8px 10px", fontSize: 12, background: "#ffffff", overflowX: "auto", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>{JSON.stringify(repActiePreview.afvoer, null, 2)}</pre>
-            : <p style={{ margin: 0, padding: "6px 10px", color: "#dc2626", fontSize: 12 }}>{repActiePreview.fout}</p>}
-          <div style={{ background: "#f8fafc", padding: "4px 10px", fontSize: 12, fontWeight: 600, color: "#475569", borderTop: `1px solid ${accentColor}` }}>Preview: Corrigeren</div>
-          {repActiePreview.ok ? <pre style={{ margin: 0, padding: "8px 10px", fontSize: 12, background: "#ffffff", overflowX: "auto", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>{JSON.stringify(repActiePreview.corrigeer, null, 2)}</pre> : null}
-        </div>
-      )}
 
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
         <button onClick={() => voerActieUit("afvoer")} disabled={actieBezig} style={{ background: "#b91c1c" }}>
@@ -62,6 +54,20 @@ export default function RepresentatieActieBox({
         </button>
         <span className="muted" style={{ fontSize: 12 }}>Corrigeren: alleen opvoer; API voert de oude representatie zelf af</span>
       </div>
+
+      {repActiePreview && (
+        <details style={{ margin: "10px 0 10px", borderRadius: 6, overflow: "hidden", border: `1px solid ${accentColor}` }}>
+          <summary style={{ cursor: "pointer", padding: "6px 10px", background: "#f8fafc", fontSize: 12, fontWeight: 600, color: "#475569" }}>
+            Preview payloads
+          </summary>
+          <div style={{ background: "#f8fafc", padding: "4px 10px", fontSize: 12, fontWeight: 600, color: "#475569", borderTop: `1px solid ${accentColor}` }}>Preview: Afvoeren</div>
+          {repActiePreview.ok
+            ? <pre style={{ margin: 0, padding: "8px 10px", fontSize: 12, background: "#ffffff", overflowX: "auto", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>{JSON.stringify(repActiePreview.afvoer, null, 2)}</pre>
+            : <p style={{ margin: 0, padding: "6px 10px", color: "#dc2626", fontSize: 12 }}>{repActiePreview.fout}</p>}
+          <div style={{ background: "#f8fafc", padding: "4px 10px", fontSize: 12, fontWeight: 600, color: "#475569", borderTop: `1px solid ${accentColor}` }}>Preview: Corrigeren</div>
+          {repActiePreview.ok ? <pre style={{ margin: 0, padding: "8px 10px", fontSize: 12, background: "#ffffff", overflowX: "auto", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>{JSON.stringify(repActiePreview.corrigeer, null, 2)}</pre> : null}
+        </details>
+      )}
 
       {actieResultaat && (
         <p style={{ marginTop: 8, marginBottom: 0, color: actieResultaat.ok ? "#166534" : "#dc2626", fontWeight: 600 }}>

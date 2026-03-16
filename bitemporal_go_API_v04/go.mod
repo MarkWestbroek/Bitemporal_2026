@@ -12,6 +12,7 @@ require (
 	github.com/uptrace/bun/driver/pgdriver v1.1.14
 	github.com/uptrace/bun/extra/bundebug v1.1.14
 	github.com/vektah/gqlparser/v2 v2.5.31
+	github.com/yuin/goldmark v1.7.8	
 )
 
 require (

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -17,6 +18,17 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+
+		requestBodyJSON, err := json.Marshal(request)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to serialize request body for audit: %v", err)})
+			return
+		}
+		requestPath := c.Request.URL.Path
+		requestMethod := c.Request.Method
+		request.Registratie.RequestBody = requestBodyJSON
+		request.Registratie.RequestPath = &requestPath
+		request.Registratie.RequestMethod = &requestMethod
 
 		// Output request body for debugging as pretty JSON
 		LogRequestBodyAsJSON(c)
@@ -410,6 +422,33 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 
 		}
 
+		elapsedMs := time.Since(start).Milliseconds()
+		responseStatus := http.StatusCreated
+		responsePayload := gin.H{
+			"message":        fmt.Sprintf("De registratie %d is succesvol verwerkt op %s in %d ms", registratieID, registratieTijdstip, elapsedMs),
+			"registratie_id": registratieID,
+			"registratieId":  registratieID,
+			"tijdstip":       registratieTijdstip,
+			"wijzigingen":    request.Wijzigingen,
+		}
+		responseBodyJSON, err := json.Marshal(responsePayload)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to serialize response body for audit: %v", err)})
+			return
+		}
+
+		request.Registratie.ResponseCode = &responseStatus
+		request.Registratie.ResponseBody = responseBodyJSON
+		request.Registratie.DurationMs = &elapsedMs
+		if _, err = tx.NewUpdate().
+			Model(&request.Registratie).
+			Column("response_code", "response_body", "duration_ms").
+			Where("id = ?", registratieID).
+			Exec(c.Request.Context()); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to update registratie audit fields: %v", err)})
+			return
+		}
+
 		// Commit transaction
 		if err := tx.Commit(); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to commit transaction: %v", err)})
@@ -417,16 +456,8 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 		}
 		committed = true
 
-		elapsedMs := time.Since(start).Milliseconds()
 		// Succes response inclusief de gewijzigde gegevens
-		c.JSON(http.StatusCreated,
-			gin.H{
-				"message":        fmt.Sprintf("De registratie %d is succesvol verwerkt op %s in %d ms", registratieID, registratieTijdstip, elapsedMs),
-				"registratie_id": registratieID,
-				"registratieId":  registratieID,
-				"tijdstip":       registratieTijdstip,
-				"wijzigingen":    request.Wijzigingen,
-			})
+		c.JSON(responseStatus, responsePayload)
 
 	}
 

@@ -58,6 +58,7 @@ func AddRoutes(router *gin.Engine) {
 	router.GET("/registraties", handlers.MakeGetEntitiesHandler[model.Registratie]("Registraties"))
 	router.GET("/registraties/:id", handlers.MakeGetEntityHandler[model.Registratie]("Registratie"))
 	router.POST("/registraties", handlers.MakeAddEntityHandler[model.Registratie]("Registratie"))
+	router.PATCH("/registraties/:id", handlers.PatchRegistratie())
 
 	// Wijziging routes
 	router.GET("/wijzigingen", handlers.MakeGetEntitiesHandler[model.Wijziging]("Wijzigingen"))

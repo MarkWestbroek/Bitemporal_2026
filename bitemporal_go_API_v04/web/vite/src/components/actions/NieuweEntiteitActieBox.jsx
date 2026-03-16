@@ -104,23 +104,23 @@ export default function NieuweEntiteitActieBox({
           secondaryOptionsByGroupKey={relatieSecondaireOpties}
         />
 
-        {nieuweEntiteitOpvoerPreview && (
-          <div style={{ margin: "10px 0", borderRadius: 6, overflow: "hidden", border: `1px solid ${accentColor}` }}>
-            <div style={{ background: "#f0fdfa", padding: "4px 10px", fontSize: 12, fontWeight: 600, color: "#115e59" }}>
-              Preview: te versturen payload (nieuwe entiteit + onderliggende opvoer)
-            </div>
-            {nieuweEntiteitOpvoerPreview.ok
-              ? <pre style={{ margin: 0, padding: "8px 10px", fontSize: 12, background: "#ffffff", overflowX: "auto", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>{JSON.stringify(nieuweEntiteitOpvoerPreview.payload, null, 2)}</pre>
-              : <p style={{ margin: 0, padding: "6px 10px", color: "#dc2626", fontSize: 12 }}>{nieuweEntiteitOpvoerPreview.fout}</p>}
-          </div>
-        )}
-
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <button onClick={voerNieuweEntiteitActieUit} disabled={nieuweEntiteitBezig || !nieuweEntiteitOpvoerPreview?.ok} style={{ background: "#0f766e" }}>
             {nieuweEntiteitBezig ? "Bezig..." : `Voer nieuwe ${entiteitType} op`}
           </button>
           <span className="muted" style={{ fontSize: 12 }}>Na succes wordt automatisch naar de nieuwe registratie gesprongen.</span>
         </div>
+
+        {nieuweEntiteitOpvoerPreview && (
+          <details style={{ margin: "10px 0", borderRadius: 6, overflow: "hidden", border: `1px solid ${accentColor}` }}>
+            <summary style={{ cursor: "pointer", padding: "6px 10px", background: "#f0fdfa", fontSize: 12, fontWeight: 600, color: "#115e59" }}>
+              Preview: te versturen payload (nieuwe entiteit + onderliggende opvoer)
+            </summary>
+            {nieuweEntiteitOpvoerPreview.ok
+              ? <pre style={{ margin: 0, padding: "8px 10px", fontSize: 12, background: "#ffffff", overflowX: "auto", whiteSpace: "pre-wrap", wordBreak: "break-all", borderTop: `1px solid ${accentColor}` }}>{JSON.stringify(nieuweEntiteitOpvoerPreview.payload, null, 2)}</pre>
+              : <p style={{ margin: 0, padding: "6px 10px", color: "#dc2626", fontSize: 12, borderTop: `1px solid ${accentColor}` }}>{nieuweEntiteitOpvoerPreview.fout}</p>}
+          </details>
+        )}
       </div>
 
       {nieuweEntiteitResultaat && (

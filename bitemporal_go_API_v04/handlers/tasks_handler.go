@@ -20,7 +20,7 @@ func HomePage(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"message":   "Welcome to the Bitemp Go API",
-		"viz":       "/viz/index_schema.html",
+		"viz":       "/viz/react/",
 		"version":   "/version",
 		"graphql":   "/graphql/playground",
 		"vizSchema": "/api/viz/schema",

@@ -130,6 +130,12 @@ type Registratie struct {
 	MaaktOngedaanRegistratieID *int64              `json:"maakt_ongedaan_registratie_id,omitempty"`                // bij ongedaanmakings: verwijzing naar de registratie die ongedaan wordt gemaakt
 	IsOngedaangemaakt          bool                `json:"is_ongedaangemaakt,omitempty" bun:"is_ongedaan_gemaakt"` // afgeleid (wordt op true gezet bij een ongedaanmaking van deze registratie)
 	Wijzigingen                []Wijziging         `json:"wijzigingen,omitempty" bun:"rel:has-many,join:id=registratie_id"`
+	RequestBody                json.RawMessage     `json:"request_body,omitempty" bun:"request_body,type:jsonb,nullzero"`   // raw request payload voor audit
+	ResponseBody               json.RawMessage     `json:"response_body,omitempty" bun:"response_body,type:jsonb,nullzero"` // raw response payload voor audit
+	ResponseCode               *int                `json:"response_code,omitempty" bun:"response_code,nullzero"`            // HTTP statuscode van de response
+	RequestPath                *string             `json:"request_path,omitempty" bun:"request_path,nullzero"`              // request pad voor audit, bv /registreer/as
+	RequestMethod              *string             `json:"request_method,omitempty" bun:"request_method,nullzero"`          // HTTP methode, bv POST
+	DurationMs                 *int64              `json:"duration_ms,omitempty" bun:"duration_ms,nullzero"`                // afhandeltijd in milliseconden
 }
 
 func (reg Registratie) IsRegistratie() bool {

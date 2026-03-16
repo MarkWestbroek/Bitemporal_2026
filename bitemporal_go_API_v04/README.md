@@ -1,4 +1,4 @@
-# Bitemporeel register met quasi-REST API v0.3
+# Bitemporeel register met quasi-REST API v0.4.01.02
 
 This project showcases the implementation of a **Bitemporal Register API** using Go Bun. It provides CR (Create, Read) functionality for managing configurable data, with data persistence in a PostgreSQL database.
 In addition it allows to correct data (in fact correct registrations and the registered data) and to undo registrations.
@@ -45,12 +45,17 @@ In addition it allows to correct data (in fact correct registrations and the reg
 
 5. Access the API at `http://localhost:8080` and start managing your tasks!
 
-## Visualisatie (React, zonder build-tooling)
+## Visualisatie (React + Vite)
 
-De actieve visualisaties zijn nu de twee schema-varianten:
+De actieve visualisaties draaien nu als React + Vite build onder:
 
-- `http://localhost:8080/viz` of `http://localhost:8080/viz/index_schema.html`
-- `http://localhost:8080/viz/tijdlijn_schema.html`
+[![Open Viz Index](https://img.shields.io/badge/Open-Viz%20Index%20(React%20%2B%20Vite)-0f766e?style=for-the-badge)](http://localhost:8080/viz/react/)
+[![Open Viz Tijdlijn](https://img.shields.io/badge/Open-Viz%20Tijdlijn%20(React%20%2B%20Vite)-0b7285?style=for-the-badge)](http://localhost:8080/viz/react/tijdlijn.html)
+[![Open Docs](https://img.shields.io/badge/Open-Docs-1d4ed8?style=for-the-badge)](http://localhost:8080/docs)
+
+- `http://localhost:8080/viz/react/` (index)
+- `http://localhost:8080/viz/react/tijdlijn.html` (tijdslijn)
+- `http://localhost:8080/viz/` (landingspagina met links)
 
 De index-pagina:
 
@@ -66,14 +71,14 @@ De tijdslijn-pagina:
 - visualiseert ongedaanmakingen met pijlen en highlights naar de ongedaan gemaakte representaties
 - ondersteunt `Download PNG` en `Kopieer PNG` voor export van de tijdslijn
 
-Verouderde pagina's blijven beschikbaar als archief:
-
-- `http://localhost:8080/viz/index_oud.html`
-- `http://localhost:8080/viz/tijdlijn_oud.html`
+De oude links naar de legacy schema- en archiefpagina's zijn verwijderd van de startpagina's.
 
 Opmerking:
 
-- De pagina's gebruiken React via CDN (`unpkg`), dus internettoegang is nodig om de scripts te laden.
+- De frontend gebruikt gebuilde assets (geen runtime React-CDN meer nodig).
+- Voor lokale markdown-documentatie kun je nu ook gebruiken:
+  - `http://localhost:8080/docs` (overzicht van alle `.md` bestanden)
+  - `http://localhost:8080/docs/web/readme.md` (web handleiding)
 
 ## Admin endpoint security
 

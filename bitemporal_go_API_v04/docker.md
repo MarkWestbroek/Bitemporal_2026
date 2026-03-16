@@ -54,7 +54,7 @@ Dus je hoeft vooraf lokaal geen `npm run build` meer te doen.
 ```powershell
 $commit = (git rev-parse --short HEAD)
 $bt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
-docker build --no-cache --build-arg COMMIT=$commit --build-arg BUILD_TIME=$bt -t bitemp-go-api:v04.00.01 .
+docker build --no-cache --build-arg COMMIT=$commit --build-arg BUILD_TIME=$bt -t bitemp-go-api:v04.01.02 .
 ```
 
 ### Bash
@@ -63,7 +63,7 @@ docker build --no-cache --build-arg COMMIT=$commit --build-arg BUILD_TIME=$bt -t
 docker build --no-cache \
   --build-arg COMMIT=$(git rev-parse --short HEAD) \
   --build-arg BUILD_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-  -t bitemp-go-api:v04.00.01 .
+  -t bitemp-go-api:v04.01.02 .
 ```
 
 Opmerking:
@@ -86,12 +86,12 @@ docker run -d --name bitemp-go-api \
   -e ALLOW_DROP_TABLES=false \
   -e ADMIN_DROP_PASSWORD="kies-een-sterk-geheim" \
   --restart unless-stopped \
-  bitemp-go-api:v04.00.01
+  bitemp-go-api:v04.01.02
 ```
 
 In 1 regeL:
 ```
-docker run -d --name bitemp-go-api -p 8080:8080 -e DATABASE_URL="postgres://postgres:1234@host.docker.internal:5432/bitemp_go_db?sslmode=disable" -e APP_ENV=production -e GIN_MODE=release -e ALLOW_DROP_TABLES=false -e ADMIN_DROP_PASSWORD="1234" --restart unless-stopped bitemp-go-api:test-docker
+docker run -d --name bitemp-go-api -p 8080:8080 -e DATABASE_URL="postgres://postgres:1234@host.docker.internal:5432/bitemp_go_db?sslmode=disable" -e APP_ENV=production -e GIN_MODE=release -e ALLOW_DROP_TABLES=false -e ADMIN_DROP_PASSWORD="1234" --restart unless-stopped bitemp-go-api:v04.01.02
 ```
 
 of met backticks:
@@ -104,7 +104,7 @@ docker run -d --name bitemp-go-api `
   -e ALLOW_DROP_TABLES=false `
   -e ADMIN_DROP_PASSWORD="1234" `
   --restart unless-stopped `
-  bitemp-go-api:test-docker
+  bitemp-go-api:v04.01.02
 ```
 
 ### Voorbeeld: DB op aparte server
@@ -118,7 +118,7 @@ docker run -d --name bitemp-go-api \
   -e ALLOW_DROP_TABLES=false \
   -e ADMIN_DROP_PASSWORD="kies-een-sterk-geheim" \
   --restart unless-stopped \
-  bitemp-go-api:v04.00.01
+  bitemp-go-api:v04.01.02
 ```
 
 ## 4. Handige controlecommando's
@@ -221,8 +221,8 @@ Voorbeeld repository:
 - `markwestbroek/bitemp-go-api`
 
 ```
-docker tag bitemp-go-api:v04.01.01 markwestbroek/bitemp-go-api:v04.01.01
-docker push markwestbroek/bitemp-go-api:v04.01.01
+docker tag bitemp-go-api:v04.01.02 markwestbroek/bitemp-go-api:v04.01.02
+docker push markwestbroek/bitemp-go-api:v04.01.02
 ``
 
 ### Op server pull en run

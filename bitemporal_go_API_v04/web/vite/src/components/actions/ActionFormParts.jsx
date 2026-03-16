@@ -274,8 +274,9 @@ export function ActionFieldControl({ veld, value, onChange, secondaireInfo, seco
   const controlStyle = { flex: 1, minWidth: 0 };
   const foutmelding = validatieMeldingVoorVeld(value, veld);
   const enumOpties = enumOptiesVoorVeld(veld);
+  const isSecondaireVeld = String(veld?.naam || "").toLowerCase() === String(secondaireKolom || "").toLowerCase();
 
-  if (veld.naam === secondaireKolom) {
+  if (isSecondaireVeld) {
     if (secondaireInfo?.loading) {
       return <input style={controlStyle} value="Laden..." readOnly />;
     }

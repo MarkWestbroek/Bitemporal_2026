@@ -73,21 +73,23 @@ export default function EntiteitActieBox({
           secondaryOptionsByGroupKey={relatieSecondaireOpties}
         />
 
-        {(entiteitNieuweGegevens.length > 0 || entiteitNieuweRelaties.length > 0) && entiteitOpvoerPreview && (
-          <div style={{ margin: "10px 0", borderRadius: 6, overflow: "hidden", border: `1px solid ${accentColor}` }}>
-            <div style={{ background: "#f8fafc", padding: "4px 10px", fontSize: 12, fontWeight: 600, color: "#475569" }}>Preview: te versturen payload (GE + relatie opvoer)</div>
-            {entiteitOpvoerPreview.ok
-              ? <pre style={{ margin: 0, padding: "8px 10px", fontSize: 12, background: "#ffffff", overflowX: "auto", whiteSpace: "pre-wrap", wordBreak: "break-all" }}>{JSON.stringify(entiteitOpvoerPreview.payload, null, 2)}</pre>
-              : <p style={{ margin: 0, padding: "6px 10px", color: "#dc2626", fontSize: 12 }}>{entiteitOpvoerPreview.fout}</p>}
-          </div>
-        )}
-
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <button onClick={() => voerEntiteitActieUit("opvoer")} disabled={actieBezig || (gegevenselementGroepOpties.length === 0 && relatieGroepOpties.length === 0) || (entiteitOpvoerPreview && !entiteitOpvoerPreview.ok)}>
             {actieBezig ? "Bezig..." : "Voer nieuwe GEs/relaties op"}
           </button>
           <span className="muted" style={{ fontSize: 12 }}>Een registratie met opvoer onder de bestaande entiteit.</span>
         </div>
+
+        {(entiteitNieuweGegevens.length > 0 || entiteitNieuweRelaties.length > 0) && entiteitOpvoerPreview && (
+          <details style={{ margin: "10px 0", borderRadius: 6, overflow: "hidden", border: `1px solid ${accentColor}` }}>
+            <summary style={{ cursor: "pointer", padding: "6px 10px", background: "#f8fafc", fontSize: 12, fontWeight: 600, color: "#475569" }}>
+              Preview: te versturen payload (GE + relatie opvoer)
+            </summary>
+            {entiteitOpvoerPreview.ok
+              ? <pre style={{ margin: 0, padding: "8px 10px", fontSize: 12, background: "#ffffff", overflowX: "auto", whiteSpace: "pre-wrap", wordBreak: "break-all", borderTop: `1px solid ${accentColor}` }}>{JSON.stringify(entiteitOpvoerPreview.payload, null, 2)}</pre>
+              : <p style={{ margin: 0, padding: "6px 10px", color: "#dc2626", fontSize: 12, borderTop: `1px solid ${accentColor}` }}>{entiteitOpvoerPreview.fout}</p>}
+          </details>
+        )}
       </div>
 
       {actieResultaat && (

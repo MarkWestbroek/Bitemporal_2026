@@ -722,7 +722,7 @@ export default function IndexSchemaPage() {
 
         const defaultNieuweEntiteitOpmerking = useMemo(() => {
           const idTekst = String(nieuweEntiteitID || '').trim();
-          return `Nieuwe ${entiteitType || 'Entiteit'} = ${idTekst || '?'}`;
+          return `Nieuwe ${entiteitType || 'Entiteit'}=${idTekst || '?'}`;
         }, [entiteitType, nieuweEntiteitID]);
 
         useEffect(() => {
@@ -798,6 +798,10 @@ export default function IndexSchemaPage() {
               });
           });
         }, [baseUrl, entiteitActieOpen, nieuweEntiteitActieOpen, geselecteerdeRep, registratieCorrigeerActief, relatieGroepOpties, relatieSecondaireOpties]);
+
+        function invalidateRelatieSecondaireOpties() {
+          setRelatieSecondaireOpties({});
+        }
 
         function bouwRepresentatieActiePayloads(item, group, actieVelden, opmerking) {
           const veldnaam = group.typeMeta?.veldnaam || group.doeltype.toLowerCase();
@@ -1304,6 +1308,7 @@ export default function IndexSchemaPage() {
             });
             const json = await res.json().catch(() => ({}));
             if (res.ok) {
+              invalidateRelatieSecondaireOpties();
               const nieuweRegistratieID = registratieIDUitResponse(json);
               setRegistratieActieResultaat({ ok: true, bericht: `Ongedaanmaking geslaagd (nieuwe registratie id=${nieuweRegistratieID || '-'})` });
               setRegistratieActieOpen(false);
@@ -1341,6 +1346,7 @@ export default function IndexSchemaPage() {
             });
             const json = await res.json().catch(() => ({}));
             if (res.ok) {
+              invalidateRelatieSecondaireOpties();
               const nieuweRegistratieID = registratieIDUitResponse(json);
               setRegistratieActieResultaat({ ok: true, bericht: `Correctie geslaagd (nieuwe registratie id=${nieuweRegistratieID || '-'})` });
               setRegistratieActieOpen(false);
@@ -1476,6 +1482,7 @@ export default function IndexSchemaPage() {
             });
             const json = await res.json().catch(() => ({}));
             if (res.ok) {
+              invalidateRelatieSecondaireOpties();
               const nieuweRegistratieID = registratieIDUitResponse(json);
               setActieResultaat({ ok: true, bericht: `${actie === 'afvoer' ? 'Entiteit-afvoer' : 'GE-opvoer'} geslaagd (registratie id=${nieuweRegistratieID || '-'})` });
               if (actie !== 'afvoer') {
@@ -1548,6 +1555,7 @@ export default function IndexSchemaPage() {
               throw new Error(json.error || `HTTP ${res.status}: ${res.statusText}`);
             }
 
+            invalidateRelatieSecondaireOpties();
             const nieuweRegistratieID = registratieIDUitResponse(json);
             if (nieuweRegistratieID > 0) {
               setRegistratieId(nieuweRegistratieID);
@@ -1594,6 +1602,7 @@ export default function IndexSchemaPage() {
             });
             const json = await res.json().catch(() => ({}));
             if (res.ok) {
+              invalidateRelatieSecondaireOpties();
               const nieuweRegistratieID = registratieIDUitResponse(json);
               setActieResultaat({ ok: true, bericht: `${actie === 'afvoer' ? 'Afvoer' : 'Correctie'} geslaagd (registratie id=${nieuweRegistratieID || '-'})` });
               setGeselecteerdeRep(null);
@@ -2115,8 +2124,8 @@ export default function IndexSchemaPage() {
                     voerActieUit={voerActieUit}
                     actieBezig={actieBezig}
                     actieResultaat={actieResultaat}
-                    secondaireEntiteitIDKolom={String(geselecteerdeRep?.group?.typeMeta?.secondaireEntiteitIDKolom || '')}
-                    secondaireIds={safeArray(relatieSecondaireOpties[`${geselecteerdeRep?.group?.rolnaam}__${geselecteerdeRep?.group?.doeltype}`]?.ids)}
+                    secondaireEntiteitIDKolom={String(geselecteerdeRep?.group?.typeMeta?.secondaireEntiteitIDKolom || '').toLowerCase()}
+                    secondaireInfo={relatieSecondaireOpties[`${geselecteerdeRep?.group?.rolnaam}__${geselecteerdeRep?.group?.doeltype}`] || { loading: false, ids: [], error: "" }}
                   />
                 </div>
               </div>

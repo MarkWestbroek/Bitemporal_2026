@@ -93,15 +93,16 @@
     <main>
       <section class="card">
         <h1>Visualisatie startpagina</h1>
-        <p>Gebruik deze pagina als ingang voor de twee actieve visualisaties.</p>
+        <p>Gebruik deze pagina als ingang voor de twee actieve React + Vite visualisaties.</p>
       </section>
 
       <section class="grid" aria-label="Viz links en requirements">
         <article class="card">
           <h2>Actieve pagina's</h2>
           <ul>
-            <li><a href="/viz/index_schema.html">Index schema</a></li>
-            <li><a href="/viz/tijdlijn_schema.html">Tijdlijn schema</a></li>
+            <li><a href="/viz/react/">Index (React + Vite)</a></li>
+            <li><a href="/viz/react/tijdlijn.html">Tijdlijn (React + Vite)</a></li>
+            <li><a href="/viz/react/registraties.html">Registraties replay (React + Vite)</a></li>
           </ul>
         </article>
 
@@ -109,7 +110,6 @@
           <h2>Requirements</h2>
           <ul>
             <li>JavaScript moet aanstaan in de browser.</li>
-            <li>Internettoegang nodig: React wordt via CDN geladen (unpkg).</li>
             <li>Moderne browser (Chrome, Edge, Safari, Firefox).</li>
             <li>Toegang tot API-server op poort 8080 vanaf je netwerk.</li>
           </ul>
@@ -120,11 +120,12 @@
         <h2>Mobiel troubleshooting</h2>
         <ul>
           <li>Test eerst of deze pagina zelf opent: <a href="/viz/">/viz/</a>.</li>
-          <li>Open daarna <a href="/viz/index_schema.html">index_schema.html</a>.</li>
-          <li>Als die leeg blijft: controleer of je telefoon toegang heeft tot unpkg CDN.</li>
+          <li>Open daarna <a href="/viz/react/">/viz/react/</a>.</li>
+          <li>Open de tijdlijn via <a href="/viz/react/tijdlijn.html">/viz/react/tijdlijn.html</a>.</li>
+          <li>Open replay via <a href="/viz/react/registraties.html">/viz/react/registraties.html</a>.</li>
           <li>Probeer tijdelijk wifi en mobiele data om DNS/firewall issues uit te sluiten.</li>
         </ul>
-        <p class="note">Tip: als React-CDN op mobiel vaak blokkeert, kun je later React lokaal meeleveren in de image.</p>
+        <p class="note">Tip: als assets niet laden, force-refresh de pagina en controleer of de laatste frontend-build is uitgerold.</p>
       </section>
     </main>
   </body>

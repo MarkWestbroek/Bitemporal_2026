@@ -12,6 +12,7 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, "index.html"),
         tijdlijn: resolve(__dirname, "tijdlijn.html"),
+        registraties: resolve(__dirname, "registraties.html"),
       },
     },
   },
