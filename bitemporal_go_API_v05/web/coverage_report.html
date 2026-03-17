@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coverage rapport</title>
+    <style>
+      :root {
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --line: #cbd5e1;
+        --text: #0f172a;
+        --muted: #475569;
+        --brand: #0f766e;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Noto Sans", sans-serif;
+        color: var(--text);
+        background: radial-gradient(900px 300px at 100% -20%, #dbeafe 0%, transparent 55%),
+          linear-gradient(180deg, #f0f9ff 0%, var(--bg) 260px);
+      }
+
+      main {
+        width: min(860px, calc(100vw - 24px));
+        margin: 20px auto 28px;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(22px, 3vw, 30px);
+      }
+
+      p {
+        margin: 0 0 10px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      li {
+        margin: 10px 0;
+      }
+
+      a {
+        color: var(--brand);
+        text-underline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="card">
+        <h1>Test coverage rapport</h1>
+        <p>
+          Deze pagina geeft de twee nuttige coverage-weergaven. De detailweergave van Go toont broncode met
+          rood/groen markering; dat is normaal gedrag van <code>go tool cover -html</code>.
+        </p>
+        <ul>
+          <li><a href="/viz/coverage_functions.txt">Functie-overzicht (tekst, percentages per functie + totaal)</a></li>
+          <li><a href="/viz/coverage.html">Detailweergave (broncode met coverage-kleuren)</a></li>
+          <li><a href="/">Terug naar API root</a></li>
+        </ul>
+        <p>
+          Ververs eerst coverage-bestanden via de VS Code task <strong>go: coverage html (v05)</strong>.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

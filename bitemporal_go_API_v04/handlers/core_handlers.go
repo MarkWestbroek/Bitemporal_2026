@@ -145,3 +145,136 @@ func MakeGetEntityHandler[T model.HasID](entity_name string) gin.HandlerFunc {
 		c.JSON(http.StatusOK, entity)
 	}
 }
+
+// MakeGetEntitiesByMetaHandler returns a gin.HandlerFunc that retrieves entities defined by TypeMeta.DBFactory with pagination.
+func MakeGetEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		const (
+			defaultPage = 1
+			defaultSize = 20
+			maxSize     = 100
+		)
+
+		if meta.DBFactory == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "DBFactory ontbreekt voor type " + meta.Typenaam})
+			return
+		}
+		if meta.DBSliceFactory == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "DBSliceFactory ontbreekt voor type " + meta.Typenaam})
+			return
+		}
+
+		page := defaultPage
+		size := defaultSize
+
+		if p := c.Query("page"); p != "" {
+			v, err := strconv.Atoi(p)
+			if err != nil || v <= 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid 'page' parameter"})
+				return
+			}
+			page = v
+		}
+
+		if s := c.Query("size"); s != "" {
+			v, err := strconv.Atoi(s)
+			if err != nil || v <= 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid 'size' parameter"})
+				return
+			}
+			if v > maxSize {
+				size = maxSize
+			} else {
+				size = v
+			}
+		}
+
+		offset := (page - 1) * size
+		entities := meta.DBSliceFactory()
+
+		err := DB.NewSelect().
+			Model(entities).
+			Limit(size).
+			Offset(offset).
+			Scan(c.Request.Context())
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		total, err := DB.NewSelect().Model(meta.DBFactory()).Count(c.Request.Context())
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		hasMore := offset+size < total
+
+		c.JSON(http.StatusOK, gin.H{
+			meta.Typenaam + "s": entities,
+			"page":              page,
+			"size":              size,
+			"has_more":          hasMore,
+		})
+	}
+}
+
+// MakeGetEntityByMetaHandler returns a gin.HandlerFunc that retrieves a single entity by meta.IDKolom.
+func MakeGetEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if meta.DBFactory == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "DBFactory ontbreekt voor type " + meta.Typenaam})
+			return
+		}
+		if meta.IDKolom == "" {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "IDKolom ontbreekt voor type " + meta.Typenaam})
+			return
+		}
+
+		entityID := c.Param("id")
+		if entityID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ID must be present"})
+			return
+		}
+
+		entity := meta.DBFactory()
+		err := DB.NewSelect().
+			Model(entity).
+			Where(meta.IDKolom+" = ?", entityID).
+			Scan(c.Request.Context())
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		if isZeroID(entity.GetID()) {
+			c.JSON(http.StatusNotFound, gin.H{"message": meta.Typenaam + " not found"})
+			return
+		}
+
+		c.JSON(http.StatusOK, entity)
+	}
+}
+
+// MakeAddEntityByMetaHandler returns a gin.HandlerFunc that inserts an entity created by TypeMeta.DBFactory.
+func MakeAddEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if meta.DBFactory == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "DBFactory ontbreekt voor type " + meta.Typenaam})
+			return
+		}
+
+		newEntity := meta.DBFactory()
+		if err := c.ShouldBindJSON(newEntity); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		_, err := DB.NewInsert().Model(newEntity).Exec(c.Request.Context())
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusCreated, gin.H{"message": meta.Typenaam + " created"})
+	}
+}

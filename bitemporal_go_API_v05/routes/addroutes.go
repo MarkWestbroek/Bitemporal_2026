@@ -19,67 +19,36 @@ func AddRoutes(router *gin.Engine) {
 	router.POST("/tests", handlers.AddTest)
 	router.PUT("/tests/:id", handlers.UpdateTest)
 
-	//Add Entities routes to router
-	router.GET("/as", handlers.MakeGetEntitiesHandler[model.A_basis]("As"))
-	router.GET("/as/:id", handlers.MakeGetEntityHandler[model.A_basis]("A"))
-	router.POST("/as", handlers.MakeAddEntityHandler[model.A_basis]("A"))
+	//Add Entities routes to router (via metamap)
+	addMetaRegistryRoutes(router)
 
-	router.GET("/bs", handlers.MakeGetEntitiesHandler[model.B_basis]("Bs"))
-	router.GET("/bs/:id", handlers.MakeGetEntityHandler[model.B_basis]("B"))
-	router.POST("/bs", handlers.MakeAddEntityHandler[model.B_basis]("B"))
+	// Full entity routes (via metamap)
+	addMetaRegistryFullRoutes(router)
 
-	// add relation routes
-	router.GET("/rel_a_bs", handlers.MakeGetEntitiesHandler[model.Rel_A_B]("Rel_A_Bs"))
-	router.GET("/rel_a_bs/:id", handlers.MakeGetEntityHandler[model.Rel_A_B]("Rel_A_B"))
-	router.POST("/rel_a_bs", handlers.MakeAddEntityHandler[model.Rel_A_B]("Rel_A_B"))
-
-	// add data element routes
-	router.GET("/a_us", handlers.MakeGetEntitiesHandler[model.A_U]("A_Us"))
-	router.GET("/a_us/:id", handlers.MakeGetEntityHandler[model.A_U]("A_U"))
-	router.POST("/a_us", handlers.MakeAddEntityHandler[model.A_U]("A_U"))
-
-	router.GET("/a_vs", handlers.MakeGetEntitiesHandler[model.A_V]("A_Vs"))
-	router.GET("/a_vs/:id", handlers.MakeGetEntityHandler[model.A_V]("A_V"))
-	router.POST("/a_vs", handlers.MakeAddEntityHandler[model.A_V]("A_V"))
-
-	router.GET("/a_ws", handlers.MakeGetEntitiesHandler[model.A_W]("A_Ws"))
-	router.GET("/a_ws/:id", handlers.MakeGetEntityHandler[model.A_W]("A_W"))
-	router.POST("/a_ws", handlers.MakeAddEntityHandler[model.A_W]("A_W"))
-
-	router.GET("/b_xs", handlers.MakeGetEntitiesHandler[model.B_X]("B_Xs"))
-	router.GET("/b_xs/:id", handlers.MakeGetEntityHandler[model.B_X]("B_X"))
-	router.POST("/b_xs", handlers.MakeAddEntityHandler[model.B_X]("B_X"))
-
-	router.GET("/b_ys", handlers.MakeGetEntitiesHandler[model.B_Y]("B_Ys"))
-	router.GET("/b_ys/:id", handlers.MakeGetEntityHandler[model.B_Y]("B_Y"))
-	router.POST("/b_ys", handlers.MakeAddEntityHandler[model.B_Y]("B_Y"))
-
-	// Registratie routes
+	// Registratie routes (dedicated, want plumbing,maar gebruikt een generieke handler)
 	router.GET("/registraties", handlers.MakeGetEntitiesHandler[model.Registratie]("Registraties"))
 	router.GET("/registraties/:id", handlers.MakeGetEntityHandler[model.Registratie]("Registratie"))
 	router.POST("/registraties", handlers.MakeAddEntityHandler[model.Registratie]("Registratie"))
 	router.PATCH("/registraties/:id", handlers.PatchRegistratie())
 
-	// Wijziging routes
+	// Wijziging routes (idem dedicated, generieke handler)
 	router.GET("/wijzigingen", handlers.MakeGetEntitiesHandler[model.Wijziging]("Wijzigingen"))
 	router.GET("/wijzigingen/:id", handlers.MakeGetEntityHandler[model.Wijziging]("Wijziging"))
 	router.POST("/wijzigingen", handlers.MakeAddEntityHandler[model.Wijziging]("Wijziging"))
 
-	// Full entity routes
-	router.GET("/full/as", handlers.MakeGetFullEntitiesHandler[model.Full_A]("As", []string{"Us", "Vs", "Ws", "RelABs"}))
-	router.GET("/full/as/:id", handlers.MakeGetFullEntityHandler[model.Full_A]("A", []string{"Us", "Vs", "Ws", "RelABs"}))
-	router.POST("/full/as", handlers.MakeAddFullEntityHandler[model.Full_A]("Full_A", []string{"Us", "Vs", "Ws", "RelABs"}))
-
-	router.GET("/full/bs", handlers.MakeGetFullEntitiesHandler[model.Full_B]("Bs", []string{"Xs", "Ys"}))
-	router.GET("/full/bs/:id", handlers.MakeGetFullEntityHandler[model.Full_B]("B", []string{"Xs", "Ys"}))
-	router.POST("/full/bs", handlers.MakeAddFullEntityHandler[model.Full_B]("Full_B", []string{"Xs", "Ys"}))
-
-	// Get registratie met onderliggende wijzigingen
+	// Get registratie met onderliggende wijzigingen (geen generieke handler gebruikt,
+	// omdat dit een specifiek afhandeling vroeg, en bovendien toch plumbing is)
 	router.GET("/full/registraties", handlers.MakeGetRegistratiesMetWijzigingenHandler())
 	router.GET("/full/registraties/:id", handlers.MakeGetRegistratieMetWijzigingenByIDHandler())
 
-	/* REGISTRATIE, CORRECTIE EN ONGEDAANMAKING ROUTES
-	Dit gaat allemaal via /registratie/ en de payload in de de body.
+	/*
+		=== BELANGRIJKSTE BITEMPORELE REGISTRATIE ENDPOINT ===
+
+		REGISTRATIE, CORRECTIE EN ONGEDAANMAKING ROUTES
+
+		Dit gaat allemaal via /registratie/ en de payload in de de body.
+
+		Zie voorbeelden in de readme.
 	*/
 	router.POST("/registratie/", handlers.RegistreerMetNieuweAanpak())
 

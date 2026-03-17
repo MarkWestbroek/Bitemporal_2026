@@ -1,10 +1,52 @@
 package routes
 
 import (
+	"sort"
+
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v04/handlers"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v04/model"
 	"github.com/gin-gonic/gin"
 )
+
+func addMetaRegistryRoutes(router *gin.Engine) {
+	typeNamen := make([]string, 0, len(model.MetaRegistry))
+	for typeNaam := range model.MetaRegistry {
+		typeNamen = append(typeNamen, typeNaam)
+	}
+	sort.Strings(typeNamen)
+
+	for _, typeNaam := range typeNamen {
+		meta, ok := model.MetaRegistry.GetTypeMeta(typeNaam)
+		if !ok || meta.DBFactory == nil || meta.Padnaam == "" {
+			continue
+		}
+
+		basePath := "/" + meta.Padnaam
+		router.GET(basePath, handlers.MakeGetEntitiesByMetaHandler(meta))
+		router.GET(basePath+"/:id", handlers.MakeGetEntityByMetaHandler(meta))
+		router.POST(basePath, handlers.MakeAddEntityByMetaHandler(meta))
+	}
+}
+
+func addMetaRegistryFullRoutes(router *gin.Engine) {
+	typeNamen := make([]string, 0, len(model.MetaRegistry))
+	for typeNaam := range model.MetaRegistry {
+		typeNamen = append(typeNamen, typeNaam)
+	}
+	sort.Strings(typeNamen)
+
+	for _, typeNaam := range typeNamen {
+		meta, ok := model.MetaRegistry.GetTypeMeta(typeNaam)
+		if !ok || meta.Metatype != model.MetatypeEntiteit || meta.Factory == nil || meta.SliceFactory == nil || meta.Padnaam == "" {
+			continue
+		}
+
+		basePath := "/full/" + meta.Padnaam
+		router.GET(basePath, handlers.MakeGetFullEntitiesByMetaHandler(meta))
+		router.GET(basePath+"/:id", handlers.MakeGetFullEntityByMetaHandler(meta))
+		router.POST(basePath, handlers.MakeAddFullEntityByMetaHandler(meta))
+	}
+}
 
 /*
 Add functional REST routes to the provided router,
@@ -20,39 +62,10 @@ func AddRoutes(router *gin.Engine) {
 	router.PUT("/tests/:id", handlers.UpdateTest)
 
 	//Add Entities routes to router
-	router.GET("/as", handlers.MakeGetEntitiesHandler[model.A_basis]("As"))
-	router.GET("/as/:id", handlers.MakeGetEntityHandler[model.A_basis]("A"))
-	router.POST("/as", handlers.MakeAddEntityHandler[model.A_basis]("A"))
+	addMetaRegistryRoutes(router)
 
-	router.GET("/bs", handlers.MakeGetEntitiesHandler[model.B_basis]("Bs"))
-	router.GET("/bs/:id", handlers.MakeGetEntityHandler[model.B_basis]("B"))
-	router.POST("/bs", handlers.MakeAddEntityHandler[model.B_basis]("B"))
-
-	// add relation routes
-	router.GET("/rel_a_bs", handlers.MakeGetEntitiesHandler[model.Rel_A_B]("Rel_A_Bs"))
-	router.GET("/rel_a_bs/:id", handlers.MakeGetEntityHandler[model.Rel_A_B]("Rel_A_B"))
-	router.POST("/rel_a_bs", handlers.MakeAddEntityHandler[model.Rel_A_B]("Rel_A_B"))
-
-	// add data element routes
-	router.GET("/a_us", handlers.MakeGetEntitiesHandler[model.A_U]("A_Us"))
-	router.GET("/a_us/:id", handlers.MakeGetEntityHandler[model.A_U]("A_U"))
-	router.POST("/a_us", handlers.MakeAddEntityHandler[model.A_U]("A_U"))
-
-	router.GET("/a_vs", handlers.MakeGetEntitiesHandler[model.A_V]("A_Vs"))
-	router.GET("/a_vs/:id", handlers.MakeGetEntityHandler[model.A_V]("A_V"))
-	router.POST("/a_vs", handlers.MakeAddEntityHandler[model.A_V]("A_V"))
-
-	router.GET("/a_ws", handlers.MakeGetEntitiesHandler[model.A_W]("A_Ws"))
-	router.GET("/a_ws/:id", handlers.MakeGetEntityHandler[model.A_W]("A_W"))
-	router.POST("/a_ws", handlers.MakeAddEntityHandler[model.A_W]("A_W"))
-
-	router.GET("/b_xs", handlers.MakeGetEntitiesHandler[model.B_X]("B_Xs"))
-	router.GET("/b_xs/:id", handlers.MakeGetEntityHandler[model.B_X]("B_X"))
-	router.POST("/b_xs", handlers.MakeAddEntityHandler[model.B_X]("B_X"))
-
-	router.GET("/b_ys", handlers.MakeGetEntitiesHandler[model.B_Y]("B_Ys"))
-	router.GET("/b_ys/:id", handlers.MakeGetEntityHandler[model.B_Y]("B_Y"))
-	router.POST("/b_ys", handlers.MakeAddEntityHandler[model.B_Y]("B_Y"))
+	// Full entity routes
+	addMetaRegistryFullRoutes(router)
 
 	// Registratie routes
 	router.GET("/registraties", handlers.MakeGetEntitiesHandler[model.Registratie]("Registraties"))
@@ -64,15 +77,6 @@ func AddRoutes(router *gin.Engine) {
 	router.GET("/wijzigingen", handlers.MakeGetEntitiesHandler[model.Wijziging]("Wijzigingen"))
 	router.GET("/wijzigingen/:id", handlers.MakeGetEntityHandler[model.Wijziging]("Wijziging"))
 	router.POST("/wijzigingen", handlers.MakeAddEntityHandler[model.Wijziging]("Wijziging"))
-
-	// Full entity routes
-	router.GET("/full/as", handlers.MakeGetFullEntitiesHandler[model.Full_A]("As", []string{"Us", "Vs", "Ws", "RelABs"}))
-	router.GET("/full/as/:id", handlers.MakeGetFullEntityHandler[model.Full_A]("A", []string{"Us", "Vs", "Ws", "RelABs"}))
-	router.POST("/full/as", handlers.MakeAddFullEntityHandler[model.Full_A]("Full_A", []string{"Us", "Vs", "Ws", "RelABs"}))
-
-	router.GET("/full/bs", handlers.MakeGetFullEntitiesHandler[model.Full_B]("Bs", []string{"Xs", "Ys"}))
-	router.GET("/full/bs/:id", handlers.MakeGetFullEntityHandler[model.Full_B]("B", []string{"Xs", "Ys"}))
-	router.POST("/full/bs", handlers.MakeAddFullEntityHandler[model.Full_B]("Full_B", []string{"Xs", "Ys"}))
 
 	// Get registratie met onderliggende wijzigingen
 	router.GET("/full/registraties", handlers.MakeGetRegistratiesMetWijzigingenHandler())

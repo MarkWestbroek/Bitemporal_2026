@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v05/handlers"
@@ -128,5 +129,20 @@ func TestIsProductionEnvironment_NonProduction(t *testing.T) {
 
 	if isProductionEnvironment() {
 		t.Fatal("expected non-production environment")
+	}
+}
+
+func TestRegistratieEndpoint_InvalidJSON_ReturnsBadRequest(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	r := NewRouter()
+	req := httptest.NewRequest(http.MethodPost, "/registratie/", strings.NewReader(`{"registratie":`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400, got %d: %s", w.Code, w.Body.String())
 	}
 }

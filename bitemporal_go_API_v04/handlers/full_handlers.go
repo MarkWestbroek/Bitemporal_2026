@@ -304,18 +304,20 @@ func structNaarMap(v any) (map[string]any, error) {
 }
 
 func entiteitNaamNaarFullPathSegment(entiteitnaam string) (string, bool) {
-	switch strings.ToUpper(strings.TrimSpace(entiteitnaam)) {
-	case "A":
-		return "as", true
-	case "B":
-		return "bs", true
-	default:
+	meta, ok := model.MetaRegistry.GetTypeMeta(strings.TrimSpace(entiteitnaam))
+	if !ok || meta.Metatype != model.MetatypeEntiteit || meta.Padnaam == "" {
 		return "", false
 	}
+
+	return meta.Padnaam, true
 }
 
 func typeMetaVoorModelNaam(modelNaam string) (model.TypeMeta, bool) {
 	for _, meta := range model.MetaRegistry {
+		if meta.Typenaam == modelNaam {
+			return meta, true
+		}
+
 		if meta.Factory != nil {
 			factoryType := reflect.TypeOf(meta.Factory())
 			if factoryType != nil {
@@ -342,21 +344,6 @@ func typeMetaVoorModelNaam(modelNaam string) (model.TypeMeta, bool) {
 	}
 
 	return model.TypeMeta{}, false
-}
-
-func doeltypeVoorRelatierol(parentModelNaam string, relatieNaam string) (string, bool) {
-	parentMeta, ok := typeMetaVoorModelNaam(parentModelNaam)
-	if !ok {
-		return "", false
-	}
-
-	for _, rel := range parentMeta.OnderliggendeGegevenselementen {
-		if rel.Rolnaam == relatieNaam {
-			return rel.Doeltype, true
-		}
-	}
-
-	return "", false
 }
 
 type formeleTijdTarget struct {
@@ -500,92 +487,91 @@ func zetAfgeleideFormeleTijdVoorRepresentatie(
 	return nil
 }
 
-func vulAfgeleideFormeleTijdVoorFullA(c *gin.Context, entity *model.Full_A, peiltijdstip time.Time) error {
-	entiteitID := fmt.Sprint(entity.ID)
+// entiteitMetaVoorFullEntity bepaalt op basis van het concrete full-model de bijbehorende
+// entiteit-meta uit de MetaRegistry. De functie verwacht een niet-nil pointer naar een full entiteit.
+func entiteitMetaVoorFullEntity(entity any) (model.TypeMeta, error) {
+	v := reflect.ValueOf(entity)
+	if !v.IsValid() || v.Kind() != reflect.Ptr || v.IsNil() {
+		return model.TypeMeta{}, fmt.Errorf("full entity moet een niet-nil pointer zijn")
+	}
 
-	if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, entity, "A", entiteitID, "", "", peiltijdstip); err != nil {
+	modelNaam := v.Elem().Type().Name()
+	meta, ok := typeMetaVoorModelNaam(modelNaam)
+	if !ok {
+		return model.TypeMeta{}, fmt.Errorf("geen metamap-entry gevonden voor full entity model %s", modelNaam)
+	}
+	if meta.Metatype != model.MetatypeEntiteit {
+		return model.TypeMeta{}, fmt.Errorf("type %s is geen entiteit", meta.Typenaam)
+	}
+
+	return meta, nil
+}
+
+// vulAfgeleideFormeleTijdVoorFullSlice verwerkt een volledige lijst van full entiteiten generiek.
+// Dit vervangt hardcoded type-switches op Full_A/Full_B: elk slice-element wordt als pointer
+// doorgegeven aan de generieke entity-routine hieronder.
+func vulAfgeleideFormeleTijdVoorFullSlice(c *gin.Context, entities any, peiltijdstip time.Time) error {
+	v := reflect.ValueOf(entities)
+	if !v.IsValid() || v.Kind() != reflect.Ptr || v.IsNil() {
+		return fmt.Errorf("entities moet een niet-nil pointer naar slice zijn")
+	}
+
+	sliceValue := v.Elem()
+	if sliceValue.Kind() != reflect.Slice {
+		return fmt.Errorf("entities moet een pointer naar slice zijn")
+	}
+
+	for i := 0; i < sliceValue.Len(); i++ {
+		entityPtr := sliceValue.Index(i).Addr().Interface()
+		if err := vulAfgeleideFormeleTijdVoorFullEntity(c, entityPtr, peiltijdstip); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// vulAfgeleideFormeleTijdVoorFullEntity leidt opvoer/afvoer af voor een full entiteit en
+// haar onderliggende representaties via interfaces i.p.v. concrete type-switches.
+// Vereiste interfaces op de entiteit:
+// - HasID: voor entiteit-ID
+// - HeeftOpvoerAfvoer: voor opvoer/afvoer op entiteitsniveau
+// - HeeftOnderliggendeGegevenselementen: voor iteratie over kind-representaties
+func vulAfgeleideFormeleTijdVoorFullEntity(c *gin.Context, entity any, peiltijdstip time.Time) error {
+	meta, err := entiteitMetaVoorFullEntity(entity)
+	if err != nil {
 		return err
 	}
 
-	for i := range entity.Us {
-		repID := fmt.Sprint(entity.Us[i].Rel_ID)
-		if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, &entity.Us[i], "A", entiteitID, "A_U", repID, peiltijdstip); err != nil {
-			return err
-		}
+	hasID, ok := entity.(model.HasID)
+	if !ok {
+		return fmt.Errorf("full entity %s implementeert HasID niet", meta.Typenaam)
 	}
 
-	for i := range entity.Vs {
-		repID := fmt.Sprint(entity.Vs[i].Rel_ID)
-		if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, &entity.Vs[i], "A", entiteitID, "A_V", repID, peiltijdstip); err != nil {
-			return err
-		}
+	formeleEntiteit, ok := entity.(model.HeeftOpvoerAfvoer)
+	if !ok {
+		return fmt.Errorf("full entity %s implementeert HeeftOpvoerAfvoer niet", meta.Typenaam)
 	}
 
-	for i := range entity.RelABs {
-		repID := fmt.Sprint(entity.RelABs[i].Rel_ID)
-		if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, &entity.RelABs[i], "A", entiteitID, "Rel_A_B", repID, peiltijdstip); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func vulAfgeleideFormeleTijdVoorFullB(c *gin.Context, entity *model.Full_B, peiltijdstip time.Time) error {
-	entiteitID := fmt.Sprint(entity.ID)
-
-	if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, entity, "B", entiteitID, "", "", peiltijdstip); err != nil {
+	entiteitID := fmt.Sprint(hasID.GetID())
+	if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, formeleEntiteit, meta.Typenaam, entiteitID, "", "", peiltijdstip); err != nil {
 		return err
 	}
 
-	for i := range entity.Xs {
-		repID := fmt.Sprint(entity.Xs[i].Rel_ID)
-		if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, &entity.Xs[i], "B", entiteitID, "B_X", repID, peiltijdstip); err != nil {
-			return err
-		}
+	metKinderen, ok := entity.(model.HeeftOnderliggendeGegevenselementen)
+	if !ok {
+		return nil
 	}
 
-	for i := range entity.Ys {
-		repID := fmt.Sprint(entity.Ys[i].Rel_ID)
-		if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, &entity.Ys[i], "B", entiteitID, "B_Y", repID, peiltijdstip); err != nil {
+	for _, kind := range metKinderen.GeefOnderliggendeGegevenselementen() {
+		if kind.Representatie == nil {
+			continue
+		}
+
+		repID := fmt.Sprint(kind.Representatie.GetID())
+		if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, kind.Representatie, meta.Typenaam, entiteitID, kind.Typenaam, repID, peiltijdstip); err != nil {
 			return err
 		}
-	}
-
-	return nil
-}
-
-func vulAfgeleideFormeleTijdVoorEntities[T any](c *gin.Context, entities []T, peiltijdstip time.Time) error {
-	for i := range entities {
-		switch entity := any(entities[i]).(type) {
-		case model.Full_A:
-			if err := vulAfgeleideFormeleTijdVoorFullA(c, &entity, peiltijdstip); err != nil {
-				return err
-			}
-			entities[i] = any(entity).(T)
-		case model.Full_B:
-			if err := vulAfgeleideFormeleTijdVoorFullB(c, &entity, peiltijdstip); err != nil {
-				return err
-			}
-			entities[i] = any(entity).(T)
-		}
-	}
-
-	return nil
-}
-
-func vulAfgeleideFormeleTijdVoorEntity[T any](c *gin.Context, entity *T, peiltijdstip time.Time) error {
-	switch typed := any(*entity).(type) {
-	case model.Full_A:
-		if err := vulAfgeleideFormeleTijdVoorFullA(c, &typed, peiltijdstip); err != nil {
-			return err
-		}
-		*entity = any(typed).(T)
-	case model.Full_B:
-		if err := vulAfgeleideFormeleTijdVoorFullB(c, &typed, peiltijdstip); err != nil {
-			return err
-		}
-		*entity = any(typed).(T)
 	}
 
 	return nil
@@ -766,16 +752,23 @@ func MakeGetRegistratieMetWijzigingenByIDHandler() gin.HandlerFunc {
 	}
 }
 
-// MakeGetFullEntitiesHandler returns a gin.HandlerFunc that retrieves entities of type T with pagination.
-// Als `peiltijdstip` is meegegeven, worden alleen records geretourneerd die op dat
-// formele tijdstip actief zijn: opvoer <= peiltijdstip en (afvoer IS NULL of afvoer > peiltijdstip).
-func MakeGetFullEntitiesHandler[T any](entity_name string, relation_names []string) gin.HandlerFunc {
+// MakeGetFullEntitiesByMetaHandler returns a gin.HandlerFunc that retrieves full entities defined by TypeMeta.Factory.
+func MakeGetFullEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		const (
 			defaultPage = 1
 			defaultSize = 20
 			maxSize     = 100
 		)
+
+		if meta.Factory == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Factory ontbreekt voor type " + meta.Typenaam})
+			return
+		}
+		if meta.SliceFactory == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "SliceFactory ontbreekt voor type " + meta.Typenaam})
+			return
+		}
 
 		page := defaultPage
 		size := defaultSize
@@ -803,9 +796,8 @@ func MakeGetFullEntitiesHandler[T any](entity_name string, relation_names []stri
 		}
 
 		offset := (page - 1) * size
-
-		var entities []T
-		query := DB.NewSelect().Model(&entities)
+		entities := meta.SliceFactory()
+		query := DB.NewSelect().Model(entities)
 
 		peiltijdstip, err := parsePeiltijdstipUitQuerystring(c)
 		if err != nil {
@@ -813,25 +805,18 @@ func MakeGetFullEntitiesHandler[T any](entity_name string, relation_names []stri
 			return
 		}
 		if peiltijdstip != nil {
-			modelNaam := reflect.TypeOf((*T)(nil)).Elem().Name()
-			query = applyFormeleTijdFilterVoorModel(query, modelNaam, *peiltijdstip)
+			query = applyFormeleTijdFilterVoorModel(query, meta.Typenaam, *peiltijdstip)
 		}
 
-		// Voeg alle relaties toe
-		for _, relation_name := range relation_names {
+		for _, rel := range meta.OnderliggendeGegevenselementen {
+			relatieNaam := rel.Rolnaam
+			doeltype := rel.Doeltype
 			if peiltijdstip != nil {
-				parentModelNaam := reflect.TypeOf((*T)(nil)).Elem().Name()
-				relatieNaam := relation_name
-				query = query.Relation(relation_name, func(relQuery *bun.SelectQuery) *bun.SelectQuery {
-					doeltype, ok := doeltypeVoorRelatierol(parentModelNaam, relatieNaam)
-					if !ok {
-						return relQuery.Where("opvoer <= ?", *peiltijdstip).
-							Where("(afvoer IS NULL OR afvoer > ?)", *peiltijdstip)
-					}
+				query = query.Relation(relatieNaam, func(relQuery *bun.SelectQuery) *bun.SelectQuery {
 					return applyFormeleTijdFilterVoorModel(relQuery, doeltype, *peiltijdstip)
 				})
 			} else {
-				query = query.Relation(relation_name)
+				query = query.Relation(relatieNaam)
 			}
 		}
 
@@ -845,14 +830,20 @@ func MakeGetFullEntitiesHandler[T any](entity_name string, relation_names []stri
 		}
 
 		if peiltijdstip != nil {
-			if err := vulAfgeleideFormeleTijdVoorEntities(c, entities, *peiltijdstip); err != nil {
+			if err := vulAfgeleideFormeleTijdVoorFullSlice(c, entities, *peiltijdstip); err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to derive formele tijdstippen: %v", err)})
 				return
 			}
 		}
 
-		hasMore := len(entities) == size
-		responseEntities := any(entities)
+		total, err := DB.NewSelect().Model(meta.Factory()).Count(c.Request.Context())
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		hasMore := offset+size < total
+
+		responseEntities := entities
 		if !toonAfvoerInResponse(c) {
 			responseEntities, err = sanitizeResponseWithoutAfvoer(entities)
 			if err != nil {
@@ -862,27 +853,40 @@ func MakeGetFullEntitiesHandler[T any](entity_name string, relation_names []stri
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			entity_name: responseEntities,
-			"page":      page,
-			"size":      size,
-			"has_more":  hasMore,
+			meta.Typenaam + "s": responseEntities,
+			"page":              page,
+			"size":              size,
+			"has_more":          hasMore,
 		})
 	}
 }
 
-// MakeGetFullEntityHandler returns a gin.HandlerFunc that retrieves a single entity by id.
-// Als `peiltijdstip` is meegegeven, wordt dezelfde formele-tijd filter toegepast als
-// in MakeGetFullEntitiesHandler.
-func MakeGetFullEntityHandler[T model.HasID](entity_name string, relation_names []string) gin.HandlerFunc {
+// MakeGetFullEntityByMetaHandler returns a gin.HandlerFunc that retrieves one full entity by meta.IDKolom.
+func MakeGetFullEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		entityID := c.Param("id") // assuming the ID is a string; adjust if it's an int or another type
+		if meta.Factory == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Factory ontbreekt voor type " + meta.Typenaam})
+			return
+		}
+		if meta.IDKolom == "" {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "IDKolom ontbreekt voor type " + meta.Typenaam})
+			return
+		}
+
+		entityID := c.Param("id")
 		if entityID == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "ID must be present"})
 			return
 		}
 
-		var entity T
-		query := DB.NewSelect().Model(&entity)
+		entity := meta.Factory()
+		hasID, ok := entity.(model.HasID)
+		if !ok {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Factory levert geen HasID voor type " + meta.Typenaam})
+			return
+		}
+
+		query := DB.NewSelect().Model(entity)
 
 		peiltijdstip, err := parsePeiltijdstipUitQuerystring(c)
 		if err != nil {
@@ -890,30 +894,23 @@ func MakeGetFullEntityHandler[T model.HasID](entity_name string, relation_names 
 			return
 		}
 		if peiltijdstip != nil {
-			modelNaam := reflect.TypeOf((*T)(nil)).Elem().Name()
-			query = applyFormeleTijdFilterVoorModel(query, modelNaam, *peiltijdstip)
+			query = applyFormeleTijdFilterVoorModel(query, meta.Typenaam, *peiltijdstip)
 		}
 
-		// Voeg alle relaties toe
-		for _, relation_name := range relation_names {
+		for _, rel := range meta.OnderliggendeGegevenselementen {
+			relatieNaam := rel.Rolnaam
+			doeltype := rel.Doeltype
 			if peiltijdstip != nil {
-				parentModelNaam := reflect.TypeOf((*T)(nil)).Elem().Name()
-				relatieNaam := relation_name
-				query = query.Relation(relation_name, func(relQuery *bun.SelectQuery) *bun.SelectQuery {
-					doeltype, ok := doeltypeVoorRelatierol(parentModelNaam, relatieNaam)
-					if !ok {
-						return relQuery.Where("opvoer <= ?", *peiltijdstip).
-							Where("(afvoer IS NULL OR afvoer > ?)", *peiltijdstip)
-					}
+				query = query.Relation(relatieNaam, func(relQuery *bun.SelectQuery) *bun.SelectQuery {
 					return applyFormeleTijdFilterVoorModel(relQuery, doeltype, *peiltijdstip)
 				})
 			} else {
-				query = query.Relation(relation_name)
+				query = query.Relation(relatieNaam)
 			}
 		}
 
 		err = query.
-			Where("id = ?", entityID).
+			Where(meta.IDKolom+" = ?", entityID).
 			Scan(c.Request.Context())
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -921,18 +918,18 @@ func MakeGetFullEntityHandler[T model.HasID](entity_name string, relation_names 
 		}
 
 		if peiltijdstip != nil {
-			if err := vulAfgeleideFormeleTijdVoorEntity(c, &entity, *peiltijdstip); err != nil {
+			if err := vulAfgeleideFormeleTijdVoorFullEntity(c, entity, *peiltijdstip); err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to derive formele tijdstippen: %v", err)})
 				return
 			}
 		}
 
-		if isZeroID(entity.GetID()) {
-			c.JSON(http.StatusNotFound, gin.H{"message": entity_name + " not found"})
+		if isZeroID(hasID.GetID()) {
+			c.JSON(http.StatusNotFound, gin.H{"message": meta.Typenaam + " not found"})
 			return
 		}
 
-		responseEntity := any(entity)
+		var responseEntity any = entity
 		if !toonAfvoerInResponse(c) {
 			responseEntity, err = sanitizeResponseWithoutAfvoer(entity)
 			if err != nil {
@@ -945,65 +942,55 @@ func MakeGetFullEntityHandler[T model.HasID](entity_name string, relation_names 
 	}
 }
 
-// MakeAddFullEntityHandler returns a gin.HandlerFunc that creates a fresh zero-value entity
-// for each request and inserts it into the DB after binding JSON.
-// This is to add the Full Entity, that is: including related data elements (that link to the entity by a FK)
-func MakeAddFullEntityHandler[T model.HasID](entity_name string, relation_names []string) gin.HandlerFunc {
+// MakeAddFullEntityByMetaHandler returns a gin.HandlerFunc that inserts one full entity and its child relations defined in the metaregistry.
+func MakeAddFullEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var newEntity T
-		if err := c.ShouldBindJSON(&newEntity); err != nil {
+		if meta.Factory == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Factory ontbreekt voor type " + meta.Typenaam})
+			return
+		}
+
+		entity := meta.Factory()
+		hasID, ok := entity.(model.HasID)
+		if !ok {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Factory levert geen HasID voor type " + meta.Typenaam})
+			return
+		}
+
+		if err := c.ShouldBindJSON(entity); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		// output request body for debugging as pretty JSON
 		LogRequestBodyAsJSON(c)
 
-		/*
-			NewInsert is a convenience method on baseQuery that creates and returns a
-			new *InsertQuery already bound to the baseQuery's database handle and connection.
-			Internally it calls NewInsertQuery(q.db) to create the query and then .Conn(q.conn)
-			to attach the same connection/transaction context.
-			The returned InsertQuery is intended for fluent chaining (e.g.,
-			NewInsert().Model(m).Exec(ctx)).
-			Model(...) sets the payload on the InsertQuery and Exec(...) uses scanOrExec to
-			either scan results into provided destinations or execute the insert, depending on whether dest args are present.
-
-			Gotchas: NewInsert does not set a model — you must call Model
-			before Exec if you expect data to be inserted/scanned. If q.conn is nil,
-			Conn(nil) behavior depends on its implementation (it may fall back to using the DB directly).
-			Exec delegates to scanOrExec, so check that function for how destination presence,
-			errors, and result/scan semantics are handled.
-		*/
-
-		// Insert the main entity first
-		_, err := DB.NewInsert().
-			Model(&newEntity).
-			Exec(c.Request.Context())
+		_, err := DB.NewInsert().Model(entity).Exec(c.Request.Context())
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		// Now handle related entities if relation_names are provided
-		if len(relation_names) > 0 {
-			entityValue := reflect.ValueOf(&newEntity).Elem()
-			entityType := entityValue.Type()
-			parentID := newEntity.GetID()
+		if len(meta.OnderliggendeGegevenselementen) > 0 {
+			entityValue := reflect.ValueOf(entity)
+			if entityValue.Kind() != reflect.Ptr || entityValue.IsNil() {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Factory levert geen pointer voor type %s", meta.Typenaam)})
+				return
+			}
+			entityElem := entityValue.Elem()
+			entityType := entityElem.Type()
+			parentID := hasID.GetID()
 
-			// Itereer door alle relaties
-			for _, relation_name := range relation_names {
-				// Find the field by name
-				relField, found := entityType.FieldByName(relation_name)
+			for _, rel := range meta.OnderliggendeGegevenselementen {
+				relationName := rel.Rolnaam
+				relField, found := entityType.FieldByName(relationName)
 				if !found {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("relation field '%s' not found", relation_name)})
+					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("relation field '%s' not found", relationName)})
 					return
 				}
 
-				// Parse the bun tag to get FK info
 				bunTag := relField.Tag.Get("bun")
 				if bunTag == "" {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("bun tag not found on relation field '%s'", relation_name)})
+					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("bun tag not found on relation field '%s'", relationName)})
 					return
 				}
 
@@ -1013,40 +1000,33 @@ func MakeAddFullEntityHandler[T model.HasID](entity_name string, relation_names 
 					return
 				}
 
-				// Get the relation field value (should be a slice)
-				relatedValue := entityValue.FieldByName(relation_name)
+				relatedValue := entityElem.FieldByName(relationName)
 				if !relatedValue.IsValid() || relatedValue.IsZero() {
-					// No related entities to insert for this relation, continue to next
 					continue
 				}
 
 				if relatedValue.Kind() != reflect.Slice {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("relation field '%s' is not a slice", relation_name)})
+					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("relation field '%s' is not a slice", relationName)})
 					return
 				}
 
-				// Insert each related entity
 				for i := 0; i < relatedValue.Len(); i++ {
 					relatedEntity := relatedValue.Index(i)
 
-					// Set the FK on the related entity
 					if err := setForeignKeyOnRelatedEntity(relatedEntity, fkField, parentID); err != nil {
 						c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to set FK: %v", err)})
 						return
 					}
 
-					// Insert the related entity
-					_, err := DB.NewInsert().
-						Model(relatedEntity.Addr().Interface()).
-						Exec(c.Request.Context())
+					_, err := DB.NewInsert().Model(relatedEntity.Addr().Interface()).Exec(c.Request.Context())
 					if err != nil {
-						c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to insert related entity: %v", err)})
+						c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 						return
 					}
 				}
 			}
 		}
 
-		c.JSON(http.StatusCreated, gin.H{"message": entity_name + " created"})
+		c.JSON(http.StatusCreated, gin.H{"message": meta.Typenaam + " created"})
 	}
 }

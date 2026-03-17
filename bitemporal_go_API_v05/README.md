@@ -45,6 +45,29 @@ In addition it allows to correct data (in fact correct registrations and the reg
 
 5. Access the API at `http://localhost:8080` and start managing your tasks!
 
+## Tests and Coverage (VS Code Tasks)
+
+In VS Code you can run the predefined tasks from `.vscode/tasks.json`:
+
+- `go: test all (v05)`
+  - Runs all tests in `bitemporal_go_API_v05`.
+- `go: coverage report (v05)`
+  - Generates `coverage.out` and prints function-level coverage in the terminal.
+- `go: coverage html (v05)`
+  - Generates `coverage.out`, `web/coverage.html` (detail) and `web/coverage_functions.txt` (function summary).
+
+The HTML report is written to:
+
+- `bitemporal_go_API_v05/web/coverage.html`
+
+When the API is running, you can open it via:
+
+- `/viz/coverage_report.html` (recommended start page)
+- `/viz/coverage_functions.txt` (function-level percentages)
+- `/viz/coverage.html` (raw Go source heatmap)
+
+Open this file in your browser to inspect coverage per package and per function.
+
 ## Visualisatie (React + Vite)
 
 De actieve visualisaties draaien nu als React + Vite build onder:
@@ -439,7 +462,8 @@ Deregister U5 and register U6 for entity A:
 
 ## TE TESTEN
 ### React
-- hergebruik formulier elementen okee?
+- code: hergebruik formulier elementen okee?
+- entity pagina: payload checken. Er gebeuren rare dingen (data cross GE)
 
 ## TODO
 
@@ -448,9 +472,20 @@ Deregister U5 and register U6 for entity A:
 21 react pagina's
 - enkelvoudig meervoudig tonen (1 of *)
 - corrigeert registratie r ook een lijntje tekenen?
+- enkele view:
+  - reg vak alles iets kleiner
+  - inhoudelijke info over wijzigingen
+  - Klikken op gerelateerde record: record ophalen en ook tonen, inclusief kinderen en relaties
+  - Dan kun je het hele model doorklikken. Vraag hoe dat netjes past, of dat defocus ook kan (A klapt weer in naar alleen een kleine A?)
+  - inklappen inclusief kinderen tonen (klein, maar zonder data)?
 
 25 react pagina's uitbreiden met:
 - (latere!) ongedaangemaaktheid van regs tonen
+- dit is een soort 'blik op de toekomst'
+
+30 Model uitbreiden met menselijke klassen
+
+40 3D weergave model en tijdslijnen :-)
 
 50 Autonumber Entiteit-IDs? Simpel maar wenselijk?
 
@@ -459,18 +494,19 @@ Deregister U5 and register U6 for entity A:
 62 pep inbouwen
 
 ## TO DO MATERIEEL = REDESIGN!
-1 In modellen de materiële tijd toevoegen = aanvang en einde, Standaard element hergebruiken? Maar is foreign key per representatie, dus voor elke representatie een aparte {REP}_Aanvang + {REP}_Einde
+1 In modellen de materiële tijd toevoegen = aanvang en einde
+- Voor elke representatie een aparte {REP}_Aanvang + {REP}_Einde tabel.
+- In de structs een standaard Aanvang en Einde plumbing struct, die zich in feite gedraagt als:
+  - een GE op de entiteit
+  - een _data element op een GE (todo, punt 2 eerst)
 
 2 Full handlers uitbreiden met meer dan één laag diepe relaties (vanwege bovenstaande mogelijke materiele 'mickey mouse oortjes' op entiteiten en gegevenselementen)
-
-3 Dan heeft het GE een drievoudige PFK:
-- `entiteit-id`
-- `{ent}_{GE}.rel-id`
-- `{ent}_{GE}_data.versie`
-
-4 model reengineeren met toch een tussentabel tussen Entiteit en GE, vanwege materieel, en ook vanwege betere correctiemogelijkheid
-
-5 hoe doe je dit API-technisch? Volg je het model strak, of plat je iets af?
-- dus maak je van aanvang of einde een sub-element, of zit het plat in een Ent/GE/Rel?
-- voordeel subelement is dat het duidelijker is dat je ook los kunt wijzigen of corrigeren
+- Dan heeft het GE een drievoudige PFK:
+  - `entiteit-id`
+  - `{ent}_{GE}.rel-id`
+  - `{ent}_{GE}_data.versie`
+- De splitsing van het gegevenselement in `{ent}_{GE}` en `{ent}_{GE}_data` is een vorm van plumbing.
+- De API blijft nog dezelfde, met toevoeging van aanvang en einde als optionele types onder elk materieel element.
+- Bij creatie worden de tabellen gesplitst gemaakt met indien materieel de aanvang en einde tabellen: `{ent}_{GE}_aanvang` en `{ent}_{GE}_einde`
+- deze gedragen zich dus als een _data tabel met een versie.
 

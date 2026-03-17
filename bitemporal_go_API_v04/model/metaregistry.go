@@ -10,12 +10,15 @@ var MetaRegistry = MetaRegistryType{
 		IsMaterieel: true,
 		Kleur:       "#bfdbfe",
 		// JSON veldnaam in REST requests
-		Veldnaam: "a",
-		Factory:  func() Representatie { return &Full_A{} },
+		Veldnaam:     "a",
+		Padnaam:      "as",
+		Factory:      func() Representatie { return &Full_A{} },
+		SliceFactory: func() any { return &[]Full_A{} },
 		// Database
-		Tabelnaam: "a",
-		IDKolom:   "id",
-		DBFactory: func() Representatie { return &A_basis{} },
+		Tabelnaam:      "a",
+		IDKolom:        "id",
+		DBFactory:      func() Representatie { return &A_basis{} },
+		DBSliceFactory: func() any { return &[]A_basis{} },
 		// Alleen voor gegevenselementen/relaties:
 		// die hebben een FK naar een of twee entiteiten
 		HeeftPFK:                  false,
@@ -38,12 +41,15 @@ var MetaRegistry = MetaRegistryType{
 		IsMaterieel: true,
 		Kleur:       "#fecaca",
 		// JSON veldnaam in REST requests
-		Veldnaam: "b",
-		Factory:  func() Representatie { return &Full_B{} },
+		Veldnaam:     "b",
+		Padnaam:      "bs",
+		Factory:      func() Representatie { return &Full_B{} },
+		SliceFactory: func() any { return &[]Full_B{} },
 		// Database
-		Tabelnaam: "b",
-		IDKolom:   "id",
-		DBFactory: func() Representatie { return &B_basis{} },
+		Tabelnaam:      "b",
+		IDKolom:        "id",
+		DBFactory:      func() Representatie { return &B_basis{} },
+		DBSliceFactory: func() any { return &[]B_basis{} },
 		// Alleen voor gegevenselementen/relaties:
 		// die hebben een FK naar een of twee entiteiten
 		HeeftPFK:                  false,
@@ -65,11 +71,13 @@ var MetaRegistry = MetaRegistryType{
 		Kleur:       "#ede9fe",
 		// JSON veldnaam in REST requests
 		Veldnaam: "rel_a_b",
+		Padnaam:  "rel_a_bs",
 		Factory:  func() Representatie { return &Rel_A_B{} },
 		// Database
-		Tabelnaam: "rel_a_b",
-		IDKolom:   "rel_id",
-		DBFactory: func() Representatie { return &Rel_A_B{} },
+		Tabelnaam:      "rel_a_b",
+		IDKolom:        "rel_id",
+		DBFactory:      func() Representatie { return &Rel_A_B{} },
+		DBSliceFactory: func() any { return &[]Rel_A_B{} },
 		// Alleen voor gegevenselementen/relaties:
 		// die hebben een FK naar een (of twee bij relaties) entiteiten
 		HeeftPFK:                  true,
@@ -87,11 +95,13 @@ var MetaRegistry = MetaRegistryType{
 		Kleur:       "#dbeafe",
 		// JSON veldnaam in REST requests
 		Veldnaam: "u",
+		Padnaam:  "a_us",
 		Factory:  func() Representatie { return &A_U{} },
 		// Database
-		Tabelnaam: "a_u",
-		IDKolom:   "rel_id",
-		DBFactory: func() Representatie { return &A_U{} },
+		Tabelnaam:      "a_u",
+		IDKolom:        "rel_id",
+		DBFactory:      func() Representatie { return &A_U{} },
+		DBSliceFactory: func() any { return &[]A_U{} },
 		// Alleen voor gegevenselementen/relaties:
 		// die hebben een FK naar een of twee entiteiten
 		HeeftPFK:                  true,
@@ -109,11 +119,13 @@ var MetaRegistry = MetaRegistryType{
 		Kleur:       "#c7f9cc",
 		// JSON veldnaam in REST requests
 		Veldnaam: "v",
+		Padnaam:  "a_vs",
 		Factory:  func() Representatie { return &A_V{} },
 		// Database
-		Tabelnaam: "a_v",
-		IDKolom:   "rel_id",
-		DBFactory: func() Representatie { return &A_V{} },
+		Tabelnaam:      "a_v",
+		IDKolom:        "rel_id",
+		DBFactory:      func() Representatie { return &A_V{} },
+		DBSliceFactory: func() any { return &[]A_V{} },
 		// Alleen voor gegevenselementen/relaties:
 		// die hebben een FK naar een of twee entiteiten
 		HeeftPFK:                  true,
@@ -131,11 +143,13 @@ var MetaRegistry = MetaRegistryType{
 		Kleur:       "#bbf7d0",
 		// JSON veldnaam in REST requests
 		Veldnaam: "w",
+		Padnaam:  "a_ws",
 		Factory:  func() Representatie { return &A_W{} },
 		// Database
-		Tabelnaam: "a_w",
-		IDKolom:   "rel_id",
-		DBFactory: func() Representatie { return &A_W{} },
+		Tabelnaam:      "a_w",
+		IDKolom:        "rel_id",
+		DBFactory:      func() Representatie { return &A_W{} },
+		DBSliceFactory: func() any { return &[]A_W{} },
 		// Alleen voor gegevenselementen/relaties:
 		// die hebben een FK naar een of twee entiteiten
 		HeeftPFK:                  true,
@@ -153,11 +167,13 @@ var MetaRegistry = MetaRegistryType{
 		Kleur:       "#fdba74",
 		// JSON veldnaam in REST requests
 		Veldnaam: "x",
+		Padnaam:  "b_xs",
 		Factory:  func() Representatie { return &B_X{} },
 		// Database
-		Tabelnaam: "b_x",
-		IDKolom:   "rel_id",
-		DBFactory: func() Representatie { return &B_X{} },
+		Tabelnaam:      "b_x",
+		IDKolom:        "rel_id",
+		DBFactory:      func() Representatie { return &B_X{} },
+		DBSliceFactory: func() any { return &[]B_X{} },
 		// Alleen voor gegevenselementen/relaties:
 		// die hebben een FK naar een of twee entiteiten
 		HeeftPFK:                  true,
@@ -175,11 +191,13 @@ var MetaRegistry = MetaRegistryType{
 		Kleur:       "#fde68a",
 		// JSON veldnaam in REST requests
 		Veldnaam: "y",
+		Padnaam:  "b_ys",
 		Factory:  func() Representatie { return &B_Y{} },
 		// Database
-		Tabelnaam: "b_y",
-		IDKolom:   "rel_id",
-		DBFactory: func() Representatie { return &B_Y{} },
+		Tabelnaam:      "b_y",
+		IDKolom:        "rel_id",
+		DBFactory:      func() Representatie { return &B_Y{} },
+		DBSliceFactory: func() any { return &[]B_Y{} },
 		// Alleen voor gegevenselementen/relaties:
 		// die hebben een FK naar een of twee entiteiten
 		HeeftPFK:                  true,

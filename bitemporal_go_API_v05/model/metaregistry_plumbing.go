@@ -41,10 +41,14 @@ type TypeMeta struct {
 	// ==== JSON ====
 	// Veldnaam is the JSON field name used in REST requests (bijv. "a", "b", "rel_a_b", "u").
 	Veldnaam string
+	// Padnaam is the URL path segment used in REST routes (bijv. "as", "bs", "rel_a_bs", "a_us").
+	Padnaam string
 	// Kleur is een optionele visualisatiekleur (bijv. "#eef6ff").
 	Kleur string
 	// Factory creates a new zero-value instance of the concrete Representatie struct.
 	Factory func() Representatie
+	// SliceFactory creates a pointer to a concrete slice for full/list queries, e.g. &[]Full_A{}.
+	SliceFactory func() any
 
 	// ==== Database (alle representaties) ====
 	// Tabelnaam is the database table name for the representatie type.
@@ -53,6 +57,8 @@ type TypeMeta struct {
 	IDKolom string
 	// De factory van de representatie struct die gebruikt wordt voor database operaties, zoals het aanmaken van tabellen.
 	DBFactory func() Representatie
+	// DBSliceFactory creates a pointer to a concrete slice for list queries, e.g. &[]A_basis{}.
+	DBSliceFactory func() any
 
 	// ==== Database (gegevenselementen/relaties) ====
 	// Of er een samengestelde sleutel is, bijv. van (EntiteitID, Rel_ID)
@@ -141,4 +147,18 @@ func (r MetaRegistryType) GetBovenliggendeRelatieMeta(childTypeName string) (Bov
 	}
 
 	return BovenliggendeRelatieMeta{}, false
+}
+
+// RelationNames returns the Bun relation field names for child representaties of an entity.
+func (m TypeMeta) RelationNames() []string {
+	if len(m.OnderliggendeGegevenselementen) == 0 {
+		return nil
+	}
+
+	namen := make([]string, 0, len(m.OnderliggendeGegevenselementen))
+	for _, rel := range m.OnderliggendeGegevenselementen {
+		namen = append(namen, rel.Rolnaam)
+	}
+
+	return namen
 }

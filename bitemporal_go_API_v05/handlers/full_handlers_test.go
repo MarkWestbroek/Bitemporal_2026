@@ -13,6 +13,21 @@ import (
 	"github.com/uptrace/bun/dialect/pgdialect"
 )
 
+type testFormeleRepresentatie struct {
+	ID     int
+	Opvoer *time.Time
+	Afvoer *time.Time
+}
+
+func (r *testFormeleRepresentatie) GetID() any               { return r.ID }
+func (r *testFormeleRepresentatie) Metatype() model.Metatype { return model.MetatypeEntiteit }
+func (r *testFormeleRepresentatie) ClearID()                 { r.ID = 0 }
+func (r *testFormeleRepresentatie) String() string           { return "testFormeleRepresentatie" }
+func (r *testFormeleRepresentatie) GetOpvoer() *time.Time    { return r.Opvoer }
+func (r *testFormeleRepresentatie) SetOpvoer(v *time.Time)   { r.Opvoer = v }
+func (r *testFormeleRepresentatie) GetAfvoer() *time.Time    { return r.Afvoer }
+func (r *testFormeleRepresentatie) SetAfvoer(v *time.Time)   { r.Afvoer = v }
+
 func TestZetAfgeleideFormeleTijdVoorRepresentatie_OpvoerBlijftGevuldOpPeilVoorLatereOngedaanmaking(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
@@ -38,11 +53,11 @@ func TestZetAfgeleideFormeleTijdVoorRepresentatie_OpvoerBlijftGevuldOpPeilVoorLa
 		WillReturnRows(sqlmock.NewRows([]string{"wijzigingstype", "registratie_tijdstip"}).
 			AddRow(string(model.WijzigingstypeOpvoer), opvoerTijdstip))
 
-	representatie := model.Full_A{ID: 1}
+	representatie := testFormeleRepresentatie{ID: 1}
 	err = zetAfgeleideFormeleTijdVoorRepresentatie(
 		ctx,
 		&representatie,
-		"A",
+		"TestEntiteit",
 		"1",
 		"",
 		"",
