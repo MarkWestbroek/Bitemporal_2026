@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"net/http"
+
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v05/handlers"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemporal_go_API_v05/model"
 	"github.com/gin-gonic/gin"
@@ -11,7 +13,30 @@ Add functional REST routes to the provided router,
 including routes for entities, relations and data elements,
 as well as bitemporal registration, correction and undoing routes.
 */
+// corsMiddleware voegt CORS-headers toe aan elke response.
+// Bij een preflight OPTIONS-request worden de extra Allow-headers
+// teruggegeven en wordt de keten afgebroken met 204 No Content.
+func corsMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "http://test1.pleio.local:8000")
+		if c.Request.Method == http.MethodOptions {
+			c.Header("Access-Control-Allow-Methods", "GET, OPTIONS")
+			c.Header("Access-Control-Allow-Headers", "Content-Type")
+			c.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+		c.Next()
+	}
+}
+
 func AddRoutes(router *gin.Engine) {
+	// CORS middleware – loopt voor alle routes, inclusief metaregistry en fullroutes
+	router.Use(corsMiddleware())
+
+	// Preflight-handler: vangt OPTIONS /*path op zodat Gin het request
+	// doorgeeft aan de middleware hierboven (en niet met 405 afwijst).
+	router.OPTIONS("/*path", func(c *gin.Context) {})
+
 	//Add Tests routes to router
 	router.GET("/tests", handlers.GetTests)
 	router.GET("/tests/:id", handlers.GetTest)
