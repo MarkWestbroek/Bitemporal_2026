@@ -76,6 +76,15 @@ func dropModelTables(ctx context.Context, db *bun.DB) error {
 				return fmt.Errorf("DBFactory ontbreekt voor type: %s", typeName)
 			}
 
+			if meta.Metatype == model.MetatypeEntiteit && meta.IsMaterieel {
+				for _, suffix := range []string{"aanvang", "einde"} {
+					tableName := fmt.Sprintf("%s_%s", meta.Tabelnaam, suffix)
+					if _, err := db.NewDropTable().Table(tableName).IfExists().Cascade().Exec(ctx); err != nil {
+						return fmt.Errorf("drop materiele plumbing tabel mislukt voor %s (%s): %w", typeName, tableName, err)
+					}
+				}
+			}
+
 			dbModel := meta.DBFactory()
 			_, err := db.NewDropTable().Model(dbModel).IfExists().Cascade().Exec(ctx)
 			if err != nil {
