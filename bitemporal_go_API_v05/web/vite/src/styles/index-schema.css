@@ -177,14 +177,20 @@ body {
         to { opacity: 0.45; }
       }
       .label-lg {
-        font-size: 15px;
+        font-size: 13px;
       }
       .label-left-lg {
         font-size: 18px;
       }
+      .reg-graph .label {
+        font-size: 20px;
+      }
+      .reg-graph .label-left-lg {
+        font-size: 27px;
+      }
       .row {
         display: grid;
-        grid-template-columns: minmax(460px, 1fr) minmax(660px, 1.35fr);
+        grid-template-columns: minmax(300px, 1fr) minmax(480px, 2fr);
         gap: 16px;
         margin-top: 16px;
       }

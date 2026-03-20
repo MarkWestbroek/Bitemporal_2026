@@ -76,6 +76,14 @@ const (
 	RelABSoortLTA RelABSoort = "LTA"
 )
 
+type ABCEnum string
+
+const (
+	OptieA ABCEnum = "Optie A"
+	OptieB ABCEnum = "Optie B"
+	OptieC ABCEnum = "Optie C"
+)
+
 // Relaties
 // Rel_A_B hoort primair bij A
 type Rel_A_B struct {
@@ -111,6 +119,10 @@ type A_V struct {
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk,autoincrement"`
 	ParentA       *A_basis   `json:"-" bun:"rel:belongs-to,join:a_id=id,on_delete:cascade"`
 	Ccc           string     `json:"ccc"`
+	Ddd           *string    `json:"ddd,omitempty"`
+	Eee           *string    `json:"eee,omitempty"`
+	Fff           float64    `json:"fff"`
+	Ggg           ABCEnum    `json:"ggg" schema:"enum=Optie A|Optie B|Optie C" schema_desc:"Test enumeratie"`
 	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
