@@ -139,7 +139,7 @@ var MetaRegistry = MetaRegistryType{
 		Typenaam:    "A_W",
 		Description: "Meervoudig gegevenselement van A met numerieke waarden.",
 		Metatype:    MetatypeGegevenselement,
-		IsMaterieel: false,
+		IsMaterieel: true,
 		Kleur:       "#bbf7d0",
 		// JSON veldnaam in REST requests
 		Veldnaam: "w",

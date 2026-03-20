@@ -88,7 +88,7 @@ const (
 // Rel_A_B hoort primair bij A
 type Rel_A_B struct {
 	bun.BaseModel `bun:"table:rel_a_b"`
-	A_ID          int        `json:"a_id" schema_desc:"ID van de A-entiteit waar deze relatie bij hoort"`
+	A_ID          int        `json:"a_id" bun:"a_id,pk" schema_desc:"ID van de A-entiteit waar deze relatie bij hoort"`
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk,autoincrement" schema_desc:"Relatieve ID van de relatie binnen A"`
 	ParentA       *A_basis   `json:"-" bun:"rel:belongs-to,join:a_id=id,on_delete:cascade"`
 	B_ID          int        `json:"b_id"`
@@ -138,6 +138,8 @@ type A_W struct {
 	Heel          int        `json:"heel"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
+	Aanvang       *Aanvang   `json:"aanvang,omitempty"`
+	Einde         *Einde     `json:"einde,omitempty"`
 }
 
 // B (1) - (1) X
@@ -215,20 +217,20 @@ func (b Full_B) GetAfvoer() *time.Time   { return b.Afvoer }
 func (b *Full_B) SetAfvoer(t *time.Time) { b.Afvoer = t }
 
 // Aanvang / Einde (materiële tijd) methoden voor materiële tijd intereface implementatie
-func (a A_basis) GetAanvang() *time.Time   { return a.Aanvang.Aanvang }
-func (a *A_basis) SetAanvang(t *time.Time) { a.Aanvang.Aanvang = t }
-func (a A_basis) GetEinde() *time.Time     { return a.Einde.Einde }
-func (a *A_basis) SetEinde(t *time.Time)   { a.Einde.Einde = t }
+func (a A_basis) GetAanvang() *Date   { return a.Aanvang.Datum }
+func (a *A_basis) SetAanvang(d *Date) { a.Aanvang.Datum = d }
+func (a A_basis) GetEinde() *Date     { return a.Einde.Datum }
+func (a *A_basis) SetEinde(d *Date)   { a.Einde.Datum = d }
 
-func (b B_basis) GetAanvang() *time.Time   { return b.Aanvang.Aanvang }
-func (b *B_basis) SetAanvang(t *time.Time) { b.Aanvang.Aanvang = t }
-func (b B_basis) GetEinde() *time.Time     { return b.Einde.Einde }
-func (b *B_basis) SetEinde(t *time.Time)   { b.Einde.Einde = t }
+func (b B_basis) GetAanvang() *Date   { return b.Aanvang.Datum }
+func (b *B_basis) SetAanvang(d *Date) { b.Aanvang.Datum = d }
+func (b B_basis) GetEinde() *Date     { return b.Einde.Datum }
+func (b *B_basis) SetEinde(d *Date)   { b.Einde.Datum = d }
 
-func (r Rel_A_B) GetAanvang() *time.Time   { return r.Aanvang.Aanvang }
-func (r *Rel_A_B) SetAanvang(t *time.Time) { r.Aanvang.Aanvang = t }
-func (r Rel_A_B) GetEinde() *time.Time     { return r.Einde.Einde }
-func (r *Rel_A_B) SetEinde(t *time.Time)   { r.Einde.Einde = t }
+func (r Rel_A_B) GetAanvang() *Date   { return r.Aanvang.Datum }
+func (r *Rel_A_B) SetAanvang(d *Date) { r.Aanvang.Datum = d }
+func (r Rel_A_B) GetEinde() *Date     { return r.Einde.Datum }
+func (r *Rel_A_B) SetEinde(d *Date)   { r.Einde.Datum = d }
 
 //TODO: als A_U, A_V, A_W, B_X, B_Y ook aanvang/einde krijgen, dan hier ook getters/setters toevoegen
 

@@ -445,6 +445,8 @@ Deregister U5 and register U6 for entity A:
 - in formulier: soort invoerveld en validatie volgt type
 - in formulier via metamap / schema api: enums als type
 - secondaire ID's in een relatie worden opgezocht uit de mogelijke seondaire entiteiten
+- reg vak alles iets kleiner
+  
 
 17 log alle requests en responses van /registratie/
 - tevens een view op registraties in react waarop je:
@@ -473,7 +475,6 @@ Deregister U5 and register U6 for entity A:
 - enkelvoudig meervoudig tonen (1 of *)
 - corrigeert registratie r ook een lijntje tekenen?
 - enkele view:
-  - reg vak alles iets kleiner
   - inhoudelijke info over wijzigingen
   - Klikken op gerelateerde record: record ophalen en ook tonen, inclusief kinderen en relaties
   - Dan kun je het hele model doorklikken. Vraag hoe dat netjes past, of dat defocus ook kan (A klapt weer in naar alleen een kleine A?)
@@ -495,12 +496,16 @@ Deregister U5 and register U6 for entity A:
 
 ## TO DO MATERIEEL = REDESIGN!
 1 In modellen de materiële tijd toevoegen = aanvang en einde
-- Voor elke representatie een aparte {REP}_Aanvang + {REP}_Einde tabel.
+- Voor elke representatie een aparte {REP}_Aanvang + {REP}_Einde tabel. (DONE)
 - In de structs een standaard Aanvang en Einde plumbing struct, die zich in feite gedraagt als:
-  - een GE op de entiteit
-  - een _data element op een GE (todo, punt 2 eerst)
+  - een GE op de entiteit (DONE in DB, PFK met 2 velden)
+  - een _data element op een GE (todo, punt 2 eerst) (DONE in DB: PFK met 3 velden)
 
-2 Full handlers uitbreiden met meer dan één laag diepe relaties (vanwege bovenstaande mogelijke materiele 'mickey mouse oortjes' op entiteiten en gegevenselementen)
+2 Aanvang en Einde op een entiteit via plumbing behandelen als een GE
+- bij opvoer, afvoer en correctie
+- ongedaanmaking moet misschien iets speciaals gebeuren in de queries
+
+3 Full handlers uitbreiden met meer dan één laag diepe relaties (vanwege bovenstaande mogelijke materiele 'mickey mouse oortjes' op entiteiten en gegevenselementen)
 - Dan heeft het GE een drievoudige PFK:
   - `entiteit-id`
   - `{ent}_{GE}.rel-id`

@@ -54,3 +54,30 @@ func RegisterRelativeIDTrigger(ctx context.Context, db *bun.DB, model interface{
 	_, err := db.ExecContext(ctx, sql)
 	return err
 }
+
+// RegisterRelativeIDTriggerComposite maakt een trigger aan voor relatieve autoincrement
+// met een samengestelde parent key (2 parent-kolommen).
+// Dit is nodig voor aanvang/einde plumbing-tabellen van gegevenselementen en relaties,
+// waar de versie relatief is aan het paar (entiteit_id, rel_id).
+func RegisterRelativeIDTriggerComposite(ctx context.Context, db *bun.DB,
+	tableName string, parentCol1 string, parentCol2 string, relativeCol string) error {
+
+	sql := fmt.Sprintf(`
+        CREATE OR REPLACE FUNCTION fn_rel_id_%[1]s() RETURNS TRIGGER AS $$
+        BEGIN
+            IF NEW."%[4]s" IS NULL OR NEW."%[4]s" = 0 THEN
+                SELECT COALESCE(MAX("%[4]s"), 0) + 1 INTO NEW."%[4]s"
+                FROM "%[1]s" WHERE "%[2]s" = NEW."%[2]s" AND "%[3]s" = NEW."%[3]s";
+            END IF;
+            RETURN NEW;
+        END; $$ LANGUAGE plpgsql;
+
+        DROP TRIGGER IF EXISTS trg_rel_id_%[1]s ON "%[1]s";
+        CREATE TRIGGER trg_rel_id_%[1]s
+        BEFORE INSERT ON "%[1]s"
+        FOR EACH ROW EXECUTE FUNCTION fn_rel_id_%[1]s();
+    `, tableName, parentCol1, parentCol2, relativeCol)
+
+	_, err := db.ExecContext(ctx, sql)
+	return err
+}

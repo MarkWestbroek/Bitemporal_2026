@@ -76,11 +76,21 @@ func dropModelTables(ctx context.Context, db *bun.DB) error {
 				return fmt.Errorf("DBFactory ontbreekt voor type: %s", typeName)
 			}
 
-			if meta.Metatype == model.MetatypeEntiteit && meta.IsMaterieel {
-				for _, suffix := range []string{"aanvang", "einde"} {
-					tableName := fmt.Sprintf("%s_%s", meta.Tabelnaam, suffix)
-					if _, err := db.NewDropTable().Table(tableName).IfExists().Cascade().Exec(ctx); err != nil {
-						return fmt.Errorf("drop materiele plumbing tabel mislukt voor %s (%s): %w", typeName, tableName, err)
+			if meta.IsMaterieel {
+				if meta.Metatype == model.MetatypeEntiteit {
+					for _, suffix := range []string{"aanvang", "einde"} {
+						tableName := fmt.Sprintf("%s_%s", meta.Tabelnaam, suffix)
+						if _, err := db.NewDropTable().Table(tableName).IfExists().Cascade().Exec(ctx); err != nil {
+							return fmt.Errorf("drop materiele plumbing tabel mislukt voor %s (%s): %w", typeName, tableName, err)
+						}
+					}
+				}
+				if (meta.Metatype == model.MetatypeGegevenselement || meta.Metatype == model.MetatypeRelatie) && meta.HeeftPFK {
+					for _, suffix := range []string{"aanvang", "einde"} {
+						tableName := fmt.Sprintf("%s_%s", meta.Tabelnaam, suffix)
+						if _, err := db.NewDropTable().Table(tableName).IfExists().Cascade().Exec(ctx); err != nil {
+							return fmt.Errorf("drop materiele plumbing tabel mislukt voor %s (%s): %w", typeName, tableName, err)
+						}
 					}
 				}
 			}

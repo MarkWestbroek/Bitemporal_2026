@@ -51,9 +51,21 @@ func createModelTables(ctx context.Context, db *bun.DB) error {
 				return fmt.Errorf("create table mislukt voor %s (%s): %w", typeName, meta.Tabelnaam, err)
 			}
 
-			if meta.Metatype == model.MetatypeEntiteit && meta.IsMaterieel {
-				if err := createMaterielePlumbingTablesForEntiteit(ctx, db, meta); err != nil {
-					return fmt.Errorf("create materiele plumbing tabellen mislukt voor %s (%s): %w", typeName, meta.Tabelnaam, err)
+			if meta.IsMaterieel {
+				if meta.Metatype == model.MetatypeEntiteit {
+					if err := createMaterielePlumbingTablesForEntiteit(ctx, db, meta); err != nil {
+						return fmt.Errorf("create materiele plumbing tabellen mislukt voor %s (%s): %w", typeName, meta.Tabelnaam, err)
+					}
+				}
+				if (meta.Metatype == model.MetatypeGegevenselement || meta.Metatype == model.MetatypeRelatie) && meta.HeeftPFK {
+					// Zorg dat de tabel een samengestelde PK heeft (entiteit_id + rel_id).
+					// Nodig als de tabel al bestaat met een enkelvoudige PK (migratie-scenario).
+					if err := ensureCompositePKForGEofRelatie(ctx, db, meta); err != nil {
+						return fmt.Errorf("PK-fix mislukt voor %s (%s): %w", typeName, meta.Tabelnaam, err)
+					}
+					if err := createMaterielePlumbingTablesForGEofRelatie(ctx, db, meta); err != nil {
+						return fmt.Errorf("create materiele plumbing tabellen mislukt voor %s (%s): %w", typeName, meta.Tabelnaam, err)
+					}
 				}
 			}
 
@@ -79,8 +91,8 @@ func createMaterielePlumbingTablesForEntiteit(ctx context.Context, db *bun.DB, e
 		suffix    string
 		waardeCol string
 	}{
-		{suffix: "aanvang", waardeCol: "aanvang"},
-		{suffix: "einde", waardeCol: "einde"},
+		{suffix: "aanvang", waardeCol: "datum"},
+		{suffix: "einde", waardeCol: "datum"},
 	} {
 		if err := createMaterielePlumbingTable(ctx, db, entiteitMeta, spec.suffix, spec.waardeCol); err != nil {
 			return err
@@ -109,7 +121,7 @@ func createMaterielePlumbingTable(ctx context.Context, db *bun.DB, parentMeta mo
 CREATE TABLE IF NOT EXISTS "%[1]s" (
     "%[2]s" %[3]s NOT NULL,
     "versie" BIGINT NOT NULL,
-    "%[4]s" timestamptz NULL,
+    "%[4]s" date NULL,
     "opvoer" timestamptz NULL,
     "afvoer" timestamptz NULL,
     PRIMARY KEY ("%[2]s", "versie"),
@@ -121,6 +133,114 @@ CREATE TABLE IF NOT EXISTS "%[1]s" (
 	}
 
 	if err := RegisterRelativeIDTrigger(ctx, db, nil, tableName, parentIDCol, "versie"); err != nil {
+		return fmt.Errorf("kon trigger voor relatieve versie niet aanmaken voor %s: %w", tableName, err)
+	}
+
+	return nil
+}
+
+// createMaterielePlumbingTablesForGEofRelatie maakt aanvang- en eindetabellen aan
+// voor een materieel gegevenselement of een materiële relatie.
+// De PFK bestaat uit 3 velden: entiteit_id, rel_id, versie.
+// ensureCompositePKForGEofRelatie zorgt idempotent dat de PK van een GE- of relatie-tabel
+// uit BEIDE kolommen (entiteit_id, rel_id) bestaat. Als de tabel al bestaat met alleen rel_id
+// als PK (bijv. na een schema-wijziging), wordt de PK opnieuw aangemaakt.
+func ensureCompositePKForGEofRelatie(ctx context.Context, db *bun.DB, meta model.TypeMeta) error {
+	tableName := strings.TrimSpace(meta.Tabelnaam)
+	entiteitIDCol := strings.TrimSpace(meta.EntiteitIDKolom)
+
+	sql := fmt.Sprintf(`
+DO $$
+DECLARE
+    pk_has_entiteit_col INT;
+    constraint_name TEXT;
+BEGIN
+    SELECT COUNT(*) INTO pk_has_entiteit_col
+    FROM pg_index i
+    JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+    WHERE i.indrelid = '%[1]s'::regclass
+      AND i.indisprimary
+      AND a.attname = '%[2]s';
+
+    IF pk_has_entiteit_col = 0 THEN
+        SELECT c.conname INTO constraint_name
+        FROM pg_constraint c
+        WHERE c.conrelid = '%[1]s'::regclass AND c.contype = 'p';
+
+        EXECUTE format('ALTER TABLE "%[1]s" DROP CONSTRAINT %%I', constraint_name);
+        ALTER TABLE "%[1]s" ADD PRIMARY KEY ("%[2]s", "%[3]s");
+    END IF;
+END $$;
+`, tableName, entiteitIDCol, strings.TrimSpace(meta.IDKolom))
+
+	_, err := db.ExecContext(ctx, sql)
+	return err
+}
+
+func createMaterielePlumbingTablesForGEofRelatie(ctx context.Context, db *bun.DB, geMeta model.TypeMeta) error {
+	for _, spec := range []struct {
+		suffix    string
+		waardeCol string
+	}{
+		{suffix: "aanvang", waardeCol: "datum"},
+		{suffix: "einde", waardeCol: "datum"},
+	} {
+		if err := createMaterielePlumbingTableForGEofRelatie(ctx, db, geMeta, spec.suffix, spec.waardeCol); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func createMaterielePlumbingTableForGEofRelatie(ctx context.Context, db *bun.DB, parentMeta model.TypeMeta, tableSuffix string, waardeKolom string) error {
+	parentTable := strings.TrimSpace(parentMeta.Tabelnaam)
+	entiteitIDCol := strings.TrimSpace(parentMeta.EntiteitIDKolom)
+	relIDCol := strings.TrimSpace(parentMeta.IDKolom)
+	if parentTable == "" || entiteitIDCol == "" || relIDCol == "" {
+		return fmt.Errorf("onvolledige metadata voor parent type %s: tabelnaam=%q entiteitidkolom=%q idkolom=%q",
+			parentMeta.Typenaam, parentMeta.Tabelnaam, parentMeta.EntiteitIDKolom, parentMeta.IDKolom)
+	}
+
+	entiteitIDType, err := resolveKolomType(ctx, db, parentTable, entiteitIDCol)
+	if err != nil {
+		return fmt.Errorf("kon kolomtype niet bepalen voor %s.%s: %w", parentTable, entiteitIDCol, err)
+	}
+
+	relIDType, err := resolveKolomType(ctx, db, parentTable, relIDCol)
+	if err != nil {
+		return fmt.Errorf("kon kolomtype niet bepalen voor %s.%s: %w", parentTable, relIDCol, err)
+	}
+
+	tableName := fmt.Sprintf("%s_%s", parentTable, tableSuffix)
+	fkName := fmt.Sprintf("fk_%s_%s_%s", tableName, entiteitIDCol, relIDCol)
+
+	ddl := fmt.Sprintf(`
+CREATE TABLE IF NOT EXISTS "%[1]s" (
+    "%[2]s" %[3]s NOT NULL,
+    "%[4]s" %[5]s NOT NULL,
+    "versie" BIGINT NOT NULL,
+    "%[6]s" date NULL,
+    "opvoer" timestamptz NULL,
+    "afvoer" timestamptz NULL,
+    PRIMARY KEY ("%[2]s", "%[4]s", "versie"),
+    CONSTRAINT "%[7]s" FOREIGN KEY ("%[2]s", "%[4]s") REFERENCES "%[8]s" ("%[2]s", "%[4]s") ON DELETE CASCADE
+);`,
+		tableName,      // 1
+		entiteitIDCol,  // 2
+		entiteitIDType, // 3
+		relIDCol,       // 4
+		relIDType,      // 5
+		waardeKolom,    // 6
+		fkName,         // 7
+		parentTable,    // 8
+	)
+
+	if _, err := db.ExecContext(ctx, ddl); err != nil {
+		return fmt.Errorf("create table mislukt voor %s: %w", tableName, err)
+	}
+
+	// versie is relatief aan het paar (entiteit_id, rel_id)
+	if err := RegisterRelativeIDTriggerComposite(ctx, db, tableName, entiteitIDCol, relIDCol, "versie"); err != nil {
 		return fmt.Errorf("kon trigger voor relatieve versie niet aanmaken voor %s: %w", tableName, err)
 	}
 

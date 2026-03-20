@@ -59,12 +59,12 @@ type HeeftOpvoerAfvoer interface {
 	SetAfvoer(*time.Time)
 }
 
-// HeeftAanvangEinde beschrijft representaties met aanvang/einde tijdstippen.
+// HeeftAanvangEinde beschrijft representaties met aanvang/einde datums.
 type HeeftAanvangEinde interface {
-	GetAanvang() *time.Time
-	SetAanvang(*time.Time)
-	GetEinde() *time.Time
-	SetEinde(*time.Time)
+	GetAanvang() *Date
+	SetAanvang(*Date)
+	GetEinde() *Date
+	SetEinde(*Date)
 }
 
 /*
@@ -79,17 +79,17 @@ type HeeftAanvangEinde interface {
 		- Aanvang en einde zijn dus zelf weer materiele elementen
 */
 type Aanvang struct {
-	Entiteit_ID        int        `json:"entiteit_id"`
-	Gegevenselement_ID int        `json:"gegevenselement_id"`
-	Aanvang            *time.Time `json:"aanvang,omitempty"`
+	Entiteit_ID        int        `json:"entiteit_id,omitempty"`
+	Gegevenselement_ID int        `json:"gegevenselement_id,omitempty"`
+	Datum              *Date      `json:"datum" bun:"datum,type:date"`
 	Opvoer             *time.Time `json:"opvoer,omitempty"`
 	Afvoer             *time.Time `json:"afvoer,omitempty"`
 }
 
 type Einde struct {
-	Entiteit_ID        int        `json:"entiteit_id"`
-	Gegevenselement_ID int        `json:"gegevenselement_id"`
-	Einde              *time.Time `json:"einde,omitempty"`
+	Entiteit_ID        int        `json:"entiteit_id,omitempty"`
+	Gegevenselement_ID int        `json:"gegevenselement_id,omitempty"`
+	Datum              *Date      `json:"datum" bun:"datum,type:date"`
 	Opvoer             *time.Time `json:"opvoer,omitempty"`
 	Afvoer             *time.Time `json:"afvoer,omitempty"`
 }
