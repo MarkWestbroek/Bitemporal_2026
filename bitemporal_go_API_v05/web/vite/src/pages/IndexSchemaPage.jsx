@@ -361,8 +361,29 @@ export default function IndexSchemaPage() {
             return 3;
           };
 
-          return [...childGroups].sort((a, b) => rank(a) - rank(b));
-        }, [childGroups]);
+          // Materiële tijd: filter aanvang/einde plumbing-types uit de reguliere weergave.
+          // Deze worden niet als GE-kaarten getoond, maar als "oortjes" boven de entiteitskaart.
+          // Herkenning: plumbing-types hebben een bovenliggendTypenaam in de schema-metadata.
+          return [...childGroups]
+            .filter((group) => !typeMetaByTypenaam[group.doeltype]?.bovenliggendTypenaam)
+            .sort((a, b) => rank(a) - rank(b));
+        }, [childGroups, typeMetaByTypenaam]);
+
+        // Materiële "oortjes": de actieve aanvang- en einddatum voor de geselecteerde entiteit.
+        // Actief = het item zonder afvoer (er is maximaal één actief per entiteit, want enkelvoudig).
+        // Geeft item + group terug zodat de oortjes klikbaar zijn als GE (selecteerRep opent bewerkformulier).
+        const entiteitOortjes = useMemo(() => {
+          if (!selectedA || !selectedEntiteitMeta?.isMaterieel) return { aanvang: null, einde: null };
+          const aanvangGroep = childGroups.find((g) => g.doeltype?.endsWith("_Aanvang") && typeMetaByTypenaam[g.doeltype]?.bovenliggendTypenaam);
+          const eindeGroep = childGroups.find((g) => g.doeltype?.endsWith("_Einde") && typeMetaByTypenaam[g.doeltype]?.bovenliggendTypenaam);
+          const actiefItem = (items) => safeArray(items).find((item) => !item.afvoer) || null;
+          const aanvangItem = actiefItem(aanvangGroep?.items);
+          const eindeItem = actiefItem(eindeGroep?.items);
+          return {
+            aanvang: aanvangItem ? { item: aanvangItem, group: aanvangGroep, datum: aanvangItem.datum } : null,
+            einde: eindeItem ? { item: eindeItem, group: eindeGroep, datum: eindeItem.datum } : null,
+          };
+        }, [selectedA, selectedEntiteitMeta, childGroups, typeMetaByTypenaam]);
 
         const gegevenselementGroepOpties = useMemo(() => {
           return childGroupsGesorteerd
@@ -1907,6 +1928,7 @@ export default function IndexSchemaPage() {
                     entiteitType={entiteitType}
                     centraleEntiteitLabelStyle={centraleEntiteitLabelStyle}
                     relatieNodesVoorGrafiek={relatieNodesVoorGrafiek}
+                    entiteitOortjes={entiteitOortjes}
                   />
 
                   {actieResultaat && !geselecteerdeRep && (
@@ -1920,7 +1942,7 @@ export default function IndexSchemaPage() {
             </div>
 
             <div className="row" style={{ gridTemplateColumns: '1fr 1fr' }}>
-              {childGroups.length === 0 && (
+              {childGroupsGesorteerd.length === 0 && (
                 <div className="card">
                   <h3>Gegevenselement-details</h3>
                   <ul>
@@ -2102,7 +2124,9 @@ export default function IndexSchemaPage() {
                     }}
                   >
                     <span className="action-section-title">
-                      <span>{geselecteerdeRep.group.doeltype} - rel_id={geselecteerdeRep.item.rel_id ?? geselecteerdeRep.item.id ?? '?'}</span>
+                      {/* Titel toont het dynamische idKolom (bijv. "versie" voor plumbing types, "rel_id" voor reguliere GE's).
+                          De waarde wordt opgezocht via het JSON-veldnaam dat door de schema API vertaald is via jsonNaamVoorBunKolom. */}
+                      <span>{geselecteerdeRep.group.doeltype} - {geselecteerdeRep.group.typeMeta?.idKolom || 'rel_id'}={geselecteerdeRep.item[geselecteerdeRep.group.typeMeta?.idKolom] ?? geselecteerdeRep.item.rel_id ?? geselecteerdeRep.item.id ?? '?'}</span>
                       <ActionTooltip text={String(geselecteerdeRep?.group?.typeMeta?.description || "")} placement="below" />
                     </span>
                     <button

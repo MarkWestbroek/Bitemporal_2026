@@ -79,6 +79,10 @@ type TypeMeta struct {
 	// bij opvoer van een opvolgend gegevenselement/relatie
 	Momentvoorkomen Momentvoorkomen // enkelvoudig of meervoudig = het voorkomen op enig moment in de tijd
 
+	// BovenliggendTypenaam is voor plumbing GE-types die niet via OnderliggendeGegevenselementen
+	// te vinden zijn (bijv. A_Aanvang, A_Einde). Geeft de naam van de bovenliggende entiteit (bijv. "A").
+	BovenliggendTypenaam string
+
 	// ==== Alleen voor entiteiten (of misschien toch ook voor GEn?)====
 	// OnderliggendeGegevenselementen applies to entiteiten; empty for gegevenselementen/relaties.
 	OnderliggendeGegevenselementen []OnderliggendGegevenselement

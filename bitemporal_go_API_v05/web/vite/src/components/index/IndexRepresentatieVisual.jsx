@@ -1,3 +1,32 @@
+/**
+ * Formatteert een datum-string naar verkorte weergave: d/m/jj (bijv. "1/1/20").
+ * Gebruikt voor de materiële-tijd "oortjes" boven entiteitskaarten.
+ */
+function korteDatumWeergave(datumStr) {
+  if (!datumStr) return null;
+  try {
+    const d = new Date(datumStr);
+    if (isNaN(d.getTime())) return null;
+    const dag = d.getDate();
+    const maand = d.getMonth() + 1;
+    const jaar = String(d.getFullYear()).slice(-2);
+    return `${dag}/${maand}/${jaar}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * SVG-pad voor een oortje-tab: afgeronde bovenkant, open onderkant.
+ * Door het pad vóór de entity rect te tekenen bedekt die de onderrand automatisch (kaartlip-effect).
+ */
+function oortjePad(x, y, w, h, r = 7) {
+  return `M ${x},${y + h} L ${x},${y + r} Q ${x},${y} ${x + r},${y} L ${x + w - r},${y} Q ${x + w},${y} ${x + w},${y + r} L ${x + w},${y + h}`;
+}
+
+// Stijl voor de materiële-tijd oortjes: handschrift-achtig lettertype voor visueel onderscheid.
+const oortjeStyle = { fontSize: "11px", fontFamily: "'Caveat', cursive", fill: "#334155", fontWeight: 700 };
+
 export default function IndexRepresentatieVisual({
   svgHoogte,
   geGroepenMetLayout,
@@ -17,6 +46,7 @@ export default function IndexRepresentatieVisual({
   entiteitType,
   centraleEntiteitLabelStyle,
   relatieNodesVoorGrafiek,
+  entiteitOortjes,
 }) {
   return (
     <svg className="graph" viewBox={`0 0 900 ${svgHoogte}`} preserveAspectRatio="xMidYMid meet">
@@ -78,21 +108,51 @@ export default function IndexRepresentatieVisual({
       {(() => {
         const entOpvoerRegID = selectedA.opvoer ? registratieIDUitOpvoerTijdstip(selectedA.opvoer) : 0;
         const entOpvoerKlikbaar = entOpvoerRegID > 0;
+        // Oortje-dimensies: tab boven de entiteitskaart (entity rect y=40), onderkant overlapt zodat entity die bedekt.
+        const OY = 17, OW = 76, OH = 28, OR = 7;
+        const aanvangOortje = entiteitOortjes?.aanvang;
+        const eindeOortje = entiteitOortjes?.einde;
+        const aanvangTekst = korteDatumWeergave(aanvangOortje?.datum);
+        const eindeTekst = korteDatumWeergave(eindeOortje?.datum);
+        const entFill = selectedEntiteitMeta?.kleur || "#dbeafe";
         return (
-          <g className="actionable-svg-target" onClick={openEntiteitActieBox} style={{ cursor: "pointer" }}>
-            {entiteitActieOpen && <rect x="327" y="37" rx="12" width="246" height="86" style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2.5, strokeDasharray: "5,3" }} />}
-            <rect className="node" x="330" y="40" rx="10" width="240" height="80" style={{ fill: selectedEntiteitMeta?.kleur || "#dbeafe", strokeWidth: 2.8 }} />
-            <text
-              className={`label label-lg${entOpvoerKlikbaar ? " opv-link" : ""}`}
-              x="562" y="56" textAnchor="end"
-              onClick={entOpvoerKlikbaar ? (event) => navigeerNaarRegistratieVanOpvoer(event, selectedA.opvoer) : undefined}
-            >opv: {selectedA.opvoer ? microsecondeIntVanTijdstip(selectedA.opvoer) : "-"}</text>
-            <text className="label" x="345" y="74">
-              <tspan style={centraleEntiteitLabelStyle}>{entiteitType || "E"}</tspan>
-              {" id="}
-              <tspan style={centraleEntiteitLabelStyle}>{selectedA.id}</tspan>
-            </text>
-          </g>
+          <>
+            {/* Materiële-tijd oortjes: getekend VOOR de entity rect zodat die hun onderrand bedekt (kaartlip-effect).
+                Klikbaar als GE: selecteerRep opent het bewerkformulier net als gewone gegevenselementen. */}
+            {aanvangTekst && (
+              <g className="actionable-svg-target" onClick={() => selecteerRep(aanvangOortje.item, aanvangOortje.group)} style={{ cursor: "pointer" }}>
+                {geselecteerdeRep?.item === aanvangOortje.item && (
+                  <rect x="334" y={OY - 4} rx={OR + 2} width={OW + 6} height={OH + 4} style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2, strokeDasharray: "4,3" }} />
+                )}
+                <path d={oortjePad(337, OY, OW, OH, OR)} style={{ fill: entFill, stroke: "#334155", strokeWidth: 1.2 }} />
+                <text x={375} y={OY + OH - 10} textAnchor="middle" style={oortjeStyle}>{aanvangTekst}</text>
+              </g>
+            )}
+            {eindeTekst && (
+              <g className="actionable-svg-target" onClick={() => selecteerRep(eindeOortje.item, eindeOortje.group)} style={{ cursor: "pointer" }}>
+                {geselecteerdeRep?.item === eindeOortje.item && (
+                  <rect x="487" y={OY - 4} rx={OR + 2} width={OW + 6} height={OH + 4} style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2, strokeDasharray: "4,3" }} />
+                )}
+                <path d={oortjePad(490, OY, OW, OH, OR)} style={{ fill: entFill, stroke: "#334155", strokeWidth: 1.2 }} />
+                <text x={528} y={OY + OH - 10} textAnchor="middle" style={oortjeStyle}>{eindeTekst}</text>
+              </g>
+            )}
+            {/* Entiteitskaart: getekend NA de oortjes — bedekt hun onderrand voor het kaartlip-effect. */}
+            <g className="actionable-svg-target" onClick={openEntiteitActieBox} style={{ cursor: "pointer" }}>
+              {entiteitActieOpen && <rect x="327" y="37" rx="12" width="246" height="86" style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2.5, strokeDasharray: "5,3" }} />}
+              <rect className="node" x="330" y="40" rx="10" width="240" height="80" style={{ fill: entFill, strokeWidth: 2.8 }} />
+              <text
+                className={`label label-lg${entOpvoerKlikbaar ? " opv-link" : ""}`}
+                x="562" y="56" textAnchor="end"
+                onClick={entOpvoerKlikbaar ? (event) => navigeerNaarRegistratieVanOpvoer(event, selectedA.opvoer) : undefined}
+              >opv: {selectedA.opvoer ? microsecondeIntVanTijdstip(selectedA.opvoer) : "-"}</text>
+              <text className="label" x="345" y="74">
+                <tspan style={centraleEntiteitLabelStyle}>{entiteitType || "E"}</tspan>
+                {" id="}
+                <tspan style={centraleEntiteitLabelStyle}>{selectedA.id}</tspan>
+              </text>
+            </g>
+          </>
         );
       })()}
 

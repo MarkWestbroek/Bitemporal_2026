@@ -53,10 +53,10 @@ Deze structuren worden gebruikt voor zowel de database als de basis REST interac
 type A_basis struct {
 	bun.BaseModel `bun:"table:a"`
 	ID            int        `json:"id" bun:"id,pk"`
-	Opvoer        *time.Time `json:"opvoer,omitempty"`  // afgeleid van registratie tijdstip opvoer
-	Afvoer        *time.Time `json:"afvoer,omitempty"`  // afgeleid van registratie tijdstip afvoer
-	Aanvang       *Aanvang   `json:"aanvang,omitempty"` // A_Aanvang in de DB, maar in de code via generieke routines
-	Einde         *Einde     `json:"einde,omitempty"`   // A_Einde in de DB, maar in de code via generieke routines
+	Opvoer        *time.Time `json:"opvoer,omitempty"`          // afgeleid van registratie tijdstip opvoer
+	Afvoer        *time.Time `json:"afvoer,omitempty"`          // afgeleid van registratie tijdstip afvoer
+	Aanvang       *Aanvang   `json:"aanvang,omitempty" bun:"-"` // Materiële tijd: ingevuld door de applicatie, niet door bun. bun:"-" voorkomt dat bun dit als DB-kolom probeert te SELECTen.
+	Einde         *Einde     `json:"einde,omitempty" bun:"-"`   // Materiële tijd: idem, apart opgeslagen in plumbing-tabel a_einde.
 }
 
 type B_basis struct {
@@ -64,8 +64,8 @@ type B_basis struct {
 	ID            int        `json:"id" bun:"id,pk"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
-	Aanvang       *Aanvang   `json:"aanvang,omitempty"`
-	Einde         *Einde     `json:"einde,omitempty"`
+	Aanvang       *Aanvang   `json:"aanvang,omitempty" bun:"-"` // Materiële tijd: bun:"-" voorkomt SELECT als DB-kolom, apart opgeslagen in b_aanvang.
+	Einde         *Einde     `json:"einde,omitempty" bun:"-"`   // Materiële tijd: idem, apart opgeslagen in b_einde.
 }
 
 type RelABSoort string
@@ -95,8 +95,8 @@ type Rel_A_B struct {
 	Soort         RelABSoort `json:"soort" schema:"enum=LTT|LAT|LTA" schema_desc:"Soort relatie tussen A en B"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
-	Aanvang       *Aanvang   `json:"aanvang,omitempty"`
-	Einde         *Einde     `json:"einde,omitempty"`
+	Aanvang       *Aanvang   `json:"aanvang,omitempty" bun:"-"` // Materiële tijd: bun:"-" voorkomt SELECT als DB-kolom.
+	Einde         *Einde     `json:"einde,omitempty" bun:"-"`   // Materiële tijd: idem.
 }
 
 // Gegevenselementen
@@ -138,8 +138,8 @@ type A_W struct {
 	Heel          int        `json:"heel"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
-	Aanvang       *Aanvang   `json:"aanvang,omitempty"`
-	Einde         *Einde     `json:"einde,omitempty"`
+	Aanvang       *Aanvang   `json:"aanvang,omitempty" bun:"-"` // Materiële tijd: bun:"-" voorkomt SELECT als DB-kolom.
+	Einde         *Einde     `json:"einde,omitempty" bun:"-"`   // Materiële tijd: idem.
 }
 
 // B (1) - (1) X

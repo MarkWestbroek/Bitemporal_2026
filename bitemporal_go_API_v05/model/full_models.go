@@ -54,6 +54,22 @@ func (a *Full_A) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentat
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "Rel_A_B", Representatie: &a.RelABs[i]})
 	}
 
+	// Materiële tijdlijn: aanvang/einde als onderliggende representaties meegeven,
+	// zodat ze beschikbaar zijn voor de generieke opvoer/afvoer-handlers.
+	for i := range a.Aanvangs {
+		if a.Aanvangs[i].A_ID == 0 {
+			a.Aanvangs[i].A_ID = a.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_Aanvang", Representatie: &a.Aanvangs[i]})
+	}
+
+	for i := range a.Eindes {
+		if a.Eindes[i].A_ID == 0 {
+			a.Eindes[i].A_ID = a.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_Einde", Representatie: &a.Eindes[i]})
+	}
+
 	return result
 }
 
@@ -75,6 +91,21 @@ func (b *Full_B) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentat
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_Y", Representatie: &b.Ys[i]})
 	}
 
+	// Materiële tijdlijn (zie toelichting bij Full_A)
+	for i := range b.Aanvangs {
+		if b.Aanvangs[i].B_ID == 0 {
+			b.Aanvangs[i].B_ID = b.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_Aanvang", Representatie: &b.Aanvangs[i]})
+	}
+
+	for i := range b.Eindes {
+		if b.Eindes[i].B_ID == 0 {
+			b.Eindes[i].B_ID = b.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_Einde", Representatie: &b.Eindes[i]})
+	}
+
 	return result
 }
 
@@ -84,8 +115,6 @@ type Full_A struct {
 	ID            int        `json:"id" bun:"id,pk"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"` // afgeleid van registratie tijdstip opvoer
 	Afvoer        *time.Time `json:"afvoer,omitempty"` // afgeleid van registratie tijdstip afvoer
-	//Aanvang *time.Time `json:"aanvang,omitempty"` // afgeleid van A_Aanvang
-	//Einde   *time.Time `json:"einde,omitempty"`   // afgeleid van A_Einde
 
 	// De U's behorende bij A, 1-1 op enig moment (enkelvoudig: todo tag)
 	Us []A_U `bun:"rel:has-many,join:id=a_id" json:"us,omitempty"`
@@ -104,6 +133,13 @@ type Full_A struct {
 
 	//Relaties Rel_AB's bij A (meervoudig op enig moment)
 	RelABs []Rel_A_B `bun:"rel:has-many,join:id=a_id" json:"rel_abs,omitempty"`
+
+	// Materiële tijdlijn: aanvang en einde als plumbing-relaties.
+	// Gedragen zich als enkelvoudige gegevenselementen (maximaal één actief per entiteit).
+	// De join is id=id omdat de FK-kolom in a_aanvang/a_einde ook "id" heet (verwijst naar a.id).
+	// Zie materiele_tijd.md voor een volledige uitleg.
+	Aanvangs []A_Aanvang `bun:"rel:has-many,join:id=id" json:"a_aanvangs,omitempty"`
+	Eindes   []A_Einde   `bun:"rel:has-many,join:id=id" json:"a_eindes,omitempty"`
 }
 
 // Full_B includes all fields of B and its related entities (like Xs)
@@ -112,11 +148,14 @@ type Full_B struct {
 	ID            int        `json:"id" bun:"id,pk"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"` // afgeleid van registratie tijdstip opvoer
 	Afvoer        *time.Time `json:"afvoer,omitempty"` // afgeleid van registratie tijdstip afvoer
-	//Aanvang *time.Time `json:"aanvang,omitempty"` // afgeleid van A_Aanvang
-	//Einde   *time.Time `json:"einde,omitempty"`   // afgeleid van A_Einde
 
 	// De X's behorende bij B, 1-1 op enig moment (enkelvoudig: todo tag)
 	Xs []B_X `bun:"rel:has-many,join:id=b_id" json:"xs,omitempty"`
 	// De Y's behorende bij B, 1-1 op enig moment (enkelvoudig: todo tag)
 	Ys []B_Y `bun:"rel:has-many,join:id=b_id" json:"ys,omitempty"`
+
+	// Materiële tijdlijn: aanvang en einde als plumbing-relaties.
+	// Zie uitleg bij Full_A hierboven en materiele_tijd.md.
+	Aanvangs []B_Aanvang `bun:"rel:has-many,join:id=id" json:"b_aanvangs,omitempty"`
+	Eindes   []B_Einde   `bun:"rel:has-many,join:id=id" json:"b_eindes,omitempty"`
 }

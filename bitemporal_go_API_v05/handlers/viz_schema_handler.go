@@ -27,6 +27,7 @@ type vizSchemaTypeDTO struct {
 	Typenaam                  string              `json:"typenaam"`
 	Description               string              `json:"description,omitempty"`
 	Metatype                  model.Metatype      `json:"metatype"`
+	IsMaterieel               bool                `json:"isMaterieel,omitempty"` // of dit type een materiële tijdlijn heeft
 	Kleur                     string              `json:"kleur,omitempty"`
 	Veldnaam                  string              `json:"veldnaam"`
 	Velden                    []vizSchemaFieldDTO `json:"velden,omitempty"`
@@ -36,6 +37,7 @@ type vizSchemaTypeDTO struct {
 	HeeftPFK                  bool                `json:"heeftPFK"`
 	EntiteitIDKolom           string              `json:"entiteitIDKolom,omitempty"`
 	SecondaireEntiteitIDKolom string              `json:"secondaireEntiteitIDKolom,omitempty"`
+	BovenliggendTypenaam      string              `json:"bovenliggendTypenaam,omitempty"` // voor plumbing-types: de entiteit waar dit type bij hoort
 	Momentvoorkomen           string              `json:"momentvoorkomen,omitempty"`
 	Onderliggende             []vizSchemaChildDTO `json:"onderliggende,omitempty"`
 }
@@ -189,6 +191,39 @@ func schemaTypeVoorReflectType(t reflect.Type) (string, string) {
 	}
 }
 
+// jsonNaamVoorBunKolom vertaalt een DB-kolomnaam (bun-tag) naar de bijbehorende
+// JSON-veldnaam in de representatie-struct. De frontend kent alleen JSON-namen,
+// dus IDKolom en EntiteitIDKolom moeten hiermee vertaald worden.
+// Retourneert de originele kolomnaam als er geen match gevonden wordt.
+func jsonNaamVoorBunKolom(meta model.TypeMeta, kolomnaam string) string {
+	if kolomnaam == "" {
+		return ""
+	}
+	rep := meta.Factory()
+	if rep == nil {
+		return kolomnaam
+	}
+	t := reflect.TypeOf(rep)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	for i := 0; i < t.NumField(); i++ {
+		f := t.Field(i)
+		bunTag := f.Tag.Get("bun")
+		if bunTag == "" || bunTag == "-" {
+			continue
+		}
+		bunNaam := strings.Split(bunTag, ",")[0]
+		if strings.EqualFold(bunNaam, kolomnaam) {
+			jsonNaam, _, skip := parseJSONTag(f.Tag.Get("json"))
+			if !skip && jsonNaam != "" {
+				return jsonNaam
+			}
+		}
+	}
+	return kolomnaam
+}
+
 // reflectedVeldenVoorMeta leest de representatie-struct via reflectie uit
 // en zet die om naar formuliervelden voor de frontend.
 // Technische tijdvelden worden expliciet weggefilterd.
@@ -276,18 +311,21 @@ func MaakVizSchemaHandler() gin.HandlerFunc {
 			}
 
 			item := vizSchemaTypeDTO{
-				Typenaam:                  meta.Typenaam,
-				Description:               meta.Description,
-				Metatype:                  meta.Metatype,
-				Kleur:                     meta.Kleur,
-				Veldnaam:                  meta.Veldnaam,
-				Velden:                    reflectedVeldenVoorMeta(meta),
-				Tabelnaam:                 meta.Tabelnaam,
-				IDKolom:                   meta.IDKolom,
+				Typenaam:    meta.Typenaam,
+				Description: meta.Description,
+				Metatype:    meta.Metatype,
+				IsMaterieel: meta.IsMaterieel,
+				Kleur:       meta.Kleur,
+				Veldnaam:    meta.Veldnaam,
+				Velden:      reflectedVeldenVoorMeta(meta),
+				Tabelnaam:   meta.Tabelnaam,
+				// Kolom-namen vertalen naar JSON-veldnamen zodat de frontend ze direct als property kan gebruiken.
+				IDKolom:                   jsonNaamVoorBunKolom(meta, meta.IDKolom),
 				IDAutoIncrement:           meta.RelatieveAutoincrement,
 				HeeftPFK:                  meta.HeeftPFK,
-				EntiteitIDKolom:           meta.EntiteitIDKolom,
-				SecondaireEntiteitIDKolom: meta.SecondaireEntiteitIDKolom,
+				EntiteitIDKolom:           jsonNaamVoorBunKolom(meta, meta.EntiteitIDKolom),
+				SecondaireEntiteitIDKolom: jsonNaamVoorBunKolom(meta, meta.SecondaireEntiteitIDKolom),
+				BovenliggendTypenaam:      meta.BovenliggendTypenaam,
 			}
 
 			if meta.Metatype != model.MetatypeEntiteit {

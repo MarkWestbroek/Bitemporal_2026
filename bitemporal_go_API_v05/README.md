@@ -471,6 +471,16 @@ Deregister U5 and register U6 for entity A:
 
 10 loop tijdsreizen nog eens na (KVK voorbeelden) want corrigeren is nu nog hetzelfde als wijzigen. Je hebt twee soorten tijdreizen (of 3).
 
+20 react - edit popups
+- corrigeren en afvoeren hebben heel weinig met elkaar te maken en staan gebroederlijk naast elkaar
+  - functioneel scheiden
+    - door niet te klikken maar rechts te klikken: bekijk | bewerk | voer af
+    - door eerst een popup met alle data te tonen in een view-kaart
+    - op die kaart:
+      1 bewerk (= afvoer + nieuwe opvoer) (enkelvoudig is eigenlijk altijd dit)
+      2 corrigeer ( = corrigeer)
+      3 voer af zonder opvolger
+
 21 react pagina's
 - enkelvoudig meervoudig tonen (1 of *)
 - corrigeert registratie r ook een lijntje tekenen?
@@ -500,6 +510,38 @@ Deregister U5 and register U6 for entity A:
 - In de structs een standaard Aanvang en Einde plumbing struct, die zich in feite gedraagt als:
   - een GE op de entiteit (DONE in DB, PFK met 2 velden)
   - een _data element op een GE (todo, punt 2 eerst) (DONE in DB: PFK met 3 velden)
+
+
+2 JSON voor een request waarbij Aanvang en /of Einde wordt toegevoegd aan een bestaande Entiteit
+
+```json
+{
+  "registratie": {
+    "registratietype": "registratie",
+    "tijdstip": "2026-02-16T10:30:00Z",
+    "opmerking": "Opvoer van aanvang en einde van A=1"
+  },
+  "wijzigingen": [
+    {
+      "opvoer": {
+        "aanvang": {
+          "a_id": "1",
+          "datum": "01-01-2020"
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "einde": {
+          "a_id": "1",
+          "datum": "31-12-2025"
+        }
+      }
+    }
+  ]
+}
+```
+
 
 2 Aanvang en Einde op een entiteit via plumbing behandelen als een GE
 - bij opvoer, afvoer en correctie

@@ -488,10 +488,15 @@ func vindEntiteitContext(entiteitnaam string, entiteitID string, representatiena
 	representatie model.FormeleRepresentatie, meta model.TypeMeta) (string, string, error) {
 	if entiteitnaam == "" {
 		bovenliggendeRelatieMeta, ok := model.MetaRegistry.GetBovenliggendeRelatieMeta(representatienaam)
-		if !ok {
+		if ok {
+			entiteitnaam = bovenliggendeRelatieMeta.ParentType.Typenaam
+		} else if meta.BovenliggendTypenaam != "" {
+			// Plumbing GE-types (bijv. A_Aanvang) zijn niet opgenomen in OnderliggendeGegevenselementen
+			// maar hebben wel een directe bovenliggende entiteit.
+			entiteitnaam = meta.BovenliggendTypenaam
+		} else {
 			return "", "", fmt.Errorf("HANDLER: geen bovenliggende entiteit gevonden voor type %s", representatienaam)
 		}
-		entiteitnaam = bovenliggendeRelatieMeta.ParentType.Typenaam
 	}
 
 	if entiteitID == "" {
@@ -537,8 +542,14 @@ func sluitActieveEnkelvoudigeVoorgangersAf(c *gin.Context, tx bun.Tx, registrati
 		return nil
 	}
 
+	// Bepaal de naam van de bovenliggende entiteit voor wijziging-records.
+	var parentTypenaam string
 	bovenliggendeRelatieMeta, ok := model.MetaRegistry.GetBovenliggendeRelatieMeta(meta.Typenaam)
-	if !ok {
+	if ok {
+		parentTypenaam = bovenliggendeRelatieMeta.ParentType.Typenaam
+	} else if meta.BovenliggendTypenaam != "" {
+		parentTypenaam = meta.BovenliggendTypenaam
+	} else {
 		return fmt.Errorf("HANDLER: geen bovenliggende entiteit gevonden voor type %s", representatienaam)
 	}
 
@@ -549,10 +560,10 @@ func sluitActieveEnkelvoudigeVoorgangersAf(c *gin.Context, tx bun.Tx, registrati
 
 	entiteitID, err := haalIntWaardeVoorKolomUitRepresentatie(representatie, fkColumn)
 	if err != nil {
-		return fmt.Errorf("HANDLER: kon bovenliggende %s id niet bepalen voor %s: %v", bovenliggendeRelatieMeta.ParentType.Typenaam, representatienaam, err)
+		return fmt.Errorf("HANDLER: kon bovenliggende %s id niet bepalen voor %s: %v", parentTypenaam, representatienaam, err)
 	}
 	if entiteitID == 0 {
-		return fmt.Errorf("HANDLER: bovenliggende %s id ontbreekt voor %s", bovenliggendeRelatieMeta.ParentType.Typenaam, representatienaam)
+		return fmt.Errorf("HANDLER: bovenliggende %s id ontbreekt voor %s", parentTypenaam, representatienaam)
 	}
 
 	activeIDs, err := haalActieveIDsGegevenselementUitDB(c, tx, meta, fkColumn, entiteitID)
@@ -566,11 +577,25 @@ func sluitActieveEnkelvoudigeVoorgangersAf(c *gin.Context, tx bun.Tx, registrati
 	}
 
 	for _, id := range activeIDs {
-		if err := updateAfvoerByID(c, tx, meta, id, registratietijdstip); err != nil {
-			return err
+		// Gebruik WHERE op zowel IDKolom als EntiteitIDKolom bij PFK-types om te
+		// voorkomen dat records van andere entiteiten per ongeluk worden afgevoerd
+		// (versie/rel_id zijn alleen uniek binnen de entiteit, niet globaal).
+		var afvoerErr error
+		if meta.HeeftPFK && meta.EntiteitIDKolom != "" {
+			_, afvoerErr = tx.NewUpdate().
+				Table(meta.Tabelnaam).
+				Set("afvoer = ?", registratietijdstip).
+				Where(fmt.Sprintf("%s = ?", meta.IDKolom), id).
+				Where(fmt.Sprintf("%s = ?", meta.EntiteitIDKolom), entiteitID).
+				Exec(c.Request.Context())
+		} else {
+			afvoerErr = updateAfvoerByID(c, tx, meta, id, registratietijdstip)
+		}
+		if afvoerErr != nil {
+			return fmt.Errorf("HANDLER: afvoer van voorganger %s id=%v mislukt: %v", representatienaam, id, afvoerErr)
 		}
 		if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
-			bovenliggendeRelatieMeta.ParentType.Typenaam, fmt.Sprint(entiteitID), representatienaam, fmt.Sprint(id), registratietijdstip); err != nil {
+			parentTypenaam, fmt.Sprint(entiteitID), representatienaam, fmt.Sprint(id), registratietijdstip); err != nil {
 			return err
 		}
 	}
