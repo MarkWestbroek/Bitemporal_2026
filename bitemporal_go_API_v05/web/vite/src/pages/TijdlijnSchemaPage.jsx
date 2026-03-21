@@ -18,6 +18,7 @@ import SchemaTijdlijnHeader from "../components/tijdlijn/SchemaTijdlijnHeader";
 import SchemaTijdlijnControls from "../components/tijdlijn/SchemaTijdlijnControls";
 import TijdlijnRegistratiePaneel from "../components/tijdlijn/TijdlijnRegistratiePaneel";
 import TijdlijnRepresentatiePaneel from "../components/tijdlijn/TijdlijnRepresentatiePaneel";
+import { bepaalOortjesUitChildGroups } from "../shared/oortjesUtils";
 
 function normInt(v, fallback = 0) {
         const n = Number.parseInt(String(v), 10);
@@ -117,9 +118,17 @@ function normInt(v, fallback = 0) {
           }));
       }
 
+      // Filter plumbing types (materiële-tijd aanvang/einde) uit childNodes;
+      // die verschijnen als oortjes op de entiteitskaart i.p.v. als aparte GE-kaarten.
+      function isPlumbingGroup(group, typeMetaByTypenaam) {
+        return !!typeMetaByTypenaam[group.doeltype]?.bovenliggendTypenaam;
+      }
+
       function buildChildNodes(snapshot, entityMeta, typeMetaByTypenaam, entityTypes) {
         const childGroups = buildChildGroups(snapshot, entityMeta, typeMetaByTypenaam);
-        return childGroups.flatMap((group) => safeArray(group.items).map((childItem, childIndex) => {
+        return childGroups
+          .filter((group) => !isPlumbingGroup(group, typeMetaByTypenaam))
+          .flatMap((group) => safeArray(group.items).map((childItem, childIndex) => {
           const secondaireKolom = String(group?.typeMeta?.secondaireEntiteitIDKolom || "");
           const tweedeEntiteitID = secondaireKolom ? childItem?.[secondaireKolom] : null;
           const tweedeEntiteitType = leidEntiteitTypeAfUitKolomnaam(secondaireKolom, entityTypes);
@@ -136,6 +145,13 @@ function normInt(v, fallback = 0) {
             key: `${group.rolnaam || group.doeltype || 'child'}-${childItem.rel_id ?? childItem.id ?? childIndex}`,
           };
         }));
+      }
+
+      // Bouw oortjes-data (aanvang/einde) voor een snapshot.
+      function buildOortjes(snapshot, entityMeta, typeMetaByTypenaam) {
+        if (!snapshot || !entityMeta?.isMaterieel) return { aanvang: null, einde: null };
+        const childGroups = buildChildGroups(snapshot, entityMeta, typeMetaByTypenaam);
+        return bepaalOortjesUitChildGroups(childGroups, typeMetaByTypenaam);
       }
 
       export default function TijdlijnSchemaPage() {
@@ -565,6 +581,7 @@ function normInt(v, fallback = 0) {
                         entityTypes={entityTypes}
                         repViewBoxHeight={repViewBoxHeight}
                         buildChildNodes={buildChildNodes}
+                        buildOortjes={buildOortjes}
                         microsecondeIntVanTijdstip={microsecondeIntVanTijdstip}
                         korteSamenvatting={korteSamenvatting}
                         normInt={normInt}

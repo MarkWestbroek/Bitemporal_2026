@@ -115,7 +115,12 @@ func createMaterielePlumbingTable(ctx context.Context, db *bun.DB, parentMeta mo
 	}
 
 	tableName := fmt.Sprintf("%s_%s", parentTable, tableSuffix)
-	fkName := fmt.Sprintf("fk_%s_%s", tableName, parentIDCol)
+	// Lokale FK-kolom heet "{entiteit}_id" (bv. a_id, b_id) i.p.v. "id",
+	// zodat de naamgeving consistent is met andere GE-types die naar een
+	// bovenliggende entiteit verwijzen. De FK verwijst nog steeds naar
+	// de kolom "id" in de parent-tabel.
+	localFKCol := fmt.Sprintf("%s_%s", parentTable, parentIDCol)
+	fkName := fmt.Sprintf("fk_%s_%s", tableName, localFKCol)
 
 	ddl := fmt.Sprintf(`
 CREATE TABLE IF NOT EXISTS "%[1]s" (
@@ -125,14 +130,14 @@ CREATE TABLE IF NOT EXISTS "%[1]s" (
     "opvoer" timestamptz NULL,
     "afvoer" timestamptz NULL,
     PRIMARY KEY ("%[2]s", "versie"),
-    CONSTRAINT "%[5]s" FOREIGN KEY ("%[2]s") REFERENCES "%[6]s" ("%[2]s") ON DELETE CASCADE
-);`, tableName, parentIDCol, parentIDType, waardeKolom, fkName, parentTable)
+    CONSTRAINT "%[5]s" FOREIGN KEY ("%[2]s") REFERENCES "%[6]s" ("%[7]s") ON DELETE CASCADE
+);`, tableName, localFKCol, parentIDType, waardeKolom, fkName, parentTable, parentIDCol)
 
 	if _, err := db.ExecContext(ctx, ddl); err != nil {
 		return fmt.Errorf("create table mislukt voor %s: %w", tableName, err)
 	}
 
-	if err := RegisterRelativeIDTrigger(ctx, db, nil, tableName, parentIDCol, "versie"); err != nil {
+	if err := RegisterRelativeIDTrigger(ctx, db, nil, tableName, localFKCol, "versie"); err != nil {
 		return fmt.Errorf("kon trigger voor relatieve versie niet aanmaken voor %s: %w", tableName, err)
 	}
 

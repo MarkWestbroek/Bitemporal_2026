@@ -215,13 +215,36 @@ getoond in de SVG, met een kaartlip-effect:
 
 - **SVG-pad**: `oortjePad(x, y, w, h, r)` tekent een pad met afgeronde bovenkant en open onderkant.
   Door het pad _vóór_ de entity rect te tekenen bedekt die de onderrand (kaartlip-effect).
-- **Aanvang**: links boven de entiteitskaart, x=337
-- **Einde**: rechts boven de entiteitskaart, x=490
+- **Aanvang**: links boven de entiteitskaart, x=331
+- **Einde**: rechts boven de entiteitskaart, x=475
+- **Breedte**: 94px — past een volledig NL-datumformaat (d-m-jjjj, bijv. "31-12-1979").
 - **Klikbaar**: elke oortje is een `<g onClick={() => selecteerRep(item, group)}>`, net als GE-kaarten.
   Klikken opent het bewerkformulier voor opvoeren/afvoeren/corrigeren.
 - **Selectie-indicator**: blauw gestreept kader als het oortje geselecteerd is.
 - Opgemaakt in handschrift-achtig lettertype (Caveat) voor visueel onderscheid.
-- Datumweergave verkort: dag/maand/2-cijferig jaar (bijv. "1/1/20").
+- Datumweergave in NL-formaat: dag-maand-volledigjaar (bijv. "1-1-2020", "31-12-1979").
+
+### 5.2b Oortjes op de tijdlijn-pagina (`TijdlijnRepresentatiePaneel.jsx`)
+
+De tijdlijn-pagina toont oortjes op iedere entiteitssnapshot-kaart in een compact formaat:
+
+- **Positie**: boven de entiteitskaart (132×82px), aanvang links, einde rechts.
+- **Breedte**: 62px — smaller dan de index-variant (94px) omdat de tijdlijn minder ruimte heeft.
+- **Hoogte**: 26px — duidelijk hoger voor betere leesbaarheid in smalle ruimte.
+- **Lettertype**: 11.6px smalle font-stack (`Arial Narrow` / `Roboto Condensed` / `Bahnschrift Condensed`, fallback `Caveat`) via `oortjeStyleNarrow`.
+- **Tekstpositie**: horizontaal gecentreerd en verticaal optisch iets hoger (`y = OY + OH/2 - 3`) met `dominantBaseline="central"`.
+- **Niet klikbaar**: in de tijdlijn zijn oortjes puur informatief (geen bewerkformulier).
+- Plumbing-types (A_Aanvang, A_Einde, B_Aanvang, B_Einde) worden uitgefilterd uit de
+  reguliere GE-kaarten in `buildChildNodes` via `isPlumbingGroup`.
+
+### 5.2c Gedeelde oortjes-hulpfuncties (`shared/oortjesUtils.js`)
+
+De oortjes-logica is geëxtraheerd naar een gedeeld bestand:
+
+- `korteDatumWeergave(datumStr)` — formatteert naar NL-formaat d-m-jjjj
+- `oortjePad(x, y, w, h, r)` — genereert het SVG-pad voor de tab-vorm
+- `oortjeStyle` / `oortjeStyleNarrow` — lettertypestijlen voor normaal en compact formaat
+- `bepaalOortjesUitChildGroups(childGroups, typeMetaByTypenaam)` — zoekt actieve aanvang/einde items
 
 ### 5.3 Oortjes-datamodel (`IndexSchemaPage.jsx`)
 
@@ -237,6 +260,37 @@ alleen de datumstring. Dit is nodig om de oortjes klikbaar te maken:
 De titel van het bewerkformulier ("action overlay") toont het dynamische `idKolom` uit de
 typeMeta. Voor reguliere GE's is dat `rel_id`, voor plumbing types is dat `versie`.
 De waarde wordt opgezocht via de JSON-veldnaam die door `jsonNaamVoorBunKolom()` vertaald is.
+
+### 5.5 Aanvang/einde datumpickers in opvoerformulieren
+
+Materiële entiteiten hebben aanvang- en einddatums. Deze kunnen worden ingesteld via
+twee datumpickers (HTML `<input type="date">`) in zowel het "nieuwe entiteit opvoeren"-
+formulier als het "bestaande entiteit"-actieoverzicht.
+
+#### Werking
+
+- **Zichtbaarheid**: de datumpickers worden alleen getoond als `selectedEntiteitMeta.isMaterieel`
+  true is. Niet-materiële entiteiten tonen het blok niet.
+- **Optioneel**: beide velden zijn optioneel. Een entiteit kan zonder aanvang/einde opgevoerd worden.
+- **Positie**: boven de GE/relatie-secties, in een blauw getint vak.
+- **Bij bestaande entiteiten**: het label toont de huidige waarde via `entiteitOortjes` (bijv.
+  "Aanvang (huidig: 2020-01-01)").
+
+#### Dataflow
+
+1. **State**: `nieuweEntiteitAanvang` / `nieuweEntiteitEinde` voor nieuwe entiteiten;
+   `entiteitAanvangDatum` / `entiteitEindeDatum` voor bestaande entiteiten.
+2. **`materieleTijdMeta`** useMemo: haalt `veldnaam` en `entiteitIDKolom` op uit de
+   aanvang/einde childGroups. Bijv. `{ aanvangVeldnaam: "a_aanvang", aanvangEntiteitIDKolom: "a_id", ... }`.
+3. **Payload**: als een datum is ingevuld, wordt een extra `{ opvoer: { [veldnaam]: { [entiteitIDKolom]: id, datum: "YYYY-MM-DD" } } }`
+   wijziging aan de array toegevoegd.
+4. **Na succes**: datumvelden worden gereset.
+
+#### Betrokken componenten
+
+- `IndexSchemaPage.jsx` — state, `materieleTijdMeta`, payload-injectie in previews + uitvoerfuncties
+- `NieuweEntiteitActieBox.jsx` — datumpickers met props `isMaterieel`, `nieuweEntiteitAanvang/Einde`
+- `EntiteitActieBox.jsx` — datumpickers met props `isMaterieel`, `entiteitAanvangDatum/EindeDatum`
 
 ## 6. API voorbeeld
 
@@ -283,6 +337,23 @@ De waarde wordt opgezocht via de JSON-veldnaam die door `jsonNaamVoorBunKolom()`
 Dit maakt gebruik van het reguliere registratie-endpoint; de aanvang wordt opgevoerd
 als een gewoon enkelvoudig gegevenselement.
 
+### POST /registratie/ (nieuwe entiteit met aanvang en einde)
+
+```json
+{
+  "registratie": { "registratietype": "registratie" },
+  "wijzigingen": [
+    { "opvoer": { "a": { "id": 5 } } },
+    { "opvoer": { "a_u": { "a_id": 5, "aaa": "waarde" } } },
+    { "opvoer": { "a_aanvang": { "a_id": 5, "datum": "2020-01-01" } } },
+    { "opvoer": { "a_einde": { "a_id": 5, "datum": "2025-12-31" } } }
+  ]
+}
+```
+
+De UI bouwt deze payload automatisch op wanneer de gebruiker datums invult in de
+materiële-tijd datumpickers van het opvoerformulier.
+
 ## 7. Bekende problemen en oplossingen
 
 ### 7.1 `column a_w.aanvang does not exist` (bun SELECT)
@@ -309,6 +380,69 @@ De `formeleTijdTargetVoorModel`-subquery verwijst naar `a_aanvang.id::text` (enk
 
 **Oplossing**: `jsonNaamVoorBunKolom()` in `viz_schema_handler.go` vertaalt DB-kolomnamen naar
 JSON-veldnamen via reflectie. De bewerkbox-titel gebruikt nu dynamisch `typeMeta.idKolom`.
+
+### 7.4 DB-kolom `id` in plumbing-tabellen hernoemd naar `a_id`/`b_id`
+
+**Probleem**: De kolom die naar de bovenliggende entiteit verwijst heette `id` in `a_aanvang`,
+`a_einde`, `b_aanvang` en `b_einde`. Dit is inconsistent met alle andere GE-types die
+`a_id` resp. `b_id` gebruiken (bijv. `a_u.a_id`, `a_v.a_id`). Het leidde ook tot verwarring
+met de entiteit's eigen PK (`a.id`).
+
+**Oplossing** (commit 20260321):
+
+| Laag | Wijziging |
+|------|-----------|
+| `model/model_plumbing.go` | bun-tag `bun:"id,pk"` → `bun:"a_id,pk"` / `bun:"b_id,pk"` |
+| `model/metaregistry.go` | `EntiteitIDKolom: "id"` → `"a_id"` / `"b_id"` |
+| `dbsetup/createmodeltables.go` | `createMaterielePlumbingTable` genereert `{entiteit}_id` als lokale FK-kolom |
+| migratie-SQL | `ALTER TABLE ... RENAME COLUMN "id" TO "a_id"/"b_id"` |
+
+De `normalizeVeldnaam()`-matcher in `haalIntWaardeVoorKolomUitRepresentatie` en `vindKolomTypeInDBModel`
+herkent `"a_id"` automatisch als Go-veld `A_ID` (normaliseert naar `"aid"`).
+
+### 7.5 Afvoer van plumbing-type faalt: verkeerd record uit DB opgehaald
+
+**Probleem**: `updateAfvoerByID` en `haalRepresentatieUitDB` filteren alleen op `IDKolom`
+(= `versie`), zonder `EntiteitIDKolom`. Omdat `versie` een relatief autoincrement is
+(1, 2, 3 per entiteit), kan `WHERE versie = 1` het record van een andere entiteit raken.
+Symptoom: "kan A_Aanvang met ID 1 niet afvoeren, want deze is al afgevoerd" — terwijl
+de gebruiker een andere entiteit bedoelt.
+
+**Oplossing**: Beide functies hebben nu een extra `entiteitID any` parameter.
+Bij PFK-types (`HeeftPFK=true`) wordt automatisch `WHERE {EntiteitIDKolom} = ?` aan de
+query toegevoegd. Alle bestaande callers zijn aangepast:
+
+- `handleRepresentatieOpvoer` (correctie-pad): extraheert `pfkEntiteitID` uit de representatie
+- `handleRepresentatieAfvoer`: idem, voor zowel `haalRepresentatieUitDB` als `updateAfvoerByID`
+- Cascade-afvoer van kinderen: geeft `entiteitIDInt` door
+- `sluitActieveEnkelvoudigeVoorgangersAf`: vereenvoudigd — inline PFK-branch vervangen door
+  de generieke `updateAfvoerByID` die het nu zelf afhandelt
+- `checkBovenliggendeEntiteitActief`: geeft `nil` mee (entiteiten hebben geen PFK)
+
+### 7.6 Correctie van materiële-tijd GE's faalt: item-match in frontend vindt geen hit
+
+**Symptoom**: bij het openen van "Corrigeer velden" in de RegistratieActieBox verschijnt
+"Huidige representatie niet beschikbaar" voor A_Einde of A_Aanvang wijzigingen,
+terwijl de data wel geladen is.
+
+**Oorzaak**: `zoekGroupEnItemVoorWijziging` matcht items via `item.rel_id ?? item.id`,
+maar plumbing types (A_Aanvang, A_Einde, B_Aanvang, B_Einde) hebben geen `id`- of
+`rel_id`-veld in hun JSON. Hun unieke identifier is `versie` (de waarde van `typeMeta.idKolom`).
+
+**Oplossing**: een derde fallback toegevoegd in de item-lookup:
+```js
+const idKolom = group.typeMeta?.idKolom;
+const itemId = item.rel_id ?? item.id ?? (idKolom ? item[idKolom] : undefined);
+```
+Reguliere GE's blijven matchen via `rel_id` of `id`; alleen als beide `undefined` zijn
+(plumbing types) wordt `item[idKolom]` (bijv. `item.versie`) gebruikt.
+
+**Gewijzigd bestand**: `web/vite/src/pages/IndexSchemaPage.jsx` — functie `zoekGroupEnItemVoorWijziging`.
+
+De bestaande payload-bouw (`bouwRegistratieCorrectiePayload`) en het veldenfilter
+(`RegistratieActieBox`) werkten al correct: `datum` wordt niet weggefilterd door de
+`temporaal`-set, en `ActionFieldControl` toont automatisch een date-picker voor velden
+met `format: "date"`.
 
 ## 8. Toekomstige uitbreidingen
 

@@ -32,6 +32,11 @@ export default function NieuweEntiteitActieBox({
   voerNieuweEntiteitActieUit,
   nieuweEntiteitBezig,
   nieuweEntiteitResultaat,
+  isMaterieel,
+  nieuweEntiteitAanvang,
+  setNieuweEntiteitAanvang,
+  nieuweEntiteitEinde,
+  setNieuweEntiteitEinde,
 }) {
   return (
     <ActionBodyCard formRef={nieuweEntiteitFormRef} accentColor={accentColor}>
@@ -77,6 +82,21 @@ export default function NieuweEntiteitActieBox({
       </ActionTopFields>
 
       <div style={{ borderTop: `1px solid ${accentColor}`, paddingTop: 10 }}>
+        {/* Materiële tijd: aanvang/einde datumpickers bij het opvoeren van een nieuwe entiteit.
+            Alleen getoond als het entiteitstype materieel is (isMaterieel). Beide zijn optioneel. */}
+        {isMaterieel && (
+          <div style={{ display: "flex", gap: 16, marginBottom: 12, padding: "8px 10px", background: "#f0f9ff", borderRadius: 6, border: "1px solid #bae6fd" }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#0369a1", marginBottom: 2 }}>Aanvang (optioneel)</label>
+              <input type="date" value={nieuweEntiteitAanvang} onChange={(e) => setNieuweEntiteitAanvang(e.target.value)} style={{ width: "100%" }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#0369a1", marginBottom: 2 }}>Einde (optioneel)</label>
+              <input type="date" value={nieuweEntiteitEinde} onChange={(e) => setNieuweEntiteitEinde(e.target.value)} style={{ width: "100%" }} />
+            </div>
+          </div>
+        )}
+
         <ActionGroupedSections
           opties={gegevenselementGroepOpties}
           rows={nieuweEntiteitGegevens}

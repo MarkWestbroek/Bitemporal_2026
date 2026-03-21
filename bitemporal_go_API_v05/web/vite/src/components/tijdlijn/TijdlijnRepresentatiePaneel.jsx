@@ -1,3 +1,5 @@
+import { korteDatumWeergave, oortjePad, oortjeStyleNarrow } from "../../shared/oortjesUtils";
+
 export default function TijdlijnRepresentatiePaneel({
   item,
   reg,
@@ -10,19 +12,27 @@ export default function TijdlijnRepresentatiePaneel({
   entityTypes,
   repViewBoxHeight,
   buildChildNodes,
+  buildOortjes,
   microsecondeIntVanTijdstip,
   korteSamenvatting,
   normInt,
   undoTargetEntId,
   undoTargetRepId,
 }) {
-  const childNodes = buildChildNodes(item.snapshot, selectedEntityMeta, typeMetaByTypenaam, entityTypes);
-  const geNodes = childNodes.filter((node) => !node.isRelatie);
-  const relatieNodes = childNodes.filter((node) => node.isRelatie);
   const entityX = 16;
   const entityY = 22;
   const entityW = 132;
   const entityH = 82;
+  const childNodes = buildChildNodes(item.snapshot, selectedEntityMeta, typeMetaByTypenaam, entityTypes);
+  // Materiële-tijd oortjes: aanvang/einde boven de entiteitskaart (compact formaat voor tijdlijn).
+  const oortjes = buildOortjes(item.snapshot, selectedEntityMeta, typeMetaByTypenaam);
+  const aanvangTekst = korteDatumWeergave(oortjes?.aanvang?.datum);
+  const eindeTekst = korteDatumWeergave(oortjes?.einde?.datum);
+  const oortjeTextYOffset = -3; // Optische correctie: iets hoger dan geometrisch midden i.v.m. overlap met entiteitskaart.
+  // Oortje-dimensies (compact): smallere tabs die binnen 132px entiteitskaart passen.
+  const OW = 62, OH = 26, OR = 7, OY = entityY - OH + 7;
+  const geNodes = childNodes.filter((node) => !node.isRelatie);
+  const relatieNodes = childNodes.filter((node) => node.isRelatie);
   const geW = 114;
   const geH = 52;
   const geBinnenGroepGap = 12;
@@ -63,6 +73,19 @@ export default function TijdlijnRepresentatiePaneel({
       ) : (
         <svg className="graph graph-rep" viewBox={`0 0 320 ${repViewBoxHeight}`} preserveAspectRatio="xMidYMin meet" style={{ height: `${repViewBoxHeight}px` }}>
           <g>
+            {/* Materiële-tijd oortjes: tab-vormige badges boven de entiteitskaart (kaartlip-effect). */}
+            {aanvangTekst && (
+              <g>
+                <path d={oortjePad(entityX, OY, OW, OH, OR)} style={{ fill: selectedEntityMeta?.kleur || "var(--entity-fill)", stroke: "#334155", strokeWidth: 0.8 }} />
+                <text x={entityX + OW / 2} y={OY + OH / 2 + oortjeTextYOffset} textAnchor="middle" dominantBaseline="central" style={oortjeStyleNarrow}>{aanvangTekst}</text>
+              </g>
+            )}
+            {eindeTekst && (
+              <g>
+                <path d={oortjePad(entityX + entityW - OW, OY, OW, OH, OR)} style={{ fill: selectedEntityMeta?.kleur || "var(--entity-fill)", stroke: "#334155", strokeWidth: 0.8 }} />
+                <text x={entityX + entityW - OW / 2} y={OY + OH / 2 + oortjeTextYOffset} textAnchor="middle" dominantBaseline="central" style={oortjeStyleNarrow}>{eindeTekst}</text>
+              </g>
+            )}
             <rect className="node" x={entityX} y={entityY} rx="10" width={entityW} height={entityH} style={{ fill: selectedEntityMeta?.kleur || "var(--entity-fill)", strokeWidth: 2.8 }} />
             {highlights.some((h) => h.soort === "ENT" && String(item.snapshot.id ?? normInt(entityId, 0)) === String(h.entId)) && (
               <ellipse cx={entityX + (entityW / 2)} cy={entityY + (entityH / 2)} rx="78" ry="50" fill="rgba(220, 38, 38, 0.18)" stroke="#dc2626" strokeWidth="2" />

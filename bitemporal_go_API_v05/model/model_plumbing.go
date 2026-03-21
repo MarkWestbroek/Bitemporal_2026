@@ -106,7 +106,7 @@ type Einde struct {
 
 type A_Aanvang struct {
 	bun.BaseModel `bun:"table:a_aanvang,alias:a_aanvang"` // alias: voorkomt bun's automatische a__aanvang alias
-	A_ID          int                                     `json:"a_id" bun:"id,pk"`
+	A_ID          int                                     `json:"a_id" bun:"a_id,pk"` // DB-kolom hernoemd van id→a_id (consistent met andere GE-types)
 	Versie        int64                                   `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Datum         *Date                                   `json:"datum,omitempty" bun:"datum,type:date"`
 	Opvoer        *time.Time                              `json:"opvoer,omitempty"`
@@ -124,7 +124,7 @@ func (a A_Aanvang) String() string          { return RepresentatieToString(a) }
 
 type A_Einde struct {
 	bun.BaseModel `bun:"table:a_einde,alias:a_einde"` // alias: voorkomt bun's automatische a__einde alias
-	A_ID          int                                 `json:"a_id" bun:"id,pk"`
+	A_ID          int                                 `json:"a_id" bun:"a_id,pk"` // DB-kolom hernoemd van id→a_id
 	Versie        int64                               `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Datum         *Date                               `json:"datum,omitempty" bun:"datum,type:date"`
 	Opvoer        *time.Time                          `json:"opvoer,omitempty"`
@@ -142,7 +142,7 @@ func (a A_Einde) String() string          { return RepresentatieToString(a) }
 
 type B_Aanvang struct {
 	bun.BaseModel `bun:"table:b_aanvang,alias:b_aanvang"` // alias: voorkomt bun's automatische b__aanvang alias
-	B_ID          int                                     `json:"b_id" bun:"id,pk"`
+	B_ID          int                                     `json:"b_id" bun:"b_id,pk"` // DB-kolom hernoemd van id→b_id
 	Versie        int64                                   `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Datum         *Date                                   `json:"datum,omitempty" bun:"datum,type:date"`
 	Opvoer        *time.Time                              `json:"opvoer,omitempty"`
@@ -160,7 +160,7 @@ func (b B_Aanvang) String() string          { return RepresentatieToString(b) }
 
 type B_Einde struct {
 	bun.BaseModel `bun:"table:b_einde,alias:b_einde"` // alias: voorkomt bun's automatische b__einde alias
-	B_ID          int                                 `json:"b_id" bun:"id,pk"`
+	B_ID          int                                 `json:"b_id" bun:"b_id,pk"` // DB-kolom hernoemd van id→b_id
 	Versie        int64                               `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Datum         *Date                               `json:"datum,omitempty" bun:"datum,type:date"`
 	Opvoer        *time.Time                          `json:"opvoer,omitempty"`

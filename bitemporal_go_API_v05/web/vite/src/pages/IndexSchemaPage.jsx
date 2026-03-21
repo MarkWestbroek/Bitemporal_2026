@@ -214,6 +214,12 @@ export default function IndexSchemaPage() {
   const [actieOpmerking, setActieOpmerking] = useState("");
   const [nieuweEntiteitOpmerking, setNieuweEntiteitOpmerking] = useState("");
   const [nieuweEntiteitOpmerkingAangepast, setNieuweEntiteitOpmerkingAangepast] = useState(false);
+  // Materiële tijd: datumvelden voor aanvang/einde bij het opvoeren van een nieuwe entiteit.
+  const [nieuweEntiteitAanvang, setNieuweEntiteitAanvang] = useState("");
+  const [nieuweEntiteitEinde, setNieuweEntiteitEinde] = useState("");
+  // Materiële tijd: datumvelden voor aanvang/einde bij het opvoeren onder een bestaande entiteit.
+  const [entiteitAanvangDatum, setEntiteitAanvangDatum] = useState("");
+  const [entiteitEindeDatum, setEntiteitEindeDatum] = useState("");
   const [actieFormVelden, setActieFormVelden] = useState({});
   const [actieBezig, setActieBezig] = useState(false);
   const [nieuweEntiteitBezig, setNieuweEntiteitBezig] = useState(false);
@@ -384,6 +390,21 @@ export default function IndexSchemaPage() {
             einde: eindeItem ? { item: eindeItem, group: eindeGroep, datum: eindeItem.datum } : null,
           };
         }, [selectedA, selectedEntiteitMeta, childGroups, typeMetaByTypenaam]);
+
+        // Materiële-tijd metadata: veldnaam en entiteitIDKolom van de aanvang/einde plumbing-groepen.
+        // Gebruikt door de opvoer-payloads om aanvang/einde wijzigingen toe te voegen.
+        const materieleTijdMeta = useMemo(() => {
+          if (!selectedEntiteitMeta?.isMaterieel) return null;
+          const aanvangGroep = childGroups.find((g) => g.doeltype?.endsWith("_Aanvang") && typeMetaByTypenaam[g.doeltype]?.bovenliggendTypenaam);
+          const eindeGroep = childGroups.find((g) => g.doeltype?.endsWith("_Einde") && typeMetaByTypenaam[g.doeltype]?.bovenliggendTypenaam);
+          if (!aanvangGroep && !eindeGroep) return null;
+          return {
+            aanvangVeldnaam: aanvangGroep?.typeMeta?.veldnaam || null,
+            eindeVeldnaam: eindeGroep?.typeMeta?.veldnaam || null,
+            aanvangEntiteitIDKolom: aanvangGroep?.typeMeta?.entiteitIDKolom || null,
+            eindeEntiteitIDKolom: eindeGroep?.typeMeta?.entiteitIDKolom || null,
+          };
+        }, [selectedEntiteitMeta, childGroups, typeMetaByTypenaam]);
 
         const gegevenselementGroepOpties = useMemo(() => {
           return childGroupsGesorteerd
@@ -673,11 +694,24 @@ export default function IndexSchemaPage() {
               });
               return { opvoer: { [optie.geVeldnaam]: item } };
             });
+            // Materiële tijd: voeg aanvang/einde opvoer-wijzigingen toe als de datums zijn ingevuld.
+            if (materieleTijdMeta && entiteitAanvangDatum) {
+              const mtItem = {};
+              if (materieleTijdMeta.aanvangEntiteitIDKolom) mtItem[materieleTijdMeta.aanvangEntiteitIDKolom] = selectedA.id;
+              mtItem.datum = entiteitAanvangDatum;
+              wijzigingen.push({ opvoer: { [materieleTijdMeta.aanvangVeldnaam]: mtItem } });
+            }
+            if (materieleTijdMeta && entiteitEindeDatum) {
+              const mtItem = {};
+              if (materieleTijdMeta.eindeEntiteitIDKolom) mtItem[materieleTijdMeta.eindeEntiteitIDKolom] = selectedA.id;
+              mtItem.datum = entiteitEindeDatum;
+              wijzigingen.push({ opvoer: { [materieleTijdMeta.eindeVeldnaam]: mtItem } });
+            }
             return { ok: true, payload: { registratie, wijzigingen } };
           } catch (err) {
             return { ok: false, fout: String(err?.message || err) };
           }
-        }, [selectedA, selectedEntiteitMeta, entiteitType, entiteitNieuweGegevens, entiteitNieuweRelaties, actieOpmerking, gegevenselementGroepOpties, relatieGroepOpties]);
+        }, [selectedA, selectedEntiteitMeta, entiteitType, entiteitNieuweGegevens, entiteitNieuweRelaties, actieOpmerking, gegevenselementGroepOpties, relatieGroepOpties, materieleTijdMeta, entiteitAanvangDatum, entiteitEindeDatum]);
 
         const nieuweEntiteitOpvoerPreview = useMemo(() => {
           if (!selectedEntiteitMeta) return null;
@@ -710,11 +744,25 @@ export default function IndexSchemaPage() {
               wijzigingen.push({ opvoer: { [optie.geVeldnaam]: item } });
             });
 
+            // Materiële tijd: voeg aanvang/einde opvoer-wijzigingen toe als de datums zijn ingevuld.
+            if (materieleTijdMeta && nieuweEntiteitAanvang) {
+              const mtItem = {};
+              if (materieleTijdMeta.aanvangEntiteitIDKolom) mtItem[materieleTijdMeta.aanvangEntiteitIDKolom] = idNummer;
+              mtItem.datum = nieuweEntiteitAanvang;
+              wijzigingen.push({ opvoer: { [materieleTijdMeta.aanvangVeldnaam]: mtItem } });
+            }
+            if (materieleTijdMeta && nieuweEntiteitEinde) {
+              const mtItem = {};
+              if (materieleTijdMeta.eindeEntiteitIDKolom) mtItem[materieleTijdMeta.eindeEntiteitIDKolom] = idNummer;
+              mtItem.datum = nieuweEntiteitEinde;
+              wijzigingen.push({ opvoer: { [materieleTijdMeta.eindeVeldnaam]: mtItem } });
+            }
+
             return { ok: true, payload: { registratie, wijzigingen } };
           } catch (err) {
             return { ok: false, fout: String(err?.message || err) };
           }
-        }, [selectedEntiteitMeta, entiteitType, nieuweEntiteitOpmerking, nieuweEntiteitID, nieuweEntiteitGegevens, nieuweEntiteitRelaties, gegevenselementGroepOpties, relatieGroepOpties]);
+        }, [selectedEntiteitMeta, entiteitType, nieuweEntiteitOpmerking, nieuweEntiteitID, nieuweEntiteitGegevens, nieuweEntiteitRelaties, gegevenselementGroepOpties, relatieGroepOpties, materieleTijdMeta, nieuweEntiteitAanvang, nieuweEntiteitEinde]);
 
         useEffect(() => {
           if (!nieuweEntiteitActieOpen || !entiteitType) {
@@ -1206,6 +1254,10 @@ export default function IndexSchemaPage() {
           setNieuweEntiteitRelatiesVolgendId((prev) => prev + 1);
         }
 
+        // Zoek het childGroup-item dat bij een wijziging hoort op basis van representatienaam en representatie_id.
+        // Standaard GE-types matchen via item.rel_id of item.id.
+        // Materiële-tijd plumbing types (A_Aanvang, A_Einde etc.) hebben geen id/rel_id;
+        // daar is de idKolom "versie", dus we gebruiken item[idKolom] als fallback.
         function zoekGroupEnItemVoorWijziging(w) {
           if (!w.representatienaam || !w.representatie_id) return null;
           for (const group of childGroups) {
@@ -1213,7 +1265,11 @@ export default function IndexSchemaPage() {
             const rolNaam = String(group.rolnaam || '').toLowerCase();
             const repNaam = String(w.representatienaam || '').toLowerCase();
             if (typeNaam === repNaam || rolNaam === repNaam) {
-              const gevonden = group.items.find((item) => String(item.rel_id ?? item.id) === String(w.representatie_id));
+              const idKolom = group.typeMeta?.idKolom;
+              const gevonden = group.items.find((item) => {
+                const itemId = item.rel_id ?? item.id ?? (idKolom ? item[idKolom] : undefined);
+                return String(itemId) === String(w.representatie_id);
+              });
               if (gevonden) return { group, item: gevonden };
             }
           }
@@ -1470,8 +1526,9 @@ export default function IndexSchemaPage() {
                 ...entiteitNieuweGegevens.map((row) => ({ row, opties: gegevenselementGroepOpties })),
                 ...entiteitNieuweRelaties.map((row) => ({ row, opties: relatieGroepOpties })),
               ];
-              if (alleRijen.length === 0) {
-                throw new Error('Voeg minimaal 1 gegevenselement of relatie toe.');
+              const heeftMaterieleTijd = materieleTijdMeta && (entiteitAanvangDatum || entiteitEindeDatum);
+              if (alleRijen.length === 0 && !heeftMaterieleTijd) {
+                throw new Error('Voeg minimaal 1 gegevenselement, relatie of materiële datum toe.');
               }
 
               // Eén opvoer-wijziging per GE/relatie-rij, met de eigen veldnaam.
@@ -1494,6 +1551,19 @@ export default function IndexSchemaPage() {
                 });
                 return { opvoer: { [optie.geVeldnaam]: item } };
               });
+              // Materiële tijd: voeg aanvang/einde opvoer-wijzigingen toe.
+              if (materieleTijdMeta && entiteitAanvangDatum) {
+                const mtItem = {};
+                if (materieleTijdMeta.aanvangEntiteitIDKolom) mtItem[materieleTijdMeta.aanvangEntiteitIDKolom] = selectedA.id;
+                mtItem.datum = entiteitAanvangDatum;
+                wijzigingen.push({ opvoer: { [materieleTijdMeta.aanvangVeldnaam]: mtItem } });
+              }
+              if (materieleTijdMeta && entiteitEindeDatum) {
+                const mtItem = {};
+                if (materieleTijdMeta.eindeEntiteitIDKolom) mtItem[materieleTijdMeta.eindeEntiteitIDKolom] = selectedA.id;
+                mtItem.datum = entiteitEindeDatum;
+                wijzigingen.push({ opvoer: { [materieleTijdMeta.eindeVeldnaam]: mtItem } });
+              }
             }
 
             const res = await fetch(`${baseUrl}/registratie/`, {
@@ -1509,6 +1579,8 @@ export default function IndexSchemaPage() {
               if (actie !== 'afvoer') {
                 setEntiteitNieuweGegevens([]);
                 setEntiteitNieuweRelaties([]);
+                setEntiteitAanvangDatum("");
+                setEntiteitEindeDatum("");
               }
               if (nieuweRegistratieID > 0) {
                 setRegistratieId(nieuweRegistratieID);
@@ -1566,6 +1638,20 @@ export default function IndexSchemaPage() {
               wijzigingen.push({ opvoer: { [optie.geVeldnaam]: item } });
             });
 
+            // Materiële tijd: voeg aanvang/einde opvoer-wijzigingen toe.
+            if (materieleTijdMeta && nieuweEntiteitAanvang) {
+              const mtItem = {};
+              if (materieleTijdMeta.aanvangEntiteitIDKolom) mtItem[materieleTijdMeta.aanvangEntiteitIDKolom] = idNummer;
+              mtItem.datum = nieuweEntiteitAanvang;
+              wijzigingen.push({ opvoer: { [materieleTijdMeta.aanvangVeldnaam]: mtItem } });
+            }
+            if (materieleTijdMeta && nieuweEntiteitEinde) {
+              const mtItem = {};
+              if (materieleTijdMeta.eindeEntiteitIDKolom) mtItem[materieleTijdMeta.eindeEntiteitIDKolom] = idNummer;
+              mtItem.datum = nieuweEntiteitEinde;
+              wijzigingen.push({ opvoer: { [materieleTijdMeta.eindeVeldnaam]: mtItem } });
+            }
+
             const res = await fetch(`${baseUrl}/registratie/`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -1589,6 +1675,8 @@ export default function IndexSchemaPage() {
             setNieuweEntiteitActieOpen(false);
             setNieuweEntiteitGegevens([]);
             setNieuweEntiteitRelaties([]);
+            setNieuweEntiteitAanvang("");
+            setNieuweEntiteitEinde("");
           } catch (err) {
             setNieuweEntiteitResultaat({ ok: false, bericht: String(err?.message || err) });
           } finally {
@@ -1815,6 +1903,11 @@ export default function IndexSchemaPage() {
                     voerNieuweEntiteitActieUit={voerNieuweEntiteitActieUit}
                     nieuweEntiteitBezig={nieuweEntiteitBezig}
                     nieuweEntiteitResultaat={nieuweEntiteitResultaat}
+                    isMaterieel={!!selectedEntiteitMeta?.isMaterieel}
+                    nieuweEntiteitAanvang={nieuweEntiteitAanvang}
+                    setNieuweEntiteitAanvang={setNieuweEntiteitAanvang}
+                    nieuweEntiteitEinde={nieuweEntiteitEinde}
+                    setNieuweEntiteitEinde={setNieuweEntiteitEinde}
                   />
                 </div>
               </div>
@@ -2094,6 +2187,12 @@ export default function IndexSchemaPage() {
                     entiteitOpvoerPreview={entiteitOpvoerPreview}
                     actieResultaat={actieResultaat}
                     safeArray={safeArray}
+                    isMaterieel={!!selectedEntiteitMeta?.isMaterieel}
+                    entiteitAanvangDatum={entiteitAanvangDatum}
+                    setEntiteitAanvangDatum={setEntiteitAanvangDatum}
+                    entiteitEindeDatum={entiteitEindeDatum}
+                    setEntiteitEindeDatum={setEntiteitEindeDatum}
+                    entiteitOortjes={entiteitOortjes}
                   />
                 </div>
               </div>

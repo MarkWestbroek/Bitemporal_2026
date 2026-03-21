@@ -231,7 +231,7 @@ var MetaRegistry = MetaRegistryType{
 		DBSliceFactory:         func() any { return &[]A_Aanvang{} },
 		HeeftPFK:               true,
 		RelatieveAutoincrement: true,
-		EntiteitIDKolom:        "id",
+		EntiteitIDKolom:        "a_id", // hernoemd van "id" → "a_id" (consistent met andere GE-types)
 		Momentvoorkomen:        Enkelvoudig,
 		BovenliggendTypenaam:   "A",
 	},
@@ -251,7 +251,7 @@ var MetaRegistry = MetaRegistryType{
 		DBSliceFactory:         func() any { return &[]A_Einde{} },
 		HeeftPFK:               true,
 		RelatieveAutoincrement: true,
-		EntiteitIDKolom:        "id",
+		EntiteitIDKolom:        "a_id", // hernoemd van "id" → "a_id"
 		Momentvoorkomen:        Enkelvoudig,
 		BovenliggendTypenaam:   "A",
 	},
@@ -271,7 +271,7 @@ var MetaRegistry = MetaRegistryType{
 		DBSliceFactory:         func() any { return &[]B_Aanvang{} },
 		HeeftPFK:               true,
 		RelatieveAutoincrement: true,
-		EntiteitIDKolom:        "id",
+		EntiteitIDKolom:        "b_id", // hernoemd van "id" → "b_id"
 		Momentvoorkomen:        Enkelvoudig,
 		BovenliggendTypenaam:   "B",
 	},
@@ -291,7 +291,7 @@ var MetaRegistry = MetaRegistryType{
 		DBSliceFactory:         func() any { return &[]B_Einde{} },
 		HeeftPFK:               true,
 		RelatieveAutoincrement: true,
-		EntiteitIDKolom:        "id",
+		EntiteitIDKolom:        "b_id", // hernoemd van "id" → "b_id"
 		Momentvoorkomen:        Enkelvoudig,
 		BovenliggendTypenaam:   "B",
 	},

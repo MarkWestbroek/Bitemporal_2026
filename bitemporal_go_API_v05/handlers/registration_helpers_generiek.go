@@ -171,8 +171,17 @@ func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratie model.Regi
 
 	/* ==== CORRECTIE ---- */
 	if registratie.IsCorrectie() && meta.Metatype != model.MetatypeEntiteit {
+		// Bij PFK-types: haal entiteitID uit de representatie voor de WHERE-clause.
+		var pfkEntiteitID any
+		if meta.HeeftPFK && meta.EntiteitIDKolom != "" {
+			eid, err := haalIntWaardeVoorKolomUitRepresentatie(representatie, meta.EntiteitIDKolom)
+			if err != nil {
+				return fmt.Errorf("HANDLER: kon entiteit-ID niet bepalen voor correctie van %s: %v", representatienaam, err)
+			}
+			pfkEntiteitID = eid
+		}
 		// get huidige waarde van het gegevenselement op basis van ID in wijziging record
-		huidigeRep, err := haalRepresentatieUitDB(c, tx, meta, representatie.GetID())
+		huidigeRep, err := haalRepresentatieUitDB(c, tx, meta, representatie.GetID(), pfkEntiteitID)
 		if err != nil {
 			return err
 		}
@@ -300,8 +309,18 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 		return fmt.Errorf("HANDLER: onbekend type voor afvoer: %s", representatienaam)
 	}
 
+	// Bij PFK-types: haal entiteitID uit de representatie voor de WHERE-clause.
+	var pfkEntiteitID any
+	if meta.HeeftPFK && meta.EntiteitIDKolom != "" {
+		eid, err := haalIntWaardeVoorKolomUitRepresentatie(representatie, meta.EntiteitIDKolom)
+		if err != nil {
+			return fmt.Errorf("HANDLER: kon entiteit-ID niet bepalen voor afvoer van %s: %v", representatienaam, err)
+		}
+		pfkEntiteitID = eid
+	}
+
 	// een reeds afgevoerde representatie mag niet nogmaals worden afgevoerd, dus eerst checken of deze al is afgevoerd, en indien ja, dan foutmelding en transactie afbreken.
-	huidigeRep, err := haalRepresentatieUitDB(c, tx, meta, representatie.GetID())
+	huidigeRep, err := haalRepresentatieUitDB(c, tx, meta, representatie.GetID(), pfkEntiteitID)
 	if err != nil {
 		return err
 	}
@@ -310,7 +329,7 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 	}
 
 	if meta.Metatype != model.MetatypeEntiteit {
-		if err := updateAfvoerByID(c, tx, meta, representatie.GetID(), afvoerTijdstip); err != nil {
+		if err := updateAfvoerByID(c, tx, meta, representatie.GetID(), pfkEntiteitID, afvoerTijdstip); err != nil {
 			return err
 		}
 
@@ -328,7 +347,7 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 	entiteitID = fmt.Sprint(representatie.GetID())
 
 	// ENTITEIT AFVOER
-	if err := updateAfvoerByID(c, tx, meta, representatie.GetID(), afvoerTijdstip); err != nil {
+	if err := updateAfvoerByID(c, tx, meta, representatie.GetID(), nil, afvoerTijdstip); err != nil {
 		return err
 	}
 	if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
@@ -360,7 +379,7 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 		}
 
 		for _, id := range activeIDs {
-			if err := updateAfvoerByID(c, tx, childMeta, id, afvoerTijdstip); err != nil {
+			if err := updateAfvoerByID(c, tx, childMeta, id, entiteitIDInt, afvoerTijdstip); err != nil {
 				return err
 			}
 			if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
@@ -374,12 +393,22 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 
 }
 
-func updateAfvoerByID(c *gin.Context, tx bun.Tx, meta model.TypeMeta, id any, afvoerTijdstip time.Time) error {
-	_, err := tx.NewUpdate().
+// updateAfvoerByID zet het afvoer-tijdstip op een representatie.
+// Bij PFK-types (HeeftPFK=true) is de IDKolom (versie) alleen uniek binnen de
+// entiteit; entiteitID voegt dan een extra WHERE op EntiteitIDKolom toe zodat
+// het juiste record wordt geraakt.
+func updateAfvoerByID(c *gin.Context, tx bun.Tx, meta model.TypeMeta, id any, entiteitID any, afvoerTijdstip time.Time) error {
+	query := tx.NewUpdate().
 		Table(meta.Tabelnaam).
 		Set("afvoer = ?", afvoerTijdstip).
-		Where(fmt.Sprintf("%s = ?", meta.IDKolom), id).
-		Exec(c.Request.Context())
+		Where(fmt.Sprintf("%s = ?", meta.IDKolom), id)
+
+	// PFK-types: versie is alleen uniek per entiteit; filter ook op EntiteitIDKolom.
+	if meta.HeeftPFK && meta.EntiteitIDKolom != "" && entiteitID != nil {
+		query = query.Where(fmt.Sprintf("%s = ?", meta.EntiteitIDKolom), entiteitID)
+	}
+
+	_, err := query.Exec(c.Request.Context())
 	if err != nil {
 		return fmt.Errorf("HANDLER: failed to update %s afvoer: %v", meta.Typenaam, err)
 	}
@@ -387,7 +416,9 @@ func updateAfvoerByID(c *gin.Context, tx bun.Tx, meta model.TypeMeta, id any, af
 	return nil
 }
 
-func haalRepresentatieUitDB(c *gin.Context, tx bun.Tx, meta model.TypeMeta, id any) (model.FormeleRepresentatie, error) {
+// haalRepresentatieUitDB haalt een representatie op uit de DB op basis van ID.
+// Bij PFK-types voegt entiteitID een extra WHERE toe (zie updateAfvoerByID).
+func haalRepresentatieUitDB(c *gin.Context, tx bun.Tx, meta model.TypeMeta, id any, entiteitID any) (model.FormeleRepresentatie, error) {
 	if isZeroID(id) {
 		return nil, fmt.Errorf("HANDLER: lege ID voor %s", meta.Typenaam)
 	}
@@ -404,6 +435,13 @@ func haalRepresentatieUitDB(c *gin.Context, tx bun.Tx, meta model.TypeMeta, id a
 	err := tx.NewSelect().
 		Model(rep).
 		Where(fmt.Sprintf("%s = ?", meta.IDKolom), id).
+		Apply(func(q *bun.SelectQuery) *bun.SelectQuery {
+			// PFK-types: versie is alleen uniek per entiteit; filter ook op EntiteitIDKolom.
+			if meta.HeeftPFK && meta.EntiteitIDKolom != "" && entiteitID != nil {
+				q = q.Where(fmt.Sprintf("%s = ?", meta.EntiteitIDKolom), entiteitID)
+			}
+			return q
+		}).
 		Limit(1).
 		Scan(c.Request.Context())
 	if err != nil {
@@ -525,7 +563,7 @@ func checkBovenliggendeEntiteitActief(c *gin.Context, tx bun.Tx, entiteitnaam st
 		entityIDAny = intID
 	}
 
-	entiteitRep, err := haalRepresentatieUitDB(c, tx, entiteitMeta, entityIDAny)
+	entiteitRep, err := haalRepresentatieUitDB(c, tx, entiteitMeta, entityIDAny, nil) // entiteiten hebben geen PFK
 	if err != nil {
 		return err
 	}
@@ -577,22 +615,9 @@ func sluitActieveEnkelvoudigeVoorgangersAf(c *gin.Context, tx bun.Tx, registrati
 	}
 
 	for _, id := range activeIDs {
-		// Gebruik WHERE op zowel IDKolom als EntiteitIDKolom bij PFK-types om te
-		// voorkomen dat records van andere entiteiten per ongeluk worden afgevoerd
-		// (versie/rel_id zijn alleen uniek binnen de entiteit, niet globaal).
-		var afvoerErr error
-		if meta.HeeftPFK && meta.EntiteitIDKolom != "" {
-			_, afvoerErr = tx.NewUpdate().
-				Table(meta.Tabelnaam).
-				Set("afvoer = ?", registratietijdstip).
-				Where(fmt.Sprintf("%s = ?", meta.IDKolom), id).
-				Where(fmt.Sprintf("%s = ?", meta.EntiteitIDKolom), entiteitID).
-				Exec(c.Request.Context())
-		} else {
-			afvoerErr = updateAfvoerByID(c, tx, meta, id, registratietijdstip)
-		}
-		if afvoerErr != nil {
-			return fmt.Errorf("HANDLER: afvoer van voorganger %s id=%v mislukt: %v", representatienaam, id, afvoerErr)
+		// updateAfvoerByID voegt automatisch EntiteitIDKolom toe bij PFK-types.
+		if err := updateAfvoerByID(c, tx, meta, id, entiteitID, registratietijdstip); err != nil {
+			return fmt.Errorf("HANDLER: afvoer van voorganger %s id=%v mislukt: %v", representatienaam, id, err)
 		}
 		if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
 			parentTypenaam, fmt.Sprint(entiteitID), representatienaam, fmt.Sprint(id), registratietijdstip); err != nil {

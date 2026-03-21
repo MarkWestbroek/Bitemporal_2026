@@ -38,14 +38,6 @@ export default function SchemaIndexControls({
               <option key={meta.typenaam} value={meta.typenaam}>{meta.typenaam}</option>
             ))}
           </select>
-          <button
-            type="button"
-            onClick={openNieuweEntiteitActieBox}
-            disabled={loading || !entiteitType}
-            style={{ marginTop: 4, background: "#0f766e" }}
-          >
-            + Nieuwe {entiteitType || "entiteit"} opvoeren
-          </button>
         </label>
 
         <label>
@@ -70,25 +62,32 @@ export default function SchemaIndexControls({
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(180px, 1fr))", gap: 12, marginTop: 10, alignItems: "start" }}>
-        <div style={{ gridColumn: "3 / 4" }}>
-          <p className="muted" style={{ margin: "0 0 6px" }}>1) Door registratie-id lopen (volgt entiteit in registratie)</p>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={decrementRegistratieAndReload} disabled={loading || normaliseerNietNegatiefGeheelGetal(registratieId, 0) <= 0}>reg-id - 1</button>
-            <button onClick={incrementRegistratieAndReload} disabled={loading}>reg-id + 1</button>
-            <div className="muted">(Entiteit blijft staan bij geen match)</div>
-          </div>
+        {/* Kolom 2: nieuwe entiteit */}
+        <div style={{ gridColumn: "2 / 3", display: "flex", gap: 8 }}>
+          <button
+            type="button"
+            onClick={openNieuweEntiteitActieBox}
+            disabled={loading || !entiteitType}
+            style={{ background: "#0f766e" }}
+          >
+            + Nieuwe {entiteitType || "entiteit"} opvoeren
+          </button>
         </div>
 
-        <div style={{ gridColumn: "4 / 5" }}>
-          <p className="muted" style={{ margin: "0 0 6px" }}>2) Door peilmoment lopen (houdt gekozen entiteit vast)</p>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={decrementTAndReload} disabled={loading || normaliseerNietNegatiefGeheelGetal(t, 0) <= 0}>t - 1</button>
-            <button onClick={incrementTAndReload} disabled={loading}>t + 1</button>
-          </div>
+        {/* Kolom 3: door registratie-id lopen */}
+        <div style={{ gridColumn: "3 / 4", display: "flex", gap: 8, alignItems: "center" }}>
+          <button onClick={decrementRegistratieAndReload} disabled={loading || normaliseerNietNegatiefGeheelGetal(registratieId, 0) <= 0}>reg-id - 1</button>
+          <button onClick={incrementRegistratieAndReload} disabled={loading}>reg-id + 1</button>
         </div>
 
+        {/* Kolom 4: door peilmoment lopen */}
+        <div style={{ gridColumn: "4 / 5", display: "flex", gap: 8 }}>
+          <button onClick={decrementTAndReload} disabled={loading || normaliseerNietNegatiefGeheelGetal(t, 0) <= 0}>t - 1</button>
+          <button onClick={incrementTAndReload} disabled={loading}>t + 1</button>
+        </div>
+
+        {/* Kolom 5: ophalen */}
         <div style={{ gridColumn: "5 / 6" }}>
-          <p className="muted" style={{ margin: "0 0 6px" }}>3) Data ophalen</p>
           <button onClick={() => loadData({ selecteerVanuitRegistratie: true })} disabled={loading || !entiteitType}>
             {loading ? "Bezig met ophalen..." : "Ophalen"}
           </button>

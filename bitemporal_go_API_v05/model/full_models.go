@@ -136,10 +136,10 @@ type Full_A struct {
 
 	// Materiële tijdlijn: aanvang en einde als plumbing-relaties.
 	// Gedragen zich als enkelvoudige gegevenselementen (maximaal één actief per entiteit).
-	// De join is id=id omdat de FK-kolom in a_aanvang/a_einde ook "id" heet (verwijst naar a.id).
+	// join:id=a_id: de FK-kolom in a_aanvang/a_einde heet "a_id" (hernoemd van "id").
 	// Zie materiele_tijd.md voor een volledige uitleg.
-	Aanvangs []A_Aanvang `bun:"rel:has-many,join:id=id" json:"a_aanvangs,omitempty"`
-	Eindes   []A_Einde   `bun:"rel:has-many,join:id=id" json:"a_eindes,omitempty"`
+	Aanvangs []A_Aanvang `bun:"rel:has-many,join:id=a_id" json:"a_aanvangs,omitempty"`
+	Eindes   []A_Einde   `bun:"rel:has-many,join:id=a_id" json:"a_eindes,omitempty"`
 }
 
 // Full_B includes all fields of B and its related entities (like Xs)
@@ -155,7 +155,8 @@ type Full_B struct {
 	Ys []B_Y `bun:"rel:has-many,join:id=b_id" json:"ys,omitempty"`
 
 	// Materiële tijdlijn: aanvang en einde als plumbing-relaties.
+	// join:id=b_id: de FK-kolom in b_aanvang/b_einde heet "b_id" (hernoemd van "id").
 	// Zie uitleg bij Full_A hierboven en materiele_tijd.md.
-	Aanvangs []B_Aanvang `bun:"rel:has-many,join:id=id" json:"b_aanvangs,omitempty"`
-	Eindes   []B_Einde   `bun:"rel:has-many,join:id=id" json:"b_eindes,omitempty"`
+	Aanvangs []B_Aanvang `bun:"rel:has-many,join:id=b_id" json:"b_aanvangs,omitempty"`
+	Eindes   []B_Einde   `bun:"rel:has-many,join:id=b_id" json:"b_eindes,omitempty"`
 }

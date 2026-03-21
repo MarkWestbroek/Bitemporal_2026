@@ -29,6 +29,12 @@ export default function EntiteitActieBox({
   setEntiteitNieuweRelaties,
   entiteitOpvoerPreview,
   actieResultaat,
+  isMaterieel,
+  entiteitAanvangDatum,
+  setEntiteitAanvangDatum,
+  entiteitEindeDatum,
+  setEntiteitEindeDatum,
+  entiteitOortjes,
 }) {
   return (
     <ActionBodyCard accentColor={accentColor}>
@@ -46,6 +52,24 @@ export default function EntiteitActieBox({
       </div>
 
       <div style={{ borderTop: `1px solid ${accentColor}`, paddingTop: 10 }}>
+        {/* Materiële tijd: aanvang/einde datumpickers, alleen zichtbaar als het entiteitstype materieel is. */}
+        {isMaterieel && (
+          <div style={{ display: "flex", gap: 16, marginBottom: 12, padding: "8px 10px", background: "#f0f9ff", borderRadius: 6, border: "1px solid #bae6fd" }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#0369a1", marginBottom: 2 }}>
+                Aanvang {entiteitOortjes?.aanvang ? <span style={{ fontWeight: 400, color: "#64748b" }}>(huidig: {entiteitOortjes.aanvang.datum || "–"})</span> : null}
+              </label>
+              <input type="date" value={entiteitAanvangDatum} onChange={(e) => setEntiteitAanvangDatum(e.target.value)} style={{ width: "100%" }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#0369a1", marginBottom: 2 }}>
+                Einde {entiteitOortjes?.einde ? <span style={{ fontWeight: 400, color: "#64748b" }}>(huidig: {entiteitOortjes.einde.datum || "–"})</span> : null}
+              </label>
+              <input type="date" value={entiteitEindeDatum} onChange={(e) => setEntiteitEindeDatum(e.target.value)} style={{ width: "100%" }} />
+            </div>
+          </div>
+        )}
+
         <ActionGroupedSections
           opties={gegevenselementGroepOpties}
           rows={entiteitNieuweGegevens}
@@ -74,13 +98,13 @@ export default function EntiteitActieBox({
         />
 
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <button onClick={() => voerEntiteitActieUit("opvoer")} disabled={actieBezig || (gegevenselementGroepOpties.length === 0 && relatieGroepOpties.length === 0) || (entiteitOpvoerPreview && !entiteitOpvoerPreview.ok)}>
+          <button onClick={() => voerEntiteitActieUit("opvoer")} disabled={actieBezig || (gegevenselementGroepOpties.length === 0 && relatieGroepOpties.length === 0 && !entiteitAanvangDatum && !entiteitEindeDatum) || (entiteitOpvoerPreview && !entiteitOpvoerPreview.ok)}>
             {actieBezig ? "Bezig..." : "Voer nieuwe GEs/relaties op"}
           </button>
           <span className="muted" style={{ fontSize: 12 }}>Een registratie met opvoer onder de bestaande entiteit.</span>
         </div>
 
-        {(entiteitNieuweGegevens.length > 0 || entiteitNieuweRelaties.length > 0) && entiteitOpvoerPreview && (
+        {(entiteitNieuweGegevens.length > 0 || entiteitNieuweRelaties.length > 0 || entiteitAanvangDatum || entiteitEindeDatum) && entiteitOpvoerPreview && (
           <details style={{ margin: "10px 0", borderRadius: 6, overflow: "hidden", border: `1px solid ${accentColor}` }}>
             <summary style={{ cursor: "pointer", padding: "6px 10px", background: "#f8fafc", fontSize: 12, fontWeight: 600, color: "#475569" }}>
               Preview: te versturen payload (GE + relatie opvoer)
