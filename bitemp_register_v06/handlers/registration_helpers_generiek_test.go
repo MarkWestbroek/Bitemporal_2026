@@ -23,10 +23,6 @@ func (r *testUintRepresentatie) GetID() any               { return r.UID }
 func (r *testUintRepresentatie) Metatype() model.Metatype { return model.MetatypeGegevenselement }
 func (r *testUintRepresentatie) String() string           { return "testUintRepresentatie" }
 
-func boolPtr(value bool) *bool {
-	return &value
-}
-
 func TestSluitActieveEnkelvoudigeVoorgangersAf_ClosesExistingActiveRecord(t *testing.T) {
 	// Given: een enkelvoudig gegevenselement met exact één actieve voorganger.
 	// When: de helper wordt uitgevoerd voor een nieuwe opvoer.
@@ -55,7 +51,7 @@ func TestSluitActieveEnkelvoudigeVoorgangersAf_ClosesExistingActiveRecord(t *tes
 		t.Fatal("expected metadata for A_U")
 	}
 
-	representatie := &model.A_U{A_ID: 1, Rel_ID: 999, Aaa: "nieuw", Bbb: boolPtr(true)}
+	representatie := &model.A_U{A_ID: 1, Rel_ID: 999}
 	tijdstip := time.Date(2026, 2, 25, 10, 0, 0, 0, time.UTC)
 
 	// SQL-volgorde: select actieve voorganger -> update afvoer -> insert wijziging.
@@ -111,7 +107,7 @@ func TestSluitActieveEnkelvoudigeVoorgangersAf_ErrorsOnMultipleActiveRecords(t *
 		t.Fatal("expected metadata for A_U")
 	}
 
-	representatie := &model.A_U{A_ID: 1, Rel_ID: 999, Aaa: "nieuw", Bbb: boolPtr(true)}
+	representatie := &model.A_U{A_ID: 1, Rel_ID: 999}
 	tijdstip := time.Date(2026, 2, 25, 10, 0, 0, 0, time.UTC)
 
 	// Simuleer twee actieve voorgangers in het queryresultaat.
@@ -164,7 +160,7 @@ func TestSluitActieveEnkelvoudigeVoorgangersAf_ErrorsOnMissingParentID(t *testin
 		t.Fatal("expected metadata for A_U")
 	}
 
-	representatie := &model.A_U{A_ID: 0, Rel_ID: 999, Aaa: "nieuw", Bbb: boolPtr(true)}
+	representatie := &model.A_U{A_ID: 0, Rel_ID: 999}
 	tijdstip := time.Date(2026, 2, 25, 10, 0, 0, 0, time.UTC)
 
 	err = sluitActieveEnkelvoudigeVoorgangersAf(ctx, tx, 42, tijdstip, "A_U", representatie, meta)
@@ -191,6 +187,11 @@ func TestParseStringNaarKolomType_TableDriven(t *testing.T) {
 		t.Fatal("expected metadata for A_U")
 	}
 
+	metaAUData, ok := model.MetaRegistry.GetTypeMeta("A_U_Data")
+	if !ok {
+		t.Fatal("expected metadata for A_U_Data")
+	}
+
 	metaCustomUint := model.TypeMeta{
 		Typenaam:  "UintDummy",
 		DBFactory: func() model.Representatie { return &testUintRepresentatie{} },
@@ -206,7 +207,7 @@ func TestParseStringNaarKolomType_TableDriven(t *testing.T) {
 	}{
 		{
 			name:        "string field via db model",
-			meta:        metaAU,
+			meta:        metaAUData,
 			kolom:       "aaa",
 			raw:         "nieuw",
 			expectedAny: "nieuw",

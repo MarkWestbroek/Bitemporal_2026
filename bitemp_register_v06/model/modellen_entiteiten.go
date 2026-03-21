@@ -246,3 +246,95 @@ func (b *B_Einde) SetOpvoer(t *time.Time) { b.Opvoer = t }
 func (b B_Einde) GetAfvoer() *time.Time   { return b.Afvoer }
 func (b *B_Einde) SetAfvoer(t *time.Time) { b.Afvoer = t }
 func (b B_Einde) String() string          { return RepresentatieToString(b) }
+
+/* === Hub-level _Aanvang/_Einde: materiële plumbing voor GE/REL hubs ===
+
+Materiële hubs (waar IsMaterieel=true in de MetaRegistry) hebben hun eigen
+aanvang/einde-tabellen, analoog aan de entiteits-level plumbing (A_Aanvang, etc.).
+
+Verschil met entiteits-plumbing:
+- PK: (ent_id, rel_id, versie) — drieledige samengestelde sleutel (i.p.v. tweedelig)
+- FK: naar de hub (ent_id, rel_id) i.p.v. direct naar de entiteit
+
+Versie is relatief autoincrement per (ent_id, rel_id), beheerd door
+RegisterRelativeIDTriggerComposite in createmodeltables.go.
+
+Alleen gedefinieerd voor materiële hubs: A_W en Rel_A_B.
+Niet-materiële hubs (A_U, A_V, B_X, B_Y) hebben geen aanvang/einde.
+*/
+
+type A_W_Aanvang struct {
+	bun.BaseModel `bun:"table:a_w_aanvang,alias:a_w_aanvang"`
+	A_ID          int        `json:"a_id" bun:"a_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+func (a A_W_Aanvang) GetID() any              { return a.Versie }
+func (a A_W_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
+func (a *A_W_Aanvang) ClearID()               { a.Versie = 0 }
+func (a A_W_Aanvang) GetOpvoer() *time.Time   { return a.Opvoer }
+func (a *A_W_Aanvang) SetOpvoer(t *time.Time) { a.Opvoer = t }
+func (a A_W_Aanvang) GetAfvoer() *time.Time   { return a.Afvoer }
+func (a *A_W_Aanvang) SetAfvoer(t *time.Time) { a.Afvoer = t }
+func (a A_W_Aanvang) String() string          { return RepresentatieToString(a) }
+
+type A_W_Einde struct {
+	bun.BaseModel `bun:"table:a_w_einde,alias:a_w_einde"`
+	A_ID          int        `json:"a_id" bun:"a_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+func (a A_W_Einde) GetID() any              { return a.Versie }
+func (a A_W_Einde) Metatype() Metatype      { return MetatypeGegevenselement }
+func (a *A_W_Einde) ClearID()               { a.Versie = 0 }
+func (a A_W_Einde) GetOpvoer() *time.Time   { return a.Opvoer }
+func (a *A_W_Einde) SetOpvoer(t *time.Time) { a.Opvoer = t }
+func (a A_W_Einde) GetAfvoer() *time.Time   { return a.Afvoer }
+func (a *A_W_Einde) SetAfvoer(t *time.Time) { a.Afvoer = t }
+func (a A_W_Einde) String() string          { return RepresentatieToString(a) }
+
+type Rel_A_B_Aanvang struct {
+	bun.BaseModel `bun:"table:rel_a_b_aanvang,alias:rel_a_b_aanvang"`
+	A_ID          int        `json:"a_id" bun:"a_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+func (r Rel_A_B_Aanvang) GetID() any              { return r.Versie }
+func (r Rel_A_B_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
+func (r *Rel_A_B_Aanvang) ClearID()               { r.Versie = 0 }
+func (r Rel_A_B_Aanvang) GetOpvoer() *time.Time   { return r.Opvoer }
+func (r *Rel_A_B_Aanvang) SetOpvoer(t *time.Time) { r.Opvoer = t }
+func (r Rel_A_B_Aanvang) GetAfvoer() *time.Time   { return r.Afvoer }
+func (r *Rel_A_B_Aanvang) SetAfvoer(t *time.Time) { r.Afvoer = t }
+func (r Rel_A_B_Aanvang) String() string          { return RepresentatieToString(r) }
+
+type Rel_A_B_Einde struct {
+	bun.BaseModel `bun:"table:rel_a_b_einde,alias:rel_a_b_einde"`
+	A_ID          int        `json:"a_id" bun:"a_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+func (r Rel_A_B_Einde) GetID() any              { return r.Versie }
+func (r Rel_A_B_Einde) Metatype() Metatype      { return MetatypeGegevenselement }
+func (r *Rel_A_B_Einde) ClearID()               { r.Versie = 0 }
+func (r Rel_A_B_Einde) GetOpvoer() *time.Time   { return r.Opvoer }
+func (r *Rel_A_B_Einde) SetOpvoer(t *time.Time) { r.Opvoer = t }
+func (r Rel_A_B_Einde) GetAfvoer() *time.Time   { return r.Afvoer }
+func (r *Rel_A_B_Einde) SetAfvoer(t *time.Time) { r.Afvoer = t }
+func (r Rel_A_B_Einde) String() string          { return RepresentatieToString(r) }

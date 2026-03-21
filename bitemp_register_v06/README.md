@@ -471,6 +471,15 @@ Deregister U5 and register U6 for entity A:
 
 10 loop tijdsreizen nog eens na (KVK voorbeelden) want corrigeren is nu nog hetzelfde als wijzigen. Je hebt twee soorten tijdreizen (of 3).
 
+15 Enums
+- in de metaregistry (en in de frontend als gevolg)
+- en in de custom struct tags
+- als soort van type, en niet alleen de waarden. Die staan al in de enum in go
+- en gaan als het goed is ook mee in het schema
+
+16 Datatypen, gegevenssoorten netjes inbouwen.
+17 Referentielijsten
+
 20 react - edit popups
 - corrigeren en afvoeren hebben heel weinig met elkaar te maken en staan gebroederlijk naast elkaar
   - functioneel scheiden

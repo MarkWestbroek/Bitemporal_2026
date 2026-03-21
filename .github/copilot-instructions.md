@@ -2,6 +2,11 @@
 
 De actieve versie is `bitemporal_go_API_v05/`. Eerdere versies (v01–v04) zijn archief.
 
+We zijn aan het bouwen aan `bitemp_register_v06/`, een doorontwikkeling van deze v05, met een aantal verbeteringen in de architectuur en implementatie. De v05 blijft beschikbaar als referentie en voor vergelijking, maar de focus ligt nu op de v06.
+
+## Algemene instructies
+Documenteer altijd alle wijzigingen in duidelijke comments in de code en in (vaak specifiek per onderwerp benoemde of anders de generieke readme) markdown files.
+
 ## Domein
 
 Dit project is een proof of concept voor een **bitemporeel register** in *Go* / *PostgreSQL*, met een focus op een flexibel datamodel via een aantal struct definities en dynamische metadata via een MetaRegistry.

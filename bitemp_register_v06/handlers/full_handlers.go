@@ -752,6 +752,53 @@ func MakeGetRegistratieMetWijzigingenByIDHandler() gin.HandlerFunc {
 	}
 }
 
+// addOnderliggendeRelations voegt Relation()-calls toe aan een Bun query voor alle
+// directe kinderen van een type, inclusief geneste relaties voor hubs.
+//
+// v06: Hub-types (GESubtypeHub) hebben eigen onderliggende (Data, Aanvang, Einde).
+// Deze worden als geneste Relation() calls toegevoegd zodat Bun ze in één query
+// meeneemt. Bij peiltijdstip-filtering wordt ook op het geneste niveau gefilterd.
+func addOnderliggendeRelations(query *bun.SelectQuery, meta model.TypeMeta, peiltijdstip *time.Time) *bun.SelectQuery {
+	for _, rel := range meta.OnderliggendeGegevenselementen {
+		capturedRel := rel
+		childMeta, childOK := model.MetaRegistry.GetTypeMeta(capturedRel.Doeltype)
+
+		// Controleer of het kind een hub is met eigen onderliggende (Data/Aanvang/Einde)
+		isHub := childOK && childMeta.GESubtype == model.GESubtypeHub && len(childMeta.OnderliggendeGegevenselementen) > 0
+
+		if isHub {
+			capturedChildMeta := childMeta
+			query = query.Relation(capturedRel.Rolnaam, func(q *bun.SelectQuery) *bun.SelectQuery {
+				if peiltijdstip != nil {
+					q = applyFormeleTijdFilterVoorModel(q, capturedRel.Doeltype, *peiltijdstip)
+				}
+				// Geneste relaties: Data, Aanvang, Einde
+				for _, grandchild := range capturedChildMeta.OnderliggendeGegevenselementen {
+					capturedGC := grandchild
+					if peiltijdstip != nil {
+						q = q.Relation(capturedGC.Rolnaam, func(rq *bun.SelectQuery) *bun.SelectQuery {
+							return applyFormeleTijdFilterVoorModel(rq, capturedGC.Doeltype, *peiltijdstip)
+						})
+					} else {
+						q = q.Relation(capturedGC.Rolnaam)
+					}
+				}
+				return q
+			})
+		} else {
+			if peiltijdstip != nil {
+				capturedDoeltype := capturedRel.Doeltype
+				query = query.Relation(capturedRel.Rolnaam, func(relQuery *bun.SelectQuery) *bun.SelectQuery {
+					return applyFormeleTijdFilterVoorModel(relQuery, capturedDoeltype, *peiltijdstip)
+				})
+			} else {
+				query = query.Relation(capturedRel.Rolnaam)
+			}
+		}
+	}
+	return query
+}
+
 // MakeGetFullEntitiesByMetaHandler returns a gin.HandlerFunc that retrieves full entities defined by TypeMeta.Factory.
 func MakeGetFullEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -808,17 +855,7 @@ func MakeGetFullEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 			query = applyFormeleTijdFilterVoorModel(query, meta.Typenaam, *peiltijdstip)
 		}
 
-		for _, rel := range meta.OnderliggendeGegevenselementen {
-			relatieNaam := rel.Rolnaam
-			doeltype := rel.Doeltype
-			if peiltijdstip != nil {
-				query = query.Relation(relatieNaam, func(relQuery *bun.SelectQuery) *bun.SelectQuery {
-					return applyFormeleTijdFilterVoorModel(relQuery, doeltype, *peiltijdstip)
-				})
-			} else {
-				query = query.Relation(relatieNaam)
-			}
-		}
+		query = addOnderliggendeRelations(query, meta, peiltijdstip)
 
 		err = query.
 			Limit(size).
@@ -897,17 +934,7 @@ func MakeGetFullEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 			query = applyFormeleTijdFilterVoorModel(query, meta.Typenaam, *peiltijdstip)
 		}
 
-		for _, rel := range meta.OnderliggendeGegevenselementen {
-			relatieNaam := rel.Rolnaam
-			doeltype := rel.Doeltype
-			if peiltijdstip != nil {
-				query = query.Relation(relatieNaam, func(relQuery *bun.SelectQuery) *bun.SelectQuery {
-					return applyFormeleTijdFilterVoorModel(relQuery, doeltype, *peiltijdstip)
-				})
-			} else {
-				query = query.Relation(relatieNaam)
-			}
-		}
+		query = addOnderliggendeRelations(query, meta, peiltijdstip)
 
 		err = query.
 			Where(meta.IDKolom+" = ?", entityID).

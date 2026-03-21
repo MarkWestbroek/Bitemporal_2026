@@ -2,6 +2,17 @@ package model
 
 // Hardcoded meta model for representatie types, avoiding reflection.
 
+// GESubtype onderscheidt de vier soorten GE/REL-lagen in het hub+data pattern.
+type GESubtype string
+
+const (
+	GESubtypeNone    GESubtype = ""        // entiteiten, entiteits-plumbing
+	GESubtypeHub     GESubtype = "hub"     // identiteitsanker (a_u, rel_a_b, ...)
+	GESubtypeData    GESubtype = "data"    // geversioned inhoud (a_u_data, ...)
+	GESubtypeAanvang GESubtype = "aanvang" // materiële aanvang (a_w_aanvang, ...)
+	GESubtypeEinde   GESubtype = "einde"   // materiële einde (a_w_einde, ...)
+)
+
 // Momentvoorkomen describes whether a relation is single or multiple.
 type Momentvoorkomen int
 
@@ -37,6 +48,11 @@ type TypeMeta struct {
 	Description string
 	Metatype    Metatype
 	IsMaterieel bool
+
+	// GE-subtype: classificatie van het type binnen de hub-hiërarchie
+	GESubtype GESubtype
+	// Typenaam van de onderliggende _Data (alleen bij hubs)
+	DataTypenaam string
 
 	// ==== JSON ====
 	// Veldnaam is the JSON field name used in REST requests (bijv. "a", "b", "rel_a_b", "u").
@@ -83,8 +99,10 @@ type TypeMeta struct {
 	// te vinden zijn (bijv. A_Aanvang, A_Einde). Geeft de naam van de bovenliggende entiteit (bijv. "A").
 	BovenliggendTypenaam string
 
-	// ==== Alleen voor entiteiten (of misschien toch ook voor GEn?)====
-	// OnderliggendeGegevenselementen applies to entiteiten; empty for gegevenselementen/relaties.
+	// ==== Alleen voor entiteiten en hubs ====
+	// OnderliggendeGegevenselementen beschrijft de onderliggende representaties.
+	// Bij entiteiten: GE-hubs en relatie-hubs.
+	// Bij hubs: _Data, en optioneel _Aanvang/_Einde (bij materiële hubs).
 	OnderliggendeGegevenselementen []OnderliggendGegevenselement
 }
 

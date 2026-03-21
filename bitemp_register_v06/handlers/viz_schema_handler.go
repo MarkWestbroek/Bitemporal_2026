@@ -27,6 +27,7 @@ type vizSchemaTypeDTO struct {
 	Typenaam                  string              `json:"typenaam"`
 	Description               string              `json:"description,omitempty"`
 	Metatype                  model.Metatype      `json:"metatype"`
+	GESubtype                 string              `json:"ge_subtype,omitempty"`  // hub, data, aanvang, einde (leeg voor entiteiten en legacy)
 	IsMaterieel               bool                `json:"isMaterieel,omitempty"` // of dit type een materiële tijdlijn heeft
 	Kleur                     string              `json:"kleur,omitempty"`
 	Veldnaam                  string              `json:"veldnaam"`
@@ -275,6 +276,13 @@ func reflectedVeldenVoorMeta(meta model.TypeMeta) []vizSchemaFieldDTO {
 		enum := enumValuesFromSchemaTag(f.Tag.Get("schema"))
 		description := strings.TrimSpace(f.Tag.Get("schema_desc"))
 
+		// autoIncrement: via bun-tag óf als het veld de IDKolom is bij een type met
+		// relatieve autoincrement. Dit laatste is nodig omdat _Input structs (Factory)
+		// geen bun-tags hebben, maar de frontend wel moet weten dat het veld
+		// automatisch wordt opgehoogd en dus niet in formulieren getoond hoeft te worden.
+		isAutoInc := hasBunOption(f.Tag.Get("bun"), "autoincrement") ||
+			(name == meta.IDKolom && meta.RelatieveAutoincrement)
+
 		velden = append(velden, vizSchemaFieldDTO{
 			Naam:          name,
 			Description:   description,
@@ -282,7 +290,7 @@ func reflectedVeldenVoorMeta(meta model.TypeMeta) []vizSchemaFieldDTO {
 			Format:        format,
 			Enum:          enum,
 			Verplicht:     !hasOmitEmpty,
-			AutoIncrement: hasBunOption(f.Tag.Get("bun"), "autoincrement"),
+			AutoIncrement: isAutoInc,
 		})
 	}
 
@@ -316,6 +324,7 @@ func MaakVizSchemaHandler() gin.HandlerFunc {
 				Typenaam:    meta.Typenaam,
 				Description: meta.Description,
 				Metatype:    meta.Metatype,
+				GESubtype:   string(meta.GESubtype),
 				IsMaterieel: meta.IsMaterieel,
 				Kleur:       meta.Kleur,
 				Veldnaam:    meta.Veldnaam,

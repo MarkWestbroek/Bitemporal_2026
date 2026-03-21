@@ -107,3 +107,54 @@ export function leidEntiteitTypeAfUitKolomnaam(kolomnaam, beschikbareEntiteitTyp
   const bestaat = safeArray(beschikbareEntiteitTypen).some((item) => String(item?.typenaam || "").toUpperCase() === prefix);
   return bestaat ? prefix : "";
 }
+
+/**
+ * Plat slaan van hub-items voor weergave en formulieren.
+ *
+ * In v06 retourneert de API hub-items met geneste data-arrays:
+ *   { a_id:1, rel_id:1, opvoer:…, data:[{versie:1, aaa:"foo", …}] }
+ *
+ * De functie mergt de inhoudsvelden van het actieve data-record (zonder afvoer)
+ * in het hub-item, zodat downstream code (visualisatie, formulieren, payloads)
+ * transparant met een plat item kan werken.
+ *
+ * Structurele velden van het data-type (bijv. versie = idKolom) worden
+ * niet gemerged om ruis in formulieren te voorkomen.
+ *
+ * @param {Array} items        - Array van hub-items uit de API-response
+ * @param {Object} hubTypeMeta - Schema-metadata van het hub-type (uit typeMetaByTypenaam)
+ * @param {Object} typeMetaByTypenaam - Volledige schema-map (typenaam → metadata)
+ * @returns {Array} Geplatte items met gemergde inhoudsvelden
+ */
+export function platSlaHubItems(items, hubTypeMeta, typeMetaByTypenaam) {
+  if (hubTypeMeta?.ge_subtype !== "hub") return safeArray(items);
+  const onderliggende = safeArray(hubTypeMeta?.onderliggende);
+  if (onderliggende.length === 0) return safeArray(items);
+
+  return safeArray(items).map((hubItem) => {
+    const merged = { ...hubItem };
+
+    for (const child of onderliggende) {
+      const childMeta = typeMetaByTypenaam?.[child.doeltype];
+      if (!childMeta || childMeta.ge_subtype !== "data") continue;
+
+      const childArray = safeArray(hubItem[child.jsonRolnaam] || hubItem[child.rolnaam]);
+      // Actief record = zonder afvoer; bij enkelvoudig max 1
+      const actief = childArray.find((d) => !d.afvoer) || childArray[0];
+      if (!actief) continue;
+
+      // Skip structurele velden van het data-type (bijv. "versie").
+      // entiteitIDKolom en hub-IDKolom bestaan al in het hub-item via !(k in merged).
+      const skipVelden = new Set();
+      if (childMeta.idKolom) skipVelden.add(String(childMeta.idKolom).toLowerCase());
+
+      for (const [k, v] of Object.entries(actief)) {
+        if (!(k in merged) && isPrimitiveWaarde(v) && !skipVelden.has(k.toLowerCase())) {
+          merged[k] = v;
+        }
+      }
+    }
+
+    return merged;
+  });
+}

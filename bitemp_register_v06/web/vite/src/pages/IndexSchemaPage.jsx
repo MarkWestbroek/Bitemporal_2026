@@ -12,6 +12,7 @@ import {
   korteSamenvatting,
   donkerdereRandkleurVanHex,
   leidEntiteitTypeAfUitKolomnaam,
+  platSlaHubItems,
 } from "../shared/schemaUtils";
 import SchemaIndexHeader from "../components/index/SchemaIndexHeader";
 import SchemaIndexControls from "../components/index/SchemaIndexControls";
@@ -30,6 +31,8 @@ function isPlumbingVeld(naam, typeMeta) {
   const k = String(naam).toLowerCase();
   if (TEMPORALE_PLUMBING_VELDEN.has(k)) return true;
   if (typeMeta?.entiteitIDKolom && k === String(typeMeta.entiteitIDKolom).toLowerCase()) return true;
+  // v06: de IDKolom van het type (bijv. rel_id voor hubs) is plumbing als autoIncrement actief is.
+  if (typeMeta?.idAutoIncrement && typeMeta?.idKolom && k === String(typeMeta.idKolom).toLowerCase()) return true;
 
   if (import.meta.env.DEV && !Array.isArray(typeMeta?.velden)) {
     const typeLabel = String(typeMeta?.typenaam || typeMeta?.doeltype || typeMeta?.veldnaam || "onbekend");
@@ -324,16 +327,25 @@ export default function IndexSchemaPage() {
         }, []);
 
         const childGroups = useMemo(() => {
-          const skeleton = safeArray(selectedEntiteitMeta?.onderliggende).map((child) => ({
-            typeMeta: typeMetaByTypenaam[child.doeltype] || null,
-            rolnaam: child.rolnaam,
-            jsonRolnaam: child.jsonRolnaam || '',
-            doeltype: child.doeltype,
-            metatype: String(typeMetaByTypenaam[child.doeltype]?.metatype || ''),
-            kleur: String(typeMetaByTypenaam[child.doeltype]?.kleur || ''),
-            secondaireEntiteitIDKolom: String(typeMetaByTypenaam[child.doeltype]?.secondaireEntiteitIDKolom || ''),
-            items: selectedA ? childArrayVoorRol(selectedA, child.rolnaam, child.jsonRolnaam) : [],
-          }));
+          const skeleton = safeArray(selectedEntiteitMeta?.onderliggende).map((child) => {
+            const childTypeMeta = typeMetaByTypenaam[child.doeltype] || null;
+            // v06 hub+data: als het child-type een hub is, plat slaan zodat
+            // inhoudsvelden van het actieve data-record direct beschikbaar zijn.
+            const rawItems = selectedA ? childArrayVoorRol(selectedA, child.rolnaam, child.jsonRolnaam) : [];
+            const items = childTypeMeta?.ge_subtype === 'hub'
+              ? platSlaHubItems(rawItems, childTypeMeta, typeMetaByTypenaam)
+              : rawItems;
+            return {
+              typeMeta: childTypeMeta,
+              rolnaam: child.rolnaam,
+              jsonRolnaam: child.jsonRolnaam || '',
+              doeltype: child.doeltype,
+              metatype: String(childTypeMeta?.metatype || ''),
+              kleur: String(childTypeMeta?.kleur || ''),
+              secondaireEntiteitIDKolom: String(childTypeMeta?.secondaireEntiteitIDKolom || ''),
+              items,
+            };
+          });
 
           if (skeleton.length > 0) {
             return skeleton;

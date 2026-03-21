@@ -88,10 +88,10 @@ func TestMaakVizSchemaHandler_GeeftSchemaTerug(t *testing.T) {
 
 	assertField("A", "id", "integer", "")
 	assertField("A", "us", "A_U", "array")
-	assertField("A_U", "bbb", "boolean", "")
-	assertField("A_W", "float", "number", "float64")
-	assertField("A_W", "heel", "integer", "")
-	assertField("A_V", "datum", "string", "date")
+	assertField("A_U_Data", "bbb", "boolean", "")
+	assertField("A_W_Data", "float", "number", "float64")
+	assertField("A_W_Data", "heel", "integer", "")
+	assertField("A_V_Data", "datum", "string", "date")
 
 	for _, item := range body.Types {
 		if item.Typenaam != "Rel_A_B" {
@@ -104,7 +104,7 @@ func TestMaakVizSchemaHandler_GeeftSchemaTerug(t *testing.T) {
 	}
 
 	for _, item := range body.Types {
-		if item.Typenaam != "Rel_A_B" {
+		if item.Typenaam != "Rel_A_B_Data" {
 			continue
 		}
 		for _, field := range item.Velden {
@@ -112,20 +112,20 @@ func TestMaakVizSchemaHandler_GeeftSchemaTerug(t *testing.T) {
 				continue
 			}
 			if field.Description == "" {
-				t.Fatal("expected field description on Rel_A_B.soort")
+				t.Fatal("expected field description on Rel_A_B_Data.soort")
 			}
 			expected := []string{"LTT", "LAT", "LTA"}
 			if len(field.Enum) != len(expected) {
-				t.Fatalf("expected Rel_A_B.soort enum length %d, got %d", len(expected), len(field.Enum))
+				t.Fatalf("expected Rel_A_B_Data.soort enum length %d, got %d", len(expected), len(field.Enum))
 			}
 			for index, value := range expected {
 				if field.Enum[index] != value {
-					t.Fatalf("expected Rel_A_B.soort enum[%d] %q, got %q", index, value, field.Enum[index])
+					t.Fatalf("expected Rel_A_B_Data.soort enum[%d] %q, got %q", index, value, field.Enum[index])
 				}
 			}
 			return
 		}
-		t.Fatalf("expected field soort on type Rel_A_B")
+		t.Fatalf("expected field soort on type Rel_A_B_Data")
 	}
-	t.Fatal("expected type Rel_A_B in schema response")
+	t.Fatal("expected type Rel_A_B_Data in schema response")
 }

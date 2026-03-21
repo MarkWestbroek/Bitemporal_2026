@@ -58,25 +58,48 @@ func createModelTables(ctx context.Context, db *bun.DB) error {
 					}
 				}
 				if (meta.Metatype == model.MetatypeGegevenselement || meta.Metatype == model.MetatypeRelatie) && meta.HeeftPFK {
-					// Zorg dat de tabel een samengestelde PK heeft (entiteit_id + rel_id).
-					// Nodig als de tabel al bestaat met een enkelvoudige PK (migratie-scenario).
-					if err := ensureCompositePKForGEofRelatie(ctx, db, meta); err != nil {
-						return fmt.Errorf("PK-fix mislukt voor %s (%s): %w", typeName, meta.Tabelnaam, err)
-					}
-					if err := createMaterielePlumbingTablesForGEofRelatie(ctx, db, meta); err != nil {
-						return fmt.Errorf("create materiele plumbing tabellen mislukt voor %s (%s): %w", typeName, meta.Tabelnaam, err)
+					// Hubs: hun _Aanvang/_Einde hebben eigen MetaRegistry entries,
+					// dus we slaan de oude DDL-generatie voor materiële plumbing over.
+					if meta.GESubtype != model.GESubtypeHub {
+						if err := ensureCompositePKForGEofRelatie(ctx, db, meta); err != nil {
+							return fmt.Errorf("PK-fix mislukt voor %s (%s): %w", typeName, meta.Tabelnaam, err)
+						}
+						if err := createMaterielePlumbingTablesForGEofRelatie(ctx, db, meta); err != nil {
+							return fmt.Errorf("create materiele plumbing tabellen mislukt voor %s (%s): %w", typeName, meta.Tabelnaam, err)
+						}
 					}
 				}
 			}
 
-			// maak de triggerfuncties aan voor autoincrement van relatieve ID's,
-			// indien nodig
-			// dit kan alleen voor gegevenselementen en relaties,
-			// en alleen als ze een PFK hebben (dus een FK naar een parent entiteit)
+			// === Trigger-registratie voor relatieve autoincrement ===
+			//
+			// Hub-onderlagen (_Data, _Aanvang, _Einde) gebruiken een composite trigger:
+			//   scope (ent_id, rel_id) → versie autoincrement
+			// Plus een FK constraint naar de bovenliggende hub.
+			//
+			// Gewone GE's/REL's (hubs zelf) gebruiken de enkelvoudige trigger:
+			//   scope (ent_id) → rel_id autoincrement
 			if (meta.Metatype == model.MetatypeGegevenselement || meta.Metatype == model.MetatypeRelatie) && meta.HeeftPFK && meta.RelatieveAutoincrement {
-				if err := RegisterRelativeIDTrigger(ctx, db,
-					dbModel, meta.Tabelnaam, meta.EntiteitIDKolom, meta.IDKolom); err != nil {
-					return fmt.Errorf("kon trigger voor relatieve ID's niet aanmaken voor %s (%s): %w", typeName, meta.Tabelnaam, err)
+				if meta.GESubtype == model.GESubtypeData || meta.GESubtype == model.GESubtypeAanvang || meta.GESubtype == model.GESubtypeEinde {
+					// _Data en hub _Aanvang/_Einde: versie incrementeert per (entiteit_id, rel_id)
+					parentMeta, ok := model.MetaRegistry.GetTypeMeta(meta.BovenliggendTypenaam)
+					if !ok {
+						return fmt.Errorf("bovenliggend type %s niet gevonden voor %s", meta.BovenliggendTypenaam, typeName)
+					}
+					hubRelIDCol := parentMeta.IDKolom // "rel_id" van de hub
+					if err := RegisterRelativeIDTriggerComposite(ctx, db,
+						meta.Tabelnaam, meta.EntiteitIDKolom, hubRelIDCol, meta.IDKolom); err != nil {
+						return fmt.Errorf("kon composite trigger niet aanmaken voor %s (%s): %w", typeName, meta.Tabelnaam, err)
+					}
+					// FK constraint naar de hub tabel
+					if err := ensureFKToParentHub(ctx, db, meta, parentMeta); err != nil {
+						return fmt.Errorf("FK constraint mislukt voor %s → %s: %w", typeName, parentMeta.Typenaam, err)
+					}
+				} else {
+					if err := RegisterRelativeIDTrigger(ctx, db,
+						dbModel, meta.Tabelnaam, meta.EntiteitIDKolom, meta.IDKolom); err != nil {
+						return fmt.Errorf("kon trigger voor relatieve ID's niet aanmaken voor %s (%s): %w", typeName, meta.Tabelnaam, err)
+					}
 				}
 			}
 
@@ -273,4 +296,29 @@ func resolveKolomType(ctx context.Context, db *bun.DB, tableName string, columnN
 	}
 
 	return kolomType, nil
+}
+
+// ensureFKToParentHub voegt een composite FK constraint toe van een _Data of hub _Aanvang/_Einde
+// tabel naar de bovenliggende hub tabel, als die constraint nog niet bestaat.
+func ensureFKToParentHub(ctx context.Context, db *bun.DB, childMeta, parentMeta model.TypeMeta) error {
+	childTable := strings.TrimSpace(childMeta.Tabelnaam)
+	parentTable := strings.TrimSpace(parentMeta.Tabelnaam)
+	entCol := strings.TrimSpace(childMeta.EntiteitIDKolom)
+	relCol := strings.TrimSpace(parentMeta.IDKolom)
+	fkName := fmt.Sprintf("fk_%s_%s_%s", childTable, entCol, relCol)
+
+	sql := fmt.Sprintf(`
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = '%[1]s'
+    ) THEN
+        ALTER TABLE "%[2]s" ADD CONSTRAINT "%[1]s"
+            FOREIGN KEY ("%[3]s", "%[4]s") REFERENCES "%[5]s" ("%[3]s", "%[4]s") ON DELETE CASCADE;
+    END IF;
+END $$;
+`, fkName, childTable, entCol, relCol, parentTable)
+
+	_, err := db.ExecContext(ctx, sql)
+	return err
 }
