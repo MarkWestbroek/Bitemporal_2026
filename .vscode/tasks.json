@@ -77,6 +77,72 @@
 				"Set-Location bitemporal_go_API_v05; go test ./... -coverprofile coverage.out; go tool cover -func coverage.out | Set-Content web/coverage_functions.txt; go tool cover -html coverage.out -o web/coverage.html; Write-Output 'Generated /viz/coverage_report.html, /viz/coverage_functions.txt and /viz/coverage.html'"
 			],
 			"isBackground": false
+		},
+		{
+			"label": "vite: dev server (v06)",
+			"type": "shell",
+			"command": "C:\\Program Files\\nodejs\\npm.cmd",
+			"args": [
+				"run",
+				"dev",
+				"--",
+				"--host"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/bitemp_register_v06/web/vite"
+			},
+			"isBackground": true,
+			"problemMatcher": {
+				"owner": "custom",
+				"fileLocation": "absolute",
+				"pattern": {
+					"regexp": "^(.*)$",
+					"file": 1,
+					"message": 1
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "^.*(VITE|vite).*$",
+					"endsPattern": "^.*ready in.*$"
+				}
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated"
+			}
+		},
+		{
+			"label": "go: test all (v06)",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"Set-Location bitemp_register_v06; go test ./..."
+			],
+			"isBackground": false
+		},
+		{
+			"label": "go: coverage all (v06)",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"Set-Location bitemp_register_v06; go test ./... -coverprofile coverage.out; go tool cover -func coverage.out"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "go: coverage html (v06)",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"Set-Location bitemp_register_v06; go test ./... -coverprofile coverage.out; go tool cover -func coverage.out | Set-Content web/coverage_functions.txt; go tool cover -html coverage.out -o web/coverage.html; Write-Output 'Generated /viz/coverage_report.html, /viz/coverage_functions.txt and /viz/coverage.html'"
+			],
+			"isBackground": false
 		}
 	]
 }

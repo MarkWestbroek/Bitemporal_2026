@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Viz startpagina</title>
+    <style>
+      :root {
+        --bg: #f8fafc;
+        --panel: #ffffff;
+        --line: #cbd5e1;
+        --text: #0f172a;
+        --muted: #475569;
+        --accent: #0f766e;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Noto Sans", sans-serif;
+        background: radial-gradient(900px 260px at 100% -20%, #dbeafe 0%, transparent 55%),
+          linear-gradient(180deg, #f0f9ff 0%, var(--bg) 260px);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      main {
+        width: min(860px, calc(100vw - 24px));
+        margin: 18px auto 28px;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(22px, 3.2vw, 30px);
+      }
+
+      h2 {
+        margin: 0 0 8px;
+        font-size: 18px;
+      }
+
+      p {
+        margin: 0 0 10px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .grid {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      li {
+        margin: 8px 0;
+      }
+
+      a {
+        color: var(--accent);
+        text-underline-offset: 2px;
+      }
+
+      .note {
+        margin-top: 12px;
+        font-size: 13px;
+      }
+
+      @media (max-width: 760px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="card">
+        <h1>Visualisatie startpagina</h1>
+        <p>Gebruik deze pagina als ingang voor de twee actieve React + Vite visualisaties.</p>
+      </section>
+
+      <section class="grid" aria-label="Viz links en requirements">
+        <article class="card">
+          <h2>Actieve pagina's</h2>
+          <ul>
+            <li><a href="/viz/react/">Index (React + Vite)</a></li>
+            <li><a href="/viz/react/tijdlijn.html">Tijdlijn (React + Vite)</a></li>
+            <li><a href="/viz/react/registraties.html">Registraties replay (React + Vite)</a></li>
+            <li><a href="/viz/coverage.html">Test coverage rapport (HTML)</a></li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h2>Requirements</h2>
+          <ul>
+            <li>JavaScript moet aanstaan in de browser.</li>
+            <li>Moderne browser (Chrome, Edge, Safari, Firefox).</li>
+            <li>Toegang tot API-server op poort 8080 vanaf je netwerk.</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="card" style="margin-top: 12px">
+        <h2>Mobiel troubleshooting</h2>
+        <ul>
+          <li>Test eerst of deze pagina zelf opent: <a href="/viz/">/viz/</a>.</li>
+          <li>Open daarna <a href="/viz/react/">/viz/react/</a>.</li>
+          <li>Open de tijdlijn via <a href="/viz/react/tijdlijn.html">/viz/react/tijdlijn.html</a>.</li>
+          <li>Open replay via <a href="/viz/react/registraties.html">/viz/react/registraties.html</a>.</li>
+          <li>Open coverage via <a href="/viz/coverage.html">/viz/coverage.html</a> (na run van coverage-task).</li>
+          <li>Probeer tijdelijk wifi en mobiele data om DNS/firewall issues uit te sluiten.</li>
+        </ul>
+        <p class="note">Tip: als assets niet laden, force-refresh de pagina en controleer of de laatste frontend-build is uitgerold.</p>
+      </section>
+    </main>
+  </body>
+</html>

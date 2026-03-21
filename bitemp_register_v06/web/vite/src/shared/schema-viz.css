@@ -1,0 +1,109 @@
+:root {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-soft: #f8fafc;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --ink: #0f172a;
+  --muted: #475569;
+  --stroke: #334155;
+  --edge: #94a3b8;
+  --opvoer-fill: #eefcf2;
+  --afvoer-fill: #fff4e8;
+  --neutral-fill: #f8fafc;
+  --registration-fill: #ecfeff;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.container {
+  max-width: 1700px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.page-title {
+  font-size: 26px;
+  margin: 0 0 8px;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+a.muted {
+  color: var(--muted);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+
+input,
+select,
+button {
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 14px;
+}
+
+button {
+  cursor: pointer;
+  color: #ffffff;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.graph {
+  width: 100%;
+  border: 1px dashed var(--border-strong);
+  background: var(--surface-soft);
+}
+
+.node {
+  fill: #ffffff;
+  stroke: var(--stroke);
+  stroke-width: 1.2;
+}
+
+.edge {
+  stroke: var(--edge);
+  stroke-width: 1.4;
+}
+
+.label {
+  fill: var(--ink);
+}
+
+@media (max-width: 900px) {
+  .controls {
+    grid-template-columns: 1fr;
+  }
+}

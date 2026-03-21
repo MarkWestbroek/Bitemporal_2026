@@ -1,0 +1,462 @@
+# Materiële tijd
+
+Dit document beschrijft hoe materiële tijd is ontworpen en geïmplementeerd in de bitemporale API (v05).
+
+## 1. Achtergrond: twee tijdslijnen
+
+In bitemporele registratie bestaan twee tijdslijnen:
+
+1. **Formele tijd** (registratietijd) — _wanneer_ is iets geregistreerd in het register?
+   Uitgewerkt via `registratie.tijdstip`, `wijziging`, `opvoer` en `afvoer`.
+   Zie ook [tijdreizen.md](../tijdreizen.md) voor de formele tijdreisqueries.
+
+2. **Materiële tijd** (geldigheidstijd) — _wanneer_ is iets geldig in de werkelijkheid?
+   Uitgewerkt via **aanvang** en **einde** datums per representatie.
+
+Een representatie (entiteit, gegevenselement of relatie) kan materieel zijn (`IsMaterieel: true`)
+of uitsluitend formeel. Materiële representaties kennen naast opvoer/afvoer ook een optionele
+aanvangsdatum en einddatum.
+
+## 2. Ontwerp: aanvang en einde als plumbing-gegevenselementen
+
+### 2.1 Kernprincipe
+
+> "Een aanvang/einde van een entiteit gedraagt zich qua opvoer/afvoer gewoon als een gegevenselement."
+
+Dit betekent dat aanvang en einde:
+
+- Eigen database-tabellen hebben (bijv. `a_aanvang`, `a_einde`, `b_aanvang`, `b_einde`)
+- Eigen versiehistorie bijhouden (met `opvoer`, `afvoer`, en `versie` als relatief autoincrement)
+- Enkelvoudig zijn op enig moment (er is maximaal één actieve aanvang en één actief einde)
+- Afgehandeld worden door dezelfde generieke handler als reguliere gegevenselementen (`handleRepresentatieOpvoer`)
+- Automatisch de voorganger afvoeren bij een nieuwe opvoer (enkelvoudige logica)
+
+### 2.2 Verschil met reguliere gegevenselementen
+
+Aanvang/einde wijken op een paar punten af:
+
+| Aspect | Regulier GE (bijv. A_U) | Aanvang/Einde (bijv. A_Aanvang) |
+|---|---|---|
+| FK-kolom | `a_id` → `a.id` | `id` → `a.id` (zelfde kolomnaam als PK van de entiteit) |
+| PK | `(a_id, rel_id)` | `(id, versie)` |
+| MetaRegistry opname | In `OnderliggendeGegevenselementen` van de entiteit + als eigen entry | Eigen entry + `BovenliggendTypenaam` als terugverwijzing |
+| Weergave in UI | Als reguliere GE-kaart in de SVG-grafiek | Als "oortje" (badge) boven de entiteitskaart |
+
+### 2.3 BovenliggendTypenaam
+
+Plumbing GE-types zoals `A_Aanvang` staan niet altijd als eerste in de klassieke
+`OnderliggendeGegevenselementen`-lookup. Daarom heeft `TypeMeta` het veld `BovenliggendTypenaam`.
+Dit wordt als fallback gebruikt in:
+
+- `vindEntiteitContext()` — om de bovenliggende entiteitnaam te bepalen bij registratie
+- `sluitActieveEnkelvoudigeVoorgangersAf()` — om de juiste parent-context te vinden bij afvoer van voorgangers
+
+## 3. Database-structuur
+
+Per materiële entiteit bestaan twee plumbing-tabellen. Voorbeeld voor entiteit A:
+
+```sql
+CREATE TABLE a_aanvang (
+    id      INTEGER NOT NULL REFERENCES a(id),
+    versie  SERIAL,
+    datum   DATE,
+    opvoer  TIMESTAMPTZ,
+    afvoer  TIMESTAMPTZ,
+    PRIMARY KEY (id, versie)
+);
+
+CREATE TABLE a_einde (
+    id      INTEGER NOT NULL REFERENCES a(id),
+    versie  SERIAL,
+    datum   DATE,
+    opvoer  TIMESTAMPTZ,
+    afvoer  TIMESTAMPTZ,
+    PRIMARY KEY (id, versie)
+);
+```
+
+- `id` is een FK naar de entiteit (bijv. `a.id`)
+- `versie` is een relatief autoincrement binnen de entiteit (per `id`)
+- `datum` is een `DATE` (geen timestamp): het materiële tijdstip
+- `opvoer`/`afvoer` zijn formele timestamps (wanneer geregistreerd/afgevoerd)
+
+Dezelfde structuur geldt voor `b_aanvang`, `b_einde`, en potentieel voor elk materieel type.
+
+## 4. Go-implementatie
+
+### 4.1 Structs (`model/model_plumbing.go`)
+
+Per entiteitstype zijn er concrete structs:
+
+```go
+type A_Aanvang struct {
+    bun.BaseModel `bun:"table:a_aanvang,alias:a_aanvang"`
+    A_ID          int        `json:"a_id" bun:"id,pk"`
+    Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+    Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+    Opvoer        *time.Time `json:"opvoer,omitempty"`
+    Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+```
+
+Elk implementeert `FormeleRepresentatie` (GetID, Metatype, ClearID, Get/SetOpvoer, Get/SetAfvoer).
+`GetID()` retourneert `Versie` (niet `A_ID`), want de versie is de identifier van de individuele representatie.
+
+#### Bun alias-tag (`alias:a_aanvang`)
+
+Zonder expliciete alias leidt bun de SQL-alias af uit de Go struct-naam: `A_Aanvang` → `a__aanvang`
+(dubbele underscore). De `formeleTijdTargetVoorModel`-subquery verwijst naar `a_aanvang.id::text`
+(enkelvoudige underscore), waardoor PostgreSQL een "invalid reference to FROM-clause entry" fout geeft.
+De `alias:`-tag forceert de juiste aliasnaam.
+
+#### Historische noot: `bun:"-"` op Aanvang/Einde velden
+
+Voorheen bevatten de structs `A`, `B`, `Rel_A_B` en `A_W` enkelvoudige `Aanvang *Aanvang`
+en `Einde *Einde` velden met `bun:"-"`. Deze zijn inmiddels verwijderd als dead code:
+de werkelijke materiële tijdlijn wordt volledig afgehandeld via de plumbing-relaties
+(`[]A_Aanvang`, `[]A_Einde` etc.) en de aparte plumbing-tabellen.
+
+### 4.2 MetaRegistry (`model/metaregistry.go`)
+
+Elk aanvang/einde-type heeft een eigen entry in de MetaRegistry:
+
+```go
+"A_Aanvang": {
+    Typenaam:               "A_Aanvang",
+    Metatype:               MetatypeGegevenselement,
+    IDKolom:                "versie",
+    EntiteitIDKolom:        "id",
+    HeeftPFK:               true,
+    RelatieveAutoincrement: true,
+    Momentvoorkomen:        Enkelvoudig,
+    BovenliggendTypenaam:   "A",
+    // ...
+},
+```
+
+Daarnaast worden ze opgenomen in de `OnderliggendeGegevenselementen` van de bovenliggende entiteit
+zodat de GET-handlers ze automatisch inladen via bun `.Relation()`:
+
+```go
+{Rolnaam: "Aanvang", JSONRolnaam: "aanvang", Doeltype: "A_Aanvang", Momentvoorkomen: Enkelvoudig},
+{Rolnaam: "Einde",   JSONRolnaam: "einde",   Doeltype: "A_Einde",   Momentvoorkomen: Enkelvoudig},
+```
+
+### 4.3 Entity structs (`model/modellen_entiteiten.go`)
+
+De `A` en `B` structs bevatten bun-relaties naar aanvang/einde:
+
+```go
+Aanvang []A_Aanvang `bun:"rel:has-many,join:id=a_id" json:"aanvang,omitempty"`
+Einde   []A_Einde   `bun:"rel:has-many,join:id=a_id" json:"einde,omitempty"`
+```
+
+Let op de join `join:id=a_id`: het `id`-veld van de A struct (= `a.id`) wordt gematcht
+op het `a_id`-veld van de plumbing-tabel (= `a_aanvang.a_id`), wat de FK is.
+
+De veldnamen zijn enkelvoud (`Aanvang`, `Einde`) — hoewel over de tijd heen meerdere
+versies kunnen voorkomen (door correcties), is er op enig moment maximaal één actief.
+De JSON-namen zijn generiek (`"aanvang"`, `"einde"`) zonder entiteitsprefix, omdat
+ze al genest zijn binnen het entiteitsobject.
+
+### 4.4 Handler-aanpassingen (`handlers/registration_helpers_generiek.go`)
+
+Twee functies zijn aangepast om plumbing GE-types correct af te handelen:
+
+- **`vindEntiteitContext()`** — heeft een fallback op `meta.BovenliggendTypenaam`
+  wanneer het type niet via `GetBovenliggendeRelatieMeta()` gevonden kan worden.
+
+- **`sluitActieveEnkelvoudigeVoorgangersAf()`** — gebruikt zowel `IDKolom` als
+  `EntiteitIDKolom` in de WHERE-clause bij PFK-types, zodat versie-id's die
+  alleen binnen één entiteit uniek zijn niet per ongeluk records van andere entiteiten raken.
+
+### 4.5 Schema API (`handlers/viz_schema_handler.go`)
+
+De `/api/viz/schema` response bevat nu:
+
+- `isMaterieel` — of het type een materiële tijdlijn heeft
+- `bovenliggendTypenaam` — voor plumbing types, de naam van de bovenliggende entiteit
+
+De frontend gebruikt `bovenliggendTypenaam` om aanvang/einde types te herkennen en
+ze apart te behandelen (als oortjes in plaats van als reguliere GE-kaarten).
+
+#### `jsonNaamVoorBunKolom()` — vertaling DB-kolomnaam → JSON-veldnaam
+
+De MetaRegistry slaat kolomnamen op als database-namen (bijv. `EntiteitIDKolom: "id"`).
+De frontend werkt echter met JSON-keys (bijv. `"a_id"`). De helperfunctie `jsonNaamVoorBunKolom()`
+vertaalt via reflectie op de struct: het doorloopt alle velden, matcht de bun-tag op de kolomnaam,
+en retourneert de bijbehorende json-tag.
+
+Dit is nodig voor plumbing types waar de naamconventie afwijkt:
+- Reguliere GE's: DB `a_id` = JSON `a_id` (zelfde naam)
+- Plumbing types: DB `id` = JSON `a_id` (verschillende namen)
+
+Zonder vertaling kan de frontend:
+- Het entiteits-ID veld niet correct herkennen (getoond als bewerkbaar veld)
+- De payload niet correct opbouwen (zoekt `item["id"]` i.p.v. `item["a_id"]`)
+- De bewerkbox-titel niet correct weergeven (`rel_id=?` in plaats van `versie=1`)
+
+## 5. Frontend-visualisatie (React/SVG)
+
+### 5.1 Filtering (`IndexSchemaPage.jsx`)
+
+Aanvang/einde groepen worden uitgefilterd uit `childGroupsGesorteerd` zodat ze niet
+als reguliere gegevenselement-kaarten in de grafiek verschijnen:
+
+```js
+// Filter aanvang/einde plumbing types uit de reguliere weergave
+return [...childGroups]
+  .filter((group) => !typeMetaByTypenaam[group.doeltype]?.bovenliggendTypenaam)
+  .sort(...)
+```
+
+In plaats daarvan wordt `entiteitOortjes` berekend: de actieve (geen afvoer) aanvang-
+en einde-datum uit de plumbing groepen.
+
+### 5.2 Oortjes-weergave (`IndexRepresentatieVisual.jsx`)
+
+De aanvang en einde worden als tab-vormige badges ("oortjes") boven de entiteitskaart
+getoond in de SVG, met een kaartlip-effect:
+
+- **SVG-pad**: `oortjePad(x, y, w, h, r)` tekent een pad met afgeronde bovenkant en open onderkant.
+  Door het pad _vóór_ de entity rect te tekenen bedekt die de onderrand (kaartlip-effect).
+- **Aanvang**: links boven de entiteitskaart, x=331
+- **Einde**: rechts boven de entiteitskaart, x=475
+- **Breedte**: 94px — past een volledig NL-datumformaat (d-m-jjjj, bijv. "31-12-1979").
+- **Klikbaar**: elke oortje is een `<g onClick={() => selecteerRep(item, group)}>`, net als GE-kaarten.
+  Klikken opent het bewerkformulier voor opvoeren/afvoeren/corrigeren.
+- **Selectie-indicator**: blauw gestreept kader als het oortje geselecteerd is.
+- Opgemaakt in handschrift-achtig lettertype (Caveat) voor visueel onderscheid.
+- Datumweergave in NL-formaat: dag-maand-volledigjaar (bijv. "1-1-2020", "31-12-1979").
+
+### 5.2b Oortjes op de tijdlijn-pagina (`TijdlijnRepresentatiePaneel.jsx`)
+
+De tijdlijn-pagina toont oortjes op iedere entiteitssnapshot-kaart in een compact formaat:
+
+- **Positie**: boven de entiteitskaart (132×82px), aanvang links, einde rechts.
+- **Breedte**: 62px — smaller dan de index-variant (94px) omdat de tijdlijn minder ruimte heeft.
+- **Hoogte**: 26px — duidelijk hoger voor betere leesbaarheid in smalle ruimte.
+- **Lettertype**: 11.6px smalle font-stack (`Arial Narrow` / `Roboto Condensed` / `Bahnschrift Condensed`, fallback `Caveat`) via `oortjeStyleNarrow`.
+- **Tekstpositie**: horizontaal gecentreerd en verticaal optisch iets hoger (`y = OY + OH/2 - 3`) met `dominantBaseline="central"`.
+- **Niet klikbaar**: in de tijdlijn zijn oortjes puur informatief (geen bewerkformulier).
+- Plumbing-types (A_Aanvang, A_Einde, B_Aanvang, B_Einde) worden uitgefilterd uit de
+  reguliere GE-kaarten in `buildChildNodes` via `isPlumbingGroup`.
+
+### 5.2c Gedeelde oortjes-hulpfuncties (`shared/oortjesUtils.js`)
+
+De oortjes-logica is geëxtraheerd naar een gedeeld bestand:
+
+- `korteDatumWeergave(datumStr)` — formatteert naar NL-formaat d-m-jjjj
+- `oortjePad(x, y, w, h, r)` — genereert het SVG-pad voor de tab-vorm
+- `oortjeStyle` / `oortjeStyleNarrow` — lettertypestijlen voor normaal en compact formaat
+- `bepaalOortjesUitChildGroups(childGroups, typeMetaByTypenaam)` — zoekt actieve aanvang/einde items
+
+### 5.3 Oortjes-datamodel (`IndexSchemaPage.jsx`)
+
+De `entiteitOortjes` useMemo retourneert objecten met `{item, group, datum}` in plaats van
+alleen de datumstring. Dit is nodig om de oortjes klikbaar te maken:
+
+- `item` — de volledige representatie (A_Aanvang of A_Einde record, zonder afvoer)
+- `group` — de groep met typeMeta, kleur, doeltype etc.
+- `datum` — de materiële datum voor weergave
+
+### 5.4 Bewerkbox-titel
+
+De titel van het bewerkformulier ("action overlay") toont het dynamische `idKolom` uit de
+typeMeta. Voor reguliere GE's is dat `rel_id`, voor plumbing types is dat `versie`.
+De waarde wordt opgezocht via de JSON-veldnaam die door `jsonNaamVoorBunKolom()` vertaald is.
+
+### 5.5 Aanvang/einde datumpickers in opvoerformulieren
+
+Materiële entiteiten hebben aanvang- en einddatums. Deze kunnen worden ingesteld via
+twee datumpickers (HTML `<input type="date">`) in zowel het "nieuwe entiteit opvoeren"-
+formulier als het "bestaande entiteit"-actieoverzicht.
+
+#### Werking
+
+- **Zichtbaarheid**: de datumpickers worden alleen getoond als `selectedEntiteitMeta.isMaterieel`
+  true is. Niet-materiële entiteiten tonen het blok niet.
+- **Optioneel**: beide velden zijn optioneel. Een entiteit kan zonder aanvang/einde opgevoerd worden.
+- **Positie**: boven de GE/relatie-secties, in een blauw getint vak.
+- **Bij bestaande entiteiten**: het label toont de huidige waarde via `entiteitOortjes` (bijv.
+  "Aanvang (huidig: 2020-01-01)").
+
+#### Dataflow
+
+1. **State**: `nieuweEntiteitAanvang` / `nieuweEntiteitEinde` voor nieuwe entiteiten;
+   `entiteitAanvangDatum` / `entiteitEindeDatum` voor bestaande entiteiten.
+2. **`materieleTijdMeta`** useMemo: haalt `veldnaam` en `entiteitIDKolom` op uit de
+   aanvang/einde childGroups. Bijv. `{ aanvangVeldnaam: "a_aanvang", aanvangEntiteitIDKolom: "a_id", ... }`.
+3. **Payload**: als een datum is ingevuld, wordt een extra `{ opvoer: { [veldnaam]: { [entiteitIDKolom]: id, datum: "YYYY-MM-DD" } } }`
+   wijziging aan de array toegevoegd.
+4. **Na succes**: datumvelden worden gereset.
+
+#### Betrokken componenten
+
+- `IndexSchemaPage.jsx` — state, `materieleTijdMeta`, payload-injectie in previews + uitvoerfuncties
+- `NieuweEntiteitActieBox.jsx` — datumpickers met props `isMaterieel`, `nieuweEntiteitAanvang/Einde`
+- `EntiteitActieBox.jsx` — datumpickers met props `isMaterieel`, `entiteitAanvangDatum/EindeDatum`
+
+## 6. API voorbeeld
+
+### GET /full/as/1 (response fragment)
+
+```json
+{
+  "id": 1,
+  "opvoer": "2026-03-15T10:00:00Z",
+  "us": [...],
+  "vs": [...],
+  "ws": [...],
+  "rel_abs": [...],
+  "aanvang": [
+    {
+      "a_id": 1,
+      "versie": 1,
+      "datum": "2020-01-01",
+      "opvoer": "2026-03-15T10:00:00Z"
+    }
+  ],
+  "einde": [
+    {
+      "a_id": 1,
+      "versie": 1,
+      "datum": "2025-12-31",
+      "opvoer": "2026-03-16T09:00:00Z"
+    }
+  ]
+}
+```
+
+### POST /registreer/a_aanvang (opvoer aanvangsdatum)
+
+```json
+{
+  "registratie": { "registratietype": "registratie" },
+  "wijzigingen": [
+    { "opvoer": { "a_aanvang": { "id": 1, "datum": "2020-01-01" } } }
+  ]
+}
+```
+
+Dit maakt gebruik van het reguliere registratie-endpoint; de aanvang wordt opgevoerd
+als een gewoon enkelvoudig gegevenselement.
+
+### POST /registratie/ (nieuwe entiteit met aanvang en einde)
+
+```json
+{
+  "registratie": { "registratietype": "registratie" },
+  "wijzigingen": [
+    { "opvoer": { "a": { "id": 5 } } },
+    { "opvoer": { "a_u": { "a_id": 5, "aaa": "waarde" } } },
+    { "opvoer": { "a_aanvang": { "a_id": 5, "datum": "2020-01-01" } } },
+    { "opvoer": { "a_einde": { "a_id": 5, "datum": "2025-12-31" } } }
+  ]
+}
+```
+
+De UI bouwt deze payload automatisch op wanneer de gebruiker datums invult in de
+materiële-tijd datumpickers van het opvoerformulier.
+
+## 7. Bekende problemen en oplossingen
+
+### 7.1 `column a_w.aanvang does not exist` (bun SELECT) — opgelost en opgeruimd
+
+**Probleem**: Voorheen bevatten `A`, `B`, `Rel_A_B` en `A_W` enkelvoudige `Aanvang *Aanvang`
+en `Einde *Einde` velden die door bun als database-kolommen werden geïnterpreteerd.
+
+**Oorspronkelijke oplossing**: `bun:"-"` tags.
+
+**Huidige status**: Deze velden zijn volledig verwijderd als dead code. De materiële tijdlijn
+wordt afgehandeld via de plumbing-relaties (`[]A_Aanvang`, `[]A_Einde` etc.).
+
+### 7.2 `invalid reference to FROM-clause entry for table "a_aanvang"` (bun alias)
+
+**Probleem**: Bun leidt SQL-aliassen af uit Go struct-namen: `A_Aanvang` → `a__aanvang` (dubbele underscore).
+De `formeleTijdTargetVoorModel`-subquery verwijst naar `a_aanvang.id::text` (enkelvoudige underscore).
+
+**Oplossing**: Expliciete `alias:a_aanvang` (etc.) in de bun table tag van alle plumbing structs in `model/model_plumbing.go`.
+
+### 7.3 Bewerkbox toont `rel_id=?` voor plumbing types
+
+**Probleem**: De MetaRegistry slaat `EntiteitIDKolom: "id"` (DB-naam) op, maar de frontend zoekt
+`item["id"]` in JSON waar het veld `"a_id"` heet. Hierdoor:
+- Titel toont `rel_id=?` (hardcoded fallback)
+- `a_id` wordt als bewerkbaar veld getoond (niet herkend als entiteits-ID)
+- POST-payload bevat geen `a_id`, wat een "lege ID" fout oplevert
+
+**Oplossing**: `jsonNaamVoorBunKolom()` in `viz_schema_handler.go` vertaalt DB-kolomnamen naar
+JSON-veldnamen via reflectie. De bewerkbox-titel gebruikt nu dynamisch `typeMeta.idKolom`.
+
+### 7.4 DB-kolom `id` in plumbing-tabellen hernoemd naar `a_id`/`b_id`
+
+**Probleem**: De kolom die naar de bovenliggende entiteit verwijst heette `id` in `a_aanvang`,
+`a_einde`, `b_aanvang` en `b_einde`. Dit is inconsistent met alle andere GE-types die
+`a_id` resp. `b_id` gebruiken (bijv. `a_u.a_id`, `a_v.a_id`). Het leidde ook tot verwarring
+met de entiteit's eigen PK (`a.id`).
+
+**Oplossing** (commit 20260321):
+
+| Laag | Wijziging |
+|------|-----------|
+| `model/model_plumbing.go` | bun-tag `bun:"id,pk"` → `bun:"a_id,pk"` / `bun:"b_id,pk"` |
+| `model/metaregistry.go` | `EntiteitIDKolom: "id"` → `"a_id"` / `"b_id"` |
+| `dbsetup/createmodeltables.go` | `createMaterielePlumbingTable` genereert `{entiteit}_id` als lokale FK-kolom |
+| migratie-SQL | `ALTER TABLE ... RENAME COLUMN "id" TO "a_id"/"b_id"` |
+
+De `normalizeVeldnaam()`-matcher in `haalIntWaardeVoorKolomUitRepresentatie` en `vindKolomTypeInDBModel`
+herkent `"a_id"` automatisch als Go-veld `A_ID` (normaliseert naar `"aid"`).
+
+### 7.5 Afvoer van plumbing-type faalt: verkeerd record uit DB opgehaald
+
+**Probleem**: `updateAfvoerByID` en `haalRepresentatieUitDB` filteren alleen op `IDKolom`
+(= `versie`), zonder `EntiteitIDKolom`. Omdat `versie` een relatief autoincrement is
+(1, 2, 3 per entiteit), kan `WHERE versie = 1` het record van een andere entiteit raken.
+Symptoom: "kan A_Aanvang met ID 1 niet afvoeren, want deze is al afgevoerd" — terwijl
+de gebruiker een andere entiteit bedoelt.
+
+**Oplossing**: Beide functies hebben nu een extra `entiteitID any` parameter.
+Bij PFK-types (`HeeftPFK=true`) wordt automatisch `WHERE {EntiteitIDKolom} = ?` aan de
+query toegevoegd. Alle bestaande callers zijn aangepast:
+
+- `handleRepresentatieOpvoer` (correctie-pad): extraheert `pfkEntiteitID` uit de representatie
+- `handleRepresentatieAfvoer`: idem, voor zowel `haalRepresentatieUitDB` als `updateAfvoerByID`
+- Cascade-afvoer van kinderen: geeft `entiteitIDInt` door
+- `sluitActieveEnkelvoudigeVoorgangersAf`: vereenvoudigd — inline PFK-branch vervangen door
+  de generieke `updateAfvoerByID` die het nu zelf afhandelt
+- `checkBovenliggendeEntiteitActief`: geeft `nil` mee (entiteiten hebben geen PFK)
+
+### 7.6 Correctie van materiële-tijd GE's faalt: item-match in frontend vindt geen hit
+
+**Symptoom**: bij het openen van "Corrigeer velden" in de RegistratieActieBox verschijnt
+"Huidige representatie niet beschikbaar" voor A_Einde of A_Aanvang wijzigingen,
+terwijl de data wel geladen is.
+
+**Oorzaak**: `zoekGroupEnItemVoorWijziging` matcht items via `item.rel_id ?? item.id`,
+maar plumbing types (A_Aanvang, A_Einde, B_Aanvang, B_Einde) hebben geen `id`- of
+`rel_id`-veld in hun JSON. Hun unieke identifier is `versie` (de waarde van `typeMeta.idKolom`).
+
+**Oplossing**: een derde fallback toegevoegd in de item-lookup:
+```js
+const idKolom = group.typeMeta?.idKolom;
+const itemId = item.rel_id ?? item.id ?? (idKolom ? item[idKolom] : undefined);
+```
+Reguliere GE's blijven matchen via `rel_id` of `id`; alleen als beide `undefined` zijn
+(plumbing types) wordt `item[idKolom]` (bijv. `item.versie`) gebruikt.
+
+**Gewijzigd bestand**: `web/vite/src/pages/IndexSchemaPage.jsx` — functie `zoekGroupEnItemVoorWijziging`.
+
+De bestaande payload-bouw (`bouwRegistratieCorrectiePayload`) en het veldenfilter
+(`RegistratieActieBox`) werkten al correct: `datum` wordt niet weggefilterd door de
+`temporaal`-set, en `ActionFieldControl` toont automatisch een date-picker voor velden
+met `format: "date"`.
+
+## 8. Toekomstige uitbreidingen
+
+- **Materiële tijdreizen**: queryparameter `geldig_op=2023-06-15` om de toestand op een
+  materieel peiltijdstip te bevragen (combinatie met formeel peiltijdstip → volledige bitemporaliteit).
+- **Aanvang/einde voor gegevenselementen en relaties**: tabellen bestaan al (bijv. `a_w_aanvang`),
+  maar de handler-, struct- en UI-ondersteuning is nog niet uitgewerkt.
+- **Materiële validatie**: controle dat einde >= aanvang, en dat periodes niet overlappen
+  bij een nieuw opgevoerde aanvang/einde.
