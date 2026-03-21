@@ -126,6 +126,12 @@ Elke laag kan apart gecorrigeerd worden zonder de andere lagen te beïnvloeden.
 | Registratie-API | Blijft **plat**; handler splitst intern naar hub + data |
 | Full query API | Hub + geneste data-versies + optioneel aanvang/einde |
 | Structurele FK's (bijv. `b_id`) | Blijven op de **hub** |
+| API input struct | **Optie A**: aparte `_Input` structs. Handler splitst intern naar hub + data |
+| GE-subtype classificatie | Enum `GESubtype` op `TypeMeta`: `hub` / `data` / `aanvang` / `einde`. Eén veld i.p.v. losse booleans |
+| OnderliggendeGE's op hubs | **Hergebruik** van bestaande `OnderliggendGegevenselement` struct en interface |
+| Naamgeving aanvang/einde | Vrij configureerbaar via `Typenaam` en `Rolnaam` (bijv. "Geboorte" i.p.v. "Persoon_Aanvang") |
+| Wijziging per record | Elke insert (hub, data, aanvang, einde) krijgt een eigen wijziging gekoppeld aan de registratie |
+| Schema-API type-indicatie | `ge_subtype` attribuut op type-niveau in schema-output |
 
 ---
 
@@ -318,9 +324,10 @@ Analoog: `Rel_A_B_Aanvang`, `Rel_A_B_Einde`.
 
 ### 7.4 "Platte" input-structs voor API-compatibiliteit
 
-De registratie-API accepteert nog steeds platte objecten (inhoudsvelden + structurele velden samen). Hiervoor houden we **aparte input-structs** of hergebruiken we de huidige structs als "flat view".
+> **Beslissing**: Optie A — aparte `_Input` structs.
 
-**Optie A — Aparte input-structs** (bijv. `A_U_Input`):
+De registratie-API accepteert nog steeds platte objecten (inhoudsvelden + structurele velden samen). Per GE/REL-type wordt een aparte **`_Input` struct** gedefinieerd die alle velden van hub + data combineert:
+
 ```go
 type A_U_Input struct {
     A_ID   int        `json:"a_id"`
@@ -329,14 +336,8 @@ type A_U_Input struct {
     Bbb    *bool      `json:"bbb,omitempty"`
 }
 ```
-De handler parsed de input-struct en maakt hiervan een hub-record + data-record.
 
-**Optie B — JSON-tags op hub met embed**:
-De hub-struct heeft `json:"-"` voor Data, en een custom `UnmarshalJSON` die platte input splitst.
-
-**Optie C — Factory-tweedeling**: `Factory` levert een flat struct (voor API/schema), `DBFactory` levert de hub struct (voor DB). De handler converteert.
-
-> **Aanbeveling**: Optie A is het eenvoudigst en meest expliciet. We introduceren `_Input` structs die in de `Factory` terugkomen, en de handler splitst die naar hub + data.
+De handler parsed de input-struct en splitst deze intern naar een hub-record + data-record. De `Factory` in de MetaRegistry levert de `_Input` struct op; de `DBFactory` levert de hub-struct.
 
 ---
 
@@ -344,17 +345,35 @@ De hub-struct heeft `json:"-"` voor Data, en een custom `UnmarshalJSON` die plat
 
 ### 8.1 Nieuwe velden op `TypeMeta`
 
+> **Beslissing**: Alle GE/REL-onderlagen (hub, data, aanvang, einde) worden uniform als gegevenselement behandeld. Het onderscheid wordt gemaakt via een `GESubtype` enum op `TypeMeta`. Hubs krijgen `OnderliggendeGegevenselementen` (hergebruik van bestaande struct en interface).
+
 ```go
+// GESubtype onderscheidt de vier soorten GE/REL-lagen
+type GESubtype string
+
+const (
+    GESubtypeNone    GESubtype = ""         // entiteiten, entiteits-plumbing
+    GESubtypeHub     GESubtype = "hub"      // identiteitsanker (a_u, rel_a_b, ...)
+    GESubtypeData    GESubtype = "data"     // geversioned inhoud (a_u_data, ...)
+    GESubtypeAanvang GESubtype = "aanvang"  // materiële aanvang (a_w_aanvang, ...)
+    GESubtypeEinde   GESubtype = "einde"    // materiële einde (a_w_einde, ...)
+)
+
 type TypeMeta struct {
     // ... bestaande velden ...
 
-    // Nieuw: geeft aan of dit type een hub is met onderliggende _Data
-    IsHub         bool
+    // GE-subtype: classificatie van het type binnen de hub-hiërarchie
+    GESubtype     GESubtype
+    // Typenaam van de onderliggende _Data (alleen bij hubs)
     DataTypenaam  string  // bijv. "A_U_Data" — leeg als geen _Data
 }
 ```
 
-Alternatief: geen nieuwe TypeMeta-velden, maar geef de hub een `OnderliggendeGegevenselementen` lijst (zoals entiteiten nu hebben). Dan wordt de hiërarchie uniform. Dit vereist wel dat hubs `HeeftOnderliggendeGegevenselementen` implementeren.
+**Voordelen**:
+- **Uniform**: alle lagen implementeren dezelfde `FormeleRepresentatie` interface (opvoer/afvoer)
+- **Hergebruik**: dezelfde `OnderliggendGegevenselement` struct en `HeeftOnderliggendeGegevenselementen` interface voor zowel ENT→hub als hub→data/aanvang/einde
+- **Flexibele naamgeving**: aanvang en einde kunnen domeintermen krijgen (bijv. `Geboorte` i.p.v. `Persoon_Aanvang`, `Overlijden` i.p.v. `Persoon_Einde`, `Oprichting`/`Ontbinding` voor rechtspersonen). De `Typenaam`, `Description` en `Rolnaam` in `OnderliggendeGegevenselementen` zijn vrij te kiezen
+- **Schema-API**: de `GESubtype` wordt direct als `ge_subtype` attribuut meegeleverd in de schema-output (zie §11)
 
 ### 8.2 Nieuwe MetaRegistry entries
 
@@ -366,6 +385,7 @@ Per GE/REL-type komen er 1 tot 3 nieuwe entries bij:
     Typenaam:               "A_U_Data",
     Description:            "Geversioned inhoud van gegevenselement A_U.",
     Metatype:               MetatypeGegevenselement,
+    GESubtype:              GESubtypeData,
     IsMaterieel:            false,
     Veldnaam:               "a_u_data",
     Padnaam:                "a_u_data",
@@ -387,6 +407,7 @@ Per GE/REL-type komen er 1 tot 3 nieuwe entries bij:
     Typenaam:               "A_W_Aanvang",
     Description:            "Aanvangsdatum van GE A_W.",
     Metatype:               MetatypeGegevenselement,
+    GESubtype:              GESubtypeAanvang,
     IsMaterieel:            false,
     Veldnaam:               "a_w_aanvang",
     Padnaam:                "a_w_aanvang",
@@ -411,7 +432,7 @@ De hub entries verliezen hun inhoudsvelden (die staan nu in _Data) en krijgen `O
 ```go
 "A_U": {
     // ... structureel als voorheen, maar:
-    IsHub: true,
+    GESubtype: GESubtypeHub,
     OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
         {Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "A_U_Data", Momentvoorkomen: Enkelvoudig},
     },
@@ -419,7 +440,7 @@ De hub entries verliezen hun inhoudsvelden (die staan nu in _Data) en krijgen `O
 
 "A_W": {
     // ... structureel als voorheen, maar:
-    IsHub:       true,
+    GESubtype:   GESubtypeHub,
     IsMaterieel: true,
     OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
         {Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "A_W_Data", Momentvoorkomen: Enkelvoudig},
@@ -430,7 +451,7 @@ De hub entries verliezen hun inhoudsvelden (die staan nu in _Data) en krijgen `O
 
 "Rel_A_B": {
     // ... structureel als voorheen, maar:
-    IsHub:       true,
+    GESubtype:   GESubtypeHub,
     IsMaterieel: true,
     OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
         {Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Rel_A_B_Data", Momentvoorkomen: Enkelvoudig},
@@ -539,7 +560,9 @@ Elke _Data en _Aanvang/_Einde tabel krijgt een relatieve autoincrement trigger v
 
 ### 10.1 Registratie (opvoer)
 
-De `handleRepresentatieOpvoer` functie werkt nu als volgt voor een GE/REL met _Data:
+De `handleRepresentatieOpvoer` functie werkt nu als volgt voor een GE/REL met _Data.
+
+> **Principe**: elke insert in de database (hub, data, aanvang, einde) wordt verantwoord door een eigen wijziging gekoppeld aan de registratie. De link tussen record-actie en registratie ís het wijziging-record.
 
 **Huidig** (v05):
 1. Ontvang plat GE-record (bijv. `{"a_id": 1, "aaa": "foo", "bbb": true}`)
@@ -551,13 +574,13 @@ De `handleRepresentatieOpvoer` functie werkt nu als volgt voor een GE/REL met _D
 2. **Split** in hub-deel en data-deel op basis van metadata
 3. Insert hub in `a_u` (als hub nog niet bestaat, of bij nieuwe instantie)
 4. Insert data in `a_u_data` met `versie` autoincrement
-5. Registreer wijzigingen (voor hub + data apart)
+5. Registreer per insert een eigen wijziging gekoppeld aan de registratie (hub + data = 2 wijzigingen)
 
 Bij een **correctie**:
 1. Hub record blijft ongewijzigd (zelfde `a_id`, `rel_id`)
-2. Huidige actieve data-versie wordt afgevoerd
-3. Nieuwe data-versie wordt opgevoerd
-4. Wijzigingen worden geregistreerd op _Data niveau
+2. Huidige actieve data-versie wordt afgevoerd (→ wijziging: afvoer)
+3. Nieuwe data-versie wordt opgevoerd (→ wijziging: opvoer)
+4. Alleen wijzigingen op _Data niveau (hub is ongewijzigd)
 
 Bij **enkelvoudig** momentvoorkomen:
 - Vorige actieve data-versie wordt automatisch afgevoerd (zoals nu bij enkelvoudige GE's)
@@ -608,14 +631,33 @@ De bestaande `applyFormeleTijdFilterVoorModel` functie wordt uitgebreid om ook d
 
 ## 11. Schema-API wijzigingen
 
-De schema-API moet het onderscheid weergeven:
+> **Beslissing**: de schema-API levert per type een `ge_subtype` attribuut met waarde `"hub"`, `"data"`, `"aanvang"` of `"einde"`. Dit is een classificatie op type-niveau, niet per veld.
 
-- **Hub**: bevat alleen structurele velden + afgeleid opvoer/afvoer + `onderliggende_gegevenselementen` naar _Data (en optioneel _Aanvang/_Einde)
-- **_Data**: bevat inhoudsvelden + versie + opvoer/afvoer
+De schema-API retourneert per GE/REL-type:
 
-De frontend kan hiermee dynamisch bepalen welke velden bij welke laag horen.
+- **`ge_subtype`**: de `GESubtype` waarde uit de MetaRegistry
+- **Hub** (`ge_subtype: "hub"`): structurele velden + afgeleid opvoer/afvoer + `onderliggende_gegevenselementen` naar _Data (en optioneel _Aanvang/_Einde)
+- **Data** (`ge_subtype: "data"`): inhoudsvelden + versie + opvoer/afvoer
+- **Aanvang** (`ge_subtype: "aanvang"`): datumveld + versie + opvoer/afvoer
+- **Einde** (`ge_subtype: "einde"`): datumveld + versie + opvoer/afvoer
 
-Optioneel: een `"laag": "hub"` of `"laag": "data"` indicator in de schema-output per type.
+Voorbeeld schema-response voor `A_U` (hub):
+```json
+{
+  "typenaam": "A_U",
+  "ge_subtype": "hub",
+  "metatype": "gegevenselement",
+  "velden": [
+    {"naam": "a_id", "type": "integer"},
+    {"naam": "rel_id", "type": "integer"}
+  ],
+  "onderliggende_gegevenselementen": [
+    {"rolnaam": "data", "doeltype": "A_U_Data", "momentvoorkomen": "enkelvoudig"}
+  ]
+}
+```
+
+De frontend gebruikt `ge_subtype` om te bepalen welk type weergave nodig is (hub als container, data als inhoudelijk formulier, aanvang/einde als datumveld met versiehistorie).
 
 ---
 
@@ -660,7 +702,7 @@ func createDataTable(ctx context.Context, db *bun.DB, hubMeta model.TypeMeta) er
 2. Nieuwe `_Data` structs maken in `modellen_ge_rel.go`
 3. Nieuwe `_Aanvang`/`_Einde` structs voor materiële hubs in `model_plumbing.go`
 4. Interface-methoden implementeren op alle nieuwe structs
-5. `TypeMeta.IsHub` en `TypeMeta.DataTypenaam` toevoegen aan `metaregistry_plumbing.go`
+5. `GESubtype` enum en `TypeMeta.GESubtype`/`TypeMeta.DataTypenaam` toevoegen aan `metaregistry_plumbing.go`
 6. MetaRegistry entries updaten/toevoegen in `metaregistry.go`
 7. `GeefOnderliggendeGegevenselementen()` op hub-types implementeren
 
@@ -675,7 +717,7 @@ func createDataTable(ctx context.Context, db *bun.DB, hubMeta model.TypeMeta) er
 13. `MakeGetFullEntityByMetaHandler` uitbreiden: geneste Relation() voor _Data
 
 ### Fase 4: API & Schema
-14. Schema-API: hub/data-indicatie, onderliggende_gegevenselementen voor hubs
+14. Schema-API: `ge_subtype` attribuut per type, onderliggende_gegevenselementen voor hubs
 15. Formeel tijdreizen: filter op beide niveaus
 
 ### Fase 5: Frontend
@@ -689,12 +731,12 @@ func createDataTable(ctx context.Context, db *bun.DB, hubMeta model.TypeMeta) er
 
 ---
 
-## 14. Open vragen
+## 14. Beslissingen (voorheen open vragen)
 
-1. **API input struct**: Optie A (aparte `_Input` structs), Optie B (custom UnmarshalJSON op hub), of Optie C (Factory-tweedeling)? → aanbeveling: Optie A.
+1. **API input struct** → **Optie A**: aparte `_Input` structs per GE/REL-type. De handler parsed de input en splitst intern naar hub + data. De `Factory` levert de `_Input` struct, de `DBFactory` de hub-struct.
 
-2. **`OnderliggendeGegevenselementen` op hubs**: Hergebruiken we dezelfde `OnderliggendGegevenselement` struct en `HeeftOnderliggendeGegevenselementen` interface, of introduceren we een apart concept voor hub→data relaties?
+2. **GE-subtype classificatie** → Alle onderlagen (hub, data, aanvang, einde) worden uniform als gegevenselement behandeld via dezelfde `OnderliggendGegevenselement` struct en `HeeftOnderliggendeGegevenselementen` interface. Het onderscheid wordt gemaakt via een **`GESubtype` enum** op `TypeMeta` met waarden `hub`, `data`, `aanvang`, `einde`. Dit vervangt losse booleans (`IsHub`, `IsAanvang`, `IsEinde`). Voordeel: aanvang en einde kunnen domeintermen krijgen (bijv. "Geboorte" i.p.v. "Persoon_Aanvang", "Overlijden" i.p.v. "Persoon_Einde").
 
-3. **Wijziging-tracking**: Wordt er een aparte wijziging geregistreerd voor de hub én de data, of alleen voor de data bij een correctie? → aanbeveling: bij eerste opvoer: wijziging voor zowel hub als data; bij correctie: alleen voor data.
+3. **Wijziging-tracking** → Elke insert in de database (hub, data, aanvang, einde) wordt verantwoord door een eigen **wijziging** gekoppeld aan de registratie. Bij eerste opvoer: wijziging voor hub + data (+ evt. aanvang/einde). Bij correctie: alleen wijziging(en) voor het/de record(s) dat/die daadwerkelijk wijzigt/wijzigen (typisch alleen _Data, of alleen _Aanvang/_Einde).
 
-4. **Schema-API veldherkomst**: Moet de schema-API per veld aangeven of het een hub-veld of data-veld is? → aanbeveling: ja, via een extra attribuut `"laag": "hub"|"data"`.
+4. **Schema-API type-indicatie** → De schema-API levert per type een **`ge_subtype`** attribuut (`"hub"`, `"data"`, `"aanvang"`, `"einde"`). Dit is een classificatie op type-niveau (niet per veld), afgeleid uit `GESubtype` in de MetaRegistry. De hiërarchische structuur in combinatie met `ge_subtype` maakt een los `"laag"` per veld overbodig.
