@@ -21,11 +21,11 @@ Splits elk GE/REL-type in:
 
 ## 2. Fundamenteel: opvoer en afvoer zijn altijd afgeleid
 
-**Alle** `opvoer` en `afvoer` velden in inhoudelijke records — ENT, GE hub, REL hub, _Data, _Aanvang, _Einde — zijn **afgeleide waarden**. Ze representeren de toestand na verwerking van alle wijzigingen tot het huidige moment (t~f~ = nu).
+**Alle** `opvoer` en `afvoer` velden in inhoudelijke records — ENT, GE hub, REL hub, _Data, _Aanvang, _Einde — zijn **afgeleide waarden**. Ze representeren de toestand na verwerking van alle wijzigingen tot het huidige moment (t_f = nu).
 
 De bron van waarheid voor formele tijd is altijd de **wijzigingen-tabel** in combinatie met de **registratie**. Elke registratie bevat wijzigingen (opvoer/afvoer), en het tijdstip van de registratie bepaalt het formele moment waarop die wijzigingen van kracht worden.
 
-Bij **formeel tijdreizen** (ophalen van de toestand op een willekeurig formeel tijdstip t~f~ ≤ nu) worden de opvoer/afvoer-velden in de records **niet** gebruikt. In plaats daarvan wordt de toestand op t~f~ opnieuw afgeleid door alle wijzigingen tot en met t~f~ te verwerken.
+Bij **formeel tijdreizen** (ophalen van de toestand op een willekeurig formeel tijdstip t_f ≤ nu) worden de opvoer/afvoer-velden in de records **niet** gebruikt. In plaats daarvan wordt de toestand op t_f opnieuw afgeleid door alle wijzigingen tot en met t_f te verwerken.
 
 Dit geldt voor alle lagen in de hiërarchie:
 
@@ -37,7 +37,7 @@ Dit geldt voor alle lagen in de hiërarchie:
 | **_Aanvang/_Einde** (A_W_Aanvang, ...) | Afgeleid: opvoer/afvoer van deze specifieke aanvang/einde-versie na alle wijzigingen t/m nu |
 | **Entiteits-plumbing** (A_Aanvang, A_Einde, ...) | Afgeleid: idem |
 
-Het formele tijdstip t~f~ kan zich **nooit** in de toekomst bevinden — we kunnen immers niet in de toekomst registreren.
+Het formele tijdstip t_f kan zich **nooit** in de toekomst bevinden — we kunnen immers niet in de toekomst registreren.
 
 ---
 
@@ -59,16 +59,16 @@ Praktisch voorbeeld: een persoon heeft een naam. De naam (GE) is gekoppeld aan d
 
 Stel: een Persoon (ENT) met een Persoon_Naam (GE, materieel).
 
-**Stap 1 — Oorspronkelijke registratie** (t~reg~ = 21/3/2026):
+**Stap 1 — Oorspronkelijke registratie** (t_reg = 21/3/2026):
 
 De persoon wijzigt zijn naam. Er ontstaat een nieuwe hub (rel_id=2) aansluitend op de vorige (rel_id=1). De registratie zet de datum (foutief) op de dag van registratie.
 
 | Record | rel_id | _data versie | naam | hub aanvang | hub einde | opvoer | afvoer |
 |--------|--------|-------------|------|-------------|-----------|--------|--------|
-| Hub 1 | 1 | 1 | "Jansen" | geboortedatum | 20/3/2026 | t~reg~ | — |
-| Hub 2 | 2 | 1 | "De Vries" | 21/3/2026 | — | t~reg~ | — |
+| Hub 1 | 1 | 1 | "Jansen" | geboortedatum | 20/3/2026 | t_reg | — |
+| Hub 2 | 2 | 1 | "De Vries" | 21/3/2026 | — | t_reg | — |
 
-**Stap 2 — Correctie** (t~corr~ > t~reg~):
+**Stap 2 — Correctie** (t_corr > t_reg):
 
 De rechtbank bepaalt dat de naamswijziging met terugwerkende kracht per 1/1/2025 effectief is. We corrigeren:
 - **Einde** van hub 1 (rel_id=1): nieuwe versie → 31/12/2024
@@ -76,24 +76,24 @@ De rechtbank bepaalt dat de naamswijziging met terugwerkende kracht per 1/1/2025
 
 | Record | rel_id | versie | waarde | opvoer | afvoer |
 |--------|--------|--------|--------|--------|--------|
-| **Hub 1 — einde** | 1 | 1 | 20/3/2026 | t~reg~ | t~corr~ |
-| **Hub 1 — einde** | 1 | 2 | 31/12/2024 | t~corr~ | — |
-| **Hub 2 — aanvang** | 2 | 1 | 21/3/2026 | t~reg~ | t~corr~ |
-| **Hub 2 — aanvang** | 2 | 2 | 1/1/2025 | t~corr~ | — |
+| **Hub 1 — einde** | 1 | 1 | 20/3/2026 | t_reg | t_corr |
+| **Hub 1 — einde** | 1 | 2 | 31/12/2024 | t_corr | — |
+| **Hub 2 — aanvang** | 2 | 1 | 21/3/2026 | t_reg | t_corr |
+| **Hub 2 — aanvang** | 2 | 2 | 1/1/2025 | t_corr | — |
 
 **Volledig overzicht na correctie** (alle records, alle lagen):
 
 | Laag | rel_id | versie | inhoud/waarde | opvoer | afvoer |
 |------|--------|--------|---------------|--------|--------|
-| **Hub 1** | 1 | — | — | t~reg~ | — |
-| Hub 1 — _data | 1 | 1 | "Jansen" | t~reg~ | — |
-| Hub 1 — _aanvang | 1 | 1 | geboortedatum | t~reg~ | — |
-| Hub 1 — _einde | 1 | 1 | 20/3/2026 | t~reg~ | t~corr~ |
-| Hub 1 — _einde | 1 | 2 | 31/12/2024 | t~corr~ | — |
-| **Hub 2** | 2 | — | — | t~reg~ | — |
-| Hub 2 — _data | 2 | 1 | "De Vries" | t~reg~ | — |
-| Hub 2 — _aanvang | 2 | 1 | 21/3/2026 | t~reg~ | t~corr~ |
-| Hub 2 — _aanvang | 2 | 2 | 1/1/2025 | t~corr~ | — |
+| **Hub 1** | 1 | — | — | t_reg | — |
+| Hub 1 — _data | 1 | 1 | "Jansen" | t_reg | — |
+| Hub 1 — _aanvang | 1 | 1 | geboortedatum | t_reg | — |
+| Hub 1 — _einde | 1 | 1 | 20/3/2026 | t_reg | t_corr |
+| Hub 1 — _einde | 1 | 2 | 31/12/2024 | t_corr | — |
+| **Hub 2** | 2 | — | — | t_reg | — |
+| Hub 2 — _data | 2 | 1 | "De Vries" | t_reg | — |
+| Hub 2 — _aanvang | 2 | 1 | 21/3/2026 | t_reg | t_corr |
+| Hub 2 — _aanvang | 2 | 2 | 1/1/2025 | t_corr | — |
 
 Wat **niet** verandert bij deze correctie:
 - De **hub**-records zelf (rel_id=1 en rel_id=2) — hun opvoer/afvoer is ongewijzigd
@@ -115,10 +115,10 @@ Elke laag kan apart gecorrigeerd worden zonder de andere lagen te beïnvloeden.
 | Aspect | Beslissing |
 |--------|-----------|
 | Opvoer/afvoer overal | **Altijd afgeleid** — in ENT, hub, _Data, _Aanvang/_Einde. Bron van waarheid = wijzigingen + registratie (zie §2) |
-| Hub heeft opvoer/afvoer | Ja, afgeleid: de actuele toestand (t~f~ = nu) na verwerking van alle wijzigingen |
+| Hub heeft opvoer/afvoer | Ja, afgeleid: de actuele toestand (t_f = nu) na verwerking van alle wijzigingen |
 | _Data bestaat wanneer | GE/REL heeft inhoudsvelden (niet bij "existence-only" types) |
 | _Data PK | `(ent_id, rel_id, versie)` — drieledige samengestelde sleutel |
-| _Data heeft opvoer/afvoer | Ja, afgeleid per versie (t~f~ = nu toestand) |
+| _Data heeft opvoer/afvoer | Ja, afgeleid per versie (t_f = nu toestand) |
 | _Data heeft aanvang/einde | **Nooit** — aanvang/einde hangen aan de hub |
 | _Aanvang/_Einde niveau | Op de **hub**, niet op _data |
 | _Aanvang/_Einde scope | Alleen materiële (`IsMaterieel: true`) GE/REL-types |
