@@ -29,7 +29,7 @@ func CreateTables(db *bun.DB) error {
 		 dus de entiteiten, relaties en gegevenselementen, typisch voor dit register.
 		Deze worden gespecificeerd in:
 		- model/metamodel.go (map)
-		- model/models.go (structs)
+		- model/modellen_ge_rel.go en model/modellen_entiteiten.go (structs)
 	*/
 	err = createModelTables(ctx, db)
 	if err != nil {

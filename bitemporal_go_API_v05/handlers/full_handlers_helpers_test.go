@@ -243,12 +243,12 @@ func TestTypeMetaVoorModelNaam_ResolvesByTypenaamAndFactoryType(t *testing.T) {
 		t.Fatalf("expected typenaam A, got %q", meta.Typenaam)
 	}
 
-	factoryMeta, ok := typeMetaVoorModelNaam("Full_A")
+	factoryMeta, ok := typeMetaVoorModelNaam("A")
 	if !ok {
-		t.Fatal("expected to resolve model name Full_A via Factory")
+		t.Fatal("expected to resolve model name A via Factory")
 	}
 	if factoryMeta.Typenaam != "A" {
-		t.Fatalf("expected typenaam A for Full_A, got %q", factoryMeta.Typenaam)
+		t.Fatalf("expected typenaam A for A, got %q", factoryMeta.Typenaam)
 	}
 
 	if _, ok := typeMetaVoorModelNaam("DOES_NOT_EXIST"); ok {
@@ -315,7 +315,7 @@ func TestApplyFormeleTijdFilterVoorModel_Branches(t *testing.T) {
 	mock.ExpectQuery(`SELECT .*FROM "a".*f_formele_wijziging_op_peil`).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "opvoer", "afvoer", "aanvang", "einde"}))
 
-	var entiteiten []model.A_basis
+	var entiteiten []model.A
 	query := DB.NewSelect().Model(&entiteiten)
 	query = applyFormeleTijdFilterVoorModel(query, "A", peil)
 	if err := query.Scan(context.Background()); err != nil {

@@ -109,12 +109,12 @@ Zonder expliciete alias leidt bun de SQL-alias af uit de Go struct-naam: `A_Aanv
 (enkelvoudige underscore), waardoor PostgreSQL een "invalid reference to FROM-clause entry" fout geeft.
 De `alias:`-tag forceert de juiste aliasnaam.
 
-#### `bun:"-"` op Aanvang/Einde velden in basis-structs (`model/models.go`)
+#### Historische noot: `bun:"-"` op Aanvang/Einde velden
 
-De structs `A_basis`, `B_basis`, `Rel_A_B` en `A_W` bevatten `Aanvang *Aanvang` en `Einde *Einde`
-velden. Dit zijn applicatie-velden die door generieke routines ingevuld worden, niet door bun.
-Zonder `bun:"-"` probeert bun ze als database-kolommen te SELECTen, wat "column does not exist"
-fouten oplevert.
+Voorheen bevatten de structs `A`, `B`, `Rel_A_B` en `A_W` enkelvoudige `Aanvang *Aanvang`
+en `Einde *Einde` velden met `bun:"-"`. Deze zijn inmiddels verwijderd als dead code:
+de werkelijke materiële tijdlijn wordt volledig afgehandeld via de plumbing-relaties
+(`[]A_Aanvang`, `[]A_Einde` etc.) en de aparte plumbing-tabellen.
 
 ### 4.2 MetaRegistry (`model/metaregistry.go`)
 
@@ -138,21 +138,26 @@ Daarnaast worden ze opgenomen in de `OnderliggendeGegevenselementen` van de bove
 zodat de GET-handlers ze automatisch inladen via bun `.Relation()`:
 
 ```go
-{Rolnaam: "Aanvangs", JSONRolnaam: "a_aanvangs", Doeltype: "A_Aanvang", Momentvoorkomen: Enkelvoudig},
-{Rolnaam: "Eindes",   JSONRolnaam: "a_eindes",   Doeltype: "A_Einde",   Momentvoorkomen: Enkelvoudig},
+{Rolnaam: "Aanvang", JSONRolnaam: "aanvang", Doeltype: "A_Aanvang", Momentvoorkomen: Enkelvoudig},
+{Rolnaam: "Einde",   JSONRolnaam: "einde",   Doeltype: "A_Einde",   Momentvoorkomen: Enkelvoudig},
 ```
 
-### 4.3 Full entity structs (`model/full_models.go`)
+### 4.3 Entity structs (`model/modellen_entiteiten.go`)
 
-De `Full_A` en `Full_B` structs bevatten bun-relaties naar aanvang/einde:
+De `A` en `B` structs bevatten bun-relaties naar aanvang/einde:
 
 ```go
-Aanvangs []A_Aanvang `bun:"rel:has-many,join:id=id" json:"a_aanvangs,omitempty"`
-Eindes   []A_Einde   `bun:"rel:has-many,join:id=id" json:"a_eindes,omitempty"`
+Aanvang []A_Aanvang `bun:"rel:has-many,join:id=a_id" json:"aanvang,omitempty"`
+Einde   []A_Einde   `bun:"rel:has-many,join:id=a_id" json:"einde,omitempty"`
 ```
 
-Let op de join `join:id=id`: het `id`-veld van de Full_A struct (= `a.id`) wordt gematcht
-op het `id`-veld van de plumbing-tabel (= `a_aanvang.id`), wat de FK is.
+Let op de join `join:id=a_id`: het `id`-veld van de A struct (= `a.id`) wordt gematcht
+op het `a_id`-veld van de plumbing-tabel (= `a_aanvang.a_id`), wat de FK is.
+
+De veldnamen zijn enkelvoud (`Aanvang`, `Einde`) — hoewel over de tijd heen meerdere
+versies kunnen voorkomen (door correcties), is er op enig moment maximaal één actief.
+De JSON-namen zijn generiek (`"aanvang"`, `"einde"`) zonder entiteitsprefix, omdat
+ze al genest zijn binnen het entiteitsobject.
 
 ### 4.4 Handler-aanpassingen (`handlers/registration_helpers_generiek.go`)
 
@@ -304,7 +309,7 @@ formulier als het "bestaande entiteit"-actieoverzicht.
   "vs": [...],
   "ws": [...],
   "rel_abs": [...],
-  "a_aanvangs": [
+  "aanvang": [
     {
       "a_id": 1,
       "versie": 1,
@@ -312,7 +317,7 @@ formulier als het "bestaande entiteit"-actieoverzicht.
       "opvoer": "2026-03-15T10:00:00Z"
     }
   ],
-  "a_eindes": [
+  "einde": [
     {
       "a_id": 1,
       "versie": 1,
@@ -323,7 +328,7 @@ formulier als het "bestaande entiteit"-actieoverzicht.
 }
 ```
 
-### POST /registreer/a_aanvangs (opvoer aanvangsdatum)
+### POST /registreer/a_aanvang (opvoer aanvangsdatum)
 
 ```json
 {
@@ -356,12 +361,15 @@ materiële-tijd datumpickers van het opvoerformulier.
 
 ## 7. Bekende problemen en oplossingen
 
-### 7.1 `column a_w.aanvang does not exist` (bun SELECT)
+### 7.1 `column a_w.aanvang does not exist` (bun SELECT) — opgelost en opgeruimd
 
-**Probleem**: De `Aanvang *Aanvang` en `Einde *Einde` velden op `A_basis`, `B_basis`, `Rel_A_B`
-en `A_W` werden door bun als database-kolommen geïnterpreteerd.
+**Probleem**: Voorheen bevatten `A`, `B`, `Rel_A_B` en `A_W` enkelvoudige `Aanvang *Aanvang`
+en `Einde *Einde` velden die door bun als database-kolommen werden geïnterpreteerd.
 
-**Oplossing**: `bun:"-"` tag toegevoegd aan alle vier structs in `model/models.go`.
+**Oorspronkelijke oplossing**: `bun:"-"` tags.
+
+**Huidige status**: Deze velden zijn volledig verwijderd als dead code. De materiële tijdlijn
+wordt afgehandeld via de plumbing-relaties (`[]A_Aanvang`, `[]A_Einde` etc.).
 
 ### 7.2 `invalid reference to FROM-clause entry for table "a_aanvang"` (bun alias)
 

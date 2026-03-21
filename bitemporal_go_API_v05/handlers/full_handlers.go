@@ -508,7 +508,7 @@ func entiteitMetaVoorFullEntity(entity any) (model.TypeMeta, error) {
 }
 
 // vulAfgeleideFormeleTijdVoorFullSlice verwerkt een volledige lijst van full entiteiten generiek.
-// Dit vervangt hardcoded type-switches op Full_A/Full_B: elk slice-element wordt als pointer
+// Dit vervangt hardcoded type-switches op A/B: elk slice-element wordt als pointer
 // doorgegeven aan de generieke entity-routine hieronder.
 func vulAfgeleideFormeleTijdVoorFullSlice(c *gin.Context, entities any, peiltijdstip time.Time) error {
 	v := reflect.ValueOf(entities)

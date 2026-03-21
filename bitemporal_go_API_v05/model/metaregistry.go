@@ -12,13 +12,13 @@ var MetaRegistry = MetaRegistryType{
 		// JSON veldnaam in REST requests
 		Veldnaam:     "a",
 		Padnaam:      "as",
-		Factory:      func() Representatie { return &Full_A{} },
-		SliceFactory: func() any { return &[]Full_A{} },
+		Factory:      func() Representatie { return &A{} },
+		SliceFactory: func() any { return &[]A{} },
 		// Database
 		Tabelnaam:      "a",
 		IDKolom:        "id",
-		DBFactory:      func() Representatie { return &A_basis{} },
-		DBSliceFactory: func() any { return &[]A_basis{} },
+		DBFactory:      func() Representatie { return &A{} },
+		DBSliceFactory: func() any { return &[]A{} },
 		// Alleen voor gegevenselementen/relaties:
 		// die hebben een FK naar een of twee entiteiten
 		HeeftPFK:                  false,
@@ -32,8 +32,8 @@ var MetaRegistry = MetaRegistryType{
 			{Rolnaam: "Ws", JSONRolnaam: "ws", Doeltype: "A_W", Momentvoorkomen: Meervoudig},
 			{Rolnaam: "RelABs", JSONRolnaam: "rel_abs", Doeltype: "Rel_A_B", Momentvoorkomen: Meervoudig},
 			// Materiële tijdlijn: aanvang/einde als enkelvoudige plumbing-GE's (zie materiele_tijd.md)
-			{Rolnaam: "Aanvangs", JSONRolnaam: "a_aanvangs", Doeltype: "A_Aanvang", Momentvoorkomen: Enkelvoudig},
-			{Rolnaam: "Eindes", JSONRolnaam: "a_eindes", Doeltype: "A_Einde", Momentvoorkomen: Enkelvoudig},
+			{Rolnaam: "Aanvang", JSONRolnaam: "aanvang", Doeltype: "A_Aanvang", Momentvoorkomen: Enkelvoudig},
+			{Rolnaam: "Einde", JSONRolnaam: "einde", Doeltype: "A_Einde", Momentvoorkomen: Enkelvoudig},
 		},
 	},
 	"B": {
@@ -46,13 +46,13 @@ var MetaRegistry = MetaRegistryType{
 		// JSON veldnaam in REST requests
 		Veldnaam:     "b",
 		Padnaam:      "bs",
-		Factory:      func() Representatie { return &Full_B{} },
-		SliceFactory: func() any { return &[]Full_B{} },
+		Factory:      func() Representatie { return &B{} },
+		SliceFactory: func() any { return &[]B{} },
 		// Database
 		Tabelnaam:      "b",
 		IDKolom:        "id",
-		DBFactory:      func() Representatie { return &B_basis{} },
-		DBSliceFactory: func() any { return &[]B_basis{} },
+		DBFactory:      func() Representatie { return &B{} },
+		DBSliceFactory: func() any { return &[]B{} },
 		// Alleen voor gegevenselementen/relaties:
 		// die hebben een FK naar een of twee entiteiten
 		HeeftPFK:                  false,
@@ -64,8 +64,8 @@ var MetaRegistry = MetaRegistryType{
 			{Rolnaam: "Xs", JSONRolnaam: "xs", Doeltype: "B_X", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "Ys", JSONRolnaam: "ys", Doeltype: "B_Y", Momentvoorkomen: Enkelvoudig},
 			// Materiële tijdlijn: aanvang/einde als enkelvoudige plumbing-GE's (zie materiele_tijd.md)
-			{Rolnaam: "Aanvangs", JSONRolnaam: "b_aanvangs", Doeltype: "B_Aanvang", Momentvoorkomen: Enkelvoudig},
-			{Rolnaam: "Eindes", JSONRolnaam: "b_eindes", Doeltype: "B_Einde", Momentvoorkomen: Enkelvoudig},
+			{Rolnaam: "Aanvang", JSONRolnaam: "aanvang", Doeltype: "B_Aanvang", Momentvoorkomen: Enkelvoudig},
+			{Rolnaam: "Einde", JSONRolnaam: "einde", Doeltype: "B_Einde", Momentvoorkomen: Enkelvoudig},
 		},
 	},
 	"Rel_A_B": {
@@ -222,7 +222,7 @@ var MetaRegistry = MetaRegistryType{
 		IsMaterieel:            false,
 		Kleur:                  "#bfdbfe",
 		Veldnaam:               "a_aanvang",
-		Padnaam:                "a_aanvangs",
+		Padnaam:                "a_aanvang",
 		Factory:                func() Representatie { return &A_Aanvang{} },
 		SliceFactory:           func() any { return &[]A_Aanvang{} },
 		Tabelnaam:              "a_aanvang",
@@ -242,7 +242,7 @@ var MetaRegistry = MetaRegistryType{
 		IsMaterieel:            false,
 		Kleur:                  "#bfdbfe",
 		Veldnaam:               "a_einde",
-		Padnaam:                "a_eindes",
+		Padnaam:                "a_einde",
 		Factory:                func() Representatie { return &A_Einde{} },
 		SliceFactory:           func() any { return &[]A_Einde{} },
 		Tabelnaam:              "a_einde",
@@ -262,7 +262,7 @@ var MetaRegistry = MetaRegistryType{
 		IsMaterieel:            false,
 		Kleur:                  "#fecaca",
 		Veldnaam:               "b_aanvang",
-		Padnaam:                "b_aanvangs",
+		Padnaam:                "b_aanvang",
 		Factory:                func() Representatie { return &B_Aanvang{} },
 		SliceFactory:           func() any { return &[]B_Aanvang{} },
 		Tabelnaam:              "b_aanvang",
@@ -282,7 +282,7 @@ var MetaRegistry = MetaRegistryType{
 		IsMaterieel:            false,
 		Kleur:                  "#fecaca",
 		Veldnaam:               "b_einde",
-		Padnaam:                "b_eindes",
+		Padnaam:                "b_einde",
 		Factory:                func() Representatie { return &B_Einde{} },
 		SliceFactory:           func() any { return &[]B_Einde{} },
 		Tabelnaam:              "b_einde",

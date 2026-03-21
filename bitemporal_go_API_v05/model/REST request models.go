@@ -32,7 +32,7 @@ De representatie (interface) plus velden voor:
 - de JSON veldnaam in de request (a, b, rel_a_b, u, v, x, y)
 
 Deze struct heeft een custom UnmarshalJSON functie die de JSON data inspecteert, de representatienaam en payload eruit haalt,
-en op basis van de representatienaam de juiste struct (Full_A, Full_B, Rel_A_B, A_U, A_V, B_X of B_Y) unmarshal't.
+en op basis van de representatienaam de juiste struct (A, B, Rel_A_B, A_U, A_V, B_X of B_Y) unmarshal't.
 
 De RepresentatiePlusNaam struct heeft ook helper methoden AsA() en AsB().
 Deze proberen de representatie te casten naar een type dat geldig is voor A of B flow, geven een fout terug als dat niet mogelijk is.
@@ -111,7 +111,7 @@ func (rep *RepresentatiePlusNaam) AsA() (*OpvoerAfvoerA, error) {
 	}
 
 	switch value := rep.Representatie.(type) {
-	case *Full_A:
+	case *A:
 		return &OpvoerAfvoerA{A: value}, nil
 	case *A_U:
 		return &OpvoerAfvoerA{U: value}, nil
@@ -130,7 +130,7 @@ func (rep *RepresentatiePlusNaam) AsB() (*OpvoerAfvoerB, error) {
 	}
 
 	switch value := rep.Representatie.(type) {
-	case *Full_B:
+	case *B:
 		return &OpvoerAfvoerB{B: value}, nil
 	case *B_X:
 		return &OpvoerAfvoerB{X: value}, nil
@@ -144,7 +144,7 @@ func (rep *RepresentatiePlusNaam) AsB() (*OpvoerAfvoerB, error) {
 // OpvoerAfvoerA can contain either a full entity or individual data elements
 type OpvoerAfvoerA struct {
 	// Voor opvoer/afvoer van hele entiteit A
-	A *Full_A `json:"a,omitempty"`
+	A *A `json:"a,omitempty"`
 
 	// Voor opvoer/afvoer van individuele gegevenselementen
 	U *A_U `json:"u,omitempty"`
@@ -164,7 +164,7 @@ type OpvoerAfvoerA struct {
 // OpvoerAfvoerB can contain either a full entity or individual data elements
 type OpvoerAfvoerB struct {
 	// Voor opvoer/afvoer van hele entiteit B
-	B *Full_B `json:"b,omitempty"`
+	B *B `json:"b,omitempty"`
 
 	// Voor opvoer/afvoer van individuele gegevenselementen
 	X *B_X `json:"x,omitempty"`

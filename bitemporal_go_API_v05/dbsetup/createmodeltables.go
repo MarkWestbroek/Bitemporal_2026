@@ -4,7 +4,7 @@ package dbsetup
 TODO: omschrijven naar een meer generieke aanpak,
 waarbij de tabellen automatisch worden gemaakt op basis van
 - de metadata in model/metamodel.go en
-- de structuren in model/models.go
+- de structuren in model/modellen_ge_rel.go en model/modellen_entiteiten.go
 */
 
 import (

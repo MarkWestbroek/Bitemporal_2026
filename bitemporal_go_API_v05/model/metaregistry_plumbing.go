@@ -47,7 +47,7 @@ type TypeMeta struct {
 	Kleur string
 	// Factory creates a new zero-value instance of the concrete Representatie struct.
 	Factory func() Representatie
-	// SliceFactory creates a pointer to a concrete slice for full/list queries, e.g. &[]Full_A{}.
+	// SliceFactory creates a pointer to a concrete slice for full/list queries, e.g. &[]A{}.
 	SliceFactory func() any
 
 	// ==== Database (alle representaties) ====
@@ -57,7 +57,7 @@ type TypeMeta struct {
 	IDKolom string
 	// De factory van de representatie struct die gebruikt wordt voor database operaties, zoals het aanmaken van tabellen.
 	DBFactory func() Representatie
-	// DBSliceFactory creates a pointer to a concrete slice for list queries, e.g. &[]A_basis{}.
+	// DBSliceFactory creates a pointer to a concrete slice for list queries, e.g. &[]A{}.
 	DBSliceFactory func() any
 
 	// ==== Database (gegevenselementen/relaties) ====
