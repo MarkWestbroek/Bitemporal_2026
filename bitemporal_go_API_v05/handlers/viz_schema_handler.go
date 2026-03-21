@@ -269,6 +269,8 @@ func reflectedVeldenVoorMeta(meta model.TypeMeta) []vizSchemaFieldDTO {
 			continue
 		}
 
+		// Bepaal het veldtype en format voor de schema-API.
+		// We gebruiken de veldtype uit de JSON-tag als die er is, anders mappen we het Go-type.
 		veldType, format := schemaTypeVoorReflectType(f.Type)
 		enum := enumValuesFromSchemaTag(f.Tag.Get("schema"))
 		description := strings.TrimSpace(f.Tag.Get("schema_desc"))

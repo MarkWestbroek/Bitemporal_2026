@@ -69,8 +69,6 @@ type Rel_A_B struct {
 	Soort         RelABSoort `json:"soort" schema:"enum=LTT|LAT|LTA" schema_desc:"Soort relatie tussen A en B"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
-	Aanvang       *Aanvang   `json:"aanvang,omitempty" bun:"-"` // Materiële tijd: bun:"-" voorkomt SELECT als DB-kolom.
-	Einde         *Einde     `json:"einde,omitempty" bun:"-"`   // Materiële tijd: idem.
 }
 
 // Gegevenselementen

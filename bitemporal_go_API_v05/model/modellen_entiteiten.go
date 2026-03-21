@@ -164,3 +164,85 @@ type B struct {
 	Aanvang []B_Aanvang `bun:"rel:has-many,join:id=b_id" json:"aanvang,omitempty"`
 	Einde   []B_Einde   `bun:"rel:has-many,join:id=b_id" json:"einde,omitempty"`
 }
+
+// === Aanvang/Einde als FormeleRepresentatie per entiteitstype ===
+// Elk type mapt direct op zijn plumbing-tabel: {entiteit}_aanvang / {entiteit}_einde.
+// De "id" kolom in de tabel is de FK naar de entiteit; "versie" is het relatieve autoincrement.
+// Ze gedragen zich als enkelvoudige gegevenselementen: handleRepresentatieOpvoer handelt ze af.
+//
+// LET OP: de expliciete `alias:` tag is noodzakelijk. Zonder alias leidt bun de alias af
+// uit de Go struct naam: A_Aanvang → a__aanvang (dubbele underscore). De formeleTijdTargetVoorModel
+// subquery referenceert de tabel met enkelvoudige underscore (a_aanvang.id::text), dus de alias
+// moet overeenkomen om "invalid reference to FROM-clause entry" fouten te voorkomen.
+
+type A_Aanvang struct {
+	bun.BaseModel `bun:"table:a_aanvang,alias:a_aanvang"` // alias: voorkomt bun's automatische a__aanvang alias
+	A_ID          int                                     `json:"a_id" bun:"a_id,pk"` // DB-kolom hernoemd van id→a_id (consistent met andere GE-types)
+	Versie        int64                                   `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date                                   `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time                              `json:"opvoer,omitempty"`
+	Afvoer        *time.Time                              `json:"afvoer,omitempty"`
+}
+
+func (a A_Aanvang) GetID() any              { return a.Versie }
+func (a A_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
+func (a *A_Aanvang) ClearID()               { a.Versie = 0 }
+func (a A_Aanvang) GetOpvoer() *time.Time   { return a.Opvoer }
+func (a *A_Aanvang) SetOpvoer(t *time.Time) { a.Opvoer = t }
+func (a A_Aanvang) GetAfvoer() *time.Time   { return a.Afvoer }
+func (a *A_Aanvang) SetAfvoer(t *time.Time) { a.Afvoer = t }
+func (a A_Aanvang) String() string          { return RepresentatieToString(a) }
+
+type A_Einde struct {
+	bun.BaseModel `bun:"table:a_einde,alias:a_einde"` // alias: voorkomt bun's automatische a__einde alias
+	A_ID          int                                 `json:"a_id" bun:"a_id,pk"` // DB-kolom hernoemd van id→a_id
+	Versie        int64                               `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date                               `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time                          `json:"opvoer,omitempty"`
+	Afvoer        *time.Time                          `json:"afvoer,omitempty"`
+}
+
+func (a A_Einde) GetID() any              { return a.Versie }
+func (a A_Einde) Metatype() Metatype      { return MetatypeGegevenselement }
+func (a *A_Einde) ClearID()               { a.Versie = 0 }
+func (a A_Einde) GetOpvoer() *time.Time   { return a.Opvoer }
+func (a *A_Einde) SetOpvoer(t *time.Time) { a.Opvoer = t }
+func (a A_Einde) GetAfvoer() *time.Time   { return a.Afvoer }
+func (a *A_Einde) SetAfvoer(t *time.Time) { a.Afvoer = t }
+func (a A_Einde) String() string          { return RepresentatieToString(a) }
+
+type B_Aanvang struct {
+	bun.BaseModel `bun:"table:b_aanvang,alias:b_aanvang"` // alias: voorkomt bun's automatische b__aanvang alias
+	B_ID          int                                     `json:"b_id" bun:"b_id,pk"` // DB-kolom hernoemd van id→b_id
+	Versie        int64                                   `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date                                   `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time                              `json:"opvoer,omitempty"`
+	Afvoer        *time.Time                              `json:"afvoer,omitempty"`
+}
+
+func (b B_Aanvang) GetID() any              { return b.Versie }
+func (b B_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
+func (b *B_Aanvang) ClearID()               { b.Versie = 0 }
+func (b B_Aanvang) GetOpvoer() *time.Time   { return b.Opvoer }
+func (b *B_Aanvang) SetOpvoer(t *time.Time) { b.Opvoer = t }
+func (b B_Aanvang) GetAfvoer() *time.Time   { return b.Afvoer }
+func (b *B_Aanvang) SetAfvoer(t *time.Time) { b.Afvoer = t }
+func (b B_Aanvang) String() string          { return RepresentatieToString(b) }
+
+type B_Einde struct {
+	bun.BaseModel `bun:"table:b_einde,alias:b_einde"` // alias: voorkomt bun's automatische b__einde alias
+	B_ID          int                                 `json:"b_id" bun:"b_id,pk"` // DB-kolom hernoemd van id→b_id
+	Versie        int64                               `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date                               `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time                          `json:"opvoer,omitempty"`
+	Afvoer        *time.Time                          `json:"afvoer,omitempty"`
+}
+
+func (b B_Einde) GetID() any              { return b.Versie }
+func (b B_Einde) Metatype() Metatype      { return MetatypeGegevenselement }
+func (b *B_Einde) ClearID()               { b.Versie = 0 }
+func (b B_Einde) GetOpvoer() *time.Time   { return b.Opvoer }
+func (b *B_Einde) SetOpvoer(t *time.Time) { b.Opvoer = t }
+func (b B_Einde) GetAfvoer() *time.Time   { return b.Afvoer }
+func (b *B_Einde) SetAfvoer(t *time.Time) { b.Afvoer = t }
+func (b B_Einde) String() string          { return RepresentatieToString(b) }
