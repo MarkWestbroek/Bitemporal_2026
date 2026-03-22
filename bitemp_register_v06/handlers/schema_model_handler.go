@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -52,7 +53,64 @@ func schemaVersieResponse(versie model.SchemaVersie) gin.H {
 		"model_versie":       versie.ModelVersie,
 		"indiener":           versie.Indiener,
 		"build_versie":       versie.BuildVersie,
+		"go_module":          versie.GoModule,
+		"opmerking":          versie.Opmerking,
 		"model":              json.RawMessage(versie.SchemaJSON),
+	}
+}
+
+type schemaCodeMetadata struct {
+	ModelNaam         string
+	ModelBeschrijving string
+	ModelVersie       string
+	BuildVersie       string
+	GoModule          string
+	Indiener          string
+	Opmerking         string
+}
+
+// schemaCodeMetadataFromEnv leest optionele metadata voor de code-export van het model.
+func schemaCodeMetadataFromEnv() schemaCodeMetadata {
+	return schemaCodeMetadata{
+		ModelNaam:         strings.TrimSpace(os.Getenv("SCHEMA_CODE_MODEL_NAAM")),
+		ModelBeschrijving: strings.TrimSpace(os.Getenv("SCHEMA_CODE_MODEL_BESCHRIJVING")),
+		ModelVersie:       strings.TrimSpace(os.Getenv("SCHEMA_CODE_MODEL_VERSIE")),
+		BuildVersie:       strings.TrimSpace(os.Getenv("SCHEMA_CODE_BUILD_VERSIE")),
+		GoModule:          strings.TrimSpace(os.Getenv("SCHEMA_CODE_GO_MODULE")),
+		Indiener:          strings.TrimSpace(os.Getenv("SCHEMA_CODE_INDIENER")),
+		Opmerking:         strings.TrimSpace(os.Getenv("SCHEMA_CODE_OPMERKING")),
+	}
+}
+
+// schemaCodeResponse bouwt een response uit de actuele code-toestand in plaats van uit schema_versies.
+func schemaCodeResponse(apiBron string) gin.H {
+	v3 := model.ExportMetaRegistryToV3()
+	metadata := schemaCodeMetadataFromEnv()
+
+	if metadata.ModelNaam != "" {
+		v3.Naam = metadata.ModelNaam
+	}
+	if metadata.ModelBeschrijving != "" {
+		v3.Beschrijving = metadata.ModelBeschrijving
+	}
+	if metadata.ModelVersie != "" {
+		v3.Versie = metadata.ModelVersie
+	}
+
+	return gin.H{
+		"bron":               apiBron,
+		"model_naam":         v3.Naam,
+		"model_beschrijving": v3.Beschrijving,
+		"model_versie":       v3.Versie,
+		"model_bron":         "code",
+		"indiener":           metadata.Indiener,
+		"build_versie":       metadata.BuildVersie,
+		"go_module":          metadata.GoModule,
+		"opmerking":          metadata.Opmerking,
+		"id":                 nil,
+		"status":             "code",
+		"tijdstip":           nil,
+		"model":              v3,
 	}
 }
 
@@ -101,20 +159,16 @@ func MaakGetSchemaModelHandler() gin.HandlerFunc {
 			return
 		}
 
-		// Fallback: exporteer on-the-fly uit de MetaRegistry
-		v3 := model.ExportMetaRegistryToV3()
-		c.JSON(http.StatusOK, gin.H{
-			"bron":               "metaregistry",
-			"model_naam":         v3.Naam,
-			"model_beschrijving": v3.Beschrijving,
-			"model_versie":       v3.Versie,
-			"model_bron":         "metaregistry",
-			"indiener":           "",
-			"id":                 nil,
-			"status":             "fallback",
-			"tijdstip":           nil,
-			"model":              v3,
-		})
+		// Fallback: exporteer on-the-fly uit de code als er nog geen actieve database-versie bestaat.
+		c.JSON(http.StatusOK, schemaCodeResponse("metaregistry"))
+	}
+}
+
+// MaakGetSchemaModelCodeHandler retourneert altijd de huidige code-toestand van het model.
+// GET /api/schema/model/code
+func MaakGetSchemaModelCodeHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.JSON(http.StatusOK, schemaCodeResponse("code"))
 	}
 }
 

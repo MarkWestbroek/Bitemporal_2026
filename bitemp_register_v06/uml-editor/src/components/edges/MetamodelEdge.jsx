@@ -39,7 +39,9 @@ function MetamodelEdge({
   const sourceNode = getNode(source);
   const targetNode = getNode(target);
 
+  const isDependency = data?.isDependency === true;
   const isComposition =
+    !isDependency &&
     sourceNode?.type === "entiteit" &&
     ["gegevenselement", "relatie"].includes(targetNode?.type);
 
@@ -68,8 +70,9 @@ function MetamodelEdge({
         id={id}
         path={edgePath}
         style={{
-          stroke: selected ? "#2563eb" : "#64748b",
+          stroke: selected ? "#2563eb" : isDependency ? "#a78bfa" : "#64748b",
           strokeWidth: selected ? 2.5 : 1.5,
+          strokeDasharray: isDependency ? "6 3" : undefined,
         }}
       />
 
@@ -86,22 +89,38 @@ function MetamodelEdge({
       )}
 
       {/* Labels boven de edge — EdgeLabelRenderer plaatst HTML over de SVG */}
-      <EdgeLabelRenderer>
-        <div
-          className="edge-label"
-          style={{
-            position: "absolute",
-            transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
-            pointerEvents: "all",
-          }}
-        >
-          {rolnaam && <span className="edge-rolnaam">{rolnaam}</span>}
-          {kardinaliteit && (
-            <span className="edge-kardinaliteit">{kardinaliteit}</span>
-          )}
-          <span className="edge-constraint">{constraint}</span>
-        </div>
-      </EdgeLabelRenderer>
+      {!isDependency && (
+        <EdgeLabelRenderer>
+          <div
+            className="edge-label"
+            style={{
+              position: "absolute",
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+              pointerEvents: "all",
+            }}
+          >
+            {rolnaam && <span className="edge-rolnaam">{rolnaam}</span>}
+            {kardinaliteit && (
+              <span className="edge-kardinaliteit">{kardinaliteit}</span>
+            )}
+            <span className="edge-constraint">{constraint}</span>
+          </div>
+        </EdgeLabelRenderer>
+      )}
+      {isDependency && (
+        <EdgeLabelRenderer>
+          <div
+            className="edge-label"
+            style={{
+              position: "absolute",
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+              pointerEvents: "all",
+            }}
+          >
+            <span className="edge-constraint" style={{ color: "#7c3aed" }}>«use»</span>
+          </div>
+        </EdgeLabelRenderer>
+      )}
     </>
   );
 }

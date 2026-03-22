@@ -148,18 +148,27 @@ export function maakLeegGegevenstype() {
 }
 
 /**
- * Bouw de VELDTYPEN-lijst dynamisch op: primitieve types + custom datatypes.
+ * Bouw de VELDTYPEN-lijst dynamisch op: primitieve types + custom datatypes + enumeraties.
  * @param {Array} datatypeNodes - React Flow nodes met type === "gegevenstype"
- * @returns {Array} veldtypen array met { type, format, label }
+ * @param {Array} enumNodes - React Flow nodes met type === "enumeratie"
+ * @returns {Array} veldtypen array met { type, format, label, isCustom?, isEnum?, enumNaam?, enumWaarden? }
  */
-export function bouwVeldtypen(datatypeNodes = []) {
+export function bouwVeldtypen(datatypeNodes = [], enumNodes = []) {
   const custom = datatypeNodes.map((n) => ({
     type: n.data.basistype || "string",
     format: n.data.format || "",
     label: n.data.naam || n.data.format || "(naamloos)",
     isCustom: true,
   }));
-  return [...VELDTYPEN, ...custom];
+  const enums = enumNodes.map((n) => ({
+    type: "string",
+    format: "",
+    label: n.data.naam,
+    isEnum: true,
+    enumNaam: n.data.naam,
+    enumWaarden: n.data.waarden || [],
+  }));
+  return [...VELDTYPEN, ...custom, ...enums];
 }
 
 /**
@@ -330,8 +339,12 @@ export function editorNaarMetamodel(nodes, edges) {
   const enumeraties = nodes
     .filter((n) => n.type === "enumeratie")
     .map((n) => ({
-      naam: n.data.naam,
-      waarden: n.data.waarden,
+      goType: n.data.naam,
+      baseType: n.data.baseType || "string",
+      waarden: (n.data.waarden || []).map((w) => ({
+        constNaam: n.data.naam + w.replace(/[^a-zA-Z0-9_]/g, ""),
+        waarde: w,
+      })),
     }));
 
   const datatypes = nodes

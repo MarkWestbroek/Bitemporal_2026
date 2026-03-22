@@ -726,10 +726,13 @@ Beide zijn **afleidbaar uit v3 + de conventie-engine**: de huidige `/viz/schema`
 |----------|---------|------|
 | `GET /api/viz/schema` | GET | Bestaande frontend-view (JSON-types, gefilterde velden) — **ongewijzigd** |
 | `GET /api/schema/model` | GET | Retourneert het actieve registermodel in v3-formaat plus response-metadata |
+| `GET /api/schema/model/code` | GET | Retourneert expliciet de actuele code-toestand van het registermodel, onafhankelijk van de database |
 | `GET /api/schema/model/:id` | GET | Retourneert een specifieke opgeslagen schema-versie uit de database |
 | `POST /api/schema/model` | POST | Accepteert een nieuw v3-model als *proposed* versie, met wrapper-metadata van de inzender |
 
 De `GET /api/schema/model` response bevat het v3-model onder `model`, plus metadata daaromheen. Daarbij betekent `bron` de herkomst van de API-response zelf (`database` of `metaregistry` fallback), `model_bron` de herkomst van het opgeslagen of ingediende model, en `model_versie` de semantische versie uit `model.versie`.
+
+De endpoint `GET /api/schema/model/code` leest nooit uit `schema_versies`, maar exporteert altijd rechtstreeks uit de actuele code via de MetaRegistry/V3-exporter. De response gebruikt `bron="code"` en `model_bron="code"`. Optioneel kunnen de velden `model_naam`, `model_beschrijving`, `model_versie`, `build_versie`, `go_module`, `indiener` en `opmerking` voor deze code-export via environment variables worden meegegeven: `SCHEMA_CODE_MODEL_NAAM`, `SCHEMA_CODE_MODEL_BESCHRIJVING`, `SCHEMA_CODE_MODEL_VERSIE`, `SCHEMA_CODE_BUILD_VERSIE`, `SCHEMA_CODE_GO_MODULE`, `SCHEMA_CODE_INDIENER`, `SCHEMA_CODE_OPMERKING`.
 
 De endpoint `GET /api/schema/model/:id` leest altijd direct uit `schema_versies` en geeft daarom ook proposals, gearchiveerde versies en de huidige actieve versie terug, zolang het betreffende ID in de database bestaat. Er is voor deze route bewust geen fallback naar de MetaRegistry.
 

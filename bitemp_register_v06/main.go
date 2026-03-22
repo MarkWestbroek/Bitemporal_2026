@@ -117,6 +117,7 @@ func NewRouter() *gin.Engine {
 
 	// Schema model endpoints (v3-formaat, zie ontwerpkeuzen.md §7)
 	router.GET("/api/schema/model", handlers.MaakGetSchemaModelHandler())
+	router.GET("/api/schema/model/code", handlers.MaakGetSchemaModelCodeHandler())
 	router.GET("/api/schema/model/:id", handlers.MaakGetSchemaModelVersieHandler())
 	router.POST("/api/schema/model", handlers.MaakPostSchemaModelHandler())
 	router.PUT("/api/schema/model/:id/activeer", handlers.MaakActiveerSchemaVersieHandler())

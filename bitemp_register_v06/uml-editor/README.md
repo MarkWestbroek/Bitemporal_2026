@@ -228,10 +228,76 @@ npx vite           # dev server op http://localhost:5173
 npx vite build     # productie-build in dist/
 ```
 
+## Editor v2 — V3 registermodel (zonder plumbing)
+
+Naast de originele editor (v1, gebaseerd op het platte `/api/viz/schema` endpoint) is er een **v2** die werkt met het hiërarchische **V3 registermodel** van `/api/schema/model/code`.
+
+### Verschil v1 vs v2
+
+| Aspect | Editor v1 | Editor v2 |
+|--------|-----------|-----------|
+| API bron | `/api/viz/schema` (platte lijst van alle types) | `/api/schema/model/code` (V3 hiërarchisch uit code) |
+| Plumbing velden | a_id, rel_id, b_id, versie, opvoer, afvoer zichtbaar | **Geen** — alleen inhoudelijke velden |
+| Hub/Data/Aanvang/Einde | Zichtbaar als aparte nodes | **Niet zichtbaar** — alleen logische GE's |
+| Materieel | Badge op node | Badge op node (ongewijzigd) |
+| Enum-velden | Inline waarden-array | Opgelost via V3 enums (goType → waarden lookup) |
+| Veldtypen | OAS type+format vanuit schema-API | Go types, automatisch geconverteerd |
+
+### Waarom v2?
+
+Het V3 model beschrijft het **logische registermodel** zonder implementatiedetails:
+- Geen plumbing (id, FK's, versie, opvoer/afvoer) — dat is infrastructuur, niet des UML's
+- GE's bevatten hun inhoudelijke velden direct, zonder hub/data-splitsing
+- Aanvang/einde zijn niet zichtbaar als aparte types — materialiteit is een label op het GE
+- Autoincrement is een patroon op basis van metatype, niet per veld geconfigureerd
+
+De code generator kan alle DB-structuur (tabellen, triggers, FK's) **afleiden** uit het metatype + `isMaterieel` flag + aanwezigheid van inhoudelijke velden.
+
+### Converter: `v3ModelNaarEditor.js`
+
+De converter in `web/vite/src/v3ModelNaarEditor.js` transformeert een V3Model naar React Flow nodes + edges:
+
+1. **Enums** → enumeratie-nodes
+2. **Datatypes** → gegevenstype-nodes
+3. **Entiteiten** → entiteit-nodes (zonder velden — id is plumbing)
+4. **Gegevenselementen** → GE-nodes met inhoudsvelden, edge van parent-entiteit
+5. **Relaties** → relatie-nodes met inhoudsvelden, edge van parent-entiteit + edge naar doelentiteit
+
+Go types worden automatisch gemapt naar editor-veldtypen:
+
+| Go type | Editor type + format |
+|---------|---------------------|
+| `string` | string |
+| `int`, `int32`, `int64` | integer |
+| `float32`, `float64` | number, float64 |
+| `bool` | boolean |
+| `Date` | string, date |
+| `time.Time` | string, date-time |
+| `*T` (pointer) | zelfde, maar `verplicht: false` |
+| enum (named type) | string + enum-waarden uit V3 enums |
+
+### Bestanden
+
+| Bestand | Doel |
+|---------|------|
+| `web/vite/src/v3ModelNaarEditor.js` | V3Model → React Flow nodes/edges converter |
+| `web/vite/src/demoV3Model.js` | Demo V3 model (hetzelfde register als demoData.js) |
+| `web/vite/src/pages/EditorV2Page.jsx` | Page component met V3 loader en header bar |
+| `web/vite/editor-v2.html` | HTML entry point |
+
+### URLs
+
+- Vite dev server: `http://localhost:5174/viz/react/editor-v2.html`
+- Go server: `http://localhost:8082/viz/react/editor-v2.html`
+
+De "V3 Model laden"-knop in de header bar fetcht standaard van `/api/schema/model/code` en converteert automatisch. Daarmee laad je expliciet de actuele code-toestand, niet de actieve schema-versie uit de database. De bestaande toolbar-knoppen (Save, Load JSON, Export) werken gewoon.
+
+---
+
 ## Toekomstige mogelijkheden
 
 - **XMI-export** voor import in Sparx Enterprise Architect of andere UML-tools
 - **MetaRegistry-generatie**: editor-output omzetten naar Go-code (MetaRegistry entries + struct definities)
 - **Validatie**: controle op naamconventies, verplichte velden, referentiële integriteit
 - **Undo/redo**: React Flow ondersteunt dit via een state-history wrapper
-- **Integratie in de bitemporele frontend**: embedden als extra pagina naast de bestaande index/tijdlijn/registraties
+- ~~**Integratie in de bitemporele frontend**: embedden als extra pagina naast de bestaande index/tijdlijn/registraties~~ ✅ Gerealiseerd (zie `UML_EDITOR_INTEGRATIE.md`)

@@ -16,13 +16,13 @@ import { METATYPES, VELDTYPEN, maakLeegVeld, defaultKleur, bouwVeldtypen } from 
 
 const BASISTYPES = ["string", "integer", "number", "boolean"];
 
-export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes = [] }) {
+export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes = [], enumNodes = [] }) {
   if (!node) return null;
 
   const data = node.data;
   const isEnum = node.type === "enumeratie";
   const isDatatype = node.type === "gegevenstype";
-  const beschikbareVeldtypen = bouwVeldtypen(datatypeNodes);
+  const beschikbareVeldtypen = bouwVeldtypen(datatypeNodes, enumNodes);
 
   function updateField(key, value) {
     onUpdate(node.id, { ...data, [key]: value });
@@ -31,6 +31,12 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
   function updateVeld(index, key, value) {
     const velden = [...(data.velden || [])];
     velden[index] = { ...velden[index], [key]: value };
+    onUpdate(node.id, { ...data, velden });
+  }
+
+  function updateVeldMulti(index, updates) {
+    const velden = [...(data.velden || [])];
+    velden[index] = { ...velden[index], ...updates };
     onUpdate(node.id, { ...data, velden });
   }
 
@@ -450,22 +456,38 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
               className="veld-naam-input"
             />
             <select
-              value={`${v.type}|${v.format || ""}`}
+              value={v.enumNaam ? `enum:${v.enumNaam}` : `${v.type}|${v.format || ""}`}
               onChange={(e) => {
-                const [type, format] = e.target.value.split("|");
-                updateVeld(i, "type", type);
-                updateVeld(i, "format", format || "");
+                const val = e.target.value;
+                if (val.startsWith("enum:")) {
+                  const enumNaam = val.slice(5);
+                  const entry = beschikbareVeldtypen.find(vt => vt.isEnum && vt.enumNaam === enumNaam);
+                  updateVeldMulti(i, {
+                    type: "string",
+                    format: "",
+                    enumNaam,
+                    enum: entry?.enumWaarden || [],
+                  });
+                } else {
+                  const [type, format] = val.split("|");
+                  updateVeldMulti(i, {
+                    type,
+                    format: format || "",
+                    enumNaam: null,
+                    enum: null,
+                  });
+                }
               }}
               className="veld-type-select"
             >
-              {beschikbareVeldtypen.map((vt) => (
-                <option
-                  key={`${vt.type}|${vt.format}`}
-                  value={`${vt.type}|${vt.format}`}
-                >
-                  {vt.label}{vt.isCustom ? " ✦" : ""}
-                </option>
-              ))}
+              {beschikbareVeldtypen.map((vt) => {
+                const optValue = vt.isEnum ? `enum:${vt.enumNaam}` : `${vt.type}|${vt.format}`;
+                return (
+                  <option key={optValue} value={optValue}>
+                    {vt.label}{vt.isCustom ? " ✦" : ""}{vt.isEnum ? " ◇" : ""}
+                  </option>
+                );
+              })}
             </select>
           </div>
           <div className="veld-edit-controls">

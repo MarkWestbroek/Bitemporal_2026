@@ -98,6 +98,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [] }
   const selectedNode = nodes.find((n) => n.id === selectedNodeId) || null;
   const selectedEdge = edges.find((e) => e.id === selectedEdgeId) || null;
   const datatypeNodes = useMemo(() => nodes.filter((n) => n.type === "gegevenstype"), [nodes]);
+  const enumNodes = useMemo(() => nodes.filter((n) => n.type === "enumeratie"), [nodes]);
 
   /**
    * onConnect wordt aangeroepen wanneer een gebruiker een edge trekt
@@ -356,6 +357,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [] }
               onUpdate={handleUpdateNode}
               onDelete={handleDeleteNode}
               datatypeNodes={datatypeNodes}
+              enumNodes={enumNodes}
             />
           )}
           {selectedEdge && !selectedNode && (

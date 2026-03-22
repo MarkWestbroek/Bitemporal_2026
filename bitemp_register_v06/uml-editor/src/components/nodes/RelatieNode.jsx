@@ -67,10 +67,10 @@ function RelatieNode({ data, selected }) {
                 )}
               </span>
               <span className="veld-type">
-                {v.type}
-                {v.format ? ` «${v.format}»` : ""}
+                {v.enumNaam || v.type}
+                {!v.enumNaam && v.format ? ` «${v.format}»` : ""}
                 {v.autoIncrement ? " {AI}" : ""}
-                {v.enum ? ` {${v.enum.join("|")}}` : ""}
+                {!v.enumNaam && v.enum ? ` {${v.enum.join("|")}}` : ""}
               </span>
             </div>
           ))

@@ -26,6 +26,7 @@ export default defineConfig({
         tijdlijn: resolve(__dirname, "tijdlijn.html"),
         registraties: resolve(__dirname, "registraties.html"),
         editor: resolve(__dirname, "editor.html"),
+        "editor-v2": resolve(__dirname, "editor-v2.html"),
       },
     },
   },

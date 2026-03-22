@@ -125,7 +125,8 @@ func jsonFieldName(f reflect.StructField) string {
 // Wordt gebruikt door de GET /api/schema/model endpoint.
 func ExportMetaRegistryToV3() V3Model {
 	model := V3Model{
-		Versie: "v3",
+		Versie:    "v3",
+		Datatypes: DatatypeRegistry,
 	}
 
 	// Verzamel enum-types en maak een set om dubbelen te voorkomen

@@ -106,6 +106,37 @@ Opmerking:
   - `http://localhost:8080/docs` (overzicht van alle `.md` bestanden)
   - `http://localhost:8080/docs/web/readme.md` (web handleiding)
 
+## Schema model endpoints (V3)
+
+Voor het registermodel in V3-formaat zijn er drie relevante endpoints:
+
+- `GET /api/schema/model`
+  - Retourneert de actieve schema-versie uit de database (`status='active'`).
+  - Als er nog geen actieve DB-versie bestaat, valt deze route terug op code-export.
+- `GET /api/schema/model/code`
+  - Retourneert altijd de actuele modeltoestand uit de draaiende code.
+  - Deze route is onafhankelijk van de inhoud van `schema_versies`.
+  - Response bevat `bron="code"` en `model_bron="code"`.
+- `GET /api/schema/model/:id`
+  - Retourneert exact één opgeslagen schema-versie uit de database.
+  - Geen fallback naar code-export.
+
+### Metadata voor code-export
+
+Voor `GET /api/schema/model/code` kun je metadata uit environment variables laten teruggeven:
+
+- `SCHEMA_CODE_MODEL_NAAM`
+- `SCHEMA_CODE_MODEL_BESCHRIJVING`
+- `SCHEMA_CODE_MODEL_VERSIE`
+- `SCHEMA_CODE_BUILD_VERSIE`
+- `SCHEMA_CODE_GO_MODULE`
+- `SCHEMA_CODE_INDIENER`
+- `SCHEMA_CODE_OPMERKING`
+
+Deze waarden vullen zowel top-level responsemetadata als, waar van toepassing, de modelvelden (`naam`, `beschrijving`, `versie`).
+
+Voor uitgebreide ontwerpachtergrond en lifecycle: zie `model/ontwerpkeuzen.md`.
+
 ## Admin endpoint security
 
 The destructive endpoint for dropping all tables is:
