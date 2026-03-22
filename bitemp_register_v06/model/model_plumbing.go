@@ -142,6 +142,7 @@ type Wijziging struct {
 	EntiteitID        string             `json:"entiteit_id"`                                            // Bewust een string to support both numeric and string IDs, or for instance UUIDs
 	Representatienaam string             `json:"representatienaam"`                                      // type-naam van de representatie, zoals "A", "B", "Rel_A_B", "A_U", "A_V", "B_X" of "B_Y"
 	RepresentatieID   string             `json:"representatie_id"`                                       // Bewust een string to support both numeric and string IDs, or for instance UUIDs
+	Versie            *int64             `json:"versie,omitempty" bun:"versie"`                          // versie bij data/aanvang/einde representaties (nullable: alleen gezet als de representatie een versie-PK heeft)
 	Tijdstip          time.Time          `json:"tijdstip"`                                               //afgeleid van registratie tijdstip
 	IsOngedaangemaakt bool               `json:"is_ongedaangemaakt,omitempty" bun:"is_ongedaan_gemaakt"` // afgeleid (wordt op true gezet bij een ongedaanmaking van deze wijziging)
 }

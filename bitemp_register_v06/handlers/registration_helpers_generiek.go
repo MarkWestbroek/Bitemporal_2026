@@ -150,6 +150,21 @@ func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratie model.Regi
 		return fmt.Errorf("HANDLER: onbekend type voor opvoer: %s", representatienaam)
 	}
 
+	// Hub-kinderen (_Data/_Aanvang/_Einde) gebruiken compound scope (entiteit_id + rel_id).
+	// Als rel_id in de request ontbreekt, probeer die defensief af te leiden uit de enige actieve hub.
+	if isDataSubtype(meta) {
+		relID, err := haalIntWaardeVoorKolomUitRepresentatie(representatie, "rel_id")
+		if err != nil || relID == 0 {
+			afgeleideRelID, inferErr := leidRelIDVoorHubKindAf(c, tx, meta, representatie)
+			if inferErr != nil {
+				return inferErr
+			}
+			if err := zetIntWaardeVoorKolomOpRepresentatie(representatie, "rel_id", afgeleideRelID); err != nil {
+				return fmt.Errorf("HANDLER: kon afgeleide rel_id=%d niet zetten op %s: %v", afgeleideRelID, representatienaam, err)
+			}
+		}
+	}
+
 	/*
 		HUB + _INPUT CONVERSIE (v06)
 		Als het type een hub is (GESubtypeHub) en de representatie is een _Input struct
@@ -284,13 +299,14 @@ func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratie model.Regi
 			entiteitnaam = representatienaam
 			entiteitID = fmt.Sprint(representatie.GetID())
 			if err := persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratie.ID,
-				representatienaam, fmt.Sprint(representatie.GetID()), "", "", registratie.Tijdstip); err != nil {
+				representatienaam, fmt.Sprint(representatie.GetID()), "", "", nil, registratie.Tijdstip); err != nil {
 				return err
 			}
 		} else {
-			// ** Geen entiteit **
+			// ** Geen entiteit: bepaal representatieID en versie op basis van meta **
+			repID, versie := bepaalRepIDenVersie(representatie, meta, representatie.GetID)
 			if err := persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratie.ID,
-				entiteitnaam, entiteitID, representatienaam, fmt.Sprint(representatie.GetID()), registratie.Tijdstip); err != nil {
+				entiteitnaam, entiteitID, representatienaam, repID, versie, registratie.Tijdstip); err != nil {
 				return err
 			}
 		}
@@ -369,8 +385,9 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 			return err
 		}
 
+		repID, versie := bepaalRepIDenVersie(huidigeRep, meta, representatie.GetID)
 		return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
-			entiteitnaam, entiteitID, representatienaam, fmt.Sprint(representatie.GetID()), afvoerTijdstip)
+			entiteitnaam, entiteitID, representatienaam, repID, versie, afvoerTijdstip)
 	}
 
 	/*
@@ -389,7 +406,7 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 			return err
 		}
 		if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
-			entiteitnaam, entiteitID, representatienaam, fmt.Sprint(representatie.GetID()), afvoerTijdstip); err != nil {
+			entiteitnaam, entiteitID, representatienaam, fmt.Sprint(representatie.GetID()), nil, afvoerTijdstip); err != nil {
 			return err
 		}
 
@@ -421,8 +438,9 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 				if err := updateAfvoerMetScope(c, tx, childMeta, versie, scope, afvoerTijdstip); err != nil {
 					return err
 				}
+				v64 := int64(versie)
 				if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
-					entiteitnaam, entiteitID, childMeta.Typenaam, fmt.Sprint(versie), afvoerTijdstip); err != nil {
+					entiteitnaam, entiteitID, childMeta.Typenaam, fmt.Sprint(hubRelIDInt), &v64, afvoerTijdstip); err != nil {
 					return err
 				}
 			}
@@ -439,7 +457,7 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 		return err
 	}
 	if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
-		entiteitnaam, entiteitID, "", "", afvoerTijdstip); err != nil {
+		entiteitnaam, entiteitID, "", "", nil, afvoerTijdstip); err != nil {
 		return err
 	}
 
@@ -470,8 +488,17 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 			if err := updateAfvoerByID(c, tx, childMeta, id, entiteitIDInt, afvoerTijdstip); err != nil {
 				return err
 			}
+			// Bij versie-PK types (entity-level plumbing): versie = id, representatieID leeg
+			var childRepID string
+			var childVersie *int64
+			if childMeta.IDKolom == "versie" {
+				v64 := int64(id)
+				childVersie = &v64
+			} else {
+				childRepID = fmt.Sprint(id)
+			}
 			if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
-				entiteitnaam, entiteitID, childMeta.Typenaam, fmt.Sprint(id), afvoerTijdstip); err != nil {
+				entiteitnaam, entiteitID, childMeta.Typenaam, childRepID, childVersie, afvoerTijdstip); err != nil {
 				return err
 			}
 		}
@@ -562,7 +589,7 @@ func haalActieveIDsGegevenselementUitDB(c *gin.Context, tx bun.Tx, meta model.Ty
 */
 func persisteerWijziging(c *gin.Context, tx bun.Tx, wijzigingstype model.WijzigingstypeEnum,
 	registratieID int64, entiteitnaam string, entiteitID string,
-	representatienaam string, representatieID string, registratietijdstip time.Time) error {
+	representatienaam string, representatieID string, versie *int64, registratietijdstip time.Time) error {
 	wijziging := model.Wijziging{
 		Wijzigingstype:    wijzigingstype,
 		RegistratieID:     registratieID,
@@ -570,6 +597,7 @@ func persisteerWijziging(c *gin.Context, tx bun.Tx, wijzigingstype model.Wijzigi
 		EntiteitID:        entiteitID,
 		Representatienaam: representatienaam,
 		RepresentatieID:   representatieID,
+		Versie:            versie,
 		Tijdstip:          registratietijdstip, //afgeleid van registratie tijdstip
 	}
 
@@ -581,6 +609,25 @@ func persisteerWijziging(c *gin.Context, tx bun.Tx, wijzigingstype model.Wijzigi
 	}
 
 	return nil
+}
+
+// bepaalRepIDenVersie splitst de representatie-identificatie op basis van meta:
+// - bij versie-PK types (data/aanvang/einde): representatieID = rel_id (of leeg), versie = GetID()
+// - bij andere types (hub, legacy): representatieID = GetID(), versie = nil
+func bepaalRepIDenVersie(representatie any, meta model.TypeMeta, getID func() any) (repID string, versie *int64) {
+	if meta.IDKolom == "versie" {
+		if vi, ok := anyNaarInt(getID()); ok {
+			v64 := int64(vi)
+			versie = &v64
+		}
+		// Probeer rel_id op te halen (hub-children hebben het, entity-plumbing niet)
+		if relID, err := haalIntWaardeVoorKolomUitRepresentatie(representatie, "rel_id"); err == nil && relID != 0 {
+			repID = fmt.Sprint(relID)
+		}
+		return
+	}
+	repID = fmt.Sprint(getID())
+	return
 }
 
 func anyNaarInt(v any) (int, bool) {
@@ -738,8 +785,20 @@ func sluitActieveEnkelvoudigeVoorgangersAf(c *gin.Context, tx bun.Tx, registrati
 				return fmt.Errorf("HANDLER: afvoer van voorganger %s id=%v mislukt: %v", representatienaam, id, err)
 			}
 		}
+		// Bij versie-PK types: versie = id, representatieID = rel_id (of leeg)
+		var voorgangerRepID string
+		var voorgangerVersie *int64
+		if meta.IDKolom == "versie" {
+			v64 := int64(id)
+			voorgangerVersie = &v64
+			if relID != 0 {
+				voorgangerRepID = fmt.Sprint(relID)
+			}
+		} else {
+			voorgangerRepID = fmt.Sprint(id)
+		}
 		if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
-			parentTypenaam, fmt.Sprint(entiteitID), representatienaam, fmt.Sprint(id), registratietijdstip); err != nil {
+			parentTypenaam, fmt.Sprint(entiteitID), representatienaam, voorgangerRepID, voorgangerVersie, registratietijdstip); err != nil {
 			return err
 		}
 	}
@@ -782,6 +841,81 @@ func haalIntWaardeVoorKolomUitRepresentatie(representatie any, kolomnaam string)
 	}
 
 	return 0, fmt.Errorf("kolom %s niet gevonden in representatie", kolomnaam)
+}
+
+func zetIntWaardeVoorKolomOpRepresentatie(representatie any, kolomnaam string, nieuweWaarde int) error {
+	value := reflect.ValueOf(representatie)
+	for value.Kind() == reflect.Pointer {
+		if value.IsNil() {
+			return fmt.Errorf("lege representatie")
+		}
+		value = value.Elem()
+	}
+	if value.Kind() != reflect.Struct {
+		return fmt.Errorf("representatie is geen struct")
+	}
+
+	typeInfo := value.Type()
+	normalizedKolom := normalizeVeldnaam(kolomnaam)
+
+	for i := 0; i < typeInfo.NumField(); i++ {
+		fieldType := typeInfo.Field(i)
+		fieldValue := value.Field(i)
+		if !fieldValue.CanSet() {
+			continue
+		}
+
+		if normalizeVeldnaam(fieldType.Name) != normalizedKolom &&
+			normalizeVeldnaam(firstTagValue(fieldType.Tag.Get("json"))) != normalizedKolom &&
+			normalizeVeldnaam(firstTagValue(fieldType.Tag.Get("bun"))) != normalizedKolom {
+			continue
+		}
+
+		switch fieldValue.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			fieldValue.SetInt(int64(nieuweWaarde))
+			return nil
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			fieldValue.SetUint(uint64(nieuweWaarde))
+			return nil
+		default:
+			return fmt.Errorf("veld %s is geen integer", fieldType.Name)
+		}
+	}
+
+	return fmt.Errorf("kolom %s niet gevonden in representatie", kolomnaam)
+}
+
+func leidRelIDVoorHubKindAf(c *gin.Context, tx bun.Tx, meta model.TypeMeta, representatie any) (int, error) {
+	if meta.BovenliggendTypenaam == "" {
+		return 0, fmt.Errorf("HANDLER: kan rel_id voor %s niet afleiden: er is geen bovenliggend hubtype geconfigureerd", meta.Typenaam)
+	}
+	hubMeta, ok := model.MetaRegistry.GetTypeMeta(meta.BovenliggendTypenaam)
+	if !ok {
+		return 0, fmt.Errorf("HANDLER: kan rel_id voor %s niet afleiden: bovenliggend hubtype %s is onbekend in de MetaRegistry", meta.Typenaam, meta.BovenliggendTypenaam)
+	}
+	if hubMeta.EntiteitIDKolom == "" {
+		return 0, fmt.Errorf("HANDLER: kan rel_id voor %s niet afleiden: bovenliggend hubtype %s heeft geen EntiteitIDKolom", meta.Typenaam, hubMeta.Typenaam)
+	}
+
+	entiteitID, err := haalIntWaardeVoorKolomUitRepresentatie(representatie, hubMeta.EntiteitIDKolom)
+	if err != nil || entiteitID == 0 {
+		return 0, fmt.Errorf("HANDLER: kan rel_id voor %s niet afleiden: veld %s ontbreekt of is 0 in de request; stuur rel_id expliciet mee voor hub-kinderen", meta.Typenaam, hubMeta.EntiteitIDKolom)
+	}
+
+	actieveHubIDs64, err := haalActieveIDsMetScope(c, tx, hubMeta, map[string]any{hubMeta.EntiteitIDKolom: entiteitID})
+	if err != nil {
+		return 0, err
+	}
+
+	switch len(actieveHubIDs64) {
+	case 0:
+		return 0, fmt.Errorf("HANDLER: kan rel_id voor %s niet afleiden: geen actieve %s hub gevonden voor %s=%d; stuur rel_id expliciet mee in de request voor dit hub-kind", meta.Typenaam, hubMeta.Typenaam, hubMeta.EntiteitIDKolom, entiteitID)
+	case 1:
+		return int(actieveHubIDs64[0]), nil
+	default:
+		return 0, fmt.Errorf("HANDLER: kan rel_id voor %s niet eenduidig afleiden: %d actieve %s hubs gevonden voor %s=%d; stuur rel_id expliciet mee in de request voor dit hub-kind", meta.Typenaam, len(actieveHubIDs64), hubMeta.Typenaam, hubMeta.EntiteitIDKolom, entiteitID)
+	}
 }
 
 func firstTagValue(tag string) string {
@@ -965,12 +1099,21 @@ func inputNaarHub(input model.FormeleRepresentatie, meta model.TypeMeta) (model.
 			return nil, fmt.Errorf("inputNaarHub: kopiëren naar data mislukt: %v", err)
 		}
 
-		// Zet Data slice op hub via reflection
-		hubVal := reflect.ValueOf(hub).Elem()
+		// Zet Data slice op hub via reflection.
+		// Defensief: voorkom panic als een DBFactory ooit een niet-pointer teruggeeft.
+		hubValue := reflect.ValueOf(hub)
+		if hubValue.Kind() != reflect.Ptr || hubValue.IsNil() {
+			return nil, fmt.Errorf("inputNaarHub: hub %s is geen geldige pointer", meta.Typenaam)
+		}
+		hubVal := hubValue.Elem()
 		dataField := hubVal.FieldByName("Data")
 		if dataField.IsValid() && dataField.CanSet() && dataField.Kind() == reflect.Slice {
 			dataSlice := reflect.MakeSlice(dataField.Type(), 1, 1)
-			dataSlice.Index(0).Set(reflect.ValueOf(dataRep).Elem())
+			dataValue := reflect.ValueOf(dataRep)
+			if dataValue.Kind() != reflect.Ptr || dataValue.IsNil() {
+				return nil, fmt.Errorf("inputNaarHub: data %s is geen geldige pointer", dataMeta.Typenaam)
+			}
+			dataSlice.Index(0).Set(dataValue.Elem())
 			dataField.Set(dataSlice)
 		}
 	}
@@ -981,7 +1124,11 @@ func inputNaarHub(input model.FormeleRepresentatie, meta model.TypeMeta) (model.
 		for inputVal.Kind() == reflect.Ptr {
 			inputVal = inputVal.Elem()
 		}
-		hubVal := reflect.ValueOf(hub).Elem()
+		hubValue := reflect.ValueOf(hub)
+		if hubValue.Kind() != reflect.Ptr || hubValue.IsNil() {
+			return nil, fmt.Errorf("inputNaarHub: hub %s is geen geldige pointer", meta.Typenaam)
+		}
+		hubVal := hubValue.Elem()
 
 		for _, plumbing := range []struct {
 			inputField string
@@ -992,7 +1139,12 @@ func inputNaarHub(input model.FormeleRepresentatie, meta model.TypeMeta) (model.
 			{"Einde", "Einde", ""},
 		} {
 			inputFld := inputVal.FieldByName(plumbing.inputField)
-			if !inputFld.IsValid() || inputFld.IsNil() {
+			if !inputFld.IsValid() {
+				continue
+			}
+			// IsNil mag alleen op nilbare kinds; zonder deze guard kan reflect panicken.
+			if (inputFld.Kind() == reflect.Ptr || inputFld.Kind() == reflect.Map || inputFld.Kind() == reflect.Slice ||
+				inputFld.Kind() == reflect.Interface || inputFld.Kind() == reflect.Func || inputFld.Kind() == reflect.Chan) && inputFld.IsNil() {
 				continue
 			}
 			hubFld := hubVal.FieldByName(plumbing.hubField)
@@ -1020,7 +1172,11 @@ func inputNaarHub(input model.FormeleRepresentatie, meta model.TypeMeta) (model.
 					continue
 				}
 				// Zet datum vanuit de _Input
-				plumbVal := reflect.ValueOf(plumbingRec).Elem()
+				plumbRecValue := reflect.ValueOf(plumbingRec)
+				if plumbRecValue.Kind() != reflect.Ptr || plumbRecValue.IsNil() {
+					continue
+				}
+				plumbVal := plumbRecValue.Elem()
 				datumFld := plumbVal.FieldByName("Datum")
 				if datumFld.IsValid() && datumFld.CanSet() {
 					datumFld.Set(inputFld)

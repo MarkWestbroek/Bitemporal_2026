@@ -55,3 +55,19 @@ export function bepaalOortjesUitChildGroups(childGroups, typeMetaByTypenaam) {
     einde: eindeItem ? { item: eindeItem, group: eindeGroep, datum: eindeItem.datum } : null,
   };
 }
+
+/**
+ * Bepaal actieve aanvang/einde uit de aanvang[] en einde[] arrays op een hub-item (GE/REL).
+ * Materiële hubs (A_W, Rel_A_B) bevatten aanvang/einde als geneste arrays in de API-response.
+ * Retourneert { aanvangDatum, eindeDatum } met de datum-string van het actieve record, of null.
+ */
+export function bepaalHubOortjes(hubItem) {
+  if (!hubItem) return { aanvangDatum: null, eindeDatum: null };
+  const actiefItem = (items) => (items || []).find((item) => !item.afvoer) || null;
+  const aanvang = actiefItem(hubItem.aanvang);
+  const einde = actiefItem(hubItem.einde);
+  return {
+    aanvangDatum: aanvang?.datum || null,
+    eindeDatum: einde?.datum || null,
+  };
+}

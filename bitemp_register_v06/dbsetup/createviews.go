@@ -11,7 +11,7 @@ import (
 func createFormeleTijdIndexes(ctx context.Context, db *bun.DB) error {
 	statements := []string{
 		`CREATE INDEX IF NOT EXISTS idx_wijziging_formele_lookup
-		 ON wijziging (entiteitnaam, entiteit_id, (COALESCE(representatienaam, '')), (COALESCE(representatie_id, '')), registratie_id, id DESC);`,
+		 ON wijziging (entiteitnaam, entiteit_id, (COALESCE(representatienaam, '')), (COALESCE(representatie_id, '')), versie, registratie_id, id DESC);`,
 		`CREATE INDEX IF NOT EXISTS idx_wijziging_registratie_id
 		 ON wijziging (registratie_id, id DESC);`,
 		`CREATE INDEX IF NOT EXISTS idx_registratie_ongedaan_peil
@@ -32,6 +32,13 @@ func createFormeleTijdIndexes(ctx context.Context, db *bun.DB) error {
 // createFormeleTijdViews maakt de basisviews aan voor formele tijdreisquery's.
 // Deze view is bewust "basis": peiltijdstip blijft een runtime-parameter in de SELECTs.
 func createFormeleTijdViews(ctx context.Context, db *bun.DB) error {
+	// PostgreSQL laat geen wijziging van RETURN TABLE-signature toe via
+	// CREATE OR REPLACE FUNCTION. Daarom droppen we de bestaande functie
+	// expliciet voordat we de nieuwe definitie aanmaken.
+	const dropPeilFunction = `
+DROP FUNCTION IF EXISTS f_formele_wijziging_op_peil(timestamptz);
+`
+
 	const createBasisView = `
 CREATE OR REPLACE VIEW vw_formele_wijziging_basis AS
 SELECT
@@ -42,7 +49,8 @@ SELECT
 	w.entiteitnaam,
 	w.entiteit_id,
 	COALESCE(w.representatienaam, '') AS representatienaam,
-	COALESCE(w.representatie_id, '') AS representatie_id
+	COALESCE(w.representatie_id, '') AS representatie_id,
+	w.versie
 FROM wijziging AS w
 JOIN registratie AS reg ON reg.id = w.registratie_id;
 `
@@ -57,7 +65,8 @@ RETURNS TABLE (
 	entiteitnaam text,
 	entiteit_id text,
 	representatienaam text,
-	representatie_id text
+	representatie_id text,
+	versie bigint
 )
 LANGUAGE SQL
 STABLE
@@ -70,7 +79,8 @@ AS $$
 		v.entiteitnaam,
 		v.entiteit_id,
 		v.representatienaam,
-		v.representatie_id
+		v.representatie_id,
+		v.versie
 	FROM vw_formele_wijziging_basis AS v
 	WHERE v.registratie_tijdstip <= p_peiltijdstip
 	  AND NOT EXISTS (
@@ -83,6 +93,10 @@ $$;
 `
 
 	if _, err := db.ExecContext(ctx, createBasisView); err != nil {
+		return err
+	}
+
+	if _, err := db.ExecContext(ctx, dropPeilFunction); err != nil {
 		return err
 	}
 

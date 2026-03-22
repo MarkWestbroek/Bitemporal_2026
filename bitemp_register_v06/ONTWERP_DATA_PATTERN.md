@@ -740,3 +740,55 @@ func createDataTable(ctx context.Context, db *bun.DB, hubMeta model.TypeMeta) er
 3. **Wijziging-tracking** → Elke insert in de database (hub, data, aanvang, einde) wordt verantwoord door een eigen **wijziging** gekoppeld aan de registratie. Bij eerste opvoer: wijziging voor hub + data (+ evt. aanvang/einde). Bij correctie: alleen wijziging(en) voor het/de record(s) dat/die daadwerkelijk wijzigt/wijzigen (typisch alleen _Data, of alleen _Aanvang/_Einde).
 
 4. **Schema-API type-indicatie** → De schema-API levert per type een **`ge_subtype`** attribuut (`"hub"`, `"data"`, `"aanvang"`, `"einde"`). Dit is een classificatie op type-niveau (niet per veld), afgeleid uit `GESubtype` in de MetaRegistry. De hiërarchische structuur in combinatie met `ge_subtype` maakt een los `"laag"` per veld overbodig.
+
+---
+
+## 15. Post-loading hub-kinderen (Bun v1.1.14 workaround)
+
+### Probleem
+
+Bun v1.1.14 crasht met een `reflect: call of reflect.Value.Field on zero Value` panic wanneer geneste `has-many` relaties met callback-filters worden geladen. Dit gebeurt in de `full/` endpoints waar de entiteit → hub → _Data/_Aanvang/_Einde drielaags-hiërarchie via `Relation()` callbacks wordt opgebouwd.
+
+### Oplossing: `laadHubKinderenNaQuery`
+
+In plaats van geneste `Relation()` calls in de Bun query (die de panic veroorzaken), worden hub-kinderen (_Data, _Aanvang, _Einde) in **aparte batch-queries na de hoofd-query** geladen.
+
+De functie `laadHubKinderenNaQuery()` in `handlers/full_handlers.go` werkt als volgt:
+
+1. **Entiteit-IDs verzamelen**: uit het query-resultaat worden alle unieke entiteit-IDs opgehaald.
+2. **Per hub-type, per child-type**: één `SELECT ... WHERE ent_id IN (...)` query.
+3. **Lookup-map bouwen**: `(entID, relID) → []records` voor snelle distributie.
+4. **Reflectie-distributie**: de opgehaalde records worden via reflection naar de juiste hub-structs geschreven.
+
+### Impact
+
+- Hoofd-query laadt: Entiteit → Hub (via `Relation()`, zonder callback-paniek).
+- Post-load laadt: Hub → Data/Aanvang/Einde (via aparte queries).
+- Peiltijdstip-filtering wordt ook op de post-load queries toegepast.
+- **Performance**: O(aantal child-typen) extra queries per request, ongeacht het aantal entiteiten. Typisch: 8 extra queries voor A-entiteiten (6 hubs × 1–3 kinderen), 4 voor B.
+
+### Gerelateerde functies
+
+| Functie | Bestand | Doel |
+|---------|---------|------|
+| `addOnderliggendeRelations` | `full_handlers.go` | Hoofd-query: laadt hubs als `Relation()`, **zonder** geneste children |
+| `laadHubKinderenNaQuery` | `full_handlers.go` | Post-load: vult hub-kinderen in via aparte batch-queries |
+| `vulAfgeleideFormeleTijdVoorFullEntity` | `full_handlers.go` | Afgeleide formele tijd: daalt nu ook af in hub-kinderen |
+
+### Wanneer verwijderen
+
+Na een Bun-upgrade die de geneste `has-many` panic oplost, kan `laadHubKinderenNaQuery` vervangen worden door het herstellen van de geneste `Relation()` calls in `addOnderliggendeRelations` (de uitgecommentarieerde kinderrelaties).
+
+---
+
+## 16. Frontend: materiële tijd op GE/REL-niveau
+
+### Weergave
+
+De frontend toont aanvang en einde op materiële GE's en relaties als "oortjes" in de SVG visualisatie, analoog aan de entiteits-oortjes. Per hub-node (GE of REL card) worden mini-aanvang/-einde badges getoond indien:
+- het hub-type `isMaterieel === true` heeft in de schema-API
+- de hub-item `aanvang` of `einde` arrays bevat met een actief (niet-afgevoerd) record
+
+### Editor
+
+In de `RepresentatieActieBox` worden aanvang-/einddatumpickers getoond wanneer het geselecteerde GE/REL materieel is. De registratie-payload bevat dan extra wijzigingen voor de aanvang-/einde plumbing-types op hub-niveau, analoog aan de entiteits-materiële-tijd.

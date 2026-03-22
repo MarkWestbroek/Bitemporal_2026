@@ -19,6 +19,12 @@ export default function RepresentatieActieBox({
   secondaireEntiteitIDKolom,
   secondaireInfo,
   secondaireIds,
+  isMaterieel,
+  repAanvangDatum,
+  setRepAanvangDatum,
+  repEindeDatum,
+  setRepEindeDatum,
+  repOortjes,
 }) {
   const effectieveSecondaireInfo = secondaireInfo || { ids: secondaireIds || [], loading: false, error: "" };
 
@@ -44,6 +50,24 @@ export default function RepresentatieActieBox({
           </ActionInlineField>
         );})}
       </ActionTopFields>
+
+      {/* Materiële tijd: aanvang/einde datumpickers voor materiële hub-GE's en RELs */}
+      {isMaterieel && (
+        <div style={{ display: "flex", gap: 16, marginBottom: 12, padding: "8px 10px", background: "#f0f9ff", borderRadius: 6, border: "1px solid #bae6fd" }}>
+          <div style={{ flex: 1 }}>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#0369a1", marginBottom: 2 }}>
+              Aanvang {repOortjes?.aanvangDatum ? <span style={{ fontWeight: 400, color: "#64748b" }}>(huidig: {repOortjes.aanvangDatum})</span> : null}
+            </label>
+            <input type="date" value={repAanvangDatum} onChange={(e) => setRepAanvangDatum(e.target.value)} style={{ width: "100%" }} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#0369a1", marginBottom: 2 }}>
+              Einde {repOortjes?.eindeDatum ? <span style={{ fontWeight: 400, color: "#64748b" }}>(huidig: {repOortjes.eindeDatum})</span> : null}
+            </label>
+            <input type="date" value={repEindeDatum} onChange={(e) => setRepEindeDatum(e.target.value)} style={{ width: "100%" }} />
+          </div>
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
         <button onClick={() => voerActieUit("afvoer")} disabled={actieBezig} style={{ background: "#b91c1c" }}>

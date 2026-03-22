@@ -61,6 +61,7 @@ func TestZetAfgeleideFormeleTijdVoorRepresentatie_OpvoerBlijftGevuldOpPeilVoorLa
 		"1",
 		"",
 		"",
+		nil,
 		peiltijdstip,
 	)
 	if err != nil {

@@ -181,6 +181,156 @@ func TestSluitActieveEnkelvoudigeVoorgangersAf_ErrorsOnMissingParentID(t *testin
 	}
 }
 
+func TestLeidRelIDVoorHubKindAf_ReturnsSingleActiveHubRelID(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
+	ctx.Request = httptest.NewRequest(http.MethodGet, "/", nil)
+
+	sqlDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to create sqlmock: %v", err)
+	}
+	defer sqlDB.Close()
+
+	db := bun.NewDB(sqlDB, pgdialect.New())
+	defer db.Close()
+
+	mock.ExpectBegin()
+	tx, err := db.BeginTx(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("failed to begin tx: %v", err)
+	}
+
+	meta, ok := model.MetaRegistry.GetTypeMeta("A_W_Aanvang")
+	if !ok {
+		t.Fatal("expected metadata for A_W_Aanvang")
+	}
+	representatie := &model.A_W_Aanvang{A_ID: 2}
+
+	mock.ExpectQuery(`SELECT CAST\(rel_id AS BIGINT\) FROM "a_w".*opvoer IS NOT NULL.*afvoer IS NULL.*a_id =`).
+		WillReturnRows(sqlmock.NewRows([]string{"rel_id"}).AddRow(3))
+
+	relID, err := leidRelIDVoorHubKindAf(ctx, tx, meta, representatie)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if relID != 3 {
+		t.Fatalf("expected rel_id 3, got %d", relID)
+	}
+
+	mock.ExpectCommit()
+	if err := tx.Commit(); err != nil {
+		t.Fatalf("failed to commit tx: %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unmet sql expectations: %v", err)
+	}
+}
+
+func TestLeidRelIDVoorHubKindAf_ErrorsOnAmbiguousActiveHub(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
+	ctx.Request = httptest.NewRequest(http.MethodGet, "/", nil)
+
+	sqlDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to create sqlmock: %v", err)
+	}
+	defer sqlDB.Close()
+
+	db := bun.NewDB(sqlDB, pgdialect.New())
+	defer db.Close()
+
+	mock.ExpectBegin()
+	tx, err := db.BeginTx(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("failed to begin tx: %v", err)
+	}
+
+	meta, ok := model.MetaRegistry.GetTypeMeta("A_W_Aanvang")
+	if !ok {
+		t.Fatal("expected metadata for A_W_Aanvang")
+	}
+	representatie := &model.A_W_Aanvang{A_ID: 2}
+
+	mock.ExpectQuery(`SELECT CAST\(rel_id AS BIGINT\) FROM "a_w".*opvoer IS NOT NULL.*afvoer IS NULL.*a_id =`).
+		WillReturnRows(sqlmock.NewRows([]string{"rel_id"}).AddRow(3).AddRow(4))
+
+	_, err = leidRelIDVoorHubKindAf(ctx, tx, meta, representatie)
+	if err == nil {
+		t.Fatal("expected ambiguity error, got nil")
+	}
+	if !strings.Contains(err.Error(), "niet eenduidig") {
+		t.Fatalf("expected ambiguity error, got %v", err)
+	}
+	if !strings.Contains(err.Error(), "stuur rel_id expliciet mee") {
+		t.Fatalf("expected explicit rel_id guidance, got %v", err)
+	}
+
+	mock.ExpectRollback()
+	if err := tx.Rollback(); err != nil {
+		t.Fatalf("failed to rollback tx: %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unmet sql expectations: %v", err)
+	}
+}
+
+func TestLeidRelIDVoorHubKindAf_ErrorsOnNoActiveHub(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
+	ctx.Request = httptest.NewRequest(http.MethodGet, "/", nil)
+
+	sqlDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to create sqlmock: %v", err)
+	}
+	defer sqlDB.Close()
+
+	db := bun.NewDB(sqlDB, pgdialect.New())
+	defer db.Close()
+
+	mock.ExpectBegin()
+	tx, err := db.BeginTx(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("failed to begin tx: %v", err)
+	}
+
+	meta, ok := model.MetaRegistry.GetTypeMeta("A_W_Aanvang")
+	if !ok {
+		t.Fatal("expected metadata for A_W_Aanvang")
+	}
+	representatie := &model.A_W_Aanvang{A_ID: 2}
+
+	mock.ExpectQuery(`SELECT CAST\(rel_id AS BIGINT\) FROM "a_w".*opvoer IS NOT NULL.*afvoer IS NULL.*a_id =`).
+		WillReturnRows(sqlmock.NewRows([]string{"rel_id"}))
+
+	_, err = leidRelIDVoorHubKindAf(ctx, tx, meta, representatie)
+	if err == nil {
+		t.Fatal("expected no-active-hub error, got nil")
+	}
+	if !strings.Contains(err.Error(), "geen actieve A_W hub") {
+		t.Fatalf("expected no-active-hub detail, got %v", err)
+	}
+	if !strings.Contains(err.Error(), "a_id=2") {
+		t.Fatalf("expected entity id detail, got %v", err)
+	}
+	if !strings.Contains(err.Error(), "stuur rel_id expliciet mee") {
+		t.Fatalf("expected explicit rel_id guidance, got %v", err)
+	}
+
+	mock.ExpectRollback()
+	if err := tx.Rollback(); err != nil {
+		t.Fatalf("failed to rollback tx: %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unmet sql expectations: %v", err)
+	}
+}
+
 func TestParseStringNaarKolomType_TableDriven(t *testing.T) {
 	metaAU, ok := model.MetaRegistry.GetTypeMeta("A_U")
 	if !ok {

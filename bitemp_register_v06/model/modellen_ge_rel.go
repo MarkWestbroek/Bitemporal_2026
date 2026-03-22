@@ -326,6 +326,147 @@ func (d Rel_A_B_Data) String() string { return RepresentatieToString(d) }
 func (d B_X_Data) String() string     { return RepresentatieToString(d) }
 func (d B_Y_Data) String() string     { return RepresentatieToString(d) }
 
+/* === Hub-level _Aanvang/_Einde: materiële plumbing voor GE/REL hubs ===
+
+Materiële hubs (waar IsMaterieel=true in de MetaRegistry) hebben hun eigen
+aanvang/einde-tabellen, analoog aan de entiteits-level plumbing (A_Aanvang, etc.).
+
+Verschil met entiteits-plumbing:
+- PK: (ent_id, rel_id, versie) — drieledige samengestelde sleutel (i.p.v. tweedelig)
+- FK: naar de hub (ent_id, rel_id) i.p.v. direct naar de entiteit
+
+Versie is relatief autoincrement per (ent_id, rel_id), beheerd door
+RegisterRelativeIDTriggerComposite in createmodeltables.go.
+
+Alleen gedefinieerd voor materiële hubs: A_W en Rel_A_B.
+Niet-materiële hubs (A_U, A_V, B_X, B_Y) hebben geen aanvang/einde.
+*/
+
+type A_W_Aanvang struct {
+	bun.BaseModel `bun:"table:a_w_aanvang,alias:a_w_aanvang"`
+	A_ID          int        `json:"a_id" bun:"a_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+func (a A_W_Aanvang) GetID() any              { return a.Versie }
+func (a A_W_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
+func (a *A_W_Aanvang) ClearID()               { a.Versie = 0 }
+func (a A_W_Aanvang) GetOpvoer() *time.Time   { return a.Opvoer }
+func (a *A_W_Aanvang) SetOpvoer(t *time.Time) { a.Opvoer = t }
+func (a A_W_Aanvang) GetAfvoer() *time.Time   { return a.Afvoer }
+func (a *A_W_Aanvang) SetAfvoer(t *time.Time) { a.Afvoer = t }
+func (a A_W_Aanvang) String() string          { return RepresentatieToString(a) }
+
+type A_W_Einde struct {
+	bun.BaseModel `bun:"table:a_w_einde,alias:a_w_einde"`
+	A_ID          int        `json:"a_id" bun:"a_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+func (a A_W_Einde) GetID() any              { return a.Versie }
+func (a A_W_Einde) Metatype() Metatype      { return MetatypeGegevenselement }
+func (a *A_W_Einde) ClearID()               { a.Versie = 0 }
+func (a A_W_Einde) GetOpvoer() *time.Time   { return a.Opvoer }
+func (a *A_W_Einde) SetOpvoer(t *time.Time) { a.Opvoer = t }
+func (a A_W_Einde) GetAfvoer() *time.Time   { return a.Afvoer }
+func (a *A_W_Einde) SetAfvoer(t *time.Time) { a.Afvoer = t }
+func (a A_W_Einde) String() string          { return RepresentatieToString(a) }
+
+type Rel_A_B_Aanvang struct {
+	bun.BaseModel `bun:"table:rel_a_b_aanvang,alias:rel_a_b_aanvang"`
+	A_ID          int        `json:"a_id" bun:"a_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+func (r Rel_A_B_Aanvang) GetID() any              { return r.Versie }
+func (r Rel_A_B_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
+func (r *Rel_A_B_Aanvang) ClearID()               { r.Versie = 0 }
+func (r Rel_A_B_Aanvang) GetOpvoer() *time.Time   { return r.Opvoer }
+func (r *Rel_A_B_Aanvang) SetOpvoer(t *time.Time) { r.Opvoer = t }
+func (r Rel_A_B_Aanvang) GetAfvoer() *time.Time   { return r.Afvoer }
+func (r *Rel_A_B_Aanvang) SetAfvoer(t *time.Time) { r.Afvoer = t }
+func (r Rel_A_B_Aanvang) String() string          { return RepresentatieToString(r) }
+
+type Rel_A_B_Einde struct {
+	bun.BaseModel `bun:"table:rel_a_b_einde,alias:rel_a_b_einde"`
+	A_ID          int        `json:"a_id" bun:"a_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+func (r Rel_A_B_Einde) GetID() any              { return r.Versie }
+func (r Rel_A_B_Einde) Metatype() Metatype      { return MetatypeGegevenselement }
+func (r *Rel_A_B_Einde) ClearID()               { r.Versie = 0 }
+func (r Rel_A_B_Einde) GetOpvoer() *time.Time   { return r.Opvoer }
+func (r *Rel_A_B_Einde) SetOpvoer(t *time.Time) { r.Opvoer = t }
+func (r Rel_A_B_Einde) GetAfvoer() *time.Time   { return r.Afvoer }
+func (r *Rel_A_B_Einde) SetAfvoer(t *time.Time) { r.Afvoer = t }
+func (r Rel_A_B_Einde) String() string          { return RepresentatieToString(r) }
+
+// Opvoer / Afvoer (formele tijd) methoden voor formele tijd intereface implementatie
+func (r Rel_A_B) GetOpvoer() *time.Time   { return r.Opvoer }
+func (r *Rel_A_B) SetOpvoer(t *time.Time) { r.Opvoer = t }
+func (r Rel_A_B) GetAfvoer() *time.Time   { return r.Afvoer }
+func (r *Rel_A_B) SetAfvoer(t *time.Time) { r.Afvoer = t }
+
+func (au A_U) GetOpvoer() *time.Time   { return au.Opvoer }
+func (au *A_U) SetOpvoer(t *time.Time) { au.Opvoer = t }
+func (au A_U) GetAfvoer() *time.Time   { return au.Afvoer }
+func (au *A_U) SetAfvoer(t *time.Time) { au.Afvoer = t }
+
+func (av A_V) GetOpvoer() *time.Time   { return av.Opvoer }
+func (av *A_V) SetOpvoer(t *time.Time) { av.Opvoer = t }
+func (av A_V) GetAfvoer() *time.Time   { return av.Afvoer }
+func (av *A_V) SetAfvoer(t *time.Time) { av.Afvoer = t }
+
+func (aw A_W) GetOpvoer() *time.Time   { return aw.Opvoer }
+func (aw *A_W) SetOpvoer(t *time.Time) { aw.Opvoer = t }
+func (aw A_W) GetAfvoer() *time.Time   { return aw.Afvoer }
+func (aw *A_W) SetAfvoer(t *time.Time) { aw.Afvoer = t }
+
+func (bx B_X) GetOpvoer() *time.Time   { return bx.Opvoer }
+func (bx *B_X) SetOpvoer(t *time.Time) { bx.Opvoer = t }
+func (bx B_X) GetAfvoer() *time.Time   { return bx.Afvoer }
+func (bx *B_X) SetAfvoer(t *time.Time) { bx.Afvoer = t }
+
+func (by B_Y) GetOpvoer() *time.Time   { return by.Opvoer }
+func (by *B_Y) SetOpvoer(t *time.Time) { by.Opvoer = t }
+func (by B_Y) GetAfvoer() *time.Time   { return by.Afvoer }
+func (by *B_Y) SetAfvoer(t *time.Time) { by.Afvoer = t }
+
+func (a A) GetOpvoer() *time.Time   { return a.Opvoer }
+func (a *A) SetOpvoer(t *time.Time) { a.Opvoer = t }
+func (a A) GetAfvoer() *time.Time   { return a.Afvoer }
+func (a *A) SetAfvoer(t *time.Time) { a.Afvoer = t }
+
+func (b B) GetOpvoer() *time.Time   { return b.Opvoer }
+func (b *B) SetOpvoer(t *time.Time) { b.Opvoer = t }
+func (b B) GetAfvoer() *time.Time   { return b.Afvoer }
+func (b *B) SetAfvoer(t *time.Time) { b.Afvoer = t }
+
+// String methoden voor debuggen
+func (r Rel_A_B) String() string { return RepresentatieToString(r) }
+func (au A_U) String() string    { return RepresentatieToString(au) }
+func (av A_V) String() string    { return RepresentatieToString(av) }
+func (aw A_W) String() string    { return RepresentatieToString(aw) }
+func (bx B_X) String() string    { return RepresentatieToString(bx) }
+func (by B_Y) String() string    { return RepresentatieToString(by) }
+
 /* === GeefOnderliggendeGegevenselementen op hub-types ===
 
 Implementeert HeeftOnderliggendeGegevenselementen voor hubs. Analoog aan de
@@ -455,181 +596,3 @@ func (h *B_Y) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie 
 	}
 	return result
 }
-
-// Opvoer / Afvoer (formele tijd) methoden voor formele tijd intereface implementatie
-func (r Rel_A_B) GetOpvoer() *time.Time   { return r.Opvoer }
-func (r *Rel_A_B) SetOpvoer(t *time.Time) { r.Opvoer = t }
-func (r Rel_A_B) GetAfvoer() *time.Time   { return r.Afvoer }
-func (r *Rel_A_B) SetAfvoer(t *time.Time) { r.Afvoer = t }
-
-func (au A_U) GetOpvoer() *time.Time   { return au.Opvoer }
-func (au *A_U) SetOpvoer(t *time.Time) { au.Opvoer = t }
-func (au A_U) GetAfvoer() *time.Time   { return au.Afvoer }
-func (au *A_U) SetAfvoer(t *time.Time) { au.Afvoer = t }
-
-func (av A_V) GetOpvoer() *time.Time   { return av.Opvoer }
-func (av *A_V) SetOpvoer(t *time.Time) { av.Opvoer = t }
-func (av A_V) GetAfvoer() *time.Time   { return av.Afvoer }
-func (av *A_V) SetAfvoer(t *time.Time) { av.Afvoer = t }
-
-func (aw A_W) GetOpvoer() *time.Time   { return aw.Opvoer }
-func (aw *A_W) SetOpvoer(t *time.Time) { aw.Opvoer = t }
-func (aw A_W) GetAfvoer() *time.Time   { return aw.Afvoer }
-func (aw *A_W) SetAfvoer(t *time.Time) { aw.Afvoer = t }
-
-func (bx B_X) GetOpvoer() *time.Time   { return bx.Opvoer }
-func (bx *B_X) SetOpvoer(t *time.Time) { bx.Opvoer = t }
-func (bx B_X) GetAfvoer() *time.Time   { return bx.Afvoer }
-func (bx *B_X) SetAfvoer(t *time.Time) { bx.Afvoer = t }
-
-func (by B_Y) GetOpvoer() *time.Time   { return by.Opvoer }
-func (by *B_Y) SetOpvoer(t *time.Time) { by.Opvoer = t }
-func (by B_Y) GetAfvoer() *time.Time   { return by.Afvoer }
-func (by *B_Y) SetAfvoer(t *time.Time) { by.Afvoer = t }
-
-func (a A) GetOpvoer() *time.Time   { return a.Opvoer }
-func (a *A) SetOpvoer(t *time.Time) { a.Opvoer = t }
-func (a A) GetAfvoer() *time.Time   { return a.Afvoer }
-func (a *A) SetAfvoer(t *time.Time) { a.Afvoer = t }
-
-func (b B) GetOpvoer() *time.Time   { return b.Opvoer }
-func (b *B) SetOpvoer(t *time.Time) { b.Opvoer = t }
-func (b B) GetAfvoer() *time.Time   { return b.Afvoer }
-func (b *B) SetAfvoer(t *time.Time) { b.Afvoer = t }
-
-// String methoden voor debuggen
-func (r Rel_A_B) String() string { return RepresentatieToString(r) }
-func (au A_U) String() string    { return RepresentatieToString(au) }
-func (av A_V) String() string    { return RepresentatieToString(av) }
-func (aw A_W) String() string    { return RepresentatieToString(aw) }
-func (bx B_X) String() string    { return RepresentatieToString(bx) }
-func (by B_Y) String() string    { return RepresentatieToString(by) }
-
-/* === _Input structs: platte API-input die hub + data combineert ===
-
-De registratie-API accepteert platte objecten (alle velden bij elkaar).
-Per GE/REL-type is er een _Input struct die de velden van hub + data combineert.
-
-De handler splitst deze intern:
-- Hub-velden (ent_id, rel_id, evt. b_id) → hub-record
-- Inhoudsvelden → data-record met versie = autoincrement
-- Aanvang/Einde (optioneel) → materiële plumbing records
-
-De Factory in de MetaRegistry levert de _Input struct op.
-De DBFactory levert de hub-struct op.
-
-_Input structs implementeren FormeleRepresentatie met no-op opvoer/afvoer,
-zodat ze door de generieke handler-chain geparsed kunnen worden.
-*/
-
-type A_U_Input struct {
-	A_ID   int    `json:"a_id"`
-	Rel_ID int    `json:"rel_id"`
-	Aaa    string `json:"aaa"`
-	Bbb    *bool  `json:"bbb,omitempty"`
-	// Materiële velden (optioneel, bij eerste opvoer)
-	Aanvang *Date `json:"aanvang,omitempty"`
-	Einde   *Date `json:"einde,omitempty"`
-}
-
-func (i A_U_Input) GetID() any              { return i.Rel_ID }
-func (i A_U_Input) Metatype() Metatype      { return MetatypeGegevenselement }
-func (i *A_U_Input) ClearID()               { i.Rel_ID = 0 }
-func (i A_U_Input) GetOpvoer() *time.Time   { return nil }
-func (i *A_U_Input) SetOpvoer(t *time.Time) {}
-func (i A_U_Input) GetAfvoer() *time.Time   { return nil }
-func (i *A_U_Input) SetAfvoer(t *time.Time) {}
-func (i A_U_Input) String() string          { return RepresentatieToString(i) }
-
-type A_V_Input struct {
-	A_ID    int     `json:"a_id"`
-	Rel_ID  int     `json:"rel_id"`
-	Ccc     string  `json:"ccc"`
-	Ddd     *string `json:"ddd,omitempty"`
-	Eee     *string `json:"eee,omitempty"`
-	Fff     float64 `json:"fff"`
-	Ggg     ABCEnum `json:"ggg"`
-	Datum   *Date   `json:"datum,omitempty"`
-	Aanvang *Date   `json:"aanvang,omitempty"`
-	Einde   *Date   `json:"einde,omitempty"`
-}
-
-func (i A_V_Input) GetID() any              { return i.Rel_ID }
-func (i A_V_Input) Metatype() Metatype      { return MetatypeGegevenselement }
-func (i *A_V_Input) ClearID()               { i.Rel_ID = 0 }
-func (i A_V_Input) GetOpvoer() *time.Time   { return nil }
-func (i *A_V_Input) SetOpvoer(t *time.Time) {}
-func (i A_V_Input) GetAfvoer() *time.Time   { return nil }
-func (i *A_V_Input) SetAfvoer(t *time.Time) {}
-func (i A_V_Input) String() string          { return RepresentatieToString(i) }
-
-type A_W_Input struct {
-	A_ID    int     `json:"a_id"`
-	Rel_ID  int     `json:"rel_id"`
-	Float   float64 `json:"float"`
-	Heel    int     `json:"heel"`
-	Aanvang *Date   `json:"aanvang,omitempty"`
-	Einde   *Date   `json:"einde,omitempty"`
-}
-
-func (i A_W_Input) GetID() any              { return i.Rel_ID }
-func (i A_W_Input) Metatype() Metatype      { return MetatypeGegevenselement }
-func (i *A_W_Input) ClearID()               { i.Rel_ID = 0 }
-func (i A_W_Input) GetOpvoer() *time.Time   { return nil }
-func (i *A_W_Input) SetOpvoer(t *time.Time) {}
-func (i A_W_Input) GetAfvoer() *time.Time   { return nil }
-func (i *A_W_Input) SetAfvoer(t *time.Time) {}
-func (i A_W_Input) String() string          { return RepresentatieToString(i) }
-
-type Rel_A_B_Input struct {
-	A_ID    int        `json:"a_id"`
-	Rel_ID  int        `json:"rel_id"`
-	B_ID    int        `json:"b_id"`
-	Soort   RelABSoort `json:"soort"`
-	Aanvang *Date      `json:"aanvang,omitempty"`
-	Einde   *Date      `json:"einde,omitempty"`
-}
-
-func (i Rel_A_B_Input) GetID() any              { return i.Rel_ID }
-func (i Rel_A_B_Input) Metatype() Metatype      { return MetatypeRelatie }
-func (i *Rel_A_B_Input) ClearID()               { i.Rel_ID = 0 }
-func (i Rel_A_B_Input) GetOpvoer() *time.Time   { return nil }
-func (i *Rel_A_B_Input) SetOpvoer(t *time.Time) {}
-func (i Rel_A_B_Input) GetAfvoer() *time.Time   { return nil }
-func (i *Rel_A_B_Input) SetAfvoer(t *time.Time) {}
-func (i Rel_A_B_Input) String() string          { return RepresentatieToString(i) }
-
-type B_X_Input struct {
-	B_ID    int    `json:"b_id"`
-	Rel_ID  int    `json:"rel_id"`
-	Fff     string `json:"fff"`
-	Ggg     string `json:"ggg"`
-	Aanvang *Date  `json:"aanvang,omitempty"`
-	Einde   *Date  `json:"einde,omitempty"`
-}
-
-func (i B_X_Input) GetID() any              { return i.Rel_ID }
-func (i B_X_Input) Metatype() Metatype      { return MetatypeGegevenselement }
-func (i *B_X_Input) ClearID()               { i.Rel_ID = 0 }
-func (i B_X_Input) GetOpvoer() *time.Time   { return nil }
-func (i *B_X_Input) SetOpvoer(t *time.Time) {}
-func (i B_X_Input) GetAfvoer() *time.Time   { return nil }
-func (i *B_X_Input) SetAfvoer(t *time.Time) {}
-func (i B_X_Input) String() string          { return RepresentatieToString(i) }
-
-type B_Y_Input struct {
-	B_ID    int    `json:"b_id"`
-	Rel_ID  int    `json:"rel_id"`
-	Hhh     string `json:"hhh"`
-	Aanvang *Date  `json:"aanvang,omitempty"`
-	Einde   *Date  `json:"einde,omitempty"`
-}
-
-func (i B_Y_Input) GetID() any              { return i.Rel_ID }
-func (i B_Y_Input) Metatype() Metatype      { return MetatypeGegevenselement }
-func (i *B_Y_Input) ClearID()               { i.Rel_ID = 0 }
-func (i B_Y_Input) GetOpvoer() *time.Time   { return nil }
-func (i *B_Y_Input) SetOpvoer(t *time.Time) {}
-func (i B_Y_Input) GetAfvoer() *time.Time   { return nil }
-func (i *B_Y_Input) SetAfvoer(t *time.Time) {}
-func (i B_Y_Input) String() string          { return RepresentatieToString(i) }

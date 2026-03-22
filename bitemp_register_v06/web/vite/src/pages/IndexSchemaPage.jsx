@@ -14,6 +14,7 @@ import {
   leidEntiteitTypeAfUitKolomnaam,
   platSlaHubItems,
 } from "../shared/schemaUtils";
+import { bepaalHubOortjes } from "../shared/oortjesUtils";
 import SchemaIndexHeader from "../components/index/SchemaIndexHeader";
 import SchemaIndexControls from "../components/index/SchemaIndexControls";
 import IndexRegistratieVisual from "../components/index/IndexRegistratieVisual";
@@ -223,6 +224,9 @@ export default function IndexSchemaPage() {
   // Materiële tijd: datumvelden voor aanvang/einde bij het opvoeren onder een bestaande entiteit.
   const [entiteitAanvangDatum, setEntiteitAanvangDatum] = useState("");
   const [entiteitEindeDatum, setEntiteitEindeDatum] = useState("");
+  // Materiële tijd: datumvelden voor aanvang/einde bij het corrigeren van een materiële hub-GE of REL.
+  const [repAanvangDatum, setRepAanvangDatum] = useState("");
+  const [repEindeDatum, setRepEindeDatum] = useState("");
   const [actieFormVelden, setActieFormVelden] = useState({});
   const [actieBezig, setActieBezig] = useState(false);
   const [nieuweEntiteitBezig, setNieuweEntiteitBezig] = useState(false);
@@ -418,6 +422,26 @@ export default function IndexSchemaPage() {
           };
         }, [selectedEntiteitMeta, childGroups, typeMetaByTypenaam]);
 
+        // Materiële-tijd meta voor de geselecteerde hub-GE/REL (indien materieel).
+        // Zoekt de _Aanvang en _Einde kinderen van het hubtype in de schema metadata.
+        const repMaterieleTijdMeta = useMemo(() => {
+          if (!geselecteerdeRep) return null;
+          const hubMeta = typeMetaByTypenaam?.[geselecteerdeRep.group?.doeltype];
+          if (!hubMeta?.isMaterieel || hubMeta?.ge_subtype !== "hub") return null;
+          const onderliggende = safeArray(hubMeta.onderliggende);
+          const aanvangChild = onderliggende.find((o) => o.doeltype?.endsWith("_Aanvang"));
+          const eindeChild = onderliggende.find((o) => o.doeltype?.endsWith("_Einde"));
+          const aanvangTypeMeta = aanvangChild ? typeMetaByTypenaam[aanvangChild.doeltype] : null;
+          const eindeTypeMeta = eindeChild ? typeMetaByTypenaam[eindeChild.doeltype] : null;
+          if (!aanvangTypeMeta && !eindeTypeMeta) return null;
+          return {
+            aanvangVeldnaam: aanvangTypeMeta?.veldnaam || null,
+            eindeVeldnaam: eindeTypeMeta?.veldnaam || null,
+            aanvangEntiteitIDKolom: aanvangTypeMeta?.entiteitIDKolom || null,
+            eindeEntiteitIDKolom: eindeTypeMeta?.entiteitIDKolom || null,
+          };
+        }, [geselecteerdeRep, typeMetaByTypenaam]);
+
         const gegevenselementGroepOpties = useMemo(() => {
           return childGroupsGesorteerd
             .filter((group) => String(group?.metatype || '').toLowerCase() === 'gegevenselement')
@@ -466,6 +490,7 @@ export default function IndexSchemaPage() {
                 label: labelVoorChildType(group.doeltype, group.rolnaam),
                 geVeldnaam: String(group?.typeMeta?.veldnaam || group.doeltype.toLowerCase()),
                 entiteitIDKolom: String(group?.typeMeta?.entiteitIDKolom || ''),
+                isMaterieel: Boolean(group?.typeMeta?.isMaterieel && group?.typeMeta?.ge_subtype === 'hub'),
                 veldDefinities,
               };
             });
@@ -523,6 +548,7 @@ export default function IndexSchemaPage() {
                 geVeldnaam: String(group?.typeMeta?.veldnaam || group.doeltype.toLowerCase()),
                 entiteitIDKolom: String(group?.typeMeta?.entiteitIDKolom || ''),
                 secondaireEntiteitIDKolom: secondaireKolom,
+                isMaterieel: Boolean(group?.typeMeta?.isMaterieel && group?.typeMeta?.ge_subtype === 'hub'),
                 veldDefinities,
               };
             });
@@ -704,6 +730,7 @@ export default function IndexSchemaPage() {
                 if (raw === undefined || raw === null || raw === '') return;
                 item[veld.naam] = coercedWaardeVoorVeld(raw, veld, `${optie.label}.${veld.naam}`);
               });
+              vulMaterieleTijdVoorHubInput(item, row, optie);
               return { opvoer: { [optie.geVeldnaam]: item } };
             });
             // Materiële tijd: voeg aanvang/einde opvoer-wijzigingen toe als de datums zijn ingevuld.
@@ -753,6 +780,7 @@ export default function IndexSchemaPage() {
                 if (raw === undefined || raw === null || raw === '') return;
                 item[veld.naam] = coercedWaardeVoorVeld(raw, veld, `${optie.label}.${veld.naam}`);
               });
+              vulMaterieleTijdVoorHubInput(item, row, optie);
               wijzigingen.push({ opvoer: { [optie.geVeldnaam]: item } });
             });
 
@@ -929,6 +957,37 @@ export default function IndexSchemaPage() {
           return { afvoerPayload, corrigeerPayload, heeftWijziging };
         }
 
+        function bouwRepMaterieleTijdWijzigingen(item, group, meta, aanvangDatum, eindeDatum) {
+          if (!meta) return [];
+
+          const entIDKolom = String(group?.typeMeta?.entiteitIDKolom || '');
+          const relID = item?.rel_id;
+          const wijzigingen = [];
+
+          function bouwMtItem(datum) {
+            const mtItem = {};
+            if (entIDKolom && item?.[entIDKolom] !== undefined) {
+              mtItem[entIDKolom] = item[entIDKolom];
+            }
+            // Hub-kinderen (_Aanvang/_Einde) horen bij exact dezelfde hub-scope als de gekozen GE/REL.
+            // Daarom moet rel_id van de hub expliciet mee; alleen versie mag op 0 blijven voor autoincrement.
+            if (relID !== undefined && relID !== null) {
+              mtItem.rel_id = relID;
+            }
+            mtItem.datum = datum;
+            return mtItem;
+          }
+
+          if (meta.aanvangVeldnaam && aanvangDatum) {
+            wijzigingen.push({ opvoer: { [meta.aanvangVeldnaam]: bouwMtItem(aanvangDatum) } });
+          }
+          if (meta.eindeVeldnaam && eindeDatum) {
+            wijzigingen.push({ opvoer: { [meta.eindeVeldnaam]: bouwMtItem(eindeDatum) } });
+          }
+
+          return wijzigingen;
+        }
+
         // Live preview voor de rep-actiebox (afvoer + correctie).
         const repActiePreview = useMemo(() => {
           if (!geselecteerdeRep) return null;
@@ -936,14 +995,18 @@ export default function IndexSchemaPage() {
           const opmerking = actieOpmerking.trim() || undefined;
           try {
             const { afvoerPayload, corrigeerPayload, heeftWijziging } = bouwRepresentatieActiePayloads(item, group, actieFormVelden, opmerking);
-            if (!heeftWijziging) {
+            const heeftMaterieleTijd = repMaterieleTijdMeta && (repAanvangDatum || repEindeDatum);
+            if (!heeftWijziging && !heeftMaterieleTijd) {
               return { ok: false, fout: 'Geen gewijzigde velden voor correctie. Pas minimaal 1 veld aan.' };
             }
+            corrigeerPayload.wijzigingen.push(
+              ...bouwRepMaterieleTijdWijzigingen(item, group, repMaterieleTijdMeta, repAanvangDatum, repEindeDatum)
+            );
             return { ok: true, afvoer: afvoerPayload, corrigeer: corrigeerPayload };
           } catch (err) {
             return { ok: false, fout: String(err?.message || err) };
           }
-        }, [geselecteerdeRep, actieOpmerking, actieFormVelden]);
+        }, [geselecteerdeRep, actieOpmerking, actieFormVelden, repMaterieleTijdMeta, repAanvangDatum, repEindeDatum]);
 
         useEffect(() => {
           let cancelled = false;
@@ -1119,6 +1182,8 @@ export default function IndexSchemaPage() {
           setActieFormVelden(bewerkbaar);
           setActieOpmerking('');
           setActieResultaat(null);
+          setRepAanvangDatum('');
+          setRepEindeDatum('');
         }
 
         function initialiseerGeWaardenVoorOptie(optie) {
@@ -1126,7 +1191,25 @@ export default function IndexSchemaPage() {
           safeArray(optie?.veldDefinities).forEach((veld) => {
             values[veld.naam] = veld.defaultValue;
           });
+          if (optie?.isMaterieel) {
+            values.aanvang = '';
+            values.einde = '';
+          }
           return values;
+        }
+
+        function vulMaterieleTijdVoorHubInput(item, row, optie) {
+          if (!optie?.isMaterieel) {
+            return;
+          }
+          const aanvang = String(row?.values?.aanvang || '').trim();
+          const einde = String(row?.values?.einde || '').trim();
+          if (aanvang) {
+            item.aanvang = aanvang;
+          }
+          if (einde) {
+            item.einde = einde;
+          }
         }
 
         function isMeervoudigOptie(optie) {
@@ -1561,6 +1644,7 @@ export default function IndexSchemaPage() {
                   }
                   item[veld.naam] = coercedWaardeVoorVeld(raw, veld, `${optie.label}.${veld.naam}`);
                 });
+                vulMaterieleTijdVoorHubInput(item, row, optie);
                 return { opvoer: { [optie.geVeldnaam]: item } };
               });
               // Materiële tijd: voeg aanvang/einde opvoer-wijzigingen toe.
@@ -1647,6 +1731,7 @@ export default function IndexSchemaPage() {
                 }
                 item[veld.naam] = coercedWaardeVoorVeld(raw, veld, `${optie.label}.${veld.naam}`);
               });
+              vulMaterieleTijdVoorHubInput(item, row, optie);
               wijzigingen.push({ opvoer: { [optie.geVeldnaam]: item } });
             });
 
@@ -1676,6 +1761,9 @@ export default function IndexSchemaPage() {
 
             invalidateRelatieSecondaireOpties();
             const nieuweRegistratieID = registratieIDUitResponse(json);
+            // Zet eerst het succesresultaat, zodat een selectie-update tijdens loadData
+            // de zichtbare terugkoppeling in de actiebox niet direct wegneemt.
+            setNieuweEntiteitResultaat({ ok: true, bericht: `Nieuwe entiteit-opvoer geslaagd (registratie id=${nieuweRegistratieID || '-'})` });
             if (nieuweRegistratieID > 0) {
               setRegistratieId(nieuweRegistratieID);
               await loadData({ tValue: t, registratieIdValue: nieuweRegistratieID, selecteerVanuitRegistratie: true });
@@ -1683,8 +1771,6 @@ export default function IndexSchemaPage() {
               await loadData();
             }
 
-            setNieuweEntiteitResultaat({ ok: true, bericht: `Nieuwe entiteit-opvoer geslaagd (registratie id=${nieuweRegistratieID || '-'})` });
-            setNieuweEntiteitActieOpen(false);
             setNieuweEntiteitGegevens([]);
             setNieuweEntiteitRelaties([]);
             setNieuweEntiteitAanvang("");
@@ -1706,15 +1792,19 @@ export default function IndexSchemaPage() {
             let wijzigingen;
             let registratie;
             const { afvoerPayload, corrigeerPayload, heeftWijziging } = bouwRepresentatieActiePayloads(item, group, actieFormVelden, opmerking);
+            const heeftMaterieleTijd = repMaterieleTijdMeta && (repAanvangDatum || repEindeDatum);
             if (actie === 'afvoer') {
               registratie = afvoerPayload.registratie;
               wijzigingen = afvoerPayload.wijzigingen;
             } else {
-              if (!heeftWijziging) {
+              if (!heeftWijziging && !heeftMaterieleTijd) {
                 throw new Error('Geen gewijzigde velden voor correctie. Pas minimaal 1 veld aan.');
               }
               registratie = corrigeerPayload.registratie;
-              wijzigingen = corrigeerPayload.wijzigingen;
+              wijzigingen = [...corrigeerPayload.wijzigingen];
+              wijzigingen.push(
+                ...bouwRepMaterieleTijdWijzigingen(item, group, repMaterieleTijdMeta, repAanvangDatum, repEindeDatum)
+              );
             }
             const res = await fetch(`${baseUrl}/registratie/`, {
               method: 'POST',
@@ -2034,6 +2124,7 @@ export default function IndexSchemaPage() {
                     centraleEntiteitLabelStyle={centraleEntiteitLabelStyle}
                     relatieNodesVoorGrafiek={relatieNodesVoorGrafiek}
                     entiteitOortjes={entiteitOortjes}
+                    typeMetaByTypenaam={typeMetaByTypenaam}
                   />
 
                   {actieResultaat && !geselecteerdeRep && (
@@ -2261,6 +2352,12 @@ export default function IndexSchemaPage() {
                     actieResultaat={actieResultaat}
                     secondaireEntiteitIDKolom={String(geselecteerdeRep?.group?.typeMeta?.secondaireEntiteitIDKolom || '').toLowerCase()}
                     secondaireInfo={relatieSecondaireOpties[`${geselecteerdeRep?.group?.rolnaam}__${geselecteerdeRep?.group?.doeltype}`] || { loading: false, ids: [], error: "" }}
+                    isMaterieel={!!(typeMetaByTypenaam?.[geselecteerdeRep?.group?.doeltype]?.isMaterieel && typeMetaByTypenaam?.[geselecteerdeRep?.group?.doeltype]?.ge_subtype === "hub")}
+                    repAanvangDatum={repAanvangDatum}
+                    setRepAanvangDatum={setRepAanvangDatum}
+                    repEindeDatum={repEindeDatum}
+                    setRepEindeDatum={setRepEindeDatum}
+                    repOortjes={typeMetaByTypenaam?.[geselecteerdeRep?.group?.doeltype]?.isMaterieel ? bepaalHubOortjes(geselecteerdeRep?.item) : null}
                   />
                 </div>
               </div>

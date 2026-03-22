@@ -393,6 +393,12 @@ export function ActionGroupedSections({
         {sectionRows.map((row) => {
           const secondaireInfo = secondaryOptionsByGroupKey[row.groupKey] || { loading: false, ids: [], error: "" };
           const velden = Array.isArray(optie?.veldDefinities) ? optie.veldDefinities : [];
+          const materieleVelden = optie?.isMaterieel
+            ? [
+                { naam: "aanvang", description: "Materiële aanvangsdatum voor deze nieuwe representatie.", type: "string", format: "date", verplicht: false },
+                { naam: "einde", description: "Materiële einddatum voor deze nieuwe representatie.", type: "string", format: "date", verplicht: false },
+              ]
+            : [];
 
           return (
             <ActionRowCard
@@ -401,20 +407,40 @@ export function ActionGroupedSections({
               disabled={busy}
               rowAccentColor={rowAccentColor}
             >
-              <ActionFieldsGrid>
-                {velden.length === 0 ? <span className="muted" style={{ fontSize: 12 }}>Geen veldinformatie beschikbaar.</span> : null}
-                {velden.map((veld) => (
-                  <ActionLabeledEditorField key={`${row.id}-${veld.naam}`} veldnaam={veld.naam} beschrijving={String(veld?.description || "")}>
-                    <ActionFieldControl
-                      veld={veld}
-                      value={row?.values?.[veld.naam] ?? ""}
-                      onChange={(waarde) => onUpdateField(row.id, veld.naam, waarde)}
-                      secondaireInfo={secondaireInfo}
-                      secondaireKolom={optie?.secondaireEntiteitIDKolom}
-                    />
-                  </ActionLabeledEditorField>
-                ))}
-              </ActionFieldsGrid>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }}>
+                <ActionFieldsGrid>
+                  {velden.length === 0 ? <span className="muted" style={{ fontSize: 12 }}>Geen veldinformatie beschikbaar.</span> : null}
+                  {velden.map((veld) => (
+                    <ActionLabeledEditorField key={`${row.id}-${veld.naam}`} veldnaam={veld.naam} beschrijving={String(veld?.description || "")}>
+                      <ActionFieldControl
+                        veld={veld}
+                        value={row?.values?.[veld.naam] ?? ""}
+                        onChange={(waarde) => onUpdateField(row.id, veld.naam, waarde)}
+                        secondaireInfo={secondaireInfo}
+                        secondaireKolom={optie?.secondaireEntiteitIDKolom}
+                      />
+                    </ActionLabeledEditorField>
+                  ))}
+                </ActionFieldsGrid>
+                {materieleVelden.length > 0 ? (
+                  <div style={{ padding: "8px 10px", borderRadius: 8, background: "#f0f9ff", border: "1px solid #bae6fd" }}>
+                    <div style={{ marginBottom: 6, fontSize: 11, fontWeight: 600, color: "#0369a1" }}>Materiële tijd voor deze regel</div>
+                    <ActionFieldsGrid>
+                      {materieleVelden.map((veld) => (
+                        <ActionLabeledEditorField key={`${row.id}-${veld.naam}`} veldnaam={veld.naam} beschrijving={String(veld?.description || "")}>
+                          <ActionFieldControl
+                            veld={veld}
+                            value={row?.values?.[veld.naam] ?? ""}
+                            onChange={(waarde) => onUpdateField(row.id, veld.naam, waarde)}
+                            secondaireInfo={secondaireInfo}
+                            secondaireKolom={optie?.secondaireEntiteitIDKolom}
+                          />
+                        </ActionLabeledEditorField>
+                      ))}
+                    </ActionFieldsGrid>
+                  </div>
+                ) : null}
+              </div>
             </ActionRowCard>
           );
         })}

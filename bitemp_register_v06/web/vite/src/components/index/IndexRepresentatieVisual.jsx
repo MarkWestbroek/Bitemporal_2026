@@ -1,4 +1,4 @@
-import { korteDatumWeergave, oortjePad, oortjeStyle } from "../../shared/oortjesUtils";
+import { korteDatumWeergave, oortjePad, oortjeStyle, bepaalHubOortjes } from "../../shared/oortjesUtils";
 
 export default function IndexRepresentatieVisual({
   svgHoogte,
@@ -20,6 +20,7 @@ export default function IndexRepresentatieVisual({
   centraleEntiteitLabelStyle,
   relatieNodesVoorGrafiek,
   entiteitOortjes,
+  typeMetaByTypenaam,
 }) {
   return (
     <svg className="graph" viewBox={`0 0 900 ${svgHoogte}`} preserveAspectRatio="xMidYMid meet">
@@ -54,10 +55,31 @@ export default function IndexRepresentatieVisual({
         const isSelected = geselecteerdeRep?.item === node.item;
         const opvoerRegistratieID = registratieIDUitOpvoerTijdstip(node.item.opvoer);
         const opvoerKlikbaar = opvoerRegistratieID > 0;
+        // Materiële-tijd mini-oortjes op hub-niveau GE's
+        const hubMeta = typeMetaByTypenaam?.[node.group?.doeltype];
+        const isMaterieleHub = hubMeta?.isMaterieel && hubMeta?.ge_subtype === "hub";
+        const hubOortjes = isMaterieleHub ? bepaalHubOortjes(node.item) : null;
+        const aanvangTekst = hubOortjes ? korteDatumWeergave(hubOortjes.aanvangDatum) : null;
+        const eindeTekst = hubOortjes ? korteDatumWeergave(hubOortjes.eindeDatum) : null;
+        // Mini-oortje dimensies: kleiner dan entiteits-oortjes, passen boven de 180px brede card
+        const mOY = node.y - 48, mOW = 72, mOH = 20, mOR = 5;
 
         return (
           <g className="actionable-svg-target" key={node.key} onClick={() => selecteerRep(node.item, node.group)} style={{ cursor: "pointer" }}>
-            {isSelected && <rect x={x - 3} y={node.y - 33} rx="10" width={width + 6} height={66} style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2.5, strokeDasharray: "5,3" }} />}
+            {isSelected && <rect x={x - 3} y={node.y - 33 - (aanvangTekst || eindeTekst ? 18 : 0)} rx="10" width={width + 6} height={66 + (aanvangTekst || eindeTekst ? 18 : 0)} style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2.5, strokeDasharray: "5,3" }} />}
+            {/* Materiële-tijd mini-oortjes boven de GE-card */}
+            {aanvangTekst && (
+              <g>
+                <path d={oortjePad(x, mOY, mOW, mOH, mOR)} style={{ fill: nodeFill, stroke: "#334155", strokeWidth: 0.8 }} />
+                <text x={x + mOW / 2} y={mOY + mOH - 6} textAnchor="middle" style={{ ...oortjeStyle, fontSize: "9.5px" }}>{aanvangTekst}</text>
+              </g>
+            )}
+            {eindeTekst && (
+              <g>
+                <path d={oortjePad(x + width - mOW, mOY, mOW, mOH, mOR)} style={{ fill: nodeFill, stroke: "#334155", strokeWidth: 0.8 }} />
+                <text x={x + width - mOW / 2} y={mOY + mOH - 6} textAnchor="middle" style={{ ...oortjeStyle, fontSize: "9.5px" }}>{eindeTekst}</text>
+              </g>
+            )}
             <rect x={x} y={node.y - 30} rx="8" width={width} height="60" style={{ fill: nodeFill, stroke: "#334155", strokeWidth: 1.2 }} />
             <text
               className={`label label-lg ${opvoerKlikbaar ? "opv-link" : ""}`}
@@ -156,9 +178,30 @@ export default function IndexRepresentatieVisual({
         const isRelSelected = geselecteerdeRep?.item === node.item;
         const opvoerRegistratieID = registratieIDUitOpvoerTijdstip(node.item.opvoer);
         const opvoerKlikbaar = opvoerRegistratieID > 0;
+        // Materiële-tijd mini-oortjes op hub-niveau RELs
+        const relHubMeta = typeMetaByTypenaam?.[node.group?.doeltype];
+        const isMaterieleRel = relHubMeta?.isMaterieel && relHubMeta?.ge_subtype === "hub";
+        const relHubOortjes = isMaterieleRel ? bepaalHubOortjes(node.item) : null;
+        const relAanvangTekst = relHubOortjes ? korteDatumWeergave(relHubOortjes.aanvangDatum) : null;
+        const relEindeTekst = relHubOortjes ? korteDatumWeergave(relHubOortjes.eindeDatum) : null;
+        const rOY = node.y - 42, rOW = 72, rOH = 20, rOR = 5;
+
         return (
           <g className="actionable-svg-target" key={node.key} onClick={() => selecteerRep(node.item, node.group)} style={{ cursor: "pointer" }}>
-            {isRelSelected && <rect x={relX - 3} y={node.y - 27} rx="10" width={relW + 6} height={relH + 6} style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2.5, strokeDasharray: "5,3" }} />}
+            {isRelSelected && <rect x={relX - 3} y={node.y - 27 - (relAanvangTekst || relEindeTekst ? 18 : 0)} rx="10" width={relW + 6} height={relH + 6 + (relAanvangTekst || relEindeTekst ? 18 : 0)} style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2.5, strokeDasharray: "5,3" }} />}
+            {/* Materiële-tijd mini-oortjes boven de REL-card */}
+            {relAanvangTekst && (
+              <g>
+                <path d={oortjePad(relX, rOY, rOW, rOH, rOR)} style={{ fill: relFill, stroke: "#7c2d12", strokeWidth: 0.8 }} />
+                <text x={relX + rOW / 2} y={rOY + rOH - 6} textAnchor="middle" style={{ ...oortjeStyle, fontSize: "9.5px" }}>{relAanvangTekst}</text>
+              </g>
+            )}
+            {relEindeTekst && (
+              <g>
+                <path d={oortjePad(relX + relW - rOW, rOY, rOW, rOH, rOR)} style={{ fill: relFill, stroke: "#7c2d12", strokeWidth: 0.8 }} />
+                <text x={relX + relW - rOW / 2} y={rOY + rOH - 6} textAnchor="middle" style={{ ...oortjeStyle, fontSize: "9.5px" }}>{relEindeTekst}</text>
+              </g>
+            )}
             <line x1="362" y1={node.y} x2={relX} y2={node.y} style={{ stroke: "#334155", strokeWidth: 2.8 }} />
             <rect x={relX} y={node.y - 24} rx="8" width={relW} height={relH} style={{ fill: relFill, stroke: "#7c2d12", strokeWidth: 2.8 }} />
             <text

@@ -351,6 +351,7 @@ type formeleTijdTarget struct {
 	EntiteitIDExpr      string
 	Representatienaam   string
 	RepresentatieIDExpr string
+	VersieExpr          string // optioneel: alleen gezet voor versie-PK types (data/aanvang/einde)
 }
 
 func formeleTijdTargetVoorModel(modelNaam string) (formeleTijdTarget, error) {
@@ -380,6 +381,21 @@ func formeleTijdTargetVoorModel(modelNaam string) (formeleTijdTarget, error) {
 		return formeleTijdTarget{}, fmt.Errorf("entiteit FK ontbreekt in metamap voor type %s", meta.Typenaam)
 	}
 
+	// Versie-PK types (data/aanvang/einde): representatieID = rel_id (of ''), versie = versie
+	if meta.IDKolom == "versie" {
+		repIDExpr := "''"
+		if meta.GESubtype == model.GESubtypeData || meta.GESubtype == model.GESubtypeAanvang || meta.GESubtype == model.GESubtypeEinde {
+			repIDExpr = fmt.Sprintf("%s.rel_id::text", meta.Tabelnaam)
+		}
+		return formeleTijdTarget{
+			Entiteitnaam:        bovenliggend.ParentType.Typenaam,
+			EntiteitIDExpr:      fmt.Sprintf("%s.%s::text", meta.Tabelnaam, meta.EntiteitIDKolom),
+			Representatienaam:   meta.Typenaam,
+			RepresentatieIDExpr: repIDExpr,
+			VersieExpr:          fmt.Sprintf("%s.versie", meta.Tabelnaam),
+		}, nil
+	}
+
 	return formeleTijdTarget{
 		Entiteitnaam:        bovenliggend.ParentType.Typenaam,
 		EntiteitIDExpr:      fmt.Sprintf("%s.%s::text", meta.Tabelnaam, meta.EntiteitIDKolom),
@@ -399,6 +415,12 @@ func applyFormeleTijdFilterVoorModel(query *bun.SelectQuery, modelNaam string, p
 			Where("(afvoer IS NULL OR afvoer > ?)", peiltijdstip)
 	}
 
+	// Voeg optionele versie-conditie toe voor versie-PK types
+	versieCondition := ""
+	if target.VersieExpr != "" {
+		versieCondition = fmt.Sprintf("\n\t\t\t  AND v.versie = %s", target.VersieExpr)
+	}
+
 	return query.Where(fmt.Sprintf(`
 		(
 			SELECT v.wijzigingstype
@@ -406,11 +428,11 @@ func applyFormeleTijdFilterVoorModel(query *bun.SelectQuery, modelNaam string, p
 			WHERE v.entiteitnaam = ?
 			  AND v.entiteit_id = %s
 			  AND v.representatienaam = ?
-			  AND v.representatie_id = %s
+			  AND v.representatie_id = %s%s
 			ORDER BY v.registratie_tijdstip DESC, v.wijziging_id DESC
 			LIMIT 1
 		) = ?
-	`, target.EntiteitIDExpr, target.RepresentatieIDExpr), peiltijdstip, target.Entiteitnaam, target.Representatienaam, activeWijziging)
+	`, target.EntiteitIDExpr, target.RepresentatieIDExpr, versieCondition), peiltijdstip, target.Entiteitnaam, target.Representatienaam, activeWijziging)
 }
 
 type laatsteWijzigingOpPeil struct {
@@ -424,17 +446,22 @@ func haalLaatsteNietOngedaanGemaakteWijzigingOpPeil(
 	entiteitID string,
 	representatienaam string,
 	representatieID string,
+	versie *int64,
 	peiltijdstip time.Time,
 ) (*laatsteWijzigingOpPeil, error) {
 	row := new(laatsteWijzigingOpPeil)
-	err := DB.NewSelect().
+	query := DB.NewSelect().
 		TableExpr("f_formele_wijziging_op_peil(?) AS v", peiltijdstip).
 		ColumnExpr("v.wijzigingstype").
 		ColumnExpr("v.registratie_tijdstip").
 		Where("v.entiteitnaam = ?", entiteitnaam).
 		Where("v.entiteit_id = ?", entiteitID).
 		Where("v.representatienaam = ?", representatienaam).
-		Where("v.representatie_id = ?", representatieID).
+		Where("v.representatie_id = ?", representatieID)
+	if versie != nil {
+		query = query.Where("v.versie = ?", *versie)
+	}
+	err := query.
 		OrderExpr("v.registratie_tijdstip DESC, v.wijziging_id DESC").
 		Limit(1).
 		Scan(c.Request.Context(), row)
@@ -455,6 +482,7 @@ func zetAfgeleideFormeleTijdVoorRepresentatie(
 	entiteitID string,
 	representatienaam string,
 	representatieID string,
+	versie *int64,
 	peiltijdstip time.Time,
 ) error {
 	wijziging, err := haalLaatsteNietOngedaanGemaakteWijzigingOpPeil(
@@ -463,6 +491,7 @@ func zetAfgeleideFormeleTijdVoorRepresentatie(
 		entiteitID,
 		representatienaam,
 		representatieID,
+		versie,
 		peiltijdstip,
 	)
 	if err != nil {
@@ -554,7 +583,7 @@ func vulAfgeleideFormeleTijdVoorFullEntity(c *gin.Context, entity any, peiltijds
 	}
 
 	entiteitID := fmt.Sprint(hasID.GetID())
-	if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, formeleEntiteit, meta.Typenaam, entiteitID, "", "", peiltijdstip); err != nil {
+	if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, formeleEntiteit, meta.Typenaam, entiteitID, "", "", nil, peiltijdstip); err != nil {
 		return err
 	}
 
@@ -568,9 +597,50 @@ func vulAfgeleideFormeleTijdVoorFullEntity(c *gin.Context, entity any, peiltijds
 			continue
 		}
 
-		repID := fmt.Sprint(kind.Representatie.GetID())
-		if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, kind.Representatie, meta.Typenaam, entiteitID, kind.Typenaam, repID, peiltijdstip); err != nil {
+		// Bepaal repID en versie op basis van het kindtype (via metaregistry)
+		kindMeta, kindOK := model.MetaRegistry.GetTypeMeta(kind.Typenaam)
+		var repID string
+		var versie *int64
+		if kindOK && kindMeta.IDKolom == "versie" {
+			// Versie-PK type: GetID() = versie; probeer rel_id op te halen
+			if vi, viOK := anyNaarInt(kind.Representatie.GetID()); viOK {
+				v64 := int64(vi)
+				versie = &v64
+			}
+			if relID, relErr := haalIntWaardeVoorKolomUitRepresentatie(kind.Representatie, "rel_id"); relErr == nil && relID != 0 {
+				repID = fmt.Sprint(relID)
+			}
+		} else {
+			repID = fmt.Sprint(kind.Representatie.GetID())
+		}
+		if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, kind.Representatie, meta.Typenaam, entiteitID, kind.Typenaam, repID, versie, peiltijdstip); err != nil {
 			return err
+		}
+
+		// Afdalen in hub-kinderen (Data/Aanvang/Einde) voor formele-tijdafleiding
+		if hubMetKinderen, hubOK := kind.Representatie.(model.HeeftOnderliggendeGegevenselementen); hubOK {
+			for _, hubKind := range hubMetKinderen.GeefOnderliggendeGegevenselementen() {
+				if hubKind.Representatie == nil {
+					continue
+				}
+				hubKindMeta, hkOK := model.MetaRegistry.GetTypeMeta(hubKind.Typenaam)
+				var hkRepID string
+				var hkVersie *int64
+				if hkOK && hubKindMeta.IDKolom == "versie" {
+					if vi, viOK := anyNaarInt(hubKind.Representatie.GetID()); viOK {
+						v64 := int64(vi)
+						hkVersie = &v64
+					}
+					if relID, relErr := haalIntWaardeVoorKolomUitRepresentatie(hubKind.Representatie, "rel_id"); relErr == nil && relID != 0 {
+						hkRepID = fmt.Sprint(relID)
+					}
+				} else {
+					hkRepID = fmt.Sprint(hubKind.Representatie.GetID())
+				}
+				if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, hubKind.Representatie, meta.Typenaam, entiteitID, hubKind.Typenaam, hkRepID, hkVersie, peiltijdstip); err != nil {
+					return err
+				}
+			}
 		}
 	}
 
@@ -767,22 +837,14 @@ func addOnderliggendeRelations(query *bun.SelectQuery, meta model.TypeMeta, peil
 		isHub := childOK && childMeta.GESubtype == model.GESubtypeHub && len(childMeta.OnderliggendeGegevenselementen) > 0
 
 		if isHub {
-			capturedChildMeta := childMeta
 			query = query.Relation(capturedRel.Rolnaam, func(q *bun.SelectQuery) *bun.SelectQuery {
 				if peiltijdstip != nil {
 					q = applyFormeleTijdFilterVoorModel(q, capturedRel.Doeltype, *peiltijdstip)
 				}
-				// Geneste relaties: Data, Aanvang, Einde
-				for _, grandchild := range capturedChildMeta.OnderliggendeGegevenselementen {
-					capturedGC := grandchild
-					if peiltijdstip != nil {
-						q = q.Relation(capturedGC.Rolnaam, func(rq *bun.SelectQuery) *bun.SelectQuery {
-							return applyFormeleTijdFilterVoorModel(rq, capturedGC.Doeltype, *peiltijdstip)
-						})
-					} else {
-						q = q.Relation(capturedGC.Rolnaam)
-					}
-				}
+				// Workaround Bun v1.1.14:
+				// Geneste has-many onder hubs (hub -> data/aanvang/einde) veroorzaakt
+				// "reflect: call of reflect.Value.Field on zero Value" tijdens selectMany.
+				// Hub-kinderen worden apart geladen via laadHubKinderenNaQuery() na de Scan.
 				return q
 			})
 		} else {
@@ -797,6 +859,115 @@ func addOnderliggendeRelations(query *bun.SelectQuery, meta model.TypeMeta, peil
 		}
 	}
 	return query
+}
+
+// laadHubKinderenNaQuery laadt Data/Aanvang/Einde records voor hub-types die in de
+// hoofd-query niet genest werden geladen (Bun v1.1.14 workaround: geneste has-many
+// relaties met callbacks veroorzaken een panic). Per child-type wordt één batch-query
+// gedaan, ongeacht het aantal entiteiten.
+func laadHubKinderenNaQuery(c *gin.Context, entitiesOrEntity any, entityMeta model.TypeMeta, peiltijdstip *time.Time) error {
+	val := reflect.ValueOf(entitiesOrEntity)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
+
+	var entityValues []reflect.Value
+	if val.Kind() == reflect.Slice {
+		for i := 0; i < val.Len(); i++ {
+			entityValues = append(entityValues, val.Index(i))
+		}
+	} else if val.Kind() == reflect.Struct {
+		entityValues = []reflect.Value{val}
+	}
+
+	if len(entityValues) == 0 {
+		return nil
+	}
+
+	// Verzamel alle unieke entiteit-IDs (eenmalig)
+	entIDs := make([]int, 0, len(entityValues))
+	seen := make(map[int]bool)
+	for _, ev := range entityValues {
+		intf := ev.Addr().Interface()
+		id, err := haalIntWaardeVoorKolomUitRepresentatie(intf, entityMeta.IDKolom)
+		if err != nil || id == 0 || seen[id] {
+			continue
+		}
+		seen[id] = true
+		entIDs = append(entIDs, id)
+	}
+	if len(entIDs) == 0 {
+		return nil
+	}
+
+	// Per hub-type, per child-type: één batch-query
+	for _, rel := range entityMeta.OnderliggendeGegevenselementen {
+		hubMeta, ok := model.MetaRegistry.GetTypeMeta(rel.Doeltype)
+		if !ok || hubMeta.GESubtype != model.GESubtypeHub || len(hubMeta.OnderliggendeGegevenselementen) == 0 {
+			continue
+		}
+
+		for _, childRel := range hubMeta.OnderliggendeGegevenselementen {
+			childMeta, gcOK := model.MetaRegistry.GetTypeMeta(childRel.Doeltype)
+			if !gcOK || childMeta.SliceFactory == nil {
+				continue
+			}
+
+			childSlice := childMeta.SliceFactory()
+			query := DB.NewSelect().
+				Model(childSlice).
+				Where(childMeta.EntiteitIDKolom+" IN (?)", bun.In(entIDs))
+
+			if peiltijdstip != nil {
+				query = applyFormeleTijdFilterVoorModel(query, childRel.Doeltype, *peiltijdstip)
+			}
+
+			if err := query.Scan(c.Request.Context()); err != nil {
+				return fmt.Errorf("laadHubKinderen %s: %v", childRel.Doeltype, err)
+			}
+
+			// Bouw lookup-map: (entID, relID) → indices in de opgehaalde slice
+			childSliceVal := reflect.ValueOf(childSlice).Elem()
+			type lk struct{ e, r int }
+			childMap := make(map[lk][]int)
+			for k := 0; k < childSliceVal.Len(); k++ {
+				cPtr := childSliceVal.Index(k).Addr().Interface()
+				eID, _ := haalIntWaardeVoorKolomUitRepresentatie(cPtr, childMeta.EntiteitIDKolom)
+				rID, _ := haalIntWaardeVoorKolomUitRepresentatie(cPtr, "rel_id")
+				childMap[lk{eID, rID}] = append(childMap[lk{eID, rID}], k)
+			}
+
+			// Verdeel de opgehaalde records over de juiste hub-structs
+			for _, entityVal := range entityValues {
+				ev := entityVal
+				if ev.Kind() == reflect.Ptr {
+					ev = ev.Elem()
+				}
+				hubsField := ev.FieldByName(rel.Rolnaam)
+				if !hubsField.IsValid() || hubsField.Kind() != reflect.Slice {
+					continue
+				}
+				for j := 0; j < hubsField.Len(); j++ {
+					hub := hubsField.Index(j)
+					hPtr := hub.Addr().Interface()
+					eID, _ := haalIntWaardeVoorKolomUitRepresentatie(hPtr, hubMeta.EntiteitIDKolom)
+					rID, _ := haalIntWaardeVoorKolomUitRepresentatie(hPtr, "rel_id")
+
+					indices := childMap[lk{eID, rID}]
+					cField := hub.FieldByName(childRel.Rolnaam)
+					if !cField.IsValid() || !cField.CanSet() {
+						continue
+					}
+					newSlice := reflect.MakeSlice(cField.Type(), len(indices), len(indices))
+					for idx, srcIdx := range indices {
+						newSlice.Index(idx).Set(childSliceVal.Index(srcIdx))
+					}
+					cField.Set(newSlice)
+				}
+			}
+		}
+	}
+	return nil
 }
 
 // MakeGetFullEntitiesByMetaHandler returns a gin.HandlerFunc that retrieves full entities defined by TypeMeta.Factory.
@@ -863,6 +1034,12 @@ func MakeGetFullEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 			Scan(c.Request.Context())
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Post-load hub-kinderen (Data/Aanvang/Einde) die niet genest geladen konden worden (Bun v1.1.14 workaround)
+		if err := laadHubKinderenNaQuery(c, entities, meta, peiltijdstip); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to load hub children: %v", err)})
 			return
 		}
 
@@ -941,6 +1118,12 @@ func MakeGetFullEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 			Scan(c.Request.Context())
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Post-load hub-kinderen (Data/Aanvang/Einde) die niet genest geladen konden worden (Bun v1.1.14 workaround)
+		if err := laadHubKinderenNaQuery(c, entity, meta, peiltijdstip); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to load hub children: %v", err)})
 			return
 		}
 
