@@ -115,6 +115,13 @@ func NewRouter() *gin.Engine {
 	router.GET("/api/viz/relatie/:typenaam/secondaire-ids", handlers.MaakVizRelatieSecondaireIDsHandler())
 	router.Static("/viz", "./web")
 
+	// Schema model endpoints (v3-formaat, zie ontwerpkeuzen.md §7)
+	router.GET("/api/schema/model", handlers.MaakGetSchemaModelHandler())
+	router.GET("/api/schema/model/:id", handlers.MaakGetSchemaModelVersieHandler())
+	router.POST("/api/schema/model", handlers.MaakPostSchemaModelHandler())
+	router.PUT("/api/schema/model/:id/activeer", handlers.MaakActiveerSchemaVersieHandler())
+	router.GET("/api/schema/versies", handlers.MaakLijstSchemaVersiesHandler())
+
 	// Version endpoint
 	router.GET("/version", func(c *gin.Context) {
 		c.JSON(200, gin.H{"commit": commit, "build_time": buildTime})

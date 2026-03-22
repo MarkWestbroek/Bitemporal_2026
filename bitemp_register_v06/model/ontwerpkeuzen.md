@@ -725,10 +725,19 @@ Beide zijn **afleidbaar uit v3 + de conventie-engine**: de huidige `/viz/schema`
 | Endpoint | Methode | Doel |
 |----------|---------|------|
 | `GET /api/viz/schema` | GET | Bestaande frontend-view (JSON-types, gefilterde velden) — **ongewijzigd** |
-| `GET /api/schema/model` | GET | Retourneert het actieve registermodel in v3-formaat (roundtrip-capable) |
-| `POST /api/schema/model` | POST | Accepteert een nieuw v3-model als *proposed* versie |
+| `GET /api/schema/model` | GET | Retourneert het actieve registermodel in v3-formaat plus response-metadata |
+| `GET /api/schema/model/:id` | GET | Retourneert een specifieke opgeslagen schema-versie uit de database |
+| `POST /api/schema/model` | POST | Accepteert een nieuw v3-model als *proposed* versie, met wrapper-metadata van de inzender |
 
-De `GET /api/schema/model` response is exact het v3-formaat: hiërarchisch, met Go-types, enums, datatypes, meervouden. De UML-editor fetcht dit, visualiseert het, laat het bewerken, en exporteert het terug als dezelfde JSON.
+De `GET /api/schema/model` response bevat het v3-model onder `model`, plus metadata daaromheen. Daarbij betekent `bron` de herkomst van de API-response zelf (`database` of `metaregistry` fallback), `model_bron` de herkomst van het opgeslagen of ingediende model, en `model_versie` de semantische versie uit `model.versie`.
+
+De endpoint `GET /api/schema/model/:id` leest altijd direct uit `schema_versies` en geeft daarom ook proposals, gearchiveerde versies en de huidige actieve versie terug, zolang het betreffende ID in de database bestaat. Er is voor deze route bewust geen fallback naar de MetaRegistry.
+
+De endpoint `GET /api/schema/versies` retourneert per rij ook een `model_url`, zodat clients of tooling direct kunnen navigeren naar de volledige representatie van een specifieke schemaversie. Voor rijen met `status='proposed'` wordt aanvullend een `activeer_url` meegegeven, zodat de activatie-flow direct vanuit dezelfde lijst kan worden gestart.
+
+Voor vindbaarheid bevat het top-level `model` ook `naam` en `beschrijving`. Deze worden naast het JSON-model expliciet opgeslagen in `schema_versies` als `model_naam` en `model_beschrijving`, zodat versies snel doorzoekbaar en herkenbaar zijn zonder eerst de volledige JSON te parsen.
+
+Bij `POST /api/schema/model` is de request-body bij voorkeur van de vorm `{ "bron": "...", "indiener": "...", "model": { ... } }`. De velden `bron` en `indiener` horen dus bij de inzending, terwijl `model.versie` een eigenschap van het model zelf blijft.
 
 ### Schema-versioning in de database
 
@@ -736,9 +745,12 @@ Een `schema_versies` tabel slaat het volledige model op als JSON-blob:
 
 ```sql
 CREATE TABLE schema_versies (
-    versie        SERIAL PRIMARY KEY,
+  id            SERIAL PRIMARY KEY,
     tijdstip      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     schema_json   JSONB NOT NULL,          -- het volledige v3-model
+  bron          TEXT,                    -- bron van de inzending, bijv. "metaregistry" of "uml-editor"
+  model_versie  TEXT,                    -- semantische versie uit model.versie
+  indiener      TEXT,                    -- naam of systeem van de indiener
     build_versie  TEXT,                     -- bijv. "v06-build-42" of git commit hash
     go_module     TEXT,                     -- bijv. "bitemp_register_v06"
     status        TEXT NOT NULL DEFAULT 'proposed',  -- proposed | active | archived
@@ -752,8 +764,8 @@ CREATE TABLE schema_versies (
 2. **Nieuw voorstel** (via UML-editor of handmatig): `POST /api/schema/model` → `INSERT ... status='proposed'`
 3. **Na succesvolle codegen + build + deploy**:
    - `UPDATE SET status='archived' WHERE status='active'`
-   - `UPDATE SET status='active' WHERE versie={nieuw}`
-4. **Verworpen voorstel**: `UPDATE SET status='archived' WHERE versie={voorstel}`
+  - `UPDATE SET status='active' WHERE id={nieuw}`
+4. **Verworpen voorstel**: `UPDATE SET status='archived' WHERE id={voorstel}`
 
 Het draaiende register levert bij `GET /api/schema/model` altijd de rij met `status='active'`.
 
