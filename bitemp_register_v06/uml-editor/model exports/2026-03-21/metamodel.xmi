@@ -1,0 +1,836 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<XMI xmi.version="1.1" xmlns:UML="omg.org/UML1.4">
+  <XMI.header>
+    <XMI.documentation>
+      <XMI.exporter>UML-editor</XMI.exporter>
+      <XMI.exporterVersion>1.0</XMI.exporterVersion>
+    </XMI.documentation>
+  </XMI.header>
+  <XMI.content>
+    <UML:Model xmi.id="EAID_model_85" name="Metamodel" visibility="public"
+              isSpecification="false" isRoot="false" isLeaf="false" isAbstract="false">
+      <UML:Namespace.ownedElement>
+        <UML:Package xmi.id="EAID_pkg_1" name="Bitemporeel Register"
+                     visibility="public" isSpecification="false"
+                     isRoot="false" isLeaf="false" isAbstract="false">
+          <UML:Namespace.ownedElement>
+            <UML:Class xmi.id="EAID_A_2" name="A" visibility="public"
+                       isSpecification="false" isRoot="false" isLeaf="false" isAbstract="false">
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype name="entiteit"/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue tag="isMaterieel" value="true"/>
+                <UML:TaggedValue tag="documentation" value="Entiteit A met materiële tijdlijn en onderliggende representaties U, V, W en Rel_A_B."/>
+              </UML:ModelElement.taggedValue>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id="EAID_attr_3" name="id" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="integer"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id="EAID_B_4" name="B" visibility="public"
+                       isSpecification="false" isRoot="false" isLeaf="false" isAbstract="false">
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype name="entiteit"/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue tag="isMaterieel" value="true"/>
+                <UML:TaggedValue tag="documentation" value="Entiteit B met materiële tijdlijn en onderliggende representaties X en Y."/>
+              </UML:ModelElement.taggedValue>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id="EAID_attr_5" name="id" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="integer"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id="EAID_A_U_6" name="A_U" visibility="public"
+                       isSpecification="false" isRoot="false" isLeaf="false" isAbstract="false">
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype name="gegevenselement"/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue tag="documentation" value="Enkelvoudig gegevenselement van A met formele tijdlijn."/>
+              </UML:ModelElement.taggedValue>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id="EAID_attr_7" name="a_id" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="integer"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_8" name="rel_id" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="integer"/>
+                    <UML:TaggedValue tag="autoIncrement" value="true"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_9" name="aaa" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="string"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_10" name="bbb" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="boolean"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="0" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id="EAID_A_V_11" name="A_V" visibility="public"
+                       isSpecification="false" isRoot="false" isLeaf="false" isAbstract="false">
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype name="gegevenselement"/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue tag="documentation" value="Meervoudig gegevenselement van A met onder andere een datumveld."/>
+              </UML:ModelElement.taggedValue>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id="EAID_attr_12" name="a_id" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="integer"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_13" name="rel_id" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="integer"/>
+                    <UML:TaggedValue tag="autoIncrement" value="true"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_14" name="ccc" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="string"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_15" name="ddd" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="string"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="0" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_16" name="eee" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="string"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="0" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_17" name="fff" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="number:float64"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_18" name="ggg" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="string"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_19" name="datum" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="string:date"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="0" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id="EAID_A_W_20" name="A_W" visibility="public"
+                       isSpecification="false" isRoot="false" isLeaf="false" isAbstract="false">
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype name="gegevenselement"/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue tag="isMaterieel" value="true"/>
+                <UML:TaggedValue tag="documentation" value="Meervoudig gegevenselement van A met numerieke waarden."/>
+              </UML:ModelElement.taggedValue>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id="EAID_attr_21" name="a_id" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="integer"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_22" name="rel_id" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="integer"/>
+                    <UML:TaggedValue tag="autoIncrement" value="true"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_23" name="float" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="number:float64"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_24" name="heel" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="integer"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id="EAID_Rel_A_B_25" name="Rel_A_B" visibility="public"
+                       isSpecification="false" isRoot="false" isLeaf="false" isAbstract="false">
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype name="relatie"/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue tag="isMaterieel" value="true"/>
+                <UML:TaggedValue tag="documentation" value="Relatie tussen A en B, meervoudig voorkomend per A en met relatieve relatie-id."/>
+              </UML:ModelElement.taggedValue>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id="EAID_attr_26" name="a_id" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="integer"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_27" name="rel_id" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="integer"/>
+                    <UML:TaggedValue tag="autoIncrement" value="true"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_28" name="b_id" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="integer"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_29" name="soort" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="string"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id="EAID_B_X_30" name="B_X" visibility="public"
+                       isSpecification="false" isRoot="false" isLeaf="false" isAbstract="false">
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype name="gegevenselement"/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue tag="documentation" value="Enkelvoudig gegevenselement van B met twee tekstvelden."/>
+              </UML:ModelElement.taggedValue>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id="EAID_attr_31" name="b_id" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="integer"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_32" name="rel_id" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="integer"/>
+                    <UML:TaggedValue tag="autoIncrement" value="true"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_33" name="fff" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="string"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_34" name="ggg" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="string"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id="EAID_B_Y_35" name="B_Y" visibility="public"
+                       isSpecification="false" isRoot="false" isLeaf="false" isAbstract="false">
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype name="gegevenselement"/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue tag="documentation" value="Enkelvoudig gegevenselement van B met een tekstveld."/>
+              </UML:ModelElement.taggedValue>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id="EAID_attr_36" name="b_id" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="integer"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_37" name="rel_id" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="integer"/>
+                    <UML:TaggedValue tag="autoIncrement" value="true"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+                <UML:Attribute xmi.id="EAID_attr_38" name="hhh" visibility="public"
+                               isSpecification="false" ownerScope="instance">
+                  <UML:ModelElement.taggedValue>
+                    <UML:TaggedValue tag="type" value="string"/>
+                  </UML:ModelElement.taggedValue>
+                  <UML:StructuralFeature.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:StructuralFeature.multiplicity>
+                </UML:Attribute>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id="EAID_enum_RelABSoort_39" name="RelABSoort" visibility="public"
+                       isSpecification="false" isRoot="false" isLeaf="false" isAbstract="false">
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype name="enumeration"/>
+              </UML:ModelElement.stereotype>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id="EAID_enumval_40" name="LTT" visibility="public"
+                               isSpecification="false" ownerScope="classifier"/>
+                <UML:Attribute xmi.id="EAID_enumval_41" name="LAT" visibility="public"
+                               isSpecification="false" ownerScope="classifier"/>
+                <UML:Attribute xmi.id="EAID_enumval_42" name="LTA" visibility="public"
+                               isSpecification="false" ownerScope="classifier"/>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:Class xmi.id="EAID_enum_ABCEnum_43" name="ABCEnum" visibility="public"
+                       isSpecification="false" isRoot="false" isLeaf="false" isAbstract="false">
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype name="enumeration"/>
+              </UML:ModelElement.stereotype>
+              <UML:Classifier.feature>
+                <UML:Attribute xmi.id="EAID_enumval_44" name="Optie A" visibility="public"
+                               isSpecification="false" ownerScope="classifier"/>
+                <UML:Attribute xmi.id="EAID_enumval_45" name="Optie B" visibility="public"
+                               isSpecification="false" ownerScope="classifier"/>
+                <UML:Attribute xmi.id="EAID_enumval_46" name="Optie C" visibility="public"
+                               isSpecification="false" ownerScope="classifier"/>
+              </UML:Classifier.feature>
+            </UML:Class>
+            <UML:DataType xmi.id="EAID_dt_NLPostcode_47" name="NLPostcode" visibility="public"
+                          isSpecification="false" isRoot="false" isLeaf="false" isAbstract="false">
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype name="datatype"/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue tag="basistype" value="string"/>
+                <UML:TaggedValue tag="format" value="nl-postcode"/>
+                <UML:TaggedValue tag="documentation" value="Nederlandse postcode (4 cijfers + 2 letters)"/>
+                <UML:TaggedValue tag="pattern" value="^[1-9][0-9]{3}\s?[A-Za-z]{2}$"/>
+                <UML:TaggedValue tag="normalisatie" value="uppercase_letters"/>
+              </UML:ModelElement.taggedValue>
+            </UML:DataType>
+            <UML:DataType xmi.id="EAID_dt_BSN_48" name="BSN" visibility="public"
+                          isSpecification="false" isRoot="false" isLeaf="false" isAbstract="false">
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype name="datatype"/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue tag="basistype" value="string"/>
+                <UML:TaggedValue tag="format" value="bsn"/>
+                <UML:TaggedValue tag="documentation" value="Burgerservicenummer (9 cijfers, 11-proef)"/>
+                <UML:TaggedValue tag="pattern" value="^[0-9]{9}$"/>
+              </UML:ModelElement.taggedValue>
+            </UML:DataType>
+            <UML:DataType xmi.id="EAID_dt_IBAN_49" name="IBAN" visibility="public"
+                          isSpecification="false" isRoot="false" isLeaf="false" isAbstract="false">
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype name="datatype"/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue tag="basistype" value="string"/>
+                <UML:TaggedValue tag="format" value="iban"/>
+                <UML:TaggedValue tag="documentation" value="Internationaal bankrekeningnummer (ISO 13616)"/>
+                <UML:TaggedValue tag="pattern" value="^[A-Z]{2}[0-9]{2}[A-Z0-9]{4}[0-9]{7}([A-Z0-9]?){0,16}$"/>
+                <UML:TaggedValue tag="normalisatie" value="strip_spaces,uppercase"/>
+              </UML:ModelElement.taggedValue>
+            </UML:DataType>
+            <UML:Association xmi.id="EAID_assoc_50" name="Us" visibility="public"
+                             isSpecification="false">
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue tag="jsonRolnaam" value="us"/>
+                <UML:TaggedValue tag="momentvoorkomen" value="enkelvoudig"/>
+              </UML:ModelElement.taggedValue>
+              <UML:Association.connection>
+                <UML:AssociationEnd xmi.id="EAID_end_53" name=""  visibility="public"
+                                    isSpecification="false" isNavigable="false"
+                                    ordering="unordered" aggregation="none"
+                                    targetScope="instance">
+                  <UML:AssociationEnd.participant>
+                    <UML:Class xmi.idref="EAID_A_51"/>
+                  </UML:AssociationEnd.participant>
+                  <UML:AssociationEnd.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:AssociationEnd.multiplicity>
+                </UML:AssociationEnd>
+                <UML:AssociationEnd xmi.id="EAID_end_54" name="Us" visibility="public"
+                                    isSpecification="false" isNavigable="true"
+                                    ordering="unordered" aggregation="none"
+                                    targetScope="instance">
+                  <UML:AssociationEnd.participant>
+                    <UML:Class xmi.idref="EAID_A_U_52"/>
+                  </UML:AssociationEnd.participant>
+                  <UML:AssociationEnd.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="0" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:AssociationEnd.multiplicity>
+                </UML:AssociationEnd>
+              </UML:Association.connection>
+            </UML:Association>
+            <UML:Association xmi.id="EAID_assoc_55" name="Vs" visibility="public"
+                             isSpecification="false">
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue tag="jsonRolnaam" value="vs"/>
+                <UML:TaggedValue tag="momentvoorkomen" value="meervoudig"/>
+              </UML:ModelElement.taggedValue>
+              <UML:Association.connection>
+                <UML:AssociationEnd xmi.id="EAID_end_58" name=""  visibility="public"
+                                    isSpecification="false" isNavigable="false"
+                                    ordering="unordered" aggregation="none"
+                                    targetScope="instance">
+                  <UML:AssociationEnd.participant>
+                    <UML:Class xmi.idref="EAID_A_56"/>
+                  </UML:AssociationEnd.participant>
+                  <UML:AssociationEnd.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:AssociationEnd.multiplicity>
+                </UML:AssociationEnd>
+                <UML:AssociationEnd xmi.id="EAID_end_59" name="Vs" visibility="public"
+                                    isSpecification="false" isNavigable="true"
+                                    ordering="unordered" aggregation="none"
+                                    targetScope="instance">
+                  <UML:AssociationEnd.participant>
+                    <UML:Class xmi.idref="EAID_A_V_57"/>
+                  </UML:AssociationEnd.participant>
+                  <UML:AssociationEnd.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="0" upper="-1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:AssociationEnd.multiplicity>
+                </UML:AssociationEnd>
+              </UML:Association.connection>
+            </UML:Association>
+            <UML:Association xmi.id="EAID_assoc_60" name="Ws" visibility="public"
+                             isSpecification="false">
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue tag="jsonRolnaam" value="ws"/>
+                <UML:TaggedValue tag="momentvoorkomen" value="meervoudig"/>
+              </UML:ModelElement.taggedValue>
+              <UML:Association.connection>
+                <UML:AssociationEnd xmi.id="EAID_end_63" name=""  visibility="public"
+                                    isSpecification="false" isNavigable="false"
+                                    ordering="unordered" aggregation="none"
+                                    targetScope="instance">
+                  <UML:AssociationEnd.participant>
+                    <UML:Class xmi.idref="EAID_A_61"/>
+                  </UML:AssociationEnd.participant>
+                  <UML:AssociationEnd.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:AssociationEnd.multiplicity>
+                </UML:AssociationEnd>
+                <UML:AssociationEnd xmi.id="EAID_end_64" name="Ws" visibility="public"
+                                    isSpecification="false" isNavigable="true"
+                                    ordering="unordered" aggregation="none"
+                                    targetScope="instance">
+                  <UML:AssociationEnd.participant>
+                    <UML:Class xmi.idref="EAID_A_W_62"/>
+                  </UML:AssociationEnd.participant>
+                  <UML:AssociationEnd.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="0" upper="-1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:AssociationEnd.multiplicity>
+                </UML:AssociationEnd>
+              </UML:Association.connection>
+            </UML:Association>
+            <UML:Association xmi.id="EAID_assoc_65" name="RelABs" visibility="public"
+                             isSpecification="false">
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue tag="jsonRolnaam" value="rel_abs"/>
+                <UML:TaggedValue tag="momentvoorkomen" value="meervoudig"/>
+              </UML:ModelElement.taggedValue>
+              <UML:Association.connection>
+                <UML:AssociationEnd xmi.id="EAID_end_68" name=""  visibility="public"
+                                    isSpecification="false" isNavigable="false"
+                                    ordering="unordered" aggregation="none"
+                                    targetScope="instance">
+                  <UML:AssociationEnd.participant>
+                    <UML:Class xmi.idref="EAID_A_66"/>
+                  </UML:AssociationEnd.participant>
+                  <UML:AssociationEnd.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:AssociationEnd.multiplicity>
+                </UML:AssociationEnd>
+                <UML:AssociationEnd xmi.id="EAID_end_69" name="RelABs" visibility="public"
+                                    isSpecification="false" isNavigable="true"
+                                    ordering="unordered" aggregation="none"
+                                    targetScope="instance">
+                  <UML:AssociationEnd.participant>
+                    <UML:Class xmi.idref="EAID_Rel_A_B_67"/>
+                  </UML:AssociationEnd.participant>
+                  <UML:AssociationEnd.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="0" upper="-1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:AssociationEnd.multiplicity>
+                </UML:AssociationEnd>
+              </UML:Association.connection>
+            </UML:Association>
+            <UML:Association xmi.id="EAID_assoc_70" name="→ B" visibility="public"
+                             isSpecification="false">
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue tag="jsonRolnaam" value="b_id"/>
+                <UML:TaggedValue tag="momentvoorkomen" value="meervoudig"/>
+              </UML:ModelElement.taggedValue>
+              <UML:Association.connection>
+                <UML:AssociationEnd xmi.id="EAID_end_73" name=""  visibility="public"
+                                    isSpecification="false" isNavigable="false"
+                                    ordering="unordered" aggregation="none"
+                                    targetScope="instance">
+                  <UML:AssociationEnd.participant>
+                    <UML:Class xmi.idref="EAID_Rel_A_B_71"/>
+                  </UML:AssociationEnd.participant>
+                  <UML:AssociationEnd.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:AssociationEnd.multiplicity>
+                </UML:AssociationEnd>
+                <UML:AssociationEnd xmi.id="EAID_end_74" name="→ B" visibility="public"
+                                    isSpecification="false" isNavigable="true"
+                                    ordering="unordered" aggregation="none"
+                                    targetScope="instance">
+                  <UML:AssociationEnd.participant>
+                    <UML:Class xmi.idref="EAID_B_72"/>
+                  </UML:AssociationEnd.participant>
+                  <UML:AssociationEnd.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="0" upper="-1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:AssociationEnd.multiplicity>
+                </UML:AssociationEnd>
+              </UML:Association.connection>
+            </UML:Association>
+            <UML:Association xmi.id="EAID_assoc_75" name="Xs" visibility="public"
+                             isSpecification="false">
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue tag="jsonRolnaam" value="xs"/>
+                <UML:TaggedValue tag="momentvoorkomen" value="enkelvoudig"/>
+              </UML:ModelElement.taggedValue>
+              <UML:Association.connection>
+                <UML:AssociationEnd xmi.id="EAID_end_78" name=""  visibility="public"
+                                    isSpecification="false" isNavigable="false"
+                                    ordering="unordered" aggregation="none"
+                                    targetScope="instance">
+                  <UML:AssociationEnd.participant>
+                    <UML:Class xmi.idref="EAID_B_76"/>
+                  </UML:AssociationEnd.participant>
+                  <UML:AssociationEnd.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:AssociationEnd.multiplicity>
+                </UML:AssociationEnd>
+                <UML:AssociationEnd xmi.id="EAID_end_79" name="Xs" visibility="public"
+                                    isSpecification="false" isNavigable="true"
+                                    ordering="unordered" aggregation="none"
+                                    targetScope="instance">
+                  <UML:AssociationEnd.participant>
+                    <UML:Class xmi.idref="EAID_B_X_77"/>
+                  </UML:AssociationEnd.participant>
+                  <UML:AssociationEnd.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="0" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:AssociationEnd.multiplicity>
+                </UML:AssociationEnd>
+              </UML:Association.connection>
+            </UML:Association>
+            <UML:Association xmi.id="EAID_assoc_80" name="Ys" visibility="public"
+                             isSpecification="false">
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue tag="jsonRolnaam" value="ys"/>
+                <UML:TaggedValue tag="momentvoorkomen" value="enkelvoudig"/>
+              </UML:ModelElement.taggedValue>
+              <UML:Association.connection>
+                <UML:AssociationEnd xmi.id="EAID_end_83" name=""  visibility="public"
+                                    isSpecification="false" isNavigable="false"
+                                    ordering="unordered" aggregation="none"
+                                    targetScope="instance">
+                  <UML:AssociationEnd.participant>
+                    <UML:Class xmi.idref="EAID_B_81"/>
+                  </UML:AssociationEnd.participant>
+                  <UML:AssociationEnd.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="1" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:AssociationEnd.multiplicity>
+                </UML:AssociationEnd>
+                <UML:AssociationEnd xmi.id="EAID_end_84" name="Ys" visibility="public"
+                                    isSpecification="false" isNavigable="true"
+                                    ordering="unordered" aggregation="none"
+                                    targetScope="instance">
+                  <UML:AssociationEnd.participant>
+                    <UML:Class xmi.idref="EAID_B_Y_82"/>
+                  </UML:AssociationEnd.participant>
+                  <UML:AssociationEnd.multiplicity>
+                    <UML:Multiplicity>
+                      <UML:Multiplicity.range>
+                        <UML:MultiplicityRange lower="0" upper="1"/>
+                      </UML:Multiplicity.range>
+                    </UML:Multiplicity>
+                  </UML:AssociationEnd.multiplicity>
+                </UML:AssociationEnd>
+              </UML:Association.connection>
+            </UML:Association>
+          </UML:Namespace.ownedElement>
+        </UML:Package>
+      </UML:Namespace.ownedElement>
+    </UML:Model>
+  </XMI.content>
+</XMI>

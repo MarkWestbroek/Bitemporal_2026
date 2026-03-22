@@ -1,0 +1,806 @@
+/* === Reset & basis === */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  color: #1e293b;
+  background: #f8fafc;
+}
+
+/* === Editor layout === */
+
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.editor-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.editor-canvas {
+  flex: 1;
+  position: relative;
+}
+
+.editor-sidebar {
+  width: 320px;
+  min-width: 280px;
+  border-left: 1px solid #e2e8f0;
+  background: #ffffff;
+  overflow-y: auto;
+}
+
+/* === Toolbar === */
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: #1e293b;
+  border-bottom: 1px solid #334155;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toolbar-label {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 500;
+  margin-right: 4px;
+}
+
+.btn-toolbar {
+  padding: 5px 12px;
+  border: 1px solid #475569;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  background: #334155;
+  color: #e2e8f0;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn-toolbar:hover {
+  background: #475569;
+  border-color: #64748b;
+}
+
+.btn-toolbar.entiteit {
+  border-color: #60a5fa;
+  color: #93c5fd;
+}
+.btn-toolbar.ge {
+  border-color: #4ade80;
+  color: #86efac;
+}
+.btn-toolbar.relatie {
+  border-color: #a78bfa;
+  color: #c4b5fd;
+}
+.btn-toolbar.enum {
+  border-color: #fbbf24;
+  color: #fde68a;
+}
+
+.btn-toolbar.save {
+  background: #166534;
+  border-color: #22c55e;
+  color: #bbf7d0;
+}
+.btn-toolbar.save:hover {
+  background: #15803d;
+}
+
+.btn-toolbar.load {
+  background: #1e3a5f;
+  border-color: #3b82f6;
+  color: #bfdbfe;
+}
+.btn-toolbar.load:hover {
+  background: #1e40af;
+}
+
+.btn-toolbar.schema {
+  background: #4c1d95;
+  border-color: #8b5cf6;
+  color: #ddd6fe;
+}
+.btn-toolbar.schema:hover {
+  background: #5b21b6;
+}
+
+/* === Metamodel nodes (UML class boxes) === */
+
+.metamodel-node {
+  min-width: 180px;
+  max-width: 280px;
+  border: 2px solid #94a3b8;
+  border-radius: 8px;
+  font-size: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  cursor: grab;
+}
+
+.metamodel-node:active {
+  cursor: grabbing;
+}
+
+.node-header {
+  padding: 6px 10px 4px;
+  text-align: center;
+}
+
+.node-stereotype {
+  font-size: 10px;
+  color: #64748b;
+  font-style: italic;
+}
+
+.node-typenaam {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 1px;
+}
+
+.node-badge {
+  display: inline-block;
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-top: 3px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.node-badge.materieel {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.node-divider {
+  height: 1px;
+  background: #94a3b8;
+  margin: 4px 0;
+}
+
+.node-velden {
+  padding: 4px 10px 6px;
+}
+
+.node-veld {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 1px 0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.node-veld.leeg {
+  color: #94a3b8;
+  font-style: italic;
+  justify-content: center;
+}
+
+.node-veld.enum-waarde {
+  justify-content: center;
+  color: #92400e;
+  font-weight: 500;
+}
+
+.veld-naam {
+  color: #1e293b;
+}
+
+.veld-naam strong {
+  font-weight: 600;
+}
+
+.veld-type {
+  color: #64748b;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+/* Node type-specifieke kleuren voor de border */
+.entiteit-node {
+  border-color: #60a5fa;
+}
+
+.ge-node {
+  border-color: #4ade80;
+}
+
+.relatie-node {
+  border-color: #a78bfa;
+}
+
+.enum-node {
+  border-color: #fbbf24;
+}
+
+/* === React Flow handles (connectiepunten) === */
+
+.react-flow__handle {
+  width: 10px;
+  height: 10px;
+  border: 2px solid #475569;
+  background: #ffffff;
+  border-radius: 50%;
+}
+
+/* Zijde-handles (links/rechts) zijn subtiel tot hover */
+.metamodel-node .react-flow__handle-left,
+.metamodel-node .react-flow__handle-right {
+  width: 8px;
+  height: 8px;
+  opacity: 0.35;
+  transition: opacity 0.15s;
+}
+
+.metamodel-node:hover .react-flow__handle-left,
+.metamodel-node:hover .react-flow__handle-right {
+  opacity: 1;
+}
+
+.react-flow__handle:hover {
+  background: #3b82f6;
+  border-color: #1d4ed8;
+}
+
+/* === Edge labels === */
+
+.edge-label {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.edge-rolnaam {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.edge-kardinaliteit {
+  color: #7c3aed;
+  font-weight: 600;
+}
+
+.edge-constraint {
+  color: #64748b;
+  font-style: italic;
+  font-size: 9px;
+}
+
+/* === Edit panel (sidebar) === */
+
+.edit-panel {
+  padding: 16px;
+}
+
+.edit-panel.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #94a3b8;
+  text-align: center;
+  gap: 8px;
+}
+
+.edit-panel.empty .hint {
+  font-size: 11px;
+  color: #cbd5e1;
+}
+
+.edit-panel h3 {
+  font-size: 15px;
+  color: #0f172a;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.edit-panel h4 {
+  font-size: 12px;
+  color: #475569;
+  margin: 12px 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.edit-panel label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: #475569;
+  font-weight: 500;
+}
+
+.edit-panel input[type="text"],
+.edit-panel input[type="color"],
+.edit-panel textarea,
+.edit-panel select {
+  display: block;
+  width: 100%;
+  margin-top: 3px;
+  padding: 5px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+  font-size: 12px;
+  font-family: inherit;
+  color: #1e293b;
+  background: #f8fafc;
+}
+
+.edit-panel input[type="text"]:focus,
+.edit-panel textarea:focus,
+.edit-panel select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.edit-panel input[type="color"] {
+  height: 32px;
+  padding: 2px;
+  cursor: pointer;
+}
+
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.checkbox-label.small {
+  font-size: 11px;
+  margin-bottom: 0;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+/* Veld-edit blokken */
+.veld-edit-row {
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.veld-edit-main {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.veld-naam-input {
+  flex: 1;
+}
+
+.veld-type-select {
+  width: 130px !important;
+  flex-shrink: 0;
+}
+
+.veld-edit-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.enum-waarde-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 3px;
+}
+
+.enum-waarde-row input {
+  flex: 1;
+}
+
+/* Knoppen */
+.btn-icon {
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.btn-icon:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.btn-add {
+  display: block;
+  width: 100%;
+  padding: 6px;
+  margin-top: 6px;
+  border: 1px dashed #94a3b8;
+  border-radius: 6px;
+  background: transparent;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-add:hover {
+  background: #f1f5f9;
+  border-color: #64748b;
+  color: #334155;
+}
+
+.btn-danger {
+  padding: 6px 14px;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+}
+
+.panel-actions {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Edge endpoints in panel */
+.edge-endpoints {
+  margin-bottom: 12px;
+  padding: 8px;
+  background: #f1f5f9;
+  border-radius: 6px;
+}
+
+.endpoint {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.endpoint-label {
+  font-weight: 600;
+  color: #475569;
+  font-size: 12px;
+}
+
+.endpoint-value {
+  color: #0f172a;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+/* === React Flow overrides === */
+
+.react-flow__minimap {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.react-flow__controls {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* === Datatype node === */
+
+.datatype-node {
+  border-color: #0891b2;
+}
+
+.node-description-hint {
+  display: inline-block;
+  cursor: help;
+  font-size: 11px;
+  color: #64748b;
+  margin-left: 4px;
+}
+
+.node-veld.datatype-detail {
+  font-size: 10px;
+  color: #475569;
+  font-family: "Cascadia Code", "Fira Code", monospace;
+  word-break: break-all;
+  justify-content: flex-start;
+}
+
+/* Toolbar gegevenstype button */
+.btn-toolbar.datatype {
+  border-color: #06b6d4;
+  color: #67e8f9;
+}
+
+/* Inline fields layout (prefix/suffix, min/max) */
+.inline-fields {
+  display: flex;
+  gap: 8px;
+}
+
+.inline-fields label {
+  flex: 1;
+}
+
+/* === Test Invoer Panel === */
+
+.btn-toolbar.test-invoer {
+  border-color: #f59e0b;
+  color: #fde68a;
+}
+
+.btn-toolbar.test-invoer.active {
+  background: #78350f;
+  border-color: #f59e0b;
+  color: #fef3c7;
+}
+
+/* === Export knoppen === */
+
+.btn-toolbar.export-mermaid,
+.btn-toolbar.export-plantuml,
+.btn-toolbar.export-xmi {
+  border-color: #6366f1;
+  color: #c7d2fe;
+}
+
+.btn-toolbar.export-mermaid:hover,
+.btn-toolbar.export-plantuml:hover,
+.btn-toolbar.export-xmi:hover {
+  background: #312e81;
+  border-color: #818cf8;
+  color: #e0e7ff;
+}
+
+.test-invoer-panel {
+  padding: 16px;
+}
+
+.test-invoer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.test-invoer-header h3 {
+  font-size: 15px;
+  color: #0f172a;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.test-invoer-empty {
+  color: #94a3b8;
+  font-style: italic;
+  text-align: center;
+  padding: 24px 0;
+}
+
+.test-invoer-beschrijving {
+  font-size: 11px;
+  color: #64748b;
+  background: #f8fafc;
+  padding: 6px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  border-left: 3px solid #06b6d4;
+}
+
+.test-invoer-veld-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+}
+
+.test-invoer-veld-wrapper input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 2px solid #d1d5db;
+  border-radius: 5px;
+  font-size: 13px;
+  font-family: "Cascadia Code", "Fira Code", monospace;
+  transition: border-color 0.2s;
+}
+
+.test-invoer-veld-wrapper input:focus {
+  outline: none;
+}
+
+.test-invoer-veld-wrapper input.invoer-geldig {
+  border-color: #22c55e;
+  background: #f0fdf4;
+}
+
+.test-invoer-veld-wrapper input.invoer-ongeldig {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.test-invoer-affix {
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  user-select: none;
+}
+
+.test-invoer-affix.prefix {
+  padding-right: 2px;
+}
+
+.test-invoer-affix.suffix {
+  padding-left: 2px;
+}
+
+.test-invoer-voorbeelden {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.test-invoer-voorbeelden-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.btn-voorbeeld {
+  padding: 2px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: #f8fafc;
+  font-size: 11px;
+  font-family: "Cascadia Code", "Fira Code", monospace;
+  color: #334155;
+  cursor: pointer;
+}
+
+.btn-voorbeeld:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.btn-valideer {
+  display: block;
+  width: 100%;
+  padding: 7px;
+  margin: 8px 0;
+  border: 1px solid #22c55e;
+  border-radius: 6px;
+  background: #166534;
+  color: #bbf7d0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-valideer:hover {
+  background: #15803d;
+}
+
+.test-invoer-resultaat {
+  padding: 10px;
+  border-radius: 6px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.test-invoer-resultaat.geldig {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+}
+
+.test-invoer-resultaat.ongeldig {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+}
+
+.resultaat-status {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.resultaat-normalisatie {
+  margin-top: 4px;
+  color: #475569;
+}
+
+.resultaat-normalisatie code {
+  background: #e2e8f0;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: "Cascadia Code", "Fira Code", monospace;
+  font-size: 12px;
+}
+
+.resultaat-label {
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.resultaat-fouten {
+  margin: 6px 0 0 18px;
+  padding: 0;
+  color: #dc2626;
+  font-size: 12px;
+}
+
+.resultaat-fouten li {
+  margin-bottom: 2px;
+}
+
+.test-invoer-details {
+  margin-top: 12px;
+  font-size: 11px;
+}
+
+.test-invoer-details summary {
+  cursor: pointer;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.test-invoer-details pre {
+  margin-top: 6px;
+  padding: 8px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  font-size: 10px;
+  overflow-x: auto;
+  max-height: 300px;
+  overflow-y: auto;
+  font-family: "Cascadia Code", "Fira Code", monospace;
+}

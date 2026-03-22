@@ -1,0 +1,110 @@
+classDiagram
+
+  class A {
+    <<entiteit>>
+    <<materieel>>
+    +integer id
+  }
+
+  class B {
+    <<entiteit>>
+    <<materieel>>
+    +integer id
+  }
+
+  class A_U {
+    <<gegevenselement>>
+    +integer a_id
+    +integer rel_id
+    +string aaa
+    -boolean bbb
+  }
+
+  class A_V {
+    <<gegevenselement>>
+    +integer a_id
+    +integer rel_id
+    +string ccc
+    -string ddd
+    -string eee
+    +number~float64~ fff
+    +string ggg
+    -string~date~ datum
+  }
+
+  class A_W {
+    <<gegevenselement>>
+    <<materieel>>
+    +integer a_id
+    +integer rel_id
+    +number~float64~ float
+    +integer heel
+  }
+
+  class Rel_A_B {
+    <<relatie>>
+    <<materieel>>
+    +integer a_id
+    +integer rel_id
+    +integer b_id
+    +string soort
+  }
+
+  class B_X {
+    <<gegevenselement>>
+    +integer b_id
+    +integer rel_id
+    +string fff
+    +string ggg
+  }
+
+  class B_Y {
+    <<gegevenselement>>
+    +integer b_id
+    +integer rel_id
+    +string hhh
+  }
+
+  class RelABSoort {
+    <<enumeration>>
+    LTT
+    LAT
+    LTA
+  }
+
+  class ABCEnum {
+    <<enumeration>>
+    Optie A
+    Optie B
+    Optie C
+  }
+
+  class NLPostcode {
+    <<datatype>>
+    +string basistype
+    +String format = "nl-postcode"
+    +String pattern
+    +String normalisatie = "uppercase_letters"
+  }
+
+  class BSN {
+    <<datatype>>
+    +string basistype
+    +String format = "bsn"
+    +String pattern
+  }
+
+  class IBAN {
+    <<datatype>>
+    +string basistype
+    +String format = "iban"
+    +String pattern
+    +String normalisatie = "strip_spaces,uppercase"
+  }
+  A "1" --> "0..1" A_U : Us
+  A "1" --> "0..*" A_V : Vs
+  A "1" --> "0..*" A_W : Ws
+  A "1" --> "0..*" Rel_A_B : RelABs
+  Rel_A_B "1" --> "0..*" B : → B
+  B "1" --> "0..1" B_X : Xs
+  B "1" --> "0..1" B_Y : Ys
