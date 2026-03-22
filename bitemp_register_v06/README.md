@@ -72,12 +72,15 @@ Open this file in your browser to inspect coverage per package and per function.
 
 De actieve visualisaties draaien nu als React + Vite build onder:
 
+- Zie ook `UML_EDITOR_INTEGRATIE.md` voor de opname van de UML editor als subtree en frontend-pagina.
+
 [![Open Viz Index](https://img.shields.io/badge/Open-Viz%20Index%20(React%20%2B%20Vite)-0f766e?style=for-the-badge)](http://localhost:8080/viz/react/)
 [![Open Viz Tijdlijn](https://img.shields.io/badge/Open-Viz%20Tijdlijn%20(React%20%2B%20Vite)-0b7285?style=for-the-badge)](http://localhost:8080/viz/react/tijdlijn.html)
 [![Open Docs](https://img.shields.io/badge/Open-Docs-1d4ed8?style=for-the-badge)](http://localhost:8080/docs)
 
 - `http://localhost:8080/viz/react/` (index)
 - `http://localhost:8080/viz/react/tijdlijn.html` (tijdslijn)
+- `http://localhost:8080/viz/react/editor.html` (UML editor)
 - `http://localhost:8080/viz/` (landingspagina met links)
 
 De index-pagina:

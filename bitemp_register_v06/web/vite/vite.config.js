@@ -5,6 +5,15 @@ import { resolve } from "path";
 export default defineConfig({
   plugins: [react()],
   base: "/viz/react/",
+  resolve: {
+    alias: {
+      // Alias naar de UML-editor subtree, zodat imports via @editor/... werken
+      "@editor": resolve(__dirname, "../../uml-editor/src"),
+      // Zorg dat @xyflow/react vanuit de subtree-bestanden ook resolved wordt
+      // vanuit onze eigen node_modules (niet vanuit uml-editor/)
+      "@xyflow/react": resolve(__dirname, "node_modules/@xyflow/react"),
+    },
+  },
   server: {
     port: 5174,
   },
@@ -16,6 +25,7 @@ export default defineConfig({
         main: resolve(__dirname, "index.html"),
         tijdlijn: resolve(__dirname, "tijdlijn.html"),
         registraties: resolve(__dirname, "registraties.html"),
+        editor: resolve(__dirname, "editor.html"),
       },
     },
   },

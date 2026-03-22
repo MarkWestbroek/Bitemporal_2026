@@ -6,6 +6,7 @@ Deze map bevat stap 2 van de migratie van de schema-visualisaties naar React + V
 
 - `src/pages/IndexSchemaPage.jsx`: migratie van `web/index_schema.html`
 - `src/pages/TijdlijnSchemaPage.jsx`: migratie van `web/tijdlijn_schema.html`
+- `src/pages/EditorPage.jsx`: wrapper rond de UML editor subtree
 - `src/shared/schemaUtils.js`: gedeelde helpers (ESM)
 - `src/shared/SvgPatternDefs.jsx`: gedeelde SVG pattern-defs (React component)
 - `src/shared/schema-viz.css`: gedeelde basis-CSS
@@ -18,6 +19,17 @@ Omdat Gin `router.Static("/viz", "./web")` gebruikt, worden de buildbestanden on
 
 - `/viz/react/` (index)
 - `/viz/react/tijdlijn.html` (tijdlijn)
+- `/viz/react/editor.html` (UML editor)
+
+De editorcode zelf staat niet in `web/vite/src`, maar in de subtree:
+
+- `../../uml-editor/`
+
+Vite importeert die code via de alias:
+
+- `@editor` -> `../../uml-editor/src`
+
+Zie ook `../../UML_EDITOR_INTEGRATIE.md`.
 
 ## Ontwikkelen
 
