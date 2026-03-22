@@ -106,8 +106,14 @@ function registratieIDUitOpvoerTijdstip(tijdstipRaw) {
   return 0;
 }
 
-function endpointSegmentVoorEntiteit(entiteitType) {
-  return `${String(entiteitType || "").toLowerCase()}s`;
+function endpointSegmentVoorEntiteit(entiteitType, entiteitTypen) {
+  const gekozenType = String(entiteitType || "");
+  const meta = safeArray(entiteitTypen).find((item) => String(item?.typenaam || "") === gekozenType) || null;
+  const segment = String(meta?.meervoud || meta?.padnaam || "").trim();
+  if (segment) {
+    return segment;
+  }
+  return `${gekozenType.toLowerCase()}s`;
 }
 
 function responseKeyVoorEntiteiten(entiteitType, responseJson) {
@@ -149,8 +155,15 @@ function childArrayVoorRol(selectedEntiteit, rolnaam, jsonRolnaam) {
   return safeArray(selectedEntiteit[key]);
 }
 
-function labelVoorChildType(doeltype, rolnaam) {
-  return String(doeltype || rolnaam || "?");
+function labelVoorChildType(doeltype, rolnaam, klassenaam) {
+  return String(klassenaam || doeltype || rolnaam || "?");
+}
+
+function labelVoorTypeNaam(typeNaam, typeMetaByTypenaam, fallback = "-") {
+  const naam = String(typeNaam || "").trim();
+  if (!naam) return fallback;
+  const meta = typeMetaByTypenaam?.[naam] || null;
+  return String(meta?.klassenaam || meta?.typenaam || naam);
 }
 
 function leidEntiteitTypeAfUitRegistratie(registratie, beschikbareEntiteitTypen) {
@@ -487,7 +500,7 @@ export default function IndexSchemaPage() {
               return {
                 groupKey,
                 group,
-                label: labelVoorChildType(group.doeltype, group.rolnaam),
+                label: labelVoorChildType(group.doeltype, group.rolnaam, group.typeMeta?.klassenaam),
                 geVeldnaam: String(group?.typeMeta?.veldnaam || group.doeltype.toLowerCase()),
                 entiteitIDKolom: String(group?.typeMeta?.entiteitIDKolom || ''),
                 isMaterieel: Boolean(group?.typeMeta?.isMaterieel && group?.typeMeta?.ge_subtype === 'hub'),
@@ -544,7 +557,7 @@ export default function IndexSchemaPage() {
               return {
                 groupKey,
                 group,
-                label: labelVoorChildType(group.doeltype, group.rolnaam),
+                label: labelVoorChildType(group.doeltype, group.rolnaam, group.typeMeta?.klassenaam),
                 geVeldnaam: String(group?.typeMeta?.veldnaam || group.doeltype.toLowerCase()),
                 entiteitIDKolom: String(group?.typeMeta?.entiteitIDKolom || ''),
                 secondaireEntiteitIDKolom: secondaireKolom,
@@ -942,7 +955,7 @@ export default function IndexSchemaPage() {
             const veldDef = Array.isArray(group?.typeMeta?.velden)
               ? (group.typeMeta.velden.find((veld) => veld.naam === k) || { naam: k, type: typeof origineel, format: '' })
               : { naam: k, type: typeof origineel, format: '' };
-            let nieuw = coercedWaardeVoorVeld(v, veldDef, `${labelVoorChildType(group.doeltype, group.rolnaam)}.${k}`);
+            let nieuw = coercedWaardeVoorVeld(v, veldDef, `${labelVoorChildType(group.doeltype, group.rolnaam, group.typeMeta?.klassenaam)}.${k}`);
             if (nieuw !== origineel) {
               nieuwItem[k] = nieuw;
               heeftWijziging = true;
@@ -1036,8 +1049,8 @@ export default function IndexSchemaPage() {
           };
         }, [baseUrl]);
 
-        async function loadData({ tValue = t, registratieIdValue = registratieId, selecteerVanuitRegistratie = false } = {}) {
-          let doelEntiteitType = entiteitType;
+        async function loadData({ tValue = t, registratieIdValue = registratieId, selecteerVanuitRegistratie = false, entiteitTypeValue = null, doelEntiteitIdValue = null } = {}) {
+          let doelEntiteitType = entiteitTypeValue || entiteitType;
           setLoading(true);
           setError('');
           try {
@@ -1075,7 +1088,7 @@ export default function IndexSchemaPage() {
               }
             }
 
-            const segment = endpointSegmentVoorEntiteit(doelEntiteitType);
+            const segment = endpointSegmentVoorEntiteit(doelEntiteitType, entiteitTypen);
             const entiteitenUrl = `${baseUrl}/full/${segment}/?t=${encodeURIComponent(peilmomentVoorEntiteiten)}`;
             const entiteitenRes = await fetch(entiteitenUrl);
 
@@ -1105,6 +1118,12 @@ export default function IndexSchemaPage() {
             setSelectedEntiteitId((vorigeEntiteitId) => {
               if (entiteiten.length === 0) {
                 return '';
+              }
+
+              // Navigatie naar een specifieke entiteit (bijv. secondaire entiteit klik)
+              if (doelEntiteitIdValue) {
+                const heeftDoel = entiteiten.some((item) => String(item.id) === String(doelEntiteitIdValue));
+                if (heeftDoel) return String(doelEntiteitIdValue);
               }
 
               if (selecteerVanuitRegistratie && entiteitIdVanuitRegistratie) {
@@ -1359,7 +1378,8 @@ export default function IndexSchemaPage() {
             const typeNaam = String(group.doeltype || '').toLowerCase();
             const rolNaam = String(group.rolnaam || '').toLowerCase();
             const repNaam = String(w.representatienaam || '').toLowerCase();
-            if (typeNaam === repNaam || rolNaam === repNaam) {
+            const dataTypeNaam = String(group?.typeMeta?.dataTypenaam || '').toLowerCase();
+            if (typeNaam === repNaam || rolNaam === repNaam || dataTypeNaam === repNaam) {
               const idKolom = group.typeMeta?.idKolom;
               const gevonden = group.items.find((item) => {
                 const itemId = item.rel_id ?? item.id ?? (idKolom ? item[idKolom] : undefined);
@@ -1409,7 +1429,11 @@ export default function IndexSchemaPage() {
               if (!match) return null;
               const { group, item } = match;
               if (item.afvoer != null && item.afvoer !== '' && item.afvoer !== 0) return null;
-              const veldnaam = group.typeMeta?.veldnaam || String(group.doeltype || w.representatienaam).toLowerCase();
+              const repTypeMeta = typeMetaByTypenaam?.[String(w.representatienaam || '')] || null;
+              const corrigeerDataSubtype = String(repTypeMeta?.ge_subtype || '').toLowerCase() === 'data';
+              const veldnaam = corrigeerDataSubtype
+                ? String(repTypeMeta?.veldnaam || '').trim()
+                : String(group.typeMeta?.veldnaam || String(group.doeltype || w.representatienaam).toLowerCase());
               const bewerkteVelden = registratieCorrigeerVelden[String(w.representatie_id)] || {};
               const nieuwItem = {};
               let heeftWijziging = false;
@@ -1587,6 +1611,16 @@ export default function IndexSchemaPage() {
           setNieuweEntiteitRelaties((prev) => prev.map((row) => (row.id === rowId
             ? { ...row, values: { ...(row.values || {}), [veldnaam]: waarde } }
             : row)));
+        }
+
+        async function navigeerNaarSecondaireEntiteit(event, tweedeEntiteitType, tweedeEntiteitId) {
+          event.stopPropagation();
+          if (!tweedeEntiteitType || !tweedeEntiteitId) return;
+          // Vind de juiste typenaam (case-insensitive) uit de beschikbare entiteittypen
+          const match = entiteitTypen.find((item) => String(item.typenaam).toUpperCase() === String(tweedeEntiteitType).toUpperCase());
+          const doelType = match ? match.typenaam : tweedeEntiteitType;
+          setEntiteitType(doelType);
+          await loadData({ entiteitTypeValue: doelType, doelEntiteitIdValue: String(tweedeEntiteitId) });
         }
 
         async function navigeerNaarRegistratieVanOpvoer(event, opvoerTijdstip) {
@@ -2050,6 +2084,7 @@ export default function IndexSchemaPage() {
                         nadrukStyle={nadrukStyle}
                         isOngedaanmaking={isOngedaanmaking}
                         grootKruisEindY={grootKruisEindY}
+                        typeMetaByTypenaam={typeMetaByTypenaam}
                       />
                     )}
 
@@ -2073,7 +2108,7 @@ export default function IndexSchemaPage() {
                               {ongedaanGemaakteWijzigingen.length === 0 && <li>Geen wijzigingen onder deze doelregistratie</li>}
                               {ongedaanGemaakteWijzigingen.map((w, index) => (
                                 <li key={`wz-doel-${w.id || index}`}>
-                                  {w.wijzigingstype} | entiteit={w.entiteitnaam}:{w.entiteit_id} | rep={w.representatienaam || '-'}:{w.representatie_id || '-'}
+                                  {w.wijzigingstype} | entiteit={labelVoorTypeNaam(w.entiteitnaam, typeMetaByTypenaam, w.entiteitnaam)}:{w.entiteit_id} | rep={labelVoorTypeNaam(w.representatienaam, typeMetaByTypenaam, w.representatienaam || '-') }:{w.representatie_id || '-'}
                                 </li>
                               ))}
                             </ul>
@@ -2087,7 +2122,7 @@ export default function IndexSchemaPage() {
                           {selectedRegistratieWijzigingen.length === 0 && <li>Geen wijzigingen onder deze registratie</li>}
                           {selectedRegistratieWijzigingen.map((w, index) => (
                             <li key={`wz-${w.id || index}`}>
-                              {w.wijzigingstype} | entiteit={w.entiteitnaam}:{w.entiteit_id} | rep={w.representatienaam || '-'}:{w.representatie_id || '-'}
+                              {w.wijzigingstype} | entiteit={labelVoorTypeNaam(w.entiteitnaam, typeMetaByTypenaam, w.entiteitnaam)}:{w.entiteit_id} | rep={labelVoorTypeNaam(w.representatienaam, typeMetaByTypenaam, w.representatienaam || '-') }:{w.representatie_id || '-'}
                             </li>
                           ))}
                         </ul>
@@ -2125,6 +2160,7 @@ export default function IndexSchemaPage() {
                     relatieNodesVoorGrafiek={relatieNodesVoorGrafiek}
                     entiteitOortjes={entiteitOortjes}
                     typeMetaByTypenaam={typeMetaByTypenaam}
+                    navigeerNaarSecondaireEntiteit={navigeerNaarSecondaireEntiteit}
                   />
 
                   {actieResultaat && !geselecteerdeRep && (
@@ -2148,7 +2184,7 @@ export default function IndexSchemaPage() {
               )}
 
               {childGroupsGesorteerd.map((group) => {
-                const typeLabel = labelVoorChildType(group.doeltype, group.rolnaam);
+                const typeLabel = labelVoorChildType(group.doeltype, group.rolnaam, group.typeMeta?.klassenaam);
                 const items = safeArray(group.items);
                 return (
                   <div className="card" key={`details-${group.rolnaam}`}>
@@ -2225,6 +2261,7 @@ export default function IndexSchemaPage() {
                     voerRegistratieCorrectieUit={voerRegistratieCorrectieUit}
                     registratieCorrectiePreview={registratieCorrectiePreview}
                     registratieActieResultaat={registratieActieResultaat}
+                    typeMetaByTypenaam={typeMetaByTypenaam}
                   />
                 </div>
               </div>

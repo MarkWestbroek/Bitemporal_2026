@@ -25,12 +25,14 @@ type vizSchemaChildDTO struct {
 
 type vizSchemaTypeDTO struct {
 	Typenaam                  string              `json:"typenaam"`
+	Klassenaam                string              `json:"klassenaam"`
 	Description               string              `json:"description,omitempty"`
 	Metatype                  model.Metatype      `json:"metatype"`
 	GESubtype                 string              `json:"ge_subtype,omitempty"`  // hub, data, aanvang, einde (leeg voor entiteiten en legacy)
 	IsMaterieel               bool                `json:"isMaterieel,omitempty"` // of dit type een materiële tijdlijn heeft
 	Kleur                     string              `json:"kleur,omitempty"`
 	Veldnaam                  string              `json:"veldnaam"`
+	Meervoud                  string              `json:"meervoud,omitempty"`
 	Velden                    []vizSchemaFieldDTO `json:"velden,omitempty"`
 	Tabelnaam                 string              `json:"tabelnaam"`
 	IDKolom                   string              `json:"idKolom"`
@@ -110,6 +112,37 @@ func enumValuesFromSchemaTag(tag string) []string {
 		}
 		if len(values) > 0 {
 			return values
+		}
+	}
+	return nil
+}
+
+// resolveEnumWaarden bepaalt de enum-waarden voor een struct field.
+// Probeert achtereenvolgens:
+// 1. Expliciete pipe-separated waarden uit de schema tag (bijv. "enum=A|B|C")
+// 2. Type-naam uit de schema tag opzoeken in EnumWaarden registry (bijv. "enum=Bereikbaarheidssoort")
+// 3. Het Go-type van het veld opzoeken in EnumWaarden registry (voor _Input structs zonder schema tag)
+func resolveEnumWaarden(f reflect.StructField) []string {
+	tagValues := enumValuesFromSchemaTag(f.Tag.Get("schema"))
+	if len(tagValues) > 1 {
+		// Meerdere waarden: dit zijn de echte enum-waarden (bijv. "Optie A|Optie B")
+		return tagValues
+	}
+	if len(tagValues) == 1 {
+		// Enkele waarde: mogelijk een type-naam (bijv. "Bereikbaarheidssoort")
+		if waarden, ok := model.EnumWaarden[tagValues[0]]; ok {
+			return waarden
+		}
+		return tagValues
+	}
+	// Geen schema tag: probeer het Go-type op te zoeken als het een named string type is
+	ft := f.Type
+	for ft.Kind() == reflect.Ptr {
+		ft = ft.Elem()
+	}
+	if ft.Kind() == reflect.String && ft.Name() != "string" && ft.Name() != "" {
+		if waarden, ok := model.EnumWaarden[ft.Name()]; ok {
+			return waarden
 		}
 	}
 	return nil
@@ -273,7 +306,7 @@ func reflectedVeldenVoorMeta(meta model.TypeMeta) []vizSchemaFieldDTO {
 		// Bepaal het veldtype en format voor de schema-API.
 		// We gebruiken de veldtype uit de JSON-tag als die er is, anders mappen we het Go-type.
 		veldType, format := schemaTypeVoorReflectType(f.Type)
-		enum := enumValuesFromSchemaTag(f.Tag.Get("schema"))
+		enum := resolveEnumWaarden(f)
 		description := strings.TrimSpace(f.Tag.Get("schema_desc"))
 
 		// autoIncrement: via bun-tag óf als het veld de IDKolom is bij een type met
@@ -322,12 +355,14 @@ func MaakVizSchemaHandler() gin.HandlerFunc {
 
 			item := vizSchemaTypeDTO{
 				Typenaam:    meta.Typenaam,
+				Klassenaam:  meta.Klassenaam,
 				Description: meta.Description,
 				Metatype:    meta.Metatype,
 				GESubtype:   string(meta.GESubtype),
 				IsMaterieel: meta.IsMaterieel,
 				Kleur:       meta.Kleur,
 				Veldnaam:    meta.Veldnaam,
+				Meervoud:    meta.Meervoud,
 				Velden:      reflectedVeldenVoorMeta(meta),
 				Tabelnaam:   meta.Tabelnaam,
 				// Kolom-namen vertalen naar JSON-veldnamen zodat de frontend ze direct als property kan gebruiken.
@@ -337,6 +372,11 @@ func MaakVizSchemaHandler() gin.HandlerFunc {
 				EntiteitIDKolom:           jsonNaamVoorBunKolom(meta, meta.EntiteitIDKolom),
 				SecondaireEntiteitIDKolom: jsonNaamVoorBunKolom(meta, meta.SecondaireEntiteitIDKolom),
 				BovenliggendTypenaam:      meta.BovenliggendTypenaam,
+			}
+
+			// Achterwaartse compatibiliteit: oudere hardcoded entries hebben nog geen expliciete Meervoud.
+			if item.Meervoud == "" {
+				item.Meervoud = meta.Padnaam
 			}
 
 			if meta.Metatype != model.MetatypeEntiteit {

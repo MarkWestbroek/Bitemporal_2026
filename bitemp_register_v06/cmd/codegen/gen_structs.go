@@ -35,13 +35,19 @@ func generateEntiteiten(v3 model.V3Model) (string, error) {
 		entIDKolom := strings.ToLower(ent.Typenaam) + "_id"
 		for _, ge := range ent.Gegevenselementen {
 			hubType := ent.Typenaam + "_" + ge.Naam
-			rolnaam := ge.Naam + "s"
-			jsonRolnaam := strings.ToLower(ge.Naam) + "s"
+			rolnaam := toPascalCase(ge.Meervoud)
+			if rolnaam == "" {
+				rolnaam = ge.Naam + "s"
+			}
+			jsonRolnaam := ge.Meervoud
+			if jsonRolnaam == "" {
+				jsonRolnaam = strings.ToLower(ge.Naam) + "s"
+			}
 			writeField(&b, entiteitRelatieField(rolnaam, jsonRolnaam, hubType, entIDKolom))
 		}
 		for _, rel := range ent.Relaties {
-			rolnaam := relRolnaam(rel.Naam)
-			jsonRolnaam := relJSONRolnaam(rel.Naam)
+			rolnaam := relRolnaam(rel.Naam, rel.Meervoud)
+			jsonRolnaam := relJSONRolnaam(rel.Naam, rel.Meervoud)
 			writeField(&b, entiteitRelatieField(rolnaam, jsonRolnaam, rel.Naam, entIDKolom))
 		}
 
@@ -63,7 +69,7 @@ func generateEntiteiten(v3 model.V3Model) (string, error) {
 				b.WriteString(fmt.Sprintf("type %s struct {\n", typeName))
 				d := deriveAanvangEinde(ent.Typenaam, ent.Typenaam, suffix)
 				writeField(&b, bunBaseModelField(d.Tabelnaam))
-				for _, f := range aanvangEindePlumbingFields(entIDKolom, false) {
+				for _, f := range aanvangEindePlumbingFields(ent.Typenaam, entIDKolom, false) {
 					writeField(&b, f)
 				}
 				b.WriteString("}\n\n")
@@ -102,9 +108,9 @@ func generateGeRel(v3 model.V3Model) (string, error) {
 		for _, ge := range ent.Gegevenselementen {
 			hubType := ent.Typenaam + "_" + ge.Naam
 			generateHubStruct(&b, hubType, ent.Typenaam, entIDKolom, "gegevenselement", ge.IsMaterieel, ge.Description, "")
-			generateDataStruct(&b, hubType, entIDKolom, ge.Velden, ge.Description)
+			generateDataStruct(&b, hubType, ent.Typenaam, entIDKolom, ge.Velden, ge.Description)
 			if ge.IsMaterieel {
-				generateAanvangEindeStructs(&b, hubType, entIDKolom, true)
+				generateAanvangEindeStructs(&b, hubType, ent.Typenaam, entIDKolom, true)
 			}
 		}
 
@@ -112,9 +118,9 @@ func generateGeRel(v3 model.V3Model) (string, error) {
 		for _, rel := range ent.Relaties {
 			secEntIDKolom := strings.ToLower(rel.DoelEntiteit) + "_id"
 			generateHubStruct(&b, rel.Naam, ent.Typenaam, entIDKolom, "relatie", rel.IsMaterieel, rel.Description, secEntIDKolom)
-			generateDataStruct(&b, rel.Naam, entIDKolom, rel.Velden, rel.Description)
+			generateDataStruct(&b, rel.Naam, ent.Typenaam, entIDKolom, rel.Velden, rel.Description)
 			if rel.IsMaterieel {
-				generateAanvangEindeStructs(&b, rel.Naam, entIDKolom, true)
+				generateAanvangEindeStructs(&b, rel.Naam, ent.Typenaam, entIDKolom, true)
 			}
 		}
 	}
@@ -137,7 +143,8 @@ func generateHubStruct(b *strings.Builder, typeName string, parentEnt string, en
 
 	// Secondaire FK voor relaties
 	if secEntIDKolom != "" {
-		writeField(b, hubRelationSecondaryField(secEntIDKolom))
+		secEntType := toPascalCase(strings.TrimSuffix(secEntIDKolom, "_id"))
+		writeField(b, hubRelationSecondaryField(secEntIDKolom, secEntType))
 	}
 
 	for _, f := range hubOpvoerAfvoerFields() {
@@ -158,7 +165,7 @@ func generateHubStruct(b *strings.Builder, typeName string, parentEnt string, en
 }
 
 // generateDataStruct genereert een _Data struct.
-func generateDataStruct(b *strings.Builder, hubType string, entIDKolom string, velden []model.V3Veld, description string) {
+func generateDataStruct(b *strings.Builder, hubType string, parentEntType string, entIDKolom string, velden []model.V3Veld, description string) {
 	dataType := hubType + "_Data"
 	tabelnaam := strings.ToLower(dataType)
 
@@ -166,7 +173,7 @@ func generateDataStruct(b *strings.Builder, hubType string, entIDKolom string, v
 	b.WriteString(fmt.Sprintf("type %s struct {\n", dataType))
 	writeField(b, bunBaseModelFieldAlias(tabelnaam))
 
-	for _, f := range dataPlumbingFields(entIDKolom) {
+	for _, f := range dataPlumbingFields(parentEntType, entIDKolom) {
 		writeField(b, f)
 	}
 
@@ -184,14 +191,14 @@ func generateDataStruct(b *strings.Builder, hubType string, entIDKolom string, v
 }
 
 // generateAanvangEindeStructs genereert _Aanvang en _Einde structs.
-func generateAanvangEindeStructs(b *strings.Builder, parentType string, entIDKolom string, hasRelID bool) {
+func generateAanvangEindeStructs(b *strings.Builder, parentType string, parentEntType string, entIDKolom string, hasRelID bool) {
 	for _, suffix := range []string{"Aanvang", "Einde"} {
 		typeName := parentType + "_" + suffix
 		tabelnaam := strings.ToLower(typeName)
 		b.WriteString(fmt.Sprintf("// %s — %sdatum van %s.\n", typeName, strings.ToLower(suffix), parentType))
 		b.WriteString(fmt.Sprintf("type %s struct {\n", typeName))
 		writeField(b, bunBaseModelFieldAlias(tabelnaam))
-		for _, f := range aanvangEindePlumbingFields(entIDKolom, hasRelID) {
+		for _, f := range aanvangEindePlumbingFields(parentEntType, entIDKolom, hasRelID) {
 			writeField(b, f)
 		}
 		b.WriteString("}\n\n")
@@ -217,13 +224,25 @@ func writeField(b *strings.Builder, f StructField) {
 	}
 }
 
-// relRolnaam genereert de Go rolnaam voor een relatie. "Rel_A_B" → "RelABs"
-func relRolnaam(naam string) string {
+// relRolnaam genereert de Go rolnaam voor een relatie.
+// Voorkeur: expliciet meervoud uit het model (snake_case -> PascalCase).
+// Fallback: oude afleiding op basis van typenaam.
+func relRolnaam(naam, meervoud string) string {
+	if strings.TrimSpace(meervoud) != "" {
+		if pascal := toPascalCase(meervoud); pascal != "" {
+			return pascal
+		}
+	}
 	clean := strings.ReplaceAll(naam, "_", "")
 	return clean + "s"
 }
 
-// relJSONRolnaam genereert de JSON rolnaam voor een relatie. "Rel_A_B" → "rel_abs"
-func relJSONRolnaam(naam string) string {
+// relJSONRolnaam genereert de JSON rolnaam voor een relatie.
+// Voorkeur: expliciet meervoud uit het model.
+// Fallback: oude afleiding op basis van typenaam.
+func relJSONRolnaam(naam, meervoud string) string {
+	if strings.TrimSpace(meervoud) != "" {
+		return meervoud
+	}
 	return strings.ToLower(naam) + "s"
 }

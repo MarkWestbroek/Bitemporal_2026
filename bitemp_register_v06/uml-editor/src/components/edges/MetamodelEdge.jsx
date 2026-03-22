@@ -59,7 +59,12 @@ function MetamodelEdge({
       ? "{enkelvoudig}"
       : "{meervoudig}";
   const kardinaliteit = data?.kardinaliteit || "";
-  const rolnaam = data?.jsonRolnaam || data?.rolnaam || "";
+  const rolnaam = data?.rolnaam || "";
+
+  // Plaats labels bij de GE/relatie-zijde (target), niet op het midden van de lijn
+  const geLabelX = labelX + (targetX - labelX) * 0.7;
+  const geLabelY = labelY + (targetY - labelY) * 0.7;
+
   const diamondColor = selected ? "#2563eb" : "#64748b";
   const dependencyColor = "#64748b";
   const { diamondCenter, diamondPoints } = getDiamondProps(sourceX, sourceY, sourcePosition);
@@ -121,7 +126,7 @@ function MetamodelEdge({
             className="edge-label"
             style={{
               position: "absolute",
-              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+              transform: `translate(-50%, -50%) translate(${geLabelX}px, ${geLabelY}px)`,
               pointerEvents: "all",
             }}
           >

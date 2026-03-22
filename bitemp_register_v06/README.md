@@ -139,7 +139,7 @@ Voor uitgebreide ontwerpachtergrond en lifecycle: zie `model/ontwerpkeuzen.md`.
 
 ## Codegen proberen (V3)
 
-Je kunt de codegenerator op twee manieren draaien:
+Je kunt de codegenerator op drie manieren draaien:
 
 - Vanuit een draaiende API (aanbevolen):
   - `go run ./cmd/codegen --from-url http://localhost:8082/api/schema/model/code --output model`
@@ -159,6 +159,14 @@ Je kunt de codegenerator op twee manieren draaien:
 
 Als je model uit de editor wilt gebruiken voor codegen, gebruik dan bij voorkeur eerst de V3 API-bron (`/api/schema/model/code`) als input voor codegen.
 
+### MetaRegistry metadata uit codegen
+
+Codegen zet de geconfigureerde meervoudsvorm nu expliciet in `TypeMeta.Meervoud`.
+
+- Voor entiteiten, gegevenselement-hubs en relatie-hubs komt deze waarde uit het V3-model (`meervoud`).
+- Voor afgeleide plumbing-types (`_Data`, `_Aanvang`, `_Einde`) gebruikt codegen een veilige default op basis van het afgeleide type.
+- `GET /api/viz/schema` geeft deze waarde terug als `meervoud` (met fallback naar `padnaam` voor oudere handgeschreven entries zonder expliciete `Meervoud`).
+
 ### Modus: standalone vs. additive
 
 De codegenerator ondersteunt twee modi via `--mode`:
@@ -166,7 +174,7 @@ De codegenerator ondersteunt twee modi via `--mode`:
 | Modus | Beschrijving |
 |-------|-------------|
 | `standalone` (default) | Genereert bestanden die de **gehele** `MetaRegistry` en `DatatypeRegistry` definiëren. Bestaande definities worden overschreven. |
-| `additive` | Genereert bestanden die via Go `init()` functies **toevoegen** aan de bestaande registries. Het register groeit: de hand-geschreven basis-entries (A, B, etc.) blijven intact en het gegenereerde model wordt ernaast geladen. |
+| `additive` | Genereert bestanden die via Go `init()` functies **toevoegen** aan de bestaande registries. Het register groeit: de handgeschreven basis-entries (A, B, etc.) blijven intact en het gegenereerde model wordt ernaast geladen. |
 
 **Standalone** (standaard — vervangt het hele model):
 ```sh
@@ -211,7 +219,7 @@ Met `--prefix hr` krijgen alle gegenereerde bestanden het prefix `hr_`:
 | `modellen_input.go` | `hr_modellen_input.go` |
 | `datatype_registry.go` | `hr_datatype_registry.go` |
 
-Dit voorkomt dat gegenereerde bestanden de hand-geschreven bestanden overschrijven.
+Dit voorkomt dat gegenereerde bestanden de handgeschreven bestanden overschrijven.
 
 ### Validatie en foutmeldingen
 
@@ -597,6 +605,20 @@ Deregister U5 and register U6 for entity A:
   
 18 React: formulier elementen worden nu als het goed is hergebruikt, maar ben nog niet helemaal overtuigd
 
+19 In modellen de materiële tijd toevoegen = aanvang en einde
+- Voor elke representatie een aparte {REP}_Aanvang + {REP}_Einde tabel. (DONE)
+- In de structs een standaard Aanvang en Einde plumbing struct, die zich in feite gedraagt als:
+  - een GE op de entiteit (DONE in DB, PFK met 2 velden)
+  - een _data element op een GE (todo, punt 2 eerst) (DONE in DB: PFK met 3 velden)
+
+20 Een UML editor voor het model
+- roundtrip engineering van model naar code
+- model versies in het register vastleggen
+- export naar mermaid, plantUML en XMI (tbv EA)
+
+21 Register uitbreiden met menselijke klassen
+- NP-locatie, via UML editor
+
 
 ## BUGS
 ### API:
@@ -644,7 +666,10 @@ Deregister U5 and register U6 for entity A:
 - (latere!) ongedaangemaaktheid van regs tonen
 - dit is een soort 'blik op de toekomst'
 
-30 Model uitbreiden met menselijke klassen
+30 UML model versies
+- delta tussen een nieuwe en de huidige bepalen
+- impact van de delta bepalen (breaking of niet)
+- import van XMI
 
 40 3D weergave model en tijdslijnen :-)
 
@@ -655,11 +680,6 @@ Deregister U5 and register U6 for entity A:
 62 pep inbouwen
 
 ## TO DO MATERIEEL = REDESIGN!
-1 In modellen de materiële tijd toevoegen = aanvang en einde
-- Voor elke representatie een aparte {REP}_Aanvang + {REP}_Einde tabel. (DONE)
-- In de structs een standaard Aanvang en Einde plumbing struct, die zich in feite gedraagt als:
-  - een GE op de entiteit (DONE in DB, PFK met 2 velden)
-  - een _data element op een GE (todo, punt 2 eerst) (DONE in DB: PFK met 3 velden)
 
 
 2 JSON voor een request waarbij Aanvang en /of Einde wordt toegevoegd aan een bestaande Entiteit

@@ -21,6 +21,7 @@ export default function IndexRepresentatieVisual({
   relatieNodesVoorGrafiek,
   entiteitOortjes,
   typeMetaByTypenaam,
+  navigeerNaarSecondaireEntiteit,
 }) {
   return (
     <svg className="graph" viewBox={`0 0 900 ${svgHoogte}`} preserveAspectRatio="xMidYMid meet">
@@ -91,7 +92,7 @@ export default function IndexRepresentatieVisual({
               opv: {node.item.opvoer ? microsecondeIntVanTijdstip(node.item.opvoer) : "-"}
             </text>
             <text className="label label-lg" x={textX} y={node.y - 8}>
-              <tspan style={nadrukStyle}>{labelVoorChildType(node.group.doeltype, node.group.rolnaam)}</tspan>
+              <tspan style={nadrukStyle}>{labelVoorChildType(node.group.doeltype, node.group.rolnaam, node.group.typeMeta?.klassenaam)}</tspan>
               {" rel_id="}
               <tspan style={nadrukStyle}>{node.item.rel_id ?? node.item.id ?? "-"}</tspan>
             </text>
@@ -214,20 +215,23 @@ export default function IndexRepresentatieVisual({
               opv: {node.item.opvoer ? microsecondeIntVanTijdstip(node.item.opvoer) : "-"}
             </text>
             <text className="label label-lg" x={relX + 10} y={node.y - 6}>
-              <tspan style={nadrukStyle}>{labelVoorChildType(node.group.doeltype, node.group.rolnaam)}</tspan>
+              <tspan style={nadrukStyle}>{labelVoorChildType(node.group.doeltype, node.group.rolnaam, node.group.typeMeta?.klassenaam)}</tspan>
               {" rel_id="}
               <tspan style={nadrukStyle}>{node.item.rel_id ?? node.item.id ?? "-"}</tspan>
             </text>
             <text className="label" x={relX + 10} y={node.y + 12}>{korteSamenvatting(node.item)}</text>
             {!!node.tweedeEntiteitLabel && (
-              <>
+              <g
+                style={{ cursor: 'pointer' }}
+                onClick={(e) => navigeerNaarSecondaireEntiteit(e, node.tweedeEntiteitType, node.tweedeEntiteitIDTekst)}
+              >
                 <rect x={secondBoxX} y={secondBoxY} rx="6" width={secondBoxW} height={secondBoxH} style={{ fill: node.tweedeEntiteitKleur || "#dbeafe", stroke: node.tweedeEntiteitRandkleur || "#1e3a8a", strokeWidth: 2 }} />
                 <text className="label" x={secondBoxX + 6} y={secondBoxY + 16}>
                   <tspan style={nadrukStyle}>{node.tweedeEntiteitType || "Ent"}</tspan>
                   {" id="}
                   <tspan style={nadrukStyle}>{node.tweedeEntiteitIDTekst || "-"}</tspan>
                 </text>
-              </>
+              </g>
             )}
           </g>
         );

@@ -31,8 +31,14 @@ function normInt(v, fallback = 0) {
         return await res.json();
       }
 
-      function endpointSegmentForEntityType(typeName) {
-        return `${String(typeName || "").toLowerCase()}s`;
+      function endpointSegmentForEntityType(typeName, entityTypes) {
+        const gekozenType = String(typeName || "");
+        const meta = safeArray(entityTypes).find((item) => String(item?.typenaam || "") === gekozenType) || null;
+        const segment = String(meta?.meervoud || meta?.padnaam || "").trim();
+        if (segment) {
+          return segment;
+        }
+        return `${gekozenType.toLowerCase()}s`;
       }
 
       function normaliseerIdComponent(value) {
@@ -437,7 +443,7 @@ function normInt(v, fallback = 0) {
           setError("");
           try {
             const registraties = await fetchAlleRegistraties(baseUrl);
-            const seg = endpointSegmentForEntityType(entityType);
+            const seg = endpointSegmentForEntityType(entityType, entityTypes);
             const id = normInt(entityId, 0);
             const entityTypeUpper = String(entityType || "").toUpperCase();
 
@@ -564,6 +570,7 @@ function normInt(v, fallback = 0) {
                         regViewBoxHeight={regViewBoxHeight}
                         isOngedaanmaking={item.isOngedaanmaking}
                         entityType={entityType}
+                        typeMetaByTypenaam={typeMetaByTypenaam}
                         microsecondeIntVanTijdstip={microsecondeIntVanTijdstip}
                         wijzigingPatroonId={wijzigingPatroonId}
                         normaliseerIdComponent={normaliseerIdComponent}

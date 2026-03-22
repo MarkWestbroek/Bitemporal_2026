@@ -49,6 +49,8 @@ func toPascalCase(s string) string {
 // DerivedType bevat alle afgeleide informatie voor een type (hub, data, aanvang, einde, entiteit).
 type DerivedType struct {
 	Typenaam               string
+	Klassenaam             string // korte weergavenaam (zonder entiteitsprefix)
+	Meervoud               string // expliciete meervoudsvorm uit het model
 	Metatype               string // "entiteit", "gegevenselement", "relatie"
 	GESubtype              string // "", "hub", "data", "aanvang", "einde"
 	Tabelnaam              string
@@ -68,6 +70,8 @@ type DerivedType struct {
 func deriveEntiteit(ent model.V3Entiteit) DerivedType {
 	return DerivedType{
 		Typenaam:    ent.Typenaam,
+		Klassenaam:  ent.Typenaam,
+		Meervoud:    ent.Meervoud,
 		Metatype:    "entiteit",
 		GESubtype:   "",
 		Tabelnaam:   strings.ToLower(ent.Typenaam),
@@ -84,16 +88,19 @@ func deriveHub(parentEnt string, typeName string, metatype string, isMaterieel b
 	entIDKolom := strings.ToLower(parentEnt) + "_id"
 	tabelnaam := strings.ToLower(typeName)
 	veldnaam := strings.ToLower(typeName)
+	klassenaam := typeName
 	// Veldnaam: voor GE's is het de korte naam (u, v, w); voor relaties de volle naam
 	if metatype == "gegevenselement" {
 		parts := strings.Split(typeName, "_")
 		if len(parts) >= 2 {
 			veldnaam = strings.ToLower(parts[len(parts)-1])
+			klassenaam = parts[len(parts)-1]
 		}
 	}
 
 	return DerivedType{
 		Typenaam:               typeName,
+		Klassenaam:             klassenaam,
 		Metatype:               metatype,
 		GESubtype:              "hub",
 		Tabelnaam:              tabelnaam,
@@ -103,6 +110,7 @@ func deriveHub(parentEnt string, typeName string, metatype string, isMaterieel b
 		EntiteitIDKolom:        entIDKolom,
 		SecEntiteitIDKolom:     secEntIDKolom,
 		Padnaam:                padnaam,
+		Meervoud:               padnaam,
 		Veldnaam:               veldnaam,
 		IsMaterieel:            isMaterieel,
 		DataTypenaam:           typeName + "_Data",
@@ -115,6 +123,7 @@ func deriveData(hubTypeName string, parentEnt string) DerivedType {
 	entIDKolom := strings.ToLower(parentEnt) + "_id"
 	return DerivedType{
 		Typenaam:               typeName,
+		Klassenaam:             "Data",
 		Metatype:               "gegevenselement",
 		GESubtype:              "data",
 		Tabelnaam:              strings.ToLower(typeName),
@@ -123,6 +132,7 @@ func deriveData(hubTypeName string, parentEnt string) DerivedType {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        entIDKolom,
 		Padnaam:                strings.ToLower(typeName),
+		Meervoud:               strings.ToLower(typeName),
 		Veldnaam:               strings.ToLower(typeName),
 		BovenliggendTypenaam:   hubTypeName,
 	}
@@ -138,6 +148,7 @@ func deriveAanvangEinde(parentTypeName string, parentEnt string, suffix string) 
 	}
 	return DerivedType{
 		Typenaam:               typeName,
+		Klassenaam:             suffix,
 		Metatype:               "gegevenselement",
 		GESubtype:              subtype,
 		Tabelnaam:              strings.ToLower(typeName),
@@ -146,6 +157,7 @@ func deriveAanvangEinde(parentTypeName string, parentEnt string, suffix string) 
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        entIDKolom,
 		Padnaam:                strings.ToLower(typeName),
+		Meervoud:               strings.ToLower(typeName),
 		Veldnaam:               strings.ToLower(typeName),
 		BovenliggendTypenaam:   parentTypeName,
 	}
@@ -161,16 +173,19 @@ type StructField struct {
 	Comment string
 }
 
-// bunBaseModelField genereert het bun.BaseModel veld.
+// bunBaseModelField genereert het bun.BaseModel veld met expliciete alias.
+// LET OP: de alias tag is altijd nodig, anders leidt Bun de alias af uit de Go struct naam
+// (bijv. NatuurlijkPersoon → natuurlijk_persoon), terwijl onze SQL-subqueries de tabelnaam
+// gebruiken. Zonder alias krijg je "invalid reference to FROM-clause entry" fouten.
 func bunBaseModelField(tabelnaam string) StructField {
 	return StructField{
 		Name: "bun.BaseModel",
 		Type: "",
-		Tags: fmt.Sprintf("`bun:\"table:%s\"`", tabelnaam),
+		Tags: fmt.Sprintf("`bun:\"table:%s,alias:%s\"`", tabelnaam, tabelnaam),
 	}
 }
 
-// bunBaseModelFieldAlias genereert het bun.BaseModel veld met alias.
+// bunBaseModelFieldAlias genereert het bun.BaseModel veld met alias (legacy — identical to bunBaseModelField).
 func bunBaseModelFieldAlias(tabelnaam string) StructField {
 	return StructField{
 		Name: "bun.BaseModel",
@@ -219,9 +234,9 @@ func hubPlumbingFields(entIDKolom string, parentEntType string) []StructField {
 }
 
 // hubRelationPlumbingFields genereert de extra FK voor relaties (secondaire entiteit).
-func hubRelationSecondaryField(secEntIDKolom string) StructField {
+func hubRelationSecondaryField(secEntIDKolom string, secEntType string) StructField {
 	return StructField{
-		Name: strings.ToUpper(strings.TrimSuffix(secEntIDKolom, "_id")) + "_ID",
+		Name: secEntType + "_ID",
 		Type: "int",
 		Tags: fmt.Sprintf("`json:\"%s\"`", secEntIDKolom),
 	}
@@ -236,9 +251,9 @@ func hubOpvoerAfvoerFields() []StructField {
 }
 
 // dataPlumbingFields genereert de plumbing-velden voor een _Data struct.
-func dataPlumbingFields(entIDKolom string) []StructField {
+func dataPlumbingFields(parentEntType string, entIDKolom string) []StructField {
 	return []StructField{
-		{Name: strings.ToUpper(strings.TrimSuffix(entIDKolom, "_id")) + "_ID", Type: "int",
+		{Name: parentEntType + "_ID", Type: "int",
 			Tags: fmt.Sprintf("`json:\"%s\" bun:\"%s,pk\"`", entIDKolom, entIDKolom)},
 		{Name: "Rel_ID", Type: "int",
 			Tags: "`json:\"rel_id\" bun:\"rel_id,pk\"`"},
@@ -248,9 +263,9 @@ func dataPlumbingFields(entIDKolom string) []StructField {
 }
 
 // aanvangEindePlumbingFields genereert plumbing-velden voor _Aanvang/_Einde.
-func aanvangEindePlumbingFields(entIDKolom string, hasRelID bool) []StructField {
+func aanvangEindePlumbingFields(parentEntType string, entIDKolom string, hasRelID bool) []StructField {
 	fields := []StructField{
-		{Name: strings.ToUpper(strings.TrimSuffix(entIDKolom, "_id")) + "_ID", Type: "int",
+		{Name: parentEntType + "_ID", Type: "int",
 			Tags: fmt.Sprintf("`json:\"%s\" bun:\"%s,pk\"`", entIDKolom, entIDKolom)},
 	}
 	if hasRelID {

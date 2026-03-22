@@ -9,10 +9,18 @@ export default function TijdlijnRegistratiePaneel({
   regViewBoxHeight,
   isOngedaanmaking,
   entityType,
+  typeMetaByTypenaam,
   microsecondeIntVanTijdstip,
   wijzigingPatroonId,
   normaliseerIdComponent,
 }) {
+  const labelVoorTypeNaam = (typeNaam, fallback = "-") => {
+    const naam = String(typeNaam || "").trim();
+    if (!naam) return fallback;
+    const meta = typeMetaByTypenaam?.[naam] || null;
+    return String(meta?.klassenaam || meta?.typenaam || naam);
+  };
+
   return (
     <div className="card">
       <h3 className="panel-title panel-title-row">
@@ -42,13 +50,13 @@ export default function TijdlijnRegistratiePaneel({
               <line x1="208" y1={y} x2="208" y2={y + 44} stroke="var(--border-strong)" strokeWidth="1" />
               <text id={isOngedaanmaking && String(w.wijzigingstype || "").toLowerCase() === "opvoer" ? `undo-src-${normaliseerIdComponent(reg.id)}-${i}` : undefined} className="label" x="24" y={y + 27}>{w.wijzigingstype || "-"}</text>
               <text className="label" x="120" y={y + 27}>
-                <tspan className="label-strong">{w.entiteitnaam || entityType || "E"}</tspan>
+                <tspan className="label-strong">{labelVoorTypeNaam(w.entiteitnaam, entityType || "E")}</tspan>
                 {": "}
                 <tspan className="label-strong">{w.entiteit_id ?? "-"}</tspan>
               </text>
               {!repLeeg && (
                 <text className="label" x="218" y={y + 27}>
-                  <tspan className="label-strong">{w.representatienaam}</tspan>
+                  <tspan className="label-strong">{labelVoorTypeNaam(w.representatienaam, w.representatienaam)}</tspan>
                   {": "}
                   <tspan className="label-strong">{w.representatie_id}</tspan>
                 </text>

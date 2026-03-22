@@ -186,7 +186,10 @@ func writeEntiteitGeefOnderliggende(b *strings.Builder, ent model.V3Entiteit) {
 	// GE's
 	for _, ge := range ent.Gegevenselementen {
 		hubType := ent.Typenaam + "_" + ge.Naam
-		sliceField := ge.Naam + "s"
+		sliceField := toPascalCase(ge.Meervoud)
+		if sliceField == "" {
+			sliceField = ge.Naam + "s"
+		}
 		b.WriteString(fmt.Sprintf("\tfor i := range %s.%s {\n", rv, sliceField))
 		b.WriteString(fmt.Sprintf("\t\tif %s.%s[i].%s == 0 {\n", rv, sliceField, entIDOnChild))
 		b.WriteString(fmt.Sprintf("\t\t\t%s.%s[i].%s = %s.ID\n", rv, sliceField, entIDOnChild, rv))
@@ -197,7 +200,7 @@ func writeEntiteitGeefOnderliggende(b *strings.Builder, ent model.V3Entiteit) {
 
 	// Relaties
 	for _, rel := range ent.Relaties {
-		sliceField := relRolnaam(rel.Naam)
+		sliceField := relRolnaam(rel.Naam, rel.Meervoud)
 		b.WriteString(fmt.Sprintf("\tfor i := range %s.%s {\n", rv, sliceField))
 		b.WriteString(fmt.Sprintf("\t\tif %s.%s[i].%s == 0 {\n", rv, sliceField, entIDOnChild))
 		b.WriteString(fmt.Sprintf("\t\t\t%s.%s[i].%s = %s.ID\n", rv, sliceField, entIDOnChild, rv))

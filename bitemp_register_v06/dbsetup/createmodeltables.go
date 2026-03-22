@@ -51,6 +51,16 @@ func createModelTables(ctx context.Context, db *bun.DB) error {
 				return fmt.Errorf("create table mislukt voor %s (%s): %w", typeName, meta.Tabelnaam, err)
 			}
 
+			// Compatibiliteit met oudere schema's:
+			// sommige oude entiteitstabellen gebruikten "<tabelnaam>_id" als PK-kolom
+			// in plaats van de huidige conventie "id". Zonder deze migratie falen
+			// FK's vanuit bijbehorende _aanvang/_einde tabellen op REFERENCES ... (id).
+			if meta.Metatype == model.MetatypeEntiteit {
+				if err := ensureEntiteitIDKolomMigrated(ctx, db, meta); err != nil {
+					return fmt.Errorf("entiteit-ID migratie mislukt voor %s (%s): %w", typeName, meta.Tabelnaam, err)
+				}
+			}
+
 			if meta.IsMaterieel {
 				if meta.Metatype == model.MetatypeEntiteit {
 					if err := createMaterielePlumbingTablesForEntiteit(ctx, db, meta); err != nil {
@@ -86,6 +96,16 @@ func createModelTables(ctx context.Context, db *bun.DB) error {
 					if !ok {
 						return fmt.Errorf("bovenliggend type %s niet gevonden voor %s", meta.BovenliggendTypenaam, typeName)
 					}
+
+					// Entiteit-level _Aanvang/_Einde (bijv. A_Aanvang, Locatie_Aanvang)
+					// worden al afgehandeld via createMaterielePlumbingTablesForEntiteit,
+					// met een enkelvoudige scope op (entiteit_id, versie).
+					// Voor deze types is er géén rel_id op het child-record, dus het
+					// hub-specifieke composite pad (entiteit_id + rel_id) is onjuist.
+					if parentMeta.Metatype == model.MetatypeEntiteit {
+						continue
+					}
+
 					hubRelIDCol := parentMeta.IDKolom // "rel_id" van de hub
 					if err := RegisterRelativeIDTriggerComposite(ctx, db,
 						meta.Tabelnaam, meta.EntiteitIDKolom, hubRelIDCol, meta.IDKolom); err != nil {
@@ -107,6 +127,42 @@ func createModelTables(ctx context.Context, db *bun.DB) error {
 	}
 
 	return nil
+}
+
+// ensureEntiteitIDKolomMigrated hernoemt legacy entiteit-PK-kolom "<tabel>_id" naar "id"
+// wanneer "id" nog ontbreekt. Hiermee blijven oudere databases bruikbaar.
+func ensureEntiteitIDKolomMigrated(ctx context.Context, db *bun.DB, meta model.TypeMeta) error {
+	tableName := strings.TrimSpace(meta.Tabelnaam)
+	idCol := strings.TrimSpace(meta.IDKolom)
+	if tableName == "" || idCol == "" || idCol != "id" {
+		return nil
+	}
+
+	legacyIDCol := tableName + "_id"
+	sql := fmt.Sprintf(`
+DO $$
+BEGIN
+	IF EXISTS (
+		SELECT 1
+		FROM information_schema.columns
+		WHERE table_schema = current_schema()
+		  AND table_name = '%[1]s'
+		  AND column_name = '%[2]s'
+	)
+	AND NOT EXISTS (
+		SELECT 1
+		FROM information_schema.columns
+		WHERE table_schema = current_schema()
+		  AND table_name = '%[1]s'
+		  AND column_name = '%[3]s'
+	) THEN
+		EXECUTE format('ALTER TABLE "%[1]s" RENAME COLUMN "%[2]s" TO "%[3]s"');
+	END IF;
+END $$;
+`, tableName, legacyIDCol, idCol)
+
+	_, err := db.ExecContext(ctx, sql)
+	return err
 }
 
 func createMaterielePlumbingTablesForEntiteit(ctx context.Context, db *bun.DB, entiteitMeta model.TypeMeta) error {

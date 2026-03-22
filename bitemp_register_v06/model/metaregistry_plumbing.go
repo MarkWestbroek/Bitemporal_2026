@@ -45,6 +45,7 @@ type HeeftOnderliggendeGegevenselementen interface {
 type TypeMeta struct {
 	// ==== UML ====
 	Typenaam    string
+	Klassenaam  string // korte weergavenaam zonder entiteitsprefix (bijv. "PersoonsIdentificatie" i.p.v. "NatuurlijkPersoon_PersoonsIdentificatie")
 	Description string
 	Metatype    Metatype
 	IsMaterieel bool
@@ -59,6 +60,8 @@ type TypeMeta struct {
 	Veldnaam string
 	// Padnaam is the URL path segment used in REST routes (bijv. "as", "bs", "rel_a_bs", "a_us").
 	Padnaam string
+	// Meervoud is de expliciete meervoudsvorm uit het model (kan afwijken van route-padconventies).
+	Meervoud string
 	// Kleur is een optionele visualisatiekleur (bijv. "#eef6ff").
 	Kleur string
 	// Factory creates a new zero-value instance of the concrete Representatie struct.
@@ -154,7 +157,7 @@ func (r MetaRegistryType) GetByVeldnaam(veldnaam string) (TypeMeta, bool) {
 // GetBovenliggendeRelatieMeta finds the parent entiteit metadata for a given child type.
 func (r MetaRegistryType) GetBovenliggendeRelatieMeta(childTypeName string) (BovenliggendeRelatieMeta, bool) {
 	for _, parentMeta := range r {
-		if parentMeta.Metatype != MetatypeEntiteit {
+		if len(parentMeta.OnderliggendeGegevenselementen) == 0 {
 			continue
 		}
 
@@ -171,6 +174,45 @@ func (r MetaRegistryType) GetBovenliggendeRelatieMeta(childTypeName string) (Bov
 	return BovenliggendeRelatieMeta{}, false
 }
 
+// GetBovenliggendeEntiteitMeta resolves the root parent entiteit for a child type.
+// For direct entity children this returns that entity; for hub children like _Data/
+// _Aanvang/_Einde it walks via BovenliggendTypenaam until the owning entiteit is found.
+func (r MetaRegistryType) GetBovenliggendeEntiteitMeta(childTypeName string) (TypeMeta, bool) {
+	bezocht := map[string]bool{}
+	current := childTypeName
+
+	for current != "" {
+		if bezocht[current] {
+			return TypeMeta{}, false
+		}
+		bezocht[current] = true
+
+		if bovenliggend, ok := r.GetBovenliggendeRelatieMeta(current); ok {
+			if bovenliggend.ParentType.Metatype == MetatypeEntiteit {
+				return bovenliggend.ParentType, true
+			}
+			current = bovenliggend.ParentType.Typenaam
+			continue
+		}
+
+		meta, ok := r.GetTypeMeta(current)
+		if !ok || meta.BovenliggendTypenaam == "" {
+			break
+		}
+
+		bovenMeta, ok := r.GetTypeMeta(meta.BovenliggendTypenaam)
+		if !ok {
+			break
+		}
+		if bovenMeta.Metatype == MetatypeEntiteit {
+			return bovenMeta, true
+		}
+		current = bovenMeta.Typenaam
+	}
+
+	return TypeMeta{}, false
+}
+
 // RelationNames returns the Bun relation field names for child representaties of an entity.
 func (m TypeMeta) RelationNames() []string {
 	if len(m.OnderliggendeGegevenselementen) == 0 {
@@ -184,3 +226,9 @@ func (m TypeMeta) RelationNames() []string {
 
 	return namen
 }
+
+// EnumWaarden is een registry van enum-type namen naar hun beschikbare waarden.
+// Wordt gebruikt door de schema-API om dropdowns te genereren.
+// De registry wordt aangevuld in init() functies van de model-bestanden
+// (bijv. door codegen gegenereerd).
+var EnumWaarden = map[string][]string{}

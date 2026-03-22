@@ -25,7 +25,7 @@ export default function SchemaTijdlijnControls({
         <label>
           Entiteittype
           <select value={entityType} onChange={(e) => setEntityType(e.target.value)}>
-            {entityTypes.map((et) => <option key={et.typenaam} value={et.typenaam}>{et.typenaam}</option>)}
+            {entityTypes.map((et) => <option key={et.typenaam} value={et.typenaam}>{et.klassenaam || et.typenaam}</option>)}
           </select>
         </label>
         <label>

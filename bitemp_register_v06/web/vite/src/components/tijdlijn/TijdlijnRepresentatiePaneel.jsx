@@ -116,7 +116,7 @@ export default function TijdlijnRepresentatiePaneel({
           {geNodesMetLayout.map((childNode) => {
             const y = childNode.y;
             const { group, item: childItem } = childNode;
-            const doelLabel = group.doeltype || group.rolnaam || "-";
+            const doelLabel = group.typeMeta?.klassenaam || group.doeltype || group.rolnaam || "-";
             const nodeFill = group.typeMeta?.kleur || "var(--neutral-fill)";
             const isHighlighted = highlights.some((h) => h.soort === "REP"
               && String(h.repNaam || "").toUpperCase() === String(doelLabel || "").toUpperCase()
@@ -139,7 +139,7 @@ export default function TijdlijnRepresentatiePaneel({
           {relatieNodes.map((childNode, groupIndex) => {
             const y = relStartY + (groupIndex * relStepY);
             const { group, item: childItem } = childNode;
-            const doelLabel = group.doeltype || group.rolnaam || "-";
+            const doelLabel = group.typeMeta?.klassenaam || group.doeltype || group.rolnaam || "-";
             const isHighlighted = highlights.some((h) => h.soort === "REP"
               && String(h.repNaam || "").toUpperCase() === String(doelLabel || "").toUpperCase()
               && String(h.repId) === String(childItem.rel_id ?? childItem.id ?? ""));

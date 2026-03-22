@@ -8,7 +8,7 @@
  */
 import { maakLeegType, maakLegeEnumeratie, maakLeegGegevenstype } from "../../metamodel/types";
 
-export default function Toolbar({ onAddNode, onSave, onSaveV3, onPublishSchemaModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI }) {
+export default function Toolbar({ onAddNode, onSave, onPublishSchemaModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI }) {
   return (
     <div className="toolbar">
       <div className="toolbar-group">
@@ -69,11 +69,6 @@ export default function Toolbar({ onAddNode, onSave, onSaveV3, onPublishSchemaMo
         <button onClick={onSave} className="btn-toolbar save">
           💾 Opslaan (JSON)
         </button>
-        {onSaveV3 && (
-          <button onClick={onSaveV3} className="btn-toolbar save">
-            💾 Opslaan (V3 JSON)
-          </button>
-        )}
         {onPublishSchemaModel && (
           <button onClick={onPublishSchemaModel} className="btn-toolbar publish">
             ☁ Publiceer schema-model

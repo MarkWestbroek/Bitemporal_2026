@@ -3,10 +3,21 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 	"github.com/gin-gonic/gin"
 )
+
+func responseCollectionKey(meta model.TypeMeta) string {
+	if strings.TrimSpace(meta.Meervoud) != "" {
+		return meta.Meervoud
+	}
+	if strings.TrimSpace(meta.Padnaam) != "" {
+		return meta.Padnaam
+	}
+	return meta.Typenaam + "s"
+}
 
 // TODO: full entity get and post to include all fields, not just ID.
 // This will require changes to the model structs and the handlers
@@ -210,10 +221,10 @@ func MakeGetEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 		hasMore := offset+size < total
 
 		c.JSON(http.StatusOK, gin.H{
-			meta.Typenaam + "s": entities,
-			"page":              page,
-			"size":              size,
-			"has_more":          hasMore,
+			responseCollectionKey(meta): entities,
+			"page":                      page,
+			"size":                      size,
+			"has_more":                  hasMore,
 		})
 	}
 }

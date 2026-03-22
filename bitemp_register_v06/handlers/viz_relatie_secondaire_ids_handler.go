@@ -17,12 +17,24 @@ type vizRelatieSecondaireIDsResponse struct {
 }
 
 // Leidt uit een FK-kolomnaam zoals "b_id" het entiteittype "B" af.
+// Zoekt case-insensitive in de MetaRegistry, zodat "locatie_id" → "Locatie" werkt.
 func entiteitTypeUitKolomnaam(kolomnaam string) string {
-	prefix := strings.ToUpper(strings.TrimSpace(strings.Split(kolomnaam, "_")[0]))
+	prefix := strings.TrimSpace(strings.Split(kolomnaam, "_")[0])
 	if prefix == "" {
 		return ""
 	}
-	return prefix
+	// Directe match (case-sensitive)
+	if _, ok := model.MetaRegistry.GetTypeMeta(prefix); ok {
+		return prefix
+	}
+	// Hoofdletter-match (bijv. "locatie" → "Locatie")
+	upper := strings.ToUpper(prefix)
+	for typeNaam := range model.MetaRegistry {
+		if strings.EqualFold(typeNaam, upper) || strings.EqualFold(typeNaam, prefix) {
+			return typeNaam
+		}
+	}
+	return strings.ToUpper(prefix)
 }
 
 // Parse een positieve query-int met default en bovengrens (voor veilige API-calls).

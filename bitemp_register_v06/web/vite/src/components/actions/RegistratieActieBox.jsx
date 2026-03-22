@@ -31,8 +31,15 @@ export default function RegistratieActieBox({
   registratieCorrectiePreview,
   registratieActieResultaat,
   relatieSecondaireOpties,
+  typeMetaByTypenaam,
 }) {
   const corrigeerbareWijzigingen = selectedRegistratieWijzigingen.filter((w) => w.wijzigingstype === "opvoer" && w.representatienaam && w.representatie_id);
+  const labelVoorTypeNaam = (typeNaam, fallback = "-") => {
+    const naam = String(typeNaam || "").trim();
+    if (!naam) return fallback;
+    const meta = typeMetaByTypenaam?.[naam] || null;
+    return String(meta?.klassenaam || meta?.typenaam || naam);
+  };
 
   return (
     <ActionBodyCard formRef={registratieActieFormRef} accentColor={accentColor}>
@@ -90,7 +97,7 @@ export default function RegistratieActieBox({
                   return (
                     <ActionRowCard key={`${w.representatienaam}_${w.representatie_id}`} rowAccentColor={accentColor}>
                       <div>
-                        <strong style={{ fontSize: 13 }}>{w.representatienaam} #{w.representatie_id}</strong>
+                        <strong style={{ fontSize: 13 }}>{labelVoorTypeNaam(w.representatienaam, w.representatienaam)} #{w.representatie_id}</strong>
                         {!match ? (
                           <p className="muted" style={{ margin: "2px 0 0" }}>Huidige representatie niet beschikbaar in geladen data (laad een peilmoment waarop de rep actief is).</p>
                         ) : afgevoerd ? (

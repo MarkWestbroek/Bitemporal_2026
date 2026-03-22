@@ -113,8 +113,8 @@ func TestMakeGetFullEntitiesByMetaHandler_ReturnsList(t *testing.T) {
 		t.Fatalf("expected has_more true, got %#v", body["has_more"])
 	}
 
-	if _, ok := body["Dummys"]; !ok {
-		t.Fatalf("expected key Dummys in response, got keys %#v", body)
+	if _, ok := body["dummies"]; !ok {
+		t.Fatalf("expected key dummies in response, got keys %#v", body)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {

@@ -21,7 +21,7 @@ func generateDatatypeRegistry(v3 model.V3Model) (string, error) {
 
 	b.WriteString("var DatatypeRegistry = []V3Datatype{\n")
 	for _, dt := range v3.Datatypes {
-		writeDatatypeEntry(&b, dt)
+		writeDatatypeEntry(&b, dt, false)
 	}
 	b.WriteString("}\n")
 
@@ -42,7 +42,7 @@ func generateDatatypeRegistryAdditive(v3 model.V3Model) (string, error) {
 	b.WriteString("func init() {\n")
 	b.WriteString("\tDatatypeRegistry = append(DatatypeRegistry,\n")
 	for _, dt := range v3.Datatypes {
-		writeDatatypeEntry(&b, dt)
+		writeDatatypeEntry(&b, dt, true)
 	}
 	b.WriteString("\t)\n")
 	b.WriteString("}\n")
@@ -51,8 +51,13 @@ func generateDatatypeRegistryAdditive(v3 model.V3Model) (string, error) {
 }
 
 // writeDatatypeEntry schrijft één V3Datatype entry.
-func writeDatatypeEntry(b *strings.Builder, dt model.V3Datatype) {
-	b.WriteString("\t{\n")
+// In additive modus moet elke append-argument expliciet getypeerd zijn.
+func writeDatatypeEntry(b *strings.Builder, dt model.V3Datatype, typed bool) {
+	if typed {
+		b.WriteString("\tV3Datatype{\n")
+	} else {
+		b.WriteString("\t{\n")
+	}
 	b.WriteString(fmt.Sprintf("\t\tNaam:      %q,\n", dt.Naam))
 	if dt.Description != "" {
 		b.WriteString(fmt.Sprintf("\t\tDescription: %q,\n", dt.Description))

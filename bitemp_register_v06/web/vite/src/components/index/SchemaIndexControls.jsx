@@ -35,7 +35,7 @@ export default function SchemaIndexControls({
           <select value={entiteitType} onChange={(e) => setEntiteitType(e.target.value)} disabled={entiteitTypen.length === 0}>
             {entiteitTypen.length === 0 && <option value="">Geen entiteittypen</option>}
             {entiteitTypen.map((meta) => (
-              <option key={meta.typenaam} value={meta.typenaam}>{meta.typenaam}</option>
+              <option key={meta.typenaam} value={meta.typenaam}>{meta.klassenaam || meta.typenaam}</option>
             ))}
           </select>
         </label>

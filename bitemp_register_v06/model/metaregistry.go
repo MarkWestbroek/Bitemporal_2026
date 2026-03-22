@@ -5,6 +5,7 @@ var MetaRegistry = MetaRegistryType{
 	"A": {
 		// UML
 		Typenaam:    "A",
+		Klassenaam:  "A",
 		Description: "Entiteit A met materiele tijdlijn en onderliggende representaties U, V, W en Rel_A_B.",
 		Metatype:    MetatypeEntiteit,
 		IsMaterieel: true,
@@ -39,6 +40,7 @@ var MetaRegistry = MetaRegistryType{
 	"B": {
 		// UML
 		Typenaam:    "B",
+		Klassenaam:  "B",
 		Description: "Entiteit B met materiele tijdlijn en onderliggende representaties X en Y.",
 		Metatype:    MetatypeEntiteit,
 		IsMaterieel: true,
@@ -71,6 +73,7 @@ var MetaRegistry = MetaRegistryType{
 	"Rel_A_B": {
 		// UML
 		Typenaam:     "Rel_A_B",
+		Klassenaam:   "A_B",
 		Description:  "Relatie tussen A en B, meervoudig voorkomend per A en met relatieve relatie-id.",
 		Metatype:     MetatypeRelatie,
 		IsMaterieel:  true,
@@ -102,6 +105,7 @@ var MetaRegistry = MetaRegistryType{
 	"A_U": {
 		// UML
 		Typenaam:     "A_U",
+		Klassenaam:   "U",
 		Description:  "Enkelvoudig gegevenselement van A met formele tijdlijn.",
 		Metatype:     MetatypeGegevenselement,
 		IsMaterieel:  false,
@@ -129,6 +133,7 @@ var MetaRegistry = MetaRegistryType{
 	"A_V": {
 		// UML
 		Typenaam:     "A_V",
+		Klassenaam:   "V",
 		Description:  "Meervoudig gegevenselement van A met onder andere een datumveld.",
 		Metatype:     MetatypeGegevenselement,
 		IsMaterieel:  false,
@@ -156,6 +161,7 @@ var MetaRegistry = MetaRegistryType{
 	"A_W": {
 		// UML
 		Typenaam:     "A_W",
+		Klassenaam:   "W",
 		Description:  "Meervoudig gegevenselement van A met numerieke waarden.",
 		Metatype:     MetatypeGegevenselement,
 		IsMaterieel:  true,
@@ -185,6 +191,7 @@ var MetaRegistry = MetaRegistryType{
 	"B_X": {
 		// UML
 		Typenaam:     "B_X",
+		Klassenaam:   "X",
 		Description:  "Enkelvoudig gegevenselement van B met twee tekstvelden.",
 		Metatype:     MetatypeGegevenselement,
 		IsMaterieel:  false,
@@ -212,6 +219,7 @@ var MetaRegistry = MetaRegistryType{
 	"B_Y": {
 		// UML
 		Typenaam:     "B_Y",
+		Klassenaam:   "Y",
 		Description:  "Enkelvoudig gegevenselement van B met een tekstveld.",
 		Metatype:     MetatypeGegevenselement,
 		IsMaterieel:  false,
@@ -241,6 +249,7 @@ var MetaRegistry = MetaRegistryType{
 	// Gedragen zich als enkelvoudige gegevenselementen; worden afgehandeld door handleRepresentatieOpvoer.
 	"A_Aanvang": {
 		Typenaam:               "A_Aanvang",
+		Klassenaam:             "Aanvang",
 		Description:            "Aanvangsdatum van entiteit A.",
 		Metatype:               MetatypeGegevenselement,
 		IsMaterieel:            false,
@@ -261,6 +270,7 @@ var MetaRegistry = MetaRegistryType{
 	},
 	"A_Einde": {
 		Typenaam:               "A_Einde",
+		Klassenaam:             "Einde",
 		Description:            "Einddatum van entiteit A.",
 		Metatype:               MetatypeGegevenselement,
 		IsMaterieel:            false,
@@ -281,6 +291,7 @@ var MetaRegistry = MetaRegistryType{
 	},
 	"B_Aanvang": {
 		Typenaam:               "B_Aanvang",
+		Klassenaam:             "Aanvang",
 		Description:            "Aanvangsdatum van entiteit B.",
 		Metatype:               MetatypeGegevenselement,
 		IsMaterieel:            false,
@@ -301,6 +312,7 @@ var MetaRegistry = MetaRegistryType{
 	},
 	"B_Einde": {
 		Typenaam:               "B_Einde",
+		Klassenaam:             "Einde",
 		Description:            "Einddatum van entiteit B.",
 		Metatype:               MetatypeGegevenselement,
 		IsMaterieel:            false,
@@ -328,6 +340,7 @@ var MetaRegistry = MetaRegistryType{
 
 	"A_U_Data": {
 		Typenaam:               "A_U_Data",
+		Klassenaam:             "Data",
 		Description:            "Geversioned inhoud van gegevenselement A_U.",
 		Metatype:               MetatypeGegevenselement,
 		GESubtype:              GESubtypeData,
@@ -349,6 +362,7 @@ var MetaRegistry = MetaRegistryType{
 	},
 	"A_V_Data": {
 		Typenaam:               "A_V_Data",
+		Klassenaam:             "Data",
 		Description:            "Geversioned inhoud van gegevenselement A_V.",
 		Metatype:               MetatypeGegevenselement,
 		GESubtype:              GESubtypeData,
@@ -370,6 +384,7 @@ var MetaRegistry = MetaRegistryType{
 	},
 	"A_W_Data": {
 		Typenaam:               "A_W_Data",
+		Klassenaam:             "Data",
 		Description:            "Geversioned inhoud van gegevenselement A_W.",
 		Metatype:               MetatypeGegevenselement,
 		GESubtype:              GESubtypeData,
@@ -391,6 +406,7 @@ var MetaRegistry = MetaRegistryType{
 	},
 	"Rel_A_B_Data": {
 		Typenaam:               "Rel_A_B_Data",
+		Klassenaam:             "Data",
 		Description:            "Geversioned inhoud van relatie Rel_A_B.",
 		Metatype:               MetatypeGegevenselement,
 		GESubtype:              GESubtypeData,
@@ -412,6 +428,7 @@ var MetaRegistry = MetaRegistryType{
 	},
 	"B_X_Data": {
 		Typenaam:               "B_X_Data",
+		Klassenaam:             "Data",
 		Description:            "Geversioned inhoud van gegevenselement B_X.",
 		Metatype:               MetatypeGegevenselement,
 		GESubtype:              GESubtypeData,
@@ -433,6 +450,7 @@ var MetaRegistry = MetaRegistryType{
 	},
 	"B_Y_Data": {
 		Typenaam:               "B_Y_Data",
+		Klassenaam:             "Data",
 		Description:            "Geversioned inhoud van gegevenselement B_Y.",
 		Metatype:               MetatypeGegevenselement,
 		GESubtype:              GESubtypeData,
@@ -460,6 +478,7 @@ var MetaRegistry = MetaRegistryType{
 
 	"A_W_Aanvang": {
 		Typenaam:               "A_W_Aanvang",
+		Klassenaam:             "Aanvang",
 		Description:            "Aanvangsdatum van GE-hub A_W.",
 		Metatype:               MetatypeGegevenselement,
 		GESubtype:              GESubtypeAanvang,
@@ -481,6 +500,7 @@ var MetaRegistry = MetaRegistryType{
 	},
 	"A_W_Einde": {
 		Typenaam:               "A_W_Einde",
+		Klassenaam:             "Einde",
 		Description:            "Einddatum van GE-hub A_W.",
 		Metatype:               MetatypeGegevenselement,
 		GESubtype:              GESubtypeEinde,
@@ -502,6 +522,7 @@ var MetaRegistry = MetaRegistryType{
 	},
 	"Rel_A_B_Aanvang": {
 		Typenaam:               "Rel_A_B_Aanvang",
+		Klassenaam:             "Aanvang",
 		Description:            "Aanvangsdatum van relatie-hub Rel_A_B.",
 		Metatype:               MetatypeGegevenselement,
 		GESubtype:              GESubtypeAanvang,
@@ -523,6 +544,7 @@ var MetaRegistry = MetaRegistryType{
 	},
 	"Rel_A_B_Einde": {
 		Typenaam:               "Rel_A_B_Einde",
+		Klassenaam:             "Einde",
 		Description:            "Einddatum van relatie-hub Rel_A_B.",
 		Metatype:               MetatypeGegevenselement,
 		GESubtype:              GESubtypeEinde,

@@ -86,7 +86,7 @@ export function v3ModelNaarEditor(v3Model) {
     nodes.push({
       id: `enum_${e.goType}`,
       type: "enumeratie",
-      position: { x: 50 + i * 220, y: 550 },
+      position: e.positie ? { x: e.positie.x, y: e.positie.y } : { x: 50 + i * 220, y: 550 },
       data: {
         naam: e.goType,
         baseType: e.baseType || "string",
@@ -100,7 +100,7 @@ export function v3ModelNaarEditor(v3Model) {
     nodes.push({
       id: `dt_${dt.naam}`,
       type: "gegevenstype",
-      position: { x: 500 + i * 280, y: 650 },
+      position: dt.positie ? { x: dt.positie.x, y: dt.positie.y } : { x: 500 + i * 280, y: 650 },
       data: {
         naam: dt.naam,
         description: dt.description || "",
@@ -121,10 +121,11 @@ export function v3ModelNaarEditor(v3Model) {
     nodes.push({
       id: ent.typenaam,
       type: "entiteit",
-      position: { x: entIdx * 500, y: 50 },
+      position: ent.positie ? { x: ent.positie.x, y: ent.positie.y } : { x: entIdx * 500, y: 50 },
       data: {
         typenaam: ent.typenaam,
         description: ent.description || "",
+        meervoud: ent.meervoud || "",
         metatype: "entiteit",
         isMaterieel: ent.isMaterieel || false,
         kleur: ent.kleur || defaultKleur("entiteit"),
@@ -140,13 +141,13 @@ export function v3ModelNaarEditor(v3Model) {
       nodes.push({
         id: geTypenaam,
         type: "gegevenselement",
-        position: {
-          x: entIdx * 500 - 150 + geIdx * 250,
-          y: 300,
-        },
+        position: ge.positie
+          ? { x: ge.positie.x, y: ge.positie.y }
+          : { x: entIdx * 500 - 150 + geIdx * 250, y: 300 },
         data: {
           typenaam: geTypenaam,
           description: ge.description || "",
+          meervoud: ge.meervoud || "",
           metatype: "gegevenselement",
           isMaterieel: ge.isMaterieel || false,
           kleur: defaultKleur("gegevenselement"),
@@ -160,6 +161,8 @@ export function v3ModelNaarEditor(v3Model) {
         source: ent.typenaam,
         target: geTypenaam,
         type: "metamodel",
+        sourceHandle: ge.sourceHandle || null,
+        targetHandle: ge.targetHandle || null,
         data: {
           rolnaam: ge.naam,
           jsonRolnaam: ge.meervoud || ge.naam.toLowerCase(),
@@ -200,13 +203,13 @@ export function v3ModelNaarEditor(v3Model) {
         nodes.push({
           id: rel.naam,
           type: "relatie",
-          position: {
-            x: entIdx * 500 + 200,
-            y: 170,
-          },
+          position: rel.positie
+            ? { x: rel.positie.x, y: rel.positie.y }
+            : { x: entIdx * 500 + 200, y: 170 },
           data: {
             typenaam: rel.naam,
             description: rel.description || "",
+            meervoud: rel.meervoud || "",
             metatype: "relatie",
             isMaterieel: rel.isMaterieel || false,
             kleur: defaultKleur("relatie"),
@@ -222,6 +225,8 @@ export function v3ModelNaarEditor(v3Model) {
         source: ent.typenaam,
         target: rel.naam,
         type: "metamodel",
+        sourceHandle: rel.sourceHandle || null,
+        targetHandle: rel.targetHandle || null,
         data: {
           rolnaam: rel.naam,
           jsonRolnaam: rel.meervoud || rel.naam.toLowerCase(),
@@ -257,6 +262,8 @@ export function v3ModelNaarEditor(v3Model) {
           source: rel.naam,
           target: rel.doelEntiteit,
           type: "metamodel",
+          sourceHandle: rel.doelSourceHandle || null,
+          targetHandle: rel.doelTargetHandle || null,
           data: {
             rolnaam: `→ ${rel.doelEntiteit}`,
             jsonRolnaam: rel.doelEntiteit.toLowerCase(),

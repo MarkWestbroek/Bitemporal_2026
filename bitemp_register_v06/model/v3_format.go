@@ -26,8 +26,9 @@ type V3Model struct {
 type V3Datatype struct {
 	Naam         string       `json:"naam"`
 	Description  string       `json:"description,omitempty"`
-	Basistype    string       `json:"basistype"`        // string, integer, number
-	Format       string       `json:"format,omitempty"` // bijv. "nl-postcode", "bsn"
+	Basistype    string       `json:"basistype"`         // string, integer, number
+	Format       string       `json:"format,omitempty"`  // bijv. "nl-postcode", "bsn"
+	Positie      *V3Positie   `json:"positie,omitempty"` // editor-layout positie (genegeerd door codegen)
 	Validatie    *V3Validatie `json:"validatie,omitempty"`
 	Normalisatie string       `json:"normalisatie,omitempty"`
 	Weergave     *V3Weergave  `json:"weergave,omitempty"`
@@ -59,7 +60,8 @@ type V3Weergave struct {
 // V3Enum beschrijft een enum type met zijn waarden.
 type V3Enum struct {
 	GoType   string         `json:"goType"`
-	BaseType string         `json:"baseType"` // bijv. "string"
+	BaseType string         `json:"baseType"`          // bijv. "string"
+	Positie  *V3Positie     `json:"positie,omitempty"` // editor-layout positie (genegeerd door codegen)
 	Waarden  []V3EnumWaarde `json:"waarden"`
 }
 
@@ -75,30 +77,47 @@ type V3Entiteit struct {
 	Description       string              `json:"description,omitempty"`
 	IsMaterieel       bool                `json:"isMaterieel,omitempty"`
 	Kleur             string              `json:"kleur,omitempty"`
-	Meervoud          string              `json:"meervoud"` // URL-padnaam, bijv. "as", "personen"
+	Meervoud          string              `json:"meervoud"`          // URL-padnaam, bijv. "as", "personen"
+	Positie           *V3Positie          `json:"positie,omitempty"` // editor-layout positie (genegeerd door codegen)
 	Gegevenselementen []V3Gegevenselement `json:"gegevenselementen,omitempty"`
 	Relaties          []V3Relatie         `json:"relaties,omitempty"`
 }
 
 // V3Gegevenselement beschrijft een gegevenselement onder een entiteit.
 type V3Gegevenselement struct {
-	Naam            string   `json:"naam"` // bijv. "U", "V", "W"
-	Description     string   `json:"description,omitempty"`
-	Meervoud        string   `json:"meervoud"`        // URL-padnaam, bijv. "a-us"
-	Momentvoorkomen string   `json:"momentvoorkomen"` // "enkelvoudig" of "meervoudig"
-	IsMaterieel     bool     `json:"isMaterieel,omitempty"`
-	Velden          []V3Veld `json:"velden,omitempty"`
+	Naam            string     `json:"naam"` // bijv. "U", "V", "W"
+	Description     string     `json:"description,omitempty"`
+	Meervoud        string     `json:"meervoud"`        // URL-padnaam, bijv. "a-us"
+	Momentvoorkomen string     `json:"momentvoorkomen"` // "enkelvoudig" of "meervoudig"
+	IsMaterieel     bool       `json:"isMaterieel,omitempty"`
+	Positie         *V3Positie `json:"positie,omitempty"`      // editor-layout positie (genegeerd door codegen)
+	SourceHandle    string     `json:"sourceHandle,omitempty"` // verbindingspunt op de entiteit (genegeerd door codegen)
+	TargetHandle    string     `json:"targetHandle,omitempty"` // verbindingspunt op het GE-node (genegeerd door codegen)
+	Velden          []V3Veld   `json:"velden,omitempty"`
 }
 
 // V3Relatie beschrijft een relatie onder een entiteit.
 type V3Relatie struct {
-	Naam            string   `json:"naam"` // bijv. "Rel_A_B"
-	Description     string   `json:"description,omitempty"`
-	Meervoud        string   `json:"meervoud"`        // URL-padnaam, bijv. "rel-a-bs"
-	Momentvoorkomen string   `json:"momentvoorkomen"` // "enkelvoudig" of "meervoudig"
-	IsMaterieel     bool     `json:"isMaterieel,omitempty"`
-	DoelEntiteit    string   `json:"doelEntiteit"` // typenaam van de doel-entiteit
-	Velden          []V3Veld `json:"velden,omitempty"`
+	Naam             string     `json:"naam"` // bijv. "Rel_A_B"
+	Description      string     `json:"description,omitempty"`
+	Meervoud         string     `json:"meervoud"`        // URL-padnaam, bijv. "rel-a-bs"
+	Momentvoorkomen  string     `json:"momentvoorkomen"` // "enkelvoudig" of "meervoudig"
+	IsMaterieel      bool       `json:"isMaterieel,omitempty"`
+	DoelEntiteit     string     `json:"doelEntiteit"`               // typenaam van de doel-entiteit
+	Positie          *V3Positie `json:"positie,omitempty"`          // editor-layout positie (genegeerd door codegen)
+	SourceHandle     string     `json:"sourceHandle,omitempty"`     // verbindingspunt op de entiteit→relatie edge (genegeerd door codegen)
+	TargetHandle     string     `json:"targetHandle,omitempty"`     // verbindingspunt op de relatie (inkomend, genegeerd door codegen)
+	DoelSourceHandle string     `json:"doelSourceHandle,omitempty"` // verbindingspunt op de relatie (uitgaand naar doel, genegeerd door codegen)
+	DoelTargetHandle string     `json:"doelTargetHandle,omitempty"` // verbindingspunt op de doel-entiteit (genegeerd door codegen)
+	Velden           []V3Veld   `json:"velden,omitempty"`
+}
+
+// V3Positie beschrijft de positie van een element in de UML-editor.
+// Dit veld wordt gebruikt voor opslag en laden van editor-layout, en wordt
+// genegeerd door de codegenerator.
+type V3Positie struct {
+	X float64 `json:"x"`
+	Y float64 `json:"y"`
 }
 
 // V3Veld beschrijft een inhoudsveld (geen plumbing) in een GE of relatie.

@@ -167,8 +167,14 @@
         return 0;
       }
 
-      function endpointSegmentVoorEntiteit(entiteitType) {
-        return `${String(entiteitType || '').toLowerCase()}s`;
+      function endpointSegmentVoorEntiteit(entiteitType, entiteitTypen) {
+        const gekozenType = String(entiteitType || '');
+        const meta = safeArray(entiteitTypen).find((item) => String(item?.typenaam || '') === gekozenType) || null;
+        const segment = String(meta?.meervoud || meta?.padnaam || '').trim();
+        if (segment) {
+          return segment;
+        }
+        return `${gekozenType.toLowerCase()}s`;
       }
 
       function responseKeyVoorEntiteiten(entiteitType, responseJson) {
@@ -856,7 +862,7 @@
               }
             }
 
-            const segment = endpointSegmentVoorEntiteit(doelEntiteitType);
+            const segment = endpointSegmentVoorEntiteit(doelEntiteitType, entiteitTypen);
             const entiteitenUrl = `${baseUrl}/full/${segment}/?t=${encodeURIComponent(peilmomentVoorEntiteiten)}`;
             const entiteitenRes = await fetch(entiteitenUrl);
 

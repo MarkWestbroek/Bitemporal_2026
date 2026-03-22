@@ -404,6 +404,22 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
       </label>
 
       <label>
+        Meervoud (padnaam)
+        <input
+          type="text"
+          value={data.meervoud || ""}
+          onChange={(e) => updateField("meervoud", e.target.value)}
+          placeholder={
+            data.metatype === "entiteit"
+              ? "bijv. natuurlijke_personen"
+              : data.metatype === "relatie"
+              ? "bijv. relaties"
+              : "bijv. gegevenselementen"
+          }
+        />
+      </label>
+
+      <label>
         Beschrijving
         <textarea
           value={data.description || ""}

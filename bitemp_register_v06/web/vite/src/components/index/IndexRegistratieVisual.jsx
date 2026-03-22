@@ -13,7 +13,15 @@ export default function IndexRegistratieVisual({
   nadrukStyle,
   isOngedaanmaking,
   grootKruisEindY,
+  typeMetaByTypenaam,
 }) {
+  const labelVoorTypeNaam = (typeNaam, fallback = "-") => {
+    const naam = String(typeNaam || "").trim();
+    if (!naam) return fallback;
+    const meta = typeMetaByTypenaam?.[naam] || null;
+    return String(meta?.klassenaam || meta?.typenaam || naam);
+  };
+
   return (
     <svg className="graph reg-graph" viewBox={`0 0 580 ${registratieSvgHoogte}`} preserveAspectRatio="xMidYMid meet">
       <SvgPatternDefs includeRegistratie={true} registratieFill="#f1f8ff" />
@@ -45,7 +53,7 @@ export default function IndexRegistratieVisual({
             <text className="label label-left-lg" x="81" y={y + 46}>{w.wijzigingstype}</text>
             <text className="label" x="228" y={y + 46}>
               {"entiteit="}
-              <tspan style={nadrukStyle}>{w.entiteitnaam}</tspan>
+              <tspan style={nadrukStyle}>{labelVoorTypeNaam(w.entiteitnaam, w.entiteitnaam)}</tspan>
               {": "}
               <tspan style={nadrukStyle}>{w.entiteit_id}</tspan>
             </text>
@@ -53,7 +61,7 @@ export default function IndexRegistratieVisual({
               <text className="label" x="376" y={y + 46}>
                 {"rep="}
                 <tspan style={(w.representatienaam === null || w.representatienaam === undefined || w.representatienaam === "") ? undefined : nadrukStyle}>
-                  {w.representatienaam || "-"}
+                  {labelVoorTypeNaam(w.representatienaam, w.representatienaam || "-")}
                 </tspan>
                 {": "}
                 <tspan style={(w.representatie_id === null || w.representatie_id === undefined || w.representatie_id === "") ? undefined : nadrukStyle}>

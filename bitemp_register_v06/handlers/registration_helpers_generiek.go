@@ -150,9 +150,10 @@ func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratie model.Regi
 		return fmt.Errorf("HANDLER: onbekend type voor opvoer: %s", representatienaam)
 	}
 
-	// Hub-kinderen (_Data/_Aanvang/_Einde) gebruiken compound scope (entiteit_id + rel_id).
-	// Als rel_id in de request ontbreekt, probeer die defensief af te leiden uit de enige actieve hub.
-	if isDataSubtype(meta) {
+	// Alleen hub-kinderen met rel_id (_Data/_Aanvang/_Einde onder een hub/relatie)
+	// gebruiken compound scope (entiteit_id + rel_id).
+	// Entiteit-level _Aanvang/_Einde (zoals NatuurlijkPersoon_Aanvang) hebben geen rel_id.
+	if isHubChildSubtypeMetRelID(meta) {
 		relID, err := haalIntWaardeVoorKolomUitRepresentatie(representatie, "rel_id")
 		if err != nil || relID == 0 {
 			afgeleideRelID, inferErr := leidRelIDVoorHubKindAf(c, tx, meta, representatie)
@@ -660,9 +661,9 @@ func anyNaarInt(v any) (int, bool) {
 func vindEntiteitContext(entiteitnaam string, entiteitID string, representatienaam string,
 	representatie model.FormeleRepresentatie, meta model.TypeMeta) (string, string, error) {
 	if entiteitnaam == "" {
-		bovenliggendeRelatieMeta, ok := model.MetaRegistry.GetBovenliggendeRelatieMeta(representatienaam)
+		bovenliggendeEntiteitMeta, ok := model.MetaRegistry.GetBovenliggendeEntiteitMeta(representatienaam)
 		if ok {
-			entiteitnaam = bovenliggendeRelatieMeta.ParentType.Typenaam
+			entiteitnaam = bovenliggendeEntiteitMeta.Typenaam
 		} else if meta.BovenliggendTypenaam != "" {
 			// Plumbing GE-types (bijv. A_Aanvang) zijn niet opgenomen in OnderliggendeGegevenselementen
 			// maar hebben wel een directe bovenliggende entiteit.
@@ -717,9 +718,9 @@ func sluitActieveEnkelvoudigeVoorgangersAf(c *gin.Context, tx bun.Tx, registrati
 
 	// Bepaal de naam van de bovenliggende entiteit voor wijziging-records.
 	var parentTypenaam string
-	bovenliggendeRelatieMeta, ok := model.MetaRegistry.GetBovenliggendeRelatieMeta(meta.Typenaam)
+	bovenliggendeEntiteitMeta, ok := model.MetaRegistry.GetBovenliggendeEntiteitMeta(meta.Typenaam)
 	if ok {
-		parentTypenaam = bovenliggendeRelatieMeta.ParentType.Typenaam
+		parentTypenaam = bovenliggendeEntiteitMeta.Typenaam
 	} else if meta.BovenliggendTypenaam != "" {
 		parentTypenaam = meta.BovenliggendTypenaam
 	} else {
@@ -741,10 +742,11 @@ func sluitActieveEnkelvoudigeVoorgangersAf(c *gin.Context, tx bun.Tx, registrati
 
 	activeIDs, err := haalActieveIDsGegevenselementUitDB(c, tx, meta, fkColumn, entiteitID)
 
-	// v06: Voor data-subtypes (_Data/_Aanvang/_Einde) is de scope compound: (entiteitID, rel_id).
-	// Zonder rel_id filter zouden we data van ALLE hubs bij deze entiteit vinden.
+	// v06: Voor hub-child subtypes (_Data/_Aanvang/_Einde onder een hub/relatie) is de scope
+	// compound: (entiteitID, rel_id). Zonder rel_id filter zouden we data van ALLE hubs vinden.
+	// ENT-level _Aanvang/_Einde (direct onder entiteit) hebben géén rel_id.
 	var relID int
-	if isDataSubtype(meta) {
+	if isHubChildSubtypeMetRelID(meta) {
 		relID, err = haalIntWaardeVoorKolomUitRepresentatie(representatie, "rel_id")
 		if err != nil {
 			return fmt.Errorf("HANDLER: kon rel_id niet bepalen voor %s: %v", representatienaam, err)
@@ -1198,6 +1200,21 @@ func isDataSubtype(meta model.TypeMeta) bool {
 	return meta.GESubtype == model.GESubtypeData ||
 		meta.GESubtype == model.GESubtypeAanvang ||
 		meta.GESubtype == model.GESubtypeEinde
+}
+
+// isHubChildSubtypeMetRelID is true voor _Data/_Aanvang/_Einde die onder een hub/relatie hangen
+// en daarom een rel_id scope nodig hebben. Entiteit-level _Aanvang/_Einde vallen hier buiten.
+func isHubChildSubtypeMetRelID(meta model.TypeMeta) bool {
+	if !isDataSubtype(meta) || meta.BovenliggendTypenaam == "" {
+		return false
+	}
+
+	parentMeta, ok := model.MetaRegistry.GetTypeMeta(meta.BovenliggendTypenaam)
+	if !ok {
+		return false
+	}
+
+	return parentMeta.Metatype == model.MetatypeGegevenselement || parentMeta.Metatype == model.MetatypeRelatie
 }
 
 // haalActieveIDsMetScope haalt actieve (opvoer IS NOT NULL, afvoer IS NULL) record-IDs

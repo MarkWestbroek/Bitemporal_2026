@@ -61,3 +61,13 @@ func TestGetBovenliggendeRelatieMeta(t *testing.T) {
 		}
 	})
 }
+
+func TestGetBovenliggendeEntiteitMeta_ViaHubChild(t *testing.T) {
+	entMeta, ok := MetaRegistry.GetBovenliggendeEntiteitMeta("Locatie_BAGlocatie_Data")
+	if !ok {
+		t.Fatalf("expected root entity for hub child data type")
+	}
+	if entMeta.Typenaam != "Locatie" {
+		t.Fatalf("expected Locatie, got %s", entMeta.Typenaam)
+	}
+}

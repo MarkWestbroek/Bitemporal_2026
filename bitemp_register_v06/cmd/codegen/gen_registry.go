@@ -26,7 +26,10 @@ func generateMetaRegistry(v3 model.V3Model) (string, error) {
 		// ---- GE hubs ----
 		for _, ge := range ent.Gegevenselementen {
 			hubType := ent.Typenaam + "_" + ge.Naam
-			padnaam := strings.ToLower(ent.Typenaam) + "_" + strings.ToLower(ge.Naam) + "s"
+			padnaam := ge.Meervoud
+			if padnaam == "" {
+				padnaam = strings.ToLower(ent.Typenaam) + "_" + strings.ToLower(ge.Naam) + "s"
+			}
 			dHub := deriveHub(ent.Typenaam, hubType, "gegevenselement", ge.IsMaterieel, padnaam, "")
 			writeHubEntry(&b, dHub, ge.Description, ent.Kleur, ge.Momentvoorkomen, ge.IsMaterieel, ge.Naam)
 		}
@@ -107,7 +110,10 @@ func generateMetaRegistryAdditive(v3 model.V3Model) (string, error) {
 		// ---- GE hubs ----
 		for _, ge := range ent.Gegevenselementen {
 			hubType := ent.Typenaam + "_" + ge.Naam
-			padnaam := strings.ToLower(ent.Typenaam) + "_" + strings.ToLower(ge.Naam) + "s"
+			padnaam := ge.Meervoud
+			if padnaam == "" {
+				padnaam = strings.ToLower(ent.Typenaam) + "_" + strings.ToLower(ge.Naam) + "s"
+			}
 			dHub := deriveHub(ent.Typenaam, hubType, "gegevenselement", ge.IsMaterieel, padnaam, "")
 			writeHubEntry(&entries, dHub, ge.Description, ent.Kleur, ge.Momentvoorkomen, ge.IsMaterieel, ge.Naam)
 		}
@@ -175,6 +181,9 @@ func generateMetaRegistryAdditive(v3 model.V3Model) (string, error) {
 func mapLiteralToAssignments(literal string) string {
 	var result strings.Builder
 	lines := strings.Split(literal, "\n")
+	inEntry := false
+	braceDepth := 0
+
 	for i := 0; i < len(lines); i++ {
 		line := lines[i]
 		trimmed := strings.TrimSpace(line)
@@ -185,12 +194,26 @@ func mapLiteralToAssignments(literal string) string {
 			colonIdx := strings.Index(trimmed, `": {`)
 			key := trimmed[1:colonIdx]
 			result.WriteString(fmt.Sprintf("\tMetaRegistry[%q] = TypeMeta{\n", key))
+			inEntry = true
+			braceDepth = 1
 			continue
 		}
 
-		// Detecteer sluiting: },
-		if trimmed == "}," {
-			result.WriteString("\t}\n")
+		if inEntry {
+			// Sluit alleen de top-level TypeMeta entry; nested composites behouden hun },
+			if trimmed == "}," && braceDepth == 1 {
+				result.WriteString("\t}\n")
+				inEntry = false
+				braceDepth = 0
+				continue
+			}
+
+			if line != "" {
+				result.WriteString(line + "\n")
+			}
+
+			braceDepth += strings.Count(line, "{")
+			braceDepth -= strings.Count(line, "}")
 			continue
 		}
 
@@ -206,12 +229,14 @@ func mapLiteralToAssignments(literal string) string {
 func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType, entIDKolom string) {
 	b.WriteString(fmt.Sprintf("\t%q: {\n", ent.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tTypenaam:    %q,\n", ent.Typenaam))
+	b.WriteString(fmt.Sprintf("\t\tKlassenaam:  %q,\n", d.Klassenaam))
 	b.WriteString(fmt.Sprintf("\t\tDescription: %q,\n", ent.Description))
 	b.WriteString("\t\tMetatype:    MetatypeEntiteit,\n")
 	b.WriteString(fmt.Sprintf("\t\tIsMaterieel: %t,\n", ent.IsMaterieel))
 	b.WriteString(fmt.Sprintf("\t\tKleur:       %q,\n", ent.Kleur))
 	b.WriteString(fmt.Sprintf("\t\tVeldnaam:    %q,\n", d.Veldnaam))
 	b.WriteString(fmt.Sprintf("\t\tPadnaam:     %q,\n", d.Padnaam))
+	b.WriteString(fmt.Sprintf("\t\tMeervoud:    %q,\n", d.Meervoud))
 	b.WriteString(fmt.Sprintf("\t\tFactory:     func() Representatie { return &%s{} },\n", ent.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tSliceFactory: func() any { return &[]%s{} },\n", ent.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tTabelnaam:      %q,\n", d.Tabelnaam))
@@ -225,15 +250,21 @@ func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType,
 	b.WriteString("\t\tOnderliggendeGegevenselementen: []OnderliggendGegevenselement{\n")
 	for _, ge := range ent.Gegevenselementen {
 		hubType := ent.Typenaam + "_" + ge.Naam
-		rolnaam := ge.Naam + "s"
-		jsonRolnaam := strings.ToLower(ge.Naam) + "s"
+		rolnaam := toPascalCase(ge.Meervoud)
+		if rolnaam == "" {
+			rolnaam = ge.Naam + "s"
+		}
+		jsonRolnaam := ge.Meervoud
+		if jsonRolnaam == "" {
+			jsonRolnaam = strings.ToLower(ge.Naam) + "s"
+		}
 		mv := momentvoorkomenConst(ge.Momentvoorkomen)
 		b.WriteString(fmt.Sprintf("\t\t\t{Rolnaam: %q, JSONRolnaam: %q, Doeltype: %q, Momentvoorkomen: %s},\n",
 			rolnaam, jsonRolnaam, hubType, mv))
 	}
 	for _, rel := range ent.Relaties {
-		rolnaam := relRolnaam(rel.Naam)
-		jsonRolnaam := relJSONRolnaam(rel.Naam)
+		rolnaam := relRolnaam(rel.Naam, rel.Meervoud)
+		jsonRolnaam := relJSONRolnaam(rel.Naam, rel.Meervoud)
 		mv := momentvoorkomenConst(rel.Momentvoorkomen)
 		b.WriteString(fmt.Sprintf("\t\t\t{Rolnaam: %q, JSONRolnaam: %q, Doeltype: %q, Momentvoorkomen: %s},\n",
 			rolnaam, jsonRolnaam, rel.Naam, mv))
@@ -250,6 +281,7 @@ func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType,
 func writeHubEntry(b *strings.Builder, d DerivedType, desc string, kleur string, momentvoorkomenStr string, isMaterieel bool, geNaam string) {
 	b.WriteString(fmt.Sprintf("\t%q: {\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tTypenaam:     %q,\n", d.Typenaam))
+	b.WriteString(fmt.Sprintf("\t\tKlassenaam:   %q,\n", d.Klassenaam))
 	b.WriteString(fmt.Sprintf("\t\tDescription:  %q,\n", desc))
 	b.WriteString("\t\tMetatype:     MetatypeGegevenselement,\n")
 	b.WriteString(fmt.Sprintf("\t\tIsMaterieel:  %t,\n", isMaterieel))
@@ -258,6 +290,7 @@ func writeHubEntry(b *strings.Builder, d DerivedType, desc string, kleur string,
 	b.WriteString(fmt.Sprintf("\t\tKleur:        %q,\n", kleur))
 	b.WriteString(fmt.Sprintf("\t\tVeldnaam: %q,\n", d.Veldnaam))
 	b.WriteString(fmt.Sprintf("\t\tPadnaam:  %q,\n", d.Padnaam))
+	b.WriteString(fmt.Sprintf("\t\tMeervoud: %q,\n", d.Meervoud))
 	inputType := d.Typenaam + "_Input"
 	b.WriteString(fmt.Sprintf("\t\tFactory:  func() Representatie { return &%s{} },\n", inputType))
 	b.WriteString(fmt.Sprintf("\t\tTabelnaam:              %q,\n", d.Tabelnaam))
@@ -284,6 +317,7 @@ func writeHubEntry(b *strings.Builder, d DerivedType, desc string, kleur string,
 func writeRelHubEntry(b *strings.Builder, d DerivedType, rel model.V3Relatie) {
 	b.WriteString(fmt.Sprintf("\t%q: {\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tTypenaam:     %q,\n", d.Typenaam))
+	b.WriteString(fmt.Sprintf("\t\tKlassenaam:   %q,\n", d.Klassenaam))
 	b.WriteString(fmt.Sprintf("\t\tDescription:  %q,\n", rel.Description))
 	b.WriteString("\t\tMetatype:     MetatypeRelatie,\n")
 	b.WriteString(fmt.Sprintf("\t\tIsMaterieel:  %t,\n", rel.IsMaterieel))
@@ -292,6 +326,7 @@ func writeRelHubEntry(b *strings.Builder, d DerivedType, rel model.V3Relatie) {
 	b.WriteString(fmt.Sprintf("\t\tKleur:        %q,\n", ""))
 	b.WriteString(fmt.Sprintf("\t\tVeldnaam: %q,\n", d.Veldnaam))
 	b.WriteString(fmt.Sprintf("\t\tPadnaam:  %q,\n", d.Padnaam))
+	b.WriteString(fmt.Sprintf("\t\tMeervoud: %q,\n", d.Meervoud))
 	inputType := d.Typenaam + "_Input"
 	b.WriteString(fmt.Sprintf("\t\tFactory:  func() Representatie { return &%s{} },\n", inputType))
 	b.WriteString(fmt.Sprintf("\t\tTabelnaam:              %q,\n", d.Tabelnaam))
@@ -319,12 +354,14 @@ func writeRelHubEntry(b *strings.Builder, d DerivedType, rel model.V3Relatie) {
 func writeDataEntry(b *strings.Builder, d DerivedType, desc string, kleur string) {
 	b.WriteString(fmt.Sprintf("\t%q: {\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tTypenaam:               %q,\n", d.Typenaam))
+	b.WriteString(fmt.Sprintf("\t\tKlassenaam:             %q,\n", d.Klassenaam))
 	b.WriteString(fmt.Sprintf("\t\tDescription:            %q,\n", fmt.Sprintf("Geversioned inhoud van %s.", d.BovenliggendTypenaam)))
 	b.WriteString("\t\tMetatype:               MetatypeGegevenselement,\n")
 	b.WriteString("\t\tGESubtype:              GESubtypeData,\n")
 	b.WriteString(fmt.Sprintf("\t\tKleur:                  %q,\n", kleur))
 	b.WriteString(fmt.Sprintf("\t\tVeldnaam:               %q,\n", d.Veldnaam))
 	b.WriteString(fmt.Sprintf("\t\tPadnaam:                %q,\n", d.Padnaam))
+	b.WriteString(fmt.Sprintf("\t\tMeervoud:               %q,\n", d.Meervoud))
 	b.WriteString(fmt.Sprintf("\t\tFactory:                func() Representatie { return &%s{} },\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tSliceFactory:           func() any { return &[]%s{} },\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tTabelnaam:              %q,\n", d.Tabelnaam))
@@ -350,12 +387,14 @@ func writeAanvangEindeEntry(b *strings.Builder, d DerivedType, kleur string, suf
 
 	b.WriteString(fmt.Sprintf("\t%q: {\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tTypenaam:               %q,\n", d.Typenaam))
+	b.WriteString(fmt.Sprintf("\t\tKlassenaam:             %q,\n", d.Klassenaam))
 	b.WriteString(fmt.Sprintf("\t\tDescription:            %q,\n", fmt.Sprintf("%s van %s.", descPrefix, parentType)))
 	b.WriteString("\t\tMetatype:               MetatypeGegevenselement,\n")
 	b.WriteString(fmt.Sprintf("\t\tGESubtype:              %s,\n", geSubtype))
 	b.WriteString(fmt.Sprintf("\t\tKleur:                  %q,\n", kleur))
 	b.WriteString(fmt.Sprintf("\t\tVeldnaam:               %q,\n", d.Veldnaam))
 	b.WriteString(fmt.Sprintf("\t\tPadnaam:                %q,\n", d.Padnaam))
+	b.WriteString(fmt.Sprintf("\t\tMeervoud:               %q,\n", d.Meervoud))
 	b.WriteString(fmt.Sprintf("\t\tFactory:                func() Representatie { return &%s{} },\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tSliceFactory:           func() any { return &[]%s{} },\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tTabelnaam:              %q,\n", d.Tabelnaam))

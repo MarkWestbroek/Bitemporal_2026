@@ -373,7 +373,7 @@ func formeleTijdTargetVoorModel(modelNaam string) (formeleTijdTarget, error) {
 		}, nil
 	}
 
-	bovenliggend, ok := model.MetaRegistry.GetBovenliggendeRelatieMeta(meta.Typenaam)
+	bovenliggendeEntiteit, ok := model.MetaRegistry.GetBovenliggendeEntiteitMeta(meta.Typenaam)
 	if !ok {
 		return formeleTijdTarget{}, fmt.Errorf("geen bovenliggende entiteit gevonden voor type %s", meta.Typenaam)
 	}
@@ -382,13 +382,14 @@ func formeleTijdTargetVoorModel(modelNaam string) (formeleTijdTarget, error) {
 	}
 
 	// Versie-PK types (data/aanvang/einde): representatieID = rel_id (of ''), versie = versie
+	// ENT-level _Aanvang/_Einde hebben géén rel_id; alleen hub-child subtypes wel.
 	if meta.IDKolom == "versie" {
 		repIDExpr := "''"
-		if meta.GESubtype == model.GESubtypeData || meta.GESubtype == model.GESubtypeAanvang || meta.GESubtype == model.GESubtypeEinde {
+		if (meta.GESubtype == model.GESubtypeData || meta.GESubtype == model.GESubtypeAanvang || meta.GESubtype == model.GESubtypeEinde) && isHubChildSubtypeMetRelID(meta) {
 			repIDExpr = fmt.Sprintf("%s.rel_id::text", meta.Tabelnaam)
 		}
 		return formeleTijdTarget{
-			Entiteitnaam:        bovenliggend.ParentType.Typenaam,
+			Entiteitnaam:        bovenliggendeEntiteit.Typenaam,
 			EntiteitIDExpr:      fmt.Sprintf("%s.%s::text", meta.Tabelnaam, meta.EntiteitIDKolom),
 			Representatienaam:   meta.Typenaam,
 			RepresentatieIDExpr: repIDExpr,
@@ -397,7 +398,7 @@ func formeleTijdTargetVoorModel(modelNaam string) (formeleTijdTarget, error) {
 	}
 
 	return formeleTijdTarget{
-		Entiteitnaam:        bovenliggend.ParentType.Typenaam,
+		Entiteitnaam:        bovenliggendeEntiteit.Typenaam,
 		EntiteitIDExpr:      fmt.Sprintf("%s.%s::text", meta.Tabelnaam, meta.EntiteitIDKolom),
 		Representatienaam:   meta.Typenaam,
 		RepresentatieIDExpr: fmt.Sprintf("%s.%s::text", meta.Tabelnaam, meta.IDKolom),
@@ -1067,10 +1068,10 @@ func MakeGetFullEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			meta.Typenaam + "s": responseEntities,
-			"page":              page,
-			"size":              size,
-			"has_more":          hasMore,
+			responseCollectionKey(meta): responseEntities,
+			"page":                      page,
+			"size":                      size,
+			"has_more":                  hasMore,
 		})
 	}
 }

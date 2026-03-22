@@ -46,6 +46,20 @@
             "cwd": "${workspaceFolder}/bitemp_register_v06/web/vite"
         },
         {
+            "name": "Frontend v06: Node.js rebuild",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "& \"C:\\Program Files\\nodejs\\npm.cmd\" rebuild",
+            "cwd": "${workspaceFolder}/bitemp_register_v06/web/vite"
+        },
+        {
+            "name": "Frontend v06: Vite build",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "& \"C:\\Program Files\\nodejs\\npm.cmd\" run build",
+            "cwd": "${workspaceFolder}/bitemp_register_v06/web/vite"
+        },
+        {
             "name": "Frontend v06: open in browser",
             "type": "msedge",
             "request": "launch",

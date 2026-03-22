@@ -88,6 +88,7 @@ export function maakLeegType(metatype = "entiteit") {
   return {
     id: generateId(metatype),
     typenaam: "",
+    meervoud: "",
     description: "",
     metatype,
     isMaterieel: metatype === "entiteit",
@@ -431,6 +432,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
     .map((n) => ({
       goType: n.data.naam,
       baseType: n.data.baseType || "string",
+      positie: n.position ? { x: n.position.x, y: n.position.y } : undefined,
       waarden: (n.data.waarden || [])
         .map((w) => (w || "").trim())
         .filter(Boolean)
@@ -447,6 +449,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
       description: n.data.description || undefined,
       basistype: n.data.basistype || "string",
       format: n.data.format || undefined,
+      positie: n.position ? { x: n.position.x, y: n.position.y } : undefined,
       validatie: n.data.validatie || undefined,
       normalisatie: n.data.normalisatie || undefined,
       weergave: n.data.weergave || undefined,
@@ -470,10 +473,14 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         naam: geNaam,
         description: geNode.data.description || undefined,
         meervoud:
+          geNode.data.meervoud ||
           e.data?.jsonRolnaam ||
           `${(geNaam || "ge").toLowerCase()}s`,
         momentvoorkomen: e.data?.momentvoorkomen || "enkelvoudig",
         isMaterieel: geNode.data.isMaterieel || false,
+        positie: geNode.position ? { x: geNode.position.x, y: geNode.position.y } : undefined,
+        sourceHandle: e.sourceHandle || undefined,
+        targetHandle: e.targetHandle || undefined,
         velden: (geNode.data.velden || [])
           .filter((v) => (v.naam || "").trim() !== "")
           .map(veldNaarV3),
@@ -502,10 +509,16 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         naam: relNode.data.typenaam,
         description: relNode.data.description || undefined,
         meervoud:
+          relNode.data.meervoud ||
           e.data?.jsonRolnaam || `${(relNode.data.typenaam || "rel").toLowerCase()}s`,
         momentvoorkomen: e.data?.momentvoorkomen || "meervoudig",
         isMaterieel: relNode.data.isMaterieel || false,
         doelEntiteit: doelEntiteitNaam,
+        positie: relNode.position ? { x: relNode.position.x, y: relNode.position.y } : undefined,
+        sourceHandle: e.sourceHandle || undefined,
+        targetHandle: e.targetHandle || undefined,
+        doelSourceHandle: relTargetEdge?.sourceHandle || undefined,
+        doelTargetHandle: relTargetEdge?.targetHandle || undefined,
         velden: (relNode.data.velden || [])
           .filter((v) => (v.naam || "").trim() !== "")
           .map(veldNaarV3),
@@ -518,8 +531,10 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
       isMaterieel: ent.data.isMaterieel || false,
       kleur: ent.data.kleur || undefined,
       meervoud:
+        ent.data.meervoud ||
         opts.padnaamByEntiteit?.[ent.data.typenaam] ||
         `${(ent.data.typenaam || "entiteit").toLowerCase()}s`,
+      positie: ent.position ? { x: ent.position.x, y: ent.position.y } : undefined,
       gegevenselementen,
       relaties,
     };

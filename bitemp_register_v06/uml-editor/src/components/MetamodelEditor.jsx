@@ -56,7 +56,6 @@ import { exportNaarXMI } from "../export/exportXMI";
 // Data helpers
 import {
   generateId,
-  editorNaarMetamodel,
   editorNaarV3Model,
   schemaResponseNaarEditor,
 } from "../metamodel/types";
@@ -445,21 +444,6 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [] }
   // === Opslaan / Laden ===
 
   const handleSave = useCallback(() => {
-    const model = editorNaarMetamodel(nodes, edges);
-    const flowState = { nodes, edges };
-    const payload = { model, flowState };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "metamodel.json";
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [nodes, edges]);
-
-  const handleSaveV3 = useCallback(() => {
     const v3Model = editorNaarV3Model(nodes, edges);
     const blob = new Blob([JSON.stringify(v3Model, null, 2)], {
       type: "application/json",
@@ -656,7 +640,6 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [] }
       <Toolbar
         onAddNode={handleAddNode}
         onSave={handleSave}
-        onSaveV3={handleSaveV3}
         onPublishSchemaModel={handlePublishSchemaModel}
         onLoad={handleLoad}
         onLoadSchema={handleLoadSchema}

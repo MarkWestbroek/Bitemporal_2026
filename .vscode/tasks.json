@@ -143,6 +143,69 @@
 				"Set-Location bitemp_register_v06; go test ./... -coverprofile coverage.out; go tool cover -func coverage.out | Set-Content web/coverage_functions.txt; go tool cover -html coverage.out -o web/coverage.html; Write-Output 'Generated /viz/coverage_report.html, /viz/coverage_functions.txt and /viz/coverage.html'"
 			],
 			"isBackground": false
+		},
+		{
+			"label": "stop: api server (v06, :8082)",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"$pids = Get-NetTCPConnection -LocalPort 8082 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if ($pids) { $pids | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Write-Output ('Stopped API process(es) on :8082: ' + ($pids -join ', ')) } else { Write-Output 'No listening API process found on :8082.' }"
+			],
+			"isBackground": false,
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			}
+		},
+		{
+			"label": "stop: vite server (v06, :5173/:5174/:5175)",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"$ports = 5173,5174,5175; $pids = @(); foreach ($port in $ports) { $listening = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if ($listening) { $pids += $listening } }; $pids = $pids | Select-Object -Unique; if ($pids) { $pids | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Write-Output ('Stopped Vite process(es): ' + ($pids -join ', ')) } else { Write-Output 'No listening Vite process found on :5173/:5174/:5175.' }"
+			],
+			"isBackground": false,
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			}
+		},
+		{
+			"label": "nodejs: rebuild (v06)",
+			"type": "shell",
+			"command": "C:\\Program Files\\nodejs\\npm.cmd",
+			"args": [
+				"rebuild"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/bitemp_register_v06/web/vite"
+			},
+			"isBackground": false,
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			}
+		},
+		{
+			"label": "vite: build (v06)",
+			"type": "shell",
+			"command": "C:\\Program Files\\nodejs\\npm.cmd",
+			"args": [
+				"run",
+				"build"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/bitemp_register_v06/web/vite"
+			},
+			"isBackground": false,
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			}
 		}
 	]
 }

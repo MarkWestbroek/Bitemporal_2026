@@ -257,11 +257,11 @@ In een echt domeinmodel worden de collectie-paden menselijk leesbaar, bijv.:
 ## 5. Codegeneratie-input: formaat en analyse GetSchema API
 
 ### Vraag
-Bevat de bestaande GetSchema API-response (`/schema`) voldoende informatie om als input te dienen voor een code generator die de 5 gegenereerde bestanden kan produceren?
+Bevat de bestaande GetSchema API-response (`/schema`) voldoende informatie om als input te dienen voor een codegenerator die de 6 gegenereerde bestanden kan produceren?
 
 ### Antwoord: **Nee, maar het is een goed vertrekpunt**
 
-De GetSchema API is ontworpen voor de **frontend** (formuliervelden, types, hiërarchie) en bevat daarom JSON/presentatie-gericht metadata. Een code generator voor **Go-broncode** heeft daarnaast Go-specifieke informatie nodig die de schema-API bewust niet blootstelt.
+De GetSchema API is ontworpen voor de **frontend** (formuliervelden, types, hiërarchie) en bevat daarom JSON/presentatie-gericht metadata. Een codegenerator voor **Go-broncode** heeft daarnaast Go-specifieke informatie nodig die de schema-API bewust niet blootstelt.
 
 ### Gap-analyse: wat ontbreekt er?
 
@@ -284,7 +284,7 @@ De GetSchema API is ontworpen voor de **frontend** (formuliervelden, types, hië
 
 De `jsonTag` en `bunTag` waarden zijn **volledig afleidbaar** uit het metatype, de veldrol en het Go-type (zie afleidingsregels hieronder). Ze zijn daarom uit het inputformaat verwijderd.
 
-Evenzo zijn de plumbing-velden (`id`, `{ent}_id`, `rel_id`, `versie`, `opvoer`, `afvoer`, `datum`) en bun-relatievelden (`ParentX`, `Data`, `Aanvang`, `Einde`) altijd identiek per metatype. Die hoeven **niet** als input: de code generator voegt ze automatisch toe op basis van metatype + geSubtype + isMaterieel.
+Evenzo zijn de plumbing-velden (`id`, `{ent}_id`, `rel_id`, `versie`, `opvoer`, `afvoer`, `datum`) en bun-relatievelden (`ParentX`, `Data`, `Aanvang`, `Einde`) altijd identiek per metatype. Die hoeven **niet** als input: de codegenerator voegt ze automatisch toe op basis van metatype + geSubtype + isMaterieel.
 
 Daarnaast zijn `tabelnaam`, `idKolom`, `heeftPFK`, `relatieveAutoincrement`, `entiteitIDKolom`, `bovenliggendTypenaam` en `goNaam` allemaal afleidbaar uit de typenaam en het metatype (zie afleidbaarheidstabel).
 
@@ -425,11 +425,11 @@ Het inputformaat bevat alleen wat **niet afleidbaar** is:
 }
 ```
 
-Dit formaat beschrijft **alleen de domeinkennis**: welke entiteiten bestaan er, welke GE's en relaties hebben ze, en welke inhoudsvelden zitten daarin. De volledige Go-structuren (structs, tags, plumbing, MetaRegistry entries) worden door de code generator afgeleid.
+Dit formaat beschrijft **alleen de domeinkennis**: welke entiteiten bestaan er, welke GE's en relaties hebben ze, en welke inhoudsvelden zitten daarin. De volledige Go-structuren (structs, tags, plumbing, MetaRegistry entries) worden door de codegenerator afgeleid.
 
 ### Afleidingsregels voor tags
 
-De code generator leidt alle struct tags af op basis van het metatype en het Go-type van het veld.
+De codegenerator leidt alle struct tags af op basis van het metatype en het Go-type van het veld.
 
 #### jsonTag-regels
 
@@ -538,7 +538,7 @@ Al het andere (tabelnaam, FK-kolommen, alle struct tags, plumbing-velden, bun-re
 | MetaRegistry (intern) | **Bijna voldoende**: mist Go-types voor de inhoudsvelden |
 | Codegen-formaat v3 (hierboven) | **Volledig + minimaal**: alleen domeinkennis, rest afgeleid |
 
-De aanbeveling is om het **v3 formaat** te gebruiken als input voor de code generator. Dit formaat bevat uitsluitend domeinkennis; de conventie-engine leidt alle structurele code af. Het meervoud (padnaam) is de belangrijkste niet-afleidbare waarde.
+De aanbeveling is om het **v3 formaat** te gebruiken als input voor de codegenerator. Dit formaat bevat uitsluitend domeinkennis; de conventie-engine leidt alle structurele code af. Het meervoud (padnaam) is de belangrijkste niet-afleidbare waarde.
 
 ---
 
@@ -679,7 +679,7 @@ De functienaam in de `expressie` van een `ValidatieRegel` moet exact matchen met
 
 ### Codegen-impact
 
-In het codegen-inputformaat (§5) is de `datatypes` sectie nu opgenomen. De code generator:
+In het codegen-inputformaat (§5) is de `datatypes` sectie nu opgenomen. De codegenerator:
 1. Genereert `datatype_registry.go` met `V3Datatype` entries (inclusief `Validatie`, `Regels` en `Weergave`)
 2. Gebruikt de bestaande `intPtr` helper uit `model_plumbing.go` voor pointervelden in gegenereerde datatypes
 3. Voegt `schema:"format=..."` tags toe aan struct-velden die een custom datatype gebruiken
@@ -867,7 +867,7 @@ Het draaiende register levert bij `GET /api/schema/model` altijd de rij met `sta
 
 Stappen [1] en [2] zijn **HTTP-calls vanuit de browser**. Stappen [3]–[5] zijn **lokale acties op de ontwikkelmachine**.
 
-### Code generator als Go CLI tool
+### Codegenerator als Go CLI tool
 
 ```
 cmd/codegen/
