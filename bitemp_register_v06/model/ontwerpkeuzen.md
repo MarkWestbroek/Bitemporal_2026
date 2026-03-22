@@ -694,3 +694,184 @@ In het codegen-inputformaat (§5) is de `datatypes` sectie nu opgenomen. De code
 | String of apart Go-type? | Velden blijven `string`/`int`/etc. in Go | Validatie is runtime, niet compile-time |
 | Schema-API contract? | `datatypes` array in `/schema` response | Frontend leest validatie/weergave hieruit |
 | Normalisatie waar? | Frontend (JS) vóór versturen, Go bij ontvangst | Beide kanten normaliseren voor consistentie |
+
+---
+
+## 7. Schema-API, versioning en code-generatie workflow
+
+### Context
+
+Het v3 codegen-formaat (§5) is de minimale beschrijving van een registermodel. Tegelijkertijd heeft het draaiende register al een `/api/viz/schema` endpoint dat een frontend-gerichte view retourneert. De vraag is hoe deze twee zich verhouden, hoe het model te exposen/importeren, en hoe de code-generatie in het ontwikkelproces past.
+
+### Relatie v3-formaat en huidige GetSchema
+
+Het v3-formaat en de huidige `/api/viz/schema` response zijn **twee complementaire projecties** van dezelfde waarheid. Geen van beide is een superset van de ander:
+
+| Aspect | `GET /api/viz/schema` (huidig) | v3 codegen-formaat (§5) |
+|--------|-------------------------------|------------------------|
+| Structuur | Plat: alle 22 types op één niveau | Hiërarchisch: entiteit → GE/rel |
+| Veldtypen | JSON-typen (`integer`, `string`) + `format` | Go-typen (`int`, `*bool`, `float64`) |
+| Enums | Inline op velden (`enum: ["LTT","LAT"]`) | Aparte sectie met Go const-namen |
+| Meervoud/padnaam | Ontbreekt | Aanwezig |
+| Datatypes | Ontbreekt | Aanwezig |
+| goType/goNaam | Ontbreekt | Aanwezig (op inhoudsvelden) |
+| Plumbing-velden | Expliciet (via reflectie) | Niet in input (afgeleid door conventie-engine) |
+| Afleidbare metadata | Expliciet (tabelnaam, idKolom, etc.) | Niet in input (afgeleid) |
+
+Beide zijn **afleidbaar uit v3 + de conventie-engine**: de huidige `/viz/schema` is wat reflectie + MetaRegistry opleveren voor de frontend; v3 is de minimale bron waaruit alles gegenereerd wordt.
+
+### Twee schema-endpoints
+
+| Endpoint | Methode | Doel |
+|----------|---------|------|
+| `GET /api/viz/schema` | GET | Bestaande frontend-view (JSON-types, gefilterde velden) — **ongewijzigd** |
+| `GET /api/schema/model` | GET | Retourneert het actieve registermodel in v3-formaat (roundtrip-capable) |
+| `POST /api/schema/model` | POST | Accepteert een nieuw v3-model als *proposed* versie |
+
+De `GET /api/schema/model` response is exact het v3-formaat: hiërarchisch, met Go-types, enums, datatypes, meervouden. De UML-editor fetcht dit, visualiseert het, laat het bewerken, en exporteert het terug als dezelfde JSON.
+
+### Schema-versioning in de database
+
+Een `schema_versies` tabel slaat het volledige model op als JSON-blob:
+
+```sql
+CREATE TABLE schema_versies (
+    versie        SERIAL PRIMARY KEY,
+    tijdstip      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    schema_json   JSONB NOT NULL,          -- het volledige v3-model
+    build_versie  TEXT,                     -- bijv. "v06-build-42" of git commit hash
+    go_module     TEXT,                     -- bijv. "bitemp_register_v06"
+    status        TEXT NOT NULL DEFAULT 'proposed',  -- proposed | active | archived
+    opmerking     TEXT
+);
+```
+
+**Lifecycle van een schemaversie:**
+
+1. **Eerste deploy**: `INSERT ... status='active'` met het huidige model
+2. **Nieuw voorstel** (via UML-editor of handmatig): `POST /api/schema/model` → `INSERT ... status='proposed'`
+3. **Na succesvolle codegen + build + deploy**:
+   - `UPDATE SET status='archived' WHERE status='active'`
+   - `UPDATE SET status='active' WHERE versie={nieuw}`
+4. **Verworpen voorstel**: `UPDATE SET status='archived' WHERE versie={voorstel}`
+
+Het draaiende register levert bij `GET /api/schema/model` altijd de rij met `status='active'`.
+
+### Code-generatie workflow
+
+```
+                           ┌──────────────┐
+                           │  UML-editor  │
+                           │  (browser)   │
+                           └──┬───────┬───┘
+                    [1] fetch │       │  [2] upload
+                    GET model │       │  POST model
+                              ▼       ▼
+                        ┌──────────────────┐
+                        │    Register      │
+                        │   (draaiend)     │
+                        │                  │
+                        │  schema_versies  │
+                        │  tabel (JSONB)   │
+                        └────────┬─────────┘
+                                 │
+                    [3] fetch    │  GET model (of: lees bestand)
+                                 │
+                                 ▼
+                        ┌──────────────────┐
+                        │   model.json     │
+                        │   (bestand)      │
+                        └────────┬─────────┘
+                                 │
+                    [4] codegen  │  go run ./cmd/codegen --input model.json
+                                 │
+                                 ▼
+                        ┌──────────────────┐
+                        │  gegenereerde    │
+                        │  Go-bestanden    │
+                        │  (model/*.go)    │
+                        └────────┬─────────┘
+                                 │
+                    [5] build    │  go build ./... && go test ./...
+                                 │
+                                 ▼
+                        ┌──────────────────┐
+                        │  nieuwe app      │
+                        │  binary          │
+                        └──────────────────┘
+```
+
+**Legenda pijlen**: alle pijlen zijn **dataflows** — ze tonen welke data waarheen stroomt. De nummering geeft de volgorde in het proces aan:
+
+| Stap | Pijl | Dataflow | Beschrijving |
+|------|------|----------|-------------|
+| [1] | UML-editor → Register | HTTP GET response | De editor haalt het actieve model op in v3-formaat |
+| [2] | UML-editor → Register | HTTP POST request body | De editor stuurt een bewerkt model terug als *proposed* versie |
+| [3] | Register → model.json | HTTP GET response of file export | De developer haalt het model op als lokaal bestand |
+| [4] | model.json → Go-bestanden | Code-generatie (file I/O) | De codegen CLI leest de JSON en schrijft `.go`-bestanden |
+| [5] | Go-bestanden → binary | Compilatie (go build) | Go compiler bouwt de nieuwe applicatie |
+
+Stappen [1] en [2] zijn **HTTP-calls vanuit de browser**. Stappen [3]–[5] zijn **lokale acties op de ontwikkelmachine**.
+
+### Code generator als Go CLI tool
+
+```
+cmd/codegen/
+├── main.go           -- entry point: leest JSON, roept generators aan
+├── conventions.go    -- de conventie-engine (afleiding tags, plumbing, etc.)
+├── gen_structs.go    -- genereert modellen_entiteiten.go + modellen_ge_rel.go
+├── gen_methods.go    -- genereert modellen_methods.go
+├── gen_input.go      -- genereert modellen_input.go
+├── gen_registry.go   -- genereert metaregistry.go
+└── templates/        -- Go text/template bestanden (optioneel)
+```
+
+**Starten:**
+
+```sh
+# Vanuit een geëxporteerd bestand:
+go run ./cmd/codegen --input model.json --output model/
+
+# Of rechtstreeks vanuit een draaiend register:
+go run ./cmd/codegen --from-url http://localhost:8080/api/schema/model --output model/
+
+# Daarna:
+go build ./...
+go test ./...
+```
+
+Dit is puur een **dev-tool** — het draait alleen op de ontwikkelmachine. De `cmd/codegen/` map wordt niet mee-gecompileerd in de server-binary (Go compileert alleen wat vanuit de server `main.go` bereikbaar is).
+
+**Alternatief: `go generate`** (voor integratie in de build-pipeline):
+
+```go
+//go:generate go run ./cmd/codegen --input model.json --output .
+```
+
+### Delta-analyse (toekomst)
+
+Bij een upgrade van het metamodel is het waardevol om een **delta** te bepalen tussen de huidige en de voorgestelde versie. Deze delta kan achterhalen of de upgrade breaking of non-breaking is:
+
+| Wijziging | Impact | Voorbeeld |
+|-----------|--------|-----------|
+| Nieuw GE/relatie toegevoegd | Non-breaking | Nieuwe tabel, bestaande data ongewijzigd |
+| Nieuw nullable veld toegevoegd | Non-breaking | Nieuwe kolom met NULL als default |
+| Veld verwijderd | **Breaking** | Kolom met data verdwijnt |
+| Veldtype gewijzigd | **Breaking** | Type-conversie nodig |
+| Entiteit verwijderd | **Breaking** | Tabel met data verdwijnt |
+| Meervoud/padnaam gewijzigd | Non-breaking (URL-wijziging) | Clients moeten updaten |
+
+Dit kan later als aparte CLI tool (`cmd/schemadiff/`) naast `cmd/codegen/`, die twee v3-JSON's vergelijkt en een migratierapport genereert. Eventueel ook DDL-migratiescripts (`ALTER TABLE ADD COLUMN ...`).
+
+### Beslissingen
+
+| Vraag | Beslissing | Motivatie |
+|-------|-----------|-----------|
+| Canoniek formaat? | v3 (§5) is de source of truth | Minimaal, hiërarchisch, roundtrip-capable |
+| Bestaande `/viz/schema`? | Blijft ongewijzigd als frontend-view | Backward compatible, andere projectie |
+| Nieuw model-endpoint? | `GET/POST /api/schema/model` | Scheiding van concerns: model vs. view |
+| Opslag in DB? | `schema_versies` tabel met JSONB | Eenvoudig, versioneerbaar, geen relationeel schema nodig |
+| Wat opslaan per versie? | schema_json + build_versie + go_module + status + opmerking | Traceerbaarheid naar code |
+| Codegen waar? | `cmd/codegen/` als Go CLI | Dev-only, niet in productie-binary |
+| Codegen starten? | `go run ./cmd/codegen --input model.json` | Standaard Go tooling, geen externe dependencies |
+| Delta-analyse? | Later als `cmd/schemadiff/` | Waardevol maar apart verhaal |
