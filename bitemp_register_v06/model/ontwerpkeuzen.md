@@ -735,6 +735,10 @@ De endpoint `GET /api/schema/model/:id` leest altijd direct uit `schema_versies`
 
 De endpoint `GET /api/schema/versies` retourneert per rij ook een `model_url`, zodat clients of tooling direct kunnen navigeren naar de volledige representatie van een specifieke schemaversie. Voor rijen met `status='proposed'` wordt aanvullend een `activeer_url` meegegeven, zodat de activatie-flow direct vanuit dezelfde lijst kan worden gestart.
 
+Voor sneller zoeken ondersteunt `GET /api/schema/versies` ook query-parameters:
+- `model_naam=<tekst>` voor case-insensitive filter op modelnaam (contains)
+- `sort=id_desc|id_asc|model_naam_asc|model_naam_desc` voor sortering
+
 Voor vindbaarheid bevat het top-level `model` ook `naam` en `beschrijving`. Deze worden naast het JSON-model expliciet opgeslagen in `schema_versies` als `model_naam` en `model_beschrijving`, zodat versies snel doorzoekbaar en herkenbaar zijn zonder eerst de volledige JSON te parsen.
 
 Bij `POST /api/schema/model` is de request-body bij voorkeur van de vorm `{ "bron": "...", "indiener": "...", "model": { ... } }`. De velden `bron` en `indiener` horen dus bij de inzending, terwijl `model.versie` een eigenschap van het model zelf blijft.
@@ -749,8 +753,10 @@ CREATE TABLE schema_versies (
     tijdstip      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     schema_json   JSONB NOT NULL,          -- het volledige v3-model
   bron          TEXT,                    -- bron van de inzending, bijv. "metaregistry" of "uml-editor"
-  model_versie  TEXT,                    -- semantische versie uit model.versie
   indiener      TEXT,                    -- naam of systeem van de indiener
+  model_versie  TEXT,                    -- semantische versie uit model.versie
+  model_naam    TEXT,                    -- herkenbare modelnaam uit model.naam
+  model_beschrijving TEXT,               -- korte beschrijving uit model.beschrijving
     build_versie  TEXT,                     -- bijv. "v06-build-42" of git commit hash
     go_module     TEXT,                     -- bijv. "bitemp_register_v06"
     status        TEXT NOT NULL DEFAULT 'proposed',  -- proposed | active | archived
