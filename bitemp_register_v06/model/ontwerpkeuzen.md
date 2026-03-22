@@ -680,20 +680,53 @@ De functienaam in de `expressie` van een `ValidatieRegel` moet exact matchen met
 ### Codegen-impact
 
 In het codegen-inputformaat (§5) is de `datatypes` sectie nu opgenomen. De code generator:
-1. Genereert de `DatatypeRegistry` variabele met alle gedefinieerde gegevenstypen
-2. Genereert de Go validatiefuncties (skeleton) voor regels met `type: "function"`
+1. Genereert `datatype_registry.go` met `V3Datatype` entries (inclusief `Validatie`, `Regels` en `Weergave`)
+2. Gebruikt de bestaande `intPtr` helper uit `model_plumbing.go` voor pointervelden in gegenereerde datatypes
 3. Voegt `schema:"format=..."` tags toe aan struct-velden die een custom datatype gebruiken
-4. Genereert de JavaScript validatiefuncties (skeleton) in `web/vite/src/validatie/`
+4. Ondersteunt zowel volledige generatie (`standalone`) als toevoegend genereren (`additive`) voor registry-bestanden
+
+De validatie-implementaties (Go/JS) voor regels met `type: "function"` worden op dit moment **niet** automatisch als losse bronbestanden gegenereerd.
 
 ### Beslissingen
 
 | Vraag | Beslissing | Motivatie |
 |-------|-----------|-----------|
-| Waar plaatsen? | `model/datatypes.go` + `model/datatypes_registry.go` | Analoog aan model/metaregistry split |
+| Waar plaatsen? | `model/datatype_registry.go` + helper in `model/model_plumbing.go` | Eén centrale registry met gedeelde helper; geen duplicatie van `intPtr` |
 | Referentie vanuit velden? | `schema:"format=..."` tag | Minimale impact op bestaande tags |
 | String of apart Go-type? | Velden blijven `string`/`int`/etc. in Go | Validatie is runtime, niet compile-time |
 | Schema-API contract? | `datatypes` array in `/schema` response | Frontend leest validatie/weergave hieruit |
 | Normalisatie waar? | Frontend (JS) vóór versturen, Go bij ontvangst | Beide kanten normaliseren voor consistentie |
+
+### Codegen-modi (standalone vs additive)
+
+Voor codegeneratie van modelbestanden en registries zijn twee expliciete modi gekozen:
+
+| Modus | Gedrag | Gebruik |
+|-------|--------|---------|
+| `standalone` (default) | Genereert complete bestanden, inclusief volledige `MetaRegistry` en `DatatypeRegistry` declaraties | Voor een volledige modelvervanging in een doelmap |
+| `additive` | Genereert bestanden die via `init()` entries toevoegen aan bestaande registries | Voor een groeiend register met meerdere modellen naast elkaar |
+
+In `additive` modus worden voor registry-bestanden geen volledige variabelen hergedefinieerd; in plaats daarvan:
+
+- worden `MetaRegistry` entries toegevoegd met `MetaRegistry["..."] = TypeMeta{...}` in `init()`
+- worden datatypes toegevoegd met `DatatypeRegistry = append(DatatypeRegistry, ...)` in `init()`
+
+Deze keuze voorkomt overschrijven van handgeschreven basis-modellen en sluit aan bij het doelbeeld van een register dat uitbreidt per gegenereerd model.
+
+### Prefix-strategie voor additive generatie
+
+De generator ondersteunt een `--prefix` vlag om bestandsnamen uniek te maken per model (bijvoorbeeld `hr_`).
+
+Voorbeeld met `--prefix hr`:
+
+- `hr_modellen_entiteiten.go`
+- `hr_modellen_ge_rel.go`
+- `hr_modellen_methods.go`
+- `hr_modellen_input.go`
+- `hr_metaregistry.go`
+- `hr_datatype_registry.go`
+
+Hiermee kunnen meerdere gegenereerde modellen veilig in dezelfde `model/` map naast elkaar bestaan, zonder bestandsnaamconflicten met bestaande handgeschreven bestanden.
 
 ---
 
