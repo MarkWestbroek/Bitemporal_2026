@@ -1,9 +1,5 @@
 package model
 
-import (
-	"time"
-)
-
 /* === _Input structs: platte API-input die hub + data combineert ===
 
 De registratie-API accepteert platte objecten (alle velden bij elkaar).
@@ -31,15 +27,6 @@ type A_U_Input struct {
 	Einde   *Date `json:"einde,omitempty"`
 }
 
-func (i A_U_Input) GetID() any              { return i.Rel_ID }
-func (i A_U_Input) Metatype() Metatype      { return MetatypeGegevenselement }
-func (i *A_U_Input) ClearID()               { i.Rel_ID = 0 }
-func (i A_U_Input) GetOpvoer() *time.Time   { return nil }
-func (i *A_U_Input) SetOpvoer(t *time.Time) {}
-func (i A_U_Input) GetAfvoer() *time.Time   { return nil }
-func (i *A_U_Input) SetAfvoer(t *time.Time) {}
-func (i A_U_Input) String() string          { return RepresentatieToString(i) }
-
 type A_V_Input struct {
 	A_ID    int     `json:"a_id"`
 	Rel_ID  int     `json:"rel_id"`
@@ -53,15 +40,6 @@ type A_V_Input struct {
 	Einde   *Date   `json:"einde,omitempty"`
 }
 
-func (i A_V_Input) GetID() any              { return i.Rel_ID }
-func (i A_V_Input) Metatype() Metatype      { return MetatypeGegevenselement }
-func (i *A_V_Input) ClearID()               { i.Rel_ID = 0 }
-func (i A_V_Input) GetOpvoer() *time.Time   { return nil }
-func (i *A_V_Input) SetOpvoer(t *time.Time) {}
-func (i A_V_Input) GetAfvoer() *time.Time   { return nil }
-func (i *A_V_Input) SetAfvoer(t *time.Time) {}
-func (i A_V_Input) String() string          { return RepresentatieToString(i) }
-
 type A_W_Input struct {
 	A_ID    int     `json:"a_id"`
 	Rel_ID  int     `json:"rel_id"`
@@ -70,15 +48,6 @@ type A_W_Input struct {
 	Aanvang *Date   `json:"aanvang,omitempty"`
 	Einde   *Date   `json:"einde,omitempty"`
 }
-
-func (i A_W_Input) GetID() any              { return i.Rel_ID }
-func (i A_W_Input) Metatype() Metatype      { return MetatypeGegevenselement }
-func (i *A_W_Input) ClearID()               { i.Rel_ID = 0 }
-func (i A_W_Input) GetOpvoer() *time.Time   { return nil }
-func (i *A_W_Input) SetOpvoer(t *time.Time) {}
-func (i A_W_Input) GetAfvoer() *time.Time   { return nil }
-func (i *A_W_Input) SetAfvoer(t *time.Time) {}
-func (i A_W_Input) String() string          { return RepresentatieToString(i) }
 
 type Rel_A_B_Input struct {
 	A_ID    int        `json:"a_id"`
@@ -89,15 +58,6 @@ type Rel_A_B_Input struct {
 	Einde   *Date      `json:"einde,omitempty"`
 }
 
-func (i Rel_A_B_Input) GetID() any              { return i.Rel_ID }
-func (i Rel_A_B_Input) Metatype() Metatype      { return MetatypeRelatie }
-func (i *Rel_A_B_Input) ClearID()               { i.Rel_ID = 0 }
-func (i Rel_A_B_Input) GetOpvoer() *time.Time   { return nil }
-func (i *Rel_A_B_Input) SetOpvoer(t *time.Time) {}
-func (i Rel_A_B_Input) GetAfvoer() *time.Time   { return nil }
-func (i *Rel_A_B_Input) SetAfvoer(t *time.Time) {}
-func (i Rel_A_B_Input) String() string          { return RepresentatieToString(i) }
-
 type B_X_Input struct {
 	B_ID    int    `json:"b_id"`
 	Rel_ID  int    `json:"rel_id"`
@@ -107,15 +67,6 @@ type B_X_Input struct {
 	Einde   *Date  `json:"einde,omitempty"`
 }
 
-func (i B_X_Input) GetID() any              { return i.Rel_ID }
-func (i B_X_Input) Metatype() Metatype      { return MetatypeGegevenselement }
-func (i *B_X_Input) ClearID()               { i.Rel_ID = 0 }
-func (i B_X_Input) GetOpvoer() *time.Time   { return nil }
-func (i *B_X_Input) SetOpvoer(t *time.Time) {}
-func (i B_X_Input) GetAfvoer() *time.Time   { return nil }
-func (i *B_X_Input) SetAfvoer(t *time.Time) {}
-func (i B_X_Input) String() string          { return RepresentatieToString(i) }
-
 type B_Y_Input struct {
 	B_ID    int    `json:"b_id"`
 	Rel_ID  int    `json:"rel_id"`
@@ -123,12 +74,3 @@ type B_Y_Input struct {
 	Aanvang *Date  `json:"aanvang,omitempty"`
 	Einde   *Date  `json:"einde,omitempty"`
 }
-
-func (i B_Y_Input) GetID() any              { return i.Rel_ID }
-func (i B_Y_Input) Metatype() Metatype      { return MetatypeGegevenselement }
-func (i *B_Y_Input) ClearID()               { i.Rel_ID = 0 }
-func (i B_Y_Input) GetOpvoer() *time.Time   { return nil }
-func (i *B_Y_Input) SetOpvoer(t *time.Time) {}
-func (i B_Y_Input) GetAfvoer() *time.Time   { return nil }
-func (i *B_Y_Input) SetAfvoer(t *time.Time) {}
-func (i B_Y_Input) String() string          { return RepresentatieToString(i) }
