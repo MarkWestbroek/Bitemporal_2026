@@ -1,0 +1,55 @@
+/**
+ * EnumeratieNode — klein blok voor enumeratie-definities.
+ *
+ *   ┌─────────────────────────┐
+ *   │  «enumeratie»           │
+ *   │  RelABSoort             │
+ *   ├─────────────────────────┤
+ *   │  LTT                    │
+ *   │  LAT                    │
+ *   │  LTA                    │
+ *   └─────────────────────────┘
+ */
+import { memo } from "react";
+import { Handle, Position } from "@xyflow/react";
+
+function EnumeratieNode({ data, selected }) {
+  const borderColor = selected ? "#d97706" : "#94a3b8";
+
+  return (
+    <div
+      className="metamodel-node enum-node"
+      style={{
+        borderColor,
+        backgroundColor: "#fef3c7",
+      }}
+    >
+      {/* Handles op alle zijden */}
+      <Handle type="target" position={Position.Top} id="top" />
+      <Handle type="source" position={Position.Bottom} id="bottom" />
+      <Handle type="source" position={Position.Top} id="top" />
+      <Handle type="target" position={Position.Bottom} id="bottom" />
+      <Handle type="source" position={Position.Left} id="left" />
+      <Handle type="target" position={Position.Left} id="left" />
+      <Handle type="source" position={Position.Right} id="right" />
+      <Handle type="target" position={Position.Right} id="right" />
+
+      <div className="node-header">
+        <div className="node-stereotype">«enumeratie»</div>
+        <div className="node-typenaam">{data.naam || "(naamloos)"}</div>
+      </div>
+
+      <div className="node-divider" />
+
+      <div className="node-velden">
+        {(data.waarden || []).map((w, i) => (
+          <div key={i} className="node-veld enum-waarde">
+            {w}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default memo(EnumeratieNode);

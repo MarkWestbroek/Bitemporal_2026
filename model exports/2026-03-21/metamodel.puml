@@ -1,0 +1,99 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+hide empty methods
+
+class A <<entiteit, materieel>> {
+  + id : integer
+}
+
+class B <<entiteit, materieel>> {
+  + id : integer
+}
+
+class A_U <<gegevenselement>> {
+  + a_id : integer
+  + rel_id : integer
+  + aaa : string
+  - bbb : boolean
+}
+
+class A_V <<gegevenselement>> {
+  + a_id : integer
+  + rel_id : integer
+  + ccc : string
+  - ddd : string
+  - eee : string
+  + fff : number {float64}
+  + ggg : string
+  - datum : string {date}
+}
+
+class A_W <<gegevenselement, materieel>> {
+  + a_id : integer
+  + rel_id : integer
+  + float : number {float64}
+  + heel : integer
+}
+
+class Rel_A_B <<relatie, materieel>> {
+  + a_id : integer
+  + rel_id : integer
+  + b_id : integer
+  + soort : string
+}
+
+class B_X <<gegevenselement>> {
+  + b_id : integer
+  + rel_id : integer
+  + fff : string
+  + ggg : string
+}
+
+class B_Y <<gegevenselement>> {
+  + b_id : integer
+  + rel_id : integer
+  + hhh : string
+}
+
+enum RelABSoort {
+  LTT
+  LAT
+  LTA
+}
+
+enum ABCEnum {
+  Optie A
+  Optie B
+  Optie C
+}
+
+class NLPostcode <<datatype>> {
+  + basistype : string
+  + format : nl-postcode
+  + pattern : String
+  + normalisatie : uppercase_letters
+}
+
+class BSN <<datatype>> {
+  + basistype : string
+  + format : bsn
+  + pattern : String
+}
+
+class IBAN <<datatype>> {
+  + basistype : string
+  + format : iban
+  + pattern : String
+  + normalisatie : strip_spaces,uppercase
+}
+
+A "1" --> "0..1" A_U : Us
+A "1" --> "0..*" A_V : Vs
+A "1" --> "0..*" A_W : Ws
+A "1" --> "0..*" Rel_A_B : RelABs
+Rel_A_B "1" --> "0..*" B : → B
+B "1" --> "0..1" B_X : Xs
+B "1" --> "0..1" B_Y : Ys
+
+@enduml
