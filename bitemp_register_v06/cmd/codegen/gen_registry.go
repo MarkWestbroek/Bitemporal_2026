@@ -83,6 +83,125 @@ func generateMetaRegistry(v3 model.V3Model) (string, error) {
 	return b.String(), nil
 }
 
+// generateMetaRegistryAdditive genereert een additive metaregistry die entries
+// toevoegt aan de bestaande MetaRegistry via een init() functie.
+func generateMetaRegistryAdditive(v3 model.V3Model) (string, error) {
+	var b strings.Builder
+	b.WriteString(fileHeader("Additieve MetaRegistry-entries — voegt types toe aan de bestaande MetaRegistry.\n// Gegenereerd door cmd/codegen — niet handmatig bewerken."))
+	b.WriteString("\n")
+
+	b.WriteString("func init() {\n")
+
+	// We hergebruiken de bestaande write-helpers, maar moeten de entries
+	// wrappen als MetaRegistry["key"] = TypeMeta{...} i.p.v. "key": {...}
+	// Daarvoor genereren we de entries in een tijdelijke buffer en formatteren ze.
+	var entries strings.Builder
+
+	for _, ent := range v3.Entiteiten {
+		entIDKolom := strings.ToLower(ent.Typenaam) + "_id"
+
+		// ---- Entiteit ----
+		d := deriveEntiteit(ent)
+		writeEntiteitEntry(&entries, ent, d, entIDKolom)
+
+		// ---- GE hubs ----
+		for _, ge := range ent.Gegevenselementen {
+			hubType := ent.Typenaam + "_" + ge.Naam
+			padnaam := strings.ToLower(ent.Typenaam) + "_" + strings.ToLower(ge.Naam) + "s"
+			dHub := deriveHub(ent.Typenaam, hubType, "gegevenselement", ge.IsMaterieel, padnaam, "")
+			writeHubEntry(&entries, dHub, ge.Description, ent.Kleur, ge.Momentvoorkomen, ge.IsMaterieel, ge.Naam)
+		}
+
+		// ---- Relatie hubs ----
+		for _, rel := range ent.Relaties {
+			secIDKolom := strings.ToLower(rel.DoelEntiteit) + "_id"
+			dHub := deriveHub(ent.Typenaam, rel.Naam, "relatie", rel.IsMaterieel, rel.Meervoud, secIDKolom)
+			writeRelHubEntry(&entries, dHub, rel)
+		}
+
+		// ---- _Data types ----
+		for _, ge := range ent.Gegevenselementen {
+			hubType := ent.Typenaam + "_" + ge.Naam
+			dData := deriveData(hubType, ent.Typenaam)
+			writeDataEntry(&entries, dData, ge.Description, ent.Kleur)
+		}
+		for _, rel := range ent.Relaties {
+			dData := deriveData(rel.Naam, ent.Typenaam)
+			writeDataEntry(&entries, dData, rel.Description, ent.Kleur)
+		}
+
+		// ---- Entiteits-level Aanvang/Einde ----
+		if ent.IsMaterieel {
+			for _, suffix := range []string{"Aanvang", "Einde"} {
+				dAE := deriveAanvangEinde(ent.Typenaam, ent.Typenaam, suffix)
+				writeAanvangEindeEntry(&entries, dAE, ent.Kleur, suffix, ent.Typenaam)
+			}
+		}
+
+		// ---- Hub-level Aanvang/Einde ----
+		for _, ge := range ent.Gegevenselementen {
+			if !ge.IsMaterieel {
+				continue
+			}
+			hubType := ent.Typenaam + "_" + ge.Naam
+			for _, suffix := range []string{"Aanvang", "Einde"} {
+				dAE := deriveAanvangEinde(hubType, ent.Typenaam, suffix)
+				writeAanvangEindeEntry(&entries, dAE, ent.Kleur, suffix, hubType)
+			}
+		}
+		for _, rel := range ent.Relaties {
+			if !rel.IsMaterieel {
+				continue
+			}
+			for _, suffix := range []string{"Aanvang", "Einde"} {
+				dAE := deriveAanvangEinde(rel.Naam, ent.Typenaam, suffix)
+				writeAanvangEindeEntry(&entries, dAE, ent.Kleur, suffix, rel.Naam)
+			}
+		}
+	}
+
+	// Converteer map-literal entries naar assignment-statements:
+	// Van:  "Key": { ... },
+	// Naar: MetaRegistry["Key"] = TypeMeta{ ... }
+	b.WriteString(mapLiteralToAssignments(entries.String()))
+
+	b.WriteString("}\n")
+	return b.String(), nil
+}
+
+// mapLiteralToAssignments converteert MetaRegistry map-literal entries naar init()-assignments.
+// Input:  \t"Key": {\n\t\tField: value,\n\t},\n
+// Output: \tMetaRegistry["Key"] = TypeMeta{\n\t\tField: value,\n\t}\n
+func mapLiteralToAssignments(literal string) string {
+	var result strings.Builder
+	lines := strings.Split(literal, "\n")
+	for i := 0; i < len(lines); i++ {
+		line := lines[i]
+		trimmed := strings.TrimSpace(line)
+
+		// Detecteer opening: "Key": {
+		if strings.HasPrefix(trimmed, `"`) && strings.HasSuffix(trimmed, ": {") {
+			// Extraheer de key
+			colonIdx := strings.Index(trimmed, `": {`)
+			key := trimmed[1:colonIdx]
+			result.WriteString(fmt.Sprintf("\tMetaRegistry[%q] = TypeMeta{\n", key))
+			continue
+		}
+
+		// Detecteer sluiting: },
+		if trimmed == "}," {
+			result.WriteString("\t}\n")
+			continue
+		}
+
+		// Alle andere regels ongewijzigd
+		if line != "" {
+			result.WriteString(line + "\n")
+		}
+	}
+	return result.String()
+}
+
 // writeEntiteitEntry schrijft de MetaRegistry entry voor een entiteit.
 func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType, entIDKolom string) {
 	b.WriteString(fmt.Sprintf("\t%q: {\n", ent.Typenaam))

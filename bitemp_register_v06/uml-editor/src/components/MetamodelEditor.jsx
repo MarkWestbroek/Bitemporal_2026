@@ -57,8 +57,10 @@ import { exportNaarXMI } from "../export/exportXMI";
 import {
   generateId,
   editorNaarMetamodel,
+  editorNaarV3Model,
   schemaResponseNaarEditor,
 } from "../metamodel/types";
+import { v3ModelNaarEditor } from "../metamodel/v3ModelNaarEditor";
 
 /**
  * nodeTypes vertelt React Flow welke React-component bij welk node type hoort.
@@ -97,8 +99,88 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [] }
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId) || null;
   const selectedEdge = edges.find((e) => e.id === selectedEdgeId) || null;
+  const nodeTypeById = useMemo(
+    () => new Map(nodes.map((n) => [n.id, n.type])),
+    [nodes]
+  );
   const datatypeNodes = useMemo(() => nodes.filter((n) => n.type === "gegevenstype"), [nodes]);
   const enumNodes = useMemo(() => nodes.filter((n) => n.type === "enumeratie"), [nodes]);
+  const entiteitNodes = useMemo(() => nodes.filter((n) => n.type === "entiteit"), [nodes]);
+
+  const swapConnectionDirection = useCallback((connection) => {
+    return {
+      ...connection,
+      source: connection.target,
+      target: connection.source,
+      sourceHandle: connection.targetHandle,
+      targetHandle: connection.sourceHandle,
+    };
+  }, []);
+
+  const normalizeConnection = useCallback(
+    (connection, currentEdges) => {
+      const sourceType = nodeTypeById.get(connection.source);
+      const targetType = nodeTypeById.get(connection.target);
+
+      if (!sourceType || !targetType) {
+        return connection;
+      }
+
+      // GE hoort altijd onder entiteit te hangen.
+      if (sourceType === "gegevenselement" && targetType === "entiteit") {
+        return swapConnectionDirection(connection);
+      }
+
+      // Enum/datatype dependency wijzen altijd van modeltype naar enum/datatype.
+      if (
+        (sourceType === "enumeratie" && targetType !== "enumeratie") ||
+        (sourceType === "gegevenstype" && targetType !== "gegevenstype")
+      ) {
+        return swapConnectionDirection(connection);
+      }
+
+      // Entiteit-relatie: eerste koppeling = entiteit -> relatie (owner),
+      // tweede koppeling = relatie -> entiteit (doel-entiteit).
+      if (
+        (sourceType === "entiteit" && targetType === "relatie") ||
+        (sourceType === "relatie" && targetType === "entiteit")
+      ) {
+        const relatieId = sourceType === "relatie" ? connection.source : connection.target;
+        const entiteitId = sourceType === "entiteit" ? connection.source : connection.target;
+
+        const ownerEdge = currentEdges.find((e) => {
+          if (e.type !== "metamodel") return false;
+          if (e.target !== relatieId) return false;
+          return nodeTypeById.get(e.source) === "entiteit";
+        });
+
+        if (!ownerEdge) {
+          return {
+            ...connection,
+            source: entiteitId,
+            target: relatieId,
+          };
+        }
+
+        if (ownerEdge.source === entiteitId) {
+          return {
+            ...connection,
+            source: entiteitId,
+            target: relatieId,
+          };
+        }
+
+        return {
+          ...connection,
+          source: relatieId,
+          target: entiteitId,
+        };
+      }
+
+      return connection;
+    },
+    [nodeTypeById, swapConnectionDirection]
+  );
 
   /**
    * onConnect wordt aangeroepen wanneer een gebruiker een edge trekt
@@ -107,20 +189,23 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [] }
    */
   const onConnect = useCallback(
     (connection) => {
-      const newEdge = {
-        ...connection,
-        id: generateId("edge"),
-        type: "metamodel",
-        data: {
-          rolnaam: "",
-          jsonRolnaam: "",
-          momentvoorkomen: "enkelvoudig",
-          kardinaliteit: "0..1",
-        },
-      };
-      setEdges((eds) => addEdge(newEdge, eds));
+      setEdges((eds) => {
+        const normalized = normalizeConnection(connection, eds);
+        const newEdge = {
+          ...normalized,
+          id: generateId("edge"),
+          type: "metamodel",
+          data: {
+            rolnaam: "",
+            jsonRolnaam: "",
+            momentvoorkomen: "enkelvoudig",
+            kardinaliteit: "0..1",
+          },
+        };
+        return addEdge(newEdge, eds);
+      });
     },
-    [setEdges]
+    [normalizeConnection, setEdges]
   );
 
   /** Selectie handlers */
@@ -163,28 +248,179 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [] }
   /** Update de data van een bestaande node */
   const handleUpdateNode = useCallback(
     (nodeId, newData) => {
-      setNodes((nds) =>
-        nds.map((n) => {
+      setNodes((nds) => {
+        const previousNode = nds.find((n) => n.id === nodeId) || null;
+        const vorigeEnumNaam = previousNode?.type === "enumeratie" ? (previousNode.data?.naam || "") : "";
+        const nieuweEnumNaam = previousNode?.type === "enumeratie" ? (newData?.naam || "") : "";
+        const vorigeDatatypeNaam = previousNode?.type === "gegevenstype" ? (previousNode.data?.naam || "") : "";
+        const nieuweDatatypeNaam = previousNode?.type === "gegevenstype" ? (newData?.naam || "") : "";
+        const isEnumRename =
+          previousNode?.type === "enumeratie" &&
+          vorigeEnumNaam !== "" &&
+          vorigeEnumNaam !== nieuweEnumNaam;
+        const isDatatypeRename =
+          previousNode?.type === "gegevenstype" &&
+          vorigeDatatypeNaam !== "" &&
+          vorigeDatatypeNaam !== nieuweDatatypeNaam;
+
+        const updatedNodes = nds.map((n) => {
           if (n.id !== nodeId) return n;
           // Als metatype veranderd is, verander ook het node type
           const newType = newData.metatype || n.type;
           return { ...n, type: newType, data: newData };
-        })
-      );
+        }).map((n) => {
+          if (!isEnumRename) return n;
+          if (n.id === nodeId) return n;
+          if (!Array.isArray(n.data?.velden)) return n;
+
+          let changed = false;
+          const velden = n.data.velden.map((v) => {
+            let next = v;
+
+            if (isEnumRename && v.enumNaam === vorigeEnumNaam) {
+              changed = true;
+              next = {
+                ...next,
+                enumNaam: nieuweEnumNaam || null,
+              };
+            }
+
+            if (isDatatypeRename && v.datatypeNaam === vorigeDatatypeNaam) {
+              changed = true;
+              next = {
+                ...next,
+                datatypeNaam: nieuweDatatypeNaam || null,
+              };
+            }
+
+            return next;
+          });
+
+          return changed ? { ...n, data: { ...n.data, velden } } : n;
+        });
+
+        // Houd enum-dependency edges automatisch synchroon met geselecteerde enum-veldtypes.
+        setEdges((eds) => {
+          const node = updatedNodes.find((n) => n.id === nodeId);
+          if (!node) return eds;
+
+          const enumTargets = new Set(
+            (node.data?.velden || [])
+              .map((v) => v.enumNaam)
+              .filter(Boolean)
+              .map((enumNaam) => {
+                const enumNode = updatedNodes.find(
+                  (n) => n.type === "enumeratie" && n.data?.naam === enumNaam
+                );
+                return enumNode?.id || null;
+              })
+              .filter(Boolean)
+          );
+
+          const existingEnumDeps = eds.filter(
+            (e) => e.source === nodeId && e.data?.isDependency === true
+          );
+          const keepIds = new Set(
+            existingEnumDeps
+              .filter((e) => enumTargets.has(e.target))
+              .map((e) => e.id)
+          );
+
+          const withoutOldEnumDeps = eds.filter(
+            (e) => !(e.source === nodeId && e.data?.isDependency === true)
+          );
+          const keptEnumDeps = existingEnumDeps.filter((e) => keepIds.has(e.id));
+
+          const existingTargets = new Set(keptEnumDeps.map((e) => e.target));
+          const newEnumDeps = Array.from(enumTargets)
+            .filter((targetId) => !existingTargets.has(targetId))
+            .map((targetId) => ({
+              id: generateId("edge"),
+              source: nodeId,
+              target: targetId,
+              type: "metamodel",
+              data: {
+                isDependency: true,
+                rolnaam: "",
+                jsonRolnaam: "",
+                momentvoorkomen: "",
+                kardinaliteit: "",
+              },
+            }));
+
+          return [...withoutOldEnumDeps, ...keptEnumDeps, ...newEnumDeps];
+        });
+
+        return updatedNodes;
+      });
     },
-    [setNodes]
+    [setEdges, setNodes]
   );
 
   /** Verwijder een node en alle bijbehorende edges */
   const handleDeleteNode = useCallback(
     (nodeId) => {
-      setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+      const nodeToDelete = nodes.find((n) => n.id === nodeId);
+      if (!nodeToDelete) return;
+
+      const verwijderType = nodeToDelete.type;
+      const verwijderNaam = nodeToDelete.data?.naam || "";
+
+      if (verwijderType === "enumeratie" || verwijderType === "gegevenstype") {
+        const referenties = nodes
+          .filter((n) => n.id !== nodeId && Array.isArray(n.data?.velden))
+          .reduce((acc, n) => {
+            const count = n.data.velden.filter((v) => {
+              if (verwijderType === "enumeratie") {
+                return v.enumNaam === verwijderNaam;
+              }
+              return v.datatypeNaam === verwijderNaam;
+            }).length;
+            return acc + count;
+          }, 0);
+
+        const label = verwijderType === "enumeratie" ? "enumeratie" : "gegevenstype";
+        const naamTekst = verwijderNaam ? ` '${verwijderNaam}'` : "";
+        const waarschuwing = referenties > 0
+          ? `De ${label}${naamTekst} wordt nog ${referenties}x gebruikt in velden. Verwijderen en referenties opruimen?`
+          : `Weet je zeker dat je de ${label}${naamTekst} wilt verwijderen?`;
+
+        if (!window.confirm(waarschuwing)) {
+          return;
+        }
+
+        if (referenties > 0) {
+          const tweedeStap = `Laatste controle: je staat op het punt een gebruikte ${label}${naamTekst} te verwijderen. Dit haalt ${referenties} verwijzingen weg. Doorgaan?`;
+          if (!window.confirm(tweedeStap)) {
+            return;
+          }
+        }
+      }
+
+      setNodes((nds) => {
+        const cleaned = nds
+          .filter((n) => n.id !== nodeId)
+          .map((n) => {
+            if (!Array.isArray(n.data?.velden)) return n;
+            const velden = n.data.velden.map((v) => {
+              if (verwijderType === "enumeratie" && v.enumNaam === verwijderNaam) {
+                return { ...v, enumNaam: null, enum: null };
+              }
+              if (verwijderType === "gegevenstype" && v.datatypeNaam === verwijderNaam) {
+                return { ...v, datatypeNaam: null };
+              }
+              return v;
+            });
+            return { ...n, data: { ...n.data, velden } };
+          });
+        return cleaned;
+      });
       setEdges((eds) =>
         eds.filter((e) => e.source !== nodeId && e.target !== nodeId)
       );
       setSelectedNodeId(null);
     },
-    [setNodes, setEdges]
+    [nodes, setNodes, setEdges]
   );
 
   // === Edge CRUD ===
@@ -223,6 +459,104 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [] }
     URL.revokeObjectURL(url);
   }, [nodes, edges]);
 
+  const handleSaveV3 = useCallback(() => {
+    const v3Model = editorNaarV3Model(nodes, edges);
+    const blob = new Blob([JSON.stringify(v3Model, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "metamodel_v3.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [nodes, edges]);
+
+  // Publiceer het actuele editor-model als proposed schema_versie via POST /api/schema/model.
+  const handlePublishSchemaModel = useCallback(async () => {
+    const v3Model = editorNaarV3Model(nodes, edges);
+
+    const versieInput = prompt("Modelversie (verplicht):", v3Model.versie || "v3");
+    if (versieInput === null) return;
+    const versie = versieInput.trim();
+    if (!versie) {
+      alert("Publiceren geannuleerd: versie is verplicht.");
+      return;
+    }
+
+    const naamInput = prompt("Modelnaam (verplicht):", v3Model.naam || "Editor export");
+    if (naamInput === null) return;
+    const naam = naamInput.trim();
+    if (!naam) {
+      alert("Publiceren geannuleerd: naam is verplicht.");
+      return;
+    }
+
+    const indienerInput = prompt("Indiener (verplicht):", "uml-editor-v2");
+    if (indienerInput === null) return;
+    const indiener = indienerInput.trim();
+    if (!indiener) {
+      alert("Publiceren geannuleerd: indiener is verplicht.");
+      return;
+    }
+
+    const opmerkingInput = prompt("Opmerking (optioneel):", "");
+    if (opmerkingInput === null) return;
+    const opmerking = opmerkingInput.trim();
+
+    const defaultUrl =
+      window.location.port === "5174"
+        ? "http://localhost:8082/api/schema/model"
+        : "/api/schema/model";
+    const endpointInput = prompt("Schema POST endpoint:", defaultUrl);
+    if (!endpointInput) return;
+
+    const endpoint = new URL(endpointInput, window.location.origin);
+    if (opmerking) {
+      endpoint.searchParams.set("opmerking", opmerking);
+    }
+
+    const payload = {
+      bron: "uml-editor-v2",
+      indiener,
+      model: {
+        ...v3Model,
+        versie,
+        naam,
+      },
+    };
+
+    try {
+      const response = await fetch(endpoint.toString(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const rawText = await response.text();
+      let body = null;
+      try {
+        body = rawText ? JSON.parse(rawText) : null;
+      } catch {
+        body = null;
+      }
+
+      if (!response.ok) {
+        const message = body?.error || `HTTP ${response.status}`;
+        const details = body?.details ? `\nDetails: ${body.details}` : "";
+        throw new Error(`${message}${details}`);
+      }
+
+      const nieuwId = body?.id ?? "(onbekend)";
+      alert(`Schema-model opgeslagen als proposed versie met ID ${nieuwId}.`);
+    } catch (err) {
+      console.error("Publiceren schema-model mislukt:", err);
+      alert(`Publiceren mislukt: ${err.message}`);
+    }
+  }, [nodes, edges]);
+
   const handleLoad = useCallback(() => {
     const input = document.createElement("input");
     input.type = "file";
@@ -234,13 +568,26 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [] }
       reader.onload = (evt) => {
         try {
           const payload = JSON.parse(evt.target.result);
+
           if (payload.flowState) {
             setNodes(payload.flowState.nodes || []);
             setEdges(payload.flowState.edges || []);
+            return;
           }
+
+          // Ondersteun V3 payloads: direct model of wrapper met top-level model.
+          const maybeV3 = payload?.model && payload.model.entiteiten ? payload.model : payload;
+          if (maybeV3 && maybeV3.entiteiten) {
+            const result = v3ModelNaarEditor(maybeV3);
+            setNodes(result.nodes || []);
+            setEdges(result.edges || []);
+            return;
+          }
+
+          throw new Error("Onbekend JSON-formaat: verwacht flowState of V3 model met entiteiten");
         } catch (err) {
           console.error("Laden mislukt:", err);
-          alert("Ongeldig JSON-bestand");
+          alert(`Laden mislukt: ${err.message}`);
         }
       };
       reader.readAsText(file);
@@ -309,6 +656,8 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [] }
       <Toolbar
         onAddNode={handleAddNode}
         onSave={handleSave}
+        onSaveV3={handleSaveV3}
+        onPublishSchemaModel={handlePublishSchemaModel}
         onLoad={handleLoad}
         onLoadSchema={handleLoadSchema}
         onToggleTestInvoer={() => setShowTestInvoer((v) => !v)}
@@ -358,6 +707,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [] }
               onDelete={handleDeleteNode}
               datatypeNodes={datatypeNodes}
               enumNodes={enumNodes}
+                entiteitNodes={entiteitNodes}
             />
           )}
           {selectedEdge && !selectedNode && (

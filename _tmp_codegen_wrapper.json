@@ -1,0 +1,24 @@
+{
+  "model": {
+    "versie": "v3",
+    "naam": "Test",
+    "entiteiten": [
+      {
+        "typenaam": "Persoon",
+        "meervoud": "personen",
+        "gegevenselementen": [
+          {
+            "naam": "Naam",
+            "meervoud": "namen",
+            "momentvoorkomen": "enkelvoudig",
+            "velden": [
+              {"naam": "volledige_naam", "goType": "string"}
+            ]
+          }
+        ],
+        "relaties": []
+      }
+    ]
+  },
+  "flowState": {"nodes": [], "edges": []}
+}

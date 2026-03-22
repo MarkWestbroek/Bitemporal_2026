@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 )
@@ -16,13 +17,30 @@ func main() {
 	inputFile := flag.String("input", "", "Pad naar het v3 model JSON bestand")
 	fromURL := flag.String("from-url", "", "URL van het draaiende register (GET /api/schema/model)")
 	outputDir := flag.String("output", "model/", "Doeldirectory voor gegenereerde bestanden")
+	prefix := flag.String("prefix", "", "Bestandsnaam-prefix voor gegenereerde bestanden (bijv. 'hr' → hr_modellen_entiteiten.go)")
+	mode := flag.String("mode", "standalone", "Generatiemodus: 'standalone' (eigen var MetaRegistry) of 'additive' (init() voegt toe aan bestaande MetaRegistry)")
 	flag.Parse()
 
 	if *inputFile == "" && *fromURL == "" {
-		fmt.Fprintln(os.Stderr, "Gebruik: go run ./cmd/codegen --input model.json [--output model/]")
-		fmt.Fprintln(os.Stderr, "    of:  go run ./cmd/codegen --from-url http://localhost:8080/api/schema/model [--output model/]")
+		fmt.Fprintln(os.Stderr, "Gebruik: go run ./cmd/codegen --input <pad-naar-v3-model.json> [--output model/]")
+		fmt.Fprintln(os.Stderr, "    of:  go run ./cmd/codegen --from-url http://localhost:8082/api/schema/model/code [--output model/]")
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, "Opties:")
+		fmt.Fprintln(os.Stderr, "  --prefix <naam>   Bestandsprefix (bijv. --prefix hr → hr_modellen_entiteiten.go)")
+		fmt.Fprintln(os.Stderr, "  --mode <modus>    'standalone' (default) of 'additive' (voegt toe via init())")
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, "Tips:")
+		fmt.Fprintln(os.Stderr, "  - De inputfile is niet hardcoded; elk pad mag, model.json is alleen een voorbeeldnaam.")
+		fmt.Fprintln(os.Stderr, "  - Wrapper payloads met top-level 'model' worden ondersteund.")
+		fmt.Fprintln(os.Stderr, "  - Editor-export met 'flowState' wordt genegeerd, zolang payload.model een geldig V3-model is.")
 		os.Exit(1)
 	}
+
+	if *mode != "standalone" && *mode != "additive" {
+		fmt.Fprintf(os.Stderr, "Onbekende mode %q: gebruik 'standalone' of 'additive'\n", *mode)
+		os.Exit(1)
+	}
+	additive := *mode == "additive"
 
 	var data []byte
 	var err error
@@ -41,19 +59,38 @@ func main() {
 		}
 	}
 
-	var v3 model.V3Model
-	if err := json.Unmarshal(data, &v3); err != nil {
-		fmt.Fprintf(os.Stderr, "Kan JSON niet parsen: %v\n", err)
+	v3, err := parseV3ModelInput(data)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Kan V3 model niet laden: %v\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Printf("Model geladen: versie=%s, %d entiteiten, %d enums\n",
-		v3.Versie, len(v3.Entiteiten), len(v3.Enums))
+	if validationErrors := validateV3Model(v3); len(validationErrors) > 0 {
+		fmt.Fprintln(os.Stderr, "V3 model validatie mislukt:")
+		for _, e := range validationErrors {
+			fmt.Fprintf(os.Stderr, "  - %s\n", e)
+		}
+		os.Exit(1)
+	}
+
+	fmt.Printf("Model geladen: versie=%s, %d entiteiten, %d enums, %d datatypes (mode=%s)\n",
+		v3.Versie, len(v3.Entiteiten), len(v3.Enums), len(v3.Datatypes), *mode)
 
 	// Maak de output directory aan als die niet bestaat
 	if err := os.MkdirAll(*outputDir, 0750); err != nil {
 		fmt.Fprintf(os.Stderr, "Kan output directory niet aanmaken: %v\n", err)
 		os.Exit(1)
+	}
+
+	// Bepaal generatiefuncties op basis van additive mode
+	var genRegistry func(model.V3Model) (string, error)
+	var genDatatypes func(model.V3Model) (string, error)
+	if additive {
+		genRegistry = generateMetaRegistryAdditive
+		genDatatypes = generateDatatypeRegistryAdditive
+	} else {
+		genRegistry = generateMetaRegistry
+		genDatatypes = generateDatatypeRegistry
 	}
 
 	// Genereer alle bestanden
@@ -65,7 +102,14 @@ func main() {
 		{"modellen_ge_rel.go", generateGeRel},
 		{"modellen_methods.go", generateMethods},
 		{"modellen_input.go", generateInput},
-		{"metaregistry.go", generateMetaRegistry},
+		{"metaregistry.go", genRegistry},
+		{"datatype_registry.go", genDatatypes},
+	}
+
+	// Prefix toepassen op bestandsnamen
+	filePrefix := ""
+	if *prefix != "" {
+		filePrefix = strings.ToLower(*prefix) + "_"
 	}
 
 	for _, f := range files {
@@ -74,7 +118,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Fout bij genereren van %s: %v\n", f.naam, err)
 			os.Exit(1)
 		}
-		path := filepath.Join(*outputDir, f.naam)
+		path := filepath.Join(*outputDir, filePrefix+f.naam)
 		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 			fmt.Fprintf(os.Stderr, "Kan %s niet schrijven: %v\n", path, err)
 			os.Exit(1)
@@ -113,4 +157,147 @@ func fetchModelFromURL(url string) ([]byte, error) {
 
 	// Anders is het direct een V3Model
 	return body, nil
+}
+
+func parseV3ModelInput(data []byte) (model.V3Model, error) {
+	payload := data
+
+	// Ondersteun wrapper payloads, zoals API-response of editor-export met flowState.
+	var wrapper struct {
+		Model json.RawMessage `json:"model"`
+	}
+	if err := json.Unmarshal(data, &wrapper); err == nil && len(wrapper.Model) > 0 {
+		payload = wrapper.Model
+	}
+
+	// Detecteer expliciet het oude/platte editor-formaat.
+	var asMap map[string]json.RawMessage
+	if err := json.Unmarshal(payload, &asMap); err == nil {
+		if _, hasTypes := asMap["types"]; hasTypes {
+			return model.V3Model{}, fmt.Errorf("input lijkt op het platte editor-formaat met 'types/relaties'; codegen verwacht V3-formaat met 'entiteiten' (tip: gebruik --from-url /api/schema/model/code)")
+		}
+	}
+
+	var v3 model.V3Model
+	if err := json.Unmarshal(payload, &v3); err != nil {
+		return model.V3Model{}, err
+	}
+
+	return v3, nil
+}
+
+func validateV3Model(v3 model.V3Model) []string {
+	var errs []string
+
+	if strings.TrimSpace(v3.Versie) == "" {
+		errs = append(errs, "model.versie is verplicht")
+	}
+	if len(v3.Entiteiten) == 0 {
+		errs = append(errs, "minimaal één entiteit vereist in model.entiteiten")
+		return errs
+	}
+
+	entiteiten := map[string]struct{}{}
+	for i, ent := range v3.Entiteiten {
+		ctx := fmt.Sprintf("entiteiten[%d]", i)
+		if !isPascalIdentifier(ent.Typenaam) {
+			errs = append(errs, fmt.Sprintf("%s.typenaam '%s' is ongeldig; gebruik PascalCase zonder spaties/koppeltekens (bijv. Persoon)", ctx, ent.Typenaam))
+		}
+		if !isSnakeLike(ent.Meervoud) {
+			errs = append(errs, fmt.Sprintf("%s.meervoud '%s' is ongeldig; gebruik lowercase/snake_case (bijv. personen of persoon_records)", ctx, ent.Meervoud))
+		}
+		entiteiten[ent.Typenaam] = struct{}{}
+
+		for j, ge := range ent.Gegevenselementen {
+			gctx := fmt.Sprintf("%s.gegevenselementen[%d]", ctx, j)
+			if !isPascalIdentifier(ge.Naam) {
+				errs = append(errs, fmt.Sprintf("%s.naam '%s' is ongeldig; gebruik PascalCase (bijv. Persoonsidentificatie of Naam)", gctx, ge.Naam))
+			}
+			if !isSnakeLike(ge.Meervoud) {
+				errs = append(errs, fmt.Sprintf("%s.meervoud '%s' is ongeldig; gebruik lowercase/snake_case", gctx, ge.Meervoud))
+			}
+			if ge.Momentvoorkomen != "enkelvoudig" && ge.Momentvoorkomen != "meervoudig" {
+				errs = append(errs, fmt.Sprintf("%s.momentvoorkomen '%s' is ongeldig; gebruik 'enkelvoudig' of 'meervoudig'", gctx, ge.Momentvoorkomen))
+			}
+			for k, veld := range ge.Velden {
+				vctx := fmt.Sprintf("%s.velden[%d]", gctx, k)
+				if !isIdentifierLike(veld.Naam) {
+					errs = append(errs, fmt.Sprintf("%s.naam '%s' is ongeldig; gebruik letters/cijfers/underscore (bijv. voorletters)", vctx, veld.Naam))
+				}
+			}
+		}
+
+		for j, rel := range ent.Relaties {
+			rctx := fmt.Sprintf("%s.relaties[%d]", ctx, j)
+			if !isPascalIdentifier(rel.Naam) {
+				errs = append(errs, fmt.Sprintf("%s.naam '%s' is ongeldig; gebruik PascalCase (underscore mag, bijv. Rel_Persoon_Adres)", rctx, rel.Naam))
+			}
+			if !isSnakeLike(rel.Meervoud) {
+				errs = append(errs, fmt.Sprintf("%s.meervoud '%s' is ongeldig; gebruik lowercase/snake_case", rctx, rel.Meervoud))
+			}
+			if rel.Momentvoorkomen != "enkelvoudig" && rel.Momentvoorkomen != "meervoudig" {
+				errs = append(errs, fmt.Sprintf("%s.momentvoorkomen '%s' is ongeldig; gebruik 'enkelvoudig' of 'meervoudig'", rctx, rel.Momentvoorkomen))
+			}
+			if rel.DoelEntiteit == "" {
+				errs = append(errs, fmt.Sprintf("%s.doelEntiteit is verplicht", rctx))
+			}
+			for k, veld := range rel.Velden {
+				vctx := fmt.Sprintf("%s.velden[%d]", rctx, k)
+				if !isIdentifierLike(veld.Naam) {
+					errs = append(errs, fmt.Sprintf("%s.naam '%s' is ongeldig; gebruik letters/cijfers/underscore", vctx, veld.Naam))
+				}
+			}
+		}
+	}
+
+	for i, ent := range v3.Entiteiten {
+		for j, rel := range ent.Relaties {
+			if rel.DoelEntiteit == "" {
+				continue
+			}
+			if _, ok := entiteiten[rel.DoelEntiteit]; !ok {
+				errs = append(errs, fmt.Sprintf("entiteiten[%d].relaties[%d].doelEntiteit '%s' bestaat niet in model.entiteiten", i, j, rel.DoelEntiteit))
+			}
+		}
+	}
+
+	return errs
+}
+
+func isIdentifierLike(s string) bool {
+	if s == "" {
+		return false
+	}
+	for i, r := range s {
+		if !(r == '_' || (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9')) {
+			return false
+		}
+		if i == 0 && (r >= '0' && r <= '9') {
+			return false
+		}
+	}
+	return true
+}
+
+func isPascalIdentifier(s string) bool {
+	if !isIdentifierLike(s) {
+		return false
+	}
+	r := rune(s[0])
+	return r >= 'A' && r <= 'Z'
+}
+
+func isSnakeLike(s string) bool {
+	if s == "" {
+		return false
+	}
+	for i, r := range s {
+		if !(r == '_' || (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9')) {
+			return false
+		}
+		if i == 0 && (r < 'a' || r > 'z') {
+			return false
+		}
+	}
+	return true
 }

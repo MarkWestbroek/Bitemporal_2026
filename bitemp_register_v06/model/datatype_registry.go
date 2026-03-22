@@ -42,5 +42,3 @@ var DatatypeRegistry = []V3Datatype{
 		},
 	},
 }
-
-func intPtr(v int) *int { return &v }

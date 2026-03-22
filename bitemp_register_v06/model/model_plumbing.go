@@ -214,3 +214,6 @@ func (reg *Registratie) UnmarshalJSON(data []byte) error {
 // methodes op registratie en wijziging om ID te kunnen ophalen in de generic handlers
 func (reg Registratie) GetID() any { return reg.ID } // waarschijnlijk niet nodig, want Registratie is geen representatie
 func (wij Wijziging) GetID() any   { return wij.ID } //waarschijnlijk niet nodig, want Wijziging is geen representatie
+
+// intPtr is een helper voor het aanmaken van *int waarden in DatatypeRegistry entries.
+func intPtr(v int) *int { return &v }

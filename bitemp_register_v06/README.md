@@ -137,6 +137,113 @@ Deze waarden vullen zowel top-level responsemetadata als, waar van toepassing, d
 
 Voor uitgebreide ontwerpachtergrond en lifecycle: zie `model/ontwerpkeuzen.md`.
 
+## Codegen proberen (V3)
+
+Je kunt de codegenerator op twee manieren draaien:
+
+- Vanuit een draaiende API (aanbevolen):
+  - `go run ./cmd/codegen --from-url http://localhost:8082/api/schema/model/code --output model`
+- Vanuit een specifieke database-versie op ID:
+  - `go run ./cmd/codegen --from-url http://localhost:8082/api/schema/model/123 --output model`
+- Vanuit een bestand:
+  - `go run ./cmd/codegen --input model.json --output model`
+
+`model.json` is hierbij alleen een voorbeeldnaam. De codegenerator leest het pad dat je via `--input` meegeeft; dat mag dus ook bijvoorbeeld `exports/metamodel_v3.json` zijn.
+
+### Inputformat en editor-export
+
+- Codegen verwacht een **V3-model** met top-level `entiteiten`.
+- Wrapper payloads met top-level `model` worden ondersteund.
+- Extra top-level velden (zoals `flowState` uit de editor) worden genegeerd.
+- Let op: het oude/platte editor-model met `types`/`relaties` is **geen** V3 input voor codegen.
+
+Als je model uit de editor wilt gebruiken voor codegen, gebruik dan bij voorkeur eerst de V3 API-bron (`/api/schema/model/code`) als input voor codegen.
+
+### Modus: standalone vs. additive
+
+De codegenerator ondersteunt twee modi via `--mode`:
+
+| Modus | Beschrijving |
+|-------|-------------|
+| `standalone` (default) | Genereert bestanden die de **gehele** `MetaRegistry` en `DatatypeRegistry` definiëren. Bestaande definities worden overschreven. |
+| `additive` | Genereert bestanden die via Go `init()` functies **toevoegen** aan de bestaande registries. Het register groeit: de hand-geschreven basis-entries (A, B, etc.) blijven intact en het gegenereerde model wordt ernaast geladen. |
+
+**Standalone** (standaard — vervangt het hele model):
+```sh
+go run ./cmd/codegen --from-url http://localhost:8082/api/schema/model/5 --output model
+```
+
+**Additive** (voegt toe aan bestaand model, met file-prefix):
+```sh
+go run ./cmd/codegen --from-url http://localhost:8082/api/schema/model/5 \
+  --output model --mode additive --prefix hr
+```
+
+Dit genereert bestanden als `hr_metaregistry.go`, `hr_modellen_entiteiten.go`, etc. In de MetaRegistry worden entries toegevoegd via `init()`:
+
+```go
+func init() {
+    MetaRegistry["Medewerker"] = TypeMeta{ ... }
+    MetaRegistry["Medewerker_Naam"] = TypeMeta{ ... }
+}
+```
+
+De DatatypeRegistry wordt uitgebreid via `append()`:
+
+```go
+func init() {
+    DatatypeRegistry = append(DatatypeRegistry, V3Datatype{ ... }, ...)
+}
+```
+
+> **Hoe werkt dit?** Go garandeert dat package-level `var`-declaraties (waar `MetaRegistry` en `DatatypeRegistry` worden geïnitialiseerd) worden uitgevoerd vóór alle `init()`-functies. Daardoor bestaat de map/slice al wanneer de additive `init()` entries toevoegt.
+
+#### `--prefix` flag
+
+Met `--prefix hr` krijgen alle gegenereerde bestanden het prefix `hr_`:
+
+| Zonder prefix | Met `--prefix hr` |
+|---|---|
+| `metaregistry.go` | `hr_metaregistry.go` |
+| `modellen_entiteiten.go` | `hr_modellen_entiteiten.go` |
+| `modellen_ge_rel.go` | `hr_modellen_ge_rel.go` |
+| `modellen_methods.go` | `hr_modellen_methods.go` |
+| `modellen_input.go` | `hr_modellen_input.go` |
+| `datatype_registry.go` | `hr_datatype_registry.go` |
+
+Dit voorkomt dat gegenereerde bestanden de hand-geschreven bestanden overschrijven.
+
+### Validatie en foutmeldingen
+
+Codegen valideert nu vooraf en geeft concrete foutregels, onder andere voor:
+
+- verplichte V3 structuur (`versie`, `entiteiten`)
+- ongeldige type-namen (PascalCase voor type-namen)
+- ongeldige padnamen (`meervoud` in lowercase/snake_case)
+- ontbrekende of ongeldige `doelEntiteit` bij relaties
+
+### Debuggen in VS Code
+
+In `bitemp_register_v06/.vscode/launch.json` staan launch-configs voor:
+
+- `Go API v06: debug`
+- `Codegen v06: from code endpoint`
+- `Codegen v06: from DB model id`
+- `Codegen v06: from file`
+
+### Model publiceren vanuit editor (POST)
+
+In Editor v2 is er een toolbar-knop `Publiceer schema-model`.
+
+Die knop post het actuele V3-model naar `POST /api/schema/model` en vraagt vooraf om:
+
+- `versie`
+- `naam`
+- `indiener`
+- `opmerking` (optioneel, wordt als query-parameter meegegeven)
+
+Bij succes krijg je de nieuwe `id` van de opgeslagen `proposed` schema-versie terug.
+
 ## Admin endpoint security
 
 The destructive endpoint for dropping all tables is:

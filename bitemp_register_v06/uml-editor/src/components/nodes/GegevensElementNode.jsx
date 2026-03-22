@@ -63,8 +63,8 @@ function GegevensElementNode({ data, selected }) {
                 )}
               </span>
               <span className="veld-type">
-                {v.enumNaam || v.type}
-                {!v.enumNaam && v.format ? ` «${v.format}»` : ""}
+                {v.enumNaam || v.datatypeNaam || v.type}
+                {!v.enumNaam && !v.datatypeNaam && v.format ? ` «${v.format}»` : ""}
                 {v.autoIncrement ? " {AI}" : ""}
                 {!v.enumNaam && v.enum ? ` {${v.enum.join("|")}}` : ""}
               </span>

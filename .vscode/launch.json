@@ -59,6 +59,48 @@
             "mode": "auto",
             "program": "${workspaceFolder}/bitemp_register_v06",
             "cwd": "${workspaceFolder}/bitemp_register_v06"
+        },
+        {
+            "name": "Codegen v06: from code endpoint",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/bitemp_register_v06/cmd/codegen",
+            "cwd": "${workspaceFolder}/bitemp_register_v06",
+            "args": [
+                "--from-url",
+                "http://localhost:8082/api/schema/model/code",
+                "--output",
+                "model"
+            ]
+        },
+        {
+            "name": "Codegen v06: from file",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/bitemp_register_v06/cmd/codegen",
+            "cwd": "${workspaceFolder}/bitemp_register_v06",
+            "args": [
+                "--input",
+                "${input:codegenV3InputPathV06Root}",
+                "--output",
+                "model"
+            ]
+        },
+        {
+            "name": "Codegen v06: from DB model id",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/bitemp_register_v06/cmd/codegen",
+            "cwd": "${workspaceFolder}/bitemp_register_v06",
+            "args": [
+                "--from-url",
+                "${input:codegenV3ApiBaseUrlV06Root}/api/schema/model/${input:codegenV3ModelIdV06Root}",
+                "--output",
+                "model"
+            ]
         }
     ],
     "compounds": [
@@ -77,6 +119,26 @@
                 "Go API v06: debug"
             ],
             "stopAll": true
+        }
+    ],
+    "inputs": [
+        {
+            "id": "codegenV3InputPathV06Root",
+            "type": "promptString",
+            "description": "Pad naar V3 JSON inputbestand voor codegen (v06)",
+            "default": "${workspaceFolder}/bitemp_register_v06/metamodel_v3.json"
+        },
+        {
+            "id": "codegenV3ApiBaseUrlV06Root",
+            "type": "promptString",
+            "description": "Basis-URL van API (zonder trailing slash)",
+            "default": "http://localhost:8082"
+        },
+        {
+            "id": "codegenV3ModelIdV06Root",
+            "type": "promptString",
+            "description": "Schema model ID uit database",
+            "default": "1"
         }
     ]
 }

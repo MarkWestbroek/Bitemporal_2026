@@ -37,8 +37,11 @@ function goTypeNaarVeldType(goType) {
   }
 }
 
-function convertV3Veld(v3Veld, enumLookup) {
-  const { type, format } = goTypeNaarVeldType(v3Veld.goType);
+function convertV3Veld(v3Veld, enumLookup, datatypeLookup) {
+  const datatype = datatypeLookup[v3Veld.goType];
+  const mapped = goTypeNaarVeldType(v3Veld.goType);
+  const type = datatype?.basistype || mapped.type;
+  const format = datatype?.format || mapped.format;
   const enumWaarden = v3Veld.enum
     ? enumLookup[v3Veld.enum] || null
     : null;
@@ -47,6 +50,7 @@ function convertV3Veld(v3Veld, enumLookup) {
     naam: v3Veld.naam,
     type,
     format,
+    datatypeNaam: datatype?.naam || null,
     enum: enumWaarden,
     enumNaam: v3Veld.enum || null,
     verplicht: !v3Veld.goType.startsWith("*"),
@@ -70,6 +74,11 @@ export function v3ModelNaarEditor(v3Model) {
   const enumLookup = {};
   (v3Model.enums || []).forEach((e) => {
     enumLookup[e.goType] = e.waarden.map((w) => w.waarde);
+  });
+
+  const datatypeLookup = {};
+  (v3Model.datatypes || []).forEach((dt) => {
+    datatypeLookup[dt.naam] = dt;
   });
 
   // ── Enum nodes ───────────────────────────────────────────────
@@ -126,7 +135,7 @@ export function v3ModelNaarEditor(v3Model) {
     // Gegevenselementen
     (ent.gegevenselementen || []).forEach((ge, geIdx) => {
       const geTypenaam = `${ent.typenaam}_${ge.naam}`;
-      const velden = (ge.velden || []).map((v) => convertV3Veld(v, enumLookup));
+      const velden = (ge.velden || []).map((v) => convertV3Veld(v, enumLookup, datatypeLookup));
 
       nodes.push({
         id: geTypenaam,
@@ -185,7 +194,7 @@ export function v3ModelNaarEditor(v3Model) {
       // Relatie-node alleen aanmaken als die nog niet bestaat
       if (!nodes.find((n) => n.id === rel.naam)) {
         const velden = (rel.velden || []).map((v) =>
-          convertV3Veld(v, enumLookup)
+          convertV3Veld(v, enumLookup, datatypeLookup)
         );
 
         nodes.push({
@@ -202,6 +211,7 @@ export function v3ModelNaarEditor(v3Model) {
             isMaterieel: rel.isMaterieel || false,
             kleur: defaultKleur("relatie"),
             velden,
+            doelEntiteit: rel.doelEntiteit || "",
           },
         });
       }

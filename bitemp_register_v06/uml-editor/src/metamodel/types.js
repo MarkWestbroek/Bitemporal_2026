@@ -158,6 +158,7 @@ export function bouwVeldtypen(datatypeNodes = [], enumNodes = []) {
     type: n.data.basistype || "string",
     format: n.data.format || "",
     label: n.data.naam || n.data.format || "(naamloos)",
+    datatypeNaam: n.data.naam || "",
     isCustom: true,
   }));
   const enums = enumNodes.map((n) => ({
@@ -360,4 +361,177 @@ export function editorNaarMetamodel(nodes, edges) {
     }));
 
   return { types, relaties, enumeraties, datatypes };
+}
+
+function veldNaarV3(veld) {
+  const enumNaam = veld.enumNaam || null;
+  const datatypeNaam = veld.datatypeNaam || null;
+  let goType = "string";
+
+  if (enumNaam) {
+    goType = enumNaam;
+  } else if (datatypeNaam) {
+    goType = datatypeNaam;
+  } else if (veld.type === "integer") {
+    goType = "int";
+  } else if (veld.type === "number") {
+    goType = "float64";
+  } else if (veld.type === "boolean") {
+    goType = "bool";
+  } else if (veld.type === "string" && veld.format === "date") {
+    goType = "Date";
+  } else if (veld.type === "string" && veld.format === "date-time") {
+    goType = "time.Time";
+  }
+
+  if (veld.verplicht === false && !goType.startsWith("*")) {
+    goType = `*${goType}`;
+  }
+
+  return {
+    naam: veld.naam,
+    goType,
+    enum: enumNaam || undefined,
+    description: veld.description || undefined,
+  };
+}
+
+function sanitizeConstSuffix(value = "") {
+  return String(value)
+    .replace(/[^a-zA-Z0-9_]/g, "")
+    .replace(/^[0-9]+/, "");
+}
+
+function geNaamVanTypenaam(entiteitNaam, geTypenaam) {
+  const prefix = `${entiteitNaam}_`;
+  if (geTypenaam?.startsWith(prefix)) {
+    return geTypenaam.slice(prefix.length);
+  }
+  return geTypenaam;
+}
+
+/**
+ * Exporteer editor-state als V3 model (codegen-ready) zonder flowState.
+ */
+export function editorNaarV3Model(nodes, edges, opts = {}) {
+  const entiteitNodes = nodes.filter((n) => n.type === "entiteit");
+  const geNodesById = Object.fromEntries(
+    nodes
+      .filter((n) => n.type === "gegevenselement")
+      .map((n) => [n.id, n])
+  );
+  const relNodesById = Object.fromEntries(
+    nodes
+      .filter((n) => n.type === "relatie")
+      .map((n) => [n.id, n])
+  );
+
+  const enums = nodes
+    .filter((n) => n.type === "enumeratie")
+    .map((n) => ({
+      goType: n.data.naam,
+      baseType: n.data.baseType || "string",
+      waarden: (n.data.waarden || [])
+        .map((w) => (w || "").trim())
+        .filter(Boolean)
+        .map((w) => ({
+          constNaam: `${n.data.naam}${sanitizeConstSuffix(w) || "Waarde"}`,
+          waarde: w,
+        })),
+    }));
+
+  const datatypes = nodes
+    .filter((n) => n.type === "gegevenstype")
+    .map((n) => ({
+      naam: n.data.naam,
+      description: n.data.description || undefined,
+      basistype: n.data.basistype || "string",
+      format: n.data.format || undefined,
+      validatie: n.data.validatie || undefined,
+      normalisatie: n.data.normalisatie || undefined,
+      weergave: n.data.weergave || undefined,
+    }));
+
+  const entiteiten = entiteitNodes.map((ent) => {
+    const outgoing = edges.filter(
+      (e) =>
+        e.type === "metamodel" &&
+        e.source === ent.id &&
+        e.data?.isDependency !== true
+    );
+
+    const geEdges = outgoing.filter((e) => geNodesById[e.target]);
+    const relEdges = outgoing.filter((e) => relNodesById[e.target]);
+
+    const gegevenselementen = geEdges.map((e) => {
+      const geNode = geNodesById[e.target];
+      const geNaam = geNaamVanTypenaam(ent.data.typenaam, geNode.data.typenaam);
+      return {
+        naam: geNaam,
+        description: geNode.data.description || undefined,
+        meervoud:
+          e.data?.jsonRolnaam ||
+          `${(geNaam || "ge").toLowerCase()}s`,
+        momentvoorkomen: e.data?.momentvoorkomen || "enkelvoudig",
+        isMaterieel: geNode.data.isMaterieel || false,
+        velden: (geNode.data.velden || [])
+          .filter((v) => (v.naam || "").trim() !== "")
+          .map(veldNaarV3),
+      };
+    });
+
+    const relaties = relEdges.map((e) => {
+      const relNode = relNodesById[e.target];
+      const relTargetEdge = edges.find(
+        (re) =>
+          re.type === "metamodel" &&
+          re.data?.isDependency !== true &&
+          re.source === relNode.id &&
+          re.target !== ent.id &&
+          entiteitNodes.some((n) => n.id === re.target)
+      );
+      const doelEntiteitNode = entiteitNodes.find(
+        (n) => n.id === relTargetEdge?.target
+      );
+      const doelEntiteitNaam =
+        relNode.data.doelEntiteit ||
+        doelEntiteitNode?.data?.typenaam ||
+        "";
+
+      return {
+        naam: relNode.data.typenaam,
+        description: relNode.data.description || undefined,
+        meervoud:
+          e.data?.jsonRolnaam || `${(relNode.data.typenaam || "rel").toLowerCase()}s`,
+        momentvoorkomen: e.data?.momentvoorkomen || "meervoudig",
+        isMaterieel: relNode.data.isMaterieel || false,
+        doelEntiteit: doelEntiteitNaam,
+        velden: (relNode.data.velden || [])
+          .filter((v) => (v.naam || "").trim() !== "")
+          .map(veldNaarV3),
+      };
+    });
+
+    return {
+      typenaam: ent.data.typenaam,
+      description: ent.data.description || undefined,
+      isMaterieel: ent.data.isMaterieel || false,
+      kleur: ent.data.kleur || undefined,
+      meervoud:
+        opts.padnaamByEntiteit?.[ent.data.typenaam] ||
+        `${(ent.data.typenaam || "entiteit").toLowerCase()}s`,
+      gegevenselementen,
+      relaties,
+    };
+  });
+
+  return {
+    versie: opts.versie || "v3",
+    naam: opts.naam || "Editor export",
+    beschrijving:
+      opts.beschrijving || "V3 export vanuit UML editor (codegen-ready)",
+    datatypes,
+    enums,
+    entiteiten,
+  };
 }

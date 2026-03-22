@@ -61,16 +61,42 @@ function MetamodelEdge({
   const kardinaliteit = data?.kardinaliteit || "";
   const rolnaam = data?.jsonRolnaam || data?.rolnaam || "";
   const diamondColor = selected ? "#2563eb" : "#64748b";
+  const dependencyColor = "#64748b";
   const { diamondCenter, diamondPoints } = getDiamondProps(sourceX, sourceY, sourcePosition);
+  const dependencyArrowId = "edge-dependency-arrow";
 
   return (
     <>
+      {isDependency && (
+        <defs>
+          <marker
+            id={dependencyArrowId}
+            markerWidth="12"
+            markerHeight="10"
+            refX="9"
+            refY="5"
+            orient="auto"
+            markerUnits="strokeWidth"
+          >
+            <path
+              d="M 1 2 L 9 5 L 1 8"
+              fill="none"
+              stroke={dependencyColor}
+              strokeWidth="1.0"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </marker>
+        </defs>
+      )}
+
       {/* De lijn zelf — BaseEdge tekent het SVG path */}
       <BaseEdge
         id={id}
         path={edgePath}
+        markerEnd={isDependency ? `url(#${dependencyArrowId})` : undefined}
         style={{
-          stroke: selected ? "#2563eb" : isDependency ? "#a78bfa" : "#64748b",
+          stroke: isDependency ? dependencyColor : selected ? "#2563eb" : "#64748b",
           strokeWidth: selected ? 2.5 : 1.5,
           strokeDasharray: isDependency ? "6 3" : undefined,
         }}

@@ -56,9 +56,16 @@ De editor kan het bestaande model inladen vanuit de **schema-API** (`/schema`) v
 | **Relatie bewerken** | Klik op een edge → sidebar toont rolnaam, kardinaliteit, constraint |
 | **Nieuw type toevoegen** | Toolbar: +Entiteit / +GE / +Relatie / +Enumeratie |
 | **Opslaan als JSON** | Toolbar: 💾 → download `metamodel.json` (bevat zowel model als layout) |
-| **Laden vanuit JSON** | Toolbar: 📂 → upload eerder opgeslagen bestand |
+| **Opslaan als V3 JSON** | Toolbar: 💾 Opslaan (V3 JSON) → download `metamodel_v3.json` (codegen-ready) |
+| **Publiceren naar schema-API** | Toolbar: ☁ Publiceer schema-model → POST naar `/api/schema/model` met prompts voor versie/naam/indiener/opmerking |
+| **Laden vanuit JSON** | Toolbar: 📂 → upload eerder opgeslagen bestand (flowState) of V3-model JSON (`entiteiten`) |
 | **Laden vanuit schema-API** | Toolbar: 🔌 → voer URL in (bijv. `http://localhost:8080/schema`) |
 | **Verwijderen** | Selecteer + Delete/Backspace, of via rode knop in sidebar |
+
+Bij enums en gegevenstypen geldt extra veiligheid:
+
+- Bij hernoemen worden veldreferenties automatisch meegeüpdatet.
+- Bij verwijderen krijg je een waarschuwing als het type nog gebruikt wordt.
 
 ### Demo-data
 
@@ -290,7 +297,7 @@ Go types worden automatisch gemapt naar editor-veldtypen:
 - Vite dev server: `http://localhost:5174/viz/react/editor-v2.html`
 - Go server: `http://localhost:8082/viz/react/editor-v2.html`
 
-De "V3 Model laden"-knop in de header bar fetcht standaard van `/api/schema/model/code` en converteert automatisch. Daarmee laad je expliciet de actuele code-toestand, niet de actieve schema-versie uit de database. De bestaande toolbar-knoppen (Save, Load JSON, Export) werken gewoon.
+De "V3 Model laden"-knop in de header bar fetcht standaard van `/api/schema/model/code` en converteert automatisch. Daarmee laad je expliciet de actuele code-toestand, niet de actieve schema-versie uit de database. In de toolbar is nu ook een aparte knop **"Opslaan (V3 JSON)"** toegevoegd: die exporteert een codegen-ready V3 modelbestand zonder `flowState`.
 
 ---
 
