@@ -280,18 +280,19 @@ De GetSchema API is ontworpen voor de **frontend** (formuliervelden, types, hië
 | GeefOnderliggende | OnderliggendeGegevenselementen is er | Volledig afleidbaar mits EntiteitIDKolom + Rolnaam beschikbaar | Nee |
 | _Input veldcombinatie | Niet expliciet | Welke hub-velden + data-velden combineren in Input | **Deels**: afleidbaar via onderliggende Data-type |
 
-### Voorgesteld codegen-inputformaat (v2 — API Design Rules-conform)
+### Voorgesteld codegen-inputformaat (v3 — vereenvoudigd)
 
-Hieronder het bijgewerkte JSON-formaat dat als input kan dienen voor het genereren van alle 5 bestanden.
-Ten opzichte van v1 zijn de volgende wijzigingen:
-- **`meervoud`** (padnaam) is verplicht en expliciet geconfigureerd (niet afleidbaar)
-- **`datatypes`** sectie toegevoegd voor custom gegevenstypen
-- JSON-veldnamen zijn **camelCase** conform `/core/query-keys-camel-case`
-- URL-padnamen zijn **kebab-case meervoud** conform `/core/path-segments-kebab-case`
+De `jsonTag` en `bunTag` waarden zijn **volledig afleidbaar** uit het metatype, de veldrol en het Go-type (zie afleidingsregels hieronder). Ze zijn daarom uit het inputformaat verwijderd.
+
+Evenzo zijn de plumbing-velden (`id`, `{ent}_id`, `rel_id`, `versie`, `opvoer`, `afvoer`, `datum`) en bun-relatievelden (`ParentX`, `Data`, `Aanvang`, `Einde`) altijd identiek per metatype. Die hoeven **niet** als input: de code generator voegt ze automatisch toe op basis van metatype + geSubtype + isMaterieel.
+
+Daarnaast zijn `tabelnaam`, `idKolom`, `heeftPFK`, `relatieveAutoincrement`, `entiteitIDKolom`, `bovenliggendTypenaam` en `goNaam` allemaal afleidbaar uit de typenaam en het metatype (zie afleidbaarheidstabel).
+
+Het inputformaat bevat alleen wat **niet afleidbaar** is:
 
 ```json
 {
-  "versie": "v2",
+  "versie": "v3",
   "datatypes": [
     {
       "naam": "NLPostcode",
@@ -306,10 +307,7 @@ Ten opzichte van v1 zijn de volgende wijzigingen:
         "foutmelding": "Voer een geldige postcode in (bijv. 1234 AB)"
       },
       "normalisatie": "uppercase_letters",
-      "weergave": {
-        "placeholder": "1234 AB",
-        "inputMask": "0000 AA"
-      }
+      "weergave": { "placeholder": "1234 AB", "inputMask": "0000 AA" }
     },
     {
       "naam": "BSN",
@@ -318,15 +316,9 @@ Ten opzichte van v1 zijn de volgende wijzigingen:
       "format": "bsn",
       "validatie": {
         "pattern": "^[0-9]{9}$",
-        "minLength": 9,
-        "maxLength": 9,
         "foutmelding": "Voer een geldig BSN in (9 cijfers, 11-proef)",
         "regels": [
-          {
-            "naam": "11-proef",
-            "type": "checksum",
-            "expressie": "(9*d1 + 8*d2 + 7*d3 + 6*d4 + 5*d5 + 4*d6 + 3*d7 + 2*d8 - 1*d9) % 11 == 0"
-          }
+          { "naam": "11-proef", "type": "checksum", "expressie": "(9*d1 + 8*d2 + 7*d3 + 6*d4 + 5*d5 + 4*d6 + 3*d7 + 2*d8 - 1*d9) % 11 == 0" }
         ]
       },
       "weergave": { "placeholder": "123456782", "inputMask": "000000000" }
@@ -341,203 +333,212 @@ Ten opzichte van v1 zijn de volgende wijzigingen:
         { "constNaam": "RelABSoortLAT", "waarde": "LAT" },
         { "constNaam": "RelABSoortLTA", "waarde": "LTA" }
       ]
-    },
-    {
-      "goType": "ABCEnum",
-      "baseType": "string",
-      "waarden": [
-        { "constNaam": "OptieA", "waarde": "Optie A" },
-        { "constNaam": "OptieB", "waarde": "Optie B" },
-        { "constNaam": "OptieC", "waarde": "Optie C" }
-      ]
     }
   ],
-  "types": [
+  "entiteiten": [
     {
       "typenaam": "A",
-      "description": "Entiteit A met materiele tijdlijn...",
-      "metatype": "entiteit",
+      "description": "Entiteit A",
       "isMaterieel": true,
       "kleur": "#bfdbfe",
-      "veldnaam": "a",
       "meervoud": "as",
-      "tabelnaam": "a",
-      "idKolom": "id",
-      "heeftPFK": false,
-      "relatieveAutoincrement": false,
-      "entiteitIDKolom": "",
-      "secondaireEntiteitIDKolom": "",
-      "velden": [
+      "gegevenselementen": [
         {
-          "naam": "id",
-          "goNaam": "ID",
-          "goType": "int",
-          "jsonTag": "\"id\"",
-          "bunTag": "\"id,pk\"",
-          "verplicht": true
+          "naam": "U",
+          "description": "Gegevenselement U bij A",
+          "meervoud": "a-us",
+          "momentvoorkomen": "enkelvoudig",
+          "velden": [
+            { "naam": "aaa", "goType": "string" },
+            { "naam": "bbb", "goType": "*bool" }
+          ]
         },
         {
-          "naam": "opvoer",
-          "goNaam": "Opvoer",
-          "goType": "*time.Time",
-          "jsonTag": "\"opvoer,omitempty\"",
-          "bunTag": "",
-          "verplicht": false,
-          "isPlumbing": true
+          "naam": "V",
+          "description": "Gegevenselement V bij A",
+          "meervoud": "a-vs",
+          "momentvoorkomen": "meervoudig",
+          "velden": [
+            { "naam": "ccc", "goType": "string" },
+            { "naam": "ddd", "goType": "*string" },
+            { "naam": "eee", "goType": "*string" },
+            { "naam": "fff", "goType": "float64" },
+            { "naam": "ggg", "goType": "ABCEnum", "enum": "ABCEnum" },
+            { "naam": "datum", "goType": "*Date" }
+          ]
         },
         {
-          "naam": "afvoer",
-          "goNaam": "Afvoer",
-          "goType": "*time.Time",
-          "jsonTag": "\"afvoer,omitempty\"",
-          "bunTag": "",
-          "verplicht": false,
-          "isPlumbing": true
+          "naam": "W",
+          "description": "Gegevenselement W bij A (materieel)",
+          "meervoud": "a-ws",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": true,
+          "velden": [
+            { "naam": "float", "goType": "float64" },
+            { "naam": "heel", "goType": "int" }
+          ]
         }
       ],
-      "bunRelatieVelden": [
+      "relaties": [
         {
-          "goNaam": "Us",
-          "goType": "[]A_U",
-          "bunTag": "\"rel:has-many,join:id=a_id\"",
-          "jsonTag": "\"us,omitempty\""
-        },
-        {
-          "goNaam": "Vs",
-          "goType": "[]A_V",
-          "bunTag": "\"rel:has-many,join:id=a_id\"",
-          "jsonTag": "\"vs,omitempty\""
+          "naam": "Rel_A_B",
+          "description": "Relatie tussen A en B",
+          "meervoud": "rel-a-bs",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": true,
+          "doelEntiteit": "B",
+          "velden": [
+            { "naam": "soort", "goType": "RelABSoort", "enum": "RelABSoort" }
+          ]
         }
-      ],
-      "onderliggende": [
-        { "rolnaam": "Us", "jsonRolnaam": "us", "doeltype": "A_U", "momentvoorkomen": "enkelvoudig" },
-        { "rolnaam": "Vs", "jsonRolnaam": "vs", "doeltype": "A_V", "momentvoorkomen": "meervoudig" }
       ]
     },
     {
-      "typenaam": "A_U",
-      "description": "Hub voor gegevenselement U bij A",
-      "metatype": "gegevenselement",
-      "geSubtype": "hub",
-      "isMaterieel": false,
-      "dataTypenaam": "A_U_Data",
-      "meervoud": "a-us",
-      "tabelnaam": "a_u",
-      "idKolom": "rel_id",
-      "heeftPFK": true,
-      "relatieveAutoincrement": true,
-      "entiteitIDKolom": "a_id",
-      "velden": [
+      "typenaam": "B",
+      "description": "Entiteit B",
+      "isMaterieel": true,
+      "kleur": "#fde68a",
+      "meervoud": "bs",
+      "gegevenselementen": [
         {
-          "naam": "aId",
-          "goNaam": "A_ID",
-          "goType": "int",
-          "jsonTag": "\"aId\"",
-          "bunTag": "\"a_id,pk\"",
-          "verplicht": true
+          "naam": "X",
+          "description": "Gegevenselement X bij B",
+          "meervoud": "b-xs",
+          "momentvoorkomen": "enkelvoudig",
+          "velden": [
+            { "naam": "fff", "goType": "string" },
+            { "naam": "ggg", "goType": "string" }
+          ]
         },
         {
-          "naam": "relId",
-          "goNaam": "Rel_ID",
-          "goType": "int",
-          "jsonTag": "\"relId\"",
-          "bunTag": "\"rel_id,pk,autoincrement\"",
-          "verplicht": true
+          "naam": "Y",
+          "description": "Gegevenselement Y bij B",
+          "meervoud": "b-ys",
+          "momentvoorkomen": "enkelvoudig",
+          "velden": [
+            { "naam": "hhh", "goType": "string" }
+          ]
         }
-      ],
-      "bunRelatieVelden": [
-        {
-          "goNaam": "ParentA",
-          "goType": "*A",
-          "bunTag": "\"rel:belongs-to,join:a_id=id,on_delete:cascade\"",
-          "jsonTag": "\"-\""
-        },
-        {
-          "goNaam": "Data",
-          "goType": "[]A_U_Data",
-          "bunTag": "\"rel:has-many,join:a_id=a_id,join:rel_id=rel_id\"",
-          "jsonTag": "\"data,omitempty\""
-        }
-      ],
-      "onderliggende": [
-        { "rolnaam": "Data", "jsonRolnaam": "data", "doeltype": "A_U_Data", "momentvoorkomen": "enkelvoudig" }
-      ]
-    },
-    {
-      "typenaam": "A_U_Data",
-      "description": "Geversioned inhoud van A_U",
-      "metatype": "gegevenselement",
-      "geSubtype": "data",
-      "tabelnaam": "a_u_data",
-      "idKolom": "versie",
-      "heeftPFK": true,
-      "relatieveAutoincrement": true,
-      "entiteitIDKolom": "a_id",
-      "bovenliggendTypenaam": "A_U",
-      "velden": [
-        { "naam": "aId", "goNaam": "A_ID", "goType": "int", "bunTag": "\"a_id,pk\"" },
-        { "naam": "relId", "goNaam": "Rel_ID", "goType": "int", "bunTag": "\"rel_id,pk\"" },
-        { "naam": "versie", "goNaam": "Versie", "goType": "int64", "bunTag": "\"versie,pk,autoincrement\"" },
-        { "naam": "aaa", "goNaam": "Aaa", "goType": "string" },
-        { "naam": "bbb", "goNaam": "Bbb", "goType": "*bool" }
       ]
     }
   ]
 }
 ```
 
+Dit formaat beschrijft **alleen de domeinkennis**: welke entiteiten bestaan er, welke GE's en relaties hebben ze, en welke inhoudsvelden zitten daarin. De volledige Go-structuren (structs, tags, plumbing, MetaRegistry entries) worden door de code generator afgeleid.
+
+### Afleidingsregels voor tags
+
+De code generator leidt alle struct tags af op basis van het metatype en het Go-type van het veld.
+
+#### jsonTag-regels
+
+| Situatie | Regel | Voorbeeld |
+|----------|-------|-----------|
+| Value-type (string, int, float64, enum) | `json:"{snake_case(naam)}"` | `Aaa string` → `json:"aaa"` |
+| Pointer-type (*bool, *string, *Date, *time.Time) | `json:"{snake_case(naam)},omitempty"` | `Bbb *bool` → `json:"bbb,omitempty"` |
+| Slice-type ([]A_U, []A_U_Data) | `json:"{snake_case(rolnaam)},omitempty"` | `Us []A_U` → `json:"us,omitempty"` |
+| Versie int64 | `json:"versie,omitempty"` | Altijd omitempty |
+| Parent-relatie (*A, *B) | `json:"-"` | Altijd verborgen |
+
+> **NB**: wanneer we overgaan naar camelCase conform de API Design Rules, wordt `snake_case(naam)` vervangen door `camelCase(naam)`. De afleidingslogica blijft identiek; alleen de case-conversie verandert.
+
+#### bunTag-regels
+
+| Situatie | Regel | Voorbeeld |
+|----------|-------|-----------|
+| Entiteit PK (ID) | `bun:"id,pk"` | Vast |
+| FK naar eigen entiteit | `bun:"{ent_id_kolom},pk"` | `A_ID` → `bun:"a_id,pk"` |
+| Rel_ID op **hub** | `bun:"rel_id,pk,autoincrement"` | Relatieve autoincrement |
+| Rel_ID op **data/aanvang/einde** | `bun:"rel_id,pk"` | Geen autoincrement |
+| Versie op **data/aanvang/einde** | `bun:"versie,pk,autoincrement"` | Versie-autoincrement |
+| Opvoer / Afvoer | *(geen bun tag)* | Plumbing, niet in DB |
+| `*Date` velden | `bun:"{snake_case(naam)},type:date"` | `Datum *Date` → `bun:"datum,type:date"` |
+| Overige inhoudsvelden | *(geen bun tag)* | Bun leidt kolomnaam af uit Go-veldnaam |
+| Input structs | *(nooit bun tags)* | Input is JSON-only |
+
+#### bunRelatieVeld-regels
+
+| Relatie | bunTag | jsonTag |
+|---------|--------|---------|
+| ENT → hub/aanvang/einde | `bun:"rel:has-many,join:id={ent_id_kolom}"` | `json:"{rolnaam},omitempty"` |
+| Hub → ParentX | `bun:"rel:belongs-to,join:{ent_id_kolom}=id,on_delete:cascade"` | `json:"-"` |
+| Hub → Data/Aanvang/Einde | `bun:"rel:has-many,join:{ent_id_kolom}={ent_id_kolom},join:rel_id=rel_id"` | `json:"{rolnaam},omitempty"` |
+
+#### goNaam-regels
+
+| Situatie | Regel | Voorbeeld |
+|----------|-------|-----------|
+| Regulier veld | `PascalCase(naam)` | `aaa` → `Aaa`, `soort` → `Soort` |
+| ID op entiteit | `ID` | Vast |
+| FK naar entiteit | `{ENT}_ID` | `A_ID`, `B_ID` |
+| Rel_ID | `Rel_ID` | Vast |
+| Versie | `Versie` | Vast |
+
+#### Plumbing-velden per metatype (automatisch toegevoegd)
+
+| Metatype | Automatische velden |
+|----------|-------------------|
+| Entiteit | `ID`, `Opvoer`, `Afvoer` + bun-relaties naar onderliggende hubs/aanvang/einde |
+| Hub | `{Ent}_ID`, `Rel_ID`, `ParentX`, `Opvoer`, `Afvoer`, `Data` + optioneel `Aanvang`/`Einde` (als isMaterieel) |
+| Data | `{Ent}_ID`, `Rel_ID`, `Versie`, `Opvoer`, `Afvoer` |
+| Aanvang/Einde | `{Ent}_ID`, (`Rel_ID` als GE/rel), `Versie`, `Datum`, `Opvoer`, `Afvoer` |
+| Input | `{Ent}_ID`, `Rel_ID`, inhoudsvelden uit Data + `Aanvang`/`Einde` (als isMaterieel) |
+
 ### Structuur van het formaat
 
-| Sectie | Doel | Herkomst |
-|--------|------|----------|
-| `datatypes[]` | Custom gegevenstypen met validatie en weergave | Nieuw (uit gegevenstypen.md / UML-editor) |
-| `enums[]` | Enum type-definities met Go const-namen | Nieuw (niet in GetSchema) |
-| `types[].velden[]` | Structuurvelden met Go-types en bun/json-tags | Uitbreiding van GetSchema |
-| `types[].bunRelatieVelden[]` | Bun has-many/belongs-to relaties | Nieuw (niet in GetSchema) |
-| `types[].meervoud` | URL-padnaam (kebab-case meervoud) | Nieuw — verplicht, niet afleidbaar |
-| `types[].dataTypenaam` | Link van hub naar _Data type | Nieuw |
-| `types[].geSubtype` | hub/data/aanvang/einde classificatie | Al in GetSchema |
-| `types[].onderliggende[]` | Hiërarchie voor GeefOnderliggende | Al in GetSchema |
+| Sectie | Doel |
+|--------|------|
+| `datatypes[]` | Custom gegevenstypen met validatie en weergave |
+| `enums[]` | Enum type-definities met Go const-namen |
+| `entiteiten[]` | Top-level entiteiten met kleur, meervoud, isMaterieel |
+| `entiteiten[].gegevenselementen[]` | GE's met naam, meervoud, momentvoorkomen, inhoudsvelden |
+| `entiteiten[].relaties[]` | Relaties met naam, meervoud, doelEntiteit, inhoudsvelden |
 
 ### Wat is afleidbaar via naamconventies?
 
-Veel waarden zijn **conventie-gebaseerd afleidbaar** uit de typenaam en de naamconventies in §4. Een code generator kan met minimale input werken als hij de conventies kent.
+Vrijwel alles is afleidbaar. De onderstaande tabel somt op wat de conventie-engine afleidt en wat expliciet opgegeven moet worden.
 
-**Let op**: het `meervoud` (= padnaam) is **niet afleidbaar** via conventies, omdat Nederlandse meervoudsvorming onregelmatig is (zie §4). Dit veld **moet** altijd expliciet worden opgegeven in de codegen-input.
+| Waarde | Afleidbaar? | Conventie / bron | Voorbeeld |
+|--------|-------------|------------------|-----------|
+| Tabelnaam | ✅ | `snake_case(typenaam)` | `A_U` → `a_u` |
+| Bun alias | ✅ | = tabelnaam | `alias:a_u` |
+| **jsonTag** | ✅ | Zie afleidingsregels hierboven | `Aaa string` → `json:"aaa"` |
+| **bunTag** | ✅ | Zie afleidingsregels hierboven | `A_ID int` → `bun:"a_id,pk"` |
+| **bunRelatieVelden** | ✅ | Vast patroon per metatype | ENT→hub: `rel:has-many,...` |
+| **goNaam** | ✅ | `PascalCase(naam)` + vaste namen voor plumbing | `aaa` → `Aaa` |
+| **Plumbing-velden** | ✅ | Vast per metatype (zie tabel hierboven) | Hub krijgt altijd {Ent}_ID, Rel_ID, etc. |
+| idKolom | ✅ | `id` (ent), `rel_id` (hub), `versie` (data/aanv/einde) | — |
+| heeftPFK | ✅ | `metatype != entiteit` | — |
+| relatieveAutoincrement | ✅ | `metatype != entiteit` | — |
+| entiteitIDKolom | ✅ | `snake_case(parent_ent) + _id` | A → `a_id` |
+| Data-typenaam | ✅ | `{hub}_Data` | `A_U` → `A_U_Data` |
+| Aanvang/Einde-typenaam | ✅ | `{type}_Aanvang` / `{type}_Einde` | `A` → `A_Aanvang` |
+| Factory/SliceFactory | ✅ | `func() Representatie { return &{Type}{} }` | `&A_U{}` |
+| FK-kolomnaam | ✅ | `snake_case(entiteitsnaam) + _id` | A → `a_id` |
+| Bun join-clausules | ✅ | Vast patroon op basis van entiteitIDKolom | `join:id=a_id` |
+| Input-struct | ✅ | Hub-velden + Data-inhoudsvelden + Aanvang/Einde (als materieel) | — |
+| **Padnaam (meervoud)** | ❌ | Onregelmatig NL meervoud | `persoon` → `personen` |
 
-| Waarde | Afleidbaar? | Conventie | Voorbeeld |
-|--------|-------------|-----------|-----------|
-| Tabelnaam | ✅ ja | `snake_case(typenaam)` | `A_U` → `a_u` |
-| Bun alias | ✅ ja | = tabelnaam | `alias:a_u` |
-| JSON veldnaam | ✅ ja | `camelCase(veldnaam)` | `a_id` → `aId` |
-| **Padnaam (meervoud)** | ❌ **nee** | Onregelmatig NL meervoud | `persoon` → `personen` (niet `persoons`) |
-| FK-kolomnaam | ✅ ja | `snake_case(entiteitsnaam) + _id` | A → `a_id` |
-| Data-typenaam | ✅ ja | `{hub}_Data` | `A_U` → `A_U_Data` |
-| Aanvang-typenaam | ✅ ja | `{type}_Aanvang` | `A` → `A_Aanvang` |
-| Factory | ✅ ja | `func() Representatie { return &{Type}{} }` | `&A_U{}` |
-| Bun has-many join (ENT→hub) | ✅ ja | `join:id={ent_id_kolom}` | `join:id=a_id` |
-| Bun has-many join (hub→data) | ✅ ja | `join:{ent_id_kolom}={ent_id_kolom},join:rel_id=rel_id` | `join:a_id=a_id,join:rel_id=rel_id` |
-
-→ Bij strikte naleving van de conventies volstaat een **vereenvoudigd** inputformaat met alleen:
+→ Het v3 codegen-inputformaat hierboven bevat **alleen wat niet afleidbaar is**:
 - Entiteiten + hun GEs/relaties (naam, description, kleur, isMaterieel, momentvoorkomen)
-- Per GE/relatie: de inhoudsvelden (naam, Go-type, bun-type-override, enum-ref, verplicht)
+- Per GE/relatie: de **inhoudsvelden** (naam + goType; optioneel enum-ref)
 - **Meervoudsnaam** per type (expliciet, niet afleidbaar)
 - Enum-definities
-- Relatie-specifieke info (secundaire entiteit)
+- Relatie-specifieke info (doelEntiteit)
 - Custom gegevenstypen (datatypes) met validatie- en weergaveregels
 
-De rest (tabelnaam, FK-kolommen, bun-tags, factories, methoden) is afleidbaar.
+Al het andere (tabelnaam, FK-kolommen, alle struct tags, plumbing-velden, bun-relaties, factories, MetaRegistry entries, Input-structs) wordt door de conventie-engine afgeleid.
 
 ### Samenvatting
 
 | Bron | Geschiktheid als codegen-input |
 |------|-------------------------------|
-| GetSchema API response | **Onvoldoende**: mist Go-types, bun-tags, enum-definities, padnaam, relatie-joins |
-| MetaRegistry (intern) | **Bijna voldoende**: mist Go-types en bun-tags voor de struct-velden zelf |
-| Voorgesteld codegen-formaat (v2) | **Volledig**: alle informatie expliciet aanwezig, inclusief datatypes en meervouden |
-| Vereenvoudigd formaat + conventies | **Volledig**: minimale input, conventies vullen de rest aan — mits `meervoud` expliciet |
+| GetSchema API response | **Onvoldoende**: mist Go-types, enum-definities, meervouden |
+| MetaRegistry (intern) | **Bijna voldoende**: mist Go-types voor de inhoudsvelden |
+| Codegen-formaat v3 (hierboven) | **Volledig + minimaal**: alleen domeinkennis, rest afgeleid |
 
-De aanbeveling is om het **vereenvoudigd formaat** te gebruiken als input voor de code generator, met een conventie-engine die de afleidbare waarden invult. Dit minimaliseert de complexiteit van de input en maximaliseert de onderhoudbaarheid. Het meervoud (padnaam) is de belangrijkste waarde die **niet** door de conventie-engine kan worden afgeleid.
+De aanbeveling is om het **v3 formaat** te gebruiken als input voor de code generator. Dit formaat bevat uitsluitend domeinkennis; de conventie-engine leidt alle structurele code af. Het meervoud (padnaam) is de belangrijkste niet-afleidbare waarde.
 
 ---
 
