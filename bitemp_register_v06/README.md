@@ -632,6 +632,8 @@ Deregister U5 and register U6 for entity A:
 ### API:
 10 aan een ongedaan gemaakte U1 bij een ongedaan gemaakte A1 kan nu gewoon een nieuwe U worden toegevoegd... ?
 
+20 react index
+- correctie aanvang/einde geeft ook bovenliggende hub mee, wat niet hoeft
 
 ## TE TESTEN
 ### React
@@ -646,6 +648,7 @@ Deregister U5 and register U6 for entity A:
 - ook in ENT
 - soort van formule (OCL? DMN?)
 - kan het label zijn in de index en tijdlijn viewer
+  - isLabel property
 
 16 Referentielijsten
 
