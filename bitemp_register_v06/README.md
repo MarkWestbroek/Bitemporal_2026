@@ -616,7 +616,15 @@ Deregister U5 and register U6 for entity A:
 - model versies in het register vastleggen
 - export naar mermaid, plantUML en XMI (tbv EA)
 
-21 Register uitbreiden met menselijke klassen
+21 Enums
+- in de metaregistry (en in de frontend als gevolg)
+- en in de custom struct tags
+- als soort van type, en niet alleen de waarden. Die staan al in de enum in go
+- en gaan als het goed is ook mee in het schema
+
+22 Datatypen, gegevenssoorten netjes inbouwen.
+
+23 Register uitbreiden met menselijke klassen
 - NP-locatie, via UML editor
 
 
@@ -634,14 +642,14 @@ Deregister U5 and register U6 for entity A:
 
 10 loop tijdsreizen nog eens na (KVK voorbeelden) want corrigeren is nu nog hetzelfde als wijzigen. Je hebt twee soorten tijdreizen (of 3).
 
-15 Enums
-- in de metaregistry (en in de frontend als gevolg)
-- en in de custom struct tags
-- als soort van type, en niet alleen de waarden. Die staan al in de enum in go
-- en gaan als het goed is ook mee in het schema
+15 Afgeleide velden
+- ook in ENT
+- soort van formule (OCL? DMN?)
+- kan het label zijn in de index en tijdlijn viewer
 
-16 Datatypen, gegevenssoorten netjes inbouwen.
-17 Referentielijsten
+16 Referentielijsten
+
+18 Mooiere formuliertjes (auto en custom)
 
 20 react - edit popups
 - corrigeren en afvoeren hebben heel weinig met elkaar te maken en staan gebroederlijk naast elkaar
