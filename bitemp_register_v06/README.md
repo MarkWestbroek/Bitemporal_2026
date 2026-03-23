@@ -1,4 +1,4 @@
-# Bitemporeel register met quasi-REST API v0.4.01.02
+# Bitemporeel register met quasi-REST API v0.6.01.01
 
 This project showcases the implementation of a **Bitemporal Register API** using Go Bun. It provides CR (Create, Read) functionality for managing configurable data, with data persistence in a PostgreSQL database.
 In addition it allows to correct data (in fact correct registrations and the registered data) and to undo registrations.

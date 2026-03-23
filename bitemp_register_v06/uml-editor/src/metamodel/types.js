@@ -479,6 +479,8 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         momentvoorkomen: e.data?.momentvoorkomen || "enkelvoudig",
         isMaterieel: geNode.data.isMaterieel || false,
         positie: geNode.position ? { x: geNode.position.x, y: geNode.position.y } : undefined,
+        // Bewaar editor-edge id zodat export/import en DB-round-trips merge-stabiel blijven.
+        id: e.id || undefined,
         sourceHandle: e.sourceHandle || undefined,
         targetHandle: e.targetHandle || undefined,
         velden: (geNode.data.velden || [])
@@ -515,8 +517,11 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         isMaterieel: relNode.data.isMaterieel || false,
         doelEntiteit: doelEntiteitNaam,
         positie: relNode.position ? { x: relNode.position.x, y: relNode.position.y } : undefined,
+        // Bewaar editor-edge ids zodat export/import en DB-round-trips merge-stabiel blijven.
+        id: e.id || undefined,
         sourceHandle: e.sourceHandle || undefined,
         targetHandle: e.targetHandle || undefined,
+        doelId: relTargetEdge?.id || undefined,
         doelSourceHandle: relTargetEdge?.sourceHandle || undefined,
         doelTargetHandle: relTargetEdge?.targetHandle || undefined,
         velden: (relNode.data.velden || [])

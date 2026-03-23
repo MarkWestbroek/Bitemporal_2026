@@ -91,6 +91,7 @@ type V3Gegevenselement struct {
 	Momentvoorkomen string     `json:"momentvoorkomen"` // "enkelvoudig" of "meervoudig"
 	IsMaterieel     bool       `json:"isMaterieel,omitempty"`
 	Positie         *V3Positie `json:"positie,omitempty"`      // editor-layout positie (genegeerd door codegen)
+	ID              string     `json:"id,omitempty"`           // persistente edge-id van entiteit→GE voor stabiele editor round-trips
 	SourceHandle    string     `json:"sourceHandle,omitempty"` // verbindingspunt op de entiteit (genegeerd door codegen)
 	TargetHandle    string     `json:"targetHandle,omitempty"` // verbindingspunt op het GE-node (genegeerd door codegen)
 	Velden          []V3Veld   `json:"velden,omitempty"`
@@ -105,8 +106,10 @@ type V3Relatie struct {
 	IsMaterieel      bool       `json:"isMaterieel,omitempty"`
 	DoelEntiteit     string     `json:"doelEntiteit"`               // typenaam van de doel-entiteit
 	Positie          *V3Positie `json:"positie,omitempty"`          // editor-layout positie (genegeerd door codegen)
+	ID               string     `json:"id,omitempty"`               // persistente edge-id van entiteit→relatie voor stabiele editor round-trips
 	SourceHandle     string     `json:"sourceHandle,omitempty"`     // verbindingspunt op de entiteit→relatie edge (genegeerd door codegen)
 	TargetHandle     string     `json:"targetHandle,omitempty"`     // verbindingspunt op de relatie (inkomend, genegeerd door codegen)
+	DoelID           string     `json:"doelId,omitempty"`           // persistente edge-id van relatie→doel-entiteit voor stabiele editor round-trips
 	DoelSourceHandle string     `json:"doelSourceHandle,omitempty"` // verbindingspunt op de relatie (uitgaand naar doel, genegeerd door codegen)
 	DoelTargetHandle string     `json:"doelTargetHandle,omitempty"` // verbindingspunt op de doel-entiteit (genegeerd door codegen)
 	Velden           []V3Veld   `json:"velden,omitempty"`

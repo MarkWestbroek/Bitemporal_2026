@@ -299,6 +299,8 @@ Go types worden automatisch gemapt naar editor-veldtypen:
 
 De "V3 Model laden"-knop in de header bar fetcht standaard van `/api/schema/model/code` en converteert automatisch. Daarmee laad je expliciet de actuele code-toestand, niet de actieve schema-versie uit de database. In de toolbar is nu ook een aparte knop **"Opslaan (V3 JSON)"** toegevoegd: die exporteert een codegen-ready V3 modelbestand zonder `flowState`.
 
+Voor model-edges bewaart de V3 export ook editor-metadata voor stabiele round-trips: `id` voor edges `entiteit → gegevenselement` en `entiteit → relatie`, `doelId` voor de edge `relatie → doelentiteit`, plus de bestaande handle-velden. Bij import worden die ids hergebruikt als ze aanwezig zijn; oudere V3-bestanden zonder deze velden vallen automatisch terug op deterministische ids.
+
 ---
 
 ## Toekomstige mogelijkheden

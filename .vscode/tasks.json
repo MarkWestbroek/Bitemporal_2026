@@ -151,7 +151,7 @@
 			"args": [
 				"-NoProfile",
 				"-Command",
-				"$pids = Get-NetTCPConnection -LocalPort 8082 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if ($pids) { $pids | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Write-Output ('Stopped API process(es) on :8082: ' + ($pids -join ', ')) } else { Write-Output 'No listening API process found on :8082.' }"
+				"$pids = Get-NetTCPConnection -LocalPort 8082 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if ($pids) { $pids | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Write-Output Stopped_API_process_on_8082; Write-Output $pids } else { Write-Output No_listening_API_process_found_on_8082 }"
 			],
 			"isBackground": false,
 			"presentation": {
@@ -166,7 +166,7 @@
 			"args": [
 				"-NoProfile",
 				"-Command",
-				"$ports = 5173,5174,5175; $pids = @(); foreach ($port in $ports) { $listening = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if ($listening) { $pids += $listening } }; $pids = $pids | Select-Object -Unique; if ($pids) { $pids | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Write-Output ('Stopped Vite process(es): ' + ($pids -join ', ')) } else { Write-Output 'No listening Vite process found on :5173/:5174/:5175.' }"
+				"$ports = 5173,5174,5175; $pids = @(); foreach ($port in $ports) { $listening = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if ($listening) { $pids += $listening } }; $pids = $pids | Select-Object -Unique; if ($pids) { $pids | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Write-Output Stopped_Vite_process; Write-Output $pids } else { Write-Output No_listening_Vite_process_found_on_5173_5174_5175 }"
 			],
 			"isBackground": false,
 			"presentation": {

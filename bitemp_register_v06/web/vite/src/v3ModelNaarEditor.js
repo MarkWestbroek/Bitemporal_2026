@@ -157,7 +157,7 @@ export function v3ModelNaarEditor(v3Model) {
 
       // Edge: entiteit → GE
       edges.push({
-        id: `${ent.typenaam}->${geTypenaam}`,
+        id: ge.id || `${ent.typenaam}->${geTypenaam}`,
         source: ent.typenaam,
         target: geTypenaam,
         type: "metamodel",
@@ -221,7 +221,7 @@ export function v3ModelNaarEditor(v3Model) {
 
       // Edge: entiteit → relatie
       edges.push({
-        id: `${ent.typenaam}->${rel.naam}`,
+        id: rel.id || `${ent.typenaam}->${rel.naam}`,
         source: ent.typenaam,
         target: rel.naam,
         type: "metamodel",
@@ -258,7 +258,7 @@ export function v3ModelNaarEditor(v3Model) {
       // Edge: relatie → doelentiteit
       if (rel.doelEntiteit) {
         edges.push({
-          id: `${rel.naam}->${rel.doelEntiteit}`,
+          id: rel.doelId || `${rel.naam}->${rel.doelEntiteit}`,
           source: rel.naam,
           target: rel.doelEntiteit,
           type: "metamodel",
