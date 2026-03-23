@@ -187,7 +187,7 @@ function normInt(v, fallback = 0) {
         const uniformeRegViewBoxHeight = useMemo(() => {
           const maxWijzigingen = items.reduce((acc, item) => Math.max(acc, safeArray(item?.wijzigingen).length), 0);
           const laatsteRijOnderkant = maxWijzigingen > 0
-            ? 64 + ((maxWijzigingen - 1) * 56) + 44
+            ? 64 + ((maxWijzigingen - 1) * 58) + 56
             : 52;
           return Math.max(220, laatsteRijOnderkant + 16);
         }, [items]);

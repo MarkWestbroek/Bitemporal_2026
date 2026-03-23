@@ -1946,7 +1946,7 @@ export default function IndexSchemaPage() {
         const nadrukStyleLinks = { fontWeight: 700, fontSize: '18px' };
         const centraleEntiteitLabelStyle = { fontWeight: 900, fontSize: '24px' };
         const grootKruisEindY = visualWijzigingen.length > 0
-          ? 108 + ((visualWijzigingen.length - 1) * 92) + 84
+          ? 108 + ((visualWijzigingen.length - 1) * 104) + 96
           : 82;
         const registratieSvgHoogte = Math.max(200, grootKruisEindY + 30);
 

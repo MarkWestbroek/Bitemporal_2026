@@ -50,7 +50,7 @@ export default function IndexRepresentatieVisual({
 
       {geNodesVoorGrafiek.map((node) => {
         const x = node.side === "left" ? 30 : 690;
-        const width = 180;
+        const width = 194;
         const textX = node.side === "left" ? 42 : 700;
         const nodeFill = node.group?.kleur || "#ffffff";
         const isSelected = geselecteerdeRep?.item === node.item;
@@ -62,12 +62,16 @@ export default function IndexRepresentatieVisual({
         const hubOortjes = isMaterieleHub ? bepaalHubOortjes(node.item) : null;
         const aanvangTekst = hubOortjes ? korteDatumWeergave(hubOortjes.aanvangDatum) : null;
         const eindeTekst = hubOortjes ? korteDatumWeergave(hubOortjes.eindeDatum) : null;
-        // Mini-oortje dimensies: kleiner dan entiteits-oortjes, passen boven de 180px brede card
-        const mOY = node.y - 48, mOW = 72, mOH = 20, mOR = 5;
+        // Mini-oortje dimensies: kleiner dan entiteits-oortjes, met lichte overlap zodat
+        // het oortje visueel vastzit aan de kaart, ook als de kaart iets naar beneden schuift.
+        const mOW = 72, mOH = 20, mOR = 5;
+        const boxH = 66;
+        const boxY = node.y - (boxH / 2);
+        const mOY = boxY - mOH + 6;
 
         return (
           <g className="actionable-svg-target" key={node.key} onClick={() => selecteerRep(node.item, node.group)} style={{ cursor: "pointer" }}>
-            {isSelected && <rect x={x - 3} y={node.y - 33 - (aanvangTekst || eindeTekst ? 18 : 0)} rx="10" width={width + 6} height={66 + (aanvangTekst || eindeTekst ? 18 : 0)} style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2.5, strokeDasharray: "5,3" }} />}
+            {isSelected && <rect x={x - 3} y={boxY - 3 - (aanvangTekst || eindeTekst ? 18 : 0)} rx="10" width={width + 6} height={boxH + 6 + (aanvangTekst || eindeTekst ? 18 : 0)} style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2.5, strokeDasharray: "5,3" }} />}
             {/* Materiële-tijd mini-oortjes boven de GE-card */}
             {aanvangTekst && (
               <g>
@@ -81,22 +85,22 @@ export default function IndexRepresentatieVisual({
                 <text x={x + width - mOW / 2} y={mOY + mOH - 6} textAnchor="middle" style={{ ...oortjeStyle, fontSize: "9.5px" }}>{eindeTekst}</text>
               </g>
             )}
-            <rect x={x} y={node.y - 30} rx="8" width={width} height="60" style={{ fill: nodeFill, stroke: "#334155", strokeWidth: 1.2 }} />
+            <rect x={x} y={boxY} rx="8" width={width} height={boxH} style={{ fill: nodeFill, stroke: "#334155", strokeWidth: 1.2 }} />
             <text
               className={`label label-lg ${opvoerKlikbaar ? "opv-link" : ""}`}
               x={x + width - 8}
-              y={node.y - 16}
+              y={boxY + 14}
               textAnchor="end"
               onClick={opvoerKlikbaar ? (event) => navigeerNaarRegistratieVanOpvoer(event, node.item.opvoer) : undefined}
             >
               opv: {node.item.opvoer ? microsecondeIntVanTijdstip(node.item.opvoer) : "-"}
             </text>
-            <text className="label label-lg" x={textX} y={node.y - 8}>
+            <text className="label label-lg" x={textX} y={boxY + 22}>
               <tspan style={nadrukStyle}>{labelVoorChildType(node.group.doeltype, node.group.rolnaam, node.group.typeMeta?.klassenaam)}</tspan>
               {" rel_id="}
               <tspan style={nadrukStyle}>{node.item.rel_id ?? node.item.id ?? "-"}</tspan>
             </text>
-            <text className="label label-lg" x={textX} y={node.y + 12}>{korteSamenvatting(node.item)}</text>
+            <text className="label label-lg" x={textX} y={boxY + 42}>{korteSamenvatting(node.item)}</text>
           </g>
         );
       })}
@@ -168,9 +172,9 @@ export default function IndexRepresentatieVisual({
 
       {relatieNodesVoorGrafiek.map((node) => {
         const centraleEntiteitRechts = 570;
-        const relW = 180;
+        const relW = 194;
         const relX = centraleEntiteitRechts - relW;
-        const relH = 54;
+        const relH = 58;
         const relFill = node.group?.kleur || "#fff7ed";
         const secondBoxW = 84;
         const secondBoxH = 24;
@@ -208,18 +212,18 @@ export default function IndexRepresentatieVisual({
             <text
               className={`label ${opvoerKlikbaar ? "opv-link" : ""}`}
               x={relX + relW - 8}
-              y={node.y - 10}
+              y={node.y - 8}
               textAnchor="end"
               onClick={opvoerKlikbaar ? (event) => navigeerNaarRegistratieVanOpvoer(event, node.item.opvoer) : undefined}
             >
               opv: {node.item.opvoer ? microsecondeIntVanTijdstip(node.item.opvoer) : "-"}
             </text>
-            <text className="label label-lg" x={relX + 10} y={node.y - 6}>
+            <text className="label label-lg" x={relX + 10} y={node.y - 2}>
               <tspan style={nadrukStyle}>{labelVoorChildType(node.group.doeltype, node.group.rolnaam, node.group.typeMeta?.klassenaam)}</tspan>
               {" rel_id="}
               <tspan style={nadrukStyle}>{node.item.rel_id ?? node.item.id ?? "-"}</tspan>
             </text>
-            <text className="label" x={relX + 10} y={node.y + 12}>{korteSamenvatting(node.item)}</text>
+            <text className="label" x={relX + 10} y={node.y + 18}>{korteSamenvatting(node.item)}</text>
             {!!node.tweedeEntiteitLabel && (
               <g
                 style={{ cursor: 'pointer' }}
