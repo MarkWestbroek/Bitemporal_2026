@@ -642,6 +642,9 @@ Deregister U5 and register U6 for entity A:
 
 ## TODO
 
+05 log requests en responses (hoe?)
+06 log correct uitgevoerd req en resp bij REG?
+
 10 loop tijdsreizen nog eens na (KVK voorbeelden) want corrigeren is nu nog hetzelfde als wijzigen. Je hebt twee soorten tijdreizen (of 3).
 
 15 Afgeleide velden
