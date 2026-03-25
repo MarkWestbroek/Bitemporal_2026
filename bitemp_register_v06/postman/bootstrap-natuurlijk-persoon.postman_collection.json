@@ -1,0 +1,97 @@
+{
+  "info": {
+    "name": "Bootstrap NatuurlijkPersoon",
+    "_postman_id": "f1a2b3c4-d5e6-7890-abcd-ef1234567890",
+    "description": "Bootstrap collectie: voert een NatuurlijkPersoon op met alle enkelvoudige GEs (elk 1 instantie) en synthetische data.\n\nDe pre-request script bepaalt automatisch het volgende vrije NP-id door GET /natuurlijk_personen op te halen, het hoogste id te bepalen en er 1 bij op te tellen.\n\nGEs:\n- Persoonsidentificatie (bsn, ingezetene)\n- Naam (voorletters, roepnaam, tussenvoegsel, achternaam)\n- Burgerschap (landcode, nationaliteit), materieel met aanvang\n- Partnernaam (achternaam)\n- Naamgebruik (naamgebruik enum)\n- Aanvang entiteit (geboortedatum)\n\nBereikbaarheid (relatie met Locatie) is weggelaten, vereist een bestaande Locatie.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Opvoer NatuurlijkPersoon met alle enkelvoudige GEs",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Haal alle NatuurlijkPersonen op om het hoogste id te bepalen",
+              "const baseUrl = pm.variables.get('baseUrl') || 'http://localhost:8082';",
+              "",
+              "pm.sendRequest({",
+              "    url: baseUrl + '/natuurlijk_personen',",
+              "    method: 'GET',",
+              "    header: { 'Accept': 'application/json' }",
+              "}, function (err, res) {",
+              "    if (err) {",
+              "        console.error('Fout bij ophalen /natuurlijk_personen:', err);",
+              "        pm.variables.set('next_np_id', 1);",
+              "        return;",
+              "    }",
+              "",
+              "    let maxId = 0;",
+              "    try {",
+              "        const body = res.json();",
+              "        // response shape: { \"natuurlijk_personen\": [...], \"page\": 1, ... }",
+              "        const items = body.natuurlijk_personen || (Array.isArray(body) ? body : []);",
+              "        for (const item of items) {",
+              "            const id = parseInt(item.id, 10);",
+              "            if (!isNaN(id) && id > maxId) {",
+              "                maxId = id;",
+              "            }",
+              "        }",
+              "    } catch (e) {",
+              "        console.warn('Kon response niet parsen, start bij id 1:', e);",
+              "    }",
+              "",
+              "    const nextId = maxId + 1;",
+              "    console.log('Hoogste NP-id in DB: ' + maxId + ' → volgend id: ' + nextId);",
+              "    pm.variables.set('next_np_id', nextId);",
+              "});"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Registratie succesvol (2xx)', function () {",
+              "    pm.expect(pm.response.code).to.be.within(200, 299);",
+              "});",
+              "",
+              "pm.test('Response bevat registratie', function () {",
+              "    const body = pm.response.json();",
+              "    pm.expect(body).to.have.property('registratie');",
+              "});",
+              "",
+              "if (pm.response.code >= 200 && pm.response.code < 300) {",
+              "    console.log('NatuurlijkPersoon opgevoerd met id: ' + pm.variables.get('next_np_id'));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"tijdstip\": \"{{$isoTimestamp}}\",\n    \"opmerking\": \"Bootstrap: opvoer NatuurlijkPersoon {{next_np_id}} met alle enkelvoudige GEs (synthetische data)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"natuurlijkpersoon\": {\n          \"id\": {{next_np_id}},\n          \"persoonsidentificaties\": [\n            {\n              \"bsn\": \"123456782\",\n              \"ingezetene\": true\n            }\n          ],\n          \"namen\": [\n            {\n              \"voorletters\": \"J.A.\",\n              \"roepnaam\": \"Jan\",\n              \"tussenvoegsel\": \"van den\",\n              \"achternaam\": \"Berg\"\n            }\n          ],\n          \"burgerschappen\": [\n            {\n              \"landcode\": \"NL\",\n              \"nationaliteit\": \"Nederlandse\",\n              \"aanvang\": \"1990-03-15\"\n            }\n          ],\n          \"partnernamen\": [\n            {\n              \"achternaam\": \"Jansen\"\n            }\n          ],\n          \"naamgebruiken\": [\n            {\n              \"naamgebruik\": \"EigenNaam\"\n            }\n          ],\n          \"aanvang\": [\n            {\n              \"datum\": \"1990-03-15\"\n            }\n          ]\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": "{{baseUrl}}/registratie/",
+        "description": "Voert een nieuwe NatuurlijkPersoon op met alle enkelvoudige GEs:\n- Persoonsidentificatie: BSN 123456782, ingezetene=true\n- Naam: J.A. van den Berg, roepnaam Jan\n- Burgerschap: NL/Nederlandse, materieel vanaf 1990-03-15\n- Partnernaam: Jansen\n- Naamgebruik: EigenNaam\n- Aanvang entiteit: 1990-03-15 (geboortedatum)\n\nHet NP-id wordt automatisch bepaald via de pre-request script (max id + 1).\nAlle rel_id's zijn autoincrement en hoeven niet meegegeven."
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8082"
+    }
+  ]
+}

@@ -1,0 +1,752 @@
+openapi: 3.1.0
+info:
+  title: Bitemporal Register v06 — NatuurlijkPersoon Bootstrap API
+  version: 0.1.0
+  description: |
+    OAS 3.1 specificatie voor het opvoeren van een NatuurlijkPersoon (NP) via
+    het bitemporele registratie-endpoint van de v06 API.
+
+    Bevat de registratie-payload, alle NP-gerelateerde _Input schemas en het
+    response-formaat voor de full-entity GET.
+
+servers:
+  - url: http://localhost:8082
+    description: Lokale dev server
+
+paths:
+  /registratie/:
+    post:
+      operationId: registreerNatuurlijkPersoon
+      summary: Registreer opvoer/afvoer van representaties
+      description: |
+        Hoofdendpoint voor bitemporele registratie. De payload bevat een
+        registratie-object plus een lijst wijzigingen. Elke wijziging heeft
+        een opvoer en/of afvoer met als sleutel de `veldnaam` uit de
+        MetaRegistry (bijv. "natuurlijkpersoon", "persoonsidentificatie").
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegistreerRequest"
+      responses:
+        "200":
+          description: Registratie succesvol verwerkt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistratieResponse"
+        "400":
+          description: Ongeldige payload
+        "500":
+          description: Interne serverfout
+
+  /natuurlijk_personen:
+    get:
+      operationId: getNatuurlijkPersonen
+      summary: Lijst van alle NatuurlijkPersoon-entiteiten (zonder geneste GEs)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Gepagineerde lijst
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  natuurlijk_personen:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/NatuurlijkPersoonSlim"
+                  page:
+                    type: integer
+                  size:
+                    type: integer
+                  has_more:
+                    type: boolean
+
+  /full/natuurlijk_personen/{id}:
+    get:
+      operationId: getFullNatuurlijkPersoon
+      summary: NatuurlijkPersoon met alle geneste GEs, relaties en materiële plumbing
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: t
+          in: query
+          description: Formeel peiltijdstip (ISO 8601). Alleen verleden.
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Volledige entiteit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NatuurlijkPersoonFull"
+        "404":
+          description: Niet gevonden
+
+components:
+  schemas:
+    # ───────── Registratie request ─────────
+    RegistreerRequest:
+      type: object
+      required: [registratie, wijzigingen]
+      properties:
+        registratie:
+          $ref: "#/components/schemas/RegistratieInput"
+        wijzigingen:
+          type: array
+          items:
+            $ref: "#/components/schemas/WijzigingRequest"
+
+    RegistratieInput:
+      type: object
+      required: [registratietype, tijdstip]
+      properties:
+        registratietype:
+          type: string
+          enum: [registratie, correctie, ongedaanmaking]
+        tijdstip:
+          type: string
+          format: date-time
+        opmerking:
+          type: string
+        corrigeert_registratie_id:
+          type: integer
+          format: int64
+        maakt_ongedaan_registratie_id:
+          type: integer
+          format: int64
+
+    WijzigingRequest:
+      type: object
+      description: |
+        Een wijziging bevat een opvoer en/of een afvoer. De waarde is een
+        object met exact één sleutel: de `veldnaam` van het representatietype
+        (bijv. "natuurlijkpersoon", "persoonsidentificatie", "naam").
+      properties:
+        opvoer:
+          $ref: "#/components/schemas/RepresentatiePlusNaam"
+        afvoer:
+          $ref: "#/components/schemas/RepresentatiePlusNaam"
+
+    RepresentatiePlusNaam:
+      type: object
+      description: |
+        Dynamisch object — precies één sleutel (de MetaRegistry veldnaam).
+        Voorbeelden van sleutels: "natuurlijkpersoon", "persoonsidentificatie",
+        "naam", "burgerschap", "partnernaam", "naamgebruik", "bereikbaarheid".
+      oneOf:
+        - type: object
+          properties:
+            natuurlijkpersoon:
+              $ref: "#/components/schemas/NatuurlijkPersoonOpvoer"
+        - type: object
+          properties:
+            persoonsidentificatie:
+              $ref: "#/components/schemas/PersoonsidentificatieInput"
+        - type: object
+          properties:
+            naam:
+              $ref: "#/components/schemas/NaamInput"
+        - type: object
+          properties:
+            burgerschap:
+              $ref: "#/components/schemas/BurgerschapInput"
+        - type: object
+          properties:
+            partnernaam:
+              $ref: "#/components/schemas/PartnernaamInput"
+        - type: object
+          properties:
+            naamgebruik:
+              $ref: "#/components/schemas/NaamgebruikInput"
+        - type: object
+          properties:
+            bereikbaarheid:
+              $ref: "#/components/schemas/BereikbaarheidInput"
+
+    # ───────── Entiteit opvoer (geneste GEs in de opvoer) ─────────
+    NatuurlijkPersoonOpvoer:
+      type: object
+      description: Opvoer van een NatuurlijkPersoon inclusief geneste GEs.
+      required: [id]
+      properties:
+        id:
+          type: integer
+          description: NP-id (handmatig opgeven; niet autoincrement)
+        persoonsidentificaties:
+          type: array
+          items:
+            $ref: "#/components/schemas/PersoonsidentificatieInput"
+        namen:
+          type: array
+          items:
+            $ref: "#/components/schemas/NaamInput"
+        burgerschappen:
+          type: array
+          items:
+            $ref: "#/components/schemas/BurgerschapInput"
+        partnernamen:
+          type: array
+          items:
+            $ref: "#/components/schemas/PartnernaamInput"
+        naamgebruiken:
+          type: array
+          items:
+            $ref: "#/components/schemas/NaamgebruikInput"
+        bereikbaarheden:
+          type: array
+          items:
+            $ref: "#/components/schemas/BereikbaarheidInput"
+        aanvang:
+          type: array
+          maxItems: 1
+          items:
+            $ref: "#/components/schemas/AanvangInput"
+        einde:
+          type: array
+          maxItems: 1
+          items:
+            $ref: "#/components/schemas/EindeInput"
+
+    # ───────── GE _Input schemas ─────────
+    PersoonsidentificatieInput:
+      type: object
+      description: "_Input struct voor NatuurlijkPersoon_Persoonsidentificatie (enkelvoudig)"
+      properties:
+        natuurlijkpersoon_id:
+          type: integer
+          description: FK naar NatuurlijkPersoon (wordt afgeleid bij geneste opvoer)
+        rel_id:
+          type: integer
+          description: Relatief autoincrement (wordt afgeleid bij nieuwe opvoer)
+        bsn:
+          type: string
+          description: Burgerservicenummer (9 cijfers, 11-proef)
+          pattern: "^[0-9]{9}$"
+          minLength: 9
+          maxLength: 9
+        ingezetene:
+          type: boolean
+          description: Is de persoon ingezetene?
+        aanvang:
+          type: string
+          format: date
+        einde:
+          type: string
+          format: date
+      required: [bsn]
+
+    NaamInput:
+      type: object
+      description: "_Input struct voor NatuurlijkPersoon_Naam (enkelvoudig)"
+      properties:
+        natuurlijkpersoon_id:
+          type: integer
+        rel_id:
+          type: integer
+        voorletters:
+          type: string
+        roepnaam:
+          type: string
+        tussenvoegsel:
+          type: string
+        achternaam:
+          type: string
+        aanvang:
+          type: string
+          format: date
+        einde:
+          type: string
+          format: date
+      required: [voorletters, achternaam]
+
+    BurgerschapInput:
+      type: object
+      description: "_Input struct voor NatuurlijkPersoon_Burgerschap (meervoudig, materieel)"
+      properties:
+        natuurlijkpersoon_id:
+          type: integer
+        rel_id:
+          type: integer
+        landcode:
+          type: string
+          description: ISO 3166-1 alpha-2 landcode
+        nationaliteit:
+          type: string
+        aanvang:
+          type: string
+          format: date
+          description: Materiële aanvangdatum
+        einde:
+          type: string
+          format: date
+      required: [landcode, nationaliteit]
+
+    PartnernaamInput:
+      type: object
+      description: "_Input struct voor NatuurlijkPersoon_Partnernaam (enkelvoudig)"
+      properties:
+        natuurlijkpersoon_id:
+          type: integer
+        rel_id:
+          type: integer
+        achternaam:
+          type: string
+        aanvang:
+          type: string
+          format: date
+        einde:
+          type: string
+          format: date
+      required: [achternaam]
+
+    NaamgebruikInput:
+      type: object
+      description: "_Input struct voor NatuurlijkPersoon_Naamgebruik (enkelvoudig)"
+      properties:
+        natuurlijkpersoon_id:
+          type: integer
+        rel_id:
+          type: integer
+        naamgebruik:
+          $ref: "#/components/schemas/Naamgebruiksoort"
+        aanvang:
+          type: string
+          format: date
+        einde:
+          type: string
+          format: date
+      required: [naamgebruik]
+
+    BereikbaarheidInput:
+      type: object
+      description: "_Input struct voor Bereikbaarheid (relatie NP→Locatie, enkelvoudig, materieel)"
+      properties:
+        natuurlijkpersoon_id:
+          type: integer
+        rel_id:
+          type: integer
+        locatie_id:
+          type: integer
+          description: FK naar Locatie-entiteit
+        soort:
+          $ref: "#/components/schemas/Bereikbaarheidssoort"
+        aanvang:
+          type: string
+          format: date
+        einde:
+          type: string
+          format: date
+      required: [locatie_id, soort]
+
+    AanvangInput:
+      type: object
+      properties:
+        datum:
+          type: string
+          format: date
+      required: [datum]
+
+    EindeInput:
+      type: object
+      properties:
+        datum:
+          type: string
+          format: date
+      required: [datum]
+
+    # ───────── Enums ─────────
+    Naamgebruiksoort:
+      type: string
+      enum:
+        - EigenNaam
+        - PartnerNaam
+        - EigenNaam-PartnerNaam
+        - PartnerNaam-EigenNaam
+
+    Bereikbaarheidssoort:
+      type: string
+      enum:
+        - Woonadres
+        - Briefadres
+        - Correspondentieadres
+
+    # ───────── Response schemas ─────────
+    RegistratieResponse:
+      type: object
+      description: Response na succesvolle registratie
+      properties:
+        registratie:
+          $ref: "#/components/schemas/Registratie"
+        wijzigingen:
+          type: array
+          items:
+            type: object
+
+    Registratie:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        registratietype:
+          type: string
+          enum: [registratie, correctie, ongedaanmaking]
+        tijdstip:
+          type: string
+          format: date-time
+        opmerking:
+          type: string
+        is_ongedaangemaakt:
+          type: boolean
+
+    # ───────── GET /full/natuurlijk_personen/:id response ─────────
+    NatuurlijkPersoonSlim:
+      type: object
+      description: NP zonder geneste GEs (lijst-endpoint)
+      properties:
+        id:
+          type: integer
+        opvoer:
+          type: string
+          format: date-time
+        afvoer:
+          type: string
+          format: date-time
+
+    NatuurlijkPersoonFull:
+      type: object
+      description: Volledige NP inclusief alle hubs, data-versies en materiële plumbing
+      properties:
+        id:
+          type: integer
+        opvoer:
+          type: string
+          format: date-time
+        afvoer:
+          type: string
+          format: date-time
+        persoonsidentificaties:
+          type: array
+          items:
+            $ref: "#/components/schemas/PersoonsidentificatieHub"
+        namen:
+          type: array
+          items:
+            $ref: "#/components/schemas/NaamHub"
+        burgerschappen:
+          type: array
+          items:
+            $ref: "#/components/schemas/BurgerschapHub"
+        partnernamen:
+          type: array
+          items:
+            $ref: "#/components/schemas/PartnernaamHub"
+        naamgebruiken:
+          type: array
+          items:
+            $ref: "#/components/schemas/NaamgebruikHub"
+        bereikbaarheden:
+          type: array
+          items:
+            $ref: "#/components/schemas/BereikbaarheidHub"
+        aanvang:
+          type: array
+          items:
+            $ref: "#/components/schemas/AanvangRecord"
+        einde:
+          type: array
+          items:
+            $ref: "#/components/schemas/EindeRecord"
+
+    # ───────── Hub + Data response structs ─────────
+    PersoonsidentificatieHub:
+      type: object
+      properties:
+        natuurlijkpersoon_id:
+          type: integer
+        rel_id:
+          type: integer
+        opvoer:
+          type: string
+          format: date-time
+        afvoer:
+          type: string
+          format: date-time
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              natuurlijkpersoon_id:
+                type: integer
+              rel_id:
+                type: integer
+              versie:
+                type: integer
+                format: int64
+              bsn:
+                type: string
+              ingezetene:
+                type: boolean
+              opvoer:
+                type: string
+                format: date-time
+              afvoer:
+                type: string
+                format: date-time
+
+    NaamHub:
+      type: object
+      properties:
+        natuurlijkpersoon_id:
+          type: integer
+        rel_id:
+          type: integer
+        opvoer:
+          type: string
+          format: date-time
+        afvoer:
+          type: string
+          format: date-time
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              natuurlijkpersoon_id:
+                type: integer
+              rel_id:
+                type: integer
+              versie:
+                type: integer
+                format: int64
+              voorletters:
+                type: string
+              roepnaam:
+                type: string
+              tussenvoegsel:
+                type: string
+              achternaam:
+                type: string
+              opvoer:
+                type: string
+                format: date-time
+              afvoer:
+                type: string
+                format: date-time
+
+    BurgerschapHub:
+      type: object
+      properties:
+        natuurlijkpersoon_id:
+          type: integer
+        rel_id:
+          type: integer
+        opvoer:
+          type: string
+          format: date-time
+        afvoer:
+          type: string
+          format: date-time
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              natuurlijkpersoon_id:
+                type: integer
+              rel_id:
+                type: integer
+              versie:
+                type: integer
+                format: int64
+              landcode:
+                type: string
+              nationaliteit:
+                type: string
+              opvoer:
+                type: string
+                format: date-time
+              afvoer:
+                type: string
+                format: date-time
+        aanvang:
+          type: array
+          items:
+            $ref: "#/components/schemas/AanvangRecord"
+        einde:
+          type: array
+          items:
+            $ref: "#/components/schemas/EindeRecord"
+
+    PartnernaamHub:
+      type: object
+      properties:
+        natuurlijkpersoon_id:
+          type: integer
+        rel_id:
+          type: integer
+        opvoer:
+          type: string
+          format: date-time
+        afvoer:
+          type: string
+          format: date-time
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              natuurlijkpersoon_id:
+                type: integer
+              rel_id:
+                type: integer
+              versie:
+                type: integer
+                format: int64
+              achternaam:
+                type: string
+              opvoer:
+                type: string
+                format: date-time
+              afvoer:
+                type: string
+                format: date-time
+
+    NaamgebruikHub:
+      type: object
+      properties:
+        natuurlijkpersoon_id:
+          type: integer
+        rel_id:
+          type: integer
+        opvoer:
+          type: string
+          format: date-time
+        afvoer:
+          type: string
+          format: date-time
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              natuurlijkpersoon_id:
+                type: integer
+              rel_id:
+                type: integer
+              versie:
+                type: integer
+                format: int64
+              naamgebruik:
+                $ref: "#/components/schemas/Naamgebruiksoort"
+              opvoer:
+                type: string
+                format: date-time
+              afvoer:
+                type: string
+                format: date-time
+
+    BereikbaarheidHub:
+      type: object
+      properties:
+        natuurlijkpersoon_id:
+          type: integer
+        rel_id:
+          type: integer
+        locatie_id:
+          type: integer
+        opvoer:
+          type: string
+          format: date-time
+        afvoer:
+          type: string
+          format: date-time
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              natuurlijkpersoon_id:
+                type: integer
+              rel_id:
+                type: integer
+              versie:
+                type: integer
+                format: int64
+              soort:
+                $ref: "#/components/schemas/Bereikbaarheidssoort"
+              opvoer:
+                type: string
+                format: date-time
+              afvoer:
+                type: string
+                format: date-time
+        aanvang:
+          type: array
+          items:
+            $ref: "#/components/schemas/AanvangRecord"
+        einde:
+          type: array
+          items:
+            $ref: "#/components/schemas/EindeRecord"
+
+    AanvangRecord:
+      type: object
+      properties:
+        natuurlijkpersoon_id:
+          type: integer
+        rel_id:
+          type: integer
+          description: Alleen aanwezig bij GE-level aanvang, niet bij entiteit-level
+        versie:
+          type: integer
+          format: int64
+        datum:
+          type: string
+          format: date
+        opvoer:
+          type: string
+          format: date-time
+        afvoer:
+          type: string
+          format: date-time
+
+    EindeRecord:
+      type: object
+      properties:
+        natuurlijkpersoon_id:
+          type: integer
+        rel_id:
+          type: integer
+        versie:
+          type: integer
+          format: int64
+        datum:
+          type: string
+          format: date
+        opvoer:
+          type: string
+          format: date-time
+        afvoer:
+          type: string
+          format: date-time

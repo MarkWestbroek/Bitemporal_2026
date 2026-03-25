@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "exported_at": "2026-03-25T20:30:00.000Z",
+  "source": "synthetic://generated-from-replay-template",
+  "count": 3,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-03-25T20:31:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Synthetische NatuurlijkPersoon NP=2",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "natuurlijkpersoon": {
+                "id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonsidentificatie": {
+                "natuurlijkpersoon_id": 2,
+                "bsn": "123456782",
+                "ingezetene": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "natuurlijkpersoon_id": 2,
+                "voorletters": "J.K.",
+                "roepnaam": "Joris",
+                "tussenvoegsel": "de",
+                "achternaam": "Vries"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "burgerschap": {
+                "natuurlijkpersoon_id": 2,
+                "landcode": "NL",
+                "nationaliteit": "Nederlandse"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "partnernaam": {
+                "natuurlijkpersoon_id": 2,
+                "achternaam": "Bakker"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naamgebruik": {
+                "natuurlijkpersoon_id": 2,
+                "naamgebruik": "EigenNaam"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "natuurlijkpersoon_aanvang": {
+                "natuurlijkpersoon_id": 2,
+                "datum": "1990-05-14"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-03-25T20:32:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Synthetische Locatie LOC=2",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "locatie": {
+                "id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adres": {
+                "locatie_id": 2,
+                "straatnaam": "Lindelaan",
+                "huisnummer": "42A",
+                "postcode": "1234AB",
+                "plaats": "Utrecht"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "baglocatie": {
+                "locatie_id": 2,
+                "adresaanduiding": "0363200000123456"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "locatie_aanvang": {
+                "locatie_id": 2,
+                "datum": "2018-09-01"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-03-25T20:33:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Synthetische woonadres-link NP=2 -> LOC=2",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "bereikbaarheid": {
+                "natuurlijkpersoon_id": 2,
+                "locatie_id": 2,
+                "soort": "Woonadres"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bereikbaarheid_aanvang": {
+                "natuurlijkpersoon_id": 2,
+                "datum": "2020-01-01"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}

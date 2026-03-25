@@ -627,6 +627,52 @@ Deregister U5 and register U6 for entity A:
 23 Register uitbreiden met menselijke klassen
 - NP-locatie, via UML editor
 
+## DONE: MATERIELE AS TOEVOEGEN = REDESIGN!
+
+1 JSON voor een request waarbij Aanvang en /of Einde wordt toegevoegd aan een bestaande Entiteit
+
+```json
+{
+  "registratie": {
+    "registratietype": "registratie",
+    "tijdstip": "2026-02-16T10:30:00Z",
+    "opmerking": "Opvoer van aanvang en einde van A=1"
+  },
+  "wijzigingen": [
+    {
+      "opvoer": {
+        "aanvang": {
+          "a_id": "1",
+          "datum": "01-01-2020"
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "einde": {
+          "a_id": "1",
+          "datum": "31-12-2025"
+        }
+      }
+    }
+  ]
+}
+```
+
+
+2 Aanvang en Einde op een entiteit via plumbing behandelen als een GE
+- bij opvoer, afvoer en correctie
+- ongedaanmaking moet misschien iets speciaals gebeuren in de queries
+
+3 Full handlers uitbreiden met meer dan één laag diepe relaties (vanwege bovenstaande mogelijke materiele 'mickey mouse oortjes' op entiteiten en gegevenselementen)
+- Dan heeft het GE een drievoudige PFK:
+  - `entiteit-id`
+  - `{ent}_{GE}.rel-id`
+  - `{ent}_{GE}_data.versie`
+- De splitsing van het gegevenselement in `{ent}_{GE}` en `{ent}_{GE}_data` is een vorm van plumbing.
+- De API blijft nog dezelfde, met toevoeging van aanvang en einde als optionele types onder elk materieel element.
+- Bij creatie worden de tabellen gesplitst gemaakt met indien materieel de aanvang en einde tabellen: `{ent}_{GE}_aanvang` en `{ent}_{GE}_einde`
+- deze gedragen zich dus als een _data tabel met een versie.
 
 ## BUGS
 ### API:
@@ -642,12 +688,11 @@ Deregister U5 and register U6 for entity A:
 
 ## TODO
 
-05 log requests en responses (hoe?)
-06 log correct uitgevoerd req en resp bij REG?
+05 log àlle requests en responses? (hoe?)
 
 10 loop tijdsreizen nog eens na (KVK voorbeelden) want corrigeren is nu nog hetzelfde als wijzigen. Je hebt twee soorten tijdreizen (of 3).
 
-15 Afgeleide velden
+15 *Afgeleide velden*
 - ook in ENT
 - soort van formule (OCL? DMN?)
 - kan het label zijn in de index en tijdlijn viewer
@@ -692,52 +737,4 @@ Deregister U5 and register U6 for entity A:
 60 pbac: wat is een goed policy formaat?
 61 pip maken op basis van metamodel?
 62 pep inbouwen
-
-## TO DO MATERIEEL = REDESIGN!
-
-
-2 JSON voor een request waarbij Aanvang en /of Einde wordt toegevoegd aan een bestaande Entiteit
-
-```json
-{
-  "registratie": {
-    "registratietype": "registratie",
-    "tijdstip": "2026-02-16T10:30:00Z",
-    "opmerking": "Opvoer van aanvang en einde van A=1"
-  },
-  "wijzigingen": [
-    {
-      "opvoer": {
-        "aanvang": {
-          "a_id": "1",
-          "datum": "01-01-2020"
-        }
-      }
-    },
-    {
-      "opvoer": {
-        "einde": {
-          "a_id": "1",
-          "datum": "31-12-2025"
-        }
-      }
-    }
-  ]
-}
-```
-
-
-2 Aanvang en Einde op een entiteit via plumbing behandelen als een GE
-- bij opvoer, afvoer en correctie
-- ongedaanmaking moet misschien iets speciaals gebeuren in de queries
-
-3 Full handlers uitbreiden met meer dan één laag diepe relaties (vanwege bovenstaande mogelijke materiele 'mickey mouse oortjes' op entiteiten en gegevenselementen)
-- Dan heeft het GE een drievoudige PFK:
-  - `entiteit-id`
-  - `{ent}_{GE}.rel-id`
-  - `{ent}_{GE}_data.versie`
-- De splitsing van het gegevenselement in `{ent}_{GE}` en `{ent}_{GE}_data` is een vorm van plumbing.
-- De API blijft nog dezelfde, met toevoeging van aanvang en einde als optionele types onder elk materieel element.
-- Bij creatie worden de tabellen gesplitst gemaakt met indien materieel de aanvang en einde tabellen: `{ent}_{GE}_aanvang` en `{ent}_{GE}_einde`
-- deze gedragen zich dus als een _data tabel met een versie.
 
