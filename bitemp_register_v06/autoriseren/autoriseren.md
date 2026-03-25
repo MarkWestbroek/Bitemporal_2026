@@ -242,7 +242,7 @@ forbid(
 ### Herkomst en positionering
 
 | Aspect | ALFA | Cedar |
-|---|---|---|---|
+|---|---|---|
 | Voluit | Abbreviated Language for Authorization | Cedar (geen acroniem) |
 | Gemaakt door | Axiomatics (commercieel, nu Ping Identity) | Amazon Web Services (open source, 2023) |
 | Standaard | Compileert naar XACML 3.0 | Eigenstandig, met formele semantiek |
