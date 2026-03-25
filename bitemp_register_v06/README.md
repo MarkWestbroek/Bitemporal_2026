@@ -693,10 +693,11 @@ Deregister U5 and register U6 for entity A:
 10 loop tijdsreizen nog eens na (KVK voorbeelden) want corrigeren is nu nog hetzelfde als wijzigen. Je hebt twee soorten tijdreizen (of 3).
 
 15 *Afgeleide velden*
-- ook in ENT
-- soort van formule (OCL? DMN?)
+- ook in ENT (vooral eigenlijk)
+- soort van formule (OCL? DMN? -> maar wat voor?)
+- / in UML view
 - kan het label zijn in de index en tijdlijn viewer
-  - isLabel property
+  - isLabelInTimelinViews property
 
 16 Referentielijsten
 
