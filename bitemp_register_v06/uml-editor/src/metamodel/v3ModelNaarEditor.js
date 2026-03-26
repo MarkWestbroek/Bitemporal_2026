@@ -99,6 +99,7 @@ export function v3ModelNaarEditor(v3Model) {
       position: ent.positie ? { x: ent.positie.x, y: ent.positie.y } : { x: entIdx * 500, y: 50 },
       data: {
         typenaam: ent.typenaam,
+        klassenaam: ent.typenaam,
         description: ent.description || "",
         meervoud: ent.meervoud || "",
         metatype: "entiteit",
@@ -127,6 +128,7 @@ export function v3ModelNaarEditor(v3Model) {
           : { x: entIdx * 500 - 150 + geIdx * 250, y: 300 },
         data: {
           typenaam: geTypenaam,
+          klassenaam: ge.naam,
           description: ge.description || "",
           meervoud: ge.meervoud || "",
           metatype: "gegevenselement",
@@ -182,6 +184,7 @@ export function v3ModelNaarEditor(v3Model) {
             : { x: entIdx * 500 + 200, y: 170 },
           data: {
             typenaam: rel.naam,
+            klassenaam: rel.naam,
             description: rel.description || "",
             meervoud: rel.meervoud || "",
             metatype: "relatie",

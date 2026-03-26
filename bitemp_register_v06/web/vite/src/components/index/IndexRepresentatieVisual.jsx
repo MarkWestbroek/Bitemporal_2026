@@ -22,6 +22,7 @@ export default function IndexRepresentatieVisual({
   entiteitOortjes,
   typeMetaByTypenaam,
   navigeerNaarSecondaireEntiteit,
+  afgeleideVeldWaarden,
 }) {
   return (
     <svg className="graph" viewBox={`0 0 900 ${svgHoogte}`} preserveAspectRatio="xMidYMid meet">
@@ -153,6 +154,15 @@ export default function IndexRepresentatieVisual({
                 {" id="}
                 <tspan style={centraleEntiteitLabelStyle}>{selectedA.id}</tspan>
               </text>
+              {/* Afgeleide velden: weergave onder het entiteitlabel */}
+              {afgeleideVeldWaarden && Object.keys(afgeleideVeldWaarden).length > 0 && (
+                <text className="label" x="450" y="98" textAnchor="middle"
+                  style={{ fontStyle: "italic", fontSize: "13px", fill: "#334155" }}>
+                  {Object.entries(afgeleideVeldWaarden).map(([naam, waarde]) =>
+                    waarde != null ? String(waarde) : ""
+                  ).filter(Boolean).join(" · ")}
+                </text>
+              )}
             </g>
           </>
         );

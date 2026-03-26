@@ -45,7 +45,7 @@ function RelatieNode({ data, selected }) {
 
       <div className="node-header">
         <div className="node-stereotype">«relatie»</div>
-        <div className="node-typenaam">{data.typenaam || "(naamloos)"}</div>
+        <div className="node-typenaam">{data.klassenaam || data.typenaam || "(naamloos)"}</div>
         {data.isMaterieel && (
           <div className="node-badge materieel">materieel</div>
         )}

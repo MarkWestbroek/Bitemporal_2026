@@ -24,30 +24,39 @@ type vizSchemaChildDTO struct {
 }
 
 type vizSchemaTypeDTO struct {
-	Typenaam                  string              `json:"typenaam"`
-	Klassenaam                string              `json:"klassenaam"`
-	Description               string              `json:"description,omitempty"`
-	Metatype                  model.Metatype      `json:"metatype"`
-	GESubtype                 string              `json:"ge_subtype,omitempty"`  // hub, data, aanvang, einde (leeg voor entiteiten en legacy)
-	IsMaterieel               bool                `json:"isMaterieel,omitempty"` // of dit type een materiële tijdlijn heeft
-	Kleur                     string              `json:"kleur,omitempty"`
-	Veldnaam                  string              `json:"veldnaam"`
-	Meervoud                  string              `json:"meervoud,omitempty"`
-	Velden                    []vizSchemaFieldDTO `json:"velden,omitempty"`
-	Tabelnaam                 string              `json:"tabelnaam"`
-	IDKolom                   string              `json:"idKolom"`
-	IDAutoIncrement           bool                `json:"idAutoIncrement,omitempty"`
-	HeeftPFK                  bool                `json:"heeftPFK"`
-	EntiteitIDKolom           string              `json:"entiteitIDKolom,omitempty"`
-	SecondaireEntiteitIDKolom string              `json:"secondaireEntiteitIDKolom,omitempty"`
-	BovenliggendTypenaam      string              `json:"bovenliggendTypenaam,omitempty"` // voor plumbing-types: de entiteit waar dit type bij hoort
-	Momentvoorkomen           string              `json:"momentvoorkomen,omitempty"`
-	Onderliggende             []vizSchemaChildDTO `json:"onderliggende,omitempty"`
+	Typenaam                  string                     `json:"typenaam"`
+	Klassenaam                string                     `json:"klassenaam"`
+	Description               string                     `json:"description,omitempty"`
+	Metatype                  model.Metatype             `json:"metatype"`
+	GESubtype                 string                     `json:"ge_subtype,omitempty"`  // hub, data, aanvang, einde (leeg voor entiteiten en legacy)
+	IsMaterieel               bool                       `json:"isMaterieel,omitempty"` // of dit type een materiële tijdlijn heeft
+	Kleur                     string                     `json:"kleur,omitempty"`
+	Veldnaam                  string                     `json:"veldnaam"`
+	Meervoud                  string                     `json:"meervoud,omitempty"`
+	Velden                    []vizSchemaFieldDTO        `json:"velden,omitempty"`
+	Tabelnaam                 string                     `json:"tabelnaam"`
+	IDKolom                   string                     `json:"idKolom"`
+	IDAutoIncrement           bool                       `json:"idAutoIncrement,omitempty"`
+	HeeftPFK                  bool                       `json:"heeftPFK"`
+	EntiteitIDKolom           string                     `json:"entiteitIDKolom,omitempty"`
+	SecondaireEntiteitIDKolom string                     `json:"secondaireEntiteitIDKolom,omitempty"`
+	BovenliggendTypenaam      string                     `json:"bovenliggendTypenaam,omitempty"` // voor plumbing-types: de entiteit waar dit type bij hoort
+	Momentvoorkomen           string                     `json:"momentvoorkomen,omitempty"`
+	Onderliggende             []vizSchemaChildDTO        `json:"onderliggende,omitempty"`
+	AfgeleideVelden           []vizSchemaAfgeleidVeldDTO `json:"afgeleideVelden,omitempty"`
 }
 
 type vizSchemaResponse struct {
 	Versie string             `json:"versie"`
 	Types  []vizSchemaTypeDTO `json:"types"`
+}
+
+type vizSchemaAfgeleidVeldDTO struct {
+	Naam                string `json:"naam"`
+	Description         string `json:"description,omitempty"`
+	GoType              string `json:"goType,omitempty"`
+	AfleidingsregelTaal string `json:"afleidingsregelTaal,omitempty"`
+	Afleidingsregel     string `json:"afleidingsregel,omitempty"`
 }
 
 type vizSchemaFieldDTO struct {
@@ -394,6 +403,20 @@ func MaakVizSchemaHandler() gin.HandlerFunc {
 					})
 				}
 				item.Onderliggende = children
+			}
+
+			if len(meta.AfgeleideVelden) > 0 {
+				avs := make([]vizSchemaAfgeleidVeldDTO, 0, len(meta.AfgeleideVelden))
+				for _, av := range meta.AfgeleideVelden {
+					avs = append(avs, vizSchemaAfgeleidVeldDTO{
+						Naam:                av.Naam,
+						Description:         av.Description,
+						GoType:              av.GoType,
+						AfleidingsregelTaal: av.AfleidingsregelTaal,
+						Afleidingsregel:     av.Afleidingsregel,
+					})
+				}
+				item.AfgeleideVelden = avs
 			}
 
 			items = append(items, item)

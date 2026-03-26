@@ -29,6 +29,16 @@ type OnderliggendGegevenselement struct {
 	Momentvoorkomen Momentvoorkomen // enkelvoudig of meervoudig = het voorkomen op enig moment in de tijd
 }
 
+// AfgeleidVeld beschrijft een entiteit-niveau afgeleid veld (bijv. weergavenaam).
+// Het veld wordt niet opgeslagen maar berekend uit onderliggende GE-velden via een CEL-expressie.
+type AfgeleidVeld struct {
+	Naam                string // JSON-veldnaam van het afgeleide veld (bijv. "weergavenaam")
+	Description         string
+	GoType              string // bijv. "string"
+	AfleidingsregelTaal string // bijv. "cel"
+	Afleidingsregel     string // CEL-expressie (bijv. "Naam.roepnaam != null ? ...")
+}
+
 // OnderliggendeRepresentatie koppelt een typenaam aan een concrete FormeleRepresentatie.
 type OnderliggendeRepresentatie struct {
 	Typenaam      string
@@ -107,6 +117,10 @@ type TypeMeta struct {
 	// Bij entiteiten: GE-hubs en relatie-hubs.
 	// Bij hubs: _Data, en optioneel _Aanvang/_Einde (bij materiële hubs).
 	OnderliggendeGegevenselementen []OnderliggendGegevenselement
+
+	// AfgeleideVelden beschrijft entiteit-niveau afgeleide velden (bijv. weergavenaam).
+	// Alleen voor entiteiten. De waarden worden berekend uit onderliggende GE-velden.
+	AfgeleideVelden []AfgeleidVeld
 }
 
 // MetaRegistryType is a named map type for the meta model registry, enabling methods.

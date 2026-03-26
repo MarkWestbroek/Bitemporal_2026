@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "../shared/schema-viz.css";
 import "../styles/index-schema.css";
+import { evalueerCelExpressie, bouwCelContext } from "../shared/celEvaluator";
 import {
   safeArray,
   tUitRegistratieTijdstip,
@@ -454,6 +455,20 @@ export default function IndexSchemaPage() {
             eindeEntiteitIDKolom: eindeTypeMeta?.entiteitIDKolom || null,
           };
         }, [geselecteerdeRep, typeMetaByTypenaam]);
+
+        // Afgeleide velden: evalueer CEL-expressies op entiteit-niveau.
+        const afgeleideVeldWaarden = useMemo(() => {
+          const definities = safeArray(selectedEntiteitMeta?.afgeleideVelden);
+          if (definities.length === 0 || !selectedA) return {};
+          const ctx = bouwCelContext(childGroups, typeMetaByTypenaam);
+          const result = {};
+          for (const av of definities) {
+            if (av.afleidingsregelTaal === "cel" && av.afleidingsregel) {
+              result[av.naam] = evalueerCelExpressie(av.afleidingsregel, ctx);
+            }
+          }
+          return result;
+        }, [selectedEntiteitMeta, selectedA, childGroups, typeMetaByTypenaam]);
 
         const gegevenselementGroepOpties = useMemo(() => {
           return childGroupsGesorteerd
@@ -2161,6 +2176,7 @@ export default function IndexSchemaPage() {
                     entiteitOortjes={entiteitOortjes}
                     typeMetaByTypenaam={typeMetaByTypenaam}
                     navigeerNaarSecondaireEntiteit={navigeerNaarSecondaireEntiteit}
+                    afgeleideVeldWaarden={afgeleideVeldWaarden}
                   />
 
                   {actieResultaat && !geselecteerdeRep && (
