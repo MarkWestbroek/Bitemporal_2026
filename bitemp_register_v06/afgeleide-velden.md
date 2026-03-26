@@ -10,6 +10,7 @@ Afgeleide velden zijn velden waarvan de waarde niet direct wordt opgeslagen, maa
 - [Ondersteunde afleidingstalen](#ondersteunde-afleidingstalen)
 - [CEL syntax en voorbeelden](#cel-syntax-en-voorbeelden)
 - [Visuele weergave in de UML-editor](#visuele-weergave-in-de-uml-editor)
+- [Opslag In Database En Roundtrip](#opslag-in-database-en-roundtrip)
 - [Codestructuur en bestanden](#codestructuur-en-bestanden)
 - [Toekomstige doorontwikkeling](#toekomstige-doorontwikkeling)
 
@@ -273,6 +274,57 @@ In de entiteitnode op het canvas verschijnt een extra sectie (gescheiden door ee
 │  /weergavenaam : string      │  ← oranje, cursief
 └─────────────────────────────┘
 ```
+
+## Opslag In Database En Roundtrip
+
+### Verwacht gedrag
+
+Bij publicatie via de editor (`POST /api/schema/model`) moet het volgende roundtrip-veilig zijn:
+
+- entiteit-niveau `afgeleideVelden[]`
+- veld-niveau `afgeleid`
+- veld-niveau `afleidingsregelTaal`
+- veld-niveau `afleidingsregel`
+
+Na refresh (editor laadt nieuwste versie via `GET /api/schema/versies` -> `GET /api/schema/model/:id`) moeten deze velden ongewijzigd terugkomen.
+
+### Gevonden issue en fix (maart 2026)
+
+Issue:
+
+- Afgeleide velden verdwenen na publiceren + refresh, terwijl opslaan/laden via lokaal JSON-bestand wel werkte.
+
+Root cause:
+
+- In de backend ontbraken afgeleide-velden-property's in de Go V3-structuur, waardoor JSON bij `POST /api/schema/model` wel geaccepteerd werd maar afgeleide properties tijdens unmarshal wegvielen.
+
+Fix:
+
+- In [model/v3_format.go](model/v3_format.go) zijn toegevoegd:
+  - `V3Entiteit.AfgeleideVelden []V3AfgeleidVeld`
+  - `V3Veld.Afgeleid`
+  - `V3Veld.AfleidingsregelTaal`
+  - `V3Veld.Afleidingsregel`
+  - nieuw type `V3AfgeleidVeld`
+
+Validatie:
+
+- End-to-end POST -> GET roundtrip getest: afgeleide velden blijven behouden in `schema_json` en komen terug in de editor.
+
+### CORS/no-load fallback naar demo
+
+Als editor v2 op `http://localhost:5174/viz/react/editor-v2.html` op `[demo]` blijft staan, is de oorzaak vaak geen modelverlies maar laadfout:
+
+- De eerste DB-load gebruikt `GET /api/schema/versies`.
+- Als die call door CORS wordt geblokkeerd, valt editor v2 terug op demo-model.
+
+Daarom staat CORS-middleware nu vroeg in de routerregistratie (voor alle routes), zodat ook `/api/schema/versies` de juiste `Access-Control-Allow-Origin` header terugstuurt.
+
+Checklist bij troubleshooting:
+
+1. Controleer in console op `Failed to fetch` of CORS-fouten.
+2. Controleer of de statusbadge `[DB #..]` of `[demo]` toont.
+3. Verifieer endpoint handmatig: `GET /api/schema/versies` moet 200 geven en CORS-header bevatten voor `localhost:5174`.
 
 ## Codestructuur en bestanden
 

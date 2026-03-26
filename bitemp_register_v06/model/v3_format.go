@@ -79,6 +79,7 @@ type V3Entiteit struct {
 	Kleur             string              `json:"kleur,omitempty"`
 	Meervoud          string              `json:"meervoud"`          // URL-padnaam, bijv. "as", "personen"
 	Positie           *V3Positie          `json:"positie,omitempty"` // editor-layout positie (genegeerd door codegen)
+	AfgeleideVelden   []V3AfgeleidVeld    `json:"afgeleideVelden,omitempty"`
 	Gegevenselementen []V3Gegevenselement `json:"gegevenselementen,omitempty"`
 	Relaties          []V3Relatie         `json:"relaties,omitempty"`
 }
@@ -125,8 +126,20 @@ type V3Positie struct {
 
 // V3Veld beschrijft een inhoudsveld (geen plumbing) in een GE of relatie.
 type V3Veld struct {
-	Naam        string `json:"naam"`
-	GoType      string `json:"goType"`         // bijv. "string", "*bool", "float64", "RelABSoort"
-	Enum        string `json:"enum,omitempty"` // ref naar V3Enum.GoType als dit een enum-veld is
-	Description string `json:"description,omitempty"`
+	Naam                string `json:"naam"`
+	GoType              string `json:"goType"`         // bijv. "string", "*bool", "float64", "RelABSoort"
+	Enum                string `json:"enum,omitempty"` // ref naar V3Enum.GoType als dit een enum-veld is
+	Description         string `json:"description,omitempty"`
+	Afgeleid            bool   `json:"afgeleid,omitempty"`
+	AfleidingsregelTaal string `json:"afleidingsregelTaal,omitempty"`
+	Afleidingsregel     string `json:"afleidingsregel,omitempty"`
+}
+
+// V3AfgeleidVeld beschrijft een entiteit-niveau afgeleid veld.
+type V3AfgeleidVeld struct {
+	Naam                string `json:"naam"`
+	Description         string `json:"description,omitempty"`
+	GoType              string `json:"goType"`
+	AfleidingsregelTaal string `json:"afleidingsregelTaal,omitempty"`
+	Afleidingsregel     string `json:"afleidingsregel,omitempty"`
 }

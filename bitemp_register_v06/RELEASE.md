@@ -14,6 +14,19 @@ Korte checklist voor een API-release met losse DB-stack.
 - Post-load hub-kinderen: `laadHubKinderenNaQuery()` laadt Data/Aanvang/Einde records in aparte batch-queries na de hoofd-query, als workaround voor de Bun v1.1.14 geneste has-many panic. Zie `ONTWERP_DATA_PATTERN.md` §15.
 - Afgeleide formele tijd: `vulAfgeleideFormeleTijdVoorFullEntity()` daalt nu ook af in hub-kinderen (Data/Aanvang/Einde) bij peiltijdstip-filtering.
 
+## Runtime fix notes (2026-03-26)
+
+- Editor v2 laadt bij opstart standaard de nieuwste DB-versie via `GET /api/schema/versies` en daarna `model_url`.
+- Statusbar toont nu modelbron (`[DB #id (status)]` of `[demo]`) en modelnaam met tooltip op modelbeschrijving.
+- CORS-fix: middleware-registratie staat nu vóór alle route-definities, zodat ook `GET /api/schema/versies` CORS-headers teruggeeft voor Vite dev-origin (`localhost:5174`).
+- Persistency-fix afgeleide velden: Go V3 struct-model uitgebreid zodat deze velden niet meer wegvallen bij `POST /api/schema/model`:
+	- `V3Entiteit.AfgeleideVelden`
+	- `V3Veld.Afgeleid`
+	- `V3Veld.AfleidingsregelTaal`
+	- `V3Veld.Afleidingsregel`
+	- nieuw type `V3AfgeleidVeld`
+- Effect: afgeleide velden blijven nu behouden na publiceren naar DB en reload van editor v2.
+
 ## 1. Nieuwe image bouwen en pushen
 
 ```bash

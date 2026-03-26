@@ -45,13 +45,17 @@ func corsMiddleware() gin.HandlerFunc {
 	}
 }
 
-func AddRoutes(router *gin.Engine) {
-	// CORS middleware – loopt voor alle routes, inclusief metaregistry en fullroutes
+func SetupMiddleware(router *gin.Engine) {
+	// CORS middleware moet vroeg worden geregistreerd, zodat alle routes
+	// (ook routes die buiten AddRoutes worden toegevoegd) CORS-headers krijgen.
 	router.Use(corsMiddleware())
 
 	// Preflight-handler: vangt OPTIONS /*path op zodat Gin het request
 	// doorgeeft aan de middleware hierboven (en niet met 405 afwijst).
 	router.OPTIONS("/*path", func(c *gin.Context) {})
+}
+
+func AddRoutes(router *gin.Engine) {
 
 	//Add Tests routes to router
 	router.GET("/tests", handlers.GetTests)

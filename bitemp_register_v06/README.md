@@ -123,6 +123,13 @@ In de UML-editor worden afgeleide velden weergegeven met een oranje `/` prefix e
 
 Zie [`afgeleide-velden.md`](afgeleide-velden.md) voor de volledige documentatie, CEL-syntaxvoorbeelden en codestructuur.
 
+Belangrijke status (maart 2026):
+
+- Afgeleide velden blijven nu ook behouden na **publiceren naar DB + refresh**.
+- Root cause was dat de backend V3-structuur de velden `afgeleideVelden`, `afgeleid`, `afleidingsregelTaal` en `afleidingsregel` nog niet had gemodelleerd.
+- De CORS-middleware staat nu vroeg in de routerregistratie, zodat ook `/api/schema/versies` correct CORS-headers teruggeeft voor Vite op `localhost:5174`.
+- Bij editorproblemen met `[demo]` als bron: controleer eerst API/CORS in browser console en endpoint `GET /api/schema/versies`.
+
 Opmerking:
 
 - De frontend gebruikt gebuilde assets (geen runtime React-CDN meer nodig).

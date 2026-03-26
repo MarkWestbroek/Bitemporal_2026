@@ -106,6 +106,9 @@ func isProductionEnvironment() bool {
 func NewRouter() *gin.Engine {
 	router := gin.Default()
 
+	// Registreer middleware (o.a. CORS) vóór alle endpoint-definities.
+	routes.SetupMiddleware(router)
+
 	//Homepage
 	router.GET("/", handlers.HomePage)
 	router.GET("/docs", handlers.DocsIndex)
