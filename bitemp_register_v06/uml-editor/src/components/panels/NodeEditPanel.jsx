@@ -688,12 +688,12 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
         + Veld toevoegen
       </button>
 
-      {/* Afgeleide velden op entiteit-niveau */}
-      {data.metatype === "entiteit" && (
+      {/* Afgeleide velden op entiteit/GE/relatie-niveau */}
+      {(data.metatype === "entiteit" || data.metatype === "gegevenselement" || data.metatype === "relatie") && (
         <>
-          <h4 style={{ marginTop: "16px" }}>Afgeleide velden (entiteit)</h4>
+          <h4 style={{ marginTop: "16px" }}>Afgeleide velden</h4>
           <p style={{ fontSize: "0.8em", color: "#64748b", margin: "0 0 8px 0" }}>
-            Velden die worden afgeleid uit GE/relatie-velden, bijv. een weergavenaam.
+            Velden die worden afgeleid uit onderliggende velden, bijv. een weergavenaam.
           </p>
           {(data.afgeleideVelden || []).map((av, i) => (
             <div key={i} className="veld-edit-row" style={{ borderLeft: "3px solid #f59e0b", paddingLeft: "6px" }}>
@@ -752,6 +752,14 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
                     rows={2}
                     style={{ width: "100%", fontFamily: "monospace", fontSize: "0.85em" }}
                   />
+                </label>
+                <label style={{ fontSize: "0.85em", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <input
+                    type="checkbox"
+                    checked={av.isWeergaveVeld || false}
+                    onChange={(e) => updateAfgeleidVeld(i, "isWeergaveVeld", e.target.checked)}
+                  />
+                  Weergaveveld (toon op kaarten)
                 </label>
               </div>
             </div>

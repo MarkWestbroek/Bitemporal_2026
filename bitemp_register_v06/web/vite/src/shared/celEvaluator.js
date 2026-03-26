@@ -231,3 +231,49 @@ export function bouwCelContext(childGroups, typeMetaByTypenaam) {
   }
   return ctx;
 }
+
+/**
+ * Evalueer weergaveVelden voor een GE/relatie item.
+ *
+ * Bouwt de CEL-context op basis van het item en het type:
+ * - Hub-types: de _Data child's klassenaam wordt als context-key gebruikt
+ *   (het platgeslagen item bevat de data-velden direct).
+ * - Overige GE's/relaties: de eigen klassenaam wordt als key gebruikt.
+ *
+ * @param {Array} afgeleideVeldenDefs - Afgeleide-velden definities (uit typeMeta.afgeleideVelden).
+ * @param {Object} item - Het (platgeslagen) GE/relatie item.
+ * @param {Object} typeMeta - De TypeMeta van het GE/relatie type.
+ * @param {Object} typeMetaByTypenaam - Map van typenaam → schema metadata.
+ * @returns {string[]} Array van geëvalueerde isWeergaveVeld-waarden (alleen niet-lege).
+ */
+export function evalueerWeergaveVeldenVoorItem(afgeleideVeldenDefs, item, typeMeta, typeMetaByTypenaam) {
+  if (!afgeleideVeldenDefs || afgeleideVeldenDefs.length === 0 || !item) return [];
+  const weergaveVelden = afgeleideVeldenDefs.filter((av) => av.isWeergaveVeld || av.weergaveVeld);
+  if (weergaveVelden.length === 0) return [];
+
+  const ctx = {};
+  if (typeMeta?.ge_subtype === "hub") {
+    const onderliggende = Array.isArray(typeMeta.onderliggende) ? typeMeta.onderliggende : [];
+    const dataChild = onderliggende.find((c) => {
+      const childMeta = typeMetaByTypenaam?.[c.doeltype];
+      return childMeta?.ge_subtype === "data";
+    });
+    if (dataChild) {
+      const dataMeta = typeMetaByTypenaam[dataChild.doeltype];
+      ctx[dataMeta?.klassenaam || dataChild.doeltype] = item;
+    }
+  } else {
+    ctx[typeMeta?.klassenaam || "item"] = item;
+  }
+
+  const result = [];
+  for (const av of weergaveVelden) {
+    if (av.afleidingsregelTaal === "cel" && av.afleidingsregel) {
+      const waarde = evalueerCelExpressie(av.afleidingsregel, ctx);
+      if (waarde != null && String(waarde).trim() !== "") {
+        result.push(String(waarde));
+      }
+    }
+  }
+  return result;
+}

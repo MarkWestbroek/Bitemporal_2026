@@ -112,6 +112,7 @@ export function v3ModelNaarEditor(v3Model) {
           goType: av.goType || "string",
           afleidingsregelTaal: av.afleidingsregelTaal || "cel",
           afleidingsregel: av.afleidingsregel || "",
+          isWeergaveVeld: av.isWeergaveVeld || av.weergaveVeld || false,
         })),
       },
     });
@@ -135,6 +136,14 @@ export function v3ModelNaarEditor(v3Model) {
           isMaterieel: ge.isMaterieel || false,
           kleur: defaultKleur("gegevenselement"),
           velden,
+          afgeleideVelden: (ge.afgeleideVelden || []).map((av) => ({
+            naam: av.naam || "",
+            description: av.description || "",
+            goType: av.goType || "string",
+            afleidingsregelTaal: av.afleidingsregelTaal || "cel",
+            afleidingsregel: av.afleidingsregel || "",
+            isWeergaveVeld: av.isWeergaveVeld || av.weergaveVeld || false,
+          })),
         },
       });
 
@@ -191,6 +200,14 @@ export function v3ModelNaarEditor(v3Model) {
             isMaterieel: rel.isMaterieel || false,
             kleur: defaultKleur("relatie"),
             velden,
+            afgeleideVelden: (rel.afgeleideVelden || []).map((av) => ({
+              naam: av.naam || "",
+              description: av.description || "",
+              goType: av.goType || "string",
+              afleidingsregelTaal: av.afleidingsregelTaal || "cel",
+              afleidingsregel: av.afleidingsregel || "",
+              isWeergaveVeld: av.isWeergaveVeld || av.weergaveVeld || false,
+            })),
             doelEntiteit: rel.doelEntiteit || "",
           },
         });

@@ -57,6 +57,7 @@ type vizSchemaAfgeleidVeldDTO struct {
 	GoType              string `json:"goType,omitempty"`
 	AfleidingsregelTaal string `json:"afleidingsregelTaal,omitempty"`
 	Afleidingsregel     string `json:"afleidingsregel,omitempty"`
+	IsWeergaveVeld      bool   `json:"isWeergaveVeld,omitempty"`
 }
 
 type vizSchemaFieldDTO struct {
@@ -414,6 +415,7 @@ func MaakVizSchemaHandler() gin.HandlerFunc {
 						GoType:              av.GoType,
 						AfleidingsregelTaal: av.AfleidingsregelTaal,
 						Afleidingsregel:     av.Afleidingsregel,
+						IsWeergaveVeld:      av.IsWeergaveVeld,
 					})
 				}
 				item.AfgeleideVelden = avs

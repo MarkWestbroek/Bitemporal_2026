@@ -36,6 +36,18 @@ var MetaRegistry = MetaRegistryType{
 			{Rolnaam: "Aanvang", JSONRolnaam: "aanvang", Doeltype: "A_Aanvang", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "Einde", JSONRolnaam: "einde", Doeltype: "A_Einde", Momentvoorkomen: Enkelvoudig},
 		},
+		// Testafleiding: toont U.aaa, optioneel U.bbb (*bool pointer) en W.heel (int) in het A-blokje.
+		// Bewijs dat entiteit-niveau CEL-afgeleide velden werken over meerdere GE's heen.
+		AfgeleideVelden: []AfgeleidVeld{
+			{
+				Naam:                "label",
+				Description:         "Testafleiding over U.aaa, U.bbb en W.heel",
+				GoType:              "string",
+				AfleidingsregelTaal: "cel",
+				Afleidingsregel:     "U.aaa + (U.bbb != null ? ' [bbb=ja]' : '') + (W.heel != null ? ' · heel=' + W.heel : '')",
+				IsWeergaveVeld:      true,
+			},
+		},
 	},
 	"B": {
 		// UML

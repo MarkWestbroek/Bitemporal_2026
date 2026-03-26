@@ -23,6 +23,8 @@ export default function IndexRepresentatieVisual({
   typeMetaByTypenaam,
   navigeerNaarSecondaireEntiteit,
   afgeleideVeldWaarden,
+  entiteitWeergaveVeldTekst,
+  evalueerWeergaveVeldenVoorItem,
 }) {
   return (
     <svg className="graph" viewBox={`0 0 900 ${svgHoogte}`} preserveAspectRatio="xMidYMid meet">
@@ -102,6 +104,16 @@ export default function IndexRepresentatieVisual({
               <tspan style={nadrukStyle}>{node.item.rel_id ?? node.item.id ?? "-"}</tspan>
             </text>
             <text className="label label-lg" x={textX} y={boxY + 42}>{korteSamenvatting(node.item)}</text>
+            {(() => {
+              const hubMeta2 = typeMetaByTypenaam?.[node.group?.doeltype];
+              const wvTeksten = evalueerWeergaveVeldenVoorItem(hubMeta2?.afgeleideVelden, node.item, hubMeta2, typeMetaByTypenaam);
+              return wvTeksten.length > 0 ? (
+                <text className="label" x={textX} y={boxY + 56}
+                  style={{ fontStyle: "italic", fontSize: "10.5px", fill: "#334155" }}>
+                  {wvTeksten.join(" | ")}
+                </text>
+              ) : null;
+            })()}
           </g>
         );
       })}
@@ -154,13 +166,11 @@ export default function IndexRepresentatieVisual({
                 {" id="}
                 <tspan style={centraleEntiteitLabelStyle}>{selectedA.id}</tspan>
               </text>
-              {/* Afgeleide velden: weergave onder het entiteitlabel */}
-              {afgeleideVeldWaarden && Object.keys(afgeleideVeldWaarden).length > 0 && (
+              {/* Afgeleide velden: weergavevelden onder het entiteitlabel */}
+              {entiteitWeergaveVeldTekst && (
                 <text className="label" x="450" y="98" textAnchor="middle"
                   style={{ fontStyle: "italic", fontSize: "13px", fill: "#334155" }}>
-                  {Object.entries(afgeleideVeldWaarden).map(([naam, waarde]) =>
-                    waarde != null ? String(waarde) : ""
-                  ).filter(Boolean).join(" · ")}
+                  {entiteitWeergaveVeldTekst}
                 </text>
               )}
             </g>
@@ -234,6 +244,16 @@ export default function IndexRepresentatieVisual({
               <tspan style={nadrukStyle}>{node.item.rel_id ?? node.item.id ?? "-"}</tspan>
             </text>
             <text className="label" x={relX + 10} y={node.y + 18}>{korteSamenvatting(node.item)}</text>
+            {(() => {
+              const relMeta2 = typeMetaByTypenaam?.[node.group?.doeltype];
+              const wvTeksten = evalueerWeergaveVeldenVoorItem(relMeta2?.afgeleideVelden, node.item, relMeta2, typeMetaByTypenaam);
+              return wvTeksten.length > 0 ? (
+                <text className="label" x={relX + 10} y={node.y + 30}
+                  style={{ fontStyle: "italic", fontSize: "10.5px", fill: "#334155" }}>
+                  {wvTeksten.join(" | ")}
+                </text>
+              ) : null;
+            })()}
             {!!node.tweedeEntiteitLabel && (
               <g
                 style={{ cursor: 'pointer' }}

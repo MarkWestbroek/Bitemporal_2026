@@ -38,7 +38,8 @@ func init() {
 				Description:         "Samengestelde weergavenaam van de persoon, afgeleid uit voornaam/tussenvoegsel/achternaam.",
 				GoType:              "string",
 				AfleidingsregelTaal: "cel",
-				Afleidingsregel:     "Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters + (Naam.tussenvoegsel != null ? ' ' + Naam.tussenvoegsel : '') + ' ' + Naam.achternaam",
+				Afleidingsregel:     "(Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters) + (Naam.tussenvoegsel != null ? ' ' + Naam.tussenvoegsel : '') + ' ' + Naam.achternaam",
+				IsWeergaveVeld:      true,
 			},
 		},
 	}
@@ -117,6 +118,16 @@ func init() {
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Burgerschap_Data", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "Aanvang", JSONRolnaam: "aanvang", Doeltype: "NatuurlijkPersoon_Burgerschap_Aanvang", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "Einde", JSONRolnaam: "einde", Doeltype: "NatuurlijkPersoon_Burgerschap_Einde", Momentvoorkomen: Enkelvoudig},
+		},
+		AfgeleideVelden: []AfgeleidVeld{
+			{
+				Naam:                "weergaveburgerschap",
+				Description:         "Samengestelde weergave van nationaliteit en landcode.",
+				GoType:              "string",
+				AfleidingsregelTaal: "cel",
+				Afleidingsregel:     "Burgerschap_Data.nationaliteit + ' (' + Burgerschap_Data.landcode + ')'",
+				IsWeergaveVeld:      true,
+			},
 		},
 	}
 	MetaRegistry["NatuurlijkPersoon_Partnernaam"] = TypeMeta{
@@ -484,6 +495,16 @@ func init() {
 			{Rolnaam: "Baglocaties", JSONRolnaam: "baglocaties", Doeltype: "Locatie_BAGlocatie", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "Aanvang", JSONRolnaam: "aanvang", Doeltype: "Locatie_Aanvang", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "Einde", JSONRolnaam: "einde", Doeltype: "Locatie_Einde", Momentvoorkomen: Enkelvoudig},
+		},
+		AfgeleideVelden: []AfgeleidVeld{
+			{
+				Naam:                "weergaveadres",
+				Description:         "Samengesteld weergaveadres, afgeleid uit straatnaam, huisnummer, postcode en plaats.",
+				GoType:              "string",
+				AfleidingsregelTaal: "cel",
+				Afleidingsregel:     "Adres.straatnaam + ' ' + Adres.huisnummer + ', ' + Adres.postcode + ' ' + Adres.plaats",
+				IsWeergaveVeld:      true,
+			},
 		},
 	}
 	MetaRegistry["Locatie_Adres"] = TypeMeta{

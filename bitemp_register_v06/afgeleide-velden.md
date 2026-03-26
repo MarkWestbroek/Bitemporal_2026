@@ -6,6 +6,7 @@ Afgeleide velden zijn velden waarvan de waarde niet direct wordt opgeslagen, maa
 
 - [Concepten](#concepten)
 - [Twee niveaus van afleidingen](#twee-niveaus-van-afleidingen)
+  - [isWeergaveVeld](#isweergaveveld)
 - [V3 metamodel JSON-structuur](#v3-metamodel-json-structuur)
 - [Ondersteunde afleidingstalen](#ondersteunde-afleidingstalen)
 - [CEL syntax en voorbeelden](#cel-syntax-en-voorbeelden)
@@ -42,9 +43,14 @@ Een individueel veld in een GE of relatie kan als *afgeleid* worden gemarkeerd. 
 }
 ```
 
-### 2. Entiteit-niveau (over gegevenselementen heen)
+### 2. Representatie-niveau (entiteit, GE-hub of relatie-hub)
 
-Op entiteit-niveau kunnen afgeleide velden worden gedefinieerd die verwijzen naar velden **uit verschillende onderliggende gegevenselementen en relaties**. Dit is typisch voor samengestelde weergavewaarden.
+Op representatie-niveau kunnen afgeleide velden worden gedefinieerd die verwijzen naar velden **uit onderliggende gegevenselementen en relaties**. Dit is typisch voor samengestelde weergavewaarden.
+
+Afgeleide velden worden ondersteund op:
+- **Entiteiten** — verwijzen naar velden in onderliggende GE's/relaties (bijv. `Naam.roepnaam`)
+- **GE-hubs** — verwijzen naar velden in de hub's data-child (bijv. `Burgerschap_Data.nationaliteit`)
+- **Relatie-hubs** — verwijzen naar velden in de relatie's data-child
 
 ```json
 {
@@ -54,13 +60,26 @@ Op entiteit-niveau kunnen afgeleide velden worden gedefinieerd die verwijzen naa
       "description": "Samengestelde weergavenaam van de persoon",
       "goType": "string",
       "afleidingsregelTaal": "cel",
-      "afleidingsregel": "Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters + (Naam.tussenvoegsel != null ? ' ' + Naam.tussenvoegsel : '') + ' ' + Naam.achternaam"
+      "afleidingsregel": "Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters + (Naam.tussenvoegsel != null ? ' ' + Naam.tussenvoegsel : '') + ' ' + Naam.achternaam",
+      "isWeergaveVeld": true
     }
   ]
 }
 ```
 
 De **padvorm** `GegevensElement.veld` (bijv. `Naam.roepnaam`) maakt duidelijk uit welk GE het bronveld komt.
+
+### isWeergaveVeld
+
+Elk afgeleid veld kan een `isWeergaveVeld: true` vlag krijgen. Dit betekent dat het veld op visuele kaarten wordt getoond:
+
+- **Entiteitskaart**: weergavevelden verschijnen onder het entiteitlabel
+- **GE-kaarten**: weergavevelden verschijnen onder de korte samenvatting
+- **Relatiekaarten**: idem
+
+Meerdere weergavevelden worden gescheiden door ` | `.
+
+Dit is herbruikbaar in zowel de Index- als de Tijdlijnvisualisatie.
 
 ## V3 metamodel JSON-structuur
 
@@ -72,15 +91,16 @@ De **padvorm** `GegevensElement.veld` (bijv. `Naam.roepnaam`) maakt duidelijk ui
 | `afleidingsregelTaal` | string  | `"cel"`   | De expressietaal van de afleidingsregel           |
 | `afleidingsregel`     | string  | `""`      | De expressie waarmee de waarde wordt berekend     |
 
-### Entiteit-niveau `afgeleideVelden[]`
+### Entiteit/GE/Relatie-niveau `afgeleideVelden[]`
 
-| Property              | Type   | Standaard | Beschrijving                                       |
-|-----------------------|--------|-----------|---------------------------------------------------|
-| `naam`                | string | verplicht | Naam van het afgeleide veld (snake_case)           |
-| `description`         | string | `""`      | Omschrijving van het afgeleide veld               |
-| `goType`              | string | `"string"`| Go-type van de berekende waarde                   |
-| `afleidingsregelTaal` | string | `"cel"`   | De expressietaal                                   |
-| `afleidingsregel`     | string | verplicht | De expressie                                       |
+| Property              | Type    | Standaard | Beschrijving                                       |
+|-----------------------|---------|-----------|---------------------------------------------------|
+| `naam`                | string  | verplicht | Naam van het afgeleide veld (snake_case)           |
+| `description`         | string  | `""`      | Omschrijving van het afgeleide veld               |
+| `goType`              | string  | `"string"`| Go-type van de berekende waarde                   |
+| `afleidingsregelTaal` | string  | `"cel"`   | De expressietaal                                   |
+| `afleidingsregel`     | string  | verplicht | De expressie                                       |
+| `isWeergaveVeld`      | boolean | `false`   | Toon op visuele kaarten (Index/Tijdlijn)          |
 
 ### Compleet voorbeeld uit `metamodel_v3.json`
 
@@ -95,7 +115,8 @@ De **padvorm** `GegevensElement.veld` (bijv. `Naam.roepnaam`) maakt duidelijk ui
       "description": "Samengestelde weergavenaam van de persoon, afgeleid uit voornaam/tussenvoegsel/achternaam.",
       "goType": "string",
       "afleidingsregelTaal": "cel",
-      "afleidingsregel": "Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters + (Naam.tussenvoegsel != null ? ' ' + Naam.tussenvoegsel : '') + ' ' + Naam.achternaam"
+      "afleidingsregel": "Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters + (Naam.tussenvoegsel != null ? ' ' + Naam.tussenvoegsel : '') + ' ' + Naam.achternaam",
+      "isWeergaveVeld": true
     }
   ],
   "gegevenselementen": [
@@ -211,13 +232,15 @@ PersoonsIdentificatie.ingezetene != null && PersoonsIdentificatie.ingezetene
   : "Niet-ingezetene"
 ```
 
-#### Nationaliteit-samenvatting (meervoudig GE)
+#### Nationaliteit-samenvatting (GE-hub-niveau)
+
+Op het GE-hub-niveau `NatuurlijkPersoon_Burgerschap` kan een afgeleide weergave worden gedefinieerd die velden uit de `_Data` child combineert:
 
 ```cel
-Burgerschap.landcode + " (" + Burgerschap.nationaliteit + ")"
+Burgerschap_Data.nationaliteit + ' (' + Burgerschap_Data.landcode + ')'
 ```
 
-Levert bijv. `"NL (Nederlandse)"`.
+Levert bijv. `"Nederlandse (NL)"`.
 
 #### Leeftijdsberekening (als geboortedatum beschikbaar zou zijn)
 
@@ -251,12 +274,15 @@ In UML worden afgeleide attributen geschreven als `/attribuutnaam : type`. De ed
 
 ### Waar zichtbaar
 
-| Locatie                 | Weergave                                              |
-|-------------------------|-------------------------------------------------------|
-| Entiteitnode (canvas)   | `/weergavenaam` in oranje, cursief, onder de velden   |
-| GE/Relatienode (canvas) | `/veldnaam` met oranje `/` prefix                     |
-| NodeEditPanel (sidebar) | Checkbox `/`, details-paneel met taal + regel          |
-| V3 JSON export          | `afgeleideVelden[]` op entiteit, `afgeleid: true` op veld |
+| Locatie                        | Weergave                                                     |
+|--------------------------------|--------------------------------------------------------------|
+| Entiteitnode (canvas)          | `/weergavenaam` in oranje, cursief, onder de velden          |
+| GE/Relatienode (canvas)        | `/veldnaam` met oranje `/` prefix (ook afgeleideVelden)      |
+| NodeEditPanel (sidebar)        | Checkbox `/`, details-paneel met taal + regel + isWeergaveVeld |
+| V3 JSON export                 | `afgeleideVelden[]` op entiteit/GE/relatie, `afgeleid: true` op veld |
+| Index visueel (entiteitskaart) | Weergavevelden onder het label, gescheiden door ` \| `        |
+| Index visueel (GE/rel-kaart)   | Weergavevelden onder de korte samenvatting                   |
+| Tijdlijn visueel               | Idem als Index, op alle kaarttypes                           |
 
 ### Screenshot-beschrijving
 
@@ -333,13 +359,13 @@ Checklist bij troubleshooting:
 | Bestand | Rol |
 |---------|-----|
 | `metamodel_v3.json` | Productie V3-model met afgeleide velden op NatuurlijkPersoon |
-| `uml-editor/src/metamodel/types.js` | `AFLEIDINGSTALEN` constante, factory-functies `maakLeegVeld()` en `maakLeegAfgeleidVeld()`, V3-export (`veldNaarV3()`, `editorNaarV3Model()`) en import (`schemaResponseNaarEditor()`) |
+| `uml-editor/src/metamodel/types.js` | `AFLEIDINGSTALEN` constante, factory-functies `maakLeegVeld()` en `maakLeegAfgeleidVeld()` (met `isWeergaveVeld`), `afgeleideVeldNaarV3()` helper, V3-export (`veldNaarV3()`, `editorNaarV3Model()`) en import (`schemaResponseNaarEditor()`) |
 
 ### Converters
 
 | Bestand | Rol |
 |---------|-----|
-| `web/vite/src/v3ModelNaarEditor.js` | V3 JSON → editor-formaat converter (de versie die door de v06 Vite-app wordt gebruikt). Mapped `afgeleid`, `afleidingsregelTaal`, `afleidingsregel` op veldniveau en `afgeleideVelden[]` op entiteitniveau. |
+| `web/vite/src/v3ModelNaarEditor.js` | V3 JSON → editor-formaat converter (de versie die door de v06 Vite-app wordt gebruikt). Mapped `afgeleid`, `afleidingsregelTaal`, `afleidingsregel` op veldniveau en `afgeleideVelden[]` (met `isWeergaveVeld`) op entiteit-, GE- en relatieniveau. |
 | `uml-editor/src/metamodel/v3ModelNaarEditor.js` | Zelfde converter voor standalone editor-gebruik |
 
 **Let op:** er bestaan twee kopieën van de converter. Bij wijzigingen moeten **beide** worden bijgewerkt.
@@ -348,16 +374,33 @@ Checklist bij troubleshooting:
 
 | Bestand | Rol |
 |---------|-----|
-| `uml-editor/src/components/panels/NodeEditPanel.jsx` | Edit-paneel met: afgeleid-checkbox per veld, afleidingstaal-selector, afleidingsregel-textarea, en een aparte sectie "Afgeleide velden (entiteit)" met CRUD |
+| `uml-editor/src/components/panels/NodeEditPanel.jsx` | Edit-paneel met: afgeleid-checkbox per veld, afleidingstaal-selector, afleidingsregel-textarea, isWeergaveVeld-checkbox, en een aparte sectie "Afgeleide velden" (voor entiteit, GE en relatie) met CRUD |
 | `uml-editor/src/components/nodes/EntiteitNode.jsx` | Oranje `/` prefix en cursieve weergave van afgeleide velden in de entiteitnode |
 | `uml-editor/src/components/nodes/GegevensElementNode.jsx` | Oranje `/` prefix bij afgeleide velden in GE-nodes |
 | `uml-editor/src/components/nodes/RelatieNode.jsx` | Oranje `/` prefix bij afgeleide velden in relatie-nodes |
 
+### Frontend visualisatie
+
+| Bestand | Rol |
+|---------|-----|
+| `web/vite/src/shared/celEvaluator.js` | CEL-evaluator met `evalueerWeergaveVeldenVoorItem()` — evalueert isWeergaveVelden voor GE/relatie items met correcte CEL-context (hub-aware) |
+| `web/vite/src/components/index/IndexRepresentatieVisual.jsx` | Weergavevelden op entiteitskaart, GE-kaarten en relatiekaarten in de Index-visualisatie |
+| `web/vite/src/components/tijdlijn/TijdlijnRepresentatiePaneel.jsx` | Weergavevelden op alle kaarten in de Tijdlijn-visualisatie |
+
+### Go backend
+
+| Bestand | Rol |
+|---------|-----|
+| `model/metaregistry_plumbing.go` | `AfgeleidVeld` struct met `IsWeergaveVeld bool` |
+| `model/v3_format.go` | `V3AfgeleidVeld` met `IsWeergaveVeld`; `V3Gegevenselement` en `V3Relatie` met `AfgeleideVelden` |
+| `handlers/viz_schema_handler.go` | Schema-API DTO met `isWeergaveVeld` in `afgeleideVelden` |
+| `cmd/codegen/gen_registry.go` | Codegen `writeAfgeleideVelden()` helper voor entiteit, GE-hub en relatie-hub |
+
 ## Toekomstige doorontwikkeling
 
 1. **Code-generatie**: afgeleide velden vertalen naar berekende Go-methoden op de entiteit-struct, zodat de API ze automatisch meelevert bij GET-responses.
-2. **MetaRegistry-integratie**: afgeleide velden opnemen in de MetaRegistry zodat handlers en schema-API ze kunnen exposeren.
-3. **Frontend-weergave**: afgeleide velden weergeven in de data-tabellen en tijdlijnvisualisatie (bijv. weergavenaam als kolom in de entiteitenlijst).
+2. ~~**MetaRegistry-integratie**~~: ✅ Gerealiseerd — afgeleide velden (met `isWeergaveVeld`) zitten in de MetaRegistry en worden via de schema-API geëxposeerd.
+3. ~~**Frontend-weergave**~~: ✅ Gerealiseerd — weergavevelden worden getoond op entiteits-, GE- en relatiekaarten in zowel Index als Tijdlijn, gescheiden door ` | `.
 4. **CEL-evaluatie in Go**: implementatie van een CEL-runtime
 
     ```go

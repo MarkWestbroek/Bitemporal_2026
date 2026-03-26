@@ -78,7 +78,7 @@ const edgeTypes = {
   metamodel: MetamodelEdge,
 };
 
-export default function MetamodelEditor({ initialNodes = [], initialEdges = [] }) {
+export default function MetamodelEditor({ initialNodes = [], initialEdges = [], onV3ModelLoaded = null }) {
   /**
    * useNodesState en useEdgesState zijn React Flow hooks:
    *   - nodes/edges: de huidige array
@@ -602,6 +602,9 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [] }
           const result = v3ModelNaarEditor(maybeV3);
           setNodes(result.nodes || []);
           setEdges(result.edges || []);
+          if (typeof onV3ModelLoaded === "function") {
+            onV3ModelLoaded(data, url);
+          }
           return;
         }
 
@@ -614,7 +617,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [] }
         console.error("Model/schema laden mislukt:", err);
         alert(`Kan model/schema niet laden: ${err.message}`);
       });
-  }, [setNodes, setEdges]);
+  }, [setNodes, setEdges, onV3ModelLoaded]);
 
   // ── Export handlers ──────────────────────────────────────────
   const downloadFile = useCallback((content, filename, mimeType) => {

@@ -128,7 +128,7 @@ export function maakLeegVeld() {
   };
 }
 
-/** Maak een leeg afgeleid veld (entiteit-niveau) */
+/** Maak een leeg afgeleid veld */
 export function maakLeegAfgeleidVeld() {
   return {
     naam: "",
@@ -136,6 +136,7 @@ export function maakLeegAfgeleidVeld() {
     goType: "string",
     afleidingsregelTaal: "cel",
     afleidingsregel: "",
+    isWeergaveVeld: false,
   };
 }
 
@@ -438,6 +439,17 @@ function veldNaarV3(veld) {
   return result;
 }
 
+function afgeleideVeldNaarV3(av) {
+  return {
+    naam: av.naam,
+    description: av.description || undefined,
+    goType: av.goType || "string",
+    afleidingsregelTaal: av.afleidingsregelTaal || "cel",
+    afleidingsregel: av.afleidingsregel || "",
+    isWeergaveVeld: av.isWeergaveVeld || av.weergaveVeld || false,
+  };
+}
+
 function sanitizeConstSuffix(value = "") {
   return String(value)
     .replace(/[^a-zA-Z0-9_]/g, "")
@@ -524,6 +536,11 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         id: e.id || undefined,
         sourceHandle: e.sourceHandle || undefined,
         targetHandle: e.targetHandle || undefined,
+        afgeleideVelden: (geNode.data.afgeleideVelden || []).length > 0
+          ? geNode.data.afgeleideVelden
+              .filter((v) => (v.naam || "").trim() !== "")
+              .map(afgeleideVeldNaarV3)
+          : undefined,
         velden: (geNode.data.velden || [])
           .filter((v) => (v.naam || "").trim() !== "")
           .map(veldNaarV3),
@@ -565,6 +582,11 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         doelId: relTargetEdge?.id || undefined,
         doelSourceHandle: relTargetEdge?.sourceHandle || undefined,
         doelTargetHandle: relTargetEdge?.targetHandle || undefined,
+        afgeleideVelden: (relNode.data.afgeleideVelden || []).length > 0
+          ? relNode.data.afgeleideVelden
+              .filter((v) => (v.naam || "").trim() !== "")
+              .map(afgeleideVeldNaarV3)
+          : undefined,
         velden: (relNode.data.velden || [])
           .filter((v) => (v.naam || "").trim() !== "")
           .map(veldNaarV3),
@@ -582,7 +604,9 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         `${(ent.data.typenaam || "entiteit").toLowerCase()}s`,
       positie: ent.position ? { x: ent.position.x, y: ent.position.y } : undefined,
       afgeleideVelden: (ent.data.afgeleideVelden || []).length > 0
-        ? ent.data.afgeleideVelden.filter((v) => (v.naam || "").trim() !== "")
+        ? ent.data.afgeleideVelden
+            .filter((v) => (v.naam || "").trim() !== "")
+            .map(afgeleideVeldNaarV3)
         : undefined,
       gegevenselementen,
       relaties,

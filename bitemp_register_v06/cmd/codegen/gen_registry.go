@@ -31,7 +31,7 @@ func generateMetaRegistry(v3 model.V3Model) (string, error) {
 				padnaam = strings.ToLower(ent.Typenaam) + "_" + strings.ToLower(ge.Naam) + "s"
 			}
 			dHub := deriveHub(ent.Typenaam, hubType, "gegevenselement", ge.IsMaterieel, padnaam, "")
-			writeHubEntry(&b, dHub, ge.Description, ent.Kleur, ge.Momentvoorkomen, ge.IsMaterieel, ge.Naam)
+			writeHubEntry(&b, dHub, ge.Description, ent.Kleur, ge.Momentvoorkomen, ge.IsMaterieel, ge.Naam, ge.AfgeleideVelden)
 		}
 
 		// ---- Relatie hubs ----
@@ -115,7 +115,7 @@ func generateMetaRegistryAdditive(v3 model.V3Model) (string, error) {
 				padnaam = strings.ToLower(ent.Typenaam) + "_" + strings.ToLower(ge.Naam) + "s"
 			}
 			dHub := deriveHub(ent.Typenaam, hubType, "gegevenselement", ge.IsMaterieel, padnaam, "")
-			writeHubEntry(&entries, dHub, ge.Description, ent.Kleur, ge.Momentvoorkomen, ge.IsMaterieel, ge.Naam)
+			writeHubEntry(&entries, dHub, ge.Description, ent.Kleur, ge.Momentvoorkomen, ge.IsMaterieel, ge.Naam, ge.AfgeleideVelden)
 		}
 
 		// ---- Relatie hubs ----
@@ -274,11 +274,12 @@ func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType,
 		b.WriteString(fmt.Sprintf("\t\t\t{Rolnaam: \"Einde\", JSONRolnaam: \"einde\", Doeltype: %q, Momentvoorkomen: Enkelvoudig},\n", ent.Typenaam+"_Einde"))
 	}
 	b.WriteString("\t\t},\n")
+	writeAfgeleideVelden(b, ent.AfgeleideVelden)
 	b.WriteString("\t},\n")
 }
 
 // writeHubEntry schrijft een MetaRegistry entry voor een GE hub.
-func writeHubEntry(b *strings.Builder, d DerivedType, desc string, kleur string, momentvoorkomenStr string, isMaterieel bool, geNaam string) {
+func writeHubEntry(b *strings.Builder, d DerivedType, desc string, kleur string, momentvoorkomenStr string, isMaterieel bool, geNaam string, afgeleideVelden []model.V3AfgeleidVeld) {
 	b.WriteString(fmt.Sprintf("\t%q: {\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tTypenaam:     %q,\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tKlassenaam:   %q,\n", d.Klassenaam))
@@ -310,6 +311,7 @@ func writeHubEntry(b *strings.Builder, d DerivedType, desc string, kleur string,
 		b.WriteString(fmt.Sprintf("\t\t\t{Rolnaam: \"Einde\", JSONRolnaam: \"einde\", Doeltype: %q, Momentvoorkomen: Enkelvoudig},\n", d.Typenaam+"_Einde"))
 	}
 	b.WriteString("\t\t},\n")
+	writeAfgeleideVelden(b, afgeleideVelden)
 	b.WriteString("\t},\n")
 }
 
@@ -347,6 +349,7 @@ func writeRelHubEntry(b *strings.Builder, d DerivedType, rel model.V3Relatie) {
 		b.WriteString(fmt.Sprintf("\t\t\t{Rolnaam: \"Einde\", JSONRolnaam: \"einde\", Doeltype: %q, Momentvoorkomen: Enkelvoudig},\n", d.Typenaam+"_Einde"))
 	}
 	b.WriteString("\t\t},\n")
+	writeAfgeleideVelden(b, rel.AfgeleideVelden)
 	b.WriteString("\t},\n")
 }
 
@@ -415,4 +418,31 @@ func momentvoorkomenConst(s string) string {
 		return "Meervoudig"
 	}
 	return "Enkelvoudig"
+}
+
+// writeAfgeleideVelden schrijft het AfgeleideVelden-blok als er afgeleide velden zijn.
+func writeAfgeleideVelden(b *strings.Builder, avs []model.V3AfgeleidVeld) {
+	if len(avs) == 0 {
+		return
+	}
+	b.WriteString("\t\tAfgeleideVelden: []AfgeleidVeld{\n")
+	for _, av := range avs {
+		b.WriteString("\t\t\t{\n")
+		b.WriteString(fmt.Sprintf("\t\t\t\tNaam:                %q,\n", av.Naam))
+		if av.Description != "" {
+			b.WriteString(fmt.Sprintf("\t\t\t\tDescription:         %q,\n", av.Description))
+		}
+		b.WriteString(fmt.Sprintf("\t\t\t\tGoType:              %q,\n", av.GoType))
+		if av.AfleidingsregelTaal != "" {
+			b.WriteString(fmt.Sprintf("\t\t\t\tAfleidingsregelTaal: %q,\n", av.AfleidingsregelTaal))
+		}
+		if av.Afleidingsregel != "" {
+			b.WriteString(fmt.Sprintf("\t\t\t\tAfleidingsregel:     %q,\n", av.Afleidingsregel))
+		}
+		if av.IsWeergaveVeld || av.WeergaveVeld {
+			b.WriteString("\t\t\t\tIsWeergaveVeld:      true,\n")
+		}
+		b.WriteString("\t\t\t},\n")
+	}
+	b.WriteString("\t\t},\n")
 }

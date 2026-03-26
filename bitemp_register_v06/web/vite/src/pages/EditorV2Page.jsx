@@ -25,12 +25,27 @@ function apiBase() {
     : "";
 }
 
+function haalModelIdUitUrl(url) {
+  const match = String(url || "").match(/\/api\/schema\/model\/(\d+)(?:\?.*)?$/);
+  return match ? Number(match[1]) : null;
+}
+
 export default function EditorV2Page() {
   const [data, setData] = useState(defaultData);
   const [editorKey, setEditorKey] = useState(0);
   const [modelBron, setModelBron] = useState("demo"); // toon herkomst in toolbar
   const [modelNaam, setModelNaam] = useState(demoV3Model.naam || "onbekend-model");
   const [modelOpmerking, setModelOpmerking] = useState(demoV3Model.beschrijving || "");
+
+  const pasModelMetadataToe = useCallback((response, sourceUrl) => {
+    const v3 = response?.model || response;
+    const modelId = response?.id || haalModelIdUitUrl(sourceUrl);
+    const modelStatus = response?.status || "?";
+
+    setModelBron(modelId ? `DB #${modelId} (${modelStatus})` : (response?.bron || "url"));
+    setModelNaam(response?.model_naam || v3?.naam || (modelId ? `model-${modelId}` : "onbekend-model"));
+    setModelOpmerking(response?.model_beschrijving || v3?.beschrijving || "");
+  }, []);
 
   // ── Bij opstart: probeer het nieuwste model uit de database te laden ──
   useEffect(() => {
@@ -57,9 +72,7 @@ export default function EditorV2Page() {
         const result = v3ModelNaarEditor(v3);
         setData(result);
         setEditorKey((k) => k + 1);
-        setModelBron(`DB #${response.id} (${response.status || "?"})`);
-        setModelNaam(v3.naam || `model-${response.id || "onbekend"}`);
-        setModelOpmerking(v3.beschrijving || "");
+        pasModelMetadataToe(response);
       })
       .catch((err) => {
         console.warn("Kon nieuwste model niet laden uit DB, gebruik demo:", err.message);
@@ -84,19 +97,13 @@ export default function EditorV2Page() {
         const result = v3ModelNaarEditor(v3);
         setData(result);
         setEditorKey((k) => k + 1);
-        setModelNaam(v3.naam || "onbekend-model");
-        setModelOpmerking(v3.beschrijving || "");
-        setModelBron(
-          response.id
-            ? `DB #${response.id} (${response.status || "?"})`
-            : response.bron || "url"
-        );
+        pasModelMetadataToe(response, url);
       })
       .catch((err) => {
         console.error("V3 model laden mislukt:", err);
         alert(`Kan V3 model niet laden: ${err.message}`);
       });
-  }, []);
+  }, [pasModelMetadataToe]);
 
   return (
     <div
@@ -165,6 +172,7 @@ export default function EditorV2Page() {
           key={editorKey}
           initialNodes={data.nodes}
           initialEdges={data.edges}
+          onV3ModelLoaded={pasModelMetadataToe}
         />
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { korteDatumWeergave, oortjePad, oortjeStyleNarrow } from "../../shared/oortjesUtils";
+import { evalueerWeergaveVeldenVoorItem, evalueerCelExpressie } from "../../shared/celEvaluator";
 
 export default function TijdlijnRepresentatiePaneel({
   item,
@@ -26,6 +27,30 @@ export default function TijdlijnRepresentatiePaneel({
   const childNodes = buildChildNodes(item.snapshot, selectedEntityMeta, typeMetaByTypenaam, entityTypes);
   // Materiële-tijd oortjes: aanvang/einde boven de entiteitskaart (compact formaat voor tijdlijn).
   const oortjes = buildOortjes(item.snapshot, selectedEntityMeta, typeMetaByTypenaam);
+
+  // Weergavevelden entiteit: evalueer CEL-expressies op entiteit-niveau (alleen isWeergaveVeld=true).
+  const entWeergaveTekst = (() => {
+    const defs = (selectedEntityMeta?.afgeleideVelden || []).filter((av) => av.isWeergaveVeld || av.weergaveVeld);
+    if (defs.length === 0 || !item.snapshot) return "";
+    // Bouw childGroups-achtige context uit childNodes
+    const groupMap = {};
+    for (const cn of childNodes) {
+      const key = cn.group?.doeltype || cn.group?.rolnaam;
+      if (key && !groupMap[key]) groupMap[key] = cn;
+    }
+    const ctx = {};
+    for (const [key, cn] of Object.entries(groupMap)) {
+      const meta = typeMetaByTypenaam?.[key];
+      const klassenaam = meta?.klassenaam || key;
+      ctx[klassenaam] = cn.item;
+    }
+    return defs
+      .map((av) => (av.afleidingsregelTaal === "cel" && av.afleidingsregel)
+        ? evalueerCelExpressie(av.afleidingsregel, ctx) : null)
+      .filter((v) => v != null && String(v).trim() !== "")
+      .map(String)
+      .join(" | ");
+  })();
   const aanvangTekst = korteDatumWeergave(oortjes?.aanvang?.datum);
   const eindeTekst = korteDatumWeergave(oortjes?.einde?.datum);
   const oortjeTextYOffset = -3; // Optische correctie: iets hoger dan geometrisch midden i.v.m. overlap met entiteitskaart.
@@ -97,6 +122,12 @@ export default function TijdlijnRepresentatiePaneel({
               <tspan className="label-strong" style={{ fontSize: 18, fontWeight: 800 }}>{item.snapshot.id ?? normInt(entityId, 0)}</tspan>
             </text>
             <text className="label" x={entityX + 14} y={entityY + 54}>{korteSamenvatting(item.snapshot)}</text>
+            {entWeergaveTekst && (
+              <text className="label" x={entityX + 14} y={entityY + 70}
+                style={{ fontStyle: "italic", fontSize: "10px", fill: "#334155" }}>
+                {entWeergaveTekst}
+              </text>
+            )}
           </g>
 
           {geNodesMetLayout.length > 0 && (
@@ -132,6 +163,15 @@ export default function TijdlijnRepresentatiePaneel({
                   {` #${childItem.rel_id ?? childItem.id ?? "-"}`}
                 </text>
                 <text className="label" x={geX + 8} y={y + 40}>{korteSamenvatting(childItem)}</text>
+                {(() => {
+                  const wv = evalueerWeergaveVeldenVoorItem(group.typeMeta?.afgeleideVelden, childItem, group.typeMeta, typeMetaByTypenaam);
+                  return wv.length > 0 ? (
+                    <text className="label" x={geX + 8} y={y + 50}
+                      style={{ fontStyle: "italic", fontSize: "9px", fill: "#334155" }}>
+                      {wv.join(" | ")}
+                    </text>
+                  ) : null;
+                })()}
               </g>
             );
           })}
@@ -158,6 +198,15 @@ export default function TijdlijnRepresentatiePaneel({
                   {` rel_id=${childItem.rel_id ?? childItem.id ?? "-"}`}
                 </text>
                 <text className="label" x={relX + 12} y={y + 22}>{korteSamenvatting(childItem)}</text>
+                {(() => {
+                  const wv = evalueerWeergaveVeldenVoorItem(group.typeMeta?.afgeleideVelden, childItem, group.typeMeta, typeMetaByTypenaam);
+                  return wv.length > 0 ? (
+                    <text className="label" x={relX + 12} y={y + 32}
+                      style={{ fontStyle: "italic", fontSize: "9px", fill: "#334155" }}>
+                      {wv.join(" | ")}
+                    </text>
+                  ) : null;
+                })()}
                 {!!childNode.tweedeEntiteitIDTekst && (
                   <>
                     <rect x={secondBoxX} y={secondBoxY} rx="6" width={secondBoxW} height={secondBoxH} style={{ fill: childNode.tweedeEntiteitKleur || "var(--entity-fill)", stroke: childNode.tweedeEntiteitRandkleur || "#1e3a8a", strokeWidth: 2 }} />

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "../shared/schema-viz.css";
 import "../styles/index-schema.css";
-import { evalueerCelExpressie, bouwCelContext } from "../shared/celEvaluator";
+import { evalueerCelExpressie, bouwCelContext, evalueerWeergaveVeldenVoorItem } from "../shared/celEvaluator";
 import {
   safeArray,
   tUitRegistratieTijdstip,
@@ -469,6 +469,18 @@ export default function IndexSchemaPage() {
           }
           return result;
         }, [selectedEntiteitMeta, selectedA, childGroups, typeMetaByTypenaam]);
+
+        // Weergavevelden: alleen afgeleide velden met isWeergaveVeld=true, gejoined met " | ".
+        const entiteitWeergaveVeldTekst = useMemo(() => {
+          const definities = safeArray(selectedEntiteitMeta?.afgeleideVelden)
+            .filter((av) => av.isWeergaveVeld || av.weergaveVeld);
+          if (definities.length === 0) return "";
+          return definities
+            .map((av) => afgeleideVeldWaarden[av.naam])
+            .filter((v) => v != null && String(v).trim() !== "")
+            .map(String)
+            .join(" | ");
+        }, [selectedEntiteitMeta, afgeleideVeldWaarden]);
 
         const gegevenselementGroepOpties = useMemo(() => {
           return childGroupsGesorteerd
@@ -2177,6 +2189,8 @@ export default function IndexSchemaPage() {
                     typeMetaByTypenaam={typeMetaByTypenaam}
                     navigeerNaarSecondaireEntiteit={navigeerNaarSecondaireEntiteit}
                     afgeleideVeldWaarden={afgeleideVeldWaarden}
+                    entiteitWeergaveVeldTekst={entiteitWeergaveVeldTekst}
+                    evalueerWeergaveVeldenVoorItem={evalueerWeergaveVeldenVoorItem}
                   />
 
                   {actieResultaat && !geselecteerdeRep && (

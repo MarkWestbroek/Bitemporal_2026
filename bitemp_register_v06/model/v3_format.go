@@ -86,34 +86,36 @@ type V3Entiteit struct {
 
 // V3Gegevenselement beschrijft een gegevenselement onder een entiteit.
 type V3Gegevenselement struct {
-	Naam            string     `json:"naam"` // bijv. "U", "V", "W"
-	Description     string     `json:"description,omitempty"`
-	Meervoud        string     `json:"meervoud"`        // URL-padnaam, bijv. "a-us"
-	Momentvoorkomen string     `json:"momentvoorkomen"` // "enkelvoudig" of "meervoudig"
-	IsMaterieel     bool       `json:"isMaterieel,omitempty"`
-	Positie         *V3Positie `json:"positie,omitempty"`      // editor-layout positie (genegeerd door codegen)
-	ID              string     `json:"id,omitempty"`           // persistente edge-id van entiteit→GE voor stabiele editor round-trips
-	SourceHandle    string     `json:"sourceHandle,omitempty"` // verbindingspunt op de entiteit (genegeerd door codegen)
-	TargetHandle    string     `json:"targetHandle,omitempty"` // verbindingspunt op het GE-node (genegeerd door codegen)
-	Velden          []V3Veld   `json:"velden,omitempty"`
+	Naam            string           `json:"naam"` // bijv. "U", "V", "W"
+	Description     string           `json:"description,omitempty"`
+	Meervoud        string           `json:"meervoud"`        // URL-padnaam, bijv. "a-us"
+	Momentvoorkomen string           `json:"momentvoorkomen"` // "enkelvoudig" of "meervoudig"
+	IsMaterieel     bool             `json:"isMaterieel,omitempty"`
+	Positie         *V3Positie       `json:"positie,omitempty"`      // editor-layout positie (genegeerd door codegen)
+	ID              string           `json:"id,omitempty"`           // persistente edge-id van entiteit→GE voor stabiele editor round-trips
+	SourceHandle    string           `json:"sourceHandle,omitempty"` // verbindingspunt op de entiteit (genegeerd door codegen)
+	TargetHandle    string           `json:"targetHandle,omitempty"` // verbindingspunt op het GE-node (genegeerd door codegen)
+	AfgeleideVelden []V3AfgeleidVeld `json:"afgeleideVelden,omitempty"`
+	Velden          []V3Veld         `json:"velden,omitempty"`
 }
 
 // V3Relatie beschrijft een relatie onder een entiteit.
 type V3Relatie struct {
-	Naam             string     `json:"naam"` // bijv. "Rel_A_B"
-	Description      string     `json:"description,omitempty"`
-	Meervoud         string     `json:"meervoud"`        // URL-padnaam, bijv. "rel-a-bs"
-	Momentvoorkomen  string     `json:"momentvoorkomen"` // "enkelvoudig" of "meervoudig"
-	IsMaterieel      bool       `json:"isMaterieel,omitempty"`
-	DoelEntiteit     string     `json:"doelEntiteit"`               // typenaam van de doel-entiteit
-	Positie          *V3Positie `json:"positie,omitempty"`          // editor-layout positie (genegeerd door codegen)
-	ID               string     `json:"id,omitempty"`               // persistente edge-id van entiteit→relatie voor stabiele editor round-trips
-	SourceHandle     string     `json:"sourceHandle,omitempty"`     // verbindingspunt op de entiteit→relatie edge (genegeerd door codegen)
-	TargetHandle     string     `json:"targetHandle,omitempty"`     // verbindingspunt op de relatie (inkomend, genegeerd door codegen)
-	DoelID           string     `json:"doelId,omitempty"`           // persistente edge-id van relatie→doel-entiteit voor stabiele editor round-trips
-	DoelSourceHandle string     `json:"doelSourceHandle,omitempty"` // verbindingspunt op de relatie (uitgaand naar doel, genegeerd door codegen)
-	DoelTargetHandle string     `json:"doelTargetHandle,omitempty"` // verbindingspunt op de doel-entiteit (genegeerd door codegen)
-	Velden           []V3Veld   `json:"velden,omitempty"`
+	Naam             string           `json:"naam"` // bijv. "Rel_A_B"
+	Description      string           `json:"description,omitempty"`
+	Meervoud         string           `json:"meervoud"`        // URL-padnaam, bijv. "rel-a-bs"
+	Momentvoorkomen  string           `json:"momentvoorkomen"` // "enkelvoudig" of "meervoudig"
+	IsMaterieel      bool             `json:"isMaterieel,omitempty"`
+	DoelEntiteit     string           `json:"doelEntiteit"`               // typenaam van de doel-entiteit
+	Positie          *V3Positie       `json:"positie,omitempty"`          // editor-layout positie (genegeerd door codegen)
+	ID               string           `json:"id,omitempty"`               // persistente edge-id van entiteit→relatie voor stabiele editor round-trips
+	SourceHandle     string           `json:"sourceHandle,omitempty"`     // verbindingspunt op de entiteit→relatie edge (genegeerd door codegen)
+	TargetHandle     string           `json:"targetHandle,omitempty"`     // verbindingspunt op de relatie (inkomend, genegeerd door codegen)
+	DoelID           string           `json:"doelId,omitempty"`           // persistente edge-id van relatie→doel-entiteit voor stabiele editor round-trips
+	DoelSourceHandle string           `json:"doelSourceHandle,omitempty"` // verbindingspunt op de relatie (uitgaand naar doel, genegeerd door codegen)
+	DoelTargetHandle string           `json:"doelTargetHandle,omitempty"` // verbindingspunt op de doel-entiteit (genegeerd door codegen)
+	AfgeleideVelden  []V3AfgeleidVeld `json:"afgeleideVelden,omitempty"`
+	Velden           []V3Veld         `json:"velden,omitempty"`
 }
 
 // V3Positie beschrijft de positie van een element in de UML-editor.
@@ -135,11 +137,13 @@ type V3Veld struct {
 	Afleidingsregel     string `json:"afleidingsregel,omitempty"`
 }
 
-// V3AfgeleidVeld beschrijft een entiteit-niveau afgeleid veld.
+// V3AfgeleidVeld beschrijft een afgeleid veld op representatie-niveau (entiteit, GE of relatie).
 type V3AfgeleidVeld struct {
 	Naam                string `json:"naam"`
 	Description         string `json:"description,omitempty"`
 	GoType              string `json:"goType"`
 	AfleidingsregelTaal string `json:"afleidingsregelTaal,omitempty"`
 	Afleidingsregel     string `json:"afleidingsregel,omitempty"`
+	IsWeergaveVeld      bool   `json:"isWeergaveVeld,omitempty"`
+	WeergaveVeld        bool   `json:"weergaveVeld,omitempty"` // legacy alias; keep for backward compatibility on older opgeslagen modellen
 }

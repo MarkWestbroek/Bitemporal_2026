@@ -142,6 +142,7 @@ export function v3ModelNaarEditor(v3Model) {
           goType: av.goType || "string",
           afleidingsregelTaal: av.afleidingsregelTaal || "cel",
           afleidingsregel: av.afleidingsregel || "",
+          isWeergaveVeld: av.isWeergaveVeld || av.weergaveVeld || false,
         })),
       },
     });

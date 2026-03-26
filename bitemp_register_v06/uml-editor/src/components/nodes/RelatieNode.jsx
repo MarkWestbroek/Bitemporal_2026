@@ -77,6 +77,24 @@ function RelatieNode({ data, selected }) {
           ))
         )}
       </div>
+
+      {/* Afgeleide velden op relatie-niveau */}
+      {(data.afgeleideVelden || []).length > 0 && (
+        <>
+          <div className="node-divider" />
+          <div className="node-velden">
+            {data.afgeleideVelden.map((av, i) => (
+              <div key={`av-${i}`} className="node-veld" style={{ fontStyle: "italic" }}>
+                <span className="veld-naam">
+                  <span style={{ color: "#f59e0b" }}>/</span>
+                  {av.naam}
+                </span>
+                <span className="veld-type">{av.goType || "string"}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
