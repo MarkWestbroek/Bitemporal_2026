@@ -1,1 +1,10 @@
 .env.docker
+
+# Frontend generated artifacts
+web/vite/node_modules/
+web/vite/dist/
+web/vite/.vite/
+
+# OS noise
+.DS_Store
+Thumbs.db

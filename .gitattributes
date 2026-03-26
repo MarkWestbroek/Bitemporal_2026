@@ -1,2 +1,10 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Normalize all text files to LF in git history and working trees.
+* text=auto eol=lf
+
+# Windows-native script formats should stay CRLF for compatibility.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# POSIX shell scripts must stay LF.
+*.sh text eol=lf
