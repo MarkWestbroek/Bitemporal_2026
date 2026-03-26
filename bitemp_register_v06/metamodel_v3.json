@@ -101,6 +101,15 @@
       "isMaterieel": true,
       "kleur": "#bfdbfe",
       "meervoud": "natuurlijkpersoons",
+      "afgeleideVelden": [
+        {
+          "naam": "weergavenaam",
+          "description": "Samengestelde weergavenaam van de persoon, afgeleid uit voornaam/tussenvoegsel/achternaam.",
+          "goType": "string",
+          "afleidingsregelTaal": "cel",
+          "afleidingsregel": "Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters + (Naam.tussenvoegsel != null ? ' ' + Naam.tussenvoegsel : '') + ' ' + Naam.achternaam"
+        }
+      ],
       "gegevenselementen": [
         {
           "naam": "PersoonsIdentificatie",
@@ -111,11 +120,13 @@
           "velden": [
             {
               "naam": "bsn",
-              "goType": "string"
+              "goType": "string",
+              "description": "Burgerservicenummer van de persoon"
             },
             {
               "naam": "ingezetene",
-              "goType": "*bool"
+              "goType": "*bool",
+              "description": "Geeft aan of de persoon ingezetene is"
             }
           ]
         },
@@ -128,24 +139,29 @@
           "velden": [
             {
               "naam": "voorletters",
-              "goType": "string"
+              "goType": "string",
+              "description": "Voorletters van de persoon"
             },
             {
               "naam": "roepnaam",
-              "goType": "*string"
+              "goType": "*string",
+              "description": "Roepnaam van de persoon"
             },
             {
               "naam": "tussenvoegsel",
-              "goType": "*string"
+              "goType": "*string",
+              "description": "Tussenvoegsel bij de achternaam"
             },
             {
               "naam": "achternaam",
-              "goType": "string"
+              "goType": "string",
+              "description": "Achternaam van de persoon"
             },
             {
               "naam": "naamgebruik",
               "goType": "Naamgebruiksoort",
-              "enum": "Naamgebruiksoort"
+              "enum": "Naamgebruiksoort",
+              "description": "Wijze van naamgebruik"
             }
           ]
         },

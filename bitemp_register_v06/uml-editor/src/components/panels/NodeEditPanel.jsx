@@ -12,7 +12,7 @@
  *   - onDelete(nodeId): callback om de node te verwijderen
  */
 import { useState } from "react";
-import { METATYPES, VELDTYPEN, maakLeegVeld, defaultKleur, bouwVeldtypen } from "../../metamodel/types";
+import { METATYPES, VELDTYPEN, AFLEIDINGSTALEN, maakLeegVeld, maakLeegAfgeleidVeld, defaultKleur, bouwVeldtypen } from "../../metamodel/types";
 
 const BASISTYPES = ["string", "integer", "number", "boolean"];
 
@@ -27,6 +27,29 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
   const beschikbareEntiteiten = (entiteitNodes || [])
     .map((n) => n.data?.typenaam)
     .filter(Boolean);
+
+  // Track welke velden uitgevouwen zijn (voor description / afgeleid details)
+  const [expandedVelden, setExpandedVelden] = useState({});
+  function toggleVeldExpanded(index) {
+    setExpandedVelden((prev) => ({ ...prev, [index]: !prev[index] }));
+  }
+
+  // Afgeleide velden op entiteit-niveau
+  function addAfgeleidVeld() {
+    const afgeleideVelden = [...(data.afgeleideVelden || []), maakLeegAfgeleidVeld()];
+    onUpdate(node.id, { ...data, afgeleideVelden });
+  }
+
+  function updateAfgeleidVeld(index, key, value) {
+    const afgeleideVelden = [...(data.afgeleideVelden || [])];
+    afgeleideVelden[index] = { ...afgeleideVelden[index], [key]: value };
+    onUpdate(node.id, { ...data, afgeleideVelden });
+  }
+
+  function removeAfgeleidVeld(index) {
+    const afgeleideVelden = (data.afgeleideVelden || []).filter((_, i) => i !== index);
+    onUpdate(node.id, { ...data, afgeleideVelden });
+  }
 
   function updateField(key, value) {
     onUpdate(node.id, { ...data, [key]: value });
@@ -491,6 +514,7 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
               value={v.naam}
               onChange={(e) => updateVeld(i, "naam", e.target.value)}
               className="veld-naam-input"
+              style={v.afgeleid ? { fontStyle: "italic", borderLeft: "3px solid #f59e0b" } : {}}
             />
             <select
               value={(() => {
@@ -577,6 +601,24 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
               />
               AI
             </label>
+            <label className="checkbox-label small" title="Afgeleid veld (derived)">
+              <input
+                type="checkbox"
+                checked={v.afgeleid || false}
+                onChange={(e) =>
+                  updateVeld(i, "afgeleid", e.target.checked)
+                }
+              />
+              /
+            </label>
+            <button
+              className="btn-icon"
+              onClick={() => toggleVeldExpanded(i)}
+              title="Details (beschrijving, afleiding)"
+              style={expandedVelden[i] ? { background: "#e2e8f0" } : {}}
+            >
+              ⋯
+            </button>
             <button
               className="btn-icon"
               onClick={() => moveVeld(i, -1)}
@@ -599,12 +641,126 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
               ✕
             </button>
           </div>
+          {/* Uitklapbaar detailpaneel */}
+          {expandedVelden[i] && (
+            <div className="veld-details" style={{ width: "100%", paddingTop: "4px", borderTop: "1px solid #e2e8f0" }}>
+              <label style={{ fontSize: "0.85em" }}>
+                Beschrijving
+                <input
+                  type="text"
+                  value={v.description || ""}
+                  onChange={(e) => updateVeld(i, "description", e.target.value)}
+                  placeholder="Omschrijving van dit veld"
+                  style={{ width: "100%" }}
+                />
+              </label>
+              {v.afgeleid && (
+                <>
+                  <label style={{ fontSize: "0.85em" }}>
+                    Afleidingstaal
+                    <select
+                      value={v.afleidingsregelTaal || "cel"}
+                      onChange={(e) => updateVeld(i, "afleidingsregelTaal", e.target.value)}
+                    >
+                      {AFLEIDINGSTALEN.map((t) => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label style={{ fontSize: "0.85em" }}>
+                    Afleidingsregel
+                    <textarea
+                      value={v.afleidingsregel || ""}
+                      onChange={(e) => updateVeld(i, "afleidingsregel", e.target.value)}
+                      placeholder="bijv. voornaam + ' ' + achternaam"
+                      rows={2}
+                      style={{ width: "100%", fontFamily: "monospace", fontSize: "0.85em" }}
+                    />
+                  </label>
+                </>
+              )}
+            </div>
+          )}
         </div>
       ))}
 
       <button className="btn-add" onClick={addVeld}>
         + Veld toevoegen
       </button>
+
+      {/* Afgeleide velden op entiteit-niveau */}
+      {data.metatype === "entiteit" && (
+        <>
+          <h4 style={{ marginTop: "16px" }}>Afgeleide velden (entiteit)</h4>
+          <p style={{ fontSize: "0.8em", color: "#64748b", margin: "0 0 8px 0" }}>
+            Velden die worden afgeleid uit GE/relatie-velden, bijv. een weergavenaam.
+          </p>
+          {(data.afgeleideVelden || []).map((av, i) => (
+            <div key={i} className="veld-edit-row" style={{ borderLeft: "3px solid #f59e0b", paddingLeft: "6px" }}>
+              <div style={{ width: "100%" }}>
+                <div className="veld-edit-main">
+                  <input
+                    type="text"
+                    placeholder="naam"
+                    value={av.naam || ""}
+                    onChange={(e) => updateAfgeleidVeld(i, "naam", e.target.value)}
+                    className="veld-naam-input"
+                    style={{ fontStyle: "italic" }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="goType"
+                    value={av.goType || "string"}
+                    onChange={(e) => updateAfgeleidVeld(i, "goType", e.target.value)}
+                    style={{ width: "80px" }}
+                  />
+                  <button
+                    className="btn-icon"
+                    onClick={() => removeAfgeleidVeld(i)}
+                    title="Verwijder"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <label style={{ fontSize: "0.85em" }}>
+                  Beschrijving
+                  <input
+                    type="text"
+                    value={av.description || ""}
+                    onChange={(e) => updateAfgeleidVeld(i, "description", e.target.value)}
+                    placeholder="Omschrijving"
+                    style={{ width: "100%" }}
+                  />
+                </label>
+                <label style={{ fontSize: "0.85em" }}>
+                  Afleidingstaal
+                  <select
+                    value={av.afleidingsregelTaal || "cel"}
+                    onChange={(e) => updateAfgeleidVeld(i, "afleidingsregelTaal", e.target.value)}
+                  >
+                    {AFLEIDINGSTALEN.map((t) => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <label style={{ fontSize: "0.85em" }}>
+                  Afleidingsregel
+                  <textarea
+                    value={av.afleidingsregel || ""}
+                    onChange={(e) => updateAfgeleidVeld(i, "afleidingsregel", e.target.value)}
+                    placeholder="bijv. Naam.roepnaam + ' ' + Naam.achternaam"
+                    rows={2}
+                    style={{ width: "100%", fontFamily: "monospace", fontSize: "0.85em" }}
+                  />
+                </label>
+              </div>
+            </div>
+          ))}
+          <button className="btn-add" onClick={addAfgeleidVeld}>
+            + Afgeleid veld toevoegen
+          </button>
+        </>
+      )}
 
       <div className="panel-actions">
         <button className="btn-danger" onClick={() => onDelete(node.id)}>

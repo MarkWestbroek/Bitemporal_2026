@@ -1,36 +1,15 @@
 /**
- * Demo V3 Model — hetzelfde registermodel als demoData.js,
- * maar dan in het hiërarchische V3-formaat (zoals /api/schema/model retourneert).
+ * Demo V3 Model — NatuurlijkPersoon/Locatie registermodel als fallback.
  *
+ * Dit is het inhoudelijke V3-formaat (zoals /api/schema/model retourneert).
  * Geen plumbing: geen id, a_id, rel_id, b_id, versie, opvoer, afvoer.
  * Alleen inhoudelijke velden met Go-types.
  */
 export const demoV3Model = {
   versie: "v3",
-  naam: "Demo Register",
+  naam: "Editor export",
   beschrijving:
-    "Demonstratiemodel met entiteiten A en B, gegevenselementen en een relatie.",
-
-  enums: [
-    {
-      goType: "RelABSoort",
-      baseType: "string",
-      waarden: [
-        { constNaam: "RelABSoortLTT", waarde: "LTT" },
-        { constNaam: "RelABSoortLAT", waarde: "LAT" },
-        { constNaam: "RelABSoortLTA", waarde: "LTA" },
-      ],
-    },
-    {
-      goType: "ABCEnum",
-      baseType: "string",
-      waarden: [
-        { constNaam: "OptieA", waarde: "Optie A" },
-        { constNaam: "OptieB", waarde: "Optie B" },
-        { constNaam: "OptieC", waarde: "Optie C" },
-      ],
-    },
-  ],
+    "V3 export vanuit UML editor (codegen-ready)",
 
   datatypes: [
     {
@@ -38,6 +17,7 @@ export const demoV3Model = {
       description: "Nederlandse postcode (4 cijfers + 2 letters)",
       basistype: "string",
       format: "nl-postcode",
+      positie: { x: 585, y: 450 },
       validatie: {
         pattern: "^[1-9][0-9]{3}\\s?[A-Za-z]{2}$",
         minLength: 6,
@@ -57,6 +37,7 @@ export const demoV3Model = {
       description: "Burgerservicenummer (9 cijfers, 11-proef)",
       basistype: "string",
       format: "bsn",
+      positie: { x: -465, y: 90 },
       validatie: {
         pattern: "^[0-9]{9}$",
         minLength: 9,
@@ -72,7 +53,6 @@ export const demoV3Model = {
           },
         ],
       },
-      normalisatie: "",
       weergave: {
         placeholder: "123456782",
         inputMask: "000000000",
@@ -80,101 +60,176 @@ export const demoV3Model = {
     },
   ],
 
+  enums: [
+    {
+      goType: "Bereikbaarheidssoort",
+      baseType: "string",
+      positie: { x: 330, y: 45 },
+      waarden: [
+        { constNaam: "BereikbaarheidssoortWoonadres", waarde: "Woonadres" },
+        { constNaam: "BereikbaarheidssoortBriefadres", waarde: "Briefadres" },
+        { constNaam: "BereikbaarheidssoortCorrespondentieadres", waarde: "Correspondentieadres" },
+      ],
+    },
+    {
+      goType: "Naamgebruiksoort",
+      baseType: "string",
+      positie: { x: 330, y: 375 },
+      waarden: [
+        { constNaam: "NaamgebruiksoortEigenNaam", waarde: "EigenNaam" },
+        { constNaam: "NaamgebruiksoortPartnerNaam", waarde: "PartnerNaam" },
+        { constNaam: "NaamgebruiksoortEigenNaamPartnerNaam", waarde: "EigenNaam-PartnerNaam" },
+        { constNaam: "NaamgebruiksoortPartnerNaamEigenNaam", waarde: "PartnerNaam-EigenNaam" },
+      ],
+    },
+  ],
+
   entiteiten: [
     {
-      typenaam: "A",
+      typenaam: "NatuurlijkPersoon",
       description:
         "Entiteit A met materiële tijdlijn en onderliggende representaties U, V, W en Rel_A_B.",
       isMaterieel: true,
       kleur: "#bfdbfe",
-      meervoud: "as",
+      meervoud: "natuurlijkpersoons",
+      positie: { x: -90, y: -120 },
       gegevenselementen: [
         {
-          naam: "U",
+          naam: "PersoonsIdentificatie",
           description:
             "Enkelvoudig gegevenselement van A met formele tijdlijn.",
           meervoud: "a_us",
           momentvoorkomen: "enkelvoudig",
           isMaterieel: false,
+          positie: { x: -465, y: -30 },
+          id: "NatuurlijkPersoon->NatuurlijkPersoon_PersoonsIdentificatie",
+          sourceHandle: "left",
           velden: [
-            { naam: "aaa", goType: "string" },
-            { naam: "bbb", goType: "*bool" },
+            { naam: "bsn", goType: "string" },
+            { naam: "ingezetene", goType: "*bool" },
           ],
         },
         {
-          naam: "V",
+          naam: "Naam",
           description:
             "Meervoudig gegevenselement van A met onder andere een datumveld.",
           meervoud: "a_vs",
-          momentvoorkomen: "meervoudig",
-          isMaterieel: false,
+          momentvoorkomen: "enkelvoudig",
+          isMaterieel: true,
+          positie: { x: -75, y: 240 },
+          id: "NatuurlijkPersoon->NatuurlijkPersoon_Naam",
           velden: [
-            { naam: "ccc", goType: "string" },
-            { naam: "ddd", goType: "*string" },
-            { naam: "eee", goType: "*string" },
-            { naam: "fff", goType: "float64" },
-            { naam: "ggg", goType: "ABCEnum", enum: "ABCEnum" },
-            { naam: "datum", goType: "Date" },
+            { naam: "voorletters", goType: "string" },
+            { naam: "roepnaam", goType: "*string" },
+            { naam: "tussenvoegsel", goType: "*string" },
+            { naam: "achternaam", goType: "string" },
           ],
         },
         {
-          naam: "W",
+          naam: "Burgerschap",
           description:
             "Meervoudig gegevenselement van A met numerieke waarden.",
           meervoud: "a_ws",
           momentvoorkomen: "meervoudig",
           isMaterieel: true,
+          positie: { x: -315, y: 405 },
+          id: "NatuurlijkPersoon->NatuurlijkPersoon_Burgerschap",
           velden: [
-            { naam: "float", goType: "float64" },
-            { naam: "heel", goType: "int" },
+            { naam: "landcode", goType: "string" },
+            { naam: "nationaliteit", goType: "string" },
+          ],
+        },
+        {
+          naam: "Partnernaam",
+          meervoud: "partnernaams",
+          momentvoorkomen: "enkelvoudig",
+          isMaterieel: false,
+          positie: { x: 90, y: 435 },
+          id: "edge_1774209110136_2",
+          sourceHandle: "bottom",
+          targetHandle: "top",
+          velden: [{ naam: "achternaam", goType: "string" }],
+        },
+        {
+          naam: "Naamgebruik",
+          meervoud: "naamgebruiks",
+          momentvoorkomen: "enkelvoudig",
+          isMaterieel: false,
+          positie: { x: 240, y: 240 },
+          id: "edge_1774209240752_5",
+          sourceHandle: "bottom",
+          targetHandle: "top",
+          velden: [
+            {
+              naam: "naamgebruik",
+              goType: "Naamgebruiksoort",
+              enum: "Naamgebruiksoort",
+            },
           ],
         },
       ],
       relaties: [
         {
-          naam: "Rel_A_B",
-          description:
-            "Relatie tussen A en B, meervoudig voorkomend per A.",
-          meervoud: "rel_a_bs",
-          momentvoorkomen: "meervoudig",
+          naam: "Bereikbaarheid",
+          meervoud: "bereikbaarheids",
+          momentvoorkomen: "enkelvoudig",
           isMaterieel: true,
-          doelEntiteit: "B",
+          doelEntiteit: "Locatie",
+          positie: { x: 330, y: -105 },
+          id: "edge_1774201942583_1",
+          sourceHandle: "right",
+          targetHandle: "left",
+          doelId: "edge_1774201991984_2",
+          doelSourceHandle: "right",
+          doelTargetHandle: "left",
           velden: [
-            { naam: "soort", goType: "RelABSoort", enum: "RelABSoort" },
+            {
+              naam: "soort",
+              goType: "Bereikbaarheidssoort",
+              enum: "Bereikbaarheidssoort",
+            },
           ],
         },
       ],
     },
     {
-      typenaam: "B",
+      typenaam: "Locatie",
       description:
         "Entiteit B met materiële tijdlijn en onderliggende representaties X en Y.",
       isMaterieel: true,
       kleur: "#fecaca",
-      meervoud: "bs",
+      meervoud: "locaties",
+      positie: { x: 720, y: -135 },
       gegevenselementen: [
         {
-          naam: "X",
+          naam: "Adres",
           description:
             "Enkelvoudig gegevenselement van B met twee tekstvelden.",
           meervoud: "b_xs",
           momentvoorkomen: "enkelvoudig",
           isMaterieel: false,
+          positie: { x: 585, y: 240 },
+          id: "Locatie->Locatie_Adres",
           velden: [
-            { naam: "fff", goType: "string" },
-            { naam: "ggg", goType: "string" },
+            { naam: "straatnaam", goType: "string" },
+            { naam: "huisnummer", goType: "string" },
+            { naam: "postcode", goType: "string" },
+            { naam: "plaats", goType: "string" },
           ],
         },
         {
-          naam: "Y",
+          naam: "BAGlocatie",
           description:
             "Enkelvoudig gegevenselement van B met een tekstveld.",
           meervoud: "b_ys",
           momentvoorkomen: "enkelvoudig",
           isMaterieel: false,
-          velden: [{ naam: "hhh", goType: "string" }],
+          positie: { x: 825, y: 240 },
+          id: "Locatie->Locatie_BAG-locatie",
+          velden: [{ naam: "adresaanduiding", goType: "string" }],
         },
       ],
+      relaties: [],
     },
   ],
 };

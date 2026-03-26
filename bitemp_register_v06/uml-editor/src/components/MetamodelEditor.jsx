@@ -579,11 +579,15 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [] }
     input.click();
   }, [setNodes, setEdges]);
 
-  /** Laad vanuit de schema-API van de bitemporele backend */
+  /** Laad vanuit model/schema-API van de backend (V3 model aanbevolen) */
   const handleLoadSchema = useCallback(() => {
+    const defaultUrl =
+      window.location.port === "5174"
+        ? "http://localhost:8082/api/schema/model"
+        : "/api/schema/model";
     const url = prompt(
-      "Schema-API URL:",
-      "http://localhost:8080/schema"
+      "Model-API URL (V3):",
+      defaultUrl
     );
     if (!url) return;
 
@@ -593,14 +597,22 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [] }
         return r.json();
       })
       .then((data) => {
-        const { nodes: newNodes, edges: newEdges } =
-          schemaResponseNaarEditor(data);
+        const maybeV3 = data?.model && data.model.entiteiten ? data.model : data;
+        if (maybeV3 && maybeV3.entiteiten) {
+          const result = v3ModelNaarEditor(maybeV3);
+          setNodes(result.nodes || []);
+          setEdges(result.edges || []);
+          return;
+        }
+
+        // Fallback voor oudere schema-responses (legacy /schema of /api/viz/schema varianten).
+        const { nodes: newNodes, edges: newEdges } = schemaResponseNaarEditor(data);
         setNodes(newNodes);
         setEdges(newEdges);
       })
       .catch((err) => {
-        console.error("Schema laden mislukt:", err);
-        alert(`Kan schema niet laden: ${err.message}`);
+        console.error("Model/schema laden mislukt:", err);
+        alert(`Kan model/schema niet laden: ${err.message}`);
       });
   }, [setNodes, setEdges]);
 

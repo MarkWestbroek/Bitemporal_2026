@@ -40,6 +40,9 @@ function convertV3Veld(v3Veld, enumLookup, datatypeLookup) {
     verplicht: !(v3Veld.goType || "").startsWith("*"),
     autoIncrement: false,
     description: v3Veld.description || "",
+    afgeleid: v3Veld.afgeleid || false,
+    afleidingsregelTaal: v3Veld.afleidingsregelTaal || "cel",
+    afleidingsregel: v3Veld.afleidingsregel || "",
   };
 }
 
@@ -102,6 +105,13 @@ export function v3ModelNaarEditor(v3Model) {
         isMaterieel: ent.isMaterieel || false,
         kleur: ent.kleur || defaultKleur("entiteit"),
         velden: [],
+        afgeleideVelden: (ent.afgeleideVelden || []).map((av) => ({
+          naam: av.naam || "",
+          description: av.description || "",
+          goType: av.goType || "string",
+          afleidingsregelTaal: av.afleidingsregelTaal || "cel",
+          afleidingsregel: av.afleidingsregel || "",
+        })),
       },
     });
 

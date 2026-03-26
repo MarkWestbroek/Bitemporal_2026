@@ -60,6 +60,21 @@ export const VELDTYPEN = [
 //   kardinaliteit?: "0..1"|"1"|"0..*"|"1..*"
 // }
 
+/**
+ * Beschikbare talen voor afleidingsregels.
+ * CEL (Common Expression Language) is de aanbevolen keuze:
+ * - Go: github.com/google/cel-go
+ * - JS: cel-js (npm)
+ * - Niet-Turing-compleet, veilig, deterministisch
+ * Alternatieven: Expr, JsonLogic, eigen pseudo-code.
+ */
+export const AFLEIDINGSTALEN = [
+  { value: "cel", label: "CEL (Common Expression Language)" },
+  { value: "expr", label: "Expr" },
+  { value: "jsonlogic", label: "JsonLogic" },
+  { value: "pseudo", label: "Pseudo-code" },
+];
+
 // === Helper functies ===
 
 /** Genereer een simpele unieke ID */
@@ -107,6 +122,20 @@ export function maakLeegVeld() {
     verplicht: true,
     autoIncrement: false,
     description: "",
+    afgeleid: false,
+    afleidingsregelTaal: "cel",
+    afleidingsregel: "",
+  };
+}
+
+/** Maak een leeg afgeleid veld (entiteit-niveau) */
+export function maakLeegAfgeleidVeld() {
+  return {
+    naam: "",
+    description: "",
+    goType: "string",
+    afleidingsregelTaal: "cel",
+    afleidingsregel: "",
   };
 }
 
@@ -228,6 +257,9 @@ export function schemaResponseNaarEditor(schemaResponse) {
           verplicht: v.verplicht,
           autoIncrement: v.autoIncrement || false,
           description: v.description || "",
+          afgeleid: v.afgeleid || false,
+          afleidingsregelTaal: v.afleidingsregelTaal || "cel",
+          afleidingsregel: v.afleidingsregel || "",
         })),
       },
     };
@@ -256,6 +288,9 @@ export function schemaResponseNaarEditor(schemaResponse) {
           verplicht: v.verplicht,
           autoIncrement: v.autoIncrement || false,
           description: v.description || "",
+          afgeleid: v.afgeleid || false,
+          afleidingsregelTaal: v.afleidingsregelTaal || "cel",
+          afleidingsregel: v.afleidingsregel || "",
         })),
       },
     };
@@ -389,12 +424,18 @@ function veldNaarV3(veld) {
     goType = `*${goType}`;
   }
 
-  return {
+  const result = {
     naam: veld.naam,
     goType,
     enum: enumNaam || undefined,
     description: veld.description || undefined,
   };
+  if (veld.afgeleid) {
+    result.afgeleid = true;
+    result.afleidingsregelTaal = veld.afleidingsregelTaal || "cel";
+    result.afleidingsregel = veld.afleidingsregel || "";
+  }
+  return result;
 }
 
 function sanitizeConstSuffix(value = "") {
@@ -540,6 +581,9 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         opts.padnaamByEntiteit?.[ent.data.typenaam] ||
         `${(ent.data.typenaam || "entiteit").toLowerCase()}s`,
       positie: ent.position ? { x: ent.position.x, y: ent.position.y } : undefined,
+      afgeleideVelden: (ent.data.afgeleideVelden || []).length > 0
+        ? ent.data.afgeleideVelden.filter((v) => (v.naam || "").trim() !== "")
+        : undefined,
       gegevenselementen,
       relaties,
     };

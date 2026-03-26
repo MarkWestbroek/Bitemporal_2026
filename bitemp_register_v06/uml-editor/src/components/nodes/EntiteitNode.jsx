@@ -61,6 +61,7 @@ function EntiteitNode({ data, selected }) {
           data.velden.map((v, i) => (
             <div key={i} className="node-veld">
               <span className="veld-naam">
+                {v.afgeleid && <span style={{ color: "#f59e0b" }}>/</span>}
                 {v.verplicht ? (
                   <strong>{v.naam}</strong>
                 ) : (
@@ -77,6 +78,24 @@ function EntiteitNode({ data, selected }) {
           ))
         )}
       </div>
+
+      {/* Afgeleide velden op entiteit-niveau */}
+      {(data.afgeleideVelden || []).length > 0 && (
+        <>
+          <div className="node-divider" />
+          <div className="node-velden">
+            {data.afgeleideVelden.map((av, i) => (
+              <div key={`av-${i}`} className="node-veld" style={{ fontStyle: "italic" }}>
+                <span className="veld-naam">
+                  <span style={{ color: "#f59e0b" }}>/</span>
+                  {av.naam}
+                </span>
+                <span className="veld-type">{av.goType || "string"}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

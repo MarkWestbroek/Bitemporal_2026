@@ -17,11 +17,27 @@ as well as bitemporal registration, correction and undoing routes.
 // Bij een preflight OPTIONS-request worden de extra Allow-headers
 // teruggegeven en wordt de keten afgebroken met 204 No Content.
 func corsMiddleware() gin.HandlerFunc {
+	allowedOrigins := map[string]struct{}{
+		"http://test1.pleio.local:8000": {},
+		// Lokale frontend dev-servers (Vite)
+		"http://localhost:5173": {},
+		"http://localhost:5174": {},
+		"http://localhost:5175": {},
+		"http://127.0.0.1:5173": {},
+		"http://127.0.0.1:5174": {},
+		"http://127.0.0.1:5175": {},
+	}
+
 	return func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "http://test1.pleio.local:8000")
+		origin := c.GetHeader("Origin")
+		if _, ok := allowedOrigins[origin]; ok {
+			c.Header("Access-Control-Allow-Origin", origin)
+			c.Header("Vary", "Origin")
+		}
+
 		if c.Request.Method == http.MethodOptions {
-			c.Header("Access-Control-Allow-Methods", "GET, OPTIONS")
-			c.Header("Access-Control-Allow-Headers", "Content-Type")
+			c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+			c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
 			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}

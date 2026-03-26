@@ -4,7 +4,7 @@
  * Knoppen:
  *   - Nieuwe entiteit / GE / relatie / enumeratie toevoegen
  *   - Opslaan / laden (JSON)
- *   - Laden vanuit schema-API
+ *   - Laden vanuit model/schema-API
  */
 import { maakLeegType, maakLegeEnumeratie, maakLeegGegevenstype } from "../../metamodel/types";
 
@@ -79,7 +79,7 @@ export default function Toolbar({ onAddNode, onSave, onPublishSchemaModel, onLoa
         </button>
         {onLoadSchema && (
           <button onClick={onLoadSchema} className="btn-toolbar schema">
-            🔌 Laden van schema-API
+            🔌 Laden van model-API
           </button>
         )}
         {onToggleTestInvoer && (

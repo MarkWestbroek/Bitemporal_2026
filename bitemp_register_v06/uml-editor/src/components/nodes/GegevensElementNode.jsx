@@ -56,6 +56,7 @@ function GegevensElementNode({ data, selected }) {
           data.velden.map((v, i) => (
             <div key={i} className="node-veld">
               <span className="veld-naam">
+                {v.afgeleid && <span style={{ color: "#f59e0b" }}>/</span>}
                 {v.verplicht ? (
                   <strong>{v.naam}</strong>
                 ) : (

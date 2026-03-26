@@ -99,6 +99,30 @@ De tijdslijn-pagina:
 
 De oude links naar de legacy schema- en archiefpagina's zijn verwijderd van de startpagina's.
 
+## Afgeleide velden (Derived Fields)
+
+Het metamodel (V3) ondersteunt **afgeleide velden** — velden waarvan de waarde wordt berekend uit andere velden, analoog aan UML derived attributes (`/attribuut`).
+
+Er zijn twee niveaus:
+
+- **Veld-niveau**: een veld binnen een GE/relatie gemarkeerd als `afgeleid: true`, met een afleidingsregel die verwijst naar velden in hetzelfde GE.
+- **Entiteit-niveau**: een `afgeleideVelden[]` array op de entiteit, met afleidingen die verwijzen naar velden uit verschillende onderliggende GE's/relaties (bijv. `Naam.roepnaam`).
+
+De standaard expressietaal is **CEL** (Common Expression Language), een type-safe, open standaard van Google.
+
+```json
+{
+  "naam": "weergavenaam",
+  "goType": "string",
+  "afleidingsregelTaal": "cel",
+  "afleidingsregel": "Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters + ' ' + Naam.achternaam"
+}
+```
+
+In de UML-editor worden afgeleide velden weergegeven met een oranje `/` prefix en cursieve stijl.
+
+Zie [`afgeleide-velden.md`](afgeleide-velden.md) voor de volledige documentatie, CEL-syntaxvoorbeelden en codestructuur.
+
 Opmerking:
 
 - De frontend gebruikt gebuilde assets (geen runtime React-CDN meer nodig).
