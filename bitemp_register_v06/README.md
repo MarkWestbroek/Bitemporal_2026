@@ -728,11 +728,25 @@ Deregister U5 and register U6 for entity A:
 - soort van formule (OCL? DMN? -> maar wat voor?)
 - / in UML view
 - kan het label zijn in de index en tijdlijn viewer
-  - isLabelInTimelinViews property
+  - isLabelInTimelineViews property
+- opnemen in de generator en daarna in:
+   - a. de wijzigings handler: de nu-staat uitrekenen m.b.v. go packages voor CEL etc.
+   - b. de database (liever niet)
+- opnemen in de API's of niet?
 
 16 Referentielijsten
+- de lijst is een apart type "ReferentieLijst". Dit mapt op een *record* in de systeem tabel register_referentielijst, die zich gedraagt als een entiteit. 
+- het <referentielijst_item> is een entiteit (of GE??) subtype. Bijv. Land. Ik wil stereotype niet gebruiken, omdat het een metamodel element is dat wordt geïmplementeerd. Stereotypen wil ik houden voor functionele toepassing. Misschien m.u.v. materieel en formeel, afh. van de export (uml, min).
+- relatie heeft ook een subtype <referentielijst_items>. De naam is de naam van de ref. lijst (die zit in het record, is al meervoud) _ de naam van het item. Bijv. landen_land. Zou je meer lijsten hebben, gebaseerd op dezelfde verzameling items, krijg je bijv. EuLidstaten_landen.
+   - dit kan een formele (gratis) of materiële relatie zijn. Wat je wil.
+
+- de editor toont +referentielijst die meteen alledrie aanmaakt met linkjes.
+  - je moet extra sublijsten kunnen aanmaken door ook losse ref.l.item en ref.l.items typen te kunnen maken. 
+  - initiële vulling van de tabel moet apart na genereren van het register. Het zijn geen enums...
 
 18 Mooiere formuliertjes (auto en custom)
+19 tabel views en invulformulieren vanuit het model (na genereren)
+   - dit is minder een editor, maar meer een viewer / navigator
 
 20 react - edit popups
 - corrigeren en afvoeren hebben heel weinig met elkaar te maken en staan gebroederlijk naast elkaar
@@ -761,10 +775,13 @@ Deregister U5 and register U6 for entity A:
 - delta tussen een nieuwe en de huidige bepalen
 - impact van de delta bepalen (breaking of niet)
 - import van XMI
+- posities uit XMI import en in export mappen 
+- Export naar MIM
 
 40 3D weergave model en tijdslijnen :-)
 
-50 Autonumber Entiteit-IDs? Simpel maar wenselijk?
+50 Autonumber Entiteit-IDs? Simpel maar wenselijk
+51 autogen GUID werkt al of moet daar iets gedaan worden?
 
 60 pbac: wat is een goed policy formaat?
 61 pip maken op basis van metamodel?
