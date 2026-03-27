@@ -744,6 +744,9 @@ Deregister U5 and register U6 for entity A:
   - je moet extra sublijsten kunnen aanmaken door ook losse ref.l.item en ref.l.items typen te kunnen maken. 
   - initiële vulling van de tabel moet apart na genereren van het register. Het zijn geen enums...
 
+- registratie- en tijdlijn-views betere layout m.b.v. weergave-velden, als die er zijn, anders gewoon id
+
+
 18 Mooiere formuliertjes (auto en custom)
 19 tabel views en invulformulieren vanuit het model (na genereren)
    - dit is minder een editor, maar meer een viewer / navigator
