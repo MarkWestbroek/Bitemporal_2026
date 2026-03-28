@@ -1,2 +1,81 @@
 {
+    "redhat.telemetry.enabled": true,
+    "http.systemCertificatesNode": true,
+    "pgsql.serverGroups": [
+        {
+            "name": "Servers",
+            "id": "AD258F14-501B-497D-9592-31CCDCE1A82D",
+            "isDefault": true
+        }
+    ],
+    "chat.instructionsFilesLocations": {
+        ".github/instructions": true,
+        ".claude/rules": true,
+        "~/.copilot/instructions": true,
+        "~/.claude/rules": true,
+        "C:\\Users\\User\\AppData\\Local\\Temp\\postman-collections-post-response.instructions.md": true,
+        "C:\\Users\\User\\AppData\\Local\\Temp\\postman-collections-pre-request.instructions.md": true,
+        "C:\\Users\\User\\AppData\\Local\\Temp\\postman-folder-post-response.instructions.md": true,
+        "C:\\Users\\User\\AppData\\Local\\Temp\\postman-folder-pre-request.instructions.md": true,
+        "C:\\Users\\User\\AppData\\Local\\Temp\\postman-http-request-post-response.instructions.md": true,
+        "C:\\Users\\User\\AppData\\Local\\Temp\\postman-http-request-pre-request.instructions.md": true
+    },
+    "security.workspace.trust.untrustedFiles": "open",
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "diffEditor.codeLens": true,
+    "chat.viewSessions.orientation": "stacked",
+    "zig.zls.enabled": "on",
+    "pgsql.connections": [
+        {
+            "id": "F735FAF3-DC58-4778-8937-6B34288DB127",
+            "groupId": "AD258F14-501B-497D-9592-31CCDCE1A82D",
+            "authenticationType": "SqlLogin",
+            "connectTimeout": 15,
+            "applicationName": "vscode-pgsql",
+            "clientEncoding": "utf8",
+            "sslmode": "prefer",
+            "sshSavePassword": true,
+            "savePassword": true,
+            "sslRootCertMode": "none",
+            "server": "localhost",
+            "user": "postgres",
+            "password": "",
+            "database": "bitemp_go_db_v05",
+            "profileName": "bitemp-go_05",
+            "connectionString": "postgres://postgres:1234@localhost:5432/bitemp_go_db_v05?sslmode=disable",
+            "port": "5432",
+            "expiresOn": 0,
+            "sshPassword": ""
+        }
+    ],
+    "chat.tools.terminal.autoApprove": {
+        "go": true,
+        "Test-Path": true
+    },
+    "chat.editor.fontSize": 24,
+    "chat.fontSize": 20,
+    "window.zoomLevel": 1,
+    "update.showReleaseNotes": false,
+    "window.customTitleBarVisibility": "windowed",
+    "chat.agent.maxRequests": 100,
+    "git.autofetch": true,
+    "chat.tools.urls.autoApprove": {
+        "https://code.visualstudio.com": true,
+        "https://github.com/microsoft/vscode/wiki/*": true,
+        "http://localhost:9001": {
+            "approveRequest": false,
+            "approveResponse": true
+        },
+        "http://test1.pleio.local:8000": true,
+        "https://commonground.nl": true,
+        "https://nldesignsystem.nl": true,
+        "https://*.commonground.nl": {
+            "approveRequest": true,
+            "approveResponse": false
+        }
+    },
+    "chat.restoreLastPanelSession": false,
+    "settingsSync.ignoredSettings": [
+        "chat.instructionsFilesLocations"
+    ]
 }
