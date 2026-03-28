@@ -359,6 +359,50 @@ classDiagram
    (Dit i.t.t. een normale relatie die meer-op-meer koppelt.)"
 ```
 
+Alternatieve layout-variant (sterker gestuurd):
+
+```mermaid
+classDiagram
+  direction TB
+
+  %% Boven: referentielijst met naam
+  class Referentielijst
+  class Referentielijstnaam {
+    naam
+  }
+
+  %% Midden: de koppeling
+  class Referentielijstitems
+
+  %% Onder: het item
+  class Referentielijstitem
+
+  %% Rechts: basisconcepten
+  class Entiteit
+  class Gegevenselement {
+    /waarde : type [0..*]
+  }
+  class Relatie
+
+  %% Kernstructuur referentielijsten
+  Referentielijstnaam --* Referentielijst
+  Referentielijst "1" --> "*" Referentielijstitems : bevat
+  Referentielijstitems --> "1" Referentielijstitem
+
+  %% Subtype-relaties
+  Referentielijst --|> Entiteit : subtype van
+  Referentielijstitem --|> Entiteit : subtype van
+  Referentielijstnaam --|> Gegevenselement : subtype van
+  Referentielijstitems --|> Relatie : subtype van
+
+  %% Basisrelatie in metamodel
+  Entiteit "1" *-- "0..*" Gegevenselement
+
+  %% Layout-hints: lichte, inhoudelijk plausibele afhankelijkheden
+  Referentielijst ..> Entiteit : metatype
+  Referentielijstitems ..> Entiteit : itemtype
+```
+
 ### Enkelvoud en meervoud
 
 Omdat het Nederlands onregelmatig is (land/landen, lidstaat/lidstaten), moeten enkelvoud en meervoud altijd expliciet worden vastgelegd in het model, net als bij gewone entiteiten.
