@@ -19,6 +19,124 @@ Referentielijsten zijn benoemde verzamelingen van items (bijv. "Landen", "EU-Lid
 | **referentielijst_item** | entiteit | Gewone entiteit (ID + vrije GE's/relaties) | "Land" |
 | **referentielijst_items** | relatie | Koppeltabel (FK naar lijst + FK naar item) | "Landen_Land" |
 
+### Overzichtsdiagram
+
+```mermaid
+classDiagram
+  direction TB
+
+  class register_referentielijst {
+    «systeemtabel»
+    +int id PK
+    +string typenaam UNIQUE
+    +string naam
+    +string beschrijving
+    +bool is_materieel
+  }
+  note for register_referentielijst "Eén record per referentielijst.\nGesynchroniseerd bij API-opstart\nvanuit MetaRegistry."
+
+  class Referentielijst {
+    «entiteit · referentielijst»
+    +int id PK
+    +time opvoer
+    +time afvoer
+  }
+  note for Referentielijst "Voorbeeld: Landenlijst.\nMaterieel optioneel (aanvang/einde)."
+
+  class ReferentielijstItem {
+    «entiteit · referentielijst_item»
+    +int id PK
+    +time opvoer
+    +time afvoer
+  }
+  note for ReferentielijstItem "Voorbeeld: Land.\nGewone entiteit met vrije GE's."
+
+  class ReferentielijstItems {
+    «relatie · referentielijst_items»
+    +int lijst_id FK
+    +int item_id FK
+    +int rel_id PK
+    +time opvoer
+    +time afvoer
+  }
+  note for ReferentielijstItems "Voorbeeld: Landenlijst_Land.\nKoppeltabel lijst ↔ item."
+
+  class Hub_Data["_Data (versioned)"] {
+    +int versie PK
+    +... inhoudelijke velden
+    +time opvoer
+    +time afvoer
+  }
+
+  class Aanvang_Einde["_Aanvang / _Einde"] {
+    +int versie PK
+    +date datum
+    +time opvoer
+    +time afvoer
+  }
+
+  register_referentielijst "1" ..> "1" Referentielijst : typenaam ↔ MetaRegistry
+  Referentielijst "1" --> "*" ReferentielijstItems : heeft items via
+  ReferentielijstItems "*" --> "1" ReferentielijstItem : verwijst naar
+  Referentielijst "1" --> "0..*" Aanvang_Einde : materieel
+  ReferentielijstItem "1" --> "0..*" Aanvang_Einde : materieel
+  ReferentielijstItems "1" --> "1" Hub_Data : geversioned inhoud
+  ReferentielijstItem "1" --> "*" Hub_Data : GE hubs + data
+```
+
+### Concreet voorbeeld: Landenlijst
+
+```mermaid
+classDiagram
+  direction LR
+
+  class Landenlijst {
+    «referentielijst»
+    +int id
+  }
+
+  class Land {
+    «referentielijst_item»
+    +int id
+  }
+
+  class Landenlijst_Land {
+    «referentielijst_items»
+    +int landenlijst_id FK
+    +int land_id FK
+    +int rel_id
+  }
+
+  class Landcode {
+    «GE hub»
+    +int land_id FK
+    +int rel_id
+  }
+
+  class Landnaam {
+    «GE hub»
+    +int land_id FK
+    +int rel_id
+  }
+
+  class Landcode_Data {
+    +string code
+    +int versie
+  }
+
+  class Landnaam_Data {
+    +string naam
+    +int versie
+  }
+
+  Landenlijst "1" --> "*" Landenlijst_Land
+  Landenlijst_Land "*" --> "1" Land
+  Land "1" --> "1" Landcode
+  Land "1" --> "1" Landnaam
+  Landcode "1" --> "*" Landcode_Data
+  Landnaam "1" --> "*" Landnaam_Data
+```
+
 ### Relatie tot bestaand metamodel
 
 - De drie subtypes erven alle eigenschappen van hun basis-metatype: hub+data-patroon, aanvang/einde (indien materieel), relatieve autoincrement, formele opvoer/afvoer.
