@@ -282,15 +282,32 @@ classDiagram
 %%    beschrijving
 %%  }
 
-  class Entiteit
+  namespace ReferentielijstDomein {
+    class Referentielijst {
+    }
 
-  class Gegevenselement {
-    /waarde : type [0..*]
+    class Referentielijstnaam {
+      naam
+    }
+
+    class Referentielijstitems {
+    }
+
+    class Referentielijstitem {
+    }
   }
 
-  class Relatie {
-    %%type : Relatietype
-    %%tijdlijn : Tijdlijnvoorkomen [0..1]
+  namespace Basismetatypes {
+    class Entiteit
+
+    class Gegevenselement {
+      /waarde : type [0..*]
+    }
+
+    class Relatie {
+      %%type : Relatietype
+      %%tijdlijn : Tijdlijnvoorkomen [0..1]
+    }
   }
 
 %%  class Gegeven {
@@ -299,19 +316,6 @@ classDiagram
 %%    beschrijving
 %%    type : Gegevenstype
 %%  }
-
-  class Referentielijst {
-  }
-
-  class Referentielijstnaam {
-    naam
-  }
-  
-  class Referentielijstitems {
-  }
-  
-  class Referentielijstitem {
-  }
 
 %%  class Enumeratie {
 %%    <<Gegevenstype>>
@@ -328,7 +332,7 @@ classDiagram
   %%Gegevenselement <|-- Relatie
 
   Referentielijstnaam --* Referentielijst
-  Referentielijstitems "*" --* "*" Referentielijst
+  Referentielijst "1" --> "*" Referentielijstitems : bevat
   Referentielijstitems --> "1" Referentielijstitem
 
   Referentielijst --|> Entiteit : subtype van
