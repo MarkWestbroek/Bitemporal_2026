@@ -1,0 +1,3 @@
+Plaats hier ruwe exports uit VS Code Copilot Chat via: Chat: Export Chat...
+
+Naamgeving: YYYY-MM-DD-onderwerp-korte-context.json
