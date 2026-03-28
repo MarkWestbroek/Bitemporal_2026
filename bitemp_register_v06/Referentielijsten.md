@@ -33,56 +33,92 @@ classDiagram
     +string beschrijving
     +bool is_materieel
   }
-  note for register_referentielijst "Eén record per referentielijst.\nGesynchroniseerd bij API-opstart\nvanuit MetaRegistry."
+  note for register_referentielijst "Eén record per referentielijst.
+  Gesynchroniseerd bij API-opstart vanuit MetaRegistry."
 
   class Referentielijst {
-    «entiteit»
-    «referentielijst»
+    «Entiteit»
     +int id PK
-    +time opvoer
-    +time afvoer
+    %%  +time opvoer
+    %%  +time afvoer
   }
-  note for Referentielijst "Voorbeeld: Landenlijst.\nMaterieel optioneel (aanvang/einde)."
+  note for Referentielijst "Elke instantie van deze klasse is een referentielijst, bijv. Landenlijst.
+  Materieel optioneel maar geldt dan wel voor alle referentielijsten in het model.
+  Elke instantie staat ook in het model en in de metaregistry."
+
+  class ReferentielijstNaam {
+    «Gegevenselement»
+    +int rel_id PFK
+    +string naam
+  }
+  ReferentielijstNaam --* Referentielijst
+
+  class ReferentielijstOpmerking {
+    «Gegevenselement»
+    +int rel_id PFK
+    +string opmerking
+  }
+  ReferentielijstOpmerking --* Referentielijst
+
 
   class ReferentielijstItem {
-    «entiteit · referentielijst_item»
+    «Entiteit»
     +int id PK
-    +time opvoer
-    +time afvoer
+    %%  +time opvoer
+    %%  +time afvoer
   }
-  note for ReferentielijstItem "Voorbeeld: Land.\nGewone entiteit met vrije GE's."
-
+  note for ReferentielijstItem "Voorbeeld: Land.
+  Behalve beperking in koppelbaarheid aan alleen ReferentielijstItems
+  is dit verder een gewone entiteit met vrij modelleerbare GE'n."
+  
   class ReferentielijstItems {
-    «relatie · referentielijst_items»
-    +int lijst_id FK
+    «Relatie»
+    +int lijst_id PFK
     +int item_id FK
-    +int rel_id PK
-    +time opvoer
-    +time afvoer
+    +int rel_id PFK
+    %%  +time opvoer
+    %%  +time afvoer
   }
-  note for ReferentielijstItems "Voorbeeld: Landenlijst_Land.\nKoppeltabel lijst ↔ item."
+  note for ReferentielijstItems "Voorbeeld: Landenlijst_Land.
+  Koppeltabel lijst ↔ item.
+  N.B.: elk type heeft één vast lijst-id!"
 
-  class Hub_Data["_Data (versioned)"] {
-    +int versie PK
+  class LijstItemRelatieXGegevens {
+    «Gegevenselement»
+    +int versie PFK
     +... inhoudelijke velden
-    +time opvoer
-    +time afvoer
+    %%  +time opvoer
+    %%  +time afvoer
   }
 
-  class Aanvang_Einde["_Aanvang / _Einde"] {
-    +int versie PK
-    +date datum
-    +time opvoer
-    +time afvoer
+  class RefLijstXGegevens {
+    «Gegevenselement»
+    +int versie PFK
+    +... inhoudelijke velden
+    %%  +time opvoer
+    %%  +time afvoer
   }
 
-  register_referentielijst "1" ..> "1" Referentielijst : typenaam ↔ MetaRegistry
+%%  class Aanvang_Einde["_Aanvang / _Einde"] {
+%%    +int versie PFK
+%%    +date datum
+    %%  +time opvoer
+    %%  +time afvoer
+%%  }
+
+  %%Referentielijst --|> Entiteit
+  %%ReferentielijstItem --|> Entiteit
+  %%ReferentielijstItems --|> Relatie
+  
+
+  register_referentielijst "1" ..|> "1" Referentielijst : realiseert | typenaam etc. ↔ MetaRegistry
   Referentielijst "1" --> "*" ReferentielijstItems : heeft items via
   ReferentielijstItems "*" --> "1" ReferentielijstItem : verwijst naar
-  Referentielijst "1" --> "0..*" Aanvang_Einde : materieel
-  ReferentielijstItem "1" --> "0..*" Aanvang_Einde : materieel
-  ReferentielijstItems "1" --> "1" Hub_Data : geversioned inhoud
-  ReferentielijstItem "1" --> "*" Hub_Data : GE hubs + data
+%%  Referentielijst "1" *-- "0..*" Aanvang_Einde : materieel
+%%  ReferentielijstItem "1" *-- "0..*" Aanvang_Einde : materieel
+%%  ReferentielijstItems "1" *-- "0..*" Aanvang_Einde : materieel
+  ReferentielijstItems "1" *-- "1" LijstItemRelatieXGegevens : eventueel extra informatie over kopppeling
+  ReferentielijstItem "1" *-- "*" RefLijstXGegevens : gegevens van een item
 ```
 
 ### Concreet voorbeeld: Landenlijst
@@ -95,6 +131,21 @@ classDiagram
     «entiteit»
     +int id
   }
+
+  class ReferentielijstNaam {
+    «GE hub»
+    +int rel_id
+    +string naam
+  }
+  ReferentielijstNaam --* Referentielijst
+
+  class ReferentielijstOpmerking {
+    «GE hub»
+    +int rel_id
+    +string opmerking
+  }
+  ReferentielijstOpmerking --* Referentielijst
+
 
   class Landenlijst {
     «Referentielijst record»
@@ -134,14 +185,14 @@ classDiagram
     +int versie
   }
 
-  Referentielijst "1" --> "*" Landenlijst_Land
+  Referentielijst "1" *-- "*" LandenlijstLand
   Referentielijst ..> Landenlijst : "bevat het record"
-  Landenlijst_Land ..> Landenlijst : "wijst naar exact dit record"
-  Landenlijst_Land "1" --> "*" Land
-  Land "1" --> "1" Landcode
-  Land "1" --> "1" Landnaam
-  Landcode "1" --> "*" Landcode_Data
-  Landnaam "1" --> "*" Landnaam_Data
+  LandenlijstLand ..> Landenlijst : "wijst naar exact dit record"
+  LandenlijstLand "1" *-- "*" Land
+  Land "1" *-- "1" Landcode
+  Land "1" *-- "1" Landnaam
+  Landcode "1" *-- "*" Landcode_Data
+  Landnaam "1" *-- "*" Landnaam_Data
 ```
 
 ### Relatie tot bestaand metamodel
@@ -151,8 +202,8 @@ classDiagram
 
 ### Metamodel (META-niveau)
 
-Onderstaand diagram toont hoe referentielijsten zich verhouden tot de bestaande metamodel-concepten (Representatie, Entiteit, Gegevenselement, Relatie, Gegeven, Gegevenstype).
-
+#### Algemeen representatie metamodel
+Dit bevat wel het Referentielijstitem, dat zich als een gegevenstype gedraagt.
 ```mermaid
 classDiagram
   direction TB
@@ -181,16 +232,7 @@ classDiagram
     type : Gegevenstype
   }
 
-  class Referentielijst {
-    naam
-    beschrijving
-  }
-
-  class ReferentielijstItems {
-    <<bijzondere relatie>>
-  }
-
-  class Referentielijstelement {
+  class Referentielijstitem {
     <<Gegevenstype>>
   }
 
@@ -206,19 +248,111 @@ classDiagram
 
   Representatie <|-- Entiteit
   Representatie <|-- Gegevenselement
-  Representatie <|-- Relatie
+  Gegevenselement <|-- Relatie
+  Referentielijstitem --|> Entiteit : subtype van
   Relatie --> Representatie : van «bron 1»
   Relatie --> Representatie : tot «doel 1»
   Entiteit "1" *-- "0..*" Gegevenselement
   Gegevenselement "1" *-- "0..*" Gegeven
-  Gegeven "0..1" --> Enumeratie : type
-  Gegeven "0..1" --> Referentielijstelement : type
+  Gegeven "0..1" --> Enumeratie : is van het type
+  Gegeven "0..1" --> Referentielijstitem : is van het type
   Enumeratie "1" *-- "1..*" Enumeratiewaarde
-  Relatie <|.. ReferentielijstItems : specialisatie
-  ReferentielijstItems <.. Referentielijst
+  
+  note for Gegeven "Een Gegeven is altijd van een bepaald Gegevenstype,
+   en kan daarmee ook een verwijzing naar een 
+   Referentielijstitem of Enumeratie zijn."
 
-  note for Gegeven "Een Gegeven is altijd van een bepaald\nGegevenstype, en kan daarmee ook een\nverwijzing naar een Referentielijstelement\nof Enumeratie zijn."
-  note for ReferentielijstItems "Een ReferentielijstItems is een bijzondere\nrelatie: het relateert alle Referentielijst-\nelementen van een bepaald type aan\n1 instantie van een Referentielijst.\nDit i.t.t. een normale relatie die\nmeer-op-meer koppelt."
+  %%note for Referentielijstitems "Een Referentielijstitems is een bijzondere relatie:
+  %% het relateert alle Referentielijst-elementen van een bepaald type aan exact 
+  %% één instantie van een Referentielijst. 
+  %% (Dit i.t.t. een normale relatie die meer-op-meer koppelt.)"
+```
+
+#### Referentielijsten toegevoegd aan het metamodel
+Onderstaand diagram toont hoe referentielijsten zich verhouden tot de bestaande metamodel-concepten (Entiteit, Gegevenselement, Relatie, Gegeven, Gegevenstype).
+Representatie is er voor de duidelijkheid uitgelaten. Zie hierboven het metamodel met de representatie superklasse.
+
+```mermaid
+classDiagram
+  direction TB
+
+%%  class Representatie {
+%%    naam «id»
+%%    alias [0..1]
+%%    beschrijving
+%%  }
+
+  class Entiteit
+
+  class Gegevenselement {
+    /waarde : type [0..*]
+  }
+
+  class Relatie {
+    %%type : Relatietype
+    %%tijdlijn : Tijdlijnvoorkomen [0..1]
+  }
+
+%%  class Gegeven {
+%%    naam
+%%    alias [0..1]
+%%    beschrijving
+%%    type : Gegevenstype
+%%  }
+
+  class Referentielijst {
+  }
+
+  class Referentielijstnaam {
+    naam
+  }
+  
+  class Referentielijstitems {
+  }
+  
+  class Referentielijstitem {
+  }
+
+%%  class Enumeratie {
+%%    <<Gegevenstype>>
+%%  }
+
+%%  class Enumeratiewaarde {
+%%    nummer : int [0..1]
+%%    naam : string
+%%    beschrijving [0..1]
+%%  }
+
+  %%Representatie <|-- Entiteit
+  %%Representatie <|-- Gegevenselement
+  %%Gegevenselement <|-- Relatie
+
+  Referentielijstnaam --* Referentielijst
+  Referentielijstitems "*" --* "*" Referentielijst
+  Referentielijstitems --> "1" Referentielijstitem
+
+  Referentielijst --|> Entiteit : subtype van
+  Referentielijstnaam --|> Gegevenselement : subtype van
+  Referentielijstitem --|> Entiteit : subtype van
+  Referentielijstitems --|> Relatie : subtype van
+  
+  
+  %%Relatie --> Representatie : van «bron 1»
+  %%Relatie --> Representatie : tot «doel 1»
+  Entiteit "1" *-- "0..*" Gegevenselement
+  %%Gegevenselement "1" *-- "0..*" Gegeven
+  %%Gegeven "0..1" --> Enumeratie : is van het type
+  %%Gegeven "0..1" --> Referentielijstitem : is van het type
+  %%Enumeratie "1" *-- "1..*" Enumeratiewaarde
+  
+  %%note for Gegeven "Een Gegeven is altijd van een bepaald Gegevenstype,
+  %% en kan daarmee ook een verwijzing naar een 
+  %% Referentielijstelement of Enumeratie zijn."
+
+  note for Referentielijstitems "Een ReferentielijstItems is een bijzondere relatie:
+   het relateert alle Referentielijst-elementen van een bepaald type aan exact 
+   één instantie van een Referentielijst. 
+   (Dit i.t.t. een normale relatie die meer-op-meer koppelt.)"
 ```
 
 ### Enkelvoud en meervoud
