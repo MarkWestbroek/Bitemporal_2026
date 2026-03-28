@@ -43,7 +43,13 @@ function EntiteitNode({ data, selected }) {
 
       {/* Header: stereotype + typenaam */}
       <div className="node-header">
-        <div className="node-stereotype">«entiteit»</div>
+        <div className="node-stereotype">
+          {data.entiteitSubtype === "referentielijst"
+            ? "«referentielijst»"
+            : data.entiteitSubtype === "referentielijst_item"
+            ? "«ref.lijst item»"
+            : "«entiteit»"}
+        </div>
         <div className="node-typenaam">{data.klassenaam || data.typenaam || "(naamloos)"}</div>
         {data.isMaterieel && (
           <div className="node-badge materieel">materieel</div>

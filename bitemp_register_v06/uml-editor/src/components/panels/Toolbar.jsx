@@ -6,9 +6,9 @@
  *   - Opslaan / laden (JSON)
  *   - Laden vanuit model/schema-API
  */
-import { maakLeegType, maakLegeEnumeratie, maakLeegGegevenstype } from "../../metamodel/types";
+import { maakLeegType, maakLegeEnumeratie, maakLeegGegevenstype, maakReferentielijstSet } from "../../metamodel/types";
 
-export default function Toolbar({ onAddNode, onSave, onPublishSchemaModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI }) {
+export default function Toolbar({ onAddNode, onAddReferentielijstSet, onSave, onPublishSchemaModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI }) {
   return (
     <div className="toolbar">
       <div className="toolbar-group">
@@ -62,6 +62,32 @@ export default function Toolbar({ onAddNode, onSave, onPublishSchemaModel, onLoa
           className="btn-toolbar datatype"
         >
           + Gegevenstype
+        </button>
+      </div>
+
+      {/* Referentielijsten — aparte groep (zie Referentielijsten.md §7) */}
+      <div className="toolbar-group">
+        <span className="toolbar-label">Ref.lijsten:</span>
+        <button
+          onClick={() => onAddReferentielijstSet && onAddReferentielijstSet()}
+          className="btn-toolbar reflijst"
+          title="Maak een volledige referentielijst-set: lijst + item + koppelrelatie"
+        >
+          + Referentielijst
+        </button>
+        <button
+          onClick={() => onAddNode(maakLeegType("entiteit", "referentielijst_item"), "entiteit")}
+          className="btn-toolbar refitem"
+          title="Voeg een los referentielijst-item type toe"
+        >
+          + Ref. Item
+        </button>
+        <button
+          onClick={() => onAddNode(maakLeegType("relatie", "referentielijst_items"), "relatie")}
+          className="btn-toolbar refitems"
+          title="Voeg een referentielijst-items koppelrelatie toe"
+        >
+          + Ref. Items
         </button>
       </div>
 

@@ -2,6 +2,7 @@ package dbsetup
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 	"github.com/uptrace/bun"
@@ -98,6 +99,17 @@ func CreateTables(db *bun.DB) error {
 		return err
 	}
 
+	// Register_referentielijst systeemtabel: overzicht van alle referentielijsten
+	_, err = db.NewCreateTable().Model((*model.RegisterReferentielijst)(nil)).IfNotExists().Exec(ctx)
+	if err != nil {
+		return err
+	}
+	// Synchroniseer de systeemtabel met de MetaRegistry (upsert)
+	err = syncReferentielijstRegister(ctx, db)
+	if err != nil {
+		return err
+	}
+
 	//Bitemporal core tables
 	// Wijziging table
 	_, err = db.NewCreateTable().Model((*model.Wijziging)(nil)).IfNotExists().Exec(ctx)
@@ -132,6 +144,33 @@ func CreateTables(db *bun.DB) error {
 	err = createFormeleTijdViews(ctx, db)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+// syncReferentielijstRegister vult de register_referentielijst systeemtabel
+// op basis van MetaRegistry-entries met EntiteitSubtype "referentielijst".
+// Bestaande rijen worden bijgewerkt (upsert op typenaam).
+func syncReferentielijstRegister(ctx context.Context, db *bun.DB) error {
+	for _, meta := range model.MetaRegistry {
+		if meta.EntiteitSubtype != model.EntiteitSubtypeReferentielijst {
+			continue
+		}
+		entry := model.RegisterReferentielijst{
+			Typenaam:     meta.Typenaam,
+			Naam:         meta.Klassenaam,
+			Beschrijving: meta.Description,
+			IsMaterieel:  meta.IsMaterieel,
+		}
+		_, err := db.NewInsert().Model(&entry).
+			On("CONFLICT (typenaam) DO UPDATE").
+			Set("naam = EXCLUDED.naam").
+			Set("beschrijving = EXCLUDED.beschrijving").
+			Set("is_materieel = EXCLUDED.is_materieel").
+			Exec(ctx)
+		if err != nil {
+			return fmt.Errorf("sync register_referentielijst mislukt voor %s: %w", meta.Typenaam, err)
+		}
 	}
 	return nil
 }

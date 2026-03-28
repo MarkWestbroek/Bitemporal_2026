@@ -733,18 +733,30 @@ Deregister U5 and register U6 for entity A:
    - a. de wijzigings handler: de nu-staat uitrekenen m.b.v. go packages voor CEL etc.
    - b. de database (liever niet)
 - opnemen in de API's of niet?
+- registratie- en tijdlijn-views betere layout m.b.v. weergave-velden, als die er zijn, anders gewoon id
 
-16 Referentielijsten
-- de lijst is een apart type "ReferentieLijst". Dit mapt op een *record* in de systeem tabel register_referentielijst, die zich gedraagt als een entiteit. 
-- het <referentielijst_item> is een entiteit (of GE??) subtype. Bijv. Land. Ik wil stereotype niet gebruiken, omdat het een metamodel element is dat wordt geïmplementeerd. Stereotypen wil ik houden voor functionele toepassing. Misschien m.u.v. materieel en formeel, afh. van de export (uml, min).
+
+16 *Referentielijsten*
+- Ik wil graag een apart type <ReferentieLijst>, dat een (singleton) lijst met items voorstelt. Er is er dus van een referentielijst maar 1 in het model. Net zoals er maar 1 gegevenstype XXX is. Dit type <ReferentieLijst> mapt op een *record* (!) in de register-systeem-tabel "register_referentielijst", die zich gedraagt als een entiteit. Het is de verzameling van alle referentielijsten in het register.
+- het <referentielijst_item> is een entiteit (of GE) subtype. Bijv.: "Land". Ik wil het UML construct stereotype hiervoor niet gebruiken, omdat het een metamodel element is dat wordt geïmplementeerd. Stereotypen wil ik houden voor functionele toepassing. Misschien m.u.v. materieel en formeel, afh. van de export (uml, min). Het is hiermee een soort extensie van UML. Net als de entiteit, relatie en gegevenselement dat zijn. Vergelijk in MIM het gegevenstype en de gegevensgroep. Hoewel zij wel stereotypen gebruiken. Ik denk omdat MIM niet primair van UML afstamt. Mijn model doet dat wel.
 - relatie heeft ook een subtype <referentielijst_items>. De naam is de naam van de ref. lijst (die zit in het record, is al meervoud) _ de naam van het item. Bijv. landen_land. Zou je meer lijsten hebben, gebaseerd op dezelfde verzameling items, krijg je bijv. EuLidstaten_landen.
    - dit kan een formele (gratis) of materiële relatie zijn. Wat je wil.
 
-- de editor toont +referentielijst die meteen alledrie aanmaakt met linkjes.
-  - je moet extra sublijsten kunnen aanmaken door ook losse ref.l.item en ref.l.items typen te kunnen maken. 
-  - initiële vulling van de tabel moet apart na genereren van het register. Het zijn geen enums...
+- *velden in deze subtypen*
+  - REF LIJST: materieel of formeel, naam en opmerking. LET OP: dit is een subtype van ENT, dus de ENT zelf heeft alleen ID. Naam en opmerking moeten elk een onderliggend _systeem_ GE worden. (dus het hub, data en indien materieel aanvang en einde patroon). Wat uitleg:
+    - Het materiele gaat over het bestaan van de lijst als geheel.
+    - Het materiele van de naam of opmerking gaat over het bestaan van de naam of opmerking. Die kun je daarmee dus 'stagen' als het in de toekomst is (!)
+  - REF LIJST ITEM: idem materieel of formeel en het is een subtype van ENT dus een ID en verder niks. Verder is de vorm van een item (welke GE-en) helemaal afhankelijk van wat het voorstelt. Een "Land" item zal gaan over de naam van het land, de landcode, misschien wel de geo-coordinaten. Een plantenlijst over de latijnse naam, de gangbare NL naam en misschien een link naar een afbeelding. Het is dus verder heel gewoon een ENT. Inclusief de mogelijkheid tot afgeleide velden. Niets bijzonders, alleen dat je het subtype wilt onderscheiden vanwege de link die je er naar legt vanuit één of meer REF LIJST ITEMS relaties
+  - de REF LIJST ITEMS relatie: gewoon een relatie, maar je wilt misschien beperken dat de van-entiteit altijd een REF LIJST is, en de naar entiteit altijd een REF LIJST ITEM. Hoewel dat laatste misschien helemaal niet hoeft. Maar dan zou je een referentielijst maken van een gewone ENT, zoals Adres. Het lijkt mij niet gewenst, eigenlijk, als ik er over nadenk.
 
-- registratie- en tijdlijn-views betere layout m.b.v. weergave-velden, als die er zijn, anders gewoon id
+
+- de editor toont een "+ referentielijst" knop die meteen alledrie aanmaakt met linkjes.
+  - je moet ook alleen extra sublijsten kunnen aanmaken met ook los "+ ref.l.item" en  "+ ref.l.items", die resp. referentielijst_items en referentielijst_item typen maakt.
+  - ik maak mij zorgen over een te volle UI balk bovenin. Misschien kan dat wat verbeterd worden. Misschien meer een menu - submenu stijl?
+
+  - Opmerking: initiële vulling van de tabel (m.u.v. de register_referentielijst systeemtabel, die natuurlijk wel de naam en beschrijving van de bestaande lijsten in het systeem moet krijgen bij een eerste start cq. een update van het model), dus de data in de tabellen moet/kan net als bij andere entiteiten en GEen pas na genereren van het register.
+
+- nog een belangrijke feature van een referentielijst_item type: dit gedraagt zich in de editor als een gegevenstype of enumeratie! Het moet dus ook in de lijst mogelijke typen verschijnen.
 
 
 18 Mooiere formuliertjes (auto en custom)

@@ -58,6 +58,7 @@ import {
   generateId,
   editorNaarV3Model,
   schemaResponseNaarEditor,
+  maakReferentielijstSet,
 } from "../metamodel/types";
 import { v3ModelNaarEditor } from "../metamodel/v3ModelNaarEditor";
 
@@ -244,6 +245,27 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     [setNodes]
   );
 
+  /**
+   * Voeg een volledige referentielijst-set toe: drie nodes (lijst, item, relatie) + twee edges.
+   * Positioneert de nodes naast elkaar zodat ze visueel als groep herkenbaar zijn.
+   * Zie Referentielijsten.md §7.
+   */
+  const handleAddReferentielijstSet = useCallback(() => {
+    const set = maakReferentielijstSet();
+    const baseX = 100 + Math.random() * 300;
+    const baseY = 100 + Math.random() * 200;
+    const newNodes = set.nodes.map((n, i) => ({
+      id: n.data.id,
+      type: n.type,
+      position: { x: baseX + i * 280, y: baseY + (i === 2 ? 100 : 0) },
+      data: n.data,
+    }));
+    setNodes((nds) => [...nds, ...newNodes]);
+    setEdges((eds) => [...eds, ...set.edges]);
+    setSelectedNodeId(newNodes[0].id);
+    setSelectedEdgeId(null);
+  }, [setNodes, setEdges]);
+
   /** Update de data van een bestaande node */
   const handleUpdateNode = useCallback(
     (nodeId, newData) => {
@@ -253,6 +275,10 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         const nieuweEnumNaam = previousNode?.type === "enumeratie" ? (newData?.naam || "") : "";
         const vorigeDatatypeNaam = previousNode?.type === "gegevenstype" ? (previousNode.data?.naam || "") : "";
         const nieuweDatatypeNaam = previousNode?.type === "gegevenstype" ? (newData?.naam || "") : "";
+        // Ref.lijst item rename detectie (entiteit met subtype referentielijst_item)
+        const isRefItem = previousNode?.type === "entiteit" && previousNode.data?.entiteitSubtype === "referentielijst_item";
+        const vorigeRefItemNaam = isRefItem ? (previousNode.data?.typenaam || "") : "";
+        const nieuweRefItemNaam = isRefItem ? (newData?.typenaam || "") : "";
         const isEnumRename =
           previousNode?.type === "enumeratie" &&
           vorigeEnumNaam !== "" &&
@@ -261,6 +287,10 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
           previousNode?.type === "gegevenstype" &&
           vorigeDatatypeNaam !== "" &&
           vorigeDatatypeNaam !== nieuweDatatypeNaam;
+        const isRefItemRename =
+          isRefItem &&
+          vorigeRefItemNaam !== "" &&
+          vorigeRefItemNaam !== nieuweRefItemNaam;
 
         const updatedNodes = nds.map((n) => {
           if (n.id !== nodeId) return n;
@@ -268,7 +298,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
           const newType = newData.metatype || n.type;
           return { ...n, type: newType, data: newData };
         }).map((n) => {
-          if (!isEnumRename) return n;
+          if (!isEnumRename && !isDatatypeRename && !isRefItemRename) return n;
           if (n.id === nodeId) return n;
           if (!Array.isArray(n.data?.velden)) return n;
 
@@ -278,18 +308,18 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
 
             if (isEnumRename && v.enumNaam === vorigeEnumNaam) {
               changed = true;
-              next = {
-                ...next,
-                enumNaam: nieuweEnumNaam || null,
-              };
+              next = { ...next, enumNaam: nieuweEnumNaam || null };
             }
 
             if (isDatatypeRename && v.datatypeNaam === vorigeDatatypeNaam) {
               changed = true;
-              next = {
-                ...next,
-                datatypeNaam: nieuweDatatypeNaam || null,
-              };
+              next = { ...next, datatypeNaam: nieuweDatatypeNaam || null };
+            }
+
+            // Propageer ref.lijst item hernoemen naar velden die ernaar verwijzen
+            if (isRefItemRename && v.refItemNaam === vorigeRefItemNaam) {
+              changed = true;
+              next = { ...next, refItemNaam: nieuweRefItemNaam || null };
             }
 
             return next;
@@ -298,40 +328,52 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
           return changed ? { ...n, data: { ...n.data, velden } } : n;
         });
 
-        // Houd enum-dependency edges automatisch synchroon met geselecteerde enum-veldtypes.
+        // Houd dependency edges automatisch synchroon met enum- en refItem-veldtypes.
         setEdges((eds) => {
           const node = updatedNodes.find((n) => n.id === nodeId);
           if (!node) return eds;
 
-          const enumTargets = new Set(
-            (node.data?.velden || [])
-              .map((v) => v.enumNaam)
-              .filter(Boolean)
-              .map((enumNaam) => {
-                const enumNode = updatedNodes.find(
-                  (n) => n.type === "enumeratie" && n.data?.naam === enumNaam
-                );
-                return enumNode?.id || null;
-              })
-              .filter(Boolean)
-          );
+          // Verzamel alle dependency targets: enum- en refItem-verwijzingen uit velden
+          const enumTargets = (node.data?.velden || [])
+            .map((v) => v.enumNaam)
+            .filter(Boolean)
+            .map((enumNaam) => {
+              const enumNode = updatedNodes.find(
+                (n) => n.type === "enumeratie" && n.data?.naam === enumNaam
+              );
+              return enumNode?.id || null;
+            })
+            .filter(Boolean);
 
-          const existingEnumDeps = eds.filter(
+          const refItemTargets = (node.data?.velden || [])
+            .map((v) => v.refItemNaam)
+            .filter(Boolean)
+            .map((refItemNaam) => {
+              const refNode = updatedNodes.find(
+                (n) => n.type === "entiteit" && n.data?.entiteitSubtype === "referentielijst_item" && n.data?.typenaam === refItemNaam
+              );
+              return refNode?.id || null;
+            })
+            .filter(Boolean);
+
+          const allTargets = new Set([...enumTargets, ...refItemTargets]);
+
+          const existingDeps = eds.filter(
             (e) => e.source === nodeId && e.data?.isDependency === true
           );
           const keepIds = new Set(
-            existingEnumDeps
-              .filter((e) => enumTargets.has(e.target))
+            existingDeps
+              .filter((e) => allTargets.has(e.target))
               .map((e) => e.id)
           );
 
-          const withoutOldEnumDeps = eds.filter(
+          const withoutOldDeps = eds.filter(
             (e) => !(e.source === nodeId && e.data?.isDependency === true)
           );
-          const keptEnumDeps = existingEnumDeps.filter((e) => keepIds.has(e.id));
+          const keptDeps = existingDeps.filter((e) => keepIds.has(e.id));
 
-          const existingTargets = new Set(keptEnumDeps.map((e) => e.target));
-          const newEnumDeps = Array.from(enumTargets)
+          const existingTargets = new Set(keptDeps.map((e) => e.target));
+          const newDeps = Array.from(allTargets)
             .filter((targetId) => !existingTargets.has(targetId))
             .map((targetId) => ({
               id: generateId("edge"),
@@ -347,7 +389,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
               },
             }));
 
-          return [...withoutOldEnumDeps, ...keptEnumDeps, ...newEnumDeps];
+          return [...withoutOldDeps, ...keptDeps, ...newDeps];
         });
 
         return updatedNodes;
@@ -654,6 +696,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     <div className="editor-container">
       <Toolbar
         onAddNode={handleAddNode}
+        onAddReferentielijstSet={handleAddReferentielijstSet}
         onSave={handleSave}
         onPublishSchemaModel={handlePublishSchemaModel}
         onLoad={handleLoad}

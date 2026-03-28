@@ -37,6 +37,7 @@ function convertV3Veld(v3Veld, enumLookup, datatypeLookup) {
     datatypeNaam: datatype?.naam || null,
     enum: enumWaarden,
     enumNaam: v3Veld.enum || null,
+    refItemNaam: v3Veld.refItemNaam || null,
     verplicht: !(v3Veld.goType || "").startsWith("*"),
     autoIncrement: false,
     description: v3Veld.description || "",
@@ -104,7 +105,9 @@ export function v3ModelNaarEditor(v3Model) {
         meervoud: ent.meervoud || "",
         metatype: "entiteit",
         isMaterieel: ent.isMaterieel || false,
-        kleur: ent.kleur || defaultKleur("entiteit"),
+        // Referentielijst-subtypes (zie Referentielijsten.md)
+        entiteitSubtype: ent.entiteitSubtype || "",
+        kleur: ent.kleur || defaultKleur("entiteit", ent.entiteitSubtype || ""),
         velden: [],
         afgeleideVelden: (ent.afgeleideVelden || []).map((av) => ({
           naam: av.naam || "",
@@ -178,6 +181,22 @@ export function v3ModelNaarEditor(v3Model) {
             },
           });
         }
+        // Dependency edge naar referentielijst_item entiteit
+        if (v.refItemNaam) {
+          edges.push({
+            id: `${geTypenaam}-->${v.refItemNaam}`,
+            source: geTypenaam,
+            target: v.refItemNaam,
+            type: "metamodel",
+            data: {
+              isDependency: true,
+              rolnaam: "",
+              jsonRolnaam: "",
+              momentvoorkomen: "",
+              kardinaliteit: "",
+            },
+          });
+        }
       });
     });
 
@@ -198,7 +217,9 @@ export function v3ModelNaarEditor(v3Model) {
             meervoud: rel.meervoud || "",
             metatype: "relatie",
             isMaterieel: rel.isMaterieel || false,
-            kleur: defaultKleur("relatie"),
+            // Referentielijst-subtypes (zie Referentielijsten.md)
+            relatieSubtype: rel.relatieSubtype || "",
+            kleur: defaultKleur("relatie", rel.relatieSubtype || ""),
             velden,
             afgeleideVelden: (rel.afgeleideVelden || []).map((av) => ({
               naam: av.naam || "",
@@ -234,6 +255,22 @@ export function v3ModelNaarEditor(v3Model) {
             id: `${rel.naam}-->${v.enum}`,
             source: rel.naam,
             target: `enum_${v.enum}`,
+            type: "metamodel",
+            data: {
+              isDependency: true,
+              rolnaam: "",
+              jsonRolnaam: "",
+              momentvoorkomen: "",
+              kardinaliteit: "",
+            },
+          });
+        }
+        // Dependency edge naar referentielijst_item entiteit
+        if (v.refItemNaam) {
+          edges.push({
+            id: `${rel.naam}-->${v.refItemNaam}`,
+            source: rel.naam,
+            target: v.refItemNaam,
             type: "metamodel",
             data: {
               isDependency: true,

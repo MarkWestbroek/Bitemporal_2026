@@ -70,6 +70,9 @@ func AddRoutes(router *gin.Engine) {
 	// Full entity routes (via metamap)
 	addMetaRegistryFullRoutes(router)
 
+	// Referentielijst routes (/referentielijsten/...)
+	addReferentielijstRoutes(router)
+
 	// Registratie routes (dedicated, want plumbing,maar gebruikt een generieke handler)
 	router.GET("/registraties", handlers.MakeGetEntitiesHandler[model.Registratie]("Registraties"))
 	router.GET("/registraties/:id", handlers.MakeGetEntityHandler[model.Registratie]("Registratie"))

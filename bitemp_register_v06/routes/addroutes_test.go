@@ -26,7 +26,13 @@ func TestAddRoutes_RegistersMetaRegistryRoutes(t *testing.T) {
 
 	for _, meta := range model.MetaRegistry {
 		if meta.DBFactory != nil && meta.Padnaam != "" {
-			basePath := "/" + meta.Padnaam
+			// Referentielijsten staan op /referentielijsten/{padnaam}
+			var basePath string
+			if meta.EntiteitSubtype == model.EntiteitSubtypeReferentielijst {
+				basePath = "/referentielijsten/" + meta.Padnaam
+			} else {
+				basePath = "/" + meta.Padnaam
+			}
 			if !routeExists(routes, "GET", basePath) {
 				t.Fatalf("expected GET route %s for %s", basePath, meta.Typenaam)
 			}
@@ -39,7 +45,12 @@ func TestAddRoutes_RegistersMetaRegistryRoutes(t *testing.T) {
 		}
 
 		if meta.Metatype == model.MetatypeEntiteit && meta.Factory != nil && meta.SliceFactory != nil && meta.Padnaam != "" {
-			basePath := "/full/" + meta.Padnaam
+			var basePath string
+			if meta.EntiteitSubtype == model.EntiteitSubtypeReferentielijst {
+				basePath = "/full/referentielijsten/" + meta.Padnaam
+			} else {
+				basePath = "/full/" + meta.Padnaam
+			}
 			if !routeExists(routes, "GET", basePath) {
 				t.Fatalf("expected GET route %s for full %s", basePath, meta.Typenaam)
 			}

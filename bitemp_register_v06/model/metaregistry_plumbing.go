@@ -2,6 +2,14 @@ package model
 
 // Hardcoded meta model for representatie types, avoiding reflection.
 
+// Referentielijst-subtypes: classificatie van entiteiten en relaties als onderdeel
+// van een referentielijst-constructie. Zie Referentielijsten.md voor achtergrond.
+const (
+	EntiteitSubtypeReferentielijst     = "referentielijst"
+	EntiteitSubtypeReferentielijstItem = "referentielijst_item"
+	RelatieSubtypeReferentielijstItems = "referentielijst_items"
+)
+
 // GESubtype onderscheidt de vier soorten GE/REL-lagen in het hub+data pattern.
 type GESubtype string
 
@@ -112,6 +120,10 @@ type TypeMeta struct {
 	// BovenliggendTypenaam is voor plumbing GE-types die niet via OnderliggendeGegevenselementen
 	// te vinden zijn (bijv. A_Aanvang, A_Einde). Geeft de naam van de bovenliggende entiteit (bijv. "A").
 	BovenliggendTypenaam string
+
+	// Referentielijst-subtypes (optioneel). Leeg voor gewone entiteiten/relaties.
+	EntiteitSubtype string // "", "referentielijst", "referentielijst_item"
+	RelatieSubtype  string // "", "referentielijst_items"
 
 	// ==== Alleen voor entiteiten en hubs ====
 	// OnderliggendeGegevenselementen beschrijft de onderliggende representaties.

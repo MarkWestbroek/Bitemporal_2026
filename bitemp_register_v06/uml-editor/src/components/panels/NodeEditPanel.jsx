@@ -12,7 +12,7 @@
  *   - onDelete(nodeId): callback om de node te verwijderen
  */
 import { useState } from "react";
-import { METATYPES, VELDTYPEN, AFLEIDINGSTALEN, maakLeegVeld, maakLeegAfgeleidVeld, defaultKleur, bouwVeldtypen } from "../../metamodel/types";
+import { METATYPES, ENTITEIT_SUBTYPES, RELATIE_SUBTYPES, VELDTYPEN, AFLEIDINGSTALEN, maakLeegVeld, maakLeegAfgeleidVeld, defaultKleur, bouwVeldtypen } from "../../metamodel/types";
 
 const BASISTYPES = ["string", "integer", "number", "boolean"];
 
@@ -23,7 +23,12 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
   const isEnum = node.type === "enumeratie";
   const isDatatype = node.type === "gegevenstype";
   const isRelatie = node.type === "relatie";
-  const beschikbareVeldtypen = bouwVeldtypen(datatypeNodes, enumNodes);
+  const beschikbareVeldtypen = bouwVeldtypen(
+    datatypeNodes,
+    enumNodes,
+    // Referentielijst_item entiteiten als keuzetype in veld-dropdown
+    (entiteitNodes || []).filter((n) => n.data?.entiteitSubtype === "referentielijst_item")
+  );
   const beschikbareEntiteiten = (entiteitNodes || [])
     .map((n) => n.data?.typenaam)
     .filter(Boolean);
@@ -468,6 +473,46 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
         </select>
       </label>
 
+      {/* Subtype-keuze voor referentielijsten (zie Referentielijsten.md §7) */}
+      {data.metatype === "entiteit" && (
+        <label>
+          Subtype
+          <select
+            value={data.entiteitSubtype || ""}
+            onChange={(e) => {
+              const subtype = e.target.value;
+              updateField("entiteitSubtype", subtype);
+              updateField("kleur", defaultKleur("entiteit", subtype));
+            }}
+          >
+            {ENTITEIT_SUBTYPES.map((st) => (
+              <option key={st} value={st}>
+                {st || "(geen — gewone entiteit)"}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      {data.metatype === "relatie" && (
+        <label>
+          Subtype
+          <select
+            value={data.relatieSubtype || ""}
+            onChange={(e) => {
+              const subtype = e.target.value;
+              updateField("relatieSubtype", subtype);
+              updateField("kleur", defaultKleur("relatie", subtype));
+            }}
+          >
+            {RELATIE_SUBTYPES.map((st) => (
+              <option key={st} value={st}>
+                {st || "(geen — gewone relatie)"}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
       <label>
         Kleur
         <input
@@ -519,6 +564,7 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
             <select
               value={(() => {
                 if (v.enumNaam) return `enum:${v.enumNaam}`;
+                if (v.refItemNaam) return `refitem:${v.refItemNaam}`;
                 if (v.datatypeNaam) return `datatype:${v.datatypeNaam}`;
                 const datatypeEntry = beschikbareVeldtypen.find(
                   (vt) =>
@@ -541,7 +587,19 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
                     format: "",
                     enumNaam,
                     datatypeNaam: null,
+                    refItemNaam: null,
                     enum: entry?.enumWaarden || [],
+                  });
+                } else if (val.startsWith("refitem:")) {
+                  // Referentielijst-item als veldtype (FK-referentie, zie Referentielijsten.md §7)
+                  const refItemNaam = val.slice(8);
+                  updateVeldMulti(i, {
+                    type: "integer",
+                    format: "",
+                    refItemNaam,
+                    datatypeNaam: null,
+                    enumNaam: null,
+                    enum: null,
                   });
                 } else if (val.startsWith("datatype:")) {
                   const datatypeNaam = val.slice(9);
@@ -553,6 +611,7 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
                     format: entry?.format || "",
                     datatypeNaam: datatypeNaam || null,
                     enumNaam: null,
+                    refItemNaam: null,
                     enum: null,
                   });
                 } else {
@@ -562,6 +621,7 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
                     format: format || "",
                     datatypeNaam: null,
                     enumNaam: null,
+                    refItemNaam: null,
                     enum: null,
                   });
                 }
@@ -571,12 +631,14 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
               {beschikbareVeldtypen.map((vt) => {
                 const optValue = vt.isEnum
                   ? `enum:${vt.enumNaam}`
+                  : vt.isRefItem
+                  ? `refitem:${vt.refItemNaam}`
                   : vt.isCustom
                   ? `datatype:${vt.datatypeNaam}`
                   : `${vt.type}|${vt.format}`;
                 return (
                   <option key={optValue} value={optValue}>
-                    {vt.label}{vt.isCustom ? " ✦" : ""}{vt.isEnum ? " ◇" : ""}
+                    {vt.label}{vt.isCustom ? " ✦" : ""}{vt.isEnum ? " ◇" : ""}{vt.isRefItem ? " ▣" : ""}
                   </option>
                 );
               })}

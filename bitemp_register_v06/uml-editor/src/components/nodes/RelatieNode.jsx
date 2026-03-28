@@ -44,7 +44,11 @@ function RelatieNode({ data, selected }) {
       <Handle type="target" position={Position.Right} id="right" />
 
       <div className="node-header">
-        <div className="node-stereotype">«relatie»</div>
+        <div className="node-stereotype">
+          {data.relatieSubtype === "referentielijst_items"
+            ? "«ref.lijst items»"
+            : "«relatie»"}
+        </div>
         <div className="node-typenaam">{data.klassenaam || data.typenaam || "(naamloos)"}</div>
         {data.isMaterieel && (
           <div className="node-badge materieel">materieel</div>

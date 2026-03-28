@@ -14,6 +14,20 @@
 
 export const METATYPES = ["entiteit", "gegevenselement", "relatie"];
 
+/**
+ * Subtypes voor entiteiten.
+ * Een referentielijst is een entiteit die een benoemde verzameling items voorstelt.
+ * Een referentielijst_item is een entiteit die de items in een referentielijst beschrijft.
+ * Zie Referentielijsten.md voor het volledige ontwerp.
+ */
+export const ENTITEIT_SUBTYPES = ["", "referentielijst", "referentielijst_item"];
+
+/**
+ * Subtypes voor relaties.
+ * Een referentielijst_items relatie koppelt items aan een referentielijst.
+ */
+export const RELATIE_SUBTYPES = ["", "referentielijst_items"];
+
 export const MOMENTVOORKOMENS = ["enkelvoudig", "meervoudig"];
 
 /**
@@ -84,8 +98,13 @@ export function generateId(prefix = "node") {
   return `${prefix}_${Date.now()}_${_idCounter}`;
 }
 
-/** Default kleur per metatype */
-export function defaultKleur(metatype) {
+/** Default kleur per metatype (en optioneel subtype) */
+export function defaultKleur(metatype, subtype = "") {
+  // Referentielijst-subtypes krijgen eigen kleuren
+  if (subtype === "referentielijst") return "#fef3c7";       // amber-100 (goudgeel)
+  if (subtype === "referentielijst_item") return "#fde68a";   // amber-200
+  if (subtype === "referentielijst_items") return "#fcd34d";  // amber-300
+
   switch (metatype) {
     case "entiteit":
       return "#bfdbfe"; // blauw
@@ -98,17 +117,20 @@ export function defaultKleur(metatype) {
   }
 }
 
-/** Maak een leeg type-object */
-export function maakLeegType(metatype = "entiteit") {
+/** Maak een leeg type-object, optioneel met subtype voor referentielijsten */
+export function maakLeegType(metatype = "entiteit", subtype = "") {
   return {
     id: generateId(metatype),
     typenaam: "",
     meervoud: "",
     description: "",
     metatype,
-    isMaterieel: metatype === "entiteit",
-    kleur: defaultKleur(metatype),
+    isMaterieel: false, // standaard formeel; materieel is optioneel
+    kleur: defaultKleur(metatype, subtype),
     velden: [],
+    // Subtypes voor referentielijsten (leeg = gewoon entiteit/relatie)
+    ...(metatype === "entiteit" && subtype ? { entiteitSubtype: subtype } : {}),
+    ...(metatype === "relatie" && subtype ? { relatieSubtype: subtype } : {}),
   };
 }
 
@@ -179,12 +201,79 @@ export function maakLeegGegevenstype() {
 }
 
 /**
- * Bouw de VELDTYPEN-lijst dynamisch op: primitieve types + custom datatypes + enumeraties.
+ * Maak een complete referentielijst-set: drie nodes (lijst, item, items-relatie) + twee edges.
+ * De "+ Referentielijst" knop in de toolbar gebruikt dit om in één klik alles aan te maken.
+ *
+ * Retourneert { nodes: [...], edges: [...] } die aan de editor state toegevoegd kunnen worden.
+ */
+export function maakReferentielijstSet() {
+  // 1. Referentielijst (entiteit-subtype)
+  const lijst = {
+    ...maakLeegType("entiteit", "referentielijst"),
+    typenaam: "",
+    description: "Referentielijst",
+  };
+
+  // 2. Referentielijst-item (entiteit-subtype)
+  const item = {
+    ...maakLeegType("entiteit", "referentielijst_item"),
+    typenaam: "",
+    description: "Referentielijst-item",
+  };
+
+  // 3. Referentielijst-items (relatie-subtype)
+  const items = {
+    ...maakLeegType("relatie", "referentielijst_items"),
+    typenaam: "",
+    description: "Koppeling referentielijst → items",
+  };
+
+  // Edges: lijst → items-relatie (owner) en items-relatie → item (doel)
+  const edgeLijstNaarItems = {
+    id: generateId("edge"),
+    source: lijst.id,
+    target: items.id,
+    type: "metamodel",
+    data: {
+      rolnaam: "",
+      jsonRolnaam: "",
+      momentvoorkomen: "meervoudig",
+      kardinaliteit: "0..*",
+    },
+  };
+
+  const edgeItemsNaarItem = {
+    id: generateId("edge"),
+    source: items.id,
+    target: item.id,
+    type: "metamodel",
+    data: {
+      rolnaam: "",
+      jsonRolnaam: "",
+      momentvoorkomen: "meervoudig",
+      kardinaliteit: "0..*",
+    },
+  };
+
+  return {
+    nodes: [
+      { data: lijst, type: "entiteit" },
+      { data: item, type: "entiteit" },
+      { data: items, type: "relatie" },
+    ],
+    edges: [edgeLijstNaarItems, edgeItemsNaarItem],
+  };
+}
+
+/**
+ * Bouw de VELDTYPEN-lijst dynamisch op: primitieve types + custom datatypes + enumeraties + referentielijst_items.
+ * Referentielijst_item types verschijnen als keuzetype, vergelijkbaar met enumeraties.
  * @param {Array} datatypeNodes - React Flow nodes met type === "gegevenstype"
  * @param {Array} enumNodes - React Flow nodes met type === "enumeratie"
- * @returns {Array} veldtypen array met { type, format, label, isCustom?, isEnum?, enumNaam?, enumWaarden? }
+ * @param {Array} refItemNodes - Entiteit-nodes met entiteitSubtype === "referentielijst_item"
+ * @returns {Array} veldtypen array met { type, format, label, isCustom?, isEnum?, isRefItem?, ... }
  */
-export function bouwVeldtypen(datatypeNodes = [], enumNodes = []) {
+export function bouwVeldtypen(datatypeNodes = [], enumNodes = [], refItemNodes = []) {
   const custom = datatypeNodes.map((n) => ({
     type: n.data.basistype || "string",
     format: n.data.format || "",
@@ -200,7 +289,15 @@ export function bouwVeldtypen(datatypeNodes = [], enumNodes = []) {
     enumNaam: n.data.naam,
     enumWaarden: n.data.waarden || [],
   }));
-  return [...VELDTYPEN, ...custom, ...enums];
+  // Referentielijst_item entiteiten als keuzetype (vergelijkbaar met enumeratie/datatype)
+  const refItems = refItemNodes.map((n) => ({
+    type: "integer",
+    format: "",
+    label: `${n.data.typenaam || "(naamloos)"} (ref.lijst)`,
+    refItemNaam: n.data.typenaam || "",
+    isRefItem: true,
+  }));
+  return [...VELDTYPEN, ...custom, ...enums, ...refItems];
 }
 
 /**
@@ -429,6 +526,7 @@ function veldNaarV3(veld) {
     naam: veld.naam,
     goType,
     enum: enumNaam || undefined,
+    refItemNaam: veld.refItemNaam || undefined,
     description: veld.description || undefined,
   };
   if (veld.afgeleid) {
@@ -573,6 +671,8 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
           e.data?.jsonRolnaam || `${(relNode.data.typenaam || "rel").toLowerCase()}s`,
         momentvoorkomen: e.data?.momentvoorkomen || "meervoudig",
         isMaterieel: relNode.data.isMaterieel || false,
+        // Referentielijst-subtypes (optioneel, zie Referentielijsten.md)
+        relatieSubtype: relNode.data.relatieSubtype || undefined,
         doelEntiteit: doelEntiteitNaam,
         positie: relNode.position ? { x: relNode.position.x, y: relNode.position.y } : undefined,
         // Bewaar editor-edge ids zodat export/import en DB-round-trips merge-stabiel blijven.
@@ -597,6 +697,8 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
       typenaam: ent.data.typenaam,
       description: ent.data.description || undefined,
       isMaterieel: ent.data.isMaterieel || false,
+      // Referentielijst-subtypes (optioneel, zie Referentielijsten.md)
+      entiteitSubtype: ent.data.entiteitSubtype || undefined,
       kleur: ent.data.kleur || undefined,
       meervoud:
         ent.data.meervoud ||
