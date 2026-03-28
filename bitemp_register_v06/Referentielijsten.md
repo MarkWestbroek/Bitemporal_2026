@@ -359,49 +359,62 @@ classDiagram
    (Dit i.t.t. een normale relatie die meer-op-meer koppelt.)"
 ```
 
-Alternatieve layout-variant (sterker gestuurd):
+Verbeterde variant (toelichting als class in namespace):
 
 ```mermaid
 classDiagram
   direction TB
 
-  %% Boven: referentielijst met naam
-  class Referentielijst
-  class Referentielijstnaam {
-    naam
+  namespace ReferentielijstDomein {
+    class Referentielijst {
+    }
+
+    class Referentielijstnaam {
+      naam
+    }
+
+    class Referentielijstitems {
+    }
+
+    class Referentielijstitem {
+    }
+
+    class ToelichtingRefItems{
+    }
   }
 
-  %% Midden: de koppeling
-  class Referentielijstitems
+  namespace Basismetatypes {
+    class Entiteit
 
-  %% Onder: het item
-  class Referentielijstitem
+    class Gegevenselement {
+      /waarde : type [0..*]
+    }
 
-  %% Rechts: basisconcepten
-  class Entiteit
-  class Gegevenselement {
-    /waarde : type [0..*]
+    class Relatie {
+    }
   }
-  class Relatie
 
-  %% Kernstructuur referentielijsten
   Referentielijstnaam --* Referentielijst
   Referentielijst "1" --> "*" Referentielijstitems : bevat
   Referentielijstitems --> "1" Referentielijstitem
 
-  %% Subtype-relaties
   Referentielijst --|> Entiteit : subtype van
-  Referentielijstitem --|> Entiteit : subtype van
   Referentielijstnaam --|> Gegevenselement : subtype van
+  Referentielijstitem --|> Entiteit : subtype van
   Referentielijstitems --|> Relatie : subtype van
-
-  %% Basisrelatie in metamodel
+  
   Entiteit "1" *-- "0..*" Gegevenselement
 
-  %% Layout-hints: lichte, inhoudelijk plausibele afhankelijkheden
-  Referentielijst ..> Entiteit : metatype
-  Referentielijstitems ..> Entiteit : itemtype
+  %% Layout-hint: trek toelichting naar Referentielijstitems
+  ToelichtingRefItems .. Referentielijstitems
+
+  note for ToelichtingRefItems "Een ReferentielijstItems is een bijzondere relatie:
+   het relateert alle Referentielijst-elementen van een bepaald type aan exact
+   één instantie van een Referentielijst.
+   (Dit i.t.t. een normale relatie die meer-op-meer koppelt.)"
 ```
+
+ **Verschil:** In deze variant staat de toelichting als class **binnen** het ReferentielijstDomein namespace, niet erbuiten. Dit zorgt ervoor dat de toelichting altijd zichtbaar blijft, ook in dark theme op GitHub.
 
 ### Enkelvoud en meervoud
 
