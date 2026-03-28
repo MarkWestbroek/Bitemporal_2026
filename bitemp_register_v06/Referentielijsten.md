@@ -15,9 +15,9 @@ Referentielijsten zijn benoemde verzamelingen van items (bijv. "Landen", "EU-Lid
 
 | Subtype | Is subtype van | Gedraagt zich als | Voorbeeld |
 |---|---|---|---|
-| **referentielijst** | entiteit | Entiteit met ID + onderliggende systeem-GE's (naam, opmerking) | "Landen" |
+| **referentielijst** | entiteit | Entiteit met ID + onderliggende systeem-GE's (naam, opmerking) | geen: elk record is een referentielijst. Voorbeeld van lijsten: landenlijst, EU-lidstaten-lijst |
 | **referentielijst_item** | entiteit | Gewone entiteit (ID + vrije GE's/relaties) | "Land" |
-| **referentielijst_items** | relatie | Koppeltabel (FK naar lijst + FK naar item) | "Landen_Land" |
+| **referentielijst_items** | relatie | Koppeltabel (FK naar lijst-record + FK naar item) | "Landen_Land" |
 
 ### Overzichtsdiagram
 
@@ -36,7 +36,8 @@ classDiagram
   note for register_referentielijst "Eén record per referentielijst.\nGesynchroniseerd bij API-opstart\nvanuit MetaRegistry."
 
   class Referentielijst {
-    «entiteit · referentielijst»
+    «entiteit»
+    «referentielijst»
     +int id PK
     +time opvoer
     +time afvoer
@@ -90,21 +91,25 @@ classDiagram
 classDiagram
   direction LR
 
-  class Landenlijst {
-    «referentielijst»
+  class Referentielijst {
+    «entiteit»
     +int id
+  }
+
+  class Landenlijst {
+    «Referentielijst record»
+    +int id = 3
   }
 
   class Land {
-    «referentielijst_item»
+    «ReferentielijstItem»
     +int id
   }
 
-  class Landenlijst_Land {
-    «referentielijst_items»
-    +int landenlijst_id FK
+  class LandenlijstLand {
+    «ReferentielijstItems»
+    +int landenlijst_id = 3 FK
     +int land_id FK
-    +int rel_id
   }
 
   class Landcode {
@@ -129,8 +134,10 @@ classDiagram
     +int versie
   }
 
-  Landenlijst "1" --> "*" Landenlijst_Land
-  Landenlijst_Land "*" --> "1" Land
+  Referentielijst "1" --> "*" Landenlijst_Land
+  Referentielijst ..> Landenlijst : "bevat het record"
+  Landenlijst_Land ..> Landenlijst : "wijst naar exact dit record"
+  Landenlijst_Land "1" --> "*" Land
   Land "1" --> "1" Landcode
   Land "1" --> "1" Landnaam
   Landcode "1" --> "*" Landcode_Data
