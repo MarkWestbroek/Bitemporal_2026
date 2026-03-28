@@ -20,6 +20,11 @@
         "C:\\Users\\User\\AppData\\Local\\Temp\\postman-http-request-post-response.instructions.md": true,
         "C:\\Users\\User\\AppData\\Local\\Temp\\postman-http-request-pre-request.instructions.md": true
     },
+    "markdown.preview.mermaid.enabled": true,
+    "markdown.experimental": {
+        "validate": true
+    },
+    "markdown.preview.security.level": "disable",
     "security.workspace.trust.untrustedFiles": "open",
     "github.copilot.nextEditSuggestions.enabled": true,
     "diffEditor.codeLens": true,
