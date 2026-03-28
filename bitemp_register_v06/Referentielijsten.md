@@ -208,42 +208,46 @@ Dit bevat wel het Referentielijstitem, dat zich als een gegevenstype gedraagt.
 classDiagram
   direction TB
 
-  class Representatie {
-    naam «id»
-    alias [0..1]
-    beschrijving
+  namespace Representaties {
+    class Representatie {
+      naam «id»
+      alias [0..1]
+      beschrijving
+    }
+
+    class Entiteit
+
+    class Gegevenselement {
+      /waarde : type [0..*]
+    }
+
+    class Relatie {
+      type : Relatietype
+      tijdlijn : Tijdlijnvoorkomen [0..1]
+    }
   }
 
-  class Entiteit
+  namespace Gegevenstypes {
+    class Gegeven {
+      naam
+      alias [0..1]
+      beschrijving
+      type : Gegevenstype
+    }
 
-  class Gegevenselement {
-    /waarde : type [0..*]
-  }
+    class Referentielijstitem {
+      <<Gegevenstype>>
+    }
 
-  class Relatie {
-    type : Relatietype
-    tijdlijn : Tijdlijnvoorkomen [0..1]
-  }
+    class Enumeratie {
+      <<Gegevenstype>>
+    }
 
-  class Gegeven {
-    naam
-    alias [0..1]
-    beschrijving
-    type : Gegevenstype
-  }
-
-  class Referentielijstitem {
-    <<Gegevenstype>>
-  }
-
-  class Enumeratie {
-    <<Gegevenstype>>
-  }
-
-  class Enumeratiewaarde {
-    nummer : int [0..1]
-    naam : string
-    beschrijving [0..1]
+    class Enumeratiewaarde {
+      nummer : int [0..1]
+      naam : string
+      beschrijving [0..1]
+    }
   }
 
   Representatie <|-- Entiteit
@@ -261,11 +265,6 @@ classDiagram
   note for Gegeven "Een Gegeven is altijd van een bepaald Gegevenstype,
    en kan daarmee ook een verwijzing naar een 
    Referentielijstitem of Enumeratie zijn."
-
-  %%note for Referentielijstitems "Een Referentielijstitems is een bijzondere relatie:
-  %% het relateert alle Referentielijst-elementen van een bepaald type aan exact 
-  %% één instantie van een Referentielijst. 
-  %% (Dit i.t.t. een normale relatie die meer-op-meer koppelt.)"
 ```
 
 #### Referentielijsten toegevoegd aan het metamodel
@@ -358,63 +357,6 @@ classDiagram
    één instantie van een Referentielijst. 
    (Dit i.t.t. een normale relatie die meer-op-meer koppelt.)"
 ```
-
-Verbeterde variant (toelichting als class in namespace):
-
-```mermaid
-classDiagram
-  direction TB
-
-  namespace ReferentielijstDomein {
-    class Referentielijst {
-    }
-
-    class Referentielijstnaam {
-      naam
-    }
-
-    class Referentielijstitems {
-    }
-
-    class Referentielijstitem {
-    }
-
-    class ToelichtingRefItems{
-    }
-  }
-
-  namespace Basismetatypes {
-    class Entiteit
-
-    class Gegevenselement {
-      /waarde : type [0..*]
-    }
-
-    class Relatie {
-    }
-  }
-
-  Referentielijstnaam --* Referentielijst
-  Referentielijst "1" --> "*" Referentielijstitems : bevat
-  Referentielijstitems --> "1" Referentielijstitem
-
-  Referentielijst --|> Entiteit : subtype van
-  Referentielijstnaam --|> Gegevenselement : subtype van
-  Referentielijstitem --|> Entiteit : subtype van
-  Referentielijstitems --|> Relatie : subtype van
-  
-  Entiteit "1" *-- "0..*" Gegevenselement
-
-  %% Layout-hint: trek toelichting naar Referentielijstitems
-  ToelichtingRefItems .. Referentielijstitems
-
-  note for ToelichtingRefItems "Een ReferentielijstItems is een bijzondere relatie:
-   het relateert alle Referentielijst-elementen van een bepaald type aan exact
-   één instantie van een Referentielijst.
-   (Dit i.t.t. een normale relatie die meer-op-meer koppelt.)"
-```
-
- **Verschil:** In deze variant staat de toelichting als class **binnen** het ReferentielijstDomein namespace, niet erbuiten. Dit zorgt ervoor dat de toelichting altijd zichtbaar blijft, ook in dark theme op GitHub.
 
 ### Enkelvoud en meervoud
 
