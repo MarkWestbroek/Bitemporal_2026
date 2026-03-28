@@ -142,6 +142,78 @@ classDiagram
 - De drie subtypes erven alle eigenschappen van hun basis-metatype: hub+data-patroon, aanvang/einde (indien materieel), relatieve autoincrement, formele opvoer/afvoer.
 - Het onderscheid met gewone entiteiten/relaties zit puur in **metamodel-metadata** (`entiteitSubtype` / `relatieSubtype`), niet in runtime-gedrag.
 
+### Metamodel (META-niveau)
+
+Onderstaand diagram toont hoe referentielijsten zich verhouden tot de bestaande metamodel-concepten (Representatie, Entiteit, Gegevenselement, Relatie, Gegeven, Gegevenstype).
+
+```mermaid
+classDiagram
+  direction TB
+
+  class Representatie {
+    naam «id»
+    alias [0..1]
+    beschrijving
+  }
+
+  class Entiteit
+
+  class Gegevenselement {
+    /waarde : type [0..*]
+  }
+
+  class Relatie {
+    type : Relatietype
+    tijdlijn : Tijdlijnvoorkomen [0..1]
+  }
+
+  class Gegeven {
+    naam
+    alias [0..1]
+    beschrijving
+    type : Gegevenstype
+  }
+
+  class Referentielijst {
+    naam
+    beschrijving
+  }
+
+  class ReferentielijstItems {
+    <<bijzondere relatie>>
+  }
+
+  class Referentielijstelement {
+    <<Gegevenstype>>
+  }
+
+  class Enumeratie {
+    <<Gegevenstype>>
+  }
+
+  class Enumeratiewaarde {
+    nummer : int [0..1]
+    naam : string
+    beschrijving [0..1]
+  }
+
+  Representatie <|-- Entiteit
+  Representatie <|-- Gegevenselement
+  Representatie <|-- Relatie
+  Relatie --> Representatie : van «bron 1»
+  Relatie --> Representatie : tot «doel 1»
+  Entiteit "1" *-- "0..*" Gegevenselement
+  Gegevenselement "1" *-- "0..*" Gegeven
+  Gegeven "0..1" --> Enumeratie : type
+  Gegeven "0..1" --> Referentielijstelement : type
+  Enumeratie "1" *-- "1..*" Enumeratiewaarde
+  Relatie <|.. ReferentielijstItems : specialisatie
+  ReferentielijstItems <.. Referentielijst
+
+  note for Gegeven "Een Gegeven is altijd van een bepaald\nGegevenstype, en kan daarmee ook een\nverwijzing naar een Referentielijstelement\nof Enumeratie zijn."
+  note for ReferentielijstItems "Een ReferentielijstItems is een bijzondere\nrelatie: het relateert alle Referentielijst-\nelementen van een bepaald type aan\n1 instantie van een Referentielijst.\nDit i.t.t. een normale relatie die\nmeer-op-meer koppelt."
+```
+
 ### Enkelvoud en meervoud
 
 Omdat het Nederlands onregelmatig is (land/landen, lidstaat/lidstaten), moeten enkelvoud en meervoud altijd expliciet worden vastgelegd in het model, net als bij gewone entiteiten.
