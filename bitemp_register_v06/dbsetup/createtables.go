@@ -99,12 +99,9 @@ func CreateTables(db *bun.DB) error {
 		return err
 	}
 
-	// Register_referentielijst systeemtabel: overzicht van alle referentielijsten
-	_, err = db.NewCreateTable().Model((*model.RegisterReferentielijst)(nil)).IfNotExists().Exec(ctx)
-	if err != nil {
-		return err
-	}
-	// Synchroniseer de systeemtabel met de MetaRegistry (upsert)
+	// Register_referentielijst tabel wordt nu aangemaakt door createModelTables
+	// via de MetaRegistry-entry "Referentielijst".
+	// Synchroniseer de bekende instanties (upsert).
 	err = syncReferentielijstRegister(ctx, db)
 	if err != nil {
 		return err
@@ -148,28 +145,20 @@ func CreateTables(db *bun.DB) error {
 	return nil
 }
 
-// syncReferentielijstRegister vult de register_referentielijst systeemtabel
-// op basis van MetaRegistry-entries met EntiteitSubtype "referentielijst".
-// Bestaande rijen worden bijgewerkt (upsert op typenaam).
+// syncReferentielijstRegister synchroniseert bekende referentielijst-instanties
+// naar de register_referentielijst tabel (upsert op systeemnaam).
+// TODO (Fase D3): lees instanties uit V3 JSON i.p.v. hardcoded lijst.
 func syncReferentielijstRegister(ctx context.Context, db *bun.DB) error {
-	for _, meta := range model.MetaRegistry {
-		if meta.EntiteitSubtype != model.EntiteitSubtypeReferentielijst {
-			continue
-		}
-		entry := model.RegisterReferentielijst{
-			Typenaam:     meta.Typenaam,
-			Naam:         meta.Klassenaam,
-			Beschrijving: meta.Description,
-			IsMaterieel:  meta.IsMaterieel,
+	instanties := []string{"Landenlijst"}
+	for _, systeemnaam := range instanties {
+		entry := model.Referentielijst{
+			Systeemnaam: systeemnaam,
 		}
 		_, err := db.NewInsert().Model(&entry).
-			On("CONFLICT (typenaam) DO UPDATE").
-			Set("naam = EXCLUDED.naam").
-			Set("beschrijving = EXCLUDED.beschrijving").
-			Set("is_materieel = EXCLUDED.is_materieel").
+			On("CONFLICT (systeemnaam) DO NOTHING").
 			Exec(ctx)
 		if err != nil {
-			return fmt.Errorf("sync register_referentielijst mislukt voor %s: %w", meta.Typenaam, err)
+			return fmt.Errorf("sync register_referentielijst mislukt voor %s: %w", systeemnaam, err)
 		}
 	}
 	return nil

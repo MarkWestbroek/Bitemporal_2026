@@ -122,8 +122,9 @@ type TypeMeta struct {
 	BovenliggendTypenaam string
 
 	// Referentielijst-subtypes (optioneel). Leeg voor gewone entiteiten/relaties.
-	EntiteitSubtype string // "", "referentielijst", "referentielijst_item"
-	RelatieSubtype  string // "", "referentielijst_items"
+	EntiteitSubtype         string // "", "referentielijst", "referentielijst_item"
+	RelatieSubtype          string // "", "referentielijst_items"
+	ReferentielijstInstantie string // systeemnaam van de gebonden referentielijst-instantie; alleen voor RelatieSubtype == "referentielijst_items"
 
 	// ==== Alleen voor entiteiten en hubs ====
 	// OnderliggendeGegevenselementen beschrijft de onderliggende representaties.

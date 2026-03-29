@@ -65,8 +65,8 @@ func addMetaRegistryFullRoutes(router *gin.Engine) {
 // - GET /full/referentielijsten/{padnaam}         → volledige (expanded) lijst
 // - GET /full/referentielijsten/{padnaam}/:id     → volledige (expanded) detail
 func addReferentielijstRoutes(router *gin.Engine) {
-	// Overzicht: alle referentielijsten uit de systeemtabel
-	router.GET("/referentielijsten", handlers.MakeGetEntitiesHandler[model.RegisterReferentielijst]("Referentielijsten"))
+	// Overzicht: alle referentielijst-instanties uit de register_referentielijst tabel
+	router.GET("/referentielijsten", handlers.MakeGetEntitiesHandler[model.Referentielijst]("Referentielijsten"))
 
 	typeNamen := make([]string, 0)
 	for typeNaam, meta := range model.MetaRegistry {

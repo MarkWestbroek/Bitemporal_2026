@@ -255,3 +255,126 @@ type Locatie_BAGlocatie_Data struct {
 	Opvoer          *time.Time `json:"opvoer,omitempty"`
 	Afvoer          *time.Time `json:"afvoer,omitempty"`
 }
+
+/* ================================================================
+   REFERENTIELIJST — GE's: Referentielijstnaam, Referentielijstomschrijving
+   ================================================================ */
+
+// Referentielijstnaam — enkelvoudig GE voor de leesbare naam van een referentielijst.
+type Referentielijstnaam struct {
+	bun.BaseModel         `bun:"table:referentielijstnaam,alias:referentielijstnaam"`
+	Referentielijst_ID    int                        `json:"referentielijst_id" bun:"referentielijst_id,pk" schema_desc:"ID van de Referentielijst-entiteit"`
+	Rel_ID                int                        `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentReferentielijst *Referentielijst           `json:"-" bun:"rel:belongs-to,join:referentielijst_id=id,on_delete:cascade"`
+	Opvoer                *time.Time                 `json:"opvoer,omitempty"`
+	Afvoer                *time.Time                 `json:"afvoer,omitempty"`
+	Data                  []Referentielijstnaam_Data `bun:"rel:has-many,join:referentielijst_id=referentielijst_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// Referentielijstnaam_Data — geversioned inhoud van Referentielijstnaam.
+type Referentielijstnaam_Data struct {
+	bun.BaseModel      `bun:"table:referentielijstnaam_data,alias:referentielijstnaam_data"`
+	Referentielijst_ID int        `json:"referentielijst_id" bun:"referentielijst_id,pk"`
+	Rel_ID             int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie             int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Naam               string     `json:"naam"`
+	Opvoer             *time.Time `json:"opvoer,omitempty"`
+	Afvoer             *time.Time `json:"afvoer,omitempty"`
+}
+
+// Referentielijstomschrijving — enkelvoudig GE voor de omschrijving van een referentielijst.
+type Referentielijstomschrijving struct {
+	bun.BaseModel         `bun:"table:referentielijstomschrijving,alias:referentielijstomschrijving"`
+	Referentielijst_ID    int                                `json:"referentielijst_id" bun:"referentielijst_id,pk" schema_desc:"ID van de Referentielijst-entiteit"`
+	Rel_ID                int                                `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentReferentielijst *Referentielijst                   `json:"-" bun:"rel:belongs-to,join:referentielijst_id=id,on_delete:cascade"`
+	Opvoer                *time.Time                         `json:"opvoer,omitempty"`
+	Afvoer                *time.Time                         `json:"afvoer,omitempty"`
+	Data                  []Referentielijstomschrijving_Data `bun:"rel:has-many,join:referentielijst_id=referentielijst_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// Referentielijstomschrijving_Data — geversioned inhoud van Referentielijstomschrijving.
+type Referentielijstomschrijving_Data struct {
+	bun.BaseModel      `bun:"table:referentielijstomschrijving_data,alias:referentielijstomschrijving_data"`
+	Referentielijst_ID int        `json:"referentielijst_id" bun:"referentielijst_id,pk"`
+	Rel_ID             int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie             int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Omschrijving       string     `json:"omschrijving"`
+	Opvoer             *time.Time `json:"opvoer,omitempty"`
+	Afvoer             *time.Time `json:"afvoer,omitempty"`
+}
+
+/* ================================================================
+   LANDENLIJSTLAND — items-relatie: koppelt Referentielijst-instantie "Landenlijst" aan Land.
+   ================================================================ */
+
+// LandenlijstLand — koppelrelatie (referentielijst_items) tussen Referentielijst-instantie Landenlijst en Land.
+type LandenlijstLand struct {
+	bun.BaseModel         `bun:"table:landenlijst_land,alias:landenlijst_land"`
+	Referentielijst_ID    int                    `json:"referentielijst_id" bun:"referentielijst_id,pk" schema_desc:"ID van de Referentielijst-entiteit"`
+	Rel_ID                int                    `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentReferentielijst *Referentielijst       `json:"-" bun:"rel:belongs-to,join:referentielijst_id=id,on_delete:cascade"`
+	Land_ID               int                    `json:"land_id"`
+	Opvoer                *time.Time             `json:"opvoer,omitempty"`
+	Afvoer                *time.Time             `json:"afvoer,omitempty"`
+	Data                  []LandenlijstLand_Data `bun:"rel:has-many,join:referentielijst_id=referentielijst_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// LandenlijstLand_Data — geversioned inhoud van LandenlijstLand.
+// Momenteel geen inhoudelijke velden; de relatie is puur structureel.
+type LandenlijstLand_Data struct {
+	bun.BaseModel      `bun:"table:landenlijst_land_data,alias:landenlijst_land_data"`
+	Referentielijst_ID int        `json:"referentielijst_id" bun:"referentielijst_id,pk"`
+	Rel_ID             int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie             int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Opvoer             *time.Time `json:"opvoer,omitempty"`
+	Afvoer             *time.Time `json:"afvoer,omitempty"`
+}
+
+/* ================================================================
+   LAND — GE's: Landcode, Landnaam
+   ================================================================ */
+
+// Landcode — enkelvoudig gegevenselement landcode van entiteit Land.
+type Landcode struct {
+	bun.BaseModel `bun:"table:landcode,alias:landcode"`
+	Land_ID       int             `json:"land_id" bun:"land_id,pk" schema_desc:"ID van de Land-entiteit"`
+	Rel_ID        int             `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentLand    *Land           `json:"-" bun:"rel:belongs-to,join:land_id=id,on_delete:cascade"`
+	Opvoer        *time.Time      `json:"opvoer,omitempty"`
+	Afvoer        *time.Time      `json:"afvoer,omitempty"`
+	Data          []Landcode_Data `bun:"rel:has-many,join:land_id=land_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// Landcode_Data — geversioned inhoud van gegevenselement Landcode.
+type Landcode_Data struct {
+	bun.BaseModel `bun:"table:landcode_data,alias:landcode_data"`
+	Land_ID       int        `json:"land_id" bun:"land_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Code          string     `json:"code"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+// Landnaam — enkelvoudig gegevenselement landnaam van entiteit Land.
+type Landnaam struct {
+	bun.BaseModel `bun:"table:landnaam,alias:landnaam"`
+	Land_ID       int             `json:"land_id" bun:"land_id,pk" schema_desc:"ID van de Land-entiteit"`
+	Rel_ID        int             `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentLand    *Land           `json:"-" bun:"rel:belongs-to,join:land_id=id,on_delete:cascade"`
+	Opvoer        *time.Time      `json:"opvoer,omitempty"`
+	Afvoer        *time.Time      `json:"afvoer,omitempty"`
+	Data          []Landnaam_Data `bun:"rel:has-many,join:land_id=land_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// Landnaam_Data — geversioned inhoud van gegevenselement Landnaam.
+type Landnaam_Data struct {
+	bun.BaseModel `bun:"table:landnaam_data,alias:landnaam_data"`
+	Land_ID       int        `json:"land_id" bun:"land_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Naam          string     `json:"naam"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}

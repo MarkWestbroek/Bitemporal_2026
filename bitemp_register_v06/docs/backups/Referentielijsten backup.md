@@ -1,7 +1,7 @@
 # Referentielijsten — Ontwerp & Ontwerpkeuzen
 
-> **Status**: ontwerp, fase 0–2 (refactoring klasse/instantie + backend) in uitvoering.  
-> **Datum**: 2026-03-29 (bijgewerkt vanuit implementatieplan)
+> **Status**: ontwerp, fase 1 (editor + V3-model) in uitvoering.  
+> **Datum**: 2026-03-27
 
 ---
 
@@ -15,11 +15,9 @@ Referentielijsten zijn benoemde verzamelingen van items (bijv. "Landen", "EU-Lid
 
 | Subtype | Is subtype van | Gedraagt zich als | Voorbeeld |
 |---|---|---|---|
-| **referentielijst** | entiteit | Entiteit met ID + onderliggende systeem-GE's (naam, omschrijving) | Eén Go struct `Referentielijst`; elke instantie (bijv. Landenlijst, EULidstaten) is een **record** in de tabel `register_referentielijst` |
-| **referentielijst_item** | entiteit | Gewone entiteit (ID + vrije GE's/relaties) | `Land` |
-| **referentielijst_items** | relatie | Koppeltabel (FK naar lijst-record + FK naar item), onderliggend aan Referentielijst | `LandenlijstLand` (geen underscores in gewone klassen) |
-
-> **Klasse vs instantie**: `Referentielijst` is de Go-struct (klasse). `Landenlijst`, `EULidstaten` etc. zijn **instanties** (records) van die klasse. Per items-relatie (bijv. `LandenlijstLand`) is de primaire FK (`referentielijst_id`) altijd gebonden aan één specifiek instantie-ID.
+| **referentielijst** | entiteit | Entiteit met ID + onderliggende systeem-GE's (naam, opmerking) | geen: elk record is een referentielijst. Voorbeeld van lijsten: landenlijst, EU-lidstaten-lijst |
+| **referentielijst_item** | entiteit | Gewone entiteit (ID + vrije GE's/relaties) | "Land" |
+| **referentielijst_items** | relatie | Koppeltabel (FK naar lijst-record + FK naar item) | "Landen_Land" |
 
 ### Overzichtsdiagram
 
@@ -28,15 +26,15 @@ classDiagram
   direction TB
 
   class register_referentielijst {
-    «entiteit-tabel Referentielijst»
-    +int id PK autoincrement
-    +string systeemnaam UNIQUE
-    +time opvoer
-    +time afvoer
+    «systeemtabel»
+    +int id PK
+    +string typenaam UNIQUE
+    +string naam
+    +string beschrijving
+    +bool is_materieel
   }
-  note for register_referentielijst "Eén record per referentielijst-instantie.
-  Naam en omschrijving leven in GE-tabellen.
-  Gesynchroniseerd bij API-opstart vanuit V3 JSON."
+  note for register_referentielijst "Eén record per referentielijst.
+  Gesynchroniseerd bij API-opstart vanuit MetaRegistry."
 
   class Referentielijst {
     «Entiteit»
@@ -45,8 +43,8 @@ classDiagram
     %%  +time afvoer
   }
   note for Referentielijst "Elke instantie van deze klasse is een referentielijst, bijv. Landenlijst.
-  Materieel optioneel maar geldt dan voor alle referentielijsten in het model.
-  Tabel: register_referentielijst. Items-relaties zijn onderliggende relaties."
+  Materieel optioneel maar geldt dan wel voor alle referentielijsten in het model.
+  Elke instantie staat ook in het model en in de metaregistry."
 
   class ReferentielijstNaam {
     «Gegevenselement»
@@ -81,10 +79,9 @@ classDiagram
     %%  +time opvoer
     %%  +time afvoer
   }
-  note for ReferentielijstItems "Voorbeeld: LandenlijstLand (geen underscores).
+  note for ReferentielijstItems "Voorbeeld: Landenlijst_Land.
   Koppeltabel lijst ↔ item.
-  N.B.: referentielijst_id is vast per items-relatie-type!
-  Items-relaties staan in OnderliggendeGegevenselementen van Referentielijst."
+  N.B.: elk type heeft één vast lijst-id!"
 
   class LijstItemRelatieXGegevens {
     «Gegevenselement»
@@ -367,50 +364,25 @@ Omdat het Nederlands onregelmatig is (land/landen, lidstaat/lidstaten), moeten e
 
 ---
 
-## 3. Tabel `register_referentielijst` — entiteit-tabel
+## 3. Systeemtabel `register_referentielijst`
 
-> **Gewijzigd 2026-03-29**: was een aparte systeemtabel, is nu de reguliere entiteit-tabel voor de `Referentielijst`-klasse.
-
-Elke referentielijst-instantie (bijv. Landenlijst, EULidstaten) is een **record** in de tabel `register_referentielijst`. Deze tabel wordt aangemaakt via de standaard MetaRegistry-driven DDL (`createModelTables`), net als elke andere entiteit.
+Elke referentielijst mapt op een **record** in de registersysteemtabel `register_referentielijst`. Deze tabel gedraagt zich als een entiteit-register van alle referentielijsten in het systeem.
 
 ```
 register_referentielijst
 ├── id            (PK, autoincrement)
-├── systeemnaam   (UNIQUE, stabiele identifier voor sync/routing/binding)
-├── opvoer        (timestamptz, formele tijd)
-└── afvoer        (timestamptz, formele tijd)
+├── typenaam      (unique, naam uit het metamodel, bijv. "Landen")
+├── naam          (weergavenaam)
+├── beschrijving  (optioneel)
+└── is_materieel  (bool)
 ```
-
-**Naam en omschrijving** staan niet meer in deze tabel, maar in aparte GE-tabellen (zie §3a). Dit maakt het mogelijk om naam en omschrijving bitemporeel te wijzigen.
-
-`is_materieel` is een klasse-eigenschap die in de MetaRegistry staat en geldt voor alle instanties uniform.
 
 ### Synchronisatie bij opstart
 
-Bij elke opstart van de API worden referentielijst-instanties gesynchroniseerd vanuit de **V3 model JSON** (niet meer vanuit MetaRegistry-entries):
-- Lees `referentielijstInstanties` uit het actieve V3 model
-- Per instantie: `INSERT register_referentielijst (systeemnaam, opvoer) ON CONFLICT (systeemnaam) DO NOTHING`
-- Bij nieuw record: bootstrap initiële GE-records (Referentielijstnaam, Referentielijstomschrijving) via directe INSERT
-- Dit vervangt de oude `syncReferentielijstRegister()` die MetaRegistry-entries filterde
-
----
-
-## 3a. Gegevenselementen: Referentielijstnaam en Referentielijstomschrijving
-
-> **Nieuw 2026-03-29**: naam en omschrijving zijn nu GE's i.p.v. kolommen in de systeemtabel.
-
-Elke referentielijst-instantie heeft twee standaard gegevenselementen:
-
-| GE | Hub-tabel | Data-tabel | Veld | Momentvoorkomen |
-|---|---|---|---|---|
-| **Referentielijstnaam** | `referentielijstnaam` | `referentielijstnaam_data` | `naam` (string) | Enkelvoudig |
-| **Referentielijstomschrijving** | `referentielijstomschrijving` | `referentielijstomschrijving_data` | `omschrijving` (string) | Enkelvoudig |
-
-Beide volgen het standaard hub+data versiepatroon:
-- Hub: `referentielijst_id (PFK), rel_id (PFK, autoincrement), opvoer, afvoer`
-- Data: `referentielijst_id (PFK), rel_id (PFK), versie (PFK, autoincrement), naam/omschrijving, opvoer, afvoer`
-
-Dit stelt ons in staat om de naam en omschrijving van een referentielijst bitemporeel te wijzigen — zowel over de formele als de materiële as (indien materieel is ingeschakeld).
+Bij elke opstart van de API wordt de systeemtabel gesynchroniseerd met de MetaRegistry:
+- Loop door alle entries met `EntiteitSubtype == "referentielijst"`
+- `INSERT ... ON CONFLICT (typenaam) DO UPDATE` zodat naamswijzigingen en beschrijvingen worden bijgewerkt
+- Dit zorgt ervoor dat modelwijzigingen automatisch worden doorgevoerd
 
 ---
 
@@ -433,9 +405,9 @@ De `{naam}` is de naam van de lijst **zonder meervoud-s**, omdat de lijstnaam in
 Items en koppelrelaties krijgen wél gewone MetaRegistry-routes omdat ze zich exact als entiteiten/relaties gedragen:
 
 ```
-GET  /landen                                   → alle Land-items
-GET  /landen/:id                               → één Land
-GET  /landenlijst_landen                        → alle LandenlijstLand koppelingen
+GET  /lands                                   → alle Land-items
+GET  /lands/:id                               → één Land
+GET  /landen_lands                             → alle Landen_Land koppelingen
 POST /registratie/                             → registreer items via bestaande registratie-API
 ```
 
@@ -465,51 +437,12 @@ Optioneel nieuw veld op entiteiten:
 ```
 
 ### Relatie-niveau
-Optionele nieuwe velden op relaties:
+Optioneel nieuw veld op relaties:
 ```json
-"relatieSubtype": "referentielijst_items",
-"referentielijstInstantie": "Landenlijst"
+"relatieSubtype": "referentielijst_items"
 ```
 
-`referentielijstInstantie` geeft aan welke referentielijst-instantie (systeemnaam) aan deze items-relatie gebonden is.
-
-### Nieuw: `referentielijstInstanties` sectie in V3 model
-
-Het V3 model krijgt een top-level sectie voor referentielijst-instanties:
-```json
-{
-  "versie": "v3",
-  "referentielijstInstanties": [
-    {
-      "systeemnaam": "Landenlijst",
-      "naam": "Landen",
-      "omschrijving": "Een lijst van alle landen",
-      "positie": { "x": 100, "y": 200 }
-    }
-  ],
-  "entiteiten": [
-    {
-      "typenaam": "Referentielijst",
-      "entiteitSubtype": "referentielijst",
-      "isMaterieel": true,
-      "gegevenselementen": [
-        { "naam": "Referentielijstnaam", "velden": [{"naam": "Naam", "type": "string"}] },
-        { "naam": "Referentielijstomschrijving", "velden": [{"naam": "Omschrijving", "type": "string"}] }
-      ],
-      "relaties": [
-        {
-          "naam": "LandenlijstLand",
-          "relatieSubtype": "referentielijst_items",
-          "doelEntiteit": "Land",
-          "referentielijstInstantie": "Landenlijst"
-        }
-      ]
-    }
-  ]
-}
-```
-
-Alle velden zijn **backwards compatible**: bestaande modellen zonder deze velden werken onveranderd.
+Beide velden zijn **backwards compatible**: bestaande modellen zonder deze velden werken onveranderd.
 
 ---
 
@@ -544,32 +477,25 @@ Alle velden zijn **backwards compatible**: bestaande modellen zonder deze velden
 
 ## 8. Naamconventie
 
-> **Gewijzigd 2026-03-29**: geen underscores meer in gewone klassenamen.
+Vrij, niet afgedwongen. Voorbeelden:
 
-Gewone klassen (entiteiten, relaties, gegevenselementen) gebruiken **PascalCase zonder underscores**. Underscores zijn gereserveerd voor systeemsuffixen (`_Data`, `_Aanvang`, `_Einde`, `_Input`).
+| Referentielijst | Item-type | Relatie |
+|---|---|---|
+| Landen | Land | Landen_Land |
+| EU_Lidstaten | Land | EU_Lidstaten_Land |
+| Plantensoorten | Plant | Plantensoorten_Plant |
 
-Dit geldt voor alle types in het model, niet alleen referentielijsten.
-
-| Instantienaam (systeemnaam) | Item-type | Items-relatie | Items-relatie Data |
-|---|---|---|---|
-| Landenlijst | Land | LandenlijstLand | LandenlijstLand_Data |
-| EULidstaten | Land | EULidstatenLand | EULidstatenLand_Data |
-| Plantensoorten | Plant | PlantensoortenPlant | PlantensoortenPlant_Data |
-
-Een item-type (bijv. `Land`) kan in meerdere referentielijsten voorkomen.
-
-Nederlands kan lange woorden hebben (bijv. `Ondercuratelstelling`). Dat is prima — PascalCase zonder underscores blijft leesbaar.
+Een item-type (bijv. "Land") kan in meerdere referentielijsten voorkomen.
 
 ---
 
 ## 9. MetaRegistry
 
-### Velden in TypeMeta
+### Nieuwe velden in TypeMeta
 
 ```go
-EntiteitSubtype          string  // "", "referentielijst", "referentielijst_item"
-RelatieSubtype           string  // "", "referentielijst_items"
-ReferentielijstInstantie string  // systeemnaam van gebonden instantie; alleen voor referentielijst_items relaties
+EntiteitSubtype   string  // "", "referentielijst", "referentielijst_item"
+RelatieSubtype    string  // "", "referentielijst_items"
 ```
 
 ### Constanten
@@ -579,12 +505,6 @@ const EntiteitSubtypeReferentielijst     = "referentielijst"
 const EntiteitSubtypeReferentielijstItem = "referentielijst_item"
 const RelatieSubtypeReferentielijstItems = "referentielijst_items"
 ```
-
-### Items-relaties als onderliggende relaties
-
-Items-relaties (bijv. `LandenlijstLand`) staan in **OnderliggendeGegevenselementen** van de `Referentielijst`-entry. Ze zijn tegelijkertijd zelfstandige MetaRegistry-entries met eigen routes. Dit is consistent met hoe bijv. Bereikbaarheid onder NatuurlijkPersoon staat maar ook een eigen entry heeft.
-
-De full-entity handler filtert op de FK van het specifieke record (`referentielijst_id`), waardoor bij `GET /full/referentielijsten/Landenlijst` alleen de relevante items-relaties data bevatten en andere lege arrays zijn.
 
 ---
 
@@ -600,42 +520,12 @@ Na validatie van het handmatige testmodel wordt de codegenerator (`cmd/codegen/`
 
 ## 11. Implementatiefasen
 
-> **Gewijzigd 2026-03-29**: Fase 1+2 zijn gedeeltelijk geïmplementeerd. Refactoring klasse/instantie vereist een nieuw implementatieplan.
-
-Zie `docs/implementatieplan-referentielijsten.md` voor het gedetailleerde stappenplan.
-
-| Fase | Stappen | Status |
+| Fase | Stappen | Validatie |
 |---|---|---|
-| **0** | Documentatie bijwerken (dit bestand) | ✅ Gedaan |
-| **A** | V3 JSON format + MetaRegistry plumbing uitbreiden | In uitvoering |
-| **B** | Go model refactoring: Referentielijst generieke struct, GE's, hernoemen, verplaatsen | Gepland |
-| **C** | MetaRegistry entries herschrijven | Gepland |
-| **D** | Database setup: tabel-creatie + instantie-sync | Gepland |
-| **E** | V3 exporter/importer aanpassen | Gepland |
-| **F** | Routes aanpassen | Gepland |
-| **G** | Editor: instantie-nodes + binding-edges | Gepland |
-| **H** | Verificatie (build, tests, API, editor round-trip) | Gepland |
-| *(later)* | Code generator aanpassen | Buiten scope dit plan |
-
----
-
-## 12. Beslissingen
-
-1. **Tabel `register_referentielijst` hergebruiken**: de tabel behoudt zijn naam maar wordt nu de entiteit-tabel voor Referentielijst. Kolommen gewijzigd: `typenaam` → `systeemnaam`, `naam`/`beschrijving`/`is_materieel` verwijderd (gaan naar GE's resp. MetaRegistry).
-2. **`systeemnaam` als stabiele identifier**: elk referentielijst-record heeft een immutable systeemnaam die gebruikt wordt voor V3 JSON sync, routing, en binding van items-relaties.
-3. **Items-relaties in OnderliggendeGegevenselementen**: ze zijn gewone onderliggende relaties van Referentielijst, met de constraint dat de primaire FK altijd hetzelfde instantie-ID heeft. Tegelijk zelfstandige MetaRegistry-entries met eigen routes.
-4. **`is_materieel` is klasse-eigenschap**: geldt voor alle referentielijst-instanties uniform. Staat in MetaRegistry, niet per-record.
-5. **Naamconventie**: geen underscores in gewone klassen (`LandenlijstLand` i.p.v. `Landenlijst_Land`). Systeemsuffixen (`_Data`, `_Aanvang`, `_Einde`) behouden underscores.
-6. **Codegenerator buiten scope**: wordt pas aangepast nadat de handmatige constructie werkt.
-
----
-
-## 13. Openstaande overwegingen
-
-1. **Instantie-ID management**: `systeemnaam` voor lookup, `id` wordt autoincrement. Bij match op systeemnaam wordt bestaand record hergebruikt. ✅ Besloten.
-2. **Cross-model referentielijsten**: nu buiten scope, maar structuur moet dit niet blokkeren. Referentielijsten en gegevenstypen zijn potentieel generiek over modellen heen. Toekomstige iteratie.
-3. **Bootstrap GE-data**: directe INSERT voor bootstrap bij eerste sync. ✅ Besloten.
-4. **Items-relatie FK constraint**: `referentielijst_id` is altijd het ID van de gebonden instantie. Nu via applicatielogica afgedwongen; later evt. DB CHECK constraint.
+| **1** | V3 modelschema + Editor (types, import/export, toolbar, nodes) | Editor kan ref.lijsten aanmaken en exporteren als V3 JSON |
+| **2** | MetaRegistry plumbing + systeemtabel + handmatig testmodel | Tabellen, routes en registratie werken voor testmodel |
+| **3** | Schema-API + frontend index/formulieren | Ref.lijsten zichtbaar en bruikbaar in frontend |
+| **4** | Code generator aanpassen | V3 model → gegenereerde Go-code inclusief ref.lijsten |
 
 
 # Nieuw plan 29 maart 2026!!

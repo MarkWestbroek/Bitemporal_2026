@@ -17,9 +17,20 @@ type V3Model struct {
 	Beschrijving string       `json:"beschrijving,omitempty"` // korte omschrijving van het modeldoel
 	Bron         string       `json:"bron,omitempty"`         // deprecated: gebruik wrapper.bron voor POST-metadata
 	Indiener     string       `json:"indiener,omitempty"`     // deprecated: gebruik wrapper.indiener voor POST-metadata
-	Datatypes    []V3Datatype `json:"datatypes,omitempty"`    // custom gegevenstypen
-	Enums        []V3Enum     `json:"enums,omitempty"`        // enum definities
-	Entiteiten   []V3Entiteit `json:"entiteiten"`             // top-level entiteiten
+	Datatypes               []V3Datatype                `json:"datatypes,omitempty"`               // custom gegevenstypen
+	Enums                   []V3Enum                    `json:"enums,omitempty"`                   // enum definities
+	ReferentielijstInstanties []V3ReferentielijstInstantie `json:"referentielijstInstanties,omitempty"` // referentielijst-instanties (Landenlijst, EULidstaten, etc.)
+	Entiteiten              []V3Entiteit                `json:"entiteiten"`                        // top-level entiteiten
+}
+
+// V3ReferentielijstInstantie beschrijft een referentielijst-instantie (record) in het V3 model.
+// Instanties verwijzen naar specifieke referentielijsten die als records bestaan
+// in de Referentielijst-entiteit (bijv. "Landenlijst", "EULidstaten").
+type V3ReferentielijstInstantie struct {
+	Systeemnaam  string     `json:"systeemnaam"`            // stabiele identifier, bijv. "Landenlijst"
+	Naam         string     `json:"naam,omitempty"`         // leesbare naam, bijv. "Landen"
+	Omschrijving string     `json:"omschrijving,omitempty"` // korte beschrijving
+	Positie      *V3Positie `json:"positie,omitempty"`      // editor-layout positie (genegeerd door codegen)
 }
 
 // V3Datatype beschrijft een custom gegevenstype met validatie en weergave.
@@ -75,6 +86,7 @@ type V3EnumWaarde struct {
 type V3Entiteit struct {
 	Typenaam          string              `json:"typenaam"`
 	Description       string              `json:"description,omitempty"`
+	EntiteitSubtype   string              `json:"entiteitSubtype,omitempty"` // bijv. "referentielijst", "referentielijst_item"
 	IsMaterieel       bool                `json:"isMaterieel,omitempty"`
 	Kleur             string              `json:"kleur,omitempty"`
 	Meervoud          string              `json:"meervoud"`          // URL-padnaam, bijv. "as", "personen"
@@ -101,12 +113,14 @@ type V3Gegevenselement struct {
 
 // V3Relatie beschrijft een relatie onder een entiteit.
 type V3Relatie struct {
-	Naam             string           `json:"naam"` // bijv. "Rel_A_B"
-	Description      string           `json:"description,omitempty"`
-	Meervoud         string           `json:"meervoud"`        // URL-padnaam, bijv. "rel-a-bs"
-	Momentvoorkomen  string           `json:"momentvoorkomen"` // "enkelvoudig" of "meervoudig"
-	IsMaterieel      bool             `json:"isMaterieel,omitempty"`
-	DoelEntiteit     string           `json:"doelEntiteit"`               // typenaam van de doel-entiteit
+	Naam                    string           `json:"naam"` // bijv. "Rel_A_B"
+	Description             string           `json:"description,omitempty"`
+	RelatieSubtype          string           `json:"relatieSubtype,omitempty"`          // bijv. "referentielijst_items"
+	ReferentielijstInstantie string          `json:"referentielijstInstantie,omitempty"` // systeemnaam van de gebonden referentielijst-instantie (alleen voor relatieSubtype == "referentielijst_items")
+	Meervoud                string           `json:"meervoud"`        // URL-padnaam, bijv. "rel-a-bs"
+	Momentvoorkomen         string           `json:"momentvoorkomen"` // "enkelvoudig" of "meervoudig"
+	IsMaterieel             bool             `json:"isMaterieel,omitempty"`
+	DoelEntiteit            string           `json:"doelEntiteit"`               // typenaam van de doel-entiteit
 	Positie          *V3Positie       `json:"positie,omitempty"`          // editor-layout positie (genegeerd door codegen)
 	ID               string           `json:"id,omitempty"`               // persistente edge-id van entiteit→relatie voor stabiele editor round-trips
 	SourceHandle     string           `json:"sourceHandle,omitempty"`     // verbindingspunt op de entiteit→relatie edge (genegeerd door codegen)
