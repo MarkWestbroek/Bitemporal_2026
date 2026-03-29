@@ -86,15 +86,15 @@ type Locatie_Einde struct {
 // Elke referentielijst (bijv. Landenlijst) is een record in deze tabel.
 type Referentielijst struct {
 	bun.BaseModel                 `bun:"table:register_referentielijst,alias:register_referentielijst"`
-	ID                            int                             `json:"id" bun:"id,pk,autoincrement"`
-	Systeemnaam                   string                          `json:"systeemnaam" bun:"systeemnaam,unique"`
-	Opvoer                        *time.Time                      `json:"opvoer,omitempty"`
-	Afvoer                        *time.Time                      `json:"afvoer,omitempty"`
-	Referentielijstnamen          []Referentielijstnaam           `bun:"rel:has-many,join:id=referentielijst_id" json:"referentielijstnamen,omitempty"`
-	Referentielijstomschrijvingen []Referentielijstomschrijving   `bun:"rel:has-many,join:id=referentielijst_id" json:"referentielijstomschrijvingen,omitempty"`
-	LandenlijstLanden             []LandenlijstLand               `bun:"rel:has-many,join:id=referentielijst_id" json:"landenlijst_landen,omitempty"`
-	Aanvang                       []Referentielijst_Aanvang       `bun:"rel:has-many,join:id=referentielijst_id" json:"aanvang,omitempty"`
-	Einde                         []Referentielijst_Einde         `bun:"rel:has-many,join:id=referentielijst_id" json:"einde,omitempty"`
+	ID                            int                           `json:"id" bun:"id,pk,autoincrement"`
+	Systeemnaam                   string                        `json:"systeemnaam" bun:"systeemnaam,unique"`
+	Opvoer                        *time.Time                    `json:"opvoer,omitempty"`
+	Afvoer                        *time.Time                    `json:"afvoer,omitempty"`
+	Referentielijstnamen          []Referentielijstnaam         `bun:"rel:has-many,join:id=referentielijst_id" json:"referentielijstnamen,omitempty"`
+	Referentielijstomschrijvingen []Referentielijstomschrijving `bun:"rel:has-many,join:id=referentielijst_id" json:"referentielijstomschrijvingen,omitempty"`
+	LandenlijstLanden             []LandenlijstLand             `bun:"rel:has-many,join:id=referentielijst_id" json:"landenlijst_landen,omitempty"`
+	Aanvang                       []Referentielijst_Aanvang     `bun:"rel:has-many,join:id=referentielijst_id" json:"aanvang,omitempty"`
+	Einde                         []Referentielijst_Einde       `bun:"rel:has-many,join:id=referentielijst_id" json:"einde,omitempty"`
 }
 
 // Referentielijst_Aanvang — aanvangsdatum van Referentielijst.

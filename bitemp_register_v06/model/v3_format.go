@@ -12,15 +12,15 @@ package model
 // Dit type beschrijft alleen het model zelf; POST-metadata zoals bron en indiener
 // horen conceptueel in de request-wrapper en niet in de modelversie.
 type V3Model struct {
-	Versie       string       `json:"versie"`                 // semantische modelversie, bijv. "v1.0.0"
-	Naam         string       `json:"naam,omitempty"`         // herkenbare modelnaam voor selectie in lijsten
-	Beschrijving string       `json:"beschrijving,omitempty"` // korte omschrijving van het modeldoel
-	Bron         string       `json:"bron,omitempty"`         // deprecated: gebruik wrapper.bron voor POST-metadata
-	Indiener     string       `json:"indiener,omitempty"`     // deprecated: gebruik wrapper.indiener voor POST-metadata
-	Datatypes               []V3Datatype                `json:"datatypes,omitempty"`               // custom gegevenstypen
-	Enums                   []V3Enum                    `json:"enums,omitempty"`                   // enum definities
+	Versie                    string                       `json:"versie"`                              // semantische modelversie, bijv. "v1.0.0"
+	Naam                      string                       `json:"naam,omitempty"`                      // herkenbare modelnaam voor selectie in lijsten
+	Beschrijving              string                       `json:"beschrijving,omitempty"`              // korte omschrijving van het modeldoel
+	Bron                      string                       `json:"bron,omitempty"`                      // deprecated: gebruik wrapper.bron voor POST-metadata
+	Indiener                  string                       `json:"indiener,omitempty"`                  // deprecated: gebruik wrapper.indiener voor POST-metadata
+	Datatypes                 []V3Datatype                 `json:"datatypes,omitempty"`                 // custom gegevenstypen
+	Enums                     []V3Enum                     `json:"enums,omitempty"`                     // enum definities
 	ReferentielijstInstanties []V3ReferentielijstInstantie `json:"referentielijstInstanties,omitempty"` // referentielijst-instanties (Landenlijst, EULidstaten, etc.)
-	Entiteiten              []V3Entiteit                `json:"entiteiten"`                        // top-level entiteiten
+	Entiteiten                []V3Entiteit                 `json:"entiteiten"`                          // top-level entiteiten
 }
 
 // V3ReferentielijstInstantie beschrijft een referentielijst-instantie (record) in het V3 model.
@@ -113,23 +113,23 @@ type V3Gegevenselement struct {
 
 // V3Relatie beschrijft een relatie onder een entiteit.
 type V3Relatie struct {
-	Naam                    string           `json:"naam"` // bijv. "Rel_A_B"
-	Description             string           `json:"description,omitempty"`
-	RelatieSubtype          string           `json:"relatieSubtype,omitempty"`          // bijv. "referentielijst_items"
-	ReferentielijstInstantie string          `json:"referentielijstInstantie,omitempty"` // systeemnaam van de gebonden referentielijst-instantie (alleen voor relatieSubtype == "referentielijst_items")
-	Meervoud                string           `json:"meervoud"`        // URL-padnaam, bijv. "rel-a-bs"
-	Momentvoorkomen         string           `json:"momentvoorkomen"` // "enkelvoudig" of "meervoudig"
-	IsMaterieel             bool             `json:"isMaterieel,omitempty"`
-	DoelEntiteit            string           `json:"doelEntiteit"`               // typenaam van de doel-entiteit
-	Positie          *V3Positie       `json:"positie,omitempty"`          // editor-layout positie (genegeerd door codegen)
-	ID               string           `json:"id,omitempty"`               // persistente edge-id van entiteit→relatie voor stabiele editor round-trips
-	SourceHandle     string           `json:"sourceHandle,omitempty"`     // verbindingspunt op de entiteit→relatie edge (genegeerd door codegen)
-	TargetHandle     string           `json:"targetHandle,omitempty"`     // verbindingspunt op de relatie (inkomend, genegeerd door codegen)
-	DoelID           string           `json:"doelId,omitempty"`           // persistente edge-id van relatie→doel-entiteit voor stabiele editor round-trips
-	DoelSourceHandle string           `json:"doelSourceHandle,omitempty"` // verbindingspunt op de relatie (uitgaand naar doel, genegeerd door codegen)
-	DoelTargetHandle string           `json:"doelTargetHandle,omitempty"` // verbindingspunt op de doel-entiteit (genegeerd door codegen)
-	AfgeleideVelden  []V3AfgeleidVeld `json:"afgeleideVelden,omitempty"`
-	Velden           []V3Veld         `json:"velden,omitempty"`
+	Naam                     string           `json:"naam"` // bijv. "Rel_A_B"
+	Description              string           `json:"description,omitempty"`
+	RelatieSubtype           string           `json:"relatieSubtype,omitempty"`           // bijv. "referentielijst_items"
+	ReferentielijstInstantie string           `json:"referentielijstInstantie,omitempty"` // systeemnaam van de gebonden referentielijst-instantie (alleen voor relatieSubtype == "referentielijst_items")
+	Meervoud                 string           `json:"meervoud"`                           // URL-padnaam, bijv. "rel-a-bs"
+	Momentvoorkomen          string           `json:"momentvoorkomen"`                    // "enkelvoudig" of "meervoudig"
+	IsMaterieel              bool             `json:"isMaterieel,omitempty"`
+	DoelEntiteit             string           `json:"doelEntiteit"`               // typenaam van de doel-entiteit
+	Positie                  *V3Positie       `json:"positie,omitempty"`          // editor-layout positie (genegeerd door codegen)
+	ID                       string           `json:"id,omitempty"`               // persistente edge-id van entiteit→relatie voor stabiele editor round-trips
+	SourceHandle             string           `json:"sourceHandle,omitempty"`     // verbindingspunt op de entiteit→relatie edge (genegeerd door codegen)
+	TargetHandle             string           `json:"targetHandle,omitempty"`     // verbindingspunt op de relatie (inkomend, genegeerd door codegen)
+	DoelID                   string           `json:"doelId,omitempty"`           // persistente edge-id van relatie→doel-entiteit voor stabiele editor round-trips
+	DoelSourceHandle         string           `json:"doelSourceHandle,omitempty"` // verbindingspunt op de relatie (uitgaand naar doel, genegeerd door codegen)
+	DoelTargetHandle         string           `json:"doelTargetHandle,omitempty"` // verbindingspunt op de doel-entiteit (genegeerd door codegen)
+	AfgeleideVelden          []V3AfgeleidVeld `json:"afgeleideVelden,omitempty"`
+	Velden                   []V3Veld         `json:"velden,omitempty"`
 }
 
 // V3Positie beschrijft de positie van een element in de UML-editor.
