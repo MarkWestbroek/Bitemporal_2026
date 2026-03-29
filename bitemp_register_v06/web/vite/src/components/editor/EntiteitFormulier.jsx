@@ -27,7 +27,7 @@ export default function EntiteitFormulier() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${baseUrl}/api/full/${apiPath}/${id}`);
+      const res = await fetch(`${baseUrl}/full/${apiPath}/${id}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       setEntity(json);

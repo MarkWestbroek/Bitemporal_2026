@@ -196,6 +196,25 @@ func jsonFieldName(f reflect.StructField) string {
 	return strings.ToLower(f.Name)
 }
 
+// convertAfgeleideVelden converteert MetaRegistry AfgeleidVeld entries naar V3AfgeleidVeld entries.
+func convertAfgeleideVelden(src []AfgeleidVeld) []V3AfgeleidVeld {
+	if len(src) == 0 {
+		return nil
+	}
+	result := make([]V3AfgeleidVeld, len(src))
+	for i, av := range src {
+		result[i] = V3AfgeleidVeld{
+			Naam:                av.Naam,
+			Description:         av.Description,
+			GoType:              av.GoType,
+			AfleidingsregelTaal: av.AfleidingsregelTaal,
+			Afleidingsregel:     av.Afleidingsregel,
+			IsWeergaveVeld:      av.IsWeergaveVeld,
+		}
+	}
+	return result
+}
+
 // ExportMetaRegistryToV3 bouwt een V3Model op basis van de huidige MetaRegistry.
 // Als domein niet leeg is, worden alleen entiteiten uit dat domein geëxporteerd.
 // Wordt gebruikt door de GET /api/schema/model endpoint.
@@ -231,6 +250,7 @@ func ExportMetaRegistryToV3(domein ...string) V3Model {
 			Kleur:           meta.Kleur,
 			Meervoud:        meta.Padnaam,
 			Runtime:         runtimeVanMeta(meta),
+			AfgeleideVelden: convertAfgeleideVelden(meta.AfgeleideVelden),
 		}
 		if meta.Layout != nil {
 			ent.Positie = meta.Layout.Positie
@@ -294,6 +314,7 @@ func v3GegevenseElementVanMeta(meta TypeMeta, child OnderliggendGegevenselement)
 		IsMaterieel:     meta.IsMaterieel,
 		Velden:          extractContentFields(meta),
 		Runtime:         runtimeVanMeta(meta),
+		AfgeleideVelden: convertAfgeleideVelden(meta.AfgeleideVelden),
 	}
 	if meta.Layout != nil {
 		ge.Positie = meta.Layout.Positie
@@ -317,6 +338,7 @@ func v3RelatieVanMeta(meta TypeMeta, child OnderliggendGegevenselement) V3Relati
 		DoelEntiteit:             doelEntiteitVanRelatie(meta),
 		Velden:                   extractContentFields(meta),
 		Runtime:                  runtimeVanMeta(meta),
+		AfgeleideVelden:          convertAfgeleideVelden(meta.AfgeleideVelden),
 	}
 	if meta.Layout != nil {
 		rel.Positie = meta.Layout.Positie

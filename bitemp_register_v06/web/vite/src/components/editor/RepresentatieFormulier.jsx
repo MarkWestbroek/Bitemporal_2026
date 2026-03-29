@@ -63,7 +63,7 @@ export default function RepresentatieFormulier({ typeMeta, initialData, onSaved 
           wijzigingen: [wijziging],
         };
 
-        const res = await fetch(`${baseUrl}/api/registreer`, {
+        const res = await fetch(`${baseUrl}/registratie/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(registratiePayload),

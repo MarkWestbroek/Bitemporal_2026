@@ -78,7 +78,7 @@ export default function RepresentatieTabel({ typeMeta }) {
     setError(null);
     try {
       const prefix = isEntiteit ? "full/" : "";
-      const res = await fetch(`${baseUrl}/api/${prefix}${apiPath}?page=1&size=1000`);
+      const res = await fetch(`${baseUrl}/${prefix}${apiPath}?page=1&size=1000`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       const key = typeMeta.meervoud || Object.keys(json).find((k) => Array.isArray(json[k]));
