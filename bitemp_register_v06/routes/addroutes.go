@@ -50,6 +50,11 @@ func SetupMiddleware(router *gin.Engine) {
 	// (ook routes die buiten AddRoutes worden toegevoegd) CORS-headers krijgen.
 	router.Use(corsMiddleware())
 
+	// Request body logger — logt POST/PUT/PATCH bodies als APP_DEBUG_LOGS=1.
+	// Moet vóór handler-registratie staan, zodat de body wordt opgevangen
+	// voordat ShouldBindJSON het consumeert.
+	router.Use(handlers.RequestBodyLogger())
+
 	// Preflight-handler: vangt OPTIONS /*path op zodat Gin het request
 	// doorgeeft aan de middleware hierboven (en niet met 405 afwijst).
 	router.OPTIONS("/*path", func(c *gin.Context) {})

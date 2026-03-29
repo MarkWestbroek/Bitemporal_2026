@@ -16,7 +16,13 @@ const PAGE_SIZE = 20;
 
 /**
  * Berekent weergaveveld-tekst voor een entiteit op basis van afgeleide velden.
- * Bouwt een CEL-context op uit de geneste GE-groepen in het full-entity object.
+ *
+ * Bitemporele context:
+ *   De weergavevelden (bijv. "Joris Vries" voor een NatuurlijkPersoon) worden
+ *   berekend via CEL-expressies die refereren aan onderliggende GE-groepen.
+ *   bouwCelContext selecteert automatisch het actuele record per groep
+ *   (opvoer gezet, geen afvoer), zodat het weergaveveld altijd de huidige
+ *   formele toestand weergeeft.
  */
 function berekenWeergaveveld(entity, typeMeta, typeMetaByTypenaam) {
   const afgVelden = safeArray(typeMeta?.afgeleideVelden)
@@ -46,8 +52,15 @@ function berekenWeergaveveld(entity, typeMeta, typeMetaByTypenaam) {
 }
 
 /**
- * RepresentatieTabel — generiek tabel-component dat een typeMeta ontvangt
- * en dynamisch kolommen, data, paginering, sortering en filtering biedt.
+ * RepresentatieTabel — generiek tabel-component voor een entiteit- of GE-type.
+ *
+ * Kolommen worden dynamisch bepaald op basis van de schema-API (typeMeta):
+ *   - Entiteiten: ID + weergaveveld (CEL) + tellerkolommen per GE + materiële tijd
+ *   - Andere types: alle primitieve velden uit de schema
+ *
+ * Entiteiten worden opgehaald via /full/{padnaam} (inclusief geneste GE's),
+ * zodat weergavevelden berekenbaar zijn. Rijen zijn klikbaar naar het
+ * EntiteitFormulier voor detail/bewerking.
  */
 export default function RepresentatieTabel({ typeMeta }) {
   const { baseUrl, typeMetaByTypenaam } = useSchema();

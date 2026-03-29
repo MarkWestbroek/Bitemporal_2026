@@ -109,17 +109,25 @@ export function leidEntiteitTypeAfUitKolomnaam(kolomnaam, beschikbareEntiteitTyp
 }
 
 /**
- * Plat slaan van hub-items voor weergave en formulieren.
+ * platSlaHubItems — slaat hub→data nesting plat voor weergave en formulieren.
  *
- * In v06 retourneert de API hub-items met geneste data-arrays:
- *   { a_id:1, rel_id:1, opvoer:…, data:[{versie:1, aaa:"foo", …}] }
+ * In het bitemporele model zijn GE's en relaties opgebouwd als hub + data:
+ *   Hub  = structureel record (entiteit_id, rel_id, opvoer, afvoer)
+ *   Data = inhoudelijk record met versiegeschiedenis (bijv. achternaam, naamgebruik)
  *
- * De functie mergt de inhoudsvelden van het actieve data-record (zonder afvoer)
- * in het hub-item, zodat downstream code (visualisatie, formulieren, payloads)
- * transparant met een plat item kan werken.
+ * De hub houdt de formele status bij (opvoer/afvoer van het GE als geheel).
+ * Het data-record bevat de inhoud. Bij een wijziging wordt het oude data-record
+ * afgevoerd (afvoer gezet) en een nieuw opgevoerd. De hub zelf blijft intact,
+ * tenzij het GE als geheel wordt afgevoerd.
  *
- * Structurele velden van het data-type (bijv. versie = idKolom) worden
- * niet gemerged om ruis in formulieren te voorkomen.
+ * Voorbeeld: Partnernaam hub (rel_id=1) heeft twee data-versies:
+ *   v1: achternaam="Bakker",  opvoer=t1, afvoer=t2  (oud, afgevoerd)
+ *   v2: achternaam="Bakkers", opvoer=t2, afvoer=null (actueel)
+ * → platSlaHubItems mergt v2 (actief) in de hub, resultaat: {rel_id:1, achternaam:"Bakkers", …}
+ *
+ * Let op: het resultaat bevat ALLE hub-items, inclusief afgevoerde hubs.
+ * Gebruik filterActueel() in EntiteitFormulier om alleen formeel geldige
+ * items te tonen (opvoer ≠ null, afvoer = null).
  *
  * @param {Array} items        - Array van hub-items uit de API-response
  * @param {Object} hubTypeMeta - Schema-metadata van het hub-type (uit typeMetaByTypenaam)

@@ -8,12 +8,25 @@ import { coercedWaardeVoorVeld } from "../actions/ActionFormParts";
 /**
  * RepresentatieFormulier — formulier voor één representatie (entiteit, GE of relatie).
  *
+ * Bitemporele context:
+ *   Dit formulier ontvangt altijd het *actuele* record (opvoer gezet, afvoer leeg).
+ *   Bij opslaan wordt een registratie aangemaakt via POST /registratie/.
+ *   De backend handelt het bitemporele mechanisme af:
+ *   - Bij een enkelvoudig GE: vorige data-versie wordt automatisch afgevoerd
+ *   - Bij een meervoudig GE: er kan een nieuw record worden toegevoegd
+ *   - De hub zelf wordt niet aangeraakt, alleen de _Data of _Input representatie
+ *
+ * Hub→Data onderscheid:
+ *   Het formulier toont de velden uit dataMeta (het _Data type) als die beschikbaar is,
+ *   anders de velden van het hub-type zelf. Dit is nodig omdat de hub alleen structurele
+ *   velden bevat (entiteit_id, rel_id), terwijl de data de inhoudsvelden heeft.
+ *
  * Props:
  *  - typeMeta:         het hub-type metadata object uit de schema-API
  *  - dataMeta:         (optioneel) het data-subtype metadata object — als het type een
  *                      hub is (bijv. NatuurlijkPersoon_Naam) worden de inhoudsvelden
  *                      uit dataMeta getoond in plaats van de hub-plumbing velden.
- *  - initialData:      bestaand (platgeslagen) record, of null voor nieuw
+ *  - initialData:      bestaand (platgeslagen) actueel record, of null voor nieuw
  *  - onSaved:          callback na succesvolle opslag
  *  - entiteitId:       parent entiteit ID (om FK terug te zetten in payload)
  *  - entiteitIdKolom:  naam van de FK-kolom (bijv. "natuurlijkpersoon_id")
@@ -79,11 +92,17 @@ export default function RepresentatieFormulier({
       setFeedback(null);
 
       try {
-        const payload = {};
+        const repPayload = {};
 
         // FK naar parent entiteit
         if (entiteitIdKolom && entiteitId != null) {
-          payload[entiteitIdKolom] = entiteitId;
+          repPayload[entiteitIdKolom] = Number(entiteitId);
+        }
+
+        // Bestaand record: ID meesturen zodat backend het kan matchen
+        if (initialData && typeMeta?.idKolom) {
+          const bestaandId = initialData[typeMeta.idKolom];
+          if (bestaandId != null) repPayload[typeMeta.idKolom] = bestaandId;
         }
 
         for (const veld of bewerkbareVelden) {
@@ -92,17 +111,19 @@ export default function RepresentatieFormulier({
             if (veld.verplicht) throw new Error(`${veld.naam} is verplicht.`);
             continue;
           }
-          payload[veld.naam] = coercedWaardeVoorVeld(raw, veld, veld.naam);
+          repPayload[veld.naam] = coercedWaardeVoorVeld(raw, veld, veld.naam);
         }
 
+        // Backend verwacht: { registratie: {...}, wijzigingen: [{ opvoer: { <veldnaam>: {...} } }] }
+        // De veldnaam is de key waarmee UnmarshalJSON het type opzoekt in de MetaRegistry.
+        const veldnaam = typeMeta.veldnaam || typeMeta.padnaam;
         const registratiePayload = {
-          opmerking: isNieuw ? `Nieuw ${typeMeta.typenaam}` : `Bewerk ${typeMeta.typenaam}`,
+          registratie: {
+            opmerking: isNieuw ? `Nieuw ${typeMeta.typenaam}` : `Bewerk ${typeMeta.typenaam}`,
+          },
           wijzigingen: [
             {
-              metatype: typeMeta.metatype,
-              typenaam: typeMeta.typenaam,
-              wijzigingstype: "opvoer",
-              representatie: payload,
+              opvoer: { [veldnaam]: repPayload },
             },
           ],
         };

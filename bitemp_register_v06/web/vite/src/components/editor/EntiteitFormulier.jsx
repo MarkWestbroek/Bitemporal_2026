@@ -5,8 +5,31 @@ import { safeArray, platSlaHubItems } from "../../shared/schemaUtils";
 import { evalueerCelExpressie, bouwCelContext } from "../../shared/celEvaluator";
 import RepresentatieFormulier from "./RepresentatieFormulier";
 
+// ── Helpers ─────────────────────────────────────────────────────────────
+
+/**
+ * filterActueel — filtert platgeslagen items op formele geldigheid.
+ *
+ * Bitemporele context:
+ *   - Een GE/relatie is "actueel" als het een opvoer heeft en géén afvoer.
+ *   - Na een ongedaanmaking kan de opvoer ontbreken → dan is het record niet meer geldig.
+ *   - Bij een nieuwe versie van een enkelvoudig GE (bijv. Partnernaam_Data v2)
+ *     wordt de vorige versie afgevoerd (afvoer gezet); de nieuwe is actueel.
+ *
+ * Na platSlaan bevat het item de opvoer/afvoer van het hub-record.
+ * De inhoudsvelden komen uit het actieve data-record (platSlaHubItems kiest
+ * het data-record zonder afvoer).
+ *
+ * @param {Array} flatItems - platgeslagen hub-items (output van platSlaHubItems)
+ * @returns {Array} Alleen items die nu formeel geldig zijn (opvoer ≠ null, afvoer = null)
+ */
+function filterActueel(flatItems) {
+  return flatItems.filter((item) => item.opvoer && !item.afvoer);
+}
+
 /**
  * Berekent weergaveveld-tekst voor een child group uit de full entity.
+ * Gebruikt het actuele (niet-afgevoerde) record voor de CEL-evaluatie.
  */
 function childWeergave(childMeta, items, typeMetaByTypenaam) {
   const afgVelden = safeArray(childMeta?.afgeleideVelden)
@@ -155,22 +178,29 @@ export default function EntiteitFormulier() {
             {entity.afvoer && <span style={{ color: "var(--cg-fout)" }}>afvoer: {String(entity.afvoer).slice(0, 19).replace("T", " ")}</span>}
           </div>
 
-          {/* Samenvattend overzicht onderliggende GE's als anchor-links */}
+          {/* Samenvattend overzicht onderliggende GE's als scroll-knoppen.
+            * Telt alleen actuele records (met opvoer, zonder afvoer). */}
           {onderliggende.length > 0 && (
             <div style={{ marginTop: "1rem", display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
               {onderliggende.map((child) => {
                 const childMeta = typeMetaByTypenaam?.[child.doeltype];
                 if (!childMeta) return null;
                 const rawItems = safeArray(entity[child.jsonRolnaam] || entity[child.rolnaam]);
-                const count = rawItems.length;
                 const flat = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
+                const actueel = filterActueel(flat);
+                const count = actueel.length;
+                const actief = actueel[0] || null;
                 const weergave = childWeergave(childMeta, rawItems, typeMetaByTypenaam);
-                const samenvatting = weergave || (flat.length > 0 ? korteVeldSamenvatting(flat.find((i) => !i.afvoer) || flat[0], childMeta) : "");
+                const samenvatting = weergave || (actief ? korteVeldSamenvatting(actief, childMeta) : "");
                 const label = childMeta.klassenaam || child.rolnaam || child.doeltype;
                 return (
-                  <a
+                  <button
+                    type="button"
                     key={child.doeltype}
-                    href={`#ge-${child.doeltype}`}
+                    onClick={() => {
+                      const el = document.getElementById(`ge-${child.doeltype}`);
+                      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
                     style={{
                       display: "inline-block",
                       padding: "0.375rem 0.75rem",
@@ -178,7 +208,8 @@ export default function EntiteitFormulier() {
                       background: childMeta.kleur || "var(--cg-lichtgrijs)",
                       border: `1px solid ${childMeta.kleur ? "rgba(0,0,0,0.15)" : "var(--cg-grijs)"}`,
                       color: "var(--cg-donkerblauw)",
-                      textDecoration: "none",
+                      cursor: "pointer",
+                      textAlign: "left",
                       fontSize: "0.8125rem",
                       lineHeight: 1.4,
                     }}
@@ -190,7 +221,7 @@ export default function EntiteitFormulier() {
                         {samenvatting.length > 60 ? samenvatting.slice(0, 57) + "…" : samenvatting}
                       </span>
                     )}
-                  </a>
+                  </button>
                 );
               })}
             </div>
@@ -204,8 +235,22 @@ export default function EntiteitFormulier() {
         if (!childMeta) return null;
 
         const rawItems = safeArray(entity[child.jsonRolnaam] || entity[child.rolnaam]);
-        // Platslaan: hub→data zodat inhoudsvelden beschikbaar zijn
+
+        /*
+         * Platslaan: hub→data zodat inhoudsvelden beschikbaar zijn.
+         * Na platslaan bevat elk item de hub-velden (opvoer, afvoer, rel_id, entiteitID)
+         * plus de inhoudsvelden van het actieve data-record.
+         *
+         * Daarna filteren we op formele geldigheid:
+         *   - enkelvoudig GE: max 1 actief record (vorige versie is afgevoerd)
+         *   - meervoudig GE:  0..n actieve records
+         * Niet-actuele records (hub afgevoerd of opvoer leeg na ongedaanmaking) worden
+         * uitgefilterd — de UI toont altijd de actuele toestand.
+         */
         const flatItems = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
+        const actueleItems = filterActueel(flatItems);
+        const historischeItems = flatItems.length - actueleItems.length;
+
         const isEnkelvoudig = child.momentvoorkomen === "enkelvoudig";
         const label = childMeta.klassenaam || child.rolnaam || child.doeltype;
 
@@ -233,22 +278,29 @@ export default function EntiteitFormulier() {
             <div className="cg-form-section__title">
               {label}
               <span style={{ fontWeight: 400, fontSize: "0.8125rem", color: "var(--cg-donkergrijs)", marginLeft: 8 }}>
-                ({child.momentvoorkomen}) — {flatItems.length} record(s)
+                ({child.momentvoorkomen}) — {actueleItems.length} actueel
+                {historischeItems > 0 && (
+                  <span style={{ color: "var(--cg-grijs)" }}>, {historischeItems} historisch</span>
+                )}
               </span>
             </div>
 
-            {isEnkelvoudig && flatItems.length > 0 ? (
-              /* Enkelvoudig: formulier met de platgeslagen data */
+            {isEnkelvoudig && actueleItems.length > 0 ? (
+              /* Enkelvoudig: formulier met het actuele (platgeslagen) record.
+               * Bij enkelvoudig GEs is er altijd max 1 actueel hub-record.
+               * Eerdere versies van de data zijn afgevoerd en worden niet getoond. */
               <RepresentatieFormulier
                 typeMeta={childMeta}
                 dataMeta={dataMeta}
-                initialData={flatItems[0]}
+                initialData={actueleItems[0]}
                 onSaved={fetchEntity}
                 entiteitId={id}
                 entiteitIdKolom={childMeta.entiteitIDKolom}
               />
-            ) : !isEnkelvoudig && flatItems.length > 0 ? (
-              /* Meervoudig: compact tabel van inhoudsvelden */
+            ) : !isEnkelvoudig && actueleItems.length > 0 ? (
+              /* Meervoudig: compact tabel met alleen actuele records.
+               * Elk record is een hub waarvan de inhoudsvelden komen uit het
+               * actieve data-record (platgeslagen door platSlaHubItems). */
               <div style={{ overflowX: "auto" }}>
                 <table className="utrecht-table" style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
@@ -259,7 +311,7 @@ export default function EntiteitFormulier() {
                     </tr>
                   </thead>
                   <tbody>
-                    {flatItems.map((item, i) => (
+                    {actueleItems.map((item, i) => (
                       <tr key={i} className="utrecht-table__row" style={{ background: i % 2 === 1 ? "var(--cg-lichtgrijs)" : undefined }}>
                         {inhoudsvelden.map((v) => (
                           <td key={v.naam} className="utrecht-table__cell" style={{ padding: "0.375rem 0.75rem" }}>
@@ -274,7 +326,7 @@ export default function EntiteitFormulier() {
             ) : null}
 
             {/* Lege GE: mogelijkheid om nieuw record toe te voegen */}
-            {flatItems.length === 0 && nieuwGE !== child.doeltype && (
+            {actueleItems.length === 0 && nieuwGE !== child.doeltype && (
               <div style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "0.5rem 0" }}>
                 <span style={{ color: "var(--cg-donkergrijs)", fontSize: "0.875rem" }}>Geen records.</span>
                 <button
@@ -311,7 +363,7 @@ export default function EntiteitFormulier() {
             )}
 
             {/* Meervoudig: knop om extra record toe te voegen */}
-            {!isEnkelvoudig && flatItems.length > 0 && nieuwGE !== child.doeltype && (
+            {!isEnkelvoudig && actueleItems.length > 0 && nieuwGE !== child.doeltype && (
               <div style={{ paddingTop: "0.5rem" }}>
                 <button
                   type="button"

@@ -821,6 +821,10 @@ Deregister U5 and register U6 for entity A:
 - selecteren van een groep elementen (voor verslepen)
 - auto kiezen handles lijntjes op basis van positie source en target
 
+35 Formulieren
+- bewaar kan ook voor alle GEn ipv per stuk. Typisch is dat ook zo.
+- bewaar of corrigeer is anders. Beide mogelijk maken. Ongedaan maken via een bekijk registratie moet ook kunnen. Daar wil je misschien ook de historie netjes inzien.
+
 40 3D weergave model en tijdslijnen :-)
 
 50 Autonumber Entiteit-IDs? Simpel maar wenselijk
