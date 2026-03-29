@@ -25,6 +25,12 @@ func createModelTables(ctx context.Context, db *bun.DB) error {
 		return fmt.Errorf("referentielijst-refactor migratie mislukt: %w", err)
 	}
 
+	// Eenmalige migratie: voeg kolom 'land' (int, FK naar referentielijst) toe
+	// aan locatie_adres_data, als deze nog ontbreekt.
+	if err := ensureLocatieAdresDataLandKolom(ctx, db); err != nil {
+		return fmt.Errorf("locatie_adres_data land-kolom migratie mislukt: %w", err)
+	}
+
 	createOrder := []model.Metatype{
 		model.MetatypeEntiteit,
 		model.MetatypeRelatie,
@@ -479,5 +485,16 @@ BEGIN
 
 END $$;
 `)
+	return err
+}
+
+// ensureLocatieAdresDataLandKolom voegt de kolom 'land' (integer, default 0) toe
+// aan locatie_adres_data wanneer deze ontbreekt. De kolom is een referentie naar
+// een LandenlijstLand entry in de referentielijst.
+func ensureLocatieAdresDataLandKolom(ctx context.Context, db *bun.DB) error {
+	_, err := db.ExecContext(ctx, `
+		ALTER TABLE locatie_adres_data
+		ADD COLUMN IF NOT EXISTS land INTEGER NOT NULL DEFAULT 0;
+	`)
 	return err
 }

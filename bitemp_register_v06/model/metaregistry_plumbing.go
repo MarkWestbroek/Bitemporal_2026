@@ -295,3 +295,24 @@ func (m TypeMeta) RelationNames() []string {
 // De registry wordt aangevuld in init() functies van de model-bestanden
 // (bijv. door codegen gegenereerd).
 var EnumWaarden = map[string][]string{}
+
+// VoegOnderliggendGEToe voegt een OnderliggendGegevenselement toe aan een reeds
+// geregistreerde TypeMeta. Hiermee kan domein-specifieke code (bijv. np-loc)
+// een kind-relatie toevoegen aan een register-scope entiteit (bijv. Referentielijst).
+func VoegOnderliggendGEToe(typenaam string, ge OnderliggendGegevenselement) {
+	meta, ok := MetaRegistry[typenaam]
+	if !ok {
+		panic("VoegOnderliggendGEToe: onbekend type " + typenaam)
+	}
+	meta.OnderliggendeGegevenselementen = append(meta.OnderliggendeGegevenselementen, ge)
+	MetaRegistry[typenaam] = meta
+}
+
+// Centrale init-volgorde: register-domein eerst, daarna domein-specifieke bestanden.
+// Zo kan np-loc via VoegOnderliggendGEToe() referenties toevoegen aan register-scope entiteiten.
+func init() {
+	initRegisterMetaRegistry()
+	initRegisterDatatypeRegistry()
+	initRegisterEnumRegistry()
+	initNpLocMetaRegistry()
+}

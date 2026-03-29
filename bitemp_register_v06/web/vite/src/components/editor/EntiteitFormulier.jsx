@@ -20,7 +20,7 @@ export default function EntiteitFormulier() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const apiPath = typeMeta?.meervoud || typeMeta?.veldnaam;
+  const apiPath = typeMeta?.padnaam || typeMeta?.meervoud || typeMeta?.veldnaam;
 
   const fetchEntity = useCallback(async () => {
     if (!apiPath || !id) return;
@@ -63,7 +63,7 @@ export default function EntiteitFormulier() {
       <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
         <button
           className="utrecht-button utrecht-button--secondary-action"
-          onClick={() => navigate(`/t/${typeMeta.meervoud || typePad}`)}
+          onClick={() => navigate(`/t/${typeMeta.padnaam || typeMeta.meervoud || typePad}`)}
         >
           ← Terug naar overzicht
         </button>

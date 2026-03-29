@@ -32,6 +32,7 @@ type vizSchemaTypeDTO struct {
 	IsMaterieel               bool                       `json:"isMaterieel,omitempty"` // of dit type een materiële tijdlijn heeft
 	Kleur                     string                     `json:"kleur,omitempty"`
 	Veldnaam                  string                     `json:"veldnaam"`
+	Padnaam                   string                     `json:"padnaam,omitempty"`
 	Meervoud                  string                     `json:"meervoud,omitempty"`
 	Velden                    []vizSchemaFieldDTO        `json:"velden,omitempty"`
 	Tabelnaam                 string                     `json:"tabelnaam"`
@@ -372,6 +373,7 @@ func MaakVizSchemaHandler() gin.HandlerFunc {
 				IsMaterieel: meta.IsMaterieel,
 				Kleur:       meta.Kleur,
 				Veldnaam:    meta.Veldnaam,
+				Padnaam:     meta.Padnaam,
 				Meervoud:    meta.Meervoud,
 				Velden:      reflectedVeldenVoorMeta(meta),
 				Tabelnaam:   meta.Tabelnaam,

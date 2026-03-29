@@ -155,8 +155,8 @@ func ExportMetaRegistryToV3(domein ...string) V3Model {
 		if meta.Metatype != MetatypeEntiteit {
 			continue
 		}
-		// Filter op domein als opgegeven
-		if filterDomein != "" && meta.Domein != filterDomein {
+		// Filter op domein als opgegeven; "register"-domein wordt altijd meege-exporteerd
+		if filterDomein != "" && meta.Domein != filterDomein && meta.Domein != "register" {
 			continue
 		}
 

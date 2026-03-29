@@ -34,7 +34,7 @@ function normInt(v, fallback = 0) {
       function endpointSegmentForEntityType(typeName, entityTypes) {
         const gekozenType = String(typeName || "");
         const meta = safeArray(entityTypes).find((item) => String(item?.typenaam || "") === gekozenType) || null;
-        const segment = String(meta?.meervoud || meta?.padnaam || "").trim();
+        const segment = String(meta?.padnaam || meta?.meervoud || "").trim();
         if (segment) {
           return segment;
         }

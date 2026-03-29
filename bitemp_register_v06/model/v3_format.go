@@ -37,9 +37,10 @@ type V3ReferentielijstInstantie struct {
 type V3Datatype struct {
 	Naam         string       `json:"naam"`
 	Description  string       `json:"description,omitempty"`
-	Basistype    string       `json:"basistype"`         // string, integer, number
-	Format       string       `json:"format,omitempty"`  // bijv. "nl-postcode", "bsn"
-	Positie      *V3Positie   `json:"positie,omitempty"` // editor-layout positie (genegeerd door codegen)
+	Basistype    string       `json:"basistype"`              // string, integer, number
+	Format       string       `json:"format,omitempty"`       // bijv. "nl-postcode", "bsn"
+	Domein       string       `json:"domein,omitempty"`       // domeingroep: "register" = registerbasis, "" = ongegroepeerd
+	Positie      *V3Positie   `json:"positie,omitempty"`      // editor-layout positie (genegeerd door codegen)
 	Validatie    *V3Validatie `json:"validatie,omitempty"`
 	Normalisatie string       `json:"normalisatie,omitempty"`
 	Weergave     *V3Weergave  `json:"weergave,omitempty"`
@@ -72,6 +73,7 @@ type V3Weergave struct {
 type V3Enum struct {
 	GoType   string         `json:"goType"`
 	BaseType string         `json:"baseType"`          // bijv. "string"
+	Domein   string         `json:"domein,omitempty"`  // domeingroep: "register" = registerbasis, "" = ongegroepeerd
 	Positie  *V3Positie     `json:"positie,omitempty"` // editor-layout positie (genegeerd door codegen)
 	Waarden  []V3EnumWaarde `json:"waarden"`
 }

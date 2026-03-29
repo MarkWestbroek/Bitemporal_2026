@@ -1,9 +1,9 @@
 package model
 
-// Additieve MetaRegistry-entries — voegt types toe aan de bestaande MetaRegistry.
+// Additieve MetaRegistry-entries — voegt NP/Loc-domein types toe aan de bestaande MetaRegistry.
 // Gegenereerd door cmd/codegen — niet handmatig bewerken.
 
-func init() {
+func initNpLocMetaRegistry() {
 	MetaRegistry["NatuurlijkPersoon"] = TypeMeta{
 		Typenaam:               "NatuurlijkPersoon",
 		Klassenaam:             "NatuurlijkPersoon",
@@ -663,134 +663,8 @@ func init() {
 	}
 
 	// ====================================================================
-	// REFERENTIELIJSTEN — generiek model met instanties
+	// LAND — referentielijst-items (np-loc domein)
 	// ====================================================================
-	MetaRegistry["Referentielijst"] = TypeMeta{
-		Typenaam:        "Referentielijst",
-		Klassenaam:      "Referentielijst",
-		Description:     "Generieke referentielijst-entiteit. Individuele lijsten (Landenlijst, EULidstaten, etc.) zijn records.",
-		Metatype:        MetatypeEntiteit,
-		EntiteitSubtype: EntiteitSubtypeReferentielijst,
-		IsMaterieel:     true,
-		Domein:          "np-loc",
-		Kleur:           "#fef3c7",
-		Layout:          &EditorLayout{Positie: &V3Positie{X: 1260, Y: -240}},
-		Veldnaam:        "referentielijst",
-		Padnaam:         "referentielijsten",
-		Meervoud:        "referentielijsten",
-		Factory:         func() Representatie { return &Referentielijst{} },
-		SliceFactory:    func() any { return &[]Referentielijst{} },
-		Tabelnaam:       "register_referentielijst",
-		IDKolom:         "id",
-		DBFactory:       func() Representatie { return &Referentielijst{} },
-		DBSliceFactory:  func() any { return &[]Referentielijst{} },
-		HeeftPFK:        false,
-		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
-			{Rolnaam: "Referentielijstnamen", JSONRolnaam: "referentielijstnamen", Doeltype: "Referentielijstnaam", Momentvoorkomen: Enkelvoudig},
-			{Rolnaam: "Referentielijstomschrijvingen", JSONRolnaam: "referentielijstomschrijvingen", Doeltype: "Referentielijstomschrijving", Momentvoorkomen: Enkelvoudig},
-			{Rolnaam: "LandenlijstLanden", JSONRolnaam: "landenlijst_landen", Doeltype: "LandenlijstLand", Momentvoorkomen: Meervoudig},
-			{Rolnaam: "Aanvang", JSONRolnaam: "aanvang", Doeltype: "Referentielijst_Aanvang", Momentvoorkomen: Enkelvoudig},
-			{Rolnaam: "Einde", JSONRolnaam: "einde", Doeltype: "Referentielijst_Einde", Momentvoorkomen: Enkelvoudig},
-		},
-	}
-	MetaRegistry["Referentielijstnaam"] = TypeMeta{
-		Typenaam:               "Referentielijstnaam",
-		Klassenaam:             "Referentielijstnaam",
-		Description:            "Leesbare naam van een referentielijst.",
-		Metatype:               MetatypeGegevenselement,
-		IsMaterieel:            false,
-		GESubtype:              GESubtypeHub,
-		DataTypenaam:           "Referentielijstnaam_Data",
-		Kleur:                  "#fef3c7",
-		Veldnaam:               "referentielijstnaam",
-		Padnaam:                "referentielijstnamen",
-		Meervoud:               "referentielijstnamen",
-		Factory:                func() Representatie { return &Referentielijstnaam{} },
-		Tabelnaam:              "referentielijstnaam",
-		IDKolom:                "rel_id",
-		DBFactory:              func() Representatie { return &Referentielijstnaam{} },
-		DBSliceFactory:         func() any { return &[]Referentielijstnaam{} },
-		HeeftPFK:               true,
-		RelatieveAutoincrement: true,
-		EntiteitIDKolom:        "referentielijst_id",
-		Momentvoorkomen:        Enkelvoudig,
-		BovenliggendTypenaam:   "Referentielijst",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1590, Y: -255}, EdgeID: "Referentielijst->Referentielijst_Referentielijstnaam", SourceHandle: "right", TargetHandle: "left"},
-		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
-			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Referentielijstnaam_Data", Momentvoorkomen: Enkelvoudig},
-		},
-	}
-	MetaRegistry["Referentielijstnaam_Data"] = TypeMeta{
-		Typenaam:               "Referentielijstnaam_Data",
-		Klassenaam:             "Data",
-		Description:            "Geversioned inhoud van Referentielijstnaam.",
-		Metatype:               MetatypeGegevenselement,
-		GESubtype:              GESubtypeData,
-		Kleur:                  "#fef3c7",
-		Veldnaam:               "referentielijstnaam_data",
-		Padnaam:                "referentielijstnaam_data",
-		Meervoud:               "referentielijstnaam_data",
-		Factory:                func() Representatie { return &Referentielijstnaam_Data{} },
-		SliceFactory:           func() any { return &[]Referentielijstnaam_Data{} },
-		Tabelnaam:              "referentielijstnaam_data",
-		IDKolom:                "versie",
-		DBFactory:              func() Representatie { return &Referentielijstnaam_Data{} },
-		DBSliceFactory:         func() any { return &[]Referentielijstnaam_Data{} },
-		HeeftPFK:               true,
-		RelatieveAutoincrement: true,
-		EntiteitIDKolom:        "referentielijst_id",
-		Momentvoorkomen:        Enkelvoudig,
-		BovenliggendTypenaam:   "Referentielijstnaam",
-	}
-	MetaRegistry["Referentielijstomschrijving"] = TypeMeta{
-		Typenaam:               "Referentielijstomschrijving",
-		Klassenaam:             "Referentielijstomschrijving",
-		Description:            "Omschrijving van een referentielijst.",
-		Metatype:               MetatypeGegevenselement,
-		IsMaterieel:            false,
-		GESubtype:              GESubtypeHub,
-		DataTypenaam:           "Referentielijstomschrijving_Data",
-		Kleur:                  "#fef3c7",
-		Veldnaam:               "referentielijstomschrijving",
-		Padnaam:                "referentielijstomschrijvingen",
-		Meervoud:               "referentielijstomschrijvingen",
-		Factory:                func() Representatie { return &Referentielijstomschrijving{} },
-		Tabelnaam:              "referentielijstomschrijving",
-		IDKolom:                "rel_id",
-		DBFactory:              func() Representatie { return &Referentielijstomschrijving{} },
-		DBSliceFactory:         func() any { return &[]Referentielijstomschrijving{} },
-		HeeftPFK:               true,
-		RelatieveAutoincrement: true,
-		EntiteitIDKolom:        "referentielijst_id",
-		Momentvoorkomen:        Enkelvoudig,
-		BovenliggendTypenaam:   "Referentielijst",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1590, Y: -135}, EdgeID: "Referentielijst->Referentielijst_Referentielijstomschrijving", SourceHandle: "right", TargetHandle: "left"},
-		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
-			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Referentielijstomschrijving_Data", Momentvoorkomen: Enkelvoudig},
-		},
-	}
-	MetaRegistry["Referentielijstomschrijving_Data"] = TypeMeta{
-		Typenaam:               "Referentielijstomschrijving_Data",
-		Klassenaam:             "Data",
-		Description:            "Geversioned inhoud van Referentielijstomschrijving.",
-		Metatype:               MetatypeGegevenselement,
-		GESubtype:              GESubtypeData,
-		Kleur:                  "#fef3c7",
-		Veldnaam:               "referentielijstomschrijving_data",
-		Padnaam:                "referentielijstomschrijving_data",
-		Meervoud:               "referentielijstomschrijving_data",
-		Factory:                func() Representatie { return &Referentielijstomschrijving_Data{} },
-		SliceFactory:           func() any { return &[]Referentielijstomschrijving_Data{} },
-		Tabelnaam:              "referentielijstomschrijving_data",
-		IDKolom:                "versie",
-		DBFactory:              func() Representatie { return &Referentielijstomschrijving_Data{} },
-		DBSliceFactory:         func() any { return &[]Referentielijstomschrijving_Data{} },
-		HeeftPFK:               true,
-		RelatieveAutoincrement: true,
-		EntiteitIDKolom:        "referentielijst_id",
-		Momentvoorkomen:        Enkelvoudig,
-		BovenliggendTypenaam:   "Referentielijstomschrijving",
-	}
 	MetaRegistry["Land"] = TypeMeta{
 		Typenaam:        "Land",
 		Klassenaam:      "Land",
@@ -969,50 +843,6 @@ func init() {
 		Momentvoorkomen:        Enkelvoudig,
 		BovenliggendTypenaam:   "LandenlijstLand",
 	}
-	MetaRegistry["Referentielijst_Aanvang"] = TypeMeta{
-		Typenaam:               "Referentielijst_Aanvang",
-		Klassenaam:             "Aanvang",
-		Description:            "Aanvangsdatum van referentielijst.",
-		Metatype:               MetatypeGegevenselement,
-		GESubtype:              GESubtypeAanvang,
-		Kleur:                  "#fef3c7",
-		Veldnaam:               "referentielijst_aanvang",
-		Padnaam:                "referentielijst_aanvang",
-		Meervoud:               "referentielijst_aanvang",
-		Factory:                func() Representatie { return &Referentielijst_Aanvang{} },
-		SliceFactory:           func() any { return &[]Referentielijst_Aanvang{} },
-		Tabelnaam:              "referentielijst_aanvang",
-		IDKolom:                "versie",
-		DBFactory:              func() Representatie { return &Referentielijst_Aanvang{} },
-		DBSliceFactory:         func() any { return &[]Referentielijst_Aanvang{} },
-		HeeftPFK:               true,
-		RelatieveAutoincrement: true,
-		EntiteitIDKolom:        "referentielijst_id",
-		Momentvoorkomen:        Enkelvoudig,
-		BovenliggendTypenaam:   "Referentielijst",
-	}
-	MetaRegistry["Referentielijst_Einde"] = TypeMeta{
-		Typenaam:               "Referentielijst_Einde",
-		Klassenaam:             "Einde",
-		Description:            "Einddatum van referentielijst.",
-		Metatype:               MetatypeGegevenselement,
-		GESubtype:              GESubtypeEinde,
-		Kleur:                  "#fef3c7",
-		Veldnaam:               "referentielijst_einde",
-		Padnaam:                "referentielijst_einde",
-		Meervoud:               "referentielijst_einde",
-		Factory:                func() Representatie { return &Referentielijst_Einde{} },
-		SliceFactory:           func() any { return &[]Referentielijst_Einde{} },
-		Tabelnaam:              "referentielijst_einde",
-		IDKolom:                "versie",
-		DBFactory:              func() Representatie { return &Referentielijst_Einde{} },
-		DBSliceFactory:         func() any { return &[]Referentielijst_Einde{} },
-		HeeftPFK:               true,
-		RelatieveAutoincrement: true,
-		EntiteitIDKolom:        "referentielijst_id",
-		Momentvoorkomen:        Enkelvoudig,
-		BovenliggendTypenaam:   "Referentielijst",
-	}
 	MetaRegistry["Land_Aanvang"] = TypeMeta{
 		Typenaam:               "Land_Aanvang",
 		Klassenaam:             "Aanvang",
@@ -1057,6 +887,11 @@ func init() {
 		Momentvoorkomen:        Enkelvoudig,
 		BovenliggendTypenaam:   "Land",
 	}
+
+	// Domein-specifieke items-relatie toevoegen aan register-scope Referentielijst
+	VoegOnderliggendGEToe("Referentielijst", OnderliggendGegevenselement{
+		Rolnaam: "LandenlijstLanden", JSONRolnaam: "landenlijst_landen", Doeltype: "LandenlijstLand", Momentvoorkomen: Meervoudig,
+	})
 
 	// Referentielijst-instantie metadata + editor-posities
 	ReferentielijstInstantieRegistry["Landenlijst"] = ReferentielijstInstantieInfo{

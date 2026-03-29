@@ -819,3 +819,47 @@ Dit garandeert dat een veld van type `schema:"ref:LandenlijstLand"` altijd een z
 21. Registerbasis-package bevat Referentielijst plumbing + systeem-GE's
 22. Modelspecifieke packages importeren het basis-package en voegen eigen types toe
 23. Delta-analyse: detecteer non-breaking model-toevoegingen
+
+
+##98 OPGELOSTE BEVINDINGEN
+1. *Laten we nog even de metaregistries en structs goed structureren zodat we voorbereid zijn op genereren*
+
+np_loc_metaregistry.go bevat:
+- MetaRegistry["Referentielijst"]
+- MetaRegistry["Referentielijstnaam"] + Opmerking + visibility + internetadres + organisatie + _Data
+- MetaRegistry["Referentielijst_Aanvang"]
+- MetaRegistry["Referentielijst_Einde"] 
+
+--> dat is allemaal het register domein. Dat moet dus niet in nl_loc
+--> hetzelfde geldt voor de bijbehorende structs en methods
+
+ik zou dat allemaal in een register_modellen_*** zetten
+
+Idem de register-scope enums en types.
+
+Maar, wat doen we als we een Ref lijst (instantie) hebben die _niet_ in register-scope staat, maar enkel domein-scope?
+
+In 	`MetaRegistry["Referentielijst"] = TypeMeta{`
+ staat:
+ ```
+ 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
+			{Rolnaam: "Referentielijstnamen", JSONRolnaam: "referentielijstnamen", Doeltype: "Referentielijstnaam", Momentvoorkomen: Enkelvoudig},
+			{Rolnaam: "Referentielijstomschrijvingen", JSONRolnaam: "referentielijstomschrijvingen", Doeltype: "Referentielijstomschrijving", Momentvoorkomen: Enkelvoudig},
+			{Rolnaam: "Visibilities", JSONRolnaam: "visibilities", Doeltype: "ReferentielijstVisibility", Momentvoorkomen: Enkelvoudig},
+			{Rolnaam: "Internetadressen", JSONRolnaam: "internetadressen", Doeltype: "ReferentielijstInternetadres", Momentvoorkomen: Meervoudig},
+			{Rolnaam: "LandenlijstLanden", JSONRolnaam: "landenlijst_landen", Doeltype: "LandenlijstLand", Momentvoorkomen: Meervoudig},
+			{Rolnaam: "Aanvang", JSONRolnaam: "aanvang", Doeltype: "Referentielijst_Aanvang", Momentvoorkomen: Enkelvoudig},
+			{Rolnaam: "Einde", JSONRolnaam: "einde", Doeltype: "Referentielijst_Einde", Momentvoorkomen: Enkelvoudig},
+		},
+```
+Met name dus het element `	{Rolnaam: "LandenlijstLanden", JSONRolnaam: "landenlijst_landen", Doeltype: "LandenlijstLand", Momentvoorkomen: Meervoudig}, `
+zou dan in een ander domein zitten. Kun je, vanuit de code in dat domein, die LandenlijstLanden dan nog toevoegen aan de OnderliggendeGegevenselementen van de Referentielijst?!
+
+## 99 Bevindingen / verder ontwerp
+2. referentie naar een ref lijst moet ook (afgeleide) veldnaam als extra info kunnen hebben. Misschien alleen voor de weergave, maar soms ook wel specifiek. Bijv. bij landcode bij Burgerschap. Dat die code op LandenlijstLand niveau beschikbaar is, is te regelen via een afgeleid veld, of door door te drillen in de subklassen, maar dat ons specifiek dit veld interesseert, is wel belangrijk.
+
+3. 
+
+
+
+

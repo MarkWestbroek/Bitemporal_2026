@@ -110,7 +110,7 @@ function registratieIDUitOpvoerTijdstip(tijdstipRaw) {
 function endpointSegmentVoorEntiteit(entiteitType, entiteitTypen) {
   const gekozenType = String(entiteitType || "");
   const meta = safeArray(entiteitTypen).find((item) => String(item?.typenaam || "") === gekozenType) || null;
-  const segment = String(meta?.meervoud || meta?.padnaam || "").trim();
+  const segment = String(meta?.padnaam || meta?.meervoud || "").trim();
   if (segment) {
     return segment;
   }

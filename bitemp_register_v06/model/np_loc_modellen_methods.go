@@ -615,20 +615,6 @@ func (h *Locatie_BAGlocatie) GeefOnderliggendeGegevenselementen() []Onderliggend
 	return result
 }
 
-/* ================================================================
-   9. REFERENTIELIJST — interface-methoden
-   ================================================================ */
-
-// Referentielijst
-func (r Referentielijst) GetID() any              { return r.ID }
-func (r Referentielijst) Metatype() Metatype      { return MetatypeEntiteit }
-func (r *Referentielijst) ClearID()               { r.ID = 0 }
-func (r Referentielijst) GetOpvoer() *time.Time   { return r.Opvoer }
-func (r *Referentielijst) SetOpvoer(t *time.Time) { r.Opvoer = t }
-func (r Referentielijst) GetAfvoer() *time.Time   { return r.Afvoer }
-func (r *Referentielijst) SetAfvoer(t *time.Time) { r.Afvoer = t }
-func (r Referentielijst) String() string          { return RepresentatieToString(r) }
-
 // Land
 func (l Land) GetID() any              { return l.ID }
 func (l Land) Metatype() Metatype      { return MetatypeEntiteit }
@@ -638,46 +624,6 @@ func (l *Land) SetOpvoer(t *time.Time) { l.Opvoer = t }
 func (l Land) GetAfvoer() *time.Time   { return l.Afvoer }
 func (l *Land) SetAfvoer(t *time.Time) { l.Afvoer = t }
 func (l Land) String() string          { return RepresentatieToString(l) }
-
-// Referentielijstnaam
-func (r Referentielijstnaam) GetID() any              { return r.Rel_ID }
-func (r Referentielijstnaam) Metatype() Metatype      { return MetatypeGegevenselement }
-func (r *Referentielijstnaam) ClearID()               { r.Rel_ID = 0 }
-func (r Referentielijstnaam) GetOpvoer() *time.Time   { return r.Opvoer }
-func (r *Referentielijstnaam) SetOpvoer(t *time.Time) { r.Opvoer = t }
-func (r Referentielijstnaam) GetAfvoer() *time.Time   { return r.Afvoer }
-func (r *Referentielijstnaam) SetAfvoer(t *time.Time) { r.Afvoer = t }
-func (r Referentielijstnaam) String() string          { return RepresentatieToString(r) }
-
-// Referentielijstnaam_Data
-func (d Referentielijstnaam_Data) GetID() any              { return d.Versie }
-func (d Referentielijstnaam_Data) Metatype() Metatype      { return MetatypeGegevenselement }
-func (d *Referentielijstnaam_Data) ClearID()               { d.Versie = 0 }
-func (d Referentielijstnaam_Data) GetOpvoer() *time.Time   { return d.Opvoer }
-func (d *Referentielijstnaam_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
-func (d Referentielijstnaam_Data) GetAfvoer() *time.Time   { return d.Afvoer }
-func (d *Referentielijstnaam_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
-func (d Referentielijstnaam_Data) String() string          { return RepresentatieToString(d) }
-
-// Referentielijstomschrijving
-func (r Referentielijstomschrijving) GetID() any              { return r.Rel_ID }
-func (r Referentielijstomschrijving) Metatype() Metatype      { return MetatypeGegevenselement }
-func (r *Referentielijstomschrijving) ClearID()               { r.Rel_ID = 0 }
-func (r Referentielijstomschrijving) GetOpvoer() *time.Time   { return r.Opvoer }
-func (r *Referentielijstomschrijving) SetOpvoer(t *time.Time) { r.Opvoer = t }
-func (r Referentielijstomschrijving) GetAfvoer() *time.Time   { return r.Afvoer }
-func (r *Referentielijstomschrijving) SetAfvoer(t *time.Time) { r.Afvoer = t }
-func (r Referentielijstomschrijving) String() string          { return RepresentatieToString(r) }
-
-// Referentielijstomschrijving_Data
-func (d Referentielijstomschrijving_Data) GetID() any              { return d.Versie }
-func (d Referentielijstomschrijving_Data) Metatype() Metatype      { return MetatypeGegevenselement }
-func (d *Referentielijstomschrijving_Data) ClearID()               { d.Versie = 0 }
-func (d Referentielijstomschrijving_Data) GetOpvoer() *time.Time   { return d.Opvoer }
-func (d *Referentielijstomschrijving_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
-func (d Referentielijstomschrijving_Data) GetAfvoer() *time.Time   { return d.Afvoer }
-func (d *Referentielijstomschrijving_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
-func (d Referentielijstomschrijving_Data) String() string          { return RepresentatieToString(d) }
 
 // LandenlijstLand
 func (ll LandenlijstLand) GetID() any              { return ll.Rel_ID }
@@ -739,26 +685,6 @@ func (d Landnaam_Data) GetAfvoer() *time.Time   { return d.Afvoer }
 func (d *Landnaam_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
 func (d Landnaam_Data) String() string          { return RepresentatieToString(d) }
 
-// Referentielijst_Aanvang
-func (a Referentielijst_Aanvang) GetID() any              { return a.Versie }
-func (a Referentielijst_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
-func (a *Referentielijst_Aanvang) ClearID()               { a.Versie = 0 }
-func (a Referentielijst_Aanvang) GetOpvoer() *time.Time   { return a.Opvoer }
-func (a *Referentielijst_Aanvang) SetOpvoer(t *time.Time) { a.Opvoer = t }
-func (a Referentielijst_Aanvang) GetAfvoer() *time.Time   { return a.Afvoer }
-func (a *Referentielijst_Aanvang) SetAfvoer(t *time.Time) { a.Afvoer = t }
-func (a Referentielijst_Aanvang) String() string          { return RepresentatieToString(a) }
-
-// Referentielijst_Einde
-func (e Referentielijst_Einde) GetID() any              { return e.Versie }
-func (e Referentielijst_Einde) Metatype() Metatype      { return MetatypeGegevenselement }
-func (e *Referentielijst_Einde) ClearID()               { e.Versie = 0 }
-func (e Referentielijst_Einde) GetOpvoer() *time.Time   { return e.Opvoer }
-func (e *Referentielijst_Einde) SetOpvoer(t *time.Time) { e.Opvoer = t }
-func (e Referentielijst_Einde) GetAfvoer() *time.Time   { return e.Afvoer }
-func (e *Referentielijst_Einde) SetAfvoer(t *time.Time) { e.Afvoer = t }
-func (e Referentielijst_Einde) String() string          { return RepresentatieToString(e) }
-
 // Land_Aanvang
 func (a Land_Aanvang) GetID() any              { return a.Versie }
 func (a Land_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
@@ -808,43 +734,8 @@ func (i *LandenlijstLand_Input) SetAfvoer(_ *time.Time) {}
 func (i LandenlijstLand_Input) String() string          { return RepresentatieToString(i) }
 
 /* ================================================================
-   10. GeefOnderliggendeGegevenselementen — REFERENTIELIJST
+   10. GeefOnderliggendeGegevenselementen — LAND + NP-LOC domein hubs
    ================================================================ */
-
-func (r *Referentielijst) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
-	result := make([]OnderliggendeRepresentatie, 0)
-	for i := range r.Referentielijstnamen {
-		if r.Referentielijstnamen[i].Referentielijst_ID == 0 {
-			r.Referentielijstnamen[i].Referentielijst_ID = r.ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Referentielijstnaam", Representatie: &r.Referentielijstnamen[i]})
-	}
-	for i := range r.Referentielijstomschrijvingen {
-		if r.Referentielijstomschrijvingen[i].Referentielijst_ID == 0 {
-			r.Referentielijstomschrijvingen[i].Referentielijst_ID = r.ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Referentielijstomschrijving", Representatie: &r.Referentielijstomschrijvingen[i]})
-	}
-	for i := range r.LandenlijstLanden {
-		if r.LandenlijstLanden[i].Referentielijst_ID == 0 {
-			r.LandenlijstLanden[i].Referentielijst_ID = r.ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "LandenlijstLand", Representatie: &r.LandenlijstLanden[i]})
-	}
-	for i := range r.Aanvang {
-		if r.Aanvang[i].Referentielijst_ID == 0 {
-			r.Aanvang[i].Referentielijst_ID = r.ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Referentielijst_Aanvang", Representatie: &r.Aanvang[i]})
-	}
-	for i := range r.Einde {
-		if r.Einde[i].Referentielijst_ID == 0 {
-			r.Einde[i].Referentielijst_ID = r.ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Referentielijst_Einde", Representatie: &r.Einde[i]})
-	}
-	return result
-}
 
 func (l *Land) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0)
@@ -871,38 +762,6 @@ func (l *Land) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie
 			l.Einde[i].Land_ID = l.ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "Land_Einde", Representatie: &l.Einde[i]})
-	}
-	return result
-}
-
-/* ================================================================
-   11. GeefOnderliggendeGegevenselementen — REFERENTIELIJST HUBS
-   ================================================================ */
-
-func (h *Referentielijstnaam) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
-	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
-	for i := range h.Data {
-		if h.Data[i].Referentielijst_ID == 0 {
-			h.Data[i].Referentielijst_ID = h.Referentielijst_ID
-		}
-		if h.Data[i].Rel_ID == 0 {
-			h.Data[i].Rel_ID = h.Rel_ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Referentielijstnaam_Data", Representatie: &h.Data[i]})
-	}
-	return result
-}
-
-func (h *Referentielijstomschrijving) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
-	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
-	for i := range h.Data {
-		if h.Data[i].Referentielijst_ID == 0 {
-			h.Data[i].Referentielijst_ID = h.Referentielijst_ID
-		}
-		if h.Data[i].Rel_ID == 0 {
-			h.Data[i].Rel_ID = h.Rel_ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Referentielijstomschrijving_Data", Representatie: &h.Data[i]})
 	}
 	return result
 }

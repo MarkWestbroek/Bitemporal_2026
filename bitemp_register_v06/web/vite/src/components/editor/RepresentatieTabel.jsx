@@ -28,8 +28,8 @@ export default function RepresentatieTabel({ typeMeta }) {
   const [columnFilters, setColumnFilters] = useState([]);
 
   const isEntiteit = typeMeta?.metatype === "entiteit";
-  // API-pad: meervoud komt overeen met Go's Padnaam (URL-registratie)
-  const apiPath = typeMeta?.meervoud || typeMeta?.veldnaam;
+  // API-pad: padnaam is het URL-pad, meervoud is de weergavenaam
+  const apiPath = typeMeta?.padnaam || typeMeta?.meervoud || typeMeta?.veldnaam;
 
   // Velden → kolommen: skip array-velden (geneste GE's), voeg telkolommen toe voor entiteiten
   const columns = useMemo(() => {
@@ -109,7 +109,7 @@ export default function RepresentatieTabel({ typeMeta }) {
     const idKolom = typeMeta.idKolom || "id";
     const idWaarde = row.original[idKolom];
     if (idWaarde != null) {
-      navigate(`/t/${typeMeta.meervoud || typeMeta.veldnaam}/${idWaarde}`);
+      navigate(`/t/${typeMeta.padnaam || typeMeta.meervoud || typeMeta.veldnaam}/${idWaarde}`);
     }
   }
 
