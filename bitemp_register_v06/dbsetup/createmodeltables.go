@@ -18,6 +18,13 @@ import (
 )
 
 func createModelTables(ctx context.Context, db *bun.DB) error {
+	// Eenmalige migratie: hernoem tabellen en kolommen van de oude
+	// Landenlijst-als-entiteit structuur naar de nieuwe generieke
+	// Referentielijst-als-entiteit structuur.
+	if err := ensureReferentielijstRefactorMigrated(ctx, db); err != nil {
+		return fmt.Errorf("referentielijst-refactor migratie mislukt: %w", err)
+	}
+
 	createOrder := []model.Metatype{
 		model.MetatypeEntiteit,
 		model.MetatypeRelatie,
@@ -376,5 +383,101 @@ END $$;
 `, fkName, childTable, entCol, relCol, parentTable)
 
 	_, err := db.ExecContext(ctx, sql)
+	return err
+}
+
+// ensureReferentielijstRefactorMigrated voert de eenmalige migratie uit voor de
+// refactoring van Landenlijst-als-entiteit naar Referentielijst-als-generieke-entiteit.
+//
+// Wijzigingen:
+//   - register_referentielijst: kolom typenaam → systeemnaam, voeg opvoer/afvoer toe
+//   - landenlijst_aanvang → referentielijst_aanvang (tabel + kolom landenlijst_id → referentielijst_id)
+//   - landenlijst_einde → referentielijst_einde (tabel + kolom landenlijst_id → referentielijst_id)
+//   - landenlijst_land: kolom landenlijst_id → referentielijst_id
+//   - landenlijst_land_data: kolom landenlijst_id → referentielijst_id
+//   - drop oude landenlijst tabel
+func ensureReferentielijstRefactorMigrated(ctx context.Context, db *bun.DB) error {
+	_, err := db.ExecContext(ctx, `
+DO $$
+BEGIN
+	-- 1. register_referentielijst: hernoem typenaam → systeemnaam (als typenaam nog bestaat)
+	IF EXISTS (
+		SELECT 1 FROM information_schema.columns
+		WHERE table_schema = current_schema() AND table_name = 'register_referentielijst' AND column_name = 'typenaam'
+	) AND NOT EXISTS (
+		SELECT 1 FROM information_schema.columns
+		WHERE table_schema = current_schema() AND table_name = 'register_referentielijst' AND column_name = 'systeemnaam'
+	) THEN
+		ALTER TABLE register_referentielijst RENAME COLUMN typenaam TO systeemnaam;
+	END IF;
+
+	-- register_referentielijst: voeg opvoer/afvoer toe als ze ontbreken
+	IF EXISTS (
+		SELECT 1 FROM information_schema.tables
+		WHERE table_schema = current_schema() AND table_name = 'register_referentielijst'
+	) THEN
+		ALTER TABLE register_referentielijst ADD COLUMN IF NOT EXISTS opvoer TIMESTAMPTZ;
+		ALTER TABLE register_referentielijst ADD COLUMN IF NOT EXISTS afvoer TIMESTAMPTZ;
+		-- Drop legacy kolommen die nu in aparte GE-tabellen zitten
+		ALTER TABLE register_referentielijst DROP COLUMN IF EXISTS naam;
+		ALTER TABLE register_referentielijst DROP COLUMN IF EXISTS beschrijving;
+		ALTER TABLE register_referentielijst DROP COLUMN IF EXISTS is_materieel;
+	END IF;
+
+	-- 2. landenlijst_aanvang → referentielijst_aanvang
+	IF EXISTS (
+		SELECT 1 FROM information_schema.tables
+		WHERE table_schema = current_schema() AND table_name = 'landenlijst_aanvang'
+	) AND NOT EXISTS (
+		SELECT 1 FROM information_schema.tables
+		WHERE table_schema = current_schema() AND table_name = 'referentielijst_aanvang'
+	) THEN
+		ALTER TABLE landenlijst_aanvang RENAME TO referentielijst_aanvang;
+	END IF;
+	IF EXISTS (
+		SELECT 1 FROM information_schema.columns
+		WHERE table_schema = current_schema() AND table_name = 'referentielijst_aanvang' AND column_name = 'landenlijst_id'
+	) THEN
+		ALTER TABLE referentielijst_aanvang RENAME COLUMN landenlijst_id TO referentielijst_id;
+	END IF;
+
+	-- 3. landenlijst_einde → referentielijst_einde
+	IF EXISTS (
+		SELECT 1 FROM information_schema.tables
+		WHERE table_schema = current_schema() AND table_name = 'landenlijst_einde'
+	) AND NOT EXISTS (
+		SELECT 1 FROM information_schema.tables
+		WHERE table_schema = current_schema() AND table_name = 'referentielijst_einde'
+	) THEN
+		ALTER TABLE landenlijst_einde RENAME TO referentielijst_einde;
+	END IF;
+	IF EXISTS (
+		SELECT 1 FROM information_schema.columns
+		WHERE table_schema = current_schema() AND table_name = 'referentielijst_einde' AND column_name = 'landenlijst_id'
+	) THEN
+		ALTER TABLE referentielijst_einde RENAME COLUMN landenlijst_id TO referentielijst_id;
+	END IF;
+
+	-- 4. landenlijst_land: hernoem kolom landenlijst_id → referentielijst_id
+	IF EXISTS (
+		SELECT 1 FROM information_schema.columns
+		WHERE table_schema = current_schema() AND table_name = 'landenlijst_land' AND column_name = 'landenlijst_id'
+	) THEN
+		ALTER TABLE landenlijst_land RENAME COLUMN landenlijst_id TO referentielijst_id;
+	END IF;
+
+	-- 5. landenlijst_land_data: hernoem kolom landenlijst_id → referentielijst_id
+	IF EXISTS (
+		SELECT 1 FROM information_schema.columns
+		WHERE table_schema = current_schema() AND table_name = 'landenlijst_land_data' AND column_name = 'landenlijst_id'
+	) THEN
+		ALTER TABLE landenlijst_land_data RENAME COLUMN landenlijst_id TO referentielijst_id;
+	END IF;
+
+	-- 6. drop oude landenlijst tabel (vervangen door records in register_referentielijst)
+	DROP TABLE IF EXISTS landenlijst CASCADE;
+
+END $$;
+`)
 	return err
 }

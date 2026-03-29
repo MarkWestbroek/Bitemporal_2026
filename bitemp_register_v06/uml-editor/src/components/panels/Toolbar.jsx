@@ -8,7 +8,7 @@
  */
 import { maakLeegType, maakLegeEnumeratie, maakLeegGegevenstype, maakReferentielijstSet } from "../../metamodel/types";
 
-export default function Toolbar({ onAddNode, onAddReferentielijstSet, onSave, onPublishSchemaModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI }) {
+export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddReferentielijstInstantie, onSave, onPublishSchemaModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI }) {
   return (
     <div className="toolbar">
       <div className="toolbar-group">
@@ -88,6 +88,13 @@ export default function Toolbar({ onAddNode, onAddReferentielijstSet, onSave, on
           title="Voeg een referentielijst-items koppelrelatie toe"
         >
           + Ref. Items
+        </button>
+        <button
+          onClick={() => onAddReferentielijstInstantie && onAddReferentielijstInstantie()}
+          className="btn-toolbar refinstantie"
+          title="Voeg een referentielijst-instantie toe (bijv. Landenlijst)"
+        >
+          + Ref. Instantie
         </button>
       </div>
 

@@ -49,16 +49,16 @@ In addition it allows to correct data (in fact correct registrations and the reg
 
 In VS Code you can run the predefined tasks from `.vscode/tasks.json`:
 
-- `go: test all (v05)`
-  - Runs all tests in `bitemporal_go_API_v05`.
-- `go: coverage report (v05)`
+- `go: test all (v06)`
+  - Runs all tests in `bitemp_register_v06`.
+- `go: coverage all (v06)`
   - Generates `coverage.out` and prints function-level coverage in the terminal.
-- `go: coverage html (v05)`
+- `go: coverage html (v06)`
   - Generates `coverage.out`, `web/coverage.html` (detail) and `web/coverage_functions.txt` (function summary).
 
 The HTML report is written to:
 
-- `bitemporal_go_API_v05/web/coverage.html`
+- `bitemp_register_v06/web/coverage.html`
 
 When the API is running, you can open it via:
 
@@ -67,6 +67,37 @@ When the API is running, you can open it via:
 - `/viz/coverage.html` (raw Go source heatmap)
 
 Open this file in your browser to inspect coverage per package and per function.
+
+## Referentielijsten
+
+Het model ondersteunt **generieke referentielijsten** via één `Referentielijst`-entiteit.
+Individuele lijsten (Landenlijst, EU-Lidstaten, etc.) zijn **records** in de tabel `register_referentielijst`, niet aparte Go-structs.
+
+### Architectuur
+
+- **`Referentielijst`** — generieke entiteit (tabel `register_referentielijst`, PK `id`, unique `systeemnaam`)
+- **`Referentielijstnaam`** / **`Referentielijstomschrijving`** — GE's (hub+data) voor naam en omschrijving
+- **`LandenlijstLand`** — items-relatie (koppelrelatie, `relatieSubtype: referentielijst_items`) tussen instantie "Landenlijst" en entiteit `Land`
+- **`Land`** — referentielijst-item entiteit met GE's `Landcode` en `Landnaam`
+
+### Endpoints
+
+| Methode | Endpoint | Beschrijving |
+|---------|----------|--------------|
+| GET | `/referentielijsten` | Overzicht van alle referentielijst-instanties |
+| GET | `/referentielijsten/referentielijsten` | Lijst Referentielijst-records |
+| GET | `/referentielijsten/referentielijsten/:id` | Detail van één Referentielijst |
+| GET | `/full/referentielijsten/referentielijsten` | Volledige lijst met geneste GE's |
+| GET | `/full/referentielijsten/referentielijsten/:id` | Volledig detail met geneste GE's |
+| GET | `/landen` | Lijst van alle landen |
+| GET | `/full/landen/:id` | Volledig land met GE's |
+| GET | `/landenlijst_landen` | Alle LandenlijstLand koppelrecords |
+
+Zie `docs/copilot-chats/plans/2026-03-29 referentielijsten PLAN.md` voor het volledige implementatieplan en alle endpoints.
+
+### DB migratie
+
+Bij het starten van de API worden oude tabellen (van de Landenlijst-als-entiteit structuur) automatisch gemigreerd naar de nieuwe generieke structuur via `ensureReferentielijstRefactorMigrated()`. Dit is idempotent.
 
 ## Visualisatie (React + Vite)
 
@@ -658,6 +689,15 @@ Deregister U5 and register U6 for entity A:
 23 Register uitbreiden met menselijke klassen
 - NP-locatie, via UML editor
 
+24 Referentielijsten: generieke Referentielijst-klasse
+- Landenlijst (concrete struct) → Referentielijst (generieke entiteit) met instantie-records
+- Referentielijstnaam + Referentielijstomschrijving als GE's (hub+data)
+- LandenlijstLand als items-relatie (referentielijst_items) gebonden aan instantie "Landenlijst"
+- V3 JSON: referentielijstInstanties sectie + referentielijstInstantie op relaties
+- UML Editor: instantie-nodes, binding-edges, toolbar + editing
+- Codegen: entiteitSubtype/relatieSubtype/referentielijstInstantie emissie
+- DB migratie: automatische rename tabellen/kolommen bij eerste start na upgrade
+
 ## DONE: MATERIELE AS TOEVOEGEN = REDESIGN!
 
 1 JSON voor een request waarbij Aanvang en /of Einde wordt toegevoegd aan een bestaande Entiteit
@@ -736,27 +776,10 @@ Deregister U5 and register U6 for entity A:
 - registratie- en tijdlijn-views betere layout m.b.v. weergave-velden, als die er zijn, anders gewoon id
 
 
-16 *Referentielijsten*
-- Ik wil graag een apart type <ReferentieLijst>, dat een (singleton) lijst met items voorstelt. Er is er dus van een referentielijst maar 1 in het model. Net zoals er maar 1 gegevenstype XXX is. Dit type <ReferentieLijst> mapt op een *record* (!) in de register-systeem-tabel "register_referentielijst", die zich gedraagt als een entiteit. Het is de verzameling van alle referentielijsten in het register.
-- het <referentielijst_item> is een entiteit (of GE) subtype. Bijv.: "Land". Ik wil het UML construct stereotype hiervoor niet gebruiken, omdat het een metamodel element is dat wordt geïmplementeerd. Stereotypen wil ik houden voor functionele toepassing. Misschien m.u.v. materieel en formeel, afh. van de export (uml, min). Het is hiermee een soort extensie van UML. Net als de entiteit, relatie en gegevenselement dat zijn. Vergelijk in MIM het gegevenstype en de gegevensgroep. Hoewel zij wel stereotypen gebruiken. Ik denk omdat MIM niet primair van UML afstamt. Mijn model doet dat wel.
-- relatie heeft ook een subtype <referentielijst_items>. De naam is de naam van de ref. lijst (die zit in het record, is al meervoud) _ de naam van het item. Bijv. landen_land. Zou je meer lijsten hebben, gebaseerd op dezelfde verzameling items, krijg je bijv. EuLidstaten_landen.
-   - dit kan een formele (gratis) of materiële relatie zijn. Wat je wil.
-
-- *velden in deze subtypen*
-  - REF LIJST: materieel of formeel, naam en opmerking. LET OP: dit is een subtype van ENT, dus de ENT zelf heeft alleen ID. Naam en opmerking moeten elk een onderliggend _systeem_ GE worden. (dus het hub, data en indien materieel aanvang en einde patroon). Wat uitleg:
-    - Het materiele gaat over het bestaan van de lijst als geheel.
-    - Het materiele van de naam of opmerking gaat over het bestaan van de naam of opmerking. Die kun je daarmee dus 'stagen' als het in de toekomst is (!)
-  - REF LIJST ITEM: idem materieel of formeel en het is een subtype van ENT dus een ID en verder niks. Verder is de vorm van een item (welke GE-en) helemaal afhankelijk van wat het voorstelt. Een "Land" item zal gaan over de naam van het land, de landcode, misschien wel de geo-coordinaten. Een plantenlijst over de latijnse naam, de gangbare NL naam en misschien een link naar een afbeelding. Het is dus verder heel gewoon een ENT. Inclusief de mogelijkheid tot afgeleide velden. Niets bijzonders, alleen dat je het subtype wilt onderscheiden vanwege de link die je er naar legt vanuit één of meer REF LIJST ITEMS relaties
-  - de REF LIJST ITEMS relatie: gewoon een relatie, maar je wilt misschien beperken dat de van-entiteit altijd een REF LIJST is, en de naar entiteit altijd een REF LIJST ITEM. Hoewel dat laatste misschien helemaal niet hoeft. Maar dan zou je een referentielijst maken van een gewone ENT, zoals Adres. Het lijkt mij niet gewenst, eigenlijk, als ik er over nadenk.
-
-
-- de editor toont een "+ referentielijst" knop die meteen alledrie aanmaakt met linkjes.
-  - je moet ook alleen extra sublijsten kunnen aanmaken met ook los "+ ref.l.item" en  "+ ref.l.items", die resp. referentielijst_items en referentielijst_item typen maakt.
-  - ik maak mij zorgen over een te volle UI balk bovenin. Misschien kan dat wat verbeterd worden. Misschien meer een menu - submenu stijl?
-
-  - Opmerking: initiële vulling van de tabel (m.u.v. de register_referentielijst systeemtabel, die natuurlijk wel de naam en beschrijving van de bestaande lijsten in het systeem moet krijgen bij een eerste start cq. een update van het model), dus de data in de tabellen moet/kan net als bij andere entiteiten en GEen pas na genereren van het register.
-
-- nog een belangrijke feature van een referentielijst_item type: dit gedraagt zich in de editor als een gegevenstype of enumeratie! Het moet dus ook in de lijst mogelijke typen verschijnen.
+16 *Referentielijsten* ✅ DONE (maart 2026)
+- Generieke Referentielijst-klasse met instantie-records geïmplementeerd
+- Zie [Implementatieplan](docs/copilot-chats/plans/2026-03-29%20referentielijsten%20PLAN.md) voor details
+- TODO: referentielijst_item als gegevenstype/enumeratie in type-keuzelijsten in de editor
 
 
 18 Mooiere formuliertjes (auto en custom)

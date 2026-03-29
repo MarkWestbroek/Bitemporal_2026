@@ -232,6 +232,9 @@ func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType,
 	b.WriteString(fmt.Sprintf("\t\tKlassenaam:  %q,\n", d.Klassenaam))
 	b.WriteString(fmt.Sprintf("\t\tDescription: %q,\n", ent.Description))
 	b.WriteString("\t\tMetatype:    MetatypeEntiteit,\n")
+	if ent.EntiteitSubtype != "" {
+		b.WriteString(fmt.Sprintf("\t\tEntiteitSubtype: %s,\n", entiteitSubtypeConst(ent.EntiteitSubtype)))
+	}
 	b.WriteString(fmt.Sprintf("\t\tIsMaterieel: %t,\n", ent.IsMaterieel))
 	b.WriteString(fmt.Sprintf("\t\tKleur:       %q,\n", ent.Kleur))
 	b.WriteString(fmt.Sprintf("\t\tVeldnaam:    %q,\n", d.Veldnaam))
@@ -322,6 +325,12 @@ func writeRelHubEntry(b *strings.Builder, d DerivedType, rel model.V3Relatie) {
 	b.WriteString(fmt.Sprintf("\t\tKlassenaam:   %q,\n", d.Klassenaam))
 	b.WriteString(fmt.Sprintf("\t\tDescription:  %q,\n", rel.Description))
 	b.WriteString("\t\tMetatype:     MetatypeRelatie,\n")
+	if rel.RelatieSubtype != "" {
+		b.WriteString(fmt.Sprintf("\t\tRelatieSubtype: %s,\n", relatieSubtypeConst(rel.RelatieSubtype)))
+	}
+	if rel.ReferentielijstInstantie != "" {
+		b.WriteString(fmt.Sprintf("\t\tReferentielijstInstantie: %q,\n", rel.ReferentielijstInstantie))
+	}
 	b.WriteString(fmt.Sprintf("\t\tIsMaterieel:  %t,\n", rel.IsMaterieel))
 	b.WriteString("\t\tGESubtype:    GESubtypeHub,\n")
 	b.WriteString(fmt.Sprintf("\t\tDataTypenaam: %q,\n", d.DataTypenaam))
@@ -445,4 +454,26 @@ func writeAfgeleideVelden(b *strings.Builder, avs []model.V3AfgeleidVeld) {
 		b.WriteString("\t\t\t},\n")
 	}
 	b.WriteString("\t\t},\n")
+}
+
+// entiteitSubtypeConst converteert een subtype-string naar de Go-constante.
+func entiteitSubtypeConst(s string) string {
+	switch s {
+	case "referentielijst":
+		return "EntiteitSubtypeReferentielijst"
+	case "referentielijst_item":
+		return "EntiteitSubtypeReferentielijstItem"
+	default:
+		return fmt.Sprintf("%q", s)
+	}
+}
+
+// relatieSubtypeConst converteert een RelatieSubtype-string naar de Go-constante.
+func relatieSubtypeConst(s string) string {
+	switch s {
+	case "referentielijst_items":
+		return "RelatieSubtypeReferentielijstItems"
+	default:
+		return fmt.Sprintf("%q", s)
+	}
 }

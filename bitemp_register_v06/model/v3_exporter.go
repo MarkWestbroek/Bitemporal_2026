@@ -8,14 +8,17 @@ import (
 
 // plumbing-veldnamen die niet als inhoudsveld in V3 verschijnen
 var plumbingVelden = map[string]struct{}{
-	"bun.BaseModel": {},
-	"A_ID":          {},
-	"B_ID":          {},
-	"Rel_ID":        {},
-	"Versie":        {},
-	"Opvoer":        {},
-	"Afvoer":        {},
-	"Datum":         {},
+	"bun.BaseModel":      {},
+	"A_ID":               {},
+	"B_ID":               {},
+	"Rel_ID":             {},
+	"Versie":             {},
+	"Opvoer":             {},
+	"Afvoer":             {},
+	"Datum":              {},
+	"Referentielijst_ID": {},
+	"Land_ID":            {},
+	"Systeemnaam":        {},
 }
 
 // isPlumbingField bepaalt of een struct-veld een plumbingveld is (niet inhoudelijk).
@@ -139,11 +142,12 @@ func ExportMetaRegistryToV3() V3Model {
 		}
 
 		ent := V3Entiteit{
-			Typenaam:    meta.Typenaam,
-			Description: meta.Description,
-			IsMaterieel: meta.IsMaterieel,
-			Kleur:       meta.Kleur,
-			Meervoud:    meta.Padnaam,
+			Typenaam:        meta.Typenaam,
+			Description:     meta.Description,
+			EntiteitSubtype: meta.EntiteitSubtype,
+			IsMaterieel:     meta.IsMaterieel,
+			Kleur:           meta.Kleur,
+			Meervoud:        meta.Padnaam,
 		}
 
 		// Verwerk onderliggende gegevenselementen en relaties
@@ -172,6 +176,17 @@ func ExportMetaRegistryToV3() V3Model {
 		model.Entiteiten = append(model.Entiteiten, ent)
 	}
 
+	// Verzamel referentielijst-instanties uit MetaRegistry entries met ReferentielijstInstantie.
+	instantieSeen := map[string]bool{}
+	for _, meta := range MetaRegistry {
+		if meta.ReferentielijstInstantie != "" && !instantieSeen[meta.ReferentielijstInstantie] {
+			instantieSeen[meta.ReferentielijstInstantie] = true
+			model.ReferentielijstInstanties = append(model.ReferentielijstInstanties, V3ReferentielijstInstantie{
+				Systeemnaam: meta.ReferentielijstInstantie,
+			})
+		}
+	}
+
 	return model
 }
 
@@ -191,13 +206,15 @@ func v3GegevenseElementVanMeta(meta TypeMeta, child OnderliggendGegevenselement)
 // v3RelatieVanMeta maakt een V3Relatie van een relatie-hub-meta.
 func v3RelatieVanMeta(meta TypeMeta, child OnderliggendGegevenselement) V3Relatie {
 	rel := V3Relatie{
-		Naam:            meta.Typenaam,
-		Description:     meta.Description,
-		Meervoud:        meta.Padnaam,
-		Momentvoorkomen: momentvoorkomenString(child.Momentvoorkomen),
-		IsMaterieel:     meta.IsMaterieel,
-		DoelEntiteit:    doelEntiteitVanRelatie(meta),
-		Velden:          extractContentFields(meta),
+		Naam:                     meta.Typenaam,
+		Description:              meta.Description,
+		RelatieSubtype:           meta.RelatieSubtype,
+		ReferentielijstInstantie: meta.ReferentielijstInstantie,
+		Meervoud:                 meta.Padnaam,
+		Momentvoorkomen:          momentvoorkomenString(child.Momentvoorkomen),
+		IsMaterieel:              meta.IsMaterieel,
+		DoelEntiteit:             doelEntiteitVanRelatie(meta),
+		Velden:                   extractContentFields(meta),
 	}
 	return rel
 }
@@ -213,15 +230,21 @@ func geNaamVanTypenaam(meta TypeMeta) string {
 }
 
 // doelEntiteitVanRelatie leidt de doelentiteit af uit SecondaireEntiteitIDKolom.
-// "b_id" → "B", "a_id" → "A"
+// "b_id" → "B", "a_id" → "A", "land_id" → "Land"
 func doelEntiteitVanRelatie(meta TypeMeta) string {
 	col := meta.SecondaireEntiteitIDKolom
 	if col == "" {
 		return ""
 	}
-	// "b_id" → "b" → "B"
+	// "land_id" → "land" → zoek entiteit op in MetaRegistry
 	name := strings.TrimSuffix(col, "_id")
-	return strings.ToUpper(name)
+	for _, m := range MetaRegistry {
+		if m.Metatype == MetatypeEntiteit && strings.EqualFold(m.Tabelnaam, name) {
+			return m.Typenaam
+		}
+	}
+	// Fallback: eerste letter uppercase (werkt voor "a"→"A", "b"→"B")
+	return strings.ToUpper(name[:1]) + name[1:]
 }
 
 // momentvoorkomenString converteert Momentvoorkomen naar string.

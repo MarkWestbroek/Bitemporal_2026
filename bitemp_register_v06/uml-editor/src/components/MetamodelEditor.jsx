@@ -38,6 +38,7 @@ import GegevensElementNode from "./nodes/GegevensElementNode";
 import RelatieNode from "./nodes/RelatieNode";
 import EnumeratieNode from "./nodes/EnumeratieNode";
 import DatatypeNode from "./nodes/DatatypeNode";
+import ReferentielijstInstantieNode from "./nodes/ReferentielijstInstantieNode";
 
 // Custom edge
 import MetamodelEdge from "./edges/MetamodelEdge";
@@ -59,6 +60,7 @@ import {
   editorNaarV3Model,
   schemaResponseNaarEditor,
   maakReferentielijstSet,
+  maakReferentielijstInstantie,
 } from "../metamodel/types";
 import { v3ModelNaarEditor } from "../metamodel/v3ModelNaarEditor";
 
@@ -73,6 +75,7 @@ const nodeTypes = {
   relatie: RelatieNode,
   enumeratie: EnumeratieNode,
   gegevenstype: DatatypeNode,
+  referentielijstInstantie: ReferentielijstInstantieNode,
 };
 
 const edgeTypes = {
@@ -265,6 +268,23 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     setSelectedNodeId(newNodes[0].id);
     setSelectedEdgeId(null);
   }, [setNodes, setEdges]);
+
+  /**
+   * Voeg een referentielijst-instantie node toe.
+   * Een instantie vertegenwoordigt een specifiek record van de Referentielijst-klasse.
+   */
+  const handleAddReferentielijstInstantie = useCallback(() => {
+    const data = maakReferentielijstInstantie();
+    const newNode = {
+      id: data.id,
+      type: "referentielijstInstantie",
+      position: { x: 100 + Math.random() * 400, y: 100 + Math.random() * 200 },
+      data,
+    };
+    setNodes((nds) => [...nds, newNode]);
+    setSelectedNodeId(data.id);
+    setSelectedEdgeId(null);
+  }, [setNodes]);
 
   /** Update de data van een bestaande node */
   const handleUpdateNode = useCallback(
@@ -697,6 +717,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       <Toolbar
         onAddNode={handleAddNode}
         onAddReferentielijstSet={handleAddReferentielijstSet}
+        onAddReferentielijstInstantie={handleAddReferentielijstInstantie}
         onSave={handleSave}
         onPublishSchemaModel={handlePublishSchemaModel}
         onLoad={handleLoad}
@@ -749,6 +770,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
               datatypeNodes={datatypeNodes}
               enumNodes={enumNodes}
                 entiteitNodes={entiteitNodes}
+              allNodes={nodes}
             />
           )}
           {selectedEdge && !selectedNode && (

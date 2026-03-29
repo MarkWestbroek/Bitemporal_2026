@@ -16,13 +16,14 @@ import { METATYPES, ENTITEIT_SUBTYPES, RELATIE_SUBTYPES, VELDTYPEN, AFLEIDINGSTA
 
 const BASISTYPES = ["string", "integer", "number", "boolean"];
 
-export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes = [], enumNodes = [], entiteitNodes = [] }) {
+export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes = [], enumNodes = [], entiteitNodes = [], allNodes = [] }) {
   if (!node) return null;
 
   const data = node.data;
   const isEnum = node.type === "enumeratie";
   const isDatatype = node.type === "gegevenstype";
   const isRelatie = node.type === "relatie";
+  const isRefInstantie = node.type === "referentielijstInstantie";
   const beschikbareVeldtypen = bouwVeldtypen(
     datatypeNodes,
     enumNodes,
@@ -410,6 +411,51 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
     );
   }
 
+  // === Referentielijst-instantie render ===
+  if (isRefInstantie) {
+    return (
+      <div className="edit-panel">
+        <h3>Ref.lijst instantie bewerken</h3>
+
+        <label>
+          Systeemnaam
+          <input
+            type="text"
+            value={data.systeemnaam || ""}
+            onChange={(e) => updateField("systeemnaam", e.target.value)}
+            placeholder="bijv. Landenlijst"
+          />
+        </label>
+
+        <label>
+          Naam
+          <input
+            type="text"
+            value={data.naam || ""}
+            onChange={(e) => updateField("naam", e.target.value)}
+            placeholder="bijv. Landen"
+          />
+        </label>
+
+        <label>
+          Omschrijving
+          <textarea
+            value={data.omschrijving || ""}
+            onChange={(e) => updateField("omschrijving", e.target.value)}
+            placeholder="Korte beschrijving van deze referentielijst"
+            rows={3}
+          />
+        </label>
+
+        <div className="panel-actions">
+          <button className="btn-danger" onClick={() => onDelete(node.id)}>
+            Verwijder instantie
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="edit-panel">
       <h3>
@@ -509,6 +555,24 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
                 {st || "(geen — gewone relatie)"}
               </option>
             ))}
+          </select>
+        </label>
+      )}
+      {data.metatype === "relatie" && data.relatieSubtype === "referentielijst_items" && (
+        <label>
+          Gebonden instantie
+          <select
+            value={data.referentielijstInstantie || ""}
+            onChange={(e) => updateField("referentielijstInstantie", e.target.value)}
+          >
+            <option value="">(geen)</option>
+            {(allNodes || [])
+              .filter((n) => n.type === "referentielijstInstantie" && n.data?.systeemnaam)
+              .map((n) => (
+                <option key={n.data.systeemnaam} value={n.data.systeemnaam}>
+                  {n.data.systeemnaam}
+                </option>
+              ))}
           </select>
         </label>
       )}

@@ -266,6 +266,23 @@ export function maakReferentielijstSet() {
 }
 
 /**
+ * Maak een referentielijst-instantie node.
+ * Een instantie vertegenwoordigt een specifieke referentielijst (bijv. "Landenlijst")
+ * als record van de generieke Referentielijst-klasse.
+ *
+ * Retourneert een node data-object dat als "referentielijstInstantie" node
+ * aan de editor state toegevoegd kan worden.
+ */
+export function maakReferentielijstInstantie() {
+  return {
+    id: generateId("refinstantie"),
+    systeemnaam: "",
+    naam: "",
+    omschrijving: "",
+  };
+}
+
+/**
  * Bouw de VELDTYPEN-lijst dynamisch op: primitieve types + custom datatypes + enumeraties + referentielijst_items.
  * Referentielijst_item types verschijnen als keuzetype, vergelijkbaar met enumeraties.
  * @param {Array} datatypeNodes - React Flow nodes met type === "gegevenstype"
@@ -673,6 +690,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         isMaterieel: relNode.data.isMaterieel || false,
         // Referentielijst-subtypes (optioneel, zie Referentielijsten.md)
         relatieSubtype: relNode.data.relatieSubtype || undefined,
+        referentielijstInstantie: relNode.data.referentielijstInstantie || undefined,
         doelEntiteit: doelEntiteitNaam,
         positie: relNode.position ? { x: relNode.position.x, y: relNode.position.y } : undefined,
         // Bewaar editor-edge ids zodat export/import en DB-round-trips merge-stabiel blijven.
@@ -715,6 +733,17 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
     };
   });
 
+  // Referentielijst-instanties (bijv. Landenlijst, EULidstaten)
+  const referentielijstInstanties = nodes
+    .filter((n) => n.type === "referentielijstInstantie")
+    .map((n) => ({
+      systeemnaam: n.data.systeemnaam || "",
+      naam: n.data.naam || "",
+      omschrijving: n.data.omschrijving || "",
+      positie: n.position ? { x: n.position.x, y: n.position.y } : undefined,
+    }))
+    .filter((ri) => ri.systeemnaam); // filter lege instanties
+
   return {
     versie: opts.versie || "v3",
     naam: opts.naam || "Editor export",
@@ -723,5 +752,6 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
     datatypes,
     enums,
     entiteiten,
+    ...(referentielijstInstanties.length > 0 ? { referentielijstInstanties } : {}),
   };
 }

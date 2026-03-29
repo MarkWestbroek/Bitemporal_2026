@@ -93,6 +93,23 @@ export function v3ModelNaarEditor(v3Model) {
 
   const entiteiten = v3Model.entiteiten || [];
 
+  // Referentielijst-instanties → eigen node-type
+  (v3Model.referentielijstInstanties || []).forEach((ri, i) => {
+    nodes.push({
+      id: `refinstantie_${ri.systeemnaam}`,
+      type: "referentielijstInstantie",
+      position: ri.positie
+        ? { x: ri.positie.x, y: ri.positie.y }
+        : { x: 800 + i * 280, y: 50 },
+      data: {
+        id: `refinstantie_${ri.systeemnaam}`,
+        systeemnaam: ri.systeemnaam || "",
+        naam: ri.naam || "",
+        omschrijving: ri.omschrijving || "",
+      },
+    });
+  });
+
   entiteiten.forEach((ent, entIdx) => {
     nodes.push({
       id: ent.typenaam,
@@ -219,6 +236,7 @@ export function v3ModelNaarEditor(v3Model) {
             isMaterieel: rel.isMaterieel || false,
             // Referentielijst-subtypes (zie Referentielijsten.md)
             relatieSubtype: rel.relatieSubtype || "",
+            referentielijstInstantie: rel.referentielijstInstantie || "",
             kleur: defaultKleur("relatie", rel.relatieSubtype || ""),
             velden,
             afgeleideVelden: (rel.afgeleideVelden || []).map((av) => ({
@@ -296,6 +314,24 @@ export function v3ModelNaarEditor(v3Model) {
             jsonRolnaam: rel.doelEntiteit.toLowerCase(),
             momentvoorkomen: "meervoudig",
             kardinaliteit: "0..*",
+          },
+        });
+      }
+
+      // Binding edge: items-relatie → referentielijst-instantie
+      if (rel.referentielijstInstantie) {
+        const instantieNodeId = `refinstantie_${rel.referentielijstInstantie}`;
+        edges.push({
+          id: `${rel.naam}-->instantie_${rel.referentielijstInstantie}`,
+          source: rel.naam,
+          target: instantieNodeId,
+          type: "metamodel",
+          data: {
+            isDependency: true,
+            rolnaam: `⇢ ${rel.referentielijstInstantie}`,
+            jsonRolnaam: "",
+            momentvoorkomen: "",
+            kardinaliteit: "",
           },
         });
       }
