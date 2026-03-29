@@ -526,3 +526,7 @@ Na validatie van het handmatige testmodel wordt de codegenerator (`cmd/codegen/`
 | **2** | MetaRegistry plumbing + systeemtabel + handmatig testmodel | Tabellen, routes en registratie werken voor testmodel |
 | **3** | Schema-API + frontend index/formulieren | Ref.lijsten zichtbaar en bruikbaar in frontend |
 | **4** | Code generator aanpassen | V3 model → gegenereerde Go-code inclusief ref.lijsten |
+
+
+# Nieuw plan 29 maart 2026!!
+D:\Git\Bitemporal_2026\bitemp_register_v06\docs\copilot-chats\exports\2026-03-29 referentielijsten PLAN.md
