@@ -9,10 +9,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tanstack/react-table": "^8.21.3",
+    "@utrecht/component-library-css": "^9.0.2",
+    "@utrecht/component-library-react": "^13.0.3",
+    "@utrecht/design-tokens": "^5.0.2",
     "@xyflow/react": "^12.10.1",
     "html2canvas": "^1.4.1",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.72.0",
+    "react-router": "^7.13.2"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",

@@ -77,7 +77,24 @@
         "https://*.commonground.nl": {
             "approveRequest": true,
             "approveResponse": false
-        }
+        },
+        "https://nldesignsystem.nl/componenten": true,
+        "https://github.com/nl-design-system/themes": true,
+        "https://github.com/nl-design-system": true,
+        "https://github.com": true,
+        "https://www.npmjs.com/search": true,
+        "https://www.npmjs.com": true,
+        "https://*.npmjs.com": true,
+        "https://github.com/nl-design-system/utrecht/tree/main/packages/component-library-react": true,
+        "https://github.com/nl-design-system/utrecht/tree/main/packages": true,
+        "https://github.com/nl-design-system/utrecht/tree/main": true,
+        "https://github.com/nl-design-system/utrecht/tree": true,
+        "https://github.com/nl-design-system/utrecht": true,
+        "https://github.com/rjsf-team/react-jsonschema-form": true,
+        "https://github.com/rjsf-team": true,
+        "https://formio.github.io/formio.js": true,
+        "https://formio.github.io": true,
+        "https://*.github.io": true
     },
     "chat.restoreLastPanelSession": false,
     "settingsSync.ignoredSettings": [

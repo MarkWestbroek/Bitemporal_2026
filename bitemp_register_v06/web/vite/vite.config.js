@@ -27,6 +27,7 @@ export default defineConfig({
         registraties: resolve(__dirname, "registraties.html"),
         editor: resolve(__dirname, "editor.html"),
         "editor-v2": resolve(__dirname, "editor-v2.html"),
+        inhoud: resolve(__dirname, "inhoud.html"),
       },
     },
   },

@@ -1,0 +1,232 @@
+/*
+ * Common Ground Thema — Design Tokens
+ *
+ * Override de standaard @utrecht/design-tokens met Common Ground branding.
+ * Kleuren afgeleid uit het Common Ground logo (Common_gound_logo_rgb.svg):
+ *   geel:        #ffc200
+ *   blauw:       #00a1e5
+ *   donkerblauw: #143462
+ */
+
+:root,
+.common-ground-theme {
+  /* === Branding kleuren === */
+  --cg-geel: #ffc200;
+  --cg-blauw: #00a1e5;
+  --cg-donkerblauw: #143462;
+  --cg-wit: #ffffff;
+  --cg-lichtgrijs: #f4f6f8;
+  --cg-grijs: #e2e8f0;
+  --cg-donkergrijs: #475569;
+  --cg-succes: #16a34a;
+  --cg-fout: #dc2626;
+  --cg-waarschuwing: #f59e0b;
+
+  /* === Document === */
+  --utrecht-document-color: var(--cg-donkerblauw);
+  --utrecht-document-background-color: var(--cg-lichtgrijs);
+  --utrecht-document-font-family: "Rijksoverheid Sans", "Open Sans", system-ui, -apple-system, sans-serif;
+  --utrecht-document-font-size: 16px;
+  --utrecht-document-line-height: 1.5;
+
+  /* === Headings === */
+  --utrecht-heading-1-font-size: 1.75rem;
+  --utrecht-heading-1-font-weight: 700;
+  --utrecht-heading-1-color: var(--cg-donkerblauw);
+  --utrecht-heading-2-font-size: 1.375rem;
+  --utrecht-heading-2-font-weight: 600;
+  --utrecht-heading-2-color: var(--cg-donkerblauw);
+  --utrecht-heading-3-font-size: 1.125rem;
+  --utrecht-heading-3-font-weight: 600;
+  --utrecht-heading-3-color: var(--cg-donkerblauw);
+
+  /* === Links === */
+  --utrecht-link-color: var(--cg-blauw);
+  --utrecht-link-hover-color: var(--cg-donkerblauw);
+  --utrecht-link-text-decoration: underline;
+
+  /* === Buttons === */
+  --utrecht-button-primary-action-background-color: var(--cg-blauw);
+  --utrecht-button-primary-action-color: var(--cg-wit);
+  --utrecht-button-primary-action-border-color: var(--cg-blauw);
+  --utrecht-button-primary-action-hover-background-color: var(--cg-donkerblauw);
+  --utrecht-button-primary-action-hover-color: var(--cg-wit);
+
+  --utrecht-button-secondary-action-background-color: var(--cg-wit);
+  --utrecht-button-secondary-action-color: var(--cg-donkerblauw);
+  --utrecht-button-secondary-action-border-color: var(--cg-grijs);
+  --utrecht-button-secondary-action-hover-background-color: var(--cg-lichtgrijs);
+
+  /* === Focus === */
+  --utrecht-focus-outline-color: var(--cg-geel);
+  --utrecht-focus-outline-width: 3px;
+  --utrecht-focus-outline-offset: 2px;
+
+  /* === Tables === */
+  --utrecht-table-header-background-color: var(--cg-donkerblauw);
+  --utrecht-table-header-color: var(--cg-wit);
+  --utrecht-table-row-alternate-background-color: var(--cg-lichtgrijs);
+  --utrecht-table-border-color: var(--cg-grijs);
+
+  /* === Form controls === */
+  --utrecht-form-control-border-color: var(--cg-grijs);
+  --utrecht-form-control-border-width: 1px;
+  --utrecht-form-control-focus-border-color: var(--cg-blauw);
+  --utrecht-form-control-invalid-border-color: var(--cg-fout);
+  --utrecht-form-control-padding-block-start: 0.5rem;
+  --utrecht-form-control-padding-block-end: 0.5rem;
+  --utrecht-form-control-padding-inline-start: 0.75rem;
+  --utrecht-form-control-padding-inline-end: 0.75rem;
+
+  /* === Form label === */
+  --utrecht-form-label-font-weight: 600;
+  --utrecht-form-label-color: var(--cg-donkerblauw);
+
+  /* === Form field description === */
+  --utrecht-form-field-description-color: var(--cg-donkergrijs);
+  --utrecht-form-field-description-font-size: 0.875rem;
+
+  /* === Form field error message === */
+  --utrecht-form-field-error-message-color: var(--cg-fout);
+  --utrecht-form-field-error-message-font-size: 0.875rem;
+
+  /* === Page layout === */
+  --utrecht-page-content-padding-inline-start: 1.5rem;
+  --utrecht-page-content-padding-inline-end: 1.5rem;
+
+  /* === Separator === */
+  --utrecht-separator-color: var(--cg-grijs);
+
+  /* === Badge (succes / fout) === */
+  --utrecht-badge-data-background-color: var(--cg-blauw);
+  --utrecht-badge-data-color: var(--cg-wit);
+}
+
+/* === Aanvullende editor-specifieke stijlen === */
+.cg-editor-nav {
+  background: var(--cg-donkerblauw);
+  color: var(--cg-wit);
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cg-editor-nav__logo {
+  height: 2rem;
+  width: auto;
+}
+
+.cg-editor-nav__title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--cg-wit);
+}
+
+.cg-editor-sidebar {
+  background: var(--cg-wit);
+  border-right: 1px solid var(--cg-grijs);
+  width: 240px;
+  min-width: 200px;
+  overflow-y: auto;
+}
+
+.cg-editor-sidebar__item {
+  display: block;
+  width: 100%;
+  padding: 0.625rem 1rem;
+  border: none;
+  background: transparent;
+  text-align: left;
+  color: var(--cg-donkerblauw);
+  font-size: 0.9375rem;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.cg-editor-sidebar__item:hover {
+  background: var(--cg-lichtgrijs);
+}
+
+.cg-editor-sidebar__item--active {
+  background: #e0f2fe;
+  border-left-color: var(--cg-blauw);
+  font-weight: 600;
+}
+
+.cg-editor-sidebar__heading {
+  padding: 0.75rem 1rem 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--cg-donkergrijs);
+}
+
+.cg-editor-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background: var(--cg-lichtgrijs);
+}
+
+.cg-editor-layout {
+  display: flex;
+  height: calc(100vh - 3.5rem); /* nav height */
+}
+
+/* Tabel hover */
+.cg-table-row-clickable:hover {
+  background: #e0f2fe !important;
+  cursor: pointer;
+}
+
+/* Sort-indicator kolom */
+.cg-sort-indicator {
+  margin-left: 0.25rem;
+  opacity: 0.7;
+}
+
+/* Paginering */
+.cg-pagination {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.75rem 0;
+}
+
+/* Formulier card */
+.cg-form-card {
+  background: var(--cg-wit);
+  border: 1px solid var(--cg-grijs);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.cg-form-section {
+  margin-bottom: 1.5rem;
+}
+
+.cg-form-section__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--cg-donkerblauw);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--cg-geel);
+}
+
+/* Feedback-berichten */
+.cg-feedback--succes {
+  color: var(--cg-succes);
+  font-size: 0.875rem;
+  padding: 0.5rem 0;
+}
+
+.cg-feedback--fout {
+  color: var(--cg-fout);
+  font-size: 0.875rem;
+  padding: 0.5rem 0;
+}

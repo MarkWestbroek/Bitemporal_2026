@@ -1,0 +1,246 @@
+# Plan: Schema-gedreven Content Editor voor Bitemporeel Register v06
+
+> **Status**: plan  
+> **Datum**: 2026-03-29
+
+## TL;DR
+Een standaard CRUD-editor toevoegen aan de v06 frontend die dynamisch tabeloverzichten en formulieren opbouwt vanuit de bestaande schema-API (`/api/viz/schema`). Iteratie 1 is een MVP met schema-gedreven tabellen (sorteerbaar/filterbaar) en formulieren (incl. validatie, enums, referentielijsten). Iteratie 2 voegt custom formulierdefinities toe via JSON. Technisch: React Router voor navigatie, @utrecht/component-library-react (NL Design System) voor UI-componenten, react-hook-form voor formulierbeheer, @tanstack/react-table voor headless tabellen.
+
+---
+
+## Architectuurkeuze: Formulierbibliotheek
+
+Er zijn drie opties onderzocht:
+
+| Optie | Beschrijving | Voordelen | Nadelen |
+|---|---|---|---|
+| **A: react-jsonschema-form (RJSF)** | JSON Schema → formulier, meerdere UI-themes | Maximale schema-automatisering; 15.7k stars; actief onderhouden | Geen NL Design System theme (moet custom gebouwd); veel "magic"; minder flexibel voor custom layouts in Iteratie 2 |
+| **B: react-hook-form + eigen componenten** (aanbevolen) | Lichtgewicht form state + zelf schema→veld mapping | Volledige controle; hergebruik bestaande `ActionFormParts.jsx` patronen; NL Design System direct toepasbaar; performant | Meer eigen code nodig voor schema→formulier mapping |
+| **C: form.io** | Drag-and-drop form builder, JSON-based | Visuele form builder; standaardformaat | Deels commercieel (server); Bootstrap-gebonden; moeilijk NL Design System; vendor lock-in |
+
+**Aanbeveling**: Optie B. Bouwt voort op bestaande patronen, geeft volledige controle voor NL Design System compliance, en is eenvoudig uitbreidbaar naar custom formulieren in Iteratie 2.
+
+---
+
+## Iteratie 1 — MVP: Schema-gedreven editor
+
+### Fase 1: Infrastructuur & Navigatie
+
+1. **React Router toevoegen** — Routing installeren (`react-router`) en `App.jsx` refactoren van pathname-matching naar `<BrowserRouter>` met `<Routes>`. Bestaande pagina's (index, tijdlijn, registraties, editors) als routes behouden.
+   - Nieuwe route: `/editor/inhoud` → `InhoudEditorPage`
+   - Subroutes: `/editor/inhoud/:typePad` → tabeloverzicht, `/editor/inhoud/:typePad/:id` → formulier
+
+2. **NL Design System integratie** — `@utrecht/component-library-react` + `@utrecht/component-library-css` + `@utrecht/design-tokens` installeren. CSS custom properties als thema laden. Wrapper `<Document className="common-ground-theme">` rond editor-pagina's.
+
+3. **Gedeelde schema-context** — `SchemaProvider` (React Context) die `/api/viz/schema` eenmaal ophaalt en beschikbaar maakt aan alle editor-componenten. Hergebruik de bestaande `fetchVizSchema()` uit `schemaUtils.js`.
+   - Eventueel `@tanstack/react-query` voor caching/revalidatie (optioneel in MVP)
+
+### Fase 2: Tabeloverzicht-component
+
+4. **`<RepresentatieTabel>`** — Generiek tabel-component dat een `typeMeta` uit de SchemaProvider ontvangt en:
+   - **Kolommen** dynamisch opbouwt uit `typeMeta.velden` (naam, type, format)
+   - **Data ophaalt** via `GET /api/{padnaam}?page={p}&size={s}`
+   - **Paginering** (page/size, has_more)
+   - **Sorteren** — client-side initieel (kolom-headers klikbaar); later server-side via query param
+   - **Filteren** — per kolom een filterveld (text input of enum-dropdown afhankelijk van veldtype)
+   - Klik op rij → navigeer naar formulier (`/editor/inhoud/:typePad/:id`)
+   - Implementeer met **@tanstack/react-table** (headless) + Utrecht tabel-CSS klassen
+
+5. **`<EntiteitOverzichtTabel>`** — Specifieke variant voor entiteiten die ook het label (afgeleid veld) toont en link naar full-entity formulier
+
+6. **Navigatiemenu** — Zijbalk of tabbladen met alle entiteittypen uit de schema (gefilterd op `metatype === "entiteit"`), dynamisch opgebouwd
+
+### Fase 3: Formuliercomponenten
+
+7. **`<SchemaFormField>`** — Generiek veld-component dat één `veld` uit de schema ontvangt en het juiste NL Design System invoerelement rendert:
+   - `string` → `<utrecht-textbox>` (text input)
+   - `string` + `format: "date"` → date input
+   - `string` + `format: "date-time"` → datetime-local input
+   - `integer` / `number` → numeric input (`inputMode: "numeric"`)
+   - `boolean` → radio group (ja/nee) of checkbox
+   - `enum` (kort, ≤10 opties) → `<select>` / radio group
+   - `enum` (lang, >10 opties of referentielijst) → autocomplete/combobox met zoekfunctie
+   - Validatie: hergebruik `validatieMeldingVoorVeld()` uit `ActionFormParts.jsx`
+   - Labels altijd zichtbaar boven invoerveld (NL Design System richtlijn)
+   - Foutmeldingen direct bij het veld (NL Design System richtlijn)
+
+8. **`<RepresentatieFormulier>`** — Formulier voor één representatie (GE/relatie):
+   - Dynamisch opgebouwd uit `typeMeta.velden`
+   - `react-hook-form` voor state management
+   - Readonly-velden voor PK/FK/autoincrement
+   - Opslaan via `POST /api/registreer` (bestaande registratie-route)
+   - Validatie vóór submit
+
+9. **`<EntiteitFormulier>`** — Formulier voor een volledige entiteit met geneste secties:
+   - Haalt data op via `GET /api/full/{padnaam}/{id}` (full entity handler)
+   - Per `onderliggende` GE/relatie een uitklapbare sectie met:
+     - `momentvoorkomen === "enkelvoudig"` → één formulier
+     - `momentvoorkomen === "meervoudig"` → tabel + toevoeg-knop
+   - Materiële tijd (aanvang/einde) als aparte sectie bovenaan
+   - Formele tijd info (opvoer/afvoer) als readonly metadata
+
+### Fase 4: Referentielijsten & Enums
+
+10. **`<EnumSelect>`** — Dropdown voor korte enum-lijsten (<= 10 items), opgebouwd uit `veld.enum`
+11. **`<ReferentielijstZoeker>`** — Autocomplete/combobox voor referentielijsten:
+    - Haalt items op via API endpoint van de referentielijst
+    - Zoekfunctie (client-side filter of server-side `?q=` parameter)
+    - Toont label + eventueel extra info
+    - Drempelwaarde: ≤10 items → gewone select, >10 items → zoek-combobox
+
+### Fase 5: Backend-aanpassingen (minimaal)
+
+12. **Server-side sorteren** — Query parameter `?sort=veldnaam&order=asc|desc` toevoegen aan `MakeGetEntitiesByMetaHandler` in `handlers/core_handlers.go`
+13. **Server-side filteren** — Query parameter `?filter_veldnaam=waarde` toevoegen (exact match/contains voor strings)
+14. **Zoek-endpoint voor referentielijsten** — `GET /api/{referentielijst_pad}?q=zoekterm` met ILIKE-filter op label/naam
+
+---
+
+## Iteratie 2 — Custom Formulieren
+
+15. **Formulierdefinitie-schema** — JSON-formaat dat layout en veldgroepering beschrijft:
+    ```json
+    {
+      "type": "A",
+      "secties": [
+        { "titel": "Persoonsgegevens", "velden": ["voornaam", "achternaam"] },
+        { "titel": "Adres", "ge": "A_V", "velden": ["straat", "huisnummer", "postcode"] }
+      ],
+      "condities": [
+        { "als": { "veld": "type", "is": "particulier" }, "toon": ["bsn"] }
+      ]
+    }
+    ```
+16. **`<CustomFormulier>`** — Renderer die een formulierdefinitie + schema-API data combineert
+17. **Conditionele zichtbaarheid** — Velden/secties tonen/verbergen op basis van andere veldwaarden
+18. **Formulierdefinities opslaan** — In database of als JSON-bestanden, gekoppeld aan entiteittype
+
+---
+
+## Toekomstige features (buiten scope Iteratie 1–2)
+
+- Inline editing in tabeloverzicht
+- Bulk-operaties (meerdere records tegelijk bewerken/verwijderen)
+- Export naar CSV/Excel
+- Formele/materiële tijdreis in de editor (peil-/tijdstipkiezer)
+- Audit-trail weergave per record
+- Role-based access control op veld-/formulierniveau
+- Drag-and-drop formulier-builder (visueel, à la form.io)
+
+---
+
+## Te wijzigen/nieuwe bestanden
+
+### Frontend (nieuw)
+- `web/vite/src/pages/InhoudEditorPage.jsx` — Hoofdpagina editor met subrouting
+- `web/vite/src/components/editor/RepresentatieTabel.jsx` — Generiek tabel-component
+- `web/vite/src/components/editor/EntiteitOverzichtTabel.jsx` — Entiteittabel met labels
+- `web/vite/src/components/editor/SchemaFormField.jsx` — Generiek veld-component
+- `web/vite/src/components/editor/RepresentatieFormulier.jsx` — Formulier per representatie
+- `web/vite/src/components/editor/EntiteitFormulier.jsx` — Volledig entiteitformulier
+- `web/vite/src/components/editor/EnumSelect.jsx` — Enum dropdown
+- `web/vite/src/components/editor/ReferentielijstZoeker.jsx` — Autocomplete voor referentielijsten
+- `web/vite/src/components/editor/EditorNavigatie.jsx` — Zijbalk navigatie
+- `web/vite/src/context/SchemaContext.jsx` — React Context voor schema data
+- `web/vite/src/styles/common-ground-theme.css` — Common Ground design tokens
+- `web/vite/editor.html` — HTML entry point voor editor
+
+### Frontend (te wijzigen)
+- `web/vite/src/App.jsx` — React Router toevoegen, editor-route registreren
+- `web/vite/vite.config.js` — Nieuw entry point `editor.html` toevoegen
+- `web/vite/package.json` — Nieuwe dependencies toevoegen
+- `web/vite/src/shared/schemaUtils.js` — Eventueel schema-helpers extraheren/delen
+
+### Backend (te wijzigen)
+- `handlers/core_handlers.go` — Sort/filter query parameters toevoegen aan `MakeGetEntitiesByMetaHandler()`
+- `routes/addroutes.go` — Eventueel nieuwe zoek-routes voor referentielijsten
+
+### Herbruikbare bestaande code
+- `ActionFormParts.jsx` → `validatieMeldingVoorVeld()`, `coercedWaardeVoorVeld()`, `inputTypeVoorVeld()` hergebruiken in `SchemaFormField`
+- `schemaUtils.js` → `fetchVizSchema()`, `safeArray()`, `childArrayVoorRol()` hergebruiken
+- `handlers/core_handlers.go` → `MakeGetEntitiesByMetaHandler()` als basis voor sort/filter
+- `handlers/full_handlers.go` → Full entity ophalen voor entiteitformulier
+- `handlers/viz_schema_handler.go` → Schema structuur als contract
+
+---
+
+## Nieuwe dependencies
+
+| Package | Versie | Doel |
+|---|---|---|
+| `react-router` | ^7.x | Client-side routing |
+| `react-hook-form` | ^7.x | Formulier state management |
+| `@tanstack/react-table` | ^8.x | Headless tabel met sort/filter/paginering |
+| `@utrecht/component-library-react` | ^13.x | NL Design System React componenten |
+| `@utrecht/component-library-css` | ^9.x | NL Design System CSS |
+| `@utrecht/design-tokens` | ^5.x | NL Design System design tokens (als basis) |
+
+---
+
+## Verificatie
+
+1. **Build check** — `npm run build` in `web/vite/` moet slagen na elke fase
+2. **Bestaande pagina's intact** — Index, tijdlijn, registraties, editors moeten ongewijzigd blijven werken
+3. **Tabel toont data** — Voor elk entiteittype (`A`, `B`) moet het tabeloverzicht records tonen met correcte kolommen
+4. **Formulier rendert alle veldtypen** — Test met string, integer, date, enum, boolean velden
+5. **Validatie werkt** — Verplichte velden, type-validatie, enum-validatie zichtbaar bij submit
+6. **Referentielijst zoeker** — Select voor korte lijsten, autocomplete voor lange
+7. **Navigatie** — Tabel → formulier → terug naar tabel werkt vloeiend
+8. **NL Design System** — Visuele check: labels boven velden, foutmeldingen bij velden, focus-indicatoren, minimum aanklikgebied
+9. **Go tests** — `go test ./...` in v06 moet blijven slagen na backend-wijzigingen
+10. **Toegankelijkheid** — Toetsenbordnavigatie door tabel en formulier, screenreader-labels aanwezig
+
+---
+
+## Beslissingen
+
+- **Optie B (react-hook-form + eigen componenten)** gekozen boven RJSF en form.io vanwege controle, NL Design System integratie, en hergebruik van bestaand patroon
+- **@utrecht/component-library-react** als NL Design System implementatie (meest volwassen React-implementatie, EUPL-1.2 licentie)
+- **Aparte editor-pagina** (niet geïntegreerd in bestaande visualisatiepagina's) — bestaande pagina's blijven ongewijzigd
+- **Registratie-patroon behouden** — Wijzigingen gaan via `/api/registreer` (bitemporele registratie), niet via directe CRUD
+- **Scope Iteratie 1**: Alleen lezen/aanmaken/bewerken via standaard formulieren. Geen delete, geen tijdreis in editor, geen custom layouts
+- **Scope Iteratie 2**: Custom formulierdefinities in JSON, conditionele logica. Geen visuele drag-and-drop builder
+
+## Besloten op openstaande vragen
+
+1. **Common Ground thema** — Eigen design tokens op basis van CG-branding. Geen Utrecht-thema, wel `@utrecht/component-library-react` als componentenbibliotheek met eigen CSS custom properties override.
+2. **Client-side sort/filter** — Start client-side; server-side toevoegen bij performance-noodzaak.
+3. **SPA voor editor, MPA voor rest** — Editor als nieuw SPA entry point (`editor.html`) met React Router. Bestaande pagina's blijven MPA.
+
+### Common Ground Thema — Design Tokens
+
+Brandkleuren uit het CG-logo (`Common_gound_logo_rgb.svg`):
+
+| Token | Hex | Gebruik |
+|---|---|---|
+| `--cg-geel` | `#ffc200` | Accent, highlights, actieve tab/selectie, hover states |
+| `--cg-blauw` | `#00a1e5` | Primaire actiekleuren: buttons, links, focus-ring |
+| `--cg-donkerblauw` | `#143462` | Tekst, headers, navigatiebalk, tabelkoppen |
+| `--cg-wit` | `#ffffff` | Achtergrond cards/formulieren |
+| `--cg-lichtgrijs` | `#f4f6f8` | Pagina-achtergrond, zebra-rijen tabel |
+| `--cg-grijs` | `#e2e8f0` | Borders, scheidingslijnen |
+| `--cg-donkergrijs` | `#475569` | Secundaire tekst, placeholders |
+| `--cg-succes` | `#16a34a` | Succes-feedback, opvoer-indicatie |
+| `--cg-fout` | `#dc2626` | Foutmeldingen, validatiefouten |
+| `--cg-waarschuwing` | `#f59e0b` | Waarschuwingen |
+
+Implementatie: `common-ground-theme.css` met CSS custom properties die de Utrecht design tokens overriden:
+
+```css
+.common-ground-theme {
+  --utrecht-document-color: #143462;
+  --utrecht-document-background-color: #f4f6f8;
+  --utrecht-button-primary-action-background-color: #00a1e5;
+  --utrecht-button-primary-action-color: #ffffff;
+  --utrecht-button-primary-action-hover-background-color: #143462;
+  --utrecht-link-color: #00a1e5;
+  --utrecht-link-hover-color: #143462;
+  --utrecht-focus-outline-color: #ffc200;
+  --utrecht-table-header-background-color: #143462;
+  --utrecht-table-header-color: #ffffff;
+  --utrecht-form-control-border-color: #e2e8f0;
+  --utrecht-form-control-focus-border-color: #00a1e5;
+}
+```
+
+Logo: `Common_gound_logo_rgb.svg` in de navigatiebalk van de editor.
