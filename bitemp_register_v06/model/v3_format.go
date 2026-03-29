@@ -37,10 +37,10 @@ type V3ReferentielijstInstantie struct {
 type V3Datatype struct {
 	Naam         string       `json:"naam"`
 	Description  string       `json:"description,omitempty"`
-	Basistype    string       `json:"basistype"`              // string, integer, number
-	Format       string       `json:"format,omitempty"`       // bijv. "nl-postcode", "bsn"
-	Domein       string       `json:"domein,omitempty"`       // domeingroep: "register" = registerbasis, "" = ongegroepeerd
-	Positie      *V3Positie   `json:"positie,omitempty"`      // editor-layout positie (genegeerd door codegen)
+	Basistype    string       `json:"basistype"`         // string, integer, number
+	Format       string       `json:"format,omitempty"`  // bijv. "nl-postcode", "bsn"
+	Domein       string       `json:"domein,omitempty"`  // domeingroep: "register" = registerbasis, "" = ongegroepeerd
+	Positie      *V3Positie   `json:"positie,omitempty"` // editor-layout positie (genegeerd door codegen)
 	Validatie    *V3Validatie `json:"validatie,omitempty"`
 	Normalisatie string       `json:"normalisatie,omitempty"`
 	Weergave     *V3Weergave  `json:"weergave,omitempty"`
@@ -93,6 +93,7 @@ type V3Entiteit struct {
 	Kleur             string              `json:"kleur,omitempty"`
 	Meervoud          string              `json:"meervoud"`          // URL-padnaam, bijv. "as", "personen"
 	Positie           *V3Positie          `json:"positie,omitempty"` // editor-layout positie (genegeerd door codegen)
+	Runtime           *V3Runtime          `json:"runtime,omitempty"` // V3.1: runtime/deployment metadata (genegeerd door codegen/UML-editor)
 	AfgeleideVelden   []V3AfgeleidVeld    `json:"afgeleideVelden,omitempty"`
 	Gegevenselementen []V3Gegevenselement `json:"gegevenselementen,omitempty"`
 	Relaties          []V3Relatie         `json:"relaties,omitempty"`
@@ -109,6 +110,7 @@ type V3Gegevenselement struct {
 	ID              string           `json:"id,omitempty"`           // persistente edge-id van entiteit→GE voor stabiele editor round-trips
 	SourceHandle    string           `json:"sourceHandle,omitempty"` // verbindingspunt op de entiteit (genegeerd door codegen)
 	TargetHandle    string           `json:"targetHandle,omitempty"` // verbindingspunt op het GE-node (genegeerd door codegen)
+	Runtime         *V3Runtime       `json:"runtime,omitempty"`      // V3.1: runtime/deployment metadata (genegeerd door codegen/UML-editor)
 	AfgeleideVelden []V3AfgeleidVeld `json:"afgeleideVelden,omitempty"`
 	Velden          []V3Veld         `json:"velden,omitempty"`
 }
@@ -130,6 +132,7 @@ type V3Relatie struct {
 	DoelID                   string           `json:"doelId,omitempty"`           // persistente edge-id van relatie→doel-entiteit voor stabiele editor round-trips
 	DoelSourceHandle         string           `json:"doelSourceHandle,omitempty"` // verbindingspunt op de relatie (uitgaand naar doel, genegeerd door codegen)
 	DoelTargetHandle         string           `json:"doelTargetHandle,omitempty"` // verbindingspunt op de doel-entiteit (genegeerd door codegen)
+	Runtime                  *V3Runtime       `json:"runtime,omitempty"`          // V3.1: runtime/deployment metadata (genegeerd door codegen/UML-editor)
 	AfgeleideVelden          []V3AfgeleidVeld `json:"afgeleideVelden,omitempty"`
 	Velden                   []V3Veld         `json:"velden,omitempty"`
 }
@@ -142,13 +145,42 @@ type V3Positie struct {
 	Y float64 `json:"y"`
 }
 
+// V3Runtime bevat runtime/deployment-specifieke metadata die afkomstig is uit de
+// MetaRegistry en nodig is voor frontends (content editor, formulieren) en API-clients.
+// Deze gegevens worden genegeerd door de codegenerator en UML-editor, maar zijn
+// essentieel voor dynamische frontend-rendering en API-integratie.
+//
+// V3.1 extensie: scheidt modeldefinitie (typenaam, velden, relaties) van
+// runtime-info (paden, tabellen, kolommen) zodat consumers gericht kunnen kiezen.
+type V3Runtime struct {
+	// Veldnaam is de JSON-veldnaam in REST requests (bijv. "a", "u", "rel_a_b").
+	Veldnaam string `json:"veldnaam,omitempty"`
+	// Padnaam is het URL-padsegment voor REST-routes (bijv. "as", "a-us", "rel-a-bs").
+	Padnaam string `json:"padnaam,omitempty"`
+	// Tabelnaam is de database-tabelnaam (bijv. "a", "a_u", "rel_a_b").
+	Tabelnaam string `json:"tabelnaam,omitempty"`
+	// IDKolom is de naam van de primaire sleutelkolom (bijv. "id", "rel_id").
+	IDKolom string `json:"idKolom,omitempty"`
+	// HeeftPFK geeft aan of er een samengestelde sleutel is (bijv. entiteitID + rel_id).
+	HeeftPFK bool `json:"heeftPFK,omitempty"`
+	// EntiteitIDKolom is de FK-kolom naar de parent-entiteit (bijv. "a_id", "b_id").
+	EntiteitIDKolom string `json:"entiteitIDKolom,omitempty"`
+	// Klassenaam is de korte weergavenaam zonder entiteitsprefix (bijv. "PersoonsIdentificatie").
+	Klassenaam string `json:"klassenaam,omitempty"`
+	// RelatieveAutoincrement geeft aan of rel_id/versie auto-increment is binnen de parent.
+	RelatieveAutoincrement bool `json:"relatieveAutoincrement,omitempty"`
+}
+
 // V3Veld beschrijft een inhoudsveld (geen plumbing) in een GE of relatie.
 type V3Veld struct {
 	Naam                string `json:"naam"`
-	GoType              string `json:"goType"`           // bijv. "string", "*bool", "float64", "RelABSoort"
-	Enum                string `json:"enum,omitempty"`   // ref naar V3Enum.GoType als dit een enum-veld is
-	Datatype            string `json:"datatype,omitempty"` // ref naar V3Datatype.Naam als dit een custom datatype-veld is (bijv. "NLPostcode", "BSN")
-	Ref                 string `json:"$ref,omitempty"`    // ref naar een referentielijst-items type (bijv. "LandenlijstLand"), analoog aan OAS 3.1 $ref
+	GoType              string `json:"goType"`              // bijv. "string", "*bool", "float64", "RelABSoort"
+	Type                string `json:"type,omitempty"`      // V3.1: OAS 3.1 type ("string", "integer", "number", "boolean")
+	Format              string `json:"format,omitempty"`    // V3.1: OAS 3.1 format ("date", "date-time", "float32", "float64", ...)
+	Verplicht           bool   `json:"verplicht,omitempty"` // V3.1: true als het veld niet optioneel is (geen pointer-type)
+	Enum                string `json:"enum,omitempty"`      // ref naar V3Enum.GoType als dit een enum-veld is
+	Datatype            string `json:"datatype,omitempty"`  // ref naar V3Datatype.Naam als dit een custom datatype-veld is (bijv. "NLPostcode", "BSN")
+	Ref                 string `json:"$ref,omitempty"`      // ref naar een referentielijst-items type (bijv. "LandenlijstLand"), analoog aan OAS 3.1 $ref
 	Description         string `json:"description,omitempty"`
 	Afgeleid            bool   `json:"afgeleid,omitempty"`
 	AfleidingsregelTaal string `json:"afleidingsregelTaal,omitempty"`

@@ -70,6 +70,63 @@ func isEnumType(t reflect.Type) bool {
 	return t.Kind() == reflect.String && t.Name() != "string" && t.Name() != ""
 }
 
+// runtimeVanMeta bouwt een V3Runtime op basis van de TypeMeta.
+// Retourneert nil als er geen relevante runtime-info is (bijv. pure modeldefinitie zonder deployment).
+func runtimeVanMeta(meta TypeMeta) *V3Runtime {
+	rt := &V3Runtime{
+		Veldnaam:               meta.Veldnaam,
+		Padnaam:                meta.Padnaam,
+		Tabelnaam:              meta.Tabelnaam,
+		IDKolom:                meta.IDKolom,
+		HeeftPFK:               meta.HeeftPFK,
+		EntiteitIDKolom:        meta.EntiteitIDKolom,
+		Klassenaam:             meta.Klassenaam,
+		RelatieveAutoincrement: meta.RelatieveAutoincrement,
+	}
+	// Retourneer nil als alles leeg is (geen runtime-info beschikbaar)
+	if rt.Veldnaam == "" && rt.Padnaam == "" && rt.Tabelnaam == "" && rt.IDKolom == "" &&
+		!rt.HeeftPFK && rt.EntiteitIDKolom == "" && rt.Klassenaam == "" && !rt.RelatieveAutoincrement {
+		return nil
+	}
+	return rt
+}
+
+// oasTypeVoorGoType converteert een reflect.Type naar OAS 3.1 type en format.
+// Analoog aan schemaTypeVoorReflectType in viz_schema_handler.go, maar dan
+// in het model package zodat de V3 exporter er toegang toe heeft.
+func oasTypeVoorGoType(t reflect.Type) (string, string) {
+	if t == nil {
+		return "string", ""
+	}
+	for t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	if t == reflect.TypeOf(time.Time{}) {
+		return "string", "date-time"
+	}
+	if t == reflect.TypeOf(Date{}) {
+		return "string", "date"
+	}
+	switch t.Kind() {
+	case reflect.Bool:
+		return "boolean", ""
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return "integer", ""
+	case reflect.Float32:
+		return "number", "float32"
+	case reflect.Float64:
+		return "number", "float64"
+	case reflect.String:
+		return "string", ""
+	default:
+		if t.Name() != "" {
+			return t.Name(), ""
+		}
+		return "string", ""
+	}
+}
+
 // extractContentFields extraheert de inhoudsvelden uit een _Data struct.
 func extractContentFields(meta TypeMeta) []V3Veld {
 	dataMeta, hasData := MetaRegistry.GetTypeMeta(meta.DataTypenaam)
@@ -95,6 +152,12 @@ func extractContentFields(meta TypeMeta) []V3Veld {
 			Naam:   jsonFieldName(f),
 			GoType: goTypeName(f.Type),
 		}
+		// V3.1: OAS 3.1 type en format
+		oasType, oasFormat := oasTypeVoorGoType(f.Type)
+		veld.Type = oasType
+		veld.Format = oasFormat
+		// V3.1: verplicht = geen pointer-type en geen omitempty
+		veld.Verplicht = f.Type.Kind() != reflect.Ptr && !strings.Contains(f.Tag.Get("json"), "omitempty")
 		if isEnumType(f.Type) {
 			ft := f.Type
 			for ft.Kind() == reflect.Ptr {
@@ -167,6 +230,7 @@ func ExportMetaRegistryToV3(domein ...string) V3Model {
 			IsMaterieel:     meta.IsMaterieel,
 			Kleur:           meta.Kleur,
 			Meervoud:        meta.Padnaam,
+			Runtime:         runtimeVanMeta(meta),
 		}
 		if meta.Layout != nil {
 			ent.Positie = meta.Layout.Positie
@@ -229,6 +293,7 @@ func v3GegevenseElementVanMeta(meta TypeMeta, child OnderliggendGegevenselement)
 		Momentvoorkomen: momentvoorkomenString(child.Momentvoorkomen),
 		IsMaterieel:     meta.IsMaterieel,
 		Velden:          extractContentFields(meta),
+		Runtime:         runtimeVanMeta(meta),
 	}
 	if meta.Layout != nil {
 		ge.Positie = meta.Layout.Positie
@@ -251,6 +316,7 @@ func v3RelatieVanMeta(meta TypeMeta, child OnderliggendGegevenselement) V3Relati
 		IsMaterieel:              meta.IsMaterieel,
 		DoelEntiteit:             doelEntiteitVanRelatie(meta),
 		Velden:                   extractContentFields(meta),
+		Runtime:                  runtimeVanMeta(meta),
 	}
 	if meta.Layout != nil {
 		rel.Positie = meta.Layout.Positie

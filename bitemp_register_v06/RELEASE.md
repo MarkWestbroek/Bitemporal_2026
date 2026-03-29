@@ -14,6 +14,17 @@ Korte checklist voor een API-release met losse DB-stack.
 - Post-load hub-kinderen: `laadHubKinderenNaQuery()` laadt Data/Aanvang/Einde records in aparte batch-queries na de hoofd-query, als workaround voor de Bun v1.1.14 geneste has-many panic. Zie `ONTWERP_DATA_PATTERN.md` §15.
 - Afgeleide formele tijd: `vulAfgeleideFormeleTijdVoorFullEntity()` daalt nu ook af in hub-kinderen (Data/Aanvang/Einde) bij peiltijdstip-filtering.
 
+## V3.1 runtime extensie (2026-03-29)
+
+- V3 modelformaat uitgebreid met **runtime/deployment metadata** (`V3Runtime`), zodat frontends (content editor, formulieren) en API-clients alle benodigde paden, tabelnamen en kolominfo rechtstreeks uit de model-API (`/api/schema/model`) kunnen lezen — zonder de oudere `viz/schema`-API nodig te hebben.
+- Nieuw type `V3Runtime` in `model/v3_format.go` met velden: `veldnaam`, `padnaam`, `tabelnaam`, `idKolom`, `heeftPFK`, `entiteitIDKolom`, `klassenaam`, `relatieveAutoincrement`.
+- `V3Runtime` wordt als `"runtime"` (omitempty) opgenomen in `V3Entiteit`, `V3Gegevenselement` en `V3Relatie`.
+- `V3Veld` uitgebreid met OAS 3.1 `type`, `format` en `verplicht` velden, zodat frontends weten welk invoerveld ze moeten renderen.
+- V3 exporter (`model/v3_exporter.go`) aangevuld met `runtimeVanMeta()` en `oasTypeVoorGoType()` helpers; alle drie de builder-functies vullen nu `Runtime` en de veld-loop vult `Type`/`Format`/`Verplicht`.
+- Volledig backward-compatible: alle nieuwe JSON-velden gebruiken `omitempty`, codegen en UML-editor negeren ze.
+- Nieuwe tests in `model/v3_exporter_test.go` voor runtime op entiteiten, relaties, en OAS type/format op velden.
+- Zie `docs/v3_1_runtime.md` voor de volledige technische documentatie.
+
 ## Runtime fix notes (2026-03-26)
 
 - Editor v2 laadt bij opstart standaard de nieuwste DB-versie via `GET /api/schema/versies` en daarna `model_url`.
