@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useState, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router";
 import { useSchema } from "../../context/SchemaContext";
 import { safeArray } from "../../shared/schemaUtils";
 import SchemaFormField from "./SchemaFormField";
@@ -7,18 +7,59 @@ import { coercedWaardeVoorVeld } from "../actions/ActionFormParts";
 
 /**
  * RepresentatieFormulier — formulier voor één representatie (entiteit, GE of relatie).
- * Toont dynamisch alle velden uit typeMeta, met validatie en opslaan via /api/registreer.
+ *
+ * Props:
+ *  - typeMeta:         het hub-type metadata object uit de schema-API
+ *  - dataMeta:         (optioneel) het data-subtype metadata object — als het type een
+ *                      hub is (bijv. NatuurlijkPersoon_Naam) worden de inhoudsvelden
+ *                      uit dataMeta getoond in plaats van de hub-plumbing velden.
+ *  - initialData:      bestaand (platgeslagen) record, of null voor nieuw
+ *  - onSaved:          callback na succesvolle opslag
+ *  - entiteitId:       parent entiteit ID (om FK terug te zetten in payload)
+ *  - entiteitIdKolom:  naam van de FK-kolom (bijv. "natuurlijkpersoon_id")
  */
-export default function RepresentatieFormulier({ typeMeta, initialData, onSaved }) {
+export default function RepresentatieFormulier({
+  typeMeta,
+  dataMeta,
+  initialData,
+  onSaved,
+  entiteitId,
+  entiteitIdKolom,
+}) {
   const { baseUrl } = useSchema();
   const navigate = useNavigate();
-  const velden = safeArray(typeMeta?.velden);
   const isNieuw = !initialData;
 
-  // Formulierstaat
+  // Selecteer velden: data-velden als die beschikbaar zijn, anders hub-velden
+  const meta = dataMeta || typeMeta;
+  const alleVelden = safeArray(meta?.velden);
+
+  // Splits immutable en bewerkbare velden
+  const { immutableVelden, bewerkbareVelden } = useMemo(() => {
+    const plumbingNamen = new Set(["opvoer", "afvoer"]);
+    const immutable = [];
+    const bewerkbaar = [];
+    for (const v of alleVelden) {
+      const naam = String(v.naam || "").toLowerCase();
+      if (plumbingNamen.has(naam)) continue; // toon apart
+      const isImmutable = v.autoIncrement
+        || naam === String(typeMeta?.idKolom || "id").toLowerCase()
+        || naam === String(entiteitIdKolom || "").toLowerCase()
+        || naam === "versie"
+        || naam === "rel_id";
+      if (isImmutable) {
+        immutable.push(v);
+      } else {
+        bewerkbaar.push(v);
+      }
+    }
+    return { immutableVelden: immutable, bewerkbareVelden: bewerkbaar };
+  }, [alleVelden, typeMeta, entiteitIdKolom]);
+
+  // Formulierstaat — alleen bewerkbare velden
   const [values, setValues] = useState(() => {
     const init = {};
-    for (const veld of velden) {
+    for (const veld of bewerkbareVelden) {
       init[veld.naam] = initialData?.[veld.naam] ?? "";
     }
     return init;
@@ -38,10 +79,14 @@ export default function RepresentatieFormulier({ typeMeta, initialData, onSaved 
       setFeedback(null);
 
       try {
-        // Coerce waarden naar juiste types
         const payload = {};
-        for (const veld of velden) {
-          if (veld.autoIncrement) continue; // Skip autoincrement velden
+
+        // FK naar parent entiteit
+        if (entiteitIdKolom && entiteitId != null) {
+          payload[entiteitIdKolom] = entiteitId;
+        }
+
+        for (const veld of bewerkbareVelden) {
           const raw = values[veld.naam];
           if (raw === "" || raw === null || raw === undefined) {
             if (veld.verplicht) throw new Error(`${veld.naam} is verplicht.`);
@@ -50,17 +95,16 @@ export default function RepresentatieFormulier({ typeMeta, initialData, onSaved 
           payload[veld.naam] = coercedWaardeVoorVeld(raw, veld, veld.naam);
         }
 
-        // Bouw registratie-payload
-        const wijziging = {
-          metatype: typeMeta.metatype,
-          typenaam: typeMeta.typenaam,
-          wijzigingstype: "opvoer",
-          representatie: payload,
-        };
-
         const registratiePayload = {
           opmerking: isNieuw ? `Nieuw ${typeMeta.typenaam}` : `Bewerk ${typeMeta.typenaam}`,
-          wijzigingen: [wijziging],
+          wijzigingen: [
+            {
+              metatype: typeMeta.metatype,
+              typenaam: typeMeta.typenaam,
+              wijzigingstype: "opvoer",
+              representatie: payload,
+            },
+          ],
         };
 
         const res = await fetch(`${baseUrl}/registratie/`, {
@@ -82,58 +126,63 @@ export default function RepresentatieFormulier({ typeMeta, initialData, onSaved 
         setBusy(false);
       }
     },
-    [values, velden, typeMeta, baseUrl, isNieuw, onSaved]
+    [values, bewerkbareVelden, typeMeta, baseUrl, isNieuw, onSaved, entiteitId, entiteitIdKolom]
   );
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="cg-form-card">
-        <div className="cg-form-section">
-          <div className="cg-form-section__title">
-            {isNieuw ? `Nieuw: ${typeMeta.klassenaam || typeMeta.typenaam}` : typeMeta.klassenaam || typeMeta.typenaam}
+      <div className="cg-form-section">
+        {/* Immutable velden als read-only display */}
+        {immutableVelden.length > 0 && initialData && (
+          <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap", fontSize: "0.875rem", color: "var(--cg-donkergrijs)", marginBottom: "0.5rem" }}>
+            {immutableVelden.map((v) => {
+              const val = initialData[v.naam];
+              return val != null && val !== "" ? (
+                <span key={v.naam}>
+                  <strong>{v.naam}:</strong> {String(val)}
+                </span>
+              ) : null;
+            })}
           </div>
+        )}
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "0.5rem 1.5rem" }}>
-            {velden.map((veld) => (
-              <SchemaFormField
-                key={veld.naam}
-                veld={veld}
-                value={values[veld.naam]}
-                onChange={(val) => updateVeld(veld.naam, val)}
-                readOnly={!!initialData && (veld.naam === (typeMeta.idKolom || "id") || veld.autoIncrement)}
-              />
-            ))}
-          </div>
+        {/* Bewerkbare velden */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "0.5rem 1.5rem" }}>
+          {bewerkbareVelden.map((veld) => (
+            <SchemaFormField
+              key={veld.naam}
+              veld={veld}
+              value={values[veld.naam]}
+              onChange={(val) => updateVeld(veld.naam, val)}
+            />
+          ))}
         </div>
 
         {/* Formele metadata (readonly) */}
         {initialData && (initialData.opvoer || initialData.afvoer) && (
-          <div className="cg-form-section" style={{ opacity: 0.7 }}>
-            <div className="cg-form-section__title" style={{ fontSize: "0.875rem" }}>Formele tijd (metadata)</div>
-            <div style={{ display: "flex", gap: "2rem", fontSize: "0.875rem" }}>
-              {initialData.opvoer && <span><strong>Opvoer:</strong> {initialData.opvoer}</span>}
-              {initialData.afvoer && <span><strong>Afvoer:</strong> {initialData.afvoer}</span>}
+          <div style={{ opacity: 0.7, marginTop: "0.5rem" }}>
+            <div style={{ fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.25rem" }}>Formele tijd</div>
+            <div style={{ display: "flex", gap: "2rem", fontSize: "0.8125rem" }}>
+              {initialData.opvoer && <span>opvoer: {String(initialData.opvoer).slice(0, 19).replace("T", " ")}</span>}
+              {initialData.afvoer && <span style={{ color: "var(--cg-fout)" }}>afvoer: {String(initialData.afvoer).slice(0, 19).replace("T", " ")}</span>}
             </div>
           </div>
         )}
 
         {feedback && (
-          <div className={feedback.type === "succes" ? "cg-feedback--succes" : "cg-feedback--fout"}>
+          <div className={feedback.type === "succes" ? "cg-feedback--succes" : "cg-feedback--fout"} style={{ marginTop: "0.5rem" }}>
             {feedback.text}
           </div>
         )}
 
         <div style={{ display: "flex", gap: "0.75rem", paddingTop: "0.75rem" }}>
-          <button type="submit" className="utrecht-button utrecht-button--primary-action" disabled={busy}>
-            {busy ? "Opslaan…" : "Opslaan"}
-          </button>
           <button
-            type="button"
-            className="utrecht-button utrecht-button--secondary-action"
-            onClick={() => navigate(-1)}
+            type="submit"
+            className="utrecht-button utrecht-button--primary-action"
+            style={{ padding: "0.5rem 1.25rem" }}
             disabled={busy}
           >
-            Terug
+            {busy ? "Opslaan…" : "Opslaan"}
           </button>
         </div>
       </div>

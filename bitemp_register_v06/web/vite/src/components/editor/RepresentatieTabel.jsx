@@ -9,16 +9,48 @@ import {
 } from "@tanstack/react-table";
 import { useNavigate } from "react-router";
 import { useSchema } from "../../context/SchemaContext";
-import { safeArray } from "../../shared/schemaUtils";
+import { safeArray, platSlaHubItems } from "../../shared/schemaUtils";
+import { evalueerCelExpressie, bouwCelContext } from "../../shared/celEvaluator";
 
 const PAGE_SIZE = 20;
+
+/**
+ * Berekent weergaveveld-tekst voor een entiteit op basis van afgeleide velden.
+ * Bouwt een CEL-context op uit de geneste GE-groepen in het full-entity object.
+ */
+function berekenWeergaveveld(entity, typeMeta, typeMetaByTypenaam) {
+  const afgVelden = safeArray(typeMeta?.afgeleideVelden)
+    .filter((av) => av.isWeergaveVeld || av.weergaveVeld);
+  if (afgVelden.length === 0 || !entity) return "";
+
+  // Bouw child groups structuur zoals de index page dat verwacht
+  const onderliggende = safeArray(typeMeta?.onderliggende);
+  const childGroups = onderliggende.map((child) => {
+    const childMeta = typeMetaByTypenaam?.[child.doeltype];
+    const rawItems = safeArray(entity[child.jsonRolnaam] || entity[child.rolnaam]);
+    // Hubs platslaan zodat data-velden op het item komen
+    const items = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
+    return { doeltype: child.doeltype, rolnaam: child.rolnaam, items, typeMeta: childMeta };
+  });
+
+  const ctx = bouwCelContext(childGroups, typeMetaByTypenaam);
+  return afgVelden
+    .map((av) => {
+      if (av.afleidingsregelTaal === "cel" && av.afleidingsregel) {
+        return evalueerCelExpressie(av.afleidingsregel, ctx);
+      }
+      return null;
+    })
+    .filter((v) => v != null && String(v).trim() !== "")
+    .join(" | ");
+}
 
 /**
  * RepresentatieTabel — generiek tabel-component dat een typeMeta ontvangt
  * en dynamisch kolommen, data, paginering, sortering en filtering biedt.
  */
 export default function RepresentatieTabel({ typeMeta }) {
-  const { baseUrl } = useSchema();
+  const { baseUrl, typeMetaByTypenaam } = useSchema();
   const navigate = useNavigate();
 
   const [data, setData] = useState([]);
@@ -31,33 +63,46 @@ export default function RepresentatieTabel({ typeMeta }) {
   // API-pad: padnaam is het URL-pad, meervoud is de weergavenaam
   const apiPath = typeMeta?.padnaam || typeMeta?.meervoud || typeMeta?.veldnaam;
 
-  // Velden → kolommen: skip array-velden (geneste GE's), voeg telkolommen toe voor entiteiten
+  // Velden → kolommen: entiteiten tonen id + weergaveveld + tellerkolommen per GE
   const columns = useMemo(() => {
-    const velden = safeArray(typeMeta?.velden);
-    // Directe (scalaire) velden
-    const cols = velden
-      .filter((veld) => veld.format !== "array")
-      .map((veld) => ({
-        accessorKey: veld.naam,
-        header: veld.naam,
-        meta: { type: veld.type, format: veld.format, enumOpties: veld.enum },
-        cell: ({ getValue }) => {
-          const val = getValue();
-          if (val === null || val === undefined) return <span style={{ color: "var(--cg-donkergrijs)" }}>—</span>;
-          if (String(veld.format) === "date" && typeof val === "string") return val.slice(0, 10);
-          if (String(veld.format) === "date-time" && typeof val === "string") return val.replace("T", " ").slice(0, 19);
-          return String(val);
-        },
-      }));
+    const cols = [];
 
-    // Entiteiten: telkolommen per onderliggend GE/relatie
     if (isEntiteit) {
+      // ID-kolom
+      const idKolom = typeMeta.idKolom || "id";
+      cols.push({
+        accessorKey: idKolom,
+        header: idKolom,
+        meta: { type: "integer" },
+        cell: ({ getValue }) => String(getValue() ?? "—"),
+      });
+
+      // Weergaveveld-kolom (afgeleid uit CEL-expressies)
+      const heeftWeergaveveld = safeArray(typeMeta?.afgeleideVelden)
+        .some((av) => av.isWeergaveVeld || av.weergaveVeld);
+      if (heeftWeergaveveld) {
+        cols.push({
+          id: "__weergave__",
+          header: "weergave",
+          accessorFn: (row) => berekenWeergaveveld(row, typeMeta, typeMetaByTypenaam),
+          cell: ({ getValue }) => {
+            const val = getValue();
+            if (!val) return <span style={{ color: "var(--cg-donkergrijs)" }}>—</span>;
+            return <span style={{ fontStyle: "italic" }}>{val}</span>;
+          },
+        });
+      }
+
+      // Tellerkolommen per onderliggend GE/relatie (skip materiële plumbing)
       for (const child of safeArray(typeMeta?.onderliggende)) {
         const key = child.jsonRolnaam || child.rolnaam;
         if (!key) continue;
+        // Skip aanvang/einde plumbing
+        const childMeta = typeMetaByTypenaam?.[child.doeltype];
+        if (childMeta?.ge_subtype === "aanvang" || childMeta?.ge_subtype === "einde") continue;
         cols.push({
           accessorKey: key,
-          header: key,
+          header: childMeta?.klassenaam || key,
           meta: { type: "count" },
           cell: ({ getValue }) => {
             const val = getValue();
@@ -66,10 +111,63 @@ export default function RepresentatieTabel({ typeMeta }) {
           },
         });
       }
+
+      // Materiële tijd kolommen (aanvang/einde)
+      for (const child of safeArray(typeMeta?.onderliggende)) {
+        const childMeta = typeMetaByTypenaam?.[child.doeltype];
+        if (childMeta?.ge_subtype === "aanvang") {
+          cols.push({
+            id: "__aanvang__",
+            header: "aanvang",
+            accessorFn: (row) => {
+              const items = safeArray(row[child.jsonRolnaam] || row[child.rolnaam]);
+              const actief = items.find((i) => !i.afvoer) || items[0];
+              return actief?.datum || "";
+            },
+            cell: ({ getValue }) => {
+              const v = getValue();
+              return v ? String(v).slice(0, 10) : <span style={{ color: "var(--cg-donkergrijs)" }}>—</span>;
+            },
+          });
+        }
+        if (childMeta?.ge_subtype === "einde") {
+          cols.push({
+            id: "__einde__",
+            header: "einde",
+            accessorFn: (row) => {
+              const items = safeArray(row[child.jsonRolnaam] || row[child.rolnaam]);
+              const actief = items.find((i) => !i.afvoer) || items[0];
+              return actief?.datum || "";
+            },
+            cell: ({ getValue }) => {
+              const v = getValue();
+              return v ? String(v).slice(0, 10) : <span style={{ color: "var(--cg-donkergrijs)" }}>—</span>;
+            },
+          });
+        }
+      }
+    } else {
+      // Niet-entiteiten: gewone velden
+      const velden = safeArray(typeMeta?.velden);
+      for (const veld of velden) {
+        if (veld.format === "array") continue;
+        cols.push({
+          accessorKey: veld.naam,
+          header: veld.naam,
+          meta: { type: veld.type, format: veld.format, enumOpties: veld.enum },
+          cell: ({ getValue }) => {
+            const val = getValue();
+            if (val === null || val === undefined) return <span style={{ color: "var(--cg-donkergrijs)" }}>—</span>;
+            if (String(veld.format) === "date" && typeof val === "string") return val.slice(0, 10);
+            if (String(veld.format) === "date-time" && typeof val === "string") return val.replace("T", " ").slice(0, 19);
+            return String(val);
+          },
+        });
+      }
     }
 
     return cols;
-  }, [typeMeta, isEntiteit]);
+  }, [typeMeta, isEntiteit, typeMetaByTypenaam]);
 
   // Data ophalen — entiteiten via /full/ (met geneste GE's), overig via flat endpoint
   const fetchData = useCallback(async () => {
