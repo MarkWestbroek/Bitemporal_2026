@@ -669,11 +669,34 @@ acties:
 a. Zou je de posities (alleen die, de rest is niet zo goed) uit de schema json #18 in de DB willen halen en in de metaregistry zetten?
 b. wil je de export van het json model v3 *vanuit code* aanvullen met die posities uit de metaregistry?
 
+3. enums zijn niet ingesteld in de code:
+- postcode is een postcode en
+- bsn is een BSN
+Kun je dat instellen, zodat we kunnen zien of dat ook goed meekomt in de export? (en later in de codegeneratie natuurlijk)
+- ✅ Opgelost: `schema:"datatype:NLPostcode"` en `schema:"datatype:BSN"` tags op de struct-velden. V3Veld heeft nu een `Datatype` veld dat meegaat in de export.
 
-3. np_loc_modellen_entiteiten -> hierin staan Referentielijst en Referentielijst_Aanvang en _Einde. Dat zou eigenlijk plumbing moeten zijn.
+4. Adres zou ook een land mogen hebben met een referentie naar de Landenlijst (het type wordt eigenlijk dan LandenlijstLand: dat is het object waar ie naartoe wijst).
+- ⏳ Nog niet geïmplementeerd. Ontwerp-analyse:
+  - Optie A: nieuw veld `Land int` (FK naar land_id) op `Locatie_Adres_Data`. Nadeel: dit is een directe FK, niet via de referentielijst-relatie.
+  - **Optie B** (voorkeur): nieuw `schema` tag mechanisme `schema:"ref:LandenlijstLand"` waarmee een veld in de V3 export als referentielijst-referentie wordt gemarkeerd. De codegen kan dan de juiste FK genereren. Dit is consistent met hoe enums en datatypes werken.
+  - Optie C: modelleer het als een extra relatie (Locatie→LandenlijstLand) in de MetaRegistry. Nadeel: het is een veld op Adres, geen eigen relatie.
+  - **Besluit nodig**: welke optie implementeren? Optie B past het best in de schema-gedreven architectuur.
+
+5. bij export zou het fijn zijn alleen 1 model te kunnen kiezen (dus nl-loc), omdat ABXY enz. (domein "AB", nu prefixloos) nu ook meekomen.
+- moet domein ook in de metaregistry (bij elk top level item)? naam (natuurlijke personen, locaties en adres + referentielijsten) + code (np-loc)
+- ✅ Opgelost: `Domein string` veld op TypeMeta. NP/Locatie/Referentielijst/Land entiteiten staan op `"np-loc"`. Export via `GET /api/schema/model/code?domein=np-loc`.
+
+6. np_loc_modellen_entiteiten -> hierin staan Referentielijst en Referentielijst_Aanvang en _Einde. Dat zou eigenlijk plumbing moeten zijn.
   - probleem: `LandenlijstLanden             []LandenlijstLand             bun:"rel:has-many,join:id=referentielijst_id" json:"landenlijst_landen,omitempty"`
   - Elk model kan zijn eigen relaties toevoegen aan deze struct...
   - hoe doen we dat?
+  - ⏳ Ontwerp-analyse:
+    - **Probleem**: de `Referentielijst` struct is plumbing (herbruikbaar over modellen), maar de bun `has-many` relatie naar `LandenlijstLand` is modelspecifiek.
+    - **Optie A: Struct embedding** — Maak een `ReferentielijstBase` plumbing-struct (ID, Systeemnaam, Opvoer, Afvoer + systeem-GE relaties). Elk model definieert een eigen `type Referentielijst struct { ReferentielijstBase; LandenlijstLanden []LandenlijstLand ... }`. Nadeel: MetaRegistry Factory moet naar het modelspecifieke type wijzen, en Bun embedding van relaties is fragiel.
+    - **Optie B: Codegen generatie** — De codegen genereert de volledige Referentielijst struct inclusief modelspecifieke relaties. Plumbing-velden (ID, Systeemnaam, systeem-GEs) worden als template meegegeven. Dit is het meest consistent met hoe de rest van de codegen werkt.
+    - **Optie C: Dynamische relatie-loading** — Houd de Referentielijst struct generiek (zonder modelspecifieke bun-relaties). Laad items-relaties via aparte queries in de full-entity handler, gestuurd door de MetaRegistry `OnderliggendeGegevenselementen`. Nadeel: lost het bun-serialisatie probleem niet op voor JSON output.
+    - **Optie D: Interface + separate Go files** — Referentielijst plumbing in `model_plumbing.go`, modelspecifieke relatie-velden in `np_loc_modellen_entiteiten.go` via een partial-struct pattern. Go ondersteunt dit niet native, maar je kunt het oplossen met codegen die de fields combineert.
+    - **Voorkeur**: Optie B (codegen) is het meest pragmatisch. Tot de codegen klaar is, blijft de huidige opzet werkend.
 
 ## editor
 1. 

@@ -43,7 +43,7 @@ type NatuurlijkPersoon_Persoonsidentificatie_Data struct {
 	NatuurlijkPersoon_ID int        `json:"natuurlijkpersoon_id" bun:"natuurlijkpersoon_id,pk"`
 	Rel_ID               int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie               int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Bsn                  string     `json:"bsn"`
+	Bsn                  string     `json:"bsn" schema:"datatype:BSN"`
 	Ingezetene           *bool      `json:"ingezetene,omitempty"`
 	Opvoer               *time.Time `json:"opvoer,omitempty"`
 	Afvoer               *time.Time `json:"afvoer,omitempty"`
@@ -228,8 +228,9 @@ type Locatie_Adres_Data struct {
 	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Straatnaam    string     `json:"straatnaam"`
 	Huisnummer    string     `json:"huisnummer"`
-	Postcode      string     `json:"postcode"`
+	Postcode      string     `json:"postcode" schema:"datatype:NLPostcode"`
 	Plaats        string     `json:"plaats"`
+	Land          int        `json:"land" bun:"land" schema:"ref:LandenlijstLand"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }

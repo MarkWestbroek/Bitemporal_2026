@@ -95,6 +95,10 @@ type TypeMeta struct {
 	Metatype    Metatype
 	IsMaterieel bool
 
+	// Domein groepeert types per modeldomein (bijv. "np-loc", "ab").
+	// Wordt gebruikt om bij export alleen types uit één domein te selecteren.
+	Domein string
+
 	// GE-subtype: classificatie van het type binnen de hub-hiërarchie
 	GESubtype GESubtype
 	// Typenaam van de onderliggende _Data (alleen bij hubs)

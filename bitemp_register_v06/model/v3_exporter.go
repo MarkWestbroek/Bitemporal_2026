@@ -102,6 +102,15 @@ func extractContentFields(meta TypeMeta) []V3Veld {
 			}
 			veld.Enum = ft.Name()
 		}
+		// Custom schema-referenties uit schema tag:
+		// - schema:"datatype:NLPostcode" → V3Veld.Datatype (custom gegevenstype)
+		// - schema:"ref:LandenlijstLand"  → V3Veld.Ref (referentielijst-items, analoog aan OAS 3.1 $ref)
+		schemaTag := f.Tag.Get("schema")
+		if strings.HasPrefix(schemaTag, "datatype:") {
+			veld.Datatype = strings.TrimPrefix(schemaTag, "datatype:")
+		} else if strings.HasPrefix(schemaTag, "ref:") {
+			veld.Ref = strings.TrimPrefix(schemaTag, "ref:")
+		}
 		desc := strings.TrimSpace(f.Tag.Get("schema_desc"))
 		if desc != "" {
 			veld.Description = desc
@@ -125,8 +134,14 @@ func jsonFieldName(f reflect.StructField) string {
 }
 
 // ExportMetaRegistryToV3 bouwt een V3Model op basis van de huidige MetaRegistry.
+// Als domein niet leeg is, worden alleen entiteiten uit dat domein geëxporteerd.
 // Wordt gebruikt door de GET /api/schema/model endpoint.
-func ExportMetaRegistryToV3() V3Model {
+func ExportMetaRegistryToV3(domein ...string) V3Model {
+	var filterDomein string
+	if len(domein) > 0 {
+		filterDomein = domein[0]
+	}
+
 	model := V3Model{
 		Versie:    "v3",
 		Datatypes: DatatypeRegistry,
@@ -138,6 +153,10 @@ func ExportMetaRegistryToV3() V3Model {
 	// Verzamel entiteiten
 	for _, meta := range MetaRegistry {
 		if meta.Metatype != MetatypeEntiteit {
+			continue
+		}
+		// Filter op domein als opgegeven
+		if filterDomein != "" && meta.Domein != filterDomein {
 			continue
 		}
 

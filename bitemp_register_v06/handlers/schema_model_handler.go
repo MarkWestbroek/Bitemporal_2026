@@ -83,8 +83,14 @@ func schemaCodeMetadataFromEnv() schemaCodeMetadata {
 }
 
 // schemaCodeResponse bouwt een response uit de actuele code-toestand in plaats van uit schema_versies.
-func schemaCodeResponse(apiBron string) gin.H {
-	v3 := model.ExportMetaRegistryToV3()
+// Als domein niet leeg is wordt gefilterd op dat modeldomein.
+func schemaCodeResponse(apiBron string, domein string) gin.H {
+	var v3 model.V3Model
+	if domein != "" {
+		v3 = model.ExportMetaRegistryToV3(domein)
+	} else {
+		v3 = model.ExportMetaRegistryToV3()
+	}
 	metadata := schemaCodeMetadataFromEnv()
 
 	if metadata.ModelNaam != "" {
@@ -160,15 +166,17 @@ func MaakGetSchemaModelHandler() gin.HandlerFunc {
 		}
 
 		// Fallback: exporteer on-the-fly uit de code als er nog geen actieve database-versie bestaat.
-		c.JSON(http.StatusOK, schemaCodeResponse("metaregistry"))
+		domein := c.Query("domein")
+		c.JSON(http.StatusOK, schemaCodeResponse("metaregistry", domein))
 	}
 }
 
 // MaakGetSchemaModelCodeHandler retourneert altijd de huidige code-toestand van het model.
-// GET /api/schema/model/code
+// GET /api/schema/model/code   ?domein=np-loc (optioneel)
 func MaakGetSchemaModelCodeHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.JSON(http.StatusOK, schemaCodeResponse("code"))
+		domein := c.Query("domein")
+		c.JSON(http.StatusOK, schemaCodeResponse("code", domein))
 	}
 }
 

@@ -143,8 +143,10 @@ type V3Positie struct {
 // V3Veld beschrijft een inhoudsveld (geen plumbing) in een GE of relatie.
 type V3Veld struct {
 	Naam                string `json:"naam"`
-	GoType              string `json:"goType"`         // bijv. "string", "*bool", "float64", "RelABSoort"
-	Enum                string `json:"enum,omitempty"` // ref naar V3Enum.GoType als dit een enum-veld is
+	GoType              string `json:"goType"`           // bijv. "string", "*bool", "float64", "RelABSoort"
+	Enum                string `json:"enum,omitempty"`   // ref naar V3Enum.GoType als dit een enum-veld is
+	Datatype            string `json:"datatype,omitempty"` // ref naar V3Datatype.Naam als dit een custom datatype-veld is (bijv. "NLPostcode", "BSN")
+	Ref                 string `json:"$ref,omitempty"`    // ref naar een referentielijst-items type (bijv. "LandenlijstLand"), analoog aan OAS 3.1 $ref
 	Description         string `json:"description,omitempty"`
 	Afgeleid            bool   `json:"afgeleid,omitempty"`
 	AfleidingsregelTaal string `json:"afleidingsregelTaal,omitempty"`
