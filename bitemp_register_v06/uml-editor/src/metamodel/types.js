@@ -543,7 +543,8 @@ function veldNaarV3(veld) {
     naam: veld.naam,
     goType,
     enum: enumNaam || undefined,
-    refItemNaam: veld.refItemNaam || undefined,
+    datatype: datatypeNaam || undefined,
+    "$ref": veld.refNaam || undefined,
     description: veld.description || undefined,
   };
   if (veld.afgeleid) {

@@ -676,11 +676,11 @@ Kun je dat instellen, zodat we kunnen zien of dat ook goed meekomt in de export?
 - ✅ Opgelost: `schema:"datatype:NLPostcode"` en `schema:"datatype:BSN"` tags op de struct-velden. V3Veld heeft nu een `Datatype` veld dat meegaat in de export.
 
 4. Adres zou ook een land mogen hebben met een referentie naar de Landenlijst (het type wordt eigenlijk dan LandenlijstLand: dat is het object waar ie naartoe wijst).
-- ⏳ Nog niet geïmplementeerd. Ontwerp-analyse:
-  - Optie A: nieuw veld `Land int` (FK naar land_id) op `Locatie_Adres_Data`. Nadeel: dit is een directe FK, niet via de referentielijst-relatie.
-  - **Optie B** (voorkeur): nieuw `schema` tag mechanisme `schema:"ref:LandenlijstLand"` waarmee een veld in de V3 export als referentielijst-referentie wordt gemarkeerd. De codegen kan dan de juiste FK genereren. Dit is consistent met hoe enums en datatypes werken.
-  - Optie C: modelleer het als een extra relatie (Locatie→LandenlijstLand) in de MetaRegistry. Nadeel: het is een veld op Adres, geen eigen relatie.
-  - **Besluit nodig**: welke optie implementeren? Optie B past het best in de schema-gedreven architectuur.
+- ✅ Geïmplementeerd via Optie B: `schema:"ref:LandenlijstLand"` tag op `Locatie_Adres_Data.Land` (int).
+  - `V3Veld.Ref` veld met JSON-tag `"$ref"` (analoog aan OAS 3.1 `$ref`)
+  - V3 exporter leest `schema:"ref:..."` tag en zet `$ref` in de export
+  - Editor toont de refnaam als type in de veldlijst (i.p.v. "integer")
+  - Editor maakt dependency edge van GE-node naar de referentielijst-items relatie node
 
 5. bij export zou het fijn zijn alleen 1 model te kunnen kiezen (dus nl-loc), omdat ABXY enz. (domein "AB", nu prefixloos) nu ook meekomen.
 - moet domein ook in de metaregistry (bij elk top level item)? naam (natuurlijke personen, locaties en adres + referentielijsten) + code (np-loc)
@@ -690,13 +690,132 @@ Kun je dat instellen, zodat we kunnen zien of dat ook goed meekomt in de export?
   - probleem: `LandenlijstLanden             []LandenlijstLand             bun:"rel:has-many,join:id=referentielijst_id" json:"landenlijst_landen,omitempty"`
   - Elk model kan zijn eigen relaties toevoegen aan deze struct...
   - hoe doen we dat?
-  - ⏳ Ontwerp-analyse:
-    - **Probleem**: de `Referentielijst` struct is plumbing (herbruikbaar over modellen), maar de bun `has-many` relatie naar `LandenlijstLand` is modelspecifiek.
-    - **Optie A: Struct embedding** — Maak een `ReferentielijstBase` plumbing-struct (ID, Systeemnaam, Opvoer, Afvoer + systeem-GE relaties). Elk model definieert een eigen `type Referentielijst struct { ReferentielijstBase; LandenlijstLanden []LandenlijstLand ... }`. Nadeel: MetaRegistry Factory moet naar het modelspecifieke type wijzen, en Bun embedding van relaties is fragiel.
-    - **Optie B: Codegen generatie** — De codegen genereert de volledige Referentielijst struct inclusief modelspecifieke relaties. Plumbing-velden (ID, Systeemnaam, systeem-GEs) worden als template meegegeven. Dit is het meest consistent met hoe de rest van de codegen werkt.
-    - **Optie C: Dynamische relatie-loading** — Houd de Referentielijst struct generiek (zonder modelspecifieke bun-relaties). Laad items-relaties via aparte queries in de full-entity handler, gestuurd door de MetaRegistry `OnderliggendeGegevenselementen`. Nadeel: lost het bun-serialisatie probleem niet op voor JSON output.
-    - **Optie D: Interface + separate Go files** — Referentielijst plumbing in `model_plumbing.go`, modelspecifieke relatie-velden in `np_loc_modellen_entiteiten.go` via een partial-struct pattern. Go ondersteunt dit niet native, maar je kunt het oplossen met codegen die de fields combineert.
-    - **Voorkeur**: Optie B (codegen) is het meest pragmatisch. Tot de codegen klaar is, blijft de huidige opzet werkend.
+  - ⏳ Wordt opgelost via codegen + lagen-architectuur (zie §14).
 
 ## editor
-1. 
+1. ✅ Editor toont nu `$ref` (refnaam) en `datatype` (datatypeNaam) correct als veldtype.
+   - `convertV3Veld` leest `v3Veld["$ref"]` en `v3Veld.datatype` uit V3 JSON
+   - Dependency edges naar gegevenstype-nodes en referentielijst-items-nodes
+   - Zowel in `web/vite/src/v3ModelNaarEditor.js` als `uml-editor/src/metamodel/v3ModelNaarEditor.js`
+
+---
+
+## 14. Lagen-architectuur: domeinen, visibility en externe referentielijsten
+
+### 14.1 Drie visibility-niveaus
+
+Referentielijsten, gegevenstypen en enums kunnen op drie niveaus zichtbaar zijn:
+
+| Niveau | Domein | Scope | Voorbeelden |
+|---|---|---|---|
+| **Registerbasis** | `"register"` | Alle modellen in het register | Referentielijsten (Landenlijst, EULidstaten), basisgegevenstypen (BSN, NLPostcode), registerbrede enums |
+| **Modelspecifiek** | `"np-loc"`, `"hr"`, etc. | Eén model | NatuurlijkPersoon, Locatie, modelspecifieke referentielijsten en gegevenstypen |
+| **Extern** | `"extern"` | Buiten het register | BRP-Landenlijst, KvK-Rechtsvormenlijst — logische referentie naar een externe API |
+
+Elk domein heeft een **unieke naam** die overeenkomt met de `Domein`-waarde op `TypeMeta`.
+
+### 14.2 Referentielijst visibility
+
+Elke referentielijst-instantie (record in `register_referentielijst`) krijgt een Visibility die bepaalt in welk domein de lijst beschikbaar is. Dit wordt vastgelegd als een structureel gegevenselement:
+
+#### Nieuw GE: ReferentielijstVisibility
+
+| Hub-tabel | Data-tabel | Velden | Momentvoorkomen |
+|---|---|---|---|
+| `register_referentielijst_visibility` | `register_referentielijst_visibility_data` | `domein` (string) | Enkelvoudig |
+
+- `domein` bevat de domeinnaam, bijv. `"register"`, `"np-loc"`, `"extern"`.
+- Registerbreed (`"register"`) beschikbare lijsten zijn zichtbaar in alle modellen.
+- Modelspecifieke lijsten zijn alleen zichtbaar in hun eigen model.
+- Externe lijsten (`"extern"`) zijn logische referenties — de data wordt niet lokaal beheerd.
+
+> **N.B.**: Tabel-prefix `register_referentielijst_` is consequent met de bestaande `register_referentielijst`-tabel.
+
+### 14.3 Externe referentielijsten
+
+Externe referentielijsten zijn referentielijsten waarvan de data niet in ons register leeft, maar bij een externe partij. Ze worden wél als `Referentielijst`-record in de database vastgelegd, zodat:
+- Ze dezelfde structuur hebben als interne lijsten (systeemnaam, naam, omschrijving via GE's)
+- Ze in de UML-editor en het V3 model verschijnen
+- Velden via `schema:"ref:..."` naar ze kunnen verwijzen
+- Een connectivity-tussenlaag weet hoe de data op te halen
+
+#### Nieuw GE: ReferentielijstInternetadres (meervoudig)
+
+| Hub-tabel | Data-tabel | Velden | Momentvoorkomen |
+|---|---|---|---|
+| `register_referentielijst_internetadres` | `register_referentielijst_internetadres_data` | `adrestype` (enum: `"URL"` / `"URN"`), `adres` (string), `organisatie` (int, `schema:"ref:OrganisatiesOrganisatie"`) | Meervoudig |
+
+- Meervoudig omdat een externe lijst meerdere adressen kan hebben (productie, acceptatie, documentatie, etc.)
+- `adrestype`: URL (directe HTTP-endpoint) of URN (logische identifier die de connectivity-laag resolved)
+- `organisatie`: referentie naar de verantwoordelijke organisatie — zelf ook een referentielijst-item uit een "Organisaties"-referentielijst (circulariteit is valide: de Organisaties-lijst is een registerbrede interne lijst)
+
+### 14.4 Domeinnaamgeving
+
+| Domein | Prefix | Tabel-prefix bestaand | Toelichting |
+|---|---|---|---|
+| `"register"` | `register_` | `register_referentielijst`, `register_referentielijst_*` | Registerbrede plumbing: Referentielijst-klasse + systeem-GE's |
+| `"extern"` | `register_` (zelfde tabel) | n.v.t. | Externe lijsten zijn records in dezelfde Referentielijst-tabel met Visibility `"extern"` |
+| `"np-loc"` | (geen prefix) | `natuurlijkpersoon`, `locatie_adres_data`, etc. | Modelspecifiek: eigen entiteiten, GE's, relaties |
+| andere modellen | (geen prefix) | tbd | Elk model krijgt een uniek domein |
+
+De prefix `register_` wordt consequent gebruikt voor alle Referentielijst-gerelateerde tabellen (de klasse en zijn systeem-GE's). Modelspecifieke items-relaties (bijv. `landenlijst_land`) hebben geen `register_`-prefix.
+
+### 14.5 Gegevenstypen en enums: zelfde visibility-patroon
+
+Het visibility-vraagstuk geldt niet alleen voor referentielijsten maar ook voor gegevenstypen en enums:
+
+| Type | Registerbasis (`"register"`) | Modelspecifiek | Extern |
+|---|---|---|---|
+| **Gegevenstype** | BSN, NLPostcode | (modelspecifieke datatypes) | n.v.t. |
+| **Enum** | (registerbrede enums) | Bereikbaarheidssoort, Naamgebruiksoort | n.v.t. |
+| **Referentielijst** | Landenlijst, EULidstaten, Organisaties | (modelspecifieke lijsten) | BRP-Landenlijst, KvK-Rechtsvormen |
+
+Gegevenstypen en enums worden via het `Domein`-veld op `TypeMeta` resp. `EnumEditorLayouts` / `DatatypeRegistry` al aan een domein gekoppeld. De editor en codegen filteren op domein bij het laden van een model.
+
+### 14.6 UML-editor: basismodel altijd meeladen
+
+Bij het openen van een model (bijv. `np-loc`) laadt de editor:
+1. **Registerbasismodel** (`domein:"register"`) — altijd, als onderlaag
+2. **Het geselecteerde model** (`domein:"np-loc"`) — het model dat bewerkt wordt
+3. **Externe referentielijsten** (`domein:"extern"`) — als lichtgrijze readonly nodes
+
+Dit garandeert dat een veld van type `schema:"ref:LandenlijstLand"` altijd een zichtbaar doel heeft in de editor, ook als de Landenlijst in het registerbasisdomein leeft.
+
+---
+
+## 15. Implementatieplan: visibility + extern + domeinnaamgeving
+
+### Fase I: Ontwerp valideren & registerbasisdomein inrichten
+1. Hernoem het huidige lege domein `""` (ABXY/basis) naar `"register"` voor TypeMeta-entries die registerbasis zijn (Referentielijst, Referentielijst_Aanvang/Einde, systeem-GE's)
+2. Voeg `"register"` domein toe aan DatatypeRegistry entries (BSN, NLPostcode) die registerbasis zijn
+3. Bevestig dat `"np-loc"` domein op modelspecifieke entries correct is
+4. Houd ABXY-types voorlopig zonder domein (zijn test/demo)
+
+### Fase II: ReferentielijstVisibility GE
+5. Definieer struct `ReferentielijstVisibility` + `ReferentielijstVisibility_Data` met `Domein string`
+6. Voeg TypeMeta-entries toe voor hub + data (GESubtype, Tabelnaam, Factory, etc.)
+7. Voeg toe aan `OnderliggendeGegevenselementen` van Referentielijst
+8. DB-tabel aanmaken in `createModelTables` (met `register_`-prefix)
+9. Bootstrap visibility bij instantie-sync: defaultwaarde `"register"` voor bestaande lijsten
+
+### Fase III: ReferentielijstInternetadres GE (meervoudig)
+10. Definieer struct `ReferentielijstInternetadres` + `ReferentielijstInternetadres_Data` met `Adrestype`, `Adres`, `Organisatie`
+11. Definieer enum `ReferentielijstAdrestype` met waarden `"URL"`, `"URN"`
+12. TypeMeta-entries (hub + data), `OnderliggendeGegevenselementen` update
+13. DB-tabel + bootstrap (leeg bij bestaande lijsten; wordt alleen gevuld voor externe)
+
+### Fase IV: Externe referentielijsten testdata
+14. Maak een externe referentielijst aan (bijv. "BRP-Landenlijst") met visibility `"extern"`
+15. Voeg internetadres GE-data toe (productie-URL, verantwoordelijke organisatie)
+16. Maak een "Organisaties"-referentielijst als registerbrede interne lijst (`"register"`)
+
+### Fase V: Editor multi-domein laden
+17. Pas de editor aan om bij het laden van een model ook het registerbasismodel en externe referentielijsten mee te laden
+18. Toon registerbasis en externe nodes als readonly / lichtgrijze achtergrond
+19. Dependency edges vanuit modelspecifieke velden naar registerbasis-types werken al via `$ref`
+
+### Fase VI: Codegen domeinfiltering
+20. Pas de codegen aan om per domein een Go package te genereren
+21. Registerbasis-package bevat Referentielijst plumbing + systeem-GE's
+22. Modelspecifieke packages importeren het basis-package en voegen eigen types toe
+23. Delta-analyse: detecteer non-breaking model-toevoegingen

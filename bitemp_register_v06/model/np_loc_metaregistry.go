@@ -66,7 +66,7 @@ func init() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Enkelvoudig,
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: -465, Y: -30}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_PersoonsIdentificatie", SourceHandle: "left"},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: -450, Y: -30}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_PersoonsIdentificatie", SourceHandle: "left"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Persoonsidentificatie_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -92,7 +92,7 @@ func init() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Enkelvoudig,
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: -75, Y: 240}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_Naam"},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: -105, Y: 255}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_Naam"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Naam_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -118,7 +118,7 @@ func init() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Meervoudig,
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: -315, Y: 405}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_Burgerschap"},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: -285, Y: 450}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_Burgerschap"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Burgerschap_Data", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "Aanvang", JSONRolnaam: "aanvang", Doeltype: "NatuurlijkPersoon_Burgerschap_Aanvang", Momentvoorkomen: Enkelvoudig},
@@ -156,7 +156,7 @@ func init() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Enkelvoudig,
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 90, Y: 435}, EdgeID: "edge_1774209110136_2", SourceHandle: "bottom", TargetHandle: "top"},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 60, Y: 450}, EdgeID: "edge_1774209110136_2", SourceHandle: "bottom", TargetHandle: "top"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Partnernaam_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -182,7 +182,7 @@ func init() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Enkelvoudig,
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 240, Y: 240}, EdgeID: "edge_1774209240752_5", SourceHandle: "bottom", TargetHandle: "top"},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 195, Y: 255}, EdgeID: "edge_1774209240752_5", SourceHandle: "bottom", TargetHandle: "top"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Naamgebruik_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -210,7 +210,7 @@ func init() {
 		SecondaireEntiteitIDKolom: "locatie_id",
 		Momentvoorkomen:           Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 330, Y: -105}, EdgeID: "edge_1774201942583_1",
+			Positie: &V3Positie{X: 330, Y: -120}, EdgeID: "edge_1774201942583_1",
 			SourceHandle: "right", TargetHandle: "left",
 			DoelEdgeID: "edge_1774201991984_2", DoelSourceHandle: "right", DoelTargetHandle: "left",
 		},
@@ -542,7 +542,7 @@ func init() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "locatie_id",
 		Momentvoorkomen:        Enkelvoudig,
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 585, Y: 240}, EdgeID: "Locatie->Locatie_Adres"},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 780, Y: 60}, EdgeID: "Locatie->Locatie_Adres"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Locatie_Adres_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -568,7 +568,7 @@ func init() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "locatie_id",
 		Momentvoorkomen:        Enkelvoudig,
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 825, Y: 240}, EdgeID: "Locatie->Locatie_BAG-locatie"},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 585, Y: 90}, EdgeID: "Locatie->Locatie_BAG-locatie"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Locatie_BAGlocatie_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -674,6 +674,7 @@ func init() {
 		IsMaterieel:     true,
 		Domein:          "np-loc",
 		Kleur:           "#fef3c7",
+		Layout:          &EditorLayout{Positie: &V3Positie{X: 1260, Y: -240}},
 		Veldnaam:        "referentielijst",
 		Padnaam:         "referentielijsten",
 		Meervoud:        "referentielijsten",
@@ -714,6 +715,7 @@ func init() {
 		EntiteitIDKolom:        "referentielijst_id",
 		Momentvoorkomen:        Enkelvoudig,
 		BovenliggendTypenaam:   "Referentielijst",
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1590, Y: -255}, EdgeID: "Referentielijst->Referentielijst_Referentielijstnaam", SourceHandle: "right", TargetHandle: "left"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Referentielijstnaam_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -762,6 +764,7 @@ func init() {
 		EntiteitIDKolom:        "referentielijst_id",
 		Momentvoorkomen:        Enkelvoudig,
 		BovenliggendTypenaam:   "Referentielijst",
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1590, Y: -135}, EdgeID: "Referentielijst->Referentielijst_Referentielijstomschrijving", SourceHandle: "right", TargetHandle: "left"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Referentielijstomschrijving_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -797,7 +800,7 @@ func init() {
 		IsMaterieel:     true,
 		Domein:          "np-loc",
 		Kleur:           "#fde68a",
-		Layout:          &EditorLayout{Positie: &V3Positie{X: 1155, Y: 150}},
+		Layout:          &EditorLayout{Positie: &V3Positie{X: 1215, Y: 345}},
 		Veldnaam:        "land",
 		Padnaam:         "landen",
 		Meervoud:        "landen",
@@ -840,7 +843,9 @@ func init() {
 		SecondaireEntiteitIDKolom: "land_id",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 330, Y: -105}, // default, geen eigen positie in editor JSON
+			Positie: &V3Positie{X: 1215, Y: 165},
+			EdgeID: "Referentielijst->LandenlijstLand",
+			DoelEdgeID: "LandenlijstLand->Land",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "LandenlijstLand_Data", Momentvoorkomen: Enkelvoudig},
@@ -867,7 +872,7 @@ func init() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "land_id",
 		Momentvoorkomen:        Enkelvoudig,
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1050, Y: 390}, EdgeID: "edge_1774646153149_10", SourceHandle: "bottom", TargetHandle: "top"},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1095, Y: 555}, EdgeID: "edge_1774646153149_10", SourceHandle: "bottom", TargetHandle: "top"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Landcode_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -893,7 +898,7 @@ func init() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "land_id",
 		Momentvoorkomen:        Enkelvoudig,
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1275, Y: 390}, EdgeID: "edge_1774646072605_7", SourceHandle: "bottom", TargetHandle: "top"},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1335, Y: 555}, EdgeID: "edge_1774646072605_7", SourceHandle: "bottom", TargetHandle: "top"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Landnaam_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -1056,7 +1061,7 @@ func init() {
 	// Referentielijst-instantie metadata + editor-posities
 	ReferentielijstInstantieRegistry["Landenlijst"] = ReferentielijstInstantieInfo{
 		Naam: "Landenlijst", Omschrijving: "Alle landen van de wereld",
-		Layout: &EditorLayout{Positie: &V3Positie{X: 1035, Y: -180}},
+		Layout: &EditorLayout{Positie: &V3Positie{X: 1065, Y: -90}},
 	}
 	ReferentielijstInstantieRegistry["EuLidstaten"] = ReferentielijstInstantieInfo{
 		Naam: "EU-lidstaten", Omschrijving: "Alle lidstaten binnen de EU",

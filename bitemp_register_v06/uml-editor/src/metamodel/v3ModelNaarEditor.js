@@ -24,20 +24,26 @@ function goTypeNaarVeldType(goType) {
 }
 
 function convertV3Veld(v3Veld, enumLookup, datatypeLookup) {
-  const datatype = datatypeLookup[v3Veld.goType];
+  // Explicit datatype reference (schema:"datatype:NLPostcode") heeft voorrang op goType lookup
+  const datatype = v3Veld.datatype
+    ? datatypeLookup[v3Veld.datatype]
+    : datatypeLookup[v3Veld.goType];
   const mapped = goTypeNaarVeldType(v3Veld.goType || "string");
   const type = datatype?.basistype || mapped.type;
   const format = datatype?.format || mapped.format;
   const enumWaarden = v3Veld.enum ? enumLookup[v3Veld.enum] || null : null;
+  // $ref naar referentielijst-items type (schema:"ref:LandenlijstLand"), analoog aan OAS 3.1 $ref
+  const refNaam = v3Veld["$ref"] || null;
 
   return {
     naam: v3Veld.naam,
     type,
     format,
-    datatypeNaam: datatype?.naam || null,
+    datatypeNaam: v3Veld.datatype || datatype?.naam || null,
     enum: enumWaarden,
     enumNaam: v3Veld.enum || null,
-    refItemNaam: v3Veld.refItemNaam || null,
+    refNaam,
+    refItemNaam: v3Veld["$ref"] || v3Veld.refItemNaam || null,
     verplicht: !(v3Veld.goType || "").startsWith("*"),
     autoIncrement: false,
     description: v3Veld.description || "",
@@ -198,12 +204,31 @@ export function v3ModelNaarEditor(v3Model) {
             },
           });
         }
-        // Dependency edge naar referentielijst_item entiteit
-        if (v.refItemNaam) {
+        // Dependency edge naar gegevenstype node
+        // Backward compat: oudere DB-modellen hebben geen v.datatype maar goType=datatypeNaam
+        const dtNaam = v.datatype || (datatypeLookup[v.goType] ? v.goType : null);
+        if (dtNaam) {
           edges.push({
-            id: `${geTypenaam}-->${v.refItemNaam}`,
+            id: `${geTypenaam}--dt-->${dtNaam}`,
             source: geTypenaam,
-            target: v.refItemNaam,
+            target: `dt_${dtNaam}`,
+            type: "metamodel",
+            data: {
+              isDependency: true,
+              rolnaam: "",
+              jsonRolnaam: "",
+              momentvoorkomen: "",
+              kardinaliteit: "",
+            },
+          });
+        }
+        // Dependency edge naar referentielijst-items relatie (via $ref)
+        const geRefNaam = v["$ref"] || v.refItemNaam || null;
+        if (geRefNaam) {
+          edges.push({
+            id: `${geTypenaam}--ref-->${geRefNaam}`,
+            source: geTypenaam,
+            target: geRefNaam,
             type: "metamodel",
             data: {
               isDependency: true,
@@ -283,12 +308,30 @@ export function v3ModelNaarEditor(v3Model) {
             },
           });
         }
-        // Dependency edge naar referentielijst_item entiteit
-        if (v.refItemNaam) {
+        // Dependency edge naar gegevenstype node
+        const relDtNaam = v.datatype || (datatypeLookup[v.goType] ? v.goType : null);
+        if (relDtNaam) {
           edges.push({
-            id: `${rel.naam}-->${v.refItemNaam}`,
+            id: `${rel.naam}--dt-->${relDtNaam}`,
             source: rel.naam,
-            target: v.refItemNaam,
+            target: `dt_${relDtNaam}`,
+            type: "metamodel",
+            data: {
+              isDependency: true,
+              rolnaam: "",
+              jsonRolnaam: "",
+              momentvoorkomen: "",
+              kardinaliteit: "",
+            },
+          });
+        }
+        // Dependency edge naar referentielijst-items relatie (via $ref)
+        const relRefNaam = v["$ref"] || v.refItemNaam || null;
+        if (relRefNaam) {
+          edges.push({
+            id: `${rel.naam}--ref-->${relRefNaam}`,
+            source: rel.naam,
+            target: relRefNaam,
             type: "metamodel",
             data: {
               isDependency: true,

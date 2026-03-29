@@ -816,6 +816,11 @@ Deregister U5 and register U6 for entity A:
 - posities uit XMI import en in export mappen 
 - Export naar MIM
 
+31 UML editor
+- trekken lijntjes van punt naar punt: bewaren handle positie source en target
+- selecteren van een groep elementen (voor verslepen)
+- auto kiezen handles lijntjes op basis van positie source en target
+
 40 3D weergave model en tijdslijnen :-)
 
 50 Autonumber Entiteit-IDs? Simpel maar wenselijk
