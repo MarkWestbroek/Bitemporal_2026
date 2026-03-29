@@ -588,6 +588,8 @@ De full-entity handler filtert op de FK van het specifieke record (`referentieli
 
 ---
 
+
+
 ## 10. Code generator
 
 Na validatie van het handmatige testmodel wordt de codegenerator (`cmd/codegen/`) aangepast:
@@ -640,3 +642,38 @@ Zie `docs/implementatieplan-referentielijsten.md` voor het gedetailleerde stappe
 
 # Nieuw plan 29 maart 2026!!
 D:\Git\Bitemporal_2026\bitemp_register_v06\docs\copilot-chats\exports\2026-03-29 referentielijsten PLAN.md
+
+
+# Observaties na implementatie stappen 1 t/m 9 van het nieuwe plan
+
+## metaregistry
+1. omschrijvingen van NP en GEn en Locatie en GEn zijn nog op ABXY gebaseerd.
+- graag updaten naar logische omschrijvingen en onderstaande definities:
+  - natuurlijk persoon: "Een mens voor zover deze door Nederlandse wetgeving met rechten en plichten wordt bekleed."
+  - locatie: hier wordt de nauwere definitie van fysiek bezoekbare locatie bedoeld. Fysiek bezoekbare locatie is een locatie die fysiek bezocht kan worden en is gelegen op het aardoppervlak. De locatie is verdeeld in twee typen:
+    - Een binnenlandse locatie:
+      - Een Binnenlandse locatie die ligt binnen de rijksgrenzen van Nederland binnen het Koninkrijk der Nederlanden, waarbij de ruimte verder wordt beperkt door de rijksgrens met Duitsland en België. De drie openbare lichamen: Bonaire, Sint Eustatius en Saba vallen niet binnen deze ruimte. In de BAG betreffen dit de verblijfsobjecten, lig- en standplaatsen. 
+    - Een buitenlandse locatie:
+      -Een Buitenlandse locatie is een op het aardoppervlak gelegen locatie, maar die niet ligt binnen de rijksgrenzen van Nederland binnen het Koninkrijk der Nederlanden, waarbij de ruimte verder wordt beperkt door de rijksgrens met Duitsland en België.
+  - Adres: een locatieaanduiding. Dat kan in voor een binnenlandse of buitenlandse locatie zijn. We hebben hier alleen de binnenlandse locatie gemodelleerd als Adres:
+    - Een binnenlands adres is een aanduiding van een binnenlandse locatie. Een binnenlands adres wordt uitgegeven door de gemeente en geregistreerd in de basisregistratie adressen en gebouwen (BAG). In de BAG wordt een adres geregistreerd als nummeraanduiding.
+  - Baglocatie: De unieke identificatie van het adresseerbaar object (verblijfsobject, stand- of ligplaats) uitgegeven door het bevoegd gemeentelijke orgaan. In de BAG betreft dit de nummeraanduiding van een verblijfsobject, een standplaats of een ligplaats.
+
+2. Voor roundtrip engineering zou het goed zijn om ook de locatie van de klassen in de metaregistry te schrijven, zodat alle informatie overal hetzelfde staat:
+- in de metaregistry + structs
+- in de json V3 naar en van de editor
+- in de html editor op het scherm
+- in de database als schema_json (ook V3)
+
+acties:
+a. Zou je de posities (alleen die, de rest is niet zo goed) uit de schema json #18 in de DB willen halen en in de metaregistry zetten?
+b. wil je de export van het json model v3 *vanuit code* aanvullen met die posities uit de metaregistry?
+
+
+3. np_loc_modellen_entiteiten -> hierin staan Referentielijst en Referentielijst_Aanvang en _Einde. Dat zou eigenlijk plumbing moeten zijn.
+  - probleem: `LandenlijstLanden             []LandenlijstLand             bun:"rel:has-many,join:id=referentielijst_id" json:"landenlijst_landen,omitempty"`
+  - Elk model kan zijn eigen relaties toevoegen aan deze struct...
+  - hoe doen we dat?
+
+## editor
+1. 

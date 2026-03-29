@@ -142,6 +142,18 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         return swapConnectionDirection(connection);
       }
 
+      // Referentielijst-instantie → relatie (items-relatie): instantie is altijd bron.
+      if (
+        (sourceType === "referentielijstInstantie" && targetType === "relatie") ||
+        (sourceType === "relatie" && targetType === "referentielijstInstantie")
+      ) {
+        const instantieId = sourceType === "referentielijstInstantie"
+          ? connection.source : connection.target;
+        const relatieId = sourceType === "relatie"
+          ? connection.source : connection.target;
+        return { ...connection, source: instantieId, target: relatieId };
+      }
+
       // Entiteit-relatie: eerste koppeling = entiteit -> relatie (owner),
       // tweede koppeling = relatie -> entiteit (doel-entiteit).
       if (
@@ -154,7 +166,8 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         const ownerEdge = currentEdges.find((e) => {
           if (e.type !== "metamodel") return false;
           if (e.target !== relatieId) return false;
-          return nodeTypeById.get(e.source) === "entiteit";
+          const ownerType = nodeTypeById.get(e.source);
+          return ownerType === "entiteit" || ownerType === "referentielijstInstantie";
         });
 
         if (!ownerEdge) {

@@ -149,6 +149,9 @@ func ExportMetaRegistryToV3() V3Model {
 			Kleur:           meta.Kleur,
 			Meervoud:        meta.Padnaam,
 		}
+		if meta.Layout != nil {
+			ent.Positie = meta.Layout.Positie
+		}
 
 		// Verwerk onderliggende gegevenselementen en relaties
 		for _, child := range meta.OnderliggendeGegevenselementen {
@@ -181,9 +184,17 @@ func ExportMetaRegistryToV3() V3Model {
 	for _, meta := range MetaRegistry {
 		if meta.ReferentielijstInstantie != "" && !instantieSeen[meta.ReferentielijstInstantie] {
 			instantieSeen[meta.ReferentielijstInstantie] = true
-			model.ReferentielijstInstanties = append(model.ReferentielijstInstanties, V3ReferentielijstInstantie{
+			inst := V3ReferentielijstInstantie{
 				Systeemnaam: meta.ReferentielijstInstantie,
-			})
+			}
+			if info, ok := ReferentielijstInstantieRegistry[meta.ReferentielijstInstantie]; ok {
+				inst.Naam = info.Naam
+				inst.Omschrijving = info.Omschrijving
+				if info.Layout != nil {
+					inst.Positie = info.Layout.Positie
+				}
+			}
+			model.ReferentielijstInstanties = append(model.ReferentielijstInstanties, inst)
 		}
 	}
 
@@ -200,6 +211,12 @@ func v3GegevenseElementVanMeta(meta TypeMeta, child OnderliggendGegevenselement)
 		IsMaterieel:     meta.IsMaterieel,
 		Velden:          extractContentFields(meta),
 	}
+	if meta.Layout != nil {
+		ge.Positie = meta.Layout.Positie
+		ge.ID = meta.Layout.EdgeID
+		ge.SourceHandle = meta.Layout.SourceHandle
+		ge.TargetHandle = meta.Layout.TargetHandle
+	}
 	return ge
 }
 
@@ -215,6 +232,15 @@ func v3RelatieVanMeta(meta TypeMeta, child OnderliggendGegevenselement) V3Relati
 		IsMaterieel:              meta.IsMaterieel,
 		DoelEntiteit:             doelEntiteitVanRelatie(meta),
 		Velden:                   extractContentFields(meta),
+	}
+	if meta.Layout != nil {
+		rel.Positie = meta.Layout.Positie
+		rel.ID = meta.Layout.EdgeID
+		rel.SourceHandle = meta.Layout.SourceHandle
+		rel.TargetHandle = meta.Layout.TargetHandle
+		rel.DoelID = meta.Layout.DoelEdgeID
+		rel.DoelSourceHandle = meta.Layout.DoelSourceHandle
+		rel.DoelTargetHandle = meta.Layout.DoelTargetHandle
 	}
 	return rel
 }
@@ -269,8 +295,8 @@ func collectEnums(velden []V3Veld, enums *[]V3Enum, seen map[string]bool) {
 	}
 }
 
-// buildV3Enum bouwt een V3Enum door de enum-waarden te extraheren via de schema tag
-// uit de data-structs in de MetaRegistry. Vangt bekende enum-types op.
+// buildV3Enum bouwt een V3Enum door de enum-waarden te extraheren via EnumWaarden registry.
+// Vangt eerst bekende hardcoded enum-types op, dan fallback naar EnumWaarden.
 func buildV3Enum(goTypeName string) *V3Enum {
 	// Bekende enums — geladen uit Go constants
 	switch goTypeName {
@@ -295,5 +321,23 @@ func buildV3Enum(goTypeName string) *V3Enum {
 			},
 		}
 	}
-	return nil
+	// Fallback: gebruik EnumWaarden registry
+	waarden, ok := EnumWaarden[goTypeName]
+	if !ok || len(waarden) == 0 {
+		return nil
+	}
+	enum := &V3Enum{
+		GoType:   goTypeName,
+		BaseType: "string",
+	}
+	for _, w := range waarden {
+		enum.Waarden = append(enum.Waarden, V3EnumWaarde{
+			ConstNaam: goTypeName + w,
+			Waarde:    w,
+		})
+	}
+	if layout, ok := EnumEditorLayouts[goTypeName]; ok {
+		enum.Positie = layout.Positie
+	}
+	return enum
 }

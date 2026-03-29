@@ -20,12 +20,14 @@ export default function EntiteitFormulier() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const apiPath = typeMeta?.meervoud || typeMeta?.veldnaam;
+
   const fetchEntity = useCallback(async () => {
-    if (!typeMeta?.padnaam || !id) return;
+    if (!apiPath || !id) return;
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${baseUrl}/api/full/${typeMeta.padnaam}/${id}`);
+      const res = await fetch(`${baseUrl}/api/full/${apiPath}/${id}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       setEntity(json);
@@ -34,7 +36,7 @@ export default function EntiteitFormulier() {
     } finally {
       setLoading(false);
     }
-  }, [baseUrl, typeMeta, id]);
+  }, [baseUrl, apiPath, id]);
 
   useEffect(() => { fetchEntity(); }, [fetchEntity]);
 
@@ -61,7 +63,7 @@ export default function EntiteitFormulier() {
       <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
         <button
           className="utrecht-button utrecht-button--secondary-action"
-          onClick={() => navigate(`/t/${typePad}`)}
+          onClick={() => navigate(`/t/${typeMeta.meervoud || typePad}`)}
         >
           ← Terug naar overzicht
         </button>

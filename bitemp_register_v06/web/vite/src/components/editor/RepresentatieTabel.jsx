@@ -27,41 +27,68 @@ export default function RepresentatieTabel({ typeMeta }) {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
 
-  // Velden → kolommen (skip opvoer/afvoer, die zijn formele metadata)
+  const isEntiteit = typeMeta?.metatype === "entiteit";
+  // API-pad: meervoud komt overeen met Go's Padnaam (URL-registratie)
+  const apiPath = typeMeta?.meervoud || typeMeta?.veldnaam;
+
+  // Velden → kolommen: skip array-velden (geneste GE's), voeg telkolommen toe voor entiteiten
   const columns = useMemo(() => {
     const velden = safeArray(typeMeta?.velden);
-    return velden.map((veld) => ({
-      accessorKey: veld.naam,
-      header: veld.naam,
-      meta: { type: veld.type, format: veld.format, enumOpties: veld.enum },
-      cell: ({ getValue }) => {
-        const val = getValue();
-        if (val === null || val === undefined) return <span style={{ color: "var(--cg-donkergrijs)" }}>—</span>;
-        if (String(veld.format) === "date" && typeof val === "string") return val.slice(0, 10);
-        if (String(veld.format) === "date-time" && typeof val === "string") return val.replace("T", " ").slice(0, 19);
-        return String(val);
-      },
-    }));
-  }, [typeMeta]);
+    // Directe (scalaire) velden
+    const cols = velden
+      .filter((veld) => veld.format !== "array")
+      .map((veld) => ({
+        accessorKey: veld.naam,
+        header: veld.naam,
+        meta: { type: veld.type, format: veld.format, enumOpties: veld.enum },
+        cell: ({ getValue }) => {
+          const val = getValue();
+          if (val === null || val === undefined) return <span style={{ color: "var(--cg-donkergrijs)" }}>—</span>;
+          if (String(veld.format) === "date" && typeof val === "string") return val.slice(0, 10);
+          if (String(veld.format) === "date-time" && typeof val === "string") return val.replace("T", " ").slice(0, 19);
+          return String(val);
+        },
+      }));
 
-  // Data ophalen (alle pagina's client-side)
+    // Entiteiten: telkolommen per onderliggend GE/relatie
+    if (isEntiteit) {
+      for (const child of safeArray(typeMeta?.onderliggende)) {
+        const key = child.jsonRolnaam || child.rolnaam;
+        if (!key) continue;
+        cols.push({
+          accessorKey: key,
+          header: key,
+          meta: { type: "count" },
+          cell: ({ getValue }) => {
+            const val = getValue();
+            const n = Array.isArray(val) ? val.length : 0;
+            return <span style={{ color: "var(--cg-donkergrijs)" }}>{n}</span>;
+          },
+        });
+      }
+    }
+
+    return cols;
+  }, [typeMeta, isEntiteit]);
+
+  // Data ophalen — entiteiten via /full/ (met geneste GE's), overig via flat endpoint
   const fetchData = useCallback(async () => {
-    if (!typeMeta?.padnaam) return;
+    if (!apiPath) return;
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${baseUrl}/api/${typeMeta.padnaam}?page=1&size=1000`);
+      const prefix = isEntiteit ? "full/" : "";
+      const res = await fetch(`${baseUrl}/api/${prefix}${apiPath}?page=1&size=1000`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      // Response is { [meervoud]: [...], page, size, has_more } of een array
-      const key = typeMeta.meervoud || typeMeta.padnaam || Object.keys(json).find((k) => Array.isArray(json[k]));
+      const key = typeMeta.meervoud || Object.keys(json).find((k) => Array.isArray(json[k]));
       setData(safeArray(json[key] || json));
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [baseUrl, typeMeta]);
+  }, [baseUrl, typeMeta, apiPath, isEntiteit]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -82,7 +109,7 @@ export default function RepresentatieTabel({ typeMeta }) {
     const idKolom = typeMeta.idKolom || "id";
     const idWaarde = row.original[idKolom];
     if (idWaarde != null) {
-      navigate(`/t/${typeMeta.veldnaam || typeMeta.padnaam}/${idWaarde}`);
+      navigate(`/t/${typeMeta.meervoud || typeMeta.veldnaam}/${idWaarde}`);
     }
   }
 

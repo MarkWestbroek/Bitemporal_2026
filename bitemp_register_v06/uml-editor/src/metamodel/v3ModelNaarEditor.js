@@ -323,8 +323,8 @@ export function v3ModelNaarEditor(v3Model) {
         const instantieNodeId = `refinstantie_${rel.referentielijstInstantie}`;
         edges.push({
           id: `${rel.naam}-->instantie_${rel.referentielijstInstantie}`,
-          source: rel.naam,
-          target: instantieNodeId,
+          source: instantieNodeId,
+          target: rel.naam,
           type: "metamodel",
           data: {
             isDependency: true,

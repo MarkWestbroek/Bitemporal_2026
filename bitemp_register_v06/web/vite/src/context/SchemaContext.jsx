@@ -50,7 +50,8 @@ export function SchemaProvider({ baseUrl, children }) {
   const typeMetaByPadnaam = useMemo(() => {
     const result = {};
     safeArray(vizSchema?.types).forEach((item) => {
-      if (item?.padnaam) result[item.padnaam] = item;
+      // meervoud = Go Padnaam (URL-pad), veldnaam = JSON field name
+      if (item?.meervoud) result[item.meervoud] = item;
       if (item?.veldnaam) result[item.veldnaam] = item;
     });
     return result;

@@ -10,6 +10,7 @@ func init() {
 		Description: "Nederlandse postcode (4 cijfers + 2 letters)",
 		Basistype: "string",
 		Format:    "nl-postcode",
+		Positie:   &V3Positie{X: 585, Y: 450},
 		Validatie: &V3Validatie{
 			Pattern:     `^[1-9][0-9]{3}\s?[A-Za-z]{2}$`,
 			MinLength:   intPtr(6),
@@ -28,6 +29,7 @@ func init() {
 		Description: "Burgerservicenummer (9 cijfers, 11-proef)",
 		Basistype: "string",
 		Format:    "bsn",
+		Positie:   &V3Positie{X: -480, Y: 120},
 		Validatie: &V3Validatie{
 			Pattern:     `^[0-9]{9}$`,
 			MinLength:   intPtr(9),

@@ -15,7 +15,7 @@ export default function EditorNavigatie() {
       {entiteitTypes.map((meta) => (
         <NavLink
           key={meta.typenaam}
-          to={`/t/${meta.veldnaam || meta.padnaam}`}
+          to={`/t/${meta.meervoud || meta.veldnaam}`}
           className={({ isActive }) =>
             `cg-editor-sidebar__item${isActive ? " cg-editor-sidebar__item--active" : ""}`
           }

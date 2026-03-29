@@ -60,6 +60,32 @@ type HeeftOnderliggendeGegevenselementen interface {
 	GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie
 }
 
+// EditorLayout bevat UML-editor layout metadata voor round-trip engineering.
+// Deze gegevens worden genegeerd door codegen maar bewaard voor stabiele editor-layouts.
+type EditorLayout struct {
+	Positie          *V3Positie // node-positie in de editor
+	EdgeID           string     // persistente edge-id (entiteit→GE/relatie)
+	SourceHandle     string     // handle op de bron-zijde van de owner-edge
+	TargetHandle     string     // handle op de doel-zijde van de owner-edge
+	DoelEdgeID       string     // alleen relaties: edge-id naar doel-entiteit
+	DoelSourceHandle string     // alleen relaties: handle op relatie (uitgaand naar doel)
+	DoelTargetHandle string     // alleen relaties: handle op doel-entiteit (inkomend)
+}
+
+// ReferentielijstInstantieInfo bevat metadata en layout voor een referentielijst-instantie
+// die niet in de TypeMeta van de relatie past.
+type ReferentielijstInstantieInfo struct {
+	Naam         string
+	Omschrijving string
+	Layout       *EditorLayout
+}
+
+// ReferentielijstInstantieRegistry bevat metadata per referentielijst-instantie (systeemnaam).
+var ReferentielijstInstantieRegistry = map[string]ReferentielijstInstantieInfo{}
+
+// EnumEditorLayouts bevat editor-posities per enum-type (goType).
+var EnumEditorLayouts = map[string]*EditorLayout{}
+
 // TypeMeta holds metadata for a representatie type.
 type TypeMeta struct {
 	// ==== UML ====
@@ -135,6 +161,11 @@ type TypeMeta struct {
 	// AfgeleideVelden beschrijft afgeleide velden (bijv. weergavenaam).
 	// Ondersteund op entiteiten, GE-hubs en relatie-hubs. De waarden worden berekend uit onderliggende velden.
 	AfgeleideVelden []AfgeleidVeld
+
+	// ==== Editor layout (round-trip) ====
+	// Layout bevat UML-editor positie en edge-metadata voor stabiele round-trips.
+	// Wordt genegeerd door codegen.
+	Layout *EditorLayout
 }
 
 // MetaRegistryType is a named map type for the meta model registry, enabling methods.

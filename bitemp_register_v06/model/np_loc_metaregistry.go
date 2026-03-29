@@ -7,13 +7,14 @@ func init() {
 	MetaRegistry["NatuurlijkPersoon"] = TypeMeta{
 		Typenaam:               "NatuurlijkPersoon",
 		Klassenaam:             "NatuurlijkPersoon",
-		Description:            "Entiteit A met materiële tijdlijn en onderliggende representaties U, V, W en Rel_A_B.",
+		Description:            "Een mens voor zover deze door Nederlandse wetgeving met rechten en plichten wordt bekleed.",
 		Metatype:               MetatypeEntiteit,
 		IsMaterieel:            true,
 		Kleur:                  "#bfdbfe",
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: -90, Y: -135}},
 		Veldnaam:               "natuurlijkpersoon",
 		Padnaam:                "natuurlijk_personen",
-		Meervoud:               "natuurlijk_personen",
+		Meervoud:               "natuurlijk personen",
 		Factory:                func() Representatie { return &NatuurlijkPersoon{} },
 		SliceFactory:           func() any { return &[]NatuurlijkPersoon{} },
 		Tabelnaam:              "natuurlijkpersoon",
@@ -46,7 +47,7 @@ func init() {
 	MetaRegistry["NatuurlijkPersoon_Persoonsidentificatie"] = TypeMeta{
 		Typenaam:               "NatuurlijkPersoon_Persoonsidentificatie",
 		Klassenaam:             "Persoonsidentificatie",
-		Description:            "Enkelvoudig gegevenselement van A met formele tijdlijn.",
+		Description:            "Identificerende gegevens van de natuurlijk persoon (BSN, ingezetene).",
 		Metatype:               MetatypeGegevenselement,
 		IsMaterieel:            false,
 		GESubtype:              GESubtypeHub,
@@ -64,6 +65,7 @@ func init() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Enkelvoudig,
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: -465, Y: -30}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_PersoonsIdentificatie", SourceHandle: "left"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Persoonsidentificatie_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -71,7 +73,7 @@ func init() {
 	MetaRegistry["NatuurlijkPersoon_Naam"] = TypeMeta{
 		Typenaam:               "NatuurlijkPersoon_Naam",
 		Klassenaam:             "Naam",
-		Description:            "Meervoudig gegevenselement van A met onder andere een datumveld.",
+		Description:            "Naamgegevens van de natuurlijk persoon (voorletters, roepnaam, tussenvoegsel, achternaam).",
 		Metatype:               MetatypeGegevenselement,
 		IsMaterieel:            false,
 		GESubtype:              GESubtypeHub,
@@ -89,6 +91,7 @@ func init() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Enkelvoudig,
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: -75, Y: 240}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_Naam"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Naam_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -96,7 +99,7 @@ func init() {
 	MetaRegistry["NatuurlijkPersoon_Burgerschap"] = TypeMeta{
 		Typenaam:               "NatuurlijkPersoon_Burgerschap",
 		Klassenaam:             "Burgerschap",
-		Description:            "Meervoudig gegevenselement van A met numerieke waarden.",
+		Description:            "Nationaliteitsgegevens (burgerschap) van de natuurlijk persoon.",
 		Metatype:               MetatypeGegevenselement,
 		IsMaterieel:            true,
 		GESubtype:              GESubtypeHub,
@@ -114,6 +117,7 @@ func init() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Meervoudig,
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: -315, Y: 405}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_Burgerschap"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Burgerschap_Data", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "Aanvang", JSONRolnaam: "aanvang", Doeltype: "NatuurlijkPersoon_Burgerschap_Aanvang", Momentvoorkomen: Enkelvoudig},
@@ -133,7 +137,7 @@ func init() {
 	MetaRegistry["NatuurlijkPersoon_Partnernaam"] = TypeMeta{
 		Typenaam:               "NatuurlijkPersoon_Partnernaam",
 		Klassenaam:             "Partnernaam",
-		Description:            "",
+		Description:            "Achternaam van de partner van de natuurlijk persoon.",
 		Metatype:               MetatypeGegevenselement,
 		IsMaterieel:            false,
 		GESubtype:              GESubtypeHub,
@@ -151,6 +155,7 @@ func init() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Enkelvoudig,
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 90, Y: 435}, EdgeID: "edge_1774209110136_2", SourceHandle: "bottom", TargetHandle: "top"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Partnernaam_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -158,7 +163,7 @@ func init() {
 	MetaRegistry["NatuurlijkPersoon_Naamgebruik"] = TypeMeta{
 		Typenaam:               "NatuurlijkPersoon_Naamgebruik",
 		Klassenaam:             "Naamgebruik",
-		Description:            "",
+		Description:            "Wijze waarop de geslachtsnaam wordt gebruikt.",
 		Metatype:               MetatypeGegevenselement,
 		IsMaterieel:            false,
 		GESubtype:              GESubtypeHub,
@@ -176,6 +181,7 @@ func init() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Enkelvoudig,
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 240, Y: 240}, EdgeID: "edge_1774209240752_5", SourceHandle: "bottom", TargetHandle: "top"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Naamgebruik_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -183,7 +189,7 @@ func init() {
 	MetaRegistry["Bereikbaarheid"] = TypeMeta{
 		Typenaam:                  "Bereikbaarheid",
 		Klassenaam:                "Bereikbaarheid",
-		Description:               "",
+		Description:               "Koppeling van een natuurlijk persoon aan een locatie als bereikbaarheidsadres.",
 		Metatype:                  MetatypeRelatie,
 		IsMaterieel:               true,
 		GESubtype:                 GESubtypeHub,
@@ -202,6 +208,11 @@ func init() {
 		EntiteitIDKolom:           "natuurlijkpersoon_id",
 		SecondaireEntiteitIDKolom: "locatie_id",
 		Momentvoorkomen:           Enkelvoudig,
+		Layout: &EditorLayout{
+			Positie: &V3Positie{X: 330, Y: -105}, EdgeID: "edge_1774201942583_1",
+			SourceHandle: "right", TargetHandle: "left",
+			DoelEdgeID: "edge_1774201991984_2", DoelSourceHandle: "right", DoelTargetHandle: "left",
+		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Bereikbaarheid_Data", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "Aanvang", JSONRolnaam: "aanvang", Doeltype: "Bereikbaarheid_Aanvang", Momentvoorkomen: Enkelvoudig},
@@ -475,10 +486,11 @@ func init() {
 	MetaRegistry["Locatie"] = TypeMeta{
 		Typenaam:               "Locatie",
 		Klassenaam:             "Locatie",
-		Description:            "Entiteit B met materiële tijdlijn en onderliggende representaties X en Y.",
+		Description:            "Fysiek bezoekbare locatie gelegen op het aardoppervlak.",
 		Metatype:               MetatypeEntiteit,
 		IsMaterieel:            true,
 		Kleur:                  "#fecaca",
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 720, Y: -135}},
 		Veldnaam:               "locatie",
 		Padnaam:                "locaties",
 		Meervoud:               "locaties",
@@ -510,7 +522,7 @@ func init() {
 	MetaRegistry["Locatie_Adres"] = TypeMeta{
 		Typenaam:               "Locatie_Adres",
 		Klassenaam:             "Adres",
-		Description:            "Enkelvoudig gegevenselement van B met twee tekstvelden.",
+		Description:            "Binnenlands adres: een aanduiding van een binnenlandse locatie, uitgegeven door de gemeente en geregistreerd in de BAG.",
 		Metatype:               MetatypeGegevenselement,
 		IsMaterieel:            false,
 		GESubtype:              GESubtypeHub,
@@ -528,6 +540,7 @@ func init() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "locatie_id",
 		Momentvoorkomen:        Enkelvoudig,
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 585, Y: 240}, EdgeID: "Locatie->Locatie_Adres"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Locatie_Adres_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -535,7 +548,7 @@ func init() {
 	MetaRegistry["Locatie_BAGlocatie"] = TypeMeta{
 		Typenaam:               "Locatie_BAGlocatie",
 		Klassenaam:             "BAGlocatie",
-		Description:            "Enkelvoudig gegevenselement van B met een tekstveld.",
+		Description:            "Unieke identificatie van het adresseerbaar object (verblijfsobject, stand- of ligplaats) uitgegeven door het bevoegd gemeentelijke orgaan.",
 		Metatype:               MetatypeGegevenselement,
 		IsMaterieel:            false,
 		GESubtype:              GESubtypeHub,
@@ -553,6 +566,7 @@ func init() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "locatie_id",
 		Momentvoorkomen:        Enkelvoudig,
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 825, Y: 240}, EdgeID: "Locatie->Locatie_BAG-locatie"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Locatie_BAGlocatie_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -779,6 +793,7 @@ func init() {
 		EntiteitSubtype: EntiteitSubtypeReferentielijstItem,
 		IsMaterieel:     true,
 		Kleur:           "#fde68a",
+		Layout:          &EditorLayout{Positie: &V3Positie{X: 1155, Y: 150}},
 		Veldnaam:        "land",
 		Padnaam:         "landen",
 		Meervoud:        "landen",
@@ -820,6 +835,9 @@ func init() {
 		RelatieveAutoincrement:    true,
 		SecondaireEntiteitIDKolom: "land_id",
 		Momentvoorkomen:           Meervoudig,
+		Layout: &EditorLayout{
+			Positie: &V3Positie{X: 330, Y: -105}, // default, geen eigen positie in editor JSON
+		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "LandenlijstLand_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -845,6 +863,7 @@ func init() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "land_id",
 		Momentvoorkomen:        Enkelvoudig,
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1050, Y: 390}, EdgeID: "edge_1774646153149_10", SourceHandle: "bottom", TargetHandle: "top"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Landcode_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -870,6 +889,7 @@ func init() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "land_id",
 		Momentvoorkomen:        Enkelvoudig,
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1275, Y: 390}, EdgeID: "edge_1774646072605_7", SourceHandle: "bottom", TargetHandle: "top"},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Landnaam_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -1027,5 +1047,15 @@ func init() {
 		EntiteitIDKolom:        "land_id",
 		Momentvoorkomen:        Enkelvoudig,
 		BovenliggendTypenaam:   "Land",
+	}
+
+	// Referentielijst-instantie metadata + editor-posities
+	ReferentielijstInstantieRegistry["Landenlijst"] = ReferentielijstInstantieInfo{
+		Naam: "Landenlijst", Omschrijving: "Alle landen van de wereld",
+		Layout: &EditorLayout{Positie: &V3Positie{X: 1035, Y: -180}},
+	}
+	ReferentielijstInstantieRegistry["EuLidstaten"] = ReferentielijstInstantieInfo{
+		Naam: "EU-lidstaten", Omschrijving: "Alle lidstaten binnen de EU",
+		Layout: &EditorLayout{Positie: &V3Positie{X: 1320, Y: -180}},
 	}
 }

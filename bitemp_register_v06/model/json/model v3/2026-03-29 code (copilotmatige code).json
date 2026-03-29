@@ -1,0 +1,544 @@
+{
+    "bron": "code",
+    "build_versie": "",
+    "go_module": "",
+    "id": null,
+    "indiener": "",
+    "model": {
+        "versie": "v3",
+        "datatypes": [
+            {
+                "naam": "NLPostcode",
+                "basistype": "string",
+                "format": "nl-postcode",
+                "validatie": {
+                    "pattern": "^[1-9][0-9]{3}\\s?[A-Za-z]{2}$",
+                    "minLength": 6,
+                    "maxLength": 7,
+                    "voorbeelden": [
+                        "1234 AB",
+                        "9999ZZ"
+                    ],
+                    "foutmelding": "Voer een geldige postcode in (bijv. 1234 AB)"
+                },
+                "normalisatie": "uppercase_letters",
+                "weergave": {
+                    "placeholder": "1234 AB",
+                    "inputMask": "0000 AA"
+                }
+            },
+            {
+                "naam": "BSN",
+                "basistype": "string",
+                "format": "bsn",
+                "validatie": {
+                    "pattern": "^[0-9]{9}$",
+                    "minLength": 9,
+                    "maxLength": 9,
+                    "voorbeelden": [
+                        "123456782"
+                    ],
+                    "foutmelding": "Voer een geldig BSN in (9 cijfers, 11-proef)",
+                    "regels": [
+                        {
+                            "naam": "11-proef",
+                            "type": "checksum",
+                            "expressie": "(9*d1 + 8*d2 + 7*d3 + 6*d4 + 5*d5 + 4*d6 + 3*d7 + 2*d8 - 1*d9) % 11 == 0"
+                        }
+                    ]
+                },
+                "weergave": {
+                    "placeholder": "123456782",
+                    "inputMask": "000000000"
+                }
+            },
+            {
+                "naam": "NLPostcode",
+                "description": "Nederlandse postcode (4 cijfers + 2 letters)",
+                "basistype": "string",
+                "format": "nl-postcode",
+                "validatie": {
+                    "pattern": "^[1-9][0-9]{3}\\s?[A-Za-z]{2}$",
+                    "minLength": 6,
+                    "maxLength": 7,
+                    "voorbeelden": [
+                        "1234 AB",
+                        "9999ZZ"
+                    ],
+                    "foutmelding": "Voer een geldige postcode in (bijv. 1234 AB)"
+                },
+                "normalisatie": "uppercase_letters",
+                "weergave": {
+                    "placeholder": "1234 AB",
+                    "inputMask": "0000 AA"
+                }
+            },
+            {
+                "naam": "BSN",
+                "description": "Burgerservicenummer (9 cijfers, 11-proef)",
+                "basistype": "string",
+                "format": "bsn",
+                "validatie": {
+                    "pattern": "^[0-9]{9}$",
+                    "minLength": 9,
+                    "maxLength": 9,
+                    "voorbeelden": [
+                        "123456782"
+                    ],
+                    "foutmelding": "Voer een geldig BSN in (9 cijfers, 11-proef)",
+                    "regels": [
+                        {
+                            "naam": "11-proef",
+                            "type": "checksum",
+                            "expressie": "(9*d1 + 8*d2 + 7*d3 + 6*d4 + 5*d5 + 4*d6 + 3*d7 + 2*d8 - 1*d9) % 11 == 0"
+                        }
+                    ]
+                },
+                "weergave": {
+                    "placeholder": "123456782",
+                    "inputMask": "000000000"
+                }
+            }
+        ],
+        "enums": [
+            {
+                "goType": "ABCEnum",
+                "baseType": "string",
+                "waarden": [
+                    {
+                        "constNaam": "OptieA",
+                        "waarde": "Optie A"
+                    },
+                    {
+                        "constNaam": "OptieB",
+                        "waarde": "Optie B"
+                    },
+                    {
+                        "constNaam": "OptieC",
+                        "waarde": "Optie C"
+                    }
+                ]
+            },
+            {
+                "goType": "RelABSoort",
+                "baseType": "string",
+                "waarden": [
+                    {
+                        "constNaam": "RelABSoortLTT",
+                        "waarde": "LTT"
+                    },
+                    {
+                        "constNaam": "RelABSoortLAT",
+                        "waarde": "LAT"
+                    },
+                    {
+                        "constNaam": "RelABSoortLTA",
+                        "waarde": "LTA"
+                    }
+                ]
+            }
+        ],
+        "referentielijstInstanties": [
+            {
+                "systeemnaam": "Landenlijst"
+            }
+        ],
+        "entiteiten": [
+            {
+                "typenaam": "A",
+                "description": "Entiteit A met materiele tijdlijn en onderliggende representaties U, V, W en Rel_A_B.",
+                "isMaterieel": true,
+                "kleur": "#bfdbfe",
+                "meervoud": "as",
+                "gegevenselementen": [
+                    {
+                        "naam": "U",
+                        "description": "Enkelvoudig gegevenselement van A met formele tijdlijn.",
+                        "meervoud": "a_us",
+                        "momentvoorkomen": "enkelvoudig",
+                        "velden": [
+                            {
+                                "naam": "aaa",
+                                "goType": "string"
+                            },
+                            {
+                                "naam": "bbb",
+                                "goType": "*bool"
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "V",
+                        "description": "Meervoudig gegevenselement van A met onder andere een datumveld.",
+                        "meervoud": "a_vs",
+                        "momentvoorkomen": "meervoudig",
+                        "velden": [
+                            {
+                                "naam": "ccc",
+                                "goType": "string"
+                            },
+                            {
+                                "naam": "ddd",
+                                "goType": "*string"
+                            },
+                            {
+                                "naam": "eee",
+                                "goType": "*string"
+                            },
+                            {
+                                "naam": "fff",
+                                "goType": "float64"
+                            },
+                            {
+                                "naam": "ggg",
+                                "goType": "ABCEnum",
+                                "enum": "ABCEnum",
+                                "description": "Test enumeratie"
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "W",
+                        "description": "Meervoudig gegevenselement van A met numerieke waarden.",
+                        "meervoud": "a_ws",
+                        "momentvoorkomen": "meervoudig",
+                        "isMaterieel": true,
+                        "velden": [
+                            {
+                                "naam": "float",
+                                "goType": "float64"
+                            },
+                            {
+                                "naam": "heel",
+                                "goType": "int"
+                            }
+                        ]
+                    }
+                ],
+                "relaties": [
+                    {
+                        "naam": "Rel_A_B",
+                        "description": "Relatie tussen A en B, meervoudig voorkomend per A en met relatieve relatie-id.",
+                        "meervoud": "rel_a_bs",
+                        "momentvoorkomen": "meervoudig",
+                        "isMaterieel": true,
+                        "doelEntiteit": "B",
+                        "velden": [
+                            {
+                                "naam": "soort",
+                                "goType": "RelABSoort",
+                                "enum": "RelABSoort",
+                                "description": "Soort relatie tussen A en B"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "typenaam": "NatuurlijkPersoon",
+                "description": "Entiteit A met materiële tijdlijn en onderliggende representaties U, V, W en Rel_A_B.",
+                "isMaterieel": true,
+                "kleur": "#bfdbfe",
+                "meervoud": "natuurlijk_personen",
+                "gegevenselementen": [
+                    {
+                        "naam": "Persoonsidentificatie",
+                        "description": "Enkelvoudig gegevenselement van A met formele tijdlijn.",
+                        "meervoud": "persoonsidentificaties",
+                        "momentvoorkomen": "enkelvoudig",
+                        "velden": [
+                            {
+                                "naam": "natuurlijkpersoon_id",
+                                "goType": "int"
+                            },
+                            {
+                                "naam": "bsn",
+                                "goType": "string"
+                            },
+                            {
+                                "naam": "ingezetene",
+                                "goType": "*bool"
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "Naam",
+                        "description": "Meervoudig gegevenselement van A met onder andere een datumveld.",
+                        "meervoud": "namen",
+                        "momentvoorkomen": "enkelvoudig",
+                        "velden": [
+                            {
+                                "naam": "natuurlijkpersoon_id",
+                                "goType": "int"
+                            },
+                            {
+                                "naam": "voorletters",
+                                "goType": "string"
+                            },
+                            {
+                                "naam": "roepnaam",
+                                "goType": "*string"
+                            },
+                            {
+                                "naam": "tussenvoegsel",
+                                "goType": "*string"
+                            },
+                            {
+                                "naam": "achternaam",
+                                "goType": "string"
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "Burgerschap",
+                        "description": "Meervoudig gegevenselement van A met numerieke waarden.",
+                        "meervoud": "burgerschappen",
+                        "momentvoorkomen": "meervoudig",
+                        "isMaterieel": true,
+                        "velden": [
+                            {
+                                "naam": "natuurlijkpersoon_id",
+                                "goType": "int"
+                            },
+                            {
+                                "naam": "landcode",
+                                "goType": "string"
+                            },
+                            {
+                                "naam": "nationaliteit",
+                                "goType": "string"
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "Partnernaam",
+                        "meervoud": "partnernamen",
+                        "momentvoorkomen": "enkelvoudig",
+                        "velden": [
+                            {
+                                "naam": "natuurlijkpersoon_id",
+                                "goType": "int"
+                            },
+                            {
+                                "naam": "achternaam",
+                                "goType": "string"
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "Naamgebruik",
+                        "meervoud": "naamgebruiken",
+                        "momentvoorkomen": "enkelvoudig",
+                        "velden": [
+                            {
+                                "naam": "natuurlijkpersoon_id",
+                                "goType": "int"
+                            },
+                            {
+                                "naam": "naamgebruik",
+                                "goType": "Naamgebruiksoort",
+                                "enum": "Naamgebruiksoort"
+                            }
+                        ]
+                    }
+                ],
+                "relaties": [
+                    {
+                        "naam": "Bereikbaarheid",
+                        "meervoud": "bereikbaarheden",
+                        "momentvoorkomen": "enkelvoudig",
+                        "isMaterieel": true,
+                        "doelEntiteit": "Locatie",
+                        "velden": [
+                            {
+                                "naam": "natuurlijkpersoon_id",
+                                "goType": "int"
+                            },
+                            {
+                                "naam": "soort",
+                                "goType": "Bereikbaarheidssoort",
+                                "enum": "Bereikbaarheidssoort"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "typenaam": "Referentielijst",
+                "description": "Generieke referentielijst-entiteit. Individuele lijsten (Landenlijst, EULidstaten, etc.) zijn records.",
+                "entiteitSubtype": "referentielijst",
+                "isMaterieel": true,
+                "kleur": "#fef3c7",
+                "meervoud": "referentielijsten",
+                "gegevenselementen": [
+                    {
+                        "naam": "Referentielijstnaam",
+                        "description": "Leesbare naam van een referentielijst.",
+                        "meervoud": "referentielijstnamen",
+                        "momentvoorkomen": "enkelvoudig",
+                        "velden": [
+                            {
+                                "naam": "naam",
+                                "goType": "string"
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "Referentielijstomschrijving",
+                        "description": "Omschrijving van een referentielijst.",
+                        "meervoud": "referentielijstomschrijvingen",
+                        "momentvoorkomen": "enkelvoudig",
+                        "velden": [
+                            {
+                                "naam": "omschrijving",
+                                "goType": "string"
+                            }
+                        ]
+                    }
+                ],
+                "relaties": [
+                    {
+                        "naam": "LandenlijstLand",
+                        "description": "Koppeling van een land aan referentielijst-instantie Landenlijst (referentielijst-items relatie).",
+                        "relatieSubtype": "referentielijst_items",
+                        "referentielijstInstantie": "Landenlijst",
+                        "meervoud": "landenlijst_landen",
+                        "momentvoorkomen": "meervoudig",
+                        "doelEntiteit": "Land"
+                    }
+                ]
+            },
+            {
+                "typenaam": "B",
+                "description": "Entiteit B met materiele tijdlijn en onderliggende representaties X en Y.",
+                "isMaterieel": true,
+                "kleur": "#fecaca",
+                "meervoud": "bs",
+                "gegevenselementen": [
+                    {
+                        "naam": "X",
+                        "description": "Enkelvoudig gegevenselement van B met twee tekstvelden.",
+                        "meervoud": "b_xs",
+                        "momentvoorkomen": "enkelvoudig",
+                        "velden": [
+                            {
+                                "naam": "fff",
+                                "goType": "string"
+                            },
+                            {
+                                "naam": "ggg",
+                                "goType": "string"
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "Y",
+                        "description": "Enkelvoudig gegevenselement van B met een tekstveld.",
+                        "meervoud": "b_ys",
+                        "momentvoorkomen": "enkelvoudig",
+                        "velden": [
+                            {
+                                "naam": "hhh",
+                                "goType": "string"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "typenaam": "Locatie",
+                "description": "Entiteit B met materiële tijdlijn en onderliggende representaties X en Y.",
+                "isMaterieel": true,
+                "kleur": "#fecaca",
+                "meervoud": "locaties",
+                "gegevenselementen": [
+                    {
+                        "naam": "Adres",
+                        "description": "Enkelvoudig gegevenselement van B met twee tekstvelden.",
+                        "meervoud": "adressen",
+                        "momentvoorkomen": "enkelvoudig",
+                        "velden": [
+                            {
+                                "naam": "locatie_id",
+                                "goType": "int"
+                            },
+                            {
+                                "naam": "straatnaam",
+                                "goType": "string"
+                            },
+                            {
+                                "naam": "huisnummer",
+                                "goType": "string"
+                            },
+                            {
+                                "naam": "postcode",
+                                "goType": "string"
+                            },
+                            {
+                                "naam": "plaats",
+                                "goType": "string"
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "BAGlocatie",
+                        "description": "Enkelvoudig gegevenselement van B met een tekstveld.",
+                        "meervoud": "baglocaties",
+                        "momentvoorkomen": "enkelvoudig",
+                        "velden": [
+                            {
+                                "naam": "locatie_id",
+                                "goType": "int"
+                            },
+                            {
+                                "naam": "adresaanduiding",
+                                "goType": "string"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "typenaam": "Land",
+                "description": "Referentielijst-item: individueel land.",
+                "entiteitSubtype": "referentielijst_item",
+                "isMaterieel": true,
+                "kleur": "#fde68a",
+                "meervoud": "landen",
+                "gegevenselementen": [
+                    {
+                        "naam": "Landcode",
+                        "description": "Enkelvoudig gegevenselement landcode van Land.",
+                        "meervoud": "landcodes",
+                        "momentvoorkomen": "enkelvoudig",
+                        "velden": [
+                            {
+                                "naam": "code",
+                                "goType": "string"
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "Landnaam",
+                        "description": "Enkelvoudig gegevenselement landnaam van Land.",
+                        "meervoud": "landnamen",
+                        "momentvoorkomen": "enkelvoudig",
+                        "velden": [
+                            {
+                                "naam": "naam",
+                                "goType": "string"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "model_beschrijving": "",
+    "model_bron": "code",
+    "model_naam": "",
+    "model_versie": "v3",
+    "opmerking": "",
+    "status": "code",
+    "tijdstip": null
+}
