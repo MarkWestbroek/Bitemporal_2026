@@ -68,8 +68,13 @@ export function veldEntries(record) {
   return Object.entries(record || {}).filter(([, value]) => isPrimitiveWaarde(value));
 }
 
-export function korteSamenvatting(record) {
+export function korteSamenvatting(record, extraOverSlaan) {
   const overSlaan = new Set(["id", "rel_id", "opvoer", "afvoer", "aanvang", "einde", "a_id", "b_id"]);
+  if (extraOverSlaan) {
+    for (const veld of extraOverSlaan) {
+      if (veld) overSlaan.add(String(veld).toLowerCase());
+    }
+  }
   const parts = veldEntries(record)
     .filter(([k]) => !overSlaan.has(k))
     .slice(0, 2)

@@ -27,14 +27,19 @@ func generateInput(v3 model.V3Model) (string, error) {
 				writeField(&b, f)
 			}
 
-			// Inhoudsvelden uit de _Data struct
+			// Inhoudsvelden uit de _Data struct (skip parent FK)
 			for _, v := range ge.Velden {
+				if v.Naam == entIDKolom {
+					continue
+				}
 				writeField(&b, inputContentField(v))
 			}
 
-			// Aanvang/Einde (altijd aanwezig als optionele velden)
-			for _, f := range inputAanvangEindeFields() {
-				writeField(&b, f)
+			// Aanvang/Einde (alleen als het GE zelf materieel is)
+			if ge.IsMaterieel {
+				for _, f := range inputAanvangEindeFields() {
+					writeField(&b, f)
+				}
 			}
 
 			b.WriteString("}\n\n")
@@ -55,14 +60,19 @@ func generateInput(v3 model.V3Model) (string, error) {
 			doelIDField := strings.ToUpper(strings.TrimSuffix(doelIDKolom, "_id")) + "_ID"
 			b.WriteString(fmt.Sprintf("\t%s int `json:\"%s\"`\n", doelIDField, doelIDKolom))
 
-			// Inhoudsvelden uit de _Data struct
+			// Inhoudsvelden uit de _Data struct (skip parent + doel FK)
 			for _, v := range rel.Velden {
+				if v.Naam == entIDKolom || v.Naam == doelIDKolom {
+					continue
+				}
 				writeField(&b, inputContentField(v))
 			}
 
-			// Aanvang/Einde
-			for _, f := range inputAanvangEindeFields() {
-				writeField(&b, f)
+			// Aanvang/Einde (alleen als relatie zelf materieel is)
+			if rel.IsMaterieel {
+				for _, f := range inputAanvangEindeFields() {
+					writeField(&b, f)
+				}
 			}
 
 			b.WriteString("}\n\n")

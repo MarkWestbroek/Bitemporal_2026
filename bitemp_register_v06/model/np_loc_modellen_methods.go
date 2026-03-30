@@ -615,158 +615,93 @@ func (h *Locatie_BAGlocatie) GeefOnderliggendeGegevenselementen() []Onderliggend
 	return result
 }
 
-// Land
-func (l Land) GetID() any              { return l.ID }
-func (l Land) Metatype() Metatype      { return MetatypeEntiteit }
-func (l *Land) ClearID()               { l.ID = 0 }
-func (l Land) GetOpvoer() *time.Time   { return l.Opvoer }
-func (l *Land) SetOpvoer(t *time.Time) { l.Opvoer = t }
-func (l Land) GetAfvoer() *time.Time   { return l.Afvoer }
-func (l *Land) SetAfvoer(t *time.Time) { l.Afvoer = t }
-func (l Land) String() string          { return RepresentatieToString(l) }
-
-// LandenlijstLand
-func (ll LandenlijstLand) GetID() any              { return ll.Rel_ID }
-func (ll LandenlijstLand) Metatype() Metatype      { return MetatypeRelatie }
-func (ll *LandenlijstLand) ClearID()               { ll.Rel_ID = 0 }
-func (ll LandenlijstLand) GetOpvoer() *time.Time   { return ll.Opvoer }
-func (ll *LandenlijstLand) SetOpvoer(t *time.Time) { ll.Opvoer = t }
-func (ll LandenlijstLand) GetAfvoer() *time.Time   { return ll.Afvoer }
-func (ll *LandenlijstLand) SetAfvoer(t *time.Time) { ll.Afvoer = t }
-func (ll LandenlijstLand) String() string          { return RepresentatieToString(ll) }
-
-// LandenlijstLand_Data
-func (d LandenlijstLand_Data) GetID() any              { return d.Versie }
-func (d LandenlijstLand_Data) Metatype() Metatype      { return MetatypeGegevenselement }
-func (d *LandenlijstLand_Data) ClearID()               { d.Versie = 0 }
-func (d LandenlijstLand_Data) GetOpvoer() *time.Time   { return d.Opvoer }
-func (d *LandenlijstLand_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
-func (d LandenlijstLand_Data) GetAfvoer() *time.Time   { return d.Afvoer }
-func (d *LandenlijstLand_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
-func (d LandenlijstLand_Data) String() string          { return RepresentatieToString(d) }
-
-// Landcode
-func (lc Landcode) GetID() any              { return lc.Rel_ID }
-func (lc Landcode) Metatype() Metatype      { return MetatypeGegevenselement }
-func (lc *Landcode) ClearID()               { lc.Rel_ID = 0 }
-func (lc Landcode) GetOpvoer() *time.Time   { return lc.Opvoer }
-func (lc *Landcode) SetOpvoer(t *time.Time) { lc.Opvoer = t }
-func (lc Landcode) GetAfvoer() *time.Time   { return lc.Afvoer }
-func (lc *Landcode) SetAfvoer(t *time.Time) { lc.Afvoer = t }
-func (lc Landcode) String() string          { return RepresentatieToString(lc) }
-
-// Landcode_Data
-func (d Landcode_Data) GetID() any              { return d.Versie }
-func (d Landcode_Data) Metatype() Metatype      { return MetatypeGegevenselement }
-func (d *Landcode_Data) ClearID()               { d.Versie = 0 }
-func (d Landcode_Data) GetOpvoer() *time.Time   { return d.Opvoer }
-func (d *Landcode_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
-func (d Landcode_Data) GetAfvoer() *time.Time   { return d.Afvoer }
-func (d *Landcode_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
-func (d Landcode_Data) String() string          { return RepresentatieToString(d) }
-
-// Landnaam
-func (ln Landnaam) GetID() any              { return ln.Rel_ID }
-func (ln Landnaam) Metatype() Metatype      { return MetatypeGegevenselement }
-func (ln *Landnaam) ClearID()               { ln.Rel_ID = 0 }
-func (ln Landnaam) GetOpvoer() *time.Time   { return ln.Opvoer }
-func (ln *Landnaam) SetOpvoer(t *time.Time) { ln.Opvoer = t }
-func (ln Landnaam) GetAfvoer() *time.Time   { return ln.Afvoer }
-func (ln *Landnaam) SetAfvoer(t *time.Time) { ln.Afvoer = t }
-func (ln Landnaam) String() string          { return RepresentatieToString(ln) }
-
-// Landnaam_Data
-func (d Landnaam_Data) GetID() any              { return d.Versie }
-func (d Landnaam_Data) Metatype() Metatype      { return MetatypeGegevenselement }
-func (d *Landnaam_Data) ClearID()               { d.Versie = 0 }
-func (d Landnaam_Data) GetOpvoer() *time.Time   { return d.Opvoer }
-func (d *Landnaam_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
-func (d Landnaam_Data) GetAfvoer() *time.Time   { return d.Afvoer }
-func (d *Landnaam_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
-func (d Landnaam_Data) String() string          { return RepresentatieToString(d) }
-
-// Land_Aanvang
-func (a Land_Aanvang) GetID() any              { return a.Versie }
-func (a Land_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
-func (a *Land_Aanvang) ClearID()               { a.Versie = 0 }
-func (a Land_Aanvang) GetOpvoer() *time.Time   { return a.Opvoer }
-func (a *Land_Aanvang) SetOpvoer(t *time.Time) { a.Opvoer = t }
-func (a Land_Aanvang) GetAfvoer() *time.Time   { return a.Afvoer }
-func (a *Land_Aanvang) SetAfvoer(t *time.Time) { a.Afvoer = t }
-func (a Land_Aanvang) String() string          { return RepresentatieToString(a) }
-
-// Land_Einde
-func (e Land_Einde) GetID() any              { return e.Versie }
-func (e Land_Einde) Metatype() Metatype      { return MetatypeGegevenselement }
-func (e *Land_Einde) ClearID()               { e.Versie = 0 }
-func (e Land_Einde) GetOpvoer() *time.Time   { return e.Opvoer }
-func (e *Land_Einde) SetOpvoer(t *time.Time) { e.Opvoer = t }
-func (e Land_Einde) GetAfvoer() *time.Time   { return e.Afvoer }
-func (e *Land_Einde) SetAfvoer(t *time.Time) { e.Afvoer = t }
-func (e Land_Einde) String() string          { return RepresentatieToString(e) }
-
-// Input structs
-func (i Landcode_Input) GetID() any              { return i.Rel_ID }
-func (i Landcode_Input) Metatype() Metatype      { return MetatypeGegevenselement }
-func (i *Landcode_Input) ClearID()               { i.Rel_ID = 0 }
-func (i Landcode_Input) GetOpvoer() *time.Time   { return nil }
-func (i *Landcode_Input) SetOpvoer(_ *time.Time) {}
-func (i Landcode_Input) GetAfvoer() *time.Time   { return nil }
-func (i *Landcode_Input) SetAfvoer(_ *time.Time) {}
-func (i Landcode_Input) String() string          { return RepresentatieToString(i) }
-
-func (i Landnaam_Input) GetID() any              { return i.Rel_ID }
-func (i Landnaam_Input) Metatype() Metatype      { return MetatypeGegevenselement }
-func (i *Landnaam_Input) ClearID()               { i.Rel_ID = 0 }
-func (i Landnaam_Input) GetOpvoer() *time.Time   { return nil }
-func (i *Landnaam_Input) SetOpvoer(_ *time.Time) {}
-func (i Landnaam_Input) GetAfvoer() *time.Time   { return nil }
-func (i *Landnaam_Input) SetAfvoer(_ *time.Time) {}
-func (i Landnaam_Input) String() string          { return RepresentatieToString(i) }
-
-func (i LandenlijstLand_Input) GetID() any              { return i.Rel_ID }
-func (i LandenlijstLand_Input) Metatype() Metatype      { return MetatypeRelatie }
-func (i *LandenlijstLand_Input) ClearID()               { i.Rel_ID = 0 }
-func (i LandenlijstLand_Input) GetOpvoer() *time.Time   { return nil }
-func (i *LandenlijstLand_Input) SetOpvoer(_ *time.Time) {}
-func (i LandenlijstLand_Input) GetAfvoer() *time.Time   { return nil }
-func (i *LandenlijstLand_Input) SetAfvoer(_ *time.Time) {}
-func (i LandenlijstLand_Input) String() string          { return RepresentatieToString(i) }
-
 /* ================================================================
-   10. GeefOnderliggendeGegevenselementen — LAND + NP-LOC domein hubs
+   ADELLIJKETITEL — interface-methoden en GeefOnderliggende
    ================================================================ */
 
-func (l *Land) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+// AdellijkeTitel
+func (a AdellijkeTitel) GetID() any              { return a.ID }
+func (a AdellijkeTitel) Metatype() Metatype      { return MetatypeEntiteit }
+func (a *AdellijkeTitel) ClearID()               { a.ID = 0 }
+func (a AdellijkeTitel) GetOpvoer() *time.Time   { return a.Opvoer }
+func (a *AdellijkeTitel) SetOpvoer(t *time.Time) { a.Opvoer = t }
+func (a AdellijkeTitel) GetAfvoer() *time.Time   { return a.Afvoer }
+func (a *AdellijkeTitel) SetAfvoer(t *time.Time) { a.Afvoer = t }
+func (a AdellijkeTitel) String() string          { return RepresentatieToString(a) }
+
+// AdellijkeTitelsTitel
+func (r AdellijkeTitelsTitel) GetID() any              { return r.Rel_ID }
+func (r AdellijkeTitelsTitel) Metatype() Metatype      { return MetatypeRelatie }
+func (r *AdellijkeTitelsTitel) ClearID()               { r.Rel_ID = 0 }
+func (r AdellijkeTitelsTitel) GetOpvoer() *time.Time   { return r.Opvoer }
+func (r *AdellijkeTitelsTitel) SetOpvoer(t *time.Time) { r.Opvoer = t }
+func (r AdellijkeTitelsTitel) GetAfvoer() *time.Time   { return r.Afvoer }
+func (r *AdellijkeTitelsTitel) SetAfvoer(t *time.Time) { r.Afvoer = t }
+func (r AdellijkeTitelsTitel) String() string          { return RepresentatieToString(r) }
+
+// AdellijkeTitelsTitel_Data
+func (d AdellijkeTitelsTitel_Data) GetID() any              { return d.Versie }
+func (d AdellijkeTitelsTitel_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *AdellijkeTitelsTitel_Data) ClearID()               { d.Versie = 0 }
+func (d AdellijkeTitelsTitel_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *AdellijkeTitelsTitel_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d AdellijkeTitelsTitel_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *AdellijkeTitelsTitel_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d AdellijkeTitelsTitel_Data) String() string          { return RepresentatieToString(d) }
+
+// AdellijkeTitelTitel
+func (g AdellijkeTitelTitel) GetID() any              { return g.Rel_ID }
+func (g AdellijkeTitelTitel) Metatype() Metatype      { return MetatypeGegevenselement }
+func (g *AdellijkeTitelTitel) ClearID()               { g.Rel_ID = 0 }
+func (g AdellijkeTitelTitel) GetOpvoer() *time.Time   { return g.Opvoer }
+func (g *AdellijkeTitelTitel) SetOpvoer(t *time.Time) { g.Opvoer = t }
+func (g AdellijkeTitelTitel) GetAfvoer() *time.Time   { return g.Afvoer }
+func (g *AdellijkeTitelTitel) SetAfvoer(t *time.Time) { g.Afvoer = t }
+func (g AdellijkeTitelTitel) String() string          { return RepresentatieToString(g) }
+
+// AdellijkeTitelTitel_Data
+func (d AdellijkeTitelTitel_Data) GetID() any              { return d.Versie }
+func (d AdellijkeTitelTitel_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *AdellijkeTitelTitel_Data) ClearID()               { d.Versie = 0 }
+func (d AdellijkeTitelTitel_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *AdellijkeTitelTitel_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d AdellijkeTitelTitel_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *AdellijkeTitelTitel_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d AdellijkeTitelTitel_Data) String() string          { return RepresentatieToString(d) }
+
+// Input structs
+func (i AdellijkeTitelTitel_Input) GetID() any              { return i.Rel_ID }
+func (i AdellijkeTitelTitel_Input) Metatype() Metatype      { return MetatypeGegevenselement }
+func (i *AdellijkeTitelTitel_Input) ClearID()               { i.Rel_ID = 0 }
+func (i AdellijkeTitelTitel_Input) GetOpvoer() *time.Time   { return nil }
+func (i *AdellijkeTitelTitel_Input) SetOpvoer(_ *time.Time) {}
+func (i AdellijkeTitelTitel_Input) GetAfvoer() *time.Time   { return nil }
+func (i *AdellijkeTitelTitel_Input) SetAfvoer(_ *time.Time) {}
+func (i AdellijkeTitelTitel_Input) String() string          { return RepresentatieToString(i) }
+
+func (i AdellijkeTitelsTitel_Input) GetID() any              { return i.Rel_ID }
+func (i AdellijkeTitelsTitel_Input) Metatype() Metatype      { return MetatypeRelatie }
+func (i *AdellijkeTitelsTitel_Input) ClearID()               { i.Rel_ID = 0 }
+func (i AdellijkeTitelsTitel_Input) GetOpvoer() *time.Time   { return nil }
+func (i *AdellijkeTitelsTitel_Input) SetOpvoer(_ *time.Time) {}
+func (i AdellijkeTitelsTitel_Input) GetAfvoer() *time.Time   { return nil }
+func (i *AdellijkeTitelsTitel_Input) SetAfvoer(_ *time.Time) {}
+func (i AdellijkeTitelsTitel_Input) String() string          { return RepresentatieToString(i) }
+
+// GeefOnderliggendeGegevenselementen — AdellijkeTitel
+
+func (a *AdellijkeTitel) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0)
-	for i := range l.Landcodes {
-		if l.Landcodes[i].Land_ID == 0 {
-			l.Landcodes[i].Land_ID = l.ID
+	for i := range a.AdellijkeTitelTitels {
+		if a.AdellijkeTitelTitels[i].AdellijkeTitel_ID == 0 {
+			a.AdellijkeTitelTitels[i].AdellijkeTitel_ID = a.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Landcode", Representatie: &l.Landcodes[i]})
-	}
-	for i := range l.Landnamen {
-		if l.Landnamen[i].Land_ID == 0 {
-			l.Landnamen[i].Land_ID = l.ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Landnaam", Representatie: &l.Landnamen[i]})
-	}
-	for i := range l.Aanvang {
-		if l.Aanvang[i].Land_ID == 0 {
-			l.Aanvang[i].Land_ID = l.ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Land_Aanvang", Representatie: &l.Aanvang[i]})
-	}
-	for i := range l.Einde {
-		if l.Einde[i].Land_ID == 0 {
-			l.Einde[i].Land_ID = l.ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Land_Einde", Representatie: &l.Einde[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "AdellijkeTitelTitel", Representatie: &a.AdellijkeTitelTitels[i]})
 	}
 	return result
 }
 
-func (h *LandenlijstLand) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+func (h *AdellijkeTitelsTitel) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
 	for i := range h.Data {
 		if h.Data[i].Referentielijst_ID == 0 {
@@ -775,35 +710,21 @@ func (h *LandenlijstLand) GeefOnderliggendeGegevenselementen() []OnderliggendeRe
 		if h.Data[i].Rel_ID == 0 {
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "LandenlijstLand_Data", Representatie: &h.Data[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "AdellijkeTitelsTitel_Data", Representatie: &h.Data[i]})
 	}
 	return result
 }
 
-func (h *Landcode) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+func (h *AdellijkeTitelTitel) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
 	for i := range h.Data {
-		if h.Data[i].Land_ID == 0 {
-			h.Data[i].Land_ID = h.Land_ID
+		if h.Data[i].AdellijkeTitel_ID == 0 {
+			h.Data[i].AdellijkeTitel_ID = h.AdellijkeTitel_ID
 		}
 		if h.Data[i].Rel_ID == 0 {
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Landcode_Data", Representatie: &h.Data[i]})
-	}
-	return result
-}
-
-func (h *Landnaam) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
-	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
-	for i := range h.Data {
-		if h.Data[i].Land_ID == 0 {
-			h.Data[i].Land_ID = h.Land_ID
-		}
-		if h.Data[i].Rel_ID == 0 {
-			h.Data[i].Rel_ID = h.Rel_ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Landnaam_Data", Representatie: &h.Data[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "AdellijkeTitelTitel_Data", Representatie: &h.Data[i]})
 	}
 	return result
 }

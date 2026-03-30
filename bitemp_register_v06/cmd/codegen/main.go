@@ -277,7 +277,12 @@ func validateV3Model(v3 model.V3Model) []string {
 				continue
 			}
 			if _, ok := entiteiten[rel.DoelEntiteit]; !ok {
-				errs = append(errs, fmt.Sprintf("entiteiten[%d].relaties[%d].doelEntiteit '%s' bestaat niet in model.entiteiten", i, j, rel.DoelEntiteit))
+				// Cross-domein relaties (bijv. referentielijst-items naar ander domein) zijn geen fout
+				if rel.RelatieSubtype == "referentielijst_items" {
+					fmt.Fprintf(os.Stderr, "  Let op: entiteiten[%d].relaties[%d].doelEntiteit '%s' is cross-domein (wordt niet gegenereerd)\n", i, j, rel.DoelEntiteit)
+				} else {
+					errs = append(errs, fmt.Sprintf("entiteiten[%d].relaties[%d].doelEntiteit '%s' bestaat niet in model.entiteiten", i, j, rel.DoelEntiteit))
+				}
 			}
 		}
 	}

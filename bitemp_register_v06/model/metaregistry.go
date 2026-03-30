@@ -4,6 +4,7 @@ package model
 var MetaRegistry = MetaRegistryType{
 	"A": {
 		// UML
+		Domein:      "abuvwxy",
 		Typenaam:    "A",
 		Klassenaam:  "A",
 		Description: "Entiteit A met materiele tijdlijn en onderliggende representaties U, V, W en Rel_A_B.",
@@ -51,6 +52,7 @@ var MetaRegistry = MetaRegistryType{
 	},
 	"B": {
 		// UML
+		Domein:      "abuvwxy",
 		Typenaam:    "B",
 		Klassenaam:  "B",
 		Description: "Entiteit B met materiele tijdlijn en onderliggende representaties X en Y.",

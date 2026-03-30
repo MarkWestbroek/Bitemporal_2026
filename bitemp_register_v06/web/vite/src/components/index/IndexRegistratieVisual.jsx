@@ -116,7 +116,8 @@ export default function IndexRegistratieVisual({
         const rijStap = 104;
         const y = 108 + index * rijStap;
         const entiteitLabel = `${labelVoorTypeNaam(w.entiteitnaam, w.entiteitnaam)}: ${w.entiteit_id ?? "-"}`;
-        const repLabel = `${labelVoorTypeNaam(w.representatienaam, w.representatienaam || "-")}: ${w.representatie_id || "-"}`;
+        const repIdStr = w.versie != null ? `${w.representatie_id || "-"} v${w.versie}` : (w.representatie_id || "-");
+        const repLabel = `${labelVoorTypeNaam(w.representatienaam, w.representatienaam || "-")}: ${repIdStr}`;
         const entiteitRegels = splitLabelOverMeerdereRegels(entiteitLabel, 18, 2);
         const repRegels = splitLabelOverMeerdereRegels(repLabel, 18, 3);
         return (
@@ -128,7 +129,10 @@ export default function IndexRegistratieVisual({
             />
             <line x1={eersteDividerX} y1={y} x2={eersteDividerX} y2={y + rijHoogte} stroke="#cbd5e1" strokeWidth="1" />
             <line x1={tweedeDividerX} y1={y} x2={tweedeDividerX} y2={y + rijHoogte} stroke="#cbd5e1" strokeWidth="1" />
-            <text className="label label-left-lg" x="81" y={y + 52}>{w.wijzigingstype}</text>
+            <text className="label" x="125" y={y + 52} textAnchor="middle"
+              style={{ fontSize: "13px", fill: "#64748b", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 600 }}>
+              {w.wijzigingstype}
+            </text>
             <text className="label" x="192" y={y + 30}>
               {entiteitRegels.map((regel, regelIndex) => (
                 <tspan key={`ent-${regelIndex}`} x="192" dy={regelIndex === 0 ? 0 : 16} style={nadrukStyle}>{regel}</tspan>

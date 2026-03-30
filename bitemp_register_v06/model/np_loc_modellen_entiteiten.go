@@ -78,37 +78,14 @@ type Locatie_Einde struct {
 }
 
 /* ================================================================
-   LAND — referentielijst-item-entiteit (record per individueel land).
+   ADELLIJKETITEL — referentielijst-item-entiteit (niet materieel).
    ================================================================ */
 
-// Land — referentielijst-item-entiteit voor individuele landen.
-type Land struct {
-	bun.BaseModel `bun:"table:land,alias:land"`
-	ID            int            `json:"id" bun:"id,pk"`
-	Opvoer        *time.Time     `json:"opvoer,omitempty"`
-	Afvoer        *time.Time     `json:"afvoer,omitempty"`
-	Landcodes     []Landcode     `bun:"rel:has-many,join:id=land_id" json:"landcodes,omitempty"`
-	Landnamen     []Landnaam     `bun:"rel:has-many,join:id=land_id" json:"landnamen,omitempty"`
-	Aanvang       []Land_Aanvang `bun:"rel:has-many,join:id=land_id" json:"aanvang,omitempty"`
-	Einde         []Land_Einde   `bun:"rel:has-many,join:id=land_id" json:"einde,omitempty"`
-}
-
-// Land_Aanvang — aanvangsdatum van referentielijst-item Land.
-type Land_Aanvang struct {
-	bun.BaseModel `bun:"table:land_aanvang,alias:land_aanvang"`
-	Land_ID       int        `json:"land_id" bun:"land_id,pk"`
-	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
-	Opvoer        *time.Time `json:"opvoer,omitempty"`
-	Afvoer        *time.Time `json:"afvoer,omitempty"`
-}
-
-// Land_Einde — einddatum van referentielijst-item Land.
-type Land_Einde struct {
-	bun.BaseModel `bun:"table:land_einde,alias:land_einde"`
-	Land_ID       int        `json:"land_id" bun:"land_id,pk"`
-	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
-	Opvoer        *time.Time `json:"opvoer,omitempty"`
-	Afvoer        *time.Time `json:"afvoer,omitempty"`
+// AdellijkeTitel — referentielijst-item-entiteit voor adellijke titels.
+type AdellijkeTitel struct {
+	bun.BaseModel        `bun:"table:adellijketitel,alias:adellijketitel"`
+	ID                   int                   `json:"id" bun:"id,pk"`
+	Opvoer               *time.Time            `json:"opvoer,omitempty"`
+	Afvoer               *time.Time            `json:"afvoer,omitempty"`
+	AdellijkeTitelTitels []AdellijkeTitelTitel `bun:"rel:has-many,join:id=adellijketitel_id" json:"adellijke_titel_titels,omitempty"`
 }

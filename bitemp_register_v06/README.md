@@ -120,6 +120,7 @@ De index-pagina:
 - toont entiteiten, gegroepeerde GEs en relaties op basis van het actuele schema
 - ondersteunt opvoeren van nieuwe entiteiten, registreren van wijzigingen, correcties en ongedaanmakingen
 - maakt `opv:`-waarden klikbaar zodat je direct naar de registratiedetails navigeert
+- volgt de visualisatiehiërarchie uit `docs/frontend-viz-design.md`
 
 De tijdslijn-pagina:
 
@@ -127,6 +128,9 @@ De tijdslijn-pagina:
 - combineert registratie- en snapshotvisualisatie in een horizontale tijdslijn
 - visualiseert ongedaanmakingen met pijlen en highlights naar de ongedaan gemaakte representaties
 - ondersteunt `Download PNG` en `Kopieer PNG` voor export van de tijdslijn
+- gebruikt dezelfde leeshiërarchie als de index-pagina voor entiteiten, GE's, relaties en registratieblokken
+
+Zie `docs/frontend-viz-design.md` voor de ontwerpregels van de viz-kaarten, informatiehiërarchie en samenvattingsregels.
 
 De oude links naar de legacy schema- en archiefpagina's zijn verwijderd van de startpagina's.
 
@@ -198,6 +202,10 @@ Voor `GET /api/schema/model/code` kun je metadata uit environment variables late
 Deze waarden vullen zowel top-level responsemetadata als, waar van toepassing, de modelvelden (`naam`, `beschrijving`, `versie`).
 
 Voor uitgebreide ontwerpachtergrond en lifecycle: zie `model/ontwerpkeuzen.md`.
+
+## API Reference
+
+Een volledige referentie van alle endpoints, query-parameters, URL-parameters en gedrag staat in [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md).
 
 ## Codegen proberen (V3)
 

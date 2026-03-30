@@ -1059,7 +1059,7 @@ func MakeGetFullEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 		hasMore := offset+size < total
 
 		responseEntities := entities
-		if !toonAfvoerInResponse(c) {
+		if peiltijdstip != nil && !toonAfvoerInResponse(c) {
 			responseEntities, err = sanitizeResponseWithoutAfvoer(entities)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to sanitize response: %v", err)})
@@ -1141,7 +1141,7 @@ func MakeGetFullEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 		}
 
 		var responseEntity any = entity
-		if !toonAfvoerInResponse(c) {
+		if peiltijdstip != nil && !toonAfvoerInResponse(c) {
 			responseEntity, err = sanitizeResponseWithoutAfvoer(entity)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to sanitize response: %v", err)})

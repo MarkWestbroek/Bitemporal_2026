@@ -98,21 +98,30 @@ export default function IndexRepresentatieVisual({
             >
               opv: {node.item.opvoer ? microsecondeIntVanTijdstip(node.item.opvoer) : "-"}
             </text>
-            <text className="label label-lg" x={textX} y={boxY + 22}>
-              <tspan style={nadrukStyle}>{labelVoorChildType(node.group.doeltype, node.group.rolnaam, node.group.typeMeta?.klassenaam)}</tspan>
-              {" rel_id="}
-              <tspan style={nadrukStyle}>{node.item.rel_id ?? node.item.id ?? "-"}</tspan>
+            <text className="label" x={textX} y={boxY + 24}>
+              <tspan style={{ fontWeight: 700, fontSize: "13px" }}>{labelVoorChildType(node.group.doeltype, node.group.rolnaam, node.group.typeMeta?.klassenaam)}</tspan>
+              <tspan style={{ fontSize: "10.5px", fill: "#64748b" }}>{" "}rel_id={node.item.rel_id ?? node.item.id ?? "-"}</tspan>
             </text>
-            <text className="label label-lg" x={textX} y={boxY + 42}>{korteSamenvatting(node.item)}</text>
             {(() => {
               const hubMeta2 = typeMetaByTypenaam?.[node.group?.doeltype];
               const wvTeksten = evalueerWeergaveVeldenVoorItem(hubMeta2?.afgeleideVelden, node.item, hubMeta2, typeMetaByTypenaam);
-              return wvTeksten.length > 0 ? (
-                <text className="label" x={textX} y={boxY + 56}
-                  style={{ fontStyle: "italic", fontSize: "10.5px", fill: "#334155" }}>
-                  {wvTeksten.join(" | ")}
+              if (wvTeksten.length > 0) {
+                return (
+                  <text className="label" x={textX} y={boxY + 44}
+                    style={{ fontWeight: 600, fontSize: "12.5px", fill: "#1e293b" }}>
+                    {wvTeksten.join(" | ")}
+                  </text>
+                );
+              }
+              const entIDKol = String(node.group?.typeMeta?.entiteitIDKolom || '').toLowerCase();
+              const secIDKol = String(node.group?.typeMeta?.secondaireEntiteitIDKolom || '').toLowerCase();
+              const extraSkip = new Set([entIDKol, secIDKol].filter(Boolean));
+              return (
+                <text className="label" x={textX} y={boxY + 44}
+                  style={{ fontSize: "12px", fill: "#475569" }}>
+                  {korteSamenvatting(node.item, extraSkip)}
                 </text>
-              ) : null;
+              );
             })()}
           </g>
         );
@@ -161,16 +170,22 @@ export default function IndexRepresentatieVisual({
                 x="562" y="56" textAnchor="end"
                 onClick={entOpvoerKlikbaar ? (event) => navigeerNaarRegistratieVanOpvoer(event, selectedA.opvoer) : undefined}
               >opv: {selectedA.opvoer ? microsecondeIntVanTijdstip(selectedA.opvoer) : "-"}</text>
-              <text className="label" x="345" y="74">
-                <tspan style={centraleEntiteitLabelStyle}>{entiteitType || "E"}</tspan>
-                {" id="}
-                <tspan style={centraleEntiteitLabelStyle}>{selectedA.id}</tspan>
-              </text>
-              {/* Afgeleide velden: weergavevelden onder het entiteitlabel */}
-              {entiteitWeergaveVeldTekst && (
-                <text className="label" x="450" y="98" textAnchor="middle"
-                  style={{ fontStyle: "italic", fontSize: "13px", fill: "#334155" }}>
-                  {entiteitWeergaveVeldTekst}
+              {entiteitWeergaveVeldTekst ? (
+                <>
+                  <text className="label" x="450" y="76" textAnchor="middle"
+                    style={{ fontWeight: 700, fontSize: "19px", fill: "#0f172a" }}>
+                    {entiteitWeergaveVeldTekst}
+                  </text>
+                  <text className="label" x="450" y="98" textAnchor="middle"
+                    style={{ fontSize: "11.5px", fill: "#64748b", letterSpacing: "0.3px" }}>
+                    {entiteitType || "E"} · id {selectedA.id}
+                  </text>
+                </>
+              ) : (
+                <text className="label" x="345" y="82">
+                  <tspan style={centraleEntiteitLabelStyle}>{entiteitType || "E"}</tspan>
+                  {" id="}
+                  <tspan style={centraleEntiteitLabelStyle}>{selectedA.id}</tspan>
                 </text>
               )}
             </g>
@@ -238,19 +253,29 @@ export default function IndexRepresentatieVisual({
             >
               opv: {node.item.opvoer ? microsecondeIntVanTijdstip(node.item.opvoer) : "-"}
             </text>
-            <text className="label label-lg" x={relX + 10} y={node.y - 2}>
-              <tspan style={nadrukStyle}>{labelVoorChildType(node.group.doeltype, node.group.rolnaam, node.group.typeMeta?.klassenaam)}</tspan>
-              {" rel_id="}
-              <tspan style={nadrukStyle}>{node.item.rel_id ?? node.item.id ?? "-"}</tspan>
+            <text className="label" x={relX + 10} y={node.y - 2}>
+              <tspan style={{ fontWeight: 700, fontSize: "13px" }}>{labelVoorChildType(node.group.doeltype, node.group.rolnaam, node.group.typeMeta?.klassenaam)}</tspan>
+              <tspan style={{ fontSize: "10.5px", fill: "#64748b" }}>{" "}rel_id={node.item.rel_id ?? node.item.id ?? "-"}</tspan>
             </text>
-            <text className="label" x={relX + 10} y={node.y + 18}>{korteSamenvatting(node.item)}</text>
             {(() => {
               const relMeta2 = typeMetaByTypenaam?.[node.group?.doeltype];
               const wvTeksten = evalueerWeergaveVeldenVoorItem(relMeta2?.afgeleideVelden, node.item, relMeta2, typeMetaByTypenaam);
-              return wvTeksten.length > 0 ? (
-                <text className="label" x={relX + 10} y={node.y + 30}
-                  style={{ fontStyle: "italic", fontSize: "10.5px", fill: "#334155" }}>
-                  {wvTeksten.join(" | ")}
+              if (wvTeksten.length > 0) {
+                return (
+                  <text className="label" x={relX + 10} y={node.y + 14}
+                    style={{ fontWeight: 600, fontSize: "12px", fill: "#1e293b" }}>
+                    {wvTeksten.join(" | ")}
+                  </text>
+                );
+              }
+              const relEntIDKol = String(node.group?.typeMeta?.entiteitIDKolom || '').toLowerCase();
+              const relSecIDKol = String(node.group?.typeMeta?.secondaireEntiteitIDKolom || '').toLowerCase();
+              const relExtraSkip = new Set([relEntIDKol, relSecIDKol].filter(Boolean));
+              const relSamenvatting = korteSamenvatting(node.item, relExtraSkip);
+              return relSamenvatting !== "-" ? (
+                <text className="label" x={relX + 10} y={node.y + 14}
+                  style={{ fontSize: "11.5px", fill: "#475569" }}>
+                  {relSamenvatting}
                 </text>
               ) : null;
             })()}

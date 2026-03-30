@@ -50,6 +50,9 @@ func generateMetaRegistryAdditive(v3 model.V3Model, opts codegenOptions) (string
 	// ReferentielijstInstanties
 	writeReferentielijstInstanties(&b, v3)
 
+	// VoegOnderliggendGEToe calls voor cross-domein referentielijst-items relaties
+	writeVoegOnderliggendGEToe(&b, v3)
+
 	b.WriteString("}\n")
 	return b.String(), nil
 }
@@ -359,7 +362,7 @@ func writeLayoutLine(b *strings.Builder, li *layoutInfo) {
 	}
 	if li.SourceHandle != "" {
 		b.WriteString(fmt.Sprintf(",\n\t\t\tSourceHandle: %q", li.SourceHandle))
-	} else if li.TargetHandle != "" || hasDoel {
+	} else if li.TargetHandle != "" {
 		b.WriteString(",")
 	}
 	if li.TargetHandle != "" {
@@ -397,6 +400,32 @@ func writeReferentielijstInstanties(b *strings.Builder, v3 model.V3Model) {
 			b.WriteString(fmt.Sprintf("\t\tLayout: &EditorLayout{Positie: &V3Positie{X: %g, Y: %g}},\n", ri.Positie.X, ri.Positie.Y))
 		}
 		b.WriteString("\t}\n")
+	}
+}
+
+// writeVoegOnderliggendGEToe genereert VoegOnderliggendGEToe calls voor
+// referentielijst-items relaties die cross-domein aan Referentielijst toegevoegd worden.
+func writeVoegOnderliggendGEToe(b *strings.Builder, v3 model.V3Model) {
+	var calls []string
+	for _, ent := range v3.Entiteiten {
+		for _, rel := range ent.Relaties {
+			if rel.RelatieSubtype != "referentielijst_items" {
+				continue
+			}
+			rolnaam := relRolnaam(rel.Naam, rel.Meervoud)
+			jsonRolnaam := relJSONRolnaam(rel.Naam, rel.Meervoud)
+			mv := momentvoorkomenConst(rel.Momentvoorkomen)
+			calls = append(calls, fmt.Sprintf(
+				"\tVoegOnderliggendGEToe(\"Referentielijst\", OnderliggendGegevenselement{\n\t\tRolnaam: %q, JSONRolnaam: %q, Doeltype: %q, Momentvoorkomen: %s,\n\t})\n",
+				rolnaam, jsonRolnaam, rel.Naam, mv))
+		}
+	}
+	if len(calls) == 0 {
+		return
+	}
+	b.WriteString("\n\t// Domein-specifieke items-relatie toevoegen aan register-scope Referentielijst\n")
+	for _, c := range calls {
+		b.WriteString(c)
 	}
 }
 

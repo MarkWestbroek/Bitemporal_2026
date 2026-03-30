@@ -258,25 +258,24 @@ type Locatie_BAGlocatie_Data struct {
 }
 
 /* ================================================================
-   LANDENLIJSTLAND — items-relatie: koppelt Referentielijst-instantie "Landenlijst" aan Land.
+   ADELLIJKETITEL — items-relatie en GE's
    ================================================================ */
 
-// LandenlijstLand — koppelrelatie (referentielijst_items) tussen Referentielijst-instantie Landenlijst en Land.
-type LandenlijstLand struct {
-	bun.BaseModel         `bun:"table:landenlijst_land,alias:landenlijst_land"`
-	Referentielijst_ID    int                    `json:"referentielijst_id" bun:"referentielijst_id,pk" schema_desc:"ID van de Referentielijst-entiteit"`
-	Rel_ID                int                    `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentReferentielijst *Referentielijst       `json:"-" bun:"rel:belongs-to,join:referentielijst_id=id,on_delete:cascade"`
-	Land_ID               int                    `json:"land_id"`
-	Opvoer                *time.Time             `json:"opvoer,omitempty"`
-	Afvoer                *time.Time             `json:"afvoer,omitempty"`
-	Data                  []LandenlijstLand_Data `bun:"rel:has-many,join:referentielijst_id=referentielijst_id,join:rel_id=rel_id" json:"data,omitempty"`
+// AdellijkeTitelsTitel — koppelrelatie (referentielijst_items) tussen Referentielijst-instantie AdellijkeTitels en AdellijkeTitel.
+type AdellijkeTitelsTitel struct {
+	bun.BaseModel         `bun:"table:adellijketitelstitel,alias:adellijketitelstitel"`
+	Referentielijst_ID    int                         `json:"referentielijst_id" bun:"referentielijst_id,pk" schema_desc:"ID van de Referentielijst-entiteit"`
+	Rel_ID                int                         `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentReferentielijst *Referentielijst            `json:"-" bun:"rel:belongs-to,join:referentielijst_id=id,on_delete:cascade"`
+	AdellijkeTitel_ID     int                         `json:"adellijketitel_id"`
+	Opvoer                *time.Time                  `json:"opvoer,omitempty"`
+	Afvoer                *time.Time                  `json:"afvoer,omitempty"`
+	Data                  []AdellijkeTitelsTitel_Data `bun:"rel:has-many,join:referentielijst_id=referentielijst_id,join:rel_id=rel_id" json:"data,omitempty"`
 }
 
-// LandenlijstLand_Data — geversioned inhoud van LandenlijstLand.
-// Momenteel geen inhoudelijke velden; de relatie is puur structureel.
-type LandenlijstLand_Data struct {
-	bun.BaseModel      `bun:"table:landenlijst_land_data,alias:landenlijst_land_data"`
+// AdellijkeTitelsTitel_Data — geversioned inhoud van AdellijkeTitelsTitel.
+type AdellijkeTitelsTitel_Data struct {
+	bun.BaseModel      `bun:"table:adellijketitelstitel_data,alias:adellijketitelstitel_data"`
 	Referentielijst_ID int        `json:"referentielijst_id" bun:"referentielijst_id,pk"`
 	Rel_ID             int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie             int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
@@ -284,50 +283,24 @@ type LandenlijstLand_Data struct {
 	Afvoer             *time.Time `json:"afvoer,omitempty"`
 }
 
-/* ================================================================
-   LAND — GE's: Landcode, Landnaam
-   ================================================================ */
-
-// Landcode — enkelvoudig gegevenselement landcode van entiteit Land.
-type Landcode struct {
-	bun.BaseModel `bun:"table:landcode,alias:landcode"`
-	Land_ID       int             `json:"land_id" bun:"land_id,pk" schema_desc:"ID van de Land-entiteit"`
-	Rel_ID        int             `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentLand    *Land           `json:"-" bun:"rel:belongs-to,join:land_id=id,on_delete:cascade"`
-	Opvoer        *time.Time      `json:"opvoer,omitempty"`
-	Afvoer        *time.Time      `json:"afvoer,omitempty"`
-	Data          []Landcode_Data `bun:"rel:has-many,join:land_id=land_id,join:rel_id=rel_id" json:"data,omitempty"`
+// AdellijkeTitelTitel — enkelvoudig gegevenselement titel van entiteit AdellijkeTitel.
+type AdellijkeTitelTitel struct {
+	bun.BaseModel        `bun:"table:adellijketiteltitel,alias:adellijketiteltitel"`
+	AdellijkeTitel_ID    int                        `json:"adellijketitel_id" bun:"adellijketitel_id,pk" schema_desc:"ID van de AdellijkeTitel-entiteit"`
+	Rel_ID               int                        `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentAdellijkeTitel *AdellijkeTitel            `json:"-" bun:"rel:belongs-to,join:adellijketitel_id=id,on_delete:cascade"`
+	Opvoer               *time.Time                 `json:"opvoer,omitempty"`
+	Afvoer               *time.Time                 `json:"afvoer,omitempty"`
+	Data                 []AdellijkeTitelTitel_Data `bun:"rel:has-many,join:adellijketitel_id=adellijketitel_id,join:rel_id=rel_id" json:"data,omitempty"`
 }
 
-// Landcode_Data — geversioned inhoud van gegevenselement Landcode.
-type Landcode_Data struct {
-	bun.BaseModel `bun:"table:landcode_data,alias:landcode_data"`
-	Land_ID       int        `json:"land_id" bun:"land_id,pk"`
-	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Code          string     `json:"code"`
-	Opvoer        *time.Time `json:"opvoer,omitempty"`
-	Afvoer        *time.Time `json:"afvoer,omitempty"`
-}
-
-// Landnaam — enkelvoudig gegevenselement landnaam van entiteit Land.
-type Landnaam struct {
-	bun.BaseModel `bun:"table:landnaam,alias:landnaam"`
-	Land_ID       int             `json:"land_id" bun:"land_id,pk" schema_desc:"ID van de Land-entiteit"`
-	Rel_ID        int             `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentLand    *Land           `json:"-" bun:"rel:belongs-to,join:land_id=id,on_delete:cascade"`
-	Opvoer        *time.Time      `json:"opvoer,omitempty"`
-	Afvoer        *time.Time      `json:"afvoer,omitempty"`
-	Data          []Landnaam_Data `bun:"rel:has-many,join:land_id=land_id,join:rel_id=rel_id" json:"data,omitempty"`
-}
-
-// Landnaam_Data — geversioned inhoud van gegevenselement Landnaam.
-type Landnaam_Data struct {
-	bun.BaseModel `bun:"table:landnaam_data,alias:landnaam_data"`
-	Land_ID       int        `json:"land_id" bun:"land_id,pk"`
-	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Naam          string     `json:"naam"`
-	Opvoer        *time.Time `json:"opvoer,omitempty"`
-	Afvoer        *time.Time `json:"afvoer,omitempty"`
+// AdellijkeTitelTitel_Data — geversioned inhoud van gegevenselement AdellijkeTitelTitel.
+type AdellijkeTitelTitel_Data struct {
+	bun.BaseModel     `bun:"table:adellijketiteltitel_data,alias:adellijketiteltitel_data"`
+	AdellijkeTitel_ID int        `json:"adellijketitel_id" bun:"adellijketitel_id,pk"`
+	Rel_ID            int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie            int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Titel             string     `json:"titel"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
 }

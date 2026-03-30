@@ -77,6 +77,7 @@ export default function TijdlijnRegistratiePaneel({
   registratieOpmerking,
   regViewBoxHeight,
   isOngedaanmaking,
+  isCorrectie,
   entityType,
   typeMetaByTypenaam,
   microsecondeIntVanTijdstip,
@@ -93,6 +94,52 @@ export default function TijdlijnRegistratiePaneel({
   const eersteDividerX = 92;
   const tweedeDividerX = 186;
   const rijHoogte = 58;
+  const heeftTerugVerwijslijnen = Boolean(isOngedaanmaking || isCorrectie);
+
+  const basisRepNaam = (value) => String(value || "").trim().toUpperCase().replace(/_(DATA|AANVANG|EINDE)$/i, "");
+  const heeftPlumbingSuffix = (value) => /_(DATA|AANVANG|EINDE)$/i.test(String(value || "").trim());
+
+  const relatieBoogjes = [];
+  for (let i = 0; i < wijzigingen.length; i += 1) {
+    const wi = wijzigingen[i] || {};
+    const wiType = String(wi.wijzigingstype || "").toLowerCase();
+    const wiNaam = String(wi.representatienaam || "").trim();
+    const wiRepId = String(wi.representatie_id ?? "").trim();
+    const wiEntId = String(wi.entiteit_id ?? "").trim();
+
+    for (let j = i + 1; j < wijzigingen.length; j += 1) {
+      const wj = wijzigingen[j] || {};
+      const wjType = String(wj.wijzigingstype || "").toLowerCase();
+      const wjNaam = String(wj.representatienaam || "").trim();
+      const wjRepId = String(wj.representatie_id ?? "").trim();
+      const wjEntId = String(wj.entiteit_id ?? "").trim();
+
+      const zelfdeEntiteit = wiEntId !== "" && wiEntId === wjEntId;
+      const zelfdeRepId = wiRepId !== "" && wiRepId === wjRepId;
+      const zelfdeBasis = basisRepNaam(wiNaam) !== "" && basisRepNaam(wiNaam) === basisRepNaam(wjNaam);
+
+      const isCorrectieBoog = isCorrectie && wiType === "afvoer" && wjType === "opvoer" && zelfdeEntiteit && (zelfdeRepId || zelfdeBasis);
+      const isHubDataBoog = isOngedaanmaking && wiType === wjType && zelfdeEntiteit && zelfdeRepId && zelfdeBasis
+        && ((heeftPlumbingSuffix(wiNaam) && !heeftPlumbingSuffix(wjNaam)) || (!heeftPlumbingSuffix(wiNaam) && heeftPlumbingSuffix(wjNaam)));
+
+      if (!isCorrectieBoog && !isHubDataBoog) {
+        continue;
+      }
+
+      const y1 = 64 + i * rijHoogte + 30;
+      const y2 = 64 + j * rijHoogte + 30;
+      relatieBoogjes.push({
+        key: `boog-${i}-${j}`,
+        x: 58,
+        y1,
+        y2,
+        kleur: isCorrectieBoog
+          ? "rgba(22, 163, 74, 0.72)"
+          : (wiType === "afvoer" ? "rgba(22, 163, 74, 0.62)" : "rgba(220, 38, 38, 0.48)"),
+      });
+      break;
+    }
+  }
 
   return (
     <div className="card">
@@ -111,28 +158,42 @@ export default function TijdlijnRegistratiePaneel({
           {` | type=${visualReg.registratietype || reg.registratietype || "-"}`}
         </text>
 
+        {relatieBoogjes.map((boog) => (
+          <path
+            key={boog.key}
+            d={`M ${boog.x} ${boog.y1} C ${boog.x - 16} ${boog.y1 + 10}, ${boog.x - 16} ${boog.y2 - 10}, ${boog.x} ${boog.y2}`}
+            fill="none"
+            stroke={boog.kleur}
+            strokeWidth="2"
+          />
+        ))}
+
         {wijzigingen.map((w, i) => {
           const y = 64 + i * rijHoogte;
           const repLeeg = (w.representatienaam === null || w.representatienaam === undefined || w.representatienaam === "")
             && (w.representatie_id === null || w.representatie_id === undefined || w.representatie_id === "");
-          const entiteitRegels = splitLabelOverMeerdereRegels(`${labelVoorTypeNaam(w.entiteitnaam, entityType || "E")}: ${w.entiteit_id ?? "-"}`, 11, 2);
-          const repRegels = splitLabelOverMeerdereRegels(`${labelVoorTypeNaam(w.representatienaam, w.representatienaam)}: ${w.representatie_id}`, 11, 3);
+          const entiteitRegels = splitLabelOverMeerdereRegels(`${labelVoorTypeNaam(w.entiteitnaam, entityType || "E")}: ${w.entiteit_id ?? "-"}`, 13, 2);
+          const repIdStr = w.versie != null ? `${w.representatie_id ?? "-"} v${w.versie}` : `${w.representatie_id ?? "-"}`;
+          const repRegels = splitLabelOverMeerdereRegels(`${labelVoorTypeNaam(w.representatienaam, w.representatienaam)}: ${repIdStr}`, 13, 3);
           return (
             <g key={`w-${w.id || i}`}>
               <line className="edge" x1="160" y1="52" x2="160" y2={y - 2} />
               <rect className="node" x="14" y={y} rx="8" width="292" height="56" style={{ fill: `url(#${wijzigingPatroonId(w.wijzigingstype)})` }} />
               <line x1={eersteDividerX} y1={y} x2={eersteDividerX} y2={y + 56} stroke="var(--border-strong)" strokeWidth="1" />
               <line x1={tweedeDividerX} y1={y} x2={tweedeDividerX} y2={y + 56} stroke="var(--border-strong)" strokeWidth="1" />
-              <text id={isOngedaanmaking && String(w.wijzigingstype || "").toLowerCase() === "opvoer" ? `undo-src-${normaliseerIdComponent(reg.id)}-${i}` : undefined} className="label" x="22" y={y + 33}>{w.wijzigingstype || "-"}</text>
-              <text className="label" x="100" y={y + 20}>
+              <text id={heeftTerugVerwijslijnen ? `undo-src-${normaliseerIdComponent(reg.id)}-${i}` : undefined} className="label" x="54" y={y + 33} textAnchor="middle"
+                style={{ fontSize: "10px", fill: "#64748b", textTransform: "uppercase", letterSpacing: "0.9px", fontWeight: 600 }}>
+                {w.wijzigingstype || "-"}
+              </text>
+              <text className="label" x="100" y={y + 18}>
                 {entiteitRegels.map((regel, regelIndex) => (
-                  <tspan key={`ent-${regelIndex}`} x="100" dy={regelIndex === 0 ? 0 : 14} className="label-strong">{regel}</tspan>
+                  <tspan key={`ent-${regelIndex}`} x="100" dy={regelIndex === 0 ? 0 : 12} style={{ fontWeight: 700, fontSize: "11.5px" }}>{regel}</tspan>
                 ))}
               </text>
               {!repLeeg && (
                 <text className="label" x="194" y={y + 16}>
                   {repRegels.map((regel, regelIndex) => (
-                    <tspan key={`rep-${regelIndex}`} x="194" dy={regelIndex === 0 ? 0 : 14} className="label-strong">{regel}</tspan>
+                    <tspan key={`rep-${regelIndex}`} x="194" dy={regelIndex === 0 ? 0 : 12} style={{ fontWeight: 700, fontSize: "11.5px" }}>{regel}</tspan>
                   ))}
                 </text>
               )}

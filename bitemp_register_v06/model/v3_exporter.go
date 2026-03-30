@@ -41,6 +41,10 @@ func isPlumbingField(f reflect.StructField) bool {
 	if strings.Contains(bunTag, "rel:") {
 		return true
 	}
+	// PK-velden in _Data structs (ent_id, rel_id, versie) zijn plumbing
+	if strings.Contains(bunTag, ",pk") {
+		return true
+	}
 	return false
 }
 

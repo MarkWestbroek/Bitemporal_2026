@@ -177,8 +177,11 @@ func generateDataStruct(b *strings.Builder, hubType string, parentEntType string
 		writeField(b, f)
 	}
 
-	// Inhoudsvelden
+	// Inhoudsvelden (skip parent FK, die zit al in plumbing)
 	for _, v := range velden {
+		if v.Naam == entIDKolom {
+			continue
+		}
 		writeField(b, contentField(v))
 	}
 

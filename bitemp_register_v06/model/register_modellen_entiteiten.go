@@ -21,18 +21,19 @@ import (
 // zodat Bun het correct kan laden.
 type Referentielijst struct {
 	bun.BaseModel                 `bun:"table:register_referentielijst,alias:register_referentielijst"`
-	ID                            int                           `json:"id" bun:"id,pk,autoincrement"`
-	Systeemnaam                   string                        `json:"systeemnaam" bun:"systeemnaam,unique"`
-	Opvoer                        *time.Time                    `json:"opvoer,omitempty"`
-	Afvoer                        *time.Time                    `json:"afvoer,omitempty"`
-	Referentielijstnamen          []Referentielijstnaam         `bun:"rel:has-many,join:id=referentielijst_id" json:"referentielijstnamen,omitempty"`
-	Referentielijstomschrijvingen []Referentielijstomschrijving `bun:"rel:has-many,join:id=referentielijst_id" json:"referentielijstomschrijvingen,omitempty"`
-	Visibilities                  []ReferentielijstVisibility     `bun:"rel:has-many,join:id=referentielijst_id" json:"visibilities,omitempty"`
-	Internetadressen              []ReferentielijstInternetadres  `bun:"rel:has-many,join:id=referentielijst_id" json:"internetadressen,omitempty"`
+	ID                            int                            `json:"id" bun:"id,pk,autoincrement"`
+	Systeemnaam                   string                         `json:"systeemnaam" bun:"systeemnaam,unique"`
+	Opvoer                        *time.Time                     `json:"opvoer,omitempty"`
+	Afvoer                        *time.Time                     `json:"afvoer,omitempty"`
+	Referentielijstnamen          []Referentielijstnaam          `bun:"rel:has-many,join:id=referentielijst_id" json:"referentielijstnamen,omitempty"`
+	Referentielijstomschrijvingen []Referentielijstomschrijving  `bun:"rel:has-many,join:id=referentielijst_id" json:"referentielijstomschrijvingen,omitempty"`
+	Visibilities                  []ReferentielijstVisibility    `bun:"rel:has-many,join:id=referentielijst_id" json:"visibilities,omitempty"`
+	Internetadressen              []ReferentielijstInternetadres `bun:"rel:has-many,join:id=referentielijst_id" json:"internetadressen,omitempty"`
 	// Domein-specifieke items-relaties (velden hier, MetaRegistry-koppeling in domeinbestand):
-	LandenlijstLanden             []LandenlijstLand               `bun:"rel:has-many,join:id=referentielijst_id" json:"landenlijst_landen,omitempty"`
-	Aanvang                       []Referentielijst_Aanvang     `bun:"rel:has-many,join:id=referentielijst_id" json:"aanvang,omitempty"`
-	Einde                         []Referentielijst_Einde       `bun:"rel:has-many,join:id=referentielijst_id" json:"einde,omitempty"`
+	LandenlijstLanden     []LandenlijstLand         `bun:"rel:has-many,join:id=referentielijst_id" json:"landenlijst_landen,omitempty"`
+	AdellijkeTitelsTitels []AdellijkeTitelsTitel    `bun:"rel:has-many,join:id=referentielijst_id" json:"adellijke_titels_titels,omitempty"`
+	Aanvang               []Referentielijst_Aanvang `bun:"rel:has-many,join:id=referentielijst_id" json:"aanvang,omitempty"`
+	Einde                 []Referentielijst_Einde   `bun:"rel:has-many,join:id=referentielijst_id" json:"einde,omitempty"`
 }
 
 // Referentielijst_Aanvang — aanvangsdatum van Referentielijst.
@@ -53,4 +54,40 @@ type Referentielijst_Einde struct {
 	Datum              *Date      `json:"datum,omitempty" bun:"datum,type:date"`
 	Opvoer             *time.Time `json:"opvoer,omitempty"`
 	Afvoer             *time.Time `json:"afvoer,omitempty"`
+}
+
+/* ================================================================
+   LAND — referentielijst-item-entiteit (record per individueel land).
+   ================================================================ */
+
+// Land — referentielijst-item-entiteit voor individuele landen.
+type Land struct {
+	bun.BaseModel `bun:"table:land,alias:land"`
+	ID            int            `json:"id" bun:"id,pk"`
+	Opvoer        *time.Time     `json:"opvoer,omitempty"`
+	Afvoer        *time.Time     `json:"afvoer,omitempty"`
+	Landcodes     []Landcode     `bun:"rel:has-many,join:id=land_id" json:"landcodes,omitempty"`
+	Landnamen     []Landnaam     `bun:"rel:has-many,join:id=land_id" json:"landnamen,omitempty"`
+	Aanvang       []Land_Aanvang `bun:"rel:has-many,join:id=land_id" json:"aanvang,omitempty"`
+	Einde         []Land_Einde   `bun:"rel:has-many,join:id=land_id" json:"einde,omitempty"`
+}
+
+// Land_Aanvang — aanvangsdatum van referentielijst-item Land.
+type Land_Aanvang struct {
+	bun.BaseModel `bun:"table:land_aanvang,alias:land_aanvang"`
+	Land_ID       int        `json:"land_id" bun:"land_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+// Land_Einde — einddatum van referentielijst-item Land.
+type Land_Einde struct {
+	bun.BaseModel `bun:"table:land_einde,alias:land_einde"`
+	Land_ID       int        `json:"land_id" bun:"land_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
