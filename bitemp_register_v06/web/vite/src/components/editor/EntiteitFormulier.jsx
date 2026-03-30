@@ -80,7 +80,8 @@ export default function EntiteitFormulier() {
   const [entity, setEntity] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [nieuwGE, setNieuwGE] = useState(null); // { doeltype } als er een nieuw record wordt toegevoegd
+  const [nieuwGE, setNieuwGE] = useState(null); // doeltype als er een nieuw record wordt toegevoegd
+  const [bewerkRij, setBewerkRij] = useState(null); // { doeltype, index } — meervoudig rij in correctiemodus
 
   const apiPath = typeMeta?.padnaam || typeMeta?.meervoud || typeMeta?.veldnaam;
 
@@ -145,6 +146,37 @@ export default function EntiteitFormulier() {
     const childMeta = typeMetaByTypenaam?.[child.doeltype];
     return childMeta && childMeta.ge_subtype !== "aanvang" && childMeta.ge_subtype !== "einde";
   });
+
+  // Verwijderen (afvoer) van een meervoudig GE record
+  async function handleVerwijderenRij(item, childMeta) {
+    const label = childMeta?.klassenaam || childMeta?.typenaam || "record";
+    if (!window.confirm(`Weet u zeker dat u dit ${label} record wilt verwijderen?`)) return;
+    setBewerkRij(null);
+    const veldnaam = childMeta.veldnaam || childMeta.padnaam;
+    const idKolom = childMeta?.idKolom;
+    const entKolom = childMeta?.entiteitIDKolom;
+    const sleutel = {};
+    if (idKolom && item[idKolom] != null) sleutel[idKolom] = item[idKolom];
+    if (entKolom && item[entKolom] != null) sleutel[entKolom] = item[entKolom];
+    if (!idKolom && item.rel_id != null) sleutel.rel_id = item.rel_id;
+    try {
+      const res = await fetch(`${baseUrl}/registratie/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          registratie: { registratietype: "registratie" },
+          wijzigingen: [{ afvoer: { [veldnaam]: sleutel } }],
+        }),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status}: ${text}`);
+      }
+      fetchEntity();
+    } catch (err) {
+      alert(`Fout bij verwijderen: ${err.message}`);
+    }
+  }
 
   return (
     <div>
@@ -296,32 +328,80 @@ export default function EntiteitFormulier() {
                 onSaved={fetchEntity}
                 entiteitId={id}
                 entiteitIdKolom={childMeta.entiteitIDKolom}
+                isEnkelvoudig={true}
               />
             ) : !isEnkelvoudig && actueleItems.length > 0 ? (
-              /* Meervoudig: compact tabel met alleen actuele records.
-               * Elk record is een hub waarvan de inhoudsvelden komen uit het
-               * actieve data-record (platgeslagen door platSlaHubItems). */
-              <div style={{ overflowX: "auto" }}>
-                <table className="utrecht-table" style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr className="utrecht-table__header-row">
-                      {inhoudsvelden.map((v) => (
-                        <th key={v.naam} className="utrecht-table__header-cell">{v.naam}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {actueleItems.map((item, i) => (
-                      <tr key={i} className="utrecht-table__row" style={{ background: i % 2 === 1 ? "var(--cg-lichtgrijs)" : undefined }}>
+              /* Meervoudig: compact tabel met actuele records + acties per rij */
+              <div>
+                <div style={{ overflowX: "auto" }}>
+                  <table className="utrecht-table" style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr className="utrecht-table__header-row">
                         {inhoudsvelden.map((v) => (
-                          <td key={v.naam} className="utrecht-table__cell" style={{ padding: "0.375rem 0.75rem" }}>
-                            {item[v.naam] != null ? String(item[v.naam]) : "—"}
-                          </td>
+                          <th key={v.naam} className="utrecht-table__header-cell">{v.naam}</th>
                         ))}
+                        <th className="utrecht-table__header-cell" style={{ width: "1%", whiteSpace: "nowrap" }}></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {actueleItems.map((item, i) => (
+                        <tr
+                          key={i}
+                          className="utrecht-table__row"
+                          style={{
+                            background: bewerkRij?.doeltype === child.doeltype && bewerkRij?.index === i
+                              ? "var(--cg-lichtblauw, #e0f0ff)"
+                              : i % 2 === 1 ? "var(--cg-lichtgrijs)" : undefined,
+                          }}
+                        >
+                          {inhoudsvelden.map((v) => (
+                            <td key={v.naam} className="utrecht-table__cell" style={{ padding: "0.375rem 0.75rem" }}>
+                              {item[v.naam] != null ? String(item[v.naam]) : "—"}
+                            </td>
+                          ))}
+                          <td className="utrecht-table__cell" style={{ padding: "0.375rem 0.5rem", whiteSpace: "nowrap" }}>
+                            <button
+                              type="button"
+                              className="utrecht-button utrecht-button--secondary-action"
+                              style={{ fontSize: "0.75rem", padding: "0.125rem 0.5rem", marginRight: "0.25rem" }}
+                              title="Corrigeren"
+                              onClick={() => { setNieuwGE(null); setBewerkRij({ doeltype: child.doeltype, index: i }); }}
+                            >
+                              ✎
+                            </button>
+                            <button
+                              type="button"
+                              className="utrecht-button utrecht-button--secondary-action"
+                              style={{ fontSize: "0.75rem", padding: "0.125rem 0.5rem", color: "var(--cg-fout, #b91c1c)" }}
+                              title="Verwijderen"
+                              onClick={() => handleVerwijderenRij(item, childMeta)}
+                            >
+                              ✕
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Inline correctieformulier voor geselecteerde meervoudige rij */}
+                {bewerkRij?.doeltype === child.doeltype && bewerkRij.index < actueleItems.length && (
+                  <div style={{ marginTop: "0.5rem", padding: "0.75rem", border: "1px solid var(--cg-grijs, #ccc)", borderRadius: "6px", background: "var(--cg-lichtgrijs, #f8f9fa)" }}>
+                    <div style={{ fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.5rem" }}>
+                      Correctie {label} (rel_id: {actueleItems[bewerkRij.index]?.rel_id ?? "—"})
+                    </div>
+                    <RepresentatieFormulier
+                      typeMeta={childMeta}
+                      dataMeta={dataMeta}
+                      initialData={actueleItems[bewerkRij.index]}
+                      onSaved={() => { setBewerkRij(null); fetchEntity(); }}
+                      onCancel={() => setBewerkRij(null)}
+                      entiteitId={id}
+                      entiteitIdKolom={childMeta.entiteitIDKolom}
+                      isEnkelvoudig={false}
+                    />
+                  </div>
+                )}
               </div>
             ) : null}
 
@@ -333,7 +413,7 @@ export default function EntiteitFormulier() {
                   type="button"
                   className="utrecht-button utrecht-button--secondary-action"
                   style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}
-                  onClick={() => setNieuwGE(child.doeltype)}
+                  onClick={() => { setBewerkRij(null); setNieuwGE(child.doeltype); }}
                 >
                   + {label} toevoegen
                 </button>
@@ -347,7 +427,7 @@ export default function EntiteitFormulier() {
                   typeMeta={childMeta}
                   dataMeta={dataMeta}
                   initialData={null}
-                  onSaved={() => { setNieuwGE(null); fetchEntity(); }}
+                  onSaved={() => { setNieuwGE(null); setBewerkRij(null); fetchEntity(); }}
                   entiteitId={id}
                   entiteitIdKolom={childMeta.entiteitIDKolom}
                 />
@@ -369,7 +449,7 @@ export default function EntiteitFormulier() {
                   type="button"
                   className="utrecht-button utrecht-button--secondary-action"
                   style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}
-                  onClick={() => setNieuwGE(child.doeltype)}
+                  onClick={() => { setBewerkRij(null); setNieuwGE(child.doeltype); }}
                 >
                   + {label} toevoegen
                 </button>

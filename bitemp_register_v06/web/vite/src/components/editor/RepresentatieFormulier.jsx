@@ -36,8 +36,10 @@ export default function RepresentatieFormulier({
   dataMeta,
   initialData,
   onSaved,
+  onCancel,
   entiteitId,
   entiteitIdKolom,
+  isEnkelvoudig = true,
 }) {
   const { baseUrl } = useSchema();
   const navigate = useNavigate();
@@ -85,53 +87,81 @@ export default function RepresentatieFormulier({
     setValues((prev) => ({ ...prev, [naam]: waarde }));
   }, []);
 
-  const handleSubmit = useCallback(
-    async (e) => {
-      e.preventDefault();
+  // ── Dirty tracking ──────────────────────────────────────────────────
+  const isDirty = useMemo(() => {
+    if (!initialData) return true;
+    return bewerkbareVelden.some((veld) => {
+      const original = initialData[veld.naam] ?? "";
+      const current = values[veld.naam] ?? "";
+      return String(original) !== String(current);
+    });
+  }, [values, bewerkbareVelden, initialData]);
+
+  const aantalGewijzigdeVelden = useMemo(() => {
+    if (!initialData) return bewerkbareVelden.length;
+    return bewerkbareVelden.filter((veld) => {
+      const original = initialData[veld.naam] ?? "";
+      const current = values[veld.naam] ?? "";
+      return String(original) !== String(current);
+    }).length;
+  }, [values, bewerkbareVelden, initialData]);
+
+  // ── Payload builders ────────────────────────────────────────────────
+  const buildOpvoerPayload = useCallback(() => {
+    const repPayload = {};
+    if (entiteitIdKolom && entiteitId != null) {
+      repPayload[entiteitIdKolom] = Number(entiteitId);
+    }
+    if (initialData?.rel_id != null) {
+      repPayload.rel_id = initialData.rel_id;
+    }
+    if (initialData && typeMeta?.idKolom) {
+      const bestaandId = initialData[typeMeta.idKolom];
+      if (bestaandId != null) repPayload[typeMeta.idKolom] = bestaandId;
+    }
+    for (const veld of bewerkbareVelden) {
+      const raw = values[veld.naam];
+      if (raw === "" || raw === null || raw === undefined) {
+        if (veld.verplicht) throw new Error(`${veld.naam} is verplicht.`);
+        continue;
+      }
+      repPayload[veld.naam] = coercedWaardeVoorVeld(raw, veld, veld.naam);
+    }
+    return repPayload;
+  }, [values, bewerkbareVelden, typeMeta, entiteitId, entiteitIdKolom, initialData]);
+
+  const buildAfvoerSleutel = useCallback(() => {
+    const sleutel = {};
+    const idKolom = typeMeta?.idKolom;
+    if (idKolom && initialData?.[idKolom] != null) {
+      sleutel[idKolom] = initialData[idKolom];
+    }
+    if (entiteitIdKolom && initialData?.[entiteitIdKolom] != null) {
+      sleutel[entiteitIdKolom] = initialData[entiteitIdKolom];
+    }
+    if (!idKolom && initialData?.rel_id != null) {
+      sleutel.rel_id = initialData.rel_id;
+    } else if (!idKolom && initialData?.id != null) {
+      sleutel.id = initialData.id;
+    }
+    return sleutel;
+  }, [typeMeta, entiteitIdKolom, initialData]);
+
+  // ── Actie-handler (wijzigen / corrigeren / beëindigen / verwijderen) ─
+  const handleActie = useCallback(
+    async (registratietype, isAfvoer = false) => {
       setBusy(true);
       setFeedback(null);
-
       try {
-        const repPayload = {};
-
-        // FK naar parent entiteit
-        if (entiteitIdKolom && entiteitId != null) {
-          repPayload[entiteitIdKolom] = Number(entiteitId);
-        }
-
-        // Bestaand record: ID meesturen zodat backend het kan matchen
-        if (initialData && typeMeta?.idKolom) {
-          const bestaandId = initialData[typeMeta.idKolom];
-          if (bestaandId != null) repPayload[typeMeta.idKolom] = bestaandId;
-        }
-
-        for (const veld of bewerkbareVelden) {
-          const raw = values[veld.naam];
-          if (raw === "" || raw === null || raw === undefined) {
-            if (veld.verplicht) throw new Error(`${veld.naam} is verplicht.`);
-            continue;
-          }
-          repPayload[veld.naam] = coercedWaardeVoorVeld(raw, veld, veld.naam);
-        }
-
-        // Backend verwacht: { registratie: {...}, wijzigingen: [{ opvoer: { <veldnaam>: {...} } }] }
-        // De veldnaam is de key waarmee UnmarshalJSON het type opzoekt in de MetaRegistry.
         const veldnaam = typeMeta.veldnaam || typeMeta.padnaam;
-        const registratiePayload = {
-          registratie: {
-            opmerking: isNieuw ? `Nieuw ${typeMeta.typenaam}` : `Bewerk ${typeMeta.typenaam}`,
-          },
-          wijzigingen: [
-            {
-              opvoer: { [veldnaam]: repPayload },
-            },
-          ],
-        };
+        const wijzigingen = isAfvoer
+          ? [{ afvoer: { [veldnaam]: buildAfvoerSleutel() } }]
+          : [{ opvoer: { [veldnaam]: buildOpvoerPayload() } }];
 
         const res = await fetch(`${baseUrl}/registratie/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(registratiePayload),
+          body: JSON.stringify({ registratie: { registratietype }, wijzigingen }),
         });
 
         if (!res.ok) {
@@ -139,7 +169,10 @@ export default function RepresentatieFormulier({
           throw new Error(`HTTP ${res.status}: ${text}`);
         }
 
-        setFeedback({ type: "succes", text: "Opgeslagen!" });
+        const label = isAfvoer
+          ? (isEnkelvoudig ? "Beëindigd" : "Verwijderd")
+          : registratietype === "correctie" ? "Correctie opgeslagen" : "Opgeslagen";
+        setFeedback({ type: "succes", text: `${label}!` });
         if (onSaved) onSaved();
       } catch (err) {
         setFeedback({ type: "fout", text: err.message });
@@ -147,7 +180,42 @@ export default function RepresentatieFormulier({
         setBusy(false);
       }
     },
-    [values, bewerkbareVelden, typeMeta, baseUrl, isNieuw, onSaved, entiteitId, entiteitIdKolom]
+    [typeMeta, baseUrl, buildOpvoerPayload, buildAfvoerSleutel, onSaved, isEnkelvoudig]
+  );
+
+  // Wijzigen: bij weinig gewijzigde velden → suggestie corrigeren
+  const handleWijzigen = useCallback(() => {
+    if (aantalGewijzigdeVelden > 0 && aantalGewijzigdeVelden <= Math.ceil(bewerkbareVelden.length / 2) && bewerkbareVelden.length > 1) {
+      if (window.confirm(
+        `Er ${aantalGewijzigdeVelden === 1 ? "is" : "zijn"} slechts ${aantalGewijzigdeVelden} van de ${bewerkbareVelden.length} velden gewijzigd.\n\nWilt u niet eigenlijk corrigeren in plaats van wijzigen?\n\nKlik OK om te corrigeren, of Annuleren om toch te wijzigen.`
+      )) {
+        handleActie("correctie");
+        return;
+      }
+    }
+    handleActie("registratie");
+  }, [handleActie, aantalGewijzigdeVelden, bewerkbareVelden.length]);
+
+  const handleCorrigeren = useCallback(() => handleActie("correctie"), [handleActie]);
+
+  const handleBeeindigen = useCallback(() => {
+    const label = typeMeta?.klassenaam || typeMeta?.typenaam || "record";
+    if (!window.confirm(`Weet u zeker dat u ${label} wilt beëindigen (afvoeren)?`)) return;
+    handleActie("registratie", true);
+  }, [handleActie, typeMeta]);
+
+  const handleVerwijderen = useCallback(() => {
+    const label = typeMeta?.klassenaam || typeMeta?.typenaam || "record";
+    if (!window.confirm(`Weet u zeker dat u dit ${label} record wilt verwijderen?`)) return;
+    handleActie("registratie", true);
+  }, [handleActie, typeMeta]);
+
+  const handleSubmit = useCallback(
+    (e) => {
+      e.preventDefault();
+      if (isNieuw) handleActie("registratie");
+    },
+    [isNieuw, handleActie]
   );
 
   return (
@@ -196,15 +264,78 @@ export default function RepresentatieFormulier({
           </div>
         )}
 
-        <div style={{ display: "flex", gap: "0.75rem", paddingTop: "0.75rem" }}>
-          <button
-            type="submit"
-            className="utrecht-button utrecht-button--primary-action"
-            style={{ padding: "0.5rem 1.25rem" }}
-            disabled={busy}
-          >
-            {busy ? "Opslaan…" : "Opslaan"}
-          </button>
+        <div style={{ display: "flex", gap: "0.75rem", paddingTop: "0.75rem", flexWrap: "wrap", alignItems: "center" }}>
+          {isNieuw ? (
+            <button
+              type="submit"
+              className="utrecht-button utrecht-button--primary-action"
+              style={{ padding: "0.5rem 1.25rem" }}
+              disabled={busy}
+            >
+              {busy ? "Opslaan…" : "Opslaan"}
+            </button>
+          ) : isEnkelvoudig ? (
+            <>
+              <button
+                type="button"
+                className="utrecht-button utrecht-button--primary-action"
+                style={{ padding: "0.5rem 1.25rem" }}
+                disabled={busy || !isDirty}
+                onClick={handleWijzigen}
+              >
+                {busy ? "Bezig…" : "Wijzigen"}
+              </button>
+              <button
+                type="button"
+                className="utrecht-button utrecht-button--secondary-action"
+                style={{ padding: "0.5rem 1.25rem" }}
+                disabled={busy || !isDirty}
+                onClick={handleCorrigeren}
+              >
+                Corrigeren
+              </button>
+              <button
+                type="button"
+                className="utrecht-button utrecht-button--secondary-action"
+                style={{ padding: "0.5rem 1.25rem", color: "var(--cg-fout, #b91c1c)" }}
+                disabled={busy}
+                onClick={handleBeeindigen}
+              >
+                Beëindigen
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="utrecht-button utrecht-button--secondary-action"
+                style={{ padding: "0.5rem 1.25rem" }}
+                disabled={busy || !isDirty}
+                onClick={handleCorrigeren}
+              >
+                {busy ? "Bezig…" : "Corrigeren"}
+              </button>
+              <button
+                type="button"
+                className="utrecht-button utrecht-button--secondary-action"
+                style={{ padding: "0.5rem 1.25rem", color: "var(--cg-fout, #b91c1c)" }}
+                disabled={busy}
+                onClick={handleVerwijderen}
+              >
+                Verwijderen
+              </button>
+              {onCancel && (
+                <button
+                  type="button"
+                  className="utrecht-button utrecht-button--secondary-action"
+                  style={{ padding: "0.5rem 1.25rem" }}
+                  onClick={onCancel}
+                >
+                  Annuleren
+                </button>
+              )}
+            </>
+          )}
         </div>
       </div>
     </form>
