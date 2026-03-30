@@ -1,0 +1,288 @@
+{
+    "naam": "register",
+    "enums": [
+        {
+            "goType": "ReferentielijstAdrestype",
+            "positie": {
+                "x": 1620,
+                "y": 255
+            },
+            "waarden": [
+                {
+                    "waarde": "URL",
+                    "constNaam": "ReferentielijstAdrestypeURL"
+                },
+                {
+                    "waarde": "URN",
+                    "constNaam": "ReferentielijstAdrestypeURN"
+                }
+            ],
+            "baseType": "string"
+        }
+    ],
+    "versie": "1.0.0",
+    "datatypes": [
+        {
+            "naam": "NLPostcode",
+            "format": "nl-postcode",
+            "positie": {
+                "x": 480,
+                "y": -270
+            },
+            "weergave": {
+                "inputMask": "0000 AA",
+                "placeholder": "1234 AB"
+            },
+            "basistype": "string",
+            "validatie": {
+                "pattern": "^[1-9][0-9]{3}\\s?[A-Za-z]{2}$",
+                "maxLength": 7,
+                "minLength": 6,
+                "foutmelding": "Voer een geldige postcode in (bijv. 1234 AB)",
+                "voorbeelden": [
+                    "1234 AB",
+                    "9999ZZ"
+                ]
+            },
+            "normalisatie": "uppercase_letters"
+        },
+        {
+            "naam": "BSN",
+            "format": "bsn",
+            "positie": {
+                "x": 525,
+                "y": 60
+            },
+            "weergave": {
+                "inputMask": "000000000",
+                "placeholder": "123456782"
+            },
+            "basistype": "string",
+            "validatie": {
+                "regels": [
+                    {
+                        "naam": "11-proef",
+                        "type": "checksum",
+                        "expressie": "(9*d1 + 8*d2 + 7*d3 + 6*d4 + 5*d5 + 4*d6 + 3*d7 + 2*d8 - 1*d9) % 11 == 0"
+                    }
+                ],
+                "pattern": "^[0-9]{9}$",
+                "maxLength": 9,
+                "minLength": 9,
+                "foutmelding": "Voer een geldig BSN in (9 cijfers, 11-proef)",
+                "voorbeelden": [
+                    "123456782"
+                ]
+            }
+        }
+    ],
+    "entiteiten": [
+        {
+            "kleur": "#fde68a",
+            "positie": {
+                "x": 1305,
+                "y": 285
+            },
+            "meervoud": "landen",
+            "typenaam": "Land",
+            "description": "Referentielijst-item: individueel land.",
+            "isMaterieel": true,
+            "entiteitSubtype": "referentielijst_item",
+            "gegevenselementen": [
+                {
+                    "id": "edge_1774646153149_10",
+                    "naam": "Landcode",
+                    "velden": [
+                        {
+                            "naam": "code",
+                            "goType": "string"
+                        }
+                    ],
+                    "positie": {
+                        "x": 1200,
+                        "y": 480
+                    },
+                    "meervoud": "landcodes",
+                    "description": "Enkelvoudig gegevenselement landcode van Land.",
+                    "sourceHandle": "bottom",
+                    "targetHandle": "top",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "id": "edge_1774646072605_7",
+                    "naam": "Landnaam",
+                    "velden": [
+                        {
+                            "naam": "naam",
+                            "goType": "string"
+                        }
+                    ],
+                    "positie": {
+                        "x": 1425,
+                        "y": 480
+                    },
+                    "meervoud": "landnamen",
+                    "description": "Enkelvoudig gegevenselement landnaam van Land.",
+                    "sourceHandle": "bottom",
+                    "targetHandle": "top",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "kleur": "#fef3c7",
+            "positie": {
+                "x": 1215,
+                "y": -285
+            },
+            "meervoud": "referentielijsten",
+            "relaties": [
+                {
+                    "id": "Referentielijst->LandenlijstLand",
+                    "naam": "LandenlijstLand",
+                    "doelId": "LandenlijstLand->Land",
+                    "positie": {
+                        "x": 1305,
+                        "y": 135
+                    },
+                    "meervoud": "landenlijst_landen",
+                    "description": "Koppeling van een land aan referentielijst-instantie Landenlijst (referentielijst-items relatie).",
+                    "doelEntiteit": "Land",
+                    "relatieSubtype": "referentielijst_items",
+                    "momentvoorkomen": "meervoudig",
+                    "referentielijstInstantie": "Landenlijst"
+                },
+                {
+                    "id": "Referentielijst->AdellijkeTitelsTitel",
+                    "naam": "AdellijkeTitelsTitel",
+                    "positie": {
+                        "x": 1035,
+                        "y": -105
+                    },
+                    "meervoud": "adellijke_titels_titels",
+                    "description": "Koppeling van een adellijke titel aan referentielijst-instantie AdellijkeTitels (referentielijst-items relatie).",
+                    "doelEntiteit": "AdellijkeTitel",
+                    "relatieSubtype": "referentielijst_items",
+                    "momentvoorkomen": "meervoudig",
+                    "referentielijstInstantie": "AdellijkeTitels"
+                }
+            ],
+            "typenaam": "Referentielijst",
+            "description": "Generieke referentielijst-entiteit. Individuele lijsten (Landenlijst, EULidstaten, etc.) zijn records.",
+            "isMaterieel": true,
+            "entiteitSubtype": "referentielijst",
+            "gegevenselementen": [
+                {
+                    "id": "Referentielijst->Referentielijst_Referentielijstnaam",
+                    "naam": "Referentielijstnaam",
+                    "velden": [
+                        {
+                            "naam": "naam",
+                            "goType": "string"
+                        }
+                    ],
+                    "positie": {
+                        "x": 1590,
+                        "y": -270
+                    },
+                    "meervoud": "referentielijstnamen",
+                    "description": "Leesbare naam van een referentielijst.",
+                    "sourceHandle": "right",
+                    "targetHandle": "left",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "id": "Referentielijst->Referentielijst_Referentielijstomschrijving",
+                    "naam": "Referentielijstomschrijving",
+                    "velden": [
+                        {
+                            "naam": "omschrijving",
+                            "goType": "string"
+                        }
+                    ],
+                    "positie": {
+                        "x": 1605,
+                        "y": -165
+                    },
+                    "meervoud": "referentielijstomschrijvingen",
+                    "description": "Omschrijving van een referentielijst.",
+                    "sourceHandle": "right",
+                    "targetHandle": "left",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "id": "Referentielijst->Referentielijst_ReferentielijstVisibility",
+                    "naam": "ReferentielijstVisibility",
+                    "velden": [
+                        {
+                            "naam": "domein",
+                            "goType": "string",
+                            "description": "Domeinzichtbaarheid: 'register', modelspecifiek domein, of 'extern'."
+                        }
+                    ],
+                    "positie": {
+                        "x": 1605,
+                        "y": -45
+                    },
+                    "meervoud": "visibilities",
+                    "description": "Domeinzichtbaarheid van een referentielijst (register, modelspecifiek, extern).",
+                    "sourceHandle": "right",
+                    "targetHandle": "left",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "id": "Referentielijst->Referentielijst_ReferentielijstInternetadres",
+                    "naam": "ReferentielijstInternetadres",
+                    "velden": [
+                        {
+                            "enum": "ReferentielijstAdrestype",
+                            "naam": "adrestype",
+                            "goType": "ReferentielijstAdrestype",
+                            "description": "Type adres: URL of URN."
+                        },
+                        {
+                            "naam": "adres",
+                            "goType": "string",
+                            "description": "Het volledige internet-adres (URL of URN)."
+                        },
+                        {
+                            "naam": "organisatie",
+                            "goType": "string",
+                            "description": "Verantwoordelijke organisatie voor dit adres."
+                        }
+                    ],
+                    "positie": {
+                        "x": 1605,
+                        "y": 60
+                    },
+                    "meervoud": "internetadressen",
+                    "description": "Internetadres (URL/URN) van een referentielijst.",
+                    "sourceHandle": "right",
+                    "targetHandle": "left",
+                    "momentvoorkomen": "meervoudig"
+                }
+            ]
+        }
+    ],
+    "beschrijving": "V3 export vanuit UML editor (codegen-ready)",
+    "referentielijstInstanties": [
+        {
+            "naam": "AdellijkeTitels",
+            "positie": {
+                "x": 870,
+                "y": -255
+            },
+            "systeemnaam": "AdellijkeTitels",
+            "omschrijving": "Adellijke titels in Nederland"
+        },
+        {
+            "naam": "Landenlijst",
+            "positie": {
+                "x": 1050,
+                "y": 15
+            },
+            "systeemnaam": "Landenlijst",
+            "omschrijving": "Alle landen van de wereld"
+        }
+    ]
+}

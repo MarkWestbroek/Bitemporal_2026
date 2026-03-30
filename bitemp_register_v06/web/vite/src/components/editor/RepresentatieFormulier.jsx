@@ -1,7 +1,8 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useSchema } from "../../context/SchemaContext";
-import { safeArray } from "../../shared/schemaUtils";
+import { safeArray, platSlaHubItems } from "../../shared/schemaUtils";
+import { evalueerCelExpressie, bouwCelContext } from "../../shared/celEvaluator";
 import SchemaFormField from "./SchemaFormField";
 import { coercedWaardeVoorVeld } from "../actions/ActionFormParts";
 
@@ -41,7 +42,7 @@ export default function RepresentatieFormulier({
   entiteitIdKolom,
   isEnkelvoudig = true,
 }) {
-  const { baseUrl } = useSchema();
+  const { baseUrl, typeMetaByTypenaam } = useSchema();
   const navigate = useNavigate();
   const isNieuw = !initialData;
 
@@ -49,14 +50,72 @@ export default function RepresentatieFormulier({
   const meta = dataMeta || typeMeta;
   const alleVelden = safeArray(meta?.velden);
 
+  // Secondaire entiteit ID (bijv. locatie_id, b_id bij relaties)
+  const secondaireIdKolom = String(typeMeta?.secondaireEntiteitIDKolom || "").toLowerCase();
+  const doelEntiteitType = typeMeta?.doelEntiteit || "";
+  const doelEntiteitMeta = doelEntiteitType ? typeMetaByTypenaam?.[doelEntiteitType] : null;
+  const [secondaireOpties, setSecondaireOpties] = useState([]); // [{id, weergave}]
+  const [secondaireLoading, setSecondaireLoading] = useState(false);
+  const [secondaireError, setSecondaireError] = useState("");
+
+  // Fetch volledige secondaire entiteiten + bereken weergaveveld
+  useEffect(() => {
+    if (!secondaireIdKolom || !doelEntiteitMeta) return;
+    const apiPad = doelEntiteitMeta.padnaam || doelEntiteitMeta.meervoud || doelEntiteitMeta.veldnaam;
+    if (!apiPad) return;
+    setSecondaireLoading(true);
+    fetch(`${baseUrl}/full/${encodeURIComponent(apiPad)}?page=1&size=1000`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((json) => {
+        const key = doelEntiteitMeta.meervoud || Object.keys(json).find((k) => Array.isArray(json[k]));
+        const entities = safeArray(json[key] || json);
+        const idKol = doelEntiteitMeta.idKolom || "id";
+        // Bereken weergaveveld per entiteit via CEL-expressies
+        const afgVelden = safeArray(doelEntiteitMeta?.afgeleideVelden)
+          .filter((av) => av.isWeergaveVeld || av.weergaveVeld);
+        const opties = entities.map((ent) => {
+          let weergave = "";
+          if (afgVelden.length > 0) {
+            const onderl = safeArray(doelEntiteitMeta?.onderliggende);
+            const childGroups = onderl.map((child) => {
+              const childMeta = typeMetaByTypenaam?.[child.doeltype];
+              const rawItems = safeArray(ent[child.jsonRolnaam] || ent[child.rolnaam]);
+              const items = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
+              return { doeltype: child.doeltype, rolnaam: child.rolnaam, items, typeMeta: childMeta };
+            });
+            const ctx = bouwCelContext(childGroups, typeMetaByTypenaam);
+            weergave = afgVelden
+              .map((av) => av.afleidingsregelTaal === "cel" && av.afleidingsregel
+                ? evalueerCelExpressie(av.afleidingsregel, ctx) : null)
+              .filter((v) => v != null && String(v).trim() !== "")
+              .join(" | ");
+          }
+          return { id: ent[idKol], weergave };
+        });
+        setSecondaireOpties(opties);
+        setSecondaireError("");
+      })
+      .catch((err) => { setSecondaireError(String(err?.message || err)); setSecondaireOpties([]); })
+      .finally(() => setSecondaireLoading(false));
+  }, [baseUrl, secondaireIdKolom, doelEntiteitMeta, typeMetaByTypenaam]);
+
   // Splits immutable en bewerkbare velden
-  const { immutableVelden, bewerkbareVelden } = useMemo(() => {
+  const { immutableVelden, bewerkbareVelden, secondaireVeld } = useMemo(() => {
     const plumbingNamen = new Set(["opvoer", "afvoer"]);
     const immutable = [];
     const bewerkbaar = [];
+    let secVeld = null;
     for (const v of alleVelden) {
       const naam = String(v.naam || "").toLowerCase();
       if (plumbingNamen.has(naam)) continue; // toon apart
+      // Secondaire ID kolom: bewerkbaar als dropdown, niet immutable
+      if (secondaireIdKolom && naam === secondaireIdKolom) {
+        secVeld = v;
+        continue;
+      }
       const isImmutable = v.autoIncrement
         || naam === String(typeMeta?.idKolom || "id").toLowerCase()
         || naam === String(entiteitIdKolom || "").toLowerCase()
@@ -68,14 +127,23 @@ export default function RepresentatieFormulier({
         bewerkbaar.push(v);
       }
     }
-    return { immutableVelden: immutable, bewerkbareVelden: bewerkbaar };
-  }, [alleVelden, typeMeta, entiteitIdKolom]);
+    // Bij hub-pattern: secondaire FK zit op de hub (typeMeta), niet op de data-child.
+    // Als het veld niet in alleVelden (= dataMeta.velden) gevonden is, zoek in typeMeta.velden.
+    if (!secVeld && secondaireIdKolom && dataMeta) {
+      const hubVelden = safeArray(typeMeta?.velden);
+      secVeld = hubVelden.find((v) => String(v.naam || "").toLowerCase() === secondaireIdKolom) || null;
+    }
+    return { immutableVelden: immutable, bewerkbareVelden: bewerkbaar, secondaireVeld: secVeld };
+  }, [alleVelden, typeMeta, entiteitIdKolom, secondaireIdKolom, dataMeta]);
 
-  // Formulierstaat — alleen bewerkbare velden
+  // Formulierstaat — bewerkbare velden + eventueel secondaire ID
   const [values, setValues] = useState(() => {
     const init = {};
     for (const veld of bewerkbareVelden) {
       init[veld.naam] = initialData?.[veld.naam] ?? "";
+    }
+    if (secondaireVeld) {
+      init[secondaireVeld.naam] = initialData?.[secondaireVeld.naam] ?? "";
     }
     return init;
   });
@@ -87,24 +155,29 @@ export default function RepresentatieFormulier({
     setValues((prev) => ({ ...prev, [naam]: waarde }));
   }, []);
 
+  // Alle velden die "dirty" kunnen zijn (bewerkbare + secondaire)
+  const alleBewerkbaar = useMemo(() => {
+    return secondaireVeld ? [...bewerkbareVelden, secondaireVeld] : bewerkbareVelden;
+  }, [bewerkbareVelden, secondaireVeld]);
+
   // ── Dirty tracking ──────────────────────────────────────────────────
   const isDirty = useMemo(() => {
     if (!initialData) return true;
-    return bewerkbareVelden.some((veld) => {
+    return alleBewerkbaar.some((veld) => {
       const original = initialData[veld.naam] ?? "";
       const current = values[veld.naam] ?? "";
       return String(original) !== String(current);
     });
-  }, [values, bewerkbareVelden, initialData]);
+  }, [values, alleBewerkbaar, initialData]);
 
   const aantalGewijzigdeVelden = useMemo(() => {
-    if (!initialData) return bewerkbareVelden.length;
-    return bewerkbareVelden.filter((veld) => {
+    if (!initialData) return alleBewerkbaar.length;
+    return alleBewerkbaar.filter((veld) => {
       const original = initialData[veld.naam] ?? "";
       const current = values[veld.naam] ?? "";
       return String(original) !== String(current);
     }).length;
-  }, [values, bewerkbareVelden, initialData]);
+  }, [values, alleBewerkbaar, initialData]);
 
   // ── Payload builders ────────────────────────────────────────────────
   const buildOpvoerPayload = useCallback(() => {
@@ -127,8 +200,17 @@ export default function RepresentatieFormulier({
       }
       repPayload[veld.naam] = coercedWaardeVoorVeld(raw, veld, veld.naam);
     }
+    // Secondaire entiteit ID (bijv. b_id, locatie_id)
+    if (secondaireVeld) {
+      const secRaw = values[secondaireVeld.naam];
+      if (secRaw !== "" && secRaw != null) {
+        repPayload[secondaireVeld.naam] = Number(secRaw);
+      } else if (secondaireVeld.verplicht) {
+        throw new Error(`${secondaireVeld.naam} is verplicht.`);
+      }
+    }
     return repPayload;
-  }, [values, bewerkbareVelden, typeMeta, entiteitId, entiteitIdKolom, initialData]);
+  }, [values, bewerkbareVelden, typeMeta, entiteitId, entiteitIdKolom, initialData, secondaireVeld]);
 
   const buildAfvoerSleutel = useCallback(() => {
     const sleutel = {};
@@ -139,13 +221,17 @@ export default function RepresentatieFormulier({
     if (entiteitIdKolom && initialData?.[entiteitIdKolom] != null) {
       sleutel[entiteitIdKolom] = initialData[entiteitIdKolom];
     }
+    // Secondaire FK mee in afvoer-sleutel zodat backend het record kan identificeren
+    if (secondaireIdKolom && initialData?.[secondaireIdKolom] != null) {
+      sleutel[secondaireIdKolom] = initialData[secondaireIdKolom];
+    }
     if (!idKolom && initialData?.rel_id != null) {
       sleutel.rel_id = initialData.rel_id;
     } else if (!idKolom && initialData?.id != null) {
       sleutel.id = initialData.id;
     }
     return sleutel;
-  }, [typeMeta, entiteitIdKolom, initialData]);
+  }, [typeMeta, entiteitIdKolom, secondaireIdKolom, initialData]);
 
   // ── Actie-handler (wijzigen / corrigeren / beëindigen / verwijderen) ─
   const handleActie = useCallback(
@@ -185,7 +271,7 @@ export default function RepresentatieFormulier({
 
   // Wijzigen: bij weinig gewijzigde velden → suggestie corrigeren
   const handleWijzigen = useCallback(() => {
-    if (aantalGewijzigdeVelden > 0 && aantalGewijzigdeVelden <= Math.ceil(bewerkbareVelden.length / 2) && bewerkbareVelden.length > 1) {
+    if (aantalGewijzigdeVelden > 0 && aantalGewijzigdeVelden <= Math.ceil(alleBewerkbaar.length / 2) && alleBewerkbaar.length > 1) {
       if (window.confirm(
         `Er ${aantalGewijzigdeVelden === 1 ? "is" : "zijn"} slechts ${aantalGewijzigdeVelden} van de ${bewerkbareVelden.length} velden gewijzigd.\n\nWilt u niet eigenlijk corrigeren in plaats van wijzigen?\n\nKlik OK om te corrigeren, of Annuleren om toch te wijzigen.`
       )) {
@@ -232,6 +318,46 @@ export default function RepresentatieFormulier({
                 </span>
               ) : null;
             })}
+          </div>
+        )}
+
+        {/* Secondaire entiteit ID als dropdown */}
+        {secondaireVeld && (
+          <div style={{ marginBottom: "0.5rem" }}>
+            <label style={{ display: "block", fontWeight: 600, fontSize: "0.875rem", marginBottom: "0.25rem" }}>
+              {secondaireVeld.naam}
+              {secondaireVeld.verplicht && <span style={{ color: "var(--cg-fout, #dc2626)" }}> *</span>}
+            </label>
+            {secondaireLoading ? (
+              <span style={{ fontSize: "0.8125rem", color: "var(--cg-donkergrijs)" }}>Laden…</span>
+            ) : secondaireOpties.length > 0 ? (
+              <select
+                className="utrecht-select"
+                style={{ minWidth: "320px" }}
+                value={String(values[secondaireVeld.naam] ?? "")}
+                onChange={(e) => updateVeld(secondaireVeld.naam, e.target.value)}
+              >
+                <option value="">(kies {doelEntiteitMeta?.klassenaam || secondaireVeld.naam})</option>
+                {secondaireOpties.map((opt) => (
+                  <option key={opt.id} value={String(opt.id)}>
+                    {opt.weergave ? `${opt.id} — ${opt.weergave}` : String(opt.id)}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                inputMode="numeric"
+                className="utrecht-textbox"
+                style={{ minWidth: "200px" }}
+                value={String(values[secondaireVeld.naam] ?? "")}
+                onChange={(e) => updateVeld(secondaireVeld.naam, e.target.value)}
+                placeholder={secondaireVeld.naam}
+              />
+            )}
+            {secondaireError && (
+              <div style={{ fontSize: "0.75rem", color: "var(--cg-fout, #dc2626)", marginTop: "0.25rem" }}>{secondaireError}</div>
+            )}
           </div>
         )}
 

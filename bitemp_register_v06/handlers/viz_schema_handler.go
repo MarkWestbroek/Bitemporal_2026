@@ -457,9 +457,69 @@ func doelEntiteitVanSecondaireKolom(kolom string) string {
 	return ""
 }
 
+// bepaalToegestaneTypenVoorDomein verzamelt alle toegestane typen voor een domeinfilter.
+//
+// Werking:
+// - Start bij root-entiteiten met Domein == gevraagd domein of Domein == "register".
+// - Loop recursief door OnderliggendeGegevenselementen.
+// - Neem alle bereikbare typenames op, ook als die zelf geen Domein-label hebben.
+//
+// Dit sluit aan op codegen-export waar domein vaak alleen op root-entiteiten staat.
+func bepaalToegestaneTypenVoorDomein(domein string, includeRegister bool) map[string]struct{} {
+	toegestaan := make(map[string]struct{})
+	if strings.TrimSpace(domein) == "" {
+		return toegestaan
+	}
+
+	stack := make([]string, 0)
+	for typenaam, meta := range model.MetaRegistry {
+		if meta.Metatype != model.MetatypeEntiteit {
+			continue
+		}
+		if meta.Domein == domein || (includeRegister && meta.Domein == "register") {
+			stack = append(stack, typenaam)
+		}
+	}
+
+	for len(stack) > 0 {
+		laatste := len(stack) - 1
+		typeNaam := stack[laatste]
+		stack = stack[:laatste]
+
+		if _, gezien := toegestaan[typeNaam]; gezien {
+			continue
+		}
+		toegestaan[typeNaam] = struct{}{}
+
+		meta, ok := model.MetaRegistry.GetTypeMeta(typeNaam)
+		if !ok {
+			continue
+		}
+		for _, child := range meta.OnderliggendeGegevenselementen {
+			if child.Doeltype == "" {
+				continue
+			}
+			if _, gezien := toegestaan[child.Doeltype]; !gezien {
+				stack = append(stack, child.Doeltype)
+			}
+		}
+	}
+
+	return toegestaan
+}
+
 // BouwFlatTypeRegistry bouwt een platte lijst van vizSchemaTypeDTO's voor alle types in de MetaRegistry.
-// Als domein niet leeg is wordt gefilterd op types die bij dat domein horen of geen domein hebben.
+// Als domein niet leeg is wordt recursief gefilterd vanaf root-entiteiten van dat domein.
+// Root-entiteiten in het register-domein blijven altijd toegestaan als basislaag.
 func BouwFlatTypeRegistry(domein string) []vizSchemaTypeDTO {
+	return BouwFlatTypeRegistryMetOpties(domein, true)
+}
+
+// BouwFlatTypeRegistryMetOpties bouwt een platte type-registry met configureerbare domeinbasis.
+// includeRegister=true neemt naast het gevraagde domein ook register-root-entiteiten mee.
+func BouwFlatTypeRegistryMetOpties(domein string, includeRegister bool) []vizSchemaTypeDTO {
+	toegestaneTypen := bepaalToegestaneTypenVoorDomein(domein, includeRegister)
+
 	typeNamen := make([]string, 0, len(model.MetaRegistry))
 	for typeNaam := range model.MetaRegistry {
 		typeNamen = append(typeNamen, typeNaam)
@@ -472,8 +532,15 @@ func BouwFlatTypeRegistry(domein string) []vizSchemaTypeDTO {
 		if !ok {
 			continue
 		}
-		// Domeinfilter: als domein is opgegeven, alleen types die bij dat domein of het register-domein horen tonen.
-		if domein != "" && meta.Domein != "" && meta.Domein != domein && meta.Domein != "register" {
+		// Domeinfilter: alleen typen tonen die recursief bereikbaar zijn vanaf toegestane root-entiteiten.
+		if strings.TrimSpace(domein) != "" {
+			if _, ok := toegestaneTypen[typeNaam]; !ok {
+				continue
+			}
+		}
+
+		// Veiligheidscheck: type kan in de tussentijd uit de registry verdwijnen.
+		if meta.Typenaam == "" {
 			continue
 		}
 		items = append(items, vizSchemaTypeDTOVanMeta(meta))

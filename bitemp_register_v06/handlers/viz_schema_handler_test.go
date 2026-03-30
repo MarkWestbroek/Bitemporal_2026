@@ -129,3 +129,57 @@ func TestMaakVizSchemaHandler_GeeftSchemaTerug(t *testing.T) {
 	}
 	t.Fatal("expected type Rel_A_B_Data in schema response")
 }
+
+func TestBouwFlatTypeRegistry_DomeinFilterIsRecursiefVanafRootEntiteiten(t *testing.T) {
+	items := BouwFlatTypeRegistry("np-loc")
+
+	set := map[string]bool{}
+	for _, item := range items {
+		set[item.Typenaam] = true
+	}
+
+	// Root-entiteit van np-loc moet aanwezig zijn.
+	if !set["NatuurlijkPersoon"] {
+		t.Fatal("expected NatuurlijkPersoon in domeinfilter np-loc")
+	}
+
+	// Onderliggend type zonder expliciet Domein-label moet via recursie worden meegenomen.
+	if !set["NatuurlijkPersoon_Naam_Data"] {
+		t.Fatal("expected NatuurlijkPersoon_Naam_Data via recursive inclusion from root entity")
+	}
+
+	// Register-basislaag blijft beschikbaar.
+	if !set["Referentielijst"] {
+		t.Fatal("expected Referentielijst from register basis layer")
+	}
+
+	// AB-testmodel moet niet meekomen in np-loc domeinfilter.
+	if set["A"] {
+		t.Fatal("did not expect A in domeinfilter np-loc")
+	}
+	if set["A_U_Data"] {
+		t.Fatal("did not expect A_U_Data in domeinfilter np-loc")
+	}
+}
+
+func TestBouwFlatTypeRegistryMetOpties_StrictZonderRegister(t *testing.T) {
+	items := BouwFlatTypeRegistryMetOpties("np-loc", false)
+
+	set := map[string]bool{}
+	for _, item := range items {
+		set[item.Typenaam] = true
+	}
+
+	if !set["NatuurlijkPersoon"] {
+		t.Fatal("expected NatuurlijkPersoon in strict np-loc filter")
+	}
+	if !set["NatuurlijkPersoon_Naam_Data"] {
+		t.Fatal("expected NaturallyPersoon_Naam_Data via recursive strict inclusion")
+	}
+	if set["Referentielijst"] {
+		t.Fatal("did not expect Referentielijst in strict np-loc filter")
+	}
+	if set["Land"] {
+		t.Fatal("did not expect Land in strict np-loc filter")
+	}
+}

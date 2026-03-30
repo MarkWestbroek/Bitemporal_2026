@@ -301,6 +301,7 @@ For each referentielijst-entiteit with padnaam `{pad}`:
   | Param | Type | Description |
   |-------|------|-------------|
   | `domein` | string | Optional. Filters the fallback code-export by model domain (e.g. `"np-loc"`). Only used when no active DB version exists. |
+  | `strict` | bool | Optional. Only relevant together with `domein` and only in fallback mode. If true, excludes register base entiteiten from the fallback export. |
 
 ### `GET /api/schema/model/code`
 - **Handler**: `handlers.MaakGetSchemaModelCodeHandler()` (`schema_model_handler.go`)
@@ -308,7 +309,8 @@ For each referentielijst-entiteit with padnaam `{pad}`:
 - **Query params**:
   | Param | Type | Description |
   |-------|------|-------------|
-  | `domein` | string | Optional. Filter export by domain |
+  | `domein` | string | Optional. Filter export by domain. Filtering is recursive from root entiteiten (`Domein == <waarde>` plus `register`) and includes all reachable onderliggende types, even when those child types have no explicit `Domein` value. |
+  | `strict` | bool | Optional. Only relevant together with `domein`. If true, uses strict domain filtering: no register-root entiteiten in `model.entiteiten` and no register-root types in `types`. |
 
 ### `GET /api/schema/model/:id`
 - **Handler**: `handlers.MaakGetSchemaModelVersieHandler()` (`schema_model_handler.go`)

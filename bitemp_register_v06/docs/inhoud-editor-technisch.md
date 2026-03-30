@@ -1,7 +1,7 @@
 # Inhoud Editor — Technische Documentatie
 
-> **Datum**: 29 maart 2026  
-> **Versie**: Iteratie 1 — MVP  
+> **Datum**: 30 maart 2026  
+> **Versie**: Iteratie 2 — GE-acties  
 > **Scope**: Schema-gedreven CRUD-editor voor bitemporeel register v06
 
 ---
@@ -120,8 +120,8 @@ Componenten lezen typeMeta uit context
 | `src/components/editor/EditorNavigatie.jsx` | Zijbalk met dynamisch opgebouwde NavLink's naar elk entiteittype. Kleur-bolletje per type (uit `meta.kleur`). Actieve link krijgt blauwe border-left |
 | `src/components/editor/RepresentatieTabel.jsx` | Generiek tabel-component. Kolommen uit `typeMeta.velden`, data uit API. Client-side sortering (kolomklik), filtering (per-kolom input/select), paginering (`@tanstack/react-table`). Rijklik navigeert naar detailformulier |
 | `src/components/editor/SchemaFormField.jsx` | Generiek formulierveld. Rendert juiste invoertype op basis van `veld.type`/`format`: text, date, datetime-local, number, boolean (radio), enum (select). Validatie via `validatieMeldingVoorVeld()` |
-| `src/components/editor/RepresentatieFormulier.jsx` | Formulier voor één representatie. Dynamisch opgebouwd uit `typeMeta.velden`. Opslaan via `POST /api/registratie/` als bitemporele registratie. Readonly voor PK/autoincrement velden. Formele tijd metadata (opvoer/afvoer) als readonly sectie |
-| `src/components/editor/EntiteitFormulier.jsx` | Volledig entiteitformulier. Haalt data op via `/api/full/{padnaam}/{id}`. Toont hoofd-entiteit velden + per onderliggend GE/relatie een sectie: enkelvoudig → formulier, meervoudig → tabel |
+| `src/components/editor/RepresentatieFormulier.jsx` | Formulier voor één representatie. Dynamisch opgebouwd uit `typeMeta.velden`. Props: `isEnkelvoudig` (bepaalt beschikbare acties), `onCancel` (voor annuleren bij meervoudige correcties). **Acties per modus** — zie §8b. Dirty tracking (knopactivering pas bij wijziging). Similarity check bij Wijzigen (suggestie Corrigeren bij weinig wijzigingen). Readonly voor PK/autoincrement velden. Formele tijd metadata als readonly sectie |
+| `src/components/editor/EntiteitFormulier.jsx` | Volledig entiteitformulier. Haalt data op via `/api/full/{padnaam}/{id}`. Toont hoofd-entiteit velden + per onderliggend GE/relatie een sectie: enkelvoudig → formulier met acties, meervoudig → tabel met per-rij ✎ (corrigeren) en ✕ (verwijderen) knoppen + inline correctieformulier |
 | `src/components/editor/NieuwRecordFormulier.jsx` | Wrapper rond `RepresentatieFormulier` zonder `initialData` (nieuw record) |
 
 ---
@@ -210,6 +210,79 @@ Het thema is geïmplementeerd als CSS custom properties die de standaard Utrecht
 
 ---
 
+## 8b. GE-acties in de Inhoud Editor (Iteratie 2)
+
+Sinds iteratie 2 ondersteunt de Inhoud Editor bitemporeel correcte acties op GE's en relaties.
+
+### Enkelvoudige GE's (momentvoorkomen = "enkelvoudig")
+
+Bij een bestaand enkelvoudig GE worden de velden direct bewerkbaar getoond.
+Drie actieknoppen verschijnen onder het formulier:
+
+| Knop | Enabled | Registratietype | Payload | Semantiek |
+|---|---|---|---|---|
+| **Wijzigen** | Alleen als velden gewijzigd zijn | `registratie` | `opvoer` van nieuw record | Backend voert de oude versie automatisch af. Inhoudelijk nieuw gegeven op de formele tijdsas. |
+| **Corrigeren** | Alleen als velden gewijzigd zijn | `correctie` | `opvoer` van gecorrigeerd record | Correctie: fout in origineel herstellen, geen inhoudelijke wijziging |
+| **Beëindigen** | Altijd | `registratie` | `afvoer` van huidig record | Beëindigt het GE zonder vervanging. Bevestigingsdialoog. |
+
+#### Similarity check bij Wijzigen
+
+Bij klik op Wijzigen controleert het formulier hoeveel velden zijn gewijzigd:
+- Als ≤ helft van de bewerkbare velden gewijzigd is (en er >1 veld is), verschijnt een `confirm()`-dialoog:
+  > "Er zijn slechts N van de M velden gewijzigd. Wilt u niet eigenlijk corrigeren?"
+- **OK** → voert een correctie uit; **Annuleren** → voert de wijziging gewoon door.
+
+Dit voorkomt dat een kleine taalfout per ongeluk als inhoudelijke wijziging wordt geregistreerd.
+
+### Meervoudige GE's (momentvoorkomen = "meervoudig")
+
+Meervoudige GE's worden getoond als een compacte tabel. Elke rij heeft twee actieknoppen:
+
+| Knop | Actie | Registratietype | Payload |
+|---|---|---|---|
+| ✎ (potlood) | Opent inline correctieformulier onder de tabel | — | — |
+| ✕ (kruis) | Verwijdert het record (na bevestiging) | `registratie` | `afvoer` van het geselecteerde record |
+
+Het inline correctieformulier (een `RepresentatieFormulier` met `isEnkelvoudig=false`) biedt:
+
+| Knop | Enabled | Registratietype | Payload |
+|---|---|---|---|
+| **Corrigeren** | Alleen als velden gewijzigd zijn | `correctie` | `opvoer` van gecorrigeerd record |
+| **Verwijderen** | Altijd | `registratie` | `afvoer` van huidig record |
+| **Annuleren** | Altijd | — | Sluit het correctieformulier |
+
+Toevoegen van een nieuw meervoudig GE-record is ongewijzigd ("+ toevoegen" knop).
+
+### State management
+
+- `bewerkRij` state: `{ doeltype, index }` — welke meervoudige rij in correctiemodus is
+- `nieuwGE` state: `doeltype` — welk GE-type in toevoegmodus is
+- Deze twee states zijn wederzijds exclusief: openen van correctie sluit toevoeg-formulier en vice versa
+
+### API payloads
+
+```json
+// Wijzigen (enkelvoudig): registratietype = "registratie", opvoer
+{
+  "registratie": { "registratietype": "registratie" },
+  "wijzigingen": [{ "opvoer": { "partnernaam": { "natuurlijkpersoon_id": 7, "achternaam": "NewName" } } }]
+}
+
+// Corrigeren: registratietype = "correctie", opvoer
+{
+  "registratie": { "registratietype": "correctie" },
+  "wijzigingen": [{ "opvoer": { "burgerschap": { "rel_id": 1, "natuurlijkpersoon_id": 7, "landcode": "NLD" } } }]
+}
+
+// Beëindigen/Verwijderen: registratietype = "registratie", afvoer
+{
+  "registratie": { "registratietype": "registratie" },
+  "wijzigingen": [{ "afvoer": { "bereikbaarheid": { "rel_id": 1, "natuurlijkpersoon_id": 2 } } }]
+}
+```
+
+---
+
 ## 9. Ontwerpbeslissingen
 
 | Beslissing | Reden |
@@ -240,7 +313,7 @@ Het bestand `common-ground-logo.svg` wordt door Vite mee gekopieerd vanuit `publ
 
 ## 11. Scope Iteratie 1 (huidige implementatie)
 
-### Wat is gebouwd
+### Iteratie 1 — MVP
 
 - ✅ Dynamisch tabeloverzicht per entiteittype
 - ✅ Client-side sortering (kolomklik, asc/desc)
@@ -257,17 +330,30 @@ Het bestand `common-ground-logo.svg` wordt door Vite mee gekopieerd vanuit `publ
 - ✅ Error boundary voor foutafhandeling
 - ✅ Zijbalk-navigatie tussen entiteittypen
 
-### Wat is uitgesteld naar Iteratie 2+
+### Iteratie 2 — GE-acties (30 maart 2026)
 
+- ✅ Enkelvoudige GE: Wijzigen (= opvoer nieuw, backend voert oude af)
+- ✅ Enkelvoudige GE: Corrigeren (= correctie-registratie met opvoer)
+- ✅ Enkelvoudige GE: Beëindigen (= afvoer zonder vervanging)
+- ✅ Meervoudige GE: Rij verwijderen (= afvoer per record)
+- ✅ Meervoudige GE: Rij corrigeren (inline formulier onder tabel)
+- ✅ Dirty tracking: knoppen pas actief na veldwijziging
+- ✅ Similarity check: suggestie Corrigeren bij weinig wijzigingen
+- ✅ State-coördinatie: bewerkRij en nieuwGE wederzijds exclusief
+- ✅ Secondaire entiteit-ID dropdown voor relaties (Optie A — `<select>` via API)
+
+### Wat is uitgesteld naar Iteratie 3+
+
+- ❌ Secondaire entiteit-ID zoekcomponent (Optie B — schaalbaar alternatief, zie §12 punt 6)
 - ❌ Custom formulierdefinities (JSON-based layout)
 - ❌ Conditionele zichtbaarheid van velden
 - ❌ Referentielijst-zoeker (autocomplete)
 - ❌ Server-side sorteren en filteren
-- ❌ Delete/afvoer van records vanuit de editor
 - ❌ Formeel/materieel tijdreizen in de editor
 - ❌ Inline editing in tabeloverzicht
 - ❌ Export naar CSV/Excel
 - ❌ Audit-trail weergave per record
+- ❌ Ongedaan maken interface
 
 ---
 
@@ -278,3 +364,9 @@ Het bestand `common-ground-logo.svg` wordt door Vite mee gekopieerd vanuit `publ
 3. **Registratie-payload**: De `RepresentatieFormulier` bouwt een registratie-payload met één wijziging. Het bestaande endpoint verwacht een specifiek formaat — test dit met de werkelijke backend.
 4. **Toetsenbordnavigatie**: Tabelrijen zijn focusbaar (`tabIndex={0}`) en klikbaar met Enter. Verdere ARIA-attributen kunnen worden toegevoegd.
 5. **Responsive design**: De zijbalk heeft een vaste breedte van 240px. Op smalle schermen kan een uitklapbare/hamburger variant wenselijk zijn.
+6. **Secondaire entiteit-ID bij relaties**: Relaties hebben een `secondaireEntiteitIDKolom` (bijv. `locatie_id` bij Bereikbaarheid).
+
+   **Optie A (huidig, geïmplementeerd)**: `<select>` dropdown in `RepresentatieFormulier`, gevuld via `GET /api/viz/relatie/{typenaam}/secondaire-ids`. Het veld wordt apart van de bewerkbare velden behandeld: het is niet immutable (gebruiker moet het kunnen selecteren), maar ook niet zomaar een tekstveld. Bij het laden van het formulier haalt een `useEffect` de beschikbare IDs op en vult de dropdown. De geselecteerde waarde wordt meegenomen in de opvoer-payload (`Number(secRaw)`) en in de afvoer-sleutel. Fallback: als de API geen IDs retourneert, wordt een gewoon tekstveld getoond. Werkt goed bij <100 opties.
+
+   **Optie B (toekomstig, schaalbaar alternatief)**: Read-only weergave van huidige waarde + een "Zoek {doelentiteit}" knop/component. Gebruiker zoekt/filtert de doelentiteit en selecteert er één. Het NL Design System heeft een **[Select Combobox](https://nldesignsystem.nl/select-combobox/)** component (status: Help Wanted) die hiervoor geschikt zou zijn — een invoerveld met filterfunctie over een optielijst. Deze is nog niet als React component beschikbaar in `@utrecht/component-library-react`, dus zou als custom component gebouwd moeten worden (met `<datalist>`, of een lightweight library zoals `downshift` of `react-select`), gestyled conform NL Design System tokens. Alternatieven: een modal/drawer met `RepresentatieTabel` (hergebruik van bestaande tabel met filtering) als zoekinterface. Aanbevolen wanneer het aantal secondaire entiteiten >100 wordt.
+7. **Ongedaan maken**: Voor het ongedaan maken van registraties is een andere interface nodig dan de per-GE acties. Dit wordt apart ontworpen.

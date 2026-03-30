@@ -12,6 +12,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func queryBool(c *gin.Context, key string) bool {
+	v := strings.ToLower(strings.TrimSpace(c.Query(key)))
+	switch v {
+	case "1", "true", "yes", "on":
+		return true
+	default:
+		return false
+	}
+}
+
 func sortExprSchemaVersies(sortParam string) (string, bool) {
 	switch strings.ToLower(strings.TrimSpace(sortParam)) {
 	case "", "id_desc":
@@ -84,12 +94,16 @@ func schemaCodeMetadataFromEnv() schemaCodeMetadata {
 
 // schemaCodeResponse bouwt een response uit de actuele code-toestand in plaats van uit schema_versies.
 // Als domein niet leeg is wordt gefilterd op dat modeldomein.
-func schemaCodeResponse(apiBron string, domein string) gin.H {
+// In strict-modus worden register-basisentiteiten niet meegeleverd.
+func schemaCodeResponse(apiBron string, domein string, strict bool) gin.H {
 	var v3 model.V3Model
 	if domein != "" {
 		v3 = model.ExportMetaRegistryToV3(domein)
 	} else {
 		v3 = model.ExportMetaRegistryToV3()
+	}
+	if strict && domein != "" {
+		v3 = model.FilterV3ModelStrictByDomein(v3, domein)
 	}
 	metadata := schemaCodeMetadataFromEnv()
 
@@ -120,7 +134,7 @@ func schemaCodeResponse(apiBron string, domein string) gin.H {
 		// Platte type-registry: elke MetaRegistry-entry als flat DTO,
 		// inclusief ge_subtype, onderliggende, velden (met $ref en datatype).
 		// Gefilterd op domein wanneer opgegeven.
-		"types": BouwFlatTypeRegistry(domein),
+		"types": BouwFlatTypeRegistryMetOpties(domein, !(strict && domein != "")),
 	}
 }
 
@@ -171,16 +185,18 @@ func MaakGetSchemaModelHandler() gin.HandlerFunc {
 
 		// Fallback: exporteer on-the-fly uit de code als er nog geen actieve database-versie bestaat.
 		domein := c.Query("domein")
-		c.JSON(http.StatusOK, schemaCodeResponse("metaregistry", domein))
+		strict := queryBool(c, "strict")
+		c.JSON(http.StatusOK, schemaCodeResponse("metaregistry", domein, strict))
 	}
 }
 
 // MaakGetSchemaModelCodeHandler retourneert altijd de huidige code-toestand van het model.
-// GET /api/schema/model/code   ?domein=np-loc (optioneel)
+// GET /api/schema/model/code   ?domein=np-loc&strict=true (optioneel)
 func MaakGetSchemaModelCodeHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		domein := c.Query("domein")
-		c.JSON(http.StatusOK, schemaCodeResponse("code", domein))
+		strict := queryBool(c, "strict")
+		c.JSON(http.StatusOK, schemaCodeResponse("code", domein, strict))
 	}
 }
 

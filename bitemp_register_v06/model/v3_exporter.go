@@ -220,6 +220,73 @@ func convertAfgeleideVelden(src []AfgeleidVeld) []V3AfgeleidVeld {
 	return result
 }
 
+func datatypeDomeinScore(datatypeDomein, filterDomein string) int {
+	d := strings.TrimSpace(datatypeDomein)
+	f := strings.TrimSpace(filterDomein)
+
+	if f == "" {
+		if d == "" {
+			return 1
+		}
+		return 2
+	}
+
+	if d == f {
+		return 3
+	}
+	if d == "register" {
+		return 2
+	}
+	if d == "" {
+		return 1
+	}
+	return 0
+}
+
+// filterEnDedupDatatypes selecteert datatypes op basis van domein en verwijdert dubbelen op naam.
+// Bij dubbele namen krijgt een entry met expliciete domeinlabeling voorrang boven een lege domeinwaarde.
+func filterEnDedupDatatypes(input []V3Datatype, domein string) []V3Datatype {
+	if len(input) == 0 {
+		return nil
+	}
+
+	gekozen := make(map[string]V3Datatype)
+	gekozenScore := make(map[string]int)
+	volgorde := make([]string, 0, len(input))
+
+	for _, dt := range input {
+		naam := strings.TrimSpace(dt.Naam)
+		if naam == "" {
+			continue
+		}
+
+		score := datatypeDomeinScore(dt.Domein, domein)
+		if score == 0 {
+			continue
+		}
+
+		if bestaand, ok := gekozen[naam]; ok {
+			if score > gekozenScore[naam] {
+				gekozen[naam] = dt
+				gekozenScore[naam] = score
+			} else {
+				_ = bestaand
+			}
+			continue
+		}
+
+		gekozen[naam] = dt
+		gekozenScore[naam] = score
+		volgorde = append(volgorde, naam)
+	}
+
+	result := make([]V3Datatype, 0, len(volgorde))
+	for _, naam := range volgorde {
+		result = append(result, gekozen[naam])
+	}
+	return result
+}
+
 // ExportMetaRegistryToV3 bouwt een V3Model op basis van de huidige MetaRegistry.
 // Als domein niet leeg is, worden alleen entiteiten uit dat domein geëxporteerd.
 // Wordt gebruikt door de GET /api/schema/model endpoint.
@@ -231,7 +298,7 @@ func ExportMetaRegistryToV3(domein ...string) V3Model {
 
 	model := V3Model{
 		Versie:    "v3",
-		Datatypes: DatatypeRegistry,
+		Datatypes: filterEnDedupDatatypes(DatatypeRegistry, filterDomein),
 	}
 
 	// Verzamel enum-types en maak een set om dubbelen te voorkomen
@@ -315,6 +382,74 @@ func ExportMetaRegistryToV3(domein ...string) V3Model {
 	}
 
 	return model
+}
+
+// FilterV3ModelStrictByDomein verwijdert alles buiten het opgegeven domein uit een reeds geëxporteerd V3 model.
+//
+// Doel:
+// - entiteiten: alleen meta.Domein == domein
+// - enums: alleen enums die nog gebruikt worden door overgebleven entiteiten
+// - referentielijstInstanties: alleen instanties die nog gebruikt worden in relaties
+//
+// Datatypes worden bewust niet extra gefilterd, omdat domeinspecifieke velden
+// vaak register-datatypes (zoals BSN/NLPostcode) gebruiken.
+func FilterV3ModelStrictByDomein(v3 V3Model, domein string) V3Model {
+	filterDomein := strings.TrimSpace(domein)
+	if filterDomein == "" {
+		return v3
+	}
+
+	filteredEntiteiten := make([]V3Entiteit, 0, len(v3.Entiteiten))
+	for _, ent := range v3.Entiteiten {
+		meta, ok := MetaRegistry.GetTypeMeta(ent.Typenaam)
+		if !ok {
+			continue
+		}
+		if strings.TrimSpace(meta.Domein) == filterDomein {
+			filteredEntiteiten = append(filteredEntiteiten, ent)
+		}
+	}
+	v3.Entiteiten = filteredEntiteiten
+
+	usedEnums := map[string]bool{}
+	usedInstanties := map[string]bool{}
+	for _, ent := range v3.Entiteiten {
+		for _, ge := range ent.Gegevenselementen {
+			for _, veld := range ge.Velden {
+				if veld.Enum != "" {
+					usedEnums[veld.Enum] = true
+				}
+			}
+		}
+		for _, rel := range ent.Relaties {
+			if rel.ReferentielijstInstantie != "" {
+				usedInstanties[rel.ReferentielijstInstantie] = true
+			}
+			for _, veld := range rel.Velden {
+				if veld.Enum != "" {
+					usedEnums[veld.Enum] = true
+				}
+			}
+		}
+	}
+
+	filteredEnums := make([]V3Enum, 0, len(v3.Enums))
+	for _, e := range v3.Enums {
+		if usedEnums[e.GoType] {
+			filteredEnums = append(filteredEnums, e)
+		}
+	}
+	v3.Enums = filteredEnums
+
+	filteredInstanties := make([]V3ReferentielijstInstantie, 0, len(v3.ReferentielijstInstanties))
+	for _, inst := range v3.ReferentielijstInstanties {
+		if usedInstanties[inst.Systeemnaam] {
+			filteredInstanties = append(filteredInstanties, inst)
+		}
+	}
+	v3.ReferentielijstInstanties = filteredInstanties
+
+	return v3
 }
 
 // v3GegevenseElementVanMeta maakt een V3Gegevenselement van een hub-meta.

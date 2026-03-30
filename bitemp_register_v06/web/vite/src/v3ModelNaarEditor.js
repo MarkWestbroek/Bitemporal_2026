@@ -88,8 +88,16 @@ export function v3ModelNaarEditor(v3Model) {
   });
 
   const datatypeLookup = {};
+  const uniekeDatatypes = [];
+  const gezienDatatypeNamen = new Set();
   (v3Model.datatypes || []).forEach((dt) => {
+    if (!dt?.naam) return;
+    // Defensief: dubbele datatypenamen geven dubbele node-ids (dt_<naam>) in de editor.
+    // We houden daarom de eerste entry per naam aan.
+    if (gezienDatatypeNamen.has(dt.naam)) return;
+    gezienDatatypeNamen.add(dt.naam);
     datatypeLookup[dt.naam] = dt;
+    uniekeDatatypes.push(dt);
   });
 
   // ── Enum nodes ───────────────────────────────────────────────
@@ -107,7 +115,7 @@ export function v3ModelNaarEditor(v3Model) {
   });
 
   // ── Datatype nodes ───────────────────────────────────────────
-  (v3Model.datatypes || []).forEach((dt, i) => {
+  uniekeDatatypes.forEach((dt, i) => {
     nodes.push({
       id: `dt_${dt.naam}`,
       type: "gegevenstype",

@@ -141,3 +141,56 @@ func TestExportMetaRegistryToV3_RelatieRuntime(t *testing.T) {
 		}
 	}
 }
+
+func TestExportMetaRegistryToV3_DatatypesUniekPerNaam(t *testing.T) {
+	v3 := ExportMetaRegistryToV3("np-loc")
+
+	if len(v3.Datatypes) == 0 {
+		t.Fatal("verwacht minimaal 1 datatype in V3 export")
+	}
+
+	countByNaam := map[string]int{}
+	for _, dt := range v3.Datatypes {
+		countByNaam[dt.Naam]++
+	}
+
+	if countByNaam["BSN"] != 1 {
+		t.Fatalf("verwacht BSN precies 1 keer, kreeg %d", countByNaam["BSN"])
+	}
+	if countByNaam["NLPostcode"] != 1 {
+		t.Fatalf("verwacht NLPostcode precies 1 keer, kreeg %d", countByNaam["NLPostcode"])
+	}
+
+	for naam, count := range countByNaam {
+		if count > 1 {
+			t.Fatalf("datatype %s komt %d keer voor", naam, count)
+		}
+	}
+}
+
+func TestFilterV3ModelStrictByDomein_ExcludesRegisterEntiteiten(t *testing.T) {
+	v3 := ExportMetaRegistryToV3("np-loc")
+	strict := FilterV3ModelStrictByDomein(v3, "np-loc")
+
+	foundNpLoc := false
+	foundRegister := false
+	for _, ent := range strict.Entiteiten {
+		meta, ok := MetaRegistry.GetTypeMeta(ent.Typenaam)
+		if !ok {
+			continue
+		}
+		if meta.Domein == "np-loc" {
+			foundNpLoc = true
+		}
+		if meta.Domein == "register" {
+			foundRegister = true
+		}
+	}
+
+	if !foundNpLoc {
+		t.Fatal("expected at least one np-loc entiteit in strict model")
+	}
+	if foundRegister {
+		t.Fatal("did not expect register entiteiten in strict model")
+	}
+}
