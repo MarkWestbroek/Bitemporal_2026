@@ -21,7 +21,33 @@ func (o codegenOptions) initFuncName(suffix string) string {
 	if o.prefix == "" {
 		return "init" + suffix
 	}
-	return "init" + toPascalCase(o.prefix) + suffix
+	return "init" + toPascalCase(normalizeIdentifierParts(o.prefix)) + suffix
+}
+
+// normalizeIdentifierParts vervangt niet-alfanumerieke tekens door underscores,
+// zodat gebruikersprefixen zoals "np-loc" veilige Go-identifiers opleveren.
+func normalizeIdentifierParts(s string) string {
+	if s == "" {
+		return s
+	}
+	var b strings.Builder
+	lastWasSep := false
+	for _, r := range s {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' {
+			b.WriteRune(r)
+			lastWasSep = false
+			continue
+		}
+		if !lastWasSep {
+			b.WriteRune('_')
+			lastWasSep = true
+		}
+	}
+	clean := strings.Trim(b.String(), "_")
+	if clean == "" {
+		return "generated"
+	}
+	return clean
 }
 
 // ---- Wrapper functies voor generators met oude signature ----

@@ -92,6 +92,18 @@ func main() {
 		additive: additive,
 	}
 
+	if *prefix != "" {
+		normalizedPrefix := normalizeIdentifierParts(*prefix)
+		if normalizedPrefix != *prefix {
+			fmt.Fprintf(os.Stderr,
+				"Let op: --prefix %q wordt voor Go-functienamen genormaliseerd naar %q (init-prefix: %q).\n",
+				*prefix,
+				normalizedPrefix,
+				toPascalCase(normalizedPrefix),
+			)
+		}
+	}
+
 	// Bepaal generatiefuncties op basis van additive mode
 	type genFunc = func(model.V3Model, codegenOptions) (string, error)
 	var genRegistry genFunc
