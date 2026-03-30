@@ -53,6 +53,8 @@ type Referentielijst struct {
 	Internetadressen              []ReferentielijstInternetadres `bun:"rel:has-many,join:id=referentielijst_id" json:"internetadressen,omitempty"`
 	LandenlijstLanden             []LandenlijstLand              `bun:"rel:has-many,join:id=referentielijst_id" json:"landenlijst_landen,omitempty"`
 	AdellijkeTitelsTitels         []AdellijkeTitelsTitel         `bun:"rel:has-many,join:id=referentielijst_id" json:"adellijke_titels_titels,omitempty"`
+	LandenlijstLanden             []LandenlijstLand              `bun:"rel:has-many,join:id=referentielijst_id" json:"landenlijst_landen,omitempty"`
+	AdellijkeTitelsTitels         []AdellijkeTitelsTitel         `bun:"rel:has-many,join:id=referentielijst_id" json:"adellijke_titels_titels,omitempty"`
 	Aanvang                       []Referentielijst_Aanvang      `bun:"rel:has-many,join:id=referentielijst_id" json:"aanvang,omitempty"`
 	Einde                         []Referentielijst_Einde        `bun:"rel:has-many,join:id=referentielijst_id" json:"einde,omitempty"`
 }

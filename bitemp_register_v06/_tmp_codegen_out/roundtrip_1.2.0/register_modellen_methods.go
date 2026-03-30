@@ -113,6 +113,26 @@ func (a AdellijkeTitelsTitel) GetAfvoer() *time.Time   { return a.Afvoer }
 func (a *AdellijkeTitelsTitel) SetAfvoer(t *time.Time) { a.Afvoer = t }
 func (a AdellijkeTitelsTitel) String() string          { return RepresentatieToString(a) }
 
+// LandenlijstLand
+func (l LandenlijstLand) GetID() any              { return l.Rel_ID }
+func (l LandenlijstLand) Metatype() Metatype      { return MetatypeRelatie }
+func (l *LandenlijstLand) ClearID()               { l.Rel_ID = 0 }
+func (l LandenlijstLand) GetOpvoer() *time.Time   { return l.Opvoer }
+func (l *LandenlijstLand) SetOpvoer(t *time.Time) { l.Opvoer = t }
+func (l LandenlijstLand) GetAfvoer() *time.Time   { return l.Afvoer }
+func (l *LandenlijstLand) SetAfvoer(t *time.Time) { l.Afvoer = t }
+func (l LandenlijstLand) String() string          { return RepresentatieToString(l) }
+
+// AdellijkeTitelsTitel
+func (a AdellijkeTitelsTitel) GetID() any              { return a.Rel_ID }
+func (a AdellijkeTitelsTitel) Metatype() Metatype      { return MetatypeRelatie }
+func (a *AdellijkeTitelsTitel) ClearID()               { a.Rel_ID = 0 }
+func (a AdellijkeTitelsTitel) GetOpvoer() *time.Time   { return a.Opvoer }
+func (a *AdellijkeTitelsTitel) SetOpvoer(t *time.Time) { a.Opvoer = t }
+func (a AdellijkeTitelsTitel) GetAfvoer() *time.Time   { return a.Afvoer }
+func (a *AdellijkeTitelsTitel) SetAfvoer(t *time.Time) { a.Afvoer = t }
+func (a AdellijkeTitelsTitel) String() string          { return RepresentatieToString(a) }
+
 /* ================================================================
    3. _DATA — interface-methoden
    ================================================================ */
@@ -176,6 +196,26 @@ func (d *ReferentielijstInternetadres_Data) SetOpvoer(t *time.Time) { d.Opvoer =
 func (d ReferentielijstInternetadres_Data) GetAfvoer() *time.Time   { return d.Afvoer }
 func (d *ReferentielijstInternetadres_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
 func (d ReferentielijstInternetadres_Data) String() string          { return RepresentatieToString(d) }
+
+// LandenlijstLand_Data
+func (d LandenlijstLand_Data) GetID() any              { return d.Versie }
+func (d LandenlijstLand_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *LandenlijstLand_Data) ClearID()               { d.Versie = 0 }
+func (d LandenlijstLand_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *LandenlijstLand_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d LandenlijstLand_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *LandenlijstLand_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d LandenlijstLand_Data) String() string          { return RepresentatieToString(d) }
+
+// AdellijkeTitelsTitel_Data
+func (d AdellijkeTitelsTitel_Data) GetID() any              { return d.Versie }
+func (d AdellijkeTitelsTitel_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *AdellijkeTitelsTitel_Data) ClearID()               { d.Versie = 0 }
+func (d AdellijkeTitelsTitel_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *AdellijkeTitelsTitel_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d AdellijkeTitelsTitel_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *AdellijkeTitelsTitel_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d AdellijkeTitelsTitel_Data) String() string          { return RepresentatieToString(d) }
 
 // LandenlijstLand_Data
 func (d LandenlijstLand_Data) GetID() any              { return d.Versie }
@@ -329,6 +369,26 @@ func (i AdellijkeTitelsTitel_Input) GetAfvoer() *time.Time   { return nil }
 func (i *AdellijkeTitelsTitel_Input) SetAfvoer(t *time.Time) {}
 func (i AdellijkeTitelsTitel_Input) String() string          { return RepresentatieToString(i) }
 
+// LandenlijstLand_Input
+func (i LandenlijstLand_Input) GetID() any              { return i.Rel_ID }
+func (i LandenlijstLand_Input) Metatype() Metatype      { return MetatypeRelatie }
+func (i *LandenlijstLand_Input) ClearID()               { i.Rel_ID = 0 }
+func (i LandenlijstLand_Input) GetOpvoer() *time.Time   { return nil }
+func (i *LandenlijstLand_Input) SetOpvoer(t *time.Time) {}
+func (i LandenlijstLand_Input) GetAfvoer() *time.Time   { return nil }
+func (i *LandenlijstLand_Input) SetAfvoer(t *time.Time) {}
+func (i LandenlijstLand_Input) String() string          { return RepresentatieToString(i) }
+
+// AdellijkeTitelsTitel_Input
+func (i AdellijkeTitelsTitel_Input) GetID() any              { return i.Rel_ID }
+func (i AdellijkeTitelsTitel_Input) Metatype() Metatype      { return MetatypeRelatie }
+func (i *AdellijkeTitelsTitel_Input) ClearID()               { i.Rel_ID = 0 }
+func (i AdellijkeTitelsTitel_Input) GetOpvoer() *time.Time   { return nil }
+func (i *AdellijkeTitelsTitel_Input) SetOpvoer(t *time.Time) {}
+func (i AdellijkeTitelsTitel_Input) GetAfvoer() *time.Time   { return nil }
+func (i *AdellijkeTitelsTitel_Input) SetAfvoer(t *time.Time) {}
+func (i AdellijkeTitelsTitel_Input) String() string          { return RepresentatieToString(i) }
+
 /* ================================================================
    7. GeefOnderliggendeGegevenselementen — ENTITEITEN
    ================================================================ */
@@ -387,6 +447,18 @@ func (r *Referentielijst) GeefOnderliggendeGegevenselementen() []OnderliggendeRe
 			r.Internetadressen[i].Referentielijst_ID = r.ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "ReferentielijstInternetadres", Representatie: &r.Internetadressen[i]})
+	}
+	for i := range r.LandenlijstLanden {
+		if r.LandenlijstLanden[i].Referentielijst_ID == 0 {
+			r.LandenlijstLanden[i].Referentielijst_ID = r.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "LandenlijstLand", Representatie: &r.LandenlijstLanden[i]})
+	}
+	for i := range r.AdellijkeTitelsTitels {
+		if r.AdellijkeTitelsTitels[i].Referentielijst_ID == 0 {
+			r.AdellijkeTitelsTitels[i].Referentielijst_ID = r.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "AdellijkeTitelsTitel", Representatie: &r.AdellijkeTitelsTitels[i]})
 	}
 	for i := range r.LandenlijstLanden {
 		if r.LandenlijstLanden[i].Referentielijst_ID == 0 {
@@ -499,6 +571,34 @@ func (h *ReferentielijstInternetadres) GeefOnderliggendeGegevenselementen() []On
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "ReferentielijstInternetadres_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
+func (h *LandenlijstLand) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
+	for i := range h.Data {
+		if h.Data[i].Referentielijst_ID == 0 {
+			h.Data[i].Referentielijst_ID = h.Referentielijst_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "LandenlijstLand_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
+func (h *AdellijkeTitelsTitel) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
+	for i := range h.Data {
+		if h.Data[i].Referentielijst_ID == 0 {
+			h.Data[i].Referentielijst_ID = h.Referentielijst_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "AdellijkeTitelsTitel_Data", Representatie: &h.Data[i]})
 	}
 	return result
 }
