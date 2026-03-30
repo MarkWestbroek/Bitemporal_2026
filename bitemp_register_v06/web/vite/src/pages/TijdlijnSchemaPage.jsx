@@ -445,6 +445,14 @@ function normInt(v, fallback = 0) {
             return;
           }
 
+          const kolomVoorRegId = (regId) => {
+            const idTekst = String(regId ?? "").trim();
+            if (!idTekst) return null;
+            return rowEl.querySelector(`.timeline-column[data-reg-id="${idTekst}"]`)
+              || rowEl.querySelector(`.timeline-column[data-visual-reg-id="${idTekst}"]`)
+              || null;
+          };
+
           const rowRect = rowEl.getBoundingClientRect();
           const arrows = [];
           const missingLinks = [];
@@ -469,14 +477,42 @@ function normInt(v, fallback = 0) {
 
             const sourceRect = sourceEl.getBoundingClientRect();
             const targetRect = targetEl.getBoundingClientRect();
+            const laneMatch = String(link.sourceId || "").match(/-(\d+)$/);
+            const laneIdx = laneMatch ? Number.parseInt(laneMatch[1], 10) : 0;
+
+            const sourceColEl = kolomVoorRegId(link.sourceRegId);
+            const targetColEl = kolomVoorRegId(link.targetRegId);
+            const sourceColRect = sourceColEl ? sourceColEl.getBoundingClientRect() : null;
+            const targetColRect = targetColEl ? targetColEl.getBoundingClientRect() : null;
+
+            const x1 = sourceRect.left + (sourceRect.width / 2) - rowRect.left;
+            const y1 = sourceRect.top + (sourceRect.height / 2) - rowRect.top;
+            const x2 = targetRect.left + (targetRect.width / 2) - rowRect.left;
+            const y2 = targetRect.top - rowRect.top + 2;
+
+            const actionType = link.actionType || "ongedaanmaking";
+            const actionIsGroen = actionType === "correctie" || actionType === "herstel";
+
+            const sCenter = sourceColRect ? (sourceColRect.left + (sourceColRect.width / 2) - rowRect.left) : x1;
+            const tCenter = targetColRect ? (targetColRect.left + (targetColRect.width / 2) - rowRect.left) : x2;
+            const mid = (sCenter + tCenter) / 2;
+            const laneOffset = ((Number.isFinite(laneIdx) ? laneIdx : 0) % 3) * 12;
+            const kleurOffset = actionIsGroen ? -34 : 34;
+            const corridorX = (Math.abs(sCenter - tCenter) < 20)
+              ? (sCenter + (actionIsGroen ? -74 : 74) + laneOffset)
+              : (mid + kleurOffset + laneOffset);
 
             arrows.push({
-              x1: sourceRect.left + (sourceRect.width / 2) - rowRect.left,
-              y1: sourceRect.top + (sourceRect.height / 2) - rowRect.top,
-              x2: targetRect.left + (targetRect.width / 2) - rowRect.left,
-              y2: targetRect.top - rowRect.top + 2,
+              x1,
+              y1,
+              x2,
+              y2,
               kleur: (link.actionType === "correctie" || link.actionType === "herstel") ? "rgba(22, 163, 74, 0.75)" : "rgba(220, 38, 38, 0.55)",
               markerId: (link.actionType === "correctie" || link.actionType === "herstel") ? "corrArrowSchema" : "undoArrowSchema",
+              actionType: link.actionType,
+              lane: Number.isNaN(laneIdx) ? 0 : laneIdx,
+              sourceRegId: link.sourceRegId,
+              corridorX,
             });
           }
 
@@ -495,11 +531,11 @@ function normInt(v, fallback = 0) {
             throw new Error("Geen visualisatie beschikbaar om te exporteren.");
           }
 
-          if (!window.html2canvas) {
+          if (typeof html2canvas !== "function") {
             throw new Error("PNG-export niet beschikbaar: html2canvas niet geladen.");
           }
 
-          return window.html2canvas(rowEl, {
+          return html2canvas(rowEl, {
             backgroundColor: "#f8fafc",
             useCORS: true,
             scale: 2,
@@ -680,12 +716,11 @@ function normInt(v, fallback = 0) {
                     </marker>
                   </defs>
                   {overlayArrows.map((arrow, arrowIndex) => {
-                    const dx = Math.abs(arrow.x1 - arrow.x2);
-                    const bendNearEnd = Math.max(12, dx * 0.06);
-                    const c1x = arrow.x1 - 14;
-                    const c1y = arrow.y1 + 46;
-                    const c2x = arrow.x2 - bendNearEnd;
-                    const c2y = arrow.y2 - 64;
+                    const lane = Number(arrow.lane || 0);
+                    const c1x = Number(arrow.corridorX ?? arrow.x1);
+                    const c2x = Number(arrow.corridorX ?? arrow.x2);
+                    const c1y = arrow.y1 + 52 + ((lane % 2) * 8);
+                    const c2y = arrow.y2 - 62 - ((lane % 2) * 8);
                     return (
                       <path
                         key={`overlay-arrow-schema-${arrowIndex}`}
@@ -711,7 +746,12 @@ function normInt(v, fallback = 0) {
                   const repViewBoxHeight = uniformeRepViewBoxHeight;
 
                   return (
-                    <div className="timeline-column" key={`col-${item.reg?.id || idx}`}>
+                    <div
+                      className="timeline-column"
+                      key={`col-${item.reg?.id || idx}`}
+                      data-reg-id={String(reg?.id ?? "")}
+                      data-visual-reg-id={String(visualReg?.id ?? "")}
+                    >
                       <TijdlijnRegistratiePaneel
                         reg={reg}
                         visualReg={visualReg}

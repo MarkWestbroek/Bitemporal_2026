@@ -1,7 +1,9 @@
 import { SvgPatternDefs } from "../../shared/SvgPatternDefs";
 
 function splitLabelOverMeerdereRegels(label, maxRegelLengte = 16, maxRegels = 2) {
-  const tekst = String(label || "").trim();
+  const tekst = String(label || "")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .trim();
   if (!tekst) return ["-"];
   if (tekst.length <= maxRegelLengte) return [tekst];
 

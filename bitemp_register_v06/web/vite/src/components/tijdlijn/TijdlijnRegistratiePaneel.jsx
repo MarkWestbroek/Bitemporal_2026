@@ -1,7 +1,9 @@
 import { SvgPatternDefs } from "../../shared/SvgPatternDefs";
 
 function splitLabelOverMeerdereRegels(label, maxRegelLengte = 12, maxRegels = 2) {
-  const tekst = String(label || "").trim();
+  const tekst = String(label || "")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .trim();
   if (!tekst) return ["-"];
   if (tekst.length <= maxRegelLengte) return [tekst];
 
@@ -95,6 +97,10 @@ export default function TijdlijnRegistratiePaneel({
   const tweedeDividerX = 186;
   const rijHoogte = 58;
   const heeftTerugVerwijslijnen = Boolean(isOngedaanmaking || isCorrectie);
+  const wijzigingstypes = wijzigingen.map((w) => String(w?.wijzigingstype || "").toLowerCase());
+  const alleenAfvoer = wijzigingstypes.length > 0 && wijzigingstypes.every((t) => t === "afvoer");
+  const alleenOpvoer = wijzigingstypes.length > 0 && wijzigingstypes.every((t) => t === "opvoer");
+  const kruisKleur = alleenAfvoer ? "#16a34a" : (alleenOpvoer ? "#dc2626" : "#64748b");
 
   const basisRepNaam = (value) => String(value || "").trim().toUpperCase().replace(/_(DATA|AANVANG|EINDE)$/i, "");
   const heeftPlumbingSuffix = (value) => /_(DATA|AANVANG|EINDE)$/i.test(String(value || "").trim());
@@ -187,13 +193,13 @@ export default function TijdlijnRegistratiePaneel({
               </text>
               <text className="label" x="100" y={y + 18}>
                 {entiteitRegels.map((regel, regelIndex) => (
-                  <tspan key={`ent-${regelIndex}`} x="100" dy={regelIndex === 0 ? 0 : 12} style={{ fontWeight: 700, fontSize: "11.5px" }}>{regel}</tspan>
+                  <tspan key={`ent-${regelIndex}`} x="100" dy={regelIndex === 0 ? 0 : 12} style={{ fontWeight: 700, fontSize: "11px" }}>{regel}</tspan>
                 ))}
               </text>
               {!repLeeg && (
                 <text className="label" x="194" y={y + 16}>
                   {repRegels.map((regel, regelIndex) => (
-                    <tspan key={`rep-${regelIndex}`} x="194" dy={regelIndex === 0 ? 0 : 12} style={{ fontWeight: 700, fontSize: "11.5px" }}>{regel}</tspan>
+                    <tspan key={`rep-${regelIndex}`} x="194" dy={regelIndex === 0 ? 0 : 12} style={{ fontWeight: 700, fontSize: "11px" }}>{regel}</tspan>
                   ))}
                 </text>
               )}
@@ -203,8 +209,8 @@ export default function TijdlijnRegistratiePaneel({
 
         {isOngedaanmaking && (
           <>
-            <line x1="14" y1="8" x2="306" y2={regViewBoxHeight - 6} stroke="#dc2626" strokeWidth="4" strokeLinecap="round" />
-            <line x1="306" y1="8" x2="14" y2={regViewBoxHeight - 6} stroke="#dc2626" strokeWidth="4" strokeLinecap="round" />
+            <line x1="14" y1="8" x2="306" y2={regViewBoxHeight - 6} stroke={kruisKleur} strokeWidth="3.2" strokeLinecap="round" />
+            <line x1="306" y1="8" x2="14" y2={regViewBoxHeight - 6} stroke={kruisKleur} strokeWidth="3.2" strokeLinecap="round" />
           </>
         )}
       </svg>
