@@ -7,5 +7,5 @@ func initRegisterEnumRegistry() {
 	EnumWaarden["ReferentielijstAdrestype"] = []string{"URL", "URN"}
 
 	// Enum editor-posities
-	EnumEditorLayouts["ReferentielijstAdrestype"] = &EditorLayout{Positie: &V3Positie{X: 1620, Y: 255}}
+	EnumEditorLayouts["ReferentielijstAdrestype"] = &EditorLayout{Positie: &V3Positie{X: 1890, Y: 120}}
 }

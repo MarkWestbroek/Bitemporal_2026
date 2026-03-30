@@ -88,6 +88,7 @@ type V3EnumWaarde struct {
 type V3Entiteit struct {
 	Typenaam          string              `json:"typenaam"`
 	Description       string              `json:"description,omitempty"`
+	Domein            string              `json:"domein,omitempty"`          // domeinnaam (bijv. "register", "np-loc"); gebruikt door codegen om cross-domein entiteiten te skippen
 	EntiteitSubtype   string              `json:"entiteitSubtype,omitempty"` // bijv. "referentielijst", "referentielijst_item"
 	IsMaterieel       bool                `json:"isMaterieel,omitempty"`
 	Kleur             string              `json:"kleur,omitempty"`

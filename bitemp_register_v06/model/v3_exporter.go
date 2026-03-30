@@ -19,7 +19,6 @@ var plumbingVelden = map[string]struct{}{
 	"Datum":              {},
 	"Referentielijst_ID": {},
 	"Land_ID":            {},
-	"Systeemnaam":        {},
 }
 
 // isPlumbingField bepaalt of een struct-veld een plumbingveld is (niet inhoudelijk).
@@ -324,6 +323,7 @@ func ExportMetaRegistryToV3(domein ...string) V3Model {
 		ent := V3Entiteit{
 			Typenaam:        meta.Typenaam,
 			Description:     meta.Description,
+			Domein:          meta.Domein,
 			EntiteitSubtype: meta.EntiteitSubtype,
 			IsMaterieel:     meta.IsMaterieel,
 			Kleur:           meta.Kleur,

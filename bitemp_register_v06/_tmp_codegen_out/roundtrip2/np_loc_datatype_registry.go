@@ -10,6 +10,7 @@ func initNpLocDatatypeRegistry() {
 			Description: "Nederlandse postcode (4 cijfers + 2 letters)",
 			Basistype:   "string",
 			Format:      "nl-postcode",
+			Domein:      "register",
 			Positie:     &V3Positie{X: 750, Y: 345},
 			Validatie: &V3Validatie{
 				Pattern:     `^[1-9][0-9]{3}\s?[A-Za-z]{2}$`,
@@ -29,6 +30,7 @@ func initNpLocDatatypeRegistry() {
 			Description: "Burgerservicenummer (9 cijfers, 11-proef)",
 			Basistype:   "string",
 			Format:      "bsn",
+			Domein:      "register",
 			Positie:     &V3Positie{X: -480, Y: 165},
 			Validatie: &V3Validatie{
 				Pattern:     `^[0-9]{9}$`,

@@ -79,6 +79,47 @@ func main() {
 	fmt.Printf("Model geladen: versie=%s, %d entiteiten, %d enums, %d datatypes (mode=%s, domein=%s)\n",
 		v3.Versie, len(v3.Entiteiten), len(v3.Enums), len(v3.Datatypes), *mode, *domein)
 
+	// Filter entiteiten op domein: als --domein is opgegeven, genereer alleen entiteiten
+	// waarvan het Domein-veld overeenkomt met --domein of leeg is.
+	// Entiteiten van andere domeinen (bijv. register-entiteiten in een np-loc export) worden overgeslagen.
+	if *domein != "" {
+		filtered := v3.Entiteiten[:0]
+		for _, ent := range v3.Entiteiten {
+			if ent.Domein == "" || ent.Domein == *domein {
+				filtered = append(filtered, ent)
+			} else {
+				fmt.Fprintf(os.Stderr, "  Overgeslagen (domein=%q): %s\n", ent.Domein, ent.Typenaam)
+			}
+		}
+		v3.Entiteiten = filtered
+
+		// Verwijder enums die niet meer gerefereerd worden door de resterende entiteiten.
+		usedEnums := map[string]bool{}
+		for _, ent := range v3.Entiteiten {
+			for _, ge := range ent.Gegevenselementen {
+				for _, v := range ge.Velden {
+					if v.Enum != "" {
+						usedEnums[v.Enum] = true
+					}
+				}
+			}
+			for _, rel := range ent.Relaties {
+				for _, v := range rel.Velden {
+					if v.Enum != "" {
+						usedEnums[v.Enum] = true
+					}
+				}
+			}
+		}
+		filteredEnums := v3.Enums[:0]
+		for _, e := range v3.Enums {
+			if usedEnums[e.GoType] {
+				filteredEnums = append(filteredEnums, e)
+			}
+		}
+		v3.Enums = filteredEnums
+	}
+
 	// Maak de output directory aan als die niet bestaat
 	if err := os.MkdirAll(*outputDir, 0750); err != nil {
 		fmt.Fprintf(os.Stderr, "Kan output directory niet aanmaken: %v\n", err)

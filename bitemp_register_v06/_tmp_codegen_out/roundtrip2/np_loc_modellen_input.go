@@ -9,26 +9,14 @@ type AdellijkeTitelTitel_Input struct {
 	Titel             string `json:"titel"`
 }
 
-type Landcode_Input struct {
-	LAND_ID int    `json:"land_id"`
-	Rel_ID  int    `json:"rel_id"`
-	Code    string `json:"code"`
-}
-
-type Landnaam_Input struct {
-	LAND_ID int    `json:"land_id"`
-	Rel_ID  int    `json:"rel_id"`
-	Naam    string `json:"naam"`
-}
-
 type Locatie_Adres_Input struct {
-	LOCATIE_ID int        `json:"locatie_id"`
-	Rel_ID     int        `json:"rel_id"`
-	Straatnaam string     `json:"straatnaam"`
-	Huisnummer string     `json:"huisnummer"`
-	Postcode   NLPostcode `json:"postcode"`
-	Plaats     string     `json:"plaats"`
-	Land       int        `json:"land"`
+	LOCATIE_ID int    `json:"locatie_id"`
+	Rel_ID     int    `json:"rel_id"`
+	Straatnaam string `json:"straatnaam"`
+	Huisnummer string `json:"huisnummer"`
+	Postcode   string `json:"postcode"`
+	Plaats     string `json:"plaats"`
+	Land       int    `json:"land"`
 }
 
 type Locatie_BAGlocatie_Input struct {
@@ -38,10 +26,10 @@ type Locatie_BAGlocatie_Input struct {
 }
 
 type NatuurlijkPersoon_Persoonsidentificatie_Input struct {
-	NATUURLIJKPERSOON_ID int   `json:"natuurlijkpersoon_id"`
-	Rel_ID               int   `json:"rel_id"`
-	Bsn                  BSN   `json:"bsn"`
-	Ingezetene           *bool `json:"ingezetene,omitempty"`
+	NATUURLIJKPERSOON_ID int    `json:"natuurlijkpersoon_id"`
+	Rel_ID               int    `json:"rel_id"`
+	Bsn                  string `json:"bsn"`
+	Ingezetene           *bool  `json:"ingezetene,omitempty"`
 }
 
 type NatuurlijkPersoon_Naam_Input struct {
@@ -81,42 +69,4 @@ type Bereikbaarheid_Input struct {
 	Soort                Bereikbaarheidssoort `json:"soort"`
 	Aanvang              *Date                `json:"aanvang,omitempty"`
 	Einde                *Date                `json:"einde,omitempty"`
-}
-
-type Referentielijstnaam_Input struct {
-	REFERENTIELIJST_ID int    `json:"referentielijst_id"`
-	Rel_ID             int    `json:"rel_id"`
-	Naam               string `json:"naam"`
-}
-
-type Referentielijstomschrijving_Input struct {
-	REFERENTIELIJST_ID int    `json:"referentielijst_id"`
-	Rel_ID             int    `json:"rel_id"`
-	Omschrijving       string `json:"omschrijving"`
-}
-
-type ReferentielijstVisibility_Input struct {
-	REFERENTIELIJST_ID int    `json:"referentielijst_id"`
-	Rel_ID             int    `json:"rel_id"`
-	Domein             string `json:"domein"`
-}
-
-type ReferentielijstInternetadres_Input struct {
-	REFERENTIELIJST_ID int                      `json:"referentielijst_id"`
-	Rel_ID             int                      `json:"rel_id"`
-	Adrestype          ReferentielijstAdrestype `json:"adrestype"`
-	Adres              string                   `json:"adres"`
-	Organisatie        string                   `json:"organisatie"`
-}
-
-type LandenlijstLand_Input struct {
-	REFERENTIELIJST_ID int `json:"referentielijst_id"`
-	Rel_ID             int `json:"rel_id"`
-	LAND_ID            int `json:"land_id"`
-}
-
-type AdellijkeTitelsTitel_Input struct {
-	REFERENTIELIJST_ID int `json:"referentielijst_id"`
-	Rel_ID             int `json:"rel_id"`
-	ADELLIJKETITEL_ID  int `json:"adellijketitel_id"`
 }
