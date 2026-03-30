@@ -1,0 +1,475 @@
+{
+  "version": 1,
+  "exported_at": "2026-03-30T21:49:06.395Z",
+  "source": "http://localhost:8082/full/registraties?page=1&size=50",
+  "count": 12,
+  "entries": [
+    {
+      "registratie_id": 25,
+      "registratietype": "registratie",
+      "tijdstip": "2026-01-02T01:00:00.000025Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "partnernaam": {
+                "achternaam": "",
+                "natuurlijkpersoon_id": 1,
+                "rel_id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": {
+        "message": "De registratie 25 is succesvol verwerkt op 2026-01-02 01:00:00.000025 +0000 UTC in 12 ms",
+        "registratieId": 25,
+        "registratie_id": 25,
+        "tijdstip": "2026-01-02T01:00:00.000025Z",
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "partnernaam": {
+                "achternaam": "",
+                "natuurlijkpersoon_id": 1,
+                "rel_id": 1
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "registratie_id": 26,
+      "registratietype": "ongedaanmaking",
+      "tijdstip": "2026-01-02T02:00:00.000026Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "maakt_ongedaan_registratie_id": 25,
+          "registratietype": "ongedaanmaking",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": []
+      },
+      "expected_response_code": 201,
+      "expected_response_body": {
+        "message": "De registratie 26 is succesvol verwerkt op 2026-01-02 02:00:00.000026 +0000 UTC in 32 ms",
+        "registratieId": 26,
+        "registratie_id": 26,
+        "tijdstip": "2026-01-02T02:00:00.000026Z",
+        "wijzigingen": []
+      }
+    },
+    {
+      "registratie_id": 27,
+      "registratietype": "correctie",
+      "tijdstip": "2026-01-02T03:00:00.000027Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "registratietype": "correctie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "partnernaam": {
+                "achternaam": "Woud",
+                "natuurlijkpersoon_id": 1,
+                "rel_id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": {
+        "message": "De registratie 27 is succesvol verwerkt op 2026-01-02 03:00:00.000027 +0000 UTC in 21 ms",
+        "registratieId": 27,
+        "registratie_id": 27,
+        "tijdstip": "2026-01-02T03:00:00.000027Z",
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "partnernaam": {
+                "achternaam": "Woud",
+                "natuurlijkpersoon_id": 1,
+                "rel_id": 1
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "registratie_id": 28,
+      "registratietype": "ongedaanmaking",
+      "tijdstip": "2026-01-02T04:00:00.000028Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "maakt_ongedaan_registratie_id": 27,
+          "registratietype": "ongedaanmaking",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": []
+      },
+      "expected_response_code": 201,
+      "expected_response_body": {
+        "message": "De registratie 28 is succesvol verwerkt op 2026-01-02 04:00:00.000028 +0000 UTC in 8 ms",
+        "registratieId": 28,
+        "registratie_id": 28,
+        "tijdstip": "2026-01-02T04:00:00.000028Z",
+        "wijzigingen": []
+      }
+    },
+    {
+      "registratie_id": 29,
+      "registratietype": "registratie",
+      "tijdstip": "2026-01-02T05:00:00.000029Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "partnernaam": {
+                "achternaam": "",
+                "natuurlijkpersoon_id": 1,
+                "rel_id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": {
+        "message": "De registratie 29 is succesvol verwerkt op 2026-01-02 05:00:00.000029 +0000 UTC in 4 ms",
+        "registratieId": 29,
+        "registratie_id": 29,
+        "tijdstip": "2026-01-02T05:00:00.000029Z",
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "partnernaam": {
+                "achternaam": "",
+                "natuurlijkpersoon_id": 1,
+                "rel_id": 1
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "registratie_id": 30,
+      "registratietype": "registratie",
+      "tijdstip": "2026-01-02T06:00:00.00003Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "partnernaam": {
+                "achternaam": "op de Zee",
+                "natuurlijkpersoon_id": 1,
+                "rel_id": 0
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": {
+        "message": "De registratie 30 is succesvol verwerkt op 2026-01-02 06:00:00.00003 +0000 UTC in 7 ms",
+        "registratieId": 30,
+        "registratie_id": 30,
+        "tijdstip": "2026-01-02T06:00:00.00003Z",
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "partnernaam": {
+                "achternaam": "op de Zee",
+                "natuurlijkpersoon_id": 1,
+                "rel_id": 0
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "registratie_id": 31,
+      "registratietype": "registratie",
+      "tijdstip": "2026-01-02T07:00:00.000031Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "naamgebruik": {
+                "naamgebruik": "PartnerNaam-EigenNaam",
+                "natuurlijkpersoon_id": 1,
+                "rel_id": 0
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": {
+        "message": "De registratie 31 is succesvol verwerkt op 2026-01-02 07:00:00.000031 +0000 UTC in 10 ms",
+        "registratieId": 31,
+        "registratie_id": 31,
+        "tijdstip": "2026-01-02T07:00:00.000031Z",
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "naamgebruik": {
+                "naamgebruik": "PartnerNaam-EigenNaam",
+                "natuurlijkpersoon_id": 1,
+                "rel_id": 0
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "registratie_id": 32,
+      "registratietype": "registratie",
+      "tijdstip": "2026-01-02T08:00:00.000032Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "burgerschap": {
+                "aanvang": "2026-03-30",
+                "landcode": "be",
+                "nationaliteit": "België",
+                "natuurlijkpersoon_id": 1,
+                "rel_id": 0
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": {
+        "message": "De registratie 32 is succesvol verwerkt op 2026-01-02 08:00:00.000032 +0000 UTC in 11 ms",
+        "registratieId": 32,
+        "registratie_id": 32,
+        "tijdstip": "2026-01-02T08:00:00.000032Z",
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "burgerschap": {
+                "aanvang": "2026-03-30",
+                "landcode": "be",
+                "nationaliteit": "België",
+                "natuurlijkpersoon_id": 1,
+                "rel_id": 0
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "registratie_id": 33,
+      "registratietype": "ongedaanmaking",
+      "tijdstip": "2026-01-02T09:00:00.000033Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "maakt_ongedaan_registratie_id": 32,
+          "registratietype": "ongedaanmaking",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": []
+      },
+      "expected_response_code": 201,
+      "expected_response_body": {
+        "message": "De registratie 33 is succesvol verwerkt op 2026-01-02 09:00:00.000033 +0000 UTC in 6 ms",
+        "registratieId": 33,
+        "registratie_id": 33,
+        "tijdstip": "2026-01-02T09:00:00.000033Z",
+        "wijzigingen": []
+      }
+    },
+    {
+      "registratie_id": 34,
+      "registratietype": "correctie",
+      "tijdstip": "2026-01-02T10:00:00.000034Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "registratietype": "correctie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "naamgebruik": {
+                "naamgebruik": "EigenNaam-PartnerNaam",
+                "natuurlijkpersoon_id": 1,
+                "rel_id": 2
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": {
+        "message": "De registratie 34 is succesvol verwerkt op 2026-01-02 10:00:00.000034 +0000 UTC in 8 ms",
+        "registratieId": 34,
+        "registratie_id": 34,
+        "tijdstip": "2026-01-02T10:00:00.000034Z",
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "naamgebruik": {
+                "naamgebruik": "EigenNaam-PartnerNaam",
+                "natuurlijkpersoon_id": 1,
+                "rel_id": 2
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "registratie_id": 35,
+      "registratietype": "correctie",
+      "tijdstip": "2026-01-02T11:00:00.000035Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "registratietype": "correctie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "persoonsidentificatie": {
+                "bsn": "1223456789",
+                "ingezetene": false,
+                "natuurlijkpersoon_id": 2,
+                "rel_id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": {
+        "message": "De registratie 35 is succesvol verwerkt op 2026-01-02 11:00:00.000035 +0000 UTC in 8 ms",
+        "registratieId": 35,
+        "registratie_id": 35,
+        "tijdstip": "2026-01-02T11:00:00.000035Z",
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "persoonsidentificatie": {
+                "bsn": "1223456789",
+                "ingezetene": false,
+                "natuurlijkpersoon_id": 2,
+                "rel_id": 1
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "registratie_id": 36,
+      "registratietype": "correctie",
+      "tijdstip": "2026-01-02T12:00:00.000036Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "registratietype": "correctie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "persoonsidentificatie": {
+                "bsn": "123456782",
+                "ingezetene": true,
+                "natuurlijkpersoon_id": 2,
+                "rel_id": 1
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": {
+        "message": "De registratie 36 is succesvol verwerkt op 2026-01-02 12:00:00.000036 +0000 UTC in 7 ms",
+        "registratieId": 36,
+        "registratie_id": 36,
+        "tijdstip": "2026-01-02T12:00:00.000036Z",
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "persoonsidentificatie": {
+                "bsn": "123456782",
+                "ingezetene": true,
+                "natuurlijkpersoon_id": 2,
+                "rel_id": 1
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
