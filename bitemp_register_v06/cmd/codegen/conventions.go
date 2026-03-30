@@ -8,6 +8,37 @@ import (
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 )
 
+// codegenOptions bevat opties die door alle generators worden gedeeld.
+type codegenOptions struct {
+	domein   string // TypeMeta.Domein waarde (bijv. "np-loc", "register")
+	prefix   string // bestandsprefix → bepaalt init-functienaam (bijv. "np_loc" → initNpLocMetaRegistry)
+	additive bool   // standalone of additive modus
+}
+
+// initFuncName leidt de init-functienaam af uit prefix en suffix.
+// Bijv. prefix="np_loc", suffix="MetaRegistry" → "initNpLocMetaRegistry".
+func (o codegenOptions) initFuncName(suffix string) string {
+	if o.prefix == "" {
+		return "init" + suffix
+	}
+	return "init" + toPascalCase(o.prefix) + suffix
+}
+
+// ---- Wrapper functies voor generators met oude signature ----
+
+func generateEntiteitenWithOpts(v3 model.V3Model, _ codegenOptions) (string, error) {
+	return generateEntiteiten(v3)
+}
+func generateGeRelWithOpts(v3 model.V3Model, _ codegenOptions) (string, error) {
+	return generateGeRel(v3)
+}
+func generateMethodsWithOpts(v3 model.V3Model, _ codegenOptions) (string, error) {
+	return generateMethods(v3)
+}
+func generateInputWithOpts(v3 model.V3Model, _ codegenOptions) (string, error) {
+	return generateInput(v3)
+}
+
 // ---- Naamconventies ----
 
 // toSnakeCase converteert PascalCase/camelCase naar snake_case.
@@ -300,9 +331,19 @@ func contentField(v model.V3Veld) StructField {
 		tags += fmt.Sprintf(` bun:"%s,type:date"`, naam)
 	}
 
-	// Enum schema tags
+	// Schema tags: enum, datatype, ref
+	var schemaParts []string
 	if v.Enum != "" {
-		tags += fmt.Sprintf(` schema:"enum=%s"`, v.Enum)
+		schemaParts = append(schemaParts, fmt.Sprintf("enum=%s", v.Enum))
+	}
+	if v.Datatype != "" {
+		schemaParts = append(schemaParts, fmt.Sprintf("datatype:%s", v.Datatype))
+	}
+	if v.Ref != "" {
+		schemaParts = append(schemaParts, fmt.Sprintf("ref:%s", v.Ref))
+	}
+	if len(schemaParts) > 0 {
+		tags += fmt.Sprintf(` schema:"%s"`, strings.Join(schemaParts, ","))
 	}
 
 	tags += "`"

@@ -28,8 +28,13 @@ type vizSchemaTypeDTO struct {
 	Klassenaam                string                     `json:"klassenaam"`
 	Description               string                     `json:"description,omitempty"`
 	Metatype                  model.Metatype             `json:"metatype"`
-	GESubtype                 string                     `json:"ge_subtype,omitempty"`  // hub, data, aanvang, einde (leeg voor entiteiten en legacy)
-	IsMaterieel               bool                       `json:"isMaterieel,omitempty"` // of dit type een materiële tijdlijn heeft
+	GESubtype                 string                     `json:"ge_subtype,omitempty"`               // hub, data, aanvang, einde (leeg voor entiteiten en legacy)
+	IsMaterieel               bool                       `json:"isMaterieel,omitempty"`              // of dit type een materiële tijdlijn heeft
+	EntiteitSubtype           string                     `json:"entiteitSubtype,omitempty"`          // bijv. "referentielijst", "referentielijst_item"
+	RelatieSubtype            string                     `json:"relatieSubtype,omitempty"`           // bijv. "referentielijst_items"
+	ReferentielijstInstantie  string                     `json:"referentielijstInstantie,omitempty"` // systeemnaam van de gebonden referentielijst-instantie
+	DoelEntiteit              string                     `json:"doelEntiteit,omitempty"`             // voor relaties: de doel-entiteit typenaam
+	Domein                    string                     `json:"domein,omitempty"`                   // domeingroep (bijv. "np-loc")
 	Kleur                     string                     `json:"kleur,omitempty"`
 	Veldnaam                  string                     `json:"veldnaam"`
 	Padnaam                   string                     `json:"padnaam,omitempty"`
@@ -69,6 +74,8 @@ type vizSchemaFieldDTO struct {
 	Enum          []string `json:"enum,omitempty"`
 	Verplicht     bool     `json:"verplicht"`
 	AutoIncrement bool     `json:"autoIncrement,omitempty"`
+	Ref           string   `json:"ref,omitempty"`      // referentielijst-items verwijzing (bijv. "LandenlijstLand")
+	Datatype      string   `json:"datatype,omitempty"` // custom gegevenstype (bijv. "NLPostcode", "BSN")
 }
 
 // hasBunOption controleert of een bun-struct-tag een bepaalde optie bevat (bijv. "autoincrement").
@@ -327,6 +334,15 @@ func reflectedVeldenVoorMeta(meta model.TypeMeta) []vizSchemaFieldDTO {
 		isAutoInc := hasBunOption(f.Tag.Get("bun"), "autoincrement") ||
 			(name == meta.IDKolom && meta.RelatieveAutoincrement)
 
+		// Referentielijst-verwijzing of custom datatype uit schema tag.
+		var ref, datatype string
+		schemaTag := f.Tag.Get("schema")
+		if strings.HasPrefix(schemaTag, "ref:") {
+			ref = strings.TrimPrefix(schemaTag, "ref:")
+		} else if strings.HasPrefix(schemaTag, "datatype:") {
+			datatype = strings.TrimPrefix(schemaTag, "datatype:")
+		}
+
 		velden = append(velden, vizSchemaFieldDTO{
 			Naam:          name,
 			Description:   description,
@@ -335,6 +351,8 @@ func reflectedVeldenVoorMeta(meta model.TypeMeta) []vizSchemaFieldDTO {
 			Enum:          enum,
 			Verplicht:     !hasOmitEmpty,
 			AutoIncrement: isAutoInc,
+			Ref:           ref,
+			Datatype:      datatype,
 		})
 	}
 
@@ -348,83 +366,125 @@ func momentvoorkomenNaarString(m model.Momentvoorkomen) string {
 	return "meervoudig"
 }
 
+// vizSchemaTypeDTOVanMeta bouwt een vizSchemaTypeDTO uit een TypeMeta entry.
+// Herbruikbaar door zowel het viz/schema endpoint als schema/model/code.
+func vizSchemaTypeDTOVanMeta(meta model.TypeMeta) vizSchemaTypeDTO {
+	item := vizSchemaTypeDTO{
+		Typenaam:    meta.Typenaam,
+		Klassenaam:  meta.Klassenaam,
+		Description: meta.Description,
+		Metatype:    meta.Metatype,
+		GESubtype:   string(meta.GESubtype),
+		IsMaterieel: meta.IsMaterieel,
+		Kleur:       meta.Kleur,
+		Veldnaam:    meta.Veldnaam,
+		Padnaam:     meta.Padnaam,
+		Meervoud:    meta.Meervoud,
+		Velden:      reflectedVeldenVoorMeta(meta),
+		Tabelnaam:   meta.Tabelnaam,
+		// Kolom-namen vertalen naar JSON-veldnamen zodat de frontend ze direct als property kan gebruiken.
+		IDKolom:                   jsonNaamVoorBunKolom(meta, meta.IDKolom),
+		IDAutoIncrement:           meta.RelatieveAutoincrement,
+		HeeftPFK:                  meta.HeeftPFK,
+		EntiteitIDKolom:           jsonNaamVoorBunKolom(meta, meta.EntiteitIDKolom),
+		SecondaireEntiteitIDKolom: jsonNaamVoorBunKolom(meta, meta.SecondaireEntiteitIDKolom),
+		BovenliggendTypenaam:      meta.BovenliggendTypenaam,
+		// V3-velden: subtypes, referentielijst-info, domein
+		EntiteitSubtype:          string(meta.EntiteitSubtype),
+		RelatieSubtype:           string(meta.RelatieSubtype),
+		ReferentielijstInstantie: meta.ReferentielijstInstantie,
+		Domein:                   meta.Domein,
+	}
+
+	// DoelEntiteit: afleiden uit secondaire ID-kolom (bijv. "locatie_id" → "Locatie")
+	if meta.Metatype == model.MetatypeRelatie && meta.SecondaireEntiteitIDKolom != "" {
+		item.DoelEntiteit = doelEntiteitVanSecondaireKolom(meta.SecondaireEntiteitIDKolom)
+	}
+
+	// Achterwaartse compatibiliteit: oudere hardcoded entries hebben nog geen expliciete Meervoud.
+	if item.Meervoud == "" {
+		item.Meervoud = meta.Padnaam
+	}
+
+	if meta.Metatype != model.MetatypeEntiteit {
+		item.Momentvoorkomen = momentvoorkomenNaarString(meta.Momentvoorkomen)
+	}
+
+	if len(meta.OnderliggendeGegevenselementen) > 0 {
+		children := make([]vizSchemaChildDTO, 0, len(meta.OnderliggendeGegevenselementen))
+		for _, child := range meta.OnderliggendeGegevenselementen {
+			children = append(children, vizSchemaChildDTO{
+				Rolnaam:         child.Rolnaam,
+				JSONRolnaam:     child.JSONRolnaam,
+				Doeltype:        child.Doeltype,
+				Momentvoorkomen: momentvoorkomenNaarString(child.Momentvoorkomen),
+			})
+		}
+		item.Onderliggende = children
+	}
+
+	if len(meta.AfgeleideVelden) > 0 {
+		avs := make([]vizSchemaAfgeleidVeldDTO, 0, len(meta.AfgeleideVelden))
+		for _, av := range meta.AfgeleideVelden {
+			avs = append(avs, vizSchemaAfgeleidVeldDTO{
+				Naam:                av.Naam,
+				Description:         av.Description,
+				GoType:              av.GoType,
+				AfleidingsregelTaal: av.AfleidingsregelTaal,
+				Afleidingsregel:     av.Afleidingsregel,
+				IsWeergaveVeld:      av.IsWeergaveVeld,
+			})
+		}
+		item.AfgeleideVelden = avs
+	}
+
+	return item
+}
+
+// doelEntiteitVanSecondaireKolom leidt de doel-entiteit typenaam af uit de secondaire ID-kolom.
+// Bijv. "locatie_id" → itereer MetaRegistry op zoek naar entiteit met IDKolom "id" en Tabelnaam "locatie".
+func doelEntiteitVanSecondaireKolom(kolom string) string {
+	// Heuristiek: zoek entiteiten waarvan de EntiteitIDKolom of tabelnaam + "_id" matcht.
+	for _, meta := range model.MetaRegistry {
+		if meta.Metatype != model.MetatypeEntiteit {
+			continue
+		}
+		verwacht := meta.Tabelnaam + "_id"
+		if verwacht == kolom {
+			return meta.Typenaam
+		}
+	}
+	return ""
+}
+
+// BouwFlatTypeRegistry bouwt een platte lijst van vizSchemaTypeDTO's voor alle types in de MetaRegistry.
+// Als domein niet leeg is wordt gefilterd op types die bij dat domein horen of geen domein hebben.
+func BouwFlatTypeRegistry(domein string) []vizSchemaTypeDTO {
+	typeNamen := make([]string, 0, len(model.MetaRegistry))
+	for typeNaam := range model.MetaRegistry {
+		typeNamen = append(typeNamen, typeNaam)
+	}
+	sort.Strings(typeNamen)
+
+	items := make([]vizSchemaTypeDTO, 0, len(typeNamen))
+	for _, typeNaam := range typeNamen {
+		meta, ok := model.MetaRegistry.GetTypeMeta(typeNaam)
+		if !ok {
+			continue
+		}
+		// Domeinfilter: als domein is opgegeven, alleen types die bij dat domein of het register-domein horen tonen.
+		if domein != "" && meta.Domein != "" && meta.Domein != domein && meta.Domein != "register" {
+			continue
+		}
+		items = append(items, vizSchemaTypeDTOVanMeta(meta))
+	}
+	return items
+}
+
 func MaakVizSchemaHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Sorteer voor stabiele output (fijn voor frontend en tests).
-		typeNamen := make([]string, 0, len(model.MetaRegistry))
-		for typeNaam := range model.MetaRegistry {
-			typeNamen = append(typeNamen, typeNaam)
-		}
-		sort.Strings(typeNamen)
-
-		items := make([]vizSchemaTypeDTO, 0, len(typeNamen))
-		for _, typeNaam := range typeNamen {
-			meta, ok := model.MetaRegistry.GetTypeMeta(typeNaam)
-			if !ok {
-				continue
-			}
-
-			item := vizSchemaTypeDTO{
-				Typenaam:    meta.Typenaam,
-				Klassenaam:  meta.Klassenaam,
-				Description: meta.Description,
-				Metatype:    meta.Metatype,
-				GESubtype:   string(meta.GESubtype),
-				IsMaterieel: meta.IsMaterieel,
-				Kleur:       meta.Kleur,
-				Veldnaam:    meta.Veldnaam,
-				Padnaam:     meta.Padnaam,
-				Meervoud:    meta.Meervoud,
-				Velden:      reflectedVeldenVoorMeta(meta),
-				Tabelnaam:   meta.Tabelnaam,
-				// Kolom-namen vertalen naar JSON-veldnamen zodat de frontend ze direct als property kan gebruiken.
-				IDKolom:                   jsonNaamVoorBunKolom(meta, meta.IDKolom),
-				IDAutoIncrement:           meta.RelatieveAutoincrement,
-				HeeftPFK:                  meta.HeeftPFK,
-				EntiteitIDKolom:           jsonNaamVoorBunKolom(meta, meta.EntiteitIDKolom),
-				SecondaireEntiteitIDKolom: jsonNaamVoorBunKolom(meta, meta.SecondaireEntiteitIDKolom),
-				BovenliggendTypenaam:      meta.BovenliggendTypenaam,
-			}
-
-			// Achterwaartse compatibiliteit: oudere hardcoded entries hebben nog geen expliciete Meervoud.
-			if item.Meervoud == "" {
-				item.Meervoud = meta.Padnaam
-			}
-
-			if meta.Metatype != model.MetatypeEntiteit {
-				item.Momentvoorkomen = momentvoorkomenNaarString(meta.Momentvoorkomen)
-			}
-
-			if len(meta.OnderliggendeGegevenselementen) > 0 {
-				children := make([]vizSchemaChildDTO, 0, len(meta.OnderliggendeGegevenselementen))
-				for _, child := range meta.OnderliggendeGegevenselementen {
-					children = append(children, vizSchemaChildDTO{
-						Rolnaam:         child.Rolnaam,
-						JSONRolnaam:     child.JSONRolnaam,
-						Doeltype:        child.Doeltype,
-						Momentvoorkomen: momentvoorkomenNaarString(child.Momentvoorkomen),
-					})
-				}
-				item.Onderliggende = children
-			}
-
-			if len(meta.AfgeleideVelden) > 0 {
-				avs := make([]vizSchemaAfgeleidVeldDTO, 0, len(meta.AfgeleideVelden))
-				for _, av := range meta.AfgeleideVelden {
-					avs = append(avs, vizSchemaAfgeleidVeldDTO{
-						Naam:                av.Naam,
-						Description:         av.Description,
-						GoType:              av.GoType,
-						AfleidingsregelTaal: av.AfleidingsregelTaal,
-						Afleidingsregel:     av.Afleidingsregel,
-						IsWeergaveVeld:      av.IsWeergaveVeld,
-					})
-				}
-				item.AfgeleideVelden = avs
-			}
-
-			items = append(items, item)
-		}
+		// Alle types, ongeacht domein (vizSchema is domein-agnostisch).
+		items := BouwFlatTypeRegistry("")
 
 		c.JSON(http.StatusOK, vizSchemaResponse{
 			Versie: "v1",

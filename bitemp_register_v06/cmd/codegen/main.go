@@ -19,6 +19,7 @@ func main() {
 	outputDir := flag.String("output", "model/", "Doeldirectory voor gegenereerde bestanden")
 	prefix := flag.String("prefix", "", "Bestandsnaam-prefix voor gegenereerde bestanden (bijv. 'hr' → hr_modellen_entiteiten.go)")
 	mode := flag.String("mode", "standalone", "Generatiemodus: 'standalone' (eigen var MetaRegistry) of 'additive' (init() voegt toe aan bestaande MetaRegistry)")
+	domein := flag.String("domein", "", "Domeinnaam voor TypeMeta.Domein (bijv. 'np-loc', 'register')")
 	flag.Parse()
 
 	if *inputFile == "" && *fromURL == "" {
@@ -28,6 +29,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "Opties:")
 		fmt.Fprintln(os.Stderr, "  --prefix <naam>   Bestandsprefix (bijv. --prefix hr → hr_modellen_entiteiten.go)")
 		fmt.Fprintln(os.Stderr, "  --mode <modus>    'standalone' (default) of 'additive' (voegt toe via init())")
+		fmt.Fprintln(os.Stderr, "  --domein <naam>   Domeinnaam voor TypeMeta.Domein (bijv. --domein np-loc)")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Tips:")
 		fmt.Fprintln(os.Stderr, "  - De inputfile is niet hardcoded; elk pad mag, model.json is alleen een voorbeeldnaam.")
@@ -73,8 +75,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Printf("Model geladen: versie=%s, %d entiteiten, %d enums, %d datatypes (mode=%s)\n",
-		v3.Versie, len(v3.Entiteiten), len(v3.Enums), len(v3.Datatypes), *mode)
+	fmt.Printf("Model geladen: versie=%s, %d entiteiten, %d enums, %d datatypes (mode=%s, domein=%s)\n",
+		v3.Versie, len(v3.Entiteiten), len(v3.Enums), len(v3.Datatypes), *mode, *domein)
 
 	// Maak de output directory aan als die niet bestaat
 	if err := os.MkdirAll(*outputDir, 0750); err != nil {
@@ -82,28 +84,40 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Bouw codegen-opties op
+	opts := codegenOptions{
+		domein:   *domein,
+		prefix:   *prefix,
+		additive: additive,
+	}
+
 	// Bepaal generatiefuncties op basis van additive mode
-	var genRegistry func(model.V3Model) (string, error)
-	var genDatatypes func(model.V3Model) (string, error)
+	type genFunc = func(model.V3Model, codegenOptions) (string, error)
+	var genRegistry genFunc
+	var genDatatypes genFunc
+	var genEnums genFunc
 	if additive {
 		genRegistry = generateMetaRegistryAdditive
 		genDatatypes = generateDatatypeRegistryAdditive
+		genEnums = generateEnumRegistryAdditive
 	} else {
 		genRegistry = generateMetaRegistry
 		genDatatypes = generateDatatypeRegistry
+		genEnums = generateEnumRegistryStandalone
 	}
 
 	// Genereer alle bestanden
 	files := []struct {
 		naam     string
-		generate func(model.V3Model) (string, error)
+		generate genFunc
 	}{
-		{"modellen_entiteiten.go", generateEntiteiten},
-		{"modellen_ge_rel.go", generateGeRel},
-		{"modellen_methods.go", generateMethods},
-		{"modellen_input.go", generateInput},
+		{"modellen_entiteiten.go", generateEntiteitenWithOpts},
+		{"modellen_ge_rel.go", generateGeRelWithOpts},
+		{"modellen_methods.go", generateMethodsWithOpts},
+		{"modellen_input.go", generateInputWithOpts},
 		{"metaregistry.go", genRegistry},
 		{"datatype_registry.go", genDatatypes},
+		{"enum_registry.go", genEnums},
 	}
 
 	// Prefix toepassen op bestandsnamen
@@ -113,7 +127,7 @@ func main() {
 	}
 
 	for _, f := range files {
-		content, err := f.generate(v3)
+		content, err := f.generate(v3, opts)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Fout bij genereren van %s: %v\n", f.naam, err)
 			os.Exit(1)

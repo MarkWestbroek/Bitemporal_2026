@@ -774,6 +774,7 @@ Deregister U5 and register U6 for entity A:
    - b. de database (liever niet)
 - opnemen in de API's of niet?
 - registratie- en tijdlijn-views betere layout m.b.v. weergave-velden, als die er zijn, anders gewoon id
+- maken voor NP naam incl. naamgebruik
 
 
 16 *Referentielijsten* ✅ DONE (maart 2026)
@@ -824,6 +825,7 @@ Deregister U5 and register U6 for entity A:
 35 Formulieren
 - bewaar kan ook voor alle GEn ipv per stuk. Typisch is dat ook zo.
 - bewaar of corrigeer is anders. Beide mogelijk maken. Ongedaan maken via een bekijk registratie moet ook kunnen. Daar wil je misschien ook de historie netjes inzien.
+- Bereikbaarheid gaat nu nergens heen: uitleggen primaire en secundaire ID + lijst beschikbare adressen (had ik al uitgelegd)
 
 40 3D weergave model en tijdslijnen :-)
 

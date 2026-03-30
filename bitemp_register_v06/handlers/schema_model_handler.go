@@ -117,6 +117,10 @@ func schemaCodeResponse(apiBron string, domein string) gin.H {
 		"status":             "code",
 		"tijdstip":           nil,
 		"model":              v3,
+		// Platte type-registry: elke MetaRegistry-entry als flat DTO,
+		// inclusief ge_subtype, onderliggende, velden (met $ref en datatype).
+		// Gefilterd op domein wanneer opgegeven.
+		"types": BouwFlatTypeRegistry(domein),
 	}
 }
 

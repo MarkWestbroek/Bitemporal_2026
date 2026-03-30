@@ -4,11 +4,16 @@ import { safeArray } from "../shared/schemaUtils";
 const SchemaContext = createContext(null);
 
 /**
- * SchemaProvider — haalt het vizSchema eenmaal op en maakt het beschikbaar
- * aan alle editor-componenten via React Context.
+ * SchemaProvider — haalt het schema eenmaal op via /api/schema/model/code
+ * en maakt het beschikbaar aan alle editor-componenten via React Context.
+ *
+ * De response bevat:
+ * - types: platte lijst van alle MetaRegistry-entries (met velden incl. ref, datatype)
+ * - model: hiërarchisch V3 model (beschikbaar voor toekomstig gebruik)
  */
 export function SchemaProvider({ baseUrl, children }) {
-  const [vizSchema, setVizSchema] = useState(null);
+  const [types, setTypes] = useState([]);
+  const [v3Model, setV3Model] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -17,14 +22,15 @@ export function SchemaProvider({ baseUrl, children }) {
     setLoading(true);
     setError(null);
 
-    fetch(`${baseUrl}/api/viz/schema`)
+    fetch(`${baseUrl}/api/schema/model/code`)
       .then((res) => {
         if (!res.ok) throw new Error(`Schema HTTP ${res.status}`);
         return res.json();
       })
       .then((data) => {
         if (!cancelled) {
-          setVizSchema(data);
+          setTypes(safeArray(data?.types));
+          setV3Model(data?.model || null);
           setLoading(false);
         }
       })
@@ -38,44 +44,47 @@ export function SchemaProvider({ baseUrl, children }) {
     return () => { cancelled = true; };
   }, [baseUrl]);
 
-  // Lookup maps
+  // Lookup: typenaam → typeMeta
   const typeMetaByTypenaam = useMemo(() => {
     const result = {};
-    safeArray(vizSchema?.types).forEach((item) => {
+    types.forEach((item) => {
       if (item?.typenaam) result[item.typenaam] = item;
     });
     return result;
-  }, [vizSchema]);
+  }, [types]);
 
+  // Lookup: padnaam / meervoud / veldnaam → typeMeta
   const typeMetaByPadnaam = useMemo(() => {
     const result = {};
-    safeArray(vizSchema?.types).forEach((item) => {
-      // meervoud = Go Padnaam (URL-pad), veldnaam = JSON field name
+    types.forEach((item) => {
       if (item?.padnaam) result[item.padnaam] = item;
       if (item?.meervoud) result[item.meervoud] = item;
       if (item?.veldnaam) result[item.veldnaam] = item;
     });
     return result;
-  }, [vizSchema]);
+  }, [types]);
 
+  // Entiteiten voor navigatie (exclusief referentielijsten en referentielijst-items)
   const entiteitTypes = useMemo(() => {
-    return safeArray(vizSchema?.types).filter(
-      (t) => t?.metatype === "entiteit" && t?.entiteitSubtype !== "referentielijst" && t?.entiteitSubtype !== "referentielijst_item"
-    );
-  }, [vizSchema]);
+    return types.filter((t) => {
+      if (t?.metatype !== "entiteit") return false;
+      const sub = t.entiteitSubtype || "";
+      return sub !== "referentielijst" && sub !== "referentielijst_item";
+    });
+  }, [types]);
 
   const value = useMemo(
     () => ({
-      vizSchema,
       loading,
       error,
       baseUrl,
       typeMetaByTypenaam,
       typeMetaByPadnaam,
       entiteitTypes,
-      allTypes: safeArray(vizSchema?.types),
+      allTypes: types,
+      v3Model,
     }),
-    [vizSchema, loading, error, baseUrl, typeMetaByTypenaam, typeMetaByPadnaam, entiteitTypes]
+    [loading, error, baseUrl, typeMetaByTypenaam, typeMetaByPadnaam, entiteitTypes, types, v3Model]
   );
 
   return <SchemaContext.Provider value={value}>{children}</SchemaContext.Provider>;
