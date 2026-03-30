@@ -10,7 +10,7 @@ import (
 // generateDatatypeRegistry genereert datatype_registry.go met alle custom gegevenstypen
 // uit het V3 model, inclusief validatie-, normalisatie- en weergave-metadata.
 // Standalone modus: genereert een eigen var DatatypeRegistry.
-func generateDatatypeRegistry(v3 model.V3Model) (string, error) {
+func generateDatatypeRegistry(v3 model.V3Model, _ codegenOptions) (string, error) {
 	var b strings.Builder
 	b.WriteString(fileHeader("DatatypeRegistry — custom gegevenstypen met validatie en weergave.\n// Gegenereerd door cmd/codegen — niet handmatig bewerken."))
 
@@ -30,7 +30,7 @@ func generateDatatypeRegistry(v3 model.V3Model) (string, error) {
 
 // generateDatatypeRegistryAdditive genereert een additive datatype_registry die
 // entries toevoegt aan de bestaande DatatypeRegistry via een init() functie.
-func generateDatatypeRegistryAdditive(v3 model.V3Model) (string, error) {
+func generateDatatypeRegistryAdditive(v3 model.V3Model, opts codegenOptions) (string, error) {
 	var b strings.Builder
 	b.WriteString(fileHeader("Additieve DatatypeRegistry-entries — voegt datatypes toe aan de bestaande DatatypeRegistry.\n// Gegenereerd door cmd/codegen — niet handmatig bewerken."))
 
@@ -39,7 +39,8 @@ func generateDatatypeRegistryAdditive(v3 model.V3Model) (string, error) {
 		return b.String(), nil
 	}
 
-	b.WriteString("func init() {\n")
+	funcName := opts.initFuncName("DatatypeRegistry")
+	b.WriteString(fmt.Sprintf("func %s() {\n", funcName))
 	b.WriteString("\tDatatypeRegistry = append(DatatypeRegistry,\n")
 	for _, dt := range v3.Datatypes {
 		writeDatatypeEntry(&b, dt, true)
@@ -65,6 +66,12 @@ func writeDatatypeEntry(b *strings.Builder, dt model.V3Datatype, typed bool) {
 	b.WriteString(fmt.Sprintf("\t\tBasistype: %q,\n", dt.Basistype))
 	if dt.Format != "" {
 		b.WriteString(fmt.Sprintf("\t\tFormat:    %q,\n", dt.Format))
+	}
+	if dt.Domein != "" {
+		b.WriteString(fmt.Sprintf("\t\tDomein:    %q,\n", dt.Domein))
+	}
+	if dt.Positie != nil {
+		b.WriteString(fmt.Sprintf("\t\tPositie:   &V3Positie{X: %g, Y: %g},\n", dt.Positie.X, dt.Positie.Y))
 	}
 
 	if dt.Validatie != nil {

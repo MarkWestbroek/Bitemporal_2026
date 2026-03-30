@@ -34,7 +34,7 @@ func generateEntiteiten(v3 model.V3Model) (string, error) {
 		// Bun relatie-velden naar onderliggende hubs
 		entIDKolom := strings.ToLower(ent.Typenaam) + "_id"
 		for _, ge := range ent.Gegevenselementen {
-			hubType := ent.Typenaam + "_" + ge.Naam
+			hubType := geHubTypeName(ent, ge.Naam)
 			rolnaam := toPascalCase(ge.Meervoud)
 			if rolnaam == "" {
 				rolnaam = ge.Naam + "s"
@@ -106,7 +106,7 @@ func generateGeRel(v3 model.V3Model) (string, error) {
 
 		// Gegevenselementen
 		for _, ge := range ent.Gegevenselementen {
-			hubType := ent.Typenaam + "_" + ge.Naam
+			hubType := geHubTypeName(ent, ge.Naam)
 			generateHubStruct(&b, hubType, ent.Typenaam, entIDKolom, "gegevenselement", ge.IsMaterieel, ge.Description, "")
 			generateDataStruct(&b, hubType, ent.Typenaam, entIDKolom, ge.Velden, ge.Description)
 			if ge.IsMaterieel {

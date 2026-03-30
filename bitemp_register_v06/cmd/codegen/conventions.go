@@ -77,6 +77,17 @@ func toPascalCase(s string) string {
 
 // ---- Afgeleid metatype ----
 
+// geHubTypeName bepaalt de type-naam voor een GE-hub.
+// Voor referentielijst-entities (EntiteitSubtype != "") wordt de GE-naam direct gebruikt
+// (bijv. "Landcode"), omdat die al volledig gekwalificeerd is.
+// Voor normale entities wordt de entiteitsnaam als prefix toegevoegd (bijv. "NatuurlijkPersoon_Naam").
+func geHubTypeName(ent model.V3Entiteit, geNaam string) string {
+	if ent.EntiteitSubtype != "" {
+		return geNaam
+	}
+	return ent.Typenaam + "_" + geNaam
+}
+
 // DerivedType bevat alle afgeleide informatie voor een type (hub, data, aanvang, einde, entiteit).
 type DerivedType struct {
 	Typenaam               string
@@ -99,16 +110,20 @@ type DerivedType struct {
 
 // deriveEntiteit leidt alle metadata af voor een entiteit.
 func deriveEntiteit(ent model.V3Entiteit) DerivedType {
+	// V3 meervoud is URL-padnaam (snake_case).
+	// Display meervoud: underscores → spaties.
+	padnaam := ent.Meervoud
+	meervoud := strings.ReplaceAll(ent.Meervoud, "_", " ")
 	return DerivedType{
 		Typenaam:    ent.Typenaam,
 		Klassenaam:  ent.Typenaam,
-		Meervoud:    ent.Meervoud,
+		Meervoud:    meervoud,
 		Metatype:    "entiteit",
 		GESubtype:   "",
 		Tabelnaam:   strings.ToLower(ent.Typenaam),
 		IDKolom:     "id",
 		HeeftPFK:    false,
-		Padnaam:     ent.Meervoud,
+		Padnaam:     padnaam,
 		Veldnaam:    strings.ToLower(ent.Typenaam),
 		IsMaterieel: ent.IsMaterieel,
 	}

@@ -31,7 +31,7 @@ func generateMethods(v3 model.V3Model) (string, error) {
 
 	for _, ent := range v3.Entiteiten {
 		for _, ge := range ent.Gegevenselementen {
-			hubType := ent.Typenaam + "_" + ge.Naam
+			hubType := geHubTypeName(ent, ge.Naam)
 			rv := hubReceiverVar(ent.Typenaam, ge.Naam)
 			writeInterfaceMethods(&b, hubType, rv, "MetatypeGegevenselement", "Rel_ID", "Rel_ID", false)
 		}
@@ -48,7 +48,7 @@ func generateMethods(v3 model.V3Model) (string, error) {
 
 	for _, ent := range v3.Entiteiten {
 		for _, ge := range ent.Gegevenselementen {
-			dataType := ent.Typenaam + "_" + ge.Naam + "_Data"
+			dataType := geHubTypeName(ent, ge.Naam) + "_Data"
 			writeInterfaceMethods(&b, dataType, "d", "MetatypeGegevenselement", "Versie", "Versie", false)
 		}
 		for _, rel := range ent.Relaties {
@@ -83,7 +83,7 @@ func generateMethods(v3 model.V3Model) (string, error) {
 			if !ge.IsMaterieel {
 				continue
 			}
-			hubType := ent.Typenaam + "_" + ge.Naam
+			hubType := geHubTypeName(ent, ge.Naam)
 			for _, suffix := range []string{"Aanvang", "Einde"} {
 				typeName := hubType + "_" + suffix
 				rv := receiverVar(typeName)
@@ -109,7 +109,7 @@ func generateMethods(v3 model.V3Model) (string, error) {
 
 	for _, ent := range v3.Entiteiten {
 		for _, ge := range ent.Gegevenselementen {
-			inputType := ent.Typenaam + "_" + ge.Naam + "_Input"
+			inputType := geHubTypeName(ent, ge.Naam) + "_Input"
 			writeInterfaceMethods(&b, inputType, "i", "MetatypeGegevenselement", "Rel_ID", "Rel_ID", true)
 		}
 		for _, rel := range ent.Relaties {
@@ -135,7 +135,7 @@ func generateMethods(v3 model.V3Model) (string, error) {
 	for _, ent := range v3.Entiteiten {
 		entIDField := ent.Typenaam + "_ID"
 		for _, ge := range ent.Gegevenselementen {
-			hubType := ent.Typenaam + "_" + ge.Naam
+			hubType := geHubTypeName(ent, ge.Naam)
 			writeHubGeefOnderliggende(&b, hubType, entIDField, ge.IsMaterieel)
 		}
 		for _, rel := range ent.Relaties {
@@ -185,7 +185,7 @@ func writeEntiteitGeefOnderliggende(b *strings.Builder, ent model.V3Entiteit) {
 
 	// GE's
 	for _, ge := range ent.Gegevenselementen {
-		hubType := ent.Typenaam + "_" + ge.Naam
+		hubType := geHubTypeName(ent, ge.Naam)
 		sliceField := toPascalCase(ge.Meervoud)
 		if sliceField == "" {
 			sliceField = ge.Naam + "s"

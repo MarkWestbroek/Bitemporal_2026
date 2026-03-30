@@ -51,7 +51,20 @@ func RegisterRelativeIDTrigger(ctx context.Context, db *bun.DB, model interface{
         FOR EACH ROW EXECUTE FUNCTION fn_rel_id_%[1]s();
     `, tableName, parentCol, relativeCol)
 
-	_, err := db.ExecContext(ctx, sql)
+	if _, err := db.ExecContext(ctx, sql); err != nil {
+		return err
+	}
+
+	// Verwijder eventuele SEQUENCE-default op de relatieve kolom.
+	// Bun's autoincrement-tag genereert BIGSERIAL → nextval(..._seq),
+	// die vóór de BEFORE INSERT trigger evalueert en daardoor de
+	// trigger-check (IS NULL OR = 0) omzeilt. Door de default weg
+	// te halen, ontvangt de trigger NULL en kan hij correct relatief
+	// ophogen. DROP DEFAULT is idempotent.
+	dropDefault := fmt.Sprintf(
+		`ALTER TABLE "%s" ALTER COLUMN "%s" DROP DEFAULT;`,
+		tableName, relativeCol)
+	_, err := db.ExecContext(ctx, dropDefault)
 	return err
 }
 
@@ -78,6 +91,15 @@ func RegisterRelativeIDTriggerComposite(ctx context.Context, db *bun.DB,
         FOR EACH ROW EXECUTE FUNCTION fn_rel_id_%[1]s();
     `, tableName, parentCol1, parentCol2, relativeCol)
 
-	_, err := db.ExecContext(ctx, sql)
+	if _, err := db.ExecContext(ctx, sql); err != nil {
+		return err
+	}
+
+	// Verwijder eventuele SEQUENCE-default — zie toelichting in
+	// RegisterRelativeIDTrigger hierboven.
+	dropDefault := fmt.Sprintf(
+		`ALTER TABLE "%s" ALTER COLUMN "%s" DROP DEFAULT;`,
+		tableName, relativeCol)
+	_, err := db.ExecContext(ctx, dropDefault)
 	return err
 }

@@ -19,7 +19,7 @@ func generateInput(v3 model.V3Model) (string, error) {
 
 		// GE inputs
 		for _, ge := range ent.Gegevenselementen {
-			inputType := ent.Typenaam + "_" + ge.Naam + "_Input"
+			inputType := geHubTypeName(ent, ge.Naam) + "_Input"
 			b.WriteString(fmt.Sprintf("type %s struct {\n", inputType))
 
 			// Plumbing: ent_id + rel_id

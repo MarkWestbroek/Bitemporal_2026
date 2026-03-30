@@ -2,6 +2,7 @@ package model
 
 import (
 	"reflect"
+	"sort"
 	"strings"
 	"time"
 )
@@ -232,8 +233,15 @@ func ExportMetaRegistryToV3(domein ...string) V3Model {
 	// Verzamel enum-types en maak een set om dubbelen te voorkomen
 	enumsSeen := map[string]bool{}
 
-	// Verzamel entiteiten
-	for _, meta := range MetaRegistry {
+	// Verzamel entiteiten — gesorteerd op typenaam voor deterministische output
+	sortedKeys := make([]string, 0, len(MetaRegistry))
+	for key := range MetaRegistry {
+		sortedKeys = append(sortedKeys, key)
+	}
+	sort.Strings(sortedKeys)
+
+	for _, key := range sortedKeys {
+		meta := MetaRegistry[key]
 		if meta.Metatype != MetatypeEntiteit {
 			continue
 		}
@@ -284,7 +292,8 @@ func ExportMetaRegistryToV3(domein ...string) V3Model {
 
 	// Verzamel referentielijst-instanties uit MetaRegistry entries met ReferentielijstInstantie.
 	instantieSeen := map[string]bool{}
-	for _, meta := range MetaRegistry {
+	for _, key := range sortedKeys {
+		meta := MetaRegistry[key]
 		if meta.ReferentielijstInstantie != "" && !instantieSeen[meta.ReferentielijstInstantie] {
 			instantieSeen[meta.ReferentielijstInstantie] = true
 			inst := V3ReferentielijstInstantie{
@@ -438,8 +447,10 @@ func buildV3Enum(goTypeName string) *V3Enum {
 		BaseType: "string",
 	}
 	for _, w := range waarden {
+		// Strip tekens die ongeldig zijn in Go-identifiers (bijv. koppeltekens)
+		cleanW := strings.ReplaceAll(w, "-", "")
 		enum.Waarden = append(enum.Waarden, V3EnumWaarde{
-			ConstNaam: goTypeName + w,
+			ConstNaam: goTypeName + cleanW,
 			Waarde:    w,
 		})
 	}

@@ -2,8 +2,344 @@
     "version":  1,
     "exported_at":  "2026-03-25T20:26:18.394Z",
     "source":  "synthetic://generated-6x-np-loc-woonadres",
-    "count":  18,
+    "count":  24,
     "entries":  [
+                    {
+                        "registratie_id":  101,
+                        "registratietype":  "registratie",
+                        "tijdstip":  "2026-03-26T08:54:00.000Z",
+                        "request_path":  "/registratie/",
+                        "request_method":  "POST",
+                        "request_body":  {
+                                             "registratie":  {
+                                                                 "id":  0,
+                                                                 "opmerking":  "Synthetische NatuurlijkPersoon NP=1",
+                                                                 "registratietype":  "registratie",
+                                                                 "tijdstip":  "0001-01-01T00:00:00Z"
+                                                             },
+                                             "wijzigingen":  [
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "natuurlijkpersoon":  {
+                                                                                                              "id":  1
+                                                                                                          }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "persoonsidentificatie":  {
+                                                                                                                  "natuurlijkpersoon_id":  1,
+                                                                                                                  "bsn":  "123456789",
+                                                                                                                  "ingezetene":  true
+                                                                                                              }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "naam":  {
+                                                                                                 "natuurlijkpersoon_id":  1,
+                                                                                                 "voorletters":  "S.",
+                                                                                                 "roepnaam":  "Sanne",
+                                                                                                 "tussenvoegsel":  "van",
+                                                                                                 "achternaam":  "Dalen"
+                                                                                             }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "burgerschap":  {
+                                                                                                        "natuurlijkpersoon_id":  1,
+                                                                                                        "landcode":  "NL",
+                                                                                                        "nationaliteit":  "Nederlandse"
+                                                                                                    }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "partnernaam":  {
+                                                                                                        "natuurlijkpersoon_id":  1,
+                                                                                                        "achternaam":  "Bos"
+                                                                                                    }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "naamgebruik":  {
+                                                                                                        "natuurlijkpersoon_id":  1,
+                                                                                                        "naamgebruik":  "EigenNaam"
+                                                                                                    }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "natuurlijkpersoon_aanvang":  {
+                                                                                                                      "natuurlijkpersoon_id":  1,
+                                                                                                                      "datum":  "1992-03-14"
+                                                                                                                  }
+                                                                                }
+                                                                 }
+                                                             ]
+                                         },
+                        "expected_response_code":  201,
+                        "expected_response_body":  null
+                    },
+                    {
+                        "registratie_id":  102,
+                        "registratietype":  "registratie",
+                        "tijdstip":  "2026-03-26T08:55:00.000Z",
+                        "request_path":  "/registratie/",
+                        "request_method":  "POST",
+                        "request_body":  {
+                                             "registratie":  {
+                                                                 "id":  0,
+                                                                 "opmerking":  "Synthetische Locatie LOC=1",
+                                                                 "registratietype":  "registratie",
+                                                                 "tijdstip":  "0001-01-01T00:00:00Z"
+                                                             },
+                                             "wijzigingen":  [
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "locatie":  {
+                                                                                                    "id":  1
+                                                                                                }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "adres":  {
+                                                                                                  "locatie_id":  1,
+                                                                                                  "straatnaam":  "Esdoornstraat",
+                                                                                                  "huisnummer":  "45",
+                                                                                                  "postcode":  "3511AA",
+                                                                                                  "plaats":  "Utrecht"
+                                                                                              }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "baglocatie":  {
+                                                                                                       "locatie_id":  1,
+                                                                                                       "adresaanduiding":  "0363200000000001"
+                                                                                                   }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "locatie_aanvang":  {
+                                                                                                            "locatie_id":  1,
+                                                                                                            "datum":  "2018-04-01"
+                                                                                                        }
+                                                                                }
+                                                                 }
+                                                             ]
+                                         },
+                        "expected_response_code":  201,
+                        "expected_response_body":  null
+                    },
+                    {
+                        "registratie_id":  103,
+                        "registratietype":  "registratie",
+                        "tijdstip":  "2026-03-26T08:56:00.000Z",
+                        "request_path":  "/registratie/",
+                        "request_method":  "POST",
+                        "request_body":  {
+                                             "registratie":  {
+                                                                 "id":  0,
+                                                                 "opmerking":  "Synthetische woonadres-link NP=1 -\u003e LOC=1",
+                                                                 "registratietype":  "registratie",
+                                                                 "tijdstip":  "0001-01-01T00:00:00Z"
+                                                             },
+                                             "wijzigingen":  [
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "bereikbaarheid":  {
+                                                                                                           "natuurlijkpersoon_id":  1,
+                                                                                                           "locatie_id":  1,
+                                                                                                           "soort":  "Woonadres"
+                                                                                                       }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "bereikbaarheid_aanvang":  {
+                                                                                                                   "natuurlijkpersoon_id":  1,
+                                                                                                                   "datum":  "2022-05-01"
+                                                                                                               }
+                                                                                }
+                                                                 }
+                                                             ]
+                                         },
+                        "expected_response_code":  201,
+                        "expected_response_body":  null
+                    },
+                    {
+                        "registratie_id":  104,
+                        "registratietype":  "registratie",
+                        "tijdstip":  "2026-03-26T08:57:00.000Z",
+                        "request_path":  "/registratie/",
+                        "request_method":  "POST",
+                        "request_body":  {
+                                             "registratie":  {
+                                                                 "id":  0,
+                                                                 "opmerking":  "Synthetische NatuurlijkPersoon NP=2",
+                                                                 "registratietype":  "registratie",
+                                                                 "tijdstip":  "0001-01-01T00:00:00Z"
+                                                             },
+                                             "wijzigingen":  [
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "natuurlijkpersoon":  {
+                                                                                                              "id":  2
+                                                                                                          }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "persoonsidentificatie":  {
+                                                                                                                  "natuurlijkpersoon_id":  2,
+                                                                                                                  "bsn":  "223456789",
+                                                                                                                  "ingezetene":  false
+                                                                                                              }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "naam":  {
+                                                                                                 "natuurlijkpersoon_id":  2,
+                                                                                                 "voorletters":  "T.",
+                                                                                                 "roepnaam":  "Timo",
+                                                                                                 "tussenvoegsel":  "de",
+                                                                                                 "achternaam":  "Ruijter"
+                                                                                             }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "burgerschap":  {
+                                                                                                        "natuurlijkpersoon_id":  2,
+                                                                                                        "landcode":  "NL",
+                                                                                                        "nationaliteit":  "Nederlandse"
+                                                                                                    }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "partnernaam":  {
+                                                                                                        "natuurlijkpersoon_id":  2,
+                                                                                                        "achternaam":  "Kramer"
+                                                                                                    }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "naamgebruik":  {
+                                                                                                        "natuurlijkpersoon_id":  2,
+                                                                                                        "naamgebruik":  "PartnerNaam"
+                                                                                                    }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "natuurlijkpersoon_aanvang":  {
+                                                                                                                      "natuurlijkpersoon_id":  2,
+                                                                                                                      "datum":  "1988-11-02"
+                                                                                                                  }
+                                                                                }
+                                                                 }
+                                                             ]
+                                         },
+                        "expected_response_code":  201,
+                        "expected_response_body":  null
+                    },
+                    {
+                        "registratie_id":  105,
+                        "registratietype":  "registratie",
+                        "tijdstip":  "2026-03-26T08:58:00.000Z",
+                        "request_path":  "/registratie/",
+                        "request_method":  "POST",
+                        "request_body":  {
+                                             "registratie":  {
+                                                                 "id":  0,
+                                                                 "opmerking":  "Synthetische Locatie LOC=2",
+                                                                 "registratietype":  "registratie",
+                                                                 "tijdstip":  "0001-01-01T00:00:00Z"
+                                                             },
+                                             "wijzigingen":  [
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "locatie":  {
+                                                                                                    "id":  2
+                                                                                                }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "adres":  {
+                                                                                                  "locatie_id":  2,
+                                                                                                  "straatnaam":  "Beukenhof",
+                                                                                                  "huisnummer":  "7",
+                                                                                                  "postcode":  "3521ZX",
+                                                                                                  "plaats":  "Utrecht"
+                                                                                              }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "baglocatie":  {
+                                                                                                       "locatie_id":  2,
+                                                                                                       "adresaanduiding":  "0363200000000002"
+                                                                                                   }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "locatie_aanvang":  {
+                                                                                                            "locatie_id":  2,
+                                                                                                            "datum":  "2020-06-15"
+                                                                                                        }
+                                                                                }
+                                                                 }
+                                                             ]
+                                         },
+                        "expected_response_code":  201,
+                        "expected_response_body":  null
+                    },
+                    {
+                        "registratie_id":  106,
+                        "registratietype":  "registratie",
+                        "tijdstip":  "2026-03-26T08:59:00.000Z",
+                        "request_path":  "/registratie/",
+                        "request_method":  "POST",
+                        "request_body":  {
+                                             "registratie":  {
+                                                                 "id":  0,
+                                                                 "opmerking":  "Synthetische woonadres-link NP=2 -\u003e LOC=2",
+                                                                 "registratietype":  "registratie",
+                                                                 "tijdstip":  "0001-01-01T00:00:00Z"
+                                                             },
+                                             "wijzigingen":  [
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "bereikbaarheid":  {
+                                                                                                           "natuurlijkpersoon_id":  2,
+                                                                                                           "locatie_id":  2,
+                                                                                                           "soort":  "Woonadres"
+                                                                                                       }
+                                                                                }
+                                                                 },
+                                                                 {
+                                                                     "opvoer":  {
+                                                                                    "bereikbaarheid_aanvang":  {
+                                                                                                                   "natuurlijkpersoon_id":  2,
+                                                                                                                   "datum":  "2023-01-10"
+                                                                                                               }
+                                                                                }
+                                                                 }
+                                                             ]
+                                         },
+                        "expected_response_code":  201,
+                        "expected_response_body":  null
+                    },
                     {
                         "registratie_id":  1,
                         "registratietype":  "registratie",

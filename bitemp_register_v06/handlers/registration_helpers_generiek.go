@@ -16,6 +16,12 @@ import (
 
 // handleRepresentatieOntOpvoer maakt een eerdere opvoer ongedaan door opvoer weer leeg te maken.
 // De Wijziging bevat string-ID's; daarom converteren we ID-waarden eerst naar het kolomtype uit de metaregistry/DBFactory.
+//
+// Voor versie-based types (_Data/_Aanvang/_Einde) slaat de wijziging op:
+//   - representatie_id = rel_id van de bovenliggende hub (leeg bij entity-level plumbing)
+//   - versie            = de daadwerkelijke versie-waarde
+//
+// Voor andere types is representatie_id direct de waarde van IDKolom.
 func handleRepresentatieOntOpvoer(c *gin.Context, tx bun.Tx, wijziging model.Wijziging) error {
 	typeName := wijziging.Representatienaam
 	targetIDRaw := wijziging.RepresentatieID
@@ -27,8 +33,8 @@ func handleRepresentatieOntOpvoer(c *gin.Context, tx bun.Tx, wijziging model.Wij
 		targetIDRaw = wijziging.EntiteitID
 	}
 
-	if typeName == "" || targetIDRaw == "" {
-		return fmt.Errorf("HANDLER: ont-opvoer mist type of ID in wijziging %d", wijziging.ID)
+	if typeName == "" {
+		return fmt.Errorf("HANDLER: ont-opvoer mist type in wijziging %d", wijziging.ID)
 	}
 
 	meta, ok := model.MetaRegistry.GetTypeMeta(typeName)
@@ -36,9 +42,21 @@ func handleRepresentatieOntOpvoer(c *gin.Context, tx bun.Tx, wijziging model.Wij
 		return fmt.Errorf("HANDLER: onbekend type voor ont-opvoer: %s", typeName)
 	}
 
-	typedID, err := parseStringNaarKolomType(meta, meta.IDKolom, targetIDRaw)
-	if err != nil {
-		return fmt.Errorf("HANDLER: ongeldige ID voor ont-opvoer (%s.%s=%q): %v", meta.Tabelnaam, meta.IDKolom, targetIDRaw, err)
+	// Versie-based types: wijziging.Versie bevat de echte versie; RepresentatieID is rel_id.
+	isVersieType := meta.IDKolom == "versie" && wijziging.Versie != nil
+
+	var typedID any
+	if isVersieType {
+		typedID = *wijziging.Versie
+	} else {
+		if targetIDRaw == "" {
+			return fmt.Errorf("HANDLER: ont-opvoer mist ID in wijziging %d", wijziging.ID)
+		}
+		var err error
+		typedID, err = parseStringNaarKolomType(meta, meta.IDKolom, targetIDRaw)
+		if err != nil {
+			return fmt.Errorf("HANDLER: ongeldige ID voor ont-opvoer (%s.%s=%q): %v", meta.Tabelnaam, meta.IDKolom, targetIDRaw, err)
+		}
 	}
 
 	query := tx.NewUpdate().
@@ -63,6 +81,18 @@ func handleRepresentatieOntOpvoer(c *gin.Context, tx bun.Tx, wijziging model.Wij
 		query = query.Where(fmt.Sprintf("%s = ?", meta.EntiteitIDKolom), typedEntiteitID)
 	}
 
+	// Hub-kinderen: voeg rel_id toe (representatie_id in de wijziging is de rel_id).
+	if isVersieType && wijziging.RepresentatieID != "" {
+		parentMeta, parentOK := model.MetaRegistry.GetTypeMeta(meta.BovenliggendTypenaam)
+		if parentOK && parentMeta.IDKolom != "" {
+			typedRelID, err := parseStringNaarKolomType(parentMeta, parentMeta.IDKolom, wijziging.RepresentatieID)
+			if err != nil {
+				return fmt.Errorf("HANDLER: ongeldige rel_id voor ont-opvoer (%s.%s=%q): %v", meta.Tabelnaam, parentMeta.IDKolom, wijziging.RepresentatieID, err)
+			}
+			query = query.Where(fmt.Sprintf("%s = ?", parentMeta.IDKolom), typedRelID)
+		}
+	}
+
 	result, err := query.Exec(c.Request.Context())
 	if err != nil {
 		return fmt.Errorf("HANDLER: ont-opvoer update mislukt voor %s: %v", meta.Typenaam, err)
@@ -77,6 +107,7 @@ func handleRepresentatieOntOpvoer(c *gin.Context, tx bun.Tx, wijziging model.Wij
 }
 
 // handleRepresentatieOntAfvoer maakt een eerdere afvoer ongedaan door afvoer weer leeg te maken.
+// Zie handleRepresentatieOntOpvoer voor de toelichting op versie-based types.
 func handleRepresentatieOntAfvoer(c *gin.Context, tx bun.Tx, wijziging model.Wijziging) error {
 	typeName := wijziging.Representatienaam
 	targetIDRaw := wijziging.RepresentatieID
@@ -86,8 +117,8 @@ func handleRepresentatieOntAfvoer(c *gin.Context, tx bun.Tx, wijziging model.Wij
 		targetIDRaw = wijziging.EntiteitID
 	}
 
-	if typeName == "" || targetIDRaw == "" {
-		return fmt.Errorf("HANDLER: ont-afvoer mist type of ID in wijziging %d", wijziging.ID)
+	if typeName == "" {
+		return fmt.Errorf("HANDLER: ont-afvoer mist type in wijziging %d", wijziging.ID)
 	}
 
 	meta, ok := model.MetaRegistry.GetTypeMeta(typeName)
@@ -95,9 +126,20 @@ func handleRepresentatieOntAfvoer(c *gin.Context, tx bun.Tx, wijziging model.Wij
 		return fmt.Errorf("HANDLER: onbekend type voor ont-afvoer: %s", typeName)
 	}
 
-	typedID, err := parseStringNaarKolomType(meta, meta.IDKolom, targetIDRaw)
-	if err != nil {
-		return fmt.Errorf("HANDLER: ongeldige ID voor ont-afvoer (%s.%s=%q): %v", meta.Tabelnaam, meta.IDKolom, targetIDRaw, err)
+	isVersieType := meta.IDKolom == "versie" && wijziging.Versie != nil
+
+	var typedID any
+	if isVersieType {
+		typedID = *wijziging.Versie
+	} else {
+		if targetIDRaw == "" {
+			return fmt.Errorf("HANDLER: ont-afvoer mist ID in wijziging %d", wijziging.ID)
+		}
+		var err error
+		typedID, err = parseStringNaarKolomType(meta, meta.IDKolom, targetIDRaw)
+		if err != nil {
+			return fmt.Errorf("HANDLER: ongeldige ID voor ont-afvoer (%s.%s=%q): %v", meta.Tabelnaam, meta.IDKolom, targetIDRaw, err)
+		}
 	}
 
 	query := tx.NewUpdate().
@@ -119,6 +161,18 @@ func handleRepresentatieOntAfvoer(c *gin.Context, tx bun.Tx, wijziging model.Wij
 		}
 
 		query = query.Where(fmt.Sprintf("%s = ?", meta.EntiteitIDKolom), typedEntiteitID)
+	}
+
+	// Hub-kinderen: voeg rel_id toe (representatie_id in de wijziging is de rel_id).
+	if isVersieType && wijziging.RepresentatieID != "" {
+		parentMeta, parentOK := model.MetaRegistry.GetTypeMeta(meta.BovenliggendTypenaam)
+		if parentOK && parentMeta.IDKolom != "" {
+			typedRelID, err := parseStringNaarKolomType(parentMeta, parentMeta.IDKolom, wijziging.RepresentatieID)
+			if err != nil {
+				return fmt.Errorf("HANDLER: ongeldige rel_id voor ont-afvoer (%s.%s=%q): %v", meta.Tabelnaam, parentMeta.IDKolom, wijziging.RepresentatieID, err)
+			}
+			query = query.Where(fmt.Sprintf("%s = ?", parentMeta.IDKolom), typedRelID)
+		}
 	}
 
 	result, err := query.Exec(c.Request.Context())

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"go/format"
 	"io"
 	"net/http"
 	"os"
@@ -132,8 +133,14 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Fout bij genereren van %s: %v\n", f.naam, err)
 			os.Exit(1)
 		}
+		// Formatteer de gegenereerde Go-code met gofmt-stijl (tabuitlijning in structs etc.)
+		formatted, fmtErr := format.Source([]byte(content))
+		if fmtErr != nil {
+			fmt.Fprintf(os.Stderr, "Waarschuwing: gofmt van %s mislukt: %v (schrijf ongeformatteerd)\n", f.naam, fmtErr)
+			formatted = []byte(content)
+		}
 		path := filepath.Join(*outputDir, filePrefix+f.naam)
-		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		if err := os.WriteFile(path, formatted, 0644); err != nil {
 			fmt.Fprintf(os.Stderr, "Kan %s niet schrijven: %v\n", path, err)
 			os.Exit(1)
 		}
