@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-03-30 23:26
 - **Sessie-ID**: `92ad3d5e-1e45-423d-8497-c8074cc73096`
-- **Berichten**: 29
+- **Berichten**: 34
 
 ---
 
@@ -1163,5 +1163,75 @@ Het script vergelijkt nu het huidige berichtenaantal met het opgeslagen aantal. 
 super!
 
 De taak wordt ook in windows aangemaakt? (Na installatie via `bash bitemp_register_v06/scripts/install-chat-hook.sh` dan denk ik?)
+
+---
+
+## 🧑 User
+
+ok, dank
+
+---
+
+## 🧑 User
+
+ik probeer de playground, maar er blijven mouse overs hangen 
+
+wat kan dat zijn?
+
+---
+
+## 🤖 Assistant
+
+Ik ga eerst de Playground-HTML en handler checken om te zien of dit een bekende UI-bug is van de gebruikte Playground-versie of iets in onze embed/configuratie.Meest waarschijnlijk: dit is een UI-issue van GraphQL Playground zelf, niet van je schema of resolvers.
+
+Wat ik in je code zie:
+- Je gebruikt de oude Playground via CDN in  (graphql-playground-react middleware script).
+- Die Playground is al langere tijd niet actief onderhouden en heeft vaker hover/tooltip/focus-glitches (vooral in Chromium/Windows combinaties).
+
+Waarom die mouseovers “blijven hangen” kan zijn:
+1. Playground/Monaco tooltip bug (bekend bij oudere builds).
+2. Browser zoom/scaling (125%/150%) of high-DPI rendering.
+3. Hardware acceleration issue in browser/VS Code webview.
+4. Focus-probleem na netwerk-lag: schema-introspection popup sluit niet netjes.
+
+Snelle checks:
+1. Hard refresh van pagina (Ctrl+F5 / Cmd+Shift+R).
+2. Open exact dezelfde URL in een losse browser (niet in embedded view).
+3. Zet browser zoom tijdelijk op 100%.
+4. Test zonder hardware acceleration (indien makkelijk).
+5. Herstart de API zodat introspection opnieuw laadt.
+
+Structurele oplossing:
+- Overstappen van Playground naar GraphiQL (actief onderhouden) of Apollo Sandbox.
+- Dan verdwijnen dit soort hover-issues meestal direct.
+
+Als je wilt, kan ik dit meteen voor je ombouwen in  naar GraphiQL, met behoud van dezelfde endpoint .
+
+---
+
+## 🧑 User
+
+Ik probeer het ook nog even op windows. Misschien daarna. Wil je het als upgrade optie in de md zetten? Wil je daar ook nog deze sectie
+
+Beschikbare queries
+full_<padnaam>(id, peiltijdstip) — volledige entiteit met geneste GE's/relaties
+<padnaam>(limit, offset) — lijst van entiteiten
+registratie(id) / registraties(limit, offset) — registraties
+Beschikbare mutations
+registreer(input: JSON!) — registratie (input = REST request format)
+corrigeer(input: JSON!) — correctie
+maak_ongedaan(input: JSON!) — ongedaanmaking
+
+beter opnemen, want die vond ik niet
+
+En eventueel nog wat voorbeelden (opvragen en registreren) op basis van het np-loc domein. Dat zou erg handig zijn!
+
+---
+
+## 🤖 Assistant
+
+
+
+Laat me eerst het huidige model en de documentatie lezen om goede voorbeelden te maken.  
 
 ---
