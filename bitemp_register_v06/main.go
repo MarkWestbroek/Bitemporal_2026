@@ -17,6 +17,7 @@ import (
 	"github.com/uptrace/bun/extra/bundebug"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/dbsetup"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/dynql"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/handlers"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/routes"
 )
@@ -131,10 +132,16 @@ func NewRouter() *gin.Engine {
 		c.JSON(200, gin.H{"commit": commit, "build_time": buildTime})
 	})
 
-	// GraphQL endpoint
-	router.GET("/graphql/playground", handlers.PlaygroundHandler())
-	router.POST("/graphql/query", handlers.GraphQLHandler())
-	router.GET("/graphql/query", handlers.GraphQLHandler())
+	// GraphQL endpoint (dynamisch vanuit MetaRegistry)
+	gqlSchema, err := dynql.BuildSchema(handlers.DB)
+	if err != nil {
+		fmt.Println("WARN: GraphQL schema bouwen mislukt:", err)
+	} else {
+		router.GET("/graphql/playground", dynql.PlaygroundHandler("/graphql/query"))
+		router.POST("/graphql/query", dynql.GraphQLHandler(gqlSchema))
+		router.GET("/graphql/query", dynql.GraphQLHandler(gqlSchema))
+		fmt.Println("GraphQL endpoint geregistreerd op /graphql/query")
+	}
 
 	// admin routes
 	router.DELETE("/admin/db/droptables/:password", handlers.DropTables)

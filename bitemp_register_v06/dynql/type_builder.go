@@ -1,0 +1,187 @@
+package dynql
+
+// type_builder bouwt graphql.Object types vanuit de MetaRegistry.
+// Elk TypeMeta record (entiteit, GE-hub, GE-data, relatie) krijgt een eigen GraphQL type.
+// Voor entiteiten worden onderliggende GE's/relaties als geneste velden toegevoegd.
+// Hub+data flattening: hub-types tonen ook de velden van hun _Data child.
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
+	"github.com/graphql-go/graphql"
+)
+
+// typeCache voorkomt dubbelaanmaak en cycli.
+var typeCache = map[string]*graphql.Object{}
+
+// BuildOutputTypes bouwt alle GraphQL output types uit de MetaRegistry.
+// Moet bij startup worden aangeroepen vóór BuildSchema.
+func BuildOutputTypes() map[string]*graphql.Object {
+	types := map[string]*graphql.Object{}
+
+	// Eerste pass: maak alle basistypes aan (zonder relaties/kinderen).
+	// We gebruiken Thunk-velden om forward references op te lossen.
+	for typenaam, meta := range model.MetaRegistry {
+		if meta.Factory == nil {
+			continue
+		}
+		obj := buildObjectType(typenaam, meta)
+		types[typenaam] = obj
+		typeCache[typenaam] = obj
+	}
+
+	return types
+}
+
+func buildObjectType(typenaam string, meta model.TypeMeta) *graphql.Object {
+	return graphql.NewObject(graphql.ObjectConfig{
+		Name:        sanitizeTypeName(typenaam),
+		Description: meta.Description,
+		Fields: graphql.FieldsThunk(func() graphql.Fields {
+			fields := fieldsVoorMeta(meta)
+
+			// Voeg opvoer/afvoer toe voor formele representaties
+			fieldsVoorFormeleRepresentatie(fields)
+
+			// Hub-type: flatten _Data velden in het hubtype
+			if meta.GESubtype == model.GESubtypeHub && meta.DataTypenaam != "" {
+				dataMeta, ok := model.MetaRegistry.GetTypeMeta(meta.DataTypenaam)
+				if ok {
+					dataFields := fieldsVoorMeta(dataMeta)
+					for k, v := range dataFields {
+						if _, exists := fields[k]; !exists {
+							fields[k] = v
+						}
+					}
+				}
+			}
+
+			// Onderliggende GE's/relaties als geneste velden
+			for _, child := range meta.OnderliggendeGegevenselementen {
+				childType := resolveChildGraphQLType(child)
+				if childType == nil {
+					continue
+				}
+
+				var gqlType graphql.Output = childType
+				if child.Momentvoorkomen == model.Meervoudig {
+					gqlType = graphql.NewList(childType)
+				}
+
+				fields[child.JSONRolnaam] = &graphql.Field{
+					Type:        gqlType,
+					Description: fmt.Sprintf("Onderliggend: %s (%s)", child.Doeltype, momentvoorkomenLabel(child.Momentvoorkomen)),
+				}
+			}
+
+			// Afgeleide velden
+			for _, av := range meta.AfgeleideVelden {
+				avType := afgeleideVeldType(av.GoType)
+				fields[av.Naam] = &graphql.Field{
+					Type:        avType,
+					Description: av.Description,
+				}
+			}
+
+			return fields
+		}),
+	})
+}
+
+// resolveChildGraphQLType zoekt of maakt het GraphQL type voor een child-relatie.
+func resolveChildGraphQLType(child model.OnderliggendGegevenselement) *graphql.Object {
+	if cached, ok := typeCache[child.Doeltype]; ok {
+		return cached
+	}
+	// Type niet gevonden — kan voorkomen als het child-type geen Factory heeft
+	return nil
+}
+
+func afgeleideVeldType(goType string) graphql.Output {
+	switch goType {
+	case "string":
+		return graphql.String
+	case "int", "int64":
+		return graphql.Int
+	case "float64":
+		return graphql.Float
+	case "bool":
+		return graphql.Boolean
+	default:
+		return graphql.String
+	}
+}
+
+func momentvoorkomenLabel(m model.Momentvoorkomen) string {
+	if m == model.Enkelvoudig {
+		return "enkelvoudig"
+	}
+	return "meervoudig"
+}
+
+// sanitizeTypeName maakt een typenaam geschikt als GraphQL type name.
+// Vervangt tekens die niet in [_A-Za-z0-9] zitten.
+func sanitizeTypeName(name string) string {
+	result := strings.Map(func(r rune) rune {
+		if (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '_' {
+			return r
+		}
+		return '_'
+	}, name)
+	if result == "" {
+		return "_"
+	}
+	if result[0] >= '0' && result[0] <= '9' {
+		result = "_" + result
+	}
+	return result
+}
+
+// --- Plumbing types: Registratie, Wijziging ---
+
+// WijzigingType is het GraphQL output type voor een wijziging.
+var WijzigingType = graphql.NewObject(graphql.ObjectConfig{
+	Name:        "Wijziging",
+	Description: "Een individuele wijziging (opvoer of afvoer) binnen een registratie",
+	Fields: graphql.Fields{
+		"id":                 &graphql.Field{Type: graphql.Int},
+		"wijzigingstype":     &graphql.Field{Type: graphql.String, Description: "opvoer of afvoer"},
+		"registratie_id":     &graphql.Field{Type: graphql.Int},
+		"entiteitnaam":       &graphql.Field{Type: graphql.String},
+		"entiteit_id":        &graphql.Field{Type: graphql.String},
+		"representatienaam":  &graphql.Field{Type: graphql.String},
+		"representatie_id":   &graphql.Field{Type: graphql.String},
+		"versie":             &graphql.Field{Type: graphql.Int},
+		"tijdstip":           &graphql.Field{Type: DateTimeScalar},
+		"is_ongedaangemaakt": &graphql.Field{Type: graphql.Boolean},
+	},
+})
+
+// RegistratieType is het GraphQL output type voor een registratie.
+var RegistratieType = graphql.NewObject(graphql.ObjectConfig{
+	Name:        "Registratie",
+	Description: "Een registratie, correctie of ongedaanmaking",
+	Fields: graphql.Fields{
+		"id":                            &graphql.Field{Type: graphql.Int},
+		"registratietype":               &graphql.Field{Type: graphql.String, Description: "registratie, correctie of ongedaanmaking"},
+		"tijdstip":                      &graphql.Field{Type: DateTimeScalar},
+		"opmerking":                     &graphql.Field{Type: graphql.String},
+		"corrigeert_registratie_id":     &graphql.Field{Type: graphql.Int},
+		"maakt_ongedaan_registratie_id": &graphql.Field{Type: graphql.Int},
+		"is_ongedaangemaakt":            &graphql.Field{Type: graphql.Boolean},
+		"wijzigingen":                   &graphql.Field{Type: graphql.NewList(WijzigingType)},
+	},
+})
+
+// RegistreerResultaatType is het GraphQL output type voor een registratie-resultaat.
+var RegistreerResultaatType = graphql.NewObject(graphql.ObjectConfig{
+	Name:        "RegistreerResultaat",
+	Description: "Resultaat van een registratie/correctie/ongedaanmaking",
+	Fields: graphql.Fields{
+		"registratie_id": &graphql.Field{Type: graphql.Int},
+		"tijdstip":       &graphql.Field{Type: DateTimeScalar},
+		"wijzigingen":    &graphql.Field{Type: graphql.NewList(WijzigingType)},
+	},
+})

@@ -1,0 +1,369 @@
+
+
+Goed vraagstuk. Laat me eerst de huidige GraphQL-implementatie en het metamodel grondig verkennen voordat ik een plan opstel.  
+
+Explore current GraphQL implementation
+
+Explore metamodel and MetaRegistry
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/graph)
+
+Searched for files matching `**/bitemp_register_v06/graph/**`, 6 matches
+
+Searched for files matching `**/bitemp_register_v06/model/metaregistry.go`, 1 match
+
+Searched for regex `natuurlijk|domein|referentielijst|afgeleide|CEL|gegevenstype` (`**/bitemp_register_v06/model/**`), 20 results
+
+Searched for regex `RegistreerRequest|WijzigingRequest` (`**/bitemp_register_v06/**`), 20 results
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/model/metaregistry_plumbing.go)
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/model/model_plumbing.go)
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/graph/model)
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/gqlgen.yml#1-1), lines 1 to 100
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/graph/schema.graphqls#1-1), lines 1 to 200
+
+Searched for regex `^` (`**/bitemp_register_v06/graph/**`), 20 results
+
+Searched for regex `schema|Schema|field` (`**/bitemp_register_v06/handlers/**`), 20 results
+
+Searched for files matching `**/bitemp_register_v06/model/np_loc*`, 7 matches
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/model/metaregistry.go#1-1), lines 1 to 400
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/model/REST%20request%20models.go)
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/graph/schema.graphqls)
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/graph/datetime.go)
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/graph/resolver.go)
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/graph/schema.resolvers.go#1-1), lines 1 to 100
+
+Searched for text `graphql|gqlgen|handler\.NewDefaultServer|ExecutableSchema` (`**/bitemp_register_v06/main.go`), 6 results
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/graph/generated.go#1-1), lines 1 to 1
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/graph/model/models_gen.go#1-1), lines 1 to 1
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/model/metaregistry.go#400-400), lines 400 to 582
+
+Searched for regex `schema|Schema` (`**/bitemp_register_v06/handlers/**`), 20 results
+
+Searched for files matching `**/bitemp_register_v06/handlers/**schema*`, 3 matches
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/model/np_loc_metaregistry.go#1-1), lines 1 to 200
+
+Searched for regex `^func` (`**/bitemp_register_v06/graph/generated.go`), 20 results
+
+Searched for regex `^type` (`**/bitemp_register_v06/graph/model/models_gen.go`), 20 results
+
+Searched for regex `^func` (`**/bitemp_register_v06/graph/schema.resolvers.go`), 20 results
+
+Searched for text `GraphQLHandler|PlaygroundHandler` (`**/bitemp_register_v06/handlers/**`), 4 results
+
+Searched for regex `reflection|reflect|Field|Type|reflect.StructField` (`**/bitemp_register_v06/handlers/**`), 20 results
+
+Searched for files matching `**/bitemp_register_v06/handlers/*generiek*`, 2 matches
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/handlers/viz_schema_handler.go#1-1), lines 1 to 300
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/graph/schema.resolvers.go)
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/handlers/graphql_handler.go)
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/main.go#130-130), lines 130 to 150
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/handlers/viz_schema_handler.go#300-300), lines 300 to 562
+
+Searched for regex `func initRegister|func initNp` (`**/bitemp_register_v06/model/metaregistry*.go`), no results
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/handlers/registration_helpers_generiek.go#1-1), lines 1 to 200
+
+Searched for regex `^type.*struct` (`**/bitemp_register_v06/graph/generated.go`), 5 results
+
+Searched for regex `^type.*struct` (`**/bitemp_register_v06/graph/model/models_gen.go`), 24 results
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/graph/model/models_gen.go)
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/graph/generated.go#1-1), lines 1 to 2000
+
+Searched for regex `Domein.*=|initRegister|initNpLoc` (`**/bitemp_register_v06/model/**`), 20 results
+
+Searched for regex `.*` (`**/bitemp_register_v06/model/register_metaregistry*.go`), 20 results
+
+Searched for text `endregion` (`**/bitemp_register_v06/graph/**`), 8 results
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/model)
+
+Searched for regex `MetaRegistry\[` (`**/bitemp_register_v06/model/register_metaregistry.go`), 20 results
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/model/register_metaregistry.go#1-1), lines 1 to 50
+
+Searched for regex `MetaRegistry\[` (`**/bitemp_register_v06/model/np_loc_metaregistry.go`), 20 results
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/handlers/viz_schema_handler.go#150-150), lines 150 to 250
+
+Read [](file:///Users/mark/Library/Application%20Support/Code/User/workspaceStorage/d00738151066395bd6028d6465e28bd3/GitHub.copilot-chat/chat-session-resources/92ad3d5e-1e45-423d-8497-c8074cc73096/toolu_bdrk_015LyAbcKg1ZbWP52hiVa6rh__vscode-1774906008031/content.txt#1-1), lines 1 to 200
+
+Read [](file:///Users/mark/Library/Application%20Support/Code/User/workspaceStorage/d00738151066395bd6028d6465e28bd3/GitHub.copilot-chat/chat-session-resources/92ad3d5e-1e45-423d-8497-c8074cc73096/toolu_bdrk_015WGg77dqTZ65PQETWYwpHF__vscode-1774906008032/content.txt#1-1), lines 1 to 300
+
+Read [](file:///Users/mark/Library/Application%20Support/Code/User/workspaceStorage/d00738151066395bd6028d6465e28bd3/GitHub.copilot-chat/chat-session-resources/92ad3d5e-1e45-423d-8497-c8074cc73096/toolu_bdrk_015WGg77dqTZ65PQETWYwpHF__vscode-1774906008032/content.txt#300-300), lines 300 to 500
+
+Now let me also look at the existing dynamic query handlers and the registration handler for patterns: 
+
+Explore dynamic handlers and schema handler
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/handlers)
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/routes)
+
+Searched for regex `MakeGetFullEntityByMetaHandler|MakeGetEntitiesByMetaHandler|RegistreerMetNieuweAanpak` (`**/bitemp_register_v06/**/*.go`), 18 results
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/handlers/core_handlers.go#160-160), lines 160 to 230
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/handlers/full_handlers.go#1079-1079), lines 1079 to 1180
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/handlers/registration_handlers.go#1-1), lines 1 to 100
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/routes/addroutes_helper.go)
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/handlers/registration_handlers.go#100-100), lines 100 to 350
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/handlers/full_handlers.go#1-1), lines 1 to 150
+
+Searched for regex `addOnderliggendeRelations|laadHubKinderenNaQuery|vulAfgeleideFormeleTijdVoorFullEntity` (`**/bitemp_register_v06/handlers/full_handlers.go`), 13 results
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/handlers/full_handlers.go#826-826), lines 826 to 920
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/handlers/full_handlers.go#865-865), lines 865 to 1010
+
+Searched for regex `func|dispatc` (`**/bitemp_register_v06/handlers/registration_helpers_generiek.go`), 20 results
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/handlers/registration_handlers.go#350-350), lines 350 to 466
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/handlers/registration_helpers_generiek.go#200-200), lines 200 to 350
+
+Searched codebase for "RepresentatiePlusNaam RegistreerRequest WijzigingRequest polymorphic wijziging opvoer afvoer", 18 results
+
+Searched for regex `type MetaRegistry|TypeMeta|Factory|OnderliggendeGegevenselementen` (`**/bitemp_register_v06/model/*.go`), 20 results
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/model/metaregistry_plumbing.go#89-89), lines 89 to 200
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/model/np_loc_metaregistry.go#1-1), lines 1 to 60
+
+Read [](file:///Users/mark/Library/Application%20Support/Code/User/workspaceStorage/d00738151066395bd6028d6465e28bd3/GitHub.copilot-chat/chat-session-resources/92ad3d5e-1e45-423d-8497-c8074cc73096/toolu_bdrk_01T9ZBYABJqir4oFnWpoonKc__vscode-1774906008088/content.txt#1-1), lines 1 to 250
+
+Nu heb ik een compleet beeld. Laat me een paar verduidelijkingsvragen stellen voordat ik het plan opstel: 
+
+Analyzing your answers...
+
+Check graphql-go/graphql library patterns
+
+Searched for regex `graphql-go/graphql|github.com/graphql-go` (`**/bitemp_register_v06/**`), no results
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/go.mod)
+
+Read [](file:///Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/main.go#1-1), lines 1 to 200
+
+Goed, alle context is verzameld. Laat me nu het plan schrijven. 
+
+Created memory file [](file:///Users/mark/Library/Application%20Support/Code/User/workspaceStorage/d00738151066395bd6028d6465e28bd3/GitHub.copilot-chat/memory-tool/memories/OTJhZDNkNWUtMWU0NS00MjNkLTg0OTctYzgwNzRjYzczMDk2/plan.md)
+
+Deleted memory [](file:///Users/mark/Library/Application%20Support/Code/User/workspaceStorage/d00738151066395bd6028d6465e28bd3/GitHub.copilot-chat/memory-tool/memories/OTJhZDNkNWUtMWU0NS00MjNkLTg0OTctYzgwNzRjYzczMDk2/plan.md)
+
+Created memory file [](file:///Users/mark/Library/Application%20Support/Code/User/workspaceStorage/d00738151066395bd6028d6465e28bd3/GitHub.copilot-chat/memory-tool/memories/OTJhZDNkNWUtMWU0NS00MjNkLTg0OTctYzgwNzRjYzczMDk2/plan.md)
+
+---
+
+## Plan: Dynamische GraphQL-laag vanuit MetaRegistry
+
+**TL;DR** — Vervang de huidige gqlgen-implementatie (~10.300 regels gegenereerde + handmatige code, verouderd model) door een **dynamische GraphQL-laag** die het schema at runtime opbouwt uit de MetaRegistry. Gebruik `graphql-go/graphql` (programmatisch, geen codegen). Eén schema, alle domeinen. Mutations alleen via REG/CORR/ONGDM. Queries voor full-entity, lijsten en registraties.
+
+---
+
+### Architectuur
+
+```
+MetaRegistry (startup)
+    │  itereer ~60 types: entiteiten, GE's, relaties
+Dynamic Schema Builder  (dynql/schema_builder.go)
+    │  bouw graphql.Object's, Query, Mutation programmatisch
+graphql.Schema
+    │  registreer op /graphql/query
+Gin Handler  (dynql/handler.go)
+    │  graphql.Do(params)
+Generic Resolvers  ←── hergebruik bestaande handler-logica
+    │              (full_handlers, registration_handlers)
+Bun / PostgreSQL
+```
+
+Het kernidee: **dezelfde MetaRegistry die nu REST routes, schema-API en frontend aandrijft, drijft ook het GraphQL-schema aan.** Geen duplicatie van types, geen codegen, geen schema-drift.
+
+---
+
+### Stappen
+
+**Fase 1: Infrastructuur** *(blokkeert alles)*
+
+1. **Dependency**: `go get github.com/graphql-go/graphql` toevoegen
+2. **Directory** `dynql/` aanmaken met 7 bestanden:
+
+| Bestand | Verantwoordelijkheid |
+|---|---|
+| `schema_builder.go` | `BuildSchema()` — MetaRegistry → `graphql.Schema` |
+| `type_builder.go` | `TypeMeta` → `graphql.Object` (output types) |
+| `field_builder.go` | Struct reflectie → `graphql.Fields` (hergebruik patroon uit viz_schema_handler.go `reflectedVeldenVoorMeta`) |
+| `query_resolvers.go` | Generieke resolve-functies voor full-entity, lijst, registraties |
+| `mutation_resolvers.go` | `registreer` mutation → hergebruik registratie-flow |
+| `scalars.go` | `DateTime`, `Date`, `JSON` custom scalars |
+| `handler.go` | Gin handlers + GraphiQL playground |
+
+---
+
+**Fase 2: Output types bouwen** *(parallel: 2a + 2b)*
+
+**2a. Entiteit/GE/Relatie types** (`type_builder.go`)
+- Per MetaRegistry entry met `Metatype == Entiteit`:
+  - `graphql.NewObject()` met velden via reflectie op `meta.Factory()`
+  - **Hub+Data flattening**: een hub-GE (bijv. `NatuurlijkPersoon_Naam`) toont direct de `_Data` velden (voornamen, achternaam) — niet de hub-plumbing (rel_id, versie)
+  - Geneste kinderen via `meta.OnderliggendeGegevenselementen`:
+    - Enkelvoudig → direct child type
+    - Meervoudig → `graphql.NewList(childType)`
+  - Afgeleide velden uit `meta.AfgeleideVelden` als computed fields
+  - Go→GraphQL type mapping:
+
+    | Go type | GraphQL type |
+    |---|---|
+    | `string` | `graphql.String` |
+    | `int`, `int64` | `graphql.Int` |
+    | `float64` | `graphql.Float` |
+    | `bool` | `graphql.Boolean` |
+    | `time.Time` | `DateTime` scalar |
+    | `model.Date` | `Date` scalar |
+    | enum (via `EnumWaarden`) | `graphql.NewEnum()` |
+
+**2b. Registratiedomein types** *(parallel met 2a)*
+- `Registratie`, `Wijziging`, `RegistratieMetWijzigingen` als output types
+
+---
+
+**Fase 3: Query resolvers** *(*depends on* Fase 2)*
+
+3.1 **Full entity query** — generieke resolver-factory per entiteit. Hergebruik kernlogica uit:
+  - full_handlers.go voor nested Bun queries
+  - full_handlers.go voor batch hub-child loading
+  - Parameters: `id: ID!`, `peiltijdstip: DateTime` (formeel tijdreizen)
+
+3.2 **Lijst query** — hergebruik core_handlers.go logica. Parameters: `limit: Int`, `offset: Int`
+
+3.3 **Registratie queries** — `registratie(id)`, `registraties(limit, offset)`
+
+3.4 **Root Query samenstellen** — per entiteit dynamisch:
+  ```graphql
+  type Query {
+    # Auto-gegenereerd per entiteit uit MetaRegistry:
+    full_natuurlijk_personen(id: ID!, peiltijdstip: DateTime): NatuurlijkPersoon
+    natuurlijk_personen(limit: Int, offset: Int): [NatuurlijkPersoon!]!
+    full_locaties(id: ID!, peiltijdstip: DateTime): Locatie
+    locaties(limit: Int, offset: Int): [Locatie!]!
+    # ... etc voor alle entiteiten
+    
+    registratie(id: ID!): RegistratieMetWijzigingen
+    registraties(limit: Int, offset: Int): [Registratie!]!
+  }
+  ```
+
+---
+
+**Fase 4: Mutation resolvers** *(*depends on* Fase 2)*
+
+4.1 **Input types** — bewust Variant B (MetaRegistry-aligned, generiek):
+  ```graphql
+  enum Registratietype { REGISTRATIE, CORRECTIE, ONGEDAANMAKING }
+  enum Wijzigingstype { OPVOER, AFVOER }
+  
+  input WijzigingInput {
+    type_wijziging: Wijzigingstype!
+    typenaam: String!    # MetaRegistry typenaam, bijv. "NatuurlijkPersoon_Naam_Data"
+    data: JSON!          # payload als generiek JSON — server unmarshalt via Factory
+  }
+  
+  input RegistreerInput {
+    registratietype: Registratietype!
+    opmerking: String
+    corrigeert_registratie_id: ID
+    maakt_ongedaan_registratie_id: ID
+    wijzigingen: [WijzigingInput!]!
+  }
+  ```
+  
+  **Waarom generiek?** Dezelfde reden dat de REST API het zo doet: MetaRegistry is de single source of truth. `typenaam` + `data: JSON` is het GraphQL-equivalent van de huidige "JSON key bepaalt type" polymorfie, maar nu met een expliciet type-veld.
+
+4.2 **Resolver**: `registreer(input)` → bouw `model.RegistreerRequest` → roep bestaande registration_helpers_generiek.go aan
+
+---
+
+**Fase 5: Integratie** *(*depends on* Fase 3+4)*
+
+5.1 **Handler**: `dynql.NewHandler(schema)` → Gin middleware met `graphql.Do()`
+5.2 **Update** main.go regels 111-115: vervang `handlers.GraphQLHandler()` door `dynql.Handler()`
+5.3 **Opruimen**: verwijder `graph/` (~10.300 regels), `gqlgen.yml`, `handlers/graphql_handler.go`
+
+---
+
+**Fase 6: Verfijning** *(parallel, niet-blokkerend)*
+
+- **Field selection**: inspecteer `ResolveParams.Info.FieldASTs` → optimaliseer DB queries
+- **Enum types**: alle `model.EnumWaarden` → `graphql.NewEnum()`
+- **Afgeleide velden**: CEL-expressies resolven als computed fields
+- **Referentielijsten**: ref-velden als links weergeven
+
+---
+
+### Te wijzigen/maken/verwijderen
+
+| Actie | Pad | Impact |
+|---|---|---|
+| **Nieuw** | `dynql/` (7 bestanden) | Kern van de implementatie |
+| **Wijzigen** | main.go | 4 regels route-setup |
+| **Wijzigen** | go.mod | Dependency swap |
+| **Verwijderen** | `graph/` (hele directory) | ~10.300 regels |
+| **Verwijderen** | gqlgen.yml | Config |
+| **Verwijderen** | handlers/graphql_handler.go | 46 regels |
+
+### Referentie-patronen (hergebruik)
+
+| Patroon | Bron | Hergebruik in |
+|---|---|---|
+| Struct → velden reflectie | viz_schema_handler.go | `field_builder.go` |
+| Go type → API type mapping | viz_schema_handler.go | `field_builder.go` |
+| Nested relation loading | full_handlers.go | `query_resolvers.go` |
+| Hub-child batch loading | full_handlers.go | `query_resolvers.go` |
+| Polymorf dispatch | RepresentatiePlusNaam.UnmarshalJSON | `mutation_resolvers.go` |
+| Registratie verwerking | registration_helpers_generiek.go | `mutation_resolvers.go` |
+
+---
+
+### Verificatie
+
+1. `go build GitHub.` compileert zonder errors
+2. Introspection: `{ __schema { types { name } } }` retourneert alle MetaRegistry entiteiten
+3. Full query: `{ full_natuurlijk_personen(id:"1") { id namen { ... } } }` werkt met nesting
+4. Lijst: `{ natuurlijk_personen(limit:10) { id } }` met paginatie
+5. Mutation: `mutation { registreer(input:{...}) { id } }` maakt registratie
+6. Tijdreizen: `peiltijdstip` parameter op full queries
+7. Playground: `/graphql/playground` werkend
+8. REST endpoints ongewijzigd (regression)
+9. Unit tests voor schema builder en resolver dispatch
+
+---
+
+### Verder overwegen
+
+1. **Typed mutations later?** De generieke `data: JSON` mutation kan in de toekomst aangevuld worden met typed input-types per domein (Variant A/C uit de analyse). Dit kan incrementeel, zonder de generieke mutation te verwijderen.
+2. **Subscriptions?** graphql-go/graphql ondersteunt geen subscriptions out of the box. Als dat later nodig is, kan dat via een apart websocket-mechanisme of een library-switch.
