@@ -206,6 +206,8 @@ func initRegisterMetaRegistry() {
 			{Rolnaam: "Internetadressen", JSONRolnaam: "internetadressen", Doeltype: "ReferentielijstInternetadres", Momentvoorkomen: Meervoudig},
 			{Rolnaam: "LandenlijstLanden", JSONRolnaam: "landenlijst_landen", Doeltype: "LandenlijstLand", Momentvoorkomen: Meervoudig},
 			{Rolnaam: "AdellijkeTitelsTitels", JSONRolnaam: "adellijke_titels_titels", Doeltype: "AdellijkeTitelsTitel", Momentvoorkomen: Meervoudig},
+			{Rolnaam: "LandenlijstLanden", JSONRolnaam: "landenlijst_landen", Doeltype: "LandenlijstLand", Momentvoorkomen: Meervoudig},
+			{Rolnaam: "AdellijkeTitelsTitels", JSONRolnaam: "adellijke_titels_titels", Doeltype: "AdellijkeTitelsTitel", Momentvoorkomen: Meervoudig},
 			{Rolnaam: "Aanvang", JSONRolnaam: "aanvang", Doeltype: "Referentielijst_Aanvang", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "Einde", JSONRolnaam: "einde", Doeltype: "Referentielijst_Einde", Momentvoorkomen: Enkelvoudig},
 		},
@@ -324,6 +326,66 @@ func initRegisterMetaRegistry() {
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "ReferentielijstInternetadres_Data", Momentvoorkomen: Enkelvoudig},
+		},
+	}
+	MetaRegistry["LandenlijstLand"] = TypeMeta{
+		Typenaam:                  "LandenlijstLand",
+		Klassenaam:                "LandenlijstLand",
+		Description:               "Koppeling van een land aan referentielijst-instantie Landenlijst (referentielijst-items relatie).",
+		Metatype:                  MetatypeRelatie,
+		RelatieSubtype:            RelatieSubtypeReferentielijstItems,
+		ReferentielijstInstantie:  "Landenlijst",
+		IsMaterieel:               false,
+		GESubtype:                 GESubtypeHub,
+		DataTypenaam:              "LandenlijstLand_Data",
+		Kleur:                     "",
+		Veldnaam:                  "landenlijstland",
+		Padnaam:                   "landenlijst_landen",
+		Meervoud:                  "landenlijst_landen",
+		Factory:                   func() Representatie { return &LandenlijstLand_Input{} },
+		Tabelnaam:                 "landenlijstland",
+		IDKolom:                   "rel_id",
+		DBFactory:                 func() Representatie { return &LandenlijstLand{} },
+		DBSliceFactory:            func() any { return &[]LandenlijstLand{} },
+		HeeftPFK:                  true,
+		RelatieveAutoincrement:    true,
+		EntiteitIDKolom:           "referentielijst_id",
+		SecondaireEntiteitIDKolom: "land_id",
+		Momentvoorkomen:           Meervoudig,
+		Layout: &EditorLayout{
+			Positie: &V3Positie{X: 1215, Y: 165}, EdgeID: "Referentielijst->LandenlijstLand",
+			DoelEdgeID: "LandenlijstLand->Land",
+		},
+		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
+			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "LandenlijstLand_Data", Momentvoorkomen: Enkelvoudig},
+		},
+	}
+	MetaRegistry["AdellijkeTitelsTitel"] = TypeMeta{
+		Typenaam:                  "AdellijkeTitelsTitel",
+		Klassenaam:                "AdellijkeTitelsTitel",
+		Description:               "Koppeling van een adellijke titel aan referentielijst-instantie AdellijkeTitels (referentielijst-items relatie).",
+		Metatype:                  MetatypeRelatie,
+		RelatieSubtype:            RelatieSubtypeReferentielijstItems,
+		ReferentielijstInstantie:  "AdellijkeTitels",
+		IsMaterieel:               false,
+		GESubtype:                 GESubtypeHub,
+		DataTypenaam:              "AdellijkeTitelsTitel_Data",
+		Kleur:                     "",
+		Veldnaam:                  "adellijketitelstitel",
+		Padnaam:                   "adellijke_titels_titels",
+		Meervoud:                  "adellijke_titels_titels",
+		Factory:                   func() Representatie { return &AdellijkeTitelsTitel_Input{} },
+		Tabelnaam:                 "adellijketitelstitel",
+		IDKolom:                   "rel_id",
+		DBFactory:                 func() Representatie { return &AdellijkeTitelsTitel{} },
+		DBSliceFactory:            func() any { return &[]AdellijkeTitelsTitel{} },
+		HeeftPFK:                  true,
+		RelatieveAutoincrement:    true,
+		EntiteitIDKolom:           "referentielijst_id",
+		SecondaireEntiteitIDKolom: "adellijketitel_id",
+		Momentvoorkomen:           Meervoudig,
+		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
+			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "AdellijkeTitelsTitel_Data", Momentvoorkomen: Enkelvoudig},
 		},
 	}
 	MetaRegistry["LandenlijstLand"] = TypeMeta{
@@ -518,6 +580,50 @@ func initRegisterMetaRegistry() {
 		Momentvoorkomen:        Enkelvoudig,
 		BovenliggendTypenaam:   "AdellijkeTitelsTitel",
 	}
+	MetaRegistry["LandenlijstLand_Data"] = TypeMeta{
+		Typenaam:               "LandenlijstLand_Data",
+		Klassenaam:             "Data",
+		Description:            "Geversioned inhoud van LandenlijstLand.",
+		Metatype:               MetatypeGegevenselement,
+		GESubtype:              GESubtypeData,
+		Kleur:                  "#fef3c7",
+		Veldnaam:               "landenlijstland_data",
+		Padnaam:                "landenlijstland_data",
+		Meervoud:               "landenlijstland_data",
+		Factory:                func() Representatie { return &LandenlijstLand_Data{} },
+		SliceFactory:           func() any { return &[]LandenlijstLand_Data{} },
+		Tabelnaam:              "landenlijstland_data",
+		IDKolom:                "versie",
+		DBFactory:              func() Representatie { return &LandenlijstLand_Data{} },
+		DBSliceFactory:         func() any { return &[]LandenlijstLand_Data{} },
+		HeeftPFK:               true,
+		RelatieveAutoincrement: true,
+		EntiteitIDKolom:        "referentielijst_id",
+		Momentvoorkomen:        Enkelvoudig,
+		BovenliggendTypenaam:   "LandenlijstLand",
+	}
+	MetaRegistry["AdellijkeTitelsTitel_Data"] = TypeMeta{
+		Typenaam:               "AdellijkeTitelsTitel_Data",
+		Klassenaam:             "Data",
+		Description:            "Geversioned inhoud van AdellijkeTitelsTitel.",
+		Metatype:               MetatypeGegevenselement,
+		GESubtype:              GESubtypeData,
+		Kleur:                  "#fef3c7",
+		Veldnaam:               "adellijketitelstitel_data",
+		Padnaam:                "adellijketitelstitel_data",
+		Meervoud:               "adellijketitelstitel_data",
+		Factory:                func() Representatie { return &AdellijkeTitelsTitel_Data{} },
+		SliceFactory:           func() any { return &[]AdellijkeTitelsTitel_Data{} },
+		Tabelnaam:              "adellijketitelstitel_data",
+		IDKolom:                "versie",
+		DBFactory:              func() Representatie { return &AdellijkeTitelsTitel_Data{} },
+		DBSliceFactory:         func() any { return &[]AdellijkeTitelsTitel_Data{} },
+		HeeftPFK:               true,
+		RelatieveAutoincrement: true,
+		EntiteitIDKolom:        "referentielijst_id",
+		Momentvoorkomen:        Enkelvoudig,
+		BovenliggendTypenaam:   "AdellijkeTitelsTitel",
+	}
 	MetaRegistry["Referentielijst_Aanvang"] = TypeMeta{
 		Typenaam:               "Referentielijst_Aanvang",
 		Klassenaam:             "Aanvang",
@@ -571,4 +677,18 @@ func initRegisterMetaRegistry() {
 		Naam: "Landenlijst", Omschrijving: "Alle landen van de wereld",
 		Layout: &EditorLayout{Positie: &V3Positie{X: 1065, Y: -90}},
 	}
+
+	// Domein-specifieke items-relatie toevoegen aan register-scope Referentielijst
+	VoegOnderliggendGEToe("Referentielijst", OnderliggendGegevenselement{
+		Rolnaam: "LandenlijstLanden", JSONRolnaam: "landenlijst_landen", Doeltype: "LandenlijstLand", Momentvoorkomen: Meervoudig,
+	})
+	VoegOnderliggendGEToe("Referentielijst", OnderliggendGegevenselement{
+		Rolnaam: "AdellijkeTitelsTitels", JSONRolnaam: "adellijke_titels_titels", Doeltype: "AdellijkeTitelsTitel", Momentvoorkomen: Meervoudig,
+	})
+	VoegOnderliggendGEToe("Referentielijst", OnderliggendGegevenselement{
+		Rolnaam: "LandenlijstLanden", JSONRolnaam: "landenlijst_landen", Doeltype: "LandenlijstLand", Momentvoorkomen: Meervoudig,
+	})
+	VoegOnderliggendGEToe("Referentielijst", OnderliggendGegevenselement{
+		Rolnaam: "AdellijkeTitelsTitels", JSONRolnaam: "adellijke_titels_titels", Doeltype: "AdellijkeTitelsTitel", Momentvoorkomen: Meervoudig,
+	})
 }

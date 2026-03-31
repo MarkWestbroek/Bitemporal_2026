@@ -2,7 +2,6 @@ package dbsetup
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 	"github.com/uptrace/bun"
@@ -99,13 +98,8 @@ func CreateTables(db *bun.DB) error {
 		return err
 	}
 
-	// Register_referentielijst tabel wordt nu aangemaakt door createModelTables
-	// via de MetaRegistry-entry "Referentielijst".
-	// Synchroniseer de bekende instanties (upsert).
-	err = syncReferentielijstRegister(ctx, db)
-	if err != nil {
-		return err
-	}
+	// Referentielijst-instanties worden nu via registratie of replay-bestanden aangemaakt.
+	// De tabel wordt al aangemaakt door createModelTables via de MetaRegistry-entry "Referentielijst".
 
 	//Bitemporal core tables
 	// Wijziging table
@@ -145,21 +139,5 @@ func CreateTables(db *bun.DB) error {
 	return nil
 }
 
-// syncReferentielijstRegister synchroniseert bekende referentielijst-instanties
-// naar de register_referentielijst tabel (upsert op systeemnaam).
-// TODO (Fase D3): lees instanties uit V3 JSON i.p.v. hardcoded lijst.
-func syncReferentielijstRegister(ctx context.Context, db *bun.DB) error {
-	instanties := []string{"Landenlijst"}
-	for _, systeemnaam := range instanties {
-		entry := model.Referentielijst{
-			Systeemnaam: systeemnaam,
-		}
-		_, err := db.NewInsert().Model(&entry).
-			On("CONFLICT (systeemnaam) DO NOTHING").
-			Exec(ctx)
-		if err != nil {
-			return fmt.Errorf("sync register_referentielijst mislukt voor %s: %w", systeemnaam, err)
-		}
-	}
-	return nil
-}
+// syncReferentielijstRegister is verwijderd: Referentielijst heeft geen Systeemnaam-veld meer.
+// Referentielijst-instanties worden nu aangemaakt via de registratie-flow of replay-bestanden.

@@ -209,6 +209,8 @@ Een volledige referentie van alle endpoints, query-parameters, URL-parameters en
 
 ## Codegen proberen (V3)
 
+> **Volledige handleiding:** zie [`docs/CODEGEN.md`](docs/CODEGEN.md) voor de complete workflow, domeinscheiding, roundtrip-verificatie en het toevoegen van nieuwe domeinen.
+
 Je kunt de codegenerator op drie manieren draaien:
 
 - Vanuit een draaiende API (aanbevolen):

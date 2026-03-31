@@ -52,3 +52,15 @@ type AdellijkeTitelsTitel_Input struct {
 	Rel_ID             int `json:"rel_id"`
 	ADELLIJKETITEL_ID  int `json:"adellijketitel_id"`
 }
+
+type LandenlijstLand_Input struct {
+	REFERENTIELIJST_ID int `json:"referentielijst_id"`
+	Rel_ID             int `json:"rel_id"`
+	LAND_ID            int `json:"land_id"`
+}
+
+type AdellijkeTitelsTitel_Input struct {
+	REFERENTIELIJST_ID int `json:"referentielijst_id"`
+	Rel_ID             int `json:"rel_id"`
+	ADELLIJKETITEL_ID  int `json:"adellijketitel_id"`
+}

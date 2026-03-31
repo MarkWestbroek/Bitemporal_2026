@@ -193,3 +193,47 @@ type AdellijkeTitelsTitel_Data struct {
 	Opvoer             *time.Time `json:"opvoer,omitempty"`
 	Afvoer             *time.Time `json:"afvoer,omitempty"`
 }
+
+// LandenlijstLand — Koppeling van een land aan referentielijst-instantie Landenlijst (referentielijst-items relatie).
+type LandenlijstLand struct {
+	bun.BaseModel         `bun:"table:landenlijstland,alias:landenlijstland"`
+	Referentielijst_ID    int                    `json:"referentielijst_id" bun:"referentielijst_id,pk" schema_desc:"ID van de Referentielijst-entiteit"`
+	Rel_ID                int                    `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentReferentielijst *Referentielijst       `json:"-" bun:"rel:belongs-to,join:referentielijst_id=id,on_delete:cascade"`
+	Land_ID               int                    `json:"land_id"`
+	Opvoer                *time.Time             `json:"opvoer,omitempty"`
+	Afvoer                *time.Time             `json:"afvoer,omitempty"`
+	Data                  []LandenlijstLand_Data `bun:"rel:has-many,join:referentielijst_id=referentielijst_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// LandenlijstLand_Data — geversioned inhoud van LandenlijstLand.
+type LandenlijstLand_Data struct {
+	bun.BaseModel      `bun:"table:landenlijstland_data,alias:landenlijstland_data"`
+	Referentielijst_ID int        `json:"referentielijst_id" bun:"referentielijst_id,pk"`
+	Rel_ID             int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie             int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Opvoer             *time.Time `json:"opvoer,omitempty"`
+	Afvoer             *time.Time `json:"afvoer,omitempty"`
+}
+
+// AdellijkeTitelsTitel — Koppeling van een adellijke titel aan referentielijst-instantie AdellijkeTitels (referentielijst-items relatie).
+type AdellijkeTitelsTitel struct {
+	bun.BaseModel         `bun:"table:adellijketitelstitel,alias:adellijketitelstitel"`
+	Referentielijst_ID    int                         `json:"referentielijst_id" bun:"referentielijst_id,pk" schema_desc:"ID van de Referentielijst-entiteit"`
+	Rel_ID                int                         `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentReferentielijst *Referentielijst            `json:"-" bun:"rel:belongs-to,join:referentielijst_id=id,on_delete:cascade"`
+	Adellijketitel_ID     int                         `json:"adellijketitel_id"`
+	Opvoer                *time.Time                  `json:"opvoer,omitempty"`
+	Afvoer                *time.Time                  `json:"afvoer,omitempty"`
+	Data                  []AdellijkeTitelsTitel_Data `bun:"rel:has-many,join:referentielijst_id=referentielijst_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// AdellijkeTitelsTitel_Data — geversioned inhoud van AdellijkeTitelsTitel.
+type AdellijkeTitelsTitel_Data struct {
+	bun.BaseModel      `bun:"table:adellijketitelstitel_data,alias:adellijketitelstitel_data"`
+	Referentielijst_ID int        `json:"referentielijst_id" bun:"referentielijst_id,pk"`
+	Rel_ID             int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie             int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Opvoer             *time.Time `json:"opvoer,omitempty"`
+	Afvoer             *time.Time `json:"afvoer,omitempty"`
+}

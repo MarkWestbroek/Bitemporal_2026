@@ -405,11 +405,26 @@ func writeReferentielijstInstanties(b *strings.Builder, v3 model.V3Model) {
 
 // writeVoegOnderliggendGEToe genereert VoegOnderliggendGEToe calls voor
 // referentielijst-items relaties die cross-domein aan Referentielijst toegevoegd worden.
+//
+// Dit is alleen nodig als de parent-entiteit (Referentielijst) NIET in de huidige
+// codegen-run zit. Als Referentielijst wél wordt gegenereerd, staan de items-relaties
+// al inline in OnderliggendeGegevenselementen.
 func writeVoegOnderliggendGEToe(b *strings.Builder, v3 model.V3Model) {
+	// Bouw set van entiteiten die in deze codegen-run worden gegenereerd.
+	entiteitenInRun := map[string]bool{}
+	for _, ent := range v3.Entiteiten {
+		entiteitenInRun[ent.Typenaam] = true
+	}
+
 	var calls []string
 	for _, ent := range v3.Entiteiten {
 		for _, rel := range ent.Relaties {
 			if rel.RelatieSubtype != "referentielijst_items" {
+				continue
+			}
+			// De parent is altijd "Referentielijst". Als die al in deze run zit,
+			// is de relatie al inline opgenomen — geen VoegOnderliggendGEToe nodig.
+			if entiteitenInRun["Referentielijst"] {
 				continue
 			}
 			rolnaam := relRolnaam(rel.Naam, rel.Meervoud)

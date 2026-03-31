@@ -1,6 +1,9 @@
 # Codegen analyse & roundtrip-plan
 
-**Datum:** 2026-03-30  
+**Datum:** 2026-03-30 (bijgewerkt 2026-03-31)  
+**Status:** ✅ Roundtrip volledig gevalideerd — 14/14 bestanden identiek  
+**Zie ook:** [`docs/CODEGEN.md`](CODEGEN.md) voor de volledige handleiding.
+
 **Doel:** De codegen (`cmd/codegen/`) moet letterlijk dezelfde code genereren als de hand-geschreven code, zodat een volledige roundtrip mogelijk is.
 
 ## Roundtrip-workflow
@@ -57,7 +60,7 @@
 
 Hieronder alle geïdentificeerde gaps, in volgorde van criticiteit voor de roundtrip.
 
-### Gap 1: `Domein` veld ontbreekt in MetaRegistry entries — KRITIEK
+### Gap 1: `Domein` veld ontbreekt in MetaRegistry entries — ✅ OPGELOST
 
 **Probleem:** Alle hand-geschreven entries zetten `Domein: "register"` of `Domein: "np-loc"`. De codegen schrijft dit nergens in `writeEntiteitEntry()`, `writeHubEntry()`, `writeRelHubEntry()`, `writeDataEntry()`, `writeAanvangEindeEntry()`.
 
@@ -67,7 +70,7 @@ Hieronder alle geïdentificeerde gaps, in volgorde van criticiteit voor de round
 
 **Oplossing:** Nieuw `--domein` CLI-flag. Alle `write*Entry()` functies krijgen een `domein` parameter en schrijven `Domein: "..."`.
 
-### Gap 2: `schema:"datatype:X"` tag ontbreekt op content-velden — KRITIEK
+### Gap 2: `schema:"datatype:X"` tag ontbreekt op content-velden — ✅ OPGELOST
 
 **Probleem:** `V3Veld.Datatype` is beschikbaar in het V3-model maar wordt nooit verwerkt in `contentField()` (conventions.go:291). Alleen `schema:"enum=X"` wordt gegenereerd.
 
@@ -77,7 +80,7 @@ Hieronder alle geïdentificeerde gaps, in volgorde van criticiteit voor de round
 
 **Oplossing:** In `contentField()`, als `v.Datatype != ""`, toevoegen: `schema:"datatype:X"`.
 
-### Gap 3: `$ref` tag ontbreekt op content-velden — KRITIEK
+### Gap 3: `$ref` tag ontbreekt op content-velden — ✅ OPGELOST
 
 **Probleem:** `V3Veld.Ref` (`json:"$ref"`) wordt niet verwerkt in `contentField()`. Referentielijst-koppelingen missen.
 
@@ -85,7 +88,7 @@ Hieronder alle geïdentificeerde gaps, in volgorde van criticiteit voor de round
 
 **Oplossing:** In `contentField()`, als `v.Ref != ""`, toevoegen: `schema:"ref:X"`.
 
-### Gap 4: Enum registry generatie ontbreekt — HOOG
+### Gap 4: Enum registry generatie ontbreekt — ✅ OPGELOST
 
 **Probleem:** Er is geen `gen_enum_registry.go`. De codegen genereert wel enum type-declaraties (in `gen_structs.go`) maar NIET de `EnumWaarden["X"]` map-entries of `EnumEditorLayouts["X"]` entries die de schema-API nodig heeft.
 
@@ -98,7 +101,7 @@ Hieronder alle geïdentificeerde gaps, in volgorde van criticiteit voor de round
 - `EnumWaarden["X"] = []string{...}` voor elke V3Enum
 - `EnumEditorLayouts["X"] = &EditorLayout{Positie: &V3Positie{X, Y}}` (wanneer positie beschikbaar)
 
-### Gap 5: `Layout` / `EditorLayout` ontbreekt in MetaRegistry entries — HOOG
+### Gap 5: `Layout` / `EditorLayout` ontbreekt in MetaRegistry entries — ✅ OPGELOST
 
 **Probleem:** Elke hand-geschreven MetaRegistry entry heeft `Layout: &EditorLayout{Positie: &V3Positie{X, Y}, EdgeID: "...", SourceHandle: "...", TargetHandle: "..."}`. De codegen negeert alle V3 positie/edge-velden.
 
@@ -113,7 +116,7 @@ Hieronder alle geïdentificeerde gaps, in volgorde van criticiteit voor de round
 
 **Oplossing:** Alle `write*Entry()` functies lezen positie/edge-velden en schrijven `Layout: &EditorLayout{...}`.
 
-### Gap 6: Additive mode genereert `func init()` i.p.v. named function — HOOG
+### Gap 6: Additive mode genereert `func init()` i.p.v. named function — ✅ OPGELOST
 
 **Probleem:** Hand-geschreven code gebruikt named functions: `initRegisterMetaRegistry()`, `initNpLocMetaRegistry()`, etc. Deze worden centraal aangeroepen in `metaregistry_plumbing.go`. De codegen genereert een kale `func init()`.
 
@@ -125,13 +128,13 @@ Hieronder alle geïdentificeerde gaps, in volgorde van criticiteit voor de round
 - Enum registry: genereer `func init{Prefix}EnumRegistry()`
 - De gebruiker voegt de aanroepen handmatig toe aan `metaregistry_plumbing.go` (of daar komt ook tooling voor).
 
-### Gap 7: ReferentielijstInstanties niet verwerkt — MEDIUM
+### Gap 7: ReferentielijstInstanties niet verwerkt — ✅ OPGELOST
 
 **Probleem:** V3Model heeft `ReferentielijstInstanties []V3ReferentielijstInstantie` maar de codegen leest/verwerkt deze niet. De hand-geschreven code vult `ReferentielijstInstantieRegistry` (in np_loc_metaregistry.go).
 
 **Oplossing:** Nieuwe sectie in `gen_registry.go` (of apart bestand) die `ReferentielijstInstantieRegistry["X"] = ...` entries genereert.
 
-### Gap 8: Datatype `Domein` en `Positie` ontbreken — MEDIUM
+### Gap 8: Datatype `Domein` en `Positie` ontbreken — ✅ OPGELOST
 
 **Probleem:** `V3Datatype` heeft `Domein` en `Positie` velden; `writeDatatypeEntry()` in `gen_datatypes.go` schrijft ze niet.
 
@@ -139,7 +142,7 @@ Hieronder alle geïdentificeerde gaps, in volgorde van criticiteit voor de round
 
 **Oplossing:** Toevoegen in `writeDatatypeEntry()`.
 
-### Gap 9: Meervoud vs Padnaam conflatie — LAAG
+### Gap 9: Meervoud vs Padnaam conflatie — ✅ OPGELOST
 
 **Probleem:** `deriveEntiteit()` zet `Padnaam` en `Meervoud` beide op `ent.Meervoud`. In de hand-geschreven code verschilt dit soms (bijv. `"natuurlijk personen"` display vs `"natuurlijk_personen"` URL).
 
