@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-03-30 23:26
 - **Sessie-ID**: `92ad3d5e-1e45-423d-8497-c8074cc73096`
-- **Berichten**: 35
+- **Berichten**: 36
 
 ---
 
@@ -1313,5 +1313,36 @@ levert
 }
 
 dat is wel heel leeg. Er zit data in de DB
+
+---
+
+## 🤖 Assistant
+
+The null values indicate a hub+data flattening issue — the GraphQL types define flattened fields but the resolver returns the nested structure. Let me investigate the actual struct definitions and the resolve chain. Good — Bereikbaarheid also uses  with . Now let me check the NatuurlijkPersoon entry's children and also the  more carefully: Now I fully understand both issues. Let me implement the fixes:
+
+1. **Null values**: The GraphQL types define flattened hub+data fields, but the resolver returns the raw nested JSON structure. Fields like `voorletters`, `achternaam` are inside `data[0]`, not at the hub level. Also, Enkelvoudig children (like `namen`) are arrays in Go but single objects in GraphQL.
+2. **Playground**: Replace with GraphiQL. Now I'll add the flattening functions and update the resolver, plus replace the Playground HTML with GraphiQL: 
+```
+
+```
+
+```
+
+```
+Build succeeds. Let me run the tests: Build en tests slagen. Twee fixes doorgevoerd:
+
+### 1. Null values opgelost — hub+data flattening in resolver
+
+Het probleem: de GraphQL types definiëren hub- en data-velden plat op één niveau (bijv. `voorletters`, `achternaam` direct op `NatuurlijkPersoon_Naam`), maar de resolver deed een JSON round-trip die de hiërarchische Go structuur behoudt (`data: [{voorletters: ...}]` genest in de hub). GraphQL zocht `voorletters` op het hub-niveau en vond niets → `null`.
+
+Twee nieuwe functies in :
+- **** — loopt recursief door alle , flattent hub data, en converteert Enkelvoudig arrays naar single objects
+- **** — kopieert velden van `data[0]` naar het hub-niveau en verwijdert de `data` key
+
+### 2. Playground → GraphiQL
+
+ gebruikt nu **GraphiQL 3** (via unpkg CDN) i.p.v. het verouderde graphql-playground-react. Geen tooltip-bugs meer, actief onderhouden, betere autocompletion.
+
+Na herstart van de API server zou je query nu de werkelijke data moeten teruggeven en de UI op  toont GraphiQL.
 
 ---

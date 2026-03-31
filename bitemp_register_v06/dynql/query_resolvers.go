@@ -78,7 +78,11 @@ func makeFullEntityResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 			}
 		}
 
-		return entityToMap(entity, meta)
+		result, err := entityToMap(entity, meta)
+		if err != nil {
+			return nil, err
+		}
+		return flattenEntityMap(result, meta), nil
 	}
 }
 
@@ -471,6 +475,98 @@ func trimSpace(s string) string {
 		j--
 	}
 	return s[i:j]
+}
+
+// flattenEntityMap verwerkt hub+data flattening en enkelvoudig-naar-single conversie.
+// De GraphQL types tonen hub- en data-velden plat op één niveau (zie type_builder.go),
+// maar de JSON round-trip van Go structs produceert de hiërarchische structuur
+// (data-velden genest onder "data": [...]).
+// Deze functie brengt de map in lijn met het GraphQL schema.
+func flattenEntityMap(m map[string]interface{}, meta model.TypeMeta) map[string]interface{} {
+	for _, child := range meta.OnderliggendeGegevenselementen {
+		childMeta, ok := model.MetaRegistry.GetTypeMeta(child.Doeltype)
+		if !ok {
+			continue
+		}
+
+		raw, exists := m[child.JSONRolnaam]
+		if !exists || raw == nil {
+			continue
+		}
+
+		// De Go struct heeft altijd slices; JSON round-trip levert []interface{}
+		items, ok := raw.([]interface{})
+		if !ok {
+			continue
+		}
+
+		// Verwerk elk item: hub+data flattening + recursie voor kinderen
+		processed := make([]interface{}, 0, len(items))
+		for _, item := range items {
+			itemMap, ok := item.(map[string]interface{})
+			if !ok {
+				processed = append(processed, item)
+				continue
+			}
+
+			// Hub+data flattening: kopieer data[0] velden naar het hub-niveau
+			if childMeta.GESubtype == model.GESubtypeHub {
+				itemMap = flattenHubData(itemMap)
+			}
+
+			// Recursie voor kinderen van dit type (bijv. aanvang/einde binnen burgerschap)
+			if len(childMeta.OnderliggendeGegevenselementen) > 0 {
+				itemMap = flattenEntityMap(itemMap, childMeta)
+			}
+
+			processed = append(processed, itemMap)
+		}
+
+		// Enkelvoudig: array → single object (of nil)
+		if child.Momentvoorkomen == model.Enkelvoudig {
+			if len(processed) > 0 {
+				m[child.JSONRolnaam] = processed[0]
+			} else {
+				m[child.JSONRolnaam] = nil
+			}
+		} else {
+			m[child.JSONRolnaam] = processed
+		}
+	}
+	return m
+}
+
+// flattenHubData kopieert velden van data[0] naar het hub-niveau en verwijdert "data".
+// Hierdoor ziet de GraphQL-gebruiker een plat type (hub + inhoudelijke velden)
+// in plaats van de interne hub→data hiërarchie.
+func flattenHubData(hub map[string]interface{}) map[string]interface{} {
+	dataRaw, exists := hub["data"]
+	if !exists || dataRaw == nil {
+		delete(hub, "data")
+		return hub
+	}
+
+	dataItems, ok := dataRaw.([]interface{})
+	if !ok || len(dataItems) == 0 {
+		delete(hub, "data")
+		return hub
+	}
+
+	dataMap, ok := dataItems[0].(map[string]interface{})
+	if !ok {
+		delete(hub, "data")
+		return hub
+	}
+
+	// Kopieer data-velden naar hub (hub-velden hebben voorrang bij dubbele keys)
+	for k, v := range dataMap {
+		if _, exists := hub[k]; !exists {
+			hub[k] = v
+		}
+	}
+
+	delete(hub, "data")
+	return hub
 }
 
 func isZeroID(id interface{}) bool {
