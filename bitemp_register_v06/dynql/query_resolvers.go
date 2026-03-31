@@ -42,10 +42,19 @@ func makeFullEntityResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 		}
 
 		// Peiltijdstip argument (optioneel)
+		// peiltijdstip heeft voorrang; als die ontbreekt, kijk naar t (integer shorthand)
 		var peiltijdstip *time.Time
 		if pt, ok := p.Args["peiltijdstip"]; ok && pt != nil {
 			if t, ok := pt.(time.Time); ok {
 				peiltijdstip = &t
+			}
+		}
+		if peiltijdstip == nil {
+			if tVal, ok := p.Args["t"]; ok && tVal != nil {
+				if tInt, ok := tVal.(int); ok {
+					pt := tijdstipUitT(tInt)
+					peiltijdstip = &pt
+				}
 			}
 		}
 
@@ -583,4 +592,13 @@ func isZeroID(id interface{}) bool {
 	default:
 		return false
 	}
+}
+
+// tijdstipUitT vertaalt een integer t naar een deterministisch peiltijdstip.
+// Zelfde logica als handlers.tijdstipUitT: 2026-01-01T00:00:00Z + t uur + t µs.
+func tijdstipUitT(t int) time.Time {
+	return time.
+		Date(2026, 1, 1, 0, 0, 0, 0, time.UTC).
+		Add(time.Duration(t) * time.Hour).
+		Add(time.Microsecond * time.Duration(t))
 }

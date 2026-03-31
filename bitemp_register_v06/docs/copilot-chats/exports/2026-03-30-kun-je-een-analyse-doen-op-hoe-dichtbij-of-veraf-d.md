@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-03-30 23:26
 - **Sessie-ID**: `92ad3d5e-1e45-423d-8497-c8074cc73096`
-- **Berichten**: 36
+- **Berichten**: 39
 
 ---
 
@@ -1344,5 +1344,43 @@ Twee nieuwe functies in :
  gebruikt nu **GraphiQL 3** (via unpkg CDN) i.p.v. het verouderde graphql-playground-react. Geen tooltip-bugs meer, actief onderhouden, betere autocompletion.
 
 Na herstart van de API server zou je query nu de werkelijke data moeten teruggeven en de UI op  toont GraphiQL.
+
+---
+
+## 🧑 User
+
+ik gebruik nu om te testen niet zozeer het peilmoment maar t=1, 2, 3 waarbij het omgezet wordt naar een echte datum-tijd. Kun je die ook in de graphql stoppen?
+
+---
+
+## 🤖 Assistant
+
+
+```
+
+```
+
+```
+
+```
+Klaar. Het  argument is toegevoegd aan de  queries, met dezelfde logica als in de REST handlers: . Als  ook is meegegeven, krijgt die voorrang.
+
+Gebruik:
+```graphql
+query {
+  full_natuurlijk_personen(id: "2", t: 3) {
+    namen {
+      voorletters
+      achternaam
+    }
+  }
+}
+```
+
+---
+
+## 🧑 User
+
+eem vraag: id is een string, maar np heeft een int als id. Of is de id parameter globaal, dus als er verschillende typen id's zijn moet ie string zijn?
 
 ---

@@ -58,6 +58,10 @@ func BuildSchema(database *bun.DB) (*graphql.Schema, error) {
 					Type:        DateTimeScalar,
 					Description: "Formeel peiltijdstip (ISO 8601). Optioneel; als leeg: actuele situatie.",
 				},
+				"t": &graphql.ArgumentConfig{
+					Type:        graphql.Int,
+					Description: "Shorthand peiltijdstip: integer t wordt vertaald naar 2026-01-01T00:00:00Z + t uur + t µs. Als peiltijdstip ook is meegegeven, krijgt peiltijdstip voorrang.",
+				},
 			},
 			Resolve: makeFullEntityResolver(meta),
 		}

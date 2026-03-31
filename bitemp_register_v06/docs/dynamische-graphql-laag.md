@@ -341,6 +341,76 @@ query {
   }
 }
 ```
+####Uitgebreider
+```
+{
+  full_natuurlijk_personen(id: "1", peiltijdstip: "2026-01-02T10:00:00.000034Z") {
+    id
+    opvoer
+    afvoer
+    weergavenaam
+    persoonsidentificaties {
+      natuurlijkpersoon_id
+      rel_id
+      bsn
+      ingezetene
+      opvoer
+      afvoer
+    }
+    namen {
+      natuurlijkpersoon_id
+      rel_id
+      voorletters
+      roepnaam
+      tussenvoegsel
+      achternaam
+      opvoer
+      afvoer
+    }
+    partnernamen {
+      achternaam
+    }
+    naamgebruiken {
+      naamgebruik
+    }
+    burgerschappen {
+      natuurlijkpersoon_id
+      rel_id
+      landcode
+      nationaliteit
+      opvoer
+      afvoer
+      aanvang {
+        datum
+        versie
+      }
+      einde {
+        datum
+        versie
+      }
+    }
+    bereikbaarheden {
+      natuurlijkpersoon_id
+      rel_id
+      locatie_id
+      soort
+      opvoer
+      afvoer
+      aanvang {
+        datum
+      }
+    }
+    aanvang {
+      datum
+      versie
+    }
+    einde {
+      datum
+      versie
+    }
+  }
+}
+```
 
 #### Lijst Locaties met paginering
 
