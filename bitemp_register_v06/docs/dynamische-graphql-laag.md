@@ -1,6 +1,6 @@
 # Dynamische GraphQL-laag vanuit MetaRegistry
 
-> Datum: 31 maart 2026
+> Datum: 1 april 2026
 > Status: **Geïmplementeerd** — build en tests OK
 
 ## Samenvatting
@@ -56,7 +56,7 @@ In tegenstelling tot gqlgen (dat een `.graphqls` schema-file en code generation 
 | `query_resolvers.go`    | ~315 | Full-entity, lijst en registratie resolvers met directe Bun queries                  |
 | `mutation_resolvers.go` | ~125 | Registreer/corrigeer/maakOngedaan via REST round-trip naar eigen server               |
 | `schema_builder.go`     | ~160 | `BuildSchema()` — assembleert alles vanuit MetaRegistry                               |
-| `handler.go`            | ~95  | Gin HTTP handler (`graphql.Do()`) + Playground UI                                     |
+| `handler.go`            | ~95  | Gin HTTP handler (`graphql.Do()`) + GraphiQL UI                                       |
 
 ### Gewijzigde bestanden
 
@@ -73,21 +73,19 @@ In tegenstelling tot gqlgen (dat een `.graphqls` schema-file en code generation 
 
 | Methode | Pad                    | Beschrijving                                |
 |---------|------------------------|---------------------------------------------|
-| GET     | `/graphql/playground`  | GraphQL Playground UI                       |
+| GET     | `/graphql/playground`  | GraphiQL UI                                 |
 | POST    | `/graphql/query`       | GraphQL query/mutation endpoint             |
 | GET     | `/graphql/query`       | GraphQL query endpoint (GET met querystring) |
 
-### Playground → GraphiQL upgrade (optioneel)
+### UI: GraphiQL (live)
 
-De huidige Playground UI gebruikt **graphql-playground-react** (CDN). Dit project wordt niet meer onderhouden en heeft bekende bugs, waaronder tooltips die na mouseover niet meer verdwijnen.
+De UI op `/graphql/playground` gebruikt nu **GraphiQL**.
 
-**GraphiQL** is het actief onderhouden alternatief van de GraphQL Foundation. Voordelen:
+GraphiQL is het actief onderhouden alternatief van de GraphQL Foundation. Voordelen:
 - Modern React-based interface
 - Plugin-systeem (explorer sidebar, etc.)
 - Geen CDN-bugs met tooltips
 - Betere autocompletion en documentatie-integratie
-
-Implementatie: vervang de embedded HTML in `dynql/handler.go` (`PlaygroundHandler`) door een GraphiQL-template. De handler-structuur blijft identiek; alleen de HTML/JS verandert.
 
 ---
 
@@ -99,14 +97,14 @@ Implementatie: vervang de embedded HTML in `dynql/handler.go` (`PlaygroundHandle
 
 | Query | Argumenten | Retourtype | Beschrijving |
 |-------|-----------|------------|-------------|
-| `full_natuurlijk_personen(id, peiltijdstip?)` | `id: String!`, `peiltijdstip: DateTime` | `NatuurlijkPersoon` | Volledige NP met alle GE's/relaties |
+| `full_natuurlijk_personen(id, peiltijdstip?, t?)` | `id: Int!`, `peiltijdstip: DateTime`, `t: Int` | `NatuurlijkPersoon` | Volledige NP met alle GE's/relaties |
 | `natuurlijk_personen(limit?, offset?)` | `limit: Int = 20`, `offset: Int = 0` | `[NatuurlijkPersoon]` | Lijst NatuurlijkPersoon (paginering) |
-| `full_locaties(id, peiltijdstip?)` | `id: String!`, `peiltijdstip: DateTime` | `Locatie` | Volledige Locatie met GE's |
+| `full_locaties(id, peiltijdstip?, t?)` | `id: Int!`, `peiltijdstip: DateTime`, `t: Int` | `Locatie` | Volledige Locatie met GE's |
 | `locaties(limit?, offset?)` | `limit: Int = 20`, `offset: Int = 0` | `[Locatie]` | Lijst Locaties |
 | `registratie(id)` | `id: Int!` | `Registratie` | Eén registratie met wijzigingen |
 | `registraties(limit?, offset?)` | `limit: Int = 20`, `offset: Int = 0` | `[Registratie]` | Lijst registraties (nieuwste eerst) |
 
-> Idem voor andere entiteiten in de MetaRegistry (bijv. `full_adellijke_titels`, etc.)
+> `id` wordt per entiteit dynamisch getypeerd bij schema-opbouw (bijv. `Int` voor NP/Locatie, `String` waar een entiteit een string-id heeft).
 
 ### Mutations
 
@@ -127,7 +125,7 @@ Voor elke entiteit in de MetaRegistry worden twee queries geregistreerd:
 ```graphql
 # Volledige entiteit met alle geneste GE's/relaties
 query {
-  full_<padnaam>(id: String!, peiltijdstip: DateTime) {
+  full_<padnaam>(id: <Int|String>!, peiltijdstip: DateTime, t: Int) {
     id
     # ... alle velden inclusief onderliggende GE's/relaties
   }
@@ -143,9 +141,16 @@ query {
 ```
 
 Voorbeelden (afhankelijk van actuele MetaRegistry-inhoud):
-- `full_natuurlijk_personen(id: "1")` — NatuurlijkPersoon met alle GE's
+- `full_natuurlijk_personen(id: 1)` — NatuurlijkPersoon met alle GE's
 - `locaties(limit: 10)` — lijst van Locaties
-- `full_as(id: "1", peiltijdstip: "2026-01-05T00:00:00Z")` — A op formeel peiltijdstip
+- `full_as(id: 1, peiltijdstip: "2026-01-05T00:00:00Z")` — A op formeel peiltijdstip
+- `full_natuurlijk_personen(id: 1, t: 3)` — NatuurlijkPersoon op shorthand peilmoment `t`
+
+`t` gebruikt dezelfde vertaling als in de REST handlers:
+
+`2026-01-01T00:00:00Z + t uur + t microseconden`.
+
+Als zowel `peiltijdstip` als `t` is meegegeven, krijgt `peiltijdstip` voorrang.
 
 ### Registraties
 
@@ -258,7 +263,7 @@ Onderstaande voorbeelden gebruiken het NatuurlijkPersoon / Locatie / Bereikbaarh
 
 ```graphql
 query {
-  full_natuurlijk_personen(id: "1") {
+  full_natuurlijk_personen(id: 1) {
     id
     opvoer
     afvoer
@@ -327,7 +332,7 @@ query {
 
 ```graphql
 query {
-  full_natuurlijk_personen(id: "1", peiltijdstip: "2025-06-01T00:00:00Z") {
+  full_natuurlijk_personen(id: 1, peiltijdstip: "2025-06-01T00:00:00Z") {
     id
     weergavenaam
     namen {
@@ -341,10 +346,29 @@ query {
   }
 }
 ```
+
+#### Volledige NatuurlijkPersoon met shorthand peilmoment `t`
+
+```graphql
+query {
+  full_natuurlijk_personen(id: 1, t: 3) {
+    id
+    weergavenaam
+    namen {
+      voorletters
+      achternaam
+    }
+    burgerschappen {
+      nationaliteit
+    }
+  }
+}
+```
+
 ####Uitgebreider
 ```
 {
-  full_natuurlijk_personen(id: "1", peiltijdstip: "2026-01-02T10:00:00.000034Z") {
+  full_natuurlijk_personen(id: 1, peiltijdstip: "2026-01-02T10:00:00.000034Z") {
     id
     opvoer
     afvoer
@@ -428,7 +452,7 @@ query {
 
 ```graphql
 query {
-  full_locaties(id: "1") {
+  full_locaties(id: 1) {
     id
     opvoer
     weergaveadres

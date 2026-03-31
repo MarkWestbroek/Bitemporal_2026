@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-03-30 23:26
 - **Sessie-ID**: `92ad3d5e-1e45-423d-8497-c8074cc73096`
-- **Berichten**: 39
+- **Berichten**: 44
 
 ---
 
@@ -1382,5 +1382,70 @@ query {
 ## 🧑 User
 
 eem vraag: id is een string, maar np heeft een int als id. Of is de id parameter globaal, dus als er verschillende typen id's zijn moet ie string zijn?
+
+---
+
+## 🤖 Assistant
+
+Ik check heel kort de actuele implementatie zodat ik je exact kan uitleggen waarom GraphQL nu String gebruikt voor id en wat de beste richting is als je verschillende ID-typen hebt.Ja, precies: dit is nu bewust generiek gemaakt.
+
+In de dynamische GraphQL-build is de parameter voor full-query’s overal als String gezet, zie .  
+Dat is gedaan omdat de querygenerator globaal werkt voor alle entiteiten en ID-typen kunnen verschillen (int, string, eventueel composiet representatie-id’s als tekst).
+
+Aan de modelkant is dat ook generiek opgezet via GetID() any, zie bijvoorbeeld .
+
+Voor NatuurlijkPersoon is de echte DB-id inderdaad int, maar door de generieke laag komt die nu als String binnen. Functioneel kan dat, maar strikter getypeerd is mooier.
+
+Praktisch advies:
+1. Houd globaal op String/ID als je mixed ID-typen verwacht.
+2. Als je per type strikte typing wilt, dan kun je dynamisch per entiteit het id-argument als Int of String zetten op basis van metadata/reflectie.
+3. Tussenoplossing: gebruik GraphQL ID scalar i.p.v. String (semantisch beter voor identifiers).
+
+Als je wilt, kan ik dit nu meteen omzetten naar optie 2 (dynamisch Int voor NP/Locatie, String waar nodig).
+
+---
+
+## 🧑 User
+
+bij 2: zet je dat bij het opzetten van het graphql schema? Of steeds bij elke call?
+
+---
+
+## 🧑 User
+
+ja, dat lijkt mij een goed idee. Wil je dat maken?
+
+---
+
+## 🧑 User
+
+ja, heel graag. Wil je altijd de documentatie bijwerken, als dat opportuun is?
+
+---
+
+## 🤖 Assistant
+
+
+```
+
+```
+
+```
+
+```
+De inhoud is bijgewerkt. Ik sla nu je voorkeur op als persistent memory, zodat ik voortaan proactief docs mee-update wanneer dat zinvol is.Ja, gedaan op beide punten.
+
+Documentatie is bijgewerkt in :
+
+1. GraphiQL-status is nu actueel beschreven (niet meer als “optionele upgrade”).
+2. Query-referenties tonen nu  naast .
+3. -typing staat nu correct als dynamisch per entiteit (bij NP/Locatie `Int`).
+4. Voorbeelden zijn aangepast van `"1"` naar `1` waar van toepassing.
+5. Extra voorbeeld toegevoegd met shorthand peilmoment: `full_natuurlijk_personen(id: 1, t: 3)`.
+
+En je voorkeur is persistent opgeslagen in memory:
+- “Bij opportune codewijzigingen altijd de bijbehorende documentatie bijwerken.”
+
+Die neem ik vanaf nu standaard mee.
 
 ---

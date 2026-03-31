@@ -8,6 +8,7 @@ package dynql
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 	"github.com/graphql-go/graphql"
@@ -46,12 +47,13 @@ func BuildSchema(database *bun.DB) (*graphql.Schema, error) {
 
 		// full_<padnaam>(id, peiltijdstip) — één entiteit met alle geneste GE's/relaties
 		fullName := "full_" + padnaam
+		idArgType := inferIDArgType(meta)
 		queryFields[fullName] = &graphql.Field{
 			Type:        objType,
 			Description: fmt.Sprintf("Volledige %s met alle onderliggende gegevenselementen en relaties", meta.Typenaam),
 			Args: graphql.FieldConfigArgument{
 				"id": &graphql.ArgumentConfig{
-					Type:        graphql.NewNonNull(graphql.String),
+					Type:        graphql.NewNonNull(idArgType),
 					Description: "ID van de entiteit",
 				},
 				"peiltijdstip": &graphql.ArgumentConfig{
@@ -173,4 +175,90 @@ func BuildSchema(database *bun.DB) (*graphql.Schema, error) {
 	}
 
 	return &schema, nil
+}
+
+// inferIDArgType bepaalt het GraphQL argumenttype voor `id` op basis van het
+// daadwerkelijke Go-type van de ID-kolom van de entiteit.
+// Dit gebeurt eenmalig bij schema-opbouw (startup), niet per request.
+func inferIDArgType(meta model.TypeMeta) graphql.Input {
+	rep := makeMetaRepresentative(meta)
+	if rep == nil {
+		return graphql.String
+	}
+
+	t := reflect.TypeOf(rep)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	if t.Kind() != reflect.Struct {
+		return graphql.String
+	}
+
+	fieldType, ok := findFieldTypeByBunKolom(t, meta.IDKolom)
+	if !ok {
+		return graphql.String
+	}
+
+	for fieldType.Kind() == reflect.Ptr {
+		fieldType = fieldType.Elem()
+	}
+
+	switch fieldType.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return graphql.Int
+	case reflect.String:
+		return graphql.String
+	default:
+		return graphql.String
+	}
+}
+
+func makeMetaRepresentative(meta model.TypeMeta) interface{} {
+	if meta.DBFactory != nil {
+		return meta.DBFactory()
+	}
+	if meta.Factory != nil {
+		return meta.Factory()
+	}
+	return nil
+}
+
+func findFieldTypeByBunKolom(t reflect.Type, kolom string) (reflect.Type, bool) {
+	for i := 0; i < t.NumField(); i++ {
+		f := t.Field(i)
+
+		// Embedded structs (zoals bun.BaseModel) recursief inspecteren.
+		if f.Anonymous {
+			embeddedType := f.Type
+			if embeddedType.Kind() == reflect.Ptr {
+				embeddedType = embeddedType.Elem()
+			}
+			if embeddedType.Kind() == reflect.Struct {
+				if ft, ok := findFieldTypeByBunKolom(embeddedType, kolom); ok {
+					return ft, true
+				}
+			}
+		}
+
+		bunTag := f.Tag.Get("bun")
+		if bunTag == "" {
+			continue
+		}
+
+		// Eerste deel van bun tag is kolomnaam, bijv. `id,pk`.
+		col := bunTag
+		for j := 0; j < len(col); j++ {
+			if col[j] == ',' {
+				col = col[:j]
+				break
+			}
+		}
+
+		if col == kolom {
+			return f.Type, true
+		}
+	}
+
+	return nil, false
 }
