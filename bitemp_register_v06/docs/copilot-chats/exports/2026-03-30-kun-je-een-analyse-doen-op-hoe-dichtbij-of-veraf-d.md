@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-03-30 23:26
 - **Sessie-ID**: `92ad3d5e-1e45-423d-8497-c8074cc73096`
-- **Berichten**: 34
+- **Berichten**: 35
 
 ---
 
@@ -1232,6 +1232,86 @@ En eventueel nog wat voorbeelden (opvragen en registreren) op basis van het np-l
 
 
 
-Laat me eerst het huidige model en de documentatie lezen om goede voorbeelden te maken.  
+Laat me eerst het huidige model en de documentatie lezen om goede voorbeelden te maken.  Now I have everything I need. Let me update the doc file with all three additions in one pass. 
+```
+
+```
+Now add the NP-Loc example queries and mutations section at the end, before the TODO section: 
+```
+
+```
+De documentatie is bijgewerkt met drie toevoegingen:
+
+1. **GraphiQL upgrade sectie** — beschrijft het probleem met de verouderde Playground en hoe naar GraphiQL te upgraden (onder "Endpoints")
+2. **Quick reference tabel** — nieuwe prominente sectie "Quick reference: beschikbare queries en mutations" met overzichtstabellen voor alle queries en mutations, direct onder de endpoints
+3. **Voorbeelden (NP-Loc domein)** — uitgebreide sectie met concrete voorbeelden:
+   - Full De documentatie is bijgewerkt met drie toevoegingen:
+
+1. **GraphiQL upgrade sectie** — beschrijft het probleem met de verouderde Playground en hoe naar GraphiQL te upgraden (onder "Endpoints")
+2. **Quick reference tabel** — nieuwe prominente sectie "Quick reference: beschikbare queries en mutations" met overzichtstabellen voor alle queries en mutations, direct onder de endpoints
+3. **Voorbeelden (NP-Loc domein)** — uitgebreide sectie met concrete voorbeelden:
+   - Full NatuurlijkPersoon ophalen (alle geneste GE's)
+   - NP op formeel peiltijdstip
+   - Lijst Locaties met paginering
+   - Full Locatie ophalen
+   - Registraties opvragen
+   - Mutation: opvoer NP met naam/burgerschap/naamgebruik
+   - Mutation: opvoer Locatie met adres
+   - Mutation: Bereikbaarheid relatie (NP ↔ Locatie)
+   - Mutation: correctie achternaam (afvoer + heropvoer)
+
+Het bestand staat in docs/dynamische-graphql-laag.md.
+
+---
+
+## 🧑 User
+
+wil je de playground vervangen / upgraden naar GraphiQL? het werkt op windows ook niet zoals het moet.
+
+Ik zie verder ook geen resultaten.
+
+query {
+  full_natuurlijk_personen(id: "2") {
+    opvoer
+    afvoer
+    namen {
+      voorletters
+      roepnaam
+      achternaam
+    }
+    burgerschappen {
+      nationaliteit
+      landcode
+      opvoer
+      afvoer
+    }
+  }
+}
+
+levert
+
+{
+  "data": {
+    "full_natuurlijk_personen": {
+      "afvoer": null,
+      "burgerschappen": [
+        {
+          "afvoer": null,
+          "landcode": null,
+          "nationaliteit": null,
+          "opvoer": null
+        }
+      ],
+      "namen": {
+        "achternaam": null,
+        "roepnaam": null,
+        "voorletters": null
+      },
+      "opvoer": null
+    }
+  }
+}
+
+dat is wel heel leeg. Er zit data in de DB
 
 ---

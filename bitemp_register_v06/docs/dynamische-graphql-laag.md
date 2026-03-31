@@ -77,7 +77,48 @@ In tegenstelling tot gqlgen (dat een `.graphqls` schema-file en code generation 
 | POST    | `/graphql/query`       | GraphQL query/mutation endpoint             |
 | GET     | `/graphql/query`       | GraphQL query endpoint (GET met querystring) |
 
-## Beschikbare queries
+### Playground → GraphiQL upgrade (optioneel)
+
+De huidige Playground UI gebruikt **graphql-playground-react** (CDN). Dit project wordt niet meer onderhouden en heeft bekende bugs, waaronder tooltips die na mouseover niet meer verdwijnen.
+
+**GraphiQL** is het actief onderhouden alternatief van de GraphQL Foundation. Voordelen:
+- Modern React-based interface
+- Plugin-systeem (explorer sidebar, etc.)
+- Geen CDN-bugs met tooltips
+- Betere autocompletion en documentatie-integratie
+
+Implementatie: vervang de embedded HTML in `dynql/handler.go` (`PlaygroundHandler`) door een GraphiQL-template. De handler-structuur blijft identiek; alleen de HTML/JS verandert.
+
+---
+
+## Quick reference: beschikbare queries en mutations
+
+> Beknopt overzicht van alle beschikbare GraphQL operaties.
+
+### Queries
+
+| Query | Argumenten | Retourtype | Beschrijving |
+|-------|-----------|------------|-------------|
+| `full_natuurlijk_personen(id, peiltijdstip?)` | `id: String!`, `peiltijdstip: DateTime` | `NatuurlijkPersoon` | Volledige NP met alle GE's/relaties |
+| `natuurlijk_personen(limit?, offset?)` | `limit: Int = 20`, `offset: Int = 0` | `[NatuurlijkPersoon]` | Lijst NatuurlijkPersoon (paginering) |
+| `full_locaties(id, peiltijdstip?)` | `id: String!`, `peiltijdstip: DateTime` | `Locatie` | Volledige Locatie met GE's |
+| `locaties(limit?, offset?)` | `limit: Int = 20`, `offset: Int = 0` | `[Locatie]` | Lijst Locaties |
+| `registratie(id)` | `id: Int!` | `Registratie` | Eén registratie met wijzigingen |
+| `registraties(limit?, offset?)` | `limit: Int = 20`, `offset: Int = 0` | `[Registratie]` | Lijst registraties (nieuwste eerst) |
+
+> Idem voor andere entiteiten in de MetaRegistry (bijv. `full_adellijke_titels`, etc.)
+
+### Mutations
+
+| Mutation | Argument | Beschrijving |
+|----------|----------|-------------|
+| `registreer(input: JSON!)` | Registratie+wijzigingen JSON | Nieuwe registratie (opvoer/afvoer) |
+| `corrigeer(input: JSON!)` | Correctie JSON | Correctie (ongedaanmaking + heropvoer) |
+| `maak_ongedaan(input: JSON!)` | Ongedaanmaking JSON | Maak een registratie ongedaan |
+
+---
+
+## Beschikbare queries (detail)
 
 ### Per entiteit (dynamisch vanuit MetaRegistry)
 
@@ -204,6 +245,319 @@ De GraphQL-laag is volledig afhankelijk van de MetaRegistry:
 5. **Afgeleide velden** — `AfgeleideVelden` worden als extra velden toegevoegd
 
 Bij het toevoegen van een nieuw type aan de MetaRegistry verschijnt het automatisch in het GraphQL schema bij de volgende serverstart.
+
+---
+
+## Voorbeelden (NP-Loc domein)
+
+Onderstaande voorbeelden gebruiken het NatuurlijkPersoon / Locatie / Bereikbaarheid domeinmodel.
+
+### Queries
+
+#### Volledige NatuurlijkPersoon ophalen
+
+```graphql
+query {
+  full_natuurlijk_personen(id: "1") {
+    id
+    opvoer
+    afvoer
+    weergavenaam
+    persoonsidentificaties {
+      natuurlijkpersoon_id
+      rel_id
+      bsn
+      ingezetene
+      opvoer
+      afvoer
+    }
+    namen {
+      natuurlijkpersoon_id
+      rel_id
+      voorletters
+      roepnaam
+      tussenvoegsel
+      achternaam
+      opvoer
+      afvoer
+    }
+    burgerschappen {
+      natuurlijkpersoon_id
+      rel_id
+      landcode
+      nationaliteit
+      opvoer
+      afvoer
+      aanvang {
+        datum
+        versie
+      }
+      einde {
+        datum
+        versie
+      }
+    }
+    naamgebruiken {
+      naamgebruik
+    }
+    bereikbaarheden {
+      natuurlijkpersoon_id
+      rel_id
+      locatie_id
+      soort
+      opvoer
+      afvoer
+      aanvang {
+        datum
+      }
+    }
+    aanvang {
+      datum
+      versie
+    }
+    einde {
+      datum
+      versie
+    }
+  }
+}
+```
+
+#### Volledige NatuurlijkPersoon op formeel peiltijdstip
+
+```graphql
+query {
+  full_natuurlijk_personen(id: "1", peiltijdstip: "2025-06-01T00:00:00Z") {
+    id
+    weergavenaam
+    namen {
+      voorletters
+      achternaam
+    }
+    burgerschappen {
+      nationaliteit
+      aanvang { datum }
+    }
+  }
+}
+```
+
+#### Lijst Locaties met paginering
+
+```graphql
+query {
+  locaties(limit: 5, offset: 0) {
+    id
+    opvoer
+    weergaveadres
+  }
+}
+```
+
+#### Volledige Locatie ophalen
+
+```graphql
+query {
+  full_locaties(id: "1") {
+    id
+    opvoer
+    weergaveadres
+    adressen {
+      locatie_id
+      rel_id
+      straatnaam
+      huisnummer
+      postcode
+      plaats
+      land
+      opvoer
+    }
+    baglocaties {
+      adresaanduiding
+    }
+    aanvang {
+      datum
+      versie
+    }
+  }
+}
+```
+
+#### Registraties opvragen
+
+```graphql
+query {
+  registraties(limit: 10) {
+    id
+    registratietype
+    tijdstip
+    opmerking
+  }
+}
+
+query {
+  registratie(id: 1) {
+    id
+    registratietype
+    tijdstip
+    opmerking
+    wijzigingen {
+      id
+      type_naam
+      opvoer_of_afvoer
+    }
+  }
+}
+```
+
+### Mutations
+
+#### Registreer nieuwe NatuurlijkPersoon (opvoer met GE's)
+
+```graphql
+mutation {
+  registreer(input: {
+    registratie: {
+      registratietype: "registratie",
+      tijdstip: "2026-04-01T09:00:00Z",
+      opmerking: "Opvoer NatuurlijkPersoon met naam en burgerschap"
+    },
+    wijzigingen: [
+      {
+        opvoer: {
+          natuurlijkpersoon: {
+            id: 5,
+            persoonsidentificaties: [
+              { bsn: "987654321", ingezetene: true }
+            ],
+            namen: [
+              {
+                voorletters: "A.B.",
+                roepnaam: "Anna",
+                achternaam: "de Vries"
+              }
+            ],
+            burgerschappen: [
+              {
+                landcode: "NL",
+                nationaliteit: "Nederlandse",
+                aanvang: "1995-08-20"
+              }
+            ],
+            naamgebruiken: [
+              { naamgebruik: "EigenNaam" }
+            ],
+            aanvang: [
+              { datum: "1995-08-20" }
+            ]
+          }
+        }
+      }
+    ]
+  })
+}
+```
+
+#### Registreer nieuwe Locatie
+
+```graphql
+mutation {
+  registreer(input: {
+    registratie: {
+      registratietype: "registratie",
+      tijdstip: "2026-04-01T09:05:00Z",
+      opmerking: "Opvoer Locatie met adres"
+    },
+    wijzigingen: [
+      {
+        opvoer: {
+          locatie: {
+            id: 10,
+            adressen: [
+              {
+                straatnaam: "Keizersgracht",
+                huisnummer: "42",
+                postcode: "1015 CR",
+                plaats: "Amsterdam",
+                land: 6030
+              }
+            ],
+            aanvang: [
+              { datum: "2026-04-01" }
+            ]
+          }
+        }
+      }
+    ]
+  })
+}
+```
+
+#### Registreer Bereikbaarheid (relatie NP ↔ Locatie)
+
+```graphql
+mutation {
+  registreer(input: {
+    registratie: {
+      registratietype: "registratie",
+      tijdstip: "2026-04-01T09:10:00Z",
+      opmerking: "Koppel NP 5 aan Locatie 10 als woonadres"
+    },
+    wijzigingen: [
+      {
+        opvoer: {
+          bereikbaarheid: {
+            natuurlijkpersoon_id: 5,
+            locatie_id: 10,
+            soort: "Woonadres",
+            aanvang: "2026-04-01"
+          }
+        }
+      }
+    ]
+  })
+}
+```
+
+#### Correctie: achternaam wijzigen
+
+```graphql
+mutation {
+  corrigeer(input: {
+    registratie: {
+      registratietype: "correctie",
+      tijdstip: "2026-04-02T10:00:00Z",
+      opmerking: "Correctie achternaam NP 5"
+    },
+    wijzigingen: [
+      {
+        afvoer: {
+          natuurlijkpersoon_naam_data: {
+            natuurlijkpersoon_id: 5,
+            rel_id: 1,
+            versie: 1
+          }
+        }
+      },
+      {
+        opvoer: {
+          natuurlijkpersoon_naam_data: {
+            natuurlijkpersoon_id: 5,
+            rel_id: 1,
+            voorletters: "A.B.",
+            roepnaam: "Anna",
+            achternaam: "Bakker"
+          }
+        }
+      }
+    ]
+  })
+}
+```
+
+> **Let op**: het `input` argument bij mutations is een vrij JSON-object (via de `JSON` scalar). Het formaat is identiek aan het REST `POST /registratie/` request body.
+
+---
 
 ## Nog te doen (Fase 6: verfijning)
 
