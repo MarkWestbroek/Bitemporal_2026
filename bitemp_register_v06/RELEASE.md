@@ -2,6 +2,11 @@
 
 Korte checklist voor een API-release met losse DB-stack.
 
+## Frontend visual tweak (2026-04-01)
+
+- Index visualisatie: centrale entiteitstekst schaalt nu mee met de lengte van de weergavetekst in de representatiekaart.
+- Effect: lange labels (zoals bij Locatie-adressen) worden iets kleiner getoond dan korte labels, zodat de verhouding met NatuurlijkPersoon visueel consistenter blijft.
+
 ## Runtime fix notes (2026-03-21)
 
 - `GET /full/<entiteit>?t=<...>`: tijdelijke workaround toegevoegd voor een Bun v1.1.14 panic bij geneste `has-many` relaties met callback-filters.

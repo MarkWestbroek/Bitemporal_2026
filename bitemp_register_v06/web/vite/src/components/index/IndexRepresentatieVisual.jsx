@@ -26,6 +26,12 @@ export default function IndexRepresentatieVisual({
   entiteitWeergaveVeldTekst,
   evalueerWeergaveVeldenVoorItem,
 }) {
+  const centraleWeergaveTekst = String(entiteitWeergaveVeldTekst || "");
+  const centraleWeergaveFontSize =
+    centraleWeergaveTekst.length > 32 ? "16px" :
+    centraleWeergaveTekst.length > 24 ? "17px" :
+    "19px";
+
   return (
     <svg className="graph" viewBox={`0 0 900 ${svgHoogte}`} preserveAspectRatio="xMidYMid meet">
       {geGroepenMetLayout.map((group) => {
@@ -173,7 +179,7 @@ export default function IndexRepresentatieVisual({
               {entiteitWeergaveVeldTekst ? (
                 <>
                   <text className="label" x="450" y="76" textAnchor="middle"
-                    style={{ fontWeight: 700, fontSize: "19px", fill: "#0f172a" }}>
+                    style={{ fontWeight: 700, fontSize: centraleWeergaveFontSize, fill: "#0f172a" }}>
                     {entiteitWeergaveVeldTekst}
                   </text>
                   <text className="label" x="450" y="98" textAnchor="middle"
