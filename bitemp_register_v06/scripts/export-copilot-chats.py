@@ -43,7 +43,7 @@ def find_workspace_storage_dirs(project_path: str) -> list[str]:
         ws_json = os.path.join(vscode_storage, entry, "workspace.json")
         if os.path.isfile(ws_json):
             try:
-                with open(ws_json, "r") as f:
+                with open(ws_json, "r", encoding="utf-8") as f:
                     data = json.load(f)
                 ws_path = data.get("folder", data.get("workspace", ""))
                 if project_path.rstrip("/") in ws_path:
@@ -68,7 +68,7 @@ def replay_jsonl_state(filepath: str) -> dict:
     messages = []
     current_response_parts = []
 
-    with open(filepath, "r") as f:
+    with open(filepath, "r", encoding="utf-8", errors="replace") as f:
         for line in f:
             line = line.strip()
             if not line:
@@ -250,7 +250,7 @@ def main():
             existing_msg_count = 0
             for ef in existing_files:
                 try:
-                    with open(ef, "r") as f:
+                    with open(ef, "r", encoding="utf-8", errors="replace") as f:
                         content = f.read(600)
                     if session_id in content:
                         existing_filepath = ef
@@ -286,7 +286,7 @@ def main():
             # Schrijf markdown
             md = session_to_markdown(session, session_id)
             if md:
-                with open(filepath, "w") as f:
+                with open(filepath, "w", encoding="utf-8", newline="\n") as f:
                     f.write(md)
                 print(f"  {action}: {session_id[:8]} → {os.path.basename(filepath)}")
                 exported += 1

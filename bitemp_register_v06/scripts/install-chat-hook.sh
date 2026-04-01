@@ -1,7 +1,9 @@
 #!/bin/sh
 # Installeer de pre-commit hook voor Copilot Chat export.
-# Draai dit script vanuit de repo-root:
+# Draai dit script vanuit de repo-root in een POSIX shell:
 #   sh bitemp_register_v06/scripts/install-chat-hook.sh
+# Gebruik op Windows PowerShell liever:
+#   powershell -ExecutionPolicy Bypass -File bitemp_register_v06/scripts/install-chat-hook.ps1
 
 REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
 if [ -z "$REPO_ROOT" ]; then
@@ -28,6 +30,7 @@ if [ -f "$HOOK_DST" ]; then
     exit 0
 fi
 
-cp "$HOOK_SRC" "$HOOK_DST"
+# Normaliseer naar LF zodat Git hooks ook op Windows via Git Bash betrouwbaar draaien.
+tr -d '\r' < "$HOOK_SRC" > "$HOOK_DST"
 chmod +x "$HOOK_DST"
 echo "Pre-commit hook geïnstalleerd: $HOOK_DST"

@@ -1,0 +1,37 @@
+#!/bin/sh
+# Pre-commit hook: exporteer Copilot Chat sessies naar docs/copilot-chats/exports/
+#
+# Dit script draait automatisch voor elke commit en exporteert nieuwe/gewijzigde
+# chat-sessies naar Markdown bestanden in de repo, zodat ze via git gesynchroniseerd
+# worden tussen machines.
+#
+# Installatie:
+#   cp bitemp_register_v06/scripts/pre-commit-chat-export .git/hooks/pre-commit
+#   chmod +x .git/hooks/pre-commit
+#
+# Of als er al een pre-commit hook is, voeg deze regel toe:
+#   bitemp_register_v06/scripts/pre-commit-chat-export
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." 2>/dev/null && pwd)"
+
+# Als we vanuit .git/hooks draaien
+if [ -z "$REPO_ROOT" ] || [ ! -d "$REPO_ROOT/bitemp_register_v06" ]; then
+    REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+fi
+
+EXPORT_SCRIPT="$REPO_ROOT/bitemp_register_v06/scripts/export-copilot-chats.py"
+
+if [ ! -f "$EXPORT_SCRIPT" ]; then
+    echo "[chat-export] Export script niet gevonden: $EXPORT_SCRIPT"
+    exit 0  # niet blokkeren op ontbrekend script
+fi
+
+echo "[chat-export] Copilot chats exporteren..."
+cd "$REPO_ROOT/bitemp_register_v06" && python3 scripts/export-copilot-chats.py
+
+# Voeg nieuwe exports toe aan de huidige commit
+EXPORT_DIR="$REPO_ROOT/bitemp_register_v06/docs/copilot-chats/exports"
+if [ -d "$EXPORT_DIR" ]; then
+    git add "$EXPORT_DIR"/*.md 2>/dev/null
+fi

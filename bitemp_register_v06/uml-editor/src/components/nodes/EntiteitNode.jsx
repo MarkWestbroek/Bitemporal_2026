@@ -50,7 +50,7 @@ function EntiteitNode({ data, selected }) {
             ? "«ref.lijst item»"
             : "«entiteit»"}
         </div>
-        <div className="node-typenaam">{data.klassenaam || data.typenaam || "(naamloos)"}</div>
+        <div className={`node-typenaam${data.isAbstract ? " abstract" : ""}`}>{data.klassenaam || data.typenaam || "(naamloos)"}</div>
         {data.isMaterieel && (
           <div className="node-badge materieel">materieel</div>
         )}

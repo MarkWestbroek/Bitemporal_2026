@@ -166,8 +166,27 @@ export function exportNaarXMI(nodes, edges, meta = {}) {
     `      </UML:Namespace.ownedElement>`,
     `    </UML:Model>`,
     `  </XMI.content>`,
-    `</XMI>`,
   );
+
+  // EA-compatibele extensie met diagramposities
+  xml.push(`  <XMI.extension extender="UML-editor">`);
+  xml.push(`    <diagrams>`);
+  xml.push(`      <diagram>`);
+  xml.push(`        <elements>`);
+  for (const node of nodes) {
+    const xmiId = nodeXmiId(node.id);
+    const x = Math.round(node.position?.x ?? 0);
+    const y = Math.round(node.position?.y ?? 0);
+    const w = node.measured?.width ?? node.width ?? 180;
+    const h = node.measured?.height ?? node.height ?? 120;
+    xml.push(`          <element subject="${xmiId}" left="${x}" right="${x + w}" top="${-y}" bottom="${-(y + h)}"/>`);
+  }
+  xml.push(`        </elements>`);
+  xml.push(`      </diagram>`);
+  xml.push(`    </diagrams>`);
+  xml.push(`  </XMI.extension>`);
+
+  xml.push(`</XMI>`);
 
   return xml.join("\n");
 }
@@ -202,10 +221,11 @@ function buildClass(node, enumNodes = [], dtNodes = []) {
     lines.push(`  </UML:ModelElement.taggedValue>`);
   }
 
-  // Attributen
-  if ((d.velden || []).length > 0) {
+  // Attributen (skip impliciete database-velden: id, *_id, rel_id, versie)
+  const exportVelden = (d.velden || []).filter((v) => !isImplicitDBVeld(v.naam));
+  if (exportVelden.length > 0) {
     lines.push(`  <UML:Classifier.feature>`);
-    for (const v of d.velden) {
+    for (const v of exportVelden) {
       lines.push(...buildAttribute(v, enumNodes, dtNodes).map((l) => `    ${l}`));
     }
     lines.push(`  </UML:Classifier.feature>`);
@@ -440,9 +460,11 @@ function buildAssociationClass(relNode, incomingEdge, outgoingEdge, enumNodes = 
     lines.push(`  </UML:ModelElement.taggedValue>`);
   }
 
-  if ((d.velden || []).length > 0) {
+  // Attributen van de relatie (skip impliciete database-velden)
+  const exportVelden = (d.velden || []).filter((v) => !isImplicitDBVeld(v.naam));
+  if (exportVelden.length > 0) {
     lines.push(`  <UML:Classifier.feature>`);
-    for (const v of d.velden) {
+    for (const v of exportVelden) {
       lines.push(...buildAttribute(v, enumNodes, dtNodes).map((l) => `    ${l}`));
     }
     lines.push(`  </UML:Classifier.feature>`);
@@ -565,4 +587,18 @@ function buildDependency(clientNodeId, supplierNodeId) {
 function arraysEqual(a, b) {
   if (!a || !b || a.length !== b.length) return false;
   return a.every((v, i) => v === b[i]);
+}
+
+/**
+ * Bepaal of een veldnaam een impliciet database-artefact is dat niet in UML thuishoort.
+ * Bijv. id, a_id, b_id, rel_id, versie — deze worden door de database-laag gegenereerd.
+ */
+function isImplicitDBVeld(naam) {
+  if (!naam) return false;
+  const lower = naam.toLowerCase();
+  // Exacte matches: id, rel_id, versie
+  if (lower === "id" || lower === "rel_id" || lower === "versie") return true;
+  // Patroon: *_id (bijv. a_id, b_id, taak_id) — entiteit-FK's
+  if (/^[a-z]_id$/.test(lower)) return true;
+  return false;
 }

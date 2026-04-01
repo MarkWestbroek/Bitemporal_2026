@@ -2,9 +2,11 @@
 
 Deze map is de vervanger voor online chat-sync: je bewaart belangrijke chats als bestanden in Git.
 
+Voor automatische export en synchronisatie via Git, zie ook `../copilot-chat-sync.md`.
+
 ## Structuur
 
-- `exports/` bevat ruwe exports uit VS Code (`Chat: Export Chat...`), meestal JSON.
+- `exports/` bevat geëxporteerde chats uit het exportscript in `scripts/export-copilot-chats.py`.
 - `summaries/` bevat korte samenvattingen per chat in Markdown.
 - `templates/` bevat invultemplates.
 
@@ -29,10 +31,26 @@ Richtlijnen:
 
 ## Snel workflow
 
-1. Exporteer belangrijke chat: `Chat: Export Chat...` naar `exports/`.
+1. Draai het exportscript of gebruik de git hook om chats naar `exports/` te schrijven.
 2. Maak direct een samenvatting in `summaries/` met dezelfde stamnaam.
 3. Voeg beide bestanden toe aan je commit als de chat leidde tot code- of ontwerpbeslissingen.
 4. Zet herbruikbare prompts om naar `.prompt.md` met `/savePrompt` en bewaar ze in een geschikte map (bijvoorbeeld `prompts/` of `docs/prompts/`).
+
+## Installatie hook
+
+Windows PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File bitemp_register_v06/scripts/install-chat-hook.ps1
+```
+
+Git Bash of andere POSIX shell:
+
+```sh
+sh bitemp_register_v06/scripts/install-chat-hook.sh
+```
+
+Na installatie draait de export bij elke `git commit`, ook vanuit GitHub Desktop.
 
 ## Beslisregel: wel of niet bewaren?
 

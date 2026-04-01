@@ -61,6 +61,15 @@ De editor kan het bestaande model inladen vanuit de **schema-API** (`/schema`) v
 | **Laden vanuit JSON** | Toolbar: 📂 → upload eerder opgeslagen bestand (flowState) of V3-model JSON (`entiteiten`) |
 | **Laden vanuit schema-API** | Toolbar: 🔌 → voer URL in (bijv. `http://localhost:8080/schema`) |
 | **Verwijderen** | Selecteer + Delete/Backspace, of via rode knop in sidebar |
+| **Edge optimaliseren** | Dubbelklik op een lijn → handles worden herberekend voor kortste route |
+| **Gebiedsselectie** | Shift + sleep op canvas → rubber-band selectie van meerdere nodes |
+| **Multi-selectie** | Ctrl + klik op nodes om ze individueel bij de selectie te voegen |
+| **Export Mermaid** | Toolbar: 🧜 Mermaid → download `metamodel.mmd` |
+| **Export PlantUML** | Toolbar: 🌱 PlantUML → download `metamodel.puml` |
+| **Export XMI 1.1** | Toolbar: 📦 XMI 1.1 → download `metamodel.xmi` (incl. diagramposities) |
+| **Import XMI** | Toolbar: 📥 XMI → laad `.xmi`/`.xml` bestand (incl. EA diagramposities) |
+| **Import Mermaid** | Toolbar: 📥 Mermaid → laad `.mmd`/`.md`/`.txt` bestand |
+| **Import PlantUML** | Toolbar: 📥 PlantUML → laad `.puml`/`.plantuml`/`.txt` bestand |
 
 Bij enums en gegevenstypen geldt extra veiligheid:
 
@@ -96,9 +105,17 @@ src/
 │   ├── edges/
 │   │   └── MetamodelEdge.jsx        ← Edge met rolnaam, kardinaliteit, constraint
 │   └── panels/
-│       ├── Toolbar.jsx              ← Werkbalk: toevoegen, opslaan, laden
+│       ├── Toolbar.jsx              ← Werkbalk: toevoegen, opslaan, laden, import, export
 │       ├── NodeEditPanel.jsx        ← Sidebar: type en velden bewerken
 │       └── EdgeEditPanel.jsx        ← Sidebar: relatie bewerken
+├── export/
+│   ├── exportMermaid.js             ← Editor → Mermaid class diagram
+│   ├── exportPlantUML.js            ← Editor → PlantUML class diagram
+│   └── exportXMI.js                 ← Editor → XMI 1.1 (incl. diagramposities)
+├── import/
+│   ├── importXMI.js                 ← XMI 1.1 → Editor (incl. EA diagramposities)
+│   ├── importMermaid.js             ← Mermaid class diagram → Editor
+│   └── importPlantUML.js            ← PlantUML class diagram → Editor
 ├── styles/
 │   └── editor.css
 ├── App.jsx
@@ -305,8 +322,8 @@ Voor model-edges bewaart de V3 export ook editor-metadata voor stabiele round-tr
 
 ## Toekomstige mogelijkheden
 
-- **XMI-export** voor import in Sparx Enterprise Architect of andere UML-tools
 - **MetaRegistry-generatie**: editor-output omzetten naar Go-code (MetaRegistry entries + struct definities)
 - **Validatie**: controle op naamconventies, verplichte velden, referentiële integriteit
 - **Undo/redo**: React Flow ondersteunt dit via een state-history wrapper
+- ~~**XMI-export** voor import in Sparx Enterprise Architect of andere UML-tools~~ ✅ Gerealiseerd: export + import XMI 1.1 incl. EA diagramposities
 - ~~**Integratie in de bitemporele frontend**: embedden als extra pagina naast de bestaande index/tijdlijn/registraties~~ ✅ Gerealiseerd (zie `UML_EDITOR_INTEGRATIE.md`)

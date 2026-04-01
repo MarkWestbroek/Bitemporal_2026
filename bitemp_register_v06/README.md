@@ -708,6 +708,20 @@ Deregister U5 and register U6 for entity A:
 - Codegen: entiteitSubtype/relatieSubtype/referentielijstInstantie emissie
 - DB migratie: automatische rename tabellen/kolommen bij eerste start na upgrade
 
+25 Afgeleide velden
+- ook in ENT (vooral eigenlijk)
+- soort van formule (OCL? DMN? -> maar wat voor?)
+- / in UML view
+- kan het label zijn in de index en tijdlijn viewer
+  - isLabelInTimelineViews property
+- opnemen in de generator en daarna in:
+- registratie- en tijdlijn-views betere layout m.b.v. weergave-velden, als die er zijn, anders gewoon id
+
+26 Mooiere formuliertjes (auto en custom)
+27 tabel views en invulformulieren vanuit het model (na genereren)
+   - dit is minder een editor, maar meer een viewer / navigator
+
+
 ## DONE: MATERIELE AS TOEVOEGEN = REDESIGN!
 
 1 JSON voor een request waarbij Aanvang en /of Einde wordt toegevoegd aan een bestaande Entiteit
@@ -774,16 +788,10 @@ Deregister U5 and register U6 for entity A:
 10 loop tijdsreizen nog eens na (KVK voorbeelden) want corrigeren is nu nog hetzelfde als wijzigen. Je hebt twee soorten tijdreizen (of 3).
 
 15 *Afgeleide velden*
-- ook in ENT (vooral eigenlijk)
-- soort van formule (OCL? DMN? -> maar wat voor?)
-- / in UML view
-- kan het label zijn in de index en tijdlijn viewer
-  - isLabelInTimelineViews property
-- opnemen in de generator en daarna in:
+- opnemen in:
    - a. de wijzigings handler: de nu-staat uitrekenen m.b.v. go packages voor CEL etc.
    - b. de database (liever niet)
 - opnemen in de API's of niet?
-- registratie- en tijdlijn-views betere layout m.b.v. weergave-velden, als die er zijn, anders gewoon id
 - maken voor NP naam incl. naamgebruik
 
 
@@ -791,11 +799,6 @@ Deregister U5 and register U6 for entity A:
 - Generieke Referentielijst-klasse met instantie-records geïmplementeerd
 - Zie [Implementatieplan](docs/copilot-chats/plans/2026-03-29%20referentielijsten%20PLAN.md) voor details
 - TODO: referentielijst_item als gegevenstype/enumeratie in type-keuzelijsten in de editor
-
-
-18 Mooiere formuliertjes (auto en custom)
-19 tabel views en invulformulieren vanuit het model (na genereren)
-   - dit is minder een editor, maar meer een viewer / navigator
 
 20 react - edit popups
 - corrigeren en afvoeren hebben heel weinig met elkaar te maken en staan gebroederlijk naast elkaar
@@ -823,14 +826,14 @@ Deregister U5 and register U6 for entity A:
 30 UML model versies
 - delta tussen een nieuwe en de huidige bepalen
 - impact van de delta bepalen (breaking of niet)
-- import van XMI
-- posities uit XMI import en in export mappen 
+* import van XMI
+* posities uit XMI import en in export mappen 
 - Export naar MIM
 
 31 UML editor
-- trekken lijntjes van punt naar punt: bewaren handle positie source en target
-- selecteren van een groep elementen (voor verslepen)
-- auto kiezen handles lijntjes op basis van positie source en target
+* trekken lijntjes van punt naar punt: bewaren handle positie source en target
+* selecteren van een groep elementen (voor verslepen)
+- auto kiezen handles lijntjes op basis van positie source en target (bij import)
 
 35 Formulieren
 - bewaar kan ook voor alle GEn ipv per stuk. Typisch is dat ook zo.

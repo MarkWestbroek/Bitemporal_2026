@@ -80,31 +80,6 @@ export default function EditorV2Page() {
       });
   }, []);
 
-  // ── Handmatig model laden via URL ──
-  const handleLoadV3Model = useCallback(() => {
-    const base = apiBase();
-    const defaultUrl = `${base}/api/schema/model`;
-    const url = prompt("V3 Model API URL:", defaultUrl);
-    if (!url) return;
-
-    fetch(url)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((response) => {
-        const v3 = response.model || response;
-        const result = v3ModelNaarEditor(v3);
-        setData(result);
-        setEditorKey((k) => k + 1);
-        pasModelMetadataToe(response, url);
-      })
-      .catch((err) => {
-        console.error("V3 model laden mislukt:", err);
-        alert(`Kan V3 model niet laden: ${err.message}`);
-      });
-  }, [pasModelMetadataToe]);
-
   return (
     <div
       style={{
@@ -114,67 +89,15 @@ export default function EditorV2Page() {
         flexDirection: "column",
       }}
     >
-      <div
-        style={{
-          padding: "6px 12px",
-          background: "#1e293b",
-          color: "#f8fafc",
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          fontSize: "13px",
-          flexShrink: 0,
-        }}
-      >
-        <span style={{ fontWeight: 600 }}>Editor v2</span>
-        <span style={{ color: "#94a3b8" }}>|</span>
-        <span
-          style={{ color: "#94a3b8" }}
-          title="Inhoudelijk V3 model; technische plumbing-velden (id, rel_id, opvoer, afvoer, etc.) worden hier bewust niet getoond"
-        >
-          V3 registermodel (inhoudelijk)
-        </span>
-        <span style={{ color: "#94a3b8" }}>|</span>
-        <span
-          style={{ color: "#e2e8f0", fontSize: "12px", maxWidth: "380px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-          title={modelOpmerking || "Geen opmerking/beschrijving beschikbaar"}
-        >
-          Model: {modelNaam}
-        </span>
-        <span
-          style={{
-            color: modelBron === "demo" ? "#fbbf24" : "#4ade80",
-            fontSize: "11px",
-            marginLeft: "4px",
-          }}
-          title="Herkomst van het geladen model"
-        >
-          [{modelBron}]
-        </span>
-        <button
-          onClick={handleLoadV3Model}
-          style={{
-            marginLeft: "auto",
-            padding: "3px 10px",
-            background: "#3b82f6",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontSize: "12px",
-          }}
-        >
-          V3 Model laden
-        </button>
-      </div>
-      <div style={{ flex: 1 }}>
-        <MetamodelEditor
-          key={editorKey}
-          initialNodes={data.nodes}
-          initialEdges={data.edges}
-          onV3ModelLoaded={pasModelMetadataToe}
-        />
-      </div>
+      <MetamodelEditor
+        key={editorKey}
+        initialNodes={data.nodes}
+        initialEdges={data.edges}
+        onV3ModelLoaded={pasModelMetadataToe}
+        modelNaam={modelNaam}
+        modelBron={modelBron}
+        modelOpmerking={modelOpmerking}
+      />
     </div>
   );
 }

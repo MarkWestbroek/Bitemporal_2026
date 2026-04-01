@@ -507,8 +507,9 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
         <select
           value={data.metatype || "entiteit"}
           onChange={(e) => {
-            updateField("metatype", e.target.value);
-            updateField("kleur", defaultKleur(e.target.value));
+            // Beide velden in één update om stale-closure bug te voorkomen
+            const newMetatype = e.target.value;
+            onUpdate(node.id, { ...data, metatype: newMetatype, kleur: defaultKleur(newMetatype) });
           }}
         >
           {METATYPES.map((mt) => (
@@ -526,9 +527,9 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
           <select
             value={data.entiteitSubtype || ""}
             onChange={(e) => {
+              // Beide velden in één update om stale-closure bug te voorkomen
               const subtype = e.target.value;
-              updateField("entiteitSubtype", subtype);
-              updateField("kleur", defaultKleur("entiteit", subtype));
+              onUpdate(node.id, { ...data, entiteitSubtype: subtype, kleur: defaultKleur("entiteit", subtype) });
             }}
           >
             {ENTITEIT_SUBTYPES.map((st) => (
@@ -545,9 +546,9 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
           <select
             value={data.relatieSubtype || ""}
             onChange={(e) => {
+              // Beide velden in één update om stale-closure bug te voorkomen
               const subtype = e.target.value;
-              updateField("relatieSubtype", subtype);
-              updateField("kleur", defaultKleur("relatie", subtype));
+              onUpdate(node.id, { ...data, relatieSubtype: subtype, kleur: defaultKleur("relatie", subtype) });
             }}
           >
             {RELATIE_SUBTYPES.map((st) => (

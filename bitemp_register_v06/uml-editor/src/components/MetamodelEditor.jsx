@@ -54,6 +54,11 @@ import { exportNaarMermaid } from "../export/exportMermaid";
 import { exportNaarPlantUML } from "../export/exportPlantUML";
 import { exportNaarXMI } from "../export/exportXMI";
 
+// Import helpers
+import { importVanXMI } from "../import/importXMI";
+import { importVanMermaid } from "../import/importMermaid";
+import { importVanPlantUML } from "../import/importPlantUML";
+
 // Data helpers
 import {
   generateId,
@@ -82,7 +87,45 @@ const edgeTypes = {
   metamodel: MetamodelEdge,
 };
 
-export default function MetamodelEditor({ initialNodes = [], initialEdges = [], onV3ModelLoaded = null }) {
+/**
+ * Bereken welke handle-combinatie (source + target) de kortste lijn oplevert
+ * tussen twee nodes, rekening houdend met node-afmetingen.
+ * Gebruikt het midden van elke zijde als ankerpunt.
+ */
+const HANDLE_POSITIES = ["top", "bottom", "left", "right"];
+
+function berekenKortsteHandles(srcNode, tgtNode) {
+  const srcW = srcNode.measured?.width ?? srcNode.width ?? 180;
+  const srcH = srcNode.measured?.height ?? srcNode.height ?? 120;
+  const tgtW = tgtNode.measured?.width ?? tgtNode.width ?? 180;
+  const tgtH = tgtNode.measured?.height ?? tgtNode.height ?? 120;
+
+  function ankerpunt(node, w, h, handle) {
+    const x = node.position.x;
+    const y = node.position.y;
+    switch (handle) {
+      case "top":    return { x: x + w / 2, y: y };
+      case "bottom": return { x: x + w / 2, y: y + h };
+      case "left":   return { x: x,         y: y + h / 2 };
+      case "right":  return { x: x + w,     y: y + h / 2 };
+    }
+  }
+
+  let best = { sourceHandle: "bottom", targetHandle: "top", dist: Infinity };
+  for (const sh of HANDLE_POSITIES) {
+    for (const th of HANDLE_POSITIES) {
+      const a = ankerpunt(srcNode, srcW, srcH, sh);
+      const b = ankerpunt(tgtNode, tgtW, tgtH, th);
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (d < best.dist) {
+        best = { sourceHandle: sh, targetHandle: th, dist: d };
+      }
+    }
+  }
+  return best;
+}
+
+export default function MetamodelEditor({ initialNodes = [], initialEdges = [], onV3ModelLoaded = null, modelNaam = "", modelBron = "", modelOpmerking = "" }) {
   /**
    * useNodesState en useEdgesState zijn React Flow hooks:
    *   - nodes/edges: de huidige array
@@ -239,6 +282,27 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     setSelectedNodeId(null);
     setSelectedEdgeId(null);
   }, []);
+
+  /**
+   * Dubbelklik op een edge: optimaliseer de handle-posities zodat de lijn
+   * zo kort mogelijk is, gegeven de actuele positie van de twee nodes.
+   */
+  const onEdgeDoubleClick = useCallback(
+    (_event, edge) => {
+      setEdges((eds) =>
+        eds.map((e) => {
+          if (e.id !== edge.id) return e;
+          const srcNode = nodes.find((n) => n.id === e.source);
+          const tgtNode = nodes.find((n) => n.id === e.target);
+          if (!srcNode || !tgtNode) return e;
+
+          const best = berekenKortsteHandles(srcNode, tgtNode);
+          return { ...e, sourceHandle: best.sourceHandle, targetHandle: best.targetHandle };
+        })
+      );
+    },
+    [nodes, setEdges]
+  );
 
   // === Node CRUD ===
 
@@ -717,6 +781,64 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     downloadFile(exportNaarXMI(nodes, edges), "metamodel.xmi", "application/xml");
   }, [nodes, edges, downloadFile]);
 
+  // ── Import handlers ──────────────────────────────────────────
+
+  /** Generiek: lees een bestand van schijf en retourneer de inhoud als tekst via een Promise. */
+  const leesBestandAlsTekst = useCallback((accept) => {
+    return new Promise((resolve) => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = accept;
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) { resolve(null); return; }
+        const reader = new FileReader();
+        reader.onload = (evt) => resolve(evt.target.result);
+        reader.readAsText(file);
+      };
+      input.click();
+    });
+  }, []);
+
+  const handleImportXMI = useCallback(async () => {
+    const text = await leesBestandAlsTekst(".xmi,.xml");
+    if (!text) return;
+    try {
+      const result = importVanXMI(text);
+      setNodes(result.nodes || []);
+      setEdges(result.edges || []);
+    } catch (err) {
+      console.error("XMI import mislukt:", err);
+      alert(`XMI import mislukt: ${err.message}`);
+    }
+  }, [leesBestandAlsTekst, setNodes, setEdges]);
+
+  const handleImportMermaid = useCallback(async () => {
+    const text = await leesBestandAlsTekst(".mmd,.md,.txt");
+    if (!text) return;
+    try {
+      const result = importVanMermaid(text);
+      setNodes(result.nodes || []);
+      setEdges(result.edges || []);
+    } catch (err) {
+      console.error("Mermaid import mislukt:", err);
+      alert(`Mermaid import mislukt: ${err.message}`);
+    }
+  }, [leesBestandAlsTekst, setNodes, setEdges]);
+
+  const handleImportPlantUML = useCallback(async () => {
+    const text = await leesBestandAlsTekst(".puml,.plantuml,.txt");
+    if (!text) return;
+    try {
+      const result = importVanPlantUML(text);
+      setNodes(result.nodes || []);
+      setEdges(result.edges || []);
+    } catch (err) {
+      console.error("PlantUML import mislukt:", err);
+      alert(`PlantUML import mislukt: ${err.message}`);
+    }
+  }, [leesBestandAlsTekst, setNodes, setEdges]);
+
   /**
    * MiniMap nodeColor: kleurt de minimap-nodes op basis van het metatype.
    * Dit is een React Flow prop die een functie accepteert.
@@ -740,6 +862,12 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         onExportMermaid={handleExportMermaid}
         onExportPlantUML={handleExportPlantUML}
         onExportXMI={handleExportXMI}
+        onImportXMI={handleImportXMI}
+        onImportMermaid={handleImportMermaid}
+        onImportPlantUML={handleImportPlantUML}
+        modelNaam={modelNaam}
+        modelBron={modelBron}
+        modelOpmerking={modelOpmerking}
       />
 
       <div className="editor-main">
@@ -753,6 +881,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
             onConnect={onConnect}
             onNodeClick={onNodeClick}
             onEdgeClick={onEdgeClick}
+            onEdgeDoubleClick={onEdgeDoubleClick}
             onPaneClick={onPaneClick}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
@@ -761,6 +890,9 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
             snapGrid={[15, 15]}
             defaultEdgeOptions={{ type: "metamodel" }}
             deleteKeyCode={["Backspace", "Delete"]}
+            selectionKeyCode="Shift"
+            selectionMode="partial"
+            multiSelectionKeyCode="Control"
           >
             {/* MiniMap: een klein overzichtskaartje rechtsonder */}
             <MiniMap nodeColor={minimapColor} zoomable pannable />
@@ -800,6 +932,12 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
               <p className="hint">
                 Sleep vanuit een handle (●) naar een ander type om een relatie te
                 maken.
+              </p>
+              <p className="hint">
+                <strong>Dubbelklik</strong> op een lijn om de kortste route te berekenen.
+              </p>
+              <p className="hint">
+                <strong>Shift + sleep</strong> op het canvas om meerdere elementen te selecteren.
               </p>
             </div>
           )}

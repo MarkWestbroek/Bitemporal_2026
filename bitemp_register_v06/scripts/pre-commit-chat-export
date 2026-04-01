@@ -27,8 +27,19 @@ if [ ! -f "$EXPORT_SCRIPT" ]; then
     exit 0  # niet blokkeren op ontbrekend script
 fi
 
+if command -v python3 >/dev/null 2>&1; then
+    PYTHON_CMD=python3
+elif command -v python >/dev/null 2>&1; then
+    PYTHON_CMD=python
+elif command -v py >/dev/null 2>&1; then
+    PYTHON_CMD='py -3'
+else
+    echo "[chat-export] Geen Python interpreter gevonden (probeerde: python3, python, py -3)."
+    exit 0
+fi
+
 echo "[chat-export] Copilot chats exporteren..."
-cd "$REPO_ROOT/bitemp_register_v06" && python3 scripts/export-copilot-chats.py
+cd "$REPO_ROOT/bitemp_register_v06" && sh -c "$PYTHON_CMD scripts/export-copilot-chats.py"
 
 # Voeg nieuwe exports toe aan de huidige commit
 EXPORT_DIR="$REPO_ROOT/bitemp_register_v06/docs/copilot-chats/exports"

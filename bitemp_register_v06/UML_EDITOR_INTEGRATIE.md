@@ -200,3 +200,117 @@ Als je editor en API op elkaar wilt afstemmen:
 - `bitemp_register_v06/web/vite/vite.config.js`
 - `bitemp_register_v06/web/vite/src/App.jsx`
 - `bitemp_register_v06/web/vite/src/pages/EditorPage.jsx`
+
+---
+
+## Interactie: edge-optimalisatie en gebiedsselectie
+
+### Dubbelklik op een edge → kortste route
+
+Wanneer je **dubbelklikt** op een lijn (edge) tussen twee elementen, worden de handle-posities automatisch herberekend zodat de lijn zo kort mogelijk is.
+
+Achtergrond: elke node heeft vier aansluitpunten (handles): `top`, `bottom`, `left`, `right`. Bij het aanmaken van een edge worden de handles bepaald door waar je de lijn vandaan sleept. Maar als je daarna nodes verplaatst, kan de lijn suboptimaal lopen (bijv. van boven naar beneden terwijl de nodes naast elkaar staan).
+
+De functie `berekenKortsteHandles()` in `MetamodelEditor.jsx` berekent voor alle 4×4 combinaties welk paar ankerpunten (rekening houdend met node-afmetingen) de kortste euclidische afstand oplevert, en past `sourceHandle` en `targetHandle` automatisch aan.
+
+### Shift + sleep → gebiedsselectie (rubber-band)
+
+Houd **Shift** ingedrukt en sleep op het canvas om een selectierechthoek te tekenen. Alle nodes die (deels) overlappen worden geselecteerd. Je kunt de geselecteerde nodes vervolgens als groep verslepen.
+
+Aanvullend: **Ctrl + klik** op individuele nodes voegt ze toe aan of verwijdert ze uit de selectie.
+
+Technisch: dit zijn React Flow props op de `<ReactFlow>` component:
+
+| Prop | Waarde | Effect |
+|------|--------|--------|
+| `selectionKeyCode` | `"Shift"` | Shift ingedrukt → rubber-band selectie i.p.v. canvas pan |
+| `selectionMode` | `"partial"` | Nodes die deels overlappen met de selectierechthoek worden ook geselecteerd |
+| `multiSelectionKeyCode` | `"Control"` | Ctrl + klik om nodes individueel bij de selectie te voegen |
+
+---
+
+## Import en Export
+
+### Export
+
+De editor ondersteunt drie exportformaten. Alle exports worden als bestandsdownload aangeboden via de toolbar.
+
+| Formaat | Bestand | Knop | Doel |
+|---------|---------|------|------|
+| **Mermaid** | `metamodel.mmd` | 🧜 Mermaid | Class diagram syntax voor Mermaid.js |
+| **PlantUML** | `metamodel.puml` | 🌱 PlantUML | Class diagram syntax voor PlantUML |
+| **XMI 1.1** | `metamodel.xmi` | 📦 XMI 1.1 | UML 1.4 XMI voor Sparx Enterprise Architect e.a. |
+
+#### XMI export met diagramposities
+
+De XMI export bevat naast het UML-model ook een `<XMI.extension>` blok met diagramposities per element in EA-compatibel formaat:
+
+```xml
+<XMI.extension extender="UML-editor">
+  <diagrams>
+    <diagram>
+      <elements>
+        <element subject="EAID_node_1" left="150" right="330" top="-50" bottom="-170"/>
+      </elements>
+    </diagram>
+  </diagrams>
+</XMI.extension>
+```
+
+De coördinaten gebruiken EA's conventie: `left`/`right` zijn X-bereik, `top`/`bottom` zijn Y-bereik met negatieve waarden (EA's scherm-Y is omgekeerd).
+
+### Import
+
+De editor kan ook modellen **importeren** uit de drie formaten. Importknoppen staan in de toolbar naast de exportknoppen.
+
+| Formaat | Knop | Bestandstypen |
+|---------|------|---------------|
+| **XMI** | 📥 XMI | `.xmi`, `.xml` |
+| **Mermaid** | 📥 Mermaid | `.mmd`, `.md`, `.txt` |
+| **PlantUML** | 📥 PlantUML | `.puml`, `.plantuml`, `.txt` |
+
+> **Let op**: import vervangt het huidige model volledig. Sla het huidige model eerst op als je het wilt bewaren.
+
+#### XMI import
+
+De XMI importer (`uml-editor/src/import/importXMI.js`) ondersteunt:
+
+- `UML:Class` met stereotype → entiteit / gegevenselement / relatie
+- `UML:Class` met `<<enumeration>>` → enumeratie
+- `UML:DataType` → gegevenstype
+- `UML:AssociationClass` → relatie-node met twee edges naar de participerende entiteiten
+- `UML:Association` → edge met rolnaam, kardinaliteit en momentvoorkomen
+- `UML:Dependency` → dependency-edge (stippellijn met `<<use>>`)
+- **EA diagramposities**: als het XMI-bestand een EA extensie-blok bevat met `<element subject="..." left/right/top/bottom>` of `<DiagramElement>` met geometry-strings, worden de posities uitgelezen en toegepast op de nodes
+
+#### Mermaid import
+
+De Mermaid importer (`uml-editor/src/import/importMermaid.js`) ondersteunt:
+
+- `class Foo { <<entiteit>> ... }` → node met stereotype-bepaling
+- Velden met `+type naam` (verplicht) of `-type naam` (optioneel)
+- Enum-waarden (regels zonder marker in een `<<enumeration>>` blok)
+- Relaties: `Foo --> Bar : label`, `Foo "1" --> "0..*" Bar : label`
+- Dependencies: `Foo ..> Bar` (stippellijn)
+
+#### PlantUML import
+
+De PlantUML importer (`uml-editor/src/import/importPlantUML.js`) ondersteunt:
+
+- `class Foo <<entiteit, materieel>> { ... }` → node met metatype en materialiteit
+- `enum Foo { ... }` → enumeratie
+- `class Foo <<datatype>> { ... }` → gegevenstype
+- Velden: `+ naam : type` (verplicht) of `- naam : type` (optioneel)
+- Relaties: `Foo "1" --> "0..*" Bar : label`
+- Dependencies: `Foo ..> Bar` (stippellijn)
+
+### Import/export bestanden
+
+| Bestand | Doel |
+|---------|------|
+| `uml-editor/src/export/exportMermaid.js` | Editor → Mermaid class diagram |
+| `uml-editor/src/export/exportPlantUML.js` | Editor → PlantUML class diagram |
+| `uml-editor/src/export/exportXMI.js` | Editor → XMI 1.1 (incl. diagramposities) |
+| `uml-editor/src/import/importXMI.js` | XMI 1.1 → Editor (incl. EA diagramposities) |
+| `uml-editor/src/import/importMermaid.js` | Mermaid class diagram → Editor |
+| `uml-editor/src/import/importPlantUML.js` | PlantUML class diagram → Editor |

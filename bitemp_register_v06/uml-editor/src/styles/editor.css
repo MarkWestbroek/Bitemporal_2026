@@ -44,13 +44,26 @@ body {
 
 .toolbar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 8px 16px;
   background: #1e293b;
   border-bottom: 1px solid #334155;
   gap: 16px;
   flex-wrap: wrap;
+}
+
+.toolbar-right {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.toolbar-right-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .toolbar-group {
@@ -100,6 +113,7 @@ body {
   color: #fde68a;
 }
 
+/* Bestand-groep: opslaan (groen), laden (blauw), publiceren (cyaan) */
 .btn-toolbar.save {
   background: #166534;
   border-color: #22c55e;
@@ -107,15 +121,6 @@ body {
 }
 .btn-toolbar.save:hover {
   background: #15803d;
-}
-
-.btn-toolbar.publish {
-  background: #0f766e;
-  border-color: #14b8a6;
-  color: #ccfbf1;
-}
-.btn-toolbar.publish:hover {
-  background: #0d9488;
 }
 
 .btn-toolbar.load {
@@ -127,13 +132,38 @@ body {
   background: #1e40af;
 }
 
-.btn-toolbar.schema {
-  background: #4c1d95;
-  border-color: #8b5cf6;
-  color: #ddd6fe;
+.btn-toolbar.publish {
+  background: #164e63;
+  border-color: #22d3ee;
+  color: #cffafe;
 }
-.btn-toolbar.schema:hover {
-  background: #5b21b6;
+.btn-toolbar.publish:hover {
+  background: #155e75;
+}
+
+.btn-toolbar.haal-op {
+  background: #1a2e44;
+  border-color: #818cf8;
+  color: #c7d2fe;
+}
+.btn-toolbar.haal-op:hover {
+  background: #312e81;
+}
+
+/* Import knoppen: warm oranje/amber tint */
+.btn-toolbar.import-xmi,
+.btn-toolbar.import-mermaid,
+.btn-toolbar.import-plantuml {
+  border-color: #f59e0b;
+  color: #fde68a;
+}
+
+.btn-toolbar.import-xmi:hover,
+.btn-toolbar.import-mermaid:hover,
+.btn-toolbar.import-plantuml:hover {
+  background: #78350f;
+  border-color: #fbbf24;
+  color: #fef3c7;
 }
 
 /* === Metamodel nodes (UML class boxes) === */
@@ -168,6 +198,11 @@ body {
   font-weight: 700;
   color: #0f172a;
   margin-top: 1px;
+}
+
+/* UML-conventie: abstracte typenamen worden cursief weergegeven */
+.node-typenaam.abstract {
+  font-style: italic;
 }
 
 .node-badge {
