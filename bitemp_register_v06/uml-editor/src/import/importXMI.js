@@ -6,6 +6,7 @@
  *   - UML:Class met <<enumeration>> → enumeratie
  *   - UML:DataType → gegevenstype
  *   - UML:AssociationClass → relatie
+ *   - EA AssociationClass patroon: UML:Class met conID + UML:Association met associationclass TV → relatie
  *   - UML:Association → edge
  *   - UML:Dependency → dependency-edge
  *   - UML:Generalization → generalisatie-edge (MIM: «Generalisatie»)
@@ -31,6 +32,22 @@ export function importVanXMI(xmlText) {
   const nodes = [];
   const edges = [];
   const idMap = new Map(); // xmi.id → editor node id
+  // EA AssociationClass detectie: Association xmi.id → relatie editor node id
+  const assocIdToRelatieNodeId = new Map();
+
+  // EA top-level tagged values: modelElement → Map(tag → value)
+  // EA plaatst sommige tags (isMaterieel, documentation, jsonRolnaam, etc.)
+  // buiten het element, met een modelElement-verwijzing.
+  const topLevelTVs = new Map();
+  for (const tv of doc.querySelectorAll("XMI\\.content > TaggedValue")) {
+    const me = tv.getAttribute("modelElement");
+    const tag = tv.getAttribute("tag");
+    const value = tv.getAttribute("value") || "";
+    if (me && tag) {
+      if (!topLevelTVs.has(me)) topLevelTVs.set(me, new Map());
+      topLevelTVs.get(me).set(tag, value);
+    }
+  }
 
   // Diagramposities uit EA-extensie (indien aanwezig)
   const posities = leesEAPosities(doc);
@@ -48,6 +65,13 @@ export function importVanXMI(xmlText) {
 
     const stereo = leesStereotype(cls);
     const taggedValues = leesTVs(cls);
+    // Merge top-level TVs (EA plaatst sommige tags buiten het element)
+    const extraTVs = topLevelTVs.get(xmiId);
+    if (extraTVs) {
+      for (const [k, v] of extraTVs) {
+        if (!taggedValues.has(k)) taggedValues.set(k, v);
+      }
+    }
     const isAbstract = cls.getAttribute("isAbstract") === "true";
 
     if (stereo === "enumeration") {
@@ -67,10 +91,14 @@ export function importVanXMI(xmlText) {
     }
 
     // MIM stereotype mapping + bestaande mapping
+    // EA AssociationClass: Class met conID tagged value → relatie
     // Heuristiek: klassen met naam "Rel_*" zonder expliciete stereotype → relatie
-    const metatype = stereo
-      ? mapStereotypeNaarMetatype(stereo)
-      : (/^Rel_/i.test(naam) ? "relatie" : "entiteit");
+    const conID = taggedValues.get("conID") || "";
+    const metatype = conID
+      ? "relatie"
+      : stereo
+        ? mapStereotypeNaarMetatype(stereo)
+        : (/^Rel_/i.test(naam) ? "relatie" : "entiteit");
 
     // MIM: "Gestructureerd datatype" → gegevenstype-node (niet als Class/entiteit)
     if (metatype === "gegevenstype") {
@@ -98,6 +126,11 @@ export function importVanXMI(xmlText) {
 
     const nodeId = generateId(metatype);
     idMap.set(xmiId, nodeId);
+
+    // EA AssociationClass: koppel de Association xmi.id aan deze relatie-node
+    if (conID) {
+      assocIdToRelatieNodeId.set(conID, nodeId);
+    }
 
     const isMaterieel = taggedValues.get("isMaterieel") === "true"
       || leesIndicatieMaterieelUitTVs(taggedValues);
@@ -255,6 +288,13 @@ export function importVanXMI(xmlText) {
     const tvs = leesTVs(assoc);
     const momentvoorkomen = tvs.get("momentvoorkomen") || "";
 
+    // EA AssociationClass: association met "associationclass" tagged value
+    // → maak edges naar de relatie-node i.p.v. een directe edge tussen de twee entiteiten
+    const assocClassRef = tvs.get("associationclass") || "";
+    const relatieNodeId = assocClassRef
+      ? (idMap.get(assocClassRef) || assocIdToRelatieNodeId.get(xmiId))
+      : assocIdToRelatieNodeId.get(xmiId);
+
     const ends = assoc.querySelectorAll("AssociationEnd");
     const participants = [];
     for (const end of ends) {
@@ -265,6 +305,42 @@ export function importVanXMI(xmlText) {
       const aggr = end.getAttribute("aggregation") || "none";
       const rolnaam = end.getAttribute("name") || "";
       participants.push({ typeRef, eaEnd, mult, aggr, rolnaam });
+    }
+
+    // EA AssociationClass: twee edges (owner → relatie, relatie → target)
+    if (relatieNodeId) {
+      const owner = participants.find((p) => p.eaEnd === "target" || p.aggr === "composite") || participants[0];
+      const target = participants.find((p) => p !== owner) || participants[1];
+
+      if (owner?.typeRef && idMap.has(owner.typeRef)) {
+        edges.push({
+          id: generateId("edge"),
+          source: idMap.get(owner.typeRef),
+          target: relatieNodeId,
+          type: "metamodel",
+          data: {
+            rolnaam: owner.rolnaam || naam || "",
+            jsonRolnaam: tvs.get("jsonRolnaam:primair") || tvs.get("jsonRolnaam") || "",
+            momentvoorkomen: momentvoorkomen || parseKardVoorkomen(owner.mult),
+            kardinaliteit: owner.mult || "0..*",
+          },
+        });
+      }
+      if (target?.typeRef && idMap.has(target.typeRef)) {
+        edges.push({
+          id: generateId("edge"),
+          source: relatieNodeId,
+          target: idMap.get(target.typeRef),
+          type: "metamodel",
+          data: {
+            rolnaam: target.rolnaam || "",
+            jsonRolnaam: tvs.get("jsonRolnaam:secondair") || "",
+            momentvoorkomen: parseKardVoorkomen(target.mult),
+            kardinaliteit: target.mult || "0..*",
+          },
+        });
+      }
+      continue;
     }
 
     // Bepaal bron (target-end / composite) en doel (source-end)

@@ -828,7 +828,9 @@ Deregister U5 and register U6 for entity A:
 - impact van de delta bepalen (breaking of niet)
 * import van XMI
 * posities uit XMI import en in export mappen 
-- Export naar MIM
+* Export naar MIM
+- Export naar MIM linked data json iets
+- kleur uit EA importeren
 
 31 UML editor
 * trekken lijntjes van punt naar punt: bewaren handle positie source en target
