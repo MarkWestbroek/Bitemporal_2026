@@ -709,17 +709,24 @@ Deregister U5 and register U6 for entity A:
 - DB migratie: automatische rename tabellen/kolommen bij eerste start na upgrade
 
 25 Afgeleide velden
-- ook in ENT (vooral eigenlijk)
-- soort van formule (OCL? DMN? -> maar wat voor?)
-- / in UML view
-- kan het label zijn in de index en tijdlijn viewer
-  - isLabelInTimelineViews property
-- opnemen in de generator en daarna in:
-- registratie- en tijdlijn-views betere layout m.b.v. weergave-velden, als die er zijn, anders gewoon id
+* ook in ENT (vooral eigenlijk)
+* soort van formule (OCL? DMN? -> maar wat voor?)
+* / in UML view
+* kan het label zijn in de index en tijdlijn viewer
+  * isLabelInTimelineViews property
+* opnemen in de generator en daarna in:
+* registratie- en tijdlijn-views betere layout m.b.v. weergave-velden, als die er zijn, anders gewoon id
 
-26 Mooiere formuliertjes (auto en custom)
-27 tabel views en invulformulieren vanuit het model (na genereren)
+26 tabel views en invulformulieren vanuit het model (na genereren)
    - dit is minder een editor, maar meer een viewer / navigator
+
+27 UML editor
+* trekken lijntjes van punt naar punt: bewaren handle positie source en target
+* selecteren van een groep elementen (voor verslepen)
+* auto kiezen handles lijntjes op basis van positie source en target (bij import)
+* import van XMI
+* posities uit XMI import en in export mappen 
+* Export naar MIM
 
 
 ## DONE: MATERIELE AS TOEVOEGEN = REDESIGN!
@@ -826,16 +833,10 @@ Deregister U5 and register U6 for entity A:
 30 UML model versies
 - delta tussen een nieuwe en de huidige bepalen
 - impact van de delta bepalen (breaking of niet)
-* import van XMI
-* posities uit XMI import en in export mappen 
-* Export naar MIM
 - Export naar MIM linked data json iets
 - kleur uit EA importeren
 
 31 UML editor
-* trekken lijntjes van punt naar punt: bewaren handle positie source en target
-* selecteren van een groep elementen (voor verslepen)
-* auto kiezen handles lijntjes op basis van positie source en target (bij import)
 
 35 Formulieren
 - bewaar kan ook voor alle GEn ipv per stuk. Typisch is dat ook zo.

@@ -389,7 +389,7 @@ func initNpLocMetaRegistry() {
 				Description:         "Samengestelde weergave van nationaliteit en landcode.",
 				GoType:              "string",
 				AfleidingsregelTaal: "cel",
-				Afleidingsregel:     "Burgerschap_Data.nationaliteit + ' (' + Burgerschap_Data.landcode + ')'",
+				Afleidingsregel:     "Burgerschap.nationaliteit + ' (' + Burgerschap.landcode + ')'",
 				IsWeergaveVeld:      true,
 			},
 		},

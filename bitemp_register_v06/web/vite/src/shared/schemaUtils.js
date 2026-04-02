@@ -171,3 +171,67 @@ export function platSlaHubItems(items, hubTypeMeta, typeMetaByTypenaam) {
     return merged;
   });
 }
+
+/**
+ * platSlaAlleVersies — geeft ALLE data-versies per hub-item terug (inclusief historische).
+ *
+ * In tegenstelling tot platSlaHubItems (dat alleen het actieve data-record mergt),
+ * retourneert deze functie een array van platgeslagen records per hub-item:
+ * elke data-versie wordt apart gemerged met de hub-velden.
+ *
+ * Resultaat per hub-item: array van versies, nieuwste eerst (op basis van afvoer: actueel bovenaan).
+ * Elk versie-object bevat de hub-velden + de data-velden van die specifieke versie.
+ *
+ * @param {Object} hubItem       - Eén hub-item uit de API-response
+ * @param {Object} hubTypeMeta   - Schema-metadata van het hub-type
+ * @param {Object} typeMetaByTypenaam - Volledige schema-map
+ * @returns {Array} Array van platgeslagen versies (actueel eerst, dan historisch)
+ */
+export function platSlaAlleVersies(hubItem, hubTypeMeta, typeMetaByTypenaam) {
+  if (!hubItem || hubTypeMeta?.ge_subtype !== "hub") return [hubItem].filter(Boolean);
+  const onderliggende = safeArray(hubTypeMeta?.onderliggende);
+  if (onderliggende.length === 0) return [hubItem];
+
+  // Zoek het data-child type
+  let dataChild = null;
+  let dataChildMeta = null;
+  for (const child of onderliggende) {
+    const childMeta = typeMetaByTypenaam?.[child.doeltype];
+    if (childMeta?.ge_subtype === "data") {
+      dataChild = child;
+      dataChildMeta = childMeta;
+      break;
+    }
+  }
+  if (!dataChild || !dataChildMeta) return [hubItem];
+
+  const childArray = safeArray(hubItem[dataChild.jsonRolnaam] || hubItem[dataChild.rolnaam]);
+  if (childArray.length === 0) return [hubItem];
+
+  const skipVelden = new Set();
+  if (dataChildMeta.idKolom) skipVelden.add(String(dataChildMeta.idKolom).toLowerCase());
+
+  // Maak een platgeslagen versie per data-record
+  const versies = childArray.map((dataRecord) => {
+    const merged = { ...hubItem };
+    for (const [k, v] of Object.entries(dataRecord)) {
+      if (!(k in merged) && isPrimitiveWaarde(v) && !skipVelden.has(k.toLowerCase())) {
+        merged[k] = v;
+      }
+    }
+    // Overschrijf opvoer/afvoer met de data-record waarden (versie-specifiek)
+    if (dataRecord.opvoer !== undefined) merged._data_opvoer = dataRecord.opvoer;
+    if (dataRecord.afvoer !== undefined) merged._data_afvoer = dataRecord.afvoer;
+    if (dataRecord.versie !== undefined) merged._data_versie = dataRecord.versie;
+    return merged;
+  });
+
+  // Sorteer: actueel (geen afvoer) eerst, dan op afvoer aflopend
+  versies.sort((a, b) => {
+    if (!a._data_afvoer && b._data_afvoer) return -1;
+    if (a._data_afvoer && !b._data_afvoer) return 1;
+    return 0;
+  });
+
+  return versies;
+}

@@ -1,0 +1,168 @@
+﻿--- Pagina 165 ---
+Groepnummer 66
+Groepnaam Blokkering
+Toelichting Gegevens over het blokkeren van de PL.
+Soort Administratieve gegevens
+Elementopsomming 66.20 Datum ingang blokkering PL
+Voorwaarden 
+Gebruik Controledoeleinden bij de uitschrijvingsprocedure en het verstrekken
+van persoonsgegevens.
+Logisch Ontwerp BRP 1 april 2026 164
+--- Pagina 166 ---
+Groepnummer 67
+Groepnaam Opschorting
+Toelichting Gegevens over het (gedeeltelijk) stoppen van de bijhouding van de PL.
+Soort Administratieve gegevens
+Elementopsomming 67.10 Datum opschorting bijhouding
+67.20 Omschrijving reden opschorting bijhouding
+Voorwaarden Indien de groep voorkomt, komen alle elementen verplicht voor.
+Gebruik Vermelding bij verstrekking van gegevens van de PL.
+Logisch Ontwerp BRP 1 april 2026 165
+--- Pagina 167 ---
+Groepnummer 68
+Groepnaam Opname
+Toelichting Gegevens over de eerste inschrijving in de BRP.
+Soort Administratieve gegevens
+Elementopsomming 68.10 Datum eerste inschrijving BRP
+Voorwaarden 
+Gebruik 
+Logisch Ontwerp BRP 1 april 2026 166
+--- Pagina 168 ---
+Groepnummer 69
+Groepnaam Gemeente PK
+Toelichting Gegevens over de gemeente waar de PK zich bevindt.
+Soort Administratieve gegevens
+Elementopsomming 69.10 Gemeente waar de PK zich bevindt
+Voorwaarden 
+Gebruik Traceren van de PK voor vragen omtrent niet naar de PL
+geconverteerde gegevens.
+Logisch Ontwerp BRP 1 april 2026 167
+--- Pagina 169 ---
+Groepnummer 70
+Groepnaam Geheim
+Toelichting Gegevens over het mogen verstrekken van informatie aan derden.
+Soort Administratieve gegevens
+Elementopsomming 70.10 Indicatie geheim
+Voorwaarden 
+Gebruik 
+Logisch Ontwerp BRP 1 april 2026 168
+--- Pagina 170 ---
+Groepnummer 71
+Groepnaam Verificatie
+Toelichting Gegevens over de verificatie van de PL in de RNI.
+Soort Administratieve gegevens
+Elementopsomming 71.10 Datum verificatie
+71.20 Omschrijving verificatie
+Voorwaarden Indien de groep voorkomt, komen alle elementen verplicht voor.
+Gebruik Ter indicatie van de actualiteit van de gegevens op de PL in de RNI.
+Logisch Ontwerp BRP 1 april 2026 169
+--- Pagina 171 ---
+Groepnummer 72
+Groepnaam Adresaangifte
+Toelichting Gegevens over de aangifte van verblijf en adres.
+Soort Administratieve gegevens
+Elementopsomming 72.10 Omschrijving van de aangifte adreshouding
+Voorwaarden 
+Gebruik 
+Logisch Ontwerp BRP 1 april 2026 170
+--- Pagina 172 ---
+Groepnummer 73
+Groepnaam Buitenlands persoonsnummer
+Toelichting Gegeven over het buitenlands persoonsnummer van vreemdelingen,
+voor zover het een nummer betreft uitgegeven door een EU-land aan
+een eigen onderdaan.
+Soort Administratieve gegevens
+Elementopsomming 73.10 EU-persoonsnummer
+Voorwaarden 
+Gebruik 
+Logisch Ontwerp BRP 1 april 2026 171
+--- Pagina 173 ---
+Groepnummer 75
+Groepnaam Documentindicatie
+Toelichting Gegevens over het feit dat gedurende de opschorting van de
+bijhouding van de PL documenten zijn binnengekomen die betrekking
+hebben op de bijhouding van de PL.
+Soort Administratieve gegevens
+Elementopsomming 75.10 Indicatie document
+Voorwaarden 
+Gebruik 
+Logisch Ontwerp BRP 1 april 2026 172
+--- Pagina 174 ---
+Groepnummer 80
+Groepnaam Synchroniciteit
+Toelichting Gegevens over het versienummer en de laatste wijziging op de PL.
+Soort Technische gegevens
+Elementopsomming 80.10 Versienummer
+80.20 Datumtijdstempel
+Voorwaarden Indien de groep voorkomt, komen alle elementen verplicht voor.
+Gebruik Versiebeheer persoonslijst in BRP-V.
+Logisch Ontwerp BRP 1 april 2026 173
+--- Pagina 175 ---
+Groepnummer 81
+Groepnaam Akte
+Toelichting Gegevens over de akte die is opgenomen in de registers van de
+burgerlijke stand in Nederland.
+Soort Administratieve gegevens
+Elementopsomming 81.10 Registergemeente akte
+81.20 Aktenummer
+Voorwaarden Indien de groep voorkomt, komen alle elementen verplicht voor.
+Gebruik Ter aanduiding van de bron van de gegevens.
+Logisch Ontwerp BRP 1 april 2026 174
+--- Pagina 176 ---
+Groepnummer 82
+Groepnaam Document
+Toelichting Gegevens over het document, dat de bron vormt van de opgenomen
+gegevens, niet zijnde een akte die is opgenomen in de registers van
+de burgerlijke stand in Nederland.
+Soort Administratieve gegevens
+Elementopsomming 82.10 Gemeente document
+82.20 Datum document
+82.30 Beschrijving document
+Voorwaarden Indien de groep voorkomt, komen alle elementen verplicht voor.
+Gebruik Ter aanduiding van de bron van de gegevens.
+Logisch Ontwerp BRP 1 april 2026 175
+--- Pagina 177 ---
+Groepnummer 83
+Groepnaam Procedure
+Toelichting Gegevens over het onderzoek dat plaatsvindt of heeft plaatsgevonden
+betreffende de gegevens in de categorie.
+Soort Administratieve gegevens
+Elementopsomming 83.10 Aanduiding gegevens in onderzoek
+83.20 Datum ingang onderzoek
+83.30 Datum einde onderzoek
+Voorwaarden Indien de groep voorkomt, komen de elementen 83.10  en 83.20 
+verplicht voor.
+Gebruik 
+Logisch Ontwerp BRP 1 april 2026 176
+--- Pagina 178 ---
+Groepnummer 84
+Groepnaam Onjuist
+Toelichting Gegevens over het onjuist of strijdig met de openbare orde zijn van
+gegevens in de categorie.
+Soort Administratieve gegevens
+Elementopsomming 84.10 Indicatie onjuist, dan wel strijdigheid met de openbare
+orde
+Voorwaarden 
+Gebruik 
+Logisch Ontwerp BRP 1 april 2026 177
+--- Pagina 179 ---
+Groepnummer 85
+Groepnaam Geldigheid
+Toelichting Gegevens over het tijdstip waarop het geheel van gegevens in de
+categorie geldig is geworden.
+Soort Algemene of verwijsgegevens
+Elementopsomming 85.10 Ingangsdatum geldigheid
+Voorwaarden 
+Gebruik Bepaling van de volgorde van geldigheid van de historische gegevens.
+Logisch Ontwerp BRP 1 april 2026 178
+--- Pagina 180 ---
+Groepnummer 86
+Groepnaam Opneming
+Toelichting Gegevens over het tijdstip van opneming van het geheel van gegevens
+in deze categorie.
+Soort Administratieve gegevens
+Elementopsomming 86.10 Datum van opneming
+Voorwaarden 
+Gebruik Bepaling van de volgorde van categorieÙn.
+Logisch Ontwerp BRP 1 april 2026 179
+--- Pagina 181 ---

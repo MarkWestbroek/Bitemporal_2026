@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useSchema } from "../../context/SchemaContext";
-import { safeArray, platSlaHubItems } from "../../shared/schemaUtils";
+import { safeArray, platSlaHubItems, tUitRegistratieTijdstip } from "../../shared/schemaUtils";
 import { evalueerCelExpressie, bouwCelContext } from "../../shared/celEvaluator";
 import SchemaFormField from "./SchemaFormField";
 import { coercedWaardeVoorVeld } from "../actions/ActionFormParts";
@@ -41,6 +41,7 @@ export default function RepresentatieFormulier({
   entiteitId,
   entiteitIdKolom,
   isEnkelvoudig = true,
+  hideIdEnTijd = false,
 }) {
   const { baseUrl, typeMetaByTypenaam } = useSchema();
   const navigate = useNavigate();
@@ -307,17 +308,41 @@ export default function RepresentatieFormulier({
   return (
     <form onSubmit={handleSubmit}>
       <div className="cg-form-section">
-        {/* Immutable velden als read-only display */}
-        {immutableVelden.length > 0 && initialData && (
-          <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap", fontSize: "0.875rem", color: "var(--cg-donkergrijs)", marginBottom: "0.5rem" }}>
-            {immutableVelden.map((v) => {
-              const val = initialData[v.naam];
-              return val != null && val !== "" ? (
-                <span key={v.naam}>
-                  <strong>{v.naam}:</strong> {String(val)}
-                </span>
-              ) : null;
-            })}
+        {/* Compact ID weergave + symbolische formele tijd — op één regel */}
+        {!hideIdEnTijd && initialData && (immutableVelden.length > 0 || initialData.opvoer) && (
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", fontSize: "0.8125rem", color: "var(--cg-donkergrijs)", marginBottom: "0.5rem" }}>
+            <span>
+              {(() => {
+                const entKolom = String(entiteitIdKolom || "").toLowerCase();
+                const entId = entKolom ? initialData[entKolom] : null;
+                const relId = initialData.rel_id;
+                const versie = initialData.versie;
+                if (entId != null) {
+                  let compactId = `${entId}`;
+                  if (relId != null) compactId += `.${relId}`;
+                  if (versie != null) compactId += `.${versie}`;
+                  return <span style={{ fontFamily: "monospace", fontSize: "0.75rem" }}>#{compactId}</span>;
+                }
+                // Fallback: toon overige immutable velden behalve entiteit_id en rel_id
+                return immutableVelden
+                  .filter((v) => {
+                    const n = String(v.naam || "").toLowerCase();
+                    return n !== "rel_id" && n !== entKolom && n !== "versie";
+                  })
+                  .map((v) => {
+                    const val = initialData[v.naam];
+                    return val != null && val !== "" ? (
+                      <span key={v.naam} style={{ marginRight: "1rem" }}>
+                        {v.naam}: {String(val)}
+                      </span>
+                    ) : null;
+                  });
+              })()}
+            </span>
+            <span style={{ fontSize: "0.75rem" }}>
+              {initialData.opvoer && <>t={tUitRegistratieTijdstip(initialData.opvoer) ?? "?"}</>}
+              {initialData.afvoer && <span style={{ color: "var(--cg-fout)", marginLeft: "0.5rem" }}>afgevoerd t={tUitRegistratieTijdstip(initialData.afvoer) ?? "?"}</span>}
+            </span>
           </div>
         )}
 
@@ -373,16 +398,7 @@ export default function RepresentatieFormulier({
           ))}
         </div>
 
-        {/* Formele metadata (readonly) */}
-        {initialData && (initialData.opvoer || initialData.afvoer) && (
-          <div style={{ opacity: 0.7, marginTop: "0.5rem" }}>
-            <div style={{ fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.25rem" }}>Formele tijd</div>
-            <div style={{ display: "flex", gap: "2rem", fontSize: "0.8125rem" }}>
-              {initialData.opvoer && <span>opvoer: {String(initialData.opvoer).slice(0, 19).replace("T", " ")}</span>}
-              {initialData.afvoer && <span style={{ color: "var(--cg-fout)" }}>afvoer: {String(initialData.afvoer).slice(0, 19).replace("T", " ")}</span>}
-            </div>
-          </div>
-        )}
+        {/* Formele tijd is nu geïntegreerd in de compacte ID-regel hierboven */}
 
         {feedback && (
           <div className={feedback.type === "succes" ? "cg-feedback--succes" : "cg-feedback--fout"} style={{ marginTop: "0.5rem" }}>

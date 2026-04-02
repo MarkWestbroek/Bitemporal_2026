@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useSchema } from "../../context/SchemaContext";
-import { safeArray, platSlaHubItems } from "../../shared/schemaUtils";
+import { safeArray, platSlaHubItems, platSlaAlleVersies, tUitRegistratieTijdstip } from "../../shared/schemaUtils";
 import { evalueerCelExpressie, bouwCelContext } from "../../shared/celEvaluator";
 import RepresentatieFormulier from "./RepresentatieFormulier";
 
@@ -82,6 +82,7 @@ export default function EntiteitFormulier() {
   const [error, setError] = useState(null);
   const [nieuwGE, setNieuwGE] = useState(null); // doeltype als er een nieuw record wordt toegevoegd
   const [bewerkRij, setBewerkRij] = useState(null); // { doeltype, index } — meervoudig rij in correctiemodus
+  const [toonHistorie, setToonHistorie] = useState({}); // { [doeltype]: true/false } — toggle per GE-type
 
   const apiPath = typeMeta?.padnaam || typeMeta?.meervoud || typeMeta?.veldnaam;
 
@@ -198,16 +199,20 @@ export default function EntiteitFormulier() {
         )}
       </div>
 
-      {/* Entiteit ID en formele tijd — alleen weergave, geen formulier */}
+      {/* Entiteit ID en formele tijd — compact weergave */}
       <div className="cg-form-card">
         <div className="cg-form-section">
-          <div className="cg-form-section__title">
-            {typeMeta.klassenaam || typeMeta.typenaam}
-          </div>
-          <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap", fontSize: "0.9375rem" }}>
-            <span><strong>{typeMeta.idKolom || "id"}:</strong> {entity[typeMeta.idKolom || "id"]}</span>
-            {entity.opvoer && <span style={{ color: "var(--cg-donkergrijs)" }}>opvoer: {String(entity.opvoer).slice(0, 19).replace("T", " ")}</span>}
-            {entity.afvoer && <span style={{ color: "var(--cg-fout)" }}>afvoer: {String(entity.afvoer).slice(0, 19).replace("T", " ")}</span>}
+          <div className="cg-form-section__title" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+            <span>
+              {typeMeta.klassenaam || typeMeta.typenaam}
+              <span style={{ fontWeight: 400, fontSize: "0.8125rem", color: "var(--cg-donkergrijs)", marginLeft: "0.5rem" }}>
+                #{entity[typeMeta.idKolom || "id"]}
+              </span>
+            </span>
+            <span style={{ fontWeight: 400, fontSize: "0.75rem", color: "var(--cg-donkergrijs)" }}>
+              {entity.opvoer && <>t={tUitRegistratieTijdstip(entity.opvoer) ?? "?"}</>}
+              {entity.afvoer && <span style={{ color: "var(--cg-fout)", marginLeft: "0.75rem" }}>afgevoerd t={tUitRegistratieTijdstip(entity.afvoer) ?? "?"}</span>}
+            </span>
           </div>
 
           {/* Samenvattend overzicht onderliggende GE's als scroll-knoppen.
@@ -244,7 +249,11 @@ export default function EntiteitFormulier() {
                       textAlign: "left",
                       fontSize: "0.8125rem",
                       lineHeight: 1.4,
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                      transition: "box-shadow 0.15s, transform 0.1s",
                     }}
+                    onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 2px 6px rgba(0,0,0,0.14)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.08)"; e.currentTarget.style.transform = "none"; }}
                   >
                     <strong>{label}</strong>
                     {count > 0 ? ` (${count})` : ""}
@@ -306,30 +315,151 @@ export default function EntiteitFormulier() {
         const alleVelden = safeArray(dataMeta?.velden || childMeta?.velden);
 
         return (
-          <div key={child.doeltype} id={`ge-${child.doeltype}`} className="cg-form-card" style={{ marginTop: "1rem" }}>
-            <div className="cg-form-section__title">
-              {label}
-              <span style={{ fontWeight: 400, fontSize: "0.8125rem", color: "var(--cg-donkergrijs)", marginLeft: 8 }}>
-                ({child.momentvoorkomen}) — {actueleItems.length} actueel
-                {historischeItems > 0 && (
-                  <span style={{ color: "var(--cg-grijs)" }}>, {historischeItems} historisch</span>
-                )}
+          <div key={child.doeltype} id={`ge-${child.doeltype}`} className="cg-form-card" style={{ marginTop: "0.75rem" }}>
+            <div className="cg-form-section__title" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+              <span>
+                {label}
+                <span style={{ fontWeight: 400, fontSize: "0.75rem", color: "var(--cg-donkergrijs)", marginLeft: "0.5rem" }}>
+                  ({child.momentvoorkomen}) — {actueleItems.length} actueel
+                  {historischeItems > 0 && (
+                    <span style={{ color: "var(--cg-grijs)" }}>, {historischeItems} hist.</span>
+                  )}
+                </span>
+                {/* Compact ID boven de gele streep voor enkelvoudig */}
+                {isEnkelvoudig && actueleItems.length > 0 && (() => {
+                  const item = actueleItems[0];
+                  const entKolom = String(childMeta.entiteitIDKolom || "").toLowerCase();
+                  const entId = entKolom ? item[entKolom] : null;
+                  const relId = item.rel_id;
+                  const versie = item.versie;
+                  if (entId == null) return null;
+                  let compactId = `${entId}`;
+                  if (relId != null) compactId += `.${relId}`;
+                  if (versie != null) compactId += `.${versie}`;
+                  return <span style={{ fontWeight: 400, fontFamily: "monospace", fontSize: "0.6875rem", color: "var(--cg-donkergrijs)", marginLeft: "0.75rem" }}>#{compactId}</span>;
+                })()}
               </span>
+              {/* Symbolische formele tijd rechts, boven de gele streep */}
+              {isEnkelvoudig && actueleItems.length > 0 && (
+                <span style={{ fontWeight: 400, fontSize: "0.6875rem", color: "var(--cg-donkergrijs)" }}>
+                  {actueleItems[0].opvoer && <>t={tUitRegistratieTijdstip(actueleItems[0].opvoer) ?? "?"}</>}
+                  {actueleItems[0].afvoer && <span style={{ color: "var(--cg-fout)", marginLeft: "0.5rem" }}>afgevoerd t={tUitRegistratieTijdstip(actueleItems[0].afvoer) ?? "?"}</span>}
+                </span>
+              )}
             </div>
 
             {isEnkelvoudig && actueleItems.length > 0 ? (
               /* Enkelvoudig: formulier met het actuele (platgeslagen) record.
                * Bij enkelvoudig GEs is er altijd max 1 actueel hub-record.
-               * Eerdere versies van de data zijn afgevoerd en worden niet getoond. */
-              <RepresentatieFormulier
-                typeMeta={childMeta}
-                dataMeta={dataMeta}
-                initialData={actueleItems[0]}
-                onSaved={fetchEntity}
-                entiteitId={id}
-                entiteitIdKolom={childMeta.entiteitIDKolom}
-                isEnkelvoudig={true}
-              />
+               * Eerdere versies van de data zijn afgevoerd en worden niet getoond
+               * tenzij de gebruiker de historie openklapt. */
+              <div style={{ position: "relative" }}>
+                {/* Gestapelde historische kaarten achter de actuele */}
+                {(() => {
+                  const rawHub = rawItems[0]; // eerste (enige) hub voor enkelvoudig
+                  const alleVersies = rawHub ? platSlaAlleVersies(rawHub, childMeta, typeMetaByTypenaam) : [];
+                  const historischeVersies = alleVersies.filter((v) => v._data_afvoer);
+                  const heeftHistorie = historischeVersies.length > 0;
+                  const historieTonen = toonHistorie[child.doeltype];
+
+                  return (
+                    <>
+                      {/* Visuele "gestapelde kaarten" hint als er historie is */}
+                      {heeftHistorie && !historieTonen && (
+                        <div style={{
+                          position: "absolute", top: 4, left: 4, right: -4, bottom: -4,
+                          background: "var(--cg-grijs)", borderRadius: "6px", opacity: 0.5,
+                          border: "1px solid var(--cg-grijs)", zIndex: 0,
+                          pointerEvents: "none",
+                        }} />
+                      )}
+                      {heeftHistorie && !historieTonen && historischeVersies.length > 1 && (
+                        <div style={{
+                          position: "absolute", top: 7, left: 7, right: -7, bottom: -7,
+                          background: "var(--cg-grijs)", borderRadius: "6px", opacity: 0.3,
+                          border: "1px solid var(--cg-grijs)", zIndex: 0,
+                          pointerEvents: "none",
+                        }} />
+                      )}
+
+                      {/* Actueel formulier (bovenop de stack) */}
+                      <div style={{ position: "relative", zIndex: 1 }}>
+                        <RepresentatieFormulier
+                          typeMeta={childMeta}
+                          dataMeta={dataMeta}
+                          initialData={actueleItems[0]}
+                          onSaved={fetchEntity}
+                          entiteitId={id}
+                          entiteitIdKolom={childMeta.entiteitIDKolom}
+                          isEnkelvoudig={true}
+                          hideIdEnTijd={true}
+                        />
+                      </div>
+
+                      {/* Toggle om historie te tonen */}
+                      {heeftHistorie && (
+                        <div style={{ position: "relative", zIndex: 1, paddingTop: historieTonen ? "0.25rem" : "0.5rem" }}>
+                          <button
+                            type="button"
+                            onClick={() => setToonHistorie((prev) => ({ ...prev, [child.doeltype]: !prev[child.doeltype] }))}
+                            style={{
+                              background: "none", border: "none", cursor: "pointer",
+                              fontSize: "0.75rem", color: "var(--cg-blauw)",
+                              padding: "0.125rem 0", textDecoration: "underline",
+                            }}
+                          >
+                            {historieTonen ? "▴ Historie verbergen" : `▾ ${historischeVersies.length} historische versie${historischeVersies.length > 1 ? "s" : ""} tonen`}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Uitgeklapte historische versies */}
+                      {heeftHistorie && historieTonen && (
+                        <div style={{ position: "relative", zIndex: 1, marginTop: "0.25rem" }}>
+                          {historischeVersies.map((versie, vi) => {
+                            const tOpvoer = versie._data_opvoer ? tUitRegistratieTijdstip(versie._data_opvoer) : null;
+                            const tAfvoer = versie._data_afvoer ? tUitRegistratieTijdstip(versie._data_afvoer) : null;
+                            return (
+                              <div
+                                key={vi}
+                                style={{
+                                  background: "var(--cg-lichtgrijs)",
+                                  border: "1px dashed var(--cg-grijs)",
+                                  borderRadius: "6px",
+                                  padding: "0.625rem 1rem",
+                                  marginTop: vi > 0 ? "0.375rem" : 0,
+                                  opacity: 0.75,
+                                }}
+                              >
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: "0.6875rem", color: "var(--cg-donkergrijs)", marginBottom: "0.375rem" }}>
+                                  <span style={{ fontFamily: "monospace" }}>
+                                    versie {versie._data_versie ?? (historischeVersies.length - vi)}
+                                  </span>
+                                  <span>
+                                    {tOpvoer != null && <>t={tOpvoer}</>}
+                                    {tAfvoer != null && <span style={{ color: "var(--cg-fout)", marginLeft: "0.5rem" }}>→ afgevoerd t={tAfvoer}</span>}
+                                  </span>
+                                </div>
+                                <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap", fontSize: "0.8125rem" }}>
+                                  {inhoudsvelden.map((v) => {
+                                    const val = versie[v.naam];
+                                    return val != null && val !== "" ? (
+                                      <span key={v.naam}>
+                                        <span style={{ color: "var(--cg-donkergrijs)" }}>{v.naam}:</span>{" "}
+                                        <span style={{ color: "var(--cg-donkerblauw)" }}>{String(val)}</span>
+                                      </span>
+                                    ) : null;
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
             ) : !isEnkelvoudig && actueleItems.length > 0 ? (
               /* Meervoudig: compact tabel met actuele records + acties per rij */
               <div>
@@ -388,7 +518,7 @@ export default function EntiteitFormulier() {
                 {bewerkRij?.doeltype === child.doeltype && bewerkRij.index < actueleItems.length && (
                   <div style={{ marginTop: "0.5rem", padding: "0.75rem", border: "1px solid var(--cg-grijs, #ccc)", borderRadius: "6px", background: "var(--cg-lichtgrijs, #f8f9fa)" }}>
                     <div style={{ fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.5rem" }}>
-                      Correctie {label} (rel_id: {actueleItems[bewerkRij.index]?.rel_id ?? "—"})
+                      Correctie {label}
                     </div>
                     <RepresentatieFormulier
                       typeMeta={childMeta}
