@@ -835,7 +835,7 @@ Deregister U5 and register U6 for entity A:
 31 UML editor
 * trekken lijntjes van punt naar punt: bewaren handle positie source en target
 * selecteren van een groep elementen (voor verslepen)
-- auto kiezen handles lijntjes op basis van positie source en target (bij import)
+* auto kiezen handles lijntjes op basis van positie source en target (bij import)
 
 35 Formulieren
 - bewaar kan ook voor alle GEn ipv per stuk. Typisch is dat ook zo.

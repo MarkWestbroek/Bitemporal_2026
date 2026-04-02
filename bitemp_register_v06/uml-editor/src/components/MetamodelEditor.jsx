@@ -580,6 +580,33 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     [setEdges]
   );
 
+  /**
+   * handleSetSupertype — stel de supertype-relatie in voor een node via een
+   * generalisatie-edge (subtype → supertype). Verwijdert bestaande generalisatie-
+   * edges vanuit deze node en voegt eventueel een nieuwe toe.
+   */
+  const handleSetSupertype = useCallback(
+    (nodeId, supertypeNodeId) => {
+      setEdges((eds) => {
+        const filtered = eds.filter(
+          (e) => !(e.source === nodeId && e.data?.isGeneralization)
+        );
+        if (!supertypeNodeId) return filtered;
+        return [
+          ...filtered,
+          {
+            id: generateId("edge"),
+            source: nodeId,
+            target: supertypeNodeId,
+            type: "metamodel",
+            data: { isGeneralization: true },
+          },
+        ];
+      });
+    },
+    [setEdges]
+  );
+
   // === Opslaan / Laden ===
 
   const handleSave = useCallback(() => {
@@ -916,6 +943,8 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
               enumNodes={enumNodes}
                 entiteitNodes={entiteitNodes}
               allNodes={nodes}
+              edges={edges}
+              onSetSupertype={handleSetSupertype}
             />
           )}
           {selectedEdge && !selectedNode && (

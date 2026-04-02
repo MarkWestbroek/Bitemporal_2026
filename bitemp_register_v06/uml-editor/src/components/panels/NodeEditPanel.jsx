@@ -16,7 +16,7 @@ import { METATYPES, ENTITEIT_SUBTYPES, RELATIE_SUBTYPES, VELDTYPEN, AFLEIDINGSTA
 
 const BASISTYPES = ["string", "integer", "number", "boolean"];
 
-export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes = [], enumNodes = [], entiteitNodes = [], allNodes = [] }) {
+export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes = [], enumNodes = [], entiteitNodes = [], allNodes = [], edges = [], onSetSupertype }) {
   if (!node) return null;
 
   const data = node.data;
@@ -595,6 +595,46 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
         />
         Materieel (heeft tijdlijn)
       </label>
+
+      <label className="checkbox-label">
+        <input
+          type="checkbox"
+          checked={data.isAbstract || false}
+          onChange={(e) => updateField("isAbstract", e.target.checked)}
+        />
+        Abstract (niet-instantieerbaar)
+      </label>
+
+      {/* Supertype — afgeleid van generalisatie-edge */}
+      {(() => {
+        const genEdge = edges.find(
+          (e) => e.source === node.id && e.data?.isGeneralization
+        );
+        const currentSupertypeId = genEdge?.target || "";
+        const mogelijkeSupertypes = allNodes.filter(
+          (n) =>
+            n.id !== node.id &&
+            ["entiteit", "gegevenselement", "relatie"].includes(n.type)
+        );
+        return (
+          <label>
+            Supertype
+            <select
+              value={currentSupertypeId}
+              onChange={(e) =>
+                onSetSupertype && onSetSupertype(node.id, e.target.value || null)
+              }
+            >
+              <option value="">(geen)</option>
+              {mogelijkeSupertypes.map((n) => (
+                <option key={n.id} value={n.id}>
+                  {n.data?.typenaam || n.id}
+                </option>
+              ))}
+            </select>
+          </label>
+        );
+      })()}
 
       {isRelatie && (
         <label>

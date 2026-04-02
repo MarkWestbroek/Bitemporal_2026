@@ -40,8 +40,10 @@ function MetamodelEdge({
   const targetNode = getNode(target);
 
   const isDependency = data?.isDependency === true;
+  const isGeneralization = data?.isGeneralization === true;
   const isComposition =
     !isDependency &&
+    !isGeneralization &&
     sourceNode?.type === "entiteit" &&
     ["gegevenselement", "relatie"].includes(targetNode?.type);
 
@@ -67,8 +69,10 @@ function MetamodelEdge({
 
   const diamondColor = selected ? "#2563eb" : "#64748b";
   const dependencyColor = "#64748b";
+  const generalizationColor = selected ? "#2563eb" : "#475569";
   const { diamondCenter, diamondPoints } = getDiamondProps(sourceX, sourceY, sourcePosition);
-  const dependencyArrowId = "edge-dependency-arrow";
+  const dependencyArrowId = `edge-dependency-arrow-${id}`;
+  const generalizationArrowId = `edge-generalization-triangle-${id}`;
 
   return (
     <>
@@ -94,14 +98,40 @@ function MetamodelEdge({
           </marker>
         </defs>
       )}
+      {isGeneralization && (
+        <defs>
+          <marker
+            id={generalizationArrowId}
+            markerWidth="14"
+            markerHeight="14"
+            refX="13"
+            refY="7"
+            orient="auto"
+            markerUnits="strokeWidth"
+          >
+            <path
+              d="M 1 1 L 13 7 L 1 13 Z"
+              fill="white"
+              stroke={generalizationColor}
+              strokeWidth="1.2"
+            />
+          </marker>
+        </defs>
+      )}
 
       {/* De lijn zelf — BaseEdge tekent het SVG path */}
       <BaseEdge
         id={id}
         path={edgePath}
-        markerEnd={isDependency ? `url(#${dependencyArrowId})` : undefined}
+        markerEnd={
+          isDependency ? `url(#${dependencyArrowId})`
+          : isGeneralization ? `url(#${generalizationArrowId})`
+          : undefined
+        }
         style={{
-          stroke: isDependency ? dependencyColor : selected ? "#2563eb" : "#64748b",
+          stroke: isDependency ? dependencyColor
+            : isGeneralization ? generalizationColor
+            : selected ? "#2563eb" : "#64748b",
           strokeWidth: selected ? 2.5 : 1.5,
           strokeDasharray: isDependency ? "6 3" : undefined,
         }}
@@ -120,7 +150,7 @@ function MetamodelEdge({
       )}
 
       {/* Labels boven de edge — EdgeLabelRenderer plaatst HTML over de SVG */}
-      {!isDependency && (
+      {!isDependency && !isGeneralization && (
         <EdgeLabelRenderer>
           <div
             className="edge-label"
@@ -149,6 +179,22 @@ function MetamodelEdge({
             }}
           >
             <span className="edge-constraint" style={{ color: "#7c3aed" }}>«use»</span>
+          </div>
+        </EdgeLabelRenderer>
+      )}
+      {isGeneralization && (
+        <EdgeLabelRenderer>
+          <div
+            className="edge-label"
+            style={{
+              position: "absolute",
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+              pointerEvents: "all",
+            }}
+          >
+            <span className="edge-constraint" style={{ color: "#0d9488" }}>
+              {data?.mixin ? "«Mixin»" : "«Generalisatie»"}
+            </span>
           </div>
         </EdgeLabelRenderer>
       )}

@@ -17,9 +17,11 @@
  */
 import { memo } from "react";
 import { Handle, Position } from "@xyflow/react";
+import { useOvergeerfdeVelden } from "../../hooks/useOvergeerfdeVelden";
 
-function GegevensElementNode({ data, selected }) {
+function GegevensElementNode({ id, data, selected }) {
   const borderColor = selected ? "#16a34a" : "#94a3b8";
+  const overerving = useOvergeerfdeVelden(id);
 
   return (
     <div
@@ -86,6 +88,26 @@ function GegevensElementNode({ data, selected }) {
                   {av.naam}
                 </span>
                 <span className="veld-type">{av.goType || "string"}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Overgeërfde velden van supertype */}
+      {overerving && overerving.velden.length > 0 && (
+        <>
+          <div className="node-divider" />
+          <div className="node-velden overgeerfd">
+            <div className="node-veld leeg" style={{ color: "#94a3b8", fontSize: "0.8em" }}>
+              ↑ {overerving.supertypeNaam}
+            </div>
+            {overerving.velden.map((v, i) => (
+              <div key={`ov-${i}`} className="node-veld" style={{ opacity: 0.5 }}>
+                <span className="veld-naam">{v.naam}</span>
+                <span className="veld-type">
+                  {v.enumNaam || v.datatypeNaam || v.type}
+                </span>
               </div>
             ))}
           </div>
