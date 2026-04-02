@@ -1,5 +1,22 @@
 import { korteDatumWeergave, oortjePad, oortjeStyle, bepaalHubOortjes } from "../../shared/oortjesUtils";
 
+function schatSvgTekstBreedte(tekst, fontSizePx = 12, extraPadding = 24) {
+  const inhoud = String(tekst || "").trim();
+  if (!inhoud) return 0;
+  return Math.ceil((inhoud.length * fontSizePx * 0.58) + extraPadding);
+}
+
+function bepaalKaartBreedte(teksten, minBreedte = 240, maxBreedte = 380) {
+  const lijst = Array.isArray(teksten) ? teksten : [teksten];
+  const breedte = lijst.reduce((max, entry) => {
+    const tekst = typeof entry === "string" ? entry : entry?.tekst;
+    const fontSize = typeof entry === "string" ? 12 : (entry?.fontSize ?? 12);
+    const padding = typeof entry === "string" ? 24 : (entry?.padding ?? 24);
+    return Math.max(max, schatSvgTekstBreedte(tekst, fontSize, padding));
+  }, minBreedte);
+  return Math.max(minBreedte, Math.min(maxBreedte, breedte));
+}
+
 export default function IndexRepresentatieVisual({
   svgHoogte,
   geGroepenMetLayout,
@@ -28,6 +45,7 @@ export default function IndexRepresentatieVisual({
 }) {
   const centraleWeergaveTekst = String(entiteitWeergaveVeldTekst || "");
   const centraleWeergaveFontSize =
+    centraleWeergaveTekst.length > 42 ? "15px" :
     centraleWeergaveTekst.length > 32 ? "16px" :
     centraleWeergaveTekst.length > 24 ? "17px" :
     "19px";
@@ -144,6 +162,14 @@ export default function IndexRepresentatieVisual({
         const aanvangTekst = korteDatumWeergave(aanvangOortje?.datum);
         const eindeTekst = korteDatumWeergave(eindeOortje?.datum);
         const entFill = selectedEntiteitMeta?.kleur || "#dbeafe";
+        const entityW = entiteitWeergaveVeldTekst
+          ? bepaalKaartBreedte([
+              { tekst: entiteitWeergaveVeldTekst, fontSize: Number.parseFloat(centraleWeergaveFontSize) || 19, padding: 56 },
+              { tekst: `${entiteitType || "E"} · id ${selectedA.id}`, fontSize: 11.5, padding: 36 },
+            ], 240, 380)
+          : 240;
+        const entityX = Math.round(450 - (entityW / 2));
+        const entityRight = entityX + entityW;
         return (
           <>
             {/* Materiële-tijd oortjes: getekend VOOR de entity rect zodat die hun onderrand bedekt (kaartlip-effect).
@@ -152,28 +178,28 @@ export default function IndexRepresentatieVisual({
             {aanvangTekst && (
               <g className="actionable-svg-target" onClick={() => selecteerRep(aanvangOortje.item, aanvangOortje.group)} style={{ cursor: "pointer" }}>
                 {geselecteerdeRep?.item === aanvangOortje.item && (
-                  <rect x="328" y={OY - 4} rx={OR + 2} width={OW + 6} height={OH + 4} style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2, strokeDasharray: "4,3" }} />
+                  <rect x={entityX - 2} y={OY - 4} rx={OR + 2} width={OW + 6} height={OH + 4} style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2, strokeDasharray: "4,3" }} />
                 )}
-                <path d={oortjePad(331, OY, OW, OH, OR)} style={{ fill: entFill, stroke: "#334155", strokeWidth: 1.2 }} />
-                <text x={331 + OW / 2} y={OY + OH - 10} textAnchor="middle" style={oortjeStyle}>{aanvangTekst}</text>
+                <path d={oortjePad(entityX + 1, OY, OW, OH, OR)} style={{ fill: entFill, stroke: "#334155", strokeWidth: 1.2 }} />
+                <text x={entityX + 1 + OW / 2} y={OY + OH - 10} textAnchor="middle" style={oortjeStyle}>{aanvangTekst}</text>
               </g>
             )}
             {eindeTekst && (
               <g className="actionable-svg-target" onClick={() => selecteerRep(eindeOortje.item, eindeOortje.group)} style={{ cursor: "pointer" }}>
                 {geselecteerdeRep?.item === eindeOortje.item && (
-                  <rect x="472" y={OY - 4} rx={OR + 2} width={OW + 6} height={OH + 4} style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2, strokeDasharray: "4,3" }} />
+                  <rect x={entityRight - OW - 4} y={OY - 4} rx={OR + 2} width={OW + 6} height={OH + 4} style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2, strokeDasharray: "4,3" }} />
                 )}
-                <path d={oortjePad(475, OY, OW, OH, OR)} style={{ fill: entFill, stroke: "#334155", strokeWidth: 1.2 }} />
-                <text x={475 + OW / 2} y={OY + OH - 10} textAnchor="middle" style={oortjeStyle}>{eindeTekst}</text>
+                <path d={oortjePad(entityRight - OW - 1, OY, OW, OH, OR)} style={{ fill: entFill, stroke: "#334155", strokeWidth: 1.2 }} />
+                <text x={entityRight - OW - 1 + OW / 2} y={OY + OH - 10} textAnchor="middle" style={oortjeStyle}>{eindeTekst}</text>
               </g>
             )}
             {/* Entiteitskaart: getekend NA de oortjes — bedekt hun onderrand voor het kaartlip-effect. */}
             <g className="actionable-svg-target" onClick={openEntiteitActieBox} style={{ cursor: "pointer" }}>
-              {entiteitActieOpen && <rect x="327" y="37" rx="12" width="246" height="86" style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2.5, strokeDasharray: "5,3" }} />}
-              <rect className="node" x="330" y="40" rx="10" width="240" height="80" style={{ fill: entFill, strokeWidth: 2.8 }} />
+              {entiteitActieOpen && <rect x={entityX - 3} y="37" rx="12" width={entityW + 6} height="86" style={{ fill: "none", stroke: "#1d4ed8", strokeWidth: 2.5, strokeDasharray: "5,3" }} />}
+              <rect className="node" x={entityX} y="40" rx="10" width={entityW} height="80" style={{ fill: entFill, strokeWidth: 2.8 }} />
               <text
                 className={`label label-lg${entOpvoerKlikbaar ? " opv-link" : ""}`}
-                x="562" y="56" textAnchor="end"
+                x={entityRight - 8} y="56" textAnchor="end"
                 onClick={entOpvoerKlikbaar ? (event) => navigeerNaarRegistratieVanOpvoer(event, selectedA.opvoer) : undefined}
               >opv: {selectedA.opvoer ? microsecondeIntVanTijdstip(selectedA.opvoer) : "-"}</text>
               {entiteitWeergaveVeldTekst ? (
@@ -188,7 +214,7 @@ export default function IndexRepresentatieVisual({
                   </text>
                 </>
               ) : (
-                <text className="label" x="345" y="82">
+                <text className="label" x={entityX + 15} y="82">
                   <tspan style={centraleEntiteitLabelStyle}>{entiteitType || "E"}</tspan>
                   {" id="}
                   <tspan style={centraleEntiteitLabelStyle}>{selectedA.id}</tspan>

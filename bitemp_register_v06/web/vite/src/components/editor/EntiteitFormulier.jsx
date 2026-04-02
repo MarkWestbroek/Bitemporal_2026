@@ -314,6 +314,14 @@ export default function EntiteitFormulier() {
         // Alle velden (incl. plumbing) voor het formulier
         const alleVelden = safeArray(dataMeta?.velden || childMeta?.velden);
 
+        // Bereken historische versies voor alle hub-types (enkelvoudig + meervoudig)
+        const alleHistorischeVersies = rawItems.flatMap((hubItem) => {
+          const versies = platSlaAlleVersies(hubItem, childMeta, typeMetaByTypenaam);
+          return versies.filter((v) => v._data_afvoer);
+        });
+        const heeftHistorie = alleHistorischeVersies.length > 0;
+        const historieTonen = toonHistorie[child.doeltype];
+
         return (
           <div key={child.doeltype} id={`ge-${child.doeltype}`} className="cg-form-card" style={{ marginTop: "0.75rem" }}>
             <div className="cg-form-section__title" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
@@ -321,8 +329,19 @@ export default function EntiteitFormulier() {
                 {label}
                 <span style={{ fontWeight: 400, fontSize: "0.75rem", color: "var(--cg-donkergrijs)", marginLeft: "0.5rem" }}>
                   ({child.momentvoorkomen}) — {actueleItems.length} actueel
-                  {historischeItems > 0 && (
-                    <span style={{ color: "var(--cg-grijs)" }}>, {historischeItems} hist.</span>
+                  {heeftHistorie && (
+                    <button
+                      type="button"
+                      onClick={() => setToonHistorie((prev) => ({ ...prev, [child.doeltype]: !prev[child.doeltype] }))}
+                      style={{
+                        background: "none", border: "none", cursor: "pointer",
+                        fontSize: "0.75rem", color: historieTonen ? "var(--cg-blauw)" : "var(--cg-donkergrijs)",
+                        padding: 0, marginLeft: "0.25rem", textDecoration: "underline", fontFamily: "inherit",
+                      }}
+                      title={historieTonen ? "Historie verbergen" : "Historie tonen"}
+                    >
+                      {alleHistorischeVersies.length} hist.
+                    </button>
                   )}
                 </span>
                 {/* Compact ID boven de gele streep voor enkelvoudig */}
@@ -349,117 +368,17 @@ export default function EntiteitFormulier() {
             </div>
 
             {isEnkelvoudig && actueleItems.length > 0 ? (
-              /* Enkelvoudig: formulier met het actuele (platgeslagen) record.
-               * Bij enkelvoudig GEs is er altijd max 1 actueel hub-record.
-               * Eerdere versies van de data zijn afgevoerd en worden niet getoond
-               * tenzij de gebruiker de historie openklapt. */
-              <div style={{ position: "relative" }}>
-                {/* Gestapelde historische kaarten achter de actuele */}
-                {(() => {
-                  const rawHub = rawItems[0]; // eerste (enige) hub voor enkelvoudig
-                  const alleVersies = rawHub ? platSlaAlleVersies(rawHub, childMeta, typeMetaByTypenaam) : [];
-                  const historischeVersies = alleVersies.filter((v) => v._data_afvoer);
-                  const heeftHistorie = historischeVersies.length > 0;
-                  const historieTonen = toonHistorie[child.doeltype];
-
-                  return (
-                    <>
-                      {/* Visuele "gestapelde kaarten" hint als er historie is */}
-                      {heeftHistorie && !historieTonen && (
-                        <div style={{
-                          position: "absolute", top: 4, left: 4, right: -4, bottom: -4,
-                          background: "var(--cg-grijs)", borderRadius: "6px", opacity: 0.5,
-                          border: "1px solid var(--cg-grijs)", zIndex: 0,
-                          pointerEvents: "none",
-                        }} />
-                      )}
-                      {heeftHistorie && !historieTonen && historischeVersies.length > 1 && (
-                        <div style={{
-                          position: "absolute", top: 7, left: 7, right: -7, bottom: -7,
-                          background: "var(--cg-grijs)", borderRadius: "6px", opacity: 0.3,
-                          border: "1px solid var(--cg-grijs)", zIndex: 0,
-                          pointerEvents: "none",
-                        }} />
-                      )}
-
-                      {/* Actueel formulier (bovenop de stack) */}
-                      <div style={{ position: "relative", zIndex: 1 }}>
-                        <RepresentatieFormulier
-                          typeMeta={childMeta}
-                          dataMeta={dataMeta}
-                          initialData={actueleItems[0]}
-                          onSaved={fetchEntity}
-                          entiteitId={id}
-                          entiteitIdKolom={childMeta.entiteitIDKolom}
-                          isEnkelvoudig={true}
-                          hideIdEnTijd={true}
-                        />
-                      </div>
-
-                      {/* Toggle om historie te tonen */}
-                      {heeftHistorie && (
-                        <div style={{ position: "relative", zIndex: 1, paddingTop: historieTonen ? "0.25rem" : "0.5rem" }}>
-                          <button
-                            type="button"
-                            onClick={() => setToonHistorie((prev) => ({ ...prev, [child.doeltype]: !prev[child.doeltype] }))}
-                            style={{
-                              background: "none", border: "none", cursor: "pointer",
-                              fontSize: "0.75rem", color: "var(--cg-blauw)",
-                              padding: "0.125rem 0", textDecoration: "underline",
-                            }}
-                          >
-                            {historieTonen ? "▴ Historie verbergen" : `▾ ${historischeVersies.length} historische versie${historischeVersies.length > 1 ? "s" : ""} tonen`}
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Uitgeklapte historische versies */}
-                      {heeftHistorie && historieTonen && (
-                        <div style={{ position: "relative", zIndex: 1, marginTop: "0.25rem" }}>
-                          {historischeVersies.map((versie, vi) => {
-                            const tOpvoer = versie._data_opvoer ? tUitRegistratieTijdstip(versie._data_opvoer) : null;
-                            const tAfvoer = versie._data_afvoer ? tUitRegistratieTijdstip(versie._data_afvoer) : null;
-                            return (
-                              <div
-                                key={vi}
-                                style={{
-                                  background: "var(--cg-lichtgrijs)",
-                                  border: "1px dashed var(--cg-grijs)",
-                                  borderRadius: "6px",
-                                  padding: "0.625rem 1rem",
-                                  marginTop: vi > 0 ? "0.375rem" : 0,
-                                  opacity: 0.75,
-                                }}
-                              >
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", fontSize: "0.6875rem", color: "var(--cg-donkergrijs)", marginBottom: "0.375rem" }}>
-                                  <span style={{ fontFamily: "monospace" }}>
-                                    versie {versie._data_versie ?? (historischeVersies.length - vi)}
-                                  </span>
-                                  <span>
-                                    {tOpvoer != null && <>t={tOpvoer}</>}
-                                    {tAfvoer != null && <span style={{ color: "var(--cg-fout)", marginLeft: "0.5rem" }}>→ afgevoerd t={tAfvoer}</span>}
-                                  </span>
-                                </div>
-                                <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap", fontSize: "0.8125rem" }}>
-                                  {inhoudsvelden.map((v) => {
-                                    const val = versie[v.naam];
-                                    return val != null && val !== "" ? (
-                                      <span key={v.naam}>
-                                        <span style={{ color: "var(--cg-donkergrijs)" }}>{v.naam}:</span>{" "}
-                                        <span style={{ color: "var(--cg-donkerblauw)" }}>{String(val)}</span>
-                                      </span>
-                                    ) : null;
-                                  })}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
-              </div>
+              /* Enkelvoudig: formulier met het actuele (platgeslagen) record */
+              <RepresentatieFormulier
+                typeMeta={childMeta}
+                dataMeta={dataMeta}
+                initialData={actueleItems[0]}
+                onSaved={fetchEntity}
+                entiteitId={id}
+                entiteitIdKolom={childMeta.entiteitIDKolom}
+                isEnkelvoudig={true}
+                hideIdEnTijd={true}
+              />
             ) : !isEnkelvoudig && actueleItems.length > 0 ? (
               /* Meervoudig: compact tabel met actuele records + acties per rij */
               <div>
@@ -534,6 +453,48 @@ export default function EntiteitFormulier() {
                 )}
               </div>
             ) : null}
+
+            {/* Uitgeklapte historische versies */}
+            {heeftHistorie && historieTonen && (
+              <div style={{ marginTop: "0.5rem", paddingLeft: "0.5rem", borderLeft: "2px solid var(--cg-grijs, #ccc)" }}>
+                <div style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--cg-donkergrijs)", marginBottom: "0.25rem" }}>
+                  Historische versies ({alleHistorischeVersies.length})
+                </div>
+                {alleHistorischeVersies.map((versie, vi) => {
+                  const tOpvoer = versie._data_opvoer ? tUitRegistratieTijdstip(versie._data_opvoer) : null;
+                  const tAfvoer = versie._data_afvoer ? tUitRegistratieTijdstip(versie._data_afvoer) : null;
+                  const dataVersie = versie._data_versie;
+                  // Toon inhoudsvelden als compacte key=value reeks
+                  const veldWaarden = inhoudsvelden
+                    .map((v) => ({ naam: v.naam, waarde: versie[v.naam] }))
+                    .filter((v) => v.waarde != null && v.waarde !== "");
+                  return (
+                    <div
+                      key={vi}
+                      style={{
+                        padding: "0.375rem 0.625rem",
+                        marginBottom: "0.25rem",
+                        border: "1px dashed var(--cg-grijs, #ccc)",
+                        borderRadius: "4px",
+                        fontSize: "0.8125rem",
+                        background: "var(--cg-lichtgrijs, #f8f9fa)",
+                      }}
+                    >
+                      <span style={{ fontFamily: "monospace", fontSize: "0.6875rem", color: "var(--cg-donkergrijs)" }}>
+                        {dataVersie != null && <>v{dataVersie} &middot; </>}
+                        {tOpvoer != null && <>t={tOpvoer}</>}
+                        {tAfvoer != null && <span style={{ color: "var(--cg-fout, #b91c1c)" }}> → afgevoerd t={tAfvoer}</span>}
+                      </span>
+                      {veldWaarden.length > 0 && (
+                        <span style={{ marginLeft: "0.75rem", color: "var(--cg-tekst, #333)" }}>
+                          {veldWaarden.map((v) => `${v.naam}: ${v.waarde}`).join(" | ")}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Lege GE: mogelijkheid om nieuw record toe te voegen */}
             {actueleItems.length === 0 && nieuwGE !== child.doeltype && (

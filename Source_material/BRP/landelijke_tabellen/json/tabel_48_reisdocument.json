@@ -1,0 +1,189 @@
+{
+  "tabel_nr": 48,
+  "naam": "Tabel Nederlands reisdocument",
+  "bron": "https://publicaties.rvig.nl/landelijke-tabellen-32-tm-61-excl-tabel-35",
+  "bron_versie": "gedownload 2026-04-02",
+  "aantal_regels": 30,
+  "regels": [
+    {
+      "code": "..",
+      "omschrijving": "Onbekend",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "BJ",
+      "omschrijving": "Identiteitskaart (toeristenkaart) BJ",
+      "datum_ingang": "19920401",
+      "datum_einde": "19950101"
+    },
+    {
+      "code": "EK",
+      "omschrijving": "Europese identiteitskaart",
+      "datum_ingang": "19950101",
+      "datum_einde": "20011001"
+    },
+    {
+      "code": "IA",
+      "omschrijving": "Identiteitskaart (toeristenkaart) A",
+      "datum_ingang": "",
+      "datum_einde": "19920101"
+    },
+    {
+      "code": "IB",
+      "omschrijving": "Identiteitskaart (toeristenkaart) B",
+      "datum_ingang": "",
+      "datum_einde": "19950101"
+    },
+    {
+      "code": "IC",
+      "omschrijving": "Identiteitskaart (toeristenkaart) C",
+      "datum_ingang": "",
+      "datum_einde": "19920101"
+    },
+    {
+      "code": "ID",
+      "omschrijving": "Gemeentelijke Identiteitskaart",
+      "datum_ingang": "19930101",
+      "datum_einde": "19950101"
+    },
+    {
+      "code": "KE",
+      "omschrijving": "Kaart met paspoortboekje, 64 pag.",
+      "datum_ingang": "19920101",
+      "datum_einde": "19920101"
+    },
+    {
+      "code": "KN",
+      "omschrijving": "Kaart met paspoortboekje, 32 pag.",
+      "datum_ingang": "19920101",
+      "datum_einde": "19920101"
+    },
+    {
+      "code": "KZ",
+      "omschrijving": "Kaart zonder paspoortboekje",
+      "datum_ingang": "19920101",
+      "datum_einde": "19920101"
+    },
+    {
+      "code": "LP",
+      "omschrijving": "Laissez-passer",
+      "datum_ingang": "19950101",
+      "datum_einde": ""
+    },
+    {
+      "code": "NB",
+      "omschrijving": "Nooddocument (model reisdocument vreemdelingen)",
+      "datum_ingang": "19950101",
+      "datum_einde": "20010401"
+    },
+    {
+      "code": "NI",
+      "omschrijving": "Nederlandse identiteitskaart",
+      "datum_ingang": "20011001",
+      "datum_einde": ""
+    },
+    {
+      "code": "NN",
+      "omschrijving": "Noodpaspoort (model nationaal paspoort)",
+      "datum_ingang": "19950101",
+      "datum_einde": ""
+    },
+    {
+      "code": "NP",
+      "omschrijving": "Noodpaspoort",
+      "datum_ingang": "",
+      "datum_einde": "19950101"
+    },
+    {
+      "code": "NV",
+      "omschrijving": "Nooddocument (model reisdocument vluchtelingen)",
+      "datum_ingang": "19950101",
+      "datum_einde": "20010401"
+    },
+    {
+      "code": "PB",
+      "omschrijving": "Reisdocument voor vreemdelingen",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "PD",
+      "omschrijving": "Diplomatiek paspoort",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "PF",
+      "omschrijving": "Faciliteitenpaspoort",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "PN",
+      "omschrijving": "Nationaal paspoort",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "PV",
+      "omschrijving": "Reisdocument voor vluchtelingen",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "PZ",
+      "omschrijving": "Dienstpaspoort",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "R1",
+      "omschrijving": "Reisdocument ouder1",
+      "datum_ingang": "20010201",
+      "datum_einde": "20120626"
+    },
+    {
+      "code": "R2",
+      "omschrijving": "Reisdocument ouder2",
+      "datum_ingang": "20010201",
+      "datum_einde": "20120626"
+    },
+    {
+      "code": "RD",
+      "omschrijving": "Reisdocument voogd",
+      "datum_ingang": "",
+      "datum_einde": "20120626"
+    },
+    {
+      "code": "RM",
+      "omschrijving": "Reisdocument moeder",
+      "datum_ingang": "",
+      "datum_einde": "20010201"
+    },
+    {
+      "code": "RV",
+      "omschrijving": "Reisdocument vader",
+      "datum_ingang": "",
+      "datum_einde": "20010201"
+    },
+    {
+      "code": "TE",
+      "omschrijving": "Tweede paspoort (zakenpaspoort)",
+      "datum_ingang": "19920401",
+      "datum_einde": ""
+    },
+    {
+      "code": "TN",
+      "omschrijving": "Tweede paspoort",
+      "datum_ingang": "19920401",
+      "datum_einde": ""
+    },
+    {
+      "code": "ZN",
+      "omschrijving": "Nationaal paspoort (zakenpaspoort)",
+      "datum_ingang": "19920401",
+      "datum_einde": ""
+    }
+  ]
+}

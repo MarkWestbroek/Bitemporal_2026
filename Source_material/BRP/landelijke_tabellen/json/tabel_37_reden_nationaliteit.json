@@ -1,0 +1,1465 @@
+{
+  "tabel_nr": 37,
+  "naam": "Tabel Reden opnemen/beëindigen nationaliteit",
+  "bron": "https://publicaties.rvig.nl/landelijke-tabellen-32-tm-61-excl-tabel-35",
+  "bron_versie": "gedownload 2026-04-02",
+  "aantal_regels": 208,
+  "regels": [
+    {
+      "code": "000",
+      "omschrijving": "Onbekend",
+      "soort": "",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "001",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 1, onder a",
+      "soort": "VK",
+      "datum_ingang": "18930701",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "002",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 1, onder b",
+      "soort": "VK",
+      "datum_ingang": "18930701",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "003",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 1, onder c",
+      "soort": "VK",
+      "datum_ingang": "18930701",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "004",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 1, onder d",
+      "soort": "VK",
+      "datum_ingang": "18930701",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "005",
+      "omschrijving": "Wet op het Nederlanderschap 1892 i.v.m. wijziging 1962, art. 1bis",
+      "soort": "VK",
+      "datum_ingang": "19561101",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "006",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 2, onder a",
+      "soort": "VK",
+      "datum_ingang": "18930701",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "007",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 2, onder b",
+      "soort": "VK",
+      "datum_ingang": "18930701",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "008",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 2, onder c",
+      "soort": "VK",
+      "datum_ingang": "18930701",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "009",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 3",
+      "soort": "VK",
+      "datum_ingang": "18930701",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "010",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 4",
+      "soort": "VK",
+      "datum_ingang": "18930701",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "011",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 5",
+      "soort": "VK",
+      "datum_ingang": "18930701",
+      "datum_einde": "19640301"
+    },
+    {
+      "code": "012",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 6",
+      "soort": "VK",
+      "datum_ingang": "18930701",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "013",
+      "omschrijving": "Wet op het Nederlanderschap 1892 i.v.m. wijziging 1963, art. 8",
+      "soort": "VK",
+      "datum_ingang": "19640301",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "014",
+      "omschrijving": "Wet op het Nederlanderschap 1892 i.v.m. wijziging 1963, art. 8b",
+      "soort": "VK",
+      "datum_ingang": "19640301",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "015",
+      "omschrijving": "Wet op het Nederlanderschap 1892 i.v.m. wijziging 1963, art. 9",
+      "soort": "VK",
+      "datum_ingang": "19640301",
+      "datum_einde": "19770315"
+    },
+    {
+      "code": "016",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 10",
+      "soort": "VK",
+      "datum_ingang": "18930701",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "017",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 3, lid 1",
+      "soort": "VK",
+      "datum_ingang": "19850101",
+      "datum_einde": ""
+    },
+    {
+      "code": "018",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 3, lid 2",
+      "soort": "VK",
+      "datum_ingang": "19850101",
+      "datum_einde": ""
+    },
+    {
+      "code": "019",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 3, lid 3",
+      "soort": "VK",
+      "datum_ingang": "19850101",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "020",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 4, lid 1",
+      "soort": "VK",
+      "datum_ingang": "19850101",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "021",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 4, lid 2",
+      "soort": "VK",
+      "datum_ingang": "19850101",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "022",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 4, lid 3",
+      "soort": "VK",
+      "datum_ingang": "19850101",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "023",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 5, lid 1",
+      "soort": "VK",
+      "datum_ingang": "19850101",
+      "datum_einde": "20040101"
+    },
+    {
+      "code": "024",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 5, lid 2",
+      "soort": "VK",
+      "datum_ingang": "19850101",
+      "datum_einde": "19981001"
+    },
+    {
+      "code": "025",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 6, lid 1, onder a",
+      "soort": "VK",
+      "datum_ingang": "19850101",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "026",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 6, lid 1, onder b",
+      "soort": "VK",
+      "datum_ingang": "19850101",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "027",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 7",
+      "soort": "VK",
+      "datum_ingang": "19850101",
+      "datum_einde": ""
+    },
+    {
+      "code": "028",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 10",
+      "soort": "VK",
+      "datum_ingang": "19850101",
+      "datum_einde": ""
+    },
+    {
+      "code": "029",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 27, lid 2",
+      "soort": "VK",
+      "datum_ingang": "19850101",
+      "datum_einde": "19880101"
+    },
+    {
+      "code": "030",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 11",
+      "soort": "VK",
+      "datum_ingang": "19850101",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "031",
+      "omschrijving": "Toescheidingsovereenkomst Nederland - Suriname, art. 6, lid 1",
+      "soort": "VK",
+      "datum_ingang": "19751125",
+      "datum_einde": "19931125"
+    },
+    {
+      "code": "032",
+      "omschrijving": "Toescheidingsovereenkomst Nederland - Suriname, art. 6, lid 2",
+      "soort": "VK",
+      "datum_ingang": "19751125",
+      "datum_einde": "19931125"
+    },
+    {
+      "code": "033",
+      "omschrijving": "Toescheidingsovereenkomst Nederland - Suriname, art. 6, lid 4",
+      "soort": "VK",
+      "datum_ingang": "19751125",
+      "datum_einde": "19981125"
+    },
+    {
+      "code": "034",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Suriname, art. 2, lid 1, jo. art. 5, lid 2",
+      "soort": "VL",
+      "datum_ingang": "19751125",
+      "datum_einde": ""
+    },
+    {
+      "code": "035",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Suriname, art. 2, lid 1, jo. art. 6, lid 1",
+      "soort": "VL",
+      "datum_ingang": "19751125",
+      "datum_einde": "19931125"
+    },
+    {
+      "code": "036",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Suriname, art. 2, lid 1, jo. art. 6, lid 2",
+      "soort": "VL",
+      "datum_ingang": "19751125",
+      "datum_einde": "19931125"
+    },
+    {
+      "code": "037",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Suriname, art. 2, lid 1, jo art. 6, lid 4",
+      "soort": "VL",
+      "datum_ingang": "19751125",
+      "datum_einde": "19981125"
+    },
+    {
+      "code": "038",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Suriname, art. 2, lid 1, jo. art. 7, lid 1",
+      "soort": "VL",
+      "datum_ingang": "19751125",
+      "datum_einde": ""
+    },
+    {
+      "code": "039",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Suriname, art. 2, lid 1, jo. art. 7, lid 2",
+      "soort": "VL",
+      "datum_ingang": "19751125",
+      "datum_einde": ""
+    },
+    {
+      "code": "040",
+      "omschrijving": "Overgangsbep. bij Wet op het Nederlanderschap 1892. Bep.: Wet 15 juli 1910",
+      "soort": "VK",
+      "datum_ingang": "19100816",
+      "datum_einde": "19100817"
+    },
+    {
+      "code": "041",
+      "omschrijving": "Overgangsbep. bij Wet op het Nederl. 1892. Bep: Rijkswet 14-11-63, art. 3, sub I",
+      "soort": "VK",
+      "datum_ingang": "19640301",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "042",
+      "omschrijving": "Overg.bep. bij Wet op het Nederl. 1892. Bep: Rijkswet 14-11-63, art. 3, sub III",
+      "soort": "VK",
+      "datum_ingang": "19640301",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "043",
+      "omschrijving": "Overgangsbep. bij Wet op het Nederl. 1892. Bep: Rijkswet 14-11-63, art. 3, sub V",
+      "soort": "VK",
+      "datum_ingang": "19640301",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "044",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Suriname, art. 6, lid 5",
+      "soort": "VK",
+      "datum_ingang": "19751125",
+      "datum_einde": "19981125"
+    },
+    {
+      "code": "045",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Suriname, art. 7, lid 1",
+      "soort": "VK",
+      "datum_ingang": "19751125",
+      "datum_einde": ""
+    },
+    {
+      "code": "046",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Suriname, art. 7, lid 2",
+      "soort": "VK",
+      "datum_ingang": "19751125",
+      "datum_einde": ""
+    },
+    {
+      "code": "047",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Suriname, art. 8, lid 1",
+      "soort": "VK",
+      "datum_ingang": "19751125",
+      "datum_einde": "19761125"
+    },
+    {
+      "code": "048",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Suriname, art. 10",
+      "soort": "VK",
+      "datum_ingang": "19751125",
+      "datum_einde": "19761125"
+    },
+    {
+      "code": "049",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 28",
+      "soort": "VK",
+      "datum_ingang": "19850101",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "050",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Suriname, art. 2, lid 1, jo. art. 8, lid 2",
+      "soort": "VL",
+      "datum_ingang": "19751125",
+      "datum_einde": "19761125"
+    },
+    {
+      "code": "051",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Suriname, art. 2, lid 1, jo. art. 9",
+      "soort": "VL",
+      "datum_ingang": "19751125",
+      "datum_einde": "19781125"
+    },
+    {
+      "code": "052",
+      "omschrijving": "Wet op het Nederlanderschap 1892 i.v.m. wijziging 1962, art. 2bis",
+      "soort": "VK",
+      "datum_ingang": "19521226",
+      "datum_einde": "19751125"
+    },
+    {
+      "code": "053",
+      "omschrijving": "Wet 30 juli 1953, art. 1, lid 1",
+      "soort": "VK",
+      "datum_ingang": "19530805",
+      "datum_einde": "19770315"
+    },
+    {
+      "code": "054",
+      "omschrijving": "Wet 30 juli 1953, art. 1, lid 2",
+      "soort": "VK",
+      "datum_ingang": "19530805",
+      "datum_einde": "19770315"
+    },
+    {
+      "code": "055",
+      "omschrijving": "Wet 3 november 1954, art. 2",
+      "soort": "VK",
+      "datum_ingang": "19541108",
+      "datum_einde": "19751125"
+    },
+    {
+      "code": "056",
+      "omschrijving": "Wet 3 november 1954, art. 3",
+      "soort": "VK",
+      "datum_ingang": "19541108",
+      "datum_einde": "19751125"
+    },
+    {
+      "code": "057",
+      "omschrijving": "Wet op het Nederlanderschap 1892 i.v.m. wijziging 1976, art. 5",
+      "soort": "VK",
+      "datum_ingang": "19770315",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "058",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 5",
+      "soort": "VL",
+      "datum_ingang": "18930701",
+      "datum_einde": "19640301"
+    },
+    {
+      "code": "059",
+      "omschrijving": "Wet op het Nederlanderschap 1892 i.v.m. wijziging 1976, art. 5",
+      "soort": "VL",
+      "datum_ingang": "19770315",
+      "datum_einde": "19770315"
+    },
+    {
+      "code": "060",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 7, onder 1",
+      "soort": "VL",
+      "datum_ingang": "18930701",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "061",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 7, onder 2",
+      "soort": "VL",
+      "datum_ingang": "19370701",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "062",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 7, onder 3",
+      "soort": "VL",
+      "datum_ingang": "18930701",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "063",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 7, onder 4",
+      "soort": "VL",
+      "datum_ingang": "18930701",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "064",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 7, onder 5",
+      "soort": "VL",
+      "datum_ingang": "18930701",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "065",
+      "omschrijving": "Wet op het Nederlanderschap 1892 i.v.m. wijziging 1963, art. 8a",
+      "soort": "VL",
+      "datum_ingang": "19640301",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "066",
+      "omschrijving": "Wet op het Nederlanderschap 1892 i.v.m. wijziging 1963, art. 8c",
+      "soort": "VL",
+      "datum_ingang": "19640301",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "067",
+      "omschrijving": "Wet op het Nederlanderschap 1892 i.v.m. wijziging 1963, art. 9",
+      "soort": "VL",
+      "datum_ingang": "19640301",
+      "datum_einde": "19770315"
+    },
+    {
+      "code": "068",
+      "omschrijving": "Overgangsbep. bij Wet op het Nederl. 1892. Bep.: Wet 21 dec. 1936",
+      "soort": "VL",
+      "datum_ingang": "19370701",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "069",
+      "omschrijving": "Overg.bep. bij de Wet op het Nederl. 1892. Bep: Wet 12-7-62. VERVALLEN!",
+      "soort": "VL",
+      "datum_ingang": "19621001",
+      "datum_einde": "19911101"
+    },
+    {
+      "code": "070",
+      "omschrijving": "Overg.bep. bij Wet op het Nederl. 1892.  Bep: Rijkswet 14-11-63, art. 3, sub II",
+      "soort": "VL",
+      "datum_ingang": "19640301",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "071",
+      "omschrijving": "Overg.bep. bij Wet op het Nederl. 1892. Bep: Rijkswet 14-11-1963, art. 3, sub IV",
+      "soort": "VL",
+      "datum_ingang": "19640301",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "072",
+      "omschrijving": "Overg.bep. bij Wet op het Nederl. 1892. Bep: Rijkswet  14-11-1963, art. 3, sub V",
+      "soort": "VL",
+      "datum_ingang": "19640301",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "073",
+      "omschrijving": "Toescheidingsovereenkomst Nederland - Suriname, art. 2, lid 1, jo. art. 3",
+      "soort": "VL",
+      "datum_ingang": "19751125",
+      "datum_einde": "19751126"
+    },
+    {
+      "code": "074",
+      "omschrijving": "Toescheidingsovereenkomst Nederland - Suriname, art. 2, lid 1, jo. art. 4, sub a",
+      "soort": "VL",
+      "datum_ingang": "19751125",
+      "datum_einde": "19751126"
+    },
+    {
+      "code": "075",
+      "omschrijving": "Toescheidingsovereenkomst Nederland - Suriname, art. 2, lid 1, jo. art. 4, sub b",
+      "soort": "VL",
+      "datum_ingang": "19751125",
+      "datum_einde": "19751126"
+    },
+    {
+      "code": "076",
+      "omschrijving": "Toescheidingsovereenkomst Nederland - Suriname, art. 2, lid 1, jo. art. 5, lid 1",
+      "soort": "VL",
+      "datum_ingang": "19751125",
+      "datum_einde": "19860101"
+    },
+    {
+      "code": "077",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 15, onder a",
+      "soort": "VL",
+      "datum_ingang": "19850101",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "078",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 15, onder b",
+      "soort": "VL",
+      "datum_ingang": "19850101",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "079",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 15, onder c",
+      "soort": "VL",
+      "datum_ingang": "19850101",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "080",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 15, onder d",
+      "soort": "VL",
+      "datum_ingang": "19850101",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "081",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 16, lid 1, onder a",
+      "soort": "VL",
+      "datum_ingang": "19850101",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "082",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 16, lid 1, onder b",
+      "soort": "VL",
+      "datum_ingang": "19850101",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "083",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 16, lid 1, onder c",
+      "soort": "VL",
+      "datum_ingang": "19850101",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "084",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 16, lid 1, onder d",
+      "soort": "VL",
+      "datum_ingang": "19850101",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "085",
+      "omschrijving": "Rijkswet 14 september 1962, art. 3, lid 1",
+      "soort": "VK",
+      "datum_ingang": "19620921",
+      "datum_einde": ""
+    },
+    {
+      "code": "086",
+      "omschrijving": "Rijkswet 14 september 1962, art. 3, lid 2",
+      "soort": "VL",
+      "datum_ingang": "19620921",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "087",
+      "omschrijving": "Rijkswet 8 september 1976, art. II",
+      "soort": "VK",
+      "datum_ingang": "19770315",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "088",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 6",
+      "soort": "VL",
+      "datum_ingang": "18930701",
+      "datum_einde": "19850101"
+    },
+    {
+      "code": "089",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 8",
+      "soort": "VK",
+      "datum_ingang": "18930701",
+      "datum_einde": "19640301"
+    },
+    {
+      "code": "090",
+      "omschrijving": "Wet op het Nederlanderschap 1892 i.v.m. wijziging 1958, art. 8a",
+      "soort": "VK",
+      "datum_ingang": "19580901",
+      "datum_einde": "19640301"
+    },
+    {
+      "code": "091",
+      "omschrijving": "Wet op het Nederlanderschap 1892 i.v.m. wijziging 1958, art. 8a",
+      "soort": "VL",
+      "datum_ingang": "19580901",
+      "datum_einde": "19640301"
+    },
+    {
+      "code": "092",
+      "omschrijving": "Wet op het Nederlanderschap 1892, art. 9",
+      "soort": "VL",
+      "datum_ingang": "18930701",
+      "datum_einde": "19640301"
+    },
+    {
+      "code": "093",
+      "omschrijving": "Koninklijk Besluit 17 november 1945, art. 2, lid 1",
+      "soort": "VL",
+      "datum_ingang": "19400511",
+      "datum_einde": "19510113"
+    },
+    {
+      "code": "094",
+      "omschrijving": "Wet 29 december 1950, art. 2",
+      "soort": "VK",
+      "datum_ingang": "19400511",
+      "datum_einde": "19510113"
+    },
+    {
+      "code": "095",
+      "omschrijving": "Wet 29 december 1950, art. 3, lid 2",
+      "soort": "VK",
+      "datum_ingang": "19400511",
+      "datum_einde": ""
+    },
+    {
+      "code": "096",
+      "omschrijving": "Wet 23 december 1953, art. I",
+      "soort": "VL",
+      "datum_ingang": "19540301",
+      "datum_einde": "19540302"
+    },
+    {
+      "code": "097",
+      "omschrijving": "Wet 23 december 1953, art. II",
+      "soort": "VK",
+      "datum_ingang": "19540301",
+      "datum_einde": ""
+    },
+    {
+      "code": "098",
+      "omschrijving": "Wet 23 december 1953, art. III",
+      "soort": "VK",
+      "datum_ingang": "19540301",
+      "datum_einde": "19760301"
+    },
+    {
+      "code": "099",
+      "omschrijving": "Overgangsbep. van de Wet op het Nederlanderschap 1892",
+      "soort": "VK",
+      "datum_ingang": "18930701",
+      "datum_einde": "18930702"
+    },
+    {
+      "code": "100",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Indonesië, art. 3",
+      "soort": "VL",
+      "datum_ingang": "19491227",
+      "datum_einde": "19511228"
+    },
+    {
+      "code": "101",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Indonesië, art. 4, lid 1",
+      "soort": "VK",
+      "datum_ingang": "19491227",
+      "datum_einde": "19491228"
+    },
+    {
+      "code": "102",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Indonesië, art. 4, lid 2, sub a",
+      "soort": "VK",
+      "datum_ingang": "19491227",
+      "datum_einde": "19511228"
+    },
+    {
+      "code": "103",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Indonesië, art. 4, lid 2, sub b",
+      "soort": "VK",
+      "datum_ingang": "19491227",
+      "datum_einde": "19491228"
+    },
+    {
+      "code": "104",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Indonesië, art. 4, lid 2, sub b",
+      "soort": "VL",
+      "datum_ingang": "19491227",
+      "datum_einde": "19511228"
+    },
+    {
+      "code": "105",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Indonesië, art. 5, 2e volzin",
+      "soort": "VK",
+      "datum_ingang": "19491227",
+      "datum_einde": "19511228"
+    },
+    {
+      "code": "106",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Indonesië, art. 5, 3e volzin",
+      "soort": "VK",
+      "datum_ingang": "19491227",
+      "datum_einde": "19511228"
+    },
+    {
+      "code": "107",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Indonesië, art. 6",
+      "soort": "VK",
+      "datum_ingang": "19491227",
+      "datum_einde": "19491228"
+    },
+    {
+      "code": "108",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Indonesië, art. 6",
+      "soort": "VL",
+      "datum_ingang": "19491227",
+      "datum_einde": "19511228"
+    },
+    {
+      "code": "109",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Indonesië, art. 7",
+      "soort": "VK",
+      "datum_ingang": "19491227",
+      "datum_einde": "19491228"
+    },
+    {
+      "code": "110",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Indonesië, art. 7",
+      "soort": "VL",
+      "datum_ingang": "19491227",
+      "datum_einde": "19511228"
+    },
+    {
+      "code": "111",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Indonesië, art. 8",
+      "soort": "VK",
+      "datum_ingang": "19491227",
+      "datum_einde": "19671226"
+    },
+    {
+      "code": "112",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Indonesië, art. 8",
+      "soort": "VL",
+      "datum_ingang": "19491227",
+      "datum_einde": "19671226"
+    },
+    {
+      "code": "113",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Indonesië, art. 10",
+      "soort": "VK",
+      "datum_ingang": "19491227",
+      "datum_einde": ""
+    },
+    {
+      "code": "114",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Indonesië, art. 10",
+      "soort": "VL",
+      "datum_ingang": "19491227",
+      "datum_einde": ""
+    },
+    {
+      "code": "115",
+      "omschrijving": "Rijkswet op het Nederlanderschap 1984, art. 14, lid 1",
+      "soort": "VL",
+      "datum_ingang": "19850101",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "116",
+      "omschrijving": "Toescheidingsovereenkomst Nederland-Suriname, art. 3 VERVALLEN!",
+      "soort": "VL",
+      "datum_ingang": "19751125",
+      "datum_einde": "19911101"
+    },
+    {
+      "code": "117",
+      "omschrijving": "Overeenkomst van Bern van 13 september 1973, art. 3, jo. art. 1, lid 1",
+      "soort": "VK",
+      "datum_ingang": "19850519",
+      "datum_einde": "19850520"
+    },
+    {
+      "code": "118",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 1998, art. 5, lid 2",
+      "soort": "VK",
+      "datum_ingang": "19981001",
+      "datum_einde": "20040101"
+    },
+    {
+      "code": "119",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 1998, art. 5, lid 3",
+      "soort": "VK",
+      "datum_ingang": "19981001",
+      "datum_einde": "20040101"
+    },
+    {
+      "code": "120",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 1998, art. 5, lid 4",
+      "soort": "VK",
+      "datum_ingang": "19981001",
+      "datum_einde": "20040101"
+    },
+    {
+      "code": "121",
+      "omschrijving": "Overg.bep. bij wijz. Rijkswet Nederl.  Bep: Rijkswet 21-12-2000, art. V, lid 2",
+      "soort": "VK",
+      "datum_ingang": "20010201",
+      "datum_einde": "20030401"
+    },
+    {
+      "code": "122",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 3, lid 3",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "123",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 4, lid 1",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "124",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 4, lid 2",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": "20090301"
+    },
+    {
+      "code": "125",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 6, lid 1, onder a",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "126",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 6, lid 1, onder b",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "127",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2002, art. 6, lid 1, onder c",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": "20090301"
+    },
+    {
+      "code": "128",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2002, art. 6, lid 1, onder d",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "129",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 6, lid 1, onder e",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "130",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 6, lid 1, onder f",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "131",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 6, lid 1, onder g",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "132",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 6, lid 1, onder h",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "133",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2002, art. 6, lid 7",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": "20090301"
+    },
+    {
+      "code": "134",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 11, lid 1",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "135",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2002, art. 11, lid 4",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": "20090301"
+    },
+    {
+      "code": "136",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2002, art. 11, lid 5",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": "20090301"
+    },
+    {
+      "code": "137",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 11, lid 7",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "138",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 14, lid 1",
+      "soort": "VL",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "139",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 14, lid 2",
+      "soort": "VL",
+      "datum_ingang": "20030401",
+      "datum_einde": "20101001"
+    },
+    {
+      "code": "140",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 15, lid 1, onder c",
+      "soort": "VL",
+      "datum_ingang": "20030401",
+      "datum_einde": "20220401"
+    },
+    {
+      "code": "141",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 15, lid 1, onder e",
+      "soort": "VL",
+      "datum_ingang": "20030401",
+      "datum_einde": "20170301"
+    },
+    {
+      "code": "142",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 15A, onder a",
+      "soort": "VL",
+      "datum_ingang": "20030401",
+      "datum_einde": "20040101"
+    },
+    {
+      "code": "143",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 15A, onder b",
+      "soort": "VL",
+      "datum_ingang": "20030401",
+      "datum_einde": "20040101"
+    },
+    {
+      "code": "144",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2002, art. 16, lid 1, onder a",
+      "soort": "VL",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "145",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2002, art. 16, lid 1, onder b",
+      "soort": "VL",
+      "datum_ingang": "20030401",
+      "datum_einde": "20090301"
+    },
+    {
+      "code": "146",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2002, art. 16, lid 1, onder c",
+      "soort": "VL",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "147",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2002, art. 16, lid 1, onder d",
+      "soort": "VL",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "148",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2002, art. 16, lid 1, onder e",
+      "soort": "VL",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "149",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 16A",
+      "soort": "VL",
+      "datum_ingang": "20030401",
+      "datum_einde": "20040101"
+    },
+    {
+      "code": "150",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2002, art. 26, lid 3",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": "20090301"
+    },
+    {
+      "code": "151",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 28, lid 1",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "152",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2002, art. 28, lid 3",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": "20090301"
+    },
+    {
+      "code": "153",
+      "omschrijving": "Overgangsbep. bij wijz. Rijkswet Nederl. Bep: Rijkswet 21-12-2000, art. V, lid 1",
+      "soort": "VK",
+      "datum_ingang": "20030401",
+      "datum_einde": "20050401"
+    },
+    {
+      "code": "154",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 15, lid 1, onder a",
+      "soort": "VL",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "155",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 15, lid 1, onder b",
+      "soort": "VL",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "156",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2000, art. 15, lid 1, onder d",
+      "soort": "VL",
+      "datum_ingang": "20030401",
+      "datum_einde": ""
+    },
+    {
+      "code": "157",
+      "omschrijving": "Verdrag van Straatsburg van 6 mei 1963, art. 1, lid 1",
+      "soort": "VL",
+      "datum_ingang": "19850610",
+      "datum_einde": ""
+    },
+    {
+      "code": "158",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2003, art. 5",
+      "soort": "VK",
+      "datum_ingang": "20040101",
+      "datum_einde": ""
+    },
+    {
+      "code": "159",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2003, art. 5a, lid 1",
+      "soort": "VK",
+      "datum_ingang": "20040101",
+      "datum_einde": ""
+    },
+    {
+      "code": "160",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2003, art. 5a, lid 2",
+      "soort": "VK",
+      "datum_ingang": "20040101",
+      "datum_einde": ""
+    },
+    {
+      "code": "161",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2003, art. 5b, lid 1",
+      "soort": "VK",
+      "datum_ingang": "20040101",
+      "datum_einde": ""
+    },
+    {
+      "code": "162",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2003, art. 5b, lid 2",
+      "soort": "VK",
+      "datum_ingang": "20040101",
+      "datum_einde": ""
+    },
+    {
+      "code": "163",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2003, art. 5c",
+      "soort": "VK",
+      "datum_ingang": "20040101",
+      "datum_einde": ""
+    },
+    {
+      "code": "164",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2008, art. 4, lid 2",
+      "soort": "VK",
+      "datum_ingang": "20090301",
+      "datum_einde": ""
+    },
+    {
+      "code": "165",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2008, art. 4, lid 3",
+      "soort": "VK",
+      "datum_ingang": "20090301",
+      "datum_einde": ""
+    },
+    {
+      "code": "166",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2008, art. 4, lid 4",
+      "soort": "VK",
+      "datum_ingang": "20090301",
+      "datum_einde": ""
+    },
+    {
+      "code": "167",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2008, art. 4, lid 5",
+      "soort": "VK",
+      "datum_ingang": "20090301",
+      "datum_einde": ""
+    },
+    {
+      "code": "168",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2008, art. 6, lid 1, onder c",
+      "soort": "VK",
+      "datum_ingang": "20090301",
+      "datum_einde": ""
+    },
+    {
+      "code": "169",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2008, art. 6, lid 8",
+      "soort": "VK",
+      "datum_ingang": "20090301",
+      "datum_einde": ""
+    },
+    {
+      "code": "170",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2008, art. 11, lid 4",
+      "soort": "VK",
+      "datum_ingang": "20090301",
+      "datum_einde": ""
+    },
+    {
+      "code": "171",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2008, art. 11, lid 5",
+      "soort": "VK",
+      "datum_ingang": "20090301",
+      "datum_einde": ""
+    },
+    {
+      "code": "172",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2008, art. 16, lid 1, onder b",
+      "soort": "VL",
+      "datum_ingang": "20090301",
+      "datum_einde": ""
+    },
+    {
+      "code": "173",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2008, art. 26, lid 3",
+      "soort": "VK",
+      "datum_ingang": "20090301",
+      "datum_einde": ""
+    },
+    {
+      "code": "174",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2008, art. 28, lid 3",
+      "soort": "VK",
+      "datum_ingang": "20090301",
+      "datum_einde": ""
+    },
+    {
+      "code": "175",
+      "omschrijving": "Wijziging Rw. Nederl. Bep: Rw. 27-06-2008 art. II, lid 1, sub a (Stb. 2008, 270)",
+      "soort": "VK",
+      "datum_ingang": "20090301",
+      "datum_einde": ""
+    },
+    {
+      "code": "176",
+      "omschrijving": "Wijziging Rw. Nederl. Bep: Rw. 27-06-2008 art. II, lid 1, sub b (Stb. 2008, 270)",
+      "soort": "VK",
+      "datum_ingang": "20090301",
+      "datum_einde": ""
+    },
+    {
+      "code": "177",
+      "omschrijving": "Wijziging Rw. Nederl. Bep: Rw. 27-06-2008 art. II, lid 1, sub c (Stb. 2008, 270)",
+      "soort": "VK",
+      "datum_ingang": "20090301",
+      "datum_einde": ""
+    },
+    {
+      "code": "178",
+      "omschrijving": "Wijziging Rw. Nederl. Bep: Rw. 27-06-2008 art. II, lid 2 (Stb. 2008, 270)",
+      "soort": "VK",
+      "datum_ingang": "20090301",
+      "datum_einde": ""
+    },
+    {
+      "code": "179",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2010, art. 6, lid 1, onder i",
+      "soort": "VK",
+      "datum_ingang": "20101001",
+      "datum_einde": ""
+    },
+    {
+      "code": "180",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2010, art. 6, lid 1, onder j",
+      "soort": "VK",
+      "datum_ingang": "20101001",
+      "datum_einde": ""
+    },
+    {
+      "code": "181",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2010, art. 6, lid 1, onder k",
+      "soort": "VK",
+      "datum_ingang": "20101001",
+      "datum_einde": ""
+    },
+    {
+      "code": "182",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2010, art. 6, lid 1, onder l",
+      "soort": "VK",
+      "datum_ingang": "20101001",
+      "datum_einde": ""
+    },
+    {
+      "code": "183",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2010, art. 6, lid 1, onder m",
+      "soort": "VK",
+      "datum_ingang": "20101001",
+      "datum_einde": ""
+    },
+    {
+      "code": "184",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2010, art. 6, lid 1, onder n",
+      "soort": "VK",
+      "datum_ingang": "20101001",
+      "datum_einde": ""
+    },
+    {
+      "code": "185",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2010, art. 6, lid 1, onder o",
+      "soort": "VK",
+      "datum_ingang": "20101001",
+      "datum_einde": ""
+    },
+    {
+      "code": "186",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2010, art. 14, lid 2",
+      "soort": "VL",
+      "datum_ingang": "20101001",
+      "datum_einde": ""
+    },
+    {
+      "code": "187",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2010, art. 14, lid 4",
+      "soort": "VL",
+      "datum_ingang": "20101001",
+      "datum_einde": "20170301"
+    },
+    {
+      "code": "188",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2010, art. 15, lid 1, onder f",
+      "soort": "VL",
+      "datum_ingang": "20101001",
+      "datum_einde": "20170301"
+    },
+    {
+      "code": "189",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2017, art. 14, lid 3",
+      "soort": "VL",
+      "datum_ingang": "20170301",
+      "datum_einde": ""
+    },
+    {
+      "code": "190",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2017, art. 14, lid 4",
+      "soort": "VL",
+      "datum_ingang": "20170301",
+      "datum_einde": ""
+    },
+    {
+      "code": "191",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2017, art. 14, lid 6",
+      "soort": "VL",
+      "datum_ingang": "20170301",
+      "datum_einde": ""
+    },
+    {
+      "code": "192",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2017, art. 15, lid 1, onder e",
+      "soort": "VL",
+      "datum_ingang": "20170301",
+      "datum_einde": ""
+    },
+    {
+      "code": "193",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2021, art. 6, lid 1, onder p",
+      "soort": "VK",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "194",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2021, art. 15, lid 1, onder c",
+      "soort": "VL",
+      "datum_ingang": "20220401",
+      "datum_einde": ""
+    },
+    {
+      "code": "195",
+      "omschrijving": "Rijkswet Nederlanderschap 1984 i.v.m. wijziging 2023, art. 6, lid 1, onder q",
+      "soort": "VK",
+      "datum_ingang": "20231001",
+      "datum_einde": ""
+    },
+    {
+      "code": "301",
+      "omschrijving": "Vaststelling bezit vreemde nationaliteit",
+      "soort": "OP",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "310",
+      "omschrijving": "Vaststelling bijzonder Nederlanderschap",
+      "soort": "OP",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "311",
+      "omschrijving": "Vaststelling onbekende nationaliteit",
+      "soort": "OP",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "312",
+      "omschrijving": "Vaststelling staatloosheid",
+      "soort": "OP",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "401",
+      "omschrijving": "Verlies vreemde nationaliteit",
+      "soort": "BE",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "402",
+      "omschrijving": "Afstand van vreemde nationaliteit",
+      "soort": "BE",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "403",
+      "omschrijving": "Vervallen vreemde nationaliteit",
+      "soort": "BE",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "404",
+      "omschrijving": "Beëindiging registratie (niet-Nederlandse) nationaliteit",
+      "soort": "BE",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "405",
+      "omschrijving": "Correctie in verband met ten onrechte opgenomen gegevens",
+      "soort": "BE",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "410",
+      "omschrijving": "Verlies bijzonder Nederlanderschap",
+      "soort": "BE",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "411",
+      "omschrijving": "Ongedaan maken onbekende nationaliteit",
+      "soort": "BE",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "412",
+      "omschrijving": "Beëindiging staatloosheid",
+      "soort": "BE",
+      "datum_ingang": "",
+      "datum_einde": ""
+    }
+  ]
+}

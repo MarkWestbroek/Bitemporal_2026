@@ -1,0 +1,51 @@
+{
+  "tabel_nr": 41,
+  "naam": "Tabel Reden ontbinding/nietigverklaring huwelijk/GP",
+  "bron": "https://publicaties.rvig.nl/landelijke-tabellen-32-tm-61-excl-tabel-35",
+  "bron_versie": "gedownload 2026-04-02",
+  "aantal_regels": 7,
+  "regels": [
+    {
+      "code": ".",
+      "omschrijving": "Onbekend",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "A",
+      "omschrijving": "Vermissing van een persoon gevolgd door ander huwelijk/geregistr. partnerschap",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "N",
+      "omschrijving": "Nietigverklaring",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "O",
+      "omschrijving": "Overlijden echtgenoot/geregistreerd partner",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "R",
+      "omschrijving": "Rechtsvermoeden van overlijden echtgenoot/geregistreerd partner",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "S",
+      "omschrijving": "Echtsch of huw.ontb na sch van tfl en bed/eindigen partnersch door ovk of ontb",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "V",
+      "omschrijving": "Een naar vreemd recht anders beëind. huwelijk/geregistr. partnerschap",
+      "datum_ingang": "",
+      "datum_einde": ""
+    }
+  ]
+}

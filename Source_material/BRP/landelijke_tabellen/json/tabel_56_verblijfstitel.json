@@ -1,0 +1,309 @@
+{
+  "tabel_nr": 56,
+  "naam": "Verblijfstiteltabel",
+  "bron": "https://publicaties.rvig.nl/landelijke-tabellen-32-tm-61-excl-tabel-35",
+  "bron_versie": "gedownload 2026-04-02",
+  "aantal_regels": 50,
+  "regels": [
+    {
+      "code": "00",
+      "omschrijving": "Onbekend",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "09",
+      "omschrijving": "Art. 9 van de Vreemdelingenwet",
+      "datum_ingang": "",
+      "datum_einde": "19941001"
+    },
+    {
+      "code": "10",
+      "omschrijving": "Art. 10 van de Vreemdelingenwet",
+      "datum_ingang": "",
+      "datum_einde": "19941001"
+    },
+    {
+      "code": "11",
+      "omschrijving": "Vergunning art. 9 Vw, zonder beperking, dan wel gerechtigd krachtens art. 10 Vw",
+      "datum_ingang": "19670101",
+      "datum_einde": "20010401"
+    },
+    {
+      "code": "12",
+      "omschrijving": "Vergunning art. 9 Vw, met beperking, die elke vorm arbeid in loondienst toestaat",
+      "datum_ingang": "19670101",
+      "datum_einde": "20010401"
+    },
+    {
+      "code": "13",
+      "omschrijving": "Vergunning art. 9 Vw, met beperking, die arbeid in loondienst niet toestaat",
+      "datum_ingang": "19670101",
+      "datum_einde": "20010401"
+    },
+    {
+      "code": "14",
+      "omschrijving": "Voorwaardelijke vergunning art. 9a Vw",
+      "datum_ingang": "19940101",
+      "datum_einde": "20010401"
+    },
+    {
+      "code": "15",
+      "omschrijving": "Benelux of EG richtl nrs 68/360/EEG, 73/148/EEG 75/34/EEG, verord nr 1251/70/EEG",
+      "datum_ingang": "19520723",
+      "datum_einde": "20010401"
+    },
+    {
+      "code": "16",
+      "omschrijving": "EG-richtlijnen nrs. 90/364/EEG, 90/365/EEG en 90/366/EEG",
+      "datum_ingang": "19520723",
+      "datum_einde": "20010401"
+    },
+    {
+      "code": "17",
+      "omschrijving": "Verzoek tot toelating als vluchteling, uitzetting blijft achterwege",
+      "datum_ingang": "19540421",
+      "datum_einde": "20010401"
+    },
+    {
+      "code": "18",
+      "omschrijving": "Gemeld bij VD, geen verzoek toelating als vluchteling, geen uitzetting",
+      "datum_ingang": "19460101",
+      "datum_einde": "20010401"
+    },
+    {
+      "code": "19",
+      "omschrijving": "Vergunning art. 9 Vw, met andere beperking dan hierboven",
+      "datum_ingang": "19670101",
+      "datum_einde": "20010401"
+    },
+    {
+      "code": "20",
+      "omschrijving": "Ander verdrag dan hierboven",
+      "datum_ingang": "19460101",
+      "datum_einde": "20010401"
+    },
+    {
+      "code": "21",
+      "omschrijving": "Vw 2000 art. 8, onder a, vergunning regulier bepaalde tijd, arbeid vrij",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "22",
+      "omschrijving": "Vw2000 art. 8, sub a, VVR bep tijd arbeid mits TWV, VVR bep tijd verblijf&arbeid",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "23",
+      "omschrijving": "Vw 2000 art. 8, onder a, vergunning regulier bepaalde tijd, arbeid specifiek",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "24",
+      "omschrijving": "Vw 2000 art. 8, onder a, vergunning regulier bepaalde tijd, geen arbeid",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "25",
+      "omschrijving": "Vw 2000 art. 8, sub b, verg. reg. onbep. tijd of langdurig ingez., arbeid vrij",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "26",
+      "omschrijving": "Vw 2000 art. 8, onder c, vergunning asiel bepaalde tijd, arbeid vrij",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "27",
+      "omschrijving": "Vw 2000 art. 8, sub d, verg. asiel onbep. tijd of langdurig ingez., arbeid vrij",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "28",
+      "omschrijving": "Vw 2000 art. 8, onder e, gemeenschapsonderdaan econ. actief, arbeid vrij",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "29",
+      "omschrijving": "Vw 2000 art. 8, onder e, gemeenschapsonderdaan econ. niet-actief, arbeid vrij",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "30",
+      "omschrijving": "Vw 2000 art. 8, onder e, toetsing aan het gemeenschapsrecht, arbeid vrij",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "31",
+      "omschrijving": "Vw 2000 art. 8, onder f en h, in procedure voor vergunning art. 14 Vw 2000",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "32",
+      "omschrijving": "Vw 2000 art. 8, onder f en h, in procedure voor vergunning art. 28 Vw 2000",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "33",
+      "omschrijving": "Vw 2000 art. 8, onder g en h, in procedure voortgezet verblijf, tijdige aanvr.",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "34",
+      "omschrijving": "Vw 2000 art. 8, onder g en h, in procedure voortgezet verblijf, ontijdige aanvr.",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "35",
+      "omschrijving": "Vw 2000 art. 8, onder l, Associatiebesluit 1/80 EEG/Turkije, arbeid specifiek",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "36",
+      "omschrijving": "Vw 2000 art. 8, onder e, gemeenschapsonderdaan econ. actief, arbeid specifiek",
+      "datum_ingang": "20040501",
+      "datum_einde": ""
+    },
+    {
+      "code": "37",
+      "omschrijving": "Vw 2000 art. 8, onder e, gemeenschapsonderdaan econ. niet-actief, arbeid spec.",
+      "datum_ingang": "20040501",
+      "datum_einde": ""
+    },
+    {
+      "code": "38",
+      "omschrijving": "Vw 2000 art. 8, onder e, toetsing aan het gemeenschapsrecht, arbeid specifiek",
+      "datum_ingang": "20040501",
+      "datum_einde": ""
+    },
+    {
+      "code": "39",
+      "omschrijving": "Vw 2000 art. 8, onder m, in afwachting indiening asielaanvraag, geen arbeid",
+      "datum_ingang": "20000101",
+      "datum_einde": "20140101"
+    },
+    {
+      "code": "40",
+      "omschrijving": "Vw 2000 art. 8, onder e, gemeenschapsonderdaan duurzaam verblijf, arbeid vrij",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "41",
+      "omschrijving": "Rechtmatig verblijf Vw 2000 art. 8, onder e, is beëindigd",
+      "datum_ingang": "20000101",
+      "datum_einde": ""
+    },
+    {
+      "code": "42",
+      "omschrijving": "Rechtmatig verblijf op grond van voorlopige maatregel EHRM, geen arbeid",
+      "datum_ingang": "20000101",
+      "datum_einde": ""
+    },
+    {
+      "code": "43",
+      "omschrijving": "Rechtmatig verblijf op aanwijzing Minister van Justitie, geen arbeid",
+      "datum_ingang": "20000101",
+      "datum_einde": ""
+    },
+    {
+      "code": "44",
+      "omschrijving": "Vw 2000 art. 8, onder m, Dublinclaimant, wacht op overdracht, rva, geen arbeid",
+      "datum_ingang": "20140101",
+      "datum_einde": ""
+    },
+    {
+      "code": "45",
+      "omschrijving": "Vw 2000 art. 8, onder i, onderzoeker/student, verblijfsrecht in EU-land",
+      "datum_ingang": "20180523",
+      "datum_einde": ""
+    },
+    {
+      "code": "46",
+      "omschrijving": "Vw2000 art 8, onder f en h, EU-richtl 2001/55, in proc art 28, arbeid loondienst",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "50",
+      "omschrijving": "Verordening (EU) 2024/1348, art 26, asielwens, in procedure asiel",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "51",
+      "omschrijving": "Verordening (EU) 2024/1348, art 35 lid 4, in niet versnelde procedure asiel",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "52",
+      "omschrijving": "Verordening (EU) 2024/1348, art 42.1, a t/m f, in versnelde procedure asiel",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "53",
+      "omschrijving": "Verordening (EU) 2024/1348, art 42.1, g t/m j, in versnelde procedure asiel",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "54",
+      "omschrijving": "Vw 2000 na EU-Pact, art 29, lid 1, asiel vluchteling",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "55",
+      "omschrijving": "Vw 2000 na EU-Pact, art 29a, lid 1, asiel subsidiair beschermde",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "56",
+      "omschrijving": "Vw 2000 na EU-Pact, art 29b, 29c, 29d, asiel gezinslid internationaal beschermde",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "91",
+      "omschrijving": "Vw 2000 art. 115, lid 4, vergunning onbepaalde tijd, arbeid vrij",
+      "datum_ingang": "",
+      "datum_einde": "20140106"
+    },
+    {
+      "code": "92",
+      "omschrijving": "Vw 2000 art. 115, lid 6, vergunning asiel bepaalde tijd, arbeid vrij",
+      "datum_ingang": "",
+      "datum_einde": "20140106"
+    },
+    {
+      "code": "93",
+      "omschrijving": "Vw 2000 art. 115, lid 2, verg. regulier bepaalde tijd, arbeid nader te bepalen",
+      "datum_ingang": "",
+      "datum_einde": "20140106"
+    },
+    {
+      "code": "98",
+      "omschrijving": "geen verblijfstitel (meer)",
+      "datum_ingang": "",
+      "datum_einde": ""
+    }
+  ]
+}

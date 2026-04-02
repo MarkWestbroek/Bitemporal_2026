@@ -106,21 +106,54 @@ export default function RepresentatieTabel({ typeMeta }) {
         });
       }
 
-      // Tellerkolommen per onderliggend GE/relatie (skip materiële plumbing)
+      // Inhoudskolommen per onderliggend GE/relatie (skip materiële plumbing)
       for (const child of safeArray(typeMeta?.onderliggende)) {
         const key = child.jsonRolnaam || child.rolnaam;
         if (!key) continue;
         // Skip aanvang/einde plumbing
         const childMeta = typeMetaByTypenaam?.[child.doeltype];
         if (childMeta?.ge_subtype === "aanvang" || childMeta?.ge_subtype === "einde") continue;
+
+        // Bepaal inhoudsvelden (data-velden minus plumbing)
+        const dataChild = safeArray(childMeta?.onderliggende).find((c) => {
+          const cm = typeMetaByTypenaam?.[c.doeltype];
+          return cm?.ge_subtype === "data";
+        });
+        const veldenBron = dataChild ? typeMetaByTypenaam?.[dataChild.doeltype] : childMeta;
+        const inhoudsvelden = safeArray(veldenBron?.velden).filter((v) => {
+          const n = String(v.naam || "").toLowerCase();
+          const overTeSlaan = new Set(["id", "rel_id", "opvoer", "afvoer", "versie"]);
+          if (childMeta.idKolom) overTeSlaan.add(String(childMeta.idKolom).toLowerCase());
+          if (childMeta.entiteitIDKolom) overTeSlaan.add(String(childMeta.entiteitIDKolom).toLowerCase());
+          return !overTeSlaan.has(n) && !v.autoIncrement;
+        });
+
         cols.push({
           accessorKey: key,
           header: childMeta?.klassenaam || key,
-          meta: { type: "count" },
           cell: ({ getValue }) => {
             const val = getValue();
-            const n = Array.isArray(val) ? val.length : 0;
-            return <span style={{ color: "var(--cg-donkergrijs)" }}>{n}</span>;
+            const hubItems = safeArray(val);
+            if (hubItems.length === 0) return <span style={{ color: "var(--cg-donkergrijs)" }}>—</span>;
+            // Platslaan per hub-item en veldwaarden extraheren
+            const regels = hubItems.map((hub, idx) => {
+              const plat = platSlaHubItems([hub], childMeta, typeMetaByTypenaam);
+              const item = plat[0] || hub;
+              const waarden = inhoudsvelden.map((v) => item[v.naam] != null ? String(item[v.naam]) : "").filter(Boolean).join(" | ");
+              const label = item.rel_id ?? hub?.rel_id ?? idx + 1;
+              return { label, waarden };
+            }).filter((r) => r.waarden);
+            if (regels.length === 0) return <span style={{ color: "var(--cg-donkergrijs)" }}>—</span>;
+            // Enkelvoudig: alleen veldwaarden; meervoudig: rel_id: veldwaarden
+            const tekst = regels.length === 1
+              ? regels[0].waarden
+              : regels.map((r) => `${r.label}: ${r.waarden}`).join("; ");
+            const MAX = 60;
+            return (
+              <span title={tekst.length > MAX ? tekst : undefined}>
+                {tekst.length > MAX ? tekst.slice(0, MAX) + "…" : tekst}
+              </span>
+            );
           },
         });
       }

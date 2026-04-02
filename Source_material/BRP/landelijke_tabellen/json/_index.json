@@ -1,0 +1,91 @@
+{
+  "beschrijving": "BRP Landelijke tabellen - referentielijsten",
+  "bron": "Rijksdienst voor Identiteitsgegevens (RvIG), publicaties.rvig.nl",
+  "gedownload": "2026-04-02",
+  "tabellen": [
+    {
+      "tabel_nr": 32,
+      "naam": "Nationaliteitentabel",
+      "bestand": "tabel_32_nationaliteiten.json",
+      "aantal_regels": 217
+    },
+    {
+      "tabel_nr": 33,
+      "naam": "Gemeententabel",
+      "bestand": "tabel_33_gemeenten.json",
+      "aantal_regels": 1479
+    },
+    {
+      "tabel_nr": 34,
+      "naam": "Landentabel",
+      "bestand": "tabel_34_landen.json",
+      "aantal_regels": 398
+    },
+    {
+      "tabel_nr": 36,
+      "naam": "Voorvoegseltabel",
+      "bestand": "tabel_36_voorvoegsels.json",
+      "aantal_regels": 333
+    },
+    {
+      "tabel_nr": 37,
+      "naam": "Tabel Reden opnemen/beëindigen nationaliteit",
+      "bestand": "tabel_37_reden_nationaliteit.json",
+      "aantal_regels": 208
+    },
+    {
+      "tabel_nr": 38,
+      "naam": "Tabel Adellijke titel/predicaat",
+      "bestand": "tabel_38_adellijke_titel.json",
+      "aantal_regels": 13
+    },
+    {
+      "tabel_nr": 39,
+      "naam": "Tabel Akteaanduiding",
+      "bestand": "tabel_39_akteaanduiding.json",
+      "aantal_regels": 47
+    },
+    {
+      "tabel_nr": 41,
+      "naam": "Tabel Reden ontbinding/nietigverklaring huwelijk/GP",
+      "bestand": "tabel_41_reden_ontbinding.json",
+      "aantal_regels": 7
+    },
+    {
+      "tabel_nr": 48,
+      "naam": "Tabel Nederlands reisdocument",
+      "bestand": "tabel_48_reisdocument.json",
+      "aantal_regels": 30
+    },
+    {
+      "tabel_nr": 49,
+      "naam": "Tabel Autoriteit van afgifte Nederlands reisdocument",
+      "bestand": "tabel_49_autoriteit_afgifte.json",
+      "aantal_regels": 14
+    },
+    {
+      "tabel_nr": 56,
+      "naam": "Verblijfstiteltabel",
+      "bestand": "tabel_56_verblijfstitel.json",
+      "aantal_regels": 50
+    },
+    {
+      "tabel_nr": 59,
+      "naam": "BRP-deelnemerstabel",
+      "bestand": "tabel_59_brp_deelnemers.json",
+      "aantal_regels": 2619
+    },
+    {
+      "tabel_nr": 60,
+      "naam": "RNI-deelnemerstabel",
+      "bestand": "tabel_60_rni_deelnemers.json",
+      "aantal_regels": 15
+    },
+    {
+      "tabel_nr": 61,
+      "naam": "Gezagsverhoudingtabel",
+      "bestand": "tabel_61_gezagsverhouding.json",
+      "aantal_regels": 6
+    }
+  ]
+}

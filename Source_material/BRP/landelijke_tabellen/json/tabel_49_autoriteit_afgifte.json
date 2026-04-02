@@ -1,0 +1,93 @@
+{
+  "tabel_nr": 49,
+  "naam": "Tabel Autoriteit van afgifte Nederlands reisdocument",
+  "bron": "https://publicaties.rvig.nl/landelijke-tabellen-32-tm-61-excl-tabel-35",
+  "bron_versie": "gedownload 2026-04-02",
+  "aantal_regels": 14,
+  "regels": [
+    {
+      "code": "..",
+      "omschrijving": "Onbekend",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "B••••",
+      "omschrijving": "Burgemeester van gecodeerd genoemde gemeente",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "BI••••",
+      "omschrijving": "Minister van Binnenlandse Zaken",
+      "datum_ingang": "19920401",
+      "datum_einde": "19940101"
+    },
+    {
+      "code": "BI0518",
+      "omschrijving": "Minister van Binnenlandse Zaken",
+      "datum_ingang": "19940101",
+      "datum_einde": ""
+    },
+    {
+      "code": "BU••••",
+      "omschrijving": "Minister van Buitenlandse Zaken",
+      "datum_ingang": "19920401",
+      "datum_einde": ""
+    },
+    {
+      "code": "BW••••",
+      "omschrijving": "College van Burgemeester en Wethouders",
+      "datum_ingang": "19930101",
+      "datum_einde": "19950101"
+    },
+    {
+      "code": "BZ••••",
+      "omschrijving": "Minister van Buitenlandse Zaken",
+      "datum_ingang": "",
+      "datum_einde": "19920401"
+    },
+    {
+      "code": "C••••",
+      "omschrijving": "Consulaire post in gecodeerd genoemd land",
+      "datum_ingang": "",
+      "datum_einde": "20140309"
+    },
+    {
+      "code": "G••••",
+      "omschrijving": "Gouverneur van Aruba / Gouverneur van of Gezaghebber in de Nederlandse Antillen",
+      "datum_ingang": "",
+      "datum_einde": "20101010"
+    },
+    {
+      "code": "GH••••",
+      "omschrijving": "Gezaghebber op Bonaire/Saba/Sint Eustatius",
+      "datum_ingang": "20101010",
+      "datum_einde": ""
+    },
+    {
+      "code": "GN••••",
+      "omschrijving": "Gouverneur van Aruba/Curaçao/Sint Maarten",
+      "datum_ingang": "20101010",
+      "datum_einde": ""
+    },
+    {
+      "code": "KM••••",
+      "omschrijving": "Commandant van de Koninklijke Marechaussee",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "P••",
+      "omschrijving": "Commissaris van de Koningin van de gecodeerd genoemde provincie",
+      "datum_ingang": "",
+      "datum_einde": "19940101"
+    },
+    {
+      "code": "PK",
+      "omschrijving": "Gegevens ontleend aan de persoonskaart",
+      "datum_ingang": "",
+      "datum_einde": ""
+    }
+  ]
+}

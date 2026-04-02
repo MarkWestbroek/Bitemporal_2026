@@ -69,7 +69,7 @@ export function veldEntries(record) {
 }
 
 export function korteSamenvatting(record, extraOverSlaan) {
-  const overSlaan = new Set(["id", "rel_id", "opvoer", "afvoer", "aanvang", "einde", "a_id", "b_id"]);
+  const overSlaan = new Set(["id", "rel_id", "opvoer", "afvoer", "aanvang", "einde", "a_id", "b_id", "versie", "_data_versie"]);
   if (extraOverSlaan) {
     for (const veld of extraOverSlaan) {
       if (veld) overSlaan.add(String(veld).toLowerCase());

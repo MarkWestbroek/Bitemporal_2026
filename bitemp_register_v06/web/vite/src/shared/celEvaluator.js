@@ -252,6 +252,12 @@ export function evalueerWeergaveVeldenVoorItem(afgeleideVeldenDefs, item, typeMe
   if (weergaveVelden.length === 0) return [];
 
   const ctx = {};
+  const voegAliasToe = (alias) => {
+    if (alias != null && String(alias).trim() !== "") {
+      ctx[String(alias)] = item;
+    }
+  };
+
   if (typeMeta?.ge_subtype === "hub") {
     const onderliggende = Array.isArray(typeMeta.onderliggende) ? typeMeta.onderliggende : [];
     const dataChild = onderliggende.find((c) => {
@@ -260,11 +266,17 @@ export function evalueerWeergaveVeldenVoorItem(afgeleideVeldenDefs, item, typeMe
     });
     if (dataChild) {
       const dataMeta = typeMetaByTypenaam[dataChild.doeltype];
-      ctx[dataMeta?.klassenaam || dataChild.doeltype] = item;
+      voegAliasToe(dataMeta?.klassenaam);
+      voegAliasToe(dataChild.doeltype);
+      voegAliasToe(typeMeta?.klassenaam ? `${typeMeta.klassenaam}_Data` : "");
+      const strippedDoeltype = String(dataChild.doeltype || "").replace(/^[^_]+_/, "");
+      voegAliasToe(strippedDoeltype);
     }
-  } else {
-    ctx[typeMeta?.klassenaam || "item"] = item;
   }
+
+  voegAliasToe(typeMeta?.klassenaam || "item");
+  voegAliasToe(typeMeta?.typenaam);
+  voegAliasToe(typeMeta?.klassenaam ? `${typeMeta.klassenaam}_Data` : "");
 
   const result = [];
   for (const av of weergaveVelden) {

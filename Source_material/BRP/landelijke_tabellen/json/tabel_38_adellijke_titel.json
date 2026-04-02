@@ -1,0 +1,74 @@
+{
+  "tabel_nr": 38,
+  "naam": "Tabel Adellijke titel/predicaat",
+  "bron": "https://publicaties.rvig.nl/landelijke-tabellen-32-tm-61-excl-tabel-35",
+  "bron_versie": "gedownload 2026-04-02",
+  "aantal_regels": 13,
+  "regels": [
+    {
+      "code": "B",
+      "omschrijving": "baron",
+      "soort": "titel"
+    },
+    {
+      "code": "BS",
+      "omschrijving": "barones",
+      "soort": "titel"
+    },
+    {
+      "code": "G",
+      "omschrijving": "graaf",
+      "soort": "titel"
+    },
+    {
+      "code": "GI",
+      "omschrijving": "gravin",
+      "soort": "titel"
+    },
+    {
+      "code": "H",
+      "omschrijving": "hertog",
+      "soort": "titel"
+    },
+    {
+      "code": "HI",
+      "omschrijving": "hertogin",
+      "soort": "titel"
+    },
+    {
+      "code": "JH",
+      "omschrijving": "jonkheer",
+      "soort": "predicaat"
+    },
+    {
+      "code": "JV",
+      "omschrijving": "jonkvrouw",
+      "soort": "predicaat"
+    },
+    {
+      "code": "M",
+      "omschrijving": "markies",
+      "soort": "titel"
+    },
+    {
+      "code": "MI",
+      "omschrijving": "markiezin",
+      "soort": "titel"
+    },
+    {
+      "code": "P",
+      "omschrijving": "prins",
+      "soort": "titel"
+    },
+    {
+      "code": "PS",
+      "omschrijving": "prinses",
+      "soort": "titel"
+    },
+    {
+      "code": "R",
+      "omschrijving": "ridder",
+      "soort": "titel"
+    }
+  ]
+}

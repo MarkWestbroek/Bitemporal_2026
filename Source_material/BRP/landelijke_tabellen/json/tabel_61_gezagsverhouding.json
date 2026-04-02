@@ -1,0 +1,45 @@
+{
+  "tabel_nr": 61,
+  "naam": "Gezagsverhoudingtabel",
+  "bron": "https://publicaties.rvig.nl/landelijke-tabellen-32-tm-61-excl-tabel-35",
+  "bron_versie": "gedownload 2026-04-02",
+  "aantal_regels": 6,
+  "regels": [
+    {
+      "code": "1",
+      "omschrijving": "Ouder1 heeft het gezag",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "12",
+      "omschrijving": "Ouder1 en ouder2 hebben het gezag",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "1D",
+      "omschrijving": "Ouder1 en een derde hebben het gezag",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "2",
+      "omschrijving": "Ouder2 heeft het gezag",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "2D",
+      "omschrijving": "Ouder2 en een derde hebben het gezag",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "D",
+      "omschrijving": "Een of meer derden hebben het gezag",
+      "datum_ingang": "",
+      "datum_einde": ""
+    }
+  ]
+}

@@ -1,0 +1,1008 @@
+{
+  "tabel_nr": 36,
+  "naam": "Voorvoegseltabel",
+  "bron": "https://publicaties.rvig.nl/landelijke-tabellen-32-tm-61-excl-tabel-35",
+  "bron_versie": "gedownload 2026-04-02",
+  "aantal_regels": 333,
+  "regels": [
+    {
+      "voorvoegsel": "A"
+    },
+    {
+      "voorvoegsel": "a"
+    },
+    {
+      "voorvoegsel": "aan"
+    },
+    {
+      "voorvoegsel": "Aan"
+    },
+    {
+      "voorvoegsel": "aan de"
+    },
+    {
+      "voorvoegsel": "Aan de"
+    },
+    {
+      "voorvoegsel": "aan den"
+    },
+    {
+      "voorvoegsel": "Aan den"
+    },
+    {
+      "voorvoegsel": "aan der"
+    },
+    {
+      "voorvoegsel": "Aan der"
+    },
+    {
+      "voorvoegsel": "Aan het"
+    },
+    {
+      "voorvoegsel": "aan het"
+    },
+    {
+      "voorvoegsel": "Aan t"
+    },
+    {
+      "voorvoegsel": "aan t"
+    },
+    {
+      "voorvoegsel": "aan 't"
+    },
+    {
+      "voorvoegsel": "Aan 't"
+    },
+    {
+      "voorvoegsel": "Af"
+    },
+    {
+      "voorvoegsel": "af"
+    },
+    {
+      "voorvoegsel": "al"
+    },
+    {
+      "voorvoegsel": "Al"
+    },
+    {
+      "voorvoegsel": "am"
+    },
+    {
+      "voorvoegsel": "Am"
+    },
+    {
+      "voorvoegsel": "am de"
+    },
+    {
+      "voorvoegsel": "Am de"
+    },
+    {
+      "voorvoegsel": "auf"
+    },
+    {
+      "voorvoegsel": "Auf"
+    },
+    {
+      "voorvoegsel": "auf dem"
+    },
+    {
+      "voorvoegsel": "Auf dem"
+    },
+    {
+      "voorvoegsel": "auf den"
+    },
+    {
+      "voorvoegsel": "Auf den"
+    },
+    {
+      "voorvoegsel": "auf der"
+    },
+    {
+      "voorvoegsel": "Auf der"
+    },
+    {
+      "voorvoegsel": "auf ter"
+    },
+    {
+      "voorvoegsel": "Auf ter"
+    },
+    {
+      "voorvoegsel": "Aus"
+    },
+    {
+      "voorvoegsel": "aus"
+    },
+    {
+      "voorvoegsel": "aus dem"
+    },
+    {
+      "voorvoegsel": "Aus dem"
+    },
+    {
+      "voorvoegsel": "Aus den"
+    },
+    {
+      "voorvoegsel": "aus den"
+    },
+    {
+      "voorvoegsel": "Aus der"
+    },
+    {
+      "voorvoegsel": "aus der"
+    },
+    {
+      "voorvoegsel": "aus m"
+    },
+    {
+      "voorvoegsel": "Aus m"
+    },
+    {
+      "voorvoegsel": "Aus 'm"
+    },
+    {
+      "voorvoegsel": "aus 'm"
+    },
+    {
+      "voorvoegsel": "Ben"
+    },
+    {
+      "voorvoegsel": "ben"
+    },
+    {
+      "voorvoegsel": "bij"
+    },
+    {
+      "voorvoegsel": "Bij"
+    },
+    {
+      "voorvoegsel": "Bij de"
+    },
+    {
+      "voorvoegsel": "bij de"
+    },
+    {
+      "voorvoegsel": "bij den"
+    },
+    {
+      "voorvoegsel": "Bij den"
+    },
+    {
+      "voorvoegsel": "Bij het"
+    },
+    {
+      "voorvoegsel": "bij het"
+    },
+    {
+      "voorvoegsel": "bij t"
+    },
+    {
+      "voorvoegsel": "Bij t"
+    },
+    {
+      "voorvoegsel": "bij 't"
+    },
+    {
+      "voorvoegsel": "Bij 't"
+    },
+    {
+      "voorvoegsel": "bin"
+    },
+    {
+      "voorvoegsel": "Bin"
+    },
+    {
+      "voorvoegsel": "boven d"
+    },
+    {
+      "voorvoegsel": "Boven d"
+    },
+    {
+      "voorvoegsel": "boven d'"
+    },
+    {
+      "voorvoegsel": "Boven d'"
+    },
+    {
+      "voorvoegsel": "d"
+    },
+    {
+      "voorvoegsel": "D"
+    },
+    {
+      "voorvoegsel": "D'"
+    },
+    {
+      "voorvoegsel": "d'"
+    },
+    {
+      "voorvoegsel": "Da"
+    },
+    {
+      "voorvoegsel": "da"
+    },
+    {
+      "voorvoegsel": "Dal"
+    },
+    {
+      "voorvoegsel": "dal"
+    },
+    {
+      "voorvoegsel": "dal'"
+    },
+    {
+      "voorvoegsel": "Dal'"
+    },
+    {
+      "voorvoegsel": "Dalla"
+    },
+    {
+      "voorvoegsel": "dalla"
+    },
+    {
+      "voorvoegsel": "das"
+    },
+    {
+      "voorvoegsel": "Das"
+    },
+    {
+      "voorvoegsel": "de"
+    },
+    {
+      "voorvoegsel": "De"
+    },
+    {
+      "voorvoegsel": "de die"
+    },
+    {
+      "voorvoegsel": "De die"
+    },
+    {
+      "voorvoegsel": "de die le"
+    },
+    {
+      "voorvoegsel": "De die le"
+    },
+    {
+      "voorvoegsel": "de l"
+    },
+    {
+      "voorvoegsel": "De l"
+    },
+    {
+      "voorvoegsel": "de l'"
+    },
+    {
+      "voorvoegsel": "De l'"
+    },
+    {
+      "voorvoegsel": "de la"
+    },
+    {
+      "voorvoegsel": "De la"
+    },
+    {
+      "voorvoegsel": "de las"
+    },
+    {
+      "voorvoegsel": "De las"
+    },
+    {
+      "voorvoegsel": "De le"
+    },
+    {
+      "voorvoegsel": "de le"
+    },
+    {
+      "voorvoegsel": "de van der"
+    },
+    {
+      "voorvoegsel": "De van der"
+    },
+    {
+      "voorvoegsel": "deca"
+    },
+    {
+      "voorvoegsel": "Deca"
+    },
+    {
+      "voorvoegsel": "Degli"
+    },
+    {
+      "voorvoegsel": "degli"
+    },
+    {
+      "voorvoegsel": "Dei"
+    },
+    {
+      "voorvoegsel": "dei"
+    },
+    {
+      "voorvoegsel": "del"
+    },
+    {
+      "voorvoegsel": "Del"
+    },
+    {
+      "voorvoegsel": "Della"
+    },
+    {
+      "voorvoegsel": "della"
+    },
+    {
+      "voorvoegsel": "den"
+    },
+    {
+      "voorvoegsel": "Den"
+    },
+    {
+      "voorvoegsel": "Der"
+    },
+    {
+      "voorvoegsel": "der"
+    },
+    {
+      "voorvoegsel": "des"
+    },
+    {
+      "voorvoegsel": "Des"
+    },
+    {
+      "voorvoegsel": "di"
+    },
+    {
+      "voorvoegsel": "Di"
+    },
+    {
+      "voorvoegsel": "die le"
+    },
+    {
+      "voorvoegsel": "Die le"
+    },
+    {
+      "voorvoegsel": "do"
+    },
+    {
+      "voorvoegsel": "Do"
+    },
+    {
+      "voorvoegsel": "don"
+    },
+    {
+      "voorvoegsel": "Don"
+    },
+    {
+      "voorvoegsel": "dos"
+    },
+    {
+      "voorvoegsel": "Dos"
+    },
+    {
+      "voorvoegsel": "du"
+    },
+    {
+      "voorvoegsel": "Du"
+    },
+    {
+      "voorvoegsel": "el"
+    },
+    {
+      "voorvoegsel": "El"
+    },
+    {
+      "voorvoegsel": "Het"
+    },
+    {
+      "voorvoegsel": "het"
+    },
+    {
+      "voorvoegsel": "i"
+    },
+    {
+      "voorvoegsel": "I"
+    },
+    {
+      "voorvoegsel": "im"
+    },
+    {
+      "voorvoegsel": "Im"
+    },
+    {
+      "voorvoegsel": "In"
+    },
+    {
+      "voorvoegsel": "in"
+    },
+    {
+      "voorvoegsel": "In de"
+    },
+    {
+      "voorvoegsel": "in de"
+    },
+    {
+      "voorvoegsel": "In den"
+    },
+    {
+      "voorvoegsel": "in den"
+    },
+    {
+      "voorvoegsel": "in der"
+    },
+    {
+      "voorvoegsel": "In der"
+    },
+    {
+      "voorvoegsel": "in het"
+    },
+    {
+      "voorvoegsel": "In het"
+    },
+    {
+      "voorvoegsel": "in t"
+    },
+    {
+      "voorvoegsel": "In t"
+    },
+    {
+      "voorvoegsel": "In 't"
+    },
+    {
+      "voorvoegsel": "in 't"
+    },
+    {
+      "voorvoegsel": "L"
+    },
+    {
+      "voorvoegsel": "l"
+    },
+    {
+      "voorvoegsel": "L'"
+    },
+    {
+      "voorvoegsel": "l'"
+    },
+    {
+      "voorvoegsel": "la"
+    },
+    {
+      "voorvoegsel": "La"
+    },
+    {
+      "voorvoegsel": "Las"
+    },
+    {
+      "voorvoegsel": "las"
+    },
+    {
+      "voorvoegsel": "le"
+    },
+    {
+      "voorvoegsel": "Le"
+    },
+    {
+      "voorvoegsel": "les"
+    },
+    {
+      "voorvoegsel": "Les"
+    },
+    {
+      "voorvoegsel": "lo"
+    },
+    {
+      "voorvoegsel": "Lo"
+    },
+    {
+      "voorvoegsel": "Los"
+    },
+    {
+      "voorvoegsel": "los"
+    },
+    {
+      "voorvoegsel": "Of"
+    },
+    {
+      "voorvoegsel": "of"
+    },
+    {
+      "voorvoegsel": "Onder"
+    },
+    {
+      "voorvoegsel": "onder"
+    },
+    {
+      "voorvoegsel": "onder de"
+    },
+    {
+      "voorvoegsel": "Onder de"
+    },
+    {
+      "voorvoegsel": "onder den"
+    },
+    {
+      "voorvoegsel": "Onder den"
+    },
+    {
+      "voorvoegsel": "onder het"
+    },
+    {
+      "voorvoegsel": "Onder het"
+    },
+    {
+      "voorvoegsel": "onder t"
+    },
+    {
+      "voorvoegsel": "Onder t"
+    },
+    {
+      "voorvoegsel": "onder 't"
+    },
+    {
+      "voorvoegsel": "Onder 't"
+    },
+    {
+      "voorvoegsel": "op"
+    },
+    {
+      "voorvoegsel": "Op"
+    },
+    {
+      "voorvoegsel": "op de"
+    },
+    {
+      "voorvoegsel": "Op de"
+    },
+    {
+      "voorvoegsel": "Op den"
+    },
+    {
+      "voorvoegsel": "op den"
+    },
+    {
+      "voorvoegsel": "op der"
+    },
+    {
+      "voorvoegsel": "Op der"
+    },
+    {
+      "voorvoegsel": "Op gen"
+    },
+    {
+      "voorvoegsel": "op gen"
+    },
+    {
+      "voorvoegsel": "op het"
+    },
+    {
+      "voorvoegsel": "Op het"
+    },
+    {
+      "voorvoegsel": "op t"
+    },
+    {
+      "voorvoegsel": "Op t"
+    },
+    {
+      "voorvoegsel": "op 't"
+    },
+    {
+      "voorvoegsel": "Op 't"
+    },
+    {
+      "voorvoegsel": "op ten"
+    },
+    {
+      "voorvoegsel": "Op ten"
+    },
+    {
+      "voorvoegsel": "Over"
+    },
+    {
+      "voorvoegsel": "over"
+    },
+    {
+      "voorvoegsel": "over de"
+    },
+    {
+      "voorvoegsel": "Over de"
+    },
+    {
+      "voorvoegsel": "over den"
+    },
+    {
+      "voorvoegsel": "Over den"
+    },
+    {
+      "voorvoegsel": "over het"
+    },
+    {
+      "voorvoegsel": "Over het"
+    },
+    {
+      "voorvoegsel": "over t"
+    },
+    {
+      "voorvoegsel": "Over t"
+    },
+    {
+      "voorvoegsel": "over 't"
+    },
+    {
+      "voorvoegsel": "Over 't"
+    },
+    {
+      "voorvoegsel": "s"
+    },
+    {
+      "voorvoegsel": "S"
+    },
+    {
+      "voorvoegsel": "'s"
+    },
+    {
+      "voorvoegsel": "'S"
+    },
+    {
+      "voorvoegsel": "s'"
+    },
+    {
+      "voorvoegsel": "S'"
+    },
+    {
+      "voorvoegsel": "t"
+    },
+    {
+      "voorvoegsel": "T"
+    },
+    {
+      "voorvoegsel": "'t"
+    },
+    {
+      "voorvoegsel": "'T"
+    },
+    {
+      "voorvoegsel": "Te"
+    },
+    {
+      "voorvoegsel": "te"
+    },
+    {
+      "voorvoegsel": "ten"
+    },
+    {
+      "voorvoegsel": "Ten"
+    },
+    {
+      "voorvoegsel": "ter"
+    },
+    {
+      "voorvoegsel": "Ter"
+    },
+    {
+      "voorvoegsel": "Tho"
+    },
+    {
+      "voorvoegsel": "tho"
+    },
+    {
+      "voorvoegsel": "Thoe"
+    },
+    {
+      "voorvoegsel": "thoe"
+    },
+    {
+      "voorvoegsel": "thor"
+    },
+    {
+      "voorvoegsel": "Thor"
+    },
+    {
+      "voorvoegsel": "to"
+    },
+    {
+      "voorvoegsel": "To"
+    },
+    {
+      "voorvoegsel": "Toe"
+    },
+    {
+      "voorvoegsel": "toe"
+    },
+    {
+      "voorvoegsel": "Tot"
+    },
+    {
+      "voorvoegsel": "tot"
+    },
+    {
+      "voorvoegsel": "uijt"
+    },
+    {
+      "voorvoegsel": "Uijt"
+    },
+    {
+      "voorvoegsel": "Uijt de"
+    },
+    {
+      "voorvoegsel": "uijt de"
+    },
+    {
+      "voorvoegsel": "Uijt den"
+    },
+    {
+      "voorvoegsel": "uijt den"
+    },
+    {
+      "voorvoegsel": "Uijt 't"
+    },
+    {
+      "voorvoegsel": "uijt 't"
+    },
+    {
+      "voorvoegsel": "uijt te de"
+    },
+    {
+      "voorvoegsel": "Uijt te de"
+    },
+    {
+      "voorvoegsel": "uijt ten"
+    },
+    {
+      "voorvoegsel": "Uijt ten"
+    },
+    {
+      "voorvoegsel": "uit"
+    },
+    {
+      "voorvoegsel": "Uit"
+    },
+    {
+      "voorvoegsel": "Uit de"
+    },
+    {
+      "voorvoegsel": "uit de"
+    },
+    {
+      "voorvoegsel": "uit den"
+    },
+    {
+      "voorvoegsel": "Uit den"
+    },
+    {
+      "voorvoegsel": "uit het"
+    },
+    {
+      "voorvoegsel": "Uit het"
+    },
+    {
+      "voorvoegsel": "uit t"
+    },
+    {
+      "voorvoegsel": "Uit t"
+    },
+    {
+      "voorvoegsel": "uit 't"
+    },
+    {
+      "voorvoegsel": "Uit 't"
+    },
+    {
+      "voorvoegsel": "Uit te de"
+    },
+    {
+      "voorvoegsel": "uit te de"
+    },
+    {
+      "voorvoegsel": "Uit ten"
+    },
+    {
+      "voorvoegsel": "uit ten"
+    },
+    {
+      "voorvoegsel": "Unter"
+    },
+    {
+      "voorvoegsel": "unter"
+    },
+    {
+      "voorvoegsel": "van"
+    },
+    {
+      "voorvoegsel": "Van"
+    },
+    {
+      "voorvoegsel": "Van de"
+    },
+    {
+      "voorvoegsel": "van De"
+    },
+    {
+      "voorvoegsel": "van de"
+    },
+    {
+      "voorvoegsel": "van de l"
+    },
+    {
+      "voorvoegsel": "Van de l"
+    },
+    {
+      "voorvoegsel": "Van de l'"
+    },
+    {
+      "voorvoegsel": "van de l'"
+    },
+    {
+      "voorvoegsel": "van den"
+    },
+    {
+      "voorvoegsel": "Van Den"
+    },
+    {
+      "voorvoegsel": "Van den"
+    },
+    {
+      "voorvoegsel": "van der"
+    },
+    {
+      "voorvoegsel": "Van der"
+    },
+    {
+      "voorvoegsel": "Van Der"
+    },
+    {
+      "voorvoegsel": "van gen"
+    },
+    {
+      "voorvoegsel": "Van gen"
+    },
+    {
+      "voorvoegsel": "van het"
+    },
+    {
+      "voorvoegsel": "Van het"
+    },
+    {
+      "voorvoegsel": "van la"
+    },
+    {
+      "voorvoegsel": "Van la"
+    },
+    {
+      "voorvoegsel": "van t"
+    },
+    {
+      "voorvoegsel": "Van t"
+    },
+    {
+      "voorvoegsel": "Van 't"
+    },
+    {
+      "voorvoegsel": "van 't"
+    },
+    {
+      "voorvoegsel": "Van ter"
+    },
+    {
+      "voorvoegsel": "van ter"
+    },
+    {
+      "voorvoegsel": "Van van de"
+    },
+    {
+      "voorvoegsel": "van van de"
+    },
+    {
+      "voorvoegsel": "ver"
+    },
+    {
+      "voorvoegsel": "Ver"
+    },
+    {
+      "voorvoegsel": "Vom"
+    },
+    {
+      "voorvoegsel": "vom"
+    },
+    {
+      "voorvoegsel": "von"
+    },
+    {
+      "voorvoegsel": "Von"
+    },
+    {
+      "voorvoegsel": "von dem"
+    },
+    {
+      "voorvoegsel": "Von dem"
+    },
+    {
+      "voorvoegsel": "von den"
+    },
+    {
+      "voorvoegsel": "Von den"
+    },
+    {
+      "voorvoegsel": "Von der"
+    },
+    {
+      "voorvoegsel": "von der"
+    },
+    {
+      "voorvoegsel": "Von t"
+    },
+    {
+      "voorvoegsel": "von t"
+    },
+    {
+      "voorvoegsel": "Von 't"
+    },
+    {
+      "voorvoegsel": "von 't"
+    },
+    {
+      "voorvoegsel": "voor"
+    },
+    {
+      "voorvoegsel": "Voor"
+    },
+    {
+      "voorvoegsel": "Voor de"
+    },
+    {
+      "voorvoegsel": "voor de"
+    },
+    {
+      "voorvoegsel": "Voor den"
+    },
+    {
+      "voorvoegsel": "voor den"
+    },
+    {
+      "voorvoegsel": "voor in t"
+    },
+    {
+      "voorvoegsel": "Voor in t"
+    },
+    {
+      "voorvoegsel": "voor in 't"
+    },
+    {
+      "voorvoegsel": "Voor in 't"
+    },
+    {
+      "voorvoegsel": "Voor 't"
+    },
+    {
+      "voorvoegsel": "voor 't"
+    },
+    {
+      "voorvoegsel": "vor"
+    },
+    {
+      "voorvoegsel": "Vor"
+    },
+    {
+      "voorvoegsel": "vor der"
+    },
+    {
+      "voorvoegsel": "Vor der"
+    },
+    {
+      "voorvoegsel": "Zu"
+    },
+    {
+      "voorvoegsel": "zu"
+    },
+    {
+      "voorvoegsel": "zum"
+    },
+    {
+      "voorvoegsel": "Zum"
+    },
+    {
+      "voorvoegsel": "zur"
+    },
+    {
+      "voorvoegsel": "Zur"
+    }
+  ]
+}

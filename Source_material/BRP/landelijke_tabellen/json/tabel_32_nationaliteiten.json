@@ -1,0 +1,1311 @@
+{
+  "tabel_nr": 32,
+  "naam": "Nationaliteitentabel",
+  "bron": "https://publicaties.rvig.nl/landelijke-tabellen-32-tm-61-excl-tabel-35",
+  "bron_versie": "gedownload 2026-04-02",
+  "aantal_regels": 217,
+  "regels": [
+    {
+      "code": "0000",
+      "omschrijving": "Onbekend",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0001",
+      "omschrijving": "Nederlandse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0002",
+      "omschrijving": "Behandeld als Nederlander",
+      "datum_ingang": "20070401",
+      "datum_einde": "20070401"
+    },
+    {
+      "code": "0027",
+      "omschrijving": "Slowaakse",
+      "datum_ingang": "19930101",
+      "datum_einde": ""
+    },
+    {
+      "code": "0028",
+      "omschrijving": "Tsjechische",
+      "datum_ingang": "19930101",
+      "datum_einde": ""
+    },
+    {
+      "code": "0029",
+      "omschrijving": "Burger van Bosnië-Herzegovina",
+      "datum_ingang": "19920406",
+      "datum_einde": ""
+    },
+    {
+      "code": "0030",
+      "omschrijving": "Georgische",
+      "datum_ingang": "19911231",
+      "datum_einde": ""
+    },
+    {
+      "code": "0031",
+      "omschrijving": "Turkmeense",
+      "datum_ingang": "19911231",
+      "datum_einde": ""
+    },
+    {
+      "code": "0032",
+      "omschrijving": "Tadzjiekse",
+      "datum_ingang": "19911231",
+      "datum_einde": ""
+    },
+    {
+      "code": "0033",
+      "omschrijving": "Oezbeekse",
+      "datum_ingang": "19911231",
+      "datum_einde": ""
+    },
+    {
+      "code": "0034",
+      "omschrijving": "Oekraïense",
+      "datum_ingang": "19911231",
+      "datum_einde": ""
+    },
+    {
+      "code": "0035",
+      "omschrijving": "Kirgizische",
+      "datum_ingang": "19911231",
+      "datum_einde": ""
+    },
+    {
+      "code": "0036",
+      "omschrijving": "Moldavische",
+      "datum_ingang": "19911231",
+      "datum_einde": ""
+    },
+    {
+      "code": "0037",
+      "omschrijving": "Kazachse",
+      "datum_ingang": "19911231",
+      "datum_einde": ""
+    },
+    {
+      "code": "0038",
+      "omschrijving": "Belarussische",
+      "datum_ingang": "19911231",
+      "datum_einde": ""
+    },
+    {
+      "code": "0039",
+      "omschrijving": "Azerbeidzjaanse",
+      "datum_ingang": "19911231",
+      "datum_einde": ""
+    },
+    {
+      "code": "0040",
+      "omschrijving": "Armeense",
+      "datum_ingang": "19911231",
+      "datum_einde": ""
+    },
+    {
+      "code": "0041",
+      "omschrijving": "Russische",
+      "datum_ingang": "19911231",
+      "datum_einde": ""
+    },
+    {
+      "code": "0042",
+      "omschrijving": "Sloveense",
+      "datum_ingang": "19920115",
+      "datum_einde": ""
+    },
+    {
+      "code": "0043",
+      "omschrijving": "Kroatische",
+      "datum_ingang": "19920115",
+      "datum_einde": ""
+    },
+    {
+      "code": "0044",
+      "omschrijving": "Letse",
+      "datum_ingang": "19910828",
+      "datum_einde": ""
+    },
+    {
+      "code": "0045",
+      "omschrijving": "Estische",
+      "datum_ingang": "19910828",
+      "datum_einde": ""
+    },
+    {
+      "code": "0046",
+      "omschrijving": "Litouwse",
+      "datum_ingang": "19910828",
+      "datum_einde": ""
+    },
+    {
+      "code": "0047",
+      "omschrijving": "Marshalleilandse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0048",
+      "omschrijving": "Myanmarese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0049",
+      "omschrijving": "Namibische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0050",
+      "omschrijving": "Albanese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0051",
+      "omschrijving": "Andorrese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0052",
+      "omschrijving": "Belgische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0053",
+      "omschrijving": "Bulgaarse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0054",
+      "omschrijving": "Deense",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0055",
+      "omschrijving": "Burger van de Bondsrepubliek Duitsland",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0056",
+      "omschrijving": "Finse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0057",
+      "omschrijving": "Franse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0058",
+      "omschrijving": "Jemenitische",
+      "datum_ingang": "19900522",
+      "datum_einde": ""
+    },
+    {
+      "code": "0059",
+      "omschrijving": "Griekse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0060",
+      "omschrijving": "Brits burger",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0061",
+      "omschrijving": "Hongaarse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0062",
+      "omschrijving": "Ierse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0063",
+      "omschrijving": "IJslandse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0064",
+      "omschrijving": "Italiaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0065",
+      "omschrijving": "Joegoslavische",
+      "datum_ingang": "",
+      "datum_einde": "20040201"
+    },
+    {
+      "code": "0066",
+      "omschrijving": "Liechtensteinse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0067",
+      "omschrijving": "Luxemburgse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0068",
+      "omschrijving": "Maltese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0069",
+      "omschrijving": "Monegaskische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0070",
+      "omschrijving": "Noorse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0071",
+      "omschrijving": "Oostenrijkse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0072",
+      "omschrijving": "Poolse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0073",
+      "omschrijving": "Portugese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0074",
+      "omschrijving": "Roemeense",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0075",
+      "omschrijving": "Burger van de Sovjet-Unie",
+      "datum_ingang": "",
+      "datum_einde": "19911231"
+    },
+    {
+      "code": "0076",
+      "omschrijving": "San Marinese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0077",
+      "omschrijving": "Spaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0078",
+      "omschrijving": "Tsjecho-Slowaakse",
+      "datum_ingang": "",
+      "datum_einde": "19930101"
+    },
+    {
+      "code": "0079",
+      "omschrijving": "Vaticaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0080",
+      "omschrijving": "Zweedse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0081",
+      "omschrijving": "Zwitserse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0082",
+      "omschrijving": "Oost-Duitse",
+      "datum_ingang": "",
+      "datum_einde": "19901003"
+    },
+    {
+      "code": "0083",
+      "omschrijving": "Brits onderdaan",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0084",
+      "omschrijving": "Eritrese",
+      "datum_ingang": "19930528",
+      "datum_einde": ""
+    },
+    {
+      "code": "0085",
+      "omschrijving": "Brits overzees burger",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0086",
+      "omschrijving": "Macedonische",
+      "datum_ingang": "19930419",
+      "datum_einde": "20190212"
+    },
+    {
+      "code": "0087",
+      "omschrijving": "Kosovaarse",
+      "datum_ingang": "20080615",
+      "datum_einde": ""
+    },
+    {
+      "code": "0088",
+      "omschrijving": "Macedonische/Burger van Noord-Macedonië",
+      "datum_ingang": "20190212",
+      "datum_einde": ""
+    },
+    {
+      "code": "0100",
+      "omschrijving": "Algerijnse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0101",
+      "omschrijving": "Angolese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0104",
+      "omschrijving": "Burundese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0105",
+      "omschrijving": "Botswaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0106",
+      "omschrijving": "Burkinese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0108",
+      "omschrijving": "Centraal-Afrikaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0109",
+      "omschrijving": "Comorese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0110",
+      "omschrijving": "Burger van Congo",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0111",
+      "omschrijving": "Beninse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0112",
+      "omschrijving": "Egyptische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0113",
+      "omschrijving": "Equatoriaal-Guinese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0114",
+      "omschrijving": "Ethiopische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0115",
+      "omschrijving": "Djiboutiaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0116",
+      "omschrijving": "Gabonese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0117",
+      "omschrijving": "Gambiaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0118",
+      "omschrijving": "Ghanese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0119",
+      "omschrijving": "Guinese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0120",
+      "omschrijving": "Ivoriaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0121",
+      "omschrijving": "Kaapverdische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0122",
+      "omschrijving": "Kameroense",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0123",
+      "omschrijving": "Kenyaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0124",
+      "omschrijving": "Zaïrese",
+      "datum_ingang": "",
+      "datum_einde": "19970715"
+    },
+    {
+      "code": "0125",
+      "omschrijving": "Lesothaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0126",
+      "omschrijving": "Liberiaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0127",
+      "omschrijving": "Libische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0128",
+      "omschrijving": "Malagassische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0129",
+      "omschrijving": "Malawische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0130",
+      "omschrijving": "Malinese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0131",
+      "omschrijving": "Marokkaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0132",
+      "omschrijving": "Mauritaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0133",
+      "omschrijving": "Mauritiaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0134",
+      "omschrijving": "Mozambikaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0135",
+      "omschrijving": "Swazische",
+      "datum_ingang": "",
+      "datum_einde": "20180419"
+    },
+    {
+      "code": "0136",
+      "omschrijving": "Nigerese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0137",
+      "omschrijving": "Nigeriaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0138",
+      "omschrijving": "Ugandese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0139",
+      "omschrijving": "Guinee-Bissause",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0140",
+      "omschrijving": "Zuid-Afrikaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0141",
+      "omschrijving": "Eswatinische",
+      "datum_ingang": "20180419",
+      "datum_einde": ""
+    },
+    {
+      "code": "0142",
+      "omschrijving": "Zimbabwaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0143",
+      "omschrijving": "Rwandese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0144",
+      "omschrijving": "Burger van São Tomé en Principe",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0145",
+      "omschrijving": "Senegalese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0147",
+      "omschrijving": "Sierra Leoonse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0148",
+      "omschrijving": "Soedanese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0149",
+      "omschrijving": "Somalische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0151",
+      "omschrijving": "Tanzaniaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0152",
+      "omschrijving": "Togolese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0154",
+      "omschrijving": "Tsjadische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0155",
+      "omschrijving": "Tunesische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0156",
+      "omschrijving": "Zambiaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0157",
+      "omschrijving": "Zuid-Soedanese",
+      "datum_ingang": "20110709",
+      "datum_einde": ""
+    },
+    {
+      "code": "0200",
+      "omschrijving": "Bahamaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0202",
+      "omschrijving": "Belizaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0204",
+      "omschrijving": "Canadese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0205",
+      "omschrijving": "Costa Ricaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0206",
+      "omschrijving": "Cubaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0207",
+      "omschrijving": "Dominicaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0208",
+      "omschrijving": "Salvadoraanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0211",
+      "omschrijving": "Guatemalaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0212",
+      "omschrijving": "Haïtiaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0213",
+      "omschrijving": "Hondurese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0214",
+      "omschrijving": "Jamaicaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0216",
+      "omschrijving": "Mexicaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0218",
+      "omschrijving": "Nicaraguaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0219",
+      "omschrijving": "Panamese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0222",
+      "omschrijving": "Burger van Trinidad en Tobago",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0223",
+      "omschrijving": "Amerikaans burger",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0250",
+      "omschrijving": "Argentijnse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0251",
+      "omschrijving": "Barbadaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0252",
+      "omschrijving": "Boliviaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0253",
+      "omschrijving": "Braziliaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0254",
+      "omschrijving": "Chileense",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0255",
+      "omschrijving": "Colombiaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0256",
+      "omschrijving": "Ecuadoraanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0259",
+      "omschrijving": "Guyaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0261",
+      "omschrijving": "Paraguayaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0262",
+      "omschrijving": "Peruaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0263",
+      "omschrijving": "Surinaamse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0264",
+      "omschrijving": "Uruguayaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0265",
+      "omschrijving": "Venezolaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0267",
+      "omschrijving": "Grenadaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0268",
+      "omschrijving": "Burger van Saint Kitts en Nevis",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0300",
+      "omschrijving": "Afghaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0301",
+      "omschrijving": "Bahreinse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0302",
+      "omschrijving": "Bhutaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0303",
+      "omschrijving": "Burmaanse",
+      "datum_ingang": "",
+      "datum_einde": "19890618"
+    },
+    {
+      "code": "0304",
+      "omschrijving": "Bruneise",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0305",
+      "omschrijving": "Cambodjaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0306",
+      "omschrijving": "Sri Lankaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0307",
+      "omschrijving": "Chinese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0308",
+      "omschrijving": "Cyprische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0309",
+      "omschrijving": "Filipijnse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0310",
+      "omschrijving": "Taiwanese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0312",
+      "omschrijving": "Indiase",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0313",
+      "omschrijving": "Indonesische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0314",
+      "omschrijving": "Iraakse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0315",
+      "omschrijving": "Iraanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0316",
+      "omschrijving": "Israëlische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0317",
+      "omschrijving": "Japanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0318",
+      "omschrijving": "Noord-Jemenitische",
+      "datum_ingang": "",
+      "datum_einde": "19900522"
+    },
+    {
+      "code": "0319",
+      "omschrijving": "Jordaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0320",
+      "omschrijving": "Koeweitse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0321",
+      "omschrijving": "Laotiaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0322",
+      "omschrijving": "Libanese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0324",
+      "omschrijving": "Maldivische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0325",
+      "omschrijving": "Maleisische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0326",
+      "omschrijving": "Mongolische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0327",
+      "omschrijving": "Omaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0328",
+      "omschrijving": "Nepalese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0329",
+      "omschrijving": "Noord-Koreaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0331",
+      "omschrijving": "Pakistaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0333",
+      "omschrijving": "Qatarese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0334",
+      "omschrijving": "Saoedi-Arabische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0335",
+      "omschrijving": "Singaporese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0336",
+      "omschrijving": "Syrische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0337",
+      "omschrijving": "Thaise",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0338",
+      "omschrijving": "Burger van de Verenigde Arabische Emiraten",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0339",
+      "omschrijving": "Turkse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0340",
+      "omschrijving": "Zuid-Jemenitische",
+      "datum_ingang": "",
+      "datum_einde": "19900522"
+    },
+    {
+      "code": "0341",
+      "omschrijving": "Zuid-Koreaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0342",
+      "omschrijving": "Vietnamese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0345",
+      "omschrijving": "Bengalese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0400",
+      "omschrijving": "Australische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0401",
+      "omschrijving": "Papoea-Nieuw-Guinese",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0402",
+      "omschrijving": "Nieuw-Zeelandse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0404",
+      "omschrijving": "West-Samoaanse",
+      "datum_ingang": "",
+      "datum_einde": "19970704"
+    },
+    {
+      "code": "0405",
+      "omschrijving": "Samoaanse",
+      "datum_ingang": "19970704",
+      "datum_einde": ""
+    },
+    {
+      "code": "0421",
+      "omschrijving": "Burger van Antigua en Barbuda",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0424",
+      "omschrijving": "Vanuatuaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0425",
+      "omschrijving": "Fijische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0429",
+      "omschrijving": "Burger van Britse afhankelijke gebieden",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0430",
+      "omschrijving": "Tongaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0431",
+      "omschrijving": "Nauruaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0432",
+      "omschrijving": "Palause",
+      "datum_ingang": "19941001",
+      "datum_einde": ""
+    },
+    {
+      "code": "0437",
+      "omschrijving": "Amerikaans onderdaan",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0442",
+      "omschrijving": "Salomonseilandse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0443",
+      "omschrijving": "Micronesische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0444",
+      "omschrijving": "Seychelse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0445",
+      "omschrijving": "Kiribatische",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0446",
+      "omschrijving": "Tuvaluaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0447",
+      "omschrijving": "Saint Luciaanse",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0448",
+      "omschrijving": "Burger van Dominica",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0449",
+      "omschrijving": "Burger van Saint Vincent en de Grenadines",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0450",
+      "omschrijving": "British National (overseas)",
+      "datum_ingang": "19870701",
+      "datum_einde": ""
+    },
+    {
+      "code": "0451",
+      "omschrijving": "Burger van Democratische Republiek Congo",
+      "datum_ingang": "19970517",
+      "datum_einde": ""
+    },
+    {
+      "code": "0452",
+      "omschrijving": "Burger van Timor Leste",
+      "datum_ingang": "20020520",
+      "datum_einde": ""
+    },
+    {
+      "code": "0453",
+      "omschrijving": "Burger van Servië en Montenegro",
+      "datum_ingang": "20030204",
+      "datum_einde": "20060603"
+    },
+    {
+      "code": "0454",
+      "omschrijving": "Servische",
+      "datum_ingang": "20060603",
+      "datum_einde": ""
+    },
+    {
+      "code": "0455",
+      "omschrijving": "Montenegrijnse",
+      "datum_ingang": "20060603",
+      "datum_einde": ""
+    },
+    {
+      "code": "0499",
+      "omschrijving": "Staatloos",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0500",
+      "omschrijving": "Vastgesteld niet-Nederlander",
+      "datum_ingang": "20070401",
+      "datum_einde": "20070401"
+    }
+  ]
+}

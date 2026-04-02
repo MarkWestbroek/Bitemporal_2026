@@ -1,0 +1,99 @@
+{
+  "tabel_nr": 60,
+  "naam": "RNI-deelnemerstabel",
+  "bron": "https://publicaties.rvig.nl/landelijke-tabellen-32-tm-61-excl-tabel-35",
+  "bron_versie": "gedownload 2026-04-02",
+  "aantal_regels": 15,
+  "regels": [
+    {
+      "code": "0000",
+      "omschrijving": "Onbekend",
+      "datum_ingang": "",
+      "datum_einde": ""
+    },
+    {
+      "code": "0101",
+      "omschrijving": "Belastingdienst (inzake heffingen en toeslagen)",
+      "datum_ingang": "20140106",
+      "datum_einde": ""
+    },
+    {
+      "code": "0201",
+      "omschrijving": "Sociale Verzekeringsbank (inzake AOW, Anw en AKW)",
+      "datum_ingang": "20150601",
+      "datum_einde": ""
+    },
+    {
+      "code": "0301",
+      "omschrijving": "Uitvoeringsinstituut werknemersverzekeringen (inzake uitkeringen)",
+      "datum_ingang": "20150420",
+      "datum_einde": ""
+    },
+    {
+      "code": "0401",
+      "omschrijving": "CAK (inzake zorgverzekeringen)",
+      "datum_ingang": "20170101",
+      "datum_einde": ""
+    },
+    {
+      "code": "0501",
+      "omschrijving": "Immigratie- en naturalisatiedienst (inzake nationaliteitsgegevens)",
+      "datum_ingang": "20170301",
+      "datum_einde": ""
+    },
+    {
+      "code": "0601",
+      "omschrijving": "Ministerie van Buitenlandse Zaken (inzake geprivilegieerden)",
+      "datum_ingang": "20140106",
+      "datum_einde": ""
+    },
+    {
+      "code": "0801",
+      "omschrijving": "Ministerie van Onderwijs, Cultuur en Wetenschap (inzake studiefinanciering)",
+      "datum_ingang": "20240401",
+      "datum_einde": ""
+    },
+    {
+      "code": "7358",
+      "omschrijving": "Gemeente Aalsmeer",
+      "datum_ingang": "20231001",
+      "datum_einde": ""
+    },
+    {
+      "code": "7606",
+      "omschrijving": "Gemeente Schiedam",
+      "datum_ingang": "20231001",
+      "datum_einde": ""
+    },
+    {
+      "code": "8507",
+      "omschrijving": "Gemeente Horst aan de Maas",
+      "datum_ingang": "20231001",
+      "datum_einde": ""
+    },
+    {
+      "code": "8894",
+      "omschrijving": "Gemeente Peel en Maas",
+      "datum_ingang": "20231001",
+      "datum_einde": ""
+    },
+    {
+      "code": "8911",
+      "omschrijving": "Gemeente Hollands Kroon",
+      "datum_ingang": "20231001",
+      "datum_einde": ""
+    },
+    {
+      "code": "9901",
+      "omschrijving": "Minister van BZK",
+      "datum_ingang": "20251101",
+      "datum_einde": ""
+    },
+    {
+      "code": "9999",
+      "omschrijving": "Noodvoorziening loket-inschrijving",
+      "datum_ingang": "20140106",
+      "datum_einde": ""
+    }
+  ]
+}

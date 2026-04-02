@@ -1,0 +1,197 @@
+{
+  "tabel_nr": 39,
+  "naam": "Tabel Akteaanduiding",
+  "bron": "https://publicaties.rvig.nl/landelijke-tabellen-32-tm-61-excl-tabel-35",
+  "bron_versie": "gedownload 2026-04-02",
+  "aantal_regels": 47,
+  "regels": [
+    {
+      "code": "1•A",
+      "omschrijving": "Geboorte"
+    },
+    {
+      "code": "1•B",
+      "omschrijving": "Erkenning bij de geboorteaangifte"
+    },
+    {
+      "code": "1•C",
+      "omschrijving": "Erkenning na de geboorteaangifte"
+    },
+    {
+      "code": "1•D",
+      "omschrijving": "Erkenning van een ongeboren vrucht"
+    },
+    {
+      "code": "1•E",
+      "omschrijving": "Ontkenning ouderschap (rechterlijke uitspraak)"
+    },
+    {
+      "code": "1•F",
+      "omschrijving": "Ontkenning ouderschap door ouder uit wie het kind is geboren, tevens erkenning"
+    },
+    {
+      "code": "1•G",
+      "omschrijving": "Vaststelling van de geslachtsnaam/voornamen bij koninklijk besluit"
+    },
+    {
+      "code": "1•H",
+      "omschrijving": "Wijziging van de geslachtsnaam bij koninklijk besluit"
+    },
+    {
+      "code": "1•I",
+      "omschrijving": "Verlening van brieven van wettiging"
+    },
+    {
+      "code": "1•J",
+      "omschrijving": "Notariële akte van erkenning"
+    },
+    {
+      "code": "1•K",
+      "omschrijving": "Verbetering/doorhaling van een akte op last van de rechter"
+    },
+    {
+      "code": "1•L",
+      "omschrijving": "Inschrijving van een ontbrekende akte (rechterlijke uitspraak)"
+    },
+    {
+      "code": "1•M",
+      "omschrijving": "Voornaamswijziging (rechterlijke uitspraak)"
+    },
+    {
+      "code": "1•N",
+      "omschrijving": "Vernietiging van een erkenning (rechterlijke uitspraak)"
+    },
+    {
+      "code": "1•O",
+      "omschrijving": "Inschrijving van een akte ex artikel 19e, lid 6, boek 1 BW"
+    },
+    {
+      "code": "1•P",
+      "omschrijving": "Gegrondverklaring betwisting van staat (rechterlijke uitspraak)"
+    },
+    {
+      "code": "1•Q",
+      "omschrijving": "Adoptie (rechterlijke uitspraak)"
+    },
+    {
+      "code": "1•R",
+      "omschrijving": "Herroeping van een adoptie (rechterlijke uitspraak)"
+    },
+    {
+      "code": "1•S",
+      "omschrijving": "Wijziging van de geslachtsvermelding"
+    },
+    {
+      "code": "1•T",
+      "omschrijving": "Inschrijving declaratoire uitspraak, niet genoemd in artikel 24, boek 1 BW"
+    },
+    {
+      "code": "1•U",
+      "omschrijving": "Verklaring ontkenning ouderschap ex artikel 199, onder b, boek 1 BW"
+    },
+    {
+      "code": "1•V",
+      "omschrijving": "Gerechtelijke vaststelling van het ouderschap"
+    },
+    {
+      "code": "1•W",
+      "omschrijving": "Naamskeuze"
+    },
+    {
+      "code": "1•X",
+      "omschrijving": "Wijziging geslachtsnaam ex art. 253t of 282, boek 1 BW (rechterlijke uitspraak)"
+    },
+    {
+      "code": "2•A",
+      "omschrijving": "Overlijden"
+    },
+    {
+      "code": "2•B",
+      "omschrijving": "Geboorte (levenloos)"
+    },
+    {
+      "code": "2•C",
+      "omschrijving": "Vaststelling van een overlijden"
+    },
+    {
+      "code": "2•D",
+      "omschrijving": "Verbetering/doorhaling van een akte op last van de rechter"
+    },
+    {
+      "code": "2•E",
+      "omschrijving": "Inschrijving van een ontbrekende akte (rechterlijke uitspraak)"
+    },
+    {
+      "code": "2•F",
+      "omschrijving": "Vermoedelijk overlijden"
+    },
+    {
+      "code": "2•G",
+      "omschrijving": "Lijkvinding"
+    },
+    {
+      "code": "3•A",
+      "omschrijving": "Huwelijk"
+    },
+    {
+      "code": "3•B",
+      "omschrijving": "Echtscheiding/huwelijksontbinding na scheiding van tafel en bed"
+    },
+    {
+      "code": "3•C",
+      "omschrijving": "Nietigverklaring van een huwelijk (rechterlijke uitspraak)"
+    },
+    {
+      "code": "3•D",
+      "omschrijving": "Verbetering/doorhaling van een huwelijksakte op last van de rechter"
+    },
+    {
+      "code": "3•E",
+      "omschrijving": "Inschrijving van een ontbrekende huwelijksakte (rechterlijke uitspraak)"
+    },
+    {
+      "code": "3•F",
+      "omschrijving": "Vernietiging nietigverklaring etc. huwelijk (rechterlijke uitspraak)"
+    },
+    {
+      "code": "3•G",
+      "omschrijving": "Inschrijving van een ontbrekende echtscheidingsakte (rechterlijke uitspraak)"
+    },
+    {
+      "code": "3•H",
+      "omschrijving": "Omzetting geregistreerd partnerschap in huwelijk"
+    },
+    {
+      "code": "5•A",
+      "omschrijving": "Geregistreerd partnerschap"
+    },
+    {
+      "code": "5•B",
+      "omschrijving": "Beëindiging geregistreerd partnerschap door overeenkomst of ontbinding"
+    },
+    {
+      "code": "5•C",
+      "omschrijving": "Nietigverklaring geregistreerd partnerschap"
+    },
+    {
+      "code": "5•D",
+      "omschrijving": "Verbetering/doorhaling akte geregistreerd partnerschap (rechterlijke uitspraak)"
+    },
+    {
+      "code": "5•E",
+      "omschrijving": "Inschrijving ontbrekende akte gereg. partnerschap (rechterlijke uitspraak)"
+    },
+    {
+      "code": "5•F",
+      "omschrijving": "Vernietiging nietigverklaring etc. gereg. partnerschap (rechterlijke uitspraak)"
+    },
+    {
+      "code": "5•G",
+      "omschrijving": "Inschrijving ontbrekende akte ontbinding geregistreerd partnerschap"
+    },
+    {
+      "code": "5•H",
+      "omschrijving": "Omzetting huwelijk in geregistreerd partnerschap"
+    }
+  ]
+}
