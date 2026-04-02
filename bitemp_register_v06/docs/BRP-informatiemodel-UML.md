@@ -653,23 +653,316 @@ classDiagram
 
 ---
 
-## 8. Landelijke tabellen (referentielijsten)
+## 8. Landelijke tabellen — referentielijsten (analyse)
 
-Het BRP LO definieert een aantal landelijke tabellen die als codelijsten fungeren. Deze zijn geen onderdeel van de PL maar worden gerefereerd via codes. In het ENT/GE/REL-model zijn dit referentielijsten.
+Het BRP LO definieert 15 "landelijke tabellen" (§4.7). Dit zijn code- of referentielijsten die *geen* onderdeel van de persoonslijst zijn, maar als hulpmiddel fungeren bij bijhouding en verstrekking. Elementen op de PL verwijzen via codes naar rijen in deze tabellen.
 
-| Tabel | BRP-nr | Gebruikt door | Voorbeeld |
-|---|---|---|---|
-| Nationaliteitentabel | 32 | Nationaliteit (GE) | 0001 = Nederlandse |
-| Gemeententabel | 33 | Geboorteplaats, Gemeente, Adres | 0363 = Amsterdam |
-| Landentabel | 34 | Geboorteland, Adres buitenland | 6030 = Nederland |
-| Voorvoegseltabel | 36 | Naam (GE) | "van", "de", "van der" |
-| Adellijke titel/predicaat | 38 | Naam (GE) | B = Baron, G = Graaf |
-| Reden opnemen/beëindigen nationaliteit | 37 | Nationaliteit (GE) | |
-| Reden ontbinding huwelijk/GP | 41 | Ontbinding (GE) | |
-| Nederlands reisdocument | 48 | DocumentIdentificatie (GE) | PN = Nationaal paspoort |
-| Autoriteit van afgifte | 49 | Uitgifte (GE) | |
-| Verblijfstiteltabel | 56 | Verblijfstitel (GE) | |
-| Gezagsverhoudingtabel | 61 | Gezagsverhouding (GE) | |
+### Classificatie: intern vs. extern
+
+Er is een duidelijk onderscheid te maken:
+
+**Domein-inhoudelijke lijsten** — beschrijven "dingen in de werkelijkheid" die ook buiten de BRP bestaan:
+
+| # | Tabel | Type | Sleutel | Kolommen | Temporeel | Toelichting |
+|---|---|---|---|---|---|---|
+| 32 | **Nationaliteitentabel** | extern | 4-cijferige code | code, omschrijving, datum ingang, datum beëindiging | ✓ geldigheidsperiode | Alle door NL erkende nationaliteiten. Bron: internationaal recht. |
+| 33 | **Gemeententabel** | extern | 4-cijferige code | code, naam, nieuwe gemeentecode, datum ingang, datum beëindiging | ✓ geldigheidsperiode | Alle huidige en voormalige NL gemeenten. Bron: CBS. Bevat doorverwijzing (nieuwe gemeentecode) bij herindeling. |
+| 34 | **Landentabel** | extern | 4-cijferige code | code, naam, ISO 3166-1 alpha-2/alpha-3/numeriek, ISO 3166-2, Engelse naam, indicatie einddatum fictief, datum ingang, datum beëindiging | ✓ geldigheidsperiode | Alle huidige en voormalige landen. Rijkste tabel: 8 kolommen incl. ISO-crossrefs. Bevat fictieve einddatums (indicator *). |
+| 59 | **BRP-deelnemerstabel** | extern | 6-cijferige code | code, omschrijving, aangesloten op berichtendienst (0/1/2/3), datum ingang, datum beëindiging | ✓ geldigheidsperiode | Alle deelnemers aan het BRP-stelsel (gemeenten, afnemers). |
+| 60 | **RNI-deelnemerstabel** | extern | 4-cijferige code | code, omschrijving, datum ingang, datum beëindiging | ✓ geldigheidsperiode | Bestuursorganen die als RNI-deelnemer gegevens leveren. |
+
+**Domein-interne codelijsten** — zijn specifiek voor de BRP-registratie en coderen juridische of administratieve begrippen:
+
+| # | Tabel | Type | Sleutel | Kolommen | Temporeel | Toelichting |
+|---|---|---|---|---|---|---|
+| 36 | **Voorvoegseltabel** | intern | voorvoegsel (tekst) | voorvoegsel | ✗ geen geldigheid | Toegestane voorvoegsels bij geslachtsnaam. Simpelste tabel: 1 kolom. |
+| 37 | **Reden opnemen/beëindigen nationaliteit** | intern | 3-cijferige code | code, omschrijving, soort (VK/OP/VL/BE), datum ingang, datum beëindiging | ✓ geldigheidsperiode | Wettelijke gronden voor verkrijging/verlies NL-schap en opname/beëindiging overige nationaliteiten. |
+| 38 | **Adellijke titel/predicaat** | intern | 1-2 letter code | code, omschrijving, soort ("titel"/"predicaat") | ✗ geen geldigheid | B=Baron, BS=Barones, G=Graaf, etc. |
+| 39 | **Akteaanduiding** | intern | 3-positie code | aanduiding (register+deel+soort), omschrijving | ✗ geen geldigheid | Model van akten in burgerlijke stand. Positie 1: soort register (1=geboorte, 2=overlijden, 3=huwelijk, 5=GP). |
+| 41 | **Reden ontbinding/nietigverklaring H/GP** | intern | 1-letter code | code, omschrijving, datum ingang, datum beëindiging | ✓ geldigheidsperiode | Wettelijke gronden voor ontbinding huwelijk/GP. |
+| 48 | **Nederlands reisdocument** | intern | 2-letter code | code, omschrijving, datum ingang, datum beëindiging | ✓ geldigheidsperiode | Modellen van NL paspoorten en ID-kaarten. |
+| 49 | **Autoriteit van afgifte reisdocument** | intern | 2-6 pos. code | code, omschrijving, datum ingang, datum beëindiging | ✓ geldigheidsperiode | Wie het reisdocument heeft uitgegeven. |
+| 56 | **Verblijfstiteltabel** | intern | 2-cijferige code | code, omschrijving, datum ingang, datum beëindiging | ✓ geldigheidsperiode | Verblijfsrechtelijke statussen voor niet-Nederlanders. |
+| 61 | **Gezagsverhoudingtabel** | intern | 1-2 pos. code | code, omschrijving, datum ingang, datum beëindiging | ✓ geldigheidsperiode | Mogelijke gezagsverhoudingen bij minderjarigen. |
+
+**Systeem-/autorisatietabel** — puur voor de werking van het BRP-stelsel:
+
+| # | Tabel | Type | Sleutel | Kolommen | Temporeel | Toelichting |
+|---|---|---|---|---|---|---|
+| 35 | **Autorisatietabel** | systeem | 6-cijferige code | code, naam, indicatie geheimhouding, verstrekkingsbeperking, rubrieknummers (spontaan/selectie/ad hoc), voorwaardenregels, media, etc. | ✓ geldigheidsperiode | Zeer uitgebreide tabel (>25 kolommen). Regelt welke afnemers welke rubrieken mogen ontvangen via welke kanalen. Puur systeem-metadata. |
+
+### Overzicht in Mermaid
+
+```mermaid
+classDiagram
+    direction TB
+
+    class ExterneReferentielijsten {
+        «EXTERN · dingen in de werkelijkheid»
+    }
+
+    class Nationaliteitentabel {
+        «Tabel 32 · temporeel»
+        code_4 nationaliteitscode
+        string omschrijving
+        datum datum_ingang
+        datum datum_beeindiging
+    }
+
+    class Gemeententabel {
+        «Tabel 33 · temporeel»
+        code_4 gemeentecode
+        string gemeentenaam
+        code_4 nieuwe_gemeentecode
+        datum datum_ingang
+        datum datum_beeindiging
+    }
+
+    class Landentabel {
+        «Tabel 34 · temporeel»
+        code_4 landcode
+        string landnaam
+        string iso_3166_1_alpha2
+        string iso_3166_1_alpha3
+        int iso_3166_1_numeriek
+        string iso_3166_2
+        string engelse_naam
+        boolean indicatie_einddatum_fictief
+        datum datum_ingang
+        datum datum_beeindiging
+    }
+
+    class BRPDeelnemerstabel {
+        «Tabel 59 · temporeel»
+        code_6 code
+        string omschrijving
+        enum aangesloten_berichtendienst
+        datum datum_ingang
+        datum datum_beeindiging
+    }
+
+    class RNIDeelnemerstabel {
+        «Tabel 60 · temporeel»
+        code_4 code
+        string omschrijving
+        datum datum_ingang
+        datum datum_beeindiging
+    }
+
+    ExterneReferentielijsten *-- Nationaliteitentabel
+    ExterneReferentielijsten *-- Gemeententabel
+    ExterneReferentielijsten *-- Landentabel
+    ExterneReferentielijsten *-- BRPDeelnemerstabel
+    ExterneReferentielijsten *-- RNIDeelnemerstabel
+
+    style ExterneReferentielijsten fill:#d1fae5,stroke:#059669
+    style Nationaliteitentabel fill:#ecfdf5,stroke:#10b981
+    style Gemeententabel fill:#ecfdf5,stroke:#10b981
+    style Landentabel fill:#ecfdf5,stroke:#10b981
+    style BRPDeelnemerstabel fill:#ecfdf5,stroke:#10b981
+    style RNIDeelnemerstabel fill:#ecfdf5,stroke:#10b981
+```
+
+```mermaid
+classDiagram
+    direction TB
+
+    class InterneCodelijsten {
+        «INTERN · BRP-specifieke begrippen»
+    }
+
+    class Voorvoegseltabel {
+        «Tabel 36 · statisch»
+        string voorvoegsel
+    }
+
+    class RedenNationaliteit {
+        «Tabel 37 · temporeel»
+        code_3 code
+        string omschrijving
+        enum soort__VK_OP_VL_BE
+        datum datum_ingang
+        datum datum_beeindiging
+    }
+
+    class AdellijkeTitelPredicaat {
+        «Tabel 38 · statisch»
+        code_2 code
+        string omschrijving
+        enum soort__titel_predicaat
+    }
+
+    class Akteaanduiding {
+        «Tabel 39 · statisch»
+        code_3 aanduiding
+        string omschrijving
+    }
+
+    class RedenOntbindingHuwelijk {
+        «Tabel 41 · temporeel»
+        code_1 code
+        string omschrijving
+        datum datum_ingang
+        datum datum_beeindiging
+    }
+
+    class NederlandsReisdocument {
+        «Tabel 48 · temporeel»
+        code_2 code
+        string omschrijving
+        datum datum_ingang
+        datum datum_beeindiging
+    }
+
+    class AutoriteitAfgifte {
+        «Tabel 49 · temporeel»
+        code_2_6 code
+        string omschrijving
+        datum datum_ingang
+        datum datum_beeindiging
+    }
+
+    class Verblijfstiteltabel {
+        «Tabel 56 · temporeel»
+        code_2 code
+        string omschrijving
+        datum datum_ingang
+        datum datum_beeindiging
+    }
+
+    class Gezagsverhoudingtabel {
+        «Tabel 61 · temporeel»
+        code_2 code
+        string omschrijving
+        datum datum_ingang
+        datum datum_beeindiging
+    }
+
+    InterneCodelijsten *-- Voorvoegseltabel
+    InterneCodelijsten *-- RedenNationaliteit
+    InterneCodelijsten *-- AdellijkeTitelPredicaat
+    InterneCodelijsten *-- Akteaanduiding
+    InterneCodelijsten *-- RedenOntbindingHuwelijk
+    InterneCodelijsten *-- NederlandsReisdocument
+    InterneCodelijsten *-- AutoriteitAfgifte
+    InterneCodelijsten *-- Verblijfstiteltabel
+    InterneCodelijsten *-- Gezagsverhoudingtabel
+
+    style InterneCodelijsten fill:#fef3c7,stroke:#d97706
+    style Voorvoegseltabel fill:#fffbeb,stroke:#f59e0b
+    style RedenNationaliteit fill:#fffbeb,stroke:#f59e0b
+    style AdellijkeTitelPredicaat fill:#fffbeb,stroke:#f59e0b
+    style Akteaanduiding fill:#fffbeb,stroke:#f59e0b
+    style RedenOntbindingHuwelijk fill:#fffbeb,stroke:#f59e0b
+    style NederlandsReisdocument fill:#fffbeb,stroke:#f59e0b
+    style AutoriteitAfgifte fill:#fffbeb,stroke:#f59e0b
+    style Verblijfstiteltabel fill:#fffbeb,stroke:#f59e0b
+    style Gezagsverhoudingtabel fill:#fffbeb,stroke:#f59e0b
+```
+
+### Kenmerken en patronen
+
+**Gemeenschappelijk patroon:** Bijna alle tabellen (12 van 15) hebben dezelfde basisstructuur:
+- Een **code** (sleutel)
+- Een **omschrijving** (leesbare tekst)
+- **Datum ingang** en **datum beëindiging** tabelregel (temporele geldigheid)
+
+Dit betekent dat ze temporeel zijn: tabelregels kunnen verlopen. Een nationaliteit die in 1990 bestond, hoeft in 2026 niet meer te bestaan (bijv. "Joegoslavisch"). De tabel bewaart dan een regel met einddatum.
+
+**Drie uitzonderingen zonder temporele geldigheid:**
+- Tabel 36 (Voorvoegseltabel): alleen een lijst van toegestane voorvoegsels, geen datums
+- Tabel 38 (Adellijke titel/predicaat): statische lijst, geen datums
+- Tabel 39 (Akteaanduiding): statische codelijst, geen datums
+
+**Bijzondere tabellen:**
+- **Tabel 34 (Landentabel)** is veruit de rijkste: 8 inhoudelijke kolommen inclusief 4 ISO 3166-crossrefs + een "indicatie einddatum fictief" vlag
+- **Tabel 33 (Gemeententabel)** heeft een uniek veld: `nieuwe_gemeentecode` — een doorverwijzing bij gemeentelijke herindeling (de oude gemeentecode verwijst naar de nieuwe)
+- **Tabel 35 (Autorisatietabel)** is een buitenbeentje: >25 kolommen, puur systeemtechnisch, geen domeininhoud
+- **Tabel 37 (Reden nationaliteit)** heeft een `soort`-kolom die dubbelgebruik van dezelfde tabel mogelijk maakt: VK (verkrijging) en OP (opname) voor element 63.10, VL (verlies) en BE (beëindiging) voor element 64.10
+
+### Welke GE/REL gebruikt welke tabel
+
+```mermaid
+flowchart LR
+    subgraph ENT/GE/REL
+        Naam["Naam (GE)"]
+        Geb["Geboorte (GE)"]
+        Overl["Overlijden (GE)"]
+        Nat["Nationaliteit (GE)"]
+        Verb["Verblijfplaats (REL)"]
+        Huw["HuwelijksSluiting (GE)"]
+        Ontb["Ontbinding (GE)"]
+        RD["Reisdocument (ENT)"]
+        VT["Verblijfstitel (GE)"]
+        GV["Gezagsverhouding (GE)"]
+    end
+
+    subgraph Externe_lijsten
+        T32["32 Nationaliteiten"]
+        T33["33 Gemeenten"]
+        T34["34 Landen"]
+    end
+
+    subgraph Interne_lijsten
+        T36["36 Voorvoegsels"]
+        T37["37 Reden nat."]
+        T38["38 Titel/predicaat"]
+        T41["41 Reden ontbinding"]
+        T48["48 Reisdocument"]
+        T49["49 Autoriteit afgifte"]
+        T56["56 Verblijfstitel"]
+        T61t["61 Gezagsverhouding"]
+    end
+
+    Naam --> T36
+    Naam --> T38
+    Geb --> T33
+    Geb --> T34
+    Overl --> T33
+    Overl --> T34
+    Nat --> T32
+    Nat --> T37
+    Verb --> T33
+    Huw --> T33
+    Huw --> T34
+    Ontb --> T33
+    Ontb --> T34
+    Ontb --> T41
+    RD --> T48
+    RD --> T49
+    VT --> T56
+    GV --> T61t
+
+    style T32 fill:#ecfdf5,stroke:#10b981
+    style T33 fill:#ecfdf5,stroke:#10b981
+    style T34 fill:#ecfdf5,stroke:#10b981
+    style T36 fill:#fffbeb,stroke:#f59e0b
+    style T37 fill:#fffbeb,stroke:#f59e0b
+    style T38 fill:#fffbeb,stroke:#f59e0b
+    style T41 fill:#fffbeb,stroke:#f59e0b
+    style T48 fill:#fffbeb,stroke:#f59e0b
+    style T49 fill:#fffbeb,stroke:#f59e0b
+    style T56 fill:#fffbeb,stroke:#f59e0b
+    style T61t fill:#fffbeb,stroke:#f59e0b
+```
+
+### Mapping naar v06 referentielijstmodel
+
+In het v06-model is het referentielijst-concept al geïmplementeerd: de `Referentielijst` is een generieke ENT met instantie-records (bijv. "Landenlijst"), en items als relatie (bijv. `LandenlijstLand`). De BRP-tabellen mappen hier als volgt op:
+
+| BRP-tabel | v06-equivalent | Wijze |
+|---|---|---|
+| 34 Landentabel | Referentielijst instantie "Landenlijst" + LandenlijstLand items | Al geïmplementeerd in np-loc |
+| 32 Nationaliteitentabel | Referentielijst instantie "Nationaliteiten" + items | Nieuw; zelfde patroon als Landenlijst |
+| 33 Gemeententabel | Referentielijst instantie "Gemeenten" + items | Nieuw; extra veld: nieuwe_gemeentecode (doorverwijzing) |
+| 36 Voorvoegseltabel | Kleine statische enum of referentielijst | Eenvoudigst als enum |
+| 38 Adellijke titel/predicaat | Kleine statische enum of referentielijst | Eenvoudigst als enum met soort-discriminator |
+| 37, 41 Reden-tabellen | Referentielijst instanties | Temporeel; soort-kolom voor dubbelgebruik |
+| 48, 49 Reisdocument-tabellen | Referentielijst instanties | Temporeel |
+| 56 Verblijfstiteltabel | Referentielijst instantie | Temporeel |
+| 61 Gezagsverhoudingtabel | Referentielijst instantie | Temporeel |
+| 35 Autorisatietabel | Buiten scope (systeem-metadata) | Niet relevant voor informatiemodel |
+| 59, 60 Deelnemerstabellen | Referentielijst instanties of buiten scope | Organisatiegegevens, niet direct PL-inhoud |
 
 ---
 
