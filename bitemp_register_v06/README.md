@@ -610,12 +610,57 @@ Deregister U5 and register U6 for entity A:
 }
 ```
 
-## DONE
-1
- full handlers uitbreiden met meer dan één relatie (array en itereren)
+## DONE v6: big thing = materiele as (axis, tijdslijn) toegevoegd
 
-2
- Speciaal Registratie (POST) endpoint dat het volgende doet:
+1 JSON voor een request waarbij Aanvang en /of Einde wordt toegevoegd aan een bestaande Entiteit
+
+```json
+{
+  "registratie": {
+    "registratietype": "registratie",
+    "tijdstip": "2026-02-16T10:30:00Z",
+    "opmerking": "Opvoer van aanvang en einde van A=1"
+  },
+  "wijzigingen": [
+    {
+      "opvoer": {
+        "aanvang": {
+          "a_id": "1",
+          "datum": "01-01-2020"
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "einde": {
+          "a_id": "1",
+          "datum": "31-12-2025"
+        }
+      }
+    }
+  ]
+}
+```
+2 Aanvang en Einde op een entiteit via plumbing behandelen als een GE
+- bij opvoer, afvoer en correctie
+- ongedaanmaking moet misschien iets speciaals gebeuren in de queries
+
+3 Full handlers uitbreiden met meer dan één laag diepe relaties (vanwege bovenstaande mogelijke materiele 'mickey mouse oortjes' op entiteiten en gegevenselementen)
+- Dan heeft het GE een drievoudige PFK:
+  - `entiteit-id`
+  - `{ent}_{GE}.rel-id`
+  - `{ent}_{GE}_data.versie`
+- De splitsing van het gegevenselement in `{ent}_{GE}` en `{ent}_{GE}_data` is een vorm van plumbing.
+- De API blijft nog dezelfde, met toevoeging van aanvang en einde als optionele types onder elk materieel element.
+- Bij creatie worden de tabellen gesplitst gemaakt met indien materieel de aanvang en einde tabellen: `{ent}_{GE}_aanvang` en `{ent}_{GE}_einde`
+- deze gedragen zich dus als een _data tabel met een versie.
+
+
+## DONE = lijst van kleine en grotere items die zijn gebouwd
+1 API's
+- full handlers uitbreiden met meer dan één relatie (array en itereren)
+
+2 Registratie: speciaal Registratie (POST) endpoint dat het volgende doet:
  - post registratie (onthoudt ID en tijdstip)
  - post gegevens (met reg_tijdstip in opvoer; opvoer kan altijd maar 1x, maar kan worden leeggemaakt bij ongedaanmaking van de opvoerende-registratie)
     * onthoudt id's of stop ze in de structs
@@ -707,6 +752,7 @@ Deregister U5 and register U6 for entity A:
 - UML Editor: instantie-nodes, binding-edges, toolbar + editing
 - Codegen: entiteitSubtype/relatieSubtype/referentielijstInstantie emissie
 - DB migratie: automatische rename tabellen/kolommen bij eerste start na upgrade
+- referentielijst_item als gegevenstype/enumeratie in type-keuzelijsten in de editor
 
 25 Afgeleide velden
 * ook in ENT (vooral eigenlijk)
@@ -727,54 +773,6 @@ Deregister U5 and register U6 for entity A:
 * import van XMI
 * posities uit XMI import en in export mappen 
 * Export naar MIM
-
-
-## DONE: MATERIELE AS TOEVOEGEN = REDESIGN!
-
-1 JSON voor een request waarbij Aanvang en /of Einde wordt toegevoegd aan een bestaande Entiteit
-
-```json
-{
-  "registratie": {
-    "registratietype": "registratie",
-    "tijdstip": "2026-02-16T10:30:00Z",
-    "opmerking": "Opvoer van aanvang en einde van A=1"
-  },
-  "wijzigingen": [
-    {
-      "opvoer": {
-        "aanvang": {
-          "a_id": "1",
-          "datum": "01-01-2020"
-        }
-      }
-    },
-    {
-      "opvoer": {
-        "einde": {
-          "a_id": "1",
-          "datum": "31-12-2025"
-        }
-      }
-    }
-  ]
-}
-```
-
-
-2 Aanvang en Einde op een entiteit via plumbing behandelen als een GE
-- bij opvoer, afvoer en correctie
-- ongedaanmaking moet misschien iets speciaals gebeuren in de queries
-
-3 Full handlers uitbreiden met meer dan één laag diepe relaties (vanwege bovenstaande mogelijke materiele 'mickey mouse oortjes' op entiteiten en gegevenselementen)
-- Dan heeft het GE een drievoudige PFK:
-  - `entiteit-id`
-  - `{ent}_{GE}.rel-id`
-  - `{ent}_{GE}_data.versie`
-- De splitsing van het gegevenselement in `{ent}_{GE}` en `{ent}_{GE}_data` is een vorm van plumbing.
-- De API blijft nog dezelfde, met toevoeging van aanvang en einde als optionele types onder elk materieel element.
-- Bij creatie worden de tabellen gesplitst gemaakt met indien materieel de aanvang en einde tabellen: `{ent}_{GE}_aanvang` en `{ent}_{GE}_einde`
-- deze gedragen zich dus als een _data tabel met een versie.
 
 ## BUGS
 ### API:
@@ -805,7 +803,6 @@ Deregister U5 and register U6 for entity A:
 16 *Referentielijsten* ✅ DONE (maart 2026)
 - Generieke Referentielijst-klasse met instantie-records geïmplementeerd
 - Zie [Implementatieplan](docs/copilot-chats/plans/2026-03-29%20referentielijsten%20PLAN.md) voor details
-- TODO: referentielijst_item als gegevenstype/enumeratie in type-keuzelijsten in de editor
 
 20 react - edit popups
 - corrigeren en afvoeren hebben heel weinig met elkaar te maken en staan gebroederlijk naast elkaar
@@ -840,6 +837,7 @@ Deregister U5 and register U6 for entity A:
 - meerdere canvassen, per domein één (of naar keuze)
 - afhankelijkheid kunnen instellen
 - overerving zelf kunnen tekenen
+- alignen
 - relatie-visualisatie:
   - met velden: associatieklasse
     - probleem: de lijnen tussen A en REL en REL en B zijn geen relaties, maar alleen maar de link tussen A en REL en REL en B
@@ -849,7 +847,15 @@ Deregister U5 and register U6 for entity A:
   - zonder: alleen een lijn met een label "relatie"
   - labels bij rollen verplaatsbaar (hoe in V3 en metareg?)
 
-32 Overerving verder uitwerken!
+32 Generator
+- optie om project leeg te halen voor het genereren.
+  - optie database drop tables of migreer
+  - oppassen met reflijst plumbing in generiek!
+
+33 Dabase migratie / backup naar json
+- dat dus
+
+34 Overerving verder uitwerken!
 - basically een extra FK:
   - van een ENT naar een ENT of
   - van een GE naar een GE

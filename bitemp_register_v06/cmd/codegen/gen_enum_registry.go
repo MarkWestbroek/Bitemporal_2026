@@ -52,6 +52,9 @@ func writeEnumRegistryEntries(b *strings.Builder, enums []model.V3Enum) {
 			waarden[i] = fmt.Sprintf("%q", w.Waarde)
 		}
 		b.WriteString(fmt.Sprintf("\tEnumWaarden[%q] = []string{%s}\n", enum.GoType, strings.Join(waarden, ", ")))
+		if strings.TrimSpace(enum.Domein) != "" {
+			b.WriteString(fmt.Sprintf("\tEnumDomeinen[%q] = %q\n", enum.GoType, enum.Domein))
+		}
 	}
 
 	// Editor-posities (alleen als er posities zijn)

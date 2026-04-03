@@ -43,18 +43,30 @@ func getDevloopPassword() string {
 	return pw
 }
 
+// RebuildDomeinSpec beschrijft één domein + prefix + mode combinatie voor multi-domein codegen.
+type RebuildDomeinSpec struct {
+	Domein string `json:"domein"`
+	Prefix string `json:"prefix"`
+	Mode   string `json:"mode"` // "additive" of "standalone"; default "additive"
+}
+
 // RebuildRequest beschrijft de request body voor de rebuild endpoint.
 type RebuildRequest struct {
 	// Domein is het domein waarvoor code wordt gegenereerd (bijv. "register", "np-loc").
-	// Als leeg, wordt "register" gebruikt.
+	// Als leeg, wordt "register" gebruikt. Genegeerd als Domeinen is gevuld.
 	Domein string `json:"domein"`
 
 	// Prefix is de bestandsnaamprefix voor de gegenereerde bestanden.
-	// Als leeg, wordt het domein (met - → _) als prefix gebruikt.
+	// Als leeg, wordt het domein (met - → _) als prefix gebruikt. Genegeerd als Domeinen is gevuld.
 	Prefix string `json:"prefix"`
 
 	// Mode is de codegen modus: "additive" (default) of "standalone".
+	// Genegeerd als Domeinen is gevuld.
 	Mode string `json:"mode"`
+
+	// Domeinen bevat meerdere domein/prefix/mode combinaties voor multi-domein codegen.
+	// Als gevuld, worden Domein/Prefix/Mode genegeerd en wordt er per entry een codegen-run gedaan.
+	Domeinen []RebuildDomeinSpec `json:"domeinen,omitempty"`
 
 	// SchemaBron bepaalt waar het model vandaan moet komen als `model` niet is meegegeven.
 	// Ondersteunde waarden: "code" (default), "actief", "latest_proposed".
@@ -184,6 +196,66 @@ func herstelModelDirectoryVanuitBaseline(appDir string) (string, error) {
 	return fmt.Sprintf("Modeldirectory hersteld vanuit baseline %s", baselineDir), nil
 }
 
+// backupModelDirectory maakt een tijdelijke kopie van model/ naar _pre_rebuild/model/.
+// Deze wordt bij een fout in codegen of build teruggeplaatst.
+func backupModelDirectory(appDir string) (string, error) {
+	modelDir := filepath.Join(appDir, "model")
+	backupDir := filepath.Join(appDir, "_pre_rebuild", "model")
+
+	// Oude pre-rebuild opruimen
+	if err := os.RemoveAll(filepath.Join(appDir, "_pre_rebuild")); err != nil {
+		return "", fmt.Errorf("kan oude pre-rebuild backup niet opruimen: %w", err)
+	}
+
+	if err := os.MkdirAll(filepath.Dir(backupDir), 0750); err != nil {
+		return "", fmt.Errorf("kan pre-rebuild directory niet aanmaken: %w", err)
+	}
+
+	if err := copyDir(modelDir, backupDir); err != nil {
+		return "", fmt.Errorf("kan model niet kopiëren naar pre-rebuild backup: %w", err)
+	}
+
+	return fmt.Sprintf("Pre-rebuild backup aangemaakt in %s", backupDir), nil
+}
+
+// rollbackModelDirectory herstelt model/ vanuit _pre_rebuild/model/ na een mislukte codegen of build.
+func rollbackModelDirectory(appDir string) (string, error) {
+	backupDir := filepath.Join(appDir, "_pre_rebuild", "model")
+	modelDir := filepath.Join(appDir, "model")
+
+	info, err := os.Stat(backupDir)
+	if err != nil || !info.IsDir() {
+		return "Geen pre-rebuild backup gevonden; model niet hersteld", nil
+	}
+
+	if err := os.RemoveAll(modelDir); err != nil {
+		return "", fmt.Errorf("kan modeldirectory niet leegmaken bij rollback: %w", err)
+	}
+	if err := copyDir(backupDir, modelDir); err != nil {
+		return "", fmt.Errorf("kan model niet herstellen vanuit pre-rebuild backup: %w", err)
+	}
+
+	return "Model hersteld vanuit pre-rebuild backup (rollback)", nil
+}
+
+// updateBaseline overschrijft _baseline/model/ met de huidige (succesvol gebouwde) model/.
+func updateBaseline(appDir string) (string, error) {
+	modelDir := filepath.Join(appDir, "model")
+	baselineDir := filepath.Join(appDir, "_baseline", "model")
+
+	if err := os.RemoveAll(baselineDir); err != nil {
+		return "", fmt.Errorf("kan oude baseline niet verwijderen: %w", err)
+	}
+	if err := os.MkdirAll(filepath.Dir(baselineDir), 0750); err != nil {
+		return "", fmt.Errorf("kan baseline directory niet aanmaken: %w", err)
+	}
+	if err := copyDir(modelDir, baselineDir); err != nil {
+		return "", fmt.Errorf("kan baseline niet bijwerken: %w", err)
+	}
+
+	return "Baseline bijgewerkt met succesvol gebouwde model", nil
+}
+
 func bepaalDomeinEnPrefixUitModelJSON(modelBytes []byte, fallbackDomein string, fallbackPrefix string) (string, string, string) {
 	fallbackDomein = strings.TrimSpace(fallbackDomein)
 	fallbackPrefix = strings.TrimSpace(fallbackPrefix)
@@ -279,7 +351,20 @@ func MaakRebuildHandler() gin.HandlerFunc {
 		stappen := []string{}
 		appDir := "/app"
 
+		// Stap 0a: Herstel model/ vanuit baseline (schone basis voor codegen).
 		if melding, err := herstelModelDirectoryVanuitBaseline(appDir); err != nil {
+			c.JSON(http.StatusInternalServerError, RebuildResponse{
+				Status:  "fout",
+				Stappen: stappen,
+				Error:   err.Error(),
+			})
+			return
+		} else if melding != "" {
+			stappen = append(stappen, melding)
+		}
+
+		// Stap 0b: Maak backup van model/ vóór codegen (voor rollback bij fout).
+		if melding, err := backupModelDirectory(appDir); err != nil {
 			c.JSON(http.StatusInternalServerError, RebuildResponse{
 				Status:  "fout",
 				Stappen: stappen,
@@ -357,9 +442,12 @@ func MaakRebuildHandler() gin.HandlerFunc {
 			modelBytes = output
 		}
 
-		var melding string
-		req.Domein, req.Prefix, melding = bepaalDomeinEnPrefixUitModelJSON(modelBytes, req.Domein, req.Prefix)
-		stappen = append(stappen, melding)
+		// Bepaal domein/prefix uit model JSON als we in single-domein modus zitten.
+		if len(req.Domeinen) == 0 {
+			var melding string
+			req.Domein, req.Prefix, melding = bepaalDomeinEnPrefixUitModelJSON(modelBytes, req.Domein, req.Prefix)
+			stappen = append(stappen, melding)
+		}
 
 		if err := os.WriteFile(modelPath, modelBytes, 0644); err != nil {
 			c.JSON(http.StatusInternalServerError, RebuildResponse{
@@ -371,35 +459,66 @@ func MaakRebuildHandler() gin.HandlerFunc {
 		}
 		stappen = append(stappen, fmt.Sprintf("Model opgeslagen als %s", modelPath))
 
-		// Stap 2: Codegen uitvoeren
-		codegenArgs := []string{
-			"--input", modelPath,
-			"--mode", req.Mode,
-			"--domein", req.Domein,
-			"--prefix", req.Prefix,
-			"--output", filepath.Join(appDir, "model"),
+		// Stap 2: Codegen uitvoeren — multi-domein of single-domein.
+		//
+		// Als req.Domeinen is gevuld, voeren we per entry een codegen-run uit.
+		// Anders gebruiken we de legacy-single-domein-velden (Domein/Prefix/Mode).
+		domeinRuns := req.Domeinen
+		if len(domeinRuns) == 0 {
+			domeinRuns = []RebuildDomeinSpec{{
+				Domein: req.Domein,
+				Prefix: req.Prefix,
+				Mode:   req.Mode,
+			}}
 		}
 
-		var codegenCmd *exec.Cmd
-		if _, err := os.Stat(filepath.Join(appDir, "bin", "codegen")); err == nil {
-			stappen = append(stappen, fmt.Sprintf("Codegen via prebuilt /app/bin/codegen %s", strings.Join(codegenArgs, " ")))
-			codegenCmd = exec.Command(filepath.Join(appDir, "bin", "codegen"), codegenArgs...)
-		} else {
-			fallbackArgs := append([]string{"run", "./cmd/codegen"}, codegenArgs...)
-			stappen = append(stappen, fmt.Sprintf("Codegen via go %s", strings.Join(fallbackArgs, " ")))
-			codegenCmd = exec.Command("go", fallbackArgs...)
+		stappen = append(stappen, fmt.Sprintf("Codegen voor %d domein(en)", len(domeinRuns)))
+
+		for i, run := range domeinRuns {
+			runMode := run.Mode
+			if runMode == "" {
+				runMode = "additive"
+			}
+			runPrefix := run.Prefix
+			if runPrefix == "" {
+				runPrefix = strings.ReplaceAll(run.Domein, "-", "_")
+			}
+
+			codegenArgs := []string{
+				"--input", modelPath,
+				"--mode", runMode,
+				"--domein", run.Domein,
+				"--prefix", runPrefix,
+				"--output", filepath.Join(appDir, "model"),
+			}
+
+			var codegenCmd *exec.Cmd
+			if _, err := os.Stat(filepath.Join(appDir, "bin", "codegen")); err == nil {
+				stappen = append(stappen, fmt.Sprintf("[%d/%d] Codegen %s (domein=%s, prefix=%s, mode=%s)", i+1, len(domeinRuns), "/app/bin/codegen", run.Domein, runPrefix, runMode))
+				codegenCmd = exec.Command(filepath.Join(appDir, "bin", "codegen"), codegenArgs...)
+			} else {
+				fallbackArgs := append([]string{"run", "./cmd/codegen"}, codegenArgs...)
+				stappen = append(stappen, fmt.Sprintf("[%d/%d] Codegen go run ./cmd/codegen (domein=%s, prefix=%s, mode=%s)", i+1, len(domeinRuns), run.Domein, runPrefix, runMode))
+				codegenCmd = exec.Command("go", fallbackArgs...)
+			}
+			codegenCmd.Dir = appDir
+			codegenOutput, err := codegenCmd.CombinedOutput()
+			if err != nil {
+				// Codegen mislukt: rollback model/ naar pre-rebuild backup.
+				if rbMsg, rbErr := rollbackModelDirectory(appDir); rbErr != nil {
+					stappen = append(stappen, fmt.Sprintf("ROLLBACK MISLUKT: %v", rbErr))
+				} else {
+					stappen = append(stappen, rbMsg)
+				}
+				c.JSON(http.StatusInternalServerError, RebuildResponse{
+					Status:  "fout",
+					Stappen: stappen,
+					Error:   fmt.Sprintf("codegen [%d/%d] mislukt (domein=%s): %v\nOutput: %s", i+1, len(domeinRuns), run.Domein, err, string(codegenOutput)),
+				})
+				return
+			}
+			stappen = append(stappen, fmt.Sprintf("[%d/%d] Codegen domein=%s succesvol", i+1, len(domeinRuns), run.Domein))
 		}
-		codegenCmd.Dir = appDir
-		codegenOutput, err := codegenCmd.CombinedOutput()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, RebuildResponse{
-				Status:  "fout",
-				Stappen: stappen,
-				Error:   fmt.Sprintf("codegen mislukt: %v\nOutput: %s", err, string(codegenOutput)),
-			})
-			return
-		}
-		stappen = append(stappen, "Codegen succesvol")
 
 		// Stap 3: Go build
 		stappen = append(stappen, "Binary hercompileren...")
@@ -408,15 +527,29 @@ func MaakRebuildHandler() gin.HandlerFunc {
 		buildCmd.Env = append(os.Environ(), "CGO_ENABLED=0")
 		buildOutput, err := buildCmd.CombinedOutput()
 		if err != nil {
+			// Build mislukt: rollback model/ naar pre-rebuild backup.
+			stappen = append(stappen, fmt.Sprintf("Build mislukt: %v", err))
+			if rbMsg, rbErr := rollbackModelDirectory(appDir); rbErr != nil {
+				stappen = append(stappen, fmt.Sprintf("ROLLBACK MISLUKT: %v", rbErr))
+			} else {
+				stappen = append(stappen, rbMsg)
+			}
 			c.JSON(http.StatusInternalServerError, RebuildResponse{
 				Status:      "fout",
 				Stappen:     stappen,
 				BuildOutput: string(buildOutput),
-				Error:       fmt.Sprintf("build mislukt: %v", err),
+				Error:       fmt.Sprintf("build mislukt: %v — model is teruggedraaid naar pre-rebuild toestand", err),
 			})
 			return
 		}
 		stappen = append(stappen, "Build succesvol")
+
+		// Stap 3b: Baseline bijwerken met succesvol gebouwde model/
+		if melding, err := updateBaseline(appDir); err != nil {
+			stappen = append(stappen, fmt.Sprintf("Waarschuwing: baseline bijwerken mislukt: %v", err))
+		} else {
+			stappen = append(stappen, melding)
+		}
 
 		// Stap 4: Opruimen
 		os.Remove(modelPath)

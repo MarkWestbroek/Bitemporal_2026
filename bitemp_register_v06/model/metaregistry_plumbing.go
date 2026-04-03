@@ -296,6 +296,10 @@ func (m TypeMeta) RelationNames() []string {
 // (bijv. door codegen gegenereerd).
 var EnumWaarden = map[string][]string{}
 
+// EnumDomeinen bewaart per enum-type in welk domein het concept thuishoort.
+// `register` is het basisdomein; modelspecifieke enums kunnen bijv. `np-loc` krijgen.
+var EnumDomeinen = map[string]string{}
+
 // VoegOnderliggendGEToe voegt een OnderliggendGegevenselement toe aan een reeds
 // geregistreerde TypeMeta. Hiermee kan domein-specifieke code (bijv. np-loc)
 // een kind-relatie toevoegen aan een register-scope entiteit (bijv. Referentielijst).
@@ -314,6 +318,7 @@ func init() {
 	initRegisterMetaRegistry()
 	initRegisterDatatypeRegistry()
 	initRegisterEnumRegistry()
+	initNpLocEnumRegistry()
 	initNpLocMetaRegistry()
 
 	// Propageer domein van entiteiten naar hun onderliggende GE's, relaties en plumbing-types.

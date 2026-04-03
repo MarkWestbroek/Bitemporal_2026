@@ -561,6 +561,7 @@ func buildV3Enum(goTypeName string) *V3Enum {
 		return &V3Enum{
 			GoType:   "RelABSoort",
 			BaseType: "string",
+			Domein:   EnumDomeinen["RelABSoort"],
 			Waarden: []V3EnumWaarde{
 				{ConstNaam: "RelABSoortLTT", Waarde: "LTT"},
 				{ConstNaam: "RelABSoortLAT", Waarde: "LAT"},
@@ -571,6 +572,7 @@ func buildV3Enum(goTypeName string) *V3Enum {
 		return &V3Enum{
 			GoType:   "ABCEnum",
 			BaseType: "string",
+			Domein:   EnumDomeinen["ABCEnum"],
 			Waarden: []V3EnumWaarde{
 				{ConstNaam: "OptieA", Waarde: "Optie A"},
 				{ConstNaam: "OptieB", Waarde: "Optie B"},
@@ -586,6 +588,7 @@ func buildV3Enum(goTypeName string) *V3Enum {
 	enum := &V3Enum{
 		GoType:   goTypeName,
 		BaseType: "string",
+		Domein:   EnumDomeinen[goTypeName],
 	}
 	for _, w := range waarden {
 		// Strip tekens die ongeldig zijn in Go-identifiers (bijv. koppeltekens)

@@ -3,6 +3,23 @@ export default function ActionDialog({ dialog, onChange, onClose, onSubmit }) {
 
   const { type, title, submitLabel, values = {} } = dialog;
 
+  // Toggle een domein aan/uit in de beschikbareDomeinen lijst.
+  const toggleDomein = (domeinNaam) => {
+    const huidige = values.beschikbareDomeinen || [];
+    const bijgewerkt = huidige.map((d) =>
+      d.naam === domeinNaam ? { ...d, geselecteerd: !d.geselecteerd } : d
+    );
+    onChange("beschikbareDomeinen", bijgewerkt);
+  };
+
+  // Selecteer alle / geen domeinen.
+  const selecteerAlles = (waarde) => {
+    const huidige = values.beschikbareDomeinen || [];
+    onChange("beschikbareDomeinen", huidige.map((d) => ({ ...d, geselecteerd: waarde })));
+  };
+
+  const heeftDomeinen = Array.isArray(values.beschikbareDomeinen) && values.beschikbareDomeinen.length > 0;
+
   return (
     <div className="editor-dialog-backdrop" onClick={onClose}>
       <div className="editor-dialog" onClick={(e) => e.stopPropagation()}>
@@ -38,8 +55,8 @@ export default function ActionDialog({ dialog, onChange, onClose, onSubmit }) {
           {(type === "publish" || type === "publishAndRebuild") && (
             <>
               <div className="editor-dialog-note">
-                <strong>Tip:</strong> de <em>modelnaam</em> is alleen een label. Voor codegeneratie bepaalt vooral het gekozen
-                <code> domein </code> en <code> prefix </code> waar de bestanden terechtkomen.
+                <strong>Tip:</strong> de <em>modelnaam</em> is alleen een label. Het volledige model (alle domeinen)
+                wordt gepubliceerd. Bij rebuild kun je kiezen welke domeinen gegenereerd worden.
               </div>
 
               <div className="editor-dialog-grid">
@@ -83,26 +100,6 @@ export default function ActionDialog({ dialog, onChange, onClose, onSubmit }) {
                     placeholder="http://localhost:8182"
                   />
                 </label>
-
-                <label className="editor-dialog-field">
-                  <span>Domein</span>
-                  <input
-                    type="text"
-                    value={values.domein || ""}
-                    onChange={(e) => onChange("domein", e.target.value)}
-                    placeholder="bijv. np-loc"
-                  />
-                </label>
-
-                <label className="editor-dialog-field">
-                  <span>Prefix</span>
-                  <input
-                    type="text"
-                    value={values.prefix || ""}
-                    onChange={(e) => onChange("prefix", e.target.value)}
-                    placeholder="bijv. np_loc"
-                  />
-                </label>
               </div>
 
               <label className="editor-dialog-field full-width">
@@ -120,8 +117,8 @@ export default function ActionDialog({ dialog, onChange, onClose, onSubmit }) {
           {(type === "rebuild" || type === "publishAndRebuild") && (
             <>
               <div className="editor-dialog-note">
-                <strong>Let op:</strong> `modelnaam` bepaalt niet het codegen-domein. Gebruik voor NP/Locatie bijvoorbeeld
-                <code> domein = np-loc </code> en <code> prefix = np_loc </code>.
+                <strong>Domein-selectie:</strong> vink aan welke domeinen gegenereerd moeten worden.
+                Elk domein wordt apart door de codegen geleid met het juiste prefix en mode.
               </div>
 
               <div className="editor-dialog-grid">
@@ -151,26 +148,6 @@ export default function ActionDialog({ dialog, onChange, onClose, onSubmit }) {
                 )}
 
                 <label className="editor-dialog-field">
-                  <span>Domein</span>
-                  <input
-                    type="text"
-                    value={values.domein || ""}
-                    onChange={(e) => onChange("domein", e.target.value)}
-                    placeholder="bijv. np-loc"
-                  />
-                </label>
-
-                <label className="editor-dialog-field">
-                  <span>Prefix</span>
-                  <input
-                    type="text"
-                    value={values.prefix || ""}
-                    onChange={(e) => onChange("prefix", e.target.value)}
-                    placeholder="bijv. np_loc"
-                  />
-                </label>
-
-                <label className="editor-dialog-field">
                   <span>Devloop API basis</span>
                   <input
                     type="text"
@@ -190,6 +167,37 @@ export default function ActionDialog({ dialog, onChange, onClose, onSubmit }) {
                   />
                 </label>
               </div>
+
+              {heeftDomeinen && (
+                <div className="editor-dialog-field full-width">
+                  <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    Domeinen voor codegen
+                    <button
+                      type="button"
+                      style={{ fontSize: "0.75em", padding: "1px 6px", cursor: "pointer" }}
+                      onClick={() => selecteerAlles(true)}
+                    >alles</button>
+                    <button
+                      type="button"
+                      style={{ fontSize: "0.75em", padding: "1px 6px", cursor: "pointer" }}
+                      onClick={() => selecteerAlles(false)}
+                    >geen</button>
+                  </span>
+                  <div className="editor-dialog-domein-lijst">
+                    {values.beschikbareDomeinen.map((d) => (
+                      <label key={d.naam} className="editor-dialog-domein-checkbox" title={`mode=${d.mode}, prefix=${d.prefix}`}>
+                        <input
+                          type="checkbox"
+                          checked={!!d.geselecteerd}
+                          onChange={() => toggleDomein(d.naam)}
+                        />
+                        <span className="domein-naam">{d.naam}</span>
+                        <span className="domein-meta">prefix={d.prefix}, {d.mode}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
             </>
           )}
 

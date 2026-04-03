@@ -7,13 +7,10 @@ package model
 func init() {
 	// v05 enums
 	EnumWaarden["RelABSoort"] = []string{"LTT", "LAT", "LTA"}
+	EnumDomeinen["RelABSoort"] = "abuvwxy"
 	EnumWaarden["ABCEnum"] = []string{"Optie A", "Optie B", "Optie C"}
-
-	// v06 codegen enums
-	EnumWaarden["Bereikbaarheidssoort"] = []string{"Woonadres", "Briefadres", "Correspondentieadres"}
-	EnumWaarden["Naamgebruiksoort"] = []string{"EigenNaam", "PartnerNaam", "EigenNaam-PartnerNaam", "PartnerNaam-EigenNaam"}
+	EnumDomeinen["ABCEnum"] = "abuvwxy"
 
 	// Enum editor-posities
-	EnumEditorLayouts["Bereikbaarheidssoort"] = &EditorLayout{Positie: &V3Positie{X: 330, Y: 60}}
-	EnumEditorLayouts["Naamgebruiksoort"] = &EditorLayout{Positie: &V3Positie{X: 285, Y: 405}}
+
 }

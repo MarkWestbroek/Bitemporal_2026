@@ -130,6 +130,59 @@ function berekenKortsteHandles(srcNode, tgtNode) {
   return best;
 }
 
+function bepaalEffectiefDomeinPerNode(nodes, edges) {
+  const nodeById = new Map(nodes.map((n) => [n.id, n]));
+  const cache = new Map();
+
+  function resolve(nodeId, visiting = new Set()) {
+    if (cache.has(nodeId)) return cache.get(nodeId) || "";
+    if (visiting.has(nodeId)) return "";
+    visiting.add(nodeId);
+
+    const node = nodeById.get(nodeId);
+    let domein = node?.data?.domein || "";
+
+    if (!domein) {
+      const inkomendeEdges = edges.filter(
+        (e) => e?.type === "metamodel" && !e?.data?.isDependency && e.target === nodeId
+      );
+      for (const edge of inkomendeEdges) {
+        const bronNode = nodeById.get(edge.source);
+        const bronType = bronNode?.type || "";
+        if (bronType === "entiteit" || bronType === "referentielijstInstantie") {
+          domein = resolve(edge.source, visiting);
+          if (domein) break;
+        }
+      }
+    }
+
+    visiting.delete(nodeId);
+    cache.set(nodeId, domein || "");
+    return domein || "";
+  }
+
+  for (const node of nodes) {
+    resolve(node.id);
+  }
+  return cache;
+}
+
+function vulOntbrekendeDomeinenOpNodes(nodes, edges) {
+  const effectiefPerNode = bepaalEffectiefDomeinPerNode(nodes, edges);
+  return nodes.map((node) => {
+    const bestaand = node?.data?.domein || "";
+    const effectief = bestaand || effectiefPerNode.get(node.id) || "";
+    if (effectief === bestaand) return node;
+    return {
+      ...node,
+      data: {
+        ...node.data,
+        domein: effectief,
+      },
+    };
+  });
+}
+
 export default function MetamodelEditor({ initialNodes = [], initialEdges = [], onV3ModelLoaded = null, modelNaam = "", modelBron = "", modelOpmerking = "" }) {
   /**
    * useNodesState en useEdgesState zijn React Flow hooks:
@@ -140,7 +193,9 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
    * React Flow stuurt "changes" (position change, selection change, remove) naar
    * deze handlers, die de state automatisch bijwerken.
    */
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [nodes, setNodes, onNodesChange] = useNodesState(
+    vulOntbrekendeDomeinenOpNodes(initialNodes, initialEdges)
+  );
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   // Track welke node of edge geselecteerd is voor het edit panel
@@ -161,15 +216,19 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   const enumNodes = useMemo(() => nodes.filter((n) => n.type === "enumeratie"), [nodes]);
   const entiteitNodes = useMemo(() => nodes.filter((n) => n.type === "entiteit"), [nodes]);
 
+  const effectiefDomeinPerNode = useMemo(() => {
+    return bepaalEffectiefDomeinPerNode(nodes, edges);
+  }, [nodes, edges]);
+
   // Verzamel unieke domeinen uit alle nodes voor de domein-selector
   const beschikbareDomeinen = useMemo(() => {
     const set = new Set();
     for (const n of nodes) {
-      const d = n.data?.domein;
+      const d = effectiefDomeinPerNode.get(n.id) || n.data?.domein || "";
       if (d) set.add(d);
     }
     return [...set].sort();
-  }, [nodes]);
+  }, [nodes, effectiefDomeinPerNode]);
 
   // Selecteer alle nodes van het actieve domein (maakt ze verplaatsbaar als groep)
   const handleSelecteerDomein = useCallback(() => {
@@ -177,10 +236,17 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     setNodes((nds) =>
       nds.map((n) => ({
         ...n,
-        selected: (n.data?.domein || "") === actiefDomein,
+        selected: (effectiefDomeinPerNode.get(n.id) || n.data?.domein || "") === actiefDomein,
       }))
     );
-  }, [actiefDomein, setNodes]);
+  }, [actiefDomein, setNodes, effectiefDomeinPerNode]);
+
+  const applyLoadedGraph = useCallback((result) => {
+    const nextEdges = result?.edges || [];
+    const nextNodes = vulOntbrekendeDomeinenOpNodes(result?.nodes || [], nextEdges);
+    setNodes(nextNodes);
+    setEdges(nextEdges);
+  }, [setNodes, setEdges]);
 
   const swapConnectionDirection = useCallback((connection) => {
     return {
@@ -675,33 +741,56 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     return basis.toLowerCase().endsWith(".json") ? basis : `${basis}.json`;
   }, []);
 
-  const pasGekozenDomeinToeAanModel = useCallback((v3Model, gekozenDomein) => {
-    const domein = (gekozenDomein || "").trim();
-    if (!domein) return v3Model;
+  // Bouw een lijst van beschikbare domeinen met hun prefix en mode.
+  // Gecombineerd uit: domeinen in het huidige model + optioneel opgehaald van de DB API.
+  const bouwBeschikbareDomeinen = useCallback(async (v3Model, apiBase) => {
+    // Stap 1: Verzamel unieke domeinen uit het V3 model.
+    const domeinenUitModel = new Set();
+    for (const ent of v3Model?.entiteiten || []) {
+      if (ent?.domein) domeinenUitModel.add(ent.domein);
+    }
+    for (const dt of v3Model?.datatypes || []) {
+      if (dt?.domein) domeinenUitModel.add(dt.domein);
+    }
+    for (const en of v3Model?.enums || []) {
+      if (en?.domein) domeinenUitModel.add(en.domein);
+    }
 
-    const applyDomeinOpGE = (ge) => ({ ...ge, domein: ge?.domein || domein });
-    const applyDomeinOpRel = (rel) => ({ ...rel, domein: rel?.domein || domein });
+    // Stap 2: Probeer ook domeinen uit de API op te halen (DB).
+    const domeinenUitDB = new Set();
+    try {
+      const resp = await fetch(new URL("/api/schema/domeinen", apiBase).toString());
+      if (resp.ok) {
+        const data = await resp.json();
+        for (const d of data?.domeinen || []) {
+          if (d?.naam) {
+            domeinenUitDB.add(d.naam);
+            domeinenUitModel.add(d.naam);
+          }
+        }
+      }
+    } catch {
+      // Niet beschikbaar — geen probleem, we gebruiken wat we uit het model weten.
+    }
 
-    return {
-      ...v3Model,
-      entiteiten: (v3Model?.entiteiten || []).map((entiteit) => ({
-        ...entiteit,
-        domein: entiteit?.domein || domein,
-        gegevenselementen: (entiteit?.gegevenselementen || []).map(applyDomeinOpGE),
-        relaties: (entiteit?.relaties || []).map(applyDomeinOpRel),
-      })),
-      datatypes: (v3Model?.datatypes || []).map((datatype) => ({
-        ...datatype,
-        domein: datatype?.domein || domein,
-      })),
-      enums: (v3Model?.enums || []).map((enumeratie) => ({
-        ...enumeratie,
-        domein: enumeratie?.domein || domein,
-      })),
-    };
+    // Stap 3: Sorteer: "register" eerst (basisfundament), dan rest alfabetisch.
+    const gesorteerd = [...domeinenUitModel].sort((a, b) => {
+      if (a === "register") return -1;
+      if (b === "register") return 1;
+      return a.localeCompare(b);
+    });
+
+    // Stap 4: Bouw de lijst met standaard prefix en mode.
+    // Domeinen uit het model zijn standaard aangevinkt, puur-DB-domeinen niet.
+    return gesorteerd.map((naam) => ({
+      naam,
+      prefix: naam.replace(/-/g, "_"),
+      mode: "additive",
+      geselecteerd: true, // standaard allemaal aan
+    }));
   }, []);
 
-  const openActieDialoog = useCallback((type) => {
+  const openActieDialoog = useCallback(async (type) => {
     const v3Model = editorNaarV3Model(nodes, edges);
     const { domein, prefix } = bepaalStandaardDomeinEnPrefix(v3Model);
     const apiBase = getDefaultApiBase();
@@ -729,12 +818,13 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
           indiener: "uml-editor-v2",
           opmerking: "",
           apiBase,
-          domein,
-          prefix,
         },
       });
       return;
     }
+
+    // Voor rebuild en publishAndRebuild: bouw domeinlijst op.
+    const beschikbareDomeinen = await bouwBeschikbareDomeinen(v3Model, apiBase);
 
     if (type === "publishAndRebuild") {
       setActieDialoog({
@@ -749,8 +839,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
           apiBase,
           wachtwoord: "1234",
           schemaVersieID: laatstGepubliceerdSchemaID ? String(laatstGepubliceerdSchemaID) : "",
-          domein,
-          prefix,
+          beschikbareDomeinen,
         },
       });
       return;
@@ -763,13 +852,12 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       values: {
         bron: laatstGepubliceerdSchemaID ? "id" : "editor",
         schemaVersieID: laatstGepubliceerdSchemaID ? String(laatstGepubliceerdSchemaID) : "",
-        domein,
-        prefix,
         apiBase,
         wachtwoord: "1234",
+        beschikbareDomeinen,
       },
     });
-  }, [bepaalStandaardDomeinEnPrefix, getDefaultApiBase, laatstGepubliceerdSchemaID, maakVoorstelBestandsnaam, nodes, edges]);
+  }, [bepaalStandaardDomeinEnPrefix, bouwBeschikbareDomeinen, getDefaultApiBase, laatstGepubliceerdSchemaID, maakVoorstelBestandsnaam, nodes, edges]);
 
   const sluitActieDialoog = useCallback(() => {
     setActieDialoog(null);
@@ -812,8 +900,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   }, [nodes, edges]);
 
   const publiceerSchemaModel = useCallback(async (values, { stilNaSucces = false } = {}) => {
-    const gekozenDomein = (values?.domein || "").trim();
-    const v3Model = pasGekozenDomeinToeAanModel(editorNaarV3Model(nodes, edges), gekozenDomein);
+    const v3Model = editorNaarV3Model(nodes, edges);
     const versie = (values?.versie || "").trim();
     const naam = (values?.naam || "").trim();
     const indiener = (values?.indiener || "").trim();
@@ -881,15 +968,11 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       alert(`Publiceren mislukt: ${err.message}`);
       return null;
     }
-  }, [getDefaultApiBase, nodes, edges, pasGekozenDomeinToeAanModel]);
+  }, [getDefaultApiBase, nodes, edges]);
 
-  const voerRebuildUit = useCallback(async ({ bron, schemaVersieID = null, modelOverride = null, domein = "", prefix = "", apiBase = "", wachtwoord = "1234" }) => {
+  const voerRebuildUit = useCallback(async ({ bron, schemaVersieID = null, modelOverride = null, beschikbareDomeinen = [], apiBase = "", wachtwoord = "1234" }) => {
     const rauwModel = modelOverride || editorNaarV3Model(nodes, edges);
-    const defaults = bepaalStandaardDomeinEnPrefix(rauwModel);
-    const modelVoorRebuild = pasGekozenDomeinToeAanModel(rauwModel, domein || defaults.domein);
     const effectieveBron = (bron || "editor").trim().toLowerCase();
-    const effectieveDomein = (domein || defaults.domein || "register").trim();
-    const effectievePrefix = (prefix || defaults.prefix || effectieveDomein.replace(/-/g, "_")).trim();
     const effectieveApiBase = (apiBase || getDefaultApiBase()).trim();
     const effectiefWachtwoord = (wachtwoord || "").trim();
 
@@ -898,15 +981,24 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       return false;
     }
 
+    // Bouw de multi-domein specificatie op uit de geselecteerde domeinen.
+    const geselecteerdeDomeinen = (beschikbareDomeinen || []).filter((d) => d.geselecteerd);
+    if (geselecteerdeDomeinen.length === 0) {
+      alert("Rebuild geannuleerd: selecteer minstens één domein.");
+      return false;
+    }
+
     const endpoint = new URL(`/admin/rebuild/${encodeURIComponent(effectiefWachtwoord)}`, effectieveApiBase);
     const payload = {
-      domein: effectieveDomein,
-      prefix: effectievePrefix,
-      mode: "additive",
+      domeinen: geselecteerdeDomeinen.map((d) => ({
+        domein: d.naam,
+        prefix: d.prefix,
+        mode: d.mode || "additive",
+      })),
     };
 
     if (effectieveBron === "editor") {
-      payload.model = modelVoorRebuild;
+      payload.model = rauwModel;
     } else if (effectieveBron === "id") {
       const gekozenSchemaVersieID = Number(schemaVersieID);
       if (!Number.isInteger(gekozenSchemaVersieID) || gekozenSchemaVersieID <= 0) {
@@ -945,9 +1037,10 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         throw new Error(message);
       }
 
+      const domeinNamen = geselecteerdeDomeinen.map((d) => d.naam).join(", ");
       const idTekst = Number.isInteger(Number(schemaVersieID)) && Number(schemaVersieID) > 0 ? ` (schema ID ${schemaVersieID})` : "";
       alert(
-        `Rebuild gestart via bron '${effectieveBron}'${idTekst} met domein '${effectieveDomein}' en prefix '${effectievePrefix}'. Bij een succesvolle build herstart de devloop-API automatisch.`
+        `Rebuild gestart via bron '${effectieveBron}'${idTekst} voor ${geselecteerdeDomeinen.length} domein(en): ${domeinNamen}. Bij een succesvolle build herstart de devloop-API automatisch.`
       );
       return true;
     } catch (err) {
@@ -955,7 +1048,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       alert(`Rebuild mislukt: ${err.message}`);
       return false;
     }
-  }, [bepaalStandaardDomeinEnPrefix, getDefaultApiBase, nodes, edges, pasGekozenDomeinToeAanModel]);
+  }, [getDefaultApiBase, nodes, edges]);
 
   const submitActieDialoog = useCallback(async () => {
     if (!actieDialoog) return;
@@ -979,8 +1072,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       const ok = await voerRebuildUit({
         bron: actieDialoog.values.bron,
         schemaVersieID: actieDialoog.values.schemaVersieID,
-        domein: actieDialoog.values.domein,
-        prefix: actieDialoog.values.prefix,
+        beschikbareDomeinen: actieDialoog.values.beschikbareDomeinen,
         apiBase: actieDialoog.values.apiBase,
         wachtwoord: actieDialoog.values.wachtwoord,
       });
@@ -998,8 +1090,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         bron: "id",
         schemaVersieID: result.schemaVersieID,
         modelOverride: result.v3Model,
-        domein: actieDialoog.values.domein,
-        prefix: actieDialoog.values.prefix,
+        beschikbareDomeinen: actieDialoog.values.beschikbareDomeinen,
         apiBase: actieDialoog.values.apiBase,
         wachtwoord: actieDialoog.values.wachtwoord,
       });
@@ -1027,8 +1118,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
           const payload = JSON.parse(evt.target.result);
 
           if (payload.flowState) {
-            setNodes(payload.flowState.nodes || []);
-            setEdges(payload.flowState.edges || []);
+            applyLoadedGraph(payload.flowState || {});
             return;
           }
 
@@ -1036,8 +1126,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
           const maybeV3 = payload?.model && payload.model.entiteiten ? payload.model : payload;
           if (maybeV3 && maybeV3.entiteiten) {
             const result = v3ModelNaarEditor(maybeV3);
-            setNodes(result.nodes || []);
-            setEdges(result.edges || []);
+            applyLoadedGraph(result);
             return;
           }
 
@@ -1050,13 +1139,13 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       reader.readAsText(file);
     };
     input.click();
-  }, [setNodes, setEdges]);
+  }, [applyLoadedGraph]);
 
   /** Laad vanuit model/schema-API van de backend (V3 model aanbevolen) */
   const handleLoadSchema = useCallback(() => {
-    const defaultUrl = `${getDefaultApiBase()}/api/schema/model`;
+    const defaultUrl = `${getDefaultApiBase()}/api/schema/model/code`;
     const url = prompt(
-      "Model-API URL (V3):",
+      "Model-API URL (V3, standaard = code):",
       defaultUrl
     );
     if (!url) return;
@@ -1070,8 +1159,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         const maybeV3 = data?.model && data.model.entiteiten ? data.model : data;
         if (maybeV3 && maybeV3.entiteiten) {
           const result = v3ModelNaarEditor(maybeV3);
-          setNodes(result.nodes || []);
-          setEdges(result.edges || []);
+          applyLoadedGraph(result);
           if (typeof onV3ModelLoaded === "function") {
             onV3ModelLoaded(data, url);
           }
@@ -1080,14 +1168,13 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
 
         // Fallback voor oudere schema-responses (legacy /schema of /api/viz/schema varianten).
         const { nodes: newNodes, edges: newEdges } = schemaResponseNaarEditor(data);
-        setNodes(newNodes);
-        setEdges(newEdges);
+        applyLoadedGraph({ nodes: newNodes, edges: newEdges });
       })
       .catch((err) => {
         console.error("Model/schema laden mislukt:", err);
         alert(`Kan model/schema niet laden: ${err.message}`);
       });
-  }, [getDefaultApiBase, setNodes, setEdges, onV3ModelLoaded]);
+  }, [getDefaultApiBase, applyLoadedGraph, onV3ModelLoaded]);
 
   // ── Export handlers ──────────────────────────────────────────
   const downloadFile = useCallback((content, filename, mimeType) => {
@@ -1136,39 +1223,36 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     if (!text) return;
     try {
       const result = importVanXMI(text);
-      setNodes(result.nodes || []);
-      setEdges(result.edges || []);
+      applyLoadedGraph(result);
     } catch (err) {
       console.error("XMI import mislukt:", err);
       alert(`XMI import mislukt: ${err.message}`);
     }
-  }, [leesBestandAlsTekst, setNodes, setEdges]);
+  }, [leesBestandAlsTekst, applyLoadedGraph]);
 
   const handleImportMermaid = useCallback(async () => {
     const text = await leesBestandAlsTekst(".mmd,.md,.txt");
     if (!text) return;
     try {
       const result = importVanMermaid(text);
-      setNodes(result.nodes || []);
-      setEdges(result.edges || []);
+      applyLoadedGraph(result);
     } catch (err) {
       console.error("Mermaid import mislukt:", err);
       alert(`Mermaid import mislukt: ${err.message}`);
     }
-  }, [leesBestandAlsTekst, setNodes, setEdges]);
+  }, [leesBestandAlsTekst, applyLoadedGraph]);
 
   const handleImportPlantUML = useCallback(async () => {
     const text = await leesBestandAlsTekst(".puml,.plantuml,.txt");
     if (!text) return;
     try {
       const result = importVanPlantUML(text);
-      setNodes(result.nodes || []);
-      setEdges(result.edges || []);
+      applyLoadedGraph(result);
     } catch (err) {
       console.error("PlantUML import mislukt:", err);
       alert(`PlantUML import mislukt: ${err.message}`);
     }
-  }, [leesBestandAlsTekst, setNodes, setEdges]);
+  }, [leesBestandAlsTekst, applyLoadedGraph]);
 
   /**
    * MiniMap nodeColor: kleurt de minimap-nodes op basis van het metatype.
@@ -1182,19 +1266,19 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   const visueleNodes = useMemo(() => {
     if (!actiefDomein) return nodes;
     return nodes.map((n) => {
-      const nodeDomein = n.data?.domein || "";
+      const nodeDomein = effectiefDomeinPerNode.get(n.id) || n.data?.domein || "";
       const isActief = nodeDomein === actiefDomein;
       return {
         ...n,
         className: isActief ? "" : "domein-inactief",
       };
     });
-  }, [nodes, actiefDomein]);
+  }, [nodes, actiefDomein, effectiefDomeinPerNode]);
 
   // Bereken bounding box van alle nodes in het actieve domein (voor de boundary-overlay)
   const domeinBoundary = useMemo(() => {
     if (!actiefDomein) return null;
-    const actieveNodes = nodes.filter((n) => (n.data?.domein || "") === actiefDomein);
+    const actieveNodes = nodes.filter((n) => (effectiefDomeinPerNode.get(n.id) || n.data?.domein || "") === actiefDomein);
     if (actieveNodes.length === 0) return null;
     const PADDING = 30;
     // Schat node-breedte en -hoogte (React Flow geeft geen measured size in state)
@@ -1217,7 +1301,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       width: maxX - minX + 2 * PADDING,
       height: maxY - minY + 2 * PADDING,
     };
-  }, [nodes, actiefDomein]);
+  }, [nodes, actiefDomein, effectiefDomeinPerNode]);
 
   return (
     <div className="editor-container">

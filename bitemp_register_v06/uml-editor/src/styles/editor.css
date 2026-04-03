@@ -328,6 +328,53 @@ body {
   padding-top: 4px;
 }
 
+/* === Domein checkbox lijst === */
+
+.editor-dialog-domein-lijst {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.editor-dialog-domein-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 3px 4px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.editor-dialog-domein-checkbox:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.editor-dialog-domein-checkbox input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+  cursor: pointer;
+}
+
+.editor-dialog-domein-checkbox .domein-naam {
+  font-weight: 600;
+  font-size: 0.9em;
+  color: #e2e8f0;
+}
+
+.editor-dialog-domein-checkbox .domein-meta {
+  font-size: 0.75em;
+  color: #94a3b8;
+  margin-left: auto;
+}
+
 @media (max-width: 900px) {
   .editor-dialog-grid {
     grid-template-columns: 1fr;

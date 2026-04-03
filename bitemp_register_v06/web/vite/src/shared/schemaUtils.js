@@ -2,6 +2,65 @@ export function safeArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
+export function normaliseerDomeinWaarde(value) {
+  return String(value ?? "").trim();
+}
+
+export function labelVoorDomein(value) {
+  const naam = normaliseerDomeinWaarde(value);
+  return naam || "(zonder domein)";
+}
+
+export function combineerDomeinOpties(apiDomeinen, schemaTypes) {
+  const gezien = new Set();
+  const result = [];
+
+  const voegToe = (naamRaw, beschrijvingRaw = "") => {
+    const naam = normaliseerDomeinWaarde(naamRaw);
+    const key = naam.toLowerCase() || "__zonder_domein__";
+    if (gezien.has(key)) {
+      return;
+    }
+    gezien.add(key);
+    result.push({
+      naam,
+      beschrijving: String(beschrijvingRaw || "").trim(),
+    });
+  };
+
+  safeArray(apiDomeinen).forEach((item) => {
+    if (item && typeof item === "object") {
+      voegToe(item.naam, item.beschrijving);
+      return;
+    }
+    voegToe(item, "");
+  });
+
+  safeArray(schemaTypes).forEach((item) => {
+    const naam = normaliseerDomeinWaarde(item?.domein);
+    const beschrijving = naam ? "Afgeleid uit schema" : "Types zonder gevuld domein";
+    voegToe(naam, beschrijving);
+  });
+
+  return result.sort((a, b) => {
+    const aLeeg = normaliseerDomeinWaarde(a?.naam) === "";
+    const bLeeg = normaliseerDomeinWaarde(b?.naam) === "";
+    if (aLeeg && !bLeeg) return 1;
+    if (!aLeeg && bLeeg) return -1;
+    return labelVoorDomein(a?.naam).localeCompare(labelVoorDomein(b?.naam), "nl", { sensitivity: "base" });
+  });
+}
+
+export function filterTypesOpDomeinen(types, geselecteerdeDomeinen) {
+  const selectie = safeArray(geselecteerdeDomeinen).map(normaliseerDomeinWaarde);
+  if (selectie.length === 0) {
+    return safeArray(types);
+  }
+
+  const allowed = new Set(selectie);
+  return safeArray(types).filter((item) => allowed.has(normaliseerDomeinWaarde(item?.domein)));
+}
+
 export function tUitRegistratieTijdstip(tijdstipRaw) {
   if (!tijdstipRaw) {
     return null;

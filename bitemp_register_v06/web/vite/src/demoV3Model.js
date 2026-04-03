@@ -15,6 +15,7 @@ export const demoV3Model = {
     {
       naam: "NLPostcode",
       description: "Nederlandse postcode (4 cijfers + 2 letters)",
+      domein: "register",
       basistype: "string",
       format: "nl-postcode",
       positie: { x: 585, y: 450 },
@@ -35,6 +36,7 @@ export const demoV3Model = {
     {
       naam: "BSN",
       description: "Burgerservicenummer (9 cijfers, 11-proef)",
+      domein: "register",
       basistype: "string",
       format: "bsn",
       positie: { x: -465, y: 90 },
@@ -63,6 +65,7 @@ export const demoV3Model = {
   enums: [
     {
       goType: "Bereikbaarheidssoort",
+      domein: "np-loc",
       baseType: "string",
       positie: { x: 330, y: 45 },
       waarden: [
@@ -73,6 +76,7 @@ export const demoV3Model = {
     },
     {
       goType: "Naamgebruiksoort",
+      domein: "np-loc",
       baseType: "string",
       positie: { x: 330, y: 375 },
       waarden: [

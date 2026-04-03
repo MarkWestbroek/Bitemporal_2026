@@ -4,6 +4,9 @@ import "../styles/index-schema.css";
 import { evalueerCelExpressie, bouwCelContext, evalueerWeergaveVeldenVoorItem } from "../shared/celEvaluator";
 import {
   safeArray,
+  combineerDomeinOpties,
+  filterTypesOpDomeinen,
+  normaliseerDomeinWaarde,
   tUitRegistratieTijdstip,
   microsecondeIntVanTijdstip,
   wijzigingKleur,
@@ -193,6 +196,15 @@ async function fetchVizSchema(baseUrl) {
   return await res.json();
 }
 
+async function fetchSchemaDomeinen(baseUrl) {
+  const res = await fetch(`${baseUrl}/api/schema/domeinen`);
+  if (!res.ok) {
+    throw new Error(`Domeinen HTTP ${res.status}: ${res.statusText}`);
+  }
+  const json = await res.json();
+  return safeArray(json?.domeinen);
+}
+
 async function fetchVizEntiteitMaxID(baseUrl, typeNaam) {
   const res = await fetch(`${baseUrl}/api/viz/entiteit/${encodeURIComponent(typeNaam)}/max-id`);
   if (!res.ok) {
@@ -215,6 +227,9 @@ export default function IndexSchemaPage() {
   const [selectedEntiteitId, setSelectedEntiteitId] = useState("");
   const [vizSchema, setVizSchema] = useState(null);
   const [schemaError, setSchemaError] = useState("");
+  const [beschikbareDomeinen, setBeschikbareDomeinen] = useState([]);
+  const [geselecteerdDomein, setGeselecteerdDomein] = useState("");
+  const [domeinenError, setDomeinenError] = useState("");
   const [geselecteerdeRep, setGeselecteerdeRep] = useState(null);
   const [entiteitActieOpen, setEntiteitActieOpen] = useState(false);
   const [nieuweEntiteitActieOpen, setNieuweEntiteitActieOpen] = useState(false);
@@ -270,9 +285,10 @@ export default function IndexSchemaPage() {
   const selectedRegistratieWijzigingen = safeArray(selectedRegistratie?.wijzigingen);
 
   const entiteitTypen = useMemo(() => {
-    const allTypes = safeArray(vizSchema?.types);
+    const domeinFilter = normaliseerDomeinWaarde(geselecteerdDomein);
+    const allTypes = filterTypesOpDomeinen(safeArray(vizSchema?.types), domeinFilter ? [domeinFilter] : []);
     return allTypes.filter((item) => String(item.metatype) === "entiteit");
-  }, [vizSchema]);
+  }, [vizSchema, geselecteerdDomein]);
 
   const typeMetaByTypenaam = useMemo(() => {
     const result = {};
@@ -288,6 +304,21 @@ export default function IndexSchemaPage() {
           () => entiteitTypen.find((item) => item.typenaam === entiteitType) || null,
           [entiteitTypen, entiteitType]
         );
+
+        useEffect(() => {
+          if (entiteitTypen.length === 0) {
+            if (entiteitType) {
+              setEntiteitType("");
+            }
+            setSelectedEntiteitId("");
+            return;
+          }
+
+          if (!entiteitTypen.some((item) => item.typenaam === entiteitType)) {
+            setEntiteitType(entiteitTypen[0].typenaam);
+            setSelectedEntiteitId("");
+          }
+        }, [entiteitTypen, entiteitType]);
 
         const as = safeArray(responseData?.[responseKey]);
         const selectedA = useMemo(() => as.find((item) => String(item.id) === String(selectedEntiteitId)) || null, [as, selectedEntiteitId]);
@@ -1053,18 +1084,36 @@ export default function IndexSchemaPage() {
 
           async function loadSchema() {
             setSchemaError('');
+            setDomeinenError('');
             try {
-              const schema = await fetchVizSchema(baseUrl);
+              const domeinPromise = fetchSchemaDomeinen(baseUrl)
+                .then((items) => ({ items, error: '' }))
+                .catch((err) => ({
+                  items: [],
+                  error: err instanceof Error ? err.message : String(err),
+                }));
+
+              const [schema, domeinResult] = await Promise.all([
+                fetchVizSchema(baseUrl),
+                domeinPromise,
+              ]);
+
               if (!cancelled) {
                 setVizSchema(schema);
-                const types = safeArray(schema?.types).filter((item) => String(item.metatype) === 'entiteit');
-                if (types.length > 0 && !types.some((item) => item.typenaam === entiteitType)) {
-                  setEntiteitType(types[0].typenaam);
-                }
+                setDomeinenError(domeinResult.error);
+                const opties = combineerDomeinOpties(domeinResult.items, schema?.types);
+                setBeschikbareDomeinen(opties);
+                setGeselecteerdDomein((vorige) => {
+                  const huidige = normaliseerDomeinWaarde(vorige);
+                  const geldigeNamen = new Set(opties.map((item) => normaliseerDomeinWaarde(item?.naam)));
+                  return geldigeNamen.has(huidige) ? huidige : "";
+                });
               }
             } catch (err) {
               if (!cancelled) {
                 setVizSchema(null);
+                setBeschikbareDomeinen([]);
+                setGeselecteerdDomein("");
                 setSchemaError(err instanceof Error ? err.message : String(err));
               }
             }
@@ -1984,6 +2033,10 @@ export default function IndexSchemaPage() {
             <SchemaIndexControls
               baseUrl={baseUrl}
               setBaseUrl={setBaseUrl}
+              beschikbareDomeinen={beschikbareDomeinen}
+              geselecteerdDomein={geselecteerdDomein}
+              setGeselecteerdDomein={setGeselecteerdDomein}
+              domeinenError={domeinenError}
               entiteitType={entiteitType}
               setEntiteitType={setEntiteitType}
               entiteitTypen={entiteitTypen}

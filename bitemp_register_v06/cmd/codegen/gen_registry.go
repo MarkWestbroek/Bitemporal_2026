@@ -76,14 +76,14 @@ func writeAllEntries(b *strings.Builder, v3 model.V3Model, opts codegenOptions) 
 			}
 			dHub := deriveHub(ent.Typenaam, hubType, "gegevenselement", ge.IsMaterieel, padnaam, "")
 			li := &layoutInfo{Positie: ge.Positie, EdgeID: ge.ID, SourceHandle: ge.SourceHandle, TargetHandle: ge.TargetHandle}
-			writeHubEntry(b, dHub, ge.Description, ent.Kleur, ge.Momentvoorkomen, ge.IsMaterieel, ge.Naam, ge.AfgeleideVelden, li)
+			writeHubEntry(b, dHub, ge.Description, ent.Kleur, ge.Momentvoorkomen, ge.IsMaterieel, ge.Naam, ge.AfgeleideVelden, opts.domein, li)
 		}
 
 		// ---- Relatie hubs ----
 		for _, rel := range ent.Relaties {
 			secIDKolom := strings.ToLower(rel.DoelEntiteit) + "_id"
 			dHub := deriveHub(ent.Typenaam, rel.Naam, "relatie", rel.IsMaterieel, rel.Meervoud, secIDKolom)
-			writeRelHubEntry(b, dHub, rel)
+			writeRelHubEntry(b, dHub, rel, opts.domein)
 		}
 
 		// ---- _Data types ----
@@ -189,13 +189,16 @@ func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType,
 }
 
 // writeHubEntry schrijft een MetaRegistry entry voor een GE hub.
-func writeHubEntry(b *strings.Builder, d DerivedType, desc string, kleur string, momentvoorkomenStr string, isMaterieel bool, geNaam string, afgeleideVelden []model.V3AfgeleidVeld, li *layoutInfo) {
+func writeHubEntry(b *strings.Builder, d DerivedType, desc string, kleur string, momentvoorkomenStr string, isMaterieel bool, geNaam string, afgeleideVelden []model.V3AfgeleidVeld, domein string, li *layoutInfo) {
 	b.WriteString(fmt.Sprintf("\t%q: {\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tTypenaam:     %q,\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tKlassenaam:   %q,\n", d.Klassenaam))
 	b.WriteString(fmt.Sprintf("\t\tDescription:  %q,\n", desc))
 	b.WriteString("\t\tMetatype:     MetatypeGegevenselement,\n")
 	b.WriteString(fmt.Sprintf("\t\tIsMaterieel:  %t,\n", isMaterieel))
+	if domein != "" {
+		b.WriteString(fmt.Sprintf("\t\tDomein: %q,\n", domein))
+	}
 	b.WriteString("\t\tGESubtype:    GESubtypeHub,\n")
 	b.WriteString(fmt.Sprintf("\t\tDataTypenaam: %q,\n", d.DataTypenaam))
 	b.WriteString(fmt.Sprintf("\t\tKleur:        %q,\n", kleur))
@@ -227,7 +230,7 @@ func writeHubEntry(b *strings.Builder, d DerivedType, desc string, kleur string,
 }
 
 // writeRelHubEntry schrijft een MetaRegistry entry voor een relatie hub.
-func writeRelHubEntry(b *strings.Builder, d DerivedType, rel model.V3Relatie) {
+func writeRelHubEntry(b *strings.Builder, d DerivedType, rel model.V3Relatie, domein string) {
 	b.WriteString(fmt.Sprintf("\t%q: {\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tTypenaam:     %q,\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tKlassenaam:   %q,\n", d.Klassenaam))
@@ -240,6 +243,9 @@ func writeRelHubEntry(b *strings.Builder, d DerivedType, rel model.V3Relatie) {
 		b.WriteString(fmt.Sprintf("\t\tReferentielijstInstantie: %q,\n", rel.ReferentielijstInstantie))
 	}
 	b.WriteString(fmt.Sprintf("\t\tIsMaterieel:  %t,\n", rel.IsMaterieel))
+	if domein != "" {
+		b.WriteString(fmt.Sprintf("\t\tDomein: %q,\n", domein))
+	}
 	b.WriteString("\t\tGESubtype:    GESubtypeHub,\n")
 	b.WriteString(fmt.Sprintf("\t\tDataTypenaam: %q,\n", d.DataTypenaam))
 	b.WriteString(fmt.Sprintf("\t\tKleur:        %q,\n", ""))

@@ -3,6 +3,9 @@ import "../shared/schema-viz.css";
 import "../styles/tijdlijn-schema.css";
 import {
   safeArray,
+  combineerDomeinOpties,
+  filterTypesOpDomeinen,
+  normaliseerDomeinWaarde,
   tUitRegistratieTijdstip,
   microsecondeIntVanTijdstip,
   wijzigingKleur,
@@ -30,6 +33,11 @@ function normInt(v, fallback = 0) {
         const res = await fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         return await res.json();
+      }
+
+      async function fetchSchemaDomeinen(baseUrl) {
+        const json = await fetchJson(`${baseUrl}/api/schema/domeinen`);
+        return safeArray(json?.domeinen);
       }
 
       function endpointSegmentForEntityType(typeName, entityTypes) {
@@ -211,6 +219,9 @@ function normInt(v, fallback = 0) {
         const [baseUrl, setBaseUrl] = useState(import.meta.env.VITE_API_BASE_URL || window.location.origin);
         const [schema, setSchema] = useState(null);
         const [schemaError, setSchemaError] = useState("");
+        const [beschikbareDomeinen, setBeschikbareDomeinen] = useState([]);
+        const [geselecteerdDomein, setGeselecteerdDomein] = useState("");
+        const [domeinenError, setDomeinenError] = useState("");
         const [entityType, setEntityType] = useState("A");
         const [entityId, setEntityId] = useState(1);
         const [loading, setLoading] = useState(false);
@@ -222,7 +233,11 @@ function normInt(v, fallback = 0) {
         const [overlayDebug, setOverlayDebug] = useState({ requested: 0, resolved: 0, missing: 0, missingLinks: [] });
         const timelineRowRef = useRef(null);
 
-        const entityTypes = useMemo(() => safeArray(schema?.types).filter((x) => String(x.metatype) === "entiteit"), [schema]);
+        const entityTypes = useMemo(() => {
+          const domeinFilter = normaliseerDomeinWaarde(geselecteerdDomein);
+          const zichtbareTypes = filterTypesOpDomeinen(safeArray(schema?.types), domeinFilter ? [domeinFilter] : []);
+          return zichtbareTypes.filter((x) => String(x.metatype) === "entiteit");
+        }, [schema, geselecteerdDomein]);
         const typeMetaByTypenaam = useMemo(() => {
           const result = {};
           safeArray(schema?.types).forEach((typeMeta) => {
@@ -231,6 +246,19 @@ function normInt(v, fallback = 0) {
           return result;
         }, [schema]);
         const selectedEntityMeta = typeMetaByTypenaam[entityType] || null;
+
+        useEffect(() => {
+          if (entityTypes.length === 0) {
+            if (entityType) {
+              setEntityType("");
+            }
+            return;
+          }
+
+          if (!entityTypes.some((item) => item.typenaam === entityType)) {
+            setEntityType(entityTypes[0].typenaam);
+          }
+        }, [entityTypes, entityType]);
 
         const uniformeRegViewBoxHeight = useMemo(() => {
           const maxWijzigingen = items.reduce((acc, item) => Math.max(acc, safeArray(item?.wijzigingen).length), 0);
@@ -419,16 +447,36 @@ function normInt(v, fallback = 0) {
           let cancelled = false;
           async function loadSchema() {
             setSchemaError("");
+            setDomeinenError("");
             try {
-              const json = await fetchJson(`${baseUrl}/api/viz/schema`);
+              const domeinPromise = fetchSchemaDomeinen(baseUrl)
+                .then((items) => ({ items, error: "" }))
+                .catch((err) => ({
+                  items: [],
+                  error: err instanceof Error ? err.message : String(err),
+                }));
+
+              const [json, domeinResult] = await Promise.all([
+                fetchJson(`${baseUrl}/api/viz/schema`),
+                domeinPromise,
+              ]);
+
               if (!cancelled) {
                 setSchema(json);
-                const first = safeArray(json?.types).find((x) => String(x.metatype) === "entiteit");
-                if (first) setEntityType((prev) => prev || first.typenaam);
+                setDomeinenError(domeinResult.error);
+                const opties = combineerDomeinOpties(domeinResult.items, json?.types);
+                setBeschikbareDomeinen(opties);
+                setGeselecteerdDomein((vorige) => {
+                  const huidige = normaliseerDomeinWaarde(vorige);
+                  const geldigeNamen = new Set(opties.map((item) => normaliseerDomeinWaarde(item?.naam)));
+                  return geldigeNamen.has(huidige) ? huidige : "";
+                });
               }
             } catch (err) {
               if (!cancelled) {
                 setSchema(null);
+                setBeschikbareDomeinen([]);
+                setGeselecteerdDomein("");
                 setSchemaError(err instanceof Error ? err.message : String(err));
               }
             }
@@ -673,6 +721,10 @@ function normInt(v, fallback = 0) {
             <SchemaTijdlijnControls
               baseUrl={baseUrl}
               setBaseUrl={setBaseUrl}
+              beschikbareDomeinen={beschikbareDomeinen}
+              geselecteerdDomein={geselecteerdDomein}
+              setGeselecteerdDomein={setGeselecteerdDomein}
+              domeinenError={domeinenError}
               entityType={entityType}
               setEntityType={setEntityType}
               entityTypes={entityTypes}

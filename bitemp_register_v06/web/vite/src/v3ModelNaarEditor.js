@@ -90,6 +90,27 @@ export function v3ModelNaarEditor(v3Model) {
   const datatypeLookup = {};
   const uniekeDatatypes = [];
   const gezienDatatypeNamen = new Set();
+  const inferredEnumDomein = {};
+  const noteEnumDomein = (enumNaam, domeinKandidaat) => {
+    if (!enumNaam) return;
+    const domein = String(domeinKandidaat || "").trim();
+    if (!domein) return;
+    const bestaand = inferredEnumDomein[enumNaam] || "";
+    if (!bestaand || (bestaand === "register" && domein !== "register")) {
+      inferredEnumDomein[enumNaam] = domein;
+    }
+  };
+  (v3Model.entiteiten || []).forEach((ent) => {
+    const entDomein = ent?.domein || "";
+    (ent?.gegevenselementen || []).forEach((ge) => {
+      const geDomein = ge?.domein || entDomein;
+      (ge?.velden || []).forEach((v) => noteEnumDomein(v?.enum, geDomein));
+    });
+    (ent?.relaties || []).forEach((rel) => {
+      const relDomein = rel?.domein || entDomein;
+      (rel?.velden || []).forEach((v) => noteEnumDomein(v?.enum, relDomein));
+    });
+  });
   (v3Model.datatypes || []).forEach((dt) => {
     if (!dt?.naam) return;
     // Defensief: dubbele datatypenamen geven dubbele node-ids (dt_<naam>) in de editor.
@@ -108,6 +129,7 @@ export function v3ModelNaarEditor(v3Model) {
       position: e.positie ? { x: e.positie.x, y: e.positie.y } : { x: 50 + i * 220, y: 550 },
       data: {
         naam: e.goType,
+        domein: e.domein || inferredEnumDomein[e.goType] || "",
         baseType: e.baseType || "string",
         waarden: e.waarden.map((w) => w.waarde),
       },
@@ -123,6 +145,7 @@ export function v3ModelNaarEditor(v3Model) {
       data: {
         naam: dt.naam,
         description: dt.description || "",
+        domein: dt.domein || "",
         basistype: dt.basistype || "string",
         format: dt.format || "",
         validatie: dt.validatie || {},
@@ -145,10 +168,12 @@ export function v3ModelNaarEditor(v3Model) {
         typenaam: ent.typenaam,
         klassenaam: ent.typenaam,
         description: ent.description || "",
+        domein: ent.domein || "",
         meervoud: ent.meervoud || "",
         metatype: "entiteit",
         isMaterieel: ent.isMaterieel || false,
-        kleur: ent.kleur || defaultKleur("entiteit"),
+        entiteitSubtype: ent.entiteitSubtype || "",
+        kleur: ent.kleur || defaultKleur("entiteit", ent.entiteitSubtype || ""),
         velden: [],
         // Entiteit-niveau afgeleide velden (bijv. weergavenaam): zie afgeleide-velden.md
         afgeleideVelden: (ent.afgeleideVelden || []).map((av) => ({
@@ -177,11 +202,20 @@ export function v3ModelNaarEditor(v3Model) {
           typenaam: geTypenaam,
           klassenaam: ge.naam,
           description: ge.description || "",
+          domein: ge.domein || ent.domein || "",
           meervoud: ge.meervoud || "",
           metatype: "gegevenselement",
           isMaterieel: ge.isMaterieel || false,
           kleur: defaultKleur("gegevenselement"),
           velden,
+          afgeleideVelden: (ge.afgeleideVelden || []).map((av) => ({
+            naam: av.naam || "",
+            description: av.description || "",
+            goType: av.goType || "string",
+            afleidingsregelTaal: av.afleidingsregelTaal || "cel",
+            afleidingsregel: av.afleidingsregel || "",
+            isWeergaveVeld: av.isWeergaveVeld || av.weergaveVeld || false,
+          })),
         },
       });
 
@@ -275,11 +309,22 @@ export function v3ModelNaarEditor(v3Model) {
             typenaam: rel.naam,
             klassenaam: rel.naam,
             description: rel.description || "",
+            domein: rel.domein || ent.domein || "",
             meervoud: rel.meervoud || "",
             metatype: "relatie",
             isMaterieel: rel.isMaterieel || false,
-            kleur: defaultKleur("relatie"),
+            relatieSubtype: rel.relatieSubtype || "",
+            referentielijstInstantie: rel.referentielijstInstantie || "",
+            kleur: defaultKleur("relatie", rel.relatieSubtype || ""),
             velden,
+            afgeleideVelden: (rel.afgeleideVelden || []).map((av) => ({
+              naam: av.naam || "",
+              description: av.description || "",
+              goType: av.goType || "string",
+              afleidingsregelTaal: av.afleidingsregelTaal || "cel",
+              afleidingsregel: av.afleidingsregel || "",
+              isWeergaveVeld: av.isWeergaveVeld || av.weergaveVeld || false,
+            })),
             doelEntiteit: rel.doelEntiteit || "",
           },
         });

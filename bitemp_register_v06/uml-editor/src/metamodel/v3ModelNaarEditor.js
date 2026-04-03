@@ -63,6 +63,27 @@ export function v3ModelNaarEditor(v3Model) {
   });
 
   const datatypeLookup = {};
+  const inferredEnumDomein = {};
+  const noteEnumDomein = (enumNaam, domeinKandidaat) => {
+    if (!enumNaam) return;
+    const domein = String(domeinKandidaat || "").trim();
+    if (!domein) return;
+    const bestaand = inferredEnumDomein[enumNaam] || "";
+    if (!bestaand || (bestaand === "register" && domein !== "register")) {
+      inferredEnumDomein[enumNaam] = domein;
+    }
+  };
+  (v3Model.entiteiten || []).forEach((ent) => {
+    const entDomein = ent?.domein || "";
+    (ent?.gegevenselementen || []).forEach((ge) => {
+      const geDomein = ge?.domein || entDomein;
+      (ge?.velden || []).forEach((v) => noteEnumDomein(v?.enum, geDomein));
+    });
+    (ent?.relaties || []).forEach((rel) => {
+      const relDomein = rel?.domein || entDomein;
+      (rel?.velden || []).forEach((v) => noteEnumDomein(v?.enum, relDomein));
+    });
+  });
   (v3Model.datatypes || []).forEach((dt) => {
     datatypeLookup[dt.naam] = dt;
   });
@@ -74,7 +95,7 @@ export function v3ModelNaarEditor(v3Model) {
       position: e.positie ? { x: e.positie.x, y: e.positie.y } : { x: 50 + i * 220, y: 550 },
       data: {
         naam: e.goType,
-        domein: e.domein || "",
+        domein: e.domein || inferredEnumDomein[e.goType] || "",
         baseType: e.baseType || "string",
         waarden: (e.waarden || []).map((w) => w.waarde),
       },
@@ -160,7 +181,7 @@ export function v3ModelNaarEditor(v3Model) {
           typenaam: geTypenaam,
           klassenaam: ge.naam,
           description: ge.description || "",
-          domein: ge.domein || "",
+          domein: ge.domein || ent.domein || "",
           meervoud: ge.meervoud || "",
           metatype: "gegevenselement",
           isMaterieel: ge.isMaterieel || false,
@@ -260,7 +281,7 @@ export function v3ModelNaarEditor(v3Model) {
             typenaam: rel.naam,
             klassenaam: rel.naam,
             description: rel.description || "",
-            domein: rel.domein || "",
+            domein: rel.domein || ent.domein || "",
             meervoud: rel.meervoud || "",
             metatype: "relatie",
             isMaterieel: rel.isMaterieel || false,

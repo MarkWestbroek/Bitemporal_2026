@@ -168,6 +168,22 @@ func TestExportMetaRegistryToV3_DatatypesUniekPerNaam(t *testing.T) {
 	}
 }
 
+func TestExportMetaRegistryToV3_EnumDomeinen(t *testing.T) {
+	v3 := ExportMetaRegistryToV3("np-loc")
+
+	domeinByEnum := map[string]string{}
+	for _, enum := range v3.Enums {
+		domeinByEnum[enum.GoType] = enum.Domein
+	}
+
+	if got := domeinByEnum["Naamgebruiksoort"]; got != "np-loc" {
+		t.Fatalf("verwacht Naamgebruiksoort domein np-loc, kreeg %q", got)
+	}
+	if got := domeinByEnum["Bereikbaarheidssoort"]; got != "np-loc" {
+		t.Fatalf("verwacht Bereikbaarheidssoort domein np-loc, kreeg %q", got)
+	}
+}
+
 func TestFilterV3ModelStrictByDomein_ExcludesRegisterEntiteiten(t *testing.T) {
 	v3 := ExportMetaRegistryToV3("np-loc")
 	strict := FilterV3ModelStrictByDomein(v3, "np-loc")
