@@ -7,6 +7,8 @@ We zijn aan het bouwen aan `bitemp_register_v06/`, een doorontwikkeling van deze
 ## Algemene instructies
 Documenteer altijd alle wijzigingen in duidelijke comments in de code en in (vaak specifiek per onderwerp benoemde of anders de generieke readme) markdown files.
 
+Als je iets **substantieels** hebt gewijzigd of onderzocht, werk dan in dezelfde taak ook de **relevante documentatie** bij (bij voorkeur de meest specifieke `.md`, bijvoorbeeld `docs/DEVLOOP.md`, anders de algemene `README.md`).
+
 ## Domein
 
 Dit project is een proof of concept voor een **bitemporeel register** in *Go* / *PostgreSQL*, met een focus op een flexibel datamodel via een aantal struct definities en dynamische metadata via een MetaRegistry.
