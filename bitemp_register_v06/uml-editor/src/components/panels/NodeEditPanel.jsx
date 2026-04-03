@@ -167,6 +167,16 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
         </label>
 
         <label>
+          Domein
+          <input
+            type="text"
+            value={data.domein || ""}
+            onChange={(e) => updateField("domein", e.target.value)}
+            placeholder="bijv. register, np_loc"
+          />
+        </label>
+
+        <label>
           Basistype
           <select
             value={data.basistype || "string"}
@@ -381,6 +391,16 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
           />
         </label>
 
+        <label>
+          Domein
+          <input
+            type="text"
+            value={data.domein || ""}
+            onChange={(e) => updateField("domein", e.target.value)}
+            placeholder="bijv. register, np_loc"
+          />
+        </label>
+
         <h4>Waarden</h4>
         {(data.waarden || []).map((w, i) => (
           <div key={i} className="enum-waarde-row">
@@ -499,6 +519,16 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
           value={data.description || ""}
           onChange={(e) => updateField("description", e.target.value)}
           rows={2}
+        />
+      </label>
+
+      <label>
+        Domein
+        <input
+          type="text"
+          value={data.domein || ""}
+          onChange={(e) => updateField("domein", e.target.value)}
+          placeholder="bijv. register, np_loc"
         />
       </label>
 

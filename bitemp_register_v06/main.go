@@ -127,6 +127,10 @@ func NewRouter() *gin.Engine {
 	router.PUT("/api/schema/model/:id/activeer", handlers.MaakActiveerSchemaVersieHandler())
 	router.GET("/api/schema/versies", handlers.MaakLijstSchemaVersiesHandler())
 
+	// Schema-domeinen endpoints
+	router.GET("/api/schema/domeinen", handlers.MaakGetSchemaDomeinenHandler())
+	router.POST("/api/schema/domeinen", handlers.MaakPostSchemaDomeinHandler())
+
 	// Version endpoint
 	router.GET("/version", func(c *gin.Context) {
 		c.JSON(200, gin.H{"commit": commit, "build_time": buildTime})
@@ -146,6 +150,10 @@ func NewRouter() *gin.Engine {
 	// admin routes
 	router.DELETE("/admin/db/droptables/:password", handlers.DropTables)
 	router.POST("/admin/db/createtables", handlers.CreateTables)
+
+	// Devloop rebuild routes (alleen actief als DEVLOOP=true)
+	router.POST("/admin/rebuild/:password", handlers.MaakRebuildHandler())
+	router.GET("/admin/rebuild/status", handlers.MaakRebuildStatusHandler())
 
 	//Add all functional routes
 	routes.AddRoutes(router)

@@ -1,0 +1,37 @@
+# Ja, laten we eerst kijken naar domein.
+
+Ik zou het nog fundamenteler aanpakken en het in de database opnemen als tabel "schema_domeinen". Dan hebben we wel een klein eindpoint daarvoor nodig, zodat de editor de lijst kan ophalen. Default waarde is "register".
+- Bij het opslaan van een nieuw schema in de DB checken op het primaire domein van het schema en dat toevoegen als het niet in de tabel staat. (Even simpel.)
+
+## Uitgangspunten:
+- een schema heeft een primair domein.
+- domein in alle top level elementen.
+    - Dat zijn: ENT, enum type.
+    - Reflijst en ReflijstItem zijn ook ENT'n dus die gaan vanzelf mee.
+    - GE's en REL ook domein? Voor de zekerheid? Ze zijn wel genest in het metamodel, dus strict genomen hoeft het niet, maar in de editor kunnen ze losraken en dan is het wel goed om te kunnen zien.
+
+- er kunnen hulp-elementen op een schema voorkomen uit een ander domein (je wilt immers soms koppelen naar een ander domeinen)
+- hoe we die elementen er bij een groter model op krijgen is een ander punt, maar voor nu kunnen we het even zo doen
+- register - Referentielijst is misschien een element dat er altijd op moet staan en ook niet weggegooid mag worden
+
+- "domein" in alle top level elementen opnemen (in editor en ook in V3 dus) .
+    - Dat zijn: ENT, enum en gegevenstype.
+    - Reflijst en ReflijstItem zijn ook ENT'n dus die gaan vanzelf mee.
+
+## Editor:
+    - domein als "actief domein" inderdaad
+    - nieuwe base types automatisch het domein geven
+    - als je een bestaande GE met domein Y wilt koppelen aan een ENT uit domein X, dan kan dat niet!
+        - melden en vragen om naar het andere domein te brengen. De naam moet dan wel gewijzigd worden. Dat ook melden. Niet afdwingen.
+        - Dat is nu een risico: een REP kan in domein X en in domein Y dezelfde typenaam hebben: dat geeft een error na het genereren.
+        - Dat is voor nu niet erg. Ik wil over de domeinen toch unieke namen hebben. Een besluit in domein Parkeren en een besluit in domein Wmo is toch verwarrend: dan noem je ze Parkeerbesluit en WmoBesluit.
+
+    -ook goed (jouw ideeën):
+        - validatie vóór publish/rebuild:
+            o waarschuwing als meerdere domeinen door elkaar staan
+            o waarschuwing als domein leeg is
+        - rebuild alleen toestaan voor het geselecteerde domein
+
+## visualisatie domeinen
+    - ik vind het iets fletser maar van niet actieve domein-elementen wel een goed idee
+    - een domein-boundary (bijv. een dashed rounded-corners-rechthoek eromheen) kan ook helpen, maar kan soms ook lastig zijn. Misschien als hulp-element zonder functionele betekenis?

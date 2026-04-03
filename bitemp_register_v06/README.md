@@ -837,6 +837,24 @@ Deregister U5 and register U6 for entity A:
 - kleur uit EA importeren
 
 31 UML editor
+- meerdere canvassen, per domein één (of naar keuze)
+- afhankelijkheid kunnen instellen
+- overerving zelf kunnen tekenen
+- relatie-visualisatie:
+  - met velden: associatieklasse
+    - probleem: de lijnen tussen A en REL en REL en B zijn geen relaties, maar alleen maar de link tussen A en REL en REL en B
+      - ze hebben een richting: hoe visualiseren?
+        - pijl is niet meer UML 2
+        - pijl langs lijn? 
+  - zonder: alleen een lijn met een label "relatie"
+  - labels bij rollen verplaatsbaar (hoe in V3 en metareg?)
+
+32 Overerving verder uitwerken!
+- basically een extra FK:
+  - van een ENT naar een ENT of
+  - van een GE naar een GE
+  - (of van een REL naar een REL?) -> deze even niet
+- 
 
 35 Formulieren
 - bewaar kan ook voor alle GEn ipv per stuk. Typisch is dat ook zo.

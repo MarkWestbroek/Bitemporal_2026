@@ -104,8 +104,9 @@ type V3Entiteit struct {
 type V3Gegevenselement struct {
 	Naam            string           `json:"naam"` // bijv. "U", "V", "W"
 	Description     string           `json:"description,omitempty"`
-	Meervoud        string           `json:"meervoud"`        // URL-padnaam, bijv. "a-us"
-	Momentvoorkomen string           `json:"momentvoorkomen"` // "enkelvoudig" of "meervoudig"
+	Domein          string           `json:"domein,omitempty"` // domein waartoe dit GE behoort (optioneel, erft normaal van parent-entiteit)
+	Meervoud        string           `json:"meervoud"`         // URL-padnaam, bijv. "a-us"
+	Momentvoorkomen string           `json:"momentvoorkomen"`  // "enkelvoudig" of "meervoudig"
 	IsMaterieel     bool             `json:"isMaterieel,omitempty"`
 	Positie         *V3Positie       `json:"positie,omitempty"`      // editor-layout positie (genegeerd door codegen)
 	ID              string           `json:"id,omitempty"`           // persistente edge-id van entiteit→GE voor stabiele editor round-trips
@@ -120,6 +121,7 @@ type V3Gegevenselement struct {
 type V3Relatie struct {
 	Naam                     string           `json:"naam"` // bijv. "Rel_A_B"
 	Description              string           `json:"description,omitempty"`
+	Domein                   string           `json:"domein,omitempty"`                   // domein waartoe deze relatie behoort (optioneel, erft normaal van parent-entiteit)
 	RelatieSubtype           string           `json:"relatieSubtype,omitempty"`           // bijv. "referentielijst_items"
 	ReferentielijstInstantie string           `json:"referentielijstInstantie,omitempty"` // systeemnaam van de gebonden referentielijst-instantie (alleen voor relatieSubtype == "referentielijst_items")
 	Meervoud                 string           `json:"meervoud"`                           // URL-padnaam, bijv. "rel-a-bs"

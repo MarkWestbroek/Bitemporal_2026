@@ -124,6 +124,7 @@ export function maakLeegType(metatype = "entiteit", subtype = "") {
     typenaam: "",
     meervoud: "",
     description: "",
+    domein: "",
     metatype,
     isMaterieel: false, // standaard formeel; materieel is optioneel
     kleur: defaultKleur(metatype, subtype),
@@ -167,6 +168,7 @@ export function maakLegeEnumeratie() {
   return {
     id: generateId("enum"),
     naam: "",
+    domein: "",
     waarden: [""],
   };
 }
@@ -177,6 +179,7 @@ export function maakLeegGegevenstype() {
     id: generateId("datatype"),
     naam: "",
     description: "",
+    domein: "",
     basistype: "string",
     format: "",
     validatie: {
@@ -337,6 +340,7 @@ export function schemaResponseNaarEditor(schemaResponse) {
       data: {
         naam: dt.naam,
         description: dt.description || "",
+        domein: dt.domein || "",
         basistype: dt.basistype || "string",
         format: dt.format || "",
         validatie: dt.validatie || {},
@@ -361,6 +365,7 @@ export function schemaResponseNaarEditor(schemaResponse) {
       data: {
         typenaam: t.typenaam,
         description: t.description || "",
+        domein: t.domein || "",
         metatype: t.metatype,
         isMaterieel: t.isMaterieel || false,
         kleur: t.kleur || defaultKleur(t.metatype),
@@ -392,6 +397,7 @@ export function schemaResponseNaarEditor(schemaResponse) {
       data: {
         typenaam: t.typenaam,
         description: t.description || "",
+        domein: t.domein || "",
         metatype,
         isMaterieel: t.isMaterieel || false,
         kleur: t.kleur || defaultKleur(metatype),
@@ -471,6 +477,7 @@ export function editorNaarMetamodel(nodes, edges) {
     .map((n) => ({
       typenaam: n.data.typenaam,
       description: n.data.description,
+      domein: n.data.domein,
       metatype: n.type,
       isMaterieel: n.data.isMaterieel,
       kleur: n.data.kleur,
@@ -492,6 +499,7 @@ export function editorNaarMetamodel(nodes, edges) {
     .filter((n) => n.type === "enumeratie")
     .map((n) => ({
       goType: n.data.naam,
+      domein: n.data.domein,
       baseType: n.data.baseType || "string",
       waarden: (n.data.waarden || []).map((w) => ({
         constNaam: n.data.naam + w.replace(/[^a-zA-Z0-9_]/g, ""),
@@ -504,6 +512,7 @@ export function editorNaarMetamodel(nodes, edges) {
     .map((n) => ({
       naam: n.data.naam,
       description: n.data.description,
+      domein: n.data.domein,
       basistype: n.data.basistype,
       format: n.data.format,
       validatie: n.data.validatie,
@@ -600,6 +609,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
     .filter((n) => n.type === "enumeratie")
     .map((n) => ({
       goType: n.data.naam,
+      domein: n.data.domein || undefined,
       baseType: n.data.baseType || "string",
       positie: n.position ? { x: n.position.x, y: n.position.y } : undefined,
       waarden: (n.data.waarden || [])
@@ -616,6 +626,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
     .map((n) => ({
       naam: n.data.naam,
       description: n.data.description || undefined,
+      domein: n.data.domein || undefined,
       basistype: n.data.basistype || "string",
       format: n.data.format || undefined,
       positie: n.position ? { x: n.position.x, y: n.position.y } : undefined,
@@ -641,6 +652,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
       return {
         naam: geNaam,
         description: geNode.data.description || undefined,
+        domein: geNode.data.domein || undefined,
         meervoud:
           geNode.data.meervoud ||
           e.data?.jsonRolnaam ||
@@ -684,6 +696,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
       return {
         naam: relNode.data.typenaam,
         description: relNode.data.description || undefined,
+        domein: relNode.data.domein || undefined,
         meervoud:
           relNode.data.meervoud ||
           e.data?.jsonRolnaam || `${(relNode.data.typenaam || "rel").toLowerCase()}s`,
@@ -715,6 +728,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
     return {
       typenaam: ent.data.typenaam,
       description: ent.data.description || undefined,
+      domein: ent.data.domein || undefined,
       isMaterieel: ent.data.isMaterieel || false,
       // Referentielijst-subtypes (optioneel, zie Referentielijsten.md)
       entiteitSubtype: ent.data.entiteitSubtype || undefined,

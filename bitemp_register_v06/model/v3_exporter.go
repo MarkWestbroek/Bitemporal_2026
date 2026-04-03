@@ -457,6 +457,7 @@ func v3GegevenseElementVanMeta(meta TypeMeta, child OnderliggendGegevenselement)
 	ge := V3Gegevenselement{
 		Naam:            geNaamVanTypenaam(meta),
 		Description:     meta.Description,
+		Domein:          meta.Domein,
 		Meervoud:        meta.Padnaam,
 		Momentvoorkomen: momentvoorkomenString(child.Momentvoorkomen),
 		IsMaterieel:     meta.IsMaterieel,
@@ -478,6 +479,7 @@ func v3RelatieVanMeta(meta TypeMeta, child OnderliggendGegevenselement) V3Relati
 	rel := V3Relatie{
 		Naam:                     meta.Typenaam,
 		Description:              meta.Description,
+		Domein:                   meta.Domein,
 		RelatieSubtype:           meta.RelatieSubtype,
 		ReferentielijstInstantie: meta.ReferentielijstInstantie,
 		Meervoud:                 meta.Padnaam,

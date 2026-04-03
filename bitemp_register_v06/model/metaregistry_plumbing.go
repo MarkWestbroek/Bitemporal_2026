@@ -315,4 +315,48 @@ func init() {
 	initRegisterDatatypeRegistry()
 	initRegisterEnumRegistry()
 	initNpLocMetaRegistry()
+
+	// Propageer domein van entiteiten naar hun onderliggende GE's, relaties en plumbing-types.
+	// Zo hoeft het domein niet op elke entry handmatig te staan.
+	propageerDomeinNaarOnderliggende()
+}
+
+// propageerDomeinNaarOnderliggende loopt alle entiteiten in de MetaRegistry af en
+// zet het domein van de entiteit op alle onderliggende types die nog geen domein hebben.
+// Dit werkt recursief: hubs propageren naar hun _Data/_Aanvang/_Einde subtypes.
+func propageerDomeinNaarOnderliggende() {
+	for _, meta := range MetaRegistry {
+		if meta.Metatype != MetatypeEntiteit || meta.Domein == "" {
+			continue
+		}
+		propageerDomeinRecursief(meta.Domein, meta.OnderliggendeGegevenselementen)
+	}
+	// Propageer ook via BovenliggendTypenaam voor plumbing-types die niet in
+	// OnderliggendeGegevenselementen staan (vangnet).
+	for key, meta := range MetaRegistry {
+		if meta.Domein != "" || meta.BovenliggendTypenaam == "" {
+			continue
+		}
+		if parent, ok := MetaRegistry[meta.BovenliggendTypenaam]; ok && parent.Domein != "" {
+			meta.Domein = parent.Domein
+			MetaRegistry[key] = meta
+		}
+	}
+}
+
+func propageerDomeinRecursief(domein string, children []OnderliggendGegevenselement) {
+	for _, child := range children {
+		childMeta, ok := MetaRegistry[child.Doeltype]
+		if !ok {
+			continue
+		}
+		if childMeta.Domein == "" {
+			childMeta.Domein = domein
+			MetaRegistry[child.Doeltype] = childMeta
+		}
+		// Recursie: propageer naar sub-children (bijv. hub → _Data, _Aanvang, _Einde)
+		if len(childMeta.OnderliggendeGegevenselementen) > 0 {
+			propageerDomeinRecursief(domein, childMeta.OnderliggendeGegevenselementen)
+		}
+	}
 }

@@ -1,0 +1,56 @@
+# Dockerfile.devloop — Self-rebuilding register container
+#
+# Dit image bevat de Go toolchain, Node.js en de volledige broncode,
+# zodat het register zichzelf kan hergenereren en hercompileren vanuit
+# de UML-editor of een V3 JSON model.
+#
+# Gebruik: docker compose -f docker-compose.devloop.yml up --build
+
+# ---------- Stage 1: Frontend build (zelfde als productie) ----------
+FROM node:22-alpine AS frontend-builder
+
+WORKDIR /app/web/vite
+COPY web/vite/package.json web/vite/package-lock.json ./
+RUN npm ci
+COPY web/vite/ ./
+# De Vite app importeert ook vanuit de aparte `uml-editor` subtree via @editor.
+# Die broncode moet dus ook aanwezig zijn tijdens de frontend build in Docker.
+COPY uml-editor/ /app/uml-editor/
+RUN npm run build
+
+# ---------- Stage 2: Devloop image met Go + Node + source ----------
+FROM golang:1.24-alpine
+
+RUN apk add --no-cache git nodejs npm bash
+
+WORKDIR /app
+
+# Go dependencies (gecached als go.mod/go.sum niet verandert)
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Volledige broncode
+COPY . .
+
+# Gebruik de frontend build uit stage 1
+COPY --from=frontend-builder /app/web/react ./web/react
+
+# Initiële compilatie van het register
+RUN CGO_ENABLED=0 go build -o /app/bitemp-go-api .
+
+# Zorg dat codegen- en export-tools ook gecompileerd zijn (snellere en robuustere rebuilds)
+RUN CGO_ENABLED=0 go build -o /app/bin/codegen ./cmd/codegen
+RUN CGO_ENABLED=0 go build -o /app/bin/export_v3 ./cmd/export_v3
+
+# Bewaar een schone baseline van de modeldirectory, zodat een mislukte rebuild
+# later niet de volgende rebuild vergiftigt met half-gegenereerde bestanden.
+RUN mkdir -p /app/_baseline && cp -R /app/model /app/_baseline/model
+
+# Entrypoint script
+COPY scripts/devloop-entrypoint.sh /app/scripts/devloop-entrypoint.sh
+RUN chmod +x /app/scripts/devloop-entrypoint.sh
+
+ENV DEVLOOP=true
+EXPOSE 8080
+
+ENTRYPOINT ["/app/scripts/devloop-entrypoint.sh"]

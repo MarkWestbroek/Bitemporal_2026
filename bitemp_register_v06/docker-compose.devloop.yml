@@ -1,0 +1,59 @@
+# docker-compose.devloop.yml — Self-rebuilding register omgeving
+#
+# Start met: docker compose -f docker-compose.devloop.yml up --build
+#
+# Dit draait:
+#   - PostgreSQL database
+#   - De devloop API container (Go toolchain + source + codegen)
+#
+# De devloop container kan zichzelf hergenereren en hercompileren via:
+#   POST /admin/rebuild  (met V3 JSON body of zonder voor huidige code)
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: bitemp-devloop-db
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-1234}
+      POSTGRES_DB: ${DB_NAME:-bitemp_go_db_v06}
+    volumes:
+      - devloop_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - devloop_net
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.devloop
+    container_name: bitemp-devloop-api
+    environment:
+      DATABASE_URL: postgres://${DB_USER:-postgres}:${DB_PASSWORD:-1234}@postgres:5432/${DB_NAME:-bitemp_go_db_v06}?sslmode=disable
+      DATABASE_ADMIN_URL: postgres://${DB_USER:-postgres}:${DB_PASSWORD:-1234}@postgres:5432/postgres?sslmode=disable
+      AUTO_CREATE_DATABASE: "false"
+      PORT: "8080"
+      APP_ENV: ${APP_ENV:-development}
+      GIN_MODE: ${GIN_MODE:-debug}
+      ALLOW_DROP_TABLES: ${ALLOW_DROP_TABLES:-true}
+      ADMIN_DROP_PASSWORD: ${ADMIN_DROP_PASSWORD:-1234}
+      DEVLOOP: "true"
+      DEVLOOP_PASSWORD: ${DEVLOOP_PASSWORD:-1234}
+    ports:
+      - "${API_PORT:-8182}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - devloop_net
+
+volumes:
+  devloop_pgdata:
+
+networks:
+  devloop_net:
+    driver: bridge

@@ -79,13 +79,20 @@ func main() {
 	fmt.Printf("Model geladen: versie=%s, %d entiteiten, %d enums, %d datatypes (mode=%s, domein=%s)\n",
 		v3.Versie, len(v3.Entiteiten), len(v3.Enums), len(v3.Datatypes), *mode, *domein)
 
-	// Filter entiteiten op domein: als --domein is opgegeven, genereer alleen entiteiten
-	// waarvan het Domein-veld overeenkomt met --domein of leeg is.
-	// Entiteiten van andere domeinen (bijv. register-entiteiten in een np-loc export) worden overgeslagen.
+	// Filter entiteiten op domein.
+	//
+	// Belangrijk voor additive generatie:
+	// - voor `register` nemen we ook de lege domeinen mee (register-basis)
+	// - voor andere domeinen, zoals `np-loc`, genereren we alléén exact dat domein
+	//   zodat gedeelde register-types niet opnieuw worden aangemaakt en met
+	//   de bestaande `register_*` bestanden botsen.
 	if *domein != "" {
 		filtered := v3.Entiteiten[:0]
+		includeLegeDomeinen := *domein == "register"
 		for _, ent := range v3.Entiteiten {
-			if ent.Domein == "" || ent.Domein == *domein {
+			zelfdeDomein := ent.Domein == *domein
+			registerBasis := includeLegeDomeinen && ent.Domein == ""
+			if zelfdeDomein || registerBasis {
 				filtered = append(filtered, ent)
 			} else {
 				fmt.Fprintf(os.Stderr, "  Overgeslagen (domein=%q): %s\n", ent.Domein, ent.Typenaam)

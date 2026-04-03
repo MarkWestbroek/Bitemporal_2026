@@ -44,32 +44,51 @@ body {
 
 .toolbar {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   padding: 8px 16px;
   background: #1e293b;
   border-bottom: 1px solid #334155;
-  gap: 16px;
+  gap: 8px;
+}
+
+.toolbar-top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 20px;
+}
+
+.toolbar-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 16px;
   flex-wrap: wrap;
 }
 
-.toolbar-right {
-  margin-left: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-}
-
-.toolbar-right-row {
+.toolbar-row-left,
+.toolbar-row-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.toolbar-row-right {
+  margin-left: auto;
+  justify-content: flex-end;
 }
 
 .toolbar-group {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
+}
+
+.toolbar-model-info {
+  flex-wrap: nowrap;
 }
 
 .toolbar-label {
@@ -77,6 +96,33 @@ body {
   font-size: 12px;
   font-weight: 500;
   margin-right: 4px;
+}
+
+/* Domein-selector in toolbar */
+.toolbar-select {
+  padding: 4px 8px;
+  border: 1px solid #475569;
+  border-radius: 6px;
+  font-size: 12px;
+  background: #0f172a;
+  color: #e2e8f0;
+  cursor: pointer;
+  min-width: 110px;
+}
+
+.toolbar-select:focus {
+  outline: none;
+  border-color: #60a5fa;
+}
+
+.btn-toolbar.domein-select {
+  border-color: #60a5fa;
+  color: #93c5fd;
+}
+
+.btn-toolbar:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .btn-toolbar {
@@ -111,6 +157,13 @@ body {
 .btn-toolbar.enum {
   border-color: #fbbf24;
   color: #fde68a;
+}
+
+@media (max-width: 1200px) {
+  .toolbar-row-right {
+    margin-left: 0;
+    justify-content: flex-start;
+  }
 }
 
 /* Bestand-groep: opslaan (groen), laden (blauw), publiceren (cyaan) */
@@ -166,6 +219,121 @@ body {
   color: #fef3c7;
 }
 
+/* === Actiedialoog === */
+
+.editor-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 24px;
+}
+
+.editor-dialog {
+  width: min(760px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  background: #0f172a;
+  color: #e2e8f0;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.45);
+}
+
+.editor-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #334155;
+}
+
+.editor-dialog-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.editor-dialog-close {
+  border: 0;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.editor-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+.editor-dialog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.editor-dialog-grid.one-column {
+  grid-template-columns: 1fr;
+}
+
+.editor-dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.editor-dialog-field.full-width {
+  width: 100%;
+}
+
+.editor-dialog-field span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.editor-dialog-field input,
+.editor-dialog-field select,
+.editor-dialog-field textarea {
+  width: 100%;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #111827;
+  color: #f8fafc;
+}
+
+.editor-dialog-note {
+  border-left: 3px solid #22d3ee;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(8, 47, 73, 0.55);
+  color: #dbeafe;
+  font-size: 12px;
+}
+
+.editor-dialog-note code {
+  color: #fde68a;
+}
+
+.editor-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+@media (max-width: 900px) {
+  .editor-dialog-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* === Metamodel nodes (UML class boxes) === */
 
 .metamodel-node {
@@ -180,6 +348,17 @@ body {
 
 .metamodel-node:active {
   cursor: grabbing;
+}
+
+/* Domein-filtering: elementen buiten het actieve domein worden gedimd */
+.react-flow__node.domein-inactief {
+  opacity: 0.25;
+  filter: grayscale(40%);
+  transition: opacity 0.25s ease, filter 0.25s ease;
+}
+.react-flow__node.domein-inactief:hover {
+  opacity: 0.6;
+  filter: grayscale(20%);
 }
 
 .node-header {

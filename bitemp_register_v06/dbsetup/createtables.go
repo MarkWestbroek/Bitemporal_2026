@@ -125,6 +125,24 @@ func CreateTables(db *bun.DB) error {
 		return err
 	}
 
+	// Schema-domeinen tabel (groepering van types per modeldomein)
+	_, err = db.NewCreateTable().Model((*model.SchemaDomein)(nil)).IfNotExists().Exec(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Seed: "register" als standaard domein
+	_, err = db.NewInsert().
+		Model(&model.SchemaDomein{
+			Naam:         "register",
+			Beschrijving: "Standaard registerdomein",
+		}).
+		On("CONFLICT (naam) DO NOTHING").
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+
 	// Indexen voor formele tijdreisquery's
 	err = createFormeleTijdIndexes(ctx, db)
 	if err != nil {

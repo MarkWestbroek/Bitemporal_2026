@@ -12,6 +12,34 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// bepaalPrimairDomein zoekt het meest voorkomende niet-lege, niet-"register" domein
+// uit de entiteiten van een V3Model. Als alleen "register" of leeg voorkomt, retourneert het "register".
+func bepaalPrimairDomein(v3 model.V3Model) string {
+	freq := make(map[string]int)
+	for _, ent := range v3.Entiteiten {
+		d := strings.TrimSpace(ent.Domein)
+		if d != "" {
+			freq[d]++
+		}
+	}
+	if len(freq) == 0 {
+		return "register"
+	}
+	// Kies het meest voorkomende niet-"register" domein
+	best := ""
+	bestCount := 0
+	for d, n := range freq {
+		if d != "register" && n > bestCount {
+			best = d
+			bestCount = n
+		}
+	}
+	if best != "" {
+		return best
+	}
+	return "register"
+}
+
 func queryBool(c *gin.Context, key string) bool {
 	v := strings.ToLower(strings.TrimSpace(c.Query(key)))
 	switch v {
@@ -336,6 +364,13 @@ func MaakPostSchemaModelHandler() gin.HandlerFunc {
 				"error": "Kan schemaversie niet opslaan: " + err.Error(),
 			})
 			return
+		}
+
+		// Registreer het primaire domein automatisch in schema_domeinen
+		// (als het nog niet bestaat). Bepaal domein uit de entiteiten.
+		primairDomein := bepaalPrimairDomein(v3)
+		if primairDomein != "" {
+			EnsureDomeinBestaat(c, primairDomein)
 		}
 
 		c.JSON(http.StatusCreated, gin.H{

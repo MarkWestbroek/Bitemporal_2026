@@ -23,6 +23,7 @@ import {
   MiniMap,
   Controls,
   Background,
+  Panel,
   useNodesState,
   useEdgesState,
   addEdge,
@@ -48,6 +49,10 @@ import NodeEditPanel from "./panels/NodeEditPanel";
 import EdgeEditPanel from "./panels/EdgeEditPanel";
 import Toolbar from "./panels/Toolbar";
 import TestInvoerPanel from "./panels/TestInvoerPanel";
+import ActionDialog from "./panels/ActionDialog";
+
+// Overlays
+import DomeinBoundaryOverlay from "./overlays/DomeinBoundaryOverlay";
 
 // Export helpers
 import { exportNaarMermaid } from "../export/exportMermaid";
@@ -142,6 +147,9 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   const [selectedNodeId, setSelectedNodeId] = useState(null);
   const [selectedEdgeId, setSelectedEdgeId] = useState(null);
   const [showTestInvoer, setShowTestInvoer] = useState(false);
+  const [laatstGepubliceerdSchemaID, setLaatstGepubliceerdSchemaID] = useState(null);
+  const [actieDialoog, setActieDialoog] = useState(null);
+  const [actiefDomein, setActiefDomein] = useState(null); // null = alles tonen
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId) || null;
   const selectedEdge = edges.find((e) => e.id === selectedEdgeId) || null;
@@ -152,6 +160,27 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   const datatypeNodes = useMemo(() => nodes.filter((n) => n.type === "gegevenstype"), [nodes]);
   const enumNodes = useMemo(() => nodes.filter((n) => n.type === "enumeratie"), [nodes]);
   const entiteitNodes = useMemo(() => nodes.filter((n) => n.type === "entiteit"), [nodes]);
+
+  // Verzamel unieke domeinen uit alle nodes voor de domein-selector
+  const beschikbareDomeinen = useMemo(() => {
+    const set = new Set();
+    for (const n of nodes) {
+      const d = n.data?.domein;
+      if (d) set.add(d);
+    }
+    return [...set].sort();
+  }, [nodes]);
+
+  // Selecteer alle nodes van het actieve domein (maakt ze verplaatsbaar als groep)
+  const handleSelecteerDomein = useCallback(() => {
+    if (!actiefDomein) return;
+    setNodes((nds) =>
+      nds.map((n) => ({
+        ...n,
+        selected: (n.data?.domein || "") === actiefDomein,
+      }))
+    );
+  }, [actiefDomein, setNodes]);
 
   const swapConnectionDirection = useCallback((connection) => {
     return {
@@ -309,20 +338,24 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   /** Voeg een nieuw type (node) toe op een willekeurige positie */
   const handleAddNode = useCallback(
     (data, type) => {
+      // Ken automatisch het actieve domein toe aan nieuwe nodes
+      const nodeData = actiefDomein && !data.domein
+        ? { ...data, domein: actiefDomein }
+        : data;
       const newNode = {
-        id: data.id,
+        id: nodeData.id || data.id,
         type,
         position: {
           x: 100 + Math.random() * 400,
           y: 100 + Math.random() * 300,
         },
-        data,
+        data: nodeData,
       };
       setNodes((nds) => [...nds, newNode]);
       setSelectedNodeId(data.id);
       setSelectedEdgeId(null);
     },
-    [setNodes]
+    [setNodes, actiefDomein]
   );
 
   /**
@@ -609,7 +642,162 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
 
   // === Opslaan / Laden ===
 
-  const handleSave = useCallback(() => {
+  // Bepaal de standaard API-basis. Bij lokaal Vite-deven wijzen we standaard
+  // naar de devloop-container op :8182 zodat deze naast de gewone app op :8082 kan draaien.
+  const getDefaultApiBase = useCallback(() => {
+    if (["5173", "5174", "5175"].includes(window.location.port)) {
+      return "http://localhost:8182";
+    }
+    return window.location.origin;
+  }, []);
+
+  const bepaalStandaardDomeinEnPrefix = useCallback((v3Model) => {
+    const domeinen = [
+      ...((v3Model?.entiteiten || []).map((item) => item?.domein).filter(Boolean)),
+      ...((v3Model?.entiteiten || []).flatMap((ent) => (ent?.gegevenselementen || []).map((ge) => ge?.domein)).filter(Boolean)),
+      ...((v3Model?.entiteiten || []).flatMap((ent) => (ent?.relaties || []).map((rel) => rel?.domein)).filter(Boolean)),
+      ...((v3Model?.datatypes || []).map((item) => item?.domein).filter(Boolean)),
+      ...((v3Model?.enums || []).map((item) => item?.domein).filter(Boolean)),
+    ];
+
+    const domein = domeinen.find((value) => value && value !== "register") || domeinen[0] || "register";
+    return {
+      domein,
+      prefix: domein.replace(/-/g, "_"),
+    };
+  }, []);
+
+  const maakVoorstelBestandsnaam = useCallback((v3Model) => {
+    const basis = (v3Model?.naam || "metamodel_v3")
+      .trim()
+      .replace(/[^a-zA-Z0-9._-]+/g, "_")
+      .replace(/^_+|_+$/g, "") || "metamodel_v3";
+    return basis.toLowerCase().endsWith(".json") ? basis : `${basis}.json`;
+  }, []);
+
+  const pasGekozenDomeinToeAanModel = useCallback((v3Model, gekozenDomein) => {
+    const domein = (gekozenDomein || "").trim();
+    if (!domein) return v3Model;
+
+    const applyDomeinOpGE = (ge) => ({ ...ge, domein: ge?.domein || domein });
+    const applyDomeinOpRel = (rel) => ({ ...rel, domein: rel?.domein || domein });
+
+    return {
+      ...v3Model,
+      entiteiten: (v3Model?.entiteiten || []).map((entiteit) => ({
+        ...entiteit,
+        domein: entiteit?.domein || domein,
+        gegevenselementen: (entiteit?.gegevenselementen || []).map(applyDomeinOpGE),
+        relaties: (entiteit?.relaties || []).map(applyDomeinOpRel),
+      })),
+      datatypes: (v3Model?.datatypes || []).map((datatype) => ({
+        ...datatype,
+        domein: datatype?.domein || domein,
+      })),
+      enums: (v3Model?.enums || []).map((enumeratie) => ({
+        ...enumeratie,
+        domein: enumeratie?.domein || domein,
+      })),
+    };
+  }, []);
+
+  const openActieDialoog = useCallback((type) => {
+    const v3Model = editorNaarV3Model(nodes, edges);
+    const { domein, prefix } = bepaalStandaardDomeinEnPrefix(v3Model);
+    const apiBase = getDefaultApiBase();
+
+    if (type === "save") {
+      setActieDialoog({
+        type,
+        title: "Model opslaan als JSON",
+        submitLabel: "Opslaan",
+        values: {
+          bestandsnaam: maakVoorstelBestandsnaam(v3Model),
+        },
+      });
+      return;
+    }
+
+    if (type === "publish") {
+      setActieDialoog({
+        type,
+        title: "Schema-model publiceren",
+        submitLabel: "Publiceren",
+        values: {
+          versie: v3Model.versie || "v3",
+          naam: v3Model.naam || "Editor export",
+          indiener: "uml-editor-v2",
+          opmerking: "",
+          apiBase,
+          domein,
+          prefix,
+        },
+      });
+      return;
+    }
+
+    if (type === "publishAndRebuild") {
+      setActieDialoog({
+        type,
+        title: "Publiceer en rebuild exact dit model",
+        submitLabel: "Publiceer + rebuild",
+        values: {
+          versie: v3Model.versie || "v3",
+          naam: v3Model.naam || "Editor export",
+          indiener: "uml-editor-v2",
+          opmerking: "",
+          apiBase,
+          wachtwoord: "1234",
+          schemaVersieID: laatstGepubliceerdSchemaID ? String(laatstGepubliceerdSchemaID) : "",
+          domein,
+          prefix,
+        },
+      });
+      return;
+    }
+
+    setActieDialoog({
+      type: "rebuild",
+      title: "Rebuild devloop-register",
+      submitLabel: "Rebuild starten",
+      values: {
+        bron: laatstGepubliceerdSchemaID ? "id" : "editor",
+        schemaVersieID: laatstGepubliceerdSchemaID ? String(laatstGepubliceerdSchemaID) : "",
+        domein,
+        prefix,
+        apiBase,
+        wachtwoord: "1234",
+      },
+    });
+  }, [bepaalStandaardDomeinEnPrefix, getDefaultApiBase, laatstGepubliceerdSchemaID, maakVoorstelBestandsnaam, nodes, edges]);
+
+  const sluitActieDialoog = useCallback(() => {
+    setActieDialoog(null);
+  }, []);
+
+  const wijzigActieDialoogVeld = useCallback((veld, waarde) => {
+    setActieDialoog((current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        values: {
+          ...current.values,
+          [veld]: waarde,
+        },
+      };
+    });
+  }, []);
+
+  const voerSaveUit = useCallback((values) => {
+    let bestandsnaam = (values?.bestandsnaam || "").trim();
+    if (!bestandsnaam) {
+      alert("Opslaan geannuleerd: bestandsnaam is verplicht.");
+      return false;
+    }
+    if (!bestandsnaam.toLowerCase().endsWith(".json")) {
+      bestandsnaam += ".json";
+    }
+
     const v3Model = editorNaarV3Model(nodes, edges);
     const blob = new Blob([JSON.stringify(v3Model, null, 2)], {
       type: "application/json",
@@ -617,51 +805,27 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "metamodel_v3.json";
+    a.download = bestandsnaam;
     a.click();
     URL.revokeObjectURL(url);
+    return true;
   }, [nodes, edges]);
 
-  // Publiceer het actuele editor-model als proposed schema_versie via POST /api/schema/model.
-  const handlePublishSchemaModel = useCallback(async () => {
-    const v3Model = editorNaarV3Model(nodes, edges);
+  const publiceerSchemaModel = useCallback(async (values, { stilNaSucces = false } = {}) => {
+    const gekozenDomein = (values?.domein || "").trim();
+    const v3Model = pasGekozenDomeinToeAanModel(editorNaarV3Model(nodes, edges), gekozenDomein);
+    const versie = (values?.versie || "").trim();
+    const naam = (values?.naam || "").trim();
+    const indiener = (values?.indiener || "").trim();
+    const opmerking = (values?.opmerking || "").trim();
+    const apiBase = (values?.apiBase || getDefaultApiBase()).trim();
 
-    const versieInput = prompt("Modelversie (verplicht):", v3Model.versie || "v3");
-    if (versieInput === null) return;
-    const versie = versieInput.trim();
-    if (!versie) {
-      alert("Publiceren geannuleerd: versie is verplicht.");
-      return;
+    if (!versie || !naam || !indiener || !apiBase) {
+      alert("Publiceren geannuleerd: versie, naam, indiener en API basis zijn verplicht.");
+      return null;
     }
 
-    const naamInput = prompt("Modelnaam (verplicht):", v3Model.naam || "Editor export");
-    if (naamInput === null) return;
-    const naam = naamInput.trim();
-    if (!naam) {
-      alert("Publiceren geannuleerd: naam is verplicht.");
-      return;
-    }
-
-    const indienerInput = prompt("Indiener (verplicht):", "uml-editor-v2");
-    if (indienerInput === null) return;
-    const indiener = indienerInput.trim();
-    if (!indiener) {
-      alert("Publiceren geannuleerd: indiener is verplicht.");
-      return;
-    }
-
-    const opmerkingInput = prompt("Opmerking (optioneel):", "");
-    if (opmerkingInput === null) return;
-    const opmerking = opmerkingInput.trim();
-
-    const defaultUrl =
-      window.location.port === "5174"
-        ? "http://localhost:8082/api/schema/model"
-        : "/api/schema/model";
-    const endpointInput = prompt("Schema POST endpoint:", defaultUrl);
-    if (!endpointInput) return;
-
-    const endpoint = new URL(endpointInput, window.location.origin);
+    const endpoint = new URL("/api/schema/model", apiBase);
     if (opmerking) {
       endpoint.searchParams.set("opmerking", opmerking);
     }
@@ -699,13 +863,156 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         throw new Error(`${message}${details}`);
       }
 
-      const nieuwId = body?.id ?? "(onbekend)";
-      alert(`Schema-model opgeslagen als proposed versie met ID ${nieuwId}.`);
+      const nieuwId = Number(body?.id);
+      if (Number.isInteger(nieuwId) && nieuwId > 0) {
+        setLaatstGepubliceerdSchemaID(nieuwId);
+      }
+
+      if (!stilNaSucces) {
+        alert(`Schema-model opgeslagen als proposed versie met ID ${body?.id ?? "(onbekend)"}.`);
+      }
+
+      return {
+        schemaVersieID: Number.isInteger(nieuwId) && nieuwId > 0 ? nieuwId : null,
+        v3Model,
+      };
     } catch (err) {
       console.error("Publiceren schema-model mislukt:", err);
       alert(`Publiceren mislukt: ${err.message}`);
+      return null;
     }
-  }, [nodes, edges]);
+  }, [getDefaultApiBase, nodes, edges, pasGekozenDomeinToeAanModel]);
+
+  const voerRebuildUit = useCallback(async ({ bron, schemaVersieID = null, modelOverride = null, domein = "", prefix = "", apiBase = "", wachtwoord = "1234" }) => {
+    const rauwModel = modelOverride || editorNaarV3Model(nodes, edges);
+    const defaults = bepaalStandaardDomeinEnPrefix(rauwModel);
+    const modelVoorRebuild = pasGekozenDomeinToeAanModel(rauwModel, domein || defaults.domein);
+    const effectieveBron = (bron || "editor").trim().toLowerCase();
+    const effectieveDomein = (domein || defaults.domein || "register").trim();
+    const effectievePrefix = (prefix || defaults.prefix || effectieveDomein.replace(/-/g, "_")).trim();
+    const effectieveApiBase = (apiBase || getDefaultApiBase()).trim();
+    const effectiefWachtwoord = (wachtwoord || "").trim();
+
+    if (!effectieveApiBase || !effectiefWachtwoord) {
+      alert("Rebuild geannuleerd: API basis en wachtwoord zijn verplicht.");
+      return false;
+    }
+
+    const endpoint = new URL(`/admin/rebuild/${encodeURIComponent(effectiefWachtwoord)}`, effectieveApiBase);
+    const payload = {
+      domein: effectieveDomein,
+      prefix: effectievePrefix,
+      mode: "additive",
+    };
+
+    if (effectieveBron === "editor") {
+      payload.model = modelVoorRebuild;
+    } else if (effectieveBron === "id") {
+      const gekozenSchemaVersieID = Number(schemaVersieID);
+      if (!Number.isInteger(gekozenSchemaVersieID) || gekozenSchemaVersieID <= 0) {
+        alert("Rebuild geannuleerd: voer een geldig positief schema-versie ID in.");
+        return false;
+      }
+      payload.schema_versie_id = gekozenSchemaVersieID;
+    } else if (effectieveBron === "actief" || effectieveBron === "active") {
+      payload.schema_bron = "actief";
+    } else if (effectieveBron === "latest_proposed" || effectieveBron === "proposed" || effectieveBron === "laatste" || effectieveBron === "latest") {
+      payload.schema_bron = "latest_proposed";
+    } else {
+      alert("Onbekende rebuild-bron. Gebruik: editor, actief, latest_proposed of id.");
+      return false;
+    }
+
+    try {
+      const response = await fetch(endpoint.toString(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const rawText = await response.text();
+      let body = null;
+      try {
+        body = rawText ? JSON.parse(rawText) : null;
+      } catch {
+        body = null;
+      }
+
+      if (!response.ok) {
+        const message = body?.error || `HTTP ${response.status}`;
+        throw new Error(message);
+      }
+
+      const idTekst = Number.isInteger(Number(schemaVersieID)) && Number(schemaVersieID) > 0 ? ` (schema ID ${schemaVersieID})` : "";
+      alert(
+        `Rebuild gestart via bron '${effectieveBron}'${idTekst} met domein '${effectieveDomein}' en prefix '${effectievePrefix}'. Bij een succesvolle build herstart de devloop-API automatisch.`
+      );
+      return true;
+    } catch (err) {
+      console.error("Rebuild mislukt:", err);
+      alert(`Rebuild mislukt: ${err.message}`);
+      return false;
+    }
+  }, [bepaalStandaardDomeinEnPrefix, getDefaultApiBase, nodes, edges, pasGekozenDomeinToeAanModel]);
+
+  const submitActieDialoog = useCallback(async () => {
+    if (!actieDialoog) return;
+
+    if (actieDialoog.type === "save") {
+      if (voerSaveUit(actieDialoog.values)) {
+        sluitActieDialoog();
+      }
+      return;
+    }
+
+    if (actieDialoog.type === "publish") {
+      const result = await publiceerSchemaModel(actieDialoog.values);
+      if (result) {
+        sluitActieDialoog();
+      }
+      return;
+    }
+
+    if (actieDialoog.type === "rebuild") {
+      const ok = await voerRebuildUit({
+        bron: actieDialoog.values.bron,
+        schemaVersieID: actieDialoog.values.schemaVersieID,
+        domein: actieDialoog.values.domein,
+        prefix: actieDialoog.values.prefix,
+        apiBase: actieDialoog.values.apiBase,
+        wachtwoord: actieDialoog.values.wachtwoord,
+      });
+      if (ok) {
+        sluitActieDialoog();
+      }
+      return;
+    }
+
+    if (actieDialoog.type === "publishAndRebuild") {
+      const result = await publiceerSchemaModel(actieDialoog.values, { stilNaSucces: true });
+      if (!result) return;
+
+      const ok = await voerRebuildUit({
+        bron: "id",
+        schemaVersieID: result.schemaVersieID,
+        modelOverride: result.v3Model,
+        domein: actieDialoog.values.domein,
+        prefix: actieDialoog.values.prefix,
+        apiBase: actieDialoog.values.apiBase,
+        wachtwoord: actieDialoog.values.wachtwoord,
+      });
+      if (ok) {
+        sluitActieDialoog();
+      }
+    }
+  }, [actieDialoog, publiceerSchemaModel, sluitActieDialoog, voerRebuildUit, voerSaveUit]);
+
+  const handleSave = useCallback(() => openActieDialoog("save"), [openActieDialoog]);
+  const handlePublishSchemaModel = useCallback(() => openActieDialoog("publish"), [openActieDialoog]);
+  const handleRebuildModel = useCallback(() => openActieDialoog("rebuild"), [openActieDialoog]);
+  const handlePublishAndRebuild = useCallback(() => openActieDialoog("publishAndRebuild"), [openActieDialoog]);
 
   const handleLoad = useCallback(() => {
     const input = document.createElement("input");
@@ -747,10 +1054,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
 
   /** Laad vanuit model/schema-API van de backend (V3 model aanbevolen) */
   const handleLoadSchema = useCallback(() => {
-    const defaultUrl =
-      window.location.port === "5174"
-        ? "http://localhost:8082/api/schema/model"
-        : "/api/schema/model";
+    const defaultUrl = `${getDefaultApiBase()}/api/schema/model`;
     const url = prompt(
       "Model-API URL (V3):",
       defaultUrl
@@ -783,7 +1087,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         console.error("Model/schema laden mislukt:", err);
         alert(`Kan model/schema niet laden: ${err.message}`);
       });
-  }, [setNodes, setEdges, onV3ModelLoaded]);
+  }, [getDefaultApiBase, setNodes, setEdges, onV3ModelLoaded]);
 
   // ── Export handlers ──────────────────────────────────────────
   const downloadFile = useCallback((content, filename, mimeType) => {
@@ -874,6 +1178,47 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     return node.data?.kleur || "#e2e8f0";
   }, []);
 
+  // Pas dimming toe op nodes die niet bij het actieve domein horen
+  const visueleNodes = useMemo(() => {
+    if (!actiefDomein) return nodes;
+    return nodes.map((n) => {
+      const nodeDomein = n.data?.domein || "";
+      const isActief = nodeDomein === actiefDomein;
+      return {
+        ...n,
+        className: isActief ? "" : "domein-inactief",
+      };
+    });
+  }, [nodes, actiefDomein]);
+
+  // Bereken bounding box van alle nodes in het actieve domein (voor de boundary-overlay)
+  const domeinBoundary = useMemo(() => {
+    if (!actiefDomein) return null;
+    const actieveNodes = nodes.filter((n) => (n.data?.domein || "") === actiefDomein);
+    if (actieveNodes.length === 0) return null;
+    const PADDING = 30;
+    // Schat node-breedte en -hoogte (React Flow geeft geen measured size in state)
+    const NODE_W = 220;
+    const NODE_H = 120;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const n of actieveNodes) {
+      const x = n.position?.x ?? 0;
+      const y = n.position?.y ?? 0;
+      const w = n.measured?.width ?? NODE_W;
+      const h = n.measured?.height ?? NODE_H;
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x + w > maxX) maxX = x + w;
+      if (y + h > maxY) maxY = y + h;
+    }
+    return {
+      x: minX - PADDING,
+      y: minY - PADDING,
+      width: maxX - minX + 2 * PADDING,
+      height: maxY - minY + 2 * PADDING,
+    };
+  }, [nodes, actiefDomein]);
+
   return (
     <div className="editor-container">
       <Toolbar
@@ -882,6 +1227,8 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         onAddReferentielijstInstantie={handleAddReferentielijstInstantie}
         onSave={handleSave}
         onPublishSchemaModel={handlePublishSchemaModel}
+        onPublishAndRebuild={handlePublishAndRebuild}
+        onRebuildModel={handleRebuildModel}
         onLoad={handleLoad}
         onLoadSchema={handleLoadSchema}
         onToggleTestInvoer={() => setShowTestInvoer((v) => !v)}
@@ -895,13 +1242,24 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         modelNaam={modelNaam}
         modelBron={modelBron}
         modelOpmerking={modelOpmerking}
+        actiefDomein={actiefDomein}
+        beschikbareDomeinen={beschikbareDomeinen}
+        onSetActiefDomein={setActiefDomein}
+        onSelecteerDomein={handleSelecteerDomein}
+      />
+
+      <ActionDialog
+        dialog={actieDialoog}
+        onChange={wijzigActieDialoogVeld}
+        onClose={sluitActieDialoog}
+        onSubmit={submitActieDialoog}
       />
 
       <div className="editor-main">
         {/* Het React Flow canvas — dit is waar de magie gebeurt */}
         <div className="editor-canvas">
           <ReactFlow
-            nodes={nodes}
+            nodes={visueleNodes}
             edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
@@ -929,6 +1287,9 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
 
             {/* Background: rasterpatroon op het canvas */}
             <Background variant={BackgroundVariant.Dots} gap={15} size={1} />
+
+            {/* Domein boundary: gestippelde rectangle om actief domein */}
+            <DomeinBoundaryOverlay boundary={domeinBoundary} domein={actiefDomein} />
           </ReactFlow>
         </div>
 
