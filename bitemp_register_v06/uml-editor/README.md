@@ -64,12 +64,19 @@ De editor kan het bestaande model inladen vanuit de **schema-API** (`/schema`) v
 | **Edge optimaliseren** | Dubbelklik op een lijn → handles worden herberekend voor kortste route |
 | **Gebiedsselectie** | Shift + sleep op canvas → rubber-band selectie van meerdere nodes |
 | **Multi-selectie** | Ctrl + klik op nodes om ze individueel bij de selectie te voegen |
+| **Uitlijnen / verdelen** | Selecteer 2+ nodes → rechtsklik voor `Links`, `Centreer`, `Rechts`, `Boven`, `Midden`, `Onder`; bij 3+ ook `Verdeel gelijk ↕` en `Verdeel gelijk ↔` |
+| **Undo canvas-acties** | `Ctrl + Z` → maakt de laatste canvasactie ongedaan (kleine undo-stack, o.a. verplaatsen, verbinden, verwijderen, uitlijnen en verdelen) |
+| **Redo canvas-acties** | `Ctrl + Y` (of `Ctrl + Shift + Z`) → zet de laatste ongedaan gemaakte canvasactie opnieuw terug |
 | **Export Mermaid** | Toolbar: 🧜 Mermaid → download `metamodel.mmd` |
 | **Export PlantUML** | Toolbar: 🌱 PlantUML → download `metamodel.puml` |
 | **Export XMI 1.1** | Toolbar: 📦 XMI 1.1 → download `metamodel.xmi` (incl. diagramposities) |
 | **Import XMI** | Toolbar: 📥 XMI → laad `.xmi`/`.xml` bestand (incl. EA diagramposities) |
 | **Import Mermaid** | Toolbar: 📥 Mermaid → laad `.mmd`/`.md`/`.txt` bestand |
 | **Import PlantUML** | Toolbar: 📥 PlantUML → laad `.puml`/`.plantuml`/`.txt` bestand |
+
+Bij gebiedsselectie kan React Flow naast nodes ook relaties/edges als geselecteerd markeren. Het rechtsklikmenu voor uitlijnen blijft dan toch beschikbaar; de bewerking wordt bewust alleen op de geselecteerde nodes toegepast.
+
+Voor canvasinteracties is er een **kleine undo/redo-stack**: met `Ctrl + Z` kun je de laatste grafische acties terugdraaien, en met `Ctrl + Y` of `Ctrl + Shift + Z` zet je de laatste ongedaan gemaakte canvasactie weer terug. Dit geldt voor **verplaatsen**, **verbinden**, **verwijderen**, **uitlijnen** en **verdelen**. Deze sneltoetsen grijpen niet in als je in een invoerveld of tekstvak aan het typen bent; dan blijft de normale browser/input-undo gelden. Bewerkingen in het inhouds-/zijpaneel vallen bewust buiten deze canvas-undo.
 
 Bij enums en gegevenstypen geldt extra veiligheid:
 

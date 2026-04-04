@@ -17,7 +17,7 @@
  *   4. onConnect: wanneer gebruiker een verbinding trekt
  *   5. MiniMap / Controls / Background: optionele UI-helpers
  */
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ReactFlow,
   MiniMap,
@@ -185,6 +185,49 @@ function vulOntbrekendeDomeinenOpNodes(nodes, edges) {
   });
 }
 
+function isTekstInvoerElement(element) {
+  if (!element) return false;
+  const tag = element.tagName?.toLowerCase?.() || "";
+  return tag === "input" || tag === "textarea" || tag === "select" || element.isContentEditable === true;
+}
+
+function deepCloneGraphValue(value) {
+  if (typeof globalThis.structuredClone === "function") {
+    return globalThis.structuredClone(value);
+  }
+  return JSON.parse(JSON.stringify(value));
+}
+
+function maakCanvasSignature(nodes, edges, selectedNodeId, selectedEdgeId) {
+  return JSON.stringify({
+    selectedNodeId: selectedNodeId || null,
+    selectedEdgeId: selectedEdgeId || null,
+    nodes: nodes
+      .map((n) => [
+        n.id,
+        n.type,
+        Math.round(n.position?.x ?? 0),
+        Math.round(n.position?.y ?? 0),
+        !!n.selected,
+      ])
+      .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
+    edges: edges
+      .map((e) => [e.id, e.source, e.target, e.sourceHandle || "", e.targetHandle || ""])
+      .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
+  });
+}
+
+function maakCanvasSnapshot(nodes, edges, selectedNodeId, selectedEdgeId, actieNaam = "canvas-actie") {
+  return {
+    actieNaam,
+    nodes: deepCloneGraphValue(nodes),
+    edges: deepCloneGraphValue(edges),
+    selectedNodeId,
+    selectedEdgeId,
+    signature: maakCanvasSignature(nodes, edges, selectedNodeId, selectedEdgeId),
+  };
+}
+
 export default function MetamodelEditor({ initialNodes = [], initialEdges = [], onV3ModelLoaded = null, modelNaam = "", modelBron = "", modelOpmerking = "" }) {
   /**
    * useNodesState en useEdgesState zijn React Flow hooks:
@@ -195,10 +238,10 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
    * React Flow stuurt "changes" (position change, selection change, remove) naar
    * deze handlers, die de state automatisch bijwerken.
    */
-  const [nodes, setNodes, onNodesChange] = useNodesState(
+  const [nodes, setNodes, baseOnNodesChange] = useNodesState(
     vulOntbrekendeDomeinenOpNodes(initialNodes, initialEdges)
   );
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [edges, setEdges, baseOnEdgesChange] = useEdgesState(initialEdges);
 
   // Track welke node of edge geselecteerd is voor het edit panel
   const [selectedNodeId, setSelectedNodeId] = useState(null);
@@ -207,6 +250,11 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   const [laatstGepubliceerdSchemaID, setLaatstGepubliceerdSchemaID] = useState(null);
   const [actieDialoog, setActieDialoog] = useState(null);
   const [actiefDomein, setActiefDomein] = useState(null); // null = alles tonen
+  // Kleine undo/redo-stack voor canvasacties; inhoudspaneel-bewerkingen vallen hier bewust buiten.
+  const undoStackRef = useRef([]);
+  const redoStackRef = useRef([]);
+  // Voorkomt dat restore-acties zelf opnieuw snapshots pushen.
+  const undoRestoreBezigRef = useRef(false);
   // { x, y } schermcoördinaten van het rechtsklikmenu; null = verborgen
   const [contextMenu, setContextMenu] = useState(null);
   const canvasRef = useRef(null);
@@ -224,6 +272,118 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   const effectiefDomeinPerNode = useMemo(() => {
     return bepaalEffectiefDomeinPerNode(nodes, edges);
   }, [nodes, edges]);
+
+  const pushCanvasUndo = useCallback(
+    (actieNaam = "canvas-actie") => {
+      if (undoRestoreBezigRef.current) return;
+      const snapshot = maakCanvasSnapshot(nodes, edges, selectedNodeId, selectedEdgeId, actieNaam);
+      const vorige = undoStackRef.current[undoStackRef.current.length - 1];
+      if (vorige?.signature === snapshot.signature) return;
+      undoStackRef.current = [...undoStackRef.current, snapshot].slice(-25);
+      // Een nieuwe canvasactie verbreekt de redo-keten.
+      redoStackRef.current = [];
+    },
+    [nodes, edges, selectedNodeId, selectedEdgeId]
+  );
+
+  const restoreCanvasSnapshot = useCallback(
+    (snapshot) => {
+      if (!snapshot) return false;
+      undoRestoreBezigRef.current = true;
+
+      const vorigeEdges = deepCloneGraphValue(snapshot.edges || []);
+      const vorigeNodes = vulOntbrekendeDomeinenOpNodes(
+        deepCloneGraphValue(snapshot.nodes || []),
+        vorigeEdges
+      );
+
+      setNodes(vorigeNodes);
+      setEdges(vorigeEdges);
+      setSelectedNodeId(snapshot.selectedNodeId || null);
+      setSelectedEdgeId(snapshot.selectedEdgeId || null);
+      setContextMenu(null);
+
+      Promise.resolve().then(() => {
+        undoRestoreBezigRef.current = false;
+      });
+      return true;
+    },
+    [setNodes, setEdges]
+  );
+
+  const undoLaatsteCanvasActie = useCallback(() => {
+    const snapshot = undoStackRef.current[undoStackRef.current.length - 1];
+    if (!snapshot) return false;
+
+    const huidigeSnapshot = maakCanvasSnapshot(nodes, edges, selectedNodeId, selectedEdgeId, "redo-base");
+    const laatsteRedo = redoStackRef.current[redoStackRef.current.length - 1];
+    if (laatsteRedo?.signature !== huidigeSnapshot.signature) {
+      redoStackRef.current = [...redoStackRef.current, huidigeSnapshot].slice(-25);
+    }
+
+    undoStackRef.current = undoStackRef.current.slice(0, -1);
+    return restoreCanvasSnapshot(snapshot);
+  }, [nodes, edges, selectedNodeId, selectedEdgeId, restoreCanvasSnapshot]);
+
+  const redoLaatsteCanvasActie = useCallback(() => {
+    const snapshot = redoStackRef.current[redoStackRef.current.length - 1];
+    if (!snapshot) return false;
+
+    const huidigeSnapshot = maakCanvasSnapshot(nodes, edges, selectedNodeId, selectedEdgeId, "undo-base");
+    const laatsteUndo = undoStackRef.current[undoStackRef.current.length - 1];
+    if (laatsteUndo?.signature !== huidigeSnapshot.signature) {
+      undoStackRef.current = [...undoStackRef.current, huidigeSnapshot].slice(-25);
+    }
+
+    redoStackRef.current = redoStackRef.current.slice(0, -1);
+    return restoreCanvasSnapshot(snapshot);
+  }, [nodes, edges, selectedNodeId, selectedEdgeId, restoreCanvasSnapshot]);
+
+  // Ctrl+Z = undo, Ctrl+Y / Ctrl+Shift+Z = redo voor canvasacties.
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (isTekstInvoerElement(event.target)) return;
+
+      const key = String(event.key).toLowerCase();
+      const hasPrimary = event.ctrlKey || event.metaKey;
+      if (!hasPrimary) return;
+
+      const isUndo = !event.shiftKey && key === "z";
+      const isRedo = key === "y" || (event.shiftKey && key === "z");
+
+      if (isUndo) {
+        const hadUndo = undoLaatsteCanvasActie();
+        if (hadUndo) event.preventDefault();
+        return;
+      }
+
+      if (isRedo) {
+        const hadRedo = redoLaatsteCanvasActie();
+        if (hadRedo) event.preventDefault();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [undoLaatsteCanvasActie, redoLaatsteCanvasActie]);
+
+  const onNodesChange = useCallback(
+    (changes) => {
+      const heeftRemove = Array.isArray(changes) && changes.some((c) => c?.type === "remove");
+      if (heeftRemove) pushCanvasUndo("nodes-remove");
+      baseOnNodesChange(changes);
+    },
+    [baseOnNodesChange, pushCanvasUndo]
+  );
+
+  const onEdgesChange = useCallback(
+    (changes) => {
+      const heeftRemove = Array.isArray(changes) && changes.some((c) => c?.type === "remove");
+      if (heeftRemove) pushCanvasUndo("edges-remove");
+      baseOnEdgesChange(changes);
+    },
+    [baseOnEdgesChange, pushCanvasUndo]
+  );
 
   // Verzamel unieke domeinen uit alle nodes voor de domein-selector
   const beschikbareDomeinen = useMemo(() => {
@@ -261,6 +421,9 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   const applyLoadedGraph = useCallback((result) => {
     const nextEdges = result?.edges || [];
     const nextNodes = vulOntbrekendeDomeinenOpNodes(result?.nodes || [], nextEdges);
+    undoStackRef.current = [];
+    redoStackRef.current = [];
+    setContextMenu(null);
     setNodes(nextNodes);
     setEdges(nextEdges);
   }, [setNodes, setEdges]);
@@ -360,6 +523,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
    */
   const onConnect = useCallback(
     (connection) => {
+      pushCanvasUndo("connect-edge");
       setEdges((eds) => {
         const normalized = normalizeConnection(connection, eds);
         const sourceType = nodeTypeById.get(normalized.source);
@@ -414,7 +578,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         return addEdge(newEdge, filteredEdges);
       });
     },
-    [normalizeConnection, setEdges]
+    [normalizeConnection, setEdges, pushCanvasUndo, nodeTypeById, nodes, setNodes]
   );
 
   /** Selectie handlers */
@@ -483,6 +647,8 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     (actie) => {
       const geselecteerd = nodes.filter((n) => n.selected);
       if (geselecteerd.length < 2) return;
+
+      pushCanvasUndo(`align:${actie}`);
 
       const w = (n) => n.measured?.width  ?? n.width  ?? 180;
       const h = (n) => n.measured?.height ?? n.height ?? 60;
@@ -553,7 +719,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         })
       );
     },
-    [nodes, setNodes]
+    [nodes, setNodes, pushCanvasUndo]
   );
 
   /**
@@ -562,6 +728,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
    */
   const onEdgeDoubleClick = useCallback(
     (_event, edge) => {
+      pushCanvasUndo("edge-optimaliseer");
       setEdges((eds) =>
         eds.map((e) => {
           if (e.id !== edge.id) return e;
@@ -574,7 +741,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         })
       );
     },
-    [nodes, setEdges]
+    [nodes, setEdges, pushCanvasUndo]
   );
 
   // === Node CRUD ===
@@ -582,6 +749,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   /** Voeg een nieuw type (node) toe op een willekeurige positie */
   const handleAddNode = useCallback(
     (data, type) => {
+      pushCanvasUndo("add-node");
       // Ken automatisch het actieve domein toe aan nieuwe nodes
       const nodeData = actiefDomein && !data.domein
         ? { ...data, domein: actiefDomein }
@@ -599,7 +767,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       setSelectedNodeId(data.id);
       setSelectedEdgeId(null);
     },
-    [setNodes, actiefDomein]
+    [setNodes, actiefDomein, pushCanvasUndo]
   );
 
   /**
@@ -608,6 +776,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
    * Zie Referentielijsten.md §7.
    */
   const handleAddReferentielijstSet = useCallback(() => {
+    pushCanvasUndo("add-referentielijst-set");
     const set = maakReferentielijstSet();
     const baseX = 100 + Math.random() * 300;
     const baseY = 100 + Math.random() * 200;
@@ -621,13 +790,14 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     setEdges((eds) => [...eds, ...set.edges]);
     setSelectedNodeId(newNodes[0].id);
     setSelectedEdgeId(null);
-  }, [setNodes, setEdges]);
+  }, [setNodes, setEdges, pushCanvasUndo]);
 
   /**
    * Voeg een referentielijst-instantie node toe.
    * Een instantie vertegenwoordigt een specifiek record van de Referentielijst-klasse.
    */
   const handleAddReferentielijstInstantie = useCallback(() => {
+    pushCanvasUndo("add-referentielijst-instantie");
     const data = maakReferentielijstInstantie();
     const newNode = {
       id: data.id,
@@ -638,7 +808,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     setNodes((nds) => [...nds, newNode]);
     setSelectedNodeId(data.id);
     setSelectedEdgeId(null);
-  }, [setNodes]);
+  }, [setNodes, pushCanvasUndo]);
 
   /** Update de data van een bestaande node */
   const handleUpdateNode = useCallback(
@@ -792,6 +962,8 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         }
       }
 
+      pushCanvasUndo("delete-node");
+
       setNodes((nds) => {
         const cleaned = nds
           .filter((n) => n.id !== nodeId)
@@ -815,7 +987,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       );
       setSelectedNodeId(null);
     },
-    [nodes, setNodes, setEdges]
+    [nodes, setNodes, setEdges, pushCanvasUndo]
   );
 
   // === Edge CRUD ===
@@ -831,6 +1003,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
 
   const handleDeleteEdge = useCallback(
     (edgeId) => {
+      pushCanvasUndo("delete-edge");
       const edgeToDelete = edges.find((e) => e.id === edgeId);
       if (edgeToDelete?.data?.isDependency === true) {
         const relatieId = nodeTypeById.get(edgeToDelete.source) === "relatie"
@@ -858,7 +1031,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       setEdges((eds) => eds.filter((e) => e.id !== edgeId));
       setSelectedEdgeId(null);
     },
-    [edges, nodeTypeById, setEdges, setNodes]
+    [edges, nodeTypeById, setEdges, setNodes, pushCanvasUndo]
   );
 
   /**
@@ -1534,6 +1707,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onNodeClick={onNodeClick}
+            onNodeDragStart={() => pushCanvasUndo("move-node")}
             onEdgeClick={onEdgeClick}
             onEdgeDoubleClick={onEdgeDoubleClick}
             onPaneClick={onPaneClick}

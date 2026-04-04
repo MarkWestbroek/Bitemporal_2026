@@ -219,6 +219,20 @@ Houd **Shift** ingedrukt en sleep op het canvas om een selectierechthoek te teke
 
 Aanvullend: **Ctrl + klik** op individuele nodes voegt ze toe aan of verwijdert ze uit de selectie.
 
+### Rechtsklikmenu voor uitlijnen en verdelen
+
+Wanneer **minstens 2 nodes** geselecteerd zijn, kun je met **rechtsklik** een compact contextmenu openen. Dat menu werkt zowel na **Ctrl + klik** als na **Shift + sleep** (gebiedsselectie), en mag ook geopend worden wanneer er tegelijk relaties/edges mee geselecteerd zijn. De acties worden dan **alleen op de geselecteerde nodes** toegepast; edges worden genegeerd.
+
+Beschikbare acties:
+
+- **Links / Centreer / Rechts** — horizontale uitlijning van de geselecteerde nodes
+- **Boven / Midden / Onder** — verticale uitlijning van de geselecteerde nodes
+- **Verdeel gelijk ↕ / Verdeel gelijk ↔** — verdeelt de tussenruimte gelijkmatig; deze opties verschijnen pas bij **3 of meer** geselecteerde nodes
+- **Ctrl + Z** — draait de laatste canvasactie terug via een kleine undo-stack (o.a. verplaatsen, verbinden, verwijderen, uitlijnen en verdelen)
+- **Ctrl + Y** of **Ctrl + Shift + Z** — zet de laatste ongedaan gemaakte canvasactie opnieuw terug
+
+Technisch: het contextmenu is gekoppeld aan `onNodeContextMenu`, `onPaneContextMenu`, `onEdgeContextMenu` en `onSelectionContextMenu` in `MetamodelEditor.jsx`, zodat het menu ook bruikbaar blijft als React Flow naast nodes ook de selectiebox of onderliggende edges als geselecteerd markeert.
+
 Technisch: dit zijn React Flow props op de `<ReactFlow>` component:
 
 | Prop | Waarde | Effect |
