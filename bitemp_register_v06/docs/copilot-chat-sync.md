@@ -56,6 +56,8 @@ Als ook `py -3` niet werkt, installeer dan Python 3 voor Windows inclusief de Py
 
 - De hook draait bij elke `git commit`, ongeacht of je commit vanuit VS Code, terminal of GitHub Desktop maakt.
 - Als een chat later verder groeit, wordt de bestaande Markdown-export opnieuw opgebouwd met de nieuwste inhoud.
+- Ook multi-root workspaces worden meegenomen: als `workspaceStorage/*/workspace.json` verwijst naar een aparte `.code-workspace`-config, leest de export nu ook die onderliggende mappen uit.
+- Bestandsnamen gebruiken waar mogelijk de sessietitel die VS Code/Copilot voor de chat bewaart; alleen als die ontbreekt, valt de export terug op de eerste user-regel.
 - Lege of ongebruikte chats worden niet geëxporteerd.
 
 ## Synchronisatie tussen machines

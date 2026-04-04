@@ -18,6 +18,54 @@ import glob
 import re
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import unquote, urlparse
+
+
+def decode_file_uri(value: str) -> str:
+    """Zet een file:// URI om naar een lokaal pad als dat nodig is."""
+    if not isinstance(value, str):
+        return ""
+    if not value.startswith("file://"):
+        return value
+
+    parsed = urlparse(value)
+    path = unquote(parsed.path or "")
+    if re.match(r"^/[A-Za-z]:", path):
+        path = path[1:]
+    return path.replace("/", os.sep)
+
+
+def workspace_contains_project(workspace_meta: dict, project_path: str) -> bool:
+    """Check of een workspace naar dit project verwijst, ook bij multi-root workspaces."""
+    needle = project_path.replace("\\", "/").lower().rstrip("/")
+    candidate_paths = []
+
+    for key in ("folder", "workspace"):
+        value = workspace_meta.get(key)
+        if isinstance(value, str):
+            candidate_paths.append(decode_file_uri(value))
+
+    for folder in workspace_meta.get("folders", []):
+        if isinstance(folder, dict) and isinstance(folder.get("path"), str):
+            candidate_paths.append(decode_file_uri(folder["path"]))
+
+    workspace_ref = workspace_meta.get("workspace")
+    workspace_file = decode_file_uri(workspace_ref) if isinstance(workspace_ref, str) else ""
+    if workspace_file and os.path.isfile(workspace_file):
+        try:
+            with open(workspace_file, "r", encoding="utf-8") as wf:
+                nested_workspace = json.load(wf)
+            for folder in nested_workspace.get("folders", []):
+                if isinstance(folder, dict) and isinstance(folder.get("path"), str):
+                    candidate_paths.append(decode_file_uri(folder["path"]))
+        except (json.JSONDecodeError, IOError):
+            pass
+
+    for candidate in candidate_paths:
+        normalized = candidate.replace("\\", "/").lower().rstrip("/")
+        if needle and needle in normalized:
+            return True
+    return False
 
 
 def find_workspace_storage_dirs(project_path: str) -> list[str]:
@@ -45,12 +93,11 @@ def find_workspace_storage_dirs(project_path: str) -> list[str]:
             try:
                 with open(ws_json, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                ws_path = data.get("folder", data.get("workspace", ""))
-                if project_path.rstrip("/") in ws_path:
+                if workspace_contains_project(data, project_path):
                     matches.append(os.path.join(vscode_storage, entry))
             except (json.JSONDecodeError, IOError):
                 continue
-    return matches
+    return sorted(set(matches))
 
 
 def replay_jsonl_state(filepath: str) -> dict:
@@ -67,6 +114,7 @@ def replay_jsonl_state(filepath: str) -> dict:
     session_header = None
     messages = []
     current_response_parts = []
+    latest_generated_title = ""
 
     with open(filepath, "r", encoding="utf-8", errors="replace") as f:
         for line in f:
@@ -83,12 +131,21 @@ def replay_jsonl_state(filepath: str) -> dict:
 
             if kind == 0:
                 session_header = v or {}
+                for key in ("customTitle", "sessionTitle", "generatedTitle", "title"):
+                    value = session_header.get(key, "")
+                    if isinstance(value, str) and value.strip():
+                        latest_generated_title = " ".join(value.split()).strip()
+                        break
                 continue
 
             if kind == 2 and isinstance(v, list):
                 for item in v:
                     if not isinstance(item, dict):
                         continue
+                    generated_title = item.get("generatedTitle", "")
+                    if isinstance(generated_title, str) and generated_title.strip():
+                        latest_generated_title = " ".join(generated_title.split()).strip()
+
                     # Request marker — bevat requestId en het user-bericht
                     if "requestId" in item:
                         if current_response_parts:
@@ -125,6 +182,9 @@ def replay_jsonl_state(filepath: str) -> dict:
     if not session_header:
         session_header = {}
 
+    if latest_generated_title:
+        session_header["generatedTitle"] = latest_generated_title
+
     session_header["_extracted_messages"] = messages
     return session_header
 
@@ -137,6 +197,26 @@ def extract_messages(session: dict) -> list[dict]:
     """
     # Gebruik de berichten die we uit de JSONL patches geëxtraheerd hebben
     return session.get("_extracted_messages", [])
+
+
+def build_session_title(session: dict, messages: list[dict], session_id: str) -> str:
+    """Gebruik bij voorkeur de echte sessietitel uit VS Code, met fallback naar het eerste user-bericht."""
+    for key in ("customTitle", "sessionTitle", "generatedTitle", "title"):
+        value = session.get(key, "")
+        if isinstance(value, str):
+            cleaned = " ".join(value.split()).strip()
+            if cleaned:
+                if len(cleaned) > 80:
+                    return cleaned[:80].rstrip() + "..."
+                return cleaned
+
+    first_user = next((m["text"] for m in messages if m["role"] == "user"), "")
+    title = first_user[:80].replace("\n", " ").strip()
+    if len(first_user) > 80:
+        title += "..."
+    if title:
+        return title
+    return session_id[:8]
 
 
 def session_to_markdown(session: dict, session_id: str) -> str:
@@ -152,11 +232,8 @@ def session_to_markdown(session: dict, session_id: str) -> str:
     if not messages:
         return ""
 
-    # Titel: eerste user-bericht (afgekapt)
-    first_user = next((m["text"] for m in messages if m["role"] == "user"), "")
-    title = first_user[:80].replace("\n", " ").strip()
-    if len(first_user) > 80:
-        title += "..."
+    # Titel: gebruik de echte sessietitel als die beschikbaar is in VS Code
+    title = build_session_title(session, messages, session_id)
 
     lines = [
         f"# Chat: {title}",
@@ -231,11 +308,9 @@ def main():
             except (ValueError, OSError):
                 date_prefix = "onbekend"
 
-            # Maak een korte slug van het eerste user-bericht
-            first_user = next(
-                (m["text"] for m in messages if m["role"] == "user"), ""
-            )
-            slug = re.sub(r"[^a-z0-9]+", "-", first_user[:50].lower()).strip("-")
+            # Maak een korte slug van de sessietitel; fallback blijft het eerste user-bericht
+            title_for_filename = build_session_title(session, messages, session_id)
+            slug = re.sub(r"[^a-z0-9]+", "-", title_for_filename[:50].lower()).strip("-")
             if not slug:
                 slug = session_id[:8]
 

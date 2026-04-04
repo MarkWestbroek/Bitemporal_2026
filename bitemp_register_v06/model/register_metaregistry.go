@@ -13,7 +13,7 @@ func initRegisterMetaRegistry() {
 		IsMaterieel:            true,
 		Domein:                 "register",
 		Kleur:                  "#fde68a",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1215, Y: 345}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1290, Y: -135}},
 		Veldnaam:               "land",
 		Padnaam:                "landen",
 		Meervoud:               "landen",
@@ -55,7 +55,7 @@ func initRegisterMetaRegistry() {
 		EntiteitIDKolom:        "land_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1095, Y: 555}, EdgeID: "edge_1774646153149_10",
+			Positie: &V3Positie{X: 1170, Y: 75}, EdgeID: "edge_1774646153149_10",
 			SourceHandle: "bottom", TargetHandle: "top",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -85,7 +85,7 @@ func initRegisterMetaRegistry() {
 		EntiteitIDKolom:        "land_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1335, Y: 555}, EdgeID: "edge_1774646072605_7",
+			Positie: &V3Positie{X: 1410, Y: 75}, EdgeID: "edge_1774646072605_7",
 			SourceHandle: "bottom", TargetHandle: "top",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -189,7 +189,7 @@ func initRegisterMetaRegistry() {
 		IsMaterieel:            true,
 		Domein:                 "register",
 		Kleur:                  "#fef3c7",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1260, Y: -240}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1440, Y: -720}},
 		Veldnaam:               "referentielijst",
 		Padnaam:                "referentielijsten",
 		Meervoud:               "referentielijsten",
@@ -235,7 +235,7 @@ func initRegisterMetaRegistry() {
 		EntiteitIDKolom:        "referentielijst_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1590, Y: -255}, EdgeID: "Referentielijst->Referentielijst_Referentielijstnaam",
+			Positie: &V3Positie{X: 1815, Y: -975}, EdgeID: "Referentielijst->Referentielijst_Referentielijstnaam",
 			SourceHandle: "right", TargetHandle: "left",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -265,7 +265,7 @@ func initRegisterMetaRegistry() {
 		EntiteitIDKolom:        "referentielijst_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1590, Y: -135}, EdgeID: "Referentielijst->Referentielijst_Referentielijstomschrijving",
+			Positie: &V3Positie{X: 1815, Y: -855}, EdgeID: "Referentielijst->Referentielijst_Referentielijstomschrijving",
 			SourceHandle: "right", TargetHandle: "left",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -295,7 +295,7 @@ func initRegisterMetaRegistry() {
 		EntiteitIDKolom:        "referentielijst_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1590, Y: -15}, EdgeID: "Referentielijst->Referentielijst_ReferentielijstVisibility",
+			Positie: &V3Positie{X: 1815, Y: -735}, EdgeID: "Referentielijst->Referentielijst_ReferentielijstVisibility",
 			SourceHandle: "right", TargetHandle: "left",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -325,7 +325,7 @@ func initRegisterMetaRegistry() {
 		EntiteitIDKolom:        "referentielijst_id",
 		Momentvoorkomen:        Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1590, Y: 85}, EdgeID: "Referentielijst->Referentielijst_ReferentielijstInternetadres",
+			Positie: &V3Positie{X: 1815, Y: -635}, EdgeID: "Referentielijst->Referentielijst_ReferentielijstInternetadres",
 			SourceHandle: "right", TargetHandle: "left",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -358,7 +358,7 @@ func initRegisterMetaRegistry() {
 		SecondaireEntiteitIDKolom: "land_id",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1215, Y: 165}, EdgeID: "Referentielijst->LandenlijstLand",
+			Positie: &V3Positie{X: 1290, Y: -315}, EdgeID: "Referentielijst->LandenlijstLand",
 			DoelEdgeID: "LandenlijstLand->Land",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -390,6 +390,10 @@ func initRegisterMetaRegistry() {
 		EntiteitIDKolom:           "referentielijst_id",
 		SecondaireEntiteitIDKolom: "adellijketitel_id",
 		Momentvoorkomen:           Meervoudig,
+		Layout: &EditorLayout{
+			Positie: &V3Positie{X: 1650, Y: -315}, EdgeID: "Referentielijst->AdellijkeTitelsTitel",
+			DoelEdgeID: "AdellijkeTitelsTitel->AdellijkeTitel",
+		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "AdellijkeTitelsTitel_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -574,9 +578,10 @@ func initRegisterMetaRegistry() {
 	// Referentielijst-instantie metadata + editor-posities
 	ReferentielijstInstantieRegistry["AdellijkeTitels"] = ReferentielijstInstantieInfo{
 		Naam: "AdellijkeTitels", Omschrijving: "Adellijke titels in Nederland",
+		Layout: &EditorLayout{Positie: &V3Positie{X: 1890, Y: -255}},
 	}
 	ReferentielijstInstantieRegistry["Landenlijst"] = ReferentielijstInstantieInfo{
 		Naam: "Landenlijst", Omschrijving: "Alle landen van de wereld",
-		Layout: &EditorLayout{Positie: &V3Positie{X: 1065, Y: -90}},
+		Layout: &EditorLayout{Positie: &V3Positie{X: 1020, Y: -255}},
 	}
 }

@@ -8,5 +8,5 @@ func initRegisterEnumRegistry() {
 	EnumDomeinen["ReferentielijstAdrestype"] = "register"
 
 	// Enum editor-posities
-	EnumEditorLayouts["ReferentielijstAdrestype"] = &EditorLayout{Positie: &V3Positie{X: 1890, Y: 120}}
+	EnumEditorLayouts["ReferentielijstAdrestype"] = &EditorLayout{Positie: &V3Positie{X: 1830, Y: -480}}
 }

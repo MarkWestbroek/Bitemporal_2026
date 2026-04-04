@@ -11,7 +11,7 @@ func initNpLocDatatypeRegistry() {
 			Basistype:   "string",
 			Format:      "nl-postcode",
 			Domein:      "register",
-			Positie:     &V3Positie{X: 750, Y: 345},
+			Positie:     &V3Positie{X: 510, Y: -315},
 			Validatie: &V3Validatie{
 				Pattern:     `^[1-9][0-9]{3}\s?[A-Za-z]{2}$`,
 				MinLength:   intPtr(6),
@@ -31,7 +31,7 @@ func initNpLocDatatypeRegistry() {
 			Basistype:   "string",
 			Format:      "bsn",
 			Domein:      "register",
-			Positie:     &V3Positie{X: -480, Y: 165},
+			Positie:     &V3Positie{X: -645, Y: -555},
 			Validatie: &V3Validatie{
 				Pattern:     `^[0-9]{9}$`,
 				MinLength:   intPtr(9),

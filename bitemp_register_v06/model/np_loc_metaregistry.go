@@ -13,6 +13,7 @@ func initNpLocMetaRegistry() {
 		IsMaterieel:            false,
 		Domein:                 "np-loc",
 		Kleur:                  "#c4b5fd",
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1665, Y: -120}},
 		Veldnaam:               "adellijketitel",
 		Padnaam:                "adellijke_titels",
 		Meervoud:               "adellijke titels",
@@ -50,6 +51,9 @@ func initNpLocMetaRegistry() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "adellijketitel_id",
 		Momentvoorkomen:        Enkelvoudig,
+		Layout: &EditorLayout{
+			Positie: &V3Positie{X: 1665, Y: 75}, EdgeID: "AdellijkeTitel->AdellijkeTitel_AdellijkeTitelTitel",
+		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "AdellijkeTitelTitel_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -84,7 +88,7 @@ func initNpLocMetaRegistry() {
 		IsMaterieel:            true,
 		Domein:                 "np-loc",
 		Kleur:                  "#fecaca",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 720, Y: -135}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 600, Y: -885}},
 		Veldnaam:               "locatie",
 		Padnaam:                "locaties",
 		Meervoud:               "locaties",
@@ -136,7 +140,7 @@ func initNpLocMetaRegistry() {
 		EntiteitIDKolom:        "locatie_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 780, Y: 60}, EdgeID: "Locatie->Locatie_Adres",
+			Positie: &V3Positie{X: 765, Y: -570}, EdgeID: "Locatie->Locatie_Adres",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Locatie_Adres_Data", Momentvoorkomen: Enkelvoudig},
@@ -165,7 +169,7 @@ func initNpLocMetaRegistry() {
 		EntiteitIDKolom:        "locatie_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 585, Y: 90}, EdgeID: "Locatie->Locatie_BAG-locatie",
+			Positie: &V3Positie{X: 510, Y: -555}, EdgeID: "Locatie->Locatie_BAG-locatie",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Locatie_BAGlocatie_Data", Momentvoorkomen: Enkelvoudig},
@@ -267,7 +271,7 @@ func initNpLocMetaRegistry() {
 		IsMaterieel:            true,
 		Domein:                 "np-loc",
 		Kleur:                  "#bfdbfe",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: -90, Y: -135}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: -210, Y: -885}},
 		Veldnaam:               "natuurlijkpersoon",
 		Padnaam:                "natuurlijk_personen",
 		Meervoud:               "natuurlijk personen",
@@ -323,7 +327,7 @@ func initNpLocMetaRegistry() {
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -450, Y: -30}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_PersoonsIdentificatie",
+			Positie: &V3Positie{X: -570, Y: -780}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_PersoonsIdentificatie",
 			SourceHandle: "left",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -353,7 +357,7 @@ func initNpLocMetaRegistry() {
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -105, Y: 255}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_Naam",
+			Positie: &V3Positie{X: -225, Y: -495}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_Naam",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Naam_Data", Momentvoorkomen: Enkelvoudig},
@@ -382,7 +386,7 @@ func initNpLocMetaRegistry() {
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -285, Y: 450}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_Burgerschap",
+			Positie: &V3Positie{X: -405, Y: -300}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_Burgerschap",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Burgerschap_Data", Momentvoorkomen: Enkelvoudig},
@@ -423,7 +427,7 @@ func initNpLocMetaRegistry() {
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 60, Y: 450}, EdgeID: "edge_1774209110136_2",
+			Positie: &V3Positie{X: -60, Y: -300}, EdgeID: "edge_1774209110136_2",
 			SourceHandle: "bottom", TargetHandle: "top",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -453,7 +457,7 @@ func initNpLocMetaRegistry() {
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 195, Y: 255}, EdgeID: "edge_1774209240752_5",
+			Positie: &V3Positie{X: 75, Y: -495}, EdgeID: "edge_1774209240752_5",
 			SourceHandle: "bottom", TargetHandle: "top",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -484,7 +488,7 @@ func initNpLocMetaRegistry() {
 		SecondaireEntiteitIDKolom: "locatie_id",
 		Momentvoorkomen:           Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 330, Y: -120}, EdgeID: "edge_1774201942583_1",
+			Positie: &V3Positie{X: 210, Y: -870}, EdgeID: "edge_1774201942583_1",
 			SourceHandle: "right", TargetHandle: "left",
 			DoelEdgeID: "edge_1774201991984_2", DoelSourceHandle: "right", DoelTargetHandle: "left",
 		},
@@ -762,9 +766,10 @@ func initNpLocMetaRegistry() {
 	// Referentielijst-instantie metadata + editor-posities
 	ReferentielijstInstantieRegistry["AdellijkeTitels"] = ReferentielijstInstantieInfo{
 		Naam: "AdellijkeTitels", Omschrijving: "Adellijke titels in Nederland",
+		Layout: &EditorLayout{Positie: &V3Positie{X: 1890, Y: -255}},
 	}
 	ReferentielijstInstantieRegistry["Landenlijst"] = ReferentielijstInstantieInfo{
 		Naam: "Landenlijst", Omschrijving: "Alle landen van de wereld",
-		Layout: &EditorLayout{Positie: &V3Positie{X: 1065, Y: -90}},
+		Layout: &EditorLayout{Positie: &V3Positie{X: 1020, Y: -255}},
 	}
 }

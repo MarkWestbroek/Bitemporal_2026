@@ -61,8 +61,9 @@ try {
         $usableInterpreterFound = $true
         $lastInterpreter = $candidate.Exe
 
+        $global:LASTEXITCODE = $null
         & $candidate.Exe @($candidate.Args)
-        $exitCode = $LASTEXITCODE
+        $exitCode = if ($null -ne $LASTEXITCODE) { [int]$LASTEXITCODE } elseif ($?) { 0 } else { 1 }
         $lastExitCode = $exitCode
 
         if ($exitCode -eq 0) {

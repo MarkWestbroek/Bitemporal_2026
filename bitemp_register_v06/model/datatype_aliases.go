@@ -1,16 +1,10 @@
 package model
 
-// custom_datatypes.go — basale Go alias-types voor domeinspecifieke datatypes.
-//
-// De codegenerator kan velden typen als `BSN` of `NLPostcode` wanneer een
-// V3-model custom datatypes definieert. Deze aliases houden de runtime-representatie
-// bewust eenvoudig (onderliggend `string`), terwijl de domeinbetekenis in de
-// gegenereerde Go structs behouden blijft.
-//
-// Validatie- en weergaveregels blijven in `DatatypeRegistry` staan.
+// Datatype aliases — Go type-definities voor custom datatypes.
+// Gegenereerd door cmd/codegen — niet handmatig bewerken.
 
-// NLPostcode representeert een Nederlandse postcode als domeinspecifiek stringtype.
+// NLPostcode — Nederlandse postcode (4 cijfers + 2 letters)
 type NLPostcode string
 
-// BSN representeert een burgerservicenummer als domeinspecifiek stringtype.
+// BSN — Burgerservicenummer (9 cijfers, 11-proef)
 type BSN string
