@@ -144,53 +144,6 @@ type NatuurlijkPersoon_Naam_Data struct {
 	Afvoer               *time.Time `json:"afvoer,omitempty"`
 }
 
-// NatuurlijkPersoon_Burgerschap — Nationaliteitsgegevens (burgerschap) van de natuurlijk persoon.
-type NatuurlijkPersoon_Burgerschap struct {
-	bun.BaseModel           `bun:"table:natuurlijkpersoon_burgerschap,alias:natuurlijkpersoon_burgerschap"`
-	NatuurlijkPersoon_ID    int                                     `json:"natuurlijkpersoon_id" bun:"natuurlijkpersoon_id,pk" schema_desc:"ID van de NatuurlijkPersoon-entiteit"`
-	Rel_ID                  int                                     `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentNatuurlijkPersoon *NatuurlijkPersoon                      `json:"-" bun:"rel:belongs-to,join:natuurlijkpersoon_id=id,on_delete:cascade"`
-	Opvoer                  *time.Time                              `json:"opvoer,omitempty"`
-	Afvoer                  *time.Time                              `json:"afvoer,omitempty"`
-	Data                    []NatuurlijkPersoon_Burgerschap_Data    `bun:"rel:has-many,join:natuurlijkpersoon_id=natuurlijkpersoon_id,join:rel_id=rel_id" json:"data,omitempty"`
-	Aanvang                 []NatuurlijkPersoon_Burgerschap_Aanvang `bun:"rel:has-many,join:natuurlijkpersoon_id=natuurlijkpersoon_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
-	Einde                   []NatuurlijkPersoon_Burgerschap_Einde   `bun:"rel:has-many,join:natuurlijkpersoon_id=natuurlijkpersoon_id,join:rel_id=rel_id" json:"einde,omitempty"`
-}
-
-// NatuurlijkPersoon_Burgerschap_Data — geversioned inhoud van NatuurlijkPersoon_Burgerschap.
-type NatuurlijkPersoon_Burgerschap_Data struct {
-	bun.BaseModel        `bun:"table:natuurlijkpersoon_burgerschap_data,alias:natuurlijkpersoon_burgerschap_data"`
-	NatuurlijkPersoon_ID int        `json:"natuurlijkpersoon_id" bun:"natuurlijkpersoon_id,pk"`
-	Rel_ID               int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie               int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Landcode             string     `json:"landcode"`
-	Nationaliteit        string     `json:"nationaliteit"`
-	Opvoer               *time.Time `json:"opvoer,omitempty"`
-	Afvoer               *time.Time `json:"afvoer,omitempty"`
-}
-
-// NatuurlijkPersoon_Burgerschap_Aanvang — aanvangdatum van NatuurlijkPersoon_Burgerschap.
-type NatuurlijkPersoon_Burgerschap_Aanvang struct {
-	bun.BaseModel        `bun:"table:natuurlijkpersoon_burgerschap_aanvang,alias:natuurlijkpersoon_burgerschap_aanvang"`
-	NatuurlijkPersoon_ID int        `json:"natuurlijkpersoon_id" bun:"natuurlijkpersoon_id,pk"`
-	Rel_ID               int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie               int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Datum                *Date      `json:"datum,omitempty" bun:"datum,type:date"`
-	Opvoer               *time.Time `json:"opvoer,omitempty"`
-	Afvoer               *time.Time `json:"afvoer,omitempty"`
-}
-
-// NatuurlijkPersoon_Burgerschap_Einde — eindedatum van NatuurlijkPersoon_Burgerschap.
-type NatuurlijkPersoon_Burgerschap_Einde struct {
-	bun.BaseModel        `bun:"table:natuurlijkpersoon_burgerschap_einde,alias:natuurlijkpersoon_burgerschap_einde"`
-	NatuurlijkPersoon_ID int        `json:"natuurlijkpersoon_id" bun:"natuurlijkpersoon_id,pk"`
-	Rel_ID               int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie               int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Datum                *Date      `json:"datum,omitempty" bun:"datum,type:date"`
-	Opvoer               *time.Time `json:"opvoer,omitempty"`
-	Afvoer               *time.Time `json:"afvoer,omitempty"`
-}
-
 // NatuurlijkPersoon_Partnernaam — Achternaam van de partner van de natuurlijk persoon.
 type NatuurlijkPersoon_Partnernaam struct {
 	bun.BaseModel           `bun:"table:natuurlijkpersoon_partnernaam,alias:natuurlijkpersoon_partnernaam"`

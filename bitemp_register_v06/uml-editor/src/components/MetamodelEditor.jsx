@@ -73,6 +73,7 @@ import {
   maakReferentielijstInstantie,
 } from "../metamodel/types";
 import { v3ModelNaarEditor } from "../metamodel/v3ModelNaarEditor";
+import { bepaalDependencyTargetIds } from "../metamodel/dependencyEdges";
 
 /**
  * nodeTypes vertelt React Flow welke React-component bij welk node type hoort.
@@ -230,16 +231,28 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     return [...set].sort();
   }, [nodes, effectiefDomeinPerNode]);
 
-  // Selecteer alle nodes van het actieve domein (maakt ze verplaatsbaar als groep)
+  const domeinSelectieActief = useMemo(() => {
+    if (!actiefDomein) return false;
+    const actieveNodes = nodes.filter(
+      (n) => (effectiefDomeinPerNode.get(n.id) || n.data?.domein || "") === actiefDomein
+    );
+    return actieveNodes.length > 0 && actieveNodes.every((n) => !!n.selected);
+  }, [nodes, actiefDomein, effectiefDomeinPerNode]);
+
+  // Toggle selectie van alle nodes van het actieve domein en houd de toolbar-indicator synchroon.
   const handleSelecteerDomein = useCallback(() => {
     if (!actiefDomein) return;
+    const moetSelecteren = !domeinSelectieActief;
     setNodes((nds) =>
-      nds.map((n) => ({
-        ...n,
-        selected: (effectiefDomeinPerNode.get(n.id) || n.data?.domein || "") === actiefDomein,
-      }))
+      nds.map((n) => {
+        const hoortBijActiefDomein = (effectiefDomeinPerNode.get(n.id) || n.data?.domein || "") === actiefDomein;
+        return {
+          ...n,
+          selected: hoortBijActiefDomein ? moetSelecteren : false,
+        };
+      })
     );
-  }, [actiefDomein, setNodes, effectiefDomeinPerNode]);
+  }, [actiefDomein, domeinSelectieActief, setNodes, effectiefDomeinPerNode]);
 
   const applyLoadedGraph = useCallback((result) => {
     const nextEdges = result?.edges || [];
@@ -529,30 +542,10 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
           const node = updatedNodes.find((n) => n.id === nodeId);
           if (!node) return eds;
 
-          // Verzamel alle dependency targets: enum- en refItem-verwijzingen uit velden
-          const enumTargets = (node.data?.velden || [])
-            .map((v) => v.enumNaam)
-            .filter(Boolean)
-            .map((enumNaam) => {
-              const enumNode = updatedNodes.find(
-                (n) => n.type === "enumeratie" && n.data?.naam === enumNaam
-              );
-              return enumNode?.id || null;
-            })
-            .filter(Boolean);
-
-          const refItemTargets = (node.data?.velden || [])
-            .map((v) => v.refItemNaam)
-            .filter(Boolean)
-            .map((refItemNaam) => {
-              const refNode = updatedNodes.find(
-                (n) => n.type === "entiteit" && n.data?.entiteitSubtype === "referentielijst_item" && n.data?.typenaam === refItemNaam
-              );
-              return refNode?.id || null;
-            })
-            .filter(Boolean);
-
-          const allTargets = new Set([...enumTargets, ...refItemTargets]);
+          // Houd alle «use»-dependencies synchroon: enum, datatype én refItem.
+          // Hierdoor blijft een bestaand datatype-lijntje ook staan als je alleen
+          // een afgeleid veld of beschrijving aanpast.
+          const allTargets = new Set(bepaalDependencyTargetIds(node.data, updatedNodes));
 
           const existingDeps = eds.filter(
             (e) => e.source === nodeId && e.data?.isDependency === true
@@ -1330,6 +1323,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         modelOpmerking={modelOpmerking}
         actiefDomein={actiefDomein}
         beschikbareDomeinen={beschikbareDomeinen}
+        domeinSelectieActief={domeinSelectieActief}
         onSetActiefDomein={setActiefDomein}
         onSelecteerDomein={handleSelecteerDomein}
       />

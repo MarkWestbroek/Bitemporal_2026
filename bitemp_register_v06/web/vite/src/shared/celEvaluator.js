@@ -2,11 +2,9 @@
  * celEvaluator.js — Minimale CEL-expressie-evaluator voor afgeleide velden.
  *
  * Ondersteunt de subset van CEL die nodig is voor afgeleide velden:
- *   - String literals:       'tekst' of "tekst"
- *   - Null literal:          null
- *   - Variabele-referenties: Naam.roepnaam  (GEKlassenaam.veldnaam)
- *   - Operators:             +  (string concat)
- *   - Vergelijking:          !=  ==
+ *   - String/number/bool literals: 'tekst', 42, true, false, null
+ *   - Variabele-referenties: Naam.roepnaam of direct `bsn` op platgeslagen GE-items
+ *   - Operators:             +, ==, !=, &&, ||, !
  *   - Ternary:               cond ? then : else
  *   - Haakjes:               ( ... )
  *
@@ -17,12 +15,18 @@
 
 const TokenType = {
   STRING: "STRING",
+  NUMBER: "NUMBER",
   NULL: "NULL",
+  TRUE: "TRUE",
+  FALSE: "FALSE",
   IDENT: "IDENT",
   DOT: "DOT",
   PLUS: "PLUS",
   EQ: "EQ",       // ==
   NEQ: "NEQ",     // !=
+  AND: "AND",     // &&
+  OR: "OR",       // ||
+  NOT: "NOT",     // !
   QUESTION: "QUESTION",
   COLON: "COLON",
   LPAREN: "LPAREN",
@@ -50,21 +54,34 @@ function tokenize(expr) {
       tokens.push({ type: TokenType.STRING, value: str });
       continue;
     }
+    // Getal literal (minimale support voor de CEL-subset in de UI)
+    if (/[0-9]/.test(ch) || (ch === "-" && /[0-9]/.test(expr[i + 1] || ""))) {
+      let num = ch;
+      i++;
+      while (i < expr.length && /[0-9.]/.test(expr[i])) { num += expr[i]; i++; }
+      tokens.push({ type: TokenType.NUMBER, value: Number(num) });
+      continue;
+    }
     // Two-char operators
     if (ch === "!" && expr[i + 1] === "=") { tokens.push({ type: TokenType.NEQ }); i += 2; continue; }
     if (ch === "=" && expr[i + 1] === "=") { tokens.push({ type: TokenType.EQ }); i += 2; continue; }
+    if (ch === "&" && expr[i + 1] === "&") { tokens.push({ type: TokenType.AND }); i += 2; continue; }
+    if (ch === "|" && expr[i + 1] === "|") { tokens.push({ type: TokenType.OR }); i += 2; continue; }
     // Single-char tokens
     if (ch === "+") { tokens.push({ type: TokenType.PLUS }); i++; continue; }
+    if (ch === "!") { tokens.push({ type: TokenType.NOT }); i++; continue; }
     if (ch === "?") { tokens.push({ type: TokenType.QUESTION }); i++; continue; }
     if (ch === ":") { tokens.push({ type: TokenType.COLON }); i++; continue; }
     if (ch === "(") { tokens.push({ type: TokenType.LPAREN }); i++; continue; }
     if (ch === ")") { tokens.push({ type: TokenType.RPAREN }); i++; continue; }
     if (ch === ".") { tokens.push({ type: TokenType.DOT }); i++; continue; }
-    // Identifier or keyword (null)
+    // Identifier or keyword (null/true/false)
     if (/[A-Za-z_]/.test(ch)) {
       let ident = "";
       while (i < expr.length && /[A-Za-z0-9_]/.test(expr[i])) { ident += expr[i]; i++; }
       if (ident === "null") { tokens.push({ type: TokenType.NULL }); }
+      else if (ident === "true") { tokens.push({ type: TokenType.TRUE }); }
+      else if (ident === "false") { tokens.push({ type: TokenType.FALSE }); }
       else { tokens.push({ type: TokenType.IDENT, value: ident }); }
       continue;
     }
@@ -87,51 +104,90 @@ function createParser(tokens) {
     return t;
   };
 
-  // Ternary: expr = comparison ('?' expr ':' expr)?
+  // expr = ternary
   function parseExpr() {
-    let node = parseAddition();
+    return parseTernary();
+  }
+
+  // ternary = or ('?' expr ':' expr)?
+  function parseTernary() {
+    let node = parseOr();
     if (peek().type === TokenType.QUESTION) {
-      advance(); // ?
+      advance();
       const thenNode = parseExpr();
       expect(TokenType.COLON);
       const elseNode = parseExpr();
-      return { type: "ternary", cond: node, then: thenNode, else: elseNode };
+      node = { type: "ternary", cond: node, then: thenNode, else: elseNode };
     }
     return node;
   }
 
-  // Addition (string concat): addition = comparison ('+' comparison)*
-  function parseAddition() {
-    let left = parseComparison();
-    while (peek().type === TokenType.PLUS) {
+  // or = and ('||' and)*
+  function parseOr() {
+    let left = parseAnd();
+    while (peek().type === TokenType.OR) {
       advance();
-      const right = parseComparison();
-      left = { type: "add", left, right };
+      const right = parseAnd();
+      left = { type: "or", left, right };
     }
     return left;
   }
 
-  // Comparison: primary ('==' | '!=') primary
+  // and = comparison ('&&' comparison)*
+  function parseAnd() {
+    let left = parseComparison();
+    while (peek().type === TokenType.AND) {
+      advance();
+      const right = parseComparison();
+      left = { type: "and", left, right };
+    }
+    return left;
+  }
+
+  // comparison = addition (('==' | '!=') addition)?
   function parseComparison() {
-    let left = parsePrimary();
+    let left = parseAddition();
     if (peek().type === TokenType.EQ) {
       advance();
-      const right = parsePrimary();
+      const right = parseAddition();
       return { type: "eq", left, right };
     }
     if (peek().type === TokenType.NEQ) {
       advance();
-      const right = parsePrimary();
+      const right = parseAddition();
       return { type: "neq", left, right };
     }
     return left;
   }
 
-  // Primary: literal | ident(.ident)* | '(' expr ')'
+  // addition = unary ('+' unary)*
+  function parseAddition() {
+    let left = parseUnary();
+    while (peek().type === TokenType.PLUS) {
+      advance();
+      const right = parseUnary();
+      left = { type: "add", left, right };
+    }
+    return left;
+  }
+
+  // unary = '!' unary | primary
+  function parseUnary() {
+    if (peek().type === TokenType.NOT) {
+      advance();
+      return { type: "not", expr: parseUnary() };
+    }
+    return parsePrimary();
+  }
+
+  // primary = literal | ident(.ident)* | '(' expr ')'
   function parsePrimary() {
     const t = peek();
     if (t.type === TokenType.STRING) { advance(); return { type: "string", value: t.value }; }
+    if (t.type === TokenType.NUMBER) { advance(); return { type: "number", value: t.value }; }
     if (t.type === TokenType.NULL) { advance(); return { type: "null" }; }
+    if (t.type === TokenType.TRUE) { advance(); return { type: "bool", value: true }; }
+    if (t.type === TokenType.FALSE) { advance(); return { type: "bool", value: false }; }
     if (t.type === TokenType.LPAREN) {
       advance();
       const inner = parseExpr();
@@ -155,16 +211,28 @@ function createParser(tokens) {
 
 // ── Evaluator ──────────────────────────────────────────────────────────
 
+function leesWaardeCaseOngevoelig(bron, sleutel) {
+  if (bron == null) return undefined;
+  if (typeof bron !== "object") return bron[sleutel];
+  if (Object.prototype.hasOwnProperty.call(bron, sleutel)) return bron[sleutel];
+  const match = Object.keys(bron).find((key) => key.toLowerCase() === String(sleutel).toLowerCase());
+  return match ? bron[match] : undefined;
+}
+
 function evaluate(node, ctx) {
   switch (node.type) {
     case "string": return node.value;
+    case "number": return node.value;
+    case "bool": return node.value;
     case "null": return null;
     case "ref": {
-      // Navigeer door de context: Naam.roepnaam → ctx["Naam"]["roepnaam"]
+      // Navigeer door de context: Naam.roepnaam → ctx["Naam"]["roepnaam"].
+      // Gebruik een case-ongevoelige fallback zodat generated klassennamen en
+      // kortere schrijfwijzen robuust blijven in CEL-expressies.
       let val = ctx;
       for (const part of node.parts) {
         if (val == null) return null;
-        val = val[part];
+        val = leesWaardeCaseOngevoelig(val, part);
       }
       return val ?? null;
     }
@@ -176,6 +244,9 @@ function evaluate(node, ctx) {
     }
     case "eq": return evaluate(node.left, ctx) === evaluate(node.right, ctx);
     case "neq": return evaluate(node.left, ctx) !== evaluate(node.right, ctx);
+    case "and": return Boolean(evaluate(node.left, ctx)) && Boolean(evaluate(node.right, ctx));
+    case "or": return Boolean(evaluate(node.left, ctx)) || Boolean(evaluate(node.right, ctx));
+    case "not": return !Boolean(evaluate(node.expr, ctx));
     case "ternary": {
       const cond = evaluate(node.cond, ctx);
       return cond ? evaluate(node.then, ctx) : evaluate(node.else, ctx);
@@ -251,7 +322,17 @@ export function evalueerWeergaveVeldenVoorItem(afgeleideVeldenDefs, item, typeMe
   const weergaveVelden = afgeleideVeldenDefs.filter((av) => av.isWeergaveVeld || av.weergaveVeld);
   if (weergaveVelden.length === 0) return [];
 
-  const ctx = {};
+  // GE/relatie-items zijn in de UI meestal al platgeslagen; exposeer hun velden
+  // daarom ook direct op root-niveau zodat expressies als `bsn + ...` meteen werken.
+  const ctx = { item };
+  if (item && typeof item === "object") {
+    for (const [key, value] of Object.entries(item)) {
+      if (key != null && String(key).trim() !== "") {
+        ctx[String(key)] = value;
+      }
+    }
+  }
+
   const voegAliasToe = (alias) => {
     if (alias != null && String(alias).trim() !== "") {
       ctx[String(alias)] = item;

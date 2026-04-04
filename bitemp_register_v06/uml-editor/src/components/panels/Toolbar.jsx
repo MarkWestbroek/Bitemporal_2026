@@ -9,8 +9,13 @@
  */
 import { maakLeegType, maakLegeEnumeratie, maakLeegGegevenstype } from "../../metamodel/types";
 
-export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddReferentielijstInstantie, onSave, onPublishSchemaModel, onPublishAndRebuild, onRebuildModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI, onImportXMI, onImportMermaid, onImportPlantUML, modelNaam, modelBron, modelOpmerking, actiefDomein, beschikbareDomeinen, onSetActiefDomein, onSelecteerDomein }) {
+export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddReferentielijstInstantie, onSave, onPublishSchemaModel, onPublishAndRebuild, onRebuildModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI, onImportXMI, onImportMermaid, onImportPlantUML, modelNaam, modelBron, modelOpmerking, actiefDomein, beschikbareDomeinen, domeinSelectieActief = false, onSetActiefDomein, onSelecteerDomein }) {
   const domeinen = beschikbareDomeinen || [];
+  const domeinSelectieTitel = !actiefDomein
+    ? "Kies eerst een actief domein"
+    : domeinSelectieActief
+      ? `Deselecteer alle elementen van domein \"${actiefDomein}\"`
+      : `Selecteer alle elementen van domein \"${actiefDomein}\"`;
 
   return (
     <div className="toolbar">
@@ -110,11 +115,12 @@ export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddRefer
             </select>
             <button
               onClick={() => onSelecteerDomein && onSelecteerDomein()}
-              className="btn-toolbar domein-select"
+              className={`btn-toolbar domein-select ${domeinSelectieActief ? "active" : ""}`.trim()}
               disabled={!actiefDomein}
-              title={actiefDomein ? `Selecteer alle elementen van domein \"${actiefDomein}\"` : "Kies eerst een actief domein"}
+              title={domeinSelectieTitel}
+              aria-pressed={domeinSelectieActief}
             >
-              ☐ Selecteer
+              {domeinSelectieActief ? "☑ Selecteer" : "☐ Selecteer"}
             </button>
           </div>
 

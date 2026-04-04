@@ -10,6 +10,6 @@ func initNpLocEnumRegistry() {
 	EnumDomeinen["Bereikbaarheidssoort"] = "np-loc"
 
 	// Enum editor-posities
-	EnumEditorLayouts["Naamgebruiksoort"] = &EditorLayout{Positie: &V3Positie{X: 165, Y: -360}}
+	EnumEditorLayouts["Naamgebruiksoort"] = &EditorLayout{Positie: &V3Positie{X: 75, Y: -345}}
 	EnumEditorLayouts["Bereikbaarheidssoort"] = &EditorLayout{Positie: &V3Positie{X: 210, Y: -690}}
 }

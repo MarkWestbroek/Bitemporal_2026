@@ -1,13 +1,15 @@
 package model
 
-// Additieve enum-registry entries voor het abuvwxy-basisdomein.
+// Enum-registraties.
+// Gegenereerd door cmd/codegen — niet handmatig bewerken.
 
 func initAbuvwxyEnumRegistry() {
-	EnumWaarden["RelABSoort"] = []string{"LTT", "LAT", "LTA"}
-	EnumDomeinen["RelABSoort"] = "abuvwxy"
-	EnumEditorLayouts["RelABSoort"] = &EditorLayout{Positie: &V3Positie{X: -330, Y: 330}}
-
 	EnumWaarden["ABCEnum"] = []string{"Optie A", "Optie B", "Optie C"}
 	EnumDomeinen["ABCEnum"] = "abuvwxy"
-	EnumEditorLayouts["ABCEnum"] = &EditorLayout{Positie: &V3Positie{X: -675, Y: 720}}
+	EnumWaarden["RelABSoort"] = []string{"LTT", "LAT", "LTA"}
+	EnumDomeinen["RelABSoort"] = "abuvwxy"
+
+	// Enum editor-posities
+	EnumEditorLayouts["ABCEnum"] = &EditorLayout{Positie: &V3Positie{X: -510, Y: 660}}
+	EnumEditorLayouts["RelABSoort"] = &EditorLayout{Positie: &V3Positie{X: -105, Y: 285}}
 }

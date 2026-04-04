@@ -1,15 +1,7 @@
 package model
 
-/*
-modellen_methods.go — Alle methoden op domein-structs (te genereren).
-
-Dit bestand bevat:
-1. Interface-methoden (getters/setters): GetID, Metatype, ClearID, Get/SetOpvoer, Get/SetAfvoer, String
-2. GeefOnderliggendeGegevenselementen: functionele methoden op entiteiten en hubs
-
-Alle methoden zijn 100% afleidbaar uit de struct-definities + MetaRegistry.
-Bij codegeneratie wordt dit bestand volledig gegenereerd uit het domeinmodel.
-*/
+// Alle methoden op domein-structs.
+// Gegenereerd door cmd/codegen — niet handmatig bewerken.
 
 import "time"
 
@@ -41,16 +33,6 @@ func (b B) String() string          { return RepresentatieToString(b) }
    2. HUBS (GE + REL) — interface-methoden
    ================================================================ */
 
-// Rel_A_B
-func (r Rel_A_B) GetID() any              { return r.Rel_ID }
-func (r Rel_A_B) Metatype() Metatype      { return MetatypeRelatie }
-func (r *Rel_A_B) ClearID()               { r.Rel_ID = 0 }
-func (r Rel_A_B) GetOpvoer() *time.Time   { return r.Opvoer }
-func (r *Rel_A_B) SetOpvoer(t *time.Time) { r.Opvoer = t }
-func (r Rel_A_B) GetAfvoer() *time.Time   { return r.Afvoer }
-func (r *Rel_A_B) SetAfvoer(t *time.Time) { r.Afvoer = t }
-func (r Rel_A_B) String() string          { return RepresentatieToString(r) }
-
 // A_U
 func (au A_U) GetID() any              { return au.Rel_ID }
 func (au A_U) Metatype() Metatype      { return MetatypeGegevenselement }
@@ -80,6 +62,16 @@ func (aw *A_W) SetOpvoer(t *time.Time) { aw.Opvoer = t }
 func (aw A_W) GetAfvoer() *time.Time   { return aw.Afvoer }
 func (aw *A_W) SetAfvoer(t *time.Time) { aw.Afvoer = t }
 func (aw A_W) String() string          { return RepresentatieToString(aw) }
+
+// Rel_A_B
+func (r Rel_A_B) GetID() any              { return r.Rel_ID }
+func (r Rel_A_B) Metatype() Metatype      { return MetatypeRelatie }
+func (r *Rel_A_B) ClearID()               { r.Rel_ID = 0 }
+func (r Rel_A_B) GetOpvoer() *time.Time   { return r.Opvoer }
+func (r *Rel_A_B) SetOpvoer(t *time.Time) { r.Opvoer = t }
+func (r Rel_A_B) GetAfvoer() *time.Time   { return r.Afvoer }
+func (r *Rel_A_B) SetAfvoer(t *time.Time) { r.Afvoer = t }
+func (r Rel_A_B) String() string          { return RepresentatieToString(r) }
 
 // B_X
 func (bx B_X) GetID() any              { return bx.Rel_ID }
@@ -321,90 +313,73 @@ func (i B_Y_Input) String() string          { return RepresentatieToString(i) }
    7. GeefOnderliggendeGegevenselementen — ENTITEITEN
    ================================================================ */
 
-// GeefOnderliggendeGegevenselementen returns all child representaties of A.
 func (a *A) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0)
-
 	for i := range a.Us {
 		if a.Us[i].A_ID == 0 {
 			a.Us[i].A_ID = a.ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_U", Representatie: &a.Us[i]})
 	}
-
 	for i := range a.Vs {
 		if a.Vs[i].A_ID == 0 {
 			a.Vs[i].A_ID = a.ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_V", Representatie: &a.Vs[i]})
 	}
-
 	for i := range a.Ws {
 		if a.Ws[i].A_ID == 0 {
 			a.Ws[i].A_ID = a.ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_W", Representatie: &a.Ws[i]})
 	}
-
 	for i := range a.RelABs {
 		if a.RelABs[i].A_ID == 0 {
 			a.RelABs[i].A_ID = a.ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "Rel_A_B", Representatie: &a.RelABs[i]})
 	}
-
-	// Materiële tijdlijn: aanvang/einde als onderliggende representaties meegeven,
-	// zodat ze beschikbaar zijn voor de generieke opvoer/afvoer-handlers.
 	for i := range a.Aanvang {
 		if a.Aanvang[i].A_ID == 0 {
 			a.Aanvang[i].A_ID = a.ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_Aanvang", Representatie: &a.Aanvang[i]})
 	}
-
 	for i := range a.Einde {
 		if a.Einde[i].A_ID == 0 {
 			a.Einde[i].A_ID = a.ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_Einde", Representatie: &a.Einde[i]})
 	}
-
 	return result
 }
 
-// GeefOnderliggendeGegevenselementen returns all child representaties of B.
 func (b *B) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0)
-
 	for i := range b.Xs {
 		if b.Xs[i].B_ID == 0 {
 			b.Xs[i].B_ID = b.ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_X", Representatie: &b.Xs[i]})
 	}
-
 	for i := range b.Ys {
 		if b.Ys[i].B_ID == 0 {
 			b.Ys[i].B_ID = b.ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_Y", Representatie: &b.Ys[i]})
 	}
-
-	// Materiële tijdlijn (zie toelichting bij A)
 	for i := range b.Aanvang {
 		if b.Aanvang[i].B_ID == 0 {
 			b.Aanvang[i].B_ID = b.ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_Aanvang", Representatie: &b.Aanvang[i]})
 	}
-
 	for i := range b.Einde {
 		if b.Einde[i].B_ID == 0 {
 			b.Einde[i].B_ID = b.ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_Einde", Representatie: &b.Einde[i]})
 	}
-
 	return result
 }
 

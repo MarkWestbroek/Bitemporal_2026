@@ -249,6 +249,15 @@ PersoonsIdentificatie.ingezetene != null && PersoonsIdentificatie.ingezetene
   : "Niet-ingezetene"
 ```
 
+Voor GE-/hub-kaarten mag dit ook in de korte, platte vorm zonder prefix, omdat de UI
+het actuele item direct in de CEL-context zet:
+
+```cel
+bsn + (ingezetene == true ? " ingezetene" : "")
+```
+
+Beide varianten werken nu ook met booleans en logische operatoren zoals `&&`, `||` en `!`.
+
 #### Nationaliteit-samenvatting (GE-hub-niveau)
 
 Op het GE-hub-niveau `NatuurlijkPersoon_Burgerschap` kan een afgeleide weergave worden gedefinieerd die velden uit de `_Data` child combineert:
@@ -440,3 +449,18 @@ Checklist bij troubleshooting:
     ```
 
 5. **Validatie**: afleidingsregels valideren bij opslaan in de editor (syntax-check via CEL-compiler).
+
+---
+
+## Verdere technische afweging frontend-CEL
+
+Voor een uitgebreidere afweging over:
+
+- zelf een volledige CEL-evaluator bouwen,
+- bestaande JavaScript-libraries,
+- bundle-size en dependency-impact,
+- en de voor- en nadelen ten opzichte van de huidige subset-aanpak,
+
+zie ook:
+
+- [`CEL-evaluatie-js.md`](./CEL-evaluatie-js.md)

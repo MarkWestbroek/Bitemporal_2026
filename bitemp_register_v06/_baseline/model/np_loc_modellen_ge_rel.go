@@ -67,7 +67,7 @@ type Locatie_Adres_Data struct {
 	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Straatnaam    string     `json:"straatnaam"`
 	Huisnummer    string     `json:"huisnummer"`
-	Postcode      NLPostcode `json:"postcode" schema:"enum=NLPostcode,datatype:NLPostcode"`
+	Postcode      NLPostcode `json:"postcode" schema:"datatype:NLPostcode"`
 	Plaats        string     `json:"plaats"`
 	Land          int        `json:"land" schema:"ref:LandenlijstLand"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
@@ -113,7 +113,7 @@ type NatuurlijkPersoon_Persoonsidentificatie_Data struct {
 	NatuurlijkPersoon_ID int        `json:"natuurlijkpersoon_id" bun:"natuurlijkpersoon_id,pk"`
 	Rel_ID               int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie               int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Bsn                  BSN        `json:"bsn" schema:"enum=BSN,datatype:BSN"`
+	Bsn                  BSN        `json:"bsn" schema:"datatype:BSN"`
 	Ingezetene           *bool      `json:"ingezetene,omitempty"`
 	Opvoer               *time.Time `json:"opvoer,omitempty"`
 	Afvoer               *time.Time `json:"afvoer,omitempty"`

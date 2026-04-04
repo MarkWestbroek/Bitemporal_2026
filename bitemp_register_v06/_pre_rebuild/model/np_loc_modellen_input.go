@@ -41,15 +41,6 @@ type NatuurlijkPersoon_Naam_Input struct {
 	Achternaam           string  `json:"achternaam"`
 }
 
-type NatuurlijkPersoon_Burgerschap_Input struct {
-	NATUURLIJKPERSOON_ID int    `json:"natuurlijkpersoon_id"`
-	Rel_ID               int    `json:"rel_id"`
-	Landcode             string `json:"landcode"`
-	Nationaliteit        string `json:"nationaliteit"`
-	Aanvang              *Date  `json:"aanvang,omitempty"`
-	Einde                *Date  `json:"einde,omitempty"`
-}
-
 type NatuurlijkPersoon_Partnernaam_Input struct {
 	NATUURLIJKPERSOON_ID int    `json:"natuurlijkpersoon_id"`
 	Rel_ID               int    `json:"rel_id"`

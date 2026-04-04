@@ -93,16 +93,6 @@ func (nn NatuurlijkPersoon_Naam) GetAfvoer() *time.Time   { return nn.Afvoer }
 func (nn *NatuurlijkPersoon_Naam) SetAfvoer(t *time.Time) { nn.Afvoer = t }
 func (nn NatuurlijkPersoon_Naam) String() string          { return RepresentatieToString(nn) }
 
-// NatuurlijkPersoon_Burgerschap
-func (nb NatuurlijkPersoon_Burgerschap) GetID() any              { return nb.Rel_ID }
-func (nb NatuurlijkPersoon_Burgerschap) Metatype() Metatype      { return MetatypeGegevenselement }
-func (nb *NatuurlijkPersoon_Burgerschap) ClearID()               { nb.Rel_ID = 0 }
-func (nb NatuurlijkPersoon_Burgerschap) GetOpvoer() *time.Time   { return nb.Opvoer }
-func (nb *NatuurlijkPersoon_Burgerschap) SetOpvoer(t *time.Time) { nb.Opvoer = t }
-func (nb NatuurlijkPersoon_Burgerschap) GetAfvoer() *time.Time   { return nb.Afvoer }
-func (nb *NatuurlijkPersoon_Burgerschap) SetAfvoer(t *time.Time) { nb.Afvoer = t }
-func (nb NatuurlijkPersoon_Burgerschap) String() string          { return RepresentatieToString(nb) }
-
 // NatuurlijkPersoon_Partnernaam
 func (np NatuurlijkPersoon_Partnernaam) GetID() any              { return np.Rel_ID }
 func (np NatuurlijkPersoon_Partnernaam) Metatype() Metatype      { return MetatypeGegevenselement }
@@ -191,16 +181,6 @@ func (d NatuurlijkPersoon_Naam_Data) GetAfvoer() *time.Time   { return d.Afvoer 
 func (d *NatuurlijkPersoon_Naam_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
 func (d NatuurlijkPersoon_Naam_Data) String() string          { return RepresentatieToString(d) }
 
-// NatuurlijkPersoon_Burgerschap_Data
-func (d NatuurlijkPersoon_Burgerschap_Data) GetID() any              { return d.Versie }
-func (d NatuurlijkPersoon_Burgerschap_Data) Metatype() Metatype      { return MetatypeGegevenselement }
-func (d *NatuurlijkPersoon_Burgerschap_Data) ClearID()               { d.Versie = 0 }
-func (d NatuurlijkPersoon_Burgerschap_Data) GetOpvoer() *time.Time   { return d.Opvoer }
-func (d *NatuurlijkPersoon_Burgerschap_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
-func (d NatuurlijkPersoon_Burgerschap_Data) GetAfvoer() *time.Time   { return d.Afvoer }
-func (d *NatuurlijkPersoon_Burgerschap_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
-func (d NatuurlijkPersoon_Burgerschap_Data) String() string          { return RepresentatieToString(d) }
-
 // NatuurlijkPersoon_Partnernaam_Data
 func (d NatuurlijkPersoon_Partnernaam_Data) GetID() any              { return d.Versie }
 func (d NatuurlijkPersoon_Partnernaam_Data) Metatype() Metatype      { return MetatypeGegevenselement }
@@ -279,26 +259,6 @@ func (n NatuurlijkPersoon_Einde) String() string          { return Representatie
    5. _AANVANG/_EINDE (hub-level plumbing) — interface-methoden
    ================================================================ */
 
-// NatuurlijkPersoon_Burgerschap_Aanvang
-func (n NatuurlijkPersoon_Burgerschap_Aanvang) GetID() any              { return n.Versie }
-func (n NatuurlijkPersoon_Burgerschap_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
-func (n *NatuurlijkPersoon_Burgerschap_Aanvang) ClearID()               { n.Versie = 0 }
-func (n NatuurlijkPersoon_Burgerschap_Aanvang) GetOpvoer() *time.Time   { return n.Opvoer }
-func (n *NatuurlijkPersoon_Burgerschap_Aanvang) SetOpvoer(t *time.Time) { n.Opvoer = t }
-func (n NatuurlijkPersoon_Burgerschap_Aanvang) GetAfvoer() *time.Time   { return n.Afvoer }
-func (n *NatuurlijkPersoon_Burgerschap_Aanvang) SetAfvoer(t *time.Time) { n.Afvoer = t }
-func (n NatuurlijkPersoon_Burgerschap_Aanvang) String() string          { return RepresentatieToString(n) }
-
-// NatuurlijkPersoon_Burgerschap_Einde
-func (n NatuurlijkPersoon_Burgerschap_Einde) GetID() any              { return n.Versie }
-func (n NatuurlijkPersoon_Burgerschap_Einde) Metatype() Metatype      { return MetatypeGegevenselement }
-func (n *NatuurlijkPersoon_Burgerschap_Einde) ClearID()               { n.Versie = 0 }
-func (n NatuurlijkPersoon_Burgerschap_Einde) GetOpvoer() *time.Time   { return n.Opvoer }
-func (n *NatuurlijkPersoon_Burgerschap_Einde) SetOpvoer(t *time.Time) { n.Opvoer = t }
-func (n NatuurlijkPersoon_Burgerschap_Einde) GetAfvoer() *time.Time   { return n.Afvoer }
-func (n *NatuurlijkPersoon_Burgerschap_Einde) SetAfvoer(t *time.Time) { n.Afvoer = t }
-func (n NatuurlijkPersoon_Burgerschap_Einde) String() string          { return RepresentatieToString(n) }
-
 // Bereikbaarheid_Aanvang
 func (b Bereikbaarheid_Aanvang) GetID() any              { return b.Versie }
 func (b Bereikbaarheid_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
@@ -376,16 +336,6 @@ func (i *NatuurlijkPersoon_Naam_Input) SetOpvoer(t *time.Time) {}
 func (i NatuurlijkPersoon_Naam_Input) GetAfvoer() *time.Time   { return nil }
 func (i *NatuurlijkPersoon_Naam_Input) SetAfvoer(t *time.Time) {}
 func (i NatuurlijkPersoon_Naam_Input) String() string          { return RepresentatieToString(i) }
-
-// NatuurlijkPersoon_Burgerschap_Input
-func (i NatuurlijkPersoon_Burgerschap_Input) GetID() any              { return i.Rel_ID }
-func (i NatuurlijkPersoon_Burgerschap_Input) Metatype() Metatype      { return MetatypeGegevenselement }
-func (i *NatuurlijkPersoon_Burgerschap_Input) ClearID()               { i.Rel_ID = 0 }
-func (i NatuurlijkPersoon_Burgerschap_Input) GetOpvoer() *time.Time   { return nil }
-func (i *NatuurlijkPersoon_Burgerschap_Input) SetOpvoer(t *time.Time) {}
-func (i NatuurlijkPersoon_Burgerschap_Input) GetAfvoer() *time.Time   { return nil }
-func (i *NatuurlijkPersoon_Burgerschap_Input) SetAfvoer(t *time.Time) {}
-func (i NatuurlijkPersoon_Burgerschap_Input) String() string          { return RepresentatieToString(i) }
 
 // NatuurlijkPersoon_Partnernaam_Input
 func (i NatuurlijkPersoon_Partnernaam_Input) GetID() any              { return i.Rel_ID }
@@ -474,12 +424,6 @@ func (n *NatuurlijkPersoon) GeefOnderliggendeGegevenselementen() []Onderliggende
 			n.Namen[i].NatuurlijkPersoon_ID = n.ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Naam", Representatie: &n.Namen[i]})
-	}
-	for i := range n.Burgerschappen {
-		if n.Burgerschappen[i].NatuurlijkPersoon_ID == 0 {
-			n.Burgerschappen[i].NatuurlijkPersoon_ID = n.ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Burgerschap", Representatie: &n.Burgerschappen[i]})
 	}
 	for i := range n.Partnernamen {
 		if n.Partnernamen[i].NatuurlijkPersoon_ID == 0 {
@@ -584,38 +528,6 @@ func (h *NatuurlijkPersoon_Naam) GeefOnderliggendeGegevenselementen() []Onderlig
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Naam_Data", Representatie: &h.Data[i]})
-	}
-	return result
-}
-
-func (h *NatuurlijkPersoon_Burgerschap) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
-	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
-	for i := range h.Data {
-		if h.Data[i].NatuurlijkPersoon_ID == 0 {
-			h.Data[i].NatuurlijkPersoon_ID = h.NatuurlijkPersoon_ID
-		}
-		if h.Data[i].Rel_ID == 0 {
-			h.Data[i].Rel_ID = h.Rel_ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Burgerschap_Data", Representatie: &h.Data[i]})
-	}
-	for i := range h.Aanvang {
-		if h.Aanvang[i].NatuurlijkPersoon_ID == 0 {
-			h.Aanvang[i].NatuurlijkPersoon_ID = h.NatuurlijkPersoon_ID
-		}
-		if h.Aanvang[i].Rel_ID == 0 {
-			h.Aanvang[i].Rel_ID = h.Rel_ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Burgerschap_Aanvang", Representatie: &h.Aanvang[i]})
-	}
-	for i := range h.Einde {
-		if h.Einde[i].NatuurlijkPersoon_ID == 0 {
-			h.Einde[i].NatuurlijkPersoon_ID = h.NatuurlijkPersoon_ID
-		}
-		if h.Einde[i].Rel_ID == 0 {
-			h.Einde[i].Rel_ID = h.Rel_ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Burgerschap_Einde", Representatie: &h.Einde[i]})
 	}
 	return result
 }

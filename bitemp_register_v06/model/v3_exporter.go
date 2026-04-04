@@ -66,18 +66,12 @@ func goTypeName(t reflect.Type) string {
 	return t.Kind().String()
 }
 
-// isEnumType bepaalt of een Go-type een enum is.
-// Alleen named string types die ook echt in EnumWaarden geregistreerd zijn,
-// tellen als enum. Named datatypes zoals BSN/NLPostcode vallen hier dus niet onder.
+// isEnumType bepaalt of een Go-type een enum is (named string type in het model package).
 func isEnumType(t reflect.Type) bool {
 	for t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
-	if t.Kind() != reflect.String || t.Name() == "" || t.Name() == "string" {
-		return false
-	}
-	_, ok := EnumWaarden[t.Name()]
-	return ok
+	return t.Kind() == reflect.String && t.Name() != "string" && t.Name() != ""
 }
 
 // runtimeVanMeta bouwt een V3Runtime op basis van de TypeMeta.
@@ -176,32 +170,13 @@ func extractContentFields(meta TypeMeta) []V3Veld {
 			veld.Enum = ft.Name()
 		}
 		// Custom schema-referenties uit schema tag:
-		// - schema:"datatype:NLPostcode"      → V3Veld.Datatype (custom gegevenstype)
-		// - schema:"enum=Naamgebruiksoort"    → V3Veld.Enum (alleen voor echte enumeraties)
-		// - schema:"ref:LandenlijstLand"      → V3Veld.Ref (referentielijst-items, analoog aan OAS 3.1 $ref)
-		schemaTag := strings.TrimSpace(f.Tag.Get("schema"))
-		if schemaTag != "" {
-			for _, part := range strings.Split(schemaTag, ",") {
-				part = strings.TrimSpace(part)
-				switch {
-				case strings.HasPrefix(part, "datatype:"):
-					veld.Datatype = strings.TrimPrefix(part, "datatype:")
-				case strings.HasPrefix(part, "ref:"):
-					veld.Ref = strings.TrimPrefix(part, "ref:")
-				case strings.HasPrefix(part, "enum="):
-					enumRef := strings.TrimSpace(strings.TrimPrefix(part, "enum="))
-					// Ondersteun named enum refs (enum=Naamgebruiksoort), maar negeer
-					// legacy inline waardenlijsten zoals enum=LTT|LAT|LTA.
-					if enumRef != "" && !strings.Contains(enumRef, "|") {
-						veld.Enum = enumRef
-					}
-				}
-			}
-		}
-		// Als een veld expliciet aan een custom datatype gekoppeld is, dan is het
-		// geen enumeratie; het datatype heeft hier voorrang op een oude/onjuiste enum-tag.
-		if veld.Datatype != "" && veld.Enum == veld.Datatype {
-			veld.Enum = ""
+		// - schema:"datatype:NLPostcode" → V3Veld.Datatype (custom gegevenstype)
+		// - schema:"ref:LandenlijstLand"  → V3Veld.Ref (referentielijst-items, analoog aan OAS 3.1 $ref)
+		schemaTag := f.Tag.Get("schema")
+		if strings.HasPrefix(schemaTag, "datatype:") {
+			veld.Datatype = strings.TrimPrefix(schemaTag, "datatype:")
+		} else if strings.HasPrefix(schemaTag, "ref:") {
+			veld.Ref = strings.TrimPrefix(schemaTag, "ref:")
 		}
 		desc := strings.TrimSpace(f.Tag.Get("schema_desc"))
 		if desc != "" {
@@ -583,7 +558,7 @@ func buildV3Enum(goTypeName string) *V3Enum {
 	// Bekende enums — geladen uit Go constants
 	switch goTypeName {
 	case "RelABSoort":
-		enum := &V3Enum{
+		return &V3Enum{
 			GoType:   "RelABSoort",
 			BaseType: "string",
 			Domein:   EnumDomeinen["RelABSoort"],
@@ -593,12 +568,8 @@ func buildV3Enum(goTypeName string) *V3Enum {
 				{ConstNaam: "RelABSoortLTA", Waarde: "LTA"},
 			},
 		}
-		if layout, ok := EnumEditorLayouts[goTypeName]; ok {
-			enum.Positie = layout.Positie
-		}
-		return enum
 	case "ABCEnum":
-		enum := &V3Enum{
+		return &V3Enum{
 			GoType:   "ABCEnum",
 			BaseType: "string",
 			Domein:   EnumDomeinen["ABCEnum"],
@@ -608,10 +579,6 @@ func buildV3Enum(goTypeName string) *V3Enum {
 				{ConstNaam: "OptieC", Waarde: "Optie C"},
 			},
 		}
-		if layout, ok := EnumEditorLayouts[goTypeName]; ok {
-			enum.Positie = layout.Positie
-		}
-		return enum
 	}
 	// Fallback: gebruik EnumWaarden registry
 	waarden, ok := EnumWaarden[goTypeName]

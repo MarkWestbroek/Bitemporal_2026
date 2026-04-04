@@ -286,7 +286,6 @@ func initNpLocMetaRegistry() {
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Persoonsidentificaties", JSONRolnaam: "persoonsidentificaties", Doeltype: "NatuurlijkPersoon_Persoonsidentificatie", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "Namen", JSONRolnaam: "namen", Doeltype: "NatuurlijkPersoon_Naam", Momentvoorkomen: Enkelvoudig},
-			{Rolnaam: "Burgerschappen", JSONRolnaam: "burgerschappen", Doeltype: "NatuurlijkPersoon_Burgerschap", Momentvoorkomen: Meervoudig},
 			{Rolnaam: "Partnernamen", JSONRolnaam: "partnernamen", Doeltype: "NatuurlijkPersoon_Partnernaam", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "Naamgebruiken", JSONRolnaam: "naamgebruiken", Doeltype: "NatuurlijkPersoon_Naamgebruik", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "Bereikbaarheden", JSONRolnaam: "bereikbaarheden", Doeltype: "Bereikbaarheid", Momentvoorkomen: Enkelvoudig},
@@ -333,6 +332,16 @@ func initNpLocMetaRegistry() {
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Persoonsidentificatie_Data", Momentvoorkomen: Enkelvoudig},
 		},
+		AfgeleideVelden: []AfgeleidVeld{
+			{
+				Naam:                "bsnEnIngezeten",
+				Description:         "Toont BSN en indien ingezetene \" (ingezetene)\"",
+				GoType:              "string",
+				AfleidingsregelTaal: "cel",
+				Afleidingsregel:     "bsn + (ingezetene ? \" ingezetene\" : \"\")",
+				IsWeergaveVeld:      true,
+			},
+		},
 	}
 	MetaRegistry["NatuurlijkPersoon_Naam"] = TypeMeta{
 		Typenaam:               "NatuurlijkPersoon_Naam",
@@ -357,49 +366,17 @@ func initNpLocMetaRegistry() {
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -225, Y: -495}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_Naam",
+			Positie: &V3Positie{X: -345, Y: -555}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_Naam",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Naam_Data", Momentvoorkomen: Enkelvoudig},
 		},
-	}
-	MetaRegistry["NatuurlijkPersoon_Burgerschap"] = TypeMeta{
-		Typenaam:               "NatuurlijkPersoon_Burgerschap",
-		Klassenaam:             "Burgerschap",
-		Description:            "Nationaliteitsgegevens (burgerschap) van de natuurlijk persoon.",
-		Metatype:               MetatypeGegevenselement,
-		IsMaterieel:            true,
-		Domein:                 "np-loc",
-		GESubtype:              GESubtypeHub,
-		DataTypenaam:           "NatuurlijkPersoon_Burgerschap_Data",
-		Kleur:                  "#bfdbfe",
-		Veldnaam:               "burgerschap",
-		Padnaam:                "burgerschappen",
-		Meervoud:               "burgerschappen",
-		Factory:                func() Representatie { return &NatuurlijkPersoon_Burgerschap_Input{} },
-		Tabelnaam:              "natuurlijkpersoon_burgerschap",
-		IDKolom:                "rel_id",
-		DBFactory:              func() Representatie { return &NatuurlijkPersoon_Burgerschap{} },
-		DBSliceFactory:         func() any { return &[]NatuurlijkPersoon_Burgerschap{} },
-		HeeftPFK:               true,
-		RelatieveAutoincrement: true,
-		EntiteitIDKolom:        "natuurlijkpersoon_id",
-		Momentvoorkomen:        Meervoudig,
-		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -405, Y: -300}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_Burgerschap",
-		},
-		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
-			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Burgerschap_Data", Momentvoorkomen: Enkelvoudig},
-			{Rolnaam: "Aanvang", JSONRolnaam: "aanvang", Doeltype: "NatuurlijkPersoon_Burgerschap_Aanvang", Momentvoorkomen: Enkelvoudig},
-			{Rolnaam: "Einde", JSONRolnaam: "einde", Doeltype: "NatuurlijkPersoon_Burgerschap_Einde", Momentvoorkomen: Enkelvoudig},
-		},
 		AfgeleideVelden: []AfgeleidVeld{
 			{
-				Naam:                "weergaveburgerschap",
-				Description:         "Samengestelde weergave van nationaliteit en landcode.",
+				Naam:                "weergavenaam",
 				GoType:              "string",
 				AfleidingsregelTaal: "cel",
-				Afleidingsregel:     "Burgerschap.nationaliteit + ' (' + Burgerschap.landcode + ')'",
+				Afleidingsregel:     "(Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters) + (Naam.tussenvoegsel != null ? ' ' + Naam.tussenvoegsel : '') + ' ' + Naam.achternaam",
 				IsWeergaveVeld:      true,
 			},
 		},
@@ -427,7 +404,7 @@ func initNpLocMetaRegistry() {
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -60, Y: -300}, EdgeID: "edge_1774209110136_2",
+			Positie: &V3Positie{X: -180, Y: -285}, EdgeID: "edge_1774209110136_2",
 			SourceHandle: "bottom", TargetHandle: "top",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -542,28 +519,6 @@ func initNpLocMetaRegistry() {
 		Momentvoorkomen:        Enkelvoudig,
 		BovenliggendTypenaam:   "NatuurlijkPersoon_Naam",
 	}
-	MetaRegistry["NatuurlijkPersoon_Burgerschap_Data"] = TypeMeta{
-		Typenaam:               "NatuurlijkPersoon_Burgerschap_Data",
-		Klassenaam:             "Data",
-		Description:            "Geversioned inhoud van NatuurlijkPersoon_Burgerschap.",
-		Metatype:               MetatypeGegevenselement,
-		GESubtype:              GESubtypeData,
-		Kleur:                  "#bfdbfe",
-		Veldnaam:               "natuurlijkpersoon_burgerschap_data",
-		Padnaam:                "natuurlijkpersoon_burgerschap_data",
-		Meervoud:               "natuurlijkpersoon_burgerschap_data",
-		Factory:                func() Representatie { return &NatuurlijkPersoon_Burgerschap_Data{} },
-		SliceFactory:           func() any { return &[]NatuurlijkPersoon_Burgerschap_Data{} },
-		Tabelnaam:              "natuurlijkpersoon_burgerschap_data",
-		IDKolom:                "versie",
-		DBFactory:              func() Representatie { return &NatuurlijkPersoon_Burgerschap_Data{} },
-		DBSliceFactory:         func() any { return &[]NatuurlijkPersoon_Burgerschap_Data{} },
-		HeeftPFK:               true,
-		RelatieveAutoincrement: true,
-		EntiteitIDKolom:        "natuurlijkpersoon_id",
-		Momentvoorkomen:        Enkelvoudig,
-		BovenliggendTypenaam:   "NatuurlijkPersoon_Burgerschap",
-	}
 	MetaRegistry["NatuurlijkPersoon_Partnernaam_Data"] = TypeMeta{
 		Typenaam:               "NatuurlijkPersoon_Partnernaam_Data",
 		Klassenaam:             "Data",
@@ -674,50 +629,6 @@ func initNpLocMetaRegistry() {
 		Momentvoorkomen:        Enkelvoudig,
 		BovenliggendTypenaam:   "NatuurlijkPersoon",
 	}
-	MetaRegistry["NatuurlijkPersoon_Burgerschap_Aanvang"] = TypeMeta{
-		Typenaam:               "NatuurlijkPersoon_Burgerschap_Aanvang",
-		Klassenaam:             "Aanvang",
-		Description:            "Aanvangsdatum van NatuurlijkPersoon_Burgerschap.",
-		Metatype:               MetatypeGegevenselement,
-		GESubtype:              GESubtypeAanvang,
-		Kleur:                  "#bfdbfe",
-		Veldnaam:               "natuurlijkpersoon_burgerschap_aanvang",
-		Padnaam:                "natuurlijkpersoon_burgerschap_aanvang",
-		Meervoud:               "natuurlijkpersoon_burgerschap_aanvang",
-		Factory:                func() Representatie { return &NatuurlijkPersoon_Burgerschap_Aanvang{} },
-		SliceFactory:           func() any { return &[]NatuurlijkPersoon_Burgerschap_Aanvang{} },
-		Tabelnaam:              "natuurlijkpersoon_burgerschap_aanvang",
-		IDKolom:                "versie",
-		DBFactory:              func() Representatie { return &NatuurlijkPersoon_Burgerschap_Aanvang{} },
-		DBSliceFactory:         func() any { return &[]NatuurlijkPersoon_Burgerschap_Aanvang{} },
-		HeeftPFK:               true,
-		RelatieveAutoincrement: true,
-		EntiteitIDKolom:        "natuurlijkpersoon_id",
-		Momentvoorkomen:        Enkelvoudig,
-		BovenliggendTypenaam:   "NatuurlijkPersoon_Burgerschap",
-	}
-	MetaRegistry["NatuurlijkPersoon_Burgerschap_Einde"] = TypeMeta{
-		Typenaam:               "NatuurlijkPersoon_Burgerschap_Einde",
-		Klassenaam:             "Einde",
-		Description:            "Einddatum van NatuurlijkPersoon_Burgerschap.",
-		Metatype:               MetatypeGegevenselement,
-		GESubtype:              GESubtypeEinde,
-		Kleur:                  "#bfdbfe",
-		Veldnaam:               "natuurlijkpersoon_burgerschap_einde",
-		Padnaam:                "natuurlijkpersoon_burgerschap_einde",
-		Meervoud:               "natuurlijkpersoon_burgerschap_einde",
-		Factory:                func() Representatie { return &NatuurlijkPersoon_Burgerschap_Einde{} },
-		SliceFactory:           func() any { return &[]NatuurlijkPersoon_Burgerschap_Einde{} },
-		Tabelnaam:              "natuurlijkpersoon_burgerschap_einde",
-		IDKolom:                "versie",
-		DBFactory:              func() Representatie { return &NatuurlijkPersoon_Burgerschap_Einde{} },
-		DBSliceFactory:         func() any { return &[]NatuurlijkPersoon_Burgerschap_Einde{} },
-		HeeftPFK:               true,
-		RelatieveAutoincrement: true,
-		EntiteitIDKolom:        "natuurlijkpersoon_id",
-		Momentvoorkomen:        Enkelvoudig,
-		BovenliggendTypenaam:   "NatuurlijkPersoon_Burgerschap",
-	}
 	MetaRegistry["Bereikbaarheid_Aanvang"] = TypeMeta{
 		Typenaam:               "Bereikbaarheid_Aanvang",
 		Klassenaam:             "Aanvang",
@@ -765,11 +676,11 @@ func initNpLocMetaRegistry() {
 
 	// Referentielijst-instantie metadata + editor-posities
 	ReferentielijstInstantieRegistry["AdellijkeTitels"] = ReferentielijstInstantieInfo{
-		Naam: "AdellijkeTitels", Omschrijving: "Adellijke titels in Nederland",
-		Layout: &EditorLayout{Positie: &V3Positie{X: 1890, Y: -255}},
+		Naam:   "",
+		Layout: &EditorLayout{Positie: &V3Positie{X: 1890, Y: -300}},
 	}
 	ReferentielijstInstantieRegistry["Landenlijst"] = ReferentielijstInstantieInfo{
-		Naam: "Landenlijst", Omschrijving: "Alle landen van de wereld",
-		Layout: &EditorLayout{Positie: &V3Positie{X: 1020, Y: -255}},
+		Naam:   "",
+		Layout: &EditorLayout{Positie: &V3Positie{X: 1020, Y: -300}},
 	}
 }

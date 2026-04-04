@@ -574,4 +574,14 @@ func initRegisterMetaRegistry() {
 		Momentvoorkomen:        Enkelvoudig,
 		BovenliggendTypenaam:   "Referentielijst",
 	}
+
+	// Referentielijst-instantie metadata + editor-posities
+	ReferentielijstInstantieRegistry["AdellijkeTitels"] = ReferentielijstInstantieInfo{
+		Naam:   "",
+		Layout: &EditorLayout{Positie: &V3Positie{X: 1890, Y: -300}},
+	}
+	ReferentielijstInstantieRegistry["Landenlijst"] = ReferentielijstInstantieInfo{
+		Naam:   "",
+		Layout: &EditorLayout{Positie: &V3Positie{X: 1020, Y: -300}},
+	}
 }

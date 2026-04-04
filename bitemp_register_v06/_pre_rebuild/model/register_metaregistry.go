@@ -577,11 +577,11 @@ func initRegisterMetaRegistry() {
 
 	// Referentielijst-instantie metadata + editor-posities
 	ReferentielijstInstantieRegistry["AdellijkeTitels"] = ReferentielijstInstantieInfo{
-		Naam: "AdellijkeTitels", Omschrijving: "Adellijke titels in Nederland",
-		Layout: &EditorLayout{Positie: &V3Positie{X: 1890, Y: -255}},
+		Naam:   "",
+		Layout: &EditorLayout{Positie: &V3Positie{X: 1890, Y: -300}},
 	}
 	ReferentielijstInstantieRegistry["Landenlijst"] = ReferentielijstInstantieInfo{
-		Naam: "Landenlijst", Omschrijving: "Alle landen van de wereld",
-		Layout: &EditorLayout{Positie: &V3Positie{X: 1020, Y: -255}},
+		Naam:   "",
+		Layout: &EditorLayout{Positie: &V3Positie{X: 1020, Y: -300}},
 	}
 }

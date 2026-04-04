@@ -120,6 +120,12 @@ body {
   color: #93c5fd;
 }
 
+.btn-toolbar.domein-select.active {
+  background: #1d4ed8;
+  border-color: #93c5fd;
+  color: #eff6ff;
+}
+
 .btn-toolbar:disabled {
   opacity: 0.55;
   cursor: not-allowed;

@@ -18,8 +18,16 @@ const logoUrl = import.meta.env.BASE_URL + "common-ground-logo.svg";
 function detectBaseUrl() {
   if (typeof window === "undefined") return "";
   const loc = window.location;
-  // Zelfde host als de pagina, maar altijd port 8082 (API)
-  return `${loc.protocol}//${loc.hostname}:8082`;
+
+  // Tijdens lokaal Vite-dev blijft de Go API op :8082 draaien.
+  if (["5173", "5174", "5175"].includes(loc.port)) {
+    return `${loc.protocol}//${loc.hostname}:8082`;
+  }
+
+  // Als de pagina door de API zelf of via Docker wordt geserveerd,
+  // moet de inhoud-editor juist op dezelfde origin blijven zodat hij
+  // de database van die eigen runtime-context gebruikt.
+  return loc.origin;
 }
 
 function EditorApp() {
