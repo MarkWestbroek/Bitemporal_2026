@@ -12,7 +12,7 @@ func initAbuvwxyMetaRegistry() {
 		IsMaterieel:            true,
 		Domein:                 "abuvwxy",
 		Kleur:                  "#bfdbfe",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: -750, Y: 135}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: -495, Y: 75}},
 		Veldnaam:               "a",
 		Padnaam:                "as",
 		Meervoud:               "as",
@@ -66,7 +66,7 @@ func initAbuvwxyMetaRegistry() {
 		EntiteitIDKolom:        "a_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -975, Y: 555}, EdgeID: "A->A_U",
+			Positie: &V3Positie{X: -720, Y: 495}, EdgeID: "A->A_U",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "A_U_Data", Momentvoorkomen: Enkelvoudig},
@@ -95,7 +95,7 @@ func initAbuvwxyMetaRegistry() {
 		EntiteitIDKolom:        "a_id",
 		Momentvoorkomen:        Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -765, Y: 495}, EdgeID: "A->A_V",
+			Positie: &V3Positie{X: -510, Y: 435}, EdgeID: "A->A_V",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "A_V_Data", Momentvoorkomen: Enkelvoudig},
@@ -124,7 +124,7 @@ func initAbuvwxyMetaRegistry() {
 		EntiteitIDKolom:        "a_id",
 		Momentvoorkomen:        Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -555, Y: 525}, EdgeID: "A->A_W",
+			Positie: &V3Positie{X: -300, Y: 465}, EdgeID: "A->A_W",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "A_W_Data", Momentvoorkomen: Enkelvoudig},
@@ -156,7 +156,7 @@ func initAbuvwxyMetaRegistry() {
 		SecondaireEntiteitIDKolom: "b_id",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -360, Y: 180}, EdgeID: "A->Rel_A_B",
+			Positie: &V3Positie{X: -105, Y: 120}, EdgeID: "A->Rel_A_B",
 			SourceHandle: "right", TargetHandle: "left",
 			DoelEdgeID: "Rel_A_B->B", DoelSourceHandle: "right", DoelTargetHandle: "left",
 		},
@@ -394,7 +394,7 @@ func initAbuvwxyMetaRegistry() {
 		IsMaterieel:            true,
 		Domein:                 "abuvwxy",
 		Kleur:                  "#fecaca",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 15, Y: 135}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 270, Y: 75}},
 		Veldnaam:               "b",
 		Padnaam:                "bs",
 		Meervoud:               "bs",
@@ -436,7 +436,7 @@ func initAbuvwxyMetaRegistry() {
 		EntiteitIDKolom:        "b_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -90, Y: 540}, EdgeID: "B->B_X",
+			Positie: &V3Positie{X: 165, Y: 480}, EdgeID: "B->B_X",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "B_X_Data", Momentvoorkomen: Enkelvoudig},
@@ -465,7 +465,7 @@ func initAbuvwxyMetaRegistry() {
 		EntiteitIDKolom:        "b_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 165, Y: 555}, EdgeID: "B->B_Y",
+			Positie: &V3Positie{X: 420, Y: 495}, EdgeID: "B->B_Y",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "B_Y_Data", Momentvoorkomen: Enkelvoudig},

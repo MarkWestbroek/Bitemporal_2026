@@ -11,7 +11,7 @@ func initRegisterDatatypeRegistry() {
 			Basistype:   "string",
 			Format:      "nl-postcode",
 			Domein:      "register",
-			Positie:     &V3Positie{X: 510, Y: -315},
+			Positie:     &V3Positie{X: 570, Y: -330},
 			Validatie: &V3Validatie{
 				Pattern:     `^[1-9][0-9]{3}\s?[A-Za-z]{2}$`,
 				MinLength:   intPtr(6),

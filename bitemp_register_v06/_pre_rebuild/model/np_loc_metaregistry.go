@@ -326,7 +326,7 @@ func initNpLocMetaRegistry() {
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -570, Y: -780}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_PersoonsIdentificatie",
+			Positie: &V3Positie{X: -645, Y: -780}, EdgeID: "NatuurlijkPersoon->NatuurlijkPersoon_PersoonsIdentificatie",
 			SourceHandle: "left",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -404,7 +404,7 @@ func initNpLocMetaRegistry() {
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -180, Y: -285}, EdgeID: "edge_1774209110136_2",
+			Positie: &V3Positie{X: -210, Y: -285}, EdgeID: "edge_1774209110136_2",
 			SourceHandle: "bottom", TargetHandle: "top",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{

@@ -912,6 +912,65 @@ body {
   border-left: 3px solid #06b6d4;
 }
 
+/* === Context menu (rechtsklik uitlijning) === */
+
+.context-menu {
+  position: absolute;
+  z-index: 1000;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  overflow: hidden;
+  user-select: none;
+}
+
+.context-menu-header {
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 14px;
+  text-align: left;
+  font-size: 13px;
+  color: #1e293b;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.context-menu-item:hover {
+  background: #f0f9ff;
+  color: #0284c7;
+}
+
+.context-menu-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.context-menu-separator {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 2px 0;
+}
+
+/* === einde context menu === */
+
 .test-invoer-veld-wrapper {
   display: flex;
   align-items: center;

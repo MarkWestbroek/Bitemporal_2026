@@ -1,4 +1,4 @@
-import { defaultKleur } from "./types";
+import { defaultKleur } from "./types.js";
 
 function goTypeNaarVeldType(goType) {
   const t = goType.startsWith("*") ? goType.slice(1) : goType;
@@ -391,10 +391,12 @@ export function v3ModelNaarEditor(v3Model) {
       if (rel.referentielijstInstantie) {
         const instantieNodeId = `refinstantie_${rel.referentielijstInstantie}`;
         edges.push({
-          id: `${rel.naam}-->instantie_${rel.referentielijstInstantie}`,
+          id: rel.instantieId || `${rel.naam}-->instantie_${rel.referentielijstInstantie}`,
           source: instantieNodeId,
           target: rel.naam,
           type: "metamodel",
+          sourceHandle: rel.instantieSourceHandle || null,
+          targetHandle: rel.instantieTargetHandle || null,
           data: {
             isDependency: true,
             rolnaam: `⇢ ${rel.referentielijstInstantie}`,

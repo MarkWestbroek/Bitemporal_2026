@@ -10,6 +10,6 @@ func initAbuvwxyEnumRegistry() {
 	EnumDomeinen["RelABSoort"] = "abuvwxy"
 
 	// Enum editor-posities
-	EnumEditorLayouts["ABCEnum"] = &EditorLayout{Positie: &V3Positie{X: -765, Y: 720}}
-	EnumEditorLayouts["RelABSoort"] = &EditorLayout{Positie: &V3Positie{X: -360, Y: 345}}
+	EnumEditorLayouts["ABCEnum"] = &EditorLayout{Positie: &V3Positie{X: -510, Y: 660}}
+	EnumEditorLayouts["RelABSoort"] = &EditorLayout{Positie: &V3Positie{X: -105, Y: 285}}
 }

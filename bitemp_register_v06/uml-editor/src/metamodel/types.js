@@ -589,6 +589,32 @@ function geNaamVanTypenaam(entiteitNaam, geTypenaam) {
   return geTypenaam;
 }
 
+function vindReferentielijstInstantieBinding(relatieNodeId, relData, edges, nodesById) {
+  const bindingEdge = (edges || []).find((e) => {
+    if (e.type !== "metamodel" || e.data?.isDependency !== true) return false;
+    const sourceNode = nodesById[e.source];
+    const targetNode = nodesById[e.target];
+    return (
+      (e.target === relatieNodeId && sourceNode?.type === "referentielijstInstantie") ||
+      (e.source === relatieNodeId && targetNode?.type === "referentielijstInstantie")
+    );
+  });
+
+  const instantieNodeId = bindingEdge
+    ? bindingEdge.source === relatieNodeId
+      ? bindingEdge.target
+      : bindingEdge.source
+    : null;
+  const instantieNode = instantieNodeId ? nodesById[instantieNodeId] : null;
+
+  return {
+    naam: relData?.referentielijstInstantie || instantieNode?.data?.systeemnaam || undefined,
+    edgeId: bindingEdge?.id || undefined,
+    sourceHandle: bindingEdge?.sourceHandle || undefined,
+    targetHandle: bindingEdge?.targetHandle || undefined,
+  };
+}
+
 /**
  * Exporteer editor-state als V3 model (codegen-ready) zonder flowState.
  */
@@ -604,6 +630,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
       .filter((n) => n.type === "relatie")
       .map((n) => [n.id, n])
   );
+  const nodesById = Object.fromEntries((nodes || []).map((n) => [n.id, n]));
 
   const enums = nodes
     .filter((n) => n.type === "enumeratie")
@@ -692,6 +719,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         relNode.data.doelEntiteit ||
         doelEntiteitNode?.data?.typenaam ||
         "";
+      const instantieBinding = vindReferentielijstInstantieBinding(relNode.id, relNode.data, edges, nodesById);
 
       return {
         naam: relNode.data.typenaam,
@@ -704,7 +732,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         isMaterieel: relNode.data.isMaterieel || false,
         // Referentielijst-subtypes (optioneel, zie Referentielijsten.md)
         relatieSubtype: relNode.data.relatieSubtype || undefined,
-        referentielijstInstantie: relNode.data.referentielijstInstantie || undefined,
+        referentielijstInstantie: instantieBinding.naam || undefined,
         doelEntiteit: doelEntiteitNaam,
         positie: relNode.position ? { x: relNode.position.x, y: relNode.position.y } : undefined,
         // Bewaar editor-edge ids zodat export/import en DB-round-trips merge-stabiel blijven.
@@ -714,6 +742,9 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         doelId: relTargetEdge?.id || undefined,
         doelSourceHandle: relTargetEdge?.sourceHandle || undefined,
         doelTargetHandle: relTargetEdge?.targetHandle || undefined,
+        instantieId: instantieBinding.edgeId || undefined,
+        instantieSourceHandle: instantieBinding.sourceHandle || undefined,
+        instantieTargetHandle: instantieBinding.targetHandle || undefined,
         afgeleideVelden: (relNode.data.afgeleideVelden || []).length > 0
           ? relNode.data.afgeleideVelden
               .filter((v) => (v.naam || "").trim() !== "")

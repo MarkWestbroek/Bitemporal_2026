@@ -11,7 +11,6 @@
       "request_method": "POST",
       "request_body": {
         "registratie": {
-          "id": 0,
           "opmerking": "Init Referentielijst AdellijkeTitels",
           "registratietype": "registratie",
           "tijdstip": "0001-01-01T00:00:00Z"
@@ -45,7 +44,6 @@
       "request_method": "POST",
       "request_body": {
         "registratie": {
-          "id": 0,
           "opmerking": "Init 13 AdellijkeTitel records",
           "registratietype": "registratie",
           "tijdstip": "0001-01-01T00:00:00Z"

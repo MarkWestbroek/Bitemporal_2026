@@ -1,0 +1,258 @@
+{
+  "version": 1,
+  "exported_at": "2026-03-30T12:00:00.000Z",
+  "source": "synthetic://init-adellijketitels",
+  "count": 3,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-03-30T12:02:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "opmerking": "Init 13 AdellijkeTitel records",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "adellijketitel": {
+                "id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketiteltitel": {
+                "adellijketitel_id": 1,
+                "titel": "Baron"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketiteltitel": {
+                "adellijketitel_id": 2,
+                "titel": "Barones"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketiteltitel": {
+                "adellijketitel_id": 3,
+                "titel": "Graaf"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketiteltitel": {
+                "adellijketitel_id": 4,
+                "titel": "Gravin"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketiteltitel": {
+                "adellijketitel_id": 5,
+                "titel": "Hertog"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketiteltitel": {
+                "adellijketitel_id": 6,
+                "titel": "Hertogin"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketiteltitel": {
+                "adellijketitel_id": 7,
+                "titel": "Jonkheer"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketiteltitel": {
+                "adellijketitel_id": 8,
+                "titel": "Jonkvrouw"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketiteltitel": {
+                "adellijketitel_id": 9,
+                "titel": "Markies"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketiteltitel": {
+                "adellijketitel_id": 10,
+                "titel": "Markiezin"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketiteltitel": {
+                "adellijketitel_id": 11,
+                "titel": "Prins"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketiteltitel": {
+                "adellijketitel_id": 12,
+                "titel": "Prinses"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketiteltitel": {
+                "adellijketitel_id": 13,
+                "titel": "Ridder"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-03-30T12:03:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Koppel 13 AdellijkeTitels aan Referentielijst AdellijkeTitels",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "adellijketitelstitel": {
+                "referentielijst_id": 1,
+                "adellijketitel_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketitelstitel": {
+                "referentielijst_id": 1,
+                "adellijketitel_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketitelstitel": {
+                "referentielijst_id": 1,
+                "adellijketitel_id": 3
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketitelstitel": {
+                "referentielijst_id": 1,
+                "adellijketitel_id": 4
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketitelstitel": {
+                "referentielijst_id": 1,
+                "adellijketitel_id": 5
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketitelstitel": {
+                "referentielijst_id": 1,
+                "adellijketitel_id": 6
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketitelstitel": {
+                "referentielijst_id": 1,
+                "adellijketitel_id": 7
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketitelstitel": {
+                "referentielijst_id": 1,
+                "adellijketitel_id": 8
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketitelstitel": {
+                "referentielijst_id": 1,
+                "adellijketitel_id": 9
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketitelstitel": {
+                "referentielijst_id": 1,
+                "adellijketitel_id": 10
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketitelstitel": {
+                "referentielijst_id": 1,
+                "adellijketitel_id": 11
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketitelstitel": {
+                "referentielijst_id": 1,
+                "adellijketitel_id": 12
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adellijketitelstitel": {
+                "referentielijst_id": 1,
+                "adellijketitel_id": 13
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}

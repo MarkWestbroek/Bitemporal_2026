@@ -7,9 +7,11 @@ test('bepaalt dependency-targets voor enum, datatype en refItem', () => {
     { id: 'enum_soort', type: 'enumeratie', data: { naam: 'Soort' } },
     { id: 'dt_bsn', type: 'gegevenstype', data: { naam: 'BSN' } },
     { id: 'ref_land', type: 'entiteit', data: { entiteitSubtype: 'referentielijst_item', typenaam: 'Land' } },
+    { id: 'refinst_landenlijst', type: 'referentielijstInstantie', data: { systeemnaam: 'Landenlijst' } },
   ];
 
   const nodeData = {
+    referentielijstInstantie: 'Landenlijst',
     velden: [
       { naam: 'soort', enumNaam: 'Soort' },
       { naam: 'bsn', datatypeNaam: 'BSN' },
@@ -19,7 +21,7 @@ test('bepaalt dependency-targets voor enum, datatype en refItem', () => {
 
   assert.deepEqual(
     bepaalDependencyTargetIds(nodeData, beschikbareNodes).sort(),
-    ['dt_bsn', 'enum_soort', 'ref_land'].sort()
+    ['dt_bsn', 'enum_soort', 'ref_land', 'refinst_landenlijst'].sort()
   );
 });
 

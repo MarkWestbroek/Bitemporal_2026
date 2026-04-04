@@ -142,6 +142,8 @@ De editor exporteert nodes en edges naar V3 JSON via `editorNaarV3Model.js`. Pos
 
 Daarbij worden ook de aparte `referentielijstInstanties` opnieuw als nodes opgebouwd, plus de korte binding-edges naar relaties met subtype `referentielijst_items`. Daardoor blijven de visuele koppelingen naar bijvoorbeeld `Landenlijst` en `AdellijkeTitels` behouden na opslaan en opnieuw laden.
 
+> Sinds 2026-04-04 bewaart V3 voor deze binding ook expliciet de editor-metadata `instantieId`, `instantieSourceHandle` en `instantieTargetHandle` op de relatie. Daardoor overleeft nu niet alleen de semantische koppeling (`referentielijstInstantie`), maar ook de gekozen `use`-lijnroute/handle-posities een JSON save-load roundtrip.
+
 ### V3 JSON → Code (codegen)
 De codegenerator (`cmd/codegen/`) leest het V3 JSON en genereert:
 - Go structs (`gen_structs.go`)

@@ -17,7 +17,7 @@
  *   4. onConnect: wanneer gebruiker een verbinding trekt
  *   5. MiniMap / Controls / Background: optionele UI-helpers
  */
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   ReactFlow,
   MiniMap,
@@ -53,6 +53,7 @@ import ActionDialog from "./panels/ActionDialog";
 
 // Overlays
 import DomeinBoundaryOverlay from "./overlays/DomeinBoundaryOverlay";
+import ContextMenu from "./ContextMenu";
 
 // Export helpers
 import { exportNaarMermaid } from "../export/exportMermaid";
@@ -206,6 +207,9 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   const [laatstGepubliceerdSchemaID, setLaatstGepubliceerdSchemaID] = useState(null);
   const [actieDialoog, setActieDialoog] = useState(null);
   const [actiefDomein, setActiefDomein] = useState(null); // null = alles tonen
+  // { x, y } schermcoördinaten van het rechtsklikmenu; null = verborgen
+  const [contextMenu, setContextMenu] = useState(null);
+  const canvasRef = useRef(null);
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId) || null;
   const selectedEdge = edges.find((e) => e.id === selectedEdgeId) || null;
@@ -358,18 +362,56 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     (connection) => {
       setEdges((eds) => {
         const normalized = normalizeConnection(connection, eds);
+        const sourceType = nodeTypeById.get(normalized.source);
+        const targetType = nodeTypeById.get(normalized.target);
+        const isReferentielijstBinding = sourceType === "referentielijstInstantie" && targetType === "relatie";
+        const isDependencyConnection =
+          isReferentielijstBinding ||
+          ((sourceType === "entiteit" || sourceType === "gegevenselement" || sourceType === "relatie") &&
+            (targetType === "enumeratie" || targetType === "gegevenstype"));
+
+        if (isReferentielijstBinding) {
+          const instantieNode = nodes.find((n) => n.id === normalized.source);
+          const instantieNaam = instantieNode?.data?.systeemnaam || "";
+          setNodes((nds) =>
+            nds.map((n) =>
+              n.id === normalized.target
+                ? { ...n, data: { ...n.data, referentielijstInstantie: instantieNaam } }
+                : n
+            )
+          );
+        }
+
+        const filteredEdges = isReferentielijstBinding
+          ? eds.filter((e) => {
+              if (e.type !== "metamodel" || e.data?.isDependency !== true) return true;
+              if (e.target !== normalized.target) return true;
+              return nodeTypeById.get(e.source) !== "referentielijstInstantie";
+            })
+          : eds;
+
         const newEdge = {
           ...normalized,
           id: generateId("edge"),
           type: "metamodel",
-          data: {
-            rolnaam: "",
-            jsonRolnaam: "",
-            momentvoorkomen: "enkelvoudig",
-            kardinaliteit: "0..1",
-          },
+          data: isDependencyConnection
+            ? {
+                isDependency: true,
+                rolnaam: isReferentielijstBinding
+                  ? `⇢ ${nodes.find((n) => n.id === normalized.source)?.data?.systeemnaam || ""}`
+                  : "",
+                jsonRolnaam: "",
+                momentvoorkomen: "",
+                kardinaliteit: "",
+              }
+            : {
+                rolnaam: "",
+                jsonRolnaam: "",
+                momentvoorkomen: "enkelvoudig",
+                kardinaliteit: "0..1",
+              },
         };
-        return addEdge(newEdge, eds);
+        return addEdge(newEdge, filteredEdges);
       });
     },
     [normalizeConnection, setEdges]
@@ -389,7 +431,130 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   const onPaneClick = useCallback(() => {
     setSelectedNodeId(null);
     setSelectedEdgeId(null);
+    setContextMenu(null);
   }, []);
+
+  /**
+   * Gedeelde helper voor het tonen van het uitlijnmenu bij rechtsklik.
+   * Werkt zowel bij rechtsklik op een node als op het canvas.
+   */
+  const toonContextMenu = useCallback(
+    (event) => {
+      const geselecteerd = nodes.filter((n) => n.selected);
+      if (geselecteerd.length < 2) return false;
+      event.preventDefault();
+      const canvasRect = canvasRef.current?.getBoundingClientRect?.() || { left: 0, top: 0 };
+      setContextMenu({
+        x: event.clientX - canvasRect.left,
+        y: event.clientY - canvasRect.top,
+        count: geselecteerd.length,
+      });
+      return true;
+    },
+    [nodes]
+  );
+
+  const onNodeContextMenu = useCallback(
+    (event) => { toonContextMenu(event); },
+    [toonContextMenu]
+  );
+
+  const onPaneContextMenu = useCallback(
+    (event) => { toonContextMenu(event); },
+    [toonContextMenu]
+  );
+
+  const onEdgeContextMenu = useCallback(
+    (event, _edge) => { toonContextMenu(event); },
+    [toonContextMenu]
+  );
+
+  const onSelectionContextMenu = useCallback(
+    (event, _nodes) => { toonContextMenu(event); },
+    [toonContextMenu]
+  );
+
+  /**
+   * Voer een uitlijnactie uit op alle geselecteerde nodes.
+   * Elke actie past de position van de geselecteerde nodes aan;
+   * breedte en hoogte komen uit measured (React Flow) of defaults.
+   */
+  const handleAlign = useCallback(
+    (actie) => {
+      const geselecteerd = nodes.filter((n) => n.selected);
+      if (geselecteerd.length < 2) return;
+
+      const w = (n) => n.measured?.width  ?? n.width  ?? 180;
+      const h = (n) => n.measured?.height ?? n.height ?? 60;
+
+      let xNieuw, yNieuw;
+
+      if (actie === "links") {
+        const minX = Math.min(...geselecteerd.map((n) => n.position.x));
+        xNieuw = () => minX;
+      } else if (actie === "rechts") {
+        const maxX = Math.max(...geselecteerd.map((n) => n.position.x + w(n)));
+        xNieuw = (n) => maxX - w(n);
+      } else if (actie === "boven") {
+        const minY = Math.min(...geselecteerd.map((n) => n.position.y));
+        yNieuw = () => minY;
+      } else if (actie === "onder") {
+        const maxY = Math.max(...geselecteerd.map((n) => n.position.y + h(n)));
+        yNieuw = (n) => maxY - h(n);
+      } else if (actie === "midden-horizontaal") {
+        const gemX = geselecteerd.reduce((som, n) => som + n.position.x + w(n) / 2, 0) / geselecteerd.length;
+        xNieuw = (n) => gemX - w(n) / 2;
+      } else if (actie === "midden-verticaal") {
+        const gemY = geselecteerd.reduce((som, n) => som + n.position.y + h(n) / 2, 0) / geselecteerd.length;
+        yNieuw = (n) => gemY - h(n) / 2;
+      } else if (actie === "verdeel-horizontaal" && geselecteerd.length >= 3) {
+        const sorted = [...geselecteerd].sort((a, b) => a.position.x - b.position.x);
+        const eerste = sorted[0];
+        const laatste = sorted[sorted.length - 1];
+        const totaalRuimte = (laatste.position.x + w(laatste)) - eerste.position.x;
+        const totaalBreedte = sorted.reduce((som, n) => som + w(n), 0);
+        const gap = (totaalRuimte - totaalBreedte) / (sorted.length - 1);
+        const posMap = new Map();
+        let curX = eerste.position.x;
+        for (const n of sorted) {
+          posMap.set(n.id, curX);
+          curX += w(n) + gap;
+        }
+        xNieuw = (n) => posMap.get(n.id) ?? n.position.x;
+      } else if (actie === "verdeel-verticaal" && geselecteerd.length >= 3) {
+        const sorted = [...geselecteerd].sort((a, b) => a.position.y - b.position.y);
+        const eerste = sorted[0];
+        const laatste = sorted[sorted.length - 1];
+        const totaalRuimte = (laatste.position.y + h(laatste)) - eerste.position.y;
+        const totaalHoogte = sorted.reduce((som, n) => som + h(n), 0);
+        const gap = (totaalRuimte - totaalHoogte) / (sorted.length - 1);
+        const posMap = new Map();
+        let curY = eerste.position.y;
+        for (const n of sorted) {
+          posMap.set(n.id, curY);
+          curY += h(n) + gap;
+        }
+        yNieuw = (n) => posMap.get(n.id) ?? n.position.y;
+      } else {
+        return;
+      }
+
+      const geselecteerdIds = new Set(geselecteerd.map((n) => n.id));
+      setNodes((nds) =>
+        nds.map((n) => {
+          if (!geselecteerdIds.has(n.id)) return n;
+          return {
+            ...n,
+            position: {
+              x: xNieuw ? xNieuw(n) : n.position.x,
+              y: yNieuw ? yNieuw(n) : n.position.y,
+            },
+          };
+        })
+      );
+    },
+    [nodes, setNodes]
+  );
 
   /**
    * Dubbelklik op een edge: optimaliseer de handle-posities zodat de lijn
@@ -666,10 +831,34 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
 
   const handleDeleteEdge = useCallback(
     (edgeId) => {
+      const edgeToDelete = edges.find((e) => e.id === edgeId);
+      if (edgeToDelete?.data?.isDependency === true) {
+        const relatieId = nodeTypeById.get(edgeToDelete.source) === "relatie"
+          ? edgeToDelete.source
+          : nodeTypeById.get(edgeToDelete.target) === "relatie"
+            ? edgeToDelete.target
+            : null;
+        const instantieId = nodeTypeById.get(edgeToDelete.source) === "referentielijstInstantie"
+          ? edgeToDelete.source
+          : nodeTypeById.get(edgeToDelete.target) === "referentielijstInstantie"
+            ? edgeToDelete.target
+            : null;
+
+        if (relatieId && instantieId) {
+          setNodes((nds) =>
+            nds.map((n) =>
+              n.id === relatieId
+                ? { ...n, data: { ...n.data, referentielijstInstantie: "" } }
+                : n
+            )
+          );
+        }
+      }
+
       setEdges((eds) => eds.filter((e) => e.id !== edgeId));
       setSelectedEdgeId(null);
     },
-    [setEdges]
+    [edges, nodeTypeById, setEdges, setNodes]
   );
 
   /**
@@ -1337,7 +1526,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
 
       <div className="editor-main">
         {/* Het React Flow canvas — dit is waar de magie gebeurt */}
-        <div className="editor-canvas">
+        <div className="editor-canvas" ref={canvasRef}>
           <ReactFlow
             nodes={visueleNodes}
             edges={edges}
@@ -1348,6 +1537,10 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
             onEdgeClick={onEdgeClick}
             onEdgeDoubleClick={onEdgeDoubleClick}
             onPaneClick={onPaneClick}
+            onNodeContextMenu={onNodeContextMenu}
+            onPaneContextMenu={onPaneContextMenu}
+            onEdgeContextMenu={onEdgeContextMenu}
+            onSelectionContextMenu={onSelectionContextMenu}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             fitView
@@ -1371,6 +1564,15 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
             {/* Domein boundary: gestippelde rectangle om actief domein */}
             <DomeinBoundaryOverlay boundary={domeinBoundary} domein={actiefDomein} />
           </ReactFlow>
+          {contextMenu && (
+            <ContextMenu
+              x={contextMenu.x}
+              y={contextMenu.y}
+              itemCount={contextMenu.count}
+              onAlign={handleAlign}
+              onClose={() => setContextMenu(null)}
+            />
+          )}
         </div>
 
         {/* Sidebar: edit panel voor geselecteerde node of edge */}

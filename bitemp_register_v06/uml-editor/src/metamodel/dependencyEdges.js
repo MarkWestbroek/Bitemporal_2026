@@ -36,13 +36,23 @@ export function bepaalDependencyTargetIds(nodeData, beschikbareNodes = []) {
     );
   };
 
+  const vindReferentielijstInstantieNodeId = (systeemnaam) => {
+    if (!systeemnaam) return null;
+    return (
+      nodes.find(
+        (n) => n.type === "referentielijstInstantie" && n.data?.systeemnaam === systeemnaam
+      )?.id || null
+    );
+  };
+
   return [...new Set(
-    velden
-      .flatMap((veld) => [
+    [
+      ...velden.flatMap((veld) => [
         vindEnumNodeId(veld?.enumNaam || veld?.enum || null),
         vindDatatypeNodeId(veld?.datatypeNaam || null, veld?.goType || null),
         vindRefItemNodeId(veld?.refItemNaam || veld?.["$ref"] || null),
-      ])
-      .filter(Boolean)
+      ]),
+      vindReferentielijstInstantieNodeId(nodeData?.referentielijstInstantie || null),
+    ].filter(Boolean)
   )];
 }
