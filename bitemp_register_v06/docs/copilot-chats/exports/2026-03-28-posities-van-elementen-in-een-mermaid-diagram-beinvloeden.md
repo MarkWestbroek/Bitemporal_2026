@@ -1,4 +1,4 @@
-# Chat: Kan ik op een mermaid diagram ook de posities van de elementen beinvloeden?
+# Chat: Posities van elementen in een Mermaid diagram beïnvloeden
 
 - **Datum**: 2026-03-28 21:35
 - **Sessie-ID**: `d4e6daef-7469-4d6c-86f0-bdb0da342f52`

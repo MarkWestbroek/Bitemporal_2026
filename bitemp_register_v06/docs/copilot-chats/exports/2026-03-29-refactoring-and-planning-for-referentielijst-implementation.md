@@ -1,4 +1,4 @@
-# Chat: about: > Generated Locatie_Adres_Input has Land int field but hand-written does...
+# Chat: Refactoring and Planning for Referentielijst Implementation
 
 - **Datum**: 2026-03-29 00:02
 - **Sessie-ID**: `4594d01e-9b87-40e8-a356-dab408af7a7f`

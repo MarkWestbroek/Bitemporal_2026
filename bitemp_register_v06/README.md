@@ -77,8 +77,10 @@ Voor het werken met de UML-editor, schema-publicatie, multi-domein codegen en ve
 Kort samengevat:
 
 - de devloop draait normaal op `http://localhost:8182`
+- lokaal testen buiten Docker kan ook, bijvoorbeeld op `http://localhost:8082`, zolang `DEVLOOP=true` is gezet
 - de editor kan publiceren naar `schema_versies` en daarna één of meer domeinen laten rebuilden/codegenereren
 - de rebuild-flow ondersteunt fallback via `_baseline/model/` en `_pre_rebuild/model/`, zodat een mislukte codegen/build niet meteen de hele app onbruikbaar maakt
+- de automatische `exit 42` herstart wordt alleen in Docker gebruikt (`DEVLOOP_CONTAINER=true`)
 
 Voor de volledige workflow, voorbeelden met `schema_versie_id`, en rollback-gedrag: zie `docs/DEVLOOP.md`.
 

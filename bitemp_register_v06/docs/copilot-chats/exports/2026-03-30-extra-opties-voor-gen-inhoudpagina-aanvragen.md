@@ -1,4 +1,4 @@
-# Chat: kun je in de inhoudpagina (overzichten en formulieren) bij GEn wat extra opties...
+# Chat: Extra opties voor GEn inhoudpagina aanvragen
 
 - **Datum**: 2026-03-30 20:33
 - **Sessie-ID**: `5737e677-f7fd-4140-b9cb-1c472360bf48`

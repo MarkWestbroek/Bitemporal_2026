@@ -1,4 +1,4 @@
-# Chat: Updated IndexRepresentatieVisual.jsx and adjusted card widths
+# Chat: Verbeteren van inhoudspagina en opmaaksuggesties
 
 - **Datum**: 2026-04-02 21:35
 - **Sessie-ID**: `349eeaab-3a97-4d2a-b46e-1ab08a6ca856`

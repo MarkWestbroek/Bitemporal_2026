@@ -1,4 +1,4 @@
-# Chat: Created comparison document with examples
+# Chat: Vergelijking van bitemporale datamodellen
 
 - **Datum**: 2026-04-02 01:53
 - **Sessie-ID**: `5e4f7f30-35f6-4792-980a-77fa2f50aa29`

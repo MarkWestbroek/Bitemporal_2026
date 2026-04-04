@@ -1,4 +1,4 @@
-# Chat: Finalizing the request
+# Chat: Domein-selector met multiselectbox maken
 
 - **Datum**: 2026-04-03 20:38
 - **Sessie-ID**: `d73b8e8e-a4d2-437f-aeb5-9570242f3ce2`

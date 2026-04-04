@@ -1,4 +1,4 @@
-# Chat: Updated generate_presentatie_v2.py and ran command
+# Chat: Uitleg bitemporele register met UML in PowerPoint
 
 - **Datum**: 2026-04-02 01:48
 - **Sessie-ID**: `67427324-c54a-4204-bda5-9978f43cee7a`

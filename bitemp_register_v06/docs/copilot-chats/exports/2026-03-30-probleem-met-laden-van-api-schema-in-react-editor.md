@@ -1,4 +1,4 @@
-# Chat: in de http://localhost:5174/viz/react/editor-v2.html zorgt laden van api/schema/...
+# Chat: Probleem met laden van API-schema in React editor
 
 - **Datum**: 2026-03-30 22:08
 - **Sessie-ID**: `14fd219b-1bbe-41a9-9b14-9a0d1dd71b52`

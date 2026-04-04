@@ -1,4 +1,4 @@
-# Chat: Executed command and created summary index file
+# Chat: UML Model van Basisregistratie Personen Ontwerpen
 
 - **Datum**: 2026-04-02 20:35
 - **Sessie-ID**: `49bb9a57-56b2-4e17-bc36-dce162fc68a8`

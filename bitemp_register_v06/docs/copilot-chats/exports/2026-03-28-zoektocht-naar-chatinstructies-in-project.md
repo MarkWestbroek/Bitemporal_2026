@@ -1,4 +1,4 @@
-# Chat: ik meen dat ik instructies voor chat geschreven had in dit project maar ik vind...
+# Chat: Zoektocht naar chatinstructies in project
 
 - **Datum**: 2026-03-28 12:49
 - **Sessie-ID**: `b0eac12e-7cf0-426c-b730-d1761bcceae2`

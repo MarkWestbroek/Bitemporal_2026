@@ -58,6 +58,15 @@ De API is standaard bereikbaar op `http://localhost:8182` in de devloop-compose.
 
 > In de UML-editor wordt bij lokaal Vite-dev (`:5173`/`:5174`/`:5175`) standaard ook `http://localhost:8182` als API-basis voorgesteld. Buiten Vite-dev valt de editor terug op `window.location.origin`.
 
+### Lokaal testen buiten Docker
+
+De rebuild-flow heeft **geen harde afhankelijkheid op poort `8182`**. Je kunt hem dus ook lokaal testen, bijvoorbeeld op `http://localhost:8082`, zolang de API met `DEVLOOP=true` gestart is.
+
+Sinds 2026-04-04 is de automatische `os.Exit(42)` herstart **alleen actief in container-modus** (`DEVLOOP_CONTAINER=true`). Daardoor geldt:
+
+- **Docker / devloop-compose** → na een succesvolle rebuild sluit de API af met exit code `42`, waarna `devloop-entrypoint.sh` automatisch de nieuwe binary herstart.
+- **Lokale Go-run op Windows/macOS/Linux** → de rebuild werkt ook, maar het proces blijft na succes gewoon draaien; je hoeft dus niet handmatig opnieuw te starten.
+
 ## Model wijzigen en rebuilden
 
 ### Via de frontend editor
@@ -177,8 +186,8 @@ Retourneert:
 6. Alleen bij succes:
    - wordt `_baseline/model/` bijgewerkt naar de nieuw bewezen toestand
    - stuurt de API een succes-response terug
-   - exit de API met code `42`
-7. **Entrypoint** detecteert exit code `42` en herstart de nieuwe binary.
+   - **alleen als `DEVLOOP_CONTAINER=true`**: exit de API met code `42`
+7. **Docker-entrypoint** detecteert exit code `42` en herstart de nieuwe binary. Buiten Docker blijft de lokale server na een rebuild gewoon actief.
 
 ### Fallback / rollback gedrag
 
@@ -256,6 +265,7 @@ Omgevingsvariabelen in `docker-compose.devloop.yml`:
 | Variabele | Default | Betekenis |
 |-----------|---------|-----------|
 | `DEVLOOP` | `true` | Activeert devloop modus |
+| `DEVLOOP_CONTAINER` | `true` in Docker compose | Activeert de automatische `exit 42` herstartlus; lokaal meestal weglaten |
 | `DEVLOOP_PASSWORD` | `1234` | Wachtwoord voor rebuild endpoint |
 | `ALLOW_DROP_TABLES` | `true` | Staat admin drop-tables toe |
 | `DB_USER` | `postgres` | PostgreSQL gebruiker |

@@ -1,4 +1,4 @@
-# Chat: I would like to plan implementing a content editor for the generated registers....
+# Chat: Content Editor Implementation Plan for Registers
 
 - **Datum**: 2026-03-29 03:50
 - **Sessie-ID**: `acfc1602-36fd-42f5-b706-89601cbde070`

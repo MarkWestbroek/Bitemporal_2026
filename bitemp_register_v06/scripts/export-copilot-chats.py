@@ -16,6 +16,7 @@ import os
 import sys
 import glob
 import re
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote, urlparse
@@ -115,6 +116,7 @@ def replay_jsonl_state(filepath: str) -> dict:
     messages = []
     current_response_parts = []
     latest_generated_title = ""
+    first_message_timestamp = 0
 
     with open(filepath, "r", encoding="utf-8", errors="replace") as f:
         for line in f:
@@ -134,14 +136,39 @@ def replay_jsonl_state(filepath: str) -> dict:
                 for key in ("customTitle", "sessionTitle", "generatedTitle", "title"):
                     value = session_header.get(key, "")
                     if isinstance(value, str) and value.strip():
-                        latest_generated_title = " ".join(value.split()).strip()
+                        cleaned = " ".join(value.split()).strip()
+                        session_header[key] = cleaned
+                        if key == "generatedTitle":
+                            latest_generated_title = cleaned
                         break
+                continue
+
+            if kind == 1:
+                patch_path = obj.get("k", [])
+                if isinstance(patch_path, list) and patch_path:
+                    patch_key = patch_path[-1]
+                    if patch_key in ("customTitle", "sessionTitle", "generatedTitle", "title"):
+                        if isinstance(v, str) and v.strip():
+                            cleaned = " ".join(v.split()).strip()
+                            session_header = session_header or {}
+                            session_header[patch_key] = cleaned
+                            if patch_key == "generatedTitle":
+                                latest_generated_title = cleaned
                 continue
 
             if kind == 2 and isinstance(v, list):
                 for item in v:
                     if not isinstance(item, dict):
                         continue
+
+                    timestamp = item.get("timestamp")
+                    if isinstance(timestamp, (int, float)) and timestamp > 0:
+                        first_message_timestamp = (
+                            timestamp
+                            if not first_message_timestamp
+                            else min(first_message_timestamp, timestamp)
+                        )
+
                     generated_title = item.get("generatedTitle", "")
                     if isinstance(generated_title, str) and generated_title.strip():
                         latest_generated_title = " ".join(generated_title.split()).strip()
@@ -182,8 +209,11 @@ def replay_jsonl_state(filepath: str) -> dict:
     if not session_header:
         session_header = {}
 
-    if latest_generated_title:
+    if latest_generated_title and not session_header.get("generatedTitle"):
         session_header["generatedTitle"] = latest_generated_title
+
+    if first_message_timestamp:
+        session_header["_first_timestamp"] = first_message_timestamp
 
     session_header["_extracted_messages"] = messages
     return session_header
@@ -197,6 +227,26 @@ def extract_messages(session: dict) -> list[dict]:
     """
     # Gebruik de berichten die we uit de JSONL patches geëxtraheerd hebben
     return session.get("_extracted_messages", [])
+
+
+def resolve_session_datetime(session: dict, filepath: str | None = None) -> datetime | None:
+    """Bepaal een bruikbare sessiedatum, met fallback op bericht-timestamps en bestandstijd."""
+    for key in ("creationDate", "lastUpdatedDate", "_first_timestamp"):
+        value = session.get(key, 0)
+        if isinstance(value, (int, float)) and value > 0:
+            timestamp = value / 1000 if value > 10_000_000_000 else value
+            try:
+                return datetime.fromtimestamp(timestamp)
+            except (ValueError, OSError, OverflowError):
+                continue
+
+    if filepath and os.path.exists(filepath):
+        try:
+            return datetime.fromtimestamp(os.path.getmtime(filepath))
+        except (ValueError, OSError, OverflowError):
+            return None
+
+    return None
 
 
 def build_session_title(session: dict, messages: list[dict], session_id: str) -> str:
@@ -219,13 +269,32 @@ def build_session_title(session: dict, messages: list[dict], session_id: str) ->
     return session_id[:8]
 
 
-def session_to_markdown(session: dict, session_id: str) -> str:
+def slugify_title(title: str, max_length: int = 60) -> str:
+    """Normaliseer een titel naar een nette bestandsnaam-slug, inclusief accenten zoals é -> e."""
+    if not isinstance(title, str):
+        return ""
+
+    normalized = unicodedata.normalize("NFKD", title)
+    ascii_title = normalized.encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^a-z0-9]+", "-", ascii_title.lower()).strip("-")
+    slug = re.sub(r"-{2,}", "-", slug)
+
+    if max_length > 0 and len(slug) > max_length:
+        truncated = slug[:max_length].rstrip("-")
+        word_boundary = truncated.rfind("-")
+        if word_boundary >= max(8, max_length // 2):
+            truncated = truncated[:word_boundary]
+        slug = truncated.rstrip("-")
+
+    return slug
+
+
+def session_to_markdown(session: dict, session_id: str, source_path: str | None = None) -> str:
     """Converteer een chat-sessie naar leesbaar Markdown."""
-    created_ms = session.get("creationDate", 0)
-    try:
-        created_dt = datetime.fromtimestamp(created_ms / 1000)
+    created_dt = resolve_session_datetime(session, source_path)
+    if created_dt:
         date_str = created_dt.strftime("%Y-%m-%d %H:%M")
-    except (ValueError, OSError):
+    else:
         date_str = "onbekend"
 
     messages = extract_messages(session)
@@ -301,16 +370,15 @@ def main():
                 continue
 
             # Bestandsnaam: datum-korte-titel
-            created_ms = session.get("creationDate", 0)
-            try:
-                created_dt = datetime.fromtimestamp(created_ms / 1000)
+            created_dt = resolve_session_datetime(session, jsonl_file)
+            if created_dt:
                 date_prefix = created_dt.strftime("%Y-%m-%d")
-            except (ValueError, OSError):
+            else:
                 date_prefix = "onbekend"
 
-            # Maak een korte slug van de sessietitel; fallback blijft het eerste user-bericht
+            # Maak een korte slug van de sessietitel; accenten worden genormaliseerd voor leesbare bestandsnamen.
             title_for_filename = build_session_title(session, messages, session_id)
-            slug = re.sub(r"[^a-z0-9]+", "-", title_for_filename[:50].lower()).strip("-")
+            slug = slugify_title(title_for_filename, max_length=60)
             if not slug:
                 slug = session_id[:8]
 
@@ -318,8 +386,6 @@ def main():
             filepath = os.path.join(export_dir, filename)
 
             # Check of er al een export is met dezelfde sessie-ID.
-            # Als die bestaat, vergelijk het berichtenaantal:
-            # is de chat gegroeid → herexporteer (overschrijf).
             existing_files = glob.glob(os.path.join(export_dir, "*.md"))
             existing_filepath = None
             existing_msg_count = 0
@@ -329,7 +395,6 @@ def main():
                         content = f.read(600)
                     if session_id in content:
                         existing_filepath = ef
-                        # Lees het opgeslagen berichtenaantal uit de header
                         m = re.search(r"\*\*Berichten\*\*:\s*(\d+)", content)
                         if m:
                             existing_msg_count = int(m.group(1))
@@ -338,18 +403,32 @@ def main():
                     continue
 
             current_msg_count = len(messages)
+            needs_filename_update = bool(
+                existing_filepath and os.path.basename(existing_filepath) != filename
+            )
 
-            if existing_filepath and current_msg_count <= existing_msg_count:
+            if existing_filepath and current_msg_count <= existing_msg_count and not needs_filename_update:
                 print(f"  Ongewijzigd ({current_msg_count} berichten): {session_id[:8]} → {os.path.basename(existing_filepath)}")
                 skipped += 1
                 continue
 
-            # Gebruik bestaand bestandspad bij update, anders nieuw pad
             if existing_filepath:
-                filepath = existing_filepath
-                action = f"Bijgewerkt ({existing_msg_count}→{current_msg_count} berichten)"
+                if needs_filename_update:
+                    filepath = os.path.join(export_dir, filename)
+                    counter = 1
+                    base_filepath = filepath
+                    while os.path.exists(filepath) and os.path.abspath(filepath) != os.path.abspath(existing_filepath):
+                        name, ext = os.path.splitext(base_filepath)
+                        filepath = f"{name}-{counter}{ext}"
+                        counter += 1
+                    if current_msg_count > existing_msg_count:
+                        action = f"Hernoemd en bijgewerkt ({existing_msg_count}→{current_msg_count} berichten)"
+                    else:
+                        action = "Hernoemd"
+                else:
+                    filepath = existing_filepath
+                    action = f"Bijgewerkt ({existing_msg_count}→{current_msg_count} berichten)"
             else:
-                # Voorkom naambotsing bij nieuw bestand
                 counter = 1
                 base_filepath = filepath
                 while os.path.exists(filepath):
@@ -359,10 +438,15 @@ def main():
                 action = "Geëxporteerd"
 
             # Schrijf markdown
-            md = session_to_markdown(session, session_id)
+            md = session_to_markdown(session, session_id, jsonl_file)
             if md:
                 with open(filepath, "w", encoding="utf-8", newline="\n") as f:
                     f.write(md)
+                if existing_filepath and os.path.abspath(existing_filepath) != os.path.abspath(filepath):
+                    try:
+                        os.remove(existing_filepath)
+                    except OSError:
+                        pass
                 print(f"  {action}: {session_id[:8]} → {os.path.basename(filepath)}")
                 exported += 1
 

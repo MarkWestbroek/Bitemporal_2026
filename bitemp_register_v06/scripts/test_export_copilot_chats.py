@@ -1,4 +1,5 @@
 import json
+import os
 import tempfile
 import unittest
 from importlib.util import module_from_spec, spec_from_file_location
@@ -52,6 +53,46 @@ class ExportCopilotChatsTests(unittest.TestCase):
                 matches = MODULE.find_workspace_storage_dirs("Bitemporal_2026")
 
             self.assertEqual(matches, [str(ws_storage_dir)])
+
+    def test_replay_jsonl_state_uses_custom_title_from_kind1_patch(self):
+        with tempfile.NamedTemporaryFile("w", delete=False, encoding="utf-8", newline="\n") as tmp:
+            tmp.write(json.dumps({"kind": 0, "v": {"creationDate": 1712232000000}}) + "\n")
+            tmp.write(json.dumps({"kind": 1, "k": ["customTitle"], "v": "Titel uit IDE"}) + "\n")
+            tmp.write(json.dumps({
+                "kind": 2,
+                "v": [{
+                    "requestId": "req-1",
+                    "message": {"text": "eerste regel van de chat"},
+                    "generatedTitle": "Cryptische Engelse titel"
+                }]
+            }) + "\n")
+            tmp_path = tmp.name
+
+        try:
+            session = MODULE.replay_jsonl_state(tmp_path)
+            title = MODULE.build_session_title(session, MODULE.extract_messages(session), "sessie-123")
+        finally:
+            os.remove(tmp_path)
+
+        self.assertEqual(title, "Titel uit IDE")
+
+    def test_resolve_session_datetime_falls_back_to_file_mtime(self):
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            tmp_path = tmp.name
+
+        try:
+            fallback_timestamp = 1712082600
+            os.utime(tmp_path, (fallback_timestamp, fallback_timestamp))
+            resolved = MODULE.resolve_session_datetime({"creationDate": 0}, tmp_path)
+        finally:
+            os.remove(tmp_path)
+
+        self.assertEqual(resolved.strftime("%Y-%m-%d"), "2024-04-02")
+
+    def test_slugify_title_normalizes_accents_for_filenames(self):
+        slug = MODULE.slugify_title("Docker omgeving voor Go-register instantie creëren")
+
+        self.assertEqual(slug, "docker-omgeving-voor-go-register-instantie-creeren")
 
 
 if __name__ == "__main__":

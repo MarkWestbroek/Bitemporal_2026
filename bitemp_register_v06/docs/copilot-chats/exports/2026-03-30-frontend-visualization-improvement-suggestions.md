@@ -1,4 +1,4 @@
-# Chat: Over de visualisatie in de frontend (index.html is het).  Ik zou het netter en...
+# Chat: Frontend Visualization Improvement Suggestions
 
 - **Datum**: 2026-03-30 17:55
 - **Sessie-ID**: `9851a6c8-1dea-4455-823c-b4f96eca67a6`

@@ -572,20 +572,30 @@ func MaakRebuildHandler() gin.HandlerFunc {
 
 		// Stap 5: Stuur response en plan herstart
 		stappen = append(stappen, "API herstart gepland over 2 seconden...")
+		herstartMelding := ""
+		if os.Getenv("DEVLOOP_CONTAINER") == "true" {
+			herstartMelding = "2 seconden"
+		}
+
 		c.JSON(http.StatusOK, RebuildResponse{
 			Status:       "succesvol",
 			Stappen:      stappen,
 			BuildOutput:  string(buildOutput),
-			HerstartOver: "2 seconden",
+			HerstartOver: herstartMelding,
 		})
 
 		// Na het sturen van de response: exit met code 42 zodat het
 		// entrypoint script de nieuwe binary herstart.
-		go func() {
-			time.Sleep(2 * time.Second)
-			fmt.Println("\n=== Devloop rebuild voltooid, herstarten met exit code 42 ===")
-			os.Exit(42)
-		}()
+		// Alleen in container-modus (DEVLOOP_CONTAINER=true), anders blijft de server draaien.
+		if os.Getenv("DEVLOOP_CONTAINER") == "true" {
+			go func() {
+				time.Sleep(2 * time.Second)
+				fmt.Println("\n=== Devloop rebuild voltooid, herstarten met exit code 42 ===")
+				os.Exit(42)
+			}()
+		} else {
+			fmt.Println("\n=== Devloop rebuild voltooid (geen herstart: niet in container) ===")
+		}
 	}
 }
 

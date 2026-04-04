@@ -1,4 +1,4 @@
-# Chat: Executed command and inspected PowerShell output
+# Chat: Script execution error in PowerShell
 
 - **Datum**: 2026-04-01 17:06
 - **Sessie-ID**: `72805f81-929b-4327-9941-10a9639d91ec`
