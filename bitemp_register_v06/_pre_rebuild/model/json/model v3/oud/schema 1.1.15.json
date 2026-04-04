@@ -1,0 +1,432 @@
+{
+    "naam": "np-loc-refs",
+    "enums": [
+        {
+            "goType": "Bereikbaarheidssoort",
+            "positie": {
+                "x": 330,
+                "y": 45
+            },
+            "waarden": [
+                {
+                    "waarde": "Woonadres",
+                    "constNaam": "BereikbaarheidssoortWoonadres"
+                },
+                {
+                    "waarde": "Briefadres",
+                    "constNaam": "BereikbaarheidssoortBriefadres"
+                },
+                {
+                    "waarde": "Correspondentieadres",
+                    "constNaam": "BereikbaarheidssoortCorrespondentieadres"
+                }
+            ],
+            "baseType": "string"
+        },
+        {
+            "goType": "Naamgebruiksoort",
+            "positie": {
+                "x": 330,
+                "y": 375
+            },
+            "waarden": [
+                {
+                    "waarde": "EigenNaam",
+                    "constNaam": "NaamgebruiksoortEigenNaam"
+                },
+                {
+                    "waarde": "PartnerNaam",
+                    "constNaam": "NaamgebruiksoortPartnerNaam"
+                },
+                {
+                    "waarde": "EigenNaam-PartnerNaam",
+                    "constNaam": "NaamgebruiksoortEigenNaamPartnerNaam"
+                },
+                {
+                    "waarde": "PartnerNaam-EigenNaam",
+                    "constNaam": "NaamgebruiksoortPartnerNaamEigenNaam"
+                }
+            ],
+            "baseType": "string"
+        }
+    ],
+    "versie": "1.1.15",
+    "datatypes": [
+        {
+            "naam": "NLPostcode",
+            "format": "nl-postcode",
+            "positie": {
+                "x": 585,
+                "y": 450
+            },
+            "weergave": {
+                "inputMask": "0000 AA",
+                "placeholder": "1234 AB"
+            },
+            "basistype": "string",
+            "validatie": {
+                "pattern": "^[1-9][0-9]{3}\\s?[A-Za-z]{2}$",
+                "maxLength": 7,
+                "minLength": 6,
+                "foutmelding": "Voer een geldige postcode in (bijv. 1234 AB)",
+                "voorbeelden": [
+                    "1234 AB",
+                    "9999ZZ"
+                ]
+            },
+            "description": "Nederlandse postcode (4 cijfers + 2 letters)",
+            "normalisatie": "uppercase_letters"
+        },
+        {
+            "naam": "BSN",
+            "format": "bsn",
+            "positie": {
+                "x": -465,
+                "y": 90
+            },
+            "weergave": {
+                "inputMask": "000000000",
+                "placeholder": "123456782"
+            },
+            "basistype": "string",
+            "validatie": {
+                "regels": [
+                    {
+                        "naam": "11-proef",
+                        "type": "checksum",
+                        "expressie": "(9*d1 + 8*d2 + 7*d3 + 6*d4 + 5*d5 + 4*d6 + 3*d7 + 2*d8 - 1*d9) % 11 == 0"
+                    }
+                ],
+                "pattern": "^[0-9]{9}$",
+                "maxLength": 9,
+                "minLength": 9,
+                "foutmelding": "Voer een geldig BSN in (9 cijfers, 11-proef)",
+                "voorbeelden": [
+                    "123456782"
+                ]
+            },
+            "description": "Burgerservicenummer (9 cijfers, 11-proef)"
+        }
+    ],
+    "entiteiten": [
+        {
+            "kleur": "#bfdbfe",
+            "positie": {
+                "x": -90,
+                "y": -135
+            },
+            "meervoud": "natuurlijkpersoons",
+            "relaties": [
+                {
+                    "id": "edge_1774201942583_1",
+                    "naam": "Bereikbaarheid",
+                    "doelId": "edge_1774201991984_2",
+                    "velden": [
+                        {
+                            "enum": "Bereikbaarheidssoort",
+                            "naam": "soort",
+                            "goType": "Bereikbaarheidssoort"
+                        }
+                    ],
+                    "positie": {
+                        "x": 330,
+                        "y": -105
+                    },
+                    "meervoud": "bereikbaarheids",
+                    "isMaterieel": true,
+                    "doelEntiteit": "Locatie",
+                    "sourceHandle": "right",
+                    "targetHandle": "left",
+                    "momentvoorkomen": "enkelvoudig",
+                    "doelSourceHandle": "right",
+                    "doelTargetHandle": "left"
+                }
+            ],
+            "typenaam": "NatuurlijkPersoon",
+            "description": "Entiteit A met materiële tijdlijn en onderliggende representaties U, V, W en Rel_A_B.",
+            "isMaterieel": true,
+            "afgeleideVelden": [
+                {
+                    "naam": "geheleNaam",
+                    "goType": "string",
+                    "description": "Totaal van 'naam (tussenvoegsel) achternaam'",
+                    "isWeergaveVeld": true,
+                    "afleidingsregel": "Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters + (Naam.tussenvoegsel != null ? ' ' + Naam.tussenvoegsel : '') + ' ' + Naam.achternaam",
+                    "afleidingsregelTaal": "cel"
+                }
+            ],
+            "gegevenselementen": [
+                {
+                    "id": "NatuurlijkPersoon->NatuurlijkPersoon_PersoonsIdentificatie",
+                    "naam": "PersoonsIdentificatie",
+                    "velden": [
+                        {
+                            "naam": "bsn",
+                            "goType": "string"
+                        },
+                        {
+                            "naam": "ingezetene",
+                            "goType": "*bool"
+                        }
+                    ],
+                    "positie": {
+                        "x": -465,
+                        "y": -30
+                    },
+                    "meervoud": "a_us",
+                    "description": "Enkelvoudig gegevenselement van A met formele tijdlijn.",
+                    "sourceHandle": "left",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "id": "NatuurlijkPersoon->NatuurlijkPersoon_Naam",
+                    "naam": "Naam",
+                    "velden": [
+                        {
+                            "naam": "voorletters",
+                            "goType": "string"
+                        },
+                        {
+                            "naam": "roepnaam",
+                            "goType": "*string"
+                        },
+                        {
+                            "naam": "tussenvoegsel",
+                            "goType": "*string"
+                        },
+                        {
+                            "naam": "achternaam",
+                            "goType": "string"
+                        }
+                    ],
+                    "positie": {
+                        "x": -75,
+                        "y": 240
+                    },
+                    "meervoud": "a_vs",
+                    "description": "Meervoudig gegevenselement van A met onder andere een datumveld.",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "id": "NatuurlijkPersoon->NatuurlijkPersoon_Burgerschap",
+                    "naam": "Burgerschap",
+                    "velden": [
+                        {
+                            "naam": "landcode",
+                            "goType": "string"
+                        },
+                        {
+                            "naam": "nationaliteit",
+                            "goType": "string"
+                        }
+                    ],
+                    "positie": {
+                        "x": -315,
+                        "y": 405
+                    },
+                    "meervoud": "a_ws",
+                    "description": "Meervoudig gegevenselement van A met numerieke waarden.",
+                    "isMaterieel": true,
+                    "momentvoorkomen": "meervoudig"
+                },
+                {
+                    "id": "edge_1774209110136_2",
+                    "naam": "Partnernaam",
+                    "velden": [
+                        {
+                            "naam": "achternaam",
+                            "goType": "string"
+                        }
+                    ],
+                    "positie": {
+                        "x": 90,
+                        "y": 435
+                    },
+                    "meervoud": "partnernaams",
+                    "sourceHandle": "bottom",
+                    "targetHandle": "top",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "id": "edge_1774209240752_5",
+                    "naam": "Naamgebruik",
+                    "velden": [
+                        {
+                            "enum": "Naamgebruiksoort",
+                            "naam": "naamgebruik",
+                            "goType": "Naamgebruiksoort"
+                        }
+                    ],
+                    "positie": {
+                        "x": 240,
+                        "y": 240
+                    },
+                    "meervoud": "naamgebruiks",
+                    "sourceHandle": "bottom",
+                    "targetHandle": "top",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "kleur": "#fecaca",
+            "positie": {
+                "x": 720,
+                "y": -135
+            },
+            "meervoud": "locaties",
+            "typenaam": "Locatie",
+            "description": "Entiteit B met materiële tijdlijn en onderliggende representaties X en Y.",
+            "isMaterieel": true,
+            "afgeleideVelden": [
+                {
+                    "naam": "geheelAdres",
+                    "goType": "string",
+                    "description": "afleiding",
+                    "isWeergaveVeld": true,
+                    "afleidingsregel": "Adres.straanaam + \"\"+ Adres.huisnummer + \"/n\" + Adres.postcode + \"  \" + Adres.plaats ",
+                    "afleidingsregelTaal": "cel"
+                }
+            ],
+            "gegevenselementen": [
+                {
+                    "id": "Locatie->Locatie_Adres",
+                    "naam": "Adres",
+                    "velden": [
+                        {
+                            "naam": "straatnaam",
+                            "goType": "string"
+                        },
+                        {
+                            "naam": "huisnummer",
+                            "goType": "string"
+                        },
+                        {
+                            "naam": "postcode",
+                            "goType": "string"
+                        },
+                        {
+                            "naam": "plaats",
+                            "goType": "string"
+                        },
+                        {
+                            "naam": "land",
+                            "goType": "int"
+                        }
+                    ],
+                    "positie": {
+                        "x": 585,
+                        "y": 240
+                    },
+                    "meervoud": "b_xs",
+                    "description": "Enkelvoudig gegevenselement van B met twee tekstvelden.",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "id": "Locatie->Locatie_BAG-locatie",
+                    "naam": "BAGlocatie",
+                    "velden": [
+                        {
+                            "naam": "adresaanduiding",
+                            "goType": "string"
+                        }
+                    ],
+                    "positie": {
+                        "x": 825,
+                        "y": 240
+                    },
+                    "meervoud": "b_ys",
+                    "description": "Enkelvoudig gegevenselement van B met een tekstveld.",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "kleur": "#fde68a",
+            "positie": {
+                "x": 1155,
+                "y": 150
+            },
+            "meervoud": "landen",
+            "relaties": [
+                {
+                    "id": "edge_1774750969717_12",
+                    "naam": "EuLidstatenLand",
+                    "positie": {
+                        "x": 1335,
+                        "y": 0
+                    },
+                    "meervoud": "EuLidstatenLanden",
+                    "doelEntiteit": "",
+                    "sourceHandle": "top",
+                    "targetHandle": "bottom",
+                    "relatieSubtype": "referentielijst_items",
+                    "momentvoorkomen": "enkelvoudig",
+                    "referentielijstInstantie": "EuLidstaten"
+                }
+            ],
+            "typenaam": "Land",
+            "description": "Referentielijst-item",
+            "isMaterieel": true,
+            "gegevenselementen": [
+                {
+                    "id": "edge_1774646072605_7",
+                    "naam": "Landnaam",
+                    "velden": [
+                        {
+                            "naam": "naam",
+                            "goType": "string"
+                        }
+                    ],
+                    "positie": {
+                        "x": 1275,
+                        "y": 390
+                    },
+                    "meervoud": "landnamen",
+                    "sourceHandle": "bottom",
+                    "targetHandle": "top",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "id": "edge_1774646153149_10",
+                    "naam": "Landcode",
+                    "velden": [
+                        {
+                            "naam": "code",
+                            "goType": "string"
+                        }
+                    ],
+                    "positie": {
+                        "x": 1050,
+                        "y": 390
+                    },
+                    "meervoud": "landcodes",
+                    "sourceHandle": "bottom",
+                    "targetHandle": "top",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        }
+    ],
+    "beschrijving": "V3 export vanuit UML editor (codegen-ready)",
+    "referentielijstInstanties": [
+        {
+            "naam": "Landenlijst",
+            "positie": {
+                "x": 1035,
+                "y": -165
+            },
+            "systeemnaam": "Landenlijst",
+            "omschrijving": "Alle landen van de wereld"
+        },
+        {
+            "naam": "EuLidstaten",
+            "positie": {
+                "x": 1320,
+                "y": -165
+            },
+            "systeemnaam": "EuLidstaten",
+            "omschrijving": "Alle lidstaten binnen de EU"
+        }
+    ]
+}

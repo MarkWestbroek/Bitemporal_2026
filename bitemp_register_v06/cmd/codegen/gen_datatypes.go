@@ -34,15 +34,24 @@ func generateDatatypeRegistryAdditive(v3 model.V3Model, opts codegenOptions) (st
 	var b strings.Builder
 	b.WriteString(fileHeader("Additieve DatatypeRegistry-entries — voegt datatypes toe aan de bestaande DatatypeRegistry.\n// Gegenereerd door cmd/codegen — niet handmatig bewerken."))
 
-	if len(v3.Datatypes) == 0 {
-		b.WriteString("// Geen datatypes gedefinieerd in het model.\n")
+	// Filter datatypes: in additive modus alleen datatypes die bij dit domein horen.
+	// Datatypes uit andere domeinen worden door dat domein zelf gegenereerd.
+	var eigenDatatypes []model.V3Datatype
+	for _, dt := range v3.Datatypes {
+		if strings.TrimSpace(dt.Domein) == opts.domein || (dt.Domein == "" && opts.domein == "register") {
+			eigenDatatypes = append(eigenDatatypes, dt)
+		}
+	}
+
+	if len(eigenDatatypes) == 0 {
+		b.WriteString("// Geen domein-eigen datatypes; datatypes uit andere domeinen worden daar gegenereerd.\n")
 		return b.String(), nil
 	}
 
 	funcName := opts.initFuncName("DatatypeRegistry")
 	b.WriteString(fmt.Sprintf("func %s() {\n", funcName))
 	b.WriteString("\tDatatypeRegistry = append(DatatypeRegistry,\n")
-	for _, dt := range v3.Datatypes {
+	for _, dt := range eigenDatatypes {
 		writeDatatypeEntry(&b, dt, true)
 	}
 	b.WriteString("\t)\n")

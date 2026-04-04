@@ -44,6 +44,33 @@ func getDevloopPassword() string {
 	return pw
 }
 
+// resolveAppDir bepaalt de projectroot voor devloop rebuilds.
+// In Docker is dat normaal `/app`; lokaal zoeken we dynamisch de map met `go.mod`.
+func resolveAppDir() string {
+	if appDir := strings.TrimSpace(os.Getenv("APP_DIR")); appDir != "" {
+		return appDir
+	}
+
+	wd, err := os.Getwd()
+	if err != nil || wd == "" {
+		return "/app"
+	}
+
+	dir := wd
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
+	}
+
+	return wd
+}
+
 // RebuildDomeinSpec beschrijft één domein + prefix combinatie voor multi-domein codegen.
 // Mode wordt altijd als "additive" uitgevoerd (standalone wordt niet meer ondersteund).
 type RebuildDomeinSpec struct {
@@ -366,7 +393,8 @@ func MaakRebuildHandler() gin.HandlerFunc {
 		}
 
 		stappen := []string{}
-		appDir := "/app"
+		appDir := resolveAppDir()
+		stappen = append(stappen, fmt.Sprintf("Werkdirectory bepaald als %s", appDir))
 
 		// Stap 0a: Herstel model/ vanuit baseline (schone basis voor codegen).
 		if melding, err := herstelModelDirectoryVanuitBaseline(appDir); err != nil {
@@ -616,14 +644,15 @@ func MaakRebuildStatusHandler() gin.HandlerFunc {
 			goVersion = strings.TrimSpace(string(out))
 		}
 
-		// Controleer of codegen binary beschikbaar is
+		appDir := resolveAppDir()
+
+		// Controleer of codegen binary of broncode beschikbaar is in de actuele app-dir.
 		codegenBeschikbaar := false
-		if _, err := os.Stat("/app/bin/codegen"); err == nil {
+		if _, err := os.Stat(filepath.Join(appDir, "bin", "codegen")); err == nil {
 			codegenBeschikbaar = true
 		}
-		// Fallback: controleer of cmd/codegen/ directory bestaat
 		if !codegenBeschikbaar {
-			if _, err := os.Stat("/app/cmd/codegen/main.go"); err == nil {
+			if _, err := os.Stat(filepath.Join(appDir, "cmd", "codegen", "main.go")); err == nil {
 				codegenBeschikbaar = true
 			}
 		}
@@ -632,8 +661,8 @@ func MaakRebuildStatusHandler() gin.HandlerFunc {
 			"devloop":                     true,
 			"go_versie":                   goVersion,
 			"codegen_beschikbaar":         codegenBeschikbaar,
-			"werkdirectory":               "/app",
-			"model_directory":             "/app/model",
+			"werkdirectory":               appDir,
+			"model_directory":             filepath.Join(appDir, "model"),
 			"beschikbare_commando":        "POST /admin/rebuild/:password met body: model of schema_bron/schema_versie_id",
 			"ondersteunde_schema_bronnen": []string{"model-in-body", "code", "actief", "latest_proposed", "schema_versie_id"},
 		})

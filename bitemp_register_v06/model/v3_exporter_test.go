@@ -168,6 +168,50 @@ func TestExportMetaRegistryToV3_DatatypesUniekPerNaam(t *testing.T) {
 	}
 }
 
+func TestExportMetaRegistryToV3_DatatypeVeldenZijnGeenEnums(t *testing.T) {
+	v3 := ExportMetaRegistryToV3("np-loc")
+
+	var postcodeVeld *V3Veld
+	var bsnVeld *V3Veld
+
+	for _, ent := range v3.Entiteiten {
+		if ent.Typenaam != "Locatie" && ent.Typenaam != "NatuurlijkPersoon" {
+			continue
+		}
+		for _, ge := range ent.Gegevenselementen {
+			for i := range ge.Velden {
+				veld := &ge.Velden[i]
+				if ent.Typenaam == "Locatie" && ge.Naam == "Adres" && veld.Naam == "postcode" {
+					postcodeVeld = veld
+				}
+				if ent.Typenaam == "NatuurlijkPersoon" && ge.Naam == "Persoonsidentificatie" && veld.Naam == "bsn" {
+					bsnVeld = veld
+				}
+			}
+		}
+	}
+
+	if postcodeVeld == nil {
+		t.Fatal("postcode veld niet gevonden in np-loc export")
+	}
+	if bsnVeld == nil {
+		t.Fatal("bsn veld niet gevonden in np-loc export")
+	}
+
+	if postcodeVeld.Enum != "" {
+		t.Fatalf("postcode mag geen enum zijn, kreeg %q", postcodeVeld.Enum)
+	}
+	if postcodeVeld.Datatype != "NLPostcode" {
+		t.Fatalf("postcode moet datatype NLPostcode hebben, kreeg %q", postcodeVeld.Datatype)
+	}
+	if bsnVeld.Enum != "" {
+		t.Fatalf("bsn mag geen enum zijn, kreeg %q", bsnVeld.Enum)
+	}
+	if bsnVeld.Datatype != "BSN" {
+		t.Fatalf("bsn moet datatype BSN hebben, kreeg %q", bsnVeld.Datatype)
+	}
+}
+
 func TestExportMetaRegistryToV3_EnumDomeinen(t *testing.T) {
 	v3 := ExportMetaRegistryToV3("np-loc")
 

@@ -26,6 +26,11 @@ func corsMiddleware() gin.HandlerFunc {
 		"http://127.0.0.1:5173": {},
 		"http://127.0.0.1:5174": {},
 		"http://127.0.0.1:5175": {},
+		// Lokale API/UI combinaties voor devloop buiten Docker
+		"http://localhost:8082": {},
+		"http://127.0.0.1:8082": {},
+		"http://localhost:8182": {},
+		"http://127.0.0.1:8182": {},
 	}
 
 	return func(c *gin.Context) {

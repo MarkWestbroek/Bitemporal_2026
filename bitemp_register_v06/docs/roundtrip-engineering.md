@@ -168,9 +168,11 @@ Bij export kan een domeincode worden meegegeven om alleen types uit dat domein t
 Velden in _Data structs kunnen verwijzen naar custom datatypes (NLPostcode, BSN) via de `schema` tag:
 
 ```go
-Postcode string `json:"postcode" schema:"datatype:NLPostcode"`
-Bsn      string `json:"bsn" schema:"datatype:BSN"`
+Postcode NLPostcode `json:"postcode" schema:"datatype:NLPostcode"`
+Bsn      BSN        `json:"bsn" schema:"datatype:BSN"`
 ```
+
+> Gebruik hier bewust **geen** `enum=NLPostcode` of `enum=BSN`: custom datatypes en enumeraties zijn aparte concepten in het V3 model.
 
 De V3 exporter leest deze tag en zet het `Datatype`-veld in `V3Veld`:
 

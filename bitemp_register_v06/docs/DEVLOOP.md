@@ -66,6 +66,7 @@ Sinds 2026-04-04 is de automatische `os.Exit(42)` herstart **alleen actief in co
 
 - **Docker / devloop-compose** → na een succesvolle rebuild sluit de API af met exit code `42`, waarna `devloop-entrypoint.sh` automatisch de nieuwe binary herstart.
 - **Lokale Go-run op Windows/macOS/Linux** → de rebuild werkt ook, maar het proces blijft na succes gewoon draaien; je hoeft dus niet handmatig opnieuw te starten.
+- Een UI op `http://localhost:8182` mag daarbij ook een lokale API op `http://localhost:8082` aanroepen; de CORS-middleware staat deze lokale dev-origins expliciet toe.
 
 ## Model wijzigen en rebuilden
 

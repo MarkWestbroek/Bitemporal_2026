@@ -374,7 +374,7 @@ func contentField(v model.V3Veld) StructField {
 
 	// Schema tags: enum, datatype, ref
 	var schemaParts []string
-	if v.Enum != "" {
+	if v.Enum != "" && v.Enum != v.Datatype {
 		schemaParts = append(schemaParts, fmt.Sprintf("enum=%s", v.Enum))
 	}
 	if v.Datatype != "" {

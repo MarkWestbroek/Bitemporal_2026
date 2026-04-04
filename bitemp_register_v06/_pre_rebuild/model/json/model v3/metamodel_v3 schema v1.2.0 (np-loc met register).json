@@ -1,0 +1,638 @@
+{
+  "versie": "v3",
+  "naam": "Editor export",
+  "beschrijving": "V3 export vanuit UML editor (codegen-ready)",
+  "datatypes": [
+    {
+      "naam": "NLPostcode",
+      "description": "Nederlandse postcode (4 cijfers + 2 letters)",
+      "basistype": "string",
+      "format": "nl-postcode",
+      "positie": {
+        "x": 750,
+        "y": 345
+      },
+      "validatie": {
+        "pattern": "^[1-9][0-9]{3}\\s?[A-Za-z]{2}$",
+        "minLength": 6,
+        "maxLength": 7,
+        "voorbeelden": [
+          "1234 AB",
+          "9999ZZ"
+        ],
+        "foutmelding": "Voer een geldige postcode in (bijv. 1234 AB)"
+      },
+      "normalisatie": "uppercase_letters",
+      "weergave": {
+        "placeholder": "1234 AB",
+        "inputMask": "0000 AA"
+      }
+    },
+    {
+      "naam": "BSN",
+      "description": "Burgerservicenummer (9 cijfers, 11-proef)",
+      "basistype": "string",
+      "format": "bsn",
+      "positie": {
+        "x": -480,
+        "y": 165
+      },
+      "validatie": {
+        "pattern": "^[0-9]{9}$",
+        "minLength": 9,
+        "maxLength": 9,
+        "voorbeelden": [
+          "123456782"
+        ],
+        "foutmelding": "Voer een geldig BSN in (9 cijfers, 11-proef)",
+        "regels": [
+          {
+            "naam": "11-proef",
+            "type": "checksum",
+            "expressie": "(9*d1 + 8*d2 + 7*d3 + 6*d4 + 5*d5 + 4*d6 + 3*d7 + 2*d8 - 1*d9) % 11 == 0"
+          }
+        ]
+      },
+      "weergave": {
+        "placeholder": "123456782",
+        "inputMask": "000000000"
+      }
+    }
+  ],
+  "enums": [
+    {
+      "goType": "Naamgebruiksoort",
+      "baseType": "string",
+      "positie": {
+        "x": 285,
+        "y": 405
+      },
+      "waarden": [
+        {
+          "constNaam": "NaamgebruiksoortEigenNaam",
+          "waarde": "EigenNaam"
+        },
+        {
+          "constNaam": "NaamgebruiksoortPartnerNaam",
+          "waarde": "PartnerNaam"
+        },
+        {
+          "constNaam": "NaamgebruiksoortEigenNaamPartnerNaam",
+          "waarde": "EigenNaam-PartnerNaam"
+        },
+        {
+          "constNaam": "NaamgebruiksoortPartnerNaamEigenNaam",
+          "waarde": "PartnerNaam-EigenNaam"
+        }
+      ]
+    },
+    {
+      "goType": "Bereikbaarheidssoort",
+      "baseType": "string",
+      "positie": {
+        "x": 330,
+        "y": 60
+      },
+      "waarden": [
+        {
+          "constNaam": "BereikbaarheidssoortWoonadres",
+          "waarde": "Woonadres"
+        },
+        {
+          "constNaam": "BereikbaarheidssoortBriefadres",
+          "waarde": "Briefadres"
+        },
+        {
+          "constNaam": "BereikbaarheidssoortCorrespondentieadres",
+          "waarde": "Correspondentieadres"
+        }
+      ]
+    },
+    {
+      "goType": "ReferentielijstAdrestype",
+      "baseType": "string",
+      "positie": {
+        "x": 1890,
+        "y": -255
+      },
+      "waarden": [
+        {
+          "constNaam": "ReferentielijstAdrestypeURL",
+          "waarde": "URL"
+        },
+        {
+          "constNaam": "ReferentielijstAdrestypeURN",
+          "waarde": "URN"
+        }
+      ]
+    }
+  ],
+  "entiteiten": [
+    {
+      "typenaam": "AdellijkeTitel",
+      "description": "Referentielijst-item: adellijke titel.",
+      "isMaterieel": false,
+      "entiteitSubtype": "referentielijst_item",
+      "kleur": "#c4b5fd",
+      "meervoud": "adellijke_titels",
+      "positie": {
+        "x": 1545,
+        "y": 345
+      },
+      "gegevenselementen": [
+        {
+          "naam": "AdellijkeTitelTitel",
+          "description": "Enkelvoudig gegevenselement titel van AdellijkeTitel.",
+          "meervoud": "adellijke_titel_titels",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 1575,
+            "y": 570
+          },
+          "id": "AdellijkeTitel->AdellijkeTitel_AdellijkeTitelTitel",
+          "velden": [
+            {
+              "naam": "titel",
+              "goType": "string"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    },
+    {
+      "typenaam": "Land",
+      "description": "Referentielijst-item: individueel land.",
+      "isMaterieel": true,
+      "entiteitSubtype": "referentielijst_item",
+      "kleur": "#fde68a",
+      "meervoud": "landen",
+      "positie": {
+        "x": 1215,
+        "y": 345
+      },
+      "gegevenselementen": [
+        {
+          "naam": "Landcode",
+          "description": "Enkelvoudig gegevenselement landcode van Land.",
+          "meervoud": "landcodes",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 1095,
+            "y": 555
+          },
+          "id": "edge_1774646153149_10",
+          "sourceHandle": "bottom",
+          "targetHandle": "top",
+          "velden": [
+            {
+              "naam": "code",
+              "goType": "string"
+            }
+          ]
+        },
+        {
+          "naam": "Landnaam",
+          "description": "Enkelvoudig gegevenselement landnaam van Land.",
+          "meervoud": "landnamen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 1335,
+            "y": 555
+          },
+          "id": "edge_1774646072605_7",
+          "sourceHandle": "bottom",
+          "targetHandle": "top",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    },
+    {
+      "typenaam": "Locatie",
+      "description": "Fysiek bezoekbare locatie gelegen op het aardoppervlak.",
+      "isMaterieel": true,
+      "kleur": "#fecaca",
+      "meervoud": "locaties",
+      "positie": {
+        "x": 720,
+        "y": -135
+      },
+      "afgeleideVelden": [
+        {
+          "naam": "weergaveadres",
+          "description": "Samengesteld weergaveadres, afgeleid uit straatnaam, huisnummer, postcode en plaats.",
+          "goType": "string",
+          "afleidingsregelTaal": "cel",
+          "afleidingsregel": "Adres.straatnaam + ' ' + Adres.huisnummer + ', ' + Adres.postcode + ' ' + Adres.plaats",
+          "isWeergaveVeld": true
+        }
+      ],
+      "gegevenselementen": [
+        {
+          "naam": "Adres",
+          "description": "Binnenlands adres: een aanduiding van een binnenlandse locatie, uitgegeven door de gemeente en geregistreerd in de BAG.",
+          "meervoud": "adressen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 795,
+            "y": 120
+          },
+          "id": "Locatie->Locatie_Adres",
+          "velden": [
+            {
+              "naam": "straatnaam",
+              "goType": "string"
+            },
+            {
+              "naam": "huisnummer",
+              "goType": "string"
+            },
+            {
+              "naam": "postcode",
+              "goType": "NLPostcode",
+              "datatype": "NLPostcode"
+            },
+            {
+              "naam": "plaats",
+              "goType": "string"
+            },
+            {
+              "naam": "land",
+              "goType": "int",
+              "$ref": "LandenlijstLand"
+            }
+          ]
+        },
+        {
+          "naam": "BAGlocatie",
+          "description": "Unieke identificatie van het adresseerbaar object (verblijfsobject, stand- of ligplaats) uitgegeven door het bevoegd gemeentelijke orgaan.",
+          "meervoud": "baglocaties",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 585,
+            "y": 90
+          },
+          "id": "Locatie->Locatie_BAG-locatie",
+          "velden": [
+            {
+              "naam": "adresaanduiding",
+              "goType": "string"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    },
+    {
+      "typenaam": "NatuurlijkPersoon",
+      "description": "Een mens voor zover deze door Nederlandse wetgeving met rechten en plichten wordt bekleed.",
+      "isMaterieel": true,
+      "kleur": "#bfdbfe",
+      "meervoud": "natuurlijk_personen",
+      "positie": {
+        "x": -90,
+        "y": -135
+      },
+      "afgeleideVelden": [
+        {
+          "naam": "weergavenaam",
+          "description": "Samengestelde weergavenaam van de persoon, afgeleid uit voornaam/tussenvoegsel/achternaam.",
+          "goType": "string",
+          "afleidingsregelTaal": "cel",
+          "afleidingsregel": "(Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters) + (Naam.tussenvoegsel != null ? ' ' + Naam.tussenvoegsel : '') + ' ' + Naam.achternaam",
+          "isWeergaveVeld": true
+        }
+      ],
+      "gegevenselementen": [
+        {
+          "naam": "Persoonsidentificatie",
+          "description": "Identificerende gegevens van de natuurlijk persoon (BSN, ingezetene).",
+          "meervoud": "persoonsidentificaties",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": -450,
+            "y": -30
+          },
+          "id": "NatuurlijkPersoon->NatuurlijkPersoon_PersoonsIdentificatie",
+          "sourceHandle": "left",
+          "velden": [
+            {
+              "naam": "bsn",
+              "goType": "BSN",
+              "datatype": "BSN"
+            },
+            {
+              "naam": "ingezetene",
+              "goType": "*bool"
+            }
+          ]
+        },
+        {
+          "naam": "Naam",
+          "description": "Naamgegevens van de natuurlijk persoon (voorletters, roepnaam, tussenvoegsel, achternaam).",
+          "meervoud": "namen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": -105,
+            "y": 285
+          },
+          "id": "NatuurlijkPersoon->NatuurlijkPersoon_Naam",
+          "velden": [
+            {
+              "naam": "voorletters",
+              "goType": "string"
+            },
+            {
+              "naam": "roepnaam",
+              "goType": "*string"
+            },
+            {
+              "naam": "tussenvoegsel",
+              "goType": "*string"
+            },
+            {
+              "naam": "achternaam",
+              "goType": "string"
+            }
+          ]
+        },
+        {
+          "naam": "Burgerschap",
+          "description": "Nationaliteitsgegevens (burgerschap) van de natuurlijk persoon.",
+          "meervoud": "burgerschappen",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": true,
+          "positie": {
+            "x": -285,
+            "y": 450
+          },
+          "id": "NatuurlijkPersoon->NatuurlijkPersoon_Burgerschap",
+          "afgeleideVelden": [
+            {
+              "naam": "weergaveburgerschap",
+              "description": "Samengestelde weergave van nationaliteit en landcode.",
+              "goType": "string",
+              "afleidingsregelTaal": "cel",
+              "afleidingsregel": "Burgerschap_Data.nationaliteit + ' (' + Burgerschap_Data.landcode + ')'",
+              "isWeergaveVeld": true
+            }
+          ],
+          "velden": [
+            {
+              "naam": "landcode",
+              "goType": "string"
+            },
+            {
+              "naam": "nationaliteit",
+              "goType": "string"
+            }
+          ]
+        },
+        {
+          "naam": "Partnernaam",
+          "description": "Achternaam van de partner van de natuurlijk persoon.",
+          "meervoud": "partnernamen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 60,
+            "y": 450
+          },
+          "id": "edge_1774209110136_2",
+          "sourceHandle": "bottom",
+          "targetHandle": "top",
+          "velden": [
+            {
+              "naam": "achternaam",
+              "goType": "string"
+            }
+          ]
+        },
+        {
+          "naam": "Naamgebruik",
+          "description": "Wijze waarop de geslachtsnaam wordt gebruikt.",
+          "meervoud": "naamgebruiken",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 195,
+            "y": 255
+          },
+          "id": "edge_1774209240752_5",
+          "sourceHandle": "bottom",
+          "targetHandle": "top",
+          "velden": [
+            {
+              "naam": "naamgebruik",
+              "goType": "Naamgebruiksoort",
+              "enum": "Naamgebruiksoort"
+            }
+          ]
+        }
+      ],
+      "relaties": [
+        {
+          "naam": "Bereikbaarheid",
+          "description": "Koppeling van een natuurlijk persoon aan een locatie als bereikbaarheidsadres.",
+          "meervoud": "bereikbaarheden",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": true,
+          "doelEntiteit": "Locatie",
+          "positie": {
+            "x": 330,
+            "y": -120
+          },
+          "id": "edge_1774201942583_1",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "doelId": "edge_1774201991984_2",
+          "doelSourceHandle": "right",
+          "doelTargetHandle": "left",
+          "velden": [
+            {
+              "naam": "soort",
+              "goType": "Bereikbaarheidssoort",
+              "enum": "Bereikbaarheidssoort"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "typenaam": "Referentielijst",
+      "description": "Generieke referentielijst-entiteit. Individuele lijsten (Landenlijst, EULidstaten, etc.) zijn records.",
+      "isMaterieel": true,
+      "entiteitSubtype": "referentielijst",
+      "kleur": "#fef3c7",
+      "meervoud": "referentielijsten",
+      "positie": {
+        "x": 1260,
+        "y": -240
+      },
+      "gegevenselementen": [
+        {
+          "naam": "Referentielijstnaam",
+          "description": "Leesbare naam van een referentielijst.",
+          "meervoud": "referentielijstnamen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 1020,
+            "y": -390
+          },
+          "id": "Referentielijst->Referentielijst_Referentielijstnaam",
+          "sourceHandle": "top",
+          "targetHandle": "bottom",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            }
+          ]
+        },
+        {
+          "naam": "Referentielijstomschrijving",
+          "description": "Omschrijving van een referentielijst.",
+          "meervoud": "referentielijstomschrijvingen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 1245,
+            "y": -390
+          },
+          "id": "Referentielijst->Referentielijst_Referentielijstomschrijving",
+          "sourceHandle": "top",
+          "targetHandle": "bottom",
+          "velden": [
+            {
+              "naam": "omschrijving",
+              "goType": "string"
+            }
+          ]
+        },
+        {
+          "naam": "ReferentielijstVisibility",
+          "description": "Domeinzichtbaarheid van een referentielijst (register, modelspecifiek, extern).",
+          "meervoud": "visibilities",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 1470,
+            "y": -390
+          },
+          "id": "Referentielijst->Referentielijst_ReferentielijstVisibility",
+          "sourceHandle": "top",
+          "targetHandle": "bottom",
+          "velden": [
+            {
+              "naam": "domein",
+              "goType": "string",
+              "description": "Domeinzichtbaarheid: 'register', modelspecifiek domein, of 'extern'."
+            }
+          ]
+        },
+        {
+          "naam": "ReferentielijstInternetadres",
+          "description": "Internetadres (URL/URN) van een referentielijst.",
+          "meervoud": "internetadressen",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 1590,
+            "y": -255
+          },
+          "id": "Referentielijst->Referentielijst_ReferentielijstInternetadres",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "velden": [
+            {
+              "naam": "adrestype",
+              "goType": "ReferentielijstAdrestype",
+              "enum": "ReferentielijstAdrestype",
+              "description": "Type adres: URL of URN."
+            },
+            {
+              "naam": "adres",
+              "goType": "string",
+              "description": "Het volledige internet-adres (URL of URN)."
+            },
+            {
+              "naam": "organisatie",
+              "goType": "string",
+              "description": "Verantwoordelijke organisatie voor dit adres."
+            }
+          ]
+        }
+      ],
+      "relaties": [
+        {
+          "naam": "LandenlijstLand",
+          "description": "Koppeling van een land aan referentielijst-instantie Landenlijst (referentielijst-items relatie).",
+          "meervoud": "landenlijst_landen",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": false,
+          "relatieSubtype": "referentielijst_items",
+          "referentielijstInstantie": "Landenlijst",
+          "doelEntiteit": "Land",
+          "positie": {
+            "x": 1215,
+            "y": 165
+          },
+          "id": "Referentielijst->LandenlijstLand",
+          "doelId": "LandenlijstLand->Land",
+          "velden": []
+        },
+        {
+          "naam": "AdellijkeTitelsTitel",
+          "description": "Koppeling van een adellijke titel aan referentielijst-instantie AdellijkeTitels (referentielijst-items relatie).",
+          "meervoud": "adellijke_titels_titels",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": false,
+          "relatieSubtype": "referentielijst_items",
+          "referentielijstInstantie": "AdellijkeTitels",
+          "doelEntiteit": "AdellijkeTitel",
+          "positie": {
+            "x": 1500,
+            "y": 165
+          },
+          "id": "Referentielijst->AdellijkeTitelsTitel",
+          "doelId": "AdellijkeTitelsTitel->AdellijkeTitel",
+          "velden": []
+        }
+      ]
+    }
+  ],
+  "referentielijstInstanties": [
+    {
+      "systeemnaam": "AdellijkeTitels",
+      "naam": "AdellijkeTitels",
+      "omschrijving": "Adellijke titels in Nederland",
+      "positie": {
+        "x": 1605,
+        "y": -90
+      }
+    },
+    {
+      "systeemnaam": "Landenlijst",
+      "naam": "Landenlijst",
+      "omschrijving": "Alle landen van de wereld",
+      "positie": {
+        "x": 1065,
+        "y": -90
+      }
+    }
+  ]
+}
