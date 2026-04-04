@@ -290,6 +290,15 @@ func (m TypeMeta) RelationNames() []string {
 	return namen
 }
 
+// MetaRegistry is de centrale registry voor alle representatietypes.
+// Wordt gevuld door domein-specifieke initXxxMetaRegistry() functies die
+// vanuit init() worden aangeroepen.
+var MetaRegistry = MetaRegistryType{}
+
+// DatatypeRegistry bevat de custom gegevenstypen die beschikbaar zijn in het register.
+// Wordt gevuld door domein-specifieke initXxxDatatypeRegistry() functies.
+var DatatypeRegistry = []V3Datatype{}
+
 // EnumWaarden is een registry van enum-type namen naar hun beschikbare waarden.
 // Wordt gebruikt door de schema-API om dropdowns te genereren.
 // De registry wordt aangevuld in init() functies van de model-bestanden
@@ -312,13 +321,22 @@ func VoegOnderliggendGEToe(typenaam string, ge OnderliggendGegevenselement) {
 	MetaRegistry[typenaam] = meta
 }
 
-// Centrale init-volgorde: register-domein eerst, daarna domein-specifieke bestanden.
+// Centrale init-volgorde: abuvwxy-basisdomein eerst, dan register, daarna overige domeinen.
 // Zo kan np-loc via VoegOnderliggendGEToe() referenties toevoegen aan register-scope entiteiten.
 func init() {
+	// abuvwxy — het oorspronkelijke basis-/referentiemodel
+	initAbuvwxyMetaRegistry()
+	initAbuvwxyDatatypeRegistry()
+	initAbuvwxyEnumRegistry()
+
+	// register — het functionele basisdomein
 	initRegisterMetaRegistry()
 	initRegisterDatatypeRegistry()
 	initRegisterEnumRegistry()
+
+	// np-loc — domein-specifieke uitbreiding
 	initNpLocEnumRegistry()
+	initNpLocDatatypeRegistry()
 	initNpLocMetaRegistry()
 
 	// Propageer domein van entiteiten naar hun onderliggende GE's, relaties en plumbing-types.

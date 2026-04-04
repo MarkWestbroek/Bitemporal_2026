@@ -132,3 +132,32 @@ func writeWeergave(b *strings.Builder, w *model.V3Weergave) {
 	}
 	b.WriteString("\t\t},\n")
 }
+
+// generateDatatypeAliases genereert Go type-aliases voor custom datatypes.
+// Dit bestand bevat bijv. `type NLPostcode string` zodat gegenereerde structs
+// deze types als veldtype kunnen gebruiken. Het bestand wordt altijd zonder
+// prefix gegenereerd (gedeeld over alle domeinen), omdat Go type-declaraties
+// package-breed uniek moeten zijn.
+func generateDatatypeAliases(v3 model.V3Model, _ codegenOptions) (string, error) {
+	var b strings.Builder
+	b.WriteString(fileHeader("Datatype aliases — Go type-definities voor custom datatypes.\n// Gegenereerd door cmd/codegen — niet handmatig bewerken."))
+
+	if len(v3.Datatypes) == 0 {
+		b.WriteString("// Geen custom datatypes in het model.\n")
+		return b.String(), nil
+	}
+
+	b.WriteString("\n")
+	for _, dt := range v3.Datatypes {
+		goBase := dt.Basistype
+		if goBase == "" {
+			goBase = "string"
+		}
+		if dt.Description != "" {
+			b.WriteString(fmt.Sprintf("// %s — %s\n", dt.Naam, dt.Description))
+		}
+		b.WriteString(fmt.Sprintf("type %s %s\n\n", dt.Naam, goBase))
+	}
+
+	return b.String(), nil
+}

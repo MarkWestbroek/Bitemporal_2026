@@ -168,17 +168,20 @@ func main() {
 	}
 
 	// Genereer alle bestanden
-	files := []struct {
+	type genFile struct {
 		naam     string
 		generate genFunc
-	}{
-		{"modellen_entiteiten.go", generateEntiteitenWithOpts},
-		{"modellen_ge_rel.go", generateGeRelWithOpts},
-		{"modellen_methods.go", generateMethodsWithOpts},
-		{"modellen_input.go", generateInputWithOpts},
-		{"metaregistry.go", genRegistry},
-		{"datatype_registry.go", genDatatypes},
-		{"enum_registry.go", genEnums},
+		noPrefix bool // true = wordt altijd zonder prefix gegenereerd (gedeeld bestand)
+	}
+	files := []genFile{
+		{"modellen_entiteiten.go", generateEntiteitenWithOpts, false},
+		{"modellen_ge_rel.go", generateGeRelWithOpts, false},
+		{"modellen_methods.go", generateMethodsWithOpts, false},
+		{"modellen_input.go", generateInputWithOpts, false},
+		{"metaregistry.go", genRegistry, false},
+		{"datatype_registry.go", genDatatypes, false},
+		{"enum_registry.go", genEnums, false},
+		{"datatype_aliases.go", generateDatatypeAliases, true},
 	}
 
 	// Prefix toepassen op bestandsnamen
@@ -199,7 +202,11 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Waarschuwing: gofmt van %s mislukt: %v (schrijf ongeformatteerd)\n", f.naam, fmtErr)
 			formatted = []byte(content)
 		}
-		path := filepath.Join(*outputDir, filePrefix+f.naam)
+		effectivePrefix := filePrefix
+		if f.noPrefix {
+			effectivePrefix = ""
+		}
+		path := filepath.Join(*outputDir, effectivePrefix+f.naam)
 		if err := os.WriteFile(path, formatted, 0644); err != nil {
 			fmt.Fprintf(os.Stderr, "Kan %s niet schrijven: %v\n", path, err)
 			os.Exit(1)

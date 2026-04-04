@@ -68,6 +68,20 @@ When the API is running, you can open it via:
 
 Open this file in your browser to inspect coverage per package and per function.
 
+## Devloop / self-rebuilding workflow
+
+Voor het werken met de UML-editor, schema-publicatie, multi-domein codegen en veilige rebuilds in Docker is er nu een aparte devloop-handleiding:
+
+- [`docs/DEVLOOP.md`](docs/DEVLOOP.md)
+
+Kort samengevat:
+
+- de devloop draait normaal op `http://localhost:8182`
+- de editor kan publiceren naar `schema_versies` en daarna één of meer domeinen laten rebuilden/codegenereren
+- de rebuild-flow ondersteunt fallback via `_baseline/model/` en `_pre_rebuild/model/`, zodat een mislukte codegen/build niet meteen de hele app onbruikbaar maakt
+
+Voor de volledige workflow, voorbeelden met `schema_versie_id`, en rollback-gedrag: zie `docs/DEVLOOP.md`.
+
 ## Referentielijsten
 
 Het model ondersteunt **generieke referentielijsten** via één `Referentielijst`-entiteit.
@@ -744,7 +758,9 @@ Deregister U5 and register U6 for entity A:
 23 Register uitbreiden met menselijke klassen
 - NP-locatie, via UML editor
 
-24 Referentielijsten: generieke Referentielijst-klasse
+24 *Referentielijsten* ✅ DONE (maart 2026)
+- Generieke Referentielijst-klasse met instantie-records geïmplementeerd
+- Zie [Implementatieplan](docs/copilot-chats/plans/2026-03-29%20referentielijsten%20PLAN.md) voor details
 - Landenlijst (concrete struct) → Referentielijst (generieke entiteit) met instantie-records
 - Referentielijstnaam + Referentielijstomschrijving als GE's (hub+data)
 - LandenlijstLand als items-relatie (referentielijst_items) gebonden aan instantie "Landenlijst"
@@ -774,6 +790,10 @@ Deregister U5 and register U6 for entity A:
 * posities uit XMI import en in export mappen 
 * Export naar MIM
 
+28 Domeinen aan schema's toegevoegd. Heel verhaal, zit overal doorheen!
+- zie 2026-04-03 domeinen.md
+
+
 ## BUGS
 ### API:
 10 aan een ongedaan gemaakte U1 bij een ongedaan gemaakte A1 kan nu gewoon een nieuwe U worden toegevoegd... ?
@@ -790,7 +810,10 @@ Deregister U5 and register U6 for entity A:
 
 05 log àlle requests en responses? (hoe?)
 
-10 loop tijdsreizen nog eens na (KVK voorbeelden) want corrigeren is nu nog hetzelfde als wijzigen. Je hebt twee soorten tijdreizen (of 3).
+08 loop tijdsreizen nog eens na (KVK voorbeelden) want corrigeren is nu nog hetzelfde als wijzigen. Je hebt twee soorten tijdreizen (of 3).
+
+10 Testdata, bootstrap
+11 autogen testdata vanuit model
 
 15 *Afgeleide velden*
 - opnemen in:
@@ -799,10 +822,9 @@ Deregister U5 and register U6 for entity A:
 - opnemen in de API's of niet?
 - maken voor NP naam incl. naamgebruik
 
-
-16 *Referentielijsten* ✅ DONE (maart 2026)
-- Generieke Referentielijst-klasse met instantie-records geïmplementeerd
-- Zie [Implementatieplan](docs/copilot-chats/plans/2026-03-29%20referentielijsten%20PLAN.md) voor details
+16 Referentielijsten
+- vullen met data
+- meer lijsten
 
 20 react - edit popups
 - corrigeren en afvoeren hebben heel weinig met elkaar te maken en staan gebroederlijk naast elkaar

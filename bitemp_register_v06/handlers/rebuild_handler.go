@@ -12,6 +12,7 @@ package handlers
 // Dit endpoint is alleen beschikbaar als DEVLOOP=true is ingesteld.
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -43,11 +44,12 @@ func getDevloopPassword() string {
 	return pw
 }
 
-// RebuildDomeinSpec beschrijft één domein + prefix + mode combinatie voor multi-domein codegen.
+// RebuildDomeinSpec beschrijft één domein + prefix combinatie voor multi-domein codegen.
+// Mode wordt altijd als "additive" uitgevoerd (standalone wordt niet meer ondersteund).
 type RebuildDomeinSpec struct {
 	Domein string `json:"domein"`
 	Prefix string `json:"prefix"`
-	Mode   string `json:"mode"` // "additive" of "standalone"; default "additive"
+	Mode   string `json:"mode,omitempty"` // genegeerd; altijd additive
 }
 
 // RebuildRequest beschrijft de request body voor de rebuild endpoint.
@@ -60,9 +62,9 @@ type RebuildRequest struct {
 	// Als leeg, wordt het domein (met - → _) als prefix gebruikt. Genegeerd als Domeinen is gevuld.
 	Prefix string `json:"prefix"`
 
-	// Mode is de codegen modus: "additive" (default) of "standalone".
+	// Mode is de codegen modus (genegeerd; altijd additive).
 	// Genegeerd als Domeinen is gevuld.
-	Mode string `json:"mode"`
+	Mode string `json:"mode,omitempty"`
 
 	// Domeinen bevat meerdere domein/prefix/mode combinaties voor multi-domein codegen.
 	// Als gevuld, worden Domein/Prefix/Mode genegeerd en wordt er per entry een codegen-run gedaan.
@@ -337,11 +339,26 @@ func MaakRebuildHandler() gin.HandlerFunc {
 			return
 		}
 
-		// Parse request
+		// Parse request. Een lege body is toegestaan, maar ongeldige JSON niet.
+		// We lezen de raw body expliciet zodat fouten zichtbaar worden en zodat
+		// we niet stilzwijgend terugvallen naar een lege request bij parseproblemen.
 		var req RebuildRequest
-		if err := c.ShouldBindJSON(&req); err != nil {
-			// Lege body is toegestaan (gebruik huidige code)
-			req = RebuildRequest{}
+		rawBody, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, RebuildResponse{
+				Status: "fout",
+				Error:  fmt.Sprintf("kan request body niet lezen: %v", err),
+			})
+			return
+		}
+		if len(bytes.TrimSpace(rawBody)) > 0 {
+			if err := json.Unmarshal(rawBody, &req); err != nil {
+				c.JSON(http.StatusBadRequest, RebuildResponse{
+					Status: "fout",
+					Error:  fmt.Sprintf("ongeldige rebuild JSON: %v", err),
+				})
+				return
+			}
 		}
 
 		if req.Mode == "" {
@@ -475,30 +492,28 @@ func MaakRebuildHandler() gin.HandlerFunc {
 		stappen = append(stappen, fmt.Sprintf("Codegen voor %d domein(en)", len(domeinRuns)))
 
 		for i, run := range domeinRuns {
-			runMode := run.Mode
-			if runMode == "" {
-				runMode = "additive"
-			}
-			runPrefix := run.Prefix
+			runPrefix := strings.TrimSpace(run.Prefix)
 			if runPrefix == "" {
 				runPrefix = strings.ReplaceAll(run.Domein, "-", "_")
 			}
 
 			codegenArgs := []string{
 				"--input", modelPath,
-				"--mode", runMode,
+				"--mode", "additive",
 				"--domein", run.Domein,
-				"--prefix", runPrefix,
-				"--output", filepath.Join(appDir, "model"),
 			}
+			if runPrefix != "" {
+				codegenArgs = append(codegenArgs, "--prefix", runPrefix)
+			}
+			codegenArgs = append(codegenArgs, "--output", filepath.Join(appDir, "model"))
 
 			var codegenCmd *exec.Cmd
 			if _, err := os.Stat(filepath.Join(appDir, "bin", "codegen")); err == nil {
-				stappen = append(stappen, fmt.Sprintf("[%d/%d] Codegen %s (domein=%s, prefix=%s, mode=%s)", i+1, len(domeinRuns), "/app/bin/codegen", run.Domein, runPrefix, runMode))
+				stappen = append(stappen, fmt.Sprintf("[%d/%d] Codegen %s (domein=%s, prefix=%s, mode=additive)", i+1, len(domeinRuns), "/app/bin/codegen", run.Domein, runPrefix))
 				codegenCmd = exec.Command(filepath.Join(appDir, "bin", "codegen"), codegenArgs...)
 			} else {
 				fallbackArgs := append([]string{"run", "./cmd/codegen"}, codegenArgs...)
-				stappen = append(stappen, fmt.Sprintf("[%d/%d] Codegen go run ./cmd/codegen (domein=%s, prefix=%s, mode=%s)", i+1, len(domeinRuns), run.Domein, runPrefix, runMode))
+				stappen = append(stappen, fmt.Sprintf("[%d/%d] Codegen go run ./cmd/codegen (domein=%s, prefix=%s, mode=additive)", i+1, len(domeinRuns), run.Domein, runPrefix))
 				codegenCmd = exec.Command("go", fallbackArgs...)
 			}
 			codegenCmd.Dir = appDir

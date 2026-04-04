@@ -781,13 +781,15 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     });
 
     // Stap 4: Bouw de lijst met standaard prefix en mode.
-    // Domeinen uit het model zijn standaard aangevinkt, puur-DB-domeinen niet.
-    return gesorteerd.map((naam) => ({
-      naam,
-      prefix: naam.replace(/-/g, "_"),
-      mode: "additive",
-      geselecteerd: true, // standaard allemaal aan
-    }));
+    // Alle domeinen gebruiken additive mode met een prefix afgeleid van de domeinnaam.
+    return gesorteerd.map((naam) => {
+      return {
+        naam,
+        prefix: naam.replace(/-/g, "_"),
+        mode: "additive",
+        geselecteerd: true,
+      };
+    });
   }, []);
 
   const openActieDialoog = useCallback(async (type) => {

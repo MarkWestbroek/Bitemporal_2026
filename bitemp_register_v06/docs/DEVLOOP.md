@@ -92,6 +92,15 @@ curl -X POST http://localhost:8182/admin/rebuild/1234 \
 
 De rebuild-endpoint ondersteunt ook meerdere codegen-runs in één keer. Dat is de standaardroute voor het schema waarin bijvoorbeeld `register`, `np-loc` en `abuvwxy` naast elkaar bestaan.
 
+Alle domeinen gebruiken **additive** mode met een eigen prefix:
+- `register` → `prefix: register`
+- `np-loc` → `prefix: np_loc`
+- `abuvwxy` → `prefix: abuvwxy`
+
+Standalone mode is niet meer nodig: elk domein genereert zijn eigen `{prefix}_*` bestanden. De lege `var MetaRegistry` en `var DatatypeRegistry` declaraties staan in `metaregistry_plumbing.go`; domein-specifieke entries worden via `initXxxMetaRegistry()`/`initXxxDatatypeRegistry()`/`initXxxEnumRegistry()` functies toegevoegd.
+
+> **Let op**: het abuvwxy-domein (A, B entiteiten) is handmatig onderhouden referentiecode en staat *niet* in het V3 model JSON. De `abuvwxy_*` bestanden worden daarom niet door de codegen gegenereerd, maar handmatig beheerd in dezelfde additive structuur als de andere domeinen.
+
 ```bash
 curl -X POST http://localhost:8182/admin/rebuild/1234 \
   -H "Content-Type: application/json" \
@@ -178,6 +187,7 @@ De devloop is expliciet defensief gemaakt zodat een mislukte generatie niet mete
 - **Codegen fout** → `model/` wordt direct teruggezet vanuit `_pre_rebuild/model/`
 - **Build fout** → `model/` wordt teruggezet vanuit `_pre_rebuild/model/`
 - **Crash kort na herstart** (standaard: binnen `10` seconden) → entrypoint herstelt `model/` vanuit `_baseline/model/`, bouwt opnieuw en probeert opnieuw te starten
+- **Ongeldige rebuild-JSON** → directe `400` response, zodat niet stilzwijgend wordt teruggevallen op een lege request
 
 Hierdoor blijft er altijd een laatste bewezen toestand beschikbaar.
 
@@ -189,7 +199,7 @@ Voor het record `schema_versie_id=27` is gecontroleerd dat opnieuw genereren naa
 |--------|----------|
 | `register` | modelbestanden identiek; verschillen alleen in editorposities/layout |
 | `np-loc` | model grotendeels identiek; inhoudelijk alleen verbetering naar getypeerde velden zoals `BSN` en `NLPostcode` |
-| `abuvwxy` | verwacht verschil, omdat dit handmatig onderhouden referentiecode betreft en geen 1-op-1 additive gegenereerde set |
+| `abuvwxy` | nu ook additive met prefix `abuvwxy`; handmatig onderhouden referentiecode (A, B entiteiten) is geconverteerd naar dezelfde `{prefix}_*` structuur als de andere domeinen |
 
 Praktisch betekent dit dat **1x publiceren naar de schema registry + meervoudige codegen per domein** een werkbare en controleerbare workflow is.
 
@@ -199,6 +209,45 @@ Praktisch betekent dit dat **1x publiceren naar de schema registry + meervoudige
 - Het endpoint is alleen actief als `DEVLOOP=true` is ingesteld
 - **Gebruik dit NIET in productie** — de Go toolchain en broncode horen
   niet in een productie-image
+
+## Bestandsstructuur model/
+
+Na de refactoring (2026-04-04) heeft elk domein een eigen set bestanden met prefix:
+
+| Prefix | Bestanden | Bron |
+|--------|-----------|------|
+| `abuvwxy_` | `abuvwxy_modellen_entiteiten.go`, `abuvwxy_metaregistry.go`, etc. | Handmatig (geconverteerd uit v05-basismodel) |
+| `register_` | `register_modellen_entiteiten.go`, `register_metaregistry.go`, etc. | Gegenereerd door codegen |
+| `np_loc_` | `np_loc_modellen_entiteiten.go`, `np_loc_metaregistry.go`, etc. | Gegenereerd door codegen |
+| *(geen)* | `metaregistry_plumbing.go`, `model_plumbing.go`, `datatype_aliases.go` | Handmatig/plumbing |
+
+De **lege `var MetaRegistry`** en **`var DatatypeRegistry`** declaraties staan in `metaregistry_plumbing.go`. Domein-entries worden via `initXxx()` functies vanuit de plumbing `init()` aangeroepen:
+
+```go
+func init() {
+    initAbuvwxyMetaRegistry()     // abuvwxy-basisdomein
+    initAbuvwxyDatatypeRegistry()
+    initAbuvwxyEnumRegistry()
+    initRegisterMetaRegistry()    // register-domein
+    initRegisterDatatypeRegistry()
+    initRegisterEnumRegistry()
+    initNpLocEnumRegistry()       // np-loc-domein
+    initNpLocDatatypeRegistry()
+    initNpLocMetaRegistry()
+    propageerDomeinNaarOnderliggende()
+}
+```
+
+### Datatype aliases (nieuw)
+
+De codegen genereert nu een gedeeld bestand `datatype_aliases.go` (zonder prefix) met Go type-aliases voor custom datatypes:
+
+```go
+type NLPostcode string
+type BSN string
+```
+
+Dit vervangt het eerdere handmatige `custom_datatypes.go`. De aliases worden afgeleid uit de `datatypes` sectie van het V3 model.
 
 ## Configuratie
 
@@ -212,7 +261,7 @@ Omgevingsvariabelen in `docker-compose.devloop.yml`:
 | `DB_USER` | `postgres` | PostgreSQL gebruiker |
 | `DB_PASSWORD` | `1234` | PostgreSQL wachtwoord |
 | `DB_NAME` | `bitemp_go_db_v06` | Database naam |
-| `API_PORT` | `8082` | Externe poort voor de API |
+| `API_PORT` | `8182` | Externe poort voor de API (mapped naar `:8080` intern) |
 
 ## Verschil met productie Docker
 
