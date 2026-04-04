@@ -1,7 +1,11 @@
 .env.docker
 
-# Local debug binary (Go build artifact)
-__debug_bin.exe
+# Local debug/temp artifacts
+__debug_bin*
+_temp/
+_tmp_*/
+_tmp_*.json
+_tmp_*.mjs
 
 # Frontend generated artifacts
 web/vite/node_modules/

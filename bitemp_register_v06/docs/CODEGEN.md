@@ -184,13 +184,13 @@ $output = go run ./cmd/export_v3 --domein register 2>&1
 $output = go run ./cmd/export_v3 --domein np-loc 2>&1
 [System.IO.File]::WriteAllText("$PWD\export_np_loc.json", ($output -join "`n"), [System.Text.UTF8Encoding]::new($false))
 
-# 2. Genereer code naar temp directory
-mkdir _tmp_roundtrip
-go run ./cmd/codegen --input export_register.json --mode additive --domein register --prefix register --output _tmp_roundtrip
-go run ./cmd/codegen --input export_np_loc.json --mode additive --domein np-loc --prefix np_loc --output _tmp_roundtrip
+# 2. Genereer code naar de centrale temp directory
+New-Item -ItemType Directory -Force _temp/roundtrip | Out-Null
+go run ./cmd/codegen --input export_register.json --mode additive --domein register --prefix register --output _temp/roundtrip
+go run ./cmd/codegen --input export_np_loc.json --mode additive --domein np-loc --prefix np_loc --output _temp/roundtrip
 
 # 3. Vergelijk met SHA256 hash
-$files = Get-ChildItem _tmp_roundtrip -Filter *.go
+$files = Get-ChildItem _temp/roundtrip -Filter *.go
 foreach ($f in $files) {
     $modelFile = Join-Path model $f.Name
     $genHash = (Get-FileHash $f.FullName -Algorithm SHA256).Hash
@@ -201,6 +201,8 @@ foreach ($f in $files) {
 ```
 
 Verwacht resultaat: **14/14 IDENTIEK** (7 register + 7 np-loc bestanden).
+
+> Gebruik voor losse experimenten, tijdelijke JSON-exports en codegen-vergelijkingen voortaan bij voorkeur de centrale map `_temp/`, zodat de projectroot schoon blijft.
 
 ---
 
