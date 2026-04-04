@@ -295,10 +295,10 @@ func initNpLocMetaRegistry() {
 		AfgeleideVelden: []AfgeleidVeld{
 			{
 				Naam:                "weergavenaam",
-				Description:         "Samengestelde weergavenaam van de persoon, afgeleid uit voornaam/tussenvoegsel/achternaam.",
+				Description:         "Samengestelde BRP-weergavenaam van de persoon, inclusief naamgebruik en partnernaam indien van toepassing.",
 				GoType:              "string",
 				AfleidingsregelTaal: "cel",
-				Afleidingsregel:     "(Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters) + (Naam.tussenvoegsel != null ? ' ' + Naam.tussenvoegsel : '') + ' ' + Naam.achternaam",
+				Afleidingsregel:     "(Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters) + ' ' + (Naamgebruik.naamgebruik == 'PartnerNaam' ? (Partnernaam.achternaam != null ? Partnernaam.achternaam : ((Naam.tussenvoegsel != null ? Naam.tussenvoegsel + ' ' : '') + Naam.achternaam)) : Naamgebruik.naamgebruik == 'EigenNaam-PartnerNaam' ? ((Naam.tussenvoegsel != null ? Naam.tussenvoegsel + ' ' : '') + Naam.achternaam) + (Partnernaam.achternaam != null ? '-' + Partnernaam.achternaam : '') : Naamgebruik.naamgebruik == 'PartnerNaam-EigenNaam' ? (Partnernaam.achternaam != null ? Partnernaam.achternaam + '-' : '') + ((Naam.tussenvoegsel != null ? Naam.tussenvoegsel + ' ' : '') + Naam.achternaam) : ((Naam.tussenvoegsel != null ? Naam.tussenvoegsel + ' ' : '') + Naam.achternaam))",
 				IsWeergaveVeld:      true,
 			},
 		},

@@ -204,17 +204,34 @@ Naam.voorletters + (Naam.tussenvoegsel != null ? " " + Naam.tussenvoegsel : "") 
 
 ### Voorbeelden voor bitemporeel register
 
-#### Weergavenaam (huidige implementatie)
+#### Weergavenaam NatuurlijkPersoon (BRP-naamgebruik)
 
 ```cel
-Naam.roepnaam != null
-  ? Naam.roepnaam
-  : Naam.voorletters
-    + (Naam.tussenvoegsel != null ? " " + Naam.tussenvoegsel : "")
-    + " " + Naam.achternaam
+(Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters)
+  + " "
+  + (
+      Naamgebruik.naamgebruik == "PartnerNaam"
+        ? (Partnernaam.achternaam != null
+            ? Partnernaam.achternaam
+            : ((Naam.tussenvoegsel != null ? Naam.tussenvoegsel + " " : "") + Naam.achternaam))
+        : Naamgebruik.naamgebruik == "EigenNaam-PartnerNaam"
+          ? ((Naam.tussenvoegsel != null ? Naam.tussenvoegsel + " " : "") + Naam.achternaam)
+            + (Partnernaam.achternaam != null ? "-" + Partnernaam.achternaam : "")
+          : Naamgebruik.naamgebruik == "PartnerNaam-EigenNaam"
+            ? (Partnernaam.achternaam != null ? Partnernaam.achternaam + "-" : "")
+              + ((Naam.tussenvoegsel != null ? Naam.tussenvoegsel + " " : "") + Naam.achternaam)
+            : ((Naam.tussenvoegsel != null ? Naam.tussenvoegsel + " " : "") + Naam.achternaam)
+    )
 ```
 
-Levert bijv. `"Mark"` (als roepnaam ingevuld) of `"M.W. de Vries"` (als alleen voorletters en achternaam).
+Levert bijvoorbeeld:
+
+- `EigenNaam` → `"Jan van den Berg"`
+- `PartnerNaam` → `"Jan Jansen"`
+- `EigenNaam-PartnerNaam` → `"Jan van den Berg-Jansen"`
+- `PartnerNaam-EigenNaam` → `"Jan Jansen-van den Berg"`
+
+> N.B. dit volgt het BRP-concept `naamgebruik`. In het huidige model is voor de partner alleen de `achternaam` gemodelleerd; een partner-`tussenvoegsel` kan dus pas worden meegenomen als dat veld later ook wordt toegevoegd.
 
 #### Volledig adres (veld-niveau in GE Adres)
 

@@ -155,6 +155,23 @@ export function v3ModelNaarEditor(v3Model) {
     });
   });
 
+  // ── Referentielijst-instanties ────────────────────────────────
+  (v3Model.referentielijstInstanties || []).forEach((ri, i) => {
+    nodes.push({
+      id: `refinstantie_${ri.systeemnaam}`,
+      type: "referentielijstInstantie",
+      position: ri.positie
+        ? { x: ri.positie.x, y: ri.positie.y }
+        : { x: 800 + i * 280, y: 50 },
+      data: {
+        id: `refinstantie_${ri.systeemnaam}`,
+        systeemnaam: ri.systeemnaam || "",
+        naam: ri.naam || "",
+        omschrijving: ri.omschrijving || "",
+      },
+    });
+  });
+
   // ── Entiteiten + onderliggende GE's en relaties ──────────────
   const entiteiten = v3Model.entiteiten || [];
 
@@ -414,6 +431,24 @@ export function v3ModelNaarEditor(v3Model) {
             jsonRolnaam: rel.doelEntiteit.toLowerCase(),
             momentvoorkomen: "meervoudig",
             kardinaliteit: "0..*",
+          },
+        });
+      }
+
+      // Binding edge: items-relatie → referentielijst-instantie
+      if (rel.referentielijstInstantie) {
+        const instantieNodeId = `refinstantie_${rel.referentielijstInstantie}`;
+        edges.push({
+          id: `${rel.naam}-->instantie_${rel.referentielijstInstantie}`,
+          source: instantieNodeId,
+          target: rel.naam,
+          type: "metamodel",
+          data: {
+            isDependency: true,
+            rolnaam: `⇢ ${rel.referentielijstInstantie}`,
+            jsonRolnaam: "",
+            momentvoorkomen: "",
+            kardinaliteit: "",
           },
         });
       }

@@ -122,6 +122,9 @@ EnumWaarden[goType] → V3Enum.Waarden
 EnumEditorLayouts[goType] → V3Enum.Positie
 ```
 
+> Gebruik voor enum-velden bij voorkeur altijd een **genoemde enum-ref** zoals `schema:"enum=RelABSoort"` of `schema:"enum=ABCEnum"`.
+> Inline waardenlijsten zoals `schema:"enum=LTT|LAT|LTA"` zijn legacy, maar verliezen editor-metadata zoals de enum-nodepositie bij een roundtrip.
+
 ### Datatypes
 ```
 DatatypeRegistry[] → V3Datatype.Positie (reeds direct in struct)
@@ -136,6 +139,8 @@ De editor exporteert nodes en edges naar V3 JSON via `editorNaarV3Model.js`. Pos
 
 ### V3 JSON → Editor (laden)
 `v3ModelNaarEditor.js` leest de V3 JSON en maakt ReactFlow nodes + edges aan op basis van de positie- en handle-gegevens.
+
+Daarbij worden ook de aparte `referentielijstInstanties` opnieuw als nodes opgebouwd, plus de korte binding-edges naar relaties met subtype `referentielijst_items`. Daardoor blijven de visuele koppelingen naar bijvoorbeeld `Landenlijst` en `AdellijkeTitels` behouden na opslaan en opnieuw laden.
 
 ### V3 JSON → Code (codegen)
 De codegenerator (`cmd/codegen/`) leest het V3 JSON en genereert:

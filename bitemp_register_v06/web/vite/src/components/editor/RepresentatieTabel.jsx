@@ -10,7 +10,7 @@ import {
 import { useNavigate } from "react-router";
 import { useSchema } from "../../context/SchemaContext";
 import { safeArray, platSlaHubItems } from "../../shared/schemaUtils";
-import { evalueerCelExpressie, bouwCelContext } from "../../shared/celEvaluator";
+import { evalueerCelExpressie, bouwCelContext, evalueerWeergaveVeldenVoorItem } from "../../shared/celEvaluator";
 
 const PAGE_SIZE = 20;
 
@@ -139,18 +139,35 @@ export default function RepresentatieTabel({ typeMeta }) {
             const regels = hubItems.map((hub, idx) => {
               const plat = platSlaHubItems([hub], childMeta, typeMetaByTypenaam);
               const item = plat[0] || hub;
-              const waarden = inhoudsvelden.map((v) => item[v.naam] != null ? String(item[v.naam]) : "").filter(Boolean).join(" | ");
+              const weergaveTeksten = evalueerWeergaveVeldenVoorItem(
+                childMeta?.afgeleideVelden,
+                item,
+                childMeta,
+                typeMetaByTypenaam,
+              );
+              const weergave = weergaveTeksten.join(" | ");
+              const waarden = inhoudsvelden
+                .map((v) => item[v.naam] != null ? String(item[v.naam]) : "")
+                .filter(Boolean)
+                .join(" | ");
               const label = item.rel_id ?? hub?.rel_id ?? idx + 1;
-              return { label, waarden };
-            }).filter((r) => r.waarden);
+              const tekst = weergave || waarden;
+              const tooltip = weergave && waarden && weergave !== waarden
+                ? `${weergave} — ${waarden}`
+                : tekst;
+              return { label, tekst, tooltip };
+            }).filter((r) => r.tekst);
             if (regels.length === 0) return <span style={{ color: "var(--cg-donkergrijs)" }}>—</span>;
-            // Enkelvoudig: alleen veldwaarden; meervoudig: rel_id: veldwaarden
+            // Enkelvoudig: toon weergaveveld als aanwezig, anders ruwe inhoud; meervoudig: rel_id: tekst
             const tekst = regels.length === 1
-              ? regels[0].waarden
-              : regels.map((r) => `${r.label}: ${r.waarden}`).join("; ");
+              ? regels[0].tekst
+              : regels.map((r) => `${r.label}: ${r.tekst}`).join("; ");
+            const tooltip = regels.length === 1
+              ? regels[0].tooltip
+              : regels.map((r) => `${r.label}: ${r.tooltip}`).join("; ");
             const MAX = 60;
             return (
-              <span title={tekst.length > MAX ? tekst : undefined}>
+              <span title={tooltip.length > MAX ? tooltip : undefined}>
                 {tekst.length > MAX ? tekst.slice(0, MAX) + "…" : tekst}
               </span>
             );

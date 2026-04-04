@@ -9,12 +9,18 @@ import (
 	"github.com/uptrace/bun"
 )
 
+// Naamgebruiksoort — BRP-aanduiding voor hoe de geslachtsnaam van de persoon wordt gevoerd
+// in de weergave: eigen naam, partnernaam, of een gecombineerde volgorde van beide.
 type Naamgebruiksoort string
 
 const (
-	NaamgebruiksoortEigenNaam            Naamgebruiksoort = "EigenNaam"
-	NaamgebruiksoortPartnerNaam          Naamgebruiksoort = "PartnerNaam"
+	// EigenNaam: gebruik alleen de eigen geslachtsnaam van de persoon.
+	NaamgebruiksoortEigenNaam Naamgebruiksoort = "EigenNaam"
+	// PartnerNaam: gebruik alleen de geslachtsnaam van de partner.
+	NaamgebruiksoortPartnerNaam Naamgebruiksoort = "PartnerNaam"
+	// EigenNaam-PartnerNaam: toon eerst de eigen naam, daarna de partnernaam.
 	NaamgebruiksoortEigenNaamPartnerNaam Naamgebruiksoort = "EigenNaam-PartnerNaam"
+	// PartnerNaam-EigenNaam: toon eerst de partnernaam, daarna de eigen naam.
 	NaamgebruiksoortPartnerNaamEigenNaam Naamgebruiksoort = "PartnerNaam-EigenNaam"
 )
 

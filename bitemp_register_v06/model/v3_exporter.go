@@ -189,7 +189,12 @@ func extractContentFields(meta TypeMeta) []V3Veld {
 				case strings.HasPrefix(part, "ref:"):
 					veld.Ref = strings.TrimPrefix(part, "ref:")
 				case strings.HasPrefix(part, "enum="):
-					veld.Enum = strings.TrimPrefix(part, "enum=")
+					enumRef := strings.TrimSpace(strings.TrimPrefix(part, "enum="))
+					// Ondersteun named enum refs (enum=Naamgebruiksoort), maar negeer
+					// legacy inline waardenlijsten zoals enum=LTT|LAT|LTA.
+					if enumRef != "" && !strings.Contains(enumRef, "|") {
+						veld.Enum = enumRef
+					}
 				}
 			}
 		}
@@ -578,7 +583,7 @@ func buildV3Enum(goTypeName string) *V3Enum {
 	// Bekende enums — geladen uit Go constants
 	switch goTypeName {
 	case "RelABSoort":
-		return &V3Enum{
+		enum := &V3Enum{
 			GoType:   "RelABSoort",
 			BaseType: "string",
 			Domein:   EnumDomeinen["RelABSoort"],
@@ -588,8 +593,12 @@ func buildV3Enum(goTypeName string) *V3Enum {
 				{ConstNaam: "RelABSoortLTA", Waarde: "LTA"},
 			},
 		}
+		if layout, ok := EnumEditorLayouts[goTypeName]; ok {
+			enum.Positie = layout.Positie
+		}
+		return enum
 	case "ABCEnum":
-		return &V3Enum{
+		enum := &V3Enum{
 			GoType:   "ABCEnum",
 			BaseType: "string",
 			Domein:   EnumDomeinen["ABCEnum"],
@@ -599,6 +608,10 @@ func buildV3Enum(goTypeName string) *V3Enum {
 				{ConstNaam: "OptieC", Waarde: "Optie C"},
 			},
 		}
+		if layout, ok := EnumEditorLayouts[goTypeName]; ok {
+			enum.Positie = layout.Positie
+		}
+		return enum
 	}
 	// Fallback: gebruik EnumWaarden registry
 	waarden, ok := EnumWaarden[goTypeName]

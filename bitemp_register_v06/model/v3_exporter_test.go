@@ -228,6 +228,22 @@ func TestExportMetaRegistryToV3_EnumDomeinen(t *testing.T) {
 	}
 }
 
+func TestExportMetaRegistryToV3_AbuvwxyEnumPosities(t *testing.T) {
+	v3 := ExportMetaRegistryToV3("abuvwxy")
+
+	posByEnum := map[string]*V3Positie{}
+	for i := range v3.Enums {
+		posByEnum[v3.Enums[i].GoType] = v3.Enums[i].Positie
+	}
+
+	if posByEnum["ABCEnum"] == nil {
+		t.Fatal("verwacht positie voor ABCEnum in V3 export")
+	}
+	if posByEnum["RelABSoort"] == nil {
+		t.Fatal("verwacht positie voor RelABSoort in V3 export")
+	}
+}
+
 func TestFilterV3ModelStrictByDomein_ExcludesRegisterEntiteiten(t *testing.T) {
 	v3 := ExportMetaRegistryToV3("np-loc")
 	strict := FilterV3ModelStrictByDomein(v3, "np-loc")

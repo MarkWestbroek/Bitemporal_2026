@@ -159,6 +159,8 @@ go run ./cmd/codegen --from-url http://localhost:8082/api/schema/model/42 \
 | `{prefix}_datatype_registry.go` | Custom datatypes (BSN, NLPostcode, etc.) |
 | `{prefix}_enum_registry.go` | EnumWaarden + EnumEditorLayouts |
 
+> Ook als een domein geen eigen datatypes of enums heeft, genereert additive mode bewust een **lege `initXxx...()` functie**. Zo blijft de centrale init-volgorde compileerbaar tijdens devloop rebuilds.
+
 ### Domeinfiltering
 
 Bij `--domein register`:

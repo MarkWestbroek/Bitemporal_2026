@@ -43,12 +43,14 @@ func generateDatatypeRegistryAdditive(v3 model.V3Model, opts codegenOptions) (st
 		}
 	}
 
+	funcName := opts.initFuncName("DatatypeRegistry")
 	if len(eigenDatatypes) == 0 {
-		b.WriteString("// Geen domein-eigen datatypes; datatypes uit andere domeinen worden daar gegenereerd.\n")
+		b.WriteString(fmt.Sprintf("func %s() {\n", funcName))
+		b.WriteString("\t// Geen domein-eigen datatypes; datatypes uit andere domeinen worden daar gegenereerd.\n")
+		b.WriteString("}\n")
 		return b.String(), nil
 	}
 
-	funcName := opts.initFuncName("DatatypeRegistry")
 	b.WriteString(fmt.Sprintf("func %s() {\n", funcName))
 	b.WriteString("\tDatatypeRegistry = append(DatatypeRegistry,\n")
 	for _, dt := range eigenDatatypes {

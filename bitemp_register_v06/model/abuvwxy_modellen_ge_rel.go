@@ -176,7 +176,7 @@ type A_V_Data struct {
 	Ddd           *string    `json:"ddd,omitempty"`
 	Eee           *string    `json:"eee,omitempty"`
 	Fff           float64    `json:"fff"`
-	Ggg           ABCEnum    `json:"ggg" schema:"enum=Optie A|Optie B|Optie C" schema_desc:"Test enumeratie"`
+	Ggg           ABCEnum    `json:"ggg" schema:"enum=ABCEnum" schema_desc:"Test enumeratie"`
 	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
@@ -200,7 +200,7 @@ type Rel_A_B_Data struct {
 	A_ID          int        `json:"a_id" bun:"a_id,pk"`
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Soort         RelABSoort `json:"soort" schema:"enum=LTT|LAT|LTA" schema_desc:"Soort relatie tussen A en B"`
+	Soort         RelABSoort `json:"soort" schema:"enum=RelABSoort" schema_desc:"Soort relatie tussen A en B"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }

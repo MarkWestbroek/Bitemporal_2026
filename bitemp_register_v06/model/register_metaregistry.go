@@ -365,6 +365,17 @@ func initRegisterMetaRegistry() {
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "LandenlijstLand_Data", Momentvoorkomen: Enkelvoudig},
 		},
 	}
+	ReferentielijstInstantieRegistry["Landenlijst"] = ReferentielijstInstantieInfo{
+		Naam:         "Landenlijst",
+		Omschrijving: "Alle landen van de wereld",
+		Layout:       &EditorLayout{Positie: &V3Positie{X: 1020, Y: -255}},
+	}
+	ReferentielijstInstantieRegistry["AdellijkeTitels"] = ReferentielijstInstantieInfo{
+		Naam:         "AdellijkeTitels",
+		Omschrijving: "Adellijke titels in Nederland",
+		Layout:       &EditorLayout{Positie: &V3Positie{X: 1890, Y: -255}},
+	}
+
 	MetaRegistry["AdellijkeTitelsTitel"] = TypeMeta{
 		Typenaam:                  "AdellijkeTitelsTitel",
 		Klassenaam:                "AdellijkeTitelsTitel",

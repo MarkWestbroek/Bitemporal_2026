@@ -31,12 +31,14 @@ func generateEnumRegistryAdditive(v3 model.V3Model, opts codegenOptions) (string
 	b.WriteString(fileHeader("Enum-registraties.\n// Gegenereerd door cmd/codegen — niet handmatig bewerken."))
 	b.WriteString("\n")
 
+	funcName := opts.initFuncName("EnumRegistry")
 	if len(v3.Enums) == 0 {
-		b.WriteString("// Geen enums gedefinieerd in het model.\n")
+		b.WriteString(fmt.Sprintf("func %s() {\n", funcName))
+		b.WriteString("\t// Geen enums gedefinieerd in het model.\n")
+		b.WriteString("}\n")
 		return b.String(), nil
 	}
 
-	funcName := opts.initFuncName("EnumRegistry")
 	b.WriteString(fmt.Sprintf("func %s() {\n", funcName))
 	writeEnumRegistryEntries(&b, v3.Enums)
 	b.WriteString("}\n")
