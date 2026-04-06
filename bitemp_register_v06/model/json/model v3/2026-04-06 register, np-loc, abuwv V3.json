@@ -1,0 +1,4636 @@
+{
+    "bron": "code",
+    "build_versie": "",
+    "go_module": "",
+    "id": null,
+    "indiener": "",
+    "model": {
+        "versie": "v3",
+        "datatypes": [
+            {
+                "naam": "NLPostcode",
+                "description": "Nederlandse postcode (4 cijfers + 2 letters)",
+                "basistype": "string",
+                "format": "nl-postcode",
+                "domein": "register",
+                "positie": {
+                    "x": 570,
+                    "y": -330
+                },
+                "validatie": {
+                    "pattern": "^[1-9][0-9]{3}\\s?[A-Za-z]{2}$",
+                    "minLength": 6,
+                    "maxLength": 7,
+                    "voorbeelden": [
+                        "1234 AB",
+                        "9999ZZ"
+                    ],
+                    "foutmelding": "Voer een geldige postcode in (bijv. 1234 AB)"
+                },
+                "normalisatie": "uppercase_letters",
+                "weergave": {
+                    "placeholder": "1234 AB",
+                    "inputMask": "0000 AA"
+                }
+            },
+            {
+                "naam": "BSN",
+                "description": "Burgerservicenummer (9 cijfers, 11-proef)",
+                "basistype": "string",
+                "format": "bsn",
+                "domein": "register",
+                "positie": {
+                    "x": -645,
+                    "y": -555
+                },
+                "validatie": {
+                    "pattern": "^[0-9]{9}$",
+                    "minLength": 9,
+                    "maxLength": 9,
+                    "voorbeelden": [
+                        "123456782"
+                    ],
+                    "foutmelding": "Voer een geldig BSN in (9 cijfers, 11-proef)",
+                    "regels": [
+                        {
+                            "naam": "11-proef",
+                            "type": "checksum",
+                            "expressie": "(9*d1 + 8*d2 + 7*d3 + 6*d4 + 5*d5 + 4*d6 + 3*d7 + 2*d8 - 1*d9) % 11 == 0"
+                        }
+                    ]
+                },
+                "weergave": {
+                    "placeholder": "123456782",
+                    "inputMask": "000000000"
+                }
+            }
+        ],
+        "enums": [
+            {
+                "goType": "ABCEnum",
+                "baseType": "string",
+                "domein": "abuvwxy",
+                "waarden": [
+                    {
+                        "constNaam": "OptieA",
+                        "waarde": "Optie A"
+                    },
+                    {
+                        "constNaam": "OptieB",
+                        "waarde": "Optie B"
+                    },
+                    {
+                        "constNaam": "OptieC",
+                        "waarde": "Optie C"
+                    }
+                ]
+            },
+            {
+                "goType": "RelABSoort",
+                "baseType": "string",
+                "domein": "abuvwxy",
+                "waarden": [
+                    {
+                        "constNaam": "RelABSoortLTT",
+                        "waarde": "LTT"
+                    },
+                    {
+                        "constNaam": "RelABSoortLAT",
+                        "waarde": "LAT"
+                    },
+                    {
+                        "constNaam": "RelABSoortLTA",
+                        "waarde": "LTA"
+                    }
+                ]
+            },
+            {
+                "goType": "Naamgebruiksoort",
+                "baseType": "string",
+                "domein": "np-loc",
+                "positie": {
+                    "x": 75,
+                    "y": -345
+                },
+                "waarden": [
+                    {
+                        "constNaam": "NaamgebruiksoortEigenNaam",
+                        "waarde": "EigenNaam"
+                    },
+                    {
+                        "constNaam": "NaamgebruiksoortPartnerNaam",
+                        "waarde": "PartnerNaam"
+                    },
+                    {
+                        "constNaam": "NaamgebruiksoortEigenNaamPartnerNaam",
+                        "waarde": "EigenNaam-PartnerNaam"
+                    },
+                    {
+                        "constNaam": "NaamgebruiksoortPartnerNaamEigenNaam",
+                        "waarde": "PartnerNaam-EigenNaam"
+                    }
+                ]
+            },
+            {
+                "goType": "Bereikbaarheidssoort",
+                "baseType": "string",
+                "domein": "np-loc",
+                "positie": {
+                    "x": 210,
+                    "y": -690
+                },
+                "waarden": [
+                    {
+                        "constNaam": "BereikbaarheidssoortWoonadres",
+                        "waarde": "Woonadres"
+                    },
+                    {
+                        "constNaam": "BereikbaarheidssoortBriefadres",
+                        "waarde": "Briefadres"
+                    },
+                    {
+                        "constNaam": "BereikbaarheidssoortCorrespondentieadres",
+                        "waarde": "Correspondentieadres"
+                    }
+                ]
+            },
+            {
+                "goType": "ReferentielijstAdrestype",
+                "baseType": "string",
+                "domein": "register",
+                "positie": {
+                    "x": 1815,
+                    "y": -480
+                },
+                "waarden": [
+                    {
+                        "constNaam": "ReferentielijstAdrestypeURL",
+                        "waarde": "URL"
+                    },
+                    {
+                        "constNaam": "ReferentielijstAdrestypeURN",
+                        "waarde": "URN"
+                    }
+                ]
+            }
+        ],
+        "referentielijstInstanties": [
+            {
+                "systeemnaam": "AdellijkeTitels",
+                "positie": {
+                    "x": 1890,
+                    "y": -319.5
+                }
+            },
+            {
+                "systeemnaam": "Landenlijst",
+                "positie": {
+                    "x": 1005,
+                    "y": -319.5
+                }
+            }
+        ],
+        "entiteiten": [
+            {
+                "typenaam": "A",
+                "description": "Entiteit A met materiele tijdlijn en onderliggende representaties U, V, W en Rel_A_B.",
+                "domein": "abuvwxy",
+                "isMaterieel": true,
+                "kleur": "#bfdbfe",
+                "meervoud": "as",
+                "positie": {
+                    "x": -495,
+                    "y": 83
+                },
+                "runtime": {
+                    "veldnaam": "a",
+                    "padnaam": "as",
+                    "tabelnaam": "a",
+                    "idKolom": "id",
+                    "klassenaam": "A"
+                },
+                "afgeleideVelden": [
+                    {
+                        "naam": "label",
+                        "description": "Testafleiding over U.aaa, U.bbb en W.heel",
+                        "goType": "string",
+                        "afleidingsregelTaal": "cel",
+                        "afleidingsregel": "U.aaa + (U.bbb != null ? ' [bbb=ja]' : '') + (W.heel != null ? ' · heel=' + W.heel : '')",
+                        "isWeergaveVeld": true
+                    }
+                ],
+                "gegevenselementen": [
+                    {
+                        "naam": "U",
+                        "description": "Enkelvoudig gegevenselement van A met formele tijdlijn.",
+                        "domein": "abuvwxy",
+                        "meervoud": "us",
+                        "momentvoorkomen": "enkelvoudig",
+                        "positie": {
+                            "x": -720,
+                            "y": 495
+                        },
+                        "id": "A->A_U",
+                        "runtime": {
+                            "veldnaam": "u",
+                            "padnaam": "us",
+                            "tabelnaam": "a_u",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "a_id",
+                            "klassenaam": "U",
+                            "relatieveAutoincrement": true
+                        },
+                        "velden": [
+                            {
+                                "naam": "aaa",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            },
+                            {
+                                "naam": "bbb",
+                                "goType": "*bool",
+                                "type": "boolean"
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "V",
+                        "description": "Meervoudig gegevenselement van A met onder andere een datumveld.",
+                        "domein": "abuvwxy",
+                        "meervoud": "vs",
+                        "momentvoorkomen": "meervoudig",
+                        "positie": {
+                            "x": -510,
+                            "y": 435
+                        },
+                        "id": "A->A_V",
+                        "runtime": {
+                            "veldnaam": "v",
+                            "padnaam": "vs",
+                            "tabelnaam": "a_v",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "a_id",
+                            "klassenaam": "V",
+                            "relatieveAutoincrement": true
+                        },
+                        "velden": [
+                            {
+                                "naam": "ccc",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            },
+                            {
+                                "naam": "ddd",
+                                "goType": "*string",
+                                "type": "string"
+                            },
+                            {
+                                "naam": "eee",
+                                "goType": "*string",
+                                "type": "string"
+                            },
+                            {
+                                "naam": "fff",
+                                "goType": "float64",
+                                "type": "number",
+                                "format": "float64",
+                                "verplicht": true
+                            },
+                            {
+                                "naam": "ggg",
+                                "goType": "ABCEnum",
+                                "type": "string",
+                                "verplicht": true,
+                                "enum": "ABCEnum"
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "W",
+                        "description": "Meervoudig gegevenselement van A met numerieke waarden.",
+                        "domein": "abuvwxy",
+                        "meervoud": "ws",
+                        "momentvoorkomen": "meervoudig",
+                        "isMaterieel": true,
+                        "positie": {
+                            "x": -300,
+                            "y": 465
+                        },
+                        "id": "A->A_W",
+                        "runtime": {
+                            "veldnaam": "w",
+                            "padnaam": "ws",
+                            "tabelnaam": "a_w",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "a_id",
+                            "klassenaam": "W",
+                            "relatieveAutoincrement": true
+                        },
+                        "velden": [
+                            {
+                                "naam": "float",
+                                "goType": "float64",
+                                "type": "number",
+                                "format": "float64",
+                                "verplicht": true
+                            },
+                            {
+                                "naam": "heel",
+                                "goType": "int",
+                                "type": "integer",
+                                "verplicht": true
+                            }
+                        ]
+                    }
+                ],
+                "relaties": [
+                    {
+                        "naam": "Rel_A_B",
+                        "description": "Relatie tussen A en B, meervoudig voorkomend per A en met relatieve relatie-id.",
+                        "domein": "abuvwxy",
+                        "meervoud": "rel_a_bs",
+                        "momentvoorkomen": "meervoudig",
+                        "isMaterieel": true,
+                        "doelEntiteit": "B",
+                        "positie": {
+                            "x": -105,
+                            "y": 120
+                        },
+                        "id": "A->Rel_A_B",
+                        "sourceHandle": "right",
+                        "targetHandle": "left",
+                        "doelId": "Rel_A_B->B",
+                        "doelSourceHandle": "right",
+                        "doelTargetHandle": "left",
+                        "runtime": {
+                            "veldnaam": "rel_a_b",
+                            "padnaam": "rel_a_bs",
+                            "tabelnaam": "rel_a_b",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "a_id",
+                            "klassenaam": "Rel_A_B",
+                            "relatieveAutoincrement": true
+                        },
+                        "velden": [
+                            {
+                                "naam": "soort",
+                                "goType": "RelABSoort",
+                                "type": "string",
+                                "verplicht": true,
+                                "enum": "RelABSoort"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "typenaam": "AdellijkeTitel",
+                "description": "Referentielijst-item: adellijke titel.",
+                "domein": "np-loc",
+                "entiteitSubtype": "referentielijst_item",
+                "kleur": "#c4b5fd",
+                "meervoud": "adellijke_titels",
+                "positie": {
+                    "x": 1665,
+                    "y": -120
+                },
+                "runtime": {
+                    "veldnaam": "adellijketitel",
+                    "padnaam": "adellijke_titels",
+                    "tabelnaam": "adellijketitel",
+                    "idKolom": "id",
+                    "klassenaam": "AdellijkeTitel"
+                },
+                "gegevenselementen": [
+                    {
+                        "naam": "AdellijkeTitelTitel",
+                        "description": "Enkelvoudig gegevenselement titel van AdellijkeTitel.",
+                        "domein": "np-loc",
+                        "meervoud": "adellijke_titel_titels",
+                        "momentvoorkomen": "enkelvoudig",
+                        "positie": {
+                            "x": 1665,
+                            "y": 75
+                        },
+                        "id": "AdellijkeTitel->AdellijkeTitel_AdellijkeTitelTitel",
+                        "runtime": {
+                            "veldnaam": "adellijketiteltitel",
+                            "padnaam": "adellijke_titel_titels",
+                            "tabelnaam": "adellijketiteltitel",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "adellijketitel_id",
+                            "klassenaam": "AdellijkeTitelTitel",
+                            "relatieveAutoincrement": true
+                        },
+                        "velden": [
+                            {
+                                "naam": "titel",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "typenaam": "B",
+                "description": "Entiteit B met materiele tijdlijn en onderliggende representaties X en Y.",
+                "domein": "abuvwxy",
+                "isMaterieel": true,
+                "kleur": "#fecaca",
+                "meervoud": "bs",
+                "positie": {
+                    "x": 270,
+                    "y": 75
+                },
+                "runtime": {
+                    "veldnaam": "b",
+                    "padnaam": "bs",
+                    "tabelnaam": "b",
+                    "idKolom": "id",
+                    "klassenaam": "B"
+                },
+                "gegevenselementen": [
+                    {
+                        "naam": "X",
+                        "description": "Enkelvoudig gegevenselement van B met twee tekstvelden.",
+                        "domein": "abuvwxy",
+                        "meervoud": "xs",
+                        "momentvoorkomen": "enkelvoudig",
+                        "positie": {
+                            "x": 165,
+                            "y": 480
+                        },
+                        "id": "B->B_X",
+                        "runtime": {
+                            "veldnaam": "x",
+                            "padnaam": "xs",
+                            "tabelnaam": "b_x",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "b_id",
+                            "klassenaam": "X",
+                            "relatieveAutoincrement": true
+                        },
+                        "velden": [
+                            {
+                                "naam": "fff",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            },
+                            {
+                                "naam": "ggg",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "Y",
+                        "description": "Enkelvoudig gegevenselement van B met een tekstveld.",
+                        "domein": "abuvwxy",
+                        "meervoud": "ys",
+                        "momentvoorkomen": "enkelvoudig",
+                        "positie": {
+                            "x": 420,
+                            "y": 495
+                        },
+                        "id": "B->B_Y",
+                        "runtime": {
+                            "veldnaam": "y",
+                            "padnaam": "ys",
+                            "tabelnaam": "b_y",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "b_id",
+                            "klassenaam": "Y",
+                            "relatieveAutoincrement": true
+                        },
+                        "velden": [
+                            {
+                                "naam": "hhh",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "typenaam": "Land",
+                "description": "Referentielijst-item: individueel land.",
+                "domein": "register",
+                "entiteitSubtype": "referentielijst_item",
+                "isMaterieel": true,
+                "kleur": "#fde68a",
+                "meervoud": "landen",
+                "positie": {
+                    "x": 1290,
+                    "y": -135
+                },
+                "runtime": {
+                    "veldnaam": "land",
+                    "padnaam": "landen",
+                    "tabelnaam": "land",
+                    "idKolom": "id",
+                    "klassenaam": "Land"
+                },
+                "gegevenselementen": [
+                    {
+                        "naam": "Landcode",
+                        "description": "Enkelvoudig gegevenselement landcode van Land.",
+                        "domein": "register",
+                        "meervoud": "landcodes",
+                        "momentvoorkomen": "enkelvoudig",
+                        "positie": {
+                            "x": 1170,
+                            "y": 75
+                        },
+                        "id": "edge_1774646153149_10",
+                        "sourceHandle": "bottom",
+                        "targetHandle": "top",
+                        "runtime": {
+                            "veldnaam": "landcode",
+                            "padnaam": "landcodes",
+                            "tabelnaam": "landcode",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "land_id",
+                            "klassenaam": "Landcode",
+                            "relatieveAutoincrement": true
+                        },
+                        "velden": [
+                            {
+                                "naam": "code",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "Landnaam",
+                        "description": "Enkelvoudig gegevenselement landnaam van Land.",
+                        "domein": "register",
+                        "meervoud": "landnamen",
+                        "momentvoorkomen": "enkelvoudig",
+                        "positie": {
+                            "x": 1418,
+                            "y": 75
+                        },
+                        "id": "edge_1774646072605_7",
+                        "sourceHandle": "bottom",
+                        "targetHandle": "top",
+                        "runtime": {
+                            "veldnaam": "landnaam",
+                            "padnaam": "landnamen",
+                            "tabelnaam": "landnaam",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "land_id",
+                            "klassenaam": "Landnaam",
+                            "relatieveAutoincrement": true
+                        },
+                        "velden": [
+                            {
+                                "naam": "naam",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "typenaam": "Locatie",
+                "description": "Fysiek bezoekbare locatie gelegen op het aardoppervlak.",
+                "domein": "np-loc",
+                "isMaterieel": true,
+                "kleur": "#fecaca",
+                "meervoud": "locaties",
+                "positie": {
+                    "x": 600,
+                    "y": -885
+                },
+                "runtime": {
+                    "veldnaam": "locatie",
+                    "padnaam": "locaties",
+                    "tabelnaam": "locatie",
+                    "idKolom": "id",
+                    "klassenaam": "Locatie"
+                },
+                "afgeleideVelden": [
+                    {
+                        "naam": "weergaveadres",
+                        "description": "Samengesteld weergaveadres, afgeleid uit straatnaam, huisnummer, postcode en plaats.",
+                        "goType": "string",
+                        "afleidingsregelTaal": "cel",
+                        "afleidingsregel": "Adres.straatnaam + ' ' + Adres.huisnummer + ', ' + Adres.postcode + ' ' + Adres.plaats",
+                        "isWeergaveVeld": true
+                    }
+                ],
+                "gegevenselementen": [
+                    {
+                        "naam": "Adres",
+                        "description": "Binnenlands adres: een aanduiding van een binnenlandse locatie, uitgegeven door de gemeente en geregistreerd in de BAG.",
+                        "domein": "np-loc",
+                        "meervoud": "adressen",
+                        "momentvoorkomen": "enkelvoudig",
+                        "positie": {
+                            "x": 765,
+                            "y": -570
+                        },
+                        "id": "Locatie->Locatie_Adres",
+                        "runtime": {
+                            "veldnaam": "adres",
+                            "padnaam": "adressen",
+                            "tabelnaam": "locatie_adres",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "locatie_id",
+                            "klassenaam": "Adres",
+                            "relatieveAutoincrement": true
+                        },
+                        "velden": [
+                            {
+                                "naam": "straatnaam",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            },
+                            {
+                                "naam": "huisnummer",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            },
+                            {
+                                "naam": "postcode",
+                                "goType": "NLPostcode",
+                                "type": "string",
+                                "verplicht": true,
+                                "enum": "NLPostcode",
+                                "datatype": "NLPostcode"
+                            },
+                            {
+                                "naam": "plaats",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            },
+                            {
+                                "naam": "land",
+                                "goType": "int",
+                                "type": "integer",
+                                "verplicht": true,
+                                "$ref": "LandenlijstLand"
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "BAGlocatie",
+                        "description": "Unieke identificatie van het adresseerbaar object (verblijfsobject, stand- of ligplaats) uitgegeven door het bevoegd gemeentelijke orgaan.",
+                        "domein": "np-loc",
+                        "meervoud": "baglocaties",
+                        "momentvoorkomen": "enkelvoudig",
+                        "positie": {
+                            "x": 510,
+                            "y": -555
+                        },
+                        "id": "Locatie->Locatie_BAG-locatie",
+                        "runtime": {
+                            "veldnaam": "baglocatie",
+                            "padnaam": "baglocaties",
+                            "tabelnaam": "locatie_baglocatie",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "locatie_id",
+                            "klassenaam": "BAGlocatie",
+                            "relatieveAutoincrement": true
+                        },
+                        "velden": [
+                            {
+                                "naam": "adresaanduiding",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "typenaam": "NatuurlijkPersoon",
+                "description": "Een mens voor zover deze door Nederlandse wetgeving met rechten en plichten wordt bekleed.",
+                "domein": "np-loc",
+                "isMaterieel": true,
+                "kleur": "#bfdbfe",
+                "meervoud": "natuurlijk_personen",
+                "positie": {
+                    "x": -210,
+                    "y": -885
+                },
+                "runtime": {
+                    "veldnaam": "natuurlijkpersoon",
+                    "padnaam": "natuurlijk_personen",
+                    "tabelnaam": "natuurlijkpersoon",
+                    "idKolom": "id",
+                    "klassenaam": "NatuurlijkPersoon"
+                },
+                "afgeleideVelden": [
+                    {
+                        "naam": "weergavenaam",
+                        "description": "Samengestelde weergavenaam van de persoon, afgeleid uit voornaam/tussenvoegsel/achternaam.",
+                        "goType": "string",
+                        "afleidingsregelTaal": "cel",
+                        "afleidingsregel": "(Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters) + (Naam.tussenvoegsel != null ? ' ' + Naam.tussenvoegsel : '') + ' ' + Naam.achternaam",
+                        "isWeergaveVeld": true
+                    }
+                ],
+                "gegevenselementen": [
+                    {
+                        "naam": "Persoonsidentificatie",
+                        "description": "Identificerende gegevens van de natuurlijk persoon (BSN, ingezetene).",
+                        "domein": "np-loc",
+                        "meervoud": "persoonsidentificaties",
+                        "momentvoorkomen": "enkelvoudig",
+                        "positie": {
+                            "x": -645,
+                            "y": -780
+                        },
+                        "id": "NatuurlijkPersoon->NatuurlijkPersoon_PersoonsIdentificatie",
+                        "sourceHandle": "left",
+                        "runtime": {
+                            "veldnaam": "persoonsidentificatie",
+                            "padnaam": "persoonsidentificaties",
+                            "tabelnaam": "natuurlijkpersoon_persoonsidentificatie",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "natuurlijkpersoon_id",
+                            "klassenaam": "Persoonsidentificatie",
+                            "relatieveAutoincrement": true
+                        },
+                        "afgeleideVelden": [
+                            {
+                                "naam": "bsnEnIngezeten",
+                                "description": "Toont BSN en indien ingezetene \" (ingezetene)\"",
+                                "goType": "string",
+                                "afleidingsregelTaal": "cel",
+                                "afleidingsregel": "bsn + (ingezetene ? \" ingezetene\" : \"\")",
+                                "isWeergaveVeld": true
+                            }
+                        ],
+                        "velden": [
+                            {
+                                "naam": "bsn",
+                                "goType": "BSN",
+                                "type": "string",
+                                "verplicht": true,
+                                "enum": "BSN",
+                                "datatype": "BSN"
+                            },
+                            {
+                                "naam": "ingezetene",
+                                "goType": "*bool",
+                                "type": "boolean"
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "Naam",
+                        "description": "Naamgegevens van de natuurlijk persoon (voorletters, roepnaam, tussenvoegsel, achternaam).",
+                        "domein": "np-loc",
+                        "meervoud": "namen",
+                        "momentvoorkomen": "enkelvoudig",
+                        "positie": {
+                            "x": -345,
+                            "y": -555
+                        },
+                        "id": "NatuurlijkPersoon->NatuurlijkPersoon_Naam",
+                        "runtime": {
+                            "veldnaam": "naam",
+                            "padnaam": "namen",
+                            "tabelnaam": "natuurlijkpersoon_naam",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "natuurlijkpersoon_id",
+                            "klassenaam": "Naam",
+                            "relatieveAutoincrement": true
+                        },
+                        "afgeleideVelden": [
+                            {
+                                "naam": "weergavenaam",
+                                "goType": "string",
+                                "afleidingsregelTaal": "cel",
+                                "afleidingsregel": "(Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters) + (Naam.tussenvoegsel != null ? ' ' + Naam.tussenvoegsel : '') + ' ' + Naam.achternaam",
+                                "isWeergaveVeld": true
+                            }
+                        ],
+                        "velden": [
+                            {
+                                "naam": "voorletters",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            },
+                            {
+                                "naam": "roepnaam",
+                                "goType": "*string",
+                                "type": "string"
+                            },
+                            {
+                                "naam": "tussenvoegsel",
+                                "goType": "*string",
+                                "type": "string"
+                            },
+                            {
+                                "naam": "achternaam",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "Partnernaam",
+                        "description": "Achternaam van de partner van de natuurlijk persoon.",
+                        "domein": "np-loc",
+                        "meervoud": "partnernamen",
+                        "momentvoorkomen": "enkelvoudig",
+                        "positie": {
+                            "x": -210,
+                            "y": -285
+                        },
+                        "id": "edge_1774209110136_2",
+                        "sourceHandle": "bottom",
+                        "targetHandle": "top",
+                        "runtime": {
+                            "veldnaam": "partnernaam",
+                            "padnaam": "partnernamen",
+                            "tabelnaam": "natuurlijkpersoon_partnernaam",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "natuurlijkpersoon_id",
+                            "klassenaam": "Partnernaam",
+                            "relatieveAutoincrement": true
+                        },
+                        "velden": [
+                            {
+                                "naam": "achternaam",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "Naamgebruik",
+                        "description": "Wijze waarop de geslachtsnaam wordt gebruikt.",
+                        "domein": "np-loc",
+                        "meervoud": "naamgebruiken",
+                        "momentvoorkomen": "enkelvoudig",
+                        "positie": {
+                            "x": 75,
+                            "y": -495
+                        },
+                        "id": "edge_1774209240752_5",
+                        "sourceHandle": "bottom",
+                        "targetHandle": "top",
+                        "runtime": {
+                            "veldnaam": "naamgebruik",
+                            "padnaam": "naamgebruiken",
+                            "tabelnaam": "natuurlijkpersoon_naamgebruik",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "natuurlijkpersoon_id",
+                            "klassenaam": "Naamgebruik",
+                            "relatieveAutoincrement": true
+                        },
+                        "velden": [
+                            {
+                                "naam": "naamgebruik",
+                                "goType": "Naamgebruiksoort",
+                                "type": "string",
+                                "verplicht": true,
+                                "enum": "Naamgebruiksoort"
+                            }
+                        ]
+                    }
+                ],
+                "relaties": [
+                    {
+                        "naam": "Bereikbaarheid",
+                        "description": "Koppeling van een natuurlijk persoon aan een locatie als bereikbaarheidsadres.",
+                        "domein": "np-loc",
+                        "meervoud": "bereikbaarheden",
+                        "momentvoorkomen": "enkelvoudig",
+                        "isMaterieel": true,
+                        "doelEntiteit": "Locatie",
+                        "positie": {
+                            "x": 210,
+                            "y": -870
+                        },
+                        "id": "edge_1774201942583_1",
+                        "sourceHandle": "right",
+                        "targetHandle": "left",
+                        "doelId": "edge_1774201991984_2",
+                        "doelSourceHandle": "right",
+                        "doelTargetHandle": "left",
+                        "runtime": {
+                            "veldnaam": "bereikbaarheid",
+                            "padnaam": "bereikbaarheden",
+                            "tabelnaam": "bereikbaarheid",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "natuurlijkpersoon_id",
+                            "klassenaam": "Bereikbaarheid",
+                            "relatieveAutoincrement": true
+                        },
+                        "velden": [
+                            {
+                                "naam": "soort",
+                                "goType": "Bereikbaarheidssoort",
+                                "type": "string",
+                                "verplicht": true,
+                                "enum": "Bereikbaarheidssoort"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "typenaam": "Referentielijst",
+                "description": "Generieke referentielijst-entiteit. Individuele lijsten (Landenlijst, EULidstaten, etc.) zijn records.",
+                "domein": "register",
+                "entiteitSubtype": "referentielijst",
+                "isMaterieel": true,
+                "kleur": "#fef3c7",
+                "meervoud": "referentielijsten",
+                "positie": {
+                    "x": 1440,
+                    "y": -720
+                },
+                "runtime": {
+                    "veldnaam": "referentielijst",
+                    "padnaam": "referentielijsten",
+                    "tabelnaam": "referentielijst",
+                    "idKolom": "id",
+                    "klassenaam": "Referentielijst"
+                },
+                "gegevenselementen": [
+                    {
+                        "naam": "Referentielijstnaam",
+                        "description": "Leesbare naam van een referentielijst.",
+                        "domein": "register",
+                        "meervoud": "referentielijstnamen",
+                        "momentvoorkomen": "enkelvoudig",
+                        "positie": {
+                            "x": 1815,
+                            "y": -975
+                        },
+                        "id": "Referentielijst->Referentielijst_Referentielijstnaam",
+                        "sourceHandle": "right",
+                        "targetHandle": "left",
+                        "runtime": {
+                            "veldnaam": "referentielijstnaam",
+                            "padnaam": "referentielijstnamen",
+                            "tabelnaam": "referentielijstnaam",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "referentielijst_id",
+                            "klassenaam": "Referentielijstnaam",
+                            "relatieveAutoincrement": true
+                        },
+                        "velden": [
+                            {
+                                "naam": "naam",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "Referentielijstomschrijving",
+                        "description": "Omschrijving van een referentielijst.",
+                        "domein": "register",
+                        "meervoud": "referentielijstomschrijvingen",
+                        "momentvoorkomen": "enkelvoudig",
+                        "positie": {
+                            "x": 1815,
+                            "y": -860.5
+                        },
+                        "id": "Referentielijst->Referentielijst_Referentielijstomschrijving",
+                        "sourceHandle": "right",
+                        "targetHandle": "left",
+                        "runtime": {
+                            "veldnaam": "referentielijstomschrijving",
+                            "padnaam": "referentielijstomschrijvingen",
+                            "tabelnaam": "referentielijstomschrijving",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "referentielijst_id",
+                            "klassenaam": "Referentielijstomschrijving",
+                            "relatieveAutoincrement": true
+                        },
+                        "velden": [
+                            {
+                                "naam": "omschrijving",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "ReferentielijstVisibility",
+                        "description": "Domeinzichtbaarheid van een referentielijst (register, modelspecifiek, extern).",
+                        "domein": "register",
+                        "meervoud": "visibilities",
+                        "momentvoorkomen": "enkelvoudig",
+                        "positie": {
+                            "x": 1815,
+                            "y": -746
+                        },
+                        "id": "Referentielijst->Referentielijst_ReferentielijstVisibility",
+                        "sourceHandle": "right",
+                        "targetHandle": "left",
+                        "runtime": {
+                            "veldnaam": "referentielijstvisibility",
+                            "padnaam": "visibilities",
+                            "tabelnaam": "referentielijstvisibility",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "referentielijst_id",
+                            "klassenaam": "ReferentielijstVisibility",
+                            "relatieveAutoincrement": true
+                        },
+                        "velden": [
+                            {
+                                "naam": "domein",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            }
+                        ]
+                    },
+                    {
+                        "naam": "ReferentielijstInternetadres",
+                        "description": "Internetadres (URL/URN) van een referentielijst.",
+                        "domein": "register",
+                        "meervoud": "internetadressen",
+                        "momentvoorkomen": "meervoudig",
+                        "positie": {
+                            "x": 1815,
+                            "y": -631.5
+                        },
+                        "id": "Referentielijst->Referentielijst_ReferentielijstInternetadres",
+                        "sourceHandle": "right",
+                        "targetHandle": "left",
+                        "runtime": {
+                            "veldnaam": "referentielijstinternetadres",
+                            "padnaam": "internetadressen",
+                            "tabelnaam": "referentielijstinternetadres",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "referentielijst_id",
+                            "klassenaam": "ReferentielijstInternetadres",
+                            "relatieveAutoincrement": true
+                        },
+                        "velden": [
+                            {
+                                "naam": "adrestype",
+                                "goType": "ReferentielijstAdrestype",
+                                "type": "string",
+                                "verplicht": true,
+                                "enum": "ReferentielijstAdrestype"
+                            },
+                            {
+                                "naam": "adres",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            },
+                            {
+                                "naam": "organisatie",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            }
+                        ]
+                    }
+                ],
+                "relaties": [
+                    {
+                        "naam": "LandenlijstLand",
+                        "description": "Koppeling van een land aan referentielijst-instantie Landenlijst (referentielijst-items relatie).",
+                        "domein": "register",
+                        "relatieSubtype": "referentielijst_items",
+                        "referentielijstInstantie": "Landenlijst",
+                        "meervoud": "landenlijst_landen",
+                        "momentvoorkomen": "meervoudig",
+                        "doelEntiteit": "Land",
+                        "positie": {
+                            "x": 1290,
+                            "y": -310.5
+                        },
+                        "id": "Referentielijst->LandenlijstLand",
+                        "doelId": "LandenlijstLand->Land",
+                        "runtime": {
+                            "veldnaam": "landenlijstland",
+                            "padnaam": "landenlijst_landen",
+                            "tabelnaam": "landenlijstland",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "referentielijst_id",
+                            "klassenaam": "LandenlijstLand",
+                            "relatieveAutoincrement": true
+                        }
+                    },
+                    {
+                        "naam": "AdellijkeTitelsTitel",
+                        "description": "Koppeling van een adellijke titel aan referentielijst-instantie AdellijkeTitels (referentielijst-items relatie).",
+                        "domein": "register",
+                        "relatieSubtype": "referentielijst_items",
+                        "referentielijstInstantie": "AdellijkeTitels",
+                        "meervoud": "adellijke_titels_titels",
+                        "momentvoorkomen": "meervoudig",
+                        "doelEntiteit": "AdellijkeTitel",
+                        "positie": {
+                            "x": 1665,
+                            "y": -315
+                        },
+                        "id": "Referentielijst->AdellijkeTitelsTitel",
+                        "doelId": "AdellijkeTitelsTitel->AdellijkeTitel",
+                        "runtime": {
+                            "veldnaam": "adellijketitelstitel",
+                            "padnaam": "adellijke_titels_titels",
+                            "tabelnaam": "adellijketitelstitel",
+                            "idKolom": "rel_id",
+                            "heeftPFK": true,
+                            "entiteitIDKolom": "referentielijst_id",
+                            "klassenaam": "AdellijkeTitelsTitel",
+                            "relatieveAutoincrement": true
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    "model_beschrijving": "",
+    "model_bron": "code",
+    "model_naam": "",
+    "model_versie": "v3",
+    "opmerking": "",
+    "status": "code",
+    "tijdstip": null,
+    "types": [
+        {
+            "typenaam": "A",
+            "klassenaam": "A",
+            "description": "Entiteit A met materiele tijdlijn en onderliggende representaties U, V, W en Rel_A_B.",
+            "metatype": "entiteit",
+            "isMaterieel": true,
+            "domein": "abuvwxy",
+            "kleur": "#bfdbfe",
+            "veldnaam": "a",
+            "padnaam": "as",
+            "meervoud": "as",
+            "velden": [
+                {
+                    "naam": "id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "us",
+                    "type": "A_U",
+                    "format": "array",
+                    "verplicht": false
+                },
+                {
+                    "naam": "vs",
+                    "type": "A_V",
+                    "format": "array",
+                    "verplicht": false
+                },
+                {
+                    "naam": "ws",
+                    "type": "A_W",
+                    "format": "array",
+                    "verplicht": false
+                },
+                {
+                    "naam": "rel_a_bs",
+                    "type": "Rel_A_B",
+                    "format": "array",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "a",
+            "idKolom": "id",
+            "heeftPFK": false,
+            "onderliggende": [
+                {
+                    "rolnaam": "Us",
+                    "jsonRolnaam": "us",
+                    "doeltype": "A_U",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Vs",
+                    "jsonRolnaam": "vs",
+                    "doeltype": "A_V",
+                    "momentvoorkomen": "meervoudig"
+                },
+                {
+                    "rolnaam": "Ws",
+                    "jsonRolnaam": "ws",
+                    "doeltype": "A_W",
+                    "momentvoorkomen": "meervoudig"
+                },
+                {
+                    "rolnaam": "RelABs",
+                    "jsonRolnaam": "rel_a_bs",
+                    "doeltype": "Rel_A_B",
+                    "momentvoorkomen": "meervoudig"
+                },
+                {
+                    "rolnaam": "Aanvang",
+                    "jsonRolnaam": "aanvang",
+                    "doeltype": "A_Aanvang",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Einde",
+                    "jsonRolnaam": "einde",
+                    "doeltype": "A_Einde",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ],
+            "afgeleideVelden": [
+                {
+                    "naam": "label",
+                    "description": "Testafleiding over U.aaa, U.bbb en W.heel",
+                    "goType": "string",
+                    "afleidingsregelTaal": "cel",
+                    "afleidingsregel": "U.aaa + (U.bbb != null ? ' [bbb=ja]' : '') + (W.heel != null ? ' · heel=' + W.heel : '')",
+                    "isWeergaveVeld": true
+                }
+            ]
+        },
+        {
+            "typenaam": "A_Aanvang",
+            "klassenaam": "Aanvang",
+            "description": "Aanvangsdatum van A.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "aanvang",
+            "domein": "abuvwxy",
+            "kleur": "#bfdbfe",
+            "veldnaam": "a_aanvang",
+            "padnaam": "a_aanvang",
+            "meervoud": "a_aanvang",
+            "velden": [
+                {
+                    "naam": "a_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "datum",
+                    "type": "string",
+                    "format": "date",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "a_aanvang",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "a_id",
+            "bovenliggendTypenaam": "A",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "A_Einde",
+            "klassenaam": "Einde",
+            "description": "Einddatum van A.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "einde",
+            "domein": "abuvwxy",
+            "kleur": "#bfdbfe",
+            "veldnaam": "a_einde",
+            "padnaam": "a_einde",
+            "meervoud": "a_einde",
+            "velden": [
+                {
+                    "naam": "a_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "datum",
+                    "type": "string",
+                    "format": "date",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "a_einde",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "a_id",
+            "bovenliggendTypenaam": "A",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "A_U",
+            "klassenaam": "U",
+            "description": "Enkelvoudig gegevenselement van A met formele tijdlijn.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "hub",
+            "domein": "abuvwxy",
+            "kleur": "#bfdbfe",
+            "veldnaam": "u",
+            "padnaam": "us",
+            "meervoud": "us",
+            "velden": [
+                {
+                    "naam": "a_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "aaa",
+                    "type": "string",
+                    "verplicht": true
+                },
+                {
+                    "naam": "bbb",
+                    "type": "boolean",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "a_u",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "a_id",
+            "momentvoorkomen": "enkelvoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "A_U_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "A_U_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van A_U.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "abuvwxy",
+            "kleur": "#bfdbfe",
+            "veldnaam": "a_u_data",
+            "padnaam": "a_u_data",
+            "meervoud": "a_u_data",
+            "velden": [
+                {
+                    "naam": "a_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "aaa",
+                    "type": "string",
+                    "verplicht": true
+                },
+                {
+                    "naam": "bbb",
+                    "type": "boolean",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "a_u_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "a_id",
+            "bovenliggendTypenaam": "A_U",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "A_V",
+            "klassenaam": "V",
+            "description": "Meervoudig gegevenselement van A met onder andere een datumveld.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "hub",
+            "domein": "abuvwxy",
+            "kleur": "#bfdbfe",
+            "veldnaam": "v",
+            "padnaam": "vs",
+            "meervoud": "vs",
+            "velden": [
+                {
+                    "naam": "a_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "ccc",
+                    "type": "string",
+                    "verplicht": true
+                },
+                {
+                    "naam": "ddd",
+                    "type": "string",
+                    "verplicht": false
+                },
+                {
+                    "naam": "eee",
+                    "type": "string",
+                    "verplicht": false
+                },
+                {
+                    "naam": "fff",
+                    "type": "number",
+                    "format": "float64",
+                    "verplicht": true
+                },
+                {
+                    "naam": "ggg",
+                    "type": "string",
+                    "enum": [
+                        "Optie A",
+                        "Optie B",
+                        "Optie C"
+                    ],
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "a_v",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "a_id",
+            "momentvoorkomen": "meervoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "A_V_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "A_V_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van A_V.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "abuvwxy",
+            "kleur": "#bfdbfe",
+            "veldnaam": "a_v_data",
+            "padnaam": "a_v_data",
+            "meervoud": "a_v_data",
+            "velden": [
+                {
+                    "naam": "a_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "ccc",
+                    "type": "string",
+                    "verplicht": true
+                },
+                {
+                    "naam": "ddd",
+                    "type": "string",
+                    "verplicht": false
+                },
+                {
+                    "naam": "eee",
+                    "type": "string",
+                    "verplicht": false
+                },
+                {
+                    "naam": "fff",
+                    "type": "number",
+                    "format": "float64",
+                    "verplicht": true
+                },
+                {
+                    "naam": "ggg",
+                    "type": "string",
+                    "enum": [
+                        "Optie A",
+                        "Optie B",
+                        "Optie C"
+                    ],
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "a_v_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "a_id",
+            "bovenliggendTypenaam": "A_V",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "A_W",
+            "klassenaam": "W",
+            "description": "Meervoudig gegevenselement van A met numerieke waarden.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "hub",
+            "isMaterieel": true,
+            "domein": "abuvwxy",
+            "kleur": "#bfdbfe",
+            "veldnaam": "w",
+            "padnaam": "ws",
+            "meervoud": "ws",
+            "velden": [
+                {
+                    "naam": "a_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "float",
+                    "type": "number",
+                    "format": "float64",
+                    "verplicht": true
+                },
+                {
+                    "naam": "heel",
+                    "type": "integer",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "a_w",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "a_id",
+            "momentvoorkomen": "meervoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "A_W_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Aanvang",
+                    "jsonRolnaam": "aanvang",
+                    "doeltype": "A_W_Aanvang",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Einde",
+                    "jsonRolnaam": "einde",
+                    "doeltype": "A_W_Einde",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "A_W_Aanvang",
+            "klassenaam": "Aanvang",
+            "description": "Aanvangsdatum van A_W.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "aanvang",
+            "domein": "abuvwxy",
+            "kleur": "#bfdbfe",
+            "veldnaam": "a_w_aanvang",
+            "padnaam": "a_w_aanvang",
+            "meervoud": "a_w_aanvang",
+            "velden": [
+                {
+                    "naam": "a_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "datum",
+                    "type": "string",
+                    "format": "date",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "a_w_aanvang",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "a_id",
+            "bovenliggendTypenaam": "A_W",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "A_W_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van A_W.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "abuvwxy",
+            "kleur": "#bfdbfe",
+            "veldnaam": "a_w_data",
+            "padnaam": "a_w_data",
+            "meervoud": "a_w_data",
+            "velden": [
+                {
+                    "naam": "a_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "float",
+                    "type": "number",
+                    "format": "float64",
+                    "verplicht": true
+                },
+                {
+                    "naam": "heel",
+                    "type": "integer",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "a_w_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "a_id",
+            "bovenliggendTypenaam": "A_W",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "A_W_Einde",
+            "klassenaam": "Einde",
+            "description": "Einddatum van A_W.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "einde",
+            "domein": "abuvwxy",
+            "kleur": "#bfdbfe",
+            "veldnaam": "a_w_einde",
+            "padnaam": "a_w_einde",
+            "meervoud": "a_w_einde",
+            "velden": [
+                {
+                    "naam": "a_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "datum",
+                    "type": "string",
+                    "format": "date",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "a_w_einde",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "a_id",
+            "bovenliggendTypenaam": "A_W",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "AdellijkeTitel",
+            "klassenaam": "AdellijkeTitel",
+            "description": "Referentielijst-item: adellijke titel.",
+            "metatype": "entiteit",
+            "entiteitSubtype": "referentielijst_item",
+            "domein": "np-loc",
+            "kleur": "#c4b5fd",
+            "veldnaam": "adellijketitel",
+            "padnaam": "adellijke_titels",
+            "meervoud": "adellijke titels",
+            "velden": [
+                {
+                    "naam": "id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "adellijke_titel_titels",
+                    "type": "AdellijkeTitelTitel",
+                    "format": "array",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "adellijketitel",
+            "idKolom": "id",
+            "heeftPFK": false,
+            "onderliggende": [
+                {
+                    "rolnaam": "AdellijkeTitelTitels",
+                    "jsonRolnaam": "adellijke_titel_titels",
+                    "doeltype": "AdellijkeTitelTitel",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "AdellijkeTitelTitel",
+            "klassenaam": "AdellijkeTitelTitel",
+            "description": "Enkelvoudig gegevenselement titel van AdellijkeTitel.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "hub",
+            "domein": "np-loc",
+            "kleur": "#c4b5fd",
+            "veldnaam": "adellijketiteltitel",
+            "padnaam": "adellijke_titel_titels",
+            "meervoud": "adellijke_titel_titels",
+            "velden": [
+                {
+                    "naam": "adellijketitel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "titel",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "adellijketiteltitel",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "adellijketitel_id",
+            "momentvoorkomen": "enkelvoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "AdellijkeTitelTitel_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "AdellijkeTitelTitel_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van AdellijkeTitelTitel.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "np-loc",
+            "kleur": "#c4b5fd",
+            "veldnaam": "adellijketiteltitel_data",
+            "padnaam": "adellijketiteltitel_data",
+            "meervoud": "adellijketiteltitel_data",
+            "velden": [
+                {
+                    "naam": "adellijketitel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "titel",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "adellijketiteltitel_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "adellijketitel_id",
+            "bovenliggendTypenaam": "AdellijkeTitelTitel",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "AdellijkeTitelsTitel",
+            "klassenaam": "AdellijkeTitelsTitel",
+            "description": "Koppeling van een adellijke titel aan referentielijst-instantie AdellijkeTitels (referentielijst-items relatie).",
+            "metatype": "relatie",
+            "ge_subtype": "hub",
+            "relatieSubtype": "referentielijst_items",
+            "referentielijstInstantie": "AdellijkeTitels",
+            "doelEntiteit": "AdellijkeTitel",
+            "domein": "register",
+            "veldnaam": "adellijketitelstitel",
+            "padnaam": "adellijke_titels_titels",
+            "meervoud": "adellijke_titels_titels",
+            "velden": [
+                {
+                    "naam": "referentielijst_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "adellijketitel_id",
+                    "type": "integer",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "adellijketitelstitel",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "secondaireEntiteitIDKolom": "adellijketitel_id",
+            "momentvoorkomen": "meervoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "AdellijkeTitelsTitel_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "AdellijkeTitelsTitel_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van AdellijkeTitelsTitel.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "register",
+            "kleur": "#fef3c7",
+            "veldnaam": "adellijketitelstitel_data",
+            "padnaam": "adellijketitelstitel_data",
+            "meervoud": "adellijketitelstitel_data",
+            "velden": [
+                {
+                    "naam": "referentielijst_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                }
+            ],
+            "tabelnaam": "adellijketitelstitel_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "bovenliggendTypenaam": "AdellijkeTitelsTitel",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "B",
+            "klassenaam": "B",
+            "description": "Entiteit B met materiele tijdlijn en onderliggende representaties X en Y.",
+            "metatype": "entiteit",
+            "isMaterieel": true,
+            "domein": "abuvwxy",
+            "kleur": "#fecaca",
+            "veldnaam": "b",
+            "padnaam": "bs",
+            "meervoud": "bs",
+            "velden": [
+                {
+                    "naam": "id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "xs",
+                    "type": "B_X",
+                    "format": "array",
+                    "verplicht": false
+                },
+                {
+                    "naam": "ys",
+                    "type": "B_Y",
+                    "format": "array",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "b",
+            "idKolom": "id",
+            "heeftPFK": false,
+            "onderliggende": [
+                {
+                    "rolnaam": "Xs",
+                    "jsonRolnaam": "xs",
+                    "doeltype": "B_X",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Ys",
+                    "jsonRolnaam": "ys",
+                    "doeltype": "B_Y",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Aanvang",
+                    "jsonRolnaam": "aanvang",
+                    "doeltype": "B_Aanvang",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Einde",
+                    "jsonRolnaam": "einde",
+                    "doeltype": "B_Einde",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "B_Aanvang",
+            "klassenaam": "Aanvang",
+            "description": "Aanvangsdatum van B.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "aanvang",
+            "domein": "abuvwxy",
+            "kleur": "#fecaca",
+            "veldnaam": "b_aanvang",
+            "padnaam": "b_aanvang",
+            "meervoud": "b_aanvang",
+            "velden": [
+                {
+                    "naam": "b_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "datum",
+                    "type": "string",
+                    "format": "date",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "b_aanvang",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "b_id",
+            "bovenliggendTypenaam": "B",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "B_Einde",
+            "klassenaam": "Einde",
+            "description": "Einddatum van B.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "einde",
+            "domein": "abuvwxy",
+            "kleur": "#fecaca",
+            "veldnaam": "b_einde",
+            "padnaam": "b_einde",
+            "meervoud": "b_einde",
+            "velden": [
+                {
+                    "naam": "b_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "datum",
+                    "type": "string",
+                    "format": "date",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "b_einde",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "b_id",
+            "bovenliggendTypenaam": "B",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "B_X",
+            "klassenaam": "X",
+            "description": "Enkelvoudig gegevenselement van B met twee tekstvelden.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "hub",
+            "domein": "abuvwxy",
+            "kleur": "#fecaca",
+            "veldnaam": "x",
+            "padnaam": "xs",
+            "meervoud": "xs",
+            "velden": [
+                {
+                    "naam": "b_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "fff",
+                    "type": "string",
+                    "verplicht": true
+                },
+                {
+                    "naam": "ggg",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "b_x",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "b_id",
+            "momentvoorkomen": "enkelvoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "B_X_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "B_X_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van B_X.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "abuvwxy",
+            "kleur": "#fecaca",
+            "veldnaam": "b_x_data",
+            "padnaam": "b_x_data",
+            "meervoud": "b_x_data",
+            "velden": [
+                {
+                    "naam": "b_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "fff",
+                    "type": "string",
+                    "verplicht": true
+                },
+                {
+                    "naam": "ggg",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "b_x_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "b_id",
+            "bovenliggendTypenaam": "B_X",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "B_Y",
+            "klassenaam": "Y",
+            "description": "Enkelvoudig gegevenselement van B met een tekstveld.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "hub",
+            "domein": "abuvwxy",
+            "kleur": "#fecaca",
+            "veldnaam": "y",
+            "padnaam": "ys",
+            "meervoud": "ys",
+            "velden": [
+                {
+                    "naam": "b_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "hhh",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "b_y",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "b_id",
+            "momentvoorkomen": "enkelvoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "B_Y_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "B_Y_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van B_Y.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "abuvwxy",
+            "kleur": "#fecaca",
+            "veldnaam": "b_y_data",
+            "padnaam": "b_y_data",
+            "meervoud": "b_y_data",
+            "velden": [
+                {
+                    "naam": "b_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "hhh",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "b_y_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "b_id",
+            "bovenliggendTypenaam": "B_Y",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "Bereikbaarheid",
+            "klassenaam": "Bereikbaarheid",
+            "description": "Koppeling van een natuurlijk persoon aan een locatie als bereikbaarheidsadres.",
+            "metatype": "relatie",
+            "ge_subtype": "hub",
+            "isMaterieel": true,
+            "doelEntiteit": "Locatie",
+            "domein": "np-loc",
+            "veldnaam": "bereikbaarheid",
+            "padnaam": "bereikbaarheden",
+            "meervoud": "bereikbaarheden",
+            "velden": [
+                {
+                    "naam": "natuurlijkpersoon_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "locatie_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "soort",
+                    "type": "string",
+                    "enum": [
+                        "Woonadres",
+                        "Briefadres",
+                        "Correspondentieadres"
+                    ],
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "bereikbaarheid",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "natuurlijkpersoon_id",
+            "secondaireEntiteitIDKolom": "locatie_id",
+            "momentvoorkomen": "enkelvoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "Bereikbaarheid_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Aanvang",
+                    "jsonRolnaam": "aanvang",
+                    "doeltype": "Bereikbaarheid_Aanvang",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Einde",
+                    "jsonRolnaam": "einde",
+                    "doeltype": "Bereikbaarheid_Einde",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "Bereikbaarheid_Aanvang",
+            "klassenaam": "Aanvang",
+            "description": "Aanvangsdatum van Bereikbaarheid.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "aanvang",
+            "domein": "np-loc",
+            "kleur": "#bfdbfe",
+            "veldnaam": "bereikbaarheid_aanvang",
+            "padnaam": "bereikbaarheid_aanvang",
+            "meervoud": "bereikbaarheid_aanvang",
+            "velden": [
+                {
+                    "naam": "natuurlijkpersoon_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "datum",
+                    "type": "string",
+                    "format": "date",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "bereikbaarheid_aanvang",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "natuurlijkpersoon_id",
+            "bovenliggendTypenaam": "Bereikbaarheid",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "Bereikbaarheid_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van Bereikbaarheid.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "np-loc",
+            "kleur": "#bfdbfe",
+            "veldnaam": "bereikbaarheid_data",
+            "padnaam": "bereikbaarheid_data",
+            "meervoud": "bereikbaarheid_data",
+            "velden": [
+                {
+                    "naam": "natuurlijkpersoon_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "soort",
+                    "type": "string",
+                    "enum": [
+                        "Woonadres",
+                        "Briefadres",
+                        "Correspondentieadres"
+                    ],
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "bereikbaarheid_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "natuurlijkpersoon_id",
+            "bovenliggendTypenaam": "Bereikbaarheid",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "Bereikbaarheid_Einde",
+            "klassenaam": "Einde",
+            "description": "Einddatum van Bereikbaarheid.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "einde",
+            "domein": "np-loc",
+            "kleur": "#bfdbfe",
+            "veldnaam": "bereikbaarheid_einde",
+            "padnaam": "bereikbaarheid_einde",
+            "meervoud": "bereikbaarheid_einde",
+            "velden": [
+                {
+                    "naam": "natuurlijkpersoon_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "datum",
+                    "type": "string",
+                    "format": "date",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "bereikbaarheid_einde",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "natuurlijkpersoon_id",
+            "bovenliggendTypenaam": "Bereikbaarheid",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "Land",
+            "klassenaam": "Land",
+            "description": "Referentielijst-item: individueel land.",
+            "metatype": "entiteit",
+            "isMaterieel": true,
+            "entiteitSubtype": "referentielijst_item",
+            "domein": "register",
+            "kleur": "#fde68a",
+            "veldnaam": "land",
+            "padnaam": "landen",
+            "meervoud": "landen",
+            "velden": [
+                {
+                    "naam": "id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "landcodes",
+                    "type": "Landcode",
+                    "format": "array",
+                    "verplicht": false
+                },
+                {
+                    "naam": "landnamen",
+                    "type": "Landnaam",
+                    "format": "array",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "land",
+            "idKolom": "id",
+            "heeftPFK": false,
+            "onderliggende": [
+                {
+                    "rolnaam": "Landcodes",
+                    "jsonRolnaam": "landcodes",
+                    "doeltype": "Landcode",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Landnamen",
+                    "jsonRolnaam": "landnamen",
+                    "doeltype": "Landnaam",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Aanvang",
+                    "jsonRolnaam": "aanvang",
+                    "doeltype": "Land_Aanvang",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Einde",
+                    "jsonRolnaam": "einde",
+                    "doeltype": "Land_Einde",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "Land_Aanvang",
+            "klassenaam": "Aanvang",
+            "description": "Aanvangsdatum van Land.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "aanvang",
+            "domein": "register",
+            "kleur": "#fde68a",
+            "veldnaam": "land_aanvang",
+            "padnaam": "land_aanvang",
+            "meervoud": "land_aanvang",
+            "velden": [
+                {
+                    "naam": "land_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "datum",
+                    "type": "string",
+                    "format": "date",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "land_aanvang",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "land_id",
+            "bovenliggendTypenaam": "Land",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "Land_Einde",
+            "klassenaam": "Einde",
+            "description": "Einddatum van Land.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "einde",
+            "domein": "register",
+            "kleur": "#fde68a",
+            "veldnaam": "land_einde",
+            "padnaam": "land_einde",
+            "meervoud": "land_einde",
+            "velden": [
+                {
+                    "naam": "land_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "datum",
+                    "type": "string",
+                    "format": "date",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "land_einde",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "land_id",
+            "bovenliggendTypenaam": "Land",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "Landcode",
+            "klassenaam": "Landcode",
+            "description": "Enkelvoudig gegevenselement landcode van Land.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "hub",
+            "domein": "register",
+            "kleur": "#fde68a",
+            "veldnaam": "landcode",
+            "padnaam": "landcodes",
+            "meervoud": "landcodes",
+            "velden": [
+                {
+                    "naam": "land_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "code",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "landcode",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "land_id",
+            "momentvoorkomen": "enkelvoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "Landcode_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "Landcode_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van Landcode.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "register",
+            "kleur": "#fde68a",
+            "veldnaam": "landcode_data",
+            "padnaam": "landcode_data",
+            "meervoud": "landcode_data",
+            "velden": [
+                {
+                    "naam": "land_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "code",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "landcode_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "land_id",
+            "bovenliggendTypenaam": "Landcode",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "LandenlijstLand",
+            "klassenaam": "LandenlijstLand",
+            "description": "Koppeling van een land aan referentielijst-instantie Landenlijst (referentielijst-items relatie).",
+            "metatype": "relatie",
+            "ge_subtype": "hub",
+            "relatieSubtype": "referentielijst_items",
+            "referentielijstInstantie": "Landenlijst",
+            "doelEntiteit": "Land",
+            "domein": "register",
+            "veldnaam": "landenlijstland",
+            "padnaam": "landenlijst_landen",
+            "meervoud": "landenlijst_landen",
+            "velden": [
+                {
+                    "naam": "referentielijst_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "land_id",
+                    "type": "integer",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "landenlijstland",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "secondaireEntiteitIDKolom": "land_id",
+            "momentvoorkomen": "meervoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "LandenlijstLand_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "LandenlijstLand_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van LandenlijstLand.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "register",
+            "kleur": "#fef3c7",
+            "veldnaam": "landenlijstland_data",
+            "padnaam": "landenlijstland_data",
+            "meervoud": "landenlijstland_data",
+            "velden": [
+                {
+                    "naam": "referentielijst_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                }
+            ],
+            "tabelnaam": "landenlijstland_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "bovenliggendTypenaam": "LandenlijstLand",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "Landnaam",
+            "klassenaam": "Landnaam",
+            "description": "Enkelvoudig gegevenselement landnaam van Land.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "hub",
+            "domein": "register",
+            "kleur": "#fde68a",
+            "veldnaam": "landnaam",
+            "padnaam": "landnamen",
+            "meervoud": "landnamen",
+            "velden": [
+                {
+                    "naam": "land_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "naam",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "landnaam",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "land_id",
+            "momentvoorkomen": "enkelvoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "Landnaam_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "Landnaam_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van Landnaam.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "register",
+            "kleur": "#fde68a",
+            "veldnaam": "landnaam_data",
+            "padnaam": "landnaam_data",
+            "meervoud": "landnaam_data",
+            "velden": [
+                {
+                    "naam": "land_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "naam",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "landnaam_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "land_id",
+            "bovenliggendTypenaam": "Landnaam",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "Locatie",
+            "klassenaam": "Locatie",
+            "description": "Fysiek bezoekbare locatie gelegen op het aardoppervlak.",
+            "metatype": "entiteit",
+            "isMaterieel": true,
+            "domein": "np-loc",
+            "kleur": "#fecaca",
+            "veldnaam": "locatie",
+            "padnaam": "locaties",
+            "meervoud": "locaties",
+            "velden": [
+                {
+                    "naam": "id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "adressen",
+                    "type": "Locatie_Adres",
+                    "format": "array",
+                    "verplicht": false
+                },
+                {
+                    "naam": "baglocaties",
+                    "type": "Locatie_BAGlocatie",
+                    "format": "array",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "locatie",
+            "idKolom": "id",
+            "heeftPFK": false,
+            "onderliggende": [
+                {
+                    "rolnaam": "Adressen",
+                    "jsonRolnaam": "adressen",
+                    "doeltype": "Locatie_Adres",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Baglocaties",
+                    "jsonRolnaam": "baglocaties",
+                    "doeltype": "Locatie_BAGlocatie",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Aanvang",
+                    "jsonRolnaam": "aanvang",
+                    "doeltype": "Locatie_Aanvang",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Einde",
+                    "jsonRolnaam": "einde",
+                    "doeltype": "Locatie_Einde",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ],
+            "afgeleideVelden": [
+                {
+                    "naam": "weergaveadres",
+                    "description": "Samengesteld weergaveadres, afgeleid uit straatnaam, huisnummer, postcode en plaats.",
+                    "goType": "string",
+                    "afleidingsregelTaal": "cel",
+                    "afleidingsregel": "Adres.straatnaam + ' ' + Adres.huisnummer + ', ' + Adres.postcode + ' ' + Adres.plaats",
+                    "isWeergaveVeld": true
+                }
+            ]
+        },
+        {
+            "typenaam": "Locatie_Aanvang",
+            "klassenaam": "Aanvang",
+            "description": "Aanvangsdatum van Locatie.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "aanvang",
+            "domein": "np-loc",
+            "kleur": "#fecaca",
+            "veldnaam": "locatie_aanvang",
+            "padnaam": "locatie_aanvang",
+            "meervoud": "locatie_aanvang",
+            "velden": [
+                {
+                    "naam": "locatie_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "datum",
+                    "type": "string",
+                    "format": "date",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "locatie_aanvang",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "locatie_id",
+            "bovenliggendTypenaam": "Locatie",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "Locatie_Adres",
+            "klassenaam": "Adres",
+            "description": "Binnenlands adres: een aanduiding van een binnenlandse locatie, uitgegeven door de gemeente en geregistreerd in de BAG.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "hub",
+            "domein": "np-loc",
+            "kleur": "#fecaca",
+            "veldnaam": "adres",
+            "padnaam": "adressen",
+            "meervoud": "adressen",
+            "velden": [
+                {
+                    "naam": "locatie_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "straatnaam",
+                    "type": "string",
+                    "verplicht": true
+                },
+                {
+                    "naam": "huisnummer",
+                    "type": "string",
+                    "verplicht": true
+                },
+                {
+                    "naam": "postcode",
+                    "type": "string",
+                    "verplicht": true
+                },
+                {
+                    "naam": "plaats",
+                    "type": "string",
+                    "verplicht": true
+                },
+                {
+                    "naam": "land",
+                    "type": "integer",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "locatie_adres",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "locatie_id",
+            "momentvoorkomen": "enkelvoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "Locatie_Adres_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "Locatie_Adres_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van Locatie_Adres.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "np-loc",
+            "kleur": "#fecaca",
+            "veldnaam": "locatie_adres_data",
+            "padnaam": "locatie_adres_data",
+            "meervoud": "locatie_adres_data",
+            "velden": [
+                {
+                    "naam": "locatie_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "straatnaam",
+                    "type": "string",
+                    "verplicht": true
+                },
+                {
+                    "naam": "huisnummer",
+                    "type": "string",
+                    "verplicht": true
+                },
+                {
+                    "naam": "postcode",
+                    "type": "string",
+                    "verplicht": true,
+                    "datatype": "NLPostcode"
+                },
+                {
+                    "naam": "plaats",
+                    "type": "string",
+                    "verplicht": true
+                },
+                {
+                    "naam": "land",
+                    "type": "integer",
+                    "verplicht": true,
+                    "ref": "LandenlijstLand"
+                }
+            ],
+            "tabelnaam": "locatie_adres_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "locatie_id",
+            "bovenliggendTypenaam": "Locatie_Adres",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "Locatie_BAGlocatie",
+            "klassenaam": "BAGlocatie",
+            "description": "Unieke identificatie van het adresseerbaar object (verblijfsobject, stand- of ligplaats) uitgegeven door het bevoegd gemeentelijke orgaan.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "hub",
+            "domein": "np-loc",
+            "kleur": "#fecaca",
+            "veldnaam": "baglocatie",
+            "padnaam": "baglocaties",
+            "meervoud": "baglocaties",
+            "velden": [
+                {
+                    "naam": "locatie_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "adresaanduiding",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "locatie_baglocatie",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "locatie_id",
+            "momentvoorkomen": "enkelvoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "Locatie_BAGlocatie_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "Locatie_BAGlocatie_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van Locatie_BAGlocatie.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "np-loc",
+            "kleur": "#fecaca",
+            "veldnaam": "locatie_baglocatie_data",
+            "padnaam": "locatie_baglocatie_data",
+            "meervoud": "locatie_baglocatie_data",
+            "velden": [
+                {
+                    "naam": "locatie_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "adresaanduiding",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "locatie_baglocatie_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "locatie_id",
+            "bovenliggendTypenaam": "Locatie_BAGlocatie",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "Locatie_Einde",
+            "klassenaam": "Einde",
+            "description": "Einddatum van Locatie.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "einde",
+            "domein": "np-loc",
+            "kleur": "#fecaca",
+            "veldnaam": "locatie_einde",
+            "padnaam": "locatie_einde",
+            "meervoud": "locatie_einde",
+            "velden": [
+                {
+                    "naam": "locatie_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "datum",
+                    "type": "string",
+                    "format": "date",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "locatie_einde",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "locatie_id",
+            "bovenliggendTypenaam": "Locatie",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "NatuurlijkPersoon",
+            "klassenaam": "NatuurlijkPersoon",
+            "description": "Een mens voor zover deze door Nederlandse wetgeving met rechten en plichten wordt bekleed.",
+            "metatype": "entiteit",
+            "isMaterieel": true,
+            "domein": "np-loc",
+            "kleur": "#bfdbfe",
+            "veldnaam": "natuurlijkpersoon",
+            "padnaam": "natuurlijk_personen",
+            "meervoud": "natuurlijk personen",
+            "velden": [
+                {
+                    "naam": "id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "persoonsidentificaties",
+                    "type": "NatuurlijkPersoon_Persoonsidentificatie",
+                    "format": "array",
+                    "verplicht": false
+                },
+                {
+                    "naam": "namen",
+                    "type": "NatuurlijkPersoon_Naam",
+                    "format": "array",
+                    "verplicht": false
+                },
+                {
+                    "naam": "partnernamen",
+                    "type": "NatuurlijkPersoon_Partnernaam",
+                    "format": "array",
+                    "verplicht": false
+                },
+                {
+                    "naam": "naamgebruiken",
+                    "type": "NatuurlijkPersoon_Naamgebruik",
+                    "format": "array",
+                    "verplicht": false
+                },
+                {
+                    "naam": "bereikbaarheden",
+                    "type": "Bereikbaarheid",
+                    "format": "array",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "natuurlijkpersoon",
+            "idKolom": "id",
+            "heeftPFK": false,
+            "onderliggende": [
+                {
+                    "rolnaam": "Persoonsidentificaties",
+                    "jsonRolnaam": "persoonsidentificaties",
+                    "doeltype": "NatuurlijkPersoon_Persoonsidentificatie",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Namen",
+                    "jsonRolnaam": "namen",
+                    "doeltype": "NatuurlijkPersoon_Naam",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Partnernamen",
+                    "jsonRolnaam": "partnernamen",
+                    "doeltype": "NatuurlijkPersoon_Partnernaam",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Naamgebruiken",
+                    "jsonRolnaam": "naamgebruiken",
+                    "doeltype": "NatuurlijkPersoon_Naamgebruik",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Bereikbaarheden",
+                    "jsonRolnaam": "bereikbaarheden",
+                    "doeltype": "Bereikbaarheid",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Aanvang",
+                    "jsonRolnaam": "aanvang",
+                    "doeltype": "NatuurlijkPersoon_Aanvang",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Einde",
+                    "jsonRolnaam": "einde",
+                    "doeltype": "NatuurlijkPersoon_Einde",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ],
+            "afgeleideVelden": [
+                {
+                    "naam": "weergavenaam",
+                    "description": "Samengestelde weergavenaam van de persoon, afgeleid uit voornaam/tussenvoegsel/achternaam.",
+                    "goType": "string",
+                    "afleidingsregelTaal": "cel",
+                    "afleidingsregel": "(Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters) + (Naam.tussenvoegsel != null ? ' ' + Naam.tussenvoegsel : '') + ' ' + Naam.achternaam",
+                    "isWeergaveVeld": true
+                }
+            ]
+        },
+        {
+            "typenaam": "NatuurlijkPersoon_Aanvang",
+            "klassenaam": "Aanvang",
+            "description": "Aanvangsdatum van NatuurlijkPersoon.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "aanvang",
+            "domein": "np-loc",
+            "kleur": "#bfdbfe",
+            "veldnaam": "natuurlijkpersoon_aanvang",
+            "padnaam": "natuurlijkpersoon_aanvang",
+            "meervoud": "natuurlijkpersoon_aanvang",
+            "velden": [
+                {
+                    "naam": "natuurlijkpersoon_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "datum",
+                    "type": "string",
+                    "format": "date",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "natuurlijkpersoon_aanvang",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "natuurlijkpersoon_id",
+            "bovenliggendTypenaam": "NatuurlijkPersoon",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "NatuurlijkPersoon_Einde",
+            "klassenaam": "Einde",
+            "description": "Einddatum van NatuurlijkPersoon.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "einde",
+            "domein": "np-loc",
+            "kleur": "#bfdbfe",
+            "veldnaam": "natuurlijkpersoon_einde",
+            "padnaam": "natuurlijkpersoon_einde",
+            "meervoud": "natuurlijkpersoon_einde",
+            "velden": [
+                {
+                    "naam": "natuurlijkpersoon_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "datum",
+                    "type": "string",
+                    "format": "date",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "natuurlijkpersoon_einde",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "natuurlijkpersoon_id",
+            "bovenliggendTypenaam": "NatuurlijkPersoon",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "NatuurlijkPersoon_Naam",
+            "klassenaam": "Naam",
+            "description": "Naamgegevens van de natuurlijk persoon (voorletters, roepnaam, tussenvoegsel, achternaam).",
+            "metatype": "gegevenselement",
+            "ge_subtype": "hub",
+            "domein": "np-loc",
+            "kleur": "#bfdbfe",
+            "veldnaam": "naam",
+            "padnaam": "namen",
+            "meervoud": "namen",
+            "velden": [
+                {
+                    "naam": "natuurlijkpersoon_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "voorletters",
+                    "type": "string",
+                    "verplicht": true
+                },
+                {
+                    "naam": "roepnaam",
+                    "type": "string",
+                    "verplicht": false
+                },
+                {
+                    "naam": "tussenvoegsel",
+                    "type": "string",
+                    "verplicht": false
+                },
+                {
+                    "naam": "achternaam",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "natuurlijkpersoon_naam",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "natuurlijkpersoon_id",
+            "momentvoorkomen": "enkelvoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "NatuurlijkPersoon_Naam_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ],
+            "afgeleideVelden": [
+                {
+                    "naam": "weergavenaam",
+                    "goType": "string",
+                    "afleidingsregelTaal": "cel",
+                    "afleidingsregel": "(Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters) + (Naam.tussenvoegsel != null ? ' ' + Naam.tussenvoegsel : '') + ' ' + Naam.achternaam",
+                    "isWeergaveVeld": true
+                }
+            ]
+        },
+        {
+            "typenaam": "NatuurlijkPersoon_Naam_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van NatuurlijkPersoon_Naam.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "np-loc",
+            "kleur": "#bfdbfe",
+            "veldnaam": "natuurlijkpersoon_naam_data",
+            "padnaam": "natuurlijkpersoon_naam_data",
+            "meervoud": "natuurlijkpersoon_naam_data",
+            "velden": [
+                {
+                    "naam": "natuurlijkpersoon_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "voorletters",
+                    "type": "string",
+                    "verplicht": true
+                },
+                {
+                    "naam": "roepnaam",
+                    "type": "string",
+                    "verplicht": false
+                },
+                {
+                    "naam": "tussenvoegsel",
+                    "type": "string",
+                    "verplicht": false
+                },
+                {
+                    "naam": "achternaam",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "natuurlijkpersoon_naam_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "natuurlijkpersoon_id",
+            "bovenliggendTypenaam": "NatuurlijkPersoon_Naam",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "NatuurlijkPersoon_Naamgebruik",
+            "klassenaam": "Naamgebruik",
+            "description": "Wijze waarop de geslachtsnaam wordt gebruikt.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "hub",
+            "domein": "np-loc",
+            "kleur": "#bfdbfe",
+            "veldnaam": "naamgebruik",
+            "padnaam": "naamgebruiken",
+            "meervoud": "naamgebruiken",
+            "velden": [
+                {
+                    "naam": "natuurlijkpersoon_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "naamgebruik",
+                    "type": "string",
+                    "enum": [
+                        "EigenNaam",
+                        "PartnerNaam",
+                        "EigenNaam-PartnerNaam",
+                        "PartnerNaam-EigenNaam"
+                    ],
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "natuurlijkpersoon_naamgebruik",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "natuurlijkpersoon_id",
+            "momentvoorkomen": "enkelvoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "NatuurlijkPersoon_Naamgebruik_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "NatuurlijkPersoon_Naamgebruik_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van NatuurlijkPersoon_Naamgebruik.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "np-loc",
+            "kleur": "#bfdbfe",
+            "veldnaam": "natuurlijkpersoon_naamgebruik_data",
+            "padnaam": "natuurlijkpersoon_naamgebruik_data",
+            "meervoud": "natuurlijkpersoon_naamgebruik_data",
+            "velden": [
+                {
+                    "naam": "natuurlijkpersoon_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "naamgebruik",
+                    "type": "string",
+                    "enum": [
+                        "EigenNaam",
+                        "PartnerNaam",
+                        "EigenNaam-PartnerNaam",
+                        "PartnerNaam-EigenNaam"
+                    ],
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "natuurlijkpersoon_naamgebruik_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "natuurlijkpersoon_id",
+            "bovenliggendTypenaam": "NatuurlijkPersoon_Naamgebruik",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "NatuurlijkPersoon_Partnernaam",
+            "klassenaam": "Partnernaam",
+            "description": "Achternaam van de partner van de natuurlijk persoon.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "hub",
+            "domein": "np-loc",
+            "kleur": "#bfdbfe",
+            "veldnaam": "partnernaam",
+            "padnaam": "partnernamen",
+            "meervoud": "partnernamen",
+            "velden": [
+                {
+                    "naam": "natuurlijkpersoon_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "achternaam",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "natuurlijkpersoon_partnernaam",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "natuurlijkpersoon_id",
+            "momentvoorkomen": "enkelvoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "NatuurlijkPersoon_Partnernaam_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "NatuurlijkPersoon_Partnernaam_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van NatuurlijkPersoon_Partnernaam.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "np-loc",
+            "kleur": "#bfdbfe",
+            "veldnaam": "natuurlijkpersoon_partnernaam_data",
+            "padnaam": "natuurlijkpersoon_partnernaam_data",
+            "meervoud": "natuurlijkpersoon_partnernaam_data",
+            "velden": [
+                {
+                    "naam": "natuurlijkpersoon_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "achternaam",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "natuurlijkpersoon_partnernaam_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "natuurlijkpersoon_id",
+            "bovenliggendTypenaam": "NatuurlijkPersoon_Partnernaam",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "NatuurlijkPersoon_Persoonsidentificatie",
+            "klassenaam": "Persoonsidentificatie",
+            "description": "Identificerende gegevens van de natuurlijk persoon (BSN, ingezetene).",
+            "metatype": "gegevenselement",
+            "ge_subtype": "hub",
+            "domein": "np-loc",
+            "kleur": "#bfdbfe",
+            "veldnaam": "persoonsidentificatie",
+            "padnaam": "persoonsidentificaties",
+            "meervoud": "persoonsidentificaties",
+            "velden": [
+                {
+                    "naam": "natuurlijkpersoon_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "bsn",
+                    "type": "string",
+                    "verplicht": true
+                },
+                {
+                    "naam": "ingezetene",
+                    "type": "boolean",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "natuurlijkpersoon_persoonsidentificatie",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "natuurlijkpersoon_id",
+            "momentvoorkomen": "enkelvoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "NatuurlijkPersoon_Persoonsidentificatie_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ],
+            "afgeleideVelden": [
+                {
+                    "naam": "bsnEnIngezeten",
+                    "description": "Toont BSN en indien ingezetene \" (ingezetene)\"",
+                    "goType": "string",
+                    "afleidingsregelTaal": "cel",
+                    "afleidingsregel": "bsn + (ingezetene ? \" ingezetene\" : \"\")",
+                    "isWeergaveVeld": true
+                }
+            ]
+        },
+        {
+            "typenaam": "NatuurlijkPersoon_Persoonsidentificatie_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van NatuurlijkPersoon_Persoonsidentificatie.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "np-loc",
+            "kleur": "#bfdbfe",
+            "veldnaam": "natuurlijkpersoon_persoonsidentificatie_data",
+            "padnaam": "natuurlijkpersoon_persoonsidentificatie_data",
+            "meervoud": "natuurlijkpersoon_persoonsidentificatie_data",
+            "velden": [
+                {
+                    "naam": "natuurlijkpersoon_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "bsn",
+                    "type": "string",
+                    "verplicht": true,
+                    "datatype": "BSN"
+                },
+                {
+                    "naam": "ingezetene",
+                    "type": "boolean",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "natuurlijkpersoon_persoonsidentificatie_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "natuurlijkpersoon_id",
+            "bovenliggendTypenaam": "NatuurlijkPersoon_Persoonsidentificatie",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "Referentielijst",
+            "klassenaam": "Referentielijst",
+            "description": "Generieke referentielijst-entiteit. Individuele lijsten (Landenlijst, EULidstaten, etc.) zijn records.",
+            "metatype": "entiteit",
+            "isMaterieel": true,
+            "entiteitSubtype": "referentielijst",
+            "domein": "register",
+            "kleur": "#fef3c7",
+            "veldnaam": "referentielijst",
+            "padnaam": "referentielijsten",
+            "meervoud": "referentielijsten",
+            "velden": [
+                {
+                    "naam": "id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "referentielijstnamen",
+                    "type": "Referentielijstnaam",
+                    "format": "array",
+                    "verplicht": false
+                },
+                {
+                    "naam": "referentielijstomschrijvingen",
+                    "type": "Referentielijstomschrijving",
+                    "format": "array",
+                    "verplicht": false
+                },
+                {
+                    "naam": "visibilities",
+                    "type": "ReferentielijstVisibility",
+                    "format": "array",
+                    "verplicht": false
+                },
+                {
+                    "naam": "internetadressen",
+                    "type": "ReferentielijstInternetadres",
+                    "format": "array",
+                    "verplicht": false
+                },
+                {
+                    "naam": "landenlijst_landen",
+                    "type": "LandenlijstLand",
+                    "format": "array",
+                    "verplicht": false
+                },
+                {
+                    "naam": "adellijke_titels_titels",
+                    "type": "AdellijkeTitelsTitel",
+                    "format": "array",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "referentielijst",
+            "idKolom": "id",
+            "heeftPFK": false,
+            "onderliggende": [
+                {
+                    "rolnaam": "Referentielijstnamen",
+                    "jsonRolnaam": "referentielijstnamen",
+                    "doeltype": "Referentielijstnaam",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Referentielijstomschrijvingen",
+                    "jsonRolnaam": "referentielijstomschrijvingen",
+                    "doeltype": "Referentielijstomschrijving",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Visibilities",
+                    "jsonRolnaam": "visibilities",
+                    "doeltype": "ReferentielijstVisibility",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Internetadressen",
+                    "jsonRolnaam": "internetadressen",
+                    "doeltype": "ReferentielijstInternetadres",
+                    "momentvoorkomen": "meervoudig"
+                },
+                {
+                    "rolnaam": "LandenlijstLanden",
+                    "jsonRolnaam": "landenlijst_landen",
+                    "doeltype": "LandenlijstLand",
+                    "momentvoorkomen": "meervoudig"
+                },
+                {
+                    "rolnaam": "AdellijkeTitelsTitels",
+                    "jsonRolnaam": "adellijke_titels_titels",
+                    "doeltype": "AdellijkeTitelsTitel",
+                    "momentvoorkomen": "meervoudig"
+                },
+                {
+                    "rolnaam": "Aanvang",
+                    "jsonRolnaam": "aanvang",
+                    "doeltype": "Referentielijst_Aanvang",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Einde",
+                    "jsonRolnaam": "einde",
+                    "doeltype": "Referentielijst_Einde",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "ReferentielijstInternetadres",
+            "klassenaam": "ReferentielijstInternetadres",
+            "description": "Internetadres (URL/URN) van een referentielijst.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "hub",
+            "domein": "register",
+            "kleur": "#fef3c7",
+            "veldnaam": "referentielijstinternetadres",
+            "padnaam": "internetadressen",
+            "meervoud": "internetadressen",
+            "velden": [
+                {
+                    "naam": "referentielijst_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "adrestype",
+                    "type": "string",
+                    "enum": [
+                        "URL",
+                        "URN"
+                    ],
+                    "verplicht": true
+                },
+                {
+                    "naam": "adres",
+                    "type": "string",
+                    "verplicht": true
+                },
+                {
+                    "naam": "organisatie",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "referentielijstinternetadres",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "momentvoorkomen": "meervoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "ReferentielijstInternetadres_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "ReferentielijstInternetadres_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van ReferentielijstInternetadres.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "register",
+            "kleur": "#fef3c7",
+            "veldnaam": "referentielijstinternetadres_data",
+            "padnaam": "referentielijstinternetadres_data",
+            "meervoud": "referentielijstinternetadres_data",
+            "velden": [
+                {
+                    "naam": "referentielijst_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "adrestype",
+                    "type": "string",
+                    "enum": [
+                        "URL",
+                        "URN"
+                    ],
+                    "verplicht": true
+                },
+                {
+                    "naam": "adres",
+                    "type": "string",
+                    "verplicht": true
+                },
+                {
+                    "naam": "organisatie",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "referentielijstinternetadres_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "bovenliggendTypenaam": "ReferentielijstInternetadres",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "ReferentielijstVisibility",
+            "klassenaam": "ReferentielijstVisibility",
+            "description": "Domeinzichtbaarheid van een referentielijst (register, modelspecifiek, extern).",
+            "metatype": "gegevenselement",
+            "ge_subtype": "hub",
+            "domein": "register",
+            "kleur": "#fef3c7",
+            "veldnaam": "referentielijstvisibility",
+            "padnaam": "visibilities",
+            "meervoud": "visibilities",
+            "velden": [
+                {
+                    "naam": "referentielijst_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "domein",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "referentielijstvisibility",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "momentvoorkomen": "enkelvoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "ReferentielijstVisibility_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "ReferentielijstVisibility_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van ReferentielijstVisibility.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "register",
+            "kleur": "#fef3c7",
+            "veldnaam": "referentielijstvisibility_data",
+            "padnaam": "referentielijstvisibility_data",
+            "meervoud": "referentielijstvisibility_data",
+            "velden": [
+                {
+                    "naam": "referentielijst_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "domein",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "referentielijstvisibility_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "bovenliggendTypenaam": "ReferentielijstVisibility",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "Referentielijst_Aanvang",
+            "klassenaam": "Aanvang",
+            "description": "Aanvangsdatum van Referentielijst.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "aanvang",
+            "domein": "register",
+            "kleur": "#fef3c7",
+            "veldnaam": "referentielijst_aanvang",
+            "padnaam": "referentielijst_aanvang",
+            "meervoud": "referentielijst_aanvang",
+            "velden": [
+                {
+                    "naam": "referentielijst_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "datum",
+                    "type": "string",
+                    "format": "date",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "referentielijst_aanvang",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "bovenliggendTypenaam": "Referentielijst",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "Referentielijst_Einde",
+            "klassenaam": "Einde",
+            "description": "Einddatum van Referentielijst.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "einde",
+            "domein": "register",
+            "kleur": "#fef3c7",
+            "veldnaam": "referentielijst_einde",
+            "padnaam": "referentielijst_einde",
+            "meervoud": "referentielijst_einde",
+            "velden": [
+                {
+                    "naam": "referentielijst_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "datum",
+                    "type": "string",
+                    "format": "date",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "referentielijst_einde",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "bovenliggendTypenaam": "Referentielijst",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "Referentielijstnaam",
+            "klassenaam": "Referentielijstnaam",
+            "description": "Leesbare naam van een referentielijst.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "hub",
+            "domein": "register",
+            "kleur": "#fef3c7",
+            "veldnaam": "referentielijstnaam",
+            "padnaam": "referentielijstnamen",
+            "meervoud": "referentielijstnamen",
+            "velden": [
+                {
+                    "naam": "referentielijst_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "naam",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "referentielijstnaam",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "momentvoorkomen": "enkelvoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "Referentielijstnaam_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "Referentielijstnaam_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van Referentielijstnaam.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "register",
+            "kleur": "#fef3c7",
+            "veldnaam": "referentielijstnaam_data",
+            "padnaam": "referentielijstnaam_data",
+            "meervoud": "referentielijstnaam_data",
+            "velden": [
+                {
+                    "naam": "referentielijst_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "naam",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "referentielijstnaam_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "bovenliggendTypenaam": "Referentielijstnaam",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "Referentielijstomschrijving",
+            "klassenaam": "Referentielijstomschrijving",
+            "description": "Omschrijving van een referentielijst.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "hub",
+            "domein": "register",
+            "kleur": "#fef3c7",
+            "veldnaam": "referentielijstomschrijving",
+            "padnaam": "referentielijstomschrijvingen",
+            "meervoud": "referentielijstomschrijvingen",
+            "velden": [
+                {
+                    "naam": "referentielijst_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "omschrijving",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "referentielijstomschrijving",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "momentvoorkomen": "enkelvoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "Referentielijstomschrijving_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "Referentielijstomschrijving_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van Referentielijstomschrijving.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "register",
+            "kleur": "#fef3c7",
+            "veldnaam": "referentielijstomschrijving_data",
+            "padnaam": "referentielijstomschrijving_data",
+            "meervoud": "referentielijstomschrijving_data",
+            "velden": [
+                {
+                    "naam": "referentielijst_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "omschrijving",
+                    "type": "string",
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "referentielijstomschrijving_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "referentielijst_id",
+            "bovenliggendTypenaam": "Referentielijstomschrijving",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "Rel_A_B",
+            "klassenaam": "Rel_A_B",
+            "description": "Relatie tussen A en B, meervoudig voorkomend per A en met relatieve relatie-id.",
+            "metatype": "relatie",
+            "ge_subtype": "hub",
+            "isMaterieel": true,
+            "doelEntiteit": "B",
+            "domein": "abuvwxy",
+            "veldnaam": "rel_a_b",
+            "padnaam": "rel_a_bs",
+            "meervoud": "rel_a_bs",
+            "velden": [
+                {
+                    "naam": "a_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "b_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "soort",
+                    "type": "string",
+                    "enum": [
+                        "LTT",
+                        "LAT",
+                        "LTA"
+                    ],
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "rel_a_b",
+            "idKolom": "rel_id",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "a_id",
+            "secondaireEntiteitIDKolom": "b_id",
+            "momentvoorkomen": "meervoudig",
+            "onderliggende": [
+                {
+                    "rolnaam": "Data",
+                    "jsonRolnaam": "data",
+                    "doeltype": "Rel_A_B_Data",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Aanvang",
+                    "jsonRolnaam": "aanvang",
+                    "doeltype": "Rel_A_B_Aanvang",
+                    "momentvoorkomen": "enkelvoudig"
+                },
+                {
+                    "rolnaam": "Einde",
+                    "jsonRolnaam": "einde",
+                    "doeltype": "Rel_A_B_Einde",
+                    "momentvoorkomen": "enkelvoudig"
+                }
+            ]
+        },
+        {
+            "typenaam": "Rel_A_B_Aanvang",
+            "klassenaam": "Aanvang",
+            "description": "Aanvangsdatum van Rel_A_B.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "aanvang",
+            "domein": "abuvwxy",
+            "kleur": "#bfdbfe",
+            "veldnaam": "rel_a_b_aanvang",
+            "padnaam": "rel_a_b_aanvang",
+            "meervoud": "rel_a_b_aanvang",
+            "velden": [
+                {
+                    "naam": "a_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "datum",
+                    "type": "string",
+                    "format": "date",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "rel_a_b_aanvang",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "a_id",
+            "bovenliggendTypenaam": "Rel_A_B",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "Rel_A_B_Data",
+            "klassenaam": "Data",
+            "description": "Geversioned inhoud van Rel_A_B.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "data",
+            "domein": "abuvwxy",
+            "kleur": "#bfdbfe",
+            "veldnaam": "rel_a_b_data",
+            "padnaam": "rel_a_b_data",
+            "meervoud": "rel_a_b_data",
+            "velden": [
+                {
+                    "naam": "a_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "soort",
+                    "type": "string",
+                    "enum": [
+                        "LTT",
+                        "LAT",
+                        "LTA"
+                    ],
+                    "verplicht": true
+                }
+            ],
+            "tabelnaam": "rel_a_b_data",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "a_id",
+            "bovenliggendTypenaam": "Rel_A_B",
+            "momentvoorkomen": "enkelvoudig"
+        },
+        {
+            "typenaam": "Rel_A_B_Einde",
+            "klassenaam": "Einde",
+            "description": "Einddatum van Rel_A_B.",
+            "metatype": "gegevenselement",
+            "ge_subtype": "einde",
+            "domein": "abuvwxy",
+            "kleur": "#bfdbfe",
+            "veldnaam": "rel_a_b_einde",
+            "padnaam": "rel_a_b_einde",
+            "meervoud": "rel_a_b_einde",
+            "velden": [
+                {
+                    "naam": "a_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "rel_id",
+                    "type": "integer",
+                    "verplicht": true
+                },
+                {
+                    "naam": "versie",
+                    "type": "integer",
+                    "verplicht": false,
+                    "autoIncrement": true
+                },
+                {
+                    "naam": "datum",
+                    "type": "string",
+                    "format": "date",
+                    "verplicht": false
+                }
+            ],
+            "tabelnaam": "rel_a_b_einde",
+            "idKolom": "versie",
+            "idAutoIncrement": true,
+            "heeftPFK": true,
+            "entiteitIDKolom": "a_id",
+            "bovenliggendTypenaam": "Rel_A_B",
+            "momentvoorkomen": "enkelvoudig"
+        }
+    ]
+}

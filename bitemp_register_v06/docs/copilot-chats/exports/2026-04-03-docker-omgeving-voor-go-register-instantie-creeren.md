@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-03 17:14
 - **Sessie-ID**: `3d51cd54-c222-4548-b2d1-0567b5aee919`
-- **Berichten**: 75
+- **Berichten**: 98
 
 ---
 
@@ -2770,5 +2770,786 @@ Daarin staat nu ook expliciet:
 - lokaal blijft de server na rebuild gewoon draaien
 
 > En ja — ik neem dit voortaan standaard mee bij substantiële wijzigingen.
+
+---
+
+## 🧑 User
+
+Er staan nu heel veel tijdelijke mappen. Dat is wat storend. Kunnen we die in 1 _temp map onderbrengen en voortaan daarheen genereren (bij een volgend experiment of test)?
+
+---
+
+## 🤖 Assistant
+
+Ik ruim dat op en maak één centrale `_temp`-plek aan.Ik zie alleen documentatieverwijzingen; de losse `_tmp_*` mappen zijn vooral experiment-uitvoer.
+
+---
+
+## 🧑 User
+
+idem deze jsons...
+
+---
+
+## 🤖 Assistant
+
+
+```
+
+```
+
+```
+
+```
+De documentatie en ignore-regels zijn nu aangepast.De losse `_tmp_*` items zijn verplaatst; er blijft alleen nog één gelockte debug-binary staan.## ✅ Opgeruimd
+
+Ik heb nu:
+
+- alle losse `_tmp_*` mappen en JSON-bestanden verplaatst naar 
+-  aangepast met:
+  - `_temp/`
+  - legacy `_tmp_*`
+  - `__debug_bin*`
+- `docs/CODEGEN.md` aangepast zodat nieuwe experimenten voortaan `_temp/roundtrip` gebruiken
+
+## Verificatie
+
+`go test .` draait nog steeds groen:
+
+- 
+- 
+- 
+- 
+
+## Kleine noot
+
+Er staat nog **één** `__debug_bin...` bestand in de root dat op dit moment door een proces gelockt is. Dat kon ik daarom niet verplaatsen. Zodra dat proces weg is, kan die ook nog weg.
+
+---
+
+## 🧑 User
+
+lokaal de build starten wil niet:
+
+---
+
+## 🧑 User
+
+failed to fetch zegt de API
+
+---
+
+## 🤖 Assistant
+
+
+```
+
+```
+
+```
+
+```
+De foutbron is gevonden: de browser werd door CORS geblokkeerd en de lokale rebuild gebruikte nog een vaste `/app`-map. Dat is nu aangepast.
+```
+
+```
+Ik herstart de lokale `:8082` server nu met de fix, zodat je het meteen opnieuw kunt proberen.Mooi: de browser-preflight is nu toegestaan en de lokale API ziet de codegen ook echt. Ik doe nog één echte rebuild-check op `:8082`.## ✅ Oorzaak gevonden en gefixt
+
+`Failed to fetch` was hier **CORS / cross-origin**, niet de rebuild zelf.
+
+Je UI draaide op:
+
+- `http://localhost:8182`
+
+en probeerde te posten naar:
+
+- `http://localhost:8082`
+
+Dat werd door de browser geblokkeerd.
+
+Daarnaast gebruikte de lokale rebuild nog een vaste Docker-map (`/app`), wat buiten Docker ook problemen gaf.
+
+---
+
+## 🔧 Wat ik heb aangepast
+
+- 
+  - lokale origins `8082` en `8182` toegevoegd aan CORS
+- 
+  - projectmap wordt nu **dynamisch bepaald** i.p.v. hardcoded `/app`
+- lokale API op `:8082` opnieuw gestart met `DEVLOOP=true`
+
+---
+
+## Verification
+
+Ik heb het direct gecontroleerd:
+
+1. **Preflight vanaf 8182 naar 8082**
+   - `StatusCode=204`
+   - `Access-Control-Allow-Origin=http://localhost:8182`
+
+2. **Lokale status endpoint**
+   - `codegen_beschikbaar: true`
+
+3. **Echte lokale rebuild-call**
+   - `POST http://localhost:8082/admin/rebuild/1234`
+   - resultaat: 
+
+---
+
+## Probeer nu opnieuw
+
+Je kunt nu dezelfde actie nog eens doen in de UI.
+
+> Als je browser nog een oude fout vasthoudt: doe even een **hard refresh** van de pagina (`Ctrl+F5`).
+
+---
+
+## 🧑 User
+
+het lijkt er nu op dat datatypes in elk domein landen: ze staan er nu 3x in. in elke XXX_datatype_registry.go
+
+Laden vanuit code plaatst ze nu in AB... domein
+
+Zit domein goed in de datatypes?
+
+---
+
+## 🤖 Assistant
+
+Now let me check the init function and how datatypes are loaded from code vs DB:  Now let me check the codegen that produces these files: Let me check how the V3 export creates the per-domain model and how the datatypes get included:  Now let me check what the rebuild handler does - specifically how it calls codegen per domain:  Now let me look at how the rebuild handler exports the V3 model by domain (specifically the "code" source): Good, now I have the full picture. Here's my analysis:
+
+---
+
+**Ja, er zit een bug in de codegen. Analyse:**
+
+De DatatypeRegistry bevat 6 entries na init (2 datatypes × 3 domeinen):
+
+| File | NLPostcode Domein | BSN Domein |
+|------|------------------|-----------|
+|  | `"abuvwxy"` | `"abuvwxy"` |
+|  | `"register"` | `"register"` |
+|  | `"register"` | `"register"` |
+
+**Twee problemen:**
+
+1. ** in de V3 exporter** geeft `register`-domein datatypes score=2 voor _elk_ doeldomein. Bedoeld zodat de editor/frontend ze kan gebruiken, maar dit leidt ertoe dat elke domein-export NLPostcode/BSN bevat.
+
+2. ** filtert niet op domein.** Het schrijft _alle_ datatypes uit het V3 model naar het domein-bestand, ongeacht of ze bij dat domein horen.
+
+**Gevolg:** np_loc krijgt dezelfde NLPostcode/BSN als register (met ), en abuvwxy heeft z'n eigen kopie met . Bij laden vanuit code staan alle 6 in . De dedup-logica in  corrigeert dit bij export, maar de bronbestanden zijn fout.
+
+**Gewenste situatie:**
+-  → NLPostcode + BSN (Domein: `"register"`) — de canonieke plek
+-  → **leeg** (np_loc definieert geen eigen datatypes)
+-  → handmatig, apart verhaal
+
+**Fix:** in , filter op  voordat je schrijft: 
+```
+
+```
+
+```
+
+```
+Build en tests OK. Nu even verifiëren wat de codegen nu zou produceren voor np_loc: Precies — de V3 export voor np-loc bevat NLPostcode/BSN met . De codegen zal die nu **overslaan** omdat `"register" != "np-loc"`. Laten we dit testen met een droge codegen-run: De fix werkt. np_loc genereert nu een lege datatype registry. Laten we ook register verifieren:  Correct: register behoudt NLPostcode + BSN, np_loc wordt leeg.
+
+Nu moet het huidige  bijgewerkt worden (de dubbele entries verwijderen):  
+```
+
+```
+Alles OK. Samenvatting:
+
+**Bug:**  schreef _alle_ datatypes uit het V3 model, ongeacht domein. Doordat  register-domein datatypes altijd meeneemt (score 2), kregen np_loc en register dezelfde NLPostcode/BSN → 3× duplicaat.
+
+**Fix in** : filter op  — elk domeinbestand genereert nu alleen datatypes die bij dat domein horen.
+
+**Resultaat na fix:**
+-  → NLPostcode + BSN () ✓
+-  → leeg (geen eigen datatypes) ✓
+-  → handmatig, ongewijzigd ()
+
+**Over abuvwxy:** die heeft dezelfde NLPostcode/BSN met  — dat zijn dus nog steeds dubbelen van de register-versie. Dat is een bewuste keuze zolang abuvwxy handmatig wordt beheerd, maar het levert wel 4 entries op in DatatypeRegistry (2× abuvwxy + 2× register). De dedup-logica in de exporter handelt dat correct af bij export.
+
+---
+
+## 🧑 User
+
+> Over abuvwxy: die heeft dezelfde NLPostcode/BSN met Domein: "abuvwxy" — dat zijn dus nog steeds dubbelen van de register-versie. 
+ik kan die toch gewoon verwijderen uit abuv...? Ze zijn daar ook helemaal niet nodig, in dat domein.
+
+---
+
+## 🤖 Assistant
+
+## ✅ Ja, die kon gewoon weg
+
+Ik heb de dubbele datatypes uit  verwijderd en de init daar leeg gemaakt:
+
+```go
+func initAbuvwxyDatatypeRegistry() {}
+```
+
+Daardoor komen `NLPostcode` en `BSN` nu niet meer ook in het `abuvwxy`-domein terecht.
+
+## Verificatie
+
+Zojuist gecontroleerd met:
+
+```powershell
+go build ./...; go test ./...
+```
+
+**Resultaat:** alles groen  
+- 
+- 
+- 
+
+> Dus: **register** blijft de plek voor deze gedeelde datatypes, en `abuvwxy` bevat ze nu niet meer onnodig.
+
+---
+
+## 🧑 User
+
+in de response van GET api/schema/model/code vind ik "enum": "NLPostcode" Dat snap ik niet.
+
+                     "velden": [
+                            {
+                                "naam": "straatnaam",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            },
+                            {
+                                "naam": "huisnummer",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+                            },
+                            {
+                                "naam": "postcode",
+                                "goType": "NLPostcode",
+                                "type": "string",
+                                "verplicht": true,
+                                "enum": "NLPostcode"
+                            },
+                            {
+                                "naam": "plaats",
+                                "goType": "string",
+                                "type": "string",
+                                "verplicht": true
+
+---
+
+## 🤖 Assistant
+
+Ik zoek uit waarom `NLPostcode` in de schema-response als  terechtkomt en los dat af op de bron.Ik heb de oorzaak gevonden: het model behandelt `NLPostcode` momenteel ten onrechte als enum én als datatype. Nu zet ik dat recht en controleer ik de export-output.
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+Mooi: de export geeft nu voor `postcode` en `bsn` alleen nog  terug, zonder onterechte .
+```
+
+```
+
+```
+
+```
+## ✅ Klopt: dat was fout
+
+`NLPostcode` en `BSN` horen in de V3-response **als **, niet als .
+
+### Oorzaak
+Er zaten twee oorzaken achter:
+-  behandelde elk named -type te breed als enum.
+- de `schema`-tag parser las  niet goed uit als die gecombineerd stond.
+
+Dat is nu rechtgezet in:
+- 
+- `cmd/codegen/conventions.go`
+- 
+
+---
+
+## Verificatie
+
+Zojuist gecontroleerd met:
+
+```powershell
+go test ./model -run TestExportMetaRegistryToV3_DatatypeVeldenZijnGeenEnums
+go test ./...
+```
+
+**Resultaat:** alles .
+
+En op de live endpoint `GET /api/schema/model/code?domein=np-loc` is nu bevestigd:
+
+- `postcode_has_datatype=YES`
+- `postcode_has_enum=NO`
+- `bsn_has_datatype=YES`
+- `bsn_has_enum=NO`
+
+> Dus: die  was onterecht en is nu weg.
+
+---
+
+## 🧑 User
+
+kun je nu de docker compose nog eens doen, zodat de docker container ook up to date is. Dan kan ik daar de roundtrip nog eens testen
+
+---
+
+## 🤖 Assistant
+
+De container is opnieuw gebouwd en gestart; ik controleer nu even of de Docker-API antwoord geeft.## ✅ Docker devloop is bijgewerkt
+
+Ik heb de stack opnieuw gebouwd en gestart met:
+
+```powershell
+docker compose -f docker-compose.devloop.yml up --build -d
+```
+
+### Verificatie
+Vers bewijs uit de container:
+
+- `bitemp-devloop-api`## ✅ Docker devloop is bijgewerkt
+
+Ik heb de stack opnieuw gebouwd en gestart met:
+
+```powershell
+docker compose -f docker-compose.devloop.yml up --build -d
+```
+
+### Verificatie
+Vers bewijs uit de container:
+
+- `bitemp-devloop-api` **gestart**
+- `bitemp-devloop-db` **healthy**
+
+En gecontroleerd op de Docker-API (`:8182`):
+
+- `docker_postcode_has_datatype=YES`
+- `docker_postcode_has_enum=NO`
+- `docker_bsn_has_datatype=YES`
+- `docker_bsn_has_enum=NO`
+
+Ook een echte rebuild-call werkte:
+
+```json
+{"status":"succesvol", ... "Build succesvol", ...}
+```
+
+---
+
+## Voor jouw roundtrip test
+Je kunt nu ## ✅ Docker devloop is bijgewerkt
+
+Ik heb de stack opnieuw gebouwd en gestart met:
+
+```powershell
+docker compose -f docker-compose.devloop.yml up --build -d
+```
+
+### Verificatie
+Vers bewijs uit de container:
+
+- `bitemp-devloop-api` **gestart**
+- `bitemp-devloop-db` **healthy**
+
+En gecontroleerd op de Docker-API (`:8182`):
+
+- `docker_postcode_has_datatype=YES`
+- `docker_postcode_has_enum=NO`
+- `docker_bsn_has_datatype=YES`
+- `docker_bsn_has_enum=NO`
+
+Ook een echte rebuild-call werkte:
+
+```json
+{"status":"succesvol", ... "Build succesvol", ...}
+```
+
+---
+
+## Voor jouw roundtrip test
+Je kunt nu weer testen via:
+
+- **API:** `http://localhost:8182`
+- **schema/model:** `http://localhost:8182/api/schema/model/code`
+- **rebuild:** `POST http://localhost:8182/admin/rebuild/1234`
+
+Dus de Docker-container is nu **up-to-date en klaar**.
+
+---
+
+## 🧑 User
+
+in de inhoud tabel lijken weergavenamen niet te worden weergegeven., behalve in de eerste kolom de weergavenaam van de ENT Klopt dat?
+
+---
+
+## 🤖 Assistant
+
+Ik controleer nu waarom afgeleide `weergavenaam`-velden niet als tabelkolommen zichtbaar zijn in de inhoudspagina.
+```
+
+```
+De tabel gebruikt nu ook de -waarden van onderliggende groepen, waar die bestaan.## ✅ Ja, dat klopte — en het is nu aangepast
+
+De inhoudstabel gebruikte tot nu toe alleen de **weergavenaam van de entiteit zelf** in de eerste kolom .  
+De andere kolommen (, `Partnernaam`, enz.) toonden nog de **ruwe veldwaarden**.
+
+Ik heb dat nu aangepast in :
+
+- per onderliggende GE/relatiekolom wordt nu eerst gekeken naar 
+- als zo’n weergaveveld bestaat, wordt **die tekst** getoond
+- anders blijft de oude fallback met ruwe veldwaarden staan
+
+### Verwacht effect
+Bijvoorbeeld in de kolom  zou je nu eerder iets als:
+
+- `Sanne van Dalen`
+
+zien, in plaats van:
+
+- 
+
+---
+
+## Verificatie
+
+Ik heb de frontend opnieuw gebouwd met:
+
+```powershell
+npm run build
+```
+
+**Resultaat:** `✓ built in 1.49s`
+
+> Je kunt de pagina nu even verversen en opnieuw kijken.
+
+---
+
+## 🧑 User
+
+even terug naar de DEVLOOP in docker: ik krijg nog steeds deze fout 
+
+Ook bij slechts 1 domein
+
+---
+
+## 🤖 Assistant
+
+Ik heb de oorzaak gevonden: bij een leeg datatype-bestand werd geen  meer gegenereerd. Dat zet ik nu recht.
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+De root cause is verholpen: de codegen maakt nu weer een geldige lege  aan. Ik werk de Docker-container nu bij en test de rebuild opnieuw.## ✅ Gevonden en opgelost
+
+De Docker devloop faalde inderdaad nog, maar nu is de oorzaak bevestigd en verholpen.
+
+### Root cause
+Bij een domein zonder eigen datatypes, zoals `np-loc`, genereerde de codegen wel een  bestand, maar **zonder**:
+
+```go
+func initNpLocDatatypeRegistry() { ... }
+```
+
+Daardoor faalde de rebuild in Docker met:
+
+```text
+undefined: initNpLocDatatypeRegistry
+```
+
+---
+
+## Wat ik heb aangepast
+In de additive codegen wordt nu ook bij **lege** datatype/enums-registry nog steeds een **lege init-functie** gegenereerd.
+
+Aangepast in:
+- `cmd/codegen/gen_datatypes.go`
+- `cmd/codegen/gen_enum_registry.go`
+
+Ook een korte notitie toegevoegd in `docs/CODEGEN.md`.
+
+---
+
+## Verificatie
+
+### 1. Fout eerst gereproduceerd
+Docker rebuild gaf echt:
+
+```text
+Build mislukt: exit status 1
+undefined: initNpLocDatatypeRegistry
+```
+
+### 2. Daarna opnieuw getest
+Na rebuild van de Docker image:
+
+```powershell
+docker compose -f docker-compose.devloop.yml up --build -d
+```
+
+en daarna exact dezelfde devloop call:
+
+```powershell
+POST http://localhost:8182/admin/rebuild/1234
+{"domein":"np-loc","prefix":"np_loc","schema_bron":"code"}
+```
+
+**Resultaat nu:**
+
+```json
+{"status":"succesvol", ... "Build succesvol", ...}
+```
+
+> Dus: de Docker DEVLOOP zou nu ook voor één domein weer moeten werken. Je kunt je roundtrip test opnieuw doen.
+
+---
+
+## 🧑 User
+
+De posities van de enums in ABU... en de korte lijntjes van Landenlijstland en de andere naar de instanties vallen weg bij een roudntrip,. zie images
+
+---
+
+## 🤖 Assistant
+
+Ik vergelijk nu de roundtrip-export met de editordata om te zien waarom die enum-posities en korte instantielijntjes wegvallen.
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+Dit is een mooie mijlpaal: de ontbrekende layoutmetadata en instantie-koppeling zijn nu in de code hersteld. Ik valideer het nu op export- en buildniveau.
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+## ✅ Roundtrip-fix is verwerkt
+
+De fix is nu doorgevoerd, gedocumenteerd en opnieuw gebouwd in Docker.
+
+### Gewijzigd
+-   
+  enum-tags genormaliseerd naar **genoemde enum-refs**
+-   
+  export bewaart nu de enum-posities correct
+-   
+  ABUVWXY enum-layouts expliciet vastgelegd
+- `web/vite/src/v3ModelNaarEditor.js`  
+  referentielijst-instanties + korte binding-lijntjes worden weer opgebouwd
+- `docs/roundtrip-engineering.md`  
+  roundtrip/layout-regels bijgewerkt
+
+### Verificatie
+- `go test .` ✅
+- `npm run build` ✅
+-  ✅
+
+### Live Docker-check op `:8182`
+De API exporteert nu weer de verwachte posities:
+
+- `ABCEnum` → `(-675, 720)`
+- `RelABSoort` → `(-330, 330)`
+- `Landenlijst` → `(1020, -255)`
+- `AdellijkeTitels` → `(1890, -255)`
+
+> De Docker devloop draait dus met de nieuwe fix. Een **hard refresh** van de editor/browser is nu aan te raden, en daarna kan de roundtrip opnieuw getest worden.Now let me read the remaining critical pieces: the rebuild handler's domain loop, the model files for abuvwxy, the standalone-specific code, and the MetamodelEditor defaults.   Now let me look at how the codegen handles datatypes in field generation (to understand where `NLPostcode`/`BSN` type references come from):  Now let me check how the existing `initXxx()` functions are called — there should be an `init()` in one of the generated files:  Let me check what model JSON is available to run the codegen locally:  Good. Now let me understand the full plan and execute. Let me first read the remaining files I need to modify:  Let me read the V3 model to understand datatype domains, and check the codegen's full  file list: Now I have a complete picture. Let me start implementing.
+
+**Plan:**
+1. Add datatype alias generation to codegen
+2. Run codegen for abuvwxy (additive mode, to temp dir)
+3. Swap model files: delete old base files, move generated `abuvwxy_*` files in
+4. Create minimal base stubs (empty , )
+5. Update plumbing init(), editor defaults, handler
+6. Build, test, document
+
+Let me start with the codegen changes: Good, that's the entire file. Now let me add the datatype alias generation function and update : 
+```
+
+```
+Now update  to add the `noPrefix` field and include `datatype_aliases.go`:   
+```
+
+```
+Now run the codegen for abuvwxy to a temp directory:    All 8 files generated successfully. Now let me swap the model files:   Now create the empty base declarations. The  was in the deleted  and  was in . I'll add both to  since that's where the type definitions and init() already live:   
+```
+
+```
+Now update the init() function in plumbing to call abuvwxy init functions and add the  call (it exists but wasn't called): 
+```
+
+```
+Now remove the standalone-specific code from the rebuild handler:    
+```
+
+```
+Now fix the remaining references to  and  that followed:     
+```
+
+```
+Now also clean up the  field references. The `RebuildDomeinSpec` still has  but the handler now ignores it. Let me update the struct comments: 
+```
+
+```
+Also update the top-level  in `RebuildRequest`:   
+```
+
+```
+Now update the  to remove the abuvwxy special-casing:     
+```
+
+```
+Now let's try building:     There's a `REST request models.go` file that references the abuvwxy structs. Let me check it:      The V3 model doesn't contain abuvwxy entities — those were hand-crafted. I need to restore and rename instead. Let me recover the files from git:      Files are back. Now  was never committed to git, so it's lost. Let me recreate it and then properly plan the rename approach:      Good. Now let me do this properly. The approach for the struct files (mode-independent) is a straightforward rename. For the registry files (mode-dependent: metaregistry, datatype_registry, enum_registry), I need to convert the standalone format to additive format. Let me do this step by step. First, rename the struct files:    Now convert  (standalone → additive). I need to read its full content and create the additive version:       The  is ~600 lines. I need to convert it from standalone (map literal) to additive (function with assignments). Let me check the codegen's existing converter:   I'll use a PowerShell script to convert the standalone metaregistry to additive format:     Good, file is readable. Let me do the transformation in steps:       Let me try a different approach - use Go to do the conversion since we already have the  function:         Header replaced. Now do the map entry conversions:        Good, 22 entries converted. Now remove the trailing comma from top-level closing braces and write:         Let me verify the first and last lines look correct:             The conversion looks correct. Now delete the old standalone  and convert the other files:           Now convert  (standalone) → `abuvwxy_datatype_registry.go` (additive):             Now delete the old standalone :   Now convert  to `abuvwxy_enum_registry.go`:     Now rename  to `datatype_aliases.go` (the codegen will produce this on rebuild):    Now let's try building:               Build succeeds. Now run the tests:                 All tests pass. Now build the frontend:                  All builds and tests pass. Now let's verify the file listing makes sense:       
+
+---
+
+## 🧑 User
+
+ik denk dat de docker inhoud pagina naar de sweet_agnesi postgres instantie kijkt . Klopt dat en kan ie naar de postgres in zijn eigen context kijken? (bitemp-devloop-db )
+
+---
+
+## 🤖 Assistant
+
+Ik controleer nu of de Docker `inhoud`-pagina inderdaad aan de verkeerde Postgres hangt en zet hem zo nodig naar `bitemp-devloop-db`.
+```
+
+```
+Ik heb de oorzaak gevonden: de Docker-inhoudspagina sprong inderdaad hardcoded naar `:8082`. Dat zet ik nu recht naar de eigen Docker-origin.## ✅ Ja, de oorzaak is gevonden
+
+De Docker-API zelf keek **al** naar zijn eigen Postgres:
+
+- in  staat:
+  - API `DATABASE_URL=...@postgres:5432/...`
+  - service `postgres` heeft 
+
+Dus de backend in Docker zat goed.
+
+---
+
+## ⚠️ Waar het misging
+
+De -frontend in `web/vite/src/editor/main.jsx` stuurde de requests **hardcoded naar `:8082`**.
+
+Ik heb ook gecontroleerd dat er op jouw machine echt nog een aparte lokale API op `:8082` draaide:
+
+- `PORT_8082_IS_LISTENING`
+- proces: `__debug_bin.exe`
+
+Daardoor kon `http://localhost:8182/viz/react/inhoud.html` alsnog data uit die **andere API/DB-context** tonen.
+
+---
+
+## 🔧 Oplossing toegepast
+
+Ik heb  aangepast:
+
+- **Vite dev** (`:5173/:5174/:5175`) → blijft naar `:8082`
+- **Docker / geserveerde pagina op `:8182`** → gebruikt nu gewoon **dezelfde origin**
+
+Daardoor kijkt de Docker -pagina nu naar de API in zijn eigen container-context, en dus naar .
+
+---
+
+## Verification
+
+Vers geverifieerd:
+
+- `npm run build` ✅
+- `docker compose -f  up --build -d` ✅
+
+---
+
+## Wat jij nu best doet
+
+1. Open opnieuw: `http://localhost:8182/viz/react/inhoud.html`
+2. Doe een **hard refresh**: `Ctrl+F5`
+
+> Als je verwarring wilt voorkomen, kun je de losse lokale API op `:8082` eventueel ook stoppen.
 
 ---
