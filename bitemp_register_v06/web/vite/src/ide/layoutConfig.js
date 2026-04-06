@@ -1,0 +1,162 @@
+/**
+ * layoutConfig.js — FlexLayout model definitie en layout-constanten.
+ *
+ * FlexLayout werkt met een JSON-model dat de indeling beschrijft.
+ * De "factory" functie bepaalt welk React component er in elke tab komt.
+ */
+import * as FlexLayout from "flexlayout-react";
+
+// Component-namen (gebruikt in factory en bij programmatic tab-adds)
+export const COMP_BROWSER = "browser";
+export const COMP_DIAGRAM = "diagram";
+export const COMP_PROPERTIES = "properties";
+
+/**
+ * Maak het FlexLayout JSON model.
+ * Herstelt uit localStorage als beschikbaar, anders default.
+ */
+export function createLayoutModel() {
+  const saved = localStorage.getItem("ide-layout");
+  if (saved) {
+    try {
+      return FlexLayout.Model.fromJson(JSON.parse(saved));
+    } catch (e) {
+      console.warn("Kon opgeslagen layout niet herstellen, gebruik default:", e);
+    }
+  }
+  return FlexLayout.Model.fromJson(DEFAULT_LAYOUT);
+}
+
+/** Sla layout op in localStorage */
+export function persistLayout(model) {
+  try {
+    localStorage.setItem("ide-layout", JSON.stringify(model.toJson()));
+  } catch (e) {
+    console.warn("Layout opslaan mislukt:", e);
+  }
+}
+
+/**
+ * Voeg een nieuwe diagram-tab toe aan het layout model.
+ * @param {FlexLayout.Model} model
+ * @param {string} diagramId
+ * @param {string} naam
+ */
+export function openDiagramTab(model, diagramId, naam) {
+  // Hergebruik een bestaande tab als dit diagram al open staat.
+  const bestaandeTabIds = [];
+  model.visitNodes((node) => {
+    if (node.getType?.() !== "tab") return;
+    if (node.getComponent?.() !== COMP_DIAGRAM) return;
+    const config = node.getConfig?.() || {};
+    if (config.diagramId === diagramId) {
+      bestaandeTabIds.push(node.getId());
+    }
+  });
+
+  if (bestaandeTabIds.length > 0) {
+    const [eersteTabId, ...dubbeleTabs] = bestaandeTabIds;
+    dubbeleTabs.forEach((tabId) => {
+      model.doAction(FlexLayout.Actions.deleteTab(tabId));
+    });
+    model.doAction(FlexLayout.Actions.selectTab(eersteTabId));
+    return;
+  }
+
+  // Zoek de eerste tabset die al een diagram bevat, of de middelste.
+  model.doAction(
+    FlexLayout.Actions.addNode(
+      {
+        type: "tab",
+        name: naam || diagramId,
+        component: COMP_DIAGRAM,
+        config: { diagramId },
+      },
+      findOrFirstTabset(model, COMP_DIAGRAM),
+      FlexLayout.DockLocation.CENTER,
+      -1,
+      true
+    )
+  );
+}
+
+/** Vind een tabset die al een tab met dit component-type bevat, of de eerste tabset. */
+function findOrFirstTabset(model, componentType) {
+  let firstTabset = null;
+  let matchTabset = null;
+
+  model.visitNodes((node) => {
+    if (node.getType() === "tabset") {
+      if (!firstTabset) firstTabset = node.getId();
+      const children = node.getChildren();
+      for (const child of children) {
+        if (child.getComponent && child.getComponent() === componentType) {
+          matchTabset = node.getId();
+        }
+      }
+    }
+  });
+
+  return matchTabset || firstTabset || "root";
+}
+
+// ─── Default layout ─────────────────────────────────────────
+
+const DEFAULT_LAYOUT = {
+  global: {
+    tabEnableFloat: false,
+    tabEnableRename: true,
+    tabSetEnableMaximize: true,
+    tabSetEnableDrag: true,
+    tabSetEnableDrop: true,
+    splitterSize: 4,
+  },
+  borders: [],
+  layout: {
+    type: "row",
+    weight: 100,
+    children: [
+      {
+        type: "tabset",
+        id: "browser-tabset",
+        weight: 20,
+        minWidth: 200,
+        children: [
+          {
+            type: "tab",
+            name: "Project Browser",
+            component: COMP_BROWSER,
+            enableClose: false,
+          },
+        ],
+      },
+      {
+        type: "tabset",
+        id: "diagram-tabset",
+        weight: 55,
+        children: [
+          {
+            type: "tab",
+            name: "Overzicht",
+            component: COMP_DIAGRAM,
+            config: { diagramId: "overzicht" },
+          },
+        ],
+      },
+      {
+        type: "tabset",
+        id: "properties-tabset",
+        weight: 25,
+        minWidth: 250,
+        children: [
+          {
+            type: "tab",
+            name: "Details",
+            component: COMP_PROPERTIES,
+            enableClose: false,
+          },
+        ],
+      },
+    ],
+  },
+};

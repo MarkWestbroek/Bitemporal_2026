@@ -28,6 +28,7 @@ export default defineConfig({
         editor: resolve(__dirname, "editor.html"),
         "editor-v2": resolve(__dirname, "editor-v2.html"),
         inhoud: resolve(__dirname, "inhoud.html"),
+        ide: resolve(__dirname, "ide.html"),
       },
     },
   },

@@ -1,0 +1,114 @@
+/**
+ * ide-diagram.css — Scoped node/edge styling voor het IDE diagram.
+ *
+ * Importeert editor.css uit de uml-editor subtree, maar scoped de
+ * globale selectors (* en body) zodat FlexLayout niet verstoord wordt.
+ * Alleen de .metamodel-node, .edge-label, en .react-flow__ overrides
+ * zijn actief in de IDE context.
+ *
+ * De IDE-canvas container krijgt class "ide-canvas" zodat we
+ * de achtergrond donker kunnen maken zonder colorMode="dark".
+ */
+
+/* Override de body-achtergrond NIET — de IDE heeft eigen dark theme.
+ * editor.css zet body { background: #f8fafc; color: #1e293b; }
+ * Die overschrijven we hier terug voor de IDE context.
+ */
+body:has(.ide-canvas) {
+  background: #1e1e1e !important;
+  color: #ccc !important;
+}
+
+/* Diagram canvas: donkere achtergrond */
+.ide-canvas {
+  background: #1a1a2e;
+  position: relative;
+}
+
+.ide-canvas .react-flow__background {
+  /* Dots iets lichter dan de achtergrond */
+  color: #2a2a4a;
+}
+
+/* Controleer dat de node tekst NIET wit wordt bij dark containers */
+.ide-canvas .react-flow__node {
+  color: #1e293b;
+}
+
+/* MiniMap passend bij donker thema */
+.ide-canvas .react-flow__minimap {
+  background: #252540;
+  border: 1px solid #3a3a5c;
+  border-radius: 6px;
+}
+
+/* Controls passend bij donker thema */
+.ide-canvas .react-flow__controls {
+  background: #2d2d4a;
+  border: 1px solid #3a3a5c;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.ide-canvas .react-flow__controls button {
+  background: #2d2d4a;
+  color: #ccc;
+  border-bottom: 1px solid #3a3a5c;
+}
+
+.ide-canvas .react-flow__controls button:hover {
+  background: #3a3a5c;
+}
+
+.ide-canvas .react-flow__controls button svg {
+  fill: #ccc;
+}
+
+/* Attribution link verbergen in de IDE */
+.ide-canvas .react-flow__attribution {
+  display: none;
+}
+
+/* ── Alignment toolbar ──────────────────────────────────────── */
+.ide-align-toolbar {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: #2d2d4aee;
+  border: 1px solid #3a3a5c;
+  border-radius: 6px;
+  padding: 2px 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.ide-align-toolbar button {
+  background: transparent;
+  color: #ccc;
+  border: none;
+  border-radius: 3px;
+  width: 26px;
+  height: 26px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.ide-align-toolbar button:hover {
+  background: #4a4a6a;
+  color: #fff;
+}
+
+.ide-align-sep {
+  width: 1px;
+  height: 18px;
+  background: #3a3a5c;
+  margin: 0 2px;
+}
