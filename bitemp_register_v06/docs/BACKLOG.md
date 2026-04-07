@@ -585,12 +585,17 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I3 | Node verwijderen ≠ element verwijderen | docs/IDE.md |
 | I4 | Diagram-scoped viewport persistentie | docs/IDE.md |
 | I5 | Database-sync en multi-user | docs/IDE.md |
-| I6 | Drag & drop: ENT + alle GE's (shift?) mee | README.md |
-| I7 | Auto-order | README.md |
+| I6 | Drag & drop: Complete ENT + alle GE's drag & drop (shift D&D?) | README.md |
+| I7 | PB: Auto-order; custom order;  | README.md |
 | I8 | CEL expressie breakout met kleurcodes en autocomplete | README.md |
 | I9 | Voorbeelden en testwaarden in REPs | README.md |
 | I10 | Velden: kardinaliteit [0..*] enz | README.md |
 | I11 | Layout bar verplaatsbaar | README.md |
+| I12 | Any bar: custom bar met functies? | README.md |
+| I13 | Edge types: compositie, overerving, associatieklasse | README.md |
+| I14 | Document by example compartiment in klassen | readme.md |
+| I15 | Testwaarden in REPs (t.b.v. expressies bijv. maar ook als document bij example) | README.md |
+
 
 ### Frontend — Content Editor (Inhoud-editor)
 

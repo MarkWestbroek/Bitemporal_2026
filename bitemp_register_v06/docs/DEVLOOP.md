@@ -213,6 +213,17 @@ Voor het record `schema_versie_id=27` is gecontroleerd dat opnieuw genereren naa
 
 Praktisch betekent dit dat **1x publiceren naar de schema registry + meervoudige codegen per domein** een werkbare en controleerbare workflow is.
 
+### Fix multi-domein codegen (2026-04-07)
+
+Bij het toevoegen van het CG Portfolio domein (`cg_` prefix) bleek de rebuild te falen met `exit code 1` doordat `go build` dubbele type-declaraties tegenkwam. Oorzaak: elke additive codegen-run genereerde een eigen `{prefix}_datatype_aliases.go` met dezelfde Go types (`NLPostcode`, `BSN`, etc.), en de baseline bevatte stale bestanden van eerdere runs.
+
+**Aanpassingen in `cmd/codegen`**:
+
+1. **Gedeeld `datatype_aliases.go`** — het bestand wordt nu zonder prefix gegenereerd (`noPrefix: true`). In additive mode worden nieuwe types gemerged met bestaande types via `mergeGedeeldBestand()`, zodat de types uit alle domeinen in één bestand staan zonder duplicaten.
+2. **Automatische opruiming** — bij elke additive run verwijdert `verwijderPrefixSpecifiekeAliases()` eventuele stale `{prefix}_datatype_aliases.go` bestanden, zodat er geen conflicten meer ontstaan.
+3. **Conditionele imports** — `gen_structs.go` en `gen_methods.go` genereren `import "time"` en `import "bun"` nu alleen als er daadwerkelijk entiteiten of GE's/relaties in het domein zitten. Dit voorkomt `unused import` fouten wanneer een domeinfilter alle entities uitsluit.
+4. **stderr → stdout** — informatieve "Overgeslagen" berichten gaan nu naar stdout i.p.v. stderr, zodat PowerShell geen `NativeCommandError` genereert.
+
 ## Beveiliging
 
 - Het rebuild endpoint is beveiligd met een wachtwoord (`DEVLOOP_PASSWORD`)
@@ -229,6 +240,7 @@ Na de refactoring (2026-04-04) heeft elk domein een eigen set bestanden met pref
 | `abuvwxy_` | `abuvwxy_modellen_entiteiten.go`, `abuvwxy_metaregistry.go`, etc. | Handmatig (geconverteerd uit v05-basismodel) |
 | `register_` | `register_modellen_entiteiten.go`, `register_metaregistry.go`, etc. | Gegenereerd door codegen |
 | `np_loc_` | `np_loc_modellen_entiteiten.go`, `np_loc_metaregistry.go`, etc. | Gegenereerd door codegen |
+| `cg_` | `cg_modellen_entiteiten.go`, `cg_metaregistry.go`, etc. | Gegenereerd door codegen (CG Portfolio domein) |
 | *(geen)* | `metaregistry_plumbing.go`, `model_plumbing.go`, `datatype_aliases.go` | Handmatig/plumbing |
 
 De **lege `var MetaRegistry`** en **`var DatatypeRegistry`** declaraties staan in `metaregistry_plumbing.go`. Domein-entries worden via `initXxx()` functies vanuit de plumbing `init()` aangeroepen:
@@ -244,20 +256,30 @@ func init() {
     initNpLocEnumRegistry()       // np-loc-domein
     initNpLocDatatypeRegistry()
     initNpLocMetaRegistry()
+    initCgEnumRegistry()          // cg — CG Portfolio domein
+    initCgDatatypeRegistry()
+    initCgMetaRegistry()
     propageerDomeinNaarOnderliggende()
 }
 ```
 
-### Datatype aliases (nieuw)
+### Datatype aliases (gedeeld)
 
-De codegen genereert nu een gedeeld bestand `datatype_aliases.go` (zonder prefix) met Go type-aliases voor custom datatypes:
+De codegen genereert een gedeeld bestand `datatype_aliases.go` (zonder prefix) met Go type-aliases voor custom datatypes:
 
 ```go
 type NLPostcode string
 type BSN string
+type Datum string
+type URL string
+type Emailadres string
+type Telefoonnummer string
+type GitAdres string
 ```
 
-Dit vervangt het eerdere handmatige `custom_datatypes.go`. De aliases worden afgeleid uit de `datatypes` sectie van het V3 model.
+Dit bestand is **gedeeld over alle domeinen** (geen prefix). In additive mode worden nieuwe types gemerged met bestaande types, zodat er geen duplicaten ontstaan. Prefix-specifieke alias-bestanden (`{prefix}_datatype_aliases.go`) worden automatisch verwijderd door de codegen bij een additive run, om dubbele type-declaraties te voorkomen.
+
+De aliases worden afgeleid uit de `datatypes` sectie van het V3 model.
 
 ## Configuratie
 

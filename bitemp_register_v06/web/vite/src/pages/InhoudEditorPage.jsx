@@ -11,6 +11,18 @@ export default function InhoudEditorPage() {
   const { typeMetaByPadnaam, loading, error } = useSchema();
   const navigate = useNavigate();
 
+  const infoBadgeStyle = {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "0.25rem",
+    padding: "0.25rem 0.5rem",
+    borderRadius: 999,
+    background: "#e0f2fe",
+    color: "var(--cg-donkerblauw)",
+    fontSize: "0.75rem",
+    fontWeight: 600,
+  };
+
   if (loading) {
     return <div style={{ padding: "1rem", color: "var(--cg-donkergrijs)" }}>Schema laden…</div>;
   }
@@ -40,6 +52,13 @@ export default function InhoudEditorPage() {
         >
           + Nieuw
         </button>
+      </div>
+
+      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
+        {typeMeta.domein && <span style={infoBadgeStyle}>Domein: {typeMeta.domein}</span>}
+        {typeMeta.entiteitSubtype === "referentielijst_item" && (
+          <span style={infoBadgeStyle}>Referentielijst-item</span>
+        )}
       </div>
 
       {typeMeta.description && (

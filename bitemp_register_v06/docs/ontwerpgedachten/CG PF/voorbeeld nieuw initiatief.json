@@ -1,0 +1,129 @@
+{
+  "registratie": {
+    "registratietype": "registratie",
+    "opmerking": "Nieuwe initiatief=1000 met vaste en overige CGPF 0.4.4-velden"
+  },
+  "wijzigingen": [
+    {
+      "opvoer": {
+        "initiatief": {
+          "id": 1000
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "planning": {
+          "initiatief_id": 1000,
+          "planningsinfo": "Roadmap staat op GitHub Projects",
+          "startdatum": "2025-01-01",
+          "ready_for_use": "2027-01-01",
+          "waar_tegenaan_gelopen": "Aansluiten van meerdere leveranciers en migratie uit legacy-processen.",
+          "fase": "Idee"
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "product": {
+          "initiatief_id": 1000,
+          "naam": "Voorbeeldinitiatief",
+          "omschrijving": "Voorbeeld voor een nieuw initiatief met zowel referentielijstkoppelingen als vrije restwaarden.",
+          "pitch": "Herbruikbaar voorbeeld voor het vullen van CG PF replay-bestanden.",
+          "website": "https://example.org/initiatief",
+          "git_repo": "https://github.com/example/initiatief",
+          "type": "Component",
+          "CG_laag": "Laag 4"
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "bijdrage": {
+          "initiatief_id": 1000,
+          "type_bijdrage": "Wendbaarheid",
+          "schaal": "Schaal 3",
+          "toelichting": "Maakt aanpassingen sneller herbruikbaar tussen gemeenten."
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "bijdrage": {
+          "initiatief_id": 1000,
+          "type_bijdrage": "Dienstverlening",
+          "schaal": "Schaal 3",
+          "toelichting": "Verbetert de afhandeling van vragen en verzoeken."
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "bijdrage": {
+          "initiatief_id": 1000,
+          "type_bijdrage": "Regie",
+          "schaal": "Schaal 2",
+          "toelichting": "Ondersteunt inzicht in gegevens en processtappen."
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "initiatiefdomein": {
+          "initiatief_id": 1000,
+          "domein_id": 5
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "anderdomein": {
+          "initiatief_id": 1000,
+          "domein": "APV; stelselfunctionaliteit"
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "initiatiefgemeente": {
+          "initiatief_id": 1000,
+          "gemeente_id": 47,
+          "rol": "Realiseert"
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "initiatiefgemeente": {
+          "initiatief_id": 1000,
+          "gemeente_id": 88,
+          "rol": "Maakt gebruik van"
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "andersdangemeente": {
+          "initiatief_id": 1000,
+          "andersDanGemeente": "Dimpact; Waterschap Rivierenland"
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "initiatiefapistandaard": {
+          "initiatief_id": 1000,
+          "apistandaard_id": 1
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "andereapistandaard": {
+          "initiatief_id": 1000,
+          "api_standaard": "JSON/HTTP standaarden; WebSocket Protocol"
+        }
+      }
+    }
+  ]
+}

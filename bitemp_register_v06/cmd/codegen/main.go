@@ -96,7 +96,7 @@ func main() {
 			if zelfdeDomein || registerBasis {
 				filtered = append(filtered, ent)
 			} else {
-				fmt.Fprintf(os.Stderr, "  Overgeslagen (domein=%q): %s\n", ent.Domein, ent.Typenaam)
+				fmt.Printf("  Overgeslagen (domein=%q): %s\n", ent.Domein, ent.Typenaam)
 			}
 		}
 		v3.Entiteiten = filtered
@@ -182,7 +182,7 @@ func main() {
 		{"metaregistry.go", genRegistry, false},
 		{"datatype_registry.go", genDatatypes, false},
 		{"enum_registry.go", genEnums, false},
-		{"datatype_aliases.go", generateDatatypeAliases, false},
+		{"datatype_aliases.go", generateDatatypeAliases, true},
 	}
 
 	// Prefix toepassen op bestandsnamen
@@ -191,23 +191,36 @@ func main() {
 		filePrefix = strings.ToLower(*prefix) + "_"
 	}
 
+	// In additive mode: verwijder prefix-specifieke datatype_aliases.go bestanden
+	// van alle prefixen (inclusief eigen prefix), want dat bestand is nu gedeeld (noPrefix).
+	if additive {
+		verwijderPrefixSpecifiekeAliases(*outputDir)
+	}
+
 	for _, f := range files {
 		content, err := f.generate(v3, opts)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Fout bij genereren van %s: %v\n", f.naam, err)
 			os.Exit(1)
 		}
+
+		// Voor gedeelde bestanden (noPrefix) in additive mode: merge met bestaande types
+		effectivePrefix := filePrefix
+		if f.noPrefix {
+			effectivePrefix = ""
+		}
+		path := filepath.Join(*outputDir, effectivePrefix+f.naam)
+
+		if f.noPrefix && additive {
+			content = mergeGedeeldBestand(path, content)
+		}
+
 		// Formatteer de gegenereerde Go-code met gofmt-stijl (tabuitlijning in structs etc.)
 		formatted, fmtErr := format.Source([]byte(content))
 		if fmtErr != nil {
 			fmt.Fprintf(os.Stderr, "Waarschuwing: gofmt van %s mislukt: %v (schrijf ongeformatteerd)\n", f.naam, fmtErr)
 			formatted = []byte(content)
 		}
-		effectivePrefix := filePrefix
-		if f.noPrefix {
-			effectivePrefix = ""
-		}
-		path := filepath.Join(*outputDir, effectivePrefix+f.naam)
 		if err := os.WriteFile(path, formatted, 0644); err != nil {
 			fmt.Fprintf(os.Stderr, "Kan %s niet schrijven: %v\n", path, err)
 			os.Exit(1)
@@ -221,6 +234,103 @@ func main() {
 	if additive && *prefix != "" {
 		if err := ensureInitRegistration(*outputDir, *prefix); err != nil {
 			fmt.Fprintf(os.Stderr, "Waarschuwing: kon init-registratie niet bijwerken: %v\n", err)
+		}
+	}
+}
+
+// mergeGedeeldBestand leest het bestaande bestand op pad en voegt type-declaraties
+// uit nieuwContent toe die nog niet bestaan. Dit voorkomt dubbele Go type-declaraties
+// wanneer meerdere prefixen hetzelfde gedeelde bestand bijwerken.
+func mergeGedeeldBestand(pad, nieuwContent string) string {
+	bestaand, err := os.ReadFile(pad)
+	if err != nil {
+		// Bestand bestaat nog niet, gebruik de nieuwe content ongewijzigd
+		return nieuwContent
+	}
+
+	// Parse bestaande type-declaraties
+	bestaandeTypes := parseTypeDefs(string(bestaand))
+
+	// Voeg regels toe uit nieuwContent die nog geen bestaande declaratie zijn
+	var b strings.Builder
+	regels := strings.Split(string(bestaand), "\n")
+	// Neem het bestaande bestand als basis
+	b.WriteString(string(bestaand))
+	// Zorg dat er een newline aan het eind staat
+	if !strings.HasSuffix(b.String(), "\n") {
+		b.WriteString("\n")
+	}
+
+	// Voeg ontbrekende types toe uit het nieuwe bestand
+	toegevoegd := 0
+	for _, regel := range strings.Split(nieuwContent, "\n") {
+		trimmed := strings.TrimSpace(regel)
+		if !strings.HasPrefix(trimmed, "type ") {
+			continue
+		}
+		parts := strings.Fields(trimmed)
+		if len(parts) < 3 {
+			continue
+		}
+		typeNaam := parts[1]
+		if bestaandeTypes[typeNaam] {
+			continue
+		}
+		// Zoek eventuele comment-regel erboven
+		nieuweRegels := strings.Split(nieuwContent, "\n")
+		for i, r := range nieuweRegels {
+			if strings.TrimSpace(r) == trimmed {
+				if i > 0 && strings.HasPrefix(strings.TrimSpace(nieuweRegels[i-1]), "//") {
+					b.WriteString("\n" + nieuweRegels[i-1] + "\n")
+				}
+				break
+			}
+		}
+		b.WriteString(regel + "\n")
+		toegevoegd++
+	}
+	_ = regels
+
+	if toegevoegd > 0 {
+		fmt.Printf("  %d nieuwe type-alias(es) samengevoegd in %s\n", toegevoegd, filepath.Base(pad))
+	}
+	return b.String()
+}
+
+// parseTypeDefs parsed type-declaraties uit Go source en retourneert een map van typenamen.
+func parseTypeDefs(content string) map[string]bool {
+	types := make(map[string]bool)
+	for _, regel := range strings.Split(content, "\n") {
+		trimmed := strings.TrimSpace(regel)
+		if strings.HasPrefix(trimmed, "type ") {
+			parts := strings.Fields(trimmed)
+			if len(parts) >= 3 {
+				types[parts[1]] = true
+			}
+		}
+	}
+	return types
+}
+
+// verwijderPrefixSpecifiekeAliases verwijdert alle <prefix>_datatype_aliases.go bestanden
+// uit de output directory, omdat dat bestand nu gedeeld is (zonder prefix).
+func verwijderPrefixSpecifiekeAliases(outputDir string) {
+	entries, err := os.ReadDir(outputDir)
+	if err != nil {
+		return
+	}
+	const aliasSuffix = "datatype_aliases.go"
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		naam := entry.Name()
+		if strings.HasSuffix(naam, aliasSuffix) && naam != aliasSuffix {
+			// Dit is een prefix-specifiek alias-bestand (bijv. cg_datatype_aliases.go)
+			pad := filepath.Join(outputDir, naam)
+			if err := os.Remove(pad); err == nil {
+				fmt.Printf("  Opgeruimd (gedeeld alias-bestand vervangt): %s\n", naam)
+			}
 		}
 	}
 }
@@ -287,6 +397,8 @@ func parseV3ModelInput(data []byte) (model.V3Model, error) {
 //
 // Het zoekt de regel met `propageerDomeinNaarOnderliggende()` en voegt daarvóór
 // de drie init-calls toe als die nog niet bestaan.
+// Bij bestaande init-calls met afwijkende casing (bijv. initCGMetaRegistry vs
+// initCgMetaRegistry) worden die vervangen door de juiste casing.
 func ensureInitRegistration(outputDir, prefix string) error {
 	plumbingPath := filepath.Join(outputDir, "metaregistry_plumbing.go")
 	data, err := os.ReadFile(plumbingPath)
@@ -301,9 +413,49 @@ func ensureInitRegistration(outputDir, prefix string) error {
 	initDatatype := fmt.Sprintf("init%sDatatypeRegistry()", pascalPrefix)
 	initEnum := fmt.Sprintf("init%sEnumRegistry()", pascalPrefix)
 
-	// Controleer of de init-calls al aanwezig zijn
+	// Controleer of de init-calls al aanwezig zijn (exact match)
 	if strings.Contains(content, initMeta) {
 		fmt.Printf("  Init-registratie voor %q al aanwezig in metaregistry_plumbing.go\n", prefix)
+		return nil
+	}
+
+	// Controleer of er init-calls bestaan met afwijkende casing (bijv. "CG" → initCG
+	// i.p.v. "cg" → initCg). Zo ja: vervang ze door de juiste casing.
+	lowerMeta := strings.ToLower(initMeta)
+	contentLower := strings.ToLower(content)
+	if strings.Contains(contentLower, lowerMeta) {
+		// Zoek de afwijkende variant en vervang
+		re := regexp.MustCompile(`(?i)init\w*MetaRegistry\(\)`)
+		for _, match := range re.FindAllString(content, -1) {
+			if strings.ToLower(match) == lowerMeta && match != initMeta {
+				content = strings.ReplaceAll(content, match, initMeta)
+				fmt.Printf("  Init-call casing gecorrigeerd: %s → %s\n", match, initMeta)
+			}
+		}
+		reDT := regexp.MustCompile(`(?i)init\w*DatatypeRegistry\(\)`)
+		for _, match := range reDT.FindAllString(content, -1) {
+			if strings.ToLower(match) == strings.ToLower(initDatatype) && match != initDatatype {
+				content = strings.ReplaceAll(content, match, initDatatype)
+				fmt.Printf("  Init-call casing gecorrigeerd: %s → %s\n", match, initDatatype)
+			}
+		}
+		reEnum := regexp.MustCompile(`(?i)init\w*EnumRegistry\(\)`)
+		for _, match := range reEnum.FindAllString(content, -1) {
+			if strings.ToLower(match) == strings.ToLower(initEnum) && match != initEnum {
+				content = strings.ReplaceAll(content, match, initEnum)
+				fmt.Printf("  Init-call casing gecorrigeerd: %s → %s\n", match, initEnum)
+			}
+		}
+
+		// Schrijf het gecorrigeerde bestand
+		formatted, fmtErr := format.Source([]byte(content))
+		if fmtErr != nil {
+			formatted = []byte(content)
+		}
+		if err := os.WriteFile(plumbingPath, formatted, 0644); err != nil {
+			return fmt.Errorf("kan %s niet schrijven: %w", plumbingPath, err)
+		}
+		fmt.Printf("  Init-registratie voor %q casing bijgewerkt in metaregistry_plumbing.go\n", prefix)
 		return nil
 	}
 

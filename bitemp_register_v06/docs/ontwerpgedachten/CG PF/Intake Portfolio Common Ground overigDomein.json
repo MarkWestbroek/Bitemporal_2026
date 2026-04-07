@@ -1,0 +1,145 @@
+{
+  "source": "bitemp_register_v06/docs/ontwerpgedachten/CG PF/Intake Portfolio Common Ground 1.json",
+  "generated_at": "2026-04-07T20:28:59.111661Z",
+  "description": "Per initiatief de domeinwaarden die niet in de vaste domeinshortlist passen en daarom in AnderDomein kunnen landen.",
+  "summary": {
+    "aantal_initiatieven_met_anderDomein": 11,
+    "aantal_unieke_waarden": 11,
+    "waarden_op_aflopende_frequentie": [
+      {
+        "naam": "Alle",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "alle domeinen",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Alle domeinen waar waardepapieren worden verstrekt",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "APV",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "de service is overkoepeld en te gebruiken vanuit alle domeinen",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "DMS en Zaak",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Geo/BI afdeling",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Het is een basisvoorziening",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Juridische afdelingen",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Overal waar projecten zijn die bij meerdere gemeentes zich voordoen",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "stelselfunctionaliteit",
+        "aantal_initiatieven": 1
+      }
+    ]
+  },
+  "entries": [
+    {
+      "bron_id": 37,
+      "initiatief_id": 37,
+      "initiatief_naam": "Een zaakregister",
+      "anderDomein": [
+        "Alle"
+      ]
+    },
+    {
+      "bron_id": 39,
+      "initiatief_id": 39,
+      "initiatief_naam": "Gemeentelijk Gegevensmodel",
+      "anderDomein": [
+        "alle domeinen"
+      ]
+    },
+    {
+      "bron_id": 42,
+      "initiatief_id": 42,
+      "initiatief_naam": "Federatieve Service Connectiviteit",
+      "anderDomein": [
+        "stelselfunctionaliteit"
+      ]
+    },
+    {
+      "bron_id": 47,
+      "initiatief_id": 47,
+      "initiatief_naam": "Waardepapieren",
+      "anderDomein": [
+        "Alle domeinen waar waardepapieren worden verstrekt"
+      ]
+    },
+    {
+      "bron_id": 74,
+      "initiatief_id": 74,
+      "initiatief_naam": "Fundament",
+      "anderDomein": [
+        "Het is een basisvoorziening"
+      ]
+    },
+    {
+      "bron_id": 86,
+      "initiatief_id": 86,
+      "initiatief_naam": "Geval (Generieke Validaties)",
+      "anderDomein": [
+        "de service is overkoepeld en te gebruiken vanuit alle domeinen"
+      ]
+    },
+    {
+      "bron_id": 99,
+      "initiatief_id": 99,
+      "initiatief_naam": "Octopus",
+      "anderDomein": [
+        "Juridische afdelingen"
+      ]
+    },
+    {
+      "bron_id": 101,
+      "initiatief_id": 101,
+      "initiatief_naam": "iSyNAPS",
+      "anderDomein": [
+        "Overal waar projecten zijn die bij meerdere gemeentes zich voordoen"
+      ]
+    },
+    {
+      "bron_id": 116,
+      "initiatief_id": 116,
+      "initiatief_naam": "MapGallery",
+      "anderDomein": [
+        "Geo/BI afdeling"
+      ]
+    },
+    {
+      "bron_id": 117,
+      "initiatief_id": 117,
+      "initiatief_naam": "xential",
+      "anderDomein": [
+        "DMS en Zaak"
+      ]
+    },
+    {
+      "bron_id": 127,
+      "initiatief_id": 127,
+      "initiatief_naam": "Eventloket",
+      "anderDomein": [
+        "APV"
+      ]
+    }
+  ]
+}

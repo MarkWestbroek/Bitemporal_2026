@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 	"reflect"
 	"sort"
@@ -50,6 +51,7 @@ type vizSchemaTypeDTO struct {
 	Momentvoorkomen           string                     `json:"momentvoorkomen,omitempty"`
 	Onderliggende             []vizSchemaChildDTO        `json:"onderliggende,omitempty"`
 	AfgeleideVelden           []vizSchemaAfgeleidVeldDTO `json:"afgeleideVelden,omitempty"`
+	ItemCount                 *int                       `json:"itemCount,omitempty"` // aantal actieve items (alleen voor referentielijst_item entiteiten)
 }
 
 type vizSchemaResponse struct {
@@ -548,10 +550,36 @@ func BouwFlatTypeRegistryMetOpties(domein string, includeRegister bool) []vizSch
 	return items
 }
 
+// verrijkMetItemCounts voegt het aantal actieve (niet-afgevoerde) items toe aan
+// types die een referentielijst_item entiteitsubtype hebben. De frontend gebruikt
+// dit om te bepalen of een dropdown of een combobox met zoekfunctie passend is.
+func verrijkMetItemCounts(ctx context.Context, items []vizSchemaTypeDTO) {
+	if DB == nil {
+		return
+	}
+	for i := range items {
+		if items[i].EntiteitSubtype != string(model.EntiteitSubtypeReferentielijstItem) {
+			continue
+		}
+		if items[i].Tabelnaam == "" {
+			continue
+		}
+		count, err := DB.NewSelect().
+			Table(items[i].Tabelnaam).
+			Where("afvoer IS NULL").
+			Count(ctx)
+		if err != nil {
+			continue
+		}
+		items[i].ItemCount = &count
+	}
+}
+
 func MaakVizSchemaHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Alle types, ongeacht domein (vizSchema is domein-agnostisch).
 		items := BouwFlatTypeRegistry("")
+		verrijkMetItemCounts(c.Request.Context(), items)
 
 		c.JSON(http.StatusOK, vizSchemaResponse{
 			Versie: "v1",

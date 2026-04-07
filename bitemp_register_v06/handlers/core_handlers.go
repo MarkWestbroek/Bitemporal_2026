@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -17,6 +19,37 @@ func responseCollectionKey(meta model.TypeMeta) string {
 		return meta.Padnaam
 	}
 	return meta.Typenaam + "s"
+}
+
+// zoekbareKolommen extraheert de bun-kolomnamen van alle string-velden uit het
+// model dat door meta.DBFactory wordt gecreëerd. Het resultaat wordt gebruikt
+// voor de ?q= ILIKE-zoekopdracht in de lijsthandler.
+func zoekbareKolommen(meta model.TypeMeta) []string {
+	if meta.DBFactory == nil {
+		return nil
+	}
+	instance := meta.DBFactory()
+	t := reflect.TypeOf(instance)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	var cols []string
+	for i := 0; i < t.NumField(); i++ {
+		f := t.Field(i)
+		if f.Type.Kind() != reflect.String {
+			continue
+		}
+		bunTag := f.Tag.Get("bun")
+		if bunTag == "" || bunTag == "-" {
+			continue
+		}
+		col := strings.SplitN(bunTag, ",", 2)[0]
+		if col == "" {
+			continue
+		}
+		cols = append(cols, col)
+	}
+	return cols
 }
 
 // TODO: full entity get and post to include all fields, not just ID.
@@ -203,17 +236,38 @@ func MakeGetEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 		offset := (page - 1) * size
 		entities := meta.DBSliceFactory()
 
-		err := DB.NewSelect().
+		query := DB.NewSelect().
 			Model(entities).
 			Limit(size).
-			Offset(offset).
-			Scan(c.Request.Context())
+			Offset(offset)
+
+		// Optionele zoekterm: als ?q= is opgegeven, doorzoek alle string-kolommen
+		// met ILIKE (case-insensitive). Handig voor combobox/autocomplete in de frontend.
+		var searchClauses []string
+		var searchArgs []interface{}
+		if q := strings.TrimSpace(c.Query("q")); q != "" {
+			cols := zoekbareKolommen(meta)
+			if len(cols) > 0 {
+				pattern := "%" + q + "%"
+				for _, col := range cols {
+					searchClauses = append(searchClauses, fmt.Sprintf("%s ILIKE ?", col))
+					searchArgs = append(searchArgs, pattern)
+				}
+				query = query.Where("("+strings.Join(searchClauses, " OR ")+")", searchArgs...)
+			}
+		}
+
+		err := query.Scan(c.Request.Context())
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		total, err := DB.NewSelect().Model(meta.DBFactory()).Count(c.Request.Context())
+		countQuery := DB.NewSelect().Model(meta.DBFactory())
+		if len(searchClauses) > 0 {
+			countQuery = countQuery.Where("("+strings.Join(searchClauses, " OR ")+")", searchArgs...)
+		}
+		total, err := countQuery.Count(c.Request.Context())
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

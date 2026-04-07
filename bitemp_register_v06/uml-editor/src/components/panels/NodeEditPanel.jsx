@@ -488,12 +488,39 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
       </h3>
 
       {/* Basis velden */}
+      {data.metatype !== "entiteit" && (
+        <label>
+          Naam (klassenaam)
+          <input
+            type="text"
+            value={data.klassenaam || ""}
+            onChange={(e) => {
+              const nieuweNaam = e.target.value;
+              // Sync klassenaam + herbereken typenaam als het oude suffix matcht
+              const updates = { klassenaam: nieuweNaam };
+              const oudeNaam = data.klassenaam || "";
+              if (data.typenaam && oudeNaam && data.typenaam.endsWith(oudeNaam)) {
+                updates.typenaam = data.typenaam.slice(0, -oudeNaam.length) + nieuweNaam;
+              }
+              onUpdate(node.id, { ...data, ...updates });
+            }}
+          />
+        </label>
+      )}
       <label>
         Typenaam
         <input
           type="text"
           value={data.typenaam || ""}
-          onChange={(e) => updateField("typenaam", e.target.value)}
+          onChange={(e) => {
+            const nieuweTypenaam = e.target.value;
+            if (data.metatype === "entiteit") {
+              // Bij entiteiten: typenaam = klassenaam
+              onUpdate(node.id, { ...data, typenaam: nieuweTypenaam, klassenaam: nieuweTypenaam });
+            } else {
+              onUpdate(node.id, { ...data, typenaam: nieuweTypenaam });
+            }
+          }}
         />
       </label>
 

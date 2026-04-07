@@ -12,7 +12,9 @@ import (
 func generateMethods(v3 model.V3Model) (string, error) {
 	var b strings.Builder
 	b.WriteString(fileHeader("Alle methoden op domein-structs.\n// Gegenereerd door cmd/codegen — niet handmatig bewerken."))
-	b.WriteString("import \"time\"\n\n")
+	if len(v3.Entiteiten) > 0 {
+		b.WriteString("import \"time\"\n\n")
+	}
 
 	// 1. Entiteiten — interface-methoden
 	b.WriteString("/* ================================================================\n")

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"net/http"
@@ -123,7 +124,7 @@ func schemaCodeMetadataFromEnv() schemaCodeMetadata {
 // schemaCodeResponse bouwt een response uit de actuele code-toestand in plaats van uit schema_versies.
 // Als domein niet leeg is wordt gefilterd op dat modeldomein.
 // In strict-modus worden register-basisentiteiten niet meegeleverd.
-func schemaCodeResponse(apiBron string, domein string, strict bool) gin.H {
+func schemaCodeResponse(ctx context.Context, apiBron string, domein string, strict bool) gin.H {
 	var v3 model.V3Model
 	if domein != "" {
 		v3 = model.ExportMetaRegistryToV3(domein)
@@ -162,7 +163,11 @@ func schemaCodeResponse(apiBron string, domein string, strict bool) gin.H {
 		// Platte type-registry: elke MetaRegistry-entry als flat DTO,
 		// inclusief ge_subtype, onderliggende, velden (met $ref en datatype).
 		// Gefilterd op domein wanneer opgegeven.
-		"types": BouwFlatTypeRegistryMetOpties(domein, !(strict && domein != "")),
+		"types": func() []vizSchemaTypeDTO {
+			items := BouwFlatTypeRegistryMetOpties(domein, !(strict && domein != ""))
+			verrijkMetItemCounts(ctx, items)
+			return items
+		}(),
 	}
 }
 
@@ -214,7 +219,7 @@ func MaakGetSchemaModelHandler() gin.HandlerFunc {
 		// Fallback: exporteer on-the-fly uit de code als er nog geen actieve database-versie bestaat.
 		domein := c.Query("domein")
 		strict := queryBool(c, "strict")
-		c.JSON(http.StatusOK, schemaCodeResponse("metaregistry", domein, strict))
+		c.JSON(http.StatusOK, schemaCodeResponse(ctx, "metaregistry", domein, strict))
 	}
 }
 
@@ -224,7 +229,7 @@ func MaakGetSchemaModelCodeHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		domein := c.Query("domein")
 		strict := queryBool(c, "strict")
-		c.JSON(http.StatusOK, schemaCodeResponse("code", domein, strict))
+		c.JSON(http.StatusOK, schemaCodeResponse(c.Request.Context(), "code", domein, strict))
 	}
 }
 

@@ -98,6 +98,9 @@
     },
     "chat.restoreLastPanelSession": false,
     "settingsSync.ignoredSettings": [
-        "chat.instructionsFilesLocations"
+        "chat.instructionsFilesLocations",
+        "debug.javascript.autoAttachFilter",
+        "debug.javascript.autoAttachSmartPattern",
+        "debug.javascript.terminalOptions"
     ]
 }

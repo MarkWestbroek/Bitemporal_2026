@@ -13,10 +13,12 @@ func generateEntiteiten(v3 model.V3Model) (string, error) {
 	var b strings.Builder
 	b.WriteString(fileHeader("Entiteitstructs en materiële plumbing (Aanvang/Einde per entiteit).\n// Gegenereerd door cmd/codegen — niet handmatig bewerken."))
 
-	b.WriteString("import (\n")
-	b.WriteString("\t\"time\"\n\n")
-	b.WriteString("\t\"github.com/uptrace/bun\"\n")
-	b.WriteString(")\n\n")
+	if len(v3.Entiteiten) > 0 {
+		b.WriteString("import (\n")
+		b.WriteString("\t\"time\"\n\n")
+		b.WriteString("\t\"github.com/uptrace/bun\"\n")
+		b.WriteString(")\n\n")
+	}
 
 	for _, ent := range v3.Entiteiten {
 		d := deriveEntiteit(ent)
@@ -85,10 +87,13 @@ func generateGeRel(v3 model.V3Model) (string, error) {
 	var b strings.Builder
 	b.WriteString(fileHeader("Hub + _Data + _Aanvang/_Einde structs voor gegevenselementen en relaties.\n// Gegenereerd door cmd/codegen — niet handmatig bewerken."))
 
-	b.WriteString("import (\n")
-	b.WriteString("\t\"time\"\n\n")
-	b.WriteString("\t\"github.com/uptrace/bun\"\n")
-	b.WriteString(")\n\n")
+	heeftStructs := len(v3.Entiteiten) > 0 || len(v3.Enums) > 0
+	if heeftStructs {
+		b.WriteString("import (\n")
+		b.WriteString("\t\"time\"\n\n")
+		b.WriteString("\t\"github.com/uptrace/bun\"\n")
+		b.WriteString(")\n\n")
+	}
 
 	// Eerst enums genereren
 	for _, enum := range v3.Enums {

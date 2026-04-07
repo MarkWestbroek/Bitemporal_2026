@@ -41,14 +41,64 @@ function stampMatches(stamp) {
   );
 }
 
+function buildInstallEnv() {
+  // VS Code JS auto-attach kan debug-variabelen doorgeven aan child processes.
+  // Daardoor kan `npm install` bij `npm run dev` blijven hangen op
+  // "Debugger attached" / "Waiting for the debugger to disconnect...".
+  // Voor deze dependency-bootstrap willen we die lokale debug-state expliciet niet erven.
+  const env = { ...process.env };
+  const strippedKeys = [
+    "NODE_OPTIONS",
+    "VSCODE_INSPECTOR_OPTIONS",
+    "npm_config_node_options",
+    "NODE_INSPECT_RESUME_ON_START",
+  ].filter((key) => env[key]);
+
+  for (const key of strippedKeys) {
+    delete env[key];
+  }
+
+  if (strippedKeys.length > 0) {
+    console.log(`[deps] Debug-variabelen tijdelijk uitgezet voor npm install: ${strippedKeys.join(", ")}`);
+  }
+
+  return env;
+}
+
+function resolveInstallCommand() {
+  // Als dit script via `npm run ...` gestart is, hergebruik dan dezelfde npm CLI.
+  // Dat vermijdt Windows-problemen met `spawnSync('npm.cmd', ...)` (EINVAL).
+  if (process.env.npm_execpath) {
+    return {
+      command: process.execPath,
+      args: [process.env.npm_execpath, "install"],
+    };
+  }
+
+  if (process.platform === "win32") {
+    return {
+      command: process.env.ComSpec || "cmd.exe",
+      args: ["/d", "/s", "/c", "npm.cmd install"],
+    };
+  }
+
+  return {
+    command: "npm",
+    args: ["install"],
+  };
+}
+
 function runInstall() {
-  const npmCmd = process.platform === "win32" ? "npm.cmd" : "npm";
+  const { command, args } = resolveInstallCommand();
   console.log(`[deps] Installeer frontend dependencies voor ${os.platform()}-${os.arch()}...`);
-  const result = spawnSync(npmCmd, ["install"], {
+  const result = spawnSync(command, args, {
     cwd: projectDir,
     stdio: "inherit",
-    env: process.env,
+    env: buildInstallEnv(),
   });
+  if (result.error) {
+    console.error(`[deps] Kon npm install niet starten: ${result.error.message}`);
+  }
   if (result.status !== 0) {
     process.exit(result.status ?? 1);
   }

@@ -858,8 +858,8 @@ Deregister U5 and register U6 for entity A:
 - kleur uit EA importeren
 
 31 UML editor
-- meerdere canvassen, per domein één (of naar keuze)
-- afhankelijkheid kunnen instellen
+* meerdere canvassen, per domein één (of naar keuze) -> IDE
+- afhankelijkheid kunnen instellen -> TODO IDE
 - overerving zelf kunnen tekenen
 - alignen
 - relatie-visualisatie:
@@ -870,25 +870,28 @@ Deregister U5 and register U6 for entity A:
         - pijl langs lijn? 
   - zonder: alleen een lijn met een label "relatie"
   - labels bij rollen verplaatsbaar (hoe in V3 en metareg?)
+  * volgorde velden veranderen
 
 35 IDE
-- multiselect in PB
-- drag and drop GE en ENT is er al: relaties moeten getekend
-  - niet altijd (reproduce)
+* multiselect in PB
+- afhankelijkheid tussen domeinen kunnen instellen = domein diagram maken :-)
+* drag and drop GE en ENT is er al: relaties moeten getekend
+  - niet altijd? (reproduce?)
 - drag and drop - complete (shift?): ENT + alle GE's (en RELs) mee?
-- auto-order
-- dubbelklik op edge: straighten
-- undo / redo doet het niet
+- auto-order / custom order
+* dubbelklik op edge: straighten
+* undo / redo doet het niet
 - edge types: compositie, overerving, associatieklasse (!)
-- diagram of any element rename in PB
-- domeinkleur instellen, uberhaupt properties van domein instellen mogelijk
+* diagram or any element rename in PB
+* domeinkleur instellen, uberhaupt properties van domein instellen mogelijk
   - welke properties allemaal?
 - layout bar verplaatsbaar
 - any bar
 - afgeleide velden CEL expressie breakout met kleurcodes en autocomplete enzo? Proberen met testwaarden
 - voorbeelden en testwaarden in REPs (t.b.v. expressies bijv. maar ook als document bij example).
-- velden (attr) ook omschrijving
+* velden (attr) ook omschrijving
   - meer dan dat: [0..*] enz
+  * volgorde velden kunnen veranderen (custom order)
 
 40 Generator
 - optie om project leeg te halen voor het genereren.

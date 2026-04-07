@@ -8,7 +8,7 @@
 
 De Inhoud Editor is een webpagina waarmee je de inhoud van het bitemporeel register kunt bekijken en bewerken. Je ziet tabeloverzichten van alle geregistreerde gegevens en kunt doorklikken naar formulieren om details te bekijken of nieuwe records aan te maken.
 
-De editor past zich automatisch aan het datamodel aan: als er entiteittypen, gegevenselementen of relaties worden toegevoegd aan het register, verschijnen deze direct in de editor zonder codewijzigingen.
+De editor past zich automatisch aan het datamodel aan: als er entiteittypen, gegevenselementen of relaties worden toegevoegd aan het register, verschijnen deze direct in de editor zonder codewijzigingen. In de zijbalk en op het startscherm wordt de inhoud nu bovendien **per domein gegroepeerd**, inclusief aparte secties voor **ENT-en** en **referentielijst-items**.
 
 ---
 
@@ -28,19 +28,19 @@ De editor past zich automatisch aan het datamodel aan: als er entiteittypen, geg
 │  [Logo]  Register — Inhoud Editor       (navigatie) │
 ├──────────┬──────────────────────────────────────────┤
 │          │                                          │
-│ Entiteit │  ← hier verschijnt de tabel of het       │
-│ types    │    formulier                             │
+│ Domeinen │  ← hier verschijnt de tabel of het       │
+│ + typen  │    formulier                             │
 │          │                                          │
-│ • A      │                                          │
-│ • B      │                                          │
-│ • ...    │                                          │
+│ CG       │                                          │
+│ • ENT-en │                                          │
+│ • Ref.   │                                          │
 │          │                                          │
 └──────────┴──────────────────────────────────────────┘
   zijbalk          hoofdvenster
 ```
 
-- **Zijbalk** (links): toont alle entiteittypen in het register. Klik op een type om het overzicht te openen.
-- **Hoofdvenster** (rechts): toont het tabeloverzicht of het formulier, afhankelijk van de navigatie.
+- **Zijbalk** (links): toont de inhoud **per domein**. Binnen elk domein zie je aparte secties voor **ENT-en** en **Referentielijst-items**. Klik op een type om het overzicht te openen.
+- **Hoofdvenster** (rechts): toont het tabeloverzicht of het formulier, afhankelijk van de navigatie. Op de startpagina zie je dezelfde domeinindeling als overzichtskaarten.
 
 ---
 

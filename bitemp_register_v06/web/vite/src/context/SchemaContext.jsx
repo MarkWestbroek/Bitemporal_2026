@@ -3,6 +3,22 @@ import { safeArray } from "../shared/schemaUtils";
 
 const SchemaContext = createContext(null);
 
+function bepaalWeergavenaam(meta) {
+  return meta?.klassenaam || meta?.typenaam || meta?.veldnaam || meta?.padnaam || "Onbekend";
+}
+
+function normaliseerDomein(meta) {
+  const raw = typeof meta?.domein === "string" ? meta.domein.trim() : "";
+  return raw || "Zonder domein";
+}
+
+function vergelijkOpWeergavenaam(a, b) {
+  return bepaalWeergavenaam(a).localeCompare(bepaalWeergavenaam(b), "nl", {
+    sensitivity: "base",
+    numeric: true,
+  });
+}
+
 /**
  * SchemaProvider — haalt het schema eenmaal op via /api/schema/model/code
  * en maakt het beschikbaar aan alle editor-componenten via React Context.
@@ -64,14 +80,56 @@ export function SchemaProvider({ baseUrl, children }) {
     return result;
   }, [types]);
 
-  // Entiteiten voor navigatie (exclusief referentielijsten en referentielijst-items)
-  const entiteitTypes = useMemo(() => {
+  // Inhoudstypen voor navigatie:
+  // - reguliere entiteiten
+  // - referentielijst-items
+  // - referentielijst-definities zelf blijven verborgen in de inhoudseditor
+  const inhoudTypes = useMemo(() => {
     return types.filter((t) => {
       if (t?.metatype !== "entiteit") return false;
+      if (!(t?.padnaam || t?.meervoud || t?.veldnaam)) return false;
       const sub = t.entiteitSubtype || "";
-      return sub !== "referentielijst" && sub !== "referentielijst_item";
+      return sub !== "referentielijst";
     });
   }, [types]);
+
+  const entiteitTypes = useMemo(() => {
+    return inhoudTypes
+      .filter((t) => (t.entiteitSubtype || "") !== "referentielijst_item")
+      .slice()
+      .sort(vergelijkOpWeergavenaam);
+  }, [inhoudTypes]);
+
+  const referentielijstItemTypes = useMemo(() => {
+    return inhoudTypes
+      .filter((t) => (t.entiteitSubtype || "") === "referentielijst_item")
+      .slice()
+      .sort(vergelijkOpWeergavenaam);
+  }, [inhoudTypes]);
+
+  const inhoudNavigatieGroepen = useMemo(() => {
+    const groepen = new Map();
+
+    inhoudTypes.forEach((meta) => {
+      const domein = normaliseerDomein(meta);
+      if (!groepen.has(domein)) {
+        groepen.set(domein, { domein, entiteiten: [], referentielijstItems: [] });
+      }
+
+      const groep = groepen.get(domein);
+      if ((meta.entiteitSubtype || "") === "referentielijst_item") {
+        groep.referentielijstItems.push(meta);
+      } else {
+        groep.entiteiten.push(meta);
+      }
+    });
+
+    return Array.from(groepen.values()).map((groep) => ({
+      ...groep,
+      entiteiten: groep.entiteiten.slice().sort(vergelijkOpWeergavenaam),
+      referentielijstItems: groep.referentielijstItems.slice().sort(vergelijkOpWeergavenaam),
+    }));
+  }, [inhoudTypes]);
 
   const value = useMemo(
     () => ({
@@ -81,10 +139,23 @@ export function SchemaProvider({ baseUrl, children }) {
       typeMetaByTypenaam,
       typeMetaByPadnaam,
       entiteitTypes,
+      referentielijstItemTypes,
+      inhoudNavigatieGroepen,
       allTypes: types,
       v3Model,
     }),
-    [loading, error, baseUrl, typeMetaByTypenaam, typeMetaByPadnaam, entiteitTypes, types, v3Model]
+    [
+      loading,
+      error,
+      baseUrl,
+      typeMetaByTypenaam,
+      typeMetaByPadnaam,
+      entiteitTypes,
+      referentielijstItemTypes,
+      inhoudNavigatieGroepen,
+      types,
+      v3Model,
+    ]
   );
 
   return <SchemaContext.Provider value={value}>{children}</SchemaContext.Provider>;

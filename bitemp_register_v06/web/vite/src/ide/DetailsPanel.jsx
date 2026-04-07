@@ -678,10 +678,37 @@ function ElementEditor({ element, updateElement }) {
     [id, updateElement]
   );
 
-  /** Naam wijzigen synchroniseert ook data.klassenaam voor node-rendering */
+  /**
+   * Naam wijzigen synchroniseert klassenaam + typenaam.
+   * - Entiteiten: typenaam = naam (identiek).
+   * - GE/relatie: typenaam = parent_naam (afgeleid uit huidig suffix).
+   */
   const handleNaamChange = useCallback(
-    (v) => updateElement(id, { naam: v, data: { klassenaam: v } }),
-    [id, updateElement]
+    (v) => {
+      const patch = { naam: v, data: { klassenaam: v } };
+      if (type === "entiteit") {
+        patch.data.typenaam = v;
+      } else if (data.typenaam && naam && data.typenaam.endsWith(naam)) {
+        patch.data.typenaam = data.typenaam.slice(0, -naam.length) + v;
+      }
+      updateElement(id, patch);
+    },
+    [id, naam, type, data.typenaam, updateElement]
+  );
+
+  /**
+   * Typenaam wijzigen: bij entiteiten sync ook naam + klassenaam.
+   * Bij GE/relatie alleen typenaam (handmatige override).
+   */
+  const handleTypenaamChange = useCallback(
+    (v) => {
+      if (type === "entiteit") {
+        updateElement(id, { naam: v, data: { typenaam: v, klassenaam: v } });
+      } else {
+        updateElement(id, { data: { typenaam: v } });
+      }
+    },
+    [id, type, updateElement]
   );
 
   /** Bouw dynamische veldtype-lijst uit alle elementen in het model */
@@ -707,7 +734,7 @@ function ElementEditor({ element, updateElement }) {
       <EditField label="ID" value={id} readOnly />
       <EditField label="Type" value={TYPE_LABELS[type] || type} readOnly />
       <EditField label="Naam" value={naam} onChange={handleNaamChange} />
-      <EditField label="Typenaam" value={data.typenaam} onChange={(v) => setData("typenaam", v)} placeholder="bijv. A_Aanvang" />
+      <EditField label="Typenaam" value={data.typenaam} onChange={handleTypenaamChange} placeholder="bijv. A_Aanvang" />
       <EditField label="Domein" value={domein} onChange={(v) => setField("domein", v)} />
       <EditField label="Beschrijving" value={data.description} onChange={(v) => setData("description", v)} type="textarea" />
 

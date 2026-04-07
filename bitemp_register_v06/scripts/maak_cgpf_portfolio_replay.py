@@ -60,6 +60,11 @@ PLACEHOLDERS = {
     "test",
     "anonymous",
     "onbekend",
+    "komt nog",
+    "later aan te vullen",
+    "kom ik later op terug",
+    "nog in te vullen",
+    "nog in te vullen (harvey)",
 }
 
 PRODUCTTYPE_MAP = OrderedDict(
@@ -102,6 +107,114 @@ LAAG_MAP = OrderedDict(
         "opslag en archivering": "Laag 1",
     }
 )
+
+GEMEENTE_ALIASES = OrderedDict(
+    {
+        "den bosch": "'s-Hertogenbosch",
+        "s hertogenbosch": "'s-Hertogenbosch",
+        "s-hertogenbosch": "'s-Hertogenbosch",
+        "den haag": "'s-Gravenhage",
+        "s gravenhage": "'s-Gravenhage",
+        "s-gravenhage": "'s-Gravenhage",
+        "fryske marren": "De Fryske Marren",
+        "de fryske marren": "De Fryske Marren",
+        "sud west friesland": "Súdwest-Fryslân",
+        "sudwest friesland": "Súdwest-Fryslân",
+        "sudwest fryslan": "Súdwest-Fryslân",
+        "súdwest fryslan": "Súdwest-Fryslân",
+        "sudwest-fryslan": "Súdwest-Fryslân",
+        "sud west fryslan": "Súdwest-Fryslân",
+        "utrechts heuvelrug": "Utrechtse Heuvelrug",
+        "utrechtseheuvelrug": "Utrechtse Heuvelrug",
+        "meersen": "Meerssen",
+        "meijerijstad": "Meierijstad",
+    }
+)
+
+DOMEIN_RULES = OrderedDict(
+    {
+        "Burgerzaken": [r"burgerzaken"],
+        "Sociaal Domein": [r"sociaal\s*domein"],
+        "Ruimtelijke ordening": [r"ruimtelijke\s*ordening"],
+        "Bedrijfsvoering (HR, ICT, Finance, facilitair, inkoop)": [r"bedrijfsvoering", r"\bhr\b", r"\bict\b", r"finance", r"facilitair", r"inkoop"],
+        "Dienstverlening": [r"dienstverlening"],
+        "(Lokale) belastingen": [r"belasting"],
+        "Fysieke leefomgeving": [r"fysieke\s+leefomgeving", r"fysieke\s+omgeving"],
+        "Bestuur": [r"bestuur"],
+        "Openbare orde en veiligheid": [r"openbare\s+orde\s+en\s+veiligheid"],
+        "Overkoepelend / randvoorwaardelijk voor CG": [r"overkoepelend", r"randvoorwaardelijk"],
+    }
+)
+
+API_RULES = OrderedDict(
+    {
+        "ZGW API": [r"\bzgw\b", r"zaakgericht\s*werk", r"zaakgerichtwerk"],
+        "REST API": [r"\brest\b", r"restful"],
+        "Notificaties API": [r"notificatie(?:s)?\s*api", r"\bnc\b"],
+        "StUF-ZKN": [r"stuf[-\s]?zkn", r"zaak- en documentservices", r"regie- en zaakservices"],
+        "StUF-FIN": [r"stuf[-\s]?fin"],
+        "StUF-DCR": [r"stuf[-\s]?dcr", r"document creatie"],
+        "StUF": [r"\bstuf\b"],
+        "Haal Centraal BRP Personen API": [r"haal\s*centraal.*brp.*personen", r"brp personen bevragen api", r"haalcentraal.*brp", r"haal centraal brp"],
+        "Haal Centraal BRP Bewoning API": [r"brp bewoning api"],
+        "Documenten API": [r"documenten api", r"\bdrc\b"],
+        "Objecten API": [r"objecten api"],
+        "Objecttypen API": [r"objecttype(?:n)? api"],
+        "Catalogi API": [r"catalogi api", r"catalogus opvragen api", r"\bztc\b"],
+        "Zaken API": [r"zaken api", r"\bzrc\b"],
+        "Besluiten API": [r"besluiten api"],
+        "Autorisaties API": [r"autorisaties api", r"\bac\b"],
+        "Klanten API": [r"klanten api"],
+        "Contactmomenten API": [r"contactmomenten api"],
+        "Klantinteracties API": [r"klantinteracties api"],
+        "NL API Strategie": [r"nl[-\s]?api strategie"],
+        "OpenAPI": [r"openapi"],
+        "JSON:API": [r"json:api"],
+        "OAuth 2.0": [r"oauth\s*2", r"\boauth\b", r"oidc", r"openid connect"],
+        "SAML": [r"\bsaml\b"],
+        "JWT": [r"\bjwt\b"],
+        "BAG API": [r"bag bevragen api", r"\bbag api\b"],
+        "BRK API": [r"brk bevragen api", r"\bbrk api\b"],
+        "KVK / Handelsregister API": [r"\bkvk\b", r"handelsregister"],
+        "DSO API": [r"\bdso\b", r"aandeslagmetdeomgevingswet", r"omgevingswet"],
+        "CMIS": [r"\bcmis\b"],
+        "MDTO": [r"\bmdto\b"],
+        "OData": [r"\bodata\b"],
+        "DROP": [r"\bdrop\b"],
+        "PDOK services": [r"\bpdok\b"],
+        "OGC API Features": [r"ogc api.?features", r"ogc-?api"],
+        "SensorThings API": [r"sensorthings"],
+        "DCAT-AP NL": [r"dcat-?ap\s*nl"],
+        "GeoJSON": [r"geojson"],
+        "WFS": [r"\bwfs\b"],
+        "WMS": [r"\bwms\b"],
+        "WMTS": [r"\bwmts\b"],
+        "NLX": [r"\bnlx\b"],
+        "HAVEN": [r"\bhaven\b"],
+        "DigiD": [r"digid"],
+        "eHerkenning": [r"eherkenning", r"e-herkenning"],
+        "CloudEvents profiel": [r"cloud\s*events", r"nl-gov profiel"],
+        "SDG API / SDG-plus": [r"\bsdg\b"],
+        "Webhook": [r"webhook"],
+        "Alfresco Public API": [r"alfresco public api"],
+    }
+)
+
+API_IGNORE_PATTERNS = [
+    r"^$",
+    r"^-+$",
+    r"^n\.?v\.?t\.?$",
+    r"^geen$",
+    r"^nog geen$",
+    r"^x$",
+    r"^test$",
+    r"^anonymous$",
+    r"^alle$",
+    r"^api-standaarden$",
+    r"forms\\.office\\.com",
+    r"wordt nog toegevoegd",
+    r"momenteel verkennen",
+]
 
 
 def clean_text(value: Any) -> str:
@@ -160,8 +273,40 @@ def split_tokens(value: Any, separators: str) -> list[str]:
     return [token for token in tokens if not is_placeholder(token)]
 
 
+def split_text_parts(value: Any, *, split_on_commas: bool = False) -> list[str]:
+    text = clean_text(value)
+    if not text or is_placeholder(text):
+        return []
+    text = text.replace("•", ";").replace("|", ";").replace(" + ", ",")
+    result: list[str] = []
+    current: list[str] = []
+    depth = 0
+    separators = {";", "\n"}
+    if split_on_commas:
+        separators.add(",")
+
+    for char in text:
+        if char == "(":
+            depth += 1
+        elif char == ")" and depth > 0:
+            depth -= 1
+
+        if char in separators and depth == 0:
+            token = clean_text("".join(current))
+            if token and not is_placeholder(token):
+                result.append(token)
+            current = []
+            continue
+        current.append(char)
+
+    token = clean_text("".join(current))
+    if token and not is_placeholder(token):
+        result.append(token)
+    return unique_preserve_order(result)
+
+
 def extract_domeinen(value: Any) -> list[str]:
-    return unique_preserve_order(split_tokens(value, r"[;\n]+"))
+    return unique_preserve_order(split_text_parts(value, split_on_commas=True))
 
 
 def extract_api_standaarden(value: Any) -> list[str]:
@@ -170,23 +315,16 @@ def extract_api_standaarden(value: Any) -> list[str]:
         return []
     if text.startswith("http://") or text.startswith("https://"):
         return [text]
-    return unique_preserve_order(split_tokens(text, r"[;\n]+"))
+    return unique_preserve_order(split_text_parts(text, split_on_commas=True))
 
 
 def extract_named_items(value: Any) -> list[str]:
-    text = clean_text(value)
-    if not text or is_placeholder(text):
-        return []
-    text = text.replace(" + ", ",")
-    parts = split_tokens(text, r"[;,\n]+")
-    if not parts:
-        return []
-    return unique_preserve_order(parts)
+    return unique_preserve_order(split_text_parts(value, split_on_commas=True))
 
 
 def looks_like_name_token(token: str) -> bool:
     parts = [part for part in re.split(r"\s+", token) if part]
-    if not parts or len(parts) > 5:
+    if not parts or len(parts) > 6:
         return False
     allowed_lowercase = {"de", "den", "der", "van", "het", "ter", "ten", "aan", "op", "en", "'s"}
     for part in parts:
@@ -200,8 +338,7 @@ def looks_like_name_token(token: str) -> bool:
 def normalize_gemeente_token(token: str) -> str:
     token = re.sub(r"\s*\(.*?\)", "", token)
     token = re.sub(r"^(gemeente|gemeenten)\s+", "", token, flags=re.IGNORECASE)
-    token = clean_text(token)
-    return token
+    return clean_text(token)
 
 
 def extract_gemeenten(value: Any) -> list[str]:
@@ -232,7 +369,7 @@ def extract_gemeenten(value: Any) -> list[str]:
             continue
         if re.search(r"\d", token) or "http" in lowered or "www." in lowered:
             continue
-        if len(token) > 40:
+        if len(token) > 60:
             continue
         if looks_like_name_token(token):
             result.append(token)
@@ -281,12 +418,11 @@ def canonical_cglaag(raw: Any) -> tuple[str, str]:
 def canonical_schaal(raw: Any) -> str:
     if raw is None or raw == "":
         return ""
-    try:
-        return str(int(raw))
-    except (ValueError, TypeError):
-        text = clean_text(raw)
-        match = re.search(r"([1-4])", text)
-        return match.group(1) if match else text
+    text = clean_text(raw)
+    match = re.search(r"([1-4])", text)
+    if match:
+        return f"Schaal {match.group(1)}"
+    return text
 
 
 def request_change(veldnaam: str, payload: dict[str, Any]) -> dict[str, Any]:
@@ -341,7 +477,174 @@ def build_reference_map(items: list[str]) -> OrderedDict[str, int]:
     return ordered
 
 
-def collect_seed_data(rows: list[dict[str, Any]]) -> dict[str, Any]:
+def load_reference_map_from_replay(replay_path: Path, data_key: str, id_field: str, name_field: str) -> OrderedDict[str, int]:
+    references: OrderedDict[str, int] = OrderedDict()
+    if not replay_path.exists():
+        return references
+    try:
+        replay = json.loads(replay_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return references
+
+    for entry in replay.get("entries", []):
+        wijzigingen = entry.get("request_body", {}).get("wijzigingen", [])
+        for wijziging in wijzigingen:
+            payload = wijziging.get("opvoer", {}).get(data_key)
+            if not isinstance(payload, dict):
+                continue
+            naam = clean_text(payload.get(name_field))
+            ref_id = payload.get(id_field)
+            if naam and isinstance(ref_id, int):
+                references.setdefault(naam, ref_id)
+    return references
+
+
+def build_lookup(reference_map: OrderedDict[str, int]) -> dict[str, int]:
+    return {normalize_key(naam): ref_id for naam, ref_id in reference_map.items()}
+
+
+def find_reference_id(value: str, lookup: dict[str, int], aliases: dict[str, str] | None = None) -> int | None:
+    key = normalize_key(value)
+    if not key:
+        return None
+    if key in lookup:
+        return lookup[key]
+    if key.endswith(".") and key[:-1] in lookup:
+        return lookup[key[:-1]]
+    if aliases:
+        alias_target = aliases.get(key)
+        if alias_target:
+            return lookup.get(normalize_key(alias_target))
+        if key.endswith("."):
+            alias_target = aliases.get(key[:-1])
+            if alias_target:
+                return lookup.get(normalize_key(alias_target))
+    return None
+
+
+def match_domeinen(raw_value: Any, seed_data: dict[str, Any]) -> tuple[list[int], list[str]]:
+    lookup = seed_data["domeinen_lookup"]
+    tokens = extract_domeinen(raw_value)
+    matched_ids: list[int] = []
+    seen_ids: set[int] = set()
+    overig: list[str] = []
+    normalized_tokens = {normalize_key(token) for token in tokens}
+
+    if {"sociaal", "domein"}.issubset(normalized_tokens):
+        sociaal_id = find_reference_id("Sociaal Domein", lookup)
+        if sociaal_id is not None and sociaal_id not in seen_ids:
+            matched_ids.append(sociaal_id)
+            seen_ids.add(sociaal_id)
+
+    for token in tokens:
+        lowered = normalize_key(token)
+        if lowered in {"sociaal", "domein"} and {"sociaal", "domein"}.issubset(normalized_tokens):
+            continue
+
+        direct_id = find_reference_id(token, lookup)
+        if direct_id is not None:
+            if direct_id not in seen_ids:
+                matched_ids.append(direct_id)
+                seen_ids.add(direct_id)
+            continue
+
+        matched = False
+        for canonical_name, patterns in DOMEIN_RULES.items():
+            if any(re.search(pattern, lowered, flags=re.IGNORECASE) for pattern in patterns):
+                domein_id = find_reference_id(canonical_name, lookup)
+                if domein_id is not None and domein_id not in seen_ids:
+                    matched_ids.append(domein_id)
+                    seen_ids.add(domein_id)
+                matched = True
+                break
+
+        if not matched and token and not is_placeholder(token):
+            overig.append(token)
+
+    return matched_ids, unique_preserve_order(overig)
+
+
+def match_api_standaarden(raw_value: Any, seed_data: dict[str, Any]) -> tuple[list[int], list[str]]:
+    text = clean_text(raw_value)
+    if not text or is_placeholder(text):
+        return [], []
+
+    lookup = seed_data["api_standaarden_lookup"]
+    matched_ids: list[int] = []
+    seen_ids: set[int] = set()
+    normalized = normalize_key(text)
+
+    for canonical_name, patterns in API_RULES.items():
+        if any(re.search(pattern, normalized, flags=re.IGNORECASE) for pattern in patterns):
+            standaard_id = find_reference_id(canonical_name, lookup)
+            if standaard_id is not None and standaard_id not in seen_ids:
+                matched_ids.append(standaard_id)
+                seen_ids.add(standaard_id)
+
+    overig: list[str] = []
+    for token in extract_api_standaarden(raw_value):
+        lowered = normalize_key(token)
+        if any(re.search(pattern, lowered, flags=re.IGNORECASE) for pattern in API_IGNORE_PATTERNS):
+            continue
+        if any(re.search(pattern, lowered, flags=re.IGNORECASE) for patterns in API_RULES.values() for pattern in patterns):
+            continue
+        overig.append(token)
+
+    if not matched_ids and not overig and text:
+        if not any(re.search(pattern, normalized, flags=re.IGNORECASE) for pattern in API_IGNORE_PATTERNS):
+            overig.append(text)
+
+    return matched_ids, unique_preserve_order(overig)
+
+
+def match_gemeenten(raw_value: Any, role: str, seed_data: dict[str, Any]) -> tuple[list[dict[str, Any]], list[str]]:
+    lookup = seed_data["gemeenten_lookup"]
+    aliases = seed_data["gemeente_aliases"]
+    relaties: list[dict[str, Any]] = []
+    seen_relations: set[tuple[int, str]] = set()
+    overig: list[str] = []
+
+    for token in extract_named_items(raw_value):
+        normalized_token = normalize_gemeente_token(token)
+        if not normalized_token or is_placeholder(normalized_token):
+            continue
+
+        direct_id = find_reference_id(normalized_token, lookup, aliases)
+        if direct_id is not None:
+            rel_key = (direct_id, role)
+            if rel_key not in seen_relations:
+                relaties.append({"gemeente_id": direct_id, "rol": role})
+                seen_relations.add(rel_key)
+            continue
+
+        parts = [
+            normalize_gemeente_token(part)
+            for part in re.split(r"\s+(?:en|/|&|of)\s+", normalized_token)
+            if normalize_gemeente_token(part)
+        ]
+
+        matched_any = False
+        if len(parts) > 1:
+            for part in parts:
+                part_id = find_reference_id(part, lookup, aliases)
+                if part_id is not None:
+                    rel_key = (part_id, role)
+                    if rel_key not in seen_relations:
+                        relaties.append({"gemeente_id": part_id, "rol": role})
+                        seen_relations.add(rel_key)
+                    matched_any = True
+                elif looks_like_name_token(part) and not is_placeholder(part):
+                    overig.append(part)
+            if matched_any:
+                continue
+
+        if looks_like_name_token(normalized_token):
+            overig.append(normalized_token)
+
+    return relaties, unique_preserve_order(overig)
+
+
+def collect_seed_data(rows: list[dict[str, Any]], source_path: Path | None = None) -> dict[str, Any]:
     gemeenten: list[str] = []
     domeinen: list[str] = []
     api_standaarden: list[str] = []
@@ -376,10 +679,28 @@ def collect_seed_data(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 link_key = normalize_key(f"{contact_org}|{po_naam}|{po_email}")
                 contactpersoon_links.setdefault(link_key, (normalize_key(contact_org), person_key))
 
+    base_dir = source_path.parent if source_path else None
+    externe_gemeenten = load_reference_map_from_replay(base_dir / "Gemeenten CBS 2026.replay.json", "gemeentegegevens", "gemeente_id", "naam") if base_dir else OrderedDict()
+    externe_domeinen = load_reference_map_from_replay(base_dir / "Domeinen vast 2026.replay.json", "domeingegevens", "domein_id", "naam") if base_dir else OrderedDict()
+    externe_api_standaarden = load_reference_map_from_replay(base_dir / "API standaarden rationalisatie 2026.replay.json", "naam", "apistandaard_id", "naam") if base_dir else OrderedDict()
+
+    gemeenten_map = externe_gemeenten or build_reference_map(gemeenten)
+    domeinen_map = externe_domeinen or build_reference_map(domeinen)
+    api_standaarden_map = externe_api_standaarden or build_reference_map(api_standaarden)
+
     return {
-        "gemeenten": build_reference_map(gemeenten),
-        "domeinen": build_reference_map(domeinen),
-        "api_standaarden": build_reference_map(api_standaarden),
+        "gemeenten": gemeenten_map,
+        "gemeenten_lookup": build_lookup(gemeenten_map),
+        "gemeente_aliases": GEMEENTE_ALIASES,
+        "domeinen": domeinen_map,
+        "domeinen_lookup": build_lookup(domeinen_map),
+        "api_standaarden": api_standaarden_map,
+        "api_standaarden_lookup": build_lookup(api_standaarden_map),
+        "externally_seeded": {
+            "gemeenten": bool(externe_gemeenten),
+            "domeinen": bool(externe_domeinen),
+            "api_standaarden": bool(externe_api_standaarden),
+        },
         "organisaties": OrderedDict(
             (info["naam"], index)
             for index, info in enumerate(
@@ -419,7 +740,7 @@ def build_seed_entries(seed_data: dict[str, Any], start_time: datetime) -> list[
                 {"gemeente_id": gemeente_id, "naam": naam, "code": to_code("GM", gemeente_id)},
             )
         )
-    if gemeente_changes:
+    if gemeente_changes and not seed_data["externally_seeded"].get("gemeenten"):
         entries.append(request_entry(timestamp.isoformat().replace("+00:00", "Z"), "Seed referentielijst Gemeente", gemeente_changes))
         timestamp += timedelta(seconds=1)
 
@@ -432,7 +753,7 @@ def build_seed_entries(seed_data: dict[str, Any], start_time: datetime) -> list[
                 {"domein_id": domein_id, "naam": naam, "omschrijving": f"Geimporteerd uit portfolio intake: {naam}"},
             )
         )
-    if domein_changes:
+    if domein_changes and not seed_data["externally_seeded"].get("domeinen"):
         entries.append(request_entry(timestamp.isoformat().replace("+00:00", "Z"), "Seed referentielijst Domein", domein_changes))
         timestamp += timedelta(seconds=1)
 
@@ -440,7 +761,7 @@ def build_seed_entries(seed_data: dict[str, Any], start_time: datetime) -> list[
     for naam, standaard_id in seed_data["api_standaarden"].items():
         api_changes.append(request_change("apistandaard", {"id": standaard_id}))
         api_changes.append(request_change("naam", {"apistandaard_id": standaard_id, "naam": naam}))
-    if api_changes:
+    if api_changes and not seed_data["externally_seeded"].get("api_standaarden"):
         entries.append(request_entry(timestamp.isoformat().replace("+00:00", "Z"), "Seed referentielijst ApiStandaard", api_changes))
         timestamp += timedelta(seconds=1)
 
@@ -595,29 +916,64 @@ def build_initiatief_entries(rows: list[dict[str, Any]], seed_data: dict[str, An
                 )
             )
 
-        for domein in extract_domeinen(row.get("domeinen")):
-            domein_id = seed_data["domeinen"].get(domein)
-            if domein_id is not None:
-                wijzigingen.append(request_change("initiatiefdomein", {"initiatief_id": initiatief_id, "domein_id": domein_id}))
-
-        gemeenten = unique_preserve_order(
-            extract_gemeenten(row.get("gemeenten_realisatie"))
-            + extract_gemeenten(row.get("gemeenten_gebruik"))
-        )
-        for gemeente in gemeenten:
-            gemeente_id = seed_data["gemeenten"].get(gemeente)
-            if gemeente_id is not None:
-                wijzigingen.append(request_change("initiatiefgemeente", {"initiatief_id": initiatief_id, "gemeente_id": gemeente_id}))
-
-        for api_standaard in extract_api_standaarden(row.get("api_standaarden")):
-            standaard_id = seed_data["api_standaarden"].get(api_standaard)
-            if standaard_id is not None:
-                wijzigingen.append(
-                    request_change(
-                        "initiatiefapistandaard",
-                        {"initiatief_id": initiatief_id, "apistandaard_id": standaard_id},
-                    )
+        matched_domeinen, overige_domeinen = match_domeinen(row.get("domeinen"), seed_data)
+        for domein_id in matched_domeinen:
+            wijzigingen.append(request_change("initiatiefdomein", {"initiatief_id": initiatief_id, "domein_id": domein_id}))
+        if overige_domeinen:
+            wijzigingen.append(
+                request_change(
+                    "anderdomein",
+                    {"initiatief_id": initiatief_id, "domein": "; ".join(overige_domeinen)},
                 )
+            )
+
+        gemeente_relaties: list[dict[str, Any]] = []
+        overige_gemeenten: list[str] = []
+        for raw_value, rol in (
+            (row.get("gemeenten_realisatie"), "Realiseert"),
+            (row.get("gemeenten_gebruik"), "Maakt gebruik van"),
+        ):
+            relaties, overig = match_gemeenten(raw_value, rol, seed_data)
+            for relatie in relaties:
+                if relatie not in gemeente_relaties:
+                    gemeente_relaties.append(relatie)
+            overige_gemeenten.extend(overig)
+
+        for relatie in gemeente_relaties:
+            wijzigingen.append(
+                request_change(
+                    "initiatiefgemeente",
+                    {
+                        "initiatief_id": initiatief_id,
+                        "gemeente_id": relatie["gemeente_id"],
+                        "rol": relatie["rol"],
+                    },
+                )
+            )
+        overige_gemeenten = unique_preserve_order(overige_gemeenten)
+        if overige_gemeenten:
+            wijzigingen.append(
+                request_change(
+                    "andersdangemeente",
+                    {"initiatief_id": initiatief_id, "andersDanGemeente": "; ".join(overige_gemeenten)},
+                )
+            )
+
+        matched_api_standaarden, overige_api_standaarden = match_api_standaarden(row.get("api_standaarden"), seed_data)
+        for standaard_id in matched_api_standaarden:
+            wijzigingen.append(
+                request_change(
+                    "initiatiefapistandaard",
+                    {"initiatief_id": initiatief_id, "apistandaard_id": standaard_id},
+                )
+            )
+        if overige_api_standaarden:
+            wijzigingen.append(
+                request_change(
+                    "andereapistandaard",
+                    {"initiatief_id": initiatief_id, "api_standaard": "; ".join(overige_api_standaarden)},
+                )
+            )
 
         entries.append(
             request_entry(
@@ -631,7 +987,7 @@ def build_initiatief_entries(rows: list[dict[str, Any]], seed_data: dict[str, An
 
 
 def build_replay(source_rows: list[dict[str, Any]], schema_meta: dict[str, Any], source_path: Path, schema_path: Path) -> dict[str, Any]:
-    seed_data = collect_seed_data(source_rows)
+    seed_data = collect_seed_data(source_rows, source_path)
 
     row_times = [parse_iso_timestamp(row.get("begintijd")) for row in source_rows]
     parsed_times = [datetime.fromisoformat(value.replace("Z", "+00:00")) for value in row_times if value]
@@ -659,10 +1015,11 @@ def build_replay(source_rows: list[dict[str, Any]], schema_meta: dict[str, Any],
             "personen": len(seed_data["personen"]),
         },
         "known_gaps": [
-            "Initiatief heeft in cgpf 0.3.7 geen relatie naar Organisatie; betrokken organisaties worden daarom alleen als losse entiteiten geseed.",
+            "Initiatief heeft in cgpf 0.3.7/0.4.4 nog geen uitgewerkte relationele koppeling naar Organisatie voor alle betrokken organisaties; contactorganisaties en leveranciers worden daarom nog steeds als losse seed-entiteiten opgevoerd.",
             "De huidige MetaRegistry gebruikt dezelfde request-key 'contactgegevens' voor Organisatie_Contactgegevens en Persoon_Contactgegevens; deze generator laat die records daarom bewust weg uit het replay-bestand.",
-            "Bronwaarden voor producttype, fase en CG-laag zijn rijker dan het huidige schema; de generator normaliseert die waarden en bewaart de ruwe bronwaarde in registratie.opmerking.",
-            "Gemeenten, domeinen en API-standaarden worden heuristisch gesplitst uit vrije tekstvelden; handmatige opschoning blijft waarschijnlijk nodig.",
+            "Bronwaarden voor producttype, fase en CG-laag zijn rijker dan de huidige enums. De generator normaliseert die waarden en bewaart de ruwe bronwaarde in registratie.opmerking.",
+            "Voor gemeente, domein en API-standaard geldt nu: match op de referentielijst => REL opvoeren; geen match => opslaan in het bijbehorende overig-GE (`anderdomein`, `andersdangemeente`, `andereapistandaard`).",
+            "Wanneer de losse seed-replays voor gemeenten, domeinen en API-standaarden aanwezig zijn, gebruikt de generator die als bron en worden die referenties niet opnieuw in dit replay-bestand geseed.",
         ],
         "entries": entries,
     }
@@ -671,7 +1028,7 @@ def build_replay(source_rows: list[dict[str, Any]], schema_meta: dict[str, Any],
 def main() -> int:
     parser = argparse.ArgumentParser(description="Zet de CG portfolio intake-JSON om naar een draft replay-bestand voor /registratie/.")
     parser.add_argument("source_json", type=Path, help="Pad naar Intake Portfolio Common Ground 1.json")
-    parser.add_argument("schema_json", type=Path, help="Pad naar cgpf 0.3.7.json")
+    parser.add_argument("schema_json", type=Path, help="Pad naar een CGPF schema-export, bijvoorbeeld CGPF 0.4.4.json")
     parser.add_argument("output_json", type=Path, help="Pad voor het replay JSON-bestand")
     args = parser.parse_args()
 

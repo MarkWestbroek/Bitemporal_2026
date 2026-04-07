@@ -1,0 +1,289 @@
+{
+  "source": "bitemp_register_v06/docs/ontwerpgedachten/CG PF/Intake Portfolio Common Ground 1.json",
+  "generated_at": "2026-04-07T20:08:11.181383Z",
+  "description": "Per initiatief de uit de gemeentevelden afgeleide waarden die bewust niet als officiële gemeente zijn geïnterpreteerd.",
+  "summary": {
+    "aantal_initiatieven_met_overigNietGemeente": 21,
+    "aantal_unieke_waarden": 24,
+    "waarden_op_aflopende_frequentie": [
+      {
+        "naam": "Dimpact",
+        "aantal_initiatieven": 8
+      },
+      {
+        "naam": "Drechteland",
+        "aantal_initiatieven": 2
+      },
+      {
+        "naam": "RDW.",
+        "aantal_initiatieven": 2
+      },
+      {
+        "naam": "Bovenstaand",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "DataMask",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "de",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "De Buch",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Digeplan",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Duoplus",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Elsevier",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Geoweb",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Min. BZK",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Min. van Binnenlandse Zaken",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "My-lex",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Omgevingsdienst Midden Holland",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Omgevingsdienst Noord-Holland-Noord",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "OWC Gemeenten",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Provincie Overijssel",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Saxion Hogescholen",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "SED Organisatie",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "SED-organisatie",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "SIMgroep",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Waterschap Rivierenland",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "WTS Zuiderzeeland",
+        "aantal_initiatieven": 1
+      }
+    ]
+  },
+  "entries": [
+    {
+      "bron_id": 44,
+      "initiatief_id": 44,
+      "initiatief_naam": "NLPortal MijnOmgeving voor inwoners en ondernemers",
+      "overigNietGemeente": [
+        "Elsevier"
+      ]
+    },
+    {
+      "bron_id": 45,
+      "initiatief_id": 45,
+      "initiatief_naam": "OpenCatalogi",
+      "overigNietGemeente": [
+        "Dimpact",
+        "Min. van Binnenlandse Zaken",
+        "SIMgroep",
+        "Min. BZK"
+      ]
+    },
+    {
+      "bron_id": 51,
+      "initiatief_id": 51,
+      "initiatief_naam": "GZAC",
+      "overigNietGemeente": [
+        "Bovenstaand"
+      ]
+    },
+    {
+      "bron_id": 52,
+      "initiatief_id": 52,
+      "initiatief_naam": "Open Zaak",
+      "overigNietGemeente": [
+        "Drechteland",
+        "Dimpact"
+      ]
+    },
+    {
+      "bron_id": 53,
+      "initiatief_id": 53,
+      "initiatief_naam": "Open Formulieren",
+      "overigNietGemeente": [
+        "Dimpact"
+      ]
+    },
+    {
+      "bron_id": 61,
+      "initiatief_id": 61,
+      "initiatief_naam": "Open Notificaties",
+      "overigNietGemeente": [
+        "Drechteland",
+        "Dimpact"
+      ]
+    },
+    {
+      "bron_id": 72,
+      "initiatief_id": 72,
+      "initiatief_naam": "Rx.Open",
+      "overigNietGemeente": [
+        "Omgevingsdienst Midden Holland",
+        "SED Organisatie"
+      ]
+    },
+    {
+      "bron_id": 74,
+      "initiatief_id": 74,
+      "initiatief_naam": "Fundament",
+      "overigNietGemeente": [
+        "Digeplan",
+        "DataMask",
+        "Geoweb",
+        "My-lex"
+      ]
+    },
+    {
+      "bron_id": 76,
+      "initiatief_id": 76,
+      "initiatief_naam": "Open Archiefbeheer",
+      "overigNietGemeente": [
+        "Dimpact"
+      ]
+    },
+    {
+      "bron_id": 78,
+      "initiatief_id": 78,
+      "initiatief_naam": "Open Producten",
+      "overigNietGemeente": [
+        "Dimpact"
+      ]
+    },
+    {
+      "bron_id": 79,
+      "initiatief_id": 79,
+      "initiatief_naam": "Tezza",
+      "overigNietGemeente": [
+        "Omgevingsdienst Noord-Holland-Noord",
+        "Saxion Hogescholen"
+      ]
+    },
+    {
+      "bron_id": 83,
+      "initiatief_id": 83,
+      "initiatief_naam": "Referentielijsten API",
+      "overigNietGemeente": [
+        "Dimpact"
+      ]
+    },
+    {
+      "bron_id": 95,
+      "initiatief_id": 95,
+      "initiatief_naam": "NotifyNL (NotificatieNL)",
+      "overigNietGemeente": [
+        "de"
+      ]
+    },
+    {
+      "bron_id": 99,
+      "initiatief_id": 99,
+      "initiatief_naam": "Octopus",
+      "overigNietGemeente": [
+        "RDW."
+      ]
+    },
+    {
+      "bron_id": 99,
+      "initiatief_id": 99,
+      "initiatief_naam": "Octopus",
+      "overigNietGemeente": [
+        "RDW."
+      ]
+    },
+    {
+      "bron_id": 101,
+      "initiatief_id": 101,
+      "initiatief_naam": "iSyNAPS",
+      "overigNietGemeente": [
+        "Waterschap Rivierenland"
+      ]
+    },
+    {
+      "bron_id": 103,
+      "initiatief_id": 103,
+      "initiatief_naam": "Aansluiting JOIN Zaaksysteem (Decos) op de MijnOmgeving van OWC gemeenten",
+      "overigNietGemeente": [
+        "OWC Gemeenten"
+      ]
+    },
+    {
+      "bron_id": 104,
+      "initiatief_id": 104,
+      "initiatief_naam": "ValidSign",
+      "overigNietGemeente": [
+        "Provincie Overijssel",
+        "SED-organisatie"
+      ]
+    },
+    {
+      "bron_id": 105,
+      "initiatief_id": 105,
+      "initiatief_naam": "Archiefbeheer",
+      "overigNietGemeente": [
+        "Duoplus",
+        "De Buch"
+      ]
+    },
+    {
+      "bron_id": 113,
+      "initiatief_id": 113,
+      "initiatief_naam": "NotifyNL en OMC",
+      "overigNietGemeente": [
+        "Dimpact"
+      ]
+    },
+    {
+      "bron_id": 114,
+      "initiatief_id": 114,
+      "initiatief_naam": "DiVault FLEX (pre-depot)",
+      "overigNietGemeente": [
+        "WTS Zuiderzeeland"
+      ]
+    }
+  ]
+}

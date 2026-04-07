@@ -78,6 +78,31 @@ Voorkom dat node_modules, dist en .vite worden getrackt.
 Geef veilige, niet-destructieve git-commando's en leg kort uit wat elk commando doet.
 ```
 
+## VS Code debug auto-attach en Settings Sync
+
+Als `npm run dev` of `npm run build` meldt:
+
+- `Debugger attached.`
+- `Waiting for the debugger to disconnect...`
+
+Dan komt dat meestal door **lokale VS Code debug auto-attach**, niet door Git of `node_modules` zelf.
+
+Aanbevolen:
+
+1. Houd deze debug-instellingen machine-lokaal.
+2. Zet ze in je **User Settings Sync ignore list**:
+
+```json
+"settingsSync.ignoredSettings": [
+  "chat.instructionsFilesLocations",
+  "debug.javascript.autoAttachFilter",
+  "debug.javascript.autoAttachSmartPattern",
+  "debug.javascript.terminalOptions"
+]
+```
+
+Daarnaast schermt `web/vite/scripts/ensure-local-deps.mjs` sinds april 2026 de automatische `npm install` al af van geërfde debug-variabelen, zodat de frontend-start op Windows en macOS niet onnodig blijft hangen.
+
 ## Notities
 
 - `node_modules` is machine-specifiek en mag niet in git.

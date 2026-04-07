@@ -1,7 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { HashRouter, Routes, Route } from "react-router";
-import { SchemaProvider } from "../context/SchemaContext";
+import { HashRouter, Routes, Route, Link } from "react-router";
+import { SchemaProvider, useSchema } from "../context/SchemaContext";
 import EditorNavigatie from "../components/editor/EditorNavigatie";
 import InhoudEditorPage from "../pages/InhoudEditorPage";
 import EntiteitFormulier from "../components/editor/EntiteitFormulier";
@@ -30,6 +30,104 @@ function detectBaseUrl() {
   return loc.origin;
 }
 
+function InhoudStartPage() {
+  const { inhoudNavigatieGroepen, loading, error } = useSchema();
+
+  if (loading) {
+    return <div style={{ padding: "2rem", color: "var(--cg-donkergrijs)" }}>Schema laden…</div>;
+  }
+
+  if (error) {
+    return <div className="cg-feedback--fout">Schema fout: {error}</div>;
+  }
+
+  return (
+    <div style={{ padding: "0.5rem" }}>
+      <h2 className="utrecht-heading-2">Welkom bij de Inhoud Editor</h2>
+      <p style={{ color: "var(--cg-donkergrijs)", maxWidth: 760 }}>
+        Kies links in de zijbalk of hieronder een domein. Per domein zie je zowel de ENT-en als de
+        referentielijst-items.
+      </p>
+
+      {inhoudNavigatieGroepen.length === 0 ? (
+        <div style={{ color: "var(--cg-donkergrijs)" }}>Geen inhoudstypen gevonden.</div>
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            gap: "1rem",
+          }}
+        >
+          {inhoudNavigatieGroepen.map((groep) => (
+            <section key={groep.domein} className="cg-form-card" style={{ marginBottom: 0 }}>
+              <h3 className="utrecht-heading-3" style={{ marginTop: 0, marginBottom: "0.75rem" }}>
+                {groep.domein}
+              </h3>
+
+              {groep.entiteiten.length > 0 && (
+                <div>
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                      color: "var(--cg-donkergrijs)",
+                    }}
+                  >
+                    ENT-en
+                  </div>
+                  <ul style={{ margin: "0.5rem 0 0", paddingLeft: "1.25rem" }}>
+                    {groep.entiteiten.map((meta) => (
+                      <li key={meta.typenaam} style={{ marginBottom: "0.25rem" }}>
+                        <Link
+                          to={`/t/${meta.padnaam || meta.meervoud || meta.veldnaam}`}
+                          style={{ color: "var(--cg-blauw)", textDecoration: "none" }}
+                        >
+                          {meta.klassenaam || meta.typenaam}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {groep.referentielijstItems.length > 0 && (
+                <div style={{ marginTop: "0.75rem" }}>
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                      color: "var(--cg-donkergrijs)",
+                    }}
+                  >
+                    Referentielijst-items
+                  </div>
+                  <ul style={{ margin: "0.5rem 0 0", paddingLeft: "1.25rem" }}>
+                    {groep.referentielijstItems.map((meta) => (
+                      <li key={meta.typenaam} style={{ marginBottom: "0.25rem" }}>
+                        <Link
+                          to={`/t/${meta.padnaam || meta.meervoud || meta.veldnaam}`}
+                          style={{ color: "var(--cg-blauw)", textDecoration: "none" }}
+                        >
+                          {meta.klassenaam || meta.typenaam}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </section>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EditorApp() {
   const baseUrl = detectBaseUrl();
 
@@ -50,15 +148,7 @@ function EditorApp() {
               <Route path="/t/:typePad" element={<InhoudEditorPage />} />
               <Route path="/t/:typePad/nieuw" element={<NieuwRecordFormulier />} />
               <Route path="/t/:typePad/:id" element={<EntiteitFormulier />} />
-              <Route
-                path="*"
-                element={
-                  <div style={{ padding: "2rem", color: "var(--cg-donkergrijs)" }}>
-                    <h2 className="utrecht-heading-2">Welkom bij de Inhoud Editor</h2>
-                    <p>Kies een entiteittype in de zijbalk om de gegevens te bekijken en bewerken.</p>
-                  </div>
-                }
-              />
+              <Route path="*" element={<InhoudStartPage />} />
             </Routes>
           </main>
         </div>

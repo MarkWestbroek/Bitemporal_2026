@@ -1,0 +1,888 @@
+{
+  "versie": "v3",
+  "naam": "Editor export",
+  "beschrijving": "V3 export vanuit UML editor (codegen-ready)",
+  "datatypes": [
+    {
+      "naam": "Datum",
+      "description": "Datum zonder tijdcomponent.",
+      "domein": "CG",
+      "basistype": "string",
+      "format": "date",
+      "positie": {
+        "x": 615,
+        "y": 495
+      },
+      "validatie": {},
+      "weergave": {}
+    },
+    {
+      "naam": "URL",
+      "description": "Volledig internetadres.",
+      "domein": "CG",
+      "basistype": "string",
+      "format": "uri",
+      "positie": {
+        "x": -510,
+        "y": 255
+      },
+      "validatie": {},
+      "weergave": {}
+    },
+    {
+      "naam": "Emailadres",
+      "description": "E-mailadres.",
+      "domein": "CG",
+      "basistype": "string",
+      "format": "email",
+      "positie": {
+        "x": -510,
+        "y": -225
+      },
+      "validatie": {},
+      "weergave": {}
+    },
+    {
+      "naam": "Telefoonnummer",
+      "description": "Telefoonnummer in nationale of internationale notatie.",
+      "domein": "CG",
+      "basistype": "string",
+      "format": "phone",
+      "positie": {
+        "x": -525,
+        "y": -15
+      },
+      "validatie": {},
+      "weergave": {}
+    },
+    {
+      "naam": "GitAdres",
+      "description": "Adres van een Git repository, bijvoorbeeld HTTPS of SSH.",
+      "domein": "CG",
+      "basistype": "string",
+      "format": "git-address",
+      "positie": {
+        "x": 975,
+        "y": 315
+      },
+      "validatie": {},
+      "weergave": {}
+    }
+  ],
+  "enums": [
+    {
+      "goType": "Producttype",
+      "domein": "CG",
+      "baseType": "string",
+      "positie": {
+        "x": 765,
+        "y": 330
+      },
+      "waarden": [
+        {
+          "constNaam": "ProducttypeComponent",
+          "waarde": "Component"
+        },
+        {
+          "constNaam": "ProducttypeToepassing",
+          "waarde": "Toepassing"
+        }
+      ]
+    },
+    {
+      "goType": "Fase",
+      "domein": "CG",
+      "baseType": "string",
+      "positie": {
+        "x": 390,
+        "y": 480
+      },
+      "waarden": [
+        {
+          "constNaam": "FaseIdee",
+          "waarde": "Idee"
+        },
+        {
+          "constNaam": "FaseVerkenning",
+          "waarde": "Verkenning"
+        },
+        {
+          "constNaam": "FaseRealisatie",
+          "waarde": "Realisatie"
+        },
+        {
+          "constNaam": "FaseInGebruik",
+          "waarde": "InGebruik"
+        }
+      ]
+    },
+    {
+      "goType": "Schaal",
+      "domein": "CG",
+      "baseType": "string",
+      "positie": {
+        "x": 1380,
+        "y": 225
+      },
+      "waarden": [
+        {
+          "constNaam": "SchaalSchaal1",
+          "waarde": "Schaal 1"
+        },
+        {
+          "constNaam": "SchaalSchaal2",
+          "waarde": "Schaal 2"
+        },
+        {
+          "constNaam": "SchaalSchaal3",
+          "waarde": "Schaal 3"
+        },
+        {
+          "constNaam": "SchaalSchaal4",
+          "waarde": "Schaal 4"
+        }
+      ]
+    },
+    {
+      "goType": "Bijdragetype",
+      "domein": "CG",
+      "baseType": "string",
+      "positie": {
+        "x": 1380,
+        "y": 60
+      },
+      "waarden": [
+        {
+          "constNaam": "BijdragetypeWendbaarheid",
+          "waarde": "Wendbaarheid"
+        },
+        {
+          "constNaam": "BijdragetypeDienstverlening",
+          "waarde": "Dienstverlening"
+        },
+        {
+          "constNaam": "BijdragetypeRegie",
+          "waarde": "Regie"
+        }
+      ]
+    },
+    {
+      "goType": "CGLaag",
+      "domein": "CG",
+      "baseType": "string",
+      "positie": {
+        "x": 885,
+        "y": 465
+      },
+      "waarden": [
+        {
+          "constNaam": "CGLaagLaag5",
+          "waarde": "Laag 5"
+        },
+        {
+          "constNaam": "CGLaagLaag4",
+          "waarde": "Laag 4"
+        },
+        {
+          "constNaam": "CGLaagLaag3",
+          "waarde": "Laag 3"
+        },
+        {
+          "constNaam": "CGLaagLaag2",
+          "waarde": "Laag 2"
+        },
+        {
+          "constNaam": "CGLaagLaag1",
+          "waarde": "Laag 1"
+        },
+        {
+          "constNaam": "CGLaagHostingeninfrastructuur",
+          "waarde": "Hosting en infrastructuur"
+        }
+      ]
+    },
+    {
+      "goType": "Organisatierol",
+      "domein": "CG",
+      "baseType": "string",
+      "positie": {
+        "x": 510,
+        "y": -150
+      },
+      "waarden": [
+        {
+          "constNaam": "OrganisatierolContactorganisatie",
+          "waarde": "Contactorganisatie"
+        },
+        {
+          "constNaam": "OrganisatierolBetrokkenOrganisatie",
+          "waarde": "BetrokkenOrganisatie"
+        }
+      ]
+    },
+    {
+      "goType": "Organisatietype",
+      "domein": "CG",
+      "baseType": "string",
+      "positie": {
+        "x": 315,
+        "y": 75
+      },
+      "waarden": [
+        {
+          "constNaam": "OrganisatietypeGemeenten",
+          "waarde": "Gemeenten"
+        },
+        {
+          "constNaam": "OrganisatietypeLeveranciers",
+          "waarde": "Leveranciers"
+        },
+        {
+          "constNaam": "OrganisatietypeVNG",
+          "waarde": "VNG"
+        },
+        {
+          "constNaam": "OrganisatietypeKetenpartners",
+          "waarde": "Ketenpartners"
+        },
+        {
+          "constNaam": "OrganisatietypeRijk",
+          "waarde": "Rijk"
+        }
+      ]
+    },
+    {
+      "goType": "Gemeenterol",
+      "domein": "CG",
+      "baseType": "string",
+      "positie": {
+        "x": 1170,
+        "y": -870
+      },
+      "waarden": [
+        {
+          "constNaam": "GemeenterolRealiseert",
+          "waarde": "Realiseert"
+        },
+        {
+          "constNaam": "GemeenterolMaaktgebruikvan",
+          "waarde": "Maakt gebruik van"
+        }
+      ]
+    }
+  ],
+  "entiteiten": [
+    {
+      "typenaam": "Initiatief",
+      "description": "Portfolio-initiatief met planning, productinformatie en bijdragen.",
+      "domein": "CG",
+      "isMaterieel": true,
+      "kleur": "#bfdbfe",
+      "meervoud": "initiatieven",
+      "positie": {
+        "x": 840,
+        "y": -480
+      },
+      "afgeleideVelden": [
+        {
+          "naam": "weergavenaam",
+          "goType": "string",
+          "afleidingsregelTaal": "cel",
+          "afleidingsregel": "Product.naam + (Planning.fase != null ? ' - ' + Planning.fase : '')",
+          "isWeergaveVeld": true
+        }
+      ],
+      "gegevenselementen": [
+        {
+          "naam": "Planning",
+          "description": "Planning en voortgang van het initiatief.",
+          "domein": "CG",
+          "meervoud": "planningen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": true,
+          "positie": {
+            "x": 585,
+            "y": 90
+          },
+          "id": "Initiatief->Initiatief_Planning",
+          "velden": [
+            {
+              "naam": "planningsinfo",
+              "goType": "string"
+            },
+            {
+              "naam": "startdatum",
+              "goType": "Datum",
+              "datatype": "Datum"
+            },
+            {
+              "naam": "ready_for_use",
+              "goType": "Datum",
+              "datatype": "Datum"
+            },
+            {
+              "naam": "waar_tegenaan_gelopen",
+              "goType": "string"
+            },
+            {
+              "naam": "fase",
+              "goType": "Fase",
+              "enum": "Fase"
+            }
+          ]
+        },
+        {
+          "naam": "Product",
+          "description": "Beschrijving van het product dat bij het initiatief hoort.",
+          "domein": "CG",
+          "meervoud": "producten",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": true,
+          "positie": {
+            "x": 840,
+            "y": 60
+          },
+          "id": "Initiatief->Initiatief_Product",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            },
+            {
+              "naam": "omschrijving",
+              "goType": "*string"
+            },
+            {
+              "naam": "pitch",
+              "goType": "*string"
+            },
+            {
+              "naam": "website",
+              "goType": "URL",
+              "datatype": "URL"
+            },
+            {
+              "naam": "git_repo",
+              "goType": "GitAdres",
+              "datatype": "GitAdres"
+            },
+            {
+              "naam": "type",
+              "goType": "Producttype",
+              "enum": "Producttype"
+            },
+            {
+              "naam": "CG_laag",
+              "goType": "CGLaag",
+              "enum": "CGLaag"
+            }
+          ]
+        },
+        {
+          "naam": "Bijdrage",
+          "description": "Bijdrage van het initiatief aan bredere doelen.",
+          "domein": "CG",
+          "meervoud": "bijdragen",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": true,
+          "positie": {
+            "x": 1125,
+            "y": 105
+          },
+          "id": "Initiatief->Initiatief_Bijdrage",
+          "velden": [
+            {
+              "naam": "type_bijdrage",
+              "goType": "Bijdragetype",
+              "enum": "Bijdragetype"
+            },
+            {
+              "naam": "schaal",
+              "goType": "Schaal",
+              "enum": "Schaal"
+            },
+            {
+              "naam": "toelichting",
+              "goType": "string"
+            }
+          ]
+        },
+        {
+          "naam": "AnderDomein",
+          "domein": "CG",
+          "meervoud": "andere_domeinen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 1170,
+            "y": -384
+          },
+          "id": "edge_1775592769882_12",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "velden": [
+            {
+              "naam": "domein",
+              "goType": "*string"
+            }
+          ]
+        },
+        {
+          "naam": "AndersDanGemeente",
+          "domein": "CG",
+          "meervoud": "anders_dan_gemeenten",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 1170,
+            "y": -618
+          },
+          "id": "edge_1775592790634_14",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "velden": [
+            {
+              "naam": "andersDanGemeente",
+              "goType": "*string"
+            }
+          ]
+        },
+        {
+          "naam": "AndereAPIStandaard",
+          "domein": "CG",
+          "meervoud": "andere_api_standaarden",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 1170,
+            "y": -150
+          },
+          "id": "edge_1775592938018_17",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "velden": [
+            {
+              "naam": "api_standaard",
+              "goType": "*string"
+            }
+          ]
+        }
+      ],
+      "relaties": [
+        {
+          "naam": "InitiatiefGemeente",
+          "domein": "CG",
+          "meervoud": "initiatief_gemeenten",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": false,
+          "doelEntiteit": "Gemeente",
+          "positie": {
+            "x": 1170,
+            "y": -735
+          },
+          "id": "edge_1775567300131_7",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "doelId": "edge_1775567335493_8",
+          "doelSourceHandle": "right",
+          "doelTargetHandle": "left",
+          "velden": [
+            {
+              "naam": "rol",
+              "goType": "Gemeenterol",
+              "enum": "Gemeenterol"
+            }
+          ]
+        },
+        {
+          "naam": "InitiatiefDomein",
+          "domein": "CG",
+          "meervoud": "initiatief_domeinen",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": false,
+          "doelEntiteit": "Domein",
+          "positie": {
+            "x": 1170,
+            "y": -501
+          },
+          "id": "edge_1775567392935_11",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "doelId": "edge_1775567422077_13",
+          "doelSourceHandle": "left",
+          "doelTargetHandle": "right",
+          "velden": []
+        },
+        {
+          "naam": "InitiatiefAPIStandaard",
+          "domein": "CG",
+          "meervoud": "initiatief_api_standaarden",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": false,
+          "doelEntiteit": "ApiStandaard",
+          "positie": {
+            "x": 1170,
+            "y": -267
+          },
+          "id": "edge_1775569530678_15",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "doelId": "edge_1775570229289_20",
+          "doelSourceHandle": "left",
+          "doelTargetHandle": "right",
+          "velden": []
+        },
+        {
+          "naam": "InitiatiefOrganisatie",
+          "description": "de organisaties bij een initiatief",
+          "domein": "CG",
+          "meervoud": "initiatief_organisaties",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "doelEntiteit": "Organisatie",
+          "positie": {
+            "x": 510,
+            "y": -300
+          },
+          "id": "edge_1775591842339_3",
+          "sourceHandle": "left",
+          "targetHandle": "right",
+          "doelId": "edge_1775591886387_4",
+          "doelSourceHandle": "left",
+          "doelTargetHandle": "right",
+          "velden": [
+            {
+              "naam": "rol",
+              "goType": "*Organisatierol",
+              "enum": "Organisatierol"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "typenaam": "Organisatie",
+      "description": "Organisatie die betrokken is bij initiatieven in het portfolio.",
+      "domein": "CG",
+      "isMaterieel": true,
+      "kleur": "#fde68a",
+      "meervoud": "organisaties",
+      "positie": {
+        "x": 150,
+        "y": -255
+      },
+      "afgeleideVelden": [
+        {
+          "naam": "weergavenaam",
+          "goType": "string",
+          "afleidingsregelTaal": "cel",
+          "afleidingsregel": "Organisatienaam.naam",
+          "isWeergaveVeld": true
+        }
+      ],
+      "gegevenselementen": [
+        {
+          "naam": "Contactgegevens",
+          "description": "Contactgegevens van de organisatie.",
+          "domein": "CG",
+          "meervoud": "contactgegevens",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": -210,
+            "y": -135
+          },
+          "id": "Organisatie->Organisatie_Contactgegevens",
+          "sourceHandle": "left",
+          "targetHandle": "right",
+          "velden": [
+            {
+              "naam": "url",
+              "goType": "URL",
+              "datatype": "URL"
+            },
+            {
+              "naam": "email",
+              "goType": "Emailadres",
+              "datatype": "Emailadres"
+            },
+            {
+              "naam": "telefoonnummer",
+              "goType": "Telefoonnummer",
+              "datatype": "Telefoonnummer"
+            }
+          ]
+        },
+        {
+          "naam": "Organisatienaam",
+          "description": "Naam van de organisatie.",
+          "domein": "CG",
+          "meervoud": "organisatienamen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": -210,
+            "y": -255
+          },
+          "id": "edge_1775569590393_16",
+          "sourceHandle": "left",
+          "targetHandle": "right",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            }
+          ]
+        },
+        {
+          "naam": "BetrokkenOrganisatietype",
+          "domein": "CG",
+          "meervoud": "betrokken_organisatietypen",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 300,
+            "y": -60
+          },
+          "id": "edge_1775592464082_9",
+          "sourceHandle": "bottom",
+          "targetHandle": "top",
+          "velden": []
+        }
+      ],
+      "relaties": [
+        {
+          "naam": "Contactpersoon",
+          "domein": "CG",
+          "meervoud": "contactpersonen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "doelEntiteit": "Persoon",
+          "positie": {
+            "x": 75,
+            "y": -30
+          },
+          "id": "edge_1775566660638_2",
+          "sourceHandle": "bottom",
+          "targetHandle": "top",
+          "doelId": "edge_1775565921272_6",
+          "doelSourceHandle": "bottom",
+          "doelTargetHandle": "top",
+          "velden": [
+            {
+              "naam": "rol",
+              "goType": "string"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "typenaam": "Persoon",
+      "description": "Persoon die betrokken is bij initiatieven in het portfolio.",
+      "domein": "CG",
+      "isMaterieel": true,
+      "kleur": "#fecaca",
+      "meervoud": "personen",
+      "positie": {
+        "x": 75,
+        "y": 165
+      },
+      "gegevenselementen": [
+        {
+          "naam": "Contactgegevens",
+          "description": "Contactgegevens van de persoon.",
+          "domein": "CG",
+          "meervoud": "contactgegevens",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": -225,
+            "y": 270
+          },
+          "id": "Persoon->Persoon_Contactgegevens",
+          "sourceHandle": "left",
+          "targetHandle": "right",
+          "velden": [
+            {
+              "naam": "email",
+              "goType": "Emailadres",
+              "datatype": "Emailadres"
+            },
+            {
+              "naam": "telefoonnummer",
+              "goType": "Telefoonnummer",
+              "datatype": "Telefoonnummer"
+            }
+          ]
+        },
+        {
+          "naam": "Persoonnaam",
+          "description": "Naam van de persoon.",
+          "domein": "CG",
+          "meervoud": "persoonnamen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": -210,
+            "y": 135
+          },
+          "id": "edge_1775569596827_17",
+          "sourceHandle": "left",
+          "targetHandle": "right",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    },
+    {
+      "typenaam": "Gemeente",
+      "description": "Referentielijst-item voor gemeenten.",
+      "domein": "CG",
+      "isMaterieel": false,
+      "entiteitSubtype": "referentielijst_item",
+      "kleur": "#c4b5fd",
+      "meervoud": "gemeenten",
+      "positie": {
+        "x": 1500,
+        "y": -748.5333333333333
+      },
+      "afgeleideVelden": [
+        {
+          "naam": "weergavenaam",
+          "goType": "string",
+          "afleidingsregelTaal": "cel",
+          "afleidingsregel": "GemeenteGegevens.naam + \" (\" + GemeenteGegevens.code + \")\"",
+          "isWeergaveVeld": true
+        }
+      ],
+      "gegevenselementen": [
+        {
+          "naam": "GemeenteGegevens",
+          "description": "Basisgegevens van een gemeente.",
+          "domein": "CG",
+          "meervoud": "gemeentegegevens",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 1830,
+            "y": -739.0333333333333
+          },
+          "id": "Gemeente->Gemeente_GemeenteGegevens",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            },
+            {
+              "naam": "code",
+              "goType": "string"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    },
+    {
+      "typenaam": "Domein",
+      "description": "Referentielijst-item voor domeinen.",
+      "domein": "CG",
+      "isMaterieel": false,
+      "entiteitSubtype": "referentielijst_item",
+      "kleur": "#a7f3d0",
+      "meervoud": "domeinen",
+      "positie": {
+        "x": 1500,
+        "y": -495
+      },
+      "afgeleideVelden": [
+        {
+          "naam": "weergavenaam",
+          "goType": "string",
+          "afleidingsregelTaal": "cel",
+          "afleidingsregel": "DomeinGegevens.naam",
+          "isWeergaveVeld": true
+        }
+      ],
+      "gegevenselementen": [
+        {
+          "naam": "DomeinGegevens",
+          "description": "Basisgegevens van een domein.",
+          "domein": "CG",
+          "meervoud": "domeingegevens",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 1830,
+            "y": -495
+          },
+          "id": "Domein->Domein_DomeinGegevens",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            },
+            {
+              "naam": "omschrijving",
+              "goType": "string"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    },
+    {
+      "typenaam": "ApiStandaard",
+      "domein": "CG",
+      "isMaterieel": false,
+      "entiteitSubtype": "referentielijst_item",
+      "kleur": "#fde68a",
+      "meervoud": "api_standaarden",
+      "positie": {
+        "x": 1500,
+        "y": -270
+      },
+      "afgeleideVelden": [
+        {
+          "naam": "weergavenaam",
+          "goType": "string",
+          "afleidingsregelTaal": "cel",
+          "afleidingsregel": "Naam.naam",
+          "isWeergaveVeld": true
+        }
+      ],
+      "gegevenselementen": [
+        {
+          "naam": "API_standaard_naam",
+          "domein": "CG",
+          "meervoud": "api_standaard_namen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 1830,
+            "y": -270
+          },
+          "id": "edge_1775567207805_5",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    }
+  ]
+}

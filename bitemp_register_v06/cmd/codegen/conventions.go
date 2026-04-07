@@ -24,8 +24,11 @@ func (o codegenOptions) initFuncName(suffix string) string {
 	return "init" + toPascalCase(normalizeIdentifierParts(o.prefix)) + suffix
 }
 
-// normalizeIdentifierParts vervangt niet-alfanumerieke tekens door underscores,
-// zodat gebruikersprefixen zoals "np-loc" veilige Go-identifiers opleveren.
+// normalizeIdentifierParts vervangt niet-alfanumerieke tekens door underscores
+// en converteert naar lowercase, zodat gebruikersprefixen zoals "np-loc" of "CG"
+// veilige en deterministische Go-identifiers opleveren.
+// Lowercase is nodig zodat prefix "CG" en "cg" dezelfde PascalCase-functienamen
+// genereren (bijv. initCgMetaRegistry) en niet tot dubbele init-calls leiden.
 func normalizeIdentifierParts(s string) string {
 	if s == "" {
 		return s
@@ -34,7 +37,7 @@ func normalizeIdentifierParts(s string) string {
 	lastWasSep := false
 	for _, r := range s {
 		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' {
-			b.WriteRune(r)
+			b.WriteRune(unicode.ToLower(r))
 			lastWasSep = false
 			continue
 		}

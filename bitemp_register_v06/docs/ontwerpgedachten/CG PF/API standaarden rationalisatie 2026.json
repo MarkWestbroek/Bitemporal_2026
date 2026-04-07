@@ -1,0 +1,707 @@
+{
+  "source": "bitemp_register_v06/docs/ontwerpgedachten/CG PF/Intake Portfolio Common Ground 1.json",
+  "generated_at": "2026-04-07T20:08:11.181383Z",
+  "description": "Gerationaliseerde lijst van API-standaarden afgeleid uit de vrije-tekstantwoorden van de CG Portfolio intake.",
+  "records_total": 95,
+  "api_antwoorden_meegenomen": 80,
+  "canonical_count": 48,
+  "items": [
+    {
+      "naam": "ZGW API",
+      "aantal_initiatieven": 27,
+      "bron_ids": [
+        43,
+        47,
+        48,
+        55,
+        60,
+        64,
+        65,
+        66,
+        67,
+        71,
+        76,
+        79,
+        80,
+        85,
+        97,
+        98,
+        99,
+        105,
+        106,
+        109,
+        111,
+        112,
+        113,
+        114,
+        117,
+        119,
+        127
+      ],
+      "voorbeeld_antwoorden": [
+        "NL api strategie, ZGW. StUF (in wording)",
+        "ZGW API en Notificatie API",
+        "KvK apis, Haal Centraal BRP Personen bevragen, ZGW Zaken, ZGW Catalogi, ZGW Documenten, Objecttype API (voor Afdeling, Groep, Medewerker, VAC, PDC en Contactverzoek als interne taak), Objecten API, Klanten API, Contactmomenten API, SDG-plus (een aangepaste versie van de API van de SDG-invoervoorziening (versie 1.3.0)."
+      ]
+    },
+    {
+      "naam": "REST API",
+      "aantal_initiatieven": 17,
+      "bron_ids": [
+        50,
+        51,
+        70,
+        77,
+        82,
+        86,
+        94,
+        95,
+        96,
+        101,
+        110,
+        120,
+        121,
+        122,
+        124,
+        126,
+        128
+      ],
+      "voorbeeld_antwoorden": [
+        "REST-API",
+        "Zaken, Documenten, Besluiten, Objecten, Klanten. Alles in REST.",
+        "REST,SAML"
+      ]
+    },
+    {
+      "naam": "StUF",
+      "aantal_initiatieven": 7,
+      "bron_ids": [
+        43,
+        53,
+        56,
+        57,
+        79,
+        106,
+        117
+      ],
+      "voorbeeld_antwoorden": [
+        "NL api strategie, ZGW. StUF (in wording)",
+        "Voor koppelingen: Zaken API, Documenten API, Catalogi API, Objecten API, BRP Personen bevragen API (BRP API), Regie- en zaakservices (StUF-ZKN), etc.",
+        "StUF ZKN / Zaak- en documentservices / Zaken API-standaard"
+      ]
+    },
+    {
+      "naam": "Haal Centraal BRP Personen API",
+      "aantal_initiatieven": 6,
+      "bron_ids": [
+        48,
+        53,
+        55,
+        59,
+        71,
+        81
+      ],
+      "voorbeeld_antwoorden": [
+        "KvK apis, Haal Centraal BRP Personen bevragen, ZGW Zaken, ZGW Catalogi, ZGW Documenten, Objecttype API (voor Afdeling, Groep, Medewerker, VAC, PDC en Contactverzoek als interne taak), Objecten API, Klanten API, Contactmomenten API, SDG-plus (een aangepaste versie van de API van de SDG-invoervoorziening (versie 1.3.0).",
+        "Voor koppelingen: Zaken API, Documenten API, Catalogi API, Objecten API, BRP Personen bevragen API (BRP API), Regie- en zaakservices (StUF-ZKN), etc.",
+        "ZGW APIs, Haal Centraal BRP, KVK API, DigiD, eHerkenning"
+      ]
+    },
+    {
+      "naam": "Notificaties API",
+      "aantal_initiatieven": 6,
+      "bron_ids": [
+        47,
+        61,
+        72,
+        102,
+        103,
+        107
+      ],
+      "voorbeeld_antwoorden": [
+        "ZGW API en Notificatie API",
+        "Notificaties API standaard",
+        "Zaken API-standaard, Documenten API-standaard, Notificaties API-standaard, Catalogus opvragen API-standaard, MDTO Metagegevensschema, PDF/A, PDF/UA, PDOK services"
+      ]
+    },
+    {
+      "naam": "Documenten API",
+      "aantal_initiatieven": 5,
+      "bron_ids": [
+        53,
+        60,
+        72,
+        102,
+        103
+      ],
+      "voorbeeld_antwoorden": [
+        "Voor koppelingen: Zaken API, Documenten API, Catalogi API, Objecten API, BRP Personen bevragen API (BRP API), Regie- en zaakservices (StUF-ZKN), etc.",
+        "ZGW / Documenten API",
+        "Zaken API-standaard, Documenten API-standaard, Notificaties API-standaard, Catalogus opvragen API-standaard, MDTO Metagegevensschema, PDF/A, PDF/UA, PDOK services"
+      ]
+    },
+    {
+      "naam": "OAuth 2.0",
+      "aantal_initiatieven": 5,
+      "bron_ids": [
+        77,
+        82,
+        120,
+        124,
+        126
+      ],
+      "voorbeeld_antwoorden": [
+        "REST,OAuth 2.0,SAML,JSON.",
+        "REST API, AD, Oauth, SSO",
+        "Het initiatief maakt gebruik van algemeen toegepaste API-principes die aansluiten bij de Common Ground-architectuur. Concreet betreft dit: REST-gebaseerde API's JSON als gegevensformaat HTTPS voor beveiligd transport OAuth2 / OpenID Connect voor authenticatie en autorisatie De API's zijn zodanig ontworpen dat zij compatibel zijn met gemeentelijke API-standaarden, zonder dat op dit moment één specifieke vastgestelde standaard verplicht wordt toegepast."
+      ]
+    },
+    {
+      "naam": "Zaken API",
+      "aantal_initiatieven": 5,
+      "bron_ids": [
+        53,
+        56,
+        72,
+        102,
+        103
+      ],
+      "voorbeeld_antwoorden": [
+        "Voor koppelingen: Zaken API, Documenten API, Catalogi API, Objecten API, BRP Personen bevragen API (BRP API), Regie- en zaakservices (StUF-ZKN), etc.",
+        "StUF ZKN / Zaak- en documentservices / Zaken API-standaard",
+        "Zaken API-standaard, Documenten API-standaard, Notificaties API-standaard, Catalogus opvragen API-standaard, MDTO Metagegevensschema, PDF/A, PDF/UA, PDOK services"
+      ]
+    },
+    {
+      "naam": "Catalogi API",
+      "aantal_initiatieven": 4,
+      "bron_ids": [
+        53,
+        72,
+        102,
+        103
+      ],
+      "voorbeeld_antwoorden": [
+        "Voor koppelingen: Zaken API, Documenten API, Catalogi API, Objecten API, BRP Personen bevragen API (BRP API), Regie- en zaakservices (StUF-ZKN), etc.",
+        "Zaken API-standaard, Documenten API-standaard, Notificaties API-standaard, Catalogus opvragen API-standaard, MDTO Metagegevensschema, PDF/A, PDF/UA, PDOK services",
+        "ZRC, DRC, ZTC, AC, NC"
+      ]
+    },
+    {
+      "naam": "NL API Strategie",
+      "aantal_initiatieven": 4,
+      "bron_ids": [
+        43,
+        64,
+        66,
+        67
+      ],
+      "voorbeeld_antwoorden": [
+        "NL api strategie, ZGW. StUF (in wording)",
+        "Haal Centraal API-standaarden voor ZGW-werken NL-API strategie NL-GOV profiel voor cloud events",
+        "Haal Centraal API-standaarden voor ZGW-werken API-standaarden voor klanten en klant interacties NL-API strategie NL-GOV profiel voor cloud events"
+      ]
+    },
+    {
+      "naam": "Objecten API",
+      "aantal_initiatieven": 4,
+      "bron_ids": [
+        48,
+        53,
+        76,
+        127
+      ],
+      "voorbeeld_antwoorden": [
+        "KvK apis, Haal Centraal BRP Personen bevragen, ZGW Zaken, ZGW Catalogi, ZGW Documenten, Objecttype API (voor Afdeling, Groep, Medewerker, VAC, PDC en Contactverzoek als interne taak), Objecten API, Klanten API, Contactmomenten API, SDG-plus (een aangepaste versie van de API van de SDG-invoervoorziening (versie 1.3.0).",
+        "Voor koppelingen: Zaken API, Documenten API, Catalogi API, Objecten API, BRP Personen bevragen API (BRP API), Regie- en zaakservices (StUF-ZKN), etc.",
+        "ZGW API's en Objecten API-standaard"
+      ]
+    },
+    {
+      "naam": "Autorisaties API",
+      "aantal_initiatieven": 3,
+      "bron_ids": [
+        52,
+        102,
+        103
+      ],
+      "voorbeeld_antwoorden": [
+        "Zaken, Documenten, Besluiten, Catalogi, Autorisaties API-standaarden",
+        "ZRC, DRC, ZTC, AC, NC",
+        "ZRC, DRC, ZTC, AC,. NC"
+      ]
+    },
+    {
+      "naam": "CloudEvents profiel",
+      "aantal_initiatieven": 3,
+      "bron_ids": [
+        64,
+        66,
+        67
+      ],
+      "voorbeeld_antwoorden": [
+        "Haal Centraal API-standaarden voor ZGW-werken NL-API strategie NL-GOV profiel voor cloud events",
+        "Haal Centraal API-standaarden voor ZGW-werken API-standaarden voor klanten en klant interacties NL-API strategie NL-GOV profiel voor cloud events"
+      ]
+    },
+    {
+      "naam": "DSO API",
+      "aantal_initiatieven": 3,
+      "bron_ids": [
+        71,
+        87,
+        106
+      ],
+      "voorbeeld_antwoorden": [
+        "Zaakgerichtwerk API's, Haal Centraal BRP API, BAG API, Handelsregister API en de API's rondom DSO",
+        "De API standaarden van het DSO (API-register - Ontwikkelaarsportaal (aandeslagmetdeomgevingswet.nl)) en Forum Standaardisatie. We maken gebruik van OGC standaarden voor de koppeling naar de Digitale Stad (WFS en OGC-API)",
+        "• StuF-FIN (betalen & invorderen) • ZGW-API's (als opvolging op • MDTO (archivering) • Document creatie (StUF-DCR) • OData dataplatform • GGM • STAM • DROP (publicaties en digitale ter inzagelegging) • Haalcentraal • eDienst voor het indienen van niet DSO verzoeken op basis van de STAM 5.0 en ZGW standaard. • Digitale terinzagelegging (heeft al zilveren label)"
+      ]
+    },
+    {
+      "naam": "JWT",
+      "aantal_initiatieven": 3,
+      "bron_ids": [
+        119,
+        124,
+        126
+      ],
+      "voorbeeld_antwoorden": [
+        "ZGW API, JSON, JWT, HTTP",
+        "REST (Representational State Transfer) OpenAPI Specification 3.0+ OAuth 2.0 OpenID Connect (OIDC) JWT (JSON Web Tokens) TLS/HTTPS HTTP/1.1 & HTTP/2 JSON (RFC 8259) WebSocket Protocol (RFC 6455) CORS (Cross-Origin Resource Sharing) HSTS (HTTP Strict Transport Security) ISO 8601 (Date/Time Format) Prometheus/OpenMetrics SQL (PostgreSQL) Redis Protocol (RESP) Bearer Authentication (RFC 6750) Semantic Versioning (SemVer)",
+        "REST API (OpenAPI specificatie), JSON/HTTP standaarden, OAuth / JWT voor authenticatie"
+      ]
+    },
+    {
+      "naam": "KVK / Handelsregister API",
+      "aantal_initiatieven": 3,
+      "bron_ids": [
+        48,
+        55,
+        71
+      ],
+      "voorbeeld_antwoorden": [
+        "KvK apis, Haal Centraal BRP Personen bevragen, ZGW Zaken, ZGW Catalogi, ZGW Documenten, Objecttype API (voor Afdeling, Groep, Medewerker, VAC, PDC en Contactverzoek als interne taak), Objecten API, Klanten API, Contactmomenten API, SDG-plus (een aangepaste versie van de API van de SDG-invoervoorziening (versie 1.3.0).",
+        "ZGW APIs, Haal Centraal BRP, KVK API, DigiD, eHerkenning",
+        "Zaakgerichtwerk API's, Haal Centraal BRP API, BAG API, Handelsregister API en de API's rondom DSO"
+      ]
+    },
+    {
+      "naam": "OpenAPI",
+      "aantal_initiatieven": 3,
+      "bron_ids": [
+        100,
+        124,
+        126
+      ],
+      "voorbeeld_antwoorden": [
+        "OpenAPI",
+        "REST (Representational State Transfer) OpenAPI Specification 3.0+ OAuth 2.0 OpenID Connect (OIDC) JWT (JSON Web Tokens) TLS/HTTPS HTTP/1.1 & HTTP/2 JSON (RFC 8259) WebSocket Protocol (RFC 6455) CORS (Cross-Origin Resource Sharing) HSTS (HTTP Strict Transport Security) ISO 8601 (Date/Time Format) Prometheus/OpenMetrics SQL (PostgreSQL) Redis Protocol (RESP) Bearer Authentication (RFC 6750) Semantic Versioning (SemVer)",
+        "REST API (OpenAPI specificatie), JSON/HTTP standaarden, OAuth / JWT voor authenticatie"
+      ]
+    },
+    {
+      "naam": "StUF-ZKN",
+      "aantal_initiatieven": 3,
+      "bron_ids": [
+        53,
+        56,
+        79
+      ],
+      "voorbeeld_antwoorden": [
+        "Voor koppelingen: Zaken API, Documenten API, Catalogi API, Objecten API, BRP Personen bevragen API (BRP API), Regie- en zaakservices (StUF-ZKN), etc.",
+        "StUF ZKN / Zaak- en documentservices / Zaken API-standaard",
+        "ZGW API, Haal centraal, Stuf-ZKN, CMIS"
+      ]
+    },
+    {
+      "naam": "BAG API",
+      "aantal_initiatieven": 2,
+      "bron_ids": [
+        71,
+        81
+      ],
+      "voorbeeld_antwoorden": [
+        "Zaakgerichtwerk API's, Haal Centraal BRP API, BAG API, Handelsregister API en de API's rondom DSO",
+        "1) BRK bevragen API-standaard 2) BAG bevragen API-standaard 3) BRP Bewoning API-standaard - (wordt wel ondersteund, maar nog niet toegepast) 4) BRP Personen bevragen API-standaard - (wordt wel ondersteund, maar nog niet toegepast) 5) Register Toepasbare Regels (RTR) raadplegen API-standaard - (wordt wel ondersteund, maar nog niet toegepast) 6) Ruimtelijke plannen opvragen API-standaard - (wordt wel ondersteund, maar nog niet toegepast)"
+      ]
+    },
+    {
+      "naam": "CMIS",
+      "aantal_initiatieven": 2,
+      "bron_ids": [
+        79,
+        117
+      ],
+      "voorbeeld_antwoorden": [
+        "ZGW API, Haal centraal, Stuf-ZKN, CMIS",
+        "StUF, ZGW, CMIS"
+      ]
+    },
+    {
+      "naam": "DigiD",
+      "aantal_initiatieven": 2,
+      "bron_ids": [
+        55,
+        115
+      ],
+      "voorbeeld_antwoorden": [
+        "ZGW APIs, Haal Centraal BRP, KVK API, DigiD, eHerkenning",
+        "DigiD, Gibit, JSON, HTML"
+      ]
+    },
+    {
+      "naam": "MDTO",
+      "aantal_initiatieven": 2,
+      "bron_ids": [
+        72,
+        106
+      ],
+      "voorbeeld_antwoorden": [
+        "Zaken API-standaard, Documenten API-standaard, Notificaties API-standaard, Catalogus opvragen API-standaard, MDTO Metagegevensschema, PDF/A, PDF/UA, PDOK services",
+        "• StuF-FIN (betalen & invorderen) • ZGW-API's (als opvolging op • MDTO (archivering) • Document creatie (StUF-DCR) • OData dataplatform • GGM • STAM • DROP (publicaties en digitale ter inzagelegging) • Haalcentraal • eDienst voor het indienen van niet DSO verzoeken op basis van de STAM 5.0 en ZGW standaard. • Digitale terinzagelegging (heeft al zilveren label)"
+      ]
+    },
+    {
+      "naam": "SAML",
+      "aantal_initiatieven": 2,
+      "bron_ids": [
+        70,
+        77
+      ],
+      "voorbeeld_antwoorden": [
+        "REST,SAML",
+        "REST,OAuth 2.0,SAML,JSON."
+      ]
+    },
+    {
+      "naam": "WFS",
+      "aantal_initiatieven": 2,
+      "bron_ids": [
+        87,
+        116
+      ],
+      "voorbeeld_antwoorden": [
+        "De API standaarden van het DSO (API-register - Ontwikkelaarsportaal (aandeslagmetdeomgevingswet.nl)) en Forum Standaardisatie. We maken gebruik van OGC standaarden voor de koppeling naar de Digitale Stad (WFS en OGC-API)",
+        "WFS, WMS, WMTS, TMS, GeoJSON, TileJSON, 3D tiles, OGC features API"
+      ]
+    },
+    {
+      "naam": "Alfresco Public API",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        80
+      ],
+      "voorbeeld_antwoorden": [
+        "ZGW API, Alfresco Public API"
+      ]
+    },
+    {
+      "naam": "BRK API",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        81
+      ],
+      "voorbeeld_antwoorden": [
+        "1) BRK bevragen API-standaard 2) BAG bevragen API-standaard 3) BRP Bewoning API-standaard - (wordt wel ondersteund, maar nog niet toegepast) 4) BRP Personen bevragen API-standaard - (wordt wel ondersteund, maar nog niet toegepast) 5) Register Toepasbare Regels (RTR) raadplegen API-standaard - (wordt wel ondersteund, maar nog niet toegepast) 6) Ruimtelijke plannen opvragen API-standaard - (wordt wel ondersteund, maar nog niet toegepast)"
+      ]
+    },
+    {
+      "naam": "Contactmomenten API",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        48
+      ],
+      "voorbeeld_antwoorden": [
+        "KvK apis, Haal Centraal BRP Personen bevragen, ZGW Zaken, ZGW Catalogi, ZGW Documenten, Objecttype API (voor Afdeling, Groep, Medewerker, VAC, PDC en Contactverzoek als interne taak), Objecten API, Klanten API, Contactmomenten API, SDG-plus (een aangepaste versie van de API van de SDG-invoervoorziening (versie 1.3.0)."
+      ]
+    },
+    {
+      "naam": "DCAT-AP NL",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        110
+      ],
+      "voorbeeld_antwoorden": [
+        "● OGC API – Features ● SensorThings API ● DCAT-AP NL ● RESTful APIs voor koppelvlakken ● Etc."
+      ]
+    },
+    {
+      "naam": "DROP",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        106
+      ],
+      "voorbeeld_antwoorden": [
+        "• StuF-FIN (betalen & invorderen) • ZGW-API's (als opvolging op • MDTO (archivering) • Document creatie (StUF-DCR) • OData dataplatform • GGM • STAM • DROP (publicaties en digitale ter inzagelegging) • Haalcentraal • eDienst voor het indienen van niet DSO verzoeken op basis van de STAM 5.0 en ZGW standaard. • Digitale terinzagelegging (heeft al zilveren label)"
+      ]
+    },
+    {
+      "naam": "eHerkenning",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        55
+      ],
+      "voorbeeld_antwoorden": [
+        "ZGW APIs, Haal Centraal BRP, KVK API, DigiD, eHerkenning"
+      ]
+    },
+    {
+      "naam": "GeoJSON",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        116
+      ],
+      "voorbeeld_antwoorden": [
+        "WFS, WMS, WMTS, TMS, GeoJSON, TileJSON, 3D tiles, OGC features API"
+      ]
+    },
+    {
+      "naam": "Haal Centraal BRP Bewoning API",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        81
+      ],
+      "voorbeeld_antwoorden": [
+        "1) BRK bevragen API-standaard 2) BAG bevragen API-standaard 3) BRP Bewoning API-standaard - (wordt wel ondersteund, maar nog niet toegepast) 4) BRP Personen bevragen API-standaard - (wordt wel ondersteund, maar nog niet toegepast) 5) Register Toepasbare Regels (RTR) raadplegen API-standaard - (wordt wel ondersteund, maar nog niet toegepast) 6) Ruimtelijke plannen opvragen API-standaard - (wordt wel ondersteund, maar nog niet toegepast)"
+      ]
+    },
+    {
+      "naam": "HAVEN",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        59
+      ],
+      "voorbeeld_antwoorden": [
+        "Haal Centraal BRP, NLX, HAVEN"
+      ]
+    },
+    {
+      "naam": "JSON:API",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        123
+      ],
+      "voorbeeld_antwoorden": [
+        "We gebruiken de JSON:API standaard."
+      ]
+    },
+    {
+      "naam": "Klanten API",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        48
+      ],
+      "voorbeeld_antwoorden": [
+        "KvK apis, Haal Centraal BRP Personen bevragen, ZGW Zaken, ZGW Catalogi, ZGW Documenten, Objecttype API (voor Afdeling, Groep, Medewerker, VAC, PDC en Contactverzoek als interne taak), Objecten API, Klanten API, Contactmomenten API, SDG-plus (een aangepaste versie van de API van de SDG-invoervoorziening (versie 1.3.0)."
+      ]
+    },
+    {
+      "naam": "Klantinteracties API",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        58
+      ],
+      "voorbeeld_antwoorden": [
+        "Klantinteracties API (in ontwikkeling)"
+      ]
+    },
+    {
+      "naam": "NLX",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        59
+      ],
+      "voorbeeld_antwoorden": [
+        "Haal Centraal BRP, NLX, HAVEN"
+      ]
+    },
+    {
+      "naam": "Objecttypen API",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        48
+      ],
+      "voorbeeld_antwoorden": [
+        "KvK apis, Haal Centraal BRP Personen bevragen, ZGW Zaken, ZGW Catalogi, ZGW Documenten, Objecttype API (voor Afdeling, Groep, Medewerker, VAC, PDC en Contactverzoek als interne taak), Objecten API, Klanten API, Contactmomenten API, SDG-plus (een aangepaste versie van de API van de SDG-invoervoorziening (versie 1.3.0)."
+      ]
+    },
+    {
+      "naam": "OData",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        106
+      ],
+      "voorbeeld_antwoorden": [
+        "• StuF-FIN (betalen & invorderen) • ZGW-API's (als opvolging op • MDTO (archivering) • Document creatie (StUF-DCR) • OData dataplatform • GGM • STAM • DROP (publicaties en digitale ter inzagelegging) • Haalcentraal • eDienst voor het indienen van niet DSO verzoeken op basis van de STAM 5.0 en ZGW standaard. • Digitale terinzagelegging (heeft al zilveren label)"
+      ]
+    },
+    {
+      "naam": "OGC API Features",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        87
+      ],
+      "voorbeeld_antwoorden": [
+        "De API standaarden van het DSO (API-register - Ontwikkelaarsportaal (aandeslagmetdeomgevingswet.nl)) en Forum Standaardisatie. We maken gebruik van OGC standaarden voor de koppeling naar de Digitale Stad (WFS en OGC-API)"
+      ]
+    },
+    {
+      "naam": "PDOK services",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        72
+      ],
+      "voorbeeld_antwoorden": [
+        "Zaken API-standaard, Documenten API-standaard, Notificaties API-standaard, Catalogus opvragen API-standaard, MDTO Metagegevensschema, PDF/A, PDF/UA, PDOK services"
+      ]
+    },
+    {
+      "naam": "SDG API / SDG-plus",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        48
+      ],
+      "voorbeeld_antwoorden": [
+        "KvK apis, Haal Centraal BRP Personen bevragen, ZGW Zaken, ZGW Catalogi, ZGW Documenten, Objecttype API (voor Afdeling, Groep, Medewerker, VAC, PDC en Contactverzoek als interne taak), Objecten API, Klanten API, Contactmomenten API, SDG-plus (een aangepaste versie van de API van de SDG-invoervoorziening (versie 1.3.0)."
+      ]
+    },
+    {
+      "naam": "SensorThings API",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        110
+      ],
+      "voorbeeld_antwoorden": [
+        "● OGC API – Features ● SensorThings API ● DCAT-AP NL ● RESTful APIs voor koppelvlakken ● Etc."
+      ]
+    },
+    {
+      "naam": "StUF-DCR",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        106
+      ],
+      "voorbeeld_antwoorden": [
+        "• StuF-FIN (betalen & invorderen) • ZGW-API's (als opvolging op • MDTO (archivering) • Document creatie (StUF-DCR) • OData dataplatform • GGM • STAM • DROP (publicaties en digitale ter inzagelegging) • Haalcentraal • eDienst voor het indienen van niet DSO verzoeken op basis van de STAM 5.0 en ZGW standaard. • Digitale terinzagelegging (heeft al zilveren label)"
+      ]
+    },
+    {
+      "naam": "StUF-FIN",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        106
+      ],
+      "voorbeeld_antwoorden": [
+        "• StuF-FIN (betalen & invorderen) • ZGW-API's (als opvolging op • MDTO (archivering) • Document creatie (StUF-DCR) • OData dataplatform • GGM • STAM • DROP (publicaties en digitale ter inzagelegging) • Haalcentraal • eDienst voor het indienen van niet DSO verzoeken op basis van de STAM 5.0 en ZGW standaard. • Digitale terinzagelegging (heeft al zilveren label)"
+      ]
+    },
+    {
+      "naam": "Webhook",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        122
+      ],
+      "voorbeeld_antwoorden": [
+        "REST API JSON data-uitwisseling Webhook integraties GDPR-conforme API's"
+      ]
+    },
+    {
+      "naam": "WMS",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        116
+      ],
+      "voorbeeld_antwoorden": [
+        "WFS, WMS, WMTS, TMS, GeoJSON, TileJSON, 3D tiles, OGC features API"
+      ]
+    },
+    {
+      "naam": "WMTS",
+      "aantal_initiatieven": 1,
+      "bron_ids": [
+        116
+      ],
+      "voorbeeld_antwoorden": [
+        "WFS, WMS, WMTS, TMS, GeoJSON, TileJSON, 3D tiles, OGC features API"
+      ]
+    }
+  ],
+  "unmatched_raw_answers": [
+    {
+      "bron_id": 38,
+      "initiatief_naam": "Signalen",
+      "antwoord": "ZWG-api (nog niet operationeel, wel in de code)"
+    },
+    {
+      "bron_id": 40,
+      "initiatief_naam": "GEM",
+      "antwoord": "nog in te vullen (Harvey)"
+    },
+    {
+      "bron_id": 42,
+      "initiatief_naam": "Federatieve Service Connectiviteit",
+      "antwoord": "Waar ze van toepassing zijn, zijn ze toegepast"
+    },
+    {
+      "bron_id": 45,
+      "initiatief_naam": "OpenCatalogi",
+      "antwoord": "Kom ik later op terug"
+    },
+    {
+      "bron_id": 49,
+      "initiatief_naam": "Verwerkinglogging implementatie",
+      "antwoord": "https://www.gemmaonline.nl/index.php/GEMMA2/0.9/id-c158d9fc-6421-4d8a-8b2e-eaa33f43ecf8"
+    },
+    {
+      "bron_id": 63,
+      "initiatief_naam": "OpenServices",
+      "antwoord": "Specifieke API-standaarden toegepast in OpenServices zijn op dit moment niet vermeld."
+    },
+    {
+      "bron_id": 69,
+      "initiatief_naam": "Gemeenschappelijke DataCatalogus (GDC)",
+      "antwoord": "-"
+    },
+    {
+      "bron_id": 73,
+      "initiatief_naam": "piet",
+      "antwoord": "piet"
+    },
+    {
+      "bron_id": 74,
+      "initiatief_naam": "Fundament",
+      "antwoord": "https://vng-realisatie.github.io/gemma-zaken/standaard/"
+    },
+    {
+      "bron_id": 75,
+      "initiatief_naam": "Digitale terinzagelegging",
+      "antwoord": "Later aan te vullen"
+    },
+    {
+      "bron_id": 78,
+      "initiatief_naam": "Open Producten",
+      "antwoord": "Samenwerkende Catalogi, en helaas ontbreekt een PDC-standaard (maar daar gaat dit component verandering in brengen!)"
+    },
+    {
+      "bron_id": 83,
+      "initiatief_naam": "Referentielijsten API",
+      "antwoord": "*snif* maakte de VNG maar weer standaarden..."
+    },
+    {
+      "bron_id": 93,
+      "initiatief_naam": "y",
+      "antwoord": "y"
+    },
+    {
+      "bron_id": 118,
+      "initiatief_naam": "MainWatch",
+      "antwoord": "Volgt nog."
+    },
+    {
+      "bron_id": 125,
+      "initiatief_naam": "Stichting BOR2050 Impact Beheer Monitor",
+      "antwoord": "koppelingen gebeuren op bestaande geo/data standaarden. Nu worden zaken nog gekoppeld via shape bestanden."
+    }
+  ]
+}

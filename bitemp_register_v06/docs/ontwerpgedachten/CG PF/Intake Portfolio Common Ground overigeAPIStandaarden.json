@@ -1,0 +1,543 @@
+{
+  "source": "bitemp_register_v06/docs/ontwerpgedachten/CG PF/Intake Portfolio Common Ground 1.json",
+  "generated_at": "2026-04-07T20:28:59.111661Z",
+  "description": "Per initiatief de API-standaardwaarden die niet in de gerationaliseerde referentielijst passen en daarom in AndereAPIStandaard kunnen landen.",
+  "summary": {
+    "aantal_initiatieven_met_andereAPIStandaard": 33,
+    "aantal_unieke_waarden": 59,
+    "waarden_op_aflopende_frequentie": [
+      {
+        "naam": "Besluiten",
+        "aantal_initiatieven": 2
+      },
+      {
+        "naam": "Documenten",
+        "aantal_initiatieven": 2
+      },
+      {
+        "naam": "JSON",
+        "aantal_initiatieven": 2
+      },
+      {
+        "naam": "Zaken",
+        "aantal_initiatieven": 2
+      },
+      {
+        "naam": "*snif* maakte de VNG maar weer standaarden...",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "3D tiles",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "abonneren)",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "AD",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "API vernietigen en overbrengen",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Catalogi",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Digitale terinzagelegging (heeft al zilveren label)",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "en helaas ontbreekt een PDC-standaard (maar daar gaat dit component verandering in brengen!)",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "etc.",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "gestandaardiseerde communicatie tussen systemen gewaarborgd",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "GGM",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Gibit",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Groep",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Haal centraal",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Haalcentraal",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "HTML",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "HTTP",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "https://vng-realisatie.github.io/gemma-zaken/standaard/",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "https://www.gemmaonline.nl/index.php/GEMMA2/0.9/id-c158d9fc-6421-4d8a-8b2e-eaa33f43ecf8",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "JSON.",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "JSON/HTTP standaarden",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Kom ik later op terug",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "koppelingen gebeuren op bestaande geo/data standaarden. Nu worden zaken nog gekoppeld via shape bestanden.",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Later aan te vullen",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "maar nog niet toegepast)",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "maar nog niet toegepast) 5) Register Toepasbare Regels (RTR) raadplegen API-standaard - (wordt wel ondersteund",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "maar nog niet toegepast) 6) Ruimtelijke plannen opvragen API-standaard - (wordt wel ondersteund",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Medewerker",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "nog in te vullen (Harvey)",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Objecten",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Objecttypes api",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "OGC features API",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "passend binnen de Common Ground-architectuur.",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "PDC en Contactverzoek als interne taak)",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "PDF/A",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "PDF/UA",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "piet",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "privacy (DPIA) en transparantie",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "routeren",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "SafeGPT maakt gebruik van moderne",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Samenwerkende Catalogi",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Specifieke API-standaarden toegepast in OpenServices zijn op dit moment niet vermeld.",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "SSO",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "STAM",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "TileJSON",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "TMS",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "VAC",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Volgt nog.",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "Waar ze van toepassing zijn",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "wat de interoperabiliteit met gemeentelijke en andere overheidsapplicaties vergemakkelijkt. SafeGPT richt zich op het veilig en efficiënt ontsluiten en verwerken van gegevens via API's die voldoen aan de eisen voor beveiliging",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "wel in de code)",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "y",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "zijn ze toegepast",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "zonder dat op dit moment één specifieke vastgestelde standaard verplicht wordt toegepast.",
+        "aantal_initiatieven": 1
+      },
+      {
+        "naam": "ZWG-api (nog niet operationeel",
+        "aantal_initiatieven": 1
+      }
+    ]
+  },
+  "entries": [
+    {
+      "bron_id": 38,
+      "initiatief_id": 38,
+      "initiatief_naam": "Signalen",
+      "andereAPIStandaard": [
+        "ZWG-api (nog niet operationeel",
+        "wel in de code)"
+      ]
+    },
+    {
+      "bron_id": 40,
+      "initiatief_id": 40,
+      "initiatief_naam": "GEM",
+      "andereAPIStandaard": [
+        "nog in te vullen (Harvey)"
+      ]
+    },
+    {
+      "bron_id": 42,
+      "initiatief_id": 42,
+      "initiatief_naam": "Federatieve Service Connectiviteit",
+      "andereAPIStandaard": [
+        "Waar ze van toepassing zijn",
+        "zijn ze toegepast"
+      ]
+    },
+    {
+      "bron_id": 45,
+      "initiatief_id": 45,
+      "initiatief_naam": "OpenCatalogi",
+      "andereAPIStandaard": [
+        "Kom ik later op terug"
+      ]
+    },
+    {
+      "bron_id": 48,
+      "initiatief_id": 48,
+      "initiatief_naam": "KISS, KlantinteractieServicesysteem",
+      "andereAPIStandaard": [
+        "Groep",
+        "Medewerker",
+        "VAC",
+        "PDC en Contactverzoek als interne taak)"
+      ]
+    },
+    {
+      "bron_id": 49,
+      "initiatief_id": 49,
+      "initiatief_naam": "Verwerkinglogging implementatie",
+      "andereAPIStandaard": [
+        "https://www.gemmaonline.nl/index.php/GEMMA2/0.9/id-c158d9fc-6421-4d8a-8b2e-eaa33f43ecf8"
+      ]
+    },
+    {
+      "bron_id": 51,
+      "initiatief_id": 51,
+      "initiatief_naam": "GZAC",
+      "andereAPIStandaard": [
+        "Zaken",
+        "Documenten",
+        "Besluiten",
+        "Objecten"
+      ]
+    },
+    {
+      "bron_id": 52,
+      "initiatief_id": 52,
+      "initiatief_naam": "Open Zaak",
+      "andereAPIStandaard": [
+        "Zaken",
+        "Documenten",
+        "Besluiten",
+        "Catalogi"
+      ]
+    },
+    {
+      "bron_id": 53,
+      "initiatief_id": 53,
+      "initiatief_naam": "Open Formulieren",
+      "andereAPIStandaard": [
+        "etc."
+      ]
+    },
+    {
+      "bron_id": 63,
+      "initiatief_id": 63,
+      "initiatief_naam": "OpenServices",
+      "andereAPIStandaard": [
+        "Specifieke API-standaarden toegepast in OpenServices zijn op dit moment niet vermeld."
+      ]
+    },
+    {
+      "bron_id": 72,
+      "initiatief_id": 72,
+      "initiatief_naam": "Rx.Open",
+      "andereAPIStandaard": [
+        "PDF/A",
+        "PDF/UA"
+      ]
+    },
+    {
+      "bron_id": 73,
+      "initiatief_id": 73,
+      "initiatief_naam": "piet",
+      "andereAPIStandaard": [
+        "piet"
+      ]
+    },
+    {
+      "bron_id": 74,
+      "initiatief_id": 74,
+      "initiatief_naam": "Fundament",
+      "andereAPIStandaard": [
+        "https://vng-realisatie.github.io/gemma-zaken/standaard/"
+      ]
+    },
+    {
+      "bron_id": 75,
+      "initiatief_id": 75,
+      "initiatief_naam": "Digitale terinzagelegging",
+      "andereAPIStandaard": [
+        "Later aan te vullen"
+      ]
+    },
+    {
+      "bron_id": 77,
+      "initiatief_id": 77,
+      "initiatief_naam": "Appsemble",
+      "andereAPIStandaard": [
+        "JSON."
+      ]
+    },
+    {
+      "bron_id": 78,
+      "initiatief_id": 78,
+      "initiatief_naam": "Open Producten",
+      "andereAPIStandaard": [
+        "Samenwerkende Catalogi",
+        "en helaas ontbreekt een PDC-standaard (maar daar gaat dit component verandering in brengen!)"
+      ]
+    },
+    {
+      "bron_id": 79,
+      "initiatief_id": 79,
+      "initiatief_naam": "Tezza",
+      "andereAPIStandaard": [
+        "Haal centraal"
+      ]
+    },
+    {
+      "bron_id": 81,
+      "initiatief_id": 81,
+      "initiatief_naam": "Atlas",
+      "andereAPIStandaard": [
+        "maar nog niet toegepast) 5) Register Toepasbare Regels (RTR) raadplegen API-standaard - (wordt wel ondersteund",
+        "maar nog niet toegepast) 6) Ruimtelijke plannen opvragen API-standaard - (wordt wel ondersteund",
+        "maar nog niet toegepast)"
+      ]
+    },
+    {
+      "bron_id": 82,
+      "initiatief_id": 82,
+      "initiatief_naam": "Werkplek reservering",
+      "andereAPIStandaard": [
+        "AD",
+        "SSO"
+      ]
+    },
+    {
+      "bron_id": 83,
+      "initiatief_id": 83,
+      "initiatief_naam": "Referentielijsten API",
+      "andereAPIStandaard": [
+        "*snif* maakte de VNG maar weer standaarden..."
+      ]
+    },
+    {
+      "bron_id": 93,
+      "initiatief_id": 93,
+      "initiatief_naam": "y",
+      "andereAPIStandaard": [
+        "y"
+      ]
+    },
+    {
+      "bron_id": 105,
+      "initiatief_id": 105,
+      "initiatief_naam": "Archiefbeheer",
+      "andereAPIStandaard": [
+        "API vernietigen en overbrengen"
+      ]
+    },
+    {
+      "bron_id": 106,
+      "initiatief_id": 106,
+      "initiatief_naam": "Centric Leefomgeving",
+      "andereAPIStandaard": [
+        "GGM",
+        "STAM",
+        "Haalcentraal",
+        "Digitale terinzagelegging (heeft al zilveren label)"
+      ]
+    },
+    {
+      "bron_id": 107,
+      "initiatief_id": 107,
+      "initiatief_naam": "Engelbert Wijnhoven",
+      "andereAPIStandaard": [
+        "routeren",
+        "abonneren)"
+      ]
+    },
+    {
+      "bron_id": 115,
+      "initiatief_id": 115,
+      "initiatief_naam": "Gemeentewinkel",
+      "andereAPIStandaard": [
+        "Gibit",
+        "JSON",
+        "HTML"
+      ]
+    },
+    {
+      "bron_id": 116,
+      "initiatief_id": 116,
+      "initiatief_naam": "MapGallery",
+      "andereAPIStandaard": [
+        "TMS",
+        "TileJSON",
+        "3D tiles",
+        "OGC features API"
+      ]
+    },
+    {
+      "bron_id": 118,
+      "initiatief_id": 118,
+      "initiatief_naam": "MainWatch",
+      "andereAPIStandaard": [
+        "Volgt nog."
+      ]
+    },
+    {
+      "bron_id": 119,
+      "initiatief_id": 119,
+      "initiatief_naam": "Authorisatie Profielen",
+      "andereAPIStandaard": [
+        "JSON",
+        "HTTP"
+      ]
+    },
+    {
+      "bron_id": 120,
+      "initiatief_id": 120,
+      "initiatief_naam": "FamilyBarometer",
+      "andereAPIStandaard": [
+        "zonder dat op dit moment één specifieke vastgestelde standaard verplicht wordt toegepast."
+      ]
+    },
+    {
+      "bron_id": 121,
+      "initiatief_id": 121,
+      "initiatief_naam": "SafeGPT",
+      "andereAPIStandaard": [
+        "SafeGPT maakt gebruik van moderne",
+        "gestandaardiseerde communicatie tussen systemen gewaarborgd",
+        "wat de interoperabiliteit met gemeentelijke en andere overheidsapplicaties vergemakkelijkt. SafeGPT richt zich op het veilig en efficiënt ontsluiten en verwerken van gegevens via API's die voldoen aan de eisen voor beveiliging",
+        "privacy (DPIA) en transparantie",
+        "passend binnen de Common Ground-architectuur."
+      ]
+    },
+    {
+      "bron_id": 125,
+      "initiatief_id": 125,
+      "initiatief_naam": "Stichting BOR2050 Impact Beheer Monitor",
+      "andereAPIStandaard": [
+        "koppelingen gebeuren op bestaande geo/data standaarden. Nu worden zaken nog gekoppeld via shape bestanden."
+      ]
+    },
+    {
+      "bron_id": 126,
+      "initiatief_id": 126,
+      "initiatief_naam": "BinnenBeter",
+      "andereAPIStandaard": [
+        "JSON/HTTP standaarden"
+      ]
+    },
+    {
+      "bron_id": 127,
+      "initiatief_id": 127,
+      "initiatief_naam": "Eventloket",
+      "andereAPIStandaard": [
+        "Objecttypes api"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1394 @@
+{
+  "version": 1,
+  "exported_at": "2026-04-07T20:28:59.111661Z",
+  "source": "json:///d:/Git/Bitemporal_2026/bitemp_register_v06/docs/ontwerpgedachten/CG PF/Intake Portfolio Common Ground 1.json",
+  "schema_source": "json:///d:/Git/Bitemporal_2026/bitemp_register_v06/docs/ontwerpgedachten/CG PF/CGPF 0.4.4.json",
+  "schema_model": {
+    "naam": "Editor export",
+    "versie": "v3"
+  },
+  "count": 48,
+  "notes": [
+    "Aanvullende replay voor CGPF 0.4.4-velden AnderDomein, AndersDanGemeente en AndereAPIStandaard.",
+    "Deze replay veronderstelt request-keys anderdomein, andersdangemeente en andereapistandaard, analoog aan planning/product/bijdrage.",
+    "Per initiatief wordt maximaal één opvoer per aanvullend veld gemaakt; meerdere waarden zijn samengevoegd met ; ."
+  ],
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-01-24T14:22:29Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=37 | naam=Een zaakregister",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "anderdomein": {
+                "initiatief_id": 37,
+                "domein": "Alle"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-01-25T14:00:25Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=38 | naam=Signalen",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 38,
+                "api_standaard": "ZWG-api (nog niet operationeel; wel in de code)"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-01-25T16:37:22Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=39 | naam=Gemeentelijk Gegevensmodel",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "anderdomein": {
+                "initiatief_id": 39,
+                "domein": "alle domeinen"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-01-26T09:59:10Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=40 | naam=GEM",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 40,
+                "api_standaard": "nog in te vullen (Harvey)"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-01-29T13:00:50Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=42 | naam=Federatieve Service Connectiviteit",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "anderdomein": {
+                "initiatief_id": 42,
+                "domein": "stelselfunctionaliteit"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 42,
+                "api_standaard": "Waar ze van toepassing zijn; zijn ze toegepast"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-02-07T08:34:01Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=44 | naam=NLPortal MijnOmgeving voor inwoners en ondernemers",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 44,
+                "andersDanGemeente": "Elsevier"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-02-08T12:22:03Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=45 | naam=OpenCatalogi",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 45,
+                "andersDanGemeente": "Dimpact; Min. van Binnenlandse Zaken; SIMgroep; Min. BZK"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 45,
+                "api_standaard": "Kom ik later op terug"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-02-27T11:15:08Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=47 | naam=Waardepapieren",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "anderdomein": {
+                "initiatief_id": 47,
+                "domein": "Alle domeinen waar waardepapieren worden verstrekt"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-02-29T22:34:20Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=48 | naam=KISS, KlantinteractieServicesysteem",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 48,
+                "api_standaard": "Groep; Medewerker; VAC; PDC en Contactverzoek als interne taak)"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-03-01T11:23:11Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=49 | naam=Verwerkinglogging implementatie",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 49,
+                "api_standaard": "https://www.gemmaonline.nl/index.php/GEMMA2/0.9/id-c158d9fc-6421-4d8a-8b2e-eaa33f43ecf8"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-03-02T11:37:56Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=51 | naam=GZAC",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 51,
+                "andersDanGemeente": "Bovenstaand"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 51,
+                "api_standaard": "Zaken; Documenten; Besluiten; Objecten"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-03-04T12:52:39Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=52 | naam=Open Zaak",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 52,
+                "andersDanGemeente": "Drechteland; Dimpact"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 52,
+                "api_standaard": "Zaken; Documenten; Besluiten; Catalogi"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-03-04T13:31:57Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=53 | naam=Open Formulieren",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 53,
+                "andersDanGemeente": "Dimpact"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 53,
+                "api_standaard": "etc."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-03-07T08:00:38Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=61 | naam=Open Notificaties",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 61,
+                "andersDanGemeente": "Drechteland; Dimpact"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-03-11T11:24:31Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=63 | naam=OpenServices",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 63,
+                "api_standaard": "Specifieke API-standaarden toegepast in OpenServices zijn op dit moment niet vermeld."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-04-05T13:47:43Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=72 | naam=Rx.Open",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 72,
+                "andersDanGemeente": "Omgevingsdienst Midden Holland; SED Organisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 72,
+                "api_standaard": "PDF/A; PDF/UA"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-04-08T09:08:37Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=73 | naam=piet",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 73,
+                "api_standaard": "piet"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-04-18T16:05:52Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=74 | naam=Fundament",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 74,
+                "andersDanGemeente": "Digeplan; DataMask; Geoweb; My-lex"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "anderdomein": {
+                "initiatief_id": 74,
+                "domein": "Het is een basisvoorziening"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 74,
+                "api_standaard": "https://vng-realisatie.github.io/gemma-zaken/standaard/"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-04-29T11:19:18Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=75 | naam=Digitale terinzagelegging",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 75,
+                "api_standaard": "Later aan te vullen"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-04-29T18:29:56Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=76 | naam=Open Archiefbeheer",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 76,
+                "andersDanGemeente": "Dimpact"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-05-03T12:13:13Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=77 | naam=Appsemble",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 77,
+                "api_standaard": "JSON."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-05-03T14:05:59Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=78 | naam=Open Producten",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 78,
+                "andersDanGemeente": "Dimpact"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 78,
+                "api_standaard": "Samenwerkende Catalogi; en helaas ontbreekt een PDC-standaard (maar daar gaat dit component verandering in brengen!)"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-05-10T15:44:14Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=79 | naam=Tezza",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 79,
+                "andersDanGemeente": "Omgevingsdienst Noord-Holland-Noord; Saxion Hogescholen"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 79,
+                "api_standaard": "Haal centraal"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-05-23T09:23:33Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=81 | naam=Atlas",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 81,
+                "api_standaard": "maar nog niet toegepast) 5) Register Toepasbare Regels (RTR) raadplegen API-standaard - (wordt wel ondersteund; maar nog niet toegepast) 6) Ruimtelijke plannen opvragen API-standaard - (wordt wel ondersteund; maar nog niet toegepast)"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-05-31T15:24:47Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=82 | naam=Werkplek reservering",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 82,
+                "api_standaard": "AD; SSO"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-05-31T17:28:32Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=83 | naam=Referentielijsten API",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 83,
+                "andersDanGemeente": "Dimpact"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 83,
+                "api_standaard": "*snif* maakte de VNG maar weer standaarden..."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-08-29T11:17:11Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=86 | naam=Geval (Generieke Validaties)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "anderdomein": {
+                "initiatief_id": 86,
+                "domein": "de service is overkoepeld en te gebruiken vanuit alle domeinen"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-10-10T15:42:01Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=93 | naam=y",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 93,
+                "api_standaard": "y"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2025-02-06T10:55:48Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=95 | naam=NotifyNL (NotificatieNL)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 95,
+                "andersDanGemeente": "de"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2025-03-31T15:40:49Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=99 | naam=Octopus",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 99,
+                "andersDanGemeente": "RDW."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "anderdomein": {
+                "initiatief_id": 99,
+                "domein": "Juridische afdelingen"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2025-06-05T14:19:53Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=101 | naam=iSyNAPS",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 101,
+                "andersDanGemeente": "Waterschap Rivierenland"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "anderdomein": {
+                "initiatief_id": 101,
+                "domein": "Overal waar projecten zijn die bij meerdere gemeentes zich voordoen"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2025-06-06T15:13:53Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=103 | naam=Aansluiting JOIN Zaaksysteem (Decos) op de MijnOmgeving van OWC gemeenten",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 103,
+                "andersDanGemeente": "OWC Gemeenten"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2025-06-06T13:41:07Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=104 | naam=ValidSign",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 104,
+                "andersDanGemeente": "Provincie Overijssel; SED-organisatie"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2025-06-11T10:35:23Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=105 | naam=Archiefbeheer",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 105,
+                "andersDanGemeente": "Duoplus; De Buch"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 105,
+                "api_standaard": "API vernietigen en overbrengen"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2025-06-19T09:52:57Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=106 | naam=Centric Leefomgeving",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 106,
+                "api_standaard": "GGM; STAM; Haalcentraal; Digitale terinzagelegging (heeft al zilveren label)"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2025-06-25T10:44:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=107 | naam=Engelbert Wijnhoven",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 107,
+                "api_standaard": "routeren; abonneren)"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2025-08-26T12:28:59Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=113 | naam=NotifyNL en OMC",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 113,
+                "andersDanGemeente": "Dimpact"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2025-09-01T14:08:40Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=114 | naam=DiVault FLEX (pre-depot)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andersdangemeente": {
+                "initiatief_id": 114,
+                "andersDanGemeente": "WTS Zuiderzeeland"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2025-09-04T09:50:23Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=115 | naam=Gemeentewinkel",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 115,
+                "api_standaard": "Gibit; JSON; HTML"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2025-09-11T10:27:15Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=116 | naam=MapGallery",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "anderdomein": {
+                "initiatief_id": 116,
+                "domein": "Geo/BI afdeling"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 116,
+                "api_standaard": "TMS; TileJSON; 3D tiles; OGC features API"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2025-10-06T15:15:29Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=117 | naam=xential",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "anderdomein": {
+                "initiatief_id": 117,
+                "domein": "DMS en Zaak"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2025-10-07T15:08:16Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=118 | naam=MainWatch",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 118,
+                "api_standaard": "Volgt nog."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2025-11-17T11:50:09Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=119 | naam=Authorisatie Profielen",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 119,
+                "api_standaard": "JSON; HTTP"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2025-12-18T12:26:04Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=120 | naam=FamilyBarometer",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 120,
+                "api_standaard": "zonder dat op dit moment één specifieke vastgestelde standaard verplicht wordt toegepast."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2025-12-30T12:48:34Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=121 | naam=SafeGPT",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 121,
+                "api_standaard": "SafeGPT maakt gebruik van moderne; gestandaardiseerde communicatie tussen systemen gewaarborgd; wat de interoperabiliteit met gemeentelijke en andere overheidsapplicaties vergemakkelijkt. SafeGPT richt zich op het veilig en efficiënt ontsluiten en verwerken van gegevens via API's die voldoen aan de eisen voor beveiliging; privacy (DPIA) en transparantie; passend binnen de Common Ground-architectuur."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-03-19T11:54:31Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=125 | naam=Stichting BOR2050 Impact Beheer Monitor",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 125,
+                "api_standaard": "koppelingen gebeuren op bestaande geo/data standaarden. Nu worden zaken nog gekoppeld via shape bestanden."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-03-20T08:04:31Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=126 | naam=BinnenBeter",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 126,
+                "api_standaard": "JSON/HTTP standaarden"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-02T16:42:28Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake aanvullende overige velden bron_id=127 | naam=Eventloket",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "anderdomein": {
+                "initiatief_id": 127,
+                "domein": "APV"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 127,
+                "api_standaard": "Objecttypes api"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}
