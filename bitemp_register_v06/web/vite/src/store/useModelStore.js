@@ -34,8 +34,8 @@ import { temporal } from "zundo";
 const DEFAULT_DIAGRAM_ID = "overzicht";
 
 const useModelStore = create(
-  temporal(
-    persist(
+  persist(
+    temporal(
       (set, get) => ({
       // === Model data ===
       /** @type {Record<string, ModelElement>} */
@@ -303,6 +303,16 @@ const useModelStore = create(
         }),
     }),
     {
+      // Undo/redo: track alleen model-mutaties, niet diagram-viewport of isDirty
+      partialize: (state) => ({
+        elements: state.elements,
+        structuralEdges: state.structuralEdges,
+        domains: state.domains,
+        domainMeta: state.domainMeta,
+      }),
+      limit: 50,
+    }),
+    {
       name: "ide-model-store",
       storage: createJSONStorage(() => localStorage),
       // Sla alleen model-data op, niet UI-state
@@ -315,17 +325,7 @@ const useModelStore = create(
         modelMeta: state.modelMeta,
       }),
     }
-  ),
-  {
-    // Undo/redo: track alleen model-mutaties, niet diagram-viewport of isDirty
-    partialize: (state) => ({
-      elements: state.elements,
-      structuralEdges: state.structuralEdges,
-      domains: state.domains,
-      domainMeta: state.domainMeta,
-    }),
-    limit: 50,
-  })
+  )
 );
 
 export default useModelStore;

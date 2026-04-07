@@ -632,8 +632,10 @@ function GegevenstypeEditor({ data, setData }) {
 
 // ─── DomainEditor ─────────────────────────────────────
 
+const EMPTY_DOMAIN_META = {};
+
 function DomainEditor({ domeinNaam }) {
-  const meta = useModelStore((s) => s.domainMeta[domeinNaam] || {});
+  const meta = useModelStore((s) => s.domainMeta[domeinNaam] ?? EMPTY_DOMAIN_META);
   const updateDomainMeta = useModelStore((s) => s.updateDomainMeta);
   const elements = useModelStore((s) => s.elements);
 
