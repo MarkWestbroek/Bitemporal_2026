@@ -9,6 +9,32 @@ import (
 	"github.com/uptrace/bun"
 )
 
+type ApiStandaard struct {
+	bun.BaseModel     `bun:"table:apistandaard,alias:apistandaard"`
+	ID                int        `json:"id" bun:"id,pk"`
+	Opvoer            *time.Time `json:"opvoer,omitempty"`
+	Afvoer            *time.Time `json:"afvoer,omitempty"`
+	ApiStandaardNamen []Naam     `bun:"rel:has-many,join:id=apistandaard_id" json:"api_standaard_namen,omitempty"`
+}
+
+// Domein — Referentielijst-item voor domeinen.
+type Domein struct {
+	bun.BaseModel  `bun:"table:domein,alias:domein"`
+	ID             int              `json:"id" bun:"id,pk"`
+	Opvoer         *time.Time       `json:"opvoer,omitempty"`
+	Afvoer         *time.Time       `json:"afvoer,omitempty"`
+	Domeingegevens []DomeinGegevens `bun:"rel:has-many,join:id=domein_id" json:"domeingegevens,omitempty"`
+}
+
+// Gemeente — Referentielijst-item voor gemeenten.
+type Gemeente struct {
+	bun.BaseModel    `bun:"table:gemeente,alias:gemeente"`
+	ID               int                `json:"id" bun:"id,pk"`
+	Opvoer           *time.Time         `json:"opvoer,omitempty"`
+	Afvoer           *time.Time         `json:"afvoer,omitempty"`
+	Gemeentegegevens []GemeenteGegevens `bun:"rel:has-many,join:id=gemeente_id" json:"gemeentegegevens,omitempty"`
+}
+
 // Initiatief — Portfolio-initiatief met planning, productinformatie en bijdragen.
 type Initiatief struct {
 	bun.BaseModel            `bun:"table:initiatief,alias:initiatief"`
@@ -51,16 +77,16 @@ type Initiatief_Einde struct {
 
 // Organisatie — Organisatie die betrokken is bij initiatieven in het portfolio.
 type Organisatie struct {
-	bun.BaseModel             `bun:"table:organisatie,alias:organisatie"`
-	ID                        int                                    `json:"id" bun:"id,pk"`
-	Opvoer                    *time.Time                             `json:"opvoer,omitempty"`
-	Afvoer                    *time.Time                             `json:"afvoer,omitempty"`
-	Contactgegevens           []Organisatie_Contactgegevens          `bun:"rel:has-many,join:id=organisatie_id" json:"contactgegevens,omitempty"`
-	Organisatienamen          []Organisatie_Organisatienaam          `bun:"rel:has-many,join:id=organisatie_id" json:"organisatienamen,omitempty"`
-	BetrokkenOrganisatietypen []Organisatie_BetrokkenOrganisatietype `bun:"rel:has-many,join:id=organisatie_id" json:"betrokken_organisatietypen,omitempty"`
-	Contactpersonen           []Contactpersoon                       `bun:"rel:has-many,join:id=organisatie_id" json:"contactpersonen,omitempty"`
-	Aanvang                   []Organisatie_Aanvang                  `bun:"rel:has-many,join:id=organisatie_id" json:"aanvang,omitempty"`
-	Einde                     []Organisatie_Einde                    `bun:"rel:has-many,join:id=organisatie_id" json:"einde,omitempty"`
+	bun.BaseModel              `bun:"table:organisatie,alias:organisatie"`
+	ID                         int                                    `json:"id" bun:"id,pk"`
+	Opvoer                     *time.Time                             `json:"opvoer,omitempty"`
+	Afvoer                     *time.Time                             `json:"afvoer,omitempty"`
+	OrganisatieContactgegevens []Organisatie_Contactgegevens          `bun:"rel:has-many,join:id=organisatie_id" json:"organisatie_contactgegevens,omitempty"`
+	Organisatienamen           []Organisatie_Organisatienaam          `bun:"rel:has-many,join:id=organisatie_id" json:"organisatienamen,omitempty"`
+	BetrokkenOrganisatietypen  []Organisatie_BetrokkenOrganisatietype `bun:"rel:has-many,join:id=organisatie_id" json:"betrokken_organisatietypen,omitempty"`
+	Contactpersonen            []Contactpersoon                       `bun:"rel:has-many,join:id=organisatie_id" json:"contactpersonen,omitempty"`
+	Aanvang                    []Organisatie_Aanvang                  `bun:"rel:has-many,join:id=organisatie_id" json:"aanvang,omitempty"`
+	Einde                      []Organisatie_Einde                    `bun:"rel:has-many,join:id=organisatie_id" json:"einde,omitempty"`
 }
 
 // Organisatie_Aanvang — aanvangdatum van entiteit Organisatie.
@@ -85,14 +111,14 @@ type Organisatie_Einde struct {
 
 // Persoon — Persoon die betrokken is bij initiatieven in het portfolio.
 type Persoon struct {
-	bun.BaseModel   `bun:"table:persoon,alias:persoon"`
-	ID              int                       `json:"id" bun:"id,pk"`
-	Opvoer          *time.Time                `json:"opvoer,omitempty"`
-	Afvoer          *time.Time                `json:"afvoer,omitempty"`
-	Contactgegevens []Persoon_Contactgegevens `bun:"rel:has-many,join:id=persoon_id" json:"contactgegevens,omitempty"`
-	Persoonnamen    []Persoon_Persoonnaam     `bun:"rel:has-many,join:id=persoon_id" json:"persoonnamen,omitempty"`
-	Aanvang         []Persoon_Aanvang         `bun:"rel:has-many,join:id=persoon_id" json:"aanvang,omitempty"`
-	Einde           []Persoon_Einde           `bun:"rel:has-many,join:id=persoon_id" json:"einde,omitempty"`
+	bun.BaseModel          `bun:"table:persoon,alias:persoon"`
+	ID                     int                       `json:"id" bun:"id,pk"`
+	Opvoer                 *time.Time                `json:"opvoer,omitempty"`
+	Afvoer                 *time.Time                `json:"afvoer,omitempty"`
+	PersoonContactgegevens []Persoon_Contactgegevens `bun:"rel:has-many,join:id=persoon_id" json:"persoon_contactgegevens,omitempty"`
+	Persoonnamen           []Persoon_Persoonnaam     `bun:"rel:has-many,join:id=persoon_id" json:"persoonnamen,omitempty"`
+	Aanvang                []Persoon_Aanvang         `bun:"rel:has-many,join:id=persoon_id" json:"aanvang,omitempty"`
+	Einde                  []Persoon_Einde           `bun:"rel:has-many,join:id=persoon_id" json:"einde,omitempty"`
 }
 
 // Persoon_Aanvang — aanvangdatum van entiteit Persoon.
@@ -113,30 +139,4 @@ type Persoon_Einde struct {
 	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
-}
-
-// Gemeente — Referentielijst-item voor gemeenten.
-type Gemeente struct {
-	bun.BaseModel    `bun:"table:gemeente,alias:gemeente"`
-	ID               int                `json:"id" bun:"id,pk"`
-	Opvoer           *time.Time         `json:"opvoer,omitempty"`
-	Afvoer           *time.Time         `json:"afvoer,omitempty"`
-	Gemeentegegevens []GemeenteGegevens `bun:"rel:has-many,join:id=gemeente_id" json:"gemeentegegevens,omitempty"`
-}
-
-// Domein — Referentielijst-item voor domeinen.
-type Domein struct {
-	bun.BaseModel  `bun:"table:domein,alias:domein"`
-	ID             int              `json:"id" bun:"id,pk"`
-	Opvoer         *time.Time       `json:"opvoer,omitempty"`
-	Afvoer         *time.Time       `json:"afvoer,omitempty"`
-	Domeingegevens []DomeinGegevens `bun:"rel:has-many,join:id=domein_id" json:"domeingegevens,omitempty"`
-}
-
-type ApiStandaard struct {
-	bun.BaseModel     `bun:"table:apistandaard,alias:apistandaard"`
-	ID                int                  `json:"id" bun:"id,pk"`
-	Opvoer            *time.Time           `json:"opvoer,omitempty"`
-	Afvoer            *time.Time           `json:"afvoer,omitempty"`
-	ApiStandaardNamen []API_standaard_naam `bun:"rel:has-many,join:id=apistandaard_id" json:"api_standaard_namen,omitempty"`
 }

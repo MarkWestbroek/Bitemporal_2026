@@ -86,3 +86,154 @@ test('referentielijst-instantie use-edge en handles blijven behouden in V3 round
   assert.equal(bindingEdge.targetHandle, 'left');
   assert.equal(bindingEdge.data?.isDependency, true);
 });
+
+test('«use» edges naar enums en datatypes bewaren handles in V3 roundtrip', () => {
+  const nodes = [
+    {
+      id: 'Ding',
+      type: 'entiteit',
+      position: { x: 0, y: 0 },
+      data: { typenaam: 'Ding', metatype: 'entiteit', velden: [], afgeleideVelden: [] },
+    },
+    {
+      id: 'Ding_Info',
+      type: 'gegevenselement',
+      position: { x: 100, y: 100 },
+      data: {
+        typenaam: 'Ding_Info',
+        metatype: 'gegevenselement',
+        velden: [
+          { naam: 'kleur', enumNaam: 'Kleur', type: 'string' },
+          { naam: 'adres', datatypeNaam: 'NLPostcode', type: 'string' },
+        ],
+        afgeleideVelden: [],
+      },
+    },
+    {
+      id: 'enum_Kleur',
+      type: 'enumeratie',
+      position: { x: 300, y: 50 },
+      data: { naam: 'Kleur', waarden: ['Rood', 'Groen', 'Blauw'] },
+    },
+    {
+      id: 'dt_NLPostcode',
+      type: 'gegevenstype',
+      position: { x: 300, y: 200 },
+      data: { naam: 'NLPostcode', basistype: 'string' },
+    },
+  ];
+
+  const edges = [
+    {
+      id: 'Ding->Ding_Info',
+      source: 'Ding',
+      target: 'Ding_Info',
+      type: 'metamodel',
+      data: { momentvoorkomen: 'enkelvoudig', kardinaliteit: '0..1' },
+    },
+    {
+      id: 'Ding_Info-->Kleur',
+      source: 'Ding_Info',
+      target: 'enum_Kleur',
+      type: 'metamodel',
+      sourceHandle: 'right',
+      targetHandle: 'left',
+      data: { isDependency: true },
+    },
+    {
+      id: 'Ding_Info--dt-->NLPostcode',
+      source: 'Ding_Info',
+      target: 'dt_NLPostcode',
+      type: 'metamodel',
+      sourceHandle: 'bottom',
+      targetHandle: 'top',
+      data: { isDependency: true },
+    },
+  ];
+
+  // Export naar V3
+  const v3 = editorNaarV3Model(nodes, edges, { naam: 'UseEdge test' });
+  const ge = v3.entiteiten[0].gegevenselementen[0];
+
+  assert.ok(ge.useEdges, 'useEdges moet aanwezig zijn op GE');
+  assert.equal(ge.useEdges.length, 2);
+
+  const enumUE = ge.useEdges.find((ue) => ue.doel === 'Kleur');
+  assert.ok(enumUE, 'useEdge voor Kleur moet bestaan');
+  assert.equal(enumUE.sourceHandle, 'right');
+  assert.equal(enumUE.targetHandle, 'left');
+
+  const dtUE = ge.useEdges.find((ue) => ue.doel === 'NLPostcode');
+  assert.ok(dtUE, 'useEdge voor NLPostcode moet bestaan');
+  assert.equal(dtUE.sourceHandle, 'bottom');
+  assert.equal(dtUE.targetHandle, 'top');
+
+  // Import terug uit V3
+  const hersteld = v3ModelNaarEditor(v3);
+
+  const enumEdge = hersteld.edges.find((e) => e.target === 'enum_Kleur');
+  assert.ok(enumEdge, 'enum edge moet bestaan na import');
+  assert.equal(enumEdge.sourceHandle, 'right');
+  assert.equal(enumEdge.targetHandle, 'left');
+
+  const dtEdge = hersteld.edges.find((e) => e.target === 'dt_NLPostcode');
+  assert.ok(dtEdge, 'datatype edge moet bestaan na import');
+  assert.equal(dtEdge.sourceHandle, 'bottom');
+  assert.equal(dtEdge.targetHandle, 'top');
+});
+
+test('verborgen «use» edges worden bewaard in V3 roundtrip', () => {
+  const nodes = [
+    {
+      id: 'X',
+      type: 'entiteit',
+      position: { x: 0, y: 0 },
+      data: { typenaam: 'X', metatype: 'entiteit', velden: [], afgeleideVelden: [] },
+    },
+    {
+      id: 'X_Data',
+      type: 'gegevenselement',
+      position: { x: 100, y: 100 },
+      data: {
+        typenaam: 'X_Data',
+        metatype: 'gegevenselement',
+        velden: [{ naam: 'status', enumNaam: 'Status', type: 'string' }],
+        afgeleideVelden: [],
+      },
+    },
+    {
+      id: 'enum_Status',
+      type: 'enumeratie',
+      position: { x: 300, y: 50 },
+      data: { naam: 'Status', waarden: ['Open', 'Gesloten'] },
+    },
+  ];
+
+  const edges = [
+    {
+      id: 'X->X_Data',
+      source: 'X',
+      target: 'X_Data',
+      type: 'metamodel',
+      data: { momentvoorkomen: 'enkelvoudig', kardinaliteit: '0..1' },
+    },
+    {
+      id: 'X_Data-->Status',
+      source: 'X_Data',
+      target: 'enum_Status',
+      type: 'metamodel',
+      hidden: true,
+      data: { isDependency: true },
+    },
+  ];
+
+  const v3 = editorNaarV3Model(nodes, edges, { naam: 'Hidden test' });
+  const ge = v3.entiteiten[0].gegevenselementen[0];
+  assert.ok(ge.useEdges, 'useEdges aanwezig');
+  assert.equal(ge.useEdges[0].hidden, true);
+
+  const hersteld = v3ModelNaarEditor(v3);
+  const statusEdge = hersteld.edges.find((e) => e.target === 'enum_Status');
+  assert.ok(statusEdge, 'edge bestaat na import');
+  assert.equal(statusEdge.hidden, true, 'edge moet verborgen zijn');
+});

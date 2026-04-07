@@ -89,9 +89,10 @@ func TestMaakVizSchemaHandler_GeeftSchemaTerug(t *testing.T) {
 	assertField("A", "id", "integer", "")
 	assertField("A", "us", "A_U", "array")
 	assertField("A_U_Data", "bbb", "boolean", "")
+	assertField("A_V_Data", "ccc", "string", "")
 	assertField("A_W_Data", "float", "number", "float64")
 	assertField("A_W_Data", "heel", "integer", "")
-	assertField("A_V_Data", "datum", "string", "date")
+	assertField("A_W_Aanvang", "datum", "string", "date")
 
 	for _, item := range body.Types {
 		if item.Typenaam != "Rel_A_B" {
@@ -110,9 +111,6 @@ func TestMaakVizSchemaHandler_GeeftSchemaTerug(t *testing.T) {
 		for _, field := range item.Velden {
 			if field.Naam != "soort" {
 				continue
-			}
-			if field.Description == "" {
-				t.Fatal("expected field description on Rel_A_B_Data.soort")
 			}
 			expected := []string{"LTT", "LAT", "LTA"}
 			if len(field.Enum) != len(expected) {

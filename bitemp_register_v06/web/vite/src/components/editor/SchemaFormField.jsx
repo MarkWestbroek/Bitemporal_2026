@@ -1,5 +1,6 @@
 import { useId } from "react";
 import { validatieMeldingVoorVeld } from "../actions/ActionFormParts";
+import RefCombobox from "./RefCombobox";
 
 /**
  * SchemaFormField — generiek formulierveld dat één `veld` uit de schema-API
@@ -81,6 +82,18 @@ export default function SchemaFormField({ veld, value, onChange, error, readOnly
             <option key={opt} value={opt}>{opt}</option>
           ))}
         </select>
+      );
+    }
+
+    // Referentielijst-verwijzing → combobox/autocomplete
+    if (veld.ref) {
+      return (
+        <RefCombobox
+          refType={veld.ref}
+          value={value}
+          onChange={onChange}
+          readOnly={isReadonly}
+        />
       );
     }
 

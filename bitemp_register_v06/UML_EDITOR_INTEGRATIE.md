@@ -241,6 +241,17 @@ Technisch: dit zijn React Flow props op de `<ReactFlow>` component:
 | `selectionMode` | `"partial"` | Nodes die deels overlappen met de selectierechthoek worden ook geselecteerd |
 | `multiSelectionKeyCode` | `"Control"` | Ctrl + klik om nodes individueel bij de selectie te voegen |
 
+### Dependency-edges tijdelijk verbergen
+
+Voor **stippellijnen met `«use»`** (dependency-edges van GE/relatie naar enum, gegevenstype of referentielijst-item) is er nu een apart rechtsklikmenu:
+
+- **Rechtsklik op een dependency-edge** → **`Verberg deze dependency`**
+- **Rechtsklik op een enum- of gegevenstype-node** → **`Verberg dependencies`** of **`Toon dependencies`** voor alle inkomende `«use»` edges naar die node
+
+Alleen edges met `data.isDependency === true` zijn op deze manier verbergbaar. Gewone compositie- en relatie-edges blijven dus altijd zichtbaar.
+
+De verborgen status blijft behouden bij een **V3 roundtrip**: in de V3 JSON worden dependency-layoutgegevens opgeslagen onder `useEdges[]`, inclusief `id`, `sourceHandle`, `targetHandle` en `hidden`. Daardoor kun je een diagram opslaan, later opnieuw laden, en dezelfde dependency-edges verborgen houden.
+
 ---
 
 ## Import en Export

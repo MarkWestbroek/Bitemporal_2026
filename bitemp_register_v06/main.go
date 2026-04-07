@@ -117,6 +117,7 @@ func NewRouter() *gin.Engine {
 	router.GET("/api/viz/schema", handlers.MaakVizSchemaHandler())
 	router.GET("/api/viz/entiteit/:typenaam/max-id", handlers.MaakVizEntiteitMaxIDHandler())
 	router.GET("/api/viz/relatie/:typenaam/secondaire-ids", handlers.MaakVizRelatieSecondaireIDsHandler())
+	router.GET("/api/viz/reflijst/:typenaam/opties", handlers.MaakVizReflijstOptiesHandler())
 	router.Static("/viz", "./web")
 
 	// Schema model endpoints (v3-formaat, zie ontwerpkeuzen.md §7)

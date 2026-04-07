@@ -205,11 +205,11 @@ type Initiatief_Product_Data struct {
 	Versie        int64       `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Naam          string      `json:"naam"`
 	Omschrijving  *string     `json:"omschrijving,omitempty"`
+	CGLaag        CGLaag      `json:"CG_laag" schema:"enum=CGLaag"`
 	Pitch         *string     `json:"pitch,omitempty"`
 	Website       URL         `json:"website" schema:"datatype:URL"`
 	GitRepo       GitAdres    `json:"git_repo" schema:"datatype:GitAdres"`
 	Type          Producttype `json:"type" schema:"enum=Producttype"`
-	CGLaag        CGLaag      `json:"CG_laag" schema:"enum=CGLaag"`
 	Opvoer        *time.Time  `json:"opvoer,omitempty"`
 	Afvoer        *time.Time  `json:"afvoer,omitempty"`
 }

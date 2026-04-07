@@ -619,8 +619,35 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   );
 
   const onNodeContextMenu = useCallback(
-    (event) => { toonContextMenu(event); },
-    [toonContextMenu]
+    (event, node) => {
+      // Dependency toggle voor enum/datatype nodes
+      if (node && (node.type === "enumeratie" || node.type === "gegevenstype")) {
+        const inkomendeDeps = edges.filter(
+          (e) => e.data?.isDependency === true && e.target === node.id
+        );
+        if (inkomendeDeps.length > 0) {
+          event.preventDefault();
+          const alleVerborgen = inkomendeDeps.every((e) => e.hidden);
+          const canvasRect = canvasRef.current?.getBoundingClientRect?.() || { left: 0, top: 0 };
+          setContextMenu({
+            menuType: "dependency",
+            x: event.clientX - canvasRect.left,
+            y: event.clientY - canvasRect.top,
+            header: node.data?.naam || node.id,
+            items: [
+              {
+                actie: alleVerborgen ? "toon-deps" : "verberg-deps",
+                label: alleVerborgen ? "Toon dependencies" : "Verberg dependencies",
+              },
+            ],
+            targetNodeId: node.id,
+          });
+          return;
+        }
+      }
+      toonContextMenu(event);
+    },
+    [toonContextMenu, edges]
   );
 
   const onPaneContextMenu = useCallback(
@@ -629,13 +656,62 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   );
 
   const onEdgeContextMenu = useCallback(
-    (event, _edge) => { toonContextMenu(event); },
+    (event, edge) => {
+      if (edge?.data?.isDependency === true) {
+        event.preventDefault();
+        const canvasRect = canvasRef.current?.getBoundingClientRect?.() || { left: 0, top: 0 };
+        setContextMenu({
+          menuType: "dependency",
+          x: event.clientX - canvasRect.left,
+          y: event.clientY - canvasRect.top,
+          header: "«use» dependency",
+          items: [
+            { actie: "verberg-edge", label: "Verberg deze dependency" },
+          ],
+          targetEdgeId: edge.id,
+          targetNodeId: edge.target,
+        });
+        return;
+      }
+      toonContextMenu(event);
+    },
     [toonContextMenu]
   );
 
   const onSelectionContextMenu = useCallback(
     (event, _nodes) => { toonContextMenu(event); },
     [toonContextMenu]
+  );
+
+  /**
+   * Verwerk een dependency-contextmenu actie: verberg/toon «use» edges.
+   */
+  const handleDependencyAction = useCallback(
+    (actie) => {
+      if (!contextMenu) return;
+      if (actie === "verberg-edge" && contextMenu.targetEdgeId) {
+        setEdges((eds) =>
+          eds.map((e) => e.id === contextMenu.targetEdgeId ? { ...e, hidden: true } : e)
+        );
+      } else if (actie === "verberg-deps" && contextMenu.targetNodeId) {
+        setEdges((eds) =>
+          eds.map((e) =>
+            e.data?.isDependency === true && e.target === contextMenu.targetNodeId
+              ? { ...e, hidden: true }
+              : e
+          )
+        );
+      } else if (actie === "toon-deps" && contextMenu.targetNodeId) {
+        setEdges((eds) =>
+          eds.map((e) =>
+            e.data?.isDependency === true && e.target === contextMenu.targetNodeId
+              ? { ...e, hidden: false }
+              : e
+          )
+        );
+      }
+    },
+    [contextMenu, setEdges]
   );
 
   /**
@@ -1742,8 +1818,12 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
             <ContextMenu
               x={contextMenu.x}
               y={contextMenu.y}
+              menuType={contextMenu.menuType || "align"}
               itemCount={contextMenu.count}
+              items={contextMenu.items}
+              header={contextMenu.header}
               onAlign={handleAlign}
+              onAction={handleDependencyAction}
               onClose={() => setContextMenu(null)}
             />
           )}

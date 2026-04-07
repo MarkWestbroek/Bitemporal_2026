@@ -302,7 +302,7 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 495, Y: -1950}, EdgeID: "Initiatief->Initiatief_Planning",
+			Positie: &V3Positie{X: 495, Y: -1935}, EdgeID: "Initiatief->Initiatief_Planning",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Initiatief_Planning_Data", Momentvoorkomen: Enkelvoudig},
@@ -364,7 +364,7 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1035, Y: -1935}, EdgeID: "Initiatief->Initiatief_Bijdrage",
+			Positie: &V3Positie{X: 1035, Y: -1920}, EdgeID: "Initiatief->Initiatief_Bijdrage",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Initiatief_Bijdrage_Data", Momentvoorkomen: Enkelvoudig},

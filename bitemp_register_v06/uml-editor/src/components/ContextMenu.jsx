@@ -1,14 +1,19 @@
 /**
- * ContextMenu — Rechtsklikmenu met uitlijnacties op het canvas.
+ * ContextMenu — Rechtsklikmenu op het canvas.
  *
- * Verschijnt alleen wanneer ≥2 nodes geselecteerd zijn.
- * SVG-iconen geïnspireerd op EA-alignmentpictogrammen.
+ * Twee varianten op basis van `menuType`:
+ *   "align"      — Uitlijnacties (verschijnt bij ≥2 geselecteerde nodes)
+ *   "dependency"  — Verberg/toon «use» dependency edges
  *
  * Props:
- *   x, y       — schermcoördinaten (pixels) van het menu
- *   onAlign    — callback(actie: string)
- *   onClose    — callback om het menu te sluiten
- *   itemCount  — aantal geselecteerde nodes
+ *   x, y        — schermcoördinaten (pixels) van het menu
+ *   menuType    — "align" | "dependency"
+ *   onAlign     — callback(actie: string)        (align)
+ *   onAction    — callback(actie: string)         (dependency)
+ *   onClose     — callback om het menu te sluiten
+ *   itemCount   — aantal geselecteerde nodes      (align)
+ *   items       — [{actie, label, icon?}]         (dependency)
+ *   header      — optionele tekst bovenin         (dependency)
  */
 import { useEffect, useRef } from "react";
 
@@ -97,7 +102,7 @@ const ALIGN_ACTIES = [
   { actie: "verdeel-horizontaal", label: "Verdeel gelijk ↔",   icon: iconen.verdeelH,  minCount: 3 },
 ];
 
-export default function ContextMenu({ x, y, onAlign, onClose, itemCount }) {
+export default function ContextMenu({ x, y, menuType = "align", onAlign, onAction, onClose, itemCount, items, header }) {
   const menuRef = useRef(null);
 
   // Sluit het menu bij klik buiten het menu
@@ -126,25 +131,50 @@ export default function ContextMenu({ x, y, onAlign, onClose, itemCount }) {
       className="context-menu"
       style={{ left: x, top: y }}
     >
-      <div className="context-menu-header">
-        {itemCount} elementen
-      </div>
-      {ALIGN_ACTIES.map((item, i) =>
-        item.separator ? (
-          <div key={`sep-${i}`} className="context-menu-separator" />
-        ) : itemCount < (item.minCount || 2) ? null : (
-          <button
-            key={item.actie}
-            className="context-menu-item"
-            onClick={() => {
-              onAlign(item.actie);
-              onClose();
-            }}
-          >
-            <span className="context-menu-icon">{item.icon}</span>
-            {item.label}
-          </button>
-        )
+      {menuType === "dependency" ? (
+        <>
+          {header && <div className="context-menu-header">{header}</div>}
+          {(items || []).map((item, i) =>
+            item.separator ? (
+              <div key={`sep-${i}`} className="context-menu-separator" />
+            ) : (
+              <button
+                key={item.actie}
+                className="context-menu-item"
+                onClick={() => {
+                  onAction?.(item.actie);
+                  onClose();
+                }}
+              >
+                {item.icon && <span className="context-menu-icon">{item.icon}</span>}
+                {item.label}
+              </button>
+            )
+          )}
+        </>
+      ) : (
+        <>
+          <div className="context-menu-header">
+            {itemCount} elementen
+          </div>
+          {ALIGN_ACTIES.map((item, i) =>
+            item.separator ? (
+              <div key={`sep-${i}`} className="context-menu-separator" />
+            ) : itemCount < (item.minCount || 2) ? null : (
+              <button
+                key={item.actie}
+                className="context-menu-item"
+                onClick={() => {
+                  onAlign(item.actie);
+                  onClose();
+                }}
+              >
+                <span className="context-menu-icon">{item.icon}</span>
+                {item.label}
+              </button>
+            )
+          )}
+        </>
       )}
     </div>
   );

@@ -616,6 +616,36 @@ function vindReferentielijstInstantieBinding(relatieNodeId, relData, edges, node
 }
 
 /**
+ * Verzamel «use» dependency edges (naar enums, datatypes, refs) vanuit een
+ * bron-node, en retourneer die edges waarvoor tenminste één handle afwijkt
+ * van de default (null) of die verborgen zijn (hidden). De doel-naam wordt
+ * afgeleid van het target-node-id (zonder enum_/dt_ prefix).
+ */
+function verzamelUseEdges(bronNodeId, edges) {
+  const depEdges = edges.filter(
+    (e) =>
+      e.type === "metamodel" &&
+      e.data?.isDependency === true &&
+      e.source === bronNodeId
+  );
+  const useEdges = depEdges
+    .filter((e) => e.sourceHandle || e.targetHandle || e.hidden)
+    .map((e) => {
+      let doel = e.target;
+      if (doel.startsWith("enum_")) doel = doel.slice(5);
+      else if (doel.startsWith("dt_")) doel = doel.slice(3);
+      return {
+        doel,
+        id: e.id || undefined,
+        sourceHandle: e.sourceHandle || undefined,
+        targetHandle: e.targetHandle || undefined,
+        hidden: e.hidden || undefined,
+      };
+    });
+  return useEdges.length > 0 ? useEdges : undefined;
+}
+
+/**
  * Exporteer editor-state als V3 model (codegen-ready) zonder flowState.
  */
 export function editorNaarV3Model(nodes, edges, opts = {}) {
@@ -699,6 +729,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         velden: (geNode.data.velden || [])
           .filter((v) => (v.naam || "").trim() !== "")
           .map(veldNaarV3),
+        useEdges: verzamelUseEdges(geNode.id, edges),
       };
     });
 
@@ -753,6 +784,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         velden: (relNode.data.velden || [])
           .filter((v) => (v.naam || "").trim() !== "")
           .map(veldNaarV3),
+        useEdges: verzamelUseEdges(relNode.id, edges),
       };
     });
 

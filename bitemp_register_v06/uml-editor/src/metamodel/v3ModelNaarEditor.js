@@ -213,13 +213,22 @@ export function v3ModelNaarEditor(v3Model) {
         },
       });
 
+      // Lookup voor «use» dependency edge handles (enum/datatype/ref)
+      const useEdgeMap = Object.fromEntries(
+        (ge.useEdges || []).map((ue) => [ue.doel, ue])
+      );
+
       (ge.velden || []).forEach((v) => {
         if (v.enum) {
+          const ue = useEdgeMap[v.enum];
           edges.push({
-            id: `${geTypenaam}-->${v.enum}`,
+            id: ue?.id || `${geTypenaam}-->${v.enum}`,
             source: geTypenaam,
             target: `enum_${v.enum}`,
             type: "metamodel",
+            sourceHandle: ue?.sourceHandle || null,
+            targetHandle: ue?.targetHandle || null,
+            hidden: ue?.hidden || false,
             data: {
               isDependency: true,
               rolnaam: "",
@@ -233,11 +242,15 @@ export function v3ModelNaarEditor(v3Model) {
         // Backward compat: oudere DB-modellen hebben geen v.datatype maar goType=datatypeNaam
         const dtNaam = v.datatype || (datatypeLookup[v.goType] ? v.goType : null);
         if (dtNaam) {
+          const ue = useEdgeMap[dtNaam];
           edges.push({
-            id: `${geTypenaam}--dt-->${dtNaam}`,
+            id: ue?.id || `${geTypenaam}--dt-->${dtNaam}`,
             source: geTypenaam,
             target: `dt_${dtNaam}`,
             type: "metamodel",
+            sourceHandle: ue?.sourceHandle || null,
+            targetHandle: ue?.targetHandle || null,
+            hidden: ue?.hidden || false,
             data: {
               isDependency: true,
               rolnaam: "",
@@ -250,11 +263,15 @@ export function v3ModelNaarEditor(v3Model) {
         // Dependency edge naar referentielijst-items relatie (via $ref)
         const geRefNaam = v["$ref"] || v.refItemNaam || null;
         if (geRefNaam) {
+          const ue = useEdgeMap[geRefNaam];
           edges.push({
-            id: `${geTypenaam}--ref-->${geRefNaam}`,
+            id: ue?.id || `${geTypenaam}--ref-->${geRefNaam}`,
             source: geTypenaam,
             target: geRefNaam,
             type: "metamodel",
+            sourceHandle: ue?.sourceHandle || null,
+            targetHandle: ue?.targetHandle || null,
+            hidden: ue?.hidden || false,
             data: {
               isDependency: true,
               rolnaam: "",
@@ -318,13 +335,22 @@ export function v3ModelNaarEditor(v3Model) {
         },
       });
 
+      // Lookup voor «use» dependency edge handles (enum/datatype/ref)
+      const relUseEdgeMap = Object.fromEntries(
+        (rel.useEdges || []).map((ue) => [ue.doel, ue])
+      );
+
       (rel.velden || []).forEach((v) => {
         if (v.enum) {
+          const ue = relUseEdgeMap[v.enum];
           edges.push({
-            id: `${rel.naam}-->${v.enum}`,
+            id: ue?.id || `${rel.naam}-->${v.enum}`,
             source: rel.naam,
             target: `enum_${v.enum}`,
             type: "metamodel",
+            sourceHandle: ue?.sourceHandle || null,
+            targetHandle: ue?.targetHandle || null,
+            hidden: ue?.hidden || false,
             data: {
               isDependency: true,
               rolnaam: "",
@@ -337,11 +363,15 @@ export function v3ModelNaarEditor(v3Model) {
         // Dependency edge naar gegevenstype node
         const relDtNaam = v.datatype || (datatypeLookup[v.goType] ? v.goType : null);
         if (relDtNaam) {
+          const ue = relUseEdgeMap[relDtNaam];
           edges.push({
-            id: `${rel.naam}--dt-->${relDtNaam}`,
+            id: ue?.id || `${rel.naam}--dt-->${relDtNaam}`,
             source: rel.naam,
             target: `dt_${relDtNaam}`,
             type: "metamodel",
+            sourceHandle: ue?.sourceHandle || null,
+            targetHandle: ue?.targetHandle || null,
+            hidden: ue?.hidden || false,
             data: {
               isDependency: true,
               rolnaam: "",
@@ -354,11 +384,15 @@ export function v3ModelNaarEditor(v3Model) {
         // Dependency edge naar referentielijst-items relatie (via $ref)
         const relRefNaam = v["$ref"] || v.refItemNaam || null;
         if (relRefNaam) {
+          const ue = relUseEdgeMap[relRefNaam];
           edges.push({
-            id: `${rel.naam}--ref-->${relRefNaam}`,
+            id: ue?.id || `${rel.naam}--ref-->${relRefNaam}`,
             source: rel.naam,
             target: relRefNaam,
             type: "metamodel",
+            sourceHandle: ue?.sourceHandle || null,
+            targetHandle: ue?.targetHandle || null,
+            hidden: ue?.hidden || false,
             data: {
               isDependency: true,
               rolnaam: "",

@@ -65,6 +65,7 @@ De editor kan het bestaande model inladen vanuit de **schema-API** (`/schema`) v
 | **Gebiedsselectie** | Shift + sleep op canvas → rubber-band selectie van meerdere nodes |
 | **Multi-selectie** | Ctrl + klik op nodes om ze individueel bij de selectie te voegen |
 | **Uitlijnen / verdelen** | Selecteer 2+ nodes → rechtsklik voor `Links`, `Centreer`, `Rechts`, `Boven`, `Midden`, `Onder`; bij 3+ ook `Verdeel gelijk ↕` en `Verdeel gelijk ↔` |
+| **Dependency verbergen / tonen** | Rechtsklik op een stippellijn `«use»` → `Verberg deze dependency`; rechtsklik op enum/gegevenstype → `Verberg dependencies` of `Toon dependencies` |
 | **Undo canvas-acties** | `Ctrl + Z` → maakt de laatste canvasactie ongedaan (kleine undo-stack, o.a. verplaatsen, verbinden, verwijderen, uitlijnen en verdelen) |
 | **Redo canvas-acties** | `Ctrl + Y` (of `Ctrl + Shift + Z`) → zet de laatste ongedaan gemaakte canvasactie opnieuw terug |
 | **Export Mermaid** | Toolbar: 🧜 Mermaid → download `metamodel.mmd` |
@@ -75,6 +76,10 @@ De editor kan het bestaande model inladen vanuit de **schema-API** (`/schema`) v
 | **Import PlantUML** | Toolbar: 📥 PlantUML → laad `.puml`/`.plantuml`/`.txt` bestand |
 
 Bij gebiedsselectie kan React Flow naast nodes ook relaties/edges als geselecteerd markeren. Het rechtsklikmenu voor uitlijnen blijft dan toch beschikbaar; de bewerking wordt bewust alleen op de geselecteerde nodes toegepast.
+
+Voor **dependency-edges** (`«use»`, stippellijnen) is er daarnaast een tweede rechtsklikpad: je kunt een losse dependency direct verbergen, of op een enum/gegevenstype alle inkomende dependencies in één keer verbergen of weer tonen. Dit is handig in drukkere diagrammen waar dezelfde datatype- of enum-node op veel plekken wordt gebruikt.
+
+De editor bewaart deze keuze ook in **V3 JSON** via `useEdges[]`. Daarin worden per dependency-edge de layout-attributen en zichtbaarheid opgeslagen (`id`, `sourceHandle`, `targetHandle`, `hidden`), zodat een save/load of database-roundtrip de verborgen status niet verliest.
 
 Voor canvasinteracties is er een **kleine undo/redo-stack**: met `Ctrl + Z` kun je de laatste grafische acties terugdraaien, en met `Ctrl + Y` of `Ctrl + Shift + Z` zet je de laatste ongedaan gemaakte canvasactie weer terug. Dit geldt voor **verplaatsen**, **verbinden**, **verwijderen**, **uitlijnen** en **verdelen**. Deze sneltoetsen grijpen niet in als je in een invoerveld of tekstvak aan het typen bent; dan blijft de normale browser/input-undo gelden. Bewerkingen in het inhouds-/zijpaneel vallen bewust buiten deze canvas-undo.
 

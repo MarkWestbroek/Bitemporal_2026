@@ -1,4 +1,5 @@
 import { useId } from "react";
+import RefCombobox from "../editor/RefCombobox";
 
 function isNumeriekSchemaType(type) {
   return type === "number" || type === "integer";
@@ -294,6 +295,16 @@ export function ActionFieldControl({ veld, value, onChange, secondaireInfo, seco
         </div>
       );
     }
+  }
+
+  // Referentielijst-verwijzing → combobox/autocomplete
+  if (veld.ref) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 0 }}>
+        <RefCombobox refType={veld.ref} value={value} onChange={onChange} />
+        {foutmelding ? <span style={{ fontSize: 11, color: "#dc2626" }}>{foutmelding}</span> : null}
+      </div>
+    );
   }
 
   if (veld.type === "boolean") {
