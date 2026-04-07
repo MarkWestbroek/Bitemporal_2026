@@ -2,7 +2,7 @@
  * adapters.js — Transformatie tussen V3 model format en Zustand store format.
  *
  * v3ModelNaarStore():  V3 JSON → { elements, structuralEdges, diagrams, domains, modelMeta }
- * storeNaarV3Model():  store state → V3 JSON (TODO: implementeren in Fase 4)
+ * storeNaarV3Model():  store state → V3 JSON (roundtrip-compatibel)
  *
  * Verschil met v3ModelNaarEditor.js:
  * - Posities zitten NIET in de elementen, maar in het diagram
@@ -394,7 +394,7 @@ export function v3ModelNaarStore(v3Full) {
     versie: v3Model?.versie || "v3",
   };
 
-  return { elements, structuralEdges, diagrams, domains, modelMeta };
+  return { elements, structuralEdges, diagrams, domains, domainMeta: {}, modelMeta };
 }
 
 // ─── Dependency edges helper ─────────────────────────────────
@@ -436,10 +436,329 @@ function addFieldDependencyEdges(convertedVelden, parentId, rawVelden, datatypeL
 
 // ─── Store → V3 Export ──────────────────────────────────────
 
+// --- Inverse helpers ---
+
+/**
+ * Vertaal een store-veld terug naar V3Veld-formaat.
+ * Inverse van convertV3Veld().
+ */
+function veldNaarV3(veld) {
+  const v3 = { naam: veld.naam };
+
+  // GoType afleiden uit type/format
+  v3.goType = veldTypeNaarGoType(veld.type, veld.format, veld.verplicht);
+
+  if (veld.verplicht === false && !v3.goType.startsWith("*")) {
+    v3.goType = "*" + v3.goType;
+  }
+  // Verplicht true → geen pointer prefix
+  if (veld.verplicht) {
+    v3.goType = v3.goType.replace(/^\*/, "");
+  }
+
+  if (veld.enumNaam) v3.enum = veld.enumNaam;
+  if (veld.datatypeNaam) v3.datatype = veld.datatypeNaam;
+  if (veld.refItemNaam) v3["$ref"] = veld.refItemNaam;
+  if (veld.description) v3.description = veld.description;
+  if (veld.afgeleid) {
+    v3.afgeleid = true;
+    if (veld.afleidingsregelTaal) v3.afleidingsregelTaal = veld.afleidingsregelTaal;
+    if (veld.afleidingsregel) v3.afleidingsregel = veld.afleidingsregel;
+  }
+
+  return v3;
+}
+
+/**
+ * Inverse van goTypeNaarVeldType(): vertaal store type+format terug naar Go type.
+ */
+function veldTypeNaarGoType(type, format, verplicht) {
+  if (format === "date") return "Date";
+  if (format === "date-time") return "time.Time";
+  switch (type) {
+    case "integer": return "int";
+    case "number": return format === "float64" ? "float64" : "float64";
+    case "boolean": return "bool";
+    case "string":
+    default:
+      return "string";
+  }
+}
+
+/**
+ * Vertaal store afgeleideVelden terug naar V3AfgeleidVeld[].
+ */
+function afgeleideVeldenNaarV3(arr) {
+  return (arr || []).filter((av) => av.naam).map((av) => {
+    const v3 = { naam: av.naam, goType: av.goType || "string" };
+    if (av.description) v3.description = av.description;
+    if (av.afleidingsregelTaal) v3.afleidingsregelTaal = av.afleidingsregelTaal;
+    if (av.afleidingsregel) v3.afleidingsregel = av.afleidingsregel;
+    if (av.isWeergaveVeld) v3.isWeergaveVeld = true;
+    return v3;
+  });
+}
+
+/**
+ * Haal de positie van een element uit het overzicht-diagram.
+ */
+function elementPositie(diagrams, elementId) {
+  const overzicht = diagrams?.[DEFAULT_DIAGRAM_ID];
+  if (!overzicht) return undefined;
+  const node = (overzicht.nodes || []).find((n) => n.elementId === elementId);
+  return node?.position || undefined;
+}
+
+/**
+ * Haal edge handle-data op uit het overzicht-diagram.
+ */
+function diagramEdgeData(diagrams, edgeId) {
+  const overzicht = diagrams?.[DEFAULT_DIAGRAM_ID];
+  if (!overzicht) return {};
+  return (overzicht.edges || []).find((e) => e.id === edgeId) || {};
+}
+
+// --- Main export: storeNaarV3Model ---
+
+/**
+ * Transformeer de Zustand store state naar V3 model JSON.
+ * Inverse van v3ModelNaarStore().
+ *
+ * @param {object} state  - Volledige store state (elements, structuralEdges, diagrams, modelMeta)
+ * @returns {object}        V3-compatibel model object
+ */
+export function storeNaarV3Model(state) {
+  const { elements, structuralEdges = [], diagrams = {}, modelMeta } = state;
+
+  // --- Groepeer elementen per type ---
+  const entiteiten = [];
+  const geElementen = {};   // id → element
+  const relaties = {};      // id → element
+  const enums = [];
+  const datatypes = [];
+  const refInstanties = [];
+
+  for (const el of Object.values(elements)) {
+    switch (el.type) {
+      case "entiteit":
+        entiteiten.push(el);
+        break;
+      case "gegevenselement":
+        geElementen[el.id] = el;
+        break;
+      case "relatie":
+        relaties[el.id] = el;
+        break;
+      case "enumeratie":
+        enums.push(el);
+        break;
+      case "gegevenstype":
+        datatypes.push(el);
+        break;
+      case "referentielijstInstantie":
+        refInstanties.push(el);
+        break;
+    }
+  }
+
+  // --- Bouw parent → children lookup vanuit structuralEdges ---
+  const kinderen = {};  // entiteitId → [{ edge, childEl }]
+  for (const edge of structuralEdges) {
+    const child = geElementen[edge.target] || relaties[edge.target];
+    if (child) {
+      if (!kinderen[edge.source]) kinderen[edge.source] = [];
+      kinderen[edge.source].push({ edge, child });
+    }
+  }
+
+  // --- Enums → V3 ---
+  const v3Enums = enums.map((el) => {
+    const v3 = {
+      goType: el.data?.naam || el.naam,
+      baseType: el.data?.baseType || "string",
+      waarden: (el.data?.waarden || []).map((w) => ({
+        constNaam: String(w).replace(/[^A-Za-z0-9_]/g, "_"),
+        waarde: w,
+      })),
+    };
+    if (el.domein) v3.domein = el.domein;
+    const pos = elementPositie(diagrams, el.id);
+    if (pos) v3.positie = pos;
+    return v3;
+  });
+
+  // --- Datatypes → V3 ---
+  const v3Datatypes = datatypes.map((el) => {
+    const d = el.data || {};
+    const v3 = {
+      naam: d.naam || el.naam,
+      basistype: d.basistype || "string",
+    };
+    if (d.description) v3.description = d.description;
+    if (d.format) v3.format = d.format;
+    if (el.domein) v3.domein = el.domein;
+
+    // Validatie: alleen als er waarden in zitten
+    const val = d.validatie || {};
+    const heeftValidatie = val.pattern || val.minLength != null || val.maxLength != null ||
+      val.minimum != null || val.maximum != null || val.multipleOf != null ||
+      val.foutmelding || (val.voorbeelden && val.voorbeelden.length) ||
+      (val.regels && val.regels.length);
+    if (heeftValidatie) v3.validatie = val;
+
+    if (d.normalisatie) v3.normalisatie = d.normalisatie;
+
+    const weer = d.weergave || {};
+    const heeftWeergave = weer.placeholder || weer.inputMask || weer.prefix || weer.suffix;
+    if (heeftWeergave) v3.weergave = weer;
+
+    const pos = elementPositie(diagrams, el.id);
+    if (pos) v3.positie = pos;
+    return v3;
+  });
+
+  // --- ReferentielijstInstanties → V3 ---
+  const v3RefInstanties = refInstanties.map((el) => {
+    const d = el.data || {};
+    const v3 = { systeemnaam: d.systeemnaam || el.naam };
+    if (d.naam) v3.naam = d.naam;
+    if (d.omschrijving) v3.omschrijving = d.omschrijving;
+    if (el.domein) v3.domein = el.domein;
+    const pos = elementPositie(diagrams, el.id);
+    if (pos) v3.positie = pos;
+    return v3;
+  });
+
+  // --- Entiteiten → V3 (met geneste GE's en relaties via structuralEdges) ---
+  const gebruikteRelaties = new Set();
+
+  const v3Entiteiten = entiteiten.map((ent) => {
+    const d = ent.data || {};
+    const v3Ent = {
+      typenaam: d.typenaam || ent.naam,
+      meervoud: d.meervoud || "",
+    };
+    if (d.description) v3Ent.description = d.description;
+    if (ent.domein) v3Ent.domein = ent.domein;
+    if (d.entiteitSubtype) v3Ent.entiteitSubtype = d.entiteitSubtype;
+    if (d.isMaterieel) v3Ent.isMaterieel = true;
+    if (d.kleur) v3Ent.kleur = d.kleur;
+
+    const pos = elementPositie(diagrams, ent.id);
+    if (pos) v3Ent.positie = pos;
+
+    const afgeleid = afgeleideVeldenNaarV3(d.afgeleideVelden);
+    if (afgeleid.length) v3Ent.afgeleideVelden = afgeleid;
+
+    // Verwerk kinderen (GE's en relaties)
+    const kids = kinderen[ent.id] || [];
+    const v3GEs = [];
+    const v3Rels = [];
+
+    for (const { edge, child } of kids) {
+      const cd = child.data || {};
+      const edgeData = edge.data || {};
+      const diagEdge = diagramEdgeData(diagrams, edge.id);
+
+      if (child.type === "gegevenselement") {
+        const v3GE = {
+          naam: cd.klassenaam || child.naam,
+          meervoud: cd.meervoud || edgeData.jsonRolnaam || "",
+          momentvoorkomen: edgeData.momentvoorkomen || "enkelvoudig",
+        };
+        if (cd.description) v3GE.description = cd.description;
+        if (child.domein && child.domein !== ent.domein) v3GE.domein = child.domein;
+        if (cd.isMaterieel) v3GE.isMaterieel = true;
+
+        const gePos = elementPositie(diagrams, child.id);
+        if (gePos) v3GE.positie = gePos;
+
+        // Velden
+        const velden = (cd.velden || []).map(veldNaarV3);
+        if (velden.length) v3GE.velden = velden;
+
+        const geAfgeleid = afgeleideVeldenNaarV3(cd.afgeleideVelden);
+        if (geAfgeleid.length) v3GE.afgeleideVelden = geAfgeleid;
+
+        // Edge handle informatie bewaren voor roundtrip
+        if (diagEdge.sourceHandle) v3GE.sourceHandle = diagEdge.sourceHandle;
+        if (diagEdge.targetHandle) v3GE.targetHandle = diagEdge.targetHandle;
+
+        v3GEs.push(v3GE);
+      } else if (child.type === "relatie") {
+        if (gebruikteRelaties.has(child.id)) {
+          // Relatie al verwerkt via andere entiteit; voeg alleen de structurele info toe
+          v3Rels.push(buildV3Relatie(child, edgeData, diagEdge, diagrams, ent.domein));
+        } else {
+          gebruikteRelaties.add(child.id);
+          v3Rels.push(buildV3Relatie(child, edgeData, diagEdge, diagrams, ent.domein));
+        }
+      }
+    }
+
+    if (v3GEs.length) v3Ent.gegevenselementen = v3GEs;
+    if (v3Rels.length) v3Ent.relaties = v3Rels;
+
+    return v3Ent;
+  });
+
+  // --- Stel het V3 model samen ---
+  const v3Model = {
+    versie: "v3",
+  };
+  if (modelMeta?.bron) v3Model.naam = "IDE export";
+  if (v3Datatypes.length) v3Model.datatypes = v3Datatypes;
+  if (v3Enums.length) v3Model.enums = v3Enums;
+  if (v3RefInstanties.length) v3Model.referentielijstInstanties = v3RefInstanties;
+  v3Model.entiteiten = v3Entiteiten;
+
+  // Wrap in het top-level formaat dat de API verwacht
+  return {
+    versie: "v3",
+    bron: "ide",
+    build_versie: modelMeta?.build_versie || "",
+    go_module: modelMeta?.go_module || "",
+    indiener: modelMeta?.indiener || "IDE",
+    model: v3Model,
+  };
+}
+
+/**
+ * Bouw een V3Relatie object vanuit een store-element + edge data.
+ */
+function buildV3Relatie(child, edgeData, diagEdge, diagrams, parentDomein) {
+  const cd = child.data || {};
+  const v3Rel = {
+    naam: cd.klassenaam || child.naam,
+    meervoud: cd.meervoud || edgeData.jsonRolnaam || "",
+    momentvoorkomen: edgeData.momentvoorkomen || "meervoudig",
+    doelEntiteit: cd.doelEntiteit || "",
+  };
+  if (cd.description) v3Rel.description = cd.description;
+  if (child.domein && child.domein !== parentDomein) v3Rel.domein = child.domein;
+  if (cd.relatieSubtype) v3Rel.relatieSubtype = cd.relatieSubtype;
+  if (cd.referentielijstInstantie) v3Rel.referentielijstInstantie = cd.referentielijstInstantie;
+  if (cd.isMaterieel) v3Rel.isMaterieel = true;
+
+  const relPos = elementPositie(diagrams, child.id);
+  if (relPos) v3Rel.positie = relPos;
+
+  const velden = (cd.velden || []).map(veldNaarV3);
+  if (velden.length) v3Rel.velden = velden;
+
+  const afgeleid = afgeleideVeldenNaarV3(cd.afgeleideVelden);
+  if (afgeleid.length) v3Rel.afgeleideVelden = afgeleid;
+
+  // Edge handles voor roundtrip
+  if (diagEdge.sourceHandle) v3Rel.sourceHandle = diagEdge.sourceHandle;
+  if (diagEdge.targetHandle) v3Rel.targetHandle = diagEdge.targetHandle;
+
+  return v3Rel;
+}
+
 /**
  * Exporteer de volledige store state als IDE JSON (model + diagrammen + meta).
  * Dit is het "IDE export" format, niet het V3 API format.
- * V3 API export (storeNaarV3Model) komt in Fase 4.
  */
 export function exportStoreAsJson(state) {
   return {
@@ -449,6 +768,7 @@ export function exportStoreAsJson(state) {
     structuralEdges: state.structuralEdges,
     diagrams: state.diagrams,
     domains: state.domains,
+    domainMeta: state.domainMeta || {},
   };
 }
 
@@ -464,6 +784,7 @@ export function importStoreFromJson(json) {
     structuralEdges: json.structuralEdges || [],
     diagrams: json.diagrams || {},
     domains: json.domains || [],
+    domainMeta: json.domainMeta || {},
     modelMeta: json.modelMeta || null,
   };
 }

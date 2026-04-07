@@ -13,6 +13,7 @@ import { useEffect, useMemo, useRef } from "react";
 const MENU_ITEMS = {
   toonInDiagram: { label: "📍 Toon op diagram", types: ["entiteit", "gegevenselement", "relatie", "enumeratie", "gegevenstype", "referentielijstInstantie"] },
   toonDetails: { label: "ℹ️ Toon details", types: ["entiteit", "gegevenselement", "relatie", "enumeratie", "gegevenstype", "referentielijstInstantie"] },
+  hernoem: { label: "✏️ Hernoem", types: ["entiteit", "gegevenselement", "relatie", "enumeratie", "gegevenstype", "referentielijstInstantie", "diagram"] },
   separator1: { separator: true },
   kopieerID: { label: "📋 Kopieer ID", types: ["entiteit", "gegevenselement", "relatie", "enumeratie", "gegevenstype", "referentielijstInstantie"] },
   nieuwDiagram: { label: "➕ Nieuw diagram", types: ["diagrams"] },

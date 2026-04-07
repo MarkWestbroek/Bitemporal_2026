@@ -10,6 +10,7 @@
  */
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { temporal } from "zundo";
 
 /**
  * @typedef {Object} ModelElement
@@ -33,8 +34,9 @@ import { persist, createJSONStorage } from "zustand/middleware";
 const DEFAULT_DIAGRAM_ID = "overzicht";
 
 const useModelStore = create(
-  persist(
-    (set, get) => ({
+  temporal(
+    persist(
+      (set, get) => ({
       // === Model data ===
       /** @type {Record<string, ModelElement>} */
       elements: {},
@@ -48,19 +50,27 @@ const useModelStore = create(
       /** @type {string[]} Gesorteerde domein-namen */
       domains: [],
 
+      /** @type {Record<string, {beschrijving?: string, kleur?: string, prefix?: string}>} */
+      domainMeta: {},
+
       /** @type {object|null} Bron-metadata (bron, build_versie, id, indiener, etc.) */
       modelMeta: null,
 
+      /** @type {boolean} True als er onopgeslagen wijzigingen zijn sinds laden/opslaan */
+      isDirty: false,
+
       // === Acties: Model ===
 
-      /** Laad een volledig model (vanuit adapter). Vervangt alles. */
-      loadModel: ({ elements, structuralEdges, diagrams, domains, modelMeta }) =>
+      /** Laad een volledig model (vanuit adapter). Vervangt alles. Zet isDirty op false. */
+      loadModel: ({ elements, structuralEdges, diagrams, domains, domainMeta, modelMeta }) =>
         set({
           elements: elements || {},
           structuralEdges: structuralEdges || [],
           diagrams: diagrams || {},
           domains: domains || [],
+          domainMeta: domainMeta || {},
           modelMeta: modelMeta || null,
+          isDirty: false,
         }),
 
       /** Reset het model */
@@ -70,15 +80,65 @@ const useModelStore = create(
           structuralEdges: [],
           diagrams: {},
           domains: [],
+          domainMeta: {},
           modelMeta: null,
+          isDirty: false,
         }),
 
-      /** Update een enkel element (merge) */
-      updateElement: (id, newData) =>
+      /** Markeer het model als opgeslagen (isDirty = false). */
+      markSaved: () => set({ isDirty: false }),
+
+      /**
+       * Update een element. `patch` kan top-level velden bevatten (naam, domein)
+       * en/of een genest `data`-object dat gemerged wordt met bestaande data.
+       *
+       * Voorbeelden:
+       *   updateElement(id, { naam: "NieuweNaam" })              — alleen top-level
+       *   updateElement(id, { data: { description: "..." } })    — alleen data
+       *   updateElement(id, { naam: "X", data: { kleur: "#f0f" } }) — beide
+       */
+      updateElement: (id, patch) =>
+        set((state) => {
+          const el = state.elements[id];
+          if (!el) return state;
+          const { data: dataPatch, ...topPatch } = patch;
+          return {
+            isDirty: true,
+            elements: {
+              ...state.elements,
+              [id]: {
+                ...el,
+                ...topPatch,
+                data: dataPatch !== undefined ? { ...el.data, ...dataPatch } : el.data,
+              },
+            },
+          };
+        }),
+
+      // === Acties: Domeinen ===
+
+      /** Voeg een nieuw domein toe */
+      addDomain: (naam) =>
+        set((state) => {
+          if (state.domains.includes(naam)) return state;
+          return { isDirty: true, domains: [...state.domains, naam].sort() };
+        }),
+
+      /** Verwijder een domein (elementen behouden, domein wordt leeg) */
+      removeDomain: (naam) =>
         set((state) => ({
-          elements: {
-            ...state.elements,
-            [id]: { ...state.elements[id], data: { ...state.elements[id]?.data, ...newData } },
+          isDirty: true,
+          domains: state.domains.filter((d) => d !== naam),
+          domainMeta: (() => { const { [naam]: _, ...rest } = state.domainMeta; return rest; })(),
+        })),
+
+      /** Update metadata van een domein (beschrijving, kleur, prefix) */
+      updateDomainMeta: (naam, patch) =>
+        set((state) => ({
+          isDirty: true,
+          domainMeta: {
+            ...state.domainMeta,
+            [naam]: { ...(state.domainMeta[naam] || {}), ...patch },
           },
         })),
 
@@ -95,6 +155,7 @@ const useModelStore = create(
             };
           }
           return {
+            isDirty: true,
             elements: restElements,
             structuralEdges: state.structuralEdges.filter(
               (e) => e.source !== id && e.target !== id
@@ -111,6 +172,20 @@ const useModelStore = create(
           diagrams: { ...state.diagrams, [diagram.id]: diagram },
         })),
 
+      /** Hernoem een diagram */
+      renameDiagram: (diagramId, nieuweNaam) =>
+        set((state) => {
+          const diag = state.diagrams[diagramId];
+          if (!diag) return state;
+          return {
+            isDirty: true,
+            diagrams: {
+              ...state.diagrams,
+              [diagramId]: { ...diag, naam: nieuweNaam },
+            },
+          };
+        }),
+
       /** Voeg een structurele edge toe aan het model (zonder duplicaten). */
       addStructuralEdge: (edge) =>
         set((state) => {
@@ -123,7 +198,36 @@ const useModelStore = create(
           );
           if (bestaatAl) return state;
           return {
+            isDirty: true,
             structuralEdges: [...state.structuralEdges, edge],
+          };
+        }),
+
+      /** Update data van een structurele edge */
+      updateStructuralEdge: (edgeId, dataPatch) =>
+        set((state) => ({
+          isDirty: true,
+          structuralEdges: state.structuralEdges.map((e) =>
+            e.id === edgeId ? { ...e, data: { ...e.data, ...dataPatch } } : e
+          ),
+        })),
+
+      /** Update edge data in een specifiek diagram */
+      updateDiagramEdge: (diagramId, edgeId, dataPatch) =>
+        set((state) => {
+          const diag = state.diagrams[diagramId];
+          if (!diag) return state;
+          return {
+            isDirty: true,
+            diagrams: {
+              ...state.diagrams,
+              [diagramId]: {
+                ...diag,
+                edges: (diag.edges || []).map((e) =>
+                  e.id === edgeId ? { ...e, data: { ...e.data, ...dataPatch } } : e
+                ),
+              },
+            },
           };
         }),
 
@@ -207,10 +311,21 @@ const useModelStore = create(
         structuralEdges: state.structuralEdges,
         diagrams: state.diagrams,
         domains: state.domains,
+        domainMeta: state.domainMeta,
         modelMeta: state.modelMeta,
       }),
     }
-  )
+  ),
+  {
+    // Undo/redo: track alleen model-mutaties, niet diagram-viewport of isDirty
+    partialize: (state) => ({
+      elements: state.elements,
+      structuralEdges: state.structuralEdges,
+      domains: state.domains,
+      domainMeta: state.domainMeta,
+    }),
+    limit: 50,
+  })
 );
 
 export default useModelStore;

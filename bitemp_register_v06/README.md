@@ -871,32 +871,50 @@ Deregister U5 and register U6 for entity A:
   - zonder: alleen een lijn met een label "relatie"
   - labels bij rollen verplaatsbaar (hoe in V3 en metareg?)
 
-32 Generator
+35 IDE
+- multiselect in PB
+- drag and drop GE en ENT is er al: relaties moeten getekend
+  - niet altijd (reproduce)
+- drag and drop - complete (shift?): ENT + alle GE's (en RELs) mee?
+- auto-order
+- dubbelklik op edge: straighten
+- undo / redo doet het niet
+- edge types: compositie, overerving, associatieklasse (!)
+- diagram of any element rename in PB
+- domeinkleur instellen, uberhaupt properties van domein instellen mogelijk
+  - welke properties allemaal?
+- layout bar verplaatsbaar
+- any bar
+- afgeleide velden CEL expressie breakout met kleurcodes en autocomplete enzo? Proberen met testwaarden
+- voorbeelden en testwaarden in REPs (t.b.v. expressies bijv. maar ook als document bij example).
+- velden (attr) ook omschrijving
+  - meer dan dat: [0..*] enz
+
+40 Generator
 - optie om project leeg te halen voor het genereren.
   - optie database drop tables of migreer
   - oppassen met reflijst plumbing in generiek!
 
-33 Dabase migratie / backup naar json
+45 Dabase migratie / backup naar json
 - dat dus
 
-34 Overerving verder uitwerken!
+50 Overerving verder uitwerken!
 - basically een extra FK:
   - van een ENT naar een ENT of
   - van een GE naar een GE
   - (of van een REL naar een REL?) -> deze even niet
-- 
 
-35 Formulieren
+
+55 Formulieren
 - bewaar kan ook voor alle GEn ipv per stuk. Typisch is dat ook zo.
 - bewaar of corrigeer is anders. Beide mogelijk maken. Ongedaan maken via een bekijk registratie moet ook kunnen. Daar wil je misschien ook de historie netjes inzien.
 - Bereikbaarheid gaat nu nergens heen: uitleggen primaire en secundaire ID + lijst beschikbare adressen (had ik al uitgelegd)
 
-40 3D weergave model en tijdslijnen :-)
+60 3D weergave model en tijdslijnen :-)
 
-50 Autonumber Entiteit-IDs? Simpel maar wenselijk
-51 autogen GUID werkt al of moet daar iets gedaan worden?
+65 Autonumber Entiteit-IDs? Simpel maar wenselijk
+66 autogen GUID werkt al of moet daar iets gedaan worden?
 
-60 pbac: wat is een goed policy formaat?
-61 pip maken op basis van metamodel?
-62 pep inbouwen
-
+70 pbac: wat is een goed policy formaat?
+71 pip maken op basis van metamodel?
+72 pep inbouwen

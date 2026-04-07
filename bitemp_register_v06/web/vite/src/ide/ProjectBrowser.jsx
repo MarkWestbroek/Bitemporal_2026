@@ -11,8 +11,9 @@
  *   └ 📌 RefInstantie
  *   📐 Diagrammen
  *
- * Fase 2:
+ * Features:
  * - Zoekbalk bovenaan voor filteren
+ * - Multi-select (Ctrl+klik) met multi-drag naar diagram
  * - Diagram-selectie → browser scrollt naar en highlight het element
  * - Dubbelklik op element → scroll-to op diagram
  * - Dubbelklik op diagram → opent tab
@@ -61,6 +62,7 @@ function buildTree(elements, structuralEdges, diagrams, domains) {
         id: ent.id,
         name: ent.naam,
         nodeType: "entiteit",
+        kleur: ent.data?.kleur,
         children: [],
       };
 
@@ -73,6 +75,7 @@ function buildTree(elements, structuralEdges, diagrams, domains) {
             id: child.id,
             name: child.naam,
             nodeType: child.type,
+            kleur: child.data?.kleur,
           });
         }
       }
@@ -86,6 +89,7 @@ function buildTree(elements, structuralEdges, diagrams, domains) {
         id: el.id,
         name: el.naam,
         nodeType: "enumeratie",
+        kleur: el.data?.kleur,
       });
     }
 
@@ -95,6 +99,7 @@ function buildTree(elements, structuralEdges, diagrams, domains) {
         id: el.id,
         name: el.naam,
         nodeType: "gegevenstype",
+        kleur: el.data?.kleur,
       });
     }
 
@@ -104,6 +109,7 @@ function buildTree(elements, structuralEdges, diagrams, domains) {
         id: el.id,
         name: el.naam,
         nodeType: "referentielijstInstantie",
+        kleur: el.data?.kleur,
       });
     }
 
@@ -121,6 +127,7 @@ function buildTree(elements, structuralEdges, diagrams, domains) {
         id: el.id,
         name: el.naam,
         nodeType: el.type,
+        kleur: el.data?.kleur,
       })),
     };
     tree.push(geenDomeinNode);
@@ -145,14 +152,67 @@ function buildTree(elements, structuralEdges, diagrams, domains) {
   return tree;
 }
 
+// ─── Multi-selectie state (module-level, gedeeld tussen TreeNode en PB) ──────
+let _multiSelected = new Set();   // set van element-id's
+let _setMultiSelected = null;     // setter van useState in PB
+let _lastClickedId = null;        // voor shift-range selectie
+let _flatVisibleIds = [];          // platte lijst zichtbare draggable node-ids
+
 // ─── Node renderer ──────────────────────────────────────────
 
 function TreeNode({ node, style }) {
   const selectedElementId = useUIStore((s) => s.selectedElementId);
   const dragGhostRef = useRef(null);
-  const isSelected = node.data.id === selectedElementId;
+  const isDetailSelected = node.data.id === selectedElementId;
+  const isMultiSelected = _multiSelected.has(node.data.id);
+  const isHighlighted = isDetailSelected || isMultiSelected;
   const isFolder = node.children && node.children.length > 0;
-  const canDrag = !["domain", "diagrams", "diagram"].includes(node.data.nodeType);
+  const isDraggable = !["domain", "diagrams", "diagram"].includes(node.data.nodeType);
+
+  const handleClick = useCallback((e) => {
+    // Domein-klik: selecteer in DetailsPanel, maar niet draggable/multi-select
+    if (node.data.nodeType === "domain") {
+      useUIStore.getState().setSelectedElementId(node.data.id);
+      return;
+    }
+    if (!isDraggable) return;
+    if (e.shiftKey && _lastClickedId) {
+      // Shift-klik: selecteer bereik tussen laatste klik en huidige
+      const startIdx = _flatVisibleIds.indexOf(_lastClickedId);
+      const endIdx = _flatVisibleIds.indexOf(node.data.id);
+      if (startIdx >= 0 && endIdx >= 0) {
+        const lo = Math.min(startIdx, endIdx);
+        const hi = Math.max(startIdx, endIdx);
+        _setMultiSelected?.((prev) => {
+          const next = new Set(prev);
+          for (let i = lo; i <= hi; i++) {
+            next.add(_flatVisibleIds[i]);
+          }
+          return next;
+        });
+      }
+      e.stopPropagation();
+      e.preventDefault();
+    } else if (e.ctrlKey || e.metaKey) {
+      // Toggle multi-selectie
+      _setMultiSelected?.((prev) => {
+        const next = new Set(prev);
+        if (next.has(node.data.id)) {
+          next.delete(node.data.id);
+        } else {
+          next.add(node.data.id);
+        }
+        return next;
+      });
+      _lastClickedId = node.data.id;
+      e.stopPropagation();
+      e.preventDefault();
+    } else {
+      // Klik zonder Ctrl/Shift → wis multi-selectie, selecteer enkel element
+      _setMultiSelected?.(new Set());
+      _lastClickedId = node.data.id;
+    }
+  }, [node.data.id, isDraggable]);
 
   return (
     <div
@@ -163,38 +223,57 @@ function TreeNode({ node, style }) {
         alignItems: "center",
         gap: 4,
         cursor: "pointer",
-        background: isSelected ? "#264f78" : "transparent",
+        background: isMultiSelected ? "#264f78aa" : isDetailSelected ? "#264f78" : "transparent",
         borderRadius: 2,
         paddingRight: 4,
         fontSize: 13,
         whiteSpace: "nowrap",
         overflow: "hidden",
         textOverflow: "ellipsis",
-        color: isSelected ? "#fff" : "#ccc",
+        color: isHighlighted ? "#fff" : "#ccc",
       }}
-      draggable={!["domain", "diagrams", "diagram"].includes(node.data.nodeType)}
+      onClick={handleClick}
+      draggable={isDraggable}
       onDragStart={(e) => {
-        if (["domain", "diagrams", "diagram"].includes(node.data.nodeType)) {
+        if (!isDraggable) {
           e.preventDefault();
           return;
         }
-        e.dataTransfer.setData(
-          "application/ide-element",
-          JSON.stringify({
+
+        // Bepaal welke elementen meegesleept worden
+        const dragItems = [];
+        if (_multiSelected.size > 0) {
+          // Multi-drag: alle geselecteerde + het huidige element
+          const allIds = new Set(_multiSelected);
+          allIds.add(node.data.id);
+          for (const id of allIds) {
+            // Haal naam en type op via de tree data (of fallback naar node.data)
+            dragItems.push({ elementId: id });
+          }
+        } else {
+          dragItems.push({
             elementId: node.data.id,
             type: node.data.nodeType,
             name: node.data.name,
-          })
+          });
+        }
+
+        e.dataTransfer.setData(
+          "application/ide-element",
+          JSON.stringify({ elements: dragItems })
         );
-        e.dataTransfer.setData("text/plain", node.data.name);
+        e.dataTransfer.setData("text/plain", dragItems.map((d) => d.name || d.elementId).join(", "));
         e.dataTransfer.effectAllowed = "copy";
-        // Drag ghost — blijft bestaan tot onDragEnd
+
+        // Drag ghost
         if (dragGhostRef.current) {
           document.body.removeChild(dragGhostRef.current);
           dragGhostRef.current = null;
         }
         const ghost = document.createElement("div");
-        ghost.textContent = node.data.name;
+        ghost.textContent = dragItems.length > 1
+          ? `${dragItems.length} elementen`
+          : node.data.name;
         ghost.style.cssText = "position:fixed;top:-999px;left:-999px;padding:4px 10px;background:#264f78;color:#fff;border-radius:4px;font-size:12px;white-space:nowrap;pointer-events:none;z-index:99999;";
         document.body.appendChild(ghost);
         e.dataTransfer.setDragImage(ghost, 0, 0);
@@ -209,7 +288,6 @@ function TreeNode({ node, style }) {
       onContextMenu={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        // Gebruik custom event om context menu door te geven aan parent
         const event = new CustomEvent("ide-context-menu", {
           bubbles: true,
           detail: { x: e.clientX, y: e.clientY, nodeData: node.data },
@@ -228,7 +306,14 @@ function TreeNode({ node, style }) {
         <span style={{ width: 12, flexShrink: 0 }} />
       )}
       <span style={{ flexShrink: 0 }}>{ICONS[node.data.nodeType] || "•"}</span>
+      {node.data.kleur && (
+        <span style={{
+          display: "inline-block", width: 8, height: 8, borderRadius: "50%",
+          background: node.data.kleur, flexShrink: 0, border: "1px solid rgba(255,255,255,0.2)",
+        }} />
+      )}
       <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{node.data.name}</span>
+      {isMultiSelected && <span style={{ fontSize: 9, opacity: 0.6, marginLeft: "auto" }}>✓</span>}
     </div>
   );
 }
@@ -246,11 +331,30 @@ export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram }) {
   const treeRef = useRef(null);
   const [zoekterm, setZoekterm] = useState("");
   const [contextMenu, setContextMenu] = useState(null); // { x, y, nodeData }
+  const [multiSelected, setMultiSelected] = useState(new Set());
+
+  // Module-scope refs bijwerken zodat TreeNode erbij kan
+  _multiSelected = multiSelected;
+  _setMultiSelected = setMultiSelected;
 
   const treeData = useMemo(
     () => buildTree(elements, structuralEdges, diagrams, domains),
     [elements, structuralEdges, diagrams, domains]
   );
+
+  // Bouw platte lijst van draggable node-ids voor shift-range selectie
+  useMemo(() => {
+    const NON_DRAGGABLE = new Set(["domain", "diagrams", "diagram"]);
+    const ids = [];
+    function walk(nodes) {
+      for (const n of nodes) {
+        if (!NON_DRAGGABLE.has(n.nodeType)) ids.push(n.id);
+        if (n.children) walk(n.children);
+      }
+    }
+    walk(treeData);
+    _flatVisibleIds = ids;
+  }, [treeData]);
 
   // ── Sync: diagram-selectie → browser opent parents + scrollt naar node ──────────
   useEffect(() => {
@@ -277,6 +381,23 @@ export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram }) {
         case "toonDetails":
           setSelectedElementId(nodeData.id);
           break;
+        case "hernoem": {
+          if (nodeData.nodeType === "diagram" && nodeData.diagramId) {
+            const nieuweNaam = window.prompt("Diagram hernoemen:", nodeData.name);
+            if (nieuweNaam && nieuweNaam !== nodeData.name) {
+              useModelStore.getState().renameDiagram(nodeData.diagramId, nieuweNaam);
+            }
+          } else {
+            const el = useModelStore.getState().elements[nodeData.id];
+            if (el) {
+              const nieuweNaam = window.prompt("Element hernoemen:", el.naam);
+              if (nieuweNaam && nieuweNaam !== el.naam) {
+                useModelStore.getState().updateElement(nodeData.id, { naam: nieuweNaam, data: { klassenaam: nieuweNaam } });
+              }
+            }
+          }
+          break;
+        }
         case "kopieerID":
           navigator.clipboard?.writeText(nodeData.id);
           break;

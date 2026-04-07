@@ -118,6 +118,41 @@ function AlignToolbar({ alignNodes }) {
   );
 }
 
+// ─── Kortste-handle berekening (dubbelklik op edge) ─────────
+
+const HANDLE_POSITIES = ["top", "right", "bottom", "left"];
+
+function berekenKortsteHandles(srcNode, tgtNode) {
+  const srcW = srcNode.measured?.width ?? srcNode.width ?? 180;
+  const srcH = srcNode.measured?.height ?? srcNode.height ?? 120;
+  const tgtW = tgtNode.measured?.width ?? tgtNode.width ?? 180;
+  const tgtH = tgtNode.measured?.height ?? tgtNode.height ?? 120;
+
+  function ankerpunt(node, w, h, handle) {
+    const x = node.position.x;
+    const y = node.position.y;
+    switch (handle) {
+      case "top":    return { x: x + w / 2, y };
+      case "bottom": return { x: x + w / 2, y: y + h };
+      case "left":   return { x,             y: y + h / 2 };
+      case "right":  return { x: x + w,     y: y + h / 2 };
+    }
+  }
+
+  let best = { sourceHandle: "bottom", targetHandle: "top", dist: Infinity };
+  for (const sh of HANDLE_POSITIES) {
+    for (const th of HANDLE_POSITIES) {
+      const a = ankerpunt(srcNode, srcW, srcH, sh);
+      const b = ankerpunt(tgtNode, tgtW, tgtH, th);
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (d < best.dist) {
+        best = { sourceHandle: sh, targetHandle: th, dist: d };
+      }
+    }
+  }
+  return best;
+}
+
 // ─── Inner canvas (moet binnen ReactFlowProvider) ───────────
 
 function DiagramCanvasInner({ diagramId }) {
@@ -158,6 +193,22 @@ function DiagramCanvasInner({ diagramId }) {
   useEffect(() => {
     nodeIdsRef.current = new Set(nodes.map((n) => n.id));
   }, [nodes]);
+
+  // ── Sync: element-data uit store → diagram nodes (naam, kleur, etc.) ──
+  useEffect(() => {
+    setNodes((nds) =>
+      nds.map((n) => {
+        const el = elements[n.id];
+        if (!el) return n;
+        const newData = { ...el.data, id: n.id };
+        // Snelle check: skip als data niet veranderd is (vergelijk naam + kleur)
+        if (n.data?.klassenaam === newData.klassenaam && n.data?.kleur === newData.kleur && n.data?.description === newData.description) {
+          return n;
+        }
+        return { ...n, data: newData };
+      })
+    );
+  }, [elements, setNodes]);
 
   // ── Sync: browser-selectie → diagram highlight + center ──
   useEffect(() => {
@@ -253,6 +304,39 @@ function DiagramCanvasInner({ diagramId }) {
       setContextMenu(null);
     },
     [diagramId, setActiveDiagramId, setSelectedEdgeId, setEdges]
+  );
+
+  // ── Dubbelklik op edge: bereken kortste handle-combinatie ──
+  const handleEdgeDoubleClick = useCallback(
+    (_event, edge) => {
+      const srcNode = getNode(edge.source);
+      const tgtNode = getNode(edge.target);
+      if (!srcNode || !tgtNode) return;
+      const { sourceHandle, targetHandle } = berekenKortsteHandles(srcNode, tgtNode);
+      // Update edge in React Flow local state
+      setEdges((eds) =>
+        eds.map((e) =>
+          e.id === edge.id ? { ...e, sourceHandle, targetHandle } : e
+        )
+      );
+      // Persist naar diagram store
+      if (diagram) {
+        const updatedEdges = (diagram.edges || []).map((e) =>
+          e.id === edge.id ? { ...e, sourceHandle, targetHandle } : e
+        );
+        updateDiagramEdges(diagramId, updatedEdges);
+      }
+      // Update structurele edge indien aanwezig (top-level velden)
+      const store = useModelStore.getState();
+      const seIdx = store.structuralEdges.findIndex((e) => e.id === edge.id);
+      if (seIdx >= 0) {
+        const updated = store.structuralEdges.map((e) =>
+          e.id === edge.id ? { ...e, sourceHandle, targetHandle } : e
+        );
+        useModelStore.setState({ structuralEdges: updated, isDirty: true });
+      }
+    },
+    [diagram, diagramId, getNode, setEdges, updateDiagramEdges]
   );
 
   // ── Context menu op node/edge (rechtermuisklik) ───────────
@@ -551,35 +635,121 @@ function DiagramCanvasInner({ diagramId }) {
       setIsDragOver(false);
       const raw = e.dataTransfer.getData("application/ide-element");
       if (!raw) return;
-      const { elementId } = JSON.parse(raw);
-      if (!elementId || !elements[elementId]) return;
+      const parsed = JSON.parse(raw);
 
-      // Voorkom duplicaten (element zit al op dit diagram)
-      if (nodeIdsRef.current.has(elementId)) return;
+      // Supporteer zowel nieuw multi-formaat als oud enkel formaat
+      let dropItems;
+      if (parsed.elements) {
+        dropItems = parsed.elements;
+      } else if (parsed.elementId) {
+        dropItems = [parsed];
+      } else {
+        return;
+      }
+
+      // Filter ongeldige en dubbele elementen
+      dropItems = dropItems.filter(
+        (item) => item.elementId && elements[item.elementId] && !nodeIdsRef.current.has(item.elementId)
+      );
+      if (dropItems.length === 0) return;
 
       // Bereken canvas-positie (correct met zoom/pan)
-      const position = screenToFlowPosition({
+      const basePosition = screenToFlowPosition({
         x: e.clientX,
         y: e.clientY,
       });
 
-      // Voeg toe aan diagram (via store)
       const addElementToDiagram = useModelStore.getState().addElementToDiagram;
-      addElementToDiagram(diagramId, elementId, position);
+      const newNodes = [];
 
-      // Update lokale Flow-state ook
-      const el = elements[elementId];
-      setNodes((nds) => [
-        ...nds,
-        {
+      dropItems.forEach((item, idx) => {
+        const { elementId } = item;
+        const position = {
+          x: basePosition.x + idx * 40,
+          y: basePosition.y + idx * 40,
+        };
+
+        addElementToDiagram(diagramId, elementId, position);
+
+        const el = elements[elementId];
+        newNodes.push({
           id: elementId,
           type: el.type,
           position,
           data: { ...el.data, id: elementId },
-        },
-      ]);
+        });
+      });
+
+      setNodes((nds) => [...nds, ...newNodes]);
+
+      // ── Auto-create edges: zoek bestaande structurele/diagram-edges
+      //    die droppen verbinden met al-aanwezige elementen op dit diagram ──
+      const store = useModelStore.getState();
+      const diag = store.diagrams[diagramId];
+      if (diag) {
+        const existingNodeIds = new Set([...nodeIdsRef.current, ...dropItems.map((d) => d.elementId)]);
+        const currentDiagEdges = diag.edges || [];
+        const currentEdgeIds = new Set(currentDiagEdges.map((e) => e.id));
+        const newFlowEdges = [];
+        const newDiagEdges = [];
+
+        for (const item of dropItems) {
+          const eid = item.elementId;
+          const eidType = elements[eid]?.type;
+
+          // Structurele edges (entiteit → GE / relatie)
+          for (const se of store.structuralEdges) {
+            const otherEnd =
+              se.source === eid ? se.target : se.target === eid ? se.source : null;
+            if (!otherEnd || !existingNodeIds.has(otherEnd)) continue;
+
+            const edgeId = se.id || `${se.source}-${se.target}`;
+            if (currentEdgeIds.has(edgeId)) continue;
+            currentEdgeIds.add(edgeId);
+
+            // Gebruik dezelfde data-structuur als handleConnect
+            const sourceType = elements[se.source]?.type;
+            const targetType = elements[se.target]?.type;
+            const targetEl = elements[se.target];
+            const isDependency = se.data?.isDependency ||
+              ((sourceType === "entiteit" || sourceType === "gegevenselement" || sourceType === "relatie") &&
+                (targetType === "enumeratie" || targetType === "gegevenstype")) ||
+              (sourceType === "referentielijstInstantie" && targetType === "relatie");
+
+            const edgeData = se.data || (isDependency
+              ? { isDependency: true, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" }
+              : {
+                  rolnaam: targetEl?.naam || "",
+                  jsonRolnaam: targetEl?.data?.meervoud || (targetEl?.naam || "").toLowerCase(),
+                  momentvoorkomen: targetType === "relatie" ? "meervoudig" : "enkelvoudig",
+                  kardinaliteit: targetType === "relatie" ? "0..*" : "0..1",
+                });
+
+            const diagEdge = {
+              id: edgeId,
+              source: se.source,
+              target: se.target,
+              sourceHandle: se.sourceHandle || null,
+              targetHandle: se.targetHandle || null,
+              type: "metamodel",
+              data: edgeData,
+            };
+            newDiagEdges.push(diagEdge);
+            newFlowEdges.push({
+              ...diagEdge,
+              selectable: false,
+              selected: false,
+            });
+          }
+        }
+
+        if (newDiagEdges.length > 0) {
+          store.updateDiagramEdges(diagramId, [...currentDiagEdges, ...newDiagEdges]);
+          setEdges((eds) => [...eds, ...newFlowEdges]);
+        }
+      }
     },
-    [diagramId, elements, setNodes, screenToFlowPosition]
+    [diagramId, elements, setNodes, setEdges, screenToFlowPosition]
   );
 
   // ── Alignment helpers: werkt op geselecteerde nodes ──────
@@ -709,6 +879,7 @@ function DiagramCanvasInner({ diagramId }) {
         onConnect={handleConnect}
         onNodeClick={handleNodeClick}
         onEdgeClick={handleEdgeClick}
+        onEdgeDoubleClick={handleEdgeDoubleClick}
         onNodeContextMenu={handleNodeContextMenu}
         onEdgeContextMenu={handleEdgeContextMenu}
         onPaneContextMenu={handlePaneContextMenu}
