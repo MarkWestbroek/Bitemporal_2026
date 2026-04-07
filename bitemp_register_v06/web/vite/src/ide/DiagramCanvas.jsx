@@ -210,6 +210,39 @@ function DiagramCanvasInner({ diagramId }) {
     );
   }, [elements, setNodes]);
 
+  // ── Sync: diagram store → React Flow (posities, nodes, edges) voor undo/redo ──
+  const diagramNodesRef = useRef(diagram?.nodes);
+  const diagramEdgesRef = useRef(diagram?.edges);
+  useEffect(() => {
+    const storeNodes = diagram?.nodes || [];
+    const storeEdges = diagram?.edges || [];
+    const prevNodes = diagramNodesRef.current || [];
+    const prevEdges = diagramEdgesRef.current || [];
+    diagramNodesRef.current = storeNodes;
+    diagramEdgesRef.current = storeEdges;
+
+    // Vergelijk store-nodes met vorige snapshot (niet met RF-state, voorkomt loop)
+    if (storeNodes !== prevNodes) {
+      setNodes((currentRFNodes) => {
+        // Snelle check: zelfde lengte en zelfde posities?
+        if (currentRFNodes.length === storeNodes.length) {
+          const positionMap = new Map(storeNodes.map((sn) => [sn.elementId, sn.position]));
+          const allMatch = currentRFNodes.every((n) => {
+            const sp = positionMap.get(n.id);
+            return sp && n.position.x === sp.x && n.position.y === sp.y;
+          });
+          if (allMatch) return currentRFNodes;
+        }
+        // Rebuild vanuit store
+        return buildFlowNodes(diagram, elements);
+      });
+    }
+
+    if (storeEdges !== prevEdges) {
+      setEdges(buildFlowEdges(diagram));
+    }
+  }, [diagram, elements, setNodes, setEdges]);
+
   // ── Sync: browser-selectie → diagram highlight + center ──
   useEffect(() => {
     if (!selectedElementId || localSelectionRef.current) {
