@@ -1,0 +1,391 @@
+{
+  "versie": "v3",
+  "naam": "Portfolio",
+  "beschrijving": "V3 metamodel voor het domein Portfolio.",
+  "datatypes": [
+    {
+      "naam": "Datum",
+      "description": "Datum zonder tijdcomponent.",
+      "domein": "portfolio",
+      "basistype": "string",
+      "format": "date"
+    },
+    {
+      "naam": "URL",
+      "description": "Volledig internetadres.",
+      "domein": "portfolio",
+      "basistype": "string",
+      "format": "uri"
+    },
+    {
+      "naam": "Emailadres",
+      "description": "E-mailadres.",
+      "domein": "portfolio",
+      "basistype": "string",
+      "format": "email"
+    },
+    {
+      "naam": "Telefoonnummer",
+      "description": "Telefoonnummer in nationale of internationale notatie.",
+      "domein": "portfolio",
+      "basistype": "string",
+      "format": "phone"
+    },
+    {
+      "naam": "GitAdres",
+      "description": "Adres van een Git repository, bijvoorbeeld HTTPS of SSH.",
+      "domein": "portfolio",
+      "basistype": "string",
+      "format": "git-address"
+    }
+  ],
+  "enums": [
+    {
+      "goType": "OrganisatieType",
+      "domein": "portfolio",
+      "baseType": "string",
+      "waarden": [
+        {
+          "constNaam": "OrganisatieTypeGemeente",
+          "waarde": "Gemeente"
+        },
+        {
+          "constNaam": "OrganisatieTypeLeverancier",
+          "waarde": "Leverancier"
+        }
+      ]
+    },
+    {
+      "goType": "Producttype",
+      "domein": "portfolio",
+      "baseType": "string",
+      "waarden": [
+        {
+          "constNaam": "ProducttypeComponent",
+          "waarde": "Component"
+        },
+        {
+          "constNaam": "ProducttypeToepassing",
+          "waarde": "Toepassing"
+        }
+      ]
+    },
+    {
+      "goType": "Fase",
+      "domein": "portfolio",
+      "baseType": "string",
+      "waarden": [
+        {
+          "constNaam": "FaseIdee",
+          "waarde": "Idee"
+        },
+        {
+          "constNaam": "FaseVerkenning",
+          "waarde": "Verkenning"
+        },
+        {
+          "constNaam": "FaseRealisatie",
+          "waarde": "Realisatie"
+        },
+        {
+          "constNaam": "FaseInGebruik",
+          "waarde": "InGebruik"
+        }
+      ]
+    },
+    {
+      "goType": "Schaal",
+      "domein": "portfolio",
+      "baseType": "string",
+      "waarden": [
+        {
+          "constNaam": "Schaal1",
+          "waarde": "1"
+        },
+        {
+          "constNaam": "Schaal2",
+          "waarde": "2"
+        },
+        {
+          "constNaam": "Schaal3",
+          "waarde": "3"
+        },
+        {
+          "constNaam": "Schaal4",
+          "waarde": "4"
+        }
+      ]
+    },
+    {
+      "goType": "Bijdragetype",
+      "domein": "portfolio",
+      "baseType": "string",
+      "waarden": [
+        {
+          "constNaam": "BijdragetypeWendbaarheid",
+          "waarde": "Wendbaarheid"
+        },
+        {
+          "constNaam": "BijdragetypeDienstverlening",
+          "waarde": "Dienstverlening"
+        },
+        {
+          "constNaam": "BijdragetypeRegie",
+          "waarde": "Regie"
+        }
+      ]
+    }
+  ],
+  "entiteiten": [
+    {
+      "typenaam": "Initiatief",
+      "description": "Portfolio-initiatief met planning, productinformatie en bijdragen.",
+      "domein": "portfolio",
+      "isMaterieel": true,
+      "kleur": "#bfdbfe",
+      "meervoud": "initiatieven",
+      "gegevenselementen": [
+        {
+          "naam": "Planning",
+          "description": "Planning en voortgang van het initiatief.",
+          "domein": "portfolio",
+          "meervoud": "planningen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": true,
+          "id": "Initiatief->Initiatief_Planning",
+          "velden": [
+            {
+              "naam": "planningsinfo",
+              "goType": "string"
+            },
+            {
+              "naam": "startdatum",
+              "goType": "Datum"
+            },
+            {
+              "naam": "ready_for_use",
+              "goType": "Datum"
+            },
+            {
+              "naam": "waar_tegenaan_gelopen",
+              "goType": "string"
+            }
+          ]
+        },
+        {
+          "naam": "Product",
+          "description": "Beschrijving van het product dat bij het initiatief hoort.",
+          "domein": "portfolio",
+          "meervoud": "producten",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": true,
+          "id": "Initiatief->Initiatief_Product",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            },
+            {
+              "naam": "omschrijving",
+              "goType": "string"
+            },
+            {
+              "naam": "pitch",
+              "goType": "string"
+            },
+            {
+              "naam": "website",
+              "goType": "URL"
+            },
+            {
+              "naam": "git_repo",
+              "goType": "GitAdres"
+            }
+          ]
+        },
+        {
+          "naam": "Bijdrage",
+          "description": "Bijdrage van het initiatief aan bredere doelen.",
+          "domein": "portfolio",
+          "meervoud": "bijdragen",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": true,
+          "id": "Initiatief->Initiatief_Bijdrage",
+          "velden": [
+            {
+              "naam": "type_bijdrage",
+              "goType": "Bijdragetype",
+              "enum": "Bijdragetype"
+            },
+            {
+              "naam": "schaal",
+              "goType": "Schaal",
+              "enum": "Schaal"
+            },
+            {
+              "naam": "toelichting",
+              "goType": "string"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    },
+    {
+      "typenaam": "Organisatie",
+      "description": "Organisatie die betrokken is bij initiatieven in het portfolio.",
+      "domein": "portfolio",
+      "isMaterieel": true,
+      "kleur": "#fde68a",
+      "meervoud": "organisaties",
+      "gegevenselementen": [
+        {
+          "naam": "Naam",
+          "description": "Naam van de organisatie.",
+          "domein": "portfolio",
+          "meervoud": "namen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "id": "Organisatie->Organisatie_Naam",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            }
+          ]
+        },
+        {
+          "naam": "Contactgegevens",
+          "description": "Contactgegevens van de organisatie.",
+          "domein": "portfolio",
+          "meervoud": "contactgegevens",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "id": "Organisatie->Organisatie_Contactgegevens",
+          "velden": [
+            {
+              "naam": "url",
+              "goType": "URL"
+            },
+            {
+              "naam": "email",
+              "goType": "Emailadres"
+            },
+            {
+              "naam": "telefoonnummer",
+              "goType": "Telefoonnummer"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    },
+    {
+      "typenaam": "Persoon",
+      "description": "Persoon die betrokken is bij initiatieven in het portfolio.",
+      "domein": "portfolio",
+      "isMaterieel": true,
+      "kleur": "#fecaca",
+      "meervoud": "personen",
+      "gegevenselementen": [
+        {
+          "naam": "Naam",
+          "description": "Naam van de persoon.",
+          "domein": "portfolio",
+          "meervoud": "namen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "id": "Persoon->Persoon_Naam",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            }
+          ]
+        },
+        {
+          "naam": "Contactgegevens",
+          "description": "Contactgegevens van de persoon.",
+          "domein": "portfolio",
+          "meervoud": "contactgegevens",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "id": "Persoon->Persoon_Contactgegevens",
+          "velden": [
+            {
+              "naam": "email",
+              "goType": "Emailadres"
+            },
+            {
+              "naam": "telefoonnummer",
+              "goType": "Telefoonnummer"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    },
+    {
+      "typenaam": "Gemeente",
+      "description": "Referentielijst-item voor gemeenten.",
+      "domein": "portfolio",
+      "isMaterieel": false,
+      "entiteitSubtype": "referentielijst_item",
+      "kleur": "#c4b5fd",
+      "meervoud": "gemeenten",
+      "gegevenselementen": [
+        {
+          "naam": "GemeenteGegevens",
+          "description": "Basisgegevens van een gemeente.",
+          "domein": "portfolio",
+          "meervoud": "gemeentegegevens",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "id": "Gemeente->Gemeente_GemeenteGegevens",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            },
+            {
+              "naam": "code",
+              "goType": "string"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    },
+    {
+      "typenaam": "Domein",
+      "description": "Referentielijst-item voor domeinen.",
+      "domein": "portfolio",
+      "isMaterieel": false,
+      "entiteitSubtype": "referentielijst_item",
+      "kleur": "#a7f3d0",
+      "meervoud": "domeinen",
+      "gegevenselementen": [
+        {
+          "naam": "DomeinGegevens",
+          "description": "Basisgegevens van een domein.",
+          "domein": "portfolio",
+          "meervoud": "domeingegevens",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "id": "Domein->Domein_DomeinGegevens",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            },
+            {
+              "naam": "omschrijving",
+              "goType": "string"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    }
+  ]
+}

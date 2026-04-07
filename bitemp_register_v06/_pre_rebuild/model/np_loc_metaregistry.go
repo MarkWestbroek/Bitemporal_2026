@@ -677,10 +677,10 @@ func initNpLocMetaRegistry() {
 	// Referentielijst-instantie metadata + editor-posities
 	ReferentielijstInstantieRegistry["AdellijkeTitels"] = ReferentielijstInstantieInfo{
 		Naam:   "",
-		Layout: &EditorLayout{Positie: &V3Positie{X: 1890, Y: -300}},
+		Layout: &EditorLayout{Positie: &V3Positie{X: 1890, Y: -319.5}},
 	}
 	ReferentielijstInstantieRegistry["Landenlijst"] = ReferentielijstInstantieInfo{
 		Naam:   "",
-		Layout: &EditorLayout{Positie: &V3Positie{X: 1020, Y: -300}},
+		Layout: &EditorLayout{Positie: &V3Positie{X: 1005, Y: -319.5}},
 	}
 }

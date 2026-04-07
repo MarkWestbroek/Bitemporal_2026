@@ -1,0 +1,526 @@
+{
+  "versie": "v3",
+  "naam": "Editor export",
+  "beschrijving": "V3 export vanuit UML editor (codegen-ready)",
+  "datatypes": [
+    {
+      "naam": "Datum",
+      "description": "Datum zonder tijdcomponent.",
+      "basistype": "string",
+      "format": "date",
+      "positie": {
+        "x": 600,
+        "y": 600
+      },
+      "validatie": {},
+      "weergave": {}
+    },
+    {
+      "naam": "URL",
+      "description": "Volledig internetadres.",
+      "basistype": "string",
+      "format": "uri",
+      "positie": {
+        "x": 810,
+        "y": 600
+      },
+      "validatie": {},
+      "weergave": {}
+    },
+    {
+      "naam": "Emailadres",
+      "description": "E-mailadres.",
+      "basistype": "string",
+      "format": "email",
+      "positie": {
+        "x": 1065,
+        "y": 600
+      },
+      "validatie": {},
+      "weergave": {}
+    },
+    {
+      "naam": "Telefoonnummer",
+      "description": "Telefoonnummer in nationale of internationale notatie.",
+      "basistype": "string",
+      "format": "phone",
+      "positie": {
+        "x": 1290,
+        "y": 600
+      },
+      "validatie": {},
+      "weergave": {}
+    },
+    {
+      "naam": "GitAdres",
+      "description": "Adres van een Git repository, bijvoorbeeld HTTPS of SSH.",
+      "basistype": "string",
+      "format": "git-address",
+      "positie": {
+        "x": 1500,
+        "y": 585
+      },
+      "validatie": {},
+      "weergave": {}
+    }
+  ],
+  "enums": [
+    {
+      "goType": "OrganisatieType",
+      "baseType": "string",
+      "positie": {
+        "x": 150,
+        "y": 405
+      },
+      "waarden": [
+        {
+          "constNaam": "OrganisatieTypeGemeente",
+          "waarde": "Gemeente"
+        },
+        {
+          "constNaam": "OrganisatieTypeLeverancier",
+          "waarde": "Leverancier"
+        }
+      ]
+    },
+    {
+      "goType": "Producttype",
+      "baseType": "string",
+      "positie": {
+        "x": 765,
+        "y": 330
+      },
+      "waarden": [
+        {
+          "constNaam": "ProducttypeComponent",
+          "waarde": "Component"
+        },
+        {
+          "constNaam": "ProducttypeToepassing",
+          "waarde": "Toepassing"
+        }
+      ]
+    },
+    {
+      "goType": "Fase",
+      "baseType": "string",
+      "positie": {
+        "x": 330,
+        "y": 825
+      },
+      "waarden": [
+        {
+          "constNaam": "FaseIdee",
+          "waarde": "Idee"
+        },
+        {
+          "constNaam": "FaseVerkenning",
+          "waarde": "Verkenning"
+        },
+        {
+          "constNaam": "FaseRealisatie",
+          "waarde": "Realisatie"
+        },
+        {
+          "constNaam": "FaseInGebruik",
+          "waarde": "InGebruik"
+        }
+      ]
+    },
+    {
+      "goType": "Schaal",
+      "baseType": "string",
+      "positie": {
+        "x": 1230,
+        "y": 120
+      },
+      "waarden": [
+        {
+          "constNaam": "SchaalWaarde",
+          "waarde": "1"
+        },
+        {
+          "constNaam": "SchaalWaarde",
+          "waarde": "2"
+        },
+        {
+          "constNaam": "SchaalWaarde",
+          "waarde": "3"
+        },
+        {
+          "constNaam": "SchaalWaarde",
+          "waarde": "4"
+        }
+      ]
+    },
+    {
+      "goType": "Bijdragetype",
+      "baseType": "string",
+      "positie": {
+        "x": 1230,
+        "y": -45
+      },
+      "waarden": [
+        {
+          "constNaam": "BijdragetypeWendbaarheid",
+          "waarde": "Wendbaarheid"
+        },
+        {
+          "constNaam": "BijdragetypeDienstverlening",
+          "waarde": "Dienstverlening"
+        },
+        {
+          "constNaam": "BijdragetypeRegie",
+          "waarde": "Regie"
+        }
+      ]
+    }
+  ],
+  "entiteiten": [
+    {
+      "typenaam": "Initiatief",
+      "description": "Portfolio-initiatief met planning, productinformatie en bijdragen.",
+      "isMaterieel": true,
+      "kleur": "#bfdbfe",
+      "meervoud": "initiatieven",
+      "positie": {
+        "x": 840,
+        "y": -210
+      },
+      "gegevenselementen": [
+        {
+          "naam": "Planning",
+          "description": "Planning en voortgang van het initiatief.",
+          "meervoud": "planningen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": true,
+          "positie": {
+            "x": 540,
+            "y": 90
+          },
+          "id": "Initiatief->Initiatief_Planning",
+          "velden": [
+            {
+              "naam": "planningsinfo",
+              "goType": "string"
+            },
+            {
+              "naam": "startdatum",
+              "goType": "Datum",
+              "datatype": "Datum"
+            },
+            {
+              "naam": "ready_for_use",
+              "goType": "Datum",
+              "datatype": "Datum"
+            },
+            {
+              "naam": "waar_tegenaan_gelopen",
+              "goType": "string"
+            }
+          ]
+        },
+        {
+          "naam": "Product",
+          "description": "Beschrijving van het product dat bij het initiatief hoort.",
+          "meervoud": "producten",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": true,
+          "positie": {
+            "x": 765,
+            "y": 90
+          },
+          "id": "Initiatief->Initiatief_Product",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            },
+            {
+              "naam": "omschrijving",
+              "goType": "string"
+            },
+            {
+              "naam": "pitch",
+              "goType": "string"
+            },
+            {
+              "naam": "website",
+              "goType": "URL",
+              "datatype": "URL"
+            },
+            {
+              "naam": "git_repo",
+              "goType": "GitAdres",
+              "datatype": "GitAdres"
+            },
+            {
+              "naam": "type",
+              "goType": "Producttype",
+              "enum": "Producttype"
+            }
+          ]
+        },
+        {
+          "naam": "Bijdrage",
+          "description": "Bijdrage van het initiatief aan bredere doelen.",
+          "meervoud": "bijdragen",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": true,
+          "positie": {
+            "x": 1020,
+            "y": 135
+          },
+          "id": "Initiatief->Initiatief_Bijdrage",
+          "velden": [
+            {
+              "naam": "type_bijdrage",
+              "goType": "Bijdragetype",
+              "enum": "Bijdragetype"
+            },
+            {
+              "naam": "schaal",
+              "goType": "Schaal",
+              "enum": "Schaal"
+            },
+            {
+              "naam": "toelichting",
+              "goType": "string"
+            }
+          ]
+        }
+      ],
+      "relaties": [
+        {
+          "naam": "Contactpersoon",
+          "meervoud": "contactpersoons",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "doelEntiteit": "Persoon",
+          "positie": {
+            "x": 510,
+            "y": -195
+          },
+          "id": "edge_1775565900544_5",
+          "sourceHandle": "left",
+          "targetHandle": "right",
+          "doelId": "edge_1775565921272_6",
+          "doelSourceHandle": "right",
+          "doelTargetHandle": "left",
+          "velden": []
+        }
+      ]
+    },
+    {
+      "typenaam": "Organisatie",
+      "description": "Organisatie die betrokken is bij initiatieven in het portfolio.",
+      "isMaterieel": true,
+      "kleur": "#fde68a",
+      "meervoud": "organisaties",
+      "positie": {
+        "x": 150,
+        "y": 90
+      },
+      "gegevenselementen": [
+        {
+          "naam": "Naam",
+          "description": "Naam van de organisatie.",
+          "meervoud": "namen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": -135,
+            "y": 180
+          },
+          "id": "Organisatie->Organisatie_Naam",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            }
+          ]
+        },
+        {
+          "naam": "Contactgegevens",
+          "description": "Contactgegevens van de organisatie.",
+          "meervoud": "contactgegevens",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": -135,
+            "y": 285
+          },
+          "id": "Organisatie->Organisatie_Contactgegevens",
+          "velden": [
+            {
+              "naam": "url",
+              "goType": "URL",
+              "datatype": "URL"
+            },
+            {
+              "naam": "email",
+              "goType": "Emailadres",
+              "datatype": "Emailadres"
+            },
+            {
+              "naam": "telefoonnummer",
+              "goType": "Telefoonnummer",
+              "datatype": "Telefoonnummer"
+            }
+          ]
+        },
+        {
+          "naam": "Organisatierol",
+          "meervoud": "Organisatierollen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 150,
+            "y": 270
+          },
+          "id": "edge_1775566275241_9",
+          "sourceHandle": "bottom",
+          "targetHandle": "top",
+          "velden": [
+            {
+              "naam": "type",
+              "goType": "OrganisatieType",
+              "enum": "OrganisatieType"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    },
+    {
+      "typenaam": "Persoon",
+      "description": "Persoon die betrokken is bij initiatieven in het portfolio.",
+      "isMaterieel": true,
+      "kleur": "#fecaca",
+      "meervoud": "personen",
+      "positie": {
+        "x": 135,
+        "y": -210
+      },
+      "gegevenselementen": [
+        {
+          "naam": "Naam",
+          "description": "Naam van de persoon.",
+          "meervoud": "namen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": -135,
+            "y": -195
+          },
+          "id": "Persoon->Persoon_Naam",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            }
+          ]
+        },
+        {
+          "naam": "Contactgegevens",
+          "description": "Contactgegevens van de persoon.",
+          "meervoud": "contactgegevens",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": -150,
+            "y": -75
+          },
+          "id": "Persoon->Persoon_Contactgegevens",
+          "velden": [
+            {
+              "naam": "email",
+              "goType": "Emailadres",
+              "datatype": "Emailadres"
+            },
+            {
+              "naam": "telefoonnummer",
+              "goType": "Telefoonnummer",
+              "datatype": "Telefoonnummer"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    },
+    {
+      "typenaam": "Gemeente",
+      "description": "Referentielijst-item voor gemeenten.",
+      "isMaterieel": false,
+      "entiteitSubtype": "referentielijst_item",
+      "kleur": "#c4b5fd",
+      "meervoud": "gemeenten",
+      "positie": {
+        "x": 1650,
+        "y": 105
+      },
+      "gegevenselementen": [
+        {
+          "naam": "GemeenteGegevens",
+          "description": "Basisgegevens van een gemeente.",
+          "meervoud": "gemeentegegevens",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 1650,
+            "y": 285
+          },
+          "id": "Gemeente->Gemeente_GemeenteGegevens",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            },
+            {
+              "naam": "code",
+              "goType": "string"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    },
+    {
+      "typenaam": "Domein",
+      "description": "Referentielijst-item voor domeinen.",
+      "isMaterieel": false,
+      "entiteitSubtype": "referentielijst_item",
+      "kleur": "#a7f3d0",
+      "meervoud": "domeinen",
+      "positie": {
+        "x": 1890,
+        "y": 105
+      },
+      "gegevenselementen": [
+        {
+          "naam": "DomeinGegevens",
+          "description": "Basisgegevens van een domein.",
+          "meervoud": "domeingegevens",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 1890,
+            "y": 285
+          },
+          "id": "Domein->Domein_DomeinGegevens",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            },
+            {
+              "naam": "omschrijving",
+              "goType": "string"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    }
+  ]
+}
