@@ -33,6 +33,17 @@ import { temporal } from "zundo";
 
 const DEFAULT_DIAGRAM_ID = "overzicht";
 
+/** Strip viewport uit diagrammen zodat pan/zoom geen undo-entries genereren. */
+function stripDiagramViewport(diagrams) {
+  if (!diagrams) return diagrams;
+  const result = {};
+  for (const [id, d] of Object.entries(diagrams)) {
+    const { viewport, ...rest } = d;
+    result[id] = rest;
+  }
+  return result;
+}
+
 const useModelStore = create(
   persist(
     temporal(
@@ -303,13 +314,18 @@ const useModelStore = create(
         }),
     }),
     {
-      // Undo/redo: track alleen model-mutaties, niet diagram-viewport of isDirty
+      // Undo/redo: track model-mutaties + diagram-layout (nodes/edges), niet viewport of isDirty
       partialize: (state) => ({
         elements: state.elements,
         structuralEdges: state.structuralEdges,
         domains: state.domains,
         domainMeta: state.domainMeta,
+        diagrams: stripDiagramViewport(state.diagrams),
       }),
+      // Sla geen undo-entry op wanneer de getrackte state niet veranderd is
+      // (bijv. bij isDirty-only of viewport-only wijzigingen)
+      equality: (pastState, currentState) =>
+        JSON.stringify(pastState) === JSON.stringify(currentState),
       limit: 50,
     }),
     {

@@ -190,7 +190,7 @@ via de Zustand store en zijn daarmee automatisch gepersisteerd in localStorage.
 
 | Component                     | Status | Beschrijving                                                    |
 |-------------------------------|--------|----------------------------------------------------------------|
-| Undo/redo                     | ✅     | Zustand temporal middleware (zundo), 50-stappen historie        |
+| Undo/redo                     | ✅     | Zustand temporal middleware (zundo), 50-stappen historie voor model én diagramlayout (excl. viewport) |
 | Undo/redo toolbar knoppen     | ✅     | ↩ Undo / ↪ Redo knoppen in toolbar                             |
 | Keyboard shortcuts            | ✅     | Ctrl+S (publiceer), Ctrl+Z (undo), Ctrl+Y/Ctrl+Shift+Z (redo), F2 (hernoemen) |
 | Element hernoemen (F2)        | ✅     | Prompt-dialoog voor hernoemen van geselecteerd element           |
@@ -256,6 +256,17 @@ Naast de bestaande `domains: string[]` is nu een `domainMeta: Record<string, { b
 - Meegenomen in IDE export/import (`_format: "ide-v1"`)
 - V3 import retourneert lege `domainMeta: {}`
 - ActionDialog leest `prefix` uit domainMeta voor pre-fill van rebuild-configuratie
+
+##### Stabiliteit & undo/redo-bugfixes (2026-04-07)
+
+Naar aanleiding van praktijktesten in de IDE zijn twee gerichte fixes doorgevoerd en gedocumenteerd:
+
+- **Domain click crash** — In `DetailsPanel.jsx` gebruikt `DomainEditor` nu een stabiele `EMPTY_DOMAIN_META` fallback in plaats van `|| {}`. Daarmee wordt voorkomen dat de Zustand-selector bij elke render een nieuw object teruggeeft, wat eerder kon leiden tot `Maximum update depth exceeded` bij klikken op een domein zonder metadata.
+- **Undo/redo voor node-verschuivingen** — In `useModelStore.js` staat de middleware-volgorde nu correct als `persist(temporal(...))`. Daarnaast neemt de temporal `partialize` nu ook de `diagrams` mee, maar expliciet **zonder** `viewport`, zodat node-posities en diagram-edges wel undoable zijn, terwijl pan/zoom geen ruis in de history geven.
+- **Geen 'lege' undo-stappen meer** — De temporal-config gebruikt een `equality` check op de geprojecteerde undo-state, zodat wijzigingen die alleen `isDirty` of viewport raken geen zichtbare maar inhoudsloze undo-stap meer toevoegen.
+- **React Flow sync na undo/redo** — In `DiagramCanvas.jsx` wordt de store-state na undo/redo teruggesynchroniseerd naar de canvas-nodes en -edges. Daardoor springen verschoven nodes nu ook visueel terug naar hun vorige positie.
+
+> Opmerking: bestaande localStorage-data uit een oudere sessie kan nog oude history bevatten. Bij twijfel kan `localStorage.removeItem("ide-model-store")` in de browserconsole helpen om schoon te herstarten.
 
 ##### Veld-omschrijvingen
 
