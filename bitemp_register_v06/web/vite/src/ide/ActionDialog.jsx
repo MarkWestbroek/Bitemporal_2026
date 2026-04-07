@@ -135,15 +135,15 @@ export default function ActionDialog({ type, values, onChange, onClose, onSubmit
               <div style={S.grid}>
                 <label style={S.field}>
                   <span style={S.label}>Modelversie</span>
-                  <input ref={firstInputRef} style={S.input} value={values.versie || ""} onChange={(e) => onChange("versie", e.target.value)} placeholder="bijv. v3" />
+                  <input ref={firstInputRef} style={S.input} value={values.versie || ""} onChange={(e) => onChange("versie", e.target.value)} placeholder="v0." />
                 </label>
                 <label style={S.field}>
                   <span style={S.label}>Modelnaam</span>
-                  <input style={S.input} value={values.naam || ""} onChange={(e) => onChange("naam", e.target.value)} placeholder="bijv. np-loc" />
+                  <input style={S.input} value={values.naam || ""} onChange={(e) => onChange("naam", e.target.value)} placeholder="actief domein" />
                 </label>
                 <label style={S.field}>
                   <span style={S.label}>Indiener</span>
-                  <input style={S.input} value={values.indiener || ""} onChange={(e) => onChange("indiener", e.target.value)} placeholder="ide-v1" />
+                  <input style={S.input} value={values.indiener || ""} onChange={(e) => onChange("indiener", e.target.value)} placeholder="MW" />
                 </label>
                 <label style={S.field}>
                   <span style={S.label}>API basis</span>

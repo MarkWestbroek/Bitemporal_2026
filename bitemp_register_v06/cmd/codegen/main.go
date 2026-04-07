@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
@@ -181,7 +182,7 @@ func main() {
 		{"metaregistry.go", genRegistry, false},
 		{"datatype_registry.go", genDatatypes, false},
 		{"enum_registry.go", genEnums, false},
-		{"datatype_aliases.go", generateDatatypeAliases, true},
+		{"datatype_aliases.go", generateDatatypeAliases, false},
 	}
 
 	// Prefix toepassen op bestandsnamen
@@ -215,6 +216,13 @@ func main() {
 	}
 
 	fmt.Println("Code generatie voltooid.")
+
+	// Stap: registreer init-calls in metaregistry_plumbing.go (additive mode)
+	if additive && *prefix != "" {
+		if err := ensureInitRegistration(*outputDir, *prefix); err != nil {
+			fmt.Fprintf(os.Stderr, "Waarschuwing: kon init-registratie niet bijwerken: %v\n", err)
+		}
+	}
 }
 
 // fetchModelFromURL haalt het model op van een draaiend register.
@@ -274,6 +282,88 @@ func parseV3ModelInput(data []byte) (model.V3Model, error) {
 	return v3, nil
 }
 
+// ensureInitRegistration zorgt dat de init()-calls voor het gegeven prefix
+// in metaregistry_plumbing.go staan. Wordt aangeroepen na codegen in additive mode.
+//
+// Het zoekt de regel met `propageerDomeinNaarOnderliggende()` en voegt daarvóór
+// de drie init-calls toe als die nog niet bestaan.
+func ensureInitRegistration(outputDir, prefix string) error {
+	plumbingPath := filepath.Join(outputDir, "metaregistry_plumbing.go")
+	data, err := os.ReadFile(plumbingPath)
+	if err != nil {
+		return fmt.Errorf("kan %s niet lezen: %w", plumbingPath, err)
+	}
+	content := string(data)
+
+	// Bepaal de PascalCase init-functienaam: bijv. prefix "cg" → "Cg", "np_loc" → "NpLoc"
+	pascalPrefix := toPascalCase(normalizeIdentifierParts(prefix))
+	initMeta := fmt.Sprintf("init%sMetaRegistry()", pascalPrefix)
+	initDatatype := fmt.Sprintf("init%sDatatypeRegistry()", pascalPrefix)
+	initEnum := fmt.Sprintf("init%sEnumRegistry()", pascalPrefix)
+
+	// Controleer of de init-calls al aanwezig zijn
+	if strings.Contains(content, initMeta) {
+		fmt.Printf("  Init-registratie voor %q al aanwezig in metaregistry_plumbing.go\n", prefix)
+		return nil
+	}
+
+	// Zoek de plek vóór propageerDomeinNaarOnderliggende()
+	marker := "propageerDomeinNaarOnderliggende()"
+	markerIdx := strings.Index(content, marker)
+	if markerIdx < 0 {
+		return fmt.Errorf("kan marker %q niet vinden in %s", marker, plumbingPath)
+	}
+
+	// Zoek de start van de regel met de marker (voor de juiste indentatie)
+	lineStart := strings.LastIndex(content[:markerIdx], "\n") + 1
+
+	// Detecteer de comment-prefix die ervoor hoort (bijv. "// Propageer domein...")
+	// We zoeken de lege regel daarvóór als insertpunt
+	insertComment := fmt.Sprintf("\t// %s — domein-specifieke uitbreiding\n", prefix)
+	insertBlock := insertComment +
+		fmt.Sprintf("\t%s\n", initEnum) +
+		fmt.Sprintf("\t%s\n", initDatatype) +
+		fmt.Sprintf("\t%s\n\n", initMeta)
+
+	// Voeg in vóór de comment-regel die bij propageerDomeinNaarOnderliggende hoort
+	// Zoek eventuele comment-regels die direct boven de marker-regel staan
+	searchArea := content[:lineStart]
+	// Zoek de laatste niet-lege, niet-comment regel vóór de marker
+	commentStart := lineStart
+	re := regexp.MustCompile(`(?m)^\s*//[^\n]*\n$`)
+	lines := strings.Split(searchArea, "\n")
+	// Scan achteruit om de bovenliggende comment-regels te vinden
+	for i := len(lines) - 1; i >= 0; i-- {
+		trimmed := strings.TrimSpace(lines[i])
+		if strings.HasPrefix(trimmed, "//") {
+			// Dit is een comment-regel boven de marker
+			commentStart -= len(lines[i]) + 1
+		} else if trimmed == "" {
+			// Lege regel — insertpunt
+			break
+		} else {
+			break
+		}
+	}
+	_ = re // gebruikt voor patroonherkenning indien nodig
+
+	newContent := content[:lineStart] + insertBlock + content[lineStart:]
+
+	// Formatteer het resultaat
+	formatted, fmtErr := format.Source([]byte(newContent))
+	if fmtErr != nil {
+		// Schrijf ongeformatteerd als fallback
+		formatted = []byte(newContent)
+	}
+
+	if err := os.WriteFile(plumbingPath, formatted, 0644); err != nil {
+		return fmt.Errorf("kan %s niet schrijven: %w", plumbingPath, err)
+	}
+
+	fmt.Printf("  Init-registratie voor %q toegevoegd aan metaregistry_plumbing.go\n", prefix)
+	return nil
+}
+
 func validateV3Model(v3 model.V3Model) []string {
 	var errs []string
 
@@ -283,6 +373,31 @@ func validateV3Model(v3 model.V3Model) []string {
 	if len(v3.Entiteiten) == 0 {
 		errs = append(errs, "minimaal één entiteit vereist in model.entiteiten")
 		return errs
+	}
+
+	// Valideer enums
+	enumNamen := map[string]struct{}{}
+	constNamen := map[string]struct{}{}
+	for i, enum := range v3.Enums {
+		ectx := fmt.Sprintf("enums[%d]", i)
+		if !isPascalIdentifier(enum.GoType) {
+			errs = append(errs, fmt.Sprintf("%s.goType '%s' is geen geldige Go-identifier; gebruik PascalCase zonder spaties (bijv. CGLaag i.p.v. CG laag)", ectx, enum.GoType))
+		}
+		if _, dup := enumNamen[enum.GoType]; dup {
+			errs = append(errs, fmt.Sprintf("%s.goType '%s' is een duplicaat", ectx, enum.GoType))
+		}
+		enumNamen[enum.GoType] = struct{}{}
+
+		for j, w := range enum.Waarden {
+			wctx := fmt.Sprintf("%s.waarden[%d]", ectx, j)
+			if !isPascalIdentifier(w.ConstNaam) {
+				errs = append(errs, fmt.Sprintf("%s.constNaam '%s' is geen geldige Go-identifier", wctx, w.ConstNaam))
+			}
+			if _, dup := constNamen[w.ConstNaam]; dup {
+				errs = append(errs, fmt.Sprintf("%s.constNaam '%s' is een duplicaat (tip: maak elke constNaam uniek, bijv. SchaalWaarde1 i.p.v. SchaalWaarde)", wctx, w.ConstNaam))
+			}
+			constNamen[w.ConstNaam] = struct{}{}
+		}
 	}
 
 	entiteiten := map[string]struct{}{}

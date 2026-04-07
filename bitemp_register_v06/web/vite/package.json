@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/ensure-local-deps.mjs",
+    "prebuild": "node scripts/ensure-local-deps.mjs",
+    "prepreview": "node scripts/ensure-local-deps.mjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"

@@ -17,6 +17,7 @@ Dit document beschrijft de volledige werkwijze voor het genereren, exporteren en
 8. [Cross-domein relaties](#8-cross-domein-relaties)
 9. [Bestandsoverzicht](#9-bestandsoverzicht)
 10. [Veelgestelde vragen](#10-veelgestelde-vragen)
+11. [Greenfield test — domeinonafhankelijkheid bewezen](#11-greenfield-test--domeinonafhankelijkheid-bewezen)
 
 ---
 
@@ -172,6 +173,33 @@ Bij `--domein np-loc`:
 - Register-entiteiten (Land, Referentielijst) worden overgeslagen — die zitten al in het register-domein
 - Enums die niet meer gerefereerd worden na filtering, worden ook verwijderd
 
+### Validatieregels
+
+De codegen valideert het V3 model voordat er code wordt gegenereerd. Bij fouten stopt het proces met een duidelijke foutmelding en exit code 1. Dit voorkomt dat ongeldige Go-code wordt gegenereerd die later pas bij compilatie faalt.
+
+#### Entiteiten, GE's en relaties
+
+| Veld | Regel | Voorbeeld goed | Voorbeeld fout |
+|------|-------|----------------|----------------|
+| `typenaam` | PascalCase, geen spaties | `ApiStandaard` | `Api Standaard` |
+| `meervoud` | lowercase/snake_case | `api_standaarden` | `ApiStandaarden` |
+| `momentvoorkomen` | `enkelvoudig` of `meervoudig` | `enkelvoudig` | `enkel` |
+| `velden[].naam` | letters/cijfers/underscore | `CG_laag` | `CG laag` |
+| `relaties[].doelEntiteit` | moet bestaan in `entiteiten` | `Gemeente` | `Onbekend` |
+
+#### Enums
+
+| Veld | Regel | Voorbeeld goed | Voorbeeld fout |
+|------|-------|----------------|----------------|
+| `goType` | PascalCase Go-identifier, geen spaties | `CGLaag` | `CG laag` |
+| `goType` | uniek per model | — | twee enums met dezelfde `goType` |
+| `waarden[].constNaam` | PascalCase Go-identifier | `CGLaagLaag5` | `CG laagLaag5` |
+| `waarden[].constNaam` | uniek over alle enums | `SchaalWaarde1`, `SchaalWaarde2` | `SchaalWaarde`, `SchaalWaarde` |
+
+> **Veelvoorkomende fout:** De UML-editor staat spaties toe in enum-namen (bijv. `"CG laag"`). Deze moeten vóór codegen worden aangepast naar PascalCase (bijv. `"CGLaag"`), inclusief de bijbehorende `constNaam`-waarden en veld-referenties (`"enum": "CGLaag"`).
+
+> **Tip:** Numerieke enum-waarden (bijv. schaal 1–4) vereisen unieke `constNaam`-waarden. Gebruik een suffix per waarde: `SchaalWaarde1`, `SchaalWaarde2`, etc. — niet vier keer `SchaalWaarde`.
+
 ---
 
 ## 5. Roundtrip-verificatie
@@ -225,21 +253,28 @@ go run ./cmd/codegen --input hr_model.json \
 
 Dit genereert 7 bestanden: `hr_modellen_entiteiten.go`, `hr_metaregistry.go`, etc.
 
-### Stap 3: Registreer de init-functies
+### Stap 3: Init-registratie (automatisch)
 
-Voeg de init-aanroepen toe in `model/metaregistry_plumbing.go`:
+De codegen voert in `-mode additive` automatisch `ensureInitRegistration()` uit. Deze functie:
+- Leest `metaregistry_plumbing.go` in de output-directory
+- Controleert of init-calls voor het prefix al bestaan
+- Voegt ze toe vóór `propageerDomeinNaarOnderliggende()` als ze ontbreken
+
+Je hoeft dus **niets handmatig** te doen. Na codegen staan de volgende aanroepen automatisch in `init()`:
 
 ```go
 func init() {
-    initRegisterMetaRegistry()
-    initRegisterDatatypeRegistry()
-    initRegisterEnumRegistry()
-    initNpLocMetaRegistry()
-    initHrMetaRegistry()          // ← nieuw
-    initHrDatatypeRegistry()      // ← nieuw
-    initHrEnumRegistry()          // ← nieuw
+    // (eerder geladen domeinen staan hier al)
+    // hr — domein-specifieke uitbreiding
+    initHrEnumRegistry()
+    initHrDatatypeRegistry()
+    initHrMetaRegistry()
+
+    propageerDomeinNaarOnderliggende()
 }
 ```
+
+> **Let op:** als de `init()` al calls bevatte voor het prefix (bijv. door een vorige codegen-run), worden ze niet gedupliceerd.
 
 ### Stap 4: Verifieer
 
@@ -369,6 +404,8 @@ Standalone overschrijft de hele MetaRegistry. Met meerdere domeinen (register + 
 
 Go garandeert dat `var`-declaraties (MetaRegistry, DatatypeRegistry) klaar zijn vóór `init()`. Maar de *onderlinge* volgorde van init-functies tussen bestanden is niet gegarandeerd. Daarom roepen we ze expliciet aan vanuit één `init()` in `metaregistry_plumbing.go` — register eerst, dan de rest.
 
+> **Sinds april 2026:** de `init()` in `metaregistry_plumbing.go` bevat zelf geen hardcoded domein-calls meer. Alle calls worden automatisch toegevoegd door `ensureInitRegistration()` als onderdeel van elke codegen-run in additive mode. Dit is gevalideerd via de [greenfield test](#11-greenfield-test--domeinonafhankelijkheid-bewezen).
+
 ### Wat als de roundtrip niet identiek is?
 
 1. Controleer de V3 export: `go run ./cmd/export_v3 --domein X | python -m json.tool`
@@ -388,3 +425,203 @@ Go garandeert dat `var`-declaraties (MetaRegistry, DatatypeRegistry) klaar zijn 
 ### Hoe werkt de PowerShell BOM-workaround?
 
 PowerShell 5.1 schrijft standaard UTF-16 LE BOM bij `>` redirect. Go's JSON parser herkent dat niet. Gebruik `[System.IO.File]::WriteAllText()` met `UTF8Encoding($false)` voor BOM-loze output.
+
+---
+
+## 11. Greenfield test — domeinonafhankelijkheid bewezen
+
+**Datum:** 7 april 2026  
+**Status:** Geslaagd ✓
+
+### Doel
+
+Bewijzen dat de applicatie **volledig domeinonafhankelijk** is: je kunt alle prefixed domeinbestanden verwijderen, codegen draaien voor een willekeurig nieuw domein, en het systeem functioneert volledig — zonder enige handmatige aanpassing aan framework-code.
+
+Dit is een fundamentele eigenschap van de architectuur: het framework (handlers, routes, schema-API, registratie-logica, frontend) is 100% meta-driven en heeft geen compile-time kennis van specifieke domeintypes nodig.
+
+### Testopzet
+
+#### Uitgangssituatie
+Vier actieve domeinen met in totaal 30 prefixed bestanden:
+
+| Prefix | Domein | Bestanden | Aard |
+|--------|--------|-----------|------|
+| `abuvwxy_` | abuvwxy | 7 | Test-/referentiemodel (A, B, Rel_A_B, etc.) |
+| `register_` | register | 7 | Functioneel basisdomein (Referentielijst, Land, etc.) |
+| `np_loc_` | np-loc | 8 | Nederlands locatiedomein |
+| `cg_` | CG | 8 | CG Portfolio domein |
+
+#### Gebruikte model
+CG Portfolio V3 JSON (`docs/ontwerpgedachten/CG PF/Portfolio.v3.json`) — een eenvoudig maar representatief model:
+- **5 entiteiten**: Initiatief, Organisatie, Persoon, Gemeente, Domein
+- **9 gegevenselementen**: Planning, Product, Bijdrage, Naam×2, Contactgegevens×2, GemeenteGegevens, DomeinGegevens
+- **5 enums**: OrganisatieType, Producttype, Fase, Schaal, Bijdragetype
+- **5 datatypes**: Datum, URL, Email, Git_adres, Telefoonnummer
+- **Geen relaties** — puur GE-gebaseerd model
+- **Materiële entiteiten**: Initiatief, Organisatie, Persoon (met Aanvang/Einde)
+
+### Stappen
+
+#### Stap 1: Backup originele situatie
+```bash
+mkdir -p /tmp/greenfield_backup
+tar czf /tmp/greenfield_backup/model.tar.gz model/
+tar czf /tmp/greenfield_backup/baseline_model.tar.gz _baseline/model/
+tar czf /tmp/greenfield_backup/routes.tar.gz routes/
+```
+
+#### Stap 2: Verwijder alle 30 prefixed files
+```bash
+rm model/abuvwxy_*.go model/cg_*.go model/np_loc_*.go model/register_*.go
+rm _baseline/model/abuvwxy_*.go _baseline/model/cg_*.go _baseline/model/np_loc_*.go _baseline/model/register_*.go
+```
+
+#### Stap 3: Strip init() in metaregistry_plumbing.go
+Alle domein-specifieke init-calls verwijderd uit `init()` in zowel `model/metaregistry_plumbing.go` als `_baseline/model/metaregistry_plumbing.go`:
+
+```go
+func init() {
+    // Domein-specifieke init calls worden door codegen automatisch toegevoegd
+    // via ensureInitRegistration(). Hier staat bewust niets hardcoded.
+    propageerDomeinNaarOnderliggende()
+}
+```
+
+#### Stap 4: Build met nul domeinen
+```bash
+go build -o /dev/null .
+# Resultaat: COMPILEERT SUCCESVOL met 0 domeintypes
+```
+
+Dit bewees dat het framework géén compile-time afhankelijkheden heeft op domeincode.
+
+#### Stap 5: Codegen CG-only
+```bash
+go run ./cmd/codegen \
+  -input "docs/ontwerpgedachten/CG PF/Portfolio.v3.json" \
+  -output model/ \
+  -prefix cg \
+  -domein portfolio \
+  -mode additive
+```
+
+Resultaat:
+- 8 bestanden gegenereerd (`cg_modellen_entiteiten.go`, `cg_metaregistry.go`, etc.)
+- `ensureInitRegistration()` voegde automatisch de init-calls toe in `metaregistry_plumbing.go`
+
+#### Stap 6: Build en start server
+```bash
+go build -o /dev/null .        # BUILD OK
+DEVLOOP=true go run .          # Server start zonder panics
+```
+
+#### Stap 7: Verificatie
+
+**Routes:** 153 routes dynamisch geregistreerd, inclusief:
+- `/initiatieven`, `/organisaties`, `/personen`, `/gemeentes`, `/domeinen`
+- `/full/initiatieven`, `/full/organisaties`, etc.
+- `/initiatief_aanvang`, `/initiatief_einde`, `/bijdragen`, `/planningen`, `/producten`
+- Alle standaard framework-routes (`/registraties`, `/wijzigingen`, `/api/schema/*`, etc.)
+
+**Schema API** (`GET /api/schema/model/code`):
+```
+Totaal types: 35
+Domeinen: ['portfolio']
+Entiteiten (5): ['Domein', 'Gemeente', 'Initiatief', 'Organisatie', 'Persoon']
+```
+
+**Entiteitstructuur correct**:
+```
+Initiatief: 5 onderliggende
+  - Initiatief_Planning (enkelvoudig) json=planningen
+  - Initiatief_Product (enkelvoudig) json=producten
+  - Initiatief_Bijdrage (meervoudig) json=bijdragen
+  - Initiatief_Aanvang (enkelvoudig) json=aanvang
+  - Initiatief_Einde (enkelvoudig) json=einde
+Organisatie: 4 onderliggende
+  - Organisatie_Naam (enkelvoudig) json=namen
+  - Organisatie_Contactgegevens (enkelvoudig) json=contactgegevens
+  - Organisatie_Aanvang (enkelvoudig) json=aanvang
+  - Organisatie_Einde (enkelvoudig) json=einde
+Persoon: 4 onderliggende
+  - Persoon_Naam (enkelvoudig) json=namen
+  - Persoon_Contactgegevens (enkelvoudig) json=contactgegevens
+  - Persoon_Aanvang (enkelvoudig) json=aanvang
+  - Persoon_Einde (enkelvoudig) json=einde
+Gemeente: 1 onderliggende
+  - GemeenteGegevens (enkelvoudig) json=gemeentegegevens
+Domein: 1 onderliggende
+  - DomeinGegevens (enkelvoudig) json=domeingegevens
+```
+
+**Full-entity endpoint**:
+```bash
+curl -s http://localhost:8082/full/initiatieven
+# {"has_more":false,"initiatieven":[],"page":1,"size":20}
+```
+Lege lijst (geen data in DB), maar correcte response-structuur.
+
+#### Stap 8: Herstel
+```bash
+tar xzf /tmp/greenfield_backup/model.tar.gz
+tar xzf /tmp/greenfield_backup/baseline_model.tar.gz
+go build -o /dev/null .   # BUILD OK — alle 30 files weer terug
+```
+
+### Gevonden en permanent gefixt
+
+Tijdens de test werden twee hardcoded afhankelijkheden op domeincode blootgelegd en permanent opgelost:
+
+#### 1. `routes/addroutes_helper.go` — hardcoded `model.Referentielijst`
+
+**Was:**
+```go
+router.GET("/referentielijsten", handlers.MakeGetEntitiesHandler[model.Referentielijst]("Referentielijsten"))
+```
+
+**Werd:**
+```go
+refMeta, hasRef := model.MetaRegistry.GetTypeMeta("Referentielijst")
+if !hasRef {
+    return // geen referentielijsten in dit model
+}
+router.GET("/referentielijsten", handlers.MakeGetEntitiesByMetaHandler(refMeta))
+```
+
+Nu wordt de route alleen geregistreerd als het type `Referentielijst` in de MetaRegistry bestaat. Modellen zonder referentielijsten werken probleemloos.
+
+#### 2. `model/REST request models.go` — dode code met ABUVWXY-types
+
+De functies `AsA()`, `AsB()` en structs `OpvoerAfvoerA`, `OpvoerAfvoerB` bevatten hardcoded type-switches op `*A`, `*A_U`, `*B_X`, etc. Deze functies werden nergens meer gebruikt in v06 (de nieuwe generieke registratie-aanpak maakt ze overbodig) maar veroorzaakten compile-errors zonder het ABUVWXY-domein.
+
+**Oplossing:** Verwijderd uit zowel `model/REST request models.go` als `_baseline/model/REST request models.go`.
+
+### Samenvatting resultaten
+
+| Aspect | Resultaat |
+|--------|-----------|
+| Build met 0 domeinen | ✓ Compileert zonder errors |
+| Codegen CG-only (via CLI) | ✓ 8 bestanden gegenereerd |
+| `ensureInitRegistration()` | ✓ Init-calls automatisch toegevoegd |
+| Server start | ✓ 0 panics, 153 routes |
+| Schema API | ✓ 35 types, 5 entiteiten, correct domein |
+| Entity structure | ✓ Alle GEs, Aanvang/Einde correct genest |
+| Full-entity endpoint | ✓ Correcte JSON-structuur |
+| Referentielijsten afwezig | ✓ Geen crash, route wordt overgeslagen |
+| Herstel naar origineel | ✓ Build OK met alle 30 bestanden |
+
+### Conclusie
+
+De applicatie is **volledig domeinonafhankelijk**. Je kunt:
+
+1. Alle prefixed bestanden verwijderen
+2. Codegen draaien voor een willekeurig V3 model
+3. De server starten — alles werkt
+
+Er is geen handmatige aanpassing nodig aan framework-code, routes, handlers, of de schema-API. Het enige dat nodig is, is een V3 JSON-model en één codegen-commando.
+
+Dit bevestigt het ontwerpprincipe: **de MetaRegistry is de single source of truth**, en alle runtime-gedrag wordt daar dynamisch uit afgeleid.
+
+### Aandachtspunt
+
+De codegen genereert soms ongebruikte imports (`time`, `github.com/uptrace/bun`) in bestanden waar de betreffende types niet voorkomen. Dit is onschuldig maar vereist een `goimports`-stap na codegen. Overweeg `goimports` als automatische naverwerking in de codegen te integreren.

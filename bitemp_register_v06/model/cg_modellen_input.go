@@ -1,0 +1,118 @@
+package model
+
+// _Input structs: platte API-input die hub + data combineert.
+// Gegenereerd door cmd/codegen — niet handmatig bewerken.
+
+type Initiatief_Planning_Input struct {
+	INITIATIEF_ID       int    `json:"initiatief_id"`
+	Rel_ID              int    `json:"rel_id"`
+	Planningsinfo       string `json:"planningsinfo"`
+	Startdatum          Datum  `json:"startdatum"`
+	ReadyForUse         Datum  `json:"ready_for_use"`
+	WaarTegenaanGelopen string `json:"waar_tegenaan_gelopen"`
+	Fase                Fase   `json:"fase"`
+	Aanvang             *Date  `json:"aanvang,omitempty"`
+	Einde               *Date  `json:"einde,omitempty"`
+}
+
+type Initiatief_Product_Input struct {
+	INITIATIEF_ID int         `json:"initiatief_id"`
+	Rel_ID        int         `json:"rel_id"`
+	Naam          string      `json:"naam"`
+	Omschrijving  string      `json:"omschrijving"`
+	Pitch         string      `json:"pitch"`
+	Website       URL         `json:"website"`
+	GitRepo       GitAdres    `json:"git_repo"`
+	Type          Producttype `json:"type"`
+	CGLaag        CGLaag      `json:"CG_laag"`
+	Aanvang       *Date       `json:"aanvang,omitempty"`
+	Einde         *Date       `json:"einde,omitempty"`
+}
+
+type Initiatief_Bijdrage_Input struct {
+	INITIATIEF_ID int          `json:"initiatief_id"`
+	Rel_ID        int          `json:"rel_id"`
+	TypeBijdrage  Bijdragetype `json:"type_bijdrage"`
+	Schaal        Schaal       `json:"schaal"`
+	Toelichting   string       `json:"toelichting"`
+	Aanvang       *Date        `json:"aanvang,omitempty"`
+	Einde         *Date        `json:"einde,omitempty"`
+}
+
+type InitiatiefGemeente_Input struct {
+	INITIATIEF_ID int `json:"initiatief_id"`
+	Rel_ID        int `json:"rel_id"`
+	GEMEENTE_ID   int `json:"gemeente_id"`
+}
+
+type InitiatiefDomein_Input struct {
+	INITIATIEF_ID int `json:"initiatief_id"`
+	Rel_ID        int `json:"rel_id"`
+	DOMEIN_ID     int `json:"domein_id"`
+}
+
+type InitiatiefAPIStandaard_Input struct {
+	INITIATIEF_ID   int `json:"initiatief_id"`
+	Rel_ID          int `json:"rel_id"`
+	APISTANDAARD_ID int `json:"apistandaard_id"`
+}
+
+type Organisatie_Contactgegevens_Input struct {
+	ORGANISATIE_ID int            `json:"organisatie_id"`
+	Rel_ID         int            `json:"rel_id"`
+	Url            URL            `json:"url"`
+	Email          Emailadres     `json:"email"`
+	Telefoonnummer Telefoonnummer `json:"telefoonnummer"`
+}
+
+type Organisatie_Organisatierol_Input struct {
+	ORGANISATIE_ID int             `json:"organisatie_id"`
+	Rel_ID         int             `json:"rel_id"`
+	Type           OrganisatieType `json:"type"`
+}
+
+type Organisatie_Organisatienaam_Input struct {
+	ORGANISATIE_ID int    `json:"organisatie_id"`
+	Rel_ID         int    `json:"rel_id"`
+	Naam           string `json:"naam"`
+}
+
+type Contactpersoon_Input struct {
+	ORGANISATIE_ID int    `json:"organisatie_id"`
+	Rel_ID         int    `json:"rel_id"`
+	PERSOON_ID     int    `json:"persoon_id"`
+	Rol            string `json:"rol"`
+}
+
+type Persoon_Contactgegevens_Input struct {
+	PERSOON_ID     int            `json:"persoon_id"`
+	Rel_ID         int            `json:"rel_id"`
+	Email          Emailadres     `json:"email"`
+	Telefoonnummer Telefoonnummer `json:"telefoonnummer"`
+}
+
+type Persoon_Persoonnaam_Input struct {
+	PERSOON_ID int    `json:"persoon_id"`
+	Rel_ID     int    `json:"rel_id"`
+	Naam       string `json:"naam"`
+}
+
+type GemeenteGegevens_Input struct {
+	GEMEENTE_ID int    `json:"gemeente_id"`
+	Rel_ID      int    `json:"rel_id"`
+	Naam        string `json:"naam"`
+	Code        string `json:"code"`
+}
+
+type DomeinGegevens_Input struct {
+	DOMEIN_ID    int    `json:"domein_id"`
+	Rel_ID       int    `json:"rel_id"`
+	Naam         string `json:"naam"`
+	Omschrijving string `json:"omschrijving"`
+}
+
+type API_standaard_naam_Input struct {
+	APISTANDAARD_ID int    `json:"apistandaard_id"`
+	Rel_ID          int    `json:"rel_id"`
+	Naam            string `json:"naam"`
+}

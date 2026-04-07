@@ -353,7 +353,7 @@
         {
           "naam": "InitiatiefGemeente",
           "domein": "CG",
-          "meervoud": "InitiatiefGemeenten",
+          "meervoud": "initiatief_gemeenten",
           "momentvoorkomen": "meervoudig",
           "isMaterieel": false,
           "doelEntiteit": "Gemeente",
@@ -372,7 +372,7 @@
         {
           "naam": "InitiatiefDomein",
           "domein": "CG",
-          "meervoud": "InitiatiefDomeinen",
+          "meervoud": "initiatief_domeinen",
           "momentvoorkomen": "meervoudig",
           "isMaterieel": false,
           "doelEntiteit": "Domein",
@@ -391,7 +391,7 @@
         {
           "naam": "InitiatiefAPIStandaard",
           "domein": "CG",
-          "meervoud": "InitiatiefAPIStandaarden",
+          "meervoud": "initiatief_api_standaarden",
           "momentvoorkomen": "meervoudig",
           "isMaterieel": false,
           "doelEntiteit": "API standaard",
@@ -477,7 +477,7 @@
         {
           "naam": "Organisatierol",
           "domein": "CG",
-          "meervoud": "Organisatierollen",
+          "meervoud": "organisatie_rollen",
           "momentvoorkomen": "enkelvoudig",
           "isMaterieel": false,
           "positie": {
@@ -674,7 +674,7 @@
       "isMaterieel": false,
       "entiteitSubtype": "referentielijst_item",
       "kleur": "#fde68a",
-      "meervoud": "API standaarden",
+      "meervoud": "api_standaarden",
       "positie": {
         "x": 1500,
         "y": -135
@@ -683,7 +683,7 @@
         {
           "naam": "API-standaard-naam",
           "domein": "CG",
-          "meervoud": "API-standaard-namen",
+          "meervoud": "api_standaard_namen",
           "momentvoorkomen": "enkelvoudig",
           "isMaterieel": false,
           "positie": {

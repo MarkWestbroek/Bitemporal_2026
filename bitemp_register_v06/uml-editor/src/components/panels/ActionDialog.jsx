@@ -66,7 +66,7 @@ export default function ActionDialog({ dialog, onChange, onClose, onSubmit }) {
                     type="text"
                     value={values.versie || ""}
                     onChange={(e) => onChange("versie", e.target.value)}
-                    placeholder="bijv. v3"
+                    placeholder="v0."
                     autoFocus
                   />
                 </label>
@@ -77,7 +77,7 @@ export default function ActionDialog({ dialog, onChange, onClose, onSubmit }) {
                     type="text"
                     value={values.naam || ""}
                     onChange={(e) => onChange("naam", e.target.value)}
-                    placeholder="bijv. np-loc"
+                    placeholder="actief domein"
                   />
                 </label>
 
@@ -87,7 +87,7 @@ export default function ActionDialog({ dialog, onChange, onClose, onSubmit }) {
                     type="text"
                     value={values.indiener || ""}
                     onChange={(e) => onChange("indiener", e.target.value)}
-                    placeholder="uml-editor-v2"
+                    placeholder="MW"
                   />
                 </label>
 

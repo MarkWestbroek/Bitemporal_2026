@@ -1149,8 +1149,8 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
 
   const openActieDialoog = useCallback(async (type) => {
     const v3Model = editorNaarV3Model(nodes, edges);
-    const { domein, prefix } = bepaalStandaardDomeinEnPrefix(v3Model);
     const apiBase = getDefaultApiBase();
+    const standaardModelNaam = actiefDomein || "";
 
     if (type === "save") {
       setActieDialoog({
@@ -1170,9 +1170,9 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         title: "Schema-model publiceren",
         submitLabel: "Publiceren",
         values: {
-          versie: v3Model.versie || "v3",
-          naam: v3Model.naam || "Editor export",
-          indiener: "uml-editor-v2",
+          versie: "v0.",
+          naam: standaardModelNaam,
+          indiener: "MW",
           opmerking: "",
           apiBase,
         },
@@ -1189,9 +1189,9 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         title: "Publiceer en rebuild exact dit model",
         submitLabel: "Publiceer + rebuild",
         values: {
-          versie: v3Model.versie || "v3",
-          naam: v3Model.naam || "Editor export",
-          indiener: "uml-editor-v2",
+          versie: "v0.",
+          naam: standaardModelNaam,
+          indiener: "MW",
           opmerking: "",
           apiBase,
           wachtwoord: "1234",
@@ -1214,7 +1214,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         beschikbareDomeinen,
       },
     });
-  }, [bepaalStandaardDomeinEnPrefix, bouwBeschikbareDomeinen, getDefaultApiBase, laatstGepubliceerdSchemaID, maakVoorstelBestandsnaam, nodes, edges]);
+  }, [actiefDomein, bouwBeschikbareDomeinen, getDefaultApiBase, laatstGepubliceerdSchemaID, maakVoorstelBestandsnaam, nodes, edges]);
 
   const sluitActieDialoog = useCallback(() => {
     setActieDialoog(null);

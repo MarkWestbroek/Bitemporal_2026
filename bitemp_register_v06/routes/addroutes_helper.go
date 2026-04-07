@@ -65,8 +65,14 @@ func addMetaRegistryFullRoutes(router *gin.Engine) {
 // - GET /full/referentielijsten/{padnaam}         → volledige (expanded) lijst
 // - GET /full/referentielijsten/{padnaam}/:id     → volledige (expanded) detail
 func addReferentielijstRoutes(router *gin.Engine) {
-	// Overzicht: alle referentielijst-instanties uit de register_referentielijst tabel
-	router.GET("/referentielijsten", handlers.MakeGetEntitiesHandler[model.Referentielijst]("Referentielijsten"))
+	// Overzicht: alle referentielijst-instanties — dynamisch via MetaRegistry lookup.
+	// Als "Referentielijst" niet in het model zit (bijv. bij een domein zonder
+	// referentielijsten), worden de /referentielijsten routes overgeslagen.
+	refMeta, hasRef := model.MetaRegistry.GetTypeMeta("Referentielijst")
+	if !hasRef {
+		return // geen referentielijsten in dit model
+	}
+	router.GET("/referentielijsten", handlers.MakeGetEntitiesByMetaHandler(refMeta))
 
 	typeNamen := make([]string, 0)
 	for typeNaam, meta := range model.MetaRegistry {

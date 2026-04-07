@@ -59,6 +59,21 @@ func generateMetaRegistryAdditive(v3 model.V3Model, opts codegenOptions) (string
 
 // writeAllEntries schrijft alle TypeMeta entries in map-literal formaat.
 func writeAllEntries(b *strings.Builder, v3 model.V3Model, opts codegenOptions) {
+	// Pre-scan: detecteer padnaam-conflicten bij GE hubs.
+	// Als twee hubs dezelfde meervoud/padnaam zouden krijgen (bijv. "contactgegevens"
+	// bij Organisatie én Persoon), prefix dan met de entiteitsnaam.
+	gePadnaamCount := map[string]int{}
+	for _, ent := range v3.Entiteiten {
+		for _, ge := range ent.Gegevenselementen {
+			p := ge.Meervoud
+			if p == "" {
+				hubType := geHubTypeName(ent, ge.Naam)
+				p = strings.ToLower(hubType) + "s"
+			}
+			gePadnaamCount[p]++
+		}
+	}
+
 	for _, ent := range v3.Entiteiten {
 		entIDKolom := strings.ToLower(ent.Typenaam) + "_id"
 
@@ -73,6 +88,10 @@ func writeAllEntries(b *strings.Builder, v3 model.V3Model, opts codegenOptions) 
 			padnaam := ge.Meervoud
 			if padnaam == "" {
 				padnaam = strings.ToLower(hubType) + "s"
+			}
+			// Bij padnaam-conflicten: gebruik de volledige hub-typenaam in snake_case
+			if gePadnaamCount[padnaam] > 1 {
+				padnaam = toSnakeCase(hubType)
 			}
 			dHub := deriveHub(ent.Typenaam, hubType, "gegevenselement", ge.IsMaterieel, padnaam, "")
 			li := &layoutInfo{Positie: ge.Positie, EdgeID: ge.ID, SourceHandle: ge.SourceHandle, TargetHandle: ge.TargetHandle}

@@ -29,6 +29,9 @@ import DetailsPanel from "../ide/DetailsPanel";
 import ActionDialog from "../ide/ActionDialog";
 import ErrorBoundary from "../ide/ErrorBoundary";
 
+const DEFAULT_MODEL_VERSIE = "v0.";
+const DEFAULT_INDIENER = "MW";
+
 function apiBase() {
   return window.location.port === "5174" ? "http://localhost:8082" : "";
 }
@@ -52,11 +55,12 @@ export default function IdePage() {
     const domains = useModelStore.getState().domains || [];
     const domainMeta = useModelStore.getState().domainMeta || {};
     const meta = useModelStore.getState().modelMeta || {};
+    const actiefDomein = useUIStore.getState().actiefDomein || "";
     const base = apiBase();
     setDialogValues({
-      versie: meta.versie || "v3",
-      naam: meta.naam || "",
-      indiener: meta.indiener || "ide-v1",
+      versie: meta.versie || DEFAULT_MODEL_VERSIE,
+      naam: actiefDomein || "",
+      indiener: meta.indiener || DEFAULT_INDIENER,
       apiBase: base || "http://localhost:8082",
       rebuildApiBase: base || "http://localhost:8082",
       opmerking: "",
@@ -253,9 +257,9 @@ export default function IdePage() {
       try {
         const queryParams = vals.opmerking ? `?opmerking=${encodeURIComponent(vals.opmerking)}` : "";
         const body = {
-          bron: vals.indiener || "ide-v1",
-          indiener: vals.indiener || "ide-v1",
-          model: { ...v3.model, versie: vals.versie || "v3", naam: vals.naam || "" },
+          bron: vals.indiener || DEFAULT_INDIENER,
+          indiener: vals.indiener || DEFAULT_INDIENER,
+          model: { ...v3.model, versie: vals.versie || DEFAULT_MODEL_VERSIE, naam: vals.naam || "" },
         };
         const resp = await fetch(`${base}/api/schema/model${queryParams}`, {
           method: "POST",

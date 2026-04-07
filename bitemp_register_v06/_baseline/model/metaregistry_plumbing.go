@@ -339,6 +339,11 @@ func init() {
 	initNpLocDatatypeRegistry()
 	initNpLocMetaRegistry()
 
+	// cg — CG Portfolio domein
+	initCgEnumRegistry()
+	initCgDatatypeRegistry()
+	initCgMetaRegistry()
+
 	// Propageer domein van entiteiten naar hun onderliggende GE's, relaties en plumbing-types.
 	// Zo hoeft het domein niet op elke entry handmatig te staan.
 	propageerDomeinNaarOnderliggende()

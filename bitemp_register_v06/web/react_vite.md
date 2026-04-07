@@ -97,6 +97,12 @@ In `web/vite/package.json`:
 - `npm run build` - productiebuild naar `web/react`
 - `npm run preview` - lokale preview van build
 
+Platformwissel Windows <-> macOS:
+- `node_modules` staat in `.gitignore` en reist dus niet mee via git.
+- Sommige frontend packages gebruiken platformspecifieke binaries. Een `node_modules` map die op Windows is opgebouwd, is niet betrouwbaar op macOS, en andersom.
+- Daarom draaien `npm run dev`, `npm run build` en `npm run preview` eerst een kleine check. Als `vite` ontbreekt of de laatst bekende OS/architectuur niet matcht, wordt automatisch `npm install` uitgevoerd in `web/vite`.
+- Praktische regel: sync alleen broncode via git; laat dependencies lokaal per machine opnieuw opbouwen.
+
 PowerShell tip:
 - Als script execution policy `npm` blokkeert, gebruik `npm.cmd`.
 
