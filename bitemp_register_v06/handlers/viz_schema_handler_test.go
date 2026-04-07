@@ -9,20 +9,70 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type vizSchemaFieldResponseTest struct {
+	Naam        string   `json:"naam"`
+	Description string   `json:"description"`
+	Type        string   `json:"type"`
+	Format      string   `json:"format"`
+	Enum        []string `json:"enum"`
+	Verplicht   bool     `json:"verplicht"`
+}
+
+type vizSchemaTypeResponseTest struct {
+	Typenaam    string                       `json:"typenaam"`
+	Description string                       `json:"description"`
+	Velden      []vizSchemaFieldResponseTest `json:"velden"`
+}
+
 type vizSchemaResponseTest struct {
-	Versie string `json:"versie"`
-	Types  []struct {
-		Typenaam    string `json:"typenaam"`
-		Description string `json:"description"`
-		Velden      []struct {
-			Naam        string   `json:"naam"`
-			Description string   `json:"description"`
-			Type        string   `json:"type"`
-			Format      string   `json:"format"`
-			Enum        []string `json:"enum"`
-			Verplicht   bool     `json:"verplicht"`
-		} `json:"velden"`
-	} `json:"types"`
+	Versie string                      `json:"versie"`
+	Types  []vizSchemaTypeResponseTest `json:"types"`
+}
+
+func findSchemaType(t *testing.T, body vizSchemaResponseTest, typeName string) vizSchemaTypeResponseTest {
+	t.Helper()
+	for _, item := range body.Types {
+		if item.Typenaam == typeName {
+			return item
+		}
+	}
+	t.Fatalf("expected type %s in schema response", typeName)
+	return vizSchemaTypeResponseTest{}
+}
+
+func findSchemaField(t *testing.T, item vizSchemaTypeResponseTest, fieldName string) vizSchemaFieldResponseTest {
+	t.Helper()
+	for _, field := range item.Velden {
+		if field.Naam == fieldName {
+			return field
+		}
+	}
+	t.Fatalf("expected field %s on type %s", fieldName, item.Typenaam)
+	return vizSchemaFieldResponseTest{}
+}
+
+func assertFieldContract(t *testing.T, body vizSchemaResponseTest, typeName, fieldName, expectedType, expectedFormat string) {
+	t.Helper()
+	field := findSchemaField(t, findSchemaType(t, body, typeName), fieldName)
+	if field.Type != expectedType {
+		t.Fatalf("expected %s.%s type %q, got %q", typeName, fieldName, expectedType, field.Type)
+	}
+	if field.Format != expectedFormat {
+		t.Fatalf("expected %s.%s format %q, got %q", typeName, fieldName, expectedFormat, field.Format)
+	}
+}
+
+func assertFieldEnum(t *testing.T, body vizSchemaResponseTest, typeName, fieldName string, expected []string) {
+	t.Helper()
+	field := findSchemaField(t, findSchemaType(t, body, typeName), fieldName)
+	if len(field.Enum) != len(expected) {
+		t.Fatalf("expected %s.%s enum length %d, got %d", typeName, fieldName, len(expected), len(field.Enum))
+	}
+	for index, value := range expected {
+		if field.Enum[index] != value {
+			t.Fatalf("expected %s.%s enum[%d] %q, got %q", typeName, fieldName, index, value, field.Enum[index])
+		}
+	}
 }
 
 func TestMaakVizSchemaHandler_GeeftSchemaTerug(t *testing.T) {
@@ -51,81 +101,25 @@ func TestMaakVizSchemaHandler_GeeftSchemaTerug(t *testing.T) {
 		t.Fatal("expected at least one type in schema")
 	}
 
-	foundA := false
-	for _, item := range body.Types {
-		if item.Typenaam == "A" {
-			foundA = true
-			break
-		}
+	// Houd de test gericht op het publieke schema-contract in plaats van op
+	// toevallige codegen-details. We controleren per categorie een representatief
+	// voorbeeld: entiteit, data-GE, materiële datum en enum op een relatie.
+	aType := findSchemaType(t, body, "A")
+	if aType.Description == "" {
+		t.Fatal("expected type description on A")
+	}
+	if len(aType.Velden) == 0 {
+		t.Fatal("expected A to expose schema fields")
 	}
 
-	if !foundA {
-		t.Fatal("expected type A in schema response")
-	}
-
-	assertField := func(typeName, fieldName, expectedType, expectedFormat string) {
-		t.Helper()
-		for _, item := range body.Types {
-			if item.Typenaam != typeName {
-				continue
-			}
-			for _, field := range item.Velden {
-				if field.Naam != fieldName {
-					continue
-				}
-				if field.Type != expectedType {
-					t.Fatalf("expected %s.%s type %q, got %q", typeName, fieldName, expectedType, field.Type)
-				}
-				if field.Format != expectedFormat {
-					t.Fatalf("expected %s.%s format %q, got %q", typeName, fieldName, expectedFormat, field.Format)
-				}
-				return
-			}
-			t.Fatalf("expected field %s on type %s", fieldName, typeName)
-		}
-		t.Fatalf("expected type %s in schema response", typeName)
-	}
-
-	assertField("A", "id", "integer", "")
-	assertField("A", "us", "A_U", "array")
-	assertField("A_U_Data", "bbb", "boolean", "")
-	assertField("A_V_Data", "ccc", "string", "")
-	assertField("A_W_Data", "float", "number", "float64")
-	assertField("A_W_Data", "heel", "integer", "")
-	assertField("A_W_Aanvang", "datum", "string", "date")
-
-	for _, item := range body.Types {
-		if item.Typenaam != "Rel_A_B" {
-			continue
-		}
-		if item.Description == "" {
-			t.Fatal("expected type description on Rel_A_B")
-		}
-		break
-	}
-
-	for _, item := range body.Types {
-		if item.Typenaam != "Rel_A_B_Data" {
-			continue
-		}
-		for _, field := range item.Velden {
-			if field.Naam != "soort" {
-				continue
-			}
-			expected := []string{"LTT", "LAT", "LTA"}
-			if len(field.Enum) != len(expected) {
-				t.Fatalf("expected Rel_A_B_Data.soort enum length %d, got %d", len(expected), len(field.Enum))
-			}
-			for index, value := range expected {
-				if field.Enum[index] != value {
-					t.Fatalf("expected Rel_A_B_Data.soort enum[%d] %q, got %q", index, value, field.Enum[index])
-				}
-			}
-			return
-		}
-		t.Fatalf("expected field soort on type Rel_A_B_Data")
-	}
-	t.Fatal("expected type Rel_A_B_Data in schema response")
+	assertFieldContract(t, body, "A", "id", "integer", "")
+	assertFieldContract(t, body, "A", "us", "A_U", "array")
+	assertFieldContract(t, body, "A_U_Data", "bbb", "boolean", "")
+	assertFieldContract(t, body, "A_V_Data", "ccc", "string", "")
+	assertFieldContract(t, body, "A_W_Data", "float", "number", "float64")
+	assertFieldContract(t, body, "A_W_Data", "heel", "integer", "")
+	assertFieldContract(t, body, "A_W_Aanvang", "datum", "string", "date")
+	assertFieldEnum(t, body, "Rel_A_B_Data", "soort", []string{"LTT", "LAT", "LTA"})
 }
 
 func TestBouwFlatTypeRegistry_DomeinFilterIsRecursiefVanafRootEntiteiten(t *testing.T) {
