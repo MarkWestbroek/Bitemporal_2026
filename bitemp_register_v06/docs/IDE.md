@@ -272,14 +272,44 @@ Naar aanleiding van praktijktesten in de IDE zijn twee gerichte fixes doorgevoer
 
 De `description` property bestond al in het velddata-model (aangemaakt in `addVeld()` en verwerkt in de V3 adapter `convertV3Veld()`), maar had geen UI. Nu wordt een invoerveld getoond tussen de naam/type-rij en de afgeleid-toggle in `VeldEditBlock`. Dit correspondeert met het `description` veld in OAS 3.1 schema-objecten.
 
-## Styling
+## Styling & Thema-toggle (donker / licht)
 
-De IDE gebruikt een **donker thema** voor de shell (FlexLayout, toolbar, browser, details panel) maar de diagram nodes behouden hun **lichte achtergrondkleuren** — identiek aan EditorV2.
+De IDE ondersteunt zowel een **donker** als een **licht** thema. Het thema kan gewisseld worden via de **☀️ Licht / 🌙 Donker** knop in de toolbar. De keuze wordt opgeslagen in `localStorage` onder de sleutel `ide-theme` en blijft dus behouden na herladen.
 
-CSS-strategie:
+Diagram nodes behouden hun **lichte achtergrondkleuren** in beide thema's — identiek aan EditorV2.
+
+### Thema-architectuur
+
+Het thema-systeem draait op **CSS custom properties** die geswitcht worden via een `data-ide-theme` attribuut op `<body>`:
+
+```css
+body[data-ide-theme="dark"]  { --ide-body-bg: #1e1e1e; --ide-body-color: #ccc; ... }
+body[data-ide-theme="light"] { --ide-body-bg: #f5f5f5; --ide-body-color: #1e293b; ... }
+```
+
+Er zijn ~50 CSS variabelen die alle IDE-oppervlakken bestrijken: achtergronden, tekst, inputs, menus, panels, boomstructuur, veld-edit-blokken, knoppen, tabellen en dialogen.
+
+### Componenten die schakelen
+
+| Component         | Mechanisme                                                                |
+|-------------------|---------------------------------------------------------------------------|
+| **IDE CSS**       | `ide-diagram.css` — twee sets CSS variabelen (dark/light) op `body[data-ide-theme]` |
+| **FlexLayout**    | Dynamische `<link>` swap tussen `dark.css` en `light.css` via Vite `?url` imports |
+| **React Flow**    | `colorMode={theme}` prop op `<ReactFlow>` — ingebouwde ondersteuning     |
+| **Inline styles** | Alle component-bestanden (DetailsPanel, ProjectBrowser, BrowserContextMenu, ActionDialog, DiagramCanvas) gebruiken `var(--ide-...)` in hun style-objecten |
+
+### Zustand integratie
+
+In `useUIStore.js`:
+- `theme` — state property (`"dark"` of `"light"`), geïnitialiseerd vanuit `localStorage`
+- `toggleTheme()` — wisselt thema en schrijft naar `localStorage`
+- `IdePage.jsx` leest `theme` en `toggleTheme` uit de store en synchroniseert `document.body.dataset.ideTheme`
+
+### CSS-strategie (volledig)
+
 - `@xyflow/react/dist/style.css` — React Flow basis
 - `@editor/styles/editor.css` — node/edge styling uit de uml-editor subtree
-- `ide-diagram.css` — dark theme overrides voor canvas, controls, minimap
+- `ide-diagram.css` — thema variabelen (dark + light) + canvas overrides
 
 De `editor.css` bevat globale `*` en `body` resets. Die worden geneutraliseerd via `body:has(.ide-canvas)` in `ide-diagram.css`.
 

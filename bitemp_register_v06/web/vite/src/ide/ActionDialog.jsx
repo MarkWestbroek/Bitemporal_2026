@@ -15,35 +15,35 @@ const S = {
     display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000,
   },
   dialog: {
-    background: "#2d2d2d", border: "1px solid #555", borderRadius: 8,
+    background: "var(--ide-menu-bg, #2d2d2d)", border: "1px solid var(--ide-menu-border, #555)", borderRadius: 8,
     boxShadow: "0 8px 32px rgba(0,0,0,0.6)", minWidth: 420, maxWidth: 560,
-    color: "#ccc", fontSize: 13,
+    color: "var(--ide-panel-color, #ccc)", fontSize: 13,
   },
   header: {
     display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "10px 16px", borderBottom: "1px solid #444",
+    padding: "10px 16px", borderBottom: "1px solid var(--ide-menu-sep, #444)",
   },
-  title: { margin: 0, fontSize: 15, color: "#ddd" },
+  title: { margin: 0, fontSize: 15, color: "var(--ide-panel-color-heading, #ddd)" },
   closeBtn: {
-    background: "none", border: "none", color: "#888", fontSize: 18,
+    background: "none", border: "none", color: "var(--ide-panel-color-muted, #888)", fontSize: 18,
     cursor: "pointer", padding: "0 4px", lineHeight: 1,
   },
   body: { padding: "12px 16px", display: "flex", flexDirection: "column", gap: 10 },
   grid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 12px" },
   field: { display: "flex", flexDirection: "column", gap: 3 },
   fieldFull: { display: "flex", flexDirection: "column", gap: 3, gridColumn: "1 / -1" },
-  label: { fontSize: 11, color: "#999" },
+  label: { fontSize: 11, color: "var(--ide-panel-color-muted, #999)" },
   input: {
-    background: "#1e1e1e", color: "#ccc", border: "1px solid #3a3a3a",
+    background: "var(--ide-input-bg, #1e1e1e)", color: "var(--ide-input-color, #ccc)", border: "1px solid var(--ide-input-border, #3a3a3a)",
     borderRadius: 3, padding: "5px 8px", fontSize: 12, outline: "none",
     width: "100%", boxSizing: "border-box",
   },
   select: {
-    background: "#1e1e1e", color: "#ccc", border: "1px solid #3a3a3a",
+    background: "var(--ide-input-bg, #1e1e1e)", color: "var(--ide-input-color, #ccc)", border: "1px solid var(--ide-input-border, #3a3a3a)",
     borderRadius: 3, padding: "5px 8px", fontSize: 12, outline: "none",
   },
   textarea: {
-    background: "#1e1e1e", color: "#ccc", border: "1px solid #3a3a3a",
+    background: "var(--ide-input-bg, #1e1e1e)", color: "var(--ide-input-color, #ccc)", border: "1px solid var(--ide-input-border, #3a3a3a)",
     borderRadius: 3, padding: "5px 8px", fontSize: 12, outline: "none",
     resize: "vertical", minHeight: 50, fontFamily: "inherit", width: "100%", boxSizing: "border-box",
   },
@@ -58,13 +58,13 @@ const S = {
   domeinCheckbox: {
     display: "flex", alignItems: "center", gap: 6, fontSize: 12, cursor: "pointer",
   },
-  domeinMeta: { color: "#666", fontSize: 10 },
+  domeinMeta: { color: "var(--ide-panel-color-muted, #666)", fontSize: 10 },
   actions: {
     display: "flex", justifyContent: "flex-end", gap: 8,
-    padding: "8px 16px", borderTop: "1px solid #444",
+    padding: "8px 16px", borderTop: "1px solid var(--ide-menu-sep, #444)",
   },
   btnCancel: {
-    background: "#3c3c3c", color: "#ccc", border: "1px solid #555",
+    background: "var(--ide-btn-bg, #3c3c3c)", color: "var(--ide-btn-color, #ccc)", border: "1px solid var(--ide-btn-border, #555)",
     borderRadius: 3, padding: "5px 14px", cursor: "pointer", fontSize: 12,
   },
   btnSubmit: {

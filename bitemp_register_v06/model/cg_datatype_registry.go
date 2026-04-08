@@ -6,16 +6,6 @@ package model
 func initCgDatatypeRegistry() {
 	DatatypeRegistry = append(DatatypeRegistry,
 		V3Datatype{
-			Naam:        "Datum",
-			Description: "Datum zonder tijdcomponent.",
-			Basistype:   "string",
-			Format:      "date",
-			Domein:      "CG",
-			Positie:     &V3Positie{X: 225, Y: -1875},
-			Validatie:   &V3Validatie{},
-			Weergave:    &V3Weergave{},
-		},
-		V3Datatype{
 			Naam:        "URL",
 			Description: "Volledig internetadres.",
 			Basistype:   "string",

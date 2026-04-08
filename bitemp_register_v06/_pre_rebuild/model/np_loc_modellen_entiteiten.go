@@ -12,10 +12,10 @@ import (
 // AdellijkeTitel — Referentielijst-item: adellijke titel.
 type AdellijkeTitel struct {
 	bun.BaseModel        `bun:"table:adellijketitel,alias:adellijketitel"`
-	ID                   int                   `json:"id" bun:"id,pk"`
-	Opvoer               *time.Time            `json:"opvoer,omitempty"`
-	Afvoer               *time.Time            `json:"afvoer,omitempty"`
-	AdellijkeTitelTitels []AdellijkeTitelTitel `bun:"rel:has-many,join:id=adellijketitel_id" json:"adellijke_titel_titels,omitempty"`
+	ID                   int                                  `json:"id" bun:"id,pk"`
+	Opvoer               *time.Time                           `json:"opvoer,omitempty"`
+	Afvoer               *time.Time                           `json:"afvoer,omitempty"`
+	AdellijkeTitelTitels []AdellijkeTitel_AdellijkeTitelTitel `bun:"rel:has-many,join:id=adellijketitel_id" json:"adellijke_titel_titels,omitempty"`
 }
 
 // Locatie — Fysiek bezoekbare locatie gelegen op het aardoppervlak.
@@ -60,6 +60,7 @@ type NatuurlijkPersoon struct {
 	Namen                  []NatuurlijkPersoon_Naam                  `bun:"rel:has-many,join:id=natuurlijkpersoon_id" json:"namen,omitempty"`
 	Partnernamen           []NatuurlijkPersoon_Partnernaam           `bun:"rel:has-many,join:id=natuurlijkpersoon_id" json:"partnernamen,omitempty"`
 	Naamgebruiken          []NatuurlijkPersoon_Naamgebruik           `bun:"rel:has-many,join:id=natuurlijkpersoon_id" json:"naamgebruiken,omitempty"`
+	Burgerschappen         []NatuurlijkPersoon_Burgerschap           `bun:"rel:has-many,join:id=natuurlijkpersoon_id" json:"burgerschappen,omitempty"`
 	Bereikbaarheden        []Bereikbaarheid                          `bun:"rel:has-many,join:id=natuurlijkpersoon_id" json:"bereikbaarheden,omitempty"`
 	Aanvang                []NatuurlijkPersoon_Aanvang               `bun:"rel:has-many,join:id=natuurlijkpersoon_id" json:"aanvang,omitempty"`
 	Einde                  []NatuurlijkPersoon_Einde                 `bun:"rel:has-many,join:id=natuurlijkpersoon_id" json:"einde,omitempty"`

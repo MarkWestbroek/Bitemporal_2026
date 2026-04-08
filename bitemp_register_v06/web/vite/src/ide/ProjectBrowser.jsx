@@ -223,14 +223,14 @@ function TreeNode({ node, style }) {
         alignItems: "center",
         gap: 4,
         cursor: "pointer",
-        background: isMultiSelected ? "#264f78aa" : isDetailSelected ? "#264f78" : "transparent",
+        background: isMultiSelected ? "var(--ide-tree-selected-alpha, #264f78aa)" : isDetailSelected ? "var(--ide-tree-selected, #264f78)" : "transparent",
         borderRadius: 2,
         paddingRight: 4,
         fontSize: 13,
         whiteSpace: "nowrap",
         overflow: "hidden",
         textOverflow: "ellipsis",
-        color: isHighlighted ? "#fff" : "#ccc",
+        color: isHighlighted ? "var(--ide-tree-highlight-color, #fff)" : "var(--ide-panel-color, #ccc)",
       }}
       onClick={handleClick}
       draggable={isDraggable}
@@ -274,7 +274,7 @@ function TreeNode({ node, style }) {
         ghost.textContent = dragItems.length > 1
           ? `${dragItems.length} elementen`
           : node.data.name;
-        ghost.style.cssText = "position:fixed;top:-999px;left:-999px;padding:4px 10px;background:#264f78;color:#fff;border-radius:4px;font-size:12px;white-space:nowrap;pointer-events:none;z-index:99999;";
+        ghost.style.cssText = "position:fixed;top:-999px;left:-999px;padding:4px 10px;background:var(--ide-tree-selected, #264f78);color:var(--ide-tree-highlight-color, #fff);border-radius:4px;font-size:12px;white-space:nowrap;pointer-events:none;z-index:99999;";
         document.body.appendChild(ghost);
         e.dataTransfer.setDragImage(ghost, 0, 0);
         dragGhostRef.current = ghost;
@@ -473,7 +473,7 @@ export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram }) {
   return (
     <div ref={containerRef} style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       {/* Zoekbalk */}
-      <div style={{ padding: "4px 6px", borderBottom: "1px solid #3a3a3a", flexShrink: 0 }}>
+      <div style={{ padding: "4px 6px", borderBottom: "1px solid var(--ide-panel-border, #3a3a3a)", flexShrink: 0 }}>
         <input
           type="text"
           value={zoekterm}
@@ -481,11 +481,11 @@ export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram }) {
           placeholder="🔍 Zoek element…"
           style={{
             width: "100%",
-            background: "#2a2a2a",
-            border: "1px solid #444",
+            background: "var(--ide-tree-search-bg, #2a2a2a)",
+            border: "1px solid var(--ide-tree-search-border, #444)",
             borderRadius: 3,
             padding: "3px 6px",
-            color: "#ccc",
+            color: "var(--ide-panel-color, #ccc)",
             fontSize: 12,
             outline: "none",
           }}

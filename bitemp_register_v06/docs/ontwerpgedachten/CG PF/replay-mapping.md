@@ -149,6 +149,15 @@ Dat volgt dezelfde conventie als de bestaande keys `planning`, `product` en `bij
 
 De hoofdgenerator `scripts/maak_cgpf_portfolio_replay.py` past deze logica nu ook direct toe in `Intake Portfolio Common Ground 2.replay (zonder gemeenten).json`, zodat dit bestand meteen de juiste mix van REL-records en `overig`-GE's bevat.
 
+### Root cause van de crash bij API-standaarden-seed
+
+De seed met `ApiStandaard`-namen gebruikte de JSON-key `naam`. Die key komt in het bredere model op meerdere plekken voor. De runtime-resolver keek eerder via `MetaRegistry.GetByVeldnaam("naam")` alleen naar de **eerste** map-match. Omdat Go-map-iteratie niet stabiel is, werd dezelfde payload soms onterecht als `NatuurlijkPersoon_Naam` geïnterpreteerd in plaats van als `ApiStandaard_Naam`.
+
+Dat is nu opgelost door de request-parser te laten **disambigueren op basis van de payload-velden zelf** (bijv. `apistandaard_id` versus `natuurlijkpersoon_id`). Daardoor hoort een payload met:
+
+- `apistandaard_id` nu deterministisch bij `ApiStandaard_Naam`
+- `natuurlijkpersoon_id` nu deterministisch bij `NatuurlijkPersoon_Naam`
+
 ### Organisatie-rationalisatie (v0.5.2)
 
 Met de upgrade naar CG v0.5.2 is de organisatiekoppeling volledig geïmplementeerd:

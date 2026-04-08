@@ -206,7 +206,7 @@ type NatuurlijkPersoon_Burgerschap_Data struct {
 	NatuurlijkPersoon_ID int        `json:"natuurlijkpersoon_id" bun:"natuurlijkpersoon_id,pk"`
 	Rel_ID               int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie               int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Land                 *string    `json:"land,omitempty"`
+	Landcode             *string    `json:"landcode,omitempty"`
 	Nationaliteit        *string    `json:"nationaliteit,omitempty"`
 	Landreferentie       *int       `json:"landreferentie,omitempty"`
 	Opvoer               *time.Time `json:"opvoer,omitempty"`

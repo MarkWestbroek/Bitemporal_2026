@@ -315,70 +315,70 @@ func (i B_Y_Input) String() string          { return RepresentatieToString(i) }
 
 func (a *A) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0)
-	for i := range a.Us {
-		if a.Us[i].A_ID == 0 {
-			a.Us[i].A_ID = a.ID
+	for idx := range a.Us {
+		if a.Us[idx].A_ID == 0 {
+			a.Us[idx].A_ID = a.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_U", Representatie: &a.Us[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_U", Representatie: &a.Us[idx]})
 	}
-	for i := range a.Vs {
-		if a.Vs[i].A_ID == 0 {
-			a.Vs[i].A_ID = a.ID
+	for idx := range a.Vs {
+		if a.Vs[idx].A_ID == 0 {
+			a.Vs[idx].A_ID = a.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_V", Representatie: &a.Vs[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_V", Representatie: &a.Vs[idx]})
 	}
-	for i := range a.Ws {
-		if a.Ws[i].A_ID == 0 {
-			a.Ws[i].A_ID = a.ID
+	for idx := range a.Ws {
+		if a.Ws[idx].A_ID == 0 {
+			a.Ws[idx].A_ID = a.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_W", Representatie: &a.Ws[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_W", Representatie: &a.Ws[idx]})
 	}
-	for i := range a.RelABs {
-		if a.RelABs[i].A_ID == 0 {
-			a.RelABs[i].A_ID = a.ID
+	for idx := range a.RelABs {
+		if a.RelABs[idx].A_ID == 0 {
+			a.RelABs[idx].A_ID = a.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Rel_A_B", Representatie: &a.RelABs[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Rel_A_B", Representatie: &a.RelABs[idx]})
 	}
-	for i := range a.Aanvang {
-		if a.Aanvang[i].A_ID == 0 {
-			a.Aanvang[i].A_ID = a.ID
+	for idx := range a.Aanvang {
+		if a.Aanvang[idx].A_ID == 0 {
+			a.Aanvang[idx].A_ID = a.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_Aanvang", Representatie: &a.Aanvang[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_Aanvang", Representatie: &a.Aanvang[idx]})
 	}
-	for i := range a.Einde {
-		if a.Einde[i].A_ID == 0 {
-			a.Einde[i].A_ID = a.ID
+	for idx := range a.Einde {
+		if a.Einde[idx].A_ID == 0 {
+			a.Einde[idx].A_ID = a.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_Einde", Representatie: &a.Einde[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "A_Einde", Representatie: &a.Einde[idx]})
 	}
 	return result
 }
 
 func (b *B) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0)
-	for i := range b.Xs {
-		if b.Xs[i].B_ID == 0 {
-			b.Xs[i].B_ID = b.ID
+	for idx := range b.Xs {
+		if b.Xs[idx].B_ID == 0 {
+			b.Xs[idx].B_ID = b.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_X", Representatie: &b.Xs[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_X", Representatie: &b.Xs[idx]})
 	}
-	for i := range b.Ys {
-		if b.Ys[i].B_ID == 0 {
-			b.Ys[i].B_ID = b.ID
+	for idx := range b.Ys {
+		if b.Ys[idx].B_ID == 0 {
+			b.Ys[idx].B_ID = b.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_Y", Representatie: &b.Ys[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_Y", Representatie: &b.Ys[idx]})
 	}
-	for i := range b.Aanvang {
-		if b.Aanvang[i].B_ID == 0 {
-			b.Aanvang[i].B_ID = b.ID
+	for idx := range b.Aanvang {
+		if b.Aanvang[idx].B_ID == 0 {
+			b.Aanvang[idx].B_ID = b.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_Aanvang", Representatie: &b.Aanvang[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_Aanvang", Representatie: &b.Aanvang[idx]})
 	}
-	for i := range b.Einde {
-		if b.Einde[i].B_ID == 0 {
-			b.Einde[i].B_ID = b.ID
+	for idx := range b.Einde {
+		if b.Einde[idx].B_ID == 0 {
+			b.Einde[idx].B_ID = b.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_Einde", Representatie: &b.Einde[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_Einde", Representatie: &b.Einde[idx]})
 	}
 	return result
 }

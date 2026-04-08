@@ -1,12 +1,32 @@
 /**
  * useUIStore — Zustand store voor IDE UI-state.
  *
- * Bevat selectie, clipboard, actief diagram, layout-voorkeuren, etc.
- * Wordt NIET gepersisteerd (behalve layout).
+ * Bevat selectie, clipboard, actief diagram, layout-voorkeuren, thema, etc.
+ * Wordt NIET gepersisteerd (behalve layout en thema).
  */
 import { create } from "zustand";
 
+/** Lees thema uit localStorage of default naar "dark" */
+function getInitialTheme() {
+  try {
+    const stored = localStorage.getItem("ide-theme");
+    if (stored === "light" || stored === "dark") return stored;
+  } catch { /* ignore */ }
+  return "dark";
+}
+
 const useUIStore = create((set) => ({
+  // === Thema ===
+  /** "dark" | "light" — persisteert in localStorage */
+  theme: getInitialTheme(),
+
+  toggleTheme: () =>
+    set((state) => {
+      const next = state.theme === "dark" ? "light" : "dark";
+      try { localStorage.setItem("ide-theme", next); } catch { /* ignore */ }
+      return { theme: next };
+    }),
+
   // === Selectie ===
   /** ID van het geselecteerde model-element (voor details panel + browser highlight) */
   selectedElementId: null,

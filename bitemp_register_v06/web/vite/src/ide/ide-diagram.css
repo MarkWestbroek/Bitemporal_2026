@@ -1,67 +1,183 @@
 /**
  * ide-diagram.css — Scoped node/edge styling voor het IDE diagram.
  *
- * Importeert editor.css uit de uml-editor subtree, maar scoped de
- * globale selectors (* en body) zodat FlexLayout niet verstoord wordt.
- * Alleen de .metamodel-node, .edge-label, en .react-flow__ overrides
- * zijn actief in de IDE context.
+ * Gebruikt CSS custom properties zodat het thema (dark/light) dynamisch
+ * gewisseld kan worden via data-ide-theme="dark"|"light" op de body.
  *
- * De IDE-canvas container krijgt class "ide-canvas" zodat we
- * de achtergrond donker kunnen maken zonder colorMode="dark".
+ * Drie lagen worden gesynchroniseerd:
+ * 1. Deze CSS (eigen IDE-kleuren)
+ * 2. FlexLayout (dark.css / light.css) — via dynamische <link> in IdePage
+ * 3. React Flow (colorMode prop) — via DiagramCanvas
  */
 
-/* Override de body-achtergrond NIET — de IDE heeft eigen dark theme.
- * editor.css zet body { background: #f8fafc; color: #1e293b; }
- * Die overschrijven we hier terug voor de IDE context.
- */
-body:has(.ide-canvas) {
-  background: #1e1e1e !important;
-  color: #ccc !important;
+/* ── Dark theme variabelen (default) ─────────────────────── */
+body[data-ide-theme="dark"] {
+  --ide-body-bg: #1e1e1e;
+  --ide-body-color: #ccc;
+  --ide-canvas-bg: #1a1a2e;
+  --ide-dots-color: #2a2a4a;
+  --ide-minimap-bg: #252540;
+  --ide-minimap-border: #3a3a5c;
+  --ide-controls-bg: #2d2d4a;
+  --ide-controls-border: #3a3a5c;
+  --ide-controls-color: #ccc;
+  --ide-controls-hover: #3a3a5c;
+  --ide-controls-shadow: rgba(0,0,0,0.3);
+  --ide-toolbar-bg: #2d2d4aee;
+  --ide-toolbar-border: #3a3a5c;
+  --ide-toolbar-color: #ccc;
+  --ide-toolbar-hover: #4a4a6a;
+  --ide-toolbar-hover-color: #fff;
+  --ide-sep-color: #3a3a5c;
+
+  /* Panels (ProjectBrowser, DetailsPanel) */
+  --ide-panel-color: #ccc;
+  --ide-panel-color-muted: #999;
+  --ide-panel-color-heading: #ddd;
+  --ide-panel-border: #3a3a3a;
+
+  /* Inputs, selects, textareas */
+  --ide-input-bg: #1e1e1e;
+  --ide-input-color: #ccc;
+  --ide-input-border: #3a3a3a;
+
+  /* Buttons */
+  --ide-btn-bg: #333;
+  --ide-btn-color: #ccc;
+  --ide-btn-border: #555;
+
+  /* Context menus & dialogs */
+  --ide-menu-bg: #2d2d2d;
+  --ide-menu-border: #555;
+  --ide-menu-color: #ccc;
+  --ide-menu-hover: #3a3f4b;
+  --ide-menu-sep: #444;
+
+  /* Tree browser */
+  --ide-tree-selected: #264f78;
+  --ide-tree-selected-alpha: #264f78aa;
+  --ide-tree-highlight-color: #fff;
+  --ide-tree-search-bg: #2a2a2a;
+  --ide-tree-search-border: #444;
+
+  /* Veld-edit blocks */
+  --ide-veld-bg: #1e2024;
+  --ide-veld-derived-bg: #2a2520;
+  --ide-veld-border: #3a3a3a;
+
+  /* Table */
+  --ide-table-border: #555;
+  --ide-table-cell-border: #2a2a2a;
 }
 
-/* Diagram canvas: donkere achtergrond */
+/* ── Light theme variabelen ──────────────────────────────── */
+body[data-ide-theme="light"] {
+  --ide-body-bg: #f5f5f5;
+  --ide-body-color: #1e293b;
+  --ide-canvas-bg: #ffffff;
+  --ide-dots-color: #e0e0e0;
+  --ide-minimap-bg: #f0f0f0;
+  --ide-minimap-border: #ccc;
+  --ide-controls-bg: #f8f8f8;
+  --ide-controls-border: #ccc;
+  --ide-controls-color: #333;
+  --ide-controls-hover: #e0e0e0;
+  --ide-controls-shadow: rgba(0,0,0,0.1);
+  --ide-toolbar-bg: #f0f0f0ee;
+  --ide-toolbar-border: #ccc;
+  --ide-toolbar-color: #333;
+  --ide-toolbar-hover: #ddd;
+  --ide-toolbar-hover-color: #000;
+  --ide-sep-color: #ccc;
+
+  /* Panels */
+  --ide-panel-color: #1e293b;
+  --ide-panel-color-muted: #555;
+  --ide-panel-color-heading: #111;
+  --ide-panel-border: #d0d0d0;
+
+  /* Inputs */
+  --ide-input-bg: #fff;
+  --ide-input-color: #1e293b;
+  --ide-input-border: #bbb;
+
+  /* Buttons */
+  --ide-btn-bg: #e8e8e8;
+  --ide-btn-color: #333;
+  --ide-btn-border: #bbb;
+
+  /* Context menus & dialogs */
+  --ide-menu-bg: #fff;
+  --ide-menu-border: #ccc;
+  --ide-menu-color: #1e293b;
+  --ide-menu-hover: #e8eef4;
+  --ide-menu-sep: #ddd;
+
+  /* Tree browser */
+  --ide-tree-selected: #0078d4;
+  --ide-tree-selected-alpha: #0078d444;
+  --ide-tree-highlight-color: #fff;
+  --ide-tree-search-bg: #fff;
+  --ide-tree-search-border: #bbb;
+
+  /* Veld-edit blocks */
+  --ide-veld-bg: #f0f2f5;
+  --ide-veld-derived-bg: #fef3e0;
+  --ide-veld-border: #ccc;
+
+  /* Table */
+  --ide-table-border: #ccc;
+  --ide-table-cell-border: #eee;
+}
+
+/* ── Body override (voor editor.css die body licht maakt) ── */
+body[data-ide-theme]:has(.ide-canvas) {
+  background: var(--ide-body-bg) !important;
+  color: var(--ide-body-color) !important;
+}
+
+/* Diagram canvas */
 .ide-canvas {
-  background: #1a1a2e;
+  background: var(--ide-canvas-bg);
   position: relative;
 }
 
 .ide-canvas .react-flow__background {
-  /* Dots iets lichter dan de achtergrond */
-  color: #2a2a4a;
+  color: var(--ide-dots-color);
 }
 
-/* Controleer dat de node tekst NIET wit wordt bij dark containers */
+/* Node tekst: altijd donker (nodes hebben eigen lichte achtergrond) */
 .ide-canvas .react-flow__node {
   color: #1e293b;
 }
 
-/* MiniMap passend bij donker thema */
+/* MiniMap */
 .ide-canvas .react-flow__minimap {
-  background: #252540;
-  border: 1px solid #3a3a5c;
+  background: var(--ide-minimap-bg);
+  border: 1px solid var(--ide-minimap-border);
   border-radius: 6px;
 }
 
-/* Controls passend bij donker thema */
+/* Controls */
 .ide-canvas .react-flow__controls {
-  background: #2d2d4a;
-  border: 1px solid #3a3a5c;
+  background: var(--ide-controls-bg);
+  border: 1px solid var(--ide-controls-border);
   border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 8px var(--ide-controls-shadow);
 }
 
 .ide-canvas .react-flow__controls button {
-  background: #2d2d4a;
-  color: #ccc;
-  border-bottom: 1px solid #3a3a5c;
+  background: var(--ide-controls-bg);
+  color: var(--ide-controls-color);
+  border-bottom: 1px solid var(--ide-controls-border);
 }
 
 .ide-canvas .react-flow__controls button:hover {
-  background: #3a3a5c;
+  background: var(--ide-controls-hover);
 }
 
 .ide-canvas .react-flow__controls button svg {
-  fill: #ccc;
+  fill: var(--ide-controls-color);
 }
 
 /* Attribution link verbergen in de IDE */
@@ -79,16 +195,16 @@ body:has(.ide-canvas) {
   display: flex;
   align-items: center;
   gap: 2px;
-  background: #2d2d4aee;
-  border: 1px solid #3a3a5c;
+  background: var(--ide-toolbar-bg);
+  border: 1px solid var(--ide-toolbar-border);
   border-radius: 6px;
   padding: 2px 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px var(--ide-controls-shadow);
 }
 
 .ide-align-toolbar button {
   background: transparent;
-  color: #ccc;
+  color: var(--ide-toolbar-color);
   border: none;
   border-radius: 3px;
   width: 26px;
@@ -102,13 +218,13 @@ body:has(.ide-canvas) {
 }
 
 .ide-align-toolbar button:hover {
-  background: #4a4a6a;
-  color: #fff;
+  background: var(--ide-toolbar-hover);
+  color: var(--ide-toolbar-hover-color);
 }
 
 .ide-align-sep {
   width: 1px;
   height: 18px;
-  background: #3a3a5c;
+  background: var(--ide-sep-color);
   margin: 0 2px;
 }

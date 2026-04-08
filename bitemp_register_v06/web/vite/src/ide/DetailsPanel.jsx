@@ -31,30 +31,30 @@ const VALIDATIE_REGEL_TYPES = ["checksum", "formula", "function"];
 // ─── Styling ──────────────────────────────────────────
 
 const S = {
-  panel: { padding: 12, fontSize: 13, overflowY: "auto", height: "100%", color: "#ccc" },
+  panel: { padding: 12, fontSize: 13, overflowY: "auto", height: "100%", color: "var(--ide-panel-color, #ccc)" },
   heading: { margin: "0 0 10px", fontSize: 14, display: "flex", alignItems: "center", gap: 6 },
   section: { marginTop: 14, marginBottom: 6 },
-  sectionTitle: { fontWeight: 600, fontSize: 13, marginBottom: 4, color: "#ddd" },
+  sectionTitle: { fontWeight: 600, fontSize: 13, marginBottom: 4, color: "var(--ide-panel-color-heading, #ddd)" },
   fieldRow: { display: "flex", alignItems: "center", gap: 8, marginBottom: 5 },
-  label: { color: "#999", minWidth: 90, flexShrink: 0, fontSize: 12 },
+  label: { color: "var(--ide-panel-color-muted, #999)", minWidth: 90, flexShrink: 0, fontSize: 12 },
   input: {
-    background: "#1e1e1e", color: "#ccc", border: "1px solid #3a3a3a",
+    background: "var(--ide-input-bg, #1e1e1e)", color: "var(--ide-input-color, #ccc)", border: "1px solid var(--ide-input-border, #3a3a3a)",
     borderRadius: 3, padding: "3px 6px", fontSize: 12, width: "100%", outline: "none",
     boxSizing: "border-box",
   },
   select: {
-    background: "#1e1e1e", color: "#ccc", border: "1px solid #3a3a3a",
+    background: "var(--ide-input-bg, #1e1e1e)", color: "var(--ide-input-color, #ccc)", border: "1px solid var(--ide-input-border, #3a3a3a)",
     borderRadius: 3, padding: "3px 4px", fontSize: 12, outline: "none",
   },
   checkbox: { accentColor: "#4fc3f7" },
   textarea: {
-    background: "#1e1e1e", color: "#ccc", border: "1px solid #3a3a3a",
+    background: "var(--ide-input-bg, #1e1e1e)", color: "var(--ide-input-color, #ccc)", border: "1px solid var(--ide-input-border, #3a3a3a)",
     borderRadius: 3, padding: "4px 6px", fontSize: 12, width: "100%", outline: "none",
     resize: "vertical", minHeight: 40, fontFamily: "inherit", boxSizing: "border-box",
   },
-  readOnly: { color: "#777", fontSize: 12, wordBreak: "break-all" },
+  readOnly: { color: "var(--ide-panel-color-muted, #777)", fontSize: 12, wordBreak: "break-all" },
   btn: {
-    background: "#333", color: "#ccc", border: "1px solid #555",
+    background: "var(--ide-btn-bg, #333)", color: "var(--ide-btn-color, #ccc)", border: "1px solid var(--ide-btn-border, #555)",
     borderRadius: 3, padding: "2px 8px", fontSize: 11, cursor: "pointer",
   },
   btnDanger: {
@@ -62,9 +62,9 @@ const S = {
     borderRadius: 3, padding: "1px 6px", fontSize: 11, cursor: "pointer",
   },
   table: { width: "100%", borderCollapse: "collapse", marginTop: 4, fontSize: 12 },
-  th: { padding: "3px 4px", borderBottom: "1px solid #555", textAlign: "left", fontSize: 11, color: "#999" },
-  td: { padding: "2px 3px", borderBottom: "1px solid #2a2a2a" },
-  placeholder: { padding: 16, color: "#888", fontSize: 13 },
+  th: { padding: "3px 4px", borderBottom: "1px solid var(--ide-table-border, #555)", textAlign: "left", fontSize: 11, color: "var(--ide-panel-color-muted, #999)" },
+  td: { padding: "2px 3px", borderBottom: "1px solid var(--ide-table-cell-border, #2a2a2a)" },
+  placeholder: { padding: 16, color: "var(--ide-panel-color-muted, #888)", fontSize: 13 },
 };
 
 // ─── EditField — universeel bewerkbaar veld ───────────
@@ -249,8 +249,8 @@ function VeldEditBlock({ veld, index, total, beschikbareVeldtypen, onUpdate, onU
 
   return (
     <div style={{
-      padding: "6px 8px", marginBottom: 4, background: isDerived ? "#2a2520" : "#1e2024",
-      borderLeft: isDerived ? "3px solid #f59e0b" : "3px solid #3a3a3a",
+      padding: "6px 8px", marginBottom: 4, background: isDerived ? "var(--ide-veld-derived-bg, #2a2520)" : "var(--ide-veld-bg, #1e2024)",
+      borderLeft: isDerived ? "3px solid #f59e0b" : "3px solid var(--ide-veld-border, #3a3a3a)",
       borderRadius: 3, fontSize: 12,
     }}>
       {/* Rij 1: naam + type + acties */}
@@ -457,7 +457,7 @@ function AfgeleidVeldBlock({ av, index, onUpdate, onRemove }) {
 
   return (
     <div style={{
-      padding: "6px 8px", marginBottom: 4, background: "#2a2520",
+      padding: "6px 8px", marginBottom: 4, background: "var(--ide-veld-derived-bg, #2a2520)",
       borderLeft: "3px solid #f59e0b", borderRadius: 3, fontSize: 12,
     }}>
       <div style={{ display: "flex", gap: 4, alignItems: "center", marginBottom: 3 }}>

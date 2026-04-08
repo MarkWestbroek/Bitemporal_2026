@@ -169,6 +169,7 @@ function DiagramCanvasInner({ diagramId }) {
   const setSelectedEdgeId = useUIStore((s) => s.setSelectedEdgeId);
   const clearSelection = useUIStore((s) => s.clearSelection);
   const setActiveDiagramId = useUIStore((s) => s.setActiveDiagramId);
+  const theme = useUIStore((s) => s.theme);
   const { setCenter, getNode, getZoom, getViewport, screenToFlowPosition, getNodes, getEdges } = useReactFlow();
   const reactFlowWrapper = useRef(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -929,6 +930,7 @@ function DiagramCanvasInner({ diagramId }) {
         edges={edges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
+        colorMode={theme}
         onNodesChange={handleNodesChangeWrapped}
         onEdgesChange={onEdgesChange}
         onConnect={handleConnect}
@@ -974,7 +976,7 @@ function DiagramCanvasInner({ diagramId }) {
         const canDistribute = selectedCount >= 3;
         const disabledStyle = { opacity: 0.4, cursor: "default", pointerEvents: "none" };
         const enabledStyle = { cursor: "pointer" };
-        const itemHover = (e) => (e.currentTarget.style.background = "#3a3f4b");
+        const itemHover = (e) => (e.currentTarget.style.background = "var(--ide-menu-hover, #3a3f4b)");
         const itemLeave = (e) => (e.currentTarget.style.background = "transparent");
         return (
           <div
@@ -982,8 +984,8 @@ function DiagramCanvasInner({ diagramId }) {
               position: "fixed",
               left: contextMenu.x,
               top: contextMenu.y,
-              background: "#2d2d2d",
-              border: "1px solid #555",
+              background: "var(--ide-menu-bg, #2d2d2d)",
+              border: "1px solid var(--ide-menu-border, #555)",
               borderRadius: 4,
               boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
               padding: "4px 0",
@@ -992,16 +994,16 @@ function DiagramCanvasInner({ diagramId }) {
               overflowY: "auto",
               zIndex: 9999,
               fontSize: 12,
-              color: "#ccc",
+              color: "var(--ide-menu-color, #ccc)",
             }}
             onMouseDown={(e) => e.stopPropagation()}
           >
-            <div style={{ padding: "3px 12px", color: "#888", fontSize: 11 }}>
+            <div style={{ padding: "3px 12px", color: "var(--ide-panel-color-muted, #888)", fontSize: 11 }}>
               Uitlijnen{canAlign ? ` (${selectedCount} nodes)` : ""}
             </div>
             {ALIGN_BUTTONS.map((btn, i) => {
               if (btn === "sep") {
-                return <div key={`align-sep-${i}`} style={{ height: 1, background: "#444", margin: "4px 8px" }} />;
+                return <div key={`align-sep-${i}`} style={{ height: 1, background: "var(--ide-menu-sep, #444)", margin: "4px 8px" }} />;
               }
               const isDistribute = btn.mode === "distribute-h" || btn.mode === "distribute-v";
               const isEnabled = isDistribute ? canDistribute : canAlign;
@@ -1027,7 +1029,7 @@ function DiagramCanvasInner({ diagramId }) {
                 </div>
               );
             })}
-            <div style={{ height: 1, background: "#444", margin: "4px 8px" }} />
+            <div style={{ height: 1, background: "var(--ide-menu-sep, #444)", margin: "4px 8px" }} />
             {contextMenu.nodeId && (
               <div
                 style={{ padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" }}

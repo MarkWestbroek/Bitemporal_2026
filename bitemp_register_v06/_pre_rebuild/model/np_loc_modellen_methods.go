@@ -43,15 +43,15 @@ func (n NatuurlijkPersoon) String() string          { return RepresentatieToStri
    2. HUBS (GE + REL) — interface-methoden
    ================================================================ */
 
-// AdellijkeTitelTitel
-func (aa AdellijkeTitelTitel) GetID() any              { return aa.Rel_ID }
-func (aa AdellijkeTitelTitel) Metatype() Metatype      { return MetatypeGegevenselement }
-func (aa *AdellijkeTitelTitel) ClearID()               { aa.Rel_ID = 0 }
-func (aa AdellijkeTitelTitel) GetOpvoer() *time.Time   { return aa.Opvoer }
-func (aa *AdellijkeTitelTitel) SetOpvoer(t *time.Time) { aa.Opvoer = t }
-func (aa AdellijkeTitelTitel) GetAfvoer() *time.Time   { return aa.Afvoer }
-func (aa *AdellijkeTitelTitel) SetAfvoer(t *time.Time) { aa.Afvoer = t }
-func (aa AdellijkeTitelTitel) String() string          { return RepresentatieToString(aa) }
+// AdellijkeTitel_AdellijkeTitelTitel
+func (aa AdellijkeTitel_AdellijkeTitelTitel) GetID() any              { return aa.Rel_ID }
+func (aa AdellijkeTitel_AdellijkeTitelTitel) Metatype() Metatype      { return MetatypeGegevenselement }
+func (aa *AdellijkeTitel_AdellijkeTitelTitel) ClearID()               { aa.Rel_ID = 0 }
+func (aa AdellijkeTitel_AdellijkeTitelTitel) GetOpvoer() *time.Time   { return aa.Opvoer }
+func (aa *AdellijkeTitel_AdellijkeTitelTitel) SetOpvoer(t *time.Time) { aa.Opvoer = t }
+func (aa AdellijkeTitel_AdellijkeTitelTitel) GetAfvoer() *time.Time   { return aa.Afvoer }
+func (aa *AdellijkeTitel_AdellijkeTitelTitel) SetAfvoer(t *time.Time) { aa.Afvoer = t }
+func (aa AdellijkeTitel_AdellijkeTitelTitel) String() string          { return RepresentatieToString(aa) }
 
 // Locatie_Adres
 func (la Locatie_Adres) GetID() any              { return la.Rel_ID }
@@ -113,6 +113,16 @@ func (nn NatuurlijkPersoon_Naamgebruik) GetAfvoer() *time.Time   { return nn.Afv
 func (nn *NatuurlijkPersoon_Naamgebruik) SetAfvoer(t *time.Time) { nn.Afvoer = t }
 func (nn NatuurlijkPersoon_Naamgebruik) String() string          { return RepresentatieToString(nn) }
 
+// NatuurlijkPersoon_Burgerschap
+func (nb NatuurlijkPersoon_Burgerschap) GetID() any              { return nb.Rel_ID }
+func (nb NatuurlijkPersoon_Burgerschap) Metatype() Metatype      { return MetatypeGegevenselement }
+func (nb *NatuurlijkPersoon_Burgerschap) ClearID()               { nb.Rel_ID = 0 }
+func (nb NatuurlijkPersoon_Burgerschap) GetOpvoer() *time.Time   { return nb.Opvoer }
+func (nb *NatuurlijkPersoon_Burgerschap) SetOpvoer(t *time.Time) { nb.Opvoer = t }
+func (nb NatuurlijkPersoon_Burgerschap) GetAfvoer() *time.Time   { return nb.Afvoer }
+func (nb *NatuurlijkPersoon_Burgerschap) SetAfvoer(t *time.Time) { nb.Afvoer = t }
+func (nb NatuurlijkPersoon_Burgerschap) String() string          { return RepresentatieToString(nb) }
+
 // Bereikbaarheid
 func (b Bereikbaarheid) GetID() any              { return b.Rel_ID }
 func (b Bereikbaarheid) Metatype() Metatype      { return MetatypeRelatie }
@@ -127,15 +137,15 @@ func (b Bereikbaarheid) String() string          { return RepresentatieToString(
    3. _DATA — interface-methoden
    ================================================================ */
 
-// AdellijkeTitelTitel_Data
-func (d AdellijkeTitelTitel_Data) GetID() any              { return d.Versie }
-func (d AdellijkeTitelTitel_Data) Metatype() Metatype      { return MetatypeGegevenselement }
-func (d *AdellijkeTitelTitel_Data) ClearID()               { d.Versie = 0 }
-func (d AdellijkeTitelTitel_Data) GetOpvoer() *time.Time   { return d.Opvoer }
-func (d *AdellijkeTitelTitel_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
-func (d AdellijkeTitelTitel_Data) GetAfvoer() *time.Time   { return d.Afvoer }
-func (d *AdellijkeTitelTitel_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
-func (d AdellijkeTitelTitel_Data) String() string          { return RepresentatieToString(d) }
+// AdellijkeTitel_AdellijkeTitelTitel_Data
+func (d AdellijkeTitel_AdellijkeTitelTitel_Data) GetID() any              { return d.Versie }
+func (d AdellijkeTitel_AdellijkeTitelTitel_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *AdellijkeTitel_AdellijkeTitelTitel_Data) ClearID()               { d.Versie = 0 }
+func (d AdellijkeTitel_AdellijkeTitelTitel_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *AdellijkeTitel_AdellijkeTitelTitel_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d AdellijkeTitel_AdellijkeTitelTitel_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *AdellijkeTitel_AdellijkeTitelTitel_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d AdellijkeTitel_AdellijkeTitelTitel_Data) String() string          { return RepresentatieToString(d) }
 
 // Locatie_Adres_Data
 func (d Locatie_Adres_Data) GetID() any              { return d.Versie }
@@ -201,6 +211,16 @@ func (d NatuurlijkPersoon_Naamgebruik_Data) GetAfvoer() *time.Time   { return d.
 func (d *NatuurlijkPersoon_Naamgebruik_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
 func (d NatuurlijkPersoon_Naamgebruik_Data) String() string          { return RepresentatieToString(d) }
 
+// NatuurlijkPersoon_Burgerschap_Data
+func (d NatuurlijkPersoon_Burgerschap_Data) GetID() any              { return d.Versie }
+func (d NatuurlijkPersoon_Burgerschap_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *NatuurlijkPersoon_Burgerschap_Data) ClearID()               { d.Versie = 0 }
+func (d NatuurlijkPersoon_Burgerschap_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *NatuurlijkPersoon_Burgerschap_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d NatuurlijkPersoon_Burgerschap_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *NatuurlijkPersoon_Burgerschap_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d NatuurlijkPersoon_Burgerschap_Data) String() string          { return RepresentatieToString(d) }
+
 // Bereikbaarheid_Data
 func (d Bereikbaarheid_Data) GetID() any              { return d.Versie }
 func (d Bereikbaarheid_Data) Metatype() Metatype      { return MetatypeGegevenselement }
@@ -259,6 +279,26 @@ func (n NatuurlijkPersoon_Einde) String() string          { return Representatie
    5. _AANVANG/_EINDE (hub-level plumbing) — interface-methoden
    ================================================================ */
 
+// NatuurlijkPersoon_Burgerschap_Aanvang
+func (n NatuurlijkPersoon_Burgerschap_Aanvang) GetID() any              { return n.Versie }
+func (n NatuurlijkPersoon_Burgerschap_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
+func (n *NatuurlijkPersoon_Burgerschap_Aanvang) ClearID()               { n.Versie = 0 }
+func (n NatuurlijkPersoon_Burgerschap_Aanvang) GetOpvoer() *time.Time   { return n.Opvoer }
+func (n *NatuurlijkPersoon_Burgerschap_Aanvang) SetOpvoer(t *time.Time) { n.Opvoer = t }
+func (n NatuurlijkPersoon_Burgerschap_Aanvang) GetAfvoer() *time.Time   { return n.Afvoer }
+func (n *NatuurlijkPersoon_Burgerschap_Aanvang) SetAfvoer(t *time.Time) { n.Afvoer = t }
+func (n NatuurlijkPersoon_Burgerschap_Aanvang) String() string          { return RepresentatieToString(n) }
+
+// NatuurlijkPersoon_Burgerschap_Einde
+func (n NatuurlijkPersoon_Burgerschap_Einde) GetID() any              { return n.Versie }
+func (n NatuurlijkPersoon_Burgerschap_Einde) Metatype() Metatype      { return MetatypeGegevenselement }
+func (n *NatuurlijkPersoon_Burgerschap_Einde) ClearID()               { n.Versie = 0 }
+func (n NatuurlijkPersoon_Burgerschap_Einde) GetOpvoer() *time.Time   { return n.Opvoer }
+func (n *NatuurlijkPersoon_Burgerschap_Einde) SetOpvoer(t *time.Time) { n.Opvoer = t }
+func (n NatuurlijkPersoon_Burgerschap_Einde) GetAfvoer() *time.Time   { return n.Afvoer }
+func (n *NatuurlijkPersoon_Burgerschap_Einde) SetAfvoer(t *time.Time) { n.Afvoer = t }
+func (n NatuurlijkPersoon_Burgerschap_Einde) String() string          { return RepresentatieToString(n) }
+
 // Bereikbaarheid_Aanvang
 func (b Bereikbaarheid_Aanvang) GetID() any              { return b.Versie }
 func (b Bereikbaarheid_Aanvang) Metatype() Metatype      { return MetatypeGegevenselement }
@@ -283,15 +323,15 @@ func (b Bereikbaarheid_Einde) String() string          { return RepresentatieToS
    6. _INPUT — interface-methoden (no-op opvoer/afvoer)
    ================================================================ */
 
-// AdellijkeTitelTitel_Input
-func (i AdellijkeTitelTitel_Input) GetID() any              { return i.Rel_ID }
-func (i AdellijkeTitelTitel_Input) Metatype() Metatype      { return MetatypeGegevenselement }
-func (i *AdellijkeTitelTitel_Input) ClearID()               { i.Rel_ID = 0 }
-func (i AdellijkeTitelTitel_Input) GetOpvoer() *time.Time   { return nil }
-func (i *AdellijkeTitelTitel_Input) SetOpvoer(t *time.Time) {}
-func (i AdellijkeTitelTitel_Input) GetAfvoer() *time.Time   { return nil }
-func (i *AdellijkeTitelTitel_Input) SetAfvoer(t *time.Time) {}
-func (i AdellijkeTitelTitel_Input) String() string          { return RepresentatieToString(i) }
+// AdellijkeTitel_AdellijkeTitelTitel_Input
+func (i AdellijkeTitel_AdellijkeTitelTitel_Input) GetID() any              { return i.Rel_ID }
+func (i AdellijkeTitel_AdellijkeTitelTitel_Input) Metatype() Metatype      { return MetatypeGegevenselement }
+func (i *AdellijkeTitel_AdellijkeTitelTitel_Input) ClearID()               { i.Rel_ID = 0 }
+func (i AdellijkeTitel_AdellijkeTitelTitel_Input) GetOpvoer() *time.Time   { return nil }
+func (i *AdellijkeTitel_AdellijkeTitelTitel_Input) SetOpvoer(t *time.Time) {}
+func (i AdellijkeTitel_AdellijkeTitelTitel_Input) GetAfvoer() *time.Time   { return nil }
+func (i *AdellijkeTitel_AdellijkeTitelTitel_Input) SetAfvoer(t *time.Time) {}
+func (i AdellijkeTitel_AdellijkeTitelTitel_Input) String() string          { return RepresentatieToString(i) }
 
 // Locatie_Adres_Input
 func (i Locatie_Adres_Input) GetID() any              { return i.Rel_ID }
@@ -357,6 +397,16 @@ func (i NatuurlijkPersoon_Naamgebruik_Input) GetAfvoer() *time.Time   { return n
 func (i *NatuurlijkPersoon_Naamgebruik_Input) SetAfvoer(t *time.Time) {}
 func (i NatuurlijkPersoon_Naamgebruik_Input) String() string          { return RepresentatieToString(i) }
 
+// NatuurlijkPersoon_Burgerschap_Input
+func (i NatuurlijkPersoon_Burgerschap_Input) GetID() any              { return i.Rel_ID }
+func (i NatuurlijkPersoon_Burgerschap_Input) Metatype() Metatype      { return MetatypeGegevenselement }
+func (i *NatuurlijkPersoon_Burgerschap_Input) ClearID()               { i.Rel_ID = 0 }
+func (i NatuurlijkPersoon_Burgerschap_Input) GetOpvoer() *time.Time   { return nil }
+func (i *NatuurlijkPersoon_Burgerschap_Input) SetOpvoer(t *time.Time) {}
+func (i NatuurlijkPersoon_Burgerschap_Input) GetAfvoer() *time.Time   { return nil }
+func (i *NatuurlijkPersoon_Burgerschap_Input) SetAfvoer(t *time.Time) {}
+func (i NatuurlijkPersoon_Burgerschap_Input) String() string          { return RepresentatieToString(i) }
+
 // Bereikbaarheid_Input
 func (i Bereikbaarheid_Input) GetID() any              { return i.Rel_ID }
 func (i Bereikbaarheid_Input) Metatype() Metatype      { return MetatypeRelatie }
@@ -373,87 +423,93 @@ func (i Bereikbaarheid_Input) String() string          { return RepresentatieToS
 
 func (a *AdellijkeTitel) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0)
-	for i := range a.AdellijkeTitelTitels {
-		if a.AdellijkeTitelTitels[i].AdellijkeTitel_ID == 0 {
-			a.AdellijkeTitelTitels[i].AdellijkeTitel_ID = a.ID
+	for idx := range a.AdellijkeTitelTitels {
+		if a.AdellijkeTitelTitels[idx].AdellijkeTitel_ID == 0 {
+			a.AdellijkeTitelTitels[idx].AdellijkeTitel_ID = a.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "AdellijkeTitelTitel", Representatie: &a.AdellijkeTitelTitels[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "AdellijkeTitel_AdellijkeTitelTitel", Representatie: &a.AdellijkeTitelTitels[idx]})
 	}
 	return result
 }
 
 func (l *Locatie) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0)
-	for i := range l.Adressen {
-		if l.Adressen[i].Locatie_ID == 0 {
-			l.Adressen[i].Locatie_ID = l.ID
+	for idx := range l.Adressen {
+		if l.Adressen[idx].Locatie_ID == 0 {
+			l.Adressen[idx].Locatie_ID = l.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Locatie_Adres", Representatie: &l.Adressen[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Locatie_Adres", Representatie: &l.Adressen[idx]})
 	}
-	for i := range l.Baglocaties {
-		if l.Baglocaties[i].Locatie_ID == 0 {
-			l.Baglocaties[i].Locatie_ID = l.ID
+	for idx := range l.Baglocaties {
+		if l.Baglocaties[idx].Locatie_ID == 0 {
+			l.Baglocaties[idx].Locatie_ID = l.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Locatie_BAGlocatie", Representatie: &l.Baglocaties[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Locatie_BAGlocatie", Representatie: &l.Baglocaties[idx]})
 	}
-	for i := range l.Aanvang {
-		if l.Aanvang[i].Locatie_ID == 0 {
-			l.Aanvang[i].Locatie_ID = l.ID
+	for idx := range l.Aanvang {
+		if l.Aanvang[idx].Locatie_ID == 0 {
+			l.Aanvang[idx].Locatie_ID = l.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Locatie_Aanvang", Representatie: &l.Aanvang[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Locatie_Aanvang", Representatie: &l.Aanvang[idx]})
 	}
-	for i := range l.Einde {
-		if l.Einde[i].Locatie_ID == 0 {
-			l.Einde[i].Locatie_ID = l.ID
+	for idx := range l.Einde {
+		if l.Einde[idx].Locatie_ID == 0 {
+			l.Einde[idx].Locatie_ID = l.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Locatie_Einde", Representatie: &l.Einde[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Locatie_Einde", Representatie: &l.Einde[idx]})
 	}
 	return result
 }
 
 func (n *NatuurlijkPersoon) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0)
-	for i := range n.Persoonsidentificaties {
-		if n.Persoonsidentificaties[i].NatuurlijkPersoon_ID == 0 {
-			n.Persoonsidentificaties[i].NatuurlijkPersoon_ID = n.ID
+	for idx := range n.Persoonsidentificaties {
+		if n.Persoonsidentificaties[idx].NatuurlijkPersoon_ID == 0 {
+			n.Persoonsidentificaties[idx].NatuurlijkPersoon_ID = n.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Persoonsidentificatie", Representatie: &n.Persoonsidentificaties[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Persoonsidentificatie", Representatie: &n.Persoonsidentificaties[idx]})
 	}
-	for i := range n.Namen {
-		if n.Namen[i].NatuurlijkPersoon_ID == 0 {
-			n.Namen[i].NatuurlijkPersoon_ID = n.ID
+	for idx := range n.Namen {
+		if n.Namen[idx].NatuurlijkPersoon_ID == 0 {
+			n.Namen[idx].NatuurlijkPersoon_ID = n.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Naam", Representatie: &n.Namen[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Naam", Representatie: &n.Namen[idx]})
 	}
-	for i := range n.Partnernamen {
-		if n.Partnernamen[i].NatuurlijkPersoon_ID == 0 {
-			n.Partnernamen[i].NatuurlijkPersoon_ID = n.ID
+	for idx := range n.Partnernamen {
+		if n.Partnernamen[idx].NatuurlijkPersoon_ID == 0 {
+			n.Partnernamen[idx].NatuurlijkPersoon_ID = n.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Partnernaam", Representatie: &n.Partnernamen[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Partnernaam", Representatie: &n.Partnernamen[idx]})
 	}
-	for i := range n.Naamgebruiken {
-		if n.Naamgebruiken[i].NatuurlijkPersoon_ID == 0 {
-			n.Naamgebruiken[i].NatuurlijkPersoon_ID = n.ID
+	for idx := range n.Naamgebruiken {
+		if n.Naamgebruiken[idx].NatuurlijkPersoon_ID == 0 {
+			n.Naamgebruiken[idx].NatuurlijkPersoon_ID = n.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Naamgebruik", Representatie: &n.Naamgebruiken[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Naamgebruik", Representatie: &n.Naamgebruiken[idx]})
 	}
-	for i := range n.Bereikbaarheden {
-		if n.Bereikbaarheden[i].NatuurlijkPersoon_ID == 0 {
-			n.Bereikbaarheden[i].NatuurlijkPersoon_ID = n.ID
+	for idx := range n.Burgerschappen {
+		if n.Burgerschappen[idx].NatuurlijkPersoon_ID == 0 {
+			n.Burgerschappen[idx].NatuurlijkPersoon_ID = n.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Bereikbaarheid", Representatie: &n.Bereikbaarheden[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Burgerschap", Representatie: &n.Burgerschappen[idx]})
 	}
-	for i := range n.Aanvang {
-		if n.Aanvang[i].NatuurlijkPersoon_ID == 0 {
-			n.Aanvang[i].NatuurlijkPersoon_ID = n.ID
+	for idx := range n.Bereikbaarheden {
+		if n.Bereikbaarheden[idx].NatuurlijkPersoon_ID == 0 {
+			n.Bereikbaarheden[idx].NatuurlijkPersoon_ID = n.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Aanvang", Representatie: &n.Aanvang[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Bereikbaarheid", Representatie: &n.Bereikbaarheden[idx]})
 	}
-	for i := range n.Einde {
-		if n.Einde[i].NatuurlijkPersoon_ID == 0 {
-			n.Einde[i].NatuurlijkPersoon_ID = n.ID
+	for idx := range n.Aanvang {
+		if n.Aanvang[idx].NatuurlijkPersoon_ID == 0 {
+			n.Aanvang[idx].NatuurlijkPersoon_ID = n.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Einde", Representatie: &n.Einde[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Aanvang", Representatie: &n.Aanvang[idx]})
+	}
+	for idx := range n.Einde {
+		if n.Einde[idx].NatuurlijkPersoon_ID == 0 {
+			n.Einde[idx].NatuurlijkPersoon_ID = n.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Einde", Representatie: &n.Einde[idx]})
 	}
 	return result
 }
@@ -462,7 +518,7 @@ func (n *NatuurlijkPersoon) GeefOnderliggendeGegevenselementen() []Onderliggende
    8. GeefOnderliggendeGegevenselementen — HUBS
    ================================================================ */
 
-func (h *AdellijkeTitelTitel) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+func (h *AdellijkeTitel_AdellijkeTitelTitel) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
 	for i := range h.Data {
 		if h.Data[i].AdellijkeTitel_ID == 0 {
@@ -471,7 +527,7 @@ func (h *AdellijkeTitelTitel) GeefOnderliggendeGegevenselementen() []Onderliggen
 		if h.Data[i].Rel_ID == 0 {
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "AdellijkeTitelTitel_Data", Representatie: &h.Data[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "AdellijkeTitel_AdellijkeTitelTitel_Data", Representatie: &h.Data[i]})
 	}
 	return result
 }
@@ -556,6 +612,38 @@ func (h *NatuurlijkPersoon_Naamgebruik) GeefOnderliggendeGegevenselementen() []O
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Naamgebruik_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
+func (h *NatuurlijkPersoon_Burgerschap) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data)+len(h.Aanvang)+len(h.Einde))
+	for i := range h.Data {
+		if h.Data[i].NatuurlijkPersoon_ID == 0 {
+			h.Data[i].NatuurlijkPersoon_ID = h.NatuurlijkPersoon_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Burgerschap_Data", Representatie: &h.Data[i]})
+	}
+	for i := range h.Aanvang {
+		if h.Aanvang[i].NatuurlijkPersoon_ID == 0 {
+			h.Aanvang[i].NatuurlijkPersoon_ID = h.NatuurlijkPersoon_ID
+		}
+		if h.Aanvang[i].Rel_ID == 0 {
+			h.Aanvang[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Burgerschap_Aanvang", Representatie: &h.Aanvang[i]})
+	}
+	for i := range h.Einde {
+		if h.Einde[i].NatuurlijkPersoon_ID == 0 {
+			h.Einde[i].NatuurlijkPersoon_ID = h.NatuurlijkPersoon_ID
+		}
+		if h.Einde[i].Rel_ID == 0 {
+			h.Einde[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "NatuurlijkPersoon_Burgerschap_Einde", Representatie: &h.Einde[i]})
 	}
 	return result
 }

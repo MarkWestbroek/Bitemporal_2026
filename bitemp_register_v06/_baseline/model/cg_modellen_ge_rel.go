@@ -155,8 +155,8 @@ type Initiatief_Planning_Data struct {
 	Rel_ID              int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie              int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Planningsinfo       string     `json:"planningsinfo"`
-	Startdatum          Datum      `json:"startdatum" schema:"datatype:Datum"`
-	ReadyForUse         Datum      `json:"ready_for_use" schema:"datatype:Datum"`
+	Startdatum          Date       `json:"startdatum" bun:"startdatum,type:date"`
+	ReadyForUse         Date       `json:"ready_for_use" bun:"ready_for_use,type:date"`
 	WaarTegenaanGelopen string     `json:"waar_tegenaan_gelopen"`
 	Fase                Fase       `json:"fase" schema:"enum=Fase"`
 	Opvoer              *time.Time `json:"opvoer,omitempty"`
@@ -206,11 +206,11 @@ type Initiatief_Product_Data struct {
 	Versie        int64       `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Naam          string      `json:"naam"`
 	Omschrijving  *string     `json:"omschrijving,omitempty"`
+	Type          Producttype `json:"type" schema:"enum=Producttype"`
 	CGLaag        CGLaag      `json:"CG_laag" schema:"enum=CGLaag"`
 	Pitch         *string     `json:"pitch,omitempty"`
-	Website       URL         `json:"website" schema:"datatype:URL"`
-	GitRepo       GitAdres    `json:"git_repo" schema:"datatype:GitAdres"`
-	Type          Producttype `json:"type" schema:"enum=Producttype"`
+	Website       *URL        `json:"website,omitempty" schema:"datatype:URL"`
+	GitRepo       *GitAdres   `json:"git_repo,omitempty" schema:"datatype:GitAdres"`
 	Opvoer        *time.Time  `json:"opvoer,omitempty"`
 	Afvoer        *time.Time  `json:"afvoer,omitempty"`
 }
@@ -365,6 +365,7 @@ type Initiatief_Initiatiefinfo_Data struct {
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Informatie    string     `json:"informatie"`
+	PbiID         int        `json:"PbiID"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }

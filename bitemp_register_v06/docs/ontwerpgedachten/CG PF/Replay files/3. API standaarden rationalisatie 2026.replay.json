@@ -1,0 +1,749 @@
+{
+  "version": 1,
+  "exported_at": "2026-04-07T20:08:11.181383Z",
+  "source": "curated://cgpf/api-standaarden-rationalisatie-2026",
+  "count": 1,
+  "generated_reference_counts": {
+    "api_standaarden": 48
+  },
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-07T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Seed referentielijst ApiStandaard (gerationaliseerde CG Portfolio lijst)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 1,
+                "naam": "ZGW API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 2,
+                "naam": "REST API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 3
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 3,
+                "naam": "StUF"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 4
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 4,
+                "naam": "Haal Centraal BRP Personen API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 5
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 5,
+                "naam": "Notificaties API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 6
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 6,
+                "naam": "Documenten API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 7
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 7,
+                "naam": "OAuth 2.0"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 8
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 8,
+                "naam": "Zaken API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 9
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 9,
+                "naam": "Catalogi API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 10
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 10,
+                "naam": "NL API Strategie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 11
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 11,
+                "naam": "Objecten API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 12
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 12,
+                "naam": "Autorisaties API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 13
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 13,
+                "naam": "CloudEvents profiel"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 14
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 14,
+                "naam": "DSO API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 15
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 15,
+                "naam": "JWT"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 16
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 16,
+                "naam": "KVK / Handelsregister API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 17
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 17,
+                "naam": "OpenAPI"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 18
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 18,
+                "naam": "StUF-ZKN"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 19
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 19,
+                "naam": "BAG API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 20
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 20,
+                "naam": "CMIS"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 21
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 21,
+                "naam": "DigiD"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 22
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 22,
+                "naam": "MDTO"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 23
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 23,
+                "naam": "SAML"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 24
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 24,
+                "naam": "WFS"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 25
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 25,
+                "naam": "Alfresco Public API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 26
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 26,
+                "naam": "BRK API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 27
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 27,
+                "naam": "Contactmomenten API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 28
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 28,
+                "naam": "DCAT-AP NL"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 29
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 29,
+                "naam": "DROP"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 30
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 30,
+                "naam": "eHerkenning"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 31
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 31,
+                "naam": "GeoJSON"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 32
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 32,
+                "naam": "Haal Centraal BRP Bewoning API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 33
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 33,
+                "naam": "HAVEN"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 34
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 34,
+                "naam": "JSON:API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 35
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 35,
+                "naam": "Klanten API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 36
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 36,
+                "naam": "Klantinteracties API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 37
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 37,
+                "naam": "NLX"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 38
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 38,
+                "naam": "Objecttypen API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 39
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 39,
+                "naam": "OData"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 40
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 40,
+                "naam": "OGC API Features"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 41
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 41,
+                "naam": "PDOK services"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 42
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 42,
+                "naam": "SDG API / SDG-plus"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 43
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 43,
+                "naam": "SensorThings API"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 44
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 44,
+                "naam": "StUF-DCR"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 45
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 45,
+                "naam": "StUF-FIN"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 46
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 46,
+                "naam": "Webhook"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 47
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 47,
+                "naam": "WMS"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "apistandaard": {
+                "id": 48
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "apistandaard_id": 48,
+                "naam": "WMTS"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}

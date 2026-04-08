@@ -9,7 +9,10 @@
  */
 import { useEffect, useCallback, useRef, useState } from "react";
 import * as FlexLayout from "flexlayout-react";
-import "flexlayout-react/style/dark.css";
+
+// FlexLayout theme CSS als URL (niet als side-effect import) — dynamisch gewisseld
+import flexDarkUrl from "flexlayout-react/style/dark.css?url";
+import flexLightUrl from "flexlayout-react/style/light.css?url";
 
 import useModelStore from "../store/useModelStore";
 import useUIStore from "../store/useUIStore";
@@ -44,9 +47,29 @@ export default function IdePage() {
   const elements = useModelStore((s) => s.elements);
   const isDirty = useModelStore((s) => s.isDirty);
   const markSaved = useModelStore((s) => s.markSaved);
+  const theme = useUIStore((s) => s.theme);
+  const toggleTheme = useUIStore((s) => s.toggleTheme);
   const [layoutModel] = useState(() => createLayoutModel());
   const [status, setStatus] = useState("laden…");
   const loadedRef = useRef(false);
+
+  // ── Theme: sync data-ide-theme op body + FlexLayout stylesheet ──
+  useEffect(() => {
+    document.body.setAttribute("data-ide-theme", theme);
+    return () => document.body.removeAttribute("data-ide-theme");
+  }, [theme]);
+
+  useEffect(() => {
+    const id = "flexlayout-theme-css";
+    let link = document.getElementById(id);
+    if (!link) {
+      link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      document.head.appendChild(link);
+    }
+    link.href = theme === "dark" ? flexDarkUrl : flexLightUrl;
+  }, [theme]);
 
   // ── Action Dialog state ──────────────────────────────────
   const [dialogType, setDialogType] = useState(null); // "publish" | "rebuild" | "publishAndRebuild" | null
@@ -458,8 +481,8 @@ export default function IdePage() {
         height: "100vh",
         display: "flex",
         flexDirection: "column",
-        background: "#1e1e1e",
-        color: "#ccc",
+        background: "var(--ide-body-bg, #1e1e1e)",
+        color: "var(--ide-body-color, #ccc)",
       }}
     >
       {/* Toolbar */}
@@ -469,24 +492,28 @@ export default function IdePage() {
           alignItems: "center",
           gap: 12,
           padding: "4px 12px",
-          background: "#2d2d2d",
-          borderBottom: "1px solid #444",
+          background: theme === "dark" ? "#2d2d2d" : "#e8e8e8",
+          borderBottom: `1px solid ${theme === "dark" ? "#444" : "#ccc"}`,
           fontSize: 13,
           flexShrink: 0,
         }}
       >
         <strong style={{ color: "#8cb4ff" }}>🏗 IDE</strong>
-        <span style={{ color: "#888" }}>|</span>
-        <span style={{ color: "#aaa" }}>{status}</span>
+        <span style={{ color: theme === "dark" ? "#888" : "#999" }}>|</span>
+        <span style={{ color: theme === "dark" ? "#aaa" : "#555" }}>{status}</span>
         {isDirty && <span style={{ color: "#f5c542", fontSize: 11, fontWeight: 600 }} title="Onopgeslagen wijzigingen">● Gewijzigd</span>}
         <span style={{ flex: 1 }} />
+        <button onClick={toggleTheme} style={toolbarBtn} title={`Wissel naar ${theme === "dark" ? "licht" : "donker"} thema`}>
+          {theme === "dark" ? "☀️ Licht" : "🌙 Donker"}
+        </button>
+        <span style={{ color: theme === "dark" ? "#555" : "#ccc" }}>|</span>
         <button onClick={() => useModelStore.temporal.getState().undo()} style={toolbarBtn} title="Ongedaan maken (Ctrl+Z)">
           ↩ Undo
         </button>
         <button onClick={() => useModelStore.temporal.getState().redo()} style={toolbarBtn} title="Opnieuw (Ctrl+Y)">
           ↪ Redo
         </button>
-        <span style={{ color: "#555" }}>|</span>
+        <span style={{ color: theme === "dark" ? "#555" : "#ccc" }}>|</span>
         <button onClick={() => handleNieuwDiagram()} style={toolbarBtn}>
           ➕ Diagram
         </button>
@@ -549,9 +576,9 @@ function maakDiagramId(naam) {
 }
 
 const toolbarBtn = {
-  background: "#3c3c3c",
-  color: "#ccc",
-  border: "1px solid #555",
+  background: "var(--ide-controls-bg, #3c3c3c)",
+  color: "var(--ide-controls-color, #ccc)",
+  border: "1px solid var(--ide-controls-border, #555)",
   borderRadius: 3,
   padding: "3px 10px",
   cursor: "pointer",

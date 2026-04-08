@@ -12,10 +12,11 @@ import (
 type Fase string
 
 const (
-	FaseIdee       Fase = "Idee"
-	FaseVerkenning Fase = "Verkenning"
-	FaseRealisatie Fase = "Realisatie"
-	FaseInGebruik  Fase = "InGebruik"
+	FaseIdeenoggeenconcreteopbrengsten                           Fase = "Idee (nog geen concrete opbrengsten)"
+	FaseInitiatiealeensnellePOC                                  Fase = "Initiatie (al een snelle POC)"
+	FaseRealisatiegaatbinnenkortdraaienbijeerstegemeenten        Fase = "Realisatie (gaat binnenkort draaien bij eerste gemeenten)"
+	FaseOpschalingdraaitbijenkelegemeentennuopzoeknaarverbreding Fase = "Opschaling (draait bij enkele gemeenten, nu op zoek naar verbreding)"
+	FaseDoorontwikkelingenbeheerstabielonderdeelgevestigdeorde   Fase = "Doorontwikkeling en beheer (stabiel, onderdeel gevestigde orde)"
 )
 
 type Producttype string
@@ -154,8 +155,8 @@ type Initiatief_Planning_Data struct {
 	Rel_ID              int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie              int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Planningsinfo       string     `json:"planningsinfo"`
-	Startdatum          Datum      `json:"startdatum" schema:"datatype:Datum"`
-	ReadyForUse         Datum      `json:"ready_for_use" schema:"datatype:Datum"`
+	Startdatum          Date       `json:"startdatum" bun:"startdatum,type:date"`
+	ReadyForUse         Date       `json:"ready_for_use" bun:"ready_for_use,type:date"`
 	WaarTegenaanGelopen string     `json:"waar_tegenaan_gelopen"`
 	Fase                Fase       `json:"fase" schema:"enum=Fase"`
 	Opvoer              *time.Time `json:"opvoer,omitempty"`
@@ -205,11 +206,11 @@ type Initiatief_Product_Data struct {
 	Versie        int64       `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Naam          string      `json:"naam"`
 	Omschrijving  *string     `json:"omschrijving,omitempty"`
+	Type          Producttype `json:"type" schema:"enum=Producttype"`
 	CGLaag        CGLaag      `json:"CG_laag" schema:"enum=CGLaag"`
 	Pitch         *string     `json:"pitch,omitempty"`
-	Website       URL         `json:"website" schema:"datatype:URL"`
-	GitRepo       GitAdres    `json:"git_repo" schema:"datatype:GitAdres"`
-	Type          Producttype `json:"type" schema:"enum=Producttype"`
+	Website       *URL        `json:"website,omitempty" schema:"datatype:URL"`
+	GitRepo       *GitAdres   `json:"git_repo,omitempty" schema:"datatype:GitAdres"`
 	Opvoer        *time.Time  `json:"opvoer,omitempty"`
 	Afvoer        *time.Time  `json:"afvoer,omitempty"`
 }
@@ -347,6 +348,30 @@ type Initiatief_AndereAPIStandaard_Data struct {
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
 
+type Initiatief_Initiatiefinfo struct {
+	bun.BaseModel    `bun:"table:initiatief_initiatiefinfo,alias:initiatief_initiatiefinfo"`
+	Initiatief_ID    int                              `json:"initiatief_id" bun:"initiatief_id,pk" schema_desc:"ID van de Initiatief-entiteit"`
+	Rel_ID           int                              `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentInitiatief *Initiatief                      `json:"-" bun:"rel:belongs-to,join:initiatief_id=id,on_delete:cascade"`
+	Opvoer           *time.Time                       `json:"opvoer,omitempty"`
+	Afvoer           *time.Time                       `json:"afvoer,omitempty"`
+	Data             []Initiatief_Initiatiefinfo_Data `bun:"rel:has-many,join:initiatief_id=initiatief_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// Initiatief_Initiatiefinfo_Data — geversioned inhoud van Initiatief_Initiatiefinfo.
+type Initiatief_Initiatiefinfo_Data struct {
+	bun.BaseModel `bun:"table:initiatief_initiatiefinfo_data,alias:initiatief_initiatiefinfo_data"`
+	Initiatief_ID int        `json:"initiatief_id" bun:"initiatief_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Informatie    string     `json:"informatie"`
+	PbiID         int        `json:"PbiID"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+// Initiatief_OrganisatieInfo — ongestructureerde organisatie-tekst bij een initiatief
+// (overig-GE: tekst die niet als organisatienaam herkend kon worden).
 type Initiatief_OrganisatieInfo struct {
 	bun.BaseModel    `bun:"table:initiatief_organisatieinfo,alias:initiatief_organisatieinfo"`
 	Initiatief_ID    int                               `json:"initiatief_id" bun:"initiatief_id,pk" schema_desc:"ID van de Initiatief-entiteit"`

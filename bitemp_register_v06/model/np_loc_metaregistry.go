@@ -474,13 +474,10 @@ func initNpLocMetaRegistry() {
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: -480, Y: -135},
+			Positie:      &V3Positie{X: -465, Y: -195},
 			EdgeID:       "edge_1775661694887_3",
 			SourceHandle: "left",
 			TargetHandle: "top",
-			UseEdges: []V3UseEdge{
-				{Doel: "Land", ID: "edge_1775661650543_2", SourceHandle: "bottom", TargetHandle: "left"},
-			},
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Burgerschap_Data", Momentvoorkomen: Enkelvoudig},

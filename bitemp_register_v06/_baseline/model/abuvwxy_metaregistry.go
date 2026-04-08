@@ -66,7 +66,8 @@ func initAbuvwxyMetaRegistry() {
 		EntiteitIDKolom:        "a_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -720, Y: 495}, EdgeID: "A->A_U",
+			Positie: &V3Positie{X: -720, Y: 495},
+			EdgeID:  "A->A_U",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "A_U_Data", Momentvoorkomen: Enkelvoudig},
@@ -95,7 +96,8 @@ func initAbuvwxyMetaRegistry() {
 		EntiteitIDKolom:        "a_id",
 		Momentvoorkomen:        Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -510, Y: 435}, EdgeID: "A->A_V",
+			Positie: &V3Positie{X: -510, Y: 435},
+			EdgeID:  "A->A_V",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "A_V_Data", Momentvoorkomen: Enkelvoudig},
@@ -124,7 +126,8 @@ func initAbuvwxyMetaRegistry() {
 		EntiteitIDKolom:        "a_id",
 		Momentvoorkomen:        Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -300, Y: 465}, EdgeID: "A->A_W",
+			Positie: &V3Positie{X: -300, Y: 465},
+			EdgeID:  "A->A_W",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "A_W_Data", Momentvoorkomen: Enkelvoudig},
@@ -156,9 +159,13 @@ func initAbuvwxyMetaRegistry() {
 		SecondaireEntiteitIDKolom: "b_id",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -105, Y: 120}, EdgeID: "A->Rel_A_B",
-			SourceHandle: "right", TargetHandle: "left",
-			DoelEdgeID: "Rel_A_B->B", DoelSourceHandle: "right", DoelTargetHandle: "left",
+			Positie:          &V3Positie{X: -105, Y: 120},
+			EdgeID:           "A->Rel_A_B",
+			SourceHandle:     "right",
+			TargetHandle:     "left",
+			DoelEdgeID:       "Rel_A_B->B",
+			DoelSourceHandle: "right",
+			DoelTargetHandle: "left",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Rel_A_B_Data", Momentvoorkomen: Enkelvoudig},
@@ -436,7 +443,8 @@ func initAbuvwxyMetaRegistry() {
 		EntiteitIDKolom:        "b_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 165, Y: 480}, EdgeID: "B->B_X",
+			Positie: &V3Positie{X: 165, Y: 480},
+			EdgeID:  "B->B_X",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "B_X_Data", Momentvoorkomen: Enkelvoudig},
@@ -465,7 +473,8 @@ func initAbuvwxyMetaRegistry() {
 		EntiteitIDKolom:        "b_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 420, Y: 495}, EdgeID: "B->B_Y",
+			Positie: &V3Positie{X: 420, Y: 495},
+			EdgeID:  "B->B_Y",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "B_Y_Data", Momentvoorkomen: Enkelvoudig},
@@ -563,7 +572,7 @@ func initAbuvwxyMetaRegistry() {
 	// Referentielijst-instantie metadata + editor-posities
 	ReferentielijstInstantieRegistry["AdellijkeTitels"] = ReferentielijstInstantieInfo{
 		Naam:   "",
-		Layout: &EditorLayout{Positie: &V3Positie{X: 1890, Y: -319.5}},
+		Layout: &EditorLayout{Positie: &V3Positie{X: 1920, Y: -330}},
 	}
 	ReferentielijstInstantieRegistry["Landenlijst"] = ReferentielijstInstantieInfo{
 		Naam:   "",

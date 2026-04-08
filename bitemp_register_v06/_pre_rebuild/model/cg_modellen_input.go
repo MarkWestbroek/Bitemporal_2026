@@ -27,8 +27,8 @@ type Initiatief_Planning_Input struct {
 	INITIATIEF_ID       int    `json:"initiatief_id"`
 	Rel_ID              int    `json:"rel_id"`
 	Planningsinfo       string `json:"planningsinfo"`
-	Startdatum          Datum  `json:"startdatum"`
-	ReadyForUse         Datum  `json:"ready_for_use"`
+	Startdatum          Date   `json:"startdatum"`
+	ReadyForUse         Date   `json:"ready_for_use"`
 	WaarTegenaanGelopen string `json:"waar_tegenaan_gelopen"`
 	Fase                Fase   `json:"fase"`
 	Aanvang             *Date  `json:"aanvang,omitempty"`
@@ -40,11 +40,11 @@ type Initiatief_Product_Input struct {
 	Rel_ID        int         `json:"rel_id"`
 	Naam          string      `json:"naam"`
 	Omschrijving  *string     `json:"omschrijving,omitempty"`
+	Type          Producttype `json:"type"`
 	CGLaag        CGLaag      `json:"CG_laag"`
 	Pitch         *string     `json:"pitch,omitempty"`
-	Website       URL         `json:"website"`
-	GitRepo       GitAdres    `json:"git_repo"`
-	Type          Producttype `json:"type"`
+	Website       *URL        `json:"website,omitempty"`
+	GitRepo       *GitAdres   `json:"git_repo,omitempty"`
 	Aanvang       *Date       `json:"aanvang,omitempty"`
 	Einde         *Date       `json:"einde,omitempty"`
 }
@@ -81,6 +81,7 @@ type Initiatief_Initiatiefinfo_Input struct {
 	INITIATIEF_ID int    `json:"initiatief_id"`
 	Rel_ID        int    `json:"rel_id"`
 	Informatie    string `json:"informatie"`
+	PbiID         int    `json:"PbiID"`
 }
 
 type InitiatiefGemeente_Input struct {

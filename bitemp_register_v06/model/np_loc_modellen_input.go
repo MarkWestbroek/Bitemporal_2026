@@ -56,7 +56,7 @@ type NatuurlijkPersoon_Naamgebruik_Input struct {
 type NatuurlijkPersoon_Burgerschap_Input struct {
 	NATUURLIJKPERSOON_ID int     `json:"natuurlijkpersoon_id"`
 	Rel_ID               int     `json:"rel_id"`
-	Land                 *string `json:"land,omitempty"`
+	Landcode             *string `json:"landcode,omitempty"`
 	Nationaliteit        *string `json:"nationaliteit,omitempty"`
 	Landreferentie       *int    `json:"landreferentie,omitempty"`
 	Aanvang              *Date   `json:"aanvang,omitempty"`

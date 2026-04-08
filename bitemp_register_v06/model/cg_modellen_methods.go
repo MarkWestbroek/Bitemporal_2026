@@ -163,15 +163,25 @@ func (ia Initiatief_AndereAPIStandaard) GetAfvoer() *time.Time   { return ia.Afv
 func (ia *Initiatief_AndereAPIStandaard) SetAfvoer(t *time.Time) { ia.Afvoer = t }
 func (ia Initiatief_AndereAPIStandaard) String() string          { return RepresentatieToString(ia) }
 
+// Initiatief_Initiatiefinfo
+func (ii Initiatief_Initiatiefinfo) GetID() any              { return ii.Rel_ID }
+func (ii Initiatief_Initiatiefinfo) Metatype() Metatype      { return MetatypeGegevenselement }
+func (ii *Initiatief_Initiatiefinfo) ClearID()               { ii.Rel_ID = 0 }
+func (ii Initiatief_Initiatiefinfo) GetOpvoer() *time.Time   { return ii.Opvoer }
+func (ii *Initiatief_Initiatiefinfo) SetOpvoer(t *time.Time) { ii.Opvoer = t }
+func (ii Initiatief_Initiatiefinfo) GetAfvoer() *time.Time   { return ii.Afvoer }
+func (ii *Initiatief_Initiatiefinfo) SetAfvoer(t *time.Time) { ii.Afvoer = t }
+func (ii Initiatief_Initiatiefinfo) String() string          { return RepresentatieToString(ii) }
+
 // Initiatief_OrganisatieInfo
-func (io Initiatief_OrganisatieInfo) GetID() any              { return io.Rel_ID }
-func (io Initiatief_OrganisatieInfo) Metatype() Metatype      { return MetatypeGegevenselement }
-func (io *Initiatief_OrganisatieInfo) ClearID()               { io.Rel_ID = 0 }
-func (io Initiatief_OrganisatieInfo) GetOpvoer() *time.Time   { return io.Opvoer }
-func (io *Initiatief_OrganisatieInfo) SetOpvoer(t *time.Time) { io.Opvoer = t }
-func (io Initiatief_OrganisatieInfo) GetAfvoer() *time.Time   { return io.Afvoer }
-func (io *Initiatief_OrganisatieInfo) SetAfvoer(t *time.Time) { io.Afvoer = t }
-func (io Initiatief_OrganisatieInfo) String() string          { return RepresentatieToString(io) }
+func (oi Initiatief_OrganisatieInfo) GetID() any              { return oi.Rel_ID }
+func (oi Initiatief_OrganisatieInfo) Metatype() Metatype      { return MetatypeGegevenselement }
+func (oi *Initiatief_OrganisatieInfo) ClearID()               { oi.Rel_ID = 0 }
+func (oi Initiatief_OrganisatieInfo) GetOpvoer() *time.Time   { return oi.Opvoer }
+func (oi *Initiatief_OrganisatieInfo) SetOpvoer(t *time.Time) { oi.Opvoer = t }
+func (oi Initiatief_OrganisatieInfo) GetAfvoer() *time.Time   { return oi.Afvoer }
+func (oi *Initiatief_OrganisatieInfo) SetAfvoer(t *time.Time) { oi.Afvoer = t }
+func (oi Initiatief_OrganisatieInfo) String() string          { return RepresentatieToString(oi) }
 
 // InitiatiefGemeente
 func (i InitiatiefGemeente) GetID() any              { return i.Rel_ID }
@@ -366,6 +376,16 @@ func (d *Initiatief_AndereAPIStandaard_Data) SetOpvoer(t *time.Time) { d.Opvoer 
 func (d Initiatief_AndereAPIStandaard_Data) GetAfvoer() *time.Time   { return d.Afvoer }
 func (d *Initiatief_AndereAPIStandaard_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
 func (d Initiatief_AndereAPIStandaard_Data) String() string          { return RepresentatieToString(d) }
+
+// Initiatief_Initiatiefinfo_Data
+func (d Initiatief_Initiatiefinfo_Data) GetID() any              { return d.Versie }
+func (d Initiatief_Initiatiefinfo_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *Initiatief_Initiatiefinfo_Data) ClearID()               { d.Versie = 0 }
+func (d Initiatief_Initiatiefinfo_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *Initiatief_Initiatiefinfo_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d Initiatief_Initiatiefinfo_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *Initiatief_Initiatiefinfo_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d Initiatief_Initiatiefinfo_Data) String() string          { return RepresentatieToString(d) }
 
 // Initiatief_OrganisatieInfo_Data
 func (d Initiatief_OrganisatieInfo_Data) GetID() any              { return d.Versie }
@@ -701,6 +721,16 @@ func (i Initiatief_AndereAPIStandaard_Input) GetAfvoer() *time.Time   { return n
 func (i *Initiatief_AndereAPIStandaard_Input) SetAfvoer(t *time.Time) {}
 func (i Initiatief_AndereAPIStandaard_Input) String() string          { return RepresentatieToString(i) }
 
+// Initiatief_Initiatiefinfo_Input
+func (i Initiatief_Initiatiefinfo_Input) GetID() any              { return i.Rel_ID }
+func (i Initiatief_Initiatiefinfo_Input) Metatype() Metatype      { return MetatypeGegevenselement }
+func (i *Initiatief_Initiatiefinfo_Input) ClearID()               { i.Rel_ID = 0 }
+func (i Initiatief_Initiatiefinfo_Input) GetOpvoer() *time.Time   { return nil }
+func (i *Initiatief_Initiatiefinfo_Input) SetOpvoer(t *time.Time) {}
+func (i Initiatief_Initiatiefinfo_Input) GetAfvoer() *time.Time   { return nil }
+func (i *Initiatief_Initiatiefinfo_Input) SetAfvoer(t *time.Time) {}
+func (i Initiatief_Initiatiefinfo_Input) String() string          { return RepresentatieToString(i) }
+
 // Initiatief_OrganisatieInfo_Input
 func (i Initiatief_OrganisatieInfo_Input) GetID() any              { return i.Rel_ID }
 func (i Initiatief_OrganisatieInfo_Input) Metatype() Metatype      { return MetatypeGegevenselement }
@@ -888,11 +918,11 @@ func (i *Initiatief) GeefOnderliggendeGegevenselementen() []OnderliggendeReprese
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "Initiatief_AndereAPIStandaard", Representatie: &i.AndereApiStandaarden[idx]})
 	}
-	for idx := range i.Organisatieinfo {
-		if i.Organisatieinfo[idx].Initiatief_ID == 0 {
-			i.Organisatieinfo[idx].Initiatief_ID = i.ID
+	for idx := range i.Initiatiefinfos {
+		if i.Initiatiefinfos[idx].Initiatief_ID == 0 {
+			i.Initiatiefinfos[idx].Initiatief_ID = i.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Initiatief_OrganisatieInfo", Representatie: &i.Organisatieinfo[idx]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Initiatief_Initiatiefinfo", Representatie: &i.Initiatiefinfos[idx]})
 	}
 	for idx := range i.InitiatiefGemeenten {
 		if i.InitiatiefGemeenten[idx].Initiatief_ID == 0 {
@@ -1187,7 +1217,7 @@ func (h *Initiatief_AndereAPIStandaard) GeefOnderliggendeGegevenselementen() []O
 	return result
 }
 
-func (h *Initiatief_OrganisatieInfo) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+func (h *Initiatief_Initiatiefinfo) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
 	for i := range h.Data {
 		if h.Data[i].Initiatief_ID == 0 {
@@ -1196,7 +1226,7 @@ func (h *Initiatief_OrganisatieInfo) GeefOnderliggendeGegevenselementen() []Onde
 		if h.Data[i].Rel_ID == 0 {
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Initiatief_OrganisatieInfo_Data", Representatie: &h.Data[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Initiatief_Initiatiefinfo_Data", Representatie: &h.Data[i]})
 	}
 	return result
 }

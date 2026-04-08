@@ -77,8 +77,8 @@ export default function BrowserContextMenu({ x, y, nodeData, onClose, onAction }
         position: "fixed",
         left: menuPos.left,
         top: menuPos.top,
-        background: "#2d2d2d",
-        border: "1px solid #555",
+        background: "var(--ide-menu-bg, #2d2d2d)",
+        border: "1px solid var(--ide-menu-border, #555)",
         borderRadius: 4,
         boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
         padding: "4px 0",
@@ -87,12 +87,12 @@ export default function BrowserContextMenu({ x, y, nodeData, onClose, onAction }
         overflowY: "auto",
         zIndex: 9999,
         fontSize: 12,
-        color: "#ccc",
+        color: "var(--ide-menu-color, #ccc)",
       }}
     >
       {visibleItems.map(([key, item], i) =>
         item.separator ? (
-          <div key={i} style={{ height: 1, background: "#444", margin: "4px 8px" }} />
+          <div key={i} style={{ height: 1, background: "var(--ide-menu-sep, #444)", margin: "4px 8px" }} />
         ) : (
           <div
             key={key}
@@ -105,7 +105,7 @@ export default function BrowserContextMenu({ x, y, nodeData, onClose, onAction }
               cursor: "pointer",
               whiteSpace: "nowrap",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "#3a3f4b")}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--ide-menu-hover, #3a3f4b)")}
             onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
           >
             {item.label}

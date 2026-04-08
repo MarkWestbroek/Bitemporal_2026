@@ -13,7 +13,7 @@ func initCgMetaRegistry() {
 		IsMaterieel:            false,
 		Domein:                 "CG",
 		Kleur:                  "#fde68a",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1410, Y: -2310}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1410, Y: -2370}},
 		Veldnaam:               "apistandaard",
 		Padnaam:                "api_standaarden",
 		Meervoud:               "api standaarden",
@@ -27,6 +27,15 @@ func initCgMetaRegistry() {
 		RelatieveAutoincrement: false,
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "ApiStandaardNamen", JSONRolnaam: "api_standaard_namen", Doeltype: "ApiStandaard_Naam", Momentvoorkomen: Enkelvoudig},
+		},
+		AfgeleideVelden: []AfgeleidVeld{
+			{
+				Naam:                "weergavenaam",
+				GoType:              "string",
+				AfleidingsregelTaal: "cel",
+				Afleidingsregel:     "Naam.naam",
+				IsWeergaveVeld:      true,
+			},
 		},
 	}
 	MetaRegistry["ApiStandaard_Naam"] = TypeMeta{
@@ -52,7 +61,7 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "apistandaard_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 1740, Y: -2310},
+			Positie:      &V3Positie{X: 1755, Y: -2355},
 			EdgeID:       "edge_1775567207805_5",
 			SourceHandle: "right",
 			TargetHandle: "left",
@@ -92,7 +101,7 @@ func initCgMetaRegistry() {
 		IsMaterieel:            false,
 		Domein:                 "CG",
 		Kleur:                  "#a7f3d0",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1410, Y: -2535}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1410, Y: -2610}},
 		Veldnaam:               "domein",
 		Padnaam:                "domeinen",
 		Meervoud:               "domeinen",
@@ -106,6 +115,15 @@ func initCgMetaRegistry() {
 		RelatieveAutoincrement: false,
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Domeingegevens", JSONRolnaam: "domeingegevens", Doeltype: "Domein_DomeinGegevens", Momentvoorkomen: Enkelvoudig},
+		},
+		AfgeleideVelden: []AfgeleidVeld{
+			{
+				Naam:                "weergavenaam",
+				GoType:              "string",
+				AfleidingsregelTaal: "cel",
+				Afleidingsregel:     "DomeinGegevens.naam",
+				IsWeergaveVeld:      true,
+			},
 		},
 	}
 	MetaRegistry["Domein_DomeinGegevens"] = TypeMeta{
@@ -131,7 +149,7 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "domein_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 1740, Y: -2535},
+			Positie:      &V3Positie{X: 1740, Y: -2610},
 			EdgeID:       "Domein->Domein_DomeinGegevens",
 			SourceHandle: "right",
 			TargetHandle: "left",
@@ -171,7 +189,7 @@ func initCgMetaRegistry() {
 		IsMaterieel:            false,
 		Domein:                 "CG",
 		Kleur:                  "#c4b5fd",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1410, Y: -2789}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1410, Y: -2895}},
 		Veldnaam:               "gemeente",
 		Padnaam:                "gemeenten",
 		Meervoud:               "gemeenten",
@@ -191,7 +209,7 @@ func initCgMetaRegistry() {
 				Naam:                "weergavenaam",
 				GoType:              "string",
 				AfleidingsregelTaal: "cel",
-				Afleidingsregel:     "naam + \" (\" + code + \")\"",
+				Afleidingsregel:     "GemeenteGegevens.naam + \" (\" + GemeenteGegevens.code + \")\"",
 				IsWeergaveVeld:      true,
 			},
 		},
@@ -219,7 +237,7 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "gemeente_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 1740, Y: -2779},
+			Positie:      &V3Positie{X: 1740, Y: -2895},
 			EdgeID:       "Gemeente->Gemeente_GemeenteGegevens",
 			SourceHandle: "right",
 			TargetHandle: "left",
@@ -258,7 +276,7 @@ func initCgMetaRegistry() {
 		IsMaterieel:            true,
 		Domein:                 "CG",
 		Kleur:                  "#bfdbfe",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 720, Y: -2505}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 735, Y: -2520}},
 		Veldnaam:               "initiatief",
 		Padnaam:                "initiatieven",
 		Meervoud:               "initiatieven",
@@ -284,6 +302,15 @@ func initCgMetaRegistry() {
 			{Rolnaam: "InitiatiefOrganisaties", JSONRolnaam: "initiatief_organisaties", Doeltype: "InitiatiefOrganisatie", Momentvoorkomen: Meervoudig},
 			{Rolnaam: "Aanvang", JSONRolnaam: "aanvang", Doeltype: "Initiatief_Aanvang", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "Einde", JSONRolnaam: "einde", Doeltype: "Initiatief_Einde", Momentvoorkomen: Enkelvoudig},
+		},
+		AfgeleideVelden: []AfgeleidVeld{
+			{
+				Naam:                "weergavenaam",
+				GoType:              "string",
+				AfleidingsregelTaal: "cel",
+				Afleidingsregel:     "Product.naam",
+				IsWeergaveVeld:      true,
+			},
 		},
 	}
 	MetaRegistry["Initiatief_Planning"] = TypeMeta{
@@ -311,12 +338,6 @@ func initCgMetaRegistry() {
 		Layout: &EditorLayout{
 			Positie: &V3Positie{X: 465, Y: -1935},
 			EdgeID:  "Initiatief->Initiatief_Planning",
-			UseEdges: []V3UseEdge{
-				{Doel: "Datum", ID: "Initiatief_Planning--dt-->Datum", SourceHandle: "left", TargetHandle: "right"},
-				{Doel: "Datum", ID: "Initiatief_Planning--dt-->Datum", SourceHandle: "left", TargetHandle: "right"},
-				{Doel: "Datum", ID: "Initiatief_Planning--dt-->Datum", SourceHandle: "left", TargetHandle: "right"},
-				{Doel: "Datum", ID: "Initiatief_Planning--dt-->Datum", SourceHandle: "left", TargetHandle: "right"},
-			},
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Initiatief_Planning_Data", Momentvoorkomen: Enkelvoudig},
@@ -350,7 +371,6 @@ func initCgMetaRegistry() {
 			Positie: &V3Positie{X: 750, Y: -1980},
 			EdgeID:  "Initiatief->Initiatief_Product",
 			UseEdges: []V3UseEdge{
-				{Doel: "URL", ID: "Initiatief_Product--dt-->URL", Hidden: true},
 				{Doel: "URL", ID: "Initiatief_Product--dt-->URL", Hidden: true},
 			},
 		},
@@ -419,7 +439,7 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 1080, Y: -2424},
+			Positie:      &V3Positie{X: 1080, Y: -2475},
 			EdgeID:       "edge_1775592769882_12",
 			SourceHandle: "right",
 			TargetHandle: "left",
@@ -451,7 +471,7 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 1080, Y: -2658},
+			Positie:      &V3Positie{X: 1080, Y: -2733},
 			EdgeID:       "edge_1775592790634_14",
 			SourceHandle: "right",
 			TargetHandle: "left",
@@ -548,7 +568,7 @@ func initCgMetaRegistry() {
 		SecondaireEntiteitIDKolom: "gemeente_id",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
-			Positie:          &V3Positie{X: 1080, Y: -2775},
+			Positie:          &V3Positie{X: 1080, Y: -2895},
 			EdgeID:           "edge_1775567300131_7",
 			SourceHandle:     "right",
 			TargetHandle:     "left",
@@ -561,6 +581,15 @@ func initCgMetaRegistry() {
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "InitiatiefGemeente_Data", Momentvoorkomen: Enkelvoudig},
+		},
+		AfgeleideVelden: []AfgeleidVeld{
+			{
+				Naam:                "weergavenaam",
+				GoType:              "string",
+				AfleidingsregelTaal: "cel",
+				Afleidingsregel:     "Gemeente.weergavenaam + \" - \" + rol",
+				IsWeergaveVeld:      true,
+			},
 		},
 	}
 	MetaRegistry["InitiatiefDomein"] = TypeMeta{
@@ -587,7 +616,7 @@ func initCgMetaRegistry() {
 		SecondaireEntiteitIDKolom: "domein_id",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
-			Positie:          &V3Positie{X: 1080, Y: -2541},
+			Positie:          &V3Positie{X: 1080, Y: -2616},
 			EdgeID:           "edge_1775567392935_11",
 			SourceHandle:     "right",
 			TargetHandle:     "left",
@@ -597,6 +626,15 @@ func initCgMetaRegistry() {
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "InitiatiefDomein_Data", Momentvoorkomen: Enkelvoudig},
+		},
+		AfgeleideVelden: []AfgeleidVeld{
+			{
+				Naam:                "weergavenaam",
+				GoType:              "string",
+				AfleidingsregelTaal: "cel",
+				Afleidingsregel:     "Domein.DomeinGegevens.naam",
+				IsWeergaveVeld:      true,
+			},
 		},
 	}
 	MetaRegistry["InitiatiefAPIStandaard"] = TypeMeta{
@@ -623,7 +661,7 @@ func initCgMetaRegistry() {
 		SecondaireEntiteitIDKolom: "apistandaard_id",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
-			Positie:          &V3Positie{X: 1080, Y: -2307},
+			Positie:          &V3Positie{X: 1080, Y: -2370},
 			EdgeID:           "edge_1775569530678_15",
 			SourceHandle:     "right",
 			TargetHandle:     "left",
@@ -633,6 +671,15 @@ func initCgMetaRegistry() {
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "InitiatiefAPIStandaard_Data", Momentvoorkomen: Enkelvoudig},
+		},
+		AfgeleideVelden: []AfgeleidVeld{
+			{
+				Naam:                "weergavenaam",
+				GoType:              "string",
+				AfleidingsregelTaal: "cel",
+				Afleidingsregel:     "ApiStandaard.Naam.naam",
+				IsWeergaveVeld:      true,
+			},
 		},
 	}
 	MetaRegistry["InitiatiefOrganisatie"] = TypeMeta{
@@ -1117,6 +1164,15 @@ func initCgMetaRegistry() {
 			{Rolnaam: "Aanvang", JSONRolnaam: "aanvang", Doeltype: "Organisatie_Aanvang", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "Einde", JSONRolnaam: "einde", Doeltype: "Organisatie_Einde", Momentvoorkomen: Enkelvoudig},
 		},
+		AfgeleideVelden: []AfgeleidVeld{
+			{
+				Naam:                "weergavenaam",
+				GoType:              "string",
+				AfleidingsregelTaal: "cel",
+				Afleidingsregel:     "Organisatienaam.naam",
+				IsWeergaveVeld:      true,
+			},
+		},
 	}
 	MetaRegistry["Organisatie_Contactgegevens"] = TypeMeta{
 		Typenaam:               "Organisatie_Contactgegevens",
@@ -1147,10 +1203,7 @@ func initCgMetaRegistry() {
 			TargetHandle: "right",
 			UseEdges: []V3UseEdge{
 				{Doel: "URL", ID: "Organisatie_Contactgegevens--dt-->URL", SourceHandle: "left", TargetHandle: "top", Hidden: true},
-				{Doel: "URL", ID: "Organisatie_Contactgegevens--dt-->URL", SourceHandle: "left", TargetHandle: "top", Hidden: true},
 				{Doel: "Emailadres", ID: "Organisatie_Contactgegevens--dt-->Emailadres", SourceHandle: "left", TargetHandle: "top"},
-				{Doel: "Emailadres", ID: "Organisatie_Contactgegevens--dt-->Emailadres", SourceHandle: "left", TargetHandle: "top"},
-				{Doel: "Telefoonnummer", ID: "Organisatie_Contactgegevens--dt-->Telefoonnummer", SourceHandle: "left", TargetHandle: "top"},
 				{Doel: "Telefoonnummer", ID: "Organisatie_Contactgegevens--dt-->Telefoonnummer", SourceHandle: "left", TargetHandle: "top"},
 			},
 		},
@@ -1416,6 +1469,15 @@ func initCgMetaRegistry() {
 			{Rolnaam: "Aanvang", JSONRolnaam: "aanvang", Doeltype: "Persoon_Aanvang", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "Einde", JSONRolnaam: "einde", Doeltype: "Persoon_Einde", Momentvoorkomen: Enkelvoudig},
 		},
+		AfgeleideVelden: []AfgeleidVeld{
+			{
+				Naam:                "weergavenaam",
+				GoType:              "string",
+				AfleidingsregelTaal: "cel",
+				Afleidingsregel:     "Persoonnaam.naam",
+				IsWeergaveVeld:      true,
+			},
+		},
 	}
 	MetaRegistry["Persoon_Contactgegevens"] = TypeMeta{
 		Typenaam:               "Persoon_Contactgegevens",
@@ -1446,8 +1508,6 @@ func initCgMetaRegistry() {
 			TargetHandle: "right",
 			UseEdges: []V3UseEdge{
 				{Doel: "Emailadres", ID: "Persoon_Contactgegevens--dt-->Emailadres", SourceHandle: "left", TargetHandle: "bottom"},
-				{Doel: "Emailadres", ID: "Persoon_Contactgegevens--dt-->Emailadres", SourceHandle: "left", TargetHandle: "bottom"},
-				{Doel: "Telefoonnummer", ID: "Persoon_Contactgegevens--dt-->Telefoonnummer", SourceHandle: "left", TargetHandle: "bottom"},
 				{Doel: "Telefoonnummer", ID: "Persoon_Contactgegevens--dt-->Telefoonnummer", SourceHandle: "left", TargetHandle: "bottom"},
 			},
 		},
