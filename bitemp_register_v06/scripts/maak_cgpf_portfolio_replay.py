@@ -78,14 +78,14 @@ PRODUCTTYPE_MAP = OrderedDict(
 
 FASE_MAP = OrderedDict(
     {
-        "idee": "Idee",
-        "initiatie": "Verkenning",
-        "verkenning": "Verkenning",
-        "realisatie": "Realisatie",
-        "opschaling": "InGebruik",
-        "doorontwikkeling": "InGebruik",
-        "beheer": "InGebruik",
-        "in gebruik": "InGebruik",
+        "idee": "Idee (nog geen concrete opbrengsten)",
+        "initiatie": "Initiatie (al een snelle POC)",
+        "verkenning": "Initiatie (al een snelle POC)",
+        "realisatie": "Realisatie (gaat binnenkort draaien bij eerste gemeenten)",
+        "opschaling": "Opschaling (draait bij enkele gemeenten, nu op zoek naar verbreding)",
+        "doorontwikkeling": "Doorontwikkeling en beheer",
+        "beheer": "Doorontwikkeling en beheer (stabiel, onderdeel gevestigde orde)",
+        "in gebruik": "Doorontwikkeling en beheer (stabiel, onderdeel gevestigde orde)",
     }
 )
 
@@ -477,7 +477,7 @@ def canonical_fase(raw: Any) -> tuple[str, str]:
     for needle, target in FASE_MAP.items():
         if needle in lowered:
             return target, text
-    return text or "Verkenning", text
+    return text or "Initiatie (al een snelle POC)", text
 
 
 def canonical_cglaag(raw: Any) -> tuple[str, str]:
@@ -1096,7 +1096,7 @@ def build_initiatief_entries(rows: list[dict[str, Any]], seed_data: dict[str, An
                 )
             )
 
-        # Organisaties: match naar seeded orgs of dump naar OrganisatieInfo
+        # Organisaties: match naar seeded orgs of dump naar Initiatiefinfo
         matched_organisaties, overige_organisaties = match_organisaties(
             row.get("contact_organisatie"),
             row.get("leveranciers"),
@@ -1116,10 +1116,21 @@ def build_initiatief_entries(rows: list[dict[str, Any]], seed_data: dict[str, An
         if overige_organisaties:
             wijzigingen.append(
                 request_change(
-                    "organisatieinfo",
+                    "initiatiefinfo",
                     {"initiatief_id": initiatief_id, "informatie": "; ".join(overige_organisaties)},
                 )
             )
+
+        # BetrokkenOrganisatie: welk type organisaties zijn betrokken?
+        org_types_raw = row.get("organisatie_types") or ""
+        for org_type_token in (t.strip() for t in org_types_raw.split(";")):
+            if org_type_token and org_type_token in ("Gemeenten", "Leveranciers", "VNG", "Ketenpartners", "Rijk"):
+                wijzigingen.append(
+                    request_change(
+                        "betrokkenorganisatie",
+                        {"initiatief_id": initiatief_id, "type": org_type_token},
+                    )
+                )
 
         entries.append(
             request_entry(
@@ -1165,7 +1176,8 @@ def build_replay(source_rows: list[dict[str, Any]], schema_meta: dict[str, Any],
             "Bronwaarden voor producttype, fase en CG-laag zijn rijker dan de huidige enums. De generator normaliseert die waarden en bewaart de ruwe bronwaarde in registratie.opmerking.",
             "Voor gemeente, domein en API-standaard geldt nu: match op de referentielijst => REL opvoeren; geen match => opslaan in het bijbehorende overig-GE (`anderdomein`, `andersdangemeente`, `andereapistandaard`).",
             "Wanneer de losse seed-replays voor gemeenten, domeinen en API-standaarden aanwezig zijn, gebruikt de generator die als bron en worden die referenties niet opnieuw in dit replay-bestand geseed.",
-            "Organisaties worden gerationaliseerd via ORG_ALIASES en is_org_like_token(). Nette namen worden geseed als Organisatie en gekoppeld als InitiatiefOrganisatie. Ongestructureerde tekst (zinnen, lijsten, onherkenbaar) wordt opgeslagen in OrganisatieInfo.informatie, zodat er geen informatie verloren gaat.",
+            "Organisaties worden gerationaliseerd via ORG_ALIASES en is_org_like_token(). Nette namen worden geseed als Organisatie en gekoppeld als InitiatiefOrganisatie. Ongestructureerde tekst (zinnen, lijsten, onherkenbaar) wordt opgeslagen in Initiatiefinfo.informatie, zodat er geen informatie verloren gaat.",
+            "Organisatietypen (Gemeenten, Leveranciers, VNG, Ketenpartners, Rijk) worden per initiatief opgeslagen als BetrokkenOrganisatie-entries.",
         ],
         "entries": entries,
     }

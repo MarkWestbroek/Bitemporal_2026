@@ -16,6 +16,7 @@ const (
 	FaseInitiatiealeensnellePOC                                  Fase = "Initiatie (al een snelle POC)"
 	FaseRealisatiegaatbinnenkortdraaienbijeerstegemeenten        Fase = "Realisatie (gaat binnenkort draaien bij eerste gemeenten)"
 	FaseOpschalingdraaitbijenkelegemeentennuopzoeknaarverbreding Fase = "Opschaling (draait bij enkele gemeenten, nu op zoek naar verbreding)"
+	FaseDoorontwikkelingenbeheer                                 Fase = "Doorontwikkeling en beheer"
 	FaseDoorontwikkelingenbeheerstabielonderdeelgevestigdeorde   Fase = "Doorontwikkeling en beheer (stabiel, onderdeel gevestigde orde)"
 )
 
@@ -24,6 +25,7 @@ type Producttype string
 const (
 	ProducttypeComponent  Producttype = "Component"
 	ProducttypeToepassing Producttype = "Toepassing"
+	ProducttypeStandaard  Producttype = "Standaard"
 )
 
 type CGLaag string
@@ -52,6 +54,16 @@ const (
 	SchaalSchaal2 Schaal = "Schaal 2"
 	SchaalSchaal3 Schaal = "Schaal 3"
 	SchaalSchaal4 Schaal = "Schaal 4"
+)
+
+type Organisatietype string
+
+const (
+	OrganisatietypeGemeenten     Organisatietype = "Gemeenten"
+	OrganisatietypeLeveranciers  Organisatietype = "Leveranciers"
+	OrganisatietypeVNG           Organisatietype = "VNG"
+	OrganisatietypeKetenpartners Organisatietype = "Ketenpartners"
+	OrganisatietypeRijk          Organisatietype = "Rijk"
 )
 
 type Gemeenterol string
@@ -370,6 +382,27 @@ type Initiatief_Initiatiefinfo_Data struct {
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
 
+type Initiatief_BetrokkenOrganisatie struct {
+	bun.BaseModel    `bun:"table:initiatief_betrokkenorganisatie,alias:initiatief_betrokkenorganisatie"`
+	Initiatief_ID    int                                    `json:"initiatief_id" bun:"initiatief_id,pk" schema_desc:"ID van de Initiatief-entiteit"`
+	Rel_ID           int                                    `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentInitiatief *Initiatief                            `json:"-" bun:"rel:belongs-to,join:initiatief_id=id,on_delete:cascade"`
+	Opvoer           *time.Time                             `json:"opvoer,omitempty"`
+	Afvoer           *time.Time                             `json:"afvoer,omitempty"`
+	Data             []Initiatief_BetrokkenOrganisatie_Data `bun:"rel:has-many,join:initiatief_id=initiatief_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// Initiatief_BetrokkenOrganisatie_Data — geversioned inhoud van Initiatief_BetrokkenOrganisatie.
+type Initiatief_BetrokkenOrganisatie_Data struct {
+	bun.BaseModel `bun:"table:initiatief_betrokkenorganisatie_data,alias:initiatief_betrokkenorganisatie_data"`
+	Initiatief_ID int             `json:"initiatief_id" bun:"initiatief_id,pk"`
+	Rel_ID        int             `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64           `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Type          Organisatietype `json:"type" schema:"enum=Organisatietype"`
+	Opvoer        *time.Time      `json:"opvoer,omitempty"`
+	Afvoer        *time.Time      `json:"afvoer,omitempty"`
+}
+
 type InitiatiefGemeente struct {
 	bun.BaseModel    `bun:"table:initiatiefgemeente,alias:initiatiefgemeente"`
 	Initiatief_ID    int                       `json:"initiatief_id" bun:"initiatief_id,pk" schema_desc:"ID van de Initiatief-entiteit"`
@@ -499,26 +532,6 @@ type Organisatie_Organisatienaam_Data struct {
 	Rel_ID         int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie         int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Naam           string     `json:"naam"`
-	Opvoer         *time.Time `json:"opvoer,omitempty"`
-	Afvoer         *time.Time `json:"afvoer,omitempty"`
-}
-
-type Organisatie_BetrokkenOrganisatietype struct {
-	bun.BaseModel     `bun:"table:organisatie_betrokkenorganisatietype,alias:organisatie_betrokkenorganisatietype"`
-	Organisatie_ID    int                                         `json:"organisatie_id" bun:"organisatie_id,pk" schema_desc:"ID van de Organisatie-entiteit"`
-	Rel_ID            int                                         `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentOrganisatie *Organisatie                                `json:"-" bun:"rel:belongs-to,join:organisatie_id=id,on_delete:cascade"`
-	Opvoer            *time.Time                                  `json:"opvoer,omitempty"`
-	Afvoer            *time.Time                                  `json:"afvoer,omitempty"`
-	Data              []Organisatie_BetrokkenOrganisatietype_Data `bun:"rel:has-many,join:organisatie_id=organisatie_id,join:rel_id=rel_id" json:"data,omitempty"`
-}
-
-// Organisatie_BetrokkenOrganisatietype_Data — geversioned inhoud van Organisatie_BetrokkenOrganisatietype.
-type Organisatie_BetrokkenOrganisatietype_Data struct {
-	bun.BaseModel  `bun:"table:organisatie_betrokkenorganisatietype_data,alias:organisatie_betrokkenorganisatietype_data"`
-	Organisatie_ID int        `json:"organisatie_id" bun:"organisatie_id,pk"`
-	Rel_ID         int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie         int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Opvoer         *time.Time `json:"opvoer,omitempty"`
 	Afvoer         *time.Time `json:"afvoer,omitempty"`
 }

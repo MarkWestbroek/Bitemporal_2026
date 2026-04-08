@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 )
 
 /*
@@ -83,7 +84,7 @@ func (rep *RepresentatiePlusNaam) UnmarshalJSON(data []byte) error {
 	}
 
 	for veldnaam, payload := range raw {
-		meta, ok := MetaRegistry.GetByVeldnaam(veldnaam)
+		meta, ok := chooseMetaByPayload(veldnaam, payload)
 		if !ok {
 			return fmt.Errorf("unsupported representatie key '%s'", veldnaam)
 		}
@@ -103,6 +104,38 @@ func (rep *RepresentatiePlusNaam) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
+}
+
+// chooseMetaByPayload lost ambiguïteit op wanneer meerdere types dezelfde
+// Veldnaam delen (bijv. "naam" → ApiStandaard_Naam_Data / NatuurlijkPersoon_Naam_Data).
+// De juiste TypeMeta wordt gekozen door te kijken welk EntiteitIDKolom als
+// JSON-sleutel in de payload voorkomt.
+func chooseMetaByPayload(veldnaam string, payload json.RawMessage) (TypeMeta, bool) {
+	candidates := MetaRegistry.GetAllByVeldnaam(veldnaam)
+	if len(candidates) == 0 {
+		return TypeMeta{}, false
+	}
+	if len(candidates) == 1 {
+		return candidates[0], true
+	}
+
+	// Meerdere matches: inspecteer de payload-sleutels om te disambigueren.
+	var keys map[string]json.RawMessage
+	if err := json.Unmarshal(payload, &keys); err != nil {
+		// Bij parsefout: neem de eerste kandidaat als fallback.
+		return candidates[0], true
+	}
+	for _, meta := range candidates {
+		if meta.EntiteitIDKolom != "" {
+			if _, found := keys[meta.EntiteitIDKolom]; found {
+				return meta, true
+			}
+		}
+	}
+
+	// Geen match op EntiteitIDKolom: log een waarschuwing, neem de eerste.
+	fmt.Fprintf(os.Stderr, "WARN chooseMetaByPayload: geen disambiguatie mogelijk voor veldnaam %q (%d candidates)\n", veldnaam, len(candidates))
+	return candidates[0], true
 }
 
 // Legacy AsA/AsB/OpvoerAfvoerA/OpvoerAfvoerB verwijderd — niet meer

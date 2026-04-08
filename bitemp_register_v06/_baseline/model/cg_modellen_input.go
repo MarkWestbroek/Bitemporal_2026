@@ -84,6 +84,12 @@ type Initiatief_Initiatiefinfo_Input struct {
 	PbiID         int    `json:"PbiID"`
 }
 
+type Initiatief_BetrokkenOrganisatie_Input struct {
+	INITIATIEF_ID int             `json:"initiatief_id"`
+	Rel_ID        int             `json:"rel_id"`
+	Type          Organisatietype `json:"type"`
+}
+
 type InitiatiefGemeente_Input struct {
 	INITIATIEF_ID int         `json:"initiatief_id"`
 	Rel_ID        int         `json:"rel_id"`
@@ -122,11 +128,6 @@ type Organisatie_Organisatienaam_Input struct {
 	ORGANISATIE_ID int    `json:"organisatie_id"`
 	Rel_ID         int    `json:"rel_id"`
 	Naam           string `json:"naam"`
-}
-
-type Organisatie_BetrokkenOrganisatietype_Input struct {
-	ORGANISATIE_ID int `json:"organisatie_id"`
-	Rel_ID         int `json:"rel_id"`
 }
 
 type Contactpersoon_Input struct {

@@ -38,22 +38,23 @@ type Gemeente struct {
 // Initiatief — Portfolio-initiatief met planning, productinformatie en bijdragen.
 type Initiatief struct {
 	bun.BaseModel            `bun:"table:initiatief,alias:initiatief"`
-	ID                       int                             `json:"id" bun:"id,pk"`
-	Opvoer                   *time.Time                      `json:"opvoer,omitempty"`
-	Afvoer                   *time.Time                      `json:"afvoer,omitempty"`
-	Planningen               []Initiatief_Planning           `bun:"rel:has-many,join:id=initiatief_id" json:"planningen,omitempty"`
-	Producten                []Initiatief_Product            `bun:"rel:has-many,join:id=initiatief_id" json:"producten,omitempty"`
-	Bijdragen                []Initiatief_Bijdrage           `bun:"rel:has-many,join:id=initiatief_id" json:"bijdragen,omitempty"`
-	AndereDomeinen           []Initiatief_AnderDomein        `bun:"rel:has-many,join:id=initiatief_id" json:"andere_domeinen,omitempty"`
-	AndersDanGemeenten       []Initiatief_AndersDanGemeente  `bun:"rel:has-many,join:id=initiatief_id" json:"anders_dan_gemeenten,omitempty"`
-	AndereApiStandaarden     []Initiatief_AndereAPIStandaard `bun:"rel:has-many,join:id=initiatief_id" json:"andere_api_standaarden,omitempty"`
-	Initiatiefinfos          []Initiatief_Initiatiefinfo     `bun:"rel:has-many,join:id=initiatief_id" json:"initiatiefinfos,omitempty"`
-	InitiatiefGemeenten      []InitiatiefGemeente            `bun:"rel:has-many,join:id=initiatief_id" json:"initiatief_gemeenten,omitempty"`
-	InitiatiefDomeinen       []InitiatiefDomein              `bun:"rel:has-many,join:id=initiatief_id" json:"initiatief_domeinen,omitempty"`
-	InitiatiefApiStandaarden []InitiatiefAPIStandaard        `bun:"rel:has-many,join:id=initiatief_id" json:"initiatief_api_standaarden,omitempty"`
-	InitiatiefOrganisaties   []InitiatiefOrganisatie         `bun:"rel:has-many,join:id=initiatief_id" json:"initiatief_organisaties,omitempty"`
-	Aanvang                  []Initiatief_Aanvang            `bun:"rel:has-many,join:id=initiatief_id" json:"aanvang,omitempty"`
-	Einde                    []Initiatief_Einde              `bun:"rel:has-many,join:id=initiatief_id" json:"einde,omitempty"`
+	ID                       int                               `json:"id" bun:"id,pk"`
+	Opvoer                   *time.Time                        `json:"opvoer,omitempty"`
+	Afvoer                   *time.Time                        `json:"afvoer,omitempty"`
+	Planningen               []Initiatief_Planning             `bun:"rel:has-many,join:id=initiatief_id" json:"planningen,omitempty"`
+	Producten                []Initiatief_Product              `bun:"rel:has-many,join:id=initiatief_id" json:"producten,omitempty"`
+	Bijdragen                []Initiatief_Bijdrage             `bun:"rel:has-many,join:id=initiatief_id" json:"bijdragen,omitempty"`
+	AndereDomeinen           []Initiatief_AnderDomein          `bun:"rel:has-many,join:id=initiatief_id" json:"andere_domeinen,omitempty"`
+	AndersDanGemeenten       []Initiatief_AndersDanGemeente    `bun:"rel:has-many,join:id=initiatief_id" json:"anders_dan_gemeenten,omitempty"`
+	AndereApiStandaarden     []Initiatief_AndereAPIStandaard   `bun:"rel:has-many,join:id=initiatief_id" json:"andere_api_standaarden,omitempty"`
+	Initiatiefinfos          []Initiatief_Initiatiefinfo       `bun:"rel:has-many,join:id=initiatief_id" json:"initiatiefinfos,omitempty"`
+	BetrokkenOrganisatie     []Initiatief_BetrokkenOrganisatie `bun:"rel:has-many,join:id=initiatief_id" json:"betrokken_organisatie,omitempty"`
+	InitiatiefGemeenten      []InitiatiefGemeente              `bun:"rel:has-many,join:id=initiatief_id" json:"initiatief_gemeenten,omitempty"`
+	InitiatiefDomeinen       []InitiatiefDomein                `bun:"rel:has-many,join:id=initiatief_id" json:"initiatief_domeinen,omitempty"`
+	InitiatiefApiStandaarden []InitiatiefAPIStandaard          `bun:"rel:has-many,join:id=initiatief_id" json:"initiatief_api_standaarden,omitempty"`
+	InitiatiefOrganisaties   []InitiatiefOrganisatie           `bun:"rel:has-many,join:id=initiatief_id" json:"initiatief_organisaties,omitempty"`
+	Aanvang                  []Initiatief_Aanvang              `bun:"rel:has-many,join:id=initiatief_id" json:"aanvang,omitempty"`
+	Einde                    []Initiatief_Einde                `bun:"rel:has-many,join:id=initiatief_id" json:"einde,omitempty"`
 }
 
 // Initiatief_Aanvang — aanvangdatum van entiteit Initiatief.
@@ -79,15 +80,14 @@ type Initiatief_Einde struct {
 // Organisatie — Organisatie die betrokken is bij initiatieven in het portfolio.
 type Organisatie struct {
 	bun.BaseModel              `bun:"table:organisatie,alias:organisatie"`
-	ID                         int                                    `json:"id" bun:"id,pk"`
-	Opvoer                     *time.Time                             `json:"opvoer,omitempty"`
-	Afvoer                     *time.Time                             `json:"afvoer,omitempty"`
-	OrganisatieContactgegevens []Organisatie_Contactgegevens          `bun:"rel:has-many,join:id=organisatie_id" json:"organisatie_contactgegevens,omitempty"`
-	Organisatienamen           []Organisatie_Organisatienaam          `bun:"rel:has-many,join:id=organisatie_id" json:"organisatienamen,omitempty"`
-	BetrokkenOrganisatietypen  []Organisatie_BetrokkenOrganisatietype `bun:"rel:has-many,join:id=organisatie_id" json:"betrokken_organisatietypen,omitempty"`
-	Contactpersonen            []Contactpersoon                       `bun:"rel:has-many,join:id=organisatie_id" json:"contactpersonen,omitempty"`
-	Aanvang                    []Organisatie_Aanvang                  `bun:"rel:has-many,join:id=organisatie_id" json:"aanvang,omitempty"`
-	Einde                      []Organisatie_Einde                    `bun:"rel:has-many,join:id=organisatie_id" json:"einde,omitempty"`
+	ID                         int                           `json:"id" bun:"id,pk"`
+	Opvoer                     *time.Time                    `json:"opvoer,omitempty"`
+	Afvoer                     *time.Time                    `json:"afvoer,omitempty"`
+	OrganisatieContactgegevens []Organisatie_Contactgegevens `bun:"rel:has-many,join:id=organisatie_id" json:"organisatie_contactgegevens,omitempty"`
+	Organisatienamen           []Organisatie_Organisatienaam `bun:"rel:has-many,join:id=organisatie_id" json:"organisatienamen,omitempty"`
+	Contactpersonen            []Contactpersoon              `bun:"rel:has-many,join:id=organisatie_id" json:"contactpersonen,omitempty"`
+	Aanvang                    []Organisatie_Aanvang         `bun:"rel:has-many,join:id=organisatie_id" json:"aanvang,omitempty"`
+	Einde                      []Organisatie_Einde           `bun:"rel:has-many,join:id=organisatie_id" json:"einde,omitempty"`
 }
 
 // Organisatie_Aanvang — aanvangdatum van entiteit Organisatie.

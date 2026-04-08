@@ -2,7 +2,7 @@
 
 Deze notitie beschrijft hoe [Intake Portfolio Common Ground 1.json](docs/ontwerpgedachten/CG%20PF/Intake%20Portfolio%20Common%20Ground%201.json) als bron wordt gebruikt voor een draft replay-bestand tegen het CG-model.
 
-**Huidige modelversie:** CG v0.5.2 (`docs/ontwerpgedachten/CG PF/CG v0.5.2.json`), opgewaardeerd van v0.4.6.1.
+**Huidige modelversie:** CG v0.5.9.3 (`docs/ontwerpgedachten/CG PF/CG v0.5.9.3.json`).
 
 ## Directe mapping
 
@@ -26,10 +26,11 @@ Deze notitie beschrijft hoe [Intake Portfolio Common Ground 1.json](docs/ontwerp
 
 ## Niet 1-op-1 in het huidige schema
 
-- ~~`Initiatief` heeft geen relatie naar `Organisatie`.~~ **Opgelost in v0.5.2**: `InitiatiefOrganisatie` (meervoudig) en `OrganisatieInfo` GE zijn nu beschikbaar. De generator koppelt opgeschoonde organisatienamen via `initiatieforganisatie` en slaat ongestructureerde tekst op in `organisatieinfo`.
-- `Persoon` en `Organisatie` hebben allebei een gegevenselement met request-key `contactgegevens`. Omdat de registratie-parser generiek op `veldnaam` werkt, is dat op dit moment ambigu. De generator laat die contactgegevens daarom bewust weg.
-- Bronwaarden voor `producttype`, `fase` en `CG-laag` zijn rijker dan de huidige enums. De generator reduceert die naar de best passende enumwaarde en bewaart de ruwe bronwaarde in `registratie.opmerking`.
-- De intake bevat vrije tekst voor gemeenten, domeinen en API-standaarden. De generator splitst die heuristisch; dit levert een bruikbare eerste replay op, maar geen opgeschoonde referentielijst.
+- ~~`Initiatief` heeft geen relatie naar `Organisatie`.~~ **Opgelost in v0.5.2**: `InitiatiefOrganisatie` (meervoudig) en `Initiatiefinfo` GE zijn nu beschikbaar. De generator koppelt opgeschoonde organisatienamen via `initiatieforganisatie` en slaat ongestructureerde tekst op in `initiatiefinfo`.
+- ~~`contactgegevens` ambigu~~ **Opgelost via `chooseMetaByPayload()`** in `REST request models.go`: bij veldnaam-collisions (`naam`, `contactgegevens`) wordt gedisambigueerd op basis van de `EntiteitIDKolom` in de payload.
+- **Nieuw in v0.5.9**: `BetrokkenOrganisatie` GE (meervoudig, met `Organisatietype` enum: Gemeenten, Leveranciers, VNG, Ketenpartners, Rijk). Het bronveld `organisatie_types` wordt nu per initiatief omgezet naar losse `betrokkenorganisatie`-entries.
+- **Fase-enum uitgebreid in v0.5.9**: de waarden zijn nu volledige beschrijvende strings (bijv. "Idee (nog geen concrete opbrengsten)") i.p.v. korte labels. De FASE_MAP in de generator is hierop aangepast.
+- **Producttype `Standaard`**: komt 6x voor in de brondata maar ontbreekt nog in de Go enum (alleen Component en Toepassing). Wordt later via het model/codegen toegevoegd.
 
 ## Generator
 
@@ -41,8 +42,8 @@ Voorbeeld:
 cd bitemp_register_v06
 python scripts/maak_cgpf_portfolio_replay.py \
   "docs/ontwerpgedachten/CG PF/Intake Portfolio Common Ground 1.json" \
-  "docs/ontwerpgedachten/CG PF/CG v0.5.2.json" \
-  "docs/ontwerpgedachten/CG PF/Intake Portfolio Common Ground 2.replay (zonder gemeenten).json"
+  "docs/ontwerpgedachten/CG PF/CG v0.5.9.3.json" \
+  "docs/ontwerpgedachten/CG PF/Replay files/4. Intake Portfolio Common Ground 2.replay (zonder gemeenten).json"
 ```
 
 ## Officiële gemeenteseed via CBS (2026)
