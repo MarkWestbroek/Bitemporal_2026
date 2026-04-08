@@ -358,18 +358,33 @@ You must also explicitly enable dropping with:
 
 If `ALLOW_DROP_TABLES` is not `true`, the endpoint returns `403 Forbidden` and will not execute.
 
+### Domein-specifiek droppen
+
+Om alleen de tabellen van een bepaald domein te droppen (bijv. `np-loc` of `cg`), gebruik de `domein` query parameter:
+
+- `DELETE /admin/db/droptables/:password?domein=np-loc`
+
+Dit dropt **alleen** de model-tabellen (entiteiten, gegevenselementen, relaties) die in de MetaRegistry tot het opgegeven domein behoren. De gedeelde plumbing-tabellen (registratie, wijziging) worden **niet** gedropt.
+
+Zonder `domein` parameter worden alle tabellen gedropt (bestaand gedrag).
+
 ### Call examples
 
 curl (local):
 
 ```bash
+# Alle tabellen droppen
 curl -X DELETE http://localhost:8080/admin/db/droptables/1234
+
+# Alleen tabellen van domein 'np-loc' droppen
+curl -X DELETE "http://localhost:8080/admin/db/droptables/1234?domein=np-loc"
 ```
 
 Postman:
 
 - Method: `DELETE`
 - URL: `http://localhost:8080/admin/db/droptables/1234`
+  - Optioneel query param: `domein=np-loc`
 - Body: none
 
 Expected responses:

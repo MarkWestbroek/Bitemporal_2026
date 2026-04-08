@@ -63,13 +63,14 @@ type HeeftOnderliggendeGegevenselementen interface {
 // EditorLayout bevat UML-editor layout metadata voor round-trip engineering.
 // Deze gegevens worden genegeerd door codegen maar bewaard voor stabiele editor-layouts.
 type EditorLayout struct {
-	Positie          *V3Positie // node-positie in de editor
-	EdgeID           string     // persistente edge-id (entiteit→GE/relatie)
-	SourceHandle     string     // handle op de bron-zijde van de owner-edge
-	TargetHandle     string     // handle op de doel-zijde van de owner-edge
-	DoelEdgeID       string     // alleen relaties: edge-id naar doel-entiteit
-	DoelSourceHandle string     // alleen relaties: handle op relatie (uitgaand naar doel)
-	DoelTargetHandle string     // alleen relaties: handle op doel-entiteit (inkomend)
+	Positie          *V3Positie  // node-positie in de editor
+	EdgeID           string      // persistente edge-id (entiteit→GE/relatie)
+	SourceHandle     string      // handle op de bron-zijde van de owner-edge
+	TargetHandle     string      // handle op de doel-zijde van de owner-edge
+	DoelEdgeID       string      // alleen relaties: edge-id naar doel-entiteit
+	DoelSourceHandle string      // alleen relaties: handle op relatie (uitgaand naar doel)
+	DoelTargetHandle string      // alleen relaties: handle op doel-entiteit (inkomend)
+	UseEdges         []V3UseEdge // optionele metadata voor dependency-edges naar enum/datatype/ref
 }
 
 // ReferentielijstInstantieInfo bevat metadata en layout voor een referentielijst-instantie

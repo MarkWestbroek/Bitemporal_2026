@@ -52,8 +52,10 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "apistandaard_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1740, Y: -2310}, EdgeID: "edge_1775567207805_5",
-			SourceHandle: "right", TargetHandle: "left",
+			Positie:      &V3Positie{X: 1740, Y: -2310},
+			EdgeID:       "edge_1775567207805_5",
+			SourceHandle: "right",
+			TargetHandle: "left",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Naam_Data", Momentvoorkomen: Enkelvoudig},
@@ -129,8 +131,10 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "domein_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1740, Y: -2535}, EdgeID: "Domein->Domein_DomeinGegevens",
-			SourceHandle: "right", TargetHandle: "left",
+			Positie:      &V3Positie{X: 1740, Y: -2535},
+			EdgeID:       "Domein->Domein_DomeinGegevens",
+			SourceHandle: "right",
+			TargetHandle: "left",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "DomeinGegevens_Data", Momentvoorkomen: Enkelvoudig},
@@ -215,8 +219,10 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "gemeente_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1740, Y: -2779}, EdgeID: "Gemeente->Gemeente_GemeenteGegevens",
-			SourceHandle: "right", TargetHandle: "left",
+			Positie:      &V3Positie{X: 1740, Y: -2779},
+			EdgeID:       "Gemeente->Gemeente_GemeenteGegevens",
+			SourceHandle: "right",
+			TargetHandle: "left",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "GemeenteGegevens_Data", Momentvoorkomen: Enkelvoudig},
@@ -302,7 +308,14 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 495, Y: -1935}, EdgeID: "Initiatief->Initiatief_Planning",
+			Positie: &V3Positie{X: 465, Y: -1935},
+			EdgeID:  "Initiatief->Initiatief_Planning",
+			UseEdges: []V3UseEdge{
+				{Doel: "Datum", ID: "Initiatief_Planning--dt-->Datum", SourceHandle: "left", TargetHandle: "right"},
+				{Doel: "Datum", ID: "Initiatief_Planning--dt-->Datum", SourceHandle: "left", TargetHandle: "right"},
+				{Doel: "Datum", ID: "Initiatief_Planning--dt-->Datum", SourceHandle: "left", TargetHandle: "right"},
+				{Doel: "Datum", ID: "Initiatief_Planning--dt-->Datum", SourceHandle: "left", TargetHandle: "right"},
+			},
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Initiatief_Planning_Data", Momentvoorkomen: Enkelvoudig},
@@ -333,7 +346,12 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 750, Y: -1980}, EdgeID: "Initiatief->Initiatief_Product",
+			Positie: &V3Positie{X: 750, Y: -1980},
+			EdgeID:  "Initiatief->Initiatief_Product",
+			UseEdges: []V3UseEdge{
+				{Doel: "URL", ID: "Initiatief_Product--dt-->URL", Hidden: true},
+				{Doel: "URL", ID: "Initiatief_Product--dt-->URL", Hidden: true},
+			},
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Initiatief_Product_Data", Momentvoorkomen: Enkelvoudig},
@@ -364,7 +382,12 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1035, Y: -1920}, EdgeID: "Initiatief->Initiatief_Bijdrage",
+			Positie: &V3Positie{X: 1035, Y: -1920},
+			EdgeID:  "Initiatief->Initiatief_Bijdrage",
+			UseEdges: []V3UseEdge{
+				{Doel: "Bijdragetype", ID: "Initiatief_Bijdrage-->Bijdragetype", SourceHandle: "right", TargetHandle: "left"},
+				{Doel: "Schaal", ID: "Initiatief_Bijdrage-->Schaal", SourceHandle: "right", TargetHandle: "left"},
+			},
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Initiatief_Bijdrage_Data", Momentvoorkomen: Enkelvoudig},
@@ -395,8 +418,10 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1080, Y: -2424}, EdgeID: "edge_1775592769882_12",
-			SourceHandle: "right", TargetHandle: "left",
+			Positie:      &V3Positie{X: 1080, Y: -2424},
+			EdgeID:       "edge_1775592769882_12",
+			SourceHandle: "right",
+			TargetHandle: "left",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Initiatief_AnderDomein_Data", Momentvoorkomen: Enkelvoudig},
@@ -425,8 +450,10 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1080, Y: -2658}, EdgeID: "edge_1775592790634_14",
-			SourceHandle: "right", TargetHandle: "left",
+			Positie:      &V3Positie{X: 1080, Y: -2658},
+			EdgeID:       "edge_1775592790634_14",
+			SourceHandle: "right",
+			TargetHandle: "left",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Initiatief_AndersDanGemeente_Data", Momentvoorkomen: Enkelvoudig},
@@ -455,8 +482,10 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1080, Y: -2190}, EdgeID: "edge_1775592938018_17",
-			SourceHandle: "right", TargetHandle: "left",
+			Positie:      &V3Positie{X: 1080, Y: -2190},
+			EdgeID:       "edge_1775592938018_17",
+			SourceHandle: "right",
+			TargetHandle: "left",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Initiatief_AndereAPIStandaard_Data", Momentvoorkomen: Enkelvoudig},
@@ -486,9 +515,13 @@ func initCgMetaRegistry() {
 		SecondaireEntiteitIDKolom: "gemeente_id",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1080, Y: -2775}, EdgeID: "edge_1775567300131_7",
-			SourceHandle: "right", TargetHandle: "left",
-			DoelEdgeID: "edge_1775567335493_8", DoelSourceHandle: "right", DoelTargetHandle: "left",
+			Positie:          &V3Positie{X: 1080, Y: -2775},
+			EdgeID:           "edge_1775567300131_7",
+			SourceHandle:     "right",
+			TargetHandle:     "left",
+			DoelEdgeID:       "edge_1775567335493_8",
+			DoelSourceHandle: "right",
+			DoelTargetHandle: "left",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "InitiatiefGemeente_Data", Momentvoorkomen: Enkelvoudig},
@@ -518,9 +551,13 @@ func initCgMetaRegistry() {
 		SecondaireEntiteitIDKolom: "domein_id",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1080, Y: -2541}, EdgeID: "edge_1775567392935_11",
-			SourceHandle: "right", TargetHandle: "left",
-			DoelEdgeID: "edge_1775567422077_13", DoelSourceHandle: "left", DoelTargetHandle: "right",
+			Positie:          &V3Positie{X: 1080, Y: -2541},
+			EdgeID:           "edge_1775567392935_11",
+			SourceHandle:     "right",
+			TargetHandle:     "left",
+			DoelEdgeID:       "edge_1775567422077_13",
+			DoelSourceHandle: "left",
+			DoelTargetHandle: "right",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "InitiatiefDomein_Data", Momentvoorkomen: Enkelvoudig},
@@ -550,9 +587,13 @@ func initCgMetaRegistry() {
 		SecondaireEntiteitIDKolom: "apistandaard_id",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1080, Y: -2307}, EdgeID: "edge_1775569530678_15",
-			SourceHandle: "right", TargetHandle: "left",
-			DoelEdgeID: "edge_1775570229289_20", DoelSourceHandle: "left", DoelTargetHandle: "right",
+			Positie:          &V3Positie{X: 1080, Y: -2307},
+			EdgeID:           "edge_1775569530678_15",
+			SourceHandle:     "right",
+			TargetHandle:     "left",
+			DoelEdgeID:       "edge_1775570229289_20",
+			DoelSourceHandle: "left",
+			DoelTargetHandle: "right",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "InitiatiefAPIStandaard_Data", Momentvoorkomen: Enkelvoudig},
@@ -582,9 +623,13 @@ func initCgMetaRegistry() {
 		SecondaireEntiteitIDKolom: "organisatie_id",
 		Momentvoorkomen:           Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 420, Y: -2340}, EdgeID: "edge_1775591842339_3",
-			SourceHandle: "left", TargetHandle: "right",
-			DoelEdgeID: "edge_1775591886387_4", DoelSourceHandle: "left", DoelTargetHandle: "right",
+			Positie:          &V3Positie{X: 420, Y: -2340},
+			EdgeID:           "edge_1775591842339_3",
+			SourceHandle:     "left",
+			TargetHandle:     "right",
+			DoelEdgeID:       "edge_1775591886387_4",
+			DoelSourceHandle: "left",
+			DoelTargetHandle: "right",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "InitiatiefOrganisatie_Data", Momentvoorkomen: Enkelvoudig},
@@ -1038,8 +1083,18 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "organisatie_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -300, Y: -2175}, EdgeID: "Organisatie->Organisatie_Contactgegevens",
-			SourceHandle: "left", TargetHandle: "right",
+			Positie:      &V3Positie{X: -315, Y: -2220},
+			EdgeID:       "Organisatie->Organisatie_Contactgegevens",
+			SourceHandle: "left",
+			TargetHandle: "right",
+			UseEdges: []V3UseEdge{
+				{Doel: "URL", ID: "Organisatie_Contactgegevens--dt-->URL", SourceHandle: "left", TargetHandle: "top", Hidden: true},
+				{Doel: "URL", ID: "Organisatie_Contactgegevens--dt-->URL", SourceHandle: "left", TargetHandle: "top", Hidden: true},
+				{Doel: "Emailadres", ID: "Organisatie_Contactgegevens--dt-->Emailadres", SourceHandle: "left", TargetHandle: "top"},
+				{Doel: "Emailadres", ID: "Organisatie_Contactgegevens--dt-->Emailadres", SourceHandle: "left", TargetHandle: "top"},
+				{Doel: "Telefoonnummer", ID: "Organisatie_Contactgegevens--dt-->Telefoonnummer", SourceHandle: "left", TargetHandle: "top"},
+				{Doel: "Telefoonnummer", ID: "Organisatie_Contactgegevens--dt-->Telefoonnummer", SourceHandle: "left", TargetHandle: "top"},
+			},
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Organisatie_Contactgegevens_Data", Momentvoorkomen: Enkelvoudig},
@@ -1068,8 +1123,10 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "organisatie_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -300, Y: -2295}, EdgeID: "edge_1775569590393_16",
-			SourceHandle: "left", TargetHandle: "right",
+			Positie:      &V3Positie{X: -315, Y: -2340},
+			EdgeID:       "edge_1775569590393_16",
+			SourceHandle: "left",
+			TargetHandle: "right",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Organisatie_Organisatienaam_Data", Momentvoorkomen: Enkelvoudig},
@@ -1098,8 +1155,10 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "organisatie_id",
 		Momentvoorkomen:        Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 210, Y: -2100}, EdgeID: "edge_1775592464082_9",
-			SourceHandle: "bottom", TargetHandle: "top",
+			Positie:      &V3Positie{X: 210, Y: -2100},
+			EdgeID:       "edge_1775592464082_9",
+			SourceHandle: "bottom",
+			TargetHandle: "top",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Organisatie_BetrokkenOrganisatietype_Data", Momentvoorkomen: Enkelvoudig},
@@ -1129,9 +1188,13 @@ func initCgMetaRegistry() {
 		SecondaireEntiteitIDKolom: "persoon_id",
 		Momentvoorkomen:           Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -15, Y: -2070}, EdgeID: "edge_1775566660638_2",
-			SourceHandle: "bottom", TargetHandle: "top",
-			DoelEdgeID: "edge_1775565921272_6", DoelSourceHandle: "bottom", DoelTargetHandle: "top",
+			Positie:          &V3Positie{X: -15, Y: -2070},
+			EdgeID:           "edge_1775566660638_2",
+			SourceHandle:     "bottom",
+			TargetHandle:     "top",
+			DoelEdgeID:       "edge_1775565921272_6",
+			DoelSourceHandle: "bottom",
+			DoelTargetHandle: "top",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Contactpersoon_Data", Momentvoorkomen: Enkelvoudig},
@@ -1319,8 +1382,16 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "persoon_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -315, Y: -1770}, EdgeID: "Persoon->Persoon_Contactgegevens",
-			SourceHandle: "left", TargetHandle: "right",
+			Positie:      &V3Positie{X: -315, Y: -1815},
+			EdgeID:       "Persoon->Persoon_Contactgegevens",
+			SourceHandle: "left",
+			TargetHandle: "right",
+			UseEdges: []V3UseEdge{
+				{Doel: "Emailadres", ID: "Persoon_Contactgegevens--dt-->Emailadres", SourceHandle: "left", TargetHandle: "bottom"},
+				{Doel: "Emailadres", ID: "Persoon_Contactgegevens--dt-->Emailadres", SourceHandle: "left", TargetHandle: "bottom"},
+				{Doel: "Telefoonnummer", ID: "Persoon_Contactgegevens--dt-->Telefoonnummer", SourceHandle: "left", TargetHandle: "bottom"},
+				{Doel: "Telefoonnummer", ID: "Persoon_Contactgegevens--dt-->Telefoonnummer", SourceHandle: "left", TargetHandle: "bottom"},
+			},
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Persoon_Contactgegevens_Data", Momentvoorkomen: Enkelvoudig},
@@ -1349,8 +1420,10 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "persoon_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -300, Y: -1905}, EdgeID: "edge_1775569596827_17",
-			SourceHandle: "left", TargetHandle: "right",
+			Positie:      &V3Positie{X: -315, Y: -1950},
+			EdgeID:       "edge_1775569596827_17",
+			SourceHandle: "left",
+			TargetHandle: "right",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Persoon_Persoonnaam_Data", Momentvoorkomen: Enkelvoudig},

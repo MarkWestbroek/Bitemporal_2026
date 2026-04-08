@@ -81,6 +81,8 @@ Voor **dependency-edges** (`«use»`, stippellijnen) is er daarnaast een tweede 
 
 De editor bewaart deze keuze ook in **V3 JSON** via `useEdges[]`. Daarin worden per dependency-edge de layout-attributen en zichtbaarheid opgeslagen (`id`, `sourceHandle`, `targetHandle`, `hidden`), zodat een save/load of database-roundtrip de verborgen status niet verliest.
 
+Dezelfde metadata blijft nu ook behouden bij een **code-roundtrip**: na een rebuild schrijft de codegenerator `useEdges[]` door naar `EditorLayout.UseEdges` in de gegenereerde `*_metaregistry.go` bestanden, en de V3 exporter geeft dit weer terug aan de editor. Daardoor blijft de route **editor → V3 → code → V3 → editor** layout-stabiel voor dependency-edges.
+
 Voor canvasinteracties is er een **kleine undo/redo-stack**: met `Ctrl + Z` kun je de laatste grafische acties terugdraaien, en met `Ctrl + Y` of `Ctrl + Shift + Z` zet je de laatste ongedaan gemaakte canvasactie weer terug. Dit geldt voor **verplaatsen**, **verbinden**, **verwijderen**, **uitlijnen** en **verdelen**. Deze sneltoetsen grijpen niet in als je in een invoerveld of tekstvak aan het typen bent; dan blijft de normale browser/input-undo gelden. Bewerkingen in het inhouds-/zijpaneel vallen bewust buiten deze canvas-undo.
 
 Bij enums en gegevenstypen geldt extra veiligheid:

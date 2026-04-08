@@ -6,10 +6,10 @@ package model
 func initCgEnumRegistry() {
 	EnumWaarden["Fase"] = []string{"Idee", "Verkenning", "Realisatie", "InGebruik"}
 	EnumDomeinen["Fase"] = "CG"
-	EnumWaarden["Producttype"] = []string{"Component", "Toepassing"}
-	EnumDomeinen["Producttype"] = "CG"
 	EnumWaarden["CGLaag"] = []string{"Laag 5", "Laag 4", "Laag 3", "Laag 2", "Laag 1", "Hosting en infrastructuur"}
 	EnumDomeinen["CGLaag"] = "CG"
+	EnumWaarden["Producttype"] = []string{"Component", "Toepassing"}
+	EnumDomeinen["Producttype"] = "CG"
 	EnumWaarden["Bijdragetype"] = []string{"Wendbaarheid", "Dienstverlening", "Regie"}
 	EnumDomeinen["Bijdragetype"] = "CG"
 	EnumWaarden["Schaal"] = []string{"Schaal 1", "Schaal 2", "Schaal 3", "Schaal 4"}
@@ -20,9 +20,9 @@ func initCgEnumRegistry() {
 	EnumDomeinen["Organisatierol"] = "CG"
 
 	// Enum editor-posities
-	EnumEditorLayouts["Fase"] = &EditorLayout{Positie: &V3Positie{X: 405, Y: -1725}}
-	EnumEditorLayouts["Producttype"] = &EditorLayout{Positie: &V3Positie{X: 645, Y: -1695}}
+	EnumEditorLayouts["Fase"] = &EditorLayout{Positie: &V3Positie{X: 405, Y: -1695}}
 	EnumEditorLayouts["CGLaag"] = &EditorLayout{Positie: &V3Positie{X: 795, Y: -1575}}
+	EnumEditorLayouts["Producttype"] = &EditorLayout{Positie: &V3Positie{X: 645, Y: -1695}}
 	EnumEditorLayouts["Bijdragetype"] = &EditorLayout{Positie: &V3Positie{X: 1290, Y: -1980}}
 	EnumEditorLayouts["Schaal"] = &EditorLayout{Positie: &V3Positie{X: 1290, Y: -1815}}
 	EnumEditorLayouts["Gemeenterol"] = &EditorLayout{Positie: &V3Positie{X: 1080, Y: -2910}}

@@ -18,13 +18,6 @@ const (
 	FaseInGebruik  Fase = "InGebruik"
 )
 
-type Producttype string
-
-const (
-	ProducttypeComponent  Producttype = "Component"
-	ProducttypeToepassing Producttype = "Toepassing"
-)
-
 type CGLaag string
 
 const (
@@ -34,6 +27,13 @@ const (
 	CGLaagLaag2                   CGLaag = "Laag 2"
 	CGLaagLaag1                   CGLaag = "Laag 1"
 	CGLaagHostingeninfrastructuur CGLaag = "Hosting en infrastructuur"
+)
+
+type Producttype string
+
+const (
+	ProducttypeComponent  Producttype = "Component"
+	ProducttypeToepassing Producttype = "Toepassing"
 )
 
 type Bijdragetype string

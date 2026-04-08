@@ -262,8 +262,8 @@ export function v3ModelNaarStore(v3Full) {
         targetHandle: ge.targetHandle || null,
       });
 
-      // Dependency edges vanuit GE-velden
-      addFieldDependencyEdges(velden, geId, ge.velden || [], datatypeLookup, diagramEdges);
+      // Dependency edges vanuit GE-velden (met useEdges voor handles/hidden)
+      addFieldDependencyEdges(velden, geId, ge.velden || [], datatypeLookup, diagramEdges, ge.useEdges);
     });
 
     // Relaties
@@ -297,8 +297,8 @@ export function v3ModelNaarStore(v3Full) {
           position: rel.positie || { x: entIdx * 500 + 200, y: 170 },
         });
 
-        // Dependency edges vanuit relatie-velden
-        addFieldDependencyEdges(velden, rel.naam, rel.velden || [], datatypeLookup, diagramEdges);
+        // Dependency edges vanuit relatie-velden (met useEdges voor handles/hidden)
+        addFieldDependencyEdges(velden, rel.naam, rel.velden || [], datatypeLookup, diagramEdges, rel.useEdges);
       }
 
       // Structurele edge: entiteit → relatie (eigenaar)
@@ -399,37 +399,72 @@ export function v3ModelNaarStore(v3Full) {
 
 // ─── Dependency edges helper ─────────────────────────────────
 
-function addFieldDependencyEdges(convertedVelden, parentId, rawVelden, datatypeLookup, edgesOut) {
+/**
+ * Genereer dependency edges vanuit veld-referenties (enum, datatype, $ref).
+ * Gebruikt useEdges uit het V3 model voor sourceHandle/targetHandle/hidden.
+ * Deduplicatie op edge-ID voorkomt dubbele lijnen.
+ */
+function addFieldDependencyEdges(convertedVelden, parentId, rawVelden, datatypeLookup, edgesOut, useEdgesArr) {
+  // Bouw lookup: edge-ID → useEdge info (hidden, handles)
+  const useEdgeMap = {};
+  (useEdgesArr || []).forEach((ue) => {
+    if (ue.id && !useEdgeMap[ue.id]) useEdgeMap[ue.id] = ue;
+  });
+
+  const seen = new Set();
   (rawVelden || []).forEach((v, i) => {
-    const cv = convertedVelden[i];
     if (v.enum) {
-      edgesOut.push({
-        id: `${parentId}-->${v.enum}`,
-        source: parentId,
-        target: `enum_${v.enum}`,
-        type: "metamodel",
-        data: { isDependency: true, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
-      });
+      const edgeId = `${parentId}-->${v.enum}`;
+      if (!seen.has(edgeId)) {
+        seen.add(edgeId);
+        const ue = useEdgeMap[edgeId];
+        edgesOut.push({
+          id: edgeId,
+          source: parentId,
+          target: `enum_${v.enum}`,
+          type: "metamodel",
+          sourceHandle: ue?.sourceHandle || null,
+          targetHandle: ue?.targetHandle || null,
+          hidden: ue?.hidden || false,
+          data: { isDependency: true, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
+        });
+      }
     }
     const dtNaam = v.datatype || (datatypeLookup[v.goType] ? v.goType : null);
     if (dtNaam) {
-      edgesOut.push({
-        id: `${parentId}--dt-->${dtNaam}`,
-        source: parentId,
-        target: `dt_${dtNaam}`,
-        type: "metamodel",
-        data: { isDependency: true, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
-      });
+      const edgeId = `${parentId}--dt-->${dtNaam}`;
+      if (!seen.has(edgeId)) {
+        seen.add(edgeId);
+        const ue = useEdgeMap[edgeId];
+        edgesOut.push({
+          id: edgeId,
+          source: parentId,
+          target: `dt_${dtNaam}`,
+          type: "metamodel",
+          sourceHandle: ue?.sourceHandle || null,
+          targetHandle: ue?.targetHandle || null,
+          hidden: ue?.hidden || false,
+          data: { isDependency: true, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
+        });
+      }
     }
     const refNaam = v["$ref"] || v.refItemNaam || null;
     if (refNaam) {
-      edgesOut.push({
-        id: `${parentId}--ref-->${refNaam}`,
-        source: parentId,
-        target: refNaam,
-        type: "metamodel",
-        data: { isDependency: true, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
-      });
+      const edgeId = `${parentId}--ref-->${refNaam}`;
+      if (!seen.has(edgeId)) {
+        seen.add(edgeId);
+        const ue = useEdgeMap[edgeId];
+        edgesOut.push({
+          id: edgeId,
+          source: parentId,
+          target: refNaam,
+          type: "metamodel",
+          sourceHandle: ue?.sourceHandle || null,
+          targetHandle: ue?.targetHandle || null,
+          hidden: ue?.hidden || false,
+          data: { isDependency: true, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
+        });
+      }
     }
   });
 }
@@ -516,6 +551,27 @@ function diagramEdgeData(diagrams, edgeId) {
   const overzicht = diagrams?.[DEFAULT_DIAGRAM_ID];
   if (!overzicht) return {};
   return (overzicht.edges || []).find((e) => e.id === edgeId) || {};
+}
+
+/**
+ * Verzamel useEdges (dependency-edge layout) voor een element uit het diagram.
+ * Zoekt alle dependency-edges die vanuit sourceId vertrekken en retourneert
+ * ze als V3UseEdge-objecten (doel, id, sourceHandle, targetHandle, hidden).
+ */
+function collectUseEdges(diagrams, sourceId) {
+  const overzicht = diagrams?.[DEFAULT_DIAGRAM_ID];
+  if (!overzicht) return [];
+  const depEdges = (overzicht.edges || []).filter(
+    (e) => e.source === sourceId && e.data?.isDependency
+  );
+  if (!depEdges.length) return [];
+  return depEdges.map((e) => {
+    const ue = { doel: (e.target || "").replace(/^(enum_|dt_)/, ""), id: e.id };
+    if (e.sourceHandle) ue.sourceHandle = e.sourceHandle;
+    if (e.targetHandle) ue.targetHandle = e.targetHandle;
+    if (e.hidden) ue.hidden = true;
+    return ue;
+  });
 }
 
 // --- Main export: storeNaarV3Model ---
@@ -684,6 +740,10 @@ export function storeNaarV3Model(state) {
         if (diagEdge.sourceHandle) v3GE.sourceHandle = diagEdge.sourceHandle;
         if (diagEdge.targetHandle) v3GE.targetHandle = diagEdge.targetHandle;
 
+        // UseEdges: dependency-edge layout (handles + hidden) bewaren
+        const geUseEdges = collectUseEdges(diagrams, child.id);
+        if (geUseEdges.length) v3GE.useEdges = geUseEdges;
+
         v3GEs.push(v3GE);
       } else if (child.type === "relatie") {
         if (gebruikteRelaties.has(child.id)) {
@@ -752,6 +812,10 @@ function buildV3Relatie(child, edgeData, diagEdge, diagrams, parentDomein) {
   // Edge handles voor roundtrip
   if (diagEdge.sourceHandle) v3Rel.sourceHandle = diagEdge.sourceHandle;
   if (diagEdge.targetHandle) v3Rel.targetHandle = diagEdge.targetHandle;
+
+  // UseEdges: dependency-edge layout (handles + hidden) bewaren
+  const relUseEdges = collectUseEdges(diagrams, child.id);
+  if (relUseEdges.length) v3Rel.useEdges = relUseEdges;
 
   return v3Rel;
 }

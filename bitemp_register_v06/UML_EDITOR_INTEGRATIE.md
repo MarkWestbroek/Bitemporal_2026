@@ -252,6 +252,8 @@ Alleen edges met `data.isDependency === true` zijn op deze manier verbergbaar. G
 
 De verborgen status blijft behouden bij een **V3 roundtrip**: in de V3 JSON worden dependency-layoutgegevens opgeslagen onder `useEdges[]`, inclusief `id`, `sourceHandle`, `targetHandle` en `hidden`. Daardoor kun je een diagram opslaan, later opnieuw laden, en dezelfde dependency-edges verborgen houden.
 
+Sinds 2026-04-08 geldt dit ook voor de **code-roundtrip** via de gegenereerde Go-bestanden: de codegenerator schrijft `useEdges[]` door naar `EditorLayout.UseEdges` in de `*_metaregistry.go` bestanden, en `ExportMetaRegistryToV3()` exporteert die metadata weer terug naar V3. Daardoor blijft de editor-layout van dependency-edges behouden in de volledige route **editor → V3 → code → V3 → editor**.
+
 ---
 
 ## Import en Export

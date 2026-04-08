@@ -206,6 +206,48 @@ func copyDir(src string, dst string) error {
 	})
 }
 
+var baselineKernModelBestanden = []string{
+	"model_plumbing.go",
+	"metaregistry_plumbing.go",
+	"v3_format.go",
+	"v3_exporter.go",
+}
+
+// syncBaselineKernModelBestanden zorgt dat handmatige model-plumbingbestanden
+// ook in `_baseline/model/` up-to-date blijven. Zonder deze synchronisatie kan
+// een rebuild eerst een oude baseline terugzetten, waardoor nieuwe types of
+// layoutmetadata (zoals UseEdges/V3UseEdge) tijdens codegen ineens verdwijnen.
+func syncBaselineKernModelBestanden(appDir string) ([]string, error) {
+	srcDir := filepath.Join(appDir, "model")
+	baselineDir := filepath.Join(appDir, "_baseline", "model")
+	if err := os.MkdirAll(baselineDir, 0750); err != nil {
+		return nil, fmt.Errorf("kan baseline directory niet aanmaken voor kernbestanden: %w", err)
+	}
+
+	meldingen := []string{}
+	for _, bestandsnaam := range baselineKernModelBestanden {
+		src := filepath.Join(srcDir, bestandsnaam)
+		info, err := os.Stat(src)
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return nil, fmt.Errorf("kan kernbestand %s niet lezen: %w", src, err)
+		}
+		if info.IsDir() {
+			continue
+		}
+
+		dst := filepath.Join(baselineDir, bestandsnaam)
+		if err := copyFile(src, dst, info.Mode()); err != nil {
+			return nil, fmt.Errorf("kan kernbestand %s niet synchroniseren naar baseline: %w", bestandsnaam, err)
+		}
+		meldingen = append(meldingen, fmt.Sprintf("Baseline kernbestand gesynchroniseerd: model/%s", bestandsnaam))
+	}
+
+	return meldingen, nil
+}
+
 func herstelModelDirectoryVanuitBaseline(appDir string) (string, error) {
 	baselineDir := filepath.Join(appDir, "_baseline", "model")
 	modelDir := filepath.Join(appDir, "model")
@@ -396,7 +438,20 @@ func MaakRebuildHandler() gin.HandlerFunc {
 		appDir := resolveAppDir()
 		stappen = append(stappen, fmt.Sprintf("Werkdirectory bepaald als %s", appDir))
 
-		// Stap 0a: Herstel model/ vanuit baseline (schone basis voor codegen).
+		// Stap 0a: synchroniseer handmatige model-plumbingbestanden eerst naar de baseline,
+		// zodat een rebuild geen recente codewijzigingen terugdraait.
+		if meldingen, err := syncBaselineKernModelBestanden(appDir); err != nil {
+			c.JSON(http.StatusInternalServerError, RebuildResponse{
+				Status:  "fout",
+				Stappen: stappen,
+				Error:   err.Error(),
+			})
+			return
+		} else if len(meldingen) > 0 {
+			stappen = append(stappen, meldingen...)
+		}
+
+		// Stap 0b: Herstel model/ vanuit baseline (schone basis voor codegen).
 		if melding, err := herstelModelDirectoryVanuitBaseline(appDir); err != nil {
 			c.JSON(http.StatusInternalServerError, RebuildResponse{
 				Status:  "fout",

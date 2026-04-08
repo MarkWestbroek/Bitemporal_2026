@@ -71,6 +71,7 @@ function buildFlowEdges(diagram) {
   return (diagram?.edges || []).map((e) => ({
     ...e,
     type: e.type || "metamodel",
+    hidden: e.hidden || false, // useEdges hidden flag doorvoeren naar React Flow
     selectable: false, // Voorkom dat edges mee-geselecteerd worden bij multi-select
     selected: false,
   }));
@@ -406,6 +407,27 @@ function DiagramCanvasInner({ diagramId }) {
       updateDE(diagramId, diagram.edges.filter((e) => e.id !== edgeId));
     }
     setEdges((eds) => eds.filter((e) => e.id !== edgeId));
+    setContextMenu(null);
+  }, [contextMenu, diagramId, diagram, setEdges]);
+
+  // Toggle hidden flag op een dependency edge (verberg/toon «use» lijn)
+  const handleToggleEdgeHidden = useCallback(() => {
+    if (!contextMenu?.edgeId) return;
+    const edgeId = contextMenu.edgeId;
+    const updateDE = useModelStore.getState().updateDiagramEdges;
+    if (diagram) {
+      updateDE(
+        diagramId,
+        diagram.edges.map((e) =>
+          e.id === edgeId ? { ...e, hidden: !e.hidden } : e
+        )
+      );
+    }
+    setEdges((eds) =>
+      eds.map((e) =>
+        e.id === edgeId ? { ...e, hidden: !e.hidden } : e
+      )
+    );
     setContextMenu(null);
   }, [contextMenu, diagramId, diagram, setEdges]);
 
@@ -1020,6 +1042,7 @@ function DiagramCanvasInner({ diagramId }) {
               const edge = edges.find((e) => e.id === contextMenu.edgeId);
               const srcName = edge && elements[edge.source]?.naam;
               const tgtName = edge && elements[edge.target]?.naam;
+              const isDep = edge?.data?.isDependency;
               return (
                 <>
                   {srcName && (
@@ -1040,6 +1063,16 @@ function DiagramCanvasInner({ diagramId }) {
                       onClick={() => handleSelectEdgeEndpoint(edge.target)}
                     >
                       📦 Selecteer doel: {tgtName}
+                    </div>
+                  )}
+                  {isDep && (
+                    <div
+                      style={{ padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" }}
+                      onMouseEnter={itemHover}
+                      onMouseLeave={itemLeave}
+                      onClick={handleToggleEdgeHidden}
+                    >
+                      {edge.hidden ? "👁️ Toon «use» lijn" : "🙈 Verberg «use» lijn"}
                     </div>
                   )}
                   <div

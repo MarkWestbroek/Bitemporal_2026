@@ -73,35 +73,35 @@ func (p Persoon) String() string          { return RepresentatieToString(p) }
    2. HUBS (GE + REL) — interface-methoden
    ================================================================ */
 
-// Naam
-func (an Naam) GetID() any              { return an.Rel_ID }
-func (an Naam) Metatype() Metatype      { return MetatypeGegevenselement }
-func (an *Naam) ClearID()               { an.Rel_ID = 0 }
-func (an Naam) GetOpvoer() *time.Time   { return an.Opvoer }
-func (an *Naam) SetOpvoer(t *time.Time) { an.Opvoer = t }
-func (an Naam) GetAfvoer() *time.Time   { return an.Afvoer }
-func (an *Naam) SetAfvoer(t *time.Time) { an.Afvoer = t }
-func (an Naam) String() string          { return RepresentatieToString(an) }
+// ApiStandaard_Naam
+func (an ApiStandaard_Naam) GetID() any              { return an.Rel_ID }
+func (an ApiStandaard_Naam) Metatype() Metatype      { return MetatypeGegevenselement }
+func (an *ApiStandaard_Naam) ClearID()               { an.Rel_ID = 0 }
+func (an ApiStandaard_Naam) GetOpvoer() *time.Time   { return an.Opvoer }
+func (an *ApiStandaard_Naam) SetOpvoer(t *time.Time) { an.Opvoer = t }
+func (an ApiStandaard_Naam) GetAfvoer() *time.Time   { return an.Afvoer }
+func (an *ApiStandaard_Naam) SetAfvoer(t *time.Time) { an.Afvoer = t }
+func (an ApiStandaard_Naam) String() string          { return RepresentatieToString(an) }
 
-// DomeinGegevens
-func (dd DomeinGegevens) GetID() any              { return dd.Rel_ID }
-func (dd DomeinGegevens) Metatype() Metatype      { return MetatypeGegevenselement }
-func (dd *DomeinGegevens) ClearID()               { dd.Rel_ID = 0 }
-func (dd DomeinGegevens) GetOpvoer() *time.Time   { return dd.Opvoer }
-func (dd *DomeinGegevens) SetOpvoer(t *time.Time) { dd.Opvoer = t }
-func (dd DomeinGegevens) GetAfvoer() *time.Time   { return dd.Afvoer }
-func (dd *DomeinGegevens) SetAfvoer(t *time.Time) { dd.Afvoer = t }
-func (dd DomeinGegevens) String() string          { return RepresentatieToString(dd) }
+// Domein_DomeinGegevens
+func (dd Domein_DomeinGegevens) GetID() any              { return dd.Rel_ID }
+func (dd Domein_DomeinGegevens) Metatype() Metatype      { return MetatypeGegevenselement }
+func (dd *Domein_DomeinGegevens) ClearID()               { dd.Rel_ID = 0 }
+func (dd Domein_DomeinGegevens) GetOpvoer() *time.Time   { return dd.Opvoer }
+func (dd *Domein_DomeinGegevens) SetOpvoer(t *time.Time) { dd.Opvoer = t }
+func (dd Domein_DomeinGegevens) GetAfvoer() *time.Time   { return dd.Afvoer }
+func (dd *Domein_DomeinGegevens) SetAfvoer(t *time.Time) { dd.Afvoer = t }
+func (dd Domein_DomeinGegevens) String() string          { return RepresentatieToString(dd) }
 
-// GemeenteGegevens
-func (gg GemeenteGegevens) GetID() any              { return gg.Rel_ID }
-func (gg GemeenteGegevens) Metatype() Metatype      { return MetatypeGegevenselement }
-func (gg *GemeenteGegevens) ClearID()               { gg.Rel_ID = 0 }
-func (gg GemeenteGegevens) GetOpvoer() *time.Time   { return gg.Opvoer }
-func (gg *GemeenteGegevens) SetOpvoer(t *time.Time) { gg.Opvoer = t }
-func (gg GemeenteGegevens) GetAfvoer() *time.Time   { return gg.Afvoer }
-func (gg *GemeenteGegevens) SetAfvoer(t *time.Time) { gg.Afvoer = t }
-func (gg GemeenteGegevens) String() string          { return RepresentatieToString(gg) }
+// Gemeente_GemeenteGegevens
+func (gg Gemeente_GemeenteGegevens) GetID() any              { return gg.Rel_ID }
+func (gg Gemeente_GemeenteGegevens) Metatype() Metatype      { return MetatypeGegevenselement }
+func (gg *Gemeente_GemeenteGegevens) ClearID()               { gg.Rel_ID = 0 }
+func (gg Gemeente_GemeenteGegevens) GetOpvoer() *time.Time   { return gg.Opvoer }
+func (gg *Gemeente_GemeenteGegevens) SetOpvoer(t *time.Time) { gg.Opvoer = t }
+func (gg Gemeente_GemeenteGegevens) GetAfvoer() *time.Time   { return gg.Afvoer }
+func (gg *Gemeente_GemeenteGegevens) SetAfvoer(t *time.Time) { gg.Afvoer = t }
+func (gg Gemeente_GemeenteGegevens) String() string          { return RepresentatieToString(gg) }
 
 // Initiatief_Planning
 func (ip Initiatief_Planning) GetID() any              { return ip.Rel_ID }
@@ -267,35 +267,35 @@ func (pp Persoon_Persoonnaam) String() string          { return RepresentatieToS
    3. _DATA — interface-methoden
    ================================================================ */
 
-// Naam_Data
-func (d Naam_Data) GetID() any              { return d.Versie }
-func (d Naam_Data) Metatype() Metatype      { return MetatypeGegevenselement }
-func (d *Naam_Data) ClearID()               { d.Versie = 0 }
-func (d Naam_Data) GetOpvoer() *time.Time   { return d.Opvoer }
-func (d *Naam_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
-func (d Naam_Data) GetAfvoer() *time.Time   { return d.Afvoer }
-func (d *Naam_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
-func (d Naam_Data) String() string          { return RepresentatieToString(d) }
+// ApiStandaard_Naam_Data
+func (d ApiStandaard_Naam_Data) GetID() any              { return d.Versie }
+func (d ApiStandaard_Naam_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *ApiStandaard_Naam_Data) ClearID()               { d.Versie = 0 }
+func (d ApiStandaard_Naam_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *ApiStandaard_Naam_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d ApiStandaard_Naam_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *ApiStandaard_Naam_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d ApiStandaard_Naam_Data) String() string          { return RepresentatieToString(d) }
 
-// DomeinGegevens_Data
-func (d DomeinGegevens_Data) GetID() any              { return d.Versie }
-func (d DomeinGegevens_Data) Metatype() Metatype      { return MetatypeGegevenselement }
-func (d *DomeinGegevens_Data) ClearID()               { d.Versie = 0 }
-func (d DomeinGegevens_Data) GetOpvoer() *time.Time   { return d.Opvoer }
-func (d *DomeinGegevens_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
-func (d DomeinGegevens_Data) GetAfvoer() *time.Time   { return d.Afvoer }
-func (d *DomeinGegevens_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
-func (d DomeinGegevens_Data) String() string          { return RepresentatieToString(d) }
+// Domein_DomeinGegevens_Data
+func (d Domein_DomeinGegevens_Data) GetID() any              { return d.Versie }
+func (d Domein_DomeinGegevens_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *Domein_DomeinGegevens_Data) ClearID()               { d.Versie = 0 }
+func (d Domein_DomeinGegevens_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *Domein_DomeinGegevens_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d Domein_DomeinGegevens_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *Domein_DomeinGegevens_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d Domein_DomeinGegevens_Data) String() string          { return RepresentatieToString(d) }
 
-// GemeenteGegevens_Data
-func (d GemeenteGegevens_Data) GetID() any              { return d.Versie }
-func (d GemeenteGegevens_Data) Metatype() Metatype      { return MetatypeGegevenselement }
-func (d *GemeenteGegevens_Data) ClearID()               { d.Versie = 0 }
-func (d GemeenteGegevens_Data) GetOpvoer() *time.Time   { return d.Opvoer }
-func (d *GemeenteGegevens_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
-func (d GemeenteGegevens_Data) GetAfvoer() *time.Time   { return d.Afvoer }
-func (d *GemeenteGegevens_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
-func (d GemeenteGegevens_Data) String() string          { return RepresentatieToString(d) }
+// Gemeente_GemeenteGegevens_Data
+func (d Gemeente_GemeenteGegevens_Data) GetID() any              { return d.Versie }
+func (d Gemeente_GemeenteGegevens_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *Gemeente_GemeenteGegevens_Data) ClearID()               { d.Versie = 0 }
+func (d Gemeente_GemeenteGegevens_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *Gemeente_GemeenteGegevens_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d Gemeente_GemeenteGegevens_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *Gemeente_GemeenteGegevens_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d Gemeente_GemeenteGegevens_Data) String() string          { return RepresentatieToString(d) }
 
 // Initiatief_Planning_Data
 func (d Initiatief_Planning_Data) GetID() any              { return d.Versie }
@@ -591,35 +591,35 @@ func (i Initiatief_Bijdrage_Einde) String() string          { return Representat
    6. _INPUT — interface-methoden (no-op opvoer/afvoer)
    ================================================================ */
 
-// Naam_Input
-func (i Naam_Input) GetID() any              { return i.Rel_ID }
-func (i Naam_Input) Metatype() Metatype      { return MetatypeGegevenselement }
-func (i *Naam_Input) ClearID()               { i.Rel_ID = 0 }
-func (i Naam_Input) GetOpvoer() *time.Time   { return nil }
-func (i *Naam_Input) SetOpvoer(t *time.Time) {}
-func (i Naam_Input) GetAfvoer() *time.Time   { return nil }
-func (i *Naam_Input) SetAfvoer(t *time.Time) {}
-func (i Naam_Input) String() string          { return RepresentatieToString(i) }
+// ApiStandaard_Naam_Input
+func (i ApiStandaard_Naam_Input) GetID() any              { return i.Rel_ID }
+func (i ApiStandaard_Naam_Input) Metatype() Metatype      { return MetatypeGegevenselement }
+func (i *ApiStandaard_Naam_Input) ClearID()               { i.Rel_ID = 0 }
+func (i ApiStandaard_Naam_Input) GetOpvoer() *time.Time   { return nil }
+func (i *ApiStandaard_Naam_Input) SetOpvoer(t *time.Time) {}
+func (i ApiStandaard_Naam_Input) GetAfvoer() *time.Time   { return nil }
+func (i *ApiStandaard_Naam_Input) SetAfvoer(t *time.Time) {}
+func (i ApiStandaard_Naam_Input) String() string          { return RepresentatieToString(i) }
 
-// DomeinGegevens_Input
-func (i DomeinGegevens_Input) GetID() any              { return i.Rel_ID }
-func (i DomeinGegevens_Input) Metatype() Metatype      { return MetatypeGegevenselement }
-func (i *DomeinGegevens_Input) ClearID()               { i.Rel_ID = 0 }
-func (i DomeinGegevens_Input) GetOpvoer() *time.Time   { return nil }
-func (i *DomeinGegevens_Input) SetOpvoer(t *time.Time) {}
-func (i DomeinGegevens_Input) GetAfvoer() *time.Time   { return nil }
-func (i *DomeinGegevens_Input) SetAfvoer(t *time.Time) {}
-func (i DomeinGegevens_Input) String() string          { return RepresentatieToString(i) }
+// Domein_DomeinGegevens_Input
+func (i Domein_DomeinGegevens_Input) GetID() any              { return i.Rel_ID }
+func (i Domein_DomeinGegevens_Input) Metatype() Metatype      { return MetatypeGegevenselement }
+func (i *Domein_DomeinGegevens_Input) ClearID()               { i.Rel_ID = 0 }
+func (i Domein_DomeinGegevens_Input) GetOpvoer() *time.Time   { return nil }
+func (i *Domein_DomeinGegevens_Input) SetOpvoer(t *time.Time) {}
+func (i Domein_DomeinGegevens_Input) GetAfvoer() *time.Time   { return nil }
+func (i *Domein_DomeinGegevens_Input) SetAfvoer(t *time.Time) {}
+func (i Domein_DomeinGegevens_Input) String() string          { return RepresentatieToString(i) }
 
-// GemeenteGegevens_Input
-func (i GemeenteGegevens_Input) GetID() any              { return i.Rel_ID }
-func (i GemeenteGegevens_Input) Metatype() Metatype      { return MetatypeGegevenselement }
-func (i *GemeenteGegevens_Input) ClearID()               { i.Rel_ID = 0 }
-func (i GemeenteGegevens_Input) GetOpvoer() *time.Time   { return nil }
-func (i *GemeenteGegevens_Input) SetOpvoer(t *time.Time) {}
-func (i GemeenteGegevens_Input) GetAfvoer() *time.Time   { return nil }
-func (i *GemeenteGegevens_Input) SetAfvoer(t *time.Time) {}
-func (i GemeenteGegevens_Input) String() string          { return RepresentatieToString(i) }
+// Gemeente_GemeenteGegevens_Input
+func (i Gemeente_GemeenteGegevens_Input) GetID() any              { return i.Rel_ID }
+func (i Gemeente_GemeenteGegevens_Input) Metatype() Metatype      { return MetatypeGegevenselement }
+func (i *Gemeente_GemeenteGegevens_Input) ClearID()               { i.Rel_ID = 0 }
+func (i Gemeente_GemeenteGegevens_Input) GetOpvoer() *time.Time   { return nil }
+func (i *Gemeente_GemeenteGegevens_Input) SetOpvoer(t *time.Time) {}
+func (i Gemeente_GemeenteGegevens_Input) GetAfvoer() *time.Time   { return nil }
+func (i *Gemeente_GemeenteGegevens_Input) SetAfvoer(t *time.Time) {}
+func (i Gemeente_GemeenteGegevens_Input) String() string          { return RepresentatieToString(i) }
 
 // Initiatief_Planning_Input
 func (i Initiatief_Planning_Input) GetID() any              { return i.Rel_ID }
@@ -793,7 +793,7 @@ func (a *ApiStandaard) GeefOnderliggendeGegevenselementen() []OnderliggendeRepre
 		if a.ApiStandaardNamen[idx].ApiStandaard_ID == 0 {
 			a.ApiStandaardNamen[idx].ApiStandaard_ID = a.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Naam", Representatie: &a.ApiStandaardNamen[idx]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "ApiStandaard_Naam", Representatie: &a.ApiStandaardNamen[idx]})
 	}
 	return result
 }
@@ -804,7 +804,7 @@ func (d *Domein) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentat
 		if d.Domeingegevens[idx].Domein_ID == 0 {
 			d.Domeingegevens[idx].Domein_ID = d.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "DomeinGegevens", Representatie: &d.Domeingegevens[idx]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Domein_DomeinGegevens", Representatie: &d.Domeingegevens[idx]})
 	}
 	return result
 }
@@ -815,7 +815,7 @@ func (g *Gemeente) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresent
 		if g.Gemeentegegevens[idx].Gemeente_ID == 0 {
 			g.Gemeentegegevens[idx].Gemeente_ID = g.ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "GemeenteGegevens", Representatie: &g.Gemeentegegevens[idx]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Gemeente_GemeenteGegevens", Representatie: &g.Gemeentegegevens[idx]})
 	}
 	return result
 }
@@ -971,7 +971,7 @@ func (p *Persoon) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresenta
    8. GeefOnderliggendeGegevenselementen — HUBS
    ================================================================ */
 
-func (h *Naam) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+func (h *ApiStandaard_Naam) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
 	for i := range h.Data {
 		if h.Data[i].ApiStandaard_ID == 0 {
@@ -980,12 +980,12 @@ func (h *Naam) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie
 		if h.Data[i].Rel_ID == 0 {
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "Naam_Data", Representatie: &h.Data[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "ApiStandaard_Naam_Data", Representatie: &h.Data[i]})
 	}
 	return result
 }
 
-func (h *DomeinGegevens) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+func (h *Domein_DomeinGegevens) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
 	for i := range h.Data {
 		if h.Data[i].Domein_ID == 0 {
@@ -994,12 +994,12 @@ func (h *DomeinGegevens) GeefOnderliggendeGegevenselementen() []OnderliggendeRep
 		if h.Data[i].Rel_ID == 0 {
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "DomeinGegevens_Data", Representatie: &h.Data[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Domein_DomeinGegevens_Data", Representatie: &h.Data[i]})
 	}
 	return result
 }
 
-func (h *GemeenteGegevens) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+func (h *Gemeente_GemeenteGegevens) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
 	for i := range h.Data {
 		if h.Data[i].Gemeente_ID == 0 {
@@ -1008,7 +1008,7 @@ func (h *GemeenteGegevens) GeefOnderliggendeGegevenselementen() []OnderliggendeR
 		if h.Data[i].Rel_ID == 0 {
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "GemeenteGegevens_Data", Representatie: &h.Data[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Gemeente_GemeenteGegevens_Data", Representatie: &h.Data[i]})
 	}
 	return result
 }

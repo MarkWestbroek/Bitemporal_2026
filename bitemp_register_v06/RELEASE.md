@@ -2,6 +2,14 @@
 
 Korte checklist voor een API-release met losse DB-stack.
 
+## Editor v2 — dependency visibility & roundtrip fix (2026-04-08)
+
+- `«use»` dependency-edges kunnen nu per stuk of per doel-node verborgen/getoond worden via rechtsklik in editor v2.
+- Rechtsklik op een **stippellijn** → `Verberg deze dependency`.
+- Rechtsklik op een **enum** of **gegevenstype** → `Verberg dependencies` / `Toon dependencies` voor alle inkomende `«use»`-lijnen.
+- De metadata voor deze lijnen (`id`, `sourceHandle`, `targetHandle`, `hidden`) blijft nu behouden in **V3 JSON** via `useEdges[]`.
+- Daarnaast blijft deze info nu ook behouden bij **editor → V3 → codegen → MetaRegistry → V3 → editor** roundtrips, doordat de codegenerator `useEdges[]` opslaat in `EditorLayout.UseEdges` in de gegenereerde `*_metaregistry.go` bestanden en de V3 exporter die weer teruggeeft.
+
 ## Frontend visual tweak (2026-04-01)
 
 - Index visualisatie: centrale entiteitstekst schaalt nu mee met de lengte van de weergavetekst in de representatiekaart.

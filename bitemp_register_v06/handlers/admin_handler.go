@@ -40,6 +40,19 @@ func DropTables(c *gin.Context) {
 		return
 	}
 
+	domein := c.Query("domein")
+
+	if domein != "" {
+		// Domein-specifiek: alleen tabellen van dit domein droppen
+		err := dbsetup.DeleteTablesByDomein(DB, domein)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "Tables for domein '" + domein + "' dropped successfully"})
+		return
+	}
+
 	err := dbsetup.DeleteTables(DB)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

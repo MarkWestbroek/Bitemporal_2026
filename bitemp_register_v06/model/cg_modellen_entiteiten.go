@@ -11,28 +11,28 @@ import (
 
 type ApiStandaard struct {
 	bun.BaseModel     `bun:"table:apistandaard,alias:apistandaard"`
-	ID                int        `json:"id" bun:"id,pk"`
-	Opvoer            *time.Time `json:"opvoer,omitempty"`
-	Afvoer            *time.Time `json:"afvoer,omitempty"`
-	ApiStandaardNamen []Naam     `bun:"rel:has-many,join:id=apistandaard_id" json:"api_standaard_namen,omitempty"`
+	ID                int                 `json:"id" bun:"id,pk"`
+	Opvoer            *time.Time          `json:"opvoer,omitempty"`
+	Afvoer            *time.Time          `json:"afvoer,omitempty"`
+	ApiStandaardNamen []ApiStandaard_Naam `bun:"rel:has-many,join:id=apistandaard_id" json:"api_standaard_namen,omitempty"`
 }
 
 // Domein — Referentielijst-item voor domeinen.
 type Domein struct {
 	bun.BaseModel  `bun:"table:domein,alias:domein"`
-	ID             int              `json:"id" bun:"id,pk"`
-	Opvoer         *time.Time       `json:"opvoer,omitempty"`
-	Afvoer         *time.Time       `json:"afvoer,omitempty"`
-	Domeingegevens []DomeinGegevens `bun:"rel:has-many,join:id=domein_id" json:"domeingegevens,omitempty"`
+	ID             int                     `json:"id" bun:"id,pk"`
+	Opvoer         *time.Time              `json:"opvoer,omitempty"`
+	Afvoer         *time.Time              `json:"afvoer,omitempty"`
+	Domeingegevens []Domein_DomeinGegevens `bun:"rel:has-many,join:id=domein_id" json:"domeingegevens,omitempty"`
 }
 
 // Gemeente — Referentielijst-item voor gemeenten.
 type Gemeente struct {
 	bun.BaseModel    `bun:"table:gemeente,alias:gemeente"`
-	ID               int                `json:"id" bun:"id,pk"`
-	Opvoer           *time.Time         `json:"opvoer,omitempty"`
-	Afvoer           *time.Time         `json:"afvoer,omitempty"`
-	Gemeentegegevens []GemeenteGegevens `bun:"rel:has-many,join:id=gemeente_id" json:"gemeentegegevens,omitempty"`
+	ID               int                         `json:"id" bun:"id,pk"`
+	Opvoer           *time.Time                  `json:"opvoer,omitempty"`
+	Afvoer           *time.Time                  `json:"afvoer,omitempty"`
+	Gemeentegegevens []Gemeente_GemeenteGegevens `bun:"rel:has-many,join:id=gemeente_id" json:"gemeentegegevens,omitempty"`
 }
 
 // Initiatief — Portfolio-initiatief met planning, productinformatie en bijdragen.

@@ -107,13 +107,10 @@ func toPascalCase(s string) string {
 // ---- Afgeleid metatype ----
 
 // geHubTypeName bepaalt de type-naam voor een GE-hub.
-// Voor referentielijst-entities (EntiteitSubtype != "") wordt de GE-naam direct gebruikt
-// (bijv. "Landcode"), omdat die al volledig gekwalificeerd is.
-// Voor normale entities wordt de entiteitsnaam als prefix toegevoegd (bijv. "NatuurlijkPersoon_Naam").
+// De entiteitsnaam wordt altijd als prefix toegevoegd, zodat tabelnamen uniek zijn
+// over entiteiten heen (bijv. "ApiStandaard_Naam" → tabel "apistandaard_naam").
+// De korte weergavenaam (Klassenaam) wordt apart afgeleid in deriveHub().
 func geHubTypeName(ent model.V3Entiteit, geNaam string) string {
-	if ent.EntiteitSubtype != "" {
-		return geNaam
-	}
 	return ent.Typenaam + "_" + geNaam
 }
 

@@ -159,6 +159,40 @@ func TestDropTablesEndpoint_DisabledByDefault(t *testing.T) {
 	}
 }
 
+func TestDropTablesEndpoint_WithDomein_DBNotInitialized(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	t.Setenv("ALLOW_DROP_TABLES", "true")
+	t.Setenv("ADMIN_DROP_PASSWORD", "1234")
+
+	handlers.DB = nil
+	r := NewRouter()
+
+	req := httptest.NewRequest(http.MethodDelete, "/admin/db/droptables/1234?domein=np-loc", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusInternalServerError {
+		t.Fatalf("expected status 500, got %d", w.Code)
+	}
+}
+
+func TestDropTablesEndpoint_WithDomein_WrongPassword(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	t.Setenv("ALLOW_DROP_TABLES", "true")
+	t.Setenv("ADMIN_DROP_PASSWORD", "1234")
+
+	handlers.DB = nil
+	r := NewRouter()
+
+	req := httptest.NewRequest(http.MethodDelete, "/admin/db/droptables/wrong?domein=np-loc", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status 401, got %d", w.Code)
+	}
+}
+
 func TestIsProductionEnvironment_AppEnvProduction(t *testing.T) {
 	t.Setenv("APP_ENV", "production")
 	t.Setenv("GIN_MODE", "debug")

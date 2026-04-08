@@ -470,6 +470,7 @@ func v3GegevenseElementVanMeta(meta TypeMeta, child OnderliggendGegevenselement)
 		ge.ID = meta.Layout.EdgeID
 		ge.SourceHandle = meta.Layout.SourceHandle
 		ge.TargetHandle = meta.Layout.TargetHandle
+		ge.UseEdges = meta.Layout.UseEdges
 	}
 	return ge
 }
@@ -498,6 +499,7 @@ func v3RelatieVanMeta(meta TypeMeta, child OnderliggendGegevenselement) V3Relati
 		rel.DoelID = meta.Layout.DoelEdgeID
 		rel.DoelSourceHandle = meta.Layout.DoelSourceHandle
 		rel.DoelTargetHandle = meta.Layout.DoelTargetHandle
+		rel.UseEdges = meta.Layout.UseEdges
 	}
 	return rel
 }

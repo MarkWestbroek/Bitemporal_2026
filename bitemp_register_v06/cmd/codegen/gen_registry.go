@@ -16,6 +16,7 @@ type layoutInfo struct {
 	DoelEdgeID       string
 	DoelSourceHandle string
 	DoelTargetHandle string
+	UseEdges         []model.V3UseEdge
 }
 
 // generateMetaRegistry genereert metaregistry.go met alle TypeMeta entries (standalone modus).
@@ -94,7 +95,7 @@ func writeAllEntries(b *strings.Builder, v3 model.V3Model, opts codegenOptions) 
 				padnaam = toSnakeCase(hubType)
 			}
 			dHub := deriveHub(ent.Typenaam, hubType, "gegevenselement", ge.IsMaterieel, padnaam, "")
-			li := &layoutInfo{Positie: ge.Positie, EdgeID: ge.ID, SourceHandle: ge.SourceHandle, TargetHandle: ge.TargetHandle}
+			li := &layoutInfo{Positie: ge.Positie, EdgeID: ge.ID, SourceHandle: ge.SourceHandle, TargetHandle: ge.TargetHandle, UseEdges: ge.UseEdges}
 			writeHubEntry(b, dHub, ge.Description, ent.Kleur, ge.Momentvoorkomen, ge.IsMaterieel, ge.Naam, ge.AfgeleideVelden, opts.domein, li)
 		}
 
@@ -286,6 +287,7 @@ func writeRelHubEntry(b *strings.Builder, d DerivedType, rel model.V3Relatie, do
 	relLayout := &layoutInfo{
 		Positie: rel.Positie, EdgeID: rel.ID, SourceHandle: rel.SourceHandle, TargetHandle: rel.TargetHandle,
 		DoelEdgeID: rel.DoelID, DoelSourceHandle: rel.DoelSourceHandle, DoelTargetHandle: rel.DoelTargetHandle,
+		UseEdges: rel.UseEdges,
 	}
 	writeLayoutLine(b, relLayout)
 
@@ -364,46 +366,66 @@ func writeAanvangEindeEntry(b *strings.Builder, d DerivedType, kleur string, suf
 
 // writeLayoutLine schrijft de Layout: &EditorLayout{...} regel als er layout-info is.
 func writeLayoutLine(b *strings.Builder, li *layoutInfo) {
-	if li == nil || li.Positie == nil {
+	if li == nil {
 		return
 	}
 
-	// Detecteer of er edge-info is
+	hasPositie := li.Positie != nil
 	hasEdge := li.EdgeID != "" || li.SourceHandle != "" || li.TargetHandle != ""
 	hasDoel := li.DoelEdgeID != "" || li.DoelSourceHandle != "" || li.DoelTargetHandle != ""
+	hasUseEdges := len(li.UseEdges) > 0
 
-	if !hasEdge && !hasDoel {
-		// Alleen positie: enkelvoudige regel
+	if !hasPositie && !hasEdge && !hasDoel && !hasUseEdges {
+		return
+	}
+	if hasPositie && !hasEdge && !hasDoel && !hasUseEdges {
 		b.WriteString(fmt.Sprintf("\t\tLayout: &EditorLayout{Positie: &V3Positie{X: %g, Y: %g}},\n", li.Positie.X, li.Positie.Y))
 		return
 	}
 
-	// Complexe layout: meerdere regels
 	b.WriteString("\t\tLayout: &EditorLayout{\n")
-	b.WriteString(fmt.Sprintf("\t\t\tPositie: &V3Positie{X: %g, Y: %g}", li.Positie.X, li.Positie.Y))
-
+	if hasPositie {
+		b.WriteString(fmt.Sprintf("\t\t\tPositie: &V3Positie{X: %g, Y: %g},\n", li.Positie.X, li.Positie.Y))
+	}
 	if li.EdgeID != "" {
-		b.WriteString(fmt.Sprintf(", EdgeID: %q", li.EdgeID))
+		b.WriteString(fmt.Sprintf("\t\t\tEdgeID: %q,\n", li.EdgeID))
 	}
 	if li.SourceHandle != "" {
-		b.WriteString(fmt.Sprintf(",\n\t\t\tSourceHandle: %q", li.SourceHandle))
-	} else if li.TargetHandle != "" {
-		b.WriteString(",")
+		b.WriteString(fmt.Sprintf("\t\t\tSourceHandle: %q,\n", li.SourceHandle))
 	}
 	if li.TargetHandle != "" {
-		b.WriteString(fmt.Sprintf(", TargetHandle: %q", li.TargetHandle))
+		b.WriteString(fmt.Sprintf("\t\t\tTargetHandle: %q,\n", li.TargetHandle))
 	}
 	if li.DoelEdgeID != "" {
-		b.WriteString(fmt.Sprintf(",\n\t\t\tDoelEdgeID: %q", li.DoelEdgeID))
+		b.WriteString(fmt.Sprintf("\t\t\tDoelEdgeID: %q,\n", li.DoelEdgeID))
 	}
 	if li.DoelSourceHandle != "" {
-		b.WriteString(fmt.Sprintf(", DoelSourceHandle: %q", li.DoelSourceHandle))
+		b.WriteString(fmt.Sprintf("\t\t\tDoelSourceHandle: %q,\n", li.DoelSourceHandle))
 	}
 	if li.DoelTargetHandle != "" {
-		b.WriteString(fmt.Sprintf(", DoelTargetHandle: %q", li.DoelTargetHandle))
+		b.WriteString(fmt.Sprintf("\t\t\tDoelTargetHandle: %q,\n", li.DoelTargetHandle))
 	}
-
-	b.WriteString(",\n\t\t},\n")
+	if hasUseEdges {
+		b.WriteString("\t\t\tUseEdges: []V3UseEdge{\n")
+		for _, ue := range li.UseEdges {
+			b.WriteString(fmt.Sprintf("\t\t\t\t{Doel: %q", ue.Doel))
+			if ue.ID != "" {
+				b.WriteString(fmt.Sprintf(", ID: %q", ue.ID))
+			}
+			if ue.SourceHandle != "" {
+				b.WriteString(fmt.Sprintf(", SourceHandle: %q", ue.SourceHandle))
+			}
+			if ue.TargetHandle != "" {
+				b.WriteString(fmt.Sprintf(", TargetHandle: %q", ue.TargetHandle))
+			}
+			if ue.Hidden {
+				b.WriteString(", Hidden: true")
+			}
+			b.WriteString("},\n")
+		}
+		b.WriteString("\t\t\t},\n")
+	}
+	b.WriteString("\t\t},\n")
 }
 
 // ---- ReferentielijstInstanties ----

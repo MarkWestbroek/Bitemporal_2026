@@ -115,6 +115,7 @@ type V3Gegevenselement struct {
 	Runtime         *V3Runtime       `json:"runtime,omitempty"`      // V3.1: runtime/deployment metadata (genegeerd door codegen/UML-editor)
 	AfgeleideVelden []V3AfgeleidVeld `json:"afgeleideVelden,omitempty"`
 	Velden          []V3Veld         `json:"velden,omitempty"`
+	UseEdges        []V3UseEdge      `json:"useEdges,omitempty"` // optionele layout/visibility metadata voor «use»-dependency-edges
 }
 
 // V3Relatie beschrijft een relatie onder een entiteit.
@@ -138,6 +139,7 @@ type V3Relatie struct {
 	Runtime                  *V3Runtime       `json:"runtime,omitempty"`          // V3.1: runtime/deployment metadata (genegeerd door codegen/UML-editor)
 	AfgeleideVelden          []V3AfgeleidVeld `json:"afgeleideVelden,omitempty"`
 	Velden                   []V3Veld         `json:"velden,omitempty"`
+	UseEdges                 []V3UseEdge      `json:"useEdges,omitempty"` // optionele layout/visibility metadata voor «use»-dependency-edges
 }
 
 // V3Positie beschrijft de positie van een element in de UML-editor.
@@ -146,6 +148,16 @@ type V3Relatie struct {
 type V3Positie struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
+}
+
+// V3UseEdge bewaart editor-layout en hidden-state van een «use»-dependency-edge
+// vanuit een GE of relatie naar een enum, datatype of referentielijst-ref.
+type V3UseEdge struct {
+	Doel         string `json:"doel,omitempty"`
+	ID           string `json:"id,omitempty"`
+	SourceHandle string `json:"sourceHandle,omitempty"`
+	TargetHandle string `json:"targetHandle,omitempty"`
+	Hidden       bool   `json:"hidden,omitempty"`
 }
 
 // V3Runtime bevat runtime/deployment-specifieke metadata die afkomstig is uit de

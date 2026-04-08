@@ -180,8 +180,9 @@ Retourneert:
 1. **Entrypoint** (`devloop-entrypoint.sh`) start de API binary in een loop.
 2. **Rebuild endpoint** (`POST /admin/rebuild/:password`) ontvangt een V3 model of haalt er één uit de database/code.
 3. Voor de codegen start:
-   - `model/` wordt eerst hersteld vanuit `_baseline/model/` (schone bewezen toestand)
-   - daarna wordt een extra backup gemaakt in `_pre_rebuild/model/`
+   - handmatige kernbestanden in `model/` (zoals `v3_format.go`, `metaregistry_plumbing.go`, `v3_exporter.go`) worden eerst naar `_baseline/model/` gesynchroniseerd
+   - daarna wordt `model/` hersteld vanuit `_baseline/model/` (schone bewezen toestand)
+   - vervolgens wordt een extra backup gemaakt in `_pre_rebuild/model/`
 4. Daarna volgt per geselecteerd domein een aparte codegen-run.
 5. Vervolgens draait `go build` om de nieuwe binary te compileren.
 6. Alleen bij succes:
@@ -200,6 +201,8 @@ De devloop is expliciet defensief gemaakt zodat een mislukte generatie niet mete
 - **Ongeldige rebuild-JSON** → directe `400` response, zodat niet stilzwijgend wordt teruggevallen op een lege request
 
 Hierdoor blijft er altijd een laatste bewezen toestand beschikbaar.
+
+> **Belangrijk:** deze extra synchronisatie van kernbestanden voorkomt een regressie waarbij een oude baseline nieuwe handmatige plumbing-types terugdraaide. Daardoor blijft bijvoorbeeld `UseEdges`/`V3UseEdge` voor editor dependency-layout nu ook bij devloop rebuilds behouden.
 
 ### Verificatie op 2026-04-04 (schema_versie_id = 27)
 
