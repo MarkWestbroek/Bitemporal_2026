@@ -44,7 +44,8 @@ function convertV3Veld(v3Veld, enumLookup, datatypeLookup) {
   const mapped = goTypeNaarVeldType(v3Veld.goType || "string");
   const type = datatype?.basistype || mapped.type;
   const format = datatype?.format || mapped.format;
-  const enumWaarden = v3Veld.enum ? enumLookup[v3Veld.enum] || null : null;
+  const enumBestaat = Boolean(v3Veld.enum && enumLookup[v3Veld.enum]);
+  const enumWaarden = enumBestaat ? enumLookup[v3Veld.enum] : null;
 
   return {
     naam: v3Veld.naam,
@@ -52,7 +53,7 @@ function convertV3Veld(v3Veld, enumLookup, datatypeLookup) {
     format,
     datatypeNaam: v3Veld.datatype || datatype?.naam || null,
     enum: enumWaarden,
-    enumNaam: v3Veld.enum || null,
+    enumNaam: enumBestaat ? v3Veld.enum : null,
     refNaam: v3Veld["$ref"] || null,
     refItemNaam: v3Veld["$ref"] || v3Veld.refItemNaam || null,
     verplicht: !(v3Veld.goType || "").startsWith("*"),
@@ -263,7 +264,7 @@ export function v3ModelNaarStore(v3Full) {
       });
 
       // Dependency edges vanuit GE-velden (met useEdges voor handles/hidden)
-      addFieldDependencyEdges(velden, geId, ge.velden || [], datatypeLookup, diagramEdges, ge.useEdges);
+      addFieldDependencyEdges(velden, geId, ge.velden || [], datatypeLookup, diagramEdges, ge.useEdges, enumLookup);
     });
 
     // Relaties
@@ -298,7 +299,7 @@ export function v3ModelNaarStore(v3Full) {
         });
 
         // Dependency edges vanuit relatie-velden (met useEdges voor handles/hidden)
-        addFieldDependencyEdges(velden, rel.naam, rel.velden || [], datatypeLookup, diagramEdges, rel.useEdges);
+        addFieldDependencyEdges(velden, rel.naam, rel.velden || [], datatypeLookup, diagramEdges, rel.useEdges, enumLookup);
       }
 
       // Structurele edge: entiteit → relatie (eigenaar)
@@ -404,7 +405,7 @@ export function v3ModelNaarStore(v3Full) {
  * Gebruikt useEdges uit het V3 model voor sourceHandle/targetHandle/hidden.
  * Deduplicatie op edge-ID voorkomt dubbele lijnen.
  */
-function addFieldDependencyEdges(convertedVelden, parentId, rawVelden, datatypeLookup, edgesOut, useEdgesArr) {
+function addFieldDependencyEdges(convertedVelden, parentId, rawVelden, datatypeLookup, edgesOut, useEdgesArr, enumLookup = {}) {
   // Bouw lookup: edge-ID → useEdge info (hidden, handles)
   const useEdgeMap = {};
   (useEdgesArr || []).forEach((ue) => {
@@ -413,7 +414,7 @@ function addFieldDependencyEdges(convertedVelden, parentId, rawVelden, datatypeL
 
   const seen = new Set();
   (rawVelden || []).forEach((v, i) => {
-    if (v.enum) {
+    if (v.enum && enumLookup[v.enum]) {
       const edgeId = `${parentId}-->${v.enum}`;
       if (!seen.has(edgeId)) {
         seen.add(edgeId);
@@ -565,12 +566,18 @@ function collectUseEdges(diagrams, sourceId) {
     (e) => e.source === sourceId && e.data?.isDependency
   );
   if (!depEdges.length) return [];
+  const seen = new Set();
   return depEdges.map((e) => {
     const ue = { doel: (e.target || "").replace(/^(enum_|dt_)/, ""), id: e.id };
     if (e.sourceHandle) ue.sourceHandle = e.sourceHandle;
     if (e.targetHandle) ue.targetHandle = e.targetHandle;
     if (e.hidden) ue.hidden = true;
     return ue;
+  }).filter((ue) => {
+    const key = JSON.stringify(ue);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
   });
 }
 

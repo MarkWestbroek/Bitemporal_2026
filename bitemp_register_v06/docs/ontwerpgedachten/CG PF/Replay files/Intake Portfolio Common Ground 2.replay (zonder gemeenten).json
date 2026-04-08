@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "exported_at": "2026-04-07T20:45:26.485621Z",
+  "exported_at": "2026-04-08T15:57:56.327406Z",
   "source": "json://docs\\ontwerpgedachten\\CG PF\\Intake Portfolio Common Ground 1.json",
-  "schema_source": "json://docs\\ontwerpgedachten\\CG PF\\CGPF 0.4.4.json",
+  "schema_source": "json://docs\\ontwerpgedachten\\CG PF\\CG v0.5.2.json",
   "schema_model": {
     "naam": "Editor export",
     "versie": "v3"
@@ -12,15 +12,15 @@
     "gemeenten": 342,
     "domeinen": 10,
     "api_standaarden": 48,
-    "organisaties": 154,
+    "organisaties": 123,
     "personen": 66
   },
   "known_gaps": [
-    "Initiatief heeft in cgpf 0.3.7/0.4.4 nog geen uitgewerkte relationele koppeling naar Organisatie voor alle betrokken organisaties; contactorganisaties en leveranciers worden daarom nog steeds als losse seed-entiteiten opgevoerd.",
     "De huidige MetaRegistry gebruikt dezelfde request-key 'contactgegevens' voor Organisatie_Contactgegevens en Persoon_Contactgegevens; deze generator laat die records daarom bewust weg uit het replay-bestand.",
     "Bronwaarden voor producttype, fase en CG-laag zijn rijker dan de huidige enums. De generator normaliseert die waarden en bewaart de ruwe bronwaarde in registratie.opmerking.",
     "Voor gemeente, domein en API-standaard geldt nu: match op de referentielijst => REL opvoeren; geen match => opslaan in het bijbehorende overig-GE (`anderdomein`, `andersdangemeente`, `andereapistandaard`).",
-    "Wanneer de losse seed-replays voor gemeenten, domeinen en API-standaarden aanwezig zijn, gebruikt de generator die als bron en worden die referenties niet opnieuw in dit replay-bestand geseed."
+    "Wanneer de losse seed-replays voor gemeenten, domeinen en API-standaarden aanwezig zijn, gebruikt de generator die als bron en worden die referenties niet opnieuw in dit replay-bestand geseed.",
+    "Organisaties worden gerationaliseerd via ORG_ALIASES en is_org_like_token(). Nette namen worden geseed als Organisatie en gekoppeld als InitiatiefOrganisatie. Ongestructureerde tekst (zinnen, lijsten, onherkenbaar) wordt opgeslagen in OrganisatieInfo.informatie, zodat er geen informatie verloren gaat."
   ],
   "entries": [
     {
@@ -53,14 +53,6 @@
           },
           {
             "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 1,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
               "organisatie": {
                 "id": 2
               }
@@ -76,14 +68,6 @@
           },
           {
             "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 2,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
               "organisatie": {
                 "id": 3
               }
@@ -93,15 +77,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 3,
-                "naam": "Alle leveranciers die hosting diensten leveren vanuit de publieke cloud zouden Haven moeten toepassen op basis van het principe"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 3,
-                "type": "Leverancier"
+                "naam": "Analyze B.V., in samenwerking met Gemeente Alkmaar"
               }
             }
           },
@@ -116,15 +92,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 4,
-                "naam": "Analyze B.V., in samenwerking met Gemeente Alkmaar"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 4,
-                "type": "Gemeente"
+                "naam": "Anonimizer"
               }
             }
           },
@@ -139,15 +107,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 5,
-                "naam": "Anonimizer"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 5,
-                "type": "Leverancier"
+                "naam": "Appsemble B.V."
               }
             }
           },
@@ -162,7 +122,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 6,
-                "naam": "Appsemble"
+                "naam": "ASE Cloud Services"
               }
             }
           },
@@ -177,15 +137,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 7,
-                "naam": "Appsemble B.V."
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 7,
-                "type": "Leverancier"
+                "naam": "Attingen AB, Schweden"
               }
             }
           },
@@ -200,7 +152,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 8,
-                "naam": "ASE Cloud Services"
+                "naam": "Avolve"
               }
             }
           },
@@ -215,7 +167,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 9,
-                "naam": "Attingen AB, Schweden"
+                "naam": "AWS"
               }
             }
           },
@@ -230,15 +182,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 10,
-                "naam": "Avolve"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 10,
-                "type": "Leverancier"
+                "naam": "Bakerware"
               }
             }
           },
@@ -253,15 +197,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 11,
-                "naam": "AWS"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 11,
-                "type": "Leverancier"
+                "naam": "beemind"
               }
             }
           },
@@ -276,15 +212,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 12,
-                "naam": "Bakerware"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 12,
-                "type": "Leverancier"
+                "naam": "beheer en ondersteuning van Atlas."
               }
             }
           },
@@ -299,15 +227,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 13,
-                "naam": "beemind"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 13,
-                "type": "Leverancier"
+                "naam": "Bit Datacenter B.V."
               }
             }
           },
@@ -322,15 +242,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 14,
-                "naam": "beheer en ondersteuning van Atlas."
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 14,
-                "type": "Leverancier"
+                "naam": "Cadac-groep als reseller van de technologie bij gemeenten"
               }
             }
           },
@@ -345,15 +257,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 15,
-                "naam": "Bit Datacenter B.V."
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 15,
-                "type": "Leverancier"
+                "naam": "cateraars"
               }
             }
           },
@@ -368,15 +272,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 16,
-                "naam": "Cadac-groep als reseller van de technologie bij gemeenten"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 16,
-                "type": "Leverancier"
+                "naam": "Centric"
               }
             }
           },
@@ -391,15 +287,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 17,
-                "naam": "cateraars"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 17,
-                "type": "Leverancier"
+                "naam": "civity"
               }
             }
           },
@@ -414,15 +302,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 18,
-                "naam": "Centric"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 18,
-                "type": "Leverancier"
+                "naam": "Conduction B.V Yard Acato Sim Groep Xxllnc"
               }
             }
           },
@@ -437,7 +317,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 19,
-                "naam": "Centric: Jeroen van Amersfoort"
+                "naam": "Conduction B.V."
               }
             }
           },
@@ -452,15 +332,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 20,
-                "naam": "civity"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 20,
-                "type": "Leverancier"
+                "naam": "Conduction Sim Groep Xxllnc"
               }
             }
           },
@@ -475,15 +347,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 21,
-                "naam": "conduction"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 21,
-                "type": "Leverancier"
+                "naam": "Contezza"
               }
             }
           },
@@ -498,15 +362,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 22,
-                "naam": "Conduction B.V (Via OpenWoo.app en OpenCatalogi) Yard (Via OpenWoo.app) Acato (Via OpenWoo.app) Sim Groep (Via OpenWoo.app en OpenCatalogi) Xxllnc (Via OpenWoo.app en Open Registers ; Klanten)"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 22,
-                "type": "Leverancier"
+                "naam": "Coopax"
               }
             }
           },
@@ -521,15 +377,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 23,
-                "naam": "Conduction B.V Yard Acato Sim Groep Xxllnc"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 23,
-                "type": "Leverancier"
+                "naam": "Decos"
               }
             }
           },
@@ -544,7 +392,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 24,
-                "naam": "Conduction B.V."
+                "naam": "Decos etc."
               }
             }
           },
@@ -559,15 +407,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 25,
-                "naam": "Conduction Sim Groep Xxllnc"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 25,
-                "type": "Leverancier"
+                "naam": "Delta10"
               }
             }
           },
@@ -582,15 +422,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 26,
-                "naam": "Contezza"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 26,
-                "type": "Leverancier"
+                "naam": "Dexes"
               }
             }
           },
@@ -605,7 +437,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 27,
-                "naam": "Coopax"
+                "naam": "Digeplan"
               }
             }
           },
@@ -620,15 +452,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 28,
-                "naam": "Decos"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 28,
-                "type": "Leverancier"
+                "naam": "Dimpact"
               }
             }
           },
@@ -643,15 +467,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 29,
-                "naam": "Decos etc."
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 29,
-                "type": "Leverancier"
+                "naam": "DiVault"
               }
             }
           },
@@ -666,15 +482,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 30,
-                "naam": "Delta10"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 30,
-                "type": "Leverancier"
+                "naam": "Diverse DMS leveranciers. Openzaak"
               }
             }
           },
@@ -689,15 +497,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 31,
-                "naam": "Delta10 B.V. ondersteunt de gemeenten van de Atlas Community als leverancier met de doorontwikkeling"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 31,
-                "type": "Leverancier"
+                "naam": "Draad"
               }
             }
           },
@@ -712,7 +512,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 32,
-                "naam": "Den Haag"
+                "naam": "Drie stuurgroep gemeenten: Utrecht, Tilburg, Drechtsteden"
               }
             }
           },
@@ -727,15 +527,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 33,
-                "naam": "Dexes"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 33,
-                "type": "Leverancier"
+                "naam": "eData"
               }
             }
           },
@@ -750,15 +542,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 34,
-                "naam": "Die gaan we aan laten sluiten naar aanleiding van de wensen van de gemeente. Maar zijn evenement locaties"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 34,
-                "type": "Leverancier"
+                "naam": "Enable-U"
               }
             }
           },
@@ -773,15 +557,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 35,
-                "naam": "Digeplan"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 35,
-                "type": "Leverancier"
+                "naam": "Epistola"
               }
             }
           },
@@ -796,7 +572,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 36,
-                "naam": "Dimpact"
+                "naam": "Excellence"
               }
             }
           },
@@ -811,15 +587,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 37,
-                "naam": "DiVault"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 37,
-                "type": "Leverancier"
+                "naam": "Gemboxx"
               }
             }
           },
@@ -834,15 +602,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 38,
-                "naam": "Diverse DMS leveranciers. Openzaak"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 38,
-                "type": "Leverancier"
+                "naam": "Gemeente Buren"
               }
             }
           },
@@ -857,15 +617,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 39,
-                "naam": "Draad"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 39,
-                "type": "Leverancier"
+                "naam": "Gemeente Delft"
               }
             }
           },
@@ -880,15 +632,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 40,
-                "naam": "Drie stuurgroep gemeenten: Utrecht, Tilburg, Drechtsteden"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 40,
-                "type": "Gemeente"
+                "naam": "Gemeente Den Haag"
               }
             }
           },
@@ -903,15 +647,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 41,
-                "naam": "eData"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 41,
-                "type": "Leverancier"
+                "naam": "Gemeente Deventer"
               }
             }
           },
@@ -926,15 +662,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 42,
-                "naam": "Enable-U"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 42,
-                "type": "Leverancier"
+                "naam": "Gemeente Haarlemmermeer"
               }
             }
           },
@@ -949,15 +677,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 43,
-                "naam": "Epistola"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 43,
-                "type": "Leverancier"
+                "naam": "Gemeente Nijmegen"
               }
             }
           },
@@ -972,15 +692,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 44,
-                "naam": "Excellence"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 44,
-                "type": "Leverancier"
+                "naam": "Gemeente Purmerend"
               }
             }
           },
@@ -995,15 +707,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 45,
-                "naam": "För närvarande är inga leverantörer formellt involverade. FamilyBarometer är utformad som en fristående komponent som kan integreras via API:er med befintliga kommunala applikationer samt ärende- eller verksamhetssystem. Implementeringen kräver ingen specifik leverantör"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 45,
-                "type": "Leverancier"
+                "naam": "Gemeente Rotterdam"
               }
             }
           },
@@ -1018,15 +722,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 46,
-                "naam": "Geen. GeVal is gemaakt door ontwikkelaars binnen Gemeente Rotterdam zelf. Om andere gemeenten te helpen wordt op Github de kennis gedeeld. Gemeente Rotterdam draagt geen enkele verantwoordelijkheid voor de werking van de code en onderhoudt de code niet (ook geen bug fixing)."
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 46,
-                "type": "Gemeente"
+                "naam": "Gemeente Sittard-Geleen"
               }
             }
           },
@@ -1041,15 +737,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 47,
-                "naam": "Geen. GeVal is initieel ontwikkeld door ontwikkelaars binnen Gemeente Rotterdam zelf."
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 47,
-                "type": "Leverancier"
+                "naam": "Gemeente Utrecht"
               }
             }
           },
@@ -1064,15 +752,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 48,
-                "naam": "Gemboxx"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 48,
-                "type": "Leverancier"
+                "naam": "Gemeente Zwolle"
               }
             }
           },
@@ -1087,15 +767,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 49,
-                "naam": "Gemeente Buren"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 49,
-                "type": "Gemeente"
+                "naam": "Gemeentewinkel B.V."
               }
             }
           },
@@ -1110,15 +782,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 50,
-                "naam": "Gemeente Delft"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 50,
-                "type": "Gemeente"
+                "naam": "Genetics"
               }
             }
           },
@@ -1133,15 +797,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 51,
-                "naam": "Gemeente Den Haag"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 51,
-                "type": "Gemeente"
+                "naam": "Genus Voice"
               }
             }
           },
@@ -1156,15 +812,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 52,
-                "naam": "Gemeente Deventer"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 52,
-                "type": "Gemeente"
+                "naam": "Haarlem"
               }
             }
           },
@@ -1179,15 +827,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 53,
-                "naam": "Gemeente Haarlemmermeer"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 53,
-                "type": "Gemeente"
+                "naam": "hosting"
               }
             }
           },
@@ -1202,15 +842,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 54,
-                "naam": "Gemeente Montferland, maar binnenkort zal VNG die rol overnemen."
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 54,
-                "type": "Gemeente"
+                "naam": "ICATT"
               }
             }
           },
@@ -1225,15 +857,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 55,
-                "naam": "Gemeente Nijmegen"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 55,
-                "type": "Gemeente"
+                "naam": "ICATT en Maykin (beide via DImpact)"
               }
             }
           },
@@ -1248,15 +872,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 56,
-                "naam": "Gemeente Purmerend"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 56,
-                "type": "Gemeente"
+                "naam": "ICTU"
               }
             }
           },
@@ -1271,15 +887,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 57,
-                "naam": "Gemeente Rotterdam"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 57,
-                "type": "Gemeente"
+                "naam": "ik hoop straks veel!"
               }
             }
           },
@@ -1294,15 +902,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 58,
-                "naam": "Gemeente Sittard-Geleen"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 58,
-                "type": "Gemeente"
+                "naam": "implementatie"
               }
             }
           },
@@ -1317,15 +917,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 59,
-                "naam": "Gemeente Utrecht"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 59,
-                "type": "Gemeente"
+                "naam": "INFO"
               }
             }
           },
@@ -1340,15 +932,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 60,
-                "naam": "Gemeente Zwolle"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 60,
-                "type": "Gemeente"
+                "naam": "Innovadis"
               }
             }
           },
@@ -1363,15 +947,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 61,
-                "naam": "Gemeentewinkel B.V."
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 61,
-                "type": "Gemeente"
+                "naam": "iO"
               }
             }
           },
@@ -1386,15 +962,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 62,
-                "naam": "Genetics"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 62,
-                "type": "Leverancier"
+                "naam": "JCC Software"
               }
             }
           },
@@ -1409,15 +977,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 63,
-                "naam": "Genus Voice"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 63,
-                "type": "Leverancier"
+                "naam": "Keesy"
               }
             }
           },
@@ -1432,15 +992,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 64,
-                "naam": "Haarlem"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 64,
-                "type": "Leverancier"
+                "naam": "Macoin"
               }
             }
           },
@@ -1455,15 +1007,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 65,
-                "naam": "hosting"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 65,
-                "type": "Leverancier"
+                "naam": "MainFields"
               }
             }
           },
@@ -1478,15 +1022,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 66,
-                "naam": "Icatt"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 66,
-                "type": "Leverancier"
+                "naam": "MainFields en Nerds&Company"
               }
             }
           },
@@ -1501,15 +1037,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 67,
-                "naam": "ICATT en Maykin (beide via DImpact)"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 67,
-                "type": "Leverancier"
+                "naam": "MapGallery"
               }
             }
           },
@@ -1524,15 +1052,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 68,
-                "naam": "ICTU"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 68,
-                "type": "Leverancier"
+                "naam": "Maykin Media"
               }
             }
           },
@@ -1547,15 +1067,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 69,
-                "naam": "ik hoop straks veel!"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 69,
-                "type": "Leverancier"
+                "naam": "meer-innovatie"
               }
             }
           },
@@ -1570,15 +1082,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 70,
-                "naam": "implementatie"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 70,
-                "type": "Leverancier"
+                "naam": "Micpoint B.V."
               }
             }
           },
@@ -1593,15 +1097,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 71,
-                "naam": "INFO"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 71,
-                "type": "Leverancier"
+                "naam": "Micpoint/MyFMS"
               }
             }
           },
@@ -1616,15 +1112,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 72,
-                "naam": "Innovadis"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 72,
-                "type": "Leverancier"
+                "naam": "Microsoft"
               }
             }
           },
@@ -1639,15 +1127,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 73,
-                "naam": "iO"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 73,
-                "type": "Leverancier"
+                "naam": "Microsoft (Azure OpenAI)"
               }
             }
           },
@@ -1662,15 +1142,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 74,
-                "naam": "JCC Software"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 74,
-                "type": "Leverancier"
+                "naam": "Milvum"
               }
             }
           },
@@ -1685,15 +1157,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 75,
-                "naam": "Keesy"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 75,
-                "type": "Leverancier"
+                "naam": "o.a. Conduction"
               }
             }
           },
@@ -1708,15 +1172,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 76,
-                "naam": "Macoin"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 76,
-                "type": "Leverancier"
+                "naam": "OpenGemeente"
               }
             }
           },
@@ -1731,15 +1187,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 77,
-                "naam": "Maikin contessa conduction meerdere"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 77,
-                "type": "Leverancier"
+                "naam": "Oribi"
               }
             }
           },
@@ -1754,7 +1202,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 78,
-                "naam": "MainFields"
+                "naam": "Osano B.V."
               }
             }
           },
@@ -1769,15 +1217,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 79,
-                "naam": "MainFields en Nerds&Company"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 79,
-                "type": "Leverancier"
+                "naam": "OWC"
               }
             }
           },
@@ -1792,15 +1232,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 80,
-                "naam": "MapGallery"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 80,
-                "type": "Leverancier"
+                "naam": "Pink"
               }
             }
           },
@@ -1815,15 +1247,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 81,
-                "naam": "maykin"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 81,
-                "type": "Leverancier"
+                "naam": "PinkRoccade"
               }
             }
           },
@@ -1838,15 +1262,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 82,
-                "naam": "Maykin en Ritense (binnen overleggen over de gemeentelijke ZGW standaarden)"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 82,
-                "type": "Leverancier"
+                "naam": "PinkRoccade Ritense Roxit"
               }
             }
           },
@@ -1861,15 +1277,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 83,
-                "naam": "Maykin media"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 83,
-                "type": "Leverancier"
+                "naam": "Procura"
               }
             }
           },
@@ -1884,15 +1292,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 84,
-                "naam": "meer-innovatie"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 84,
-                "type": "Leverancier"
+                "naam": "professionele dienstverleners (als sprekers of trainers)"
               }
             }
           },
@@ -1907,7 +1307,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 85,
-                "naam": "Micpoint B.V."
+                "naam": "Progresity"
               }
             }
           },
@@ -1922,15 +1322,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 86,
-                "naam": "Micpoint/MyFMS"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 86,
-                "type": "Leverancier"
+                "naam": "Proxy Managed Services B.V."
               }
             }
           },
@@ -1945,15 +1337,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 87,
-                "naam": "Microsoft"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 87,
-                "type": "Leverancier"
+                "naam": "Raakvlak Advies"
               }
             }
           },
@@ -1968,15 +1352,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 88,
-                "naam": "Microsoft (Azure OpenAI)"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 88,
-                "type": "Leverancier"
+                "naam": "Ritense"
               }
             }
           },
@@ -1991,15 +1367,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 89,
-                "naam": "Milvum"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 89,
-                "type": "Leverancier"
+                "naam": "Ritense (productontwikkeling )"
               }
             }
           },
@@ -2014,7 +1382,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 90,
-                "naam": "Nijmegen"
+                "naam": "Roxit"
               }
             }
           },
@@ -2029,15 +1397,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 91,
-                "naam": "Nog niks"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 91,
-                "type": "Leverancier"
+                "naam": "Roxit en leveranciers waarmee geïntegreerd wordt zoals DataMask"
               }
             }
           },
@@ -2052,15 +1412,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 92,
-                "naam": "o.a. Conduction"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 92,
-                "type": "Leverancier"
+                "naam": "Rx.Mission"
               }
             }
           },
@@ -2075,15 +1427,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 93,
-                "naam": "OpenGemeente"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 93,
-                "type": "Leverancier"
+                "naam": "SafeGPT Netherlands B.V."
               }
             }
           },
@@ -2098,15 +1442,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 94,
-                "naam": "Oribi"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 94,
-                "type": "Leverancier"
+                "naam": "Savvy"
               }
             }
           },
@@ -2121,7 +1457,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 95,
-                "naam": "Osano B.V."
+                "naam": "Sigmax"
               }
             }
           },
@@ -2136,7 +1472,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 96,
-                "naam": "OWC"
+                "naam": "SIM Groep"
               }
             }
           },
@@ -2151,15 +1487,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 97,
-                "naam": "piet"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 97,
-                "type": "Leverancier"
+                "naam": "Simply Intelligent BV"
               }
             }
           },
@@ -2174,15 +1502,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 98,
-                "naam": "Pink"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 98,
-                "type": "Leverancier"
+                "naam": "SSC Twente"
               }
             }
           },
@@ -2197,15 +1517,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 99,
-                "naam": "Pinkroccade"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 99,
-                "type": "Leverancier"
+                "naam": "Stadsbeheer"
               }
             }
           },
@@ -2220,15 +1532,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 100,
-                "naam": "pinkRoccade Mitek"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 100,
-                "type": "Leverancier"
+                "naam": "Stichting BOR2050"
               }
             }
           },
@@ -2243,15 +1547,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 101,
-                "naam": "PinkRoccade Ritense Roxit"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 101,
-                "type": "Leverancier"
+                "naam": "SUSE Software Solutions Germany GmbH"
               }
             }
           },
@@ -2266,15 +1562,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 102,
-                "naam": "Procura"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 102,
-                "type": "Leverancier"
+                "naam": "SWIS"
               }
             }
           },
@@ -2289,15 +1577,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 103,
-                "naam": "professionele dienstverleners (als sprekers of trainers)"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 103,
-                "type": "Leverancier"
+                "naam": "SWIS (initiatiefnemer / realisatiepartner)"
               }
             }
           },
@@ -2312,15 +1592,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 104,
-                "naam": "Progresity"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 104,
-                "type": "Leverancier"
+                "naam": "Súdwest-Fryslân"
               }
             }
           },
@@ -2335,15 +1607,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 105,
-                "naam": "Proxy Managed Services B.V."
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 105,
-                "type": "Leverancier"
+                "naam": "technische dienstverleners (als audio visueel leveranciers)"
               }
             }
           },
@@ -2358,15 +1622,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 106,
-                "naam": "Raakvlak Advies"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 106,
-                "type": "Leverancier"
+                "naam": "Textinfo"
               }
             }
           },
@@ -2381,15 +1637,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 107,
-                "naam": "Ritense"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 107,
-                "type": "Leverancier"
+                "naam": "Triply"
               }
             }
           },
@@ -2404,15 +1652,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 108,
-                "naam": "Ritense (productontwikkeling )"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 108,
-                "type": "Leverancier"
+                "naam": "True"
               }
             }
           },
@@ -2427,15 +1667,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 109,
-                "naam": "Roxit"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 109,
-                "type": "Leverancier"
+                "naam": "TrueLime"
               }
             }
           },
@@ -2450,15 +1682,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 110,
-                "naam": "Roxit en leveranciers waarmee geïntegreerd wordt zoals DataMask"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 110,
-                "type": "Leverancier"
+                "naam": "ValidSign"
               }
             }
           },
@@ -2473,15 +1697,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 111,
-                "naam": "Rx.Mission"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 111,
-                "type": "Leverancier"
+                "naam": "Vebego Groen en Progresity"
               }
             }
           },
@@ -2496,7 +1712,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 112,
-                "naam": "SafeGPT Netherlands B.V."
+                "naam": "Veiligheidsregio Zuid-Limburg"
               }
             }
           },
@@ -2511,15 +1727,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 113,
-                "naam": "Savvy"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 113,
-                "type": "Leverancier"
+                "naam": "Visma Circle"
               }
             }
           },
@@ -2534,15 +1742,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 114,
-                "naam": "Sigmax"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 114,
-                "type": "Leverancier"
+                "naam": "Visma Roxit"
               }
             }
           },
@@ -2557,15 +1757,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 115,
-                "naam": "SIMgroep"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 115,
-                "type": "Leverancier"
+                "naam": "VNG"
               }
             }
           },
@@ -2580,15 +1772,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 116,
-                "naam": "Simply Intelligent BV"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 116,
-                "type": "Leverancier"
+                "naam": "VNG Realisatie"
               }
             }
           },
@@ -2603,15 +1787,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 117,
-                "naam": "SSC Twente"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 117,
-                "type": "Leverancier"
+                "naam": "WeareFrank"
               }
             }
           },
@@ -2626,15 +1802,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 118,
-                "naam": "Stadsbeheer"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 118,
-                "type": "Leverancier"
+                "naam": "Worth Systems"
               }
             }
           },
@@ -2649,7 +1817,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 119,
-                "naam": "Stichting BOR2050"
+                "naam": "Worth Systems (implementatie)"
               }
             }
           },
@@ -2664,15 +1832,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 120,
-                "naam": "SUSE Software Solutions Germany GmbH"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 120,
-                "type": "Leverancier"
+                "naam": "Woweb"
               }
             }
           },
@@ -2687,7 +1847,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 121,
-                "naam": "SWIS"
+                "naam": "Xxllnc"
               }
             }
           },
@@ -2702,15 +1862,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 122,
-                "naam": "SWIS (initiatiefnemer / realisatiepartner)"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 122,
-                "type": "Leverancier"
+                "naam": "Yard Digital Agency"
               }
             }
           },
@@ -2725,672 +1877,7 @@
             "opvoer": {
               "organisatienaam": {
                 "organisatie_id": 123,
-                "naam": "Súdwest-Fryslân"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 123,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 124
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 124,
-                "naam": "technische dienstverleners (als audio visueel leveranciers)"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 124,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 125
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 125,
-                "naam": "tetst"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 125,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 126
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 126,
-                "naam": "Textinfo"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 126,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 127
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 127,
-                "naam": "Triply"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 127,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 128
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 128,
-                "naam": "True"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 128,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 129
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 129,
-                "naam": "TrueLime"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 129,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 130
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 130,
-                "naam": "utan kan ske i samarbete med kommunernas befintliga systemleverantörer."
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 130,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 131
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 131,
-                "naam": "ValidSign"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 131,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 132
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 132,
-                "naam": "Vebego Groen en Progresity"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 132,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 133
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 133,
-                "naam": "Veiligheidsregio Zuid-Limburg"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 134
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 134,
-                "naam": "Visma Circle"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 135
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 135,
-                "naam": "Visma Roxit"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 135,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 136
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 136,
-                "naam": "VNG"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 137
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 137,
-                "naam": "VNG Realisatie"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 138
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 138,
-                "naam": "voor het chatmodel en embedding model. De rest is open source."
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 138,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 139
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 139,
-                "naam": "We gebruiken ZGW-API"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 139,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 140
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 140,
-                "naam": "WeareFrank"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 140,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 141
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 141,
-                "naam": "WeAreFrank GTKCyber ikv de software. We gaan nu ook andere partijen benaderen die kunnen helpen bij het toepassen van het Gemeentelijk Gegevens Model."
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 141,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 142
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 142,
-                "naam": "Worth"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 143
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 143,
-                "naam": "Worth Systems"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 143,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 144
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 144,
-                "naam": "Worth Systems (implementatie)"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 144,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 145
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 145,
-                "naam": "Woweb"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 145,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 146
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 146,
-                "naam": "xx"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 147
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 147,
-                "naam": "xxllnc"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 147,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 148
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 148,
-                "naam": "xxllnce"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 148,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 149
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 149,
-                "naam": "y"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 149,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 150
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 150,
-                "naam": "Yard"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 150,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 151
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 151,
-                "naam": "Yard Digital Agency"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 152
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 152,
-                "naam": "zie https://openwebconcept.nl/wie-zijn-wij"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 152,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 153
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 153,
                 "naam": "Zynyo"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 153,
-                "type": "Leverancier"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatie": {
-                "id": 154
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatienaam": {
-                "organisatie_id": 154,
-                "naam": "● Analyze (KBenP) – hoofdontwikkelaar ● Diverse Bronnen- en cloudleveranciers"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "organisatierol": {
-                "organisatie_id": 154,
-                "type": "Leverancier"
               }
             }
           }
@@ -4423,7 +2910,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 49,
+                "organisatie_id": 38,
                 "persoon_id": 32,
                 "rol": "PO"
               }
@@ -4432,7 +2919,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 137,
+                "organisatie_id": 116,
                 "persoon_id": 34,
                 "rol": "PO"
               }
@@ -4441,7 +2928,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 50,
+                "organisatie_id": 39,
                 "persoon_id": 4,
                 "rol": "PO"
               }
@@ -4450,7 +2937,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 40,
+                "organisatie_id": 32,
                 "persoon_id": 51,
                 "rol": "PO"
               }
@@ -4459,7 +2946,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 136,
+                "organisatie_id": 115,
                 "persoon_id": 18,
                 "rol": "PO"
               }
@@ -4468,25 +2955,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 21,
-                "persoon_id": 55,
-                "rol": "PO"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "contactpersoon": {
-                "organisatie_id": 32,
-                "persoon_id": 65,
-                "rol": "PO"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "contactpersoon": {
-                "organisatie_id": 57,
+                "organisatie_id": 45,
                 "persoon_id": 54,
                 "rol": "PO"
               }
@@ -4495,7 +2964,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 36,
+                "organisatie_id": 28,
                 "persoon_id": 28,
                 "rol": "PO"
               }
@@ -4504,7 +2973,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 52,
+                "organisatie_id": 41,
                 "persoon_id": 14,
                 "rol": "PO"
               }
@@ -4513,7 +2982,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 55,
+                "organisatie_id": 43,
                 "persoon_id": 8,
                 "rol": "PO"
               }
@@ -4522,7 +2991,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 27,
+                "organisatie_id": 22,
                 "persoon_id": 9,
                 "rol": "PO"
               }
@@ -4531,7 +3000,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 107,
+                "organisatie_id": 88,
                 "persoon_id": 63,
                 "rol": "PO"
               }
@@ -4540,16 +3009,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 81,
-                "persoon_id": 37,
-                "rol": "PO"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "contactpersoon": {
-                "organisatie_id": 36,
+                "organisatie_id": 28,
                 "persoon_id": 7,
                 "rol": "PO"
               }
@@ -4558,7 +3018,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 123,
+                "organisatie_id": 104,
                 "persoon_id": 17,
                 "rol": "PO"
               }
@@ -4567,7 +3027,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 95,
+                "organisatie_id": 78,
                 "persoon_id": 41,
                 "rol": "PO"
               }
@@ -4576,7 +3036,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 102,
+                "organisatie_id": 83,
                 "persoon_id": 60,
                 "rol": "PO"
               }
@@ -4585,7 +3045,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 26,
+                "organisatie_id": 21,
                 "persoon_id": 62,
                 "rol": "PO"
               }
@@ -4594,7 +3054,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 51,
+                "organisatie_id": 40,
                 "persoon_id": 11,
                 "rol": "PO"
               }
@@ -4603,7 +3063,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 24,
+                "organisatie_id": 19,
                 "persoon_id": 55,
                 "rol": "PO"
               }
@@ -4612,25 +3072,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 97,
-                "persoon_id": 53,
-                "rol": "PO"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "contactpersoon": {
-                "organisatie_id": 90,
-                "persoon_id": 33,
-                "rol": "PO"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "contactpersoon": {
-                "organisatie_id": 7,
+                "organisatie_id": 5,
                 "persoon_id": 38,
                 "rol": "PO"
               }
@@ -4639,7 +3081,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 109,
+                "organisatie_id": 90,
                 "persoon_id": 57,
                 "rol": "PO"
               }
@@ -4648,7 +3090,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 135,
+                "organisatie_id": 114,
                 "persoon_id": 44,
                 "rol": "PO"
               }
@@ -4657,16 +3099,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 97,
-                "persoon_id": 52,
-                "rol": "PO"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "contactpersoon": {
-                "organisatie_id": 109,
+                "organisatie_id": 90,
                 "persoon_id": 43,
                 "rol": "PO"
               }
@@ -4675,7 +3108,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 18,
+                "organisatie_id": 16,
                 "persoon_id": 16,
                 "rol": "PO"
               }
@@ -4684,7 +3117,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 83,
+                "organisatie_id": 68,
                 "persoon_id": 37,
                 "rol": "PO"
               }
@@ -4693,7 +3126,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 56,
+                "organisatie_id": 44,
                 "persoon_id": 59,
                 "rol": "PO"
               }
@@ -4702,16 +3135,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 6,
-                "persoon_id": 31,
-                "rol": "PO"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "contactpersoon": {
-                "organisatie_id": 151,
+                "organisatie_id": 122,
                 "persoon_id": 15,
                 "rol": "PO"
               }
@@ -4720,16 +3144,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 46,
-                "persoon_id": 23,
-                "rol": "PO"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "contactpersoon": {
-                "organisatie_id": 57,
+                "organisatie_id": 45,
                 "persoon_id": 22,
                 "rol": "PO"
               }
@@ -4738,7 +3153,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 58,
+                "organisatie_id": 46,
                 "persoon_id": 49,
                 "rol": "PO"
               }
@@ -4747,16 +3162,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 149,
-                "persoon_id": 66,
-                "rol": "PO"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "contactpersoon": {
-                "organisatie_id": 147,
+                "organisatie_id": 121,
                 "persoon_id": 36,
                 "rol": "PO"
               }
@@ -4765,7 +3171,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 143,
+                "organisatie_id": 118,
                 "persoon_id": 25,
                 "rol": "PO"
               }
@@ -4774,16 +3180,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 54,
-                "persoon_id": 10,
-                "rol": "PO"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "contactpersoon": {
-                "organisatie_id": 109,
+                "organisatie_id": 90,
                 "persoon_id": 58,
                 "rol": "PO"
               }
@@ -4792,7 +3189,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 153,
+                "organisatie_id": 123,
                 "persoon_id": 47,
                 "rol": "PO"
               }
@@ -4801,16 +3198,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 32,
-                "persoon_id": 3,
-                "rol": "PO"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "contactpersoon": {
-                "organisatie_id": 85,
+                "organisatie_id": 70,
                 "persoon_id": 27,
                 "rol": "PO"
               }
@@ -4819,7 +3207,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 53,
+                "organisatie_id": 42,
                 "persoon_id": 19,
                 "rol": "PO"
               }
@@ -4828,7 +3216,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 96,
+                "organisatie_id": 79,
                 "persoon_id": 12,
                 "rol": "PO"
               }
@@ -4837,7 +3225,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 96,
+                "organisatie_id": 79,
                 "persoon_id": 13,
                 "rol": "PO"
               }
@@ -4846,7 +3234,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 131,
+                "organisatie_id": 110,
                 "persoon_id": 24,
                 "rol": "PO"
               }
@@ -4855,7 +3243,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 109,
+                "organisatie_id": 90,
                 "persoon_id": 44,
                 "rol": "PO"
               }
@@ -4864,16 +3252,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 19,
-                "persoon_id": 35,
-                "rol": "PO"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "contactpersoon": {
-                "organisatie_id": 99,
+                "organisatie_id": 81,
                 "persoon_id": 21,
                 "rol": "PO"
               }
@@ -4882,7 +3261,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 60,
+                "organisatie_id": 48,
                 "persoon_id": 20,
                 "rol": "PO"
               }
@@ -4891,7 +3270,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 36,
+                "organisatie_id": 28,
                 "persoon_id": 45,
                 "rol": "PO"
               }
@@ -4900,7 +3279,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 4,
+                "organisatie_id": 3,
                 "persoon_id": 39,
                 "rol": "PO"
               }
@@ -4909,7 +3288,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 134,
+                "organisatie_id": 113,
                 "persoon_id": 5,
                 "rol": "PO"
               }
@@ -4918,16 +3297,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 142,
-                "persoon_id": 26,
-                "rol": "PO"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "contactpersoon": {
-                "organisatie_id": 37,
+                "organisatie_id": 29,
                 "persoon_id": 30,
                 "rol": "PO"
               }
@@ -4936,7 +3306,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 61,
+                "organisatie_id": 49,
                 "persoon_id": 46,
                 "rol": "PO"
               }
@@ -4945,7 +3315,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 80,
+                "organisatie_id": 67,
                 "persoon_id": 42,
                 "rol": "PO"
               }
@@ -4954,7 +3324,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 59,
+                "organisatie_id": 47,
                 "persoon_id": 62,
                 "rol": "PO"
               }
@@ -4963,7 +3333,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 78,
+                "organisatie_id": 65,
                 "persoon_id": 6,
                 "rol": "PO"
               }
@@ -4972,7 +3342,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 9,
+                "organisatie_id": 7,
                 "persoon_id": 1,
                 "rol": "PO"
               }
@@ -4981,7 +3351,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 112,
+                "organisatie_id": 93,
                 "persoon_id": 48,
                 "rol": "PO"
               }
@@ -4990,7 +3360,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 8,
+                "organisatie_id": 6,
                 "persoon_id": 2,
                 "rol": "PO"
               }
@@ -4999,7 +3369,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 121,
+                "organisatie_id": 102,
                 "persoon_id": 40,
                 "rol": "PO"
               }
@@ -5008,7 +3378,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 105,
+                "organisatie_id": 86,
                 "persoon_id": 64,
                 "rol": "PO"
               }
@@ -5017,7 +3387,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 119,
+                "organisatie_id": 100,
                 "persoon_id": 50,
                 "rol": "PO"
               }
@@ -5026,7 +3396,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 104,
+                "organisatie_id": 85,
                 "persoon_id": 61,
                 "rol": "PO"
               }
@@ -5035,7 +3405,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 133,
+                "organisatie_id": 112,
                 "persoon_id": 29,
                 "rol": "PO"
               }
@@ -5044,7 +3414,7 @@
           {
             "opvoer": {
               "contactpersoon": {
-                "organisatie_id": 43,
+                "organisatie_id": 35,
                 "persoon_id": 56,
                 "rol": "PO"
               }
@@ -5181,6 +3551,24 @@
                 "api_standaard": "https://forms.office.com/Pages/ResponsePage.aspx?id=qynwbtc_mE2bDtH1_t6m0cYdPcvoKcFJh8QnFnbbJrdUNDhFMU1NTThNOVlHVUY2SlRLSEZTOFpMMi4u"
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 37,
+                "organisatie_id": 38,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 37,
+                "organisatie_id": 68,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -5300,6 +3688,69 @@
               "andereapistandaard": {
                 "initiatief_id": 38,
                 "api_standaard": "ZWG-api (nog niet operationeel, wel in de code)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 38,
+                "organisatie_id": 116,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 38,
+                "organisatie_id": 25,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 38,
+                "organisatie_id": 64,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 38,
+                "organisatie_id": 108,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 38,
+                "organisatie_id": 17,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 38,
+                "organisatie_id": 19,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 38,
+                "organisatie_id": 68,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -5469,6 +3920,51 @@
                 "initiatief_id": 39,
                 "gemeente_id": 599,
                 "rol": "Realiseert"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 39,
+                "organisatie_id": 39,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 39,
+                "organisatie_id": 81,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 39,
+                "organisatie_id": 16,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 39,
+                "organisatie_id": 72,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 39,
+                "organisatie_id": 11,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -6022,6 +4518,42 @@
                 "andersDanGemeente": "Nuenen"
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 40,
+                "organisatie_id": 32,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 40,
+                "organisatie_id": 68,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 40,
+                "organisatie_id": 51,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 40,
+                "organisatie_id": 69,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -6161,6 +4693,60 @@
               "andereapistandaard": {
                 "initiatief_id": 42,
                 "api_standaard": "Waar ze van toepassing zijn; zijn ze toegepast"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 42,
+                "organisatie_id": 115,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 42,
+                "organisatie_id": 80,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 42,
+                "organisatie_id": 16,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 42,
+                "organisatie_id": 95,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 42,
+                "organisatie_id": 34,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 42,
+                "organisatie_id": 117,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -6419,6 +5005,33 @@
                 "apistandaard_id": 10
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 43,
+                "organisatie_id": 19,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 43,
+                "organisatie_id": 121,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 43,
+                "organisatie_id": 76,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -6618,6 +5231,24 @@
                 "andersDanGemeente": "Elsevier"
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 44,
+                "organisatie_id": 40,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 44,
+                "organisatie_id": 88,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -6812,6 +5443,24 @@
                 "andersDanGemeente": "Dimpact; Min. van Binnenlandse Zaken; SIMgroep; Min. BZK"
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 45,
+                "organisatie_id": 45,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 45,
+                "organisatie_id": 19,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -6906,6 +5555,32 @@
               "initiatiefdomein": {
                 "initiatief_id": 46,
                 "domein_id": 10
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 46,
+                "organisatie_id": 116,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 46,
+                "organisatie_id": 1,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 46,
+                "informatie": "Leverancier: Alle leveranciers die hosting diensten leveren vanuit de publieke cloud zouden Haven moeten toepassen op basis van het principe"
               }
             }
           }
@@ -7078,6 +5753,51 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 47,
                 "apistandaard_id": 5
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 47,
+                "organisatie_id": 28,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 47,
+                "organisatie_id": 19,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 47,
+                "organisatie_id": 56,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 47,
+                "organisatie_id": 74,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 47,
+                "organisatie_id": 98,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -7358,6 +6078,24 @@
                 "apistandaard_id": 42
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 48,
+                "organisatie_id": 41,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 48,
+                "organisatie_id": 54,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -7470,6 +6208,15 @@
               "andereapistandaard": {
                 "initiatief_id": 49,
                 "api_standaard": "https://www.gemmaonline.nl/index.php/GEMMA2/0.9/id-c158d9fc-6421-4d8a-8b2e-eaa33f43ecf8"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 49,
+                "organisatie_id": 43,
+                "rol": "Contactorganisatie"
               }
             }
           }
@@ -7607,6 +6354,50 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 50,
                 "apistandaard_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 50,
+                "organisatie_id": 22,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 50,
+                "organisatie_id": 15,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 50,
+                "organisatie_id": 105,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 50,
+                "organisatie_id": 84,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 50,
+                "informatie": "Leverancier: Die gaan we aan laten sluiten naar aanleiding van de wensen van de gemeente. Maar zijn evenement locaties"
               }
             }
           }
@@ -7807,6 +6598,42 @@
               "andereapistandaard": {
                 "initiatief_id": 51,
                 "api_standaard": "Zaken; Documenten; Besluiten; Objecten"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 51,
+                "organisatie_id": 88,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 51,
+                "organisatie_id": 89,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 51,
+                "organisatie_id": 87,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 51,
+                "organisatie_id": 119,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -8110,6 +6937,33 @@
                 "api_standaard": "Zaken; Documenten; Besluiten; Catalogi"
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 52,
+                "organisatie_id": 68,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 52,
+                "organisatie_id": 21,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 52,
+                "organisatie_id": 36,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -8324,6 +7178,15 @@
                 "api_standaard": "etc."
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 53,
+                "organisatie_id": 68,
+                "rol": "Contactorganisatie"
+              }
+            }
           }
         ]
       },
@@ -8419,6 +7282,24 @@
               "initiatiefdomein": {
                 "initiatief_id": 54,
                 "domein_id": 10
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 54,
+                "organisatie_id": 68,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 54,
+                "organisatie_id": 88,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -8680,6 +7561,24 @@
                 "apistandaard_id": 30
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 55,
+                "organisatie_id": 28,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 55,
+                "organisatie_id": 68,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -8903,6 +7802,33 @@
                 "apistandaard_id": 8
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 56,
+                "organisatie_id": 104,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 56,
+                "organisatie_id": 117,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 56,
+                "organisatie_id": 52,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -9097,6 +8023,33 @@
                 "apistandaard_id": 3
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 57,
+                "organisatie_id": 78,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 57,
+                "organisatie_id": 121,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 57,
+                "organisatie_id": 14,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -9280,6 +8233,33 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 58,
                 "apistandaard_id": 36
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 58,
+                "organisatie_id": 68,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 58,
+                "organisatie_id": 88,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 58,
+                "organisatie_id": 54,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -9609,6 +8589,60 @@
                 "apistandaard_id": 33
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 59,
+                "organisatie_id": 83,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 59,
+                "organisatie_id": 96,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 59,
+                "organisatie_id": 19,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 59,
+                "organisatie_id": 62,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 59,
+                "organisatie_id": 77,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 59,
+                "organisatie_id": 9,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -9774,6 +8808,15 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 60,
                 "apistandaard_id": 6
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 60,
+                "organisatie_id": 21,
+                "rol": "Contactorganisatie"
               }
             }
           }
@@ -10031,6 +9074,15 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 61,
                 "apistandaard_id": 5
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 61,
+                "organisatie_id": 68,
+                "rol": "Contactorganisatie"
               }
             }
           }
@@ -10427,6 +9479,33 @@
                 "rol": "Maakt gebruik van"
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 62,
+                "organisatie_id": 40,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 62,
+                "organisatie_id": 31,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 62,
+                "organisatie_id": 94,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -10530,6 +9609,24 @@
               "andereapistandaard": {
                 "initiatief_id": 63,
                 "api_standaard": "Specifieke API-standaarden toegepast in OpenServices zijn op dit moment niet vermeld."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 63,
+                "organisatie_id": 19,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 63,
+                "organisatie_id": 18,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -10651,6 +9748,23 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 64,
                 "apistandaard_id": 13
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 64,
+                "organisatie_id": 19,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 64,
+                "informatie": "Leverancier: Conduction B.V (Via OpenWoo.app en OpenCatalogi) Yard (Via OpenWoo.app) Acato (Via OpenWoo.app) Sim Groep (Via OpenWoo.app en OpenCatalogi) Xxllnc (Via OpenWoo.app en Open Registers ; Klanten)"
               }
             }
           }
@@ -10775,6 +9889,24 @@
                 "apistandaard_id": 1
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 65,
+                "organisatie_id": 19,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 65,
+                "organisatie_id": 20,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -10894,6 +10026,23 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 66,
                 "apistandaard_id": 13
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 66,
+                "organisatie_id": 19,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 66,
+                "informatie": "Leverancier: Conduction B.V (Via OpenWoo.app en OpenCatalogi) Yard (Via OpenWoo.app) Acato (Via OpenWoo.app) Sim Groep (Via OpenWoo.app en OpenCatalogi) Xxllnc (Via OpenWoo.app en Open Registers ; Klanten)"
               }
             }
           }
@@ -11017,6 +10166,23 @@
                 "apistandaard_id": 13
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 67,
+                "organisatie_id": 19,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 67,
+                "informatie": "Leverancier: Conduction B.V (Via OpenWoo.app en OpenCatalogi) Yard (Via OpenWoo.app) Acato (Via OpenWoo.app) Sim Groep (Via OpenWoo.app en OpenCatalogi) Xxllnc (Via OpenWoo.app en Open Registers ; Klanten)"
+              }
+            }
           }
         ]
       },
@@ -11130,6 +10296,14 @@
                 "initiatief_id": 68,
                 "gemeente_id": 275,
                 "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 68,
+                "informatie": "Contact: piet; Leverancier: piet"
               }
             }
           }
@@ -11327,6 +10501,33 @@
                 "rol": "Maakt gebruik van"
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 69,
+                "organisatie_id": 43,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 69,
+                "organisatie_id": 26,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 69,
+                "organisatie_id": 106,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -11512,6 +10713,15 @@
                 "apistandaard_id": 23
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 70,
+                "organisatie_id": 5,
+                "rol": "Contactorganisatie"
+              }
+            }
           }
         ]
       },
@@ -11647,6 +10857,60 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 71,
                 "apistandaard_id": 14
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 71,
+                "organisatie_id": 90,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 71,
+                "organisatie_id": 91,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 71,
+                "organisatie_id": 27,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 71,
+                "organisatie_id": 110,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 71,
+                "organisatie_id": 4,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 71,
+                "organisatie_id": 24,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -11836,6 +11100,15 @@
                 "api_standaard": "PDF/A; PDF/UA"
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 72,
+                "organisatie_id": 114,
+                "rol": "Contactorganisatie"
+              }
+            }
           }
         ]
       },
@@ -11939,6 +11212,14 @@
               "andereapistandaard": {
                 "initiatief_id": 73,
                 "api_standaard": "piet"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 73,
+                "informatie": "Contact: piet; Leverancier: piet"
               }
             }
           }
@@ -12063,6 +11344,15 @@
                 "api_standaard": "https://vng-realisatie.github.io/gemma-zaken/standaard/"
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 74,
+                "organisatie_id": 90,
+                "rol": "Contactorganisatie"
+              }
+            }
           }
         ]
       },
@@ -12158,6 +11448,42 @@
               "initiatiefdomein": {
                 "initiatief_id": 75,
                 "domein_id": 3
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 75,
+                "organisatie_id": 16,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 75,
+                "organisatie_id": 37,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 75,
+                "organisatie_id": 50,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 75,
+                "organisatie_id": 99,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -12333,6 +11659,24 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 76,
                 "apistandaard_id": 11
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 76,
+                "organisatie_id": 68,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 76,
+                "organisatie_id": 59,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -12560,6 +11904,15 @@
                 "api_standaard": "JSON."
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 77,
+                "organisatie_id": 5,
+                "rol": "Contactorganisatie"
+              }
+            }
           }
         ]
       },
@@ -12706,6 +12059,15 @@
               "andereapistandaard": {
                 "initiatief_id": 78,
                 "api_standaard": "Samenwerkende Catalogi; en helaas ontbreekt een PDC-standaard (maar daar gaat dit component verandering in brengen!)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 78,
+                "organisatie_id": 68,
+                "rol": "Contactorganisatie"
               }
             }
           }
@@ -12971,6 +12333,15 @@
                 "api_standaard": "Haal centraal"
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 79,
+                "organisatie_id": 21,
+                "rol": "Contactorganisatie"
+              }
+            }
           }
         ]
       },
@@ -13164,6 +12535,15 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 80,
                 "apistandaard_id": 25
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 80,
+                "organisatie_id": 21,
+                "rol": "Contactorganisatie"
               }
             }
           }
@@ -13450,6 +12830,50 @@
                 "apistandaard_id": 26
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 81,
+                "organisatie_id": 44,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 81,
+                "organisatie_id": 58,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 81,
+                "organisatie_id": 53,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 81,
+                "organisatie_id": 12,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 81,
+                "informatie": "Leverancier: Delta10 B.V. ondersteunt de gemeenten van de Atlas Community als leverancier met de doorontwikkeling"
+              }
+            }
           }
         ]
       },
@@ -13607,6 +13031,15 @@
                 "api_standaard": "AD; SSO"
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 82,
+                "organisatie_id": 5,
+                "rol": "Contactorganisatie"
+              }
+            }
           }
         ]
       },
@@ -13738,6 +13171,15 @@
                 "api_standaard": "*snif* maakte de VNG maar weer standaarden..."
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 83,
+                "organisatie_id": 68,
+                "rol": "Contactorganisatie"
+              }
+            }
           }
         ]
       },
@@ -13833,6 +13275,14 @@
               "initiatiefdomein": {
                 "initiatief_id": 84,
                 "domein_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 84,
+                "informatie": "Contact: xx"
               }
             }
           }
@@ -13940,6 +13390,23 @@
                 "apistandaard_id": 1
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 85,
+                "organisatie_id": 122,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 85,
+                "informatie": "Leverancier: zie https://openwebconcept.nl/wie-zijn-wij"
+              }
+            }
           }
         ]
       },
@@ -14043,6 +13510,14 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 86,
                 "apistandaard_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 86,
+                "informatie": "Contact: Geen. GeVal is gemaakt door ontwikkelaars binnen Gemeente Rotterdam zelf. Om andere gemeenten te helpen wordt op Github de kennis gedeeld. Gemeente Rotterdam draagt geen enkele verantwoordelijkheid voor de werking van de code en onderhoudt de code niet (ook geen bug fixing).; Leverancier: Geen. GeVal is initieel ontwikkeld door ontwikkelaars binnen Gemeente Rotterdam zelf."
               }
             }
           }
@@ -14174,6 +13649,24 @@
                 "apistandaard_id": 24
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 87,
+                "organisatie_id": 45,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 87,
+                "organisatie_id": 107,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -14278,6 +13771,23 @@
                 "initiatief_id": 88,
                 "gemeente_id": 1883,
                 "rol": "Maakt gebruik van"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 88,
+                "organisatie_id": 46,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 88,
+                "informatie": "Leverancier: WeAreFrank GTKCyber ikv de software. We gaan nu ook andere partijen benaderen die kunnen helpen bij het toepassen van het Gemeentelijk Gegevens Model."
               }
             }
           }
@@ -14676,6 +14186,14 @@
                 "domein_id": 8
               }
             }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 92,
+                "informatie": "Leverancier: tetst"
+              }
+            }
           }
         ]
       },
@@ -14779,6 +14297,14 @@
               "andereapistandaard": {
                 "initiatief_id": 93,
                 "api_standaard": "y"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 93,
+                "informatie": "Contact: y; Leverancier: y"
               }
             }
           }
@@ -14911,6 +14437,15 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 94,
                 "apistandaard_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 94,
+                "organisatie_id": 121,
+                "rol": "Contactorganisatie"
               }
             }
           }
@@ -15071,6 +14606,23 @@
                 "apistandaard_id": 2
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 95,
+                "organisatie_id": 118,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 95,
+                "informatie": "Leverancier: Maykin en Ritense (binnen overleggen over de gemeentelijke ZGW standaarden)"
+              }
+            }
           }
         ]
       },
@@ -15174,6 +14726,23 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 96,
                 "apistandaard_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 96,
+                "organisatie_id": 73,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 96,
+                "informatie": "Contact: Gemeente Montferland, maar binnenkort zal VNG die rol overnemen.; Leverancier: voor het chatmodel en embedding model. De rest is open source."
               }
             }
           }
@@ -15343,6 +14912,33 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 97,
                 "apistandaard_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 97,
+                "organisatie_id": 90,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 97,
+                "organisatie_id": 123,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 97,
+                "organisatie_id": 110,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -15522,6 +15118,24 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 98,
                 "apistandaard_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 98,
+                "organisatie_id": 123,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 98,
+                "organisatie_id": 92,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -15739,6 +15353,24 @@
                 "apistandaard_id": 1
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 99,
+                "organisatie_id": 40,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 99,
+                "organisatie_id": 109,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -15842,6 +15474,23 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 96,
                 "apistandaard_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 96,
+                "organisatie_id": 73,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 96,
+                "informatie": "Contact: Gemeente Montferland, maar binnenkort zal VNG die rol overnemen.; Leverancier: voor het chatmodel en embedding model. De rest is open source."
               }
             }
           }
@@ -16011,6 +15660,33 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 97,
                 "apistandaard_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 97,
+                "organisatie_id": 90,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 97,
+                "organisatie_id": 123,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 97,
+                "organisatie_id": 110,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -16190,6 +15866,24 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 98,
                 "apistandaard_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 98,
+                "organisatie_id": 123,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 98,
+                "organisatie_id": 92,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -16405,6 +16099,24 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 99,
                 "apistandaard_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 99,
+                "organisatie_id": 40,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 99,
+                "organisatie_id": 109,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -16544,6 +16256,24 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 100,
                 "apistandaard_id": 17
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 100,
+                "organisatie_id": 70,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 100,
+                "organisatie_id": 71,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -16802,6 +16532,24 @@
                 "apistandaard_id": 2
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 101,
+                "organisatie_id": 42,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 101,
+                "organisatie_id": 97,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -16984,6 +16732,42 @@
                 "apistandaard_id": 12
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 102,
+                "organisatie_id": 79,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 102,
+                "organisatie_id": 23,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 102,
+                "organisatie_id": 122,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 102,
+                "organisatie_id": 19,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -17154,6 +16938,42 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 103,
                 "apistandaard_id": 12
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 103,
+                "organisatie_id": 79,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 103,
+                "organisatie_id": 122,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 103,
+                "organisatie_id": 19,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 103,
+                "organisatie_id": 23,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -17585,6 +17405,24 @@
                 "andersDanGemeente": "Provincie Overijssel; SED-organisatie; Bergen"
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 104,
+                "organisatie_id": 110,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 104,
+                "organisatie_id": 90,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -17722,6 +17560,15 @@
               "andereapistandaard": {
                 "initiatief_id": 105,
                 "api_standaard": "API vernietigen en overbrengen"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 105,
+                "organisatie_id": 90,
+                "rol": "Contactorganisatie"
               }
             }
           }
@@ -17929,6 +17776,51 @@
                 "apistandaard_id": 29
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 106,
+                "organisatie_id": 16,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 106,
+                "organisatie_id": 27,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 106,
+                "organisatie_id": 30,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 106,
+                "organisatie_id": 10,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 106,
+                "organisatie_id": 8,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -18132,6 +18024,15 @@
                 "apistandaard_id": 5
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 107,
+                "organisatie_id": 81,
+                "rol": "Contactorganisatie"
+              }
+            }
           }
         ]
       },
@@ -18227,6 +18128,32 @@
               "initiatiefdomein": {
                 "initiatief_id": 108,
                 "domein_id": 10
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 108,
+                "organisatie_id": 48,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 108,
+                "organisatie_id": 57,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 108,
+                "informatie": "Leverancier: Nog niks"
               }
             }
           }
@@ -18423,6 +18350,24 @@
                 "apistandaard_id": 1
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 109,
+                "organisatie_id": 28,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 109,
+                "organisatie_id": 55,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -18584,6 +18529,23 @@
                 "apistandaard_id": 28
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 110,
+                "organisatie_id": 3,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 110,
+                "informatie": "Leverancier: ● Analyze (KBenP) – hoofdontwikkelaar ● Diverse Bronnen- en cloudleveranciers"
+              }
+            }
           }
         ]
       },
@@ -18713,6 +18675,87 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 111,
                 "apistandaard_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 111,
+                "organisatie_id": 113,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 111,
+                "organisatie_id": 75,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 111,
+                "organisatie_id": 33,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 111,
+                "organisatie_id": 50,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 111,
+                "organisatie_id": 60,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 111,
+                "organisatie_id": 61,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 111,
+                "organisatie_id": 63,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 111,
+                "organisatie_id": 68,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 111,
+                "organisatie_id": 114,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -18866,6 +18909,24 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 112,
                 "apistandaard_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 112,
+                "organisatie_id": 81,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 112,
+                "organisatie_id": 82,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -19058,6 +19119,15 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 113,
                 "apistandaard_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 113,
+                "organisatie_id": 118,
+                "rol": "Contactorganisatie"
               }
             }
           }
@@ -19259,6 +19329,15 @@
                 "apistandaard_id": 1
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 114,
+                "organisatie_id": 29,
+                "rol": "Contactorganisatie"
+              }
+            }
           }
         ]
       },
@@ -19397,6 +19476,15 @@
               "andereapistandaard": {
                 "initiatief_id": 115,
                 "api_standaard": "Gibit; JSON; HTML"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 115,
+                "organisatie_id": 49,
+                "rol": "Contactorganisatie"
               }
             }
           }
@@ -19612,6 +19700,15 @@
                 "api_standaard": "TMS; TileJSON; 3D tiles; OGC features API"
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 116,
+                "organisatie_id": 67,
+                "rol": "Contactorganisatie"
+              }
+            }
           }
         ]
       },
@@ -19809,6 +19906,24 @@
                 "apistandaard_id": 20
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 117,
+                "organisatie_id": 47,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 117,
+                "organisatie_id": 21,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -19936,6 +20051,24 @@
               "andereapistandaard": {
                 "initiatief_id": 118,
                 "api_standaard": "Volgt nog."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 118,
+                "organisatie_id": 65,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 118,
+                "organisatie_id": 66,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -20167,6 +20300,15 @@
                 "api_standaard": "JSON; HTTP"
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 119,
+                "organisatie_id": 21,
+                "rol": "Contactorganisatie"
+              }
+            }
           }
         ]
       },
@@ -20286,6 +20428,23 @@
               "andereapistandaard": {
                 "initiatief_id": 120,
                 "api_standaard": "zonder dat op dit moment één specifieke vastgestelde standaard verplicht wordt toegepast."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 120,
+                "organisatie_id": 7,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 120,
+                "informatie": "Leverancier: För närvarande är inga leverantörer formellt involverade. FamilyBarometer är utformad som en fristående komponent som kan integreras via API:er med befintliga kommunala applikationer samt ärende- eller verksamhetssystem. Implementeringen kräver ingen specifik leverantör; Leverancier: utan kan ske i samarbete med kommunernas befintliga systemleverantörer."
               }
             }
           }
@@ -20519,6 +20678,23 @@
                 "api_standaard": "SafeGPT maakt gebruik van moderne; gestandaardiseerde communicatie tussen systemen gewaarborgd; wat de interoperabiliteit met gemeentelijke en andere overheidsapplicaties vergemakkelijkt. SafeGPT richt zich op het veilig en efficiënt ontsluiten en verwerken van gegevens via API's die voldoen aan de eisen voor beveiliging; privacy (DPIA) en transparantie; passend binnen de Common Ground-architectuur."
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 121,
+                "organisatie_id": 93,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "organisatieinfo": {
+                "initiatief_id": 121,
+                "informatie": "Leverancier: We gebruiken ZGW-API"
+              }
+            }
           }
         ]
       },
@@ -20646,6 +20822,24 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 122,
                 "apistandaard_id": 46
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 122,
+                "organisatie_id": 6,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 122,
+                "organisatie_id": 2,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -20776,6 +20970,24 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 123,
                 "apistandaard_id": 34
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 123,
+                "organisatie_id": 102,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 123,
+                "organisatie_id": 103,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -20913,6 +21125,33 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 124,
                 "apistandaard_id": 15
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 124,
+                "organisatie_id": 86,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 124,
+                "organisatie_id": 13,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 124,
+                "organisatie_id": 101,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -21063,6 +21302,24 @@
               "andereapistandaard": {
                 "initiatief_id": 125,
                 "api_standaard": "koppelingen gebeuren op bestaande geo/data standaarden. Nu worden zaken nog gekoppeld via shape bestanden."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 125,
+                "organisatie_id": 100,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 125,
+                "organisatie_id": 111,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }
@@ -21314,6 +21571,15 @@
               "andereapistandaard": {
                 "initiatief_id": 126,
                 "api_standaard": "JSON/HTTP standaarden"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 126,
+                "organisatie_id": 85,
+                "rol": "Contactorganisatie"
               }
             }
           }
@@ -21678,6 +21944,24 @@
                 "api_standaard": "Objecttypes api"
               }
             }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 127,
+                "organisatie_id": 112,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 127,
+                "organisatie_id": 120,
+                "rol": "BetrokkenOrganisatie"
+              }
+            }
           }
         ]
       },
@@ -21871,6 +22155,24 @@
               "initiatiefapistandaard": {
                 "initiatief_id": 128,
                 "apistandaard_id": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 128,
+                "organisatie_id": 35,
+                "rol": "Contactorganisatie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatieforganisatie": {
+                "initiatief_id": 128,
+                "organisatie_id": 88,
+                "rol": "BetrokkenOrganisatie"
               }
             }
           }

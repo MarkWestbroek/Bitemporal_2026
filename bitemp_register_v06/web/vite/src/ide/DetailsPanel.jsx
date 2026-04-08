@@ -667,6 +667,7 @@ function DomainEditor({ domeinNaam }) {
 function ElementEditor({ element, updateElement }) {
   const { id, naam, type, domein, data = {} } = element;
   const elements = useModelStore((s) => s.elements);
+  const structuralEdges = useModelStore((s) => s.structuralEdges);
 
   const setField = useCallback(
     (key, value) => updateElement(id, { [key]: value }),
@@ -682,6 +683,7 @@ function ElementEditor({ element, updateElement }) {
    * Naam wijzigen synchroniseert klassenaam + typenaam.
    * - Entiteiten: typenaam = naam (identiek).
    * - GE/relatie: typenaam = parent_naam (afgeleid uit huidig suffix).
+   *   Als typenaam leeg was, afleiden uit parent-entiteit + nieuwe naam.
    */
   const handleNaamChange = useCallback(
     (v) => {
@@ -690,10 +692,17 @@ function ElementEditor({ element, updateElement }) {
         patch.data.typenaam = v;
       } else if (data.typenaam && naam && data.typenaam.endsWith(naam)) {
         patch.data.typenaam = data.typenaam.slice(0, -naam.length) + v;
+      } else if (!data.typenaam && v) {
+        // Typenaam was leeg: afleiden uit parent-entiteit + klassenaam
+        const parentEdge = structuralEdges.find((e) => e.target === id);
+        const parentEnt = parentEdge && elements[parentEdge.source];
+        if (parentEnt?.data?.typenaam) {
+          patch.data.typenaam = `${parentEnt.data.typenaam}_${v}`;
+        }
       }
       updateElement(id, patch);
     },
-    [id, naam, type, data.typenaam, updateElement]
+    [id, naam, type, data.typenaam, elements, structuralEdges, updateElement]
   );
 
   /**

@@ -75,6 +75,7 @@ import {
 } from "../metamodel/types";
 import { v3ModelNaarEditor } from "../metamodel/v3ModelNaarEditor";
 import { bepaalDependencyTargetIds } from "../metamodel/dependencyEdges";
+import { validateV3Model } from "../../../web/vite/src/validation/validateV3Model";
 
 /**
  * nodeTypes vertelt React Flow welke React-component bij welk node type hoort.
@@ -1228,6 +1229,10 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     const apiBase = getDefaultApiBase();
     const standaardModelNaam = actiefDomein || "";
 
+    // Pre-validatie van het V3 model (behalve bij lokaal opslaan)
+    const { errors: validationErrors, warnings: validationWarnings } =
+      type !== "save" ? validateV3Model(v3Model) : { errors: [], warnings: [] };
+
     if (type === "save") {
       setActieDialoog({
         type,
@@ -1245,6 +1250,8 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         type,
         title: "Schema-model publiceren",
         submitLabel: "Publiceren",
+        validationErrors,
+        validationWarnings,
         values: {
           versie: "v0.",
           naam: standaardModelNaam,
@@ -1264,6 +1271,8 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         type,
         title: "Publiceer en rebuild exact dit model",
         submitLabel: "Publiceer + rebuild",
+        validationErrors,
+        validationWarnings,
         values: {
           versie: "v0.",
           naam: standaardModelNaam,
@@ -1282,6 +1291,8 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       type: "rebuild",
       title: "Rebuild devloop-register",
       submitLabel: "Rebuild starten",
+      validationErrors,
+      validationWarnings,
       values: {
         bron: laatstGepubliceerdSchemaID ? "id" : "editor",
         schemaVersieID: laatstGepubliceerdSchemaID ? String(laatstGepubliceerdSchemaID) : "",

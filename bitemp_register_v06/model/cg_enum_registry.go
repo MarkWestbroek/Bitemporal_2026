@@ -20,8 +20,8 @@ func initCgEnumRegistry() {
 	EnumDomeinen["Organisatierol"] = "CG"
 
 	// Enum editor-posities
-	EnumEditorLayouts["Fase"] = &EditorLayout{Positie: &V3Positie{X: 300, Y: -1560}}
-	EnumEditorLayouts["Producttype"] = &EditorLayout{Positie: &V3Positie{X: 675, Y: -1710}}
+	EnumEditorLayouts["Fase"] = &EditorLayout{Positie: &V3Positie{X: 405, Y: -1695}}
+	EnumEditorLayouts["Producttype"] = &EditorLayout{Positie: &V3Positie{X: 645, Y: -1695}}
 	EnumEditorLayouts["CGLaag"] = &EditorLayout{Positie: &V3Positie{X: 795, Y: -1575}}
 	EnumEditorLayouts["Bijdragetype"] = &EditorLayout{Positie: &V3Positie{X: 1290, Y: -1980}}
 	EnumEditorLayouts["Schaal"] = &EditorLayout{Positie: &V3Positie{X: 1290, Y: -1815}}

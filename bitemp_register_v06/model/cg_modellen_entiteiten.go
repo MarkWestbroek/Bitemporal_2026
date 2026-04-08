@@ -47,6 +47,7 @@ type Initiatief struct {
 	AndereDomeinen           []Initiatief_AnderDomein        `bun:"rel:has-many,join:id=initiatief_id" json:"andere_domeinen,omitempty"`
 	AndersDanGemeenten       []Initiatief_AndersDanGemeente  `bun:"rel:has-many,join:id=initiatief_id" json:"anders_dan_gemeenten,omitempty"`
 	AndereApiStandaarden     []Initiatief_AndereAPIStandaard `bun:"rel:has-many,join:id=initiatief_id" json:"andere_api_standaarden,omitempty"`
+	Organisatieinfo          []Initiatief_OrganisatieInfo    `bun:"rel:has-many,join:id=initiatief_id" json:"organisatieinfo,omitempty"`
 	InitiatiefGemeenten      []InitiatiefGemeente            `bun:"rel:has-many,join:id=initiatief_id" json:"initiatief_gemeenten,omitempty"`
 	InitiatiefDomeinen       []InitiatiefDomein              `bun:"rel:has-many,join:id=initiatief_id" json:"initiatief_domeinen,omitempty"`
 	InitiatiefApiStandaarden []InitiatiefAPIStandaard        `bun:"rel:has-many,join:id=initiatief_id" json:"initiatief_api_standaarden,omitempty"`

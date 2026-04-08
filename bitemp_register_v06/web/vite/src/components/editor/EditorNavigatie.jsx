@@ -1,47 +1,125 @@
-import { NavLink } from "react-router";
+import { useMemo, useRef } from "react";
+import { useNavigate, useLocation } from "react-router";
+import { Tree } from "react-arborist";
 import { useSchema } from "../../context/SchemaContext";
 
-function NavigatieLink({ meta }) {
-  const isReferentielijstItem = (meta.entiteitSubtype || "") === "referentielijst_item";
+/* ── Iconen per knooptype ────────────────────────────────── */
+const ICONS = {
+  domain: "📁",
+  categorie: "📂",
+  entiteit: "📦",
+  referentielijstItem: "📌",
+};
+
+/* ── Boomdata bouwen uit inhoudNavigatieGroepen ──────────── */
+function buildTree(groepen) {
+  return groepen.map((groep) => {
+    const children = [];
+
+    if (groep.entiteiten.length > 0) {
+      children.push({
+        id: `cat_ent_${groep.domein}`,
+        name: `ENT-en (${groep.entiteiten.length})`,
+        nodeType: "categorie",
+        children: groep.entiteiten.map((meta) => ({
+          id: meta.typenaam,
+          name: meta.klassenaam || meta.typenaam,
+          nodeType: "entiteit",
+          kleur: meta.kleur,
+          padnaam: meta.padnaam || meta.meervoud || meta.veldnaam,
+        })),
+      });
+    }
+
+    if (groep.referentielijstItems.length > 0) {
+      children.push({
+        id: `cat_ref_${groep.domein}`,
+        name: `Referentielijst-items (${groep.referentielijstItems.length})`,
+        nodeType: "categorie",
+        children: groep.referentielijstItems.map((meta) => ({
+          id: meta.typenaam,
+          name: meta.klassenaam || meta.typenaam,
+          nodeType: "referentielijstItem",
+          kleur: meta.kleur,
+          padnaam: meta.padnaam || meta.meervoud || meta.veldnaam,
+        })),
+      });
+    }
+
+    return {
+      id: `domain_${groep.domein}`,
+      name: groep.domein,
+      nodeType: "domain",
+      children,
+    };
+  });
+}
+
+/* ── Node-renderer (licht thema) ─────────────────────────── */
+function TreeNode({ node, style }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isLeaf = !node.children || node.children.length === 0;
+  const pad = node.data.padnaam;
+  const isActive = isLeaf && pad && location.hash === `#/t/${pad}`;
+
+  const handleClick = () => {
+    if (isLeaf && pad) {
+      navigate(`/t/${pad}`);
+    } else {
+      node.toggle();
+    }
+  };
 
   return (
-    <NavLink
-      key={meta.typenaam}
-      to={`/t/${meta.padnaam || meta.meervoud || meta.veldnaam}`}
-      className={({ isActive }) =>
-        `cg-editor-sidebar__item${isActive ? " cg-editor-sidebar__item--active" : ""}`
-      }
-      style={{ textDecoration: "none" }}
+    <div
+      className={`cg-tree-node${isActive ? " cg-tree-node--active" : ""}`}
+      style={{ ...style, paddingLeft: node.level * 16 + 8 }}
+      onClick={handleClick}
     >
-      <span
-        style={{
-          display: "inline-block",
-          width: 10,
-          height: 10,
-          borderRadius: "50%",
-          background: meta.kleur || "#94a3b8",
-          marginRight: 8,
-          flexShrink: 0,
-        }}
-      />
-      <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        <span>{meta.klassenaam || meta.typenaam}</span>
-        {isReferentielijstItem && (
-          <span style={{ fontSize: "0.72rem", color: "var(--cg-donkergrijs)" }}>
-            referentielijst-item
-          </span>
-        )}
+      {/* Chevron voor folders */}
+      {!isLeaf ? (
+        <span
+          className="cg-tree-node__chevron"
+          onClick={(e) => { e.stopPropagation(); node.toggle(); }}
+        >
+          {node.isOpen ? "▾" : "▸"}
+        </span>
+      ) : (
+        <span className="cg-tree-node__chevron-spacer" />
+      )}
+
+      {/* Icoon */}
+      <span className="cg-tree-node__icon">
+        {ICONS[node.data.nodeType] || "•"}
       </span>
-    </NavLink>
+
+      {/* Kleurbol voor entiteiten/ref-items */}
+      {node.data.kleur && (
+        <span
+          className="cg-tree-node__color-dot"
+          style={{ background: node.data.kleur }}
+        />
+      )}
+
+      {/* Label */}
+      <span className="cg-tree-node__label">{node.data.name}</span>
+    </div>
   );
 }
 
 /**
- * EditorNavigatie — zijbalk met dynamisch opgebouwde links per domein.
- * Per domein tonen we zowel ENT-en als referentielijst-items.
+ * EditorNavigatie — zijbalk met in-/uitklapbare boom per domein.
+ * Gebruikt react-arborist met een licht thema.
  */
 export default function EditorNavigatie() {
   const { inhoudNavigatieGroepen, loading } = useSchema();
+  const treeRef = useRef(null);
+
+  const treeData = useMemo(
+    () => buildTree(inhoudNavigatieGroepen),
+    [inhoudNavigatieGroepen]
+  );
 
   return (
     <nav className="cg-editor-sidebar" aria-label="Registerinhoud navigatie">
@@ -53,53 +131,23 @@ export default function EditorNavigatie() {
         </div>
       )}
 
-      {inhoudNavigatieGroepen.map((groep) => (
-        <section key={groep.domein} style={{ paddingBottom: "0.5rem" }}>
-          <div
-            className="cg-editor-sidebar__heading"
-            style={{ paddingTop: "0.5rem", color: "var(--cg-donkerblauw)" }}
+      {!loading && treeData.length > 0 && (
+        <div className="cg-editor-tree">
+          <Tree
+            ref={treeRef}
+            data={treeData}
+            openByDefault={true}
+            indent={16}
+            rowHeight={30}
+            width="100%"
+            height={window.innerHeight - 140}
+            disableDrag
+            disableDrop
           >
-            {groep.domein}
-          </div>
-
-          {groep.entiteiten.length > 0 && (
-            <>
-              <div
-                style={{
-                  padding: "0.15rem 1rem 0.25rem",
-                  fontSize: "0.6875rem",
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  color: "var(--cg-donkergrijs)",
-                }}
-              >
-                ENT-en ({groep.entiteiten.length})
-              </div>
-              {groep.entiteiten.map((meta) => <NavigatieLink key={meta.typenaam} meta={meta} />)}
-            </>
-          )}
-
-          {groep.referentielijstItems.length > 0 && (
-            <>
-              <div
-                style={{
-                  padding: "0.15rem 1rem 0.25rem",
-                  marginTop: groep.entiteiten.length > 0 ? 6 : 0,
-                  fontSize: "0.6875rem",
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  color: "var(--cg-donkergrijs)",
-                }}
-              >
-                Referentielijst-items ({groep.referentielijstItems.length})
-              </div>
-              {groep.referentielijstItems.map((meta) => <NavigatieLink key={meta.typenaam} meta={meta} />)}
-            </>
-          )}
-        </section>
-      ))}
+            {TreeNode}
+          </Tree>
+        </div>
+      )}
     </nav>
   );
 }

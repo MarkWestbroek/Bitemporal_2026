@@ -1,6 +1,8 @@
 # Replay-mapping voor CG Portfolio Intake
 
-Deze notitie beschrijft hoe [Intake Portfolio Common Ground 1.json](/Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/docs/ontwerpgedachten/CG%20PF/Intake%20Portfolio%20Common%20Ground%201.json) als bron wordt gebruikt voor een draft replay-bestand tegen het model in [cgpf 0.3.7.json](/Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/docs/ontwerpgedachten/CG%20PF/cgpf%200.3.7.json).
+Deze notitie beschrijft hoe [Intake Portfolio Common Ground 1.json](docs/ontwerpgedachten/CG%20PF/Intake%20Portfolio%20Common%20Ground%201.json) als bron wordt gebruikt voor een draft replay-bestand tegen het CG-model.
+
+**Huidige modelversie:** CG v0.5.2 (`docs/ontwerpgedachten/CG PF/CG v0.5.2.json`), opgewaardeerd van v0.4.6.1.
 
 ## Directe mapping
 
@@ -24,23 +26,23 @@ Deze notitie beschrijft hoe [Intake Portfolio Common Ground 1.json](/Users/mark/
 
 ## Niet 1-op-1 in het huidige schema
 
-- `Initiatief` heeft geen relatie naar `Organisatie` in `cgpf 0.3.7`. Daarom worden contactorganisaties en leveranciers alleen als losse seed-entiteiten aangemaakt, niet gekoppeld aan een initiatief.
+- ~~`Initiatief` heeft geen relatie naar `Organisatie`.~~ **Opgelost in v0.5.2**: `InitiatiefOrganisatie` (meervoudig) en `OrganisatieInfo` GE zijn nu beschikbaar. De generator koppelt opgeschoonde organisatienamen via `initiatieforganisatie` en slaat ongestructureerde tekst op in `organisatieinfo`.
 - `Persoon` en `Organisatie` hebben allebei een gegevenselement met request-key `contactgegevens`. Omdat de registratie-parser generiek op `veldnaam` werkt, is dat op dit moment ambigu. De generator laat die contactgegevens daarom bewust weg.
 - Bronwaarden voor `producttype`, `fase` en `CG-laag` zijn rijker dan de huidige enums. De generator reduceert die naar de best passende enumwaarde en bewaart de ruwe bronwaarde in `registratie.opmerking`.
 - De intake bevat vrije tekst voor gemeenten, domeinen en API-standaarden. De generator splitst die heuristisch; dit levert een bruikbare eerste replay op, maar geen opgeschoonde referentielijst.
 
 ## Generator
 
-De draft replay wordt gegenereerd met [scripts/maak_cgpf_portfolio_replay.py](/Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/scripts/maak_cgpf_portfolio_replay.py).
+De draft replay wordt gegenereerd met [scripts/maak_cgpf_portfolio_replay.py](scripts/maak_cgpf_portfolio_replay.py).
 
 Voorbeeld:
 
 ```bash
-cd /Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06
-python3 scripts/maak_cgpf_portfolio_replay.py \
+cd bitemp_register_v06
+python scripts/maak_cgpf_portfolio_replay.py \
   "docs/ontwerpgedachten/CG PF/Intake Portfolio Common Ground 1.json" \
-  "docs/ontwerpgedachten/CG PF/cgpf 0.3.7.json" \
-  "docs/ontwerpgedachten/CG PF/Intake Portfolio Common Ground 1.replay.json"
+  "docs/ontwerpgedachten/CG PF/CG v0.5.2.json" \
+  "docs/ontwerpgedachten/CG PF/Intake Portfolio Common Ground 2.replay (zonder gemeenten).json"
 ```
 
 ## Officiële gemeenteseed via CBS (2026)
@@ -59,6 +61,10 @@ Deze seed gebruikt de **numerieke CBS-gemeentecode als `gemeente.id`** en bewaar
 2. voer daarna `Domeinen vast 2026.replay.json` uit voor de vaste shortlist van 10 CG-portfolio-domeinen;
 3. voer daarna `API standaarden rationalisatie 2026.replay.json` uit voor de gerationaliseerde lijst API-standaarden;
 4. voer daarna `Intake Portfolio Common Ground 2.replay (zonder gemeenten).json` uit.
+
+> **Let op:** na de upgrade naar model v0.5.2 moeten eerst de bestaande CG-tabellen gedropt worden via `DELETE /admin/db/droptables/<wachtwoord>?domein=CG` en opnieuw aangemaakt, voordat de replays opnieuw uitgevoerd worden.
+
+> **Replay 3 (overige velden) is nu overbodig.** Het aparte bestand `Intake Portfolio Common Ground 3.replay (overige velden).json` bevatte alleen `anderdomein`, `andereapistandaard` en `andersdangemeente`. Al deze keys worden nu direct in replay 2 gegenereerd. Het bestand en de kopie in `replay files/` kunnen verwijderd worden.
 
 In dat vierde replay-bestand is de oude `Seed referentielijst Gemeente` verwijderd. Voor `gemeente`, `domein` en `api-standaard` geldt nu expliciet:
 
@@ -143,8 +149,23 @@ Dat volgt dezelfde conventie als de bestaande keys `planning`, `product` en `bij
 
 De hoofdgenerator `scripts/maak_cgpf_portfolio_replay.py` past deze logica nu ook direct toe in `Intake Portfolio Common Ground 2.replay (zonder gemeenten).json`, zodat dit bestand meteen de juiste mix van REL-records en `overig`-GE's bevat.
 
+### Organisatie-rationalisatie (v0.5.2)
+
+Met de upgrade naar CG v0.5.2 is de organisatiekoppeling volledig geïmplementeerd:
+
+- **Model**: `InitiatiefOrganisatie` relatie (nu **meervoudig**) + nieuw `OrganisatieInfo` GE met veld `informatie`
+- **Organisatierol**: enum met waarden `Contactorganisatie` en `BetrokkenOrganisatie`
+- **ORG_ALIASES**: ~40 normalisatieregels in de generator (bijv. `Appsemble` → `Appsemble B.V.`, `conduction b.v` → `Conduction B.V.`, `xxllnce` → `Xxllnc`)
+- **Org-filtering**: tokens worden geclassificeerd via `is_org_like_token()` — zinnen, testdata, >80 tekens, >8 woorden en Zweedse tekst worden uitgefilterd
+- **Resultaat**: 154 ruwe organisatienamen → **123 canonieke organisaties** als seed
+- **Koppelingen**: **196 `initiatieforganisatie`** relaties (contactorganisatie + leveranciers)
+- **Overig**: **21 `organisatieinfo`** entries met ongestructureerde tekst die niet als organisatienaam herkend is (zinnen, URLs, testdata, complexe parentheticals)
+
+Hierdoor gaat er geen data verloren: opgeschoonde namen worden als relatie vastgelegd, en rommelige tekst wordt als `organisatieinfo.informatie` bewaard.
+
 ## Aanbevolen vervolgstappen
 
 1. Maak de request-keys voor `Organisatie_Contactgegevens` en `Persoon_Contactgegevens` uniek.
-2. Voeg een expliciete relatie `Initiatief` -> `Organisatie` toe als betrokken organisaties belangrijk zijn in het register.
-3. Introduceer opgeschoonde referentielijsten of mappingtabellen voor gemeenten, domeinen en API-standaarden voordat de replay definitief wordt.
+2. ~~Voeg een expliciete relatie `Initiatief` -> `Organisatie` toe.~~ **Gedaan** in v0.5.2 — `InitiatiefOrganisatie` (meervoudig) en `OrganisatieInfo` GE.
+3. ~~Introduceer opgeschoonde referentielijsten of mappingtabellen voor gemeenten, domeinen en API-standaarden.~~ Grotendeels **gedaan** — CBS-gemeenten, vaste domeinen en gerationaliseerde API-standaarden zijn als losse seeds beschikbaar.
+4. Controleer de **4 dubbele bron-ID's** (96–99) in de intake: deze verschijnen elk 2× in `Intake Portfolio Common Ground 1.json` en genereren dus dubbele entries.

@@ -31,7 +31,8 @@ function convertV3Veld(v3Veld, enumLookup, datatypeLookup) {
   const mapped = goTypeNaarVeldType(v3Veld.goType || "string");
   const type = datatype?.basistype || mapped.type;
   const format = datatype?.format || mapped.format;
-  const enumWaarden = v3Veld.enum ? enumLookup[v3Veld.enum] || null : null;
+  const enumBestaat = Boolean(v3Veld.enum && enumLookup[v3Veld.enum]);
+  const enumWaarden = enumBestaat ? enumLookup[v3Veld.enum] : null;
   // $ref naar referentielijst-items type (schema:"ref:LandenlijstLand"), analoog aan OAS 3.1 $ref
   const refNaam = v3Veld["$ref"] || null;
 
@@ -41,7 +42,7 @@ function convertV3Veld(v3Veld, enumLookup, datatypeLookup) {
     format,
     datatypeNaam: v3Veld.datatype || datatype?.naam || null,
     enum: enumWaarden,
-    enumNaam: v3Veld.enum || null,
+    enumNaam: enumBestaat ? v3Veld.enum : null,
     refNaam,
     refItemNaam: v3Veld["$ref"] || v3Veld.refItemNaam || null,
     verplicht: !(v3Veld.goType || "").startsWith("*"),
@@ -218,11 +219,15 @@ export function v3ModelNaarEditor(v3Model) {
         (ge.useEdges || []).map((ue) => [ue.doel, ue])
       );
 
+      const geDepSeen = new Set();
       (ge.velden || []).forEach((v) => {
-        if (v.enum) {
+        if (v.enum && enumLookup[v.enum]) {
+          const edgeId = `${geTypenaam}-->${v.enum}`;
+          if (!geDepSeen.has(edgeId)) {
+            geDepSeen.add(edgeId);
           const ue = useEdgeMap[v.enum];
           edges.push({
-            id: ue?.id || `${geTypenaam}-->${v.enum}`,
+            id: ue?.id || edgeId,
             source: geTypenaam,
             target: `enum_${v.enum}`,
             type: "metamodel",
@@ -237,14 +242,18 @@ export function v3ModelNaarEditor(v3Model) {
               kardinaliteit: "",
             },
           });
+          }
         }
         // Dependency edge naar gegevenstype node
         // Backward compat: oudere DB-modellen hebben geen v.datatype maar goType=datatypeNaam
         const dtNaam = v.datatype || (datatypeLookup[v.goType] ? v.goType : null);
         if (dtNaam) {
+          const dtEdgeId = `${geTypenaam}--dt-->${dtNaam}`;
+          if (!geDepSeen.has(dtEdgeId)) {
+            geDepSeen.add(dtEdgeId);
           const ue = useEdgeMap[dtNaam];
           edges.push({
-            id: ue?.id || `${geTypenaam}--dt-->${dtNaam}`,
+            id: ue?.id || dtEdgeId,
             source: geTypenaam,
             target: `dt_${dtNaam}`,
             type: "metamodel",
@@ -259,13 +268,17 @@ export function v3ModelNaarEditor(v3Model) {
               kardinaliteit: "",
             },
           });
+          }
         }
         // Dependency edge naar referentielijst-items relatie (via $ref)
         const geRefNaam = v["$ref"] || v.refItemNaam || null;
         if (geRefNaam) {
+          const refEdgeId = `${geTypenaam}--ref-->${geRefNaam}`;
+          if (!geDepSeen.has(refEdgeId)) {
+            geDepSeen.add(refEdgeId);
           const ue = useEdgeMap[geRefNaam];
           edges.push({
-            id: ue?.id || `${geTypenaam}--ref-->${geRefNaam}`,
+            id: ue?.id || refEdgeId,
             source: geTypenaam,
             target: geRefNaam,
             type: "metamodel",
@@ -280,6 +293,7 @@ export function v3ModelNaarEditor(v3Model) {
               kardinaliteit: "",
             },
           });
+          }
         }
       });
     });
@@ -340,11 +354,15 @@ export function v3ModelNaarEditor(v3Model) {
         (rel.useEdges || []).map((ue) => [ue.doel, ue])
       );
 
+      const relDepSeen = new Set();
       (rel.velden || []).forEach((v) => {
-        if (v.enum) {
+        if (v.enum && enumLookup[v.enum]) {
+          const edgeId = `${rel.naam}-->${v.enum}`;
+          if (!relDepSeen.has(edgeId)) {
+            relDepSeen.add(edgeId);
           const ue = relUseEdgeMap[v.enum];
           edges.push({
-            id: ue?.id || `${rel.naam}-->${v.enum}`,
+            id: ue?.id || edgeId,
             source: rel.naam,
             target: `enum_${v.enum}`,
             type: "metamodel",
@@ -359,13 +377,17 @@ export function v3ModelNaarEditor(v3Model) {
               kardinaliteit: "",
             },
           });
+          }
         }
         // Dependency edge naar gegevenstype node
         const relDtNaam = v.datatype || (datatypeLookup[v.goType] ? v.goType : null);
         if (relDtNaam) {
+          const dtEdgeId = `${rel.naam}--dt-->${relDtNaam}`;
+          if (!relDepSeen.has(dtEdgeId)) {
+            relDepSeen.add(dtEdgeId);
           const ue = relUseEdgeMap[relDtNaam];
           edges.push({
-            id: ue?.id || `${rel.naam}--dt-->${relDtNaam}`,
+            id: ue?.id || dtEdgeId,
             source: rel.naam,
             target: `dt_${relDtNaam}`,
             type: "metamodel",
@@ -380,13 +402,17 @@ export function v3ModelNaarEditor(v3Model) {
               kardinaliteit: "",
             },
           });
+          }
         }
         // Dependency edge naar referentielijst-items relatie (via $ref)
         const relRefNaam = v["$ref"] || v.refItemNaam || null;
         if (relRefNaam) {
+          const refEdgeId = `${rel.naam}--ref-->${relRefNaam}`;
+          if (!relDepSeen.has(refEdgeId)) {
+            relDepSeen.add(refEdgeId);
           const ue = relUseEdgeMap[relRefNaam];
           edges.push({
-            id: ue?.id || `${rel.naam}--ref-->${relRefNaam}`,
+            id: ue?.id || refEdgeId,
             source: rel.naam,
             target: relRefNaam,
             type: "metamodel",
@@ -401,6 +427,7 @@ export function v3ModelNaarEditor(v3Model) {
               kardinaliteit: "",
             },
           });
+          }
         }
       });
 

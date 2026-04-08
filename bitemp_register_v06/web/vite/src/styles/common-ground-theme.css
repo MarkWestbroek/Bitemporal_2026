@@ -167,6 +167,70 @@
   color: var(--cg-donkergrijs);
 }
 
+/* ── Licht tree-component (react-arborist) in sidebar ─── */
+.cg-editor-tree {
+  padding: 0.25rem 0;
+}
+.cg-editor-tree [role="tree"] {
+  outline: none;
+}
+
+.cg-tree-node {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding-right: 8px;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--cg-donkerblauw);
+  border-radius: 3px;
+  user-select: none;
+  transition: background 0.12s;
+}
+.cg-tree-node:hover {
+  background: var(--cg-lichtgrijs);
+}
+.cg-tree-node--active {
+  background: #e0f2fe;
+  font-weight: 600;
+}
+.cg-tree-node--active:hover {
+  background: #bae6fd;
+}
+
+.cg-tree-node__chevron {
+  width: 14px;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--cg-donkergrijs);
+  line-height: 1;
+}
+.cg-tree-node__chevron-spacer {
+  width: 14px;
+  flex-shrink: 0;
+}
+.cg-tree-node__icon {
+  flex-shrink: 0;
+  font-size: 13px;
+  line-height: 1;
+}
+.cg-tree-node__color-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+.cg-tree-node__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .cg-editor-main {
   flex: 1;
   overflow-y: auto;

@@ -14,6 +14,7 @@ import "flexlayout-react/style/dark.css";
 import useModelStore from "../store/useModelStore";
 import useUIStore from "../store/useUIStore";
 import { v3ModelNaarStore, exportStoreAsJson, importStoreFromJson, storeNaarV3Model } from "../store/adapters";
+import { validateV3Model } from "../validation/validateV3Model";
 import { demoV3Model } from "../demoV3Model";
 import {
   createLayoutModel,
@@ -50,6 +51,7 @@ export default function IdePage() {
   // ── Action Dialog state ──────────────────────────────────
   const [dialogType, setDialogType] = useState(null); // "publish" | "rebuild" | "publishAndRebuild" | null
   const [dialogValues, setDialogValues] = useState({});
+  const [validationResult, setValidationResult] = useState({ errors: [], warnings: [] });
 
   const openDialog = useCallback((type) => {
     const domains = useModelStore.getState().domains || [];
@@ -57,6 +59,12 @@ export default function IdePage() {
     const meta = useModelStore.getState().modelMeta || {};
     const actiefDomein = useUIStore.getState().actiefDomein || "";
     const base = apiBase();
+
+    // Pre-validatie: bouw V3 model en valideer naamconventies
+    const state = useModelStore.getState();
+    const v3 = storeNaarV3Model(state);
+    setValidationResult(validateV3Model(v3.model || v3));
+
     setDialogValues({
       versie: meta.versie || DEFAULT_MODEL_VERSIE,
       naam: actiefDomein || "",
@@ -519,6 +527,8 @@ export default function IdePage() {
         <ActionDialog
           type={dialogType}
           values={dialogValues}
+          validationErrors={validationResult.errors}
+          validationWarnings={validationResult.warnings}
           onChange={handleDialogChange}
           onClose={() => setDialogType(null)}
           onSubmit={handleDialogSubmit}

@@ -205,11 +205,11 @@ type Initiatief_Product_Data struct {
 	Versie        int64       `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Naam          string      `json:"naam"`
 	Omschrijving  *string     `json:"omschrijving,omitempty"`
+	CGLaag        CGLaag      `json:"CG_laag" schema:"enum=CGLaag"`
 	Pitch         *string     `json:"pitch,omitempty"`
 	Website       URL         `json:"website" schema:"datatype:URL"`
 	GitRepo       GitAdres    `json:"git_repo" schema:"datatype:GitAdres"`
 	Type          Producttype `json:"type" schema:"enum=Producttype"`
-	CGLaag        CGLaag      `json:"CG_laag" schema:"enum=CGLaag"`
 	Opvoer        *time.Time  `json:"opvoer,omitempty"`
 	Afvoer        *time.Time  `json:"afvoer,omitempty"`
 }
@@ -343,6 +343,27 @@ type Initiatief_AndereAPIStandaard_Data struct {
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	ApiStandaard  *string    `json:"api_standaard,omitempty"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+type Initiatief_OrganisatieInfo struct {
+	bun.BaseModel    `bun:"table:initiatief_organisatieinfo,alias:initiatief_organisatieinfo"`
+	Initiatief_ID    int                               `json:"initiatief_id" bun:"initiatief_id,pk" schema_desc:"ID van de Initiatief-entiteit"`
+	Rel_ID           int                               `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentInitiatief *Initiatief                       `json:"-" bun:"rel:belongs-to,join:initiatief_id=id,on_delete:cascade"`
+	Opvoer           *time.Time                        `json:"opvoer,omitempty"`
+	Afvoer           *time.Time                        `json:"afvoer,omitempty"`
+	Data             []Initiatief_OrganisatieInfo_Data `bun:"rel:has-many,join:initiatief_id=initiatief_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// Initiatief_OrganisatieInfo_Data — geversioned inhoud van Initiatief_OrganisatieInfo.
+type Initiatief_OrganisatieInfo_Data struct {
+	bun.BaseModel `bun:"table:initiatief_organisatieinfo_data,alias:initiatief_organisatieinfo_data"`
+	Initiatief_ID int        `json:"initiatief_id" bun:"initiatief_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Informatie    string     `json:"informatie"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }

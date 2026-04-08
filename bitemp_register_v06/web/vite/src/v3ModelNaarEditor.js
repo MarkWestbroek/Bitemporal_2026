@@ -45,8 +45,9 @@ function convertV3Veld(v3Veld, enumLookup, datatypeLookup) {
   const mapped = goTypeNaarVeldType(v3Veld.goType);
   const type = datatype?.basistype || mapped.type;
   const format = datatype?.format || mapped.format;
-  const enumWaarden = v3Veld.enum
-    ? enumLookup[v3Veld.enum] || null
+  const enumBestaat = Boolean(v3Veld.enum && enumLookup[v3Veld.enum]);
+  const enumWaarden = enumBestaat
+    ? enumLookup[v3Veld.enum]
     : null;
   // $ref naar referentielijst-items type (schema:"ref:LandenlijstLand"), analoog aan OAS 3.1 $ref
   // Backward compat: oudere DB-opgeslagen modellen gebruiken "refItemNaam" i.p.v. "$ref"
@@ -58,7 +59,7 @@ function convertV3Veld(v3Veld, enumLookup, datatypeLookup) {
     format,
     datatypeNaam: v3Veld.datatype || datatype?.naam || null,
     enum: enumWaarden,
-    enumNaam: v3Veld.enum || null,
+    enumNaam: enumBestaat ? v3Veld.enum : null,
     refNaam,
     verplicht: !v3Veld.goType.startsWith("*"),
     autoIncrement: false,
@@ -255,7 +256,7 @@ export function v3ModelNaarEditor(v3Model) {
 
       // Enum dependency edges voor GE-velden
       (ge.velden || []).forEach((v) => {
-        if (v.enum) {
+        if (v.enum && enumLookup[v.enum]) {
           edges.push({
             id: `${geTypenaam}-->${v.enum}`,
             source: geTypenaam,
@@ -366,7 +367,7 @@ export function v3ModelNaarEditor(v3Model) {
 
       // Enum dependency edges voor relatie-velden
       (rel.velden || []).forEach((v) => {
-        if (v.enum) {
+        if (v.enum && enumLookup[v.enum]) {
           edges.push({
             id: `${rel.naam}-->${v.enum}`,
             source: rel.naam,

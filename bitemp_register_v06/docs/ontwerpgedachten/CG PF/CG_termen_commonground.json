@@ -1,0 +1,529 @@
+{
+  "bron": "https://commonground.nl/page/view/c2e9287e-7ec1-43b7-b713-e5e84bd8b046/termen",
+  "type": "termenlijst_volledig",
+  "totaal": 87,
+  "termen": [
+    {
+      "term": "Aansluitcriteria",
+      "guid": "ef3dad93-71e6-43dd-86c1-c78db1a59121",
+      "url": "https://commonground.nl/term/view/ef3dad93-71e6-43dd-86c1-c78db1a59121/aansluitcriteria",
+      "beschrijving": "Aansluitcriteria vormen de set van voorwaarden waaraan software moet voldoen om aan te sluiten op de basisset. Deze criteria richten zich op de interoperabiliteit van de koppeling en niet op de interne werking van een applicatie. Ze omvatten onder meer technische standaarden, beveiligingseisen en afspraken over gegevensgebruik en -uitwisseling.\n\nzie ook opnamecriteria en validatiecriteria"
+    },
+    {
+      "term": "Aansluitvoorwaarden",
+      "guid": "804e71bd-7aab-4a1f-98c0-9becf6453c62",
+      "url": "https://commonground.nl/term/view/804e71bd-7aab-4a1f-98c0-9becf6453c62/aansluitvoorwaarden",
+      "beschrijving": "Aansluitvoorwaarden vormen het normatieve kader van technische en organisatorische eisen waaraan software moet voldoen om aan te sluiten op een voorziening binnen het Common Ground-ecosysteem. Ze zorgen ervoor dat componenten veilig, betrouwbaar en volgens open standaarden met elkaar communiceren. De voorwaarden richten zich op correct gebruik van interfaces, interoperabiliteit, informatieveiligheid en beheerbaarheid van de aansluiting. Juridische en contractuele afspraken, zoals eigenaarschap en aansprakelijkheid, worden doorgaans vastgelegd in het afsprakenstelsel of in aanvullende contracten. Door duidelijke voorwaarden te stellen wordt voorkomen dat nieuwe applicaties de integriteit en betrouwbaarheid van de gemeentelijke informatievoorziening in gevaar brengen.\n\nZie ook aansluitcriteria en opnamevoorwaarden"
+    },
+    {
+      "term": "ABAC",
+      "guid": "c7c2bd2f-62cf-4d27-8788-9960e5b1888b",
+      "url": "https://commonground.nl/term/view/c7c2bd2f-62cf-4d27-8788-9960e5b1888b/abac",
+      "beschrijving": "Attribute-Based Access Control gebruikt attributen zoals functie, organisatie, locatie of tijdstip om te bepalen of toegang wordt toegestaan. Hierdoor kunnen zeer fijnmazige en contextafhankelijke beslissingen worden genomen.\n\nzie ook PBAC, RBAC"
+    },
+    {
+      "term": "Acceptatieomgeving",
+      "guid": "35feaeca-8bf1-47db-aa17-6186ba344a6f",
+      "url": "https://commonground.nl/term/view/35feaeca-8bf1-47db-aa17-6186ba344a6f/acceptatieomgeving",
+      "beschrijving": "Een niet-productieve omgeving waarin wordt vastgesteld of software voldoet aan afgesproken eisen voordat deze in gebruik wordt genomen.\n\nOTAP-Omgevingen\nOntwikkel-, test-, acceptatie- en productieomgeving  \n\nOverige omgevingen\nSandbox-, demo-, referentie-, validatie- en blauwdrukomgeving"
+    },
+    {
+      "term": "Activiteit",
+      "guid": "a47c8961-162b-48ae-8ded-ce063ca5eaaf",
+      "url": "https://commonground.nl/term/view/a47c8961-162b-48ae-8ded-ce063ca5eaaf/activiteit",
+      "beschrijving": "zie procesactiviteit"
+    },
+    {
+      "term": "Afsprakenstelsel",
+      "guid": "76a447b6-13c9-4420-b3da-8718b8ff6aef",
+      "url": "https://commonground.nl/term/view/76a447b6-13c9-4420-b3da-8718b8ff6aef/afsprakenstelsel",
+      "beschrijving": "Het geheel van juridische, organisatorische, tactische en technische afspraken waarbinnen de voorziening en de ketenpartners opereren"
+    },
+    {
+      "term": "API",
+      "guid": "b91f8897-fe1d-43f7-b53e-658e0fee5a3c",
+      "url": "https://commonground.nl/term/view/b91f8897-fe1d-43f7-b53e-658e0fee5a3c/api",
+      "beschrijving": "Een API is een gestandaardiseerd koppelvlak waarmee softwarecomponenten gegevens en functies met elkaar kunnen uitwisselen. De API fungeert als een contract tussen aanbieder en afnemer: systemen weten welke informatie beschikbaar is en hoe deze kan worden opgevraagd, zonder dat de interne werking van het systeem zichtbaar hoeft te zijn. In moderne architecturen worden vaak REST-API’s gebruikt omdat deze eenvoudiger te implementeren en beter schaalbaar zijn dan eerdere integratievormen. Door functionaliteit en gegevens via API’s beschikbaar te maken, kunnen systemen als losse componenten samenwerken en gegevens rechtstreeks bij de bron gebruiken."
+    },
+    {
+      "term": "Architectuur",
+      "guid": "a74ef8b5-9b46-4f51-899a-f75ed8471651",
+      "url": "https://commonground.nl/term/view/a74ef8b5-9b46-4f51-899a-f75ed8471651/architectuur",
+      "beschrijving": "Definities\n\nOorspronkelijk betekent architectuur zoiets als \"de kunst van het ontwerpen van structuren\", en wordt in de context van Common Ground gebruikt voor IT architectuur.\n\nDe Gartner definitie (niet vertaald) is: \"\"a series of principles, guidelines or rules used by an enterprise to direct the process of acquiring, building, modifying and interfacing IT resources throughout the enterprise.”\n\nWij bedoelen het geheel van doelen, principes en ontwerpen, dat het proces van wijzigen, ontwerpen, bouwen en uitvoeren van alle IT inspanningen binnen de context van de architectuur beschrijft.\n\nContext\n\nAanvankelijk zal Common Ground, en daarmee de architectuur die wij opstellen, zich beperken tot de context van de gemeentelijke dienstverlening."
+    },
+    {
+      "term": "Authenticatie",
+      "guid": "a0f18f95-e9ae-4465-9565-d0adf4f8933f",
+      "url": "https://commonground.nl/term/view/a0f18f95-e9ae-4465-9565-d0adf4f8933f/authenticatie",
+      "beschrijving": "Authenticatie beschrijft hoe wordt gecontroleerd of een gebruiker of systeem daadwerkelijk is wie het zegt te zijn. Dit gebeurt bijvoorbeeld met een wachtwoord, token of digitaal certificaat en vormt de basis voordat autorisatie kan worden toegepast.\n\nzie ook autorisatie"
+    },
+    {
+      "term": "Autorisatie",
+      "guid": "ba14c62a-335c-4060-9b02-b7f9f24d85e3",
+      "url": "https://commonground.nl/term/view/ba14c62a-335c-4060-9b02-b7f9f24d85e3/autorisatie",
+      "beschrijving": "Autorisatie beschrijft het proces waarbij wordt vastgesteld welke acties een gebruiker of systeem mag uitvoeren binnen een applicatie of voorziening. Dit gebeurt op basis van rollen, rechten of beleidsregels en bepaalt bijvoorbeeld welke gegevens mogen worden ingezien, gewijzigd of opgevraagd.\n\nZie ook authenticatie"
+    },
+    {
+      "term": "Basisset",
+      "guid": "49873ef3-495f-419b-ba84-8e42a7abbd2d",
+      "url": "https://commonground.nl/term/view/49873ef3-495f-419b-ba84-8e42a7abbd2d/basisset",
+      "beschrijving": "De set aan componenten die in de voorziening Common Ground is opgenomen en beschikbaar wordt gesteld via de voorziening.\n\nN.B. Dit is geen statische set. Deze ontwikkelt zich.\n\nN.B. 2: er zijn ook componenten die kunnen aansluiten op de basisset, maar niet standaard beschikbaar worden gesteld via de voorziening. Deze maken daarom geen deel uit van de basisset."
+    },
+    {
+      "term": "Besluit 1: Basisset laag 1,2 en 3",
+      "guid": "4ba8bf5c-f8f7-40e0-9948-023fff4d35d8",
+      "url": "https://commonground.nl/besluit/view/4ba8bf5c-f8f7-40e0-9948-023fff4d35d8/besluit-1-basisset-laag-12-en-3",
+      "beschrijving": "Bestuurlijke besluitvorming zegt dat we een voorziening (basisset) gaan neerzetten, focus op dienstverlening. Dan is het natuurlijk nodig om te bepalen wat er in die basis-set wordt opgenomen.   In onderstaande figuur nog even schematisch weergegeven wat we onder de basisset verstaan; het blauwe deel van het geheel.  \n\n\n\nHet vaststellen van de basisset betekent overigens niet dat daarmee alle andere vormen ‘niet toegestaan’ zijn; daar hebben we niet altijd iets over te zeggen.  \n\nHet betekent wél dat we de inzet van collectieve middelen en capaciteit richten op een voorziening met deze basis-opzet en dat we toewerken naar de standaard-verklaring dan deze basisset.  \n\nHoewel in die basisset ook delen van laag 4 en 5 zullen gaan zitten, beperken we ons met dit voorgenomen besluit tot de invulling van laag 1, 2 en 3. Dit voorstel staat ook nog even los van de infra, die natuurlijk ook aan de orde is, maar niet valt onder het begrip basisset\n\nCriteria om te besluiten op welke manier we laag 1, 2 en 3 gaan invullen. \n\nMinimale investering in geld en tijd (snelheid is van belang)\n\nDe oplossing en componenten zijn leveranciers-onafhankelijk. \n\nDe componenten in de basisset vormen een geïntegreerd geheel \n\nVoor alle gemeenten (aard en omvang) bruikbaar \n\nEenduidig en eenvoudig om op aan te sluiten met álle partijen op de lagen 4 en 5 \n\nAansluitend bij landelijke standaarden, waaronder gebruik maken van de FSC\n\nEen zgn. agnostische opzet op Haven+, waardoor bij een verstoring/uitval bij het ene platform de load door een ander platform kan worden overgenomen. Zo kunnen we de operationele continuïteit beter borgen en is soevereiniteit gegarandeerd. \n\n\n\nWe komen dan tot de conclusie dat de geïntegreerde componenten en patronen van Platform Dienstverlening/Podium D het meest voldoen aan deze criteria. Met name het feit dat er daarmee al verreweg de meeste functionele ‘rijkdom’ wordt benut voor alle gemeenten is voor ons een zwaarwegend argument.  \n\nHet voorgenomen besluit is dan ook om een voorziening neer te zetten waarbij we laag 1, 2 en 3 van het Platform Dienstverlening/ Podium D met FSC als basis-set gebruiken voor deze lagen.  \n\n(De componenten en patronen van Platform dienstverlening en Podium D zijn grotendeels hetzelfde of erg gelijkend. In de verdere uitwerking beschouwen ze als één set onder de roepnaam “PD”, wetende dat dit nog niet helemáál de feitelijke situatie is) \n\nHet snel en eenvoudig aansluiten van zoveel mogelijk gemeenten is cruciaal voor de beweging Common Ground; hoe sneller we de inzet verbreden, hoe sneller we inhoudelijk én financieel de voordelen gaan benutten.  \n\nDe basisset op lagen 1, 2 en 3 zal zich ook verder doorontwikkelen. Good-practices uit de huidige andere implementaties zullen we integreren in de basisset, en daar waar nog dubbelingen in Platform diensteverlening en Podium D zitten, zullen we gaan convergeren naar één oplossing.  \n\nIn beginsel wil een gemeente zich ‘alleen maar’ bezighouden met de functionele keuzevragen (laag 4 en 5). Dat zijn immers bekende vraagstukken waar prima overwegingen op kunnen worden gemaakt zonder specifieke kennis over de ‘onderlagen’.  In deze lagen 4 en 5 verwachten en hopen we dan ook dat -naast een standaard deel dat iedere gemeente gebruikt- een mooi en gevarieerd landschap ontstaat van verschillende toepassingen die daarop aangesloten worden. We bekijken steeds welke innovaties of andere initiatieven we toevoegen en benutten.  \n\nWe willen dan ook samen met de communities als Signalen, GEM, KISS en OWC etc. sámen bekijken wat er nodig is om de aansluiting te realiseren. Daar nemen we ook de tijd voor; gebruik van de gegevenslaag uit de basis is geen ‘big bang’ actie.  \n\nDus is er alle ruimte om samen te bepalen hoe we van de huidige situatie daarheen groeien. En uiteraard hoe, als de basis eenmaal staat, de ruimte weer benutten om verder te innoveren en componenten uit andere communities aan de basisset toe te voegen, de basisset op lagen 4 en 5 vorm te geven etc.  \n\nEn jij bent nadrukkelijk uitgenodigd om daarover mee denken en aan bij te dragen!"
+    },
+    {
+      "term": "Besluit 2: XXX",
+      "guid": "e5ef8408-5b77-46ac-868d-e8c5acd0abc2",
+      "url": "https://commonground.nl/besluit/view/e5ef8408-5b77-46ac-868d-e8c5acd0abc2/besluit-2-xxx",
+      "beschrijving": "Lorem Ipsum is slechts een proeftekst uit het drukkerij- en zetterijwezen. Lorem Ipsum is de standaard proeftekst in deze bedrijfstak sinds de 16e eeuw, toen een onbekende drukker een zethaak met letters nam en ze door elkaar husselde om een font-catalogus te maken. Het heeft niet alleen vijf eeuwen overleefd maar is ook, vrijwel onveranderd, overgenomen in elektronische letterzetting."
+    },
+    {
+      "term": "Bitemporeel",
+      "guid": "03d5b4cc-3467-48f7-84c1-037b161fb9ba",
+      "url": "https://commonground.nl/term/view/03d5b4cc-3467-48f7-84c1-037b161fb9ba/bitemporeel",
+      "beschrijving": "Alle registerdata bevat idealiter informatie over de zogenaamde materiële en formele tijdslijnen.\n\nMateriële tijdslijn\n\nDe materiële tijdslijn bevat de informatie over het werkelijke (materiële) bestaan van het object of subject waarnaar het gegeven expliciet verwijst. Een register beoogt dat zo nauwkeurig mogelijk kloppend met de werkelijkheid vast te leggen. Het doet dat doorgaans op datumniveau (maar dat kan, bijv. voor de WOZ, preciezer nodig zijn) en houdt daarbij de aanvang en het einde van een object of subject vast. Soms hebben aanvang en einde een specifieke term.\n\nBijvoorbeeld:\n\nvoor de natuurlijk persoon is dat geboorte en overlijden, en \n\nvoor de rechtspersoon oprichting en ontbinding.\n\n\n\nFormele tijdslijn\n\nDe formele tijdslijn houdt bij wanneer een gegeven geregistreerd of gederegistreerd is in het (basis-)register. Een subtiliteit daarbij is, dat gegevens ook gecorrigeerd, ongedaan gemaakt of logisch verwijderd kunnen worden.\n\nEen correctie is iets anders dan een wijziging. Het zegt immers: ik heb op tijdstip t1 een gegeven geregistreerd, maar dat was (deels) fout. Op tijdstip t2 is dit gecorrigeerd naar de volgende waarde(n). De toestand tussen t1 en t2 moet voor audit doeleinden wel te zien zijn, maar bij normaal 'tijdreizen' niet meer.\n\nEen ongedaanmaking gebeurt wanneer een registratie niet had mogen gebeuren en om die reden ongedaan wordt gemaakt.\n\nEen verwijdering is iets wat je technisch niet wilt uit een register, omwille van traceerbaarheid en 'auditabiillity', maar kan iets zijn dat je functioneel wel mogelijk wilt maken. Een verwijderd gegeven, is, net als een gecorrigeerd gegeven alleen onder voorwaarden (audit) zichtbaar, maar normaalgesproken, ook bij tijdreizen over de formele tijdsas, niet."
+    },
+    {
+      "term": "Blauwdrukomgeving",
+      "guid": "d8c790d4-2ce5-400d-9178-f6a50fe3a4a6",
+      "url": "https://commonground.nl/term/view/d8c790d4-2ce5-400d-9178-f6a50fe3a4a6/blauwdrukomgeving",
+      "beschrijving": "Een gestandaardiseerde technische configuratie-set die als sjabloon dient voor nieuwe implementaties van de basisset.\n\nOTAP-Omgevingen\nOntwikkel-, test-, acceptatie- en productieomgeving  \n\nOverige omgevingen\nSandbox-, demo-, referentie- en validatieomgeving"
+    },
+    {
+      "term": "BOMOS",
+      "guid": "a3d19417-893f-4d9d-9ec2-ed4967ba4890",
+      "url": "https://commonground.nl/term/view/a3d19417-893f-4d9d-9ec2-ed4967ba4890/bomos",
+      "beschrijving": "Het Beheer- en OntwikkelModel voor Open Standaarden biedt handvatten voor het organiseren van het beheer en de doorontwikkeling van standaarden. Het beschrijft rollen, processen en afspraken die nodig zijn om standaarden duurzaam te onderhouden en breed toe te passen.\n\nBOMOS richt zich onder andere op:\n\ngovernance en besluitvorming\n\nbeheer en versiebeheer van standaarden\n\nbetrokkenheid van stakeholders\n\nadoptie en implementatie\n\n\n\nBOMOS helpt om standaarden consistent te beheren en te zorgen dat ze bruikbaar en actueel blijven."
+    },
+    {
+      "term": "Broncode",
+      "guid": "a88caff9-df0a-459b-955d-46c193017fa4",
+      "url": "https://commonground.nl/term/view/a88caff9-df0a-459b-955d-46c193017fa4/broncode",
+      "beschrijving": "De broncode (in het Engels source of source code) van een computerprogramma is de leesbare tekst die door de programmeur in een programmeertaal is geschreven. Dit in tegenstelling tot de 'uitvoerbare (executable) code' of doelcode (object code) zoals die door een compiler of interpreter vanuit deze broncode gegenereerd wordt.\n\nVoorbeeld:\n\nint square(int i)\n{\n    return i * i;\n}\n\nbron: https://nl.wikipedia.org/wiki/Broncode"
+    },
+    {
+      "term": "CGTS",
+      "guid": "fe108215-8e9b-443f-b1e6-b6b2666519e8",
+      "url": "https://commonground.nl/term/view/fe108215-8e9b-443f-b1e6-b6b2666519e8/cgts",
+      "beschrijving": "Het Common Ground Technische Specificaties-register (CGTS-register) is de plek waar alle technische specificaties binnen Common Ground samenkomen. Het geeft inzicht in welke ideeën en oplossingen er al zijn ontwikkeld, wie eraan gewerkt heeft en in welke fase van uitwerking ze zich bevinden. Zo ontstaat een centraal overzicht dat helpt om orde te scheppen in de veelheid aan initiatieven. \n\nVoor meer informatie raadpleeg de website Common Ground."
+    },
+    {
+      "term": "Community",
+      "guid": "af868752-bd3b-442d-9118-05a49a0caa76",
+      "url": "https://commonground.nl/term/view/af868752-bd3b-442d-9118-05a49a0caa76/community",
+      "beschrijving": "Binnen Common Ground hebben we een aantal communities ingericht die bestaan uit betrokkenen vanuit zowel gemeenten, het programma, VNG, leveranciers en ketenpartners, die samen een bepaald onderwerp bespreken.\n\nHet niveau waarop het onderwerp besproken wordt kan varieren van ideeënvorming tot heel concrete uitwerking tot een component.\n\nZie deze pagina voor een overzicht van de huidige communities."
+    },
+    {
+      "term": "Component",
+      "guid": "74ed6756-6041-4ba0-a068-9fd3884cb492",
+      "url": "https://commonground.nl/term/view/74ed6756-6041-4ba0-a068-9fd3884cb492/component",
+      "beschrijving": "(Kort voor: software component)\n\nEen onderdeel van een groter systeem met een afgebakende taak en functie, en een gedefinieerde interface.\n\nDe taak en functie wordt beschreven door het gedrag van het component, dat kan worden getriggerd door de interactie via de interface. Een component kan op zijn beurt gebruik maken van andere componenten, hetzij omdat het opgebouwd is uit deze componenten (compositie), hetzij omdat het ze 'aanspreekt' (gebruik).\n\nHieronder de (UML) weergave van een component met interfaces.\n\n\n\n(https://en.wikipedia.org/wiki/Component_(UML))"
+    },
+    {
+      "term": "CPSV",
+      "guid": "2ab01807-b0d0-4230-8201-77ac4136bcc7",
+      "url": "https://commonground.nl/term/view/2ab01807-b0d0-4230-8201-77ac4136bcc7/cpsv",
+      "beschrijving": "De Core Public Service Vocabulary is een standaard van de Europese Unie die een gemeenschappelijke structuur biedt voor het beschrijven van overheidsdiensten. Het model legt vast welke elementen bij een dienst horen, zoals de dienst zelf, de betrokken organisatie, vereisten, procedures en uitkomsten.\n\nCPSV ondersteunt interoperabiliteit tussen landen en systemen en wordt gebruikt in initiatieven zoals de Single Digital Gateway en Your Europe om dienstverlening consistent en herbruikbaar te maken."
+    },
+    {
+      "term": "CRUD API",
+      "guid": "13465161-36af-4fb8-b1fa-d6363fb69fe1",
+      "url": "https://commonground.nl/term/view/13465161-36af-4fb8-b1fa-d6363fb69fe1/crud-api",
+      "beschrijving": "Een CRUD API biedt standaardbewerkingen op data: Create (aanmaken), Read (opvragen), Update (wijzigen) en Delete (verwijderen). Deze operaties vormen de basis voor het beheren van gegevens in systemen en worden vaak via HTTP-methoden aangeboden, zoals POST, GET, PUT/PATCH en DELETE.\n\nBinnen Common Ground worden CRUD API’s gebruikt om gegevens bij de bron te beheren en toegankelijk te maken voor andere systemen."
+    },
+    {
+      "term": "Data",
+      "guid": "7cb148a0-656c-41a2-b206-08239a88249a",
+      "url": "https://commonground.nl/term/view/7cb148a0-656c-41a2-b206-08239a88249a/data",
+      "beschrijving": "Letterlijk: gegevens.\n\nEen gegeven is is de vastgelegde uitdrukking van een feit, of: een representatie van iets in de werkelijkheid.\n\nHet meervoud van gegeven is gegevens en data is daar een synoniem (Latijn en Engels) voor. Het enkelvoud van data, datum, gebruiken we in het Nederlands alleen voor een datum op de kalender: een dag, maand en een jaar.\n\nData of gegevens kunnen we typeren: dan zeggen we dat ze van een bepaald type zijn. Dat type heet datatype of gegevenstype.\n\nEen set van gegevens, of een dataset, kan bestaan uit één of meer instanties van één of meer soorten gegevens (gegevenstypen), al dan niet gerelateerd.\n\nWanneer we de aard en samenhang van gegevens weergeven in een model spreken we van een gegevensmodel."
+    },
+    {
+      "term": "Data bij de bron",
+      "guid": "dba979f0-8543-4a41-a32d-a140e50d657f",
+      "url": "https://commonground.nl/term/view/dba979f0-8543-4a41-a32d-a140e50d657f/data-bij-de-bron",
+      "beschrijving": "Data bij de bron is het principe dat gegevens zoveel mogelijk worden beheerd en vastgelegd in de registratie waar zij ontstaan of waarvoor een organisatie verantwoordelijk is. In plaats van gegevens structureel te kopiëren naar lokale systemen, worden ze opgevraagd bij de bron wanneer ze nodig zijn. Dit voorkomt problemen met actualiteit, kwaliteit, authenticiteit en synchronisatie tussen verschillende systemen. Het principe stimuleert het gebruik van betrouwbare bronregistraties en het opnemen van verwijzingen naar brongegevens in plaats van lokale kopieën. In sommige situaties kunnen technische kopieën of afgeleide datasets nog nodig zijn, bijvoorbeeld voor prestaties of analyse, maar het uitgangspunt blijft dat gegevens bij de bron worden beheerd en onderhouden."
+    },
+    {
+      "term": "Dataset",
+      "guid": "f88f3bb9-7b3a-4ce1-bce1-cd525e5e257e",
+      "url": "https://commonground.nl/term/view/f88f3bb9-7b3a-4ce1-bce1-cd525e5e257e/dataset",
+      "beschrijving": "Een dataset is een samenhangende verzameling van gegevens die volgens een bepaalde structuur zijn georganiseerd en als geheel beschikbaar worden gesteld voor gebruik."
+    },
+    {
+      "term": "Demo-omgeving",
+      "guid": "0f16374a-471b-428e-90d5-fbc0b9432782",
+      "url": "https://commonground.nl/term/view/0f16374a-471b-428e-90d5-fbc0b9432782/demo-omgeving",
+      "beschrijving": "Een niet-productieve omgeving die is ingericht voor demonstraties en presentaties, met als doel de werking van de voorziening inzichtelijk te maken voor stakeholders, waarbij de nadruk ligt op begrijpelijkheid en gebruikservaring.\n\nOTAP-Omgevingen\nOntwikkel-, test-, acceptatie- en productieomgeving  \n\nOverige omgevingen\nSandbox-, referentie-, validatie-en blauwdrukomgeving\n\nzie ook additionele uitleg demo-omgeving van de voorziening"
+    },
+    {
+      "term": "Deprecatiebeleid",
+      "guid": "66fa43a6-a50c-4ebe-8d20-3f18c8bc9131",
+      "url": "https://commonground.nl/term/view/66fa43a6-a50c-4ebe-8d20-3f18c8bc9131/deprecatiebeleid",
+      "beschrijving": "De afspraken over de termijn en wijze waarop verouderde versies van interfaces of standaarden worden uitgefaseerd."
+    },
+    {
+      "term": "DiDo",
+      "guid": "2363e0f4-877c-4ff4-9368-155b323ae954",
+      "url": "https://commonground.nl/term/view/2363e0f4-877c-4ff4-9368-155b323ae954/dido",
+      "beschrijving": "Dienstverlening Doelarchitectuur"
+    },
+    {
+      "term": "FDS",
+      "guid": "911fb812-cbde-4649-9243-9872a7496008",
+      "url": "https://commonground.nl/term/view/911fb812-cbde-4649-9243-9872a7496008/fds",
+      "beschrijving": "Een Federatief Datastelsel is een netwerk van samenwerkende gegevensbronnen en voorzieningen, waarbij data niet centraal wordt opgeslagen maar bij de bron blijft. Via gestandaardiseerde API’s en afspraken kunnen systemen deze gegevens opvragen en gebruiken, waardoor hergebruik wordt bevorderd en dubbele opslag wordt voorkomen."
+    },
+    {
+      "term": "FSC",
+      "guid": "4b71b89e-d389-4cea-a25b-98caf6abf057",
+      "url": "https://commonground.nl/term/view/4b71b89e-d389-4cea-a25b-98caf6abf057/fsc",
+      "beschrijving": "De FSC (Federatieve Service Connectiviteit) standaard beschrijft hoe op een uniforme wijze koppelingen te maken en te beheren zijn.\n\nDe Programmeringsraad GDI heeft in december 2024 Federatieve Service Connectiviteit (FSC) als standaard vastgesteld. Deze standaard zorgt ervoor dat gegevensuitwisseling bij (overheids)organisaties schaalbaar wordt en tegelijkertijd veilig en beheersbaar blijft. De FSC standaard is ontwikkeld in opdracht van de VNG en faciliteert de Common Ground principes: 'eenmalig vastleggen, meervoudig gebruiken' en de toepassing van API-standaarden voor gegevensuitwisseling.\n\nZie ook: https://vng.nl/projecten/federatieve-service-connectiviteit-fsc\n\nWat standaardiseert FSC\n\nHoe de identiteit van een organisatie wordt bepaald en vertrouwd.\n\nHoe een autorisatie om te mogen koppelen met een API gegeven, geweigerd of ontnomen wordt.\n\nHoe organisaties in een netwerk de API's, en elkaar kunnen vinden.\n\nHoe een verbinding naar een API veilig kan worden opgezet.\n\nDe inhoud van logregels en wanneer deze moeten worden weggeschreven.\n\nHoe een intermediair namens een andere organisatie een API kan consumeren en/of publiceren."
+    },
+    {
+      "term": "FTV",
+      "guid": "f1aaf7b4-716d-4e23-9656-a4ec9ed478d3",
+      "url": "https://commonground.nl/term/view/f1aaf7b4-716d-4e23-9656-a4ec9ed478d3/ftv",
+      "beschrijving": "Bij Federatieve ToegangsVerlening wordt de identiteit van een gebruiker of systeem vastgesteld door de eigen organisatie, terwijl een andere organisatie deze identiteit accepteert en gebruikt om toegang te verlenen. De toegangsbeslissing wordt daarbij opgebouwd uit verschillende onderdelen:\n\nPIP (Policy Information Point) levert de benodigde informatie, zoals attributen over de gebruiker of context\n\nPAP (Policy Administration Point) beheert de beleidsregels die bepalen wie toegang mag krijgen\n\nPEP (Policy Enforcement Point) handhaaft de beslissing en bepaalt of toegang daadwerkelijk wordt toegestaan\n\n\n\nDeze componenten werken samen om op basis van gedeelde afspraken een toegangsbesluit te nemen. Binnen een federatie vertrouwen organisaties elkaars identiteiten en de manier waarop deze beslissingen tot stand komen.\n\nFTV maakt samenwerking in ketens mogelijk en voorkomt dat elke organisatie zelf alle gebruikers en rechten afzonderlijk moet beheren.\n\nVoor meer informatie raadpleeg de website digilab.overheid.nl"
+    },
+    {
+      "term": "Gegevensharmonisatie",
+      "guid": "5d918257-f31c-452e-9407-a04e173040f4",
+      "url": "https://commonground.nl/term/view/5d918257-f31c-452e-9407-a04e173040f4/gegevensharmonisatie",
+      "beschrijving": "Gegevensharmonisatie is het technisch en semantisch op elkaar afstemmen van gegevens uit verschillende bronnen. Binnen Common Ground is dit een belangrijke voorwaarde voor het principe van bevragen bij de bron. Het zorgt ervoor dat gegevens zoveel mogelijk dezelfde betekenis en een consistent formaat hebben, gebaseerd op landelijke standaarden en informatiemodellen, zoals GEMMA. Daardoor kunnen applicaties en componenten beter met elkaar samenwerken. Dit verkleint de kans op vertaalfouten en vermindert de noodzaak van lokale kopieën, zodat gegevens directer en betrouwbaarder uitwisselbaar worden."
+    },
+    {
+      "term": "Gegevensmodel",
+      "guid": "9c620ef1-7e26-4d8a-8510-94b1ada4ab72",
+      "url": "https://commonground.nl/term/view/9c620ef1-7e26-4d8a-8510-94b1ada4ab72/gegevensmodel",
+      "beschrijving": "Een model dat de eigenschappen van en samenhang tussen gegevenstypen weergeeft.\n\nWe onderscheiden vaak conceptuele, logische en fysieke gegevensmodellen."
+    },
+    {
+      "term": "GGM",
+      "guid": "136ece1a-9213-457c-a9af-c0019aa2c4f1",
+      "url": "https://commonground.nl/term/view/136ece1a-9213-457c-a9af-c0019aa2c4f1/ggm",
+      "beschrijving": "Het Gemeentelijk Gegevensmodel is een referentiemodel dat de structuur en betekenis van gemeentelijke gegevens vastlegt. Het biedt een gemeenschappelijke taal voor gegevensdefinities en ondersteunt interoperabiliteit tussen systemen, zodat gegevens consistent worden gebruikt binnen en tussen gemeenten.\n\nVoor meer informatie raadpleeg de website Gemeentelijk GegevensModel"
+    },
+    {
+      "term": "Haven+",
+      "guid": "5c90563e-cf6d-4f7f-b52e-9ed27ef5188b",
+      "url": "https://commonground.nl/term/view/5c90563e-cf6d-4f7f-b52e-9ed27ef5188b/haven",
+      "beschrijving": "Zie: https://developer.overheid.nl/kennisbank/devops/standaarden/haven-plus\n\nHaven+ is een set aan componenten die gezamenlijk de volgende dingen voor je doen:\n\nMonitoring (metrics, logging en tracing)\n\nAuthenticatie\n\nDatabases\n\nCertificaatbeheer\n\nSecret management"
+    },
+    {
+      "term": "IaaS",
+      "guid": "6eb676cd-04fd-49aa-a0a3-65c69ea73e35",
+      "url": "https://commonground.nl/term/view/6eb676cd-04fd-49aa-a0a3-65c69ea73e35/iaas",
+      "beschrijving": "Bij Infrastructure as a Service (iaas) levert de aanbieder de technische infrastructuur. De gebruiker beheert zelf het besturingssysteem, applicaties en data. Dit biedt flexibiliteit, maar vraagt ook technisch beheer.\n\nzie ook PaaS, SaaS"
+    },
+    {
+      "term": "IAM",
+      "guid": "42536f24-8ab2-4436-b806-5a4e311d9870",
+      "url": "https://commonground.nl/term/view/42536f24-8ab2-4436-b806-5a4e311d9870/iam",
+      "beschrijving": "Identity and Access Management omvat het beheren van digitale identiteiten en het bepalen wie toegang heeft tot welke systemen en gegevens. Het combineert authenticatie en autorisatie en zorgt ervoor dat alleen bevoegde gebruikers en systemen toegang krijgen, op basis van rollen, rechten of beleidsregels.\n\nzie ook ABAC, PBAC en RBAC"
+    },
+    {
+      "term": "Implementatie",
+      "guid": "a6fcaba2-7220-47cc-964c-04354bc98042",
+      "url": "https://commonground.nl/term/view/a6fcaba2-7220-47cc-964c-04354bc98042/implementatie",
+      "beschrijving": "Implementatie is het proces waarbij een component, applicatie of dienst technisch wordt ingericht en werkend gemaakt binnen een specifieke omgeving. Dit omvat onder meer het installeren of uitrollen van software, het configureren van infrastructuur en het inrichten van koppelingen met andere systemen. Binnen de Common Ground-architectuur ligt de nadruk op het inzetten van gestandaardiseerde componenten en koppelvlakken, zodat applicaties via API’s gegevens kunnen gebruiken die bij de bron beschikbaar zijn. Een succesvolle implementatie betekent dat een component niet alleen technisch functioneert, maar ook aansluit op de afgesproken standaarden voor interoperabiliteit, gegevensuitwisseling en informatieveiligheid."
+    },
+    {
+      "term": "Interoperabiliteit",
+      "guid": "c30d6c3e-2d25-4cf0-88d3-a994277be502",
+      "url": "https://commonground.nl/term/view/c30d6c3e-2d25-4cf0-88d3-a994277be502/interoperabiliteit",
+      "beschrijving": "Interoperabiliteit is het vermogen van organisaties en systemen om informatie naadloos uit te wisselen en deze direct te gebruiken in hun eigen processen. Binnen de overheid worden doorgaans vijf niveaus onderscheiden: politiek, juridisch, organisatorisch, semantisch en technisch. Interoperabiliteit gaat daarmee niet alleen over technische koppelingen, maar ook over gedeelde wetgeving, afspraken en begrippen. In de Common Ground-visie vormt dit een belangrijke voorwaarde om gegevens bij de bron op te vragen zonder dat handmatige vertaalslagen of extra kopieën nodig zijn. Door afspraken te standaardiseren en begrippen te harmoniseren, worden systemen minder afhankelijk van specifieke leveranciers en kunnen gemeenten eenvoudiger samenwerken aan digitale dienstverlening"
+    },
+    {
+      "term": "Iteratieve ontwikkeling",
+      "guid": "2f94580f-ae13-4a83-b8f1-28cca56ab576",
+      "url": "https://commonground.nl/term/view/2f94580f-ae13-4a83-b8f1-28cca56ab576/iteratieve-ontwikkeling",
+      "beschrijving": "Iteratieve ontwikkeling is het stapsgewijs bouwen van een product door middel van korte, herhaalde ontwikkelcycli. In plaats van een volledig ontwerp vooraf wordt telkens een werkend onderdeel opgeleverd dat wordt getest door gebruikers en getoetst aan architectuurkaders. Binnen de context van Common Ground helpt deze aanpak om software en standaarden beter te laten aansluiten op de uitvoeringspraktijk. Fouten en nieuwe inzichten worden in een vroeg stadium zichtbaar, waardoor het risico op grote mislukkingen afneemt. Elke cyclus levert extra functionaliteit en verbetert de kwaliteit van het systeem. Dit ondersteunt een flexibele informatievoorziening die kan meebewegen met nieuwe wetgeving en veranderende behoeften."
+    },
+    {
+      "term": "Keten",
+      "guid": "f7ecec70-1e23-44a2-b6b7-7152eecb4742",
+      "url": "https://commonground.nl/term/view/f7ecec70-1e23-44a2-b6b7-7152eecb4742/keten",
+      "beschrijving": "Een keten is een samenhangende reeks van activiteiten die door verschillende organisaties worden uitgevoerd om gezamenlijk een maatschappelijk resultaat te bereiken voor een burger of bedrijf. Binnen de Common Ground-architectuur verschuift de focus van afzonderlijke binnengemeentelijke systemen naar samenwerking in deze ketens. Dit vraagt om duidelijke afspraken over gegevensuitwisseling, processen en verantwoordelijkheden, zodat informatie betrouwbaar en veilig tussen organisaties kan worden gedeeld. In plaats van gegevens per organisatie op te slaan, worden gegevens waar mogelijk bij de bron opgevraagd. Zo ontstaat een samenhangende dienstverlening waarin meerdere organisaties bijdragen aan één gezamenlijk resultaat voor de inwoner of ondernemer."
+    },
+    {
+      "term": "Ketenregie",
+      "guid": "de61e67b-ab6c-4fda-a28d-1360222046fd",
+      "url": "https://commonground.nl/term/view/de61e67b-ab6c-4fda-a28d-1360222046fd/ketenregie",
+      "beschrijving": "Ketenregie is de coördinatie en sturing van processen, gegevensuitwisseling en technische voorzieningen binnen een netwerk van samenwerkende organisaties. Het doel is om ervoor te zorgen dat dienstverlening aan burgers en bedrijven samenhangend en betrouwbaar verloopt. De ketenregisseur bewaakt dat afspraken over interoperabiliteit, gegevensgebruik en verantwoordelijkheden worden nageleefd. In moderne informatiesystemen verschuift de aandacht daarbij van het beheren van afzonderlijke koppelingen naar het coördineren van interacties tussen bronnen en afnemers. Niet de individuele organisatie staat centraal, maar het gezamenlijke maatschappelijke resultaat. Ketenregie omvat daarom ook het monitoren van ketenprestaties en het tijdig bijsturen wanneer knelpunten ontstaan in de samenwerking of informatie-uitwisseling."
+    },
+    {
+      "term": "Koppelvlak",
+      "guid": "e5e8affa-5678-43e7-b626-fabe2e4b79ec",
+      "url": "https://commonground.nl/term/view/e5e8affa-5678-43e7-b626-fabe2e4b79ec/koppelvlak",
+      "beschrijving": "Een koppelvlak is het formeel gedefinieerde punt waar twee informatiesystemen gegevens of functies met elkaar uitwisselen. Het beschrijft de technische en semantische afspraken die nodig zijn om deze uitwisseling mogelijk te maken. In moderne architecturen verschuift de focus van maatwerkverbindingen tussen systemen naar gestandaardiseerde koppelvlakken, zoals API’s. Een goed gedefinieerd koppelvlak zorgt ervoor dat systemen onafhankelijk van elkaar kunnen functioneren en worden aangepast, zolang zij zich houden aan het afgesproken contract. Dit ondersteunt een modulaire architectuur waarin gegevens bij de bron kunnen worden opgevraagd en systemen eenvoudiger kunnen worden vervangen of uitgebreid."
+    },
+    {
+      "term": "Logisch gegevensmodel",
+      "guid": "21854ceb-fb0e-4a02-b4fa-524a13653497",
+      "url": "https://commonground.nl/term/view/21854ceb-fb0e-4a02-b4fa-524a13653497/logisch-gegevensmodel",
+      "beschrijving": "Afgekort als LGM."
+    },
+    {
+      "term": "Migratie",
+      "guid": "78cb5e4e-4c93-446b-9247-34062447c897",
+      "url": "https://commonground.nl/term/view/78cb5e4e-4c93-446b-9247-34062447c897/migratie",
+      "beschrijving": "Migratie is het proces van het gecontroleerd en gestructureerd overzetten van gegevens, configuraties en functionaliteit van een bestaand systeem naar een nieuwe omgeving. Binnen de gemeentelijke architectuur betreft dit vaak de overgang van traditionele systemen naar een architectuur die beter aansluit op Common Ground-principes, zoals het scheiden van gegevens en applicaties. Tijdens migratie is het waarborgen van de integriteit, volledigheid en herleidbaarheid van gegevens essentieel voor de continuïteit van de publieke dienstverlening. Een succesvolle migratie vraagt daarom om een zorgvuldige analyse van informatiemodellen, gegevensstructuren en technische standaarden, zodat gegevens in de nieuwe omgeving correct kunnen worden gebruikt en uitgewisseld via gestandaardiseerde koppelvlakken."
+    },
+    {
+      "term": "MijnOverheid",
+      "guid": "c1c2b57b-758b-44cb-a048-d0d8b4881385",
+      "url": "https://commonground.nl/term/view/c1c2b57b-758b-44cb-a048-d0d8b4881385/mijnoverheid",
+      "beschrijving": "MijnOverheid is een online platform waarop burgers toegang hebben tot persoonlijke informatie van de overheid, zoals berichten, gegevens en lopende zaken. Het portaal biedt onder andere toegang tot de Berichtenbox, persoonlijke gegevens en overzicht van zaken bij verschillende overheidsorganisaties.\n\nBinnen de digitale overheid fungeert MijnOverheid als centraal kanaal voor communicatie tussen overheid en burger, waarbij informatie uit verschillende bronnen wordt samengebracht.\n\nzie ook Your Europe"
+    },
+    {
+      "term": "Mock",
+      "guid": "df673ff3-2569-447b-b071-a3bb79b11098",
+      "url": "https://commonground.nl/term/view/df673ff3-2569-447b-b071-a3bb79b11098/mock",
+      "beschrijving": "Een gesimuleerde versie van een service die het gedrag van een bron (zoals de BRP) nabootst voor testdoeleinden, zonder werkelijke dataverbinding.\n\nZe worden vooral gebruikt om te toetsen of een systeem zich aan de gemaakte afspraken houdt. Denk aan technische standaarden, beveiliging en volgorde van interacties. Tijdens een validatieproces kan een mock bijvoorbeeld controleren of een organisatie eerst een geldige autorisatie meestuurt voordat gegevens worden opgevraagd.\n\nzie ook stub"
+    },
+    {
+      "term": "Normatief kader",
+      "guid": "e42f57a9-fd89-4cdb-a2ee-faddd4bcd73e",
+      "url": "https://commonground.nl/term/view/e42f57a9-fd89-4cdb-a2ee-faddd4bcd73e/normatief-kader",
+      "beschrijving": "Een set van afspraken, richtlijnen en eisen die beschrijven hoe systemen en organisaties moeten werken binnen een bepaalde context, zoals een platform of samenwerking.\n\nHet wordt vooral gebruikt om richting en houvast te geven bij ontwikkeling en implementatie. Denk aan afspraken over standaarden, beveiliging, gegevensuitwisseling en werkwijzen. Tijdens ontwerp en realisatie helpt een normatief kader bijvoorbeeld om te bepalen welke API-standaarden gevolgd moeten worden of hoe autorisatie ingericht moet zijn."
+    },
+    {
+      "term": "Ontwikkelomgeving",
+      "guid": "a9c4dd92-fb5f-4af8-958a-abda9ba9fe7c",
+      "url": "https://commonground.nl/term/view/a9c4dd92-fb5f-4af8-958a-abda9ba9fe7c/ontwikkelomgeving",
+      "beschrijving": "Een niet-productieve omgeving waarin software wordt ontwikkeld en aangepast.\n\nOTAP-Omgevingen\nOntwikkel-, test-, acceptatie- en productieomgeving   \n\nOverige omgevingen\nSandbox-, demo-, referentie-, validatie- en blauwdrukomgeving"
+    },
+    {
+      "term": "Open Source Software",
+      "guid": "9895af56-5e1a-4d62-8b91-66ceafbb17e0",
+      "url": "https://commonground.nl/term/view/9895af56-5e1a-4d62-8b91-66ceafbb17e0/open-source-software",
+      "beschrijving": "Software waarbij de broncode toegankelijk is gemaakt ten behoeve van met name samenwerking, om welke reden modificatie en afgeleide software moet worden toegestaan. The Open Source Initiative® geeft deze definitie, die bestaat uit 10 onderdelen.\n\nDe licentie (vaak volgens een licentiemodel) van de software beschrijft de voorwaarden voor het  gebruik en modificatie van de code en/of de software. Er kan een code of conduct zijn opgesteld.\n\nEr bestaat een belangrijk verband tussen (en er is onderscheid tussen) auteursrecht (copyright) en de open source licentie, waarbij het auteursrecht eigenlijk ten dienste wordt gesteld om het licentiemodel af te kunnen dwingen.\n\nType Licentie\n\nWat het doet\n\nVoorbeeld\n\n\nPermissief\n\nJe mag er bijna alles mee doen, zolang je de oorspronkelijke maker maar noemt. Je mag het zelfs verwerken in betaalde, gesloten software.\n\nMIT, Apache\n\n\nCopyleft\n\nDit is \"besmettelijk\". Als je de code aanpast en verspreidt, moet jouw nieuwe versie óók open source blijven onder dezelfde voorwaarden.\n\nGPL (GNU General Public License)"
+    },
+    {
+      "term": "Opnamecriteria",
+      "guid": "7d2c6c3c-7925-4172-bb36-6ae1464c2b78",
+      "url": "https://commonground.nl/term/view/7d2c6c3c-7925-4172-bb36-6ae1464c2b78/opnamecriteria",
+      "beschrijving": "Opnamecriteria vormen de set van voorwaarden waaraan software moet voldoen om opgenomen te worden in de basisset. Deze criteria richten zich op de geschiktheid en kwaliteit van een component in relatie tot de doelstellingen en architectuur van de voorziening. Ze omvatten onder meer eisen aan functionaliteit, documentatie, beheerbaarheid en aansluiting op geldende standaarden en principes.\n\nzie ook aansluitcriteria en validatiecriteria"
+    },
+    {
+      "term": "Opnamevoorwaarden",
+      "guid": "ceac03df-b6cd-46a5-8ca6-30ed37ad3b05",
+      "url": "https://commonground.nl/term/view/ceac03df-b6cd-46a5-8ca6-30ed37ad3b05/opnamevoorwaarden",
+      "beschrijving": "Opnamevoorwaarden vormen het toetsingskader waaraan een component of API moet voldoen om te worden opgenomen in de Common Ground basisset. Deze criteria borgen de kwaliteit op meerdere niveaus: technisch (gebruik van open standaarden en architectuurprincipes), juridisch (naleving van wet- en regelgeving, zoals de AVG, en passende open-source-licenties) en organisatorisch (duidelijke afspraken over beheer, doorontwikkeling en financiering). Het doel is om afhankelijkheid van specifieke leveranciers te beperken en te zorgen dat gemeenten componenten veilig en herbruikbaar kunnen inzetten. Pas wanneer een oplossing aantoonbaar stabiel is en voldoende draagvlak heeft binnen de community, kan deze worden opgenomen in de basisset.\n\nZie ook aansluitvoorwaarden"
+    },
+    {
+      "term": "PaaS",
+      "guid": "1ff99372-65a5-4f01-b34d-b75339c301d2",
+      "url": "https://commonground.nl/term/view/1ff99372-65a5-4f01-b34d-b75339c301d2/paas",
+      "beschrijving": "Bij Platform as a Service beheert de aanbieder de infrastructuur en het platform (zoals runtime en databases). De gebruiker richt zich op het ontwikkelen en draaien van applicaties zonder zich bezig te houden met onderliggende techniek.\n\nzie ook IaaS, SaaS"
+    },
+    {
+      "term": "PBAC",
+      "guid": "d048066a-8f5c-47ea-81a4-c7c10b47c96e",
+      "url": "https://commonground.nl/term/view/d048066a-8f5c-47ea-81a4-c7c10b47c96e/pbac",
+      "beschrijving": "Policy-Based Access Control is een autorisatiemodel waarbij beslissingen over toegang worden genomen op basis van dynamische beleidsregels. Deze regels kunnen rekening houden met context, zoals het type gebruiker, de actie, het tijdstip of de bron van de aanvraag. Hierdoor kan fijnmazig en flexibel worden bepaald of toegang wordt toegestaan."
+    },
+    {
+      "term": "PBAC",
+      "guid": "ec91b519-53b4-4b6a-bc56-3cedec139fb4",
+      "url": "https://commonground.nl/term/view/ec91b519-53b4-4b6a-bc56-3cedec139fb4/pbac",
+      "beschrijving": "Policy Based Access Control.\n\nWordt vaak in één adem genoemd met het PxP patroon van een PEP, PDP, PIP en PAP-component.\n\nHet landelijk project FTV (Federatieve Toegangsverlening) heeft reeds het component openFTV ontwikkeld, en is bezig een landelijk standaard voor een soort 'meta-policy'-taal (codenaam MAM: meta autorisatie model) te ontwikkelen, waarschijnlijk gebaseerd op ODRL.\n\nzie ook ABAC, RBAC"
+    },
+    {
+      "term": "PDC",
+      "guid": "0371f9f9-b78d-46ff-be9d-d15ff1bc435f",
+      "url": "https://commonground.nl/term/view/0371f9f9-b78d-46ff-be9d-d15ff1bc435f/pdc",
+      "beschrijving": "De Producten- en DienstenCatalogus bevat gestructureerde informatie over gemeentelijke producten en diensten, zoals beschrijvingen, voorwaarden, kosten en doorlooptijden. Deze informatie wordt gebruikt om dienstverlening transparant te maken en vormt vaak de basis voor digitale formulieren, websites en klantcontact.\n\nZie ook UPL en Samenwerkende Catalogi"
+    },
+    {
+      "term": "Platform",
+      "guid": "8acbf143-381f-414f-a2a0-df12d08c1aa1",
+      "url": "https://commonground.nl/term/view/8acbf143-381f-414f-a2a0-df12d08c1aa1/platform",
+      "beschrijving": "Het Common Ground platform is een ontkoppeld ecosysteem dat de uitvoering, het beheer en de samenwerking van digitale diensten ondersteunt. Het platform vormt de technische basis waarop Common Ground voorziening draait en bestaat uit een aantal samenhangende onderdelen:\n\nA. Infrastructuur\nDe onderliggende laag die voorziet in opslag, verwerkingscapaciteit en netwerkvoorzieningen. Deze basisinfrastructuur biedt de hardware en software-ondersteuning waarop componenten kunnen draaien.\n\nB. Beheerplatform\nDe laag die zich richt op het beschikbaar maken en beheren van essentiële bouwstenen voor productieomgevingen. Hieronder vallen onder andere monitoring, authenticatie, certificaatbeheer en databasediensten. Deze diensten zorgen voor stabiliteit, veiligheid en beheersbaarheid van het platform.\n\nC. Dataplatform\nDe functionele lagen waarin data, interactie en functionaliteit samenkomen. Dit omvat:\n\t- de integratielaag, die communicatie faciliteert via gestandaardiseerde API’s\n\t- de servicelaag, die herbruikbare functies en componenten aanbiedt\n\t- de datalaag, waarin gegevens bij de bron worden opgeslagen en beheerd"
+    },
+    {
+      "term": "Platform Dienstverlening",
+      "guid": "144c600a-5a98-42f0-a85a-ce6bf920e6e6",
+      "url": "https://commonground.nl/term/view/144c600a-5a98-42f0-a85a-ce6bf920e6e6/platform-dienstverlening",
+      "beschrijving": "Het Platform Dienstverlening is een op Common Ground principes gebaseerde architectuur, ingevuld met referentiecomponenten. Het platform komt voort uit de samenwerking tussen de gemeenten, leveranciers en Dimpact.\n\nVoor meer informatie raadpleeg de website op gitbook."
+    },
+    {
+      "term": "Podium D",
+      "guid": "2329a9e8-6a44-460d-8033-2ae9d223ba46",
+      "url": "https://commonground.nl/term/view/2329a9e8-6a44-460d-8033-2ae9d223ba46/podium-d",
+      "beschrijving": "PodiumD is een open source dienstverleningsplatform waarmee gemeenten vragen, aanvragen en zaken van inwoners en ondernemers kunnen afhandelen. Op PodiumD werken verschillende producten volledig geïntegreerd samen, zodat inwoners en ondernemers een naadloze klantreis ervaren bij hun gemeente.\n\nPodiumD zorgt dat de (aan)vraag van de inwoner “reist” en niet de inwoner zelf. Het platform bestaat uit verschillende producten, die onderling samenwerken. Zo zorgt jouw gemeente ervoor dat de klantreis van inwoners en ondernemers zo soepel mogelijk verloopt. Ook contact, samenwerking en interactie zijn mogelijk.\n\nvoor meer informatie raadpleeg de website van Dimpact."
+    },
+    {
+      "term": "Proces",
+      "guid": "eecbd9bc-050a-42f4-a79a-408cf00b18c4",
+      "url": "https://commonground.nl/term/view/eecbd9bc-050a-42f4-a79a-408cf00b18c4/proces",
+      "beschrijving": "Binnen Common Ground is een proces een samenhangende reeks activiteiten en beslissingen die leidt tot een resultaat voor een burger, organisatie of medewerker. In traditionele systemen waren processen vaak sterk verweven met de applicatie en de onderliggende gegevensopslag. In de Common Ground-architectuur worden proceslogica en gegevensopslag van elkaar gescheiden. Processen sturen de interactie met gegevens aan via gestandaardiseerde API's, terwijl gegevens bij de bron blijven. Hierdoor kunnen processen flexibeler worden ingericht, beter worden aangepast aan nieuwe wetgeving of beleid en onafhankelijker functioneren van specifieke softwaresystemen."
+    },
+    {
+      "term": "Procesactiviteit",
+      "guid": "b8a50b37-71a2-410b-907d-a3be59631f88",
+      "url": "https://commonground.nl/term/view/b8a50b37-71a2-410b-907d-a3be59631f88/procesactiviteit",
+      "beschrijving": "Een procesactiviteit is een afzonderlijke stap binnen een proces die een specifieke taak uitvoert en bijdraagt aan het eindresultaat van het proces. In traditionele systemen waren deze stappen vaak vast ingebouwd in applicaties. In moderne architecturen worden procesactiviteiten losgekoppeld van de onderliggende gegevensopslag en applicaties. Hierdoor kunnen activiteiten als zelfstandige onderdelen worden ingericht die via gestandaardiseerde koppelvlakken gegevens bij de bron opvragen of wijzigen. Deze modulaire opzet maakt het mogelijk om processen eenvoudiger aan te passen wanneer wetgeving, beleid of werkwijzen veranderen."
+    },
+    {
+      "term": "Procesbouwblok",
+      "guid": "317fea53-9c33-4a8c-aff8-7b9a060ac37b",
+      "url": "https://commonground.nl/term/view/317fea53-9c33-4a8c-aff8-7b9a060ac37b/procesbouwblok",
+      "beschrijving": "Een procesbouwblok is een gestandaardiseerde en herbruikbare eenheid die een specifieke functie of stap binnen een proces ondersteunt. In moderne overheidsarchitecturen worden procesbouwblokken losgekoppeld van specifieke applicaties, zodat ze in verschillende processen en ketens kunnen worden hergebruikt. Door processen op te bouwen uit dergelijke modulaire onderdelen hoeft functionaliteit niet telkens opnieuw te worden ontwikkeld. Dit bevordert uniformiteit in de uitvoering van processen en maakt het eenvoudiger om processen aan te passen wanneer wetgeving, beleid of werkwijzen veranderen. Procesbouwblokken vormen daarmee een schakel tussen de organisatorische procesinrichting en de technische implementatie via gestandaardiseerde koppelvlakken."
+    },
+    {
+      "term": "Procesflow / Flow",
+      "guid": "8b09b644-ca98-4cbc-b0e3-c0bed6752600",
+      "url": "https://commonground.nl/term/view/8b09b644-ca98-4cbc-b0e3-c0bed6752600/procesflow-flow",
+      "beschrijving": "Een procesflow beschrijft de opeenvolging van processtappen, beslismomenten en gegevensuitwisselingen binnen een gemeentelijke dienst. In de Common Ground-architectuur wordt proceslogica losgekoppeld van dataopslag. Processen sturen de interactie met gegevens aan via gestandaardiseerde koppelvlakken, terwijl gegevens bij de bron blijven. Hierdoor kan het worden opgebouwd uit herbruikbare componenten. Door de flows te standaardiseren en los te koppelen van gegevensopslag, kunnen gemeenten diensten eenvoudiger aanpassen aan nieuwe wetgeving of veranderende behoeften van inwoners en bedrijven."
+    },
+    {
+      "term": "Proceslogica",
+      "guid": "b34be1eb-ac77-4ba7-aa9d-b423017816de",
+      "url": "https://commonground.nl/term/view/b34be1eb-ac77-4ba7-aa9d-b423017816de/proceslogica",
+      "beschrijving": "Proceslogica beschrijft hoe een proces wordt uitgevoerd, welke stappen worden doorlopen en op basis van welke regels beslissingen worden genomen. Het bepaalt de volgorde van activiteiten, de verwerking van gegevens en de afhandeling van verschillende scenario’s binnen een proces"
+    },
+    {
+      "term": "Productieomgeving",
+      "guid": "6b1132f9-37b8-4742-8ee9-a20387aaf456",
+      "url": "https://commonground.nl/term/view/6b1132f9-37b8-4742-8ee9-a20387aaf456/productieomgeving",
+      "beschrijving": "De operationele omgeving waarin software daadwerkelijk door eindgebruikers wordt gebruikt.\n\nOTAP-Omgevingen\nOntwikkel-, test-, acceptatie- en productieomgeving \n\nOverige omgevingen\nSandbox-, demo-, referentie-, validatie- en blauwdrukomgeving"
+    },
+    {
+      "term": "RBAC",
+      "guid": "c6779173-47f5-4b54-8e8e-2c6085d3cd47",
+      "url": "https://commonground.nl/term/view/c6779173-47f5-4b54-8e8e-2c6085d3cd47/rbac",
+      "beschrijving": "Role-Based Access Control is een autorisatiemodel waarbij gebruikers of systemen één of meerdere rollen krijgen toegewezen. Elke rol bevat een set van rechten die bepalen welke acties mogen worden uitgevoerd en tot welke gegevens toegang is toegestaan. Hierdoor wordt beheer eenvoudiger en consistent doordat rechten niet per individu, maar per rol worden ingericht.\n\nzie ook ABAC, PBAC"
+    },
+    {
+      "term": "Referentieomgeving",
+      "guid": "6b192fd7-2190-4be0-821a-607170ecb05f",
+      "url": "https://commonground.nl/term/view/6b192fd7-2190-4be0-821a-607170ecb05f/referentieomgeving",
+      "beschrijving": "Een voorbeeldmatig ingerichte niet-productieve omgeving die laat zien hoe de voorziening technisch en functioneel kan worden toegepast.\n\nOTAP-Omgevingen\nOntwikkel-, test-, acceptatie- en productieomgeving  \n\nOverige omgevingen\nSandbox-, demo-, validatie-en blauwdrukomgeving"
+    },
+    {
+      "term": "Register",
+      "guid": "3c2a4f13-9c05-4abb-94da-4ab6a638c3f9",
+      "url": "https://commonground.nl/term/view/3c2a4f13-9c05-4abb-94da-4ab6a638c3f9/register",
+      "beschrijving": "Een ten behoeve van registratie van gegevens ingericht digitaal opslagsysteem, dat voldoet aan de voor een register geldende veiligheids-, integriteits- en juistheids-eisen."
+    },
+    {
+      "term": "Release",
+      "guid": "3089a7e7-54b6-485f-9257-e96089bb3610",
+      "url": "https://commonground.nl/term/view/3089a7e7-54b6-485f-9257-e96089bb3610/release",
+      "beschrijving": ""
+    },
+    {
+      "term": "SaaS",
+      "guid": "f60e9f6e-eef8-4737-ad77-1e192c39fca2",
+      "url": "https://commonground.nl/term/view/f60e9f6e-eef8-4737-ad77-1e192c39fca2/saas",
+      "beschrijving": "Bij Software as a Service beheert de aanbieder de volledige oplossing, inclusief infrastructuur, platform en applicatie. De gebruiker gebruikt de software zonder installatie of technisch beheer.\n\nzie ook PaaS, IaaS"
+    },
+    {
+      "term": "Samenwerkende catalogi",
+      "guid": "8051a8c5-0851-4217-b318-669dd717b33b",
+      "url": "https://commonground.nl/term/view/8051a8c5-0851-4217-b318-669dd717b33b/samenwerkende-catalogi",
+      "beschrijving": "Samenwerkende catalogi maken het mogelijk dat meerdere organisaties hun producten- en dienstinformatie op elkaar afstemmen en delen. Door gebruik te maken van gezamenlijke standaarden, zoals de UPL, kunnen catalogi onderling gegevens uitwisselen en hergebruiken. Hierdoor ontstaat één samenhangend geheel van dienstverlening, ook wanneer meerdere partijen betrokken zijn.\n\nzie ook PDC"
+    },
+    {
+      "term": "Sandboxomgeving",
+      "guid": "d30c3031-66cb-4e22-86ba-9a6e6097ea09",
+      "url": "https://commonground.nl/term/view/d30c3031-66cb-4e22-86ba-9a6e6097ea09/sandboxomgeving",
+      "beschrijving": "Een tijdelijke afgeschermde niet-productieve omgeving waarin vrij geëxperimenteerd kan worden met componenten of configuraties.\n\nOTAP-Omgevingen\nOntwikkel-, test-, acceptatie- en productieomgeving  \n\nOverige omgevingen\nDemo-, referentie-, validatie- en blauwdrukomgeving"
+    },
+    {
+      "term": "SDG",
+      "guid": "5c2f7d0d-6e9d-475e-a7ea-a52b2888afd5",
+      "url": "https://commonground.nl/term/view/5c2f7d0d-6e9d-475e-a7ea-a52b2888afd5/sdg",
+      "beschrijving": "De Single Digital Gateway stelt eisen aan overheden binnen de Europese Unie om belangrijke diensten en informatie online beschikbaar te stellen via één toegangspunt. Dit omvat onder andere het digitaal kunnen afhandelen van procedures en het aanbieden van informatie in meerdere talen.\n\nDe SDG verplicht lidstaten om hun dienstverlening zo in te richten dat deze ook bruikbaar is voor burgers en bedrijven uit andere EU-landen. Dit vraagt om standaardisatie, herbruikbare gegevens en interoperabiliteit tussen systemen.\n\nzie ook CPSV, Samenwerkende Catalogi en UPL"
+    },
+    {
+      "term": "Standaard",
+      "guid": "88e43288-eeb2-42cd-b46f-c60e04a3e8b0",
+      "url": "https://commonground.nl/term/view/88e43288-eeb2-42cd-b46f-c60e04a3e8b0/standaard",
+      "beschrijving": "Een document dat een set van regels bevat die beschrijven hoe mensen materialen, producten, diensten, technologieën, taken, processen en systemen dienen te ontwikkelen en beheren."
+    },
+    {
+      "term": "Standaardisatie",
+      "guid": "e8da5243-ff7f-4708-8bb0-ad445eaa14bf",
+      "url": "https://commonground.nl/term/view/e8da5243-ff7f-4708-8bb0-ad445eaa14bf/standaardisatie",
+      "beschrijving": "Standaardisatie zorgt ervoor dat verschillende partijen dezelfde standaarden gebruiken. Dit maakt samenwerking eenvoudiger, bevordert hergebruik en minimaliseert maatwerk. Binnen de overheid speelt standaardisatie een belangrijke rol in interoperabiliteit en gegevensuitwisseling"
+    },
+    {
+      "term": "Stub",
+      "guid": "7419e96f-3fef-44fd-8ac4-cc5899e54123",
+      "url": "https://commonground.nl/term/view/7419e96f-3fef-44fd-8ac4-cc5899e54123/stub",
+      "beschrijving": "Stub\nEen gesimuleerde versie van een service die een bron (zoals de BRP) vervangt door vooraf gedefinieerde antwoorden terug te geven, zonder werkelijke dataverbinding.\n\nZe worden vooral gebruikt om te testen of een systeem ontvangen gegevens correct verwerkt. Denk aan het vullen van formulieren of het verwerken van responses in de eigen applicatie. Tijdens het testen kan een stub bijvoorbeeld een vast burgerobject teruggeven, zodat gecontroleerd kan worden of de applicatie deze gegevens op de juiste manier gebruikt.\n\nzie ook mock"
+    },
+    {
+      "term": "Superset",
+      "guid": "eb01b01d-8653-45da-8fd1-0421eb95419e",
+      "url": "https://commonground.nl/term/view/eb01b01d-8653-45da-8fd1-0421eb95419e/superset",
+      "beschrijving": ""
+    },
+    {
+      "term": "Testomgeving",
+      "guid": "76b882b3-bfcd-41a8-9450-2682843b35e6",
+      "url": "https://commonground.nl/term/view/76b882b3-bfcd-41a8-9450-2682843b35e6/testomgeving",
+      "beschrijving": "Een niet-productieve omgeving waarin wordt gecontroleerd of componenten en koppelingen technisch correct samenwerken.\n\nOTAP-Omgevingen\nOntwikkel-, test-, acceptatie- en productieomgeving \n\nOverige omgevingen\nSandbox-, demo-, referentie-, validatie- en blauwdrukomgeving"
+    },
+    {
+      "term": "Tijdreizen",
+      "guid": "4e97601d-8057-4364-a29c-5db913ffc727",
+      "url": "https://commonground.nl/term/view/4e97601d-8057-4364-a29c-5db913ffc727/tijdreizen",
+      "beschrijving": "De capabiliteit van een register om opvragingen te doen over wat de toestand van het register eerder in de tijd was.\n\nDat kan over zowel de materiële en formele tijdslijn heen."
+    },
+    {
+      "term": "Transitie",
+      "guid": "ce819700-c2c2-4a49-ab18-f6712da96b47",
+      "url": "https://commonground.nl/term/view/ce819700-c2c2-4a49-ab18-f6712da96b47/transitie",
+      "beschrijving": "Omvat techniek, processen, organisatie en beheer."
+    },
+    {
+      "term": "Uit betrouwbare bron",
+      "guid": "f082605b-5511-4636-ad09-737e5cda2952",
+      "url": "https://commonground.nl/term/view/f082605b-5511-4636-ad09-737e5cda2952/uit-betrouwbare-bron",
+      "beschrijving": "Een werkgroep van BZK en KCA over betrouwbare registers.\n\nZie www.uitbetrouwbarebron.nl"
+    },
+    {
+      "term": "UPL",
+      "guid": "6abfadd0-256c-4a3e-b07c-0fb2391594b5",
+      "url": "https://commonground.nl/term/view/6abfadd0-256c-4a3e-b07c-0fb2391594b5/upl",
+      "beschrijving": "De Unified Product List is een landelijke standaard die gemeenten helpt om producten en diensten op een uniforme manier te benoemen en te structureren. Door gebruik te maken van een gezamenlijke lijst wordt het eenvoudiger om informatie uit te wisselen, te vergelijken en te hergebruiken in verschillende systemen, zoals websites, formulieren en klantcontactsystemen.\n\nDe UPL vormt vaak de basis voor de inrichting van een Producten- en DienstenCatalogus en ondersteunt consistente dienstverlening richting inwoners en bedrijven.\n\nzie ook Samenwerkende Catalogi"
+    },
+    {
+      "term": "Validatiecriteria",
+      "guid": "ade87124-93d4-4023-a7b2-43f18f9c1369",
+      "url": "https://commonground.nl/term/view/ade87124-93d4-4023-a7b2-43f18f9c1369/validatiecriteria",
+      "beschrijving": "Validatiecriteria vormen de set van eisen waaraan software moet voldoen om aan te tonen dat deze correct en conform de gemaakte afspraken functioneert binnen de basisset. Deze criteria richten zich op het gedrag van de applicatie in interactie met andere componenten en voorzieningen. Ze omvatten onder meer controles op correcte implementatie van API’s, naleving van beveiligingsvereisten en het juist verwerken van gegevens en foutafhandeling.\n\nzie ook aansluitcriteria en opnamecriteria"
+    },
+    {
+      "term": "Validatieomgeving (staging)",
+      "guid": "85904080-9ecf-439b-8d4c-67126a631ed4",
+      "url": "https://commonground.nl/term/view/85904080-9ecf-439b-8d4c-67126a631ed4/validatieomgeving-staging",
+      "beschrijving": "Een voorbeeldmatig ingerichte omgeving die laat zien hoe de voorziening en basisset kunnen worden ingericht.\n\nOTAP-Omgevingen\nOntwikkel-, test-, acceptatie- en productieomgeving  \n\nOverige omgevingen\nSandbox-, demo-, referentie- en blauwdrukomgeving"
+    },
+    {
+      "term": "Versiebeheer",
+      "guid": "79ae7510-709c-4edf-87a6-3b946abf82c3",
+      "url": "https://commonground.nl/term/view/79ae7510-709c-4edf-87a6-3b946abf82c3/versiebeheer",
+      "beschrijving": "Het systematisch registreren en beheren van wijzigingen in componenten, configuraties en interfaces."
+    },
+    {
+      "term": "Voorziening",
+      "guid": "10b09f9a-d27f-42f7-bae0-0c4e1a75b876",
+      "url": "https://commonground.nl/term/view/10b09f9a-d27f-42f7-bae0-0c4e1a75b876/voorziening",
+      "beschrijving": "De Common Ground voorziening is een digitale dienst die de interactie tussen overheid, burgers en bedrijven ondersteunt. Het gaat niet om een losse applicatie, maar om een samenhang van technologie, processen, beheer en afspraken. Binnen de architectuur van de digitale overheid wordt een voorziening doorgaans aangeboden als een SaaS-dienst die via gestandaardiseerde koppelvlakken kan worden gebruikt door meerdere organisaties. Een voorziening levert specifieke functionaliteit die generiek inzetbaar is voor verschillende processen. Door governance, beheer en doorontwikkeling structureel te organiseren, blijft de continuïteit en kwaliteit van de publieke dienstverlening gewaarborgd. De basisset maakt onderdeel uit van de voorziening."
+    },
+    {
+      "term": "Your Europe portal",
+      "guid": "e00dc8b4-0c78-407d-9b08-52e7000533e4",
+      "url": "https://commonground.nl/term/view/e00dc8b4-0c78-407d-9b08-52e7000533e4/your-europe-portal",
+      "beschrijving": "Your Europe is een initiatief van de Europese Unie dat als centraal toegangspunt dient voor informatie over wonen, werken, studeren en ondernemen in andere EU-landen. Het portaal bundelt informatie van nationale overheden en verwijst naar relevante procedures en diensten.\n\nBinnen de context van digitale dienstverlening en Common Ground speelt Your Europe een rol in het ontsluiten van overheidsinformatie volgens Europese standaarden, zoals de Single Digital Gateway-verordening (SDG)\n\nzie ook MijnOverheid"
+    }
+  ]
+}

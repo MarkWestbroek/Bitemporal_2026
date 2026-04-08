@@ -628,6 +628,7 @@ function verzamelUseEdges(bronNodeId, edges) {
       e.data?.isDependency === true &&
       e.source === bronNodeId
   );
+  const seen = new Set();
   const useEdges = depEdges
     .filter((e) => e.sourceHandle || e.targetHandle || e.hidden)
     .map((e) => {
@@ -641,6 +642,12 @@ function verzamelUseEdges(bronNodeId, edges) {
         targetHandle: e.targetHandle || undefined,
         hidden: e.hidden || undefined,
       };
+    })
+    .filter((ue) => {
+      const key = JSON.stringify(ue);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
     });
   return useEdges.length > 0 ? useEdges : undefined;
 }
@@ -705,7 +712,9 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
 
     const gegevenselementen = geEdges.map((e) => {
       const geNode = geNodesById[e.target];
-      const geNaam = geNaamVanTypenaam(ent.data.typenaam, geNode.data.typenaam);
+      // Primair: afleiden uit typenaam; fallback naar klassenaam zodat nieuw-aangemaakte GE's
+      // die nog geen typenaam hebben, maar wel een klassenaam, correct geëxporteerd worden.
+      const geNaam = geNaamVanTypenaam(ent.data.typenaam, geNode.data.typenaam) || geNode.data.klassenaam || "";
       return {
         naam: geNaam,
         description: geNode.data.description || undefined,

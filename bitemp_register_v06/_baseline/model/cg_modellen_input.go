@@ -3,20 +3,20 @@ package model
 // _Input structs: platte API-input die hub + data combineert.
 // Gegenereerd door cmd/codegen — niet handmatig bewerken.
 
-type Naam_Input struct {
+type ApiStandaard_Naam_Input struct {
 	APISTANDAARD_ID int    `json:"apistandaard_id"`
 	Rel_ID          int    `json:"rel_id"`
 	Naam            string `json:"naam"`
 }
 
-type DomeinGegevens_Input struct {
+type Domein_DomeinGegevens_Input struct {
 	DOMEIN_ID    int    `json:"domein_id"`
 	Rel_ID       int    `json:"rel_id"`
 	Naam         string `json:"naam"`
 	Omschrijving string `json:"omschrijving"`
 }
 
-type GemeenteGegevens_Input struct {
+type Gemeente_GemeenteGegevens_Input struct {
 	GEMEENTE_ID int    `json:"gemeente_id"`
 	Rel_ID      int    `json:"rel_id"`
 	Naam        string `json:"naam"`
@@ -75,6 +75,12 @@ type Initiatief_AndereAPIStandaard_Input struct {
 	INITIATIEF_ID int     `json:"initiatief_id"`
 	Rel_ID        int     `json:"rel_id"`
 	ApiStandaard  *string `json:"api_standaard,omitempty"`
+}
+
+type Initiatief_Initiatiefinfo_Input struct {
+	INITIATIEF_ID int    `json:"initiatief_id"`
+	Rel_ID        int    `json:"rel_id"`
+	Informatie    string `json:"informatie"`
 }
 
 type InitiatiefGemeente_Input struct {

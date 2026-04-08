@@ -237,3 +237,42 @@ test('verborgen «use» edges worden bewaard in V3 roundtrip', () => {
   assert.ok(statusEdge, 'edge bestaat na import');
   assert.equal(statusEdge.hidden, true, 'edge moet verborgen zijn');
 });
+
+test('datatype met foutieve enum-verwijzing maakt geen wees-lijntje', () => {
+  const v3 = {
+    versie: 'v3',
+    naam: 'orphan-edge-regression',
+    datatypes: [
+      { naam: 'Datum', basistype: 'string', format: 'date' },
+    ],
+    enums: [
+      { goType: 'Fase', waarden: [{ waarde: 'Idee' }] },
+    ],
+    entiteiten: [
+      {
+        typenaam: 'Initiatief',
+        meervoud: 'initiatieven',
+        gegevenselementen: [
+          {
+            naam: 'Planning',
+            meervoud: 'planningen',
+            momentvoorkomen: 'enkelvoudig',
+            velden: [
+              { naam: 'startdatum', goType: 'Datum', enum: 'Datum', datatype: 'Datum' },
+              { naam: 'fase', goType: 'Fase', enum: 'Fase' },
+            ],
+          },
+        ],
+        relaties: [],
+      },
+    ],
+  };
+
+  const hersteld = v3ModelNaarEditor(v3);
+  const depEdges = hersteld.edges.filter((e) => e.source === 'Initiatief_Planning' && e.data?.isDependency);
+
+  assert.equal(depEdges.length, 2, 'alleen Datum-datatype en Fase-enum mogen een edge maken');
+  assert.ok(depEdges.some((e) => e.target === 'dt_Datum'), 'datatype-edge naar dt_Datum moet bestaan');
+  assert.ok(depEdges.some((e) => e.target === 'enum_Fase'), 'enum-edge naar enum_Fase moet bestaan');
+  assert.equal(depEdges.some((e) => e.target === 'enum_Datum'), false, 'er mag geen wees-lijntje naar enum_Datum ontstaan');
+});

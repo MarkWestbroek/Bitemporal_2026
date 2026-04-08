@@ -330,6 +330,19 @@ Go types worden automatisch gemapt naar editor-veldtypen:
 
 De "V3 Model laden"-knop in de header bar fetcht standaard van `/api/schema/model/code` en converteert automatisch. Daarmee laad je expliciet de actuele code-toestand, niet de actieve schema-versie uit de database. In de toolbar is nu ook een aparte knop **"Opslaan (V3 JSON)"** toegevoegd: die exporteert een codegen-ready V3 modelbestand zonder `flowState`.
 
+#### Klassenaam → typenaam afleiding bij GE/relatie
+
+Bij het bewerken van een GE of relatie werkt de naam-synchronisatie als volgt:
+
+- **Klassenaam** (korte naam, bijv. "Naam"): zichtbaar in "Naam (klassenaam)" veld
+- **Typenaam** (volledig, bijv. "ApiStandaard_Naam"): prefix = parent-entiteit
+
+Wanneer de gebruiker de klassenaam wijzigt:
+1. Als typenaam al een waarde had die eindigt op de oude klassenaam → suffix wordt vervangen
+2. Als typenaam **leeg** was → typenaam wordt automatisch afgeleid uit `parentEntiteit_klassenaam` (bijv. "ApiStandaard" + "_" + "Naam" → "ApiStandaard_Naam")
+
+De V3 export (`editorNaarV3Model`) schrijft het `naam`-veld af uit de typenaam (prefix strippen), met fallback naar klassenaam als typenaam leeg mocht zijn.
+
 Voor model-edges bewaart de V3 export ook editor-metadata voor stabiele round-trips: `id` voor edges `entiteit → gegevenselement` en `entiteit → relatie`, `doelId` voor de edge `relatie → doelentiteit`, plus de bestaande handle-velden. Bij import worden die ids hergebruikt als ze aanwezig zijn; oudere V3-bestanden zonder deze velden vallen automatisch terug op deterministische ids.
 
 ---

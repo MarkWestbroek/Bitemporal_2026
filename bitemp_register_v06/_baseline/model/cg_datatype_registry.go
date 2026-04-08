@@ -11,7 +11,7 @@ func initCgDatatypeRegistry() {
 			Basistype:   "string",
 			Format:      "date",
 			Domein:      "CG",
-			Positie:     &V3Positie{X: 225, Y: -1875},
+			Positie:     &V3Positie{X: 135, Y: -1680},
 			Validatie:   &V3Validatie{},
 			Weergave:    &V3Weergave{},
 		},

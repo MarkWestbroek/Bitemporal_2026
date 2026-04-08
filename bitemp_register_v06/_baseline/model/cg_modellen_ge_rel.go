@@ -12,10 +12,18 @@ import (
 type Fase string
 
 const (
-	FaseIdee       Fase = "Idee"
-	FaseVerkenning Fase = "Verkenning"
-	FaseRealisatie Fase = "Realisatie"
-	FaseInGebruik  Fase = "InGebruik"
+	FaseIdeenoggeenconcreteopbrengsten                           Fase = "Idee (nog geen concrete opbrengsten)"
+	FaseInitiatiealeensnellePOC                                  Fase = "Initiatie (al een snelle POC)"
+	FaseRealisatiegaatbinnenkortdraaienbijeerstegemeenten        Fase = "Realisatie (gaat binnenkort draaien bij eerste gemeenten)"
+	FaseOpschalingdraaitbijenkelegemeentennuopzoeknaarverbreding Fase = "Opschaling (draait bij enkele gemeenten, nu op zoek naar verbreding)"
+	FaseDoorontwikkelingenbeheerstabielonderdeelgevestigdeorde   Fase = "Doorontwikkeling en beheer (stabiel, onderdeel gevestigde orde)"
+)
+
+type Producttype string
+
+const (
+	ProducttypeComponent  Producttype = "Component"
+	ProducttypeToepassing Producttype = "Toepassing"
 )
 
 type CGLaag string
@@ -27,13 +35,6 @@ const (
 	CGLaagLaag2                   CGLaag = "Laag 2"
 	CGLaagLaag1                   CGLaag = "Laag 1"
 	CGLaagHostingeninfrastructuur CGLaag = "Hosting en infrastructuur"
-)
-
-type Producttype string
-
-const (
-	ProducttypeComponent  Producttype = "Component"
-	ProducttypeToepassing Producttype = "Toepassing"
 )
 
 type Bijdragetype string
@@ -67,19 +68,19 @@ const (
 	OrganisatierolBetrokkenOrganisatie Organisatierol = "BetrokkenOrganisatie"
 )
 
-type Naam struct {
-	bun.BaseModel      `bun:"table:naam,alias:naam"`
-	ApiStandaard_ID    int           `json:"apistandaard_id" bun:"apistandaard_id,pk" schema_desc:"ID van de ApiStandaard-entiteit"`
-	Rel_ID             int           `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentApiStandaard *ApiStandaard `json:"-" bun:"rel:belongs-to,join:apistandaard_id=id,on_delete:cascade"`
-	Opvoer             *time.Time    `json:"opvoer,omitempty"`
-	Afvoer             *time.Time    `json:"afvoer,omitempty"`
-	Data               []Naam_Data   `bun:"rel:has-many,join:apistandaard_id=apistandaard_id,join:rel_id=rel_id" json:"data,omitempty"`
+type ApiStandaard_Naam struct {
+	bun.BaseModel      `bun:"table:apistandaard_naam,alias:apistandaard_naam"`
+	ApiStandaard_ID    int                      `json:"apistandaard_id" bun:"apistandaard_id,pk" schema_desc:"ID van de ApiStandaard-entiteit"`
+	Rel_ID             int                      `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentApiStandaard *ApiStandaard            `json:"-" bun:"rel:belongs-to,join:apistandaard_id=id,on_delete:cascade"`
+	Opvoer             *time.Time               `json:"opvoer,omitempty"`
+	Afvoer             *time.Time               `json:"afvoer,omitempty"`
+	Data               []ApiStandaard_Naam_Data `bun:"rel:has-many,join:apistandaard_id=apistandaard_id,join:rel_id=rel_id" json:"data,omitempty"`
 }
 
-// Naam_Data — geversioned inhoud van Naam.
-type Naam_Data struct {
-	bun.BaseModel   `bun:"table:naam_data,alias:naam_data"`
+// ApiStandaard_Naam_Data — geversioned inhoud van ApiStandaard_Naam.
+type ApiStandaard_Naam_Data struct {
+	bun.BaseModel   `bun:"table:apistandaard_naam_data,alias:apistandaard_naam_data"`
 	ApiStandaard_ID int        `json:"apistandaard_id" bun:"apistandaard_id,pk"`
 	Rel_ID          int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie          int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
@@ -88,20 +89,20 @@ type Naam_Data struct {
 	Afvoer          *time.Time `json:"afvoer,omitempty"`
 }
 
-// DomeinGegevens — Basisgegevens van een domein.
-type DomeinGegevens struct {
-	bun.BaseModel `bun:"table:domeingegevens,alias:domeingegevens"`
-	Domein_ID     int                   `json:"domein_id" bun:"domein_id,pk" schema_desc:"ID van de Domein-entiteit"`
-	Rel_ID        int                   `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentDomein  *Domein               `json:"-" bun:"rel:belongs-to,join:domein_id=id,on_delete:cascade"`
-	Opvoer        *time.Time            `json:"opvoer,omitempty"`
-	Afvoer        *time.Time            `json:"afvoer,omitempty"`
-	Data          []DomeinGegevens_Data `bun:"rel:has-many,join:domein_id=domein_id,join:rel_id=rel_id" json:"data,omitempty"`
+// Domein_DomeinGegevens — Basisgegevens van een domein.
+type Domein_DomeinGegevens struct {
+	bun.BaseModel `bun:"table:domein_domeingegevens,alias:domein_domeingegevens"`
+	Domein_ID     int                          `json:"domein_id" bun:"domein_id,pk" schema_desc:"ID van de Domein-entiteit"`
+	Rel_ID        int                          `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentDomein  *Domein                      `json:"-" bun:"rel:belongs-to,join:domein_id=id,on_delete:cascade"`
+	Opvoer        *time.Time                   `json:"opvoer,omitempty"`
+	Afvoer        *time.Time                   `json:"afvoer,omitempty"`
+	Data          []Domein_DomeinGegevens_Data `bun:"rel:has-many,join:domein_id=domein_id,join:rel_id=rel_id" json:"data,omitempty"`
 }
 
-// DomeinGegevens_Data — geversioned inhoud van DomeinGegevens.
-type DomeinGegevens_Data struct {
-	bun.BaseModel `bun:"table:domeingegevens_data,alias:domeingegevens_data"`
+// Domein_DomeinGegevens_Data — geversioned inhoud van Domein_DomeinGegevens.
+type Domein_DomeinGegevens_Data struct {
+	bun.BaseModel `bun:"table:domein_domeingegevens_data,alias:domein_domeingegevens_data"`
 	Domein_ID     int        `json:"domein_id" bun:"domein_id,pk"`
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
@@ -111,20 +112,20 @@ type DomeinGegevens_Data struct {
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
 
-// GemeenteGegevens — Basisgegevens van een gemeente.
-type GemeenteGegevens struct {
-	bun.BaseModel  `bun:"table:gemeentegegevens,alias:gemeentegegevens"`
-	Gemeente_ID    int                     `json:"gemeente_id" bun:"gemeente_id,pk" schema_desc:"ID van de Gemeente-entiteit"`
-	Rel_ID         int                     `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentGemeente *Gemeente               `json:"-" bun:"rel:belongs-to,join:gemeente_id=id,on_delete:cascade"`
-	Opvoer         *time.Time              `json:"opvoer,omitempty"`
-	Afvoer         *time.Time              `json:"afvoer,omitempty"`
-	Data           []GemeenteGegevens_Data `bun:"rel:has-many,join:gemeente_id=gemeente_id,join:rel_id=rel_id" json:"data,omitempty"`
+// Gemeente_GemeenteGegevens — Basisgegevens van een gemeente.
+type Gemeente_GemeenteGegevens struct {
+	bun.BaseModel  `bun:"table:gemeente_gemeentegegevens,alias:gemeente_gemeentegegevens"`
+	Gemeente_ID    int                              `json:"gemeente_id" bun:"gemeente_id,pk" schema_desc:"ID van de Gemeente-entiteit"`
+	Rel_ID         int                              `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentGemeente *Gemeente                        `json:"-" bun:"rel:belongs-to,join:gemeente_id=id,on_delete:cascade"`
+	Opvoer         *time.Time                       `json:"opvoer,omitempty"`
+	Afvoer         *time.Time                       `json:"afvoer,omitempty"`
+	Data           []Gemeente_GemeenteGegevens_Data `bun:"rel:has-many,join:gemeente_id=gemeente_id,join:rel_id=rel_id" json:"data,omitempty"`
 }
 
-// GemeenteGegevens_Data — geversioned inhoud van GemeenteGegevens.
-type GemeenteGegevens_Data struct {
-	bun.BaseModel `bun:"table:gemeentegegevens_data,alias:gemeentegegevens_data"`
+// Gemeente_GemeenteGegevens_Data — geversioned inhoud van Gemeente_GemeenteGegevens.
+type Gemeente_GemeenteGegevens_Data struct {
+	bun.BaseModel `bun:"table:gemeente_gemeentegegevens_data,alias:gemeente_gemeentegegevens_data"`
 	Gemeente_ID   int        `json:"gemeente_id" bun:"gemeente_id,pk"`
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
@@ -343,6 +344,27 @@ type Initiatief_AndereAPIStandaard_Data struct {
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	ApiStandaard  *string    `json:"api_standaard,omitempty"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+type Initiatief_Initiatiefinfo struct {
+	bun.BaseModel    `bun:"table:initiatief_initiatiefinfo,alias:initiatief_initiatiefinfo"`
+	Initiatief_ID    int                              `json:"initiatief_id" bun:"initiatief_id,pk" schema_desc:"ID van de Initiatief-entiteit"`
+	Rel_ID           int                              `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentInitiatief *Initiatief                      `json:"-" bun:"rel:belongs-to,join:initiatief_id=id,on_delete:cascade"`
+	Opvoer           *time.Time                       `json:"opvoer,omitempty"`
+	Afvoer           *time.Time                       `json:"afvoer,omitempty"`
+	Data             []Initiatief_Initiatiefinfo_Data `bun:"rel:has-many,join:initiatief_id=initiatief_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// Initiatief_Initiatiefinfo_Data — geversioned inhoud van Initiatief_Initiatiefinfo.
+type Initiatief_Initiatiefinfo_Data struct {
+	bun.BaseModel `bun:"table:initiatief_initiatiefinfo_data,alias:initiatief_initiatiefinfo_data"`
+	Initiatief_ID int        `json:"initiatief_id" bun:"initiatief_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Informatie    string     `json:"informatie"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }

@@ -1,7 +1,8 @@
 export default function ActionDialog({ dialog, onChange, onClose, onSubmit }) {
   if (!dialog) return null;
 
-  const { type, title, submitLabel, values = {} } = dialog;
+  const { type, title, submitLabel, values = {}, validationErrors = [], validationWarnings = [] } = dialog;
+  const hasErrors = validationErrors.length > 0;
 
   // Toggle een domein aan/uit in de beschikbareDomeinen lijst.
   const toggleDomein = (domeinNaam) => {
@@ -201,11 +202,33 @@ export default function ActionDialog({ dialog, onChange, onClose, onSubmit }) {
             </>
           )}
 
+          {/* ── Validatie-resultaten ── */}
+          {(hasErrors || validationWarnings.length > 0) && (
+            <div style={{ maxHeight: 200, overflowY: "auto" }}>
+              {hasErrors && (
+                <div className="editor-dialog-note" style={{ background: "#3a1a1a", borderColor: "#a33", color: "#ff8888" }}>
+                  <strong>❌ Validatiefouten ({validationErrors.length}):</strong>
+                  <ul style={{ margin: "4px 0 0", paddingLeft: 18, listStyle: "disc" }}>
+                    {validationErrors.map((err, i) => <li key={i}>{err}</li>)}
+                  </ul>
+                </div>
+              )}
+              {validationWarnings.length > 0 && (
+                <div className="editor-dialog-note" style={{ background: "#3a2a0a", borderColor: "#a93", color: "#ffcc44" }}>
+                  <strong>⚠️ Waarschuwingen ({validationWarnings.length}):</strong>
+                  <ul style={{ margin: "4px 0 0", paddingLeft: 18, listStyle: "disc" }}>
+                    {validationWarnings.map((w, i) => <li key={i}>{w}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="editor-dialog-actions">
             <button type="button" className="btn-toolbar load" onClick={onClose}>
               Annuleren
             </button>
-            <button type="submit" className="btn-toolbar publish">
+            <button type="submit" className="btn-toolbar publish" disabled={hasErrors} style={hasErrors ? { opacity: 0.4, cursor: "not-allowed" } : {}} title={hasErrors ? "Los eerst de validatiefouten op" : undefined}>
               {submitLabel}
             </button>
           </div>

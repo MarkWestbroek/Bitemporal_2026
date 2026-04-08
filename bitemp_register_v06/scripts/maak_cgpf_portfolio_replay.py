@@ -131,6 +131,64 @@ GEMEENTE_ALIASES = OrderedDict(
     }
 )
 
+ORG_ALIASES = OrderedDict(
+    {
+        "appsemble": "Appsemble B.V.",
+        "appsemble b.v.": "Appsemble B.V.",
+        "ase cloud services": "ASE Cloud Services",
+        "centric": "Centric",
+        "centric: jeroen van amersfoort": "Centric",
+        "conduction": "Conduction B.V.",
+        "conduction b.v.": "Conduction B.V.",
+        "conduction b.v": "Conduction B.V.",
+        "den haag": "Gemeente Den Haag",
+        "gemeente den haag": "Gemeente Den Haag",
+        "divault": "DiVault",
+        "gemeente nijmegen": "Gemeente Nijmegen",
+        "nijmegen": "Gemeente Nijmegen",
+        "icatt": "ICATT",
+        "mainfields": "MainFields",
+        "maykin": "Maykin Media",
+        "maykin media": "Maykin Media",
+        "owc": "OWC",
+        "pinkroccade": "PinkRoccade",
+        "pinkroccade mitek": "PinkRoccade",
+        "progresity": "Progresity",
+        "ritense": "Ritense",
+        "roxit": "Roxit",
+        "visma roxit": "Visma Roxit",
+        "vng": "VNG",
+        "vng realisatie": "VNG Realisatie",
+        "worth": "Worth Systems",
+        "worth systems": "Worth Systems",
+        "xxllnc": "Xxllnc",
+        "xxllnce": "Xxllnc",
+        "yard": "Yard Digital Agency",
+        "yard digital agency": "Yard Digital Agency",
+        "simgroep": "SIM Groep",
+        "sim groep": "SIM Groep",
+        "gemeentewinkel b.v.": "Gemeentewinkel B.V.",
+        "contezza": "Contezza",
+        "rx.mission": "Rx.Mission",
+        "truelime": "TrueLime",
+        "sudwest-fryslan": "Súdwest-Fryslân",
+        "súdwest-fryslân": "Súdwest-Fryslân",
+        "maikin contessa conduction meerdere": "Maykin Media",
+    }
+)
+
+ORG_SENTENCE_PATTERNS = [
+    r"^.{120,}$",
+    r"^(alle|die|we|het|geen|nog|voor|er|via|op|in|naar|uit|met|door|om|wordt|zie|voor|pas)\s",
+    r"\b(zouden|moeten|gaan|worden|hebben|kunnen|willen)\b",
+    r"^nog niks",
+    r"^tetst?$",
+    r"^piet$",
+    r"^xx?$",
+    r"^y$",
+    r"för närvarande",
+]
+
 DOMEIN_RULES = OrderedDict(
     {
         "Burgerzaken": [r"burgerzaken"],
@@ -331,6 +389,22 @@ def looks_like_name_token(token: str) -> bool:
         if part.lower() in allowed_lowercase:
             continue
         if not re.match(r"^[A-ZÀ-Ý'`][A-Za-zÀ-ÿ'`.-]*$", part):
+            return False
+    return True
+
+
+def is_org_like_token(token: str) -> bool:
+    """Bepaal of een token op een organisatienaam lijkt (minder strikt dan looks_like_name_token)."""
+    if not token or is_placeholder(token):
+        return False
+    if len(token) > 80:
+        return False
+    words = token.split()
+    if len(words) > 8:
+        return False
+    lowered = normalize_key(token)
+    for pattern in ORG_SENTENCE_PATTERNS:
+        if re.search(pattern, lowered, flags=re.IGNORECASE):
             return False
     return True
 
@@ -644,6 +718,59 @@ def match_gemeenten(raw_value: Any, role: str, seed_data: dict[str, Any]) -> tup
     return relaties, unique_preserve_order(overig)
 
 
+def normalize_org_token(token: str) -> str:
+    """Normaliseer een organisatietoken via ORG_ALIASES."""
+    key = normalize_key(token)
+    canonical = ORG_ALIASES.get(key)
+    if canonical:
+        return canonical
+    return clean_text(token)
+
+
+def match_organisaties(
+    contact_org_value: Any,
+    leveranciers_value: Any,
+    seed_data: dict[str, Any],
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Match organisaties uit de intake naar seeded orgs of overig tekst.
+
+    Returns: (matched_relaties, overig_tekst)
+        matched_relaties: [{"organisatie_id": int, "rol": str}, ...]
+        overig_tekst: [str, ...]
+    """
+    lookup = seed_data["organisaties_lookup"]
+    matched: list[dict[str, Any]] = []
+    seen_ids: set[int] = set()
+    overig: list[str] = []
+
+    # Contactorganisatie
+    contact = clean_text(contact_org_value)
+    if contact and not is_placeholder(contact):
+        normalized = normalize_org_token(contact)
+        org_id = find_reference_id(normalized, lookup, ORG_ALIASES)
+        if org_id is not None and org_id not in seen_ids:
+            matched.append({"organisatie_id": org_id, "rol": "Contactorganisatie"})
+            seen_ids.add(org_id)
+        elif not is_org_like_token(contact):
+            overig.append(f"Contact: {contact}")
+        else:
+            overig.append(f"Contact: {contact}")
+
+    # Leveranciers
+    for token in extract_named_items(leveranciers_value):
+        normalized = normalize_org_token(token)
+        org_id = find_reference_id(normalized, lookup, ORG_ALIASES)
+        if org_id is not None:
+            if org_id not in seen_ids:
+                matched.append({"organisatie_id": org_id, "rol": "BetrokkenOrganisatie"})
+                seen_ids.add(org_id)
+            continue
+        if not is_placeholder(token):
+            overig.append(f"Leverancier: {token}")
+
+    return matched, unique_preserve_order(overig)
+
+
 def collect_seed_data(rows: list[dict[str, Any]], source_path: Path | None = None) -> dict[str, Any]:
     gemeenten: list[str] = []
     domeinen: list[str] = []
@@ -660,14 +787,14 @@ def collect_seed_data(rows: list[dict[str, Any]], source_path: Path | None = Non
 
         contact_org = clean_text(row.get("contact_organisatie"))
         if contact_org and not is_placeholder(contact_org):
-            role = "Gemeente" if "gemeente" in normalize_key(contact_org) else ""
-            organisaties.setdefault(normalize_key(contact_org), {"naam": contact_org, "rol": role})
+            normalized = normalize_org_token(contact_org)
+            if is_org_like_token(normalized):
+                organisaties.setdefault(normalize_key(normalized), {"naam": normalized})
 
         for leverancier in extract_named_items(row.get("leveranciers")):
-            key = normalize_key(leverancier)
-            existing = organisaties.setdefault(key, {"naam": leverancier, "rol": "Leverancier"})
-            if not existing.get("rol"):
-                existing["rol"] = "Leverancier"
+            normalized = normalize_org_token(leverancier)
+            if is_org_like_token(normalized):
+                organisaties.setdefault(normalize_key(normalized), {"naam": normalized})
 
         po_naam = clean_text(row.get("po_naam"))
         po_email = clean_text(row.get("po_email"))
@@ -688,7 +815,7 @@ def collect_seed_data(rows: list[dict[str, Any]], source_path: Path | None = Non
     domeinen_map = externe_domeinen or build_reference_map(domeinen)
     api_standaarden_map = externe_api_standaarden or build_reference_map(api_standaarden)
 
-    return {
+    seed_result = {
         "gemeenten": gemeenten_map,
         "gemeenten_lookup": build_lookup(gemeenten_map),
         "gemeente_aliases": GEMEENTE_ALIASES,
@@ -725,6 +852,8 @@ def collect_seed_data(rows: list[dict[str, Any]], source_path: Path | None = Non
         },
         "contactpersoon_links": list(contactpersoon_links.values()),
     }
+    seed_result["organisaties_lookup"] = build_lookup(seed_result["organisaties"])
+    return seed_result
 
 
 def build_seed_entries(seed_data: dict[str, Any], start_time: datetime) -> list[dict[str, Any]]:
@@ -767,16 +896,8 @@ def build_seed_entries(seed_data: dict[str, Any], start_time: datetime) -> list[
 
     organisatie_changes: list[dict[str, Any]] = []
     for naam, organisatie_id in seed_data["organisaties"].items():
-        meta = seed_data["organisatie_meta"][naam]
         organisatie_changes.append(request_change("organisatie", {"id": organisatie_id}))
-        organisatie_changes.append(request_change("organisatienaam", {"organisatie_id": organisatie_id, "naam": meta["naam"]}))
-        if meta.get("rol"):
-            organisatie_changes.append(
-                request_change(
-                    "organisatierol",
-                    {"organisatie_id": organisatie_id, "type": meta["rol"]},
-                )
-            )
+        organisatie_changes.append(request_change("organisatienaam", {"organisatie_id": organisatie_id, "naam": naam}))
     if organisatie_changes:
         entries.append(request_entry(timestamp.isoformat().replace("+00:00", "Z"), "Seed organisaties uit portfolio intake", organisatie_changes))
         timestamp += timedelta(seconds=1)
@@ -975,6 +1096,31 @@ def build_initiatief_entries(rows: list[dict[str, Any]], seed_data: dict[str, An
                 )
             )
 
+        # Organisaties: match naar seeded orgs of dump naar OrganisatieInfo
+        matched_organisaties, overige_organisaties = match_organisaties(
+            row.get("contact_organisatie"),
+            row.get("leveranciers"),
+            seed_data,
+        )
+        for relatie in matched_organisaties:
+            wijzigingen.append(
+                request_change(
+                    "initiatieforganisatie",
+                    {
+                        "initiatief_id": initiatief_id,
+                        "organisatie_id": relatie["organisatie_id"],
+                        "rol": relatie["rol"],
+                    },
+                )
+            )
+        if overige_organisaties:
+            wijzigingen.append(
+                request_change(
+                    "organisatieinfo",
+                    {"initiatief_id": initiatief_id, "informatie": "; ".join(overige_organisaties)},
+                )
+            )
+
         entries.append(
             request_entry(
                 row_tijdstip,
@@ -1015,11 +1161,11 @@ def build_replay(source_rows: list[dict[str, Any]], schema_meta: dict[str, Any],
             "personen": len(seed_data["personen"]),
         },
         "known_gaps": [
-            "Initiatief heeft in cgpf 0.3.7/0.4.4 nog geen uitgewerkte relationele koppeling naar Organisatie voor alle betrokken organisaties; contactorganisaties en leveranciers worden daarom nog steeds als losse seed-entiteiten opgevoerd.",
             "De huidige MetaRegistry gebruikt dezelfde request-key 'contactgegevens' voor Organisatie_Contactgegevens en Persoon_Contactgegevens; deze generator laat die records daarom bewust weg uit het replay-bestand.",
             "Bronwaarden voor producttype, fase en CG-laag zijn rijker dan de huidige enums. De generator normaliseert die waarden en bewaart de ruwe bronwaarde in registratie.opmerking.",
             "Voor gemeente, domein en API-standaard geldt nu: match op de referentielijst => REL opvoeren; geen match => opslaan in het bijbehorende overig-GE (`anderdomein`, `andersdangemeente`, `andereapistandaard`).",
             "Wanneer de losse seed-replays voor gemeenten, domeinen en API-standaarden aanwezig zijn, gebruikt de generator die als bron en worden die referenties niet opnieuw in dit replay-bestand geseed.",
+            "Organisaties worden gerationaliseerd via ORG_ALIASES en is_org_like_token(). Nette namen worden geseed als Organisatie en gekoppeld als InitiatiefOrganisatie. Ongestructureerde tekst (zinnen, lijsten, onherkenbaar) wordt opgeslagen in OrganisatieInfo.informatie, zodat er geen informatie verloren gaat.",
         ],
         "entries": entries,
     }

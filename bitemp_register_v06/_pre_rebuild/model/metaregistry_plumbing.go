@@ -218,6 +218,19 @@ func (r MetaRegistryType) GetByVeldnaam(veldnaam string) (TypeMeta, bool) {
 	return TypeMeta{}, false
 }
 
+// GetAllByVeldnaam retourneert alle TypeMeta's die dezelfde Veldnaam hebben.
+// Dit is nodig voor disambiguatie als meerdere types dezelfde JSON-veldnaam delen
+// (bijv. "naam" bij NatuurlijkPersoon_Naam en ApiStandaard_Naam).
+func (r MetaRegistryType) GetAllByVeldnaam(veldnaam string) []TypeMeta {
+	var matches []TypeMeta
+	for _, meta := range r {
+		if meta.Veldnaam == veldnaam {
+			matches = append(matches, meta)
+		}
+	}
+	return matches
+}
+
 // GetBovenliggendeRelatieMeta finds the parent entiteit metadata for a given child type.
 func (r MetaRegistryType) GetBovenliggendeRelatieMeta(childTypeName string) (BovenliggendeRelatieMeta, bool) {
 	for _, parentMeta := range r {

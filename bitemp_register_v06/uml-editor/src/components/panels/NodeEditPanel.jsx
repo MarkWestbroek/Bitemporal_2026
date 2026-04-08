@@ -501,6 +501,13 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
               const oudeNaam = data.klassenaam || "";
               if (data.typenaam && oudeNaam && data.typenaam.endsWith(oudeNaam)) {
                 updates.typenaam = data.typenaam.slice(0, -oudeNaam.length) + nieuweNaam;
+              } else if (!data.typenaam && nieuweNaam) {
+                // Typenaam was leeg: afleiden uit parent-entiteit + klassenaam
+                const parentEdge = edges.find((ed) => ed.target === node.id && ed.type === "metamodel" && ed.data?.isDependency !== true);
+                const parentEnt = parentEdge && entiteitNodes.find((en) => en.id === parentEdge.source);
+                if (parentEnt?.data?.typenaam) {
+                  updates.typenaam = `${parentEnt.data.typenaam}_${nieuweNaam}`;
+                }
               }
               onUpdate(node.id, { ...data, ...updates });
             }}

@@ -277,10 +277,11 @@ func initCgMetaRegistry() {
 			{Rolnaam: "AndereDomeinen", JSONRolnaam: "andere_domeinen", Doeltype: "Initiatief_AnderDomein", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "AndersDanGemeenten", JSONRolnaam: "anders_dan_gemeenten", Doeltype: "Initiatief_AndersDanGemeente", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "AndereApiStandaarden", JSONRolnaam: "andere_api_standaarden", Doeltype: "Initiatief_AndereAPIStandaard", Momentvoorkomen: Enkelvoudig},
+			{Rolnaam: "Organisatieinfo", JSONRolnaam: "organisatieinfo", Doeltype: "Initiatief_OrganisatieInfo", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "InitiatiefGemeenten", JSONRolnaam: "initiatief_gemeenten", Doeltype: "InitiatiefGemeente", Momentvoorkomen: Meervoudig},
 			{Rolnaam: "InitiatiefDomeinen", JSONRolnaam: "initiatief_domeinen", Doeltype: "InitiatiefDomein", Momentvoorkomen: Meervoudig},
 			{Rolnaam: "InitiatiefApiStandaarden", JSONRolnaam: "initiatief_api_standaarden", Doeltype: "InitiatiefAPIStandaard", Momentvoorkomen: Meervoudig},
-			{Rolnaam: "InitiatiefOrganisaties", JSONRolnaam: "initiatief_organisaties", Doeltype: "InitiatiefOrganisatie", Momentvoorkomen: Enkelvoudig},
+			{Rolnaam: "InitiatiefOrganisaties", JSONRolnaam: "initiatief_organisaties", Doeltype: "InitiatiefOrganisatie", Momentvoorkomen: Meervoudig},
 			{Rolnaam: "Aanvang", JSONRolnaam: "aanvang", Doeltype: "Initiatief_Aanvang", Momentvoorkomen: Enkelvoudig},
 			{Rolnaam: "Einde", JSONRolnaam: "einde", Doeltype: "Initiatief_Einde", Momentvoorkomen: Enkelvoudig},
 		},
@@ -308,8 +309,14 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 495, Y: -1950},
+			Positie: &V3Positie{X: 465, Y: -1935},
 			EdgeID:  "Initiatief->Initiatief_Planning",
+			UseEdges: []V3UseEdge{
+				{Doel: "Datum", ID: "Initiatief_Planning--dt-->Datum", SourceHandle: "left", TargetHandle: "right"},
+				{Doel: "Datum", ID: "Initiatief_Planning--dt-->Datum", SourceHandle: "left", TargetHandle: "right"},
+				{Doel: "Datum", ID: "Initiatief_Planning--dt-->Datum", SourceHandle: "left", TargetHandle: "right"},
+				{Doel: "Datum", ID: "Initiatief_Planning--dt-->Datum", SourceHandle: "left", TargetHandle: "right"},
+			},
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Initiatief_Planning_Data", Momentvoorkomen: Enkelvoudig},
@@ -342,6 +349,10 @@ func initCgMetaRegistry() {
 		Layout: &EditorLayout{
 			Positie: &V3Positie{X: 750, Y: -1980},
 			EdgeID:  "Initiatief->Initiatief_Product",
+			UseEdges: []V3UseEdge{
+				{Doel: "URL", ID: "Initiatief_Product--dt-->URL", Hidden: true},
+				{Doel: "URL", ID: "Initiatief_Product--dt-->URL", Hidden: true},
+			},
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Initiatief_Product_Data", Momentvoorkomen: Enkelvoudig},
@@ -372,8 +383,12 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1035, Y: -1935},
+			Positie: &V3Positie{X: 1035, Y: -1920},
 			EdgeID:  "Initiatief->Initiatief_Bijdrage",
+			UseEdges: []V3UseEdge{
+				{Doel: "Bijdragetype", ID: "Initiatief_Bijdrage-->Bijdragetype", SourceHandle: "right", TargetHandle: "left"},
+				{Doel: "Schaal", ID: "Initiatief_Bijdrage-->Schaal", SourceHandle: "right", TargetHandle: "left"},
+			},
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Initiatief_Bijdrage_Data", Momentvoorkomen: Enkelvoudig},
@@ -475,6 +490,38 @@ func initCgMetaRegistry() {
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Initiatief_AndereAPIStandaard_Data", Momentvoorkomen: Enkelvoudig},
+		},
+	}
+	MetaRegistry["Initiatief_OrganisatieInfo"] = TypeMeta{
+		Typenaam:               "Initiatief_OrganisatieInfo",
+		Klassenaam:             "OrganisatieInfo",
+		Description:            "",
+		Metatype:               MetatypeGegevenselement,
+		IsMaterieel:            false,
+		Domein:                 "CG",
+		GESubtype:              GESubtypeHub,
+		DataTypenaam:           "Initiatief_OrganisatieInfo_Data",
+		Kleur:                  "#bfdbfe",
+		Veldnaam:               "organisatieinfo",
+		Padnaam:                "organisatieinfo",
+		Meervoud:               "organisatieinfo",
+		Factory:                func() Representatie { return &Initiatief_OrganisatieInfo_Input{} },
+		Tabelnaam:              "initiatief_organisatieinfo",
+		IDKolom:                "rel_id",
+		DBFactory:              func() Representatie { return &Initiatief_OrganisatieInfo{} },
+		DBSliceFactory:         func() any { return &[]Initiatief_OrganisatieInfo{} },
+		HeeftPFK:               true,
+		RelatieveAutoincrement: true,
+		EntiteitIDKolom:        "initiatief_id",
+		Momentvoorkomen:        Enkelvoudig,
+		Layout: &EditorLayout{
+			Positie:      &V3Positie{X: 420, Y: -2505},
+			EdgeID:       "edge_1775654224141_2",
+			SourceHandle: "left",
+			TargetHandle: "right",
+		},
+		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
+			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Initiatief_OrganisatieInfo_Data", Momentvoorkomen: Enkelvoudig},
 		},
 	}
 	MetaRegistry["InitiatiefGemeente"] = TypeMeta{
@@ -607,7 +654,7 @@ func initCgMetaRegistry() {
 		RelatieveAutoincrement:    true,
 		EntiteitIDKolom:           "initiatief_id",
 		SecondaireEntiteitIDKolom: "organisatie_id",
-		Momentvoorkomen:           Enkelvoudig,
+		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
 			Positie:          &V3Positie{X: 420, Y: -2340},
 			EdgeID:           "edge_1775591842339_3",
@@ -752,6 +799,28 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Enkelvoudig,
 		BovenliggendTypenaam:   "Initiatief_AndereAPIStandaard",
+	}
+	MetaRegistry["Initiatief_OrganisatieInfo_Data"] = TypeMeta{
+		Typenaam:               "Initiatief_OrganisatieInfo_Data",
+		Klassenaam:             "Data",
+		Description:            "Geversioned inhoud van Initiatief_OrganisatieInfo.",
+		Metatype:               MetatypeGegevenselement,
+		GESubtype:              GESubtypeData,
+		Kleur:                  "#bfdbfe",
+		Veldnaam:               "initiatief_organisatieinfo_data",
+		Padnaam:                "initiatief_organisatieinfo_data",
+		Meervoud:               "initiatief_organisatieinfo_data",
+		Factory:                func() Representatie { return &Initiatief_OrganisatieInfo_Data{} },
+		SliceFactory:           func() any { return &[]Initiatief_OrganisatieInfo_Data{} },
+		Tabelnaam:              "initiatief_organisatieinfo_data",
+		IDKolom:                "versie",
+		DBFactory:              func() Representatie { return &Initiatief_OrganisatieInfo_Data{} },
+		DBSliceFactory:         func() any { return &[]Initiatief_OrganisatieInfo_Data{} },
+		HeeftPFK:               true,
+		RelatieveAutoincrement: true,
+		EntiteitIDKolom:        "initiatief_id",
+		Momentvoorkomen:        Enkelvoudig,
+		BovenliggendTypenaam:   "Initiatief_OrganisatieInfo",
 	}
 	MetaRegistry["InitiatiefGemeente_Data"] = TypeMeta{
 		Typenaam:               "InitiatiefGemeente_Data",
@@ -1069,10 +1138,18 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "organisatie_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: -300, Y: -2175},
+			Positie:      &V3Positie{X: -315, Y: -2220},
 			EdgeID:       "Organisatie->Organisatie_Contactgegevens",
 			SourceHandle: "left",
 			TargetHandle: "right",
+			UseEdges: []V3UseEdge{
+				{Doel: "URL", ID: "Organisatie_Contactgegevens--dt-->URL", SourceHandle: "left", TargetHandle: "top", Hidden: true},
+				{Doel: "URL", ID: "Organisatie_Contactgegevens--dt-->URL", SourceHandle: "left", TargetHandle: "top", Hidden: true},
+				{Doel: "Emailadres", ID: "Organisatie_Contactgegevens--dt-->Emailadres", SourceHandle: "left", TargetHandle: "top"},
+				{Doel: "Emailadres", ID: "Organisatie_Contactgegevens--dt-->Emailadres", SourceHandle: "left", TargetHandle: "top"},
+				{Doel: "Telefoonnummer", ID: "Organisatie_Contactgegevens--dt-->Telefoonnummer", SourceHandle: "left", TargetHandle: "top"},
+				{Doel: "Telefoonnummer", ID: "Organisatie_Contactgegevens--dt-->Telefoonnummer", SourceHandle: "left", TargetHandle: "top"},
+			},
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Organisatie_Contactgegevens_Data", Momentvoorkomen: Enkelvoudig},
@@ -1101,7 +1178,7 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "organisatie_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: -300, Y: -2295},
+			Positie:      &V3Positie{X: -315, Y: -2340},
 			EdgeID:       "edge_1775569590393_16",
 			SourceHandle: "left",
 			TargetHandle: "right",
@@ -1360,10 +1437,16 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "persoon_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: -315, Y: -1770},
+			Positie:      &V3Positie{X: -315, Y: -1815},
 			EdgeID:       "Persoon->Persoon_Contactgegevens",
 			SourceHandle: "left",
 			TargetHandle: "right",
+			UseEdges: []V3UseEdge{
+				{Doel: "Emailadres", ID: "Persoon_Contactgegevens--dt-->Emailadres", SourceHandle: "left", TargetHandle: "bottom"},
+				{Doel: "Emailadres", ID: "Persoon_Contactgegevens--dt-->Emailadres", SourceHandle: "left", TargetHandle: "bottom"},
+				{Doel: "Telefoonnummer", ID: "Persoon_Contactgegevens--dt-->Telefoonnummer", SourceHandle: "left", TargetHandle: "bottom"},
+				{Doel: "Telefoonnummer", ID: "Persoon_Contactgegevens--dt-->Telefoonnummer", SourceHandle: "left", TargetHandle: "bottom"},
+			},
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Persoon_Contactgegevens_Data", Momentvoorkomen: Enkelvoudig},
@@ -1392,7 +1475,7 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "persoon_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: -300, Y: -1905},
+			Positie:      &V3Positie{X: -315, Y: -1950},
 			EdgeID:       "edge_1775569596827_17",
 			SourceHandle: "left",
 			TargetHandle: "right",

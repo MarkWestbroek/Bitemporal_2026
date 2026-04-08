@@ -518,6 +518,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | B16 | Server-side sort/filter op lijstendpoints | Forms plan 02 |
 | B17 | Zoek-endpoint referentielijsten (?q= met ILIKE) | Forms plan 02 |
 | B18 | gRPC/Connect als toekomstige command-API | API-standaarden-analyse.md |
+| B19 | enums hebben ook een beschrijving van de term | |
 
 ### Database / DDL
 

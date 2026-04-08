@@ -3,7 +3,7 @@ package model
 // _Input structs: platte API-input die hub + data combineert.
 // Gegenereerd door cmd/codegen — niet handmatig bewerken.
 
-type AdellijkeTitelTitel_Input struct {
+type AdellijkeTitel_AdellijkeTitelTitel_Input struct {
 	ADELLIJKETITEL_ID int    `json:"adellijketitel_id"`
 	Rel_ID            int    `json:"rel_id"`
 	Titel             string `json:"titel"`
@@ -51,6 +51,16 @@ type NatuurlijkPersoon_Naamgebruik_Input struct {
 	NATUURLIJKPERSOON_ID int              `json:"natuurlijkpersoon_id"`
 	Rel_ID               int              `json:"rel_id"`
 	Naamgebruik          Naamgebruiksoort `json:"naamgebruik"`
+}
+
+type NatuurlijkPersoon_Burgerschap_Input struct {
+	NATUURLIJKPERSOON_ID int     `json:"natuurlijkpersoon_id"`
+	Rel_ID               int     `json:"rel_id"`
+	Land                 *string `json:"land,omitempty"`
+	Nationaliteit        *string `json:"nationaliteit,omitempty"`
+	Landreferentie       *int    `json:"landreferentie,omitempty"`
+	Aanvang              *Date   `json:"aanvang,omitempty"`
+	Einde                *Date   `json:"einde,omitempty"`
 }
 
 type Bereikbaarheid_Input struct {

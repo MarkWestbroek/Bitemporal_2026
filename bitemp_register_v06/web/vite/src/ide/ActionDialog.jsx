@@ -85,8 +85,9 @@ const SUBMIT_LABELS = {
   publishAndRebuild: "Publiceer + Rebuild",
 };
 
-export default function ActionDialog({ type, values, onChange, onClose, onSubmit }) {
+export default function ActionDialog({ type, values, validationErrors = [], validationWarnings = [], onChange, onClose, onSubmit }) {
   const firstInputRef = useRef(null);
+  const hasErrors = validationErrors.length > 0;
 
   // Focus eerste input bij openen
   useEffect(() => {
@@ -213,10 +214,32 @@ export default function ActionDialog({ type, values, onChange, onClose, onSubmit
             </>
           )}
 
+          {/* ── Validatie-resultaten ── */}
+          {(hasErrors || validationWarnings.length > 0) && (
+            <div style={{ maxHeight: 200, overflowY: "auto" }}>
+              {hasErrors && (
+                <div style={{ background: "#3a1a1a", border: "1px solid #a33", borderRadius: 4, padding: "6px 10px", fontSize: 11, color: "#ff8888", lineHeight: 1.5 }}>
+                  <strong>❌ Validatiefouten ({validationErrors.length}):</strong>
+                  <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
+                    {validationErrors.map((err, i) => <li key={i}>{err}</li>)}
+                  </ul>
+                </div>
+              )}
+              {validationWarnings.length > 0 && (
+                <div style={{ background: "#3a2a0a", border: "1px solid #a93", borderRadius: 4, padding: "6px 10px", fontSize: 11, color: "#ffcc44", lineHeight: 1.5, marginTop: hasErrors ? 6 : 0 }}>
+                  <strong>⚠️ Waarschuwingen ({validationWarnings.length}):</strong>
+                  <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
+                    {validationWarnings.map((w, i) => <li key={i}>{w}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ── Acties ── */}
           <div style={S.actions}>
             <button type="button" style={S.btnCancel} onClick={onClose}>Annuleren</button>
-            <button type="submit" style={S.btnSubmit}>{SUBMIT_LABELS[type] || "OK"}</button>
+            <button type="submit" style={{ ...S.btnSubmit, ...(hasErrors ? { opacity: 0.4, cursor: "not-allowed" } : {}) }} disabled={hasErrors} title={hasErrors ? "Los eerst de validatiefouten op" : undefined}>{SUBMIT_LABELS[type] || "OK"}</button>
           </div>
         </form>
       </div>
