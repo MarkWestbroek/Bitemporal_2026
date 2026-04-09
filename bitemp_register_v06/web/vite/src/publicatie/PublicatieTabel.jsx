@@ -10,31 +10,54 @@ import { useParams, useNavigate, Link } from "react-router";
 import { useSchema } from "../context/SchemaContext";
 import { useWeergaveDefinitie } from "../hooks/useWeergaveDefinitie";
 import { safeArray, platSlaHubItems } from "../shared/schemaUtils";
-import { bouwCelContext } from "../shared/celEvaluator";
 
 /**
- * Resolvet een veldpad (bijv. "Naam.roepnaam") naar een waarde uit een full-entity object.
+ * Resolvet een veldpad (bijv. "namen.data.roepnaam" of "id") naar een waarde
+ * uit een full-entity object.
  *
- * Bouwt een CEL-context op uit de onderliggende GE's van de entiteit, zodat
- * veldpaden als "Naam.roepnaam" of "Bereikbaarheid.emailadres" een waarde opleveren.
+ * Ondersteunt twee patronen:
+ *   - Direct entity-veld:  "id" → entity.id
+ *   - Genest GE-veld:      "namen.data.roepnaam" → zoek in onderliggende GE "namen",
+ *     neem het actuele (platgeslagen) item, en lees "roepnaam".
+ *
+ * Het segment ".data." in het pad wordt overgeslagen omdat platSlaHubItems de hub
+ * al heeft platgeslagen naar directe veldwaarden.
+ *
+ * De lookup werkt op zowel jsonRolnaam (snake_case) als klassenaam (PascalCase).
  */
 function resolveVeldpad(entity, veldpad, typeMeta, typeMetaByTypenaam) {
   if (!entity || !veldpad) return null;
 
-  // Bouw CEL-context: { Naam: { roepnaam: "Jan", ... }, Bereikbaarheid: { ... } }
-  const onderliggende = safeArray(typeMeta?.onderliggende);
-  const childGroups = onderliggende.map((child) => {
-    const childMeta = typeMetaByTypenaam?.[child.doeltype];
-    const rawItems = safeArray(entity[child.jsonRolnaam] || entity[child.rolnaam]);
-    const items = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
-    return { doeltype: child.doeltype, rolnaam: child.rolnaam, items };
-  });
-  const ctx = bouwCelContext(childGroups, typeMetaByTypenaam);
+  // 1) Directe entity-velden (bijv. "id", "opvoer")
+  if (!veldpad.includes(".")) {
+    return entity[veldpad] ?? null;
+  }
 
-  // Navigeer het pad: "Naam.roepnaam" → ctx["Naam"]["roepnaam"]
-  const delen = veldpad.split(".");
-  let huidig = ctx;
-  for (const deel of delen) {
+  // 2) Genest veldpad: splits op "." en verwijder "data" segmenten
+  const delen = veldpad.split(".").filter((d) => d !== "data");
+  if (delen.length < 2) return entity[delen[0]] ?? null;
+
+  const [geKey, ...restDelen] = delen;
+
+  // Zoek het onderliggende GE op basis van jsonRolnaam of rolnaam
+  const onderliggende = safeArray(typeMeta?.onderliggende);
+  const child = onderliggende.find(
+    (c) => c.jsonRolnaam === geKey || c.rolnaam === geKey
+  );
+  if (!child) return null;
+
+  // Haal de items op uit de entity (via jsonRolnaam of rolnaam)
+  const childMeta = typeMetaByTypenaam?.[child.doeltype];
+  const rawItems = safeArray(entity[child.jsonRolnaam] || entity[child.rolnaam]);
+  const items = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
+
+  // Neem het eerste actieve item (zonder afvoer)
+  const actiefItem = items.find((item) => !item.afvoer) || items[0] || null;
+  if (!actiefItem) return null;
+
+  // Navigeer de resterende delen
+  let huidig = actiefItem;
+  for (const deel of restDelen) {
     if (huidig == null || typeof huidig !== "object") return null;
     huidig = huidig[deel];
   }

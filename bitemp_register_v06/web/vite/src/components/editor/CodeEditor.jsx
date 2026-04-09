@@ -1,4 +1,5 @@
-import Editor from "react-simple-code-editor";
+import EditorModule from "react-simple-code-editor";
+const Editor = EditorModule.default ?? EditorModule;
 import Prism from "prismjs";
 import "prismjs/components/prism-json";
 import "prismjs/components/prism-markdown";
@@ -43,10 +44,22 @@ export default function CodeEditor({
   // Bij JSON: probeer te formatteren voor weergave als read-only
   const displayValue = readOnly && taal === "json" ? formatteerJson(value) : String(value ?? "");
 
+  function handleFormatteer() {
+    const geformateerd = formatteerJson(value);
+    if (geformateerd !== value && onChange) onChange(geformateerd);
+  }
+
+  const kanFormatteren = !readOnly && taal === "json" && value && !foutmelding;
+
   return (
     <div className={`cg-code-editor ${readOnly ? "cg-code-editor--readonly" : ""} cg-code-editor--${taal}`}>
       <div className="cg-code-editor__header">
         <span className="cg-code-editor__title">{taal === "json" ? "JSON" : "Markdown"}</span>
+        {kanFormatteren && (
+          <button type="button" className="cg-code-editor__format-btn" onClick={handleFormatteer}>
+            Formatteer
+          </button>
+        )}
         {foutmelding && <span className="cg-code-editor__error">{foutmelding}</span>}
       </div>
       <Editor

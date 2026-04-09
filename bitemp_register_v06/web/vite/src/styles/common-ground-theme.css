@@ -478,6 +478,25 @@
   color: var(--cg-fout);
 }
 
+.cg-code-editor__format-btn {
+  font-size: 0.6875rem;
+  padding: 1px 8px;
+  border: 1px solid var(--cg-donkerblauw, #143462);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--cg-donkerblauw, #143462);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+.cg-code-editor__format-btn:hover {
+  background: var(--cg-donkerblauw, #143462);
+  color: #fff;
+}
+
 .cg-code-editor__area {
   min-height: 200px;
   color: #16324f;

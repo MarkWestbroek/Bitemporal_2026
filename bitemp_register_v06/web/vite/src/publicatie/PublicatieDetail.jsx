@@ -3,7 +3,6 @@ import { useParams, Link } from "react-router";
 import { useSchema } from "../context/SchemaContext";
 import { useWeergaveDefinitie } from "../hooks/useWeergaveDefinitie";
 import { safeArray, platSlaHubItems } from "../shared/schemaUtils";
-import { bouwCelContext } from "../shared/celEvaluator";
 
 /**
  * Resolvet een veldpad (bijv. "Naam.roepnaam") naar een waarde uit een CEL-context.
@@ -132,17 +131,37 @@ export default function PublicatieDetail() {
     };
   }, [baseUrl, apiPath, id]);
 
-  // Bouw CEL-context uit de full-entity data
+  // Bouw CEL-context uit de full-entity data.
+  // Voeg entries toe op zowel klassenaam als jsonRolnaam, zodat veldpaden
+  // als "Namen.roepnaam" én "namen.data.roepnaam" beide werken.
   const celContext = useMemo(() => {
     if (!entity || !typeMeta) return {};
     const onderliggende = safeArray(typeMeta?.onderliggende);
-    const childGroups = onderliggende.map((child) => {
+    const ctx = {};
+
+    // Voeg direct entity-velden toe (bijv. id)
+    for (const key of Object.keys(entity)) {
+      if (typeof entity[key] !== "object" || entity[key] === null) {
+        ctx[key] = entity[key];
+      }
+    }
+
+    for (const child of onderliggende) {
       const childMeta = typeMetaByTypenaam?.[child.doeltype];
       const rawItems = safeArray(entity[child.jsonRolnaam] || entity[child.rolnaam]);
       const items = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
-      return { doeltype: child.doeltype, rolnaam: child.rolnaam, items };
-    });
-    return bouwCelContext(childGroups, typeMetaByTypenaam);
+      const actiefItem = items.find((item) => !item.afvoer) || items[0] || null;
+      if (!actiefItem) continue;
+
+      // Maak het item beschikbaar onder klassenaam (PascalCase) én jsonRolnaam (snake_case)
+      const klassenaam = childMeta?.klassenaam || child.doeltype;
+      ctx[klassenaam] = actiefItem;
+      if (child.jsonRolnaam && child.jsonRolnaam !== klassenaam) {
+        // "namen" → { roepnaam: "Jan", ... } EN "namen.data" → dezelfde
+        ctx[child.jsonRolnaam] = { ...actiefItem, data: actiefItem };
+      }
+    }
+    return ctx;
   }, [entity, typeMeta, typeMetaByTypenaam]);
 
   // Render het template (of fallback)
