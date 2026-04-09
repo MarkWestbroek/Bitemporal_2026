@@ -1,4 +1,4 @@
-# Chat: ik heb in models en model_plumbing de Aanvang en Einde structs toegevoegd. Deze...
+# Chat: Structs en extra tabellen voor Aanvang en Einde
 
 - **Datum**: 2026-03-19 18:26
 - **Sessie-ID**: `a66211f5-b045-427a-ad42-98072b4d795e`

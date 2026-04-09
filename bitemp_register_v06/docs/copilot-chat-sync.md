@@ -37,6 +37,8 @@ Er zijn vier handige taken in deze workspace:
 
 Deze taken gebruiken intern `scripts/run-chat-backup.ps1`, dat op Windows eerst `py -3` probeert en daarna pas `python3` en `python`. Daarmee vermijden we de veelvoorkomende Microsoft Store-alias van `python`.
 
+De taak `copilot: export chats (v06)` gebruikt op macOS en Linux expliciet de repo-interpreter op `.venv/bin/python`, zodat de export niet afhangt van de systeem-`python3` in `PATH`.
+
 Als de task toch meldt dat er geen werkende Python interpreter is, dan staat er op die machine nog geen echte Python-installatie in PATH. De Windows Store-alias `python.exe` is daarvoor niet voldoende.
 
 ## Handmatig exporteren
@@ -49,6 +51,8 @@ python scripts/export-copilot-chats.py
 ```
 
 Als `python` niet bestaat, probeer dan eerst `py -3 scripts/export-copilot-chats.py` en daarna pas `python3 scripts/export-copilot-chats.py`.
+
+Op macOS en Linux draait het script nu ook correct onder oudere Python 3.9-installaties, doordat type-annotaties niet meer direct bij het opstarten geëvalueerd worden.
 
 Als ook `py -3` niet werkt, installeer dan Python 3 voor Windows inclusief de Python Launcher en vink tijdens installatie bij voorkeur `Add python.exe to PATH` aan.
 

@@ -1,4 +1,4 @@
-# Chat: Ik zou een nieuw concept willen toevoegen aan het model: afgeleide velden. Dit i...
+# Chat: UML afgeleide velden en afleidingsregels toevoegen
 
 - **Datum**: 2026-03-26 16:42
 - **Sessie-ID**: `606197b2-7596-4f8b-b476-5da532f94101`

@@ -1,4 +1,4 @@
-# Chat: kun je in de index visualisatie de grootte van het font op Locatie iets kleiner...
+# Chat: Font size adjustment in index visualization
 
 - **Datum**: 2026-04-01 12:20
 - **Sessie-ID**: `1975a993-cfbd-4dc8-8510-f7b9c70a5e75`

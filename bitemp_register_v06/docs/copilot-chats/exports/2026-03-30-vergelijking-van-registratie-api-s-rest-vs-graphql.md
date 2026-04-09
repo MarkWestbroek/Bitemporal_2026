@@ -1,4 +1,4 @@
-# Chat: kun je een analyse doen op hoe dichtbij of veraf de registratie API ligt van RES...
+# Chat: Vergelijking van registratie API's: REST vs GraphQL
 
 - **Datum**: 2026-03-30 23:26
 - **Sessie-ID**: `92ad3d5e-1e45-423d-8497-c8074cc73096`
