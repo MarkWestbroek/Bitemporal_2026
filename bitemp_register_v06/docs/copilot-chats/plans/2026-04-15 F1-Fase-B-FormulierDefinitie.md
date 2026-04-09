@@ -2,7 +2,7 @@
 
 **Datum**: 2026-04-15
 **Backlog items**: F1, F2, F25–F30
-**Status**: Fase B kern ✅ afgerond, vervolgstappen open (F29, F30)
+**Status**: Fase B kern ✅ + F29 ✅ afgerond, vervolgstappen open (F30)
 
 ---
 
@@ -144,8 +144,37 @@ const { FormulierDefinitie, layout, loading, error } = useFormulierDefinitie("Ty
 In `EntiteitFormulier.jsx`:
 - Roept `useFormulierDefinitie(typeMeta.typenaam)` aan
 - Toont een toggle-knop "Custom formulier / Standaard weergave" als er een layout beschikbaar is
-- In custom modus: flatten alle GE _Data velden en waarden, render via CustomFormulierRenderer (read-only)
+- In custom modus: flatten alle GE _Data velden en waarden, render via CustomFormulierRenderer
+- **Editable** (F29): velden zijn bewerkbaar, met cross-GE save via één registratie
 - Standaard weergave blijft de bestaande per-GE rendering
+
+### F29 — Editable cross-GE save (2026-04-09)
+
+Het custom formulier is nu volledig bewerkbaar. Architectuur:
+
+### Voorbeeld replaybestand
+
+Er is nu ook een concreet replaybestand voor een ENT-voorbeeldformulier:
+
+- `replay files/registraties-replay-init-formulierdefinitie-initiatief-voorbeeld.json`
+
+Dit replaybestand maakt een actieve standaard-`FormulierDefinitie` aan voor doeltype `Initiatief`, met een layout over meerdere GE's heen (`Product`, `Planning`, links en conditionele sectie).
+
+1. **`veldNaarGE` mapping** (useMemo): elke veldnaam → `{ childMeta, dataMeta, actueel, bronVelden }` zodat bij opslaan bekend is welk veld bij welk GE hoort.
+
+2. **`customEditValues` state**: override-map (alleen gewijzigde velden). Renderer krijgt `{ ...customValues, ...customEditValues }` als values — geen aparte useEffect nodig.
+
+3. **`handleCustomOpslaan` (useCallback)**:
+   - Groepeert gewijzigde velden per GE (op `childMeta.typenaam`)
+   - Bouwt per GE een compleet opvoer-payload (FK, rel_id, alle data-velden)
+   - Stuurt alles in **één** `POST /registratie/` request
+   - Backend itereert over `wijzigingen[]` en verwerkt per GE
+
+4. **UI**: Opslaan + Reset knoppen, feedback-melding, disabled-state tijdens save.
+
+**Bugfixes** tijdens implementatie:
+- Infinite re-render loop: `useEffect` op `customValues` → opgelost met override-patroon
+- Hook-ordering ("Rendered more hooks"): `useMemo`/`useCallback` stonden ná early returns → verplaatst naar vóór early returns, `onderliggende` omgezet naar `useMemo`
 
 ---
 
@@ -153,7 +182,7 @@ In `EntiteitFormulier.jsx`:
 
 | # | Item | Status |
 |---|------|--------|
-| F29 | Editable custom formulier: cross-GE save mechanisme | Open |
+| F29 | Editable custom formulier: cross-GE save mechanisme | ✅ Afgerond (2026-04-09) |
 | F30 | Visuele layout-editor (drag-and-drop) voor FormulierDefinitie | Open |
 | | Optimalisatie: batch-fetch FormulierDefinities (ipv N+1 per entity) | Open |
 | | Layout-validatie bij opslaan (zijn alle veldnamen geldig?) | Open |

@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "exported_at": "2026-04-09T18:45:00.000Z",
+  "source": "manual://copilot-formulierdefinitie-voorbeeld",
+  "count": 1,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-09T18:45:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Voorbeeld FormulierDefinitie voor ENT Initiatief",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "formulierdefinitie": {
+                "id": 9001
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "meta": {
+                "formulierdefinitie_id": 9001,
+                "naam": "Initiatief voorbeeldformulier",
+                "beschrijving": "Voorbeeld van een custom formulierlayout voor ENT Initiatief, over meerdere GE's heen.",
+                "doeltype": "Initiatief",
+                "status": "actief",
+                "is_standaard": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "layout": {
+                "formulierdefinitie_id": 9001,
+                "layout_json": "{\"type\":\"formulier\",\"elementen\":[{\"type\":\"groep\",\"label\":\"Product\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"naam\"},{\"type\":\"veld\",\"veld\":\"omschrijving\"},{\"type\":\"veld\",\"veld\":\"pitch\"},{\"type\":\"rij\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"website\",\"breedte\":\"50%\"},{\"type\":\"veld\",\"veld\":\"git_repo\",\"breedte\":\"50%\"}]},{\"type\":\"veld\",\"veld\":\"type\"},{\"type\":\"veld\",\"veld\":\"CG_laag\"}]},{\"type\":\"groep\",\"label\":\"Planning\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"planningsinfo\"},{\"type\":\"rij\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"startdatum\",\"breedte\":\"50%\"},{\"type\":\"veld\",\"veld\":\"ready_for_use\",\"breedte\":\"50%\"}]},{\"type\":\"veld\",\"veld\":\"fase\"},{\"type\":\"veld\",\"veld\":\"waar_tegenaan_gelopen\"}]},{\"type\":\"conditioneel\",\"als\":\"git_repo\",\"dan\":[{\"type\":\"groep\",\"label\":\"Repository aanwezig\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"git_repo\"}]}]}]}"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "formulierdefinitie_aanvang": {
+                "formulierdefinitie_id": 9001,
+                "datum": "2026-04-09"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}

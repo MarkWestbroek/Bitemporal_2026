@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-09 02:02
 - **Sessie-ID**: `46d32eeb-fd34-4fd9-b806-b45d122a035b`
-- **Berichten**: 10
+- **Berichten**: 27
 
 ---
 
@@ -412,5 +412,262 @@ Nu de vervolgstappen. Laat me de twee openstaande items bekijken:
 
 - **F29**: Custom formulier editable modus met cross-GE save (nu read-only)
 - **F30**: Visuele FormulierDefinitie layout-editor (drag-and-drop) Laat me eerst de huidige architectuur analyseren om de cross-GE save uit te werken. Het kernprobleem: het custom formulier toont velden uit **meerdere GE's** tegelijk, maar de registratie-API verwacht per GE een aparte opvoer/afvoer.     
+
+---
+
+## 🧑 User
+
+Zoals het nu gaat worden GE's veranderingen los geregistreerd, maar typisch gebeurt dat ook 'en masse'. Zoals in de visualisatie (index.html) waar je een nieuwe entiteit aanmaakt. Dan komen alle wijzigingen in 1 registratie.
+
+---
+
+## 🤖 Assistant
+
+Laat me de exacte payload-structuur en de Go unmarshaling begrijpen:  Nu heb ik het volledige plaatje. De backend ondersteunt al multi-GE wijzigingen in één registratie — de `RegistreerMetNieuweAanpak` handler loopt over alle  ongeacht type. Het key inzicht is dat `GetByVeldnaamMetPayload` dynamisch het juiste type resolvet.
+
+Laat me nu F29 implementeren. Laat me de exacte code rond de state-declaraties en de custom formulier rendering opnieuw bekijken:  Goed, nu heb ik alle context. Laat me de implementatie doen. Het plan:
+
+1. **useMemo uitbreiden** met `veldNaarGE` mapping (veld → welke GE + actueel record)
+2. **State toevoegen** voor bewerkte waarden en feedback
+3. **onChange + handleCustomOpslaan** toevoegen
+4. **Renderer wiren** met echte onChange, save-knop 
+```
+
+```
+Nu de useMemo uitbreiden om de `veldNaarGE` mapping te produceren:   
+```
+
+```
+Nu de cross-GE save handler toevoegen, direct na de useMemo en vóór de :    
+```
+
+```
+
+```
+
+```
+Nu het CustomFormulierRenderer-blok wiren met echte onChange, save-knop en feedback:    Nu het custom formulier blok vervangen met de editeerbare versie:     
+```
+
+```
+Nu builden en testen:    Alles compileert en alle tests slagen. Nu de BACKLOG.md bijwerken:    
+```
+
+```
+F29 is geïmplementeerd. Samenvatting van de wijzigingen in :
+
+**Architectuur**: Eén registratie met meerdere GE-wijzigingen, precies zoals  al doet bij het aanmaken van een entiteit.
+
+**Wat is veranderd**:
+
+1. ** mapping** — de bestaande  produceert nu ook een mapping van elk veld naar zijn GE-context (, ,  record, ). Hierdoor weten we bij opslaan welk veld bij welk GE hoort.
+
+2. **** — nieuwe cross-GE save handler die:
+   - Bepaalt welke velden gewijzigd zijn (string-vergelijking)
+   - Groepeert per GE (op )
+   - Per GE een compleet opvoer-payload bouwt (FK, rel_id, alle data-velden met de gewijzigde waarden)
+   - Alles in **één**  stuurt met meerdere 
+   - Na succes de entiteit herlaadt
+
+3. **CustomFormulierRenderer** — nu gewired met , echte  die  state bijwerkt, plus **Opslaan** en **Reset** knoppen met feedback.
+
+4. **Import** van  voor correcte type-coercing (integers, booleans, etc.)
+
+Vite build: 486 modules, Go build + tests: all pass.
+
+---
+
+## 🧑 User
+
+de inhoud pagina doet het nu niet meer: Minified React error #310; visit https://reactjs.org/docs/error-decoder.html?invariant=310 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+Herlaad pagina
+
+---
+
+## 🤖 Assistant
+
+React error #310 = "Too many re-renders" — veroorzaakt door de  die ik net toevoegde.  is elke render een nieuw object (omdat  niet gememoized is), waardoor de useEffect eindeloos triggert.
+
+Fix: gebruik  als dependency in plaats van . 
+
+---
+
+## 🧑 User
+
+oh wacht, via de index gaat het beter
+
+---
+
+## 🤖 Assistant
+
+React error #310 is "Objects are not valid as a React child". Laat me het probleem opsporen in de recente wijzigingen: 
+
+---
+
+## 🧑 User
+
+maar daarna de initiatieven toch mis http://localhost:8082/viz/react/inhoud.html#/t/initiatieven/37
+
+---
+
+## 🤖 Assistant
+
+React error #310 = "Too many re-renders" — veroorzaakt door de  die ik toevoegde om  te synchroniseren.  is een nieuw array elke render →  herberekent  →  zet state → oneindige loop.
+
+Fix: verwijder de useEffect, gebruik een override-patroon. Nu heb ik alle context. De fix:  wordt een **override-map** (alleen gewijzigde velden), niet een kopie van alle waarden. Geen useEffect nodig. 
+```
+
+```
+Build OK. De oorzaak was een oneindige render-loop:
+
+1.  = nieuw array elke render ( produceert nieuw object)
+2. →  herberekent  (nieuwe referentie)
+3. →  vuurde, riep  aan
+4. → state change → re-render → terug naar stap 1
+
+**Fix**: verwijderd de ,  bevat nu alleen **overrides** (velden die de gebruiker wijzigt). In de renderer worden de waarden gemerged: . Na save/reset worden overrides geleegd naar `{}`.
+
+---
+
+## 🧑 User
+
+http://localhost:5174/viz/react/inhoud.html#/t/initiatieven/37
+
+Er ging iets mis
+Rendered more hooks than during the previous render.
+Herlaad pagina
+
+---
+
+## 🤖 Assistant
+
+Hook-ordering probleem — de  en  voor custom formulier staan ná de early returns (, , etc.), maar de  die ik verwijderde stond ervóór. Laat me de exacte volgorde bekijken. Gevonden. Het probleem is dat  (customVelden) en  (handleCustomOpslaan) **ná de early returns** staan (regels 293-309: , , , ). Bij de eerste render is  → early return → hooks worden niet aangeroepen. Na fetch → geen early return → meer hooks → React error.
+
+Fix: verplaats ,  en  naar **vóór** de early returns. 
+```
+
+```
+Build slaagt. De fix:
+
+-  was een gewone `const` (berekend ná early returns) → nu een  (vóór early returns, retourneert `[]` als  nog niet beschikbaar is)
+-  (customVelden) en  (handleCustomOpslaan) zijn mee verplaatst naar vóór de early returns
+- Hierdoor is de hook-volgorde stabiel: bij loading, error, én geladen state worden altijd dezelfde hooks aangeroepen
+
+Herlaad `http://localhost:8082/viz/react/inhoud.html#/t/initiatieven/37` — zou nu moeten werken.
+
+---
+
+## 🧑 User
+
+ik ga nu naar werk en verder op mijn laptop. Is er een volgende fase om te ontwikkelen die overdracht behoeft naar een nieuwe chat daar?
+
+WIl je dat dan nu opschrijven?
+
+Is de documentatie sowieso nu op orde?
+
+---
+
+## 🤖 Assistant
+
+Het plan-doc F1-Fase-B is niet bijgewerkt met F29. Laat me dat doen en een session handoff schrijven.   Nu update ik het plan-doc met F29 status en schrijf een handoff-sectie: 
+```
+
+```
+Nu de session memory schrijven voor handoff: Documentatie is nu bijgewerkt. Samenvatting:
+
+**Huidige stand**:
+- F25–F29 zijn allemaal ✅ (FormulierDefinitie + editable cross-GE save)
+- Plan-doc  is bijgewerkt met F29 details
+-  is actueel
+
+**Volgende fase (voor de nieuwe chat)**:
+De meest logische vervolgstap is **F30: Visuele layout-editor** — een editor-UI om FormulierDefinitie layouts visueel samen te stellen (drag-and-drop velden, groepen, rijen). Maar er zijn ook andere open items die minder afhankelijk zijn:
+
+| # | Item | Complexiteit |
+|---|------|-------------|
+| **F30** | Visuele layout-editor (drag-and-drop) | Groot |
+| F22 | Custom tabelweergaven | Medium |
+| F18 | Labels-configuratie | Klein |
+| F23 | Server-side zoek/filter | Medium |
+
+In de nieuwe chat kun je verwijzen naar het plan-doc hierboven — dat bevat de volledige architectuur, gegenereerde bestanden, en F29-implementatiedetails. De  geeft het totaaloverzicht.
+
+---
+
+## 🧑 User
+
+is het huidige formulier nu via de definitie?
+
+---
+
+## 🤖 Assistant
+
+ de toggle **“Custom formulier”** kiest, dan wordt het formulier **nu via de definitie/layout JSON** gerenderd.
+
+### Concreet
+- **Standaard weergave** → nog steeds de bestaande per-GE rendering
+- **Custom formulier** → via `FormulierDefinitie_Layout.layout_json`
+- Die rendering loopt via:
+  - 
+  - 
+  - integratie in 
+
+### Dus
+- **Ja**, het huidige **custom** formulier is via de definitie
+- **Nee**, niet alle formulieren automatisch; alleen als er een actieve definitie is en die custom weergave gebruikt wordt
+
+---
+
+## 🧑 User
+
+staat die ook ergens uitgelegd? Is er nu voor een ENT een voorbeeldformulier?
+
+---
+
+## 🧑 User
+
+ja, graag. Kan dat als replay file?
+
+---
+
+## 🤖 Assistant
+
+Ik controleer eerst hoe replay files in deze repo zijn opgebouwd, zodat het voorbeeldformulier direct in het juiste formaat komt.Ik heb bevestigd dat replay files al een vaste structuur hebben; nu pak ik een bestaand voorbeeld erbij zodat het nieuwe bestand direct importeerbaar is.Ik heb de juiste replay-structuur nu helder; ik zet er meteen een concreet `Initiatief`-voorbeeld in.
+```
+
+```
+
+```
+
+```
+## Ja
+
+Er staat nu een concreet replaybestand klaar:
+
+- 
+
+### Wat het doet
+Dit bestand maakt een **actieve standaard-`FormulierDefinitie`** aan voor ENT **`Initiatief`**:
+
+- 
+- 
+- `is_standaard: true`
+
+De layout bevat een voorbeeld over meerdere GE’s heen, o.a.:
+
+- **Product**: , `omschrijving`, `pitch`, `website`, `git_repo`, , `CG_laag`
+- **Planning**: `planningsinfo`, `startdatum`, `ready_for_use`, `fase`, `waar_tegenaan_gelopen`
+
+### Documentatie
+Het staat nu ook benoemd in:
+
+- `bitemp_register_v06/docs/copilot-chats/plans/2026-04-15 F1-Fase-B-FormulierDefinitie.md`
+
+### Verificatie
+Het replaybestand is syntactisch gecontroleerd:
+- JSON parse OK
+- output: 
+
+> Ik heb het **niet uitgevoerd**, alleen klaargezet zodat je het later op je laptop kunt inladen.
 
 ---
