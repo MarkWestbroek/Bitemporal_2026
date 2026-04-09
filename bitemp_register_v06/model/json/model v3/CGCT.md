@@ -41,59 +41,61 @@ classDiagram
     +string naam
   }
 
-  class Repository {
-    <<entiteit>>
-    <<materieel>>
-  }
+  namespace CGCT {
+    class Repository {
+      <<entiteit>>
+      <<materieel>>
+    }
 
-  class Repository_RepoAddress {
-    <<gegevenselement>>
-    +string url
-  }
+    class Repository_RepoAddress {
+      <<gegevenselement>>
+      +string url
+    }
 
-  class Repository_RepoName {
-    <<gegevenselement>>
-    +string name
-  }
+    class Repository_RepoName {
+      <<gegevenselement>>
+      +string name
+    }
 
-  class Unnamed {
-    <<relatie>>
-    +string role
-  }
+    class Unnamed {
+      <<relatie>>
+      +string role
+    }
 
-  class RepoOrgRole {
-    <<enumeration>>
-    Owner
-    Contributor
-    User
-  }
+    class RepoOrgRole {
+      <<enumeration>>
+      Owner
+      Contributor
+      User
+    }
 
-  class Repository_ {
-    <<gegevenselement>>
-    +AspectAnalysiTypes aspectType
-    +DatumTijd readyAt
-    +integer score
-  }
+    class Repository_ {
+      <<gegevenselement>>
+      +AspectAnalysiTypes aspectType
+      +DatumTijd readyAt
+      +integer score
+    }
 
-  class AspectAnalysiTypes {
-    <<enumeration>>
-    Code
-    Documentation
-    Etc
-  }
+    class AspectAnalysiTypes {
+      <<enumeration>>
+      Code
+      Documentation
+      Etc
+    }
 
-  class RepoAnalysis {
-    <<entiteit>>
-  }
+    class RepoAnalysis {
+      <<entiteit>>
+    }
 
-  class RepoAnalyses {
-    <<relatie>>
-  }
+    class RepoAnalyses {
+      <<relatie>>
+    }
 
-  class RepoAnalysisOverall {
-    <<gegevenselement>>
-    +DatumTijd checkedAt
-    +Decimaal score
+    class RepoAnalysisOverall {
+      <<gegevenselement>>
+      +DatumTijd checkedAt
+      +Decimaal score
+    }
   }
   Organisatie "1" --> "0..1" Organisatie_Contactgegevens : Contactgegevens
   Organisatie_Contactgegevens "1" --> "*" Emailadres
