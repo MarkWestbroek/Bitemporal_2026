@@ -12,6 +12,10 @@ export default defineConfig({
       // Zorg dat @xyflow/react vanuit de subtree-bestanden ook resolved wordt
       // vanuit onze eigen node_modules (niet vanuit uml-editor/)
       "@xyflow/react": resolve(__dirname, "node_modules/@xyflow/react"),
+      // Vite 8/Rolldown: resolve react en react-dom vanuit de subtree naar
+      // onze eigen node_modules (uml-editor heeft geen eigen node_modules)
+      "react": resolve(__dirname, "node_modules/react"),
+      "react-dom": resolve(__dirname, "node_modules/react-dom"),
     },
   },
   server: {
@@ -20,7 +24,7 @@ export default defineConfig({
   build: {
     outDir: "../react",
     emptyOutDir: true,
-    rollupOptions: {
+    rolldownOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
         tijdlijn: resolve(__dirname, "tijdlijn.html"),

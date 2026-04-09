@@ -8,6 +8,13 @@ const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const projectDir = path.resolve(scriptDir, "..");
 const nodeModulesDir = path.join(projectDir, "node_modules");
 const stampFile = path.join(nodeModulesDir, ".platform-stamp.json");
+const packageJsonFile = path.join(projectDir, "package.json");
+
+const packageJson = JSON.parse(fs.readFileSync(packageJsonFile, "utf8"));
+const declaredPackageNames = [
+  ...Object.keys(packageJson.dependencies || {}),
+  ...Object.keys(packageJson.devDependencies || {}),
+];
 
 const currentPlatform = {
   platform: process.platform,
@@ -31,6 +38,16 @@ function writeStamp() {
 
 function viteBinaryExists() {
   return fs.existsSync(path.join(nodeModulesDir, ".bin", process.platform === "win32" ? "vite.cmd" : "vite"));
+}
+
+function packageExists(packageName) {
+  const packageDir = path.join(nodeModulesDir, ...packageName.split("/"));
+  const packageJsonPath = path.join(packageDir, "package.json");
+  return fs.existsSync(packageJsonPath);
+}
+
+function findMissingPackages() {
+  return declaredPackageNames.filter((packageName) => !packageExists(packageName));
 }
 
 function stampMatches(stamp) {
@@ -106,9 +123,13 @@ function runInstall() {
 }
 
 const stamp = readStamp();
-const needsInstall = !viteBinaryExists() || !stampMatches(stamp);
+const missingPackages = findMissingPackages();
+const needsInstall = !viteBinaryExists() || !stampMatches(stamp) || missingPackages.length > 0;
 
 if (needsInstall) {
+  if (missingPackages.length > 0) {
+    console.log(`[deps] Ontbrekende npm packages gevonden: ${missingPackages.join(", ")}`);
+  }
   runInstall();
 } else {
   writeStamp();

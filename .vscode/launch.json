@@ -42,22 +42,41 @@
             "name": "Frontend v06: Vite dev server",
             "type": "node-terminal",
             "request": "launch",
-            "command": "& \"C:\\Program Files\\nodejs\\npm.cmd\" run dev -- --host",
-            "cwd": "${workspaceFolder}/bitemp_register_v06/web/vite"
+            "command": "npm run dev -- --host",
+            "cwd": "${workspaceFolder}/bitemp_register_v06/web/vite",
+            "windows": {
+                "command": "& \"C:\\Program Files\\nodejs\\npm.cmd\" run dev -- --host"
+            }
+        },
+        {
+            "name": "Frontend v06: Vite dev server (clean)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "rm -rf node_modules/.vite && npm run dev -- --host",
+            "cwd": "${workspaceFolder}/bitemp_register_v06/web/vite",
+            "windows": {
+                "command": "powershell -NoProfile -Command \"if (Test-Path node_modules/.vite) { Remove-Item -Recurse -Force node_modules/.vite }; & 'C:\\Program Files\\nodejs\\npm.cmd' run dev -- --host\""
+            }
         },
         {
             "name": "Frontend v06: Node.js rebuild",
             "type": "node-terminal",
             "request": "launch",
-            "command": "& \"C:\\Program Files\\nodejs\\npm.cmd\" rebuild",
-            "cwd": "${workspaceFolder}/bitemp_register_v06/web/vite"
+            "command": "npm rebuild",
+            "cwd": "${workspaceFolder}/bitemp_register_v06/web/vite",
+            "windows": {
+                "command": "& \"C:\\Program Files\\nodejs\\npm.cmd\" rebuild"
+            }
         },
         {
             "name": "Frontend v06: Vite build",
             "type": "node-terminal",
             "request": "launch",
-            "command": "& \"C:\\Program Files\\nodejs\\npm.cmd\" run build",
-            "cwd": "${workspaceFolder}/bitemp_register_v06/web/vite"
+            "command": "npm run build",
+            "cwd": "${workspaceFolder}/bitemp_register_v06/web/vite",
+            "windows": {
+                "command": "& \"C:\\Program Files\\nodejs\\npm.cmd\" run build"
+            }
         },
         {
             "name": "Frontend v06: open in browser",

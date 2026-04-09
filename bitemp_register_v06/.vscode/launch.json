@@ -59,21 +59,40 @@
             "type": "node-terminal",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "command": "powershell -NoProfile -Command \"$pids = Get-NetTCPConnection -LocalPort 8082 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if ($pids) { $pids | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Write-Output Stopped_API_process_on_8082; Write-Output $pids } else { Write-Output No_listening_API_process_found_on_8082 }\""
+            "command": "pids=$(lsof -ti :8082 2>/dev/null); if [ -n \"$pids\" ]; then echo \"$pids\" | xargs kill -9; echo Stopped_API_process_on_8082; echo \"$pids\"; else echo No_listening_API_process_found_on_8082; fi",
+            "windows": {
+                "command": "powershell -NoProfile -Command \"$pids = Get-NetTCPConnection -LocalPort 8082 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if ($pids) { $pids | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Write-Output Stopped_API_process_on_8082; Write-Output $pids } else { Write-Output No_listening_API_process_found_on_8082 }\""
+            }
+        },
+        {
+            "name": "Frontend v06: Vite dev server (clean)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "rm -rf node_modules/.vite && npm run dev -- --host",
+            "cwd": "${workspaceFolder}/web/vite",
+            "windows": {
+                "command": "powershell -NoProfile -Command \"if (Test-Path node_modules/.vite) { Remove-Item -Recurse -Force node_modules/.vite }; & 'C:\\Program Files\\nodejs\\npm.cmd' run dev -- --host\""
+            }
         },
         {
             "name": "Frontend v06: Vite build",
             "type": "node-terminal",
             "request": "launch",
-            "command": "& \"C:\\Program Files\\nodejs\\npm.cmd\" run build",
-            "cwd": "${workspaceFolder}/web/vite"
+            "command": "npm run build",
+            "cwd": "${workspaceFolder}/web/vite",
+            "windows": {
+                "command": "& \"C:\\Program Files\\nodejs\\npm.cmd\" run build"
+            }
         },
         {
             "name": "Stop Vite server (v06, :5173/:5174/:5175)",
             "type": "node-terminal",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "command": "powershell -NoProfile -Command \"$ports = 5173,5174,5175; $pids = @(); foreach ($port in $ports) { $listening = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if ($listening) { $pids += $listening } }; $pids = $pids | Select-Object -Unique; if ($pids) { $pids | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Write-Output Stopped_Vite_process; Write-Output $pids } else { Write-Output No_listening_Vite_process_found_on_5173_5174_5175 }\""
+            "command": "pids=$(lsof -ti :5173,:5174,:5175 2>/dev/null | sort -u); if [ -n \"$pids\" ]; then echo \"$pids\" | xargs kill -9; echo Stopped_Vite_process; echo \"$pids\"; else echo No_listening_Vite_process_found_on_5173_5174_5175; fi",
+            "windows": {
+                "command": "powershell -NoProfile -Command \"$ports = 5173,5174,5175; $pids = @(); foreach ($port in $ports) { $listening = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique; if ($listening) { $pids += $listening } }; $pids = $pids | Select-Object -Unique; if ($pids) { $pids | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }; Write-Output Stopped_Vite_process; Write-Output $pids } else { Write-Output No_listening_Vite_process_found_on_5173_5174_5175 }\""
+            }
         }
     ],
     "inputs": [

@@ -39,6 +39,8 @@ cd bitemp_register_v06/web/vite
 npm ci
 ```
 
+Als je net van Windows naar macOS bent gewisseld en de lokale map is niet meer consistent, is `npm install` of de VS Code task `nodejs: herstel dependencies (v06)` de juiste herstelactie. `npm rebuild` alleen is daarvoor niet voldoende, omdat ontbrekende packages daarmee niet opnieuw worden binnengehaald.
+
 3. Start de frontend:
 
 ```bash
@@ -102,6 +104,21 @@ Aanbevolen:
 ```
 
 Daarnaast schermt `web/vite/scripts/ensure-local-deps.mjs` sinds april 2026 de automatische `npm install` al af van geërfde debug-variabelen, zodat de frontend-start op Windows en macOS niet onnodig blijft hangen.
+
+Sinds 9 april 2026 controleert dat script ook of gedeclareerde packages werkelijk in `node_modules` aanwezig zijn. Daardoor wordt bij een OS-switch met een half geldige of onvolledige `node_modules` map automatisch opnieuw `npm install` gedaan, ook als de platform-stamp op zichzelf nog geldig lijkt.
+
+## Launch-configs in VS Code
+
+De project-launches onder `.vscode/launch.json` zijn OS-specifiek gesplitst:
+
+- Windows mag `npm.cmd` en PowerShell blijven gebruiken.
+- macOS/Linux gebruiken gewone shell-commando's zoals `npm run build` en `lsof`.
+
+Daardoor hoort een Mac-terminal geen regels meer te krijgen zoals:
+
+```bash
+& "C:\Program Files\nodejs\npm.cmd" run build
+```
 
 ## Notities
 
