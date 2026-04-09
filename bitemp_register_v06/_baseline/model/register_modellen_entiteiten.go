@@ -12,13 +12,13 @@ import (
 // Land — Referentielijst-item: individueel land.
 type Land struct {
 	bun.BaseModel `bun:"table:land,alias:land"`
-	ID            int            `json:"id" bun:"id,pk"`
-	Opvoer        *time.Time     `json:"opvoer,omitempty"`
-	Afvoer        *time.Time     `json:"afvoer,omitempty"`
-	Landcodes     []Landcode     `bun:"rel:has-many,join:id=land_id" json:"landcodes,omitempty"`
-	Landnamen     []Landnaam     `bun:"rel:has-many,join:id=land_id" json:"landnamen,omitempty"`
-	Aanvang       []Land_Aanvang `bun:"rel:has-many,join:id=land_id" json:"aanvang,omitempty"`
-	Einde         []Land_Einde   `bun:"rel:has-many,join:id=land_id" json:"einde,omitempty"`
+	ID            int             `json:"id" bun:"id,pk"`
+	Opvoer        *time.Time      `json:"opvoer,omitempty"`
+	Afvoer        *time.Time      `json:"afvoer,omitempty"`
+	Landcodes     []Land_Landcode `bun:"rel:has-many,join:id=land_id" json:"landcodes,omitempty"`
+	Landnamen     []Land_Landnaam `bun:"rel:has-many,join:id=land_id" json:"landnamen,omitempty"`
+	Aanvang       []Land_Aanvang  `bun:"rel:has-many,join:id=land_id" json:"aanvang,omitempty"`
+	Einde         []Land_Einde    `bun:"rel:has-many,join:id=land_id" json:"einde,omitempty"`
 }
 
 // Land_Aanvang — aanvangdatum van entiteit Land.
@@ -44,17 +44,17 @@ type Land_Einde struct {
 // Referentielijst — Generieke referentielijst-entiteit. Individuele lijsten (Landenlijst, EULidstaten, etc.) zijn records.
 type Referentielijst struct {
 	bun.BaseModel                 `bun:"table:referentielijst,alias:referentielijst"`
-	ID                            int                            `json:"id" bun:"id,pk"`
-	Opvoer                        *time.Time                     `json:"opvoer,omitempty"`
-	Afvoer                        *time.Time                     `json:"afvoer,omitempty"`
-	Referentielijstnamen          []Referentielijstnaam          `bun:"rel:has-many,join:id=referentielijst_id" json:"referentielijstnamen,omitempty"`
-	Referentielijstomschrijvingen []Referentielijstomschrijving  `bun:"rel:has-many,join:id=referentielijst_id" json:"referentielijstomschrijvingen,omitempty"`
-	Visibilities                  []ReferentielijstVisibility    `bun:"rel:has-many,join:id=referentielijst_id" json:"visibilities,omitempty"`
-	Internetadressen              []ReferentielijstInternetadres `bun:"rel:has-many,join:id=referentielijst_id" json:"internetadressen,omitempty"`
-	LandenlijstLanden             []LandenlijstLand              `bun:"rel:has-many,join:id=referentielijst_id" json:"landenlijst_landen,omitempty"`
-	AdellijkeTitelsTitels         []AdellijkeTitelsTitel         `bun:"rel:has-many,join:id=referentielijst_id" json:"adellijke_titels_titels,omitempty"`
-	Aanvang                       []Referentielijst_Aanvang      `bun:"rel:has-many,join:id=referentielijst_id" json:"aanvang,omitempty"`
-	Einde                         []Referentielijst_Einde        `bun:"rel:has-many,join:id=referentielijst_id" json:"einde,omitempty"`
+	ID                            int                                            `json:"id" bun:"id,pk"`
+	Opvoer                        *time.Time                                     `json:"opvoer,omitempty"`
+	Afvoer                        *time.Time                                     `json:"afvoer,omitempty"`
+	Referentielijstnamen          []Referentielijst_Referentielijstnaam          `bun:"rel:has-many,join:id=referentielijst_id" json:"referentielijstnamen,omitempty"`
+	Referentielijstomschrijvingen []Referentielijst_Referentielijstomschrijving  `bun:"rel:has-many,join:id=referentielijst_id" json:"referentielijstomschrijvingen,omitempty"`
+	Visibilities                  []Referentielijst_ReferentielijstVisibility    `bun:"rel:has-many,join:id=referentielijst_id" json:"visibilities,omitempty"`
+	Internetadressen              []Referentielijst_ReferentielijstInternetadres `bun:"rel:has-many,join:id=referentielijst_id" json:"internetadressen,omitempty"`
+	LandenlijstLanden             []LandenlijstLand                              `bun:"rel:has-many,join:id=referentielijst_id" json:"landenlijst_landen,omitempty"`
+	AdellijkeTitelsTitels         []AdellijkeTitelsTitel                         `bun:"rel:has-many,join:id=referentielijst_id" json:"adellijke_titels_titels,omitempty"`
+	Aanvang                       []Referentielijst_Aanvang                      `bun:"rel:has-many,join:id=referentielijst_id" json:"aanvang,omitempty"`
+	Einde                         []Referentielijst_Einde                        `bun:"rel:has-many,join:id=referentielijst_id" json:"einde,omitempty"`
 }
 
 // Referentielijst_Aanvang — aanvangdatum van entiteit Referentielijst.

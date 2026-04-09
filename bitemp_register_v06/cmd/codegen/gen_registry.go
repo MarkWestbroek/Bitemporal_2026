@@ -75,6 +75,19 @@ func writeAllEntries(b *strings.Builder, v3 model.V3Model, opts codegenOptions) 
 		}
 	}
 
+	// Pre-scan: detecteer veldnaam-conflicten bij GE hubs.
+	// Als twee hubs dezelfde korte Veldnaam zouden krijgen (bijv. "meta" bij
+	// FormulierDefinitie én WeergaveDefinitie), gebruik dan de volledige typenaam.
+	geVeldnaamCount := map[string]int{}
+	for _, ent := range v3.Entiteiten {
+		for _, ge := range ent.Gegevenselementen {
+			hubType := geHubTypeName(ent, ge.Naam)
+			parts := strings.Split(hubType, "_")
+			shortName := strings.ToLower(parts[len(parts)-1])
+			geVeldnaamCount[shortName]++
+		}
+	}
+
 	for _, ent := range v3.Entiteiten {
 		entIDKolom := strings.ToLower(ent.Typenaam) + "_id"
 
@@ -95,6 +108,12 @@ func writeAllEntries(b *strings.Builder, v3 model.V3Model, opts codegenOptions) 
 				padnaam = toSnakeCase(hubType)
 			}
 			dHub := deriveHub(ent.Typenaam, hubType, "gegevenselement", ge.IsMaterieel, padnaam, "")
+			// Bij veldnaam-conflicten: gebruik de volledige typenaam in lowercase
+			parts := strings.Split(hubType, "_")
+			shortName := strings.ToLower(parts[len(parts)-1])
+			if geVeldnaamCount[shortName] > 1 {
+				dHub.Veldnaam = strings.ToLower(hubType)
+			}
 			li := &layoutInfo{Positie: ge.Positie, EdgeID: ge.ID, SourceHandle: ge.SourceHandle, TargetHandle: ge.TargetHandle, UseEdges: ge.UseEdges}
 			writeHubEntry(b, dHub, ge.Description, ent.Kleur, ge.Momentvoorkomen, ge.IsMaterieel, ge.Naam, ge.AfgeleideVelden, opts.domein, li)
 		}

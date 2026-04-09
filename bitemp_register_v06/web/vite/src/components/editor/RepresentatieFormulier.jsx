@@ -5,6 +5,7 @@ import { safeArray, platSlaHubItems, tUitRegistratieTijdstip } from "../../share
 import { evalueerCelExpressie, bouwCelContext } from "../../shared/celEvaluator";
 import SchemaFormField from "./SchemaFormField";
 import { coercedWaardeVoorVeld } from "../actions/ActionFormParts";
+import { bepaalWidgetOverride } from "./widgetOverrides";
 
 /**
  * RepresentatieFormulier — formulier voor één representatie (entiteit, GE of relatie).
@@ -394,6 +395,7 @@ export default function RepresentatieFormulier({
               veld={veld}
               value={values[veld.naam]}
               onChange={(val) => updateVeld(veld.naam, val)}
+              widgetOverride={bepaalWidgetOverride(typeMeta, veld.naam)}
             />
           ))}
         </div>

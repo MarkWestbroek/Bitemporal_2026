@@ -20,14 +20,14 @@
           {
             "opvoer": {
               "formulierdefinitie": {
-                "id": 9001
+                "id": 1
               }
             }
           },
           {
             "opvoer": {
-              "meta": {
-                "formulierdefinitie_id": 9001,
+              "formulierdefinitie_meta": {
+                "formulierdefinitie_id": 1,
                 "naam": "Initiatief voorbeeldformulier",
                 "beschrijving": "Voorbeeld van een custom formulierlayout voor ENT Initiatief, over meerdere GE's heen.",
                 "doeltype": "Initiatief",
@@ -39,15 +39,16 @@
           {
             "opvoer": {
               "layout": {
-                "formulierdefinitie_id": 9001,
-                "layout_json": "{\"type\":\"formulier\",\"elementen\":[{\"type\":\"groep\",\"label\":\"Product\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"naam\"},{\"type\":\"veld\",\"veld\":\"omschrijving\"},{\"type\":\"veld\",\"veld\":\"pitch\"},{\"type\":\"rij\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"website\",\"breedte\":\"50%\"},{\"type\":\"veld\",\"veld\":\"git_repo\",\"breedte\":\"50%\"}]},{\"type\":\"veld\",\"veld\":\"type\"},{\"type\":\"veld\",\"veld\":\"CG_laag\"}]},{\"type\":\"groep\",\"label\":\"Planning\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"planningsinfo\"},{\"type\":\"rij\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"startdatum\",\"breedte\":\"50%\"},{\"type\":\"veld\",\"veld\":\"ready_for_use\",\"breedte\":\"50%\"}]},{\"type\":\"veld\",\"veld\":\"fase\"},{\"type\":\"veld\",\"veld\":\"waar_tegenaan_gelopen\"}]},{\"type\":\"conditioneel\",\"als\":\"git_repo\",\"dan\":[{\"type\":\"groep\",\"label\":\"Repository aanwezig\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"git_repo\"}]}]}]}"
+                "formulierdefinitie_id": 1,
+                "layout_json": "{\"type\":\"formulier\",\"elementen\":[{\"type\":\"groep\",\"label\":\"Product\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"naam\"},{\"type\":\"veld\",\"veld\":\"omschrijving\"},{\"type\":\"veld\",\"veld\":\"pitch\"},{\"type\":\"rij\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"website\",\"breedte\":\"50%\"},{\"type\":\"veld\",\"veld\":\"git_repo\",\"breedte\":\"50%\"}]},{\"type\":\"veld\",\"veld\":\"type\"},{\"type\":\"veld\",\"veld\":\"CG_laag\"}]},{\"type\":\"groep\",\"label\":\"Planning\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"planningsinfo\"},{\"type\":\"rij\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"startdatum\",\"breedte\":\"50%\"},{\"type\":\"veld\",\"veld\":\"ready_for_use\",\"breedte\":\"50%\"}]},{\"type\":\"veld\",\"veld\":\"fase\"},{\"type\":\"veld\",\"veld\":\"waar_tegenaan_gelopen\"}]},{\"type\":\"conditioneel\",\"als\":\"git_repo\",\"dan\":[{\"type\":\"groep\",\"label\":\"Repository aanwezig\",\"elementen\":[{\"type\":\"veld\",\"veld\":\"git_repo\"}]}]}]}",
+                "definitie_versie": "0.1"
               }
             }
           },
           {
             "opvoer": {
               "formulierdefinitie_aanvang": {
-                "formulierdefinitie_id": 9001,
+                "formulierdefinitie_id": 1,
                 "datum": "2026-04-09"
               }
             }

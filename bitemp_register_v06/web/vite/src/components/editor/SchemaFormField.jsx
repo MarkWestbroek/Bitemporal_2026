@@ -2,6 +2,7 @@ import { useId } from "react";
 import { validatieMeldingVoorVeld } from "../actions/ActionFormParts";
 import RefCombobox from "./RefCombobox";
 import { useSchema } from "../../context/SchemaContext";
+import CodeEditor, { jsonParseFout } from "./CodeEditor";
 
 /**
  * SchemaFormField — generiek formulierveld dat één `veld` uit de schema-API
@@ -17,8 +18,9 @@ import { useSchema } from "../../context/SchemaContext";
  *  - onChange:  (nieuweWaarde) => void
  *  - error:     optioneel foutmelding override (vanuit react-hook-form)
  *  - readOnly:  forceer readonly (voor PK/FK/autoincrement)
+ *  - widgetOverride: optionele expliciete widget-keuze uit formulier/weergaveconfiguratie
  */
-export default function SchemaFormField({ veld, value, onChange, error, readOnly }) {
+export default function SchemaFormField({ veld, value, onChange, error, readOnly, widgetOverride }) {
   const fieldId = useId();
   const { datatypeByNaam } = useSchema();
   if (!veld) return null;
@@ -32,6 +34,7 @@ export default function SchemaFormField({ veld, value, onChange, error, readOnly
   // Weergave-hints uit DatatypeRegistry ophalen (widget, prefix, suffix, multiline, decimalen)
   const datatypeMeta = veld.datatype ? datatypeByNaam?.[veld.datatype] : null;
   const weergave = datatypeMeta?.weergave || {};
+  const effectieveWidget = widgetOverride || weergave.widget || "";
 
   function inputType() {
     if (type === "string" && format === "date") return "date";
@@ -114,8 +117,35 @@ export default function SchemaFormField({ veld, value, onChange, error, readOnly
       );
     }
 
+    // JSON-widget: geïntegreerde code-editor met syntax-highlighting.
+    if (effectieveWidget === "json") {
+      return (
+        <CodeEditor
+          value={value}
+          onChange={onChange}
+          taal="json"
+          readOnly={isReadonly}
+          placeholder={weergave.placeholder || '{\n  "sleutel": "waarde"\n}'}
+          foutmelding={jsonParseFout(value)}
+        />
+      );
+    }
+
+    // Markdown-widget: geïntegreerde code-editor met syntax-highlighting.
+    if (effectieveWidget === "markdown") {
+      return (
+        <CodeEditor
+          value={value}
+          onChange={onChange}
+          taal="markdown"
+          readOnly={isReadonly}
+          placeholder={weergave.placeholder || "# Titel\n\nTekst met **vet** en *cursief*"}
+        />
+      );
+    }
+
     // Multiline / textarea widget (bijv. LangeTekst)
-    if (weergave.multiline || weergave.widget === "textarea") {
+    if (weergave.multiline || effectieveWidget === "textarea") {
       return (
         <textarea
           id={fieldId}
@@ -163,8 +193,11 @@ export default function SchemaFormField({ veld, value, onChange, error, readOnly
     return inputEl;
   }
 
+  // JSON en markdown widgets moeten de volle breedte van het grid innemen
+  const isFullWidth = effectieveWidget === "json" || effectieveWidget === "markdown";
+
   return (
-    <div className="utrecht-form-field" style={{ marginBottom: "0.75rem" }}>
+    <div className="utrecht-form-field" style={{ marginBottom: "0.75rem", ...(isFullWidth ? { gridColumn: "1 / -1" } : {}) }}>
       <label htmlFor={fieldId} className="utrecht-form-label" style={{ display: "block", marginBottom: "0.25rem" }}>
         {veld.naam}
         {veld.verplicht && <span style={{ color: "var(--cg-fout)", marginLeft: 4 }}>*</span>}

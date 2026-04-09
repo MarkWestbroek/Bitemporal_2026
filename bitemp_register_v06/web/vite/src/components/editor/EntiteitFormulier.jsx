@@ -621,6 +621,7 @@ export default function EntiteitFormulier() {
             values={{ ...customValues, ...customEditValues }}
             onChange={(veldnaam, waarde) => setCustomEditValues((prev) => ({ ...prev, [veldnaam]: waarde }))}
             readOnly={false}
+            typeMeta={typeMeta}
           />
         </div>
       )}

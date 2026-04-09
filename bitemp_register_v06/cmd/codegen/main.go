@@ -459,8 +459,9 @@ func ensureInitRegistration(outputDir, prefix string) error {
 		return nil
 	}
 
-	// Zoek de plek vóór propageerDomeinNaarOnderliggende()
-	marker := "propageerDomeinNaarOnderliggende()"
+	// Zoek de plek vóór propageerDomeinNaarOnderliggende() — de functie-CALL
+	// (tab-geïndenteerd), niet de functie-declaratie of een comment.
+	marker := "\tpropageerDomeinNaarOnderliggende()"
 	markerIdx := strings.Index(content, marker)
 	if markerIdx < 0 {
 		return fmt.Errorf("kan marker %q niet vinden in %s", marker, plumbingPath)

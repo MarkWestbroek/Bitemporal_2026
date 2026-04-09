@@ -2,7 +2,22 @@
   "versie": "v3",
   "naam": "Configuratie-domein",
   "beschrijving": "Bitemporele entiteiten voor configuratie: formulierdefinities, views, etc.",
-  "datatypes": [],
+  "datatypes": [
+    {
+      "naam": "Versie",
+      "description": "Versienummer in semver-achtig formaat: m.n (verplicht), optioneel m.n.o of m.n.o.p.",
+      "domein": "configuratie",
+      "basistype": "string",
+      "format": "versie",
+      "validatie": {
+        "pattern": "^\\d+\\.\\d+(\\.\\d+)?(\\.\\d+)?$",
+        "foutmelding": "Voer een geldig versienummer in (bijv. 1.0, 2.1.3 of 1.0.0.1)"
+      },
+      "weergave": {
+        "placeholder": "bijv. 1.0 of 2.1.3"
+      }
+    }
+  ],
   "enums": [
     {
       "goType": "FormulierDefinitieStatus",
@@ -12,6 +27,16 @@
         { "constNaam": "FormulierDefinitieStatusConcept", "waarde": "concept" },
         { "constNaam": "FormulierDefinitieStatusActief", "waarde": "actief" },
         { "constNaam": "FormulierDefinitieStatusInactief", "waarde": "inactief" }
+      ]
+    },
+    {
+      "goType": "WeergaveDefinitieStatus",
+      "baseType": "string",
+      "domein": "configuratie",
+      "waarden": [
+        { "constNaam": "WeergaveDefinitieStatusConcept", "waarde": "concept" },
+        { "constNaam": "WeergaveDefinitieStatusActief", "waarde": "actief" },
+        { "constNaam": "WeergaveDefinitieStatusInactief", "waarde": "inactief" }
       ]
     }
   ],
@@ -63,13 +88,105 @@
           "naam": "Layout",
           "description": "De layout-boom van het formulier als JSON-structuur. Bevat groepen, rijen, velden en conditionele elementen.",
           "meervoud": "formulier_definitie_layouts",
-          "momentvoorkomen": "enkelvoudig",
+          "momentvoorkomen": "meervoudig",
           "isMaterieel": false,
           "velden": [
             {
               "naam": "layout_json",
               "goType": "string",
               "description": "JSON-string met de formulier-layout (groep/rij/veld/conditioneel elementen)."
+            },
+            {
+              "naam": "definitie_versie",
+              "goType": "string",
+              "datatype": "Versie",
+              "description": "Versienummer van de layout (semver: m.n.o.p)."
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    },
+    {
+      "typenaam": "WeergaveDefinitie",
+      "description": "Weergavedefinitie voor publicatie-views op entiteitsdata. Bevat metadata (naam, doeltype, status), een tabelconfiguratie (kolommen, sortering) en een detail-template met veldpad-inserts. Bitemporeel: wijzigingen zijn traceerbaar en corrigeerbaar via registraties.",
+      "domein": "configuratie",
+      "isMaterieel": true,
+      "kleur": "#a5f3fc",
+      "meervoud": "weergave_definities",
+      "gegevenselementen": [
+        {
+          "naam": "Meta",
+          "description": "Metadata van de weergavedefinitie: naam, beschrijving, doeltype en status.",
+          "meervoud": "weergave_definitie_metas",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string",
+              "description": "Weergavenaam van de view, bijv. 'Personen overzicht'."
+            },
+            {
+              "naam": "beschrijving",
+              "goType": "string",
+              "description": "Toelichting op doel en gebruik van deze weergave."
+            },
+            {
+              "naam": "doeltype",
+              "goType": "string",
+              "description": "Typenaam van de doelentiteit waarvoor deze weergave is bedoeld, bijv. 'NatuurlijkPersoon'."
+            },
+            {
+              "naam": "status",
+              "goType": "WeergaveDefinitieStatus",
+              "enum": "WeergaveDefinitieStatus",
+              "description": "Levenscyclusstatus: concept, actief of inactief."
+            },
+            {
+              "naam": "is_standaard",
+              "goType": "*bool",
+              "description": "True als dit de standaardweergave is voor het doeltype."
+            }
+          ]
+        },
+        {
+          "naam": "TabelConfig",
+          "description": "Configuratie van de tabelweergave: kolomdefinities (veldpad, label, breedte, sorteerbaar, filterbaar), standaardsortering en aantal rijen per pagina.",
+          "meervoud": "weergave_definitie_tabel_configs",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": false,
+          "velden": [
+            {
+              "naam": "tabel_config_json",
+              "goType": "string",
+              "description": "JSON-string met kolomdefinities, standaardsortering en paginering-instellingen."
+            },
+            {
+              "naam": "definitie_versie",
+              "goType": "string",
+              "datatype": "Versie",
+              "description": "Versienummer van de tabelconfiguratie (semver: m.n.o.p)."
+            }
+          ]
+        },
+        {
+          "naam": "DetailTemplate",
+          "description": "Template voor de detail-pagina met {{veldpad}} inserts. Wordt gerenderd als read-only publicatieweergave.",
+          "meervoud": "weergave_definitie_detail_templates",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": false,
+          "velden": [
+            {
+              "naam": "template_tekst",
+              "goType": "string",
+              "description": "Markdown-achtig template met {{veldpad}} inserts, bijv. '{{Naam.roepnaam}} {{Naam.achternaam}}'."
+            },
+            {
+              "naam": "definitie_versie",
+              "goType": "string",
+              "datatype": "Versie",
+              "description": "Versienummer van het detail-template (semver: m.n.o.p)."
             }
           ]
         }

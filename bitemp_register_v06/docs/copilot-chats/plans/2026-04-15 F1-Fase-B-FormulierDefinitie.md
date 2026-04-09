@@ -135,7 +135,7 @@ const { FormulierDefinitie, layout, loading, error } = useFormulierDefinitie("Ty
 ```
 
 - Fetcht alle FormulierDefinities via `/formulier_definities`
-- Haalt per item de full data op via `/full/formulier_definities/{id}`
+- Haalt de geneste data op via `/full/formulier_definities`
 - Vindt de actieve standaard-definitie voor het opgegeven doeltype
 - Parseert `layout_json` en retourneert het als `layout`
 

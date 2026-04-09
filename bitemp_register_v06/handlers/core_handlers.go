@@ -52,6 +52,53 @@ func zoekbareKolommen(meta model.TypeMeta) []string {
 	return cols
 }
 
+// alleKolommen extraheert alle bun-kolomnamen uit het model dat door meta.DBFactory
+// wordt gecreëerd. Het resultaat is een set (map) voor validatie van sort/filter kolommen.
+func alleKolommen(meta model.TypeMeta) map[string]bool {
+	if meta.DBFactory == nil {
+		return nil
+	}
+	instance := meta.DBFactory()
+	t := reflect.TypeOf(instance)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	cols := make(map[string]bool)
+	for i := 0; i < t.NumField(); i++ {
+		f := t.Field(i)
+		bunTag := f.Tag.Get("bun")
+		if bunTag == "" || bunTag == "-" {
+			continue
+		}
+		col := strings.SplitN(bunTag, ",", 2)[0]
+		if col != "" {
+			cols[col] = true
+		}
+	}
+	return cols
+}
+
+// isVeiligeKolomnaam controleert of een kolomnaam alleen veilige tekens bevat
+// (letters, cijfers, underscore). Defense-in-depth tegen SQL injection.
+func isVeiligeKolomnaam(col string) bool {
+	if len(col) == 0 {
+		return false
+	}
+	for _, ch := range col {
+		if !((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_') {
+			return false
+		}
+	}
+	return true
+}
+
+// filterClause beschrijft één WHERE-conditie met bijbehorende argumenten.
+// Wordt gebruikt om dezelfde filters op zowel de data- als count-query toe te passen.
+type filterClause struct {
+	condition string
+	args      []interface{}
+}
+
 // TODO: full entity get and post to include all fields, not just ID.
 // This will require changes to the model structs and the handlers
 // to bind JSON to the full struct instead of just an ID field.
@@ -241,20 +288,67 @@ func MakeGetEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 			Limit(size).
 			Offset(offset)
 
+		// Bouw een lijst van filtervoorwaarden op die zowel op de data-query als
+		// de count-query worden toegepast, voor consistentie.
+		var filters []filterClause
+
 		// Optionele zoekterm: als ?q= is opgegeven, doorzoek alle string-kolommen
 		// met ILIKE (case-insensitive). Handig voor combobox/autocomplete in de frontend.
-		var searchClauses []string
-		var searchArgs []interface{}
 		if q := strings.TrimSpace(c.Query("q")); q != "" {
 			cols := zoekbareKolommen(meta)
 			if len(cols) > 0 {
+				var orParts []string
+				var orArgs []interface{}
 				pattern := "%" + q + "%"
 				for _, col := range cols {
-					searchClauses = append(searchClauses, fmt.Sprintf("%s ILIKE ?", col))
-					searchArgs = append(searchArgs, pattern)
+					orParts = append(orParts, fmt.Sprintf("%s ILIKE ?", col))
+					orArgs = append(orArgs, pattern)
 				}
-				query = query.Where("("+strings.Join(searchClauses, " OR ")+")", searchArgs...)
+				filters = append(filters, filterClause{
+					condition: "(" + strings.Join(orParts, " OR ") + ")",
+					args:      orArgs,
+				})
 			}
+		}
+
+		// Veldspecifiek filteren: ?filter.naam=jan&filter.status=actief
+		// Elke filter wordt als AND-conditie toegevoegd (ILIKE, case-insensitive).
+		allCols := alleKolommen(meta)
+		for key, values := range c.Request.URL.Query() {
+			if !strings.HasPrefix(key, "filter.") || len(values) == 0 {
+				continue
+			}
+			col := strings.TrimPrefix(key, "filter.")
+			if !allCols[col] || !isVeiligeKolomnaam(col) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("onbekende filterkolom: %s", col)})
+				return
+			}
+			val := strings.TrimSpace(values[0])
+			if val == "" {
+				continue
+			}
+			filters = append(filters, filterClause{
+				condition: fmt.Sprintf("%s ILIKE ?", col),
+				args:      []interface{}{"%" + val + "%"},
+			})
+		}
+
+		// Pas alle filters toe op de data-query
+		for _, f := range filters {
+			query = query.Where(f.condition, f.args...)
+		}
+
+		// Sortering: ?sort=kolom&order=asc|desc
+		if sortCol := c.Query("sort"); sortCol != "" {
+			if !allCols[sortCol] || !isVeiligeKolomnaam(sortCol) {
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("onbekende sorteerkolom: %s", sortCol)})
+				return
+			}
+			order := "ASC"
+			if strings.EqualFold(c.Query("order"), "desc") {
+				order = "DESC"
+			}
+			query = query.OrderExpr(fmt.Sprintf("%s %s", sortCol, order))
 		}
 
 		err := query.Scan(c.Request.Context())
@@ -263,9 +357,10 @@ func MakeGetEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 			return
 		}
 
+		// Count-query met dezelfde filters voor consistente paginering
 		countQuery := DB.NewSelect().Model(meta.DBFactory())
-		if len(searchClauses) > 0 {
-			countQuery = countQuery.Where("("+strings.Join(searchClauses, " OR ")+")", searchArgs...)
+		for _, f := range filters {
+			countQuery = countQuery.Where(f.condition, f.args...)
 		}
 		total, err := countQuery.Count(c.Request.Context())
 		if err != nil {
@@ -279,6 +374,7 @@ func MakeGetEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 			"page":                      page,
 			"size":                      size,
 			"has_more":                  hasMore,
+			"total_count":               total,
 		})
 	}
 }

@@ -623,7 +623,7 @@ func initCgMetaRegistry() {
 				Naam:                "weergavenaam",
 				GoType:              "string",
 				AfleidingsregelTaal: "cel",
-				Afleidingsregel:     "Gemeente.weergavenaam + \" - \" + rol",
+				Afleidingsregel:     "Gemeente.GemeenteGegevens.naam + \" - \" + rol",
 				IsWeergaveVeld:      true,
 			},
 		},

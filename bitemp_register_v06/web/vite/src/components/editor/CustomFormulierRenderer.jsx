@@ -1,4 +1,5 @@
 import SchemaFormField from "./SchemaFormField";
+import { bepaalWidgetOverride } from "./widgetOverrides";
 
 /**
  * CustomFormulierRenderer — rendert een formulier op basis van een layout-JSON
@@ -26,6 +27,7 @@ export default function CustomFormulierRenderer({
   onChange,
   errors = {},
   readOnly = false,
+  typeMeta = null,
 }) {
   if (!layout || !velden) return null;
 
@@ -90,6 +92,7 @@ export default function CustomFormulierRenderer({
               onChange={(val) => onChange(element.veld, val)}
               error={errors[element.veld]}
               readOnly={readOnly}
+              widgetOverride={bepaalWidgetOverride(typeMeta, element.veld, element.widget)}
             />
           </div>
         );

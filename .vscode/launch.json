@@ -148,7 +148,7 @@
         {
             "name": "Start frontend and debug API v06",
             "configurations": [
-                "Frontend v06: Vite dev server",
+                "Frontend v06: Vite dev server (clean)",
                 "Go API v06: debug"
             ],
             "stopAll": true

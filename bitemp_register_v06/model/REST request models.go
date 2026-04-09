@@ -83,16 +83,7 @@ func (rep *RepresentatiePlusNaam) UnmarshalJSON(data []byte) error {
 	}
 
 	for veldnaam, payload := range raw {
-		// Disambiguatie: extraheer payload-keys om bij dubbele veldnamen
-		// (bijv. "naam", "contactgegevens") het juiste type te kiezen.
-		var payloadObj map[string]json.RawMessage
-		payloadKeys := make(map[string]struct{})
-		if json.Unmarshal(payload, &payloadObj) == nil {
-			for k := range payloadObj {
-				payloadKeys[k] = struct{}{}
-			}
-		}
-		meta, ok := MetaRegistry.GetByVeldnaamMetPayload(veldnaam, payloadKeys)
+		meta, ok := MetaRegistry.GetByVeldnaam(veldnaam)
 		if !ok {
 			return fmt.Errorf("unsupported representatie key '%s'", veldnaam)
 		}

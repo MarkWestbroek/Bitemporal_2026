@@ -1072,6 +1072,7 @@ func MakeGetFullEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 			"page":                      page,
 			"size":                      size,
 			"has_more":                  hasMore,
+			"total_count":               total,
 		})
 	}
 }

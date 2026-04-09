@@ -1,4 +1,4 @@
-# Backlog — Bitemporeel Register v06
+`# Backlog — Bitemporeel Register v06
 
 > **Samengesteld**: 2026-04-07
 > **Bron**: alle `.md` bestanden, Go-code TODOs, planbestanden, ontwerpgedachten en frontend-code in de v06 codebase.
@@ -625,15 +625,21 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | F19 | ✅ Betekenisvolle gegevenstypen (MIM): presentatie-datatypes + weergave-hints | F1-Q1Q2Q3 plan |
 | F20 | ✅ API endpoint `/api/viz/schema/datatypes` | F1-Q1Q2Q3 plan |
 | F21 | ✅ SchemaFormField: widget-rendering op basis van datatype weergave-hints | F1-Q1Q2Q3 plan |
-| F22 | Custom tabelweergaven (ViewDefinitie JSON, kolom-selectie, sortering) | F1-Q1Q2Q3 plan |
-| F23 | Server-side zoek/filter endpoint voor entiteiten | F1-Q1Q2Q3 plan |
-| F24 | Detail-pagina template renderer (veldinserts via CEL-paden) | F1-Q1Q2Q3 plan |
+| F22 | ✅ Custom tabelweergaven (WeergaveDefinitie ENT + PublicatieTabel + TabelConfig kolom-selectie/sortering) | F1-Q1Q2Q3 Fase Q2 |
+| F23 | ✅ Server-side zoek/filter endpoint: `?filter.*`, `?sort=`, `?order=`, `total_count` in response | F1-Q1Q2Q3 Fase Q2 |
+| F24 | ✅ Detail-pagina template renderer (PublicatieDetail met `{{veldpad}}` inserts via CEL-paden) | F1-Q1Q2Q3 Fase Q2 |
+| F31 | ✅ WeergaveDefinitie bitemporale entiteit (codegen configuratie-domein: ENT + Meta/TabelConfig/DetailTemplate GE's) | F1-Q1Q2Q3 Fase Q2 |
+| F32 | ✅ useWeergaveDefinitie hook + publicatie.html apart entrypoint (HashRouter, server-side paginering) | F1-Q1Q2Q3 Fase Q2 |
+| F33 | ✅ Replay file: standaard WeergaveDefinities voor NatuurlijkPersoon, Initiatief, A en Land (v0.1, hub-veldnamen, definitie_versie) | F1-Q1Q2Q3 Fase Q2 |
 | F25 | ✅ FormulierDefinitie bitemporale entiteit (codegen configuratie-domein: ENT + Meta GE + Layout GE) | F1-Q1Q2Q3 Fase B |
 | F26 | ✅ CustomFormulierRenderer.jsx (layout JSON → formulier met groep/rij/veld/conditioneel) | F1-Q1Q2Q3 Fase B |
 | F27 | ✅ useFormulierDefinitie hook (fetch actieve FormulierDefinitie voor een doeltype) | F1-Q1Q2Q3 Fase B |
 | F28 | ✅ EntiteitFormulier integratie: toggle custom/standaard weergave bij actieve FormulierDefinitie | F1-Q1Q2Q3 Fase B |
 | F29 | ✅ Custom formulier: editable modus met cross-GE save (één registratie, meerdere GE-wijzigingen) | F1-Q1Q2Q3 Fase B vervolg |
 | F30 | Visuele FormulierDefinitie layout-editor (drag-and-drop veldindeling) | F1-Q1Q2Q3 Fase B vervolg |
+| F34 | ✅ JSON- en Markdown-widget: side-by-side editor + live preview, full-width grid spanning, `widget: "json"` en `widget: "markdown"` in layout | inhoud-editor-technisch.md |
+| F35 | Geïntegreerde code-editor (één paneel, type "in" de gekleurde code). Opties: **react-simple-code-editor** (~3 KB, licht), **CodeMirror 6** (~150 KB, volledig), **Monaco** (~2 MB, overkill). Zie §12.8 in inhoud-editor-technisch.md | inhoud-editor-technisch.md |
+| F36 | Code splitting per doelgroep: publicatie (mobiel/licht), inhoud-editor (desktop), IDE (zwaar/desktop). Vite multi-entry is al ingericht. | inhoud-editor-technisch.md |
 
 
 ### Frontend — Bestaande pagina's (Index/Tijdlijn/Registraties)

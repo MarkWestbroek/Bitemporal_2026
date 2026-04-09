@@ -1,5 +1,10 @@
 package model
 
+import (
+	"fmt"
+	"os"
+)
+
 // Hardcoded meta model for representatie types, avoiding reflection.
 
 // Referentielijst-subtypes: classificatie van entiteiten en relaties als onderdeel
@@ -209,6 +214,8 @@ func (r MetaRegistryType) MustTypeMeta(typeName string) TypeMeta {
 }
 
 // GetByVeldnaam zoekt een TypeMeta op basis van de JSON veldnaam (bijv. "a", "u", "rel_a_b").
+// LET OP: bij dubbele veldnamen (bijv. "naam", "contactgegevens") is het resultaat
+// non-deterministisch. Gebruik GetByVeldnaamMetPayload voor disambiguatie.
 func (r MetaRegistryType) GetByVeldnaam(veldnaam string) (TypeMeta, bool) {
 	for _, meta := range r {
 		if meta.Veldnaam == veldnaam {
@@ -216,6 +223,31 @@ func (r MetaRegistryType) GetByVeldnaam(veldnaam string) (TypeMeta, bool) {
 		}
 	}
 	return TypeMeta{}, false
+}
+
+// GetByVeldnaamMetPayload zoekt een TypeMeta op veldnaam en lost ambiguïteit op
+// wanneer meerdere types dezelfde Veldnaam delen (bijv. "naam" → ApiStandaard_Naam_Data
+// / NatuurlijkPersoon_Naam_Data). De juiste TypeMeta wordt gekozen door te kijken welk
+// EntiteitIDKolom als JSON-sleutel in de payload voorkomt.
+func (r MetaRegistryType) GetByVeldnaamMetPayload(veldnaam string, payloadKeys map[string]struct{}) (TypeMeta, bool) {
+	candidates := r.GetAllByVeldnaam(veldnaam)
+	if len(candidates) == 0 {
+		return TypeMeta{}, false
+	}
+	if len(candidates) == 1 {
+		return candidates[0], true
+	}
+	// Meerdere matches: inspecteer de payload-sleutels om te disambigueren.
+	for _, meta := range candidates {
+		if meta.EntiteitIDKolom != "" {
+			if _, found := payloadKeys[meta.EntiteitIDKolom]; found {
+				return meta, true
+			}
+		}
+	}
+	// Geen match op EntiteitIDKolom: neem de eerste als fallback.
+	fmt.Fprintf(os.Stderr, "WARN GetByVeldnaamMetPayload: geen disambiguatie mogelijk voor veldnaam %q (%d candidates)\n", veldnaam, len(candidates))
+	return candidates[0], true
 }
 
 // GetAllByVeldnaam retourneert alle TypeMeta's die dezelfde Veldnaam hebben.
@@ -335,8 +367,9 @@ func VoegOnderliggendGEToe(typenaam string, ge OnderliggendGegevenselement) {
 	MetaRegistry[typenaam] = meta
 }
 
-// Centrale init-volgorde: abuvwxy-basisdomein eerst, dan register, daarna overige domeinen.
+// Centrale init-volgorde: abuvwxy-basisdomein, register, overige domeinen.
 // Zo kan np-loc via VoegOnderliggendGEToe() referenties toevoegen aan register-scope entiteiten.
+// Additionele domeinen worden door ensureInitRegistration automatisch toegevoegd.
 func init() {
 	// abuvwxy — het oorspronkelijke basis-/referentiemodel
 	initAbuvwxyMetaRegistry()

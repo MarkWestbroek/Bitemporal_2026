@@ -422,9 +422,57 @@ Go garandeert dat `var`-declaraties (MetaRegistry, DatatypeRegistry) klaar zijn 
 2. Genereer opnieuw met codegen
 3. De struct krijgt automatisch het nieuwe veld, inclusief tags
 
+### Welke veldnamen zijn gereserveerd?
+
+De codegen genereert automatisch plumbing-velden in `_Data` structs. De volgende veldnamen zijn **gereserveerd** en mogen niet als inhoudsveld worden gebruikt:
+
+| Veldnaam   | Type       | Reden                                            |
+|------------|------------|--------------------------------------------------|
+| `versie`   | `int64`    | Autoincrement PK voor data-versioning            |
+| `rel_id`   | `int`      | FK naar parent hub                               |
+| `opvoer`   | `*time.Time` | Formele tijd: opvoer                           |
+| `afvoer`   | `*time.Time` | Formele tijd: afvoer                           |
+
+Als een inhoudsveld dezelfde naam heeft als een systeemveld, wordt het **automatisch overgeslagen** met een waarschuwing (`⚠ veld "versie" in ... overgeslagen: conflicteert met systeemveld`). Hernoem het veld in de V3 JSON, bijvoorbeeld `versie` → `definitie_versie`.
+
+### Unieke Veldnaam-afleiding voor GE hubs
+
+Sinds juni 2026 detecteert de codegen automatisch wanneer twee GE-types (uit verschillende entiteiten) dezelfde korte Veldnaam zouden krijgen (bijv. "Meta" bij zowel FormulierDefinitie als WeergaveDefinitie). In dat geval wordt de volledige typenaam in lowercase gebruikt:
+
+- `FormulierDefinitie_Meta` → Veldnaam `formulierdefinitie_meta` (i.p.v. `meta`)
+- `WeergaveDefinitie_Meta` → Veldnaam `weergavedefinitie_meta`
+
+GE-types zonder naamconflict behouden de korte Veldnaam (bijv. `layout`, `tabelconfig`).
+
+### Custom datatypes
+
+Domeinen kunnen eigen datatypes definiëren in de `datatypes`-array van de V3 JSON:
+
+```json
+{
+  "naam": "Versie",
+  "description": "Versienummer in formaat m.n.o.p (o en p optioneel).",
+  "basistype": "string",
+  "format": "versie",
+  "validatie": { "pattern": "^\\d+\\.\\d+(\\.\\d+)?(\\.\\d+)?$" }
+}
+```
+
+In gegenereerde structs krijgt het veld een `schema:"datatype:Versie"` tag. De frontend kan het format en de validatie uit de schema-API lezen.
+
 ### Hoe werkt de PowerShell BOM-workaround?
 
 PowerShell 5.1 schrijft standaard UTF-16 LE BOM bij `>` redirect. Go's JSON parser herkent dat niet. Gebruik `[System.IO.File]::WriteAllText()` met `UTF8Encoding($false)` voor BOM-loze output.
+
+### Replay-bestandsconventies
+
+Replay files (`replay files/*.json`) bevatten registraties die via `POST /registratie/` worden ingeladen. Conventies:
+
+1. **Hub-veldnamen gebruiken, niet `_data`-veldnamen.** Bij een eerste opvoer bestaat de hub nog niet; de registratielogica maakt automatisch zowel een hub- als een data-record aan. Gebruik dus `weergavedefinitie_meta` (niet `weergavedefinitie_meta_data`), `tabelconfig` (niet `weergavedefinitie_tabelconfig_data`), etc. De `_data`-veldnaam is alleen nodig bij low-level wijzigingen op een bestaand data-record.
+2. **IDs beginnen bij 1** voor een verse database. Gebruik geen willekeurig hoge nummers (bijv. 9000+).
+3. **Datum en tijdstip:** gebruik de actuele datum als aanvangsdatum voor standaard-definities. `exported_at` en `tijdstip` in ISO 8601.
+4. **definitie_versie** invullen als het veld bestaat (bijv. `"0.1"`).
+5. **Eén registratie per entitet-instantie:** elke entry in `entries[]` bevat de volledige set wijzigingen voor één entiteit (opvoer entiteit + GE hubs + aanvang).
 
 ---
 

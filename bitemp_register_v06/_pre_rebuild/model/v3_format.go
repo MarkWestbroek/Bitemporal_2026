@@ -64,9 +64,16 @@ type V3Regel struct {
 }
 
 // V3Weergave beschrijft weergave-hints voor de frontend.
+// Naast placeholder en inputMask bevat dit ook widget-type, prefix/suffix en multiline-hints
+// zodat de frontend het juiste invoercomponent kan renderen op basis van het gegevenstype.
 type V3Weergave struct {
 	Placeholder string `json:"placeholder,omitempty"`
 	InputMask   string `json:"inputMask,omitempty"`
+	Widget      string `json:"widget,omitempty"`    // bijv. "textarea", "checkbox", "currency", "datepicker"
+	Prefix      string `json:"prefix,omitempty"`    // bijv. "€" voor Bedrag
+	Suffix      string `json:"suffix,omitempty"`    // bijv. "%" voor Percentage
+	Multiline   bool   `json:"multiline,omitempty"` // true voor LangeTekst (rendert als <textarea>)
+	Decimalen   *int   `json:"decimalen,omitempty"` // aantal decimalen voor numerieke waarden
 }
 
 // V3Enum beschrijft een enum type met zijn waarden.

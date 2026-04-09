@@ -1,0 +1,253 @@
+{
+  "version": 1,
+  "exported_at": "2026-04-09T10:00:00.000Z",
+  "source": "manual://copilot-standaard-weergavedefinities-v0.1",
+  "description": "Standaard WeergaveDefinities (v0.1) voor de belangrijkste entiteitstypen. Legt per entiteit een tabelconfiguratie en detail-template vast. Gebruikt hub-veldnamen (niet _data) zodat de registratielogica automatisch hub + data records aanmaakt.",
+  "count": 4,
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-09T10:00:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "WeergaveDefinitie voor NatuurlijkPersoon",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Standaard WeergaveDefinitie v0.1 voor ENT NatuurlijkPersoon",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "weergavedefinitie": { "id": 1 }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_meta": {
+                "weergavedefinitie_id": 1,
+                "naam": "Natuurlijk Persoon standaardweergave",
+                "beschrijving": "Standaard tabel- en detailweergave voor NatuurlijkPersoon entiteiten.",
+                "doeltype": "NatuurlijkPersoon",
+                "status": "actief",
+                "is_standaard": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "tabelconfig": {
+                "weergavedefinitie_id": 1,
+                "tabel_config_json": "{\"kolommen\":[{\"veldpad\":\"id\",\"label\":\"ID\",\"breedte\":80,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"namen.data.roepnaam\",\"label\":\"Roepnaam\",\"breedte\":140,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"namen.data.achternaam\",\"label\":\"Achternaam\",\"breedte\":160,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"namen.data.tussenvoegsel\",\"label\":\"Tussenvoegsel\",\"breedte\":100},{\"veldpad\":\"persoonsidentificaties.data.bsn\",\"label\":\"BSN\",\"breedte\":120,\"filterbaar\":true},{\"veldpad\":\"burgerschappen.data.nationaliteit\",\"label\":\"Nationaliteit\",\"breedte\":130}],\"standaardSortering\":{\"veld\":\"id\",\"richting\":\"asc\"},\"rijenPerPagina\":25}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "detailtemplate": {
+                "weergavedefinitie_id": 1,
+                "template_tekst": "# {{namen.data.roepnaam}} {{namen.data.tussenvoegsel}} {{namen.data.achternaam}}\n\n**BSN:** {{persoonsidentificaties.data.bsn}}\n\n**Nationaliteit:** {{burgerschappen.data.nationaliteit}}\n\n**Naamgebruik:** {{naamgebruiken.data.naamgebruik}}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_aanvang": {
+                "weergavedefinitie_id": 1,
+                "datum": "2026-04-09"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-09T10:01:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "WeergaveDefinitie voor Initiatief",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Standaard WeergaveDefinitie v0.1 voor ENT Initiatief",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "weergavedefinitie": { "id": 2 }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_meta": {
+                "weergavedefinitie_id": 2,
+                "naam": "Initiatief standaardweergave",
+                "beschrijving": "Standaard tabel- en detailweergave voor Initiatief entiteiten.",
+                "doeltype": "Initiatief",
+                "status": "actief",
+                "is_standaard": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "tabelconfig": {
+                "weergavedefinitie_id": 2,
+                "tabel_config_json": "{\"kolommen\":[{\"veldpad\":\"id\",\"label\":\"ID\",\"breedte\":80,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"producten.data.naam\",\"label\":\"Productnaam\",\"breedte\":180,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"producten.data.type\",\"label\":\"Type\",\"breedte\":120,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"producten.data.CG_laag\",\"label\":\"CG-laag\",\"breedte\":120},{\"veldpad\":\"planningen.data.fase\",\"label\":\"Fase\",\"breedte\":120,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"planningen.data.startdatum\",\"label\":\"Startdatum\",\"breedte\":120,\"sorteerbaar\":true}],\"standaardSortering\":{\"veld\":\"id\",\"richting\":\"asc\"},\"rijenPerPagina\":25}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "detailtemplate": {
+                "weergavedefinitie_id": 2,
+                "template_tekst": "# {{producten.data.naam}}\n\n**Type:** {{producten.data.type}}\n**CG-laag:** {{producten.data.CG_laag}}\n**Fase:** {{planningen.data.fase}}\n\n## Omschrijving\n{{producten.data.omschrijving}}\n\n**Pitch:** {{producten.data.pitch}}\n**Website:** {{producten.data.website}}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_aanvang": {
+                "weergavedefinitie_id": 2,
+                "datum": "2026-04-09"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-09T10:02:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "WeergaveDefinitie voor A (testentiteit)",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Standaard WeergaveDefinitie v0.1 voor ENT A (test)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "weergavedefinitie": { "id": 3 }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_meta": {
+                "weergavedefinitie_id": 3,
+                "naam": "A standaardweergave",
+                "beschrijving": "Standaard tabel- en detailweergave voor testentiteit A.",
+                "doeltype": "A",
+                "status": "actief",
+                "is_standaard": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "tabelconfig": {
+                "weergavedefinitie_id": 3,
+                "tabel_config_json": "{\"kolommen\":[{\"veldpad\":\"id\",\"label\":\"ID\",\"breedte\":80,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"us.data.aaa\",\"label\":\"AAA\",\"breedte\":150,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"us.data.bbb\",\"label\":\"BBB\",\"breedte\":150},{\"veldpad\":\"vs.data.ccc\",\"label\":\"CCC\",\"breedte\":120},{\"veldpad\":\"ws.data.float\",\"label\":\"Float\",\"breedte\":100},{\"veldpad\":\"ws.data.heel\",\"label\":\"Heel\",\"breedte\":100}],\"standaardSortering\":{\"veld\":\"id\",\"richting\":\"asc\"},\"rijenPerPagina\":25}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "detailtemplate": {
+                "weergavedefinitie_id": 3,
+                "template_tekst": "# A {{id}}\n\n**AAA:** {{us.data.aaa}}\n**BBB:** {{us.data.bbb}}\n\n## V-gegevens\n**CCC:** {{vs.data.ccc}}\n**DDD:** {{vs.data.ddd}}\n\n## W-gegevens\n**Float:** {{ws.data.float}}\n**Heel:** {{ws.data.heel}}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_aanvang": {
+                "weergavedefinitie_id": 3,
+                "datum": "2026-04-09"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-09T10:03:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "description": "WeergaveDefinitie voor Land",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Standaard WeergaveDefinitie v0.1 voor ENT Land",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "weergavedefinitie": { "id": 4 }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_meta": {
+                "weergavedefinitie_id": 4,
+                "naam": "Land standaardweergave",
+                "beschrijving": "Standaard tabel- en detailweergave voor Land entiteiten.",
+                "doeltype": "Land",
+                "status": "actief",
+                "is_standaard": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "tabelconfig": {
+                "weergavedefinitie_id": 4,
+                "tabel_config_json": "{\"kolommen\":[{\"veldpad\":\"id\",\"label\":\"ID\",\"breedte\":80,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"landcodes.data.landcode\",\"label\":\"Landcode\",\"breedte\":100,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"landnamen.data.landnaam\",\"label\":\"Landnaam\",\"breedte\":200,\"sorteerbaar\":true,\"filterbaar\":true}],\"standaardSortering\":{\"veld\":\"landcodes.data.landcode\",\"richting\":\"asc\"},\"rijenPerPagina\":50}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "detailtemplate": {
+                "weergavedefinitie_id": 4,
+                "template_tekst": "# {{landnamen.data.landnaam}}\n\n**Landcode:** {{landcodes.data.landcode}}",
+                "definitie_versie": "0.1"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "weergavedefinitie_aanvang": {
+                "weergavedefinitie_id": 4,
+                "datum": "2026-04-09"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201
+    }
+  ]
+}

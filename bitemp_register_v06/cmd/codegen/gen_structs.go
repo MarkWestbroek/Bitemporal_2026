@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
@@ -182,9 +183,11 @@ func generateDataStruct(b *strings.Builder, hubType string, parentEntType string
 		writeField(b, f)
 	}
 
-	// Inhoudsvelden (skip parent FK, die zit al in plumbing)
+	// Inhoudsvelden (skip parent FK en plumbing-velden die al gegenereerd zijn)
+	plumbingNamen := map[string]bool{entIDKolom: true, "rel_id": true, "versie": true, "opvoer": true, "afvoer": true}
 	for _, v := range velden {
-		if v.Naam == entIDKolom {
+		if plumbingNamen[v.Naam] {
+			log.Printf("  ⚠ veld %q in %s overgeslagen: conflicteert met systeemveld", v.Naam, dataType)
 			continue
 		}
 		writeField(b, contentField(v))

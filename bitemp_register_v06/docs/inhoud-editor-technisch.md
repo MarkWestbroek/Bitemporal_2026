@@ -341,12 +341,48 @@ Het bestand `common-ground-logo.svg` wordt door Vite mee gekopieerd vanuit `publ
 - ✅ Similarity check: suggestie Corrigeren bij weinig wijzigingen
 - ✅ State-coördinatie: bewerkRij en nieuwGE wederzijds exclusief
 - ✅ Secondaire entiteit-ID dropdown voor relaties (Optie A — `<select>` via API)
+- ✅ Custom formulierdefinities (JSON-layout met groepen, rijen, conditionele blokken)
+- ✅ Expliciete widget-overrides in formulierlayout, incl. `widget: "json"` voor syntax-highlight preview
+
+### Iteratie 2b — Configuratievelden met JSON- en Markdown-widget (9 april 2026)
+
+- `SchemaFormField` ondersteunt nu een expliciete **widget-override** naast datatype-gedreven widgets.
+- `CustomFormulierRenderer` kan per layout-element een widget afdwingen, bijvoorbeeld `{ "type": "veld", "veld": "layout_json", "widget": "json" }`.
+- Beschikbare widget-overrides: **`json`** (syntax-highlighted JSON) en **`markdown`** (syntax-highlighted Markdown).
+- De volgende configuratievelden krijgen automatisch een widget-override via `widgetOverrides.js`:
+  - `FormulierDefinitie_Layout.layout_json` → `json`
+  - `WeergaveDefinitie_TabelConfig.tabel_config_json` → `json`
+  - `WeergaveDefinitie_DetailTemplate.template_tekst` → `markdown`
+- **Geïntegreerde code-editor**: Gebruikt `react-simple-code-editor` + `prismjs` — je typt direct "in" de gekleurde code (transparante textarea over een syntax-highlighted `<pre>`). Geen apart invoerveld en preview naast elkaar meer.
+- **Volle breedte**: JSON- en Markdown-widgets spannen altijd de volle breedte van het formuliergrid, zodat ze niet worden ingedrukt door smalle velden zoals `definitie_versie`.
+- **JSON-validatie**: Bij `json`-widgets wordt een parse-foutmelding getoond in de header als de inhoud geen geldige JSON is.
+- In readonly-modus is de editor niet bewerkbaar maar toont wel syntax-highlighting.
+
+#### Widget configureren in een FormulierDefinitie layout_json
+
+Een widget-override kan ook expliciet worden meegegeven in de layout JSON:
+
+```json
+{
+  "type": "formulier",
+  "elementen": [
+    { "type": "veld", "veld": "tabel_config_json", "widget": "json" },
+    { "type": "veld", "veld": "template_tekst", "widget": "markdown" },
+    { "type": "veld", "veld": "definitie_versie" }
+  ]
+}
+```
+
+De volgorde van widget-resolutie is:
+1. **Expliciet in layout JSON** — `element.widget` in de FormulierDefinitie
+2. **widgetOverrides.js** — hardcoded mapping per typenaam + veldnaam (voor configuratie-entiteiten)
+3. **DatatypeRegistry** — `weergave.widget` uit het datatype (bijv. `textarea` voor LangeTekst)
+4. **Standaard** — normaal invoerveld op basis van type/format
 
 ### Wat is uitgesteld naar Iteratie 3+
 
 - ❌ Secondaire entiteit-ID zoekcomponent (Optie B — schaalbaar alternatief, zie §12 punt 6)
-- ❌ Custom formulierdefinities (JSON-based layout)
-- ❌ Conditionele zichtbaarheid van velden
+- ❌ Visuele layout-editor voor custom formulierdefinities
 - ❌ Referentielijst-zoeker (autocomplete)
 - ❌ Server-side sorteren en filteren
 - ❌ Formeel/materieel tijdreizen in de editor
@@ -370,3 +406,22 @@ Het bestand `common-ground-logo.svg` wordt door Vite mee gekopieerd vanuit `publ
 
    **Optie B (toekomstig, schaalbaar alternatief)**: Read-only weergave van huidige waarde + een "Zoek {doelentiteit}" knop/component. Gebruiker zoekt/filtert de doelentiteit en selecteert er één. Het NL Design System heeft een **[Select Combobox](https://nldesignsystem.nl/select-combobox/)** component (status: Help Wanted) die hiervoor geschikt zou zijn — een invoerveld met filterfunctie over een optielijst. Deze is nog niet als React component beschikbaar in `@utrecht/component-library-react`, dus zou als custom component gebouwd moeten worden (met `<datalist>`, of een lightweight library zoals `downshift` of `react-select`), gestyled conform NL Design System tokens. Alternatieven: een modal/drawer met `RepresentatieTabel` (hergebruik van bestaande tabel met filtering) als zoekinterface. Aanbevolen wanneer het aantal secondaire entiteiten >100 wordt.
 7. **Ongedaan maken**: Voor het ongedaan maken van registraties is een andere interface nodig dan de per-GE acties. Dit wordt apart ontworpen.
+8. **Geïntegreerde code-editor voor JSON/Markdown** — De huidige side-by-side layout (textarea + preview) werkt zonder extra dependency. Als upgrade naar een "type in de gekleurde code"-ervaring zijn er drie opties:
+
+   | Optie | Pakket | Grootte (min+gzip) | Kenmerken |
+   |-------|--------|--------------------|-----------|
+   | **A** | `react-simple-code-editor` + `prismjs` | ~3 KB + ~6 KB | Transparante textarea over `<pre>` met syntax-highlight. Zeer licht, geen autocomplete, geen folding. Goed genoeg voor korte JSON/Markdown fragmenten. |
+   | **B** | CodeMirror 6 (`@codemirror/view` + taal-extensies) | ~40–150 KB (afhankelijk van extensies) | Volwaardige editor: autocomplete, bracket matching, zoeken, folding, meerdere cursors. Modulair: je importeert alleen wat je nodig hebt. |
+   | **C** | Monaco Editor (`@monaco-editor/react`) | ~2 MB | VS Code-engine in de browser. Overkill voor formuliervelden; nuttig als je een volledige IDE-achtige ervaring wilt (bijv. in de UML/IDE-pagina). |
+
+   **Aanbeveling**: Optie A als snelle verbetering; optie B als de JSON-configs complexer worden (>50 regels). De ~150 KB van CodeMirror is voor desktopgebruik verwaarloosbaar — het is vergelijkbaar met de huidige `jsx-runtime` bundle (140 KB). Bovendien wordt het alleen geladen in de entry points die het gebruiken, niet in de publicatie-pagina.
+
+9. **Code splitting per doelgroep** — Vite multi-entry is al ingericht met 7 aparte HTML-bestanden. Elke pagina laadt alleen haar eigen JS/CSS bundle:
+
+   | Entrypoint | Doelgroep | Bundlegrootte | Toelichting |
+   |------------|-----------|---------------|-------------|
+   | `publicatie.html` | Eindgebruiker, ook mobiel | ~14 KB JS | Licht, read-only, geen edit-componenten |
+   | `inhoud.html` | Redacteur, desktop | ~52 KB JS | Formulieren, GE-acties, widget-editors |
+   | `ide.html` | Beheerder, desktop | ~212 KB JS | Metamodel-editor, kan zwaardere componenten bevatten |
+
+   Een zware dependency zoals CodeMirror kan via `React.lazy()` + dynamic `import()` alleen worden geladen wanneer een JSON/Markdown-veld daadwerkelijk in beeld komt. Hierdoor betaalt de publicatie-pagina er niets voor, en zelfs in de inhoud-editor wordt het pas geladen bij het openen van een configuratie-entiteit. Dit is de standaard Vite-aanpak en vereist geen extra configuratie.

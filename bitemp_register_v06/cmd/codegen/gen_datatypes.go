@@ -160,10 +160,7 @@ func generateDatatypeAliases(v3 model.V3Model, _ codegenOptions) (string, error)
 
 	b.WriteString("\n")
 	for _, dt := range v3.Datatypes {
-		goBase := dt.Basistype
-		if goBase == "" {
-			goBase = "string"
-		}
+		goBase := jsonSchemaTypeToGo(dt.Basistype)
 		if dt.Description != "" {
 			b.WriteString(fmt.Sprintf("// %s — %s\n", dt.Naam, dt.Description))
 		}
@@ -171,4 +168,21 @@ func generateDatatypeAliases(v3 model.V3Model, _ codegenOptions) (string, error)
 	}
 
 	return b.String(), nil
+}
+
+// jsonSchemaTypeToGo mapt JSON Schema basistypes naar Go types.
+// Onbekende of lege types worden als "string" behandeld.
+func jsonSchemaTypeToGo(basistype string) string {
+	switch basistype {
+	case "integer":
+		return "int64"
+	case "number":
+		return "float64"
+	case "boolean":
+		return "bool"
+	case "string", "":
+		return "string"
+	default:
+		return basistype
+	}
 }

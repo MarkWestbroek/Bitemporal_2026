@@ -5,7 +5,7 @@ import { safeArray } from "../shared/schemaUtils";
 /**
  * useFormulierDefinitie — haalt de actieve FormulierDefinitie op voor een gegeven doeltype.
  *
- * Laadt alle FormulierDefinities via de full-API, vindt degene met status "actief"
+ * Laadt alle FormulierDefinities via de full-lijst-API, vindt degene met status "actief"
  * en is_standaard=true voor het doeltype. Retourneert de geparsede layout en metadata.
  *
  * @param {string} doeltype - Typenaam van de doelentiteit (bijv. "NatuurlijkPersoon")
@@ -25,33 +25,24 @@ export function useFormulierDefinitie(doeltype) {
     setLoading(true);
     setError(null);
 
-    // Haal alle FormulierDefinities op via de standaard lijst-API.
-    fetch(`${baseUrl}/formulier_definities`)
+    // Gebruik de full-lijst-API direct. Voor FormulierDefinitie is de full-detailroute
+    // niet overal beschikbaar, maar de full-lijstroute levert wel de geneste Meta/Layout.
+    fetch(`${baseUrl}/full/formulier_definities`)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
-      .then(async (lijst) => {
+      .then((lijst) => {
         if (cancelled) return;
 
-        const items = safeArray(lijst);
+        const items = safeArray(lijst?.["formulier definities"]);
         if (items.length === 0) {
           setLoading(false);
           return;
         }
 
-        // Haal per FormulierDefinitie de full data op om Meta en Layout te lezen.
-        // In een productieomgeving zou je dit via een query-parameter doen.
-        const fullPromises = items.map((item) =>
-          fetch(`${baseUrl}/full/formulier_definities/${item.id}`)
-            .then((r) => (r.ok ? r.json() : null))
-            .catch(() => null)
-        );
-        const fullItems = await Promise.all(fullPromises);
-        if (cancelled) return;
-
         // Zoek de actieve standaard-definitie voor dit doeltype.
-        const match = fullItems.find((full) => {
+        const match = items.find((full) => {
           if (!full) return false;
           const metaData = vindActueleData(full, "formulier_definitie_metas");
           return (

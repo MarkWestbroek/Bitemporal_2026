@@ -27,9 +27,10 @@ func generateInput(v3 model.V3Model) (string, error) {
 				writeField(&b, f)
 			}
 
-			// Inhoudsvelden uit de _Data struct (skip parent FK)
+			// Inhoudsvelden uit de _Data struct (skip parent FK en systeemvelden)
+			plumbingNamen := map[string]bool{entIDKolom: true, "rel_id": true, "versie": true, "opvoer": true, "afvoer": true}
 			for _, v := range ge.Velden {
-				if v.Naam == entIDKolom {
+				if plumbingNamen[v.Naam] {
 					continue
 				}
 				writeField(&b, inputContentField(v))
