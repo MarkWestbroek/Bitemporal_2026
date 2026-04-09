@@ -576,6 +576,8 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | E7 | Validatie: naamconventies, verplichte velden, referentiële integriteit | uml-editor/README.md |
 | E8 | Export naar MIM linked data JSON | README.md |
 | E9 | Kleur uit EA importeren | README.md |
+| E10| (ook IDE) Extra REP veld "Alias" | nieuw |
+
 
 ### IDE (metamodel-ontwerp omgeving)
 
@@ -618,6 +620,9 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | F14 | Verdere ARIA-attributen / toetsenbordnavigatie | inhoud-editor-technisch.md |
 | F15 | CSS tree-shaking Utrecht components | inhoud-editor-technisch.md |
 | F16 | Server-side paginering bij grote datasets | inhoud-editor-technisch.md |
+| F17 | Zoek-endpoint referentielijsten (?q= met ILIKE) | inhoud-editor-technisch.md |
+| F18 | Labels-configuratie voor veldnamen e.d. (InitiatiefDomein -> domein) | nieuw |
+
 
 ### Frontend — Bestaande pagina's (Index/Tijdlijn/Registraties)
 

@@ -1230,6 +1230,21 @@ def main() -> int:
     args = parser.parse_args()
 
     rows = [canonicalize_row(row) for row in json.loads(args.source_json.read_text(encoding="utf-8"))]
+
+    # Deduplicate op bron_id: bij meerdere rijen met hetzelfde bron_id wint de laatste (schoonste) versie.
+    seen_bron_ids: dict[Any, int] = {}
+    unique_rows: list[dict[str, Any]] = []
+    for row in rows:
+        bid = row.get("bron_id")
+        if bid in seen_bron_ids:
+            unique_rows[seen_bron_ids[bid]] = row  # overschrijf met latere versie
+        else:
+            seen_bron_ids[bid] = len(unique_rows)
+            unique_rows.append(row)
+    if len(unique_rows) < len(rows):
+        print(f"dedup: {len(rows)} → {len(unique_rows)} rijen (duplicaat bron_ids verwijderd)")
+    rows = unique_rows
+
     schema_meta = load_schema_meta(args.schema_json)
     replay = build_replay(rows, schema_meta, args.source_json, args.schema_json)
 
