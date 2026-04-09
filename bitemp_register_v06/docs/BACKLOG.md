@@ -632,7 +632,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | F26 | ✅ CustomFormulierRenderer.jsx (layout JSON → formulier met groep/rij/veld/conditioneel) | F1-Q1Q2Q3 Fase B |
 | F27 | ✅ useFormulierDefinitie hook (fetch actieve FormulierDefinitie voor een doeltype) | F1-Q1Q2Q3 Fase B |
 | F28 | ✅ EntiteitFormulier integratie: toggle custom/standaard weergave bij actieve FormulierDefinitie | F1-Q1Q2Q3 Fase B |
-| F29 | Custom formulier: editable modus met cross-GE save (nu read-only) | F1-Q1Q2Q3 Fase B vervolg |
+| F29 | ✅ Custom formulier: editable modus met cross-GE save (één registratie, meerdere GE-wijzigingen) | F1-Q1Q2Q3 Fase B vervolg |
 | F30 | Visuele FormulierDefinitie layout-editor (drag-and-drop veldindeling) | F1-Q1Q2Q3 Fase B vervolg |
 
 

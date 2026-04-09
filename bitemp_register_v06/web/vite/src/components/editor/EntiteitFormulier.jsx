@@ -6,6 +6,7 @@ import { evalueerCelExpressie, bouwCelContext, evalueerWeergaveVeldenVoorItem } 
 import RepresentatieFormulier from "./RepresentatieFormulier";
 import { useFormulierDefinitie } from "../../hooks/useFormulierDefinitie";
 import CustomFormulierRenderer from "./CustomFormulierRenderer";
+import { coercedWaardeVoorVeld } from "../actions/ActionFormParts";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -146,6 +147,9 @@ export default function EntiteitFormulier() {
   const [toonHistorie, setToonHistorie] = useState({}); // { [doeltype]: true/false } — toggle per GE-type
   const [doelEntiteitCache, setDoelEntiteitCache] = useState({}); // { "Typenaam:id": platgeslagenData }
   const [customWeergave, setCustomWeergave] = useState(false); // custom formulier layout modus
+  const [customEditValues, setCustomEditValues] = useState({}); // werkwaarden custom formulier
+  const [customBusy, setCustomBusy] = useState(false);
+  const [customFeedback, setCustomFeedback] = useState(null); // { type: "succes"|"fout", text }
 
   // Custom FormulierDefinitie ophalen voor dit entiteittype
   const { layout: customLayout, formulierDefinitie: customFormDef, loading: customLayoutLoading } =
@@ -284,6 +288,140 @@ export default function EntiteitFormulier() {
     return () => controller.abort();
   }, [entity, typeMeta, typeMetaByTypenaam, baseUrl]);
 
+  // Filter onderliggende: skip materiële plumbing (aanvang/einde op entiteitsniveau)
+  // N.B.: moet vóór early returns staan zodat useMemo/useCallback hook-orde stabiel blijft.
+  const onderliggende = useMemo(() => {
+    if (!typeMeta) return [];
+    return safeArray(typeMeta.onderliggende).filter((child) => {
+      const childMeta = typeMetaByTypenaam?.[child.doeltype];
+      return childMeta && childMeta.ge_subtype !== "aanvang" && childMeta.ge_subtype !== "einde";
+    });
+  }, [typeMeta, typeMetaByTypenaam]);
+
+  // ── Custom formulier: flatten GE-data voor de layout renderer ─────────
+  // veldNaarGE: mapping van veldnaam → { childMeta, dataMeta, actueel, bronVelden }
+  // zodat we bij opslaan weten welk veld bij welk GE hoort (cross-GE save).
+  const { customVelden, customValues, veldNaarGE } = useMemo(() => {
+    if (!customLayout || !entity) return { customVelden: [], customValues: {}, veldNaarGE: {} };
+    const velden = [];
+    const values = {};
+    const geMapping = {};
+    const gezien = new Set();
+    for (const child of onderliggende) {
+      const childMeta = typeMetaByTypenaam?.[child.doeltype];
+      if (!childMeta) continue;
+      const dataChild = safeArray(childMeta?.onderliggende).find((c) => {
+        const cm = typeMetaByTypenaam?.[c.doeltype];
+        return cm?.ge_subtype === "data";
+      });
+      const dataMeta = dataChild ? typeMetaByTypenaam?.[dataChild.doeltype] : null;
+      const bronVelden = safeArray(dataMeta?.velden || childMeta?.velden);
+      const rawItems = safeArray(entity[child.jsonRolnaam] || entity[child.rolnaam]);
+      const flat = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
+      const actueel = flat.find((item) => item?.opvoer && !item?.afvoer);
+      for (const v of bronVelden) {
+        const naam = v?.naam;
+        if (!naam || gezien.has(naam)) continue;
+        if (["opvoer", "afvoer", "versie"].includes(naam)) continue;
+        if (childMeta.entiteitIDKolom && naam === childMeta.entiteitIDKolom) continue;
+        if (v.autoIncrement) continue;
+        gezien.add(naam);
+        velden.push(v);
+        geMapping[naam] = { childMeta, dataMeta, actueel, bronVelden };
+      }
+      if (actueel) {
+        for (const v of bronVelden) {
+          if (v?.naam && actueel[v.naam] != null) values[v.naam] = actueel[v.naam];
+        }
+      }
+    }
+    return { customVelden: velden, customValues: values, veldNaarGE: geMapping };
+  }, [customLayout, entity, onderliggende, typeMetaByTypenaam]);
+
+  // ── Cross-GE save: groepeer gewijzigde velden per GE en stuur één registratie ──
+  const handleCustomOpslaan = useCallback(async () => {
+    setCustomBusy(true);
+    setCustomFeedback(null);
+    try {
+      const geGroepen = {};
+      for (const [veldnaam, waarde] of Object.entries(customEditValues)) {
+        const origWaarde = customValues[veldnaam];
+        if (String(waarde ?? "") === String(origWaarde ?? "")) continue;
+        const ge = veldNaarGE[veldnaam];
+        if (!ge) continue;
+        const key = ge.childMeta.typenaam;
+        if (!geGroepen[key]) {
+          geGroepen[key] = { ...ge, gewijzigdeVelden: {} };
+        }
+        geGroepen[key].gewijzigdeVelden[veldnaam] = waarde;
+      }
+
+      const geKeys = Object.keys(geGroepen);
+      if (geKeys.length === 0) {
+        setCustomFeedback({ type: "succes", text: "Geen wijzigingen." });
+        return;
+      }
+
+      const wijzigingen = [];
+      for (const info of Object.values(geGroepen)) {
+        const hubMeta = info.childMeta;
+        const veldnaamKey = hubMeta.veldnaam || hubMeta.padnaam;
+        const payload = {};
+        if (hubMeta.entiteitIDKolom && id) {
+          payload[hubMeta.entiteitIDKolom] = Number(id);
+        }
+        if (info.actueel?.rel_id != null) {
+          payload.rel_id = info.actueel.rel_id;
+        }
+        if (hubMeta.idKolom && info.actueel?.[hubMeta.idKolom] != null) {
+          payload[hubMeta.idKolom] = info.actueel[hubMeta.idKolom];
+        }
+
+        const bronVelden = safeArray(info.dataMeta?.velden || hubMeta?.velden);
+        for (const v of bronVelden) {
+          const naam = v?.naam;
+          if (!naam) continue;
+          if (["opvoer", "afvoer", "versie"].includes(naam)) continue;
+          if (hubMeta.entiteitIDKolom && naam === hubMeta.entiteitIDKolom) continue;
+          if (v.autoIncrement) continue;
+
+          const edited = customEditValues[naam];
+          const original = info.actueel?.[naam];
+          const raw = edited !== undefined ? edited : original;
+          if (raw === "" || raw === null || raw === undefined) {
+            if (v.verplicht) throw new Error(`${naam} is verplicht.`);
+            continue;
+          }
+          payload[naam] = coercedWaardeVoorVeld(raw, v, naam);
+        }
+
+        wijzigingen.push({ opvoer: { [veldnaamKey]: payload } });
+      }
+
+      const res = await fetch(`${baseUrl}/registratie/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          registratie: { registratietype: "registratie" },
+          wijzigingen,
+        }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status}: ${text}`);
+      }
+
+      setCustomFeedback({ type: "succes", text: `Opgeslagen! (${wijzigingen.length} GE${wijzigingen.length > 1 ? "'s" : ""})` });
+      setCustomEditValues({});
+      fetchEntity();
+    } catch (err) {
+      setCustomFeedback({ type: "fout", text: err.message });
+    } finally {
+      setCustomBusy(false);
+    }
+  }, [customEditValues, customValues, veldNaarGE, baseUrl, id, fetchEntity]);
+
   if (!typeMeta) {
     return <div className="cg-feedback--fout">Onbekend type: {typePad}</div>;
   }
@@ -299,50 +437,6 @@ export default function EntiteitFormulier() {
   if (!entity) {
     return <div className="cg-feedback--fout">Record niet gevonden.</div>;
   }
-
-  // Filter onderliggende: skip materiële plumbing (aanvang/einde op entiteitsniveau)
-  const onderliggende = safeArray(typeMeta.onderliggende).filter((child) => {
-    const childMeta = typeMetaByTypenaam?.[child.doeltype];
-    return childMeta && childMeta.ge_subtype !== "aanvang" && childMeta.ge_subtype !== "einde";
-  });
-
-  // ── Custom formulier: flatten GE-data voor de layout renderer ─────────
-  const { customVelden, customValues } = useMemo(() => {
-    if (!customLayout || !entity) return { customVelden: [], customValues: {} };
-    const velden = [];
-    const values = {};
-    const gezien = new Set();
-    for (const child of onderliggende) {
-      const childMeta = typeMetaByTypenaam?.[child.doeltype];
-      if (!childMeta) continue;
-      // Zoek het _Data sub-type voor inhoudsvelden
-      const dataChild = safeArray(childMeta?.onderliggende).find((c) => {
-        const cm = typeMetaByTypenaam?.[c.doeltype];
-        return cm?.ge_subtype === "data";
-      });
-      const dataMeta = dataChild ? typeMetaByTypenaam?.[dataChild.doeltype] : null;
-      const bronVelden = safeArray(dataMeta?.velden || childMeta?.velden);
-      for (const v of bronVelden) {
-        const naam = v?.naam;
-        if (!naam || gezien.has(naam)) continue;
-        if (["opvoer", "afvoer", "versie"].includes(naam)) continue;
-        if (childMeta.entiteitIDKolom && naam === childMeta.entiteitIDKolom) continue;
-        if (v.autoIncrement) continue;
-        gezien.add(naam);
-        velden.push(v);
-      }
-      // Actuele waarden uit het first actuele record
-      const rawItems = safeArray(entity[child.jsonRolnaam] || entity[child.rolnaam]);
-      const flat = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
-      const actueel = flat.find((item) => item?.opvoer && !item?.afvoer);
-      if (actueel) {
-        for (const v of bronVelden) {
-          if (v?.naam && actueel[v.naam] != null) values[v.naam] = actueel[v.naam];
-        }
-      }
-    }
-    return { customVelden: velden, customValues: values };
-  }, [customLayout, entity, onderliggende, typeMetaByTypenaam]);
 
   // Verwijderen (afvoer) van een meervoudig GE record
   async function handleVerwijderenRij(item, childMeta) {
@@ -487,18 +581,46 @@ export default function EntiteitFormulier() {
         </div>
       )}
 
-      {/* Custom formulier weergave (alleen-lezen cross-GE layout) */}
+      {/* Custom formulier weergave — editeerbaar, cross-GE save via één registratie */}
       {customWeergave && customLayout && customVelden.length > 0 && (
         <div className="cg-form-card" style={{ marginBottom: "0.75rem" }}>
-          <div className="cg-form-section__title" style={{ marginBottom: "0.5rem" }}>
-            {customFormDef?.meta?.naam || "Custom formulier"}
+          <div className="cg-form-section__title" style={{ marginBottom: "0.5rem", display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+            <span>{customFormDef?.meta?.naam || "Custom formulier"}</span>
+            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+              {customFeedback && (
+                <span
+                  className={customFeedback.type === "fout" ? "cg-feedback--fout" : "cg-feedback--succes"}
+                  style={{ fontSize: "0.8125rem", padding: "0.125rem 0.5rem", borderRadius: "4px" }}
+                >
+                  {customFeedback.text}
+                </span>
+              )}
+              <button
+                type="button"
+                className="utrecht-button utrecht-button--secondary-action"
+                style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}
+                disabled={customBusy}
+                onClick={() => { setCustomEditValues({}); setCustomFeedback(null); }}
+              >
+                Reset
+              </button>
+              <button
+                type="button"
+                className="utrecht-button utrecht-button--primary-action"
+                style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}
+                disabled={customBusy}
+                onClick={handleCustomOpslaan}
+              >
+                {customBusy ? "Opslaan…" : "Opslaan"}
+              </button>
+            </div>
           </div>
           <CustomFormulierRenderer
             layout={customLayout}
             velden={customVelden}
-            values={customValues}
-            onChange={() => {}}
-            readOnly={true}
+            values={{ ...customValues, ...customEditValues }}
+            onChange={(veldnaam, waarde) => setCustomEditValues((prev) => ({ ...prev, [veldnaam]: waarde }))}
+            readOnly={false}
           />
         </div>
       )}
