@@ -115,6 +115,7 @@ func NewRouter() *gin.Engine {
 	router.GET("/docs", handlers.DocsIndex)
 	router.GET("/docs/*filepath", handlers.DocsPage)
 	router.GET("/api/viz/schema", handlers.MaakVizSchemaHandler())
+	router.GET("/api/viz/schema/datatypes", handlers.MaakVizSchemaDatatypesHandler())
 	router.GET("/api/viz/entiteit/:typenaam/max-id", handlers.MaakVizEntiteitMaxIDHandler())
 	router.GET("/api/viz/relatie/:typenaam/secondaire-ids", handlers.MaakVizRelatieSecondaireIDsHandler())
 	router.GET("/api/viz/reflijst/:typenaam/opties", handlers.MaakVizReflijstOptiesHandler())

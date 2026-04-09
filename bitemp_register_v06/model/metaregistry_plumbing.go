@@ -367,9 +367,12 @@ func VoegOnderliggendGEToe(typenaam string, ge OnderliggendGegevenselement) {
 	MetaRegistry[typenaam] = meta
 }
 
-// Centrale init-volgorde: abuvwxy-basisdomein eerst, dan register, daarna overige domeinen.
+// Centrale init-volgorde: presentatie-datatypes eerst, dan abuvwxy-basisdomein, register, overige domeinen.
 // Zo kan np-loc via VoegOnderliggendGEToe() referenties toevoegen aan register-scope entiteiten.
 func init() {
+	// presentatie — domeinonafhankelijke MIM-gebaseerde gegevenstypen (KorteTekst, Bedrag, Datum, etc.)
+	initPresentatieDatatypeRegistry()
+
 	// abuvwxy — het oorspronkelijke basis-/referentiemodel
 	initAbuvwxyMetaRegistry()
 	initAbuvwxyDatatypeRegistry()
@@ -392,6 +395,12 @@ func init() {
 
 	// Propageer domein van entiteiten naar hun onderliggende GE's, relaties en plumbing-types.
 	// Zo hoeft het domein niet op elke entry handmatig te staan.
+
+	// configuratie — domein-specifieke uitbreiding
+	initConfiguratieEnumRegistry()
+	initConfiguratieDatatypeRegistry()
+	initConfiguratieMetaRegistry()
+
 	propageerDomeinNaarOnderliggende()
 }
 

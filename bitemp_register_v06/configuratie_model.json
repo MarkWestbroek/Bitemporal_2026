@@ -1,0 +1,80 @@
+{
+  "versie": "v3",
+  "naam": "Configuratie-domein",
+  "beschrijving": "Bitemporele entiteiten voor configuratie: formulierdefinities, views, etc.",
+  "datatypes": [],
+  "enums": [
+    {
+      "goType": "FormulierDefinitieStatus",
+      "baseType": "string",
+      "domein": "configuratie",
+      "waarden": [
+        { "constNaam": "FormulierDefinitieStatusConcept", "waarde": "concept" },
+        { "constNaam": "FormulierDefinitieStatusActief", "waarde": "actief" },
+        { "constNaam": "FormulierDefinitieStatusInactief", "waarde": "inactief" }
+      ]
+    }
+  ],
+  "entiteiten": [
+    {
+      "typenaam": "FormulierDefinitie",
+      "description": "Formulierdefinitie voor custom layouts van entiteitsformulieren. Bevat metadata (naam, status, doeltype) en een JSON layout-boom. Bitemporeel: wijzigingen zijn traceerbaar en corrigeerbaar via registraties.",
+      "domein": "configuratie",
+      "isMaterieel": true,
+      "kleur": "#c4b5fd",
+      "meervoud": "formulier_definities",
+      "gegevenselementen": [
+        {
+          "naam": "Meta",
+          "description": "Metadata van de formulierdefinitie: naam, beschrijving, doeltype en status.",
+          "meervoud": "formulier_definitie_metas",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string",
+              "description": "Weergavenaam van het formulier, bijv. 'Standaard persoonsformulier'."
+            },
+            {
+              "naam": "beschrijving",
+              "goType": "string",
+              "description": "Toelichting op doel en gebruik van dit formulier."
+            },
+            {
+              "naam": "doeltype",
+              "goType": "string",
+              "description": "Typenaam van de doelentiteit waarvoor dit formulier is bedoeld, bijv. 'NatuurlijkPersoon'."
+            },
+            {
+              "naam": "status",
+              "goType": "FormulierDefinitieStatus",
+              "enum": "FormulierDefinitieStatus",
+              "description": "Levenscyclusstatus: concept, actief of inactief."
+            },
+            {
+              "naam": "is_standaard",
+              "goType": "*bool",
+              "description": "True als dit het standaardformulier is voor het doeltype."
+            }
+          ]
+        },
+        {
+          "naam": "Layout",
+          "description": "De layout-boom van het formulier als JSON-structuur. Bevat groepen, rijen, velden en conditionele elementen.",
+          "meervoud": "formulier_definitie_layouts",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "velden": [
+            {
+              "naam": "layout_json",
+              "goType": "string",
+              "description": "JSON-string met de formulier-layout (groep/rij/veld/conditioneel elementen)."
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    }
+  ]
+}

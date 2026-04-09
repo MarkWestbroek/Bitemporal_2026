@@ -1,13 +1,18 @@
 import { useId } from "react";
 import { validatieMeldingVoorVeld } from "../actions/ActionFormParts";
 import RefCombobox from "./RefCombobox";
+import { useSchema } from "../../context/SchemaContext";
 
 /**
  * SchemaFormField — generiek formulierveld dat één `veld` uit de schema-API
  * rendert als NL Design System-compatible invoerelement.
  *
+ * Gebruikt de DatatypeRegistry (via SchemaContext) om weergave-hints op te halen
+ * zoals widget, prefix, suffix, multiline en decimalen. Hierdoor wordt bijv.
+ * een Bedrag-veld getoond met "€"-prefix en een LangeTekst als <textarea>.
+ *
  * Props:
- *  - veld:      { naam, type, format, enum, verplicht, description, autoIncrement }
+ *  - veld:      { naam, type, format, enum, verplicht, description, autoIncrement, datatype }
  *  - value:     huidige waarde
  *  - onChange:  (nieuweWaarde) => void
  *  - error:     optioneel foutmelding override (vanuit react-hook-form)
@@ -15,6 +20,7 @@ import RefCombobox from "./RefCombobox";
  */
 export default function SchemaFormField({ veld, value, onChange, error, readOnly }) {
   const fieldId = useId();
+  const { datatypeByNaam } = useSchema();
   if (!veld) return null;
 
   const isReadonly = readOnly || veld.autoIncrement;
@@ -22,6 +28,10 @@ export default function SchemaFormField({ veld, value, onChange, error, readOnly
   const foutmelding = error || (!isReadonly ? validatieMeldingVoorVeld(value, veld) : "");
   const type = String(veld.type || "string");
   const format = String(veld.format || "");
+
+  // Weergave-hints uit DatatypeRegistry ophalen (widget, prefix, suffix, multiline, decimalen)
+  const datatypeMeta = veld.datatype ? datatypeByNaam?.[veld.datatype] : null;
+  const weergave = datatypeMeta?.weergave || {};
 
   function inputType() {
     if (type === "string" && format === "date") return "date";
@@ -37,8 +47,15 @@ export default function SchemaFormField({ veld, value, onChange, error, readOnly
 
   function step() {
     if (type === "integer") return "1";
+    if (type === "number" && weergave.decimalen != null) {
+      return String(Math.pow(10, -weergave.decimalen));
+    }
     if (type === "number") return "any";
     return undefined;
+  }
+
+  function maxLength() {
+    return datatypeMeta?.validatie?.maxLength || undefined;
   }
 
   function renderInput() {
@@ -97,8 +114,26 @@ export default function SchemaFormField({ veld, value, onChange, error, readOnly
       );
     }
 
-    // Default → text/date/number input
-    return (
+    // Multiline / textarea widget (bijv. LangeTekst)
+    if (weergave.multiline || weergave.widget === "textarea") {
+      return (
+        <textarea
+          id={fieldId}
+          className="utrecht-textarea utrecht-textarea--html-textarea"
+          rows={4}
+          value={String(value ?? "")}
+          onChange={(e) => onChange(e.target.value)}
+          readOnly={isReadonly}
+          disabled={isReadonly}
+          aria-invalid={foutmelding ? "true" : undefined}
+          placeholder={weergave.placeholder || undefined}
+          maxLength={maxLength()}
+        />
+      );
+    }
+
+    // Input met prefix/suffix wrapper (bijv. "€" voor Bedrag, "%" voor Percentage)
+    const inputEl = (
       <input
         id={fieldId}
         className="utrecht-textbox utrecht-textbox--html-input"
@@ -110,9 +145,22 @@ export default function SchemaFormField({ veld, value, onChange, error, readOnly
         readOnly={isReadonly}
         disabled={isReadonly}
         aria-invalid={foutmelding ? "true" : undefined}
-        placeholder={format === "date" ? "JJJJ-MM-DD" : format === "date-time" ? "JJJJ-MM-DDThh:mm" : undefined}
+        placeholder={weergave.placeholder || (format === "date" ? "JJJJ-MM-DD" : format === "date-time" ? "JJJJ-MM-DDThh:mm" : undefined)}
+        maxLength={maxLength()}
       />
     );
+
+    if (weergave.prefix || weergave.suffix) {
+      return (
+        <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+          {weergave.prefix && <span className="utrecht-form-field__prefix">{weergave.prefix}</span>}
+          {inputEl}
+          {weergave.suffix && <span className="utrecht-form-field__suffix">{weergave.suffix}</span>}
+        </div>
+      );
+    }
+
+    return inputEl;
   }
 
   return (

@@ -587,3 +587,15 @@ func MaakVizSchemaHandler() gin.HandlerFunc {
 		})
 	}
 }
+
+// MaakVizSchemaDatatypesHandler retourneert alle beschikbare V3Datatypes uit de
+// DatatypeRegistry, inclusief hun weergave-hints (widget, prefix, suffix, multiline, decimalen).
+// Frontend gebruikt dit endpoint om per veld het juiste invoercomponent te bepalen.
+func MaakVizSchemaDatatypesHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"versie":    "v1",
+			"datatypes": model.DatatypeRegistry,
+		})
+	}
+}

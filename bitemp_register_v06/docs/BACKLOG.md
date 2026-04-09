@@ -604,8 +604,8 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 
 | # | Item | Bron |
 |---|------|------|
-| F1 | Iteratie 2: custom formulierdefinities in JSON | Forms plan 02 |
-| F2 | Conditionele zichtbaarheid | Forms plan 02 |
+| F1 | ✅ Iteratie 2: custom formulierdefinities in JSON — FormulierDefinitie als bitemporale entiteit (configuratie-domein) + CustomFormulierRenderer + useFormulierDefinitie hook + integratie in EntiteitFormulier | Forms plan 02, F1-Q1Q2Q3 plan |
+| F2 | ✅ Conditionele zichtbaarheid — `evalueerConditie()` in CustomFormulierRenderer (==, !=, truthy, falsy) | Forms plan 02, F1-Q1Q2Q3 plan |
 | F3 | Inline editing in tabeloverzicht | Forms plan 02 |
 | F4 | Bulk-operaties | Forms plan 02 |
 | F5 | Export CSV/Excel | Forms plan 02 |
@@ -622,6 +622,18 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | F16 | Server-side paginering bij grote datasets | inhoud-editor-technisch.md |
 | F17 | Zoek-endpoint referentielijsten (?q= met ILIKE) | inhoud-editor-technisch.md |
 | F18 | Labels-configuratie voor veldnamen e.d. (InitiatiefDomein -> domein) | nieuw |
+| F19 | ✅ Betekenisvolle gegevenstypen (MIM): presentatie-datatypes + weergave-hints | F1-Q1Q2Q3 plan |
+| F20 | ✅ API endpoint `/api/viz/schema/datatypes` | F1-Q1Q2Q3 plan |
+| F21 | ✅ SchemaFormField: widget-rendering op basis van datatype weergave-hints | F1-Q1Q2Q3 plan |
+| F22 | Custom tabelweergaven (ViewDefinitie JSON, kolom-selectie, sortering) | F1-Q1Q2Q3 plan |
+| F23 | Server-side zoek/filter endpoint voor entiteiten | F1-Q1Q2Q3 plan |
+| F24 | Detail-pagina template renderer (veldinserts via CEL-paden) | F1-Q1Q2Q3 plan |
+| F25 | ✅ FormulierDefinitie bitemporale entiteit (codegen configuratie-domein: ENT + Meta GE + Layout GE) | F1-Q1Q2Q3 Fase B |
+| F26 | ✅ CustomFormulierRenderer.jsx (layout JSON → formulier met groep/rij/veld/conditioneel) | F1-Q1Q2Q3 Fase B |
+| F27 | ✅ useFormulierDefinitie hook (fetch actieve FormulierDefinitie voor een doeltype) | F1-Q1Q2Q3 Fase B |
+| F28 | ✅ EntiteitFormulier integratie: toggle custom/standaard weergave bij actieve FormulierDefinitie | F1-Q1Q2Q3 Fase B |
+| F29 | Custom formulier: editable modus met cross-GE save (nu read-only) | F1-Q1Q2Q3 Fase B vervolg |
+| F30 | Visuele FormulierDefinitie layout-editor (drag-and-drop veldindeling) | F1-Q1Q2Q3 Fase B vervolg |
 
 
 ### Frontend — Bestaande pagina's (Index/Tijdlijn/Registraties)

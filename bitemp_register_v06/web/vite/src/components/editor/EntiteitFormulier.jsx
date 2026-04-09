@@ -4,6 +4,8 @@ import { useSchema } from "../../context/SchemaContext";
 import { safeArray, platSlaHubItems, platSlaAlleVersies, tUitRegistratieTijdstip } from "../../shared/schemaUtils";
 import { evalueerCelExpressie, bouwCelContext, evalueerWeergaveVeldenVoorItem } from "../../shared/celEvaluator";
 import RepresentatieFormulier from "./RepresentatieFormulier";
+import { useFormulierDefinitie } from "../../hooks/useFormulierDefinitie";
+import CustomFormulierRenderer from "./CustomFormulierRenderer";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -143,6 +145,11 @@ export default function EntiteitFormulier() {
   const [bewerkRij, setBewerkRij] = useState(null); // { doeltype, index } — meervoudig rij in correctiemodus
   const [toonHistorie, setToonHistorie] = useState({}); // { [doeltype]: true/false } — toggle per GE-type
   const [doelEntiteitCache, setDoelEntiteitCache] = useState({}); // { "Typenaam:id": platgeslagenData }
+  const [customWeergave, setCustomWeergave] = useState(false); // custom formulier layout modus
+
+  // Custom FormulierDefinitie ophalen voor dit entiteittype
+  const { layout: customLayout, formulierDefinitie: customFormDef, loading: customLayoutLoading } =
+    useFormulierDefinitie(typeMeta?.typenaam);
 
   const apiPath = typeMeta?.padnaam || typeMeta?.meervoud || typeMeta?.veldnaam;
 
@@ -299,6 +306,44 @@ export default function EntiteitFormulier() {
     return childMeta && childMeta.ge_subtype !== "aanvang" && childMeta.ge_subtype !== "einde";
   });
 
+  // ── Custom formulier: flatten GE-data voor de layout renderer ─────────
+  const { customVelden, customValues } = useMemo(() => {
+    if (!customLayout || !entity) return { customVelden: [], customValues: {} };
+    const velden = [];
+    const values = {};
+    const gezien = new Set();
+    for (const child of onderliggende) {
+      const childMeta = typeMetaByTypenaam?.[child.doeltype];
+      if (!childMeta) continue;
+      // Zoek het _Data sub-type voor inhoudsvelden
+      const dataChild = safeArray(childMeta?.onderliggende).find((c) => {
+        const cm = typeMetaByTypenaam?.[c.doeltype];
+        return cm?.ge_subtype === "data";
+      });
+      const dataMeta = dataChild ? typeMetaByTypenaam?.[dataChild.doeltype] : null;
+      const bronVelden = safeArray(dataMeta?.velden || childMeta?.velden);
+      for (const v of bronVelden) {
+        const naam = v?.naam;
+        if (!naam || gezien.has(naam)) continue;
+        if (["opvoer", "afvoer", "versie"].includes(naam)) continue;
+        if (childMeta.entiteitIDKolom && naam === childMeta.entiteitIDKolom) continue;
+        if (v.autoIncrement) continue;
+        gezien.add(naam);
+        velden.push(v);
+      }
+      // Actuele waarden uit het first actuele record
+      const rawItems = safeArray(entity[child.jsonRolnaam] || entity[child.rolnaam]);
+      const flat = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
+      const actueel = flat.find((item) => item?.opvoer && !item?.afvoer);
+      if (actueel) {
+        for (const v of bronVelden) {
+          if (v?.naam && actueel[v.naam] != null) values[v.naam] = actueel[v.naam];
+        }
+      }
+    }
+    return { customVelden: velden, customValues: values };
+  }, [customLayout, entity, onderliggende, typeMetaByTypenaam]);
+
   // Verwijderen (afvoer) van een meervoudig GE record
   async function handleVerwijderenRij(item, childMeta) {
     const label = childMeta?.klassenaam || childMeta?.typenaam || "record";
@@ -422,6 +467,41 @@ export default function EntiteitFormulier() {
           )}
         </div>
       </div>
+
+      {/* Toggle voor custom formulier layout (als er een actieve FormulierDefinitie is) */}
+      {customLayout && !customLayoutLoading && (
+        <div style={{ marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <button
+            type="button"
+            className={`utrecht-button ${customWeergave ? "utrecht-button--primary-action" : "utrecht-button--secondary-action"}`}
+            style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}
+            onClick={() => setCustomWeergave(!customWeergave)}
+          >
+            {customWeergave ? "⬦ Standaard weergave" : "⬧ Custom formulier"}
+          </button>
+          {customFormDef?.meta?.naam && (
+            <span style={{ fontSize: "0.75rem", color: "var(--cg-donkergrijs)" }}>
+              Layout: {customFormDef.meta.naam}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Custom formulier weergave (alleen-lezen cross-GE layout) */}
+      {customWeergave && customLayout && customVelden.length > 0 && (
+        <div className="cg-form-card" style={{ marginBottom: "0.75rem" }}>
+          <div className="cg-form-section__title" style={{ marginBottom: "0.5rem" }}>
+            {customFormDef?.meta?.naam || "Custom formulier"}
+          </div>
+          <CustomFormulierRenderer
+            layout={customLayout}
+            velden={customVelden}
+            values={customValues}
+            onChange={() => {}}
+            readOnly={true}
+          />
+        </div>
+      )}
 
       {/* Onderliggende GE's en relaties */}
       {onderliggende.map((child) => {

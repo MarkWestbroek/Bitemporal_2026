@@ -30,6 +30,7 @@ function vergelijkOpWeergavenaam(a, b) {
 export function SchemaProvider({ baseUrl, children }) {
   const [types, setTypes] = useState([]);
   const [v3Model, setV3Model] = useState(null);
+  const [datatypes, setDatatypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -38,15 +39,21 @@ export function SchemaProvider({ baseUrl, children }) {
     setLoading(true);
     setError(null);
 
-    fetch(`${baseUrl}/api/schema/model/code`)
-      .then((res) => {
+    Promise.all([
+      fetch(`${baseUrl}/api/schema/model/code`).then((res) => {
         if (!res.ok) throw new Error(`Schema HTTP ${res.status}`);
         return res.json();
-      })
-      .then((data) => {
+      }),
+      fetch(`${baseUrl}/api/viz/schema/datatypes`).then((res) => {
+        if (!res.ok) throw new Error(`Datatypes HTTP ${res.status}`);
+        return res.json();
+      }),
+    ])
+      .then(([schemaData, dtData]) => {
         if (!cancelled) {
-          setTypes(safeArray(data?.types));
-          setV3Model(data?.model || null);
+          setTypes(safeArray(schemaData?.types));
+          setV3Model(schemaData?.model || null);
+          setDatatypes(safeArray(dtData?.datatypes));
           setLoading(false);
         }
       })
@@ -68,6 +75,15 @@ export function SchemaProvider({ baseUrl, children }) {
     });
     return result;
   }, [types]);
+
+  // Lookup: datatype naam → V3Datatype (incl. weergave-hints: widget, prefix, suffix, multiline, decimalen)
+  const datatypeByNaam = useMemo(() => {
+    const result = {};
+    datatypes.forEach((dt) => {
+      if (dt?.naam) result[dt.naam] = dt;
+    });
+    return result;
+  }, [datatypes]);
 
   // Lookup: padnaam / meervoud / veldnaam → typeMeta
   const typeMetaByPadnaam = useMemo(() => {
@@ -138,6 +154,7 @@ export function SchemaProvider({ baseUrl, children }) {
       baseUrl,
       typeMetaByTypenaam,
       typeMetaByPadnaam,
+      datatypeByNaam,
       entiteitTypes,
       referentielijstItemTypes,
       inhoudNavigatieGroepen,
@@ -150,6 +167,7 @@ export function SchemaProvider({ baseUrl, children }) {
       baseUrl,
       typeMetaByTypenaam,
       typeMetaByPadnaam,
+      datatypeByNaam,
       entiteitTypes,
       referentielijstItemTypes,
       inhoudNavigatieGroepen,
