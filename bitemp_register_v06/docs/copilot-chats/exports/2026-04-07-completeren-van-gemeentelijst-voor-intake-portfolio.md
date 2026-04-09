@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-07 21:18
 - **Sessie-ID**: `271139a4-1858-4f5a-800c-2486c7792bbc`
-- **Berichten**: 22
+- **Berichten**: 26
 
 ---
 
@@ -1694,5 +1694,141 @@ Dan heb je twee opties:
 - een **ID offset** gebruiken
 
 Als je wilt, kan ik meteen ook aangeven **welke resetstap** je het best nu uitvoert.
+
+---
+
+## 🧑 User
+
+We hadden dit gefixt:
+
+```
+Ik heb de echte oorzaak te pakken: naam werd door de runtime soms als persoonsnaam gelezen in plaats van als API-standaardnaam.
+
+✅ Oorzaak gevonden en opgelost
+De file zelf was niet kapot.
+Het probleem zat in de runtime-parser voor de JSON-key naam.
+
+Wat ging mis?
+In jouw log zie je dit patroon:
+
+id=1 → correct als ApiStandaard_Naam
+id=2 → ineens fout als NatuurlijkPersoon_Naam
+Dat kwam doordat de code bij naam alleen de eerste MetaRegistry-match pakte.
+Omdat Go-map-iteratie niet stabiel is, was dat gedrag semi-toevallig — daarom leek het te crashen “bij 2 of 3”.
+
+🔧 Gefixt in code
+Aangepast:
+
+bitemp_register_v06/model/REST request models.go
+Ik heb de parser nu zo gemaakt dat hij bij dubbele veldnamen zoals naam kijkt naar de payload zelf:
+
+apistandaard_id → ApiStandaard_Naam
+natuurlijkpersoon_id → NatuurlijkPersoon_Naam
+Dus de disambiguatie is nu deterministisch.
+```
+
+Maar nu gebeurt precies hetzelfde weer. Hoe kan dit steeds terugkomen? (Het is nu al 2 x gefixt)....
+
+```
+
+[bun]  01:49:47.067   INSERT                     0s  INSERT INTO "wijziging" ("id", "wijzigingstype", "registratie_id", "entiteitnaam", "entiteit_id", "representatienaam", "representatie_id", "versie", "tijdstip", "is_ongedaan_gemaakt") VALUES (DEFAULT, 'opvoer', 346, 'ApiStandaard', '6', 'ApiStandaard_Naam_Data', '1', 1, '2026-01-15 10:00:00.000346+00:00', FALSE) RETURNING "id"
+HANDLER: representatienaam=ApiStandaard veldnaam=apistandaard
+- representatie: type=model.ApiStandaard metatype=entiteit id=7
+  ID=7
+HANDLER (meta opvoer): registratietype: registratie
+[bun]  01:49:47.068   INSERT                  518µs  INSERT INTO "apistandaard" ("id", "opvoer", "afvoer") VALUES (7, '2026-01-15 10:00:00.000346+00:00', DEFAULT) RETURNING *
+[bun]  01:49:47.068   INSERT                     0s  INSERT INTO "wijziging" ("id", "wijzigingstype", "registratie_id", "entiteitnaam", "entiteit_id", "representatienaam", "representatie_id", "versie", "tijdstip", "is_ongedaan_gemaakt") VALUES (DEFAULT, 'opvoer', 346, 'ApiStandaard', '7', '', '', DEFAULT, '2026-01-15 10:00:00.000346+00:00', FALSE) RETURNING "id", "versie"
+HANDLER: representatienaam=NatuurlijkPersoon_Naam veldnaam=naam
+- representatie: type=model.NatuurlijkPersoon_Naam_Input metatype=gegevenselement id=0
+HANDLER (meta opvoer): registratietype: registratie
+[BODY-LOG] ──── POST /registratie/ → 500 (27ms) ────
+[bun]  01:49:47.068   ROLLBACK                593µs  ROLLBACK
+[GIN] 2026/04/09 - 01:49:47 | 500 |     27.1453ms |   
+```
+
+---
+
+## 🤖 Assistant
+
+`REST request models.go` is **not** in the codegen list, so codegen shouldn't be overwriting it. But it keeps getting reverted somehow. Regardless, the real permanent fix is to put the disambiguation logic into  (also not codegen-generated) — inside `GetByVeldnaam` itself. That way even if `REST request models.go` gets reset, the lookup is already smart. Now I understand the full picture. The real fix is twofold:
+
+1. Change `GetByVeldnaam` to accept an optional payload for disambiguation (but that changes the signature which would break callers)
+2. Better: add a `GetByVeldnaamMetPayload` method that does the smart lookup, and use it in `UnmarshalJSON`
+
+But the **truly permanent** fix is to put `chooseMetaByPayload` in  (safe from codegen) and call it from `UnmarshalJSON`. Let me also check all callers of `GetByVeldnaam` to understand impact:  Only one real caller: `REST request models.go:86`. The `_baseline` and `_pre_rebuild` are backups. The plan:
+
+1. Add `GetByVeldnaamMetPayload` to  (codegen-safe)
+2. Update `REST request models.go` to call it
+3. Add a regression test in `model/` so if this ever gets reverted, the test catches it 
+```
+
+```
+Now check if  and  are already imported in :  No imports at all — I need to add them:    
+```
+
+```
+
+```
+
+```
+Now check if  and  are already imported in :  No imports at all — I need to add them:    
+```
+
+```
+Now update `UnmarshalJSON` in `REST request models.go` to use the new method:      
+```
+
+```
+Now let me build first to verify it compiles:       Clean build. Now add a regression test. Let me check for existing model tests:         Good. Now I'll create a regression test for the veldnaam disambiguation:     The Typenaam is `ApiStandaard_Naam`, not `ApiStandaard_Naam_Data` — let me check:      The Typenaam is `ApiStandaard_Naam` (not `_Data`). Let me also check the NatuurlijkPersoon one and the contactgegevens:        Now I have the correct Typenaam values. Fix the test:    
+```
+
+```
+All 7 tests pass. Now run all tests:        All tests pass. Here's what happened and why:
+
+## Waarom het steeds terugkwam
+
+De vorige fix zat **alleen** in `REST request models.go` — een aparte `chooseMetaByPayload()` functie. Elke keer als dat bestand werd gereset (door een edit, een git checkout, of een onbedoelde overwrite), was de fix weg en viel je terug op de non-deterministische `GetByVeldnaam`.
+
+## Permanente oplossing
+
+De disambiguatie zit nu **in de MetaRegistry zelf**, in  — een bestand dat **niet door codegen wordt overschreven**:
+
+- Nieuwe methode:  — kijkt bij dubbele veldnamen naar welk  in de payload zit
+- `UnmarshalJSON` in  roept nu die methode aan
+
+## Regressietest
+
+ — 7 tests:
+-  + `apistandaard_id` → `ApiStandaard_Naam`
+-  + `natuurlijkpersoon_id` → `NatuurlijkPersoon_Naam`
+- `contactgegevens` +  → `Organisatie_Contactgegevens`
+- `contactgegevens` +  → `Persoon_Contactgegevens`
+- End-to-end UnmarshalJSON test (20 iteraties om non-determinisme te vangen)
+
+**Je moet nu de API-server herstarten** om de fix actief te maken. Daarna kun je replay 4 opnieuw uitvoeren.
+
+---
+
+## 🧑 User
+
+DIt ziet er al veel en veel beter uit.
+
+Er falen nog 4 entries:
+
+---
+
+## 🤖 Assistant
+
+Let me check the server logs for these 500 errors, and look at what entries 66-69 contain in the replay file. Now let me check the server logs and compare with a succeeding entry: Let me check the product payloads for the failing entries — specifically the `producttype` field: Interesting — entries 62-65 and 66-69 have the **same product names**! Let me check if they're duplicates: Entries 66–69 are exact duplicates of entries 62–65 (same `initiatief_id` 96–99). The 500 errors are because those IDs already exist in the database from the first insert.
+
+Let me find and fix the duplication in the Python generator: Exactly 4 duplicates — IDs 96–99 each appear twice. Now let me find why the generator produces these. Let me look at the source data and the generator:  Let me check the source JSON for duplicates:  The source JSON () itself has duplicate rows for bron_ids 96–99. The generator faithfully processes all rows, producing duplicate entries. The fix should deduplicate in the ) itself has duplicate rows for bron_ids 96–99. The generator faithfully processes all rows, producing duplicate entries. The fix should deduplicate in the generator. Not identical — let me check what differs between the duplicates:  Trivial differences: trailing semicolons and `anonymous` → `anoniem`. The second copy (later in the file) is the cleaner version. The simplest fix is to deduplicate in the generator by keeping the **last** occurrence of each `bron_id`. I'll add deduplication right after  — keep the last occurrence of each `bron_id`: 
+```
+
+```
+Oorzaak gevonden en opgelost. Het bronbestand  bevat 4 dubbele rijen (bron_ids 96–99) — twee versies die minimaal verschillen (trailing semicolons, `anonymous` → `anoniem`). Entries 62–65 registreerden die IDs succesvol, waarna entries 66–69 dezelfde IDs opnieuw probeerden → 500.
+
+**Fix:** Deduplicatie in de generator op `bron_id` (laatste/schoonste versie wint). Replay is nu **94 entries** (was 98), **0 duplicaten**.
+
+Je kunt nu de CG-tabellen resetten en replay 1–4 opnieuw afspelen om te testen.
 
 ---
