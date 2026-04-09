@@ -344,6 +344,7 @@ func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratie model.Regi
 		representatie.SetOpvoer(&registratie.Tijdstip)
 		_, err := tx.NewInsert().
 			Model(representatie).
+			Returning("*").
 			Exec(c.Request.Context())
 		if err != nil {
 			return fmt.Errorf("HANDLER: failed to insert %s: %v", representatienaam, err)

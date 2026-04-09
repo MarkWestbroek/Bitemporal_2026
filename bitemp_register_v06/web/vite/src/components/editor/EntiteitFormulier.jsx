@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useSchema } from "../../context/SchemaContext";
 import { safeArray, platSlaHubItems, platSlaAlleVersies, tUitRegistratieTijdstip } from "../../shared/schemaUtils";
-import { evalueerCelExpressie, bouwCelContext } from "../../shared/celEvaluator";
+import { evalueerCelExpressie, bouwCelContext, evalueerWeergaveVeldenVoorItem } from "../../shared/celEvaluator";
 import RepresentatieFormulier from "./RepresentatieFormulier";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
@@ -67,6 +67,65 @@ function korteVeldSamenvatting(item, meta) {
 }
 
 /**
+ * Berekent weergaveveld-tekst voor één platgeslagen relatie-item,
+ * inclusief doelentiteit-context als die beschikbaar is.
+ *
+ * @param {Object} childMeta - Schema metadata van het child type (hub).
+ * @param {Object} flatItem - Het platgeslagen item (hub + data gemerged).
+ * @param {Object} typeMetaByTypenaam - Map van typenaam → schema metadata.
+ * @param {Object} doelEntiteitCache - Map van "Typenaam:id" → platgeslagen entiteitdata.
+ * @returns {string|null} De berekende weergavetekst, of null.
+ */
+function berekenWeergaveVoorItem(childMeta, flatItem, typeMetaByTypenaam, doelEntiteitCache) {
+  const afgVelden = safeArray(childMeta?.afgeleideVelden)
+    .filter((av) => av.isWeergaveVeld || av.weergaveVeld);
+  if (afgVelden.length === 0 || !flatItem) return null;
+
+  // Gebruik evalueerWeergaveVeldenVoorItem als basis (bouwt context met item + aliases)
+  // Maar verrijk de context met doelentiteit-data als die beschikbaar is.
+  const doelEntTypenaam = childMeta?.doelEntiteit;
+  const secKolom = childMeta?.secondaireEntiteitIDKolom;
+  const doelId = secKolom ? flatItem[secKolom] : null;
+
+  // Als er doelentiteit-data in de cache is, gebruik altijd de verrijkte context.
+  // Reden: CEL-expressies als "Gemeente.GemeenteGegevens.naam + ... + rol" bevatten
+  // zowel doelentiteit-verwijzingen als eigen velden. Zonder verrijkte context
+  // evalueert de doelentiteit-helft naar "", wat een niet-leeg maar onvolledig
+  // resultaat oplevert (bijv. "- Realiseert" i.p.v. "Amsterdam - Realiseert").
+  if (doelEntTypenaam && doelId != null && doelEntiteitCache) {
+    const cacheKey = `${doelEntTypenaam}:${doelId}`;
+    const doelData = doelEntiteitCache[cacheKey];
+    if (doelData) {
+      // Bouw een verrijkte context: item-velden + doelentiteit als geneste key
+      const ctx = {};
+      if (flatItem && typeof flatItem === "object") {
+        for (const [key, value] of Object.entries(flatItem)) {
+          if (key != null && String(key).trim() !== "") ctx[String(key)] = value;
+        }
+      }
+      // Voeg doelentiteit toe onder haar klassenaam
+      const doelMeta = typeMetaByTypenaam?.[doelEntTypenaam];
+      const doelKlassenaam = doelMeta?.klassenaam || doelEntTypenaam;
+      ctx[doelKlassenaam] = doelData;
+      // Voeg ook de typenaam als alias toe
+      if (doelEntTypenaam !== doelKlassenaam) ctx[doelEntTypenaam] = doelData;
+
+      const teksten = afgVelden
+        .filter((av) => av.afleidingsregelTaal === "cel" && av.afleidingsregel)
+        .map((av) => evalueerCelExpressie(av.afleidingsregel, ctx))
+        .filter((v) => v != null && String(v).trim() !== "")
+        .map(String);
+      if (teksten.length > 0) return teksten.join(" | ");
+    }
+  }
+
+  // Fallback: evalueer zonder doelentiteit-context (voor eigen-GE-expressies)
+  let teksten = evalueerWeergaveVeldenVoorItem(afgVelden, flatItem, childMeta, typeMetaByTypenaam);
+
+  return teksten.length > 0 ? teksten.join(" | ") : null;
+}
+
+/**
  * EntiteitFormulier — toont een volledige entiteit met geneste GE/relatie-secties.
  * Haalt de full entity op via /full/{padnaam}/{id} en rendert per onderliggend
  * type een formulier (enkelvoudig) of compact tabel (meervoudig).
@@ -83,6 +142,7 @@ export default function EntiteitFormulier() {
   const [nieuwGE, setNieuwGE] = useState(null); // doeltype als er een nieuw record wordt toegevoegd
   const [bewerkRij, setBewerkRij] = useState(null); // { doeltype, index } — meervoudig rij in correctiemodus
   const [toonHistorie, setToonHistorie] = useState({}); // { [doeltype]: true/false } — toggle per GE-type
+  const [doelEntiteitCache, setDoelEntiteitCache] = useState({}); // { "Typenaam:id": platgeslagenData }
 
   const apiPath = typeMeta?.padnaam || typeMeta?.meervoud || typeMeta?.veldnaam;
 
@@ -125,6 +185,97 @@ export default function EntiteitFormulier() {
       .filter((v) => v != null && String(v).trim() !== "")
       .join(" | ");
   }, [entity, typeMeta, typeMetaByTypenaam]);
+
+  // ── Doelentiteiten ophalen voor weergavevelden van relatie-hubs ───────
+  // Relaties als InitiatiefDomein hebben CEL-expressies die verwijzen naar
+  // de doelentiteit (bijv. Domein.DomeinGegevens.naam). Die data staat niet
+  // in de full-entity response; we halen die apart op en cachen per type+id.
+  useEffect(() => {
+    if (!entity || !typeMeta) return;
+    const onderliggende = safeArray(typeMeta.onderliggende);
+    // Verzamel alle benodigde doelentiteit-fetches: { Typenaam → Set<id> }
+    const teHalen = {};
+    for (const child of onderliggende) {
+      const childMeta = typeMetaByTypenaam?.[child.doeltype];
+      if (!childMeta?.doelEntiteit || !childMeta.secondaireEntiteitIDKolom) continue;
+      // Alleen als er afgeleide weergavevelden zijn
+      const heeftWeergave = safeArray(childMeta.afgeleideVelden)
+        .some((av) => av.isWeergaveVeld || av.weergaveVeld);
+      if (!heeftWeergave) continue;
+
+      const rawItems = safeArray(entity[child.jsonRolnaam] || entity[child.rolnaam]);
+      const flat = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
+      const secKolom = childMeta.secondaireEntiteitIDKolom;
+      for (const item of flat) {
+        const doelId = item[secKolom];
+        if (doelId == null) continue;
+        const key = `${childMeta.doelEntiteit}:${doelId}`;
+        if (doelEntiteitCache[key]) continue; // al in cache
+        if (!teHalen[childMeta.doelEntiteit]) teHalen[childMeta.doelEntiteit] = new Set();
+        teHalen[childMeta.doelEntiteit].add(doelId);
+      }
+    }
+    if (Object.keys(teHalen).length === 0) return;
+
+    // Fetch alle doelentiteiten parallel
+    const controller = new AbortController();
+    (async () => {
+      const nieuweCacheEntries = {};
+      const fetches = [];
+      for (const [doelTypenaam, ids] of Object.entries(teHalen)) {
+        const doelMeta = typeMetaByTypenaam?.[doelTypenaam];
+        if (!doelMeta) continue;
+        const doelPad = doelMeta.padnaam || doelMeta.meervoud || doelMeta.veldnaam;
+        if (!doelPad) continue;
+        for (const doelId of ids) {
+          fetches.push(
+            fetch(`${baseUrl}/full/${doelPad}/${doelId}`, { signal: controller.signal })
+              .then((r) => r.ok ? r.json() : null)
+              .then((json) => {
+                if (!json) return;
+                // Platslaan: bouw een context-object met child-klassenamen als keys
+                const children = safeArray(doelMeta.onderliggende);
+                const platData = {};
+                for (const ch of children) {
+                  const chMeta = typeMetaByTypenaam?.[ch.doeltype];
+                  if (!chMeta) continue;
+                  const chNaam = chMeta.klassenaam || ch.doeltype;
+                  const rawCh = safeArray(json[ch.jsonRolnaam] || json[ch.rolnaam]);
+                  const flatCh = platSlaHubItems(rawCh, chMeta, typeMetaByTypenaam);
+                  const actief = flatCh.find((i) => !i.afvoer) || flatCh[0];
+                  if (actief) platData[chNaam] = actief;
+                }
+                // Voeg ook de weergavenaam van de doelentiteit zelf toe als die beschikbaar is
+                const doelAfgVelden = safeArray(doelMeta.afgeleideVelden)
+                  .filter((av) => av.isWeergaveVeld || av.weergaveVeld);
+                if (doelAfgVelden.length > 0) {
+                  const doelCtx = bouwCelContext(
+                    children.map((ch) => {
+                      const chMeta = typeMetaByTypenaam?.[ch.doeltype];
+                      const rawCh = safeArray(json[ch.jsonRolnaam] || json[ch.rolnaam]);
+                      return { doeltype: ch.doeltype, rolnaam: ch.rolnaam, items: platSlaHubItems(rawCh, chMeta, typeMetaByTypenaam), typeMeta: chMeta };
+                    }),
+                    typeMetaByTypenaam
+                  );
+                  const weergave = doelAfgVelden
+                    .map((av) => av.afleidingsregelTaal === "cel" ? evalueerCelExpressie(av.afleidingsregel, doelCtx) : null)
+                    .filter((v) => v != null && String(v).trim() !== "")
+                    .join(" | ");
+                  if (weergave) platData.weergavenaam = weergave;
+                }
+                nieuweCacheEntries[`${doelTypenaam}:${doelId}`] = platData;
+              })
+              .catch(() => {}) // negeer individuele fouten
+          );
+        }
+      }
+      await Promise.all(fetches);
+      if (!controller.signal.aborted && Object.keys(nieuweCacheEntries).length > 0) {
+        setDoelEntiteitCache((prev) => ({ ...prev, ...nieuweCacheEntries }));
+      }
+    })();
+    return () => controller.abort();
+  }, [entity, typeMeta, typeMetaByTypenaam, baseUrl]);
 
   if (!typeMeta) {
     return <div className="cg-feedback--fout">Onbekend type: {typePad}</div>;
@@ -227,7 +378,9 @@ export default function EntiteitFormulier() {
                 const actueel = filterActueel(flat);
                 const count = actueel.length;
                 const actief = actueel[0] || null;
-                const weergave = childWeergave(childMeta, rawItems, typeMetaByTypenaam);
+                const weergave = actief
+                  ? berekenWeergaveVoorItem(childMeta, actief, typeMetaByTypenaam, doelEntiteitCache)
+                  : childWeergave(childMeta, rawItems, typeMetaByTypenaam);
                 const samenvatting = weergave || (actief ? korteVeldSamenvatting(actief, childMeta) : "");
                 const label = childMeta.klassenaam || child.rolnaam || child.doeltype;
                 return (
@@ -381,6 +534,11 @@ export default function EntiteitFormulier() {
               />
             ) : !isEnkelvoudig && actueleItems.length > 0 ? (
               /* Meervoudig: compact tabel met actuele records + acties per rij */
+              (() => {
+                // Bepaal of dit type een weergaveveld heeft
+                const heeftWeergave = safeArray(childMeta?.afgeleideVelden)
+                  .some((av) => av.isWeergaveVeld || av.weergaveVeld);
+                return (
               <div>
                 <div style={{ overflowX: "auto" }}>
                   <table className="utrecht-table" style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -389,11 +547,18 @@ export default function EntiteitFormulier() {
                         {inhoudsvelden.map((v) => (
                           <th key={v.naam} className="utrecht-table__header-cell">{v.naam}</th>
                         ))}
+                        {heeftWeergave && (
+                          <th className="utrecht-table__header-cell" style={{ fontStyle: "italic" }}>weergave</th>
+                        )}
                         <th className="utrecht-table__header-cell" style={{ width: "1%", whiteSpace: "nowrap" }}></th>
                       </tr>
                     </thead>
                     <tbody>
-                      {actueleItems.map((item, i) => (
+                      {actueleItems.map((item, i) => {
+                        const weergaveTekst = heeftWeergave
+                          ? berekenWeergaveVoorItem(childMeta, item, typeMetaByTypenaam, doelEntiteitCache)
+                          : null;
+                        return (
                         <tr
                           key={i}
                           className="utrecht-table__row"
@@ -408,6 +573,11 @@ export default function EntiteitFormulier() {
                               {item[v.naam] != null ? String(item[v.naam]) : "—"}
                             </td>
                           ))}
+                          {heeftWeergave && (
+                            <td className="utrecht-table__cell" style={{ padding: "0.375rem 0.75rem", fontStyle: "italic", color: "var(--cg-donkergrijs)" }}>
+                              {weergaveTekst || "—"}
+                            </td>
+                          )}
                           <td className="utrecht-table__cell" style={{ padding: "0.375rem 0.5rem", whiteSpace: "nowrap" }}>
                             <button
                               type="button"
@@ -429,7 +599,8 @@ export default function EntiteitFormulier() {
                             </button>
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -452,6 +623,8 @@ export default function EntiteitFormulier() {
                   </div>
                 )}
               </div>
+                );
+              })()
             ) : null}
 
             {/* Uitgeklapte historische versies */}

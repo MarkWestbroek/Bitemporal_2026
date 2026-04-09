@@ -551,9 +551,33 @@ def build_reference_map(items: list[str]) -> OrderedDict[str, int]:
     return ordered
 
 
-def load_reference_map_from_replay(replay_path: Path, data_key: str, id_field: str, name_field: str) -> OrderedDict[str, int]:
+def resolve_replay_reference_path(base_dir: Path | None, filename: str) -> Path | None:
+    if not base_dir:
+        return None
+
+    search_dirs = [
+        base_dir,
+        base_dir / "Replay files",
+    ]
+
+    # 1. Exact match.
+    for search_dir in search_dirs:
+        candidate = search_dir / filename
+        if candidate.exists():
+            return candidate
+
+    # 2. Genummerde replay-bestanden, bijv. "1. Gemeenten CBS 2026.replay.json".
+    for search_dir in search_dirs:
+        for candidate in sorted(search_dir.glob(f"*{filename}")):
+            if candidate.exists():
+                return candidate
+
+    return search_dirs[0] / filename
+
+
+def load_reference_map_from_replay(replay_path: Path | None, data_key: str, id_field: str, name_field: str) -> OrderedDict[str, int]:
     references: OrderedDict[str, int] = OrderedDict()
-    if not replay_path.exists():
+    if replay_path is None or not replay_path.exists():
         return references
     try:
         replay = json.loads(replay_path.read_text(encoding="utf-8"))
@@ -807,9 +831,24 @@ def collect_seed_data(rows: list[dict[str, Any]], source_path: Path | None = Non
                 contactpersoon_links.setdefault(link_key, (normalize_key(contact_org), person_key))
 
     base_dir = source_path.parent if source_path else None
-    externe_gemeenten = load_reference_map_from_replay(base_dir / "Gemeenten CBS 2026.replay.json", "gemeentegegevens", "gemeente_id", "naam") if base_dir else OrderedDict()
-    externe_domeinen = load_reference_map_from_replay(base_dir / "Domeinen vast 2026.replay.json", "domeingegevens", "domein_id", "naam") if base_dir else OrderedDict()
-    externe_api_standaarden = load_reference_map_from_replay(base_dir / "API standaarden rationalisatie 2026.replay.json", "naam", "apistandaard_id", "naam") if base_dir else OrderedDict()
+    externe_gemeenten = load_reference_map_from_replay(
+        resolve_replay_reference_path(base_dir, "Gemeenten CBS 2026.replay.json"),
+        "gemeentegegevens",
+        "gemeente_id",
+        "naam",
+    )
+    externe_domeinen = load_reference_map_from_replay(
+        resolve_replay_reference_path(base_dir, "Domeinen vast 2026.replay.json"),
+        "domeingegevens",
+        "domein_id",
+        "naam",
+    )
+    externe_api_standaarden = load_reference_map_from_replay(
+        resolve_replay_reference_path(base_dir, "API standaarden rationalisatie 2026.replay.json"),
+        "naam",
+        "apistandaard_id",
+        "naam",
+    )
 
     gemeenten_map = externe_gemeenten or build_reference_map(gemeenten)
     domeinen_map = externe_domeinen or build_reference_map(domeinen)

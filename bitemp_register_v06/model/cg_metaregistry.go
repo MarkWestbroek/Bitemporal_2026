@@ -623,7 +623,7 @@ func initCgMetaRegistry() {
 				Naam:                "weergavenaam",
 				GoType:              "string",
 				AfleidingsregelTaal: "cel",
-				Afleidingsregel:     "Gemeente.weergavenaam + \" - \" + rol",
+				Afleidingsregel:     "Gemeente.GemeenteGegevens.naam + \" - \" + rol",
 				IsWeergaveVeld:      true,
 			},
 		},
@@ -742,7 +742,7 @@ func initCgMetaRegistry() {
 		SecondaireEntiteitIDKolom: "organisatie_id",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
-			Positie:          &V3Positie{X: 420, Y: -2340},
+			Positie:          &V3Positie{X: 420, Y: -2355},
 			EdgeID:           "edge_1775591842339_3",
 			SourceHandle:     "left",
 			TargetHandle:     "right",
@@ -752,6 +752,15 @@ func initCgMetaRegistry() {
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "InitiatiefOrganisatie_Data", Momentvoorkomen: Enkelvoudig},
+		},
+		AfgeleideVelden: []AfgeleidVeld{
+			{
+				Naam:                "weergavenaam",
+				GoType:              "string",
+				AfleidingsregelTaal: "cel",
+				Afleidingsregel:     "Organisatie.Organisatienaam.naam",
+				IsWeergaveVeld:      true,
+			},
 		},
 	}
 	MetaRegistry["Initiatief_Planning_Data"] = TypeMeta{

@@ -412,6 +412,8 @@ Checklist bij troubleshooting:
 | `web/vite/src/shared/celEvaluator.js` | CEL-evaluator met `evalueerWeergaveVeldenVoorItem()` — evalueert isWeergaveVelden voor GE/relatie items met correcte CEL-context (hub-aware) |
 | `web/vite/src/components/index/IndexRepresentatieVisual.jsx` | Weergavevelden op entiteitskaart, GE-kaarten en relatiekaarten in de Index-visualisatie |
 | `web/vite/src/components/tijdlijn/TijdlijnRepresentatiePaneel.jsx` | Weergavevelden op alle kaarten in de Tijdlijn-visualisatie |
+| `web/vite/src/components/editor/EntiteitFormulier.jsx` | Inhoud-detailpagina: weergavevelden in meervoudige GE/relatie-tabellen + doelentiteit-resolutie voor cross-entiteit CEL-expressies |
+| `web/vite/src/components/editor/RepresentatieTabel.jsx` | Weergavevelden als kolom in overzichtslijst van representaties |
 
 ### Go backend
 
@@ -426,7 +428,7 @@ Checklist bij troubleshooting:
 
 1. **Code-generatie**: afgeleide velden vertalen naar berekende Go-methoden op de entiteit-struct, zodat de API ze automatisch meelevert bij GET-responses.
 2. ~~**MetaRegistry-integratie**~~: ✅ Gerealiseerd — afgeleide velden (met `isWeergaveVeld`) zitten in de MetaRegistry en worden via de schema-API geëxposeerd.
-3. ~~**Frontend-weergave**~~: ✅ Gerealiseerd — weergavevelden worden getoond op entiteits-, GE- en relatiekaarten in zowel Index als Tijdlijn, gescheiden door ` | `.
+3. ~~**Frontend-weergave**~~: ✅ Gerealiseerd — weergavevelden worden getoond op entiteits-, GE- en relatiekaarten in zowel Index als Tijdlijn, gescheiden door ` | `. Vanaf april 2026 ook in de inhoud-detailpagina (meervoudige tabellen) met doelentiteit-resolutie voor cross-entiteit CEL-expressies.
 4. **CEL-evaluatie in Go**: implementatie van een CEL-runtime
 
     ```go
@@ -449,6 +451,157 @@ Checklist bij troubleshooting:
     ```
 
 5. **Validatie**: afleidingsregels valideren bij opslaan in de editor (syntax-check via CEL-compiler).
+
+---
+
+## Inhoud-detailpagina: weergavevelden in meervoudige tabellen (april 2026)
+
+### Probleem
+
+De inhoud-detailpagina (`EntiteitFormulier.jsx`) toonde meervoudige GE/relatie-records (zoals `InitiatiefDomein`, `InitiatiefOrganisatie`, `InitiatiefGemeente`) in een compacte tabel met alleen de ruwe veldwaarden: `rel_id`, `domein_id`, `rol`, etc. **Geen enkel afgeleid weergaveveld** was zichtbaar, waardoor de herkenbaarheid van records slecht was — een `rel_id` zegt niets over welk domein, welke gemeente of welke organisatie het betreft.
+
+De root cause bestond uit twee lagen:
+
+1. **Structureel**: de meervoudige tabel in `EntiteitFormulier.jsx` had überhaupt geen weergaveveld-kolom. De `actueleItems.map()` iteratie renderde alleen `inhoudsvelden` (ruwe data-velden), zonder enige CEL-evaluatie.
+
+2. **Data**: de CEL-expressies op relatie-hubs verwijzen naar **doelentiteiten** die niet in de `/full/{padnaam}/{id}` API-response zitten. Voorbeeld: `InitiatiefDomein` heeft als CEL-expressie `Domein.DomeinGegevens.naam`, maar de full-entity response van een `Initiatief` bevat alleen de hub-records (met `domein_id`), niet de volledige `Domein`-entiteit met zijn `DomeinGegevens` GE.
+
+### Contrast met andere pagina's
+
+| Pagina | Weergaveveld zichtbaar? | Hoe? |
+|--------|------------------------|------|
+| Index-overzicht (`RepresentatieTabel.jsx`) | ✅ Ja | Roept `evalueerWeergaveVeldenVoorItem()` aan per rij |
+| Tijdlijn (`TijdlijnRepresentatiePaneel.jsx`) | ✅ Ja | Idem, met correct plat-slaan en CEL-context |
+| Index visueel (`IndexRepresentatieVisual.jsx`) | ✅ Ja | Idem |
+| **Inhoud-detail** (`EntiteitFormulier.jsx`) | ❌ Nee (was) → ✅ Ja (nu) | Nieuw: weergave-kolom + doelentiteit-resolutie |
+
+### Oplossing: drie wijzigingen in `EntiteitFormulier.jsx`
+
+#### 1. Weergaveveld-kolom in meervoudige tabel
+
+De meervoudige-tabel-rendering is uitgebreid met een `heeftWeergave`-check en een extra kolom:
+
+```jsx
+const heeftWeergave = safeArray(childMeta?.afgeleideVelden)
+  .some((av) => av.isWeergaveVeld || av.weergaveVeld);
+
+// In de thead:
+{heeftWeergave && <th style={{ fontStyle: "italic" }}>weergave</th>}
+
+// In elke tbody-rij:
+const weergaveTekst = heeftWeergave
+  ? berekenWeergaveVoorItem(childMeta, item, typeMetaByTypenaam, doelEntiteitCache)
+  : null;
+
+{heeftWeergave && (
+  <td style={{ fontStyle: "italic", color: "var(--cg-donkergrijs)" }}>
+    {weergaveTekst || "—"}
+  </td>
+)}
+```
+
+De kolom verschijnt **alleen** als het child-type minstens één `isWeergaveVeld: true` heeft. Records zonder berekend resultaat tonen "—".
+
+#### 2. Doelentiteit-resolutie via `useEffect`
+
+Een nieuw `useEffect` in de component:
+
+1. Itereert over alle `onderliggende` child-types van de entiteit.
+2. Filtert op relaties met `doelEntiteit` + `secondaireEntiteitIDKolom` + `isWeergaveVeld`.
+3. Verzamelt unieke FK-IDs per doeltype (bijv. `Domein:5`, `Domein:8`).
+4. Fetcht elke doelentiteit via `GET /full/{padnaam}/{id}`.
+5. Slaat de child-GE-data plat (met `platSlaHubItems`) en berekent de doelentiteit's eigen `weergavenaam`.
+6. Cachet alles in `doelEntiteitCache` state (`Map<"Typenaam:id", platgeslagenData>`).
+
+```jsx
+const [doelEntiteitCache, setDoelEntiteitCache] = useState({});
+
+useEffect(() => {
+  // Verzamel benodigde doelentiteit-fetches
+  const teHalen = {}; // { Typenaam → Set<id> }
+  // ... filter op doelEntiteit/secondaireEntiteitIDKolom/isWeergaveVeld ...
+  // Fetch alle doelentiteiten parallel
+  const fetches = [];
+  for (const [doelTypenaam, ids] of Object.entries(teHalen)) {
+    for (const doelId of ids) {
+      fetches.push(
+        fetch(`${baseUrl}/full/${doelPad}/${doelId}`)
+          .then(r => r.json())
+          .then(json => {
+            // Platslaan child-GE's + berekenen weergavenaam
+            nieuweCacheEntries[`${doelTypenaam}:${doelId}`] = platData;
+          })
+      );
+    }
+  }
+  await Promise.all(fetches);
+  setDoelEntiteitCache(prev => ({ ...prev, ...nieuweCacheEntries }));
+}, [entity, typeMeta, ...]);
+```
+
+De fetch gebruikt een `AbortController` voor cleanup bij unmount.
+
+#### 3. Verrijkte CEL-context via `berekenWeergaveVoorItem()`
+
+Nieuwe helperfunctie die:
+
+1. Eerst de standaard `evalueerWeergaveVeldenVoorItem()` probeert (voor eenvoudige expressies op eigen velden).
+2. Als die leeg terugkomt en er doelentiteit-data in de cache is, een **verrijkte context** bouwt:
+   - Alle velden van het platgeslagen item als root-keys.
+   - De doelentiteit-data onder haar klassenaam (bijv. `{ Domein: { DomeinGegevens: { naam: "Dienstverlening" } } }`).
+   - De typenaam als alias als die verschilt van de klassenaam.
+3. De CEL-expressie opnieuw evalueert met deze verrijkte context.
+
+### CEL-expressie audit (CG-domein)
+
+| Relatie-type | CEL-expressie | Verwijst naar | Status |
+|-------------|--------------|---------------|--------|
+| `InitiatiefDomein` | `Domein.DomeinGegevens.naam` | Doelentiteit `Domein` → GE `DomeinGegevens` → veld `naam` | ✅ Opgelost via doelentiteit-fetch |
+| `InitiatiefGemeente` | `Gemeente.weergavenaam + " - " + rol` | Doelentiteit `Gemeente` (met eigen afgeleide weergavenaam) + eigen veld `rol` | ✅ Opgelost (weergavenaam van Gemeente wordt meeberekend) |
+| `InitiatiefAPIStandaard` | `ApiStandaard.Naam.naam` | Doelentiteit `ApiStandaard` → GE `Naam` → veld `naam` | ✅ Opgelost via doelentiteit-fetch |
+| `InitiatiefOrganisatie` | **(niet gedefinieerd)** | — | ⚠️ Moet via UML-editor worden toegevoegd |
+
+#### Andere entiteiten (NP/Loc-domein)
+
+| Type | CEL-expressie | Status |
+|------|--------------|--------|
+| `Organisatie` | `Organisatienaam.naam` | ✅ Werkt (eigen GE, geen doelentiteit nodig) |
+| `NatuurlijkPersoon` | `(Naam.roepnaam != null ? ...) + ' ' + Naam.achternaam` | ✅ Werkt (eigen GE's) |
+| `Domein` | `DomeinGegevens.naam` | ✅ Werkt (eigen GE) |
+| `Gemeente` | `GemeenteGegevens.naam + " (" + GemeenteGegevens.code + ")"` | ✅ Werkt (eigen GE) |
+| `ApiStandaard` | `Naam.naam` | ✅ Werkt (eigen GE) |
+
+### Patroon: twee soorten CEL-expressies
+
+De implementatie onderscheidt nu twee patronen:
+
+1. **Eigen-GE-expressies** (bijv. `Naam.roepnaam + " " + Naam.achternaam`): verwijzen naar GE's van de eigen entiteit of het eigen platgeslagen hub-item. Deze werken direct met `evalueerWeergaveVeldenVoorItem()`.
+
+2. **Cross-entiteit-expressies** (bijv. `Domein.DomeinGegevens.naam`): verwijzen naar child-GE's van een **andere entiteit**, bereikbaar via de FK (`domein_id`). Deze vereisen doelentiteit-resolutie: de doelentiteit wordt apart gefetcht en in de CEL-context geïnjecteerd.
+
+Het verschil wordt automatisch gedetecteerd door te kijken of de eerste evaluatie iets oplevert. Alleen als die leeg is én er een `doelEntiteit` gedefinieerd is, wordt de verrijkte context gebruikt.
+
+### Visueel resultaat
+
+Na de wijziging ziet de meervoudige tabel er zo uit:
+
+```
+ InitiatiefDomein (meervoudig) — 3 actueel
+
+  rel_id   domein_id   weergave
+  1        5           Dienstverlening
+  2        8           Zaakgericht werken
+  3        12          Gegevensmanagement
+```
+
+In plaats van alleen:
+
+```
+  rel_id   domein_id
+  1        5
+  2        8
+  3        12
+```
 
 ---
 

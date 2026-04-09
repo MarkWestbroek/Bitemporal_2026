@@ -25,6 +25,7 @@ type Producttype string
 const (
 	ProducttypeComponent  Producttype = "Component"
 	ProducttypeToepassing Producttype = "Toepassing"
+	ProducttypeStandaard  Producttype = "Standaard"
 )
 
 type CGLaag string
@@ -55,6 +56,16 @@ const (
 	SchaalSchaal4 Schaal = "Schaal 4"
 )
 
+type Organisatietype string
+
+const (
+	OrganisatietypeGemeenten     Organisatietype = "Gemeenten"
+	OrganisatietypeLeveranciers  Organisatietype = "Leveranciers"
+	OrganisatietypeVNG           Organisatietype = "VNG"
+	OrganisatietypeKetenpartners Organisatietype = "Ketenpartners"
+	OrganisatietypeRijk          Organisatietype = "Rijk"
+)
+
 type Gemeenterol string
 
 const (
@@ -67,16 +78,6 @@ type Organisatierol string
 const (
 	OrganisatierolContactorganisatie   Organisatierol = "Contactorganisatie"
 	OrganisatierolBetrokkenOrganisatie Organisatierol = "BetrokkenOrganisatie"
-)
-
-type Organisatietype string
-
-const (
-	OrganisatietypeGemeenten     Organisatietype = "Gemeenten"
-	OrganisatietypeLeveranciers  Organisatietype = "Leveranciers"
-	OrganisatietypeVNG           Organisatietype = "VNG"
-	OrganisatietypeKetenpartners Organisatietype = "Ketenpartners"
-	OrganisatietypeRijk          Organisatietype = "Rijk"
 )
 
 type ApiStandaard_Naam struct {

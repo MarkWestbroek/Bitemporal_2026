@@ -67,6 +67,8 @@ Deze seed gebruikt de **numerieke CBS-gemeentecode als `gemeente.id`** en bewaar
 
 > **Replay 3 (overige velden) is nu overbodig.** Het aparte bestand `Intake Portfolio Common Ground 3.replay (overige velden).json` bevatte alleen `anderdomein`, `andereapistandaard` en `andersdangemeente`. Al deze keys worden nu direct in replay 2 gegenereerd. Het bestand en de kopie in `replay files/` kunnen verwijderd worden.
 
+> **Automatische seed-detectie.** De generator herkent nu ook de genummerde seedbestanden in `Replay files/` (`1. Gemeenten ...`, `2. Domeinen ...`, `3. API standaarden ...`) en laat de corresponderende seedblokken in replay 4 dan automatisch weg. Daarmee voorkom je duplicate-ID fouten aan het begin van de import.
+
 In dat vierde replay-bestand is de oude `Seed referentielijst Gemeente` verwijderd. Voor `gemeente`, `domein` en `api-standaard` geldt nu expliciet:
 
 - **match op de referentielijst** → de generator voert een **REL** op (`initiatiefgemeente`, `initiatiefdomein`, `initiatiefapistandaard`)
