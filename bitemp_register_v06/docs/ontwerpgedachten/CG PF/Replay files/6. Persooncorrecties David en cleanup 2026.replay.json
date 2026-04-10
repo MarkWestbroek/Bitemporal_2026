@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "exported_at": "2026-04-10T19:35:00Z",
+  "source": "derived://cgpf/handmatige-persooncorrecties",
+  "depends_on": [
+    "docs/ontwerpgedachten/CG PF/Replay files/4. Intake Portfolio Common Ground 2.replay (zonder gemeenten).json",
+    "docs/ontwerpgedachten/CG PF/Replay files/5. PO email naar Persoon.Contactgegevens 2026.replay.json"
+  ],
+  "count": 3,
+  "notes": [
+    "Handmatige correctiereplay voor opschoning van dubbele en testachtige persoonrecords in de CG Portfolio-import.",
+    "Verificatie op 2026-04-10 tegen localhost:8082: de twee David Bronsveld-records zijn persoon_id 12 en 13; de actieve contactpersoon-koppeling hangt aan organisatie_id 79 (OWC) en wijst al naar persoon_id 13.",
+    "Er zijn in de huidige data geen actieve links met persoon_id 53 aangetroffen; daarom bevat deze replay geen relink naar persoon_id 22 maar alleen een afvoer van persoon_id 53."
+  ],
+  "entries": [
+    {
+      "registratietype": "correctie",
+      "tijdstip": "2026-04-10T19:35:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Correctie: normaliseer de actieve David Bronsveld-naam",
+          "registratietype": "correctie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "persoonnaam": {
+                "persoon_id": 13,
+                "rel_id": 1,
+                "naam": "David Bronsveld"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-10T19:35:01Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Opschoning: voer het dubbele David Bronsveld-record af (persoon_id 12)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "persoon": {
+                "id": 12
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-10T19:35:02Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Opschoning: voer test/pseudo-persoon af (persoon_id 53)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "afvoer": {
+              "persoon": {
+                "id": 53
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}

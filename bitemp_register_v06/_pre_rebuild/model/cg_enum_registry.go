@@ -27,7 +27,7 @@ func initCgEnumRegistry() {
 	EnumEditorLayouts["CGLaag"] = &EditorLayout{Positie: &V3Positie{X: 810, Y: -1530}}
 	EnumEditorLayouts["Bijdragetype"] = &EditorLayout{Positie: &V3Positie{X: 1290, Y: -1980}}
 	EnumEditorLayouts["Schaal"] = &EditorLayout{Positie: &V3Positie{X: 1290, Y: -1815}}
-	EnumEditorLayouts["Organisatietype"] = &EditorLayout{Positie: &V3Positie{X: 435, Y: -2745}}
-	EnumEditorLayouts["Gemeenterol"] = &EditorLayout{Positie: &V3Positie{X: 1080, Y: -3030}}
-	EnumEditorLayouts["Organisatierol"] = &EditorLayout{Positie: &V3Positie{X: 420, Y: -2190}}
+	EnumEditorLayouts["Organisatietype"] = &EditorLayout{Positie: &V3Positie{X: 450, Y: -2865}}
+	EnumEditorLayouts["Gemeenterol"] = &EditorLayout{Positie: &V3Positie{X: 1080, Y: -3150}}
+	EnumEditorLayouts["Organisatierol"] = &EditorLayout{Positie: &V3Positie{X: 420, Y: -2235}}
 }

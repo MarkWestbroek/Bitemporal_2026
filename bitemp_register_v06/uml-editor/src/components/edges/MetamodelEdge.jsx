@@ -49,8 +49,11 @@ function MetamodelEdge({
   const isAssociation = data?.isAssociation === true;
   const isAssociationClassLink = data?.isAssociationClassLink === true;
   const directioneel = data?.directioneel === true;
-  // Pijl alleen op de anker→B edge (source is anker), niet op A→anker
-  const showDirectionalArrow = isAssociation && directioneel && sourceNode?.type === "associatieAnker";
+  // Pijl op: (1) anker→B edge bij ASOC, of (2) relatie→entiteit edge bij collapsed REL
+  const showDirectionalArrow = directioneel && (
+    (isAssociation && sourceNode?.type === "associatieAnker") ||
+    (!isAssociation && !isAssociationClassLink && sourceNode?.type === "relatie" && targetNode?.type === "entiteit")
+  );
 
   // Compositie: alleen entiteit → GE (niet meer entiteit → relatie)
   const isComposition =

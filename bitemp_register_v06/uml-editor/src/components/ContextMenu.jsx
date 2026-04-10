@@ -100,6 +100,9 @@ const ALIGN_ACTIES = [
   { separator: true },
   { actie: "verdeel-verticaal",   label: "Verdeel gelijk ↕",   icon: iconen.verdeelV,  minCount: 3 },
   { actie: "verdeel-horizontaal", label: "Verdeel gelijk ↔",   icon: iconen.verdeelH,  minCount: 3 },
+  { separator: true },
+  { actie: "normaliseer-relaties", label: "↔ Normaliseer relaties", minCount: 0 },
+  { actie: "snap-naar-grid",      label: "⊞ Snap naar grid",       minCount: 0 },
 ];
 
 export default function ContextMenu({ x, y, menuType = "align", onAlign, onAction, onClose, itemCount, items, header }) {

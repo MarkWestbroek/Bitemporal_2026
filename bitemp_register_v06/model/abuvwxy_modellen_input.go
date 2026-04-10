@@ -50,3 +50,9 @@ type B_Y_Input struct {
 	Rel_ID int    `json:"rel_id"`
 	Hhh    string `json:"hhh"`
 }
+
+type B_BC_Input struct {
+	B_ID   int `json:"b_id"`
+	Rel_ID int `json:"rel_id"`
+	C_ID   int `json:"c_id"`
+}

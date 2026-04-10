@@ -28,6 +28,9 @@ Deze notitie beschrijft hoe [Intake Portfolio Common Ground 1.json](docs/ontwerp
 
 - ~~`Initiatief` heeft geen relatie naar `Organisatie`.~~ **Opgelost in v0.5.2**: `InitiatiefOrganisatie` (meervoudig) en `Initiatiefinfo` GE zijn nu beschikbaar. De generator koppelt opgeschoonde organisatienamen via `initiatieforganisatie` en slaat ongestructureerde tekst op in `initiatiefinfo`.
 - ~~`contactgegevens` ambigu~~ **Opgelost via `chooseMetaByPayload()`** in `REST request models.go`: bij veldnaam-collisions (`naam`, `contactgegevens`) wordt gedisambigueerd op basis van de `EntiteitIDKolom` in de payload.
+- **PO e-mail replay toegevoegd (april 2026)**: `Replay files/5. PO email naar Persoon.Contactgegevens 2026.replay.json` vult nu `Persoon.Contactgegevens.email` op basis van `Wat is het emailadres van de PO?`. Dit bestand speel je **na replay 4** af, zodra `telefoonnummer` niet meer verplicht is.
+- **Opgeschoonde PO e-mail replay toegevoegd (april 2026)**: `Replay files/5b. PO email naar Persoon.Contactgegevens 2026 - opgeschoond.replay.json` is de voorkeursvariant voor import. Deze laat vrije-tekstcontacten, placeholders en dubieuze niet-persoonsrecords bewust weg.
+- **Persooncorrectie-replay toegevoegd (april 2026)**: `Replay files/6. Persooncorrecties David en cleanup 2026.replay.json` ruimt een bekende dubbele `David Bronsveld` op en voert test-/pseudo-persoon `persoon_id 53` af. Deze replay is optioneel en bedoeld als nabehandeling na de import.
 - **Nieuw in v0.5.9**: `BetrokkenOrganisatie` GE (meervoudig, met `Organisatietype` enum: Gemeenten, Leveranciers, VNG, Ketenpartners, Rijk). Het bronveld `organisatie_types` wordt nu per initiatief omgezet naar losse `betrokkenorganisatie`-entries.
 - **Fase-enum uitgebreid in v0.5.9**: de waarden zijn nu volledige beschrijvende strings (bijv. "Idee (nog geen concrete opbrengsten)") i.p.v. korte labels. De FASE_MAP in de generator is hierop aangepast.
 - **Producttype `Standaard`**: komt 6x voor in de brondata maar ontbreekt nog in de Go enum (alleen Component en Toepassing). Wordt later via het model/codegen toegevoegd.
@@ -61,7 +64,9 @@ Deze seed gebruikt de **numerieke CBS-gemeentecode als `gemeente.id`** en bewaar
 1. voer eerst `Gemeenten CBS 2026.replay.json` uit om de complete officiële gemeentelijst te laden;
 2. voer daarna `Domeinen vast 2026.replay.json` uit voor de vaste shortlist van 10 CG-portfolio-domeinen;
 3. voer daarna `API standaarden rationalisatie 2026.replay.json` uit voor de gerationaliseerde lijst API-standaarden;
-4. voer daarna `Intake Portfolio Common Ground 2.replay (zonder gemeenten).json` uit.
+4. voer daarna `Intake Portfolio Common Ground 2.replay (zonder gemeenten).json` uit;
+5. voer daarna bij voorkeur `5b. PO email naar Persoon.Contactgegevens 2026 - opgeschoond.replay.json` uit zodra `telefoonnummer` niet meer verplicht is (of gebruik anders de volledige variant `5. ...`);
+6. voer desgewenst daarna `6. Persooncorrecties David en cleanup 2026.replay.json` uit voor handmatige opschoning van dubbele/testachtige persoonrecords.
 
 > **Let op:** na de upgrade naar model v0.5.2 moeten eerst de bestaande CG-tabellen gedropt worden via `DELETE /admin/db/droptables/<wachtwoord>?domein=CG` en opnieuw aangemaakt, voordat de replays opnieuw uitgevoerd worden.
 

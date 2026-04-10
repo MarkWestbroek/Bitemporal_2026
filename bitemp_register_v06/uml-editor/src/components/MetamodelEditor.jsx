@@ -829,6 +829,39 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   );
 
   /**
+   * Normaliseer alle relaties: bereken voor elke edge de kortste handle-combinatie.
+   */
+  const handleNormaliseerAlleRelaties = useCallback(() => {
+    pushCanvasUndo("normaliseer-alle-relaties");
+    setEdges((eds) =>
+      eds.map((e) => {
+        const srcNode = nodes.find((n) => n.id === e.source);
+        const tgtNode = nodes.find((n) => n.id === e.target);
+        if (!srcNode || !tgtNode) return e;
+        const best = berekenKortsteHandles(srcNode, tgtNode);
+        return { ...e, sourceHandle: best.sourceHandle, targetHandle: best.targetHandle };
+      })
+    );
+  }, [nodes, setEdges, pushCanvasUndo]);
+
+  /**
+   * Snap alle nodes naar het dichtstbijzijnde gridpunt.
+   */
+  const GRID_SIZE = 15;
+  const handleSnapAlleNaarGrid = useCallback(() => {
+    pushCanvasUndo("snap-naar-grid");
+    setNodes((nds) =>
+      nds.map((n) => ({
+        ...n,
+        position: {
+          x: Math.round(n.position.x / GRID_SIZE) * GRID_SIZE,
+          y: Math.round(n.position.y / GRID_SIZE) * GRID_SIZE,
+        },
+      }))
+    );
+  }, [setNodes, pushCanvasUndo]);
+
+  /**
    * Voer een uitlijnactie uit op alle geselecteerde nodes.
    * Elke actie past de position van de geselecteerde nodes aan;
    * breedte en hoogte komen uit measured (React Flow) of defaults.
@@ -891,6 +924,12 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
           curY += h(n) + gap;
         }
         yNieuw = (n) => posMap.get(n.id) ?? n.position.y;
+      } else if (actie === "snap-naar-grid") {
+        handleSnapAlleNaarGrid();
+        return;
+      } else if (actie === "normaliseer-relaties") {
+        handleNormaliseerAlleRelaties();
+        return;
       } else {
         return;
       }
@@ -909,7 +948,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         })
       );
     },
-    [nodes, setNodes, pushCanvasUndo]
+    [nodes, setNodes, pushCanvasUndo, handleSnapAlleNaarGrid, handleNormaliseerAlleRelaties]
   );
 
   /**
@@ -1233,6 +1272,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
             // Reverse: laatste veld verwijderd → converteer terug naar collapsed badge.
             // Verplaats relatie naar ankerpositie, verwijder anker, herstel eenvoudige edges.
             const relatieNaam = previousNode.data?.typenaam || nodeId;
+            const directioneelFlag = newData.directioneel || false;
             const ankerNode = updatedNodes.find(
               (n) => n.type === "associatieAnker" && (
                 n.data?.relatieNaam === relatieNaam || n.id === `anker_${nodeId}`
@@ -1278,7 +1318,13 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
                     type: "metamodel",
                     sourceHandle: "source-right",
                     targetHandle: edge2.targetHandle,
-                    data: { rolnaam: "", jsonRolnaam: "", momentvoorkomen: "enkelvoudig", kardinaliteit: edge2.data?.kardinaliteit || "0..*" },
+                    data: {
+                      rolnaam: "", jsonRolnaam: "",
+                      momentvoorkomen: "enkelvoudig",
+                      kardinaliteit: edge2.data?.kardinaliteit || "0..*",
+                      // Bewaar directioneel zodat de pijl naar doel zichtbaar blijft
+                      ...(directioneelFlag ? { directioneel: true } : {}),
+                    },
                   });
                 }
                 return [...withoutAsoc, ...newEdges];
@@ -1460,11 +1506,15 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   }, []);
 
   const maakVoorstelBestandsnaam = useCallback((v3Model) => {
+    // Gebruik versie als default bestandsnaam, zonder .json extensie
+    const versie = (v3Model?.versie || "").trim();
+    if (versie) return versie;
+    // Fallback: modelnaam
     const basis = (v3Model?.naam || "metamodel_v3")
       .trim()
       .replace(/[^a-zA-Z0-9._-]+/g, "_")
       .replace(/^_+|_+$/g, "") || "metamodel_v3";
-    return basis.toLowerCase().endsWith(".json") ? basis : `${basis}.json`;
+    return basis.toLowerCase().endsWith(".json") ? basis.slice(0, -5) : basis;
   }, []);
 
   // Bouw een lijst van beschikbare domeinen met hun prefix en mode.
@@ -2069,6 +2119,8 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         domeinSelectieActief={domeinSelectieActief}
         onSetActiefDomein={setActiefDomein}
         onSelecteerDomein={handleSelecteerDomein}
+        onNormaliseerAlleRelaties={handleNormaliseerAlleRelaties}
+        onSnapAlleNaarGrid={handleSnapAlleNaarGrid}
       />
 
       <ActionDialog

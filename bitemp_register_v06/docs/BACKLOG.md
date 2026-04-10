@@ -80,13 +80,21 @@
     - meerdere canvassen, per domein één (of naar keuze)
     - afhankelijkheid kunnen instellen
     - overerving zelf kunnen tekenen
-    - alignen
+    - ~~alignen~~ ✅ (context menu align-acties)
     - relatie-visualisatie:
-      - met velden: associatieklasse
-        - probleem: de lijnen tussen A en REL en REL en B zijn geen relaties, maar alleen maar de link
-          - ze hebben een richting: hoe visualiseren?
-      - zonder: alleen een lijn met een label "relatie"
+      - ~~met velden: associatieklasse~~ ✅ (ASOC-patroon: anker + 3 edges)
+        - ~~probleem: de lijnen tussen A en REL en REL en B zijn geen relaties, maar alleen maar de link~~ ✅
+          - ~~ze hebben een richting: hoe visualiseren?~~ ✅ (directioneel checkbox + pijl op anker→B)
+      - ~~zonder: alleen een lijn met een label "relatie"~~ ✅ (collapsed badge)
       - labels bij rollen verplaatsbaar (hoe in V3 en metareg?)
+    - ~~V3 import ASOC alleen bij velden~~ ✅
+    - ~~reverse ASOC behoudt directioneel~~ ✅
+    - ~~default bestandsnaam opslaan = versie~~ ✅
+    - ~~normaliseer alle relaties (toolbar + context menu)~~ ✅
+    - ~~snap alle elementen naar grid (toolbar + context menu)~~ ✅
+    - edge-eigenschappen conceptueel incorrect: A-anker en anker-B zijn geen relaties maar links
+      - Toekomst: edit via relatie-node, niet via edges
+    - grid-grootte instelbaar (optioneel)
 ```
 
 ### IDE
@@ -98,9 +106,9 @@
       - niet altijd (reproduce)
     - drag and drop - complete (shift?): ENT + alle GE's (en RELs) mee?
     - auto-order
-    - dubbelklik op edge: straighten
+    - ~~dubbelklik op edge: straighten~~ ✅ (berekenKortsteHandles)
     - undo / redo doet het niet
-    - edge types: compositie, overerving, associatieklasse (!)
+    - edge types: ~~compositie~~✅, ~~overerving~~✅, ~~associatieklasse~~✅ (!)
     - diagram of any element rename in PB
     - domeinkleur instellen, uberhaupt properties van domein instellen mogelijk
       - welke properties allemaal?
@@ -110,6 +118,8 @@
     - voorbeelden en testwaarden in REPs (t.b.v. expressies bijv. maar ook als document bij example)
     - velden (attr) ook omschrijving
       - meer dan dat: [0..*] enz
+    - ~~normaliseer alle relaties~~ ✅ (gedeeld via MetamodelEditor)
+    - ~~snap naar grid~~ ✅ (gedeeld via MetamodelEditor)
 ```
 
 ### Codegenerator
@@ -577,6 +587,10 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | E8 | Export naar MIM linked data JSON | README.md |
 | E9 | Kleur uit EA importeren | README.md |
 | E10| (ook IDE) Extra REP veld "Alias" | nieuw |
+| E11| Node resize: gebruiker kan nodes groter/kleiner maken (React Flow `<NodeResizer>`) | nieuw |
+| E12| ENT-node dikkere rand als standaardstijl (border-width 2-3px) | nieuw |
+| E13| ENT→ENT edge trekken = nieuwe REL aanmaken (collapsed/ASOC-small, geen velden) | nieuw |
+| E14| Ctrl-drag vanuit ENT-handle naar canvas = nieuwe GE aanmaken op die positie, gekoppeld aan bron-ENT (via `onConnectEnd`) | nieuw |
 
 
 ### IDE (metamodel-ontwerp omgeving)
@@ -598,6 +612,10 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I13 | Edge types: compositie, overerving, associatieklasse | README.md |
 | I14 | Document by example compartiment in klassen | readme.md |
 | I15 | Testwaarden in REPs (t.b.v. expressies bijv. maar ook als document bij example) | README.md |
+| I16 | IDE toolbar: knoppen voor aanmaken nieuwe REPs (ENT, GE, REL, reflijst, type, enum) | nieuw |
+| I17 | IDE toolbar + rechtsklik: normaliseer en snap-to-grid knoppen toevoegen | nieuw |
+| I18 | Verplaatsbare toolbars: drag naar gewenste positie, snap verticaal bij zijranden / horizontaal bij boven-/onderrand | nieuw |
+| I19 | PB rechtsklik: "Nieuw element" per type (rechtsklik op ENT → nieuw GE, etc.) | nieuw |
 
 
 ### Frontend — Content Editor (Inhoud-editor)
@@ -700,6 +718,12 @@ Focus: de IDE robuust en productief maken voor dagelijks modelwerk.
 | 4 | **I6** Drag & drop: ENT + alle GE's mee | Kwaliteit van leven bij herindelen |
 | 5 | **I7** Auto-order | Layout-kwaliteit bij grotere diagrammen |
 | 6 | **DM2–DM5** Domein als actief domein, validatie, boundary | Domeinscheiding zichtbaar en afdwingbaar |
+| 7 | **E11** Node resize | Gebruiker kan nodes groter/kleiner maken |
+| 8 | **E13** ENT→ENT edge = maak REL | Snelle relatie-creatie op canvas |
+| 9 | **E14** Ctrl-drag vanuit ENT → maak GE | Snelle GE-creatie op canvas |
+| 10 | **I16–I17** IDE toolbar: create-knoppen + normaliseer/snap | Volledige IDE-werkbalk |
+| 11 | **I18** Verplaatsbare toolbars | Professionele IDE-layout |
+| 12 | **I19** PB rechtsklik: nieuw element per type | Creëren vanuit projectbrowser |
 
 ### Increment 2B — Codegenerator betrouwbaar
 

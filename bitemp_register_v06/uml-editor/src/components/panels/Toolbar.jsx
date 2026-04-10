@@ -9,7 +9,7 @@
  */
 import { maakLeegType, maakLegeEnumeratie, maakLeegGegevenstype } from "../../metamodel/types";
 
-export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddReferentielijstInstantie, onSave, onPublishSchemaModel, onPublishAndRebuild, onRebuildModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI, onImportXMI, onImportMermaid, onImportPlantUML, modelNaam, modelBron, modelOpmerking, actiefDomein, beschikbareDomeinen, domeinSelectieActief = false, onSetActiefDomein, onSelecteerDomein }) {
+export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddReferentielijstInstantie, onSave, onPublishSchemaModel, onPublishAndRebuild, onRebuildModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI, onImportXMI, onImportMermaid, onImportPlantUML, modelNaam, modelBron, modelOpmerking, actiefDomein, beschikbareDomeinen, domeinSelectieActief = false, onSetActiefDomein, onSelecteerDomein, onNormaliseerAlleRelaties, onSnapAlleNaarGrid }) {
   const domeinen = beschikbareDomeinen || [];
   const domeinSelectieTitel = !actiefDomein
     ? "Kies eerst een actief domein"
@@ -78,6 +78,12 @@ export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddRefer
             >
               + Gegevenstype
             </button>
+          </div>
+
+          <div className="toolbar-group">
+            <span className="toolbar-label">Layout:</span>
+            {onNormaliseerAlleRelaties && <button onClick={onNormaliseerAlleRelaties} className="btn-toolbar" title="Normaliseer alle relaties (kortste weg)">↔ Normaliseer</button>}
+            {onSnapAlleNaarGrid && <button onClick={onSnapAlleNaarGrid} className="btn-toolbar" title="Snap alle elementen naar het grid">⊞ Snap grid</button>}
           </div>
         </div>
 

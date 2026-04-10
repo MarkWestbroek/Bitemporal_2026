@@ -51,6 +51,7 @@ type B struct {
 	Afvoer        *time.Time  `json:"afvoer,omitempty"`
 	Xs            []B_X       `bun:"rel:has-many,join:id=b_id" json:"xs,omitempty"`
 	Ys            []B_Y       `bun:"rel:has-many,join:id=b_id" json:"ys,omitempty"`
+	Bc            []B_BC      `bun:"rel:has-many,join:id=b_id" json:"bc,omitempty"`
 	Aanvang       []B_Aanvang `bun:"rel:has-many,join:id=b_id" json:"aanvang,omitempty"`
 	Einde         []B_Einde   `bun:"rel:has-many,join:id=b_id" json:"einde,omitempty"`
 }
@@ -71,6 +72,13 @@ type B_Einde struct {
 	B_ID          int        `json:"b_id" bun:"b_id,pk"`
 	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
 	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+type C struct {
+	bun.BaseModel `bun:"table:c,alias:c"`
+	ID            int        `json:"id" bun:"id,pk"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }

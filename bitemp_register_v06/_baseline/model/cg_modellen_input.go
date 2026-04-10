@@ -117,11 +117,11 @@ type InitiatiefOrganisatie_Input struct {
 }
 
 type Organisatie_Contactgegevens_Input struct {
-	ORGANISATIE_ID int            `json:"organisatie_id"`
-	Rel_ID         int            `json:"rel_id"`
-	Url            URL            `json:"url"`
-	Email          Emailadres     `json:"email"`
-	Telefoonnummer Telefoonnummer `json:"telefoonnummer"`
+	ORGANISATIE_ID int             `json:"organisatie_id"`
+	Rel_ID         int             `json:"rel_id"`
+	Url            *URL            `json:"url,omitempty"`
+	Email          *Emailadres     `json:"email,omitempty"`
+	Telefoonnummer *Telefoonnummer `json:"telefoonnummer,omitempty"`
 }
 
 type Organisatie_Organisatienaam_Input struct {
@@ -138,10 +138,10 @@ type Contactpersoon_Input struct {
 }
 
 type Persoon_Contactgegevens_Input struct {
-	PERSOON_ID     int            `json:"persoon_id"`
-	Rel_ID         int            `json:"rel_id"`
-	Email          Emailadres     `json:"email"`
-	Telefoonnummer Telefoonnummer `json:"telefoonnummer"`
+	PERSOON_ID     int             `json:"persoon_id"`
+	Rel_ID         int             `json:"rel_id"`
+	Email          *Emailadres     `json:"email,omitempty"`
+	Telefoonnummer *Telefoonnummer `json:"telefoonnummer,omitempty"`
 }
 
 type Persoon_Persoonnaam_Input struct {

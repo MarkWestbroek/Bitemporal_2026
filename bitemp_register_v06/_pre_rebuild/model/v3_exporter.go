@@ -487,18 +487,23 @@ func v3RelatieVanMeta(meta TypeMeta, child OnderliggendGegevenselement) V3Relati
 		Momentvoorkomen:          momentvoorkomenString(child.Momentvoorkomen),
 		IsMaterieel:              meta.IsMaterieel,
 		DoelEntiteit:             doelEntiteitVanRelatie(meta),
+		Directioneel:             meta.Directioneel,
 		Velden:                   extractContentFields(meta),
 		Runtime:                  runtimeVanMeta(meta),
 		AfgeleideVelden:          convertAfgeleideVelden(meta.AfgeleideVelden),
 	}
 	if meta.Layout != nil {
 		rel.Positie = meta.Layout.Positie
+		rel.AnkerPositie = meta.Layout.AnkerPositie
 		rel.ID = meta.Layout.EdgeID
 		rel.SourceHandle = meta.Layout.SourceHandle
 		rel.TargetHandle = meta.Layout.TargetHandle
 		rel.DoelID = meta.Layout.DoelEdgeID
 		rel.DoelSourceHandle = meta.Layout.DoelSourceHandle
 		rel.DoelTargetHandle = meta.Layout.DoelTargetHandle
+		rel.ClassLinkID = meta.Layout.ClassLinkEdgeID
+		rel.ClassLinkSourceHandle = meta.Layout.ClassLinkSourceHandle
+		rel.ClassLinkTargetHandle = meta.Layout.ClassLinkTargetHandle
 		rel.UseEdges = meta.Layout.UseEdges
 	}
 	return rel

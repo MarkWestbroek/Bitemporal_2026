@@ -504,14 +504,14 @@ type Organisatie_Contactgegevens struct {
 // Organisatie_Contactgegevens_Data — geversioned inhoud van Organisatie_Contactgegevens.
 type Organisatie_Contactgegevens_Data struct {
 	bun.BaseModel  `bun:"table:organisatie_contactgegevens_data,alias:organisatie_contactgegevens_data"`
-	Organisatie_ID int            `json:"organisatie_id" bun:"organisatie_id,pk"`
-	Rel_ID         int            `json:"rel_id" bun:"rel_id,pk"`
-	Versie         int64          `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Url            URL            `json:"url" schema:"datatype:URL"`
-	Email          Emailadres     `json:"email" schema:"datatype:Emailadres"`
-	Telefoonnummer Telefoonnummer `json:"telefoonnummer" schema:"datatype:Telefoonnummer"`
-	Opvoer         *time.Time     `json:"opvoer,omitempty"`
-	Afvoer         *time.Time     `json:"afvoer,omitempty"`
+	Organisatie_ID int             `json:"organisatie_id" bun:"organisatie_id,pk"`
+	Rel_ID         int             `json:"rel_id" bun:"rel_id,pk"`
+	Versie         int64           `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Url            *URL            `json:"url,omitempty" schema:"datatype:URL"`
+	Email          *Emailadres     `json:"email,omitempty" schema:"datatype:Emailadres"`
+	Telefoonnummer *Telefoonnummer `json:"telefoonnummer,omitempty" schema:"datatype:Telefoonnummer"`
+	Opvoer         *time.Time      `json:"opvoer,omitempty"`
+	Afvoer         *time.Time      `json:"afvoer,omitempty"`
 }
 
 // Organisatie_Organisatienaam — Naam van de organisatie.
@@ -572,13 +572,13 @@ type Persoon_Contactgegevens struct {
 // Persoon_Contactgegevens_Data — geversioned inhoud van Persoon_Contactgegevens.
 type Persoon_Contactgegevens_Data struct {
 	bun.BaseModel  `bun:"table:persoon_contactgegevens_data,alias:persoon_contactgegevens_data"`
-	Persoon_ID     int            `json:"persoon_id" bun:"persoon_id,pk"`
-	Rel_ID         int            `json:"rel_id" bun:"rel_id,pk"`
-	Versie         int64          `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Email          Emailadres     `json:"email" schema:"datatype:Emailadres"`
-	Telefoonnummer Telefoonnummer `json:"telefoonnummer" schema:"datatype:Telefoonnummer"`
-	Opvoer         *time.Time     `json:"opvoer,omitempty"`
-	Afvoer         *time.Time     `json:"afvoer,omitempty"`
+	Persoon_ID     int             `json:"persoon_id" bun:"persoon_id,pk"`
+	Rel_ID         int             `json:"rel_id" bun:"rel_id,pk"`
+	Versie         int64           `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Email          *Emailadres     `json:"email,omitempty" schema:"datatype:Emailadres"`
+	Telefoonnummer *Telefoonnummer `json:"telefoonnummer,omitempty" schema:"datatype:Telefoonnummer"`
+	Opvoer         *time.Time      `json:"opvoer,omitempty"`
+	Afvoer         *time.Time      `json:"afvoer,omitempty"`
 }
 
 // Persoon_Persoonnaam — Naam van de persoon.

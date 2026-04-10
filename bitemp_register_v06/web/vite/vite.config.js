@@ -20,6 +20,10 @@ export default defineConfig({
   },
   server: {
     port: 5174,
+    watch: {
+      // Zorg dat wijzigingen in de uml-editor subtree ook HMR triggeren
+      ignored: ["!**/uml-editor/src/**"],
+    },
   },
   build: {
     outDir: "../react",

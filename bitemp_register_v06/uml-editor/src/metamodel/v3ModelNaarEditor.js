@@ -346,91 +346,124 @@ export function v3ModelNaarEditor(v3Model) {
         });
       }
 
-      // ── Association class pattern: A ── o ── B + o╌╌REL ──
-      // Maak een ankerpunt (o) tussen de primaire entiteit en de doelentiteit.
-      // Dit vervangt de oude 2-edge compositie-patroon.
-      const ankerId = `anker_${rel.naam}`;
-      if (!nodes.find((n) => n.id === ankerId)) {
-        // Bereken ankerpositie: midden tussen entiteit A en doelentiteit B
-        const entPos = ent.positie || { x: entIdx * 500, y: 50 };
-        const doelEnt = rel.doelEntiteit
-          ? (v3Model.entiteiten || []).find((e) => e.typenaam === rel.doelEntiteit)
-          : null;
-        const doelPos = doelEnt?.positie || { x: entPos.x + 400, y: entPos.y };
-        const ankerPos = rel.ankerPositie || {
-          x: (entPos.x + doelPos.x) / 2,
-          y: (entPos.y + doelPos.y) / 2,
-        };
-        nodes.push({
-          id: ankerId,
-          type: "associatieAnker",
-          position: ankerPos,
-          data: { relatieNaam: rel.naam },
-        });
-      }
+      // ── Kies ASOC-patroon (met anker) of collapsed-patroon (eenvoudige edges) ──
+      const heeftRelVelden = (rel.velden || []).length > 0 || (rel.afgeleideVelden || []).length > 0;
 
-      // Edge 1: Entiteit → Anker (associatie, solid)
-      // Kardinaliteit bij het anker-einde = de REL→B multipliciteit (swap)
-      const doelKardinaliteit = rel.doelKardinaliteit || "0..*";
-      edges.push({
-        id: rel.id || `${ent.typenaam}->${ankerId}`,
-        source: ent.typenaam,
-        target: ankerId,
-        type: "metamodel",
-        sourceHandle: migrateSourceHandle(rel.sourceHandle || null),
-        targetHandle: migrateTargetHandle(rel.targetHandle || null),
-        data: {
-          isAssociation: true,
-          directioneel: rel.directioneel || false,
-          // Bij A tonen we de kardinaliteit die bij B hoort (swap)
-          rolnaam: "",
-          jsonRolnaam: "",
-          momentvoorkomen: "",
-          kardinaliteit: rel.directioneel ? "" : doelKardinaliteit,
-        },
-      });
+      if (heeftRelVelden) {
+        // ── Association class pattern: A ── o ── B + o╌╌REL ──
+        // Maak een ankerpunt (o) tussen de primaire entiteit en de doelentiteit.
+        const ankerId = `anker_${rel.naam}`;
+        if (!nodes.find((n) => n.id === ankerId)) {
+          const entPos = ent.positie || { x: entIdx * 500, y: 50 };
+          const doelEnt = rel.doelEntiteit
+            ? (v3Model.entiteiten || []).find((e) => e.typenaam === rel.doelEntiteit)
+            : null;
+          const doelPos = doelEnt?.positie || { x: entPos.x + 400, y: entPos.y };
+          const ankerPos = rel.ankerPositie || {
+            x: (entPos.x + doelPos.x) / 2,
+            y: (entPos.y + doelPos.y) / 2,
+          };
+          nodes.push({
+            id: ankerId,
+            type: "associatieAnker",
+            position: ankerPos,
+            data: { relatieNaam: rel.naam },
+          });
+        }
 
-      // Edge 2: Anker → Doel-entiteit (associatie, solid, optioneel directionele pijl)
-      if (rel.doelEntiteit) {
-        // Kardinaliteit bij B-zijde = de A→REL multipliciteit (expliciet of afgeleid uit momentvoorkomen)
-        const bronKardinaliteit = rel.bronKardinaliteit
-          || (rel.momentvoorkomen === "meervoudig" ? "0..*" : "0..1");
+        // Edge 1: Entiteit → Anker (associatie, solid)
+        const doelKardinaliteit = rel.doelKardinaliteit || "0..*";
         edges.push({
-          id: rel.doelId || `${ankerId}->${rel.doelEntiteit}`,
-          source: ankerId,
-          target: rel.doelEntiteit,
+          id: rel.id || `${ent.typenaam}->${ankerId}`,
+          source: ent.typenaam,
+          target: ankerId,
           type: "metamodel",
-          sourceHandle: migrateSourceHandle(rel.doelSourceHandle || null),
-          targetHandle: migrateTargetHandle(rel.doelTargetHandle || null),
+          sourceHandle: migrateSourceHandle(rel.sourceHandle || null),
+          targetHandle: migrateTargetHandle(rel.targetHandle || null),
           data: {
             isAssociation: true,
             directioneel: rel.directioneel || false,
             rolnaam: "",
             jsonRolnaam: "",
             momentvoorkomen: "",
-            kardinaliteit: bronKardinaliteit,
+            kardinaliteit: rel.directioneel ? "" : doelKardinaliteit,
           },
         });
-      }
 
-      // Edge 3: Anker ╌╌ Relatie-node (association class link, dashed, geen labels)
-      // Standaard handles: anker-bottom → relatie-top (REL zit typisch onder het anker)
-      const classLinkId = rel.classLinkId || `${ankerId}-->${rel.naam}`;
-      edges.push({
-        id: classLinkId,
-        source: ankerId,
-        target: rel.naam,
-        type: "metamodel",
-        sourceHandle: migrateSourceHandle(rel.classLinkSourceHandle || "source-bottom"),
-        targetHandle: migrateTargetHandle(rel.classLinkTargetHandle || "target-top"),
-        data: {
-          isAssociationClassLink: true,
-          rolnaam: "",
-          jsonRolnaam: "",
-          momentvoorkomen: "",
-          kardinaliteit: "",
-        },
-      });
+        // Edge 2: Anker → Doel-entiteit (associatie, solid, optioneel directionele pijl)
+        if (rel.doelEntiteit) {
+          const bronKardinaliteit = rel.bronKardinaliteit
+            || (rel.momentvoorkomen === "meervoudig" ? "0..*" : "0..1");
+          edges.push({
+            id: rel.doelId || `${ankerId}->${rel.doelEntiteit}`,
+            source: ankerId,
+            target: rel.doelEntiteit,
+            type: "metamodel",
+            sourceHandle: migrateSourceHandle(rel.doelSourceHandle || null),
+            targetHandle: migrateTargetHandle(rel.doelTargetHandle || null),
+            data: {
+              isAssociation: true,
+              directioneel: rel.directioneel || false,
+              rolnaam: "",
+              jsonRolnaam: "",
+              momentvoorkomen: "",
+              kardinaliteit: bronKardinaliteit,
+            },
+          });
+        }
+
+        // Edge 3: Anker ╌╌ Relatie-node (association class link, dashed)
+        const classLinkId = rel.classLinkId || `${ankerId}-->${rel.naam}`;
+        edges.push({
+          id: classLinkId,
+          source: ankerId,
+          target: rel.naam,
+          type: "metamodel",
+          sourceHandle: migrateSourceHandle(rel.classLinkSourceHandle || "source-bottom"),
+          targetHandle: migrateTargetHandle(rel.classLinkTargetHandle || "target-top"),
+          data: {
+            isAssociationClassLink: true,
+            rolnaam: "",
+            jsonRolnaam: "",
+            momentvoorkomen: "",
+            kardinaliteit: "",
+          },
+        });
+      } else {
+        // ── Collapsed badge: eenvoudige edges entiteit→REL→doelentiteit ──
+        edges.push({
+          id: rel.id || `${ent.typenaam}->${rel.naam}`,
+          source: ent.typenaam,
+          target: rel.naam,
+          type: "metamodel",
+          sourceHandle: migrateSourceHandle(rel.sourceHandle || null),
+          targetHandle: migrateTargetHandle(rel.targetHandle || null),
+          data: {
+            rolnaam: "",
+            jsonRolnaam: "",
+            momentvoorkomen: rel.momentvoorkomen || "enkelvoudig",
+            kardinaliteit: rel.doelKardinaliteit || "0..1",
+          },
+        });
+
+        if (rel.doelEntiteit) {
+          edges.push({
+            id: rel.doelId || `${rel.naam}->${rel.doelEntiteit}`,
+            source: rel.naam,
+            target: rel.doelEntiteit,
+            type: "metamodel",
+            sourceHandle: migrateSourceHandle(rel.doelSourceHandle || null),
+            targetHandle: migrateTargetHandle(rel.doelTargetHandle || null),
+            data: {
+              rolnaam: "",
+              jsonRolnaam: "",
+              momentvoorkomen: "enkelvoudig",
+              kardinaliteit: rel.bronKardinaliteit || "0..*",
+              ...(rel.directioneel ? { directioneel: true } : {}),
+            },
+          });
+        }
+      }
 
       // Lookup voor «use» dependency edge handles (enum/datatype/ref)
       const relUseEdgeMap = Object.fromEntries(

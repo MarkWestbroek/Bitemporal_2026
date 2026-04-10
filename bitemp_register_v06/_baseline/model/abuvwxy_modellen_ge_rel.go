@@ -212,3 +212,24 @@ type B_Y_Data struct {
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
+
+type B_BC struct {
+	bun.BaseModel `bun:"table:b_bc,alias:b_bc"`
+	B_ID          int         `json:"b_id" bun:"b_id,pk" schema_desc:"ID van de B-entiteit"`
+	Rel_ID        int         `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentB       *B          `json:"-" bun:"rel:belongs-to,join:b_id=id,on_delete:cascade"`
+	C_ID          int         `json:"c_id"`
+	Opvoer        *time.Time  `json:"opvoer,omitempty"`
+	Afvoer        *time.Time  `json:"afvoer,omitempty"`
+	Data          []B_BC_Data `bun:"rel:has-many,join:b_id=b_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// B_BC_Data — geversioned inhoud van B_BC.
+type B_BC_Data struct {
+	bun.BaseModel `bun:"table:b_bc_data,alias:b_bc_data"`
+	B_ID          int        `json:"b_id" bun:"b_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
