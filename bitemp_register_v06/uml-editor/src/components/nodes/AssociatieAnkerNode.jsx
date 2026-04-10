@@ -13,6 +13,9 @@
  *   3. o ╌╌ REL (association class link, dashed)
  *
  * Handles op alle 4 zijden (boven/onder/links/rechts) voor flexibele routing.
+ * Elke zijde heeft zowel een source als target handle zodat edges uit elke
+ * richting kunnen aansluiten (8 handles totaal). De handles zijn onzichtbaar
+ * en niet-interactief zodat de node zelf versleepbaar blijft.
  */
 import { memo } from "react";
 import { Handle, Position } from "@xyflow/react";
@@ -40,14 +43,13 @@ function AssociatieAnkerNode({ id, data, selected }) {
         position: "relative",
       }}
     >
-      {/* 4 handles: één per zijde, afwisselend source/target.
-           target-left  ← inkomend van entiteit A
-           source-right → uitgaand naar entiteit B
-           source-bottom→ class-link naar REL
-           target-top   ← reservehandle (verticale layout) */}
       <Handle type="target" position={Position.Top} id="target-top" style={handleStyle} />
+      <Handle type="source" position={Position.Top} id="source-top" style={handleStyle} />
+      <Handle type="target" position={Position.Bottom} id="target-bottom" style={handleStyle} />
       <Handle type="source" position={Position.Bottom} id="source-bottom" style={handleStyle} />
       <Handle type="target" position={Position.Left} id="target-left" style={handleStyle} />
+      <Handle type="source" position={Position.Left} id="source-left" style={handleStyle} />
+      <Handle type="target" position={Position.Right} id="target-right" style={handleStyle} />
       <Handle type="source" position={Position.Right} id="source-right" style={handleStyle} />
     </div>
   );

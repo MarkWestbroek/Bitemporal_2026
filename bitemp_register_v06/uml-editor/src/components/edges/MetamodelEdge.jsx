@@ -49,6 +49,8 @@ function MetamodelEdge({
   const isAssociation = data?.isAssociation === true;
   const isAssociationClassLink = data?.isAssociationClassLink === true;
   const directioneel = data?.directioneel === true;
+  // Pijl alleen op de anker→B edge (source is anker), niet op A→anker
+  const showDirectionalArrow = isAssociation && directioneel && sourceNode?.type === "associatieAnker";
 
   // Compositie: alleen entiteit → GE (niet meer entiteit → relatie)
   const isComposition =
@@ -137,8 +139,8 @@ function MetamodelEdge({
           </marker>
         </defs>
       )}
-      {/* Open pijl voor directionele associatie (▷) */}
-      {isAssociation && directioneel && (
+      {/* Open pijl voor directionele associatie (▷) — alleen op anker→B edge */}
+      {showDirectionalArrow && (
         <defs>
           <marker
             id={associationArrowId}
@@ -168,7 +170,7 @@ function MetamodelEdge({
         markerEnd={
           isDependency ? `url(#${dependencyArrowId})`
           : isGeneralization ? `url(#${generalizationArrowId})`
-          : (isAssociation && directioneel) ? `url(#${associationArrowId})`
+          : showDirectionalArrow ? `url(#${associationArrowId})`
           : undefined
         }
         style={{
