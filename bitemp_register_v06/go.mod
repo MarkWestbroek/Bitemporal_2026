@@ -12,6 +12,7 @@ require (
 	github.com/uptrace/bun/driver/pgdriver v1.1.14
 	github.com/uptrace/bun/extra/bundebug v1.1.14
 	github.com/yuin/goldmark v1.7.8
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -45,6 +46,5 @@ require (
 	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	mellium.im/sasl v0.3.1 // indirect
 )

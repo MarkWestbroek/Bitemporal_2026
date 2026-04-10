@@ -25,14 +25,14 @@ function EnumeratieNode({ data, selected }) {
       }}
     >
       {/* Handles op alle zijden */}
-      <Handle type="target" position={Position.Top} id="top" />
-      <Handle type="source" position={Position.Bottom} id="bottom" />
-      <Handle type="source" position={Position.Top} id="top" />
-      <Handle type="target" position={Position.Bottom} id="bottom" />
-      <Handle type="source" position={Position.Left} id="left" />
-      <Handle type="target" position={Position.Left} id="left" />
-      <Handle type="source" position={Position.Right} id="right" />
-      <Handle type="target" position={Position.Right} id="right" />
+      <Handle type="target" position={Position.Top} id="target-top" />
+      <Handle type="source" position={Position.Bottom} id="source-bottom" />
+      <Handle type="source" position={Position.Top} id="source-top" />
+      <Handle type="target" position={Position.Bottom} id="target-bottom" />
+      <Handle type="source" position={Position.Left} id="source-left" />
+      <Handle type="target" position={Position.Left} id="target-left" />
+      <Handle type="source" position={Position.Right} id="source-right" />
+      <Handle type="target" position={Position.Right} id="target-right" />
 
       <div className="node-header">
         <div className="node-stereotype">«enumeratie»</div>

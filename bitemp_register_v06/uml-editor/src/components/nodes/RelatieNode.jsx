@@ -27,6 +27,39 @@ function RelatieNode({ id, data, selected }) {
   const borderColor = selected ? "#7c3aed" : "#94a3b8";
   const overerving = useOvergeerfdeVelden(id);
 
+  const heeftVelden = (data.velden || []).length > 0;
+  const heeftAfgeleide = (data.afgeleideVelden || []).length > 0;
+  const heeftOvererving = overerving && overerving.velden.length > 0;
+  const isLeeg = !heeftVelden && !heeftAfgeleide && !heeftOvererving;
+
+  // Collapsed mode: wanneer de relatie geen inhoudelijke velden heeft,
+  // tonen we alleen een compact naambadge (association class label).
+  if (isLeeg) {
+    return (
+      <div
+        className="metamodel-node relatie-node relatie-collapsed"
+        style={{
+          borderColor,
+          backgroundColor: data.kleur || "#ede9fe",
+          padding: "4px 10px",
+          minWidth: "auto",
+        }}
+      >
+        <Handle type="target" position={Position.Top} id="target-top" />
+        <Handle type="source" position={Position.Bottom} id="source-bottom" />
+        <Handle type="source" position={Position.Top} id="source-top" />
+        <Handle type="target" position={Position.Bottom} id="target-bottom" />
+        <Handle type="source" position={Position.Left} id="source-left" />
+        <Handle type="target" position={Position.Left} id="target-left" />
+        <Handle type="source" position={Position.Right} id="source-right" />
+        <Handle type="target" position={Position.Right} id="target-right" />
+        <div className="node-typenaam" style={{ fontSize: "0.85em", margin: 0 }}>
+          {data.klassenaam || data.typenaam || "(naamloos)"}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className="metamodel-node relatie-node"
@@ -36,14 +69,14 @@ function RelatieNode({ id, data, selected }) {
       }}
     >
       {/* Handles op alle zijden voor flexibele edge-aansluitingen */}
-      <Handle type="target" position={Position.Top} id="top" />
-      <Handle type="source" position={Position.Bottom} id="bottom" />
-      <Handle type="source" position={Position.Top} id="top" />
-      <Handle type="target" position={Position.Bottom} id="bottom" />
-      <Handle type="source" position={Position.Left} id="left" />
-      <Handle type="target" position={Position.Left} id="left" />
-      <Handle type="source" position={Position.Right} id="right" />
-      <Handle type="target" position={Position.Right} id="right" />
+      <Handle type="target" position={Position.Top} id="target-top" />
+      <Handle type="source" position={Position.Bottom} id="source-bottom" />
+      <Handle type="source" position={Position.Top} id="source-top" />
+      <Handle type="target" position={Position.Bottom} id="target-bottom" />
+      <Handle type="source" position={Position.Left} id="source-left" />
+      <Handle type="target" position={Position.Left} id="target-left" />
+      <Handle type="source" position={Position.Right} id="source-right" />
+      <Handle type="target" position={Position.Right} id="target-right" />
 
       <div className="node-header">
         <div className="node-stereotype">

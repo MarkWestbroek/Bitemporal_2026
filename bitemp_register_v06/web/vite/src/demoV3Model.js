@@ -107,7 +107,7 @@ export const demoV3Model = {
           isMaterieel: false,
           positie: { x: -465, y: -30 },
           id: "NatuurlijkPersoon->NatuurlijkPersoon_PersoonsIdentificatie",
-          sourceHandle: "left",
+          sourceHandle: "source-left",
           velden: [
             { naam: "bsn", goType: "string" },
             { naam: "ingezetene", goType: "*bool" },
@@ -150,8 +150,8 @@ export const demoV3Model = {
           isMaterieel: false,
           positie: { x: 90, y: 435 },
           id: "edge_1774209110136_2",
-          sourceHandle: "bottom",
-          targetHandle: "top",
+          sourceHandle: "source-bottom",
+          targetHandle: "target-top",
           velden: [{ naam: "achternaam", goType: "string" }],
         },
         {
@@ -161,8 +161,8 @@ export const demoV3Model = {
           isMaterieel: false,
           positie: { x: 240, y: 240 },
           id: "edge_1774209240752_5",
-          sourceHandle: "bottom",
-          targetHandle: "top",
+          sourceHandle: "source-bottom",
+          targetHandle: "target-top",
           velden: [
             {
               naam: "naamgebruik",
@@ -181,11 +181,11 @@ export const demoV3Model = {
           doelEntiteit: "Locatie",
           positie: { x: 330, y: -105 },
           id: "edge_1774201942583_1",
-          sourceHandle: "right",
-          targetHandle: "left",
+          sourceHandle: "source-right",
+          targetHandle: "target-left",
           doelId: "edge_1774201991984_2",
-          doelSourceHandle: "right",
-          doelTargetHandle: "left",
+          doelSourceHandle: "source-right",
+          doelTargetHandle: "target-left",
           velden: [
             {
               naam: "soort",

@@ -44,8 +44,8 @@ test('referentielijst-instantie use-edge en handles blijven behouden in V3 round
       source: 'Lijst',
       target: 'LijstItems',
       type: 'metamodel',
-      sourceHandle: 'bottom',
-      targetHandle: 'top',
+      sourceHandle: 'source-bottom',
+      targetHandle: 'target-top',
       data: { momentvoorkomen: 'meervoudig', kardinaliteit: '0..*' },
     },
     {
@@ -53,8 +53,8 @@ test('referentielijst-instantie use-edge en handles blijven behouden in V3 round
       source: 'LijstItems',
       target: 'Item',
       type: 'metamodel',
-      sourceHandle: 'bottom',
-      targetHandle: 'top',
+      sourceHandle: 'source-bottom',
+      targetHandle: 'target-top',
       data: { momentvoorkomen: 'meervoudig', kardinaliteit: '0..*' },
     },
     {
@@ -62,8 +62,8 @@ test('referentielijst-instantie use-edge en handles blijven behouden in V3 round
       source: 'refinstantie_Landenlijst',
       target: 'LijstItems',
       type: 'metamodel',
-      sourceHandle: 'right',
-      targetHandle: 'left',
+      sourceHandle: 'source-right',
+      targetHandle: 'target-left',
       data: { isDependency: true },
     },
   ];
@@ -73,8 +73,8 @@ test('referentielijst-instantie use-edge en handles blijven behouden in V3 round
 
   assert.equal(relatie.referentielijstInstantie, 'Landenlijst');
   assert.equal(relatie.instantieId, 'binding-edge');
-  assert.equal(relatie.instantieSourceHandle, 'right');
-  assert.equal(relatie.instantieTargetHandle, 'left');
+  assert.equal(relatie.instantieSourceHandle, 'source-right');
+  assert.equal(relatie.instantieTargetHandle, 'target-left');
 
   const hersteld = v3ModelNaarEditor(v3);
   const bindingEdge = hersteld.edges.find((e) => e.id === 'binding-edge');
@@ -82,8 +82,8 @@ test('referentielijst-instantie use-edge en handles blijven behouden in V3 round
   assert.ok(bindingEdge);
   assert.equal(bindingEdge.source, 'refinstantie_Landenlijst');
   assert.equal(bindingEdge.target, 'LijstItems');
-  assert.equal(bindingEdge.sourceHandle, 'right');
-  assert.equal(bindingEdge.targetHandle, 'left');
+  assert.equal(bindingEdge.sourceHandle, 'source-right');
+  assert.equal(bindingEdge.targetHandle, 'target-left');
   assert.equal(bindingEdge.data?.isDependency, true);
 });
 
@@ -136,8 +136,8 @@ test('«use» edges naar enums en datatypes bewaren handles in V3 roundtrip', ()
       source: 'Ding_Info',
       target: 'enum_Kleur',
       type: 'metamodel',
-      sourceHandle: 'right',
-      targetHandle: 'left',
+      sourceHandle: 'source-right',
+      targetHandle: 'target-left',
       data: { isDependency: true },
     },
     {
@@ -145,8 +145,8 @@ test('«use» edges naar enums en datatypes bewaren handles in V3 roundtrip', ()
       source: 'Ding_Info',
       target: 'dt_NLPostcode',
       type: 'metamodel',
-      sourceHandle: 'bottom',
-      targetHandle: 'top',
+      sourceHandle: 'source-bottom',
+      targetHandle: 'target-top',
       data: { isDependency: true },
     },
   ];
@@ -160,26 +160,26 @@ test('«use» edges naar enums en datatypes bewaren handles in V3 roundtrip', ()
 
   const enumUE = ge.useEdges.find((ue) => ue.doel === 'Kleur');
   assert.ok(enumUE, 'useEdge voor Kleur moet bestaan');
-  assert.equal(enumUE.sourceHandle, 'right');
-  assert.equal(enumUE.targetHandle, 'left');
+  assert.equal(enumUE.sourceHandle, 'source-right');
+  assert.equal(enumUE.targetHandle, 'target-left');
 
   const dtUE = ge.useEdges.find((ue) => ue.doel === 'NLPostcode');
   assert.ok(dtUE, 'useEdge voor NLPostcode moet bestaan');
-  assert.equal(dtUE.sourceHandle, 'bottom');
-  assert.equal(dtUE.targetHandle, 'top');
+  assert.equal(dtUE.sourceHandle, 'source-bottom');
+  assert.equal(dtUE.targetHandle, 'target-top');
 
   // Import terug uit V3
   const hersteld = v3ModelNaarEditor(v3);
 
   const enumEdge = hersteld.edges.find((e) => e.target === 'enum_Kleur');
   assert.ok(enumEdge, 'enum edge moet bestaan na import');
-  assert.equal(enumEdge.sourceHandle, 'right');
-  assert.equal(enumEdge.targetHandle, 'left');
+  assert.equal(enumEdge.sourceHandle, 'source-right');
+  assert.equal(enumEdge.targetHandle, 'target-left');
 
   const dtEdge = hersteld.edges.find((e) => e.target === 'dt_NLPostcode');
   assert.ok(dtEdge, 'datatype edge moet bestaan na import');
-  assert.equal(dtEdge.sourceHandle, 'bottom');
-  assert.equal(dtEdge.targetHandle, 'top');
+  assert.equal(dtEdge.sourceHandle, 'source-bottom');
+  assert.equal(dtEdge.targetHandle, 'target-top');
 });
 
 test('verborgen «use» edges worden bewaard in V3 roundtrip', () => {

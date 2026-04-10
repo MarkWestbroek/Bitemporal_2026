@@ -19,6 +19,12 @@ class RootErrorBoundary extends React.Component {
     console.error("[React RootErrorBoundary]", error, errorInfo);
   }
 
+  handleReset = () => {
+    // Verwijder mogelijk corrupte layout state, behoud model data
+    localStorage.removeItem("ide-layout");
+    window.location.reload();
+  };
+
   render() {
     if (this.state.hasError) {
       return (
@@ -30,9 +36,14 @@ class RootErrorBoundary extends React.Component {
           <pre style={{ margin: 0, padding: "10px 12px", borderRadius: 8, background: "#f8fafc", border: "1px solid #e2e8f0", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
             {this.state.errorMessage}
           </pre>
-          <button onClick={() => window.location.reload()} style={{ marginTop: 12 }}>
-            Herlaad pagina
-          </button>
+          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+            <button onClick={this.handleReset} style={{ padding: "6px 16px", background: "#1d4ed8", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>
+              Reset layout en herlaad
+            </button>
+            <button onClick={() => window.location.reload()} style={{ padding: "6px 16px" }}>
+              Herlaad pagina
+            </button>
+          </div>
         </div>
       );
     }
@@ -41,10 +52,11 @@ class RootErrorBoundary extends React.Component {
   }
 }
 
+// NB: Geen React.StrictMode — flexlayout-react, react-arborist en @xyflow/react
+// manipuleren de DOM direct. StrictMode's dubbele mount/unmount veroorzaakt
+// "removeChild" fouten met deze libraries.
 createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <RootErrorBoundary>
-      <App />
-    </RootErrorBoundary>
-  </React.StrictMode>
+  <RootErrorBoundary>
+    <App />
+  </RootErrorBoundary>
 );

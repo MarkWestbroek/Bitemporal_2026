@@ -238,30 +238,66 @@ export function importVanXMI(xmlText) {
     const target = participants.find((p) => p !== owner) || participants[1];
 
     if (owner?.typeRef && idMap.has(owner.typeRef)) {
+      // Maak anker-node voor association class pattern
+      const ankerId = generateId("anker");
+      const ownerNodeId = idMap.get(owner.typeRef);
+      const ownerNode = nodes.find((n) => n.id === ownerNodeId);
+      const relNode = nodes.find((n) => n.id === nodeId);
+      const ankerPos = {
+        x: ((ownerNode?.position?.x || 0) + (relNode?.position?.x || 200)) / 2,
+        y: (ownerNode?.position?.y || 0) + 20,
+      };
+      nodes.push({
+        id: ankerId,
+        type: "associatieAnker",
+        position: ankerPos,
+        data: { relatieNaam: naam },
+      });
+
+      // Edge 1: Owner → Anker (associatie)
       edges.push({
         id: generateId("edge"),
-        source: idMap.get(owner.typeRef),
+        source: ownerNodeId,
+        target: ankerId,
+        type: "metamodel",
+        data: {
+          isAssociation: true,
+          rolnaam: "",
+          jsonRolnaam: "",
+          momentvoorkomen: "",
+          kardinaliteit: target?.mult || "0..*",
+        },
+      });
+
+      // Edge 2: Anker → Target entiteit (associatie)
+      if (target?.typeRef && idMap.has(target.typeRef)) {
+        edges.push({
+          id: generateId("edge"),
+          source: ankerId,
+          target: idMap.get(target.typeRef),
+          type: "metamodel",
+          data: {
+            isAssociation: true,
+            rolnaam: "",
+            jsonRolnaam: "",
+            momentvoorkomen: "",
+            kardinaliteit: owner.mult || "0..*",
+          },
+        });
+      }
+
+      // Edge 3: Anker ╌╌ Relatie-node (association class link)
+      edges.push({
+        id: generateId("edge"),
+        source: ankerId,
         target: nodeId,
         type: "metamodel",
         data: {
-          rolnaam: owner.rolnaam || naam,
+          isAssociationClassLink: true,
+          rolnaam: "",
           jsonRolnaam: "",
-          momentvoorkomen: parseKardVoorkomen(owner.mult),
-          kardinaliteit: owner.mult,
-        },
-      });
-    }
-    if (target?.typeRef && idMap.has(target.typeRef)) {
-      edges.push({
-        id: generateId("edge"),
-        source: nodeId,
-        target: idMap.get(target.typeRef),
-        type: "metamodel",
-        data: {
-          rolnaam: target.rolnaam || "",
-          jsonRolnaam: "",
-          momentvoorkomen: parseKardVoorkomen(target.mult),
-          kardinaliteit: target.mult,
+          momentvoorkomen: "",
+          kardinaliteit: "",
         },
       });
     }
@@ -307,36 +343,71 @@ export function importVanXMI(xmlText) {
       participants.push({ typeRef, eaEnd, mult, aggr, rolnaam });
     }
 
-    // EA AssociationClass: twee edges (owner → relatie, relatie → target)
+    // EA AssociationClass: drie edges via anker-node (owner → anker → target + anker╌╌relatie)
     if (relatieNodeId) {
       const owner = participants.find((p) => p.eaEnd === "target" || p.aggr === "composite") || participants[0];
       const target = participants.find((p) => p !== owner) || participants[1];
 
       if (owner?.typeRef && idMap.has(owner.typeRef)) {
+        const ankerId = generateId("anker");
+        const ownerNodeId = idMap.get(owner.typeRef);
+        const ownerNode = nodes.find((n) => n.id === ownerNodeId);
+        const relNode = nodes.find((n) => n.id === relatieNodeId);
+        const ankerPos = {
+          x: ((ownerNode?.position?.x || 0) + (relNode?.position?.x || 200)) / 2,
+          y: (ownerNode?.position?.y || 0) + 20,
+        };
+        nodes.push({
+          id: ankerId,
+          type: "associatieAnker",
+          position: ankerPos,
+          data: { relatieNaam: naam },
+        });
+
+        // Edge 1: Owner → Anker (associatie)
         edges.push({
           id: generateId("edge"),
-          source: idMap.get(owner.typeRef),
+          source: ownerNodeId,
+          target: ankerId,
+          type: "metamodel",
+          data: {
+            isAssociation: true,
+            rolnaam: "",
+            jsonRolnaam: "",
+            momentvoorkomen: "",
+            kardinaliteit: target?.mult || "0..*",
+          },
+        });
+
+        // Edge 2: Anker → Target entiteit (associatie)
+        if (target?.typeRef && idMap.has(target.typeRef)) {
+          edges.push({
+            id: generateId("edge"),
+            source: ankerId,
+            target: idMap.get(target.typeRef),
+            type: "metamodel",
+            data: {
+              isAssociation: true,
+              rolnaam: "",
+              jsonRolnaam: "",
+              momentvoorkomen: "",
+              kardinaliteit: owner.mult || "0..*",
+            },
+          });
+        }
+
+        // Edge 3: Anker ╌╌ Relatie-node (association class link)
+        edges.push({
+          id: generateId("edge"),
+          source: ankerId,
           target: relatieNodeId,
           type: "metamodel",
           data: {
-            rolnaam: owner.rolnaam || naam || "",
-            jsonRolnaam: tvs.get("jsonRolnaam:primair") || tvs.get("jsonRolnaam") || "",
-            momentvoorkomen: momentvoorkomen || parseKardVoorkomen(owner.mult),
-            kardinaliteit: owner.mult || "0..*",
-          },
-        });
-      }
-      if (target?.typeRef && idMap.has(target.typeRef)) {
-        edges.push({
-          id: generateId("edge"),
-          source: relatieNodeId,
-          target: idMap.get(target.typeRef),
-          type: "metamodel",
-          data: {
-            rolnaam: target.rolnaam || "",
-            jsonRolnaam: tvs.get("jsonRolnaam:secondair") || "",
-            momentvoorkomen: parseKardVoorkomen(target.mult),
-            kardinaliteit: target.mult || "0..*",
+            isAssociationClassLink: true,
+            rolnaam: "",
+            jsonRolnaam: "",
+            momentvoorkomen: "",
+            kardinaliteit: "",
           },
         });
       }

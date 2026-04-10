@@ -6,14 +6,19 @@
  *
  *       [A] ——— rolnaam {enkelvoudig} 0..1 ———> [A_U]
  *
- * De `data` prop bevat:
- *   - rolnaam: de Go-veldnaam (bijv. "Us")
- *   - jsonRolnaam: de JSON-veldnaam (bijv. "us")
- *   - momentvoorkomen: "enkelvoudig" | "meervoudig"
- *   - kardinaliteit: "0..1", "1", "0..*", "1..*"
+ * Edge classificaties:
+ *   - Compositie: entiteit → GE (◆ ruit op bronzijde)
+ *   - Associatie: entiteit → anker → entiteit (solid lijn, geen ruit)
+ *   - Associatieklasse-link: anker ╌╌ relatie (dashed, geen labels)
+ *   - Dependency: GE/REL → enum/datatype (dashed + «use»)
+ *   - Generalisatie: supertype → subtype (driehoek)
  *
- * We gebruiken getBezierPath() van React Flow om het pad te berekenen,
- * en gebruiken EdgeLabelRenderer om labels over de edge te plaatsen.
+ * De `data` prop bevat:
+ *   - rolnaam, jsonRolnaam, momentvoorkomen, kardinaliteit (standaard)
+ *   - isDependency, isGeneralization (bestaand)
+ *   - isAssociation: true voor solid associatie-edges (A→o, o→B)
+ *   - isAssociationClassLink: true voor dashed link (o╌╌REL)
+ *   - directioneel: true → open pijl op target-zijde
  */
 import {
   getBezierPath,
@@ -41,11 +46,18 @@ function MetamodelEdge({
 
   const isDependency = data?.isDependency === true;
   const isGeneralization = data?.isGeneralization === true;
+  const isAssociation = data?.isAssociation === true;
+  const isAssociationClassLink = data?.isAssociationClassLink === true;
+  const directioneel = data?.directioneel === true;
+
+  // Compositie: alleen entiteit → GE (niet meer entiteit → relatie)
   const isComposition =
     !isDependency &&
     !isGeneralization &&
+    !isAssociation &&
+    !isAssociationClassLink &&
     sourceNode?.type === "entiteit" &&
-    ["gegevenselement", "relatie"].includes(targetNode?.type);
+    targetNode?.type === "gegevenselement";
 
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
@@ -59,20 +71,27 @@ function MetamodelEdge({
   const constraint =
     data?.momentvoorkomen === "enkelvoudig"
       ? "{enkelvoudig}"
-      : "{meervoudig}";
+      : data?.momentvoorkomen === "meervoudig"
+        ? "{meervoudig}"
+        : "";
   const kardinaliteit = data?.kardinaliteit || "";
   const rolnaam = data?.rolnaam || "";
 
-  // Plaats labels bij de GE/relatie-zijde (target), niet op het midden van de lijn
+  // Plaats labels bij de target-zijde (70% richting target)
   const geLabelX = labelX + (targetX - labelX) * 0.7;
   const geLabelY = labelY + (targetY - labelY) * 0.7;
+  // Labels bij de source-zijde (30% richting source)
+  const srcLabelX = labelX + (sourceX - labelX) * 0.7;
+  const srcLabelY = labelY + (sourceY - labelY) * 0.7;
 
   const diamondColor = selected ? "#2563eb" : "#64748b";
   const dependencyColor = "#64748b";
   const generalizationColor = selected ? "#2563eb" : "#475569";
+  const associationColor = selected ? "#2563eb" : "#64748b";
   const { diamondCenter, diamondPoints } = getDiamondProps(sourceX, sourceY, sourcePosition);
   const dependencyArrowId = `edge-dependency-arrow-${id}`;
   const generalizationArrowId = `edge-generalization-triangle-${id}`;
+  const associationArrowId = `edge-association-arrow-${id}`;
 
   return (
     <>
@@ -118,6 +137,29 @@ function MetamodelEdge({
           </marker>
         </defs>
       )}
+      {/* Open pijl voor directionele associatie (▷) */}
+      {isAssociation && directioneel && (
+        <defs>
+          <marker
+            id={associationArrowId}
+            markerWidth="12"
+            markerHeight="10"
+            refX="9"
+            refY="5"
+            orient="auto"
+            markerUnits="strokeWidth"
+          >
+            <path
+              d="M 1 2 L 9 5 L 1 8"
+              fill="none"
+              stroke={associationColor}
+              strokeWidth="1.0"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </marker>
+        </defs>
+      )}
 
       {/* De lijn zelf — BaseEdge tekent het SVG path */}
       <BaseEdge
@@ -126,18 +168,23 @@ function MetamodelEdge({
         markerEnd={
           isDependency ? `url(#${dependencyArrowId})`
           : isGeneralization ? `url(#${generalizationArrowId})`
+          : (isAssociation && directioneel) ? `url(#${associationArrowId})`
           : undefined
         }
         style={{
           stroke: isDependency ? dependencyColor
             : isGeneralization ? generalizationColor
+            : isAssociation ? associationColor
+            : isAssociationClassLink ? (selected ? "#7c3aed" : "#94a3b8")
             : selected ? "#2563eb" : "#64748b",
           strokeWidth: selected ? 2.5 : 1.5,
-          strokeDasharray: isDependency ? "6 3" : undefined,
+          strokeDasharray: isDependency ? "6 3"
+            : isAssociationClassLink ? "4 3"
+            : undefined,
         }}
       />
 
-      {/* Compositie-ruit (◆) op de bronzijde van de edge */}
+      {/* Compositie-ruit (◆) op de bronzijde — alleen entiteit → GE */}
       {isComposition && (
         <g transform={`translate(${diamondCenter.x} ${diamondCenter.y})`}>
           <polygon
@@ -149,8 +196,8 @@ function MetamodelEdge({
         </g>
       )}
 
-      {/* Labels boven de edge — EdgeLabelRenderer plaatst HTML over de SVG */}
-      {!isDependency && !isGeneralization && (
+      {/* Labels voor compositie-edges (entiteit → GE) */}
+      {isComposition && (
         <EdgeLabelRenderer>
           <div
             className="edge-label"
@@ -164,10 +211,40 @@ function MetamodelEdge({
             {kardinaliteit && (
               <span className="edge-kardinaliteit">{kardinaliteit}</span>
             )}
-            <span className="edge-constraint">{constraint}</span>
+            {constraint && <span className="edge-constraint">{constraint}</span>}
           </div>
         </EdgeLabelRenderer>
       )}
+
+      {/* Labels voor associatie-edges (A→o en o→B): kardinaliteit bij entiteit-zijde */}
+      {isAssociation && (kardinaliteit || constraint || rolnaam) && (() => {
+        // Label moet bij de entiteit staan, niet bij het anker.
+        // A→o (target=anker): toon bij source (srcLabel). o→B (source=anker): toon bij target (geLabel).
+        const nearAnker = targetNode?.type === "associatieAnker";
+        const lx = nearAnker ? srcLabelX : geLabelX;
+        const ly = nearAnker ? srcLabelY : geLabelY;
+        return (
+          <EdgeLabelRenderer>
+            <div
+              className="edge-label"
+              style={{
+                position: "absolute",
+                transform: `translate(-50%, -50%) translate(${lx}px, ${ly}px)`,
+                pointerEvents: "all",
+              }}
+            >
+              {rolnaam && <span className="edge-rolnaam">{rolnaam}</span>}
+              {kardinaliteit && (
+                <span className="edge-kardinaliteit">{kardinaliteit}</span>
+              )}
+              {constraint && <span className="edge-constraint">{constraint}</span>}
+            </div>
+          </EdgeLabelRenderer>
+        );
+      })()}
+
+      {/* Geen labels op associatieklasse-link (o╌╌REL) */}
+
       {isDependency && (
         <EdgeLabelRenderer>
           <div

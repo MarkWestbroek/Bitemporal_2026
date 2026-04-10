@@ -9,14 +9,18 @@ import (
 
 // layoutInfo bevat editor-layout metadata die doorgegeven wordt aan write-functies.
 type layoutInfo struct {
-	Positie          *model.V3Positie
-	EdgeID           string
-	SourceHandle     string
-	TargetHandle     string
-	DoelEdgeID       string
-	DoelSourceHandle string
-	DoelTargetHandle string
-	UseEdges         []model.V3UseEdge
+	Positie               *model.V3Positie
+	EdgeID                string
+	SourceHandle          string
+	TargetHandle          string
+	DoelEdgeID            string
+	DoelSourceHandle      string
+	DoelTargetHandle      string
+	AnkerPositie          *model.V3Positie
+	ClassLinkEdgeID       string
+	ClassLinkSourceHandle string
+	ClassLinkTargetHandle string
+	UseEdges              []model.V3UseEdge
 }
 
 // generateMetaRegistry genereert metaregistry.go met alle TypeMeta entries (standalone modus).
@@ -303,9 +307,14 @@ func writeRelHubEntry(b *strings.Builder, d DerivedType, rel model.V3Relatie, do
 	b.WriteString(fmt.Sprintf("\t\tSecondaireEntiteitIDKolom: %q,\n", d.SecEntiteitIDKolom))
 	b.WriteString(fmt.Sprintf("\t\tMomentvoorkomen:           %s,\n", momentvoorkomenConst(rel.Momentvoorkomen)))
 	// Layout met volledige edge-info (bron→relatie + relatie→doel)
+	if rel.Directioneel {
+		b.WriteString("\t\tDirectioneel: true,\n")
+	}
 	relLayout := &layoutInfo{
 		Positie: rel.Positie, EdgeID: rel.ID, SourceHandle: rel.SourceHandle, TargetHandle: rel.TargetHandle,
 		DoelEdgeID: rel.DoelID, DoelSourceHandle: rel.DoelSourceHandle, DoelTargetHandle: rel.DoelTargetHandle,
+		AnkerPositie: rel.AnkerPositie, ClassLinkEdgeID: rel.ClassLinkID,
+		ClassLinkSourceHandle: rel.ClassLinkSourceHandle, ClassLinkTargetHandle: rel.ClassLinkTargetHandle,
 		UseEdges: rel.UseEdges,
 	}
 	writeLayoutLine(b, relLayout)
@@ -392,12 +401,14 @@ func writeLayoutLine(b *strings.Builder, li *layoutInfo) {
 	hasPositie := li.Positie != nil
 	hasEdge := li.EdgeID != "" || li.SourceHandle != "" || li.TargetHandle != ""
 	hasDoel := li.DoelEdgeID != "" || li.DoelSourceHandle != "" || li.DoelTargetHandle != ""
+	hasAnker := li.AnkerPositie != nil
+	hasClassLink := li.ClassLinkEdgeID != "" || li.ClassLinkSourceHandle != "" || li.ClassLinkTargetHandle != ""
 	hasUseEdges := len(li.UseEdges) > 0
 
-	if !hasPositie && !hasEdge && !hasDoel && !hasUseEdges {
+	if !hasPositie && !hasEdge && !hasDoel && !hasAnker && !hasClassLink && !hasUseEdges {
 		return
 	}
-	if hasPositie && !hasEdge && !hasDoel && !hasUseEdges {
+	if hasPositie && !hasEdge && !hasDoel && !hasAnker && !hasClassLink && !hasUseEdges {
 		b.WriteString(fmt.Sprintf("\t\tLayout: &EditorLayout{Positie: &V3Positie{X: %g, Y: %g}},\n", li.Positie.X, li.Positie.Y))
 		return
 	}
@@ -423,6 +434,18 @@ func writeLayoutLine(b *strings.Builder, li *layoutInfo) {
 	}
 	if li.DoelTargetHandle != "" {
 		b.WriteString(fmt.Sprintf("\t\t\tDoelTargetHandle: %q,\n", li.DoelTargetHandle))
+	}
+	if hasAnker {
+		b.WriteString(fmt.Sprintf("\t\t\tAnkerPositie: &V3Positie{X: %g, Y: %g},\n", li.AnkerPositie.X, li.AnkerPositie.Y))
+	}
+	if li.ClassLinkEdgeID != "" {
+		b.WriteString(fmt.Sprintf("\t\t\tClassLinkEdgeID: %q,\n", li.ClassLinkEdgeID))
+	}
+	if li.ClassLinkSourceHandle != "" {
+		b.WriteString(fmt.Sprintf("\t\t\tClassLinkSourceHandle: %q,\n", li.ClassLinkSourceHandle))
+	}
+	if li.ClassLinkTargetHandle != "" {
+		b.WriteString(fmt.Sprintf("\t\t\tClassLinkTargetHandle: %q,\n", li.ClassLinkTargetHandle))
 	}
 	if hasUseEdges {
 		b.WriteString("\t\t\tUseEdges: []V3UseEdge{\n")

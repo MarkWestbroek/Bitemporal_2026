@@ -19,6 +19,64 @@ const BASISTYPES = ["string", "integer", "number", "boolean"];
 export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes = [], enumNodes = [], entiteitNodes = [], allNodes = [], edges = [], onSetSupertype }) {
   if (!node) return null;
 
+  // --- Associatie-anker: toon compacte ASOC-info ---
+  if (node.type === "associatieAnker") {
+    const relatieNaam = node.data?.relatieNaam || "";
+    const relatieNode = allNodes.find((n) => n.id === relatieNaam);
+    // Zoek de 3 edges rondom dit anker
+    const inkomend = edges.filter((e) => e.target === node.id && e.data?.isAssociation);
+    const uitgaand = edges.filter((e) => e.source === node.id && e.data?.isAssociation);
+    const classLink = edges.find((e) => e.source === node.id && e.data?.isAssociationClassLink)
+      || edges.find((e) => e.target === node.id && e.data?.isAssociationClassLink);
+    const bronEntiteit = inkomend.length > 0
+      ? allNodes.find((n) => n.id === inkomend[0].source)
+      : null;
+    const doelEntiteit = uitgaand.length > 0
+      ? allNodes.find((n) => n.id === uitgaand[0].target)
+      : null;
+
+    return (
+      <div className="edit-panel">
+        <h3>Associatie-anker</h3>
+        <div style={{ fontSize: "0.9em", color: "#64748b", marginBottom: 8 }}>
+          Ankerpunt op de associatielijn. Versleep om de lijn midpoint te verplaatsen.
+        </div>
+        <div style={{ marginBottom: 12 }}>
+          <strong>Relatie:</strong>{" "}
+          <span style={{ color: "#7c3aed" }}>{relatieNaam || "(geen)"}</span>
+        </div>
+        {bronEntiteit && (
+          <div><strong>Bron:</strong> {bronEntiteit.data?.typenaam || bronEntiteit.id}</div>
+        )}
+        {doelEntiteit && (
+          <div><strong>Doel:</strong> {doelEntiteit.data?.typenaam || doelEntiteit.id}</div>
+        )}
+        {(inkomend.length > 0 || uitgaand.length > 0) && (
+          <div style={{ marginTop: 12 }}>
+            <strong>Kardinaliteiten</strong>
+            {inkomend.map((e) => (
+              <div key={e.id} style={{ fontSize: "0.85em", color: "#475569" }}>
+                Bij {allNodes.find((n) => n.id === e.source)?.data?.typenaam || e.source}:{" "}
+                <em>{e.data?.kardinaliteit || "—"}</em>
+              </div>
+            ))}
+            {uitgaand.map((e) => (
+              <div key={e.id} style={{ fontSize: "0.85em", color: "#475569" }}>
+                Bij {allNodes.find((n) => n.id === e.target)?.data?.typenaam || e.target}:{" "}
+                <em>{e.data?.kardinaliteit || "—"}</em>
+              </div>
+            ))}
+          </div>
+        )}
+        {relatieNode && (
+          <div style={{ marginTop: 12, fontSize: "0.85em", color: "#94a3b8" }}>
+            Klik op de relatie-node of een edge om details te bewerken.
+          </div>
+        )}
+      </div>
+    );
+  }
+
   const data = node.data;
   const isEnum = node.type === "enumeratie";
   const isDatatype = node.type === "gegevenstype";
@@ -668,6 +726,18 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
         />
         Abstract (niet-instantieerbaar)
       </label>
+
+      {/* Directioneel — alleen voor relaties (association class) */}
+      {isRelatie && (
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            checked={data.directioneel || false}
+            onChange={(e) => updateField("directioneel", e.target.checked)}
+          />
+          Directioneel (pijl naar doel)
+        </label>
+      )}
 
       {/* Supertype — afgeleid van generalisatie-edge */}
       {(() => {

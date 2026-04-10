@@ -22,6 +22,7 @@ import { demoV3Model } from "../demoV3Model";
 import {
   createLayoutModel,
   persistLayout,
+  resetLayout,
   openDiagramTab,
   COMP_BROWSER,
   COMP_DIAGRAM,

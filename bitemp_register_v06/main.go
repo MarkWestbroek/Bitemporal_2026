@@ -138,6 +138,17 @@ func NewRouter() *gin.Engine {
 		c.JSON(200, gin.H{"commit": commit, "build_time": buildTime})
 	})
 
+	// OpenAPI 3.1 specificaties (conform NL API Strategie ADR 2.1.0)
+	// /core/publish-openapi: publiceer op /openapi.json en /openapi.yaml
+	router.GET("/openapi.json", handlers.MaakOpenAPIHandler("json"))
+	router.GET("/openapi.yaml", handlers.MaakOpenAPIHandler("yaml"))
+	router.GET("/openapi", handlers.MaakOpenAPIDomeinenLijstHandler())
+	router.GET("/openapi/:domein", handlers.MaakOpenAPIDomeinHandler(""))
+
+	// Interactieve API-documentatie (Swagger UI en ReDoc)
+	router.GET("/swagger", handlers.MaakSwaggerUIHandler())
+	router.GET("/redoc", handlers.MaakReDocHandler())
+
 	// GraphQL endpoint (dynamisch vanuit MetaRegistry)
 	gqlSchema, err := dynql.BuildSchema(handlers.DB)
 	if err != nil {

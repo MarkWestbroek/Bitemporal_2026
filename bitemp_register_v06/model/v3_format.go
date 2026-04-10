@@ -135,15 +135,22 @@ type V3Relatie struct {
 	Meervoud                 string           `json:"meervoud"`                           // URL-padnaam, bijv. "rel-a-bs"
 	Momentvoorkomen          string           `json:"momentvoorkomen"`                    // "enkelvoudig" of "meervoudig"
 	IsMaterieel              bool             `json:"isMaterieel,omitempty"`
-	DoelEntiteit             string           `json:"doelEntiteit"`               // typenaam van de doel-entiteit
-	Positie                  *V3Positie       `json:"positie,omitempty"`          // editor-layout positie (genegeerd door codegen)
-	ID                       string           `json:"id,omitempty"`               // persistente edge-id van entiteit→relatie voor stabiele editor round-trips
-	SourceHandle             string           `json:"sourceHandle,omitempty"`     // verbindingspunt op de entiteit→relatie edge (genegeerd door codegen)
-	TargetHandle             string           `json:"targetHandle,omitempty"`     // verbindingspunt op de relatie (inkomend, genegeerd door codegen)
-	DoelID                   string           `json:"doelId,omitempty"`           // persistente edge-id van relatie→doel-entiteit voor stabiele editor round-trips
-	DoelSourceHandle         string           `json:"doelSourceHandle,omitempty"` // verbindingspunt op de relatie (uitgaand naar doel, genegeerd door codegen)
-	DoelTargetHandle         string           `json:"doelTargetHandle,omitempty"` // verbindingspunt op de doel-entiteit (genegeerd door codegen)
-	Runtime                  *V3Runtime       `json:"runtime,omitempty"`          // V3.1: runtime/deployment metadata (genegeerd door codegen/UML-editor)
+	DoelEntiteit             string           `json:"doelEntiteit"`                    // typenaam van de doel-entiteit
+	Directioneel             bool             `json:"directioneel,omitempty"`          // true = gerichte associatie (pijl naar doel-entiteit)
+	BronKardinaliteit        string           `json:"bronKardinaliteit,omitempty"`     // kardinaliteit aan de bronkant (bijv. "0..*"); default afgeleid uit momentvoorkomen
+	DoelKardinaliteit        string           `json:"doelKardinaliteit,omitempty"`     // kardinaliteit aan de doel-entiteitkant (bijv. "0..*")
+	Positie                  *V3Positie       `json:"positie,omitempty"`               // editor-layout positie van het relatieblok (genegeerd door codegen)
+	AnkerPositie             *V3Positie       `json:"ankerPositie,omitempty"`          // editor-layout positie van het associatie-anker (genegeerd door codegen)
+	ID                       string           `json:"id,omitempty"`                    // persistente edge-id van entiteit→anker voor stabiele editor round-trips
+	SourceHandle             string           `json:"sourceHandle,omitempty"`          // verbindingspunt op de entiteit→anker edge (genegeerd door codegen)
+	TargetHandle             string           `json:"targetHandle,omitempty"`          // verbindingspunt op het anker (inkomend vanuit entiteit, genegeerd door codegen)
+	DoelID                   string           `json:"doelId,omitempty"`                // persistente edge-id van anker→doel-entiteit voor stabiele editor round-trips
+	DoelSourceHandle         string           `json:"doelSourceHandle,omitempty"`      // verbindingspunt op het anker (uitgaand naar doel, genegeerd door codegen)
+	DoelTargetHandle         string           `json:"doelTargetHandle,omitempty"`      // verbindingspunt op de doel-entiteit (genegeerd door codegen)
+	ClassLinkID              string           `json:"classLinkId,omitempty"`           // persistente edge-id van anker→relatieblok (genegeerd door codegen)
+	ClassLinkSourceHandle    string           `json:"classLinkSourceHandle,omitempty"` // verbindingspunt op het anker (naar relatieblok, genegeerd door codegen)
+	ClassLinkTargetHandle    string           `json:"classLinkTargetHandle,omitempty"` // verbindingspunt op het relatieblok (inkomend van anker, genegeerd door codegen)
+	Runtime                  *V3Runtime       `json:"runtime,omitempty"`               // V3.1: runtime/deployment metadata (genegeerd door codegen/UML-editor)
 	AfgeleideVelden          []V3AfgeleidVeld `json:"afgeleideVelden,omitempty"`
 	Velden                   []V3Veld         `json:"velden,omitempty"`
 	UseEdges                 []V3UseEdge      `json:"useEdges,omitempty"` // optionele layout/visibility metadata voor «use»-dependency-edges

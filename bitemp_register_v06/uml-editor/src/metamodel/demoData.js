@@ -399,9 +399,9 @@ export const demoEdges = [
   {
     id: "Rel_A_B->B",
     source: "Rel_A_B",
-    sourceHandle: "right",
+    sourceHandle: "source-right",
     target: "B",
-    targetHandle: "left",
+    targetHandle: "target-left",
     type: "metamodel",
     data: {
       rolnaam: "→ B",

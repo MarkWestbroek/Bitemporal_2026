@@ -48,6 +48,36 @@ export function exportNaarXMI(nodes, edges, meta = {}) {
   const consumedEdgeIds = new Set();
 
   for (const relNode of relationNodes) {
+    // Nieuw ASOC-patroon: anker → relNode via isAssociationClassLink,
+    // A → anker en anker → B via isAssociation edges.
+    const classLinkEdge = edges.find(
+      (e) => e.target === relNode.id && e.data?.isAssociationClassLink
+    );
+    if (classLinkEdge) {
+      const ankerId = classLinkEdge.source;
+      const assocEdgeFromEnt = edges.find(
+        (e) => e.target === ankerId && e.data?.isAssociation
+      );
+      const assocEdgeToDoel = edges.find(
+        (e) => e.source === ankerId && e.data?.isAssociation
+      );
+      const primaryNode = nodes.find((n) => n.id === assocEdgeFromEnt?.source);
+      const secondaryNode = nodes.find((n) => n.id === assocEdgeToDoel?.target);
+
+      if (assocEdgeFromEnt && assocEdgeToDoel && primaryNode && secondaryNode) {
+        // Bouw AssociationClass met de edges rondom het anker
+        associationClasses.push(
+          buildAssociationClass(relNode, assocEdgeFromEnt, assocEdgeToDoel, enumNodes, dtNodes)
+        );
+        associationClassRelationIds.add(relNode.id);
+        consumedEdgeIds.add(classLinkEdge.id);
+        consumedEdgeIds.add(assocEdgeFromEnt.id);
+        consumedEdgeIds.add(assocEdgeToDoel.id);
+        continue;
+      }
+    }
+
+    // Legacy patroon: directe A → REL → B edges (backward compat)
     const incoming = edges.find((e) => e.target === relNode.id);
     const outgoing = edges.find((e) => e.source === relNode.id);
     const primaryNode = nodes.find((n) => n.id === incoming?.source);

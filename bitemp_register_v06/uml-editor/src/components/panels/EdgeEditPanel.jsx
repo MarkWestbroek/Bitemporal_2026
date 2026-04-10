@@ -98,26 +98,26 @@ export default function EdgeEditPanel({ edge, nodes, onUpdate, onDelete }) {
       <label>
         Bron (vertrek)
         <select
-          value={edge.sourceHandle || "bottom"}
+          value={edge.sourceHandle || "source-bottom"}
           onChange={(e) => onUpdate(edge.id, data, { sourceHandle: e.target.value })}
         >
-          <option value="top">Boven</option>
-          <option value="right">Rechts</option>
-          <option value="bottom">Onder</option>
-          <option value="left">Links</option>
+          <option value="source-top">Boven</option>
+          <option value="source-right">Rechts</option>
+          <option value="source-bottom">Onder</option>
+          <option value="source-left">Links</option>
         </select>
       </label>
 
       <label>
         Doel (aankomst)
         <select
-          value={edge.targetHandle || "top"}
+          value={edge.targetHandle || "target-top"}
           onChange={(e) => onUpdate(edge.id, data, { targetHandle: e.target.value })}
         >
-          <option value="top">Boven</option>
-          <option value="right">Rechts</option>
-          <option value="bottom">Onder</option>
-          <option value="left">Links</option>
+          <option value="target-top">Boven</option>
+          <option value="target-right">Rechts</option>
+          <option value="target-bottom">Onder</option>
+          <option value="target-left">Links</option>
         </select>
       </label>
 

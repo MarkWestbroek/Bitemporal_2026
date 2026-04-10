@@ -42,6 +42,11 @@ const ICONS = {
  */
 function buildTree(elements, structuralEdges, diagrams, domains) {
   const tree = [];
+  // Houd bij welke element-ids al in de boom zitten (voorkom duplicaten)
+  const geplaatst = new Set();
+
+  // Helper: alleen elementen met een geldig string-id verwerken
+  const geldigId = (el) => el && typeof el.id === "string" && el.id !== "";
 
   // Groepeer elementen per domein
   for (const domein of domains) {
@@ -53,7 +58,7 @@ function buildTree(elements, structuralEdges, diagrams, domains) {
     };
 
     // Filter elementen voor dit domein
-    const domeinElements = Object.values(elements).filter((el) => el.domein === domein);
+    const domeinElements = Object.values(elements).filter((el) => geldigId(el) && el.domein === domein);
 
     // Entiteiten met hun GE's en relaties
     const entiteiten = domeinElements.filter((el) => el.type === "entiteit");
@@ -65,18 +70,20 @@ function buildTree(elements, structuralEdges, diagrams, domains) {
         kleur: ent.data?.kleur,
         children: [],
       };
+      geplaatst.add(ent.id);
 
       // Vind GE's die structureel onder deze entiteit hangen
       const childEdges = structuralEdges.filter((e) => e.source === ent.id);
       for (const edge of childEdges) {
         const child = elements[edge.target];
-        if (child) {
+        if (child && geldigId(child)) {
           entNode.children.push({
             id: child.id,
             name: child.naam,
             nodeType: child.type,
             kleur: child.data?.kleur,
           });
+          geplaatst.add(child.id);
         }
       }
 
@@ -91,6 +98,7 @@ function buildTree(elements, structuralEdges, diagrams, domains) {
         nodeType: "enumeratie",
         kleur: el.data?.kleur,
       });
+      geplaatst.add(el.id);
     }
 
     // Datatypes
@@ -101,6 +109,7 @@ function buildTree(elements, structuralEdges, diagrams, domains) {
         nodeType: "gegevenstype",
         kleur: el.data?.kleur,
       });
+      geplaatst.add(el.id);
     }
 
     // Referentielijst-instanties
@@ -111,13 +120,16 @@ function buildTree(elements, structuralEdges, diagrams, domains) {
         nodeType: "referentielijstInstantie",
         kleur: el.data?.kleur,
       });
+      geplaatst.add(el.id);
     }
 
     tree.push(domeinNode);
   }
 
-  // Elementen zonder domein
-  const geenDomein = Object.values(elements).filter((el) => !el.domein);
+  // Elementen zonder domein — alleen als ze nog niet geplaatst zijn en een geldig id hebben
+  const geenDomein = Object.values(elements).filter(
+    (el) => geldigId(el) && !el.domein && !geplaatst.has(el.id)
+  );
   if (geenDomein.length > 0) {
     const geenDomeinNode = {
       id: "domain_",
@@ -496,6 +508,7 @@ export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram }) {
         <Tree
           ref={treeRef}
           data={treeData}
+          idAccessor={(d) => String(d.id)}
           openByDefault={false}
           width="100%"
           height={treeHeight - 32}

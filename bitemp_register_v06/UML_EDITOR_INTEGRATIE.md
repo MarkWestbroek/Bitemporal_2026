@@ -198,6 +198,67 @@ Als je editor en API op elkaar wilt afstemmen:
 - `bitemp_register_v06/uml-editor/README.md`
 - `bitemp_register_v06/web/vite/README.md`
 - `bitemp_register_v06/web/vite/vite.config.js`
+
+## Association Class (ASOC) rendering voor relaties
+
+Relaties (REL) worden in de UML-editor weergegeven als **association classes** conform de UML-standaard. Dit is een afwijking van de eerdere aanpak waarbij relaties als samengestelde kinderen (composition diamond) werden getekend.
+
+### Patroon
+
+Oud: `A ◆──→ REL ──→ B` (2 composition edges)
+Nieuw: `A ── o ── B` (solid association) + `o ╌╌ REL` (dashed class link)
+
+Visueel:
+- **Associatie-anker** (`o`): klein cirkelknooppunt (14px), versleepbaar, verbindt de twee entiteiten
+- **A→o edge**: ononderbroken lijn, geen diamond, optioneel kardinaliteitslabel
+- **o→B edge**: ononderbroken lijn, optioneel open pijlpunt (bij directionele relatie)
+- **o╌╌REL edge**: gestreepte lijn (association class link), geen labels
+
+### Collapsible REL-blok
+
+Wanneer een relatie geen inhoudelijke velden EN geen afgeleide velden heeft, toont het `RelatieNode`-component een compact naambadge in plaats van het volledige class-box. Dit maakt visueel duidelijk dat de relatie puur structureel is.
+
+### Directioneel
+
+Relaties kunnen als `directioneel` worden gemarkeerd (boolean). Bij directionele relaties:
+- verschijnt een **open pijlpunt** (niet gevuld) op de o→B edge
+- het kardinaliteitslabel op de A-kant kan worden weggelaten
+
+### Edge-classificaties in MetamodelEdge
+
+| Classificatie            | Lijnstijl     | Markers            | Voorbeeld                       |
+|--------------------------|---------------|--------------------|----------------------------------|
+| `composition`            | Ononderbroken | Diamond bij bron   | Entiteit → Gegevenselement      |
+| `isAssociation`          | Ononderbroken | Geen / open pijl   | A → anker, anker → B            |
+| `isAssociationClassLink` | Gestreept     | Geen               | anker → REL-blok                 |
+| `dependency`             | Gestreept     | Open pijl + «use»  | GE → Enum/Datatype              |
+| `generalization`         | Ononderbroken | Driehoek bij doel  | Sub → Super                     |
+
+### Gewijzigde bestanden
+
+**Editor (React/JS)**:
+- `uml-editor/src/components/nodes/AssociatieAnkerNode.jsx` — nieuw ankerknooppunt
+- `uml-editor/src/components/nodes/RelatieNode.jsx` — collapsible mode toegevoegd
+- `uml-editor/src/components/edges/MetamodelEdge.jsx` — 5 edge-classificaties
+- `uml-editor/src/components/MetamodelEditor.jsx` — `associatieAnker` node type geregistreerd
+- `uml-editor/src/metamodel/v3ModelNaarEditor.js` — 3-edge + ankerpatroon voor relaties
+- `uml-editor/src/metamodel/types.js` — round-trip export via ankerpatroon
+- `uml-editor/src/import/importXMI.js` — XMI import met ankerpatroon
+- `uml-editor/src/export/exportXMI.js` — XMI export via ankerdetectie
+- `web/vite/src/ide/DiagramCanvas.jsx` — `associatieAnker` node type geregistreerd
+
+**Go backend**:
+- `model/metaregistry_plumbing.go` — `Directioneel bool` op TypeMeta, `AnkerPositie`/`ClassLink*` op EditorLayout
+- `model/v3_format.go` — V3Relatie: `directioneel`, `doelKardinaliteit`, `ankerPositie`, `classLinkId/SourceHandle/TargetHandle`
+- `model/v3_exporter.go` — export van nieuwe velden
+- `cmd/codegen/gen_registry.go` — codegen ondersteunt nieuwe layout-velden en `Directioneel`
+
+### Backward compatibility
+
+Het oude patroon (directe A→REL→B edges zonder anker) wordt nog steeds ondersteund bij:
+- `types.js` (export): herkent zowel anker- als legacy-patroon
+- `exportXMI.js`: probeert eerst anker, valt terug op legacy
+- `v3ModelNaarEditor.js`: genereert altijd het nieuwe ankerpatroon
 - `bitemp_register_v06/web/vite/src/App.jsx`
 - `bitemp_register_v06/web/vite/src/pages/EditorPage.jsx`
 
@@ -341,3 +402,38 @@ De PlantUML importer (`uml-editor/src/import/importPlantUML.js`) ondersteunt:
 | `uml-editor/src/import/importXMI.js` | XMI 1.1 → Editor (incl. EA diagramposities) |
 | `uml-editor/src/import/importMermaid.js` | Mermaid class diagram → Editor |
 | `uml-editor/src/import/importPlantUML.js` | PlantUML class diagram → Editor |
+
+## Bugfix: Unieke Handle IDs (removeChild crash)
+
+**Datum:** 2026-04-10  
+**Probleem:** De editor en IDE crashten met een `removeChild` fout in React.  
+**Oorzaak:** Alle 6 React Flow node-componenten hadden **dubbele `id`** attributen op `<Handle>` elementen: zowel `<Handle type="source" id="top"/>` als `<Handle type="target" id="top"/>` bestonden op dezelfde node. React Flow maakt DOM-elementen per handle-ID; duplicaten veroorzaken dat React probeert nodes te verwijderen die al zijn vervangen tijdens reconciliation.
+
+### Oplossing
+
+Elke Handle heeft nu een uniek `id` in het formaat `{type}-{positie}`:
+
+| Oud | Nieuw (source) | Nieuw (target) |
+|-----|----------------|----------------|
+| `id="top"` | `id="source-top"` | `id="target-top"` |
+| `id="bottom"` | `id="source-bottom"` | `id="target-bottom"` |
+| `id="left"` | `id="source-left"` | `id="target-left"` |
+| `id="right"` | `id="source-right"` | `id="target-right"` |
+
+### Gewijzigde bestanden
+
+| Bestand | Wijziging |
+|---------|-----------|
+| `uml-editor/src/components/nodes/*.jsx` (6 bestanden) | Handle `id` attributen geprefixed |
+| `uml-editor/src/components/MetamodelEditor.jsx` | `berekenKortsteHandles` retourneert geprefixte IDs; `swapConnectionDirection` past prefixes aan bij het omdraaien |
+| `web/vite/src/ide/DiagramCanvas.jsx` | `berekenKortsteHandles` idem |
+| `uml-editor/src/components/panels/EdgeEditPanel.jsx` | Dropdown option values geprefixed |
+| `uml-editor/src/metamodel/v3ModelNaarEditor.js` | Backward-compat migratiefuncties `migrateSourceHandle()`/`migrateTargetHandle()` voor oude DB-modellen met kale positienamen |
+| `uml-editor/src/metamodel/demoData.js` | Handle IDs bijgewerkt |
+| `web/vite/src/demoV3Model.js` | Handle IDs bijgewerkt |
+| `uml-editor/src/metamodel/referentielijstRoundtrip.test.js` | Testverwachtingen bijgewerkt |
+| `uml-editor/src/metamodel/types.js` | Geen wijziging nodig — passthrough van handle waarden |
+
+### Backward compatibiliteit
+
+Modellen opgeslagen in de database met het oude formaat (`"top"`, `"bottom"`, etc.) worden automatisch gemigreerd bij het laden via `migrateSourceHandle()`/`migrateTargetHandle()` in `v3ModelNaarEditor.js`. Nieuw opgeslagen modellen gebruiken het geprefixte formaat.

@@ -30,6 +30,7 @@ import RelatieNode from "@editor/components/nodes/RelatieNode";
 import EnumeratieNode from "@editor/components/nodes/EnumeratieNode";
 import DatatypeNode from "@editor/components/nodes/DatatypeNode";
 import ReferentielijstInstantieNode from "@editor/components/nodes/ReferentielijstInstantieNode";
+import AssociatieAnkerNode from "@editor/components/nodes/AssociatieAnkerNode";
 import MetamodelEdge from "@editor/components/edges/MetamodelEdge";
 
 import useModelStore from "../store/useModelStore";
@@ -39,6 +40,7 @@ const nodeTypes = {
   entiteit: EntiteitNode,
   gegevenselement: GegevensElementNode,
   relatie: RelatieNode,
+  associatieAnker: AssociatieAnkerNode,
   enumeratie: EnumeratieNode,
   gegevenstype: DatatypeNode,
   referentielijstInstantie: ReferentielijstInstantieNode,
@@ -140,14 +142,14 @@ function berekenKortsteHandles(srcNode, tgtNode) {
     }
   }
 
-  let best = { sourceHandle: "bottom", targetHandle: "top", dist: Infinity };
+  let best = { sourceHandle: "source-bottom", targetHandle: "target-top", dist: Infinity };
   for (const sh of HANDLE_POSITIES) {
     for (const th of HANDLE_POSITIES) {
       const a = ankerpunt(srcNode, srcW, srcH, sh);
       const b = ankerpunt(tgtNode, tgtW, tgtH, th);
       const d = Math.hypot(a.x - b.x, a.y - b.y);
       if (d < best.dist) {
-        best = { sourceHandle: sh, targetHandle: th, dist: d };
+        best = { sourceHandle: `source-${sh}`, targetHandle: `target-${th}`, dist: d };
       }
     }
   }

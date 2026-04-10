@@ -1,5 +1,16 @@
 import { defaultKleur } from "./types.js";
 
+// Backward-compat: oude DB-modellen gebruiken kale positienamen ("top", "bottom", …)
+// als handle IDs. Nieuwe nodes gebruiken "source-top" / "target-top" etc.
+function migrateSourceHandle(h) {
+  if (!h) return h;
+  return h.startsWith("source-") ? h : "source-" + h;
+}
+function migrateTargetHandle(h) {
+  if (!h) return h;
+  return h.startsWith("target-") ? h : "target-" + h;
+}
+
 function goTypeNaarVeldType(goType) {
   const t = goType.startsWith("*") ? goType.slice(1) : goType;
   switch (t) {
@@ -204,8 +215,8 @@ export function v3ModelNaarEditor(v3Model) {
         source: ent.typenaam,
         target: geTypenaam,
         type: "metamodel",
-        sourceHandle: ge.sourceHandle || null,
-        targetHandle: ge.targetHandle || null,
+        sourceHandle: migrateSourceHandle(ge.sourceHandle || null),
+        targetHandle: migrateTargetHandle(ge.targetHandle || null),
         data: {
           rolnaam: ge.naam,
           jsonRolnaam: ge.meervoud || ge.naam.toLowerCase(),
@@ -231,8 +242,8 @@ export function v3ModelNaarEditor(v3Model) {
             source: geTypenaam,
             target: `enum_${v.enum}`,
             type: "metamodel",
-            sourceHandle: ue?.sourceHandle || null,
-            targetHandle: ue?.targetHandle || null,
+            sourceHandle: migrateSourceHandle(ue?.sourceHandle || null),
+            targetHandle: migrateTargetHandle(ue?.targetHandle || null),
             hidden: ue?.hidden || false,
             data: {
               isDependency: true,
@@ -257,8 +268,8 @@ export function v3ModelNaarEditor(v3Model) {
             source: geTypenaam,
             target: `dt_${dtNaam}`,
             type: "metamodel",
-            sourceHandle: ue?.sourceHandle || null,
-            targetHandle: ue?.targetHandle || null,
+            sourceHandle: migrateSourceHandle(ue?.sourceHandle || null),
+            targetHandle: migrateTargetHandle(ue?.targetHandle || null),
             hidden: ue?.hidden || false,
             data: {
               isDependency: true,
@@ -282,8 +293,8 @@ export function v3ModelNaarEditor(v3Model) {
             source: geTypenaam,
             target: geRefNaam,
             type: "metamodel",
-            sourceHandle: ue?.sourceHandle || null,
-            targetHandle: ue?.targetHandle || null,
+            sourceHandle: migrateSourceHandle(ue?.sourceHandle || null),
+            targetHandle: migrateTargetHandle(ue?.targetHandle || null),
             hidden: ue?.hidden || false,
             data: {
               isDependency: true,
@@ -330,22 +341,94 @@ export function v3ModelNaarEditor(v3Model) {
               isWeergaveVeld: av.isWeergaveVeld || av.weergaveVeld || false,
             })),
             doelEntiteit: rel.doelEntiteit || "",
+            directioneel: rel.directioneel || false,
           },
         });
       }
 
+      // ── Association class pattern: A ── o ── B + o╌╌REL ──
+      // Maak een ankerpunt (o) tussen de primaire entiteit en de doelentiteit.
+      // Dit vervangt de oude 2-edge compositie-patroon.
+      const ankerId = `anker_${rel.naam}`;
+      if (!nodes.find((n) => n.id === ankerId)) {
+        // Bereken ankerpositie: midden tussen entiteit A en doelentiteit B
+        const entPos = ent.positie || { x: entIdx * 500, y: 50 };
+        const doelEnt = rel.doelEntiteit
+          ? (v3Model.entiteiten || []).find((e) => e.typenaam === rel.doelEntiteit)
+          : null;
+        const doelPos = doelEnt?.positie || { x: entPos.x + 400, y: entPos.y };
+        const ankerPos = rel.ankerPositie || {
+          x: (entPos.x + doelPos.x) / 2,
+          y: (entPos.y + doelPos.y) / 2,
+        };
+        nodes.push({
+          id: ankerId,
+          type: "associatieAnker",
+          position: ankerPos,
+          data: { relatieNaam: rel.naam },
+        });
+      }
+
+      // Edge 1: Entiteit → Anker (associatie, solid)
+      // Kardinaliteit bij het anker-einde = de REL→B multipliciteit (swap)
+      const doelKardinaliteit = rel.doelKardinaliteit || "0..*";
       edges.push({
-        id: rel.id || `${ent.typenaam}->${rel.naam}`,
+        id: rel.id || `${ent.typenaam}->${ankerId}`,
         source: ent.typenaam,
+        target: ankerId,
+        type: "metamodel",
+        sourceHandle: migrateSourceHandle(rel.sourceHandle || null),
+        targetHandle: migrateTargetHandle(rel.targetHandle || null),
+        data: {
+          isAssociation: true,
+          directioneel: rel.directioneel || false,
+          // Bij A tonen we de kardinaliteit die bij B hoort (swap)
+          rolnaam: "",
+          jsonRolnaam: "",
+          momentvoorkomen: "",
+          kardinaliteit: rel.directioneel ? "" : doelKardinaliteit,
+        },
+      });
+
+      // Edge 2: Anker → Doel-entiteit (associatie, solid, optioneel directionele pijl)
+      if (rel.doelEntiteit) {
+        // Kardinaliteit bij B-zijde = de A→REL multipliciteit (expliciet of afgeleid uit momentvoorkomen)
+        const bronKardinaliteit = rel.bronKardinaliteit
+          || (rel.momentvoorkomen === "meervoudig" ? "0..*" : "0..1");
+        edges.push({
+          id: rel.doelId || `${ankerId}->${rel.doelEntiteit}`,
+          source: ankerId,
+          target: rel.doelEntiteit,
+          type: "metamodel",
+          sourceHandle: migrateSourceHandle(rel.doelSourceHandle || null),
+          targetHandle: migrateTargetHandle(rel.doelTargetHandle || null),
+          data: {
+            isAssociation: true,
+            directioneel: rel.directioneel || false,
+            rolnaam: "",
+            jsonRolnaam: "",
+            momentvoorkomen: "",
+            kardinaliteit: bronKardinaliteit,
+          },
+        });
+      }
+
+      // Edge 3: Anker ╌╌ Relatie-node (association class link, dashed, geen labels)
+      // Standaard handles: anker-bottom → relatie-top (REL zit typisch onder het anker)
+      const classLinkId = rel.classLinkId || `${ankerId}-->${rel.naam}`;
+      edges.push({
+        id: classLinkId,
+        source: ankerId,
         target: rel.naam,
         type: "metamodel",
-        sourceHandle: rel.sourceHandle || null,
-        targetHandle: rel.targetHandle || null,
+        sourceHandle: migrateSourceHandle(rel.classLinkSourceHandle || "source-bottom"),
+        targetHandle: migrateTargetHandle(rel.classLinkTargetHandle || "target-top"),
         data: {
-          rolnaam: rel.naam,
-          jsonRolnaam: rel.meervoud || rel.naam.toLowerCase(),
-          momentvoorkomen: rel.momentvoorkomen || "meervoudig",
-          kardinaliteit: rel.momentvoorkomen === "meervoudig" ? "0..*" : "0..1",
+          isAssociationClassLink: true,
+          rolnaam: "",
+          jsonRolnaam: "",
+          momentvoorkomen: "",
+          kardinaliteit: "",
         },
       });
 
@@ -366,8 +449,8 @@ export function v3ModelNaarEditor(v3Model) {
             source: rel.naam,
             target: `enum_${v.enum}`,
             type: "metamodel",
-            sourceHandle: ue?.sourceHandle || null,
-            targetHandle: ue?.targetHandle || null,
+            sourceHandle: migrateSourceHandle(ue?.sourceHandle || null),
+            targetHandle: migrateTargetHandle(ue?.targetHandle || null),
             hidden: ue?.hidden || false,
             data: {
               isDependency: true,
@@ -391,8 +474,8 @@ export function v3ModelNaarEditor(v3Model) {
             source: rel.naam,
             target: `dt_${relDtNaam}`,
             type: "metamodel",
-            sourceHandle: ue?.sourceHandle || null,
-            targetHandle: ue?.targetHandle || null,
+            sourceHandle: migrateSourceHandle(ue?.sourceHandle || null),
+            targetHandle: migrateTargetHandle(ue?.targetHandle || null),
             hidden: ue?.hidden || false,
             data: {
               isDependency: true,
@@ -416,8 +499,8 @@ export function v3ModelNaarEditor(v3Model) {
             source: rel.naam,
             target: relRefNaam,
             type: "metamodel",
-            sourceHandle: ue?.sourceHandle || null,
-            targetHandle: ue?.targetHandle || null,
+            sourceHandle: migrateSourceHandle(ue?.sourceHandle || null),
+            targetHandle: migrateTargetHandle(ue?.targetHandle || null),
             hidden: ue?.hidden || false,
             data: {
               isDependency: true,
@@ -432,20 +515,9 @@ export function v3ModelNaarEditor(v3Model) {
       });
 
       if (rel.doelEntiteit) {
-        edges.push({
-          id: rel.doelId || `${rel.naam}->${rel.doelEntiteit}`,
-          source: rel.naam,
-          target: rel.doelEntiteit,
-          type: "metamodel",
-          sourceHandle: rel.doelSourceHandle || null,
-          targetHandle: rel.doelTargetHandle || null,
-          data: {
-            rolnaam: `→ ${rel.doelEntiteit}`,
-            jsonRolnaam: rel.doelEntiteit.toLowerCase(),
-            momentvoorkomen: "meervoudig",
-            kardinaliteit: "0..*",
-          },
-        });
+        // Note: the edge A-anker→doelEntiteit is already created above in the
+        // association class 3-edge pattern. This block is only for the
+        // referentielijst-instantie binding edge.
       }
 
       // Binding edge: items-relatie → referentielijst-instantie
@@ -456,8 +528,8 @@ export function v3ModelNaarEditor(v3Model) {
           source: instantieNodeId,
           target: rel.naam,
           type: "metamodel",
-          sourceHandle: rel.instantieSourceHandle || null,
-          targetHandle: rel.instantieTargetHandle || null,
+          sourceHandle: migrateSourceHandle(rel.instantieSourceHandle || null),
+          targetHandle: migrateTargetHandle(rel.instantieTargetHandle || null),
           data: {
             isDependency: true,
             rolnaam: `⇢ ${rel.referentielijstInstantie}`,

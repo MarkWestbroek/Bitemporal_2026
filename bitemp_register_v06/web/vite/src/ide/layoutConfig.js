@@ -14,17 +14,30 @@ export const COMP_PROPERTIES = "properties";
 /**
  * Maak het FlexLayout JSON model.
  * Herstelt uit localStorage als beschikbaar, anders default.
+ * Bij fout: verwijder corrupte opslag en gebruik default.
  */
 export function createLayoutModel() {
   const saved = localStorage.getItem("ide-layout");
   if (saved) {
     try {
-      return FlexLayout.Model.fromJson(JSON.parse(saved));
+      const parsed = JSON.parse(saved);
+      // Sanity check: layout moet een object zijn met layout property
+      if (parsed && typeof parsed === "object" && parsed.layout) {
+        return FlexLayout.Model.fromJson(parsed);
+      }
+      console.warn("Opgeslagen layout mist 'layout' property, gebruik default.");
     } catch (e) {
       console.warn("Kon opgeslagen layout niet herstellen, gebruik default:", e);
     }
+    // Corrupte data → verwijder
+    localStorage.removeItem("ide-layout");
   }
   return FlexLayout.Model.fromJson(DEFAULT_LAYOUT);
+}
+
+/** Reset layout naar default (verwijder opgeslagen state) */
+export function resetLayout() {
+  localStorage.removeItem("ide-layout");
 }
 
 /** Sla layout op in localStorage */

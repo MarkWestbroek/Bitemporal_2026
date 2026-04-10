@@ -667,6 +667,11 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
       .filter((n) => n.type === "relatie")
       .map((n) => [n.id, n])
   );
+  const ankerNodesById = Object.fromEntries(
+    nodes
+      .filter((n) => n.type === "associatieAnker")
+      .map((n) => [n.id, n])
+  );
   const nodesById = Object.fromEntries((nodes || []).map((n) => [n.id, n]));
 
   const enums = nodes
@@ -708,7 +713,55 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
     );
 
     const geEdges = outgoing.filter((e) => geNodesById[e.target]);
-    const relEdges = outgoing.filter((e) => relNodesById[e.target]);
+    // Oud patroon: directe edge naar relatieNode (backward compat)
+    const directRelEdges = outgoing.filter((e) => relNodesById[e.target]);
+    // Nieuw patroon: edge naar ankerNode → zoek de REL via association class link
+    const ankerEdges = outgoing.filter((e) => ankerNodesById[e.target]);
+
+    // Combineer: voor elk anker, zoek de achterliggende relatie via classLink edge
+    const ankerRelPairs = ankerEdges.map((ankerEdge) => {
+      const ankerId = ankerEdge.target;
+      const ankerNode = ankerNodesById[ankerId];
+      // Vind de association class link edge: anker → relatie (isAssociationClassLink)
+      const classLinkEdge = edges.find(
+        (re) =>
+          re.source === ankerId &&
+          re.data?.isAssociationClassLink === true &&
+          relNodesById[re.target]
+      );
+      // Vind de doelentiteit edge: anker → entiteit
+      const doelEdge = edges.find(
+        (re) =>
+          re.type === "metamodel" &&
+          re.data?.isAssociation === true &&
+          re.source === ankerId &&
+          re.target !== ankerId &&
+          entiteitNodes.some((n) => n.id === re.target)
+      );
+      return { ankerEdge, ankerNode, classLinkEdge, doelEdge, relNode: classLinkEdge ? relNodesById[classLinkEdge.target] : null };
+    }).filter((p) => p.relNode);
+
+    // Merge: gebruik ankerRelPairs als primaire bron, fallback naar directRelEdges
+    const relPairsByRelId = new Map(ankerRelPairs.map((p) => [p.relNode.id, p]));
+    // Voeg directe rel edges toe als ze niet al via anker zijn afgedekt
+    directRelEdges.forEach((e) => {
+      if (!relPairsByRelId.has(e.target)) {
+        relPairsByRelId.set(e.target, {
+          ankerEdge: e,
+          ankerNode: null,
+          classLinkEdge: null,
+          doelEdge: edges.find(
+            (re) =>
+              re.type === "metamodel" &&
+              re.data?.isDependency !== true &&
+              re.source === e.target &&
+              re.target !== ent.id &&
+              entiteitNodes.some((n) => n.id === re.target)
+          ),
+          relNode: relNodesById[e.target],
+        });
+      }
+    });
 
     const gegevenselementen = geEdges.map((e) => {
       const geNode = geNodesById[e.target];
@@ -742,24 +795,21 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
       };
     });
 
-    const relaties = relEdges.map((e) => {
-      const relNode = relNodesById[e.target];
-      const relTargetEdge = edges.find(
-        (re) =>
-          re.type === "metamodel" &&
-          re.data?.isDependency !== true &&
-          re.source === relNode.id &&
-          re.target !== ent.id &&
-          entiteitNodes.some((n) => n.id === re.target)
-      );
-      const doelEntiteitNode = entiteitNodes.find(
-        (n) => n.id === relTargetEdge?.target
-      );
+    const relaties = Array.from(relPairsByRelId.values()).map(({ ankerEdge, ankerNode, classLinkEdge, doelEdge, relNode }) => {
+      const doelEntiteitNode = doelEdge ? entiteitNodes.find((n) => n.id === doelEdge.target) : null;
       const doelEntiteitNaam =
         relNode.data.doelEntiteit ||
         doelEntiteitNode?.data?.typenaam ||
         "";
       const instantieBinding = vindReferentielijstInstantieBinding(relNode.id, relNode.data, edges, nodesById);
+
+      // Bij associatie-edges: de kardinaliteit bij B = bronKardinaliteit (= momentvoorkomen op A→REL)
+      // De bronKardinaliteit is opgeslagen op doelEdge.data.kardinaliteit (bij B-zijde)
+      // De doelKardinaliteit is opgeslagen op ankerEdge.data.kardinaliteit (bij A-zijde)
+      const bronKardinaliteit = doelEdge?.data?.kardinaliteit || "0..*";
+      const doelKardinaliteit = ankerEdge?.data?.kardinaliteit || "0..*";
+      // Reconstruct momentvoorkomen van bronKardinaliteit
+      const momentvoorkomen = bronKardinaliteit === "0..1" || bronKardinaliteit === "1" ? "enkelvoudig" : "meervoudig";
 
       return {
         naam: relNode.data.typenaam,
@@ -767,21 +817,31 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         domein: relNode.data.domein || undefined,
         meervoud:
           relNode.data.meervoud ||
-          e.data?.jsonRolnaam || `${(relNode.data.typenaam || "rel").toLowerCase()}s`,
-        momentvoorkomen: e.data?.momentvoorkomen || "meervoudig",
+          ankerEdge.data?.jsonRolnaam || `${(relNode.data.typenaam || "rel").toLowerCase()}s`,
+        momentvoorkomen: momentvoorkomen,
         isMaterieel: relNode.data.isMaterieel || false,
         // Referentielijst-subtypes (optioneel, zie Referentielijsten.md)
         relatieSubtype: relNode.data.relatieSubtype || undefined,
         referentielijstInstantie: instantieBinding.naam || undefined,
+        directioneel: relNode.data.directioneel || undefined,
         doelEntiteit: doelEntiteitNaam,
+        bronKardinaliteit: bronKardinaliteit !== "0..*" ? bronKardinaliteit : undefined,
+        doelKardinaliteit: doelKardinaliteit !== "0..*" ? doelKardinaliteit : undefined,
         positie: relNode.position ? { x: relNode.position.x, y: relNode.position.y } : undefined,
-        // Bewaar editor-edge ids zodat export/import en DB-round-trips merge-stabiel blijven.
-        id: e.id || undefined,
-        sourceHandle: e.sourceHandle || undefined,
-        targetHandle: e.targetHandle || undefined,
-        doelId: relTargetEdge?.id || undefined,
-        doelSourceHandle: relTargetEdge?.sourceHandle || undefined,
-        doelTargetHandle: relTargetEdge?.targetHandle || undefined,
+        // Anker-positie voor round-trip
+        ankerPositie: ankerNode?.position ? { x: ankerNode.position.x, y: ankerNode.position.y } : undefined,
+        // Primaire edge (ent → anker)
+        id: ankerEdge.id || undefined,
+        sourceHandle: ankerEdge.sourceHandle || undefined,
+        targetHandle: ankerEdge.targetHandle || undefined,
+        // Doelentiteit edge (anker → doelEntiteit)
+        doelId: doelEdge?.id || undefined,
+        doelSourceHandle: doelEdge?.sourceHandle || undefined,
+        doelTargetHandle: doelEdge?.targetHandle || undefined,
+        // Association class link edge (anker → relatie)
+        classLinkId: classLinkEdge?.id || undefined,
+        classLinkSourceHandle: classLinkEdge?.sourceHandle || undefined,
+        classLinkTargetHandle: classLinkEdge?.targetHandle || undefined,
         instantieId: instantieBinding.edgeId || undefined,
         instantieSourceHandle: instantieBinding.sourceHandle || undefined,
         instantieTargetHandle: instantieBinding.targetHandle || undefined,

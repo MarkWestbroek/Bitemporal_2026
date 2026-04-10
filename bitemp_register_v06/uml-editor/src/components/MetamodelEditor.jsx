@@ -37,6 +37,7 @@ import "@xyflow/react/dist/style.css";
 import EntiteitNode from "./nodes/EntiteitNode";
 import GegevensElementNode from "./nodes/GegevensElementNode";
 import RelatieNode from "./nodes/RelatieNode";
+import AssociatieAnkerNode from "./nodes/AssociatieAnkerNode";
 import EnumeratieNode from "./nodes/EnumeratieNode";
 import DatatypeNode from "./nodes/DatatypeNode";
 import ReferentielijstInstantieNode from "./nodes/ReferentielijstInstantieNode";
@@ -86,6 +87,7 @@ const nodeTypes = {
   entiteit: EntiteitNode,
   gegevenselement: GegevensElementNode,
   relatie: RelatieNode,
+  associatieAnker: AssociatieAnkerNode,
   enumeratie: EnumeratieNode,
   gegevenstype: DatatypeNode,
   referentielijstInstantie: ReferentielijstInstantieNode,
@@ -119,14 +121,14 @@ function berekenKortsteHandles(srcNode, tgtNode) {
     }
   }
 
-  let best = { sourceHandle: "bottom", targetHandle: "top", dist: Infinity };
+  let best = { sourceHandle: "source-bottom", targetHandle: "target-top", dist: Infinity };
   for (const sh of HANDLE_POSITIES) {
     for (const th of HANDLE_POSITIES) {
       const a = ankerpunt(srcNode, srcW, srcH, sh);
       const b = ankerpunt(tgtNode, tgtW, tgtH, th);
       const d = Math.hypot(a.x - b.x, a.y - b.y);
       if (d < best.dist) {
-        best = { sourceHandle: sh, targetHandle: th, dist: d };
+        best = { sourceHandle: `source-${sh}`, targetHandle: `target-${th}`, dist: d };
       }
     }
   }
@@ -430,12 +432,17 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   }, [setNodes, setEdges]);
 
   const swapConnectionDirection = useCallback((connection) => {
+    // Bij het omdraaien van de richting moeten we ook het prefix van de
+    // handle IDs aanpassen: een target-handle op de oude target-node wordt
+    // een source-handle op de nieuwe source-node, en andersom.
+    const swapPrefix = (h, from, to) =>
+      h ? h.replace(from, to) : h;
     return {
       ...connection,
       source: connection.target,
       target: connection.source,
-      sourceHandle: connection.targetHandle,
-      targetHandle: connection.sourceHandle,
+      sourceHandle: swapPrefix(connection.targetHandle, "target-", "source-"),
+      targetHandle: swapPrefix(connection.sourceHandle, "source-", "target-"),
     };
   }, []);
 
@@ -529,6 +536,109 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         const normalized = normalizeConnection(connection, eds);
         const sourceType = nodeTypeById.get(normalized.source);
         const targetType = nodeTypeById.get(normalized.target);
+
+        // === ASOC auto-conversie ===
+        // Wanneer de tweede entiteit verbonden wordt met een relatie, converteren
+        // we automatisch naar het association-class patroon:
+        //   [A] ── o ── [B]  +  o╌╌[REL]
+        // normalizeConnection retourneert relatie→entiteit voor de tweede koppeling.
+        if (sourceType === "relatie" && targetType === "entiteit") {
+          const relatieId = normalized.source;
+          const doelEntiteitId = normalized.target;
+
+          // Zoek de bestaande owner-edge (entiteitA → relatie)
+          const ownerEdge = eds.find((e) => {
+            if (e.type !== "metamodel" || e.target !== relatieId) return false;
+            if (e.data?.isDependency || e.data?.isAssociation || e.data?.isAssociationClassLink) return false;
+            const t = nodeTypeById.get(e.source);
+            return t === "entiteit" || t === "referentielijstInstantie";
+          });
+
+          if (ownerEdge) {
+            const bronEntiteitId = ownerEdge.source;
+            const relatieNode = nodes.find((n) => n.id === relatieId);
+            const bronNode = nodes.find((n) => n.id === bronEntiteitId);
+            const doelNode = nodes.find((n) => n.id === doelEntiteitId);
+
+            // Bereken ankerpositie: midden tussen beide entiteiten
+            const bronPos = bronNode?.position || { x: 0, y: 0 };
+            const doelPos = doelNode?.position || { x: 400, y: 0 };
+            const ankerId = `anker_${relatieId}`;
+            const ankerPos = {
+              x: (bronPos.x + doelPos.x) / 2 + 80,
+              y: (bronPos.y + doelPos.y) / 2,
+            };
+
+            // Voeg anker-node toe
+            setNodes((nds) => [
+              ...nds,
+              {
+                id: ankerId,
+                type: "associatieAnker",
+                position: ankerPos,
+                data: { relatieNaam: relatieNode?.data?.typenaam || relatieId },
+              },
+            ]);
+
+            // Verwijder de owner-edge en maak 3 ASOC-edges aan
+            const withoutOwner = eds.filter((e) => e.id !== ownerEdge.id);
+            const directioneel = relatieNode?.data?.directioneel || false;
+
+            const asocEdge1 = {
+              id: generateId("edge"),
+              source: bronEntiteitId,
+              target: ankerId,
+              type: "metamodel",
+              sourceHandle: ownerEdge.sourceHandle || null,
+              targetHandle: "target-left",
+              data: {
+                isAssociation: true,
+                directioneel,
+                rolnaam: "",
+                jsonRolnaam: "",
+                momentvoorkomen: "",
+                kardinaliteit: "",
+              },
+            };
+
+            const asocEdge2 = {
+              id: generateId("edge"),
+              source: ankerId,
+              target: doelEntiteitId,
+              type: "metamodel",
+              sourceHandle: "source-right",
+              targetHandle: normalized.targetHandle || null,
+              data: {
+                isAssociation: true,
+                directioneel,
+                rolnaam: "",
+                jsonRolnaam: "",
+                momentvoorkomen: "",
+                kardinaliteit: "",
+              },
+            };
+
+            const asocEdge3 = {
+              id: generateId("edge"),
+              source: ankerId,
+              target: relatieId,
+              type: "metamodel",
+              sourceHandle: "source-bottom",
+              targetHandle: "target-top",
+              data: {
+                isAssociationClassLink: true,
+                rolnaam: "",
+                jsonRolnaam: "",
+                momentvoorkomen: "",
+                kardinaliteit: "",
+              },
+            };
+
+            return [...withoutOwner, asocEdge1, asocEdge2, asocEdge3];
+          }
+        }
+
+        // === Standaard edge-aanmaak (bestaande logica) ===
         const isReferentielijstBinding = sourceType === "referentielijstInstantie" && targetType === "relatie";
         const isDependencyConnection =
           isReferentielijstBinding ||
@@ -992,6 +1102,30 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
 
           return [...withoutOldDeps, ...keptDeps, ...newDeps];
         });
+
+        // Propageer directioneel naar ASOC-edges wanneer een relatie-node wijzigt.
+        if (previousNode?.type === "relatie") {
+          const prevDir = previousNode.data?.directioneel || false;
+          const newDir = newData.directioneel || false;
+          if (prevDir !== newDir) {
+            const relatieNaam = newData.typenaam || nodeId;
+            setEdges((eds) => {
+              // Zoek de anker-node voor deze relatie
+              const ankerNode = updatedNodes.find(
+                (n) => n.type === "associatieAnker" && n.data?.relatieNaam === relatieNaam
+              ) || updatedNodes.find(
+                (n) => n.type === "associatieAnker" && n.id === `anker_${nodeId}`
+              );
+              if (!ankerNode) return eds;
+              return eds.map((e) => {
+                if (e.data?.isAssociation && (e.source === ankerNode.id || e.target === ankerNode.id)) {
+                  return { ...e, data: { ...e.data, directioneel: newDir } };
+                }
+                return e;
+              });
+            });
+          }
+        }
 
         return updatedNodes;
       });

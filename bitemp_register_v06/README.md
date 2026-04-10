@@ -111,6 +111,23 @@ Individuele lijsten (Landenlijst, EU-Lidstaten, etc.) zijn **records** in de tab
 
 Zie `docs/copilot-chats/plans/2026-03-29 referentielijsten PLAN.md` voor het volledige implementatieplan en alle endpoints.
 
+### OpenAPI 3.1 & Interactieve documentatie
+
+De API publiceert OpenAPI 3.1.0 specificaties conform de NL API Strategie (ADR 2.1.0). De specs worden dynamisch gegenereerd uit de MetaRegistry.
+
+| Methode | Endpoint | Beschrijving |
+|---------|----------|--------------|
+| GET | `/openapi.json` | Geconsolideerde OAS 3.1 spec (JSON) |
+| GET | `/openapi.yaml` | Geconsolideerde OAS 3.1 spec (YAML) |
+| GET | `/openapi` | Lijst beschikbare domeinen |
+| GET | `/openapi/:domein` | Domein-specifieke spec (bijv. `/openapi/abuvwxy.json`) |
+| GET | `/swagger` | Swagger UI — interactieve API-verkenner |
+| GET | `/redoc` | ReDoc — leesbare API-documentatie |
+
+[![Swagger UI](https://img.shields.io/badge/Open-Swagger%20UI-85ea2d?style=for-the-badge&logo=swagger&logoColor=black)](http://localhost:8082/swagger)
+[![ReDoc](https://img.shields.io/badge/Open-ReDoc-6ec5ab?style=for-the-badge)](http://localhost:8082/redoc)
+[![OpenAPI JSON](https://img.shields.io/badge/Open-OpenAPI%20JSON-0d47a1?style=for-the-badge)](http://localhost:8082/openapi.json)
+
 ### DB migratie
 
 Bij het starten van de API worden oude tabellen (van de Landenlijst-als-entiteit structuur) automatisch gemigreerd naar de nieuwe generieke structuur via `ensureReferentielijstRefactorMigrated()`. Dit is idempotent.

@@ -68,14 +68,18 @@ type HeeftOnderliggendeGegevenselementen interface {
 // EditorLayout bevat UML-editor layout metadata voor round-trip engineering.
 // Deze gegevens worden genegeerd door codegen maar bewaard voor stabiele editor-layouts.
 type EditorLayout struct {
-	Positie          *V3Positie  // node-positie in de editor
-	EdgeID           string      // persistente edge-id (entiteit→GE/relatie)
-	SourceHandle     string      // handle op de bron-zijde van de owner-edge
-	TargetHandle     string      // handle op de doel-zijde van de owner-edge
-	DoelEdgeID       string      // alleen relaties: edge-id naar doel-entiteit
-	DoelSourceHandle string      // alleen relaties: handle op relatie (uitgaand naar doel)
-	DoelTargetHandle string      // alleen relaties: handle op doel-entiteit (inkomend)
-	UseEdges         []V3UseEdge // optionele metadata voor dependency-edges naar enum/datatype/ref
+	Positie               *V3Positie  // node-positie in de editor
+	EdgeID                string      // persistente edge-id (entiteit→anker)
+	SourceHandle          string      // handle op de bron-zijde van de owner-edge
+	TargetHandle          string      // handle op de doel-zijde van de owner-edge
+	DoelEdgeID            string      // alleen relaties: edge-id anker→doel-entiteit
+	DoelSourceHandle      string      // alleen relaties: handle op anker (uitgaand naar doel)
+	DoelTargetHandle      string      // alleen relaties: handle op doel-entiteit (inkomend)
+	AnkerPositie          *V3Positie  // alleen relaties: positie van het associatie-ankerpunt
+	ClassLinkEdgeID       string      // alleen relaties: edge-id anker╌╌relatie (association class link)
+	ClassLinkSourceHandle string      // alleen relaties: handle op anker (uitgaand naar relatie)
+	ClassLinkTargetHandle string      // alleen relaties: handle op relatie (inkomend van anker)
+	UseEdges              []V3UseEdge // optionele metadata voor dependency-edges naar enum/datatype/ref
 }
 
 // ReferentielijstInstantieInfo bevat metadata en layout voor een referentielijst-instantie
@@ -156,6 +160,11 @@ type TypeMeta struct {
 	// BovenliggendTypenaam is voor plumbing GE-types die niet via OnderliggendeGegevenselementen
 	// te vinden zijn (bijv. A_Aanvang, A_Einde). Geeft de naam van de bovenliggende entiteit (bijv. "A").
 	BovenliggendTypenaam string
+
+	// Directioneel geeft aan of de relatie een directionele associatie is.
+	// Bij directionele relaties wordt een open pijl weergegeven aan de doelzijde (B)
+	// en wordt de kardinaliteit aan de bronzijde (A) niet getoond.
+	Directioneel bool
 
 	// Referentielijst-subtypes (optioneel). Leeg voor gewone entiteiten/relaties.
 	EntiteitSubtype          string // "", "referentielijst", "referentielijst_item"
