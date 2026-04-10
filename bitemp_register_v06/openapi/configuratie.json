@@ -1,0 +1,3106 @@
+{
+  "components": {
+    "schemas": {
+      "FormulierDefinitie": {
+        "description": "Formulierdefinitie voor custom layouts van entiteitsformulieren. Bevat metadata (naam, status, doeltype) en een JSON layout-boom. Bitemporeel: wijzigingen zijn traceerbaar en corrigeerbaar via registraties.",
+        "properties": {
+          "id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "FormulierDefinitieFull": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/FormulierDefinitie"
+          },
+          {
+            "properties": {
+              "aanvang": {
+                "items": {
+                  "$ref": "#/components/schemas/FormulierDefinitie_Aanvang"
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "einde": {
+                "items": {
+                  "$ref": "#/components/schemas/FormulierDefinitie_Einde"
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "formulier_definitie_layouts": {
+                "items": {
+                  "$ref": "#/components/schemas/FormulierDefinitie_Layout"
+                },
+                "type": "array"
+              },
+              "formulier_definitie_metas": {
+                "items": {
+                  "$ref": "#/components/schemas/FormulierDefinitie_Meta"
+                },
+                "maxItems": 1,
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        ],
+        "description": "Volledige FormulierDefinitie met alle geneste gegevenselementen en relaties"
+      },
+      "FormulierDefinitie_Aanvang": {
+        "description": "Aanvangsdatum van FormulierDefinitie.",
+        "properties": {
+          "datum": {
+            "format": "date",
+            "type": "string"
+          },
+          "formulierdefinitie_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "formulierdefinitie_id"
+        ],
+        "type": "object"
+      },
+      "FormulierDefinitie_Einde": {
+        "description": "Einddatum van FormulierDefinitie.",
+        "properties": {
+          "datum": {
+            "format": "date",
+            "type": "string"
+          },
+          "formulierdefinitie_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "formulierdefinitie_id"
+        ],
+        "type": "object"
+      },
+      "FormulierDefinitie_Layout": {
+        "description": "De layout-boom van het formulier als JSON-structuur. Bevat groepen, rijen, velden en conditionele elementen.",
+        "properties": {
+          "definitie_versie": {
+            "type": "string"
+          },
+          "formulierdefinitie_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "layout_json": {
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "formulierdefinitie_id",
+          "rel_id",
+          "layout_json",
+          "definitie_versie"
+        ],
+        "type": "object"
+      },
+      "FormulierDefinitie_Layout_Data": {
+        "description": "Geversioned inhoud van FormulierDefinitie_Layout.",
+        "properties": {
+          "definitie_versie": {
+            "type": "string"
+          },
+          "formulierdefinitie_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "layout_json": {
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "formulierdefinitie_id",
+          "rel_id",
+          "layout_json",
+          "definitie_versie"
+        ],
+        "type": "object"
+      },
+      "FormulierDefinitie_Meta": {
+        "description": "Metadata van de formulierdefinitie: naam, beschrijving, doeltype en status.",
+        "properties": {
+          "beschrijving": {
+            "type": "string"
+          },
+          "doeltype": {
+            "type": "string"
+          },
+          "formulierdefinitie_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "is_standaard": {
+            "type": "boolean"
+          },
+          "naam": {
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "concept",
+              "actief",
+              "inactief"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "formulierdefinitie_id",
+          "rel_id",
+          "naam",
+          "beschrijving",
+          "doeltype",
+          "status"
+        ],
+        "type": "object"
+      },
+      "FormulierDefinitie_Meta_Data": {
+        "description": "Geversioned inhoud van FormulierDefinitie_Meta.",
+        "properties": {
+          "beschrijving": {
+            "type": "string"
+          },
+          "doeltype": {
+            "type": "string"
+          },
+          "formulierdefinitie_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "is_standaard": {
+            "type": "boolean"
+          },
+          "naam": {
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "concept",
+              "actief",
+              "inactief"
+            ],
+            "type": "string"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "formulierdefinitie_id",
+          "rel_id",
+          "naam",
+          "beschrijving",
+          "doeltype",
+          "status"
+        ],
+        "type": "object"
+      },
+      "WeergaveDefinitie": {
+        "description": "Weergavedefinitie voor publicatie-views op entiteitsdata. Bevat metadata (naam, doeltype, status), een tabelconfiguratie (kolommen, sortering) en een detail-template met veldpad-inserts. Bitemporeel: wijzigingen zijn traceerbaar en corrigeerbaar via registraties.",
+        "properties": {
+          "id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "WeergaveDefinitieFull": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/WeergaveDefinitie"
+          },
+          {
+            "properties": {
+              "aanvang": {
+                "items": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_Aanvang"
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "einde": {
+                "items": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_Einde"
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "weergave_definitie_detail_templates": {
+                "items": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_DetailTemplate"
+                },
+                "type": "array"
+              },
+              "weergave_definitie_metas": {
+                "items": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_Meta"
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "weergave_definitie_tabel_configs": {
+                "items": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_TabelConfig"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        ],
+        "description": "Volledige WeergaveDefinitie met alle geneste gegevenselementen en relaties"
+      },
+      "WeergaveDefinitie_Aanvang": {
+        "description": "Aanvangsdatum van WeergaveDefinitie.",
+        "properties": {
+          "datum": {
+            "format": "date",
+            "type": "string"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "weergavedefinitie_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "weergavedefinitie_id"
+        ],
+        "type": "object"
+      },
+      "WeergaveDefinitie_DetailTemplate": {
+        "description": "Template voor de detail-pagina met {{veldpad}} inserts. Wordt gerenderd als read-only publicatieweergave.",
+        "properties": {
+          "definitie_versie": {
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "template_tekst": {
+            "type": "string"
+          },
+          "weergavedefinitie_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "weergavedefinitie_id",
+          "rel_id",
+          "template_tekst",
+          "definitie_versie"
+        ],
+        "type": "object"
+      },
+      "WeergaveDefinitie_DetailTemplate_Data": {
+        "description": "Geversioned inhoud van WeergaveDefinitie_DetailTemplate.",
+        "properties": {
+          "definitie_versie": {
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "template_tekst": {
+            "type": "string"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "weergavedefinitie_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "weergavedefinitie_id",
+          "rel_id",
+          "template_tekst",
+          "definitie_versie"
+        ],
+        "type": "object"
+      },
+      "WeergaveDefinitie_Einde": {
+        "description": "Einddatum van WeergaveDefinitie.",
+        "properties": {
+          "datum": {
+            "format": "date",
+            "type": "string"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "weergavedefinitie_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "weergavedefinitie_id"
+        ],
+        "type": "object"
+      },
+      "WeergaveDefinitie_Meta": {
+        "description": "Metadata van de weergavedefinitie: naam, beschrijving, doeltype en status.",
+        "properties": {
+          "beschrijving": {
+            "type": "string"
+          },
+          "doeltype": {
+            "type": "string"
+          },
+          "is_standaard": {
+            "type": "boolean"
+          },
+          "naam": {
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "concept",
+              "actief",
+              "inactief"
+            ],
+            "type": "string"
+          },
+          "weergavedefinitie_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "weergavedefinitie_id",
+          "rel_id",
+          "naam",
+          "beschrijving",
+          "doeltype",
+          "status"
+        ],
+        "type": "object"
+      },
+      "WeergaveDefinitie_Meta_Data": {
+        "description": "Geversioned inhoud van WeergaveDefinitie_Meta.",
+        "properties": {
+          "beschrijving": {
+            "type": "string"
+          },
+          "doeltype": {
+            "type": "string"
+          },
+          "is_standaard": {
+            "type": "boolean"
+          },
+          "naam": {
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "concept",
+              "actief",
+              "inactief"
+            ],
+            "type": "string"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "weergavedefinitie_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "weergavedefinitie_id",
+          "rel_id",
+          "naam",
+          "beschrijving",
+          "doeltype",
+          "status"
+        ],
+        "type": "object"
+      },
+      "WeergaveDefinitie_TabelConfig": {
+        "description": "Configuratie van de tabelweergave: kolomdefinities (veldpad, label, breedte, sorteerbaar, filterbaar), standaardsortering en aantal rijen per pagina.",
+        "properties": {
+          "definitie_versie": {
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "tabel_config_json": {
+            "type": "string"
+          },
+          "weergavedefinitie_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "weergavedefinitie_id",
+          "rel_id",
+          "tabel_config_json",
+          "definitie_versie"
+        ],
+        "type": "object"
+      },
+      "WeergaveDefinitie_TabelConfig_Data": {
+        "description": "Geversioned inhoud van WeergaveDefinitie_TabelConfig.",
+        "properties": {
+          "definitie_versie": {
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "tabel_config_json": {
+            "type": "string"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "weergavedefinitie_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "weergavedefinitie_id",
+          "rel_id",
+          "tabel_config_json",
+          "definitie_versie"
+        ],
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "contact": {
+      "email": "beheer@register.nl",
+      "name": "Bitemporeel Register beheerder"
+    },
+    "description": "OpenAPI 3.1.0 specificatie voor het domein 'configuratie', automatisch gegenereerd uit de MetaRegistry.",
+    "title": "Bitemporeel Register v06 — configuratie API",
+    "version": "0.6.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/formulier_definitie_layouts": {
+      "get": {
+        "operationId": "getFormulierDefinitie_LayoutLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "formulier_definitie_layouts": {
+                      "items": {
+                        "$ref": "#/components/schemas/FormulierDefinitie_Layout"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van formulier_definitie_layouts",
+        "tags": [
+          "configuratie"
+        ]
+      },
+      "post": {
+        "operationId": "addFormulierDefinitie_Layout",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormulierDefinitie_Layout"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormulierDefinitie_Layout"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een FormulierDefinitie_Layout toe",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/formulier_definitie_layouts/{id}": {
+      "get": {
+        "operationId": "getFormulierDefinitie_Layout",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormulierDefinitie_Layout"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één FormulierDefinitie_Layout op",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/formulier_definitie_metas": {
+      "get": {
+        "operationId": "getFormulierDefinitie_MetaLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "formulier_definitie_metas": {
+                      "items": {
+                        "$ref": "#/components/schemas/FormulierDefinitie_Meta"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van formulier_definitie_metas",
+        "tags": [
+          "configuratie"
+        ]
+      },
+      "post": {
+        "operationId": "addFormulierDefinitie_Meta",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormulierDefinitie_Meta"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormulierDefinitie_Meta"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een FormulierDefinitie_Meta toe",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/formulier_definitie_metas/{id}": {
+      "get": {
+        "operationId": "getFormulierDefinitie_Meta",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormulierDefinitie_Meta"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één FormulierDefinitie_Meta op",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/formulier_definities": {
+      "get": {
+        "operationId": "getFormulierDefinitieLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "formulier definities": {
+                      "items": {
+                        "$ref": "#/components/schemas/FormulierDefinitie"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van formulier definities",
+        "tags": [
+          "configuratie"
+        ]
+      },
+      "post": {
+        "operationId": "addFormulierDefinitie",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormulierDefinitie"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormulierDefinitie"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een FormulierDefinitie toe",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/formulier_definities/{id}": {
+      "get": {
+        "operationId": "getFormulierDefinitie",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormulierDefinitie"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één FormulierDefinitie op",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/formulierdefinitie_aanvang": {
+      "get": {
+        "operationId": "getFormulierDefinitie_AanvangLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "formulierdefinitie_aanvang": {
+                      "items": {
+                        "$ref": "#/components/schemas/FormulierDefinitie_Aanvang"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van formulierdefinitie_aanvang",
+        "tags": [
+          "configuratie"
+        ]
+      },
+      "post": {
+        "operationId": "addFormulierDefinitie_Aanvang",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormulierDefinitie_Aanvang"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormulierDefinitie_Aanvang"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een FormulierDefinitie_Aanvang toe",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/formulierdefinitie_aanvang/{id}": {
+      "get": {
+        "operationId": "getFormulierDefinitie_Aanvang",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormulierDefinitie_Aanvang"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één FormulierDefinitie_Aanvang op",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/formulierdefinitie_einde": {
+      "get": {
+        "operationId": "getFormulierDefinitie_EindeLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "formulierdefinitie_einde": {
+                      "items": {
+                        "$ref": "#/components/schemas/FormulierDefinitie_Einde"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van formulierdefinitie_einde",
+        "tags": [
+          "configuratie"
+        ]
+      },
+      "post": {
+        "operationId": "addFormulierDefinitie_Einde",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormulierDefinitie_Einde"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormulierDefinitie_Einde"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een FormulierDefinitie_Einde toe",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/formulierdefinitie_einde/{id}": {
+      "get": {
+        "operationId": "getFormulierDefinitie_Einde",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormulierDefinitie_Einde"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één FormulierDefinitie_Einde op",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/formulierdefinitie_layout_data": {
+      "get": {
+        "operationId": "getFormulierDefinitie_Layout_DataLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "formulierdefinitie_layout_data": {
+                      "items": {
+                        "$ref": "#/components/schemas/FormulierDefinitie_Layout_Data"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van formulierdefinitie_layout_data",
+        "tags": [
+          "configuratie"
+        ]
+      },
+      "post": {
+        "operationId": "addFormulierDefinitie_Layout_Data",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormulierDefinitie_Layout_Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormulierDefinitie_Layout_Data"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een FormulierDefinitie_Layout_Data toe",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/formulierdefinitie_layout_data/{id}": {
+      "get": {
+        "operationId": "getFormulierDefinitie_Layout_Data",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormulierDefinitie_Layout_Data"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één FormulierDefinitie_Layout_Data op",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/formulierdefinitie_meta_data": {
+      "get": {
+        "operationId": "getFormulierDefinitie_Meta_DataLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "formulierdefinitie_meta_data": {
+                      "items": {
+                        "$ref": "#/components/schemas/FormulierDefinitie_Meta_Data"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van formulierdefinitie_meta_data",
+        "tags": [
+          "configuratie"
+        ]
+      },
+      "post": {
+        "operationId": "addFormulierDefinitie_Meta_Data",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormulierDefinitie_Meta_Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormulierDefinitie_Meta_Data"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een FormulierDefinitie_Meta_Data toe",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/formulierdefinitie_meta_data/{id}": {
+      "get": {
+        "operationId": "getFormulierDefinitie_Meta_Data",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormulierDefinitie_Meta_Data"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één FormulierDefinitie_Meta_Data op",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/full/formulier_definities": {
+      "get": {
+        "operationId": "getFullFormulierDefinitieLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Formeel peiltijdstip (ISO 8601). Alleen naar het verleden.",
+            "in": "query",
+            "name": "t",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "formulier definities": {
+                      "items": {
+                        "$ref": "#/components/schemas/FormulierDefinitieFull"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst met geneste GEs"
+          }
+        },
+        "summary": "Lijst van formulier definities met geneste gegevenselementen",
+        "tags": [
+          "configuratie"
+        ]
+      },
+      "post": {
+        "operationId": "addFullFormulierDefinitie",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormulierDefinitieFull"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormulierDefinitieFull"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een volledige FormulierDefinitie toe met geneste GEs",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/full/formulier_definities/{id}": {
+      "get": {
+        "operationId": "getFullFormulierDefinitie",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Formeel peiltijdstip (ISO 8601). Alleen naar het verleden.",
+            "in": "query",
+            "name": "t",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormulierDefinitieFull"
+                }
+              }
+            },
+            "description": "Volledige entiteit met geneste GEs"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Volledige FormulierDefinitie met alle geneste gegevenselementen",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/full/weergave_definities": {
+      "get": {
+        "operationId": "getFullWeergaveDefinitieLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Formeel peiltijdstip (ISO 8601). Alleen naar het verleden.",
+            "in": "query",
+            "name": "t",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "weergave definities": {
+                      "items": {
+                        "$ref": "#/components/schemas/WeergaveDefinitieFull"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst met geneste GEs"
+          }
+        },
+        "summary": "Lijst van weergave definities met geneste gegevenselementen",
+        "tags": [
+          "configuratie"
+        ]
+      },
+      "post": {
+        "operationId": "addFullWeergaveDefinitie",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeergaveDefinitieFull"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitieFull"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een volledige WeergaveDefinitie toe met geneste GEs",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/full/weergave_definities/{id}": {
+      "get": {
+        "operationId": "getFullWeergaveDefinitie",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Formeel peiltijdstip (ISO 8601). Alleen naar het verleden.",
+            "in": "query",
+            "name": "t",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitieFull"
+                }
+              }
+            },
+            "description": "Volledige entiteit met geneste GEs"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Volledige WeergaveDefinitie met alle geneste gegevenselementen",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/weergave_definitie_detail_templates": {
+      "get": {
+        "operationId": "getWeergaveDefinitie_DetailTemplateLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "weergave_definitie_detail_templates": {
+                      "items": {
+                        "$ref": "#/components/schemas/WeergaveDefinitie_DetailTemplate"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van weergave_definitie_detail_templates",
+        "tags": [
+          "configuratie"
+        ]
+      },
+      "post": {
+        "operationId": "addWeergaveDefinitie_DetailTemplate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeergaveDefinitie_DetailTemplate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_DetailTemplate"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een WeergaveDefinitie_DetailTemplate toe",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/weergave_definitie_detail_templates/{id}": {
+      "get": {
+        "operationId": "getWeergaveDefinitie_DetailTemplate",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_DetailTemplate"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één WeergaveDefinitie_DetailTemplate op",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/weergave_definitie_metas": {
+      "get": {
+        "operationId": "getWeergaveDefinitie_MetaLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "weergave_definitie_metas": {
+                      "items": {
+                        "$ref": "#/components/schemas/WeergaveDefinitie_Meta"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van weergave_definitie_metas",
+        "tags": [
+          "configuratie"
+        ]
+      },
+      "post": {
+        "operationId": "addWeergaveDefinitie_Meta",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeergaveDefinitie_Meta"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_Meta"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een WeergaveDefinitie_Meta toe",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/weergave_definitie_metas/{id}": {
+      "get": {
+        "operationId": "getWeergaveDefinitie_Meta",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_Meta"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één WeergaveDefinitie_Meta op",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/weergave_definitie_tabel_configs": {
+      "get": {
+        "operationId": "getWeergaveDefinitie_TabelConfigLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "weergave_definitie_tabel_configs": {
+                      "items": {
+                        "$ref": "#/components/schemas/WeergaveDefinitie_TabelConfig"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van weergave_definitie_tabel_configs",
+        "tags": [
+          "configuratie"
+        ]
+      },
+      "post": {
+        "operationId": "addWeergaveDefinitie_TabelConfig",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeergaveDefinitie_TabelConfig"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_TabelConfig"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een WeergaveDefinitie_TabelConfig toe",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/weergave_definitie_tabel_configs/{id}": {
+      "get": {
+        "operationId": "getWeergaveDefinitie_TabelConfig",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_TabelConfig"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één WeergaveDefinitie_TabelConfig op",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/weergave_definities": {
+      "get": {
+        "operationId": "getWeergaveDefinitieLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "weergave definities": {
+                      "items": {
+                        "$ref": "#/components/schemas/WeergaveDefinitie"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van weergave definities",
+        "tags": [
+          "configuratie"
+        ]
+      },
+      "post": {
+        "operationId": "addWeergaveDefinitie",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeergaveDefinitie"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een WeergaveDefinitie toe",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/weergave_definities/{id}": {
+      "get": {
+        "operationId": "getWeergaveDefinitie",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één WeergaveDefinitie op",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/weergavedefinitie_aanvang": {
+      "get": {
+        "operationId": "getWeergaveDefinitie_AanvangLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "weergavedefinitie_aanvang": {
+                      "items": {
+                        "$ref": "#/components/schemas/WeergaveDefinitie_Aanvang"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van weergavedefinitie_aanvang",
+        "tags": [
+          "configuratie"
+        ]
+      },
+      "post": {
+        "operationId": "addWeergaveDefinitie_Aanvang",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeergaveDefinitie_Aanvang"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_Aanvang"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een WeergaveDefinitie_Aanvang toe",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/weergavedefinitie_aanvang/{id}": {
+      "get": {
+        "operationId": "getWeergaveDefinitie_Aanvang",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_Aanvang"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één WeergaveDefinitie_Aanvang op",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/weergavedefinitie_detailtemplate_data": {
+      "get": {
+        "operationId": "getWeergaveDefinitie_DetailTemplate_DataLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "weergavedefinitie_detailtemplate_data": {
+                      "items": {
+                        "$ref": "#/components/schemas/WeergaveDefinitie_DetailTemplate_Data"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van weergavedefinitie_detailtemplate_data",
+        "tags": [
+          "configuratie"
+        ]
+      },
+      "post": {
+        "operationId": "addWeergaveDefinitie_DetailTemplate_Data",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeergaveDefinitie_DetailTemplate_Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_DetailTemplate_Data"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een WeergaveDefinitie_DetailTemplate_Data toe",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/weergavedefinitie_detailtemplate_data/{id}": {
+      "get": {
+        "operationId": "getWeergaveDefinitie_DetailTemplate_Data",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_DetailTemplate_Data"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één WeergaveDefinitie_DetailTemplate_Data op",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/weergavedefinitie_einde": {
+      "get": {
+        "operationId": "getWeergaveDefinitie_EindeLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "weergavedefinitie_einde": {
+                      "items": {
+                        "$ref": "#/components/schemas/WeergaveDefinitie_Einde"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van weergavedefinitie_einde",
+        "tags": [
+          "configuratie"
+        ]
+      },
+      "post": {
+        "operationId": "addWeergaveDefinitie_Einde",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeergaveDefinitie_Einde"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_Einde"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een WeergaveDefinitie_Einde toe",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/weergavedefinitie_einde/{id}": {
+      "get": {
+        "operationId": "getWeergaveDefinitie_Einde",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_Einde"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één WeergaveDefinitie_Einde op",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/weergavedefinitie_meta_data": {
+      "get": {
+        "operationId": "getWeergaveDefinitie_Meta_DataLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "weergavedefinitie_meta_data": {
+                      "items": {
+                        "$ref": "#/components/schemas/WeergaveDefinitie_Meta_Data"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van weergavedefinitie_meta_data",
+        "tags": [
+          "configuratie"
+        ]
+      },
+      "post": {
+        "operationId": "addWeergaveDefinitie_Meta_Data",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeergaveDefinitie_Meta_Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_Meta_Data"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een WeergaveDefinitie_Meta_Data toe",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/weergavedefinitie_meta_data/{id}": {
+      "get": {
+        "operationId": "getWeergaveDefinitie_Meta_Data",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_Meta_Data"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één WeergaveDefinitie_Meta_Data op",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/weergavedefinitie_tabelconfig_data": {
+      "get": {
+        "operationId": "getWeergaveDefinitie_TabelConfig_DataLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "weergavedefinitie_tabelconfig_data": {
+                      "items": {
+                        "$ref": "#/components/schemas/WeergaveDefinitie_TabelConfig_Data"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van weergavedefinitie_tabelconfig_data",
+        "tags": [
+          "configuratie"
+        ]
+      },
+      "post": {
+        "operationId": "addWeergaveDefinitie_TabelConfig_Data",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WeergaveDefinitie_TabelConfig_Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_TabelConfig_Data"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een WeergaveDefinitie_TabelConfig_Data toe",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    },
+    "/weergavedefinitie_tabelconfig_data/{id}": {
+      "get": {
+        "operationId": "getWeergaveDefinitie_TabelConfig_Data",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeergaveDefinitie_TabelConfig_Data"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één WeergaveDefinitie_TabelConfig_Data op",
+        "tags": [
+          "configuratie"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "description": "Lokale dev server",
+      "url": "http://localhost:8082"
+    }
+  ]
+}

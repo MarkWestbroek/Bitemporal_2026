@@ -115,6 +115,8 @@ Zie `docs/copilot-chats/plans/2026-03-29 referentielijsten PLAN.md` voor het vol
 
 De API publiceert OpenAPI 3.1.0 specificaties conform de NL API Strategie (ADR 2.1.0). De specs worden dynamisch gegenereerd uit de MetaRegistry.
 
+> Volledige documentatie: [`docs/OPENAPI.md`](docs/OPENAPI.md) — endpoints, CLI-export, architectuur, ADR-compliance en schema-overzicht.
+
 | Methode | Endpoint | Beschrijving |
 |---------|----------|--------------|
 | GET | `/openapi.json` | Geconsolideerde OAS 3.1 spec (JSON) |
@@ -123,6 +125,13 @@ De API publiceert OpenAPI 3.1.0 specificaties conform de NL API Strategie (ADR 2
 | GET | `/openapi/:domein` | Domein-specifieke spec (bijv. `/openapi/abuvwxy.json`) |
 | GET | `/swagger` | Swagger UI — interactieve API-verkenner |
 | GET | `/redoc` | ReDoc — leesbare API-documentatie |
+
+Specs naar bestanden exporteren voor Git:
+
+```sh
+go run ./cmd/openapi-export              # alle specs naar openapi/
+go run ./cmd/openapi-export --domein CG  # alleen één domein
+```
 
 [![Swagger UI](https://img.shields.io/badge/Open-Swagger%20UI-85ea2d?style=for-the-badge&logo=swagger&logoColor=black)](http://localhost:8082/swagger)
 [![ReDoc](https://img.shields.io/badge/Open-ReDoc-6ec5ab?style=for-the-badge)](http://localhost:8082/redoc)

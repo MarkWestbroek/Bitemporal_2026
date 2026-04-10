@@ -1,0 +1,3514 @@
+components:
+    schemas:
+        AdellijkeTitel:
+            description: 'Referentielijst-item: adellijke titel.'
+            properties:
+                id:
+                    format: int32
+                    type: integer
+            required:
+                - id
+            type: object
+        AdellijkeTitel_AdellijkeTitelTitel:
+            description: Enkelvoudig gegevenselement titel van AdellijkeTitel.
+            properties:
+                adellijketitel_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+                titel:
+                    type: string
+            required:
+                - adellijketitel_id
+                - rel_id
+                - titel
+            type: object
+        AdellijkeTitel_AdellijkeTitelTitel_Data:
+            description: Geversioned inhoud van AdellijkeTitel_AdellijkeTitelTitel.
+            properties:
+                adellijketitel_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+                titel:
+                    type: string
+                versie:
+                    format: int64
+                    type: integer
+            required:
+                - adellijketitel_id
+                - rel_id
+                - titel
+            type: object
+        AdellijkeTitelFull:
+            allOf:
+                - $ref: '#/components/schemas/AdellijkeTitel'
+                - properties:
+                    adellijke_titel_titels:
+                        items:
+                            $ref: '#/components/schemas/AdellijkeTitel_AdellijkeTitelTitel'
+                        maxItems: 1
+                        type: array
+                  type: object
+            description: Volledige AdellijkeTitel met alle geneste gegevenselementen en relaties
+        Bereikbaarheid:
+            description: Koppeling van een natuurlijk persoon aan een locatie als bereikbaarheidsadres.
+            properties:
+                aanvang:
+                    format: date
+                    type: string
+                einde:
+                    format: date
+                    type: string
+                locatie_id:
+                    format: int32
+                    type: integer
+                natuurlijkpersoon_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+                soort:
+                    enum:
+                        - Woonadres
+                        - Briefadres
+                        - Correspondentieadres
+                    type: string
+            required:
+                - natuurlijkpersoon_id
+                - rel_id
+                - locatie_id
+                - soort
+            type: object
+        Bereikbaarheid_Aanvang:
+            description: Aanvangsdatum van Bereikbaarheid.
+            properties:
+                datum:
+                    format: date
+                    type: string
+                natuurlijkpersoon_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+                versie:
+                    format: int64
+                    type: integer
+            required:
+                - natuurlijkpersoon_id
+                - rel_id
+            type: object
+        Bereikbaarheid_Data:
+            description: Geversioned inhoud van Bereikbaarheid.
+            properties:
+                natuurlijkpersoon_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+                soort:
+                    enum:
+                        - Woonadres
+                        - Briefadres
+                        - Correspondentieadres
+                    type: string
+                versie:
+                    format: int64
+                    type: integer
+            required:
+                - natuurlijkpersoon_id
+                - rel_id
+                - soort
+            type: object
+        Bereikbaarheid_Einde:
+            description: Einddatum van Bereikbaarheid.
+            properties:
+                datum:
+                    format: date
+                    type: string
+                natuurlijkpersoon_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+                versie:
+                    format: int64
+                    type: integer
+            required:
+                - natuurlijkpersoon_id
+                - rel_id
+            type: object
+        Locatie:
+            description: Fysiek bezoekbare locatie gelegen op het aardoppervlak.
+            properties:
+                id:
+                    format: int32
+                    type: integer
+            required:
+                - id
+            type: object
+        Locatie_Aanvang:
+            description: Aanvangsdatum van Locatie.
+            properties:
+                datum:
+                    format: date
+                    type: string
+                locatie_id:
+                    format: int32
+                    type: integer
+                versie:
+                    format: int64
+                    type: integer
+            required:
+                - locatie_id
+            type: object
+        Locatie_Adres:
+            description: 'Binnenlands adres: een aanduiding van een binnenlandse locatie, uitgegeven door de gemeente en geregistreerd in de BAG.'
+            properties:
+                huisnummer:
+                    type: string
+                land:
+                    format: int32
+                    type: integer
+                locatie_id:
+                    format: int32
+                    type: integer
+                plaats:
+                    type: string
+                postcode:
+                    type: string
+                rel_id:
+                    format: int32
+                    type: integer
+                straatnaam:
+                    type: string
+            required:
+                - locatie_id
+                - rel_id
+                - straatnaam
+                - huisnummer
+                - postcode
+                - plaats
+                - land
+            type: object
+        Locatie_Adres_Data:
+            description: Geversioned inhoud van Locatie_Adres.
+            properties:
+                huisnummer:
+                    type: string
+                land:
+                    format: int32
+                    type: integer
+                locatie_id:
+                    format: int32
+                    type: integer
+                plaats:
+                    type: string
+                postcode:
+                    type: string
+                rel_id:
+                    format: int32
+                    type: integer
+                straatnaam:
+                    type: string
+                versie:
+                    format: int64
+                    type: integer
+            required:
+                - locatie_id
+                - rel_id
+                - straatnaam
+                - huisnummer
+                - postcode
+                - plaats
+                - land
+            type: object
+        Locatie_BAGlocatie:
+            description: Unieke identificatie van het adresseerbaar object (verblijfsobject, stand- of ligplaats) uitgegeven door het bevoegd gemeentelijke orgaan.
+            properties:
+                adresaanduiding:
+                    type: string
+                locatie_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+            required:
+                - locatie_id
+                - rel_id
+                - adresaanduiding
+            type: object
+        Locatie_BAGlocatie_Data:
+            description: Geversioned inhoud van Locatie_BAGlocatie.
+            properties:
+                adresaanduiding:
+                    type: string
+                locatie_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+                versie:
+                    format: int64
+                    type: integer
+            required:
+                - locatie_id
+                - rel_id
+                - adresaanduiding
+            type: object
+        Locatie_Einde:
+            description: Einddatum van Locatie.
+            properties:
+                datum:
+                    format: date
+                    type: string
+                locatie_id:
+                    format: int32
+                    type: integer
+                versie:
+                    format: int64
+                    type: integer
+            required:
+                - locatie_id
+            type: object
+        LocatieFull:
+            allOf:
+                - $ref: '#/components/schemas/Locatie'
+                - properties:
+                    aanvang:
+                        items:
+                            $ref: '#/components/schemas/Locatie_Aanvang'
+                        maxItems: 1
+                        type: array
+                    adressen:
+                        items:
+                            $ref: '#/components/schemas/Locatie_Adres'
+                        maxItems: 1
+                        type: array
+                    baglocaties:
+                        items:
+                            $ref: '#/components/schemas/Locatie_BAGlocatie'
+                        maxItems: 1
+                        type: array
+                    einde:
+                        items:
+                            $ref: '#/components/schemas/Locatie_Einde'
+                        maxItems: 1
+                        type: array
+                  type: object
+            description: Volledige Locatie met alle geneste gegevenselementen en relaties
+        NatuurlijkPersoon:
+            description: Een mens voor zover deze door Nederlandse wetgeving met rechten en plichten wordt bekleed.
+            properties:
+                id:
+                    format: int32
+                    type: integer
+            required:
+                - id
+            type: object
+        NatuurlijkPersoon_Aanvang:
+            description: Aanvangsdatum van NatuurlijkPersoon.
+            properties:
+                datum:
+                    format: date
+                    type: string
+                natuurlijkpersoon_id:
+                    format: int32
+                    type: integer
+                versie:
+                    format: int64
+                    type: integer
+            required:
+                - natuurlijkpersoon_id
+            type: object
+        NatuurlijkPersoon_Burgerschap:
+            properties:
+                aanvang:
+                    format: date
+                    type: string
+                einde:
+                    format: date
+                    type: string
+                landcode:
+                    type: string
+                landreferentie:
+                    format: int32
+                    type: integer
+                nationaliteit:
+                    type: string
+                natuurlijkpersoon_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+            required:
+                - natuurlijkpersoon_id
+                - rel_id
+            type: object
+        NatuurlijkPersoon_Burgerschap_Aanvang:
+            description: Aanvangsdatum van NatuurlijkPersoon_Burgerschap.
+            properties:
+                datum:
+                    format: date
+                    type: string
+                natuurlijkpersoon_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+                versie:
+                    format: int64
+                    type: integer
+            required:
+                - natuurlijkpersoon_id
+                - rel_id
+            type: object
+        NatuurlijkPersoon_Burgerschap_Data:
+            description: Geversioned inhoud van NatuurlijkPersoon_Burgerschap.
+            properties:
+                landcode:
+                    type: string
+                landreferentie:
+                    format: int32
+                    type: integer
+                nationaliteit:
+                    type: string
+                natuurlijkpersoon_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+                versie:
+                    format: int64
+                    type: integer
+            required:
+                - natuurlijkpersoon_id
+                - rel_id
+            type: object
+        NatuurlijkPersoon_Burgerschap_Einde:
+            description: Einddatum van NatuurlijkPersoon_Burgerschap.
+            properties:
+                datum:
+                    format: date
+                    type: string
+                natuurlijkpersoon_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+                versie:
+                    format: int64
+                    type: integer
+            required:
+                - natuurlijkpersoon_id
+                - rel_id
+            type: object
+        NatuurlijkPersoon_Einde:
+            description: Einddatum van NatuurlijkPersoon.
+            properties:
+                datum:
+                    format: date
+                    type: string
+                natuurlijkpersoon_id:
+                    format: int32
+                    type: integer
+                versie:
+                    format: int64
+                    type: integer
+            required:
+                - natuurlijkpersoon_id
+            type: object
+        NatuurlijkPersoon_Naam:
+            description: Naamgegevens van de natuurlijk persoon (voorletters, roepnaam, tussenvoegsel, achternaam).
+            properties:
+                achternaam:
+                    type: string
+                natuurlijkpersoon_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+                roepnaam:
+                    type: string
+                tussenvoegsel:
+                    type: string
+                voorletters:
+                    type: string
+            required:
+                - natuurlijkpersoon_id
+                - rel_id
+                - voorletters
+                - achternaam
+            type: object
+        NatuurlijkPersoon_Naam_Data:
+            description: Geversioned inhoud van NatuurlijkPersoon_Naam.
+            properties:
+                achternaam:
+                    type: string
+                natuurlijkpersoon_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+                roepnaam:
+                    type: string
+                tussenvoegsel:
+                    type: string
+                versie:
+                    format: int64
+                    type: integer
+                voorletters:
+                    type: string
+            required:
+                - natuurlijkpersoon_id
+                - rel_id
+                - voorletters
+                - achternaam
+            type: object
+        NatuurlijkPersoon_Naamgebruik:
+            description: Wijze waarop de geslachtsnaam wordt gebruikt.
+            properties:
+                naamgebruik:
+                    enum:
+                        - EigenNaam
+                        - PartnerNaam
+                        - EigenNaam-PartnerNaam
+                        - PartnerNaam-EigenNaam
+                    type: string
+                natuurlijkpersoon_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+            required:
+                - natuurlijkpersoon_id
+                - rel_id
+                - naamgebruik
+            type: object
+        NatuurlijkPersoon_Naamgebruik_Data:
+            description: Geversioned inhoud van NatuurlijkPersoon_Naamgebruik.
+            properties:
+                naamgebruik:
+                    enum:
+                        - EigenNaam
+                        - PartnerNaam
+                        - EigenNaam-PartnerNaam
+                        - PartnerNaam-EigenNaam
+                    type: string
+                natuurlijkpersoon_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+                versie:
+                    format: int64
+                    type: integer
+            required:
+                - natuurlijkpersoon_id
+                - rel_id
+                - naamgebruik
+            type: object
+        NatuurlijkPersoon_Partnernaam:
+            description: Achternaam van de partner van de natuurlijk persoon.
+            properties:
+                achternaam:
+                    type: string
+                natuurlijkpersoon_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+            required:
+                - natuurlijkpersoon_id
+                - rel_id
+                - achternaam
+            type: object
+        NatuurlijkPersoon_Partnernaam_Data:
+            description: Geversioned inhoud van NatuurlijkPersoon_Partnernaam.
+            properties:
+                achternaam:
+                    type: string
+                natuurlijkpersoon_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+                versie:
+                    format: int64
+                    type: integer
+            required:
+                - natuurlijkpersoon_id
+                - rel_id
+                - achternaam
+            type: object
+        NatuurlijkPersoon_Persoonsidentificatie:
+            description: Identificerende gegevens van de natuurlijk persoon (BSN, ingezetene).
+            properties:
+                bsn:
+                    type: string
+                ingezetene:
+                    type: boolean
+                natuurlijkpersoon_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+            required:
+                - natuurlijkpersoon_id
+                - rel_id
+                - bsn
+            type: object
+        NatuurlijkPersoon_Persoonsidentificatie_Data:
+            description: Geversioned inhoud van NatuurlijkPersoon_Persoonsidentificatie.
+            properties:
+                bsn:
+                    type: string
+                ingezetene:
+                    type: boolean
+                natuurlijkpersoon_id:
+                    format: int32
+                    type: integer
+                rel_id:
+                    format: int32
+                    type: integer
+                versie:
+                    format: int64
+                    type: integer
+            required:
+                - natuurlijkpersoon_id
+                - rel_id
+                - bsn
+            type: object
+        NatuurlijkPersoonFull:
+            allOf:
+                - $ref: '#/components/schemas/NatuurlijkPersoon'
+                - properties:
+                    aanvang:
+                        items:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Aanvang'
+                        maxItems: 1
+                        type: array
+                    bereikbaarheden:
+                        items:
+                            $ref: '#/components/schemas/Bereikbaarheid'
+                        maxItems: 1
+                        type: array
+                    burgerschappen:
+                        items:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Burgerschap'
+                        maxItems: 1
+                        type: array
+                    einde:
+                        items:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Einde'
+                        maxItems: 1
+                        type: array
+                    naamgebruiken:
+                        items:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Naamgebruik'
+                        maxItems: 1
+                        type: array
+                    namen:
+                        items:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Naam'
+                        maxItems: 1
+                        type: array
+                    partnernamen:
+                        items:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Partnernaam'
+                        maxItems: 1
+                        type: array
+                    persoonsidentificaties:
+                        items:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Persoonsidentificatie'
+                        maxItems: 1
+                        type: array
+                  type: object
+            description: Volledige NatuurlijkPersoon met alle geneste gegevenselementen en relaties
+info:
+    contact:
+        email: beheer@register.nl
+        name: Bitemporeel Register beheerder
+    description: OpenAPI 3.1.0 specificatie voor het domein 'np-loc', automatisch gegenereerd uit de MetaRegistry.
+    title: Bitemporeel Register v06 — np-loc API
+    version: 0.6.0
+openapi: 3.1.0
+paths:
+    /adellijke_titel_titels:
+        get:
+            operationId: getAdellijkeTitel_AdellijkeTitelTitelLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    adellijke_titel_titels:
+                                        items:
+                                            $ref: '#/components/schemas/AdellijkeTitel_AdellijkeTitelTitel'
+                                        type: array
+                                    has_more:
+                                        type: boolean
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van adellijke_titel_titels
+            tags:
+                - np-loc
+        post:
+            operationId: addAdellijkeTitel_AdellijkeTitelTitel
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/AdellijkeTitel_AdellijkeTitelTitel'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AdellijkeTitel_AdellijkeTitelTitel'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een AdellijkeTitel_AdellijkeTitelTitel toe
+            tags:
+                - np-loc
+    /adellijke_titel_titels/{id}:
+        get:
+            operationId: getAdellijkeTitel_AdellijkeTitelTitel
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AdellijkeTitel_AdellijkeTitelTitel'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één AdellijkeTitel_AdellijkeTitelTitel op
+            tags:
+                - np-loc
+    /adellijke_titels:
+        get:
+            operationId: getAdellijkeTitelLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    adellijke titels:
+                                        items:
+                                            $ref: '#/components/schemas/AdellijkeTitel'
+                                        type: array
+                                    has_more:
+                                        type: boolean
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van adellijke titels
+            tags:
+                - np-loc
+        post:
+            operationId: addAdellijkeTitel
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/AdellijkeTitel'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AdellijkeTitel'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een AdellijkeTitel toe
+            tags:
+                - np-loc
+    /adellijke_titels/{id}:
+        get:
+            operationId: getAdellijkeTitel
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AdellijkeTitel'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één AdellijkeTitel op
+            tags:
+                - np-loc
+    /adellijketitel_adellijketiteltitel_data:
+        get:
+            operationId: getAdellijkeTitel_AdellijkeTitelTitel_DataLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    adellijketitel_adellijketiteltitel_data:
+                                        items:
+                                            $ref: '#/components/schemas/AdellijkeTitel_AdellijkeTitelTitel_Data'
+                                        type: array
+                                    has_more:
+                                        type: boolean
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van adellijketitel_adellijketiteltitel_data
+            tags:
+                - np-loc
+        post:
+            operationId: addAdellijkeTitel_AdellijkeTitelTitel_Data
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/AdellijkeTitel_AdellijkeTitelTitel_Data'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AdellijkeTitel_AdellijkeTitelTitel_Data'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een AdellijkeTitel_AdellijkeTitelTitel_Data toe
+            tags:
+                - np-loc
+    /adellijketitel_adellijketiteltitel_data/{id}:
+        get:
+            operationId: getAdellijkeTitel_AdellijkeTitelTitel_Data
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AdellijkeTitel_AdellijkeTitelTitel_Data'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één AdellijkeTitel_AdellijkeTitelTitel_Data op
+            tags:
+                - np-loc
+    /adressen:
+        get:
+            operationId: getLocatie_AdresLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    adressen:
+                                        items:
+                                            $ref: '#/components/schemas/Locatie_Adres'
+                                        type: array
+                                    has_more:
+                                        type: boolean
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van adressen
+            tags:
+                - np-loc
+        post:
+            operationId: addLocatie_Adres
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Locatie_Adres'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Locatie_Adres'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een Locatie_Adres toe
+            tags:
+                - np-loc
+    /adressen/{id}:
+        get:
+            operationId: getLocatie_Adres
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Locatie_Adres'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één Locatie_Adres op
+            tags:
+                - np-loc
+    /baglocaties:
+        get:
+            operationId: getLocatie_BAGlocatieLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    baglocaties:
+                                        items:
+                                            $ref: '#/components/schemas/Locatie_BAGlocatie'
+                                        type: array
+                                    has_more:
+                                        type: boolean
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van baglocaties
+            tags:
+                - np-loc
+        post:
+            operationId: addLocatie_BAGlocatie
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Locatie_BAGlocatie'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Locatie_BAGlocatie'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een Locatie_BAGlocatie toe
+            tags:
+                - np-loc
+    /baglocaties/{id}:
+        get:
+            operationId: getLocatie_BAGlocatie
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Locatie_BAGlocatie'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één Locatie_BAGlocatie op
+            tags:
+                - np-loc
+    /bereikbaarheden:
+        get:
+            operationId: getBereikbaarheidLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    bereikbaarheden:
+                                        items:
+                                            $ref: '#/components/schemas/Bereikbaarheid'
+                                        type: array
+                                    has_more:
+                                        type: boolean
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van bereikbaarheden
+            tags:
+                - np-loc
+        post:
+            operationId: addBereikbaarheid
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Bereikbaarheid'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Bereikbaarheid'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een Bereikbaarheid toe
+            tags:
+                - np-loc
+    /bereikbaarheden/{id}:
+        get:
+            operationId: getBereikbaarheid
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Bereikbaarheid'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één Bereikbaarheid op
+            tags:
+                - np-loc
+    /bereikbaarheid_aanvang:
+        get:
+            operationId: getBereikbaarheid_AanvangLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    bereikbaarheid_aanvang:
+                                        items:
+                                            $ref: '#/components/schemas/Bereikbaarheid_Aanvang'
+                                        type: array
+                                    has_more:
+                                        type: boolean
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van bereikbaarheid_aanvang
+            tags:
+                - np-loc
+        post:
+            operationId: addBereikbaarheid_Aanvang
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Bereikbaarheid_Aanvang'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Bereikbaarheid_Aanvang'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een Bereikbaarheid_Aanvang toe
+            tags:
+                - np-loc
+    /bereikbaarheid_aanvang/{id}:
+        get:
+            operationId: getBereikbaarheid_Aanvang
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Bereikbaarheid_Aanvang'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één Bereikbaarheid_Aanvang op
+            tags:
+                - np-loc
+    /bereikbaarheid_data:
+        get:
+            operationId: getBereikbaarheid_DataLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    bereikbaarheid_data:
+                                        items:
+                                            $ref: '#/components/schemas/Bereikbaarheid_Data'
+                                        type: array
+                                    has_more:
+                                        type: boolean
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van bereikbaarheid_data
+            tags:
+                - np-loc
+        post:
+            operationId: addBereikbaarheid_Data
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Bereikbaarheid_Data'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Bereikbaarheid_Data'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een Bereikbaarheid_Data toe
+            tags:
+                - np-loc
+    /bereikbaarheid_data/{id}:
+        get:
+            operationId: getBereikbaarheid_Data
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Bereikbaarheid_Data'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één Bereikbaarheid_Data op
+            tags:
+                - np-loc
+    /bereikbaarheid_einde:
+        get:
+            operationId: getBereikbaarheid_EindeLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    bereikbaarheid_einde:
+                                        items:
+                                            $ref: '#/components/schemas/Bereikbaarheid_Einde'
+                                        type: array
+                                    has_more:
+                                        type: boolean
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van bereikbaarheid_einde
+            tags:
+                - np-loc
+        post:
+            operationId: addBereikbaarheid_Einde
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Bereikbaarheid_Einde'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Bereikbaarheid_Einde'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een Bereikbaarheid_Einde toe
+            tags:
+                - np-loc
+    /bereikbaarheid_einde/{id}:
+        get:
+            operationId: getBereikbaarheid_Einde
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Bereikbaarheid_Einde'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één Bereikbaarheid_Einde op
+            tags:
+                - np-loc
+    /burgerschappen:
+        get:
+            operationId: getNatuurlijkPersoon_BurgerschapLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    burgerschappen:
+                                        items:
+                                            $ref: '#/components/schemas/NatuurlijkPersoon_Burgerschap'
+                                        type: array
+                                    has_more:
+                                        type: boolean
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van burgerschappen
+            tags:
+                - np-loc
+        post:
+            operationId: addNatuurlijkPersoon_Burgerschap
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Burgerschap'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Burgerschap'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een NatuurlijkPersoon_Burgerschap toe
+            tags:
+                - np-loc
+    /burgerschappen/{id}:
+        get:
+            operationId: getNatuurlijkPersoon_Burgerschap
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Burgerschap'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één NatuurlijkPersoon_Burgerschap op
+            tags:
+                - np-loc
+    /full/adellijke_titels:
+        get:
+            operationId: getFullAdellijkeTitelLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Formeel peiltijdstip (ISO 8601). Alleen naar het verleden.
+                  in: query
+                  name: t
+                  schema:
+                    format: date-time
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    adellijke titels:
+                                        items:
+                                            $ref: '#/components/schemas/AdellijkeTitelFull'
+                                        type: array
+                                    has_more:
+                                        type: boolean
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst met geneste GEs
+            summary: Lijst van adellijke titels met geneste gegevenselementen
+            tags:
+                - np-loc
+        post:
+            operationId: addFullAdellijkeTitel
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/AdellijkeTitelFull'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AdellijkeTitelFull'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een volledige AdellijkeTitel toe met geneste GEs
+            tags:
+                - np-loc
+    /full/adellijke_titels/{id}:
+        get:
+            operationId: getFullAdellijkeTitel
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+                - description: Formeel peiltijdstip (ISO 8601). Alleen naar het verleden.
+                  in: query
+                  name: t
+                  schema:
+                    format: date-time
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AdellijkeTitelFull'
+                    description: Volledige entiteit met geneste GEs
+                "404":
+                    description: Niet gevonden
+            summary: Volledige AdellijkeTitel met alle geneste gegevenselementen
+            tags:
+                - np-loc
+    /full/locaties:
+        get:
+            operationId: getFullLocatieLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Formeel peiltijdstip (ISO 8601). Alleen naar het verleden.
+                  in: query
+                  name: t
+                  schema:
+                    format: date-time
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    locaties:
+                                        items:
+                                            $ref: '#/components/schemas/LocatieFull'
+                                        type: array
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst met geneste GEs
+            summary: Lijst van locaties met geneste gegevenselementen
+            tags:
+                - np-loc
+        post:
+            operationId: addFullLocatie
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/LocatieFull'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/LocatieFull'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een volledige Locatie toe met geneste GEs
+            tags:
+                - np-loc
+    /full/locaties/{id}:
+        get:
+            operationId: getFullLocatie
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+                - description: Formeel peiltijdstip (ISO 8601). Alleen naar het verleden.
+                  in: query
+                  name: t
+                  schema:
+                    format: date-time
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/LocatieFull'
+                    description: Volledige entiteit met geneste GEs
+                "404":
+                    description: Niet gevonden
+            summary: Volledige Locatie met alle geneste gegevenselementen
+            tags:
+                - np-loc
+    /full/natuurlijk_personen:
+        get:
+            operationId: getFullNatuurlijkPersoonLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Formeel peiltijdstip (ISO 8601). Alleen naar het verleden.
+                  in: query
+                  name: t
+                  schema:
+                    format: date-time
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    natuurlijk personen:
+                                        items:
+                                            $ref: '#/components/schemas/NatuurlijkPersoonFull'
+                                        type: array
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst met geneste GEs
+            summary: Lijst van natuurlijk personen met geneste gegevenselementen
+            tags:
+                - np-loc
+        post:
+            operationId: addFullNatuurlijkPersoon
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/NatuurlijkPersoonFull'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoonFull'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een volledige NatuurlijkPersoon toe met geneste GEs
+            tags:
+                - np-loc
+    /full/natuurlijk_personen/{id}:
+        get:
+            operationId: getFullNatuurlijkPersoon
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+                - description: Formeel peiltijdstip (ISO 8601). Alleen naar het verleden.
+                  in: query
+                  name: t
+                  schema:
+                    format: date-time
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoonFull'
+                    description: Volledige entiteit met geneste GEs
+                "404":
+                    description: Niet gevonden
+            summary: Volledige NatuurlijkPersoon met alle geneste gegevenselementen
+            tags:
+                - np-loc
+    /locatie_aanvang:
+        get:
+            operationId: getLocatie_AanvangLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    locatie_aanvang:
+                                        items:
+                                            $ref: '#/components/schemas/Locatie_Aanvang'
+                                        type: array
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van locatie_aanvang
+            tags:
+                - np-loc
+        post:
+            operationId: addLocatie_Aanvang
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Locatie_Aanvang'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Locatie_Aanvang'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een Locatie_Aanvang toe
+            tags:
+                - np-loc
+    /locatie_aanvang/{id}:
+        get:
+            operationId: getLocatie_Aanvang
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Locatie_Aanvang'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één Locatie_Aanvang op
+            tags:
+                - np-loc
+    /locatie_adres_data:
+        get:
+            operationId: getLocatie_Adres_DataLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    locatie_adres_data:
+                                        items:
+                                            $ref: '#/components/schemas/Locatie_Adres_Data'
+                                        type: array
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van locatie_adres_data
+            tags:
+                - np-loc
+        post:
+            operationId: addLocatie_Adres_Data
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Locatie_Adres_Data'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Locatie_Adres_Data'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een Locatie_Adres_Data toe
+            tags:
+                - np-loc
+    /locatie_adres_data/{id}:
+        get:
+            operationId: getLocatie_Adres_Data
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Locatie_Adres_Data'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één Locatie_Adres_Data op
+            tags:
+                - np-loc
+    /locatie_baglocatie_data:
+        get:
+            operationId: getLocatie_BAGlocatie_DataLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    locatie_baglocatie_data:
+                                        items:
+                                            $ref: '#/components/schemas/Locatie_BAGlocatie_Data'
+                                        type: array
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van locatie_baglocatie_data
+            tags:
+                - np-loc
+        post:
+            operationId: addLocatie_BAGlocatie_Data
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Locatie_BAGlocatie_Data'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Locatie_BAGlocatie_Data'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een Locatie_BAGlocatie_Data toe
+            tags:
+                - np-loc
+    /locatie_baglocatie_data/{id}:
+        get:
+            operationId: getLocatie_BAGlocatie_Data
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Locatie_BAGlocatie_Data'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één Locatie_BAGlocatie_Data op
+            tags:
+                - np-loc
+    /locatie_einde:
+        get:
+            operationId: getLocatie_EindeLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    locatie_einde:
+                                        items:
+                                            $ref: '#/components/schemas/Locatie_Einde'
+                                        type: array
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van locatie_einde
+            tags:
+                - np-loc
+        post:
+            operationId: addLocatie_Einde
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Locatie_Einde'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Locatie_Einde'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een Locatie_Einde toe
+            tags:
+                - np-loc
+    /locatie_einde/{id}:
+        get:
+            operationId: getLocatie_Einde
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Locatie_Einde'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één Locatie_Einde op
+            tags:
+                - np-loc
+    /locaties:
+        get:
+            operationId: getLocatieLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    locaties:
+                                        items:
+                                            $ref: '#/components/schemas/Locatie'
+                                        type: array
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van locaties
+            tags:
+                - np-loc
+        post:
+            operationId: addLocatie
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Locatie'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Locatie'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een Locatie toe
+            tags:
+                - np-loc
+    /locaties/{id}:
+        get:
+            operationId: getLocatie
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Locatie'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één Locatie op
+            tags:
+                - np-loc
+    /naamgebruiken:
+        get:
+            operationId: getNatuurlijkPersoon_NaamgebruikLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    naamgebruiken:
+                                        items:
+                                            $ref: '#/components/schemas/NatuurlijkPersoon_Naamgebruik'
+                                        type: array
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van naamgebruiken
+            tags:
+                - np-loc
+        post:
+            operationId: addNatuurlijkPersoon_Naamgebruik
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Naamgebruik'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Naamgebruik'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een NatuurlijkPersoon_Naamgebruik toe
+            tags:
+                - np-loc
+    /naamgebruiken/{id}:
+        get:
+            operationId: getNatuurlijkPersoon_Naamgebruik
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Naamgebruik'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één NatuurlijkPersoon_Naamgebruik op
+            tags:
+                - np-loc
+    /namen:
+        get:
+            operationId: getNatuurlijkPersoon_NaamLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    namen:
+                                        items:
+                                            $ref: '#/components/schemas/NatuurlijkPersoon_Naam'
+                                        type: array
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van namen
+            tags:
+                - np-loc
+        post:
+            operationId: addNatuurlijkPersoon_Naam
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Naam'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Naam'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een NatuurlijkPersoon_Naam toe
+            tags:
+                - np-loc
+    /namen/{id}:
+        get:
+            operationId: getNatuurlijkPersoon_Naam
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Naam'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één NatuurlijkPersoon_Naam op
+            tags:
+                - np-loc
+    /natuurlijk_personen:
+        get:
+            operationId: getNatuurlijkPersoonLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    natuurlijk personen:
+                                        items:
+                                            $ref: '#/components/schemas/NatuurlijkPersoon'
+                                        type: array
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van natuurlijk personen
+            tags:
+                - np-loc
+        post:
+            operationId: addNatuurlijkPersoon
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/NatuurlijkPersoon'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een NatuurlijkPersoon toe
+            tags:
+                - np-loc
+    /natuurlijk_personen/{id}:
+        get:
+            operationId: getNatuurlijkPersoon
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één NatuurlijkPersoon op
+            tags:
+                - np-loc
+    /natuurlijkpersoon_aanvang:
+        get:
+            operationId: getNatuurlijkPersoon_AanvangLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    natuurlijkpersoon_aanvang:
+                                        items:
+                                            $ref: '#/components/schemas/NatuurlijkPersoon_Aanvang'
+                                        type: array
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van natuurlijkpersoon_aanvang
+            tags:
+                - np-loc
+        post:
+            operationId: addNatuurlijkPersoon_Aanvang
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Aanvang'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Aanvang'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een NatuurlijkPersoon_Aanvang toe
+            tags:
+                - np-loc
+    /natuurlijkpersoon_aanvang/{id}:
+        get:
+            operationId: getNatuurlijkPersoon_Aanvang
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Aanvang'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één NatuurlijkPersoon_Aanvang op
+            tags:
+                - np-loc
+    /natuurlijkpersoon_burgerschap_aanvang:
+        get:
+            operationId: getNatuurlijkPersoon_Burgerschap_AanvangLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    natuurlijkpersoon_burgerschap_aanvang:
+                                        items:
+                                            $ref: '#/components/schemas/NatuurlijkPersoon_Burgerschap_Aanvang'
+                                        type: array
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van natuurlijkpersoon_burgerschap_aanvang
+            tags:
+                - np-loc
+        post:
+            operationId: addNatuurlijkPersoon_Burgerschap_Aanvang
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Burgerschap_Aanvang'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Burgerschap_Aanvang'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een NatuurlijkPersoon_Burgerschap_Aanvang toe
+            tags:
+                - np-loc
+    /natuurlijkpersoon_burgerschap_aanvang/{id}:
+        get:
+            operationId: getNatuurlijkPersoon_Burgerschap_Aanvang
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Burgerschap_Aanvang'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één NatuurlijkPersoon_Burgerschap_Aanvang op
+            tags:
+                - np-loc
+    /natuurlijkpersoon_burgerschap_data:
+        get:
+            operationId: getNatuurlijkPersoon_Burgerschap_DataLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    natuurlijkpersoon_burgerschap_data:
+                                        items:
+                                            $ref: '#/components/schemas/NatuurlijkPersoon_Burgerschap_Data'
+                                        type: array
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van natuurlijkpersoon_burgerschap_data
+            tags:
+                - np-loc
+        post:
+            operationId: addNatuurlijkPersoon_Burgerschap_Data
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Burgerschap_Data'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Burgerschap_Data'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een NatuurlijkPersoon_Burgerschap_Data toe
+            tags:
+                - np-loc
+    /natuurlijkpersoon_burgerschap_data/{id}:
+        get:
+            operationId: getNatuurlijkPersoon_Burgerschap_Data
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Burgerschap_Data'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één NatuurlijkPersoon_Burgerschap_Data op
+            tags:
+                - np-loc
+    /natuurlijkpersoon_burgerschap_einde:
+        get:
+            operationId: getNatuurlijkPersoon_Burgerschap_EindeLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    natuurlijkpersoon_burgerschap_einde:
+                                        items:
+                                            $ref: '#/components/schemas/NatuurlijkPersoon_Burgerschap_Einde'
+                                        type: array
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van natuurlijkpersoon_burgerschap_einde
+            tags:
+                - np-loc
+        post:
+            operationId: addNatuurlijkPersoon_Burgerschap_Einde
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Burgerschap_Einde'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Burgerschap_Einde'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een NatuurlijkPersoon_Burgerschap_Einde toe
+            tags:
+                - np-loc
+    /natuurlijkpersoon_burgerschap_einde/{id}:
+        get:
+            operationId: getNatuurlijkPersoon_Burgerschap_Einde
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Burgerschap_Einde'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één NatuurlijkPersoon_Burgerschap_Einde op
+            tags:
+                - np-loc
+    /natuurlijkpersoon_einde:
+        get:
+            operationId: getNatuurlijkPersoon_EindeLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    natuurlijkpersoon_einde:
+                                        items:
+                                            $ref: '#/components/schemas/NatuurlijkPersoon_Einde'
+                                        type: array
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van natuurlijkpersoon_einde
+            tags:
+                - np-loc
+        post:
+            operationId: addNatuurlijkPersoon_Einde
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Einde'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Einde'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een NatuurlijkPersoon_Einde toe
+            tags:
+                - np-loc
+    /natuurlijkpersoon_einde/{id}:
+        get:
+            operationId: getNatuurlijkPersoon_Einde
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Einde'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één NatuurlijkPersoon_Einde op
+            tags:
+                - np-loc
+    /natuurlijkpersoon_naam_data:
+        get:
+            operationId: getNatuurlijkPersoon_Naam_DataLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    natuurlijkpersoon_naam_data:
+                                        items:
+                                            $ref: '#/components/schemas/NatuurlijkPersoon_Naam_Data'
+                                        type: array
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van natuurlijkpersoon_naam_data
+            tags:
+                - np-loc
+        post:
+            operationId: addNatuurlijkPersoon_Naam_Data
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Naam_Data'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Naam_Data'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een NatuurlijkPersoon_Naam_Data toe
+            tags:
+                - np-loc
+    /natuurlijkpersoon_naam_data/{id}:
+        get:
+            operationId: getNatuurlijkPersoon_Naam_Data
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Naam_Data'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één NatuurlijkPersoon_Naam_Data op
+            tags:
+                - np-loc
+    /natuurlijkpersoon_naamgebruik_data:
+        get:
+            operationId: getNatuurlijkPersoon_Naamgebruik_DataLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    natuurlijkpersoon_naamgebruik_data:
+                                        items:
+                                            $ref: '#/components/schemas/NatuurlijkPersoon_Naamgebruik_Data'
+                                        type: array
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van natuurlijkpersoon_naamgebruik_data
+            tags:
+                - np-loc
+        post:
+            operationId: addNatuurlijkPersoon_Naamgebruik_Data
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Naamgebruik_Data'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Naamgebruik_Data'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een NatuurlijkPersoon_Naamgebruik_Data toe
+            tags:
+                - np-loc
+    /natuurlijkpersoon_naamgebruik_data/{id}:
+        get:
+            operationId: getNatuurlijkPersoon_Naamgebruik_Data
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Naamgebruik_Data'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één NatuurlijkPersoon_Naamgebruik_Data op
+            tags:
+                - np-loc
+    /natuurlijkpersoon_partnernaam_data:
+        get:
+            operationId: getNatuurlijkPersoon_Partnernaam_DataLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    natuurlijkpersoon_partnernaam_data:
+                                        items:
+                                            $ref: '#/components/schemas/NatuurlijkPersoon_Partnernaam_Data'
+                                        type: array
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van natuurlijkpersoon_partnernaam_data
+            tags:
+                - np-loc
+        post:
+            operationId: addNatuurlijkPersoon_Partnernaam_Data
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Partnernaam_Data'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Partnernaam_Data'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een NatuurlijkPersoon_Partnernaam_Data toe
+            tags:
+                - np-loc
+    /natuurlijkpersoon_partnernaam_data/{id}:
+        get:
+            operationId: getNatuurlijkPersoon_Partnernaam_Data
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Partnernaam_Data'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één NatuurlijkPersoon_Partnernaam_Data op
+            tags:
+                - np-loc
+    /natuurlijkpersoon_persoonsidentificatie_data:
+        get:
+            operationId: getNatuurlijkPersoon_Persoonsidentificatie_DataLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    natuurlijkpersoon_persoonsidentificatie_data:
+                                        items:
+                                            $ref: '#/components/schemas/NatuurlijkPersoon_Persoonsidentificatie_Data'
+                                        type: array
+                                    page:
+                                        type: integer
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van natuurlijkpersoon_persoonsidentificatie_data
+            tags:
+                - np-loc
+        post:
+            operationId: addNatuurlijkPersoon_Persoonsidentificatie_Data
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Persoonsidentificatie_Data'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Persoonsidentificatie_Data'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een NatuurlijkPersoon_Persoonsidentificatie_Data toe
+            tags:
+                - np-loc
+    /natuurlijkpersoon_persoonsidentificatie_data/{id}:
+        get:
+            operationId: getNatuurlijkPersoon_Persoonsidentificatie_Data
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Persoonsidentificatie_Data'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één NatuurlijkPersoon_Persoonsidentificatie_Data op
+            tags:
+                - np-loc
+    /partnernamen:
+        get:
+            operationId: getNatuurlijkPersoon_PartnernaamLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    page:
+                                        type: integer
+                                    partnernamen:
+                                        items:
+                                            $ref: '#/components/schemas/NatuurlijkPersoon_Partnernaam'
+                                        type: array
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van partnernamen
+            tags:
+                - np-loc
+        post:
+            operationId: addNatuurlijkPersoon_Partnernaam
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Partnernaam'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Partnernaam'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een NatuurlijkPersoon_Partnernaam toe
+            tags:
+                - np-loc
+    /partnernamen/{id}:
+        get:
+            operationId: getNatuurlijkPersoon_Partnernaam
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Partnernaam'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één NatuurlijkPersoon_Partnernaam op
+            tags:
+                - np-loc
+    /persoonsidentificaties:
+        get:
+            operationId: getNatuurlijkPersoon_PersoonsidentificatieLijst
+            parameters:
+                - description: Paginanummer (1-gebaseerd)
+                  in: query
+                  name: page
+                  schema:
+                    default: 1
+                    type: integer
+                - description: Aantal resultaten per pagina
+                  in: query
+                  name: size
+                  schema:
+                    default: 20
+                    type: integer
+                - description: Zoekterm (ILIKE op tekstvelden)
+                  in: query
+                  name: q
+                  schema:
+                    type: string
+                - description: Sorteerveld
+                  in: query
+                  name: sort
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    has_more:
+                                        type: boolean
+                                    page:
+                                        type: integer
+                                    persoonsidentificaties:
+                                        items:
+                                            $ref: '#/components/schemas/NatuurlijkPersoon_Persoonsidentificatie'
+                                        type: array
+                                    size:
+                                        type: integer
+                                type: object
+                    description: Gepagineerde lijst
+            summary: Lijst van persoonsidentificaties
+            tags:
+                - np-loc
+        post:
+            operationId: addNatuurlijkPersoon_Persoonsidentificatie
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/NatuurlijkPersoon_Persoonsidentificatie'
+                required: true
+            responses:
+                "201":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Persoonsidentificatie'
+                    description: Aangemaakt
+                "400":
+                    description: Ongeldige payload
+            summary: Voeg een NatuurlijkPersoon_Persoonsidentificatie toe
+            tags:
+                - np-loc
+    /persoonsidentificaties/{id}:
+        get:
+            operationId: getNatuurlijkPersoon_Persoonsidentificatie
+            parameters:
+                - description: Uniek ID van de resource
+                  in: path
+                  name: id
+                  required: true
+                  schema:
+                    type: integer
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/NatuurlijkPersoon_Persoonsidentificatie'
+                    description: Resource gevonden
+                "404":
+                    description: Niet gevonden
+            summary: Haal één NatuurlijkPersoon_Persoonsidentificatie op
+            tags:
+                - np-loc
+servers:
+    - description: Lokale dev server
+      url: http://localhost:8082

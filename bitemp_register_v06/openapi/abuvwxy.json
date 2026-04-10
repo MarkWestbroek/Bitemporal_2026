@@ -1,0 +1,4104 @@
+{
+  "components": {
+    "schemas": {
+      "A": {
+        "description": "Entiteit A met materiele tijdlijn en onderliggende representaties U, V, W en Rel_A_B.",
+        "properties": {
+          "id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "AFull": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/A"
+          },
+          {
+            "properties": {
+              "aanvang": {
+                "items": {
+                  "$ref": "#/components/schemas/A_Aanvang"
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "einde": {
+                "items": {
+                  "$ref": "#/components/schemas/A_Einde"
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "rel_a_bs": {
+                "items": {
+                  "$ref": "#/components/schemas/Rel_A_B"
+                },
+                "type": "array"
+              },
+              "us": {
+                "items": {
+                  "$ref": "#/components/schemas/A_U"
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "vs": {
+                "items": {
+                  "$ref": "#/components/schemas/A_V"
+                },
+                "type": "array"
+              },
+              "ws": {
+                "items": {
+                  "$ref": "#/components/schemas/A_W"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        ],
+        "description": "Volledige A met alle geneste gegevenselementen en relaties"
+      },
+      "A_Aanvang": {
+        "description": "Aanvangsdatum van A.",
+        "properties": {
+          "a_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "datum": {
+            "format": "date",
+            "type": "string"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "a_id"
+        ],
+        "type": "object"
+      },
+      "A_Einde": {
+        "description": "Einddatum van A.",
+        "properties": {
+          "a_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "datum": {
+            "format": "date",
+            "type": "string"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "a_id"
+        ],
+        "type": "object"
+      },
+      "A_U": {
+        "description": "Enkelvoudig gegevenselement van A met formele tijdlijn.",
+        "properties": {
+          "a_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "aaa": {
+            "type": "string"
+          },
+          "bbb": {
+            "type": "boolean"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "a_id",
+          "rel_id",
+          "aaa"
+        ],
+        "type": "object"
+      },
+      "A_U_Data": {
+        "description": "Geversioned inhoud van A_U.",
+        "properties": {
+          "a_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "aaa": {
+            "type": "string"
+          },
+          "bbb": {
+            "type": "boolean"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "a_id",
+          "rel_id",
+          "aaa"
+        ],
+        "type": "object"
+      },
+      "A_V": {
+        "description": "Meervoudig gegevenselement van A met onder andere een datumveld.",
+        "properties": {
+          "a_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "ccc": {
+            "type": "string"
+          },
+          "ddd": {
+            "type": "string"
+          },
+          "eee": {
+            "type": "string"
+          },
+          "fff": {
+            "format": "double",
+            "type": "number"
+          },
+          "ggg": {
+            "enum": [
+              "Optie A",
+              "Optie B",
+              "Optie C"
+            ],
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "a_id",
+          "rel_id",
+          "ccc",
+          "fff",
+          "ggg"
+        ],
+        "type": "object"
+      },
+      "A_V_Data": {
+        "description": "Geversioned inhoud van A_V.",
+        "properties": {
+          "a_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "ccc": {
+            "type": "string"
+          },
+          "ddd": {
+            "type": "string"
+          },
+          "eee": {
+            "type": "string"
+          },
+          "fff": {
+            "format": "double",
+            "type": "number"
+          },
+          "ggg": {
+            "enum": [
+              "Optie A",
+              "Optie B",
+              "Optie C"
+            ],
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "a_id",
+          "rel_id",
+          "ccc",
+          "fff",
+          "ggg"
+        ],
+        "type": "object"
+      },
+      "A_W": {
+        "description": "Meervoudig gegevenselement van A met numerieke waarden.",
+        "properties": {
+          "a_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "aanvang": {
+            "format": "date",
+            "type": "string"
+          },
+          "einde": {
+            "format": "date",
+            "type": "string"
+          },
+          "float": {
+            "format": "double",
+            "type": "number"
+          },
+          "heel": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "a_id",
+          "rel_id",
+          "float",
+          "heel"
+        ],
+        "type": "object"
+      },
+      "A_W_Aanvang": {
+        "description": "Aanvangsdatum van A_W.",
+        "properties": {
+          "a_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "datum": {
+            "format": "date",
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "a_id",
+          "rel_id"
+        ],
+        "type": "object"
+      },
+      "A_W_Data": {
+        "description": "Geversioned inhoud van A_W.",
+        "properties": {
+          "a_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "float": {
+            "format": "double",
+            "type": "number"
+          },
+          "heel": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "a_id",
+          "rel_id",
+          "float",
+          "heel"
+        ],
+        "type": "object"
+      },
+      "A_W_Einde": {
+        "description": "Einddatum van A_W.",
+        "properties": {
+          "a_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "datum": {
+            "format": "date",
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "a_id",
+          "rel_id"
+        ],
+        "type": "object"
+      },
+      "B": {
+        "description": "Entiteit B met materiele tijdlijn en onderliggende representaties X en Y.",
+        "properties": {
+          "id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "BFull": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/B"
+          },
+          {
+            "properties": {
+              "aanvang": {
+                "items": {
+                  "$ref": "#/components/schemas/B_Aanvang"
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "einde": {
+                "items": {
+                  "$ref": "#/components/schemas/B_Einde"
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "xs": {
+                "items": {
+                  "$ref": "#/components/schemas/B_X"
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "ys": {
+                "items": {
+                  "$ref": "#/components/schemas/B_Y"
+                },
+                "maxItems": 1,
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        ],
+        "description": "Volledige B met alle geneste gegevenselementen en relaties"
+      },
+      "B_Aanvang": {
+        "description": "Aanvangsdatum van B.",
+        "properties": {
+          "b_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "datum": {
+            "format": "date",
+            "type": "string"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "b_id"
+        ],
+        "type": "object"
+      },
+      "B_Einde": {
+        "description": "Einddatum van B.",
+        "properties": {
+          "b_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "datum": {
+            "format": "date",
+            "type": "string"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "b_id"
+        ],
+        "type": "object"
+      },
+      "B_X": {
+        "description": "Enkelvoudig gegevenselement van B met twee tekstvelden.",
+        "properties": {
+          "b_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "fff": {
+            "type": "string"
+          },
+          "ggg": {
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "b_id",
+          "rel_id",
+          "fff",
+          "ggg"
+        ],
+        "type": "object"
+      },
+      "B_X_Data": {
+        "description": "Geversioned inhoud van B_X.",
+        "properties": {
+          "b_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "fff": {
+            "type": "string"
+          },
+          "ggg": {
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "b_id",
+          "rel_id",
+          "fff",
+          "ggg"
+        ],
+        "type": "object"
+      },
+      "B_Y": {
+        "description": "Enkelvoudig gegevenselement van B met een tekstveld.",
+        "properties": {
+          "b_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "hhh": {
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "b_id",
+          "rel_id",
+          "hhh"
+        ],
+        "type": "object"
+      },
+      "B_Y_Data": {
+        "description": "Geversioned inhoud van B_Y.",
+        "properties": {
+          "b_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "hhh": {
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "b_id",
+          "rel_id",
+          "hhh"
+        ],
+        "type": "object"
+      },
+      "Rel_A_B": {
+        "description": "Relatie tussen A en B, meervoudig voorkomend per A en met relatieve relatie-id.",
+        "properties": {
+          "a_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "aanvang": {
+            "format": "date",
+            "type": "string"
+          },
+          "b_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "einde": {
+            "format": "date",
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "soort": {
+            "enum": [
+              "LTT",
+              "LAT",
+              "LTA"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "a_id",
+          "rel_id",
+          "b_id",
+          "soort"
+        ],
+        "type": "object"
+      },
+      "Rel_A_B_Aanvang": {
+        "description": "Aanvangsdatum van Rel_A_B.",
+        "properties": {
+          "a_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "datum": {
+            "format": "date",
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "a_id",
+          "rel_id"
+        ],
+        "type": "object"
+      },
+      "Rel_A_B_Data": {
+        "description": "Geversioned inhoud van Rel_A_B.",
+        "properties": {
+          "a_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "soort": {
+            "enum": [
+              "LTT",
+              "LAT",
+              "LTA"
+            ],
+            "type": "string"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "a_id",
+          "rel_id",
+          "soort"
+        ],
+        "type": "object"
+      },
+      "Rel_A_B_Einde": {
+        "description": "Einddatum van Rel_A_B.",
+        "properties": {
+          "a_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "datum": {
+            "format": "date",
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "a_id",
+          "rel_id"
+        ],
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "contact": {
+      "email": "beheer@register.nl",
+      "name": "Bitemporeel Register beheerder"
+    },
+    "description": "OpenAPI 3.1.0 specificatie voor het domein 'abuvwxy', automatisch gegenereerd uit de MetaRegistry.",
+    "title": "Bitemporeel Register v06 — abuvwxy API",
+    "version": "0.6.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/a_aanvang": {
+      "get": {
+        "operationId": "getA_AanvangLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "a_aanvang": {
+                      "items": {
+                        "$ref": "#/components/schemas/A_Aanvang"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van a_aanvang",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addA_Aanvang",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/A_Aanvang"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_Aanvang"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een A_Aanvang toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/a_aanvang/{id}": {
+      "get": {
+        "operationId": "getA_Aanvang",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_Aanvang"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één A_Aanvang op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/a_einde": {
+      "get": {
+        "operationId": "getA_EindeLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "a_einde": {
+                      "items": {
+                        "$ref": "#/components/schemas/A_Einde"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van a_einde",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addA_Einde",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/A_Einde"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_Einde"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een A_Einde toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/a_einde/{id}": {
+      "get": {
+        "operationId": "getA_Einde",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_Einde"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één A_Einde op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/a_u_data": {
+      "get": {
+        "operationId": "getA_U_DataLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "a_u_data": {
+                      "items": {
+                        "$ref": "#/components/schemas/A_U_Data"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van a_u_data",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addA_U_Data",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/A_U_Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_U_Data"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een A_U_Data toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/a_u_data/{id}": {
+      "get": {
+        "operationId": "getA_U_Data",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_U_Data"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één A_U_Data op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/a_v_data": {
+      "get": {
+        "operationId": "getA_V_DataLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "a_v_data": {
+                      "items": {
+                        "$ref": "#/components/schemas/A_V_Data"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van a_v_data",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addA_V_Data",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/A_V_Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_V_Data"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een A_V_Data toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/a_v_data/{id}": {
+      "get": {
+        "operationId": "getA_V_Data",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_V_Data"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één A_V_Data op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/a_w_aanvang": {
+      "get": {
+        "operationId": "getA_W_AanvangLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "a_w_aanvang": {
+                      "items": {
+                        "$ref": "#/components/schemas/A_W_Aanvang"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van a_w_aanvang",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addA_W_Aanvang",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/A_W_Aanvang"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_W_Aanvang"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een A_W_Aanvang toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/a_w_aanvang/{id}": {
+      "get": {
+        "operationId": "getA_W_Aanvang",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_W_Aanvang"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één A_W_Aanvang op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/a_w_data": {
+      "get": {
+        "operationId": "getA_W_DataLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "a_w_data": {
+                      "items": {
+                        "$ref": "#/components/schemas/A_W_Data"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van a_w_data",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addA_W_Data",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/A_W_Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_W_Data"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een A_W_Data toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/a_w_data/{id}": {
+      "get": {
+        "operationId": "getA_W_Data",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_W_Data"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één A_W_Data op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/a_w_einde": {
+      "get": {
+        "operationId": "getA_W_EindeLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "a_w_einde": {
+                      "items": {
+                        "$ref": "#/components/schemas/A_W_Einde"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van a_w_einde",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addA_W_Einde",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/A_W_Einde"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_W_Einde"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een A_W_Einde toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/a_w_einde/{id}": {
+      "get": {
+        "operationId": "getA_W_Einde",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_W_Einde"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één A_W_Einde op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/as": {
+      "get": {
+        "operationId": "getALijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "as": {
+                      "items": {
+                        "$ref": "#/components/schemas/A"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van as",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addA",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/A"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een A toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/as/{id}": {
+      "get": {
+        "operationId": "getA",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één A op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/b_aanvang": {
+      "get": {
+        "operationId": "getB_AanvangLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "b_aanvang": {
+                      "items": {
+                        "$ref": "#/components/schemas/B_Aanvang"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van b_aanvang",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addB_Aanvang",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/B_Aanvang"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B_Aanvang"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een B_Aanvang toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/b_aanvang/{id}": {
+      "get": {
+        "operationId": "getB_Aanvang",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B_Aanvang"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één B_Aanvang op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/b_einde": {
+      "get": {
+        "operationId": "getB_EindeLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "b_einde": {
+                      "items": {
+                        "$ref": "#/components/schemas/B_Einde"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van b_einde",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addB_Einde",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/B_Einde"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B_Einde"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een B_Einde toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/b_einde/{id}": {
+      "get": {
+        "operationId": "getB_Einde",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B_Einde"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één B_Einde op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/b_x_data": {
+      "get": {
+        "operationId": "getB_X_DataLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "b_x_data": {
+                      "items": {
+                        "$ref": "#/components/schemas/B_X_Data"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van b_x_data",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addB_X_Data",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/B_X_Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B_X_Data"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een B_X_Data toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/b_x_data/{id}": {
+      "get": {
+        "operationId": "getB_X_Data",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B_X_Data"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één B_X_Data op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/b_y_data": {
+      "get": {
+        "operationId": "getB_Y_DataLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "b_y_data": {
+                      "items": {
+                        "$ref": "#/components/schemas/B_Y_Data"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van b_y_data",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addB_Y_Data",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/B_Y_Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B_Y_Data"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een B_Y_Data toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/b_y_data/{id}": {
+      "get": {
+        "operationId": "getB_Y_Data",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B_Y_Data"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één B_Y_Data op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/bs": {
+      "get": {
+        "operationId": "getBLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "bs": {
+                      "items": {
+                        "$ref": "#/components/schemas/B"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van bs",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addB",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/B"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een B toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/bs/{id}": {
+      "get": {
+        "operationId": "getB",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één B op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/full/as": {
+      "get": {
+        "operationId": "getFullALijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Formeel peiltijdstip (ISO 8601). Alleen naar het verleden.",
+            "in": "query",
+            "name": "t",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "as": {
+                      "items": {
+                        "$ref": "#/components/schemas/AFull"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst met geneste GEs"
+          }
+        },
+        "summary": "Lijst van as met geneste gegevenselementen",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addFullA",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AFull"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AFull"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een volledige A toe met geneste GEs",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/full/as/{id}": {
+      "get": {
+        "operationId": "getFullA",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Formeel peiltijdstip (ISO 8601). Alleen naar het verleden.",
+            "in": "query",
+            "name": "t",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AFull"
+                }
+              }
+            },
+            "description": "Volledige entiteit met geneste GEs"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Volledige A met alle geneste gegevenselementen",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/full/bs": {
+      "get": {
+        "operationId": "getFullBLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Formeel peiltijdstip (ISO 8601). Alleen naar het verleden.",
+            "in": "query",
+            "name": "t",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "bs": {
+                      "items": {
+                        "$ref": "#/components/schemas/BFull"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst met geneste GEs"
+          }
+        },
+        "summary": "Lijst van bs met geneste gegevenselementen",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addFullB",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BFull"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BFull"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een volledige B toe met geneste GEs",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/full/bs/{id}": {
+      "get": {
+        "operationId": "getFullB",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Formeel peiltijdstip (ISO 8601). Alleen naar het verleden.",
+            "in": "query",
+            "name": "t",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BFull"
+                }
+              }
+            },
+            "description": "Volledige entiteit met geneste GEs"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Volledige B met alle geneste gegevenselementen",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/rel_a_b_aanvang": {
+      "get": {
+        "operationId": "getRel_A_B_AanvangLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "rel_a_b_aanvang": {
+                      "items": {
+                        "$ref": "#/components/schemas/Rel_A_B_Aanvang"
+                      },
+                      "type": "array"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van rel_a_b_aanvang",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addRel_A_B_Aanvang",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Rel_A_B_Aanvang"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rel_A_B_Aanvang"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Rel_A_B_Aanvang toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/rel_a_b_aanvang/{id}": {
+      "get": {
+        "operationId": "getRel_A_B_Aanvang",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rel_A_B_Aanvang"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Rel_A_B_Aanvang op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/rel_a_b_data": {
+      "get": {
+        "operationId": "getRel_A_B_DataLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "rel_a_b_data": {
+                      "items": {
+                        "$ref": "#/components/schemas/Rel_A_B_Data"
+                      },
+                      "type": "array"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van rel_a_b_data",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addRel_A_B_Data",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Rel_A_B_Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rel_A_B_Data"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Rel_A_B_Data toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/rel_a_b_data/{id}": {
+      "get": {
+        "operationId": "getRel_A_B_Data",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rel_A_B_Data"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Rel_A_B_Data op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/rel_a_b_einde": {
+      "get": {
+        "operationId": "getRel_A_B_EindeLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "rel_a_b_einde": {
+                      "items": {
+                        "$ref": "#/components/schemas/Rel_A_B_Einde"
+                      },
+                      "type": "array"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van rel_a_b_einde",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addRel_A_B_Einde",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Rel_A_B_Einde"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rel_A_B_Einde"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Rel_A_B_Einde toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/rel_a_b_einde/{id}": {
+      "get": {
+        "operationId": "getRel_A_B_Einde",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rel_A_B_Einde"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Rel_A_B_Einde op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/rel_a_bs": {
+      "get": {
+        "operationId": "getRel_A_BLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "rel_a_bs": {
+                      "items": {
+                        "$ref": "#/components/schemas/Rel_A_B"
+                      },
+                      "type": "array"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van rel_a_bs",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addRel_A_B",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Rel_A_B"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rel_A_B"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Rel_A_B toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/rel_a_bs/{id}": {
+      "get": {
+        "operationId": "getRel_A_B",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rel_A_B"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Rel_A_B op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/us": {
+      "get": {
+        "operationId": "getA_ULijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "us": {
+                      "items": {
+                        "$ref": "#/components/schemas/A_U"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van us",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addA_U",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/A_U"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_U"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een A_U toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/us/{id}": {
+      "get": {
+        "operationId": "getA_U",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_U"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één A_U op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/vs": {
+      "get": {
+        "operationId": "getA_VLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "vs": {
+                      "items": {
+                        "$ref": "#/components/schemas/A_V"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van vs",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addA_V",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/A_V"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_V"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een A_V toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/vs/{id}": {
+      "get": {
+        "operationId": "getA_V",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_V"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één A_V op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/ws": {
+      "get": {
+        "operationId": "getA_WLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "ws": {
+                      "items": {
+                        "$ref": "#/components/schemas/A_W"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van ws",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addA_W",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/A_W"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_W"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een A_W toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/ws/{id}": {
+      "get": {
+        "operationId": "getA_W",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/A_W"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één A_W op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/xs": {
+      "get": {
+        "operationId": "getB_XLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "xs": {
+                      "items": {
+                        "$ref": "#/components/schemas/B_X"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van xs",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addB_X",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/B_X"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B_X"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een B_X toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/xs/{id}": {
+      "get": {
+        "operationId": "getB_X",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B_X"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één B_X op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/ys": {
+      "get": {
+        "operationId": "getB_YLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "ys": {
+                      "items": {
+                        "$ref": "#/components/schemas/B_Y"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van ys",
+        "tags": [
+          "abuvwxy"
+        ]
+      },
+      "post": {
+        "operationId": "addB_Y",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/B_Y"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B_Y"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een B_Y toe",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    },
+    "/ys/{id}": {
+      "get": {
+        "operationId": "getB_Y",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/B_Y"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één B_Y op",
+        "tags": [
+          "abuvwxy"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "description": "Lokale dev server",
+      "url": "http://localhost:8082"
+    }
+  ]
+}

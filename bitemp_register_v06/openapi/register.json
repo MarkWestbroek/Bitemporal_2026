@@ -1,0 +1,4031 @@
+{
+  "components": {
+    "schemas": {
+      "AdellijkeTitelsTitel": {
+        "description": "Koppeling van een adellijke titel aan referentielijst-instantie AdellijkeTitels (referentielijst-items relatie).",
+        "properties": {
+          "adellijketitel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "referentielijst_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "referentielijst_id",
+          "rel_id",
+          "adellijketitel_id"
+        ],
+        "type": "object"
+      },
+      "AdellijkeTitelsTitel_Data": {
+        "description": "Geversioned inhoud van AdellijkeTitelsTitel.",
+        "properties": {
+          "referentielijst_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "referentielijst_id",
+          "rel_id"
+        ],
+        "type": "object"
+      },
+      "Land": {
+        "description": "Referentielijst-item: individueel land.",
+        "properties": {
+          "id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "LandFull": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Land"
+          },
+          {
+            "properties": {
+              "aanvang": {
+                "items": {
+                  "$ref": "#/components/schemas/Land_Aanvang"
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "einde": {
+                "items": {
+                  "$ref": "#/components/schemas/Land_Einde"
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "landcodes": {
+                "items": {
+                  "$ref": "#/components/schemas/Land_Landcode"
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "landnamen": {
+                "items": {
+                  "$ref": "#/components/schemas/Land_Landnaam"
+                },
+                "maxItems": 1,
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        ],
+        "description": "Volledige Land met alle geneste gegevenselementen en relaties"
+      },
+      "Land_Aanvang": {
+        "description": "Aanvangsdatum van Land.",
+        "properties": {
+          "datum": {
+            "format": "date",
+            "type": "string"
+          },
+          "land_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "land_id"
+        ],
+        "type": "object"
+      },
+      "Land_Einde": {
+        "description": "Einddatum van Land.",
+        "properties": {
+          "datum": {
+            "format": "date",
+            "type": "string"
+          },
+          "land_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "land_id"
+        ],
+        "type": "object"
+      },
+      "Land_Landcode": {
+        "description": "Enkelvoudig gegevenselement landcode van Land.",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "land_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "land_id",
+          "rel_id",
+          "code"
+        ],
+        "type": "object"
+      },
+      "Land_Landcode_Data": {
+        "description": "Geversioned inhoud van Land_Landcode.",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "land_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "land_id",
+          "rel_id",
+          "code"
+        ],
+        "type": "object"
+      },
+      "Land_Landnaam": {
+        "description": "Enkelvoudig gegevenselement landnaam van Land.",
+        "properties": {
+          "land_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "naam": {
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "land_id",
+          "rel_id",
+          "naam"
+        ],
+        "type": "object"
+      },
+      "Land_Landnaam_Data": {
+        "description": "Geversioned inhoud van Land_Landnaam.",
+        "properties": {
+          "land_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "naam": {
+            "type": "string"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "land_id",
+          "rel_id",
+          "naam"
+        ],
+        "type": "object"
+      },
+      "LandenlijstLand": {
+        "description": "Koppeling van een land aan referentielijst-instantie Landenlijst (referentielijst-items relatie).",
+        "properties": {
+          "land_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "referentielijst_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "referentielijst_id",
+          "rel_id",
+          "land_id"
+        ],
+        "type": "object"
+      },
+      "LandenlijstLand_Data": {
+        "description": "Geversioned inhoud van LandenlijstLand.",
+        "properties": {
+          "referentielijst_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "referentielijst_id",
+          "rel_id"
+        ],
+        "type": "object"
+      },
+      "Referentielijst": {
+        "description": "Generieke referentielijst-entiteit. Individuele lijsten (Landenlijst, EULidstaten, etc.) zijn records.",
+        "properties": {
+          "id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "ReferentielijstFull": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Referentielijst"
+          },
+          {
+            "properties": {
+              "aanvang": {
+                "items": {
+                  "$ref": "#/components/schemas/Referentielijst_Aanvang"
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "adellijke_titels_titels": {
+                "items": {
+                  "$ref": "#/components/schemas/AdellijkeTitelsTitel"
+                },
+                "type": "array"
+              },
+              "einde": {
+                "items": {
+                  "$ref": "#/components/schemas/Referentielijst_Einde"
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "internetadressen": {
+                "items": {
+                  "$ref": "#/components/schemas/Referentielijst_ReferentielijstInternetadres"
+                },
+                "type": "array"
+              },
+              "landenlijst_landen": {
+                "items": {
+                  "$ref": "#/components/schemas/LandenlijstLand"
+                },
+                "type": "array"
+              },
+              "referentielijstnamen": {
+                "items": {
+                  "$ref": "#/components/schemas/Referentielijst_Referentielijstnaam"
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "referentielijstomschrijvingen": {
+                "items": {
+                  "$ref": "#/components/schemas/Referentielijst_Referentielijstomschrijving"
+                },
+                "maxItems": 1,
+                "type": "array"
+              },
+              "visibilities": {
+                "items": {
+                  "$ref": "#/components/schemas/Referentielijst_ReferentielijstVisibility"
+                },
+                "maxItems": 1,
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        ],
+        "description": "Volledige Referentielijst met alle geneste gegevenselementen en relaties"
+      },
+      "Referentielijst_Aanvang": {
+        "description": "Aanvangsdatum van Referentielijst.",
+        "properties": {
+          "datum": {
+            "format": "date",
+            "type": "string"
+          },
+          "referentielijst_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "referentielijst_id"
+        ],
+        "type": "object"
+      },
+      "Referentielijst_Einde": {
+        "description": "Einddatum van Referentielijst.",
+        "properties": {
+          "datum": {
+            "format": "date",
+            "type": "string"
+          },
+          "referentielijst_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "referentielijst_id"
+        ],
+        "type": "object"
+      },
+      "Referentielijst_ReferentielijstInternetadres": {
+        "description": "Internetadres (URL/URN) van een referentielijst.",
+        "properties": {
+          "adres": {
+            "type": "string"
+          },
+          "adrestype": {
+            "enum": [
+              "URL",
+              "URN"
+            ],
+            "type": "string"
+          },
+          "organisatie": {
+            "type": "string"
+          },
+          "referentielijst_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "referentielijst_id",
+          "rel_id",
+          "adrestype",
+          "adres",
+          "organisatie"
+        ],
+        "type": "object"
+      },
+      "Referentielijst_ReferentielijstInternetadres_Data": {
+        "description": "Geversioned inhoud van Referentielijst_ReferentielijstInternetadres.",
+        "properties": {
+          "adres": {
+            "type": "string"
+          },
+          "adrestype": {
+            "enum": [
+              "URL",
+              "URN"
+            ],
+            "type": "string"
+          },
+          "organisatie": {
+            "type": "string"
+          },
+          "referentielijst_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "referentielijst_id",
+          "rel_id",
+          "adrestype",
+          "adres",
+          "organisatie"
+        ],
+        "type": "object"
+      },
+      "Referentielijst_ReferentielijstVisibility": {
+        "description": "Domeinzichtbaarheid van een referentielijst (register, modelspecifiek, extern).",
+        "properties": {
+          "domein": {
+            "type": "string"
+          },
+          "referentielijst_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "referentielijst_id",
+          "rel_id",
+          "domein"
+        ],
+        "type": "object"
+      },
+      "Referentielijst_ReferentielijstVisibility_Data": {
+        "description": "Geversioned inhoud van Referentielijst_ReferentielijstVisibility.",
+        "properties": {
+          "domein": {
+            "type": "string"
+          },
+          "referentielijst_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "referentielijst_id",
+          "rel_id",
+          "domein"
+        ],
+        "type": "object"
+      },
+      "Referentielijst_Referentielijstnaam": {
+        "description": "Leesbare naam van een referentielijst.",
+        "properties": {
+          "naam": {
+            "type": "string"
+          },
+          "referentielijst_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "referentielijst_id",
+          "rel_id",
+          "naam"
+        ],
+        "type": "object"
+      },
+      "Referentielijst_Referentielijstnaam_Data": {
+        "description": "Geversioned inhoud van Referentielijst_Referentielijstnaam.",
+        "properties": {
+          "naam": {
+            "type": "string"
+          },
+          "referentielijst_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "referentielijst_id",
+          "rel_id",
+          "naam"
+        ],
+        "type": "object"
+      },
+      "Referentielijst_Referentielijstomschrijving": {
+        "description": "Omschrijving van een referentielijst.",
+        "properties": {
+          "omschrijving": {
+            "type": "string"
+          },
+          "referentielijst_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "referentielijst_id",
+          "rel_id",
+          "omschrijving"
+        ],
+        "type": "object"
+      },
+      "Referentielijst_Referentielijstomschrijving_Data": {
+        "description": "Geversioned inhoud van Referentielijst_Referentielijstomschrijving.",
+        "properties": {
+          "omschrijving": {
+            "type": "string"
+          },
+          "referentielijst_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "rel_id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "versie": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "referentielijst_id",
+          "rel_id",
+          "omschrijving"
+        ],
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "contact": {
+      "email": "beheer@register.nl",
+      "name": "Bitemporeel Register beheerder"
+    },
+    "description": "OpenAPI 3.1.0 specificatie voor het domein 'register', automatisch gegenereerd uit de MetaRegistry.",
+    "title": "Bitemporeel Register v06 — register API",
+    "version": "0.6.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/adellijke_titels_titels": {
+      "get": {
+        "operationId": "getAdellijkeTitelsTitelLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "adellijke_titels_titels": {
+                      "items": {
+                        "$ref": "#/components/schemas/AdellijkeTitelsTitel"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van adellijke_titels_titels",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addAdellijkeTitelsTitel",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdellijkeTitelsTitel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdellijkeTitelsTitel"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een AdellijkeTitelsTitel toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/adellijke_titels_titels/{id}": {
+      "get": {
+        "operationId": "getAdellijkeTitelsTitel",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdellijkeTitelsTitel"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één AdellijkeTitelsTitel op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/adellijketitelstitel_data": {
+      "get": {
+        "operationId": "getAdellijkeTitelsTitel_DataLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "adellijketitelstitel_data": {
+                      "items": {
+                        "$ref": "#/components/schemas/AdellijkeTitelsTitel_Data"
+                      },
+                      "type": "array"
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van adellijketitelstitel_data",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addAdellijkeTitelsTitel_Data",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdellijkeTitelsTitel_Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdellijkeTitelsTitel_Data"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een AdellijkeTitelsTitel_Data toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/adellijketitelstitel_data/{id}": {
+      "get": {
+        "operationId": "getAdellijkeTitelsTitel_Data",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdellijkeTitelsTitel_Data"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één AdellijkeTitelsTitel_Data op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/full/landen": {
+      "get": {
+        "operationId": "getFullLandLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Formeel peiltijdstip (ISO 8601). Alleen naar het verleden.",
+            "in": "query",
+            "name": "t",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "landen": {
+                      "items": {
+                        "$ref": "#/components/schemas/LandFull"
+                      },
+                      "type": "array"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst met geneste GEs"
+          }
+        },
+        "summary": "Lijst van landen met geneste gegevenselementen",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addFullLand",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LandFull"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LandFull"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een volledige Land toe met geneste GEs",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/full/landen/{id}": {
+      "get": {
+        "operationId": "getFullLand",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Formeel peiltijdstip (ISO 8601). Alleen naar het verleden.",
+            "in": "query",
+            "name": "t",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LandFull"
+                }
+              }
+            },
+            "description": "Volledige entiteit met geneste GEs"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Volledige Land met alle geneste gegevenselementen",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/full/referentielijsten": {
+      "get": {
+        "operationId": "getFullReferentielijstLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Formeel peiltijdstip (ISO 8601). Alleen naar het verleden.",
+            "in": "query",
+            "name": "t",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "referentielijsten": {
+                      "items": {
+                        "$ref": "#/components/schemas/ReferentielijstFull"
+                      },
+                      "type": "array"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst met geneste GEs"
+          }
+        },
+        "summary": "Lijst van referentielijsten met geneste gegevenselementen",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addFullReferentielijst",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReferentielijstFull"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferentielijstFull"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een volledige Referentielijst toe met geneste GEs",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/full/referentielijsten/{id}": {
+      "get": {
+        "operationId": "getFullReferentielijst",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Formeel peiltijdstip (ISO 8601). Alleen naar het verleden.",
+            "in": "query",
+            "name": "t",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferentielijstFull"
+                }
+              }
+            },
+            "description": "Volledige entiteit met geneste GEs"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Volledige Referentielijst met alle geneste gegevenselementen",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/internetadressen": {
+      "get": {
+        "operationId": "getReferentielijst_ReferentielijstInternetadresLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "internetadressen": {
+                      "items": {
+                        "$ref": "#/components/schemas/Referentielijst_ReferentielijstInternetadres"
+                      },
+                      "type": "array"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van internetadressen",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addReferentielijst_ReferentielijstInternetadres",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Referentielijst_ReferentielijstInternetadres"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_ReferentielijstInternetadres"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Referentielijst_ReferentielijstInternetadres toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/internetadressen/{id}": {
+      "get": {
+        "operationId": "getReferentielijst_ReferentielijstInternetadres",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_ReferentielijstInternetadres"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Referentielijst_ReferentielijstInternetadres op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/land_aanvang": {
+      "get": {
+        "operationId": "getLand_AanvangLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "land_aanvang": {
+                      "items": {
+                        "$ref": "#/components/schemas/Land_Aanvang"
+                      },
+                      "type": "array"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van land_aanvang",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addLand_Aanvang",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Land_Aanvang"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Land_Aanvang"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Land_Aanvang toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/land_aanvang/{id}": {
+      "get": {
+        "operationId": "getLand_Aanvang",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Land_Aanvang"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Land_Aanvang op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/land_einde": {
+      "get": {
+        "operationId": "getLand_EindeLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "land_einde": {
+                      "items": {
+                        "$ref": "#/components/schemas/Land_Einde"
+                      },
+                      "type": "array"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van land_einde",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addLand_Einde",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Land_Einde"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Land_Einde"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Land_Einde toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/land_einde/{id}": {
+      "get": {
+        "operationId": "getLand_Einde",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Land_Einde"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Land_Einde op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/land_landcode_data": {
+      "get": {
+        "operationId": "getLand_Landcode_DataLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "land_landcode_data": {
+                      "items": {
+                        "$ref": "#/components/schemas/Land_Landcode_Data"
+                      },
+                      "type": "array"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van land_landcode_data",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addLand_Landcode_Data",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Land_Landcode_Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Land_Landcode_Data"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Land_Landcode_Data toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/land_landcode_data/{id}": {
+      "get": {
+        "operationId": "getLand_Landcode_Data",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Land_Landcode_Data"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Land_Landcode_Data op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/land_landnaam_data": {
+      "get": {
+        "operationId": "getLand_Landnaam_DataLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "land_landnaam_data": {
+                      "items": {
+                        "$ref": "#/components/schemas/Land_Landnaam_Data"
+                      },
+                      "type": "array"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van land_landnaam_data",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addLand_Landnaam_Data",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Land_Landnaam_Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Land_Landnaam_Data"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Land_Landnaam_Data toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/land_landnaam_data/{id}": {
+      "get": {
+        "operationId": "getLand_Landnaam_Data",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Land_Landnaam_Data"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Land_Landnaam_Data op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/landcodes": {
+      "get": {
+        "operationId": "getLand_LandcodeLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "landcodes": {
+                      "items": {
+                        "$ref": "#/components/schemas/Land_Landcode"
+                      },
+                      "type": "array"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van landcodes",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addLand_Landcode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Land_Landcode"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Land_Landcode"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Land_Landcode toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/landcodes/{id}": {
+      "get": {
+        "operationId": "getLand_Landcode",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Land_Landcode"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Land_Landcode op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/landen": {
+      "get": {
+        "operationId": "getLandLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "landen": {
+                      "items": {
+                        "$ref": "#/components/schemas/Land"
+                      },
+                      "type": "array"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van landen",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addLand",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Land"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Land"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Land toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/landen/{id}": {
+      "get": {
+        "operationId": "getLand",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Land"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Land op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/landenlijst_landen": {
+      "get": {
+        "operationId": "getLandenlijstLandLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "landenlijst_landen": {
+                      "items": {
+                        "$ref": "#/components/schemas/LandenlijstLand"
+                      },
+                      "type": "array"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van landenlijst_landen",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addLandenlijstLand",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LandenlijstLand"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LandenlijstLand"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een LandenlijstLand toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/landenlijst_landen/{id}": {
+      "get": {
+        "operationId": "getLandenlijstLand",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LandenlijstLand"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één LandenlijstLand op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/landenlijstland_data": {
+      "get": {
+        "operationId": "getLandenlijstLand_DataLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "landenlijstland_data": {
+                      "items": {
+                        "$ref": "#/components/schemas/LandenlijstLand_Data"
+                      },
+                      "type": "array"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van landenlijstland_data",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addLandenlijstLand_Data",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LandenlijstLand_Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LandenlijstLand_Data"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een LandenlijstLand_Data toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/landenlijstland_data/{id}": {
+      "get": {
+        "operationId": "getLandenlijstLand_Data",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LandenlijstLand_Data"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één LandenlijstLand_Data op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/landnamen": {
+      "get": {
+        "operationId": "getLand_LandnaamLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "landnamen": {
+                      "items": {
+                        "$ref": "#/components/schemas/Land_Landnaam"
+                      },
+                      "type": "array"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van landnamen",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addLand_Landnaam",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Land_Landnaam"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Land_Landnaam"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Land_Landnaam toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/landnamen/{id}": {
+      "get": {
+        "operationId": "getLand_Landnaam",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Land_Landnaam"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Land_Landnaam op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/referentielijst_aanvang": {
+      "get": {
+        "operationId": "getReferentielijst_AanvangLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "referentielijst_aanvang": {
+                      "items": {
+                        "$ref": "#/components/schemas/Referentielijst_Aanvang"
+                      },
+                      "type": "array"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van referentielijst_aanvang",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addReferentielijst_Aanvang",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Referentielijst_Aanvang"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_Aanvang"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Referentielijst_Aanvang toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/referentielijst_aanvang/{id}": {
+      "get": {
+        "operationId": "getReferentielijst_Aanvang",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_Aanvang"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Referentielijst_Aanvang op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/referentielijst_einde": {
+      "get": {
+        "operationId": "getReferentielijst_EindeLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "referentielijst_einde": {
+                      "items": {
+                        "$ref": "#/components/schemas/Referentielijst_Einde"
+                      },
+                      "type": "array"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van referentielijst_einde",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addReferentielijst_Einde",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Referentielijst_Einde"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_Einde"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Referentielijst_Einde toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/referentielijst_einde/{id}": {
+      "get": {
+        "operationId": "getReferentielijst_Einde",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_Einde"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Referentielijst_Einde op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/referentielijst_referentielijstinternetadres_data": {
+      "get": {
+        "operationId": "getReferentielijst_ReferentielijstInternetadres_DataLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "referentielijst_referentielijstinternetadres_data": {
+                      "items": {
+                        "$ref": "#/components/schemas/Referentielijst_ReferentielijstInternetadres_Data"
+                      },
+                      "type": "array"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van referentielijst_referentielijstinternetadres_data",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addReferentielijst_ReferentielijstInternetadres_Data",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Referentielijst_ReferentielijstInternetadres_Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_ReferentielijstInternetadres_Data"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Referentielijst_ReferentielijstInternetadres_Data toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/referentielijst_referentielijstinternetadres_data/{id}": {
+      "get": {
+        "operationId": "getReferentielijst_ReferentielijstInternetadres_Data",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_ReferentielijstInternetadres_Data"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Referentielijst_ReferentielijstInternetadres_Data op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/referentielijst_referentielijstnaam_data": {
+      "get": {
+        "operationId": "getReferentielijst_Referentielijstnaam_DataLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "referentielijst_referentielijstnaam_data": {
+                      "items": {
+                        "$ref": "#/components/schemas/Referentielijst_Referentielijstnaam_Data"
+                      },
+                      "type": "array"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van referentielijst_referentielijstnaam_data",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addReferentielijst_Referentielijstnaam_Data",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Referentielijst_Referentielijstnaam_Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_Referentielijstnaam_Data"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Referentielijst_Referentielijstnaam_Data toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/referentielijst_referentielijstnaam_data/{id}": {
+      "get": {
+        "operationId": "getReferentielijst_Referentielijstnaam_Data",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_Referentielijstnaam_Data"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Referentielijst_Referentielijstnaam_Data op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/referentielijst_referentielijstomschrijving_data": {
+      "get": {
+        "operationId": "getReferentielijst_Referentielijstomschrijving_DataLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "referentielijst_referentielijstomschrijving_data": {
+                      "items": {
+                        "$ref": "#/components/schemas/Referentielijst_Referentielijstomschrijving_Data"
+                      },
+                      "type": "array"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van referentielijst_referentielijstomschrijving_data",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addReferentielijst_Referentielijstomschrijving_Data",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Referentielijst_Referentielijstomschrijving_Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_Referentielijstomschrijving_Data"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Referentielijst_Referentielijstomschrijving_Data toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/referentielijst_referentielijstomschrijving_data/{id}": {
+      "get": {
+        "operationId": "getReferentielijst_Referentielijstomschrijving_Data",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_Referentielijstomschrijving_Data"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Referentielijst_Referentielijstomschrijving_Data op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/referentielijst_referentielijstvisibility_data": {
+      "get": {
+        "operationId": "getReferentielijst_ReferentielijstVisibility_DataLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "referentielijst_referentielijstvisibility_data": {
+                      "items": {
+                        "$ref": "#/components/schemas/Referentielijst_ReferentielijstVisibility_Data"
+                      },
+                      "type": "array"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van referentielijst_referentielijstvisibility_data",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addReferentielijst_ReferentielijstVisibility_Data",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Referentielijst_ReferentielijstVisibility_Data"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_ReferentielijstVisibility_Data"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Referentielijst_ReferentielijstVisibility_Data toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/referentielijst_referentielijstvisibility_data/{id}": {
+      "get": {
+        "operationId": "getReferentielijst_ReferentielijstVisibility_Data",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_ReferentielijstVisibility_Data"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Referentielijst_ReferentielijstVisibility_Data op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/referentielijsten/referentielijsten": {
+      "get": {
+        "operationId": "getReferentielijstLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "referentielijsten": {
+                      "items": {
+                        "$ref": "#/components/schemas/Referentielijst"
+                      },
+                      "type": "array"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van referentielijsten",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addReferentielijst",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Referentielijst"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Referentielijst toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/referentielijsten/referentielijsten/{id}": {
+      "get": {
+        "operationId": "getReferentielijst",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Referentielijst op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/referentielijstnamen": {
+      "get": {
+        "operationId": "getReferentielijst_ReferentielijstnaamLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "referentielijstnamen": {
+                      "items": {
+                        "$ref": "#/components/schemas/Referentielijst_Referentielijstnaam"
+                      },
+                      "type": "array"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van referentielijstnamen",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addReferentielijst_Referentielijstnaam",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Referentielijst_Referentielijstnaam"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_Referentielijstnaam"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Referentielijst_Referentielijstnaam toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/referentielijstnamen/{id}": {
+      "get": {
+        "operationId": "getReferentielijst_Referentielijstnaam",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_Referentielijstnaam"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Referentielijst_Referentielijstnaam op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/referentielijstomschrijvingen": {
+      "get": {
+        "operationId": "getReferentielijst_ReferentielijstomschrijvingLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "referentielijstomschrijvingen": {
+                      "items": {
+                        "$ref": "#/components/schemas/Referentielijst_Referentielijstomschrijving"
+                      },
+                      "type": "array"
+                    },
+                    "size": {
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van referentielijstomschrijvingen",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addReferentielijst_Referentielijstomschrijving",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Referentielijst_Referentielijstomschrijving"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_Referentielijstomschrijving"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Referentielijst_Referentielijstomschrijving toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/referentielijstomschrijvingen/{id}": {
+      "get": {
+        "operationId": "getReferentielijst_Referentielijstomschrijving",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_Referentielijstomschrijving"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Referentielijst_Referentielijstomschrijving op",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/visibilities": {
+      "get": {
+        "operationId": "getReferentielijst_ReferentielijstVisibilityLijst",
+        "parameters": [
+          {
+            "description": "Paginanummer (1-gebaseerd)",
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "default": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Aantal resultaten per pagina",
+            "in": "query",
+            "name": "size",
+            "schema": {
+              "default": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Zoekterm (ILIKE op tekstvelden)",
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Sorteerveld",
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "visibilities": {
+                      "items": {
+                        "$ref": "#/components/schemas/Referentielijst_ReferentielijstVisibility"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Gepagineerde lijst"
+          }
+        },
+        "summary": "Lijst van visibilities",
+        "tags": [
+          "register"
+        ]
+      },
+      "post": {
+        "operationId": "addReferentielijst_ReferentielijstVisibility",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Referentielijst_ReferentielijstVisibility"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_ReferentielijstVisibility"
+                }
+              }
+            },
+            "description": "Aangemaakt"
+          },
+          "400": {
+            "description": "Ongeldige payload"
+          }
+        },
+        "summary": "Voeg een Referentielijst_ReferentielijstVisibility toe",
+        "tags": [
+          "register"
+        ]
+      }
+    },
+    "/visibilities/{id}": {
+      "get": {
+        "operationId": "getReferentielijst_ReferentielijstVisibility",
+        "parameters": [
+          {
+            "description": "Uniek ID van de resource",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referentielijst_ReferentielijstVisibility"
+                }
+              }
+            },
+            "description": "Resource gevonden"
+          },
+          "404": {
+            "description": "Niet gevonden"
+          }
+        },
+        "summary": "Haal één Referentielijst_ReferentielijstVisibility op",
+        "tags": [
+          "register"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "description": "Lokale dev server",
+      "url": "http://localhost:8082"
+    }
+  ]
+}
