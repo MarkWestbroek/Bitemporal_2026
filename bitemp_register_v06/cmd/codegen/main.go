@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/schemadiff"
 )
 
 func main() {
@@ -22,6 +23,8 @@ func main() {
 	prefix := flag.String("prefix", "", "Bestandsnaam-prefix voor gegenereerde bestanden (bijv. 'hr' → hr_modellen_entiteiten.go)")
 	mode := flag.String("mode", "standalone", "Generatiemodus: 'standalone' (eigen var MetaRegistry) of 'additive' (init() voegt toe aan bestaande MetaRegistry)")
 	domein := flag.String("domein", "", "Domeinnaam voor TypeMeta.Domein (bijv. 'np-loc', 'register')")
+	diffFile := flag.String("diff", "", "Pad naar oud model voor delta-analyse vóór generatie (optioneel)")
+	diffOnly := flag.Bool("diff-only", false, "Alleen delta-analyse, niet genereren")
 	flag.Parse()
 
 	if *inputFile == "" && *fromURL == "" {
@@ -32,6 +35,8 @@ func main() {
 		fmt.Fprintln(os.Stderr, "  --prefix <naam>   Bestandsprefix (bijv. --prefix hr → hr_modellen_entiteiten.go)")
 		fmt.Fprintln(os.Stderr, "  --mode <modus>    'standalone' (default) of 'additive' (voegt toe via init())")
 		fmt.Fprintln(os.Stderr, "  --domein <naam>   Domeinnaam voor TypeMeta.Domein (bijv. --domein np-loc)")
+		fmt.Fprintln(os.Stderr, "  --diff <pad>      Vergelijk met oud model en toon delta vóór generatie")
+		fmt.Fprintln(os.Stderr, "  --diff-only       Alleen delta-analyse, niet genereren")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Tips:")
 		fmt.Fprintln(os.Stderr, "  - De inputfile is niet hardcoded; elk pad mag, model.json is alleen een voorbeeldnaam.")
@@ -126,6 +131,51 @@ func main() {
 			}
 		}
 		v3.Enums = filteredEnums
+	}
+
+	// ---- Delta-analyse (optioneel) ----
+	if *diffFile != "" {
+		oudData, err := os.ReadFile(*diffFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Kan oud model niet lezen voor diff: %v\n", err)
+			os.Exit(1)
+		}
+		oudModel, err := parseV3ModelInput(oudData)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Kan oud model niet parsen voor diff: %v\n", err)
+			os.Exit(1)
+		}
+
+		var diffOpties []schemadiff.VergelijkOptie
+		if *domein != "" {
+			diffOpties = append(diffOpties, schemadiff.MetDomeinFilter(*domein))
+		}
+		rapport := schemadiff.Vergelijk(oudModel, v3, diffOpties...)
+
+		fmt.Fprintf(os.Stderr, "\n%s\n", rapport.Samenvatting())
+		if rapport.IsBreaking() {
+			fmt.Fprintf(os.Stderr, "⚠ Breaking changes: %d destructief, %d modificatie\n",
+				len(rapport.Destructief()), len(rapport.Modificaties()))
+		}
+		if rapport.HeeftDBMigratie() {
+			migratie := schemadiff.GenereerMigratie(rapport)
+			migDir := filepath.Join(*outputDir, "..", "dbsetup", "migrations")
+			if err := os.MkdirAll(migDir, 0750); err == nil {
+				migPad := filepath.Join(migDir, migratie.Bestandsnaam())
+				if err := os.WriteFile(migPad, []byte(migratie.AlsSQL()), 0644); err != nil {
+					fmt.Fprintf(os.Stderr, "Kan migratiebestand niet schrijven: %v\n", err)
+				} else {
+					fmt.Fprintf(os.Stderr, "Migratiebestand: %s\n", migPad)
+				}
+			}
+		}
+
+		if *diffOnly {
+			if rapport.IsBreaking() {
+				os.Exit(2)
+			}
+			os.Exit(0)
+		}
 	}
 
 	// Maak de output directory aan als die niet bestaat

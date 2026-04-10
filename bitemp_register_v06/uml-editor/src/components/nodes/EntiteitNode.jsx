@@ -18,7 +18,7 @@
  *   - Top target handle: hier komen edges binnen (niet typisch voor entiteiten, maar voor flexibiliteit)
  */
 import { memo } from "react";
-import { Handle, Position } from "@xyflow/react";
+import { Handle, NodeResizer, Position } from "@xyflow/react";
 import { useOvergeerfdeVelden } from "../../hooks/useOvergeerfdeVelden";
 
 function EntiteitNode({ id, data, selected }) {
@@ -30,9 +30,17 @@ function EntiteitNode({ id, data, selected }) {
       className="metamodel-node entiteit-node"
       style={{
         borderColor,
+        borderWidth: 3,
         backgroundColor: data.kleur || "#bfdbfe",
       }}
     >
+      <NodeResizer
+        minWidth={180}
+        minHeight={80}
+        isVisible={selected}
+        lineStyle={{ borderColor }}
+        handleStyle={{ width: 10, height: 10, borderRadius: 3, borderColor, background: "#ffffff" }}
+      />
       {/* Handles op alle zijden voor flexibele edge-aansluitingen */}
       <Handle type="target" position={Position.Top} id="target-top" />
       <Handle type="source" position={Position.Bottom} id="source-bottom" />
@@ -61,31 +69,32 @@ function EntiteitNode({ id, data, selected }) {
       {/* Scheidingslijn */}
       <div className="node-divider" />
 
-      {/* Velden (attributen) */}
-      <div className="node-velden">
-        {(data.velden || []).length === 0 ? (
-          <div className="node-veld leeg">— geen velden —</div>
-        ) : (
-          data.velden.map((v, i) => (
-            <div key={i} className="node-veld">
-              <span className="veld-naam">
-                {v.afgeleid && <span style={{ color: "#f59e0b" }}>/</span>}
-                {v.verplicht ? (
-                  <strong>{v.naam}</strong>
-                ) : (
-                  <span>{v.naam}</span>
-                )}
-              </span>
-              <span className="veld-type">
-                {v.enumNaam || v.datatypeNaam || v.type}
-                {!v.enumNaam && !v.datatypeNaam && v.format ? ` «${v.format}»` : ""}
-                {v.autoIncrement ? " {AI}" : ""}
-                {!v.enumNaam && v.enum ? ` {${v.enum.join("|")}}` : ""}
-              </span>
-            </div>
-          ))
-        )}
-      </div>
+      {/* Velden (attributen) — verborgen voor entiteiten als er geen zijn */}
+      {(data.velden || []).length > 0 && (
+        <>
+          <div className="node-divider" />
+          <div className="node-velden">
+            {data.velden.map((v, i) => (
+              <div key={i} className="node-veld">
+                <span className="veld-naam">
+                  {v.afgeleid && <span style={{ color: "#f59e0b" }}>/</span>}
+                  {v.verplicht ? (
+                    <strong>{v.naam}</strong>
+                  ) : (
+                    <span>{v.naam}</span>
+                  )}
+                </span>
+                <span className="veld-type">
+                  {v.enumNaam || v.datatypeNaam || v.type}
+                  {!v.enumNaam && !v.datatypeNaam && v.format ? ` «${v.format}»` : ""}
+                  {v.autoIncrement ? " {AI}" : ""}
+                  {!v.enumNaam && v.enum ? ` {${v.enum.join("|")}}` : ""}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Afgeleide velden op entiteit-niveau */}
       {(data.afgeleideVelden || []).length > 0 && (

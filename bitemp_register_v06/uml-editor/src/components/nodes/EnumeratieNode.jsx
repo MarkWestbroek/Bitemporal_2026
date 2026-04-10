@@ -11,7 +11,7 @@
  *   └─────────────────────────┘
  */
 import { memo } from "react";
-import { Handle, Position } from "@xyflow/react";
+import { Handle, NodeResizer, Position } from "@xyflow/react";
 
 function EnumeratieNode({ data, selected }) {
   const borderColor = selected ? "#d97706" : "#94a3b8";
@@ -24,6 +24,13 @@ function EnumeratieNode({ data, selected }) {
         backgroundColor: "#fef3c7",
       }}
     >
+      <NodeResizer
+        minWidth={180}
+        minHeight={70}
+        isVisible={selected}
+        lineStyle={{ borderColor }}
+        handleStyle={{ width: 10, height: 10, borderRadius: 3, borderColor, background: "#ffffff" }}
+      />
       {/* Handles op alle zijden */}
       <Handle type="target" position={Position.Top} id="target-top" />
       <Handle type="source" position={Position.Bottom} id="source-bottom" />

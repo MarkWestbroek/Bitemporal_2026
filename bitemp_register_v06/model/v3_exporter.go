@@ -2,6 +2,7 @@ package model
 
 import (
 	"reflect"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -560,34 +561,11 @@ func collectEnums(velden []V3Veld, enums *[]V3Enum, seen map[string]bool) {
 }
 
 // buildV3Enum bouwt een V3Enum door de enum-waarden te extraheren via EnumWaarden registry.
-// Vangt eerst bekende hardcoded enum-types op, dan fallback naar EnumWaarden.
+// reNonIdent verwijdert alle tekens die ongeldig zijn in een Go-identifier.
+var reNonIdent = regexp.MustCompile(`[^A-Za-z0-9_]`)
+
+// buildV3Enum bouwt een V3Enum door de enum-waarden te extraheren via EnumWaarden registry.
 func buildV3Enum(goTypeName string) *V3Enum {
-	// Bekende enums — geladen uit Go constants
-	switch goTypeName {
-	case "RelABSoort":
-		return &V3Enum{
-			GoType:   "RelABSoort",
-			BaseType: "string",
-			Domein:   EnumDomeinen["RelABSoort"],
-			Waarden: []V3EnumWaarde{
-				{ConstNaam: "RelABSoortLTT", Waarde: "LTT"},
-				{ConstNaam: "RelABSoortLAT", Waarde: "LAT"},
-				{ConstNaam: "RelABSoortLTA", Waarde: "LTA"},
-			},
-		}
-	case "ABCEnum":
-		return &V3Enum{
-			GoType:   "ABCEnum",
-			BaseType: "string",
-			Domein:   EnumDomeinen["ABCEnum"],
-			Waarden: []V3EnumWaarde{
-				{ConstNaam: "OptieA", Waarde: "Optie A"},
-				{ConstNaam: "OptieB", Waarde: "Optie B"},
-				{ConstNaam: "OptieC", Waarde: "Optie C"},
-			},
-		}
-	}
-	// Fallback: gebruik EnumWaarden registry
 	waarden, ok := EnumWaarden[goTypeName]
 	if !ok || len(waarden) == 0 {
 		return nil
@@ -598,8 +576,7 @@ func buildV3Enum(goTypeName string) *V3Enum {
 		Domein:   EnumDomeinen[goTypeName],
 	}
 	for _, w := range waarden {
-		// Strip tekens die ongeldig zijn in Go-identifiers (bijv. koppeltekens)
-		cleanW := strings.ReplaceAll(w, "-", "")
+		cleanW := reNonIdent.ReplaceAllString(w, "")
 		enum.Waarden = append(enum.Waarden, V3EnumWaarde{
 			ConstNaam: goTypeName + cleanW,
 			Waarde:    w,

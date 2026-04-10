@@ -23,6 +23,7 @@ import { Tree } from "react-arborist";
 import useModelStore from "../store/useModelStore";
 import useUIStore from "../store/useUIStore";
 import BrowserContextMenu from "./BrowserContextMenu";
+import { voegNieuwRepToe } from "./repCreation";
 
 // Iconen per element-type
 const ICONS = {
@@ -175,11 +176,22 @@ let _flatVisibleIds = [];          // platte lijst zichtbare draggable node-ids
 function TreeNode({ node, style }) {
   const selectedElementId = useUIStore((s) => s.selectedElementId);
   const dragGhostRef = useRef(null);
+  const verwijderDragGhostVeilig = useCallback(() => {
+    const ghost = dragGhostRef.current;
+    if (ghost?.parentNode) {
+      ghost.parentNode.removeChild(ghost);
+    }
+    dragGhostRef.current = null;
+  }, []);
   const isDetailSelected = node.data.id === selectedElementId;
   const isMultiSelected = _multiSelected.has(node.data.id);
   const isHighlighted = isDetailSelected || isMultiSelected;
   const isFolder = node.children && node.children.length > 0;
   const isDraggable = !["domain", "diagrams", "diagram"].includes(node.data.nodeType);
+
+  useEffect(() => () => {
+    verwijderDragGhostVeilig();
+  }, [verwijderDragGhostVeilig]);
 
   const handleClick = useCallback((e) => {
     // Domein-klik: selecteer in DetailsPanel, maar niet draggable/multi-select
@@ -224,7 +236,7 @@ function TreeNode({ node, style }) {
       _setMultiSelected?.(new Set());
       _lastClickedId = node.data.id;
     }
-  }, [node.data.id, isDraggable]);
+  }, [node.data.id, isDraggable, verwijderDragGhostVeilig]);
 
   return (
     <div
@@ -278,10 +290,7 @@ function TreeNode({ node, style }) {
         e.dataTransfer.effectAllowed = "copy";
 
         // Drag ghost
-        if (dragGhostRef.current) {
-          document.body.removeChild(dragGhostRef.current);
-          dragGhostRef.current = null;
-        }
+        verwijderDragGhostVeilig();
         const ghost = document.createElement("div");
         ghost.textContent = dragItems.length > 1
           ? `${dragItems.length} elementen`
@@ -292,10 +301,7 @@ function TreeNode({ node, style }) {
         dragGhostRef.current = ghost;
       }}
       onDragEnd={() => {
-        if (dragGhostRef.current) {
-          document.body.removeChild(dragGhostRef.current);
-          dragGhostRef.current = null;
-        }
+        verwijderDragGhostVeilig();
       }}
       onContextMenu={(e) => {
         e.preventDefault();
@@ -413,6 +419,37 @@ export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram }) {
         case "kopieerID":
           navigator.clipboard?.writeText(nodeData.id);
           break;
+        case "verwijder": {
+          const el = useModelStore.getState().elements[nodeData.id];
+          const naam = el?.naam || el?.data?.typenaam || nodeData.id;
+          if (window.confirm(`Weet je zeker dat je "${naam}" uit het model wilt verwijderen?`)) {
+            useModelStore.getState().deleteElement(nodeData.id);
+            setSelectedElementId(null);
+          }
+          break;
+        }
+        case "nieuwEntiteit":
+          voegNieuwRepToe("entiteit", { domein: nodeData.name === "(geen domein)" ? "" : nodeData.name });
+          break;
+        case "nieuwEnumeratie":
+          voegNieuwRepToe("enumeratie", { domein: nodeData.name === "(geen domein)" ? "" : nodeData.name });
+          break;
+        case "nieuwGegevenstype":
+          voegNieuwRepToe("gegevenstype", { domein: nodeData.name === "(geen domein)" ? "" : nodeData.name });
+          break;
+        case "nieuwReferentielijst":
+          voegNieuwRepToe("referentielijst", { domein: nodeData.name === "(geen domein)" ? "" : nodeData.name });
+          break;
+        case "nieuwGE": {
+          const el = useModelStore.getState().elements[nodeData.id];
+          voegNieuwRepToe("gegevenselement", { parentId: nodeData.id, parentDomein: el?.domein || "" });
+          break;
+        }
+        case "nieuwRelatie": {
+          const el = useModelStore.getState().elements[nodeData.id];
+          voegNieuwRepToe("relatie", { parentId: nodeData.id, parentDomein: el?.domein || "" });
+          break;
+        }
         case "nieuwDiagram":
           onCreateDiagram?.();
           break;

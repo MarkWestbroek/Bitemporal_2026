@@ -9,6 +9,19 @@ Doel:
 - Data behouden in een aparte database.
 - Geen afhankelijkheid van docker compose.
 
+## Beschikbare Docker-varianten in deze repo
+
+- `docker-compose.yml` — bestaande gecombineerde stack met database + API.
+- `docker-compose.api-only.yml` — alleen de API-image; database draait elders of in een aparte stack.
+- `docker-compose.devloop.yml` — ontwikkel/devloop-variant met self-rebuild flow.
+- `docker-compose.split.yml` — **nieuw**: aparte backend-image én aparte frontend-image, plus PostgreSQL in één extra compose-bestand.
+- `docker-compose.frontend-only.yml` — alleen de frontend-image; API draait elders (extern of aparte stack).
+
+Bij de split-variant horen ook:
+- `Dockerfile.api` — bouwt alleen de Go-backend.
+- `Dockerfile.frontend` — bouwt alleen de Vite/nginx-frontend.
+- `nginx.frontend.conf` — reverse proxy zodat frontend en API via dezelfde origin werken.
+
 ## 1. Vereisten
 
 - Docker Engine op je machine of server.
@@ -93,6 +106,91 @@ Opmerking:
 - De runtime-image bevat geen Node/Vite dev server.
 - Alleen de Go binary en de benodigde statische `/viz` assets worden meegenomen.
 - Build opnieuw na relevante frontend- of Dockerfile-wijzigingen en push een nieuwe tag.
+
+## 2A. Frontend + backend als twee losse exporteerbare images
+
+Als je backend en frontend los wilt uitrollen of als aparte `.tar` wilt exporteren, gebruik dan de nieuwe split-variant:
+
+- compose: `docker-compose.split.yml`
+- backend Dockerfile: `Dockerfile.api`
+- frontend Dockerfile: `Dockerfile.frontend`
+
+### Builden
+
+```bash
+docker compose -f docker-compose.split.yml build
+```
+
+### Starten
+
+```bash
+docker compose -f docker-compose.split.yml up -d
+```
+
+Standaard draait dan:
+- frontend op `http://localhost:8083/viz/react/`
+- API direct op `http://localhost:8082/`
+
+De frontend-image serveert alleen de Vite-build via nginx. Alle API-calls naar `/api`, `/full`, `/registratie`, `/docs`, `/swagger`, `/redoc`, enz. worden doorgeproxied naar de backend-container, zodat `window.location.origin` gewoon blijft werken.
+
+### Los exporteren als bestanden
+
+```bash
+docker save -o bitemp-go-api_v06-split.tar bitemp-go-api:v06-split
+docker save -o bitemp-viz-frontend_v06-split.tar bitemp-viz-frontend:v06-split
+```
+
+### Weer inladen op een andere machine
+
+```bash
+docker load -i bitemp-go-api_v06-split.tar
+docker load -i bitemp-viz-frontend_v06-split.tar
+```
+
+> Gebruik `FRONTEND_PORT`, `API_PORT` en `PG_PORT` in `.env.docker` als je deze stack naast een bestaande deployment wilt laten draaien.
+
+## 2B. Alleen de frontend (tegen een externe API)
+
+Als de API al ergens draait en je alleen de frontend wilt deployen:
+
+```bash
+# Bouw met de URL van de externe API
+docker compose -f docker-compose.frontend-only.yml build \
+  --build-arg VITE_API_BASE_URL=https://api.example.com
+
+# Start
+docker compose -f docker-compose.frontend-only.yml up -d
+```
+
+De frontend draait dan op `http://localhost:8083/viz/react/`. Zorg dat `VITE_API_BASE_URL` naar je API wijst (inclusief protocol en poort).
+
+## 2C. Selectieve domeinbuild (deelverzameling van modellen)
+
+Het register bevat meerdere gegenereerde domeinen. Met het selectieve-build script (`scripts/selectieve-build.ps1`) kun je de API compileren met alleen de gewenste domeinen. De domeinen **abuvwxy** en **register** worden altijd meegenomen.
+
+Optionele domeinen: `np_loc`, `cg`, `configuratie`, `financieel`.
+
+### Voorbeelden
+
+```powershell
+# Alleen abuvwxy + register + np_loc
+.\scripts\selectieve-build.ps1 -Include np_loc
+
+# Alles behalve financieel en cg
+.\scripts\selectieve-build.ps1 -Exclude financieel,cg
+
+# Met Docker image erbij
+.\scripts\selectieve-build.ps1 -Include np_loc -DockerBuild -DockerTag bitemp-api:np-loc
+```
+
+### Hoe werkt het?
+
+1. Verplaatst de `model/{prefix}_*.go` bestanden van uitgesloten domeinen naar `_temp/model_exclude/`.
+2. Commentarieert de bijbehorende `init...()` calls uit in `metaregistry_plumbing.go`.
+3. Voert `go build ./...` uit (en optioneel `docker build`).
+4. Herstelt **altijd** alle bestanden naar de originele staat (ook bij fouten).
+
+Routes, handlers en DB-setup zijn volledig generiek (gedreven door de MetaRegistry), dus die hoeven niet aangepast — alleen de model-bestanden en de init-registratie tellen.
 
 ## 3. API starten (zonder compose)
 

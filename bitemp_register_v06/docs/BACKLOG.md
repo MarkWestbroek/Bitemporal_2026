@@ -407,8 +407,12 @@ ONGEDAANMAKING VAN EEN ONGEDAANMAKING
 
 ---
 
-## 17. model/ontwerpkeuzen.md — Delta-analyse (toekomst)
+## 17. model/ontwerpkeuzen.md — Delta-analyse ✅ GEÏMPLEMENTEERD
 
+**Status**: volledig geïmplementeerd in `schemadiff/` package + `cmd/schemadiff/` CLI + `--diff`/`--diff-only` in codegen.
+Zie [docs/schemadiff.md](schemadiff.md) voor volledige documentatie.
+
+Oorspronkelijk plan:
 ```
 Bij een upgrade van het metamodel is het waardevol om een delta te bepalen tussen de
 huidige en de voorgestelde versie. Deze delta kan achterhalen of de upgrade breaking of
@@ -536,8 +540,8 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 |---|------|------|
 | D1 | createmodeltables.go → meer generieke aanpak | dbsetup/createmodeltables.go |
 | D2 | Generator: optie om project leeg te halen / drop tables / migreer | README.md |
-| D3 | Delta-analyse CLI tool (cmd/schemadiff/) | model/ontwerpkeuzen.md |
-| D4 | DDL-migratiescripts genereren (ALTER TABLE ADD COLUMN) | model/ontwerpkeuzen.md |
+| ~~D3~~ | ~~Delta-analyse CLI tool (cmd/schemadiff/)~~ **✅ DONE** — zie docs/schemadiff.md | model/ontwerpkeuzen.md |
+| ~~D4~~ | ~~DDL-migratiescripts genereren (ALTER TABLE ADD COLUMN)~~ **✅ DONE** — schemadiff/migration.go | model/ontwerpkeuzen.md |
 | D5 | Items-relatie FK constraint (DB CHECK) | Referentielijsten.md |
 
 ### GraphQL
@@ -587,10 +591,10 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | E8 | Export naar MIM linked data JSON | README.md |
 | E9 | Kleur uit EA importeren | README.md |
 | E10| (ook IDE) Extra REP veld "Alias" | nieuw |
-| E11| Node resize: gebruiker kan nodes groter/kleiner maken (React Flow `<NodeResizer>`) | nieuw |
-| E12| ENT-node dikkere rand als standaardstijl (border-width 2-3px) | nieuw |
-| E13| ENT→ENT edge trekken = nieuwe REL aanmaken (collapsed/ASOC-small, geen velden) | nieuw |
-| E14| Ctrl-drag vanuit ENT-handle naar canvas = nieuwe GE aanmaken op die positie, gekoppeld aan bron-ENT (via `onConnectEnd`) | nieuw |
+| E11| ✅ Node resize: gebruiker kan nodes groter/kleiner maken (React Flow `<NodeResizer>`) + CSS max-width verwijderd | nieuw |
+| E12| ✅ ENT-node dikkere rand als standaardstijl (border-width 3px vast) | nieuw |
+| E13| ✅ ENT→ENT edge trekken = nieuwe REL aanmaken (collapsed/ASOC-small, geen velden) + genormaliseerde handles | nieuw |
+| E14| ✅ Ctrl-drag vanuit ENT bottom-handle naar canvas = nieuwe GE aanmaken, genormaliseerde edge | nieuw |
 
 
 ### IDE (metamodel-ontwerp omgeving)
@@ -616,6 +620,11 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I17 | IDE toolbar + rechtsklik: normaliseer en snap-to-grid knoppen toevoegen | nieuw |
 | I18 | Verplaatsbare toolbars: drag naar gewenste positie, snap verticaal bij zijranden / horizontaal bij boven-/onderrand | nieuw |
 | I19 | PB rechtsklik: "Nieuw element" per type (rechtsklik op ENT → nieuw GE, etc.) | nieuw |
+| I20 | ✅ PB rechtsklik: "Verwijder uit model" element verwijderen inclusief alle diagrammen | nieuw |
+| I21 | ✅ Domein auto-toevoegen: updateElement voegt nieuw domein automatisch toe aan domeinlijst | nieuw |
+| I22 | ✅ AlignToolbar verticale layout: toolbar wisselt correct naar kolom-layout bij verticale snap | nieuw |
+| I23 | ✅ Lege veldencompartimenten verbergen: ENT toont geen velden-compartiment, GE/REL tonen leeg vak i.p.v. "— geen velden —" | nieuw |
+| I24 | ✅ NodeEditPanel: velden-sectie verborgen voor entiteiten (alleen afgeleide velden beschikbaar) | nieuw |
 
 
 ### Frontend — Content Editor (Inhoud-editor)
@@ -734,7 +743,7 @@ Focus: van IDE-model naar werkende Go-code zonder handmatig bijwerken.
 | 1 | **C1** Fix alle 9 gaps in codegen | Basisbetrouwbaarheid |
 | 2 | **C3** Roundtrip-test np-loc model | Bewijs dat codegen correct is |
 | 3 | **O1–O4** Overerving in TypeMeta, DB, handlers, schema-API | Foundations voor generalisatie |
-| 4 | **D3–D4** Delta-analyse CLI + DDL-migratie | Veilig upgraden van modellen |
+| ~~4~~ | ~~**D3–D4** Delta-analyse CLI + DDL-migratie~~ **✅ DONE** | Veilig upgraden van modellen |
 | 5 | **C4** Codegen voor referentielijsten | Referentielijsten mee laten genereren |
 
 ### Increment 2C — Backend verrijking

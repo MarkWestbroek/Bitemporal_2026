@@ -99,6 +99,41 @@ const useModelStore = create(
       /** Markeer het model als opgeslagen (isDirty = false). */
       markSaved: () => set({ isDirty: false }),
 
+      /** Voeg één model-element toe en houd de domeinlijst automatisch bij. */
+      addElement: (element) =>
+        set((state) => {
+          if (!element?.id) return state;
+          const volgendeDomeinen = element.domein && !state.domains.includes(element.domein)
+            ? [...state.domains, element.domein].sort()
+            : state.domains;
+          return {
+            isDirty: true,
+            elements: {
+              ...state.elements,
+              [element.id]: element,
+            },
+            domains: volgendeDomeinen,
+          };
+        }),
+
+      /** Voeg meerdere model-elementen in één mutatie toe. */
+      addElements: (items = []) =>
+        set((state) => {
+          const geldigeItems = (items || []).filter((item) => item?.id);
+          if (geldigeItems.length === 0) return state;
+          const nieuweElements = { ...state.elements };
+          const domeinen = new Set(state.domains);
+          for (const item of geldigeItems) {
+            nieuweElements[item.id] = item;
+            if (item.domein) domeinen.add(item.domein);
+          }
+          return {
+            isDirty: true,
+            elements: nieuweElements,
+            domains: [...domeinen].sort(),
+          };
+        }),
+
       /**
        * Update een element. `patch` kan top-level velden bevatten (naam, domein)
        * en/of een genest `data`-object dat gemerged wordt met bestaande data.
@@ -113,8 +148,14 @@ const useModelStore = create(
           const el = state.elements[id];
           if (!el) return state;
           const { data: dataPatch, ...topPatch } = patch;
+          // Auto-add nieuw domein aan de domeinlijst
+          const nieuwDomein = topPatch.domein || null;
+          const volgendeDomeinen = nieuwDomein && !state.domains.includes(nieuwDomein)
+            ? [...state.domains, nieuwDomein].sort()
+            : state.domains;
           return {
             isDirty: true,
+            domains: volgendeDomeinen,
             elements: {
               ...state.elements,
               [id]: {

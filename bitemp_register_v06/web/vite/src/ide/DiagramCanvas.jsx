@@ -35,6 +35,7 @@ import MetamodelEdge from "@editor/components/edges/MetamodelEdge";
 
 import useModelStore from "../store/useModelStore";
 import useUIStore from "../store/useUIStore";
+import { maakRelatieTussenEntiteiten, voegNieuwRepToe } from "./repCreation";
 
 const nodeTypes = {
   entiteit: EntiteitNode,
@@ -105,18 +106,208 @@ const ALIGN_BUTTONS = [
   { mode: "distribute-v", title: "Verdeel verticaal",   icon: <AlignIcon><line x1="1" y1="1" x2="15" y2="1"/><line x1="1" y1="15" x2="15" y2="15"/><rect x="4" y="4" width="8" height="3" fill="currentColor" stroke="none"/><rect x="4" y="9" width="8" height="3" fill="currentColor" stroke="none"/></AlignIcon> },
 ];
 
-function AlignToolbar({ alignNodes }) {
+const CREATE_BUTTONS = [
+  { kind: "entiteit", label: "ENT", title: "Nieuwe entiteit" },
+  { kind: "gegevenselement", label: "GE", title: "Nieuw gegevenselement" },
+  { kind: "relatie", label: "REL", title: "Nieuwe relatie" },
+  { kind: "enumeratie", label: "ENUM", title: "Nieuwe enumeratie" },
+  { kind: "gegevenstype", label: "TYPE", title: "Nieuw gegevenstype" },
+  { kind: "referentielijst", label: "REFSET", title: "Nieuwe referentielijst-set" },
+  { kind: "referentielijstInstantie", label: "REF", title: "Nieuwe referentielijst-instantie" },
+];
+
+function AlignToolbar({ alignNodes, onNormaliseer, onSnapGrid, embedded = false, isVertical = false }) {
   return (
-    <div className="ide-align-toolbar">
+    <div
+      className="ide-align-toolbar"
+      style={embedded ? { position: "static", top: "auto", left: "auto", transform: "none", boxShadow: "none", border: "none", background: "transparent", padding: 0, flexDirection: isVertical ? "column" : "row" } : undefined}
+    >
       {ALIGN_BUTTONS.map((btn, i) =>
         btn === "sep" ? (
-          <span key={i} className="ide-align-sep" />
+          <span key={i} className="ide-align-sep" style={isVertical ? { width: "100%", height: 1, margin: "2px 0" } : undefined} />
         ) : (
           <button key={btn.mode} title={btn.title} onClick={() => alignNodes(btn.mode)}>
             {btn.icon}
           </button>
         )
       )}
+      {(onNormaliseer || onSnapGrid) && <span className="ide-align-sep" />}
+      {onNormaliseer && (
+        <button title="Normaliseer alle relaties" onClick={onNormaliseer}>
+          ↔
+        </button>
+      )}
+      {onSnapGrid && (
+        <button title="Snap alle nodes naar het grid" onClick={onSnapGrid}>
+          ⊞
+        </button>
+      )}
+    </div>
+  );
+}
+
+const FLOATING_TOOLBAR_STORAGE_KEY = "ide-floating-toolbar-layouts";
+const DEFAULT_TOOLBAR_LAYOUTS = {
+  create: { x: 12, y: 12, orientation: "horizontal" },
+  layout: { x: 12, y: 82, orientation: "horizontal" },
+};
+
+function leesToolbarLayouts() {
+  if (typeof window === "undefined") return DEFAULT_TOOLBAR_LAYOUTS;
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(FLOATING_TOOLBAR_STORAGE_KEY) || "null");
+    return {
+      create: { ...DEFAULT_TOOLBAR_LAYOUTS.create, ...(parsed?.create || {}) },
+      layout: { ...DEFAULT_TOOLBAR_LAYOUTS.layout, ...(parsed?.layout || {}) },
+    };
+  } catch {
+    return DEFAULT_TOOLBAR_LAYOUTS;
+  }
+}
+
+function bewaarToolbarLayouts(layouts) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(FLOATING_TOOLBAR_STORAGE_KEY, JSON.stringify(layouts));
+  } catch {
+    // localStorage niet beschikbaar is niet fataal.
+  }
+}
+
+function snapToolbarLayout(layout, containerRect, toolbarRect) {
+  if (!containerRect || !toolbarRect) return layout;
+  const leftThreshold = 42;
+  const edgePadding = 8;
+  const topThreshold = 42;
+  const rightDistance = containerRect.width - (layout.x + toolbarRect.width);
+  const bottomDistance = containerRect.height - (layout.y + toolbarRect.height);
+
+  if (layout.x <= leftThreshold) {
+    return { ...layout, x: edgePadding, orientation: "vertical" };
+  }
+  if (rightDistance <= leftThreshold) {
+    return {
+      ...layout,
+      x: Math.max(edgePadding, containerRect.width - toolbarRect.width - edgePadding),
+      orientation: "vertical",
+    };
+  }
+  if (layout.y <= topThreshold) {
+    return { ...layout, y: edgePadding, orientation: "horizontal" };
+  }
+  if (bottomDistance <= topThreshold) {
+    return {
+      ...layout,
+      y: Math.max(edgePadding, containerRect.height - toolbarRect.height - edgePadding),
+      orientation: "horizontal",
+    };
+  }
+  return layout;
+}
+
+function FloatingToolbar({ title, layout, onLayoutChange, children }) {
+  const rootRef = useRef(null);
+  const dragStateRef = useRef(null);
+
+  useEffect(() => {
+    const handleMouseMove = (event) => {
+      const state = dragStateRef.current;
+      if (!state) return;
+      const rect = state.containerRect;
+      const toolbarRect = rootRef.current?.getBoundingClientRect();
+      const width = toolbarRect?.width || 220;
+      const height = toolbarRect?.height || 48;
+      const nextX = Math.min(
+        Math.max(8, event.clientX - rect.left - state.offsetX),
+        Math.max(8, rect.width - width - 8)
+      );
+      const nextY = Math.min(
+        Math.max(8, event.clientY - rect.top - state.offsetY),
+        Math.max(8, rect.height - height - 8)
+      );
+      onLayoutChange({ ...layout, x: nextX, y: nextY });
+    };
+
+    const handleMouseUp = () => {
+      const state = dragStateRef.current;
+      if (!state) return;
+      dragStateRef.current = null;
+      const toolbarRect = rootRef.current?.getBoundingClientRect();
+      onLayoutChange(snapToolbarLayout(layout, state.containerRect, toolbarRect));
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [layout, onLayoutChange]);
+
+  const handleDragStart = useCallback((event) => {
+    if (event.button !== 0) return;
+    const canvas = rootRef.current?.closest(".ide-canvas");
+    const containerRect = canvas?.getBoundingClientRect();
+    if (!containerRect) return;
+    dragStateRef.current = {
+      containerRect,
+      offsetX: event.clientX - containerRect.left - (layout.x || 0),
+      offsetY: event.clientY - containerRect.top - (layout.y || 0),
+    };
+    event.preventDefault();
+    event.stopPropagation();
+  }, [layout]);
+
+  const isVertical = layout?.orientation === "vertical";
+
+  return (
+    <div
+      ref={rootRef}
+      style={{
+        position: "absolute",
+        left: layout?.x ?? 12,
+        top: layout?.y ?? 12,
+        zIndex: 12,
+        display: "flex",
+        flexDirection: "column",
+        gap: 0,
+        borderRadius: 8,
+        overflow: "hidden",
+        border: "1px solid var(--ide-toolbar-border)",
+        background: "var(--ide-toolbar-bg)",
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.25)",
+        maxWidth: isVertical ? 90 : "min(720px, calc(100% - 16px))",
+      }}
+    >
+      <div
+        onMouseDown={handleDragStart}
+        style={{
+          cursor: "grab",
+          userSelect: "none",
+          padding: "3px 8px",
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: 0.2,
+          color: "var(--ide-toolbar-color)",
+          borderBottom: "1px solid var(--ide-toolbar-border)",
+          background: "rgba(15, 23, 42, 0.18)",
+        }}
+        title="Sleep de toolbar naar een rand om hem verticaal of horizontaal te laten snappen"
+      >
+        ⋮⋮ {title}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: isVertical ? "column" : "row",
+          alignItems: isVertical ? "stretch" : "center",
+          gap: 4,
+          flexWrap: isVertical ? "nowrap" : "wrap",
+          padding: 6,
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 }
@@ -175,6 +366,7 @@ function DiagramCanvasInner({ diagramId }) {
   const { setCenter, getNode, getZoom, getViewport, screenToFlowPosition, getNodes, getEdges } = useReactFlow();
   const reactFlowWrapper = useRef(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [toolbarLayouts, setToolbarLayouts] = useState(() => leesToolbarLayouts());
 
   const initialNodes = useMemo(
     () => buildFlowNodes(diagram, elements),
@@ -189,6 +381,19 @@ function DiagramCanvasInner({ diagramId }) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
+  const updateToolbarLayout = useCallback((toolbarId, nextLayout) => {
+    setToolbarLayouts((prev) => {
+      const next = {
+        ...prev,
+        [toolbarId]: {
+          ...(prev?.[toolbarId] || DEFAULT_TOOLBAR_LAYOUTS[toolbarId] || {}),
+          ...nextLayout,
+        },
+      };
+      bewaarToolbarLayouts(next);
+      return next;
+    });
+  }, []);
 
   // Track of de selectie van dit diagram komt (voorkomt oneindige loop)
   const localSelectionRef = useRef(false);
@@ -514,6 +719,25 @@ function DiagramCanvasInner({ diagramId }) {
       const normalized = normalizeConnection(connection, currentEdges);
       const sourceType = elementTypeById.get(normalized.source);
       const targetType = elementTypeById.get(normalized.target);
+
+      // ENT → ENT maakt in de IDE direct een lege relatie-node in collapsed mode.
+      if (sourceType === "entiteit" && targetType === "entiteit") {
+        const bronNode = getNode(normalized.source);
+        const doelNode = getNode(normalized.target);
+        maakRelatieTussenEntiteiten({
+          diagramId,
+          bronEntiteitId: normalized.source,
+          doelEntiteitId: normalized.target,
+          bronPositie: bronNode?.position,
+          doelPositie: doelNode?.position,
+          position: {
+            x: ((bronNode?.position?.x ?? 0) + (doelNode?.position?.x ?? 320)) / 2,
+            y: ((bronNode?.position?.y ?? 0) + (doelNode?.position?.y ?? 0)) / 2 + 70,
+          },
+        });
+        return;
+      }
+
       const isStructuralConnection = sourceType === "entiteit" && ["gegevenselement", "relatie"].includes(targetType);
       const isReferentielijstBinding = sourceType === "referentielijstInstantie" && targetType === "relatie";
       const isDependencyConnection =
@@ -588,17 +812,46 @@ function DiagramCanvasInner({ diagramId }) {
     ]
   );
 
+  const handleConnectEnd = useCallback(
+    (event, connectionState) => {
+      const heeftCtrl = !!(event?.ctrlKey || event?.metaKey);
+      if (!heeftCtrl || connectionState?.isValid) return;
+
+      const bronNode = connectionState?.fromNode || null;
+      const fromHandle = connectionState?.fromHandle;
+      const handleType = fromHandle?.type || "source";
+      const handleId = fromHandle?.id || "";
+      // Ctrl-drag alleen via de bottom-handle
+      if (!bronNode || bronNode.type !== "entiteit" || handleType !== "source" || handleId !== "source-bottom") return;
+
+      const pointer = (() => {
+        if (typeof event?.clientX === "number" && typeof event?.clientY === "number") {
+          return { x: event.clientX, y: event.clientY };
+        }
+        const touch = event?.changedTouches?.[0] || event?.touches?.[0] || null;
+        return touch ? { x: touch.clientX, y: touch.clientY } : null;
+      })();
+      if (!pointer) return;
+
+      voegNieuwRepToe("gegevenselement", {
+        diagramId,
+        parentId: bronNode.id,
+        parentDomein: bronNode?.data?.domein || "",
+        position: screenToFlowPosition(pointer),
+      });
+    },
+    [diagramId, screenToFlowPosition]
+  );
+
   const openAlignmentContextMenu = useCallback(
     (event) => {
-      const selectedCount = getNodes().filter((n) => n.selected).length;
-      if (selectedCount < 2) return false;
       event.preventDefault();
       event.stopPropagation();
       const pos = clampContextMenuPosition(event.clientX, event.clientY);
       setContextMenu({ x: pos.x, y: pos.y, nodeId: null });
       return true;
     },
-    [getNodes]
+    []
   );
 
   const handlePaneContextMenu = useCallback(
@@ -810,9 +1063,65 @@ function DiagramCanvasInner({ diagramId }) {
     [diagramId, elements, setNodes, setEdges, screenToFlowPosition]
   );
 
-  // ── Alignment helpers: werkt op geselecteerde nodes ──────
+  // ── Layout helpers: snap, normaliseer en uitlijnen ──────
+  const snapNodesToGrid = useCallback(() => {
+    setNodes((nds) => {
+      const updated = nds.map((node) => ({
+        ...node,
+        position: {
+          x: Math.round((node.position?.x ?? 0) / 15) * 15,
+          y: Math.round((node.position?.y ?? 0) / 15) * 15,
+        },
+      }));
+      if (diagram) {
+        const updatedDiagNodes = diagram.nodes.map((dn) => {
+          const flowNode = updated.find((node) => node.id === dn.elementId);
+          return flowNode ? { ...dn, position: flowNode.position } : dn;
+        });
+        updateDiagramNodes(diagramId, updatedDiagNodes);
+      }
+      return updated;
+    });
+  }, [diagram, diagramId, setNodes, updateDiagramNodes]);
+
+  const normaliseerRelaties = useCallback(() => {
+    setEdges((eds) => {
+      const updated = eds.map((edge) => {
+        const srcNode = getNode(edge.source);
+        const tgtNode = getNode(edge.target);
+        if (!srcNode || !tgtNode) return edge;
+        const { sourceHandle, targetHandle } = berekenKortsteHandles(srcNode, tgtNode);
+        return { ...edge, sourceHandle, targetHandle };
+      });
+      if (diagram) {
+        updateDiagramEdges(
+          diagramId,
+          updated.map(({ selected, ...rest }) => rest)
+        );
+      }
+      return updated;
+    });
+  }, [diagram, diagramId, getNode, setEdges, updateDiagramEdges]);
+
+  const handleCreateRep = useCallback((kind, extra = {}) => {
+    voegNieuwRepToe(kind, {
+      diagramId,
+      domein: useUIStore.getState().actiefDomein || diagram?.domein || "",
+      ...extra,
+    });
+  }, [diagram, diagramId]);
+
   const alignNodes = useCallback(
     (mode) => {
+      if (mode === "normaliseer-relaties") {
+        normaliseerRelaties();
+        return;
+      }
+      if (mode === "snap-grid") {
+        snapNodesToGrid();
+        return;
+      }
+
       const selected = getNodes().filter((n) => n.selected);
       if (selected.length < 2) return;
 
@@ -884,19 +1193,17 @@ function DiagramCanvasInner({ diagramId }) {
 
       setNodes((nds) => {
         const updated = nds.map(updater);
-        // Persist naar store
         if (diagram) {
           const updatedDiagNodes = diagram.nodes.map((dn) => {
             const flowNode = updated.find((n) => n.id === dn.elementId);
-            if (flowNode) return { ...dn, position: flowNode.position };
-            return dn;
+            return flowNode ? { ...dn, position: flowNode.position } : dn;
           });
           updateDiagramNodes(diagramId, updatedDiagNodes);
         }
         return updated;
       });
     },
-    [getNodes, setNodes, diagram, diagramId, updateDiagramNodes]
+    [getNodes, setNodes, diagram, diagramId, updateDiagramNodes, normaliseerRelaties, snapNodesToGrid]
   );
 
   const handleMoveEnd = useCallback(
@@ -925,8 +1232,47 @@ function DiagramCanvasInner({ diagramId }) {
       }}
       className="ide-canvas"
     >
-      {/* Alignment toolbar */}
-      <AlignToolbar alignNodes={alignNodes} />
+      <FloatingToolbar
+        title="Maken"
+        layout={toolbarLayouts.create}
+        onLayoutChange={(nextLayout) => updateToolbarLayout("create", nextLayout)}
+      >
+        {CREATE_BUTTONS.map((button) => (
+          <button
+            key={button.kind}
+            title={button.title}
+            onClick={() => handleCreateRep(button.kind)}
+            style={{
+              minWidth: 52,
+              padding: "6px 8px",
+              borderRadius: 6,
+              border: "1px solid var(--ide-toolbar-border)",
+              background: "var(--ide-toolbar-bg-secondary, rgba(255,255,255,0.04))",
+              color: "var(--ide-toolbar-color)",
+              cursor: "pointer",
+              fontSize: 11,
+              fontWeight: 700,
+            }}
+          >
+            {button.label}
+          </button>
+        ))}
+      </FloatingToolbar>
+
+      <FloatingToolbar
+        title="Layout"
+        layout={toolbarLayouts.layout}
+        onLayoutChange={(nextLayout) => updateToolbarLayout("layout", nextLayout)}
+      >
+        <AlignToolbar
+          alignNodes={alignNodes}
+          onNormaliseer={normaliseerRelaties}
+          onSnapGrid={snapNodesToGrid}
+          embedded
+          isVertical={toolbarLayouts.layout?.orientation === "vertical"}
+        />
+      </FloatingToolbar>
+
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -936,6 +1282,7 @@ function DiagramCanvasInner({ diagramId }) {
         onNodesChange={handleNodesChangeWrapped}
         onEdgesChange={onEdgesChange}
         onConnect={handleConnect}
+        onConnectEnd={handleConnectEnd}
         onNodeClick={handleNodeClick}
         onEdgeClick={handleEdgeClick}
         onEdgeDoubleClick={handleEdgeDoubleClick}
@@ -1031,6 +1378,23 @@ function DiagramCanvasInner({ diagramId }) {
                 </div>
               );
             })}
+            <div style={{ height: 1, background: "var(--ide-menu-sep, #444)", margin: "4px 8px" }} />
+            <div
+              style={{ padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" }}
+              onMouseEnter={itemHover}
+              onMouseLeave={itemLeave}
+              onClick={() => { normaliseerRelaties(); setContextMenu(null); }}
+            >
+              ↔ Normaliseer relaties
+            </div>
+            <div
+              style={{ padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" }}
+              onMouseEnter={itemHover}
+              onMouseLeave={itemLeave}
+              onClick={() => { snapNodesToGrid(); setContextMenu(null); }}
+            >
+              ⊞ Snap nodes naar grid
+            </div>
             <div style={{ height: 1, background: "var(--ide-menu-sep, #444)", margin: "4px 8px" }} />
             {contextMenu.nodeId && (
               <div

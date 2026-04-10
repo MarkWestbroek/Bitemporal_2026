@@ -653,6 +653,13 @@ func initAbuvwxyMetaRegistry() {
 		HeeftPFK:                       false,
 		RelatieveAutoincrement:         false,
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{},
+		AfgeleideVelden: []AfgeleidVeld{
+			{
+				Naam:                "afgeleid",
+				GoType:              "string",
+				AfleidingsregelTaal: "cel",
+			},
+		},
 	}
 
 	// Referentielijst-instantie metadata + editor-posities
@@ -662,6 +669,6 @@ func initAbuvwxyMetaRegistry() {
 	}
 	ReferentielijstInstantieRegistry["Landenlijst"] = ReferentielijstInstantieInfo{
 		Naam:   "",
-		Layout: &EditorLayout{Positie: &V3Positie{X: 1005, Y: -315}},
+		Layout: &EditorLayout{Positie: &V3Positie{X: 1005, Y: -319.5}},
 	}
 }

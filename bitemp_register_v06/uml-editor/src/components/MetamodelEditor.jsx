@@ -71,6 +71,7 @@ import {
   generateId,
   editorNaarV3Model,
   schemaResponseNaarEditor,
+  maakLeegType,
   maakReferentielijstSet,
   maakReferentielijstInstantie,
 } from "../metamodel/types";
@@ -201,6 +202,25 @@ function deepCloneGraphValue(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function normaliseerMetamodelNaam(rawValue, fallback = "Type") {
+  const basis = String(rawValue || "")
+    .trim()
+    .replace(/[^a-zA-Z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return basis || fallback;
+}
+
+function haalPointerPositie(event) {
+  if (event && typeof event.clientX === "number" && typeof event.clientY === "number") {
+    return { x: event.clientX, y: event.clientY };
+  }
+  const touch = event?.changedTouches?.[0] || event?.touches?.[0] || null;
+  if (touch && typeof touch.clientX === "number" && typeof touch.clientY === "number") {
+    return { x: touch.clientX, y: touch.clientY };
+  }
+  return null;
+}
+
 function maakCanvasSignature(nodes, edges, selectedNodeId, selectedEdgeId) {
   return JSON.stringify({
     selectedNodeId: selectedNodeId || null,
@@ -231,7 +251,7 @@ function maakCanvasSnapshot(nodes, edges, selectedNodeId, selectedEdgeId, actieN
   };
 }
 
-export default function MetamodelEditor({ initialNodes = [], initialEdges = [], onV3ModelLoaded = null, modelNaam = "", modelBron = "", modelOpmerking = "" }) {
+export default function MetamodelEditor({ initialNodes = [], initialEdges = [], onV3ModelLoaded = null, modelNaam = "", modelVersie = "", modelBron = "", modelOpmerking = "" }) {
   /**
    * useNodesState en useEdgesState zijn React Flow hooks:
    *   - nodes/edges: de huidige array
@@ -261,6 +281,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   // { x, y } schermcoördinaten van het rechtsklikmenu; null = verborgen
   const [contextMenu, setContextMenu] = useState(null);
   const canvasRef = useRef(null);
+  const reactFlowRef = useRef(null);
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId) || null;
   const selectedEdge = edges.find((e) => e.id === selectedEdgeId) || null;
@@ -537,6 +558,86 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         const sourceType = nodeTypeById.get(normalized.source);
         const targetType = nodeTypeById.get(normalized.target);
 
+        // ENT → ENT: maak direct een lege relatie in collapsed mode.
+        if (sourceType === "entiteit" && targetType === "entiteit") {
+          const bronNode = nodes.find((n) => n.id === normalized.source);
+          const doelNode = nodes.find((n) => n.id === normalized.target);
+          const bronNaam = normaliseerMetamodelNaam(
+            bronNode?.data?.typenaam || bronNode?.data?.klassenaam || normalized.source,
+            "Entiteit"
+          );
+          const doelNaam = normaliseerMetamodelNaam(
+            doelNode?.data?.typenaam || doelNode?.data?.klassenaam || normalized.target,
+            "Entiteit"
+          );
+          const basisRelatie = maakLeegType("relatie");
+          const relatieId = basisRelatie.id;
+          const relatieNaam = `Rel_${bronNaam}_${doelNaam}`;
+          const relatiePos = {
+            x: ((bronNode?.position?.x ?? 0) + (doelNode?.position?.x ?? 320)) / 2,
+            y: ((bronNode?.position?.y ?? 0) + (doelNode?.position?.y ?? 0)) / 2 + 70,
+          };
+          const doelEntiteitNaam = doelNode?.data?.typenaam || doelNode?.data?.klassenaam || doelNode?.id || "";
+          const rolnaam = (doelNode?.data?.meervoud || doelNode?.data?.klassenaam || doelEntiteitNaam || "relatie").trim();
+
+          setNodes((nds) => [
+            ...nds,
+            {
+              id: relatieId,
+              type: "relatie",
+              position: relatiePos,
+              data: {
+                ...basisRelatie,
+                domein: bronNode?.data?.domein || doelNode?.data?.domein || actiefDomein || "",
+                typenaam: relatieNaam,
+                klassenaam: relatieNaam,
+                meervoud: `${relatieNaam}en`,
+                doelEntiteit: doelEntiteitNaam,
+                velden: [],
+              },
+            },
+          ]);
+          setSelectedNodeId(relatieId);
+          setSelectedEdgeId(null);
+
+          // Bereken genormaliseerde handles voor de twee edges
+          const relatieNode = { position: relatiePos, measured: { width: 120, height: 36 } };
+          const h1 = berekenKortsteHandles(bronNode, relatieNode);
+          const h2 = berekenKortsteHandles(relatieNode, doelNode);
+
+          return [
+            ...eds,
+            {
+              id: generateId("edge"),
+              source: normalized.source,
+              target: relatieId,
+              sourceHandle: h1.sourceHandle,
+              targetHandle: h1.targetHandle,
+              type: "metamodel",
+              data: {
+                rolnaam: "",
+                jsonRolnaam: relatieNaam.toLowerCase(),
+                momentvoorkomen: "meervoudig",
+                kardinaliteit: "0..*",
+              },
+            },
+            {
+              id: generateId("edge"),
+              source: relatieId,
+              target: normalized.target,
+              sourceHandle: h2.sourceHandle,
+              targetHandle: h2.targetHandle,
+              type: "metamodel",
+              data: {
+                rolnaam,
+                jsonRolnaam: relatieNaam.toLowerCase(),
+                momentvoorkomen: "meervoudig",
+                kardinaliteit: "0..*",
+              },
+            },
+          ];
+        }
+
         // === ASOC auto-conversie ===
         // Wanneer de tweede entiteit verbonden wordt met een relatie die al velden
         // heeft, converteren we automatisch naar het association-class patroon:
@@ -692,7 +793,81 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         return addEdge(newEdge, filteredEdges);
       });
     },
-    [normalizeConnection, setEdges, pushCanvasUndo, nodeTypeById, nodes, setNodes]
+    [actiefDomein, normalizeConnection, setEdges, pushCanvasUndo, nodeTypeById, nodes, setNodes]
+  );
+
+  /**
+   * Ctrl-drag vanuit een entiteit-handle naar leeg canvas: maak daar direct
+   * een nieuw gegevenselement en koppel het structureel aan de bron-entiteit.
+   */
+  const handleConnectEnd = useCallback(
+    (event, connectionState) => {
+      const heeftCtrl = !!(event?.ctrlKey || event?.metaKey);
+      if (!heeftCtrl || connectionState?.isValid) return;
+
+      const bronNode = connectionState?.fromNode || null;
+      const fromHandle = connectionState?.fromHandle;
+      const handleType = fromHandle?.type || "source";
+      const handleId = fromHandle?.id || "";
+      // Ctrl-drag alleen via de bottom-handle
+      if (!bronNode || bronNode.type !== "entiteit" || handleType !== "source" || handleId !== "source-bottom") return;
+
+      const pointer = haalPointerPositie(event);
+      const flowPos = pointer && reactFlowRef.current?.screenToFlowPosition
+        ? reactFlowRef.current.screenToFlowPosition(pointer)
+        : null;
+      if (!flowPos) return;
+
+      const bronNaam = normaliseerMetamodelNaam(
+        bronNode?.data?.typenaam || bronNode?.data?.klassenaam || bronNode?.id,
+        "Entiteit"
+      );
+      const basisGE = maakLeegType("gegevenselement");
+      const geNaam = `${bronNaam}_GE`;
+      const geId = basisGE.id;
+
+      pushCanvasUndo("ctrl-drag-ge");
+      setNodes((nds) => [
+        ...nds,
+        {
+          id: geId,
+          type: "gegevenselement",
+          position: { x: flowPos.x, y: flowPos.y },
+          data: {
+            ...basisGE,
+            domein: bronNode?.data?.domein || actiefDomein || "",
+            typenaam: geNaam,
+            klassenaam: geNaam,
+            meervoud: `${geNaam}s`,
+            description: `Nieuw gegevenselement bij ${bronNaam}`,
+          },
+        },
+      ]);
+      // Bereken optimale handles voor de edge tussen bron en nieuw GE
+      const geNode = { position: { x: flowPos.x, y: flowPos.y }, measured: { width: 180, height: 80 } };
+      const { sourceHandle, targetHandle } = berekenKortsteHandles(bronNode, geNode);
+
+      setEdges((eds) => [
+        ...eds,
+        {
+          id: generateId("edge"),
+          source: bronNode.id,
+          target: geId,
+          sourceHandle,
+          targetHandle,
+          type: "metamodel",
+          data: {
+            rolnaam: geNaam,
+            jsonRolnaam: geNaam.toLowerCase(),
+            momentvoorkomen: "enkelvoudig",
+            kardinaliteit: "0..1",
+          },
+        },
+      ]);
+      setSelectedNodeId(geId);
+      setSelectedEdgeId(null);
+    },
+    [actiefDomein, pushCanvasUndo, setEdges, setNodes]
   );
 
   /** Selectie handlers */
@@ -1480,6 +1655,18 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
 
   // === Opslaan / Laden ===
 
+  // Gebruik de geladen modelmetadata als basis voor exports/publiceren, zodat
+  // we niet terugvallen op de generieke placeholder-versie "v3".
+  const bouwExportV3Model = useCallback(
+    (opts = {}) =>
+      editorNaarV3Model(nodes, edges, {
+        versie: opts.versie || modelVersie || "v3",
+        naam: opts.naam || modelNaam || "Editor export",
+        beschrijving: opts.beschrijving || modelOpmerking || "V3 export vanuit UML editor (codegen-ready)",
+      }),
+    [nodes, edges, modelVersie, modelNaam, modelOpmerking]
+  );
+
   // Bepaal de standaard API-basis. Bij lokaal Vite-deven wijzen we standaard
   // naar de devloop-container op :8182 zodat deze naast de gewone app op :8082 kan draaien.
   const getDefaultApiBase = useCallback(() => {
@@ -1569,9 +1756,9 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   }, []);
 
   const openActieDialoog = useCallback(async (type) => {
-    const v3Model = editorNaarV3Model(nodes, edges);
+    const v3Model = bouwExportV3Model();
     const apiBase = getDefaultApiBase();
-    const standaardModelNaam = actiefDomein || "";
+    const standaardModelNaam = actiefDomein || modelNaam || v3Model?.naam || "";
 
     // Pre-validatie van het V3 model (behalve bij lokaal opslaan)
     const { errors: validationErrors, warnings: validationWarnings } =
@@ -1597,7 +1784,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         validationErrors,
         validationWarnings,
         values: {
-          versie: "v0.",
+          versie: v3Model?.versie || modelVersie || "v0.",
           naam: standaardModelNaam,
           indiener: "MW",
           opmerking: "",
@@ -1618,7 +1805,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         validationErrors,
         validationWarnings,
         values: {
-          versie: "v0.",
+          versie: v3Model?.versie || modelVersie || "v0.",
           naam: standaardModelNaam,
           indiener: "MW",
           opmerking: "",
@@ -1645,7 +1832,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         beschikbareDomeinen,
       },
     });
-  }, [actiefDomein, bouwBeschikbareDomeinen, getDefaultApiBase, laatstGepubliceerdSchemaID, maakVoorstelBestandsnaam, nodes, edges]);
+  }, [actiefDomein, bouwBeschikbareDomeinen, bouwExportV3Model, getDefaultApiBase, laatstGepubliceerdSchemaID, maakVoorstelBestandsnaam, modelNaam, modelVersie]);
 
   const sluitActieDialoog = useCallback(() => {
     setActieDialoog(null);
@@ -1674,7 +1861,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       bestandsnaam += ".json";
     }
 
-    const v3Model = editorNaarV3Model(nodes, edges);
+    const v3Model = bouwExportV3Model();
     const blob = new Blob([JSON.stringify(v3Model, null, 2)], {
       type: "application/json",
     });
@@ -1685,10 +1872,10 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     a.click();
     URL.revokeObjectURL(url);
     return true;
-  }, [nodes, edges]);
+  }, [bouwExportV3Model]);
 
   const publiceerSchemaModel = useCallback(async (values, { stilNaSucces = false } = {}) => {
-    const v3Model = editorNaarV3Model(nodes, edges);
+    const v3Model = bouwExportV3Model();
     const versie = (values?.versie || "").trim();
     const naam = (values?.naam || "").trim();
     const indiener = (values?.indiener || "").trim();
@@ -1756,10 +1943,10 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       alert(`Publiceren mislukt: ${err.message}`);
       return null;
     }
-  }, [getDefaultApiBase, nodes, edges]);
+  }, [bouwExportV3Model, getDefaultApiBase]);
 
   const voerRebuildUit = useCallback(async ({ bron, schemaVersieID = null, modelOverride = null, beschikbareDomeinen = [], apiBase = "", wachtwoord = "1234" }) => {
-    const rauwModel = modelOverride || editorNaarV3Model(nodes, edges);
+    const rauwModel = modelOverride || bouwExportV3Model();
     const effectieveBron = (bron || "editor").trim().toLowerCase();
     const effectieveApiBase = (apiBase || getDefaultApiBase()).trim();
     const effectiefWachtwoord = (wachtwoord || "").trim();
@@ -1836,7 +2023,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       alert(`Rebuild mislukt: ${err.message}`);
       return false;
     }
-  }, [getDefaultApiBase, nodes, edges]);
+  }, [bouwExportV3Model, getDefaultApiBase]);
 
   const submitActieDialoog = useCallback(async () => {
     if (!actieDialoog) return;
@@ -1915,6 +2102,9 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
           if (maybeV3 && maybeV3.entiteiten) {
             const result = v3ModelNaarEditor(maybeV3);
             applyLoadedGraph(result);
+            if (typeof onV3ModelLoaded === "function") {
+              onV3ModelLoaded(payload, file.name || "lokaal-bestand");
+            }
             return;
           }
 
@@ -2138,7 +2328,11 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
             edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
+            onInit={(instance) => {
+              reactFlowRef.current = instance;
+            }}
             onConnect={onConnect}
+            onConnectEnd={handleConnectEnd}
             onNodeClick={onNodeClick}
             onNodeDragStart={() => pushCanvasUndo("move-node")}
             onEdgeClick={onEdgeClick}

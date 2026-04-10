@@ -15,7 +15,7 @@
  *   └─────────────────────────────┘
  */
 import { memo } from "react";
-import { Handle, Position } from "@xyflow/react";
+import { Handle, NodeResizer, Position } from "@xyflow/react";
 
 function DatatypeNode({ data, selected }) {
   const borderColor = selected ? "#0891b2" : "#94a3b8";
@@ -49,6 +49,13 @@ function DatatypeNode({ data, selected }) {
         backgroundColor: data.kleur || "#e0f2fe",
       }}
     >
+      <NodeResizer
+        minWidth={180}
+        minHeight={90}
+        isVisible={selected}
+        lineStyle={{ borderColor }}
+        handleStyle={{ width: 10, height: 10, borderRadius: 3, borderColor, background: "#ffffff" }}
+      />
       {/* Handles op alle zijden */}
       <Handle type="target" position={Position.Top} id="target-top" />
       <Handle type="source" position={Position.Bottom} id="source-bottom" />

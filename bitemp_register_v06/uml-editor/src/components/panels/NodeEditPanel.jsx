@@ -787,8 +787,10 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
         </label>
       )}
 
-      {/* Velden / attributen */}
-      <h4>Velden</h4>
+      {/* Velden / attributen — niet tonen voor entiteiten (die hebben alleen afgeleide velden) */}
+      {data.metatype !== "entiteit" && (
+        <>
+          <h4>Velden</h4>
       {(data.velden || []).map((v, i) => (
         <div key={i} className="veld-edit-row">
           <div className="veld-edit-main">
@@ -988,6 +990,8 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
       <button className="btn-add" onClick={addVeld}>
         + Veld toevoegen
       </button>
+        </>
+      )}
 
       {/* Afgeleide velden op entiteit/GE/relatie-niveau */}
       {(data.metatype === "entiteit" || data.metatype === "gegevenselement" || data.metatype === "relatie") && (

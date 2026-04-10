@@ -35,6 +35,7 @@ export default function EditorV2Page() {
   const [editorKey, setEditorKey] = useState(0);
   const [modelBron, setModelBron] = useState("demo"); // toon herkomst in toolbar
   const [modelNaam, setModelNaam] = useState(demoV3Model.naam || "onbekend-model");
+  const [modelVersie, setModelVersie] = useState(demoV3Model.versie || "v3");
   const [modelOpmerking, setModelOpmerking] = useState(demoV3Model.beschrijving || "");
 
   const pasModelMetadataToe = useCallback((response, sourceUrl) => {
@@ -44,6 +45,7 @@ export default function EditorV2Page() {
 
     setModelBron(modelId ? `DB #${modelId} (${modelStatus})` : (response?.bron || "url"));
     setModelNaam(response?.model_naam || v3?.naam || (modelId ? `model-${modelId}` : "onbekend-model"));
+    setModelVersie(v3?.versie || "v3");
     setModelOpmerking(response?.model_beschrijving || v3?.beschrijving || "");
   }, []);
 
@@ -95,6 +97,7 @@ export default function EditorV2Page() {
         initialEdges={data.edges}
         onV3ModelLoaded={pasModelMetadataToe}
         modelNaam={modelNaam}
+        modelVersie={modelVersie}
         modelBron={modelBron}
         modelOpmerking={modelOpmerking}
       />

@@ -2,6 +2,26 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 
+if (import.meta.hot) {
+  let volledigeReloadAangevraagd = false;
+  import.meta.hot.on("vite:beforeUpdate", (payload) => {
+    if (volledigeReloadAangevraagd) return;
+    const heeftDomIntensieveWijziging = Array.isArray(payload?.updates)
+      && payload.updates.some((update) => {
+        const pad = String(update?.path || "");
+        return pad.includes("/uml-editor/src/")
+          || pad.includes("/web/vite/src/ide/")
+          || pad.endsWith("/web/vite/src/pages/EditorV2Page.jsx")
+          || pad.endsWith("/web/vite/src/main.jsx");
+      });
+
+    if (heeftDomIntensieveWijziging) {
+      volledigeReloadAangevraagd = true;
+      import.meta.hot.invalidate("Volledige reload voor ReactFlow/FlexLayout HMR-wijziging");
+    }
+  });
+}
+
 class RootErrorBoundary extends React.Component {
   constructor(props) {
     super(props);

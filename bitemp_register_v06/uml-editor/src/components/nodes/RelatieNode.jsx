@@ -20,7 +20,7 @@
  *   - Bottom source: voor eventuele verdere relaties
  */
 import { memo } from "react";
-import { Handle, Position } from "@xyflow/react";
+import { Handle, NodeResizer, Position } from "@xyflow/react";
 import { useOvergeerfdeVelden } from "../../hooks/useOvergeerfdeVelden";
 
 function RelatieNode({ id, data, selected }) {
@@ -45,6 +45,13 @@ function RelatieNode({ id, data, selected }) {
           minWidth: "auto",
         }}
       >
+        <NodeResizer
+          minWidth={120}
+          minHeight={36}
+          isVisible={selected}
+          lineStyle={{ borderColor }}
+          handleStyle={{ width: 10, height: 10, borderRadius: 3, borderColor, background: "#ffffff" }}
+        />
         <Handle type="target" position={Position.Top} id="target-top" />
         <Handle type="source" position={Position.Bottom} id="source-bottom" />
         <Handle type="source" position={Position.Top} id="source-top" />
@@ -68,6 +75,13 @@ function RelatieNode({ id, data, selected }) {
         backgroundColor: data.kleur || "#ede9fe",
       }}
     >
+      <NodeResizer
+        minWidth={180}
+        minHeight={80}
+        isVisible={selected}
+        lineStyle={{ borderColor }}
+        handleStyle={{ width: 10, height: 10, borderRadius: 3, borderColor, background: "#ffffff" }}
+      />
       {/* Handles op alle zijden voor flexibele edge-aansluitingen */}
       <Handle type="target" position={Position.Top} id="target-top" />
       <Handle type="source" position={Position.Bottom} id="source-bottom" />
@@ -94,7 +108,7 @@ function RelatieNode({ id, data, selected }) {
 
       <div className="node-velden">
         {(data.velden || []).length === 0 ? (
-          <div className="node-veld leeg">— geen velden —</div>
+          <div className="node-veld leeg">&nbsp;</div>
         ) : (
           data.velden.map((v, i) => (
             <div key={i} className="node-veld">

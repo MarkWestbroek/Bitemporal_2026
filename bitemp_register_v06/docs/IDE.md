@@ -218,6 +218,19 @@ te verbeteren.
 | Publiceer + Rebuild combi           | ✅     | "🚀⚙️ Pub+Rebuild" knop voert eerst publiceer uit, daarna automatisch rebuild     |
 | Element-kleuren in Project Browser  | ✅     | Gekleurde stip (8×8 cirkel) naast het icoon in de boomstructuur, indien het element een kleur heeft |
 | Domein als bewerkbaar element       | ✅     | Klik op domein-map in PB → DomainEditor in DetailsPanel: beschrijving, kleur, prefix. `domainMeta` in de store met `addDomain`/`removeDomain`/`updateDomainMeta` acties |
+
+### Fase 6.5: Diagram-productiviteit & snelle creatie ✅
+
+| Component                              | Status | Beschrijving |
+|----------------------------------------|--------|--------------|
+| Resizable nodes                        | ✅     | ENT, GE, REL, ENUM, TYPE en referentielijst-instanties hebben resize-handles zodra een node geselecteerd is. |
+| Dikkere ENT-rand                       | ✅     | Entiteiten krijgen visueel meer nadruk door een iets zwaardere rand. |
+| ENT→ENT maakt direct een REL           | ✅     | Een verbinding van entiteit naar entiteit op canvas maakt automatisch een lege relatie-representatie aan. |
+| Ctrl-drag vanaf ENT → nieuw GE         | ✅     | Sleep met `Ctrl` vanaf een ENT-handle naar lege canvasruimte om snel een nieuw gegevenselement onder die entiteit te maken. |
+| Twee verplaatsbare IDE-toolbars        | ✅     | De IDE heeft losse `Maken`- en `Layout`-toolbars die naar een rand gesleept kunnen worden en daar horizontaal/verticaal snappen. |
+| Normaliseer + snap in IDE              | ✅     | `↔ Normaliseer relaties` en `⊞ Snap naar grid` zitten nu in de layout-toolbar én in het canvas-contextmenu. |
+| Nieuwe elementen vanuit Project Browser| ✅     | Rechtsklik op een domein of entiteit om direct nieuwe entiteiten, GE's, relaties of referentielijst-sets aan te maken. |
+| Versievaste export/publiceer defaults  | ✅     | Opslaan/publiceren/rebuild gebruikt nu de geladen modelmetadata (`versie`, `naam`, `beschrijving`) in plaats van een generieke fallback zoals `v3`. |
 | Veld-omschrijvingen (OAS 3.1)      | ✅     | Description-invoerveld per veld in VeldEditBlock, placeholder "Omschrijving (OAS 3.1 description)…" |
 | Afgeleide velden CEL expand/collapse| ✅     | Afleidingsregel-textareas hebben een ▼/▲ toggle-knop voor compact (28–36px) of uitgebreid (120px, 6 regels) |
 
@@ -312,6 +325,44 @@ In `useUIStore.js`:
 - `ide-diagram.css` — thema variabelen (dark + light) + canvas overrides
 
 De `editor.css` bevat globale `*` en `body` resets. Die worden geneutraliseerd via `body:has(.ide-canvas)` in `ide-diagram.css`.
+
+##### UX-fixes Editor & IDE (2026-07-10)
+
+Naar aanleiding van gebruikerstests zijn 11 issues opgelost in zowel de EditorV2 als de IDE:
+
+**Visueel & nodes:**
+- **Entiteit-rand duidelijker** — `borderWidth` op EntiteitNode is nu vast 3px (was 2.5, nauwelijks zichtbaar verschil met de 2px basis). Hierdoor zijn entiteiten direct herkenbaar als zwaardere UML class-boxes.
+- **NodeResizer werkt correct** — `max-width: 280px` verwijderd uit `.metamodel-node` CSS. `width: 100%; height: 100%` toegevoegd. Daardoor groeit de node-inhoud mee als de gebruiker resized en hangen edges niet meer los.
+- **Lege veldencompartimenten** — Entiteiten tonen het velden-compartiment nu alleen als er daadwerkelijk velden aanwezig zijn (in de praktijk nooit, want entiteiten hebben alleen afgeleide velden). GE- en relatie-nodes tonen een leeg vak (`&nbsp;`) in plaats van "— geen velden —".
+
+**Edge-normalisatie:**
+- **Ctrl-drag alleen via bottom-handle** — In zowel `MetamodelEditor.jsx` als `DiagramCanvas.jsx` luistert `handleConnectEnd` nu alleen op `source-bottom`. De nieuw aangemaakte edge krijgt direct genormaliseerde handles via `berekenKortsteHandles`.
+- **ENT→ENT relatie-edges genormaliseerd** — Bij het aanmaken van een relatie via ENT→ENT verbinding worden de twee structurele edges (bron→relatie, relatie→doel) nu direct met optimale handles aangemaakt, in zowel de EditorV2 (`MetamodelEditor.jsx`) als de IDE (`repCreation.js`). In `repCreation.js` is hiervoor een lokale `berekenKortsteHandles` helper toegevoegd, en de caller in `DiagramCanvas.jsx` geeft nu `bronPositie`/`doelPositie` mee.
+
+**Project Browser & model-beheer:**
+- **Element verwijderen uit model** — Nieuw context-menu item "🗑️ Verwijder uit model" in `BrowserContextMenu.jsx`, met bevestigingsdialoog. Roept `deleteElement(id)` aan die het element uit alle diagrammen + structural edges verwijdert.
+- **Domein auto-toevoegen** — `updateElement` in `useModelStore.js` voegt nu automatisch een nieuw domein toe aan de `domains` lijst wanneer een element een domein krijgt dat nog niet bestaat. Consistent met het bestaande gedrag van `addElement` en `addElements`.
+
+**Editor panels:**
+- **Velden geblokkeerd voor entiteiten** — In `NodeEditPanel.jsx` (EditorV2) is de hele "Velden / attributen" sectie (inclusief "Veld toevoegen" knop) nu verborgen voor entiteiten (`data.metatype !== "entiteit"`). De sectie "Afgeleide velden" blijft beschikbaar voor alle types.
+
+**Toolbar layout:**
+- **AlignToolbar verticale modus** — `AlignToolbar` accepteert nu een `isVertical` prop. Wanneer de layout-toolbar tegen een zijrand gesnapt wordt, switcht de flex-direction naar `column` en worden separators horizontale lijnen. De `FloatingToolbar` wrapper geeft de oriëntatie door.
+
+**Gewijzigde bestanden:**
+| Bestand | Wijzigingen |
+|---------|------------|
+| `uml-editor/src/styles/editor.css` | `max-width` verwijderd, `width/height: 100%` |
+| `uml-editor/src/components/nodes/EntiteitNode.jsx` | `borderWidth: 3`, velden-compartiment conditioneel |
+| `uml-editor/src/components/nodes/GegevensElementNode.jsx` | Leeg vak i.p.v. "geen velden" |
+| `uml-editor/src/components/nodes/RelatieNode.jsx` | Leeg vak i.p.v. "geen velden" |
+| `uml-editor/src/components/panels/NodeEditPanel.jsx` | Velden-sectie verborgen voor entiteiten |
+| `uml-editor/src/components/MetamodelEditor.jsx` | Ctrl-drag bottom-only + edge normalisatie |
+| `web/vite/src/ide/DiagramCanvas.jsx` | Ctrl-drag bottom-only + AlignToolbar isVertical |
+| `web/vite/src/ide/repCreation.js` | Edge normalisatie bij ENT→ENT relatie-creatie |
+| `web/vite/src/ide/BrowserContextMenu.jsx` | "Verwijder uit model" menu-item |
+| `web/vite/src/ide/ProjectBrowser.jsx` | Handler voor verwijder-actie |
+| `web/vite/src/store/useModelStore.js` | Domein auto-add in `updateElement` |
 
 ## Hoe te gebruiken
 

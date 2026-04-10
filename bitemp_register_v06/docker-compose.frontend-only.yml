@@ -1,0 +1,28 @@
+# docker-compose.frontend-only.yml — frontend-image tegen een externe API.
+#
+# Gebruik wanneer de backend (Go API) al ergens draait en je alleen de
+# frontend als aparte nginx-container wilt uitrollen.
+#
+# Starten:
+#   VITE_API_BASE_URL=http://mijn-server:8082 \
+#     docker compose -f docker-compose.frontend-only.yml up --build -d
+#
+# Of via .env.docker:
+#   VITE_API_BASE_URL=http://mijn-server:8082
+#   docker compose -f docker-compose.frontend-only.yml up --build -d
+#
+# Let op: als VITE_API_BASE_URL leeg is, proxiet nginx naar http://api:8080
+# (die in deze stack niet bestaat). Zet daarom altijd een echte URL.
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
+    image: ${FRONTEND_IMAGE:-bitemp-viz-frontend:v06}
+    container_name: bitemp-viz-frontend-v06-standalone
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-8083}:80"

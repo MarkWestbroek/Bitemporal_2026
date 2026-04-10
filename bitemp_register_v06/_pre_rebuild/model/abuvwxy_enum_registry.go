@@ -11,5 +11,5 @@ func initAbuvwxyEnumRegistry() {
 
 	// Enum editor-posities
 	EnumEditorLayouts["ABCEnum"] = &EditorLayout{Positie: &V3Positie{X: -510, Y: 660}}
-	EnumEditorLayouts["RelABSoort"] = &EditorLayout{Positie: &V3Positie{X: -105, Y: 300}}
+	EnumEditorLayouts["RelABSoort"] = &EditorLayout{Positie: &V3Positie{X: -90, Y: 330}}
 }

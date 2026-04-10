@@ -1,0 +1,84 @@
+# docker-compose.split.yml — gesplitste deployment met aparte backend- en frontend-image.
+#
+# Laat de bestaande compose-bestanden intact en biedt daarnaast een extra stack met:
+#   - PostgreSQL
+#   - aparte Go backend-image
+#   - aparte nginx/Vite frontend-image
+#
+# Starten:
+#   docker compose -f docker-compose.split.yml up --build
+#
+# Standaard URLs:
+#   Frontend: http://localhost:${FRONTEND_PORT:-8083}/viz/react/
+#   API:      http://localhost:${API_PORT:-8082}/
+
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    container_name: bitemp-postgres-v06-split
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-1234}
+      POSTGRES_DB: ${POSTGRES_DB:-bitemp_go_db_v06}
+    ports:
+      - "${PG_PORT:-5433}:5432"
+    volumes:
+      - postgres_data_split:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-bitemp_go_db_v06}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bitemp_split_network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+      args:
+        COMMIT: ${COMMIT:-local}
+        BUILD_TIME: ${BUILD_TIME:-dev}
+    image: ${API_IMAGE:-bitemp-go-api:v06-split}
+    container_name: bitemp-go-api-v06-split
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-1234}@${DB_HOST:-postgres}:${DB_PORT:-5432}/${POSTGRES_DB:-bitemp_go_db_v06}?sslmode=${DB_SSLMODE:-disable}
+      APP_ENV: ${APP_ENV:-production}
+      GIN_MODE: ${GIN_MODE:-release}
+      ALLOW_DROP_TABLES: ${ALLOW_DROP_TABLES:-false}
+      ADMIN_DROP_PASSWORD: ${ADMIN_DROP_PASSWORD:-1234}
+      AUTO_CREATE_DATABASE: ${AUTO_CREATE_DATABASE:-false}
+      DATABASE_ADMIN_URL: ${DATABASE_ADMIN_URL:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-8082}:8080"
+    networks:
+      - bitemp_split_network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        # Laat leeg voor same-origin via nginx proxy naar de api-service.
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-}
+    image: ${FRONTEND_IMAGE:-bitemp-viz-frontend:v06-split}
+    container_name: bitemp-viz-frontend-v06
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${FRONTEND_PORT:-8083}:80"
+    networks:
+      - bitemp_split_network
+
+volumes:
+  postgres_data_split:
+
+networks:
+  bitemp_split_network:
+    driver: bridge

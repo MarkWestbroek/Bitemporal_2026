@@ -14,7 +14,7 @@
  * Referentielijst-klasse (bijv. "Landenlijst", "EULidstaten").
  */
 import { memo } from "react";
-import { Handle, Position } from "@xyflow/react";
+import { Handle, NodeResizer, Position } from "@xyflow/react";
 
 function ReferentielijstInstantieNode({ data, selected }) {
   const borderColor = selected ? "#2563eb" : "#94a3b8";
@@ -27,6 +27,13 @@ function ReferentielijstInstantieNode({ data, selected }) {
         backgroundColor: "#fef3c7", // amber-100 (zelfde als referentielijst)
       }}
     >
+      <NodeResizer
+        minWidth={180}
+        minHeight={70}
+        isVisible={selected}
+        lineStyle={{ borderColor }}
+        handleStyle={{ width: 10, height: 10, borderRadius: 3, borderColor, background: "#ffffff" }}
+      />
       <Handle type="target" position={Position.Top} id="target-top" />
       <Handle type="source" position={Position.Bottom} id="source-bottom" />
       <Handle type="source" position={Position.Top} id="source-top" />

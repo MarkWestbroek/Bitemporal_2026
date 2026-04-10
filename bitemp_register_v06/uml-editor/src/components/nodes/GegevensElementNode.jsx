@@ -16,7 +16,7 @@
  *   - Bottom source: voor eventuele verdere relaties
  */
 import { memo } from "react";
-import { Handle, Position } from "@xyflow/react";
+import { Handle, NodeResizer, Position } from "@xyflow/react";
 import { useOvergeerfdeVelden } from "../../hooks/useOvergeerfdeVelden";
 
 function GegevensElementNode({ id, data, selected }) {
@@ -31,6 +31,13 @@ function GegevensElementNode({ id, data, selected }) {
         backgroundColor: data.kleur || "#bbf7d0",
       }}
     >
+      <NodeResizer
+        minWidth={180}
+        minHeight={80}
+        isVisible={selected}
+        lineStyle={{ borderColor }}
+        handleStyle={{ width: 10, height: 10, borderRadius: 3, borderColor, background: "#ffffff" }}
+      />
       {/* Handles op alle zijden voor flexibele edge-aansluitingen */}
       <Handle type="target" position={Position.Top} id="target-top" />
       <Handle type="source" position={Position.Bottom} id="source-bottom" />
@@ -53,7 +60,7 @@ function GegevensElementNode({ id, data, selected }) {
 
       <div className="node-velden">
         {(data.velden || []).length === 0 ? (
-          <div className="node-veld leeg">— geen velden —</div>
+          <div className="node-veld leeg">&nbsp;</div>
         ) : (
           data.velden.map((v, i) => (
             <div key={i} className="node-veld">

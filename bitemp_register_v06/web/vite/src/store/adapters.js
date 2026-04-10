@@ -393,6 +393,8 @@ export function v3ModelNaarStore(v3Full) {
     id: v3Full?.id || null,
     indiener: v3Full?.indiener || "",
     versie: v3Model?.versie || "v3",
+    naam: v3Model?.naam || "",
+    beschrijving: v3Model?.beschrijving || "",
   };
 
   return { elements, structuralEdges, diagrams, domains, domainMeta: {}, modelMeta };
@@ -771,9 +773,16 @@ export function storeNaarV3Model(state) {
 
   // --- Stel het V3 model samen ---
   const v3Model = {
-    versie: "v3",
+    versie: modelMeta?.versie || "v3",
   };
-  if (modelMeta?.bron) v3Model.naam = "IDE export";
+  if (modelMeta?.naam) {
+    v3Model.naam = modelMeta.naam;
+  } else if (modelMeta?.bron) {
+    v3Model.naam = "IDE export";
+  }
+  if (modelMeta?.beschrijving) {
+    v3Model.beschrijving = modelMeta.beschrijving;
+  }
   if (v3Datatypes.length) v3Model.datatypes = v3Datatypes;
   if (v3Enums.length) v3Model.enums = v3Enums;
   if (v3RefInstanties.length) v3Model.referentielijstInstanties = v3RefInstanties;
@@ -781,7 +790,7 @@ export function storeNaarV3Model(state) {
 
   // Wrap in het top-level formaat dat de API verwacht
   return {
-    versie: "v3",
+    versie: modelMeta?.versie || "v3",
     bron: "ide",
     build_versie: modelMeta?.build_versie || "",
     go_module: modelMeta?.go_module || "",

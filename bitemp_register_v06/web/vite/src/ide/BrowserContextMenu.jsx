@@ -11,11 +11,20 @@
 import { useEffect, useMemo, useRef } from "react";
 
 const MENU_ITEMS = {
+  nieuwEntiteit: { label: "➕ Nieuwe entiteit", types: ["domain"] },
+  nieuwEnumeratie: { label: "➕ Nieuwe enumeratie", types: ["domain"] },
+  nieuwGegevenstype: { label: "➕ Nieuw gegevenstype", types: ["domain"] },
+  nieuwReferentielijst: { label: "➕ Nieuwe referentielijst-set", types: ["domain"] },
+  nieuwGE: { label: "➕ Nieuw gegevenselement", types: ["entiteit"] },
+  nieuwRelatie: { label: "➕ Nieuwe relatie", types: ["entiteit"] },
+  separator0: { separator: true },
   toonInDiagram: { label: "📍 Toon op diagram", types: ["entiteit", "gegevenselement", "relatie", "enumeratie", "gegevenstype", "referentielijstInstantie"] },
   toonDetails: { label: "ℹ️ Toon details", types: ["entiteit", "gegevenselement", "relatie", "enumeratie", "gegevenstype", "referentielijstInstantie"] },
   hernoem: { label: "✏️ Hernoem", types: ["entiteit", "gegevenselement", "relatie", "enumeratie", "gegevenstype", "referentielijstInstantie", "diagram"] },
   separator1: { separator: true },
   kopieerID: { label: "📋 Kopieer ID", types: ["entiteit", "gegevenselement", "relatie", "enumeratie", "gegevenstype", "referentielijstInstantie"] },
+  separator2: { separator: true },
+  verwijder: { label: "🗑️ Verwijder uit model", types: ["entiteit", "gegevenselement", "relatie", "enumeratie", "gegevenstype", "referentielijstInstantie"] },
   nieuwDiagram: { label: "➕ Nieuw diagram", types: ["diagrams"] },
   openDiagram: { label: "📐 Open diagram", types: ["diagram"] },
 };
