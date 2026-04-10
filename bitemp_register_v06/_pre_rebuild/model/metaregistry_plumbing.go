@@ -393,6 +393,16 @@ func init() {
 
 	// Propageer domein van entiteiten naar hun onderliggende GE's, relaties en plumbing-types.
 	// Zo hoeft het domein niet op elke entry handmatig te staan.
+	// configuratie — domein-specifieke uitbreiding
+	initConfiguratieEnumRegistry()
+	initConfiguratieDatatypeRegistry()
+	initConfiguratieMetaRegistry()
+
+	// financieel — domein-specifieke uitbreiding
+	initFinancieelEnumRegistry()
+	initFinancieelDatatypeRegistry()
+	initFinancieelMetaRegistry()
+
 	propageerDomeinNaarOnderliggende()
 }
 

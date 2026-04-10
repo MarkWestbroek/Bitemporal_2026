@@ -211,12 +211,15 @@ var baselineKernModelBestanden = []string{
 	"metaregistry_plumbing.go",
 	"v3_format.go",
 	"v3_exporter.go",
+	"json",
 }
 
 // syncBaselineKernModelBestanden zorgt dat handmatige model-plumbingbestanden
-// ook in `_baseline/model/` up-to-date blijven. Zonder deze synchronisatie kan
-// een rebuild eerst een oude baseline terugzetten, waardoor nieuwe types of
-// layoutmetadata (zoals UseEdges/V3UseEdge) tijdens codegen ineens verdwijnen.
+// én bewust bewaarde V3 JSON modelbestanden ook in `_baseline/model/`
+// up-to-date blijven. Zonder deze synchronisatie kan een rebuild eerst een
+// oude baseline terugzetten, waardoor nieuwe types, layoutmetadata
+// (zoals UseEdges/V3UseEdge) of bewaarde `model/json/model v3/*` exports
+// ineens verdwijnen.
 func syncBaselineKernModelBestanden(appDir string) ([]string, error) {
 	srcDir := filepath.Join(appDir, "model")
 	baselineDir := filepath.Join(appDir, "_baseline", "model")
@@ -234,11 +237,19 @@ func syncBaselineKernModelBestanden(appDir string) ([]string, error) {
 			}
 			return nil, fmt.Errorf("kan kernbestand %s niet lezen: %w", src, err)
 		}
+
+		dst := filepath.Join(baselineDir, bestandsnaam)
 		if info.IsDir() {
+			if err := os.RemoveAll(dst); err != nil {
+				return nil, fmt.Errorf("kan oude kernmap %s in baseline niet verwijderen: %w", bestandsnaam, err)
+			}
+			if err := copyDir(src, dst); err != nil {
+				return nil, fmt.Errorf("kan kernmap %s niet synchroniseren naar baseline: %w", bestandsnaam, err)
+			}
+			meldingen = append(meldingen, fmt.Sprintf("Baseline kernmap gesynchroniseerd: model/%s", bestandsnaam))
 			continue
 		}
 
-		dst := filepath.Join(baselineDir, bestandsnaam)
 		if err := copyFile(src, dst, info.Mode()); err != nil {
 			return nil, fmt.Errorf("kan kernbestand %s niet synchroniseren naar baseline: %w", bestandsnaam, err)
 		}

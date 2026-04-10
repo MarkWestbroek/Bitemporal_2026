@@ -1,0 +1,815 @@
+{
+  "versie": "v3",
+  "naam": "Editor export",
+  "beschrijving": "V3 export vanuit UML editor (codegen-ready)",
+  "datatypes": [
+    {
+      "naam": "KorteTekst",
+      "description": "Alfanumerieke tekst, max 255 tekens (MIM: AN255).",
+      "basistype": "string",
+      "positie": {
+        "x": 510,
+        "y": 765
+      },
+      "validatie": {
+        "maxLength": 255
+      },
+      "weergave": {}
+    },
+    {
+      "naam": "LangeTekst",
+      "description": "Onbeperkte tekst, meerdere regels (MIM: CharacterString).",
+      "basistype": "string",
+      "positie": {
+        "x": 790,
+        "y": 765
+      },
+      "validatie": {},
+      "weergave": {
+        "widget": "textarea",
+        "multiline": true
+      }
+    },
+    {
+      "naam": "AN40",
+      "description": "Alfanumerieke tekst, max 40 tekens (MIM: AN40).",
+      "basistype": "string",
+      "positie": {
+        "x": 1070,
+        "y": 765
+      },
+      "validatie": {
+        "maxLength": 40
+      },
+      "weergave": {}
+    },
+    {
+      "naam": "AN200",
+      "description": "Alfanumerieke tekst, max 200 tekens (MIM: AN200).",
+      "basistype": "string",
+      "positie": {
+        "x": 1350,
+        "y": 765
+      },
+      "validatie": {
+        "maxLength": 200
+      },
+      "weergave": {}
+    },
+    {
+      "naam": "Geheel",
+      "description": "Geheel getal (MIM: Integer).",
+      "basistype": "integer",
+      "format": "int32",
+      "positie": {
+        "x": 1425,
+        "y": 1065
+      },
+      "validatie": {},
+      "weergave": {}
+    },
+    {
+      "naam": "Decimaal",
+      "description": "Decimaal getal met 2 decimalen (MIM: Real).",
+      "basistype": "number",
+      "format": "double",
+      "positie": {
+        "x": 1215,
+        "y": 1065
+      },
+      "validatie": {},
+      "weergave": {
+        "decimalen": 2
+      }
+    },
+    {
+      "naam": "Bedrag",
+      "description": "Geldbedrag in euro's, 2 decimalen.",
+      "basistype": "number",
+      "format": "double",
+      "positie": {
+        "x": 3840,
+        "y": -840
+      },
+      "validatie": {},
+      "weergave": {
+        "prefix": "€",
+        "widget": "currency",
+        "decimalen": 2
+      }
+    },
+    {
+      "naam": "Percentage",
+      "description": "Percentagewaarde met 1 decimaal.",
+      "basistype": "number",
+      "format": "double",
+      "positie": {
+        "x": 615,
+        "y": 195
+      },
+      "validatie": {},
+      "weergave": {
+        "suffix": "%",
+        "decimalen": 1
+      }
+    },
+    {
+      "naam": "Datum",
+      "description": "Kalenderdatum zonder tijdcomponent (MIM: Date).",
+      "basistype": "string",
+      "format": "date",
+      "positie": {
+        "x": 480,
+        "y": 1200
+      },
+      "validatie": {},
+      "weergave": {
+        "placeholder": "JJJJ-MM-DD"
+      }
+    },
+    {
+      "naam": "DatumTijd",
+      "description": "Datum en tijd met tijdzone (MIM: DateTime).",
+      "basistype": "string",
+      "format": "date-time",
+      "positie": {
+        "x": 330,
+        "y": 390
+      },
+      "validatie": {},
+      "weergave": {
+        "placeholder": "JJJJ-MM-DDThh:mm"
+      }
+    },
+    {
+      "naam": "Jaar",
+      "description": "Jaartal, 4 cijfers (MIM: Year).",
+      "basistype": "integer",
+      "positie": {
+        "x": 930,
+        "y": 1170
+      },
+      "validatie": {
+        "maxLength": 4,
+        "minLength": 4
+      },
+      "weergave": {
+        "placeholder": "2025"
+      }
+    },
+    {
+      "naam": "JaNee",
+      "description": "Ja/Nee keuze (MIM: Boolean).",
+      "basistype": "boolean",
+      "positie": {
+        "x": 495,
+        "y": 975
+      },
+      "validatie": {},
+      "weergave": {
+        "widget": "checkbox"
+      }
+    },
+    {
+      "naam": "IBAN",
+      "description": "Internationaal bankrekeningnummer (IBAN).",
+      "domein": "financieel",
+      "basistype": "string",
+      "format": "iban",
+      "positie": {
+        "x": 3810,
+        "y": -660
+      },
+      "validatie": {
+        "pattern": "^[A-Z]{2}[0-9]{2}[A-Z0-9]{4}[0-9]{7}([A-Z0-9]?){0,16}$",
+        "maxLength": 34,
+        "minLength": 15,
+        "foutmelding": "Voer een geldig IBAN in (bijv. NL91ABNA0417164300)",
+        "voorbeelden": [
+          "NL91ABNA0417164300"
+        ]
+      },
+      "weergave": {
+        "inputMask": "AA00 AAAA 0000 0000 00",
+        "placeholder": "NL91ABNA0417164300"
+      }
+    },
+    {
+      "naam": "KvKNummer",
+      "description": "KvK-nummer (8 cijfers).",
+      "domein": "register",
+      "basistype": "string",
+      "format": "kvk-nummer",
+      "positie": {
+        "x": 1755,
+        "y": 1035
+      },
+      "validatie": {
+        "pattern": "^[0-9]{8}$",
+        "maxLength": 8,
+        "minLength": 8,
+        "foutmelding": "Voer een geldig KvK-nummer in (8 cijfers)",
+        "voorbeelden": [
+          "12345678"
+        ]
+      },
+      "weergave": {
+        "inputMask": "00000000",
+        "placeholder": "12345678"
+      }
+    },
+    {
+      "naam": "Emailadres",
+      "description": "E-mailadres.",
+      "domein": "CG",
+      "basistype": "string",
+      "format": "email",
+      "positie": {
+        "x": -1500,
+        "y": 195
+      },
+      "validatie": {},
+      "weergave": {}
+    },
+    {
+      "naam": "Telefoonnummer",
+      "description": "Telefoonnummer in nationale of internationale notatie.",
+      "domein": "CG",
+      "basistype": "string",
+      "format": "phone",
+      "positie": {
+        "x": -1290,
+        "y": 195
+      },
+      "validatie": {},
+      "weergave": {}
+    },
+    {
+      "naam": "Versie",
+      "description": "Versienummer in semver-achtig formaat: m.n (verplicht), optioneel m.n.o of m.n.o.p.",
+      "domein": "configuratie",
+      "basistype": "string",
+      "format": "versie",
+      "positie": {
+        "x": 1350,
+        "y": 450
+      },
+      "validatie": {
+        "pattern": "^\\d+\\.\\d+(\\.\\d+)?(\\.\\d+)?$",
+        "foutmelding": "Voer een geldig versienummer in (bijv. 1.0, 2.1.3 of 1.0.0.1)"
+      },
+      "weergave": {
+        "placeholder": "bijv. 1.0 of 2.1.3"
+      }
+    }
+  ],
+  "enums": [
+    {
+      "goType": "ReferentielijstAdrestype",
+      "domein": "register",
+      "baseType": "string",
+      "positie": {
+        "x": 120,
+        "y": 1275
+      },
+      "waarden": [
+        {
+          "constNaam": "ReferentielijstAdrestypeURL",
+          "waarde": "URL"
+        },
+        {
+          "constNaam": "ReferentielijstAdrestypeURN",
+          "waarde": "URN"
+        }
+      ]
+    },
+    {
+      "goType": "RepoOrgRole",
+      "domein": "CGCT",
+      "baseType": "string",
+      "positie": {
+        "x": -330,
+        "y": -195
+      },
+      "waarden": [
+        {
+          "constNaam": "RepoOrgRoleOwner",
+          "waarde": "Owner"
+        },
+        {
+          "constNaam": "RepoOrgRoleContributor",
+          "waarde": "Contributor"
+        },
+        {
+          "constNaam": "RepoOrgRoleUser",
+          "waarde": "User"
+        }
+      ]
+    },
+    {
+      "goType": "AspectAnalysiTypes",
+      "domein": "CGCT",
+      "baseType": "string",
+      "positie": {
+        "x": -15,
+        "y": 525
+      },
+      "waarden": [
+        {
+          "constNaam": "AspectAnalysiTypesCode",
+          "waarde": "Code"
+        },
+        {
+          "constNaam": "AspectAnalysiTypesDocumentation",
+          "waarde": "Documentation"
+        },
+        {
+          "constNaam": "AspectAnalysiTypesEtc",
+          "waarde": "Etc"
+        }
+      ]
+    }
+  ],
+  "entiteiten": [
+    {
+      "typenaam": "Organisatie",
+      "description": "Organisatie die betrokken is bij initiatieven in het portfolio.",
+      "domein": "CG",
+      "isMaterieel": true,
+      "kleur": "#fde68a",
+      "meervoud": "organisaties",
+      "positie": {
+        "x": -675,
+        "y": -45
+      },
+      "afgeleideVelden": [
+        {
+          "naam": "weergavenaam",
+          "goType": "string",
+          "afleidingsregelTaal": "cel",
+          "afleidingsregel": "Organisatienaam.naam",
+          "isWeergaveVeld": true
+        }
+      ],
+      "gegevenselementen": [
+        {
+          "naam": "Contactgegevens",
+          "description": "Contactgegevens van de organisatie.",
+          "domein": "CG",
+          "meervoud": "organisatie_contactgegevens",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": -1050,
+            "y": 30
+          },
+          "id": "Organisatie->Organisatie_Contactgegevens",
+          "sourceHandle": "left",
+          "targetHandle": "right",
+          "velden": [
+            {
+              "naam": "url",
+              "goType": "URL",
+              "datatype": "URL"
+            },
+            {
+              "naam": "email",
+              "goType": "Emailadres",
+              "datatype": "Emailadres"
+            },
+            {
+              "naam": "telefoonnummer",
+              "goType": "Telefoonnummer",
+              "datatype": "Telefoonnummer"
+            }
+          ]
+        },
+        {
+          "naam": "Organisatienaam",
+          "description": "Naam van de organisatie.",
+          "domein": "CG",
+          "meervoud": "organisatienamen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": -1050,
+            "y": -90
+          },
+          "id": "edge_1775569590393_16",
+          "sourceHandle": "left",
+          "targetHandle": "right",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            }
+          ]
+        }
+      ],
+      "relaties": [
+        {
+          "naam": "Contactpersoon",
+          "domein": "CG",
+          "meervoud": "contactpersonen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "doelEntiteit": "Persoon",
+          "positie": {
+            "x": -675,
+            "y": 195
+          },
+          "id": "edge_1775566660638_2",
+          "sourceHandle": "bottom",
+          "targetHandle": "top",
+          "doelId": "edge_1775565921272_6",
+          "doelSourceHandle": "bottom",
+          "doelTargetHandle": "top",
+          "velden": [
+            {
+              "naam": "rol",
+              "goType": "string"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "typenaam": "Persoon",
+      "description": "Persoon die betrokken is bij initiatieven in het portfolio.",
+      "domein": "CG",
+      "isMaterieel": true,
+      "kleur": "#fecaca",
+      "meervoud": "personen",
+      "positie": {
+        "x": -675,
+        "y": 390
+      },
+      "afgeleideVelden": [
+        {
+          "naam": "weergavenaam",
+          "goType": "string",
+          "afleidingsregelTaal": "cel",
+          "afleidingsregel": "Persoonnaam.naam",
+          "isWeergaveVeld": true
+        }
+      ],
+      "gegevenselementen": [
+        {
+          "naam": "Contactgegevens",
+          "description": "Contactgegevens van de persoon.",
+          "domein": "CG",
+          "meervoud": "persoon_contactgegevens",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": -1050,
+            "y": 465
+          },
+          "id": "Persoon->Persoon_Contactgegevens",
+          "sourceHandle": "left",
+          "targetHandle": "right",
+          "velden": [
+            {
+              "naam": "email",
+              "goType": "Emailadres",
+              "datatype": "Emailadres"
+            },
+            {
+              "naam": "telefoonnummer",
+              "goType": "Telefoonnummer",
+              "datatype": "Telefoonnummer"
+            }
+          ]
+        },
+        {
+          "naam": "Persoonnaam",
+          "description": "Naam van de persoon.",
+          "domein": "CG",
+          "meervoud": "persoonnamen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": -1050,
+            "y": 345
+          },
+          "id": "edge_1775569596827_17",
+          "sourceHandle": "left",
+          "targetHandle": "right",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    },
+    {
+      "typenaam": "Referentielijst",
+      "description": "Generieke referentielijst-entiteit. Individuele lijsten (Landenlijst, EULidstaten, etc.) zijn records.",
+      "domein": "register",
+      "isMaterieel": true,
+      "entiteitSubtype": "referentielijst",
+      "kleur": "#fef3c7",
+      "meervoud": "referentielijsten",
+      "positie": {
+        "x": -255,
+        "y": 1035
+      },
+      "gegevenselementen": [
+        {
+          "naam": "Referentielijstnaam",
+          "description": "Leesbare naam van een referentielijst.",
+          "domein": "register",
+          "meervoud": "referentielijstnamen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 120,
+            "y": 780
+          },
+          "id": "Referentielijst->Referentielijst_Referentielijstnaam",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string"
+            }
+          ]
+        },
+        {
+          "naam": "Referentielijstomschrijving",
+          "description": "Omschrijving van een referentielijst.",
+          "domein": "register",
+          "meervoud": "referentielijstomschrijvingen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 120,
+            "y": 895
+          },
+          "id": "Referentielijst->Referentielijst_Referentielijstomschrijving",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "velden": [
+            {
+              "naam": "omschrijving",
+              "goType": "string"
+            }
+          ]
+        },
+        {
+          "naam": "ReferentielijstVisibility",
+          "description": "Domeinzichtbaarheid van een referentielijst (register, modelspecifiek, extern).",
+          "domein": "register",
+          "meervoud": "visibilities",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 120,
+            "y": 1009
+          },
+          "id": "Referentielijst->Referentielijst_ReferentielijstVisibility",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "velden": [
+            {
+              "naam": "domein",
+              "goType": "string"
+            }
+          ]
+        },
+        {
+          "naam": "ReferentielijstInternetadres",
+          "description": "Internetadres (URL/URN) van een referentielijst.",
+          "domein": "register",
+          "meervoud": "internetadressen",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 120,
+            "y": 1124
+          },
+          "id": "Referentielijst->Referentielijst_ReferentielijstInternetadres",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "velden": [
+            {
+              "naam": "adrestype",
+              "goType": "ReferentielijstAdrestype",
+              "enum": "ReferentielijstAdrestype"
+            },
+            {
+              "naam": "adres",
+              "goType": "string"
+            },
+            {
+              "naam": "organisatie",
+              "goType": "string"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    },
+    {
+      "typenaam": "Repository",
+      "domein": "CGCT",
+      "isMaterieel": true,
+      "kleur": "#bfdbfe",
+      "meervoud": "repositorys",
+      "positie": {
+        "x": -15,
+        "y": -45
+      },
+      "gegevenselementen": [
+        {
+          "naam": "RepoAddress",
+          "domein": "CGCT",
+          "meervoud": "repoaddresss",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 315,
+            "y": -30
+          },
+          "id": "edge_1775754083731_3",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "velden": [
+            {
+              "naam": "url",
+              "goType": "string"
+            }
+          ]
+        },
+        {
+          "naam": "RepoName",
+          "domein": "CGCT",
+          "meervoud": "reponames",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": -15,
+            "y": -195
+          },
+          "id": "edge_1775754304090_8",
+          "sourceHandle": "top",
+          "targetHandle": "bottom",
+          "velden": [
+            {
+              "naam": "name",
+              "goType": "string"
+            }
+          ]
+        }
+      ],
+      "relaties": [
+        {
+          "naam": "",
+          "domein": "CGCT",
+          "meervoud": "rels",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": false,
+          "doelEntiteit": "Organisatie",
+          "positie": {
+            "x": -330,
+            "y": -30
+          },
+          "id": "edge_1775754239771_6",
+          "sourceHandle": "left",
+          "targetHandle": "right",
+          "doelId": "edge_1775754242497_7",
+          "doelSourceHandle": "left",
+          "doelTargetHandle": "right",
+          "velden": [
+            {
+              "naam": "role",
+              "goType": "RepoOrgRole",
+              "enum": "RepoOrgRole"
+            }
+          ],
+          "useEdges": [
+            {
+              "doel": "1775754387507_9",
+              "id": "edge_1775754458390_11",
+              "sourceHandle": "top",
+              "targetHandle": "bottom"
+            }
+          ]
+        },
+        {
+          "naam": "",
+          "meervoud": "rels",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": false,
+          "doelEntiteit": "RepoAnalysis",
+          "positie": {
+            "x": -15,
+            "y": 105
+          },
+          "id": "edge_1775754960959_23",
+          "sourceHandle": "bottom",
+          "targetHandle": "top",
+          "doelId": "edge_1775754965925_24",
+          "doelSourceHandle": "bottom",
+          "doelTargetHandle": "top",
+          "velden": []
+        }
+      ]
+    },
+    {
+      "typenaam": "RepoAnalysis",
+      "domein": "CGCT",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "repoanalysiss",
+      "positie": {
+        "x": -15,
+        "y": 225
+      },
+      "gegevenselementen": [
+        {
+          "naam": "Repository_",
+          "domein": "CGCT",
+          "meervoud": "analyses",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": -15,
+            "y": 360
+          },
+          "id": "edge_1775754900056_21",
+          "sourceHandle": "bottom",
+          "targetHandle": "top",
+          "velden": [
+            {
+              "naam": "aspectType",
+              "goType": "AspectAnalysiTypes",
+              "enum": "AspectAnalysiTypes"
+            },
+            {
+              "naam": "readyAt",
+              "goType": "DatumTijd",
+              "datatype": "DatumTijd"
+            },
+            {
+              "naam": "score",
+              "goType": "int"
+            }
+          ],
+          "useEdges": [
+            {
+              "doel": "DatumTijd",
+              "id": "edge_1775754619991_14",
+              "sourceHandle": "right",
+              "targetHandle": "left"
+            }
+          ]
+        },
+        {
+          "naam": "RepoAnalysisOverall",
+          "meervoud": "repoanalysisoveralls",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 330,
+            "y": 225
+          },
+          "id": "edge_1775755059029_26",
+          "sourceHandle": "right",
+          "targetHandle": "left",
+          "velden": [
+            {
+              "naam": "checkedAt",
+              "goType": "DatumTijd",
+              "datatype": "DatumTijd"
+            },
+            {
+              "naam": "score",
+              "goType": "Percentage",
+              "datatype": "Percentage"
+            }
+          ],
+          "useEdges": [
+            {
+              "doel": "DatumTijd",
+              "id": "edge_1775755079905_27",
+              "sourceHandle": "bottom",
+              "targetHandle": "top"
+            },
+            {
+              "doel": "Percentage",
+              "id": "edge_1775755087669_28",
+              "sourceHandle": "right",
+              "targetHandle": "left"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    }
+  ]
+}

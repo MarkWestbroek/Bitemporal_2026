@@ -16,20 +16,20 @@ const (
 	ReferentielijstAdrestypeURN ReferentielijstAdrestype = "URN"
 )
 
-// Landcode — Enkelvoudig gegevenselement landcode van Land.
-type Landcode struct {
-	bun.BaseModel `bun:"table:landcode,alias:landcode"`
-	Land_ID       int             `json:"land_id" bun:"land_id,pk" schema_desc:"ID van de Land-entiteit"`
-	Rel_ID        int             `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentLand    *Land           `json:"-" bun:"rel:belongs-to,join:land_id=id,on_delete:cascade"`
-	Opvoer        *time.Time      `json:"opvoer,omitempty"`
-	Afvoer        *time.Time      `json:"afvoer,omitempty"`
-	Data          []Landcode_Data `bun:"rel:has-many,join:land_id=land_id,join:rel_id=rel_id" json:"data,omitempty"`
+// Land_Landcode — Enkelvoudig gegevenselement landcode van Land.
+type Land_Landcode struct {
+	bun.BaseModel `bun:"table:land_landcode,alias:land_landcode"`
+	Land_ID       int                  `json:"land_id" bun:"land_id,pk" schema_desc:"ID van de Land-entiteit"`
+	Rel_ID        int                  `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentLand    *Land                `json:"-" bun:"rel:belongs-to,join:land_id=id,on_delete:cascade"`
+	Opvoer        *time.Time           `json:"opvoer,omitempty"`
+	Afvoer        *time.Time           `json:"afvoer,omitempty"`
+	Data          []Land_Landcode_Data `bun:"rel:has-many,join:land_id=land_id,join:rel_id=rel_id" json:"data,omitempty"`
 }
 
-// Landcode_Data — geversioned inhoud van Landcode.
-type Landcode_Data struct {
-	bun.BaseModel `bun:"table:landcode_data,alias:landcode_data"`
+// Land_Landcode_Data — geversioned inhoud van Land_Landcode.
+type Land_Landcode_Data struct {
+	bun.BaseModel `bun:"table:land_landcode_data,alias:land_landcode_data"`
 	Land_ID       int        `json:"land_id" bun:"land_id,pk"`
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
@@ -38,20 +38,20 @@ type Landcode_Data struct {
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
 
-// Landnaam — Enkelvoudig gegevenselement landnaam van Land.
-type Landnaam struct {
-	bun.BaseModel `bun:"table:landnaam,alias:landnaam"`
-	Land_ID       int             `json:"land_id" bun:"land_id,pk" schema_desc:"ID van de Land-entiteit"`
-	Rel_ID        int             `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentLand    *Land           `json:"-" bun:"rel:belongs-to,join:land_id=id,on_delete:cascade"`
-	Opvoer        *time.Time      `json:"opvoer,omitempty"`
-	Afvoer        *time.Time      `json:"afvoer,omitempty"`
-	Data          []Landnaam_Data `bun:"rel:has-many,join:land_id=land_id,join:rel_id=rel_id" json:"data,omitempty"`
+// Land_Landnaam — Enkelvoudig gegevenselement landnaam van Land.
+type Land_Landnaam struct {
+	bun.BaseModel `bun:"table:land_landnaam,alias:land_landnaam"`
+	Land_ID       int                  `json:"land_id" bun:"land_id,pk" schema_desc:"ID van de Land-entiteit"`
+	Rel_ID        int                  `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentLand    *Land                `json:"-" bun:"rel:belongs-to,join:land_id=id,on_delete:cascade"`
+	Opvoer        *time.Time           `json:"opvoer,omitempty"`
+	Afvoer        *time.Time           `json:"afvoer,omitempty"`
+	Data          []Land_Landnaam_Data `bun:"rel:has-many,join:land_id=land_id,join:rel_id=rel_id" json:"data,omitempty"`
 }
 
-// Landnaam_Data — geversioned inhoud van Landnaam.
-type Landnaam_Data struct {
-	bun.BaseModel `bun:"table:landnaam_data,alias:landnaam_data"`
+// Land_Landnaam_Data — geversioned inhoud van Land_Landnaam.
+type Land_Landnaam_Data struct {
+	bun.BaseModel `bun:"table:land_landnaam_data,alias:land_landnaam_data"`
 	Land_ID       int        `json:"land_id" bun:"land_id,pk"`
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
@@ -60,20 +60,20 @@ type Landnaam_Data struct {
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
 
-// Referentielijstnaam — Leesbare naam van een referentielijst.
-type Referentielijstnaam struct {
-	bun.BaseModel         `bun:"table:referentielijstnaam,alias:referentielijstnaam"`
-	Referentielijst_ID    int                        `json:"referentielijst_id" bun:"referentielijst_id,pk" schema_desc:"ID van de Referentielijst-entiteit"`
-	Rel_ID                int                        `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentReferentielijst *Referentielijst           `json:"-" bun:"rel:belongs-to,join:referentielijst_id=id,on_delete:cascade"`
-	Opvoer                *time.Time                 `json:"opvoer,omitempty"`
-	Afvoer                *time.Time                 `json:"afvoer,omitempty"`
-	Data                  []Referentielijstnaam_Data `bun:"rel:has-many,join:referentielijst_id=referentielijst_id,join:rel_id=rel_id" json:"data,omitempty"`
+// Referentielijst_Referentielijstnaam — Leesbare naam van een referentielijst.
+type Referentielijst_Referentielijstnaam struct {
+	bun.BaseModel         `bun:"table:referentielijst_referentielijstnaam,alias:referentielijst_referentielijstnaam"`
+	Referentielijst_ID    int                                        `json:"referentielijst_id" bun:"referentielijst_id,pk" schema_desc:"ID van de Referentielijst-entiteit"`
+	Rel_ID                int                                        `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentReferentielijst *Referentielijst                           `json:"-" bun:"rel:belongs-to,join:referentielijst_id=id,on_delete:cascade"`
+	Opvoer                *time.Time                                 `json:"opvoer,omitempty"`
+	Afvoer                *time.Time                                 `json:"afvoer,omitempty"`
+	Data                  []Referentielijst_Referentielijstnaam_Data `bun:"rel:has-many,join:referentielijst_id=referentielijst_id,join:rel_id=rel_id" json:"data,omitempty"`
 }
 
-// Referentielijstnaam_Data — geversioned inhoud van Referentielijstnaam.
-type Referentielijstnaam_Data struct {
-	bun.BaseModel      `bun:"table:referentielijstnaam_data,alias:referentielijstnaam_data"`
+// Referentielijst_Referentielijstnaam_Data — geversioned inhoud van Referentielijst_Referentielijstnaam.
+type Referentielijst_Referentielijstnaam_Data struct {
+	bun.BaseModel      `bun:"table:referentielijst_referentielijstnaam_data,alias:referentielijst_referentielijstnaam_data"`
 	Referentielijst_ID int        `json:"referentielijst_id" bun:"referentielijst_id,pk"`
 	Rel_ID             int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie             int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
@@ -82,20 +82,20 @@ type Referentielijstnaam_Data struct {
 	Afvoer             *time.Time `json:"afvoer,omitempty"`
 }
 
-// Referentielijstomschrijving — Omschrijving van een referentielijst.
-type Referentielijstomschrijving struct {
-	bun.BaseModel         `bun:"table:referentielijstomschrijving,alias:referentielijstomschrijving"`
-	Referentielijst_ID    int                                `json:"referentielijst_id" bun:"referentielijst_id,pk" schema_desc:"ID van de Referentielijst-entiteit"`
-	Rel_ID                int                                `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentReferentielijst *Referentielijst                   `json:"-" bun:"rel:belongs-to,join:referentielijst_id=id,on_delete:cascade"`
-	Opvoer                *time.Time                         `json:"opvoer,omitempty"`
-	Afvoer                *time.Time                         `json:"afvoer,omitempty"`
-	Data                  []Referentielijstomschrijving_Data `bun:"rel:has-many,join:referentielijst_id=referentielijst_id,join:rel_id=rel_id" json:"data,omitempty"`
+// Referentielijst_Referentielijstomschrijving — Omschrijving van een referentielijst.
+type Referentielijst_Referentielijstomschrijving struct {
+	bun.BaseModel         `bun:"table:referentielijst_referentielijstomschrijving,alias:referentielijst_referentielijstomschrijving"`
+	Referentielijst_ID    int                                                `json:"referentielijst_id" bun:"referentielijst_id,pk" schema_desc:"ID van de Referentielijst-entiteit"`
+	Rel_ID                int                                                `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentReferentielijst *Referentielijst                                   `json:"-" bun:"rel:belongs-to,join:referentielijst_id=id,on_delete:cascade"`
+	Opvoer                *time.Time                                         `json:"opvoer,omitempty"`
+	Afvoer                *time.Time                                         `json:"afvoer,omitempty"`
+	Data                  []Referentielijst_Referentielijstomschrijving_Data `bun:"rel:has-many,join:referentielijst_id=referentielijst_id,join:rel_id=rel_id" json:"data,omitempty"`
 }
 
-// Referentielijstomschrijving_Data — geversioned inhoud van Referentielijstomschrijving.
-type Referentielijstomschrijving_Data struct {
-	bun.BaseModel      `bun:"table:referentielijstomschrijving_data,alias:referentielijstomschrijving_data"`
+// Referentielijst_Referentielijstomschrijving_Data — geversioned inhoud van Referentielijst_Referentielijstomschrijving.
+type Referentielijst_Referentielijstomschrijving_Data struct {
+	bun.BaseModel      `bun:"table:referentielijst_referentielijstomschrijving_data,alias:referentielijst_referentielijstomschrijving_data"`
 	Referentielijst_ID int        `json:"referentielijst_id" bun:"referentielijst_id,pk"`
 	Rel_ID             int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie             int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
@@ -104,20 +104,20 @@ type Referentielijstomschrijving_Data struct {
 	Afvoer             *time.Time `json:"afvoer,omitempty"`
 }
 
-// ReferentielijstVisibility — Domeinzichtbaarheid van een referentielijst (register, modelspecifiek, extern).
-type ReferentielijstVisibility struct {
-	bun.BaseModel         `bun:"table:referentielijstvisibility,alias:referentielijstvisibility"`
-	Referentielijst_ID    int                              `json:"referentielijst_id" bun:"referentielijst_id,pk" schema_desc:"ID van de Referentielijst-entiteit"`
-	Rel_ID                int                              `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentReferentielijst *Referentielijst                 `json:"-" bun:"rel:belongs-to,join:referentielijst_id=id,on_delete:cascade"`
-	Opvoer                *time.Time                       `json:"opvoer,omitempty"`
-	Afvoer                *time.Time                       `json:"afvoer,omitempty"`
-	Data                  []ReferentielijstVisibility_Data `bun:"rel:has-many,join:referentielijst_id=referentielijst_id,join:rel_id=rel_id" json:"data,omitempty"`
+// Referentielijst_ReferentielijstVisibility — Domeinzichtbaarheid van een referentielijst (register, modelspecifiek, extern).
+type Referentielijst_ReferentielijstVisibility struct {
+	bun.BaseModel         `bun:"table:referentielijst_referentielijstvisibility,alias:referentielijst_referentielijstvisibility"`
+	Referentielijst_ID    int                                              `json:"referentielijst_id" bun:"referentielijst_id,pk" schema_desc:"ID van de Referentielijst-entiteit"`
+	Rel_ID                int                                              `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentReferentielijst *Referentielijst                                 `json:"-" bun:"rel:belongs-to,join:referentielijst_id=id,on_delete:cascade"`
+	Opvoer                *time.Time                                       `json:"opvoer,omitempty"`
+	Afvoer                *time.Time                                       `json:"afvoer,omitempty"`
+	Data                  []Referentielijst_ReferentielijstVisibility_Data `bun:"rel:has-many,join:referentielijst_id=referentielijst_id,join:rel_id=rel_id" json:"data,omitempty"`
 }
 
-// ReferentielijstVisibility_Data — geversioned inhoud van ReferentielijstVisibility.
-type ReferentielijstVisibility_Data struct {
-	bun.BaseModel      `bun:"table:referentielijstvisibility_data,alias:referentielijstvisibility_data"`
+// Referentielijst_ReferentielijstVisibility_Data — geversioned inhoud van Referentielijst_ReferentielijstVisibility.
+type Referentielijst_ReferentielijstVisibility_Data struct {
+	bun.BaseModel      `bun:"table:referentielijst_referentielijstvisibility_data,alias:referentielijst_referentielijstvisibility_data"`
 	Referentielijst_ID int        `json:"referentielijst_id" bun:"referentielijst_id,pk"`
 	Rel_ID             int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie             int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
@@ -126,20 +126,20 @@ type ReferentielijstVisibility_Data struct {
 	Afvoer             *time.Time `json:"afvoer,omitempty"`
 }
 
-// ReferentielijstInternetadres — Internetadres (URL/URN) van een referentielijst.
-type ReferentielijstInternetadres struct {
-	bun.BaseModel         `bun:"table:referentielijstinternetadres,alias:referentielijstinternetadres"`
-	Referentielijst_ID    int                                 `json:"referentielijst_id" bun:"referentielijst_id,pk" schema_desc:"ID van de Referentielijst-entiteit"`
-	Rel_ID                int                                 `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentReferentielijst *Referentielijst                    `json:"-" bun:"rel:belongs-to,join:referentielijst_id=id,on_delete:cascade"`
-	Opvoer                *time.Time                          `json:"opvoer,omitempty"`
-	Afvoer                *time.Time                          `json:"afvoer,omitempty"`
-	Data                  []ReferentielijstInternetadres_Data `bun:"rel:has-many,join:referentielijst_id=referentielijst_id,join:rel_id=rel_id" json:"data,omitempty"`
+// Referentielijst_ReferentielijstInternetadres — Internetadres (URL/URN) van een referentielijst.
+type Referentielijst_ReferentielijstInternetadres struct {
+	bun.BaseModel         `bun:"table:referentielijst_referentielijstinternetadres,alias:referentielijst_referentielijstinternetadres"`
+	Referentielijst_ID    int                                                 `json:"referentielijst_id" bun:"referentielijst_id,pk" schema_desc:"ID van de Referentielijst-entiteit"`
+	Rel_ID                int                                                 `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentReferentielijst *Referentielijst                                    `json:"-" bun:"rel:belongs-to,join:referentielijst_id=id,on_delete:cascade"`
+	Opvoer                *time.Time                                          `json:"opvoer,omitempty"`
+	Afvoer                *time.Time                                          `json:"afvoer,omitempty"`
+	Data                  []Referentielijst_ReferentielijstInternetadres_Data `bun:"rel:has-many,join:referentielijst_id=referentielijst_id,join:rel_id=rel_id" json:"data,omitempty"`
 }
 
-// ReferentielijstInternetadres_Data — geversioned inhoud van ReferentielijstInternetadres.
-type ReferentielijstInternetadres_Data struct {
-	bun.BaseModel      `bun:"table:referentielijstinternetadres_data,alias:referentielijstinternetadres_data"`
+// Referentielijst_ReferentielijstInternetadres_Data — geversioned inhoud van Referentielijst_ReferentielijstInternetadres.
+type Referentielijst_ReferentielijstInternetadres_Data struct {
+	bun.BaseModel      `bun:"table:referentielijst_referentielijstinternetadres_data,alias:referentielijst_referentielijstinternetadres_data"`
 	Referentielijst_ID int                      `json:"referentielijst_id" bun:"referentielijst_id,pk"`
 	Rel_ID             int                      `json:"rel_id" bun:"rel_id,pk"`
 	Versie             int64                    `json:"versie,omitempty" bun:"versie,pk,autoincrement"`

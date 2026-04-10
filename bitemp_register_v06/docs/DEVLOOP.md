@@ -181,6 +181,7 @@ Retourneert:
 2. **Rebuild endpoint** (`POST /admin/rebuild/:password`) ontvangt een V3 model of haalt er één uit de database/code.
 3. Voor de codegen start:
    - handmatige kernbestanden in `model/` (zoals `v3_format.go`, `metaregistry_plumbing.go`, `v3_exporter.go`) worden eerst naar `_baseline/model/` gesynchroniseerd
+   - ook de bewust bewaarde JSON-bronnen onder `model/json/` (zoals `model/json/model v3/*`) worden mee gesynchroniseerd, zodat ze niet verdwijnen bij een restore
    - daarna wordt `model/` hersteld vanuit `_baseline/model/` (schone bewezen toestand)
    - vervolgens wordt een extra backup gemaakt in `_pre_rebuild/model/`
 4. Daarna volgt per geselecteerd domein een aparte codegen-run.
