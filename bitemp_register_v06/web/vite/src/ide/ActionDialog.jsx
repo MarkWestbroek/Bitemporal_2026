@@ -8,6 +8,7 @@
  *   - "publishAndRebuild"  — Publiceer + direct daarna rebuild
  */
 import { useEffect, useRef } from "react";
+import DiffResultPanel from "./DiffResultPanel";
 
 const S = {
   backdrop: {
@@ -16,7 +17,7 @@ const S = {
   },
   dialog: {
     background: "var(--ide-menu-bg, #2d2d2d)", border: "1px solid var(--ide-menu-border, #555)", borderRadius: 8,
-    boxShadow: "0 8px 32px rgba(0,0,0,0.6)", minWidth: 420, maxWidth: 560,
+    boxShadow: "0 8px 32px rgba(0,0,0,0.6)", minWidth: 420, maxWidth: 640,
     color: "var(--ide-panel-color, #ccc)", fontSize: 13,
   },
   header: {
@@ -77,17 +78,20 @@ const TITLES = {
   publish: "🚀 Publiceer schema-versie",
   rebuild: "⚙️ Rebuild (codegen + herstart)",
   publishAndRebuild: "🚀⚙️ Publiceer + Rebuild",
+  diff: "🔍 Delta-analyse",
 };
 
 const SUBMIT_LABELS = {
   publish: "Publiceer",
   rebuild: "Rebuild starten",
   publishAndRebuild: "Publiceer + Rebuild",
+  diff: "Analyse starten",
 };
 
-export default function ActionDialog({ type, values, validationErrors = [], validationWarnings = [], onChange, onClose, onSubmit }) {
+export default function ActionDialog({ type, values, validationErrors = [], validationWarnings = [], diffResult, diffLoading, onChange, onClose, onSubmit, onDiff }) {
   const firstInputRef = useRef(null);
   const hasErrors = validationErrors.length > 0;
+  const hasDiffResult = !!diffResult;
 
   // Focus eerste input bij openen
   useEffect(() => {
@@ -211,7 +215,62 @@ export default function ActionDialog({ type, values, validationErrors = [], vali
                   </div>
                 </div>
               )}
+
+              {/* Pre-flight diff knop bij rebuild */}
+              {onDiff && (
+                <button type="button" onClick={onDiff} style={{
+                  background: "#1a2633", color: "#8cb4ff", border: "1px solid #2a4a6a",
+                  borderRadius: 3, padding: "5px 14px", cursor: "pointer", fontSize: 12,
+                  alignSelf: "flex-start",
+                }}>
+                  🔍 Eerst delta-analyse uitvoeren
+                </button>
+              )}
             </>
+          )}
+
+          {/* ── Diff-sectie (standalone modus) ── */}
+          {type === "diff" && (
+            <>
+              <div style={S.note}>
+                <strong>Delta-analyse:</strong> vergelijk het huidige editormodel met een referentieversie
+                om te zien wat er is gewijzigd en of er breaking changes zijn.
+              </div>
+              <div style={S.grid}>
+                <label style={S.field}>
+                  <span style={S.label}>Vergelijken met</span>
+                  <select style={S.select} value={values.diffBron || "actief"} onChange={(e) => onChange("diffBron", e.target.value)}>
+                    <option value="actief">Actieve schema-versie</option>
+                    <option value="proposed">Laatste proposed versie</option>
+                    <option value="code">Huidige code (MetaRegistry)</option>
+                    <option value="id">Specifiek schema-versie ID</option>
+                  </select>
+                </label>
+                {values.diffBron === "id" && (
+                  <label style={S.field}>
+                    <span style={S.label}>Schema-versie ID</span>
+                    <input style={S.input} type="number" value={values.diffSchemaVersieID || ""} onChange={(e) => onChange("diffSchemaVersieID", e.target.value)} />
+                  </label>
+                )}
+                <label style={S.field}>
+                  <span style={S.label}>API basis</span>
+                  <input style={S.input} value={values.rebuildApiBase || ""} onChange={(e) => onChange("rebuildApiBase", e.target.value)} placeholder="http://localhost:8082" />
+                </label>
+                <label style={S.field}>
+                  <span style={S.label}>Devloop wachtwoord</span>
+                  <input style={S.input} type="password" value={values.wachtwoord || ""} onChange={(e) => onChange("wachtwoord", e.target.value)} placeholder="1234" />
+                </label>
+              </div>
+              <label style={S.fieldFull}>
+                <span style={S.label}>Domeinfilter (optioneel)</span>
+                <input style={S.input} value={values.diffDomein || ""} onChange={(e) => onChange("diffDomein", e.target.value)} placeholder="(leeg = alle domeinen)" />
+              </label>
+            </>
+          )}
+
+          {/* ── Diff-resultaten ── */}
+          {(diffResult || diffLoading) && (
+            <DiffResultPanel diffResult={diffResult} loading={diffLoading} />
           )}
 
           {/* ── Validatie-resultaten ── */}
@@ -239,7 +298,11 @@ export default function ActionDialog({ type, values, validationErrors = [], vali
           {/* ── Acties ── */}
           <div style={S.actions}>
             <button type="button" style={S.btnCancel} onClick={onClose}>Annuleren</button>
-            <button type="submit" style={{ ...S.btnSubmit, ...(hasErrors ? { opacity: 0.4, cursor: "not-allowed" } : {}) }} disabled={hasErrors} title={hasErrors ? "Los eerst de validatiefouten op" : undefined}>{SUBMIT_LABELS[type] || "OK"}</button>
+            {type === "diff" && hasDiffResult ? (
+              <button type="submit" style={S.btnSubmit}>🔄 Opnieuw analyseren</button>
+            ) : (
+              <button type="submit" style={{ ...S.btnSubmit, ...(hasErrors ? { opacity: 0.4, cursor: "not-allowed" } : {}) }} disabled={hasErrors} title={hasErrors ? "Los eerst de validatiefouten op" : undefined}>{SUBMIT_LABELS[type] || "OK"}</button>
+            )}
           </div>
         </form>
       </div>

@@ -14,6 +14,21 @@ import { DEFAULT_DIAGRAM_ID } from "./useModelStore.js";
 
 // ─── Helpers ────────────────────────────────────────────────
 
+/**
+ * Genereer een geldige, unieke Go-constNaam voor een enum-waarde.
+ * Prefixed met het enum GoType zodat constNamen cross-enum uniek zijn.
+ * Bijv. enum "Status" + waarde "concept" → "StatusConcept".
+ */
+function maakConstNaam(enumGoType, waarde) {
+  const sanitized = String(waarde).replace(/[^a-zA-Z0-9]+/g, " ").trim();
+  const suffix = sanitized
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join("");
+  return (enumGoType || "Enum") + (suffix || "Onbekend");
+}
+
 function goTypeNaarVeldType(goType) {
   const t = (goType || "").startsWith("*") ? goType.slice(1) : goType || "";
   switch (t) {
@@ -638,11 +653,12 @@ export function storeNaarV3Model(state) {
 
   // --- Enums → V3 ---
   const v3Enums = enums.map((el) => {
+    const goType = el.data?.naam || el.naam;
     const v3 = {
-      goType: el.data?.naam || el.naam,
+      goType,
       baseType: el.data?.baseType || "string",
       waarden: (el.data?.waarden || []).map((w) => ({
-        constNaam: String(w).replace(/[^A-Za-z0-9_]/g, "_"),
+        constNaam: maakConstNaam(goType, w),
         waarde: w,
       })),
     };

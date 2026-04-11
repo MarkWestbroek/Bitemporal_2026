@@ -671,6 +671,24 @@ func MaakRebuildHandler() gin.HandlerFunc {
 			herstartMelding = "2 seconden"
 		}
 
+		// Auto-snapshot: sla rebuild model op als IdeBestand
+		go func() {
+			snapshotErr := RegistreerBestandSnapshot(context.Background(), DB, BestandSnapshotParams{
+				Naam:         fmt.Sprintf("rebuild_%s.json", req.Domein),
+				Beschrijving: fmt.Sprintf("Rebuild snapshot (domein: %s)", req.Domein),
+				Categorie:    model.IdeBestandCategorieModelSnapshot,
+				Formaat:      model.IdeBestandFormaatJSON,
+				MimeType:     "application/json",
+				Domein:       req.Domein,
+				VersieLabel:  "rebuild",
+				Inhoud:       string(modelBytes),
+				Opmerking:    "Auto-snapshot bij succesvolle rebuild",
+			})
+			if snapshotErr != nil {
+				fmt.Printf("WARN: IdeBestand snapshot bij rebuild mislukt: %v\n", snapshotErr)
+			}
+		}()
+
 		c.JSON(http.StatusOK, RebuildResponse{
 			Status:       "succesvol",
 			Stappen:      stappen,

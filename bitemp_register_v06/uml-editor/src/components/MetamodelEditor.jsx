@@ -808,9 +808,8 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       const bronNode = connectionState?.fromNode || null;
       const fromHandle = connectionState?.fromHandle;
       const handleType = fromHandle?.type || "source";
-      const handleId = fromHandle?.id || "";
-      // Ctrl-drag alleen via de bottom-handle
-      if (!bronNode || bronNode.type !== "entiteit" || handleType !== "source" || handleId !== "source-bottom") return;
+      // Ctrl-drag vanuit elke source handle van een entiteit
+      if (!bronNode || bronNode.type !== "entiteit" || handleType !== "source") return;
 
       const pointer = haalPointerPositie(event);
       const flowPos = pointer && reactFlowRef.current?.screenToFlowPosition

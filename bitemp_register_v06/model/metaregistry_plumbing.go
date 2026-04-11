@@ -412,6 +412,11 @@ func init() {
 	initFinancieelDatatypeRegistry()
 	initFinancieelMetaRegistry()
 
+	// ide_bestanden — domein-specifieke uitbreiding
+	initIdeBestandenEnumRegistry()
+	initIdeBestandenDatatypeRegistry()
+	initIdeBestandenMetaRegistry()
+
 	propageerDomeinNaarOnderliggende()
 }
 

@@ -67,8 +67,8 @@
 
 ```
 30  UML model versies
-    - delta tussen een nieuwe en de huidige bepalen
-    - impact van de delta bepalen (breaking of niet)
+    - ~~delta tussen een nieuwe en de huidige bepalen~~ ✅ (schemadiff + IDE Delta-knop)
+    - ~~impact van de delta bepalen (breaking of niet)~~ ✅ (ernst-classificatie in schemadiff)
     - Export naar MIM linked data json iets
     - kleur uit EA importeren
 ```
@@ -409,7 +409,7 @@ ONGEDAANMAKING VAN EEN ONGEDAANMAKING
 
 ## 17. model/ontwerpkeuzen.md — Delta-analyse ✅ GEÏMPLEMENTEERD
 
-**Status**: volledig geïmplementeerd in `schemadiff/` package + `cmd/schemadiff/` CLI + `--diff`/`--diff-only` in codegen.
+**Status**: volledig geïmplementeerd in `schemadiff/` package + `cmd/schemadiff/` CLI + `--diff`/`--diff-only` in codegen + IDE integratie via `POST /admin/diff/:password`.
 Zie [docs/schemadiff.md](schemadiff.md) voor volledige documentatie.
 
 Oorspronkelijk plan:

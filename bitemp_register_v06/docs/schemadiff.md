@@ -56,6 +56,58 @@ Bij `--diff` worden automatisch migratie-SQL-bestanden naar `dbsetup/migrations/
 
 Er is een VS Code taak "go: schemadiff (v06)" beschikbaar die om de paden van het oude en nieuwe model vraagt.
 
+### IDE / Editor integratie
+
+De delta-analyse is rechtstreeks beschikbaar vanuit de IDE (IdePage):
+
+#### Standalone Delta-knop (🔍 Delta)
+In de IDE-toolbar staat een **🔍 Delta** knop die een dialoog opent waar je kunt kiezen waartegen het huidige editormodel wordt vergeleken:
+
+- **Actieve schema-versie** (default) — de laatst geactiveerde versie in de database
+- **Laatste proposed versie** — de nieuwste nog niet-geactiveerde versie
+- **Huidige code (MetaRegistry)** — wat er nu daadwerkelijk draait
+- **Specifiek schema-versie ID** — een expliciet versienummer
+
+Optioneel kan een domeinfilter worden opgegeven. Na de analyse worden resultaten getoond met kleurcodering per ernst-niveau, filterbadges, en optioneel de gegenereerde migratie-SQL.
+
+#### Pre-flight diff bij Rebuild
+Bij de Rebuild- en Pub+Rebuild-dialogen is een knop **🔍 Eerst delta-analyse uitvoeren** beschikbaar. Deze voert de vergelijking uit tegen de actieve schema-versie en toont de resultaten in dezelfde dialoog, zodat je vóór het rebuilden kunt zien wat de impact is.
+
+#### API endpoint
+
+```
+POST /admin/diff/:password
+Content-Type: application/json
+
+{
+  "model": { ... },         // V3 model vanuit de editor (verplicht)
+  "bron": "actief",         // "actief" | "proposed" | "code" | "id"
+  "schema_versie_id": 42,   // alleen bij bron="id"
+  "domein": "np-loc"        // optioneel domeinfilter
+}
+```
+
+Response:
+```json
+{
+  "status": "ok",
+  "samenvatting": "Delta: 2 additief, 1 modificatie — vergeleken met: ...",
+  "is_breaking": true,
+  "heeft_migratie": true,
+  "totaal": 3,
+  "informatief": 0,
+  "additief": 2,
+  "modificatie": 1,
+  "destructief": 0,
+  "oud_model_naam": "register",
+  "nieuw_model_naam": "register",
+  "items": [ ... ],
+  "migratie_sql": "BEGIN;\n..."
+}
+```
+
+Vereist: `DEVLOOP=true` environment variabele (zelfde beveiliging als rebuild).
+
 ## Ernst-classificatie
 
 Elke wijziging krijgt een van vier ernst-niveaus:
@@ -114,6 +166,17 @@ cmd/schemadiff/main.go    ─── CLI entry point
 cmd/codegen/main.go       ─── --diff / --diff-only integratie
     │
     └── schemadiff/           (zelfde package)
+
+handlers/diff_handler.go   ─── POST /admin/diff/:password   (IDE integratie)
+    │
+    ├── schemadiff/diff.go     ── Vergelijk()
+    ├── schemadiff/migration.go── GenereerMigratie()
+    └── model/v3_export.go     ── ExportMetaRegistryToV3() (bij bron=code)
+
+web/vite/src/
+    ├── ide/ActionDialog.jsx      ── "diff" modus + pre-flight bij rebuild
+    ├── ide/DiffResultPanel.jsx   ── Resultaatweergave met kleurcodes + filter
+    └── pages/IdePage.jsx         ── 🔍 Delta knop + doDiff() + handlePreFlightDiff()
 ```
 
 ## Beperkingen
@@ -122,3 +185,13 @@ cmd/codegen/main.go       ─── --diff / --diff-only integratie
 - **Geen data-migratie**: de tool genereert alleen DDL (structuur), geen DML (data-transformatie).
 - **CREATE TABLE als placeholder**: nieuwe tabellen worden niet als volledig DDL gegenereerd, omdat Bun/createmodeltables dit automatisch doet bij herstart.
 - **Trigger-aanpassing**: als PK-structuur wijzigt (bijv. door isMaterieel wijziging), moeten relatieve-autoincrement-triggers handmatig worden bijgewerkt.
+
+## Enum constNaam generatie
+
+Enum-waarden in het V3-model bevatten naast de `waarde` (letterlijke string) een `constNaam` die als Go-constant wordt gebruikt. De IDE slaat alleen de waarde-strings op; de `constNaam` wordt automatisch gegenereerd bij export naar V3 (`storeNaarV3Model()` in `adapters.js`).
+
+Patroon: `{EnumGoType}{WaardePascalCase}` — bijv. enum `Status` met waarde `"concept"` → constNaam `StatusConcept`.
+
+Dit garandeert:
+- **PascalCase**: geldig als Go-identifier
+- **Cross-enum uniekheid**: door het enum-prefix zijn `StatusConcept` en `PublicatieStatusConcept` uniek

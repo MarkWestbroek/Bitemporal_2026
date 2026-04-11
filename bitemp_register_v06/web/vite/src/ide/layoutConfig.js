@@ -10,6 +10,7 @@ import * as FlexLayout from "flexlayout-react";
 export const COMP_BROWSER = "browser";
 export const COMP_DIAGRAM = "diagram";
 export const COMP_PROPERTIES = "properties";
+export const COMP_BESTANDEN = "bestanden";
 
 /**
  * Maak het FlexLayout JSON model.
@@ -84,6 +85,42 @@ export function openDiagramTab(model, diagramId, naam) {
         name: naam || diagramId,
         component: COMP_DIAGRAM,
         config: { diagramId },
+      },
+      findOrFirstTabset(model, COMP_DIAGRAM),
+      FlexLayout.DockLocation.CENTER,
+      -1,
+      true
+    )
+  );
+}
+
+/**
+ * Open de Bestanden-tab in het layout model.
+ * Hergebruikt een bestaande tab als die al open staat.
+ * @param {FlexLayout.Model} model
+ */
+export function openBestandenTab(model) {
+  // Hergebruik bestaande bestanden-tab
+  let bestaandeTabId = null;
+  model.visitNodes((node) => {
+    if (node.getType?.() !== "tab") return;
+    if (node.getComponent?.() === COMP_BESTANDEN) {
+      bestaandeTabId = node.getId();
+    }
+  });
+
+  if (bestaandeTabId) {
+    model.doAction(FlexLayout.Actions.selectTab(bestaandeTabId));
+    return;
+  }
+
+  // Voeg toe aan de diagram-tabset (midden)
+  model.doAction(
+    FlexLayout.Actions.addNode(
+      {
+        type: "tab",
+        name: "Bestanden",
+        component: COMP_BESTANDEN,
       },
       findOrFirstTabset(model, COMP_DIAGRAM),
       FlexLayout.DockLocation.CENTER,

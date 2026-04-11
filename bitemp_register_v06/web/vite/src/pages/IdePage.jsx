@@ -24,13 +24,17 @@ import {
   persistLayout,
   resetLayout,
   openDiagramTab,
+  openBestandenTab,
   COMP_BROWSER,
   COMP_DIAGRAM,
   COMP_PROPERTIES,
+  COMP_BESTANDEN,
 } from "../ide/layoutConfig";
 import ProjectBrowser from "../ide/ProjectBrowser";
 import DiagramCanvas from "../ide/DiagramCanvas";
 import DetailsPanel from "../ide/DetailsPanel";
+import BestandenPanel from "../ide/BestandenPanel";
+import UploadDialog from "../ide/UploadDialog";
 import ActionDialog from "../ide/ActionDialog";
 import ErrorBoundary from "../ide/ErrorBoundary";
 
@@ -72,10 +76,15 @@ export default function IdePage() {
     link.href = theme === "dark" ? flexDarkUrl : flexLightUrl;
   }, [theme]);
 
+  // ── Upload Dialog state ──────────────────────────────────
+  const [uploadOpen, setUploadOpen] = useState(false);
+
   // ── Action Dialog state ──────────────────────────────────
-  const [dialogType, setDialogType] = useState(null); // "publish" | "rebuild" | "publishAndRebuild" | null
+  const [dialogType, setDialogType] = useState(null); // "publish" | "rebuild" | "publishAndRebuild" | "diff" | null
   const [dialogValues, setDialogValues] = useState({});
   const [validationResult, setValidationResult] = useState({ errors: [], warnings: [] });
+  const [diffResult, setDiffResult] = useState(null);
+  const [diffLoading, setDiffLoading] = useState(false);
 
   const openDialog = useCallback((type) => {
     const domains = useModelStore.getState().domains || [];
@@ -89,6 +98,10 @@ export default function IdePage() {
     const v3 = storeNaarV3Model(state);
     setValidationResult(validateV3Model(v3.model || v3));
 
+    // Reset diff-state bij nieuw dialoog
+    setDiffResult(null);
+    setDiffLoading(false);
+
     setDialogValues({
       versie: meta.versie || DEFAULT_MODEL_VERSIE,
       naam: actiefDomein || "",
@@ -99,6 +112,9 @@ export default function IdePage() {
       bron: "editor",
       wachtwoord: "1234",
       schemaVersieID: "",
+      diffBron: "actief",
+      diffSchemaVersieID: "",
+      diffDomein: "",
       beschikbareDomeinen: domains.map((d) => ({
         naam: d,
         prefix: domainMeta[d]?.prefix || "",
@@ -273,10 +289,63 @@ export default function IdePage() {
     openDialog("publishAndRebuild");
   }, [openDialog]);
 
+  // ── Delta-analyse (standalone) ────────────────────────────
+  const handleDiff = useCallback(() => {
+    openDialog("diff");
+  }, [openDialog]);
+
+  // ── Bestanden tab openen ─────────────────────────────────
+  const handleOpenBestanden = useCallback(() => {
+    openBestandenTab(layoutModel);
+  }, [layoutModel]);
+
+  // ── Diff helper: voert delta-analyse uit via API ─────────
+  const doDiff = useCallback(async (vals, bron, domein) => {
+    const base = vals.rebuildApiBase || vals.apiBase || apiBase();
+    const wachtwoord = vals.wachtwoord || "1234";
+    const state = useModelStore.getState();
+    const v3 = storeNaarV3Model(state);
+
+    const body = {
+      model: v3.model,
+      bron: bron || vals.diffBron || "actief",
+      domein: domein || vals.diffDomein || "",
+    };
+    if (body.bron === "id" && vals.diffSchemaVersieID) {
+      body.schema_versie_id = parseInt(vals.diffSchemaVersieID, 10);
+    }
+
+    setDiffLoading(true);
+    setDiffResult(null);
+    try {
+      const resp = await fetch(`${base}/admin/diff/${encodeURIComponent(wachtwoord)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const result = await resp.json();
+      setDiffResult(result);
+      return result;
+    } catch (err) {
+      const errorResult = { status: "fout", error: `Verbinding mislukt: ${err.message}` };
+      setDiffResult(errorResult);
+      return errorResult;
+    } finally {
+      setDiffLoading(false);
+    }
+  }, []);
+
   // ── Dialog submit: voert de actie uit op basis van dialogType ──
   const handleDialogSubmit = useCallback(async () => {
     const type = dialogType;
     const vals = dialogValues;
+
+    // Bij diff: voer analyse uit maar sluit dialoog niet
+    if (type === "diff") {
+      await doDiff(vals);
+      return;
+    }
+
     setDialogType(null);
 
     const base = vals.apiBase || apiBase();
@@ -321,7 +390,12 @@ export default function IdePage() {
     if (type === "rebuild") {
       await doRebuild(vals);
     }
-  }, [dialogType, dialogValues, markSaved]);
+  }, [dialogType, dialogValues, markSaved, doDiff]);
+
+  // ── Pre-flight diff bij rebuild: gebruikt "actief" als bron ──
+  const handlePreFlightDiff = useCallback(async () => {
+    await doDiff(dialogValues, "actief", "");
+  }, [dialogValues, doDiff]);
 
   // ── Rebuild helper ────────────────────────────────────────
   const doRebuild = useCallback(async (vals, schemaVersieID) => {
@@ -468,6 +542,8 @@ export default function IdePage() {
           return <ErrorBoundary label="DiagramCanvas"><DiagramCanvas diagramId={config.diagramId || "overzicht"} /></ErrorBoundary>;
         case COMP_PROPERTIES:
           return <ErrorBoundary label="DetailsPanel"><DetailsPanel /></ErrorBoundary>;
+        case COMP_BESTANDEN:
+          return <ErrorBoundary label="BestandenPanel"><BestandenPanel /></ErrorBoundary>;
         default:
           return <div style={{ padding: 16 }}>Onbekend component: {component}</div>;
       }
@@ -530,8 +606,19 @@ export default function IdePage() {
         <button onClick={handleExportV3} style={toolbarBtn}>
           📄 V3 Export
         </button>
+        <span style={{ color: theme === "dark" ? "#555" : "#ccc" }}>|</span>
+        <button onClick={handleOpenBestanden} style={toolbarBtn} title="Bestanden bekijken en beheren">
+          🗄 Bestanden
+        </button>
+        <button onClick={() => setUploadOpen(true)} style={toolbarBtn} title="Bestand uploaden">
+          ⬆ Upload
+        </button>
+        <span style={{ color: theme === "dark" ? "#555" : "#ccc" }}>|</span>
         <button onClick={handlePubliceer} style={toolbarBtnAccent}>
           🚀 Publiceer
+        </button>
+        <button onClick={handleDiff} style={toolbarBtn} title="Delta-analyse: vergelijk editormodel met referentie">
+          🔍 Delta
         </button>
         <button onClick={handleRebuild} style={toolbarBtnDanger}>
           ⚙️ Rebuild
@@ -557,11 +644,21 @@ export default function IdePage() {
           values={dialogValues}
           validationErrors={validationResult.errors}
           validationWarnings={validationResult.warnings}
+          diffResult={diffResult}
+          diffLoading={diffLoading}
           onChange={handleDialogChange}
-          onClose={() => setDialogType(null)}
+          onClose={() => { setDialogType(null); setDiffResult(null); setDiffLoading(false); }}
           onSubmit={handleDialogSubmit}
+          onDiff={(dialogType === "rebuild" || dialogType === "publishAndRebuild") ? handlePreFlightDiff : undefined}
         />
       )}
+
+      {/* Upload Dialog */}
+      <UploadDialog
+        open={uploadOpen}
+        onClose={() => setUploadOpen(false)}
+        onSuccess={() => setStatus("Bestand geüpload ✓")}
+      />
     </div>
   );
 }

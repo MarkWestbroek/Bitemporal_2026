@@ -1,0 +1,147 @@
+{
+  "versie": "v3",
+  "naam": "IDE Bestanden domein",
+  "beschrijving": "Bitemporele entiteiten voor bestandenbeheer in de IDE: model-snapshots, imports, exports, gegenereerde code, documentatie en overige bestanden.",
+  "datatypes": [],
+  "enums": [
+    {
+      "goType": "IdeBestandCategorie",
+      "baseType": "string",
+      "domein": "ide-bestanden",
+      "waarden": [
+        { "constNaam": "IdeBestandCategorieModelSnapshot", "waarde": "model_snapshot" },
+        { "constNaam": "IdeBestandCategorieIdeSnapshot", "waarde": "ide_snapshot" },
+        { "constNaam": "IdeBestandCategorieGenereerdCode", "waarde": "gegenereerde_code" },
+        { "constNaam": "IdeBestandCategorieImport", "waarde": "import" },
+        { "constNaam": "IdeBestandCategorieExport", "waarde": "export" },
+        { "constNaam": "IdeBestandCategorieDocumentatie", "waarde": "documentatie" },
+        { "constNaam": "IdeBestandCategorieConfiguratie", "waarde": "configuratie" },
+        { "constNaam": "IdeBestandCategorieOverig", "waarde": "overig" }
+      ]
+    },
+    {
+      "goType": "IdeBestandFormaat",
+      "baseType": "string",
+      "domein": "ide-bestanden",
+      "waarden": [
+        { "constNaam": "IdeBestandFormaatJSON", "waarde": "json" },
+        { "constNaam": "IdeBestandFormaatYAML", "waarde": "yaml" },
+        { "constNaam": "IdeBestandFormaatXML", "waarde": "xml" },
+        { "constNaam": "IdeBestandFormaatMarkdown", "waarde": "markdown" },
+        { "constNaam": "IdeBestandFormaatGoCode", "waarde": "go_code" },
+        { "constNaam": "IdeBestandFormaatSQL", "waarde": "sql" },
+        { "constNaam": "IdeBestandFormaatTekst", "waarde": "tekst" },
+        { "constNaam": "IdeBestandFormaatBinair", "waarde": "binair" },
+        { "constNaam": "IdeBestandFormaatOverig", "waarde": "overig" }
+      ]
+    },
+    {
+      "goType": "IdeBestandOpslagType",
+      "baseType": "string",
+      "domein": "ide-bestanden",
+      "waarden": [
+        { "constNaam": "IdeBestandOpslagTypeInline", "waarde": "inline" },
+        { "constNaam": "IdeBestandOpslagTypeMinio", "waarde": "minio" }
+      ]
+    }
+  ],
+  "entiteiten": [
+    {
+      "typenaam": "IdeBestand",
+      "description": "Bestand beheerd vanuit de IDE: model-snapshots, imports, exports, gegenereerde code of documentatie. Bitemporeel: wijzigingen zijn traceerbaar en corrigeerbaar via registraties.",
+      "domein": "ide-bestanden",
+      "isMaterieel": true,
+      "kleur": "#fbbf24",
+      "meervoud": "ide_bestanden",
+      "gegevenselementen": [
+        {
+          "naam": "Meta",
+          "description": "Metadata van het bestand: naam, beschrijving, categorie, formaat en domein.",
+          "meervoud": "ide_bestand_metas",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "velden": [
+            {
+              "naam": "naam",
+              "goType": "string",
+              "description": "Bestandsnaam inclusief extensie, bijv. 'np-loc_v1.2.json'."
+            },
+            {
+              "naam": "beschrijving",
+              "goType": "string",
+              "description": "Toelichting op doel of herkomst van het bestand."
+            },
+            {
+              "naam": "categorie",
+              "goType": "IdeBestandCategorie",
+              "enum": "IdeBestandCategorie",
+              "description": "Type bestand: model_snapshot, import, export, gegenereerde_code, documentatie, etc."
+            },
+            {
+              "naam": "bestandsformaat",
+              "goType": "IdeBestandFormaat",
+              "enum": "IdeBestandFormaat",
+              "description": "Formaat van de inhoud: json, yaml, xml, markdown, go_code, sql, tekst, binair, overig."
+            },
+            {
+              "naam": "mime_type",
+              "goType": "string",
+              "description": "MIME-type van het bestand, bijv. 'application/json' of 'text/markdown'."
+            },
+            {
+              "naam": "domein",
+              "goType": "string",
+              "description": "Optioneel domeinnaam waartoe het bestand behoort, bijv. 'np-loc' of 'configuratie'."
+            },
+            {
+              "naam": "tags",
+              "goType": "string",
+              "description": "Kommagescheiden labels voor zoeken en groeperen, bijv. 'snapshot,v1.2,publish'."
+            }
+          ]
+        },
+        {
+          "naam": "Inhoud",
+          "description": "Inhoud en opslaginformatie van het bestand. Kleine tekstbestanden staan inline in de database, grotere of binaire bestanden worden opgeslagen in MinIO.",
+          "meervoud": "ide_bestand_inhouds",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "velden": [
+            {
+              "naam": "opslag_type",
+              "goType": "IdeBestandOpslagType",
+              "enum": "IdeBestandOpslagType",
+              "description": "Opslaglocatie: 'inline' (tekst in database) of 'minio' (object in MinIO)."
+            },
+            {
+              "naam": "inline_inhoud",
+              "goType": "string",
+              "description": "Tekstinhoud van het bestand als het inline is opgeslagen (max ~1 MB). Leeg bij minio-opslag."
+            },
+            {
+              "naam": "object_key",
+              "goType": "string",
+              "description": "MinIO object key, bijv. 'model_snapshot/2026/04/uuid_bestandsnaam.json'. Leeg bij inline opslag."
+            },
+            {
+              "naam": "sha256_hash",
+              "goType": "string",
+              "description": "SHA-256 hash van de bestandsinhoud voor integriteitscontrole."
+            },
+            {
+              "naam": "grootte_bytes",
+              "goType": "int64",
+              "description": "Bestandsgrootte in bytes."
+            },
+            {
+              "naam": "versie_label",
+              "goType": "string",
+              "description": "Optioneel versielabel, bijv. 'v1.2.0' of 'publish-2026-04-11'."
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    }
+  ]
+}

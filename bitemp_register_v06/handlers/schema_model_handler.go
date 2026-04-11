@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -377,6 +378,24 @@ func MaakPostSchemaModelHandler() gin.HandlerFunc {
 		if primairDomein != "" {
 			EnsureDomeinBestaat(c, primairDomein)
 		}
+
+		// Auto-snapshot: sla gepubliceerd model op als IdeBestand
+		go func() {
+			snapshotErr := RegistreerBestandSnapshot(context.Background(), DB, BestandSnapshotParams{
+				Naam:         fmt.Sprintf("schema_model_v%d.json", versie.ID),
+				Beschrijving: fmt.Sprintf("Schema model versie %d (%s)", versie.ID, v3.Naam),
+				Categorie:    model.IdeBestandCategorieModelSnapshot,
+				Formaat:      model.IdeBestandFormaatJSON,
+				MimeType:     "application/json",
+				Domein:       primairDomein,
+				VersieLabel:  fmt.Sprintf("v%d", versie.ID),
+				Inhoud:       string(schemaBytes),
+				Opmerking:    fmt.Sprintf("Auto-snapshot bij publicatie schema model versie %d", versie.ID),
+			})
+			if snapshotErr != nil {
+				fmt.Printf("WARN: IdeBestand snapshot bij publicatie mislukt: %v\n", snapshotErr)
+			}
+		}()
 
 		c.JSON(http.StatusCreated, gin.H{
 			"id":       versie.ID,

@@ -1,0 +1,84 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "docs/copilot-chats/exports"
+		}
+	],
+	"settings": {
+		"redhat.telemetry.enabled": true,
+		"chat.instructionsFilesLocations": {
+			".github/instructions": true,
+			".claude/rules": true,
+			"~/.copilot/instructions": true,
+			"~/.claude/rules": true,
+			"C:\\Users\\User\\AppData\\Local\\Temp\\postman-collections-post-response.instructions.md": true,
+			"C:\\Users\\User\\AppData\\Local\\Temp\\postman-collections-pre-request.instructions.md": true,
+			"C:\\Users\\User\\AppData\\Local\\Temp\\postman-folder-post-response.instructions.md": true,
+			"C:\\Users\\User\\AppData\\Local\\Temp\\postman-folder-pre-request.instructions.md": true,
+			"C:\\Users\\User\\AppData\\Local\\Temp\\postman-http-request-post-response.instructions.md": true,
+			"C:\\Users\\User\\AppData\\Local\\Temp\\postman-http-request-pre-request.instructions.md": true
+		},
+		"chat.viewSessions.orientation": "stacked",
+		"chat.tools.terminal.autoApprove": {
+			"go": true,
+			"Test-Path": true
+		},
+		"chat.editor.fontSize": 24,
+		"chat.fontSize": 20,
+		"window.zoomLevel": 1,
+		"chat.agent.maxRequests": 100,
+		"chat.tools.urls.autoApprove": {
+			"https://code.visualstudio.com": true,
+			"https://github.com/microsoft/vscode/wiki/*": true,
+			"http://localhost:9001": {
+				"approveRequest": false,
+				"approveResponse": true
+			},
+			"http://test1.pleio.local:8000": true,
+			"https://commonground.nl": true,
+			"https://nldesignsystem.nl": true,
+			"https://*.commonground.nl": {
+				"approveRequest": true,
+				"approveResponse": false
+			},
+			"https://nldesignsystem.nl/componenten": true,
+			"https://github.com/nl-design-system/themes": true,
+			"https://github.com/nl-design-system": true,
+			"https://github.com": true,
+			"https://www.npmjs.com/search": true,
+			"https://www.npmjs.com": true,
+			"https://*.npmjs.com": true,
+			"https://github.com/nl-design-system/utrecht/tree/main/packages/component-library-react": true,
+			"https://github.com/nl-design-system/utrecht/tree/main/packages": true,
+			"https://github.com/nl-design-system/utrecht/tree/main": true,
+			"https://github.com/nl-design-system/utrecht/tree": true,
+			"https://github.com/nl-design-system/utrecht": true,
+			"https://github.com/rjsf-team/react-jsonschema-form": true,
+			"https://github.com/rjsf-team": true,
+			"https://formio.github.io/formio.js": true,
+			"https://formio.github.io": true,
+			"https://*.github.io": true,
+			"https://www.cbs.nl": {
+				"approveRequest": false,
+				"approveResponse": true
+			},
+			"https://jsonforms.io/docs": true,
+			"https://jsonforms.io": true,
+			"https://github.com/eclipsesource/jsonforms": true,
+			"https://github.com/eclipsesource": true,
+			"https://json-schema.org/understanding-json-schema/reference/string": true,
+			"https://json-schema.org/understanding-json-schema/reference": true,
+			"https://json-schema.org/understanding-json-schema": true,
+			"https://json-schema.org": true,
+			"https://spec.openapis.org/oas/v3.1.1.html#data-types": true,
+			"https://spec.openapis.org/oas": true,
+			"https://spec.openapis.org": true,
+			"https://*.openapis.org": true
+		},
+		"chat.restoreLastPanelSession": false,
+		"postman.settings.dotenv-detection-notification-visibility": false
+	}
+}

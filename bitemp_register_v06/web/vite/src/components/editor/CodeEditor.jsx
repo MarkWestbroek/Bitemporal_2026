@@ -3,6 +3,21 @@ const Editor = EditorModule.default ?? EditorModule;
 import Prism from "prismjs";
 import "prismjs/components/prism-json";
 import "prismjs/components/prism-markdown";
+import "prismjs/components/prism-yaml";
+import "prismjs/components/prism-markup";
+import "prismjs/components/prism-go";
+import "prismjs/components/prism-sql";
+
+// Lookup map: taal-prop → { grammar, prismTaal, label }
+const TAAL_MAP = {
+  json:     { grammar: () => Prism.languages.json,     prismTaal: "json",     label: "JSON" },
+  markdown: { grammar: () => Prism.languages.markdown,  prismTaal: "markdown", label: "Markdown" },
+  yaml:     { grammar: () => Prism.languages.yaml,      prismTaal: "yaml",     label: "YAML" },
+  xml:      { grammar: () => Prism.languages.markup,     prismTaal: "markup",   label: "XML" },
+  go_code:  { grammar: () => Prism.languages.go,         prismTaal: "go",       label: "Go" },
+  sql:      { grammar: () => Prism.languages.sql,        prismTaal: "sql",      label: "SQL" },
+  tekst:    { grammar: () => null,                        prismTaal: "text",     label: "Tekst" },
+};
 
 /**
  * CodeEditor — geïntegreerde code-editor op basis van react-simple-code-editor.
@@ -13,7 +28,7 @@ import "prismjs/components/prism-markdown";
  * Props:
  *  - value:       huidige waarde (string)
  *  - onChange:     (nieuweWaarde) => void
- *  - taal:         "json" | "markdown" — bepaalt de Prism-grammar
+ *  - taal:         "json" | "markdown" | "yaml" | "xml" | "go_code" | "sql" | "tekst" — bepaalt de Prism-grammar
  *  - readOnly:     indien true, alleen weergave
  *  - placeholder:  optionele placeholder tekst
  *  - minHeight:    minimum hoogte in px (default: 200)
@@ -28,11 +43,14 @@ export default function CodeEditor({
   minHeight = 200,
   foutmelding = "",
 }) {
-  const grammar = taal === "markdown" ? Prism.languages.markdown : Prism.languages.json;
-  const prismTaal = taal === "markdown" ? "markdown" : "json";
+  const taalInfo = TAAL_MAP[taal] || TAAL_MAP.json;
+  const grammar = taalInfo.grammar();
+  const prismTaal = taalInfo.prismTaal;
+  const label = taalInfo.label;
 
   function highlight(code) {
     if (!code) return "";
+    if (!grammar) return code; // tekst: geen highlighting
     try {
       return Prism.highlight(code, grammar, prismTaal);
     } catch {
@@ -54,7 +72,7 @@ export default function CodeEditor({
   return (
     <div className={`cg-code-editor ${readOnly ? "cg-code-editor--readonly" : ""} cg-code-editor--${taal}`}>
       <div className="cg-code-editor__header">
-        <span className="cg-code-editor__title">{taal === "json" ? "JSON" : "Markdown"}</span>
+        <span className="cg-code-editor__title">{label}</span>
         {kanFormatteren && (
           <button type="button" className="cg-code-editor__format-btn" onClick={handleFormatteer}>
             Formatteer

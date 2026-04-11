@@ -110,6 +110,11 @@ func AddRoutes(router *gin.Engine) {
 	*/
 	router.POST("/registratie/", handlers.RegistreerMetNieuweAanpak())
 
+	// Bestanden (IdeBestand) — upload, download en preview routes
+	router.POST("/api/bestanden/upload", handlers.MaakUploadBestandHandler())
+	router.GET("/api/bestanden/:id/download", handlers.MaakDownloadBestandHandler())
+	router.GET("/api/bestanden/:id/preview", handlers.MaakPreviewBestandHandler())
+
 	/* IDEE
 	Idee voor een generieke registratie/correctie/ongedaanmaking route,
 	waarbij het entiteittype en de te corrigeren gegevenselementen in de URL worden meegegeven.

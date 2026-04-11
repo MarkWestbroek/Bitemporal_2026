@@ -18,6 +18,7 @@ import (
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/dbsetup"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/dynql"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/filestore"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/handlers"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/routes"
 )
@@ -70,6 +71,12 @@ func main() {
 	fmt.Println("Succesfully connected to the database.")
 
 	handlers.DB = db
+
+	// Initialiseer MinIO filestore (optioneel — graceful degradation als niet geconfigureerd)
+	if err := filestore.Init(); err != nil {
+		fmt.Println("WARN: MinIO initialisatie mislukt:", err)
+		fmt.Println("Bestandsopslag beperkt tot inline (database).")
+	}
 
 	// Create router and register routes
 	router := NewRouter()
@@ -167,6 +174,7 @@ func NewRouter() *gin.Engine {
 	// Devloop rebuild routes (alleen actief als DEVLOOP=true)
 	router.POST("/admin/rebuild/:password", handlers.MaakRebuildHandler())
 	router.GET("/admin/rebuild/status", handlers.MaakRebuildStatusHandler())
+	router.POST("/admin/diff/:password", handlers.MaakDiffHandler())
 
 	//Add all functional routes
 	routes.AddRoutes(router)
