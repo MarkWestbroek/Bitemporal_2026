@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
@@ -76,7 +75,7 @@ func TestAddRoutes_RegistersMetaRegistryRoutes(t *testing.T) {
 
 	for _, required := range requiredStatic {
 		if !routeExists(routes, required.method, required.path) {
-			t.Fatal(fmt.Sprintf("expected static route %s %s", required.method, required.path))
+			t.Fatalf("expected static route %s %s", required.method, required.path)
 		}
 	}
 }

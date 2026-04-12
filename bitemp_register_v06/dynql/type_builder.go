@@ -4,6 +4,8 @@ package dynql
 // Elk TypeMeta record (entiteit, GE-hub, GE-data, relatie) krijgt een eigen GraphQL type.
 // Voor entiteiten worden onderliggende GE's/relaties als geneste velden toegevoegd.
 // Hub+data flattening: hub-types tonen ook de velden van hun _Data child.
+// Reverse relaties: als een relatie A→B bestaat, krijgt B automatisch een
+// "gerelateerde_<bron-padnaam>" veld dat de bron-entiteiten ophaalt.
 
 import (
 	"fmt"
@@ -16,9 +18,98 @@ import (
 // typeCache voorkomt dubbelaanmaak en cycli.
 var typeCache = map[string]*graphql.Object{}
 
+// ReverseRelationInfo beschrijft een omgekeerde relatie: vanuit doelentiteit B
+// terugkijkend naar bronentiteit A via een tussenliggende relatie.
+type ReverseRelationInfo struct {
+	// BronEntiteitTypenaam is de typenaam van de bron-entiteit (bijv. "A")
+	BronEntiteitTypenaam string
+	// BronEntiteitMeta is de TypeMeta van de bron-entiteit
+	BronEntiteitMeta model.TypeMeta
+	// RelatieMeta is de TypeMeta van de tussenliggende relatie (bijv. "Rel_A_B")
+	RelatieMeta model.TypeMeta
+	// SecondaireIDKolom is de FK-kolom in de relatie die naar de doel-entiteit wijst (bijv. "b_id")
+	SecondaireIDKolom string
+	// BronIDKolom is de FK-kolom in de relatie die naar de bron-entiteit wijst (bijv. "a_id")
+	BronIDKolom string
+	// Veldnaam voor het GraphQL veld (bijv. "gerelateerde_as")
+	GQLVeldnaam string
+}
+
+// reverseRelationMap wordt eenmalig opgebouwd bij startup.
+// Key = doelentiteit typenaam (bijv. "B"), Value = alle reverse relaties die naar die entiteit wijzen.
+var reverseRelationMap map[string][]ReverseRelationInfo
+
+// buildReverseRelationMap scant de MetaRegistry en bouwt de reverse-relatie-index op.
+// Wordt aangeroepen vanuit BuildOutputTypes.
+func buildReverseRelationMap() {
+	reverseRelationMap = map[string][]ReverseRelationInfo{}
+
+	// Stap 1: vind alle relatie-hubs met een SecondaireEntiteitIDKolom
+	// en bepaal welke bron-entiteit ze bezitten (via OnderliggendeGegevenselementen)
+	for bronTypenaam, bronMeta := range model.MetaRegistry {
+		if bronMeta.Metatype != model.MetatypeEntiteit {
+			continue
+		}
+		for _, child := range bronMeta.OnderliggendeGegevenselementen {
+			relMeta, ok := model.MetaRegistry.GetTypeMeta(child.Doeltype)
+			if !ok || relMeta.Metatype != model.MetatypeRelatie {
+				continue
+			}
+			if relMeta.SecondaireEntiteitIDKolom == "" {
+				continue
+			}
+
+			// Zoek de doel-entiteit: welke entiteit heeft IDKolom == SecondaireEntiteitIDKolom?
+			doelTypenaam := vindDoelEntiteit(relMeta.SecondaireEntiteitIDKolom)
+			if doelTypenaam == "" {
+				continue
+			}
+
+			// Bepaal veldnaam: "gerelateerde_" + padnaam van de bron-entiteit
+			bronPadnaam := bronMeta.Padnaam
+			if bronPadnaam == "" {
+				bronPadnaam = bronMeta.Veldnaam
+			}
+			gqlVeldnaam := "gerelateerde_" + bronPadnaam
+
+			reverseRelationMap[doelTypenaam] = append(reverseRelationMap[doelTypenaam], ReverseRelationInfo{
+				BronEntiteitTypenaam: bronTypenaam,
+				BronEntiteitMeta:     bronMeta,
+				RelatieMeta:          relMeta,
+				SecondaireIDKolom:    relMeta.SecondaireEntiteitIDKolom,
+				BronIDKolom:          relMeta.EntiteitIDKolom,
+				GQLVeldnaam:          gqlVeldnaam,
+			})
+		}
+	}
+}
+
+// vindDoelEntiteit zoekt welke entiteit een IDKolom heeft die overeenkomt met
+// de SecondaireEntiteitIDKolom van een relatie (bijv. "b_id" → entiteit B met IDKolom "id"
+// en EntiteitIDKolom-patroon "b_id").
+func vindDoelEntiteit(secIDKolom string) string {
+	// Conventie: secIDKolom is bijv. "b_id", "gemeente_id", "locatie_id"
+	// De doelentiteit is degene waar secIDKolom == <veldnaam>_id of
+	// secIDKolom in de structuur voorkomt.
+	for typenaam, meta := range model.MetaRegistry {
+		if meta.Metatype != model.MetatypeEntiteit {
+			continue
+		}
+		// Match: secIDKolom moet gelijk zijn aan <veldnaam>_id
+		expected := meta.Veldnaam + "_id"
+		if secIDKolom == expected {
+			return typenaam
+		}
+	}
+	return ""
+}
+
 // BuildOutputTypes bouwt alle GraphQL output types uit de MetaRegistry.
 // Moet bij startup worden aangeroepen vóór BuildSchema.
 func BuildOutputTypes() map[string]*graphql.Object {
+	// Bouw de reverse-relatie-index (eenmalig)
+	buildReverseRelationMap()
+
 	types := map[string]*graphql.Object{}
 
 	// Eerste pass: maak alle basistypes aan (zonder relaties/kinderen).
@@ -85,6 +176,30 @@ func buildObjectType(typenaam string, meta model.TypeMeta) *graphql.Object {
 				}
 			}
 
+			// Reverse relaties: als andere entiteiten via een relatie naar dit type wijzen,
+			// voeg dan een "gerelateerde_<padnaam>" veld toe dat die bron-entiteiten ophaalt.
+			if meta.Metatype == model.MetatypeEntiteit {
+				for _, rev := range reverseRelationMap[typenaam] {
+					bronType := resolveEntityGraphQLType(rev.BronEntiteitTypenaam)
+					if bronType == nil {
+						continue
+					}
+					capturedRev := rev
+					fields[capturedRev.GQLVeldnaam] = &graphql.Field{
+						Type:        graphql.NewList(bronType),
+						Description: fmt.Sprintf("Omgekeerde relatie: %s-entiteiten die via %s naar dit record wijzen", capturedRev.BronEntiteitTypenaam, capturedRev.RelatieMeta.Typenaam),
+						Args: graphql.FieldConfigArgument{
+							"limit": &graphql.ArgumentConfig{
+								Type:         graphql.Int,
+								DefaultValue: 20,
+								Description:  "Maximum aantal resultaten (max 100)",
+							},
+						},
+						Resolve: makeReverseRelationResolver(capturedRev),
+					}
+				}
+			}
+
 			return fields
 		}),
 	})
@@ -96,6 +211,14 @@ func resolveChildGraphQLType(child model.OnderliggendGegevenselement) *graphql.O
 		return cached
 	}
 	// Type niet gevonden — kan voorkomen als het child-type geen Factory heeft
+	return nil
+}
+
+// resolveEntityGraphQLType zoekt het GraphQL type voor een entiteit op typenaam.
+func resolveEntityGraphQLType(typenaam string) *graphql.Object {
+	if cached, ok := typeCache[typenaam]; ok {
+		return cached
+	}
 	return nil
 }
 

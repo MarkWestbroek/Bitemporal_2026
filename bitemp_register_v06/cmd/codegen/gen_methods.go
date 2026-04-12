@@ -23,7 +23,11 @@ func generateMethods(v3 model.V3Model) (string, error) {
 
 	for _, ent := range v3.Entiteiten {
 		rv := receiverVar(ent.Typenaam)
-		writeInterfaceMethods(&b, ent.Typenaam, rv, "MetatypeEntiteit", "ID", "ID", false)
+		idField := "ID"
+		if ent.Erft != "" {
+			idField = ent.Erft + "_ID"
+		}
+		writeInterfaceMethods(&b, ent.Typenaam, rv, "MetatypeEntiteit", idField, idField, false)
 	}
 
 	// 2. Hubs — interface-methoden
@@ -182,6 +186,11 @@ func writeInterfaceMethods(b *strings.Builder, typeName string, rv string, metat
 func writeEntiteitGeefOnderliggende(b *strings.Builder, ent model.V3Entiteit) {
 	rv := receiverVar(ent.Typenaam)
 	entIDOnChild := ent.Typenaam + "_ID" // bijv. A_ID
+	// Eigen ID-veld op de entiteitstruct: "ID" voor gewone entiteiten, "{Parent}_ID" voor subtypes
+	ownIDField := "ID"
+	if ent.Erft != "" {
+		ownIDField = ent.Erft + "_ID"
+	}
 	b.WriteString(fmt.Sprintf("func (%s *%s) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {\n", rv, ent.Typenaam))
 	b.WriteString("\tresult := make([]OnderliggendeRepresentatie, 0)\n")
 
@@ -195,7 +204,7 @@ func writeEntiteitGeefOnderliggende(b *strings.Builder, ent model.V3Entiteit) {
 		}
 		b.WriteString(fmt.Sprintf("\tfor idx := range %s.%s {\n", rv, sliceField))
 		b.WriteString(fmt.Sprintf("\t\tif %s.%s[idx].%s == 0 {\n", rv, sliceField, entIDOnChild))
-		b.WriteString(fmt.Sprintf("\t\t\t%s.%s[idx].%s = %s.ID\n", rv, sliceField, entIDOnChild, rv))
+		b.WriteString(fmt.Sprintf("\t\t\t%s.%s[idx].%s = %s.%s\n", rv, sliceField, entIDOnChild, rv, ownIDField))
 		b.WriteString("\t\t}\n")
 		b.WriteString(fmt.Sprintf("\t\tresult = append(result, OnderliggendeRepresentatie{Typenaam: \"%s\", Representatie: &%s.%s[idx]})\n", hubType, rv, sliceField))
 		b.WriteString("\t}\n")
@@ -206,7 +215,7 @@ func writeEntiteitGeefOnderliggende(b *strings.Builder, ent model.V3Entiteit) {
 		sliceField := relRolnaam(rel.Naam, rel.Meervoud)
 		b.WriteString(fmt.Sprintf("\tfor idx := range %s.%s {\n", rv, sliceField))
 		b.WriteString(fmt.Sprintf("\t\tif %s.%s[idx].%s == 0 {\n", rv, sliceField, entIDOnChild))
-		b.WriteString(fmt.Sprintf("\t\t\t%s.%s[idx].%s = %s.ID\n", rv, sliceField, entIDOnChild, rv))
+		b.WriteString(fmt.Sprintf("\t\t\t%s.%s[idx].%s = %s.%s\n", rv, sliceField, entIDOnChild, rv, ownIDField))
 		b.WriteString("\t\t}\n")
 		b.WriteString(fmt.Sprintf("\t\tresult = append(result, OnderliggendeRepresentatie{Typenaam: \"%s\", Representatie: &%s.%s[idx]})\n", rel.Naam, rv, sliceField))
 		b.WriteString("\t}\n")
@@ -218,7 +227,7 @@ func writeEntiteitGeefOnderliggende(b *strings.Builder, ent model.V3Entiteit) {
 			typeName := ent.Typenaam + "_" + suffix
 			b.WriteString(fmt.Sprintf("\tfor idx := range %s.%s {\n", rv, suffix))
 			b.WriteString(fmt.Sprintf("\t\tif %s.%s[idx].%s == 0 {\n", rv, suffix, entIDOnChild))
-			b.WriteString(fmt.Sprintf("\t\t\t%s.%s[idx].%s = %s.ID\n", rv, suffix, entIDOnChild, rv))
+			b.WriteString(fmt.Sprintf("\t\t\t%s.%s[idx].%s = %s.%s\n", rv, suffix, entIDOnChild, rv, ownIDField))
 			b.WriteString("\t\t}\n")
 			b.WriteString(fmt.Sprintf("\t\tresult = append(result, OnderliggendeRepresentatie{Typenaam: \"%s\", Representatie: &%s.%s[idx]})\n", typeName, rv, suffix))
 			b.WriteString("\t}\n")

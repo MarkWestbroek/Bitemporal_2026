@@ -74,6 +74,7 @@ import {
   maakLeegType,
   maakReferentielijstSet,
   maakReferentielijstInstantie,
+  EDGE_MODES,
 } from "../metamodel/types";
 import { v3ModelNaarEditor } from "../metamodel/v3ModelNaarEditor";
 import { bepaalDependencyTargetIds } from "../metamodel/dependencyEdges";
@@ -280,6 +281,8 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   const undoRestoreBezigRef = useRef(false);
   // { x, y } schermcoördinaten van het rechtsklikmenu; null = verborgen
   const [contextMenu, setContextMenu] = useState(null);
+  // Actieve edge-mode: EDGE_MODES.NONE = auto-detectie, anders override.
+  const [activeEdgeMode, setActiveEdgeMode] = useState(EDGE_MODES.NONE);
   const canvasRef = useRef(null);
   const reactFlowRef = useRef(null);
 
@@ -390,6 +393,17 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [undoLaatsteCanvasActie, redoLaatsteCanvasActie]);
+
+  // Escape-toets: reset edge-mode naar NONE.
+  useEffect(() => {
+    function handleEscapeKey(event) {
+      if (event.key === "Escape" && activeEdgeMode !== EDGE_MODES.NONE) {
+        setActiveEdgeMode(EDGE_MODES.NONE);
+      }
+    }
+    document.addEventListener("keydown", handleEscapeKey);
+    return () => document.removeEventListener("keydown", handleEscapeKey);
+  }, [activeEdgeMode]);
 
   const onNodesChange = useCallback(
     (changes) => {
@@ -557,6 +571,47 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         const normalized = normalizeConnection(connection, eds);
         const sourceType = nodeTypeById.get(normalized.source);
         const targetType = nodeTypeById.get(normalized.target);
+
+        // === Edge-mode override ===
+        // Als een edge-mode actief is, override het standaardgedrag.
+        if (activeEdgeMode === EDGE_MODES.GENERALISATIE) {
+          // Generalisatie alleen toestaan tussen dezelfde metatypes (ENT↔ENT of GE↔GE).
+          if (sourceType !== targetType || !["entiteit", "gegevenselement"].includes(sourceType)) {
+            console.warn(`Generalisatie alleen mogelijk tussen zelfde metatype (${sourceType} → ${targetType})`);
+            setActiveEdgeMode(EDGE_MODES.NONE);
+            return eds;
+          }
+          // Verwijder bestaande generalisatie-edge vanuit deze source.
+          const filtered = eds.filter(
+            (e) => !(e.source === normalized.source && e.data?.isGeneralization)
+          );
+          setActiveEdgeMode(EDGE_MODES.NONE);
+          return [
+            ...filtered,
+            {
+              ...normalized,
+              id: generateId("edge"),
+              type: "metamodel",
+              data: { isGeneralization: true },
+            },
+          ];
+        }
+
+        if (activeEdgeMode === EDGE_MODES.COMPOSITIE) {
+          const newEdge = {
+            ...normalized,
+            id: generateId("edge"),
+            type: "metamodel",
+            data: {
+              rolnaam: "",
+              jsonRolnaam: "",
+              momentvoorkomen: "enkelvoudig",
+              kardinaliteit: "0..1",
+            },
+          };
+          setActiveEdgeMode(EDGE_MODES.NONE);
+          return addEdge(newEdge, eds);
+        }
 
         // ENT → ENT: maak direct een lege relatie in collapsed mode.
         if (sourceType === "entiteit" && targetType === "entiteit") {
@@ -793,17 +848,18 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         return addEdge(newEdge, filteredEdges);
       });
     },
-    [actiefDomein, normalizeConnection, setEdges, pushCanvasUndo, nodeTypeById, nodes, setNodes]
+    [actiefDomein, activeEdgeMode, normalizeConnection, setEdges, pushCanvasUndo, nodeTypeById, nodes, setNodes]
   );
 
   /**
-   * Ctrl-drag vanuit een entiteit-handle naar leeg canvas: maak daar direct
+   * Alt-drag vanuit een entiteit-handle naar leeg canvas: maak daar direct
    * een nieuw gegevenselement en koppel het structureel aan de bron-entiteit.
+   * (Voorheen Ctrl-drag, maar Ctrl is gereserveerd voor multiselect.)
    */
   const handleConnectEnd = useCallback(
     (event, connectionState) => {
-      const heeftCtrl = !!(event?.ctrlKey || event?.metaKey);
-      if (!heeftCtrl || connectionState?.isValid) return;
+      const heeftModifier = !!(event?.altKey || event?.ctrlKey || event?.metaKey);
+      if (!heeftModifier || connectionState?.isValid) return;
 
       const bronNode = connectionState?.fromNode || null;
       const fromHandle = connectionState?.fromHandle;
@@ -2310,6 +2366,8 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         onSelecteerDomein={handleSelecteerDomein}
         onNormaliseerAlleRelaties={handleNormaliseerAlleRelaties}
         onSnapAlleNaarGrid={handleSnapAlleNaarGrid}
+        activeEdgeMode={activeEdgeMode}
+        onSetActiveEdgeMode={setActiveEdgeMode}
       />
 
       <ActionDialog
@@ -2321,7 +2379,13 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
 
       <div className="editor-main">
         {/* Het React Flow canvas — dit is waar de magie gebeurt */}
-        <div className="editor-canvas" ref={canvasRef}>
+        <div className={`editor-canvas${activeEdgeMode !== EDGE_MODES.NONE ? ` ${activeEdgeMode.cursorClass}` : ""}`} ref={canvasRef}>
+          {activeEdgeMode !== EDGE_MODES.NONE && (
+            <div className="edge-mode-indicator">
+              {activeEdgeMode.icon} {activeEdgeMode.label}-modus actief — sleep van bron naar doel &nbsp;
+              <span style={{ opacity: 0.7, fontSize: "11px" }}>(Esc om te annuleren)</span>
+            </div>
+          )}
           <ReactFlow
             nodes={visueleNodes}
             edges={edges}

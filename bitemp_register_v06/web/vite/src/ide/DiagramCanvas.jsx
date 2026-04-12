@@ -36,7 +36,7 @@ import MetamodelEdge from "@editor/components/edges/MetamodelEdge";
 import useModelStore from "../store/useModelStore";
 import useUIStore from "../store/useUIStore";
 import { maakRelatieTussenEntiteiten, voegNieuwRepToe } from "./repCreation";
-import { generateId } from "@editor/metamodel/types";
+import { generateId, EDGE_MODES } from "@editor/metamodel/types";
 
 const nodeTypes = {
   entiteit: EntiteitNode,
@@ -368,6 +368,18 @@ function DiagramCanvasInner({ diagramId }) {
   const reactFlowWrapper = useRef(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [toolbarLayouts, setToolbarLayouts] = useState(() => leesToolbarLayouts());
+  const [activeEdgeMode, setActiveEdgeMode] = useState(EDGE_MODES.NONE);
+
+  // Escape-toets: reset edge-mode naar NONE.
+  useEffect(() => {
+    function handleEscapeKey(event) {
+      if (event.key === "Escape" && activeEdgeMode !== EDGE_MODES.NONE) {
+        setActiveEdgeMode(EDGE_MODES.NONE);
+      }
+    }
+    document.addEventListener("keydown", handleEscapeKey);
+    return () => document.removeEventListener("keydown", handleEscapeKey);
+  }, [activeEdgeMode]);
 
   const initialNodes = useMemo(
     () => buildFlowNodes(diagram, elements),
@@ -899,6 +911,48 @@ function DiagramCanvasInner({ diagramId }) {
       const sourceType = elementTypeById.get(normalized.source);
       const targetType = elementTypeById.get(normalized.target);
 
+      // === Edge-mode override ===
+      if (activeEdgeMode === EDGE_MODES.GENERALISATIE) {
+        if (sourceType !== targetType || !["entiteit", "gegevenselement"].includes(sourceType)) {
+          console.warn(`Generalisatie alleen mogelijk tussen zelfde metatype (${sourceType} → ${targetType})`);
+          setActiveEdgeMode(EDGE_MODES.NONE);
+          return;
+        }
+        const filtered = currentEdges.filter(
+          (e) => !(e.source === normalized.source && e.data?.isGeneralization)
+        );
+        const genEdge = {
+          ...normalized,
+          id: `edge_${normalized.source}_${normalized.target}_${Date.now()}`,
+          type: "metamodel",
+          data: { isGeneralization: true },
+        };
+        const nextEdges = [...filtered, genEdge];
+        setEdges(nextEdges);
+        updateDiagramEdges(diagramId, nextEdges.map(({ selected, ...rest }) => rest));
+        setActiveEdgeMode(EDGE_MODES.NONE);
+        return;
+      }
+
+      if (activeEdgeMode === EDGE_MODES.COMPOSITIE) {
+        const compEdge = {
+          ...normalized,
+          id: `edge_${normalized.source}_${normalized.target}_${Date.now()}`,
+          type: "metamodel",
+          data: {
+            rolnaam: "",
+            jsonRolnaam: "",
+            momentvoorkomen: "enkelvoudig",
+            kardinaliteit: "0..1",
+          },
+        };
+        const nextEdges = addEdge(compEdge, currentEdges);
+        setEdges(nextEdges);
+        updateDiagramEdges(diagramId, nextEdges.map(({ selected, ...rest }) => rest));
+        setActiveEdgeMode(EDGE_MODES.NONE);
+        return;
+      }
+
       // ENT → ENT maakt in de IDE direct een lege relatie-node in collapsed mode.
       if (sourceType === "entiteit" && targetType === "entiteit") {
         const bronNode = getNode(normalized.source);
@@ -979,6 +1033,7 @@ function DiagramCanvasInner({ diagramId }) {
     },
     [
       addStructuralEdge,
+      activeEdgeMode,
       diagramId,
       elementTypeById,
       elements,
@@ -993,13 +1048,13 @@ function DiagramCanvasInner({ diagramId }) {
 
   const handleConnectEnd = useCallback(
     (event, connectionState) => {
-      const heeftCtrl = !!(event?.ctrlKey || event?.metaKey);
-      if (!heeftCtrl || connectionState?.isValid) return;
+      const heeftModifier = !!(event?.altKey || event?.ctrlKey || event?.metaKey);
+      if (!heeftModifier || connectionState?.isValid) return;
 
       const bronNode = connectionState?.fromNode || null;
       const fromHandle = connectionState?.fromHandle;
       const handleType = fromHandle?.type || "source";
-      // Ctrl-drag vanuit elke source handle van een entiteit
+      // Alt-drag (of Ctrl/Meta) vanuit elke source handle van een entiteit
       if (!bronNode || bronNode.type !== "entiteit" || handleType !== "source") return;
 
       const pointer = (() => {
@@ -1408,7 +1463,7 @@ function DiagramCanvasInner({ diagramId }) {
         outline: isDragOver ? "2px dashed #4a9eff" : "none",
         outlineOffset: "-2px",
       }}
-      className="ide-canvas"
+      className={`ide-canvas${activeEdgeMode !== EDGE_MODES.NONE ? ` ${activeEdgeMode.cursorClass}` : ""}`}
     >
       <FloatingToolbar
         title="Maken"
@@ -1450,6 +1505,48 @@ function DiagramCanvasInner({ diagramId }) {
           isVertical={toolbarLayouts.layout?.orientation === "vertical"}
         />
       </FloatingToolbar>
+
+      <FloatingToolbar
+        title="Verbinding"
+        layout={toolbarLayouts.verbinding}
+        onLayoutChange={(nextLayout) => updateToolbarLayout("verbinding", nextLayout)}
+      >
+        {[EDGE_MODES.COMPOSITIE, EDGE_MODES.GENERALISATIE].map((mode) => (
+          <button
+            key={mode.key}
+            onClick={() => setActiveEdgeMode(activeEdgeMode === mode ? EDGE_MODES.NONE : mode)}
+            title={`${mode.label}-verbinding tekenen`}
+            aria-pressed={activeEdgeMode === mode}
+            style={{
+              minWidth: 52,
+              padding: "6px 8px",
+              borderRadius: 6,
+              border: activeEdgeMode === mode
+                ? "1px solid #60a5fa"
+                : "1px solid var(--ide-toolbar-border)",
+              background: activeEdgeMode === mode
+                ? "rgba(30, 58, 95, 0.92)"
+                : "var(--ide-toolbar-bg-secondary, rgba(255,255,255,0.04))",
+              color: activeEdgeMode === mode
+                ? "#93c5fd"
+                : "var(--ide-toolbar-color)",
+              cursor: "pointer",
+              fontSize: 11,
+              fontWeight: 700,
+              boxShadow: activeEdgeMode === mode ? "0 0 6px rgba(96,165,250,0.35)" : "none",
+            }}
+          >
+            {mode.icon} {mode.label}
+          </button>
+        ))}
+      </FloatingToolbar>
+
+      {activeEdgeMode !== EDGE_MODES.NONE && (
+        <div className="edge-mode-indicator">
+          {activeEdgeMode.icon} {activeEdgeMode.label}-modus actief — sleep van bron naar doel &nbsp;
+          <span style={{ opacity: 0.7, fontSize: "11px" }}>(Esc om te annuleren)</span>
+        </div>
+      )}
 
       <ReactFlow
         nodes={nodes}

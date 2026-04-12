@@ -2,8 +2,15 @@
  * useOvergeerfdeVelden — Hook die de overgeërfde velden ophaalt voor een node
  * via generalisatie-edges. Gebruikt de React Flow store voor reactive updates.
  */
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { useStore } from "@xyflow/react";
+
+// Shallow equality zodat useStore niet bij elke store-mutatie re-rendert
+function shallowEqualOvererving(a, b) {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return a.supertypeNaam === b.supertypeNaam && a.velden === b.velden;
+}
 
 export function useOvergeerfdeVelden(nodeId) {
   const selector = useMemo(
@@ -21,5 +28,5 @@ export function useOvergeerfdeVelden(nodeId) {
     },
     [nodeId]
   );
-  return useStore(selector);
+  return useStore(selector, shallowEqualOvererving);
 }

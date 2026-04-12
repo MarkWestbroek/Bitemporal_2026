@@ -7,9 +7,9 @@
  *     Rij 1: Import (XMI / Mermaid / PlantUML) + Export (Mermaid / PlantUML / XMI)
  *     Rij 2: Opslaan / Laden / Publiceer / Publiceer+Rebuild / Rebuild / Haal op / Test invoer
  */
-import { maakLeegType, maakLegeEnumeratie, maakLeegGegevenstype } from "../../metamodel/types";
+import { maakLeegType, maakLegeEnumeratie, maakLeegGegevenstype, EDGE_MODES } from "../../metamodel/types";
 
-export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddReferentielijstInstantie, onSave, onPublishSchemaModel, onPublishAndRebuild, onRebuildModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI, onImportXMI, onImportMermaid, onImportPlantUML, modelNaam, modelBron, modelOpmerking, actiefDomein, beschikbareDomeinen, domeinSelectieActief = false, onSetActiefDomein, onSelecteerDomein, onNormaliseerAlleRelaties, onSnapAlleNaarGrid }) {
+export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddReferentielijstInstantie, onSave, onPublishSchemaModel, onPublishAndRebuild, onRebuildModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI, onImportXMI, onImportMermaid, onImportPlantUML, modelNaam, modelBron, modelOpmerking, actiefDomein, beschikbareDomeinen, domeinSelectieActief = false, onSetActiefDomein, onSelecteerDomein, onNormaliseerAlleRelaties, onSnapAlleNaarGrid, activeEdgeMode, onSetActiveEdgeMode }) {
   const domeinen = beschikbareDomeinen || [];
   const domeinSelectieTitel = !actiefDomein
     ? "Kies eerst een actief domein"
@@ -85,6 +85,23 @@ export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddRefer
             {onNormaliseerAlleRelaties && <button onClick={onNormaliseerAlleRelaties} className="btn-toolbar" title="Normaliseer alle relaties (kortste weg)">↔ Normaliseer</button>}
             {onSnapAlleNaarGrid && <button onClick={onSnapAlleNaarGrid} className="btn-toolbar" title="Snap alle elementen naar het grid">⊞ Snap grid</button>}
           </div>
+
+          {onSetActiveEdgeMode && (
+            <div className="toolbar-group toolbar-edge-modes">
+              <span className="toolbar-label">Verbinding:</span>
+              {[EDGE_MODES.COMPOSITIE, EDGE_MODES.GENERALISATIE].map((mode) => (
+                <button
+                  key={mode.key}
+                  onClick={() => onSetActiveEdgeMode(activeEdgeMode === mode ? EDGE_MODES.NONE : mode)}
+                  className={`btn-toolbar edge-mode ${activeEdgeMode === mode ? "active" : ""}`}
+                  title={`${mode.label}-verbinding tekenen (klik, sleep van bron naar doel${activeEdgeMode === mode ? ", of klik om te annuleren" : ""})`}
+                  aria-pressed={activeEdgeMode === mode}
+                >
+                  {mode.icon} {mode.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="toolbar-row-right">

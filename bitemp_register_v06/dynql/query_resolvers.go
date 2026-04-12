@@ -136,6 +136,65 @@ func makeListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 	}
 }
 
+// makeFullListResolver maakt een resolver voor een lijst van entiteiten met alle
+// onderliggende GE's/relaties, inclusief hub+data flattening.
+// Equivalent van de REST GET /full/{padnaam}?page=1&size=N, maar met GraphQL flattening.
+func makeFullListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
+	return func(p graphql.ResolveParams) (interface{}, error) {
+		if db == nil {
+			return nil, fmt.Errorf("database niet geïnitialiseerd")
+		}
+		if meta.SliceFactory == nil {
+			return nil, fmt.Errorf("SliceFactory ontbreekt voor type %s", meta.Typenaam)
+		}
+
+		limit := 20
+		offset := 0
+		if l, ok := p.Args["limit"]; ok && l != nil {
+			if v, ok := l.(int); ok && v > 0 {
+				if v > 100 {
+					limit = 100
+				} else {
+					limit = v
+				}
+			}
+		}
+		if o, ok := p.Args["offset"]; ok && o != nil {
+			if v, ok := o.(int); ok && v >= 0 {
+				offset = v
+			}
+		}
+
+		entities := meta.SliceFactory()
+		query := db.NewSelect().
+			Model(entities).
+			Limit(limit).
+			Offset(offset)
+
+		// Onderliggende relaties laden
+		query = addOnderliggendeRelations(query, meta, nil)
+
+		if err := query.Scan(p.Context); err != nil {
+			return nil, fmt.Errorf("full lijst query fout voor %s: %v", meta.Typenaam, err)
+		}
+
+		// Hub-kinderen laden (Bun workaround)
+		if err := laadHubKinderenNaQuery(p.Context, entities, meta, nil); err != nil {
+			return nil, fmt.Errorf("hub-kinderen laden mislukt: %v", err)
+		}
+
+		// Converteer naar maps en flatten
+		maps, err := sliceToMaps(entities, meta)
+		if err != nil {
+			return nil, err
+		}
+		for i, m := range maps {
+			maps[i] = flattenEntityMap(m, meta)
+		}
+		return maps, nil
+	}
+}
+
 // makeRegistratiesResolver retourneert de lijst-resolver voor registraties.
 func makeRegistratiesResolver() graphql.FieldResolveFn {
 	return func(p graphql.ResolveParams) (interface{}, error) {
@@ -206,6 +265,104 @@ func makeRegistratieResolver() graphql.FieldResolveFn {
 			return nil, nil
 		}
 		return registratieToMap(reg), nil
+	}
+}
+
+// makeReverseRelationResolver maakt een resolver voor omgekeerde relatie-navigatie.
+// Gegeven een doel-entiteit (bijv. B met id=3), zoek alle bron-entiteiten (bijv. A)
+// die via een relatie (bijv. Rel_A_B) naar dit doel wijzen.
+//
+// Stappen:
+// 1. Haal het id van de huidige entiteit uit de parent-source
+// 2. Query de relatietabel WHERE secondaire_id_kolom = id
+// 3. Verzamel de unieke bron-entiteit-id's
+// 4. Laad die bron-entiteiten met hun volledige geneste structuur
+func makeReverseRelationResolver(rev ReverseRelationInfo) graphql.FieldResolveFn {
+	return func(p graphql.ResolveParams) (interface{}, error) {
+		if db == nil {
+			return nil, fmt.Errorf("database niet geïnitialiseerd")
+		}
+
+		// Haal het id van de huidige entiteit (doel) uit de parent-source
+		source, ok := p.Source.(map[string]interface{})
+		if !ok {
+			return nil, nil
+		}
+		doelID, ok := source["id"]
+		if !ok || doelID == nil {
+			return nil, nil
+		}
+
+		// Limit argument
+		limit := 20
+		if l, ok := p.Args["limit"]; ok && l != nil {
+			if v, ok := l.(int); ok && v > 0 {
+				if v > 100 {
+					limit = 100
+				} else {
+					limit = v
+				}
+			}
+		}
+
+		// Stap 1: Query de relatietabel voor bron-IDs
+		// SELECT DISTINCT bron_id_kolom FROM relatie_tabel WHERE sec_id_kolom = doelID AND afvoer IS NULL
+		relMeta := rev.RelatieMeta
+		if relMeta.DBSliceFactory == nil {
+			return nil, nil
+		}
+
+		type bronIDRow struct {
+			BronID interface{}
+		}
+
+		var bronIDs []interface{}
+		err := db.NewRaw(
+			fmt.Sprintf(
+				"SELECT DISTINCT %s FROM %s WHERE %s = ? AND afvoer IS NULL LIMIT ?",
+				rev.BronIDKolom, relMeta.Tabelnaam, rev.SecondaireIDKolom,
+			),
+			doelID, limit,
+		).Scan(p.Context, &bronIDs)
+		if err != nil {
+			return nil, fmt.Errorf("reverse relatie query (%s) fout: %v", relMeta.Typenaam, err)
+		}
+		if len(bronIDs) == 0 {
+			return []map[string]interface{}{}, nil
+		}
+
+		// Stap 2: Laad de bron-entiteiten met volledige geneste structuur
+		bronMeta := rev.BronEntiteitMeta
+		if bronMeta.SliceFactory == nil {
+			return nil, nil
+		}
+
+		entities := bronMeta.SliceFactory()
+		query := db.NewSelect().
+			Model(entities).
+			Where(bronMeta.IDKolom+" IN (?)", bun.In(bronIDs))
+
+		// Onderliggende relaties laden
+		query = addOnderliggendeRelations(query, bronMeta, nil)
+
+		if err := query.Scan(p.Context); err != nil {
+			return nil, fmt.Errorf("reverse bron-entiteiten laden (%s) fout: %v", bronMeta.Typenaam, err)
+		}
+
+		// Hub-kinderen laden
+		if err := laadHubKinderenNaQuery(p.Context, entities, bronMeta, nil); err != nil {
+			return nil, fmt.Errorf("reverse hub-kinderen laden fout: %v", err)
+		}
+
+		// Converteer naar maps en flatten
+		results, err := sliceToMaps(entities, bronMeta)
+		if err != nil {
+			return nil, err
+		}
+		for i, m := range results {
+			results[i] = flattenEntityMap(m, bronMeta)
+		}
+		return results, nil
 	}
 }
 

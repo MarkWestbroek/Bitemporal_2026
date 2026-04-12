@@ -830,6 +830,21 @@ func MakeGetRegistratieMetWijzigingenByIDHandler() gin.HandlerFunc {
 // Deze worden als geneste Relation() calls toegevoegd zodat Bun ze in één query
 // meeneemt. Bij peiltijdstip-filtering wordt ook op het geneste niveau gefilterd.
 func addOnderliggendeRelations(query *bun.SelectQuery, meta model.TypeMeta, peiltijdstip *time.Time) *bun.SelectQuery {
+	// Bij subtypes: laad ook de parent-entiteit via de belongs-to relatie.
+	// De parent's eigen OnderliggendeGegevenselementen worden apart geladen
+	// in laadHubKinderenNaQuery, net als bij gewone hubs.
+	if meta.ParentTypenaam != "" {
+		parentMeta, parentOK := model.MetaRegistry.GetTypeMeta(meta.ParentTypenaam)
+		if parentOK {
+			parentRelName := "Parent" + meta.ParentTypenaam
+			query = query.Relation(parentRelName, func(q *bun.SelectQuery) *bun.SelectQuery {
+				// Recursief: ook de parent's onderliggende GEs laden
+				q = addOnderliggendeRelations(q, parentMeta, peiltijdstip)
+				return q
+			})
+		}
+	}
+
 	for _, rel := range meta.OnderliggendeGegevenselementen {
 		capturedRel := rel
 		childMeta, childOK := model.MetaRegistry.GetTypeMeta(capturedRel.Doeltype)
@@ -968,6 +983,29 @@ func laadHubKinderenNaQuery(c *gin.Context, entitiesOrEntity any, entityMeta mod
 			}
 		}
 	}
+
+	// Bij subtypes: ook hub-kinderen laden voor de parent-entiteit die via belongs-to is ingeladen.
+	if entityMeta.ParentTypenaam != "" {
+		parentMeta, parentOK := model.MetaRegistry.GetTypeMeta(entityMeta.ParentTypenaam)
+		if parentOK {
+			parentFieldName := "Parent" + entityMeta.ParentTypenaam
+			for _, ev := range entityValues {
+				evDeref := ev
+				if evDeref.Kind() == reflect.Ptr {
+					evDeref = evDeref.Elem()
+				}
+				pField := evDeref.FieldByName(parentFieldName)
+				if !pField.IsValid() || pField.IsNil() {
+					continue
+				}
+				parentEntity := pField.Interface()
+				if err := laadHubKinderenNaQuery(c, parentEntity, parentMeta, peiltijdstip); err != nil {
+					return fmt.Errorf("laadHubKinderen voor parent %s: %v", entityMeta.ParentTypenaam, err)
+				}
+			}
+		}
+	}
+
 	return nil
 }
 

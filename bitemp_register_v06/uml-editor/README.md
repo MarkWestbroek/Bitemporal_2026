@@ -50,6 +50,10 @@ De editor kan het bestaande model inladen vanuit de **schema-API** (`/schema`) v
 | **Node verslepen** | Drag & drop op het canvas |
 | **Zoom/pan** | Scrollwiel / twee vingers |
 | **Relatie trekken** | Sleep van een ● handle naar een andere node |
+| **Compositie-modus** | Toolbar: klik ◆ Compositie → cursor wordt crosshair → sleep edge van bron naar doel. Auto-reset na 1 edge. Escape of opnieuw klikken om te annuleren |
+| **Generalisatie-modus** | Toolbar: klik ▷ Generalisatie → sleep edge tussen zelfde metatype (ENT↔ENT of GE↔GE). Maakt generalisatie-edge met open driehoek (▷). Weigert ongelijke metatypes |
+| **Edge-mode indicator** | Bij actieve edge-mode toont het canvas een blauwe banner met de actieve modus en "Esc om te annuleren" |
+| **Nieuwe GE via drag** | Alt+drag vanuit een ENT source-handle naar leeg canvas → maakt automatisch een nieuw GE + compositie-edge |
 | **Type bewerken** | Klik op een node → sidebar toont velden |
 | **Veld toevoegen** | In sidebar: "+ Veld toevoegen" |
 | **Veld verplaatsen** | In sidebar: ↑ / ↓ knoppen |
@@ -83,7 +87,30 @@ De editor bewaart deze keuze ook in **V3 JSON** via `useEdges[]`. Daarin worden 
 
 Dezelfde metadata blijft nu ook behouden bij een **code-roundtrip**: na een rebuild schrijft de codegenerator `useEdges[]` door naar `EditorLayout.UseEdges` in de gegenereerde `*_metaregistry.go` bestanden, en de V3 exporter geeft dit weer terug aan de editor. Daardoor blijft de route **editor → V3 → code → V3 → editor** layout-stabiel voor dependency-edges.
 
+**Generalisatie-roundtrip**: overerving (generalisatie-edges, `isAbstract`) wordt volledig bewaard in de V3 JSON via de velden `isAbstract` en `erft` op entiteiten. Bij V3 export schrijft de editor de generalisatie-edges als `erft`-referenties naar de parent-entiteit; bij V3 import worden deze weer gereconstrueerd als generalisatie-edges in het canvas. De codegenerator schrijft `IsAbstract` en `ParentTypenaam` door naar de gegenereerde MetaRegistry. Ook de XMI-export genereert nu dynamisch `isAbstract` en `UML:Generalization`-elements, en Mermaid/PlantUML exporteren generalisatie als `--|>` resp. `<|--` pijlen.
+
 Voor canvasinteracties is er een **kleine undo/redo-stack**: met `Ctrl + Z` kun je de laatste grafische acties terugdraaien, en met `Ctrl + Y` of `Ctrl + Shift + Z` zet je de laatste ongedaan gemaakte canvasactie weer terug. Dit geldt voor **verplaatsen**, **verbinden**, **verwijderen**, **uitlijnen** en **verdelen**. Deze sneltoetsen grijpen niet in als je in een invoerveld of tekstvak aan het typen bent; dan blijft de normale browser/input-undo gelden. Bewerkingen in het inhouds-/zijpaneel vallen bewust buiten deze canvas-undo.
+
+### Edge-modus (Verbinding-tekenmodus)
+
+De toolbar bevat twee **edge-mode knoppen**: ◆ Compositie en ▷ Generalisatie. Deze werken als toggle:
+
+1. **Klik op een knop** → de knop licht op, de cursor verandert in een crosshair, en een blauwe banner verschijnt ("…-modus actief — sleep van bron naar doel").
+2. **Sleep van een handle naar een andere node** → een edge van dat specifieke type wordt aangemaakt, ongeacht de standaard auto-detectie.
+3. **Na 1 edge** → de modus reset automatisch naar normaal.
+4. **Annuleren** → druk `Escape` of klik opnieuw op dezelfde knop.
+
+**Validatie**: generalisatie-edges worden alleen aangemaakt tussen nodes van hetzelfde metatype (ENT↔ENT of GE↔GE). Bij een ongeldige combinatie wordt de modus geannuleerd.
+
+Zonder actieve edge-modus werkt de auto-detectie zoals voorheen:
+- ENT → ENT = nieuwe collapsed REL-node
+- ENT → GE = compositie-edge
+- REL → ENT = tweede been (evt. ASOC-conversie)
+- → enum/gegevenstype = dependency-edge
+
+### Alt+drag (snelle GE-creatie)
+
+Alt+drag (of Ctrl/Meta+drag) vanuit een source-handle van een entiteit naar leeg canvas maakt automatisch een nieuw gegevenselement + compositie-edge. Dit was voorheen Ctrl+drag, maar is gewijzigd naar Alt+drag omdat Ctrl gereserveerd is voor multi-selectie (`multiSelectionKeyCode="Control"`).
 
 Bij enums en gegevenstypen geldt extra veiligheid:
 

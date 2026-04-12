@@ -7,6 +7,13 @@ import {
 import * as THREE from "three";
 import { schemaToGraph, extractDomains, NODE_RADIUS } from "./schemaToGraph";
 import { evalueerCelExpressie } from "../shared/celEvaluator";
+import * as sfx from "./sfx";
+import {
+  fetchInstancesGraphQL,
+  fetchFullEntityGraphQL,
+  flattenRecord,
+  discoverReverseRelations,
+} from "./graphqlFetcher";
 import "./universum.css";
 
 /* ── Singleton CSS2DRenderer ───────────────────────────────────────── */
@@ -27,33 +34,19 @@ function berekenWeergavenaam(record, entityMeta, typesByTypenaam) {
   const weergave = afgeleide.find((av) => av.isWeergaveVeld || av.weergaveVeld);
   if (!weergave?.afleidingsregel) return null;
 
+  // Record is al geflattened: hub-data op hub-niveau, enkelvoudig als object
   const ctx = {};
   if (Array.isArray(entityMeta.onderliggende)) {
     for (const child of entityMeta.onderliggende) {
       const childMeta = typesByTypenaam?.[child.doeltype];
       const key =
         childMeta?.klassenaam || child.doeltype.replace(/^[^_]+_/, "");
-      const items = record?.[child.jsonRolnaam] || [];
-      const actief = items.find((r) => !r.afvoer) || items[0];
+      const raw = record?.[child.jsonRolnaam];
+      // Enkelvoudig = object, meervoudig = array
+      const actief = Array.isArray(raw)
+        ? raw.find((r) => !r.afvoer) || raw[0]
+        : raw;
       if (!actief) continue;
-
-      if (
-        childMeta?.ge_subtype === "hub" &&
-        Array.isArray(childMeta.onderliggende)
-      ) {
-        const dataChild = childMeta.onderliggende.find((c) => {
-          const cm = typesByTypenaam?.[c.doeltype];
-          return cm?.ge_subtype === "data";
-        });
-        if (dataChild) {
-          const dataItems = actief[dataChild.jsonRolnaam] || [];
-          const actiefData = dataItems.find((d) => !d.afvoer) || dataItems[0];
-          if (actiefData) {
-            ctx[key] = { ...actief, ...actiefData };
-            continue;
-          }
-        }
-      }
       ctx[key] = actief;
     }
   }
@@ -78,24 +71,9 @@ function fallbackLabel(record) {
 }
 
 function extractGEDisplay(item, childMeta, typesByTypenaam) {
-  let data = { ...item };
-  if (
-    childMeta?.ge_subtype === "hub" &&
-    Array.isArray(childMeta.onderliggende)
-  ) {
-    const dataChild = childMeta.onderliggende.find((c) => {
-      const cm = typesByTypenaam?.[c.doeltype];
-      return cm?.ge_subtype === "data";
-    });
-    if (dataChild) {
-      const dataItems = item[dataChild.jsonRolnaam] || [];
-      const actiefData = dataItems.find((d) => !d.afvoer) || dataItems[0];
-      if (actiefData) data = { ...item, ...actiefData };
-    }
-  }
-
+  // In geflattened formaat zijn hub-data velden al op het item-niveau
   const vals = [];
-  for (const [k, v] of Object.entries(data)) {
+  for (const [k, v] of Object.entries(item)) {
     if (
       SYSTEM_FIELDS.has(k) || v == null || typeof v === "object" ||
       k.endsWith("_id")
@@ -115,7 +93,7 @@ function buildInstancesGraph(entity, records) {
       id: "__center__",
       label: entity.label,
       color: entity.color || "#60a5fa",
-      radius: 10,
+      radius: 5,
       nodeType: "entity_center",
     },
   ];
@@ -143,31 +121,47 @@ function buildInstancesGraph(entity, records) {
  * Bouwt het concrete universum: instantie als centrum, GE-data eromheen,
  * en secondaire entiteiten via relaties (bijv. Bereikbaarheid → Locatie).
  *
+ * Data is in geflattened formaat:
+ * - Hub-data velden staan op hub-niveau (geen geneste "data" arrays)
+ * - Enkelvoudige types zijn objecten (niet arrays)
+ * - Aanvang/Einde worden als kleine "manen" dicht bij hun parent weergegeven
+ *
  * @param {string}  label              Weergavenaam van de instantie
- * @param {object}  record             Het /full/{padnaam}/:id response
+ * @param {object}  record             Het geflattende entity record
  * @param {object}  entityMeta         Schema metadata van het entiteitstype
  * @param {object}  typesByTypenaam    Alle type metadata, indexed op typenaam
  * @param {object}  secondaries        Map van relatieNodeId → { record, doeltype, doelMeta, label }
+ * @param {object}  reverseEntities    Map van gqlFieldName → { items, bronTypenaam, bronMeta }
  */
 function buildConcreteGraph(
-  label, record, entityMeta, typesByTypenaam, secondaries = {}
+  label, record, entityMeta, typesByTypenaam, secondaries = {}, reverseEntities = {}
 ) {
   const nodes = [
     {
       id: "__self__",
       label,
       color: entityMeta?.kleur || "#60a5fa",
-      radius: 7,
+      radius: 4,
       nodeType: "self",
     },
   ];
   const links = [];
 
+  // Verzamel eerst de GE-nodes, zodat Aanvang/Einde als manen
+  // aan hun parent-hub (of direct aan __self__) gehangen kunnen worden.
+  // parentMap: geId van de hub → geId van de parent
+  const moonTargets = {};
+
   for (const child of entityMeta?.onderliggende || []) {
     const childMeta = typesByTypenaam?.[child.doeltype];
     if (!childMeta) continue;
 
-    const items = record?.[child.jsonRolnaam] || [];
+    const isMoon =
+      child.doeltype.includes("Aanvang") || child.doeltype.includes("Einde");
+
+    // Geflattened: enkelvoudig = object, meervoudig = array
+    const raw = record?.[child.jsonRolnaam];
+    const items = Array.isArray(raw) ? raw : raw ? [raw] : [];
     if (items.length === 0) continue;
 
     const active = items.filter((i) => !i.afvoer);
@@ -180,15 +174,30 @@ function buildConcreteGraph(
         childMeta.klassenaam || child.doeltype.replace(/^[^_]+_/, "");
       const display = extractGEDisplay(item, childMeta, typesByTypenaam);
 
+      if (isMoon) {
+        // Aanvang/Einde: kleine maan dicht bij de parent entiteit
+        const moonColor = child.doeltype.includes("Aanvang")
+          ? "#4ade80"   // groen voor aanvang
+          : "#f87171";  // rood voor einde
+        nodes.push({
+          id: geId,
+          label: klassenaam,
+          displayData: display,
+          color: moonColor,
+          radius: 1.2,
+          nodeType: "moon",
+        });
+        links.push({
+          source: "__self__",
+          target: geId,
+          color: `${moonColor}55`,
+          distance: 15,
+        });
+        continue;
+      }
+
       let color = childMeta.kleur || "#a3e635";
       let nodeType = "ge_data";
-      if (
-        child.doeltype.includes("Aanvang") ||
-        child.doeltype.includes("Einde")
-      ) {
-        color = childMeta.kleur || "#67e8f9";
-        nodeType = "materieel";
-      }
       if (childMeta.metatype === "relatie") {
         color = childMeta.kleur || "#f472b6";
         nodeType = "relatie_data";
@@ -208,6 +217,42 @@ function buildConcreteGraph(
         color: `${color}55`,
       });
 
+      // ── Eventuele Aanvang/Einde manen op een hub ──────────────────
+      if (childMeta.ge_subtype === "hub" && Array.isArray(childMeta.onderliggende)) {
+        for (const hubChild of childMeta.onderliggende) {
+          const hcMeta = typesByTypenaam?.[hubChild.doeltype];
+          if (!hcMeta) continue;
+          const isHubMoon =
+            hubChild.doeltype.includes("Aanvang") ||
+            hubChild.doeltype.includes("Einde");
+          if (!isHubMoon) continue;
+
+          const hubRaw = item[hubChild.jsonRolnaam];
+          const hubItem = Array.isArray(hubRaw) ? hubRaw[0] : hubRaw;
+          if (!hubItem) continue;
+
+          const moonId = `moon::${hubChild.doeltype}::${item.rel_id ?? item.versie ?? i}`;
+          const moonColor = hubChild.doeltype.includes("Aanvang")
+            ? "#4ade80"
+            : "#f87171";
+          const moonDisplay = extractGEDisplay(hubItem, hcMeta, typesByTypenaam);
+          nodes.push({
+            id: moonId,
+            label: hcMeta.klassenaam || hubChild.doeltype.replace(/^[^_]+_/, ""),
+            displayData: moonDisplay,
+            color: moonColor,
+            radius: 1.0,
+            nodeType: "moon",
+          });
+          links.push({
+            source: geId,
+            target: moonId,
+            color: `${moonColor}44`,
+            distance: 10,
+          });
+        }
+      }
+
       // ── Secondaire entiteit via relatie ──────────────────────────
       const sec = secondaries[geId];
       if (sec) {
@@ -215,7 +260,6 @@ function buildConcreteGraph(
         const secMeta = sec.doelMeta;
         const secLabel = sec.label || sec.doeltype;
 
-        // De secondaire entiteit als bol
         nodes.push({
           id: secEntityId,
           label: secLabel,
@@ -229,12 +273,17 @@ function buildConcreteGraph(
           color: `${color}88`,
         });
 
-        // De GE's van de secondaire entiteit
+        // De GE's van de secondaire entiteit (ook geflattened)
         for (const secChild of secMeta?.onderliggende || []) {
           const scMeta = typesByTypenaam?.[secChild.doeltype];
           if (!scMeta) continue;
 
-          const secItems = sec.record?.[secChild.jsonRolnaam] || [];
+          const secIsMoon =
+            secChild.doeltype.includes("Aanvang") ||
+            secChild.doeltype.includes("Einde");
+
+          const secRaw = sec.record?.[secChild.jsonRolnaam];
+          const secItems = Array.isArray(secRaw) ? secRaw : secRaw ? [secRaw] : [];
           if (secItems.length === 0) continue;
 
           const secActive = secItems.filter((si) => !si.afvoer);
@@ -247,34 +296,72 @@ function buildConcreteGraph(
               scMeta.klassenaam || secChild.doeltype.replace(/^[^_]+_/, "");
             const secDisplay = extractGEDisplay(si, scMeta, typesByTypenaam);
 
-            let secColor = scMeta.kleur || "#a3e635";
-            let secNodeType = "ge_data";
-            if (
-              secChild.doeltype.includes("Aanvang") ||
-              secChild.doeltype.includes("Einde")
-            ) {
-              secColor = scMeta.kleur || "#67e8f9";
-              secNodeType = "materieel";
-            }
+            if (secIsMoon) {
+              const moonColor = secChild.doeltype.includes("Aanvang")
+                ? "#4ade80"
+                : "#f87171";
+              nodes.push({
+                id: secGeId,
+                label: secKlass,
+                displayData: secDisplay,
+                color: moonColor,
+                radius: 0.8,
+                nodeType: "moon",
+              });
+              links.push({
+                source: secEntityId,
+                target: secGeId,
+                color: `${moonColor}33`,
+                distance: 8,
+              });
+            } else {
+              let secColor = scMeta.kleur || "#a3e635";
+              let secNodeType = "ge_data";
 
-            nodes.push({
-              id: secGeId,
-              label: secKlass,
-              displayData: secDisplay,
-              color: secColor,
-              radius: 2,
-              nodeType: secNodeType,
-            });
-            links.push({
-              source: secEntityId,
-              target: secGeId,
-              color: `${secColor}44`,
-            });
+              nodes.push({
+                id: secGeId,
+                label: secKlass,
+                displayData: secDisplay,
+                color: secColor,
+                radius: 2,
+                nodeType: secNodeType,
+              });
+              links.push({
+                source: secEntityId,
+                target: secGeId,
+                color: `${secColor}44`,
+              });
+            }
           }
         }
       }
     }
   }
+
+  // ── Reverse relaties: entiteiten die naar __self__ wijzen ─────────
+  for (const [, revData] of Object.entries(reverseEntities)) {
+    for (const item of revData.items) {
+      const revId = `rev::${revData.bronTypenaam}::${item.id}`;
+      const revLabel =
+        item.weergavenaam || `${revData.bronMeta?.klassenaam || revData.bronTypenaam} ${item.id}`;
+      const revColor = revData.bronMeta?.kleur || "#fbbf24";
+
+      nodes.push({
+        id: revId,
+        label: revLabel,
+        color: revColor,
+        radius: 4,
+        nodeType: "rev_entity",
+      });
+      links.push({
+        source: revId,
+        target: "__self__",
+        color: `${revColor}55`,
+        distance: 80,
+      });
+    }
+  }
+
   return { nodes, links };
 }
 
@@ -296,9 +383,12 @@ export default function UniversumPage() {
   const [focusedInstance, setFocusedInstance] = useState(null);
   const [concreteRecord, setConcreteRecord] = useState(null);
   const [concreteSecondaries, setConcreteSecondaries] = useState({});
+  const [concreteReverseEntities, setConcreteReverseEntities] = useState({});
 
   const [loading, setLoading] = useState(false);
+  const [dataSource, setDataSource] = useState("rest"); // "rest" | "graphql"
   const lastClickRef = useRef({ time: 0, nodeId: null });
+  const containerRef = useRef(null);
 
   const domains = useMemo(() => extractDomains(rawSchema), [rawSchema]);
 
@@ -330,9 +420,10 @@ export default function UniversumPage() {
       concreteRecord,
       meta,
       typesByTypenaam,
-      concreteSecondaries
+      concreteSecondaries,
+      concreteReverseEntities
     );
-  }, [focusedInstance, concreteRecord, concreteSecondaries, typesByTypenaam]);
+  }, [focusedInstance, concreteRecord, concreteSecondaries, concreteReverseEntities, typesByTypenaam]);
 
   const graphData =
     viewMode === "concrete"
@@ -353,6 +444,16 @@ export default function UniversumPage() {
       .then(setRawSchema)
       .catch((e) => setError(e.message));
   }, []);
+
+  /* ── CSS2D label cleanup bij view-wissel ──────────────────────────── */
+  // CSS2DRenderer houdt DOM-elements van vorige views niet bij;
+  // bij wisselen van graphData blijven ze in de DOM hangen.
+  // Daarom verwijderen we ze expliciet.
+
+  useEffect(() => {
+    const dom = cssRenderer.domElement;
+    dom.querySelectorAll('.node-label').forEach((el) => el.remove());
+  }, [viewMode]);
 
   /* ── Domeinfilter: mesh + CSS2D visibility ───────────────────────── */
   // CSS2DRenderer's traverseVisible skips hidden subtrees, maar
@@ -394,14 +495,27 @@ export default function UniversumPage() {
     const fg = fgRef.current;
     if (!fg) return;
     if (viewMode === "instances") {
-      fg.d3Force("charge")?.strength(-30);
-      fg.d3Force("link")?.distance(25);
+      fg.d3Force("charge")?.strength(-80);
+      fg.d3Force("link")?.distance(50);
     } else if (viewMode === "concrete") {
-      fg.d3Force("charge")?.strength(-60);
-      fg.d3Force("link")?.distance(40);
+      fg.d3Force("charge")?.strength(-100);
+      // Per-link afstand: manen dichterbij hun parent
+      fg.d3Force("link")?.distance((link) => link.distance || 60);
     } else {
       fg.d3Force("charge")?.strength(-120);
       fg.d3Force("link")?.distance(80);
+    }
+
+    // Camera resetten na view-wissel
+    if (viewMode !== "meta") {
+      const dist = viewMode === "instances" ? 250 : 200;
+      setTimeout(() => {
+        fg.cameraPosition(
+          { x: 0, y: 0, z: dist },
+          { x: 0, y: 0, z: 0 },
+          800
+        );
+      }, 600);
     }
   }, [viewMode, graphData]);
 
@@ -430,19 +544,39 @@ export default function UniversumPage() {
       setSelectedNode(null);
       setLoading(true);
 
+      sfx.woosh("in");
       flyToNode(entityNode, 2);
-      setTimeout(() => setWormholeActive(true), 200);
+      const wormholeTimer = setTimeout(() => setWormholeActive(true), 200);
 
       const base = API_BASE();
-      fetch(`${base}/full/${entityNode.padnaam}?page=1&size=50`)
-        .then((r) => {
-          if (!r.ok) throw new Error(`${r.status}`);
-          return r.json();
-        })
-        .then((data) => {
-          const key = Object.keys(data).find((k) => Array.isArray(data[k]));
-          const records = key ? data[key] : [];
+      const fetchPromise =
+        dataSource === "graphql"
+          ? fetchInstancesGraphQL(
+              base,
+              entityNode.padnaam,
+              entityNode.id,
+              typesByTypenaam,
+              50
+            )
+          : fetch(`${base}/full/${entityNode.padnaam}?page=1&size=50`)
+              .then((r) => {
+                if (!r.ok) throw new Error(`${r.status}`);
+                return r.json();
+              })
+              .then((data) => {
+                const key = Object.keys(data).find((k) =>
+                  Array.isArray(data[k])
+                );
+                const records = key ? data[key] : [];
+                // Normaliseer REST naar geflattened formaat
+                const eMeta = typesByTypenaam[entityNode.id];
+                return records.map((rec) => flattenRecord(rec, eMeta, typesByTypenaam));
+              });
+
+      fetchPromise
+        .then((records) => {
           if (records.length === 0) {
+            clearTimeout(wormholeTimer);
             setWormholeActive(false);
             setLoading(false);
             return;
@@ -470,11 +604,12 @@ export default function UniversumPage() {
         })
         .catch((err) => {
           console.error("Instances laden mislukt:", err);
+          clearTimeout(wormholeTimer);
           setWormholeActive(false);
           setLoading(false);
         });
     },
-    [typesByTypenaam, flyToNode]
+    [typesByTypenaam, flyToNode, dataSource]
   );
 
   /* ── Wormhole: instances → concreet ──────────────────────────────── */
@@ -485,19 +620,38 @@ export default function UniversumPage() {
       setSelectedNode(null);
       setLoading(true);
 
+      sfx.woosh("in");
       flyToNode(instanceNode, 2);
-      setTimeout(() => setWormholeActive(true), 200);
+      const wormholeTimer = setTimeout(() => setWormholeActive(true), 200);
 
       const base = API_BASE();
       const entityPadnaam = focusedEntity.padnaam;
       const entityTypenaam = focusedEntity.typenaam;
       const instId = instanceNode.instanceId;
 
-      fetch(`${base}/full/${entityPadnaam}/${instId}`)
-        .then((r) => {
-          if (!r.ok) throw new Error(`${r.status}`);
-          return r.json();
-        })
+      // Reverse relaties ontdekken (welke entiteiten wijzen naar dit type?)
+      const reverseRels = discoverReverseRelations(entityTypenaam, typesByTypenaam);
+
+      const entityFetchPromise =
+        dataSource === "graphql"
+          ? fetchFullEntityGraphQL(
+              base,
+              entityPadnaam,
+              instId,
+              entityTypenaam,
+              typesByTypenaam,
+              reverseRels
+            )
+          : fetch(`${base}/full/${entityPadnaam}/${instId}`).then((r) => {
+              if (!r.ok) throw new Error(`${r.status}`);
+              return r.json();
+            }).then((rec) => {
+              // Normaliseer REST naar geflattened formaat
+              const eMeta = typesByTypenaam[entityTypenaam];
+              return flattenRecord(rec, eMeta, typesByTypenaam);
+            });
+
+      entityFetchPromise
         .then(async (record) => {
           // ── Secondaire entiteiten ophalen via relaties ───────────
           const entityMeta = typesByTypenaam[entityTypenaam];
@@ -516,7 +670,9 @@ export default function UniversumPage() {
               childMeta.secondaireEntiteitIDKolom ||
               `${childMeta.doelEntiteit.toLowerCase()}_id`;
 
-            const items = record[child.jsonRolnaam] || [];
+            // Geflattened: enkelvoudig = object, meervoudig = array
+            const raw = record[child.jsonRolnaam];
+            const items = Array.isArray(raw) ? raw : raw ? [raw] : [];
             const actief = items.filter((i) => !i.afvoer);
             const show = actief.length > 0 ? actief : items.slice(0, 1);
 
@@ -541,9 +697,23 @@ export default function UniversumPage() {
           await Promise.all(
             secFetches.map(async (f) => {
               try {
-                const r = await fetch(`${base}/full/${f.padnaam}/${f.id}`);
-                if (!r.ok) return;
-                const secRecord = await r.json();
+                let secRecord;
+                if (dataSource === "graphql") {
+                  secRecord = await fetchFullEntityGraphQL(
+                    base,
+                    f.padnaam,
+                    f.id,
+                    f.doeltype,
+                    typesByTypenaam
+                  );
+                  if (!secRecord) return;
+                } else {
+                  const r = await fetch(`${base}/full/${f.padnaam}/${f.id}`);
+                  if (!r.ok) return;
+                  secRecord = await r.json();
+                  // Normaliseer REST naar geflattened formaat
+                  secRecord = flattenRecord(secRecord, f.doelMeta, typesByTypenaam);
+                }
 
                 // Weergavenaam van de secondaire entiteit
                 const secDisplayName =
@@ -563,6 +733,25 @@ export default function UniversumPage() {
             })
           );
 
+          // ── Reverse relaties extraheren uit GQL response ────────────
+          const revEnts = {};
+          if (dataSource === "graphql") {
+            for (const rev of reverseRels) {
+              const items = record[rev.gqlFieldName];
+              if (Array.isArray(items) && items.length > 0) {
+                revEnts[rev.gqlFieldName] = {
+                  items,
+                  bronTypenaam: rev.bronTypenaam,
+                  bronMeta: rev.bronMeta,
+                  relatieTypenaam: rev.relatieTypenaam,
+                };
+              }
+              // Verwijder gerelateerde_* van het record zodat buildConcreteGraph
+              // het niet als GE-data probeert te renderen
+              delete record[rev.gqlFieldName];
+            }
+          }
+
           setFocusedInstance({
             id: instId,
             label: instanceNode.label,
@@ -570,6 +759,7 @@ export default function UniversumPage() {
           });
           setConcreteRecord(record);
           setConcreteSecondaries(secs);
+          setConcreteReverseEntities(revEnts);
           setViewMode("concrete");
 
           setTimeout(() => {
@@ -579,17 +769,19 @@ export default function UniversumPage() {
         })
         .catch((err) => {
           console.error("Concreet laden mislukt:", err);
+          clearTimeout(wormholeTimer);
           setWormholeActive(false);
           setLoading(false);
         });
     },
-    [focusedEntity, typesByTypenaam, flyToNode]
+    [focusedEntity, typesByTypenaam, flyToNode, dataSource]
   );
 
   /* ── Terug-navigatie ─────────────────────────────────────────────── */
 
   const goBack = useCallback(() => {
     if (viewMode === "meta") return;
+    sfx.woosh("out");
     setSelectedNode(null);
     setWormholeActive(true);
 
@@ -598,6 +790,7 @@ export default function UniversumPage() {
         setFocusedInstance(null);
         setConcreteRecord(null);
         setConcreteSecondaries({});
+        setConcreteReverseEntities({});
         setViewMode("instances");
       } else {
         setFocusedEntity(null);
@@ -610,6 +803,7 @@ export default function UniversumPage() {
 
   const goToMeta = useCallback(() => {
     if (viewMode === "meta") return;
+    sfx.woosh("out");
     setSelectedNode(null);
     setWormholeActive(true);
 
@@ -617,6 +811,7 @@ export default function UniversumPage() {
       setFocusedInstance(null);
       setConcreteRecord(null);
       setConcreteSecondaries({});
+      setConcreteReverseEntities({});
       setFocusedEntity(null);
       setInstanceRecords([]);
       setViewMode("meta");
@@ -642,8 +837,14 @@ export default function UniversumPage() {
 
       lastClickRef.current = { time: now, nodeId: node.id };
       setSelectedNode(node);
+      sfx.ping();
+
+      // In concrete view: alleen selecteren, niet vliegen
+      if (viewMode === "concrete") return;
+
+      sfx.zoom();
       const dist =
-        node.nodeType === "instance" || node.nodeType === "ge_data" ? 50 : 100;
+        node.nodeType === "instance" || node.nodeType === "ge_data" ? 80 : 120;
       flyToNode(node, dist);
     },
     [viewMode, enterInstances, enterConcrete, flyToNode]
@@ -653,6 +854,12 @@ export default function UniversumPage() {
 
   useEffect(() => {
     const handler = (e) => {
+      // Voorkom dat alt+pijl browser-navigatie een React-crash veroorzaakt
+      if (e.altKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+        e.preventDefault();
+        if (e.key === "ArrowLeft" && viewMode !== "meta") goBack();
+        return;
+      }
       if (e.key === "Escape") {
         if (viewMode !== "meta") goBack();
         else setSelectedNode(null);
@@ -678,14 +885,64 @@ export default function UniversumPage() {
     return () => window.removeEventListener("keydown", handler);
   }, [viewMode, selectedNode, goBack, enterInstances, enterConcrete]);
 
+  /* ── Ambient drone: start/stop + bewegingsdetectie ───────────────── */
+  // De drone start bij eerste pointer-interactie (autoplay-policy) en
+  // stopt bij unmount. Pointer-snelheid stuurt gain + filter aan.
+  // We luisteren op window i.p.v. containerRef omdat bij eerste render
+  // de ref nog null is (vroege return voor loading-state).
+
+  useEffect(() => {
+    let lastX = 0, lastY = 0, lastT = 0;
+    let fadeTimer = null;
+    let started = false;
+
+    const onMove = (e) => {
+      const now = performance.now();
+      if (!started) {
+        sfx.droneStart();
+        started = true;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        lastT = now;
+        return;
+      }
+
+      const dt = now - lastT;
+      if (dt < 16) return;           // max ~60 fps
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      const speed = Math.sqrt(dx * dx + dy * dy) / dt; // px/ms
+      lastX = e.clientX;
+      lastY = e.clientY;
+      lastT = now;
+
+      // Map speed naar 0..1 (0..2 px/ms = normaal muisgebruik)
+      const intensity = Math.min(1, speed / 2);
+      sfx.droneMove(intensity);
+
+      // Na 120ms geen beweging → fade naar idle
+      clearTimeout(fadeTimer);
+      fadeTimer = setTimeout(() => sfx.droneMove(0), 120);
+    };
+
+    window.addEventListener("pointermove", onMove);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      clearTimeout(fadeTimer);
+      sfx.droneStop();
+    };
+  }, []);
+
   /* ── Domain toggle ───────────────────────────────────────────────── */
 
   const toggleDomain = useCallback(
     (dom) => {
       setActiveDomains((prev) => {
         const cur = prev === null ? new Set(domains) : new Set(prev);
-        if (cur.has(dom)) cur.delete(dom);
+        const wasOn = cur.has(dom);
+        if (wasOn) cur.delete(dom);
         else cur.add(dom);
+        sfx.tick(!wasOn);
         return cur.size === domains.length ? null : cur;
       });
     },
@@ -714,16 +971,18 @@ export default function UniversumPage() {
     const isCenter =
       node.nodeType === "entity_center" || node.nodeType === "self";
     const isSecEntity = node.nodeType === "sec_entity";
+    const isRevEntity = node.nodeType === "rev_entity";
+    const isMoon = node.nodeType === "moon";
 
-    const geo = new THREE.SphereGeometry(radius, 20, 14);
+    const geo = new THREE.SphereGeometry(radius, isMoon ? 12 : 20, isMoon ? 8 : 14);
     const mat = new THREE.MeshLambertMaterial({
       color: node.color || "#94a3b8",
       transparent: true,
-      opacity: isCenter ? 0.35 : isSecEntity ? 0.65 : 0.85,
+      opacity: isCenter ? 0.35 : (isSecEntity || isRevEntity) ? 0.65 : isMoon ? 0.9 : 0.85,
     });
     const mesh = new THREE.Mesh(geo, mat);
 
-    if (isCenter || isSecEntity) {
+    if (isCenter || isSecEntity || isRevEntity) {
       const ring = new THREE.RingGeometry(radius + 1, radius + 2, 32);
       const rMat = new THREE.MeshBasicMaterial({
         color: node.color || "#60a5fa",
@@ -741,6 +1000,10 @@ export default function UniversumPage() {
     else if (node.nodeType === "self") cssClass += " node-label--self";
     else if (node.nodeType === "sec_entity")
       cssClass += " node-label--sec-entity";
+    else if (node.nodeType === "rev_entity")
+      cssClass += " node-label--rev-entity";
+    else if (node.nodeType === "moon")
+      cssClass += " node-label--moon";
     else if (
       node.nodeType === "ge_data" ||
       node.nodeType === "materieel" ||
@@ -788,7 +1051,7 @@ export default function UniversumPage() {
   }
 
   return (
-    <div className="universum-container">
+    <div className="universum-container" ref={containerRef}>
       <div className={`wormhole-overlay${wormholeActive ? " active" : ""}`} />
 
       {/* Toolbar + breadcrumb */}
@@ -837,6 +1100,24 @@ export default function UniversumPage() {
               ? "Dubbelklik instantie = concreet universum · Esc = terug"
               : "Esc / Backspace = terug"}
         </span>
+
+        {/* REST / GraphQL toggle */}
+        <div className="datasource-toggle">
+          <button
+            className={`ds-btn${dataSource === "rest" ? " ds-active" : ""}`}
+            onClick={() => setDataSource("rest")}
+            title="Data ophalen via REST /full endpoints"
+          >
+            REST
+          </button>
+          <button
+            className={`ds-btn${dataSource === "graphql" ? " ds-active" : ""}`}
+            onClick={() => setDataSource("graphql")}
+            title="Data ophalen via GraphQL"
+          >
+            GQL
+          </button>
+        </div>
       </div>
 
       {/* Domeinfilter (alleen meta) */}
@@ -860,6 +1141,7 @@ export default function UniversumPage() {
       {/* 3D Graaf */}
       {graphData && (
         <ForceGraph3D
+          key={viewMode}
           ref={fgRef}
           graphData={graphData}
           nodeThreeObject={nodeThreeObject}

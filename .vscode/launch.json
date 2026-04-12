@@ -1,43 +1,43 @@
 {
     "version": "0.2.1",
     "configurations": [
-        {
-            "name": "Frontend v04: Vite dev server",
-            "type": "node-terminal",
-            "request": "launch",
-            "command": "& \"C:\\Program Files\\nodejs\\npm.cmd\" run dev -- --host",
-            "cwd": "${workspaceFolder}/bitemporal_go_API_v04/web/vite"
-        },
-        {
-            "name": "Go API v04: debug",
-            "type": "go",
-            "request": "launch",
-            "mode": "auto",
-            "program": "${workspaceFolder}/bitemporal_go_API_v04",
-            "cwd": "${workspaceFolder}/bitemporal_go_API_v04"
-        },
-         {
-            "name": "Frontend v05: Vite dev server",
-            "type": "node-terminal",
-            "request": "launch",
-            "command": "& \"C:\\Program Files\\nodejs\\npm.cmd\" run dev -- --host",
-            "cwd": "${workspaceFolder}/bitemporal_go_API_v05/web/vite"
-        },
-        {
-            "name": "Frontend v05: open in browser",
-            "type": "msedge",
-            "request": "launch",
-            "url": "http://localhost:8081/",
-            "webRoot": "${workspaceFolder}/bitemporal_go_API_v05/web/vite"
-        },
-        {
-            "name": "Go API v05: debug",
-            "type": "go",
-            "request": "launch",
-            "mode": "auto",
-            "program": "${workspaceFolder}/bitemporal_go_API_v05",
-            "cwd": "${workspaceFolder}/bitemporal_go_API_v05"
-        },
+        // {
+        //     "name": "Frontend v04: Vite dev server",
+        //     "type": "node-terminal",
+        //     "request": "launch",
+        //     "command": "& \"C:\\Program Files\\nodejs\\npm.cmd\" run dev -- --host",
+        //     "cwd": "${workspaceFolder}/bitemporal_go_API_v04/web/vite"
+        // },
+        // {
+        //     "name": "Go API v04: debug",
+        //     "type": "go",
+        //     "request": "launch",
+        //     "mode": "auto",
+        //     "program": "${workspaceFolder}/bitemporal_go_API_v04",
+        //     "cwd": "${workspaceFolder}/bitemporal_go_API_v04"
+        // },
+        // {
+        //     "name": "Frontend v05: Vite dev server",
+        //     "type": "node-terminal",
+        //     "request": "launch",
+        //     "command": "& \"C:\\Program Files\\nodejs\\npm.cmd\" run dev -- --host",
+        //     "cwd": "${workspaceFolder}/bitemporal_go_API_v05/web/vite"
+        // },
+        // {
+        //     "name": "Frontend v05: open in browser",
+        //     "type": "msedge",
+        //     "request": "launch",
+        //     "url": "http://localhost:8081/",
+        //     "webRoot": "${workspaceFolder}/bitemporal_go_API_v05/web/vite"
+        // },
+        // {
+        //     "name": "Go API v05: debug",
+        //     "type": "go",
+        //     "request": "launch",
+        //     "mode": "auto",
+        //     "program": "${workspaceFolder}/bitemporal_go_API_v05",
+        //     "cwd": "${workspaceFolder}/bitemporal_go_API_v05"
+        // },
         {
             "name": "Frontend v06: Vite dev server",
             "type": "node-terminal",
@@ -77,6 +77,14 @@
             "windows": {
                 "command": "& \"C:\\Program Files\\nodejs\\npm.cmd\" run build"
             }
+        },
+        {
+            "name": "Frontend v06: Vite build and restart dev server",
+            "type": "node-terminal",
+            "request": "launch",
+            "preLaunchTask": "vite: build and restart dev server (v06)",
+            "command": "echo Vite build and restart sequence completed",
+            "cwd": "${workspaceFolder}"
         },
         {
             "name": "Frontend v06: open in browser",
@@ -137,14 +145,14 @@
         }
     ],
     "compounds": [
-        {
-            "name": "Start frontend and debug API v05",
-            "configurations": [
-                "Frontend v05: Vite dev server",
-                "Go API v05: debug"
-            ],
-            "stopAll": true
-        },
+        // {
+        //     "name": "Start frontend and debug API v05",
+        //     "configurations": [
+        //         "Frontend v05: Vite dev server",
+        //         "Go API v05: debug"
+        //     ],
+        //     "stopAll": true
+        // },
         {
             "name": "Start frontend and debug API v06",
             "configurations": [

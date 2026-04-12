@@ -44,7 +44,13 @@ func createModelTables(ctx context.Context, db *bun.DB) error {
 				typeNames = append(typeNames, typeName)
 			}
 		}
-		sort.Strings(typeNames)
+
+		// Entiteiten: topologische sortering zodat parent-tabellen voor children worden aangemaakt.
+		if metatype == model.MetatypeEntiteit {
+			typeNames = topoSortEntiteiten(typeNames)
+		} else {
+			sort.Strings(typeNames)
+		}
 
 		for _, typeName := range typeNames {
 			meta, ok := model.MetaRegistry.GetTypeMeta(typeName)
@@ -71,6 +77,12 @@ func createModelTables(ctx context.Context, db *bun.DB) error {
 			if meta.Metatype == model.MetatypeEntiteit {
 				if err := ensureEntiteitIDKolomMigrated(ctx, db, meta); err != nil {
 					return fmt.Errorf("entiteit-ID migratie mislukt voor %s (%s): %w", typeName, meta.Tabelnaam, err)
+				}
+				// Subtype-entiteiten: voeg FK constraint toe van child PK naar parent PK.
+				if meta.ParentTypenaam != "" {
+					if err := ensureSubtypeFK(ctx, db, meta); err != nil {
+						return fmt.Errorf("subtype FK constraint mislukt voor %s: %w", typeName, err)
+					}
 				}
 			}
 
@@ -500,3 +512,78 @@ func ensureLocatieAdresDataLandKolom(ctx context.Context, db *bun.DB) error {
 	return err
 }
 */
+
+// topoSortEntiteiten sorteert entiteit-typenamen topologisch zodat parent-entiteiten
+// altijd voor hun children komen. Types zonder ParentTypenaam komen eerst (alfabetisch),
+// daarna children van die parents, etc.
+func topoSortEntiteiten(typeNames []string) []string {
+	// Bouw een parent-map
+	parentOf := make(map[string]string) // child → parent
+	childrenOf := make(map[string][]string)
+	inSet := make(map[string]bool)
+	for _, tn := range typeNames {
+		inSet[tn] = true
+		meta, ok := model.MetaRegistry.GetTypeMeta(tn)
+		if !ok {
+			continue
+		}
+		if meta.ParentTypenaam != "" {
+			parentOf[tn] = meta.ParentTypenaam
+			childrenOf[meta.ParentTypenaam] = append(childrenOf[meta.ParentTypenaam], tn)
+		}
+	}
+
+	// Roots: types zonder parent (of parent buiten de set)
+	roots := make([]string, 0)
+	for _, tn := range typeNames {
+		p := parentOf[tn]
+		if p == "" || !inSet[p] {
+			roots = append(roots, tn)
+		}
+	}
+	sort.Strings(roots)
+
+	// BFS vanuit roots
+	result := make([]string, 0, len(typeNames))
+	queue := roots
+	for len(queue) > 0 {
+		cur := queue[0]
+		queue = queue[1:]
+		result = append(result, cur)
+		ch := childrenOf[cur]
+		sort.Strings(ch)
+		queue = append(queue, ch...)
+	}
+	return result
+}
+
+// ensureSubtypeFK voegt een FK constraint toe van de child-entiteitstabel naar de
+// parent-entiteitstabel (PFK patroon). Dit wordt idempotent uitgevoerd via IF NOT EXISTS.
+func ensureSubtypeFK(ctx context.Context, db *bun.DB, childMeta model.TypeMeta) error {
+	parentMeta, ok := model.MetaRegistry.GetTypeMeta(childMeta.ParentTypenaam)
+	if !ok {
+		return fmt.Errorf("parent type %s niet gevonden in MetaRegistry", childMeta.ParentTypenaam)
+	}
+	childTable := childMeta.Tabelnaam
+	childCol := childMeta.IDKolom // bijv. "taak_id"
+	parentTable := parentMeta.Tabelnaam
+	parentCol := parentMeta.IDKolom // "id"
+	constraintName := fmt.Sprintf("fk_%s_%s", childTable, parentTable)
+
+	sql := fmt.Sprintf(`
+DO $$
+BEGIN
+	IF NOT EXISTS (
+		SELECT 1 FROM information_schema.table_constraints
+		WHERE constraint_name = '%s'
+		  AND table_schema = current_schema()
+		  AND table_name = '%s'
+	) THEN
+		EXECUTE format('ALTER TABLE "%s" ADD CONSTRAINT "%s" FOREIGN KEY ("%s") REFERENCES "%s" ("%s") ON DELETE CASCADE');
+	END IF;
+END $$;
+`, constraintName, childTable, childTable, constraintName, childCol, parentTable, parentCol)
+
+	_, err := db.ExecContext(ctx, sql)
+	return err
+}

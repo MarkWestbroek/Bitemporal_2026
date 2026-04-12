@@ -342,6 +342,15 @@ func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratie model.Regi
 			representatie.ClearID()
 		}
 		representatie.SetOpvoer(&registratie.Tijdstip)
+
+		// Bij subtype-entiteiten: maak eerst de parent-record aan als deze nog niet bestaat.
+		// TPT patroon: child-tabel heeft PFK naar parent-tabel → parent moet eerst bestaan.
+		if meta.Metatype == model.MetatypeEntiteit && meta.ParentTypenaam != "" {
+			if err := ensureParentRecordBijOpvoer(c, tx, meta, representatie, registratie.Tijdstip); err != nil {
+				return fmt.Errorf("HANDLER: kon parent-record niet aanmaken voor %s: %v", representatienaam, err)
+			}
+		}
+
 		_, err := tx.NewInsert().
 			Model(representatie).
 			Returning("*").
@@ -1318,4 +1327,62 @@ func hubScopeVoorChild(childMeta model.TypeMeta, entiteitID int, relID int) map[
 	}
 	scope["rel_id"] = relID
 	return scope
+}
+
+// ensureParentRecordBijOpvoer maakt een parent-record aan in de parent-tabel als onderdeel
+// van het TPT (Table-per-Type) patroon. De child-entiteitstabel heeft een PFK naar de
+// parent-tabel, dus de parent moet bestaan voordat het child-record kan worden ge-inserted.
+// Werkt recursief: als de parent zelf ook een subtype is, wordt diens parent eerst aangemaakt.
+func ensureParentRecordBijOpvoer(c *gin.Context, tx bun.Tx, childMeta model.TypeMeta, childRep model.FormeleRepresentatie, opvoerTijdstip time.Time) error {
+	parentMeta, ok := model.MetaRegistry.GetTypeMeta(childMeta.ParentTypenaam)
+	if !ok {
+		return fmt.Errorf("parent type %s niet gevonden in MetaRegistry", childMeta.ParentTypenaam)
+	}
+
+	// Haal het ID op uit de child-representatie (de PFK waarde = parent ID)
+	childID := childRep.GetID()
+	if childID == nil || childID == 0 {
+		return fmt.Errorf("child %s heeft geen ID voor parent-record aanmaak", childMeta.Typenaam)
+	}
+
+	// Check of het parent record al bestaat
+	parentRep := parentMeta.Factory()
+	count, err := tx.NewSelect().
+		Model(parentRep).
+		Where(parentMeta.IDKolom+" = ?", childID).
+		Count(c.Request.Context())
+	if err != nil {
+		return fmt.Errorf("kon parent %s niet opzoeken: %v", parentMeta.Typenaam, err)
+	}
+	if count > 0 {
+		return nil // parent bestaat al
+	}
+
+	// Maak een nieuw parent-record aan met hetzelfde ID en opvoer-tijdstip.
+	newParent := parentMeta.Factory()
+
+	// Stel parent ID in via reflectie: zoek het PK-veld dat past bij parentMeta.IDKolom.
+	if err := zetIntWaardeVoorKolomOpRepresentatie(newParent, parentMeta.IDKolom, childID.(int)); err != nil {
+		return fmt.Errorf("kon ID niet zetten op parent %s: %v", parentMeta.Typenaam, err)
+	}
+	if fRep, ok := newParent.(model.FormeleRepresentatie); ok {
+		fRep.SetOpvoer(&opvoerTijdstip)
+	}
+
+	// Recursie: als de parent zelf ook een subtype is, maak eerst diens parent aan.
+	if parentMeta.ParentTypenaam != "" {
+		if fRep, ok := newParent.(model.FormeleRepresentatie); ok {
+			if err := ensureParentRecordBijOpvoer(c, tx, parentMeta, fRep, opvoerTijdstip); err != nil {
+				return err
+			}
+		}
+	}
+
+	_, err = tx.NewInsert().
+		Model(newParent).
+		Exec(c.Request.Context())
+	if err != nil {
+		return fmt.Errorf("kon parent %s record niet aanmaken: %v", parentMeta.Typenaam, err)
+	}
+	return nil
 }

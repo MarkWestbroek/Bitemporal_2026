@@ -484,14 +484,14 @@ func ensureInitRegistration(outputDir, prefix string) error {
 		}
 		reDT := regexp.MustCompile(`(?i)init\w*DatatypeRegistry\(\)`)
 		for _, match := range reDT.FindAllString(content, -1) {
-			if strings.ToLower(match) == strings.ToLower(initDatatype) && match != initDatatype {
+			if strings.EqualFold(match, initDatatype) && match != initDatatype {
 				content = strings.ReplaceAll(content, match, initDatatype)
 				fmt.Printf("  Init-call casing gecorrigeerd: %s → %s\n", match, initDatatype)
 			}
 		}
 		reEnum := regexp.MustCompile(`(?i)init\w*EnumRegistry\(\)`)
 		for _, match := range reEnum.FindAllString(content, -1) {
-			if strings.ToLower(match) == strings.ToLower(initEnum) && match != initEnum {
+			if strings.EqualFold(match, initEnum) && match != initEnum {
 				content = strings.ReplaceAll(content, match, initEnum)
 				fmt.Printf("  Init-call casing gecorrigeerd: %s → %s\n", match, initEnum)
 			}

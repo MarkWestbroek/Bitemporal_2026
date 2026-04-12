@@ -182,6 +182,12 @@ func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType,
 		b.WriteString(fmt.Sprintf("\t\tEntiteitSubtype: %s,\n", entiteitSubtypeConst(ent.EntiteitSubtype)))
 	}
 	b.WriteString(fmt.Sprintf("\t\tIsMaterieel: %t,\n", ent.IsMaterieel))
+	if ent.IsAbstract {
+		b.WriteString("\t\tIsAbstract:  true,\n")
+	}
+	if ent.Erft != "" {
+		b.WriteString(fmt.Sprintf("\t\tParentTypenaam: %q,\n", ent.Erft))
+	}
 	if domein != "" {
 		b.WriteString(fmt.Sprintf("\t\tDomein:      %q,\n", domein))
 	}
@@ -193,10 +199,22 @@ func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType,
 	b.WriteString(fmt.Sprintf("\t\tFactory:     func() Representatie { return &%s{} },\n", ent.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tSliceFactory: func() any { return &[]%s{} },\n", ent.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tTabelnaam:      %q,\n", d.Tabelnaam))
-	b.WriteString(fmt.Sprintf("\t\tIDKolom:        %q,\n", d.IDKolom))
+	if ent.Erft != "" {
+		// Subtype: PK is de PFK naar parent, bijv. "taak_id"
+		parentIDKolom := strings.ToLower(ent.Erft) + "_id"
+		b.WriteString(fmt.Sprintf("\t\tIDKolom:        %q,\n", parentIDKolom))
+	} else {
+		b.WriteString(fmt.Sprintf("\t\tIDKolom:        %q,\n", d.IDKolom))
+	}
 	b.WriteString(fmt.Sprintf("\t\tDBFactory:      func() Representatie { return &%s{} },\n", ent.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tDBSliceFactory: func() any { return &[]%s{} },\n", ent.Typenaam))
-	b.WriteString("\t\tHeeftPFK:               false,\n")
+	if ent.Erft != "" {
+		b.WriteString("\t\tHeeftPFK:               true,\n")
+		parentIDKolom := strings.ToLower(ent.Erft) + "_id"
+		b.WriteString(fmt.Sprintf("\t\tEntiteitIDKolom:        %q,\n", parentIDKolom))
+	} else {
+		b.WriteString("\t\tHeeftPFK:               false,\n")
+	}
 	b.WriteString("\t\tRelatieveAutoincrement: false,\n")
 
 	// OnderliggendeGegevenselementen

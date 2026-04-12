@@ -30,12 +30,37 @@ func generateEntiteiten(v3 model.V3Model) (string, error) {
 		}
 		b.WriteString(fmt.Sprintf("type %s struct {\n", ent.Typenaam))
 		writeField(&b, bunBaseModelField(d.Tabelnaam))
-		for _, f := range entiteitPlumbingFields() {
-			writeField(&b, f)
+
+		if ent.Erft != "" {
+			// Subtype: PFK naar parent-entiteit (bijv. Klanttaak_ID int → FK naar taak(id))
+			parentIDKolom := strings.ToLower(ent.Erft) + "_id"
+			writeField(&b, StructField{
+				Name: ent.Erft + "_ID",
+				Type: "int",
+				Tags: fmt.Sprintf("`json:\"%s\" bun:\"%s,pk\"`", parentIDKolom, parentIDKolom),
+			})
+			// Belongs-to relatie naar parent-entiteit
+			writeField(&b, StructField{
+				Name: "Parent" + ent.Erft,
+				Type: "*" + ent.Erft,
+				Tags: fmt.Sprintf("`json:\"-\" bun:\"rel:belongs-to,join:%s=id\"`", parentIDKolom),
+			})
+			// Opvoer/Afvoer (geen eigen ID autoincrement)
+			writeField(&b, StructField{Name: "Opvoer", Type: "*time.Time", Tags: "`json:\"opvoer,omitempty\"`"})
+			writeField(&b, StructField{Name: "Afvoer", Type: "*time.Time", Tags: "`json:\"afvoer,omitempty\"`"})
+		} else {
+			for _, f := range entiteitPlumbingFields() {
+				writeField(&b, f)
+			}
 		}
 
 		// Bun relatie-velden naar onderliggende hubs
 		entIDKolom := strings.ToLower(ent.Typenaam) + "_id"
+		// PK kolom voor has-many joins: "id" voor gewone entiteiten, "{parent}_id" voor subtypes
+		pkKolom := "id"
+		if ent.Erft != "" {
+			pkKolom = strings.ToLower(ent.Erft) + "_id"
+		}
 		for _, ge := range ent.Gegevenselementen {
 			hubType := geHubTypeName(ent, ge.Naam)
 			rolnaam := toPascalCase(ge.Meervoud)
@@ -46,20 +71,20 @@ func generateEntiteiten(v3 model.V3Model) (string, error) {
 			if jsonRolnaam == "" {
 				jsonRolnaam = strings.ToLower(ge.Naam) + "s"
 			}
-			writeField(&b, entiteitRelatieField(rolnaam, jsonRolnaam, hubType, entIDKolom))
+			writeField(&b, entiteitRelatieFieldPK(rolnaam, jsonRolnaam, hubType, pkKolom, entIDKolom))
 		}
 		for _, rel := range ent.Relaties {
 			rolnaam := relRolnaam(rel.Naam, rel.Meervoud)
 			jsonRolnaam := relJSONRolnaam(rel.Naam, rel.Meervoud)
-			writeField(&b, entiteitRelatieField(rolnaam, jsonRolnaam, rel.Naam, entIDKolom))
+			writeField(&b, entiteitRelatieFieldPK(rolnaam, jsonRolnaam, rel.Naam, pkKolom, entIDKolom))
 		}
 
 		// Materiële plumbing (Aanvang/Einde) als de entiteit materieel is
 		if ent.IsMaterieel {
 			aanvangType := ent.Typenaam + "_Aanvang"
 			eindeType := ent.Typenaam + "_Einde"
-			writeField(&b, entiteitRelatieField("Aanvang", "aanvang", aanvangType, entIDKolom))
-			writeField(&b, entiteitRelatieField("Einde", "einde", eindeType, entIDKolom))
+			writeField(&b, entiteitRelatieFieldPK("Aanvang", "aanvang", aanvangType, pkKolom, entIDKolom))
+			writeField(&b, entiteitRelatieFieldPK("Einde", "einde", eindeType, pkKolom, entIDKolom))
 		}
 
 		b.WriteString("}\n\n")

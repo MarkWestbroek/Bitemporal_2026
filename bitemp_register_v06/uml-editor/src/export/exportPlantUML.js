@@ -79,6 +79,13 @@ export function exportNaarPlantUML(nodes, edges) {
     const source = sanitize(edgeEndpointName(edge.source, nodes));
     const target = sanitize(edgeEndpointName(edge.target, nodes));
     const d = edge.data || {};
+
+    // Generalisatie-edge: kind --|> ouder
+    if (d.isGeneralization) {
+      lines.push(`${target} <|-- ${source}`);
+      continue;
+    }
+
     const label = d.rolnaam || "";
     const kard = d.kardinaliteit || "*";
 

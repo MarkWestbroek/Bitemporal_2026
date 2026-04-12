@@ -185,6 +185,14 @@ body[data-ide-theme]:has(.ide-canvas) {
   display: none;
 }
 
+/* ── Edge-mode cursor override ──────────────────────────────── */
+.ide-canvas.edge-mode-compositie .react-flow__pane,
+.ide-canvas.edge-mode-compositie .react-flow__node,
+.ide-canvas.edge-mode-generalisatie .react-flow__pane,
+.ide-canvas.edge-mode-generalisatie .react-flow__node {
+  cursor: crosshair !important;
+}
+
 /* ── Alignment toolbar ──────────────────────────────────────── */
 .ide-align-toolbar {
   position: absolute;

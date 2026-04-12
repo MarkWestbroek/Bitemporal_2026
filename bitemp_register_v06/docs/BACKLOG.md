@@ -570,12 +570,16 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 
 | # | Item | Bron |
 |---|------|------|
-| O1 | TypeMeta uitbreiden met SupertypeRef en IsAbstract | overerving-analyse.md |
-| O2 | Database createtables voor PFK-structuur | overerving-analyse.md |
-| O3 | Generieke handler voor supertype-join | overerving-analyse.md |
-| O4 | Schema-API met overervingsvelden | overerving-analyse.md |
-| O5 | Editor: generalisatie-edge (driehoek-pijl) | overerving-analyse.md |
+| O1 | ✅ TypeMeta uitbreiden met `IsAbstract` en `ParentTypenaam` | overerving-analyse.md |
+| O2 | ✅ Database + Codegen voor PFK-structuur: codegen genereert PFK-veld + belongs-to relatie op subtypes, `entiteitRelatieFieldPK` voor has-many joins met juiste PK-kolom, `createmodeltables` met topologische sort (parent-before-child) + `ensureSubtypeFK` voor FK-constraint | overerving-analyse.md |
+| O3 | ✅ Generieke handlers voor supertype-join: `addOnderliggendeRelations` laadt parent via `Relation("Parent{Type}")`, `laadHubKinderenNaQuery` recursief voor parent hub-children, `ensureParentRecordBijOpvoer` maakt transparant parent-record aan in registratie-handler (TPT) | overerving-analyse.md |
+| O4 | ✅ Schema-API met overervingsvelden: `IsAbstract`, `ParentTypenaam`, `GeerfdeVelden` (recursief) in DTO + builder | overerving-analyse.md |
+| O5 | ✅ Editor: generalisatie-edge (driehoek-pijl) — rendering ✅, sidebar-dropdown ✅, toolbar edge-mode ✅ | overerving-analyse.md |
 | O6 | Frontend: geërfde velden in formulieren | overerving-analyse.md |
+| O7 | ✅ V3 JSON roundtrip: `isAbstract` + `erft` velden op V3Entiteit, export/import generalisatie-edges | — |
+| O8 | ✅ Codegen: schrijft `IsAbstract` + `ParentTypenaam` naar gegenereerde MetaRegistry | — |
+| O9 | ✅ Exporters: XMI (dynamisch isAbstract + UML:Generalization), Mermaid (--|>), PlantUML (<|--) | — |
+| O10 | ✅ Bugfix: afgeleide velden in subklassen tonen nu correct (shallow equality fix in useOvergeerfdeVelden) | — |
 
 ### UML Editor (EditorV2)
 
@@ -594,7 +598,9 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | E11| ✅ Node resize: gebruiker kan nodes groter/kleiner maken (React Flow `<NodeResizer>`) + CSS max-width verwijderd | nieuw |
 | E12| ✅ ENT-node dikkere rand als standaardstijl (border-width 3px vast) | nieuw |
 | E13| ✅ ENT→ENT edge trekken = nieuwe REL aanmaken (collapsed/ASOC-small, geen velden) + genormaliseerde handles | nieuw |
-| E14| ✅ Ctrl-drag vanuit ENT bottom-handle naar canvas = nieuwe GE aanmaken, genormaliseerde edge | nieuw |
+| E14| ✅ Alt-drag vanuit ENT source-handle naar canvas = nieuwe GE aanmaken, genormaliseerde edge (was Ctrl-drag, gewijzigd wegens conflict met multiSelectionKeyCode) | nieuw |
+| E15| ✅ Edge-mode toolbar: Compositie (◆) en Generalisatie (▷) knoppen — selecteer mode, sleep edge, auto-reset | nieuw |
+| E16| ✅ Edge-mode indicator: visuele banner + crosshair cursor bij actieve mode, Escape om te annuleren | nieuw |
 
 
 ### IDE (metamodel-ontwerp omgeving)
@@ -613,7 +619,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I10 | Velden: kardinaliteit [0..*] enz | README.md |
 | I11 | Layout bar verplaatsbaar | README.md |
 | I12 | Any bar: custom bar met functies? | README.md |
-| I13 | Edge types: compositie, overerving, associatieklasse | README.md |
+| I13 | ✅ Edge types: compositie, overerving, associatieklasse — rendering ✅, toolbar edge-mode (comp+gen) ✅ | README.md |
 | I14 | Document by example compartiment in klassen | readme.md |
 | I15 | Testwaarden in REPs (t.b.v. expressies bijv. maar ook als document bij example) | README.md |
 | I16 | IDE toolbar: knoppen voor aanmaken nieuwe REPs (ENT, GE, REL, reflijst, type, enum) | nieuw |
@@ -723,14 +729,15 @@ Focus: de IDE robuust en productief maken voor dagelijks modelwerk.
 |------|-------|-------|
 | 1 | **I1–I4** Multi-diagram (tabs, node ≠ element, viewport) | Ontgrendelt werken met grotere modellen |
 | 2 | **I10** Kardinaliteit [0..*] op velden | Essentieel voor correcte modellering |
-| 3 | **O5** Generalisatie-edge in IDE | Overerving is onmisbaar voor serieuze modellen |
+| 3 | ~~**O5** Generalisatie-edge in IDE~~ **✅ DONE** | Rendering + toolbar edge-mode knoppen |
 | 4 | **I6** Drag & drop: ENT + alle GE's mee | Kwaliteit van leven bij herindelen |
 | 5 | **I7** Auto-order | Layout-kwaliteit bij grotere diagrammen |
 | 6 | **DM2–DM5** Domein als actief domein, validatie, boundary | Domeinscheiding zichtbaar en afdwingbaar |
 | 7 | **E11** Node resize | Gebruiker kan nodes groter/kleiner maken |
 | 8 | **E13** ENT→ENT edge = maak REL | Snelle relatie-creatie op canvas |
-| 9 | **E14** Ctrl-drag vanuit ENT → maak GE | Snelle GE-creatie op canvas |
-| 10 | **I16–I17** IDE toolbar: create-knoppen + normaliseer/snap | Volledige IDE-werkbalk |
+| 9 | ~~**E14** Alt-drag vanuit ENT → maak GE~~ **✅ DONE** | Snelle GE-creatie op canvas |
+| 10 | ~~**I16–I17** IDE toolbar: create-knoppen + normaliseer/snap~~ **✅ DONE** | Volledige IDE-werkbalk |
+| 11 | ~~**E15–E16** Edge-mode toolbar (comp+gen)~~ **✅ DONE** | Associatietype kiezen en tekenen |
 | 11 | **I18** Verplaatsbare toolbars | Professionele IDE-layout |
 | 12 | **I19** PB rechtsklik: nieuw element per type | Creëren vanuit projectbrowser |
 
@@ -742,7 +749,7 @@ Focus: van IDE-model naar werkende Go-code zonder handmatig bijwerken.
 |------|-------|-------|
 | 1 | **C1** Fix alle 9 gaps in codegen | Basisbetrouwbaarheid |
 | 2 | **C3** Roundtrip-test np-loc model | Bewijs dat codegen correct is |
-| 3 | **O1–O4** Overerving in TypeMeta, DB, handlers, schema-API | Foundations voor generalisatie |
+| ~~3~~ | ~~**O1** ✅, **O7–O10** ✅, **O2–O4** ✅ Overerving in DB, handlers, schema-API~~ **✅ DONE** | Foundations voor generalisatie |
 | ~~4~~ | ~~**D3–D4** Delta-analyse CLI + DDL-migratie~~ **✅ DONE** | Veilig upgraden van modellen |
 | 5 | **C4** Codegen voor referentielijsten | Referentielijsten mee laten genereren |
 

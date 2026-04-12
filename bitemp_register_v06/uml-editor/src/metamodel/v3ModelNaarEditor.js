@@ -164,6 +164,7 @@ export function v3ModelNaarEditor(v3Model) {
         meervoud: ent.meervoud || "",
         metatype: "entiteit",
         isMaterieel: ent.isMaterieel || false,
+        isAbstract: ent.isAbstract || false,
         // Referentielijst-subtypes (zie Referentielijsten.md)
         entiteitSubtype: ent.entiteitSubtype || "",
         kleur: ent.kleur || defaultKleur("entiteit", ent.entiteitSubtype || ""),
@@ -574,6 +575,19 @@ export function v3ModelNaarEditor(v3Model) {
       }
     });
   });
+
+  // --- Generalisatie-edges reconstrueren vanuit erft-veld ---
+  for (const ent of (v3Model.entiteiten || [])) {
+    if (ent.erft) {
+      edges.push({
+        id: `gen-${ent.typenaam}-${ent.erft}`,
+        source: ent.typenaam,
+        target: ent.erft,
+        type: "metamodel",
+        data: { isGeneralization: true },
+      });
+    }
+  }
 
   return { nodes, edges };
 }

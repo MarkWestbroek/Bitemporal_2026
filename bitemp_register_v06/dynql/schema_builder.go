@@ -87,6 +87,25 @@ func BuildSchema(database *bun.DB) (*graphql.Schema, error) {
 			Resolve: makeListResolver(meta),
 		}
 
+		// full_<padnaam>_list(limit, offset) — lijst met alle onderliggende GE's/relaties (geflattened)
+		queryFields[fullName+"_list"] = &graphql.Field{
+			Type:        graphql.NewList(objType),
+			Description: fmt.Sprintf("Lijst van %s met alle onderliggende gegevenselementen en relaties (geflattened)", meta.Typenaam),
+			Args: graphql.FieldConfigArgument{
+				"limit": &graphql.ArgumentConfig{
+					Type:         graphql.Int,
+					DefaultValue: 20,
+					Description:  "Maximum aantal resultaten (max 100)",
+				},
+				"offset": &graphql.ArgumentConfig{
+					Type:         graphql.Int,
+					DefaultValue: 0,
+					Description:  "Offset voor paginering",
+				},
+			},
+			Resolve: makeFullListResolver(meta),
+		}
+
 		// Registreer de padnaam voor mutations
 		registeredEntiteitMetas = append(registeredEntiteitMetas, struct{ Padnaam string }{padnaam})
 	}

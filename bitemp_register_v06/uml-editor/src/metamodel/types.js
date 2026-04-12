@@ -89,6 +89,17 @@ export const AFLEIDINGSTALEN = [
   { value: "pseudo", label: "Pseudo-code" },
 ];
 
+/**
+ * Edge-modes voor de toolbar: selecteer een mode om het volgende
+ * handle-drag gedrag te overriden.
+ * NONE = standaard auto-detectie op basis van bron/doel node-type.
+ */
+export const EDGE_MODES = {
+  NONE:          { key: "none",          label: null,            icon: null,  cursorClass: null },
+  COMPOSITIE:    { key: "compositie",    label: "Compositie",    icon: "◆",   cursorClass: "edge-mode-compositie" },
+  GENERALISATIE: { key: "generalisatie", label: "Generalisatie", icon: "▷",   cursorClass: "edge-mode-generalisatie" },
+};
+
 // === Helper functies ===
 
 /** Genereer een simpele unieke ID */
@@ -857,10 +868,20 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
       };
     });
 
+    // Generalisatie: zoek edge waar deze entiteit source is met isGeneralization
+    const genEdge = edges.find(
+      (e) => e.source === ent.id && e.data?.isGeneralization
+    );
+    const parentEntNaam = genEdge
+      ? (nodesById[genEdge.target]?.data?.typenaam || undefined)
+      : undefined;
+
     return {
       typenaam: ent.data.typenaam,
       description: ent.data.description || undefined,
       domein: ent.data.domein || undefined,
+      isAbstract: ent.data.isAbstract || undefined,
+      erft: parentEntNaam,
       isMaterieel: ent.data.isMaterieel || false,
       // Referentielijst-subtypes (optioneel, zie Referentielijsten.md)
       entiteitSubtype: ent.data.entiteitSubtype || undefined,

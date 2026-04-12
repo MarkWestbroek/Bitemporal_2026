@@ -75,6 +75,13 @@ export function exportNaarMermaid(nodes, edges) {
     const source = sanitize(edgeEndpointName(edge.source, nodes));
     const target = sanitize(edgeEndpointName(edge.target, nodes));
     const d = edge.data || {};
+
+    // Generalisatie-edge: kind --|> ouder
+    if (d.isGeneralization) {
+      lines.push(`  ${source} --|> ${target}`);
+      continue;
+    }
+
     const label = d.rolnaam || "";
     const kard = d.kardinaliteit || "";
 

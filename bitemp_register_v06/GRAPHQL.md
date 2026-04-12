@@ -1,274 +1,226 @@
-# GraphQL API Documentation
+# GraphQL API
 
 ## Overview
 
-Your Bitemporal API now has a full GraphQL endpoint integrated with Gin and gqlgen. The GraphQL implementation is type-safe and works directly with your Bun ORM.
+De GraphQL API biedt een dynamisch, MetaRegistry-gestuurd schema voor het bevragen en muteren van het bitemporele register. Het schema wordt **programmatisch** opgebouwd in Go (geen SDL-bestanden, geen codegen) met de [`graphql-go/graphql`](https://github.com/graphql-go/graphql) library v0.8.1.
+
+Alle entiteiten, gegevenselementen en relaties uit de MetaRegistry worden automatisch als GraphQL types en queries beschikbaar. Bij het toevoegen van een nieuw type aan de MetaRegistry verschijnt het automatisch in het GraphQL schema bij de volgende serverstart.
+
+> **Architectuurdocument**: zie [`docs/dynamische-graphql-laag.md`](docs/dynamische-graphql-laag.md) voor de technische architectuur, ontwerpbeslissingen, type mapping, hub+data flattening, en bestandsstructuur.
 
 ## Endpoints
 
-- **GraphQL Playground (Interactive IDE)**: `GET /graphql/playground`
-- **GraphQL Query/Mutation Endpoint**: 
-  - `POST /graphql/query` - Execute queries and mutations
-  - `GET /graphql/query` - Execute simple GET queries
+| Endpoint | Methode | Beschrijving |
+|----------|---------|-------------|
+| `/graphql/playground` | GET | GraphiQL — interactieve IDE met autocompletion en docs |
+| `/graphql/query` | POST / GET | Query- en mutation-endpoint |
 
-## Getting Started
-
-### 1. Start the Server
+## Quick start
 
 ```bash
+# Start de server
 go run main.go
+
+# Open GraphiQL
+# → http://localhost:8082/graphql/playground
 ```
 
-Or use the compiled binary:
-```bash
-./app
+### Frontend integratie: 3D Data Universum
+
+Het 3D Data Universum heeft een **REST / GQL toggle** in de toolbar waarmee je live kunt wisselen of data-opvragingen via REST (`/full/{padnaam}`) of via GraphQL (`/graphql/query`) gaan. De queries worden dynamisch opgebouwd uit de schema-metadata. Zie [`docs/3D_UNIVERSUM.md`](docs/3D_UNIVERSUM.md) voor details.
+
+## Queries
+
+### Per entiteit (dynamisch)
+
+Voor elke entiteit in de MetaRegistry worden drie queries gegenereerd:
+
+```graphql
+# Volledige entiteit met alle geneste GE's/relaties
+full_<padnaam>(id: <Int|String>!, peiltijdstip: DateTime, t: Int) { ... }
+
+# Lijst met paginering (alleen top-level velden, zonder kinderen)
+<padnaam>(limit: Int = 20, offset: Int = 0) { ... }
+
+# Lijst met alle onderliggende GE's/relaties, geflattened (hub+data plat, enkelvoudig als object)
+full_<padnaam>_list(limit: Int = 20, offset: Int = 0) { ... }
 ```
 
-### 2. Open GraphQL Playground
+De `full_*_list` query is het GraphQL-equivalent van `GET /full/{padnaam}?page=1&size=N`: dezelfde data als `full_<padnaam>` maar dan als lijst. Hub+data flattening en enkelvoudig-unwrapping worden server-side toegepast.
 
-Navigate to: `http://localhost:8080/graphql/playground`
+**Formeel tijdreizen**: gebruik `peiltijdstip` (ISO 8601) of de shorthand `t` (uren + microseconden vanaf `2026-01-01T00:00:00Z`). Bij beide geeft `peiltijdstip` voorrang.
 
-You'll see the interactive GraphQL IDE where you can:
-- Write queries and mutations
-- Explore the schema with auto-complete
-- See real-time documentation
-- Execute requests and view results
+### Registraties
 
-## Schema Overview
+```graphql
+registratie(id: Int!)        { id, registratietype, tijdstip, opmerking, wijzigingen { ... } }
+registraties(limit, offset)  { id, registratietype, tijdstip, opmerking }
+```
 
-### Core Types
+### Omgekeerde relaties (reverse navigation)
 
-- **EntityA** - Entity A with lifecycle dates (opvoer/afvoer)
-- **EntityB** - Entity B with lifecycle dates  
-- **RelationAB** - Relationship between A and B
-- **DataElementAU** - A one-to-one data element
-- **DataElementAV** - A one-to-many data element
-- **DataElementBX** - B one-to-one data element
-- **DataElementBY** - B one-to-one data element
-- **Registration** - Audit record for changes (Registratie/Correctie/Ongedaanmaking)
-- **Change** - Tracks individual field changes (Wijziging)
-- **Task** - Task management
+Entiteiten krijgen automatisch `gerelateerde_<bron-padnaam>` velden als andere entiteiten via een relatie naar ze wijzen. Zie de sectie hieronder.
 
-### Custom Scalars
+## Mutations
 
-- **DateTime** - ISO 8601 formatted datetime strings (RFC3339)
+Mutations gebruiken hetzelfde JSON-formaat als de REST endpoints:
 
-## Example Queries
+```graphql
+registreer(input: JSON!)     # Nieuwe registratie (opvoer/afvoer)
+corrigeer(input: JSON!)      # Correctie (ongedaanmaking + heropvoer)
+maak_ongedaan(input: JSON!)  # Maak een registratie ongedaan
+```
 
-### Query a Task
+> De `JSON` scalar accepteert vrije JSON-payloads — identiek aan het REST request-formaat.
+
+## Voorbeelden
+
+### Volledige entiteit ophalen
 
 ```graphql
 query {
-  task(id: "task-123") {
+  full_natuurlijk_personen(id: 1) {
     id
-    title
-    description
-    status
-    dueDate
+    weergavenaam
+    namen {
+      roepnaam
+      achternaam
+    }
+    burgerschappen {
+      nationaliteit
+      aanvang { datum }
+      einde { datum }
+    }
+    bereikbaarheden {
+      soort
+      locatie_id
+    }
+    aanvang { datum, versie }
   }
 }
 ```
 
-### Get All Tasks with Pagination
+### Lijst met paginering
 
 ```graphql
 query {
-  allTasks(limit: 10, offset: 0) {
+  locaties(limit: 5, offset: 0) {
     id
-    title
-    status
+    weergaveadres
   }
 }
 ```
 
-### Query Entity A
+### Formeel tijdreizen
 
 ```graphql
 query {
-  entityA(id: "entity-a-1") {
+  full_natuurlijk_personen(id: 1, peiltijdstip: "2025-06-01T00:00:00Z") {
     id
-    opvoer
-    afvoer
-    dataElementAU {
-      aaa
-      bbb
+    weergavenaam
+    namen { achternaam }
+  }
+}
+
+# Of met shorthand: t=3 → 2026-01-01T03:00:00.000003Z
+query {
+  full_natuurlijk_personen(id: 1, t: 3) {
+    id
+    weergavenaam
+  }
+}
+```
+
+### Reverse navigation
+
+Welke NatuurlijkPersonen zijn bereikbaar op Locatie 1?
+
+```graphql
+query {
+  full_locaties(id: 1) {
+    id
+    weergaveadres
+    adressen {
+      straatnaam
+      huisnummer
+      postcode
+      plaats
     }
-    dataElementsAV {
-      ccc
-    }
-    relations {
-      bId
-      entityB {
-        id
+    gerelateerde_natuurlijk_personen(limit: 10) {
+      id
+      weergavenaam
+      namen {
+        roepnaam
+        achternaam
       }
     }
   }
 }
 ```
 
-## Example Mutations
+Het veld `gerelateerde_natuurlijk_personen` wordt automatisch gegenereerd omdat er een relatie (Bereikbaarheid) bestaat met `SecondaireEntiteitIDKolom = "locatie_id"`. De resolver voert twee queries uit:
 
-### Create a Task
+1. `SELECT DISTINCT natuurlijkpersoon_id FROM bereikbaarheid WHERE locatie_id = 1 AND afvoer IS NULL LIMIT 10`
+2. Laad die NatuurlijkPersonen met volledige geneste structuur
 
-```graphql
-mutation {
-  createTask(input: {
-    id: "task-1"
-    title: "My Task"
-    description: "Task description"
-    dueDate: "2026-02-28T23:59:59Z"
-    status: "pending"
-  }) {
-    id
-    title
-    status
-  }
-}
-```
-
-### Update a Task
+### Registreren (mutation)
 
 ```graphql
 mutation {
-  updateTask(id: "task-1", input: {
-    title: "Updated Task"
-    status: "completed"
-  }) {
-    id
-    title
-    status
-  }
-}
-```
-
-### Delete a Task
-
-```graphql
-mutation {
-  deleteTask(id: "task-1")
-}
-```
-
-## Implementation Guide
-
-### Current Status
-
-The GraphQL schema has been defined in `graph/schema.graphqls` with all resolvers generated by gqlgen.
-
-**Ready to implement:**
-- ✅ Task resolvers (database operations)
-- ✅ DateTime scalar marshaling/unmarshaling
-- ⏳ Entity A/B/Relationship resolvers
-- ⏳ Data element resolvers
-- ⏳ Registration/Change audit resolvers
-
-### Implementing Resolvers
-
-Resolvers are located in `graph/schema.resolvers.go`. Each resolver has a `panic` statement. Replace these with actual implementations.
-
-**Pattern for implementing a resolver:**
-
-```go
-// Example: Implement EntityA resolver
-func (r *queryResolver) EntityA(ctx context.Context, id string) (*model.EntityA, error) {
-	var dbEntity dbmodel.A
-	err := r.DB.NewSelect().Model(&dbEntity).Where("id = ?", id).Scan(ctx)
-	if err != nil {
-		return nil, err
-	}
-	
-	// Convert DB model to GraphQL model
-	return &model.EntityA{
-		ID:     dbEntity.ID,
-		Opvoer: dbEntity.Opvoer,
-		Afvoer: dbEntity.Afvoer,
-	}, nil
-}
-```
-
-### Key Files
-
-- `graph/schema.graphqls` - GraphQL schema definition
-- `graph/schema.resolvers.go` - Resolver implementations
-- `graph/model/models_gen.go` - Generated GraphQL models
-- `graph/resolver.go` - Resolver dependency injection (has `*bun.DB`)
-- `graph/datetime.go` - DateTime scalar marshaling
-- `handlers/graphql_handler.go` - Gin integration
-- `gqlgen.yml` - gqlgen configuration
-
-### Regenerating Code
-
-After modifying `schema.graphqls`, regenerate the code:
-
-```bash
-go run github.com/99designs/gqlgen@latest generate
-```
-
-This will:
-- Update `graph/model/models_gen.go` with new types
-- Add new resolver stubs in `graph/schema.resolvers.go`
-- Keep your implementations intact (they won't be overwritten)
-
-## Database Integration
-
-The GraphQL resolver has access to the Bun database via `r.DB`:
-
-```go
-func (r *queryResolver) Task(ctx context.Context, id string) (*model.Task, error) {
-	var task dbmodel.Task
-	err := r.DB.NewSelect().Model(&task).Where("id = ?", id).Scan(ctx)
-	// ...
-}
-```
-
-## DateTime Handling
-
-DateTime fields are serialized as ISO 8601 strings (RFC3339 format):
-
-**Input example:**
-```json
-{
-  "dueDate": "2026-02-28T23:59:59Z"
-}
-```
-
-**Output example:**
-```json
-{
-  "dueDate": "2026-02-28T23:59:59Z"
-}
-```
-
-## Error Handling
-
-GraphQL errors are automatically formatted. If a resolver returns an error, it will be included in the GraphQL response:
-
-```json
-{
-  "errors": [
-    {
-      "message": "Error message from resolver",
-      "path": ["task"],
-      "extensions": {
-        "code": "INTERNAL_SERVER_ERROR"
+  registreer(input: {
+    registratie: {
+      registratietype: "registratie",
+      tijdstip: "2026-04-01T09:00:00Z",
+      opmerking: "Opvoer NatuurlijkPersoon"
+    },
+    wijzigingen: [
+      {
+        opvoer: {
+          natuurlijkpersoon: {
+            id: 5,
+            namen: [{ roepnaam: "Anna", achternaam: "de Vries" }],
+            aanvang: [{ datum: "1995-08-20" }]
+          }
+        }
       }
-    }
-  ],
-  "data": null
+    ]
+  })
 }
 ```
 
-## Next Steps
+## Omgekeerde relaties — technisch
 
-1. **Implement Task Resolvers** - Start with the existing Task model since you already have it
-2. **Implement Entity Resolvers** - Use Entity A/B as templates
-3. **Add Filtering** - Enhance queries with filter inputs
-4. **Add Sorting** - Support ordering results
-5. **Batching** - Use DataLoader for N+1 query prevention
-6. **Authorization** - Add middleware for security
+Als een relatie A→B bestaat (bijv. Bereikbaarheid: NatuurlijkPersoon → Locatie), krijgt B automatisch een reverse-veld:
 
-## References
+| Aspect | Waarde |
+|--------|--------|
+| Veldnaam | `gerelateerde_<bron-padnaam>` (bijv. `gerelateerde_natuurlijk_personen`) |
+| Type | `[<BronEntiteit>]` (lijst) |
+| Argument | `limit: Int = 20` (max 100) |
+| Filter | Alleen actieve relaties (`afvoer IS NULL`) |
 
-- [gqlgen Documentation](https://gqlgen.com/)
+### Hoe het werkt
+
+Bij startup bouwt `buildReverseRelationMap()` een index door alle entiteiten en hun onderliggende relaties te scannen. Relaties met een `SecondaireEntiteitIDKolom` worden herkend als doelrelaties. De doelentiteit wordt gevonden via de conventie `secIDKolom == meta.Veldnaam + "_id"`.
+
+De resolver (`makeReverseRelationResolver`) voert twee database queries uit:
+1. Bron-IDs ophalen uit de relatietabel
+2. Volledige bron-entiteiten laden met alle geneste GE's/relaties (inclusief hub-flattening)
+
+> Zie [`docs/dynamische-graphql-laag.md`](docs/dynamische-graphql-laag.md) voor de volledige architectuurbeschrijving en ReverseRelationInfo struct.
+
+## Custom scalars
+
+| Scalar | Go type | Formaat |
+|--------|---------|---------|
+| `DateTime` | `time.Time` | ISO 8601 / RFC 3339 |
+| `Date` | `model.Date` | `YYYY-MM-DD` |
+| `JSON` | `interface{}` | Vrij JSON-object |
+| `<Naam>Enum` | `string` | Dynamisch via `EnumWaarden` registry |
+
+## Referenties
+
+- [`docs/dynamische-graphql-laag.md`](docs/dynamische-graphql-laag.md) — Architectuurdocument
+- [`graphql-go/graphql`](https://github.com/graphql-go/graphql) — Library
 - [GraphQL Best Practices](https://graphql.org/learn/best-practices/)
-- [Bun ORM Documentation](https://bun.uptrace.dev/)
+- [Bun ORM](https://bun.uptrace.dev/)

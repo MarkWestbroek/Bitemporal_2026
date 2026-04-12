@@ -660,3 +660,103 @@ mutation {
 - **Unit tests** voor de `dynql` package
 - **Introspection test** — `{ __schema { types { name } } }` valideren met een live server
 - **Materieel tijdreizen** via `peildatum` argument op full-entity queries
+
+---
+
+## Omgekeerde relaties (reverse navigation)
+
+De GraphQL-laag ondersteunt **automatische omgekeerde relatie-velden** op entiteiten. Als een relatie A→B bestaat (bijv. Bereikbaarheid: NatuurlijkPersoon → Locatie), dan krijgt B (Locatie) automatisch een veld `gerelateerde_<bron-padnaam>` (bijv. `gerelateerde_natuurlijk_personen`) waarmee je de bron-entiteiten (NatuurlijkPersonen) kunt ophalen die naar dat record wijzen.
+
+### Motivatie
+
+In het registermodel zijn relaties eenrichtingsverkeer: een relatie kent een primaire entiteit (bron) en een secondaire entiteit (doel). Via de reguliere forward-navigatie kun je vanuit een NatuurlijkPersoon de Bereikbaarheden opvragen en daarmee de Locaties zien. Maar de **omgekeerde vraag** — "Welke NatuurlijkPersonen wonen op Locatie X?" — was niet mogelijk zonder een apart REST endpoint.
+
+GraphQL is hiervoor een natuurlijke oplossing: het graph-model maakt bidirectionele navigatie intuïtief. De reverse-velden worden volledig automatisch gegenereerd op basis van de MetaRegistry.
+
+### Architectuur
+
+```
+Startup: BuildOutputTypes()
+    ↓
+buildReverseRelationMap()
+    scant MetaRegistry → voor elke relatie met SecondaireEntiteitIDKolom:
+    vindDoelEntiteit(secIDKolom)  →  match op conventie: secIDKolom == <veldnaam>_id
+    ↓
+reverseRelationMap[doelEntiteit] = [ ...ReverseRelationInfo ]
+    ↓
+buildObjectType()  →  voor entiteiten:
+    voor elke reverse relatie:
+        voeg "gerelateerde_<bron-padnaam>" veld toe (list type, limit arg)
+        met makeReverseRelationResolver()
+```
+
+### ReverseRelationInfo struct
+
+| Veld | Type | Beschrijving |
+|------|------|-------------|
+| `BronEntiteitTypenaam` | `string` | Typenaam van de bron-entiteit (bijv. "NatuurlijkPersoon") |
+| `BronEntiteitMeta` | `TypeMeta` | Volledige TypeMeta van de bron-entiteit |
+| `RelatieMeta` | `TypeMeta` | TypeMeta van de tussenliggende relatie (bijv. "Bereikbaarheid") |
+| `SecondaireIDKolom` | `string` | FK-kolom in de relatie naar het doel (bijv. "locatie_id") |
+| `BronIDKolom` | `string` | FK-kolom in de relatie naar de bron (bijv. "natuurlijkpersoon_id") |
+| `GQLVeldnaam` | `string` | Naam van het GraphQL veld (bijv. "gerelateerde_natuurlijk_personen") |
+
+### Naamconventie doelentiteit
+
+`vindDoelEntiteit()` gebruikt een conventie-gebaseerde lookup:
+
+```go
+secIDKolom == meta.Veldnaam + "_id"
+// Bijv.: "locatie_id" → entiteit met Veldnaam "locatie" → Locatie
+//        "b_id"       → entiteit met Veldnaam "b"       → B
+```
+
+Dit werkt voor alle bestaande relaties in de MetaRegistry.
+
+### Resolver: `makeReverseRelationResolver()`
+
+De resolver voert twee queries uit:
+
+1. **Bron-IDs ophalen**: `SELECT DISTINCT <bron_id_kolom> FROM <relatie_tabel> WHERE <sec_id_kolom> = ? AND afvoer IS NULL LIMIT ?`
+2. **Bron-entiteiten laden**: volledige geneste structuur via `SliceFactory`, `addOnderliggendeRelations`, `laadHubKinderenNaQuery`, en `flattenEntityMap`
+
+Het `limit` argument is optioneel (default: 20, max: 100). Alleen actieve relaties (afvoer IS NULL) worden meegenomen.
+
+### Voorbeeld: backward navigation
+
+```graphql
+# Welke NatuurlijkPersonen zijn bereikbaar op Locatie 1?
+query {
+  full_locaties(id: 1) {
+    id
+    weergaveadres
+    adressen {
+      straatnaam
+      huisnummer
+      postcode
+      plaats
+    }
+    gerelateerde_natuurlijk_personen(limit: 10) {
+      id
+      weergavenaam
+      namen {
+        roepnaam
+        achternaam
+      }
+      bereikbaarheden {
+        soort
+        locatie_id
+      }
+    }
+  }
+}
+```
+
+Dit retourneert de Locatie met al haar adresgegevens, plus alle NatuurlijkPersonen die via een Bereikbaarheid-relatie naar deze Locatie wijzen — inclusief hun volledige geneste structuur.
+
+### Betrokken bestanden
+
+| Bestand | Wijziging |
+|---------|-----------|
+| `dynql/type_builder.go` | `ReverseRelationInfo` struct, `reverseRelationMap`, `buildReverseRelationMap()`, `vindDoelEntiteit()`, reverse-velden in `buildObjectType()`, `resolveEntityGraphQLType()` |
+| `dynql/query_resolvers.go` | `makeReverseRelationResolver()` — 2-staps query (bron-IDs + volledige entiteiten) |

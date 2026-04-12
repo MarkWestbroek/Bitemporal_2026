@@ -109,8 +109,26 @@ export function exportNaarXMI(nodes, edges, meta = {}) {
   }
 
   // --- UML:Association per edge ---
+  const generalizations = [];
   for (const edge of edges) {
     if (consumedEdgeIds.has(edge.id)) {
+      continue;
+    }
+    // Generalisatie-edges apart behandelen
+    if (edge.data?.isGeneralization) {
+      const childId = nodeXmiId(edge.source);
+      const parentId = nodeXmiId(edge.target);
+      const genId = nextXmiId("gen");
+      generalizations.push([
+        `<UML:Generalization xmi.id="${genId}" isSpecification="false">`,
+        `  <UML:Generalization.child>`,
+        `    <UML:Class xmi.idref="${childId}"/>`,
+        `  </UML:Generalization.child>`,
+        `  <UML:Generalization.parent>`,
+        `    <UML:Class xmi.idref="${parentId}"/>`,
+        `  </UML:Generalization.parent>`,
+        `</UML:Generalization>`,
+      ]);
       continue;
     }
     associations.push(buildAssociation(edge, nodes));
@@ -185,6 +203,11 @@ export function exportNaarXMI(nodes, edges, meta = {}) {
     xml.push(...assoc.map((l) => `            ${l}`));
   }
 
+  // Voeg generalizations toe
+  for (const gen of generalizations) {
+    xml.push(...gen.map((l) => `            ${l}`));
+  }
+
   // Voeg dependencies toe
   for (const dep of dependencies) {
     xml.push(...dep.map((l) => `            ${l}`));
@@ -229,10 +252,11 @@ function buildClass(node, enumNodes = [], dtNodes = []) {
   const d = node.data;
   const id = nodeXmiId(node.id);
   const naam = d.typenaam || "Unnamed";
+  const abstract = d.isAbstract ? "true" : "false";
   const lines = [];
 
   lines.push(`<UML:Class xmi.id="${id}" name="${esc(naam)}" visibility="public"`);
-  lines.push(`           isSpecification="false" isRoot="false" isLeaf="false" isAbstract="false">`);
+  lines.push(`           isSpecification="false" isRoot="false" isLeaf="false" isAbstract="${abstract}">`);
 
   // Stereotype
   lines.push(`  <UML:ModelElement.stereotype>`);

@@ -31,6 +31,9 @@ type vizSchemaTypeDTO struct {
 	Metatype                  model.Metatype             `json:"metatype"`
 	GESubtype                 string                     `json:"ge_subtype,omitempty"`               // hub, data, aanvang, einde (leeg voor entiteiten en legacy)
 	IsMaterieel               bool                       `json:"isMaterieel,omitempty"`              // of dit type een materiële tijdlijn heeft
+	IsAbstract                bool                       `json:"isAbstract,omitempty"`               // UML: abstracte klasse (niet-instantieerbaar)
+	ParentTypenaam            string                     `json:"parentTypenaam,omitempty"`           // typenaam van de parent-entiteit bij generalisatie
+	GeerfdeVelden             []vizSchemaFieldDTO        `json:"geerfdeVelden,omitempty"`            // velden geërfd van de parent-entiteit (recursief)
 	EntiteitSubtype           string                     `json:"entiteitSubtype,omitempty"`          // bijv. "referentielijst", "referentielijst_item"
 	RelatieSubtype            string                     `json:"relatieSubtype,omitempty"`           // bijv. "referentielijst_items"
 	ReferentielijstInstantie  string                     `json:"referentielijstInstantie,omitempty"` // systeemnaam van de gebonden referentielijst-instantie
@@ -368,22 +371,42 @@ func momentvoorkomenNaarString(m model.Momentvoorkomen) string {
 	return "meervoudig"
 }
 
+// geerfdeVeldenVoorType verzamelt recursief de velden van een parent-entiteit
+// en diens parent (indien aanwezig). Zo krijgt een child-type de volledige set
+// geërfde velden, inclusief velden van grootouders etc.
+func geerfdeVeldenVoorType(parentTypenaam string) []vizSchemaFieldDTO {
+	parentMeta, ok := model.MetaRegistry.GetTypeMeta(parentTypenaam)
+	if !ok {
+		return nil
+	}
+	// Eerst de velden van hogere voorouders (recursief)
+	var result []vizSchemaFieldDTO
+	if parentMeta.ParentTypenaam != "" {
+		result = geerfdeVeldenVoorType(parentMeta.ParentTypenaam)
+	}
+	// Voeg dan de eigen velden van deze parent toe
+	result = append(result, reflectedVeldenVoorMeta(parentMeta)...)
+	return result
+}
+
 // vizSchemaTypeDTOVanMeta bouwt een vizSchemaTypeDTO uit een TypeMeta entry.
 // Herbruikbaar door zowel het viz/schema endpoint als schema/model/code.
 func vizSchemaTypeDTOVanMeta(meta model.TypeMeta) vizSchemaTypeDTO {
 	item := vizSchemaTypeDTO{
-		Typenaam:    meta.Typenaam,
-		Klassenaam:  meta.Klassenaam,
-		Description: meta.Description,
-		Metatype:    meta.Metatype,
-		GESubtype:   string(meta.GESubtype),
-		IsMaterieel: meta.IsMaterieel,
-		Kleur:       meta.Kleur,
-		Veldnaam:    meta.Veldnaam,
-		Padnaam:     meta.Padnaam,
-		Meervoud:    meta.Meervoud,
-		Velden:      reflectedVeldenVoorMeta(meta),
-		Tabelnaam:   meta.Tabelnaam,
+		Typenaam:       meta.Typenaam,
+		Klassenaam:     meta.Klassenaam,
+		Description:    meta.Description,
+		Metatype:       meta.Metatype,
+		GESubtype:      string(meta.GESubtype),
+		IsMaterieel:    meta.IsMaterieel,
+		IsAbstract:     meta.IsAbstract,
+		ParentTypenaam: meta.ParentTypenaam,
+		Kleur:          meta.Kleur,
+		Veldnaam:       meta.Veldnaam,
+		Padnaam:        meta.Padnaam,
+		Meervoud:       meta.Meervoud,
+		Velden:         reflectedVeldenVoorMeta(meta),
+		Tabelnaam:      meta.Tabelnaam,
 		// Kolom-namen vertalen naar JSON-veldnamen zodat de frontend ze direct als property kan gebruiken.
 		IDKolom:                   jsonNaamVoorBunKolom(meta, meta.IDKolom),
 		IDAutoIncrement:           meta.RelatieveAutoincrement,
@@ -396,6 +419,11 @@ func vizSchemaTypeDTOVanMeta(meta model.TypeMeta) vizSchemaTypeDTO {
 		RelatieSubtype:           string(meta.RelatieSubtype),
 		ReferentielijstInstantie: meta.ReferentielijstInstantie,
 		Domein:                   meta.Domein,
+	}
+
+	// Geërfde velden: verzamel recursief velden van alle parent-entiteiten.
+	if meta.ParentTypenaam != "" {
+		item.GeerfdeVelden = geerfdeVeldenVoorType(meta.ParentTypenaam)
 	}
 
 	// DoelEntiteit: afleiden uit secondaire ID-kolom (bijv. "locatie_id" → "Locatie")
