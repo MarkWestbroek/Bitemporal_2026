@@ -149,11 +149,13 @@ De actieve visualisaties draaien nu als React + Vite build onder:
 
 [![Open Viz Index](https://img.shields.io/badge/Open-Viz%20Index%20(React%20%2B%20Vite)-0f766e?style=for-the-badge)](http://localhost:8080/viz/react/)
 [![Open Viz Tijdlijn](https://img.shields.io/badge/Open-Viz%20Tijdlijn%20(React%20%2B%20Vite)-0b7285?style=for-the-badge)](http://localhost:8080/viz/react/tijdlijn.html)
+[![Open 3D Universum](https://img.shields.io/badge/Open-3D%20Data%20Universum-6366f1?style=for-the-badge)](http://localhost:8082/viz/react/universum.html)
 [![Open Docs](https://img.shields.io/badge/Open-Docs-1d4ed8?style=for-the-badge)](http://localhost:8080/docs)
 
 - `http://localhost:8080/viz/react/` (index)
 - `http://localhost:8080/viz/react/tijdlijn.html` (tijdslijn)
 - `http://localhost:8080/viz/react/editor.html` (UML editor)
+- `http://localhost:8082/viz/react/universum.html` (3D Data Universum)
 - `http://localhost:8080/viz/` (landingspagina met links)
 
 De index-pagina:
@@ -175,6 +177,17 @@ De tijdslijn-pagina:
 Zie `docs/frontend-viz-design.md` voor de ontwerpregels van de viz-kaarten, informatiehiërarchie en samenvattingsregels.
 
 De oude links naar de legacy schema- en archiefpagina's zijn verwijderd van de startpagina's.
+
+### 3D Data Universum
+
+Een interactieve 3D-visualisatie van het metamodel, gebouwd met `react-force-graph-3d` en Three.js. Toont alle representatietypes (entiteiten, gegevenselementen, relaties) als gekleurde bollen in een force-directed graph, met kleuren uit de MetaRegistry.
+
+Belangrijkste features:
+- **Domeinfilter**: toggle-knoppen per domein om specifieke delen van het model te isoleren
+- **Instance drill-down**: dubbelklik op een node om de onderliggende data op te halen
+- **Keyboard-navigatie**: Alt+←/→ (history), Enter (drill-down), Escape (deselecteren)
+
+Zie [`docs/3D_UNIVERSUM.md`](docs/3D_UNIVERSUM.md) voor het volledige ontwerp, de implementatie en de roadmap.
 
 ## Afgeleide velden (Derived Fields)
 

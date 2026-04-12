@@ -1,6 +1,6 @@
 param(
-    [switch]$OpenExportsInVSCode,
-    [switch]$OpenLatestExportInVSCode
+    [switch]$OpenExports,
+    [switch]$OpenExportsInVSCode
 )
 
 $ErrorActionPreference = 'Stop'
@@ -61,9 +61,8 @@ try {
         $usableInterpreterFound = $true
         $lastInterpreter = $candidate.Exe
 
-        $global:LASTEXITCODE = $null
         & $candidate.Exe @($candidate.Args)
-        $exitCode = if ($null -ne $LASTEXITCODE) { [int]$LASTEXITCODE } elseif ($?) { 0 } else { 1 }
+        $exitCode = $LASTEXITCODE
         $lastExitCode = $exitCode
 
         if ($exitCode -eq 0) {
@@ -83,7 +82,16 @@ try {
         exit 1
     }
 
-    if ($OpenExportsInVSCode -or $OpenLatestExportInVSCode) {
+    if ($OpenExports) {
+        if (-not (Test-Path $exportDir)) {
+            Write-Error "Exportmap niet gevonden: $exportDir"
+            exit 1
+        }
+
+        explorer.exe $exportDir | Out-Null
+    }
+
+    if ($OpenExportsInVSCode) {
         if (-not (Test-Path $exportDir)) {
             Write-Error "Exportmap niet gevonden: $exportDir"
             exit 1
@@ -95,22 +103,7 @@ try {
             exit 1
         }
 
-        if ($OpenExportsInVSCode) {
-            & $codeCommand.Source --reuse-window --add $exportDir
-        }
-
-        if ($OpenLatestExportInVSCode) {
-            $latestFile = Get-ChildItem -Path $exportDir -Filter '*.md' -File |
-                Sort-Object LastWriteTime -Descending |
-                Select-Object -First 1
-
-            if (-not $latestFile) {
-                Write-Error "Geen geëxporteerde chatbestanden gevonden in $exportDir"
-                exit 1
-            }
-
-            & $codeCommand.Source --reuse-window $latestFile.FullName
-        }
+        & $codeCommand.Source --reuse-window --add $exportDir
     }
 }
 finally {

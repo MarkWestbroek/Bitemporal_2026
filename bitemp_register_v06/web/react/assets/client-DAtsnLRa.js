@@ -1,0 +1,1 @@
+import{r as e}from"./jsx-runtime-QRboWSh1.js";import{t}from"./react-dom-DJNBd4Xk.js";var n=e((e=>{var n=t();e.createRoot=n.createRoot,e.hydrateRoot=n.hydrateRoot}));export{n as t};

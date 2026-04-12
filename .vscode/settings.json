@@ -94,7 +94,11 @@
         "https://github.com/rjsf-team": true,
         "https://formio.github.io/formio.js": true,
         "https://formio.github.io": true,
-        "https://*.github.io": true
+        "https://*.github.io": true,
+        "http://localhost:8082/api/schema/model": true,
+        "http://localhost:8082/api/schema": true,
+        "http://localhost:8082/api": true,
+        "http://localhost:8082": true
     },
     "chat.restoreLastPanelSession": false,
     "settingsSync.ignoredSettings": [

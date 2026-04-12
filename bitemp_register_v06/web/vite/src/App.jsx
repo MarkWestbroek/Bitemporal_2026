@@ -7,6 +7,7 @@ import RegistratieReplayPage from "./pages/RegistratieReplayPage";
 const EditorPage = lazy(() => import("./pages/EditorPage"));
 const EditorV2Page = lazy(() => import("./pages/EditorV2Page"));
 const IdePage = lazy(() => import("./pages/IdePage"));
+const UniversumPage = lazy(() => import("./universum/UniversumPage"));
 
 function routeFromPath(pathname) {
   const path = String(pathname || "").toLowerCase();
@@ -33,6 +34,13 @@ function routeFromPath(pathname) {
     path.endsWith("/editor-v2.html")
   ) {
     return "editor-v2";
+  }
+  if (
+    path.endsWith("/universum") ||
+    path.endsWith("/universum/") ||
+    path.endsWith("/universum.html")
+  ) {
+    return "universum";
   }
   if (
     path.endsWith("/ide") ||
@@ -66,6 +74,14 @@ export default function App() {
     return (
       <Suspense fallback={<div style={{ padding: 32 }}>Editor v2 laden…</div>}>
         <EditorV2Page />
+      </Suspense>
+    );
+  }
+
+  if (route === "universum") {
+    return (
+      <Suspense fallback={<div style={{ padding: 32 }}>Universum laden…</div>}>
+        <UniversumPage />
       </Suspense>
     );
   }
