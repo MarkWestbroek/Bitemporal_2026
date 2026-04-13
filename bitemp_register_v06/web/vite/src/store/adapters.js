@@ -510,8 +510,10 @@ function addFieldDependencyEdges(convertedVelden, parentId, rawVelden, datatypeL
 function veldNaarV3(veld) {
   const v3 = { naam: veld.naam };
 
-  // GoType afleiden uit type/format
-  v3.goType = veldTypeNaarGoType(veld.type, veld.format, veld.verplicht);
+  // GoType afleiden: enum → enumnaam, anders uit type/format
+  v3.goType = veld.enumNaam
+    ? veld.enumNaam
+    : veldTypeNaarGoType(veld.type, veld.format, veld.verplicht);
 
   if (veld.verplicht === false && !v3.goType.startsWith("*")) {
     v3.goType = "*" + v3.goType;

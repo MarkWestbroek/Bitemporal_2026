@@ -428,3 +428,26 @@ De roundtrip werkt als volgt:
 | `model/v3_format.go` | **Nieuw**: `V3Domein` struct + `Domeinen []V3Domein` op `V3Model` |
 | `model/v3_exporter_test.go` | **Nieuw**: `TestV3DomeinRoundtrip` test |
 | `web/vite/src/store/adapters.js` | `storeNaarV3Model`: schrijft domainMeta → `domeinen`; `v3ModelNaarStore`: leest `domeinen` → domainMeta |
+
+##### Bugfixes rebuild & enum GoType (2026-04-13)
+
+**4. Rebuild stuurt verkeerd JSON-veld voor domein (bugfix)**
+
+Rebuild vanuit de IDE mislukte altijd met HTTP 500, ongeacht het geselecteerde domein.
+
+*Oorzaak*: `IdePage.jsx` stuurde `{ naam: "abuvwxy", prefix: "", mode: "register" }` in de domeinen-payload, maar de Go handler `RebuildDomeinSpec` verwacht JSON-key `"domein"` (niet `"naam"`). Hierdoor werd het domein als `""` gelezen → codegen filterering werd overgeslagen → alle types inclusief baseline werden gegenereerd → duplicate type definitions → `go build` faalt → HTTP 500.
+
+*Fix*: In `IdePage.jsx` de property `naam` hernoemd naar `domein` in zowel de `.map()` van geselecteerde domeinen als de fallback-waarde.
+
+**5. Enum GoType verloren in V3 export (bugfix)**
+
+Velden met een enum-type (bijv. `ABCEnum`) kregen bij V3 export `goType: "string"` in plaats van `goType: "ABCEnum"`.
+
+*Oorzaak*: `veldNaarV3()` in `adapters.js` gebruikte altijd `veldTypeNaarGoType(type, format)` om het goType af te leiden, wat voor enum-velden `"string"` retourneerde. Het enum-veld werd wel correct als `v3.enum = "ABCEnum"` gezet, maar het goType klopte niet.
+
+*Fix*: `veldNaarV3()` checkt nu eerst of `veld.enumNaam` is gezet; zo ja, wordt dat als goType gebruikt. Anders de bestaande type/format afleiding.
+
+| Bestand | Wijziging |
+|---------|-----------|
+| `web/vite/src/pages/IdePage.jsx` | `naam` → `domein` in rebuild payload |
+| `web/vite/src/store/adapters.js` | `veldNaarV3()`: enum goType = enumnaam i.p.v. "string" |

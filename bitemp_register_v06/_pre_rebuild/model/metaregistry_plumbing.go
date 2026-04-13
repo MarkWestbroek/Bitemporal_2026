@@ -99,11 +99,13 @@ var EnumEditorLayouts = map[string]*EditorLayout{}
 // TypeMeta holds metadata for a representatie type.
 type TypeMeta struct {
 	// ==== UML ====
-	Typenaam    string
-	Klassenaam  string // korte weergavenaam zonder entiteitsprefix (bijv. "PersoonsIdentificatie" i.p.v. "NatuurlijkPersoon_PersoonsIdentificatie")
-	Description string
-	Metatype    Metatype
-	IsMaterieel bool
+	Typenaam       string
+	Klassenaam     string // korte weergavenaam zonder entiteitsprefix (bijv. "PersoonsIdentificatie" i.p.v. "NatuurlijkPersoon_PersoonsIdentificatie")
+	Description    string
+	Metatype       Metatype
+	IsMaterieel    bool
+	IsAbstract     bool   // UML: abstracte klasse (cursief weergegeven, niet-instantieerbaar)
+	ParentTypenaam string // typenaam van de parent-entiteit bij generalisatie (leeg indien geen overerving)
 
 	// Domein groepeert types per modeldomein (bijv. "np-loc", "ab").
 	// Wordt gebruikt om bij export alleen types uit één domein te selecteren.
@@ -411,6 +413,11 @@ func init() {
 	initFinancieelEnumRegistry()
 	initFinancieelDatatypeRegistry()
 	initFinancieelMetaRegistry()
+
+	// ide_bestanden — domein-specifieke uitbreiding
+	initIdeBestandenEnumRegistry()
+	initIdeBestandenDatatypeRegistry()
+	initIdeBestandenMetaRegistry()
 
 	propageerDomeinNaarOnderliggende()
 }

@@ -410,11 +410,11 @@ export default function IdePage() {
     // Bouw domeinen-payload
     const geselecteerdeDomeinen = (vals.beschikbareDomeinen || [])
       .filter((d) => d.geselecteerd)
-      .map((d) => ({ naam: d.naam, prefix: d.prefix || "", mode: d.mode || "register" }));
+      .map((d) => ({ domein: d.naam, prefix: d.prefix || "", mode: d.mode || "register" }));
 
     const body = {
       model: v3.model,
-      domeinen: geselecteerdeDomeinen.length > 0 ? geselecteerdeDomeinen : [{ naam: "register", prefix: "", mode: "register" }],
+      domeinen: geselecteerdeDomeinen.length > 0 ? geselecteerdeDomeinen : [{ domein: "register", prefix: "", mode: "register" }],
     };
     if (schemaVersieID) body.schemaVersieID = schemaVersieID;
 
