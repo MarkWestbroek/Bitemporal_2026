@@ -19,6 +19,290 @@ import "./universum.css";
 /* ── Singleton CSS2DRenderer ───────────────────────────────────────── */
 const cssRenderer = new CSS2DRenderer();
 
+/* ── Procedurele nebula-textuur (canvas) ───────────────────────────── */
+function createNebulaTexture(width, height, hue, saturation, opacity) {
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const cx = canvas.getContext("2d");
+
+  // Meerdere overlapping-radiale gradiënten voor "gaswolk" effect
+  const blobs = 5 + Math.floor(Math.random() * 4);
+  for (let i = 0; i < blobs; i++) {
+    const bx = width * (0.15 + Math.random() * 0.7);
+    const by = height * (0.15 + Math.random() * 0.7);
+    const r = Math.min(width, height) * (0.2 + Math.random() * 0.4);
+    const g = cx.createRadialGradient(bx, by, 0, bx, by, r);
+    const h = hue + (Math.random() - 0.5) * 40;
+    const s = saturation + (Math.random() - 0.5) * 20;
+    g.addColorStop(0, `hsla(${h}, ${s}%, 60%, ${opacity * 0.8})`);
+    g.addColorStop(0.4, `hsla(${h}, ${s}%, 40%, ${opacity * 0.4})`);
+    g.addColorStop(1, `hsla(${h}, ${s}%, 20%, 0)`);
+    cx.fillStyle = g;
+    cx.fillRect(0, 0, width, height);
+  }
+
+  // Circulaire vignette zodat randen zacht wegsmelten (geen rechthoekige cutoff)
+  cx.globalCompositeOperation = "destination-in";
+  const vigR = Math.min(width, height) * 0.5;
+  const vig = cx.createRadialGradient(width / 2, height / 2, vigR * 0.25,
+                                       width / 2, height / 2, vigR);
+  vig.addColorStop(0, "rgba(255,255,255,1)");
+  vig.addColorStop(0.6, "rgba(255,255,255,0.7)");
+  vig.addColorStop(1, "rgba(255,255,255,0)");
+  cx.fillStyle = vig;
+  cx.fillRect(0, 0, width, height);
+  cx.globalCompositeOperation = "source-over";
+
+  return new THREE.CanvasTexture(canvas);
+}
+
+/* ── Space dragon: procedurele ruimtedraak ─────────────────────────── */
+/*
+ * Een raadselachtige, bioluminescente ruimtedraak die door het universum zweeft.
+ * Opgebouwd uit gloeiende deeltjes (lichaam, vleugels, staart) als THREE.Points
+ * met een golvende sinusbeweging. Spawnt samen met de spaceBird() audio.
+ *
+ * De draak is semi-transparant en ethereal — meer kwalachtig/aurora dan reptiel.
+ * Vliegt van links naar rechts (of vice versa) op z ≈ camerazicht, tussen de objecten door.
+ */
+const activeDragons = [];
+
+function createSpaceDragon() {
+  const group = new THREE.Group();
+
+  // Richting en startpositie
+  const leftToRight = Math.random() > 0.5;
+  const startX = leftToRight ? -350 : 350;
+  const endX = leftToRight ? 350 : -350;
+  const baseY = (Math.random() - 0.5) * 150;
+  const baseZ = -30 + (Math.random() - 0.5) * 80;
+
+  // Kleurenschema: bioluminescent blauw/groen/paars
+  const hues = [0x00ffcc, 0x4488ff, 0xaa44ff, 0x00aaff, 0x66ffaa];
+  const mainColor = hues[Math.floor(Math.random() * hues.length)];
+  const trailColor = hues[Math.floor(Math.random() * hues.length)];
+
+  // Lichaam: 30 deeltjes in een slangachtige rij
+  const bodyCount = 30;
+  const bodyGeo = new THREE.BufferGeometry();
+  const bodyPos = new Float32Array(bodyCount * 3);
+  const bodySizes = new Float32Array(bodyCount);
+  for (let i = 0; i < bodyCount; i++) {
+    bodyPos[i * 3] = (i / bodyCount) * 40 - 20;
+    bodyPos[i * 3 + 1] = 0;
+    bodyPos[i * 3 + 2] = 0;
+    // Kop groot, staart dun
+    const t = i / bodyCount;
+    bodySizes[i] = t < 0.15 ? 3 + t * 15 : 5 * (1 - (t - 0.15) / 0.85);
+  }
+  bodyGeo.setAttribute("position", new THREE.BufferAttribute(bodyPos, 3));
+  bodyGeo.setAttribute("size", new THREE.BufferAttribute(bodySizes, 1));
+  const bodyMat = new THREE.PointsMaterial({
+    color: mainColor, size: 4, transparent: true, opacity: 0.7,
+    sizeAttenuation: true, blending: THREE.AdditiveBlending,
+    depthWrite: false, fog: false,
+  });
+  group.add(new THREE.Points(bodyGeo, bodyMat));
+
+  // Vleugels: twee sets van 15 deeltjes die zijwaarts uitsteken
+  for (const side of [-1, 1]) {
+    const wingCount = 15;
+    const wingGeo = new THREE.BufferGeometry();
+    const wingPos = new Float32Array(wingCount * 3);
+    const wingSizes = new Float32Array(wingCount);
+    for (let i = 0; i < wingCount; i++) {
+      const t = i / wingCount;
+      wingPos[i * 3] = -5 + t * 12;
+      wingPos[i * 3 + 1] = side * (2 + t * 8);
+      wingPos[i * 3 + 2] = t * 2;
+      wingSizes[i] = 2 + (1 - t) * 3;
+    }
+    wingGeo.setAttribute("position", new THREE.BufferAttribute(wingPos, 3));
+    wingGeo.setAttribute("size", new THREE.BufferAttribute(wingSizes, 1));
+    const wingMat = new THREE.PointsMaterial({
+      color: mainColor, size: 3, transparent: true, opacity: 0.4,
+      sizeAttenuation: true, blending: THREE.AdditiveBlending,
+      depthWrite: false, fog: false,
+    });
+    group.add(new THREE.Points(wingGeo, wingMat));
+  }
+
+  // Staart-trail: 40 deeltjes met afnemende opacity (via size)
+  const trailCount = 40;
+  const trailGeo = new THREE.BufferGeometry();
+  const trailPos = new Float32Array(trailCount * 3);
+  const trailSizes = new Float32Array(trailCount);
+  for (let i = 0; i < trailCount; i++) {
+    trailPos[i * 3] = -20 - i * 2.5;
+    trailPos[i * 3 + 1] = 0;
+    trailPos[i * 3 + 2] = 0;
+    trailSizes[i] = 3 * Math.pow(1 - i / trailCount, 1.5);
+  }
+  trailGeo.setAttribute("position", new THREE.BufferAttribute(trailPos, 3));
+  trailGeo.setAttribute("size", new THREE.BufferAttribute(trailSizes, 1));
+  const trailMat = new THREE.PointsMaterial({
+    color: trailColor, size: 2.5, transparent: true, opacity: 0.35,
+    sizeAttenuation: true, blending: THREE.AdditiveBlending,
+    depthWrite: false, fog: false,
+  });
+  group.add(new THREE.Points(trailGeo, trailMat));
+
+  // Glow core (kop): punt-licht-achtig
+  const glowGeo = new THREE.SphereGeometry(2, 8, 6);
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: mainColor, transparent: true, opacity: 0.6,
+    blending: THREE.AdditiveBlending, depthWrite: false, fog: false,
+  });
+  const glow = new THREE.Mesh(glowGeo, glowMat);
+  glow.position.set(18, 0, 0);
+  group.add(glow);
+
+  group.position.set(startX, baseY, baseZ);
+
+  const dur = 3 + Math.random() * 4;  // 3-7 sec fly-across
+  const speed = (endX - startX) / dur;
+  const waveFreq = 0.5 + Math.random() * 1.5;
+  const waveAmp = 5 + Math.random() * 10;
+  const yWaveFreq = 0.3 + Math.random();
+  const yWaveAmp = 3 + Math.random() * 5;
+
+  return {
+    group, startTime: performance.now() / 1000, dur, startX, baseY, baseZ,
+    speed, waveFreq, waveAmp, yWaveFreq, yWaveAmp, leftToRight,
+  };
+}
+
+function updateDragons(t, scene) {
+  for (let i = activeDragons.length - 1; i >= 0; i--) {
+    const d = activeDragons[i];
+    const elapsed = t - d.startTime;
+    if (elapsed > d.dur + 1) {
+      scene.remove(d.group);
+      d.group.traverse((child) => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) child.material.dispose();
+      });
+      activeDragons.splice(i, 1);
+      continue;
+    }
+
+    const progress = elapsed / d.dur;
+    const x = d.startX + d.speed * elapsed;
+    const sinWave = Math.sin(elapsed * d.waveFreq * Math.PI * 2) * d.waveAmp;
+    const yWave = Math.sin(elapsed * d.yWaveFreq * Math.PI * 2) * d.yWaveAmp;
+
+    d.group.position.set(x, d.baseY + yWave, d.baseZ + sinWave);
+
+    // Ondulatie: lichte rotatie voor vloeiende slangenbeweging
+    d.group.rotation.z = Math.sin(elapsed * d.waveFreq * Math.PI * 2) * 0.15;
+    d.group.rotation.y = (d.leftToRight ? 0 : Math.PI) +
+      Math.sin(elapsed * 0.8) * 0.1;
+
+    // Vleugelklap-animatie: update wing Y-posities
+    d.group.children.forEach((child, ci) => {
+      if (ci === 1 || ci === 2) { // vleugels
+        const side = ci === 1 ? -1 : 1;
+        const posArr = child.geometry.attributes.position.array;
+        for (let j = 0; j < posArr.length / 3; j++) {
+          const wingT = j / (posArr.length / 3);
+          const flap = Math.sin(elapsed * 3 + wingT * 2) * (3 + wingT * 5);
+          posArr[j * 3 + 1] = side * (2 + wingT * 8 + flap);
+        }
+        child.geometry.attributes.position.needsUpdate = true;
+      }
+    });
+
+    // Fade in/out
+    const alpha = progress < 0.1 ? progress / 0.1
+      : progress > 0.85 ? (1 - progress) / 0.15
+      : 1;
+    d.group.children.forEach((child) => {
+      if (child.material && child.material.opacity !== undefined) {
+        child.material.opacity = child.material.userData?.baseOpacity
+          ? child.material.userData.baseOpacity * alpha
+          : alpha * 0.6;
+      }
+    });
+  }
+}
+
+/** Voeg ruimtelijke nevellagen + sterren + achtergrondnebula toe aan de scene.
+ *  Retourneert een THREE.Group die meebeweegt met de camera voor stabiele achtergrond. */
+function addSpaceEnvironment(scene) {
+  // ── Fog voor dieptesuggestie ──────────────────────────────────────
+  scene.fog = new THREE.FogExp2(0x0f172a, 0.0015);
+
+  // Alles in een groep zodat we die aan de camera kunnen koppelen
+  const envGroup = new THREE.Group();
+  envGroup.name = "spaceEnvironment";
+
+  // ── Sterrveld ─────────────────────────────────────────────────────
+  const starCount = 3000;
+  const starGeo = new THREE.BufferGeometry();
+  const starPos = new Float32Array(starCount * 3);
+  const starSizes = new Float32Array(starCount);
+  for (let i = 0; i < starCount; i++) {
+    const r = 300 + Math.random() * 700;
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    starPos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+    starPos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+    starPos[i * 3 + 2] = r * Math.cos(phi);
+    starSizes[i] = 0.5 + Math.random() * 1.5;
+  }
+  starGeo.setAttribute("position", new THREE.BufferAttribute(starPos, 3));
+  starGeo.setAttribute("size", new THREE.BufferAttribute(starSizes, 1));
+  const starMat = new THREE.PointsMaterial({
+    color: 0xccddff, size: 1.2, transparent: true, opacity: 0.8,
+    sizeAttenuation: true, fog: false,
+  });
+  envGroup.add(new THREE.Points(starGeo, starMat));
+
+  // ── Nevellagen: meer, groter, duidelijker ─────────────────────────
+  const nebulaLayers = [
+    { z: -60,  x: -40,  y: 20,   scale: 150, hue: 220, sat: 65, opacity: 0.18 },
+    { z: -60,  x: 60,   y: -10,  scale: 130, hue: 200, sat: 55, opacity: 0.14 },
+    { z: -180, x: -80,  y: -30,  scale: 300, hue: 260, sat: 55, opacity: 0.22 },
+    { z: -180, x: 100,  y: 40,   scale: 260, hue: 250, sat: 50, opacity: 0.18 },
+    { z: -320, x: 0,    y: 0,    scale: 450, hue: 280, sat: 45, opacity: 0.28 },
+    { z: -320, x: -120, y: -40,  scale: 350, hue: 300, sat: 35, opacity: 0.20 },
+    { z: -500, x: 60,   y: 20,   scale: 600, hue: 270, sat: 40, opacity: 0.30 },
+    { z: 120,  x: -30,  y: 30,   scale: 200, hue: 205, sat: 60, opacity: 0.10 },
+    { z: 120,  x: 50,   y: -20,  scale: 180, hue: 230, sat: 50, opacity: 0.08 },
+  ];
+  for (const layer of nebulaLayers) {
+    const tex = createNebulaTexture(256, 256, layer.hue, layer.sat, layer.opacity);
+    const mat = new THREE.SpriteMaterial({
+      map: tex, transparent: true, opacity: layer.opacity,
+      depthWrite: false, fog: true, blending: THREE.AdditiveBlending,
+    });
+    const sprite = new THREE.Sprite(mat);
+    sprite.scale.set(layer.scale, layer.scale, 1);
+    sprite.position.set(
+      layer.x + (Math.random() - 0.5) * layer.scale * 0.3,
+      layer.y + (Math.random() - 0.5) * layer.scale * 0.2,
+      layer.z
+    );
+    envGroup.add(sprite);
+  }
+
+  // ── Achtergrond-nebula horizon: grote bol met inward-facing textuur ─
+  const horizonTex = createNebulaTexture(512, 256, 240, 50, 0.4);
+  horizonTex.wrapS = THREE.RepeatWrapping;
+  horizonTex.wrapT = THREE.ClampToEdgeWrapping;
+  const horizonGeo = new THREE.SphereGeometry(800, 32, 16);
+  const horizonMat = new THREE.MeshBasicMaterial({
+    map: horizonTex, side: THREE.BackSide, transparent: true,
+    opacity: 0.5, depthWrite: false, fog: false,
+    blending: THREE.AdditiveBlending,
+  });
+  envGroup.add(new THREE.Mesh(horizonGeo, horizonMat));
+
+  scene.add(envGroup);
+  return envGroup;
+}
+
 /** Verwijder alle labels uit de CSS2DRenderer DOM — nodig omdat de
  *  singleton niet automatisch opruimt bij ForceGraph3D remount.       */
 function clearCSSLabels() {
@@ -518,6 +802,48 @@ export default function UniversumPage() {
     }
   }, [viewMode, metaGraphData, isDomainVisible]);
 
+  /* ── Space-omgeving: fog, sterren, nevels ────────────────────────── */
+  // Track welke scene al environment heeft; reset bij ForceGraph3D remount
+  const envSceneRef = useRef(null);
+  const envGroupRef = useRef(null);
+  useEffect(() => {
+    const fg = fgRef.current;
+    if (!fg) return;
+    const scene = fg.scene();
+    if (!scene || scene === envSceneRef.current) return;
+    envGroupRef.current = addSpaceEnvironment(scene);
+    envSceneRef.current = scene;
+  });
+
+  /* ── Space bird fly-by + ruimtedraak (periodiek) ─────────────────── */
+  const spawnDragon = useCallback(() => {
+    const fg = fgRef.current;
+    const scene = fg?.scene();
+    if (!scene) return;
+    sfx.spaceBird();
+    const dragon = createSpaceDragon();
+    scene.add(dragon.group);
+    activeDragons.push(dragon);
+  }, []);
+
+  useEffect(() => {
+    // Start random ruimtevogels+draken na 8-25 sec, dan elke 15-45 sec
+    let timer;
+    const scheduleNext = () => {
+      const delay = (15 + Math.random() * 30) * 1000;
+      timer = setTimeout(() => {
+        spawnDragon();
+        scheduleNext();
+      }, delay);
+    };
+    // Eerste vogel+draak na 8-25 sec
+    timer = setTimeout(() => {
+      spawnDragon();
+      scheduleNext();
+    }, (8 + Math.random() * 17) * 1000);
+    return () => clearTimeout(timer);
+  }, [spawnDragon]);
+
   /* ── d3-force tuning ─────────────────────────────────────────────── */
 
   useEffect(() => {
@@ -576,7 +902,17 @@ export default function UniversumPage() {
             controls.rotateSpeed = sensitivity;
             if (controls.panSpeed !== undefined) controls.panSpeed = sensitivity;
           }
+
+          // Achtergrond meelatenbewegen met camera → stabiele sterren/nevels
+          const eg = envGroupRef.current;
+          if (eg) eg.position.copy(cam.position);
         }
+      }
+
+      // Ruimtedraak-animatie (absoluut tijdstip, want dragon.startTime is absoluut)
+      if (fg) {
+        const scene = fg.scene();
+        if (scene) updateDragons(performance.now() / 1000, scene);
       }
 
       // Orbit: update positie van elk perkamentrol CSS2DObject

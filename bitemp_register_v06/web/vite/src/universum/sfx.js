@@ -151,9 +151,9 @@ export function woosh(direction = "in") {
   const ac = getCtx();
   if (!ac) return;
   const now = ac.currentTime;
-  // "out" = langzamer, lager, dromeriger
+  // "out" = langzamer, lager, dromeriger, zachter
   const isOut = direction !== "in";
-  const dur = isOut ? 1.4 : 0.7;
+  const dur = isOut ? 2.2 : 0.7;
 
   // Twee gedetunde saw-oscillatoren
   const osc1 = ac.createOscillator();
@@ -163,10 +163,10 @@ export function woosh(direction = "in") {
 
   const filter = ac.createBiquadFilter();
   filter.type = "bandpass";
-  filter.Q.value = isOut ? 1.2 : 1.8;
+  filter.Q.value = isOut ? 0.9 : 1.8;
 
   const gain = ac.createGain();
-  envelope(gain, now, isOut ? 0.12 : 0.06, isOut ? 0.4 : 0.2, dur - (isOut ? 0.52 : 0.26), 0.10);
+  envelope(gain, now, isOut ? 0.25 : 0.06, isOut ? 0.5 : 0.2, dur - (isOut ? 0.75 : 0.26), isOut ? 0.05 : 0.10);
 
   // Noise-laag voor luchtachtige textuur
   const noise = createNoise(ac, dur + 0.2);
@@ -174,7 +174,7 @@ export function woosh(direction = "in") {
   nFilter.type = "bandpass";
   nFilter.Q.value = 0.8;
   const nGain = ac.createGain();
-  envelope(nGain, now, isOut ? 0.1 : 0.05, isOut ? 0.3 : 0.15, dur - (isOut ? 0.4 : 0.2), 0.04);
+  envelope(nGain, now, isOut ? 0.2 : 0.05, isOut ? 0.4 : 0.15, dur - (isOut ? 0.6 : 0.2), isOut ? 0.02 : 0.04);
 
   if (!isOut) {
     osc1.frequency.setValueAtTime(35, now);
@@ -186,15 +186,15 @@ export function woosh(direction = "in") {
     nFilter.frequency.setValueAtTime(200, now);
     nFilter.frequency.exponentialRampToValueAtTime(3000, now + dur);
   } else {
-    // Lager en langzamer: 400→18 Hz over 1.4s
-    osc1.frequency.setValueAtTime(400, now);
-    osc1.frequency.exponentialRampToValueAtTime(18, now + dur);
-    osc2.frequency.setValueAtTime(420, now);
-    osc2.frequency.exponentialRampToValueAtTime(20, now + dur);
-    filter.frequency.setValueAtTime(900, now);
-    filter.frequency.exponentialRampToValueAtTime(40, now + dur);
-    nFilter.frequency.setValueAtTime(1800, now);
-    nFilter.frequency.exponentialRampToValueAtTime(80, now + dur);
+    // Lager, langzamer en zachter: 300→14 Hz over 2.2s
+    osc1.frequency.setValueAtTime(300, now);
+    osc1.frequency.exponentialRampToValueAtTime(14, now + dur);
+    osc2.frequency.setValueAtTime(315, now);
+    osc2.frequency.exponentialRampToValueAtTime(16, now + dur);
+    filter.frequency.setValueAtTime(600, now);
+    filter.frequency.exponentialRampToValueAtTime(30, now + dur);
+    nFilter.frequency.setValueAtTime(1200, now);
+    nFilter.frequency.exponentialRampToValueAtTime(60, now + dur);
   }
 
   osc1.connect(filter);
@@ -210,19 +210,19 @@ export function woosh(direction = "in") {
     // Woosh-out: eigen trage delay (450ms/600ms) voor dromerig uitfade-effect
     const dlyL = ac.createDelay(2);
     const dlyR = ac.createDelay(2);
-    dlyL.delayTime.value = 0.45;
-    dlyR.delayTime.value = 0.60;
+    dlyL.delayTime.value = 0.55;
+    dlyR.delayTime.value = 0.75;
     const fb = ac.createGain();
-    fb.gain.value = 0.35;
+    fb.gain.value = 0.3;
     const lp = ac.createBiquadFilter();
     lp.type = "lowpass";
-    lp.frequency.value = 600;
+    lp.frequency.value = 450;
     const pL = ac.createStereoPanner();
     pL.pan.value = -0.6;
     const pR = ac.createStereoPanner();
     pR.pan.value = 0.6;
     const wetG = ac.createGain();
-    wetG.gain.value = 0.4;
+    wetG.gain.value = 0.25;
 
     gain.connect(wetG);
     nGain.connect(wetG);
@@ -491,6 +491,9 @@ export function droneStart() {
       lpFilter,           // freq: 180 (idle) → 600 (beweging)
       bp,                 // bandpass op noise (voor evt. extra modulatie)
     };
+
+    // Start nootvariatie
+    scheduleDroneNoteChange();
   } catch { /* stil */ }
 }
 
@@ -511,6 +514,9 @@ export function droneStop() {
     });
 
     droneState = null;
+
+    // Stop nootvariatie
+    if (droneNoteTimer) { clearTimeout(droneNoteTimer); droneNoteTimer = null; }
   } catch { /* stil */ }
 }
 
@@ -610,4 +616,144 @@ export function paperWhisper(direction = "open") {
     noise1.stop(endTime);
     noise2.stop(endTime);
   } catch { /* stil */ }
+}
+
+/* ── Space bird fly-by — JMJ-achtig ruimtegeluid ───────────────────── */
+/*
+ * Een synthesized "ruimtevogel" die van links naar rechts (of omgekeerd)
+ * door het sterrenbeeld vliegt. Geïnspireerd door Oxygene/Equinoxe.
+ *
+ * Opgebouwd uit:
+ *   - Carrier: sine/triangle met grote frequentie-glide (portamento)
+ *   - FM-modulator: snelle modulatie voor "trillerend" vogeleffect
+ *   - Noise-laag: gefilterd voor "vleugels in de wind"
+ *   - Stereo pan: lineaire sweep van L→R of R→L
+ *   - Reverb-achtige tail via de shared delay bus
+ */
+export function spaceBird() {
+  try {
+    const ac = getCtx();
+    if (!ac) return;
+    const now = ac.currentTime;
+
+    // Randomiseer richting en karakter
+    const leftToRight = Math.random() > 0.5;
+    const dur = 2.5 + Math.random() * 3;        // 2.5-5.5 sec
+    const baseFreq = 400 + Math.random() * 800;  // 400-1200 Hz
+    const peakFreq = baseFreq * (1.5 + Math.random() * 2);
+    const endFreq = baseFreq * (0.3 + Math.random() * 0.5);
+
+    // ── FM carrier + modulator ─────────────────────────────────────
+    const carrier = ac.createOscillator();
+    carrier.type = Math.random() > 0.5 ? "sine" : "triangle";
+
+    // Frequentie-pad: laag → hoog (midden) → laag — als een voorbijvliegend object
+    const midTime = now + dur * (0.3 + Math.random() * 0.2);
+    carrier.frequency.setValueAtTime(baseFreq, now);
+    carrier.frequency.exponentialRampToValueAtTime(peakFreq, midTime);
+    carrier.frequency.exponentialRampToValueAtTime(endFreq, now + dur);
+
+    // FM modulator voor trillerend/warblend effect
+    const mod = ac.createOscillator();
+    mod.type = "sine";
+    mod.frequency.setValueAtTime(6 + Math.random() * 12, now);
+    mod.frequency.linearRampToValueAtTime(15 + Math.random() * 20, midTime);
+    mod.frequency.linearRampToValueAtTime(4 + Math.random() * 8, now + dur);
+
+    const modGain = ac.createGain();
+    modGain.gain.setValueAtTime(baseFreq * 0.15, now);
+    modGain.gain.linearRampToValueAtTime(peakFreq * 0.25, midTime);
+    modGain.gain.linearRampToValueAtTime(endFreq * 0.1, now + dur);
+
+    mod.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    // ── Filter: bandpass die mee-sweept ────────────────────────────
+    const bp = ac.createBiquadFilter();
+    bp.type = "bandpass";
+    bp.Q.value = 2 + Math.random() * 3;
+    bp.frequency.setValueAtTime(baseFreq * 1.5, now);
+    bp.frequency.exponentialRampToValueAtTime(peakFreq * 1.2, midTime);
+    bp.frequency.exponentialRampToValueAtTime(endFreq * 1.5, now + dur);
+
+    // ── Noise-laag: "windveren" ────────────────────────────────────
+    const noise = createNoise(ac, dur + 0.5);
+    const nBp = ac.createBiquadFilter();
+    nBp.type = "bandpass";
+    nBp.Q.value = 1.5;
+    nBp.frequency.setValueAtTime(1500, now);
+    nBp.frequency.exponentialRampToValueAtTime(5000, midTime);
+    nBp.frequency.linearRampToValueAtTime(800, now + dur);
+
+    const nGain = ac.createGain();
+    envelope(nGain, now, dur * 0.15, dur * 0.3, dur * 0.55, 0.012);
+
+    // ── Stereo pan sweep ───────────────────────────────────────────
+    const panner = ac.createStereoPanner();
+    panner.pan.setValueAtTime(leftToRight ? -0.9 : 0.9, now);
+    panner.pan.linearRampToValueAtTime(leftToRight ? 0.9 : -0.9, now + dur);
+
+    // ── Gain envelope: zacht, swell in het midden ──────────────────
+    const gain = ac.createGain();
+    const peak = 0.04 + Math.random() * 0.03;
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.exponentialRampToValueAtTime(peak, midTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+    // ── Routing ────────────────────────────────────────────────────
+    carrier.connect(bp);
+    bp.connect(gain);
+    noise.connect(nBp);
+    nBp.connect(nGain);
+    nGain.connect(gain);
+    gain.connect(panner);
+    panner.connect(out());
+    if (send()) panner.connect(send());
+
+    // Start & stop
+    carrier.start(now);
+    mod.start(now);
+    noise.start(now);
+    carrier.stop(now + dur + 0.2);
+    mod.stop(now + dur + 0.2);
+    noise.stop(now + dur + 0.5);
+  } catch { /* stil */ }
+}
+
+/* ── Drone nootvariatie ────────────────────────────────────────────── */
+/*
+ * Wisselt de fundamentele dronefrequentie periodiek naar een andere noot.
+ * Notenset (lage bas): C1=~32.7, D1=~36.7, Eb1=~38.9, F1=~43.7, G1=~49,
+ * Ab1=~51.9 — een donkere mineur-achtige reeks.
+ *
+ * Één keer per 12-30 seconden glijdt de drone naar een andere noot
+ * via een langzame exponential ramp (2-4 seconden portamento).
+ */
+const DRONE_NOTES = [32.7, 36.7, 38.9, 43.7, 49.0, 51.9, 43.7, 38.9];
+let droneNoteTimer = null;
+let droneNoteIdx = 0;
+
+function scheduleDroneNoteChange() {
+  if (droneNoteTimer) clearTimeout(droneNoteTimer);
+  const delay = (12 + Math.random() * 18) * 1000;
+  droneNoteTimer = setTimeout(() => {
+    try {
+      if (!droneState) return;
+      const { ac, saw1, saw2 } = droneState;
+      const now = ac.currentTime;
+
+      // Kies volgende noot (niet dezelfde)
+      let next;
+      do { next = Math.floor(Math.random() * DRONE_NOTES.length); }
+      while (next === droneNoteIdx && DRONE_NOTES.length > 1);
+      droneNoteIdx = next;
+
+      const freq = DRONE_NOTES[droneNoteIdx];
+      const glideTime = 2 + Math.random() * 2; // 2-4 sec portamento
+
+      saw1.frequency.setTargetAtTime(freq, now, glideTime * 0.3);
+      saw2.frequency.setTargetAtTime(freq * 1.035, now, glideTime * 0.3); // licht detuned
+    } catch { /* stil */ }
+    scheduleDroneNoteChange();
+  }, delay);
 }
