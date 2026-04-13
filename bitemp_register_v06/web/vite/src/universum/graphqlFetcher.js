@@ -168,10 +168,11 @@ export async function fetchFullEntityGraphQL(
 ) {
   const fields = buildFieldSelection(typenaam, typesByTypenaam);
 
-  // Reverse relatie velden: lichtgewicht (alleen leaf-velden, depth 0)
+  // Reverse relatie velden: depth 1 zodat onderliggende GE's mee komen
+  // voor het berekenen van weergavenamen
   let reverseFields = "";
   for (const rev of reverseRelations) {
-    const bronFields = buildFieldSelection(rev.bronTypenaam, typesByTypenaam, 0);
+    const bronFields = buildFieldSelection(rev.bronTypenaam, typesByTypenaam, 1);
     reverseFields += `\n    ${rev.gqlFieldName}(limit: 20) { ${bronFields} }`;
   }
 

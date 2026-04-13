@@ -19,8 +19,24 @@ import "./universum.css";
 /* ── Singleton CSS2DRenderer ───────────────────────────────────────── */
 const cssRenderer = new CSS2DRenderer();
 
+/** Verwijder alle labels uit de CSS2DRenderer DOM — nodig omdat de
+ *  singleton niet automatisch opruimt bij ForceGraph3D remount.       */
+function clearCSSLabels() {
+  const el = cssRenderer.domElement;
+  while (el.firstChild) el.removeChild(el.firstChild);
+  orbitingScrolls.clear();
+  openScrolls.length = 0;
+}
+
 const API_BASE = () =>
   window.location.port === "5174" ? "http://localhost:8082" : "";
+
+/* ── Perkamentrol tracking ─────────────────────────────────────────── */
+/** Set van { css2d, radius, phase } objecten voor 3D orbit animatie */
+const orbitingScrolls = new Set();
+/** Geordende array van open scroll DOM-elementen (max 3) */
+const openScrolls = [];
+const MAX_OPEN_SCROLLS = 3;
 
 const SYSTEM_FIELDS = new Set([
   "id", "opvoer", "afvoer", "rel_id", "versie", "_weergavenaam",
@@ -191,7 +207,7 @@ function buildConcreteGraph(
           source: "__self__",
           target: geId,
           color: `${moonColor}55`,
-          distance: 15,
+          distance: 10,
         });
         continue;
       }
@@ -266,6 +282,9 @@ function buildConcreteGraph(
           color: secMeta?.kleur || "#60a5fa",
           radius: 5,
           nodeType: "sec_entity",
+          entityTypenaam: sec.doeltype,
+          entityPadnaam: secMeta?.padnaam,
+          entityId: sec.id,
         });
         links.push({
           source: geId,
@@ -343,7 +362,9 @@ function buildConcreteGraph(
     for (const item of revData.items) {
       const revId = `rev::${revData.bronTypenaam}::${item.id}`;
       const revLabel =
-        item.weergavenaam || `${revData.bronMeta?.klassenaam || revData.bronTypenaam} ${item.id}`;
+        item.weergavenaam ||
+        berekenWeergavenaam(item, revData.bronMeta, typesByTypenaam) ||
+        fallbackLabel(item);
       const revColor = revData.bronMeta?.kleur || "#fbbf24";
 
       nodes.push({
@@ -352,6 +373,9 @@ function buildConcreteGraph(
         color: revColor,
         radius: 4,
         nodeType: "rev_entity",
+        entityTypenaam: revData.bronTypenaam,
+        entityPadnaam: revData.bronMeta?.padnaam,
+        entityId: item.id,
       });
       links.push({
         source: revId,
@@ -386,9 +410,14 @@ export default function UniversumPage() {
   const [concreteReverseEntities, setConcreteReverseEntities] = useState({});
 
   const [loading, setLoading] = useState(false);
-  const [dataSource, setDataSource] = useState("rest"); // "rest" | "graphql"
+  const [dataSource, setDataSource] = useState("graphql"); // "rest" | "graphql"
   const lastClickRef = useRef({ time: 0, nodeId: null });
   const containerRef = useRef(null);
+
+  /* ── Navigatiegeschiedenis ([ ] toetsen) ─────────────────────────── */
+  const navHistoryRef = useRef([]);       // array van snapshots
+  const navHistoryIdxRef = useRef(-1);    // huidige positie
+  const isRestoringHistoryRef = useRef(false);
 
   const domains = useMemo(() => extractDomains(rawSchema), [rawSchema]);
 
@@ -519,6 +548,87 @@ export default function UniversumPage() {
     }
   }, [viewMode, graphData]);
 
+  /* ── Animatieloop: orbit + zoom-scale perkamentrollen ───────────── */
+  useEffect(() => {
+    let animId;
+    const ORBIT_SPEED = 0.15; // radialen per seconde
+    const MIN_ORBIT_R = 8;    // minimum orbit-straal in scene-units
+    const startTime = performance.now();
+
+    const animate = () => {
+      const fg = fgRef.current;
+      const t = (performance.now() - startTime) / 1000;
+
+      // Zoom-scale + camera-gevoeligheid mee laten schalen
+      if (fg) {
+        const cam = fg.camera();
+        if (cam) {
+          const dist = cam.position.length();
+          const s = Math.max(0.3, Math.min(2.5, 180 / dist));
+          document.documentElement.style.setProperty(
+            "--scroll-scale", s.toFixed(3)
+          );
+
+          // Muisgevoeligheid: hoe dichter bij (kleiner dist), hoe trager
+          const controls = fg.controls();
+          if (controls) {
+            const sensitivity = Math.max(0.08, Math.min(2.5, dist / 200));
+            controls.rotateSpeed = sensitivity;
+            if (controls.panSpeed !== undefined) controls.panSpeed = sensitivity;
+          }
+        }
+      }
+
+      // Orbit: update positie van elk perkamentrol CSS2DObject
+      for (const entry of orbitingScrolls) {
+        const angle = t * ORBIT_SPEED + entry.phase;
+        const r = Math.max(MIN_ORBIT_R, entry.radius * 2.2);
+        entry.css2d.position.set(
+          Math.cos(angle) * r,
+          -0.5,
+          Math.sin(angle) * r
+        );
+      }
+
+      animId = requestAnimationFrame(animate);
+    };
+    animate();
+    return () => cancelAnimationFrame(animId);
+  }, [viewMode, graphData]);
+
+  /* ── Auto-close scrolls bij camera-drag ─────────────────────────── */
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    let startX = 0, startY = 0;
+    const DRAG_THRESHOLD = 8; // pixels
+
+    const onDown = (e) => { startX = e.clientX; startY = e.clientY; };
+    const onUp = (e) => {
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if (Math.hypot(dx, dy) > DRAG_THRESHOLD && openScrolls.length > 0) {
+        const toClose = [...openScrolls];
+        openScrolls.length = 0;
+        toClose.forEach((el, i) => {
+          setTimeout(() => {
+            if (el.classList.contains("perkamentrol--open")) {
+              el.classList.remove("perkamentrol--open");
+              sfx.paperWhisper("close");
+            }
+          }, i * 180);
+        });
+      }
+    };
+
+    container.addEventListener("pointerdown", onDown, true);
+    container.addEventListener("pointerup", onUp, true);
+    return () => {
+      container.removeEventListener("pointerdown", onDown, true);
+      container.removeEventListener("pointerup", onUp, true);
+    };
+  }, []);
+
   /* ── Camera ──────────────────────────────────────────────────────── */
 
   const flyToNode = useCallback((node, distance = 120) => {
@@ -543,6 +653,7 @@ export default function UniversumPage() {
       if (entityNode.metatype !== "entiteit" || !entityNode.padnaam) return;
       setSelectedNode(null);
       setLoading(true);
+      clearCSSLabels();
 
       sfx.woosh("in");
       flyToNode(entityNode, 2);
@@ -615,19 +726,38 @@ export default function UniversumPage() {
   /* ── Wormhole: instances → concreet ──────────────────────────────── */
 
   const enterConcrete = useCallback(
-    (instanceNode) => {
-      if (!focusedEntity || !instanceNode.instanceId) return;
+    (instanceNode, overrideEntity) => {
+      // overrideEntity: optioneel { typenaam, padnaam, id, label, color }
+      // voor drill-through vanuit concrete view (sec_entity / rev_entity)
+      const entityInfo = overrideEntity || focusedEntity;
+      const instId = overrideEntity?.id ?? instanceNode.instanceId;
+      const instLabel = overrideEntity?.label ?? instanceNode.label;
+      if (!entityInfo || !instId) return;
+
       setSelectedNode(null);
       setLoading(true);
+      clearCSSLabels();
 
       sfx.woosh("in");
       flyToNode(instanceNode, 2);
       const wormholeTimer = setTimeout(() => setWormholeActive(true), 200);
 
+      // Bij drill-through: concrete state wissen zodat oude nodes niet blijven plakken
+      if (overrideEntity) {
+        setConcreteRecord(null);
+        setConcreteSecondaries({});
+        setConcreteReverseEntities({});
+        setFocusedEntity({
+          typenaam: overrideEntity.typenaam,
+          padnaam: overrideEntity.padnaam,
+          label: overrideEntity.label || overrideEntity.typenaam,
+          color: overrideEntity.color,
+        });
+      }
+
       const base = API_BASE();
-      const entityPadnaam = focusedEntity.padnaam;
-      const entityTypenaam = focusedEntity.typenaam;
-      const instId = instanceNode.instanceId;
+      const entityPadnaam = entityInfo.padnaam;
+      const entityTypenaam = entityInfo.typenaam;
 
       // Reverse relaties ontdekken (welke entiteiten wijzen naar dit type?)
       const reverseRels = discoverReverseRelations(entityTypenaam, typesByTypenaam);
@@ -754,7 +884,7 @@ export default function UniversumPage() {
 
           setFocusedInstance({
             id: instId,
-            label: instanceNode.label,
+            label: instLabel,
             entityTypenaam,
           });
           setConcreteRecord(record);
@@ -784,6 +914,7 @@ export default function UniversumPage() {
     sfx.woosh("out");
     setSelectedNode(null);
     setWormholeActive(true);
+    clearCSSLabels();
 
     setTimeout(() => {
       if (viewMode === "concrete") {
@@ -791,7 +922,13 @@ export default function UniversumPage() {
         setConcreteRecord(null);
         setConcreteSecondaries({});
         setConcreteReverseEntities({});
-        setViewMode("instances");
+        // Na drill-through is er geen instances-lijst; ga dan naar meta
+        if (instanceRecords.length === 0) {
+          setFocusedEntity(null);
+          setViewMode("meta");
+        } else {
+          setViewMode("instances");
+        }
       } else {
         setFocusedEntity(null);
         setInstanceRecords([]);
@@ -799,13 +936,14 @@ export default function UniversumPage() {
       }
       setTimeout(() => setWormholeActive(false), 400);
     }, 300);
-  }, [viewMode]);
+  }, [viewMode, instanceRecords]);
 
   const goToMeta = useCallback(() => {
     if (viewMode === "meta") return;
     sfx.woosh("out");
     setSelectedNode(null);
     setWormholeActive(true);
+    clearCSSLabels();
 
     setTimeout(() => {
       setFocusedInstance(null);
@@ -818,6 +956,65 @@ export default function UniversumPage() {
       setTimeout(() => setWormholeActive(false), 400);
     }, 300);
   }, [viewMode]);
+
+  /* ── Navigatiegeschiedenis: snapshot bij stabiele state ────────── */
+  useEffect(() => {
+    if (loading || wormholeActive) return;
+    if (isRestoringHistoryRef.current) {
+      isRestoringHistoryRef.current = false;
+      return;
+    }
+    const snap = {
+      viewMode, focusedEntity, instanceRecords,
+      focusedInstance, concreteRecord, concreteSecondaries, concreteReverseEntities,
+    };
+    const history = navHistoryRef.current;
+    const idx = navHistoryIdxRef.current;
+    // Voorkom dubbele push voor zelfde positie
+    if (idx >= 0 && history[idx]) {
+      const prev = history[idx];
+      if (prev.viewMode === snap.viewMode
+        && prev.focusedEntity?.typenaam === snap.focusedEntity?.typenaam
+        && prev.focusedInstance?.id === snap.focusedInstance?.id) return;
+    }
+    // Truncate vooruitgeschiedenis en push
+    navHistoryRef.current = history.slice(0, idx + 1);
+    navHistoryRef.current.push(snap);
+    // Beperk tot 50 entries
+    if (navHistoryRef.current.length > 50) {
+      navHistoryRef.current = navHistoryRef.current.slice(-50);
+    }
+    navHistoryIdxRef.current = navHistoryRef.current.length - 1;
+  }, [viewMode, focusedEntity, focusedInstance, concreteRecord, loading, wormholeActive]);
+
+  const restoreSnapshot = useCallback((snap) => {
+    isRestoringHistoryRef.current = true;
+    clearCSSLabels();
+    setSelectedNode(null);
+    setViewMode(snap.viewMode);
+    setFocusedEntity(snap.focusedEntity);
+    setInstanceRecords(snap.instanceRecords);
+    setFocusedInstance(snap.focusedInstance);
+    setConcreteRecord(snap.concreteRecord);
+    setConcreteSecondaries(snap.concreteSecondaries);
+    setConcreteReverseEntities(snap.concreteReverseEntities);
+  }, []);
+
+  const historyBack = useCallback(() => {
+    const idx = navHistoryIdxRef.current;
+    if (idx <= 0) return;
+    sfx.woosh("out");
+    navHistoryIdxRef.current = idx - 1;
+    restoreSnapshot(navHistoryRef.current[idx - 1]);
+  }, [restoreSnapshot]);
+
+  const historyForward = useCallback(() => {
+    const idx = navHistoryIdxRef.current;
+    if (idx >= navHistoryRef.current.length - 1) return;
+    sfx.woosh("in");
+    navHistoryIdxRef.current = idx + 1;
+    restoreSnapshot(navHistoryRef.current[idx + 1]);
+  }, [restoreSnapshot]);
 
   /* ── Click + dubbelklik ──────────────────────────────────────────── */
 
@@ -832,6 +1029,44 @@ export default function UniversumPage() {
           enterInstances(node);
         else if (viewMode === "instances" && node.nodeType === "instance")
           enterConcrete(node);
+        else if (
+          viewMode === "concrete" &&
+          (node.nodeType === "sec_entity" || node.nodeType === "rev_entity") &&
+          node.entityTypenaam &&
+          node.entityPadnaam &&
+          node.entityId
+        ) {
+          // Drill-through: spring naar de concrete view van deze entiteit
+          const meta = typesByTypenaam[node.entityTypenaam];
+          enterConcrete(node, {
+            typenaam: node.entityTypenaam,
+            padnaam: node.entityPadnaam,
+            id: node.entityId,
+            label: meta?.klassenaam || node.entityTypenaam,
+            color: meta?.kleur || node.color,
+          });
+        }
+        return;
+      }
+
+      // Eerste klik op een drillable node in instances/meta: vlieg ernaartoe
+      // Als de node al geselecteerd was (= al in beeld), drill direct
+      if (
+        viewMode === "meta" &&
+        node.metatype === "entiteit" &&
+        selectedNode?.id === node.id
+      ) {
+        lastClickRef.current = { time: 0, nodeId: null };
+        enterInstances(node);
+        return;
+      }
+      if (
+        viewMode === "instances" &&
+        node.nodeType === "instance" &&
+        selectedNode?.id === node.id
+      ) {
+        lastClickRef.current = { time: 0, nodeId: null };
+        enterConcrete(node);
         return;
       }
 
@@ -839,25 +1074,38 @@ export default function UniversumPage() {
       setSelectedNode(node);
       sfx.ping();
 
-      // In concrete view: alleen selecteren, niet vliegen
-      if (viewMode === "concrete") return;
+      // In concrete view: selecteren + vliegen naar sec/rev entiteiten
+      if (viewMode === "concrete") {
+        if (node.nodeType === "sec_entity" || node.nodeType === "rev_entity") {
+          sfx.zoom();
+          flyToNode(node, 60);
+        }
+        return;
+      }
 
       sfx.zoom();
       const dist =
         node.nodeType === "instance" || node.nodeType === "ge_data" ? 80 : 120;
       flyToNode(node, dist);
     },
-    [viewMode, enterInstances, enterConcrete, flyToNode]
+    [viewMode, selectedNode, enterInstances, enterConcrete, flyToNode, typesByTypenaam]
   );
 
   /* ── Keyboard ────────────────────────────────────────────────────── */
 
   useEffect(() => {
     const handler = (e) => {
-      // Voorkom dat alt+pijl browser-navigatie een React-crash veroorzaakt
+      // Alt+pijl: navigatiegeschiedenis (voorkom ook browser back/forward)
       if (e.altKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
         e.preventDefault();
-        if (e.key === "ArrowLeft" && viewMode !== "meta") goBack();
+        if (e.key === "ArrowLeft") historyBack();
+        else historyForward();
+        return;
+      }
+      // [ en ] voor navigatiegeschiedenis
+      if (e.key === "[" || e.key === "]") {
+        if (e.key === "[") historyBack();
+        else historyForward();
         return;
       }
       if (e.key === "Escape") {
@@ -878,12 +1126,28 @@ export default function UniversumPage() {
           selectedNode.nodeType === "instance"
         )
           enterConcrete(selectedNode);
+        else if (
+          viewMode === "concrete" &&
+          (selectedNode.nodeType === "sec_entity" || selectedNode.nodeType === "rev_entity") &&
+          selectedNode.entityTypenaam &&
+          selectedNode.entityPadnaam &&
+          selectedNode.entityId
+        ) {
+          const meta = typesByTypenaam[selectedNode.entityTypenaam];
+          enterConcrete(selectedNode, {
+            typenaam: selectedNode.entityTypenaam,
+            padnaam: selectedNode.entityPadnaam,
+            id: selectedNode.entityId,
+            label: meta?.klassenaam || selectedNode.entityTypenaam,
+            color: meta?.kleur || selectedNode.color,
+          });
+        }
         return;
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [viewMode, selectedNode, goBack, enterInstances, enterConcrete]);
+  }, [viewMode, selectedNode, goBack, enterInstances, enterConcrete, typesByTypenaam, historyBack, historyForward]);
 
   /* ── Ambient drone: start/stop + bewegingsdetectie ───────────────── */
   // De drone start bij eerste pointer-interactie (autoplay-policy) en
@@ -1019,10 +1283,69 @@ export default function UniversumPage() {
       title.textContent = node.label;
       title.className = "ge-label-title";
       el.appendChild(title);
-      const data = document.createElement("div");
-      data.textContent = node.displayData;
-      data.className = "ge-label-data";
-      el.appendChild(data);
+
+      const text = node.displayData;
+      const isLong = text.length > 80;
+
+      if (isLong) {
+        // Titel blijft in el (main label op de bol)
+        // Perkamentrol als orbiterend satelliet-element
+        // Wrapper div voor CSS2DObject (CSS2DRenderer overschrijft
+        // inline transform op het element — wrapper vangt dit op
+        // zodat de inner .perkamentrol eigen scale kan houden)
+        const scrollWrapper = document.createElement("div");
+        const scrollEl = document.createElement("div");
+        scrollEl.className = "perkamentrol";
+        scrollWrapper.appendChild(scrollEl);
+
+        const topRoll = document.createElement("div");
+        topRoll.className = "perkamentrol-roll perkamentrol-roll--top";
+        scrollEl.appendChild(topRoll);
+
+        const body = document.createElement("div");
+        body.className = "perkamentrol-body";
+        const data = document.createElement("div");
+        data.className = "ge-label-data";
+        data.textContent = text;
+        body.appendChild(data);
+        scrollEl.appendChild(body);
+
+        const bottomRoll = document.createElement("div");
+        bottomRoll.className = "perkamentrol-roll perkamentrol-roll--bottom";
+        scrollEl.appendChild(bottomRoll);
+
+        scrollEl.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const isOpen = scrollEl.classList.toggle("perkamentrol--open");
+          sfx.paperWhisper(isOpen ? "open" : "close");
+          if (isOpen) {
+            openScrolls.push(scrollEl);
+            // Sluit oudste als we > MAX_OPEN_SCROLLS hebben
+            while (openScrolls.length > MAX_OPEN_SCROLLS) {
+              const oldest = openScrolls.shift();
+              oldest.classList.remove("perkamentrol--open");
+              sfx.paperWhisper("close");
+            }
+          } else {
+            const idx = openScrolls.indexOf(scrollEl);
+            if (idx !== -1) openScrolls.splice(idx, 1);
+          }
+        });
+
+        const scrollLbl = new CSS2DObject(scrollWrapper);
+        // Startpositie — wordt overschreven door orbit-animatie
+        scrollLbl.position.set(radius + 4, -1, 0);
+        mesh.add(scrollLbl);
+
+        // Registreer voor orbit-animatie met random startfase
+        const entry = { css2d: scrollLbl, radius, phase: Math.random() * Math.PI * 2 };
+        orbitingScrolls.add(entry);
+      } else {
+        const data = document.createElement("div");
+        data.textContent = text;
+        data.className = "ge-label-data";
+        el.appendChild(data);
+      }
     } else {
       el.textContent = node.label;
     }
@@ -1141,7 +1464,7 @@ export default function UniversumPage() {
       {/* 3D Graaf */}
       {graphData && (
         <ForceGraph3D
-          key={viewMode}
+          key={`${viewMode}::${focusedInstance?.id ?? ""}::${focusedInstance?.entityTypenaam ?? ""}`}
           ref={fgRef}
           graphData={graphData}
           nodeThreeObject={nodeThreeObject}

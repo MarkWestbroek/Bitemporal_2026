@@ -74,7 +74,7 @@ func filterEntiteiten(ents []model.V3Entiteit, domein string) []model.V3Entiteit
 	}
 	var result []model.V3Entiteit
 	for _, e := range ents {
-		if e.Domein == domein {
+		if e.Domein == domein || e.Domein == "" {
 			result = append(result, e)
 		}
 	}
@@ -213,6 +213,70 @@ func vergelijkEntiteit(rapport *DeltaRapport, oud, nieuw model.V3Entiteit) {
 			NieuweWaarde: nieuw.Kleur,
 			Omschrijving: fmt.Sprintf("Kleur van entiteit '%s' gewijzigd", pad),
 		})
+	}
+
+	// isAbstract wijziging
+	if oud.IsAbstract != nieuw.IsAbstract {
+		ernst := Modificatie
+		var omschrijving string
+		if nieuw.IsAbstract {
+			omschrijving = fmt.Sprintf("Entiteit '%s' wordt abstract — niet meer direct instantieerbaar", pad)
+		} else {
+			omschrijving = fmt.Sprintf("Entiteit '%s' is niet meer abstract — wordt direct instantieerbaar", pad)
+		}
+		rapport.Items = append(rapport.Items, DeltaItem{
+			Ernst:        ernst,
+			Categorie:    CategorieEntiteit,
+			Actie:        ActieGewijzigd,
+			Pad:          pad,
+			OudeWaarde:   fmt.Sprintf("isAbstract=%v", oud.IsAbstract),
+			NieuweWaarde: fmt.Sprintf("isAbstract=%v", nieuw.IsAbstract),
+			Omschrijving: omschrijving,
+			Tabelnaam:    strings.ToLower(oud.Typenaam),
+		})
+	}
+
+	// erft (overerving / parent) wijziging
+	if oud.Erft != nieuw.Erft {
+		tabelnaam := strings.ToLower(oud.Typenaam)
+		switch {
+		case oud.Erft == "" && nieuw.Erft != "":
+			// Geen parent → parent toegevoegd: PK wordt PFK, FK-constraint nodig
+			rapport.Items = append(rapport.Items, DeltaItem{
+				Ernst:        Modificatie,
+				Categorie:    CategorieEntiteit,
+				Actie:        ActieGewijzigd,
+				Pad:          pad,
+				OudeWaarde:   "erft=",
+				NieuweWaarde: fmt.Sprintf("erft=%s", nieuw.Erft),
+				Omschrijving: fmt.Sprintf("Entiteit '%s' erft nu van '%s' — PFK-constraint en parent-tabel nodig", pad, nieuw.Erft),
+				Tabelnaam:    tabelnaam,
+			})
+		case oud.Erft != "" && nieuw.Erft == "":
+			// Parent verwijderd: PFK-constraint verwijderen, PK wordt eigen kolom
+			rapport.Items = append(rapport.Items, DeltaItem{
+				Ernst:        Destructief,
+				Categorie:    CategorieEntiteit,
+				Actie:        ActieGewijzigd,
+				Pad:          pad,
+				OudeWaarde:   fmt.Sprintf("erft=%s", oud.Erft),
+				NieuweWaarde: "erft=",
+				Omschrijving: fmt.Sprintf("Entiteit '%s' erft niet meer van '%s' — PFK-constraint en parent-link verwijderd", pad, oud.Erft),
+				Tabelnaam:    tabelnaam,
+			})
+		default:
+			// Parent gewijzigd: ander supertype → destructief (FK wijzigt)
+			rapport.Items = append(rapport.Items, DeltaItem{
+				Ernst:        Destructief,
+				Categorie:    CategorieEntiteit,
+				Actie:        ActieGewijzigd,
+				Pad:          pad,
+				OudeWaarde:   fmt.Sprintf("erft=%s", oud.Erft),
+				NieuweWaarde: fmt.Sprintf("erft=%s", nieuw.Erft),
+				Omschrijving: fmt.Sprintf("Entiteit '%s' erft nu van '%s' in plaats van '%s' — PFK-constraint wijzigt", pad, nieuw.Erft, oud.Erft),
+				Tabelnaam:    tabelnaam,
+			})
+		}
 	}
 
 	// Gegevenselementen vergelijken

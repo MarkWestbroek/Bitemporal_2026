@@ -28,6 +28,7 @@ export default defineConfig({
   build: {
     outDir: "../react",
     emptyOutDir: true,
+    chunkSizeWarningLimit: 1500,
     rolldownOptions: {
       input: {
         main: resolve(__dirname, "index.html"),

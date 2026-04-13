@@ -372,5 +372,59 @@ Naar aanleiding van gebruikerstests zijn 11 issues opgelost in zowel de EditorV2
 4. Het model wordt automatisch uit de database geladen, of het demo-model als fallback
 5. Gebruik ➕ Diagram om een nieuw leeg diagram-tabblad aan te maken
 6. Gebruik 🔄 Herlaad om een verse copy uit de DB te halen
-7. Gebruik 💾 Exporteer om het model als JSON op te slaan
+7. Gebruik 💾 Exporteer om het export-dialoog te openen (keuze uit IDE/V3 formaat, domein, versienummer)
 8. Gebruik 📂 Importeer om een V3 of IDE-JSON bestand te laden
+
+##### Bugfixes & features IDE (2026-07-13)
+
+**1. Verbinding-toolbar niet versleepbaar (bugfix)**
+
+De "Verbinding"-toolbar (Compositie/Generalisatie knoppen) in het diagram was niet versleepbaar, terwijl de "Aanmaken" en "Layout" toolbars dat wel waren.
+
+*Oorzaak*: `DEFAULT_TOOLBAR_LAYOUTS` in `DiagramCanvas.jsx` bevatte geen entry voor `verbinding`, en `leesToolbarLayouts()` spreidde alleen `create` en `layout` uit localStorage. Hierdoor was `toolbarLayouts.verbinding === undefined`, en crashte `handleDragStart` op `layout.x` (TypeError op undefined).
+
+*Fix*: Standaard layout `{ x: 12, y: 152, orientation: "horizontal" }` toegevoegd voor `verbinding` in zowel `DEFAULT_TOOLBAR_LAYOUTS` als `leesToolbarLayouts()`.
+
+**2. Export-dialoog met domein-versienummering (feature)**
+
+Voorheen downloadden de twee exportknoppen (💾 Exporteer / 📄 V3 Export) direct bestanden met datum-gebaseerde bestandsnamen (`ide-export-YYYY-MM-DD.json`). Dit maakte het lastig om versies per domein bij te houden.
+
+*Nieuw*: Eén "💾 Exporteer" knop opent nu een `ExportDialog` met:
+- **Formaat**: keuze tussen V3 Model (entiteiten, enums, datatypes) of IDE Snapshot (volledig + diagramposities)
+- **Domein**: dropdown met alle domeinen + "Alle domeinen"
+- **Versie**: per domein bewaard in `domainMeta[domein].versie`, auto-ingevuld bij domeinkeuze
+- **Bestandsnaam**: automatisch gegenereerd als `{domein} v{versie} — {formaat}.json`, maar handmatig aanpasbaar
+
+De versie wordt bij export opgeslagen in de store (`domainMeta`), zodat bij de volgende export de laatst gebruikte versie per domein beschikbaar is.
+
+**3. Domein-metadata (`versie`) in V3 roundtrip (feature)**
+
+`domainMeta` (versie, beschrijving, kleur, prefix) werd eerder alleen in de frontend store bewaard en ging verloren bij een V3 roundtrip. Nu wordt domein-metadata mee geserialiseerd in het V3 model via een nieuw `domeinen`-array:
+
+```json
+{
+  "versie": "v1.0",
+  "domeinen": [
+    { "naam": "kern", "versie": "2.1", "beschrijving": "Het kerndomein", "kleur": "#3b82f6", "prefix": "k" },
+    { "naam": "extern", "versie": "1.0" }
+  ],
+  "entiteiten": [ ... ]
+}
+```
+
+De roundtrip werkt als volgt:
+- **Store → V3** (`storeNaarV3Model`): domainMeta wordt geschreven naar `v3Model.domeinen[]` — alleen entries met ten minste één gevuld veld
+- **V3 → Store** (`v3ModelNaarStore`): `v3Model.domeinen[]` wordt gelezen en omgezet naar `domainMeta`
+- **Go backend**: `V3Domein` struct in `model/v3_format.go` met `json:"domeinen,omitempty"` op `V3Model`
+- **MetaRegistry export**: retourneert geen `Domeinen` (MetaRegistry slaat geen domein-metadata op); het veld is `nil`/omitted
+
+**Gewijzigde bestanden:**
+
+| Bestand | Wijziging |
+|---------|-----------|
+| `web/vite/src/ide/DiagramCanvas.jsx` | `verbinding` entry in `DEFAULT_TOOLBAR_LAYOUTS` + `leesToolbarLayouts()` |
+| `web/vite/src/ide/ExportDialog.jsx` | **Nieuw** — modal dialoog voor export met formaat/domein/versie/bestandsnaam |
+| `web/vite/src/pages/IdePage.jsx` | Twee export-handlers → één `handleExportDialog`, `ExportDialog` geïntegreerd, `domains`/`domainMeta` selectors |
+| `model/v3_format.go` | **Nieuw**: `V3Domein` struct + `Domeinen []V3Domein` op `V3Model` |
+| `model/v3_exporter_test.go` | **Nieuw**: `TestV3DomeinRoundtrip` test |
+| `web/vite/src/store/adapters.js` | `storeNaarV3Model`: schrijft domainMeta → `domeinen`; `v3ModelNaarStore`: leest `domeinen` → domainMeta |

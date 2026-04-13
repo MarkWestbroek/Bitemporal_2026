@@ -40,10 +40,11 @@ func generateEntiteiten(v3 model.V3Model) (string, error) {
 				Tags: fmt.Sprintf("`json:\"%s\" bun:\"%s,pk\"`", parentIDKolom, parentIDKolom),
 			})
 			// Belongs-to relatie naar parent-entiteit
+			parentJSONKey := "parent_" + strings.ToLower(ent.Erft)
 			writeField(&b, StructField{
 				Name: "Parent" + ent.Erft,
 				Type: "*" + ent.Erft,
-				Tags: fmt.Sprintf("`json:\"-\" bun:\"rel:belongs-to,join:%s=id\"`", parentIDKolom),
+				Tags: fmt.Sprintf("`json:\"%s,omitempty\" bun:\"rel:belongs-to,join:%s=id\"`", parentJSONKey, parentIDKolom),
 			})
 			// Opvoer/Afvoer (geen eigen ID autoincrement)
 			writeField(&b, StructField{Name: "Opvoer", Type: "*time.Time", Tags: "`json:\"opvoer,omitempty\"`"})

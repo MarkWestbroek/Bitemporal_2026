@@ -101,6 +101,8 @@ func genereerStatements(item DeltaItem) []MigratieStatement {
 		return genereerDropColumn(item)
 	case item.Categorie == CategorieVeld && item.Actie == ActieGewijzigd:
 		return genereerAlterColumn(item)
+	case item.Categorie == CategorieEntiteit && item.Actie == ActieGewijzigd && strings.HasPrefix(item.OudeWaarde, "erft="):
+		return genereerOverervingMigratie(item)
 	default:
 		// Geen DDL nodig voor informatieve items of items zonder tabel
 		return nil
@@ -193,6 +195,44 @@ func genereerAlterColumn(item DeltaItem) []MigratieStatement {
 		stmts = append(stmts, MigratieStatement{
 			SQL:          fmt.Sprintf("ALTER TABLE \"%s\" ALTER COLUMN \"%s\" DROP NOT NULL;", item.Tabelnaam, item.Kolomnaam),
 			Omschrijving: fmt.Sprintf("Kolom '%s' optioneel maken (DROP NOT NULL)", item.Kolomnaam),
+			Ernst:        item.Ernst,
+		})
+	}
+
+	return stmts
+}
+
+// genereerOverervingMigratie genereert DDL voor overerving-wijzigingen (PFK-constraints).
+func genereerOverervingMigratie(item DeltaItem) []MigratieStatement {
+	if item.Tabelnaam == "" {
+		return nil
+	}
+
+	var stmts []MigratieStatement
+
+	// Oude parent FK constraint verwijderen indien aanwezig
+	oudeParent := strings.TrimPrefix(item.OudeWaarde, "erft=")
+	if oudeParent != "" {
+		constraintNaam := fmt.Sprintf("fk_%s_%s", item.Tabelnaam, strings.ToLower(oudeParent))
+		stmts = append(stmts, MigratieStatement{
+			SQL:           fmt.Sprintf("ALTER TABLE \"%s\" DROP CONSTRAINT IF EXISTS \"%s\";", item.Tabelnaam, constraintNaam),
+			Omschrijving:  fmt.Sprintf("PFK-constraint naar '%s' verwijderen van '%s'", oudeParent, item.Tabelnaam),
+			Ernst:         item.Ernst,
+			IsDestructief: true,
+		})
+	}
+
+	// Nieuwe parent FK constraint toevoegen indien aanwezig
+	nieuweParent := strings.TrimPrefix(item.NieuweWaarde, "erft=")
+	if nieuweParent != "" {
+		parentTabel := strings.ToLower(nieuweParent)
+		parentIDKolom := parentTabel + "_id"
+		constraintNaam := fmt.Sprintf("fk_%s_%s", item.Tabelnaam, parentTabel)
+		// PK-kolom hernoemen van "id" naar "{parent}_id" als dat nodig is
+		stmts = append(stmts, MigratieStatement{
+			SQL: fmt.Sprintf("ALTER TABLE \"%s\" ADD CONSTRAINT \"%s\" FOREIGN KEY (\"%s\") REFERENCES \"%s\"(\"id\") ON DELETE CASCADE;",
+				item.Tabelnaam, constraintNaam, parentIDKolom, parentTabel),
+			Omschrijving: fmt.Sprintf("PFK-constraint naar '%s' toevoegen op '%s'", nieuweParent, item.Tabelnaam),
 			Ernst:        item.Ernst,
 		})
 	}

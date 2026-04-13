@@ -151,6 +151,7 @@ const FLOATING_TOOLBAR_STORAGE_KEY = "ide-floating-toolbar-layouts";
 const DEFAULT_TOOLBAR_LAYOUTS = {
   create: { x: 12, y: 12, orientation: "horizontal" },
   layout: { x: 12, y: 82, orientation: "horizontal" },
+  verbinding: { x: 12, y: 152, orientation: "horizontal" },
 };
 
 function leesToolbarLayouts() {
@@ -160,6 +161,7 @@ function leesToolbarLayouts() {
     return {
       create: { ...DEFAULT_TOOLBAR_LAYOUTS.create, ...(parsed?.create || {}) },
       layout: { ...DEFAULT_TOOLBAR_LAYOUTS.layout, ...(parsed?.layout || {}) },
+      verbinding: { ...DEFAULT_TOOLBAR_LAYOUTS.verbinding, ...(parsed?.verbinding || {}) },
     };
   } catch {
     return DEFAULT_TOOLBAR_LAYOUTS;

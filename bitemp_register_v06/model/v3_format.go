@@ -17,10 +17,22 @@ type V3Model struct {
 	Beschrijving              string                       `json:"beschrijving,omitempty"`              // korte omschrijving van het modeldoel
 	Bron                      string                       `json:"bron,omitempty"`                      // deprecated: gebruik wrapper.bron voor POST-metadata
 	Indiener                  string                       `json:"indiener,omitempty"`                  // deprecated: gebruik wrapper.indiener voor POST-metadata
+	Domeinen                  []V3Domein                   `json:"domeinen,omitempty"`                  // domein-metadata (versie, beschrijving, kleur, prefix)
 	Datatypes                 []V3Datatype                 `json:"datatypes,omitempty"`                 // custom gegevenstypen
 	Enums                     []V3Enum                     `json:"enums,omitempty"`                     // enum definities
 	ReferentielijstInstanties []V3ReferentielijstInstantie `json:"referentielijstInstanties,omitempty"` // referentielijst-instanties (Landenlijst, EULidstaten, etc.)
 	Entiteiten                []V3Entiteit                 `json:"entiteiten"`                          // top-level entiteiten
+}
+
+// V3Domein beschrijft de metadata van een domein in het model.
+// Domeinen groeperen entiteiten, enums en datatypes; hun metadata (versie, kleur, prefix)
+// wordt meegeserialiseerd in het V3 model voor roundtrip met de IDE.
+type V3Domein struct {
+	Naam         string `json:"naam"`                   // unieke domeinnaam, bijv. "kern", "abuvwxy"
+	Versie       string `json:"versie,omitempty"`       // domeinversie, bijv. "1.0", "2.3"
+	Beschrijving string `json:"beschrijving,omitempty"` // korte omschrijving van het domein
+	Kleur        string `json:"kleur,omitempty"`        // visualisatie-kleur (hex), bijv. "#3b82f6"
+	Prefix       string `json:"prefix,omitempty"`       // codegen prefix, bijv. "a, b"
 }
 
 // V3ReferentielijstInstantie beschrijft een referentielijst-instantie (record) in het V3 model.

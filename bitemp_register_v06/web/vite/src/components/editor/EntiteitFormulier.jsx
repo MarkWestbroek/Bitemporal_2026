@@ -298,6 +298,10 @@ export default function EntiteitFormulier() {
     });
   }, [typeMeta, typeMetaByTypenaam]);
 
+  // ── Overerving (TPT): parent-entiteit metadata ────────────────────────
+  const parentTypeMeta = typeMeta?.parentTypenaam ? typeMetaByTypenaam?.[typeMeta.parentTypenaam] : null;
+  const parentJSONKey = parentTypeMeta ? ("parent_" + typeMeta.parentTypenaam.toLowerCase()) : null;
+
   // ── Custom formulier: flatten GE-data voor de layout renderer ─────────
   // veldNaarGE: mapping van veldnaam → { childMeta, dataMeta, actueel, bronVelden }
   // zodat we bij opslaan weten welk veld bij welk GE hoort (cross-GE save).
@@ -307,6 +311,30 @@ export default function EntiteitFormulier() {
     const values = {};
     const geMapping = {};
     const gezien = new Set();
+
+    // Geërfde velden (van parent-entiteit via TPT) — vóór eigen GE-velden
+    if (parentTypeMeta && parentJSONKey) {
+      const parentData = entity[parentJSONKey];
+      const geerfdeVeldenRaw = safeArray(typeMeta?.geerfdeVelden);
+      const skipNamen = new Set(["opvoer", "afvoer"]);
+      for (const v of geerfdeVeldenRaw) {
+        const naam = v?.naam;
+        if (!naam || gezien.has(naam)) continue;
+        if (skipNamen.has(naam.toLowerCase())) continue;
+        if (v.autoIncrement) continue;
+        if (naam.toLowerCase() === String(parentTypeMeta?.idKolom || "id").toLowerCase()) continue;
+        if (naam === "versie" || naam === "rel_id") continue;
+        gezien.add(naam);
+        velden.push(v);
+        geMapping[naam] = { childMeta: parentTypeMeta, dataMeta: null, actueel: parentData, bronVelden: geerfdeVeldenRaw, isParentVeld: true };
+      }
+      if (parentData) {
+        for (const v of geerfdeVeldenRaw) {
+          if (v?.naam && parentData[v.naam] != null) values[v.naam] = parentData[v.naam];
+        }
+      }
+    }
+
     for (const child of onderliggende) {
       const childMeta = typeMetaByTypenaam?.[child.doeltype];
       if (!childMeta) continue;
@@ -336,7 +364,7 @@ export default function EntiteitFormulier() {
       }
     }
     return { customVelden: velden, customValues: values, veldNaarGE: geMapping };
-  }, [customLayout, entity, onderliggende, typeMetaByTypenaam]);
+  }, [customLayout, entity, onderliggende, typeMetaByTypenaam, parentTypeMeta, parentJSONKey, typeMeta]);
 
   // ── Cross-GE save: groepeer gewijzigde velden per GE en stuur één registratie ──
   const handleCustomOpslaan = useCallback(async () => {
@@ -363,26 +391,40 @@ export default function EntiteitFormulier() {
       }
 
       const wijzigingen = [];
-      for (const info of Object.values(geGroepen)) {
+      // Parent wijzigingen komen EERST (TPT: ensureParentRecordBijOpvoer vindt het record dan al)
+      const sortedGroepen = Object.values(geGroepen).sort((a, b) => (a.isParentVeld ? -1 : 0) - (b.isParentVeld ? -1 : 0));
+      for (const info of sortedGroepen) {
         const hubMeta = info.childMeta;
         const veldnaamKey = hubMeta.veldnaam || hubMeta.padnaam;
         const payload = {};
-        if (hubMeta.entiteitIDKolom && id) {
-          payload[hubMeta.entiteitIDKolom] = Number(id);
-        }
-        if (info.actueel?.rel_id != null) {
-          payload.rel_id = info.actueel.rel_id;
-        }
-        if (hubMeta.idKolom && info.actueel?.[hubMeta.idKolom] != null) {
-          payload[hubMeta.idKolom] = info.actueel[hubMeta.idKolom];
+
+        if (info.isParentVeld) {
+          // Parent entiteit: shared PK = child entity's ID (TPT patroon)
+          const idKolom = hubMeta?.idKolom || "id";
+          if (id) payload[idKolom] = Number(id);
+        } else {
+          if (hubMeta.entiteitIDKolom && id) {
+            payload[hubMeta.entiteitIDKolom] = Number(id);
+          }
+          if (info.actueel?.rel_id != null) {
+            payload.rel_id = info.actueel.rel_id;
+          }
+          if (hubMeta.idKolom && info.actueel?.[hubMeta.idKolom] != null) {
+            payload[hubMeta.idKolom] = info.actueel[hubMeta.idKolom];
+          }
         }
 
-        const bronVelden = safeArray(info.dataMeta?.velden || hubMeta?.velden);
+        const bronVelden = safeArray(info.isParentVeld ? info.bronVelden : (info.dataMeta?.velden || hubMeta?.velden));
         for (const v of bronVelden) {
           const naam = v?.naam;
           if (!naam) continue;
           if (["opvoer", "afvoer", "versie"].includes(naam)) continue;
-          if (hubMeta.entiteitIDKolom && naam === hubMeta.entiteitIDKolom) continue;
+          if (info.isParentVeld) {
+            // Skip parent ID kolom (al handmatig gezet als shared PK)
+            if (naam.toLowerCase() === String(hubMeta?.idKolom || "id").toLowerCase()) continue;
+          } else {
+            if (hubMeta.entiteitIDKolom && naam === hubMeta.entiteitIDKolom) continue;
+          }
           if (v.autoIncrement) continue;
 
           const edited = customEditValues[naam];
@@ -622,6 +664,29 @@ export default function EntiteitFormulier() {
             onChange={(veldnaam, waarde) => setCustomEditValues((prev) => ({ ...prev, [veldnaam]: waarde }))}
             readOnly={false}
             typeMeta={typeMeta}
+          />
+        </div>
+      )}
+
+      {/* Parent entiteit velden (TPT overerving) — boven eigen GE-secties */}
+      {parentTypeMeta && parentJSONKey && entity[parentJSONKey] && !customWeergave && (
+        <div id="ge-parent" className="cg-form-card" style={{ marginTop: "0.75rem" }}>
+          <div className="cg-form-section__title" style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+            <span>
+              {parentTypeMeta.klassenaam || typeMeta.parentTypenaam}
+              <span style={{ fontWeight: 400, fontSize: "0.75rem", color: "var(--cg-donkergrijs)", marginLeft: "0.5rem" }}>
+                (overgeërfd)
+              </span>
+            </span>
+          </div>
+          <RepresentatieFormulier
+            typeMeta={parentTypeMeta}
+            initialData={entity[parentJSONKey]}
+            onSaved={fetchEntity}
+            entiteitId={null}
+            entiteitIdKolom={null}
+            isEnkelvoudig={true}
+            hideIdEnTijd={true}
           />
         </div>
       )}

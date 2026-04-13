@@ -655,6 +655,7 @@ function DomainEditor({ domeinNaam }) {
       <h3 style={S.heading}>📁 Domein: {domeinNaam}</h3>
       <EditField label="Naam" value={domeinNaam} readOnly />
       <EditField label="Elementen" value={`${count}`} readOnly />
+      <EditField label="Versie" value={meta.versie} onChange={(v) => setMeta("versie", v)} placeholder="bijv. 1.0" />
       <EditField label="Beschrijving" value={meta.beschrijving} onChange={(v) => setMeta("beschrijving", v)} type="textarea" />
       <EditField label="Kleur" value={meta.kleur} onChange={(v) => setMeta("kleur", v)} type="color" />
       <EditField label="Prefix" value={meta.prefix} onChange={(v) => setMeta("prefix", v)} placeholder="bijv. a, b" />

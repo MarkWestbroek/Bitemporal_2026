@@ -534,3 +534,80 @@ export function droneMove(intensity) {
     lpFilter.frequency.setTargetAtTime(freqTarget, now, 0.08);
   } catch { /* stil */ }
 }
+
+/**
+ * Paper whisper — subtiel papier-geritsel geluid voor perkamentrol open/dicht.
+ * Gebruikt gefilterde noise met bandpass sweep voor realistisch papier-effect.
+ * @param {"open"|"close"} direction — "open" = uitrollen, "close" = oprollen
+ */
+export function paperWhisper(direction = "open") {
+  try {
+    const ac = getCtx();
+    if (!ac) return;
+    const now = ac.currentTime;
+    const isOpen = direction === "open";
+    const dur = isOpen ? 0.45 : 0.3;
+
+    // Twee noise-lagen: breedbandige "froissement" + hogere "crinkle"
+    const noise1 = createNoise(ac, dur + 0.1);
+    const noise2 = createNoise(ac, dur + 0.1);
+
+    // Bandpass 1: papier-body (1.5–4 kHz sweep)
+    const bp1 = ac.createBiquadFilter();
+    bp1.type = "bandpass";
+    bp1.Q.value = 1.2;
+    if (isOpen) {
+      bp1.frequency.setValueAtTime(1500, now);
+      bp1.frequency.linearRampToValueAtTime(4000, now + dur);
+    } else {
+      bp1.frequency.setValueAtTime(3800, now);
+      bp1.frequency.linearRampToValueAtTime(1200, now + dur);
+    }
+
+    // Bandpass 2: hogere "crinkle" texture (5–8 kHz)
+    const bp2 = ac.createBiquadFilter();
+    bp2.type = "bandpass";
+    bp2.Q.value = 0.8;
+    bp2.frequency.setValueAtTime(isOpen ? 5000 : 7000, now);
+    bp2.frequency.linearRampToValueAtTime(isOpen ? 8000 : 4500, now + dur);
+
+    // Gain envelopes — zacht, subtiel
+    const gain1 = ac.createGain();
+    envelope(gain1, now, 0.02, dur * 0.3, dur * 0.6, 0.06);
+
+    const gain2 = ac.createGain();
+    envelope(gain2, now, 0.01, dur * 0.2, dur * 0.7, 0.025);
+
+    // Amplitude modulatie voor onregelmatig geritsel-effect
+    const lfo = ac.createOscillator();
+    lfo.type = "sine";
+    lfo.frequency.value = isOpen ? 18 : 25;  // snellere modulation bij close
+    const lfoGain = ac.createGain();
+    lfoGain.gain.value = 0.03;
+    lfo.connect(lfoGain);
+    lfoGain.connect(gain1.gain);  // moduleer de amplitude
+
+    // Routing
+    const dest = out();
+    if (!dest) return;
+
+    noise1.connect(bp1);
+    bp1.connect(gain1);
+    gain1.connect(dest);
+
+    noise2.connect(bp2);
+    bp2.connect(gain2);
+    gain2.connect(dest);
+
+    // Start
+    lfo.start(now);
+    noise1.start(now);
+    noise2.start(now);
+
+    // Stop
+    const endTime = now + dur + 0.15;
+    lfo.stop(endTime);
+    noise1.stop(endTime);
+    noise2.stop(endTime);
+  } catch { /* stil */ }
+}

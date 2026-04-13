@@ -388,6 +388,18 @@ export function v3ModelNaarStore(v3Full) {
     return a.localeCompare(b);
   });
 
+  // --- Domein-metadata uit V3 domeinen-array ---
+  const domainMeta = {};
+  for (const d of (v3Model?.domeinen || [])) {
+    if (!d?.naam) continue;
+    const meta = {};
+    if (d.versie) meta.versie = d.versie;
+    if (d.beschrijving) meta.beschrijving = d.beschrijving;
+    if (d.kleur) meta.kleur = d.kleur;
+    if (d.prefix) meta.prefix = d.prefix;
+    if (Object.keys(meta).length > 0) domainMeta[d.naam] = meta;
+  }
+
   // --- Overzicht diagram (alle elementen) ---
   const diagrams = {
     [DEFAULT_DIAGRAM_ID]: {
@@ -412,7 +424,7 @@ export function v3ModelNaarStore(v3Full) {
     beschrijving: v3Model?.beschrijving || "",
   };
 
-  return { elements, structuralEdges, diagrams, domains, domainMeta: {}, modelMeta };
+  return { elements, structuralEdges, diagrams, domains, domainMeta, modelMeta };
 }
 
 // ─── Dependency edges helper ─────────────────────────────────
@@ -608,7 +620,7 @@ function collectUseEdges(diagrams, sourceId) {
  * @returns {object}        V3-compatibel model object
  */
 export function storeNaarV3Model(state) {
-  const { elements, structuralEdges = [], diagrams = {}, modelMeta } = state;
+  const { elements, structuralEdges = [], diagrams = {}, modelMeta, domains = [], domainMeta = {} } = state;
 
   // --- Groepeer elementen per type ---
   const entiteiten = [];
@@ -803,6 +815,20 @@ export function storeNaarV3Model(state) {
   if (v3Enums.length) v3Model.enums = v3Enums;
   if (v3RefInstanties.length) v3Model.referentielijstInstanties = v3RefInstanties;
   v3Model.entiteiten = v3Entiteiten;
+
+  // --- Domeinen met metadata (versie, beschrijving, kleur, prefix) ---
+  const v3Domeinen = domains
+    .map((naam) => {
+      const meta = domainMeta[naam] || {};
+      const d = { naam };
+      if (meta.versie) d.versie = meta.versie;
+      if (meta.beschrijving) d.beschrijving = meta.beschrijving;
+      if (meta.kleur) d.kleur = meta.kleur;
+      if (meta.prefix) d.prefix = meta.prefix;
+      return d;
+    })
+    .filter((d) => d.versie || d.beschrijving || d.kleur || d.prefix);
+  if (v3Domeinen.length) v3Model.domeinen = v3Domeinen;
 
   // Wrap in het top-level formaat dat de API verwacht
   return {

@@ -61,7 +61,7 @@ const useModelStore = create(
       /** @type {string[]} Gesorteerde domein-namen */
       domains: [],
 
-      /** @type {Record<string, {beschrijving?: string, kleur?: string, prefix?: string}>} */
+      /** @type {Record<string, {versie?: string, beschrijving?: string, kleur?: string, prefix?: string}>} */
       domainMeta: {},
 
       /** @type {object|null} Bron-metadata (bron, build_versie, id, indiener, etc.) */

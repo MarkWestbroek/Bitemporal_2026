@@ -52,6 +52,25 @@ export default function RepresentatieFormulier({
   const meta = dataMeta || typeMeta;
   const alleVelden = safeArray(meta?.velden);
 
+  // ── Overerving (TPT): geërfde velden van parent-entiteit ─────────────
+  const parentTypeMeta = typeMeta?.parentTypenaam ? typeMetaByTypenaam?.[typeMeta.parentTypenaam] : null;
+  const parentJSONKey = parentTypeMeta ? ("parent_" + typeMeta.parentTypenaam.toLowerCase()) : null;
+  const geerfdeVeldenRaw = safeArray(typeMeta?.geerfdeVelden);
+  const parentInitialData = parentJSONKey && initialData ? initialData[parentJSONKey] : null;
+  // Filter geërfde velden op bewerkbaarheid (skip plumbing)
+  const geerfdeVeldenBewerkbaar = useMemo(() => {
+    if (!geerfdeVeldenRaw.length) return [];
+    const skip = new Set(["opvoer", "afvoer"]);
+    return geerfdeVeldenRaw.filter((v) => {
+      const naam = String(v.naam || "").toLowerCase();
+      if (skip.has(naam)) return false;
+      if (v.autoIncrement) return false;
+      if (naam === String(parentTypeMeta?.idKolom || "id").toLowerCase()) return false;
+      if (naam === "versie" || naam === "rel_id") return false;
+      return true;
+    });
+  }, [geerfdeVeldenRaw, parentTypeMeta]);
+
   // Secondaire entiteit ID (bijv. locatie_id, b_id bij relaties)
   const secondaireIdKolom = String(typeMeta?.secondaireEntiteitIDKolom || "").toLowerCase();
   const doelEntiteitType = typeMeta?.doelEntiteit || "";
@@ -150,6 +169,15 @@ export default function RepresentatieFormulier({
     return init;
   });
 
+  // Geërfde velden: apart formulierstaat zodat payload naar parent-type gestuurd wordt
+  const [parentValues, setParentValues] = useState(() => {
+    const init = {};
+    for (const veld of geerfdeVeldenBewerkbaar) {
+      init[veld.naam] = parentInitialData?.[veld.naam] ?? "";
+    }
+    return init;
+  });
+
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState(null);
 
@@ -157,29 +185,50 @@ export default function RepresentatieFormulier({
     setValues((prev) => ({ ...prev, [naam]: waarde }));
   }, []);
 
-  // Alle velden die "dirty" kunnen zijn (bewerkbare + secondaire)
+  const updateParentVeld = useCallback((naam, waarde) => {
+    setParentValues((prev) => ({ ...prev, [naam]: waarde }));
+  }, []);
+
+  // Alle velden die "dirty" kunnen zijn (bewerkbare + secondaire + geërfde)
   const alleBewerkbaar = useMemo(() => {
     return secondaireVeld ? [...bewerkbareVelden, secondaireVeld] : bewerkbareVelden;
   }, [bewerkbareVelden, secondaireVeld]);
 
   // ── Dirty tracking ──────────────────────────────────────────────────
+  const isParentDirty = useMemo(() => {
+    if (!geerfdeVeldenBewerkbaar.length) return false;
+    if (!parentInitialData) return geerfdeVeldenBewerkbaar.some((v) => parentValues[v.naam] !== "");
+    return geerfdeVeldenBewerkbaar.some((veld) => {
+      const original = parentInitialData[veld.naam] ?? "";
+      const current = parentValues[veld.naam] ?? "";
+      return String(original) !== String(current);
+    });
+  }, [parentValues, geerfdeVeldenBewerkbaar, parentInitialData]);
+
   const isDirty = useMemo(() => {
     if (!initialData) return true;
-    return alleBewerkbaar.some((veld) => {
+    const ownDirty = alleBewerkbaar.some((veld) => {
       const original = initialData[veld.naam] ?? "";
       const current = values[veld.naam] ?? "";
       return String(original) !== String(current);
     });
-  }, [values, alleBewerkbaar, initialData]);
+    return ownDirty || isParentDirty;
+  }, [values, alleBewerkbaar, initialData, isParentDirty]);
 
   const aantalGewijzigdeVelden = useMemo(() => {
-    if (!initialData) return alleBewerkbaar.length;
-    return alleBewerkbaar.filter((veld) => {
+    if (!initialData) return alleBewerkbaar.length + geerfdeVeldenBewerkbaar.length;
+    const ownChanged = alleBewerkbaar.filter((veld) => {
       const original = initialData[veld.naam] ?? "";
       const current = values[veld.naam] ?? "";
       return String(original) !== String(current);
     }).length;
-  }, [values, alleBewerkbaar, initialData]);
+    const parentChanged = geerfdeVeldenBewerkbaar.filter((veld) => {
+      const original = parentInitialData?.[veld.naam] ?? "";
+      const current = parentValues[veld.naam] ?? "";
+      return String(original) !== String(current);
+    }).length;
+    return ownChanged + parentChanged;
+  }, [values, alleBewerkbaar, initialData, parentValues, geerfdeVeldenBewerkbaar, parentInitialData]);
 
   // ── Payload builders ────────────────────────────────────────────────
   const buildOpvoerPayload = useCallback(() => {
@@ -214,6 +263,27 @@ export default function RepresentatieFormulier({
     return repPayload;
   }, [values, bewerkbareVelden, typeMeta, entiteitId, entiteitIdKolom, initialData, secondaireVeld]);
 
+  // Payload voor parent-entiteit bij TPT subtypes (geërfde velden)
+  const buildParentOpvoerPayload = useCallback(() => {
+    if (!parentTypeMeta || !geerfdeVeldenBewerkbaar.length) return null;
+    const parentPayload = {};
+    // Zelfde ID als child (shared PK in TPT patroon)
+    const childIdKolom = typeMeta?.idKolom;
+    const childId = initialData?.[childIdKolom] ?? values[childIdKolom];
+    if (childId != null) {
+      parentPayload[parentTypeMeta.idKolom || "id"] = Number(childId);
+    }
+    for (const veld of geerfdeVeldenBewerkbaar) {
+      const raw = parentValues[veld.naam];
+      if (raw === "" || raw === null || raw === undefined) {
+        if (veld.verplicht) throw new Error(`${veld.naam} is verplicht.`);
+        continue;
+      }
+      parentPayload[veld.naam] = coercedWaardeVoorVeld(raw, veld, veld.naam);
+    }
+    return parentPayload;
+  }, [parentValues, geerfdeVeldenBewerkbaar, parentTypeMeta, typeMeta, initialData, values]);
+
   const buildAfvoerSleutel = useCallback(() => {
     const sleutel = {};
     const idKolom = typeMeta?.idKolom;
@@ -242,9 +312,21 @@ export default function RepresentatieFormulier({
       setFeedback(null);
       try {
         const veldnaam = typeMeta.veldnaam || typeMeta.padnaam;
-        const wijzigingen = isAfvoer
-          ? [{ afvoer: { [veldnaam]: buildAfvoerSleutel() } }]
-          : [{ opvoer: { [veldnaam]: buildOpvoerPayload() } }];
+        let wijzigingen;
+        if (isAfvoer) {
+          wijzigingen = [{ afvoer: { [veldnaam]: buildAfvoerSleutel() } }];
+        } else {
+          wijzigingen = [];
+          // Bij TPT subtypes: stuur parent-wijziging VÓÓR child-wijziging.
+          // De backend verwerkt ze in volgorde; ensureParentRecordBijOpvoer
+          // vindt het parent-record dan al en slaat aanmaak over.
+          const parentPayload = buildParentOpvoerPayload();
+          if (parentPayload && parentTypeMeta) {
+            const parentVeldnaam = parentTypeMeta.veldnaam || parentTypeMeta.padnaam;
+            wijzigingen.push({ opvoer: { [parentVeldnaam]: parentPayload } });
+          }
+          wijzigingen.push({ opvoer: { [veldnaam]: buildOpvoerPayload() } });
+        }
 
         const res = await fetch(`${baseUrl}/registratie/`, {
           method: "POST",
@@ -268,7 +350,7 @@ export default function RepresentatieFormulier({
         setBusy(false);
       }
     },
-    [typeMeta, baseUrl, buildOpvoerPayload, buildAfvoerSleutel, onSaved, isEnkelvoudig]
+    [typeMeta, baseUrl, buildOpvoerPayload, buildAfvoerSleutel, buildParentOpvoerPayload, parentTypeMeta, onSaved, isEnkelvoudig]
   );
 
   // Wijzigen: bij weinig gewijzigde velden → suggestie corrigeren
@@ -385,6 +467,26 @@ export default function RepresentatieFormulier({
               <div style={{ fontSize: "0.75rem", color: "var(--cg-fout, #dc2626)", marginTop: "0.25rem" }}>{secondaireError}</div>
             )}
           </div>
+        )}
+
+        {/* Geërfde velden (van parent-entiteit) — boven eigen velden */}
+        {geerfdeVeldenBewerkbaar.length > 0 && (
+          <>
+            <div style={{ fontSize: "0.8125rem", color: "var(--cg-donkergrijs)", marginBottom: "0.25rem", borderBottom: "1px solid var(--cg-lichtgrijs, #e5e7eb)", paddingBottom: "0.25rem" }}>
+              {parentTypeMeta?.klassenaam || typeMeta.parentTypenaam}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "0.5rem 1.5rem", marginBottom: "0.75rem" }}>
+              {geerfdeVeldenBewerkbaar.map((veld) => (
+                <SchemaFormField
+                  key={veld.naam}
+                  veld={veld}
+                  value={parentValues[veld.naam]}
+                  onChange={(val) => updateParentVeld(veld.naam, val)}
+                  widgetOverride={bepaalWidgetOverride(parentTypeMeta, veld.naam)}
+                />
+              ))}
+            </div>
+          </>
         )}
 
         {/* Bewerkbare velden */}

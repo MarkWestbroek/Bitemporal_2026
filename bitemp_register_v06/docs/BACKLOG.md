@@ -575,11 +575,12 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | O3 | ✅ Generieke handlers voor supertype-join: `addOnderliggendeRelations` laadt parent via `Relation("Parent{Type}")`, `laadHubKinderenNaQuery` recursief voor parent hub-children, `ensureParentRecordBijOpvoer` maakt transparant parent-record aan in registratie-handler (TPT) | overerving-analyse.md |
 | O4 | ✅ Schema-API met overervingsvelden: `IsAbstract`, `ParentTypenaam`, `GeerfdeVelden` (recursief) in DTO + builder | overerving-analyse.md |
 | O5 | ✅ Editor: generalisatie-edge (driehoek-pijl) — rendering ✅, sidebar-dropdown ✅, toolbar edge-mode ✅ | overerving-analyse.md |
-| O6 | Frontend: geërfde velden in formulieren | overerving-analyse.md |
+| O6 | ✅ Frontend: geërfde velden in formulieren. Codegen: parent belongs-to JSON tag fix (`json:"-"` → `json:"parent_{lower},omitempty"`). RepresentatieFormulier: geërfde velden boven eigen velden, bewerkbaar, twee-wijziging patroon (parent vóór child). EntiteitFormulier: cross-GE save met parent velden (isParentVeld marker, shared PK), standaard-weergave met aparte parent sectie. | overerving-analyse.md |
 | O7 | ✅ V3 JSON roundtrip: `isAbstract` + `erft` velden op V3Entiteit, export/import generalisatie-edges | — |
 | O8 | ✅ Codegen: schrijft `IsAbstract` + `ParentTypenaam` naar gegenereerde MetaRegistry | — |
 | O9 | ✅ Exporters: XMI (dynamisch isAbstract + UML:Generalization), Mermaid (--|>), PlantUML (<|--) | — |
 | O10 | ✅ Bugfix: afgeleide velden in subklassen tonen nu correct (shallow equality fix in useOvergeerfdeVelden) | — |
+| O11 | ✅ Schemadiff: `isAbstract`-wijziging (→ modificatie), `erft`-wijziging (toevoegen → modificatie, verwijderen/wijzigen → destructief), DDL-migratie voor PFK-constraints. 7 tests. | — |
 
 ### UML Editor (EditorV2)
 

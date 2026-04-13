@@ -182,6 +182,39 @@ web/vite/src/
 ## Beperkingen
 
 - **Geen rename-detectie**: als een veld hernoemd wordt, ziet de tool dit als verwijderd + toegevoegd. Hernoemingen moeten handmatig via `ALTER TABLE RENAME COLUMN` worden opgelost.
+
+## Bugfix: domeinfilter op entiteiten (2026-07-13)
+
+### Probleem
+
+Bij delta-analyse met een domeinfilter (bijv. "abuvwxy") verschenen alle entiteiten als "toegevoegd", ook al bestonden ze al in de opgeslagen referentie-schemaversie. Enums en datatypes werkten wel correct met dezelfde filter.
+
+### Oorzaak
+
+`filterEntiteiten()` in `schemadiff/diff.go` gebruikte een **stricte** domeinmatch:
+
+```go
+if e.Domein == domein { ... }
+```
+
+Terwijl `filterEnums()` en `filterDatatypes()` een **inclusieve** match gebruikten:
+
+```go
+if e.Domein == domein || e.Domein == "" { ... }
+```
+
+Oude schema-versies (opgeslagen vóór domein-ondersteuning) hebben alle entiteiten met `Domein==""`. Bij het toepassen van een domeinfilter werden alle oude entiteiten uitgesloten, waardoor het hele referentiemodel "leeg" leek en alles als nieuw verscheen.
+
+### Fix
+
+`filterEntiteiten` aangepast naar hetzelfde inclusieve patroon als enums/datatypes: `e.Domein == domein || e.Domein == ""`. Nieuwe test `TestDomeinFilterLeegDomeinEntiteit` toegevoegd die dit scenario expliciet dekt.
+
+### Gewijzigde bestanden
+
+| Bestand | Wijziging |
+|---------|-----------|
+| `schemadiff/diff.go` | `filterEntiteiten`: `\|\| e.Domein == ""` toegevoegd |
+| `schemadiff/diff_test.go` | Test `TestDomeinFilterLeegDomeinEntiteit` toegevoegd |
 - **Geen data-migratie**: de tool genereert alleen DDL (structuur), geen DML (data-transformatie).
 - **CREATE TABLE als placeholder**: nieuwe tabellen worden niet als volledig DDL gegenereerd, omdat Bun/createmodeltables dit automatisch doet bij herstart.
 - **Trigger-aanpassing**: als PK-structuur wijzigt (bijv. door isMaterieel wijziging), moeten relatieve-autoincrement-triggers handmatig worden bijgewerkt.

@@ -35,6 +35,7 @@ import DiagramCanvas from "../ide/DiagramCanvas";
 import DetailsPanel from "../ide/DetailsPanel";
 import BestandenPanel from "../ide/BestandenPanel";
 import UploadDialog from "../ide/UploadDialog";
+import ExportDialog from "../ide/ExportDialog";
 import ActionDialog from "../ide/ActionDialog";
 import ErrorBoundary from "../ide/ErrorBoundary";
 
@@ -52,6 +53,8 @@ export default function IdePage() {
   const elements = useModelStore((s) => s.elements);
   const isDirty = useModelStore((s) => s.isDirty);
   const markSaved = useModelStore((s) => s.markSaved);
+  const domains = useModelStore((s) => s.domains);
+  const domainMeta = useModelStore((s) => s.domainMeta);
   const theme = useUIStore((s) => s.theme);
   const toggleTheme = useUIStore((s) => s.toggleTheme);
   const [layoutModel] = useState(() => createLayoutModel());
@@ -78,6 +81,9 @@ export default function IdePage() {
 
   // ── Upload Dialog state ──────────────────────────────────
   const [uploadOpen, setUploadOpen] = useState(false);
+
+  // ── Export Dialog state ──────────────────────────────────
+  const [exportOpen, setExportOpen] = useState(false);
 
   // ── Action Dialog state ──────────────────────────────────
   const [dialogType, setDialogType] = useState(null); // "publish" | "rebuild" | "publishAndRebuild" | "diff" | null
@@ -248,30 +254,27 @@ export default function IdePage() {
     [layoutModel]
   );
 
-  // ── Export (IDE format) ────────────────────────────────────
-  const handleExport = useCallback(() => {
+  // ── Export (via ExportDialog) ────────────────────────────
+  const handleExportDialog = useCallback((format, filename) => {
     const state = useModelStore.getState();
-    const json = exportStoreAsJson(state);
+    let json;
+    if (format === "ide") {
+      json = exportStoreAsJson(state);
+    } else {
+      json = storeNaarV3Model(state);
+    }
     const blob = new Blob([JSON.stringify(json, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `ide-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = filename || `export-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    setExportOpen(false);
   }, []);
 
-  // ── Export V3 (download als bestand) ──────────────────────
-  const handleExportV3 = useCallback(() => {
-    const state = useModelStore.getState();
-    const v3 = storeNaarV3Model(state);
-    const blob = new Blob([JSON.stringify(v3, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `v3-model-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleExportUpdateVersie = useCallback((domein, versie) => {
+    useModelStore.getState().updateDomainMeta(domein, { versie });
   }, []);
 
   // ── Publiceer naar API (proposed schema versie) ────────────
@@ -600,11 +603,8 @@ export default function IdePage() {
         <button onClick={handleImport} style={toolbarBtn}>
           📂 Importeer
         </button>
-        <button onClick={handleExport} style={toolbarBtn}>
+        <button onClick={() => setExportOpen(true)} style={toolbarBtn}>
           💾 Exporteer
-        </button>
-        <button onClick={handleExportV3} style={toolbarBtn}>
-          📄 V3 Export
         </button>
         <span style={{ color: theme === "dark" ? "#555" : "#ccc" }}>|</span>
         <button onClick={handleOpenBestanden} style={toolbarBtn} title="Bestanden bekijken en beheren">
@@ -658,6 +658,17 @@ export default function IdePage() {
         open={uploadOpen}
         onClose={() => setUploadOpen(false)}
         onSuccess={() => setStatus("Bestand geüpload ✓")}
+      />
+
+      {/* Export Dialog */}
+      <ExportDialog
+        open={exportOpen}
+        domains={domains || []}
+        domainMeta={domainMeta || {}}
+        modelVersie={modelMeta?.versie || ""}
+        onExport={handleExportDialog}
+        onUpdateVersie={handleExportUpdateVersie}
+        onClose={() => setExportOpen(false)}
       />
     </div>
   );

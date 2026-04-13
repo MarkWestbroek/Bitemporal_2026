@@ -312,6 +312,95 @@
   font-weight: 400;
 }
 
+/* ── Perkamentrol: scroll-roll animatie ─────────────────────────────── */
+
+/* Container: flex-kolom, centered, schaalt mee met zoom */
+.perkamentrol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+  filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.35));
+  transform: scale(var(--scroll-scale, 1));
+  transform-origin: center top;
+}
+
+/* Cilindrische rollen */
+.perkamentrol-roll {
+  width: 32px;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to bottom,
+    #7a5c12 0%, #c9a044 22%, #f0d88a 48%, #d4aa50 72%, #8b6914 100%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  position: relative;
+  z-index: 2;
+  transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Knoppen aan de uiteinden */
+.perkamentrol-roll::before,
+.perkamentrol-roll::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  width: 6px;
+  height: 12px;
+  border-radius: 2px;
+  background: linear-gradient(to bottom,
+    #96780e 0%, #d4a853 30%, #e8c870 50%, #d4a853 70%, #96780e 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.perkamentrol-roll::before { left: -2px; }
+.perkamentrol-roll::after  { right: -2px; }
+
+.perkamentrol-roll--top    { margin-bottom: -1px; }
+.perkamentrol-roll--bottom { margin-top: -1px; }
+
+/* Perkament-papier (verborgen bij collapsed) */
+.perkamentrol-body {
+  width: 32px;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  background: linear-gradient(178deg,
+    rgba(62, 55, 35, 0.94) 0%,
+    rgba(50, 44, 28, 0.96) 50%,
+    rgba(42, 37, 24, 0.94) 100%);
+  border-left: 1px solid rgba(180, 160, 100, 0.15);
+  border-right: 1px solid rgba(180, 160, 100, 0.15);
+  padding: 0 6px;
+  position: relative;
+  z-index: 1;
+  transition:
+    max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s ease 0.12s,
+    padding 0.3s ease 0.08s;
+}
+
+.perkamentrol-body .ge-label-data {
+  width: 170px;
+  line-height: 1.35;
+  color: #b8a880;
+  white-space: normal;
+  font-size: 10px;
+}
+
+/* Uitgerolde staat */
+.perkamentrol--open .perkamentrol-roll {
+  width: 190px;
+}
+
+.perkamentrol--open .perkamentrol-body {
+  width: 190px;
+  max-height: 400px;
+  opacity: 1;
+  padding: 5px 8px;
+}
+
 /* ── Info panel ────────────────────────────────────────────────────── */
 
 .universum-info {

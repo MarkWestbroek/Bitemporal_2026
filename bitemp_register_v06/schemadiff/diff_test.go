@@ -514,6 +514,37 @@ func TestDomeinFilter(t *testing.T) {
 	}
 }
 
+// TestDomeinFilterLeegDomeinEntiteit test dat entiteiten zonder domein (Domein=="")
+// meegenomen worden bij een domeinfilter, zodat oude schema-versies (van vóór
+// domein-ondersteuning) niet onterecht als volledig nieuw verschijnen.
+func TestDomeinFilterLeegDomeinEntiteit(t *testing.T) {
+	// "Oud" model: entiteit zonder domein (legacy schema-versie)
+	oud := model.V3Model{
+		Versie: "v0.9",
+		Naam:   "LegacyModel",
+		Entiteiten: []model.V3Entiteit{
+			{Typenaam: "Persoon", Domein: "", Meervoud: "personen"},
+		},
+	}
+	// "Nieuw" model: dezelfde entiteit nu met domein "kern"
+	nieuw := model.V3Model{
+		Versie: "v1.0",
+		Naam:   "NieuwModel",
+		Entiteiten: []model.V3Entiteit{
+			{Typenaam: "Persoon", Domein: "kern", Meervoud: "personen"},
+		},
+	}
+
+	rapport := Vergelijk(oud, nieuw, MetDomeinFilter("kern"))
+
+	// Persoon moet als gemodificeerd verschijnen (domein gewijzigd), niet als "toegevoegd"
+	for _, item := range rapport.Items {
+		if item.Pad == "Persoon" && item.Actie == "toegevoegd" {
+			t.Error("Persoon met leeg domein in oud model mag niet als 'toegevoegd' verschijnen bij domeinfilter 'kern'")
+		}
+	}
+}
+
 func TestRapportSamenvatting(t *testing.T) {
 	oud := maakBasisModel()
 	nieuw := maakBasisModel()
@@ -611,5 +642,134 @@ func TestGeMomentvoorkomenGewijzigd(t *testing.T) {
 	}
 	if !gevonden {
 		t.Error("Verwachtte modificatie-item voor momentvoorkomen-wijziging")
+	}
+}
+
+// ---- Overerving (isAbstract + erft) ----
+
+func TestIsAbstractGewijzigd(t *testing.T) {
+	oud := maakBasisModel()
+	nieuw := maakBasisModel()
+	nieuw.Entiteiten[0].IsAbstract = true
+
+	rapport := Vergelijk(oud, nieuw)
+
+	gevonden := false
+	for _, item := range rapport.Modificaties() {
+		if item.Categorie == CategorieEntiteit &&
+			item.OudeWaarde == "isAbstract=false" && item.NieuweWaarde == "isAbstract=true" {
+			gevonden = true
+		}
+	}
+	if !gevonden {
+		t.Error("Verwachtte modificatie-item voor isAbstract false→true")
+	}
+}
+
+func TestIsAbstractVerwijderd(t *testing.T) {
+	oud := maakBasisModel()
+	oud.Entiteiten[0].IsAbstract = true
+	nieuw := maakBasisModel()
+
+	rapport := Vergelijk(oud, nieuw)
+
+	gevonden := false
+	for _, item := range rapport.Modificaties() {
+		if item.Categorie == CategorieEntiteit &&
+			item.OudeWaarde == "isAbstract=true" && item.NieuweWaarde == "isAbstract=false" {
+			gevonden = true
+		}
+	}
+	if !gevonden {
+		t.Error("Verwachtte modificatie-item voor isAbstract true→false")
+	}
+}
+
+func TestErftToeGevoegd(t *testing.T) {
+	oud := maakBasisModel()
+	nieuw := maakBasisModel()
+	nieuw.Entiteiten[1].Erft = "Persoon" // Adres erft nu van Persoon
+
+	rapport := Vergelijk(oud, nieuw)
+
+	gevonden := false
+	for _, item := range rapport.Modificaties() {
+		if item.Categorie == CategorieEntiteit &&
+			item.OudeWaarde == "erft=" && item.NieuweWaarde == "erft=Persoon" {
+			gevonden = true
+		}
+	}
+	if !gevonden {
+		t.Error("Verwachtte modificatie-item voor erft toegevoegd")
+	}
+}
+
+func TestErftVerwijderd(t *testing.T) {
+	oud := maakBasisModel()
+	oud.Entiteiten[1].Erft = "Persoon"
+	nieuw := maakBasisModel()
+
+	rapport := Vergelijk(oud, nieuw)
+
+	gevonden := false
+	for _, item := range rapport.Destructief() {
+		if item.Categorie == CategorieEntiteit &&
+			item.OudeWaarde == "erft=Persoon" && item.NieuweWaarde == "erft=" {
+			gevonden = true
+		}
+	}
+	if !gevonden {
+		t.Error("Verwachtte destructief-item voor erft verwijderd")
+	}
+}
+
+func TestErftGewijzigd(t *testing.T) {
+	oud := maakBasisModel()
+	oud.Entiteiten[1].Erft = "Persoon"
+	nieuw := maakBasisModel()
+	nieuw.Entiteiten[1].Erft = "AndereEntiteit"
+
+	rapport := Vergelijk(oud, nieuw)
+
+	gevonden := false
+	for _, item := range rapport.Destructief() {
+		if item.Categorie == CategorieEntiteit &&
+			item.OudeWaarde == "erft=Persoon" && item.NieuweWaarde == "erft=AndereEntiteit" {
+			gevonden = true
+		}
+	}
+	if !gevonden {
+		t.Error("Verwachtte destructief-item voor erft gewijzigd van Persoon naar AndereEntiteit")
+	}
+}
+
+func TestIsAbstractOngewijzigdGeenDelta(t *testing.T) {
+	oud := maakBasisModel()
+	oud.Entiteiten[0].IsAbstract = true
+	nieuw := maakBasisModel()
+	nieuw.Entiteiten[0].IsAbstract = true
+
+	rapport := Vergelijk(oud, nieuw)
+
+	for _, item := range rapport.Items {
+		if item.Categorie == CategorieEntiteit && item.OudeWaarde == "isAbstract=true" {
+			t.Error("Onverwacht delta-item voor ongewijzigde isAbstract")
+		}
+	}
+}
+
+func TestErftOngewijzigdGeenDelta(t *testing.T) {
+	oud := maakBasisModel()
+	oud.Entiteiten[1].Erft = "Persoon"
+	nieuw := maakBasisModel()
+	nieuw.Entiteiten[1].Erft = "Persoon"
+
+	rapport := Vergelijk(oud, nieuw)
+
+	for _, item := range rapport.Items {
+		if item.Categorie == CategorieEntiteit && item.Pad == "Adres" &&
+			(item.OudeWaarde == "erft=Persoon" || item.NieuweWaarde == "erft=Persoon") {
+			t.Error("Onverwacht delta-item voor ongewijzigde erft")
+		}
 	}
 }
