@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-12 15:11
 - **Sessie-ID**: `09e148c9-ac56-4c78-8219-52fe80ac073d`
-- **Berichten**: 86
+- **Berichten**: 91
 
 ---
 
@@ -2255,6 +2255,174 @@ Ik zal nog een paar noten toevoegen waar de drone soms op over kan gaan, ipv 1 t
 
 ## 🤖 Assistant
 
-Now let me see the full ForceGraph3D setup and the scene access, especially how the graph is initialized: Now let me read the import lines and the THREE import:  Now let me look at the animation loop to understand how to integrate nebulae and fog:  
+Now let me see the full ForceGraph3D setup and the scene access, especially how the graph is initialized: Now let me read the import lines and the THREE import:  Now let me look at the animation loop to understand how to integrate nebulae and fog:  Now I have a complete picture. Let me implement everything. The approach:
+
+1. **Fog + depth**: Add  to the scene after ForceGraph3D mounts, matching the background color
+2. **Nebula layers**: Create procedural nebula sprites as large, semi-transparent particle clouds at different Z-depths using THREE.Points with custom shader material
+3. **Background nebula horizon**: Large sphere with procedural nebula appearance
+4. **Space bird fly-by**: Synthesized stereo-panned frequency sweep in sfx.js, triggered randomly
+5. **Drone note variation**: Add note switching to the drone oscillators Now let me see the full ForceGraph3D setup and the scene access, especially how the graph is initialized: Now let me read the import lines and the THREE import:  Now let me look at the animation loop to understand how to integrate nebulae and fog:  Now I have a complete picture. Let me implement everything. The approach:
+
+1. **Fog + depth**: Add  to the scene after ForceGraph3D mounts, matching the background color
+2. **Nebula layers**: Create procedural nebula sprites as large, semi-transparent particle clouds at different Z-depths using THREE.Points with custom shader material
+3. **Background nebula horizon**: Large sphere with procedural nebula appearance
+4. **Space bird fly-by**: Synthesized stereo-panned frequency sweep in sfx.js, triggered randomly
+5. **Drone note variation**: Add note switching to the drone oscillators Now let me implement everything. First, the visual enhancements in UniversumPage.jsx, then the audio in sfx.js: 
+```
+
+```
+Now add a useEffect that injects the environment into the ForceGraph3D scene after mount:  
+```
+
+```
+Now add the space bird and drone note variation to sfx.js: 
+```
+
+```
+Now I need to integrate the drone note change scheduling into  and :   
+```
+
+```
+
+```
+
+```
+Build succeeds. Hier is wat er is toegevoegd:
+
+### Visueel — Dieptegevoel
+
+1. **Exponentiële fog** () met de achtergrondkleur `#0f172a` — objecten verder weg vervagen geleidelijk in de ruimte. Dichtstbijzijnde objecten blijven scherp, verre worden verneveld.
+
+2. **Sterrveld** — 2000 sterren in een bol met straal 400–1000 scene-units, met size attenuation. Fog-vrij zodat ze altijd zichtbaar blijven als oriëntatiepunten.
+
+3. **4 nevellagen** op verschillende diepten (z = -80, -200, -350 en +150) — procedureel gegenereerde canvas-texturen met overlappende radiale gradiënten in blauw/violet tinten. Additive blending, transparant, met fog-response zodat de diepere lagen vager worden.
+
+4. **Achtergrond-nebula horizon** — een grote bol (r=800) met inward-facing procedurele nebula-textuur. Additive blending, fog-vrij, geeft het gevoel van een oneindige ruimte achter alles.
+
+### Audio — Variatie
+
+5. **Space bird fly-by** () — JMJ-achtig synthesized geluid: FM-carrier met frequentieglide (laag→hoog→laag als passeervlucht), bandpass sweep, noise-laag voor "windveren", stereo pan sweep L→R of R→L. Verschijnt elke 15–45 seconden met random karakter (frequentie, duur, richting). Gaat door de shared delay bus voor ruimtelijk echo-effect.
+
+6. **Drone nootvariatie** — De drone wisselt elke 12–30 seconden van basisnoot via een langzaam 2–4 sec portamento. Notenset: C1, D1, Eb1, F1, G1, Ab1 — een donkere mineur-reeks. De licht-detuned tweede saw gaat mee voor het warme zwevende effect.
+
+---
+
+## 🧑 User
+
+- De JMJ geluiden zijn mooi! Zou er nog een visueel effect bij kunnen? Een avatar achtige ruimtedraak (natuurlijk raadselachtig hoe die zonder zuurstof kan enz.)
+- de nevel nog iets te subtiel, zie imgs
+- heeft de drilldown (instantie level) uberhaupt nevel?
+
+---
+
+## 🤖 Assistant
+
+I see the problem. The  is set to `true` after the first mount, but when  remounts (different ), a new scene is created and the environment isn't added. Let me also check the useEffect for the environment: Now I need to read the animation loop to understand where to add the dragon visual:  Now I have a clear picture. The issues are:
+
+1.  prevents re-adding env on remount (ForceGraph3D key changes create new scene)
+2. Nebula opacity values are too low
+3. Need a visual dragon
+
+Let me also check how much of the ForceGraph3D key changes:   Good. The key changes whenever viewMode changes, causing a full ForceGraph3D remount with a fresh scene. The  blocks re-adding. I need to track the scene itself instead.
+
+Now let me implement all three fixes: 
+```
+
+```
+Now add the space dragon visual. I'll create a procedural dragon that flies across as a THREE.Group of glowing particles + trail, spawned when spaceBird plays. The dragon needs to be animated in the existing animation loop:  
+```
+
+```
+Now I need to:
+1. Spawn the dragon when spaceBird fires
+2. Update dragons in the animation loop
+
+Let me read the relevant sections: Now I need to read the animation loop to add dragon updates: Now I need to add dragon spawning in the spaceBird timer and dragon updates in the animation loop. I also need to read the env init code to make sure I have the scene reference available: Good. Now I need to spawn a dragon along with each spaceBird call, and update dragons in the animation loop. I need the scene from  in both spots. 
+```
+
+```
+Now I need to make sure  is imported. Let me check: Good,  is already imported. Now let me also check that  uses  for  which should align with the animation loop's time. Let me re-check the animation time to make sure the dragon timing is correct:
+
+The animation loop uses `const t = (performance.now() - startTime) / 1000;` — a relative time since animation start. But  uses  — an absolute time. In , I'm passing ... wait, that's not right. Let me fix this. The dragon uses absolute  as its startTime, and we need to pass absolute time to . The problem:  mixes relative seconds + absolute milliseconds/1000. The dragon's  is  (absolute seconds). So I should just pass  to : 
+```
+
+```
+Now let's build to verify:  Build succeeds. The visual space dragon is now implemented. Here's what it does:
+
+**Ruimtedraak (Space Dragon)**:
+- A procedural  made of **glowing bioluminescent particles**: body (30 points in a serpentine shape), two wings (15 points each with animated flapping), a trailing particle tail (40 points), and a glowing head sphere
+- Random color from a dark palette: `#00ffcc`, `#4488ff`, `#aa44ff`, `#00aaff`,  made of **glowing bioluminescent particles**: body (30 points in a serpentine shape), two wings (15 points each with animated flapping), a trailing particle tail (40 points), and a glowing head sphere
+- Random color from a dark palette: `#00ffcc`, `#4488ff`, `#aa44ff`, `#00aaff`, `#66ffaa`
+- Flies across the scene **left↔right** (randomized direction) over 3–7 seconds, matching the spaceBird audio
+- **Sinusoidal undulation** on Y and Z axes for organic snake-like movement
+- **Wing flap animation** updated per frame
+- **Fade in/out** at the start (first 10%) and end (last 15%) of the flight
+- Uses  +  for ethereal glow effect,  so the dragon stays visible
+- Proper cleanup: geometry and materials are disposed after the flight ends
+
+Every spaceBird sound now also spawns a dragon — appearing on all view levels (meta, instances, concrete) since the nebula scene-tracking fix ensures the environment is always present.
+
+---
+
+## 🧑 User
+
+cool!!
+
+the sound movement is cool. The 'bird' is great!
+
+A few observations:
+- Sometimes there is a rectangular cutoff, see imgs
+
+- can the back-sound be somewhat lower, less loud and slower (slower change)?
+
+- at some viewpoints, the whole universe moves. It should maybe be more that we move our universe, and the background stays more stable, but maybe that is not possible.
+
+---
+
+## 🧑 User
+
+ad 2 : no, not the drone, the "go back" sound
+
+---
+
+## 🤖 Assistant
+
+Now I understand — the woosh "out" (back navigation) sound. Currently it's , gain peak `0.4`, noise peak `0.15`. I'll make it quieter and slower. Let me also check the  helper to understand the parameters: Good.  — so for the woosh-out:
+- Main gain:  → peak=0.10, attack=0.12s, hold=0.4s
+- Noise gain:  → peak=0.04
+
+I'll make dur longer (2.2s), reduce peaks by ~50%, slow the frequency sweep, and reduce the delay wet. Now let me also look at the nebula cutoff issue — the rectangular visible edge on the sprites:
+
+The rectangular cutoff in the screenshots is because  renders as a quad and the nebula texture doesn't fully fade to zero at the edges. I need to add a circular fade-to-transparent vignette in the  function. 
+```
+
+```
+
+```
+
+```
+Now for the woosh-out delay wet gain — reduce it too: 
+```
+
+```
+Now the background stability — stars/nebula/horizon should follow the camera so they appear fixed: The approach: group all environment objects (stars, nebulas, horizon) into a , then in the animation loop update that group's position to match the camera position. This way the background moves with the camera → appears stable. I'll refactor  to return a group, then in the animation loop update that group's position to match the camera: 
+```
+
+```
+Now update the env init to store the group ref, and update the animation loop to move the env group with the camera:  
+```
+
+```
+Now add the camera-follow logic in the animation loop. Let me find the right spot: I'll add the camera-follow right after the camera distance check, before the dragon update:  
+```
+
+```
+Now build:  Build succeeds. Three changes made:
+
+1. **Nebula rectangular cutoff fixed** — Added a circular vignette mask ( compositing) to  so edges fade smoothly to transparent instead of showing hard rectangle borders.
+
+2. **Woosh-out (go-back) sound softer and slower** — Duration `1.4s → 2.2s`, gain peak `0.10 → 0.05`, noise peak `0.04 → 0.02`, frequency sweep starts lower (`300→14 Hz` instead of `400→18 Hz`), delay times longer (`0.55/0.75s`), wet gain reduced (`0.4 → 0.25`), lowpass on delay at `450 Hz` instead of `600`. Should feel much more gentle and gradual.
+
+3. **Stable background** — Stars, nebulas and horizon are now in a  whose position is copied from the camera every frame. The background stays fixed relative to the viewport while only the data graph moves when you pan/rotate.
 
 ---
