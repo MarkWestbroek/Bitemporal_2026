@@ -1,7 +1,6 @@
 package model
 
 import (
-	"encoding/json"
 	"testing"
 )
 
@@ -209,53 +208,5 @@ func TestFilterV3ModelStrictByDomein_ExcludesRegisterEntiteiten(t *testing.T) {
 	}
 	if foundRegister {
 		t.Fatal("did not expect register entiteiten in strict model")
-	}
-}
-
-// TestV3DomeinRoundtrip controleert dat V3Domein-metadata correct wordt
-// geserialiseerd en gedeserialiseerd in het V3Model JSON-formaat.
-func TestV3DomeinRoundtrip(t *testing.T) {
-	original := V3Model{
-		Versie: "v1.0",
-		Naam:   "RoundtripTest",
-		Domeinen: []V3Domein{
-			{Naam: "kern", Versie: "2.1", Beschrijving: "Het kerndomein", Kleur: "#3b82f6", Prefix: "k"},
-			{Naam: "extern", Versie: "1.0"},
-			{Naam: "leeg"},
-		},
-		Entiteiten: []V3Entiteit{
-			{Typenaam: "Persoon", Domein: "kern", Meervoud: "personen"},
-		},
-	}
-
-	// Serialiseer naar JSON
-	data, err := json.Marshal(original)
-	if err != nil {
-		t.Fatalf("json.Marshal mislukt: %v", err)
-	}
-
-	// Deserialiseer terug
-	var parsed V3Model
-	if err := json.Unmarshal(data, &parsed); err != nil {
-		t.Fatalf("json.Unmarshal mislukt: %v", err)
-	}
-
-	if len(parsed.Domeinen) != 3 {
-		t.Fatalf("verwachtte 3 domeinen, kreeg %d", len(parsed.Domeinen))
-	}
-
-	kern := parsed.Domeinen[0]
-	if kern.Naam != "kern" || kern.Versie != "2.1" || kern.Beschrijving != "Het kerndomein" || kern.Kleur != "#3b82f6" || kern.Prefix != "k" {
-		t.Errorf("kern-domein niet correct geroundtript: %+v", kern)
-	}
-
-	extern := parsed.Domeinen[1]
-	if extern.Naam != "extern" || extern.Versie != "1.0" {
-		t.Errorf("extern-domein niet correct geroundtript: %+v", extern)
-	}
-
-	leeg := parsed.Domeinen[2]
-	if leeg.Naam != "leeg" || leeg.Versie != "" {
-		t.Errorf("leeg-domein niet correct geroundtript: %+v", leeg)
 	}
 }

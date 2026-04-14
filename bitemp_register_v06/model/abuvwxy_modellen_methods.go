@@ -39,6 +39,16 @@ func (c C) GetAfvoer() *time.Time   { return c.Afvoer }
 func (c *C) SetAfvoer(t *time.Time) { c.Afvoer = t }
 func (c C) String() string          { return RepresentatieToString(c) }
 
+// C_sub
+func (c C_sub) GetID() any              { return c.C_ID }
+func (c C_sub) Metatype() Metatype      { return MetatypeEntiteit }
+func (c *C_sub) ClearID()               { c.C_ID = 0 }
+func (c C_sub) GetOpvoer() *time.Time   { return c.Opvoer }
+func (c *C_sub) SetOpvoer(t *time.Time) { c.Opvoer = t }
+func (c C_sub) GetAfvoer() *time.Time   { return c.Afvoer }
+func (c *C_sub) SetAfvoer(t *time.Time) { c.Afvoer = t }
+func (c C_sub) String() string          { return RepresentatieToString(c) }
+
 /* ================================================================
    2. HUBS (GE + REL) — interface-methoden
    ================================================================ */
@@ -103,15 +113,25 @@ func (by B_Y) GetAfvoer() *time.Time   { return by.Afvoer }
 func (by *B_Y) SetAfvoer(t *time.Time) { by.Afvoer = t }
 func (by B_Y) String() string          { return RepresentatieToString(by) }
 
-// B_BC
-func (b B_BC) GetID() any              { return b.Rel_ID }
-func (b B_BC) Metatype() Metatype      { return MetatypeRelatie }
-func (b *B_BC) ClearID()               { b.Rel_ID = 0 }
-func (b B_BC) GetOpvoer() *time.Time   { return b.Opvoer }
-func (b *B_BC) SetOpvoer(t *time.Time) { b.Opvoer = t }
-func (b B_BC) GetAfvoer() *time.Time   { return b.Afvoer }
-func (b *B_BC) SetAfvoer(t *time.Time) { b.Afvoer = t }
-func (b B_BC) String() string          { return RepresentatieToString(b) }
+// C_C_GE
+func (cc C_C_GE) GetID() any              { return cc.Rel_ID }
+func (cc C_C_GE) Metatype() Metatype      { return MetatypeGegevenselement }
+func (cc *C_C_GE) ClearID()               { cc.Rel_ID = 0 }
+func (cc C_C_GE) GetOpvoer() *time.Time   { return cc.Opvoer }
+func (cc *C_C_GE) SetOpvoer(t *time.Time) { cc.Opvoer = t }
+func (cc C_C_GE) GetAfvoer() *time.Time   { return cc.Afvoer }
+func (cc *C_C_GE) SetAfvoer(t *time.Time) { cc.Afvoer = t }
+func (cc C_C_GE) String() string          { return RepresentatieToString(cc) }
+
+// Rel_C_B
+func (r Rel_C_B) GetID() any              { return r.Rel_ID }
+func (r Rel_C_B) Metatype() Metatype      { return MetatypeRelatie }
+func (r *Rel_C_B) ClearID()               { r.Rel_ID = 0 }
+func (r Rel_C_B) GetOpvoer() *time.Time   { return r.Opvoer }
+func (r *Rel_C_B) SetOpvoer(t *time.Time) { r.Opvoer = t }
+func (r Rel_C_B) GetAfvoer() *time.Time   { return r.Afvoer }
+func (r *Rel_C_B) SetAfvoer(t *time.Time) { r.Afvoer = t }
+func (r Rel_C_B) String() string          { return RepresentatieToString(r) }
 
 /* ================================================================
    3. _DATA — interface-methoden
@@ -177,15 +197,25 @@ func (d B_Y_Data) GetAfvoer() *time.Time   { return d.Afvoer }
 func (d *B_Y_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
 func (d B_Y_Data) String() string          { return RepresentatieToString(d) }
 
-// B_BC_Data
-func (d B_BC_Data) GetID() any              { return d.Versie }
-func (d B_BC_Data) Metatype() Metatype      { return MetatypeGegevenselement }
-func (d *B_BC_Data) ClearID()               { d.Versie = 0 }
-func (d B_BC_Data) GetOpvoer() *time.Time   { return d.Opvoer }
-func (d *B_BC_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
-func (d B_BC_Data) GetAfvoer() *time.Time   { return d.Afvoer }
-func (d *B_BC_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
-func (d B_BC_Data) String() string          { return RepresentatieToString(d) }
+// C_C_GE_Data
+func (d C_C_GE_Data) GetID() any              { return d.Versie }
+func (d C_C_GE_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *C_C_GE_Data) ClearID()               { d.Versie = 0 }
+func (d C_C_GE_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *C_C_GE_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d C_C_GE_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *C_C_GE_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d C_C_GE_Data) String() string          { return RepresentatieToString(d) }
+
+// Rel_C_B_Data
+func (d Rel_C_B_Data) GetID() any              { return d.Versie }
+func (d Rel_C_B_Data) Metatype() Metatype      { return MetatypeGegevenselement }
+func (d *Rel_C_B_Data) ClearID()               { d.Versie = 0 }
+func (d Rel_C_B_Data) GetOpvoer() *time.Time   { return d.Opvoer }
+func (d *Rel_C_B_Data) SetOpvoer(t *time.Time) { d.Opvoer = t }
+func (d Rel_C_B_Data) GetAfvoer() *time.Time   { return d.Afvoer }
+func (d *Rel_C_B_Data) SetAfvoer(t *time.Time) { d.Afvoer = t }
+func (d Rel_C_B_Data) String() string          { return RepresentatieToString(d) }
 
 /* ================================================================
    4. _AANVANG/_EINDE (entiteits-plumbing) — interface-methoden
@@ -339,15 +369,25 @@ func (i B_Y_Input) GetAfvoer() *time.Time   { return nil }
 func (i *B_Y_Input) SetAfvoer(t *time.Time) {}
 func (i B_Y_Input) String() string          { return RepresentatieToString(i) }
 
-// B_BC_Input
-func (i B_BC_Input) GetID() any              { return i.Rel_ID }
-func (i B_BC_Input) Metatype() Metatype      { return MetatypeRelatie }
-func (i *B_BC_Input) ClearID()               { i.Rel_ID = 0 }
-func (i B_BC_Input) GetOpvoer() *time.Time   { return nil }
-func (i *B_BC_Input) SetOpvoer(t *time.Time) {}
-func (i B_BC_Input) GetAfvoer() *time.Time   { return nil }
-func (i *B_BC_Input) SetAfvoer(t *time.Time) {}
-func (i B_BC_Input) String() string          { return RepresentatieToString(i) }
+// C_C_GE_Input
+func (i C_C_GE_Input) GetID() any              { return i.Rel_ID }
+func (i C_C_GE_Input) Metatype() Metatype      { return MetatypeGegevenselement }
+func (i *C_C_GE_Input) ClearID()               { i.Rel_ID = 0 }
+func (i C_C_GE_Input) GetOpvoer() *time.Time   { return nil }
+func (i *C_C_GE_Input) SetOpvoer(t *time.Time) {}
+func (i C_C_GE_Input) GetAfvoer() *time.Time   { return nil }
+func (i *C_C_GE_Input) SetAfvoer(t *time.Time) {}
+func (i C_C_GE_Input) String() string          { return RepresentatieToString(i) }
+
+// Rel_C_B_Input
+func (i Rel_C_B_Input) GetID() any              { return i.Rel_ID }
+func (i Rel_C_B_Input) Metatype() Metatype      { return MetatypeRelatie }
+func (i *Rel_C_B_Input) ClearID()               { i.Rel_ID = 0 }
+func (i Rel_C_B_Input) GetOpvoer() *time.Time   { return nil }
+func (i *Rel_C_B_Input) SetOpvoer(t *time.Time) {}
+func (i Rel_C_B_Input) GetAfvoer() *time.Time   { return nil }
+func (i *Rel_C_B_Input) SetAfvoer(t *time.Time) {}
+func (i Rel_C_B_Input) String() string          { return RepresentatieToString(i) }
 
 /* ================================================================
    7. GeefOnderliggendeGegevenselementen — ENTITEITEN
@@ -408,12 +448,6 @@ func (b *B) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 		}
 		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_Y", Representatie: &b.Ys[idx]})
 	}
-	for idx := range b.Bc {
-		if b.Bc[idx].B_ID == 0 {
-			b.Bc[idx].B_ID = b.ID
-		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_BC", Representatie: &b.Bc[idx]})
-	}
 	for idx := range b.Aanvang {
 		if b.Aanvang[idx].B_ID == 0 {
 			b.Aanvang[idx].B_ID = b.ID
@@ -430,6 +464,23 @@ func (b *B) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 }
 
 func (c *C) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0)
+	for idx := range c.CGes {
+		if c.CGes[idx].C_ID == 0 {
+			c.CGes[idx].C_ID = c.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "C_C_GE", Representatie: &c.CGes[idx]})
+	}
+	for idx := range c.RelCBs {
+		if c.RelCBs[idx].C_ID == 0 {
+			c.RelCBs[idx].C_ID = c.ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Rel_C_B", Representatie: &c.RelCBs[idx]})
+	}
+	return result
+}
+
+func (c *C_sub) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0)
 	return result
 }
@@ -558,16 +609,30 @@ func (h *B_Y) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie 
 	return result
 }
 
-func (h *B_BC) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+func (h *C_C_GE) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
 	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
 	for i := range h.Data {
-		if h.Data[i].B_ID == 0 {
-			h.Data[i].B_ID = h.B_ID
+		if h.Data[i].C_ID == 0 {
+			h.Data[i].C_ID = h.C_ID
 		}
 		if h.Data[i].Rel_ID == 0 {
 			h.Data[i].Rel_ID = h.Rel_ID
 		}
-		result = append(result, OnderliggendeRepresentatie{Typenaam: "B_BC_Data", Representatie: &h.Data[i]})
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "C_C_GE_Data", Representatie: &h.Data[i]})
+	}
+	return result
+}
+
+func (h *Rel_C_B) GeefOnderliggendeGegevenselementen() []OnderliggendeRepresentatie {
+	result := make([]OnderliggendeRepresentatie, 0, len(h.Data))
+	for i := range h.Data {
+		if h.Data[i].C_ID == 0 {
+			h.Data[i].C_ID = h.C_ID
+		}
+		if h.Data[i].Rel_ID == 0 {
+			h.Data[i].Rel_ID = h.Rel_ID
+		}
+		result = append(result, OnderliggendeRepresentatie{Typenaam: "Rel_C_B_Data", Representatie: &h.Data[i]})
 	}
 	return result
 }

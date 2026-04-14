@@ -51,8 +51,15 @@ type B_Y_Input struct {
 	Hhh    string `json:"hhh"`
 }
 
-type B_BC_Input struct {
-	B_ID   int `json:"b_id"`
-	Rel_ID int `json:"rel_id"`
-	C_ID   int `json:"c_id"`
+type C_C_GE_Input struct {
+	C_ID      int     `json:"c_id"`
+	Rel_ID    int     `json:"rel_id"`
+	Superveld *string `json:"superveld,omitempty"`
+}
+
+type Rel_C_B_Input struct {
+	C_ID    int     `json:"c_id"`
+	Rel_ID  int     `json:"rel_id"`
+	B_ID    int     `json:"b_id"`
+	Relveld *string `json:"relveld,omitempty"`
 }

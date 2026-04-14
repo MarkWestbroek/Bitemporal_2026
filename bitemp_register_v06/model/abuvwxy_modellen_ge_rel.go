@@ -213,23 +213,45 @@ type B_Y_Data struct {
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
 
-type B_BC struct {
-	bun.BaseModel `bun:"table:b_bc,alias:b_bc"`
-	B_ID          int         `json:"b_id" bun:"b_id,pk" schema_desc:"ID van de B-entiteit"`
-	Rel_ID        int         `json:"rel_id" bun:"rel_id,pk,autoincrement"`
-	ParentB       *B          `json:"-" bun:"rel:belongs-to,join:b_id=id,on_delete:cascade"`
-	C_ID          int         `json:"c_id"`
-	Opvoer        *time.Time  `json:"opvoer,omitempty"`
-	Afvoer        *time.Time  `json:"afvoer,omitempty"`
-	Data          []B_BC_Data `bun:"rel:has-many,join:b_id=b_id,join:rel_id=rel_id" json:"data,omitempty"`
+type C_C_GE struct {
+	bun.BaseModel `bun:"table:c_c_ge,alias:c_c_ge"`
+	C_ID          int           `json:"c_id" bun:"c_id,pk" schema_desc:"ID van de C-entiteit"`
+	Rel_ID        int           `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentC       *C            `json:"-" bun:"rel:belongs-to,join:c_id=id,on_delete:cascade"`
+	Opvoer        *time.Time    `json:"opvoer,omitempty"`
+	Afvoer        *time.Time    `json:"afvoer,omitempty"`
+	Data          []C_C_GE_Data `bun:"rel:has-many,join:c_id=c_id,join:rel_id=rel_id" json:"data,omitempty"`
 }
 
-// B_BC_Data — geversioned inhoud van B_BC.
-type B_BC_Data struct {
-	bun.BaseModel `bun:"table:b_bc_data,alias:b_bc_data"`
-	B_ID          int        `json:"b_id" bun:"b_id,pk"`
+// C_C_GE_Data — geversioned inhoud van C_C_GE.
+type C_C_GE_Data struct {
+	bun.BaseModel `bun:"table:c_c_ge_data,alias:c_c_ge_data"`
+	C_ID          int        `json:"c_id" bun:"c_id,pk"`
 	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
 	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Superveld     *string    `json:"superveld,omitempty"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+type Rel_C_B struct {
+	bun.BaseModel `bun:"table:rel_c_b,alias:rel_c_b"`
+	C_ID          int            `json:"c_id" bun:"c_id,pk" schema_desc:"ID van de C-entiteit"`
+	Rel_ID        int            `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentC       *C             `json:"-" bun:"rel:belongs-to,join:c_id=id,on_delete:cascade"`
+	B_ID          int            `json:"b_id"`
+	Opvoer        *time.Time     `json:"opvoer,omitempty"`
+	Afvoer        *time.Time     `json:"afvoer,omitempty"`
+	Data          []Rel_C_B_Data `bun:"rel:has-many,join:c_id=c_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// Rel_C_B_Data — geversioned inhoud van Rel_C_B.
+type Rel_C_B_Data struct {
+	bun.BaseModel `bun:"table:rel_c_b_data,alias:rel_c_b_data"`
+	C_ID          int        `json:"c_id" bun:"c_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Relveld       *string    `json:"relveld,omitempty"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }

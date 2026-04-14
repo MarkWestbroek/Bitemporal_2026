@@ -225,6 +225,17 @@ export function v3ModelNaarStore(v3Full) {
         afgeleideVelden: afgeleideVeldenConvert(ent.afgeleideVelden),
       },
     };
+
+    // Generalisatie-edge reconstrueren vanuit erft-veld
+    if (ent.erft) {
+      diagramEdges.push({
+        id: `gen-${ent.typenaam}-${ent.erft}`,
+        source: ent.typenaam,
+        target: ent.erft,
+        type: "metamodel",
+        data: { isGeneralization: true },
+      });
+    }
     diagramNodes.push({
       elementId: ent.typenaam,
       position: ent.positie || { x: entIdx * 500, y: 50 },
@@ -510,8 +521,10 @@ function addFieldDependencyEdges(convertedVelden, parentId, rawVelden, datatypeL
 function veldNaarV3(veld) {
   const v3 = { naam: veld.naam };
 
-  // GoType afleiden uit type/format
-  v3.goType = veldTypeNaarGoType(veld.type, veld.format, veld.verplicht);
+  // GoType afleiden: enum → enumnaam, anders uit type/format
+  v3.goType = veld.enumNaam
+    ? veld.enumNaam
+    : veldTypeNaarGoType(veld.type, veld.format, veld.verplicht);
 
   if (veld.verplicht === false && !v3.goType.startsWith("*")) {
     v3.goType = "*" + v3.goType;
@@ -722,6 +735,15 @@ export function storeNaarV3Model(state) {
     return v3;
   });
 
+  // --- Generalisatie-lookup: entiteitId → supertype-entiteitId ---
+  const supertypeLookup = {};  // source → target (child → parent)
+  const overzichtEdges = diagrams?.[DEFAULT_DIAGRAM_ID]?.edges || [];
+  for (const e of overzichtEdges) {
+    if (e.data?.isGeneralization && e.source && e.target) {
+      supertypeLookup[e.source] = e.target;
+    }
+  }
+
   // --- Entiteiten → V3 (met geneste GE's en relaties via structuralEdges) ---
   const gebruikteRelaties = new Set();
 
@@ -736,6 +758,13 @@ export function storeNaarV3Model(state) {
     if (d.entiteitSubtype) v3Ent.entiteitSubtype = d.entiteitSubtype;
     if (d.isMaterieel) v3Ent.isMaterieel = true;
     if (d.kleur) v3Ent.kleur = d.kleur;
+
+    // Generalisatie: supertype afleiden uit diagram-edge
+    const supertype = supertypeLookup[ent.id];
+    if (supertype) {
+      const superEl = elements[supertype];
+      v3Ent.erft = superEl?.data?.typenaam || supertype;
+    }
 
     const pos = elementPositie(diagrams, ent.id);
     if (pos) v3Ent.positie = pos;
