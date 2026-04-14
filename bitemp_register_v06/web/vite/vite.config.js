@@ -1,9 +1,32 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
+import { readdir, readFile, writeFile } from "fs/promises";
+
+// Plugin: normaliseer line endings naar LF in alle HTML-bestanden na de build.
+// Voorkomt CRLF/mixed-ending diffs tussen Windows en Mac (Git ziet mixed endings als binary).
+function normalizeBuildLineEndings() {
+  return {
+    name: "normalize-line-endings",
+    apply: "build",
+    async closeBundle() {
+      const outDir = resolve(__dirname, "../react");
+      const files = await readdir(outDir);
+      for (const f of files.filter((n) => n.endsWith(".html"))) {
+        const p = resolve(outDir, f);
+        const content = await readFile(p, "utf8");
+        const normalized = content.replace(/\r\n|\r/g, "\n");
+        if (normalized !== content) {
+          await writeFile(p, normalized, "utf8");
+          console.log(`  ✓ LF-normalized: ${f}`);
+        }
+      }
+    },
+  };
+}
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), normalizeBuildLineEndings()],
   base: "/viz/react/",
   resolve: {
     alias: {
