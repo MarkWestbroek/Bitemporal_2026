@@ -446,132 +446,142 @@ function DiagramCanvasInner({ diagramId }) {
     const diagNodeIds = new Set((diagram.nodes || []).map((n) => n.elementId));
     const prevVelden = prevRelatieVeldenRef.current;
     const nextVelden = {};
-    let forwardId = null;
-    let reverseId = null;
+    const forwardIds = [];
+    const reverseIds = [];
 
     for (const [id, el] of Object.entries(elements)) {
       if (el.type !== "relatie" || !diagNodeIds.has(id)) continue;
       const vCount = (el.data?.velden || []).length;
       nextVelden[id] = vCount;
       const prevCount = prevVelden[id] ?? 0;
-      if (prevCount === 0 && vCount > 0) forwardId = id;
-      if (prevCount > 0 && vCount === 0) reverseId = id;
+      if (prevCount === 0 && vCount > 0) forwardIds.push(id);
+      if (prevCount > 0 && vCount === 0) reverseIds.push(id);
     }
     prevRelatieVeldenRef.current = nextVelden;
 
-    // ── Forward: eerste veld toegevoegd → converteer naar ASOC ──
-    if (forwardId) {
-      const relatieEl = elements[forwardId];
-      const relatieNaam = relatieEl?.data?.typenaam || forwardId;
-      const ankerId = `anker_${forwardId}`;
-      // Check of er al een anker bestaat
-      const bestaandAnker = (diagram.nodes || []).some((n) => n.elementId === ankerId);
-      if (!bestaandAnker) {
-        const diagEdges = diagram.edges || [];
+    // ── Forward: velden toegevoegd → converteer naar ASOC (batch alle relaties) ──
+    if (forwardIds.length > 0) {
+      let currentEdges = [...(diagram.edges || [])];
+      let currentNodes = [...(diagram.nodes || [])];
+      const store = useModelStore.getState();
+      let changed = false;
+
+      for (const fwdId of forwardIds) {
+        const relatieEl = elements[fwdId];
+        const relatieNaam = relatieEl?.data?.typenaam || fwdId;
+        const ankerId = `anker_${fwdId}`;
+        // Check of er al een anker bestaat
+        if (currentNodes.some((n) => n.elementId === ankerId)) continue;
+
         // Zoek owner-edge (ENT → relatie) en target-edge (relatie → ENT)
-        const ownerEdge = diagEdges.find((e) => {
-          if (e.target !== forwardId) return false;
+        const ownerEdge = currentEdges.find((e) => {
+          if (e.target !== fwdId) return false;
           if (e.data?.isDependency) return false;
           const t = elementTypeById.get(e.source);
           return t === "entiteit" || t === "referentielijstInstantie";
         });
-        const targetEdge = diagEdges.find((e) => {
-          if (e.source !== forwardId) return false;
+        const targetEdge = currentEdges.find((e) => {
+          if (e.source !== fwdId) return false;
           if (e.data?.isDependency) return false;
           const t = elementTypeById.get(e.target);
           return t === "entiteit";
         });
 
-        if (ownerEdge && targetEdge) {
-          const bronNodeRef = (diagram.nodes || []).find((n) => n.elementId === ownerEdge.source);
-          const doelNodeRef = (diagram.nodes || []).find((n) => n.elementId === targetEdge.target);
-          const relatieNodeRef = (diagram.nodes || []).find((n) => n.elementId === forwardId);
-          const bronPos = bronNodeRef?.position || { x: 0, y: 0 };
-          const doelPos = doelNodeRef?.position || { x: 400, y: 0 };
-          const ankerPos = {
-            x: (bronPos.x + doelPos.x) / 2 + 80,
-            y: (bronPos.y + doelPos.y) / 2,
-          };
-          const relatiePos = { x: ankerPos.x - 40, y: ankerPos.y + 60 };
+        if (!ownerEdge || !targetEdge) continue;
 
-          // Maak anker-element in de store (type=associatieAnker, visueel-only)
-          const store = useModelStore.getState();
-          if (!store.elements[ankerId]) {
-            store.addElement({
-              id: ankerId,
-              naam: relatieNaam,
-              type: "associatieAnker",
-              domein: relatieEl?.domein || "",
-              data: { relatieNaam },
-            });
-          }
+        const bronNodeRef = currentNodes.find((n) => n.elementId === ownerEdge.source);
+        const doelNodeRef = currentNodes.find((n) => n.elementId === targetEdge.target);
+        const bronPos = bronNodeRef?.position || { x: 0, y: 0 };
+        const doelPos = doelNodeRef?.position || { x: 400, y: 0 };
+        const ankerPos = {
+          x: (bronPos.x + doelPos.x) / 2 + 80,
+          y: (bronPos.y + doelPos.y) / 2,
+        };
+        const relatiePos = { x: ankerPos.x - 40, y: ankerPos.y + 60 };
 
-          const directioneel = relatieEl?.data?.directioneel || false;
-          const ownerTargetEdgeIds = new Set([ownerEdge.id, targetEdge.id]);
-          const withoutOld = diagEdges.filter((e) => !ownerTargetEdgeIds.has(e.id));
-          const newEdges = [
-            ...withoutOld,
-            {
-              id: generateId("edge"),
-              source: ownerEdge.source,
-              target: ankerId,
-              type: "metamodel",
-              sourceHandle: ownerEdge.sourceHandle || null,
-              targetHandle: "target-left",
-              data: { isAssociation: true, directioneel, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
-            },
-            {
-              id: generateId("edge"),
-              source: ankerId,
-              target: targetEdge.target,
-              type: "metamodel",
-              sourceHandle: "source-right",
-              targetHandle: targetEdge.targetHandle || null,
-              data: { isAssociation: true, directioneel, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
-            },
-            {
-              id: generateId("edge"),
-              source: ankerId,
-              target: forwardId,
-              type: "metamodel",
-              sourceHandle: "source-bottom",
-              targetHandle: "target-top",
-              data: { isAssociationClassLink: true, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
-            },
-          ];
-
-          // Verplaats relatie-node en voeg anker-node toe aan diagram
-          const updatedNodes = (diagram.nodes || []).map((n) =>
-            n.elementId === forwardId ? { ...n, position: relatiePos } : n
-          );
-          updatedNodes.push({ elementId: ankerId, position: ankerPos });
-
-          updateDiagramNodes(diagramId, updatedNodes);
-          updateDiagramEdges(diagramId, newEdges);
+        // Maak anker-element in de store (type=associatieAnker, visueel-only)
+        if (!store.elements[ankerId]) {
+          store.addElement({
+            id: ankerId,
+            naam: relatieNaam,
+            type: "associatieAnker",
+            domein: relatieEl?.domein || "",
+            data: { relatieNaam },
+          });
         }
+
+        const directioneel = relatieEl?.data?.directioneel || false;
+        const ownerTargetEdgeIds = new Set([ownerEdge.id, targetEdge.id]);
+        currentEdges = currentEdges.filter((e) => !ownerTargetEdgeIds.has(e.id));
+        currentEdges.push(
+          {
+            id: generateId("edge"),
+            source: ownerEdge.source,
+            target: ankerId,
+            type: "metamodel",
+            sourceHandle: ownerEdge.sourceHandle || null,
+            targetHandle: "target-left",
+            data: { isAssociation: true, directioneel, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
+          },
+          {
+            id: generateId("edge"),
+            source: ankerId,
+            target: targetEdge.target,
+            type: "metamodel",
+            sourceHandle: "source-right",
+            targetHandle: targetEdge.targetHandle || null,
+            data: { isAssociation: true, directioneel, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
+          },
+          {
+            id: generateId("edge"),
+            source: ankerId,
+            target: fwdId,
+            type: "metamodel",
+            sourceHandle: "source-bottom",
+            targetHandle: "target-top",
+            data: { isAssociationClassLink: true, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
+          },
+        );
+
+        // Verplaats relatie-node en voeg anker-node toe
+        currentNodes = currentNodes.map((n) =>
+          n.elementId === fwdId ? { ...n, position: relatiePos } : n
+        );
+        currentNodes.push({ elementId: ankerId, position: ankerPos });
+        changed = true;
+      }
+
+      if (changed) {
+        updateDiagramNodes(diagramId, currentNodes);
+        updateDiagramEdges(diagramId, currentEdges);
       }
     }
 
-    // ── Reverse: laatste veld verwijderd → terug naar collapsed ──
-    if (reverseId) {
-      const ankerId = `anker_${reverseId}`;
-      const ankerNodeRef = (diagram.nodes || []).find((n) => n.elementId === ankerId);
-      if (ankerNodeRef) {
-        const diagEdges = diagram.edges || [];
-        const edge1 = diagEdges.find((e) => e.data?.isAssociation && e.target === ankerId);
-        const edge2 = diagEdges.find((e) => e.data?.isAssociation && e.source === ankerId);
-        const classLink = diagEdges.find((e) => e.data?.isAssociationClassLink &&
+    // ── Reverse: laatste veld verwijderd → terug naar collapsed (batch) ──
+    if (reverseIds.length > 0) {
+      let currentEdges = [...(diagram.edges || [])];
+      let currentNodes = [...(diagram.nodes || [])];
+      const store = useModelStore.getState();
+      let changed = false;
+
+      for (const revId of reverseIds) {
+        const ankerId = `anker_${revId}`;
+        const ankerNodeRef = currentNodes.find((n) => n.elementId === ankerId);
+        if (!ankerNodeRef) continue;
+
+        const edge1 = currentEdges.find((e) => e.data?.isAssociation && e.target === ankerId);
+        const edge2 = currentEdges.find((e) => e.data?.isAssociation && e.source === ankerId);
+        const classLink = currentEdges.find((e) => e.data?.isAssociationClassLink &&
           (e.source === ankerId || e.target === ankerId));
         const asocEdgeIds = new Set([edge1?.id, edge2?.id, classLink?.id].filter(Boolean));
-        const withoutAsoc = diagEdges.filter((e) => !asocEdgeIds.has(e.id));
+        currentEdges = currentEdges.filter((e) => !asocEdgeIds.has(e.id));
 
-        const directioneelFlag = elements[reverseId]?.data?.directioneel || false;
-        const newEdges = [];
+        const directioneelFlag = elements[revId]?.data?.directioneel || false;
         if (edge1) {
-          newEdges.push({
+          currentEdges.push({
             id: generateId("edge"),
             source: edge1.source,
-            target: reverseId,
+            target: revId,
             type: "metamodel",
             sourceHandle: edge1.sourceHandle,
             targetHandle: "target-left",
@@ -579,9 +589,9 @@ function DiagramCanvasInner({ diagramId }) {
           });
         }
         if (edge2) {
-          newEdges.push({
+          currentEdges.push({
             id: generateId("edge"),
-            source: reverseId,
+            source: revId,
             target: edge2.target,
             type: "metamodel",
             sourceHandle: "source-right",
@@ -596,18 +606,20 @@ function DiagramCanvasInner({ diagramId }) {
         }
 
         // Verplaats relatie naar ankerpositie, verwijder anker uit diagram
-        const updatedNodes = (diagram.nodes || [])
+        currentNodes = currentNodes
           .filter((n) => n.elementId !== ankerId)
-          .map((n) => n.elementId === reverseId ? { ...n, position: ankerNodeRef.position } : n);
-
-        updateDiagramNodes(diagramId, updatedNodes);
-        updateDiagramEdges(diagramId, [...withoutAsoc, ...newEdges]);
+          .map((n) => n.elementId === revId ? { ...n, position: ankerNodeRef.position } : n);
 
         // Verwijder anker-element uit model store
-        const store = useModelStore.getState();
         if (store.elements[ankerId]) {
           store.deleteElement(ankerId);
         }
+        changed = true;
+      }
+
+      if (changed) {
+        updateDiagramNodes(diagramId, currentNodes);
+        updateDiagramEdges(diagramId, currentEdges);
       }
     }
   }, [elements, diagram, diagramId, elementTypeById, updateDiagramNodes, updateDiagramEdges]);
