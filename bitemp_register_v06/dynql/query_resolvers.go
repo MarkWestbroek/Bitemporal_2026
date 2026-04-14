@@ -366,6 +366,65 @@ func makeReverseRelationResolver(rev ReverseRelationInfo) graphql.FieldResolveFn
 	}
 }
 
+// makeForwardRelationResolver maakt een resolver voor forward FK-navigatie.
+// Gegeven een relatie-hub (bijv. InitiatiefGemeente met gemeente_id=5),
+// laadt de doel-entiteit (Gemeente met id=5) met alle geneste GE's/relaties.
+// De resolver wordt alleen getriggerd als het veld daadwerkelijk wordt opgevraagd.
+func makeForwardRelationResolver(fwd ForwardRelationInfo) graphql.FieldResolveFn {
+	return func(p graphql.ResolveParams) (interface{}, error) {
+		if db == nil {
+			return nil, fmt.Errorf("database niet geïnitialiseerd")
+		}
+
+		// Haal de FK-waarde uit de source (de geflattende map van de relatie-hub)
+		source, ok := p.Source.(map[string]interface{})
+		if !ok {
+			return nil, nil
+		}
+		fkValue, ok := source[fwd.FKKolom]
+		if !ok || fkValue == nil {
+			return nil, nil
+		}
+
+		// Laad de doel-entiteit met volledige geneste structuur
+		doelMeta := fwd.DoelEntiteitMeta
+		if doelMeta.Factory == nil {
+			return nil, nil
+		}
+
+		entity := doelMeta.Factory()
+		query := db.NewSelect().Model(entity)
+
+		// Onderliggende relaties laden
+		query = addOnderliggendeRelations(query, doelMeta, nil)
+
+		err := query.
+			Where(doelMeta.IDKolom+" = ?", fkValue).
+			Scan(p.Context)
+		if err != nil {
+			return nil, fmt.Errorf("forward relatie query (%s) fout: %v", doelMeta.Typenaam, err)
+		}
+
+		// Hub-kinderen laden
+		if err := laadHubKinderenNaQuery(p.Context, entity, doelMeta, nil); err != nil {
+			return nil, fmt.Errorf("forward hub-kinderen laden fout: %v", err)
+		}
+
+		// Check of entity gevonden is
+		if hasID, ok := entity.(model.HasID); ok {
+			if isZeroID(hasID.GetID()) {
+				return nil, nil
+			}
+		}
+
+		result, err := entityToMap(entity, doelMeta)
+		if err != nil {
+			return nil, err
+		}
+		return flattenEntityMap(result, doelMeta), nil
+	}
+}
+
 // --- Hulpfuncties: Bun-query helpers (vereenvoudigd uit full_handlers.go) ---
 
 func addOnderliggendeRelations(query *bun.SelectQuery, meta model.TypeMeta, peiltijdstip *time.Time) *bun.SelectQuery {

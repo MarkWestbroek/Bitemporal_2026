@@ -39,6 +39,24 @@ type ReverseRelationInfo struct {
 // Key = doelentiteit typenaam (bijv. "B"), Value = alle reverse relaties die naar die entiteit wijzen.
 var reverseRelationMap map[string][]ReverseRelationInfo
 
+// ForwardRelationInfo beschrijft een forward FK-relatie: vanuit een relatie-hub
+// naar de doel-entiteit via SecondaireEntiteitIDKolom.
+// Voorbeeld: InitiatiefGemeente → Gemeente via gemeente_id.
+type ForwardRelationInfo struct {
+	// DoelEntiteitTypenaam is de typenaam van de doel-entiteit (bijv. "Gemeente")
+	DoelEntiteitTypenaam string
+	// DoelEntiteitMeta is de TypeMeta van de doel-entiteit
+	DoelEntiteitMeta model.TypeMeta
+	// FKKolom is de FK-kolom in de bron-struct (bijv. "gemeente_id")
+	FKKolom string
+	// GQLVeldnaam is de veldnaam in het GraphQL type (bijv. "gemeente")
+	GQLVeldnaam string
+}
+
+// forwardRelationMap wordt eenmalig opgebouwd bij startup.
+// Key = bron-typenaam (bijv. "InitiatiefGemeente"), Value = forward relaties.
+var forwardRelationMap map[string][]ForwardRelationInfo
+
 // buildReverseRelationMap scant de MetaRegistry en bouwt de reverse-relatie-index op.
 // Wordt aangeroepen vanuit BuildOutputTypes.
 func buildReverseRelationMap() {
@@ -104,11 +122,49 @@ func vindDoelEntiteit(secIDKolom string) string {
 	return ""
 }
 
+// buildForwardRelationMap scant de MetaRegistry en bouwt de forward-relatie-index op.
+// Voor elk type met SecondaireEntiteitIDKolom wordt de doel-entiteit bepaald.
+// Wordt aangeroepen vanuit BuildOutputTypes.
+func buildForwardRelationMap() {
+	forwardRelationMap = map[string][]ForwardRelationInfo{}
+
+	for typenaam, meta := range model.MetaRegistry {
+		if meta.SecondaireEntiteitIDKolom == "" {
+			continue
+		}
+
+		doelTypenaam := vindDoelEntiteit(meta.SecondaireEntiteitIDKolom)
+		if doelTypenaam == "" {
+			continue
+		}
+		doelMeta, ok := model.MetaRegistry.GetTypeMeta(doelTypenaam)
+		if !ok {
+			continue
+		}
+
+		// Veldnaam = veldnaam van de doel-entiteit (bijv. "gemeente")
+		gqlVeldnaam := doelMeta.Veldnaam
+		if gqlVeldnaam == "" {
+			continue
+		}
+
+		forwardRelationMap[typenaam] = append(forwardRelationMap[typenaam], ForwardRelationInfo{
+			DoelEntiteitTypenaam: doelTypenaam,
+			DoelEntiteitMeta:     doelMeta,
+			FKKolom:              meta.SecondaireEntiteitIDKolom,
+			GQLVeldnaam:          gqlVeldnaam,
+		})
+	}
+}
+
 // BuildOutputTypes bouwt alle GraphQL output types uit de MetaRegistry.
 // Moet bij startup worden aangeroepen vóór BuildSchema.
 func BuildOutputTypes() map[string]*graphql.Object {
 	// Bouw de reverse-relatie-index (eenmalig)
 	buildReverseRelationMap()
+
+	// Bouw de forward-relatie-index (eenmalig)
+	buildForwardRelationMap()
 
 	types := map[string]*graphql.Object{}
 
@@ -197,6 +253,22 @@ func buildObjectType(typenaam string, meta model.TypeMeta) *graphql.Object {
 						},
 						Resolve: makeReverseRelationResolver(capturedRev),
 					}
+				}
+			}
+
+			// Forward relaties: als dit type een SecondaireEntiteitIDKolom heeft,
+			// voeg dan een veld toe dat de doel-entiteit ophaalt (bijv. "gemeente" op InitiatiefGemeente).
+			// De resolver wordt alleen getriggerd als het veld daadwerkelijk wordt opgevraagd in de query.
+			for _, fwd := range forwardRelationMap[typenaam] {
+				doelType := resolveEntityGraphQLType(fwd.DoelEntiteitTypenaam)
+				if doelType == nil {
+					continue
+				}
+				capturedFwd := fwd
+				fields[capturedFwd.GQLVeldnaam] = &graphql.Field{
+					Type:        doelType,
+					Description: fmt.Sprintf("Forward relatie: %s via %s", capturedFwd.DoelEntiteitTypenaam, capturedFwd.FKKolom),
+					Resolve:     makeForwardRelationResolver(capturedFwd),
 				}
 			}
 

@@ -61,6 +61,10 @@ registraties(limit, offset)  { id, registratietype, tijdstip, opmerking }
 
 Entiteiten krijgen automatisch `gerelateerde_<bron-padnaam>` velden als andere entiteiten via een relatie naar ze wijzen. Zie de sectie hieronder.
 
+### Forward relaties (FK-navigatie)
+
+Relatie-hubs met een `SecondaireEntiteitIDKolom` (bijv. `gemeente_id` op InitiatiefGemeente) krijgen automatisch een veld met de naam van de doel-entiteit (bijv. `gemeente`). Dit veld laadt de volledige doel-entiteit met alle geneste GE's/relaties — **alleen als het veld daadwerkelijk wordt opgevraagd** in de query. Geen extra DB-queries als je het veld weglaat.
+
 ## Mutations
 
 Mutations gebruiken hetzelfde JSON-formaat als de REST endpoints:
@@ -163,6 +167,32 @@ Het veld `gerelateerde_natuurlijk_personen` wordt automatisch gegenereerd omdat 
 1. `SELECT DISTINCT natuurlijkpersoon_id FROM bereikbaarheid WHERE locatie_id = 1 AND afvoer IS NULL LIMIT 10`
 2. Laad die NatuurlijkPersonen met volledige geneste structuur
 
+### Forward FK-navigatie
+
+Welke gemeente hoort bij een InitiatiefGemeente? Diep in één query:
+
+```graphql
+query {
+  full_initiatieven(id: 1) {
+    id
+    weergavenaam
+    initiatief_gemeenten {
+      gemeente_id
+      rol
+      gemeente {
+        id
+        gemeentegegevens {
+          naam
+          code
+        }
+      }
+    }
+  }
+}
+```
+
+Het veld `gemeente` op `InitiatiefGemeente` wordt automatisch gegenereerd omdat de relatie een `SecondaireEntiteitIDKolom = "gemeente_id"` heeft. De resolver laadt de volledige Gemeente-entiteit **alleen als het veld wordt opgevraagd** — laat je `gemeente { ... }` weg, dan blijft de query snel.
+
 ### Registreren (mutation)
 
 ```graphql
@@ -208,6 +238,25 @@ De resolver (`makeReverseRelationResolver`) voert twee database queries uit:
 2. Volledige bron-entiteiten laden met alle geneste GE's/relaties (inclusief hub-flattening)
 
 > Zie [`docs/dynamische-graphql-laag.md`](docs/dynamische-graphql-laag.md) voor de volledige architectuurbeschrijving en ReverseRelationInfo struct.
+
+## Forward relaties — technisch
+
+Als een relatie-hub (GE of relatie) een `SecondaireEntiteitIDKolom` heeft, krijgt het type automatisch een forward-veld dat de doel-entiteit oplevert:
+
+| Aspect | Waarde |
+|--------|--------|
+| Veldnaam | `<doel-entiteit veldnaam>` (bijv. `gemeente`, `locatie`, `land`) |
+| Type | `<DoelEntiteit>` (single object, niet-lijst) |
+| Lazy | Resolver wordt alleen getriggerd als het veld daadwerkelijk wordt opgevraagd |
+| Nesting | De doel-entiteit wordt volledig geladen met alle geneste GE's/relaties |
+
+### Hoe het werkt
+
+Bij startup bouwt `buildForwardRelationMap()` een index door alle types met een `SecondaireEntiteitIDKolom` te scannen. De doel-entiteit wordt gevonden via `vindDoelEntiteit(secIDKolom)` (conventie: `veldnaam + "_id"`).
+
+De resolver (`makeForwardRelationResolver`) leest de FK-waarde (bijv. `gemeente_id`) uit de geflattende source-map en voert één query uit die de doel-entiteit laadt met alle geneste structuur (inclusief hub-flattening).
+
+**Geen circulaire loops**: alleen forward relaties (van relatie → doel-entiteit) worden opgenomen, niet omgekeerd. Reverse relaties worden separaat afgehandeld via `gerelateerde_*` velden op entiteiten.
 
 ## Custom scalars
 
