@@ -6,7 +6,7 @@
  * Wijzigingen worden bij blur/change naar de model store geschreven.
  */
 import { useState, useEffect, useCallback, useMemo } from "react";
-import useModelStore from "../store/useModelStore";
+import useModelStore, { DEFAULT_DIAGRAM_ID } from "../store/useModelStore";
 import useUIStore from "../store/useUIStore";
 import { VELDTYPEN, AFLEIDINGSTALEN, bouwVeldtypen } from "@editor/metamodel/types";
 
@@ -663,12 +663,73 @@ function DomainEditor({ domeinNaam }) {
   );
 }
 
+// ─── SupertypeField — Supertype dropdown afgeleid van generalisatie-edge ───
+
+function SupertypeField({ elementId, elements, diagrams, updateDiagramEdges }) {
+  const overzichtId = DEFAULT_DIAGRAM_ID;
+  const overzichtEdges = diagrams?.[overzichtId]?.edges || [];
+
+  // Zoek bestaande generalisatie-edge waar deze entiteit source is
+  const genEdge = overzichtEdges.find(
+    (e) => e.source === elementId && e.data?.isGeneralization
+  );
+  const currentSupertypeId = genEdge?.target || "";
+
+  // Mogelijke supertypes: alle entiteiten behalve zichzelf
+  const mogelijkeSupertypes = useMemo(() =>
+    Object.values(elements)
+      .filter((el) => el.type === "entiteit" && el.id !== elementId)
+      .sort((a, b) => (a.naam || "").localeCompare(b.naam || "")),
+    [elements, elementId]
+  );
+
+  const handleChange = useCallback((e) => {
+    const newTarget = e.target.value || null;
+    let nextEdges;
+    if (!newTarget) {
+      // Verwijder generalisatie-edge
+      nextEdges = overzichtEdges.filter(
+        (edge) => !(edge.source === elementId && edge.data?.isGeneralization)
+      );
+    } else if (genEdge) {
+      // Update bestaande edge
+      nextEdges = overzichtEdges.map((edge) =>
+        edge.id === genEdge.id ? { ...edge, target: newTarget } : edge
+      );
+    } else {
+      // Voeg nieuwe generalisatie-edge toe
+      nextEdges = [...overzichtEdges, {
+        id: `gen-${elementId}-${newTarget}`,
+        source: elementId,
+        target: newTarget,
+        type: "metamodel",
+        data: { isGeneralization: true },
+      }];
+    }
+    updateDiagramEdges(overzichtId, nextEdges);
+  }, [elementId, overzichtEdges, genEdge, overzichtId, updateDiagramEdges]);
+
+  return (
+    <div style={S.fieldRow}>
+      <span style={S.label}>Supertype:</span>
+      <select style={S.select} value={currentSupertypeId} onChange={handleChange}>
+        <option value="">(geen)</option>
+        {mogelijkeSupertypes.map((ent) => (
+          <option key={ent.id} value={ent.id}>{ent.data?.typenaam || ent.naam}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 // ─── ElementEditor ────────────────────────────────────
 
 function ElementEditor({ element, updateElement }) {
   const { id, naam, type, domein, data = {} } = element;
   const elements = useModelStore((s) => s.elements);
   const structuralEdges = useModelStore((s) => s.structuralEdges);
+  const diagrams = useModelStore((s) => s.diagrams);
+  const updateDiagramEdges = useModelStore((s) => s.updateDiagramEdges);
 
   const setField = useCallback(
     (key, value) => updateElement(id, { [key]: value }),
@@ -766,6 +827,13 @@ function ElementEditor({ element, updateElement }) {
           options={ENTITEIT_SUBTYPES}
         />
       )}
+
+      {type === "entiteit" && <SupertypeField
+        elementId={id}
+        elements={elements}
+        diagrams={diagrams}
+        updateDiagramEdges={updateDiagramEdges}
+      />}
 
       {type === "relatie" && (
         <>

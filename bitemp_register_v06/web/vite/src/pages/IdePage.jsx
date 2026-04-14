@@ -59,7 +59,17 @@ export default function IdePage() {
   const toggleTheme = useUIStore((s) => s.toggleTheme);
   const [layoutModel] = useState(() => createLayoutModel());
   const [status, setStatus] = useState("laden…");
+  const [toast, setToast] = useState(null); // { message, type: "success"|"error"|"info", stappen? }
+  const toastTimerRef = useRef(null);
   const loadedRef = useRef(false);
+
+  // ── Toast helper: toont een prominente melding die na delay verdwijnt ──
+  const showToast = useCallback((message, type = "info", extra = {}) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ message, type, ...extra });
+    const delay = type === "error" ? 12000 : 6000;
+    toastTimerRef.current = setTimeout(() => setToast(null), delay);
+  }, []);
 
   // ── Theme: sync data-ide-theme op body + FlexLayout stylesheet ──
   useEffect(() => {
@@ -377,6 +387,7 @@ export default function IdePage() {
         const result = await resp.json();
         markSaved();
         setStatus(`Gepubliceerd ✓ (versie #${result.id}, status: ${result.status})`);
+        showToast(`Gepubliceerd ✓ (versie #${result.id})`, "success");
 
         // Bij publishAndRebuild: ga door met rebuild
         if (type === "publishAndRebuild") {
@@ -385,6 +396,7 @@ export default function IdePage() {
       } catch (err) {
         console.error("Publiceer fout:", err);
         setStatus(`Publicatie mislukt: ${err.message}`);
+        showToast(`Publicatie mislukt: ${err.message}`, "error");
       }
       return;
     }
@@ -427,18 +439,24 @@ export default function IdePage() {
       });
       if (!resp.ok) {
         const text = await resp.text();
-        throw new Error(`HTTP ${resp.status}: ${text.slice(0, 200)}`);
+        console.error("Rebuild response:", text);
+        throw new Error(`HTTP ${resp.status}: ${text.slice(0, 2000)}`);
       }
       const result = await resp.json();
       if (result.status === "succesvol") {
         markSaved();
+        const stappenTekst = (result.stappen || []).join("\n• ");
+        console.info("Rebuild succesvol — stappen:\n•", stappenTekst);
         setStatus(`Rebuild ✓ (${(result.stappen || []).length} stappen)`);
+        showToast(`Rebuild succesvol (${(result.stappen || []).length} stappen)`, "success", { stappen: result.stappen });
       } else {
         setStatus(`Rebuild fout: ${result.error || "onbekend"}`);
+        showToast(`Rebuild fout: ${result.error || "onbekend"}`, "error", { stappen: result.stappen });
       }
     } catch (err) {
       console.error("Rebuild fout:", err);
       setStatus(`Rebuild mislukt: ${err.message}`);
+      showToast(`Rebuild mislukt: ${err.message}`, "error");
     }
   }, [markSaved]);
 
@@ -630,6 +648,45 @@ export default function IdePage() {
 
       {/* FlexLayout */}
       <div style={{ flex: 1, position: "relative" }}>
+        {/* Toast melding */}
+        {toast && (
+          <div
+            style={{
+              position: "absolute",
+              top: 8,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 9999,
+              padding: "10px 20px",
+              borderRadius: 8,
+              fontSize: 14,
+              fontWeight: 600,
+              maxWidth: "80%",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+              cursor: "pointer",
+              background:
+                toast.type === "success" ? "#1b5e20" :
+                toast.type === "error" ? "#b71c1c" : "#1565c0",
+              color: "#fff",
+              border: `1px solid ${
+                toast.type === "success" ? "#4caf50" :
+                toast.type === "error" ? "#ef5350" : "#42a5f5"
+              }`,
+            }}
+            onClick={() => setToast(null)}
+            title="Klik om te sluiten"
+          >
+            <div>{toast.type === "success" ? "✅ " : toast.type === "error" ? "❌ " : "ℹ️ "}{toast.message}</div>
+            {toast.stappen && toast.stappen.length > 0 && (
+              <details style={{ marginTop: 6, fontSize: 12, fontWeight: 400, opacity: 0.9 }}>
+                <summary style={{ cursor: "pointer" }}>{toast.stappen.length} stappen — klik voor details</summary>
+                <ul style={{ margin: "4px 0 0 16px", padding: 0 }}>
+                  {toast.stappen.map((s, i) => <li key={i}>{s}</li>)}
+                </ul>
+              </details>
+            )}
+          </div>
+        )}
         <FlexLayout.Layout
           model={layoutModel}
           factory={factory}

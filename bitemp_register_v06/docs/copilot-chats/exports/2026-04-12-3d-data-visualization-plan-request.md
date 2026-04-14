@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-12 15:11
 - **Sessie-ID**: `09e148c9-ac56-4c78-8219-52fe80ac073d`
-- **Berichten**: 91
+- **Berichten**: 93
 
 ---
 
@@ -2424,5 +2424,51 @@ Now build:  Build succeeds. Three changes made:
 2. **Woosh-out (go-back) sound softer and slower** — Duration `1.4s → 2.2s`, gain peak `0.10 → 0.05`, noise peak `0.04 → 0.02`, frequency sweep starts lower (`300→14 Hz` instead of `400→18 Hz`), delay times longer (`0.55/0.75s`), wet gain reduced (`0.4 → 0.25`), lowpass on delay at `450 Hz` instead of `600`. Should feel much more gentle and gradual.
 
 3. **Stable background** — Stars, nebulas and horizon are now in a  whose position is copied from the camera every frame. The background stays fixed relative to the viewport while only the data graph moves when you pan/rotate.
+
+---
+
+## 🧑 User
+
+Thank you. Can you double check that every important (techical decisions as wel as functional decision and explanation of both) has been documented?
+
+---
+
+## 🤖 Assistant
+
+The doc covers up to v8.2 but is missing everything from the recent sessions. Let me check exactly what's outdated vs current: There's a lot to add. The documentation is missing all features from v8.3 onwards (perkamentrol, space environment, navigation history, zoom sensitivity, space dragon, etc.) and some sfx values are now outdated. Let me do a comprehensive update. Now I'll update the doc in several targeted edits. Let me first update the keyboard navigation table, then update the sfx section, then add the new sections, and finally add new iteration entries.  
+```
+
+```
+Now add the new sections (perkamentrol, space environment, space dragon) before "Geplande uitbreidingen":  
+```
+
+```
+Now add the new iteration entries at the bottom of the iteration table:  The file ends at line 394. Let me see the exact end:  
+```
+
+```
+Now let me also update the v6 entry in the iteration table to not have the outdated woosh-out values: 
+```
+
+```
+Documentation audit complete. Here's what was added/updated in docs/3D_UNIVERSUM.md:
+
+**New sections added:**
+- **Navigatiegeschiedenis** — `[`/`]` keys, Alt+arrows, ref-based stack, snapshot restore
+- **Zoom-gevoeligheid** — dynamic / scaling
+- **Perkamentrollen** — full section covering orbit, CSS animation, auto-close, max 3, paper whisper, CSS2DRenderer singleton
+- **Ruimteomgeving** — fog, stars, 9 nebula layers, horizon, circular vignette, stable background (envGroup follows camera), scene-tracking
+- **Ruimtedraak** — full section covering procedural geometry, animation, lifecycle, visual style
+
+**Updated existing sections:**
+- **Keyboard navigation table** — added `[`/`]` and Alt+arrow entries
+- **sfx effects table** — added  and  rows, corrected woosh-out parameters (2.2s, 300→14 Hz, etc.)
+- **Ambient drone** — added nootvariatie paragraph (DRONE_NOTES, scheduleDroneNoteChange)
+- **v6 iteration entry** — removed hardcoded delay values (now references v10.1 tuning)
+
+**New iteration entries:**
+- **v9** — Perkamentrollen
+- **v10** — Space environment + navigatie
+- **v10.1** — JMJ audio + ruimtedraak + woosh-out tuning
 
 ---

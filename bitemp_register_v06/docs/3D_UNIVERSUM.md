@@ -77,9 +77,22 @@ Overige bestanden:
 | Wormhole naar concreet | Dubbelklik op instantie, of Enter |
 | Terug (1 niveau) | Escape of Backspace |
 | Terug naar meta | Klik op "🌌 Meta" in breadcrumb |
+| Geschiedenis terug | `[` of Alt+← |
+| Geschiedenis vooruit | `]` of Alt+→ |
 | Roteren | Muis slepen (linkerknop) |
 | Zoomen | Scrollwiel |
 | Pannen | Muis slepen (rechterknop) |
+
+> **Zoom-gevoeligheid**: muisgevoeligheid (roteren + pannen) schaalt automatisch mee met het zoomniveau. Hoe dichter bij, hoe preciezer de besturing (`rotateSpeed = panSpeed = max(0.08, min(2.5, dist/200))`).
+
+### Navigatiegeschiedenis
+
+Het Universum houdt een stack bij van maximaal 50 snapshots (viewMode, focusedEntity, focusedInstance, selected). Met `[`/`]` of Alt+←/→ kun je door de geschiedenis bladeren, vergelijkbaar met browser-back/forward. Elk snapshot bevat de volledige navigatie-state, zodat bij restore de camera, breadcrumb en data correct worden teruggezet.
+
+**Technische details:**
+- `navHistoryRef` / `navHistoryIdxRef` (useRef) — vermijdt re-renders bij elke push
+- `isRestoringHistoryRef` guard — voorkomt dat een restore zelf weer een push triggert
+- `restoreSnapshot(snap)` — herstelt alle state vanuit het snapshot, inclusief viewMode en data-fetch
 
 ### Domeinfilter
 
@@ -219,13 +232,15 @@ De delay-bus geeft alle effecten een ruimtelijk, dromerig karakter — herhaling
 | Functie | Trigger | Beschrijving | Freq. bereik | Duur | Delay |
 |---------|---------|--------------|-------------|------|-------|
 | `woosh("in")` | Wormhole drill-down | Stijgende saw-sweep + noise | 35→800 Hz | 0.7s | Shared bus |
-| `woosh("out")` | Wormhole terug | Dalende saw-sweep, lager en langzamer | 400→18 Hz | 1.4s | **Eigen delay** (450ms/600ms, fb 35%, LP 600 Hz) |
+| `woosh("out")` | Wormhole terug | Dalende saw-sweep, lager, langzamer, zachter | 300→14 Hz | 2.2s | **Eigen delay** (550ms/750ms, fb 30%, LP 450 Hz, wet 0.25) |
 | `ping()` | Node selectie | FM-belletje (carrier 340 Hz, mod 110 Hz) | 340 Hz ± FM | 0.35s | Shared bus |
 | `tick(on)` | Domeinfilter toggle | Mechanisch klikje, square-wave | 600/380 Hz | 0.08s | Geen (dry only) |
 | `zoom()` | Camera-beweging | Tonale glide + noise | 110→240→170 Hz | 0.45s | Shared bus |
 | `buzz()` | Geblokkeerde actie | Korte sawtooth-buzz | 55 Hz, LP 200 | 0.2s | Geen (dry only) |
+| `spaceBird()` | Periodiek (15-45 sec) | JMJ-achtige FM-synthese: carrier+modulator met freq-glide, bandpass sweep, noise voor "veerwind", stereo L↔R pan sweep | 200→1400→300 Hz | 2.5-5.5s | Shared bus |
+| `paperWhisper(dir)` | Perkamentrol open/dicht | Gefilterde noise met bandpass sweep, papier-geritsel effect | 600→3000 Hz (open) / 2500→400 Hz (close) | 0.45/0.3s | Geen |
 
-De woosh-out heeft bewust een eigen, tragere delay (450ms/600ms) in plaats van de shared bus (270ms/350ms), voor een dromerig uitfade-effect bij het terugnavigeren.
+De woosh-out heeft bewust een eigen, tragere delay (550ms/750ms) in plaats van de shared bus (270ms/350ms), voor een dromerig uitfade-effect bij het terugnavigeren.
 
 ### Ambient drone
 
@@ -248,12 +263,100 @@ Noise (8s looped buffer) → bandpass (300 Hz, Q 2.5)
   - Filter cutoff: `280 + t × 920` Hz
   - Overgang via `setTargetAtTime` met τ=0.08s voor vloeiende transities
 
+**Nootvariatie:**
+- `DRONE_NOTES = [32.7, 36.7, 38.9, 43.7, 49.0, 51.9, 43.7, 38.9]` — een donkere mineur-set (C1/D1/Eb1/F1/G1/Ab1)
+- `scheduleDroneNoteChange()` wisselt elke 12-30 seconden naar een andere noot (met 2-4 sec portamento via `setTargetAtTime`)
+- Beide oscillatoren verschuiven, met lichte detuning behouden
+
 **Integratie in UniversumPage.jsx:**
 - `useEffect` met `[]` luistert op `window` (niet `containerRef`) voor `pointermove`
 - Reden: de eerste render is een loading-state early-return zonder `ref={containerRef}` — als we op `containerRef.current` luisteren, wordt de listener nooit geattacht
 - Snelheidsberekening: `|Δx| + |Δy|` / `Δt` (px/ms) → genormaliseerd naar 0..1 met drempel 1.5 px/ms
 - Drone start lazy bij eerste beweging, fadt naar idle na 120ms zonder beweging
 - Cleanup: `droneStop()` bij unmount
+
+---
+
+## Perkamentrollen (orbiting scrolls)
+
+Bij selectie van een node in de concrete view verschijnt een **perkamentrol** als CSS2DObject dat om de geselecteerde node orbiteert. De scroll toont de data-velden van het geselecteerde gegevenselement in een decoratief perkament-ontwerp.
+
+### Visueel ontwerp
+
+- **CSS-animatie**: de scroll rolt open/dicht met een `scaleY(0)→scaleY(1)` transitie, versterkt door `box-shadow` en `background-image` gradiënten die een oud-papier textuur simuleren
+- **Orbit**: elke scroll is een `CSS2DObject` in Three.js die in de animatieloop een circulaire baan beschrijft (`ORBIT_SPEED = 0.15 rad/s`) rond de parent-node
+- **Zoom-scale**: de scroll schaalt mee met het zoomniveau via CSS custom property `--scroll-scale = max(0.3, min(2.5, 180/dist))`
+- **Maximum 3 open scrolls**: bij opening van een 4e wordt de oudste automatisch gesloten (FIFO via `openScrolls` array)
+- **Auto-close bij camera-drag**: als de gebruiker begint te roteren/pannen sluiten alle open scrolls automatisch na 0.6 seconden
+- **Paper whisper geluid**: bij openen/sluiten van een scroll klinkt een subtiel papier-geritsel (`sfx.paperWhisper("open"|"close")`)
+
+### Technische beslissingen
+
+- **`CSS2DRenderer` als singleton**: omdat ForceGraph3D bij elke view-mode-switch een nieuwe `WebGLRenderer` maakt, maar CSS2D-labels in een aparte DOM-laag leven. De singleton voorkomt duplicaten en stale labels. `clearCSSLabels()` ruimt op bij remount.
+- **Ref-tracking voor orbit**: `orbitingScrolls` is een module-level `Set` van `{ css2d, radius, phase }` objecten. De animatieloop itereert hierover voor positie-updates. Cleanup bij scroll-sluiting verwijdert het entry uit de set.
+
+---
+
+## Ruimteomgeving (space environment)
+
+Het universum heeft een immersieve ruimteachtergrond die diepte en sfeer toevoegt, geïnspireerd op deep-space fotografie.
+
+### Componenten
+
+| Element | Techniek | Parameters |
+|---------|----------|-----------|
+| **Fog** | `THREE.FogExp2` | Kleur `#0f172a`, dichtheid 0.0015 |
+| **Sterren** | `THREE.Points` (3000 punten) | Radius 300-1000, bol-verdeling, size 0.5-1.5, `fog: false` |
+| **Nevels** | 9 `THREE.Sprite` lagen | Canvas-textuur met overlappende radiale gradiënten + circulaire vignette, `AdditiveBlending` |
+| **Horizon** | `THREE.SphereGeometry(800)` | `BackSide`, nebula-textuur, opacity 0.5, `AdditiveBlending` |
+
+### Nevellagen
+
+9 sprites op verschillende diepten (-500 tot +120 z-as) met variërende schaal (130-600), kleurtoon (200-300 hue) en opacity (0.08-0.30). Elke laag krijgt een procedurele canvas-textuur via `createNebulaTexture()`.
+
+**Circulaire vignette**: de textuurrand smelt zacht weg via een `destination-in` compositing operatie met een radiale gradiënt. Dit voorkomt zichtbare rechthoekige uitsnijdingen bij de sprite-randen.
+
+### Stabiele achtergrond
+
+De gehele omgeving (sterren, nevels, horizon) zit in één `THREE.Group` (`envGroup`). In de animatieloop wordt de positie van deze groep elke frame gelijkgesteld aan de camerapositie: `envGroup.position.copy(cam.position)`. Hierdoor beweegt de achtergrond mee met de camera en lijkt het alsof alleen de data-nodes bewegen — de sterren en nevels staan "stil" als een echte hemel.
+
+**Scene-tracking**: `envSceneRef` houdt bij welke Three.js scene al een omgeving heeft. ForceGraph3D maakt een nieuwe scene bij elke view-mode-switch (de component key bevat `viewMode`). Als de scene verandert, wordt de omgeving opnieuw toegevoegd. Dit lost het probleem op dat de nebula niet zichtbaar was na een wormhole-transitie.
+
+---
+
+## Ruimtedraak (space dragon)
+
+Een raadselachtige, bioluminescente ruimtedraak die periodiek (samen met het `spaceBird()`-geluid) door het universum vliegt. Puur procedureel gegenereerd uit Three.js primitives — geen externe modellen of texturen.
+
+### Opbouw
+
+| Onderdeel | Geometrie | Aantal punten | Kleur |
+|-----------|-----------|--------------|-------|
+| **Lichaam** | `THREE.Points` (slangachtige rij) | 30 | Bioluminescent (random: cyaan/blauw/paars/groen) |
+| **Vleugels** (×2) | `THREE.Points` (zijwaarts) | 15 per vleugel | Zelfde hoofdkleur, opacity 0.4 |
+| **Staart-trail** | `THREE.Points` (afnemend) | 40 | Tweede random kleur, opacity 0.35 |
+| **Glow-kop** | `THREE.SphereGeometry(2)` | — | `MeshBasicMaterial`, `AdditiveBlending` |
+
+### Animatie
+
+- **Vliegrichting**: willekeurig links→rechts of rechts→links, startpositie x=±350
+- **Duur**: 3-7 seconden (match met `spaceBird()` geluidsduur van 2.5-5.5s)
+- **Beweging**: lineaire x-verplaatsing + sinusoïdale golving op Y-as (ademhaling) en Z-as (slangenbeweging)
+- **Vleugelklap**: per-punt Y-positie wordt elk frame bijgewerkt met `sin(t * 3 + wingT * 2)` voor een vloeiend flap-effect
+- **Fade in/out**: opacity schaalt op van 0→1 in de eerste 10% en fadt uit in de laatste 15%
+- **Rotatie**: lichte Z-rotatie (undulatie) en Y-rotatie (richting + subtiele oscillatie)
+
+### Levenscyclus
+
+1. `spawnDragon()` (via `useCallback`) maakt een `createSpaceDragon()` en voegt de groep toe aan de scene
+2. Module-level `activeDragons[]` array houdt alle actieve draken bij
+3. `updateDragons(t, scene)` in de animatieloop verplaatst, animeert en faded elke draak
+4. Na `dur + 1` seconden wordt de draak verwijderd: `scene.remove()` + geometry/material dispose
+5. Spawnt samen met `sfx.spaceBird()` — eerste na 8-25 sec, daarna elke 15-45 sec
+
+### Visuele stijl
+
+Alle materialen gebruiken `AdditiveBlending` + `depthWrite: false` + `fog: false` voor een etherisch, kwalachtig/aurora-achtig uiterlijk. De draak is semi-transparant en gloeit door de omgeving, zonder het zicht op de data-nodes te blokkeren.
 
 ---
 
@@ -281,8 +384,11 @@ Zie ook het oorspronkelijke conceptontwerp voor de volledige roadmap.
 | 2026-04-12 | v3 — Interactie | Domeinfilter (linksboven toggle-knoppen). Instance drill-down (dubbelklik/Enter). Keyboard navigatie: Alt+←/→ voor geschiedenis, Escape voor deselecteren. Navigatiegeschiedenis met browser-achtig forward/back-model. |
 | 2026-04-12 | v4 — Visuele drill-down | Instance-kubusjes in de 3D-graaf (later vervangen door v5). |
 | 2026-04-12 | v5 — Wormhole | **Drie view-modes**: meta → instances → concreet universum, verbonden door visuele wormhole-transitie (donkere radial-gradient overlay). **Domeinfilter fix**: nodes worden nu uit graphData gefilterd i.p.v. via CSS2DRenderer visibility hacks. **Instances-view**: entiteitsbol als semi-transparant centrum (glow-ring) met instance-bolletjes eromheen, d3-force tuning per mode. **Concreet universum**: `GET /full/{padnaam}/:id`, GE-data als tweeregelslabels (klassenaam + waarden), hub-type flattening, materieel-nodes in cyaan. **Breadcrumb**: "🌌 Meta › Type › Instantie" — klik om terug te navigeren. **Keyboard**: Enter = wormhole, Escape/Backspace = terug. |
-| 2026-07 | v6 — Geluid + fixes | **Geluidseffecten** (`sfx.js`): 5 fire-and-forget effecten (woosh, ping, tick, zoom, buzz) + ambient drone — puur Web Audio API, geen samples. Stereo ping-pong delay bus voor ruimtelijk effect. Woosh-out heeft eigen tragere delay (450ms/600ms) voor dromerig uitfade. **Ambient drone**: 2 detuned saws (42/43.5 Hz) + LFO-gesweepte noise, reageert op muisbeweging (gain + filter cutoff). Luistert op `window` i.p.v. `containerRef` (fix: `useEffect([])` draait vóór ref-attachment bij conditional render). **Relatie follow-through fix**: secondaire entiteiten worden correct gevolgd en weergegeven in het concrete universum. **Alt+← crash fix**: navigatiegeschiedenis stack boundary-check. |
+| 2026-07 | v6 — Geluid + fixes | **Geluidseffecten** (`sfx.js`): 5 fire-and-forget effecten (woosh, ping, tick, zoom, buzz) + ambient drone — puur Web Audio API, geen samples. Stereo ping-pong delay bus voor ruimtelijk effect. Woosh-out heeft eigen tragere delay voor dromerig uitfade (later getuned in v10.1). **Ambient drone**: 2 detuned saws (42/43.5 Hz) + LFO-gesweepte noise, reageert op muisbeweging (gain + filter cutoff). Luistert op `window` i.p.v. `containerRef` (fix: `useEffect([])` draait vóór ref-attachment bij conditional render). **Relatie follow-through fix**: secondaire entiteiten worden correct gevolgd en weergegeven in het concrete universum. **Alt+← crash fix**: navigatiegeschiedenis stack boundary-check. |
 | 2026-07 | v7 — REST/GraphQL toggle | **Databron-switch**: toggle in toolbar (REST / GQL) om live te wisselen tussen REST `/full` endpoints en GraphQL queries. **`graphqlFetcher.js`**: bouwt dynamisch GraphQL queries op uit de schema-metadata (velden, onderliggende GE's, afgeleide velden, recursief tot depth 2). Alle 3 data-fetches (instances-lijst, volledige entiteit, secondaire entiteiten) switchen op basis van `dataSource` state. Schema-fetch (`/api/schema/model/code`) blijft altijd REST. |
 | 2026-07 | v8 — Geflattend formaat + manen | **Uniform geflattend dataformaat**: REST en GraphQL responses worden genormaliseerd naar één formaat voordat de frontend ze verwerkt. Hub+Data flattening (data-velden gepromoveerd naar hub-niveau, `"data"` key verwijderd), enkelvoudige types als object i.p.v. array. **`flattenRecord()`** in `graphqlFetcher.js` normaliseert REST responses client-side. **Backend `full_<padnaam>_list`**: nieuwe GraphQL query die de lijst met alle onderliggende GE's/relaties retourneert (geflattened), zodat instances-view weergavenamen correct berekent. **Aanvang/Einde als manen**: kleine bollen (radius 1.0–1.2) dicht bij hun parent (link distance 10–15) met groen (aanvang) / rood (einde) kleurcodes i.p.v. reguliere GE-bollen. Per-link afstand in d3-force voor concrete view. **Vereenvoudigde helpers**: `berekenWeergavenaam`, `extractGEDisplay`, `buildConcreteGraph` werken nu op het platte formaat zonder hub→data digging. |
 | 2026-07 | v8.1 — GQL drilldown fix | **Bugfix: GQL drilldown hing de pagina.** Twee oorzaken gevonden en opgelost: (1) **Dubbele veldnamen in GQL query**: de schema-API bevat child-relaties zowel in `velden` (als leaf) als in `onderliggende` (als genest object). `buildFieldSelection()` nam beide op, waardoor het GraphQL-schema validatiefouten gaf ("must have a sub selection"). Fix: `onderliggendeNamen`-set die leaf-velden filtert die al als genest object worden opgenomen. (2) **Wormhole-overlay bleef permanent actief**: bij een fetch-fout resette de `.catch()` handler `wormholeActive`, maar de `setTimeout(() => setWormholeActive(true), 200)` daarna overschreef dit weer. Het 97%-opaque overlay bedekte het hele scherm permanent — de "hang". Fix: `clearTimeout(wormholeTimer)` in zowel de error- als de lege-resultaten-handler. |
 | 2026-07 | v8.2 — Reverse relaties in concrete view | **Bidirectionele navigatie**: entiteiten die eerder een doodlopend punt waren (bijv. Gemeente, Organisatie) tonen nu welke andere entiteiten naar hen verwijzen via relaties. **Client-side reverse relation discovery**: `discoverReverseRelations()` in `graphqlFetcher.js` scant alle relatie-types in de schema-metadata en vindt welke bron-entiteiten via hun `doelEntiteit` naar het huidige type wijzen. **GQL reverse velden**: `fetchFullEntityGraphQL()` voegt `gerelateerde_<bronPadnaam>(limit: 20)` velden toe aan de query — gebruikt de bestaande backend `gerelateerde_*` resolvers uit `type_builder.go`. **Visualisatie**: reverse entiteiten worden getoond als `rev_entity` nodes (amberkleurige rand) met links die NAAR het centrale `__self__` record wijzen, visueel onderscheiden van forward secundaire entiteiten. **Drill-through navigatie**: dubbelklik (of Enter) op een sec_entity of rev_entity node in concrete view navigeert direct naar de concrete view van die entiteit. `enterConcrete` accepteert een optionele `overrideEntity` parameter zodat het niet afhankelijk is van `focusedEntity` state. Breadcrumb en focusedEntity worden automatisch bijgewerkt. `goBack` na een drill-through gaat direct naar meta (geen instances-lijst beschikbaar). **Scope**: alleen GQL-modus; REST reverse relaties worden in een volgende iteratie toegevoegd. |
+| 2026-04-13 | v9 — Perkamentrollen | **Orbiting scrolls**: klik op een node in concrete view → perkamentrol opent als CSS2DObject dat om de node orbiteert. Decoratief perkament-ontwerp met oud-papier textuur (CSS-gradiënten). Max 3 gelijktijdig open (FIFO). Auto-close bij camera-drag (0.6s delay). `--scroll-scale` CSS custom property mee-scalend met zoomniveau. **Paper whisper geluid** (`sfx.paperWhisper()`): gefilterde noise met bandpass sweep. **CSS2DRenderer als singleton**: voorkomt duplicaten bij ForceGraph3D remount; `clearCSSLabels()` ruimt stale labels op. **Sticking labels fix**: `clearCSSLabels()` verwijdert alle children uit de CSS2DRenderer DOM bij remount, plus reset van `orbitingScrolls` set en `openScrolls` array. |
+| 2026-04-13 | v10 — Space environment + navigatie | **Ruimteomgeving**: FogExp2 (dichtheid 0.0015), 3000 sterren in bol-verdeling, 9 procedurele nevellagen met `AdditiveBlending`, horizon-bol (r=800) met nebula-textuur. Alles in een `THREE.Group` die de camerapositie volgt voor stabiele achtergrond. **Circulaire vignette**: `destination-in` compositing in `createNebulaTexture()` voorkomt rechthoekige cutoffs bij sprite-randen. **Scene-tracking**: `envSceneRef` detecteert wanneer ForceGraph3D een nieuwe scene maakt (bij view-mode switch) en voegt de omgeving opnieuw toe. **Navigatiegeschiedenis**: `navHistoryRef` stack (max 50 snapshots) met `[`/`]` en Alt+←/→ toetsen voor browser-achtige navigatie. `isRestoringHistoryRef` guard voorkomt dubbele pushes. **Zoom-gevoeligheid**: `rotateSpeed` en `panSpeed` schalen dynamisch met cameradistance (`dist/200`), zodat dichtbij preciezer en veraf sneller. |
+| 2026-04-13 | v10.1 — JMJ audio + ruimtedraak | **Space bird fly-by** (`sfx.spaceBird()`): JMJ Oxygène/Equinoxe-geïnspireerde FM-synthese met carrier+modulator frequentie-glide, bandpass sweep, noise "veerwind", en stereo L↔R pan sweep. Duur 2.5-5.5s. Periodiek: eerste na 8-25 sec, daarna elke 15-45 sec. **Drone nootvariatie**: `DRONE_NOTES` array met 8-noot donkere mineur-set (C1-Ab1), `scheduleDroneNoteChange()` wisselt elke 12-30 sec met 2-4 sec portamento. **Visuele ruimtedraak**: procedurele `THREE.Group` (30-punts lichaam, 2×15-punts vleugels met flap-animatie, 40-punts staart-trail, glow-kop). Bioluminescente kleuren (cyaan/blauw/paars/groen). Vliegt L↔R over 3-7 sec met sinusoïdale undulatie. Spawnt samen met spaceBird-geluid. Fade in/out, geometry+material dispose na afloop. **Woosh-out tuning**: zachter (peak 0.10→0.05), langzamer (1.4→2.2s), lagere frequenties (400→300 Hz start), meer ruimte in delay (550/750ms, wet 0.25, LP 450 Hz). |

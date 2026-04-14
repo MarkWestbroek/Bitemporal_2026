@@ -326,6 +326,7 @@ func ExportMetaRegistryToV3(domein ...string) V3Model {
 			Description:     meta.Description,
 			Domein:          meta.Domein,
 			EntiteitSubtype: meta.EntiteitSubtype,
+			Erft:            meta.ParentTypenaam,
 			IsMaterieel:     meta.IsMaterieel,
 			Kleur:           meta.Kleur,
 			Meervoud:        meta.Padnaam,

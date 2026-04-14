@@ -451,3 +451,58 @@ Velden met een enum-type (bijv. `ABCEnum`) kregen bij V3 export `goType: "string
 |---------|-----------|
 | `web/vite/src/pages/IdePage.jsx` | `naam` → `domein` in rebuild payload |
 | `web/vite/src/store/adapters.js` | `veldNaarV3()`: enum goType = enumnaam i.p.v. "string" |
+
+**6. Rebuild faalt door ontbrekende ide_bestanden in baseline (bugfix, 2026-04-13)**
+
+Na fix #4 gaf rebuild nog steeds HTTP 500. De foutmelding (na verruiming van de error-truncatie van 200→2000 tekens in `IdePage.jsx`) luidde:
+
+```
+model\metaregistry_plumbing.go:418:2: undefined: initIdeBestandenEnumRegistry
+model\metaregistry_plumbing.go:419:2: undefined: initIdeBestandenDatatypeRegistry
+model\metaregistry_plumbing.go:420:2: undefined: initIdeBestandenMetaRegistry
+```
+
+*Oorzaak*: De rebuild-handler herstelt eerst de `model/` directory vanuit `_baseline/model/` alvorens codegen te draaien. De baseline `metaregistry_plumbing.go` bevat `init()` calls naar `initIdeBestandenXxx()` functies, maar de bijbehorende `ide_bestanden_*.go` bestanden (7 stuks, eerder via codegen gegenereerd) waren nooit in `_baseline/model/` gekopieerd. Hierdoor faalde de `go build` na codegen, met als gevolg een rollback en HTTP 500.
+
+*Fix*:
+1. De 7 `ide_bestanden_*.go` bestanden hersteld uit git (commit `512781a`) naar `model/`
+2. Gekopieerd naar `_baseline/model/` zodat ze bij elke rebuild-restore beschikbaar zijn
+3. Error-weergave in `IdePage.jsx` verruimd van `text.slice(0, 200)` naar `text.slice(0, 2000)` + `console.error` voor toekomstige debugging
+
+*Verificatie*: Rebuild via direct HTTP-request naar `/admin/rebuild/1234` retourneert `"status": "succesvol"` met alle stappen doorlopen, inclusief codegen en binary build.
+
+| Bestand / Directory | Wijziging |
+|---------------------|-----------|
+| `_baseline/model/ide_bestanden_*.go` (7 bestanden) | Toegevoegd aan baseline |
+| `model/ide_bestanden_*.go` (7 bestanden) | Hersteld uit git |
+| `web/vite/src/pages/IdePage.jsx` | Error-truncatie 200→2000, `console.error` toegevoegd |
+
+**7. Overerving (generalisatie) roundtrip fix (2026-04-13)**
+
+De V3 roundtrip voor entiteitsovererving (generalisatie/supertype) was incompleet. De v2 editor ondersteunde dit al, maar in de IDE (nieuwe editor) ging het supertype verloren bij import, export en codegen-rebuild.
+
+*Analyse*: De backend-structuren (`V3Entiteit.Erft`, `TypeMeta.ParentTypenaam`) en codegen waren al gereed, maar de data werd op drie plekken niet doorgegeven:
+
+| Laag | Status vóór fix | Probleem |
+|------|-----------------|----------|
+| `V3Entiteit.Erft` (format) | ✅ Aanwezig | — |
+| `TypeMeta.ParentTypenaam` | ✅ Aanwezig | — |
+| Codegen (`gen_registry.go`) | ✅ Schrijft `ParentTypenaam`, PFK, IDKolom | — |
+| V3 exporter (`v3_exporter.go`) | ❌ Schrijft `Erft` niet | `meta.ParentTypenaam` werd niet naar `V3Entiteit.Erft` gemapt |
+| V3 import (adapters.js) | ❌ Leest `erft` niet | Generalisatie-edge werd niet gereconstrueerd uit V3 JSON |
+| V3 export (adapters.js) | ❌ Schrijft `erft` niet | Generalisatie-edge werd niet terugvertaald naar `erft` veld |
+| IDE DetailsPanel | ❌ Toont geen supertype | Geen dropdown, geen aflezen van generalisatie-edge |
+
+*Fixes*:
+1. **V3 exporter** (`v3_exporter.go`): `Erft: meta.ParentTypenaam` toegevoegd aan `V3Entiteit` constructie
+2. **V3 import** (`adapters.js`): Bij `ent.erft`, generalisatie-edge aanmaken in `diagramEdges` met `data: { isGeneralization: true }`
+3. **V3 export** (`adapters.js`): `supertypeLookup` opgebouwd uit diagram generalisatie-edges, `erft` gezet op V3-entiteit
+4. **IDE DetailsPanel** (`DetailsPanel.jsx`): Nieuw `SupertypeField` component met dropdown, leest/schrijft generalisatie-edge in diagram
+
+*Referentie*: De v2 editor (`uml-editor/`) had dit al correct geïmplementeerd: `types.js` schrijft `erft` bij export, `v3ModelNaarEditor.js` reconstrueert generalisatie-edges bij import, `NodeEditPanel.jsx` toont supertype-dropdown.
+
+| Bestand | Wijziging |
+|---------|-----------|
+| `model/v3_exporter.go` | `Erft: meta.ParentTypenaam` toegevoegd |
+| `web/vite/src/store/adapters.js` | V3 import: `erft` → generalisatie-edge; V3 export: generalisatie-edge → `erft` |
+| `web/vite/src/ide/DetailsPanel.jsx` | `SupertypeField` component met dropdown, import `DEFAULT_DIAGRAM_ID` |
