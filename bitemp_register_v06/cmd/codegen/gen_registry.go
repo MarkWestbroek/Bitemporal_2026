@@ -230,15 +230,17 @@ func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType,
 			jsonRolnaam = strings.ToLower(ge.Naam) + "s"
 		}
 		mv := momentvoorkomenConst(ge.Momentvoorkomen)
-		b.WriteString(fmt.Sprintf("\t\t\t{Rolnaam: %q, JSONRolnaam: %q, Doeltype: %q, Momentvoorkomen: %s},\n",
-			rolnaam, jsonRolnaam, hubType, mv))
+		naamLabels := naamLabelFields(ge.NaamLabelHeen, ge.NaamLabelTerug)
+		b.WriteString(fmt.Sprintf("\t\t\t{Rolnaam: %q, JSONRolnaam: %q, Doeltype: %q, Momentvoorkomen: %s%s},\n",
+			rolnaam, jsonRolnaam, hubType, mv, naamLabels))
 	}
 	for _, rel := range ent.Relaties {
 		rolnaam := relRolnaam(rel.Naam, rel.Meervoud)
 		jsonRolnaam := relJSONRolnaam(rel.Naam, rel.Meervoud)
 		mv := momentvoorkomenConst(rel.Momentvoorkomen)
-		b.WriteString(fmt.Sprintf("\t\t\t{Rolnaam: %q, JSONRolnaam: %q, Doeltype: %q, Momentvoorkomen: %s},\n",
-			rolnaam, jsonRolnaam, rel.Naam, mv))
+		naamLabels := naamLabelFields(rel.NaamLabelHeen, rel.NaamLabelTerug)
+		b.WriteString(fmt.Sprintf("\t\t\t{Rolnaam: %q, JSONRolnaam: %q, Doeltype: %q, Momentvoorkomen: %s%s},\n",
+			rolnaam, jsonRolnaam, rel.Naam, mv, naamLabels))
 	}
 	if ent.IsMaterieel {
 		b.WriteString(fmt.Sprintf("\t\t\t{Rolnaam: \"Aanvang\", JSONRolnaam: \"aanvang\", Doeltype: %q, Momentvoorkomen: Enkelvoudig},\n", ent.Typenaam+"_Aanvang"))
@@ -609,6 +611,22 @@ func momentvoorkomenConst(s string) string {
 		return "Meervoudig"
 	}
 	return "Enkelvoudig"
+}
+
+// naamLabelFields geeft een Go struct-literal fragment voor NaamLabelHeen/Terug,
+// of een lege string als beide leeg zijn.
+func naamLabelFields(heen, terug string) string {
+	if heen == "" && terug == "" {
+		return ""
+	}
+	var parts []string
+	if heen != "" {
+		parts = append(parts, fmt.Sprintf("NaamLabelHeen: %q", heen))
+	}
+	if terug != "" {
+		parts = append(parts, fmt.Sprintf("NaamLabelTerug: %q", terug))
+	}
+	return ", " + strings.Join(parts, ", ")
 }
 
 // writeAfgeleideVelden schrijft het AfgeleideVelden-blok als er afgeleide velden zijn.

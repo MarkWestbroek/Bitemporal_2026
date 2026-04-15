@@ -233,7 +233,11 @@ export function v3ModelNaarStore(v3Full) {
         source: ent.typenaam,
         target: ent.erft,
         type: "metamodel",
-        data: { isGeneralization: true },
+        data: {
+          isGeneralization: true,
+          naamLabelHeen: ent.naamLabelHeen || "",
+          naamLabelTerug: ent.naamLabelTerug || "",
+        },
       });
     }
     diagramNodes.push({
@@ -260,6 +264,8 @@ export function v3ModelNaarStore(v3Full) {
           metatype: "gegevenselement",
           isMaterieel: ge.isMaterieel || false,
           kleur: defaultKleur("gegevenselement"),
+          naamLabelHeen: ge.naamLabelHeen || "",
+          naamLabelTerug: ge.naamLabelTerug || "",
           velden,
           afgeleideVelden: afgeleideVeldenConvert(ge.afgeleideVelden),
         },
@@ -317,6 +323,8 @@ export function v3ModelNaarStore(v3Full) {
             velden,
             afgeleideVelden: afgeleideVeldenConvert(rel.afgeleideVelden),
             doelEntiteit: rel.doelEntiteit || "",
+            naamLabelHeen: rel.naamLabelHeen || "",
+            naamLabelTerug: rel.naamLabelTerug || "",
           },
         };
         diagramNodes.push({
@@ -737,10 +745,15 @@ export function storeNaarV3Model(state) {
 
   // --- Generalisatie-lookup: entiteitId → supertype-entiteitId ---
   const supertypeLookup = {};  // source → target (child → parent)
+  const generalisatieLabels = {}; // source → { naamLabelHeen, naamLabelTerug }
   const overzichtEdges = diagrams?.[DEFAULT_DIAGRAM_ID]?.edges || [];
   for (const e of overzichtEdges) {
     if (e.data?.isGeneralization && e.source && e.target) {
       supertypeLookup[e.source] = e.target;
+      generalisatieLabels[e.source] = {
+        naamLabelHeen: e.data.naamLabelHeen || "",
+        naamLabelTerug: e.data.naamLabelTerug || "",
+      };
     }
   }
 
@@ -764,6 +777,9 @@ export function storeNaarV3Model(state) {
     if (supertype) {
       const superEl = elements[supertype];
       v3Ent.erft = superEl?.data?.typenaam || supertype;
+      const genLabels = generalisatieLabels[ent.id] || {};
+      if (genLabels.naamLabelHeen) v3Ent.naamLabelHeen = genLabels.naamLabelHeen;
+      if (genLabels.naamLabelTerug) v3Ent.naamLabelTerug = genLabels.naamLabelTerug;
     }
 
     const pos = elementPositie(diagrams, ent.id);
@@ -791,6 +807,8 @@ export function storeNaarV3Model(state) {
         if (cd.description) v3GE.description = cd.description;
         if (child.domein && child.domein !== ent.domein) v3GE.domein = child.domein;
         if (cd.isMaterieel) v3GE.isMaterieel = true;
+        if (cd.naamLabelHeen) v3GE.naamLabelHeen = cd.naamLabelHeen;
+        if (cd.naamLabelTerug) v3GE.naamLabelTerug = cd.naamLabelTerug;
 
         const gePos = elementPositie(diagrams, child.id);
         if (gePos) v3GE.positie = gePos;
@@ -886,6 +904,8 @@ function buildV3Relatie(child, edgeData, diagEdge, diagrams, parentDomein) {
   if (cd.relatieSubtype) v3Rel.relatieSubtype = cd.relatieSubtype;
   if (cd.referentielijstInstantie) v3Rel.referentielijstInstantie = cd.referentielijstInstantie;
   if (cd.isMaterieel) v3Rel.isMaterieel = true;
+  if (cd.naamLabelHeen) v3Rel.naamLabelHeen = cd.naamLabelHeen;
+  if (cd.naamLabelTerug) v3Rel.naamLabelTerug = cd.naamLabelTerug;
 
   const relPos = elementPositie(diagrams, child.id);
   if (relPos) v3Rel.positie = relPos;
