@@ -835,6 +835,13 @@ function ElementEditor({ element, updateElement }) {
         updateDiagramEdges={updateDiagramEdges}
       />}
 
+      {type === "gegevenselement" && (
+        <>
+          <EditField label="Label heen" value={data.naamLabelHeen} onChange={(v) => setData("naamLabelHeen", v)} placeholder="bijv. heeft" />
+          <EditField label="Label terug" value={data.naamLabelTerug} onChange={(v) => setData("naamLabelTerug", v)} placeholder="bijv. behoort bij" />
+        </>
+      )}
+
       {type === "relatie" && (
         <>
           <EditField
@@ -845,6 +852,8 @@ function ElementEditor({ element, updateElement }) {
             options={RELATIE_SUBTYPES}
           />
           <EditField label="Doel-entiteit" value={data.doelEntiteit} onChange={(v) => setData("doelEntiteit", v)} />
+          <EditField label="Label heen" value={data.naamLabelHeen} onChange={(v) => setData("naamLabelHeen", v)} placeholder="bijv. woont op" />
+          <EditField label="Label terug" value={data.naamLabelTerug} onChange={(v) => setData("naamLabelTerug", v)} placeholder="bijv. is woonadres van" />
         </>
       )}
 
@@ -954,6 +963,12 @@ function EdgeEditor({ edgeId }) {
         type="select"
         options={KARDINALITEIT_OPTIES}
       />
+      {d.isGeneralization && (
+        <>
+          <EditField label="Label heen" value={d.naamLabelHeen} onChange={(v) => setEdgeData("naamLabelHeen", v)} placeholder="bijv. is een" />
+          <EditField label="Label terug" value={d.naamLabelTerug} onChange={(v) => setEdgeData("naamLabelTerug", v)} placeholder="bijv. kent subtypes" />
+        </>
+      )}
     </div>
   );
 }

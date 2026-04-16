@@ -199,6 +199,8 @@ export function v3ModelNaarEditor(v3Model) {
           metatype: "gegevenselement",
           isMaterieel: ge.isMaterieel || false,
           kleur: defaultKleur("gegevenselement"),
+          naamLabelHeen: ge.naamLabelHeen || "",
+          naamLabelTerug: ge.naamLabelTerug || "",
           velden,
           afgeleideVelden: (ge.afgeleideVelden || []).map((av) => ({
             naam: av.naam || "",
@@ -343,6 +345,8 @@ export function v3ModelNaarEditor(v3Model) {
             })),
             doelEntiteit: rel.doelEntiteit || "",
             directioneel: rel.directioneel || false,
+            naamLabelHeen: rel.naamLabelHeen || "",
+            naamLabelTerug: rel.naamLabelTerug || "",
           },
         });
       }
@@ -584,7 +588,11 @@ export function v3ModelNaarEditor(v3Model) {
         source: ent.typenaam,
         target: ent.erft,
         type: "metamodel",
-        data: { isGeneralization: true },
+        data: {
+          isGeneralization: true,
+          naamLabelHeen: ent.naamLabelHeen || "",
+          naamLabelTerug: ent.naamLabelTerug || "",
+        },
       });
     }
   }

@@ -789,6 +789,8 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
           `${(geNaam || "ge").toLowerCase()}s`,
         momentvoorkomen: e.data?.momentvoorkomen || "enkelvoudig",
         isMaterieel: geNode.data.isMaterieel || false,
+        naamLabelHeen: geNode.data.naamLabelHeen || undefined,
+        naamLabelTerug: geNode.data.naamLabelTerug || undefined,
         positie: geNode.position ? { x: geNode.position.x, y: geNode.position.y } : undefined,
         // Bewaar editor-edge id zodat export/import en DB-round-trips merge-stabiel blijven.
         id: e.id || undefined,
@@ -835,6 +837,8 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         relatieSubtype: relNode.data.relatieSubtype || undefined,
         referentielijstInstantie: instantieBinding.naam || undefined,
         directioneel: relNode.data.directioneel || undefined,
+        naamLabelHeen: relNode.data.naamLabelHeen || undefined,
+        naamLabelTerug: relNode.data.naamLabelTerug || undefined,
         doelEntiteit: doelEntiteitNaam,
         bronKardinaliteit: bronKardinaliteit !== "0..*" ? bronKardinaliteit : undefined,
         doelKardinaliteit: doelKardinaliteit !== "0..*" ? doelKardinaliteit : undefined,
@@ -882,6 +886,8 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
       domein: ent.data.domein || undefined,
       isAbstract: ent.data.isAbstract || undefined,
       erft: parentEntNaam,
+      naamLabelHeen: genEdge?.data?.naamLabelHeen || undefined,
+      naamLabelTerug: genEdge?.data?.naamLabelTerug || undefined,
       isMaterieel: ent.data.isMaterieel || false,
       // Referentielijst-subtypes (optioneel, zie Referentielijsten.md)
       entiteitSubtype: ent.data.entiteitSubtype || undefined,
