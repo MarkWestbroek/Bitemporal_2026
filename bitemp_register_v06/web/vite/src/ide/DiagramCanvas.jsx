@@ -85,6 +85,236 @@ function buildFlowEdges(diagram) {
   }));
 }
 
+/**
+ * Universele edge-materialisatie: bouw ALLE edges voor een diagram opnieuw op
+ * vanuit de model-structuur. Vervangt discoverEdgesForNodes als "single source of truth".
+ *
+ * Logica:
+ * 1) Voor elke REL op het diagram: bepaal of owner en/of doel op diagram staan.
+ *    - Beide + velden → ASOC (anker + 3 edges)
+ *    - Beide + geen velden → 2 simpele edges (owner→REL, REL→doel)
+ *    - Eén kant → 1 edge (geen halve ASOC)
+ * 2) ENT→GE compositie-edges (structuralEdges, niet-REL targets)
+ * 3) Dependency-edges (enum, datatype «use»)
+ * 4) Orphan cleanup: elke edge heeft beide endpoints op diagram
+ *
+ * @param {Object} store      - useModelStore.getState()
+ * @param {Object} elements   - store.elements
+ * @param {Array}  diagNodes  - diagram.nodes ([ { elementId, position } ])
+ * @returns {{ edges: Array, extraNodes: Array }} nieuwe edges + anker-nodes om toe te voegen
+ */
+function materialiseerDiagramEdges(store, elements, diagNodes) {
+  const nodeIdSet = new Set(diagNodes.map((n) => n.elementId));
+  const nodePositionMap = new Map(diagNodes.map((n) => [n.elementId, n.position]));
+  const edges = [];
+  const extraNodes = [];
+  const addedPairs = new Set();
+
+  const addEdge = (edge) => {
+    const pair = `${edge.source}→${edge.target}`;
+    if (addedPairs.has(pair)) return;
+    // Veiligheidscheck: beide endpoints moeten op diagram staan
+    if (!nodeIdSet.has(edge.source) || !nodeIdSet.has(edge.target)) return;
+    addedPairs.add(pair);
+    edges.push(edge);
+  };
+
+  // ── 1. Relatie-edges (ASOC of simpel) ──
+  for (const nodeId of nodeIdSet) {
+    const el = elements[nodeId];
+    if (!el || el.type !== "relatie") continue;
+
+    // Zoek owner (bron-entiteit) via structuralEdges
+    let ownerId = null;
+    let ownerSE = null;
+    for (const se of store.structuralEdges) {
+      if (se.target === nodeId) {
+        const srcType = elements[se.source]?.type;
+        if (srcType === "entiteit" || srcType === "referentielijstInstantie") {
+          ownerId = se.source;
+          ownerSE = se;
+          break;
+        }
+      }
+    }
+
+    const doelId = el.data?.doelEntiteit || null;
+    const ownerOpDiagram = ownerId && nodeIdSet.has(ownerId);
+    const doelOpDiagram = doelId && nodeIdSet.has(doelId);
+    const heeftVelden = (el.data?.velden?.length || 0) > 0;
+    const directioneel = el.data?.directioneel || false;
+
+    if (heeftVelden && ownerOpDiagram && doelOpDiagram) {
+      // ── ASOC-patroon: anker + 3 edges ──
+      const ankerId = `anker_${nodeId}`;
+
+      // Maak anker-element als het nog niet bestaat
+      if (!elements[ankerId] && !store.elements[ankerId]) {
+        store.addElement({
+          id: ankerId,
+          naam: el.data?.typenaam || nodeId,
+          type: "associatieAnker",
+          domein: el.domein || "",
+          data: { relatieNaam: el.data?.typenaam || nodeId },
+        });
+      }
+
+      // Positie: als anker al op diagram staat, bewaar; anders midpoint
+      if (!nodeIdSet.has(ankerId)) {
+        const ownerPos = nodePositionMap.get(ownerId) || { x: 0, y: 0 };
+        const doelPos = nodePositionMap.get(doelId) || { x: 400, y: 0 };
+        const ankerPos = {
+          x: (ownerPos.x + doelPos.x) / 2 + 80,
+          y: (ownerPos.y + doelPos.y) / 2,
+        };
+        extraNodes.push({ elementId: ankerId, position: ankerPos });
+        nodeIdSet.add(ankerId);
+        nodePositionMap.set(ankerId, ankerPos);
+      }
+
+      // Edge 1: owner → anker
+      addEdge({
+        id: `${ownerId}->${ankerId}`,
+        source: ownerId,
+        target: ankerId,
+        type: "metamodel",
+        sourceHandle: null,
+        targetHandle: "target-left",
+        data: { isAssociation: true, directioneel, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
+      });
+      // Edge 2: anker → doel
+      addEdge({
+        id: `${ankerId}->${doelId}`,
+        source: ankerId,
+        target: doelId,
+        type: "metamodel",
+        sourceHandle: "source-right",
+        targetHandle: null,
+        data: { isAssociation: true, directioneel, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
+      });
+      // Edge 3: anker → relatie (dashed class link)
+      addEdge({
+        id: `${ankerId}->${nodeId}`,
+        source: ankerId,
+        target: nodeId,
+        type: "metamodel",
+        sourceHandle: "source-bottom",
+        targetHandle: "target-top",
+        data: { isAssociationClassLink: true, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
+      });
+    } else {
+      // ── Simpele relatie: max 2 edges ──
+      if (ownerOpDiagram) {
+        const targetEl = elements[nodeId];
+        addEdge({
+          id: ownerSE?.id || `${ownerId}->${nodeId}`,
+          source: ownerId,
+          target: nodeId,
+          type: "metamodel",
+          sourceHandle: null,
+          targetHandle: null,
+          data: ownerSE?.data || {
+            rolnaam: targetEl?.naam || "",
+            jsonRolnaam: targetEl?.data?.meervoud || (targetEl?.naam || "").toLowerCase(),
+            momentvoorkomen: "meervoudig",
+            kardinaliteit: "0..*",
+          },
+        });
+      }
+      if (doelOpDiagram) {
+        addEdge({
+          id: `${nodeId}->${doelId}`,
+          source: nodeId,
+          target: doelId,
+          type: "metamodel",
+          sourceHandle: null,
+          targetHandle: null,
+          data: {
+            rolnaam: `→ ${doelId}`,
+            jsonRolnaam: (doelId || "").toLowerCase(),
+            momentvoorkomen: "meervoudig",
+            kardinaliteit: "0..*",
+            ...(directioneel ? { directioneel: true } : {}),
+          },
+        });
+      }
+    }
+  }
+
+  // ── 2. Structurele edges: ENT→GE compositie (niet-REL targets) ──
+  for (const se of store.structuralEdges) {
+    if (!nodeIdSet.has(se.source) || !nodeIdSet.has(se.target)) continue;
+    const targetType = elements[se.target]?.type;
+    // REL-edges zijn hierboven al afgehandeld
+    if (targetType === "relatie") continue;
+
+    const sourceType = elements[se.source]?.type;
+    const isDependency = se.data?.isDependency ||
+      ((sourceType === "entiteit" || sourceType === "gegevenselement" || sourceType === "relatie") &&
+        (targetType === "enumeratie" || targetType === "gegevenstype")) ||
+      (sourceType === "referentielijstInstantie" && targetType === "relatie");
+
+    const targetEl = elements[se.target];
+    const edgeData = se.data || (isDependency
+      ? { isDependency: true, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" }
+      : {
+          rolnaam: targetEl?.naam || "",
+          jsonRolnaam: targetEl?.data?.meervoud || (targetEl?.naam || "").toLowerCase(),
+          momentvoorkomen: "enkelvoudig",
+          kardinaliteit: "0..1",
+        });
+
+    addEdge({
+      id: se.id || `${se.source}->${se.target}`,
+      source: se.source,
+      target: se.target,
+      sourceHandle: se.sourceHandle || null,
+      targetHandle: se.targetHandle || null,
+      type: "metamodel",
+      data: edgeData,
+    });
+  }
+
+  // ── 3. Dependency-edges uit alle diagrammen (enum/datatype «use», binding) ──
+  for (const diagKey of Object.keys(store.diagrams)) {
+    const d = store.diagrams[diagKey];
+    for (const de of d.edges || []) {
+      if (!nodeIdSet.has(de.source) || !nodeIdSet.has(de.target)) continue;
+      // Alleen dependency-edges (use, binding) en ASOC-gerelateerde edges overnemen
+      if (de.data?.isDependency) {
+        addEdge({
+          id: de.id,
+          source: de.source,
+          target: de.target,
+          sourceHandle: de.sourceHandle || null,
+          targetHandle: de.targetHandle || null,
+          type: de.type || "metamodel",
+          data: de.data,
+          hidden: de.hidden || false,
+        });
+      }
+    }
+  }
+
+  // ── 4. Referentielijst binding-edges (REFLIJST → REL) ──
+  for (const se of store.structuralEdges) {
+    if (!nodeIdSet.has(se.source) || !nodeIdSet.has(se.target)) continue;
+    if (elements[se.source]?.type === "referentielijstInstantie" && elements[se.target]?.type === "relatie") {
+      addEdge({
+        id: se.id || `${se.source}->${se.target}`,
+        source: se.source,
+        target: se.target,
+        sourceHandle: se.sourceHandle || null,
+        targetHandle: se.targetHandle || null,
+        type: "metamodel",
+        data: se.data || { isDependency: true, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
+      });
+    }
+  }
+
+  return { edges, extraNodes };
+}
+
 function clampContextMenuPosition(x, y, width = 220, height = 360) {
   if (typeof window === "undefined") return { x, y };
   return {
@@ -1032,7 +1262,6 @@ function DiagramCanvasInner({ diagramId }) {
     const pasteCenter = screenToFlowPosition(centerScreen);
 
     const newNodes = [];
-    const pastedIds = new Set();
 
     for (const item of toPaste) {
       const position = {
@@ -1047,47 +1276,29 @@ function DiagramCanvasInner({ diagramId }) {
         position,
         data: { ...el.data, id: item.elementId },
       });
-      pastedIds.add(item.elementId);
+    }
+
+    // ── Materialiseer alle edges (incl. ASOC-ankers) ──
+    const updatedDiagNodes = [...(diag.nodes || []), ...newNodes.map((n) => ({ elementId: n.id, position: n.position }))];
+    const { edges: matEdges, extraNodes } = materialiseerDiagramEdges(store, elements, updatedDiagNodes);
+
+    // Voeg anker-nodes toe (voor ASOC-relaties met velden)
+    for (const an of extraNodes) {
+      addElToDiag(diagramId, an.elementId, an.position);
+      const anEl = store.elements[an.elementId] || elements[an.elementId];
+      if (anEl) {
+        newNodes.push({
+          id: an.elementId,
+          type: anEl.type,
+          position: an.position,
+          data: { ...anEl.data, id: an.elementId },
+        });
+      }
     }
 
     setNodes((nds) => [...nds, ...newNodes]);
-
-    // ── Auto-create edges: clipboard-edges + helper voor rest ──
-    const allNodeIds = new Set([...existingNodeIds, ...pastedIds]);
-    const currentDiagEdges = diag.edges || [];
-    const newFlowEdges = [];
-    const newDiagEdges = [];
-
-    const addedPairs = new Set(currentDiagEdges.map((e) => `${e.source}→${e.target}`));
-
-    const addEdgeIfNew = (edge) => {
-      const pair = `${edge.source}→${edge.target}`;
-      if (addedPairs.has(pair)) return;
-      addedPairs.add(pair);
-      newDiagEdges.push(edge);
-      newFlowEdges.push({ ...edge, selectable: false, selected: false });
-    };
-
-    // ── 1) Clipboard edges eerst (bewaart visuele representatie uit brondiagram) ──
-    for (const clipEdge of (diagramClipboard.internalEdges || diagramClipboard.edges || [])) {
-      if (!allNodeIds.has(clipEdge.source) || !allNodeIds.has(clipEdge.target)) continue;
-      addEdgeIfNew(clipEdge);
-    }
-    for (const bEdge of (diagramClipboard.boundaryEdges || [])) {
-      if (!allNodeIds.has(bEdge.source) || !allNodeIds.has(bEdge.target)) continue;
-      addEdgeIfNew({ ...bEdge, hidden: bEdge.hidden || false });
-    }
-
-    // ── 2) Helper: ontdek overige edges (structural + alle diagrammen) ──
-    const discovered = discoverEdgesForNodes(store, elements, allNodeIds, addedPairs);
-    for (const de of discovered) {
-      addEdgeIfNew(de);
-    }
-
-    if (newDiagEdges.length > 0) {
-      store.updateDiagramEdges(diagramId, [...currentDiagEdges, ...newDiagEdges]);
-      setEdges((eds) => [...eds, ...newFlowEdges]);
-    }
+    store.updateDiagramEdges(diagramId, matEdges);
+    setEdges(matEdges.map((e) => ({ ...e, selectable: false, selected: false })));
   }, [diagramId, elements, setNodes, setEdges, screenToFlowPosition]);
 
   // Ctrl+C / Ctrl+V: kopiëren en plakken van visuele elementen tussen diagrammen
@@ -1506,34 +1717,6 @@ function DiagramCanvasInner({ diagramId }) {
       );
       if (dropItems.length === 0) return;
 
-      // ── Auto-add gerelateerde entiteiten voor relaties (owner + doel) ──
-      // Zonder beide endpoints kan een ASOC-edge niet zichtbaar worden.
-      const allDropIds = new Set(dropItems.map((d) => d.elementId));
-      const autoItems = [];
-      for (const item of dropItems) {
-        const el = elements[item.elementId];
-        if (el?.type !== "relatie") continue;
-        // Doel-entiteit
-        const doelId = el.data?.doelEntiteit;
-        if (doelId && elements[doelId] && !existingNodeIds.has(doelId) && !allDropIds.has(doelId)) {
-          autoItems.push({ elementId: doelId, _auto: true });
-          allDropIds.add(doelId);
-        }
-        // Owner-entiteit (bron): zoek via structuralEdges
-        for (const se of store.structuralEdges) {
-          if (se.target === item.elementId && elements[se.source]?.type === "entiteit") {
-            if (!existingNodeIds.has(se.source) && !allDropIds.has(se.source)) {
-              autoItems.push({ elementId: se.source, _auto: true });
-              allDropIds.add(se.source);
-            }
-            break;
-          }
-        }
-      }
-      if (autoItems.length > 0) {
-        dropItems = [...dropItems, ...autoItems];
-      }
-
       // Bereken canvas-positie (correct met zoom/pan)
       const basePosition = screenToFlowPosition({
         x: e.clientX,
@@ -1542,29 +1725,14 @@ function DiagramCanvasInner({ diagramId }) {
 
       const addElementToDiagram = store.addElementToDiagram;
       const newNodes = [];
-      let explicitIdx = 0;
-      let autoIdx = 0;
 
-      dropItems.forEach((item) => {
+      dropItems.forEach((item, idx) => {
         const { elementId } = item;
-        let position;
-        if (item._auto) {
-          // Auto-toegevoegde entiteiten: horizontaal rechts van drop-punt
-          position = {
-            x: basePosition.x + 300 + autoIdx * 250,
-            y: basePosition.y - 30,
-          };
-          autoIdx++;
-        } else {
-          position = {
-            x: basePosition.x + explicitIdx * 40,
-            y: basePosition.y + explicitIdx * 40,
-          };
-          explicitIdx++;
-        }
-
+        const position = {
+          x: basePosition.x + idx * 40,
+          y: basePosition.y + idx * 40,
+        };
         addElementToDiagram(diagramId, elementId, position);
-
         const el = elements[elementId];
         newNodes.push({
           id: elementId,
@@ -1574,24 +1742,27 @@ function DiagramCanvasInner({ diagramId }) {
         });
       });
 
-      setNodes((nds) => [...nds, ...newNodes]);
+      // ── Materialiseer alle edges (incl. ASOC-ankers) ──
+      const updatedDiagNodes = [...(diag.nodes || []), ...newNodes.map((n) => ({ elementId: n.id, position: n.position }))];
+      const { edges: matEdges, extraNodes } = materialiseerDiagramEdges(store, elements, updatedDiagNodes);
 
-      // ── Auto-create edges: structural + alle diagrammen scannen ──
-      if (diag) {
-        const allNodeIds = new Set([...existingNodeIds, ...dropItems.map((d) => d.elementId)]);
-        const currentDiagEdges = diag.edges || [];
-        const existingPairs = new Set(currentDiagEdges.map((e) => `${e.source}→${e.target}`));
-
-        const discovered = discoverEdgesForNodes(store, elements, allNodeIds, existingPairs);
-
-        if (discovered.length > 0) {
-          store.updateDiagramEdges(diagramId, [...currentDiagEdges, ...discovered]);
-          setEdges((eds) => [
-            ...eds,
-            ...discovered.map((e) => ({ ...e, selectable: false, selected: false })),
-          ]);
+      // Voeg anker-nodes toe (voor ASOC-relaties met velden)
+      for (const an of extraNodes) {
+        addElementToDiagram(diagramId, an.elementId, an.position);
+        const anEl = store.elements[an.elementId] || elements[an.elementId];
+        if (anEl) {
+          newNodes.push({
+            id: an.elementId,
+            type: anEl.type,
+            position: an.position,
+            data: { ...anEl.data, id: an.elementId },
+          });
         }
       }
+
+      setNodes((nds) => [...nds, ...newNodes]);
+      store.updateDiagramEdges(diagramId, matEdges);
+      setEdges(matEdges.map((e) => ({ ...e, selectable: false, selected: false })));
     },
     [diagramId, elements, setNodes, setEdges, screenToFlowPosition]
   );

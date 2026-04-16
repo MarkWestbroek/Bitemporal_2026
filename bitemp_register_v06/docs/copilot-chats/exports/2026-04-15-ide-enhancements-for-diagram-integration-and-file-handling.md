@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-15 12:38
 - **Sessie-ID**: `49a288c2-a77b-4af1-812c-9e54b19b8022`
-- **Berichten**: 49
+- **Berichten**: 53
 
 ---
 
@@ -3351,5 +3351,65 @@ The document contains:
 Regarding issue #1 (Shift+drag cursor): react-arborist likely intercepts Shift+mousedown for its own selection handling, blocking the HTML5 drag-start. This is a separate fix.
 
 Review the document and let me know your answers to the open questions — then I'll implement.
+
+---
+
+## 🧑 User
+
+Dank. Wil je de chat ook kort samenvatten, zodat ik hiermee op mijn mac verder kan vandaag?
+
+Belangrijk: de issues die je tegenkwam. Wat werkte en wat niet.
+
+---
+
+## 🤖 Assistant
+
+Hier is een korte overdraag-samenvatting voor vandaag op je Mac.
+
+**Stand van zaken**
+- We hebben de drop-events verplaatst van ReactFlow naar de wrapper-div in .
+- Vervolgens auto-add toegevoegd voor relatie-endpoints (owner + doel) bij drop in dezelfde file.
+- Frontend build is groen (vite build).
+- Analyse/documentatie gemaakt van de echte kernoorzaak in .
+
+**Wat werkte**
+- Drop-events komen nu consistenter binnen (minder interferentie vanuit ReactFlow zelf).
+- Multi-drop gedraagt zich beter dan voorheen.
+- Basis edge-discovery werkt voor simpele gevallen.
+- Build/compile blijft goed.
+
+**Wat niet (of nog niet goed)**
+- Shift+drag vanuit ProjectBrowser: item is geselecteerd, maar drag-icoon/start is nog niet betrouwbaar.
+- Bij sommige drops verschijnt extra node (zoals Persoon) die functioneel niet gewenst voelt.
+- ASOC bij drop is nog incompleet:
+  - Relatie zoals InitiatiefGemeente krijgt niet altijd anker + complete 3-edge patroon.
+  - Vaak zie je alleen een “halve” connectie.
+- Paste kan nog “half edges” opleveren zonder volledige betekenisvolle context.
+- Hoofdreden: drop/paste/create hebben nu aparte edge-logica; ASOC-ankeropbouw gebeurt alleen in convertVeldenForward-flow, niet uniform in alle paden.
+
+**Belangrijkste inzicht**
+- De editor heeft nu geen eenduidige “materialiseer relaties op diagram”-stap na drop/paste/create.
+- Daardoor inconsistentie: soms wel simpele edges, soms geen anker, soms losse/halve edges.
+
+**Handige bestanden om direct te openen**
+- Code: 
+- Code: 
+- Analyse + sequence diagrams: 
+- Backlog update: 
+- UML-editor docs update: 
+
+Als je wilt, kan ik in de volgende stap meteen de uniforme materialiseer-functie implementeren (drop/paste/create via 1 pad), inclusief cleanup van orphan/half edges.
+
+---
+
+## 🧑 User
+
+ja, die universele functie lijkt zinvol. Daar zit dan in dat er relaties kunnen zijn vanuit elementen die al op het diagram staan. Het vergt dus een check op alle elementen (nodes wel te verstaan: ENT, GE, REL en hun afgeleide REFLIJST dingen; gegevenstypen en enums zullen nooit uitgaande relaties hebben overigens). Wil je die al maken? Half edges zijn inderdaad zinloos / fout.
+
+---
+
+## 🤖 Assistant
+
+Reading current ASOC-creation logic, edge structures, and the paste handler to understand what to unify: 
 
 ---
