@@ -614,6 +614,7 @@ export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram, onImpor
           onActivate={handleActivate}
           disableDrag
           disableDrop
+          disableMultiSelection
         >
           {TreeNode}
         </Tree>

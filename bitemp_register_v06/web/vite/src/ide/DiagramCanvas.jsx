@@ -101,14 +101,21 @@ function buildFlowEdges(diagram) {
  * @param {Object} store      - useModelStore.getState()
  * @param {Object} elements   - store.elements
  * @param {Array}  diagNodes  - diagram.nodes ([ { elementId, position } ])
+ * @param {Array}  [existingEdges] - bestaande diagram-edges, voor handle-preservatie
  * @returns {{ edges: Array, extraNodes: Array }} nieuwe edges + anker-nodes om toe te voegen
  */
-function materialiseerDiagramEdges(store, elements, diagNodes) {
+function materialiseerDiagramEdges(store, elements, diagNodes, existingEdges = []) {
   const nodeIdSet = new Set(diagNodes.map((n) => n.elementId));
   const nodePositionMap = new Map(diagNodes.map((n) => [n.elementId, n.position]));
   const edges = [];
   const extraNodes = [];
   const addedPairs = new Set();
+
+  // Lookup: bewaar handles van bestaande edges (gebruiker kan handles hebben genormaliseerd)
+  const existingHandleMap = new Map();
+  for (const e of existingEdges) {
+    existingHandleMap.set(`${e.source}→${e.target}`, { sourceHandle: e.sourceHandle, targetHandle: e.targetHandle, id: e.id });
+  }
 
   const addEdge = (edge) => {
     const pair = `${edge.source}→${edge.target}`;
@@ -116,6 +123,13 @@ function materialiseerDiagramEdges(store, elements, diagNodes) {
     // Veiligheidscheck: beide endpoints moeten op diagram staan
     if (!nodeIdSet.has(edge.source) || !nodeIdSet.has(edge.target)) return;
     addedPairs.add(pair);
+    // Bewaar bestaande handles tenzij de edge expliciete handles specificeert
+    const existing = existingHandleMap.get(pair);
+    if (existing) {
+      if (!edge.sourceHandle && existing.sourceHandle) edge.sourceHandle = existing.sourceHandle;
+      if (!edge.targetHandle && existing.targetHandle) edge.targetHandle = existing.targetHandle;
+      if (existing.id) edge.id = existing.id; // behoud edge-id voor stabiliteit
+    }
     edges.push(edge);
   };
 
@@ -1280,7 +1294,7 @@ function DiagramCanvasInner({ diagramId }) {
 
     // ── Materialiseer alle edges (incl. ASOC-ankers) ──
     const updatedDiagNodes = [...(diag.nodes || []), ...newNodes.map((n) => ({ elementId: n.id, position: n.position }))];
-    const { edges: matEdges, extraNodes } = materialiseerDiagramEdges(store, elements, updatedDiagNodes);
+    const { edges: matEdges, extraNodes } = materialiseerDiagramEdges(store, elements, updatedDiagNodes, diag.edges || []);
 
     // Voeg anker-nodes toe (voor ASOC-relaties met velden)
     for (const an of extraNodes) {
@@ -1744,7 +1758,7 @@ function DiagramCanvasInner({ diagramId }) {
 
       // ── Materialiseer alle edges (incl. ASOC-ankers) ──
       const updatedDiagNodes = [...(diag.nodes || []), ...newNodes.map((n) => ({ elementId: n.id, position: n.position }))];
-      const { edges: matEdges, extraNodes } = materialiseerDiagramEdges(store, elements, updatedDiagNodes);
+      const { edges: matEdges, extraNodes } = materialiseerDiagramEdges(store, elements, updatedDiagNodes, diag.edges || []);
 
       // Voeg anker-nodes toe (voor ASOC-relaties met velden)
       for (const an of extraNodes) {

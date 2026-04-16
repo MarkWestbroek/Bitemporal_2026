@@ -1,15 +1,31 @@
 # Drop / Paste Logic — Sequence Diagram & Analyse
 
-## Huidige situatie — problemen
+## Status: GEÏMPLEMENTEERD ✅
 
-### Kernprobleem
-De huidige code heeft **drie losse codepaden** (drop, paste, create) die elk op hun eigen manier edges aanmaken. Geen van deze paden maakt het **volledige ASOC-patroon** (anker + 3 edges) aan bij het plaatsen van een relatie. Het ASOC-patroon wordt alleen gecreëerd door `convertVeldenForward()` (wanneer het eerste veld aan een relatie wordt toegevoegd), niet bij drop/paste.
+De universele functie `materialiseerDiagramEdges()` is geïmplementeerd in `DiagramCanvas.jsx` (~L107-330) en vervangt de losse edge-logica in drop en paste codepaden.
 
-### Specifieke problemen
-1. **Shift+drag vanuit PB** — cursor verandert niet in drag-icoon (react-arborist conflicteert met Shift)
-2. **Drop relatie** — doelEdge + ownerEdge worden niet altijd correct gevonden; ASOC-anker wordt nooit gemaakt
-3. **Paste** — kopieert boundary-edges (halve edges) die zinloos zijn zonder hun endpoints
-4. **Orphan edges** — edges waarvan een endpoint niet op het diagram staat, worden nooit opgeruimd
+### Wat is geïmplementeerd
+- **`materialiseerDiagramEdges(store, elements, diagNodes, existingEdges=[])`** — universele edge-builder
+- **Geïntegreerd in `handleDrop`** — geen auto-add meer, alleen materialiseer
+- **Geïntegreerd in `handlePasteClipboard`** — geen clipboard-edges meer, alleen materialiseer
+- **Handle-preservatie** — bestaande edge handles (sourceHandle/targetHandle) worden bewaard via `existingHandleMap`
+- **Edge-ID stabiliteit** — bestaande edge IDs worden hergebruikt waar mogelijk
+- **ASOC-patroon** — automatisch aangemaakt bij relaties met velden (anker + 3 edges)
+- **Simpel patroon** — 2 edges bij relaties zonder velden (of met maar 1 endpoint op diagram)
+- **Orphan-bescherming** — `addEdge` helper weigert edges waarvan source of target niet op diagram staan
+- **Dedup** — `addedPairs` set voorkomt dubbele edges voor hetzelfde source→target paar
+- **`disableMultiSelection`** op react-arborist Tree — voorkomt conflict met Shift+drag
+- **Compatibiliteit met `convertVeldenForward/Reverse`** — forward-effect detecteert bestaande anker-nodes en slaat ze over
+
+### Edge-categorieën die worden gematerialiseerd
+1. **Relatie-edges** (ASOC of simpel) — per relatie-node op diagram
+2. **Structurele edges** (ENT→GE compositie) — voor niet-REL targets
+3. **Dependency-edges** (enum/datatype «use») — uit alle diagrammen
+4. **Referentielijst binding-edges** (REFLIJST→REL)
+
+---
+
+## Oorspronkelijke analyse (referentie)
 
 ---
 

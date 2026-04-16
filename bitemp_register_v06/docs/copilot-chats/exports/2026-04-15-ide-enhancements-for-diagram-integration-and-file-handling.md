@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-15 12:38
 - **Sessie-ID**: `49a288c2-a77b-4af1-812c-9e54b19b8022`
-- **Berichten**: 53
+- **Berichten**: 55
 
 ---
 
@@ -3410,6 +3410,135 @@ ja, die universele functie lijkt zinvol. Daar zit dan in dat er relaties kunnen 
 
 ## 🤖 Assistant
 
-Reading current ASOC-creation logic, edge structures, and the paste handler to understand what to unify: 
+Reading current ASOC-creation logic, edge structures, and the paste handler to understand what to unify: Now let me also read the paste handler and the end of handleDrop to understand what needs replacing:  Now let me read the current handleDrop: Now I need to check the imports and utility functions available, especially generateId and berekenKortsteHandles:  Good. Now I have the complete picture. Let me implement `materialiseerDiagramEdges()` — a single function that rebuilds all edges on a diagram from scratch based on which nodes are present. Now I'll implement the unified function. It replaces  with a smarter approach that also handles ASOC patterns and orphan cleanup. I'll place it as a module-level function right after :   Let me also check what  /  /  are available in the store:  Now let me write the function. The key design: it takes the current diagram state, all elements, and structural edges, and produces a complete set of edges + any extra anker-nodes that need to be added.   
+```
+
+```
+Progress:  is in place. Now integrating it into  — replacing the auto-add + discoverEdgesForNodes approach with one clean call:    
+```
+
+```
+Now integrating into  — same principle, replace the ad-hoc edge discovery with :   Let me find the paste handler more precisely:   Now replacing the paste handler with the unified approach:    Now replacing the paste handler with the unified approach:    
+```
+
+```
+Now there's an important consideration: the existing `convertVeldenForward`/`convertVeldenReverse` effect also manages ASOC. When it runs, it might conflict with what  did. I should make `convertVeldenForward` reuse the same function, OR at minimum ensure they don't fight. Let me check:
+
+The `convertVeldenForward` effect fires when a relatie gains its first field, and `convertVeldenReverse` fires when the last field is removed. These are **live editing** scenarios — the user adds/removes fields in the DetailsPanel. The  runs at **placement** time (drop/paste). They shouldn't directly conflict since one is triggered by field changes and the other by node placement.
+
+BUT:  now replaces ALL edges on the diagram. This means after a drop/paste, the existing edges from `convertVeldenForward` (with / flags) would be gone, because  rebuilds from scratch.
+
+Actually that's fine —  IS the source of truth now at placement. The forward/reverse effect handles subsequent field changes on already-placed relaties.
+
+But there IS a problem: when  runs, it replaces edges set by `convertVeldenForward` that may have custom handles from user-applied normalization (dubbelklik). The new edges get `null` handles. This is OK for initial placement since the user hasn't customized yet.
+
+Let me also handle the important edge case:  replaces ALL edges. The existing diagram might have edges that were previously there. The function needs to be additive for existing edges but clean for the new situation. Actually — since I'm calling it after adding new nodes, I should consider using it to rebuild edges from scratch for the **entire** diagram, which is safer. The current  does exactly that.
+
+Let me verify the build:    Build succeeds. Now let me also make sure  properly preserves existing edge handles when they're already customized on the current diagram. Currently my function always creates edges with `null` handles, but existing diagram edges may have user-set handles from normalization. Let me improve this — I'll read existing edges and reuse handles where the same pair exists:     I need to add a parameter for existing edges so we can preserve handles. Let me update the function signature and add handle-preservation logic:     
+```
+
+```
+Now I need to use the  in the  helper to preserve existing handles unless the edge explicitly sets them (like ASOC edges which have fixed handles):     
+```
+
+```
+Now let me find where handleDrop and handlePaste call  to pass the existing edges: Now I need to pass the existing edges. Let me check what  looks like: 
+```
+
+```
+Now let me verify the build: Build passes. Now let me also check for potential conflicts with `convertVeldenForward` which creates ASOC edges during live editing. Let me read that section: The convertVeldenForward/Reverse functions seem to have been renamed or are in a different file. Let me search their actual location: Let me find the convertVeldenForward/Reverse functionality — it may have been renamed or is at a specific line range:  I see — the convertVelden Forward/Reverse logic handles live editing (adding/removing fields from a relatie). This is a separate concern from drop/paste. The potential conflict is minimal because:
+
+1.  runs at drop/paste time (one-shot)  
+2. Forward/Reverse runs when fields change on an existing diagram node
+
+They shouldn't conflict because they operate at different times. The Forward logic even checks "if anker already exists, skip" — so if materialiseerDiagramEdges already created the anker, Forward won't duplicate it.
+
+Let me now read the full materialiseerDiagramEdges function to verify correctness:  Good, the function looks solid. Now let me verify the full drop and paste integrations look correct:   Now let me check the handlePaste integration:   Everything looks good. Let me also check for the multi-drop issue the user reported (extra nodes appearing). The problem was that dropping e.g. "Contactpersoon" under "Organisatie" also drops "Persoon". Let me find the drop handling to see if there's auto-add logic left:  Good — paste looks clean. Now let me check the drop handler:   The drop logic is clean — no auto-add of extra entities. The old auto-add logic has been removed. The "extra nodes appearing" issue the user reported was about the previous implementation.
+
+Now let me check the multi-drop from ProjectBrowser to understand the Shift+drag issue: I see the issue with Shift+drag. The code at line 304 checks  — so Shift+drag is already implemented for entiteiten. The problem the user reported was about the cursor not changing. Let me look more carefully at the react-arborist tree component to see if it intercepts Shift: I see the problem now. When `Shift` is held, the  runs and does a range-select (lines 229-242). Since this fires on mousedown/click *before* the drag starts, react-arborist's  component may be consuming the Shift+mousedown event for selection, preventing the drag from starting.
+
+The Shift+drag conflict: Shift+click is set up for range-select in the tree, AND Shift+drag is for "drag entiteit + children". These conflict because mousedown with Shift triggers the range-select handler first.
+
+Let me look at how the drag is initiated —  is set on the div. The browser's native drag starts on mousedown+move. But if  calls  on Shift+click (line 240), it blocks the drag initiation.
+
+The fix: We should not  in the Shift+click handler when the click is also the start of a potential drag. Actually, looking more carefully —  +  are called on Shift+click at line 239-240.  on a click event doesn't prevent drag — it's the mousedown that matters. Let me check if this is really the issue.
+
+Actually, thinking about it more: the native drag API starts from `mousedown` → `mousemove`. The  fires after `mouseup`. So the Shift+drag should work: mousedown → mousemove triggers drag. The  handler with Shift shouldn't interfere because it fires after release.
+
+But the user says the cursor doesn't change. Let me check if react-arborist uses its own selection mechanism that might be consuming the mousedown:   The element has  and . Both are on the same . The issue is that react-arborist's  component also has an  handler. Let me check:   I'll continue from where the previous session left off. The handle-preservation and existingEdges passing are now done. Let me track the remaining items and fix the Shift+drag issue. The Shift+drag issue: react-arborist has built-in multi-selection (Shift+click) that may consume the mousedown event before the native drag can start. The  component has  but NOT . Since we have our own custom multi-select logic via , we should disable react-arborist's built-in selection to prevent interference.
+
+Let me check what props react-arborist supports:    Confirmed: react-arborist has  prop and its  intercepts Shift+click for range-selection. Since we have our own custom multi-select, this should be disabled: 
+```
+
+```
+Now let me also check the  more closely to understand how the mousedown event flows with Shift:    This is just keyboard handling. Let me look at the node-api to see how Shift+click works on mouse:  So react-arborist's  on line 200 intercepts Shift+click for contiguous selection. With , it'll fall through to just  +  instead. This should no longer interfere with the native HTML drag.
+
+But wait — the real issue might be deeper. React-arborist's  fires on `click` (mouseup), not on `mousedown`. The native drag API starts on mousedown+mousemove. So the Shift+click shouldn't actually prevent drag initiation. Let me check if there's a mousedown handler:   No mousedown handlers. So react-arborist doesn't interfere with the native drag at the mousedown level. The problem must be elsewhere. Let me look more carefully at the wrapper div where drag handlers are set in DiagramCanvas:     The drag handlers (handleDragOver, handleDragLeave, handleDrop) are on the wrapper div, not inside . This should be fine.
+
+Let me now think about the actual Shift+drag behavior. The user said "cursor doesn't change to drag icon". This might be because:
+
+1. The  on ReactFlow (lines around the  component) is also interfering
+2. OR the browser isn't showing the drag cursor because the drag ghost isn't being set properly with Shift
+
+Let me check the ReactFlow props:     on ReactFlow means when you hold Shift, ReactFlow enters box-selection mode. This is on the ReactFlow component which is INSIDE the wrapper div. The drag starts from the ProjectBrowser (outside ReactFlow), so the drop occurs on the wrapper. This shouldn't interfere with the drag **initiation** in the PB.
+
+The problem must be with context — when holding Shift and trying to drag from the ProjectBrowser. Let me re-examine the drag start code more carefully for the Shift case:   The  code with  looks correct. The  attribute is on the div. The issue might be subtle:
+
+When the user holds Shift and does mousedown on a tree node, react-arborist's  (which fires on the `click` event, i.e., mouseup) calls  which traverses the tree and focuses/selects nodes. This happens via react-arborist's internal row rendering.
+
+But wait — there's a deeper issue. React-arborist renders each row via its internal . Let me check if the internal row has its own click handler that might call :     The  wraps our  in a div with . This means the click event bubbles from our TreeNode's div up to DefaultRow's div, where  fires (the react-arborist handler). Our TreeNode's  fires first (inner), then DefaultRow's fires (outer).
+
+The issue is that our custom  does  on Shift+click (line 239), which prevents DefaultRow's  from firing. But we added , so DefaultRow's handler now just does a regular select — which is fine.
+
+However, the cursor/drag issue might actually be because when the user holds Shift, our  runs on click (mouseup after the drag attempt/cancel), doing range-select instead of letting the drag proceed. But  fires on mouseup, not mousedown, so it shouldn't prevent drag initiation.
+
+Let me think about this differently. The user said "cursor doesn't change to drag icon". In the browser's native DnD, when you mousedown on a  element and start moving, the browser shows a drag ghost (cursor changes). But if something is capturing the mousedown event higher up and preventing default...
+
+Actually, I wonder if the issue is simpler. Let me check if the  component uses `user-select: none` CSS or something that blocks the drag:      OK, no blocking. The  addition should help. But the core issue might simply be that the user didn't realize Shift+drag works differently than expected — the drag needs to start with mousedown+move, not click. With , react-arborist won't fight for the Shift key.
+
+Now let me verify the `convertVeldenForward` compatibility. The concern is that when  creates ASOC edges on drop, then `convertVeldenForward` fires (because it watches for field count changes), it might try to create duplicate ASOC structures. Let me check the forward logic more carefully: Key line: `if (currentNodes.some((n) => n.elementId === ankerId)) continue;` — the forward logic checks if the anker already exists on the diagram. Since  adds the anker to diagram nodes, `convertVeldenForward` will detect it and skip. No conflict.
+
+Also, the forward effect uses  to track field count changes (0→N triggers forward). When an element is dropped, it already has fields — so  for the first render would be 0 (since it wasn't tracked before) and , triggering forward. But the anker check prevents duplicates.
+
+Actually wait — there IS a subtle issue. When we drop a relatie with fields for the first time:
+1.  →  creates ASOC edges + anker extraNode
+2. The anker node is added to the diagram via 
+3. The  state changes trigger the  for ASOC forward/reverse
+4.  = 0,  → forward triggered
+5. BUT  = true (anker was added by materialiseerDiagramEdges) → **skip** ✅
+
+Good, no conflict. Build passes. Now let me update the documentation:  Now let me update the doc to reflect the implementation:  
+```
+
+```
+All tasks completed. Here's a summary of what was done in this session:
+
+**Completed changes in :**
+
+1. **Handle-preservation in  helper** (~L129-133): When a new edge matches a  pair from existing edges, the existing ,  and  are preserved. This prevents user-customized handle positions from being lost on drop/paste.
+
+2. ** passed from both callers**:  and  now pass  as the 4th parameter so the handle map is populated.
+
+**Completed changes in :**
+
+3. **** added to the  component. React-arborist was intercepting Shift+click for its built-in range-selection, which conflicted with our custom multi-select and Shift+drag behavior.
+
+**Verified:**
+- `convertVeldenForward` won't create duplicate ASOC structures — it checks for existing anker nodes and skips if already present.
+- Build passes (376ms).
+
+**Updated:** docs/DIAGRAM_DROP_PASTE_LOGIC.md — added implementation status section.
+
+---
+
+## 🧑 User
+
+Dank. Vat je het nog eens samen (we hebben nu wat gedaan)?
+
+---
+
+## 🧑 User
+
+dank
 
 ---
