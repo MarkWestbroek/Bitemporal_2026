@@ -30,7 +30,8 @@ function splitTabelRij(regel) {
   let r = regel.trim();
   if (r.startsWith("|")) r = r.slice(1);
   if (r.endsWith("|")) r = r.slice(0, -1);
-  return r.split("|").map((cel) => cel.trim());
+  // Split op niet-geëscapede pipes, unescape daarna
+  return r.split(/(?<!\\)\|/).map((cel) => cel.trim().replace(/\\\|/g, "|"));
 }
 
 function alignmentVoorKolom(scheidingCel) {

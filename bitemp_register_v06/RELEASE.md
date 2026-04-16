@@ -8,9 +8,14 @@ Korte checklist voor een API-release met losse DB-stack.
 - **Oorzaak**: `schemaTypeVoorReflectType()` retourneerde `"string"` als Go-typenaam voor alle string-based enum-types (Gemeenterol, Fase, Organisatietype, etc.). `makeEnumType()` cachete het eerste enum-type onder key `"string"` in `enumTypeCache`, waarna alle volgende enums diezelfde (verkeerde) enum kregen. Bij serialisatie vond graphql-go de werkelijke waarde niet terug in de verkeerde enum → `null`.
 - **Fix** (`dynql/field_builder.go`): in `fieldsVoorMeta()` wordt nu de werkelijke Go-typenaam (bijv. `"Gemeenterol"`) als enum-naam doorgegeven aan `goTypeToGraphQL()`, zodat elke enum een unieke cache-entry krijgt.
 - **Impact**: alle enum-velden in alle hub+data types (InitiatiefGemeente.rol, Initiatief.fase, Organisatie.organisatietype, etc.) retourneren nu correcte waarden.
+- **Documentatie**: zie `docs/graphql-enum-handling.md` voor de volledige analyse.
 
 ### Debug logging verwijderd
 - Tijdelijke `[DEBUG laadHubKinderen]`, `[DEBUG entityToMap]` en `[DEBUG flattenEntityMap]` prints in `dynql/query_resolvers.go` zijn verwijderd.
+
+### Frontend: pipe-karakter in data breekt markdown-tabellen niet meer
+- **Oorzaak**: `renderTemplate()` injecteerde ruwe datawaarden (met `|`) in markdown-templates; `splitTabelRij()` splitste op álle pipes.
+- **Fix**: `renderTemplate()` (`PublicatieDetail.jsx`) escaped pipes als `\|` bij invoeging. `splitTabelRij()` split nu alleen op niet-geëscapede pipes (lookbehind regex) en unescaped daarna — in zowel `PublicatieDetail.jsx` als `MarkdownWeergave.jsx`.
 
 ## Publicatie detail — GraphQL query builder, `[key=value]` filter, weergavenaam-verrijking (2026-04-17)
 
