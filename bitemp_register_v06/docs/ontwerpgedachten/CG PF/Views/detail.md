@@ -3,10 +3,10 @@
 
 | **Korte omschrijving** | **Fase initiatief** | **Common Ground La(a)g(en)** |
 | --- | --- | --- |
-| {{producten.data.omschrijving}} | {{planningen.data.fase}} | {{producten.data.CG_laag}} |
+| {{producten.omschrijving}} | {{planningen.fase}} | {{producten.CG_laag}} |
 
-| Gebruikende/betrokken gemeenten | Betrokken organisaties | Domein |
+| Realiserende gemeenten | Gebruik makende gemeente | Domein |
 | --- | --- | --- |
-| {{initiatief_gemeenten.weergavenaam}} | {{initiatief_organisaties.weergavenaam}} | tbd |
+| {{initiatief_gemeenten[rol=Realiseert].weergavenaam}} | {{initiatief_gemeenten[rol=Maakt_gebruik_van].weergavenaam}} | tbd |
 
-Website: {{producten.website}} - Git: {{producten.git_repo}} - Contactpersoon: {{initiatief_organisaties.organisatie.contactpersonen.persoon.persoonnamen.naam}} - emailAdres: - planning: - Betrokken leveranciers: - 
+Website: {{producten.website}} - Git: {{producten.git_repo}} - Contactpersoon: {{initiatief_organisaties.organisatie.contactpersonen.persoon.persoonnamen.naam}} - emailAdres: - startdatum: {{planningen.startdatum}} Betrokken leveranciers: - 

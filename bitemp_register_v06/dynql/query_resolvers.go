@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
@@ -91,7 +92,9 @@ func makeFullEntityResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 		if err != nil {
 			return nil, err
 		}
-		return flattenEntityMap(result, meta), nil
+		flat := flattenEntityMap(result, meta)
+		verrijkWeergavenamen(p.Context, flat, meta)
+		return flat, nil
 	}
 }
 
@@ -189,7 +192,9 @@ func makeFullListResolver(meta model.TypeMeta) graphql.FieldResolveFn {
 			return nil, err
 		}
 		for i, m := range maps {
-			maps[i] = flattenEntityMap(m, meta)
+			flat := flattenEntityMap(m, meta)
+			verrijkWeergavenamen(p.Context, flat, meta)
+			maps[i] = flat
 		}
 		return maps, nil
 	}
@@ -360,7 +365,9 @@ func makeReverseRelationResolver(rev ReverseRelationInfo) graphql.FieldResolveFn
 			return nil, err
 		}
 		for i, m := range results {
-			results[i] = flattenEntityMap(m, bronMeta)
+			flat := flattenEntityMap(m, bronMeta)
+			verrijkWeergavenamen(p.Context, flat, bronMeta)
+			results[i] = flat
 		}
 		return results, nil
 	}
@@ -421,7 +428,9 @@ func makeForwardRelationResolver(fwd ForwardRelationInfo) graphql.FieldResolveFn
 		if err != nil {
 			return nil, err
 		}
-		return flattenEntityMap(result, doelMeta), nil
+		flat := flattenEntityMap(result, doelMeta)
+		verrijkWeergavenamen(p.Context, flat, doelMeta)
+		return flat, nil
 	}
 }
 
@@ -817,4 +826,259 @@ func tijdstipUitT(t int) time.Time {
 		Date(2026, 1, 1, 0, 0, 0, 0, time.UTC).
 		Add(time.Duration(t) * time.Hour).
 		Add(time.Microsecond * time.Duration(t))
+}
+
+// ─── Weergavenaam-verrijking voor GraphQL ────────────────────────────────────
+//
+// Parallel aan handlers/full_handlers.go's verrijkResponseMetWeergavenamen,
+// maar werkt op reeds geflattende entity-maps (na flattenEntityMap).
+// Wordt aangeroepen vanuit full-entity en full-entity-list resolvers.
+
+// verrijkWeergavenamen injecteert weergavenaam in child relatie-items
+// die een SecondaireEntiteitIDKolom en IsWeergaveVeld afgeleide velden hebben.
+func verrijkWeergavenamen(ctx context.Context, result map[string]interface{}, meta model.TypeMeta) {
+	for _, child := range meta.OnderliggendeGegevenselementen {
+		childMeta, ok := model.MetaRegistry.GetTypeMeta(child.Doeltype)
+		if !ok || childMeta.SecondaireEntiteitIDKolom == "" {
+			continue
+		}
+		heeftWeergaveVeld := false
+		for _, av := range childMeta.AfgeleideVelden {
+			if av.IsWeergaveVeld {
+				heeftWeergaveVeld = true
+				break
+			}
+		}
+		if !heeftWeergaveVeld {
+			continue
+		}
+
+		// Zoek de forward relation info voor het FK-veld
+		fwds := forwardRelationMap[child.Doeltype]
+		if len(fwds) == 0 {
+			continue
+		}
+		fwd := fwds[0]
+		doelMeta := fwd.DoelEntiteitMeta
+
+		// Haal child items op uit de result map
+		raw, exists := result[child.JSONRolnaam]
+		if !exists || raw == nil {
+			continue
+		}
+		items, ok := raw.([]interface{})
+		if !ok {
+			// Enkelvoudig: single object
+			if single, singleOK := raw.(map[string]interface{}); singleOK {
+				items = []interface{}{single}
+			} else {
+				continue
+			}
+		}
+
+		// Verzamel FK-IDs
+		fkIDs := map[int]bool{}
+		for _, item := range items {
+			itemMap, ok := item.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			if fkID := extractIntFromMap(itemMap, fwd.FKKolom); fkID >= 0 {
+				fkIDs[fkID] = true
+			}
+		}
+		if len(fkIDs) == 0 {
+			continue
+		}
+
+		// Batch-load doelentiteiten en bereken weergavenamen
+		idList := make([]int, 0, len(fkIDs))
+		for id := range fkIDs {
+			idList = append(idList, id)
+		}
+		weergaveMap := laadWeergavenamenBatch(ctx, doelMeta, idList)
+
+		// Injecteer weergavenaam in elke child item
+		for _, item := range items {
+			itemMap, ok := item.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			fkID := extractIntFromMap(itemMap, fwd.FKKolom)
+			if fkID < 0 {
+				continue
+			}
+			if naam, ok := weergaveMap[fkID]; ok && naam != "" {
+				itemMap["weergavenaam"] = naam
+			}
+		}
+	}
+}
+
+// extractIntFromMap haalt een int-waarde op uit een map (JSON round-trip geeft float64).
+// Retourneert -1 als het veld ontbreekt of geen numerieke waarde is.
+func extractIntFromMap(m map[string]interface{}, key string) int {
+	val, ok := m[key]
+	if !ok || val == nil {
+		return -1
+	}
+	switch v := val.(type) {
+	case float64:
+		return int(v)
+	case int:
+		return v
+	case int64:
+		return int(v)
+	}
+	return -1
+}
+
+// laadWeergavenamenBatch laadt doelentiteiten en berekent hun weergavenaam.
+// Retourneert een map van ID → weergavenaam-string.
+func laadWeergavenamenBatch(ctx context.Context, doelMeta model.TypeMeta, ids []int) map[int]string {
+	if db == nil || doelMeta.SliceFactory == nil || len(ids) == 0 {
+		return nil
+	}
+
+	targetEntities := doelMeta.SliceFactory()
+	query := db.NewSelect().Model(targetEntities)
+	query = addOnderliggendeRelations(query, doelMeta, nil)
+	if err := query.Where(doelMeta.IDKolom+" IN (?)", bun.In(ids)).Scan(ctx); err != nil {
+		return nil
+	}
+
+	// Hub-kinderen laden (Bun workaround)
+	if err := laadHubKinderenNaQuery(ctx, targetEntities, doelMeta, nil); err != nil {
+		return nil
+	}
+
+	// Converteer naar maps, flatten, en bereken weergavenaam per entiteit
+	maps, err := sliceToMaps(targetEntities, doelMeta)
+	if err != nil {
+		return nil
+	}
+
+	idKolom := doelMeta.IDKolom
+	result := make(map[int]string, len(maps))
+	for _, m := range maps {
+		flat := flattenEntityMap(m, doelMeta)
+		idVal, ok := flat[idKolom].(float64)
+		if !ok {
+			continue
+		}
+		naam := berekenWeergavenaamVlak(flat, doelMeta)
+		result[int(idVal)] = naam
+	}
+	return result
+}
+
+// berekenWeergavenaamVlak berekent de weergavenaam uit een geflattende entity-map.
+func berekenWeergavenaamVlak(entityMap map[string]interface{}, meta model.TypeMeta) string {
+	for _, av := range meta.AfgeleideVelden {
+		if !av.IsWeergaveVeld {
+			continue
+		}
+		return evalueerCELConcatenatieVlak(entityMap, av.Afleidingsregel, meta)
+	}
+	return ""
+}
+
+// evalueerCELConcatenatieVlak evalueert een (beperkte) CEL-expressie op een geflattende map.
+// Zelfde logica als handlers.evalueerCELConcatenatie maar werkt met geflattende data.
+func evalueerCELConcatenatieVlak(entityMap map[string]interface{}, expressie string, meta model.TypeMeta) string {
+	if !strings.Contains(expressie, "+") {
+		return navigeerAfgeleidPadVlak(entityMap, strings.TrimSpace(expressie), meta)
+	}
+
+	segmenten := strings.Split(expressie, "+")
+	var resultaat strings.Builder
+	for _, segment := range segmenten {
+		segment = strings.TrimSpace(segment)
+		if segment == "" {
+			continue
+		}
+		if len(segment) >= 2 && segment[0] == '"' && segment[len(segment)-1] == '"' {
+			literal := segment[1 : len(segment)-1]
+			literal = strings.ReplaceAll(literal, `\"`, `"`)
+			literal = strings.ReplaceAll(literal, `\\`, `\`)
+			resultaat.WriteString(literal)
+		} else {
+			resultaat.WriteString(navigeerAfgeleidPadVlak(entityMap, segment, meta))
+		}
+	}
+	return resultaat.String()
+}
+
+// navigeerAfgeleidPadVlak navigeert een punt-gescheiden pad door een geflattende entity-map.
+// Gebruikt MetaRegistry voor Rolnaam→JSONRolnaam vertaling, maar verwacht
+// hub→data al geflattend (door flattenEntityMap).
+func navigeerAfgeleidPadVlak(entityMap map[string]interface{}, pad string, meta model.TypeMeta) string {
+	delen := strings.Split(pad, ".")
+	var huidig interface{} = entityMap
+	huidigMeta := meta
+
+	for i, deel := range delen {
+		m, ok := huidig.(map[string]interface{})
+		if !ok {
+			return ""
+		}
+
+		// Zoek het onderliggende element op Rolnaam
+		gevonden := false
+		for _, child := range huidigMeta.OnderliggendeGegevenselementen {
+			if !strings.EqualFold(child.Rolnaam, deel) {
+				continue
+			}
+			childVal := m[child.JSONRolnaam]
+			if childVal == nil {
+				return ""
+			}
+			childMeta, childOK := model.MetaRegistry.GetTypeMeta(child.Doeltype)
+
+			// In geflattende map: enkelvoudig = single object, meervoudig = array
+			if arr, arrOK := childVal.([]interface{}); arrOK {
+				if len(arr) == 0 {
+					return ""
+				}
+				if itemMap, imOK := arr[0].(map[string]interface{}); imOK {
+					huidig = itemMap
+				} else {
+					return ""
+				}
+			} else if subMap, subOK := childVal.(map[string]interface{}); subOK {
+				huidig = subMap
+			} else {
+				return ""
+			}
+
+			if childOK {
+				huidigMeta = childMeta
+			}
+			gevonden = true
+			break
+		}
+
+		if !gevonden {
+			// Probeer als direct veld
+			lowerDeel := strings.ToLower(deel)
+			if val, ok := m[lowerDeel]; ok {
+				if i == len(delen)-1 {
+					return fmt.Sprint(val)
+				}
+				huidig = val
+			} else if val, ok := m[deel]; ok {
+				if i == len(delen)-1 {
+					return fmt.Sprint(val)
+				}
+				huidig = val
+			} else {
+				return ""
+			}
+		}
+	}
+
+	if huidig == nil {
+		return ""
+	}
+	return fmt.Sprint(huidig)
 }

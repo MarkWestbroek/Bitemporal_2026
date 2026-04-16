@@ -2,6 +2,40 @@
 
 Korte checklist voor een API-release met losse DB-stack.
 
+## GraphQL enum cache fix — `rol` en andere enum-velden correct in response (2026-04-18)
+
+### Bug: enum-velden (o.a. `rol`) waren `null` in GraphQL-responses
+- **Oorzaak**: `schemaTypeVoorReflectType()` retourneerde `"string"` als Go-typenaam voor alle string-based enum-types (Gemeenterol, Fase, Organisatietype, etc.). `makeEnumType()` cachete het eerste enum-type onder key `"string"` in `enumTypeCache`, waarna alle volgende enums diezelfde (verkeerde) enum kregen. Bij serialisatie vond graphql-go de werkelijke waarde niet terug in de verkeerde enum → `null`.
+- **Fix** (`dynql/field_builder.go`): in `fieldsVoorMeta()` wordt nu de werkelijke Go-typenaam (bijv. `"Gemeenterol"`) als enum-naam doorgegeven aan `goTypeToGraphQL()`, zodat elke enum een unieke cache-entry krijgt.
+- **Impact**: alle enum-velden in alle hub+data types (InitiatiefGemeente.rol, Initiatief.fase, Organisatie.organisatietype, etc.) retourneren nu correcte waarden.
+
+### Debug logging verwijderd
+- Tijdelijke `[DEBUG laadHubKinderen]`, `[DEBUG entityToMap]` en `[DEBUG flattenEntityMap]` prints in `dynql/query_resolvers.go` zijn verwijderd.
+
+## Publicatie detail — GraphQL query builder, `[key=value]` filter, weergavenaam-verrijking (2026-04-17)
+
+### Frontend: `[key=value]` filter in veldpad-templates
+- Template-placeholders ondersteunen nu filter-syntax: `{{gemeenten[rol=Realiseert].weergavenaam}}` filtert een array op het veld `rol` vóór verdere navigatie.
+- Geïmplementeerd in `parseSegment()` en `resolveVeldpadUitContext()`, verplaatst naar `publicatieUtils.js`.
+
+### Frontend: `data`-segment skip (REST ↔ GraphQL transparantie)
+- Templates die `producten.data.type` gebruiken, werken nu ook op GraphQL-responses waarbij `data` al afgevlakt is: het `data`-segment wordt geskipt als de key ontbreekt.
+
+### Frontend: GraphQL query builder in `PublicatieDetail`
+- Als een WeergaveDefinitie een `detailTemplate` heeft, haalt `PublicatieDetail` data op via GraphQL in plaats van REST `/full/`.
+- Functies `extractVeldpaden()`, `buildSelectieTree()`, `treeNaarGql()`, `buildGraphQLQuery()` bouwen een gerichte GraphQL-query op basis van de template-placeholders.
+- Voordeel: diepe navigatie via forward FK relaties (bijv. contactpersoon-naam via Initiatief → ContactpersoonRelatie → NatuurlijkPersoon) werkt nu zonder extra REST-calls.
+- Herbruikbare functies zijn verplaatst naar `web/vite/src/publicatie/publicatieUtils.js`.
+
+### Backend: weergavenaam-verrijking in GraphQL-responses (`dynql/query_resolvers.go`)
+- `verrijkWeergavenamen()` wordt aangeroepen na `flattenEntityMap()` op alle vier call-sites (full entity, full list, forward relation, reverse relation).
+- Per kind-entiteit met een `SecondaireEntiteitIDKolom` en een `IsWeergaveVeld`-AfgeleidVeld worden de FK-waarden gebatcht opgehaald, de weergavenaam berekend via `berekenWeergavenaamVlak()` + `evalueerCELConcatenatieVlak()`, en in de response-map ingezet.
+- Nieuwe helperfuncties: `laadWeergavenamenBatch()`, `berekenWeergavenaamVlak()`, `evalueerCELConcatenatieVlak()`, `navigeerAfgeleidPadVlak()`, `extractIntFromMap()`.
+
+### Tests toegevoegd
+- **Go** (`handlers/full_handlers_weergavenaam_test.go`): 12 unit tests voor `evalueerCELConcatenatie`, `navigeerAfgeleidPad`, `berekenWeergavenaamVanEntiteit` — geen DB nodig, volledig in-memory.
+- **JS** (`web/vite/src/publicatie/publicatieUtils.test.js`): 27 unit tests voor `parseSegment`, `segmentNaarString`, `resolveVeldpadUitContext`, `extractVeldpaden`, `buildSelectieTree`, `buildGraphQLQuery` — gedraaid met `node --test`.
+
 ## Publicatie markdown — tabelweergave hersteld (2026-04-16)
 
 - Oorzaak: de lokale markdown-renderer in de frontend ondersteunde geen GFM-tabellen, waardoor tabelsyntax als platte tekst werd weergegeven op de publicatiepagina en in de markdown-preview.

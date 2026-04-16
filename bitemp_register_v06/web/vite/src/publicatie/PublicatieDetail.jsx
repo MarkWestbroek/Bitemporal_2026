@@ -3,39 +3,15 @@ import { useParams, Link } from "react-router";
 import { useSchema } from "../context/SchemaContext";
 import { useWeergaveDefinitie } from "../hooks/useWeergaveDefinitie";
 import { safeArray, platSlaHubItems } from "../shared/schemaUtils";
-
-/**
- * Resolvet een veldpad (bijv. "Naam.roepnaam") naar een waarde uit een CEL-context.
- * Ondersteunt arrays: als er onderweg een array wordt aangetroffen (meervoudige
- * GE's/relaties), wordt het resterende pad op elk element geresolved en worden
- * de waarden samengevoegd met ", ".
- */
-function resolveVeldpadUitContext(ctx, veldpad) {
-  if (!ctx || !veldpad) return null;
-  const delen = veldpad.split(".");
-  let huidig = ctx;
-  for (let i = 0; i < delen.length; i++) {
-    if (huidig == null) return null;
-    if (Array.isArray(huidig)) {
-      const restPad = delen.slice(i).join(".");
-      const waarden = huidig
-        .map((item) => resolveVeldpadUitContext(item, restPad))
-        .filter((v) => v != null && v !== "");
-      return waarden.length > 0 ? waarden.join(", ") : null;
-    }
-    if (typeof huidig !== "object") return null;
-    huidig = huidig[delen[i]];
-  }
-  if (Array.isArray(huidig)) {
-    return huidig.filter((v) => v != null).join(", ");
-  }
-  return huidig ?? null;
-}
+import {
+  parseSegment,
+  segmentNaarString,
+  resolveVeldpadUitContext,
+  buildGraphQLQuery,
+} from "./publicatieUtils";
 
 /**
  * Vervangt alle {{veldpad}} placeholders in een template met waarden uit de CEL-context.
- * De volledige markdown-string wordt later centraal ge-escaped in markdownNaarHtml(),
- * dus placeholders worden hier onbewerkt als platte tekst ingevoegd.
  */
 function renderTemplate(template, ctx) {
   if (!template) return "";
@@ -177,7 +153,8 @@ function markdownNaarHtml(md) {
  * PublicatieDetail — read-only detailpagina voor een entiteit, gerenderd via
  * een WeergaveDefinitie template met {{veldpad}} inserts.
  *
- * Als er geen detailTemplate is, wordt een fallback getoond met alle GE-velden.
+ * Als er een detailTemplate is, wordt data opgehaald via GraphQL (ondersteunt
+ * diepe navigatie via forward FK relaties). Zonder template: REST fallback.
  */
 export default function PublicatieDetail() {
   const { typePad, id } = useParams();
@@ -198,41 +175,78 @@ export default function PublicatieDetail() {
 
   const apiPath = typeMeta?.padnaam || typeMeta?.meervoud || typeMeta?.veldnaam;
 
-  // Haal de full entity op
+  // Haal de full entity op.
+  // Met detailTemplate → GraphQL (ondersteunt diepe navigatie via forward FK).
+  // Zonder template → REST /full/ (fallback voor generieke weergave).
   useEffect(() => {
-    if (!apiPath || !baseUrl || !id) return;
+    if (!apiPath || !baseUrl || !id || wdLoading) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
 
-    fetch(`${baseUrl}/full/${apiPath}/${id}`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
+    if (detailTemplate) {
+      // GraphQL: bouw query op basis van template veldpaden
+      const query = buildGraphQLQuery(detailTemplate, apiPath, id);
+      fetch(`${baseUrl}/graphql/query`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
       })
-      .then((json) => {
-        if (!cancelled) {
-          setEntity(json);
+        .then((res) => res.json())
+        .then((json) => {
+          if (cancelled) return;
+          if (json.errors) {
+            setError(json.errors.map((e) => e.message).join(", "));
+          } else {
+            setEntity(json.data?.[`full_${apiPath}`] || null);
+          }
           setLoading(false);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setError(err.message);
-          setLoading(false);
-        }
-      });
+        })
+        .catch((err) => {
+          if (!cancelled) {
+            setError(err.message);
+            setLoading(false);
+          }
+        });
+    } else {
+      // REST fallback
+      fetch(`${baseUrl}/full/${apiPath}/${id}`)
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then((json) => {
+          if (!cancelled) {
+            setEntity(json);
+            setLoading(false);
+          }
+        })
+        .catch((err) => {
+          if (!cancelled) {
+            setError(err.message);
+            setLoading(false);
+          }
+        });
+    }
 
     return () => {
       cancelled = true;
     };
-  }, [baseUrl, apiPath, id]);
+  }, [baseUrl, apiPath, id, detailTemplate, wdLoading]);
 
-  // Bouw CEL-context uit de full-entity data.
-  // Voeg entries toe op zowel klassenaam als jsonRolnaam, zodat veldpaden
-  // als "Namen.roepnaam" én "namen.data.roepnaam" beide werken.
+  // Bouw CEL-context uit de entity data.
+  // GraphQL: response is al geflattend — direct als context.
+  // REST: bouw context met hub-flattening en klassenaam-mapping.
   const celContext = useMemo(() => {
     if (!entity || !typeMeta) return {};
+
+    // GraphQL-response: al geflattend, direct als context gebruiken.
+    // resolveVeldpadUitContext handelt 'data'-segmenten transparant af.
+    if (detailTemplate) {
+      return entity;
+    }
+
+    // REST fallback: bestaande hub-flattening + klassenaam-mapping
     const onderliggende = safeArray(typeMeta?.onderliggende);
     const ctx = {};
 
@@ -254,15 +268,12 @@ export default function PublicatieDetail() {
       const isMeervoudig = child.momentvoorkomen === "meervoudig";
 
       if (isMeervoudig) {
-        // Meervoudig: bewaar ALLE actieve items als array, zodat
-        // resolveVeldpadUitContext ze kan joinen met ", ".
         const arr = actieveItems.length > 0 ? actieveItems : items;
         ctx[klassenaam] = arr;
         if (child.jsonRolnaam && child.jsonRolnaam !== klassenaam) {
           ctx[child.jsonRolnaam] = arr;
         }
       } else {
-        // Enkelvoudig: neem het eerste actieve item
         const actiefItem = actieveItems[0] || items[0] || null;
         if (!actiefItem) continue;
         ctx[klassenaam] = actiefItem;
@@ -272,7 +283,7 @@ export default function PublicatieDetail() {
       }
     }
     return ctx;
-  }, [entity, typeMeta, typeMetaByTypenaam]);
+  }, [entity, typeMeta, typeMetaByTypenaam, detailTemplate]);
 
   // Render het template (of fallback)
   const gerenderdHtml = useMemo(() => {

@@ -62,7 +62,21 @@ func fieldsVoorMeta(meta model.TypeMeta) graphql.Fields {
 
 		goType, format := schemaTypeVoorReflectType(f.Type)
 		enumValues := resolveEnumWaarden(f)
-		gqlType := goTypeToGraphQL(goType, format, enumValues)
+
+		// Gebruik de Go-typenaam als enum-naam (bijv. "Gemeenterol") i.p.v.
+		// de generieke "string", om collisies in enumTypeCache te voorkomen:
+		// alle string-based enums zouden anders dezelfde cache-key delen.
+		enumGoType := goType
+		if len(enumValues) > 0 {
+			ft := f.Type
+			for ft.Kind() == reflect.Ptr {
+				ft = ft.Elem()
+			}
+			if ft.Name() != "" && ft.Name() != "string" {
+				enumGoType = ft.Name()
+			}
+		}
+		gqlType := goTypeToGraphQL(enumGoType, format, enumValues)
 
 		// Array-formaten
 		if strings.HasPrefix(format, "array") {

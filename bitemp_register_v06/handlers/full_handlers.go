@@ -463,14 +463,50 @@ func laadWeergavenamenVoorEntiteiten(c *gin.Context, doelMeta model.TypeMeta, id
 
 // berekenWeergavenaamVanEntiteit berekent de weergavenaam uit een entity-map
 // door het AfgeleidVeld-pad te navigeren door de hub→data structuur.
+// Ondersteunt CEL-concatenatie-expressies met + (bijv. "GE.naam + \" (\" + GE.code + \")\"").
 func berekenWeergavenaamVanEntiteit(entityMap map[string]any, meta model.TypeMeta) string {
 	for _, av := range meta.AfgeleideVelden {
 		if !av.IsWeergaveVeld {
 			continue
 		}
-		return navigeerAfgeleidPad(entityMap, av.Afleidingsregel, meta)
+		return evalueerCELConcatenatie(entityMap, av.Afleidingsregel, meta)
 	}
 	return ""
+}
+
+// evalueerCELConcatenatie evalueert een (beperkte) CEL-expressie die bestaat uit
+// pad-navigaties en string-literals verbonden met +.
+// Voorbeelden:
+//   - "DomeinGegevens.naam"                                        → eenvoudig pad
+//   - "GemeenteGegevens.naam + \" (\" + GemeenteGegevens.code + \")\""  → concatenatie
+func evalueerCELConcatenatie(entityMap map[string]any, expressie string, meta model.TypeMeta) string {
+	// Snelle check: als er geen + in zit, is het een eenvoudig pad
+	if !strings.Contains(expressie, "+") {
+		return navigeerAfgeleidPad(entityMap, strings.TrimSpace(expressie), meta)
+	}
+
+	// Splits op + en evalueer elk segment
+	segmenten := strings.Split(expressie, "+")
+	var resultaat strings.Builder
+	for _, segment := range segmenten {
+		segment = strings.TrimSpace(segment)
+		if segment == "" {
+			continue
+		}
+		// String-literal: begint en eindigt met "
+		if len(segment) >= 2 && segment[0] == '"' && segment[len(segment)-1] == '"' {
+			// Verwijder quotes en unescape basis-escapes
+			literal := segment[1 : len(segment)-1]
+			literal = strings.ReplaceAll(literal, `\"`, `"`)
+			literal = strings.ReplaceAll(literal, `\\`, `\`)
+			resultaat.WriteString(literal)
+		} else {
+			// Pad-navigatie
+			waarde := navigeerAfgeleidPad(entityMap, segment, meta)
+			resultaat.WriteString(waarde)
+		}
+	}
+	return resultaat.String()
 }
 
 // navigeerAfgeleidPad navigeert een punt-gescheiden pad (bijv. "DomeinGegevens.naam")

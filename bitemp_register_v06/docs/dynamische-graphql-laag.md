@@ -53,6 +53,9 @@ In tegenstelling tot gqlgen (dat een `.graphqls` schema-file en code generation 
 | `scalars.go`            | ~185 | DateTime, Date, JSON custom scalars + `goTypeToGraphQL()` mapping + enum-aanmaak     |
 | `field_builder.go`      | ~210 | Struct-reflectie → `graphql.Fields` (geporteerd patroon uit `viz_schema_handler.go`) |
 | `type_builder.go`       | ~155 | `TypeMeta` → `graphql.Object` met hub+data flattening, geneste GE's, afgeleide velden |
+
+> **Enum handling**: enum-velden gebruiken GraphQL enum-types met gesanitizede namen.
+> Zie [graphql-enum-handling.md](graphql-enum-handling.md) voor de volledige analyse van de enum cache-bug en het underscore-serialisatiegedrag.
 | `query_resolvers.go`    | ~315 | Full-entity, lijst en registratie resolvers met directe Bun queries                  |
 | `mutation_resolvers.go` | ~125 | Registreer/corrigeer/maakOngedaan via REST round-trip naar eigen server               |
 | `schema_builder.go`     | ~160 | `BuildSchema()` — assembleert alles vanuit MetaRegistry                               |
