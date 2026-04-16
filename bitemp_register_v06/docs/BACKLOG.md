@@ -716,6 +716,31 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | R5 | Codegenerator aanpassen voor referentielijsten | Referentielijsten.md |
 | R6 | Omschrijvingen updaten (NP, Locatie, Adres, BAGLocatie) | Referentielijsten.md |
 
+### Publicatie site
+
+> Aparte Vite-entry (`publicatie.html`), eindgebruikersgerichte weergave van registerdata via WeergaveDefinities. Fundament (F22–F24, F31–F33) is ✅ gebouwd.
+
+| # | Item | Bron |
+|---|------|------|
+| P1 | Meervoudige items tonen in tabelweergave (GE's met momentvoorkomen meervoudig) | nieuw |
+| P2 | Doorzoekbare / filterbare tabelweergave voor eindgebruikers | nieuw |
+| P3 | Navigatie vanuit detailpagina naar gerelateerde entiteiten (doorklikken) | nieuw |
+| P4 | Tijdreis-kiezer (formeel/materieel peiltijdstip) in publicatieweergave | nieuw |
+| P5 | Responsive / mobiel-vriendelijk ontwerp | nieuw |
+| P6 | WeergaveDefinitie beheer-UI (aanmaken, bewerken, archiveren) | nieuw |
+
+### Data-universum
+
+> Overkoepelend inzicht in alle instanties en hun onderlinge samenhang, over entiteitstypes heen.
+
+| # | Item | Bron |
+|---|------|------|
+| DU1 | Dashboard: aantallen per entiteitstype, actief vs. afgevoerd | nieuw |
+| DU2 | Cross-entity zoeken: vrije tekst doorzoekt alle entiteitstypes tegelijk | nieuw |
+| DU3 | Tijdreis over het gehele register (combinatie formeel + materieel peiltijdstip) | nieuw |
+| DU4 | Export van het complete register (JSON / CSV) | nieuw |
+| DU5 | Graaf-visualisatie van instantie-relaties (wie is verbonden met wie) | nieuw |
+
 ---
 
 ## Visie & Plan — Increment 2
@@ -780,6 +805,19 @@ Focus: content editor (formulieren) doorontwikkelen.
 | 5 | **F10–F11** Records verwijderen + ongedaan maken | Basis CRUD afronden |
 | 6 | **V1–V5** Bestaande pagina's verbeteren | Views, doorklikken, corrigeren |
 
+### Increment 2E — Publicatie site
+
+Focus: de publicatieweergave geschikt maken voor eindgebruikers.
+
+| Prio | Items | Reden |
+|------|-------|-------|
+| 1 | **P1** Meervoudige items in tabelweergave | Correcte weergave van meervoudige GE's |
+| 2 | **P2** Doorzoekbare / filterbare tabel | Bruikbaarheid voor eindgebruikers |
+| 3 | **P3** Navigatie naar gerelateerde entiteiten | Doorklikken binnen het register |
+| 4 | **P4** Tijdreis-kiezer in publicatieweergave | Kernfeature bitemporeel register |
+| 5 | **P5** Responsive / mobiel ontwerp | Bereikbaarheid op alle apparaten |
+| 6 | **P6** WeergaveDefinitie beheer-UI | Zelfbeheer door functioneel beheerder |
+
 ### Horizon (later, bewust geparkeerd)
 
 | Items | Reden om te wachten |
@@ -790,3 +828,4 @@ Focus: content editor (formulieren) doorontwikkelen.
 | **B18** gRPC/Connect | Pas overwegen bij typed-client behoefte |
 | **G7–G8** Typed mutations, subscriptions | GraphQL eerst basaal werkend |
 | **CEL3** Afleiding backend-first | Eerst CEL in Go en frontend stabiel |
+| **DU2–DU5** Cross-entity zoeken, tijdreis register-breed, export, graaf | Pas waardevol bij voldoende data en stabiele registers |

@@ -12006,6 +12006,127 @@
     },
     {
       "registratietype": "registratie",
+      "tijdstip": "2024-04-08T09:08:37Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Portfolio intake bron_id=73 | naam=piet | contactorganisatie=piet | po=piet | po_email=piet | bron_producttype=Component (deel van een toepassing) | bron_fase=Idee (nog geen concrete opbrengsten) | bron_lagen=laag 5: websites en apps",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "initiatief": {
+                "id": 73
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatief_aanvang": {
+                "initiatief_id": 73,
+                "datum": "2024-04-15"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "planning": {
+                "initiatief_id": 73,
+                "planningsinfo": "piet",
+                "startdatum": "2024-04-15",
+                "ready_for_use": "2024-05-04",
+                "waar_tegenaan_gelopen": "piet",
+                "fase": "Idee (nog geen concrete opbrengsten)"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "product": {
+                "initiatief_id": 73,
+                "naam": "piet",
+                "omschrijving": "piet | Componenten: piet | Parallel gebruik: piet",
+                "pitch": "piet",
+                "website": "piet",
+                "git_repo": "piet",
+                "type": "Component",
+                "CG_laag": "Laag 5"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 73,
+                "type_bijdrage": "Wendbaarheid",
+                "schaal": "Schaal 1",
+                "toelichting": "piet"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 73,
+                "type_bijdrage": "Dienstverlening",
+                "schaal": "Schaal 1",
+                "toelichting": "piet"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bijdrage": {
+                "initiatief_id": 73,
+                "type_bijdrage": "Regie",
+                "schaal": "Schaal 1",
+                "toelichting": "piet"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefdomein": {
+                "initiatief_id": 73,
+                "domein_id": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "andereapistandaard": {
+                "initiatief_id": 73,
+                "api_standaard": "piet"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "initiatiefinfo": {
+                "initiatief_id": 73,
+                "informatie": "Contact: piet; Leverancier: piet"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "betrokkenorganisatie": {
+                "initiatief_id": 73,
+                "type": "Gemeenten"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
       "tijdstip": "2024-04-18T16:05:52Z",
       "request_path": "/registratie/",
       "request_method": "POST",
@@ -14699,127 +14820,6 @@
               "betrokkenorganisatie": {
                 "initiatief_id": 88,
                 "type": "Leveranciers"
-              }
-            }
-          }
-        ]
-      },
-      "expected_response_code": 201,
-      "expected_response_body": null
-    },
-    {
-      "registratietype": "registratie",
-      "tijdstip": "2024-10-10T15:42:01Z",
-      "request_path": "/registratie/",
-      "request_method": "POST",
-      "request_body": {
-        "registratie": {
-          "id": 0,
-          "opmerking": "Portfolio intake bron_id=93 | naam=y | contactorganisatie=y | po=y | po_email=y | bron_producttype=Component (deel van een toepassing) | bron_fase=Initiatie (al een snelle POC) | bron_lagen=Laag 4: Procesinrichting",
-          "registratietype": "registratie",
-          "tijdstip": "0001-01-01T00:00:00Z"
-        },
-        "wijzigingen": [
-          {
-            "opvoer": {
-              "initiatief": {
-                "id": 93
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "initiatief_aanvang": {
-                "initiatief_id": 93,
-                "datum": "2024-10-30"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "planning": {
-                "initiatief_id": 93,
-                "planningsinfo": "y",
-                "startdatum": "2024-10-30",
-                "ready_for_use": "2024-10-25",
-                "waar_tegenaan_gelopen": "y",
-                "fase": "Initiatie (al een snelle POC)"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "product": {
-                "initiatief_id": 93,
-                "naam": "y",
-                "omschrijving": "y | Componenten: y | Parallel gebruik: y",
-                "pitch": "y",
-                "website": "y",
-                "git_repo": "y",
-                "type": "Component",
-                "CG_laag": "Laag 4"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "bijdrage": {
-                "initiatief_id": 93,
-                "type_bijdrage": "Wendbaarheid",
-                "schaal": "Schaal 3",
-                "toelichting": "y"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "bijdrage": {
-                "initiatief_id": 93,
-                "type_bijdrage": "Dienstverlening",
-                "schaal": "Schaal 3",
-                "toelichting": "y"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "bijdrage": {
-                "initiatief_id": 93,
-                "type_bijdrage": "Regie",
-                "schaal": "Schaal 3",
-                "toelichting": "y"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "initiatiefdomein": {
-                "initiatief_id": 93,
-                "domein_id": 2
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "andereapistandaard": {
-                "initiatief_id": 93,
-                "api_standaard": "y"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "initiatiefinfo": {
-                "initiatief_id": 93,
-                "informatie": "Contact: y; Leverancier: y"
-              }
-            }
-          },
-          {
-            "opvoer": {
-              "betrokkenorganisatie": {
-                "initiatief_id": 93,
-                "type": "Ketenpartners"
               }
             }
           }
@@ -18378,7 +18378,7 @@
             "opvoer": {
               "andersdangemeente": {
                 "initiatief_id": 109,
-                "andersDanGemeente": "Raotterdam"
+                "andersDanGemeente": "Rotterdam"
               }
             }
           },
