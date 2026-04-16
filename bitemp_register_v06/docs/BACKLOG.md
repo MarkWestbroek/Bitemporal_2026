@@ -716,6 +716,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | CEL1 | CEL-evaluatie in Go (github.com/google/cel-go) | afgeleide-velden.md |
 | CEL2 | Frontend CEL: evalueren overstap naar library | CEL-evaluatie-js.md |
 | CEL3 | Afleiding backend-first overwegen (lange termijn) | CEL-evaluatie-js.md |
+| CEL4 | Check: condities in velden in expressie | t.b.v. detailpagina's |
 
 ### Referentielijst-specifiek
 
@@ -734,12 +735,27 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 
 | # | Item | Bron |
 |---|------|------|
-| P1 | Meervoudige items tonen in tabelweergave (GE's met momentvoorkomen meervoudig) | nieuw |
-| P2 | Doorzoekbare / filterbare tabelweergave voor eindgebruikers | nieuw |
-| P3 | Navigatie vanuit detailpagina naar gerelateerde entiteiten (doorklikken) | nieuw |
+| P1 | Meervoudige items tonen in tabelweergave (GE's met momentvoorkomen meervoudig) | nog doortesten |
+| P2 | ✅ Doorzoekbare / filterbare tabelweergave voor eindgebruikers | nieuw |
+| P3 | ✅ Navigatie vanuit detailpagina naar gerelateerde entiteiten (doorklikken) | nieuw |
 | P4 | Tijdreis-kiezer (formeel/materieel peiltijdstip) in publicatieweergave | nieuw |
 | P5 | Responsive / mobiel-vriendelijk ontwerp | nieuw |
 | P6 | WeergaveDefinitie beheer-UI (aanmaken, bewerken, archiveren) | nieuw |
+| P7 | ad P1: meervoudig formaat "A, B en C" | nieuw |
+| P8 | Widgets kunnen gebruiken voor speciale gevallen | nieuw |
+| P9 | ✅ Zoeken over alle rijen: preload alle rijen | Nieuw |
+| P10 | Doorklikken naar detailpaginavariatie x (speciale link) | Nieuw |
+| P11 | Lijstjes in detailweergave simpel (A, B en C) notatieformaat: CEL? | Nieuw |
+| P12 | condities in detailweergave (gem, rol=maker) + lijstjes (CEL?)| Nieuw |
+| P13 | Filter ingewikkelder: uitsluitingen enz. | Nieuw |
+| P14 | Sorteren | Nieuw |
+| P15 | Bij een enum-veld een dropdownfilter / datum een range enz. | Nieuw |
+| P16 | Bij een lijst-veld een dropdownfilter afh. v lengte lijst? | Nieuw |
+| P17 | websites vanzelf ook als link tonen | Nieuw |
+| P | | Nieuw |
+| P | | Nieuw |
+| P | | Nieuw |
+| P | | Nieuw |
 
 ### Data-universum
 

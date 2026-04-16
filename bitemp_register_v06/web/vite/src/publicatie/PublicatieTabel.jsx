@@ -4,6 +4,7 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   flexRender,
 } from "@tanstack/react-table";
 import { useParams, useNavigate, Link } from "react-router";
@@ -15,10 +16,13 @@ import { safeArray, platSlaHubItems } from "../shared/schemaUtils";
  * Resolvet een veldpad (bijv. "namen.data.roepnaam" of "id") naar een waarde
  * uit een full-entity object.
  *
- * Ondersteunt twee patronen:
- *   - Direct entity-veld:  "id" → entity.id
- *   - Genest GE-veld:      "namen.data.roepnaam" → zoek in onderliggende GE "namen",
+ * Ondersteunt drie patronen:
+ *   - Direct entity-veld:       "id" → entity.id
+ *   - Genest GE-veld:           "namen.data.roepnaam" → zoek in onderliggende GE "namen",
  *     neem het actuele (platgeslagen) item, en lees "roepnaam".
+ *   - Meervoudig GE-veld:       "initiatief_domeinen.weergavenaam" → bij meervoudig
+ *     momentvoorkomen worden ALLE actieve items verzameld en de waarden
+ *     gejoined met ", ".
  *
  * Het segment ".data." in het pad wordt overgeslagen omdat platSlaHubItems de hub
  * al heeft platgeslagen naar directe veldwaarden.
@@ -51,7 +55,29 @@ function resolveVeldpad(entity, veldpad, typeMeta, typeMetaByTypenaam) {
   const rawItems = safeArray(entity[child.jsonRolnaam] || entity[child.rolnaam]);
   const items = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
 
-  // Neem het eerste actieve item (zonder afvoer)
+  // Bepaal of het meervoudig is (meerdere items per entiteit)
+  const isMeervoudig = child.momentvoorkomen === "meervoudig";
+
+  if (isMeervoudig) {
+    // Verzamel waarden van ALLE actieve items en join met ", "
+    const actieveItems = items.filter((item) => !item.afvoer);
+    if (actieveItems.length === 0) return null;
+
+    const waarden = actieveItems
+      .map((item) => {
+        let huidig = item;
+        for (const deel of restDelen) {
+          if (huidig == null || typeof huidig !== "object") return null;
+          huidig = huidig[deel];
+        }
+        return huidig ?? null;
+      })
+      .filter((v) => v != null);
+
+    return waarden.length > 0 ? waarden.join(", ") : null;
+  }
+
+  // Enkelvoudig: neem het eerste actieve item (zonder afvoer)
   const actiefItem = items.find((item) => !item.afvoer) || items[0] || null;
   if (!actiefItem) return null;
 
@@ -62,6 +88,15 @@ function resolveVeldpad(entity, veldpad, typeMeta, typeMetaByTypenaam) {
     huidig = huidig[deel];
   }
   return huidig ?? null;
+}
+
+/**
+ * Vervangt punten in een veldpad door dubbel-underscore, zodat TanStack Table
+ * het als een eenvoudige string-sleutel kan gebruiken (geen nested-path
+ * interpretatie, geen problemen in _getAllFlatColumnsById).
+ */
+function sanitizeKolId(veldpad) {
+  return (veldpad || "").replace(/\./g, "__");
 }
 
 /**
@@ -91,58 +126,80 @@ export default function PublicatieTabel() {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [serverPage, setServerPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 });
 
   const apiPath = typeMeta?.padnaam || typeMeta?.meervoud || typeMeta?.veldnaam;
-  const serverPageSize = tabelConfig?.rijenPerPagina || 50;
 
-  // Data ophalen: server-side paginering
+  // Data ophalen: alles in één keer, zodat filter + sortering over de volledige
+  // dataset werken. Client-side paginering via TanStack getPaginationRowModel.
   const fetchData = useCallback(async () => {
     if (!apiPath || !baseUrl) return;
     setLoading(true);
     setError(null);
     try {
       const res = await fetch(
-        `${baseUrl}/full/${apiPath}?page=${serverPage}&size=${serverPageSize}`
+        `${baseUrl}/full/${apiPath}?page=1&size=9999`
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       const key = typeMeta?.meervoud || Object.keys(json).find((k) => Array.isArray(json[k]));
       setData(safeArray(json[key] || json));
-      setTotalCount(json.total_count ?? 0);
-      setHasMore(json.has_more ?? false);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [baseUrl, apiPath, typeMeta, serverPage, serverPageSize]);
+  }, [baseUrl, apiPath, typeMeta]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
+  // Pre-bereken alle kolomwaarden zodat de filter altijd actuele waarden ziet.
+  // Elke rij krijgt naast de originele entity-velden ook voor elke kolom een
+  // gesaniteerde sleutel (punten → __), zodat TanStack de waarde direct kan
+  // opzoeken via een simpele accessorKey-string zonder dots.
+  const resolvedData = useMemo(() => {
+    if (!typeMeta || !tabelConfig?.kolommen?.length) return data;
+    return data.map((entity) => {
+      const row = { ...entity };
+      for (const kol of tabelConfig.kolommen) {
+        row[sanitizeKolId(kol.veldpad)] = resolveVeldpad(
+          entity,
+          kol.veldpad,
+          typeMeta,
+          typeMetaByTypenaam
+        ) ?? null;
+      }
+      return row;
+    });
+  }, [data, tabelConfig, typeMeta, typeMetaByTypenaam]);
+
   // Kolommen: uit WeergaveDefinitie of fallback
   const columns = useMemo(() => {
     if (!typeMeta) return [];
 
-    // Als er een tabelConfig is, gebruik die kolommen
+    // Als er een tabelConfig is, gebruik die kolommen.
+    // accessorKey leest direct uit resolvedData[sanitizeKolId(veldpad)].
+    // Geen dots in de key → geen TanStack nested-path interpretatie.
     if (tabelConfig?.kolommen?.length > 0) {
-      return tabelConfig.kolommen.map((kol) => ({
-        id: kol.veldpad,
-        header: kol.label || kol.veldpad,
-        accessorFn: (row) => resolveVeldpad(row, kol.veldpad, typeMeta, typeMetaByTypenaam),
-        cell: ({ getValue }) => {
-          const val = getValue();
-          if (val == null) return <span style={{ color: "var(--cg-donkergrijs)" }}>—</span>;
-          return String(val);
-        },
-        enableSorting: kol.sorteerbaar !== false,
-        enableColumnFilter: kol.filterbaar !== false,
-        size: kol.breedte ? parseInt(kol.breedte, 10) || undefined : undefined,
-      }));
+      return tabelConfig.kolommen.map((kol) => {
+        const key = sanitizeKolId(kol.veldpad);
+        return {
+          id: key,
+          header: kol.label || kol.veldpad,
+          accessorFn: (row) => row[key] ?? null,
+          cell: ({ getValue }) => {
+            const val = getValue();
+            if (val == null) return <span style={{ color: "var(--cg-donkergrijs)" }}>—</span>;
+            return String(val);
+          },
+          enableSorting: kol.sorteerbaar !== false,
+          enableColumnFilter: kol.filterbaar !== false,
+          filterFn: "includesString",
+          size: kol.breedte ? parseInt(kol.breedte, 10) || undefined : undefined,
+        };
+      });
     }
 
     // Fallback: ID + klassenaam per onderliggend GE
@@ -193,10 +250,13 @@ export default function PublicatieTabel() {
 
   // Initiële sortering uit tabelConfig
   const initialSorting = useMemo(() => {
-    if (!tabelConfig?.standaardSortering?.veldpad) return [];
+    // standaardSortering kan "veldpad" of "veld" hebben (backward compat)
+    const vp = tabelConfig?.standaardSortering?.veldpad || tabelConfig?.standaardSortering?.veld;
+    if (!vp) return [];
     return [
       {
-        id: tabelConfig.standaardSortering.veldpad,
+        // Gebruik dezelfde gesaniteerde sleutel als in de kolom-definitie
+        id: sanitizeKolId(vp),
         desc: tabelConfig.standaardSortering.richting === "desc",
       },
     ];
@@ -206,20 +266,29 @@ export default function PublicatieTabel() {
     if (initialSorting.length > 0) setSorting(initialSorting);
   }, [initialSorting]);
 
-  const pageSize = tabelConfig?.rijenPerPagina || 25;
+  // Pas paginagrootte aan als tabelConfig geladen is
+  useEffect(() => {
+    const ps = tabelConfig?.rijenPerPagina || 25;
+    setPagination((p) => ({ ...p, pageSize: ps, pageIndex: 0 }));
+  }, [tabelConfig]);
 
-  const totalServerPages = Math.max(1, Math.ceil(totalCount / serverPageSize));
+  // Reset naar pagina 1 zodra filter/sortering verandert
+  useEffect(() => {
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  }, [globalFilter, columnFilters, sorting]);
 
   const table = useReactTable({
-    data,
+    data: resolvedData,
     columns,
-    state: { sorting, columnFilters, globalFilter },
+    state: { sorting, columnFilters, globalFilter, pagination },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     globalFilterFn: "includesString",
   });
 
@@ -362,26 +431,38 @@ export default function PublicatieTabel() {
         </table>
       </div>
 
-      {/* Server-side paginering */}
+      {/* Client-side paginering */}
       <div className="cg-pagination">
         <button
           className="utrecht-button utrecht-button--secondary-action"
-          onClick={() => setServerPage((p) => Math.max(1, p - 1))}
-          disabled={serverPage <= 1 || loading}
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage() || loading}
         >
           ← Vorige
         </button>
         <span style={{ fontSize: "0.875rem", color: "var(--cg-donkergrijs)" }}>
-          Pagina {serverPage} van {totalServerPages}
-          {" "}({totalCount} records totaal, {table.getFilteredRowModel().rows.length} op deze pagina)
+          Pagina {table.getState().pagination.pageIndex + 1} van {table.getPageCount()}
+          {" "}({table.getFilteredRowModel().rows.length} van {data.length} records)
         </span>
         <button
           className="utrecht-button utrecht-button--secondary-action"
-          onClick={() => setServerPage((p) => p + 1)}
-          disabled={!hasMore || loading}
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage() || loading}
         >
           Volgende →
         </button>
+        <select
+          value={table.getState().pagination.pageSize}
+          onChange={(e) =>
+            setPagination((p) => ({ ...p, pageSize: Number(e.target.value), pageIndex: 0 }))
+          }
+          style={{ fontSize: "0.875rem", padding: "2px 6px" }}
+          aria-label="Rijen per pagina"
+        >
+          {[10, 25, 50, 100].map((n) => (
+            <option key={n} value={n}>{n} per pagina</option>
+          ))}
+        </select>
       </div>
     </div>
   );

@@ -432,6 +432,30 @@
   padding-left: 1.25rem;
 }
 
+.cg-markdown-viewer__body table,
+.cg-form-card table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0 0.75rem;
+  font-size: 0.875rem;
+}
+
+.cg-markdown-viewer__body th,
+.cg-markdown-viewer__body td,
+.cg-form-card th,
+.cg-form-card td {
+  border: 1px solid color-mix(in srgb, var(--cg-blauw) 18%, white);
+  padding: 0.45rem 0.55rem;
+  vertical-align: top;
+}
+
+.cg-markdown-viewer__body th,
+.cg-form-card th {
+  background: color-mix(in srgb, var(--cg-blauw) 10%, white);
+  color: var(--cg-donkerblauw);
+  font-weight: 700;
+}
+
 /* ── Code editor (react-simple-code-editor) ────────── */
 
 .cg-code-editor {

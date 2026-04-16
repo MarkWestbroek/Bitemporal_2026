@@ -101,7 +101,7 @@
             "opvoer": {
               "tabelconfig": {
                 "weergavedefinitie_id": 2,
-                "tabel_config_json": "{\"kolommen\":[{\"veldpad\":\"id\",\"label\":\"ID\",\"breedte\":80,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"producten.data.naam\",\"label\":\"Productnaam\",\"breedte\":180,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"producten.data.type\",\"label\":\"Type\",\"breedte\":120,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"producten.data.CG_laag\",\"label\":\"CG-laag\",\"breedte\":120},{\"veldpad\":\"planningen.data.fase\",\"label\":\"Fase\",\"breedte\":120,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"planningen.data.startdatum\",\"label\":\"Startdatum\",\"breedte\":120,\"sorteerbaar\":true}],\"standaardSortering\":{\"veld\":\"id\",\"richting\":\"asc\"},\"rijenPerPagina\":25}",
+                "tabel_config_json": "{\"kolommen\":[{\"veldpad\":\"id\",\"label\":\"ID\",\"breedte\":80,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"producten.data.naam\",\"label\":\"Productnaam\",\"breedte\":180,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"producten.data.type\",\"label\":\"Type\",\"breedte\":120,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"producten.data.CG_laag\",\"label\":\"CG-laag\",\"breedte\":120},{\"veldpad\":\"initiatief_domeinen.weergavenaam\",\"label\":\"Domeinen\",\"breedte\":180,\"sorteerbaar\":false,\"filterbaar\":true},{\"veldpad\":\"planningen.data.fase\",\"label\":\"Fase\",\"breedte\":120,\"sorteerbaar\":true,\"filterbaar\":true},{\"veldpad\":\"planningen.data.startdatum\",\"label\":\"Startdatum\",\"breedte\":120,\"sorteerbaar\":true}],\"standaardSortering\":{\"veld\":\"id\",\"richting\":\"asc\"},\"rijenPerPagina\":25}",
                 "definitie_versie": "0.1"
               }
             }
@@ -110,7 +110,7 @@
             "opvoer": {
               "detailtemplate": {
                 "weergavedefinitie_id": 2,
-                "template_tekst": "# {{producten.data.naam}}\n\n**Type:** {{producten.data.type}}\n**CG-laag:** {{producten.data.CG_laag}}\n**Fase:** {{planningen.data.fase}}\n\n## Omschrijving\n{{producten.data.omschrijving}}\n\n**Pitch:** {{producten.data.pitch}}\n**Website:** {{producten.data.website}}",
+                "template_tekst": "# {{producten.data.naam}}\n## {{producten.data.type}}\n\n| **Korte omschrijving** | **Fase initiatief** | **Common Ground La(a)g(en)** |\n| --- | --- | --- |\n| {{producten.data.omschrijving}} | {{planningen.data.fase}} | {{producten.data.CG_laag}} |\n\n**Pitch:** {{producten.data.pitch}}  \n**Website:** {{producten.data.website}}",
                 "definitie_versie": "0.1"
               }
             }

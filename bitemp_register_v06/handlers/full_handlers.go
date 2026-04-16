@@ -277,6 +277,323 @@ func removeAfvoerKeys(v any) any {
 	}
 }
 
+// ─── Weergavenaam-verrijking ──────────────────────────────────────────────
+//
+// Voor relatie-hubs met een SecondaireEntiteitIDKolom en AfgeleideVelden
+// (IsWeergaveVeld) wordt de weergavenaam van de doelentiteit opgehaald en
+// geïnjecteerd in de response. Hierdoor kan de frontend direct
+// "initiatiefdomein.weergavenaam" resolven zonder extra API-calls.
+
+// verrijkingTarget beschrijft één relatie-type dat verrijkt moet worden.
+type verrijkingTarget struct {
+	jsonRolnaam string
+	childMeta   model.TypeMeta
+	fkJSONNaam  string         // JSON-naam van de FK-kolom (bijv. "domein_id")
+	doelMeta    model.TypeMeta // Metadata van de doelentiteit (bijv. Domein)
+}
+
+// bepaalVerrijkingTargets geeft de relatie-types terug die verrijkt moeten worden.
+func bepaalVerrijkingTargets(entityMeta model.TypeMeta) []verrijkingTarget {
+	var targets []verrijkingTarget
+	for _, rel := range entityMeta.OnderliggendeGegevenselementen {
+		childMeta, ok := model.MetaRegistry.GetTypeMeta(rel.Doeltype)
+		if !ok || childMeta.SecondaireEntiteitIDKolom == "" {
+			continue
+		}
+		heeftWeergaveVeld := false
+		for _, av := range childMeta.AfgeleideVelden {
+			if av.IsWeergaveVeld {
+				heeftWeergaveVeld = true
+				break
+			}
+		}
+		if !heeftWeergaveVeld {
+			continue
+		}
+		doelTypenaam := doelEntiteitVanSecondaireKolom(childMeta.SecondaireEntiteitIDKolom)
+		doelMeta, doelOK := model.MetaRegistry.GetTypeMeta(doelTypenaam)
+		if !doelOK || doelMeta.Metatype != model.MetatypeEntiteit {
+			continue
+		}
+		fkJSON := jsonNaamVoorBunKolom(childMeta, childMeta.SecondaireEntiteitIDKolom)
+		targets = append(targets, verrijkingTarget{
+			jsonRolnaam: rel.JSONRolnaam,
+			childMeta:   childMeta,
+			fkJSONNaam:  fkJSON,
+			doelMeta:    doelMeta,
+		})
+	}
+	return targets
+}
+
+// verrijkResponseMetWeergavenamen voegt weergavenaam toe aan relatie-items
+// in een full-entity response. Werkt op zowel een enkel entity als een slice.
+// Retourneert de verrijkte response als []map of map (JSON-compatibel).
+func verrijkResponseMetWeergavenamen(c *gin.Context, entities any, entityMeta model.TypeMeta) (any, error) {
+	targets := bepaalVerrijkingTargets(entityMeta)
+	if len(targets) == 0 {
+		return entities, nil
+	}
+
+	// Converteer naar generieke JSON-structuur
+	b, err := json.Marshal(entities)
+	if err != nil {
+		return entities, nil // fallback: origineel teruggeven
+	}
+
+	// Bepaal of het een slice of een enkel object is
+	isSlice := false
+	var maps []map[string]any
+	if err := json.Unmarshal(b, &maps); err != nil {
+		// Probeer als enkel object
+		var single map[string]any
+		if err2 := json.Unmarshal(b, &single); err2 != nil {
+			return entities, nil
+		}
+		maps = []map[string]any{single}
+	} else {
+		isSlice = true
+	}
+
+	for _, target := range targets {
+		// Verzamel alle FK-IDs uit alle entiteiten
+		fkIDs := make(map[int]bool)
+		for _, entityMap := range maps {
+			relatieItems, ok := entityMap[target.jsonRolnaam].([]any)
+			if !ok {
+				continue
+			}
+			for _, item := range relatieItems {
+				itemMap, ok := item.(map[string]any)
+				if !ok {
+					continue
+				}
+				if fkVal, ok := itemMap[target.fkJSONNaam]; ok {
+					if fkID, ok := fkVal.(float64); ok {
+						fkIDs[int(fkID)] = true
+					}
+				}
+			}
+		}
+		if len(fkIDs) == 0 {
+			continue
+		}
+
+		// Batch-load doelentiteiten
+		idList := make([]int, 0, len(fkIDs))
+		for id := range fkIDs {
+			idList = append(idList, id)
+		}
+
+		weergaveMap, err := laadWeergavenamenVoorEntiteiten(c, target.doelMeta, idList)
+		if err != nil {
+			continue // bij fout: gewoon doorgaan zonder verrijking
+		}
+
+		// Injecteer weergavenaam in elke relatie-item
+		for _, entityMap := range maps {
+			relatieItems, ok := entityMap[target.jsonRolnaam].([]any)
+			if !ok {
+				continue
+			}
+			for _, item := range relatieItems {
+				itemMap, ok := item.(map[string]any)
+				if !ok {
+					continue
+				}
+				if fkVal, ok := itemMap[target.fkJSONNaam]; ok {
+					if fkID, ok := fkVal.(float64); ok {
+						if naam, ok := weergaveMap[int(fkID)]; ok {
+							itemMap["weergavenaam"] = naam
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if isSlice {
+		return maps, nil
+	}
+	return maps[0], nil
+}
+
+// laadWeergavenamenVoorEntiteiten laadt doelentiteiten en berekent hun weergavenaam.
+// Retourneert een map van ID → weergavenaam-string.
+func laadWeergavenamenVoorEntiteiten(c *gin.Context, doelMeta model.TypeMeta, ids []int) (map[int]string, error) {
+	if doelMeta.SliceFactory == nil {
+		return nil, fmt.Errorf("SliceFactory ontbreekt voor %s", doelMeta.Typenaam)
+	}
+
+	targetEntities := doelMeta.SliceFactory()
+	query := DB.NewSelect().Model(targetEntities)
+	query = addOnderliggendeRelations(query, doelMeta, nil)
+	err := query.Where(doelMeta.IDKolom+" IN (?)", bun.In(ids)).Scan(c.Request.Context())
+	if err != nil {
+		return nil, err
+	}
+
+	// Post-load hub-kinderen
+	if err := laadHubKinderenNaQuery(c, targetEntities, doelMeta, nil); err != nil {
+		return nil, err
+	}
+
+	// Converteer naar maps en bereken weergavenaam per entiteit
+	tb, err := json.Marshal(targetEntities)
+	if err != nil {
+		return nil, err
+	}
+	var targetMaps []map[string]any
+	if err := json.Unmarshal(tb, &targetMaps); err != nil {
+		return nil, err
+	}
+
+	idKolom := doelMeta.IDKolom
+	result := make(map[int]string, len(targetMaps))
+	for _, tm := range targetMaps {
+		idVal, ok := tm[idKolom].(float64)
+		if !ok {
+			continue
+		}
+		naam := berekenWeergavenaamVanEntiteit(tm, doelMeta)
+		result[int(idVal)] = naam
+	}
+	return result, nil
+}
+
+// berekenWeergavenaamVanEntiteit berekent de weergavenaam uit een entity-map
+// door het AfgeleidVeld-pad te navigeren door de hub→data structuur.
+func berekenWeergavenaamVanEntiteit(entityMap map[string]any, meta model.TypeMeta) string {
+	for _, av := range meta.AfgeleideVelden {
+		if !av.IsWeergaveVeld {
+			continue
+		}
+		return navigeerAfgeleidPad(entityMap, av.Afleidingsregel, meta)
+	}
+	return ""
+}
+
+// navigeerAfgeleidPad navigeert een punt-gescheiden pad (bijv. "DomeinGegevens.naam")
+// door een entity-map, gebruikmakend van MetaRegistry voor hub→data navigatie.
+func navigeerAfgeleidPad(entityMap map[string]any, pad string, meta model.TypeMeta) string {
+	delen := strings.Split(pad, ".")
+	var huidig any = entityMap
+	huidigMeta := meta
+
+	for i, deel := range delen {
+		m, ok := huidig.(map[string]any)
+		if !ok {
+			return ""
+		}
+
+		// Zoek het onderliggende element op Rolnaam
+		gevonden := false
+		for _, child := range huidigMeta.OnderliggendeGegevenselementen {
+			if !strings.EqualFold(child.Rolnaam, deel) {
+				continue
+			}
+			childItems := m[child.JSONRolnaam]
+			if childItems == nil {
+				return ""
+			}
+			childMeta, childOK := model.MetaRegistry.GetTypeMeta(child.Doeltype)
+
+			// Als het een array is, neem het eerste actieve item
+			if arr, arrOK := childItems.([]any); arrOK {
+				actiefItem := eersteActieveMapItem(arr)
+				if actiefItem == nil {
+					return ""
+				}
+				// Als het een hub is, merge data-velden erin
+				if childOK && childMeta.GESubtype == model.GESubtypeHub {
+					actiefItem = slaMapHubItemPlat(actiefItem, childMeta)
+				}
+				huidig = actiefItem
+			} else if subMap, subOK := childItems.(map[string]any); subOK {
+				huidig = subMap
+			} else {
+				return ""
+			}
+
+			if childOK {
+				huidigMeta = childMeta
+			}
+			gevonden = true
+			break
+		}
+
+		if !gevonden {
+			// Probeer als direct veld
+			lowerDeel := strings.ToLower(deel)
+			if val, ok := m[lowerDeel]; ok {
+				if i == len(delen)-1 {
+					return fmt.Sprint(val)
+				}
+				huidig = val
+			} else if val, ok := m[deel]; ok {
+				if i == len(delen)-1 {
+					return fmt.Sprint(val)
+				}
+				huidig = val
+			} else {
+				return ""
+			}
+		}
+	}
+
+	if huidig == nil {
+		return ""
+	}
+	return fmt.Sprint(huidig)
+}
+
+// eersteActieveMapItem retourneert het eerste item zonder afvoer uit een JSON-array.
+func eersteActieveMapItem(arr []any) map[string]any {
+	for _, item := range arr {
+		m, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		if m["afvoer"] == nil {
+			return m
+		}
+	}
+	if len(arr) > 0 {
+		if m, ok := arr[0].(map[string]any); ok {
+			return m
+		}
+	}
+	return nil
+}
+
+// slaMapHubItemPlat mergt de actieve data-velden in een hub-item map.
+func slaMapHubItemPlat(hubItem map[string]any, hubMeta model.TypeMeta) map[string]any {
+	merged := make(map[string]any, len(hubItem))
+	for k, v := range hubItem {
+		merged[k] = v
+	}
+	for _, child := range hubMeta.OnderliggendeGegevenselementen {
+		childMeta, ok := model.MetaRegistry.GetTypeMeta(child.Doeltype)
+		if !ok || childMeta.GESubtype != model.GESubtypeData {
+			continue
+		}
+		arr, ok := merged[child.JSONRolnaam].([]any)
+		if !ok {
+			continue
+		}
+		actief := eersteActieveMapItem(arr)
+		if actief == nil {
+			continue
+		}
+		for k, v := range actief {
+			if _, exists := merged[k]; !exists {
+				merged[k] = v
+			}
+		}
+	}
+	return merged
+}
+
 func sanitizeResponseWithoutAfvoer(payload any) (any, error) {
 	b, err := json.Marshal(payload)
 	if err != nil {
@@ -1111,6 +1428,9 @@ func MakeGetFullEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 			}
 		}
 
+		// Verrijk relatie-items met weergavenamen van doelentiteiten
+		responseEntities, _ = verrijkResponseMetWeergavenamen(c, responseEntities, meta)
+
 		c.JSON(http.StatusOK, gin.H{
 			responseCollectionKey(meta): responseEntities,
 			"page":                      page,
@@ -1193,6 +1513,9 @@ func MakeGetFullEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 				return
 			}
 		}
+
+		// Verrijk relatie-items met weergavenamen van doelentiteiten
+		responseEntity, _ = verrijkResponseMetWeergavenamen(c, responseEntity, meta)
 
 		c.JSON(http.StatusOK, responseEntity)
 	}
