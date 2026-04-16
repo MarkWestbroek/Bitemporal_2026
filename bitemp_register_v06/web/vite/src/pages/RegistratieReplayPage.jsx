@@ -3,6 +3,17 @@ import "../shared/schema-viz.css";
 
 const DEFAULT_PAGE_SIZE = 20;
 
+// Stabiele kleuren voor domein-badges; hash-gebaseerd zodat dezelfde domein altijd dezelfde kleur krijgt.
+const DOMEIN_KLEUREN = [
+  "#2563eb", "#059669", "#d97706", "#dc2626", "#7c3aed",
+  "#0891b2", "#be185d", "#4f46e5", "#65a30d", "#ea580c",
+];
+function domeinKleur(domein) {
+  let h = 0;
+  for (let i = 0; i < domein.length; i++) h = ((h << 5) - h + domein.charCodeAt(i)) | 0;
+  return DOMEIN_KLEUREN[Math.abs(h) % DOMEIN_KLEUREN.length];
+}
+
 function toPrettyJson(value) {
   if (value == null) {
     return "-";
@@ -348,6 +359,11 @@ export default function RegistratieReplayPage() {
   const [savingOpmerkingId, setSavingOpmerkingId] = useState(null);
   const [opmerkingSaveError, setOpmerkingSaveError] = useState("");
 
+  // Domein-filter: "" = alle, anders bijv. "np_loc"
+  const [domeinFilter, setDomeinFilter] = useState("");
+  // Unieke domeinen verzameld uit geladen registraties (voor de dropdown)
+  const [beschikbareDomeinen, setBeschikbareDomeinen] = useState([]);
+
   useEffect(() => {
     let active = true;
     const controller = new AbortController();
@@ -357,6 +373,7 @@ export default function RegistratieReplayPage() {
       setLoadError("");
       try {
         const qs = new URLSearchParams({ page: String(page), size: String(size) });
+        if (domeinFilter) qs.set("domein", domeinFilter);
         qs.set("_ts", String(Date.now()));
         const res = await fetch(`${baseUrl}/full/registraties?${qs.toString()}`, {
           signal: controller.signal,
@@ -374,6 +391,17 @@ export default function RegistratieReplayPage() {
         }
         setRegistraties(sortRegistratiesById(rows));
         setHasMore(Boolean(json?.has_more));
+        // Verzamel unieke domeinen voor de filter-dropdown
+        const domSet = new Set();
+        for (const r of rows) {
+          if (Array.isArray(r?.domeinen)) {
+            for (const d of r.domeinen) if (d) domSet.add(d);
+          }
+        }
+        setBeschikbareDomeinen((prev) => {
+          const merged = new Set([...prev, ...domSet]);
+          return [...merged].sort();
+        });
       } catch (err) {
         if (!active || err?.name === "AbortError") {
           return;
@@ -393,7 +421,7 @@ export default function RegistratieReplayPage() {
       active = false;
       controller.abort();
     };
-  }, [baseUrl, page, size]);
+  }, [baseUrl, page, size, domeinFilter]);
 
   useEffect(() => {
     let active = true;
@@ -423,6 +451,15 @@ export default function RegistratieReplayPage() {
 
         setSchemaEntiteitNamen(normalizeEntityNames(entiteitNames));
         setSchemaTypeNamen(normalizeEntityNames(alleTypeNames));
+
+        // Verzamel unieke domeinen uit schema voor de filter-dropdown
+        const schemaDomeinen = [...new Set(
+          types.map((t) => String(t?.domein || "").trim()).filter(Boolean)
+        )].sort();
+        setBeschikbareDomeinen((prev) => {
+          const merged = new Set([...prev, ...schemaDomeinen]);
+          return [...merged].sort();
+        });
       } catch {
         if (active) {
           setSchemaEntiteitNamen([]);
@@ -765,7 +802,7 @@ export default function RegistratieReplayPage() {
       </p>
 
       <section className="card" style={{ marginBottom: 12 }}>
-        <div className="controls" style={{ gridTemplateColumns: "2fr 120px 120px auto auto auto auto auto" }}>
+        <div className="controls" style={{ gridTemplateColumns: "2fr 120px 120px 160px auto auto auto auto auto" }}>
           <label>
             Base URL
             <input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value.trim())} placeholder="http://localhost:8080" />
@@ -788,6 +825,18 @@ export default function RegistratieReplayPage() {
               value={size}
               onChange={(e) => setSize(Math.min(100, Math.max(1, Number(e.target.value || DEFAULT_PAGE_SIZE))))}
             />
+          </label>
+          <label>
+            Domein
+            <select
+              value={domeinFilter}
+              onChange={(e) => { setDomeinFilter(e.target.value); setPage(1); }}
+            >
+              <option value="">Alle domeinen</option>
+              {beschikbareDomeinen.map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
           </label>
           <label style={{ justifyContent: "flex-end" }}>
             <span>&nbsp;</span>
@@ -856,6 +905,7 @@ export default function RegistratieReplayPage() {
                   ID ↑
                 </th>
                 <th style={{ textAlign: "left", borderBottom: "1px solid #cbd5e1", padding: 8 }}>Type</th>
+                <th style={{ textAlign: "left", borderBottom: "1px solid #cbd5e1", padding: 8 }}>Domeinen</th>
                 <th style={{ textAlign: "left", borderBottom: "1px solid #cbd5e1", padding: 8 }}>Opmerking</th>
                 <th style={{ textAlign: "left", borderBottom: "1px solid #cbd5e1", padding: 8 }}>Tijdstip</th>
                 <th style={{ textAlign: "left", borderBottom: "1px solid #cbd5e1", padding: 8 }}>Ref</th>
@@ -881,6 +931,31 @@ export default function RegistratieReplayPage() {
                       title={truncateTooltip(toTooltip(reg?.opmerking || "Geen opmerking"))}
                     >
                       {reg?.registratietype || "-"}
+                    </td>
+                    <td style={{ borderBottom: "1px solid #e2e8f0", padding: 8 }}>
+                      {Array.isArray(reg?.domeinen) && reg.domeinen.length > 0
+                        ? reg.domeinen.map((d) => (
+                            <span
+                              key={d}
+                              style={{
+                                display: "inline-block",
+                                padding: "1px 7px",
+                                marginRight: 4,
+                                borderRadius: 9999,
+                                fontSize: 11,
+                                fontWeight: 600,
+                                background: domeinKleur(d),
+                                color: "#fff",
+                                whiteSpace: "nowrap",
+                                cursor: "pointer",
+                              }}
+                              title={`Filter op ${d}`}
+                              onClick={() => { setDomeinFilter(d); setPage(1); }}
+                            >
+                              {d}
+                            </span>
+                          ))
+                        : <span style={{ color: "#94a3b8" }}>-</span>}
                     </td>
                     <td
                       style={{ borderBottom: "1px solid #e2e8f0", padding: 8, minWidth: 260 }}
@@ -948,7 +1023,7 @@ export default function RegistratieReplayPage() {
               })}
               {registraties.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={9} style={{ padding: 10, color: "#64748b" }}>
+                  <td colSpan={10} style={{ padding: 10, color: "#64748b" }}>
                     Geen registraties gevonden.
                   </td>
                 </tr>

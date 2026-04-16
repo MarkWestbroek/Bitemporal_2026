@@ -76,7 +76,7 @@ const FORMAT_V3 = "v3";
  * @param {string[]} props.domains          — lijst van domeinnamen
  * @param {Object}   props.domainMeta       — Record<naam, {versie?, ...}>
  * @param {string}   props.modelVersie      — modelMeta.versie (fallback)
- * @param {Function} props.onExport         — (format, filename) => void
+ * @param {Function} props.onExport         — (format, filename, domein, bestemming, extra) => void
  * @param {Function} props.onUpdateVersie   — (domein, versie) => void  — slaat versie op in domainMeta
  * @param {Function} props.onClose
  */
@@ -86,6 +86,9 @@ export default function ExportDialog({ open, domains, domainMeta, modelVersie, o
   const [versie, setVersie] = useState("");
   const [filename, setFilename] = useState("");
   const [filenameManual, setFilenameManual] = useState(false);
+  const [bestemming, setBestemming] = useState("bestand");  // "bestand" | "database"
+  const [beschrijving, setBeschrijving] = useState("");
+  const [tags, setTags] = useState("");
 
   // Auto-fill versie wanneer domein verandert
   useEffect(() => {
@@ -116,8 +119,8 @@ export default function ExportDialog({ open, domains, domainMeta, modelVersie, o
     if (domein && versie && onUpdateVersie) {
       onUpdateVersie(domein, versie);
     }
-    onExport(format, filename, domein);
-  }, [format, filename, domein, versie, onExport, onUpdateVersie]);
+    onExport(format, filename, domein, bestemming, { beschrijving, tags, versie });
+  }, [format, filename, domein, versie, bestemming, beschrijving, tags, onExport, onUpdateVersie]);
 
   const handleKeyDown = useCallback((e) => {
     if (e.key === "Escape") onClose();
@@ -137,6 +140,21 @@ export default function ExportDialog({ open, domains, domainMeta, modelVersie, o
 
         {/* Body */}
         <div style={S.body}>
+          {/* Bestemming */}
+          <div style={S.field}>
+            <label style={S.label}>Bestemming</label>
+            <div style={S.radioGroup}>
+              <label style={S.radioLabel}>
+                <input type="radio" name="exportBestemming" value="bestand" checked={bestemming === "bestand"} onChange={() => setBestemming("bestand")} />
+                📁 Lokaal bestand
+              </label>
+              <label style={S.radioLabel}>
+                <input type="radio" name="exportBestemming" value="database" checked={bestemming === "database"} onChange={() => setBestemming("database")} />
+                🗄 Database (IdeBestand)
+              </label>
+            </div>
+          </div>
+
           {/* Formaat */}
           <div style={S.field}>
             <label style={S.label}>Formaat</label>
@@ -183,6 +201,30 @@ export default function ExportDialog({ open, domains, domainMeta, modelVersie, o
               onChange={handleFilenameChange}
             />
           </div>
+
+          {/* Database-specifieke velden */}
+          {bestemming === "database" && (
+            <>
+              <div style={S.field}>
+                <label style={S.label}>Beschrijving</label>
+                <input
+                  style={S.input}
+                  value={beschrijving}
+                  onChange={(e) => setBeschrijving(e.target.value)}
+                  placeholder="Korte beschrijving van deze export…"
+                />
+              </div>
+              <div style={S.field}>
+                <label style={S.label}>Tags <span style={{ color: "#666" }}>(komma-gescheiden)</span></label>
+                <input
+                  style={S.input}
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  placeholder="bijv. snapshot, productie, backup"
+                />
+              </div>
+            </>
+          )}
 
           {/* Toelichting */}
           <div style={S.note}>

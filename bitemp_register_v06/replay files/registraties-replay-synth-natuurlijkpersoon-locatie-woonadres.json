@@ -1,12 +1,16 @@
 {
   "version": 1,
-  "exported_at": "2026-03-25T20:30:00.000Z",
-  "source": "synthetic://generated-from-replay-template",
-  "count": 3,
+  "exported_at": "2026-04-15T12:30:00.000Z",
+  "source": "synthetic://generated-np-loc-woonadres-met-gemeentelink",
+  "count": 15,
+  "notes": [
+    "Adres gebruikt gemeente_id als link naar de Gemeente-referentielijst (id = CBS gemeentecode).",
+    "BSN-waarden zijn synthetisch en voldoen aan de 11-proef."
+  ],
   "entries": [
     {
       "registratietype": "registratie",
-      "tijdstip": "2026-03-25T20:31:00.000Z",
+      "tijdstip": "2026-04-15T12:31:00.000Z",
       "request_path": "/registratie/",
       "request_method": "POST",
       "request_body": {
@@ -28,7 +32,7 @@
             "opvoer": {
               "persoonsidentificatie": {
                 "natuurlijkpersoon_id": 2,
-                "bsn": "123456782",
+                "bsn": "100000010",
                 "ingezetene": true
               }
             }
@@ -84,7 +88,7 @@
     },
     {
       "registratietype": "registratie",
-      "tijdstip": "2026-03-25T20:32:00.000Z",
+      "tijdstip": "2026-04-15T12:32:00.000Z",
       "request_path": "/registratie/",
       "request_method": "POST",
       "request_body": {
@@ -108,8 +112,8 @@
                 "locatie_id": 2,
                 "straatnaam": "Lindelaan",
                 "huisnummer": "42A",
-                "postcode": "1234AB",
-                "plaats": "Utrecht"
+                "postcode": "3511AA",
+                "gemeente_id": 344
               }
             }
           },
@@ -136,7 +140,7 @@
     },
     {
       "registratietype": "registratie",
-      "tijdstip": "2026-03-25T20:33:00.000Z",
+      "tijdstip": "2026-04-15T12:33:00.000Z",
       "request_path": "/registratie/",
       "request_method": "POST",
       "request_body": {
@@ -161,6 +165,666 @@
               "bereikbaarheid_aanvang": {
                 "natuurlijkpersoon_id": 2,
                 "datum": "2020-01-01"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-15T12:34:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Synthetische NatuurlijkPersoon NP=3",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "natuurlijkpersoon": {
+                "id": 3
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonsidentificatie": {
+                "natuurlijkpersoon_id": 3,
+                "bsn": "100000022",
+                "ingezetene": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "natuurlijkpersoon_id": 3,
+                "voorletters": "M.",
+                "roepnaam": "Mila",
+                "tussenvoegsel": "",
+                "achternaam": "Vermeer"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "burgerschap": {
+                "natuurlijkpersoon_id": 3,
+                "landcode": "NL",
+                "nationaliteit": "Nederlandse"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "partnernaam": {
+                "natuurlijkpersoon_id": 3,
+                "achternaam": "Smit"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naamgebruik": {
+                "natuurlijkpersoon_id": 3,
+                "naamgebruik": "PartnerNaam"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "natuurlijkpersoon_aanvang": {
+                "natuurlijkpersoon_id": 3,
+                "datum": "1994-11-03"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-15T12:35:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Synthetische Locatie LOC=3",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "locatie": {
+                "id": 3
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adres": {
+                "locatie_id": 3,
+                "straatnaam": "Beukenplein",
+                "huisnummer": "7",
+                "postcode": "3061AA",
+                "gemeente_id": 599
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "baglocatie": {
+                "locatie_id": 3,
+                "adresaanduiding": "0599300000000003"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "locatie_aanvang": {
+                "locatie_id": 3,
+                "datum": "2019-06-15"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-15T12:36:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Synthetische woonadres-link NP=3 -> LOC=3",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "bereikbaarheid": {
+                "natuurlijkpersoon_id": 3,
+                "locatie_id": 3,
+                "soort": "Woonadres"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bereikbaarheid_aanvang": {
+                "natuurlijkpersoon_id": 3,
+                "datum": "2021-02-01"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-15T12:37:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Synthetische NatuurlijkPersoon NP=4",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "natuurlijkpersoon": {
+                "id": 4
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonsidentificatie": {
+                "natuurlijkpersoon_id": 4,
+                "bsn": "100000034",
+                "ingezetene": false
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "natuurlijkpersoon_id": 4,
+                "voorletters": "R.",
+                "roepnaam": "Ravi",
+                "tussenvoegsel": "van",
+                "achternaam": "Leeuwen"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "burgerschap": {
+                "natuurlijkpersoon_id": 4,
+                "landcode": "NL",
+                "nationaliteit": "Nederlandse"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "partnernaam": {
+                "natuurlijkpersoon_id": 4,
+                "achternaam": "Kok"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naamgebruik": {
+                "natuurlijkpersoon_id": 4,
+                "naamgebruik": "EigenNaam"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "natuurlijkpersoon_aanvang": {
+                "natuurlijkpersoon_id": 4,
+                "datum": "1987-08-22"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-15T12:38:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Synthetische Locatie LOC=4",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "locatie": {
+                "id": 4
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adres": {
+                "locatie_id": 4,
+                "straatnaam": "Noorderkade",
+                "huisnummer": "118",
+                "postcode": "1811MJ",
+                "gemeente_id": 361
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "baglocatie": {
+                "locatie_id": 4,
+                "adresaanduiding": "0361000000000004"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "locatie_aanvang": {
+                "locatie_id": 4,
+                "datum": "2016-04-01"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-15T12:39:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Synthetische woonadres-link NP=4 -> LOC=4",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "bereikbaarheid": {
+                "natuurlijkpersoon_id": 4,
+                "locatie_id": 4,
+                "soort": "Woonadres"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bereikbaarheid_aanvang": {
+                "natuurlijkpersoon_id": 4,
+                "datum": "2019-09-01"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-15T12:40:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Synthetische NatuurlijkPersoon NP=5",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "natuurlijkpersoon": {
+                "id": 5
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonsidentificatie": {
+                "natuurlijkpersoon_id": 5,
+                "bsn": "100000046",
+                "ingezetene": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "natuurlijkpersoon_id": 5,
+                "voorletters": "L.",
+                "roepnaam": "Lotte",
+                "tussenvoegsel": "",
+                "achternaam": "Meijer"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "burgerschap": {
+                "natuurlijkpersoon_id": 5,
+                "landcode": "NL",
+                "nationaliteit": "Nederlandse"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "partnernaam": {
+                "natuurlijkpersoon_id": 5,
+                "achternaam": "Hendriks"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naamgebruik": {
+                "natuurlijkpersoon_id": 5,
+                "naamgebruik": "PartnerNaam"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "natuurlijkpersoon_aanvang": {
+                "natuurlijkpersoon_id": 5,
+                "datum": "1996-01-17"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-15T12:41:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Synthetische Locatie LOC=5",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "locatie": {
+                "id": 5
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adres": {
+                "locatie_id": 5,
+                "straatnaam": "Rivierstraat",
+                "huisnummer": "56",
+                "postcode": "5611AZ",
+                "gemeente_id": 772
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "baglocatie": {
+                "locatie_id": 5,
+                "adresaanduiding": "0772000000000005"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "locatie_aanvang": {
+                "locatie_id": 5,
+                "datum": "2017-11-01"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-15T12:42:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Synthetische woonadres-link NP=5 -> LOC=5",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "bereikbaarheid": {
+                "natuurlijkpersoon_id": 5,
+                "locatie_id": 5,
+                "soort": "Woonadres"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bereikbaarheid_aanvang": {
+                "natuurlijkpersoon_id": 5,
+                "datum": "2022-11-01"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-15T12:43:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Synthetische NatuurlijkPersoon NP=6",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "natuurlijkpersoon": {
+                "id": 6
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonsidentificatie": {
+                "natuurlijkpersoon_id": 6,
+                "bsn": "100000058",
+                "ingezetene": true
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naam": {
+                "natuurlijkpersoon_id": 6,
+                "voorletters": "Y.",
+                "roepnaam": "Yara",
+                "tussenvoegsel": "",
+                "achternaam": "de Jong"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "burgerschap": {
+                "natuurlijkpersoon_id": 6,
+                "landcode": "NL",
+                "nationaliteit": "Nederlandse"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "partnernaam": {
+                "natuurlijkpersoon_id": 6,
+                "achternaam": "Visser"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "naamgebruik": {
+                "natuurlijkpersoon_id": 6,
+                "naamgebruik": "EigenNaam"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "natuurlijkpersoon_aanvang": {
+                "natuurlijkpersoon_id": 6,
+                "datum": "1991-07-09"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-15T12:44:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Synthetische Locatie LOC=6",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "locatie": {
+                "id": 6
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "adres": {
+                "locatie_id": 6,
+                "straatnaam": "Havenweg",
+                "huisnummer": "203",
+                "postcode": "8011AB",
+                "gemeente_id": 1930
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "baglocatie": {
+                "locatie_id": 6,
+                "adresaanduiding": "1930000000000006"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "locatie_aanvang": {
+                "locatie_id": 6,
+                "datum": "2021-03-01"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-15T12:45:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Synthetische woonadres-link NP=6 -> LOC=6",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "bereikbaarheid": {
+                "natuurlijkpersoon_id": 6,
+                "locatie_id": 6,
+                "soort": "Woonadres"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "bereikbaarheid_aanvang": {
+                "natuurlijkpersoon_id": 6,
+                "datum": "2023-07-01"
               }
             }
           }

@@ -366,6 +366,7 @@ var RegistratieType = graphql.NewObject(graphql.ObjectConfig{
 		"corrigeert_registratie_id":     &graphql.Field{Type: graphql.Int},
 		"maakt_ongedaan_registratie_id": &graphql.Field{Type: graphql.Int},
 		"is_ongedaangemaakt":            &graphql.Field{Type: graphql.Boolean},
+		"domeinen":                      &graphql.Field{Type: graphql.NewList(graphql.String), Description: "Afgeleide domeinen: unieke set van TypeMeta.Domein per wijziging"},
 		"wijzigingen":                   &graphql.Field{Type: graphql.NewList(WijzigingType)},
 	},
 })

@@ -16,7 +16,7 @@ import flexLightUrl from "flexlayout-react/style/light.css?url";
 
 import useModelStore from "../store/useModelStore";
 import useUIStore from "../store/useUIStore";
-import { v3ModelNaarStore, exportStoreAsJson, importStoreFromJson, storeNaarV3Model } from "../store/adapters";
+import { v3ModelNaarStore, exportStoreAsJson, importStoreFromJson, storeNaarV3Model, filterStoreByDomein, mergeStoreDomein } from "../store/adapters";
 import { validateV3Model } from "../validation/validateV3Model";
 import { demoV3Model } from "../demoV3Model";
 import {
@@ -36,6 +36,7 @@ import DetailsPanel from "../ide/DetailsPanel";
 import BestandenPanel from "../ide/BestandenPanel";
 import UploadDialog from "../ide/UploadDialog";
 import ExportDialog from "../ide/ExportDialog";
+import ImportDialog from "../ide/ImportDialog";
 import ActionDialog from "../ide/ActionDialog";
 import ErrorBoundary from "../ide/ErrorBoundary";
 
@@ -94,6 +95,11 @@ export default function IdePage() {
 
   // ── Export Dialog state ──────────────────────────────────
   const [exportOpen, setExportOpen] = useState(false);
+  const [exportPrefillDomein, setExportPrefillDomein] = useState(undefined);
+
+  // ── Import Dialog state ─────────────────────────────────
+  const [importOpen, setImportOpen] = useState(false);
+  const [importPrefillDomein, setImportPrefillDomein] = useState(undefined);
 
   // ── Action Dialog state ──────────────────────────────────
   const [dialogType, setDialogType] = useState(null); // "publish" | "rebuild" | "publishAndRebuild" | "diff" | null
@@ -228,9 +234,15 @@ export default function IdePage() {
   );
 
   // ── Nieuw diagram aanmaken ───────────────────────────────
+  /**
+   * Nieuw diagram aanmaken.
+   * @param {string} [voorgesteldeNaam] - Vooraf ingevulde naam in de prompt.
+   * @param {string|null} [domein] - Domein waaronder het diagram valt (uit PB-boom rechtsklik).
+   */
   const handleNieuwDiagram = useCallback(
-    (voorgesteldeNaam) => {
-      const naam = window.prompt("Naam van het nieuwe diagram:", voorgesteldeNaam || "Nieuw diagram");
+    (voorgesteldeNaam, domein) => {
+      const standaardNaam = domein ? `${domein} — Nieuw diagram` : "Nieuw diagram";
+      const naam = window.prompt("Naam van het nieuwe diagram:", voorgesteldeNaam || standaardNaam);
       if (!naam) return;
 
       const bestaand = useModelStore.getState().diagrams || {};
@@ -245,13 +257,13 @@ export default function IdePage() {
       addDiagram({
         id: diagramId,
         naam,
-        domein: null,
+        domein: domein || null,
         nodes: [],
         edges: [],
         viewport: null,
       });
       openDiagramTab(layoutModel, diagramId, naam);
-      setStatus(`Nieuw diagram aangemaakt: ${naam}`);
+      setStatus(`Nieuw diagram aangemaakt: ${naam}${domein ? ` (domein: ${domein})` : ""}`);
     },
     [addDiagram, layoutModel]
   );
@@ -265,7 +277,7 @@ export default function IdePage() {
   );
 
   // ── Export (via ExportDialog) ────────────────────────────
-  const handleExportDialog = useCallback((format, filename) => {
+  const handleExportDialog = useCallback(async (format, filename, domein, bestemming, extra) => {
     const state = useModelStore.getState();
     let json;
     if (format === "ide") {
@@ -273,15 +285,52 @@ export default function IdePage() {
     } else {
       json = storeNaarV3Model(state);
     }
-    const blob = new Blob([JSON.stringify(json, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename || `export-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+
+    // Domein-filter toepassen op V3 export
+    if (domein && format !== "ide" && json?.model?.entiteiten) {
+      json.model.entiteiten = json.model.entiteiten.filter((e) => e.domein === domein);
+      json.model.enums = (json.model.enums || []).filter((e) => e.domein === domein || !e.domein);
+      json.model.datatypes = (json.model.datatypes || []).filter((dt) => dt.domein === domein || !dt.domein);
+    }
+
+    const jsonStr = JSON.stringify(json, null, 2);
+    const finalFilename = filename || `export-${new Date().toISOString().slice(0, 10)}.json`;
+
+    if (bestemming === "database") {
+      // ── Database export via IdeBestand upload ──
+      try {
+        const formData = new FormData();
+        const blob = new Blob([jsonStr], { type: "application/json" });
+        formData.append("file", blob, finalFilename);
+        formData.append("naam", finalFilename);
+        formData.append("beschrijving", extra?.beschrijving || "");
+        formData.append("categorie", format === "ide" ? "ide_snapshot" : "model_snapshot");
+        formData.append("bestandsformaat", "json");
+        formData.append("tags", extra?.tags || "");
+        formData.append("versie_label", extra?.versie || "");
+        const resp = await fetch(`${apiBase()}/api/bestanden/upload`, {
+          method: "POST",
+          body: formData,
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${(await resp.text()).slice(0, 200)}`);
+        showToast(`Opgeslagen in database: ${finalFilename}`, "success");
+      } catch (err) {
+        console.error("Database export mislukt:", err);
+        showToast(`Database export mislukt: ${err.message}`, "error");
+      }
+    } else {
+      // ── Lokaal bestand download ──
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = finalFilename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
     setExportOpen(false);
-  }, []);
+    setExportPrefillDomein(undefined);
+  }, [showToast]);
 
   const handleExportUpdateVersie = useCallback((domein, versie) => {
     useModelStore.getState().updateDomainMeta(domein, { versie });
@@ -460,35 +509,98 @@ export default function IdePage() {
     }
   }, [markSaved]);
 
-  // ── Import ────────────────────────────────────────────────
+  // ── Import: open de ImportDialog ────────────────────────
   const handleImport = useCallback(() => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".json";
-    input.onchange = async (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      try {
-        const text = await file.text();
-        const json = JSON.parse(text);
+    setImportPrefillDomein(undefined);
+    setImportOpen(true);
+  }, []);
 
-        // IDE-format of V3-format?
-        if (json._format === "ide-v1") {
-          loadModel(importStoreFromJson(json));
-          setStatus(`IDE export geladen (${Object.keys(json.elements || {}).length} elementen)`);
-        } else if (json.model?.versie === "v3" || json.versie === "v3") {
-          const storeData = v3ModelNaarStore(json);
-          loadModel(storeData);
-          setStatus(`V3 model geïmporteerd (${Object.keys(storeData.elements).length} elementen)`);
-        } else {
-          alert("Onbekend bestandsformat. Verwacht IDE JSON of V3 model JSON.");
-        }
-      } catch (err) {
-        alert(`Import mislukt: ${err.message}`);
+  /**
+   * Verwerk het resultaat van de ImportDialog.
+   * Ondersteunt V3 en IDE-v1 formaten, domein-vervang en merge modus.
+   * Maakt automatisch een diagram aan bij import met posities uit het V3-model.
+   */
+  const handleImportResult = useCallback((data, meta) => {
+    try {
+      let storeData;
+      const isIDE = meta.format === "ide";
+
+      if (isIDE) {
+        storeData = importStoreFromJson(data);
+      } else {
+        storeData = v3ModelNaarStore(data);
       }
-    };
-    input.click();
-  }, [loadModel]);
+
+      // Domein-specifiek: filter en/of merge
+      if (meta.domein) {
+        if (meta.modus === "merge") {
+          const gefilterd = filterStoreByDomein(storeData, meta.domein);
+          const gemerged = mergeStoreDomein(useModelStore.getState(), gefilterd, meta.domein);
+          loadModel(gemerged);
+        } else {
+          // Vervang: huidige state mergen met gefilterd domein uit import
+          const gefilterd = filterStoreByDomein(storeData, meta.domein);
+          const gemerged = mergeStoreDomein(useModelStore.getState(), gefilterd, meta.domein);
+          loadModel(gemerged);
+        }
+      } else {
+        // Alles vervangen
+        loadModel(storeData);
+      }
+
+      // ── Auto-diagram: maak een import-diagram aan met posities ──
+      const diagramNaam = meta.bronLabel || `Import ${new Date().toISOString().slice(0, 10)}`;
+      const basisId = maakDiagramId(diagramNaam);
+      const bestaand = useModelStore.getState().diagrams || {};
+      let diagramId = basisId;
+      let teller = 2;
+      while (bestaand[diagramId]) {
+        diagramId = `${basisId}_${teller}`;
+        teller += 1;
+      }
+
+      // Haal posities uit het overzicht-diagram (aangemaakt door v3ModelNaarStore)
+      // of uit de bestaande diagrammen in geval van IDE-import
+      const bron = useModelStore.getState().diagrams;
+      const overzicht = bron?.overzicht;
+      const importNodes = overzicht?.nodes || [];
+      const importEdges = overzicht?.edges || [];
+
+      // Filter nodes op het domeinfilter als dat actief is
+      let diagramNodes = importNodes;
+      let diagramEdges = importEdges;
+      if (meta.domein) {
+        const domeinElementIds = new Set();
+        const els = useModelStore.getState().elements || {};
+        for (const [id, el] of Object.entries(els)) {
+          if (el.domein === meta.domein) domeinElementIds.add(id);
+        }
+        diagramNodes = importNodes.filter((n) => domeinElementIds.has(n.elementId));
+        const nodeElIds = new Set(diagramNodes.map((n) => n.elementId));
+        diagramEdges = importEdges.filter(
+          (e) => nodeElIds.has(e.source) && nodeElIds.has(e.target)
+        );
+      }
+
+      addDiagram({
+        id: diagramId,
+        naam: diagramNaam,
+        domein: meta.domein || null,
+        nodes: diagramNodes,
+        edges: diagramEdges,
+        viewport: null,
+      });
+      openDiagramTab(layoutModel, diagramId, diagramNaam);
+
+      const elCount = Object.keys(useModelStore.getState().elements || {}).length;
+      setStatus(`Import "${diagramNaam}" (${elCount} elementen)`);
+      showToast(`Import geslaagd: ${diagramNaam}`, "success");
+      setImportOpen(false);
+    } catch (err) {
+      console.error("Import fout:", err);
+      showToast(`Import mislukt: ${err.message}`, "error");
+    }
+  }, [loadModel, addDiagram, layoutModel, showToast]);
 
   // ── Keyboard shortcuts ─────────────────────────────────────
   useEffect(() => {
@@ -550,6 +662,17 @@ export default function IdePage() {
     return () => window.removeEventListener("keydown", handler);
   }, [handlePubliceer]);
 
+  // ── Rechtsklik domein → import/export ─────────────────────
+  const handleImportDomein = useCallback((domein) => {
+    setImportPrefillDomein(domein);
+    setImportOpen(true);
+  }, []);
+
+  const handleExportDomein = useCallback((domein) => {
+    setExportPrefillDomein(domein);
+    setExportOpen(true);
+  }, []);
+
   // ── Factory: bepaalt welk component in welke tab ─────────
   const factory = useCallback(
     (node) => {
@@ -558,7 +681,16 @@ export default function IdePage() {
 
       switch (component) {
         case COMP_BROWSER:
-          return <ErrorBoundary label="ProjectBrowser"><ProjectBrowser onOpenDiagram={handleOpenDiagram} onCreateDiagram={handleNieuwDiagram} /></ErrorBoundary>;
+          return (
+            <ErrorBoundary label="ProjectBrowser">
+              <ProjectBrowser
+                onOpenDiagram={handleOpenDiagram}
+                onCreateDiagram={handleNieuwDiagram}
+                onImportDomein={handleImportDomein}
+                onExportDomein={handleExportDomein}
+              />
+            </ErrorBoundary>
+          );
         case COMP_DIAGRAM:
           return <ErrorBoundary label="DiagramCanvas"><DiagramCanvas diagramId={config.diagramId || "overzicht"} /></ErrorBoundary>;
         case COMP_PROPERTIES:
@@ -569,7 +701,7 @@ export default function IdePage() {
           return <div style={{ padding: 16 }}>Onbekend component: {component}</div>;
       }
     },
-    [handleNieuwDiagram, handleOpenDiagram]
+    [handleNieuwDiagram, handleOpenDiagram, handleImportDomein, handleExportDomein]
   );
 
   return (
@@ -725,7 +857,17 @@ export default function IdePage() {
         modelVersie={modelMeta?.versie || ""}
         onExport={handleExportDialog}
         onUpdateVersie={handleExportUpdateVersie}
-        onClose={() => setExportOpen(false)}
+        onClose={() => { setExportOpen(false); setExportPrefillDomein(undefined); }}
+      />
+
+      {/* Import Dialog */}
+      <ImportDialog
+        open={importOpen}
+        domains={domains || []}
+        domainMeta={domainMeta || {}}
+        prefillDomein={importPrefillDomein}
+        onImport={handleImportResult}
+        onClose={() => { setImportOpen(false); setImportPrefillDomein(undefined); }}
       />
     </div>
   );

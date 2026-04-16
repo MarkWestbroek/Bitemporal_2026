@@ -69,6 +69,38 @@ END $$;
 	return err
 }
 
+func ensureRegistratieDomeinenMigrated(ctx context.Context, db *bun.DB) error {
+	// Houd bestaande databases bruikbaar wanneer `registratie.domeinen`
+	// eerder als scalar tekstkolom is aangemaakt. Voor GIN-arrayfiltering
+	// normaliseren we dit naar TEXT[] met behoud van bestaande waarden.
+	_, err := db.ExecContext(ctx, `
+DO $$
+DECLARE
+	v_data_type text;
+BEGIN
+	SELECT data_type
+	INTO v_data_type
+	FROM information_schema.columns
+	WHERE table_schema = 'public'
+		AND table_name = 'registratie'
+		AND column_name = 'domeinen';
+
+	IF v_data_type IS NULL THEN
+		ALTER TABLE registratie ADD COLUMN domeinen TEXT[];
+	ELSIF v_data_type <> 'ARRAY' THEN
+		ALTER TABLE registratie
+		ALTER COLUMN domeinen TYPE TEXT[]
+		USING CASE
+			WHEN domeinen IS NULL OR btrim(domeinen::text) = '' THEN NULL
+			WHEN domeinen::text LIKE '%,%' THEN regexp_split_to_array(domeinen::text, '\\s*,\\s*')
+			ELSE ARRAY[domeinen::text]
+		END;
+	END IF;
+END $$;
+`)
+	return err
+}
+
 func CreateTables(db *bun.DB) error {
 	ctx := context.Background()
 
@@ -110,6 +142,17 @@ func CreateTables(db *bun.DB) error {
 
 	// Registratie table
 	_, err = db.NewCreateTable().Model((*model.Registratie)(nil)).IfNotExists().Exec(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = ensureRegistratieDomeinenMigrated(ctx, db)
+	if err != nil {
+		return err
+	}
+
+	// GIN index op domeinen-kolom voor efficiënt filteren op domein
+	_, err = db.NewRaw(`CREATE INDEX IF NOT EXISTS idx_registratie_domeinen ON registratie USING GIN(domeinen)`).Exec(ctx)
 	if err != nil {
 		return err
 	}

@@ -92,6 +92,8 @@
     - ~~default bestandsnaam opslaan = versie~~ ✅
     - ~~normaliseer alle relaties (toolbar + context menu)~~ ✅
     - ~~snap alle elementen naar grid (toolbar + context menu)~~ ✅
+    - ~~kopiëren/plakken van nodes tussen diagrammen (Ctrl+C/V + rechtsklik)~~ ✅
+    - ~~Shift+drag entiteit vanuit PB = ENT + alle onderliggende GE's/relaties~~ ✅
     - edge-eigenschappen conceptueel incorrect: A-anker en anker-B zijn geen relaties maar links
       - Toekomst: edit via relatie-node, niet via edges
     - grid-grootte instelbaar (optioneel)
@@ -101,10 +103,11 @@
 
 ```
 35  IDE
-    - multiselect in PB
-    - drag and drop GE en ENT is er al: relaties moeten getekend
-      - niet altijd (reproduce)
-    - drag and drop - complete (shift?): ENT + alle GE's (en RELs) mee?
+    - ~~multiselect in PB~~ ✅ (Ctrl+click toggle, Shift+click range)
+    - ~~drag and drop GE en ENT is er al: relaties moeten getekend~~ ✅ (auto-add owner + doel entiteiten)
+      - ~~niet altijd (reproduce)~~ ✅
+    - ~~drag and drop - complete (shift?): ENT + alle GE's (en RELs) mee?~~ ✅ (Shift+drag entiteit bevat alle onderliggende + doel-entiteiten worden auto-toegevoegd)
+    - ~~Ctrl+click multi-select + multi-drop~~ ✅
     - auto-order
     - ~~dubbelklik op edge: straighten~~ ✅ (berekenKortsteHandles)
     - undo / redo doet het niet
@@ -533,6 +536,10 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | B17 | Zoek-endpoint referentielijsten (?q= met ILIKE) | Forms plan 02 |
 | B18 | gRPC/Connect als toekomstige command-API | API-standaarden-analyse.md |
 | B19 | enums hebben ook een beschrijving van de term | |
+| B20 | ✅ Domein-tracking in registraties: `domeinen TEXT[]` kolom, afgeleide domein-set per wijziging, GIN index | nieuw |
+| B21 | ✅ Backfill script bestaande registraties: `cmd/backfill_registratie_domeinen/` | nieuw |
+| B22 | ✅ API domein-filter: `?domein=` queryparameter op `GET /full/registraties` met `@>` array containment | nieuw |
+| B23 | ✅ GraphQL `domeinen` veld op RegistratieType | nieuw |
 
 ### Database / DDL
 
@@ -632,6 +639,10 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I22 | ✅ AlignToolbar verticale layout: toolbar wisselt correct naar kolom-layout bij verticale snap | nieuw |
 | I23 | ✅ Lege veldencompartimenten verbergen: ENT toont geen velden-compartiment, GE/REL tonen leeg vak i.p.v. "— geen velden —" | nieuw |
 | I24 | ✅ NodeEditPanel: velden-sectie verborgen voor entiteiten (alleen afgeleide velden beschikbaar) | nieuw |
+| I25 | ✅ PB diagrammen onder domeinen: domein-specifieke diagrammen verschijnen als 📐 Diagrammen subfolder per domein | nieuw |
+| I26 | ✅ Import-dialoog: bestand/API bron, domeinfilter, merge/vervang, auto-diagram aanmaken bij import | nieuw |
+| I27 | ✅ PB rechtsklik import/export: importeer/exporteer domein met pre-ingevuld domeinfilter | nieuw |
+| I28 | ✅ Export naar database: ExportDialog met bestemming keuze (bestand/database), beschrijving en tags | nieuw |
 
 
 ### Frontend — Content Editor (Inhoud-editor)
@@ -685,6 +696,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | V3 | Corrigeert registratie: lijntje tekenen | README.md |
 | V4 | Doorklikken naar gerelateerd record | README.md |
 | V5 | Ongedaangemaaktheid van registraties tonen | README.md |
+| V6 | ✅ Domein-badges en domeinfilter op RegistratieReplayPage: gekleurde chips per registratie, dropdown-filter, klikbare badges | nieuw |
 
 ### Domeinen
 

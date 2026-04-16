@@ -725,6 +725,12 @@ func MakeGetRegistratiesMetWijzigingenHandler() gin.HandlerFunc {
 
 		registraties := make([]model.Registratie, 0)
 		query := DB.NewSelect().Model(&registraties)
+
+		// Domein-filter: ?domein=np-loc filtert op registraties die dat domein bevatten
+		if domeinFilter := c.Query("domein"); domeinFilter != "" {
+			query = query.Where("domeinen @> ARRAY[?]::text[]", domeinFilter)
+		}
+
 		if len(typeFilter) > 0 {
 			query = query.Where("registratietype IN (?)", bun.In(typeFilter))
 		}

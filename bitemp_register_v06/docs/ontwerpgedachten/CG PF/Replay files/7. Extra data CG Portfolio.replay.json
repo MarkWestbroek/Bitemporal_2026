@@ -1,0 +1,1547 @@
+{
+  "version": 1,
+  "exported_at": "2026-04-15T22:37:30.951468Z",
+  "source": "generated://generate_extra_data_replay.py",
+  "schema_source": "Extra data uit SharePoint PowerBI export (uitgebreid.txt)",
+  "schema_model": {
+    "naam": "CG Portfolio extra data",
+    "versie": "v3"
+  },
+  "count": 50,
+  "known_gaps": [
+    "Alleen NIEUWE GE's (Beoordeling, Etalage) worden via replay opvoerd.",
+    "Extra velden op BESTAANDE records (obstakels, verwacht_ready_datum, vervangt_ouder_product, score, aanmeldingsdatum) staan in het bijbehorende SQL-bestand (7b).",
+    "3 initiatieven uit de bron konden niet gematcht worden op een bestaand initiatief: OneGround, MijnOmgeving-as-a-service, OPENinschrijving.",
+    "Corrupt-rij-data (door CRLF-kolomverschuivingen) wordt gefilterd via veldvalidatie."
+  ],
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=37 | naam=Zaakregister | beoordeling (NietGecontroleerd)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 37,
+                "fase_cg_portfolio": "NietGecontroleerd",
+                "redenatie_zilver": "teruggezet naar niet gecontroleerd na overleg met Holger. Hij heeft deze niet ingevuld en constateert zelf ook onvolledige data."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=38 | naam=Signalen | beoordeling (Zilver), etalage",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 38,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-01-29",
+                "redenatie_zilver": "Het initiatief 'Signalen' is gepromoveerd naar zilver omdat een aantal principes als 'samen' en 'maatschappelijke bijdrage' ruim worden ingevuld. Daarnaast is het daadwerkelijk in gebruik bij diverse gemeenten en heeft het zich bewezen."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "etalage": {
+                "initiatief_id": 38,
+                "level1": "Platform dienstverlening"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=40 | naam=GEM | beoordeling (Zilver), etalage",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 40,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-02-26",
+                "redenatie_zilver": "GEM scoort goed op de  kenmerken wendbaarheid en dienstverlening. Bovendien is het klaar voor gebruik en gebruiken veel gemeenten het al"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "etalage": {
+                "initiatief_id": 40,
+                "level1": "Platform dienstverlening"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=43 | naam=OpenWoo.app | beoordeling (Goud)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 43,
+                "fase_cg_portfolio": "Goud",
+                "datum_zilver": "2024-02-26",
+                "datum_goud": "2024-04-08",
+                "check_zilver": false,
+                "redenatie_zilver": "De WOO is een belangrijk onderwerp voor gemeenten. Verder scoort het initiatief goed op de doelen",
+                "redenatie_goud": "Uit de toets blijkt dat het initiatief voldoet aan de realisatie en architectuurprincipes. Bovendien - reden waarom we openwoo.app een voorbeeld vinden, is alles traceerbaar."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=44 | naam=NLPortal MijnOmgeving voor inwoners en ondernemers | beoordeling (Zilver), etalage",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 44,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-04-08",
+                "redenatie_zilver": "Voldoet aan de doelstellingen."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "etalage": {
+                "initiatief_id": 44,
+                "level1": "Platform dienstverlening"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=45 | naam=OpenCatalogi | beoordeling (Zilver)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 45,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-02-26",
+                "check_zilver": false,
+                "redenatie_zilver": "Mooi initiatief en overkoepelend"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=47 | naam=Waardepapieren | beoordeling (Zilver)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 47,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-03-11",
+                "check_zilver": false,
+                "redenatie_zilver": "voor gemeenten en burgers waardevol initiatief. In lijn met CG doelen."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=48 | naam=KISS, KlantinteractieServicesysteem | beoordeling (Goud)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 48,
+                "fase_cg_portfolio": "Goud",
+                "datum_zilver": "2024-03-11",
+                "datum_goud": "2024-05-27",
+                "check_zilver": false,
+                "redenatie_zilver": "Lijkt wat ruim gescoord met 3 x 4, maar desalniettemin is de bijdrage aan CG doelen voldoende."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=49 | naam=Verwerkinglogging implementatie | beoordeling (Zilver)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 49,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-03-11",
+                "check_zilver": false,
+                "goud_niet_gehaald": true,
+                "redenatie_goud_niet_gehaald": "goud niet gehaald, omdat het gebaseerd is op werking op Amazon componenten. En niet gebaseerd is op CG standaarden - in dit geval HAVEN."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=50 | naam=Coopax | beoordeling (NietGecontroleerd)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 50,
+                "fase_cg_portfolio": "NietGecontroleerd",
+                "check_zilver": false,
+                "redenatie_zilver": "Teruggezet naar 'niet gecontroleerd', omdat we menen dat het product niet voldoet aan de doelstellingen en niet voldoet aan de belangrijkste principes. De leverancier is daarvan op de hoogte gesteld."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=51 | naam=GZAC | beoordeling (Zilver), etalage",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 51,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-03-11",
+                "check_zilver": false,
+                "redenatie_zilver": "GZAC zien we als het procesmotortje voor veel toepassingen. Geheel volgens doelstellingen van CG."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "etalage": {
+                "initiatief_id": 51,
+                "level1": "Platform dienstverlening"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=52 | naam=Open Zaak | beoordeling (Goud), etalage",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 52,
+                "fase_cg_portfolio": "Goud",
+                "datum_zilver": "2024-03-11",
+                "datum_goud": "2024-05-06",
+                "check_zilver": false,
+                "redenatie_zilver": "voldoet aan de standaarden.",
+                "redenatie_goud": "Voldoet aan principes"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "etalage": {
+                "initiatief_id": 52,
+                "level1": "Platform dienstverlening"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=53 | naam=Open Formulieren | beoordeling (Goud), etalage",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 53,
+                "fase_cg_portfolio": "Goud",
+                "datum_zilver": "2024-03-11",
+                "datum_goud": "2024-05-06",
+                "check_zilver": false,
+                "redenatie_zilver": "voldoet aan de standaarden als FSC, ZGW api",
+                "redenatie_goud": "conform principes."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "etalage": {
+                "initiatief_id": 53,
+                "level1": "Platform dienstverlening"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=54 | naam=Samen delen | beoordeling (Brons)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 54,
+                "fase_cg_portfolio": "Brons",
+                "check_zilver": false
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=55 | naam=Open Inwoner Platform (OIP) | beoordeling (Goud), etalage",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 55,
+                "fase_cg_portfolio": "Goud",
+                "datum_zilver": "2024-04-01",
+                "datum_goud": "2024-05-06",
+                "check_zilver": false,
+                "redenatie_zilver": "Voldoet aan de CG doelstellingen."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "etalage": {
+                "initiatief_id": 55,
+                "level1": "Platform dienstverlening"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=56 | naam=Open Zaakbrug | beoordeling (Goud)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 56,
+                "fase_cg_portfolio": "Goud",
+                "datum_zilver": "2024-03-24",
+                "datum_goud": "2024-05-06",
+                "check_zilver": false,
+                "redenatie_zilver": "Voldoet aan CG doelen",
+                "redenatie_goud": "Dit is een tijdelijke oplossing. We moeten nog info hebben over hoe dit beheerd gaat worden. Hoe zijn privacy en security bij design toegepast?"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=57 | naam=Osano Registersysteem | beoordeling (Zilver)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 57,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-04-01",
+                "check_zilver": false,
+                "redenatie_zilver": "Er is geen reden om het niet naar zilver te promoveren. De deelnemers van de expert review groep hebben echter geen beeld bij wat dit initiatief doet. Graag daarom meer toelichting."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=58 | naam=Open Klant | beoordeling (Goud), etalage",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 58,
+                "fase_cg_portfolio": "Goud",
+                "datum_zilver": "2024-03-24",
+                "datum_goud": "2024-05-06",
+                "check_zilver": false,
+                "redenatie_zilver": "Voldoet aan CG doelen",
+                "redenatie_goud": "Voldoet aan principes"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "etalage": {
+                "initiatief_id": 58,
+                "level1": "Platform dienstverlening"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=59 | naam=vrijBRP (open source BRP voor gemeenten) | beoordeling (Zilver)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 59,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-03-24",
+                "check_zilver": false,
+                "redenatie_zilver": "Voldoet aan CG doelstellingen."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=60 | naam=Alfresco Documenten API | beoordeling (Goud), etalage",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 60,
+                "fase_cg_portfolio": "Goud",
+                "datum_zilver": "2024-03-24",
+                "datum_goud": "2024-04-22",
+                "redenatie_zilver": "Voldoet aan CG doelstellingen",
+                "redenatie_goud": "Voldoet aan CG principes."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "etalage": {
+                "initiatief_id": 60,
+                "level1": "Platform dienstverlening"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=61 | naam=Open Notificaties | beoordeling (Goud)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 61,
+                "fase_cg_portfolio": "Goud",
+                "datum_zilver": "2024-03-28",
+                "datum_goud": "2024-05-06",
+                "check_zilver": false,
+                "redenatie_zilver": "Voldoet aan de doelstellingen.",
+                "redenatie_goud": "Voldoet aan principes, maar helder moet worden wanneer FSC op de roadmap komt. Er staat nu: Notificaties is een uitzondering (in onze registraties) en kan nog niet omgaan met verkeer naar buiten via FSC (er is ook geen vraag naar).”"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=62 | naam=OpenStad | beoordeling (Zilver), etalage",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 62,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-03-28",
+                "check_zilver": false,
+                "redenatie_zilver": "Voldoet aan CG doelstellingen."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "etalage": {
+                "initiatief_id": 62,
+                "level1": "Platform dienstverlening"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=63 | naam=OpenServices | beoordeling (Zilver)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 63,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-04-01",
+                "check_zilver": false,
+                "redenatie_zilver": "Bijzonder zinvol initiatief dat voldoet aan de doelstellingen van CG"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=64 | naam=BRKRegister | beoordeling (Zilver)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 64,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-04-01",
+                "check_zilver": false,
+                "redenatie_zilver": "Voor nu zilver. We zien dit als niet conform architectuur CG en daarmee een noodzakelijke tussenoplossing waarvoor migratie nodig is."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=65 | naam=Zakenregister | beoordeling (Zilver)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 65,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-04-01",
+                "check_zilver": false,
+                "redenatie_zilver": "Voldoet aan CG doelstellingen"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=66 | naam=Open Index | beoordeling (Zilver)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 66,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-04-01",
+                "check_zilver": false,
+                "redenatie_zilver": "Dit is een missing link in de CG architectuur. Voldoet aan CG doelstellingen."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=67 | naam=Open Registers | beoordeling (Zilver), etalage",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 67,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-04-01",
+                "check_zilver": false,
+                "redenatie_zilver": "Voldoet aan CG doelstellingen."
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "etalage": {
+                "initiatief_id": 67,
+                "level1": "Platform dienstverlening",
+                "level2": "Online Interactie omgeving"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=69 | naam=Gemeenschappelijke DataCatalogus (GDC) | beoordeling (Zilver)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 69,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-04-15",
+                "check_zilver": false,
+                "redenatie_zilver": "Voldoet aan de doelstellingen."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=71 | naam=Rx.Mission | beoordeling (Zilver)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 71,
+                "fase_cg_portfolio": "Zilver",
+                "check_zilver": false
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=72 | naam=Rx.Open | beoordeling (Zilver)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 72,
+                "fase_cg_portfolio": "Zilver",
+                "check_zilver": false
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=75 | naam=Digitale terinzagelegging | beoordeling (Zilver)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 75,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-05-06",
+                "check_zilver": false,
+                "redenatie_zilver": "Het platform verzorgt de publicatie op officiëlebekendmakingen.nl én de inzage. 2."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=76 | naam=Open Archiefbeheer | beoordeling (Goud)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 76,
+                "fase_cg_portfolio": "Goud",
+                "datum_zilver": "2024-05-06",
+                "datum_goud": "2024-05-20",
+                "check_zilver": false,
+                "redenatie_zilver": "naar zilver. Voldoet aan doelstellingen.",
+                "redenatie_goud": "Voldoet aan principes. Wel de vraag of lagen 4 en 5 gecombineerd zijn."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=77 | naam=Appsemble | beoordeling (NietGecontroleerd)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 77,
+                "fase_cg_portfolio": "NietGecontroleerd",
+                "datum_zilver": "2024-05-06",
+                "check_zilver": false,
+                "redenatie_zilver": "Gepromoveerd naar zilver. We zien appsemble echter niet als een onderdeel van het informatie landschap, maar bijzonder zinvol om CG waardige toepassingen mee te creëren die wel tot het informatie landschap van een gemeente behoren. Wellicht nadenken over een nieuwe categorie van nuttige common ground waardige applicaties die niet tot het informatie landschap behoren.",
+                "redenatie_goud": "Appsemble is van het portfolio gehaald, omdat deze applicatie zelf geen waarde toevoegt aan de doelstellingen. De applicaties als broodbox e.d. doen dat wel. Deze en andere met appsemble gemaakte applicaties zullen wel in het portfolio worden opgenomen."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=78 | naam=Open Producten | beoordeling (Zilver)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 78,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-05-06",
+                "check_zilver": false,
+                "redenatie_zilver": "Naar zilver. Voldoet aan de doelstellingen."
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=79 | naam=Tezza | beoordeling (Goud)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 79,
+                "fase_cg_portfolio": "Goud",
+                "datum_zilver": "2024-05-30",
+                "check_zilver": false
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=80 | naam=Archivering en Vernietigings Component | beoordeling (Zilver)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 80,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-05-30",
+                "check_zilver": false
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=81 | naam=Atlas | etalage",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "etalage": {
+                "initiatief_id": 81,
+                "level1": "Purmerend"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=82 | naam=Werkplek reservering | beoordeling (Brons)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 82,
+                "fase_cg_portfolio": "Brons",
+                "check_zilver": false
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=83 | naam=Referentielijsten API | beoordeling (Brons)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 83,
+                "fase_cg_portfolio": "Brons",
+                "datum_zilver": "2024-06-27",
+                "check_zilver": false
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=85 | naam=Open Webconcept | beoordeling (Zilver)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 85,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-08-27",
+                "check_zilver": true
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=86 | naam=Geval (Generieke Validaties) | beoordeling (Zilver), etalage",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 86,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-10-02"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "etalage": {
+                "initiatief_id": 86,
+                "level1": "Platform dienstverlening"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=87 | naam=Vergunning Controle Service (VCS) | beoordeling (Zilver), etalage",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 87,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2024-10-02"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "etalage": {
+                "initiatief_id": 87,
+                "level1": "Nee"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=88 | naam=Datavirtualisatie | beoordeling (Brons)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 88,
+                "fase_cg_portfolio": "Brons",
+                "check_zilver": false
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=102 | naam=koppelen Zaaksysteem JOIN (Decos) met OpenWebConcept formulieren | beoordeling (Brons)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 102,
+                "fase_cg_portfolio": "Brons"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=103 | naam=Aansluiting JOIN Zaaksysteem (Decos) op de MijnOmgeving van OWC gemeenten | beoordeling (Brons)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 103,
+                "fase_cg_portfolio": "Brons"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=106 | naam=Centric Leefomgeving | etalage",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "etalage": {
+                "initiatief_id": 106,
+                "level2": "Nee, op dit moment niet"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=111 | naam=Djuma DnA | beoordeling (Brons)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 111,
+                "fase_cg_portfolio": "Brons"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=113 | naam=NotifyNL en OMC | beoordeling (Zilver)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 113,
+                "fase_cg_portfolio": "Zilver",
+                "datum_zilver": "2025-09-15",
+                "check_zilver": true
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=116 | naam=MapGallery | beoordeling (Brons)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 116,
+                "fase_cg_portfolio": "Brons"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-04-16T00:00:00Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Extra data initiatief_id=117 | naam=Xential | beoordeling (Brons)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "beoordeling": {
+                "initiatief_id": 117,
+                "fase_cg_portfolio": "Brons"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}

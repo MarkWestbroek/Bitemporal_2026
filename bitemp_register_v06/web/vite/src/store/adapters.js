@@ -939,3 +939,106 @@ export function importStoreFromJson(json) {
     modelMeta: json.modelMeta || null,
   };
 }
+
+// ─── Domein-filtering en merge helpers ──────────────────────
+
+/**
+ * Filter store-data tot alleen elementen van het opgegeven domein.
+ * Behoudt structuralEdges waarvan beide kanten in het domein zitten.
+ * Behoudt diagrammen van dat domein.
+ *
+ * @param {Object} storeData  - Volledige store state (elements, structuralEdges, diagrams, domains, domainMeta)
+ * @param {string} domein     - Domeinnaam om te filteren
+ * @returns {Object} Gefilterde store-data
+ */
+export function filterStoreByDomein(storeData, domein) {
+  const elements = {};
+  const elementIds = new Set();
+
+  for (const [id, el] of Object.entries(storeData.elements || {})) {
+    if (el.domein === domein) {
+      elements[id] = el;
+      elementIds.add(id);
+    }
+  }
+
+  // structuralEdges: behoud als source EN target in het domein zitten
+  const structuralEdges = (storeData.structuralEdges || []).filter(
+    (e) => elementIds.has(e.source) && elementIds.has(e.target)
+  );
+
+  // Diagrammen: alleen die met dit domein
+  const diagrams = {};
+  for (const [id, d] of Object.entries(storeData.diagrams || {})) {
+    if (d.domein === domein) {
+      diagrams[id] = d;
+    }
+  }
+
+  return {
+    elements,
+    structuralEdges,
+    diagrams,
+    domains: [domein],
+    domainMeta: { [domein]: (storeData.domainMeta || {})[domein] || {} },
+    modelMeta: storeData.modelMeta,
+  };
+}
+
+/**
+ * Merge (domein-vervang): verwijder alle elementen van het opgegeven domein uit
+ * de bestaande state en voeg de nieuwe elementen in. Overige domeinen blijven intact.
+ *
+ * @param {Object} bestaandState  - Huidige store state
+ * @param {Object} nieuwStoreData - Nieuwe (gefilterde) store-data voor het domein
+ * @param {string} domein         - Domeinnaam die vervangen wordt
+ * @returns {Object} Gemerged store state
+ */
+export function mergeStoreDomein(bestaandState, nieuwStoreData, domein) {
+  // Verwijder alle elementen van het domein uit de bestaande state
+  const elements = {};
+  for (const [id, el] of Object.entries(bestaandState.elements || {})) {
+    if (el.domein !== domein) elements[id] = el;
+  }
+  // Voeg nieuwe elementen toe
+  for (const [id, el] of Object.entries(nieuwStoreData.elements || {})) {
+    elements[id] = el;
+  }
+
+  const bestaandeIds = new Set(Object.keys(elements));
+
+  // structuralEdges: verwijder die van het domein, voeg nieuwe toe
+  const oudEdges = (bestaandState.structuralEdges || []).filter((e) => {
+    const srcEl = bestaandState.elements?.[e.source];
+    const tgtEl = bestaandState.elements?.[e.target];
+    return !(srcEl?.domein === domein || tgtEl?.domein === domein);
+  });
+  // Voeg nieuwe edges toe (alleen als beide kanten bestaan)
+  const nieuweEdges = (nieuwStoreData.structuralEdges || []).filter(
+    (e) => bestaandeIds.has(e.source) && bestaandeIds.has(e.target)
+  );
+
+  // Diagrammen: verwijder domein-diagrammen, voeg nieuwe toe
+  const diagrams = {};
+  for (const [id, d] of Object.entries(bestaandState.diagrams || {})) {
+    if (d.domein !== domein) diagrams[id] = d;
+  }
+  for (const [id, d] of Object.entries(nieuwStoreData.diagrams || {})) {
+    diagrams[id] = d;
+  }
+
+  // Domains: behoud unieke set
+  const domainSet = new Set([...(bestaandState.domains || []), ...(nieuwStoreData.domains || [])]);
+
+  // DomainMeta: merge
+  const domainMeta = { ...(bestaandState.domainMeta || {}), ...(nieuwStoreData.domainMeta || {}) };
+
+  return {
+    elements,
+    structuralEdges: [...oudEdges, ...nieuweEdges],
+    diagrams,
+    domains: [...domainSet],
+    domainMeta,
+    modelMeta: bestaandState.modelMeta,
+  };
+}

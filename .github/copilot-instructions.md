@@ -1,13 +1,11 @@
-# Copilot Instructions — Bitemporal Go API v05
+# Copilot Instructions — Bitemporeel Register v06
 
-De actieve versie is `bitemporal_go_API_v05/`. Eerdere versies (v01–v04) zijn archief.
-
-We zijn aan het bouwen aan `bitemp_register_v06/`, een doorontwikkeling van deze v05, met een aantal verbeteringen in de architectuur en implementatie. De v05 blijft beschikbaar als referentie en voor vergelijking, maar de focus ligt nu op de v06.
+De actieve versie is `bitemp_register_v06/`. Eerdere versies (v01–v05) zijn archief; v05 dient als referentie.
 
 ## Algemene instructies
 Documenteer altijd alle wijzigingen in duidelijke comments in de code en in (vaak specifiek per onderwerp benoemde of anders de generieke readme) markdown files.
 
-Als je iets **substantieels** hebt gewijzigd of onderzocht, werk dan in dezelfde taak ook de **relevante documentatie** bij (bij voorkeur de meest specifieke `.md`, bijvoorbeeld `docs/DEVLOOP.md`, anders de algemene `README.md`).
+Als je iets **substantieels** hebt gewijzigd of onderzocht, werk dan in dezelfde taak ook de **relevante documentatie** bij (bij voorkeur de meest specifieke `.md`, bijvoorbeeld `docs/DEVLOOP.md`, `docs/CODEGEN.md`, `docs/BACKLOG.md`, anders de algemene `README.md`).
 
 ## Domein
 
@@ -29,7 +27,7 @@ Het representatie-record zelf bevat wel een `opvoer` en `afvoer` veld, maar de b
 
 ### Tijdreizen
 #### Formeel tijdreizen
-Formeel tijdreizen is het ophalen van de toestand van (een subset van) het register op een bepaald formeel tijdstip t~f~. We kunnen op de formele tijdsas alleen tijdreizen naar het verleden. We kunnen immers niet in de toekomst registeren. 
+Formeel tijdreizen is het ophalen van de toestand van (een subset van) het register op een bepaald formeel tijdstip t~f~. We kunnen op de formele tijdsas alleen tijdreizen naar het verleden. We kunnen immers niet in de toekomst registeren.
 
 De API ondersteunt dit via query parameters `?t=2024-01-01T12:00:00Z` (ISO 8601-formaat).
 
@@ -38,110 +36,244 @@ Materieel tijdreizen is het ophalen van de toestand van (een subset van) het reg
 
 ## Architectuur
 
+### Hub + _Data patroon (v06-specifiek)
+
+In v06 is het **Hub + _Data** patroon geïntroduceerd, een wezenlijk verschil met v05:
+
+- **Hub**: stabiel associatief anker (compositie-relatie naar entiteit), bevat alleen structurele FK's + afgeleide `opvoer`/`afvoer`.
+- **_Data**: geversioned content-record, PK: `(ent_id, rel_id, versie)`. Correcties en inhoudelijke wijzigingen leven in _Data.
+- **_Aanvang / _Einde**: materiële plumbing op hub-niveau (niet op _Data). Alleen voor types met `IsMaterieel: true`.
+
+Alle `opvoer`/`afvoer` waarden zijn **afgeleid** uit wijzigingen + registratie; ze worden nooit direct opgeslagen.
+
+Zie `ONTWERP_DATA_PATTERN.md` voor het volledige ontwerp.
+
 ### Representatietypes
 
 Elk type in het model is een **representatie** met een van drie metatypes:
 
-| Metatype            | Voorbeelden                      | Kenmerken                                  |
-|---------------------|----------------------------------|--------------------------------------------|
-| `entiteit`          | A, B                             | Heeft `ID` (autoincrement), bevat onderliggende GE's/relaties |
-| `gegevenselement`   | A_U, A_V, A_W, B_X, B_Y         | FK naar entiteit (`a_id`/`b_id`), relatieve `rel_id` |
-| `relatie`           | Rel_A_B                          | FK naar twee entiteiten, relatieve `rel_id` |
+| Metatype            | Voorbeelden                                | Kenmerken                                  |
+|---------------------|--------------------------------------------|--------------------------------------------|
+| `entiteit`          | A, B, NatuurlijkPersoon, Locatie           | Heeft `ID`, bevat onderliggende GE's/relaties |
+| `gegevenselement`   | A_U, A_V, NP_Naam, NP_Naam_Data           | FK naar entiteit, relatieve `rel_id`, optioneel Hub+_Data |
+| `relatie`           | Rel_A_B, NP_Nationaliteit                  | FK naar twee entiteiten, relatieve `rel_id` |
 
-Elke representatie heeft `opvoer`/`afvoer` (formele tijd).
+Elke representatie heeft `opvoer`/`afvoer` (formele tijd, afgeleid).
 
 Alle representaties zijn structs in Go, met JSON-tags voor API-serialisatie en Bun-tags voor DB-mapping. Ze implementeren interfaces (`Representatie`, `FormeleRepresentatie`, `MaterieleRepresentatie`) die methoden definiëren voor ID, metatype, tijdvelden, etc.
 
-Alle representaties implementeren ook een `GetID()`, `Metatype()`, `ClearID()`, `GetOpvoer()`, `SetOpvoer()`, `GetAfvoer()`, `SetAfvoer()` methoden, zodat ze generiek kunnen worden behandeld in handlers en de MetaRegistry.
-
-Alle representaties worden opgeslagen in een eigen tabel in de database, met velden die via bun-tags zijn gedefinieerd.
+Alle representaties implementeren ook `GetID()`, `Metatype()`, `ClearID()`, `GetOpvoer()`, `SetOpvoer()`, `GetAfvoer()`, `SetAfvoer()` methoden, zodat ze generiek kunnen worden behandeld in handlers en de MetaRegistry.
 
 #### Velden
-Velden in representaties zijn getypeerd volgens de beschikbare types in Go (string, int, time.Time, etc.). Omdat we eigenlijk 3 werelden van types hebben (4 als we GraphQL meenemen), heeft elke wereld haar eigen typeringssysteem:
-- Go: de go-types
-- JSON: we gebruiken het systeem van OAS 3.1, met `type` en `format` in de JSON-schema's van de schema-API. Het type en format worden bepaald op basis van de Go-type van het veld, maar kunnen ook expliciet worden opgegeven in de `schema` tag van het veld.
-- DB: we gebruiken bun-tags om de mapping van Go-types naar DB-kolommen te definiëren
-- GraphQL: we gebruiken gqlgen, waarbij we in de gqlgen config kunnen definiëren hoe Go-types worden gemapt naar GraphQL-types
+Velden in representaties zijn getypeerd volgens de beschikbare types in Go (string, int, time.Time, etc.). Er zijn 4 werelden van types:
+- **Go**: de Go-types (incl. custom datatypes als `Datum`, `BSN`, `NLPostcode`, `Emailadres`, etc. uit `datatype_aliases.go`)
+- **JSON**: OAS 3.1 systeem met `type` en `format` in de JSON-schema's van de schema-API. Bepaald op basis van Go-type of expliciet via de `schema` tag.
+- **DB**: Bun-tags voor mapping van Go-types naar DB-kolommen
+- **GraphQL**: dynamisch gemapt vanuit Go-types via `graphql-go/graphql` (zie GraphQL sectie)
 
 ##### Gebruik velden in de FrontEnd
-In de frontend gebruiken we de JSON-veldnaam (de snake_case versie van het veld) om de data te binden in formulieren en weergaven. Daarnaast gebruiken we de veldtype en format uit de schema-API om te bepalen welk type invoerveld we moeten renderen (bijv. datepicker voor datumvelden, text input voor strings, etc.).
+In de frontend gebruiken we de JSON-veldnaam (snake_case) om data te binden in formulieren en weergaven. Veldtype en format uit de schema-API bepalen het type invoerveld (datepicker, text input, etc.).
 
-#### Entiteiten (voorbeeld: A, B)
-Entiteiten hebben een eigen ID ("id" in de eigen tabel, "a_id" of "b_id" als (P)FK in andere tabellen, voor nu nog niet autoincrement, maar via de API of UI ingegeven) en kunnen onderliggende gegevenselementen en relaties bevatten. Ze implementeren ook een `GeefOnderliggendeGegevenselementen()` methode die een lijst van hun onderliggende GE's/relaties retourneert, inclusief:
-- Rolnaam: de rolnaam van het gegevenselement of de relatie
-- JSON-rolnaam: de JSON-veldnaam van het gegevenselement of de relatie
-- Doeltype: het type (struct) van het gegevenselement of de relatie (bijv. A_U, Rel_A_B, etc.)
-- momentvoorkomen: dit is of het gerelateerde gegevenselement:
-  - enkelvoudig is als je de tijd stilzet, dus op een formeel tijdstip t, of
-  - meervoudig is, waardoor er meerdere GE's/relaties van hetzelfde type op enig moment tegelijk kunnen voorkomen. Bijv. meerdere A_U's bij een A op formeel tijdstip t.
+#### Entiteiten
+Entiteiten hebben een eigen ID en kunnen onderliggende gegevenselementen en relaties bevatten. Ze implementeren een `GeefOnderliggendeGegevenselementen()` methode die retourneert:
+- **Rolnaam**: Go-veldnaam
+- **JSON-rolnaam**: JSON-veldnaam
+- **Doeltype**: het type-struct (bijv. A_U, Rel_A_B)
+- **Momentvoorkomen**: enkelvoudig of meervoudig op een formeel tijdstip t
 
-### Routes in de database.
-Relatieve autoincrement: bij gegevenselementen en relaties wordt de `rel_id` automatisch opgehoogd binnen de scope van de parent-entiteit (a_id of b_id) en het type van het gegevenselement of de relatie. Dit maakt het mogelijk om meerdere GE's/relaties van hetzelfde type te hebben bij een entiteit, en om eenvoudig te verwijzen naar specifieke GE's/relaties via hun `rel_id`.
+### Multi-domein architectuur (v06-specifiek)
 
-Dit geldt ook voor aanvang en einde: er kunnen meerdere aanvangs- en eindrecords zijn voor een entiteit, en de `versie` wordt automatisch opgehoogd binnen de scope van de parent-entiteit (a_id of b_id) en het type (A_Aanvang, A_Einde, etc.). Hierdoor kunnen we een volledige geschiedenis van aanvangs- en eindrecords bijhouden, en altijd de meest recente versie ophalen.
+Het model is opgedeeld in **domeinen**, elk met een eigen prefix en codegen-uitvoer:
+
+| Domein          | Prefix           | Inhoud                                         |
+|-----------------|------------------|-------------------------------------------------|
+| Register        | `register_`      | Referentielijst, Land, AdellijkeTitel, etc.     |
+| NL Personen/Loc | `np_loc_`        | NatuurlijkPersoon, Locatie, Bereikbaarheid      |
+| ABUVWXY (ref)   | `abuvwxy_`       | A, B, GE's, Relaties (handmatig referentiemodel)|
+| CG Portfolio    | `cg_`            | CG Portfolio domein                             |
+| Configuratie    | `configuratie_`  | Configuratie/setup domein                       |
+
+Elk domein genereert 7 bestanden: `{prefix}_modellen_entiteiten.go`, `{prefix}_modellen_ge_rel.go`, `{prefix}_modellen_methods.go`, `{prefix}_modellen_input.go`, `{prefix}_metaregistry.go`, `{prefix}_datatype_registry.go`, `{prefix}_enum_registry.go`.
+
+Domeinen worden geïnitialiseerd via `initXxxMetaRegistry()` functies; de volgorde is belangrijk (afhankelijkheden eerst). Cross-domein relaties worden gelegd via `VoegOnderliggendGEToe()`.
+
+### Relatieve autoincrement
+Bij GE's en relaties wordt `rel_id` automatisch opgehoogd binnen de scope van de parent-entiteit en het type. Dit geldt ook voor `versie` bij _Data, _Aanvang en _Einde records.
 
 ### Materiële plumbing-types
 
 Aanvang en einde worden gemodelleerd als **aparte enkelvoudige GE's** met eigen tabellen en versiegeschiedenis:
 
-- `A_Aanvang`, `A_Einde`, `B_Aanvang`, `B_Einde`
-- PK: `(a_id|b_id, versie)` — versie is autoincrement
+- `X_Aanvang`, `X_Einde` per materieel type
+- PK: `(ent_id, versie)` — versie is autoincrement
+- Leven op **hub-niveau** (niet op _Data), waardoor materiële tijd onafhankelijk van data gecorrigeerd kan worden
 - Vorige versie wordt automatisch afgevoerd bij een nieuwe registratie
-- Gedefinieerd in `model/modellen_entiteiten.go` en `model/modellen_GE_rel.go` (todo)
 
 ### MetaRegistry — de single source of truth
 
-`model/metaregistry.go` bevat een `MetaRegistryType` map van `TypeMeta`-entries.
+`model/metaregistry_plumbing.go` definieert de `TypeMeta`-struct en helpers; de daadwerkelijke entries worden per domein geïnitialiseerd in `{prefix}_metaregistry.go` bestanden.
 
-Dit is nodig om te voorkomen dat er eindeloos veel custom tags in de structs gezet worden.
+De metaregistry is de **single source of truth** voor alle metadata over representatietypes. Alle handlers, routes, schema-API, GraphQL-laag, OpenAPI-generatie en frontend lezen dynamisch uit de metaregistry.
 
-De metaregistry - die we kort ook wel metamap noemen - is de **single source of truth** voor alle metadata over de representatietypes in het model. Alle informatie over de types, hun relaties, database mapping, URL-paden, etc. staat in deze metaregistry. Handlers, routes, schema-API en frontend lezen deze informatie dynamisch uit de metaregistry, zodat er niet steeds reflectie over structs of tags nodig is.
-
-De metaregistry gaat over alle representatietypes (structs dus) in het model, dus entiteiten, gegevenselementen en relaties, en niet over hun velden. Die staan in de structs. De relatie-structuur tussen de representatie-structs is ook in de metaregistry gedefinieerd, via de `OnderliggendeGegevenselementen` lijst in de entiteit-entries. Deze lijst beschrijft welke gegevenselementen en relaties er onder een entiteit vallen, en hoe ze gerelateerd zijn aan de struct-velden van de entiteit.
+De metaregistry gaat over alle representatietypes (structs), niet over hun velden (die staan in de structs). De relatie-structuur is gedefinieerd via `OnderliggendeGegevenselementen` in entiteit-entries.
 
 Elke entry beschrijft:
 
-- **Typenaam**, **Description**, **Metatype**, **IsMaterieel**
-- **Veldnaam** (JSON-veldnaam), **Padnaam** (URL-pad), **Kleur** (visualisatie)
+- **Typenaam**, **Description**, **Metatype**, **IsMaterieel**, **Domein**
+- **Veldnaam** (JSON), **Padnaam** (URL), **Kleur** (visualisatie)
+- **GESubtype** (`hub`, `data`, `aanvang`, `einde`), **DataTypenaam**, **BovenliggendTypenaam**
 - **Factory/SliceFactory/DBFactory/DBSliceFactory** (constructors)
 - **Tabelnaam**, **IDKolom**, **EntiteitIDKolom**, **HeeftPFK**, **RelatieveAutoincrement**
-- **OnderliggendeGegevenselementen** (alleen voor entiteiten): lijst met `Rolnaam` (Go-veldnaam), `JSONRolnaam`, `Doeltype`, `Momentvoorkomen`
+- **AfgeleideVelden** (lijst `AfgeleidVeld` met expressietaal + regel)
+- **EditorLayout** (posities, kleuren, anker-info voor UML-editor)
+- **ReferentielijstInstantieInfo** (voor referentielijst-items)
+- **Directioneel** (voor relatie-types: directionele associatie)
+- **OnderliggendeGegevenselementen**: `Rolnaam`, `JSONRolnaam`, `Doeltype`, `Momentvoorkomen`
 
-Routes, handlers, schema-API en frontend worden allemaal **dynamisch gedreven** door de MetaRegistry.
+### Afgeleide velden
+
+Afgeleide velden bestaan op twee niveaus:
+- **Veldniveau**: een veld binnen een GE/relatie waarvan de waarde wordt afgeleid uit andere velden (bijv. `weergavenaam` = `voornaam + " " + achternaam`).
+- **Representatieniveau**: velden die over GE's heen worden samengesteld.
+
+De expressietaal is primair **CEL** (Common Expression Language); ook `expr`, `jsonlogic` en `pseudo` worden ondersteund. In de UML-editor worden afgeleide velden getoond met oranje `/` prefix en cursieve stijl. Het veld `isWeergaveVeld` markeert velden die op visuele kaarten in de frontend worden getoond.
+
+Zie `afgeleide-velden.md` voor het volledige ontwerp.
+
+### Overerving (analyse)
+
+Generalisatie/specialisatie is geanalyseerd met drie DB-strategieën: TPH, TPT, TPC. Aanbeveling is **TPT** (Table Per Type) omdat dat past bij het MetaRegistry-model: elk type is een eigen entry, subtypes hebben een impliciete parent-referentie.
+
+Status: ontwerp gereed, nog niet geïmplementeerd. Zie `docs/overerving-analyse.md`.
 
 #### Schema-API
-De schema-API (`/schema`) retourneert de metadata van alle representatietypes in de MetaRegistry, inclusief hun velden en onderliggende gegevenselementen/relaties. De frontend gebruikt deze informatie om dynamisch formulieren en weergaven te genereren, zonder hardcoded veldnamen of structuren.
+De schema-API (`/api/schema/model`) retourneert de metadata van alle representatietypes in de MetaRegistry in **V3 JSON-formaat**, inclusief velden, onderliggende GE's/relaties, afgeleide velden, editor-layout en runtime-metadata (`V3Runtime`).
 
-N.B.: de gehele frontend is dynamisch gedreven door de schema-API, die op zijn beurt weer gedreven wordt door de MetaRegistry. Er zijn geen hardcoded veldnamen of structuren in de frontend; alles komt uit de schema-API.
+De frontend is volledig schema-gedreven: geen hardcoded veldnamen of structuren. Alles komt dynamisch uit de schema-API.
 
-##### Velden (zie bovenstaande uitleg over veldtypen)
-Velden in de schema-API worden beschreven met hun JSON-veldnaam, veldtype (bepaald op basis van de Go-type of expliciet opgegeven in de `schema` tag), format (voor datums, etc.), enum-waarden (indien van toepassing) en beschrijving (uit de `schema_desc` tag).
+##### Velden
+Velden in de schema-API worden beschreven met hun JSON-veldnaam, veldtype (OAS 3.1), format, enum-waarden en beschrijving (uit de `schema_desc` tag).
 
 ##### OnderliggendeGegevenselementen
-OnderliggendeGegevenselementen worden beschreven met hun rolnaam (de Go-veldnaam in de entiteitstruct), JSON-rolnaam (de JSON-veldnaam van dat veld), doeltype (het type van het gegevenselement of de relatie) en momentvoorkomen (enkelvoudig of meervoudig).
+Beschreven met rolnaam, JSON-rolnaam, doeltype en momentvoorkomen.
 
-#### API Routes 
-Routes worden beschreven met hun padnaam (zoals `/a_aanvang`, `/rel_a_bs`, etc.) en worden dynamisch geregistreerd in Gin op basis van de MetaRegistry. Handlers worden ook dynamisch gegenereerd op basis van de metadata in de MetaRegistry, zodat we geen handmatige route- of handlerdefinities hoeven te schrijven voor elk type.
+#### API Routes
+Routes worden dynamisch geregistreerd in Gin op basis van `Padnaam` uit de MetaRegistry. Per type:
+- `GET /{padnaam}?page=&size=` (lijst met paginering)
+- `GET /{padnaam}/:id` (enkel record)
+- `POST /{padnaam}` (insert)
+- `GET /full/{padnaam}/:id` (entiteit met alle geneste GE's/relaties, met `?t=` voor formeel tijdreizen)
 
-##### Routes voor Wijzigingen en Registraties
-Voor registratie van wijzigingen hebben we een speciale route `/registreer` die een volledige registratie met wijzigingen en representaties accepteert. Deze route gebruikt de `RegistreerMetNieuweAanpak()` handler, die de logica bevat voor het verwerken van de registratie, inclusief het automatisch afvoeren van vorige versies van aanvangs- en eindrecords.
+Registratie-endpoints:
+- `POST /registreer` — opvoer/afvoer met audittrail
+- `POST /corrigeer` — correctie van data
+- `POST /maak_ongedaan` — ongedaanmaking van een registratie
 
+### GraphQL (dynamisch, v06-specifiek)
+
+De GraphQL-laag in `dynql/` is volledig dynamisch en wordt bij startup gebouwd vanuit de MetaRegistry. Geen codegeneratie, geen SDL-bestanden.
+
+- **Technologie**: `graphql-go/graphql` v0.8.1 (programmatisch)
+- **Queries**: `full_<padnaam>()`, `<padnaam>()`, `full_<padnaam>_list()` met `peiltijdstip`/`t`-parameter
+- **Mutations**: `registreer()`, `corrigeer()`, `maak_ongedaan()`
+- **Reverse relaties**: `gerelateerde_<bron-padnaam>` op doelentiteiten
+- **Forward FK navigatie**: automatisch laden van secundaire entiteiten
+- **Hub+Data flattening**: data-lagen worden server-side afgevlakt in GraphQL-responses
+- **UI**: GraphiQL playground op `/graphql`
+
+Zie `GRAPHQL.md` en `docs/dynamische-graphql-laag.md` voor de volledige documentatie.
+
+### OpenAPI 3.1
+
+Dynamisch gegenereerd vanuit de MetaRegistry, conform NL API Strategie (ADR 2.1.0).
+
+- **Endpoints**: `/openapi.json`, `/openapi.yaml`, `/openapi/:domein`, `/swagger`, `/redoc`
+- **CLI export**: `go run ./cmd/openapi-export` → `openapi/` directory (JSON + YAML per domein)
+
+Zie `docs/OPENAPI.md`.
+
+### Codegen (v06-specifiek)
+
+De codegen-tool (`cmd/codegen/`) genereert Go-model-bestanden vanuit V3 JSON. De roundtrip is: **Code ↔ V3 JSON ↔ UML-Editor**.
+
+- **Modi**: `standalone` (vervangt alles) vs. `additive` (init-functies voor multi-domein)
+- **Input**: `--input` (bestand), `--from-url` (API-endpoint), `--domein`, `--prefix`
+- **Output**: 7 bestanden per domein (zie Multi-domein sectie)
+- **Validatie**: preflight-checks op V3-model (PascalCase types, geldig momentvoorkomen, bestaande doelEntiteit, etc.)
+- **Shared**: `datatype_aliases.go` met merge-logica voor multi-domein
+
+Zie `docs/CODEGEN.md`.
+
+### Schema-diff en versioning
+
+- **SchemaDiff** (`schemadiff/`): delta-berekening en migratiepad-suggesties tussen modelversies
+- **SchemaVersie**: tabel die gepubliceerde modelversies bijhoudt
+- **Diff endpoint**: `/api/schema/diff` voor vergelijking van schemas
+
+### Devloop (v06-specifiek)
+
+Self-rebuilding workflow (lokaal en Docker):
+
+1. Editor → publiceer V3 JSON → API slaat model op
+2. `POST /admin/rebuild/:password` triggert codegen + build
+3. Bij exit code 42 herstart Docker de container automatisch
+4. Fallback via `_baseline/model/` en `_pre_rebuild/model/` voor veiligheid
+
+Zie `docs/DEVLOOP.md`.
 
 #### Frontend
-De frontend in `web/vite/` is volledig dynamisch en leest alle metadata uit de schema-API. Hierdoor kunnen we zonder codewijzigingen nieuwe representatietypes, velden of relaties toevoegen, zolang ze maar correct in de MetaRegistry staan.
+De frontend in `web/vite/` is volledig dynamisch en schema-gedreven. Pagina's:
 
-De bestaat uit een aantal pagina's om de inhoudelijke gegevens in het register te bekijken en te bewerken, en een aparte pagina om de lijst registraties te kunnen inzien.
+- **Index**: entiteiten, GE's, relaties, registraties — met rijke visualisatie (weergavevelden, temporal metadata, relatienavigatie)
+- **Tijdlijn**: registraties + formele/materiële snapshots
+- **UML-Editor** (v2): visuele metamodel-editor met V3 JSON roundtrip (zie UML-Editor sectie)
+- **3D Universum**: `react-force-graph-3d` + Three.js, 3 view-modes (Meta → Instances → Concreet), wormhole-navigatie, REST/GraphQL toggle, domeinfilter
+- **Publicatie**: V3 JSON publiceren + devloop-rebuild triggeren
 
+### UML-Editor (v06-specifiek)
+
+De UML-editor (`uml-editor/`) is een React + React Flow editor voor het visuele metamodel:
+
+- **V3 JSON ↔ Editor roundtrip**: importeer en exporteer V3 JSON
+- **XMI import/export**: voor interoperabiliteit met Enterprise Architect e.d.
+- **Nodetypen**: Entiteit, GE, Relatie, Referentielijst, AssociatieAnker
+- **Edge-typen**: compositie (◆ diamond voor ENT→GE), associatie (ASOC-patroon voor relaties), dependency (`«use»` voor referentielijsten)
+- **Associatieklasse (ASOC) weergave**: relaties worden getoond als `A──o──B` (solid line via ankernode) + dashed `o╌╌REL` (associatieklasse-link). Bij relaties zonder eigen velden klapt de REL in tot een naam-label.
+- **Directioneel**: checkbox + open pijl op de edge
+- **Afgeleide velden**: `/` prefix + italic, CEL-expressie weergave
+- **Drag-drop, alignment, grid-snap, dependency visibility toggle**
+- **Layout-persistentie**: posities, edge-metadata, hidden-status
+
+### Autorisatie (ontwerp)
+
+PBAC (Policy Based Access Control) met PxP-patroon (PIP/PAP/PDP/PEP), gebaseerd op XACML 3.0. Ontwerp gereed, nog niet geïmplementeerd. Zie `autoriseren/autoriseren.md`.
 
 ### Bestandsstructuur model/
 
+**Plumbing (handmatig)**:
+
 | Bestand                    | Inhoud                                                       |
 |----------------------------|--------------------------------------------------------------|
-| `model_plumbing.go`        | Interfaces (`Representatie`, `FormeleRepresentatie`, `MaterieleRepresentatie`), helpers, plumbing-types (A_Aanvang etc.) |
-| `metaregistry_plumbing.go` | `TypeMeta` struct, `MetaRegistryType`, `OnderliggendGegevenselement`, constanten |
-| `metaregistry.go`          | De `MetaRegistry` variabele met alle type-entries            |
-| `modellen_entiteiten.go`   | Entiteitstructs (A, B) met hun GE-relaties en `GeefOnderliggendeGegevenselementen()` |
-| `modellen_ge_rel.go`       | GE- en relatiestructs (A_U, A_V, A_W, Rel_A_B, B_X, B_Y) met formele-tijd methoden |
+| `metaregistry_plumbing.go` | `TypeMeta` struct (~87 velden), `MetaRegistry` declaratie, helpers (`GetTypeMeta`, `MustTypeMeta`, `GetByVeldnaam`, etc.) |
+| `model_plumbing.go`        | Interfaces (`Representatie`, `FormeleRepresentatie`, `MaterieleRepresentatie`, `HeeftOnderliggendeGegevenselementen`), plumbing-types (Registratie, Wijziging, Taak) |
+| `datatype_aliases.go`      | Go type-aliassen (NLPostcode, BSN, Datum, URL, Emailadres, etc.) |
+| `date.go`                  | `Date` type (YYYY-MM-DD) met JSON/Bun marshaling |
+| `v3_format.go`             | V3 JSON structs (`V3EntiteitModel`, `V3Entiteit`, `V3Relatie`, `V3Veld`, `V3Runtime`, etc.) |
+| `v3_exporter.go`           | Export MetaRegistry → V3 JSON (met runtime-metadata) |
+| `schema_versie.go`         | SchemaVersie entity (bijhouding gepubliceerde modelversies) |
+| `nested.go`                | Helpers voor geneste entiteit-loading |
+
+**Per domein (codegen-gegenereerd)**:
+
+| Bestandspatroon                 | Inhoud                                  |
+|---------------------------------|-----------------------------------------|
+| `{prefix}_modellen_entiteiten.go` | Entiteitstructs + materiële plumbing  |
+| `{prefix}_modellen_ge_rel.go`    | GE/relatie hubs + _Data + _Aanvang/_Einde structs + enum-declaraties |
+| `{prefix}_modellen_methods.go`   | Interface-implementaties (GetID, Metatype, etc.), GeefOnderliggende...() |
+| `{prefix}_modellen_input.go`     | Afgevlakte input-structs voor registratie-API |
+| `{prefix}_metaregistry.go`      | TypeMeta entries + `VoegOnderliggendGEToe()` cross-domein + init-functie |
+| `{prefix}_datatype_registry.go`  | Custom datatypes + init-functie |
+| `{prefix}_enum_registry.go`     | Enums + init-functie |
 
 ### Generieke handlers
 
@@ -153,18 +285,34 @@ Handlers in `handlers/` zijn **generiek** en werken op basis van `TypeMeta`:
 - `MakeGetFullEntityByMetaHandler(meta)` — entiteit met alle geneste GE's/relaties
 - `RegistreerMetNieuweAanpak()` — registratie van opvoer/afvoer met audittrail
 
+Daarnaast:
+- **Schema/metadata handlers**: V3 JSON export, domein-specifiek, OpenAPI, viz-schema
+- **Admin handlers**: DB drop/rebuild, devloop-rebuild, async-taken
+- **Diff handler**: schema-vergelijking
+- **Bestanden handler**: file upload/management
+- **Docs handler**: markdown-documentatie serveren
+
 Routes worden dynamisch geregistreerd in `routes/addroutes.go` op basis van `Padnaam` uit de MetaRegistry.
+
+### CLI-tools (cmd/)
+
+| Tool                  | Doel                                                |
+|-----------------------|-----------------------------------------------------|
+| `cmd/codegen/`        | V3 JSON → Go-model codegen (multi-domein, additief) |
+| `cmd/export_v3/`      | MetaRegistry → V3 JSON export                       |
+| `cmd/openapi-export/` | OAS 3.1 specs exporteren naar bestanden             |
+| `cmd/schemadiff/`     | Schema-versies vergelijken                          |
 
 ## Naamconventies
 
-| Context        | Conventie                      | Voorbeeld                        |
-|----------------|-------------------------------|----------------------------------|
-| Go struct      | PascalCase                    | `A_Aanvang`, `Rel_A_B`          |
-| Go veld        | PascalCase                    | `Aanvang`, `RelABs`             |
-| JSON tag       | snake_case, zonder entiteitsprefix voor materieel | `"aanvang"`, `"einde"`, `"us"` |
-| DB tabel       | snake_case                    | `a_aanvang`, `rel_a_b`          |
-| DB kolom       | snake_case                    | `a_id`, `rel_id`, `versie`      |
-| URL pad        | snake_case                    | `/a_aanvang`, `/rel_a_bs`       |
+| Context        | Conventie                      | Voorbeeld                                  |
+|----------------|-------------------------------|---------------------------------------------|
+| Go struct      | PascalCase                    | `A_Aanvang`, `Rel_A_B`, `NP_Naam_Data`     |
+| Go veld        | PascalCase                    | `Aanvang`, `RelABs`, `Voornaam`             |
+| JSON tag       | snake_case                    | `"aanvang"`, `"einde"`, `"voornaam"`        |
+| DB tabel       | snake_case                    | `a_aanvang`, `rel_a_b`, `np_naam_data`      |
+| DB kolom       | snake_case                    | `a_id`, `rel_id`, `versie`                  |
+| URL pad        | snake_case                    | `/a_aanvang`, `/rel_a_bs`, `/np_naam`       |
 
 **Taal**: Domeintermen zijn Nederlands (opvoer, afvoer, aanvang, einde, wijziging, registratie). Code-identifiers en comments zijn Nederlands tenzij het Go/HTTP-conventie betreft.
 
@@ -172,30 +320,80 @@ Routes worden dynamisch geregistreerd in `routes/addroutes.go` op basis van `Pad
 
 - **Go** met **Gin** (HTTP) en **Bun** (ORM/PostgreSQL)
 - **PostgreSQL** als database
+- **GraphQL** via `graphql-go/graphql` (dynamisch, geen codegen)
 - **React + Vite** frontend in `web/vite/`, serveert vanuit `/viz/react/`
+- **UML-Editor** in `uml-editor/` (React + React Flow)
+- **3D Universum**: `react-force-graph-3d` + Three.js
+- **OpenAPI 3.1**: dynamisch gegenereerd, Swagger + ReDoc UI
+- **Docker**: Alpine-based images, devloop-compose, split-compose
 - Frontend leest het schema dynamisch via de schema-API — geen hardcoded veldnamen
-- **GraphQL** via gqlgen (experimenteel)
+
+## V3 JSON als uitwisselingsformaat
+
+V3 JSON is het **platform-onafhankelijke modelformaat** voor de roundtrip:
+
+**Code ↔ V3 JSON ↔ UML-Editor**
+
+Het V3-formaat bevat:
+- Entiteiten met velden, metatype-info, momentvoorkomen, materialiteitsinstellingen
+- Relaties met bron/doelEntiteit, kardinaliteit, directioneel-vlag
+- GE's met Hub+_Data structuur
+- Afgeleide velden met expressietaal en regels
+- Datatypes en enums
+- Editor-layout (posities, kleuren, use-edges, anker-posities)
+- Runtime-metadata (`V3Runtime`)
+
+Bewaard in `model/v3_format.go` (structs) en `model/v3_exporter.go` (export).
 
 ## Werkwijze bij modelwijzigingen
 
-Bij het toevoegen of wijzigen van een representatietype, pas aan:
+### Via codegen (aanbevolen)
+1. Pas het V3 JSON model aan (via UML-Editor of handmatig)
+2. Draai codegen: `go run ./cmd/codegen --input model.json --output model --domein <domein> --prefix <prefix> --mode additive`
+3. De 7 domeinbestanden worden automatisch gegenereerd
+4. Controleer met `go build ./...` en `go test ./...`
 
-1. **Struct** in `modellen_entiteiten.go` of `modellen_ge_rel.go`
-2. **Interface-methoden** (GetID, Metatype, ClearID, Get/SetOpvoer, Get/SetAfvoer)
-3. **MetaRegistry-entry** in `metaregistry.go`
-4. **OnderliggendeGegevenselementen** in de parent-entiteit entry (Rolnaam + JSONRolnaam moeten matchen met struct-veld en JSON-tag)
-5. **GeefOnderliggendeGegevenselementen()** methode op de entiteit
-6. **DB-tabel** aanmaken in `dbsetup/createtables.go` en `dbsetup/createmodeltables.go`
+### Handmatig (voor plumbing of het ABUVWXY referentiemodel)
+1. **Struct** in `{prefix}_modellen_entiteiten.go` of `{prefix}_modellen_ge_rel.go`
+2. **Interface-methoden** in `{prefix}_modellen_methods.go`
+3. **MetaRegistry-entry** in `{prefix}_metaregistry.go`
+4. **OnderliggendeGegevenselementen** in de parent-entiteit entry
+5. **GeefOnderliggendeGegevenselementen()** op de entiteit
+6. **DB-tabel** in `dbsetup/createtables.go` en `dbsetup/createmodeltables.go`
 
-Routes en handlers hoeven **niet** handmatig toegevoegd; die worden dynamisch gegenereerd.
+Routes, handlers, GraphQL-schema en OpenAPI-specs hoeven **niet** handmatig toegevoegd; die worden dynamisch gegenereerd.
 
 ## Tests en build
 
 ```sh
-cd bitemporal_go_API_v05
+cd bitemp_register_v06
 go build ./...          # compileer
 go test ./...           # unit tests
 go test ./... -coverprofile coverage.out  # coverage
 ```
 
-Er zijn VS Code tasks gedefinieerd voor build, test en coverage (zie `.vscode/tasks.json`).
+Er zijn VS Code tasks gedefinieerd voor build, test, coverage en devloop (zie `.vscode/tasks.json`):
+- `go: test all (v06)`, `go: coverage all (v06)`, `go: coverage html (v06)`
+- `vite: dev server (v06)`, `vite: build (v06)`
+- `stop: api server (v06, :8082)`, `stop: vite server (v06, :5173/:5174/:5175)`
+
+## Belangrijke referentiedocumentatie
+
+| Document                             | Onderwerp                                      |
+|--------------------------------------|-------------------------------------------------|
+| `README.md`                          | Hoofdoverzicht, setup, features                 |
+| `docs/DEVLOOP.md`                    | Devloop workflow en auto-rebuild                |
+| `docs/CODEGEN.md`                    | Codegen architectuur en multi-domein            |
+| `docs/OPENAPI.md`                    | OpenAPI 3.1 generatie en NL API Strategie       |
+| `docs/BACKLOG.md`                    | Open items en prioriteiten                      |
+| `docs/overerving-analyse.md`         | Overerving/generalisatie TPT-analyse            |
+| `docs/dynamische-graphql-laag.md`    | GraphQL-laag implementatie                      |
+| `docs/3D_UNIVERSUM.md`              | 3D visualisatie                                 |
+| `docs/frontend-viz-design.md`        | Frontend visualisatie-ontwerp                   |
+| `ONTWERP_DATA_PATTERN.md`           | Hub + _Data patroon                             |
+| `afgeleide-velden.md`               | Afgeleide velden ontwerp                        |
+| `materiele_tijd.md`                  | Materiële tijdsplumbing                         |
+| `GRAPHQL.md`                         | GraphQL overzicht                               |
+| `RELEASE.md`                         | Release notes                                   |
+| `uml-editor/README.md`             | UML-editor features en gebruik                  |
+| `autoriseren/autoriseren.md`        | Autorisatie-ontwerp (PBAC)                      |

@@ -8,8 +8,9 @@
  *   │ └ 🔗 Relatie
  *   ├ 📄 Datatype
  *   ├ 📋 Enumeratie
- *   └ 📌 RefInstantie
- *   📐 Diagrammen
+ *   ├ 📌 RefInstantie
+ *   └ 📐 Diagrammen (domein-specifiek)
+ *   📐 Diagrammen (overall, zonder domein)
  *
  * Features:
  * - Zoekbalk bovenaan voor filteren
@@ -124,6 +125,23 @@ function buildTree(elements, structuralEdges, diagrams, domains) {
       geplaatst.add(el.id);
     }
 
+    // Diagrammen die bij dit domein horen — als sub-map onder de domeinmap
+    const domeinDiagrammen = Object.values(diagrams).filter((d) => d.domein === domein);
+    if (domeinDiagrammen.length > 0) {
+      domeinNode.children.push({
+        id: `diagrams_${domein}`,
+        name: "Diagrammen",
+        nodeType: "diagrams",
+        domein: domein,
+        children: domeinDiagrammen.map((d) => ({
+          id: `diagram_${d.id}`,
+          name: d.naam || d.id,
+          nodeType: "diagram",
+          diagramId: d.id,
+        })),
+      });
+    }
+
     tree.push(domeinNode);
   }
 
@@ -146,14 +164,14 @@ function buildTree(elements, structuralEdges, diagrams, domains) {
     tree.push(geenDomeinNode);
   }
 
-  // Diagrammen-map
-  const diagramList = Object.values(diagrams);
-  if (diagramList.length > 0) {
+  // Diagrammen zonder domein — overall diagrammen-map
+  const overallDiagrammen = Object.values(diagrams).filter((d) => !d.domein);
+  if (overallDiagrammen.length > 0) {
     tree.push({
       id: "diagrams_root",
       name: "Diagrammen",
       nodeType: "diagrams",
-      children: diagramList.map((d) => ({
+      children: overallDiagrammen.map((d) => ({
         id: `diagram_${d.id}`,
         name: d.naam || d.id,
         nodeType: "diagram",
@@ -178,8 +196,16 @@ function TreeNode({ node, style }) {
   const dragGhostRef = useRef(null);
   const verwijderDragGhostVeilig = useCallback(() => {
     const ghost = dragGhostRef.current;
-    if (ghost?.parentNode) {
-      ghost.parentNode.removeChild(ghost);
+    if (ghost) {
+      try {
+        // `remove()` is idempotent en voorkomt parent/child race-condities.
+        ghost.remove?.();
+      } catch (_err) {
+        // Fallback voor edge-cases in oudere DOM-implementaties.
+        if (ghost.parentNode && ghost.parentNode.contains(ghost)) {
+          ghost.parentNode.removeChild(ghost);
+        }
+      }
     }
     dragGhostRef.current = null;
   }, []);
@@ -274,6 +300,19 @@ function TreeNode({ node, style }) {
             // Haal naam en type op via de tree data (of fallback naar node.data)
             dragItems.push({ elementId: id });
           }
+        } else if (e.shiftKey && node.data.nodeType === "entiteit") {
+          // Shift+drag op entiteit: neem entiteit + alle onderliggende GE's/relaties mee
+          dragItems.push({
+            elementId: node.data.id,
+            type: node.data.nodeType,
+            name: node.data.name,
+          });
+          const { structuralEdges, elements } = useModelStore.getState();
+          for (const se of structuralEdges) {
+            if (se.source === node.data.id && elements[se.target]) {
+              dragItems.push({ elementId: se.target });
+            }
+          }
         } else {
           dragItems.push({
             elementId: node.data.id,
@@ -286,6 +325,8 @@ function TreeNode({ node, style }) {
           "application/ide-element",
           JSON.stringify({ elements: dragItems })
         );
+        // Fallback MIME voor browsers/drag-sources die custom types filteren.
+        e.dataTransfer.setData("application/json", JSON.stringify({ elements: dragItems }));
         e.dataTransfer.setData("text/plain", dragItems.map((d) => d.name || d.elementId).join(", "));
         e.dataTransfer.effectAllowed = "copy";
 
@@ -338,7 +379,7 @@ function TreeNode({ node, style }) {
 
 // ─── Hoofdcomponent ─────────────────────────────────────────
 
-export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram }) {
+export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram, onImportDomein, onExportDomein }) {
   const elements = useModelStore((s) => s.elements);
   const structuralEdges = useModelStore((s) => s.structuralEdges);
   const diagrams = useModelStore((s) => s.diagrams);
@@ -450,15 +491,28 @@ export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram }) {
           voegNieuwRepToe("relatie", { parentId: nodeData.id, parentDomein: el?.domein || "" });
           break;
         }
-        case "nieuwDiagram":
-          onCreateDiagram?.();
+        case "nieuwDiagram": {
+          // Bij aanroep vanuit domein-map of domein-diagrammen-map → domein meegeven
+          const diagramDomein = nodeData.domein || (nodeData.nodeType === "domain" ? (nodeData.name === "(geen domein)" ? "" : nodeData.name) : undefined);
+          onCreateDiagram?.(undefined, diagramDomein);
           break;
+        }
         case "openDiagram":
           if (nodeData.diagramId) onOpenDiagram?.(nodeData.diagramId, nodeData.name);
           break;
+        case "importeerDomein": {
+          const domNaam = nodeData.name === "(geen domein)" ? "" : nodeData.name;
+          onImportDomein?.(domNaam);
+          break;
+        }
+        case "exporteerDomein": {
+          const domNaam = nodeData.name === "(geen domein)" ? "" : nodeData.name;
+          onExportDomein?.(domNaam);
+          break;
+        }
       }
     },
-    [setSelectedElementId, onCreateDiagram, onOpenDiagram]
+    [setSelectedElementId, onCreateDiagram, onOpenDiagram, onImportDomein, onExportDomein]
   );
 
   const handleSelect = useCallback(

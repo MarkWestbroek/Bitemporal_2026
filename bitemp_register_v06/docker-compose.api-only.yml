@@ -13,6 +13,11 @@ services:
       GIN_MODE: "${GIN_MODE:-release}"
       ALLOW_DROP_TABLES: "${ALLOW_DROP_TABLES:-false}"
       ADMIN_DROP_PASSWORD: "${ADMIN_DROP_PASSWORD:-change-me}"
+      MINIO_ENDPOINT: "${MINIO_ENDPOINT:-bitemp-minio-v06:9000}"
+      MINIO_ACCESS_KEY: "${MINIO_ACCESS_KEY:-minioadmin}"
+      MINIO_SECRET_KEY: "${MINIO_SECRET_KEY:-minioadmin}"
+      MINIO_BUCKET: "${MINIO_BUCKET:-ide-bestanden}"
+      MINIO_USE_SSL: "${MINIO_USE_SSL:-false}"
     networks:
       - bitemp-net
 

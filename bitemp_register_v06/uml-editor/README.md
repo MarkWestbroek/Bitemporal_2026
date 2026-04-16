@@ -72,6 +72,11 @@ De editor kan het bestaande model inladen vanuit de **schema-API** (`/schema`) v
 | **Dependency verbergen / tonen** | Rechtsklik op een stippellijn `«use»` → `Verberg deze dependency`; rechtsklik op enum/gegevenstype → `Verberg dependencies` of `Toon dependencies` |
 | **Undo canvas-acties** | `Ctrl + Z` → maakt de laatste canvasactie ongedaan (kleine undo-stack, o.a. verplaatsen, verbinden, verwijderen, uitlijnen en verdelen) |
 | **Redo canvas-acties** | `Ctrl + Y` (of `Ctrl + Shift + Z`) → zet de laatste ongedaan gemaakte canvasactie opnieuw terug |
+| **Kopiëren tussen diagrammen** | `Ctrl + C` → kopieer geselecteerde nodes (+ onderlinge edges) naar het clipboard. Werkt ook via rechtsklik → "📋 Kopiëren". Bij rechtsklik op een enkele node wordt die node gekopieerd |
+| **Plakken op diagram** | `Ctrl + V` → plak gekopieerde nodes op het actieve diagram (midden viewport). Elementen die al op het diagram staan worden overgeslagen. Edges worden automatisch ontdekt via clipboard-edges + `discoverEdgesForNodes` (scant structuralEdges én alle diagrammen, ook ASOC-doelEdges, anker-edges en dependency-edges). Werkt ook via rechtsklik → "📋 Plakken" |
+| **Shift+drag entiteit** | `Shift + drag` vanuit de ProjectBrowser → sleept de entiteit + alle onderliggende GE's/relaties in één keer op het diagram. Edges worden automatisch ontdekt via `discoverEdgesForNodes` (incl. ASOC, anker, dependency). Doel-entiteiten van relaties worden automatisch mee-toegevoegd zodat ASOC-doelEdges direct zichtbaar zijn |
+| **Multi-drop vanuit PB** | `Ctrl + klik` op meerdere items in de ProjectBrowser → sleep een van de geselecteerde items naar het diagram → alle geselecteerde items worden in één keer gedropt. Auto-add van gerelateerde entiteiten is ook actief bij multi-drop |
+| **Auto-add relatie-endpoints** | Bij het droppen van een relatie worden de owner-entiteit (bron) en doel-entiteit automatisch mee-toegevoegd aan het diagram als ze er niet al op staan. Dit zorgt ervoor dat zowel de structurele ownerEdge als de ASOC-doelEdge direct zichtbaar worden |
 | **Export Mermaid** | Toolbar: 🧜 Mermaid → download `metamodel.mmd` |
 | **Export PlantUML** | Toolbar: 🌱 PlantUML → download `metamodel.puml` |
 | **Export XMI 1.1** | Toolbar: 📦 XMI 1.1 → download `metamodel.xmi` (incl. diagramposities) |

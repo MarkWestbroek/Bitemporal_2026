@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-12 22:26
 - **Sessie-ID**: `0f31b728-fd0b-4d6f-a532-8d57cff27a91`
-- **Berichten**: 45
+- **Berichten**: 49
 
 ---
 
@@ -1856,5 +1856,227 @@ Laat me nu de rebuild testen door een direct HTTP-verzoek te sturen:   Het wacht
 **Verificatie**: Rebuild via `POST /admin/rebuild/1234` voor domein "abuvwxy" retourneert  — alle stappen inclusief codegen en binary build zijn doorlopen.
 
 Documentatie bijgewerkt in docs/IDE.md.
+
+---
+
+## 🧑 User
+
+Ik heb abuvwxy gegenereerd (rebuild) maar zie over de overerving niets in C_sub staan (in metaregistry) 
+
+```
+MetaRegistry["C_sub"] = TypeMeta{
+        Typenaam:                       "C_sub",
+        Klassenaam:                     "C_sub",
+        Description:                    "",
+        Metatype:                       MetatypeEntiteit,
+        IsMaterieel:                    false,
+        Domein:                         "abuvwxy",
+        Kleur:                          "#d2c1fb",
+        Layout:                         &EditorLayout{Positie: &V3Positie{X: 795, Y: 600}},
+        Veldnaam:                       "c_sub",
+        Padnaam:                        "c_subs",
+        Meervoud:                       "c subs",
+        Factory:                        func() Representatie { return &C_sub{} },
+        SliceFactory:                   func() any { return &[]C_sub{} },
+        Tabelnaam:                      "c_sub",
+        IDKolom:                        "id",
+        DBFactory:                      func() Representatie { return &C_sub{} },
+        DBSliceFactory:                 func() any { return &[]C_sub{} },
+        HeeftPFK:                       false,
+        RelatieveAutoincrement:         false,
+        OnderliggendeGegevenselementen: []OnderliggendGegevenselement{},
+        AfgeleideVelden: []AfgeleidVeld{
+            {
+                Naam:                "superveld",
+                GoType:              "string",
+                AfleidingsregelTaal: "cel",
+                Afleidingsregel:     "C.C_GE.superveld",
+                IsWeergaveVeld:      true,
+            },
+        },
+    }
+    ```
+
+    In de editor v2 staat wel supertype (img2). In de IDE zie ik dat veld niet meer. In V3 (attached ) zie ik ook geen info over het supertype C in C_sub
+
+    Gaat de roundtrip voor overerving wel goed dan?
+
+---
+
+## 🤖 Assistant
+
+Goed nieuws: de backend-structuren zijn al klaar — `V3Entiteit.Erft` en `TypeMeta.ParentTypenaam` bestaan allebei, en codegen snapt ze ook. Het probleem zit in **drie plekken** waar de data niet doorgesluisd wordt:
+
+1. **V3 exporter** schrijft `Erft` niet
+2. **Frontend adapters** lezen/schrijven `erft` niet
+3. **IDE details panel** toont geen supertype-veld
+
+Laat me dit fixen. Eerst de bronbestanden lezen: Nu de frontend adapters bekijken — waar entiteiten van/naar V3 geconverteerd worden: Laat me de relevante functies in  lezen — de import (v3→store) en export (store→v3):  Nu de export-functie (store→V3):   Nu moet ik begrijpen hoe de IDE/store de generalisatie-edges opslaat. Laat me zoeken in de store en diagram-componenten:  Nu snap ik het. De IDE maakt een **generalisatie-edge** aan met . Dit is een **diagram-edge**, niet een structural edge. Laat me checken hoe deze edge verwerkt wordt bij export:   Niet in de adapters! Laat me breder zoeken:     wordt **alleen** in  gebruikt — het wordt nergens gelezen in de adapters of store. De generalisatie-edge bestaat alleen in het diagram, maar wordt niet naar de store/V3 model doorgesluisd.
+
+Laat me nu de oude editor (v2) bekijken hoe die het supertype-dropdown toont:   Hmm, ook niet. Laat me dan de v2 editor-pagina bekijken:    Geen "Supertype" in de frontend-code? Maar in je screenshot (image 2) staat Geen "Supertype" in de frontend-code? Maar in je screenshot (image 2) staat het wel. Laat me de editor pages bekijken:     De "editor v2" is de oude `uml-editor/`. Laat me daar zoeken naar "Supertype":      Nu snap ik het complete plaatje. De **v2 editor** heeft dit volledig geïmplementeerd (generalisatie-edges, supertype dropdown,  veld in V3 export). De **IDE** (nieuwe editor) heeft de generalisatie-edge wel in het diagram, maar:
+1. Leest  niet bij V3 import
+2. Schrijft  niet bij V3 export 
+3. Toont geen "Supertype" in het details panel
+
+Laat me nu ook bekijken hoe de v2 editor het  veld schrijft bij export:      Nu de V3→editor import functie:      Helder. De v2 editor doet exact wat nodig is:
+- **Import**:  → generalisatie-edge met 
+- **Export**: generalisatie-edge → 
+
+Nu moet ik hetzelfde implementeren in de IDE. Laat me de huidige state van de relevante bestanden begrijpen en dan alle gaten dichten.
+
+Laten we de hele keten fixen:  Nu de export-functie waar entiteiten gebouwd worden:       Nu moet ik ook weten waar de  en diagramEdges beschikbaar zijn voor de export. De generalisatie-edges zitten in , niet in . Laat me de state-structuur begrijpen:         Laat me het begin van v3ModelNaarStore en het einde bekijken — met name hoe diagramEdges worden opgebouwd en teruggegeven:        Nu het einde van de functie waar het resultaat wordt samengesteld:        Nu snap ik de datastructuur.  bevat de edges voor het diagram (inclusief type, handles, etc.) en  bevat de structurele relaties (entiteit→GE, entiteit→relatie).
+
+De generalisatie-edge is een **diagram edge** (visueel), niet een structural edge. Ik moet:
+
+1. **V3 import** (): Bij het inlezen van entiteiten, als  aanwezig is, een generalisatie-edge toevoegen aan 
+2. **V3 export** (): Bij het schrijven van entiteiten, generalisatie-edges uit  opzoeken en  zetten
+3. **V3 exporter (Go)**: `Erft: meta.ParentTypenaam` toevoegen
+4. **IDE DetailsPanel**: Supertype veld tonen en bewerkbaar maken
+
+Laat me nu de DetailsPanel lezen — met name de entiteit-sectie:         Nu heb ik voldoende context. Laat me ook de  helper en het -object in de export bekijken:         Nu heb ik alle puzzelstukjes. Laat me alle wijzigingen implementeren. De keten is:
+
+**1. V3 exporter (Go)** — schrijft `Erft` niet → fix  
+**2. V3 import (adapters.js)** — leest  niet → fix  
+**3. V3 export (adapters.js)** — schrijft  niet → fix  
+**4. IDE DetailsPanel** — toont geen supertype → fix   
+```
+
+```
+
+```
+
+```
+Nu de **V3 export** (store→V3) — ik moet generalisatie-edges uit het diagram opzoeken en  zetten op de entiteit:         Ik moet de generalisatie-edges uit het diagram halen. De  variabele is beschikbaar. Laat me een lookup bouwen vóór de entiteiten-map, en dan bij elke entiteit het supertype opzoeken:            
+```
+
+```
+Nu het **DetailsPanel** — ik moet een "Supertype" dropdown toevoegen voor entiteiten, die het supertype afleidt uit de generalisatie-edges in het diagram. Net als de v2 editor moet ik:
+1. De diagram-edges beschikbaar hebben
+2. Een generalisatie-edge zoeken waar 
+3. De target (supertype) tonen/bewerken
+
+Laat me de DetailsPanel beter begrijpen — hoe het aan diagram-edges komt:     Nu moet ik de diagram-edges beschikbaar maken in de ElementEditor om het supertype te vinden. De  zijn beschikbaar via de store. Ik moet:
+
+1. De diagrams ophalen via 
+2. Generalisatie-edge zoeken waar 
+3. Supertype dropdown tonen
+4. Bij wijziging de generalisatie-edge aanpassen/verwijderen/toevoegen
+
+Laat me ook de  actie in de store bekijken:           Ik heb  beschikbaar. Laat me ook de DEFAULT_DIAGRAM_ID opzoeken:            Goed. Nu het DetailsPanel aanpassen. Ik moet in de  component:
+1.  en  ophalen uit de store
+2. Het huidige supertype afleiden uit generalisatie-edges
+3. Een dropdown tonen met alle entiteiten als mogelijke supertypes
+4. Bij wijziging de generalisatie-edge toevoegen/wijzigen/verwijderen       
+```
+
+```
+Nu moet ik de import van  toevoegen en de supertype-logica. Laat me eerst de imports bekijken:          
+```
+
+```
+Nu de supertype-dropdown toevoegen in het entiteit-formulier. Laat me de plek opnieuw lezen:          Ik moet na het "Subtype" veld een "Supertype" dropdown toevoegen. Ik maak het als een select dat de generalisatie-edge beheert:        
+```
+
+```
+Nu de  component aanmaken. Ik voeg het toe vóór de  functie:      
+```
+
+```
+Laat me nu verifiëren dat de codegen correct omgaat met het -veld. De subagent meldde dat het al klaar is, maar laat me het zelf checken:      De codegen handle  al perfect:
+- Schrijft `ParentTypenaam` als 
+- Zet  op  (bijv. `c_id`)
+- Zet  en 
+
+Nu de builds verifiëren:          Beide builds slagen. Laat me nu de Go tests draaien en dan ook checken dat de  correct geëxporteerd wordt uit :         Nu documentatie bijwerken:            
+```
+
+```
+De hele overerving-roundtrip is nu gefixt. Hier is de samenvatting:
+
+**Probleem**: De generalisatie (C_sub erft van C) ging verloren in de V3 roundtrip. De backend-structuren (, `TypeMeta.ParentTypenaam`) en codegen waren al klaar, maar de data werd op **drie plekken** niet doorgesluisd:
+
+**Fixes**:
+
+| # | Bestand | Fix |
+|---|---------|-----|
+| 1 |  |  toegevoegd zodat Go export het supertype meeneemt |
+| 2 |  | **Import**:  → generalisatie-edge in diagram. **Export**: generalisatie-edges →  veld op V3-entiteit |
+| 3 |  | Nieuw  component: dropdown met alle entiteiten, leest/schrijft generalisatie-edge |
+
+**Codegen** () was al correct: schrijft `ParentTypenaam`, zet  op , .
+
+Na rebuild vanuit de IDE zou `C_sub` nu `ParentTypenaam: "C"`,  en  in de MetaRegistry moeten krijgen. Je kunt dit testen door in de IDE het supertype "C" te selecteren voor C_sub en dan te rebuilden.
+
+---
+
+## 🧑 User
+
+Ja, super (pun intended :-)  ):        ` ParentTypenaam:                 "C" `
+
+Ik denk dat de rebuild dus werkt.
+
+Er komt wel geen feedback op, in de IDE. Dat zou wel moeten.
+
+Ik check de DB: 
+heeft C_sub alleen een C_id? Dus geen eigen? Het kan werken, maar klopt dat met het ontwerp? Ik had ook een eigen id verwacht.
+
+---
+
+## 🤖 Assistant
+
+Now let me check the rebuild response to understand what data we can show: Now let me look at how the toolbar and status are rendered around line 584, and find a good place for a toast: Now I have a clear picture. The status feedback IS there in the toolbar —  — but it's a subtle grey text. The user says "Er komt geen feedback op" which likely means it's too easy to miss.
+
+I'll add a toast notification system that shows a prominent, auto-dismissing notification for rebuild results (and other operations). Also, I'll log the steps to console for debugging. Now I'll implement a toast notification system. I'll add a minimal `toast` state and a `<Toast>` visual component that shows prominently in the IDE: 
+```
+
+```
+Now add toast calls in  on success and error: 
+```
+
+```
+
+```
+
+```
+Also add toast for publish success/failure:  
+```
+
+```
+
+```
+
+```
+Now add the Toast component rendering in the JSX — a floating banner above the FlexLayout: 
+```
+
+```
+Now let me verify it builds: Build succeeds. Now let me address the second question about C_sub's PK design. Twee punten:
+
+### 1. Rebuild feedback
+
+De feedback stond al in de toolbar-statusbalk, maar was te subtiel (klein grijs tekstje). Ik heb een **toast-notificatie** toegevoegd in :
+
+- **Groene banner** bij succes, **rode** bij fout — floating, gecentreerd boven het canvas
+- Klikbaar om te sluiten, verdwijnt automatisch (6s succes, 12s fout)
+- Bevat een  met uitklapbare stappen uit de rebuild-response
+- Volledige stappen worden ook naar  gelogd
+- Werkt ook voor publicatie (succes/fout)
+
+### 2. C_sub PK: `c_id` zonder eigen  — klopt dit?
+
+**Ja, dit is correct TPT (Table Per Type) design.** De codegen doet dit bewust:
+
+- `C_sub` **IS een** `C` — identiteit wordt gedeeld
+- `c_id` is tegelijk **PK** en **FK** naar  (1:1 relatie)
+- In de MetaRegistry: `IDKolom: "c_id"`, `HeeftPFK: true`, `EntiteitIDKolom: "c_id"`
+
+Dit patroon heet **shared primary key** of **identifying relationship**. Een `C_sub` kan niet bestaan zonder een `C`, en deelt exact dezelfde identifier. Je kunt altijd `JOIN c ON c.id = c_sub.c_id` doen om de volledige C + C_sub gegevens op te halen.
+
+Als je C_sub een **eigen** autoincrement  zou geven, zou je:
+- Een extra kolom + FK nodig hebben (meer overhead)
+- De 1:1-garantie verliezen (meerdere C_subs per C zouden mogelijk worden tenzij je een unique constraint toevoegt)
+- De semantiek breken: het subtype IS de parent, het IS geen apart ding
+
+Dus de huidige opzet in je screenshot is precies goed: `c_id` (PK + FK), `opvoer`, `afvoer`.
 
 ---
