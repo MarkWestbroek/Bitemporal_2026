@@ -716,6 +716,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | CEL1 | CEL-evaluatie in Go (github.com/google/cel-go) | afgeleide-velden.md |
 | CEL2 | Frontend CEL: evalueren overstap naar library | CEL-evaluatie-js.md |
 | CEL3 | Afleiding backend-first overwegen (lange termijn) | CEL-evaluatie-js.md |
+| CEL4 | Check: condities in velden in expressie | t.b.v. detailpagina's |
 
 ### Referentielijst-specifiek
 
@@ -727,6 +728,46 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | R4 | Items-relatie FK constraint (DB CHECK) | Referentielijsten.md |
 | R5 | Codegenerator aanpassen voor referentielijsten | Referentielijsten.md |
 | R6 | Omschrijvingen updaten (NP, Locatie, Adres, BAGLocatie) | Referentielijsten.md |
+
+### Publicatie site
+
+> Aparte Vite-entry (`publicatie.html`), eindgebruikersgerichte weergave van registerdata via WeergaveDefinities. Fundament (F22–F24, F31–F33) is ✅ gebouwd.
+
+| # | Item | Bron |
+|---|------|------|
+| P1 | Meervoudige items tonen in tabelweergave (GE's met momentvoorkomen meervoudig) | nog doortesten |
+| P2 | ✅ Doorzoekbare / filterbare tabelweergave voor eindgebruikers | nieuw |
+| P3 | ✅ Navigatie vanuit detailpagina naar gerelateerde entiteiten (doorklikken) | nieuw |
+| P4 | Tijdreis-kiezer (formeel/materieel peiltijdstip) in publicatieweergave | nieuw |
+| P5 | Responsive / mobiel-vriendelijk ontwerp | nieuw |
+| P6 | WeergaveDefinitie beheer-UI (aanmaken, bewerken, archiveren) | nieuw |
+| P7 | ad P1: meervoudig formaat "A, B en C" | nieuw |
+| P8 | Widgets kunnen gebruiken voor speciale gevallen | nieuw |
+| P9 | ✅ Zoeken over alle rijen: preload alle rijen | Nieuw |
+| P10 | Doorklikken naar detailpaginavariatie x (speciale link) | Nieuw |
+| P11 | Lijstjes in detailweergave simpel (A, B en C) notatieformaat: CEL? | Nieuw |
+| P12 | condities in detailweergave (gem, rol=maker) + lijstjes (CEL?)| Nieuw |
+| P13 | Filter ingewikkelder: uitsluitingen enz. | Nieuw |
+| P14 | Sorteren | Nieuw |
+| P15 | Bij een enum-veld een dropdownfilter / datum een range enz. | Nieuw |
+| P16 | Bij een lijst-veld een dropdownfilter afh. v lengte lijst? | Nieuw |
+| P17 | websites vanzelf ook als link tonen | Nieuw |
+| P | | Nieuw |
+| P | | Nieuw |
+| P | | Nieuw |
+| P | | Nieuw |
+
+### Data-universum
+
+> Overkoepelend inzicht in alle instanties en hun onderlinge samenhang, over entiteitstypes heen.
+
+| # | Item | Bron |
+|---|------|------|
+| DU1 | Dashboard: aantallen per entiteitstype, actief vs. afgevoerd | nieuw |
+| DU2 | Cross-entity zoeken: vrije tekst doorzoekt alle entiteitstypes tegelijk | nieuw |
+| DU3 | Tijdreis over het gehele register (combinatie formeel + materieel peiltijdstip) | nieuw |
+| DU4 | Export van het complete register (JSON / CSV) | nieuw |
+| DU5 | Graaf-visualisatie van instantie-relaties (wie is verbonden met wie) | nieuw |
 
 ---
 
@@ -792,6 +833,19 @@ Focus: content editor (formulieren) doorontwikkelen.
 | 5 | **F10–F11** Records verwijderen + ongedaan maken | Basis CRUD afronden |
 | 6 | **V1–V5** Bestaande pagina's verbeteren | Views, doorklikken, corrigeren |
 
+### Increment 2E — Publicatie site
+
+Focus: de publicatieweergave geschikt maken voor eindgebruikers.
+
+| Prio | Items | Reden |
+|------|-------|-------|
+| 1 | **P1** Meervoudige items in tabelweergave | Correcte weergave van meervoudige GE's |
+| 2 | **P2** Doorzoekbare / filterbare tabel | Bruikbaarheid voor eindgebruikers |
+| 3 | **P3** Navigatie naar gerelateerde entiteiten | Doorklikken binnen het register |
+| 4 | **P4** Tijdreis-kiezer in publicatieweergave | Kernfeature bitemporeel register |
+| 5 | **P5** Responsive / mobiel ontwerp | Bereikbaarheid op alle apparaten |
+| 6 | **P6** WeergaveDefinitie beheer-UI | Zelfbeheer door functioneel beheerder |
+
 ### Horizon (later, bewust geparkeerd)
 
 | Items | Reden om te wachten |
@@ -802,3 +856,4 @@ Focus: content editor (formulieren) doorontwikkelen.
 | **B18** gRPC/Connect | Pas overwegen bij typed-client behoefte |
 | **G7–G8** Typed mutations, subscriptions | GraphQL eerst basaal werkend |
 | **CEL3** Afleiding backend-first | Eerst CEL in Go en frontend stabiel |
+| **DU2–DU5** Cross-entity zoeken, tijdreis register-breed, export, graaf | Pas waardevol bij voldoende data en stabiele registers |

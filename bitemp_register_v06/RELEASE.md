@@ -2,6 +2,60 @@
 
 Korte checklist voor een API-release met losse DB-stack.
 
+## Publicatie markdown — tabelweergave hersteld (2026-04-16)
+
+- Oorzaak: de lokale markdown-renderer in de frontend ondersteunde geen GFM-tabellen, waardoor tabelsyntax als platte tekst werd weergegeven op de publicatiepagina en in de markdown-preview.
+- Oplossing: tabelparsing toegevoegd aan `markdownNaarHtml()` in zowel `web/vite/src/publicatie/PublicatieDetail.jsx` als `web/vite/src/components/editor/MarkdownWeergave.jsx`.
+- Styling: tabelopmaak toegevoegd in `web/vite/src/styles/common-ground-theme.css` voor zowel `.cg-markdown-viewer__body table` als `.cg-form-card table`.
+- Resultaat: geldige markdown-tabellen renderen nu als HTML-tabel in publicatie en editor-preview.
+
+## Publicatie markdown — HTML entities niet meer zichtbaar (2026-04-16)
+
+- Oorzaak: placeholderwaarden in `PublicatieDetail` werden eerst ge-escaped in `renderTemplate()` en daarna nogmaals via `markdownNaarHtml()`, waardoor tekst als `API&#39;s &amp; opslag` zichtbaar werd.
+- Oplossing: placeholder-invoeging in `renderTemplate()` gebruikt nu ruwe tekst; escaping blijft centraal in `markdownNaarHtml()`.
+- Resultaat: waarden uit de API worden weer normaal getoond, bijvoorbeeld `API's & opslag`.
+
+## CG Portfolio — modeluitbreiding extra velden + meervoudige weergave (2026-04-16)
+
+### DB-migratie: `20260415_add_cg_beoordeling_etalage_extra_velden.sql`
+Voer dit script uit op de applicatiedatabase (`bitemp_go_db_v06`) vóór de volgende backend-start. Alle kolommen zijn nullable (backward-compatible).
+
+Nieuwe kolommen op bestaande tabellen:
+
+| Tabel | Kolom | Type | Toelichting |
+|---|---|---|---|
+| `initiatief_planning_data` | `obstakels` | TEXT | Beschrijving van obstakels voor de planning |
+| `initiatief_planning_data` | `verwacht_ready_datum` | DATE | Verwachte datum van gereedmelding |
+| `initiatief_product_data` | `vervangt_ouder_product` | BOOLEAN | Vervangt dit product een ouder product? |
+| `initiatief_bijdrage_data` | `score` | INTEGER | Numerieke beoordelingsscore |
+| `initiatief_initiatiefinfo_data` | `aanmeldingsdatum` | DATE | Datum van aanmelding van het initiatief |
+
+Nieuwe tabellen (`initiatief_beoordeling`, `initiatief_beoordeling_data`, `initiatief_beoordeling_aanvang`, `initiatief_beoordeling_einde`, `initiatief_etalage`, `initiatief_etalage_data`) worden automatisch aangemaakt via Bun `IfNotExists()` bij backend-start — geen handmatige DDL nodig.
+
+### Backend: meervoudige weergavenaam-verrijking (`handlers/full_handlers.go`)
+Relatie-hubs met een `SecondaireEntiteitIDKolom` én een `IsWeergaveVeld`-AfgeleidVeld (zoals `InitiatiefDomein`) krijgen nu automatisch een `weergavenaam`-veld meegeleverd in de `/full/`-response. De waarde wordt server-side bepaald door de doelentiteit (bijv. `Domein`) op te halen en het AfgeleidVeld-pad te navigeren.
+
+### Frontend: meervoudige veldpaden (`PublicatieTabel.jsx`)
+`resolveVeldpad()` ondersteunt nu meervoudig `momentvoorkomen`: bij een GE/relatie met meerdere actieve items worden alle waarden verzameld en samengevoegd met `", "`. Voorbeeld: `"initiatief_domeinen.weergavenaam"` geeft `"Standaarden, Componenten"`.
+
+### Weergave replay bijgewerkt
+`registraties-replay-init-standaard-weergavedefinities.json`: kolom `"Domeinen"` (veldpad `"initiatief_domeinen.weergavenaam"`) toegevoegd aan de Initiatief-standaardweergave.
+
+### Frontend: filter voor meervoudige kolommen (`PublicatieTabel.jsx`)
+De globale zoekfunctie en per-kolom-filter werken nu ook correct voor meervoudige veldpaden (bijv. `"initiatief_domeinen.weergavenaam"`).
+
+**Oorzaken van het probleem:**
+1. TanStack Table kan kolom-IDs met punten (`.`) intern inconsistent afhandelen.
+2. Kolommen gebaseerd op `accessorFn` + een verouderde `typeMetaByTypenaam`-closure konden `null` teruggeven in de filter-fase, ondanks correct tonen in de cell-renderer.
+
+**Oplossing (dubbele aanpak):**
+- `sanitizeKolId()`: vervangt punten in veldpaden door `__` voor veilige TanStack-sleutels.
+- `resolvedData` memo: pre-berekent alle kolomwaarden upfront (inclusief meervoudige samenvoegingen) als directe string-properties op elke rij.
+- Kolommen gebruiken nu `accessorKey` (eenvoudige string) i.p.v. `id + accessorFn`, zodat TanStack de waarde rechtstreeks uit `resolvedData[sanitizeKolId(veldpad)]` leest.
+- `standaardSortering` ID is eveneens gesaniteerd.
+
+Resultaat: filter en sortering werken nu voor alle kolomtypen — enkelvoudig en meervoudig.
+
 ## Editor v2 — dependency visibility & roundtrip fix (2026-04-08)
 
 - `«use»` dependency-edges kunnen nu per stuk of per doel-node verborgen/getoond worden via rechtsklik in editor v2.

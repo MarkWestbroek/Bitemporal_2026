@@ -15,6 +15,85 @@ function escapeHtml(tekst) {
   return tekst.replace(/[&<>"']/g, (c) => map[c]);
 }
 
+function isTabelRij(regel) {
+  const trimmed = regel.trim();
+  return /^\|.+\|$/.test(trimmed) || (/\|/.test(trimmed) && !/^[-*]\s/.test(trimmed));
+}
+
+function isTabelScheiding(regel) {
+  const trimmed = regel.trim();
+  if (!trimmed.includes("|")) return false;
+  return /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(trimmed);
+}
+
+function splitTabelRij(regel) {
+  let r = regel.trim();
+  if (r.startsWith("|")) r = r.slice(1);
+  if (r.endsWith("|")) r = r.slice(0, -1);
+  return r.split("|").map((cel) => cel.trim());
+}
+
+function alignmentVoorKolom(scheidingCel) {
+  const c = scheidingCel.trim();
+  const links = c.startsWith(":");
+  const rechts = c.endsWith(":");
+  if (links && rechts) return "center";
+  if (rechts) return "right";
+  if (links) return "left";
+  return null;
+}
+
+function converteerTabellen(html) {
+  const regels = html.split("\n");
+  const uit = [];
+
+  for (let i = 0; i < regels.length; i += 1) {
+    const headerRij = regels[i];
+    const scheidingRij = regels[i + 1];
+
+    if (!headerRij || !scheidingRij || !isTabelRij(headerRij) || !isTabelScheiding(scheidingRij)) {
+      uit.push(headerRij ?? "");
+      continue;
+    }
+
+    const headers = splitTabelRij(headerRij);
+    const aligns = splitTabelRij(scheidingRij).map(alignmentVoorKolom);
+    const bodyRijen = [];
+    i += 2;
+
+    while (i < regels.length && isTabelRij(regels[i])) {
+      bodyRijen.push(splitTabelRij(regels[i]));
+      i += 1;
+    }
+
+    i -= 1;
+
+    const thead = `<thead><tr>${headers
+      .map((cel, idx) => {
+        const align = aligns[idx] ? ` style="text-align:${aligns[idx]}"` : "";
+        return `<th${align}>${cel}</th>`;
+      })
+      .join("")}</tr></thead>`;
+
+    const tbody = bodyRijen.length
+      ? `<tbody>${bodyRijen
+          .map(
+            (rij) => `<tr>${headers
+              .map((_, idx) => {
+                const align = aligns[idx] ? ` style="text-align:${aligns[idx]}"` : "";
+                return `<td${align}>${rij[idx] ?? ""}</td>`;
+              })
+              .join("")}</tr>`
+          )
+          .join("")}</tbody>`
+      : "";
+
+    uit.push(`<table>${thead}${tbody}</table>`);
+  }
+
+  return uit.join("\n");
+}
+
 /**
  * Simpele Markdown-naar-HTML converter — bewust beperkt tot een veilige subset.
  * Identiek aan de versie in PublicatieDetail.jsx.
@@ -37,13 +116,16 @@ function markdownNaarHtml(md) {
   html = html.replace(/^- (.+)$/gm, "<li>$1</li>");
   html = html.replace(/(<li>.*<\/li>\n?)+/g, (match) => `<ul>${match}</ul>`);
 
+  // GFM-tabellen
+  html = converteerTabellen(html);
+
   // Paragrafen: dubbele newlines → <p>
   html = html
     .split(/\n\n+/)
     .map((blok) => {
       const trimmed = blok.trim();
       if (!trimmed) return "";
-      if (/^<(h[1-3]|ul|ol|li)/.test(trimmed)) return trimmed;
+      if (/^<(h[1-3]|ul|ol|li|table)/.test(trimmed)) return trimmed;
       return `<p>${trimmed}</p>`;
     })
     .join("\n");

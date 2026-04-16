@@ -6,28 +6,43 @@ import { safeArray, platSlaHubItems } from "../shared/schemaUtils";
 
 /**
  * Resolvet een veldpad (bijv. "Naam.roepnaam") naar een waarde uit een CEL-context.
+ * Ondersteunt arrays: als er onderweg een array wordt aangetroffen (meervoudige
+ * GE's/relaties), wordt het resterende pad op elk element geresolved en worden
+ * de waarden samengevoegd met ", ".
  */
 function resolveVeldpadUitContext(ctx, veldpad) {
   if (!ctx || !veldpad) return null;
   const delen = veldpad.split(".");
   let huidig = ctx;
-  for (const deel of delen) {
-    if (huidig == null || typeof huidig !== "object") return null;
-    huidig = huidig[deel];
+  for (let i = 0; i < delen.length; i++) {
+    if (huidig == null) return null;
+    if (Array.isArray(huidig)) {
+      const restPad = delen.slice(i).join(".");
+      const waarden = huidig
+        .map((item) => resolveVeldpadUitContext(item, restPad))
+        .filter((v) => v != null && v !== "");
+      return waarden.length > 0 ? waarden.join(", ") : null;
+    }
+    if (typeof huidig !== "object") return null;
+    huidig = huidig[delen[i]];
+  }
+  if (Array.isArray(huidig)) {
+    return huidig.filter((v) => v != null).join(", ");
   }
   return huidig ?? null;
 }
 
 /**
  * Vervangt alle {{veldpad}} placeholders in een template met waarden uit de CEL-context.
- * HTML-escaped de ingevoegde waarden om XSS te voorkomen.
+ * De volledige markdown-string wordt later centraal ge-escaped in markdownNaarHtml(),
+ * dus placeholders worden hier onbewerkt als platte tekst ingevoegd.
  */
 function renderTemplate(template, ctx) {
   if (!template) return "";
   return template.replace(/\{\{([^}]+)\}\}/g, (_, veldpad) => {
     const waarde = resolveVeldpadUitContext(ctx, veldpad.trim());
     if (waarde == null) return "";
-    return escapeHtml(String(waarde));
+    return String(waarde);
   });
 }
 
@@ -35,6 +50,85 @@ function renderTemplate(template, ctx) {
 function escapeHtml(tekst) {
   const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
   return tekst.replace(/[&<>"']/g, (c) => map[c]);
+}
+
+function isTabelRij(regel) {
+  const trimmed = regel.trim();
+  return /^\|.+\|$/.test(trimmed) || (/\|/.test(trimmed) && !/^[-*]\s/.test(trimmed));
+}
+
+function isTabelScheiding(regel) {
+  const trimmed = regel.trim();
+  if (!trimmed.includes("|")) return false;
+  return /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(trimmed);
+}
+
+function splitTabelRij(regel) {
+  let r = regel.trim();
+  if (r.startsWith("|")) r = r.slice(1);
+  if (r.endsWith("|")) r = r.slice(0, -1);
+  return r.split("|").map((cel) => cel.trim());
+}
+
+function alignmentVoorKolom(scheidingCel) {
+  const c = scheidingCel.trim();
+  const links = c.startsWith(":");
+  const rechts = c.endsWith(":");
+  if (links && rechts) return "center";
+  if (rechts) return "right";
+  if (links) return "left";
+  return null;
+}
+
+function converteerTabellen(html) {
+  const regels = html.split("\n");
+  const uit = [];
+
+  for (let i = 0; i < regels.length; i += 1) {
+    const headerRij = regels[i];
+    const scheidingRij = regels[i + 1];
+
+    if (!headerRij || !scheidingRij || !isTabelRij(headerRij) || !isTabelScheiding(scheidingRij)) {
+      uit.push(headerRij ?? "");
+      continue;
+    }
+
+    const headers = splitTabelRij(headerRij);
+    const aligns = splitTabelRij(scheidingRij).map(alignmentVoorKolom);
+    const bodyRijen = [];
+    i += 2;
+
+    while (i < regels.length && isTabelRij(regels[i])) {
+      bodyRijen.push(splitTabelRij(regels[i]));
+      i += 1;
+    }
+
+    i -= 1;
+
+    const thead = `<thead><tr>${headers
+      .map((cel, idx) => {
+        const align = aligns[idx] ? ` style="text-align:${aligns[idx]}"` : "";
+        return `<th${align}>${cel}</th>`;
+      })
+      .join("")}</tr></thead>`;
+
+    const tbody = bodyRijen.length
+      ? `<tbody>${bodyRijen
+          .map(
+            (rij) => `<tr>${headers
+              .map((_, idx) => {
+                const align = aligns[idx] ? ` style="text-align:${aligns[idx]}"` : "";
+                return `<td${align}>${rij[idx] ?? ""}</td>`;
+              })
+              .join("")}</tr>`
+          )
+          .join("")}</tbody>`
+      : "";
+
+    uit.push(`<table>${thead}${tbody}</table>`);
+  }
+
+  return uit.join("\n");
 }
 
 /**
@@ -59,13 +153,16 @@ function markdownNaarHtml(md) {
   html = html.replace(/^- (.+)$/gm, "<li>$1</li>");
   html = html.replace(/(<li>.*<\/li>\n?)+/g, (match) => `<ul>${match}</ul>`);
 
+  // GFM-tabellen
+  html = converteerTabellen(html);
+
   // Paragrafen: dubbele newlines → <p>
   html = html
     .split(/\n\n+/)
     .map((blok) => {
       const trimmed = blok.trim();
       if (!trimmed) return "";
-      if (/^<(h[1-3]|ul|ol|li)/.test(trimmed)) return trimmed;
+      if (/^<(h[1-3]|ul|ol|li|table)/.test(trimmed)) return trimmed;
       return `<p>${trimmed}</p>`;
     })
     .join("\n");
@@ -150,15 +247,28 @@ export default function PublicatieDetail() {
       const childMeta = typeMetaByTypenaam?.[child.doeltype];
       const rawItems = safeArray(entity[child.jsonRolnaam] || entity[child.rolnaam]);
       const items = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
-      const actiefItem = items.find((item) => !item.afvoer) || items[0] || null;
-      if (!actiefItem) continue;
+      const actieveItems = items.filter((item) => !item.afvoer);
+      if (actieveItems.length === 0 && items.length === 0) continue;
 
-      // Maak het item beschikbaar onder klassenaam (PascalCase) én jsonRolnaam (snake_case)
       const klassenaam = childMeta?.klassenaam || child.doeltype;
-      ctx[klassenaam] = actiefItem;
-      if (child.jsonRolnaam && child.jsonRolnaam !== klassenaam) {
-        // "namen" → { roepnaam: "Jan", ... } EN "namen.data" → dezelfde
-        ctx[child.jsonRolnaam] = { ...actiefItem, data: actiefItem };
+      const isMeervoudig = child.momentvoorkomen === "meervoudig";
+
+      if (isMeervoudig) {
+        // Meervoudig: bewaar ALLE actieve items als array, zodat
+        // resolveVeldpadUitContext ze kan joinen met ", ".
+        const arr = actieveItems.length > 0 ? actieveItems : items;
+        ctx[klassenaam] = arr;
+        if (child.jsonRolnaam && child.jsonRolnaam !== klassenaam) {
+          ctx[child.jsonRolnaam] = arr;
+        }
+      } else {
+        // Enkelvoudig: neem het eerste actieve item
+        const actiefItem = actieveItems[0] || items[0] || null;
+        if (!actiefItem) continue;
+        ctx[klassenaam] = actiefItem;
+        if (child.jsonRolnaam && child.jsonRolnaam !== klassenaam) {
+          ctx[child.jsonRolnaam] = { ...actiefItem, data: actiefItem };
+        }
       }
     }
     return ctx;
