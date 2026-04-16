@@ -52,6 +52,10 @@ const edgeTypes = {
   metamodel: MetamodelEdge,
 };
 
+// ── Module-level clipboard voor kopiëren/plakken tussen diagrammen ──
+// (Module-level zodat clipboard bewaard blijft bij wisselen van diagram-tab)
+let diagramClipboard = null; // { nodes: [{elementId, dx, dy}], edges: [...], originDiagramId }
+
 /**
  * Bouw React Flow nodes vanuit diagram-refs + element data.
  */
@@ -81,12 +85,341 @@ function buildFlowEdges(diagram) {
   }));
 }
 
+/**
+ * Universele edge-materialisatie: bouw ALLE edges voor een diagram opnieuw op
+ * vanuit de model-structuur. Vervangt discoverEdgesForNodes als "single source of truth".
+ *
+ * Logica:
+ * 1) Voor elke REL op het diagram: bepaal of owner en/of doel op diagram staan.
+ *    - Beide + velden → ASOC (anker + 3 edges)
+ *    - Beide + geen velden → 2 simpele edges (owner→REL, REL→doel)
+ *    - Eén kant → 1 edge (geen halve ASOC)
+ * 2) ENT→GE compositie-edges (structuralEdges, niet-REL targets)
+ * 3) Dependency-edges (enum, datatype «use»)
+ * 4) Orphan cleanup: elke edge heeft beide endpoints op diagram
+ *
+ * @param {Object} store      - useModelStore.getState()
+ * @param {Object} elements   - store.elements
+ * @param {Array}  diagNodes  - diagram.nodes ([ { elementId, position } ])
+ * @param {Array}  [existingEdges] - bestaande diagram-edges, voor handle-preservatie
+ * @returns {{ edges: Array, extraNodes: Array }} nieuwe edges + anker-nodes om toe te voegen
+ */
+function materialiseerDiagramEdges(store, elements, diagNodes, existingEdges = []) {
+  const nodeIdSet = new Set(diagNodes.map((n) => n.elementId));
+  const nodePositionMap = new Map(diagNodes.map((n) => [n.elementId, n.position]));
+  const edges = [];
+  const extraNodes = [];
+  const addedPairs = new Set();
+
+  // Lookup: bewaar handles van bestaande edges (gebruiker kan handles hebben genormaliseerd)
+  const existingHandleMap = new Map();
+  for (const e of existingEdges) {
+    existingHandleMap.set(`${e.source}→${e.target}`, { sourceHandle: e.sourceHandle, targetHandle: e.targetHandle, id: e.id });
+  }
+
+  const addEdge = (edge) => {
+    const pair = `${edge.source}→${edge.target}`;
+    if (addedPairs.has(pair)) return;
+    // Veiligheidscheck: beide endpoints moeten op diagram staan
+    if (!nodeIdSet.has(edge.source) || !nodeIdSet.has(edge.target)) return;
+    addedPairs.add(pair);
+    // Bewaar bestaande handles tenzij de edge expliciete handles specificeert
+    const existing = existingHandleMap.get(pair);
+    if (existing) {
+      if (!edge.sourceHandle && existing.sourceHandle) edge.sourceHandle = existing.sourceHandle;
+      if (!edge.targetHandle && existing.targetHandle) edge.targetHandle = existing.targetHandle;
+      if (existing.id) edge.id = existing.id; // behoud edge-id voor stabiliteit
+    }
+    edges.push(edge);
+  };
+
+  // ── 1. Relatie-edges (ASOC of simpel) ──
+  for (const nodeId of nodeIdSet) {
+    const el = elements[nodeId];
+    if (!el || el.type !== "relatie") continue;
+
+    // Zoek owner (bron-entiteit) via structuralEdges
+    let ownerId = null;
+    let ownerSE = null;
+    for (const se of store.structuralEdges) {
+      if (se.target === nodeId) {
+        const srcType = elements[se.source]?.type;
+        if (srcType === "entiteit" || srcType === "referentielijstInstantie") {
+          ownerId = se.source;
+          ownerSE = se;
+          break;
+        }
+      }
+    }
+
+    const doelId = el.data?.doelEntiteit || null;
+    const ownerOpDiagram = ownerId && nodeIdSet.has(ownerId);
+    const doelOpDiagram = doelId && nodeIdSet.has(doelId);
+    const heeftVelden = (el.data?.velden?.length || 0) > 0;
+    const directioneel = el.data?.directioneel || false;
+
+    if (heeftVelden && ownerOpDiagram && doelOpDiagram) {
+      // ── ASOC-patroon: anker + 3 edges ──
+      const ankerId = `anker_${nodeId}`;
+
+      // Maak anker-element als het nog niet bestaat
+      if (!elements[ankerId] && !store.elements[ankerId]) {
+        store.addElement({
+          id: ankerId,
+          naam: el.data?.typenaam || nodeId,
+          type: "associatieAnker",
+          domein: el.domein || "",
+          data: { relatieNaam: el.data?.typenaam || nodeId },
+        });
+      }
+
+      // Positie: als anker al op diagram staat, bewaar; anders midpoint
+      if (!nodeIdSet.has(ankerId)) {
+        const ownerPos = nodePositionMap.get(ownerId) || { x: 0, y: 0 };
+        const doelPos = nodePositionMap.get(doelId) || { x: 400, y: 0 };
+        const ankerPos = {
+          x: (ownerPos.x + doelPos.x) / 2 + 80,
+          y: (ownerPos.y + doelPos.y) / 2,
+        };
+        extraNodes.push({ elementId: ankerId, position: ankerPos });
+        nodeIdSet.add(ankerId);
+        nodePositionMap.set(ankerId, ankerPos);
+      }
+
+      // Edge 1: owner → anker
+      addEdge({
+        id: `${ownerId}->${ankerId}`,
+        source: ownerId,
+        target: ankerId,
+        type: "metamodel",
+        sourceHandle: null,
+        targetHandle: "target-left",
+        data: { isAssociation: true, directioneel, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
+      });
+      // Edge 2: anker → doel
+      addEdge({
+        id: `${ankerId}->${doelId}`,
+        source: ankerId,
+        target: doelId,
+        type: "metamodel",
+        sourceHandle: "source-right",
+        targetHandle: null,
+        data: { isAssociation: true, directioneel, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
+      });
+      // Edge 3: anker → relatie (dashed class link)
+      addEdge({
+        id: `${ankerId}->${nodeId}`,
+        source: ankerId,
+        target: nodeId,
+        type: "metamodel",
+        sourceHandle: "source-bottom",
+        targetHandle: "target-top",
+        data: { isAssociationClassLink: true, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
+      });
+    } else {
+      // ── Simpele relatie: max 2 edges ──
+      if (ownerOpDiagram) {
+        const targetEl = elements[nodeId];
+        addEdge({
+          id: ownerSE?.id || `${ownerId}->${nodeId}`,
+          source: ownerId,
+          target: nodeId,
+          type: "metamodel",
+          sourceHandle: null,
+          targetHandle: null,
+          data: ownerSE?.data || {
+            rolnaam: targetEl?.naam || "",
+            jsonRolnaam: targetEl?.data?.meervoud || (targetEl?.naam || "").toLowerCase(),
+            momentvoorkomen: "meervoudig",
+            kardinaliteit: "0..*",
+          },
+        });
+      }
+      if (doelOpDiagram) {
+        addEdge({
+          id: `${nodeId}->${doelId}`,
+          source: nodeId,
+          target: doelId,
+          type: "metamodel",
+          sourceHandle: null,
+          targetHandle: null,
+          data: {
+            rolnaam: `→ ${doelId}`,
+            jsonRolnaam: (doelId || "").toLowerCase(),
+            momentvoorkomen: "meervoudig",
+            kardinaliteit: "0..*",
+            ...(directioneel ? { directioneel: true } : {}),
+          },
+        });
+      }
+    }
+  }
+
+  // ── 2. Structurele edges: ENT→GE compositie (niet-REL targets) ──
+  for (const se of store.structuralEdges) {
+    if (!nodeIdSet.has(se.source) || !nodeIdSet.has(se.target)) continue;
+    const targetType = elements[se.target]?.type;
+    // REL-edges zijn hierboven al afgehandeld
+    if (targetType === "relatie") continue;
+
+    const sourceType = elements[se.source]?.type;
+    const isDependency = se.data?.isDependency ||
+      ((sourceType === "entiteit" || sourceType === "gegevenselement" || sourceType === "relatie") &&
+        (targetType === "enumeratie" || targetType === "gegevenstype")) ||
+      (sourceType === "referentielijstInstantie" && targetType === "relatie");
+
+    const targetEl = elements[se.target];
+    const edgeData = se.data || (isDependency
+      ? { isDependency: true, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" }
+      : {
+          rolnaam: targetEl?.naam || "",
+          jsonRolnaam: targetEl?.data?.meervoud || (targetEl?.naam || "").toLowerCase(),
+          momentvoorkomen: "enkelvoudig",
+          kardinaliteit: "0..1",
+        });
+
+    addEdge({
+      id: se.id || `${se.source}->${se.target}`,
+      source: se.source,
+      target: se.target,
+      sourceHandle: se.sourceHandle || null,
+      targetHandle: se.targetHandle || null,
+      type: "metamodel",
+      data: edgeData,
+    });
+  }
+
+  // ── 3. Dependency-edges uit alle diagrammen (enum/datatype «use», binding) ──
+  for (const diagKey of Object.keys(store.diagrams)) {
+    const d = store.diagrams[diagKey];
+    for (const de of d.edges || []) {
+      if (!nodeIdSet.has(de.source) || !nodeIdSet.has(de.target)) continue;
+      // Alleen dependency-edges (use, binding) en ASOC-gerelateerde edges overnemen
+      if (de.data?.isDependency) {
+        addEdge({
+          id: de.id,
+          source: de.source,
+          target: de.target,
+          sourceHandle: de.sourceHandle || null,
+          targetHandle: de.targetHandle || null,
+          type: de.type || "metamodel",
+          data: de.data,
+          hidden: de.hidden || false,
+        });
+      }
+    }
+  }
+
+  // ── 4. Referentielijst binding-edges (REFLIJST → REL) ──
+  for (const se of store.structuralEdges) {
+    if (!nodeIdSet.has(se.source) || !nodeIdSet.has(se.target)) continue;
+    if (elements[se.source]?.type === "referentielijstInstantie" && elements[se.target]?.type === "relatie") {
+      addEdge({
+        id: se.id || `${se.source}->${se.target}`,
+        source: se.source,
+        target: se.target,
+        sourceHandle: se.sourceHandle || null,
+        targetHandle: se.targetHandle || null,
+        type: "metamodel",
+        data: se.data || { isDependency: true, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" },
+      });
+    }
+  }
+
+  return { edges, extraNodes };
+}
+
 function clampContextMenuPosition(x, y, width = 220, height = 360) {
   if (typeof window === "undefined") return { x, y };
   return {
     x: Math.max(8, Math.min(x, window.innerWidth - width - 8)),
     y: Math.max(8, Math.min(y, window.innerHeight - height - 8)),
   };
+}
+
+/**
+ * Ontdek alle edges die horen bij een set nodes op een diagram.
+ *
+ * Scant twee bronnen:
+ * 1) structuralEdges (model-level: ENT→GE, ENT→REL compositie-edges)
+ * 2) diagram.edges van ALLE diagrammen (diagram-level: doelEdges, use-edges,
+ *    anker-edges, ASOC-links — alles wat niet in structuralEdges zit)
+ *
+ * Retourneert alleen edges waar beide endpoints in `nodeIdSet` zitten
+ * en die nog niet in `excludePairs` voorkomen.
+ *
+ * @param {Object} store - useModelStore.getState()
+ * @param {Object} elements - elements record
+ * @param {Set<string>} nodeIdSet - alle node-ids op het doeldiagram (existing + nieuw)
+ * @param {Set<string>} excludePairs - "source→target" paren die al bestaan
+ * @returns {Array<Object>} nieuwe diagram-edges
+ */
+function discoverEdgesForNodes(store, elements, nodeIdSet, excludePairs) {
+  const found = [];
+  const addedPairs = new Set(excludePairs);
+
+  const tryAdd = (edge) => {
+    if (!nodeIdSet.has(edge.source) || !nodeIdSet.has(edge.target)) return;
+    const pair = `${edge.source}→${edge.target}`;
+    if (addedPairs.has(pair)) return;
+    addedPairs.add(pair);
+    found.push(edge);
+  };
+
+  // 1) Structural edges
+  let seChecked = 0, seMatched = 0;
+  for (const se of store.structuralEdges) {
+    seChecked++;
+    if (!nodeIdSet.has(se.source) || !nodeIdSet.has(se.target)) continue;
+    seMatched++;
+    const sourceType = elements[se.source]?.type;
+    const targetType = elements[se.target]?.type;
+    const targetEl = elements[se.target];
+    const isDependency = se.data?.isDependency ||
+      ((sourceType === "entiteit" || sourceType === "gegevenselement" || sourceType === "relatie") &&
+        (targetType === "enumeratie" || targetType === "gegevenstype")) ||
+      (sourceType === "referentielijstInstantie" && targetType === "relatie");
+
+    const edgeData = se.data || (isDependency
+      ? { isDependency: true, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" }
+      : {
+          rolnaam: targetEl?.naam || "",
+          jsonRolnaam: targetEl?.data?.meervoud || (targetEl?.naam || "").toLowerCase(),
+          momentvoorkomen: targetType === "relatie" ? "meervoudig" : "enkelvoudig",
+          kardinaliteit: targetType === "relatie" ? "0..*" : "0..1",
+        });
+
+    tryAdd({
+      id: se.id || `${se.source}-${se.target}`,
+      source: se.source,
+      target: se.target,
+      sourceHandle: se.sourceHandle || null,
+      targetHandle: se.targetHandle || null,
+      type: "metamodel",
+      data: edgeData,
+    });
+  }
+
+  // 2) Diagram-edges van alle diagrammen (vangt ASOC, doelEdges, use-edges, etc.)
+  let diagEdgesChecked = 0;
+  for (const diagKey of Object.keys(store.diagrams)) {
+    const d = store.diagrams[diagKey];
+    for (const de of d.edges || []) {
+      diagEdgesChecked++;
+      tryAdd({
+        id: de.id,
+        source: de.source,
+        target: de.target,
+        sourceHandle: de.sourceHandle || null,
+        targetHandle: de.targetHandle || null,
+        type: de.type || "metamodel",
+        data: de.data || {},
+        hidden: de.hidden || false,
+      });
+    }
+  }
+
+  return found;
 }
 
 // ─── Alignment icons als kleine inline SVG's (16×16) ────────
@@ -688,7 +1021,12 @@ function DiagramCanvasInner({ diagramId }) {
 
         const zoom = getZoom();
         const vp = getViewport();
+        // Guard: als ReactFlow nog niet geïnitialiseerd is, zijn zoom/vp NaN
+        if (!zoom || !isFinite(zoom) || !isFinite(vp?.x) || !isFinite(vp?.y)) return;
+        if (!isFinite(node.position?.x) || !isFinite(node.position?.y)) return;
+
         const rect = wrapper.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
 
         // Node positie in screen-pixels
         const nx = node.position.x * zoom + vp.x;
@@ -707,7 +1045,9 @@ function DiagramCanvasInner({ diagramId }) {
         if (!isVisible) {
           const cx = node.position.x + (node.measured?.width ?? 200) / 2;
           const cy = node.position.y + (node.measured?.height ?? 100) / 2;
-          setCenter(cx, cy, { zoom, duration: 300 });
+          if (isFinite(cx) && isFinite(cy)) {
+            setCenter(cx, cy, { zoom, duration: 300 });
+          }
         }
       } catch (err) {
         console.warn("[DiagramCanvas] setCenter fout:", err);
@@ -853,6 +1193,153 @@ function DiagramCanvasInner({ diagramId }) {
     },
     [elements, setSelectedElementId]
   );
+
+  // ── Kopiëren/plakken van visuele elementen tussen diagrammen ──────
+
+  /**
+   * Kopieer geselecteerde nodes (+ onderlinge edges) naar het module-level clipboard.
+   * Als singleNodeId is meegegeven en er geen geselecteerde nodes zijn,
+   * kopieer dan alleen die ene node (handig bij rechtermuisklik op een node).
+   */
+  const handleCopySelection = useCallback(
+    (singleNodeId = null) => {
+      let selected = getNodes().filter((n) => n.selected);
+      // Fallback: rechtermuisklik op een niet-geselecteerde node
+      if (selected.length === 0 && singleNodeId) {
+        const node = getNodes().find((n) => n.id === singleNodeId);
+        if (node) selected = [node];
+      }
+      if (selected.length === 0) return;
+
+      // Bereken center van selectie als referentiepunt voor relatieve posities
+      const cx = selected.reduce((s, n) => s + n.position.x, 0) / selected.length;
+      const cy = selected.reduce((s, n) => s + n.position.y, 0) / selected.length;
+
+      const selectedIds = new Set(selected.map((n) => n.id));
+
+      // Bewaar ALLE edges die minstens één endpoint in de selectie hebben:
+      // - internalEdges: beide endpoints in selectie (altijd plakken)
+      // - boundaryEdges: één endpoint in selectie (plakken als de andere kant op het doeldiagram staat)
+      const internalEdges = [];
+      const boundaryEdges = [];
+      for (const e of edges) {
+        const srcIn = selectedIds.has(e.source);
+        const tgtIn = selectedIds.has(e.target);
+        if (!srcIn && !tgtIn) continue;
+        const { selected: _sel, ...clean } = e;
+        if (srcIn && tgtIn) {
+          internalEdges.push(clean);
+        } else {
+          boundaryEdges.push(clean);
+        }
+      }
+
+      diagramClipboard = {
+        nodes: selected.map((n) => ({
+          elementId: n.id,
+          dx: n.position.x - cx,
+          dy: n.position.y - cy,
+        })),
+        internalEdges,
+        boundaryEdges,
+        originDiagramId: diagramId,
+      };
+    },
+    [diagramId, edges, getNodes]
+  );
+
+  /**
+   * Plak clipboard-inhoud op het huidige diagram.
+   * Elementen die al op het diagram staan worden overgeslagen (alleen visuele referenties).
+   * Edges worden automatisch aangemaakt op basis van structurele edges + clipboard-edges.
+   */
+  const handlePasteClipboard = useCallback(() => {
+    if (!diagramClipboard || diagramClipboard.nodes.length === 0) return;
+    const store = useModelStore.getState();
+    const diag = store.diagrams[diagramId];
+    if (!diag) return;
+
+    const addElToDiag = store.addElementToDiagram;
+    const existingNodeIds = new Set((diag.nodes || []).map((n) => n.elementId));
+
+    // Filter: alleen elementen die nog in het model bestaan en nog niet op dit diagram staan
+    const toPaste = diagramClipboard.nodes.filter(
+      (n) => elements[n.elementId] && !existingNodeIds.has(n.elementId)
+    );
+    if (toPaste.length === 0) return;
+
+    // Plak in het midden van de huidige viewport
+    const wrapper = reactFlowWrapper.current;
+    const centerScreen = wrapper
+      ? { x: wrapper.clientWidth / 2, y: wrapper.clientHeight / 2 }
+      : { x: 400, y: 300 };
+    const pasteCenter = screenToFlowPosition(centerScreen);
+
+    const newNodes = [];
+
+    for (const item of toPaste) {
+      const position = {
+        x: pasteCenter.x + item.dx,
+        y: pasteCenter.y + item.dy,
+      };
+      addElToDiag(diagramId, item.elementId, position);
+      const el = elements[item.elementId];
+      newNodes.push({
+        id: item.elementId,
+        type: el.type,
+        position,
+        data: { ...el.data, id: item.elementId },
+      });
+    }
+
+    // ── Materialiseer alle edges (incl. ASOC-ankers) ──
+    const updatedDiagNodes = [...(diag.nodes || []), ...newNodes.map((n) => ({ elementId: n.id, position: n.position }))];
+    const { edges: matEdges, extraNodes } = materialiseerDiagramEdges(store, elements, updatedDiagNodes, diag.edges || []);
+
+    // Voeg anker-nodes toe (voor ASOC-relaties met velden)
+    for (const an of extraNodes) {
+      addElToDiag(diagramId, an.elementId, an.position);
+      const anEl = store.elements[an.elementId] || elements[an.elementId];
+      if (anEl) {
+        newNodes.push({
+          id: an.elementId,
+          type: anEl.type,
+          position: an.position,
+          data: { ...anEl.data, id: an.elementId },
+        });
+      }
+    }
+
+    setNodes((nds) => [...nds, ...newNodes]);
+    store.updateDiagramEdges(diagramId, matEdges);
+    setEdges(matEdges.map((e) => ({ ...e, selectable: false, selected: false })));
+  }, [diagramId, elements, setNodes, setEdges, screenToFlowPosition]);
+
+  // Ctrl+C / Ctrl+V: kopiëren en plakken van visuele elementen tussen diagrammen
+  useEffect(() => {
+    function handleCopyPasteKey(event) {
+      // Negeer als focus in een input/textarea/contenteditable zit
+      const tag = event.target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || event.target?.isContentEditable) return;
+      if (!(event.ctrlKey || event.metaKey)) return;
+
+      // Reageer als dit het actieve diagram is, of als er geselecteerde nodes zijn
+      // (activeDiagramId is niet altijd up-to-date, bijv. na Shift+drag box-selectie)
+      const uiState = useUIStore.getState();
+      if (uiState.activeDiagramId && uiState.activeDiagramId !== diagramId) return;
+
+      if (event.key === "c") {
+        // Zet activeDiagramId zodat paste op het juiste diagram werkt
+        uiState.setActiveDiagramId(diagramId);
+        handleCopySelection();
+      } else if (event.key === "v") {
+        event.preventDefault();
+        handlePasteClipboard();
+      }
+    }
+    document.addEventListener("keydown", handleCopyPasteKey);
+    return () => document.removeEventListener("keydown", handleCopyPasteKey);
+  }, [diagramId, handleCopySelection, handlePasteClipboard]);
 
   const swapConnectionDirection = useCallback((connection) => ({
     ...connection,
@@ -1154,10 +1641,23 @@ function DiagramCanvasInner({ diagramId }) {
     };
   }, [contextMenu]);
 
-  // Sla node-posities op in store na drag
+  // Sla node-posities op in store na drag; sync verwijderingen naar store
   const handleNodesChangeWrapped = useCallback(
     (changes) => {
       onNodesChange(changes);
+
+      // Verwijder nodes die via Delete-toets uit React Flow verwijderd zijn
+      const removeChanges = changes.filter((c) => c.type === "remove");
+      if (removeChanges.length > 0) {
+        const rmStore = useModelStore.getState();
+        for (const rc of removeChanges) {
+          rmStore.removeElementFromDiagram(diagramId, rc.id);
+        }
+        // Verwijder ook edges die naar verwijderde nodes wijzen
+        const removedIds = new Set(removeChanges.map((c) => c.id));
+        setEdges((eds) => eds.filter((e) => !removedIds.has(e.source) && !removedIds.has(e.target)));
+      }
+
       // Alleen bij position-changes die "dragging: false" hebben (einde drag)
       const posChanges = changes.filter(
         (c) => c.type === "position" && c.dragging === false && c.position
@@ -1171,16 +1671,21 @@ function DiagramCanvasInner({ diagramId }) {
         updateDiagramNodes(diagramId, updatedDiagNodes);
       }
     },
-    [onNodesChange, diagram, diagramId, updateDiagramNodes]
+    [onNodesChange, diagram, diagramId, updateDiagramNodes, setEdges]
   );
 
   // Drop vanuit ProjectBrowser
   const handleDragOver = useCallback((e) => {
-    if (e.dataTransfer.types.includes("application/ide-element")) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = "copy";
-      setIsDragOver(true);
-    }
+    const types = Array.from(e.dataTransfer?.types || []);
+    const isLikelyIdeDrag =
+      types.includes("application/ide-element") ||
+      types.includes("application/json") ||
+      types.includes("text/plain");
+    if (!isLikelyIdeDrag) return;
+
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+    setIsDragOver(true);
   }, []);
 
   const handleDragLeave = useCallback(() => {
@@ -1191,9 +1696,24 @@ function DiagramCanvasInner({ diagramId }) {
     (e) => {
       e.preventDefault();
       setIsDragOver(false);
-      const raw = e.dataTransfer.getData("application/ide-element");
+      const store = useModelStore.getState();
+      const diag = store.diagrams[diagramId];
+      if (!diag) return;
+      const existingNodeIds = new Set((diag.nodes || []).map((n) => n.elementId));
+
+      const raw =
+        e.dataTransfer.getData("application/ide-element") ||
+        e.dataTransfer.getData("application/json") ||
+        "";
       if (!raw) return;
-      const parsed = JSON.parse(raw);
+
+      let parsed;
+      try {
+        parsed = JSON.parse(raw);
+      } catch (err) {
+        console.warn("[handleDrop] kon drag payload niet parsen:", raw);
+        return;
+      }
 
       // Supporteer zowel nieuw multi-formaat als oud enkel formaat
       let dropItems;
@@ -1207,7 +1727,7 @@ function DiagramCanvasInner({ diagramId }) {
 
       // Filter ongeldige en dubbele elementen
       dropItems = dropItems.filter(
-        (item) => item.elementId && elements[item.elementId] && !nodeIdsRef.current.has(item.elementId)
+        (item) => item.elementId && elements[item.elementId] && !existingNodeIds.has(item.elementId)
       );
       if (dropItems.length === 0) return;
 
@@ -1217,7 +1737,7 @@ function DiagramCanvasInner({ diagramId }) {
         y: e.clientY,
       });
 
-      const addElementToDiagram = useModelStore.getState().addElementToDiagram;
+      const addElementToDiagram = store.addElementToDiagram;
       const newNodes = [];
 
       dropItems.forEach((item, idx) => {
@@ -1226,9 +1746,7 @@ function DiagramCanvasInner({ diagramId }) {
           x: basePosition.x + idx * 40,
           y: basePosition.y + idx * 40,
         };
-
         addElementToDiagram(diagramId, elementId, position);
-
         const el = elements[elementId];
         newNodes.push({
           id: elementId,
@@ -1238,74 +1756,27 @@ function DiagramCanvasInner({ diagramId }) {
         });
       });
 
-      setNodes((nds) => [...nds, ...newNodes]);
+      // ── Materialiseer alle edges (incl. ASOC-ankers) ──
+      const updatedDiagNodes = [...(diag.nodes || []), ...newNodes.map((n) => ({ elementId: n.id, position: n.position }))];
+      const { edges: matEdges, extraNodes } = materialiseerDiagramEdges(store, elements, updatedDiagNodes, diag.edges || []);
 
-      // ── Auto-create edges: zoek bestaande structurele/diagram-edges
-      //    die droppen verbinden met al-aanwezige elementen op dit diagram ──
-      const store = useModelStore.getState();
-      const diag = store.diagrams[diagramId];
-      if (diag) {
-        const existingNodeIds = new Set([...nodeIdsRef.current, ...dropItems.map((d) => d.elementId)]);
-        const currentDiagEdges = diag.edges || [];
-        const currentEdgeIds = new Set(currentDiagEdges.map((e) => e.id));
-        const newFlowEdges = [];
-        const newDiagEdges = [];
-
-        for (const item of dropItems) {
-          const eid = item.elementId;
-          const eidType = elements[eid]?.type;
-
-          // Structurele edges (entiteit → GE / relatie)
-          for (const se of store.structuralEdges) {
-            const otherEnd =
-              se.source === eid ? se.target : se.target === eid ? se.source : null;
-            if (!otherEnd || !existingNodeIds.has(otherEnd)) continue;
-
-            const edgeId = se.id || `${se.source}-${se.target}`;
-            if (currentEdgeIds.has(edgeId)) continue;
-            currentEdgeIds.add(edgeId);
-
-            // Gebruik dezelfde data-structuur als handleConnect
-            const sourceType = elements[se.source]?.type;
-            const targetType = elements[se.target]?.type;
-            const targetEl = elements[se.target];
-            const isDependency = se.data?.isDependency ||
-              ((sourceType === "entiteit" || sourceType === "gegevenselement" || sourceType === "relatie") &&
-                (targetType === "enumeratie" || targetType === "gegevenstype")) ||
-              (sourceType === "referentielijstInstantie" && targetType === "relatie");
-
-            const edgeData = se.data || (isDependency
-              ? { isDependency: true, rolnaam: "", jsonRolnaam: "", momentvoorkomen: "", kardinaliteit: "" }
-              : {
-                  rolnaam: targetEl?.naam || "",
-                  jsonRolnaam: targetEl?.data?.meervoud || (targetEl?.naam || "").toLowerCase(),
-                  momentvoorkomen: targetType === "relatie" ? "meervoudig" : "enkelvoudig",
-                  kardinaliteit: targetType === "relatie" ? "0..*" : "0..1",
-                });
-
-            const diagEdge = {
-              id: edgeId,
-              source: se.source,
-              target: se.target,
-              sourceHandle: se.sourceHandle || null,
-              targetHandle: se.targetHandle || null,
-              type: "metamodel",
-              data: edgeData,
-            };
-            newDiagEdges.push(diagEdge);
-            newFlowEdges.push({
-              ...diagEdge,
-              selectable: false,
-              selected: false,
-            });
-          }
-        }
-
-        if (newDiagEdges.length > 0) {
-          store.updateDiagramEdges(diagramId, [...currentDiagEdges, ...newDiagEdges]);
-          setEdges((eds) => [...eds, ...newFlowEdges]);
+      // Voeg anker-nodes toe (voor ASOC-relaties met velden)
+      for (const an of extraNodes) {
+        addElementToDiagram(diagramId, an.elementId, an.position);
+        const anEl = store.elements[an.elementId] || elements[an.elementId];
+        if (anEl) {
+          newNodes.push({
+            id: an.elementId,
+            type: anEl.type,
+            position: an.position,
+            data: { ...anEl.data, id: an.elementId },
+          });
         }
       }
+
+      setNodes((nds) => [...nds, ...newNodes]);
+      store.updateDiagramEdges(diagramId, matEdges);
+      setEdges(matEdges.map((e) => ({ ...e, selectable: false, selected: false })));
     },
     [diagramId, elements, setNodes, setEdges, screenToFlowPosition]
   );
@@ -1455,7 +1926,10 @@ function DiagramCanvasInner({ diagramId }) {
 
   const handleMoveEnd = useCallback(
     (_event, viewport) => {
-      updateDiagramViewport(diagramId, viewport);
+      // Guard: sla geen gecorrumpeerde viewport op
+      if (viewport && isFinite(viewport.x) && isFinite(viewport.y) && isFinite(viewport.zoom) && viewport.zoom > 0) {
+        updateDiagramViewport(diagramId, viewport);
+      }
     },
     [diagramId, updateDiagramViewport]
   );
@@ -1478,6 +1952,9 @@ function DiagramCanvasInner({ diagramId }) {
         outlineOffset: "-2px",
       }}
       className={`ide-canvas${activeEdgeMode !== EDGE_MODES.NONE ? ` ${activeEdgeMode.cursorClass}` : ""}`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
       <FloatingToolbar
         title="Maken"
@@ -1581,15 +2058,16 @@ function DiagramCanvasInner({ diagramId }) {
         onSelectionContextMenu={handleSelectionContextMenu}
         onPaneClick={handlePaneClick}
         onMoveEnd={handleMoveEnd}
-        defaultViewport={diagram.viewport || { x: 0, y: 0, zoom: 1 }}
+        defaultViewport={
+          diagram.viewport && isFinite(diagram.viewport.x) && isFinite(diagram.viewport.y) && isFinite(diagram.viewport.zoom) && diagram.viewport.zoom > 0
+            ? diagram.viewport
+            : { x: 0, y: 0, zoom: 1 }
+        }
         fitView={!diagram.viewport}
         fitViewOptions={{ padding: 0.15 }}
         snapToGrid
         snapGrid={[15, 15]}
         defaultEdgeOptions={{ type: "metamodel" }}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
         deleteKeyCode={["Backspace", "Delete"]}
         selectionKeyCode="Shift"
         selectionMode="partial"
@@ -1684,6 +2162,29 @@ function DiagramCanvasInner({ diagramId }) {
             >
               ⊞ Snap nodes naar grid
             </div>
+            <div style={{ height: 1, background: "var(--ide-menu-sep, #444)", margin: "4px 8px" }} />
+            {/* Kopiëren: beschikbaar als er geselecteerde nodes zijn of als er een node-contextmenu is */}
+            {(selectedCount > 0 || contextMenu.nodeId) && (
+              <div
+                style={{ padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" }}
+                onMouseEnter={itemHover}
+                onMouseLeave={itemLeave}
+                onClick={() => { handleCopySelection(contextMenu.nodeId); setContextMenu(null); }}
+              >
+                📋 Kopiëren (Ctrl+C)
+              </div>
+            )}
+            {/* Plakken: beschikbaar als er iets op het clipboard staat */}
+            {diagramClipboard && diagramClipboard.nodes.length > 0 && (
+              <div
+                style={{ padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" }}
+                onMouseEnter={itemHover}
+                onMouseLeave={itemLeave}
+                onClick={() => { handlePasteClipboard(); setContextMenu(null); }}
+              >
+                📋 Plakken (Ctrl+V)
+              </div>
+            )}
             <div style={{ height: 1, background: "var(--ide-menu-sep, #444)", margin: "4px 8px" }} />
             {contextMenu.nodeId && (
               <div

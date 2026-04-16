@@ -1,0 +1,63 @@
+# docker-compose.filestore-only.yml — Alleen de MinIO filestore.
+#
+# Gebruik samen met docker-compose.db-only.yml en docker-compose.api-only.yml
+# voor een volledig gesplitste Dockge/server-opzet:
+#   DB stack:        docker-compose.db-only.yml
+#   Filestore stack: docker-compose.filestore-only.yml
+#   API stack:       docker-compose.api-only.yml
+#
+# Starten:
+#   docker compose -f docker-compose.filestore-only.yml up -d
+#
+# MinIO console: http://localhost:${MINIO_CONSOLE_PORT:-9001}
+# MinIO API:     http://localhost:${MINIO_API_PORT:-9000}
+
+services:
+  bitemp-minio:
+    image: minio/minio:latest
+    container_name: bitemp-minio-v06
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - bitemp-minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bitemp-net
+
+  bitemp-minio-init:
+    image: minio/mc:latest
+    container_name: bitemp-minio-init-v06
+    depends_on:
+      bitemp-minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://bitemp-minio-v06:9000 $${MINIO_ROOT_USER:-minioadmin} $${MINIO_ROOT_PASSWORD:-minioadmin};
+      mc mb --ignore-existing local/$${MINIO_BUCKET:-ide-bestanden};
+      echo 'Bucket $${MINIO_BUCKET:-ide-bestanden} aangemaakt of bestond al.';
+      "
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-ide-bestanden}
+    networks:
+      - bitemp-net
+
+volumes:
+  bitemp-minio-data:
+
+networks:
+  bitemp-net:
+    name: bitemp-net

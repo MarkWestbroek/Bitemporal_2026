@@ -24,8 +24,11 @@ const MENU_ITEMS = {
   separator1: { separator: true },
   kopieerID: { label: "📋 Kopieer ID", types: ["entiteit", "gegevenselement", "relatie", "enumeratie", "gegevenstype", "referentielijstInstantie"] },
   separator2: { separator: true },
+  importeerDomein: { label: "📂 Importeer domein…", types: ["domain"] },
+  exporteerDomein: { label: "💾 Exporteer domein…", types: ["domain"] },
+  separator3: { separator: true },
   verwijder: { label: "🗑️ Verwijder uit model", types: ["entiteit", "gegevenselement", "relatie", "enumeratie", "gegevenstype", "referentielijstInstantie"] },
-  nieuwDiagram: { label: "➕ Nieuw diagram", types: ["diagrams"] },
+  nieuwDiagram: { label: "➕ Nieuw diagram", types: ["diagrams", "domain"] },
   openDiagram: { label: "📐 Open diagram", types: ["diagram"] },
 };
 

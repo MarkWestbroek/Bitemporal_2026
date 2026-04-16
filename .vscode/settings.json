@@ -106,5 +106,6 @@
         "debug.javascript.autoAttachFilter",
         "debug.javascript.autoAttachSmartPattern",
         "debug.javascript.terminalOptions"
-    ]
+    ],
+    "postman.settings.dotenv-detection-notification-visibility": false
 }

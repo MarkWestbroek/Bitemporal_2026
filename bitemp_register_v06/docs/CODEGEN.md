@@ -473,6 +473,12 @@ Replay files (`replay files/*.json`) bevatten registraties die via `POST /regist
 3. **Datum en tijdstip:** gebruik de actuele datum als aanvangsdatum voor standaard-definities. `exported_at` en `tijdstip` in ISO 8601.
 4. **definitie_versie** invullen als het veld bestaat (bijv. `"0.1"`).
 5. **Eén registratie per entitet-instantie:** elke entry in `entries[]` bevat de volledige set wijzigingen voor één entiteit (opvoer entiteit + GE hubs + aanvang).
+6. **Adres -> Gemeente referentielijst:** in replaybestanden die op het nieuwe NP/Loc-adresmodel mikken, gebruik `adres.gemeente_id` (CBS-gemeentecode) als referentielink. `adres.plaats` geldt dan als legacy veld voor oudere modelversies.
+7. **Synthetische schaalbestanden:** voor testdata met veel records (bijv. 50 NP's) gebruik hetzelfde patroon: per NP één registratie voor NP, één voor Locatie en één voor de woonadres-link, met 11-proef geldige synthetische BSN's.
+8. **Batch-splitsing voor scenario-tests:** gebruik meerdere replaybestanden met aansluitende ID-ranges om stapsgewijs te seeden, bijvoorbeeld:
+  - `registraties-replay-synth-50x-np-locatie-woonadres ID=1 tm 50.json`
+  - `registraties-replay-synth-50x-np-locatie-woonadres ID=51 tm 100.json`
+  - `registraties-replay-synth-50x-locatie-adres ID=101 tm 150.json` (alleen locaties/adressen, geen bereikbaarheid-links)
 
 ---
 

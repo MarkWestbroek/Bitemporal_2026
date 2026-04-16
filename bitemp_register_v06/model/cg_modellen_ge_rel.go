@@ -80,6 +80,15 @@ const (
 	OrganisatierolBetrokkenOrganisatie Organisatierol = "BetrokkenOrganisatie"
 )
 
+type CGPortfolioFase string
+
+const (
+	CGPortfolioFaseBrons             CGPortfolioFase = "Brons"
+	CGPortfolioFaseZilver            CGPortfolioFase = "Zilver"
+	CGPortfolioFaseGoud              CGPortfolioFase = "Goud"
+	CGPortfolioFaseNietGecontroleerd CGPortfolioFase = "Niet gecontroleerd"
+)
+
 type ApiStandaard_Naam struct {
 	bun.BaseModel      `bun:"table:apistandaard_naam,alias:apistandaard_naam"`
 	ApiStandaard_ID    int                      `json:"apistandaard_id" bun:"apistandaard_id,pk" schema_desc:"ID van de ApiStandaard-entiteit"`
@@ -171,6 +180,8 @@ type Initiatief_Planning_Data struct {
 	ReadyForUse         Date       `json:"ready_for_use" bun:"ready_for_use,type:date"`
 	WaarTegenaanGelopen string     `json:"waar_tegenaan_gelopen"`
 	Fase                Fase       `json:"fase" schema:"enum=Fase"`
+	Obstakels           *string    `json:"obstakels,omitempty"`
+	VerwachtReadyDatum  *Date      `json:"verwacht_ready_datum,omitempty" bun:"verwacht_ready_datum,type:date"`
 	Opvoer              *time.Time `json:"opvoer,omitempty"`
 	Afvoer              *time.Time `json:"afvoer,omitempty"`
 }
@@ -212,19 +223,20 @@ type Initiatief_Product struct {
 
 // Initiatief_Product_Data — geversioned inhoud van Initiatief_Product.
 type Initiatief_Product_Data struct {
-	bun.BaseModel `bun:"table:initiatief_product_data,alias:initiatief_product_data"`
-	Initiatief_ID int         `json:"initiatief_id" bun:"initiatief_id,pk"`
-	Rel_ID        int         `json:"rel_id" bun:"rel_id,pk"`
-	Versie        int64       `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Naam          string      `json:"naam"`
-	Omschrijving  *string     `json:"omschrijving,omitempty"`
-	Type          Producttype `json:"type" schema:"enum=Producttype"`
-	CGLaag        CGLaag      `json:"CG_laag" schema:"enum=CGLaag"`
-	Pitch         *string     `json:"pitch,omitempty"`
-	Website       *URL        `json:"website,omitempty" schema:"datatype:URL"`
-	GitRepo       *GitAdres   `json:"git_repo,omitempty" schema:"datatype:GitAdres"`
-	Opvoer        *time.Time  `json:"opvoer,omitempty"`
-	Afvoer        *time.Time  `json:"afvoer,omitempty"`
+	bun.BaseModel        `bun:"table:initiatief_product_data,alias:initiatief_product_data"`
+	Initiatief_ID        int         `json:"initiatief_id" bun:"initiatief_id,pk"`
+	Rel_ID               int         `json:"rel_id" bun:"rel_id,pk"`
+	Versie               int64       `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Naam                 string      `json:"naam"`
+	Omschrijving         *string     `json:"omschrijving,omitempty"`
+	Type                 Producttype `json:"type" schema:"enum=Producttype"`
+	CGLaag               CGLaag      `json:"CG_laag" schema:"enum=CGLaag"`
+	Pitch                *string     `json:"pitch,omitempty"`
+	VervangtOuderProduct *bool       `json:"vervangt_ouder_product,omitempty"`
+	Website              *URL        `json:"website,omitempty" schema:"datatype:URL"`
+	GitRepo              *GitAdres   `json:"git_repo,omitempty" schema:"datatype:GitAdres"`
+	Opvoer               *time.Time  `json:"opvoer,omitempty"`
+	Afvoer               *time.Time  `json:"afvoer,omitempty"`
 }
 
 // Initiatief_Product_Aanvang — aanvangdatum van Initiatief_Product.
@@ -271,6 +283,7 @@ type Initiatief_Bijdrage_Data struct {
 	TypeBijdrage  Bijdragetype `json:"type_bijdrage" schema:"enum=Bijdragetype"`
 	Schaal        Schaal       `json:"schaal" schema:"enum=Schaal"`
 	Toelichting   string       `json:"toelichting"`
+	Score         *int         `json:"score,omitempty"`
 	Opvoer        *time.Time   `json:"opvoer,omitempty"`
 	Afvoer        *time.Time   `json:"afvoer,omitempty"`
 }
@@ -372,14 +385,15 @@ type Initiatief_Initiatiefinfo struct {
 
 // Initiatief_Initiatiefinfo_Data — geversioned inhoud van Initiatief_Initiatiefinfo.
 type Initiatief_Initiatiefinfo_Data struct {
-	bun.BaseModel `bun:"table:initiatief_initiatiefinfo_data,alias:initiatief_initiatiefinfo_data"`
-	Initiatief_ID int        `json:"initiatief_id" bun:"initiatief_id,pk"`
-	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
-	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
-	Informatie    string     `json:"informatie"`
-	PbiID         int        `json:"PbiID"`
-	Opvoer        *time.Time `json:"opvoer,omitempty"`
-	Afvoer        *time.Time `json:"afvoer,omitempty"`
+	bun.BaseModel    `bun:"table:initiatief_initiatiefinfo_data,alias:initiatief_initiatiefinfo_data"`
+	Initiatief_ID    int        `json:"initiatief_id" bun:"initiatief_id,pk"`
+	Rel_ID           int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie           int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Informatie       string     `json:"informatie"`
+	PbiID            int        `json:"PbiID"`
+	Aanmeldingsdatum *Date      `json:"aanmeldingsdatum,omitempty" bun:"aanmeldingsdatum,type:date"`
+	Opvoer           *time.Time `json:"opvoer,omitempty"`
+	Afvoer           *time.Time `json:"afvoer,omitempty"`
 }
 
 type Initiatief_BetrokkenOrganisatie struct {
@@ -401,6 +415,82 @@ type Initiatief_BetrokkenOrganisatie_Data struct {
 	Type          Organisatietype `json:"type" schema:"enum=Organisatietype"`
 	Opvoer        *time.Time      `json:"opvoer,omitempty"`
 	Afvoer        *time.Time      `json:"afvoer,omitempty"`
+}
+
+// Initiatief_Beoordeling — CG Portfolio beoordeling (Brons/Zilver/Goud) van het initiatief.
+type Initiatief_Beoordeling struct {
+	bun.BaseModel    `bun:"table:initiatief_beoordeling,alias:initiatief_beoordeling"`
+	Initiatief_ID    int                              `json:"initiatief_id" bun:"initiatief_id,pk" schema_desc:"ID van de Initiatief-entiteit"`
+	Rel_ID           int                              `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentInitiatief *Initiatief                      `json:"-" bun:"rel:belongs-to,join:initiatief_id=id,on_delete:cascade"`
+	Opvoer           *time.Time                       `json:"opvoer,omitempty"`
+	Afvoer           *time.Time                       `json:"afvoer,omitempty"`
+	Data             []Initiatief_Beoordeling_Data    `bun:"rel:has-many,join:initiatief_id=initiatief_id,join:rel_id=rel_id" json:"data,omitempty"`
+	Aanvang          []Initiatief_Beoordeling_Aanvang `bun:"rel:has-many,join:initiatief_id=initiatief_id,join:rel_id=rel_id" json:"aanvang,omitempty"`
+	Einde            []Initiatief_Beoordeling_Einde   `bun:"rel:has-many,join:initiatief_id=initiatief_id,join:rel_id=rel_id" json:"einde,omitempty"`
+}
+
+// Initiatief_Beoordeling_Data — geversioned inhoud van Initiatief_Beoordeling.
+type Initiatief_Beoordeling_Data struct {
+	bun.BaseModel            `bun:"table:initiatief_beoordeling_data,alias:initiatief_beoordeling_data"`
+	Initiatief_ID            int             `json:"initiatief_id" bun:"initiatief_id,pk"`
+	Rel_ID                   int             `json:"rel_id" bun:"rel_id,pk"`
+	Versie                   int64           `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	FaseCgPortfolio          CGPortfolioFase `json:"fase_cg_portfolio" schema:"enum=CGPortfolioFase"`
+	DatumZilver              *Date           `json:"datum_zilver,omitempty" bun:"datum_zilver,type:date"`
+	DatumGoud                *Date           `json:"datum_goud,omitempty" bun:"datum_goud,type:date"`
+	CheckZilver              *bool           `json:"check_zilver,omitempty"`
+	RedenatieZilver          *string         `json:"redenatie_zilver,omitempty"`
+	RedenatieGoud            *string         `json:"redenatie_goud,omitempty"`
+	GoudNietGehaald          *bool           `json:"goud_niet_gehaald,omitempty"`
+	RedenatieGoudNietGehaald *string         `json:"redenatie_goud_niet_gehaald,omitempty"`
+	Opvoer                   *time.Time      `json:"opvoer,omitempty"`
+	Afvoer                   *time.Time      `json:"afvoer,omitempty"`
+}
+
+// Initiatief_Beoordeling_Aanvang — aanvangdatum van Initiatief_Beoordeling.
+type Initiatief_Beoordeling_Aanvang struct {
+	bun.BaseModel `bun:"table:initiatief_beoordeling_aanvang,alias:initiatief_beoordeling_aanvang"`
+	Initiatief_ID int        `json:"initiatief_id" bun:"initiatief_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+// Initiatief_Beoordeling_Einde — eindedatum van Initiatief_Beoordeling.
+type Initiatief_Beoordeling_Einde struct {
+	bun.BaseModel `bun:"table:initiatief_beoordeling_einde,alias:initiatief_beoordeling_einde"`
+	Initiatief_ID int        `json:"initiatief_id" bun:"initiatief_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Datum         *Date      `json:"datum,omitempty" bun:"datum,type:date"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
+}
+
+// Initiatief_Etalage — Etalage-classificatie van het initiatief in het CG Portfolio.
+type Initiatief_Etalage struct {
+	bun.BaseModel    `bun:"table:initiatief_etalage,alias:initiatief_etalage"`
+	Initiatief_ID    int                       `json:"initiatief_id" bun:"initiatief_id,pk" schema_desc:"ID van de Initiatief-entiteit"`
+	Rel_ID           int                       `json:"rel_id" bun:"rel_id,pk,autoincrement"`
+	ParentInitiatief *Initiatief               `json:"-" bun:"rel:belongs-to,join:initiatief_id=id,on_delete:cascade"`
+	Opvoer           *time.Time                `json:"opvoer,omitempty"`
+	Afvoer           *time.Time                `json:"afvoer,omitempty"`
+	Data             []Initiatief_Etalage_Data `bun:"rel:has-many,join:initiatief_id=initiatief_id,join:rel_id=rel_id" json:"data,omitempty"`
+}
+
+// Initiatief_Etalage_Data — geversioned inhoud van Initiatief_Etalage.
+type Initiatief_Etalage_Data struct {
+	bun.BaseModel `bun:"table:initiatief_etalage_data,alias:initiatief_etalage_data"`
+	Initiatief_ID int        `json:"initiatief_id" bun:"initiatief_id,pk"`
+	Rel_ID        int        `json:"rel_id" bun:"rel_id,pk"`
+	Versie        int64      `json:"versie,omitempty" bun:"versie,pk,autoincrement"`
+	Level1        *string    `json:"level1,omitempty"`
+	Level2        *string    `json:"level2,omitempty"`
+	Opvoer        *time.Time `json:"opvoer,omitempty"`
+	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
 
 type InitiatiefGemeente struct {

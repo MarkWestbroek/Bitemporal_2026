@@ -1,32 +1,68 @@
-# Docker Guide (API apart van database)
+# Docker Guide (modulaire 4-componenten stack)
 
-Deze handleiding beschrijft hoe je de API als losse Docker image bouwt en draait, terwijl PostgreSQL apart blijft draaien.
+Deze handleiding beschrijft hoe je de vier componenten van het register als losse Docker images/services bouwt en draait.
 
 Snelle releaseflow: zie ook [RELEASE.md](RELEASE.md).
 
+## Vier componenten
+
+De stack bestaat uit vier onafhankelijke deelservices:
+
+| Component    | Image / service          | Doel                                        | Standaard poort |
+|--------------|--------------------------|---------------------------------------------|-----------------|
+| **DB**       | `postgres:16-alpine`     | PostgreSQL database (data-opslag)           | 5433 → 5432    |
+| **Filestore**| `minio/minio:latest`     | MinIO S3-compatibele objectopslag (IDE-bestanden, modellen) | 9000 (API), 9001 (console) |
+| **BE (API)** | `bitemp-go-api:v06.*`    | Go backend — REST, GraphQL, schema-API      | 8082 → 8080    |
+| **FE**       | `bitemp-viz-frontend:v06.*` | Vite/React frontend via nginx            | 8083 → 80      |
+
 Doel:
-- API eenvoudig vervangen/upgraden.
-- Data behouden in een aparte database.
-- Geen afhankelijkheid van docker compose.
+- Elk component eenvoudig apart vervangen/upgraden.
+- Data behouden in aparte database- en filestore-volumes.
+- Geen afhankelijkheid van één groot docker compose bestand.
 
 ## Beschikbare Docker-varianten in deze repo
 
-- `docker-compose.yml` — bestaande gecombineerde stack met database + API.
-- `docker-compose.api-only.yml` — alleen de API-image; database draait elders of in een aparte stack.
-- `docker-compose.devloop.yml` — ontwikkel/devloop-variant met self-rebuild flow.
-- `docker-compose.split.yml` — **nieuw**: aparte backend-image én aparte frontend-image, plus PostgreSQL in één extra compose-bestand.
-- `docker-compose.frontend-only.yml` — alleen de frontend-image; API draait elders (extern of aparte stack).
+| Compose-bestand                       | Bevat                                      | Gebruik                                      |
+|---------------------------------------|--------------------------------------------|----------------------------------------------|
+| `docker-compose.yml`                  | DB + Filestore + BE (alles-in-één)         | Lokale ontwikkeling                          |
+| `docker-compose.devloop.yml`          | DB + Filestore + BE (devloop/self-rebuild) | Ontwikkel/devloop-variant                    |
+| `docker-compose.split.yml`            | DB + Filestore + BE + FE (4 services)      | Complete stack met aparte FE-image           |
+| `docker-compose.db-only.yml`          | Alleen DB                                  | Dockge/server: DB als losse stack            |
+| `docker-compose.filestore-only.yml`   | Alleen Filestore (MinIO + init)            | Dockge/server: filestore als losse stack     |
+| `docker-compose.api-only.yml`         | Alleen BE (API)                            | Dockge/server: API als losse stack           |
+| `docker-compose.frontend-only.yml`    | Alleen FE                                  | FE tegen externe API                         |
 
 Bij de split-variant horen ook:
 - `Dockerfile.api` — bouwt alleen de Go-backend.
 - `Dockerfile.frontend` — bouwt alleen de Vite/nginx-frontend.
 - `nginx.frontend.conf` — reverse proxy zodat frontend en API via dezelfde origin werken.
 
+### Aanbevolen stack-combinaties
+
+**Lokaal ontwikkelen** (alles in één):
+```
+docker-compose.yml
+```
+
+**Server/Dockge (3 losse stacks)**:
+```
+docker-compose.db-only.yml          # stack 1: DB
+docker-compose.filestore-only.yml   # stack 2: Filestore
+docker-compose.api-only.yml         # stack 3: API
+```
+Alle drie draaien op het gedeelde `bitemp-net` netwerk.
+
+**Complete split (4 services in 1 compose)**:
+```
+docker-compose.split.yml            # DB + Filestore + BE + FE
+```
+
 ## 1. Vereisten
 
 - Docker Engine op je machine of server.
 - Een bereikbare PostgreSQL database (lokaal, remote of aparte container).
 - Correcte PostgreSQL connectiestring in `DATABASE_URL`.
+- Een bereikbare MinIO filestore (lokaal, remote of aparte container) voor bestandsopslag.
 
 Voorbeelden van host in `DATABASE_URL`:
 - PostgreSQL op Windows host vanuit container: `host.docker.internal`
@@ -356,11 +392,12 @@ docker run -d --name bitemp-go-api-v06 -p 8082:8080 -e DATABASE_URL="postgres://
 
 ## 8. TrueNAS en Dockge (aanbevolen op server)
 
-Als je TrueNAS gebruikt met Dockge, gebruik dan 2 aparte stacks:
+Als je TrueNAS gebruikt met Dockge, gebruik dan 3 aparte stacks:
 - DB stack: `docker-compose.db-only.yml`
+- Filestore stack: `docker-compose.filestore-only.yml`
 - API stack: `docker-compose.api-only.yml`
 
-Zo blijft de database zelfstandig draaien en kun je de API los upgraden.
+Zo blijven database en filestore zelfstandig draaien en kun je de API los upgraden.
 
 ### 8.1 Eenmalig: env-bestand klaarzetten
 
@@ -368,14 +405,19 @@ Zo blijft de database zelfstandig draaien en kun je de API los upgraden.
 cp .env.docker.example .env.docker
 ```
 
-Pas secrets aan in `.env.docker` voordat je deployt.
+Pas secrets aan in `.env.docker` voordat je deployt. Let op de MinIO-variabelen:
+
+```dotenv
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=kies-een-sterk-geheim
+MINIO_BUCKET=ide-bestanden
+MINIO_ENDPOINT=bitemp-minio-v06:9000
+```
 
 ### 8.2 Database stack deployen (eerst)
 
 Gebruik bestand:
 - `docker-compose.db-only.yml`
-
-Plak in Dockge of gebruik via CLI:
 
 ```bash
 docker compose -f docker-compose.db-only.yml up -d
@@ -388,12 +430,29 @@ docker logs --tail 100 bitemp-postgres-v06
 docker exec -it bitemp-postgres-v06 pg_isready -U postgres -d bitemp_go_db_v06
 ```
 
-### 8.3 API stack deployen (daarna)
+### 8.3 Filestore stack deployen (daarna)
+
+Gebruik bestand:
+- `docker-compose.filestore-only.yml`
+
+```bash
+docker compose -f docker-compose.filestore-only.yml up -d
+```
+
+Controle:
+
+```bash
+docker logs --tail 50 bitemp-minio-v06
+# MinIO console openen in browser:
+# http://<server-ip>:9001  (login: MINIO_ACCESS_KEY / MINIO_SECRET_KEY)
+```
+
+De init-container maakt automatisch de bucket `ide-bestanden` aan (of bevestigt dat deze al bestaat).
+
+### 8.4 API stack deployen (als laatste)
 
 Gebruik bestand:
 - `docker-compose.api-only.yml`
-
-Plak in Dockge of gebruik via CLI:
 
 ```bash
 docker compose -f docker-compose.api-only.yml up -d
@@ -405,11 +464,15 @@ Belangrijk:
 - De network `bitemp-net` wordt automatisch aangemaakt door compose (als die nog niet bestaat).
 - Beide stacks lezen variabelen uit `.env.docker`.
 
-### 8.4 Updaten in Dockge
+### 8.5 Updaten in Dockge
 
 DB upgraden:
 1. Pas `image: postgres:...` aan in de DB stack.
 2. Redeploy de DB stack.
+
+Filestore upgraden:
+1. Pas `image: minio/minio:...` aan in de Filestore stack.
+2. Redeploy de Filestore stack. Data blijft staan in het volume.
 
 API upgraden:
 1. Push nieuwe image tag (bijv. `v06.00.01`).
@@ -417,8 +480,8 @@ API upgraden:
 3. Redeploy de API stack.
 
 Voordeel:
-- API is eenvoudig vervangbaar.
-- Data blijft staan in volume van de DB stack.
+- Elk component is onafhankelijk vervangbaar.
+- Data blijft staan in de volumes van DB en Filestore stacks.
 - Beheer via UI met behoud van reproduceerbare compose-config.
 
 ## 9. Veelvoorkomende fouten
@@ -452,6 +515,8 @@ Gebruik in productie:
 - Sterk `ADMIN_DROP_PASSWORD`
 - Sterke DB credentials
 - `sslmode=require` (of strenger) waar mogelijk
+- Sterke MinIO credentials (`MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY`)
+- MinIO console-poort (9001) niet publiek exposen tenzij nodig
 
 Extra:
 - Commit geen `.env.docker` met echte secrets naar Git.
@@ -536,3 +601,44 @@ Zet `API_IMAGE` terug naar de vorige stabiele tag en redeploy opnieuw:
 ```bash
 docker compose -f docker-compose.api-only.yml up -d
 ```
+
+## 13. MinIO / Filestore
+
+MinIO is de S3-compatibele objectopslag voor het register. De API gebruikt MinIO voor:
+- Opslag van IDE-bestanden (UML-editor exports, gepubliceerde V3 JSON modellen)
+- Bestandsbeheer via de bestanden-handler (`/api/bestanden/...`)
+
+### 13.1 Configuratie-variabelen
+
+| Variabele            | Standaard        | Beschrijving                                         |
+|----------------------|------------------|------------------------------------------------------|
+| `MINIO_ENDPOINT`     | `minio:9000`     | Endpoint dat de API gebruikt (containernaam:poort)   |
+| `MINIO_ACCESS_KEY`   | `minioadmin`     | Toegangssleutel (equivalent van AWS access key)      |
+| `MINIO_SECRET_KEY`   | `minioadmin`     | Geheime sleutel (equivalent van AWS secret key)      |
+| `MINIO_BUCKET`       | `ide-bestanden`  | Naam van de bucket                                   |
+| `MINIO_USE_SSL`      | `false`          | SSL gebruiken voor verbinding (true/false)           |
+| `MINIO_API_PORT`     | `9000`           | Host-poort voor MinIO API                            |
+| `MINIO_CONSOLE_PORT` | `9001`           | Host-poort voor MinIO webconsole                     |
+
+### 13.2 Bucket-initialisatie
+
+Alle compose-bestanden die MinIO bevatten hebben een `minio-init` service die automatisch:
+1. Een alias aanmaakt naar de MinIO-server.
+2. De bucket `ide-bestanden` aanmaakt (of bevestigt dat deze al bestaat).
+
+### 13.3 Handmatig beheer via MinIO console
+
+Open `http://localhost:9001` (of `http://<server-ip>:9001`) en log in met `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY`. Hier kun je:
+- Bestanden bekijken en downloaden
+- Buckets aanmaken/verwijderen
+- Toegangsbeleid instellen
+
+### 13.4 Data-persistentie
+
+MinIO-data wordt opgeslagen in een named Docker volume:
+- `docker-compose.yml`: `minio_data`
+- `docker-compose.devloop.yml`: `devloop_minio_data`
+- `docker-compose.split.yml`: `minio_data_split`
+- `docker-compose.filestore-only.yml`: `bitemp-minio-data`
+
+Het volume blijft bestaan bij container-herstarts en -upgrades. Verwijder het volume alleen bewust met `docker volume rm <naam>`.

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
@@ -423,6 +424,29 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 
 		}
 
+		// ── Afgeleide domeinen: verzamel unieke domeinen uit TypeMeta voor alle wijzigingen ──
+		domeinSet := make(map[string]struct{})
+		for _, w := range request.Wijzigingen {
+			repNaam := ""
+			if w.Opvoer != nil {
+				repNaam = w.Opvoer.Representatienaam
+			} else if w.Afvoer != nil {
+				repNaam = w.Afvoer.Representatienaam
+			}
+			if repNaam == "" {
+				continue
+			}
+			if meta, ok := model.MetaRegistry.GetTypeMeta(repNaam); ok && meta.Domein != "" {
+				domeinSet[meta.Domein] = struct{}{}
+			}
+		}
+		domeinen := make([]string, 0, len(domeinSet))
+		for d := range domeinSet {
+			domeinen = append(domeinen, d)
+		}
+		sort.Strings(domeinen)
+		request.Registratie.Domeinen = domeinen
+
 		elapsedMs := time.Since(start).Milliseconds()
 		responseStatus := http.StatusCreated
 		responsePayload := gin.H{
@@ -443,7 +467,7 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 		request.Registratie.DurationMs = &elapsedMs
 		if _, err = tx.NewUpdate().
 			Model(&request.Registratie).
-			Column("response_code", "response_body", "duration_ms").
+			Column("response_code", "response_body", "duration_ms", "domeinen").
 			Where("id = ?", registratieID).
 			Exec(c.Request.Context()); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to update registratie audit fields: %v", err)})
