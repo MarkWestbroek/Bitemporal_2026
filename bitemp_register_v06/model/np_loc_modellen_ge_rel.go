@@ -69,7 +69,6 @@ type Locatie_Adres_Data struct {
 	Huisnummer    string     `json:"huisnummer"`
 	Postcode      *string    `json:"postcode,omitempty" schema:"datatype:NLPostcode"`
 	Gemeente      int        `json:"gemeente" schema:"ref:Gemeente"`
-	Plaats        *string    `json:"plaats,omitempty"`
 	Land          int        `json:"land" schema:"ref:LandenlijstLand"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
