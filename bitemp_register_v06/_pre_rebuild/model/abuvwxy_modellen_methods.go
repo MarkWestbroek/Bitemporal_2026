@@ -40,9 +40,9 @@ func (c *C) SetAfvoer(t *time.Time) { c.Afvoer = t }
 func (c C) String() string          { return RepresentatieToString(c) }
 
 // C_sub
-func (c C_sub) GetID() any              { return c.ID }
+func (c C_sub) GetID() any              { return c.C_ID }
 func (c C_sub) Metatype() Metatype      { return MetatypeEntiteit }
-func (c *C_sub) ClearID()               { c.ID = 0 }
+func (c *C_sub) ClearID()               { c.C_ID = 0 }
 func (c C_sub) GetOpvoer() *time.Time   { return c.Opvoer }
 func (c *C_sub) SetOpvoer(t *time.Time) { c.Opvoer = t }
 func (c C_sub) GetAfvoer() *time.Time   { return c.Afvoer }

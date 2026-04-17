@@ -40,6 +40,8 @@ type OnderliggendGegevenselement struct {
 	JSONRolnaam     string
 	Doeltype        string
 	Momentvoorkomen Momentvoorkomen // enkelvoudig of meervoudig = het voorkomen op enig moment in de tijd
+	NaamLabelHeen   string          // UML-label op de heen-richting (bijv. "woont op", "heeft")
+	NaamLabelTerug  string          // UML-label op de terug-richting (bijv. "is woonadres van", "behoort bij")
 }
 
 // AfgeleidVeld beschrijft een afgeleid veld op representatie-niveau (entiteit, GE-hub of relatie-hub).

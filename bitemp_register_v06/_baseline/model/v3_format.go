@@ -111,6 +111,8 @@ type V3Entiteit struct {
 	EntiteitSubtype   string              `json:"entiteitSubtype,omitempty"` // bijv. "referentielijst", "referentielijst_item"
 	IsAbstract        bool                `json:"isAbstract,omitempty"`      // UML: abstracte klasse (cursief weergegeven)
 	Erft              string              `json:"erft,omitempty"`            // typenaam van de parent-entiteit bij generalisatie
+	NaamLabelHeen     string              `json:"naamLabelHeen,omitempty"`   // UML-label op de heen-richting van de generalisatie-relatie
+	NaamLabelTerug    string              `json:"naamLabelTerug,omitempty"`  // UML-label op de terug-richting van de generalisatie-relatie
 	IsMaterieel       bool                `json:"isMaterieel,omitempty"`
 	Kleur             string              `json:"kleur,omitempty"`
 	Meervoud          string              `json:"meervoud"`          // URL-padnaam, bijv. "as", "personen"
@@ -129,11 +131,13 @@ type V3Gegevenselement struct {
 	Meervoud        string           `json:"meervoud"`         // URL-padnaam, bijv. "a-us"
 	Momentvoorkomen string           `json:"momentvoorkomen"`  // "enkelvoudig" of "meervoudig"
 	IsMaterieel     bool             `json:"isMaterieel,omitempty"`
-	Positie         *V3Positie       `json:"positie,omitempty"`      // editor-layout positie (genegeerd door codegen)
-	ID              string           `json:"id,omitempty"`           // persistente edge-id van entiteit→GE voor stabiele editor round-trips
-	SourceHandle    string           `json:"sourceHandle,omitempty"` // verbindingspunt op de entiteit (genegeerd door codegen)
-	TargetHandle    string           `json:"targetHandle,omitempty"` // verbindingspunt op het GE-node (genegeerd door codegen)
-	Runtime         *V3Runtime       `json:"runtime,omitempty"`      // V3.1: runtime/deployment metadata (genegeerd door codegen/UML-editor)
+	NaamLabelHeen   string           `json:"naamLabelHeen,omitempty"`  // UML-label op de heen-richting van de compositie (bijv. "heeft")
+	NaamLabelTerug  string           `json:"naamLabelTerug,omitempty"` // UML-label op de terug-richting van de compositie (bijv. "behoort bij")
+	Positie         *V3Positie       `json:"positie,omitempty"`        // editor-layout positie (genegeerd door codegen)
+	ID              string           `json:"id,omitempty"`             // persistente edge-id van entiteit→GE voor stabiele editor round-trips
+	SourceHandle    string           `json:"sourceHandle,omitempty"`   // verbindingspunt op de entiteit (genegeerd door codegen)
+	TargetHandle    string           `json:"targetHandle,omitempty"`   // verbindingspunt op het GE-node (genegeerd door codegen)
+	Runtime         *V3Runtime       `json:"runtime,omitempty"`        // V3.1: runtime/deployment metadata (genegeerd door codegen/UML-editor)
 	AfgeleideVelden []V3AfgeleidVeld `json:"afgeleideVelden,omitempty"`
 	Velden          []V3Veld         `json:"velden,omitempty"`
 	UseEdges        []V3UseEdge      `json:"useEdges,omitempty"` // optionele layout/visibility metadata voor «use»-dependency-edges
@@ -151,6 +155,8 @@ type V3Relatie struct {
 	IsMaterieel              bool             `json:"isMaterieel,omitempty"`
 	DoelEntiteit             string           `json:"doelEntiteit"`                    // typenaam van de doel-entiteit
 	Directioneel             bool             `json:"directioneel,omitempty"`          // true = gerichte associatie (pijl naar doel-entiteit)
+	NaamLabelHeen            string           `json:"naamLabelHeen,omitempty"`         // UML-label op de heen-richting van de associatie (bijv. "woont op")
+	NaamLabelTerug           string           `json:"naamLabelTerug,omitempty"`        // UML-label op de terug-richting van de associatie (bijv. "is woonadres van")
 	BronKardinaliteit        string           `json:"bronKardinaliteit,omitempty"`     // kardinaliteit aan de bronkant (bijv. "0..*"); default afgeleid uit momentvoorkomen
 	DoelKardinaliteit        string           `json:"doelKardinaliteit,omitempty"`     // kardinaliteit aan de doel-entiteitkant (bijv. "0..*")
 	Positie                  *V3Positie       `json:"positie,omitempty"`               // editor-layout positie van het relatieblok (genegeerd door codegen)

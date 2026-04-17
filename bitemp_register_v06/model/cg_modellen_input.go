@@ -24,32 +24,29 @@ type Gemeente_GemeenteGegevens_Input struct {
 }
 
 type Initiatief_Planning_Input struct {
-	INITIATIEF_ID       int     `json:"initiatief_id"`
-	Rel_ID              int     `json:"rel_id"`
-	Planningsinfo       string  `json:"planningsinfo"`
-	Startdatum          Date    `json:"startdatum"`
-	ReadyForUse         Date    `json:"ready_for_use"`
-	WaarTegenaanGelopen string  `json:"waar_tegenaan_gelopen"`
-	Fase                Fase    `json:"fase"`
-	Obstakels           *string `json:"obstakels,omitempty"`
-	VerwachtReadyDatum  *Date   `json:"verwacht_ready_datum,omitempty"`
-	Aanvang             *Date   `json:"aanvang,omitempty"`
-	Einde               *Date   `json:"einde,omitempty"`
+	INITIATIEF_ID       int    `json:"initiatief_id"`
+	Rel_ID              int    `json:"rel_id"`
+	Planningsinfo       string `json:"planningsinfo"`
+	Startdatum          Date   `json:"startdatum"`
+	ReadyForUse         Date   `json:"ready_for_use"`
+	WaarTegenaanGelopen string `json:"waar_tegenaan_gelopen"`
+	Fase                Fase   `json:"fase"`
+	Aanvang             *Date  `json:"aanvang,omitempty"`
+	Einde               *Date  `json:"einde,omitempty"`
 }
 
 type Initiatief_Product_Input struct {
-	INITIATIEF_ID        int         `json:"initiatief_id"`
-	Rel_ID               int         `json:"rel_id"`
-	Naam                 string      `json:"naam"`
-	Omschrijving         *string     `json:"omschrijving,omitempty"`
-	Type                 Producttype `json:"type"`
-	CGLaag               CGLaag      `json:"CG_laag"`
-	Pitch                *string     `json:"pitch,omitempty"`
-	VervangtOuderProduct *bool       `json:"vervangt_ouder_product,omitempty"`
-	Website              *URL        `json:"website,omitempty"`
-	GitRepo              *GitAdres   `json:"git_repo,omitempty"`
-	Aanvang              *Date       `json:"aanvang,omitempty"`
-	Einde                *Date       `json:"einde,omitempty"`
+	INITIATIEF_ID int         `json:"initiatief_id"`
+	Rel_ID        int         `json:"rel_id"`
+	Naam          string      `json:"naam"`
+	Omschrijving  *string     `json:"omschrijving,omitempty"`
+	Type          Producttype `json:"type"`
+	CGLaag        CGLaag      `json:"CG_laag"`
+	Pitch         *string     `json:"pitch,omitempty"`
+	Website       *URL        `json:"website,omitempty"`
+	GitRepo       *GitAdres   `json:"git_repo,omitempty"`
+	Aanvang       *Date       `json:"aanvang,omitempty"`
+	Einde         *Date       `json:"einde,omitempty"`
 }
 
 type Initiatief_Bijdrage_Input struct {
@@ -58,7 +55,6 @@ type Initiatief_Bijdrage_Input struct {
 	TypeBijdrage  Bijdragetype `json:"type_bijdrage"`
 	Schaal        Schaal       `json:"schaal"`
 	Toelichting   string       `json:"toelichting"`
-	Score         *int         `json:"score,omitempty"`
 	Aanvang       *Date        `json:"aanvang,omitempty"`
 	Einde         *Date        `json:"einde,omitempty"`
 }
@@ -82,39 +78,16 @@ type Initiatief_AndereAPIStandaard_Input struct {
 }
 
 type Initiatief_Initiatiefinfo_Input struct {
-	INITIATIEF_ID    int    `json:"initiatief_id"`
-	Rel_ID           int    `json:"rel_id"`
-	Informatie       string `json:"informatie"`
-	PbiID            int    `json:"PbiID"`
-	Aanmeldingsdatum *Date  `json:"aanmeldingsdatum,omitempty"`
+	INITIATIEF_ID int    `json:"initiatief_id"`
+	Rel_ID        int    `json:"rel_id"`
+	Informatie    string `json:"informatie"`
+	PbiID         int    `json:"PbiID"`
 }
 
 type Initiatief_BetrokkenOrganisatie_Input struct {
 	INITIATIEF_ID int             `json:"initiatief_id"`
 	Rel_ID        int             `json:"rel_id"`
 	Type          Organisatietype `json:"type"`
-}
-
-type Initiatief_Beoordeling_Input struct {
-	INITIATIEF_ID            int             `json:"initiatief_id"`
-	Rel_ID                   int             `json:"rel_id"`
-	FaseCgPortfolio          CGPortfolioFase `json:"fase_cg_portfolio"`
-	DatumZilver              *Date           `json:"datum_zilver,omitempty"`
-	DatumGoud                *Date           `json:"datum_goud,omitempty"`
-	CheckZilver              *bool           `json:"check_zilver,omitempty"`
-	RedenatieZilver          *string         `json:"redenatie_zilver,omitempty"`
-	RedenatieGoud            *string         `json:"redenatie_goud,omitempty"`
-	GoudNietGehaald          *bool           `json:"goud_niet_gehaald,omitempty"`
-	RedenatieGoudNietGehaald *string         `json:"redenatie_goud_niet_gehaald,omitempty"`
-	Aanvang                  *Date           `json:"aanvang,omitempty"`
-	Einde                    *Date           `json:"einde,omitempty"`
-}
-
-type Initiatief_Etalage_Input struct {
-	INITIATIEF_ID int     `json:"initiatief_id"`
-	Rel_ID        int     `json:"rel_id"`
-	Level1        *string `json:"level1,omitempty"`
-	Level2        *string `json:"level2,omitempty"`
 }
 
 type InitiatiefGemeente_Input struct {

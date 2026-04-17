@@ -169,6 +169,7 @@ type Registratie struct {
 	RequestPath                *string             `json:"request_path,omitempty" bun:"request_path,nullzero"`              // request pad voor audit, bv /registreer/as
 	RequestMethod              *string             `json:"request_method,omitempty" bun:"request_method,nullzero"`          // HTTP methode, bv POST
 	DurationMs                 *int64              `json:"duration_ms,omitempty" bun:"duration_ms,nullzero"`                // afhandeltijd in milliseconden
+	Domeinen                   []string            `json:"domeinen,omitempty" bun:"domeinen,array,type:text[]"`             // Afgeleide domeinen: unieke set van TypeMeta.Domein per wijziging
 }
 
 func (reg Registratie) IsRegistratie() bool {

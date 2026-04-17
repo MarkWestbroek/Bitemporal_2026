@@ -51,10 +51,7 @@ func initNpLocMetaRegistry() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "adellijketitel_id",
 		Momentvoorkomen:        Enkelvoudig,
-		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 1665, Y: 75},
-			EdgeID:  "AdellijkeTitel->AdellijkeTitel_AdellijkeTitelTitel",
-		},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1665, Y: 75}},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "AdellijkeTitel_AdellijkeTitelTitel_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -142,7 +139,10 @@ func initNpLocMetaRegistry() {
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
 			Positie: &V3Positie{X: 765, Y: -570},
-			EdgeID:  "Locatie->Locatie_Adres",
+			UseEdges: []V3UseEdge{
+				{Doel: "NLPostcode", ID: "Locatie_Adres--dt-->NLPostcode"},
+				{Doel: "LandenlijstLand", ID: "Locatie_Adres--ref-->LandenlijstLand"},
+			},
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Locatie_Adres_Data", Momentvoorkomen: Enkelvoudig},
@@ -170,10 +170,7 @@ func initNpLocMetaRegistry() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "locatie_id",
 		Momentvoorkomen:        Enkelvoudig,
-		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 510, Y: -555},
-			EdgeID:  "Locatie->Locatie_BAG-locatie",
-		},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 510, Y: -555}},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Locatie_BAGlocatie_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -331,8 +328,10 @@ func initNpLocMetaRegistry() {
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
 			Positie:      &V3Positie{X: -720, Y: -780},
-			EdgeID:       "NatuurlijkPersoon->NatuurlijkPersoon_PersoonsIdentificatie",
 			SourceHandle: "left",
+			UseEdges: []V3UseEdge{
+				{Doel: "BSN", ID: "NatuurlijkPersoon_Persoonsidentificatie--dt-->BSN"},
+			},
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Persoonsidentificatie_Data", Momentvoorkomen: Enkelvoudig},
@@ -370,10 +369,7 @@ func initNpLocMetaRegistry() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "natuurlijkpersoon_id",
 		Momentvoorkomen:        Enkelvoudig,
-		Layout: &EditorLayout{
-			Positie: &V3Positie{X: -270, Y: -570},
-			EdgeID:  "NatuurlijkPersoon->NatuurlijkPersoon_Naam",
-		},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: -270, Y: -570}},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Naam_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -411,7 +407,6 @@ func initNpLocMetaRegistry() {
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
 			Positie:      &V3Positie{X: -135, Y: -285},
-			EdgeID:       "edge_1774209110136_2",
 			SourceHandle: "bottom",
 			TargetHandle: "top",
 		},
@@ -443,9 +438,11 @@ func initNpLocMetaRegistry() {
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
 			Positie:      &V3Positie{X: 75, Y: -495},
-			EdgeID:       "edge_1774209240752_5",
 			SourceHandle: "bottom",
 			TargetHandle: "top",
+			UseEdges: []V3UseEdge{
+				{Doel: "Naamgebruiksoort", ID: "NatuurlijkPersoon_Naamgebruik-->Naamgebruiksoort"},
+			},
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "NatuurlijkPersoon_Naamgebruik_Data", Momentvoorkomen: Enkelvoudig},
@@ -475,7 +472,6 @@ func initNpLocMetaRegistry() {
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
 			Positie:      &V3Positie{X: -465, Y: -195},
-			EdgeID:       "edge_1775661694887_3",
 			SourceHandle: "left",
 			TargetHandle: "top",
 		},
@@ -509,13 +505,12 @@ func initNpLocMetaRegistry() {
 		SecondaireEntiteitIDKolom: "locatie_id",
 		Momentvoorkomen:           Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:          &V3Positie{X: 210, Y: -870},
-			EdgeID:           "edge_1774201942583_1",
-			SourceHandle:     "right",
-			TargetHandle:     "left",
-			DoelEdgeID:       "edge_1774201991984_2",
-			DoelSourceHandle: "right",
-			DoelTargetHandle: "left",
+			Positie:      &V3Positie{X: 210, Y: -870},
+			SourceHandle: "right",
+			TargetHandle: "left",
+			UseEdges: []V3UseEdge{
+				{Doel: "Bereikbaarheidssoort", ID: "Bereikbaarheid-->Bereikbaarheidssoort"},
+			},
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Bereikbaarheid_Data", Momentvoorkomen: Enkelvoudig},

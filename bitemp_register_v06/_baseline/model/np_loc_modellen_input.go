@@ -10,13 +10,14 @@ type AdellijkeTitel_AdellijkeTitelTitel_Input struct {
 }
 
 type Locatie_Adres_Input struct {
-	LOCATIE_ID int        `json:"locatie_id"`
-	Rel_ID     int        `json:"rel_id"`
-	Straatnaam string     `json:"straatnaam"`
-	Huisnummer string     `json:"huisnummer"`
-	Postcode   NLPostcode `json:"postcode"`
-	Plaats     string     `json:"plaats"`
-	Land       int        `json:"land"`
+	LOCATIE_ID int     `json:"locatie_id"`
+	Rel_ID     int     `json:"rel_id"`
+	Straatnaam string  `json:"straatnaam"`
+	Huisnummer string  `json:"huisnummer"`
+	Postcode   *string `json:"postcode,omitempty"`
+	Gemeente   int     `json:"gemeente"`
+	Plaats     *string `json:"plaats,omitempty"`
+	Land       int     `json:"land"`
 }
 
 type Locatie_BAGlocatie_Input struct {
@@ -26,10 +27,10 @@ type Locatie_BAGlocatie_Input struct {
 }
 
 type NatuurlijkPersoon_Persoonsidentificatie_Input struct {
-	NATUURLIJKPERSOON_ID int   `json:"natuurlijkpersoon_id"`
-	Rel_ID               int   `json:"rel_id"`
-	Bsn                  BSN   `json:"bsn"`
-	Ingezetene           *bool `json:"ingezetene,omitempty"`
+	NATUURLIJKPERSOON_ID int    `json:"natuurlijkpersoon_id"`
+	Rel_ID               int    `json:"rel_id"`
+	Bsn                  string `json:"bsn"`
+	Ingezetene           *bool  `json:"ingezetene,omitempty"`
 }
 
 type NatuurlijkPersoon_Naam_Input struct {

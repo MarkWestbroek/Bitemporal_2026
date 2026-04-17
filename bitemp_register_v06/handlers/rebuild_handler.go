@@ -211,6 +211,7 @@ var baselineKernModelBestanden = []string{
 	"metaregistry_plumbing.go",
 	"v3_format.go",
 	"v3_exporter.go",
+	"gebruiker.go",
 	"json",
 }
 

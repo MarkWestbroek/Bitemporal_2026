@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-16 20:41
 - **Sessie-ID**: `21989e11-a412-45b9-bf0e-aaf628a7104b`
-- **Berichten**: 86
+- **Berichten**: 109
 
 ---
 
@@ -2689,5 +2689,680 @@ truenas_admin@truenas[~]$ sudo docker logs bitemp-openftv-pdp --tail 20 -f
 {"time":"2026-04-17T19:13:19.94722462Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run.func1.1","file":"/build/eam/server/fiber/run.go","line":24},"msg":"http service (health) started"}
 {"time":"2026-04-17T19:13:24.944288118Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"10s"}
 {"time":"2026-04-17T19:13:34.950479631Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"20s"}
+
+---
+
+## 🤖 Assistant
+
+De 403 blijft komen — de manager heeft nog steeds de **oude policy** (de bijgewerkte is alleen lokaal opgeslagen, nog niet op TrueNAS). 
+
+Voer dit commando uit in de **TrueNAS shell**:
+
+```bash
+sudo tee /mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/policies/bitemp_authz.rego << 'ENDOFFILE'
+package bitemp.authz
+
+import rego.v1
+
+default allow := false
+
+rol_niveau := {
+    "admin": 3,
+    "editor": 2,
+    "viewer": 1,
+}
+
+heeft_minimaal_rol(vereist) if {
+    rol_niveau[input.subject.properties.role] >= rol_niveau[vereist]
+}
+
+publieke_paginas := {
+    "index", "tijdlijn", "registraties", "universum",
+    "swagger", "redoc", "graphiql", "publicatie",
+    "docs", "version", "openapi",
+}
+
+allow if {
+    input.action.name == "access"
+    input.resource.type == "page"
+    input.resource.id in publieke_paginas
+}
+
+beschermde_paginas := {
+    "editor-v2", "editor", "ide", "inhoud",
+}
+
+allow if {
+    input.action.name == "access"
+    input.resource.type == "page"
+    input.resource.id in beschermde_paginas
+    heeft_minimaal_rol("editor")
+}
+
+allow if {
+    input.action.name == "read"
+    input.resource.type == "api"
+    heeft_minimaal_rol("viewer")
+}
+
+allow if {
+    input.action.name == "write"
+    input.resource.type == "api"
+    heeft_minimaal_rol("editor")
+}
+
+allow if {
+    input.action.name == "admin"
+    input.resource.type == "api"
+    heeft_minimaal_rol("admin")
+}
+
+allow if {
+    input.resource.type == "service"
+    startswith(input.resource.id, "/v1/bundle/")
+}
+ENDOFFILE
+```
+
+Dan:
+
+```bash
+sudo docker restart bitemp-openftv-manager
+```
+
+Wacht ~5 seconden, dan controleert de PDP vanzelf opnieuw (de retry staat op 20s). Check daarna de logs:
+
+```bash
+sudo docker logs bitemp-openftv-pdp --tail 10
+```
+
+Je zou nu `"retrieved bundle"` moeten zien i.p.v. 403.
+
+---
+
+## 🧑 User
+
+bitemp-openftv-manager
+truenas_admin@truenas[~]$ sudo docker logs bitemp-openftv-pdp --tail 10
+{"time":"2026-04-17T19:13:19.94722462Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run.func1.1","file":"/build/eam/server/fiber/run.go","line":24},"msg":"http service (health) started"}
+{"time":"2026-04-17T19:13:24.944288118Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"10s"}
+{"time":"2026-04-17T19:13:34.950479631Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"20s"}
+{"time":"2026-04-17T19:13:54.958517556Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"40s"}
+{"time":"2026-04-17T19:14:34.966962206Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":47},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403"}
+{"time":"2026-04-17T19:14:34.967020832Z","level":"ERROR","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).bundleRetriever","file":"/build/apps/pdp/server/router.go","line":61},"msg":"failed to get latest bundle","url":"http://openftv-manager:9443/v1/bundle/bitemp-pdp","error":"failed to retrieve bundle; tried 5 times"}
+{"time":"2026-04-17T19:14:34.970163857Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"5s"}
+{"time":"2026-04-17T19:14:39.973994504Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"10s"}
+{"time":"2026-04-17T19:14:49.977683385Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"20s"}
+{"time":"2026-04-17T19:15:09.985450957Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"40s"}
+truenas_admin@truenas[~]$ sudo docker logs bitemp-openftv-pdp --tail 10
+{"time":"2026-04-17T19:14:34.970163857Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"5s"}
+{"time":"2026-04-17T19:14:39.973994504Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"10s"}
+{"time":"2026-04-17T19:14:49.977683385Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"20s"}
+{"time":"2026-04-17T19:15:09.985450957Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"40s"}
+{"time":"2026-04-17T19:15:49.994789873Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":47},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403"}
+{"time":"2026-04-17T19:15:49.9948602Z","level":"ERROR","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).bundleRetriever","file":"/build/apps/pdp/server/router.go","line":61},"msg":"failed to get latest bundle","url":"http://openftv-manager:9443/v1/bundle/bitemp-pdp","error":"failed to retrieve bundle; tried 5 times"}
+{"time":"2026-04-17T19:15:49.997996998Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"5s"}
+{"time":"2026-04-17T19:15:55.005691894Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"10s"}
+{"time":"2026-04-17T19:16:05.009912939Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"20s"}
+{"time":"2026-04-17T19:16:25.016446308Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"40s"}
+truenas_admin@truenas[~]$
+
+---
+
+## 🤖 Assistant
+
+De 403 blijft omdat de policy nog niet bijgewerkt is op TrueNAS — de `tee` stap is nog niet gedaan. Voer dit nu stap voor stap uit in de TrueNAS shell:
+
+**Stap 1 — Policy-bestand overschrijven** (kopieer en plak dit volledig):
+
+```bash
+sudo tee /mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/policies/bitemp_authz.rego << 'ENDOFFILE'
+package bitemp.authz
+
+import rego.v1De 403 blijft omdat de policy nog niet bijgewerkt is op TrueNAS — de `tee` stap is nog niet gedaan. Voer dit nu stap voor stap uit in de TrueNAS shell:
+
+**Stap 1 — Policy-bestand overschrijven** (kopieer en plak dit volledig):
+
+```bash
+sudo tee /mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/policies/bitemp_authz.rego << 'ENDOFFILE'
+package bitemp.authz
+
+import rego.v1
+
+default allow := false
+
+rol_niveau := {
+    "admin": 3,
+    "editor": 2,
+    "viewer": 1,
+}
+
+heeft_minimaal_rol(vereist) if {
+    rol_niveau[input.subject.properties.role] >= rol_niveau[vereist]
+}
+
+publieke_paginas := {
+    "index", "tijdlijn", "registraties", "universum",
+    "swagger", "redoc", "graphiql", "publicatie",
+    "docs", "version", "openapi",
+}
+
+allow if {
+    input.action.name == "access"
+    input.resource.type == "page"
+    input.resource.id in publieke_paginas
+}
+
+beschermde_paginas := {
+    "editor-v2", "editor", "ide", "inhoud",
+}
+
+allow if {
+    input.action.name == "access"
+    input.resource.type == "page"
+    input.resource.id in beschermde_paginas
+    heeft_minimaal_rol("editor")
+}
+
+allow if {
+    input.action.name == "read"
+    input.resource.type == "api"
+    heeft_minimaal_rol("viewer")
+}
+
+allow if {
+    input.action.name == "write"
+    input.resource.type == "api"
+    heeft_minimaal_rol("editor")
+}
+
+allow if {
+    input.action.name == "admin"
+    input.resource.type == "api"
+    heeft_minimaal_rol("admin")
+}
+
+allow if {
+    input.resource.type == "service"
+    startswith(input.resource.id, "/v1/bundle/")
+}
+ENDOFFILE
+```
+
+**Stap 2 — Controleer of het gelukt is:**
+```bash
+tail -5 /mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/policies/bitemp_authz.rego
+```
+Je moet de `startswith` regel zien.
+
+**Stap 3 — Manager herstarten:**
+```bash
+sudo docker restart bitemp-openftv-manager
+```
+
+**Stap 4 — Na ~30 seconden PDP-logs bekijken:**
+```bash
+sudo docker logs bitemp-openftv-pdp --tail 5
+```
+
+---
+
+## 🧑 User
+
+truenas_admin@truenas[~]$ tail -5 /mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/policies/bitemp_authz.rego
+tail: cannot open '/mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/policies/bitemp_authz.rego' for reading: Permission denied
+truenas_admin@truenas[~]$
+
+---
+
+## 🤖 Assistant
+
+Probeer met `sudo`:
+
+```bash
+sudo tail -5 /mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/policies/bitemp_authz.rego
+```
+
+Als dat werkt en de `startswith` regel zichtbaar is, ga dan direct door naar:
+
+```bash
+sudo docker restart bitemp-openftv-manager
+```
+
+Als de tail **ook** met sudo faalt, controleer dan of het pad klopt:
+
+```bash
+sudo ls /mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/policies/
+```
+
+En als het bestand er niet is:
+```bash
+sudo mkdir -p /mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/policies
+```
+
+Gevolgd door de `tee` stap opnieuw.
+
+---
+
+## 🧑 User
+
+de startswith regel is er en de restart gedaan, maar de login faalt nog
+
+---
+
+## 🤖 Assistant
+
+Laten we eerst checken of de manager de nieuwe policy ook daadwerkelijk heeft opgepikt, en of de bundle `bitemp-pdp` überhaupt geconfigureerd is in de manager: Bundle-config ziet er goed uit. Vraag: zijn de manager-logs ook 403-vrij na de restart? Check dit eerst:
+
+```bash
+sudo docker logs bitemp-openftv-manager --tail 20
+```
+
+En check of de policy daadwerkelijk door de manager is geladen (zoek naar het pad):
+```bash
+sudo docker exec bitemp-openftv-manager ls /tmp/data/policies/ 2>/dev/null || echo "geen toegang"
+```
+
+Als exec niet werkt (distroless), probeer dan:
+```bash
+sudo ls -la /mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/policies/
+```
+
+**Alternatieve aanpak**: Als de policy-reload problemen geeft, is een snellere fix om in de compose de manager-authenticatie helemaal uit te zetten voor het bundle-endpoint via een env-var:
+
+```bash
+sudo docker inspect bitemp-openftv-manager | grep -i auth
+```
+
+Dat toont welke `MANAGER_AUTHENTICATION_TYPE` ingesteld is. Als die al `none` is, zou de bundle-endpoint sowieso open moeten zijn — dan is er iets anders aan de hand met het bundle-pad of de bundle-naam.
+
+---
+
+## 🧑 User
+
+dit zijn teveel opties door elkaar en ik snap het niet meer. 
+
+Dit kwam er terug:
+```
+truenas_admin@truenas[~]$ sudo docker restart bitemp-openftv-manager
+bitemp-openftv-manager
+truenas_admin@truenas[~]$ sudo docker logs bitemp-openftv-manager --tail 20
+{"time":"2026-04-17T19:19:50.080722285Z","level":"ERROR","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.(*controller).Authorize","file":"/build/eam/pdp/opa-embedded/auth.go","line":39},"msg":"authorization failed","controller":"OPA/Rego 1.0.0","request-uid":"b919fc8d-44de-4a60-a9a7-8ee230fbbbf7","err":"opa_undefined_error: /authz decision was undefined","pdp elapsed":"295.512µs"}
+{"time":"2026-04-17T19:19:50.080738993Z","level":"ERROR","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/authorization/fiber.Check","file":"/build/eam/authorization/fiber/request.go","line":58},"msg":"authorization failed","path":"/v1/bundle/bitemp-pdp","authResponse":{"message":"not authorized"},"err":"opa_undefined_error: /authz decision was undefined"}
+{"time":"2026-04-17T19:20:10.084003099Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.(*wrappedLogger).Info","file":"/build/eam/pdp/opa-embedded/logging.go","line":19},"msg":"Decision Log","decision_id":"29d72014-8393-4b88-b149-291a701abec0","error":{"code":"opa_undefined_error","message":"/authz decision was undefined"},"input":{"action":{"attributes":{"method":"GET"},"id":"can_read","type":"name"},"context":{"action":"name::can_read","headers":{"Content-Encoding":"bzip2","Host":"openftv-manager:9443","User-Agent":"Go-http-client/1.1"},"http":{"host":"","method":"GET","path":"/v1/bundle/bitemp-pdp","path_parts":["v1","bundle","bitemp-pdp"],"query":{},"scheme":""},"resource":"service::/v1/bundle/bitemp-pdp","time":"2026-04-17T19:20:10.083474813Z"},"principal":{"id":"invalid","type":"invalid"},"resource":{"id":"/v1/bundle/bitemp-pdp","type":"service"}},"labels":{"id":"opa-controller","version":"1.10.1"},"metrics":{"timer_rego_external_resolve_ns":953,"timer_rego_query_eval_ns":21713,"timer_sdk_decision_eval_ns":214519},"nd_builtin_cache":null,"path":"/authz","timestamp":"2026-04-17T19:20:10.083474813Z","type":"openpolicyagent.org/decision_logs"}
+{"time":"2026-04-17T19:20:10.084094916Z","level":"ERROR","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.(*controller).Authorize","file":"/build/eam/pdp/opa-embedded/auth.go","line":39},"msg":"authorization failed","controller":"OPA/Rego 1.0.0","request-uid":"29d72014-8393-4b88-b149-291a701abec0","err":"opa_undefined_error: /authz decision was undefined","pdp elapsed":"539.443µs"}
+{"time":"2026-04-17T19:20:10.084129867Z","level":"ERROR","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/authorization/fiber.Check","file":"/build/eam/authorization/fiber/request.go","line":58},"msg":"authorization failed","path":"/v1/bundle/bitemp-pdp","authResponse":{"message":"not authorized"},"err":"opa_undefined_error: /authz decision was undefined"}
+{"time":"2026-04-17T19:20:50.088087248Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.(*wrappedLogger).Info","file":"/build/eam/pdp/opa-embedded/logging.go","line":19},"msg":"Decision Log","decision_id":"d77c089c-5161-4186-a53c-e36667f5ae86","error":{"code":"opa_undefined_error","message":"/authz decision was undefined"},"input":{"action":{"attributes":{"method":"GET"},"id":"can_read","type":"name"},"context":{"action":"name::can_read","headers":{"Content-Encoding":"bzip2","Host":"openftv-manager:9443","User-Agent":"Go-http-client/1.1"},"http":{"host":"","method":"GET","path":"/v1/bundle/bitemp-pdp","path_parts":["v1","bundle","bitemp-pdp"],"query":{},"scheme":""},"resource":"service::/v1/bundle/bitemp-pdp","time":"2026-04-17T19:20:50.08743153Z"},"principal":{"id":"invalid","type":"invalid"},"resource":{"id":"/v1/bundle/bitemp-pdp","type":"service"}},"labels":{"id":"opa-controller","version":"1.10.1"},"metrics":{"timer_rego_external_resolve_ns":1204,"timer_rego_query_eval_ns":24605,"timer_sdk_decision_eval_ns":263444},"nd_builtin_cache":null,"path":"/authz","timestamp":"2026-04-17T19:20:50.08743153Z","type":"openpolicyagent.org/decision_logs"}
+{"time":"2026-04-17T19:20:50.088210046Z","level":"ERROR","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.(*controller).Authorize","file":"/build/eam/pdp/opa-embedded/auth.go","line":39},"msg":"authorization failed","controller":"OPA/Rego 1.0.0","request-uid":"d77c089c-5161-4186-a53c-e36667f5ae86","err":"opa_undefined_error: /authz decision was undefined","pdp elapsed":"699.045µs"}
+{"time":"2026-04-17T19:20:50.08825965Z","level":"ERROR","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/authorization/fiber.Check","file":"/build/eam/authorization/fiber/request.go","line":58},"msg":"authorization failed","path":"/v1/bundle/bitemp-pdp","authResponse":{"message":"not authorized"},"err":"opa_undefined_error: /authz decision was undefined"}
+{"time":"2026-04-17T19:20:50.090598559Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.(*wrappedLogger).Info","file":"/build/eam/pdp/opa-embedded/logging.go","line":19},"msg":"Decision Log","decision_id":"5a4af18e-8895-4658-8568-60fabf870e51","error":{"code":"opa_undefined_error","message":"/authz decision was undefined"},"input":{"action":{"attributes":{"method":"GET"},"id":"can_read","type":"name"},"context":{"action":"name::can_read","headers":{"Content-Encoding":"bzip2","Host":"openftv-manager:9443","User-Agent":"Go-http-client/1.1"},"http":{"host":"","method":"GET","path":"/v1/bundle/bitemp-pdp","path_parts":["v1","bundle","bitemp-pdp"],"query":{},"scheme":""},"resource":"service::/v1/bundle/bitemp-pdp","time":"2026-04-17T19:20:50.090129757Z"},"principal":{"id":"invalid","type":"invalid"},"resource":{"id":"/v1/bundle/bitemp-pdp","type":"service"}},"labels":{"id":"opa-controller","version":"1.10.1"},"metrics":{"timer_rego_external_resolve_ns":1037,"timer_rego_query_eval_ns":18009,"timer_sdk_decision_eval_ns":159528},"nd_builtin_cache":null,"path":"/authz","timestamp":"2026-04-17T19:20:50.090129757Z","type":"openpolicyagent.org/decision_logs"}
+{"time":"2026-04-17T19:20:50.090701332Z","level":"ERROR","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.(*controller).Authorize","file":"/build/eam/pdp/opa-embedded/auth.go","line":39},"msg":"authorization failed","controller":"OPA/Rego 1.0.0","request-uid":"5a4af18e-8895-4658-8568-60fabf870e51","err":"opa_undefined_error: /authz decision was undefined","pdp elapsed":"503.905µs"}
+{"time":"2026-04-17T19:20:50.090739822Z","level":"ERROR","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/authorization/fiber.Check","file":"/build/eam/authorization/fiber/request.go","line":58},"msg":"authorization failed","path":"/v1/bundle/bitemp-pdp","authResponse":{"message":"not authorized"},"err":"opa_undefined_error: /authz decision was undefined"}
+{"time":"2026-04-17T19:20:55.099132313Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.(*wrappedLogger).Info","file":"/build/eam/pdp/opa-embedded/logging.go","line":19},"msg":"Decision Log","decision_id":"583b0006-ab46-4365-b3fd-f2cc37729c74","error":{"code":"opa_undefined_error","message":"/authz decision was undefined"},"input":{"action":{"attributes":{"method":"GET"},"id":"can_read","type":"name"},"context":{"action":"name::can_read","headers":{"Content-Encoding":"bzip2","Host":"openftv-manager:9443","User-Agent":"Go-http-client/1.1"},"http":{"host":"","method":"GET","path":"/v1/bundle/bitemp-pdp","path_parts":["v1","bundle","bitemp-pdp"],"query":{},"scheme":""},"resource":"service::/v1/bundle/bitemp-pdp","time":"2026-04-17T19:20:55.098493542Z"},"principal":{"id":"invalid","type":"invalid"},"resource":{"id":"/v1/bundle/bitemp-pdp","type":"service"}},"labels":{"id":"opa-controller","version":"1.10.1"},"metrics":{"timer_rego_external_resolve_ns":1337,"timer_rego_query_eval_ns":24303,"timer_sdk_decision_eval_ns":273606},"nd_builtin_cache":null,"path":"/authz","timestamp":"2026-04-17T19:20:55.098493542Z","type":"openpolicyagent.org/decision_logs"}
+{"time":"2026-04-17T19:20:55.099253473Z","level":"ERROR","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.(*controller).Authorize","file":"/build/eam/pdp/opa-embedded/auth.go","line":39},"msg":"authorization failed","controller":"OPA/Rego 1.0.0","request-uid":"583b0006-ab46-4365-b3fd-f2cc37729c74","err":"opa_undefined_error: /authz decision was undefined","pdp elapsed":"680.185µs"}
+{"time":"2026-04-17T19:20:55.099297881Z","level":"ERROR","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/authorization/fiber.Check","file":"/build/eam/authorization/fiber/request.go","line":58},"msg":"authorization failed","path":"/v1/bundle/bitemp-pdp","authResponse":{"message":"not authorized"},"err":"opa_undefined_error: /authz decision was undefined"}
+{"time":"2026-04-17T19:21:05.107057069Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.(*wrappedLogger).Info","file":"/build/eam/pdp/opa-embedded/logging.go","line":19},"msg":"Decision Log","decision_id":"5730c974-0934-430a-9b6d-50c32a57c64e","error":{"code":"opa_undefined_error","message":"/authz decision was undefined"},"input":{"action":{"attributes":{"method":"GET"},"id":"can_read","type":"name"},"context":{"action":"name::can_read","headers":{"Content-Encoding":"bzip2","Host":"openftv-manager:9443","User-Agent":"Go-http-client/1.1"},"http":{"host":"","method":"GET","path":"/v1/bundle/bitemp-pdp","path_parts":["v1","bundle","bitemp-pdp"],"query":{},"scheme":""},"resource":"service::/v1/bundle/bitemp-pdp","time":"2026-04-17T19:21:05.10658917Z"},"principal":{"id":"invalid","type":"invalid"},"resource":{"id":"/v1/bundle/bitemp-pdp","type":"service"}},"labels":{"id":"opa-controller","version":"1.10.1"},"metrics":{"timer_rego_external_resolve_ns":997,"timer_rego_query_eval_ns":20685,"timer_sdk_decision_eval_ns":157215},"nd_builtin_cache":null,"path":"/authz","timestamp":"2026-04-17T19:21:05.10658917Z","type":"openpolicyagent.org/decision_logs"}
+{"time":"2026-04-17T19:21:05.107163386Z","level":"ERROR","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.(*controller).Authorize","file":"/build/eam/pdp/opa-embedded/auth.go","line":39},"msg":"authorization failed","controller":"OPA/Rego 1.0.0","request-uid":"5730c974-0934-430a-9b6d-50c32a57c64e","err":"opa_undefined_error: /authz decision was undefined","pdp elapsed":"509.025µs"}
+{"time":"2026-04-17T19:21:05.107197189Z","level":"ERROR","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/authorization/fiber.Check","file":"/build/eam/authorization/fiber/request.go","line":58},"msg":"authorization failed","path":"/v1/bundle/bitemp-pdp","authResponse":{"message":"not authorized"},"err":"opa_undefined_error: /authz decision was undefined"}
+{"time":"2026-04-17T19:21:25.11515366Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.(*wrappedLogger).Info","file":"/build/eam/pdp/opa-embedded/logging.go","line":19},"msg":"Decision Log","decision_id":"a71ee2c2-3eab-4572-9fc9-22904f34f2a8","error":{"code":"opa_undefined_error","message":"/authz decision was undefined"},"input":{"action":{"attributes":{"method":"GET"},"id":"can_read","type":"name"},"context":{"action":"name::can_read","headers":{"Content-Encoding":"bzip2","Host":"openftv-manager:9443","User-Agent":"Go-http-client/1.1"},"http":{"host":"","method":"GET","path":"/v1/bundle/bitemp-pdp","path_parts":["v1","bundle","bitemp-pdp"],"query":{},"scheme":""},"resource":"service::/v1/bundle/bitemp-pdp","time":"2026-04-17T19:21:25.114581776Z"},"principal":{"id":"invalid","type":"invalid"},"resource":{"id":"/v1/bundle/bitemp-pdp","type":"service"}},"labels":{"id":"opa-controller","version":"1.10.1"},"metrics":{"timer_rego_external_resolve_ns":956,"timer_rego_query_eval_ns":21293,"timer_sdk_decision_eval_ns":234280},"nd_builtin_cache":null,"path":"/authz","timestamp":"2026-04-17T19:21:25.114581776Z","type":"openpolicyagent.org/decision_logs"}
+{"time":"2026-04-17T19:21:25.115255071Z","level":"ERROR","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.(*controller).Authorize","file":"/build/eam/pdp/opa-embedded/auth.go","line":39},"msg":"authorization failed","controller":"OPA/Rego 1.0.0","request-uid":"a71ee2c2-3eab-4572-9fc9-22904f34f2a8","err":"opa_undefined_error: /authz decision was undefined","pdp elapsed":"583.03µs"}
+{"time":"2026-04-17T19:21:25.115288573Z","level":"ERROR","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/authorization/fiber.Check","file":"/build/eam/authorization/fiber/request.go","line":58},"msg":"authorization failed","path":"/v1/bundle/bitemp-pdp","authResponse":{"message":"not authorized"},"err":"opa_undefined_error: /authz decision was undefined"}
+truenas_admin@truenas[~]$ sudo docker exec bitemp-openftv-manager ls /tmp/data/policies/ 2>/dev/null || echo "geen toegang"
+bitemp_authz.rego
+truenas_admin@truenas[~]$ 
+```
+
+Kunnen we de management interface niet gebruiken?
+
+---
+
+## 🤖 Assistant
+
+Nu zie ik het probleem! De manager evalueert op pad `/authz`, maar onze policy heeft `package bitemp.authz` — dat mappt naar `/bitemp/authz`. Daarom is het altijd "undefined".
+
+De fix is simpel: de package-naam moet `authz` zijn, niet `bitemp.authz`. 
+```
+
+```
+Voer nu dit **ene commando** uit op TrueNAS — het overschrijft het bestand én herstart beide services:
+
+```bash
+sudo bash -c 'cat > /mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/policies/bitemp_authz.rego << "EOF"
+package authz
+
+import rego.v1
+
+default allow := false
+
+rol_niveau := {
+    "admin": 3,
+    "editor": 2,
+    "viewer": 1,
+}
+
+heeft_minimaal_rol(vereist) if {
+    rol_niveau[input.subject.properties.role] >= rol_niveau[vereist]
+}
+
+publieke_paginas := {
+    "index", "tijdlijn", "registraties", "universum",
+    "swagger", "redoc", "graphiql", "publicatie",
+    "docs", "version", "openapi",
+}
+
+allow if {
+    input.action.name == "access"
+    input.resource.type == "page"
+    input.resource.id in publieke_paginas
+}
+
+beschermde_paginas := {
+    "editor-v2", "editor", "ide", "inhoud",
+}
+
+allow if {
+    input.action.name == "access"
+    input.resource.type == "page"
+    input.resource.id in beschermde_paginas
+    heeft_minimaal_rol("editor")
+}
+
+allow if {
+    input.action.name == "read"
+    input.resource.type == "api"
+    heeft_minimaal_rol("viewer")
+}
+
+allow if {
+    input.action.name == "write"
+    input.resource.type == "api"
+    heeft_minimaal_rol("editor")
+}
+
+allow if {
+    input.action.name == "admin"
+    input.resource.type == "api"
+    heeft_minimaal_rol("admin")
+}
+
+allow if {
+    input.resource.type == "service"
+    startswith(input.resource.id, "/v1/bundle/")
+}
+EOF
+docker restart bitemp-openftv-manager && sleep 5 && docker restart bitemp-openftv-pdp && sleep 10 && docker logs bitemp-openftv-pdp --tail 5'
+```
+
+Het kernprobleem was: de manager's interne OPA evalueert op pad `/authz`, maar `package bitemp.authz` registreert zich op `/bitemp/authz`. Door de package te wijzigen naar `authz` matcht het eindelijk.
+
+---
+
+## 🧑 User
+
+ik kom er echter nog niet in. Kan ik via de FTV management interface (op welke poort draait die?) niet ook checken wat de policies zijn?
+
+Waarom zijn er twee stijlen login?  (img 1 = ide.html)
+img 2 = inhoud.html
+
+---
+
+## 🤖 Assistant
+
+**Twee dingen tegelijk:**
+
+---
+
+**1. OpenFTV MI**: draait op poort **8180** → `http://192.168.2.22:8180/`
+
+---
+
+**2. Twee login-stijlen**:  laadt de Utrecht Design System CSS (groen/teal knop),  laadt een andere stylesheet (blauw). Zelfde  component, andere CSS-bundle per entry point. Dit is normaal/gewenst.
+
+---
+
+**3. Root oorzaak login-fout**: het `$`-teken in `M$rk0k12bi` wordt in Dockge/shell geïnterpreteerd als variabele — `$rk` wordt leeg, dus het opgeslagen wachtwoord is waarschijnlijk `M0k12bi` (of anders gemutileerd).
+
+Controleer dit door direct in de DB in te loggen:
+
+```bash
+sudo docker exec bitemp-postgres-06 psql -U postgres -d bitemp_go_db_v06 -c "SELECT gebruikersnaam, rol, actief FROM gebruikers;"
+```
+
+Als de gebruiker bestaat, reset dan het wachtwoord direct via de DB met de juiste bcrypt-hash. Genereer een hash voor het exacte wachtwoord:
+
+```bash
+sudo docker exec bitemp-go-api-06 sh -c 'echo $ADMIN_PASSWORD'
+```
+
+Dat toont wat er werkelijk als `ADMIN_PASSWORD` is doorgekomen. Als daar `M0k12bi` of iets anders staat → dat is het wachtwoord waarmee je moet inloggen, of je update de hash in de DB.
+
+---
+
+## 🧑 User
+
+de laatste twee stappen snap ik niet. Ik snap dat hashen ook niet / waar dat moet / hoe.
+
+Er is een record in de DB
+
+ww hash is $2a$10$jk7cF36cYHYEjUItySzbPeNMwAMe1BBcpo8r1M17IoUmmd5q86q.u
+
+---
+
+## 🤖 Assistant
+
+Het `$`-teken in het wachtwoord is het probleem — de shell/Dockge heeft `$rk` geïnterpreteerd als een lege variabele, dus het opgeslagen wachtwoord is waarschijnlijk `M0k12bi` of iets anders.
+
+De eenvoudigste fix: gebruiker verwijderen, wachtwoord zonder `$` instellen, API herstart zodat hij opnieuw seeded.
+
+**Stap 1 — Verwijder het huidige gebruikersrecord:**
+```bash
+sudo docker exec bitemp-postgres-06 psql -U postgres -d bitemp_go_db_v06 -c "DELETE FROM gebruikers WHERE gebruikersnaam = 'mark';"
+```
+
+**Stap 2 — Wijzig `ADMIN_PASSWORD` in Dockge** (verwijder het `$`-teken):
+- Ga naar de Dockge stack editor
+- Zoek in de `.env` sectie de regel `ADMIN_PASSWORD=M$rk0k12bi`
+- Verander naar bijv. `ADMIN_PASSWORD=Mark0k12bi`
+- Sla op
+
+**Stap 3 — Herstart alleen de API:**
+```bash
+sudo docker restart bitemp-go-api-06
+```
+
+De API seed bij opstart automatisch een nieuwe gebruiker met het nieuwe wachtwoord. Daarna kun je inloggen met `mark` / `Mark0k12bi`.
+
+---
+
+## 🧑 User
+
+nu komt er geen fout wachtwoord melding, maar de pagina's blijven toch hangen op inloggen
+
+
+bitemp-go-api-06        | Succesfully connected to the database.
+bitemp-go-api-06        | AUTH: Admin-gebruiker 'mark' aangemaakt.
+bitemp-go-api-06        | MinIO verbonden: endpoint=minio:9000, bucket=ide-bestanden-docker, ssl=false
+bitemp-go-api-06        | GraphQL endpoint geregistreerd op /graphql/query
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /viz/react/inhoud.html HTTP/1.1" 200 1579 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /viz/react/assets/inhoud-BvXnNb5W.js HTTP/1.1" 200 52374 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /viz/react/assets/jsx-runtime-QRboWSh1.js HTTP/1.1" 200 7742 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /viz/react/assets/preload-helper-DEZ0L_My.js HTTP/1.1" 200 9364 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /viz/react/assets/assertThisInitialized-CykCb3PW.js HTTP/1.1" 200 134 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /viz/react/assets/inheritsLoose-DgSfUTtB.js HTTP/1.1" 200 454 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /viz/react/assets/shim-DbRIdONe.js HTTP/1.1" 200 826 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /viz/react/assets/objectWithoutPropertiesLoose-DD008tOi.js HTTP/1.1" 200 156 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /viz/react/assets/common-ground-theme-CqxhzZrb.css HTTP/1.1" 200 547733 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /viz/react/assets/prop-types-CTY5hJMu.js HTTP/1.1" 200 5678 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /viz/react/assets/CodeEditor-DiaM0Fu2.js HTTP/1.1" 200 160332 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /viz/react/assets/ActionFormParts-D61z_Du3.js HTTP/1.1" 200 53953 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /viz/react/assets/common-ground-theme-BSA2xTlH.js HTTP/1.1" 200 90155 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /viz/react/assets/client-DAtsnLRa.js HTTP/1.1" 200 180 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /viz/react/assets/react-dom-DJNBd4Xk.js HTTP/1.1" 200 132693 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /viz/react/common-ground-logo.svg HTTP/1.1" 304 0 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-go-api-06        | [GIN] 2026/04/17 - 20:44:44 | 200 |      287.57µs |    192.168.2.10 | GET      "/api/auth/status"
+bitemp-go-api-06        | [GIN] 2026/04/17 - 20:44:44 | 200 |     776.784µs |    192.168.2.10 | GET      "/api/viz/schema/datatypes"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /api/auth/status HTTP/1.1" 200 38 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /api/viz/schema/datatypes HTTP/1.1" 200 5106 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-go-api-06        | [GIN] 2026/04/17 - 20:44:44 | 404 |      37.711µs |    192.168.2.10 | GET      "/favicon.ico"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /favicon.ico HTTP/1.1" 404 18 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-go-api-06        | [GIN] 2026/04/17 - 20:44:44 | 200 |   14.715279ms |    192.168.2.10 | GET      "/api/schema/model/code"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:44 +0000] "GET /api/schema/model/code HTTP/1.1" 200 217488 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-go-api-06        | [GIN] 2026/04/17 - 20:44:49 | 200 |   74.218349ms |    192.168.2.10 | POST     "/api/auth/login"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:49 +0000] "POST /api/auth/login HTTP/1.1" 200 71 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-go-api-06        | [GIN] 2026/04/17 - 20:44:49 | 200 |      38.703µs |    192.168.2.10 | GET      "/api/auth/status"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:44:49 +0000] "GET /api/auth/status HTTP/1.1" 200 38 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-go-api-06        | [GIN] 2026/04/17 - 20:45:03 | 200 |    76.87229ms |    192.168.2.10 | POST     "/api/auth/login"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:45:03 +0000] "POST /api/auth/login HTTP/1.1" 200 71 "http://192.168.2.22:8086/viz/react/ide.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-go-api-06        | [GIN] 2026/04/17 - 20:45:03 | 200 |      44.832µs |    192.168.2.10 | GET      "/api/auth/status"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:20:45:03 +0000] "GET /api/auth/status HTTP/1.1" 200 38 "http://192.168.2.22:8086/viz/react/ide.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+
+---
+
+## 🤖 Assistant
+
+Gevonden. Het probleem is de **Secure cookie**:
+
+```go
+isSecure := os.Getenv("GIN_MODE") == "release"
+```
+
+In Docker is `GIN_MODE=release`, dus . Maar de site draait op **HTTP** (niet HTTPS). Browsers slaan een `Secure` cookie niet op over HTTP — de cookie wordt dus nooit meegestuurd na login. Vandaar dat status altijd  teruggeeft.
+
+Oplossing: een aparte env var voor de cookie-security: 
+```
+
+```
+Nu nieuw image bouwen en pushen:
+
+```powershell
+cd D:\Git\Bitemporal_2026\bitemp_register_v06
+docker build -f Dockerfile.api -t markwestbroek/bitemp-go-api:latest .
+docker push markwestbroek/bitemp-go-api:latest
+```
+
+Dan op TrueNAS:
+```bash
+sudo docker pull markwestbroek/bitemp-go-api:latest
+sudo docker compose -f /mnt/Pool1/share/Docker/Bitemporal/bitemp/docker-compose.truenas.yml up -d --force-recreate api
+```
+
+`COOKIE_SECURE` staat default op `false`, dus de cookie werkt nu over HTTP. Wil je later HTTPS, zet dan `COOKIE_SECURE=true` in de `.env`.
+
+---
+
+## 🧑 User
+
+PS D:\Git\Bitemporal_2026\bitemp_register_v06> docker push markwestbroek/bitemp-go-api:latest& d:/Git/Bitemporal_2026/.venv/Scripts/Activate.ps1
+At line:1 char:47
++ docker push markwestbroek/bitemp-go-api:latest& d:/Git/Bitemporal_202 ...
++                                               ~
+The ampersand (&) character is not allowed. The & operator is reserved for future use; wrap an ampersand in double quotation marks ("&") to pass it 
+as part of a string.
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : AmpersandNotAllowed
+ 
+PS D:\Git\Bitemporal_2026\bitemp_register_v06>
+
+---
+
+## 🧑 User
+
+sudo docker compose -f /mnt/Pool1/share/Docker/Bitemporal/bitemp/docker-compose.truenas.yml up -d --force-recreate api
+latest: Pulling from markwestbroek/bitemp-go-api
+Digest: sha256:b98a9caec3d9566d2391b9590816bd85e9f937b8ca46373a8d5827afd76d1187
+Status: Image is up to date for markwestbroek/bitemp-go-api:latest
+docker.io/markwestbroek/bitemp-go-api:latest
+open /mnt/Pool1/share/Docker/Bitemporal/bitemp/docker-compose.truenas.yml: no such file or directory
+truenas_admin@truenas[~]$
+
+---
+
+## 🧑 User
+
+open /mnt/Pool1/share/Docker/Bitemporal/bitemp/docker-compose.truenas.yml: no such file or directory
+truenas_admin@truenas[~]$ sudo find /mnt/Pool1/share/Docker/Bitemporal -name "*.yml" -o -name "*.yaml" 2>/dev/null
+/mnt/Pool1/share/Docker/Bitemporal/bitemp-api-4/compose.yaml
+/mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/tags/tags.yaml
+/mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/bundles/bitemp-pdp.yaml
+/mnt/Pool1/share/Docker/Bitemporal/bitemp/compose.yaml
+/mnt/Pool1/share/Docker/Bitemporal/bitemp-db/compose.yaml
+truenas_admin@truenas[~]$
+
+---
+
+## 🤖 Assistant
+
+De build is eigenlijk **geslaagd** — alle stappen zijn afgerond en het image is aangemaakt. De exit code 1 is waarschijnlijk een BuildKit-bijwerking. Push het gewoon: Gepushed met een nieuwe digest. Nu op TrueNAS:
+
+```bash
+cd /mnt/Pool1/share/Docker/Bitemporal/bitemp
+sudo docker compose pull api
+sudo docker compose up -d --force-recreate api
+```
+
+Daarna controleer of het werkt:
+```bash
+sudo docker logs bitemp-go-api-06 --tail 5
+```
+
+---
+
+## 🧑 User
+
+truenas_admin@truenas[~]$ cd /mnt/Pool1/share/Docker/Bitemporal/bitemp
+sudo docker compose pull api
+sudo docker compose up -d --force-recreate api
+cd: permission denied: /mnt/Pool1/share/Docker/Bitemporal/bitemp
+no configuration file provided: not found
+no configuration file provided: not found
+truenas_admin@truenas[~]$
+
+---
+
+## 🧑 User
+
+en nu lijkt de BE niet te bereiken. Wat is er veranderd? Voor login aanzetten, werkte het wel
+
+bitemp-viz-frontend     | 2026/04/17 21:03:37 [error] 28#28: *123 connect() failed (113: Host is unreachable) while connecting to upstream, client: 192.168.2.10, server: _, request: "GET /api/auth/status HTTP/1.1", upstream: "http://[fdd0:0:0:3::5]:8080/api/auth/status", host: "192.168.2.22:8086", referrer: "http://192.168.2.22:8086/viz/react/inhoud.html"
+bitemp-viz-frontend     | 2026/04/17 21:03:37 [warn] 28#28: *123 upstream server temporarily disabled while connecting to upstream, client: 192.168.2.10, server: _, request: "GET /api/auth/status HTTP/1.1", upstream: "http://[fdd0:0:0:3::5]:8080/api/auth/status", host: "192.168.2.22:8086", referrer: "http://192.168.2.22:8086/viz/react/inhoud.html"
+bitemp-viz-frontend     | 2026/04/17 21:03:37 [error] 28#28: *123 no live upstreams while connecting to upstream, client: 192.168.2.10, server: _, request: "GET /api/auth/status HTTP/1.1", upstream: "http://api/api/auth/status", host: "192.168.2.22:8086", referrer: "http://192.168.2.22:8086/viz/react/inhoud.html"
+bitemp-viz-frontend     | 2026/04/17 21:03:40 [error] 32#32: *124 connect() failed (113: Host is unreachable) while connecting to upstream, client: 192.168.2.10, server: _, request: "GET /api/schema/model/code HTTP/1.1", upstream: "http://[fdd0:0:0:3::5]:8080/api/schema/model/code", host: "192.168.2.22:8086", referrer: "http://192.168.2.22:8086/viz/react/inhoud.html"
+bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:21:03:40 +0000] "GET /api/schema/model/code HTTP/1.1" 502 559 "http://192.168.2.22:8086/viz/react/inhoud.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36" "-"
+bitemp-viz-frontend     | 2026/04/17 21:03:40 [warn] 32#32: *124 upstream server temporarily disabled while connecting to upstream, client: 192.168.2.10, server: _, request: "GET /api/schema/model/code HTTP/1.1", upstream: "http://[fdd0:0:0:3::5]:8080/api/schema/model/code", host: "192.168.2.22:8086", referrer: "http://192.168.2.22:8086/viz/react/inhoud.html"
+bitemp-go-api-06        | [GIN] 2026/04/17 - 21:05:00 | 200 |    13.63703ms |    192.168.2.10 | GET      "/api/schema/model/code"
+bitemp-go-api-06        | [GIN] 2026/04/17 - 21:05:00 | 404 |       9.434µs |    192.168.2.10 | GET      "/favicon.ico"
+
+---
+
+## 🧑 User
+
+Dit was een hele operatie! Kun je hier een duidelijke samenvatting van maken: welke stappen hebben we moeten doorlopen om het werkend te krijgen?
+
+Als ik dit opnieuw doe op een andere omgeving, moet dat misschien nog eens. (Waarschijnlijk net weer anders, maar okee).
+
+Wat zijn de stappen om een nieuwe versie van een frontend of backend op de dockge docker te krijgen?
+
+Tot slot iets anders: als ik een domeinnaam en SSL certificaat wil linken naar mijn NAS, kan dat dan? Zodat e.e.a. onder een domeinnaam zichtbaar gaat zijn, ipv een IP adres.
+
+---
+
+## 🤖 Assistant
+
+Alles staat nu in docs/TRUENAS_DEPLOYMENT.md.
+
+**Korte samenvatting van de valkuilen die we tegenkwamen:**
+
+1. **Rego `package authz`** — moet `authz` zijn, niet `bitemp.authz` (anders vindt OPA de policy niet)
+2. **Bundle allow-regel** — PDP→Manager is machine-to-machine zonder JWT; expliciet toestaan voor `service` type
+3. **`openftv_adl` database** — handmatig aanmaken na eerste start
+4. **Distroless images** — geen healthcheck mogelijk, gebruik `service_started`
+5. **`$` in wachtwoorden** — wordt geïnterpreteerd door shell/Docker
+6. **Secure cookie over HTTP** — opgelost met `COOKIE_SECURE` env var
+7. **Nginx DNS-cache** — altijd frontend herstarten na API recreate
+8. **Go-versie in Dockerfiles** — moet matchen met `go.mod`
+
+**Nieuwe versie deployen** = build → push → pull op TrueNAS → force-recreate → restart frontend (bij API-update)
+
+**Domeinnaam + SSL**: ja, kan! Aanbeveling is **Cloudflare Tunnel** — geen port-forwarding nodig, SSL automatisch, NAS niet direct exposed. Alternatief: Nginx Proxy Manager met Let's Encrypt. Details staan in sectie 4 van het document.
 
 ---

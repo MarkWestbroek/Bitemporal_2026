@@ -20,8 +20,6 @@ func initCgEnumRegistry() {
 	EnumDomeinen["Gemeenterol"] = "CG"
 	EnumWaarden["Organisatierol"] = []string{"Contactorganisatie", "BetrokkenOrganisatie"}
 	EnumDomeinen["Organisatierol"] = "CG"
-	EnumWaarden["CGPortfolioFase"] = []string{"Brons", "Zilver", "Goud", "Niet gecontroleerd"}
-	EnumDomeinen["CGPortfolioFase"] = "CG"
 
 	// Enum editor-posities
 	EnumEditorLayouts["Fase"] = &EditorLayout{Positie: &V3Positie{X: 315, Y: -1560}}

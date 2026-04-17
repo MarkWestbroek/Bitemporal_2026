@@ -86,7 +86,8 @@ type C struct {
 
 type C_sub struct {
 	bun.BaseModel `bun:"table:c_sub,alias:c_sub"`
-	ID            int        `json:"id" bun:"id,pk"`
+	C_ID          int        `json:"c_id" bun:"c_id,pk"`
+	ParentC       *C         `json:"parent_c,omitempty" bun:"rel:belongs-to,join:c_id=id"`
 	Opvoer        *time.Time `json:"opvoer,omitempty"`
 	Afvoer        *time.Time `json:"afvoer,omitempty"`
 }
