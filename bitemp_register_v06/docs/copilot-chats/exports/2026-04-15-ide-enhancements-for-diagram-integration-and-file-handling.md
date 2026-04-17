@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-15 12:38
 - **Sessie-ID**: `49a288c2-a77b-4af1-812c-9e54b19b8022`
-- **Berichten**: 55
+- **Berichten**: 56
 
 ---
 
@@ -3540,5 +3540,355 @@ Dank. Vat je het nog eens samen (we hebben nu wat gedaan)?
 ## 🧑 User
 
 dank
+
+---
+
+## 🤖 Assistant
+
+Let me read the current state of the files I need to modify for Fase 1.   Now let me read the IdePage component props where ProjectBrowser is rendered, and later parts: Now let me also read the ProjectBrowser component's props definition to see what props it currently accepts: Good, I have all the context I need. Now let me implement Fase 1: Diagrams nested under domain nodes in the Project Browser.
+
+**Fase 1 changes:**
+1.  — modify  to nest domain-specific diagrams under domain nodes
+2.  — allow  on  nodes too
+3.  — modify  for  to pass domain
+4.  — modify  to accept domain param 
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+Now update the JSDoc comment at the top of  to reflect the new tree structure: 
+```
+
+```
+Now for Fase 2: Import Dialog. Let me first read the ExportDialog to reuse its styles:  Now let me create the ImportDialog component: Now add the `filterStoreByDomein` and `mergeStoreDomein` helpers to : 
+```
+
+```
+Now wire up the ImportDialog in  — replace the handleImport handler and add the ImportDialog component:  Good. Now I need to:
+1. Add `ImportDialog` import
+2. Add import dialog state
+3. Replace  with the new flow
+4. Render `<ImportDialog>` 
+```
+
+```
+
+```
+
+```
+Now add import dialog state, after the export dialog state:  
+```
+
+```
+Now replace the handleImport handler with the new import dialog flow:  
+```
+
+```
+Now render the ImportDialog component. Let me find where ExportDialog is rendered:  
+```
+
+```
+Now Fase 2b: right-click import/export on domain nodes. Add context menu items and wire up in ProjectBrowser and IdePage.   
+```
+
+```
+Now add the corresponding handlers in ProjectBrowser.jsx:   
+```
+
+```
+Now update the component props:   
+```
+
+```
+Now wire it up in IdePage's factory where ProjectBrowser is rendered, and pass the callbacks:   Now I need to add domain import/export handlers and pass them to the factory. Let me find the factory part: 
+```
+
+```
+Now Fase 3: Export to database. Let me read the full ExportDialog to extend it:  I need to extend ExportDialog to support "database" as a destination, and extend the onExport callback signature. I also need to update the handler in IdePage.jsx.  
+```
+
+```
+Now update the handleExport function and the render:   
+```
+
+```
+Now add the bestemming radio and extra fields to the render. Let me insert them right after the format radio:   
+```
+
+```
+Now add the database-specific fields (beschrijving, tags) after the filename field:    
+```
+
+```
+Now update the export handler in  to support the database destination:    
+```
+
+```
+Now Fase 5a: Backend — add `Domeinen` to Registratie struct and derive it in the handler. Let me read the current files:     Now let me implement the backend changes. First add the `Domeinen` field to Registratie:     
+```
+
+```
+Now update the registration handler to derive domains and include  import:     
+```
+
+```
+Now add the domain derivation logic after the wijzigingen loop and before the response building:     
+```
+
+```
+Now update the audit update to also persist :       
+```
+
+```
+Now add the GIN index in createtables.go:       
+```
+
+```
+Now Fase 5b: Backfill script. Let me check the DB connection pattern used elsewhere:      Now let me also check the model initialization pattern — how metaregistry gets initialized: Good. Now let me create the backfill script. It needs to import the model package to use the MetaRegistry, which auto-initializes via .    Now Fase 5c: API domain filter on registratie list endpoints. Let me find the registratie handler:      Good. Now I need to add a  filter to both the flat list handler (for registratie specifically) and the full handler. Given the generic handler is shared, the best approach is adding the filter to `MakeGetRegistratiesMetWijzigingenHandler` (the full handler) since that's the main one. For the flat list, I'll add a domain-aware wrapper.
+
+Let me read the full handler code:    Now I'll add the  filter to this handler. I'll insert it right after the  parsing:       
+```
+
+```
+Now Fase 5d: GraphQL — extend the Registratie type with  field. Let me find how the GraphQL types are built:       
+```
+
+```
+Now let me read the session plan and the RegistratieReplayPage to implement Fase 5e (frontend domain badges): Now let me read the RegistratieReplayPage to implement Fase 5e: Now let me read the table rendering section: Now let me read the controls section to see the pagination/filter area: Now I have a clear picture. I need to:
+1. Add a  state
+2. Pass  to the fetch URL when set
+3. Extract unique domains from fetched registraties (they now have  field)
+4. Add a domain filter dropdown in the controls
+5. Add domain badges in the table rows
+
+Let me also check the fetch URL to see how the data comes back: Now I'll implement the changes. I need to:
+1. Add  state
+2. Include  in the fetch query params
+3. Also add it to the dependency array of useEffect
+4. Add domain filter dropdown in controls
+5. Add a "Domeinen" column header and badges in the table 
+```
+
+```
+Now update the part where the registratie rows are stored, to also collect unique domains, and add  to the dependency array:  
+```
+
+```
+Now add  to the dependency array: 
+```
+
+```
+Now add the domain filter dropdown to the controls area. Let me add it after the "Grootte" field:  
+```
+
+```
+Now add the "Domeinen" column to the table header and domain badges in rows. First the header: 
+```
+
+```
+Now add the domain badges cell in the row. Let me find the Type cell in the row:   
+```
+
+```
+Now I need to add the  helper function. Let me also update the colSpan from 9 to 10 in the empty state row. First, let me add the color helper near the top of the file: 
+```
+
+```
+Now update the colspan for the empty registraties row:  
+```
+
+```
+Fase 5e is done. Now let me also load all available domains from the schema endpoint (not just from visible registraties), so the dropdown is immediately populated: 
+```
+
+```
+Now Fase 6: Documentation. Let me create the main doc and update BACKLOG.md:   Now I have the full BACKLOG. Let me add the new items to it and create the documentation file. I'll add new IDE items for import/export and domain tracking: 
+```
+
+```
+Now add domain tracking items to the Backend section:     
+```
+
+```
+Now add frontend registratie badges item:  Let me read the current state of the files I need to modify for Fase 1.   Now let me read the IdePage component props where ProjectBrowser is rendered, and later parts: Now let me also read the ProjectBrowser component's props definition to see what props it currently accepts: Good, I have all the context I need. Now let me implement Fase 1: Diagrams nested under domain nodes in the Project Browser.
+
+**Fase 1 changes:**
+1.  — modify  to nest domain-specific diagrams under domain nodes
+2.  — allow  on  nodes too
+3.  — modify  for  to pass domain
+4.  — modify  to accept domain param 
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+Now update the JSDoc comment at the top of  to reflect the new tree structure: 
+```
+
+```
+Now for Fase 2: Import Dialog. Let me first read the ExportDialog to reuse its styles:  Now let me create the ImportDialog component: Now add the `filterStoreByDomein` and `mergeStoreDomein` helpers to : 
+```
+
+```
+Now wire up the ImportDialog in  — replace the handleImport handler and add the ImportDialog component:  Good. Now I need to:
+1. Add `ImportDialog` import
+2. Add import dialog state
+3. Replace  with the new flow
+4. Render `<ImportDialog>` 
+```
+
+```
+
+```
+
+```
+Now add import dialog state, after the export dialog state:  
+```
+
+```
+Now replace the handleImport handler with the new import dialog flow:  
+```
+
+```
+Now render the ImportDialog component. Let me find where ExportDialog is rendered:  
+```
+
+```
+Now Fase 2b: right-click import/export on domain nodes. Add context menu items and wire up in ProjectBrowser and IdePage.   
+```
+
+```
+Now add the corresponding handlers in ProjectBrowser.jsx:   
+```
+
+```
+Now update the component props:   
+```
+
+```
+Now wire it up in IdePage's factory where ProjectBrowser is rendered, and pass the callbacks:   Now I need to add domain import/export handlers and pass them to the factory. Let me find the factory part: 
+```
+
+```
+Now Fase 3: Export to database. Let me read the full ExportDialog to extend it:  I need to extend ExportDialog to support "database" as a destination, and extend the onExport callback signature. I also need to update the handler in IdePage.jsx.  
+```
+
+```
+Now update the handleExport function and the render:   
+```
+
+```
+Now add the bestemming radio and extra fields to the render. Let me insert them right after the format radio:   
+```
+
+```
+Now add the database-specific fields (beschrijving, tags) after the filename field:    
+```
+
+```
+Now update the export handler in  to support the database destination:    
+```
+
+```
+Now Fase 5a: Backend — add `Domeinen` to Registratie struct and derive it in the handler. Let me read the current files:     Now let me implement the backend changes. First add the `Domeinen` field to Registratie:     
+```
+
+```
+Now update the registration handler to derive domains and include  import:     
+```
+
+```
+Now add the domain derivation logic after the wijzigingen loop and before the response building:     
+```
+
+```
+Now update the audit update to also persist :       
+```
+
+```
+Now add the GIN index in createtables.go:       
+```
+
+```
+Now Fase 5b: Backfill script. Let me check the DB connection pattern used elsewhere:      Now let me also check the model initialization pattern — how metaregistry gets initialized: Good. Now let me create the backfill script. It needs to import the model package to use the MetaRegistry, which auto-initializes via .    Now Fase 5c: API domain filter on registratie list endpoints. Let me find the registratie handler:      Good. Now I need to add a  filter to both the flat list handler (for registratie specifically) and the full handler. Given the generic handler is shared, the best approach is adding the filter to `MakeGetRegistratiesMetWijzigingenHandler` (the full handler) since that's the main one. For the flat list, I'll add a domain-aware wrapper.
+
+Let me read the full handler code:    Now I'll add the  filter to this handler. I'll insert it right after the  parsing:       
+```
+
+```
+Now Fase 5d: GraphQL — extend the Registratie type with  field. Let me find how the GraphQL types are built:       
+```
+
+```
+Now let me read the session plan and the RegistratieReplayPage to implement Fase 5e (frontend domain badges): Now let me read the RegistratieReplayPage to implement Fase 5e: Now let me read the table rendering section: Now let me read the controls section to see the pagination/filter area: Now I have a clear picture. I need to:
+1. Add a  state
+2. Pass  to the fetch URL when set
+3. Extract unique domains from fetched registraties (they now have  field)
+4. Add a domain filter dropdown in the controls
+5. Add domain badges in the table rows
+
+Let me also check the fetch URL to see how the data comes back: Now I'll implement the changes. I need to:
+1. Add  state
+2. Include  in the fetch query params
+3. Also add it to the dependency array of useEffect
+4. Add domain filter dropdown in controls
+5. Add a "Domeinen" column header and badges in the table 
+```
+
+```
+Now update the part where the registratie rows are stored, to also collect unique domains, and add  to the dependency array:  
+```
+
+```
+Now add  to the dependency array: 
+```
+
+```
+Now add the domain filter dropdown to the controls area. Let me add it after the "Grootte" field:  
+```
+
+```
+Now add the "Domeinen" column to the table header and domain badges in rows. First the header: 
+```
+
+```
+Now add the domain badges cell in the row. Let me find the Type cell in the row:   
+```
+
+```
+Now I need to add the  helper function. Let me also update the colSpan from 9 to 10 in the empty state row. First, let me add the color helper near the top of the file: 
+```
+
+```
+Now update the colspan for the empty registraties row:  
+```
+
+```
+Fase 5e is done. Now let me also load all available domains from the schema endpoint (not just from visible registraties), so the dropdown is immediately populated: 
+```
+
+```
+Now Fase 6: Documentation. Let me create the main doc and update BACKLOG.md:   Now I have the full BACKLOG. Let me add the new items to it and create the documentation file. I'll add new IDE items for import/export and domain tracking: 
+```
+
+```
+Now add domain tracking items to the Backend section:     
+```
+
+```
+Now add frontend registratie badges item:  
 
 ---

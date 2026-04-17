@@ -537,7 +537,7 @@ func genereerFullSchemaVoorEntiteit(meta model.TypeMeta) oasMap {
 }
 
 // veldeigenschappenVoorField zet een reflect.StructField om naar OAS property-attributen.
-func veldeigenschappenVoorField(f reflect.StructField, meta model.TypeMeta) oasMap {
+func veldeigenschappenVoorField(f reflect.StructField, _ model.TypeMeta) oasMap {
 	prop := oasMap{}
 
 	apiType, format := oasTypeVoorReflectType(f.Type)

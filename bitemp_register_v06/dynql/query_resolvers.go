@@ -591,7 +591,7 @@ func entityToMap(entity interface{}, _ model.TypeMeta) (map[string]interface{}, 
 }
 
 // sliceToMaps converteert een *[]Struct naar een []map[string]interface{}.
-func sliceToMaps(entities interface{}, meta model.TypeMeta) ([]map[string]interface{}, error) {
+func sliceToMaps(entities interface{}, _ model.TypeMeta) ([]map[string]interface{}, error) {
 	b, err := json.Marshal(entities)
 	if err != nil {
 		return nil, err

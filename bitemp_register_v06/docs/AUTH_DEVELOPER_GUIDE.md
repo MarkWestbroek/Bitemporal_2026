@@ -17,7 +17,8 @@
 8. [Rollen en hiërarchie](#8-rollen-en-hiërarchie)
 9. [OpenFTV sidecar](#9-openftv-sidecar)
 10. [Frontend authenticatie](#10-frontend-authenticatie)
-11. [Veelgestelde vragen](#11-veelgestelde-vragen)
+11. [Gebruikersbeheer](#11-gebruikersbeheer)
+12. [Veelgestelde vragen](#12-veelgestelde-vragen)
 
 ---
 
@@ -654,7 +655,82 @@ main.jsx (7 pagina's)           editor/main.jsx (inhoud)     publicatie/main.jsx
 
 ---
 
-## 11. Veelgestelde vragen
+## 11. Gebruikersbeheer
+
+Er is nog geen gebruikersbeheer-UI. Gebruikers worden aangemaakt via twee wegen:
+
+### A. Admin-seed via `.env` (aanbevolen voor eerste gebruik)
+
+Voeg toe aan `.env`:
+
+```env
+AUTH_ENABLED=true
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=geheim123
+ADMIN_EMAIL=admin@example.com   # optioneel
+```
+
+Bij elke start roept `main.go` `SeedAdminGebruiker()` aan. Die maakt de gebruiker **alleen aan als die nog niet bestaat** — bestaande gebruikers worden nooit overschreven. Na de eerste keer is het veilig om `ADMIN_PASSWORD` uit de `.env` te verwijderen.
+
+```go
+// handlers/auth_handler.go
+func SeedAdminGebruiker(ctx context.Context) error {
+    username := os.Getenv("ADMIN_USERNAME")
+    password := os.Getenv("ADMIN_PASSWORD")
+    // ... bcrypt + INSERT ... ON CONFLICT DO NOTHING
+}
+```
+
+### B. Extra gebruikers direct in de database
+
+Bcrypt-hash genereren kan via Go (of een online bcrypt tool op cost 10):
+
+```bash
+# Via htpasswd (Apache utils):
+htpasswd -bnBC 10 "" geheim123 | tr -d ':\n'
+```
+
+Insert:
+
+```sql
+INSERT INTO gebruiker (gebruikersnaam, wachtwoord_hash, email, rol, actief)
+VALUES
+  ('jan',    '$2a$10$...hash...', 'jan@example.com',    'editor', true),
+  ('marjan', '$2a$10$...hash...', 'marjan@example.com', 'viewer', true);
+```
+
+Wachtwoord resetten:
+
+```sql
+UPDATE gebruiker
+SET wachtwoord_hash = '$2a$10$...nieuwehash...'
+WHERE gebruikersnaam = 'jan';
+```
+
+Gebruiker deactiveren (kan niet meer inloggen, wordt niet verwijderd):
+
+```sql
+UPDATE gebruiker SET actief = false WHERE gebruikersnaam = 'jan';
+```
+
+### Tabelstructuur (referentie)
+
+| Kolom | Type | Toelichting |
+|-------|------|-------------|
+| `id` | bigint PK autoincrement | intern |
+| `gebruikersnaam` | text UNIQUE NOT NULL | login-naam |
+| `wachtwoord_hash` | text NOT NULL | bcrypt (cost 10), nooit plaintext |
+| `email` | text | optioneel |
+| `rol` | text NOT NULL default 'viewer' | `admin` / `editor` / `viewer` |
+| `actief` | bool NOT NULL default true | false = geblokkeerd |
+| `aangemaakt_op` | timestamptz | automatisch |
+| `laatste_login_op` | timestamptz nullable | bijgewerkt bij elke succesvolle login |
+
+> **Roadmap**: een gebruikersbeheer-API + UI (lijst, aanmaken, wachtwoord wijzigen, roltoewijzing) staat in de backlog.
+
+---
+
+## 12. Veelgestelde vragen
 
 **Q: Waarom een httpOnly cookie in plaats van `Authorization: Bearer` header?**
 A: Een httpOnly cookie is veiliger tegen XSS (JavaScript kan het token niet lezen). De browser stuurt de cookie automatisch mee; de frontend hoeft het token niet op te slaan of te beheren.
@@ -666,10 +742,10 @@ A: Bun retourneert een fout bij de SELECT query; de `LoginHandler` geeft een gen
 A: Ja — laat `AUTH_ENABLED` weg uit je `.env` (of zet op `false`). Alle endpoints zijn dan publiek, net als vóór de auth-implementatie.
 
 **Q: Hoe maak ik een nieuwe gebruiker aan?**
-A: Momenteel alleen via de admin-seed (`ADMIN_USERNAME`/`ADMIN_PASSWORD` in `.env`) of direct in de database. Een gebruikersbeheer-UI en API komen in een latere fase.
+A: Zie [sectie 11 — Gebruikersbeheer](#11-gebruikersbeheer): via de admin-seed in `.env` (voor de eerste admin) of direct via SQL in de database (voor extra gebruikers).
 
 **Q: Wat als ik mijn wachtwoord vergeet?**
-A: Reset via de database: `UPDATE gebruiker SET wachtwoord_hash = '<nieuwe bcrypt hash>' WHERE gebruikersnaam = '...'`. Een self-service password reset komt in een latere fase.
+A: Reset via de database (zie [sectie 11](#11-gebruikersbeheer)): `UPDATE gebruiker SET wachtwoord_hash = '<nieuwe bcrypt hash>' WHERE gebruikersnaam = '...'`. Een self-service password reset komt in een latere fase.
 
 **Q: Hoe test ik authenticatie handmatig?**
 A:

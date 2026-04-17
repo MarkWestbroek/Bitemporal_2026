@@ -138,8 +138,8 @@ func bepaalPadnaamUitInput(input map[string]interface{}) string {
 }
 
 // findEntiteitMetaVoorVeldnaam zoekt de bovenliggende entiteit-meta voor een veldnaam.
-func findEntiteitMetaVoorVeldnaam(veldnaam string) (struct{ Padnaam string }, bool) {
-	// Zoek eerst het type via veldnaam
+func findEntiteitMetaVoorVeldnaam(_ string) (struct{ Padnaam string }, bool) {
+	// Zoek de eerste beschikbare entiteit (geen veldnaam-index beschikbaar in registeredEntiteitMetas)
 	for _, meta := range registeredEntiteitMetas {
 		if meta.Padnaam != "" {
 			return struct{ Padnaam string }{meta.Padnaam}, true
