@@ -424,7 +424,7 @@ sequenceDiagram
     H->>H: Verwerk registratie...
     H-->>B: 200 OK
 
-    Note over PDP: Het Rego-beleid definieert de regels.<br/>De PDP evalueert; de PEP dwingt af.
+    Note over PDP: Het Rego-beleid definieert de regels.<br/>De PDP evalueert, de PEP dwingt af.
 ```
 
 ---
