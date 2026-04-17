@@ -94,6 +94,7 @@ services:
     image: minio/mc:latest
     container_name: bitemp-minio-init
     restart: "no"
+    profiles: ["init"]  # Draai alleen expliciet: docker compose --profile init up minio-init
     depends_on:
       minio:
         condition: service_healthy

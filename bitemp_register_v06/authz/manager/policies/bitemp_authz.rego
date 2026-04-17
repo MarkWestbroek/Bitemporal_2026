@@ -12,7 +12,7 @@
 #   publiek:    index, tijdlijn, registraties, universum, swagger, redoc, graphiql
 #   beschermd:  editor-v2, editor, ide (vereist editor of admin)
 
-package bitemp.authz
+package authz
 
 import rego.v1
 
@@ -80,4 +80,14 @@ allow if {
     input.action.name == "admin"
     input.resource.type == "api"
     heeft_minimaal_rol("admin")
+}
+
+# === Interne service-endpoints — altijd toegestaan ===
+# De PDP haalt bundles op via GET /v1/bundle/... op de manager.
+# Dit is een machine-to-machine verzoek zonder gebruikerscontext;
+# principal.type is "invalid" (geen JWT). Sta dit toe op service-resources.
+
+allow if {
+    input.resource.type == "service"
+    startswith(input.resource.id, "/v1/bundle/")
 }

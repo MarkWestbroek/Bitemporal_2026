@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-16 20:41
 - **Sessie-ID**: `21989e11-a412-45b9-bf0e-aaf628a7104b`
-- **Berichten**: 34
+- **Berichten**: 86
 
 ---
 
@@ -1358,5 +1358,1336 @@ In  staat bij `openftv-mi`:
 VITE_PAP_BASE_URL: "http://<HOST>:9010"
 ```
 Vervang `<HOST>` door het IP-adres van je TrueNAS (bijv. `192.168.1.50`) voordat je de compose in Dockge plakt.
+
+---
+
+## 🧑 User
+
+optie A werkt niet: access denied.
+optie B snap ik niet: ik heb de shell, maar ken de commando's niet
+optie C: ik zou de console moeten enablen
+
+Kun je optie B uitleggen?
+
+---
+
+## 🤖 Assistant
+
+Goed. In de TrueNAS Shell (via de web UI → System → Shell) plak je dit blok voor blok. Ik geef je **één groot script** dat alles in één keer aanmaakt — je hoeft het alleen in te plakken en Enter te drukken.
+
+---
+
+### Stap 1 — Open de Shell
+TrueNAS UI → **System** → **Shell** (of de knop rechtsboven in de web UI).
+
+### Stap 2 — Plak dit script in zijn geheel
+
+```bash
+# Maak de mappenstructuur aan
+mkdir -p /opt/stacks/bitemp/authz/manager/policies
+mkdir -p /opt/stacks/bitemp/authz/manager/bundles
+mkdir -p /opt/stacks/bitemp/authz/manager/tags
+mkdir -p /opt/stacks/bitemp/authz/manager/data
+mkdir -p /opt/stacks/bitemp/authz/pdp/policies
+
+# init-db.sh
+cat > /opt/stacks/bitemp/authz/init-db.sh << 'EOF'
+#!/bin/bash
+set -e
+
+# Initialiseer extra databases voor OpenFTV (ADL logging).
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+    CREATE DATABASE openftv_adl;
+EOSQL
+EOF
+chmod +x /opt/stacks/bitemp/authz/init-db.sh
+
+# manager/bundles/bitemp-pdp.yaml
+cat > /opt/stacks/bitemp/authz/manager/bundles/bitemp-pdp.yaml << 'EOF'
+---
+id: "bitemp-pdp"
+title: "Bitemp Register PDP deployment bundle"
+language: "rego"
+tags: ["bitemp"]
+policies: true
+data: true
+version: true
+targets:
+  - uri: "http://openftv-pdp:9443"
+    apikey: ""
+    encoding: "bzip2"
+EOF
+
+# manager/tags/tags.yaml
+cat > /opt/stacks/bitemp/authz/manager/tags/tags.yaml << 'EOF'
+---
+- id: bitemp
+  name: Beleidsregels voor het bitemporeel register
+EOF
+
+# manager/policies/bitemp_authz.rego
+cat > /opt/stacks/bitemp/authz/manager/policies/bitemp_authz.rego << 'EOF'
+# Bitemp Register — Autorisatiebeleid (Rego / OPA)
+package bitemp.authz
+
+import rego.v1
+
+default allow := false
+
+rol_niveau := {
+    "admin": 3,
+    "editor": 2,
+    "viewer": 1,
+}
+
+heeft_minimaal_rol(vereist) if {
+    rol_niveau[input.subject.properties.role] >= rol_niveau[vereist]
+}
+
+publieke_paginas := {
+    "index", "tijdlijn", "registraties", "universum",
+    "swagger", "redoc", "graphiql", "publicatie",
+    "docs", "version", "openapi",
+}
+
+allow if {
+    input.action.name == "access"
+    input.resource.type == "page"
+    input.resource.id in publieke_paginas
+}
+
+beschermde_paginas := {
+    "editor-v2", "editor", "ide", "inhoud",
+}
+
+allow if {
+    input.action.name == "access"
+    input.resource.type == "page"
+    input.resource.id in beschermde_paginas
+    heeft_minimaal_rol("editor")
+}
+
+allow if {
+    input.action.name == "read"
+    input.resource.type == "api"
+    heeft_minimaal_rol("viewer")
+}
+
+allow if {
+    input.action.name == "write"
+    input.resource.type == "api"
+    heeft_minimaal_rol("editor")
+}
+
+allow if {
+    input.action.name == "admin"
+    input.resource.type == "api"
+    heeft_minimaal_rol("admin")
+}
+EOF
+
+echo "Klaar. Structuur:"
+find /opt/stacks/bitemp/authz -type f
+```
+
+### Stap 3 — Controleer de uitvoer
+Je ziet dan zoiets:
+```
+Klaar. Structuur:
+/opt/stacks/bitemp/authz/init-db.sh
+/opt/stacks/bitemp/authz/manager/policies/bitemp_authz.rego
+/opt/stacks/bitemp/authz/manager/bundles/bitemp-pdp.yaml
+/opt/stacks/bitemp/authz/manager/tags/tags.yaml
+```
+
+### Stap 4 — Daarna in Dockge
+1. Nieuwe stack maken → naam `bitemp`
+2. De inhoud van  plakken in het compose-vak
+3. Je `.env` waarden invullen in het `.env`-vak (de variabelen staan onderaan de compose file als commentaar)
+4. `<HOST>` in de `VITE_PAP_BASE_URL` regel vervangen door het TrueNAS IP (bijv. `192.168.2.22`)
+5. Opzetten klikken
+
+---
+
+## 🧑 User
+
+truenas_admin@truenas[~]$ mkdir -p /opt/stacks/bitemp/authz/manager/policies
+mkdir: cannot create directory ‘/opt/stacks’: Read-only file system
+truenas_admin@truenas[~]$
+
+---
+
+## 🤖 Assistant
+
+TrueNAS heeft een read-only root filesystem — `/opt` bestaat niet als schrijfbaar pad. Alles moet op een ZFS pool staan (onder `/mnt/`). Laat me even kijken waar Dockge zijn stacks al bewaart:
+
+```bash
+# Zoek de bestaande bitemp-api-4 stack (die zie je al draaien in Dockge)
+find /mnt -name "docker-compose.yml" -path "*bitemp*" 2>/dev/null
+```
+
+Dat geeft je het pad van de bestaande stacks. Waarschijnlijk zoiets als:
+```
+/mnt/<poolnaam>/dockge/stacks/bitemp-api-4/docker-compose.yml
+```
+
+Voer dan dit uit om de exacte stacks-root te bevestigen:
+```bash
+find /mnt -maxdepth 5 -name "dockge" -type d 2>/dev/null
+```
+
+Zodra je de locatie weet (bijv. `/mnt/tank/dockge/stacks`), vervang je in het eerdere script overal `/opt/stacks/bitemp` door dat pad + `/bitemp`, bijv.:
+
+```bash
+STACKS=/mnt/tank/dockge/stacks   # ← aanpassen op basis van bovenstaande uitvoer
+
+mkdir -p $STACKS/bitemp/authz/manager/policies
+mkdir -p $STACKS/bitemp/authz/manager/bundles
+# etc.
+```
+
+Plak de uitvoer van de `find`-commando's hier en ik pas het volledige script voor je aan naar het juiste pad.
+
+---
+
+## 🧑 User
+
+op find /mnt -name "docker-compose.yml" -path "*bitemp*" 2>/dev/null komt niets
+
+---
+
+## 🧑 User
+
+truenas_admin@truenas[~]$ find /mnt -name "dockge" -type d 2>/dev/null
+/mnt/.ix-apps/app_mounts/dockge
+/mnt/.ix-apps/truenas_catalog/trains/community/dockge
+/mnt/.ix-apps/truenas_catalog/ix-dev/community/dockge
+/mnt/.ix-apps/app_configs/dockge
+
+---
+
+## 🧑 User
+
+truenas_admin@truenas[~]$ ;2Dcat /mnt/.ix-apps/app_configs/dockge/values.yaml 2>/dev/null || \
+ls /mnt/.ix-apps/app_configs/dockge/
+metadata.yaml  versions
+truenas_admin@truenas[~]$ ls /mnt/.ix-apps/app_mounts/dockge/
+data
+
+het pad in de URL is http://192.168.2.22:31014/compose/bitemp-api-4
+
+Dockge settings: zie img
+
+---
+
+## 🤖 Assistant
+
+Het stacks-pad is `/mnt/Pool1/share/Docker/Bitemporal` — dat zie ik in je screenshot. Bevestig even in de shell:
+
+```bash
+ls /mnt/Pool1/share/Docker/Bitemporal/
+```
+
+Daar zou je `bitemp-api-4`, `bitemp-db`, `ix-dockge` moeten zien. Daarna het volledige script in één keer plakken:
+
+```bash
+STACKS=/mnt/Pool1/share/Docker/Bitemporal
+
+mkdir -p $STACKS/bitemp/authz/manager/policies
+mkdir -p $STACKS/bitemp/authz/manager/bundles
+mkdir -p $STACKS/bitemp/authz/manager/tags
+mkdir -p $STACKS/bitemp/authz/manager/data
+mkdir -p $STACKS/bitemp/authz/pdp/policies
+
+cat > $STACKS/bitemp/authz/init-db.sh << 'EOF'
+#!/bin/bash
+set -e
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+    CREATE DATABASE openftv_adl;
+EOSQL
+EOF
+chmod +x $STACKS/bitemp/authz/init-db.sh
+
+cat > $STACKS/bitemp/authz/manager/bundles/bitemp-pdp.yaml << 'EOF'
+---
+id: "bitemp-pdp"
+title: "Bitemp Register PDP deployment bundle"
+language: "rego"
+tags: ["bitemp"]
+policies: true
+data: true
+version: true
+targets:
+  - uri: "http://openftv-pdp:9443"
+    apikey: ""
+    encoding: "bzip2"
+EOF
+
+cat > $STACKS/bitemp/authz/manager/tags/tags.yaml << 'EOF'
+---
+- id: bitemp
+  name: Beleidsregels voor het bitemporeel register
+EOF
+
+cat > $STACKS/bitemp/authz/manager/policies/bitemp_authz.rego << 'EOF'
+package bitemp.authz
+
+import rego.v1
+
+default allow := false
+
+rol_niveau := {
+    "admin": 3,
+    "editor": 2,
+    "viewer": 1,
+}
+
+heeft_minimaal_rol(vereist) if {
+    rol_niveau[input.subject.properties.role] >= rol_niveau[vereist]
+}
+
+publieke_paginas := {
+    "index", "tijdlijn", "registraties", "universum",
+    "swagger", "redoc", "graphiql", "publicatie",
+    "docs", "version", "openapi",
+}
+
+allow if {
+    input.action.name == "access"
+    input.resource.type == "page"
+    input.resource.id in publieke_paginas
+}
+
+beschermde_paginas := {
+    "editor-v2", "editor", "ide", "inhoud",
+}
+
+allow if {
+    input.action.name == "access"
+    input.resource.type == "page"
+    input.resource.id in beschermde_paginas
+    heeft_minimaal_rol("editor")
+}
+
+allow if {
+    input.action.name == "read"
+    input.resource.type == "api"
+    heeft_minimaal_rol("viewer")
+}
+
+allow if {
+    input.action.name == "write"
+    input.resource.type == "api"
+    heeft_minimaal_rol("editor")
+}
+
+allow if {
+    input.action.name == "admin"
+    input.resource.type == "api"
+    heeft_minimaal_rol("admin")
+}
+EOF
+
+echo "Klaar. Bestanden:"
+find $STACKS/bitemp/authz -type f
+```
+
+Na de uitvoer ("Klaar. Bestanden: ...") → ga naar Dockge → **+ Nieuwe stack** → naam `bitemp` → plak de compose-inhoud en `.env`. De `authz/` map wordt dan automatisch gevonden via de `./authz/` volumes in de compose file.
+
+---
+
+## 🧑 User
+
+truenas_admin@truenas[~]$ ls /mnt/Pool1/share/Docker/Bitemporal/
+ls: cannot access '/mnt/Pool1/share/Docker/Bitemporal/': Permission denied
+
+idem via windows: img
+
+---
+
+## 🤖 Assistant
+
+De `truenas_admin` gebruiker heeft geen rechten op die map. Gebruik `sudo`:
+
+```bash
+sudo ls /mnt/Pool1/share/Docker/Bitemporal/
+```
+
+Als dat werkt, plak dan het hele script met `sudo bash`:
+
+```bash
+sudo bash << 'SCRIPT'
+STACKS=/mnt/Pool1/share/Docker/Bitemporal
+
+mkdir -p $STACKS/bitemp/authz/manager/policies
+mkdir -p $STACKS/bitemp/authz/manager/bundles
+mkdir -p $STACKS/bitemp/authz/manager/tags
+mkdir -p $STACKS/bitemp/authz/manager/data
+mkdir -p $STACKS/bitemp/authz/pdp/policies
+
+cat > $STACKS/bitemp/authz/init-db.sh << 'EOF'
+#!/bin/bash
+set -e
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+    CREATE DATABASE openftv_adl;
+EOSQL
+EOF
+chmod +x $STACKS/bitemp/authz/init-db.sh
+
+cat > $STACKS/bitemp/authz/manager/bundles/bitemp-pdp.yaml << 'EOF'
+---
+id: "bitemp-pdp"
+title: "Bitemp Register PDP deployment bundle"
+language: "rego"
+tags: ["bitemp"]
+policies: true
+data: true
+version: true
+targets:
+  - uri: "http://openftv-pdp:9443"
+    apikey: ""
+    encoding: "bzip2"
+EOF
+
+cat > $STACKS/bitemp/authz/manager/tags/tags.yaml << 'EOF'
+---
+- id: bitemp
+  name: Beleidsregels voor het bitemporeel register
+EOF
+
+cat > $STACKS/bitemp/authz/manager/policies/bitemp_authz.rego << 'EOF'
+package bitemp.authz
+
+import rego.v1
+
+default allow := false
+
+rol_niveau := {
+    "admin": 3,
+    "editor": 2,
+    "viewer": 1,
+}
+
+heeft_minimaal_rol(vereist) if {
+    rol_niveau[input.subject.properties.role] >= rol_niveau[vereist]
+}
+
+publieke_paginas := {
+    "index", "tijdlijn", "registraties", "universum",
+    "swagger", "redoc", "graphiql", "publicatie",
+    "docs", "version", "openapi",
+}
+
+allow if {
+    input.action.name == "access"
+    input.resource.type == "page"
+    input.resource.id in publieke_paginas
+}
+
+beschermde_paginas := {
+    "editor-v2", "editor", "ide", "inhoud",
+}
+
+allow if {
+    input.action.name == "access"
+    input.resource.type == "page"
+    input.resource.id in beschermde_paginas
+    heeft_minimaal_rol("editor")
+}
+
+allow if {
+    input.action.name == "read"
+    input.resource.type == "api"
+    heeft_minimaal_rol("viewer")
+}
+
+allow if {
+    input.action.name == "write"
+    input.resource.type == "api"
+    heeft_minimaal_rol("editor")
+}
+
+allow if {
+    input.action.name == "admin"
+    input.resource.type == "api"
+    heeft_minimaal_rol("admin")
+}
+EOF
+
+echo "Klaar. Bestanden:"
+find $STACKS/bitemp/authz -type f
+SCRIPT
+```
+
+Als `sudo` om een wachtwoord vraagt, voer dat van je `truenas_admin` account in.
+
+---
+
+## 🧑 User
+
+echo "Klaar. Bestanden:"
+find $STACKS/bitemp/authz -type f
+SCRIPT
+Klaar. Bestanden:
+/mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/policies/bitemp_authz.rego
+/mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/tags/tags.yaml
+/mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/bundles/bitemp-pdp.yaml
+/mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/init-db.sh
+
+De nieuwe  dockge stack moet dus bitemp heten? Kloppen de paden van de Volumes in de docker compose nu dan?
+
+---
+
+## 🧑 User
+
+er staat vaker localhost in de docker compose file: moet ik dat ook vervangen door 192.168.2.22?
+
+---
+
+## 🤖 Assistant
+
+Niet allemaal — het hangt ervan af wie `localhost` bedoelt:
+
+| Locatie | `localhost` betekent | Aanpassen? |
+|---|---|---|
+| `VITE_PAP_BASE_URL: "http://localhost:9010"` in `openftv-mi` | De **browser** van de gebruiker maakt verbinding → op TrueNAS is dat het TrueNAS-IP, niet localhost | **Ja** → `192.168.2.22` |
+| `VITE_PIP_BASE_URL: "http://localhost:9010"` | Zelfde | **Ja** → `192.168.2.22` |
+| `wget -qO- http://localhost:8080/healthz` in healthchecks | Het commando draait **binnen de container zelf** → localhost = de container | **Nee**, correct zo |
+
+In de  (lokaal gebruik op je Windows machine) klopt `localhost` wél — jouw browser zit op dezelfde machine als de Docker containers.
+
+In de `docker-compose.truenas.yml` heb ik de `VITE_*` regels al als `<HOST>` placeholder gezet — die moet je vervangen door `192.168.2.22`. De rest (`healthcheck`) staat daar ook op `localhost` en dat moet zo blijven.
+
+---
+
+## 🧑 User
+
+oh, nu zegt dockge dat de stack al bestaat... omdat de map er al staat... Wat te doen?
+
+---
+
+## 🤖 Assistant
+
+Dockge heeft de map `bitemp/` al gezien en registreert die als bestaande stack. De map bestaat maar heeft nog geen `docker-compose.yml` — daardoor loopt Dockge vast.
+
+Twee opties:
+
+**Optie A (makkelijkst):** Kijk of `bitemp` al in de Dockge-sidebar staat (linksonder naast `bitemp-api-4` en `bitemp-db`). Zo ja → klik erop → klik **Bewerken** → plak de compose-inhoud daar.
+
+**Optie B:** Maak de `docker-compose.yml` zelf aan via de TrueNAS shell, dan pikt Dockge die op:
+
+```bash
+sudo touch /mnt/Pool1/share/Docker/Bitemporal/bitemp/docker-compose.yml
+```
+
+Daarna verschijnt `bitemp` in Dockge als lege stack → klik erop → Bewerken → plak de compose-inhoud van  erin (met `192.168.2.22` in plaats van `<HOST>`).
+
+---
+
+## 🧑 User
+
+dockge zegt:
+dependency failed to start: container bitemp-openftv-db is unhealthy
+
+---
+
+## 🧑 User
+
+oh, wait, I recreated the stack and must add the files again
+
+---
+
+## 🤖 Assistant
+
+Ik lees de bestanden op zodat ik de juiste shell-commando's kan geven.  Nu lees ik ook de overige Nu lees ik ook de overige authz-bestanden: Nu lees ik ook de overige authz-bestanden: Ik zie ook gelijk de oorzaak van de `unhealthy` fout: `start_period: 2s` is veel te kort voor PostgreSQL. Ik fix dat meteen in de compose file en geef daarna het volledige shell-script voor TrueNAS. Fix eerst de `start_period` in de lokale compose: 
+```
+
+```
+Nu het volledige shell-script voor de TrueNAS terminal. Kopieer en plak dit in één keer als `sudo bash`:
+
+Nu het volledige shell-script voor de TrueNAS terminal. Kopieer en plak dit in één keer als `sudo bash`:
+
+```bash
+sudo bash << 'ENDSCRIPT'
+BASE=/mnt/Pool1/share/Docker/Bitemporal/bitemp
+
+# Mappen aanmaken
+mkdir -p $BASE/authz/manager/policies
+mkdir -p $BASE/authz/manager/bundles
+mkdir -p $BASE/authz/manager/tags
+mkdir -p $BASE/authz/manager/data
+mkdir -p $BASE/authz/pdp/policies
+
+# init-db.sh
+cat > $BASE/authz/init-db.sh << 'EOF'
+#!/bin/bash
+set -e
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+    CREATE DATABASE openftv_adl;
+EOSQL
+EOF
+chmod +x $BASE/authz/init-db.sh
+
+# tags.yaml
+cat > $BASE/authz/manager/tags/tags.yaml << 'EOF'
+---
+- id: bitemp
+  name: Beleidsregels voor het bitemporeel register
+EOF
+
+# bitemp-pdp.yaml
+cat > $BASE/authz/manager/bundles/bitemp-pdp.yaml << 'EOF'
+---
+id: "bitemp-pdp"
+title: "Bitemp Register PDP deployment bundle"
+language: "rego"
+tags: ["bitemp"]
+policies: true
+data: true
+version: true
+targets:
+  - uri: "http://openftv-pdp:9443"
+    apikey: ""
+    encoding: "bzip2"
+EOF
+
+# bitemp_authz.rego
+cat > $BASE/authz/manager/policies/bitemp_authz.rego << 'EOF'
+# Bitemp Register — Autorisatiebeleid (Rego / OPA)
+package bitemp.authz
+
+import rego.v1
+
+default allow := false
+
+rol_niveau := {
+    "admin": 3,
+    "editor": 2,
+    "viewer": 1,
+}
+
+heeft_minimaal_rol(vereist) if {
+    rol_niveau[input.subject.properties.role] >= rol_niveau[vereist]
+}
+
+publieke_paginas := {
+    "index", "tijdlijn", "registraties", "universum",
+    "swagger", "redoc", "graphiql", "publicatie",
+    "docs", "version", "openapi",
+}
+
+allow if {
+    input.action.name == "access"
+    input.resource.type == "page"
+    input.resource.id in publieke_paginas
+}
+
+beschermde_paginas := {
+    "editor-v2", "editor", "ide", "inhoud",
+}
+
+allow if {
+    input.action.name == "access"
+    input.resource.type == "page"
+    input.resource.id in beschermde_paginas
+    heeft_minimaal_rol("editor")
+}
+
+allow if {
+    input.action.name == "read"
+    input.resource.type == "api"
+    heeft_minimaal_rol("viewer")
+}
+
+allow if {
+    input.action.name == "write"
+    input.resource.type == "api"
+    heeft_minimaal_rol("editor")
+}
+
+allow if {
+    input.action.name == "admin"
+    input.resource.type == "api"
+    heeft_minimaal_rol("admin")
+}
+EOF
+
+echo "Alle bestanden aangemaakt."
+ls -la $BASE/authz/
+ls -la $BASE/authz/manager/
+ENDSCRIPT
+```
+
+Daarna plak je in Dockge de compose-inhoud van  (vervang `<HOST>` door `192.168.2.22`).
+
+**Let op de `start_period` fix:** ik heb ook `start_period: 2s → 30s` gezet voor de openftv-db healthcheck — dat was de oorzaak van de `unhealthy` fout (Postgres had 2 seconden om te starten, dat is nooit genoeg). Zorg dat je de **bijgewerkte** compose gebruikt.
+
+---
+
+## 🧑 User
+
+bestanden (vorige script, zelfde als deze hierboven?) gemaakt met sudo, en nu loopt de openftv-db door maar deze niet:
+dependency failed to start: container bitemp-openftv-manager is unhealthy
+
+---
+
+## 🧑 User
+
+hij gaat nu maar door met wachten... 
+
+Is dat wel okee?
+
+---
+
+## 🤖 Assistant
+
+Ja, dat is normaal! 
+
+De manager staat in de `start_period` (60s) + doet daarna nog healthchecks (10 × 10s = 100s). Totale max wachttijd: **~160 seconden** voordat Docker hem unhealthy markeert.
+
+Bij de eerste start moet de manager:
+1. Verbinding maken met postgres
+2. Database-migraties uitvoeren
+3. Pas daarna luisteren op poort 8080 (waar de healthcheck op checkt)
+
+Dat kost op een TrueNAS-machine met cold-pull van de GitLab registry image al snel 1-2 minuten.
+
+**Wacht gewoon af** — als hij na ~160s nog steeds faalt, laat dan de manager-logs zien. Die kun je in de TrueNAS shell opvragen met:
+
+```bash
+docker logs bitemp-openftv-manager --tail 50
+```
+
+---
+
+## 🧑 User
+
+hij gaat weer fout. de logs:
+truenas_admin@truenas[~]$ docker logs bitemp-openftv-manager --tail 50
+permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.47/containers/bitemp-openftv-manager/json": dial unix /var/run/docker.sock: connect: permission denied
+truenas_admin@truenas[~]$
+
+---
+
+## 🤖 Assistant
+
+Gebruik `sudo`:
+
+```bash
+sudo docker logs bitemp-openftv-manager --tail 50
+```
+
+---
+
+## 🧑 User
+
+truenas_admin@truenas[~]$ docker logs bitemp-openftv-manager --tail 50
+permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.47/containers/bitemp-openftv-manager/json": dial unix /var/run/docker.sock: connect: permission denied
+truenas_admin@truenas[~]$ sudo docker logs bitemp-openftv-manager --tail 50
+{"time":"2026-04-17T17:34:08.198673844Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/manager/config.(*Config).LogSanitized","file":"/build/apps/manager/config/config.go","line":57},"msg":"OpenFTV Manager 2.0"}
+{"time":"2026-04-17T17:34:08.198832644Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/manager/config.(*Config).LogSanitized","file":"/build/apps/manager/config/config.go","line":62},"msg":"configuration loaded successfully","config":{"mainHost":"0.0.0.0","mainPort":8443,"mainOrigins":"*","mainHeaders":"*","mainReadTimeout":30000000000,"mainWriteTimeout":30000000000,"mainIdleTimeout":300000000000,"mainMaxBody":65536,"logOutput":"stdout","logFormat":"json","logLevel":"info","logSource":true,"internalPort":9443,"internalOrigins":"*","internalHeaders":"*","internalReadTimeout":30000000000,"internalWriteTimeout":30000000000,"internalIdleTimeout":300000000000,"internalMaxBody":65536,"healthPort":8080,"healthOrigins":"*","healthHeaders":"*","healthReadTimeout":30000000000,"healthWriteTimeout":30000000000,"healthIdleTimeout":300000000000,"healthMaxBody":256,"policyLanguage":"rego","policyStore":"/tmp/data/policies","policyRecurse":true,"tagsPath":"/tmp/data/tags","pipStore":"/tmp/data/data","pipRecurse":true,"persistType":"postgres","persistPgMaxLife":300000000000,"persistPgMaxConn":100,"authenticationType":"none","forceAuthentication":false,"bundlePath":"/tmp/data/bundles","bundleRecurse":true,"bundleTimeout":60000000000,"migrationSource":"*embed*","migrationAuto":true,"adlType":"postgresql","adlService":"bitemp-register","adlTimeout":5000000000,"adlPgMaxLife":300000000000,"adlPgMaxConn":100}}
+{"time":"2026-04-17T17:34:08.199199312Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/manager/config.(*Config).LogSanitized","file":"/build/apps/manager/config/config.go","line":63},"msg":"git version","hash":"unknown","tag":"unknown"}
+{"time":"2026-04-17T17:34:08.199472432Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pip.New","file":"/build/eam/pip/pip.go","line":112},"msg":"pip initialized"}
+{"time":"2026-04-17T17:34:08.199573416Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pap.New","file":"/build/eam/pap/pap.go","line":101},"msg":"pap initialized","policyStore":"/tmp/data/policies","recurse":true}
+{"time":"2026-04-17T17:34:08.202841242Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.(*controller).Handle","file":"/build/eam/pdp/opa-embedded/event.go","line":39},"msg":"policy added/replaced","controller":"OPA/Rego 1.0.0","policy-id":"bitemp_authz.rego"}
+{"time":"2026-04-17T17:34:08.202972132Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.NewController","file":"/build/eam/pdp/opa-embedded/controller.go","line":83},"msg":"pdp controller initialized","controller":"OPA/Rego 1.0.0","module":"github.com/open-policy-agent/opa/sdk","module-version":"","rego":3}
+{"time":"2026-04-17T17:34:08.225196163Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pap.(*PAP).migration","file":"/build/eam/pap/migrate.go","line":40},"msg":"pap database migration completed; no changes"}
+{"time":"2026-04-17T17:34:08.225226133Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pap.New","file":"/build/eam/pap/pap.go","line":101},"msg":"pap initialized","persistence":true}
+{"time":"2026-04-17T17:34:08.225251193Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pip.New","file":"/build/eam/pip/pip.go","line":112},"msg":"pip initialized","persistence":true}
+{"time":"2026-04-17T17:34:08.237707738Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/manager/server.(*Services).initTags","file":"/build/apps/manager/server/router.go","line":79},"msg":"tags loaded successfully","count":1}
+{"time":"2026-04-17T17:34:08.242272026Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/manager/server.(*Services).initADL","file":"/build/apps/manager/server/router.go","line":208},"msg":"adl initialized","type":"postgresql"}
+{"time":"2026-04-17T17:34:08.242490728Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run","file":"/build/eam/server/fiber/run.go","line":18},"msg":"http service (health) starting","host":"0.0.0.0","port":8080}
+{"time":"2026-04-17T17:34:08.242523084Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run","file":"/build/eam/server/fiber/run.go","line":18},"msg":"http service (main) starting","host":"0.0.0.0","port":8443}
+{"time":"2026-04-17T17:34:08.242511115Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run","file":"/build/eam/server/fiber/run.go","line":18},"msg":"http service (internal) starting","host":"0.0.0.0","port":9443}
+{"time":"2026-04-17T17:34:08.253139173Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run.func1.1","file":"/build/eam/server/fiber/run.go","line":24},"msg":"http service (health) started"}
+{"time":"2026-04-17T17:34:08.253170391Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run.func1.1","file":"/build/eam/server/fiber/run.go","line":24},"msg":"http service (internal) started"}
+{"time":"2026-04-17T17:34:08.253218765Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run.func1.1","file":"/build/eam/server/fiber/run.go","line":24},"msg":"http service (main) started"}
+truenas_admin@truenas[~]$
+
+---
+
+## 🤖 Assistant
+
+De manager is perfect opgestart — alle services draaien. Het probleem is de healthcheck zelf: `wget` zit waarschijnlijk niet in de manager-container (minimale Go-image zonder shell tools).
+
+Oplossing: gebruik `nc -z` (netcat, vrijwel altijd beschikbaar) voor de manager- en pdp-healthcheck: 
+```
+
+```
+Kopieer de bijgewerkte compose naar clipboard:
+
+```powershell
+Get-Content bitemp_register_v06\docker-compose.truenas.yml | Set-Clipboard
+```
+
+Dan in Dockge: **stop → editor → alles vervangen → opslaan → opzetten**.
+
+De manager draait al prima (logs tonen succesvol opstarten op poort 8080), alleen de `wget`-healthcheck faalde omdat die tool niet in de container zit. `nc -z` checkt puur of de poort open is — geen HTTP nodig.
+
+---
+
+## 🧑 User
+
+hmmm
+Container bitemp-openftv-manager  Error                                                        123.6s 
+dependency failed to start: container bitemp-openftv-manager is unhealthy
+
+
+truenas_admin@truenas[~]$ 
+truenas_admin@truenas[~]$ sudo docker logs bitemp-openftv-manager --tail 50
+{"time":"2026-04-17T17:41:13.12429073Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/manager/config.(*Config).LogSanitized","file":"/build/apps/manager/config/config.go","line":57},"msg":"OpenFTV Manager 2.0"}
+{"time":"2026-04-17T17:41:13.124368212Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/manager/config.(*Config).LogSanitized","file":"/build/apps/manager/config/config.go","line":62},"msg":"configuration loaded successfully","config":{"mainHost":"0.0.0.0","mainPort":8443,"mainOrigins":"*","mainHeaders":"*","mainReadTimeout":30000000000,"mainWriteTimeout":30000000000,"mainIdleTimeout":300000000000,"mainMaxBody":65536,"logOutput":"stdout","logFormat":"json","logLevel":"info","logSource":true,"internalPort":9443,"internalOrigins":"*","internalHeaders":"*","internalReadTimeout":30000000000,"internalWriteTimeout":30000000000,"internalIdleTimeout":300000000000,"internalMaxBody":65536,"healthPort":8080,"healthOrigins":"*","healthHeaders":"*","healthReadTimeout":30000000000,"healthWriteTimeout":30000000000,"healthIdleTimeout":300000000000,"healthMaxBody":256,"policyLanguage":"rego","policyStore":"/tmp/data/policies","policyRecurse":true,"tagsPath":"/tmp/data/tags","pipStore":"/tmp/data/data","pipRecurse":true,"persistType":"postgres","persistPgMaxLife":300000000000,"persistPgMaxConn":100,"authenticationType":"none","forceAuthentication":false,"bundlePath":"/tmp/data/bundles","bundleRecurse":true,"bundleTimeout":60000000000,"migrationSource":"*embed*","migrationAuto":true,"adlType":"postgresql","adlService":"bitemp-register","adlTimeout":5000000000,"adlPgMaxLife":300000000000,"adlPgMaxConn":100}}
+{"time":"2026-04-17T17:41:13.12456832Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/manager/config.(*Config).LogSanitized","file":"/build/apps/manager/config/config.go","line":63},"msg":"git version","hash":"unknown","tag":"unknown"}
+{"time":"2026-04-17T17:41:13.12483093Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pip.New","file":"/build/eam/pip/pip.go","line":112},"msg":"pip initialized"}
+{"time":"2026-04-17T17:41:13.124978189Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pap.New","file":"/build/eam/pap/pap.go","line":101},"msg":"pap initialized","policyStore":"/tmp/data/policies","recurse":true}
+{"time":"2026-04-17T17:41:13.126037087Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.(*controller).Handle","file":"/build/eam/pdp/opa-embedded/event.go","line":39},"msg":"policy added/replaced","controller":"OPA/Rego 1.0.0","policy-id":"bitemp_authz.rego"}
+{"time":"2026-04-17T17:41:13.126070891Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.NewController","file":"/build/eam/pdp/opa-embedded/controller.go","line":83},"msg":"pdp controller initialized","controller":"OPA/Rego 1.0.0","module":"github.com/open-policy-agent/opa/sdk","module-version":"","rego":3}
+{"time":"2026-04-17T17:41:13.131488045Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pap.(*PAP).migration","file":"/build/eam/pap/migrate.go","line":40},"msg":"pap database migration completed; no changes"}
+{"time":"2026-04-17T17:41:13.131506482Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pap.New","file":"/build/eam/pap/pap.go","line":101},"msg":"pap initialized","persistence":true}
+{"time":"2026-04-17T17:41:13.131525051Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pip.New","file":"/build/eam/pip/pip.go","line":112},"msg":"pip initialized","persistence":true}
+{"time":"2026-04-17T17:41:13.13669758Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/manager/server.(*Services).initTags","file":"/build/apps/manager/server/router.go","line":79},"msg":"tags loaded successfully","count":1}
+{"time":"2026-04-17T17:41:13.137807311Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/manager/server.(*Services).initADL","file":"/build/apps/manager/server/router.go","line":208},"msg":"adl initialized","type":"postgresql"}
+{"time":"2026-04-17T17:41:13.137893982Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run","file":"/build/eam/server/fiber/run.go","line":18},"msg":"http service (internal) starting","host":"0.0.0.0","port":9443}
+{"time":"2026-04-17T17:41:13.137902502Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run","file":"/build/eam/server/fiber/run.go","line":18},"msg":"http service (health) starting","host":"0.0.0.0","port":8080}
+{"time":"2026-04-17T17:41:13.137905663Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run","file":"/build/eam/server/fiber/run.go","line":18},"msg":"http service (main) starting","host":"0.0.0.0","port":8443}
+{"time":"2026-04-17T17:41:13.148313883Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run.func1.1","file":"/build/eam/server/fiber/run.go","line":24},"msg":"http service (health) started"}
+{"time":"2026-04-17T17:41:13.148355239Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run.func1.1","file":"/build/eam/server/fiber/run.go","line":24},"msg":"http service (internal) started"}
+{"time":"2026-04-17T17:41:13.14835339Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run.func1.1","file":"/build/eam/server/fiber/run.go","line":24},"msg":"http service (main) started"}
+truenas_admin@truenas[~]$
+
+---
+
+## 🤖 Assistant
+
+
+```
+
+```
+Kopieer naar clipboard:
+
+```powershell
+Get-Content bitemp_register_v06\docker-compose.truenas.yml | Set-Clipboard
+```
+
+Dan in Dockge: **stop → editor → alles vervangen → opslaan → opzetten**.
+
+De manager en pdp starten intern prima op — ze hebben alleen geen shell beschikbaar voor de healthcheck. Met `service_started` wacht de pdp gewoon tot de manager-container gestart is (wat snel gaat), en de MI doet hetzelfde.
+
+---
+
+## 🧑 User
+
+gestart maar:
+
+---
+
+## 🤖 Assistant
+
+De panic is duidelijk: `failed to initialize authorization handler`. De PDP mist waarschijnlijk `PDP_AUTHENTICATION_TYPE=none` — die staat wel bij de manager maar ontbreekt bij de PDP. Laat me de lokale auth compose vergelijken: De configs zijn identiek aan de lokale versie — het probleem is dus elders. De meest waarschijnlijke oorzaak: de `openftv_adl` database bestaat niet, omdat de postgres-volume van een vorige run nog bestaat en  dan niet opnieuw draait. De PDP paniekt als de ADL-migratie faalt.
+
+Voer dit uit in de TrueNAS shell:
+
+```bash
+sudo docker exec bitemp-openftv-db psql -U openftv -c "\l"
+```
+
+Zie je `openftv_adl` in de lijst? Zo niet:
+
+```bash
+sudo docker exec bitemp-openftv-db psql -U openftv -c "CREATE DATABASE openftv_adl;"
+```
+
+Daarna de PDP herstarten:
+
+```bash
+sudo docker restart bitemp-openftv-pdp
+```
+
+---
+
+## 🧑 User
+
+ik krijg nu de UI niet aan de praat: img2
+502 is meestal dat de backend niet loopt
+
+ik probeer bij de DB te komen maar dat lukt niet  (img)
+
+---
+
+## 🤖 Assistant
+
+Twee problemen:
+
+**1. DB-poort verkeerd in DataGrip:** PostgreSQL draait op host-poort `5433` (niet 5432 — die is intern). Verander de poort naar `5433`.
+
+**2. 502 = API-container draait niet of crasht.** Check de logs:
+
+```bash
+sudo docker ps -a | grep bitemp
+sudo docker logs bitemp-go-api-06 --tail 30
+```
+
+De API is waarschijnlijk gecrasht omdat `AUTO_CREATE_DATABASE=false` maar de database `bitemp_go_db_v06` nog niet bestaat op de verse postgres-volume. Voer dit uit:
+
+```bash
+sudo docker exec bitemp-postgres-06 psql -U postgres -c "\l"
+```
+
+Als `bitemp_go_db_v06` er niet bij staat:
+
+```bash
+sudo docker exec bitemp-postgres-06 psql -U postgres -c "CREATE DATABASE bitemp_go_db_v06;"
+sudo docker restart bitemp-go-api-06
+```
+
+Of zet tijdelijk `AUTO_CREATE_DATABASE=true` in de Dockge stack-editor (onder de `api` service environment), sla op en start opnieuw.
+
+---
+
+## 🧑 User
+
+truenas_admin@truenas[~]$ sudo docker ps -a | grep bitemp
+sudo docker logs bitemp-go-api-06 --tail 30
+a98e58a972dd   registry.gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp:2.2.3                    "/pdp"                   17 minutes ago   Up 7 minutes                0.0.0.0:8104->8080/tcp, [::]:8104->8080/tcp, 0.0.0.0:9004->8443/tcp, [::]:9004->8443/tcp, 0.0.0.0:9104->9443/tcp, [::]:9104->9443/tcp   bitemp-openftv-pdp
+f44c79cf5ed1   registry.gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/manager:2.2.3                "/manager"               17 minutes ago   Up 17 minutes               0.0.0.0:8110->8080/tcp, [::]:8110->8080/tcp, 0.0.0.0:9010->8443/tcp, [::]:9010->8443/tcp, 0.0.0.0:9110->9443/tcp, [::]:9110->9443/tcp   bitemp-openftv-manager
+31cafa6e4fbc   postgres:16-alpine                                                                              "docker-entrypoint.s…"   33 minutes ago   Up 33 minutes (healthy)     0.0.0.0:5433->5432/tcp, [::]:5433->5432/tcp                                                                                             bitemp-postgres-06
+08e5a87413fa   postgres:15                                                                                     "docker-entrypoint.s…"   34 minutes ago   Up 33 minutes (healthy)     0.0.0.0:5400->5432/tcp, [::]:5400->5432/tcp                                                                                             bitemp-openftv-db
+cec296f42fba   markwestbroek/bitemp-viz-frontend:latest                                                        "/docker-entrypoint.…"   44 minutes ago   Up 42 minutes               0.0.0.0:8086->80/tcp, [::]:8086->80/tcp                                                                                                 bitemp-viz-frontend
+3ea7026fad46   markwestbroek/bitemp-go-api:latest                                                              "./bitemp-go-api"        44 minutes ago   Up 33 minutes               0.0.0.0:8085->8080/tcp, [::]:8085->8080/tcp                                                                                             bitemp-go-api-06
+5284930c0613   registry.gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/management-interface:2.2.3   "/docker-entrypoint.…"   45 minutes ago   Up 17 minutes               0.0.0.0:8180->8080/tcp, [::]:8180->8080/tcp                                                                                             bitemp-openftv-mi
+c75815ff2cb1   minio/mc:latest                                                                                 "/bin/sh -c ' mc ali…"   45 minutes ago   Exited (0) 16 minutes ago                                                                                                                                           bitemp-minio-init
+b7f9a1043687   minio/minio:latest                                                                              "/usr/bin/docker-ent…"   46 minutes ago   Up 44 minutes (healthy)     0.0.0.0:9000-9001->9000-9001/tcp, :::9000-9001->9000-9001/tcp                                                                           bitemp-minio
+c9013434d493   markwestbroek/bitemp-go-api:v04.01.02                                                           "./bitemp-go-api"        4 weeks ago      Up 35 hours                 0.0.0.0:8080->8080/tcp, :::8080->8080/tcp                                                                                               bitemp-go-api
+6b2623c77571   postgres:16-alpine                                                                              "docker-entrypoint.s…"   4 weeks ago      Up 35 hours                 5432/tcp                                                                                                                                bitemp-postgres
+No .env file loaded (using existing environment variables)
+Bitemp Go API Project
+build commit: local, build time: dev
+admin drop tables enabled: false
+Succesfully connected to the database.
+Table(s) created successfully or they were already present.
+Succesfully connected to the database.
+GraphQL endpoint geregistreerd op /graphql/query
+No .env file loaded (using existing environment variables)
+Bitemp Go API Project
+build commit: local, build time: dev
+admin drop tables enabled: false
+Succesfully connected to the database.
+Table(s) created successfully or they were already present.
+Succesfully connected to the database.
+GraphQL endpoint geregistreerd op /graphql/query
+[GIN] 2026/04/17 - 17:52:30 | 404 |     104.611µs |    192.168.2.10 | GET      "/index.html"
+[GIN] 2026/04/17 - 17:52:30 | 404 |       6.647µs |    192.168.2.10 | GET      "/favicon.ico"
+[GIN] 2026/04/17 - 17:53:59 | 200 |    5.687576ms |    192.168.2.10 | GET      "/full/registraties?page=1&size=20&_ts=1776448439403"
+[GIN] 2026/04/17 - 17:53:59 | 200 |   30.895573ms |    192.168.2.10 | GET      "/api/viz/schema"
+[GIN] 2026/04/17 - 18:00:27 | 200 |    6.778801ms |    192.168.2.10 | GET      "/api/schema/domeinen"
+[GIN] 2026/04/17 - 18:00:27 | 200 |   12.002044ms |    192.168.2.10 | GET      "/api/viz/schema"
+Error #01: write tcp 172.16.4.4:8080->192.168.2.10:60166: write: broken pipe
+truenas_admin@truenas[~]$
+
+---
+
+## 🤖 Assistant
+
+Goed nieuws: **alles draait!** De logs tonen 200-responses van de API. De 502 was van vóór de API volledig opstond.
+
+Status overzicht:
+- `bitemp-go-api-06` ✅ Up, reageert correct
+- `bitemp-postgres-06` ✅ Healthy
+- `bitemp-openftv-manager` ✅ Up 17 minuten
+- `bitemp-openftv-pdp` ✅ Up 7 minuten (panic opgelost)
+- `bitemp-viz-frontend` ✅ Up
+- `bitemp-minio` ✅ Healthy
+
+De 404s voor `/index.html` en `/favicon.ico` zijn normaal — de frontend leeft op `/viz/react/`.
+
+**Twee dingen om nu te doen:**
+
+1. **Ververs de browser** op `http://192.168.2.22:8086/viz/react/` — de 502 was tijdelijk.
+
+2. **DataGrip DB-verbinding fixen**: poort moet `5433` zijn (niet 5432):
+   - Host: `192.168.2.22`, Port: `5433`, User: `postgres`, DB: `bitemp_go_db_v06`
+
+---
+
+## 🧑 User
+
+ik snap iets niet. Dit is toch een recent docker image? Of was het oud? De IDE is een heel oude versie nog.
+
+---
+
+## 🧑 User
+
+dan moeten we de backend ook opnieuw doen, want daar waren recent ook nog wijzigingen
+
+---
+
+## 🤖 Assistant
+
+Frontend is al gebuild. Nu alles in één keer pushen en de API ook opnieuw bouwen:
+
+```powershell
+cd bitemp_register_v06
+
+# Push frontend (al gebuild)
+docker push markwestbroek/bitemp-viz-frontend:latest
+
+# Build en push API
+docker build -f Dockerfile.api -t markwestbroek/bitemp-go-api:latest .
+docker push markwestbroek/bitemp-go-api:latest
+```
+
+Daarna op TrueNAS alles pullen en herstarten:
+
+```bash
+sudo docker pull markwestbroek/bitemp-go-api:latest
+sudo docker pull markwestbroek/bitemp-viz-frontend:latest
+sudo docker restart bitemp-go-api-06 bitemp-viz-frontend
+```
+
+---
+
+## 🧑 User
+
+ik snap er niets van, het zijn nog steeds oude versies. Er missen allerlei knoppen in. Best zichtbaar in de editor-v2
+
+Maar ook de IDE is stokoud. (img 3 en 4)
+
+FE image is wel net gemaakt, maar BE image 8 uur terug....???
+
+---
+
+## 🤖 Assistant
+
+De API build is **gefaald** (Exit Code: 1). Laat me kijken wat er mis ging en hoe de Dockerfiles werken:  De frontend Dockerfile doet `npm run build` **intern** — de lokale `dist/` wordt niet gebruikt. Dus de frontend is vers gebuild. Maar de **uml-editor** map wordt ook gekopieerd. Laat me de API build error checken: Het probleem is duidelijk: `go.mod` vereist **Go 1.25.0**, maar de Dockerfile gebruikt `golang:1.24-alpine`. Fix: 
+```
+
+```
+Check of er ook andere Dockerfiles zijn met dezelfde Go-versie:  
+```
+
+```
+
+```
+
+```
+Nu opnieuw bouwen:   API image gepushed. Nu op TrueNAS uitvoeren:
+
+```bash
+sudo docker pull markwestbroek/bitemp-go-api:latest
+sudo docker pull markwestbroek/bitemp-viz-frontend:latest
+sudo docker restart bitemp-go-api-06 bitemp-viz-frontend
+```
+
+**De oorzaak was:** `go.mod` vereist Go 1.25.0, maar alle Dockerfiles gebruikten nog `golang:1.24-alpine`. De API build faalde stilletjes. Alle drie Dockerfiles (Dockerfile, Dockerfile.api, ) zijn nu bijgewerkt naar `golang:1.25-alpine`.
+
+---
+
+## 🧑 User
+
+ja, maar de editor en IDE zijn nog steeds oud... Komen de nieuwe vite build files uit de UML editor map wel mee? Dat is sowieso steeds (ook lokaal) een geemmer met een nieuwe versie daarvan. Kunnen we het niet refactoren en de UML-editor integraal deel maken van de /web map? Zou dat helpen?
+
+Dan breekt misschien de link naar het UML-editor project, maar ik denk dat het inmiddels toch al niet meer onafhankelijk van de rest functioneert... Het heeft tabellen nodig die we genereren enz. Het leunt helemaal op de bitemp backend.
+
+---
+
+## 🤖 Assistant
+
+De analyse is helder. De Docker-integratie werkt **al correct** — `uml-editor/` wordt gekopieerd en meegebundeld door Vite via de `@editor` alias. Het probleem is niet het build-systeem.
+
+**Waarom de UI oud is op TrueNAS:** je hebt de nieuwe images lokaal gebuild en gepushed, maar op TrueNAS draai je nog steeds de **oude** images. Je moet daar nog pullen en restarten:
+
+```bash
+sudo docker pull markwestbroek/bitemp-viz-frontend:latest
+sudo docker pull markwestbroek/bitemp-go-api:latest
+sudo docker restart bitemp-viz-frontend bitemp-go-api-06
+```
+
+**Over de refactoring:** de `uml-editor/` is een volledig apart Vite-project dat via een pad-alias (`@editor` → `../../uml-editor/src`) in `web/vite` wordt geïmporteerd. Verhuizen naar `web/uml-editor/` is simpel en prima te doen, maar het lost het **huidige probleem niet op** — dat is puur een kwestie van images pullen op TrueNAS.
+
+De refactoring is wél nuttig voor:
+- Duidelijkere projectstructuur (het IS geen onafhankelijk project meer)
+- Kortere pad-alias ( ipv `../../uml-editor/src`)
+- Simpelere Docker COPY instructies
+
+Wil je dat ik de refactoring doe nadat we bevestigd hebben dat de TrueNAS deployment werkt met de verse images? 
+
+---
+
+## 🧑 User
+
+het werkt niet
+
+bitemp-viz-frontend
+truenas_admin@truenas[~]$ sudo docker pull markwestbroek/bitemp-viz-frontend:latest
+sudo docker pull markwestbroek/bitemp-go-api:latest
+sudo docker restart bitemp-viz-frontend bitemp-go-api-06
+latest: Pulling from markwestbroek/bitemp-viz-frontend
+Digest: sha256:2028d489f241c801c1351b3d5f1741f3357ab77003c6c2cfe31466422d7d2d23
+Status: Image is up to date for markwestbroek/bitemp-viz-frontend:latest
+docker.io/markwestbroek/bitemp-viz-frontend:latest
+latest: Pulling from markwestbroek/bitemp-go-api
+Digest: sha256:f19f7825105b6f2900ac470c48cd70c8c05b45335fdf7889a18bfba4f4dfde0c
+Status: Image is up to date for markwestbroek/bitemp-go-api:latest
+docker.io/markwestbroek/bitemp-go-api:latest
+bitemp-viz-frontend
+bitemp-go-api-06
+truenas_admin@truenas[~]$ 
+
+Ik snap het ook niet, want ik kan mij niet herinneren dat ik eerder (heel lang geleden, voordat de IDE pagina er uberhaupt was) dan vandaag docker images gepusht heb naar de docker hub... !!!
+
+Dus ja, het zijn recente images. MAAR: ze hebben oude UML editor vite files in zich
+
+---
+
+## 🤖 Assistant
+
+Het probleem is `docker restart` — dat herstart de **bestaande container** die nog op het **oude image** draait. Een restart maakt geen nieuwe container aan.
+
+Je moet de containers **verwijderen en opnieuw aanmaken**. In de TrueNAS shell:
+
+```bash
+sudo docker stop bitemp-viz-frontend bitemp-go-api-06
+sudo docker rm bitemp-viz-frontend bitemp-go-api-06
+```
+
+Ga daarna in Dockge naar de `bitemp` stack en klik **Opzetten** — die maakt de containers opnieuw aan met het nieuwe image.
+
+Of in één keer via de shell (vanuit de stack-directory):
+
+```bash
+cd /mnt/Pool1/share/Docker/Bitemporal/bitemp
+sudo docker compose up -d --force-recreate api frontend
+```
+
+**`docker restart`** = herstart dezelfde container (oud image)
+**`docker compose up -d --force-recreate`** = verwijdert + maakt opnieuw aan (nieuw image)
+
+---
+
+## 🧑 User
+
+ja, dat werkt. Vreemd trouwens dat de API base URL wel poort 8086 lijkt te zijn in de pagina's:
+
+---
+
+## 🧑 User
+
+het werkt, er is wel nog geen login te zien. Dat is mogelijk een .env instelling?
+
+---
+
+## 🧑 User
+
+maar ik heb een .env ingevoerd in dockge bij het opzetten. Kan ik zomaar ngo een .env file maken dan?
+
+---
+
+## 🧑 User
+
+okee, dat is gelukt, maar nu kan ik niet inloggen. Het record is in de DB aangemaakt
+
+bitemp-openftv-pdp      | {"time":"2026-04-17T19:06:13.093250344Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"20s"}
+bitemp-openftv-pdp      | {"time":"2026-04-17T19:06:33.097473213Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"40s"}
+bitemp-openftv-manager  | {"time":"2026-04-17T19:06:33.096897867Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.(*wrappedLogger).Info","file":"/build/eam/pdp/opa-embedded/logging.go","line":19},"msg":"Decision Log","decision_id":"01268905-d2a4-4556-925e-eca125cf6dd8","error":{"code":"opa_undefined_error","message":"/authz decision was undefined"},"input":{"action":{"attributes":{"method":"GET"},"id":"can_read","type":"name"},"context":{"action":"name::can_read","headers":{"Content-Encoding":"bzip2","Host":"openftv-manager:9443","User-Agent":"Go-http-client/1.1"},"http":{"host":"","method":"GET","path":"/v1/bundle/bitemp-pdp","path_parts":["v1","bundle","bitemp-pdp"],"query":{},"scheme":""},"resource":"service::/v1/bundle/bitemp-pdp","time":"2026-04-17T19:06:33.096341041Z"},"principal":{"id":"invalid","type":"invalid"},"resource":{"id":"/v1/bundle/bitemp-pdp","type":"service"}},"labels":{"id":"opa-controller","version":"1.10.1"},"metrics":{"timer_rego_external_resolve_ns":1074,"timer_rego_query_eval_ns":18924,"timer_sdk_decision_eval_ns":241875},"nd_builtin_cache":null,"path":"/authz","timestamp":"2026-04-17T19:06:33.096341041Z","type":"openpolicyagent.org/decision_logs"}
+bitemp-openftv-manager  | {"time":"2026-04-17T19:06:33.096997154Z","level":"ERROR","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.(*controller).Authorize","file":"/build/eam/pdp/opa-embedded/auth.go","line":39},"msg":"authorization failed","controller":"OPA/Rego 1.0.0","request-uid":"01268905-d2a4-4556-925e-eca125cf6dd8","err":"opa_undefined_error: /authz decision was undefined","pdp elapsed":"587.17µs"}
+bitemp-openftv-manager  | {"time":"2026-04-17T19:06:33.097034643Z","level":"ERROR","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/authorization/fiber.Check","file":"/build/eam/authorization/fiber/request.go","line":58},"msg":"authorization failed","path":"/v1/bundle/bitemp-pdp","authResponse":{"message":"not authorized"},"err":"opa_undefined_error: /authz decision was undefined"}
+
+---
+
+## 🤖 Assistant
+
+Het probleem is duidelijk: de `openftv-pdp` probeert de bundle op te halen via `GET /v1/bundle/bitemp-pdp` op de manager, maar de manager's eigen OPA-policy () beslist hierover — en die kent geen regel voor `service`-type resources. Resultaat: `undefined` → 403.
+
+De manager heeft een **interne autorisatie** nodig voor het bundle-endpoint. Dit is een machine-to-machine verzoek (PDP → Manager), niet een gebruiker. We moeten een regel toevoegen die toegang tot bundle-endpoints toestaat voor interne service-requests. 
+```
+
+```
+Nu moet dit bestand op de TrueNAS worden bijgewerkt. De manager laadt de policy uit het volume-pad. Kopieer het bijgewerkte bestand naar TrueNAS en herstart de manager:
+
+```bash
+# Kopieer het bijgewerkte beleidsbestand
+sudo cp /mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/policies/bitemp_authz.rego \
+        /mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/policies/bitemp_authz.rego.bak
+
+# Plak de nieuwe inhoud (of gebruik scp/sftp vanuit je lokale machine)
+```
+
+De snelste aanpak: plak de volledige inhoud via TrueNAS shell:
+
+```bash
+sudo tee /mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/policies/bitemp_authz.rego << 'EOF'
+```
+
+Dan de complete bestandsinhoud, of gebruik `scp` vanaf je Windows machine:
+
+```powershell
+scp bitemp_register_v06\authz\manager\policies\bitemp_authz.rego mark@192.168.2.22:/mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/policies/bitemp_authz.rego
+```
+
+Daarna op TrueNAS:
+```bash
+sudo docker restart bitemp-openftv-manager
+sudo docker restart bitemp-openftv-pdp
+```
+
+De manager herlaadt de policy automatisch, en de PDP kan dan de bundle ophalen (200 i.p.v. 403).
+
+---
+
+## 🧑 User
+
+de stack stopt trouwens steeds
+
+---
+
+## 🤖 Assistant
+
+
+```
+
+```
+Nu draait minio-init **niet** automatisch mee bij `docker compose up -d`. Bij eerste opzet of als de bucket opnieuw aangemaakt moet worden, run je handmatig:
+
+```bash
+cd /mnt/Pool1/share/Docker/Bitemporal/bitemp
+sudo docker compose --profile init up minio-init
+```
+
+De bucket bestaat al op TrueNAS (die is eerder aangemaakt), dus je hoeft dit nu niet opnieuw te doen. Dockge toont de stack voortaan als "Running" zodra je "Start" klikt, omdat alle actieve containers blijven draaien.
+
+**Update TrueNAS**: kopieer de gewijzigde compose, of pas de `minio-init` service in de Dockge editor aan door `profiles: ["init"]` toe te voegen.
+
+---
+
+## 🧑 User
+
+kun je nog eens uitleggen wat ik precies moet doen om de policy aan te maken. Het is misschien afgebroken door mijn vraag over de status gestopt
+
+---
+
+## 🤖 Assistant
+
+Hier is wat je precies moet doen, stap voor stap:
+
+---
+
+**Stap 1 — Bestand overschrijven op TrueNAS**
+
+Ga in de TrueNAS shell en plak dit commando in z'n geheel (het schrijft het bijgewerkte policy-bestand):
+
+```bash
+sudo tee /mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/policies/bitemp_authz.rego << 'ENDOFFILE'
+# Bitemp Register — Autorisatiebeleid (Rego / OPA)
+package bitemp.authz
+
+import rego.v1
+
+default allow := false
+
+rol_niveau := {
+    "admin": 3,
+    "editor": 2,
+    "viewer": 1,
+}
+
+heeft_minimaal_rol(vereist) if {
+    rol_niveau[input.subject.properties.role] >= rol_niveau[vereist]
+}
+
+publieke_paginas := {
+    "index", "tijdlijn", "registraties", "universum",
+    "swagger", "redoc", "graphiql", "publicatie",
+    "docs", "version", "openapi",
+}
+
+allow if {
+    input.action.name == "access"
+    input.resource.type == "page"
+    input.resource.id in publieke_paginas
+}
+
+beschermde_paginas := {
+    "editor-v2", "editor", "ide", "inhoud",
+}
+
+allow if {
+    input.action.name == "access"
+    input.resource.type == "page"
+    input.resource.id in beschermde_paginas
+    heeft_minimaal_rol("editor")
+}
+
+allow if {
+    input.action.name == "read"
+    input.resource.type == "api"
+    heeft_minimaal_rol("viewer")
+}
+
+allow if {
+    input.action.name == "write"
+    input.resource.type == "api"
+    heeft_minimaal_rol("editor")
+}
+
+allow if {
+    input.action.name == "admin"
+    input.resource.type == "api"
+    heeft_minimaal_rol("admin")
+}
+
+# Interne PDP→Manager bundle-ophaalverzoeken toestaan (geen JWT beschikbaar)
+allow if {
+    input.resource.type == "service"
+    startswith(input.resource.id, "/v1/bundle/")
+}
+ENDOFFILE
+```
+
+---
+
+**Stap 2 — Manager en PDP herstarten**
+
+```bash
+sudo docker restart bitemp-openftv-manager
+sudo docker restart bitemp-openftv-pdp
+```
+
+---
+
+**Stap 3 — Verifieer in de logs**
+
+```bash
+sudo docker logs bitemp-openftv-pdp --tail 20 -f
+```
+
+Je zou nu `"retrieved bundle"` of vergelijkbaar moeten zien i.p.v. de 403-fouten.
+
+---
+
+## 🧑 User
+
+bitemp-openftv-pdp
+truenas_admin@truenas[~]$ sudo docker logs bitemp-openftv-pdp --tail 20 -f
+{"time":"2026-04-17T19:13:18.492950301Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run","file":"/build/eam/server/fiber/run.go","line":67},"msg":"http service (health) stopped successfully"}
+{"time":"2026-04-17T19:13:18.49295289Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run","file":"/build/eam/server/fiber/run.go","line":67},"msg":"http service (main) stopped successfully"}
+{"time":"2026-04-17T19:13:18.492959487Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run","file":"/build/eam/server/fiber/run.go","line":67},"msg":"http service (internal) stopped successfully"}
+{"time":"2026-04-17T19:13:19.929087827Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/config.(*Config).LogSanitized","file":"/build/apps/pdp/config/config.go","line":57},"msg":"OpenFTV PDP 2.0"}
+{"time":"2026-04-17T19:13:19.929138452Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/config.(*Config).LogSanitized","file":"/build/apps/pdp/config/config.go","line":63},"msg":"configuration loaded successfully","config":{"mainHost":"0.0.0.0","mainPort":8443,"mainOrigins":"*","mainHeaders":"*","mainReadTimeout":30000000000,"mainWriteTimeout":30000000000,"mainIdleTimeout":300000000000,"mainMaxBody":65536,"logOutput":"stdout","logFormat":"json","logLevel":"info","logSource":true,"internalPort":9443,"internalOrigins":"*","internalHeaders":"*","internalReadTimeout":30000000000,"internalWriteTimeout":30000000000,"internalIdleTimeout":300000000000,"internalMaxBody":65536,"healthPort":8080,"healthOrigins":"*","healthHeaders":"*","healthReadTimeout":30000000000,"healthWriteTimeout":30000000000,"healthIdleTimeout":300000000000,"healthMaxBody":256,"bundleManager":"http://openftv-manager:9443/v1/bundle/bitemp-pdp","bundleEncoding":"bzip2","bundleTimeout":30000000000,"bundleRetries":5,"policyLanguage":"rego","forceAuthentication":false,"adlType":"postgresql","adlService":"bitemp-register","adlTimeout":5000000000,"adlPgMaxLife":300000000000,"adlPgMaxConn":100,"migrationSource":"*embed*","migrationAuto":true}}
+{"time":"2026-04-17T19:13:19.929520811Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/config.(*Config).LogSanitized","file":"/build/apps/pdp/config/config.go","line":64},"msg":"git version","hash":"unknown","tag":"unknown"}
+{"time":"2026-04-17T19:13:19.935986662Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).migrateADL","file":"/build/apps/pdp/server/auth.go","line":196},"msg":"pdp database migration completed; no changes"}
+{"time":"2026-04-17T19:13:19.936147485Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).newADL","file":"/build/apps/pdp/server/auth.go","line":159},"msg":"authorization decision log initialized","type":"postgresql","service":"bitemp-register"}
+{"time":"2026-04-17T19:13:19.936173105Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pip.New","file":"/build/eam/pip/pip.go","line":112},"msg":"pip initialized"}
+{"time":"2026-04-17T19:13:19.936201222Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pap.New","file":"/build/eam/pap/pap.go","line":101},"msg":"pap initialized"}
+{"time":"2026-04-17T19:13:19.936666616Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp/opa-embedded.NewController","file":"/build/eam/pdp/opa-embedded/controller.go","line":83},"msg":"pdp controller initialized","controller":"OPA/Rego 1.0.0","module":"github.com/open-policy-agent/opa/sdk","module-version":"","rego":3}
+{"time":"2026-04-17T19:13:19.93674342Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run","file":"/build/eam/server/fiber/run.go","line":18},"msg":"http service (health) starting","host":"0.0.0.0","port":8080}
+{"time":"2026-04-17T19:13:19.936774788Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run","file":"/build/eam/server/fiber/run.go","line":18},"msg":"http service (internal) starting","host":"0.0.0.0","port":9443}
+{"time":"2026-04-17T19:13:19.93678653Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run","file":"/build/eam/server/fiber/run.go","line":18},"msg":"http service (main) starting","host":"0.0.0.0","port":8443}
+{"time":"2026-04-17T19:13:19.936816846Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).bundleRetriever","file":"/build/apps/pdp/server/router.go","line":56},"msg":"retrieving latest bundle from manager","url":"http://openftv-manager:9443/v1/bundle/bitemp-pdp"}
+{"time":"2026-04-17T19:13:19.937987763Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"5s"}
+{"time":"2026-04-17T19:13:19.947191993Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run.func1.1","file":"/build/eam/server/fiber/run.go","line":24},"msg":"http service (internal) started"}
+{"time":"2026-04-17T19:13:19.947196497Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run.func1.1","file":"/build/eam/server/fiber/run.go","line":24},"msg":"http service (main) started"}
+{"time":"2026-04-17T19:13:19.94722462Z","level":"INFO","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/server/fiber.(*service).run.func1.1","file":"/build/eam/server/fiber/run.go","line":24},"msg":"http service (health) started"}
+{"time":"2026-04-17T19:13:24.944288118Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"10s"}
+{"time":"2026-04-17T19:13:34.950479631Z","level":"WARN","source":{"function":"gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/apps/pdp/server.(*Services).getLatestBundle","file":"/build/apps/pdp/server/bundle.go","line":45},"msg":"failed to retrieve bundle","error":"failed to retrieve bundle: status 403","retry in":"20s"}
 
 ---

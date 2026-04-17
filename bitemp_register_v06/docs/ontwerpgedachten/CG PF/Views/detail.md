@@ -9,4 +9,4 @@
 | --- | --- | --- |
 | {{initiatief_gemeenten[rol=Realiseert].weergavenaam}} | {{initiatief_gemeenten[rol=Maakt_gebruik_van].weergavenaam}} | tbd |
 
-Website: {{producten.website}} - Git: {{producten.git_repo}} - Contactpersoon: {{initiatief_organisaties.organisatie.contactpersonen.persoon.persoonnamen.naam}} - emailAdres: - startdatum: {{planningen.startdatum}} Betrokken leveranciers: - 
+Website: {{producten.website}} - Git: {{producten.git_repo}} - Contactpersoon: {{initiatief_organisaties.organisatie.contactpersonen.persoon.persoonnamen.naam}} - emailAdres: - startdatum: {{planningen.startdatum}} Betrokken leveranciers: tbd

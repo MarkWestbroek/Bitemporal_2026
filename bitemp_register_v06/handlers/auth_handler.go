@@ -65,8 +65,9 @@ func LoginHandler() gin.HandlerFunc {
 			Exec(c.Request.Context())
 
 		// Zet httpOnly cookie
-		// Secure=false voor lokale ontwikkeling; in productie via HTTPS
-		isSecure := os.Getenv("GIN_MODE") == "release"
+		// COOKIE_SECURE=true vereist HTTPS (bijv. productie achter TLS-proxy).
+		// Standaard false zodat HTTP-deployments (zoals TrueNAS zonder TLS) werken.
+		isSecure := os.Getenv("COOKIE_SECURE") == "true"
 		c.SetSameSite(http.SameSiteLaxMode)
 		c.SetCookie(middleware.CookieNaam, token, 3600*middleware.JwtExpiryHours(), "/", "", isSecure, true)
 
