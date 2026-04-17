@@ -15,6 +15,7 @@ Browser → Gin API (JWT cookie) → PEP middleware → OpenFTV PDP (AuthZEN)
 
 ```
 authz/
+├── authzen_client.go           # AuthZEN HTTP-client (Go, package authz)
 ├── init-db.sh                  # PostgreSQL init voor ADL database
 ├── manager/                    # OpenFTV Manager (PAP + PIP)
 │   ├── bundles/                # Bundleconfiguratie voor PDP-distributie
@@ -31,6 +32,27 @@ authz/
     └── policies/               # Lokaal fallback-beleid
         └── bitemp_authz.rego
 ```
+
+## PEP Middleware (Phase 3)
+
+De PEP middleware (`middleware/authz_pep.go`) dwingt autorisatiebeslissingen af:
+
+| Feature flag | Standaard | Effect |
+|-------------|-----------|--------|
+| `AUTH_ENABLED` | `false` | Auth geheel aan/uit |
+| `AUTHZ_PDP_ENABLED` | `false` | PDP-evaluatie aan/uit (vereist AUTH_ENABLED) |
+| `AUTHZ_DENY_ON_ERROR` | `false` | fail-open (false) of fail-closed (true) bij PDP-fouten |
+
+De mapping van HTTP-requests naar AuthZEN-termen:
+
+| HTTP-methode | AuthZEN actie | Pad-prefix | AuthZEN resource |
+|-------------|---------------|------------|-----------------|
+| GET/HEAD | `read` | `/admin/*` | `(api, admin)` |
+| POST/PUT/PATCH/DELETE | `write` | `/api/schema/*` | `(api, schema)` |
+| POST op `/admin/*` | `admin` | `/full/<pad>/*` | `(api, <pad>)` |
+| OPTIONS | `read` | `/<pad>` | `(api, <pad>)` |
+
+Publieke paden (OPTIONS, `/api/auth/*`, `/viz/*`, `/docs*`, `/`, `/version`, `/openapi*`, `/swagger`, `/redoc`, `/graphql/playground`) slaan de PDP over.
 
 ## Starten
 

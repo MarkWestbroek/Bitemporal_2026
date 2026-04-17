@@ -26,7 +26,7 @@
 |------|--------|
 | **Authenticatie** | Vaststellen *wie* je bent (identiteit). Bij ons: gebruikersnaam + wachtwoord → JWT-token. |
 | **Autorisatie** | Vaststellen *wat* je mag (rechten). Bij ons: rolgebaseerd (viewer/editor/admin) + OpenFTV PDP. |
-| **Middleware** | Code die *tussen* het binnenkomende HTTP-request en de uiteindelijke handler zit. Vergelijk het met een reeks filters in een pijplijn: elk filter kan het request inspecteren, verrijken of afwijzen voordat het de volgende schakel (of de uiteindelijke endpoint-handler) bereikt. In Gin registreer je middleware via `router.Use(...)`. Ons systeem heeft drie middlewares: CORS, RequestBodyLogger en JWTAuthMiddleware. |
+| **Middleware** | Code die *tussen* het binnenkomende HTTP-request en de uiteindelijke handler zit. Vergelijk het met een reeks filters in een pijplijn: elk filter kan het request inspecteren, verrijken of afwijzen voordat het de volgende schakel (of de uiteindelijke endpoint-handler) bereikt. In Gin registreer je middleware via `router.Use(...)`. Ons systeem heeft vier middlewares: CORS, RequestBodyLogger, JWTAuthMiddleware en AuthzPEPMiddleware. |
 | **Token** | Een digitaal "pasje" dat bewijst wie je bent. Bij ons een **JWT** (JSON Web Token): een base64-gecodeerde string met drie delen (header.payload.signature). Het bevat je gebruikersnaam, rol en verloopdatum, ondertekend met een geheim (HS256). |
 | **JWT** | **JSON Web Token** — een open standaard (RFC 7519) voor het veilig overdragen van claims (informatie) tussen twee partijen. De server ondertekent het token; de server kan het later verifiëren zonder database-lookup. |
 | **httpOnly cookie** | Een cookie die de browser *wel* automatisch meestuurt bij elk request, maar die *niet* leesbaar is vanuit JavaScript. Dit beschermt tegen XSS-aanvallen (cross-site scripting). |
@@ -35,7 +35,7 @@
 | **PDP** | **Policy Decision Point** — het component dat een autorisatievraag beantwoordt: "mag deze gebruiker deze actie op deze resource?" → ja/nee. Bij ons: OpenFTV PDP (draait op poort 9004). |
 | **PAP** | **Policy Administration Point** — het component waar je autorisatiebeleid beheert (aanmaken, wijzigen, verwijderen van policies). Bij ons: de OpenFTV Manager. |
 | **PIP** | **Policy Information Point** — het component dat extra informatie levert die nodig is voor een autorisatiebeslissing (bijv. roldefinities, pagina-eigenschappen). Bij ons ingebouwd in de OpenFTV Manager via de `data/entities/` JSON-bestanden. |
-| **PEP** | **Policy Enforcement Point** — het component dat de autorisatiebeslissing *afdwingt*. Bij ons: een Gin middleware die het PDP-antwoord controleert en bij `decision: false` een 403 Forbidden retourneert. (Nog niet geïmplementeerd — Phase 3.) |
+| **PEP** | **Policy Enforcement Point** — het component dat de autorisatiebeslissing *afdwingt*. Bij ons: de `AuthzPEPMiddleware()` in `middleware/authz_pep.go` — een Gin middleware die het PDP-antwoord controleert en bij `decision: false` een 403 Forbidden retourneert. Geactiveerd met `AUTHZ_PDP_ENABLED=true`. |
 | **AuthZEN** | Een open standaard voor autorisatie-evaluatie-API's. Definieert een POST-endpoint met een vaste structuur: `{subject, action, resource, context}` → `{decision: bool}`. OpenFTV implementeert deze standaard. |
 | **Rego** | De beleidstaal van **OPA** (Open Policy Agent). Declaratief: je beschrijft *regels* die evalueren naar true/false. Ons beleid staat in `authz/manager/policies/bitemp_authz.rego`. |
 | **OPA** | **Open Policy Agent** — een open-source policy engine. Evalueert Rego-beleid. OpenFTV kan OPA als engine gebruiken (naast Cedar, Cerbos, OpenFGA). |
@@ -102,8 +102,8 @@
 
 ### Twee lagen van autorisatie
 
-1. **Lokale rolcheck** (Phase 1, nu actief): De Gin middleware (`RequireAuth()`, `RequireRol()`) controleert de rol uit het JWT-token. Snel, geen externe call.
-2. **PDP-evaluatie** (Phase 3, toekomstig): De PEP middleware stuurt een AuthZEN-request naar de OpenFTV PDP voor fijnmazige autorisatie. De PDP evalueert het Rego-beleid en retourneert `{decision: true/false}`.
+1. **Lokale rolcheck** (Phase 1): De Gin middleware (`RequireAuth()`, `RequireRol()`) controleert de rol uit het JWT-token. Snel, geen externe call. Altijd actief als `AUTH_ENABLED=true`.
+2. **PDP-evaluatie** (Phase 3): De `AuthzPEPMiddleware()` stuurt een AuthZEN-request naar de OpenFTV PDP voor fijnmazige autorisatie. De PDP evalueert het Rego-beleid en retourneert `{decision: true/false}`. Actief als `AUTH_ENABLED=true` EN `AUTHZ_PDP_ENABLED=true`.
 
 ---
 
@@ -181,11 +181,19 @@ Request binnenkomst
     │                        Als AUTH_ENABLED=false:
     │                          • Doet niets (c.Next())
     ▼
-[4] RequireAuth()           — Optioneel per route-groep:
+[4] AuthzPEPMiddleware()    — Als AUTHZ_PDP_ENABLED=true:
+    │                          • Mapt method+pad → AuthZEN actie+resource
+    │                          • Stuurt evaluatieverzoek naar OpenFTV PDP
+    │                          • Bij decision=false → 403 Forbidden
+    │                          • Bij PDP-fout → fail-open (of fail-closed via AUTHZ_DENY_ON_ERROR)
+    │                        Als AUTHZ_PDP_ENABLED=false:
+    │                          • Doet niets (c.Next())
+    ▼
+[5] RequireAuth()           — Optioneel per route-groep:
     │                          • Checkt of "gebruiker" in context staat
     │                          • Zo nee: 401 Unauthorized
     ▼
-[5] RequireRol("editor")   — Optioneel per route-groep:
+[6] RequireRol("editor")   — Optioneel per route-groep:
     │                          • Checkt rol-hiërarchie
     │                          • Zo onvoldoende: 403 Forbidden
     ▼
@@ -389,7 +397,7 @@ sequenceDiagram
     end
 ```
 
-### 4.8 Toekomstig: PEP + PDP evaluatie (Phase 3)
+### 4.8 PEP + PDP evaluatie (Phase 3)
 
 ```mermaid
 sequenceDiagram
@@ -447,6 +455,14 @@ sequenceDiagram
 | `authz/pdp/policies/bitemp_authz.rego` | Lokaal fallback-beleid voor de PDP (voor als bundles nog niet zijn geladen). |
 | `authz/README.md` | Documentatie van de autorisatie-architectuur en configuratie. |
 
+### PEP Middleware (Phase 3)
+
+| Bestand | Verantwoordelijkheid |
+|---------|---------------------|
+| `authz/authzen_client.go` | **AuthZEN HTTP-client**: stuurt evaluatieverzoeken naar de OpenFTV PDP (`POST /authzen/v1/evaluation`). Bevat structs voor AuthZEN-protocol (`EvaluatieVerzoek`, `EvaluatieResultaat`), connection pooling, timeout (5s), en convenience-methode `EvalueerKort()`. Leest `OPENFTV_PDP_URL` (default: `http://localhost:9004`). |
+| `middleware/authz_pep.go` | **PEP middleware**: `AuthzPEPMiddleware()` — mapt HTTP method+pad → AuthZEN actie+resource, stuurt evaluatieverzoek naar PDP, dwingt `decision: false` af met 403. Publieke paden (OPTIONS, `/api/auth/*`, `/viz/*`, etc.) slaan PDP over. Feature flags: `AUTHZ_PDP_ENABLED`, `AUTHZ_DENY_ON_ERROR`. Lazy client-initialisatie via `initAuthzClient()`. |
+| `middleware/authz_pep_test.go` | **Unit tests**: 3 testfuncties met ~50 cases voor `BepaalAuthZENActie()`, `BepaalAuthZENResource()` en `isPubliekPad()`. |
+
 ---
 
 ## 6. Database: Gebruiker-tabel
@@ -481,7 +497,9 @@ Dit is een relatief kleine refactoring die op elk moment kan worden gedaan.
 
 ---
 
-## 7. Feature flag: AUTH_ENABLED
+## 7. Feature flags
+
+### AUTH_ENABLED
 
 | Waarde | Effect |
 |--------|--------|
@@ -489,6 +507,20 @@ Dit is een relatief kleine refactoring die op elk moment kan worden gedaan.
 | `true` / `1` / `yes` / `on` | **Auth actief**: JWT-middleware extraheert cookies, RequireAuth blokkeert niet-ingelogde gebruikers, RequireRol controleert rollen. Admin-seed bij startup. |
 
 Dit wordt gecontroleerd in `middleware.IsAuthEnabled()` en gelezen uit de `AUTH_ENABLED` environment variable.
+
+### AUTHZ_PDP_ENABLED
+
+| Waarde | Effect |
+|--------|--------|
+| `false` / niet gezet (default) | **PDP uit**: AuthzPEPMiddleware is een no-op. Alleen lokale rolchecks (RequireAuth/RequireRol) zijn actief. |
+| `true` / `1` / `yes` / `on` | **PDP actief**: AuthzPEPMiddleware stuurt evaluatieverzoeken naar de OpenFTV PDP. Vereist dat `AUTH_ENABLED=true` ook is ingesteld. |
+
+### AUTHZ_DENY_ON_ERROR
+
+| Waarde | Effect |
+|--------|--------|
+| `false` / niet gezet (default) | **Fail-open**: bij PDP-communicatiefouten wordt het request doorgelaten met een waarschuwing in de logs. Voorkomt dat een onbereikbare PDP de gehele API blokkeert. |
+| `true` | **Fail-closed**: bij PDP-fouten wordt het request geweigerd met 403 Forbidden. Veiliger, maar vereist een stabiele PDP. |
 
 ---
 

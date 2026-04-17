@@ -66,6 +66,10 @@ func SetupMiddleware(router *gin.Engine) {
 	// Zet claims in context, maar blokkeert niet (dat doet RequireAuth).
 	router.Use(middleware.JWTAuthMiddleware())
 
+	// PEP middleware — stuurt autorisatieverzoeken naar OpenFTV PDP (AuthZEN).
+	// Alleen actief als AUTH_ENABLED=true EN AUTHZ_PDP_ENABLED=true.
+	router.Use(middleware.AuthzPEPMiddleware())
+
 	// Preflight-handler: vangt OPTIONS /*path op zodat Gin het request
 	// doorgeeft aan de middleware hierboven (en niet met 405 afwijst).
 	router.OPTIONS("/*path", func(c *gin.Context) {})
