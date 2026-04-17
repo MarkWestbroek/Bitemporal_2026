@@ -242,7 +242,7 @@ sequenceDiagram
 
     H->>DB: UPDATE gebruiker SET laatste_login_op = NOW()
 
-    H-->>B: 200 OK<br/>Set-Cookie: bitemp_token=eyJhbG...; HttpOnly; Path=/; SameSite=Lax<br/>{"bericht":"Succesvol ingelogd.","rol":"editor"}
+    H-->>B: 200 OK<br/>Set-Cookie: bitemp_token=eyJhbG... (HttpOnly, Path=/, SameSite=Lax)<br/>{"bericht":"Succesvol ingelogd.","rol":"editor"}
 
     Note over B: Cookie wordt automatisch opgeslagen<br/>door de browser (niet leesbaar door JS)
 ```
@@ -362,7 +362,7 @@ sequenceDiagram
     G->>H: (middleware keten doorlopen)
 
     H->>H: SetCookie("bitemp_token", "", maxAge=-1)
-    H-->>B: 200 OK<br/>Set-Cookie: bitemp_token=; Max-Age=-1; HttpOnly<br/>{"bericht":"Uitgelogd."}
+    H-->>B: 200 OK<br/>Set-Cookie: bitemp_token= (Max-Age=-1, HttpOnly)<br/>{"bericht":"Uitgelogd."}
 
     Note over B: Browser verwijdert de cookie<br/>Volgende requests zijn anoniem
 ```
