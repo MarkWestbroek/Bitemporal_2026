@@ -3,7 +3,7 @@
 # Deze image bouwt alleen de Go-API binary.
 # Devloop-tools en losse codegen/openapi-export binaries worden niet mee verpakt.
 
-FROM golang:1.24-alpine AS go-builder
+FROM golang:1.25-alpine AS go-builder
 
 RUN apk add --no-cache git
 

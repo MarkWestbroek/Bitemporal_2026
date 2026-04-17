@@ -1,0 +1,319 @@
+# docker-compose.truenas.yml — All-in-one deployment voor TrueNAS / Dockge
+#
+# Alle images worden van registers gepulled; geen lokale broncode of build vereist.
+# Zet dit bestand + de ./authz/ map op de TrueNAS server.
+#
+# Custom images (push eenmalig via: docker push markwestbroek/<naam>:latest):
+#   markwestbroek/bitemp-go-api:latest          — Go API backend
+#   markwestbroek/bitemp-viz-frontend:latest    — Nginx + React frontend
+#
+# Pre-built images (publiek, geen push nodig):
+#   postgres, minio, minio/mc                   — standaard Docker Hub
+#   registry.gitlab.com/.../eam/manager:2.2.3   — OpenFTV Manager (PAP+PIP)
+#   registry.gitlab.com/.../eam/pdp:2.2.3       — OpenFTV PDP (AuthZEN)
+#   registry.gitlab.com/.../eam/management-interface:2.2.3 — OpenFTV MI
+#
+# Configuratie: maak een .env bestand naast dit compose bestand.
+# Zie de ENV-tabel onderaan dit bestand voor alle variabelen.
+#
+# Starten: docker compose -f docker-compose.truenas.yml up -d
+# Updaten: docker compose -f docker-compose.truenas.yml pull && docker compose -f docker-compose.truenas.yml up -d
+#
+# URLs na starten (vervang <HOST> door IP/hostnaam van de TrueNAS):
+#   Frontend:         http://<HOST>:${FRONTEND_PORT:-8083}/viz/react/
+#   API:              http://<HOST>:${API_PORT:-8082}/
+#   Minio console:    http://<HOST>:${MINIO_CONSOLE_PORT:-9001}/
+#   OpenFTV Manager:  http://<HOST>:${OPENFTV_MANAGER_PORT:-9010}/
+#   OpenFTV MI:       http://<HOST>:${OPENFTV_MI_PORT:-8180}/
+#
+# Poorten:
+#   8082: Go API
+#   8083: Frontend (nginx)
+#   5433: PostgreSQL (bitemp)
+#   5400: PostgreSQL (OpenFTV)
+#   9000: Minio S3 API
+#   9001: Minio Console
+#   9010: OpenFTV Manager (PAP+PIP)
+#   9110: OpenFTV Manager bundle endpoint (intern)
+#   8110: OpenFTV Manager health
+#   9004: OpenFTV PDP (AuthZEN evaluatie)
+#   9104: OpenFTV PDP bundle endpoint (intern)
+#   8104: OpenFTV PDP health
+#   8180: OpenFTV Management Interface (web UI)
+
+services:
+
+  # ─────────────────────────────────────────────
+  # Bitemp PostgreSQL
+  # ─────────────────────────────────────────────
+  postgres:
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    container_name: bitemp-postgres-06
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-1234}
+      POSTGRES_DB: ${POSTGRES_DB:-bitemp_go_db_v06}
+    ports:
+      - "${PG_PORT:-5433}:5432"
+    volumes:
+      - bitemp_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-bitemp_go_db_v06}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bitemp_net
+
+  # ─────────────────────────────────────────────
+  # Minio (S3 object storage voor bestanden)
+  # ─────────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: bitemp-minio
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - bitemp_minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bitemp_net
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: bitemp-minio-init
+    restart: "no"
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 $${MINIO_ROOT_USER:-minioadmin} $${MINIO_ROOT_PASSWORD:-minioadmin};
+      mc mb --ignore-existing local/$${MINIO_BUCKET:-ide-bestanden};
+      echo 'Bucket $${MINIO_BUCKET:-ide-bestanden} aangemaakt of bestond al.';
+      "
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-ide-bestanden}
+    networks:
+      - bitemp_net
+
+  # ─────────────────────────────────────────────
+  # Bitemp Go API
+  # ─────────────────────────────────────────────
+  api:
+    image: ${API_IMAGE:-markwestbroek/bitemp-go-api:latest}
+    container_name: bitemp-go-api-06
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-1234}@postgres:5432/${POSTGRES_DB:-bitemp_go_db_v06}?sslmode=${DB_SSLMODE:-disable}
+      APP_ENV: ${APP_ENV:-production}
+      GIN_MODE: ${GIN_MODE:-release}
+      ALLOW_DROP_TABLES: ${ALLOW_DROP_TABLES:-false}
+      ADMIN_DROP_PASSWORD: ${ADMIN_DROP_PASSWORD:-changeme}
+      AUTO_CREATE_DATABASE: ${AUTO_CREATE_DATABASE:-false}
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-ide-bestanden}
+      MINIO_USE_SSL: "false"
+      AUTH_ENABLED: ${AUTH_ENABLED:-false}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-8082}:8080"
+    networks:
+      - bitemp_net
+      - bitemp_auth_net
+
+  # ─────────────────────────────────────────────
+  # Bitemp Frontend (nginx + React/Vite)
+  # ─────────────────────────────────────────────
+  frontend:
+    image: ${FRONTEND_IMAGE:-markwestbroek/bitemp-viz-frontend:latest}
+    container_name: bitemp-viz-frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${FRONTEND_PORT:-8083}:80"
+    networks:
+      - bitemp_net
+
+  # ─────────────────────────────────────────────
+  # OpenFTV PostgreSQL (aparte DB voor auth ADL)
+  # ─────────────────────────────────────────────
+  openftv-db:
+    image: postgres:15
+    container_name: bitemp-openftv-db
+    restart: unless-stopped
+    ports:
+      - "${OPENFTV_PG_PORT:-5400}:5432"
+    environment:
+      POSTGRES_USER: openftv
+      POSTGRES_PASSWORD: openftv
+      POSTGRES_DB: openftv
+    volumes:
+      - openftv_postgres_data:/var/lib/postgresql/data
+      - ./authz/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openftv -d openftv"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - bitemp_auth_net
+
+  # ─────────────────────────────────────────────
+  # OpenFTV Manager (PAP + PIP)
+  # ─────────────────────────────────────────────
+  openftv-manager:
+    image: registry.gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/manager:2.2.3
+    container_name: bitemp-openftv-manager
+    restart: unless-stopped
+    ports:
+      - "${OPENFTV_MANAGER_PORT:-9010}:8443"
+      - "${OPENFTV_MANAGER_BUNDLE_PORT:-9110}:9443"
+      - "${OPENFTV_MANAGER_HEALTH_PORT:-8110}:8080"
+    environment:
+      - MANAGER_PERSIST_TYPE=postgres
+      - MANAGER_PERSIST_POSTGRES_URL=postgres://openftv:openftv@openftv-db:5432/openftv?sslmode=disable
+      - MANAGER_MIGRATE_AUTO=true
+      - MANAGER_MIGRATE_SOURCE=*embed*
+      - MANAGER_POLICIES_LANGUAGE=rego
+      - MANAGER_POLICIES_STORE=/tmp/data/policies
+      - MANAGER_POLICIES_STORE_RECURSE=true
+      - MANAGER_PIP_STORE=/tmp/data/data
+      - MANAGER_PIP_STORE_RECURSE=true
+      - MANAGER_TAGS_PATH=/tmp/data/tags
+      - MANAGER_AUTHENTICATION_TYPE=none
+      - MANAGER_BUNDLE_CONFIGS=/tmp/data/bundles
+      - MANAGER_BUNDLE_RECURSE=true
+      - MANAGER_BUNDLE_SEND_TIMEOUT=60s
+      - MANAGER_ADL_TYPE=postgresql
+      - MANAGER_ADL_SERVICE_NAME=bitemp-register
+      - MANAGER_ADL_PG_URL=postgres://openftv:openftv@openftv-db:5432/openftv_adl?sslmode=disable
+    depends_on:
+      openftv-db:
+        condition: service_healthy
+    volumes:
+      - ./authz/manager:/tmp/data
+    networks:
+      - bitemp_auth_net
+    # Geen healthcheck: distroless image heeft geen shell/nc/wget beschikbaar.
+    # De manager start snel op; pdp en mi gebruiken service_started.
+
+  # ─────────────────────────────────────────────
+  # OpenFTV PDP (AuthZEN evaluatie-endpoint)
+  # ─────────────────────────────────────────────
+  openftv-pdp:
+    image: registry.gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp:2.2.3
+    container_name: bitemp-openftv-pdp
+    restart: unless-stopped
+    ports:
+      - "${OPENFTV_PDP_PORT:-9004}:8443"
+      - "${OPENFTV_PDP_BUNDLE_PORT:-9104}:9443"
+      - "${OPENFTV_PDP_HEALTH_PORT:-8104}:8080"
+    environment:
+      - PDP_BUNDLE_MANAGER=http://openftv-manager:9443/v1/bundle/bitemp-pdp
+      - PDP_BUNDLE_ENCODING=bzip2
+      - PDP_BUNDLE_TIMEOUT=30s
+      - PDP_BUNDLE_RETRIES=5
+      - PDP_POLICIES_LANGUAGE=rego
+      - PDP_ADL_TYPE=postgresql
+      - PDP_ADL_SERVICE_NAME=bitemp-register
+      - PDP_ADL_PG_URL=postgres://openftv:openftv@openftv-db:5432/openftv_adl?sslmode=disable
+      - PDP_MIGRATE_AUTO=true
+      - PDP_MIGRATE_SOURCE=*embed*
+    depends_on:
+      openftv-manager:
+        condition: service_started
+    volumes:
+      - ./authz/pdp:/tmp/data
+    networks:
+      - bitemp_auth_net
+
+  # ─────────────────────────────────────────────
+  # OpenFTV Management Interface (web UI)
+  # ─────────────────────────────────────────────
+  openftv-mi:
+    image: registry.gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/management-interface:2.2.3
+    container_name: bitemp-openftv-mi
+    restart: unless-stopped
+    environment:
+      VITE_PAP_BASE_URL: "http://<HOST>:${OPENFTV_MANAGER_PORT:-9010}"
+      VITE_PIP_BASE_URL: "http://<HOST>:${OPENFTV_MANAGER_PORT:-9010}"
+    ports:
+      - "${OPENFTV_MI_PORT:-8180}:8080"
+    depends_on:
+      openftv-manager:
+        condition: service_started
+    networks:
+      - bitemp_auth_net
+
+volumes:
+  bitemp_postgres_data:
+  bitemp_minio_data:
+  openftv_postgres_data:
+
+networks:
+  bitemp_net:
+    driver: bridge
+  bitemp_auth_net:
+    driver: bridge
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ENV variabelen (.env bestand naast dit compose bestand):
+#
+# POSTGRES_IMAGE=postgres:16-alpine
+# POSTGRES_USER=postgres
+# POSTGRES_PASSWORD=<sterk_wachtwoord>
+# POSTGRES_DB=bitemp_go_db_v06
+# PG_PORT=5433
+#
+# MINIO_ACCESS_KEY=<minio_user>
+# MINIO_SECRET_KEY=<sterk_wachtwoord>
+# MINIO_BUCKET=ide-bestanden
+# MINIO_API_PORT=9000
+# MINIO_CONSOLE_PORT=9001
+#
+# API_IMAGE=markwestbroek/bitemp-go-api:latest
+# API_PORT=8082
+# APP_ENV=production
+# GIN_MODE=release
+# ALLOW_DROP_TABLES=false
+# ADMIN_DROP_PASSWORD=<sterk_wachtwoord>
+# AUTH_ENABLED=false
+# ADMIN_USERNAME=admin
+# ADMIN_PASSWORD=<sterk_wachtwoord>
+#
+# FRONTEND_IMAGE=markwestbroek/bitemp-viz-frontend:latest
+# FRONTEND_PORT=8083
+#
+# OPENFTV_PG_PORT=5400
+# OPENFTV_MANAGER_PORT=9010
+# OPENFTV_MANAGER_BUNDLE_PORT=9110
+# OPENFTV_MANAGER_HEALTH_PORT=8110
+# OPENFTV_PDP_PORT=9004
+# OPENFTV_PDP_BUNDLE_PORT=9104
+# OPENFTV_PDP_HEALTH_PORT=8104
+# OPENFTV_MI_PORT=8180
+# ─────────────────────────────────────────────────────────────────────────────

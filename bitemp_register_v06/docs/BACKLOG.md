@@ -625,14 +625,14 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I8 | CEL expressie breakout met kleurcodes en autocomplete | README.md |
 | I9 | Voorbeelden en testwaarden in REPs | README.md |
 | I10 | Velden: kardinaliteit [0..*] enz | README.md |
-| I11 | Layout bar verplaatsbaar | README.md |
+| I11 | ✅Layout bar verplaatsbaar | README.md |
 | I12 | Any bar: custom bar met functies? | README.md |
 | I13 | ✅ Edge types: compositie, overerving, associatieklasse — rendering ✅, toolbar edge-mode (comp+gen) ✅ | README.md |
 | I14 | Document by example compartiment in klassen | readme.md |
 | I15 | Testwaarden in REPs (t.b.v. expressies bijv. maar ook als document bij example) | README.md |
-| I16 | IDE toolbar: knoppen voor aanmaken nieuwe REPs (ENT, GE, REL, reflijst, type, enum) | nieuw |
-| I17 | IDE toolbar + rechtsklik: normaliseer en snap-to-grid knoppen toevoegen | nieuw |
-| I18 | Verplaatsbare toolbars: drag naar gewenste positie, snap verticaal bij zijranden / horizontaal bij boven-/onderrand | nieuw |
+| I16 | ✅IDE toolbar: knoppen voor aanmaken nieuwe REPs (ENT, GE, REL, reflijst, type, enum) | nieuw |
+| I17 | ✅IDE toolbar + rechtsklik: normaliseer en snap-to-grid knoppen toevoegen | nieuw |
+| I18 | ✅ Verplaatsbare toolbars: drag naar gewenste positie, snap verticaal bij zijranden / horizontaal bij boven-/onderrand | nieuw |
 | I19 | PB rechtsklik: "Nieuw element" per type (rechtsklik op ENT → nieuw GE, etc.) | nieuw |
 | I20 | ✅ PB rechtsklik: "Verwijder uit model" element verwijderen inclusief alle diagrammen | nieuw |
 | I21 | ✅ Domein auto-toevoegen: updateElement voegt nieuw domein automatisch toe aan domeinlijst | nieuw |
@@ -642,7 +642,19 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I25 | ✅ PB diagrammen onder domeinen: domein-specifieke diagrammen verschijnen als 📐 Diagrammen subfolder per domein | nieuw |
 | I26 | ✅ Import-dialoog: bestand/API bron, domeinfilter, merge/vervang, auto-diagram aanmaken bij import | nieuw |
 | I27 | ✅ PB rechtsklik import/export: importeer/exporteer domein met pre-ingevuld domeinfilter | nieuw |
-| I28 | ✅ Export naar database: ExportDialog met bestemming keuze (bestand/database), beschrijving en tags | nieuw |
+| I28 | meerdere edge-typen (rond, hoekig, direct, zelf zoeken, kneedbaar) | nieuw |
+| I29 | edge knikbaar / duw- en trekbaar | nieuw |
+| I30 | ? edge verbergbaar | klaar: beter testen: alle edges of allen dependencies kunnen dat? |
+| I31 | edges zoeken (ivm verbergen kunnen ze weg zijn) | nieuw |
+| I32 | match size (hoogte / breedte / beide) | nieuw |
+| I33 | meer nodes (per element instelbaar / automatisch bij vergroten) | nieuw |
+| I34 | edges naar andere handle trekken of anderszins | nieuw |
+| I35 | domein selectie ; boundary element introduceren? | nieuw |
+| I |  | nieuw |
+| I |  | nieuw |
+| I |  | nieuw |
+| I |  | nieuw |
+| I |  | nieuw |
 
 
 ### Frontend — Content Editor (Inhoud-editor)

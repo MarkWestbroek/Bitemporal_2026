@@ -1,15 +1,16 @@
 # docker-compose voor OpenFTV autorisatie-sidecar
 # Gebruikt samen met de bitemp_register_v06 API.
 #
-# Start met: docker compose -f docker-compose.auth.yml up --build
+# Start met: docker compose -f docker-compose.auth.yml up
+# (geen --build nodig: gebruikt pre-built images van GitLab registry)
 #
-# Vereist dat het open-ftv repository beschikbaar is in ../../open-ftv
-# (relatief t.o.v. deze file, ofwel D:\Git\open-ftv).
+# Pre-built images: registry.gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/
+# Lokaal bouwen: docker compose -f docker-compose.auth.yml up --build (vereist ../../open-ftv checkout)
 #
 # Poorten:
-#   9000: OpenFTV Manager (PAP+PIP) — HTTPS API
-#   9100: OpenFTV Manager — bundle endpoint (intern, voor PDP)
-#   8100: OpenFTV Manager — health endpoint
+#   9010: OpenFTV Manager (PAP+PIP) — HTTPS API  (9000 bezet door Minio)
+#   9110: OpenFTV Manager — bundle endpoint (intern, voor PDP)
+#   8110: OpenFTV Manager — health endpoint
 #   9004: OpenFTV PDP — AuthZEN evaluatie endpoint (HTTPS)
 #   8104: OpenFTV PDP — health endpoint
 #   8180: OpenFTV Management Interface (web UI)
@@ -38,14 +39,12 @@ services:
       - bitemp-auth
 
   openftv-manager:
-    build:
-      context: ../open-ftv
-      dockerfile: ./apps/manager/Dockerfile
+    image: registry.gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/manager:2.2.3
     container_name: bitemp-openftv-manager
     ports:
-      - "9000:8443"
-      - "9100:9443"
-      - "8100:8080"
+      - "9010:8443"
+      - "9110:9443"
+      - "8110:8080"
     environment:
       - MANAGER_PERSIST_TYPE=postgres
       - MANAGER_PERSIST_POSTGRES_URL=postgres://openftv:openftv@openftv-db:5432/openftv?sslmode=disable
@@ -72,16 +71,14 @@ services:
     networks:
       - bitemp-auth
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz > /dev/null 2>&1 || exit 1"]
       interval: 4s
       timeout: 10s
       retries: 5
-      start_period: 2s
+      start_period: 5s
 
   openftv-pdp:
-    build:
-      context: ../open-ftv
-      dockerfile: ./apps/pdp/Dockerfile
+    image: registry.gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/pdp:2.2.3
     container_name: bitemp-openftv-pdp
     ports:
       - "9004:8443"
@@ -106,20 +103,18 @@ services:
     networks:
       - bitemp-auth
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/livez"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/livez > /dev/null 2>&1 || exit 1"]
       interval: 4s
       timeout: 10s
       retries: 5
-      start_period: 2s
+      start_period: 5s
 
   openftv-mi:
-    build:
-      context: ../open-ftv
-      dockerfile: ./apps/management-interface/Dockerfile
+    image: registry.gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/eam/management-interface:2.2.3
     container_name: bitemp-openftv-mi
     environment:
-      VITE_PAP_BASE_URL: "http://localhost:9000"
-      VITE_PIP_BASE_URL: "http://localhost:9000"
+      VITE_PAP_BASE_URL: "http://localhost:9010"
+      VITE_PIP_BASE_URL: "http://localhost:9010"
     ports:
       - "8180:8080"
     depends_on:

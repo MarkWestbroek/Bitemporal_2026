@@ -89,7 +89,7 @@
 │                  OpenFTV Sidecar (Docker)                           │
 │                                                                     │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐          │
-│  │   PDP :9004  │◀───│ Manager :9000│───▶│   MI :8180   │          │
+│  │   PDP :9004  │◀───│ Manager :9010│───▶│   MI :8180   │          │
 │  │ (evaluatie)  │    │ (PAP + PIP)  │    │  (web UI)    │          │
 │  └──────────────┘    └──────────────┘    └──────────────┘          │
 │         ▲                    │                                      │
@@ -600,7 +600,7 @@ docker compose -f docker-compose.auth.yml up --build
 | Service | URL | Functie |
 |---------|-----|---------|
 | PDP | http://localhost:9004/authzen/v1/evaluation | Autorisatie-evaluatie |
-| Manager | http://localhost:9000 | Beleidsbeheer API |
+| Manager | http://localhost:9010 | Beleidsbeheer API |
 | MI | http://localhost:8180 | Management Interface (web UI) |
 | PDP Health | http://localhost:8104/livez | Health check |
 

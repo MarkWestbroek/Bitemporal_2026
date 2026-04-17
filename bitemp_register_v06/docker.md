@@ -88,6 +88,30 @@ Pas daarna minimaal aan in `.env.docker`:
 - `ADMIN_DROP_PASSWORD`
 - eventueel `API_IMAGE`
 
+### 1.1.1 Poorten aanpassen als lokale dev ook draait
+
+De standaard host-poorten (`API_PORT=8082`, `FRONTEND_PORT=8083`) kunnen conflicteren als je tegelijk lokaal ontwikkelt (Go dev server op 8082, Vite op 5173/5174).
+
+Zet in `.env.docker` andere host-poorten:
+
+```dotenv
+API_PORT=8085
+FRONTEND_PORT=8086
+```
+
+De interne containerpoorten veranderen niet (API: 8080, Frontend: 80). Alleen de host-side mapping schuift op.
+
+### 1.1.2 MinIO bucket-scheiding (dev vs. Docker)
+
+Lokale dev en een Docker-instantie die dezelfde MinIO gebruiken, landen standaard in dezelfde bucket. Om te voorkomen dat testdata en dev-bestanden door elkaar lopen:
+
+- **Lokaal `.env`**: `MINIO_BUCKET=ide-bestanden-dev`
+- **`.env.docker`**: `MINIO_BUCKET=ide-bestanden-docker` (of `ide-bestanden` voor productie)
+
+De API maakt de bucket automatisch aan bij startup als die nog niet bestaat. Geen verdere configuratie nodig.
+
+De MinIO console (http://localhost:9001) is beschikbaar met de credentials uit `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` (standaard: `minioadmin` / `minioadmin`).
+
 ### 1.2 Eerste deployment op nieuwe omgeving (database automatisch laten aanmaken)
 
 De API kan bij startup optioneel zelf de database aanmaken als die nog niet bestaat.

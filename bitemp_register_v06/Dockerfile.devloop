@@ -19,7 +19,7 @@ COPY uml-editor/ /app/uml-editor/
 RUN npm run build
 
 # ---------- Stage 2: Devloop image met Go + Node + source ----------
-FROM golang:1.24-alpine
+FROM golang:1.25-alpine
 
 RUN apk add --no-cache git nodejs npm bash
 

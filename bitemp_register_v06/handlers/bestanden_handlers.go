@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,12 +18,30 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// MaxInlineGrootte is de maximale grootte voor inline opslag in de database (1 MB).
-const MaxInlineGrootte = 1024 * 1024
+// MaxInlineGrootte is de drempelwaarde voor inline vs. MinIO-opslag.
+// Bestanden tot deze grootte worden inline in de DB opgeslagen; grotere bestanden gaan naar MinIO.
+// Standaard 1 MB; overschrijfbaar via env var BESTAND_INLINE_DREMPEL_MB.
+var MaxInlineGrootte int64 = 1024 * 1024
+
+// MaxBestandGrootte is de absolute bovengrens voor uploads.
+// Standaard 500 MB; overschrijfbaar via env var BESTAND_MAX_GROOTTE_MB.
+var MaxBestandGrootte int64 = 500 * 1024 * 1024
+
+func init() {
+	if v := os.Getenv("BESTAND_INLINE_DREMPEL_MB"); v != "" {
+		if mb, err := strconv.ParseInt(v, 10, 64); err == nil && mb > 0 {
+			MaxInlineGrootte = mb * 1024 * 1024
+		}
+	}
+	if v := os.Getenv("BESTAND_MAX_GROOTTE_MB"); v != "" {
+		if mb, err := strconv.ParseInt(v, 10, 64); err == nil && mb > 0 {
+			MaxBestandGrootte = mb * 1024 * 1024
+		}
+	}
+}
 
 // MaakUploadBestandHandler retourneert een handler voor multipart file upload.
-// Kleine tekstbestanden (≤ 1 MB) worden inline in de database opgeslagen,
-// grotere of binaire bestanden gaan naar MinIO.
+// Slaat het bestand op als IdeBestand in de database (inline of MinIO via RegistreerBestandSnapshot).
 //
 // POST /api/bestanden/upload
 // multipart/form-data met velden: file, naam (optioneel), beschrijving (optioneel),
@@ -35,10 +55,26 @@ func MaakUploadBestandHandler() gin.HandlerFunc {
 		}
 		defer file.Close()
 
-		// Lees het volledige bestand in geheugen (voor hash + inline check)
+		// Vroeg-check op bestandsgrootte via Content-Length header (snel, zonder inlezen)
+		if header.Size > MaxBestandGrootte {
+			c.JSON(http.StatusRequestEntityTooLarge, gin.H{
+				"error": fmt.Sprintf("Bestand te groot: %d MB (maximum is %d MB).", header.Size/1024/1024, MaxBestandGrootte/1024/1024),
+			})
+			return
+		}
+
+		// Lees het volledige bestand in geheugen
 		data, err := io.ReadAll(file)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Bestand lezen mislukt: " + err.Error()})
+			return
+		}
+
+		// Definitieve check na inlezen (verdedigingslinie tegen afwijkende header.Size)
+		if int64(len(data)) > MaxBestandGrootte {
+			c.JSON(http.StatusRequestEntityTooLarge, gin.H{
+				"error": fmt.Sprintf("Bestand te groot: %d MB (maximum is %d MB).", int64(len(data))/1024/1024, MaxBestandGrootte/1024/1024),
+			})
 			return
 		}
 
@@ -60,63 +96,24 @@ func MaakUploadBestandHandler() gin.HandlerFunc {
 		tags := c.PostForm("tags")
 		versieLabel := c.PostForm("versie_label")
 
-		sha256Hash := filestore.BerekenSHA256(data)
-		grootte := int64(len(data))
-
-		// Bepaal opslag strategie
-		opslagType := "inline"
-		var objectKey string
-		var inlineInhoud string
-
-		isTekst := isTekstFormaat(bestandsformaat)
-
-		if isTekst && grootte <= MaxInlineGrootte {
-			// Inline opslag
-			opslagType = "inline"
-			inlineInhoud = string(data)
-		} else if filestore.Beschikbaar {
-			// MinIO opslag
-			opslagType = "minio"
-			objectKey = genereerObjectKey(categorie, naam)
-
-			result, err := filestore.Huidig().Upload(
-				c.Request.Context(),
-				objectKey,
-				bytes.NewReader(data),
-				grootte,
-				mimeType,
-			)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "MinIO upload mislukt: " + err.Error()})
-				return
-			}
-			sha256Hash = result.SHA256Hash
-		} else {
-			// Geen MinIO, maar bestand te groot voor inline
-			if grootte > MaxInlineGrootte {
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error": fmt.Sprintf("Bestand te groot voor inline opslag (%d bytes > %d bytes) en MinIO is niet beschikbaar.", grootte, MaxInlineGrootte),
-				})
-				return
-			}
-			inlineInhoud = string(data)
-		}
-
-		c.JSON(http.StatusOK, gin.H{
-			"naam":            naam,
-			"beschrijving":    beschrijving,
-			"categorie":       categorie,
-			"bestandsformaat": bestandsformaat,
-			"mime_type":       mimeType,
-			"domein":          domein,
-			"tags":            tags,
-			"opslag_type":     opslagType,
-			"object_key":      objectKey,
-			"inline_inhoud":   inlineInhoud != "",
-			"sha256_hash":     sha256Hash,
-			"grootte_bytes":   grootte,
-			"versie_label":    versieLabel,
+		// Sla op in DB (inline of MinIO) via de standaard snapshot-registratie.
+		err = RegistreerBestandSnapshot(c.Request.Context(), DB, BestandSnapshotParams{
+			Naam:         naam,
+			Beschrijving: beschrijving,
+			Categorie:    model.IdeBestandCategorie(categorie),
+			Formaat:      model.IdeBestandFormaat(bestandsformaat),
+			MimeType:     mimeType,
+			Domein:       domein,
+			Tags:         tags,
+			VersieLabel:  versieLabel,
+			Inhoud:       string(data),
+			Opmerking:    "upload via IDE bestanden-tab",
 		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Opslaan mislukt: " + err.Error()})
+			return
+		}
+		c.JSON(http.StatusCreated, gin.H{"status": "opgeslagen", "naam": naam})
 	}
 }
 
@@ -260,10 +257,14 @@ func MaakPreviewBestandHandler() gin.HandlerFunc {
 }
 
 // RegistreerBestandSnapshot slaat een IdeBestand op als bitemporale registratie.
-// Wordt intern aangeroepen door auto-snapshot hooks (publish, rebuild).
+// Wordt intern aangeroepen door auto-snapshot hooks (publish, rebuild) en de upload handler.
 func RegistreerBestandSnapshot(ctx context.Context, db *bun.DB, params BestandSnapshotParams) error {
-	sha256Hash := filestore.BerekenSHA256([]byte(params.Inhoud))
 	grootte := int64(len(params.Inhoud))
+	if grootte > MaxBestandGrootte {
+		return fmt.Errorf("bestand te groot: %d MB (maximum is %d MB)", grootte/1024/1024, MaxBestandGrootte/1024/1024)
+	}
+
+	sha256Hash := filestore.BerekenSHA256([]byte(params.Inhoud))
 
 	opslagType := model.IdeBestandOpslagTypeInline
 	objectKey := ""
@@ -298,20 +299,23 @@ func RegistreerBestandSnapshot(ctx context.Context, db *bun.DB, params BestandSn
 	}
 	nieuwID := maxID + 1
 
-	// Registratie aanmaken
+	// Registratie aanmaken — tijdstip nu instellen zodat het terugkomt via Returning
 	var opmerking *string
 	if params.Opmerking != "" {
 		o := params.Opmerking
 		opmerking = &o
 	}
+	nu := time.Now()
 	reg := model.Registratie{
 		Registratietype: model.RegistratietypeRegistratie,
 		Opmerking:       opmerking,
+		Tijdstip:        nu,
 	}
-	_, err = db.NewInsert().Model(&reg).Exec(ctx)
+	_, err = db.NewInsert().Model(&reg).Returning("*").Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("registratie aanmaken mislukt: %w", err)
 	}
+	opvoerTijdstip := reg.Tijdstip
 
 	// Wijziging 1: opvoer entiteit
 	wij1 := model.Wijziging{
@@ -325,7 +329,7 @@ func RegistreerBestandSnapshot(ctx context.Context, db *bun.DB, params BestandSn
 	}
 
 	// IdeBestand entiteit
-	ent := model.IdeBestand{ID: int(nieuwID)}
+	ent := model.IdeBestand{ID: int(nieuwID), Opvoer: &opvoerTijdstip}
 	_, err = db.NewInsert().Model(&ent).Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("ide_bestand insert mislukt: %w", err)
@@ -345,6 +349,7 @@ func RegistreerBestandSnapshot(ctx context.Context, db *bun.DB, params BestandSn
 	metaHub := model.IdeBestand_Meta{
 		IdeBestand_ID: int(nieuwID),
 		Rel_ID:        1,
+		Opvoer:        &opvoerTijdstip,
 	}
 	_, err = db.NewInsert().Model(&metaHub).Exec(ctx)
 	if err != nil {
@@ -362,6 +367,7 @@ func RegistreerBestandSnapshot(ctx context.Context, db *bun.DB, params BestandSn
 		MimeType:        params.MimeType,
 		Domein:          params.Domein,
 		Tags:            params.Tags,
+		Opvoer:          &opvoerTijdstip,
 	}
 	_, err = db.NewInsert().Model(&metaData).Exec(ctx)
 	if err != nil {
@@ -382,6 +388,7 @@ func RegistreerBestandSnapshot(ctx context.Context, db *bun.DB, params BestandSn
 	inhoudHub := model.IdeBestand_Inhoud{
 		IdeBestand_ID: int(nieuwID),
 		Rel_ID:        1,
+		Opvoer:        &opvoerTijdstip,
 	}
 	_, err = db.NewInsert().Model(&inhoudHub).Exec(ctx)
 	if err != nil {
@@ -398,6 +405,7 @@ func RegistreerBestandSnapshot(ctx context.Context, db *bun.DB, params BestandSn
 		Sha256Hash:    sha256Hash,
 		GrootteBytes:  grootte,
 		VersieLabel:   params.VersieLabel,
+		Opvoer:        &opvoerTijdstip,
 	}
 	_, err = db.NewInsert().Model(&inhoudData).Exec(ctx)
 	if err != nil {
