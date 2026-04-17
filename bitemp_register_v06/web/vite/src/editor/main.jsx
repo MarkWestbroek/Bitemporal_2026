@@ -1,6 +1,9 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Routes, Route, Link } from "react-router";
+import { AuthProvider } from "../context/AuthContext";
+import AuthBeschermd from "../components/AuthBeschermd";
+import GebruikerBadge from "../components/GebruikerBadge";
 import { SchemaProvider, useSchema } from "../context/SchemaContext";
 import EditorNavigatie from "../components/editor/EditorNavigatie";
 import InhoudEditorPage from "../pages/InhoudEditorPage";
@@ -132,28 +135,33 @@ function EditorApp() {
   const baseUrl = detectBaseUrl();
 
   return (
-    <SchemaProvider baseUrl={baseUrl}>
-      <div className="common-ground-theme" style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
-        {/* Top navigatiebalk */}
-        <header className="cg-editor-nav">
-          <img src={logoUrl} alt="Common Ground" className="cg-editor-nav__logo" />
-          <span className="cg-editor-nav__title">Register — Inhoud Editor</span>
-        </header>
+    <AuthProvider>
+      <SchemaProvider baseUrl={baseUrl}>
+        <AuthBeschermd vereistRol="editor">
+          <div className="common-ground-theme" style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+            {/* Top navigatiebalk */}
+            <header className="cg-editor-nav">
+              <img src={logoUrl} alt="Common Ground" className="cg-editor-nav__logo" />
+              <span className="cg-editor-nav__title">Register — Inhoud Editor</span>
+              <GebruikerBadge />
+            </header>
 
-        {/* Layout: sidebar + main */}
-        <div className="cg-editor-layout">
-          <EditorNavigatie />
-          <main className="cg-editor-main">
-            <Routes>
-              <Route path="/t/:typePad" element={<InhoudEditorPage />} />
-              <Route path="/t/:typePad/nieuw" element={<NieuwRecordFormulier />} />
-              <Route path="/t/:typePad/:id" element={<EntiteitFormulier />} />
-              <Route path="*" element={<InhoudStartPage />} />
-            </Routes>
-          </main>
-        </div>
-      </div>
-    </SchemaProvider>
+            {/* Layout: sidebar + main */}
+            <div className="cg-editor-layout">
+              <EditorNavigatie />
+              <main className="cg-editor-main">
+                <Routes>
+                  <Route path="/t/:typePad" element={<InhoudEditorPage />} />
+                  <Route path="/t/:typePad/nieuw" element={<NieuwRecordFormulier />} />
+                  <Route path="/t/:typePad/:id" element={<EntiteitFormulier />} />
+                  <Route path="*" element={<InhoudStartPage />} />
+                </Routes>
+              </main>
+            </div>
+          </div>
+        </AuthBeschermd>
+      </SchemaProvider>
+    </AuthProvider>
   );
 }
 

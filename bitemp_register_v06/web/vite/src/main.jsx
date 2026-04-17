@@ -1,5 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
+import { AuthProvider } from "./context/AuthContext";
 import App from "./App";
 
 if (import.meta.hot) {
@@ -77,6 +78,8 @@ class RootErrorBoundary extends React.Component {
 // "removeChild" fouten met deze libraries.
 createRoot(document.getElementById("root")).render(
   <RootErrorBoundary>
-    <App />
+    <AuthProvider>
+      <App />
+    </AuthProvider>
   </RootErrorBoundary>
 );

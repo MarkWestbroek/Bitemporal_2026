@@ -13,10 +13,11 @@
 4. [Scenario's met sequence-diagrammen](#4-scenarios-met-sequence-diagrammen)
 5. [Bestanden en verantwoordelijkheden](#5-bestanden-en-verantwoordelijkheden)
 6. [Database: Gebruiker-tabel](#6-database-gebruiker-tabel)
-7. [Feature flag: AUTH_ENABLED](#7-feature-flag-auth_enabled)
+7. [Feature flags](#7-feature-flags)
 8. [Rollen en hiërarchie](#8-rollen-en-hiërarchie)
 9. [OpenFTV sidecar](#9-openftv-sidecar)
-10. [Veelgestelde vragen](#10-veelgestelde-vragen)
+10. [Frontend authenticatie](#10-frontend-authenticatie)
+11. [Veelgestelde vragen](#11-veelgestelde-vragen)
 
 ---
 
@@ -146,9 +147,9 @@ Na succesvolle login genereert `middleware.GenereerJWT()`:
 
 ```
 Header:   {"alg": "HS256", "typ": "JWT"}
-Payload:  {"sub": "jan", "iss": "bitemp-register-v06",
+Payload:  {"sub": "henk", "iss": "bitemp-register-v06",
            "iat": 1713350400, "exp": 1713436800,
-           "gebruikersnaam": "jan", "rol": "editor", "email": "jan@example.com"}
+           "gebruikersnaam": "henk", "rol": "editor", "email": "jan@example.com"}
 Signature: HMAC-SHA256(header + "." + payload, JWT_SECRET)
 ```
 
@@ -228,16 +229,16 @@ sequenceDiagram
     participant H as LoginHandler
     participant DB as PostgreSQL
 
-    B->>G: POST /api/auth/login<br/>{"gebruikersnaam":"jan","wachtwoord":"geheim"}
+    B->>G: POST /api/auth/login<br/>{"gebruikersnaam":"henk","wachtwoord":"geheim"}
     G->>MW: (middleware keten — geen cookie aanwezig)
     MW->>MW: Geen cookie → c.Next() (geen claims gezet)
     MW->>H: Request doorgestuurd
 
-    H->>DB: SELECT * FROM gebruiker<br/>WHERE gebruikersnaam='jan' AND actief=true
+    H->>DB: SELECT * FROM gebruiker<br/>WHERE gebruikersnaam='henk' AND actief=true
     DB-->>H: Gebruiker gevonden (met wachtwoord_hash)
 
     H->>H: bcrypt.CompareHashAndPassword(hash, "geheim") ✓
-    H->>H: middleware.GenereerJWT("jan", "editor", "jan@example.com")
+    H->>H: middleware.GenereerJWT("henk", "editor", "jan@example.com")
     H->>H: JWT-token aangemaakt
 
     H->>DB: UPDATE gebruiker SET laatste_login_op = NOW()
@@ -262,7 +263,7 @@ sequenceDiagram
 
     G->>MW: JWTAuthMiddleware
     MW->>MW: Leest cookie → ValideerJWT(token)
-    MW->>MW: Token geldig: {gebruikersnaam:"jan", rol:"editor"}
+    MW->>MW: Token geldig: {gebruikersnaam:"henk", rol:"editor"}
     MW->>MW: c.Set("gebruiker", claims)
     MW->>RA: c.Next()
 
@@ -292,7 +293,7 @@ sequenceDiagram
 
     G->>MW: JWTAuthMiddleware
     MW->>MW: Leest cookie → ValideerJWT(token)
-    MW->>MW: Token geldig: {gebruikersnaam:"jan", rol:"viewer"}
+    MW->>MW: Token geldig: {gebruikersnaam:"henk", rol:"viewer"}
     MW->>MW: c.Set("gebruiker", claims)
     MW->>RA: c.Next()
 
@@ -389,7 +390,7 @@ sequenceDiagram
         H-->>B: {"auth_enabled":false, "ingelogd":false}
         Note over B: Frontend toont geen login-knop<br/>Alles is open
     else Auth aan, ingelogd
-        H-->>B: {"auth_enabled":true, "ingelogd":true,<br/>"gebruikersnaam":"jan", "rol":"editor"}
+        H-->>B: {"auth_enabled":true, "ingelogd":true,<br/>"gebruikersnaam":"henk", "rol":"editor"}
         Note over B: Frontend toont gebruikersnaam<br/>en rol-specifieke UI
     else Auth aan, niet ingelogd
         H-->>B: {"auth_enabled":true, "ingelogd":false}
@@ -414,7 +415,7 @@ sequenceDiagram
     MW->>MW: JWT geldig → claims in context
     MW->>PEP: c.Next()
 
-    PEP->>PEP: Bouw AuthZEN request:<br/>{subject:{id:"jan",properties:{role:"editor"}},<br/>action:{name:"write"},<br/>resource:{type:"api",id:"registreer"}}
+    PEP->>PEP: Bouw AuthZEN request:<br/>{subject:{id:"henk",properties:{role:"editor"}},<br/>action:{name:"write"},<br/>resource:{type:"api",id:"registreer"}}
 
     PEP->>PDP: POST /authzen/v1/evaluation
     PDP->>PDP: Evalueer bitemp_authz.rego<br/>editor mag "write" op "api" → allow = true
@@ -462,6 +463,19 @@ sequenceDiagram
 | `authz/authzen_client.go` | **AuthZEN HTTP-client**: stuurt evaluatieverzoeken naar de OpenFTV PDP (`POST /authzen/v1/evaluation`). Bevat structs voor AuthZEN-protocol (`EvaluatieVerzoek`, `EvaluatieResultaat`), connection pooling, timeout (5s), en convenience-methode `EvalueerKort()`. Leest `OPENFTV_PDP_URL` (default: `http://localhost:9004`). |
 | `middleware/authz_pep.go` | **PEP middleware**: `AuthzPEPMiddleware()` — mapt HTTP method+pad → AuthZEN actie+resource, stuurt evaluatieverzoek naar PDP, dwingt `decision: false` af met 403. Publieke paden (OPTIONS, `/api/auth/*`, `/viz/*`, etc.) slaan PDP over. Feature flags: `AUTHZ_PDP_ENABLED`, `AUTHZ_DENY_ON_ERROR`. Lazy client-initialisatie via `initAuthzClient()`. |
 | `middleware/authz_pep_test.go` | **Unit tests**: 3 testfuncties met ~50 cases voor `BepaalAuthZENActie()`, `BepaalAuthZENResource()` en `isPubliekPad()`. |
+
+### Frontend Authenticatie (Phase 4)
+
+| Bestand | Verantwoordelijkheid |
+|---------|---------------------|
+| `web/vite/src/context/AuthContext.jsx` | **Auth state management**: `AuthProvider` (React Context) haalt bij mount de status op via `GET /api/auth/status`. Biedt: `authEnabled`, `ingelogd`, `gebruiker`, `laden`, `fout`, `login()`, `logout()`, `verversStatus()`. Cookie is httpOnly → wordt automatisch meegestuurd, geen JS token-opslag nodig. |
+| `web/vite/src/components/LoginPagina.jsx` | **Inlogformulier**: gebruikersnaam + wachtwoord in Common Ground / Utrecht stijl. Toont foutmeldingen van backend. |
+| `web/vite/src/components/AuthBeschermd.jsx` | **Route-bescherming**: wrapper-component dat een pagina alleen toont als de gebruiker is ingelogd met de vereiste rol. Als `AUTH_ENABLED=false` → alles open. Bij onvoldoende rechten toont het een foutpagina. |
+| `web/vite/src/components/GebruikerBadge.jsx` | **Gebruikersindicator**: toont gebruikersnaam + rol-badge + uitlogknop in de header-balk. Verbergt zichzelf als auth niet actief is. |
+| `web/vite/src/main.jsx` | **Gewrapped** met `<AuthProvider>` zodat alle 7 MPA-pagina's toegang hebben tot auth-status. |
+| `web/vite/src/App.jsx` | **Beschermde routes**: `editor-v2`, `editor` en `ide` zijn gewrapped met `<AuthBeschermd vereistRol="editor">`. Publieke pagina's (index, tijdlijn, registraties, universum) zijn onbeschermd. |
+| `web/vite/src/editor/main.jsx` | **Inhoud editor**: gewrapped met `<AuthProvider>` + `<AuthBeschermd vereistRol="editor">` + `<GebruikerBadge>` in de header. |
+| `web/vite/src/publicatie/main.jsx` | **Publicatie**: gewrapped met `<AuthProvider>` + `<GebruikerBadge>` in de header. Publicatie is leesbaar voor iedereen, maar toont gebruikersinfo als ingelogd. |
 
 ---
 
@@ -597,7 +611,50 @@ docker compose -f docker-compose.auth.yml up --build
 
 ---
 
-## 10. Veelgestelde vragen
+## 10. Frontend authenticatie
+
+De frontend is een **Multi-Page Application** (MPA) met 9 HTML entry-points. Authenticatie is geïntegreerd via React Context, zonder extra routing-library.
+
+### Architectuur
+
+```
+main.jsx (7 pagina's)           editor/main.jsx (inhoud)     publicatie/main.jsx
+    │                                │                            │
+    └─ <AuthProvider>                └─ <AuthProvider>            └─ <AuthProvider>
+        └─ <App>                        └─ <AuthBeschermd>           └─ <GebruikerBadge>
+            ├─ index        (open)          └─ <EditorApp>               └─ <PublicatieApp>
+            ├─ tijdlijn     (open)              └─ <GebruikerBadge>
+            ├─ registraties (open)
+            ├─ universum    (open)
+            ├─ editor-v2    (editor) ← AuthBeschermd
+            ├─ editor       (editor) ← AuthBeschermd
+            └─ ide          (editor) ← AuthBeschermd
+```
+
+### Hoe het werkt
+
+1. **Bij mount** haalt `AuthProvider` de status op via `GET /api/auth/status`
+2. Als `auth_enabled: false` → alles open, geen loginscherm, geen badge
+3. Als `auth_enabled: true` en een beschermde pagina wordt geopend:
+   - Niet ingelogd → `LoginPagina` wordt getoond
+   - Ingelogd met verkeerde rol → "Onvoldoende rechten" bericht
+   - Ingelogd met juiste rol → pagina wordt getoond + `GebruikerBadge` in header
+4. Cookie is httpOnly → wordt automatisch meegestuurd door de browser, geen JS token-opslag
+
+### Beschermde pagina's
+
+| Pagina | Vereiste rol | Entry point |
+|--------|-------------|-------------|
+| editor-v2 | editor | `main.jsx` → `App.jsx` |
+| editor | editor | `main.jsx` → `App.jsx` |
+| ide | editor | `main.jsx` → `App.jsx` |
+| inhoud | editor | `editor/main.jsx` |
+| index, tijdlijn, registraties, universum | geen | `main.jsx` → `App.jsx` |
+| publicatie | geen | `publicatie/main.jsx` |
+
+---
+
+## 11. Veelgestelde vragen
 
 **Q: Waarom een httpOnly cookie in plaats van `Authorization: Bearer` header?**
 A: Een httpOnly cookie is veiliger tegen XSS (JavaScript kan het token niet lezen). De browser stuurt de cookie automatisch mee; de frontend hoeft het token niet op te slaan of te beheren.

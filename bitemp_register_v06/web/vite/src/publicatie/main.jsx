@@ -1,6 +1,8 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Routes, Route, Link, useNavigate } from "react-router";
+import { AuthProvider } from "../context/AuthContext";
+import GebruikerBadge from "../components/GebruikerBadge";
 import { SchemaProvider, useSchema } from "../context/SchemaContext";
 
 // Stijlen
@@ -86,27 +88,30 @@ function PublicatieApp() {
   const baseUrl = detectBaseUrl();
 
   return (
-    <SchemaProvider baseUrl={baseUrl}>
-      <div
-        className="common-ground-theme"
-        style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
-      >
-        <header className="cg-editor-nav">
-          <Link to="/" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
-            <img src={logoUrl} alt="Common Ground" className="cg-editor-nav__logo" />
-          </Link>
-          <span className="cg-editor-nav__title">Register — Publicatie</span>
-        </header>
+    <AuthProvider>
+      <SchemaProvider baseUrl={baseUrl}>
+        <div
+          className="common-ground-theme"
+          style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+        >
+          <header className="cg-editor-nav">
+            <Link to="/" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
+              <img src={logoUrl} alt="Common Ground" className="cg-editor-nav__logo" />
+            </Link>
+            <span className="cg-editor-nav__title">Register — Publicatie</span>
+            <GebruikerBadge />
+          </header>
 
-        <main style={{ flex: 1, padding: "0.5rem 1rem" }}>
-          <Routes>
-            <Route path="/t/:typePad" element={<PublicatieTabel />} />
-            <Route path="/t/:typePad/:id" element={<PublicatieDetail />} />
-            <Route path="*" element={<PublicatieLanding />} />
-          </Routes>
-        </main>
-      </div>
-    </SchemaProvider>
+          <main style={{ flex: 1, padding: "0.5rem 1rem" }}>
+            <Routes>
+              <Route path="/t/:typePad" element={<PublicatieTabel />} />
+              <Route path="/t/:typePad/:id" element={<PublicatieDetail />} />
+              <Route path="*" element={<PublicatieLanding />} />
+            </Routes>
+          </main>
+        </div>
+      </SchemaProvider>
+    </AuthProvider>
   );
 }
 

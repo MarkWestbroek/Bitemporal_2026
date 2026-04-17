@@ -1,4 +1,6 @@
 import { useMemo, lazy, Suspense } from "react";
+import { useAuth } from "./context/AuthContext";
+import AuthBeschermd from "./components/AuthBeschermd";
 import IndexSchemaPage from "./pages/IndexSchemaPage";
 import TijdlijnSchemaPage from "./pages/TijdlijnSchemaPage";
 import RegistratieReplayPage from "./pages/RegistratieReplayPage";
@@ -72,9 +74,11 @@ export default function App() {
 
   if (route === "editor-v2") {
     return (
-      <Suspense fallback={<div style={{ padding: 32 }}>Editor v2 laden…</div>}>
-        <EditorV2Page />
-      </Suspense>
+      <AuthBeschermd vereistRol="editor">
+        <Suspense fallback={<div style={{ padding: 32 }}>Editor v2 laden…</div>}>
+          <EditorV2Page />
+        </Suspense>
+      </AuthBeschermd>
     );
   }
 
@@ -88,17 +92,21 @@ export default function App() {
 
   if (route === "ide") {
     return (
-      <Suspense fallback={<div style={{ padding: 32 }}>IDE laden…</div>}>
-        <IdePage />
-      </Suspense>
+      <AuthBeschermd vereistRol="editor">
+        <Suspense fallback={<div style={{ padding: 32 }}>IDE laden…</div>}>
+          <IdePage />
+        </Suspense>
+      </AuthBeschermd>
     );
   }
 
   if (route === "editor") {
     return (
-      <Suspense fallback={<div style={{ padding: 32 }}>Editor laden…</div>}>
-        <EditorPage />
-      </Suspense>
+      <AuthBeschermd vereistRol="editor">
+        <Suspense fallback={<div style={{ padding: 32 }}>Editor laden…</div>}>
+          <EditorPage />
+        </Suspense>
+      </AuthBeschermd>
     );
   }
 
