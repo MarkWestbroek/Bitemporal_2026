@@ -20,6 +20,7 @@ import (
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/dynql"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/filestore"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/handlers"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/middleware"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/routes"
 )
 
@@ -72,6 +73,13 @@ func main() {
 
 	handlers.DB = db
 
+	// Seed admin-gebruiker als AUTH_ENABLED en ADMIN_USERNAME/ADMIN_PASSWORD zijn ingesteld
+	if middleware.IsAuthEnabled() {
+		if err := handlers.SeedAdminGebruiker(context.Background()); err != nil {
+			fmt.Println("WARN: Admin-seed mislukt:", err)
+		}
+	}
+
 	// Initialiseer MinIO filestore (optioneel — graceful degradation als niet geconfigureerd)
 	if err := filestore.Init(); err != nil {
 		fmt.Println("WARN: MinIO initialisatie mislukt:", err)
@@ -114,8 +122,17 @@ func isProductionEnvironment() bool {
 func NewRouter() *gin.Engine {
 	router := gin.Default()
 
-	// Registreer middleware (o.a. CORS) vóór alle endpoint-definities.
+	// Registreer middleware (o.a. CORS, JWT) vóór alle endpoint-definities.
 	routes.SetupMiddleware(router)
+
+	// === Authenticatie routes (publiek, geen auth vereist) ===
+	auth := router.Group("/api/auth")
+	{
+		auth.POST("/login", handlers.LoginHandler())
+		auth.POST("/logout", handlers.LogoutHandler())
+		auth.GET("/me", handlers.MeHandler())
+		auth.GET("/status", handlers.AuthStatusHandler())
+	}
 
 	//Homepage
 	router.GET("/", handlers.HomePage)

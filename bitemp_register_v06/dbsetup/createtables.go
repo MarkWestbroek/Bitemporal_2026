@@ -133,6 +133,12 @@ func CreateTables(db *bun.DB) error {
 	// Referentielijst-instanties worden nu via registratie of replay-bestanden aangemaakt.
 	// De tabel wordt al aangemaakt door createModelTables via de MetaRegistry-entry "Referentielijst".
 
+	// Gebruiker tabel (authenticatie + autorisatie, plumbing)
+	_, err = db.NewCreateTable().Model((*model.Gebruiker)(nil)).IfNotExists().Exec(ctx)
+	if err != nil {
+		return err
+	}
+
 	//Bitemporal core tables
 	// Wijziging table
 	_, err = db.NewCreateTable().Model((*model.Wijziging)(nil)).IfNotExists().Exec(ctx)

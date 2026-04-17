@@ -98,7 +98,18 @@
         "http://localhost:8082/api/schema/model": true,
         "http://localhost:8082/api/schema": true,
         "http://localhost:8082/api": true,
-        "http://localhost:8082": true
+        "http://localhost:8082": true,
+        "https://gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/-/tree/main/apps": true,
+        "https://gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/-/tree/main": true,
+        "https://gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/-/tree": true,
+        "https://gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/-": true,
+        "https://gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv": true,
+        "https://gitlab.com/digilab.overheid.nl/ecosystem/ftv": true,
+        "https://gitlab.com/digilab.overheid.nl/ecosystem": true,
+        "https://gitlab.com/digilab.overheid.nl": true,
+        "https://gitlab.com": true,
+        "https://gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/-/tree/main/apps/pdp": true,
+        "https://gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv/-/tree/main/eam": true
     },
     "chat.restoreLastPanelSession": false,
     "settingsSync.ignoredSettings": [

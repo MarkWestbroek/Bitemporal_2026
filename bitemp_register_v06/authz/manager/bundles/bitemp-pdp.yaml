@@ -1,0 +1,12 @@
+---
+id: "bitemp-pdp"
+title: "Bitemp Register PDP deployment bundle"
+language: "rego"
+tags: ["bitemp"]
+policies: true
+data: true
+version: true
+targets:
+  - uri: "http://openftv-pdp:9443"
+    apikey: ""
+    encoding: "bzip2"

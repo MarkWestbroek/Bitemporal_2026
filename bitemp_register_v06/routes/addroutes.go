@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/handlers"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/middleware"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 	"github.com/gin-gonic/gin"
 )
@@ -37,6 +38,7 @@ func corsMiddleware() gin.HandlerFunc {
 		origin := c.GetHeader("Origin")
 		if _, ok := allowedOrigins[origin]; ok {
 			c.Header("Access-Control-Allow-Origin", origin)
+			c.Header("Access-Control-Allow-Credentials", "true")
 			c.Header("Vary", "Origin")
 		}
 
@@ -59,6 +61,10 @@ func SetupMiddleware(router *gin.Engine) {
 	// Moet vóór handler-registratie staan, zodat de body wordt opgevangen
 	// voordat ShouldBindJSON het consumeert.
 	router.Use(handlers.RequestBodyLogger())
+
+	// JWT auth middleware — extraheert en valideert JWT uit httpOnly cookie.
+	// Zet claims in context, maar blokkeert niet (dat doet RequireAuth).
+	router.Use(middleware.JWTAuthMiddleware())
 
 	// Preflight-handler: vangt OPTIONS /*path op zodat Gin het request
 	// doorgeeft aan de middleware hierboven (en niet met 405 afwijst).

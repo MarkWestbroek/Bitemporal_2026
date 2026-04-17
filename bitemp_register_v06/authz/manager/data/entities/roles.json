@@ -1,0 +1,22 @@
+{
+  "rol": {
+    "admin": {
+      "type": "rol",
+      "id": "admin",
+      "beschrijving": "Volledige toegang inclusief admin-endpoints",
+      "niveau": 3
+    },
+    "editor": {
+      "type": "rol",
+      "id": "editor",
+      "beschrijving": "Lezen + schrijven (registratie, correctie, schema-publicatie)",
+      "niveau": 2
+    },
+    "viewer": {
+      "type": "rol",
+      "id": "viewer",
+      "beschrijving": "Alleen lezen",
+      "niveau": 1
+    }
+  }
+}

@@ -1,0 +1,136 @@
+# docker-compose voor OpenFTV autorisatie-sidecar
+# Gebruikt samen met de bitemp_register_v06 API.
+#
+# Start met: docker compose -f docker-compose.auth.yml up --build
+#
+# Vereist dat het open-ftv repository beschikbaar is in ../../open-ftv
+# (relatief t.o.v. deze file, ofwel D:\Git\open-ftv).
+#
+# Poorten:
+#   9000: OpenFTV Manager (PAP+PIP) — HTTPS API
+#   9100: OpenFTV Manager — bundle endpoint (intern, voor PDP)
+#   8100: OpenFTV Manager — health endpoint
+#   9004: OpenFTV PDP — AuthZEN evaluatie endpoint (HTTPS)
+#   8104: OpenFTV PDP — health endpoint
+#   8180: OpenFTV Management Interface (web UI)
+#   5400: OpenFTV PostgreSQL database
+
+services:
+  openftv-db:
+    image: postgres:15
+    container_name: bitemp-openftv-db
+    ports:
+      - "5400:5432"
+    environment:
+      POSTGRES_USER: openftv
+      POSTGRES_PASSWORD: openftv
+      POSTGRES_DB: openftv
+    volumes:
+      - openftv-postgres-data:/var/lib/postgresql/data
+      - ./authz/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openftv -d openftv"]
+      interval: 4s
+      timeout: 10s
+      retries: 5
+      start_period: 2s
+    networks:
+      - bitemp-auth
+
+  openftv-manager:
+    build:
+      context: ../open-ftv
+      dockerfile: ./apps/manager/Dockerfile
+    container_name: bitemp-openftv-manager
+    ports:
+      - "9000:8443"
+      - "9100:9443"
+      - "8100:8080"
+    environment:
+      - MANAGER_PERSIST_TYPE=postgres
+      - MANAGER_PERSIST_POSTGRES_URL=postgres://openftv:openftv@openftv-db:5432/openftv?sslmode=disable
+      - MANAGER_MIGRATE_AUTO=true
+      - MANAGER_MIGRATE_SOURCE=*embed*
+      - MANAGER_POLICIES_LANGUAGE=rego
+      - MANAGER_POLICIES_STORE=/tmp/data/policies
+      - MANAGER_POLICIES_STORE_RECURSE=true
+      - MANAGER_PIP_STORE=/tmp/data/data
+      - MANAGER_PIP_STORE_RECURSE=true
+      - MANAGER_TAGS_PATH=/tmp/data/tags
+      - MANAGER_AUTHENTICATION_TYPE=none
+      - MANAGER_BUNDLE_CONFIGS=/tmp/data/bundles
+      - MANAGER_BUNDLE_RECURSE=true
+      - MANAGER_BUNDLE_SEND_TIMEOUT=60s
+      - MANAGER_ADL_TYPE=postgresql
+      - MANAGER_ADL_SERVICE_NAME=bitemp-register
+      - MANAGER_ADL_PG_URL=postgres://openftv:openftv@openftv-db:5432/openftv_adl?sslmode=disable
+    depends_on:
+      openftv-db:
+        condition: service_healthy
+    volumes:
+      - ./authz/manager:/tmp/data
+    networks:
+      - bitemp-auth
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 4s
+      timeout: 10s
+      retries: 5
+      start_period: 2s
+
+  openftv-pdp:
+    build:
+      context: ../open-ftv
+      dockerfile: ./apps/pdp/Dockerfile
+    container_name: bitemp-openftv-pdp
+    ports:
+      - "9004:8443"
+      - "9104:9443"
+      - "8104:8080"
+    environment:
+      - PDP_BUNDLE_MANAGER=http://openftv-manager:9443/v1/bundle/bitemp-pdp
+      - PDP_BUNDLE_ENCODING=bzip2
+      - PDP_BUNDLE_TIMEOUT=30s
+      - PDP_BUNDLE_RETRIES=5
+      - PDP_POLICIES_LANGUAGE=rego
+      - PDP_ADL_TYPE=postgresql
+      - PDP_ADL_SERVICE_NAME=bitemp-register
+      - PDP_ADL_PG_URL=postgres://openftv:openftv@openftv-db:5432/openftv_adl?sslmode=disable
+      - PDP_MIGRATE_AUTO=true
+      - PDP_MIGRATE_SOURCE=*embed*
+    depends_on:
+      openftv-manager:
+        condition: service_healthy
+    volumes:
+      - ./authz/pdp:/tmp/data
+    networks:
+      - bitemp-auth
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/livez"]
+      interval: 4s
+      timeout: 10s
+      retries: 5
+      start_period: 2s
+
+  openftv-mi:
+    build:
+      context: ../open-ftv
+      dockerfile: ./apps/management-interface/Dockerfile
+    container_name: bitemp-openftv-mi
+    environment:
+      VITE_PAP_BASE_URL: "http://localhost:9000"
+      VITE_PIP_BASE_URL: "http://localhost:9000"
+    ports:
+      - "8180:8080"
+    depends_on:
+      openftv-manager:
+        condition: service_healthy
+    networks:
+      - bitemp-auth
+
+volumes:
+  openftv-postgres-data:
+
+networks:
+  bitemp-auth:
+    driver: bridge

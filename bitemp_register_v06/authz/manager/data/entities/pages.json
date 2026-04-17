@@ -1,0 +1,68 @@
+{
+  "page": {
+    "index": {
+      "type": "page",
+      "id": "index",
+      "beschrijving": "Hoofdpagina met entiteiten, GE's en relaties"
+    },
+    "tijdlijn": {
+      "type": "page",
+      "id": "tijdlijn",
+      "beschrijving": "Tijdlijn van registraties en formele/materiële snapshots"
+    },
+    "registraties": {
+      "type": "page",
+      "id": "registraties",
+      "beschrijving": "Overzicht registraties"
+    },
+    "universum": {
+      "type": "page",
+      "id": "universum",
+      "beschrijving": "3D universum visualisatie"
+    },
+    "editor-v2": {
+      "type": "page",
+      "id": "editor-v2",
+      "beschrijving": "UML metamodel editor (v2)",
+      "vereiste_rol": "editor"
+    },
+    "editor": {
+      "type": "page",
+      "id": "editor",
+      "beschrijving": "UML metamodel editor (v1)",
+      "vereiste_rol": "editor"
+    },
+    "ide": {
+      "type": "page",
+      "id": "ide",
+      "beschrijving": "Integrated Development Environment",
+      "vereiste_rol": "editor"
+    },
+    "swagger": {
+      "type": "page",
+      "id": "swagger",
+      "beschrijving": "Swagger UI (OpenAPI)"
+    },
+    "redoc": {
+      "type": "page",
+      "id": "redoc",
+      "beschrijving": "ReDoc (OpenAPI)"
+    },
+    "graphiql": {
+      "type": "page",
+      "id": "graphiql",
+      "beschrijving": "GraphiQL playground"
+    },
+    "publicatie": {
+      "type": "page",
+      "id": "publicatie",
+      "beschrijving": "Schema publicatie en devloop rebuild"
+    },
+    "inhoud": {
+      "type": "page",
+      "id": "inhoud",
+      "beschrijving": "Inhoud editor — tabeloverzicht en formulieren voor registerdata",
+      "vereiste_rol": "editor"
+    }
+  }
+}
