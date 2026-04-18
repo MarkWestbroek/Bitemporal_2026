@@ -215,6 +215,27 @@ var baselineKernModelBestanden = []string{
 	"json",
 }
 
+// codegenGegeneerdeSuffixen zijn de bestandssuffixen die door codegen worden gegenereerd
+// per domein (patroon: {prefix}_{suffix}). Deze worden vóór codegen verwijderd zodat
+// handmatige bestanden intact blijven.
+var codegenGegeneerdeSuffixen = []string{
+	"_modellen_entiteiten.go",
+	"_modellen_ge_rel.go",
+	"_modellen_methods.go",
+	"_modellen_input.go",
+	"_metaregistry.go",
+	"_datatype_registry.go",
+	"_enum_registry.go",
+}
+
+// codegenGedeeldeBestanden zijn bestanden die door codegen worden gegenereerd/gemerged
+// en niet domeinspecifiek zijn. Deze worden alleen verwijderd bij een volledige rebuild
+// (alle domeinen), niet bij een single-domein rebuild, omdat codegen in additive mode
+// merge-logica toepast.
+var codegenGedeeldeBestanden = []string{
+	"datatype_aliases.go",
+}
+
 // syncBaselineKernModelBestanden zorgt dat handmatige model-plumbingbestanden
 // én bewust bewaarde V3 JSON modelbestanden ook in `_baseline/model/`
 // up-to-date blijven. Zonder deze synchronisatie kan een rebuild eerst een
@@ -260,23 +281,74 @@ func syncBaselineKernModelBestanden(appDir string) ([]string, error) {
 	return meldingen, nil
 }
 
-func herstelModelDirectoryVanuitBaseline(appDir string) (string, error) {
-	baselineDir := filepath.Join(appDir, "_baseline", "model")
+// herstelModelDirectoryVanuitBaseline verwijdert alleen codegen-gegenereerde bestanden
+// voor de opgegeven prefixen, zodat alle handmatige bestanden (plumbing, tests, utils)
+// intact blijven. Bij een lege prefixlijst worden bestanden voor ALLE prefixen verwijderd
+// (inclusief gedeelde bestanden zoals datatype_aliases.go).
+//
+// Voorbeeld:
+//   - prefixen=["np_loc"] → verwijdert alleen np_loc_modellen_entiteiten.go etc.
+//   - prefixen=nil        → verwijdert alle codegen-bestanden (volledige rebuild)
+func herstelModelDirectoryVanuitBaseline(appDir string, prefixen []string) (string, error) {
 	modelDir := filepath.Join(appDir, "model")
+	verwijderd := 0
+	isVolledigeRebuild := len(prefixen) == 0
 
-	info, err := os.Stat(baselineDir)
-	if err != nil || !info.IsDir() {
-		return "Geen model-baseline gevonden; huidige modeldirectory blijft behouden", nil
+	entries, err := os.ReadDir(modelDir)
+	if err != nil {
+		return "", fmt.Errorf("kan modeldirectory niet lezen: %w", err)
 	}
 
-	if err := os.RemoveAll(modelDir); err != nil {
-		return "", fmt.Errorf("kan modeldirectory niet leegmaken: %w", err)
-	}
-	if err := copyDir(baselineDir, modelDir); err != nil {
-		return "", fmt.Errorf("kan modeldirectory niet herstellen vanuit baseline: %w", err)
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		naam := entry.Name()
+
+		// Controleer of dit een codegen-gegenereerd bestand is ({prefix}_{suffix})
+		isCodegen := false
+		for _, suffix := range codegenGegeneerdeSuffixen {
+			if !strings.HasSuffix(naam, suffix) {
+				continue
+			}
+			if isVolledigeRebuild {
+				isCodegen = true
+				break
+			}
+			// Single-/multi-domein: alleen verwijderen als de prefix matcht
+			for _, prefix := range prefixen {
+				if strings.HasPrefix(naam, prefix+"_") {
+					isCodegen = true
+					break
+				}
+			}
+			if isCodegen {
+				break
+			}
+		}
+
+		// Gedeelde bestanden (datatype_aliases.go) alleen bij volledige rebuild
+		if !isCodegen && isVolledigeRebuild {
+			for _, gedeeld := range codegenGedeeldeBestanden {
+				if naam == gedeeld {
+					isCodegen = true
+					break
+				}
+			}
+		}
+
+		if isCodegen {
+			if err := os.Remove(filepath.Join(modelDir, naam)); err != nil {
+				return "", fmt.Errorf("kan codegen-bestand %s niet verwijderen: %w", naam, err)
+			}
+			verwijderd++
+		}
 	}
 
-	return fmt.Sprintf("Modeldirectory hersteld vanuit baseline %s", baselineDir), nil
+	if isVolledigeRebuild {
+		return fmt.Sprintf("Codegen-bestanden opgeschoond (%d bestanden verwijderd, volledige rebuild)", verwijderd), nil
+	}
+	return fmt.Sprintf("Codegen-bestanden opgeschoond (%d bestanden verwijderd voor prefixen %v)", verwijderd, prefixen), nil
 }
 
 // backupModelDirectory maakt een tijdelijke kopie van model/ naar _pre_rebuild/model/.
@@ -463,8 +535,29 @@ func MaakRebuildHandler() gin.HandlerFunc {
 			stappen = append(stappen, meldingen...)
 		}
 
-		// Stap 0b: Herstel model/ vanuit baseline (schone basis voor codegen).
-		if melding, err := herstelModelDirectoryVanuitBaseline(appDir); err != nil {
+		// Stap 0b: Bepaal welke prefixen opgeschoond moeten worden.
+		// Bij een single-domein rebuild worden alleen bestanden voor dat domein verwijderd;
+		// bij een multi-domein rebuild (req.Domeinen) alleen de opgegeven domeinen.
+		// Een lege lijst betekent "alles" (volledige rebuild, ongebruikelijk via IDE).
+		var teVerwijderenPrefixen []string
+		if len(req.Domeinen) > 0 {
+			for _, d := range req.Domeinen {
+				p := strings.TrimSpace(d.Prefix)
+				if p == "" {
+					p = strings.ReplaceAll(d.Domein, "-", "_")
+				}
+				teVerwijderenPrefixen = append(teVerwijderenPrefixen, p)
+			}
+		} else if req.Domein != "" {
+			p := strings.TrimSpace(req.Prefix)
+			if p == "" {
+				p = strings.ReplaceAll(req.Domein, "-", "_")
+			}
+			teVerwijderenPrefixen = []string{p}
+		}
+
+		// Verwijder alleen codegen-bestanden voor de doeldomeinen (handmatige bestanden blijven intact).
+		if melding, err := herstelModelDirectoryVanuitBaseline(appDir, teVerwijderenPrefixen); err != nil {
 			c.JSON(http.StatusInternalServerError, RebuildResponse{
 				Status:  "fout",
 				Stappen: stappen,

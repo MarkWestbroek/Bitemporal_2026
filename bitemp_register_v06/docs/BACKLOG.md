@@ -720,6 +720,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | DM4 | Rebuild alleen voor geselecteerd domein | ontwerpgedachten/domeinen |
 | DM5 | Domein-boundary visualisatie | ontwerpgedachten/domeinen |
 | DM6 | Cross-model referentielijsten | Referentielijsten.md |
+| DM7 | Domein verwijderen: flow in frontend + opschoning codegen-bestanden, `datatype_aliases.go` en `metaregistry_plumbing.go` init-calls. Basisdomein `register` kan nooit verwijderd. | DEVLOOP.md §3 rebuild-scenario's |
 
 ### CEL / Evaluatie
 
