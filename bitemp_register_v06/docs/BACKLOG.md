@@ -650,9 +650,11 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I33 | meer nodes (per element instelbaar / automatisch bij vergroten) | nieuw |
 | I34 | edges naar andere handle trekken of anderszins | nieuw |
 | I35 | domein selectie ; boundary element introduceren? | nieuw |
-| I |  | nieuw |
-| I |  | nieuw |
-| I |  | nieuw |
+| I36 | Refactor in model → refactor in db? (Ook data, nu alleen structuur SQL in Delta) | nieuw |
+| I37 | Link referentie data content: file (t.b.v. vulling) / live view | nieuw |
+| I38 | Jump naar view / edit pagina's data | nieuw |
+| I39 | Relatie naam labels tonen op diagram (rechtsklik toon/hide) | nieuw |
+| I40 | Model geheel (bi?)temporeel in database? | nieuw |
 | I |  | nieuw |
 | I |  | nieuw |
 
@@ -697,6 +699,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | F34 | ✅ JSON- en Markdown-widget: side-by-side editor + live preview, full-width grid spanning, `widget: "json"` en `widget: "markdown"` in layout | inhoud-editor-technisch.md |
 | F35 | Geïntegreerde code-editor (één paneel, type "in" de gekleurde code). Opties: **react-simple-code-editor** (~3 KB, licht), **CodeMirror 6** (~150 KB, volledig), **Monaco** (~2 MB, overkill). Zie §12.8 in inhoud-editor-technisch.md | inhoud-editor-technisch.md |
 | F36 | Code splitting per doelgroep: publicatie (mobiel/licht), inhoud-editor (desktop), IDE (zwaar/desktop). Vite multi-entry is al ingericht. | inhoud-editor-technisch.md |
+| F37 | Inhoud.html (content editor): export data als Bootstrap / replay file / sql | nieuw |
 
 
 ### Frontend — Bestaande pagina's (Index/Tijdlijn/Registraties)
@@ -741,6 +744,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | R4 | Items-relatie FK constraint (DB CHECK) | Referentielijsten.md |
 | R5 | Codegenerator aanpassen voor referentielijsten | Referentielijsten.md |
 | R6 | Omschrijvingen updaten (NP, Locatie, Adres, BAGLocatie) | Referentielijsten.md |
+| R7 | Ref lijst id uniek maken: hoe? Unieke shorthand code, id of uuid? | nieuw |
 
 ### Publicatie site
 
@@ -769,6 +773,25 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | P | | Nieuw |
 | P | | Nieuw |
 | P | | Nieuw |
+
+### Requirements Management (RM)
+
+| # | Item | Bron |
+|---|------|------|
+| RM1 | Requirements management (RM) opzetten | nieuw |
+| RM2 | req ENT met type, inhoud, fase | nieuw |
+| RM3 | REL naar opvoeder, bijwerker, uitvoerder | nieuw |
+| RM4 | REL naar zichzelf met type link: aggregatie, realisatie, zelf aangeven | nieuw |
+| RM5 | Im/exporteer reqs als: linked data, mim, ea | nieuw |
+| RM6 | Visualiseer reqs als boomstructuur pagina / verslepen / inline edit / relaties maken (IDE specialisatie: nodes / edges / tree) | nieuw |
+| RM7 | Per project / domein / werkgroep | nieuw |
+
+### Gebruiker
+
+| # | Item | Bron |
+|---|------|------|
+| GB1 | Gebruiker en Werkgroep ENT'n maken | nieuw |
+| GB2 | Rollen tabel | nieuw |
 
 ### Data-universum
 
