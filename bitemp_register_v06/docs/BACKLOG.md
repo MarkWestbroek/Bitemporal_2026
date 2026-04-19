@@ -79,7 +79,7 @@
 31  UML editor
     - meerdere canvassen, per domein één (of naar keuze)
     - afhankelijkheid kunnen instellen
-    - overerving zelf kunnen tekenen
+    - overerving zelf kunnen tekenen ✅
     - ~~alignen~~ ✅ (context menu align-acties)
     - relatie-visualisatie:
       - ~~met velden: associatieklasse~~ ✅ (ASOC-patroon: anker + 3 edges)
@@ -110,12 +110,12 @@
     - ~~Ctrl+click multi-select + multi-drop~~ ✅
     - auto-order
     - ~~dubbelklik op edge: straighten~~ ✅ (berekenKortsteHandles)
-    - undo / redo doet het niet
+    - undo / redo doet het niet ✅
     - edge types: ~~compositie~~✅, ~~overerving~~✅, ~~associatieklasse~~✅ (!)
     - diagram of any element rename in PB
-    - domeinkleur instellen, uberhaupt properties van domein instellen mogelijk
+    - domeinkleur instellen, uberhaupt properties van domein instellen mogelijk✅
       - welke properties allemaal?
-    - layout bar verplaatsbaar
+    - layout bar verplaatsbaar✅
     - any bar
     - afgeleide velden CEL expressie breakout met kleurcodes en autocomplete enzo? Proberen met testwaarden
     - voorbeelden en testwaarden in REPs (t.b.v. expressies bijv. maar ook als document bij example)
