@@ -121,6 +121,13 @@ function markdownNaarHtml(md) {
   html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
   html = html.replace(/^# (.+)$/gm, "<h1>$1</h1>");
 
+  // Links: [tekst](url) — alleen http(s), mailto en relatieve URLs toegestaan
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, tekst, url) => {
+    const veilig = /^(https?:|mailto:|\/)/i.test(url);
+    if (!veilig) return `[${tekst}](${url})`;
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${tekst}</a>`;
+  });
+
   // Bold: **tekst**
   html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
 

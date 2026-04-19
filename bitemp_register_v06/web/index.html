@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Viz startpagina</title>
+    <title>Viz startpagina — Bitemporeel Register v06</title>
     <style>
       :root {
         --bg: #f8fafc;
@@ -12,6 +12,9 @@
         --text: #0f172a;
         --muted: #475569;
         --accent: #0f766e;
+        --auth-bg: #fffbeb;
+        --auth-line: #fde68a;
+        --auth-muted: #92400e;
       }
 
       * {
@@ -38,6 +41,11 @@
         border-radius: 14px;
         padding: 18px;
         box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+      }
+
+      .card.auth {
+        background: var(--auth-bg);
+        border-color: var(--auth-line);
       }
 
       h1 {
@@ -82,6 +90,21 @@
         font-size: 13px;
       }
 
+      .badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 1px 6px;
+        border-radius: 4px;
+        vertical-align: middle;
+        margin-left: 4px;
+      }
+
+      .badge.auth {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
       @media (max-width: 760px) {
         .grid {
           grid-template-columns: 1fr;
@@ -96,49 +119,46 @@
         <p>Ingang voor alle React + Vite pagina's en API-documentatie van het bitemporeel register v06.</p>
       </section>
 
-      <section class="grid" aria-label="Viz links en requirements">
+      <section class="grid" aria-label="Frontend pagina's">
         <article class="card">
-          <h2>Frontend pagina's</h2>
+          <h2>Open pagina's</h2>
           <ul>
-            <li><a href="/viz/react/">Index — data-overzicht</a></li>
-            <li><a href="/viz/react/tijdlijn.html">Tijdlijn — formeel &amp; materieel</a></li>
-            <li><a href="/viz/react/registraties.html">Registraties replay</a></li>
-            <li><a href="/viz/react/editor-v2.html">UML-editor v2 — metamodel</a></li>
-            <li><a href="/viz/react/universum.html">3D Data Universum</a></li>
-            <li><a href="/viz/react/ide.html">IDE — modelbestanden</a></li>
-            <li><a href="/viz/react/publicatie.html">Publicatie &amp; devloop</a></li>
-            <li><a href="/viz/react/inhoud.html">Inhoud-editor</a></li>
+            <li><a href="/viz/react/">Data-overzicht</a> — entiteiten, GE's, relaties</li>
+            <li><a href="/viz/react/tijdlijn.html">Tijdlijn</a> — formeel &amp; materieel</li>
+            <li><a href="/viz/react/editor-v2.html">UML-editor v2</a> — metamodel bewerken</li>
+            <li><a href="/viz/react/universum.html">3D Universum</a> — force-graph visualisatie</li>
           </ul>
         </article>
 
+        <article class="card auth">
+          <h2>Login vereist</h2>
+          <ul>
+            <li><a href="/viz/react/registraties.html">Registraties replay</a></li>
+            <li><a href="/viz/react/ide.html">IDE</a> — modelbestanden beheren</li>
+            <li><a href="/viz/react/inhoud.html">Inhoud-editor</a> — data bewerken</li>
+            <li><a href="/viz/react/publicatie.html">Publicatie &amp; devloop</a> — V3 JSON publiceren + rebuild</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="grid" aria-label="Documentatie en diagnostiek">
         <article class="card">
           <h2>API-documentatie</h2>
           <ul>
             <li><a href="/swagger">Swagger UI</a> — interactieve API-verkenner</li>
             <li><a href="/redoc">ReDoc</a> — leesbare API-documentatie</li>
-            <li><a href="/graphql">GraphiQL</a> — GraphQL playground</li>
+            <li><a href="/graphql/playground">GraphiQL</a> — GraphQL playground</li>
             <li><a href="/openapi.json">OpenAPI 3.1 spec (JSON)</a></li>
             <li><a href="/api/schema/model/code">Schema model (V3 API)</a></li>
           </ul>
         </article>
-      </section>
 
-      <section class="grid" aria-label="Diagnostiek en technisch">
         <article class="card">
           <h2>Diagnostiek</h2>
           <ul>
             <li><a href="/viz/coverage.html">Test coverage rapport</a></li>
             <li><a href="/viz/coverage_functions.txt">Coverage functies (tekst)</a></li>
             <li><a href="/docs">Markdown documentatie</a></li>
-          </ul>
-        </article>
-
-        <article class="card">
-          <h2>Requirements</h2>
-          <ul>
-            <li>JavaScript moet aanstaan in de browser.</li>
-            <li>Moderne browser (Chrome, Edge, Safari, Firefox).</li>
-            <li>Toegang tot API-server op poort 8082.</li>
           </ul>
         </article>
       </section>

@@ -109,7 +109,7 @@ Bij upgrade van Go (bijv. 1.24 → 1.25), moeten **alle** Dockerfiles bijgewerkt
 
 ### Backend (Go API) updaten
 
-**Op je lokale machine (Windows):**
+**Op je lokale machine (Windows, PowerShell):**
 ```powershell
 cd D:\Git\Bitemporal_2026\bitemp_register_v06
 
@@ -139,12 +139,13 @@ Of via Dockge: **Update** knop → **Opzetten**.
 
 ### Frontend (Vite/React) updaten
 
-**Op je lokale machine (Windows):**
+**Op je lokale machine (Windows, PowerShell):**
 ```powershell
 cd D:\Git\Bitemporal_2026\bitemp_register_v06
 
 # 1. Bouw Vite productie-build (optioneel, zit al in Docker build)
-cd web/vite && npm run build && cd ../..
+# Let op: PowerShell gebruikt ; als separator, niet &&
+cd web\vite; npm run build; cd ..\..
 
 # 2. Build het image
 docker build -f Dockerfile.frontend -t markwestbroek/bitemp-viz-frontend:latest .

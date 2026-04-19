@@ -2,6 +2,32 @@
 
 Korte checklist voor een API-release met losse DB-stack.
 
+## Replay: betere foutdiagnose + preview; fix GE-veldnaam-disambiguatie (2026-04-19)
+
+### Bug: GE-veldnaam "naam" werd gekoppeld aan verkeerde entiteit bij replay
+- **Oorzaak**: `UnmarshalJSON` in `model/REST request models.go` gebruikte `MetaRegistry.GetByVeldnaam(veldnaam)` voor het opzoeken van een representatietype op JSON-veldnaam. Omdat meerdere types dezelfde `Veldnaam` kunnen hebben (bijv. `ApiStandaard_Naam` en `NatuurlijkPersoon_Naam` → beide "naam"), werd de eerste match (niet-deterministisch) geretourneerd, wat leidde tot fouten als `NatuurlijkPersoon_Naam_Input` werd gebruikt terwijl `ApiStandaard_Naam` werd verwacht.
+- **Fix**: `UnmarshalJSON` extraheert nu de JSON-sleutels uit de inner payload (bijv. `apistandaard_id`, `naam`) en roept de reeds bestaande `MetaRegistry.GetByVeldnaamMetPayload(veldnaam, payloadKeys)` aan. Die disambigueert op `EntiteitIDKolom` (bijv. `apistandaard_id` → `ApiStandaard_Naam`).
+- **Impact**: replay files met GE's waarvan de veldnaam gedeeld wordt door meerdere types werken nu correct.
+
+### Backend: uitgebreidere foutmeldingen in de registreer-handler
+- De wijziging-loop in `handlers/registration_handlers.go` gebruikt nu een index (`wijzigingIdx`).
+- Alle foutmeldingen bevatten nu `wijziging[N]`, de `representatienaam` én de `veldnaam`, zodat direct duidelijk is welke stap in de replay-body faalde.
+- Oud: `"failed to handle opvoer van NatuurlijkPersoon_Naam: ..."`.
+- Nieuw: `"wijziging[3]: opvoer van ApiStandaard_Naam (veldnaam=naam) mislukt: ..."`.
+
+### Frontend: replay-preview toont de geïmporteerde file
+- Na import van een replay file wordt de volledige JSON opgeslagen en getoond in de preview-sectie onderaan de pagina (inclusief bron, export-tijdstip en aantal entries). Vóór import blijft het voorbeeld van de huidige registratieselectie zichtbaar.
+- `maxHeight` van de preview verhoogd naar 400px.
+
+### Frontend: uitklapbare fout-details per replay-entry
+- Foutrijen krijgen een rode achtergrond en zijn klikbaar (▸ / ▾).
+- De detail-rij toont side-by-side:
+  - **Request body** (zoals verzonden, inclusief ID-offsets).
+  - **Response body** (volledige API-response, inclusief de nieuwe gedetailleerde foutmelding).
+- De API `error`-string uit de response body wordt direct getoond in de "Fout / details" kolom.
+
+---
+
 ## GraphQL enum cache fix — `rol` en andere enum-velden correct in response (2026-04-18)
 
 ### Bug: enum-velden (o.a. `rol`) waren `null` in GraphQL-responses

@@ -110,12 +110,12 @@
     - ~~Ctrl+click multi-select + multi-drop~~ ✅
     - auto-order
     - ~~dubbelklik op edge: straighten~~ ✅ (berekenKortsteHandles)
-    - undo / redo doet het niet ✅
+    - undo / redo doet het niet ✅ 
     - edge types: ~~compositie~~✅, ~~overerving~~✅, ~~associatieklasse~~✅ (!)
     - diagram of any element rename in PB
-    - domeinkleur instellen, uberhaupt properties van domein instellen mogelijk✅
+    - domeinkleur instellen, uberhaupt properties van domein instellen mogelijk ✅
       - welke properties allemaal?
-    - layout bar verplaatsbaar✅
+    - layout bar verplaatsbaar ✅
     - any bar
     - afgeleide velden CEL expressie breakout met kleurcodes en autocomplete enzo? Proberen met testwaarden
     - voorbeelden en testwaarden in REPs (t.b.v. expressies bijv. maar ook als document bij example)
@@ -595,7 +595,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 |---|------|------|
 | E1 | Meerdere canvassen per domein | README.md |
 | E2 | Afhankelijkheid instellen | README.md |
-| E3 | Overerving zelf tekenen | README.md |
+| E3 | ✅ Overerving zelf tekenen | README.md |
 | E4 | Relatie-visualisatie: associatieklasse | README.md |
 | E5 | Labels bij rollen verplaatsbaar | README.md |
 | E6 | MetaRegistry-generatie vanuit editor | uml-editor/README.md |
@@ -620,7 +620,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I3 | Node verwijderen ≠ element verwijderen | docs/IDE.md |
 | I4 | Diagram-scoped viewport persistentie | docs/IDE.md |
 | I5 | Database-sync en multi-user | docs/IDE.md |
-| I6 | Drag & drop: Complete ENT + alle GE's drag & drop (shift D&D?) | README.md |
+| I6 | Drag & drop: Complete ENT + alle GE's drag & drop (shift D&D?) | README.md -> testen |
 | I7 | PB: Auto-order; custom order;  | README.md |
 | I8 | CEL expressie breakout met kleurcodes en autocomplete | README.md |
 | I9 | Voorbeelden en testwaarden in REPs | README.md |
@@ -650,7 +650,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I33 | meer nodes (per element instelbaar / automatisch bij vergroten) | nieuw |
 | I34 | edges naar andere handle trekken of anderszins | nieuw |
 | I35 | domein selectie ; boundary element introduceren? | nieuw |
-| I |  | nieuw |
+| I36 | IDE diagram-positie synchronisatie: posities slaan alleen op in het actieve diagram, maar de V3 export leest altijd uit `overzicht` — 3 opties uitgewerkt in [docs/ide-diagram-positie-sync.md](ide-diagram-positie-sync.md) | nieuw |
 | I |  | nieuw |
 | I |  | nieuw |
 | I |  | nieuw |
@@ -697,6 +697,10 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | F34 | ✅ JSON- en Markdown-widget: side-by-side editor + live preview, full-width grid spanning, `widget: "json"` en `widget: "markdown"` in layout | inhoud-editor-technisch.md |
 | F35 | Geïntegreerde code-editor (één paneel, type "in" de gekleurde code). Opties: **react-simple-code-editor** (~3 KB, licht), **CodeMirror 6** (~150 KB, volledig), **Monaco** (~2 MB, overkill). Zie §12.8 in inhoud-editor-technisch.md | inhoud-editor-technisch.md |
 | F36 | Code splitting per doelgroep: publicatie (mobiel/licht), inhoud-editor (desktop), IDE (zwaar/desktop). Vite multi-entry is al ingericht. | inhoud-editor-technisch.md |
+| F37 | zelfde loading en filtering als de publicatie pagina | nieuw  |
+| F |  |  |
+| F |  |  |
+| F |  |  |
 
 
 ### Frontend — Bestaande pagina's (Index/Tijdlijn/Registraties)

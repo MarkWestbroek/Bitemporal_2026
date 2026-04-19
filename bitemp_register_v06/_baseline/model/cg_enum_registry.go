@@ -16,6 +16,8 @@ func initCgEnumRegistry() {
 	EnumDomeinen["Schaal"] = "CG"
 	EnumWaarden["Organisatietype"] = []string{"Gemeenten", "Leveranciers", "VNG", "Ketenpartners", "Rijk"}
 	EnumDomeinen["Organisatietype"] = "CG"
+	EnumWaarden["CGPortfolioFase"] = []string{"Brons", "Zilver", "Goud", "Niet gecontroleerd"}
+	EnumDomeinen["CGPortfolioFase"] = "CG"
 	EnumWaarden["Gemeenterol"] = []string{"Realiseert", "Maakt gebruik van"}
 	EnumDomeinen["Gemeenterol"] = "CG"
 	EnumWaarden["Organisatierol"] = []string{"Contactorganisatie", "BetrokkenOrganisatie"}
@@ -28,6 +30,7 @@ func initCgEnumRegistry() {
 	EnumEditorLayouts["Bijdragetype"] = &EditorLayout{Positie: &V3Positie{X: 1290, Y: -1980}}
 	EnumEditorLayouts["Schaal"] = &EditorLayout{Positie: &V3Positie{X: 1290, Y: -1815}}
 	EnumEditorLayouts["Organisatietype"] = &EditorLayout{Positie: &V3Positie{X: 450, Y: -2865}}
+	EnumEditorLayouts["CGPortfolioFase"] = &EditorLayout{Positie: &V3Positie{X: 2690, Y: 550}}
 	EnumEditorLayouts["Gemeenterol"] = &EditorLayout{Positie: &V3Positie{X: 1080, Y: -3150}}
 	EnumEditorLayouts["Organisatierol"] = &EditorLayout{Positie: &V3Positie{X: 420, Y: -2235}}
 }

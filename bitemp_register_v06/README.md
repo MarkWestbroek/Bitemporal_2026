@@ -147,16 +147,21 @@ De actieve visualisaties draaien nu als React + Vite build onder:
 
 - Zie ook `UML_EDITOR_INTEGRATIE.md` voor de opname van de UML editor als subtree en frontend-pagina.
 
-[![Open Viz Index](https://img.shields.io/badge/Open-Viz%20Index%20(React%20%2B%20Vite)-0f766e?style=for-the-badge)](http://localhost:8080/viz/react/)
-[![Open Viz Tijdlijn](https://img.shields.io/badge/Open-Viz%20Tijdlijn%20(React%20%2B%20Vite)-0b7285?style=for-the-badge)](http://localhost:8080/viz/react/tijdlijn.html)
-[![Open 3D Universum](https://img.shields.io/badge/Open-3D%20Data%20Universum-6366f1?style=for-the-badge)](http://localhost:8082/viz/react/universum.html)
-[![Open Docs](https://img.shields.io/badge/Open-Docs-1d4ed8?style=for-the-badge)](http://localhost:8080/docs)
+[![Open Viz Index](https://img.shields.io/badge/Open-Data--overzicht-0f766e?style=for-the-badge)](http://localhost:8082/viz/react/)
+[![Open Viz Tijdlijn](https://img.shields.io/badge/Open-Tijdlijn-0b7285?style=for-the-badge)](http://localhost:8082/viz/react/tijdlijn.html)
+[![Open 3D Universum](https://img.shields.io/badge/Open-3D%20Universum-6366f1?style=for-the-badge)](http://localhost:8082/viz/react/universum.html)
+[![Open UML Editor](https://img.shields.io/badge/Open-UML--editor-0e7490?style=for-the-badge)](http://localhost:8082/viz/react/editor-v2.html)
+[![Open Docs](https://img.shields.io/badge/Open-Docs-1d4ed8?style=for-the-badge)](http://localhost:8082/docs)
 
-- `http://localhost:8080/viz/react/` (index)
-- `http://localhost:8080/viz/react/tijdlijn.html` (tijdslijn)
-- `http://localhost:8080/viz/react/editor.html` (UML editor)
-- `http://localhost:8082/viz/react/universum.html` (3D Data Universum)
-- `http://localhost:8080/viz/` (landingspagina met links)
+- `http://localhost:8082/viz/react/` (data-overzicht)
+- `http://localhost:8082/viz/react/tijdlijn.html` (tijdlijn)
+- `http://localhost:8082/viz/react/editor-v2.html` (UML-editor v2)
+- `http://localhost:8082/viz/react/universum.html` (3D Universum)
+- `http://localhost:8082/viz/react/registraties.html` (registraties replay)
+- `http://localhost:8082/viz/react/ide.html` (IDE — modelbestanden)
+- `http://localhost:8082/viz/react/inhoud.html` (inhoud-editor)
+- `http://localhost:8082/viz/react/publicatie.html` (publicatie & devloop)
+- `http://localhost:8082/viz/` (landingspagina met links)
 
 De index-pagina:
 

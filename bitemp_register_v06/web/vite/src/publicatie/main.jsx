@@ -86,6 +86,9 @@ function PublicatieLanding() {
 
 function PublicatieApp() {
   const baseUrl = detectBaseUrl();
+  // ?embed=1 in de querystring verbergt de header (voor iframe-inbedding).
+  // Lokaal (zonder querystring) blijft de header zichtbaar.
+  const isEmbed = new URLSearchParams(window.location.search).get("embed") === "1";
 
   return (
     <AuthProvider>
@@ -94,13 +97,15 @@ function PublicatieApp() {
           className="common-ground-theme"
           style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
         >
-          <header className="cg-editor-nav">
-            <Link to="/" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
-              <img src={logoUrl} alt="Common Ground" className="cg-editor-nav__logo" />
-            </Link>
-            <span className="cg-editor-nav__title">Register — Publicatie</span>
-            <GebruikerBadge />
-          </header>
+          {!isEmbed && (
+            <header className="cg-editor-nav">
+              <Link to="/" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
+                <img src={logoUrl} alt="Common Ground" className="cg-editor-nav__logo" />
+              </Link>
+              <span className="cg-editor-nav__title">Register — Publicatie</span>
+              <GebruikerBadge />
+            </header>
+          )}
 
           <main style={{ flex: 1, padding: "0.5rem 1rem" }}>
             <Routes>

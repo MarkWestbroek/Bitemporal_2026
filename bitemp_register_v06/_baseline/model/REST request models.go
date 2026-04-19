@@ -83,7 +83,16 @@ func (rep *RepresentatiePlusNaam) UnmarshalJSON(data []byte) error {
 	}
 
 	for veldnaam, payload := range raw {
-		meta, ok := MetaRegistry.GetByVeldnaam(veldnaam)
+		// Extraheer de JSON-sleutels uit de payload voor disambiguatie
+		// (bijv. "apistandaard_id" vs "natuurlijk_persoon_id" bij veldnaam "naam").
+		var payloadMap map[string]json.RawMessage
+		payloadKeys := make(map[string]struct{})
+		if err := json.Unmarshal(payload, &payloadMap); err == nil {
+			for k := range payloadMap {
+				payloadKeys[k] = struct{}{}
+			}
+		}
+		meta, ok := MetaRegistry.GetByVeldnaamMetPayload(veldnaam, payloadKeys)
 		if !ok {
 			return fmt.Errorf("unsupported representatie key '%s'", veldnaam)
 		}

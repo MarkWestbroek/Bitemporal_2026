@@ -16,7 +16,7 @@
     "personen": 66
   },
   "known_gaps": [
-    "De huidige MetaRegistry gebruikt dezelfde request-key 'contactgegevens' voor Organisatie_Contactgegevens en Persoon_Contactgegevens; deze generator laat die records daarom bewust weg uit het replay-bestand.",
+    "De huidige MetaRegistry gebruikt 'organisatiecontactgegevens' en 'persoonscontactgegevens' als aparte veldnamen; contactgegevens-records worden apart geseed via replay 5.",
     "Bronwaarden voor producttype, fase en CG-laag zijn rijker dan de huidige enums. De generator normaliseert die waarden en bewaart de ruwe bronwaarde in registratie.opmerking.",
     "Voor gemeente, domein en API-standaard geldt nu: match op de referentielijst => REL opvoeren; geen match => opslaan in het bijbehorende overig-GE (`anderdomein`, `andersdangemeente`, `andereapistandaard`).",
     "Wanneer de losse seed-replays voor gemeenten, domeinen en API-standaarden aanwezig zijn, gebruikt de generator die als bron en worden die referenties niet opnieuw in dit replay-bestand geseed.",

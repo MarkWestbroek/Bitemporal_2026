@@ -32,7 +32,7 @@ FILES = [
     "2. Domeinen vast 2026.replay.json",
     "3. API standaarden rationalisatie 2026.replay.json",
     "4. Intake Portfolio Common Ground 2.replay (zonder gemeenten).json",
-    "5. PO email naar Persoon.Contactgegevens 2026.replay.json",
+    "5. PO email naar Persoon.Contactgegevens 2026.replay - zonder piet en test.json",
 ]
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -110,7 +110,7 @@ def build_lookups():
                 personen.setdefault(fields["id"], {})
             elif typ == "persoonnaam":
                 personen.setdefault(fields["persoon_id"], {})["naam"] = fields.get("naam", "")
-            elif typ == "contactgegevens" and "persoon_id" in fields:
+            elif typ == "persoonscontactgegevens" and "persoon_id" in fields:
                 personen.setdefault(fields["persoon_id"], {})["email"] = fields.get("email", "")
 
             elif typ == "initiatief":

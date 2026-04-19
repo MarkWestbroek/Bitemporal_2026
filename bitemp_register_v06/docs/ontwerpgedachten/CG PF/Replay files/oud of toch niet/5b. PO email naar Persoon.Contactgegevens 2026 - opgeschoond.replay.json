@@ -1,0 +1,548 @@
+﻿{
+  "version": 1,
+  "exported_at": "2026-04-10T19:46:08.937978Z",
+  "source": "json://docs/ontwerpgedachten/CG PF/Intake Portfolio Common Ground 1.json",
+  "depends_on": [
+    "docs/ontwerpgedachten/CG PF/Replay files/4. Intake Portfolio Common Ground 2.replay (zonder gemeenten).json"
+  ],
+  "count": 1,
+  "generated_reference_counts": {
+    "personen_met_email": 56,
+    "uitgesloten_personen": 10
+  },
+  "notes": [
+    "Opgeschoonde variant van de PO-e-mail replay voor Persoonscontactgegevens.email.",
+    "Bewust uitgesloten: vrije-tekst/contactpersoon-zinnen, placeholder/testrecords en dubieuze niet-persoonlijke namen.",
+    "Deze replay laat telefoonnummer bewust weg; voer hem pas uit zodra telefoonnummer niet meer verplicht is."
+  ],
+  "excluded_items": [
+    {
+      "persoon_id": 15,
+      "naam": "Diverse gemeenten en leveranciers",
+      "email": "dennis.vanaalst@yard.nl",
+      "reden": "handmatig_uitgesloten"
+    },
+    {
+      "persoon_id": 22,
+      "naam": "Er is een productowner, maar de contactpersoon is vooralsnog Ruub van der Klip en Rolf Jonker",
+      "email": "r.vanderklip@rotterdam.nl en r.jonker@rotterdam.nl",
+      "reden": "handmatig_uitgesloten"
+    },
+    {
+      "persoon_id": 23,
+      "naam": "Er is geen PO. Ruub van der klip is contactpersoon.",
+      "email": "r.vanderklip@rotterdam.nl",
+      "reden": "handmatig_uitgesloten"
+    },
+    {
+      "persoon_id": 33,
+      "naam": "Is nog niet eenduidig belegd; gemeenten doen dit nog samen. Vooralsnog fungeer ik als contactpersoon.",
+      "email": "a6.verhulst@nijmegen.nl",
+      "reden": "handmatig_uitgesloten"
+    },
+    {
+      "persoon_id": 42,
+      "naam": "MapGallery",
+      "email": "info@mapgallery.eu",
+      "reden": "handmatig_uitgesloten"
+    },
+    {
+      "persoon_id": 43,
+      "naam": "Marcel Slingerland (Johannes Battjes contactpersoon)",
+      "email": "johannes.battjes@roxit.nl",
+      "reden": "handmatig_uitgesloten"
+    },
+    {
+      "persoon_id": 45,
+      "naam": "Marco Klerks (Gemeente Rotterdam, waarnemend product owner)",
+      "email": "mm.klerks@rotterdam.nl",
+      "reden": "handmatig_uitgesloten"
+    },
+    {
+      "persoon_id": 52,
+      "naam": "piet",
+      "email": "piet",
+      "reden": "handmatig_uitgesloten"
+    },
+    {
+      "persoon_id": 53,
+      "naam": "po\\iet",
+      "email": "piet@piet.nl",
+      "reden": "handmatig_uitgesloten"
+    },
+    {
+      "persoon_id": 66,
+      "naam": "y",
+      "email": "y",
+      "reden": "handmatig_uitgesloten"
+    }
+  ],
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2024-01-24T14:12:31Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Seed persoon-contactgegevens (alleen e-mail, opgeschoonde selectie) uit portfolio intake",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 1,
+                "email": "hello@familybarometer.com"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 2,
+                "email": "info@asecloud.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 3,
+                "email": "andre.pijl@truelime.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 4,
+                "email": "arjen.brienen@vng.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 5,
+                "email": "bas.retera@visma.com"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 6,
+                "email": "bastiaan.ligt@mainfields.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 7,
+                "email": "bobby.sprakel@dimpact.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 8,
+                "email": "b.withaar@nijmegen.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 9,
+                "email": "advanbreukelen@uniteness.one"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 10,
+                "email": "d.verloop@montferland.info"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 11,
+                "email": "david.bos@denhaag.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 12,
+                "email": "d.bronsveld@decos.com"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 13,
+                "email": "d.bronsveld@decos.com"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 14,
+                "email": "d.zecic@deventer.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 16,
+                "email": "eddy.van.de.werken@centric.eu"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 17,
+                "email": "e.witteveen@sudwestfryslan.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 18,
+                "email": "edward.vangelderen@vng.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 19,
+                "email": "edwin.akkermans@haarlemmermeer.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 20,
+                "email": "E.zomer@zwolle.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 21,
+                "email": "engelbert.wijnhoven@pinkroccade.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 24,
+                "email": "erik.daggert@validsign.eu"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 25,
+                "email": "evdwaard@worth.systems en fmolenaar@worth.systems"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 26,
+                "email": "evdwaard@worth.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 27,
+                "email": "f.leemkuil@micpoint.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 28,
+                "email": "f.lieuwen@harderwijk.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 29,
+                "email": "gidi.simons@vrzl.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 30,
+                "email": "hans@divault.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 31,
+                "email": "hoki.fo@eindhoven.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 32,
+                "email": "hpeters@buren.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 34,
+                "email": "jacco.brouwer@vng.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 35,
+                "email": "jeroen.van.amersfoort@centric.eu"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 36,
+                "email": "jinte.felice@xxllnc.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 37,
+                "email": "joeri.bekker@maykinmedia.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 38,
+                "email": "kees@appsemble.com"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 39,
+                "email": "Voor contact: kevin.otjes@analyze.nl Overigens kan ook contact worden opgenomen met Niek Hendriks, Gemeente Alkmaar. Mailadres: NHendriks@alkmaar.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 40,
+                "email": "lvredenburg@swis.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 41,
+                "email": "mbroek@messagedesign.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 44,
+                "email": "marcel.slingerland@roxit.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 46,
+                "email": "mathijs@gemeentewinkel.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 47,
+                "email": "michiel.geerdink@zynyo.com"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 48,
+                "email": "mitchell@safegpt.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 49,
+                "email": "Patrick.duchateau@sittard-geleen.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 50,
+                "email": "info@petersebregts.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 51,
+                "email": "pj.vanschaick@rotterdam.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 54,
+                "email": "r.vancortenberghe@rotterdam.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 55,
+                "email": "ruben@conduction.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 56,
+                "email": "sander@epistola.app"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 57,
+                "email": "sander.devries@roxit.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 58,
+                "email": "sander.devries@roxit.nl namens deze johannes.battjes@roxit.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 59,
+                "email": "s.griffioen@purmerend.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 60,
+                "email": "s.assenberg@simgroep.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 61,
+                "email": "steven.voss@progresity.com"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 62,
+                "email": "tahir.malik@contezza.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 63,
+                "email": "thomas.minke@ritense.com"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 64,
+                "email": "timothy.helsdingen@proxy.nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "persoonscontactgegevens": {
+                "persoon_id": 65,
+                "email": "Vincent.vanbeek@denhaag.nl"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}

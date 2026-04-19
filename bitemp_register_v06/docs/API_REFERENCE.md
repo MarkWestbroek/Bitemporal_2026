@@ -288,7 +288,13 @@ For each referentielijst-entiteit with padnaam `{pad}`:
 - **URL params**: none
 - **Body**: `RegistreerRequest` JSON containing:
   - `registratie`: Registratie metadata (registratietype, opmerking, corrigeertRegistratieID, maaktOngedaanRegistratieID)
-  - `wijzigingen[]`: Array of wijziging objects, each with `opvoer` and/or `afvoer` maps keyed by entiteit type
+  - `wijzigingen[]`: Array of wijziging objects, each with `opvoer` and/or `afvoer` maps keyed by veldnaam (JSON-sleutel zoals gedefinieerd in de MetaRegistry)
+- **Success response** (HTTP 201): `{ "message": "...", "registratie_id": N, "tijdstip": "...", "wijzigingen": [...] }`
+- **Foutresponse**: `{ "error": "<beschrijving>" }`. Bij fouten in een wijziging bevat de melding het 0-gebaseerde index van de wijziging, de `representatienaam` en de `veldnaam`. Voorbeeld: `"wijziging[3]: opvoer van ApiStandaard_Naam (veldnaam=naam) mislukt: ..."`
+
+#### Veldnaam-disambiguatie bij wijzigingen
+
+Elke opvoer/afvoer in `wijzigingen[]` wordt geparseerd via `RepresentatiePlusNaam.UnmarshalJSON()` (`model/REST request models.go`). De JSON-sleutel (bijv. `"naam"`) wordt opgezocht in de MetaRegistry via `GetByVeldnaamMetPayload()`. Wanneer meerdere types dezelfde `Veldnaam` delen (bijv. `ApiStandaard_Naam` en `NatuurlijkPersoon_Naam` → beide `"naam"`), disambigueert de parser op basis van de inner payload-sleutels: het `EntiteitIDKolom` van het juiste type (bijv. `apistandaard_id`) moet als sleutel voorkomen in de payload. Ontbreekt een onderscheidende sleutel, dan wordt de eerste kandidaat als fallback gebruikt en wordt een waarschuwing naar stderr geschreven.
 
 ---
 

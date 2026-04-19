@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bitemporal Go API v05</title>
+    <title>Bitemporeel Register v06</title>
     <style>
       :root {
         color-scheme: light;
@@ -15,6 +15,9 @@
         --line: #cbd5e1;
         --brand: #0f766e;
         --brand-soft: #ccfbf1;
+        --auth-soft: #fef3c7;
+        --auth-border: #fde68a;
+        --auth-text: #78350f;
       }
 
       * {
@@ -103,15 +106,35 @@
         gap: 8px;
       }
 
+      .chip-label {
+        margin-top: 14px;
+        margin-bottom: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--muted);
+      }
+
+      .chip-label:first-of-type {
+        margin-top: 16px;
+      }
+
       .chip {
         display: inline-block;
-        padding: 6px 10px;
+        padding: 6px 12px;
         border-radius: 999px;
         background: var(--brand-soft);
         border: 1px solid #99f6e4;
         color: #134e4a;
         text-decoration: none;
         font-size: 13px;
+      }
+
+      .chip.auth {
+        background: var(--auth-soft);
+        border-color: var(--auth-border);
+        color: var(--auth-text);
       }
 
       .footer {
@@ -130,65 +153,77 @@
   <body>
     <main class="wrap">
       <section class="hero">
-        <h1>Bitemporal Go API v05</h1>
+        <h1>Bitemporeel Register v06</h1>
         <p class="subtitle">
-          Welkom op de root van de API-server. Vanaf hier kun je direct naar de actieve visualisaties,
-          documentatie en projectinformatie.
+          Welkom op de root van de API-server. Vanaf hier kun je direct naar de
+          actieve UI-pagina's, API-documentatie en projectinformatie.
         </p>
 
+        <p class="chip-label">Open</p>
         <div class="chips">
-          <a class="chip" href="/viz/react/">Viz index (React + Vite)</a>
-          <a class="chip" href="/viz/react/tijdlijn.html">Viz tijdlijn (React + Vite)</a>
-          <a class="chip" href="/viz/react/registraties.html">Registraties replay (React + Vite)</a>
-          <a class="chip" href="/viz/react/editor.html">UML editor (React + Vite)</a>
-          <a class="chip" href="/api/schema/model/code">Schema model uit code</a>
-          <a class="chip" href="/viz/coverage_report.html">Coverage rapport</a>
-          <a class="chip" href="/version">Version endpoint</a>
-          <a class="chip" href="/graphql/playground">GraphQL Playground</a>
-          <a class="chip" href="/api/viz/schema">Viz schema API</a>
+          <a class="chip" href="/viz/react/">Data-overzicht</a>
+          <a class="chip" href="/viz/react/tijdlijn.html">Tijdlijn</a>
+          <a class="chip" href="/viz/react/editor-v2.html">UML-editor</a>
+          <a class="chip" href="/viz/react/universum.html">3D Universum</a>
+          <a class="chip" href="/graphql/playground">GraphiQL playground</a>
+        </div>
+
+        <p class="chip-label">Login vereist</p>
+        <div class="chips">
+          <a class="chip auth" href="/viz/react/registraties.html">Registraties replay</a>
+          <a class="chip auth" href="/viz/react/ide.html">IDE</a>
+          <a class="chip auth" href="/viz/react/inhoud.html">Inhoud-editor</a>
+          <a class="chip auth" href="/viz/react/publicatie.html">Publicatie &amp; devloop</a>
         </div>
       </section>
 
       <section class="grid" aria-label="Snelle links">
         <article class="card">
-          <h2>Visualisaties</h2>
-          <p>Actieve React + Vite pagina's voor schema-overzicht, tijdlijn, replay en UML-bewerking.</p>
+          <h2>Frontend pagina's</h2>
+          <p>Schema-gedreven React + Vite pagina's — alle data komt dynamisch uit de schema-API.</p>
           <ul>
-            <li><a href="/viz/react/">Viz index (React + Vite)</a></li>
-            <li><a href="/viz/react/tijdlijn.html">Viz tijdlijn (React + Vite)</a></li>
-            <li><a href="/viz/react/registraties.html">Registraties replay (React + Vite)</a></li>
-            <li><a href="/viz/react/editor.html">UML editor (React + Vite)</a></li>
+            <li><a href="/viz/react/">Data-overzicht</a> — entiteiten, GE's, relaties</li>
+            <li><a href="/viz/react/tijdlijn.html">Tijdlijn</a> — formeel &amp; materieel</li>
+            <li><a href="/viz/react/editor-v2.html">UML-editor v2</a> — metamodel bewerken</li>
+            <li><a href="/viz/react/universum.html">3D Universum</a> — force-graph visualisatie</li>
+            <li><a href="/viz/react/registraties.html">Registraties replay</a></li>
+            <li><a href="/viz/react/ide.html">IDE</a> — modelbestanden beheren</li>
+            <li><a href="/viz/react/inhoud.html">Inhoud-editor</a> — data bewerken</li>
+            <li><a href="/viz/react/publicatie.html">Publicatie &amp; devloop</a> — V3 JSON publiceren + rebuild</li>
           </ul>
         </article>
 
         <article class="card">
-          <h2>Handleiding viz</h2>
-          <p>Praktische en technische uitleg van de actieboxen en endpoint-koppelingen.</p>
+          <h2>API-documentatie</h2>
+          <p>Dynamisch gegenereerde specs en interactieve verkenners.</p>
           <ul>
-            <li><a href="/docs/web/readme.md">Web viz handleiding (lokaal gerenderd)</a></li>
-            <li><a href="/docs">Alle markdown documenten</a></li>
+            <li><a href="/swagger">Swagger UI</a> — interactieve API-verkenner</li>
+            <li><a href="/redoc">ReDoc</a> — leesbare API-documentatie</li>
+            <li><a href="/graphql/playground">GraphiQL</a> — GraphQL playground</li>
+            <li><a href="/openapi.json">OpenAPI 3.1 spec (JSON)</a></li>
+            <li><a href="/api/schema/model/code">Schema model (V3 API)</a></li>
           </ul>
         </article>
 
         <article class="card">
           <h2>GitHub project</h2>
-          <p>Broncode en algemene context van dit project.</p>
+          <p>Broncode en documentatie van het bitemporeel register.</p>
           <ul>
             <li><a href="https://github.com/MarkWestbroek/Bitemporal_2026" target="_blank" rel="noopener noreferrer">Project root op GitHub</a></li>
-            <li><a href="https://github.com/MarkWestbroek/Bitemporal_2026/tree/main/bitemporal_go_API_v05" target="_blank" rel="noopener noreferrer">Bitemporal Go API v05 map</a></li>
-            <li><a href="https://github.com/MarkWestbroek/Bitemporal_2026/blob/main/bitemporal_go_API_v05/README.md" target="_blank" rel="noopener noreferrer">Algemene README v05</a></li>
+            <li><a href="https://github.com/MarkWestbroek/Bitemporal_2026/tree/main/bitemp_register_v06" target="_blank" rel="noopener noreferrer">Bitemp Register v06 map</a></li>
+            <li><a href="https://github.com/MarkWestbroek/Bitemporal_2026/blob/main/bitemp_register_v06/README.md" target="_blank" rel="noopener noreferrer">README v06</a></li>
           </ul>
         </article>
 
         <article class="card">
-          <h2>Aanvullend handig</h2>
-          <p>Voor beheer, debugging en release-checks.</p>
+          <h2>Diagnostiek &amp; beheer</h2>
+          <p>Voor debugging, coverage en release-checks.</p>
           <ul>
             <li><a href="/version">Runtime build info</a></li>
-            <li><a href="/graphql/playground">GraphQL playground</a></li>
             <li><a href="/api/viz/schema">Viz schema endpoint</a></li>
-            <li><a href="/api/schema/model/code">Schema model uit code (onafhankelijk van DB)</a></li>
-            <li><a href="/viz/coverage_report.html">Coverage rapport (samenvatting + detail)</a></li>
+            <li><a href="/viz/coverage.html">Test coverage rapport</a></li>
+            <li><a href="/viz/coverage_functions.txt">Coverage functies (tekst)</a></li>
+            <li><a href="/docs">Markdown documentatie</a></li>
           </ul>
         </article>
       </section>

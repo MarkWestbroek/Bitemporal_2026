@@ -1,0 +1,2725 @@
+{
+  "versie": "v3",
+  "bron": "ide",
+  "build_versie": "",
+  "go_module": "",
+  "indiener": "IDE",
+  "model": {
+    "versie": "v3",
+    "naam": "IDE export",
+    "datatypes": [
+      {
+        "naam": "KorteTekst",
+        "basistype": "string",
+        "description": "Alfanumerieke tekst, max 255 tekens (MIM: AN255).",
+        "validatie": {
+          "maxLength": 255
+        },
+        "positie": {
+          "x": 500,
+          "y": 650
+        }
+      },
+      {
+        "naam": "LangeTekst",
+        "basistype": "string",
+        "description": "Onbeperkte tekst, meerdere regels (MIM: CharacterString).",
+        "positie": {
+          "x": 780,
+          "y": 650
+        }
+      },
+      {
+        "naam": "AN40",
+        "basistype": "string",
+        "description": "Alfanumerieke tekst, max 40 tekens (MIM: AN40).",
+        "validatie": {
+          "maxLength": 40
+        },
+        "positie": {
+          "x": 1060,
+          "y": 650
+        }
+      },
+      {
+        "naam": "AN200",
+        "basistype": "string",
+        "description": "Alfanumerieke tekst, max 200 tekens (MIM: AN200).",
+        "validatie": {
+          "maxLength": 200
+        },
+        "positie": {
+          "x": 1340,
+          "y": 650
+        }
+      },
+      {
+        "naam": "Geheel",
+        "basistype": "integer",
+        "description": "Geheel getal (MIM: Integer).",
+        "format": "int32",
+        "positie": {
+          "x": 3180,
+          "y": 870
+        }
+      },
+      {
+        "naam": "Decimaal",
+        "basistype": "number",
+        "description": "Decimaal getal met 2 decimalen (MIM: Real).",
+        "format": "double",
+        "positie": {
+          "x": 2970,
+          "y": 870
+        }
+      },
+      {
+        "naam": "Bedrag",
+        "basistype": "number",
+        "description": "Geldbedrag in euro's, 2 decimalen.",
+        "format": "double",
+        "positie": {
+          "x": 3900,
+          "y": 720
+        }
+      },
+      {
+        "naam": "Percentage",
+        "basistype": "number",
+        "description": "Percentagewaarde met 1 decimaal.",
+        "format": "double",
+        "positie": {
+          "x": 2535,
+          "y": 765
+        }
+      },
+      {
+        "naam": "Datum",
+        "basistype": "string",
+        "description": "Kalenderdatum zonder tijdcomponent (MIM: Date).",
+        "format": "date",
+        "weergave": {
+          "placeholder": "JJJJ-MM-DD"
+        },
+        "positie": {
+          "x": 2235,
+          "y": 1005
+        }
+      },
+      {
+        "naam": "DatumTijd",
+        "basistype": "string",
+        "description": "Datum en tijd met tijdzone (MIM: DateTime).",
+        "format": "date-time",
+        "weergave": {
+          "placeholder": "JJJJ-MM-DDThh:mm"
+        },
+        "positie": {
+          "x": 2445,
+          "y": 1020
+        }
+      },
+      {
+        "naam": "Jaar",
+        "basistype": "integer",
+        "description": "Jaartal, 4 cijfers (MIM: Year).",
+        "validatie": {
+          "minLength": 4,
+          "maxLength": 4
+        },
+        "weergave": {
+          "placeholder": "2025"
+        },
+        "positie": {
+          "x": 2685,
+          "y": 975
+        }
+      },
+      {
+        "naam": "JaNee",
+        "basistype": "boolean",
+        "description": "Ja/Nee keuze (MIM: Boolean).",
+        "positie": {
+          "x": 2250,
+          "y": 780
+        }
+      },
+      {
+        "naam": "KvKNummer",
+        "basistype": "string",
+        "description": "KvK-nummer (8 cijfers).",
+        "format": "kvk-nummer",
+        "domein": "register",
+        "validatie": {
+          "pattern": "^[0-9]{8}$",
+          "minLength": 8,
+          "maxLength": 8,
+          "voorbeelden": [
+            "12345678"
+          ],
+          "foutmelding": "Voer een geldig KvK-nummer in (8 cijfers)"
+        },
+        "weergave": {
+          "placeholder": "12345678",
+          "inputMask": "00000000"
+        },
+        "positie": {
+          "x": 3510,
+          "y": 840
+        }
+      },
+      {
+        "naam": "NLPostcode",
+        "basistype": "string",
+        "description": "Nederlandse postcode (4 cijfers + 2 letters)",
+        "format": "nl-postcode",
+        "domein": "register",
+        "validatie": {
+          "pattern": "^[1-9][0-9]{3}\\s?[A-Za-z]{2}$",
+          "minLength": 6,
+          "maxLength": 7,
+          "voorbeelden": [
+            "1234 AB",
+            "9999ZZ"
+          ],
+          "foutmelding": "Voer een geldige postcode in (bijv. 1234 AB)"
+        },
+        "normalisatie": "uppercase_letters",
+        "weergave": {
+          "placeholder": "1234 AB",
+          "inputMask": "0000 AA"
+        },
+        "positie": {
+          "x": 570,
+          "y": -330
+        }
+      },
+      {
+        "naam": "BSN",
+        "basistype": "string",
+        "description": "Burgerservicenummer (9 cijfers, 11-proef)",
+        "format": "bsn",
+        "domein": "register",
+        "validatie": {
+          "pattern": "^[0-9]{9}$",
+          "minLength": 9,
+          "maxLength": 9,
+          "voorbeelden": [
+            "123456782"
+          ],
+          "foutmelding": "Voer een geldig BSN in (9 cijfers, 11-proef)",
+          "regels": [
+            {
+              "naam": "11-proef",
+              "type": "checksum",
+              "expressie": "(9*d1 + 8*d2 + 7*d3 + 6*d4 + 5*d5 + 4*d6 + 3*d7 + 2*d8 - 1*d9) % 11 == 0"
+            }
+          ]
+        },
+        "weergave": {
+          "placeholder": "123456782",
+          "inputMask": "000000000"
+        },
+        "positie": {
+          "x": -645,
+          "y": -555
+        }
+      },
+      {
+        "naam": "URL",
+        "basistype": "string",
+        "description": "Volledig internetadres.",
+        "format": "uri",
+        "domein": "CG",
+        "positie": {
+          "x": 1005,
+          "y": -1575
+        }
+      },
+      {
+        "naam": "Emailadres",
+        "basistype": "string",
+        "description": "E-mailadres.",
+        "format": "email",
+        "domein": "CG",
+        "positie": {
+          "x": -690,
+          "y": -2250
+        }
+      },
+      {
+        "naam": "Telefoonnummer",
+        "basistype": "string",
+        "description": "Telefoonnummer in nationale of internationale notatie.",
+        "format": "phone",
+        "domein": "CG",
+        "positie": {
+          "x": -465,
+          "y": -2250
+        }
+      },
+      {
+        "naam": "GitAdres",
+        "basistype": "string",
+        "description": "Adres van een Git repository, bijvoorbeeld HTTPS of SSH.",
+        "format": "git-address",
+        "domein": "CG",
+        "positie": {
+          "x": 915,
+          "y": -1725
+        }
+      },
+      {
+        "naam": "Versie",
+        "basistype": "string",
+        "description": "Versienummer in semver-achtig formaat: m.n (verplicht), optioneel m.n.o of m.n.o.p.",
+        "format": "versie",
+        "domein": "configuratie",
+        "validatie": {
+          "pattern": "^\\d+\\.\\d+(\\.\\d+)?(\\.\\d+)?$",
+          "foutmelding": "Voer een geldig versienummer in (bijv. 1.0, 2.1.3 of 1.0.0.1)"
+        },
+        "weergave": {
+          "placeholder": "bijv. 1.0 of 2.1.3"
+        },
+        "positie": {
+          "x": 3390,
+          "y": 495
+        }
+      },
+      {
+        "naam": "IBAN",
+        "basistype": "string",
+        "description": "Internationaal bankrekeningnummer (IBAN).",
+        "format": "iban",
+        "domein": "financieel",
+        "validatie": {
+          "pattern": "^[A-Z]{2}[0-9]{2}[A-Z0-9]{4}[0-9]{7}([A-Z0-9]?){0,16}$",
+          "minLength": 15,
+          "maxLength": 34,
+          "voorbeelden": [
+            "NL91ABNA0417164300"
+          ],
+          "foutmelding": "Voer een geldig IBAN in (bijv. NL91ABNA0417164300)"
+        },
+        "weergave": {
+          "placeholder": "NL91ABNA0417164300",
+          "inputMask": "AA00 AAAA 0000 0000 00"
+        },
+        "positie": {
+          "x": 3870,
+          "y": 900
+        }
+      }
+    ],
+    "enums": [
+      {
+        "goType": "ABCEnum",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "ABCEnumOptieA",
+            "waarde": "Optie A"
+          },
+          {
+            "constNaam": "ABCEnumOptieB",
+            "waarde": "Optie B"
+          },
+          {
+            "constNaam": "ABCEnumOptieC",
+            "waarde": "Optie C"
+          }
+        ],
+        "domein": "abuvwxy",
+        "positie": {
+          "x": -570,
+          "y": 1020
+        }
+      },
+      {
+        "goType": "RelABSoort",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "RelABSoortLTT",
+            "waarde": "LTT"
+          },
+          {
+            "constNaam": "RelABSoortLAT",
+            "waarde": "LAT"
+          },
+          {
+            "constNaam": "RelABSoortLTA",
+            "waarde": "LTA"
+          }
+        ],
+        "domein": "abuvwxy",
+        "positie": {
+          "x": -150,
+          "y": 690
+        }
+      },
+      {
+        "goType": "FormulierDefinitieStatus",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "FormulierDefinitieStatusConcept",
+            "waarde": "concept"
+          },
+          {
+            "constNaam": "FormulierDefinitieStatusActief",
+            "waarde": "actief"
+          },
+          {
+            "constNaam": "FormulierDefinitieStatusInactief",
+            "waarde": "inactief"
+          }
+        ],
+        "domein": "configuratie",
+        "positie": {
+          "x": 2535,
+          "y": 540
+        }
+      },
+      {
+        "goType": "IdeBestandCategorie",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "IdeBestandCategorieModelSnapshot",
+            "waarde": "model_snapshot"
+          },
+          {
+            "constNaam": "IdeBestandCategorieIdeSnapshot",
+            "waarde": "ide_snapshot"
+          },
+          {
+            "constNaam": "IdeBestandCategorieGegenereerdeCode",
+            "waarde": "gegenereerde_code"
+          },
+          {
+            "constNaam": "IdeBestandCategorieImport",
+            "waarde": "import"
+          },
+          {
+            "constNaam": "IdeBestandCategorieExport",
+            "waarde": "export"
+          },
+          {
+            "constNaam": "IdeBestandCategorieDocumentatie",
+            "waarde": "documentatie"
+          },
+          {
+            "constNaam": "IdeBestandCategorieConfiguratie",
+            "waarde": "configuratie"
+          },
+          {
+            "constNaam": "IdeBestandCategorieOverig",
+            "waarde": "overig"
+          }
+        ],
+        "domein": "ide-bestanden",
+        "positie": {
+          "x": 710,
+          "y": 550
+        }
+      },
+      {
+        "goType": "IdeBestandFormaat",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "IdeBestandFormaatJson",
+            "waarde": "json"
+          },
+          {
+            "constNaam": "IdeBestandFormaatYaml",
+            "waarde": "yaml"
+          },
+          {
+            "constNaam": "IdeBestandFormaatXml",
+            "waarde": "xml"
+          },
+          {
+            "constNaam": "IdeBestandFormaatMarkdown",
+            "waarde": "markdown"
+          },
+          {
+            "constNaam": "IdeBestandFormaatGoCode",
+            "waarde": "go_code"
+          },
+          {
+            "constNaam": "IdeBestandFormaatSql",
+            "waarde": "sql"
+          },
+          {
+            "constNaam": "IdeBestandFormaatTekst",
+            "waarde": "tekst"
+          },
+          {
+            "constNaam": "IdeBestandFormaatBinair",
+            "waarde": "binair"
+          },
+          {
+            "constNaam": "IdeBestandFormaatOverig",
+            "waarde": "overig"
+          }
+        ],
+        "domein": "ide-bestanden",
+        "positie": {
+          "x": 930,
+          "y": 550
+        }
+      },
+      {
+        "goType": "IdeBestandOpslagType",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "IdeBestandOpslagTypeInline",
+            "waarde": "inline"
+          },
+          {
+            "constNaam": "IdeBestandOpslagTypeMinio",
+            "waarde": "minio"
+          }
+        ],
+        "domein": "ide-bestanden",
+        "positie": {
+          "x": 1150,
+          "y": 550
+        }
+      },
+      {
+        "goType": "Fase",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "FaseIdeeNogGeenConcreteOpbrengsten",
+            "waarde": "Idee (nog geen concrete opbrengsten)"
+          },
+          {
+            "constNaam": "FaseInitiatieAlEenSnellePOC",
+            "waarde": "Initiatie (al een snelle POC)"
+          },
+          {
+            "constNaam": "FaseRealisatieGaatBinnenkortDraaienBijEersteGemeenten",
+            "waarde": "Realisatie (gaat binnenkort draaien bij eerste gemeenten)"
+          },
+          {
+            "constNaam": "FaseOpschalingDraaitBijEnkeleGemeentenNuOpZoekNaarVerbreding",
+            "waarde": "Opschaling (draait bij enkele gemeenten, nu op zoek naar verbreding)"
+          },
+          {
+            "constNaam": "FaseDoorontwikkelingEnBeheer",
+            "waarde": "Doorontwikkeling en beheer"
+          },
+          {
+            "constNaam": "FaseDoorontwikkelingEnBeheerStabielOnderdeelGevestigdeOrde",
+            "waarde": "Doorontwikkeling en beheer (stabiel, onderdeel gevestigde orde)"
+          }
+        ],
+        "domein": "CG",
+        "positie": {
+          "x": 315,
+          "y": -1560
+        }
+      },
+      {
+        "goType": "Producttype",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "ProducttypeComponent",
+            "waarde": "Component"
+          },
+          {
+            "constNaam": "ProducttypeToepassing",
+            "waarde": "Toepassing"
+          },
+          {
+            "constNaam": "ProducttypeStandaard",
+            "waarde": "Standaard"
+          }
+        ],
+        "domein": "CG",
+        "positie": {
+          "x": 645,
+          "y": -1695
+        }
+      },
+      {
+        "goType": "CGLaag",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "CGLaagLaag5",
+            "waarde": "Laag 5"
+          },
+          {
+            "constNaam": "CGLaagLaag4",
+            "waarde": "Laag 4"
+          },
+          {
+            "constNaam": "CGLaagLaag3",
+            "waarde": "Laag 3"
+          },
+          {
+            "constNaam": "CGLaagLaag2",
+            "waarde": "Laag 2"
+          },
+          {
+            "constNaam": "CGLaagLaag1",
+            "waarde": "Laag 1"
+          },
+          {
+            "constNaam": "CGLaagHostingEnInfrastructuur",
+            "waarde": "Hosting en infrastructuur"
+          }
+        ],
+        "domein": "CG",
+        "positie": {
+          "x": 810,
+          "y": -1530
+        }
+      },
+      {
+        "goType": "Bijdragetype",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "BijdragetypeWendbaarheid",
+            "waarde": "Wendbaarheid"
+          },
+          {
+            "constNaam": "BijdragetypeDienstverlening",
+            "waarde": "Dienstverlening"
+          },
+          {
+            "constNaam": "BijdragetypeRegie",
+            "waarde": "Regie"
+          }
+        ],
+        "domein": "CG",
+        "positie": {
+          "x": 1290,
+          "y": -1980
+        }
+      },
+      {
+        "goType": "Schaal",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "SchaalSchaal1",
+            "waarde": "Schaal 1"
+          },
+          {
+            "constNaam": "SchaalSchaal2",
+            "waarde": "Schaal 2"
+          },
+          {
+            "constNaam": "SchaalSchaal3",
+            "waarde": "Schaal 3"
+          },
+          {
+            "constNaam": "SchaalSchaal4",
+            "waarde": "Schaal 4"
+          }
+        ],
+        "domein": "CG",
+        "positie": {
+          "x": 1290,
+          "y": -1815
+        }
+      },
+      {
+        "goType": "Organisatietype",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "OrganisatietypeGemeenten",
+            "waarde": "Gemeenten"
+          },
+          {
+            "constNaam": "OrganisatietypeLeveranciers",
+            "waarde": "Leveranciers"
+          },
+          {
+            "constNaam": "OrganisatietypeVNG",
+            "waarde": "VNG"
+          },
+          {
+            "constNaam": "OrganisatietypeKetenpartners",
+            "waarde": "Ketenpartners"
+          },
+          {
+            "constNaam": "OrganisatietypeRijk",
+            "waarde": "Rijk"
+          }
+        ],
+        "domein": "CG",
+        "positie": {
+          "x": 450,
+          "y": -2865
+        }
+      },
+      {
+        "goType": "CGPortfolioFase",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "CGPortfolioFaseBrons",
+            "waarde": "Brons"
+          },
+          {
+            "constNaam": "CGPortfolioFaseZilver",
+            "waarde": "Zilver"
+          },
+          {
+            "constNaam": "CGPortfolioFaseGoud",
+            "waarde": "Goud"
+          },
+          {
+            "constNaam": "CGPortfolioFaseNietGecontroleerd",
+            "waarde": "Niet gecontroleerd"
+          }
+        ],
+        "domein": "CG",
+        "positie": {
+          "x": 2690,
+          "y": 550
+        }
+      },
+      {
+        "goType": "Gemeenterol",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "GemeenterolRealiseert",
+            "waarde": "Realiseert"
+          },
+          {
+            "constNaam": "GemeenterolMaaktGebruikVan",
+            "waarde": "Maakt gebruik van"
+          }
+        ],
+        "domein": "CG",
+        "positie": {
+          "x": 1080,
+          "y": -3150
+        }
+      },
+      {
+        "goType": "Organisatierol",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "OrganisatierolContactorganisatie",
+            "waarde": "Contactorganisatie"
+          },
+          {
+            "constNaam": "OrganisatierolBetrokkenOrganisatie",
+            "waarde": "BetrokkenOrganisatie"
+          }
+        ],
+        "domein": "CG",
+        "positie": {
+          "x": 420,
+          "y": -2235
+        }
+      },
+      {
+        "goType": "Naamgebruiksoort",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "NaamgebruiksoortEigenNaam",
+            "waarde": "EigenNaam"
+          },
+          {
+            "constNaam": "NaamgebruiksoortPartnerNaam",
+            "waarde": "PartnerNaam"
+          },
+          {
+            "constNaam": "NaamgebruiksoortEigenNaamPartnerNaam",
+            "waarde": "EigenNaam-PartnerNaam"
+          },
+          {
+            "constNaam": "NaamgebruiksoortPartnerNaamEigenNaam",
+            "waarde": "PartnerNaam-EigenNaam"
+          }
+        ],
+        "domein": "np-loc",
+        "positie": {
+          "x": 75,
+          "y": -345
+        }
+      },
+      {
+        "goType": "Bereikbaarheidssoort",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "BereikbaarheidssoortWoonadres",
+            "waarde": "Woonadres"
+          },
+          {
+            "constNaam": "BereikbaarheidssoortBriefadres",
+            "waarde": "Briefadres"
+          },
+          {
+            "constNaam": "BereikbaarheidssoortCorrespondentieadres",
+            "waarde": "Correspondentieadres"
+          }
+        ],
+        "domein": "np-loc",
+        "positie": {
+          "x": 210,
+          "y": -690
+        }
+      },
+      {
+        "goType": "ReferentielijstAdrestype",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "ReferentielijstAdrestypeURL",
+            "waarde": "URL"
+          },
+          {
+            "constNaam": "ReferentielijstAdrestypeURN",
+            "waarde": "URN"
+          }
+        ],
+        "domein": "register",
+        "positie": {
+          "x": 1815,
+          "y": -480
+        }
+      },
+      {
+        "goType": "WeergaveDefinitieStatus",
+        "baseType": "string",
+        "waarden": [
+          {
+            "constNaam": "WeergaveDefinitieStatusConcept",
+            "waarde": "concept"
+          },
+          {
+            "constNaam": "WeergaveDefinitieStatusActief",
+            "waarde": "actief"
+          },
+          {
+            "constNaam": "WeergaveDefinitieStatusInactief",
+            "waarde": "inactief"
+          }
+        ],
+        "domein": "configuratie",
+        "positie": {
+          "x": 3090,
+          "y": 540
+        }
+      }
+    ],
+    "referentielijstInstanties": [
+      {
+        "systeemnaam": "AdellijkeTitels",
+        "positie": {
+          "x": 1920,
+          "y": -330
+        }
+      },
+      {
+        "systeemnaam": "Landenlijst",
+        "positie": {
+          "x": 1005,
+          "y": -319.5
+        }
+      }
+    ],
+    "entiteiten": [
+      {
+        "typenaam": "A",
+        "meervoud": "as",
+        "description": "Entiteit A met materiele tijdlijn en onderliggende representaties U, V, W en Rel_A_B.",
+        "domein": "abuvwxy",
+        "isMaterieel": true,
+        "kleur": "#bfdbfe",
+        "positie": {
+          "x": -555,
+          "y": 450
+        },
+        "afgeleideVelden": [
+          {
+            "naam": "label",
+            "goType": "string",
+            "description": "Testafleiding over U.aaa, U.bbb en W.heel",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "U.aaa + (U.bbb != null ? ' [bbb=ja]' : '') + (W.heel != null ? ' · heel=' + W.heel : '')",
+            "isWeergaveVeld": true
+          }
+        ],
+        "gegevenselementen": [
+          {
+            "naam": "U",
+            "meervoud": "us",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Enkelvoudig gegevenselement van A met formele tijdlijn.",
+            "positie": {
+              "x": -780,
+              "y": 855
+            },
+            "velden": [
+              {
+                "naam": "aaa",
+                "goType": "string"
+              },
+              {
+                "naam": "bbb",
+                "goType": "*bool"
+              }
+            ],
+            "sourceHandle": "source-bottom",
+            "targetHandle": "target-top"
+          },
+          {
+            "naam": "V",
+            "meervoud": "vs",
+            "momentvoorkomen": "meervoudig",
+            "description": "Meervoudig gegevenselement van A met onder andere een datumveld.",
+            "positie": {
+              "x": -570,
+              "y": 795
+            },
+            "velden": [
+              {
+                "naam": "ccc",
+                "goType": "string"
+              },
+              {
+                "naam": "ddd",
+                "goType": "*string"
+              },
+              {
+                "naam": "eee",
+                "goType": "*string"
+              },
+              {
+                "naam": "fff",
+                "goType": "float64"
+              },
+              {
+                "naam": "ggg",
+                "goType": "ABCEnum",
+                "enum": "ABCEnum"
+              }
+            ],
+            "sourceHandle": "source-bottom",
+            "targetHandle": "target-top",
+            "useEdges": [
+              {
+                "doel": "ABCEnum",
+                "id": "A_V-->ABCEnum",
+                "sourceHandle": "source-bottom",
+                "targetHandle": "target-top"
+              }
+            ]
+          },
+          {
+            "naam": "W",
+            "meervoud": "ws",
+            "momentvoorkomen": "meervoudig",
+            "description": "Meervoudig gegevenselement van A met numerieke waarden.",
+            "isMaterieel": true,
+            "positie": {
+              "x": -360,
+              "y": 825
+            },
+            "velden": [
+              {
+                "naam": "float",
+                "goType": "float64"
+              },
+              {
+                "naam": "heel",
+                "goType": "int"
+              }
+            ],
+            "sourceHandle": "source-bottom",
+            "targetHandle": "target-top"
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "Rel_A_B",
+            "meervoud": "rel_a_bs",
+            "momentvoorkomen": "meervoudig",
+            "doelEntiteit": "B",
+            "description": "Relatie tussen A en B, meervoudig voorkomend per A en met relatieve relatie-id.",
+            "isMaterieel": true,
+            "positie": {
+              "x": -165,
+              "y": 540
+            },
+            "velden": [
+              {
+                "naam": "soort",
+                "goType": "RelABSoort",
+                "enum": "RelABSoort"
+              }
+            ],
+            "sourceHandle": "source-right",
+            "targetHandle": "target-left",
+            "useEdges": [
+              {
+                "doel": "RelABSoort",
+                "id": "Rel_A_B-->RelABSoort",
+                "sourceHandle": "source-bottom",
+                "targetHandle": "target-top"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "typenaam": "AdellijkeTitel",
+        "meervoud": "adellijke_titels",
+        "description": "Referentielijst-item: adellijke titel.",
+        "domein": "np-loc",
+        "entiteitSubtype": "referentielijst_item",
+        "kleur": "#c4b5fd",
+        "positie": {
+          "x": 1665,
+          "y": -120
+        },
+        "gegevenselementen": [
+          {
+            "naam": "AdellijkeTitelTitel",
+            "meervoud": "adellijke_titel_titels",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Enkelvoudig gegevenselement titel van AdellijkeTitel.",
+            "positie": {
+              "x": 1665,
+              "y": 75
+            },
+            "velden": [
+              {
+                "naam": "titel",
+                "goType": "string"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "typenaam": "ApiStandaard",
+        "meervoud": "api_standaarden",
+        "domein": "CG",
+        "entiteitSubtype": "referentielijst_item",
+        "kleur": "#fde68a",
+        "positie": {
+          "x": 1410,
+          "y": -2370
+        },
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "Naam.naam",
+            "isWeergaveVeld": true
+          }
+        ],
+        "gegevenselementen": [
+          {
+            "naam": "Naam",
+            "meervoud": "api_standaard_namen",
+            "momentvoorkomen": "enkelvoudig",
+            "positie": {
+              "x": 1755,
+              "y": -2355
+            },
+            "velden": [
+              {
+                "naam": "naam",
+                "goType": "string"
+              }
+            ],
+            "sourceHandle": "source-right",
+            "targetHandle": "target-left"
+          }
+        ]
+      },
+      {
+        "typenaam": "B",
+        "meervoud": "bs",
+        "description": "Entiteit B met materiele tijdlijn en onderliggende representaties X en Y.",
+        "domein": "abuvwxy",
+        "isMaterieel": true,
+        "kleur": "#fecaca",
+        "positie": {
+          "x": 210,
+          "y": 435
+        },
+        "gegevenselementen": [
+          {
+            "naam": "X",
+            "meervoud": "xs",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Enkelvoudig gegevenselement van B met twee tekstvelden.",
+            "positie": {
+              "x": 105,
+              "y": 840
+            },
+            "velden": [
+              {
+                "naam": "fff",
+                "goType": "string"
+              },
+              {
+                "naam": "ggg",
+                "goType": "string"
+              }
+            ],
+            "sourceHandle": "source-bottom",
+            "targetHandle": "target-top"
+          },
+          {
+            "naam": "Y",
+            "meervoud": "ys",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Enkelvoudig gegevenselement van B met een tekstveld.",
+            "positie": {
+              "x": 360,
+              "y": 855
+            },
+            "velden": [
+              {
+                "naam": "hhh",
+                "goType": "string"
+              }
+            ],
+            "sourceHandle": "source-bottom",
+            "targetHandle": "target-top"
+          }
+        ]
+      },
+      {
+        "typenaam": "C",
+        "meervoud": "cs",
+        "domein": "abuvwxy",
+        "kleur": "#e298ec",
+        "positie": {
+          "x": 795,
+          "y": 420
+        },
+        "afgeleideVelden": [
+          {
+            "naam": "relveldTest",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "Rel_C_B.relveld",
+            "isWeergaveVeld": true
+          }
+        ],
+        "gegevenselementen": [
+          {
+            "naam": "GE",
+            "meervoud": "c_ges",
+            "momentvoorkomen": "enkelvoudig",
+            "positie": {
+              "x": 1095,
+              "y": 585
+            },
+            "velden": [
+              {
+                "naam": "superveld",
+                "goType": "*string"
+              }
+            ],
+            "sourceHandle": "source-right",
+            "targetHandle": "target-left"
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "Rel_C_B",
+            "meervoud": "rel_c_bs",
+            "momentvoorkomen": "meervoudig",
+            "doelEntiteit": "B",
+            "positie": {
+              "x": 510,
+              "y": 495
+            },
+            "velden": [
+              {
+                "naam": "relveld",
+                "goType": "*string"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "typenaam": "C_sub",
+        "meervoud": "c_subs",
+        "domein": "abuvwxy",
+        "kleur": "#d2c1fb",
+        "erft": "C",
+        "positie": {
+          "x": 795,
+          "y": 600
+        },
+        "afgeleideVelden": [
+          {
+            "naam": "superveld",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "C.C_GE.superveld",
+            "isWeergaveVeld": true
+          }
+        ]
+      },
+      {
+        "typenaam": "Domein",
+        "meervoud": "domeinen",
+        "description": "Referentielijst-item voor domeinen.",
+        "domein": "CG",
+        "entiteitSubtype": "referentielijst_item",
+        "kleur": "#a7f3d0",
+        "positie": {
+          "x": 1410,
+          "y": -2610
+        },
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "DomeinGegevens.naam",
+            "isWeergaveVeld": true
+          }
+        ],
+        "gegevenselementen": [
+          {
+            "naam": "DomeinGegevens",
+            "meervoud": "domeingegevens",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Basisgegevens van een domein.",
+            "positie": {
+              "x": 1740,
+              "y": -2610
+            },
+            "velden": [
+              {
+                "naam": "naam",
+                "goType": "string"
+              },
+              {
+                "naam": "omschrijving",
+                "goType": "string"
+              }
+            ],
+            "sourceHandle": "source-right",
+            "targetHandle": "target-left"
+          }
+        ]
+      },
+      {
+        "typenaam": "FormulierDefinitie",
+        "meervoud": "formulier_definities",
+        "description": "Formulierdefinitie voor custom layouts van entiteitsformulieren. Bevat metadata (naam, status, doeltype) en een JSON layout-boom. Bitemporeel: wijzigingen zijn traceerbaar en corrigeerbaar via registraties.",
+        "domein": "configuratie",
+        "isMaterieel": true,
+        "kleur": "#c4b5fd",
+        "positie": {
+          "x": 2650,
+          "y": 80
+        },
+        "gegevenselementen": [
+          {
+            "naam": "Meta",
+            "meervoud": "formulier_definitie_metas",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Metadata van de formulierdefinitie: naam, beschrijving, doeltype en status.",
+            "positie": {
+              "x": 2500,
+              "y": 330
+            },
+            "velden": [
+              {
+                "naam": "naam",
+                "goType": "string"
+              },
+              {
+                "naam": "beschrijving",
+                "goType": "string"
+              },
+              {
+                "naam": "doeltype",
+                "goType": "string"
+              },
+              {
+                "naam": "status",
+                "goType": "FormulierDefinitieStatus",
+                "enum": "FormulierDefinitieStatus"
+              },
+              {
+                "naam": "is_standaard",
+                "goType": "*bool"
+              }
+            ],
+            "useEdges": [
+              {
+                "doel": "FormulierDefinitieStatus",
+                "id": "FormulierDefinitie_Meta-->FormulierDefinitieStatus"
+              }
+            ]
+          },
+          {
+            "naam": "Layout",
+            "meervoud": "formulier_definitie_layouts",
+            "momentvoorkomen": "meervoudig",
+            "description": "De layout-boom van het formulier als JSON-structuur. Bevat groepen, rijen, velden en conditionele elementen.",
+            "positie": {
+              "x": 2750,
+              "y": 330
+            },
+            "velden": [
+              {
+                "naam": "layout_json",
+                "goType": "string"
+              },
+              {
+                "naam": "definitie_versie",
+                "goType": "string",
+                "datatype": "Versie"
+              }
+            ],
+            "useEdges": [
+              {
+                "doel": "Versie",
+                "id": "FormulierDefinitie_Layout--dt-->Versie"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "typenaam": "Gemeente",
+        "meervoud": "gemeenten",
+        "description": "Referentielijst-item voor gemeenten.",
+        "domein": "CG",
+        "entiteitSubtype": "referentielijst_item",
+        "kleur": "#c4b5fd",
+        "positie": {
+          "x": 1395,
+          "y": -2910
+        },
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "GemeenteGegevens.naam + \" (\" + GemeenteGegevens.code + \")\"",
+            "isWeergaveVeld": true
+          }
+        ],
+        "gegevenselementen": [
+          {
+            "naam": "GemeenteGegevens",
+            "meervoud": "gemeentegegevens",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Basisgegevens van een gemeente.",
+            "positie": {
+              "x": 1740,
+              "y": -2910
+            },
+            "velden": [
+              {
+                "naam": "naam",
+                "goType": "string"
+              },
+              {
+                "naam": "code",
+                "goType": "string"
+              }
+            ],
+            "sourceHandle": "source-right",
+            "targetHandle": "target-left"
+          }
+        ]
+      },
+      {
+        "typenaam": "IdeBestand",
+        "meervoud": "ide_bestanden",
+        "description": "Bestand beheerd vanuit de IDE: model-snapshots, imports, exports, gegenereerde code of documentatie. Bitemporeel: wijzigingen zijn traceerbaar en corrigeerbaar via registraties.",
+        "domein": "ide-bestanden",
+        "isMaterieel": true,
+        "kleur": "#fbbf24",
+        "positie": {
+          "x": 4500,
+          "y": 50
+        },
+        "gegevenselementen": [
+          {
+            "naam": "Meta",
+            "meervoud": "ide_bestand_metas",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Metadata van het bestand: naam, beschrijving, categorie, formaat en domein.",
+            "positie": {
+              "x": 4350,
+              "y": 300
+            },
+            "velden": [
+              {
+                "naam": "naam",
+                "goType": "string"
+              },
+              {
+                "naam": "beschrijving",
+                "goType": "string"
+              },
+              {
+                "naam": "categorie",
+                "goType": "IdeBestandCategorie",
+                "enum": "IdeBestandCategorie"
+              },
+              {
+                "naam": "bestandsformaat",
+                "goType": "IdeBestandFormaat",
+                "enum": "IdeBestandFormaat"
+              },
+              {
+                "naam": "mime_type",
+                "goType": "string"
+              },
+              {
+                "naam": "domein",
+                "goType": "string"
+              },
+              {
+                "naam": "tags",
+                "goType": "string"
+              }
+            ],
+            "useEdges": [
+              {
+                "doel": "IdeBestandCategorie",
+                "id": "IdeBestand_Meta-->IdeBestandCategorie"
+              },
+              {
+                "doel": "IdeBestandFormaat",
+                "id": "IdeBestand_Meta-->IdeBestandFormaat"
+              }
+            ]
+          },
+          {
+            "naam": "Inhoud",
+            "meervoud": "ide_bestand_inhouds",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Inhoud en opslaginformatie van het bestand. Kleine tekstbestanden staan inline in de database, grotere of binaire bestanden worden opgeslagen in MinIO.",
+            "positie": {
+              "x": 4600,
+              "y": 300
+            },
+            "velden": [
+              {
+                "naam": "opslag_type",
+                "goType": "IdeBestandOpslagType",
+                "enum": "IdeBestandOpslagType"
+              },
+              {
+                "naam": "inline_inhoud",
+                "goType": "string"
+              },
+              {
+                "naam": "object_key",
+                "goType": "string"
+              },
+              {
+                "naam": "sha256_hash",
+                "goType": "string"
+              },
+              {
+                "naam": "grootte_bytes",
+                "goType": "int"
+              },
+              {
+                "naam": "versie_label",
+                "goType": "string"
+              }
+            ],
+            "useEdges": [
+              {
+                "doel": "IdeBestandOpslagType",
+                "id": "IdeBestand_Inhoud-->IdeBestandOpslagType"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "typenaam": "Initiatief",
+        "meervoud": "initiatieven",
+        "description": "Portfolio-initiatief met planning, productinformatie en bijdragen.",
+        "domein": "CG",
+        "isMaterieel": true,
+        "kleur": "#bfdbfe",
+        "positie": {
+          "x": 720,
+          "y": -2580
+        },
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "Product.naam",
+            "isWeergaveVeld": true
+          }
+        ],
+        "gegevenselementen": [
+          {
+            "naam": "Planning",
+            "meervoud": "planningen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Planning en voortgang van het initiatief.",
+            "isMaterieel": true,
+            "positie": {
+              "x": 465,
+              "y": -1935
+            },
+            "velden": [
+              {
+                "naam": "planningsinfo",
+                "goType": "string"
+              },
+              {
+                "naam": "startdatum",
+                "goType": "Date"
+              },
+              {
+                "naam": "ready_for_use",
+                "goType": "Date"
+              },
+              {
+                "naam": "waar_tegenaan_gelopen",
+                "goType": "string"
+              },
+              {
+                "naam": "fase",
+                "goType": "Fase",
+                "enum": "Fase"
+              },
+              {
+                "naam": "obstakels",
+                "goType": "*string"
+              },
+              {
+                "naam": "verwacht_ready_datum",
+                "goType": "*Date"
+              }
+            ],
+            "sourceHandle": "source-bottom",
+            "targetHandle": "target-top",
+            "useEdges": [
+              {
+                "doel": "Fase",
+                "id": "Initiatief_Planning-->Fase",
+                "sourceHandle": "source-bottom",
+                "targetHandle": "target-top"
+              }
+            ]
+          },
+          {
+            "naam": "Product",
+            "meervoud": "producten",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Beschrijving van het product dat bij het initiatief hoort.",
+            "isMaterieel": true,
+            "positie": {
+              "x": 750,
+              "y": -1980
+            },
+            "velden": [
+              {
+                "naam": "naam",
+                "goType": "string"
+              },
+              {
+                "naam": "omschrijving",
+                "goType": "*string"
+              },
+              {
+                "naam": "type",
+                "goType": "Producttype",
+                "enum": "Producttype"
+              },
+              {
+                "naam": "CG_laag",
+                "goType": "CGLaag",
+                "enum": "CGLaag"
+              },
+              {
+                "naam": "pitch",
+                "goType": "*string"
+              },
+              {
+                "naam": "vervangt_ouder_product",
+                "goType": "*bool"
+              },
+              {
+                "naam": "website",
+                "goType": "*string",
+                "datatype": "URL"
+              },
+              {
+                "naam": "git_repo",
+                "goType": "*string",
+                "datatype": "GitAdres"
+              }
+            ],
+            "sourceHandle": "source-bottom",
+            "targetHandle": "target-top",
+            "useEdges": [
+              {
+                "doel": "Producttype",
+                "id": "Initiatief_Product-->Producttype",
+                "sourceHandle": "source-bottom",
+                "targetHandle": "target-top"
+              },
+              {
+                "doel": "CGLaag",
+                "id": "Initiatief_Product-->CGLaag",
+                "sourceHandle": "source-bottom",
+                "targetHandle": "target-top"
+              },
+              {
+                "doel": "URL",
+                "id": "Initiatief_Product--dt-->URL",
+                "sourceHandle": "source-bottom",
+                "targetHandle": "target-left",
+                "hidden": true
+              },
+              {
+                "doel": "GitAdres",
+                "id": "Initiatief_Product--dt-->GitAdres",
+                "sourceHandle": "source-bottom",
+                "targetHandle": "target-left"
+              }
+            ]
+          },
+          {
+            "naam": "Bijdrage",
+            "meervoud": "bijdragen",
+            "momentvoorkomen": "meervoudig",
+            "description": "Bijdrage van het initiatief aan bredere doelen.",
+            "isMaterieel": true,
+            "positie": {
+              "x": 1035,
+              "y": -1920
+            },
+            "velden": [
+              {
+                "naam": "type_bijdrage",
+                "goType": "Bijdragetype",
+                "enum": "Bijdragetype"
+              },
+              {
+                "naam": "schaal",
+                "goType": "Schaal",
+                "enum": "Schaal"
+              },
+              {
+                "naam": "toelichting",
+                "goType": "string"
+              },
+              {
+                "naam": "score",
+                "goType": "*int"
+              }
+            ],
+            "sourceHandle": "source-bottom",
+            "targetHandle": "target-top",
+            "useEdges": [
+              {
+                "doel": "Bijdragetype",
+                "id": "Initiatief_Bijdrage-->Bijdragetype",
+                "sourceHandle": "source-right",
+                "targetHandle": "target-left"
+              },
+              {
+                "doel": "Schaal",
+                "id": "Initiatief_Bijdrage-->Schaal",
+                "sourceHandle": "source-right",
+                "targetHandle": "target-left"
+              }
+            ]
+          },
+          {
+            "naam": "AnderDomein",
+            "meervoud": "andere_domeinen",
+            "momentvoorkomen": "enkelvoudig",
+            "positie": {
+              "x": 1080,
+              "y": -2505
+            },
+            "velden": [
+              {
+                "naam": "domein",
+                "goType": "*string"
+              }
+            ],
+            "sourceHandle": "source-right",
+            "targetHandle": "target-left"
+          },
+          {
+            "naam": "AndersDanGemeente",
+            "meervoud": "anders_dan_gemeenten",
+            "momentvoorkomen": "enkelvoudig",
+            "positie": {
+              "x": 1080,
+              "y": -2820
+            },
+            "velden": [
+              {
+                "naam": "andersDanGemeente",
+                "goType": "*string"
+              }
+            ],
+            "sourceHandle": "source-right",
+            "targetHandle": "target-left"
+          },
+          {
+            "naam": "AndereAPIStandaard",
+            "meervoud": "andere_api_standaarden",
+            "momentvoorkomen": "enkelvoudig",
+            "positie": {
+              "x": 1080,
+              "y": -2175
+            },
+            "velden": [
+              {
+                "naam": "api_standaard",
+                "goType": "*string"
+              }
+            ],
+            "sourceHandle": "source-bottom",
+            "targetHandle": "target-left"
+          },
+          {
+            "naam": "Initiatiefinfo",
+            "meervoud": "initiatiefinfos",
+            "momentvoorkomen": "enkelvoudig",
+            "positie": {
+              "x": 435,
+              "y": -2655
+            },
+            "velden": [
+              {
+                "naam": "informatie",
+                "goType": "string"
+              },
+              {
+                "naam": "PbiID",
+                "goType": "int"
+              },
+              {
+                "naam": "aanmeldingsdatum",
+                "goType": "*Date"
+              }
+            ],
+            "sourceHandle": "source-left",
+            "targetHandle": "target-right"
+          },
+          {
+            "naam": "BetrokkenOrganisatie",
+            "meervoud": "betrokken_organisatie",
+            "momentvoorkomen": "meervoudig",
+            "positie": {
+              "x": 720,
+              "y": -2835
+            },
+            "velden": [
+              {
+                "naam": "type",
+                "goType": "Organisatietype",
+                "enum": "Organisatietype"
+              }
+            ],
+            "sourceHandle": "source-top",
+            "targetHandle": "target-bottom",
+            "useEdges": [
+              {
+                "doel": "Organisatietype",
+                "id": "Initiatief_BetrokkenOrganisatie-->Organisatietype",
+                "sourceHandle": "source-left",
+                "targetHandle": "target-right"
+              }
+            ]
+          },
+          {
+            "naam": "Beoordeling",
+            "meervoud": "beoordelingen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "CG Portfolio beoordeling (Brons/Zilver/Goud) van het initiatief.",
+            "isMaterieel": true,
+            "positie": {
+              "x": 6850,
+              "y": 300
+            },
+            "velden": [
+              {
+                "naam": "fase_cg_portfolio",
+                "goType": "CGPortfolioFase",
+                "enum": "CGPortfolioFase"
+              },
+              {
+                "naam": "datum_zilver",
+                "goType": "*Date"
+              },
+              {
+                "naam": "datum_goud",
+                "goType": "*Date"
+              },
+              {
+                "naam": "check_zilver",
+                "goType": "*bool"
+              },
+              {
+                "naam": "redenatie_zilver",
+                "goType": "*string"
+              },
+              {
+                "naam": "redenatie_goud",
+                "goType": "*string"
+              },
+              {
+                "naam": "goud_niet_gehaald",
+                "goType": "*bool"
+              },
+              {
+                "naam": "redenatie_goud_niet_gehaald",
+                "goType": "*string"
+              }
+            ],
+            "useEdges": [
+              {
+                "doel": "CGPortfolioFase",
+                "id": "Initiatief_Beoordeling-->CGPortfolioFase",
+                "sourceHandle": "source-bottom",
+                "targetHandle": "target-top"
+              }
+            ]
+          },
+          {
+            "naam": "Etalage",
+            "meervoud": "etalages",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Etalage-classificatie van het initiatief in het CG Portfolio.",
+            "positie": {
+              "x": 7100,
+              "y": 300
+            },
+            "velden": [
+              {
+                "naam": "level1",
+                "goType": "*string"
+              },
+              {
+                "naam": "level2",
+                "goType": "*string"
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "InitiatiefGemeente",
+            "meervoud": "initiatief_gemeenten",
+            "momentvoorkomen": "meervoudig",
+            "doelEntiteit": "Gemeente",
+            "positie": {
+              "x": 1080,
+              "y": -3000
+            },
+            "velden": [
+              {
+                "naam": "rol",
+                "goType": "Gemeenterol",
+                "enum": "Gemeenterol"
+              }
+            ],
+            "afgeleideVelden": [
+              {
+                "naam": "weergavenaam",
+                "goType": "string",
+                "afleidingsregelTaal": "cel",
+                "afleidingsregel": "Gemeente.GemeenteGegevens.naam + \" - \" + rol",
+                "isWeergaveVeld": true
+              }
+            ],
+            "sourceHandle": "source-top",
+            "targetHandle": "target-bottom",
+            "useEdges": [
+              {
+                "doel": "Gemeenterol",
+                "id": "InitiatiefGemeente-->Gemeenterol",
+                "sourceHandle": "source-top",
+                "targetHandle": "target-bottom"
+              }
+            ]
+          },
+          {
+            "naam": "InitiatiefDomein",
+            "meervoud": "initiatief_domeinen",
+            "momentvoorkomen": "meervoudig",
+            "doelEntiteit": "Domein",
+            "positie": {
+              "x": 1080,
+              "y": -2685
+            },
+            "afgeleideVelden": [
+              {
+                "naam": "weergavenaam",
+                "goType": "string",
+                "afleidingsregelTaal": "cel",
+                "afleidingsregel": "Domein.DomeinGegevens.naam",
+                "isWeergaveVeld": true
+              }
+            ],
+            "sourceHandle": "source-right",
+            "targetHandle": "target-left"
+          },
+          {
+            "naam": "InitiatiefAPIStandaard",
+            "meervoud": "initiatief_api_standaarden",
+            "momentvoorkomen": "meervoudig",
+            "doelEntiteit": "ApiStandaard",
+            "positie": {
+              "x": 1080,
+              "y": -2325
+            },
+            "afgeleideVelden": [
+              {
+                "naam": "weergavenaam",
+                "goType": "string",
+                "afleidingsregelTaal": "cel",
+                "afleidingsregel": "ApiStandaard.Naam.naam",
+                "isWeergaveVeld": true
+              }
+            ],
+            "sourceHandle": "source-right",
+            "targetHandle": "target-left"
+          },
+          {
+            "naam": "InitiatiefOrganisatie",
+            "meervoud": "initiatief_organisaties",
+            "momentvoorkomen": "meervoudig",
+            "doelEntiteit": "Organisatie",
+            "description": "de organisaties bij een initiatief",
+            "positie": {
+              "x": 420,
+              "y": -2400
+            },
+            "velden": [
+              {
+                "naam": "rol",
+                "goType": "*Organisatierol",
+                "enum": "Organisatierol"
+              }
+            ],
+            "afgeleideVelden": [
+              {
+                "naam": "weergavenaam",
+                "goType": "string",
+                "afleidingsregelTaal": "cel",
+                "afleidingsregel": "Organisatie.Organisatienaam.naam",
+                "isWeergaveVeld": true
+              }
+            ],
+            "sourceHandle": "source-left",
+            "targetHandle": "target-right",
+            "useEdges": [
+              {
+                "doel": "Organisatierol",
+                "id": "InitiatiefOrganisatie-->Organisatierol",
+                "sourceHandle": "source-bottom",
+                "targetHandle": "target-top"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "typenaam": "Land",
+        "meervoud": "landen",
+        "description": "Referentielijst-item: individueel land.",
+        "domein": "register",
+        "entiteitSubtype": "referentielijst_item",
+        "isMaterieel": true,
+        "kleur": "#fde68a",
+        "positie": {
+          "x": 1290,
+          "y": -135
+        },
+        "gegevenselementen": [
+          {
+            "naam": "Landcode",
+            "meervoud": "landcodes",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Enkelvoudig gegevenselement landcode van Land.",
+            "positie": {
+              "x": 1170,
+              "y": 75
+            },
+            "velden": [
+              {
+                "naam": "code",
+                "goType": "string"
+              }
+            ],
+            "sourceHandle": "bottom",
+            "targetHandle": "top"
+          },
+          {
+            "naam": "Landnaam",
+            "meervoud": "landnamen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Enkelvoudig gegevenselement landnaam van Land.",
+            "positie": {
+              "x": 1418,
+              "y": 75
+            },
+            "velden": [
+              {
+                "naam": "naam",
+                "goType": "string"
+              }
+            ],
+            "sourceHandle": "bottom",
+            "targetHandle": "top"
+          }
+        ]
+      },
+      {
+        "typenaam": "Locatie",
+        "meervoud": "locaties",
+        "description": "Fysiek bezoekbare locatie gelegen op het aardoppervlak.",
+        "domein": "np-loc",
+        "isMaterieel": true,
+        "kleur": "#fecaca",
+        "positie": {
+          "x": 600,
+          "y": -885
+        },
+        "afgeleideVelden": [
+          {
+            "naam": "weergaveadres",
+            "goType": "string",
+            "description": "Samengesteld weergaveadres, afgeleid uit straatnaam, huisnummer, postcode en plaats.",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "Adres.straatnaam + ' ' + Adres.huisnummer + ', ' + Adres.postcode + ' ' + Adres.plaats",
+            "isWeergaveVeld": true
+          }
+        ],
+        "gegevenselementen": [
+          {
+            "naam": "Adres",
+            "meervoud": "adressen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Binnenlands adres: een aanduiding van een binnenlandse locatie, uitgegeven door de gemeente en geregistreerd in de BAG.",
+            "positie": {
+              "x": 765,
+              "y": -570
+            },
+            "velden": [
+              {
+                "naam": "straatnaam",
+                "goType": "string"
+              },
+              {
+                "naam": "huisnummer",
+                "goType": "string"
+              },
+              {
+                "naam": "postcode",
+                "goType": "*string",
+                "datatype": "NLPostcode"
+              },
+              {
+                "naam": "gemeente",
+                "goType": "int",
+                "$ref": "Gemeente"
+              },
+              {
+                "naam": "land",
+                "goType": "int",
+                "$ref": "LandenlijstLand"
+              }
+            ],
+            "useEdges": [
+              {
+                "doel": "NLPostcode",
+                "id": "Locatie_Adres--dt-->NLPostcode"
+              },
+              {
+                "doel": "LandenlijstLand",
+                "id": "Locatie_Adres--ref-->LandenlijstLand"
+              }
+            ]
+          },
+          {
+            "naam": "BAGlocatie",
+            "meervoud": "baglocaties",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Unieke identificatie van het adresseerbaar object (verblijfsobject, stand- of ligplaats) uitgegeven door het bevoegd gemeentelijke orgaan.",
+            "positie": {
+              "x": 510,
+              "y": -555
+            },
+            "velden": [
+              {
+                "naam": "adresaanduiding",
+                "goType": "string"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "typenaam": "NatuurlijkPersoon",
+        "meervoud": "natuurlijk_personen",
+        "description": "Een mens voor zover deze door Nederlandse wetgeving met rechten en plichten wordt bekleed.",
+        "domein": "np-loc",
+        "isMaterieel": true,
+        "kleur": "#bfdbfe",
+        "positie": {
+          "x": -135,
+          "y": -885
+        },
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "description": "Samengestelde weergavenaam van de persoon, afgeleid uit voornaam/tussenvoegsel/achternaam.",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "(Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters) + (Naam.tussenvoegsel != null ? ' ' + Naam.tussenvoegsel : '') + ' ' + Naam.achternaam",
+            "isWeergaveVeld": true
+          }
+        ],
+        "gegevenselementen": [
+          {
+            "naam": "Persoonsidentificatie",
+            "meervoud": "persoonsidentificaties",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Identificerende gegevens van de natuurlijk persoon (BSN, ingezetene).",
+            "positie": {
+              "x": -720,
+              "y": -780
+            },
+            "velden": [
+              {
+                "naam": "bsn",
+                "goType": "string",
+                "datatype": "BSN"
+              },
+              {
+                "naam": "ingezetene",
+                "goType": "*bool"
+              }
+            ],
+            "afgeleideVelden": [
+              {
+                "naam": "bsnEnIngezeten",
+                "goType": "string",
+                "description": "Toont BSN en indien ingezetene \" (ingezetene)\"",
+                "afleidingsregelTaal": "cel",
+                "afleidingsregel": "bsn + (ingezetene ? \" ingezetene\" : \"\")",
+                "isWeergaveVeld": true
+              }
+            ],
+            "sourceHandle": "left",
+            "useEdges": [
+              {
+                "doel": "BSN",
+                "id": "NatuurlijkPersoon_Persoonsidentificatie--dt-->BSN"
+              }
+            ]
+          },
+          {
+            "naam": "Naam",
+            "meervoud": "namen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Naamgegevens van de natuurlijk persoon (voorletters, roepnaam, tussenvoegsel, achternaam).",
+            "positie": {
+              "x": -270,
+              "y": -570
+            },
+            "velden": [
+              {
+                "naam": "voorletters",
+                "goType": "string"
+              },
+              {
+                "naam": "roepnaam",
+                "goType": "*string"
+              },
+              {
+                "naam": "tussenvoegsel",
+                "goType": "*string"
+              },
+              {
+                "naam": "achternaam",
+                "goType": "string"
+              }
+            ],
+            "afgeleideVelden": [
+              {
+                "naam": "weergavenaam",
+                "goType": "string",
+                "afleidingsregelTaal": "cel",
+                "afleidingsregel": "(Naam.roepnaam != null ? Naam.roepnaam : Naam.voorletters) + (Naam.tussenvoegsel != null ? ' ' + Naam.tussenvoegsel : '') + ' ' + Naam.achternaam",
+                "isWeergaveVeld": true
+              }
+            ]
+          },
+          {
+            "naam": "Partnernaam",
+            "meervoud": "partnernamen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Achternaam van de partner van de natuurlijk persoon.",
+            "positie": {
+              "x": -135,
+              "y": -285
+            },
+            "velden": [
+              {
+                "naam": "achternaam",
+                "goType": "string"
+              }
+            ],
+            "sourceHandle": "bottom",
+            "targetHandle": "top"
+          },
+          {
+            "naam": "Naamgebruik",
+            "meervoud": "naamgebruiken",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Wijze waarop de geslachtsnaam wordt gebruikt.",
+            "positie": {
+              "x": 75,
+              "y": -495
+            },
+            "velden": [
+              {
+                "naam": "naamgebruik",
+                "goType": "Naamgebruiksoort",
+                "enum": "Naamgebruiksoort"
+              }
+            ],
+            "sourceHandle": "bottom",
+            "targetHandle": "top",
+            "useEdges": [
+              {
+                "doel": "Naamgebruiksoort",
+                "id": "NatuurlijkPersoon_Naamgebruik-->Naamgebruiksoort"
+              }
+            ]
+          },
+          {
+            "naam": "Burgerschap",
+            "meervoud": "burgerschappen",
+            "momentvoorkomen": "enkelvoudig",
+            "isMaterieel": true,
+            "positie": {
+              "x": -465,
+              "y": -195
+            },
+            "velden": [
+              {
+                "naam": "landcode",
+                "goType": "*string"
+              },
+              {
+                "naam": "nationaliteit",
+                "goType": "*string"
+              },
+              {
+                "naam": "landreferentie",
+                "goType": "*int"
+              }
+            ],
+            "sourceHandle": "left",
+            "targetHandle": "top"
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "Bereikbaarheid",
+            "meervoud": "bereikbaarheden",
+            "momentvoorkomen": "enkelvoudig",
+            "doelEntiteit": "Locatie",
+            "description": "Koppeling van een natuurlijk persoon aan een locatie als bereikbaarheidsadres.",
+            "isMaterieel": true,
+            "positie": {
+              "x": 210,
+              "y": -870
+            },
+            "velden": [
+              {
+                "naam": "soort",
+                "goType": "Bereikbaarheidssoort",
+                "enum": "Bereikbaarheidssoort"
+              }
+            ],
+            "sourceHandle": "right",
+            "targetHandle": "left",
+            "useEdges": [
+              {
+                "doel": "Bereikbaarheidssoort",
+                "id": "Bereikbaarheid-->Bereikbaarheidssoort"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "typenaam": "Organisatie",
+        "meervoud": "organisaties",
+        "description": "Organisatie die betrokken is bij initiatieven in het portfolio.",
+        "domein": "CG",
+        "isMaterieel": true,
+        "kleur": "#fde68a",
+        "positie": {
+          "x": 150,
+          "y": -2505
+        },
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "Organisatienaam.naam",
+            "isWeergaveVeld": true
+          }
+        ],
+        "gegevenselementen": [
+          {
+            "naam": "Organisatiecontactgegevens",
+            "meervoud": "organisatiecontactgegevens",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Contactgegevens van de organisatie.",
+            "positie": {
+              "x": -270,
+              "y": -2415
+            },
+            "velden": [
+              {
+                "naam": "url",
+                "goType": "*string",
+                "datatype": "URL"
+              },
+              {
+                "naam": "email",
+                "goType": "*string",
+                "datatype": "Emailadres"
+              },
+              {
+                "naam": "telefoonnummer",
+                "goType": "*string",
+                "datatype": "Telefoonnummer"
+              }
+            ],
+            "sourceHandle": "source-left",
+            "targetHandle": "target-right",
+            "useEdges": [
+              {
+                "doel": "URL",
+                "id": "Organisatie_Contactgegevens--dt-->URL",
+                "sourceHandle": "source-right",
+                "targetHandle": "target-left",
+                "hidden": true
+              },
+              {
+                "doel": "Emailadres",
+                "id": "Organisatie_Contactgegevens--dt-->Emailadres",
+                "sourceHandle": "source-left",
+                "targetHandle": "target-top"
+              },
+              {
+                "doel": "Telefoonnummer",
+                "id": "Organisatie_Contactgegevens--dt-->Telefoonnummer",
+                "sourceHandle": "source-left",
+                "targetHandle": "target-top"
+              }
+            ]
+          },
+          {
+            "naam": "Organisatienaam",
+            "meervoud": "organisatienamen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Naam van de organisatie.",
+            "positie": {
+              "x": -270,
+              "y": -2535
+            },
+            "velden": [
+              {
+                "naam": "naam",
+                "goType": "string"
+              }
+            ],
+            "sourceHandle": "source-left",
+            "targetHandle": "target-right"
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "Contactpersoon",
+            "meervoud": "contactpersonen",
+            "momentvoorkomen": "enkelvoudig",
+            "doelEntiteit": "Persoon",
+            "positie": {
+              "x": 15,
+              "y": -2250
+            },
+            "velden": [
+              {
+                "naam": "rol",
+                "goType": "string"
+              }
+            ],
+            "sourceHandle": "source-bottom",
+            "targetHandle": "target-top"
+          }
+        ]
+      },
+      {
+        "typenaam": "Persoon",
+        "meervoud": "personen",
+        "description": "Persoon die betrokken is bij initiatieven in het portfolio.",
+        "domein": "CG",
+        "isMaterieel": true,
+        "kleur": "#fecaca",
+        "positie": {
+          "x": 150,
+          "y": -2055
+        },
+        "afgeleideVelden": [
+          {
+            "naam": "weergavenaam",
+            "goType": "string",
+            "afleidingsregelTaal": "cel",
+            "afleidingsregel": "Persoonnaam.naam",
+            "isWeergaveVeld": true
+          }
+        ],
+        "gegevenselementen": [
+          {
+            "naam": "Persoonscontactgegevens",
+            "meervoud": "persoonscontactgegevens",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Contactgegevens van de persoon.",
+            "positie": {
+              "x": -270,
+              "y": -1980
+            },
+            "velden": [
+              {
+                "naam": "email",
+                "goType": "*string",
+                "datatype": "Emailadres"
+              },
+              {
+                "naam": "telefoonnummer",
+                "goType": "*string",
+                "datatype": "Telefoonnummer"
+              }
+            ],
+            "sourceHandle": "source-left",
+            "targetHandle": "target-right",
+            "useEdges": [
+              {
+                "doel": "Emailadres",
+                "id": "Persoon_Contactgegevens--dt-->Emailadres",
+                "sourceHandle": "source-left",
+                "targetHandle": "target-bottom"
+              },
+              {
+                "doel": "Telefoonnummer",
+                "id": "Persoon_Contactgegevens--dt-->Telefoonnummer",
+                "sourceHandle": "source-left",
+                "targetHandle": "target-bottom"
+              }
+            ]
+          },
+          {
+            "naam": "Persoonnaam",
+            "meervoud": "persoonnamen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Naam van de persoon.",
+            "positie": {
+              "x": -270,
+              "y": -2100
+            },
+            "velden": [
+              {
+                "naam": "naam",
+                "goType": "string"
+              }
+            ],
+            "sourceHandle": "source-left",
+            "targetHandle": "target-right"
+          }
+        ]
+      },
+      {
+        "typenaam": "Referentielijst",
+        "meervoud": "referentielijsten",
+        "description": "Generieke referentielijst-entiteit. Individuele lijsten (Landenlijst, EULidstaten, etc.) zijn records.",
+        "domein": "register",
+        "entiteitSubtype": "referentielijst",
+        "isMaterieel": true,
+        "kleur": "#fef3c7",
+        "positie": {
+          "x": 1440,
+          "y": -720
+        },
+        "gegevenselementen": [
+          {
+            "naam": "Referentielijstnaam",
+            "meervoud": "referentielijstnamen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Leesbare naam van een referentielijst.",
+            "positie": {
+              "x": 1815,
+              "y": -975
+            },
+            "velden": [
+              {
+                "naam": "naam",
+                "goType": "string"
+              }
+            ],
+            "sourceHandle": "right",
+            "targetHandle": "left"
+          },
+          {
+            "naam": "Referentielijstomschrijving",
+            "meervoud": "referentielijstomschrijvingen",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Omschrijving van een referentielijst.",
+            "positie": {
+              "x": 1815,
+              "y": -860.5
+            },
+            "velden": [
+              {
+                "naam": "omschrijving",
+                "goType": "string"
+              }
+            ],
+            "sourceHandle": "right",
+            "targetHandle": "left"
+          },
+          {
+            "naam": "ReferentielijstVisibility",
+            "meervoud": "visibilities",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Domeinzichtbaarheid van een referentielijst (register, modelspecifiek, extern).",
+            "positie": {
+              "x": 1815,
+              "y": -746
+            },
+            "velden": [
+              {
+                "naam": "domein",
+                "goType": "string"
+              }
+            ],
+            "sourceHandle": "right",
+            "targetHandle": "left"
+          },
+          {
+            "naam": "ReferentielijstInternetadres",
+            "meervoud": "internetadressen",
+            "momentvoorkomen": "meervoudig",
+            "description": "Internetadres (URL/URN) van een referentielijst.",
+            "positie": {
+              "x": 1815,
+              "y": -631.5
+            },
+            "velden": [
+              {
+                "naam": "adrestype",
+                "goType": "ReferentielijstAdrestype",
+                "enum": "ReferentielijstAdrestype"
+              },
+              {
+                "naam": "adres",
+                "goType": "string"
+              },
+              {
+                "naam": "organisatie",
+                "goType": "string"
+              }
+            ],
+            "sourceHandle": "right",
+            "targetHandle": "left",
+            "useEdges": [
+              {
+                "doel": "ReferentielijstAdrestype",
+                "id": "Referentielijst_ReferentielijstInternetadres-->ReferentielijstAdrestype"
+              }
+            ]
+          }
+        ],
+        "relaties": [
+          {
+            "naam": "LandenlijstLand",
+            "meervoud": "landenlijst_landen",
+            "momentvoorkomen": "meervoudig",
+            "doelEntiteit": "Land",
+            "description": "Koppeling van een land aan referentielijst-instantie Landenlijst (referentielijst-items relatie).",
+            "relatieSubtype": "referentielijst_items",
+            "referentielijstInstantie": "Landenlijst",
+            "positie": {
+              "x": 1290,
+              "y": -310.5
+            }
+          },
+          {
+            "naam": "AdellijkeTitelsTitel",
+            "meervoud": "adellijke_titels_titels",
+            "momentvoorkomen": "meervoudig",
+            "doelEntiteit": "AdellijkeTitel",
+            "description": "Koppeling van een adellijke titel aan referentielijst-instantie AdellijkeTitels (referentielijst-items relatie).",
+            "relatieSubtype": "referentielijst_items",
+            "referentielijstInstantie": "AdellijkeTitels",
+            "positie": {
+              "x": 1665,
+              "y": -315
+            }
+          }
+        ]
+      },
+      {
+        "typenaam": "WeergaveDefinitie",
+        "meervoud": "weergave_definities",
+        "description": "Weergavedefinitie voor publicatie-views op entiteitsdata. Bevat metadata (naam, doeltype, status), een tabelconfiguratie (kolommen, sortering) en een detail-template met veldpad-inserts. Bitemporeel: wijzigingen zijn traceerbaar en corrigeerbaar via registraties.",
+        "domein": "configuratie",
+        "isMaterieel": true,
+        "kleur": "#a5f3fc",
+        "positie": {
+          "x": 3270,
+          "y": 75
+        },
+        "gegevenselementen": [
+          {
+            "naam": "Meta",
+            "meervoud": "weergave_definitie_metas",
+            "momentvoorkomen": "enkelvoudig",
+            "description": "Metadata van de weergavedefinitie: naam, beschrijving, doeltype en status.",
+            "positie": {
+              "x": 3120,
+              "y": 325
+            },
+            "velden": [
+              {
+                "naam": "naam",
+                "goType": "string"
+              },
+              {
+                "naam": "beschrijving",
+                "goType": "string"
+              },
+              {
+                "naam": "doeltype",
+                "goType": "string"
+              },
+              {
+                "naam": "status",
+                "goType": "WeergaveDefinitieStatus",
+                "enum": "WeergaveDefinitieStatus"
+              },
+              {
+                "naam": "is_standaard",
+                "goType": "*bool"
+              }
+            ],
+            "useEdges": [
+              {
+                "doel": "WeergaveDefinitieStatus",
+                "id": "WeergaveDefinitie_Meta-->WeergaveDefinitieStatus"
+              }
+            ]
+          },
+          {
+            "naam": "TabelConfig",
+            "meervoud": "weergave_definitie_tabel_configs",
+            "momentvoorkomen": "meervoudig",
+            "description": "Configuratie van de tabelweergave: kolomdefinities (veldpad, label, breedte, sorteerbaar, filterbaar), standaardsortering en aantal rijen per pagina.",
+            "positie": {
+              "x": 3370,
+              "y": 325
+            },
+            "velden": [
+              {
+                "naam": "tabel_config_json",
+                "goType": "string"
+              },
+              {
+                "naam": "definitie_versie",
+                "goType": "string",
+                "datatype": "Versie"
+              }
+            ],
+            "useEdges": [
+              {
+                "doel": "Versie",
+                "id": "WeergaveDefinitie_TabelConfig--dt-->Versie"
+              }
+            ]
+          },
+          {
+            "naam": "DetailTemplate",
+            "meervoud": "weergave_definitie_detail_templates",
+            "momentvoorkomen": "meervoudig",
+            "description": "Template voor de detail-pagina met {{veldpad}} inserts. Wordt gerenderd als read-only publicatieweergave.",
+            "positie": {
+              "x": 3620,
+              "y": 325
+            },
+            "velden": [
+              {
+                "naam": "template_tekst",
+                "goType": "string"
+              },
+              {
+                "naam": "definitie_versie",
+                "goType": "string",
+                "datatype": "Versie"
+              }
+            ],
+            "useEdges": [
+              {
+                "doel": "Versie",
+                "id": "WeergaveDefinitie_DetailTemplate--dt-->Versie"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "domeinen": [
+      {
+        "naam": "CG",
+        "versie": "0.9.7"
+      }
+    ]
+  }
+}

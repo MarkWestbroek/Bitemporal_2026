@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Common Ground — Initiatieven Register</title>
+
+  <!-- Open Sans via Google Fonts (zelfde font als het register zelf) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    /* ============================================================
+       Common Ground Design Tokens
+       Kleuren afgeleid uit het CG logo (geel / blauw / donkerblauw)
+       ============================================================ */
+    :root {
+      --cg-geel:        #ffc200;
+      --cg-blauw:       #00a1e5;
+      --cg-donkerblauw: #143462;
+      --cg-wit:         #ffffff;
+      --cg-lichtgrijs:  #f4f6f8;
+      --cg-grijs:       #e2e8f0;
+      --cg-donkergrijs: #475569;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: "Open Sans", system-ui, -apple-system, sans-serif;
+      background: var(--cg-lichtgrijs);
+      color: var(--cg-donkerblauw);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ============================================================
+       Topbalk
+       ============================================================ */
+    .cg-header {
+      background: var(--cg-donkerblauw);
+      padding: 0.65rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      box-shadow: 0 2px 10px rgba(20, 52, 98, 0.25);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .cg-header__logo {
+      height: 38px;
+      flex-shrink: 0;
+    }
+
+    /* SVG-logo is inline — alle paden worden wit gemaakt voor donkere achtergrond */
+    .cg-header__logo path, .cg-header__logo .st0, .cg-header__logo .st1, .cg-header__logo .st2 {
+      fill: #ffffff;
+    }
+
+    .cg-header__divider {
+      width: 1px;
+      height: 28px;
+      background: rgba(255, 255, 255, 0.25);
+      flex-shrink: 0;
+    }
+
+    .cg-header__title {
+      color: var(--cg-wit);
+      font-size: 1rem;
+      font-weight: 600;
+      flex: 1;
+      letter-spacing: 0.01em;
+    }
+
+    .cg-header__link {
+      color: var(--cg-blauw);
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid rgba(0, 161, 229, 0.45);
+      padding: 0.3rem 0.8rem;
+      border-radius: 4px;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .cg-header__link:hover {
+      background: rgba(0, 161, 229, 0.15);
+      color: var(--cg-wit);
+    }
+
+    /* ============================================================
+       Intro-banner (blauw)
+       ============================================================ */
+    .cg-intro {
+      background: var(--cg-blauw);
+      color: var(--cg-wit);
+      padding: 1.5rem 2rem 1.4rem;
+    }
+
+    .cg-intro__inner {
+      max-width: 960px;
+    }
+
+    .cg-intro h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    .cg-intro p {
+      font-size: 0.92rem;
+      line-height: 1.55;
+      opacity: 0.93;
+      max-width: 680px;
+    }
+
+    /* ============================================================
+       Broodkruimel / metabalk
+       ============================================================ */
+    .cg-meta {
+      background: var(--cg-wit);
+      border-bottom: 3px solid var(--cg-geel);
+      padding: 0.45rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.82rem;
+      color: var(--cg-donkergrijs);
+    }
+
+    .cg-meta a {
+      color: var(--cg-blauw);
+      text-decoration: none;
+    }
+
+    .cg-meta a:hover {
+      text-decoration: underline;
+    }
+
+    /* ============================================================
+       IFrame-container
+       ============================================================ */
+    .cg-iframe-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--cg-wit);
+    }
+
+    .cg-iframe {
+      flex: 1;
+      border: none;
+      width: 100%;
+      min-height: calc(100vh - 200px);
+      height: calc(100vh - 200px);
+      display: block;
+    }
+
+    /* Fallback die zichtbaar is als de iframe geblokkeerd wordt (bijv. mixed content) */
+    .cg-iframe-fallback {
+      display: none;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      color: var(--cg-donkergrijs);
+      border-top: 3px solid var(--cg-geel);
+    }
+
+    .cg-iframe-fallback h2 {
+      color: var(--cg-donkerblauw);
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .cg-iframe-fallback .cg-btn {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.6rem 1.5rem;
+      background: var(--cg-blauw);
+      color: #fff;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: background 0.15s;
+    }
+
+    .cg-iframe-fallback .cg-btn:hover { background: var(--cg-donkerblauw); }
+
+    /* ============================================================
+       Footer
+       ============================================================ */
+    .cg-footer {
+      background: var(--cg-donkerblauw);
+      color: rgba(255, 255, 255, 0.75);
+      padding: 1rem 2rem;
+      font-size: 0.78rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .cg-footer a {
+      color: var(--cg-blauw);
+      text-decoration: none;
+    }
+
+    .cg-footer a:hover {
+      text-decoration: underline;
+    }
+
+    .cg-footer__badge {
+      display: inline-block;
+      background: var(--cg-geel);
+      color: var(--cg-donkerblauw);
+      font-weight: 700;
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+      padding: 0.15rem 0.5rem;
+      border-radius: 3px;
+      vertical-align: middle;
+      margin-right: 0.4rem;
+    }
+
+    /* ============================================================
+       Responsive
+       ============================================================ */
+    @media (max-width: 640px) {
+      .cg-header      { padding: 0.65rem 1rem; }
+      .cg-header__link { display: none; }
+      .cg-intro       { padding: 1rem; }
+      .cg-meta        { padding: 0.45rem 1rem; }
+      .cg-footer      { padding: 0.85rem 1rem; flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       Topbalk — logo is inline SVG zodat geen HTTP-verzoek nodig is
+       ============================================================ -->
+  <header class="cg-header">
+    <svg class="cg-header__logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 975.1 283.5" aria-label="Common Ground" role="img">
+      <path d="M41.7,41.5C68.3,15,104.3,0,141.9,0c37.6,0,73.6,14.8,100.2,41.4l100.3,100.3-100.3,100.3c-26.6,26.6-62.7,41.5-100.3,41.5s-73.7-14.9-100.3-41.5C14.9,215.3,0,179.3,0,141.6c0-37.6,14.9-73.7,41.5-100.3l.2.2Z"/>
+      <path d="M411.9,41.5C385.3,15,349.3,0,311.7,0c-37.6,0-73.6,14.8-100.2,41.4l-100.3,100.3,100.3,100.3c26.6,26.6,62.7,41.5,100.3,41.5s73.7-14.9,100.3-41.5c26.6-26.6,41.5-62.7,41.5-100.3,0-37.6-14.9-73.7-41.5-100.3l-.2.2Z"/>
+      <path d="M242.1,41.4c-4.8-4.8-9.9-9.2-15.3-13.2-5.4,4-10.5,8.4-15.3,13.2l-100.3,100.3,100.3,100.3c4.8,4.8,9.9,9.2,15.3,13.2,5.4-4,10.5-8.4,15.3-13.2l100.3-100.3-100.3-100.3Z"/>
+      <path d="M836.1,211c0,4.5,3.6,8.1,8.1,8.1s8.1-3.6,8.1-8.1v-32.4l25,19.3v13.1c0,4.5,3.6,8.1,8.1,8.1s8.1-3.6,8.1-8.1v-49.7c0-4.5-3.6-8.1-8.1-8.1s-8.1,3.6-8.1,8.1v15.8l-28.6-22.3c-1.4-1.3-3.5-1.6-5-1.6-4.2,0-7.7,3.6-7.7,7.9v50Z"/>
+      <path d="M752.2,189.7c0,18.2,9.4,30,28.1,30s28.4-11.7,28.4-30v-28.5c0-4.5-3.6-8.1-8.1-8.1s-8.1,3.6-8.1,8.1v29.1c0,11-3.3,15.2-12,15.2s-12-4.2-12-15.2v-29.1c0-4.5-3.6-8.1-8.1-8.1s-8.1,3.6-8.1,8.1v28.5Z"/>
+      <path d="M699.2,152.3c-18.6,0-33.5,15.1-33.5,33.7s14.9,33.7,33.5,33.7,33.5-15.1,33.5-33.7-14.9-33.7-33.5-33.7ZM699.1,205.5c-9.9,0-17.1-9.1-17.1-19.2s7.2-18.7,17.1-18.7,17.3,8.6,17.3,18.7-7.2,19.2-17.3,19.2Z"/>
+      <path d="M636.2,193.9c6.5-3.6,10.3-10.3,10.3-19.1,0-12.7-8.9-21.7-20.5-21.7h-23.2c-4.5,0-8.1,3.6-8.1,8.1v49.7c0,4.5,3.6,8.1,8.1,8.1s8.1-3.6,8.1-8.1v-12.8h10l7.9,16.6c1.3,2.7,3.8,4.3,7,4.3,4.5,0,8-3.3,8-7.8s-.3-2.9-1-4.1l-6.6-13.4ZM625.1,182.7h-14.2v-13.2h14.2c2.7,0,4.8,1.7,4.8,6.4s-2.1,6.9-4.8,6.9Z"/>
+      <path d="M543.5,167.6c4.5,0,9.5,1.3,13.1,3.7,1.4,1.3,3,1.9,4.9,1.9,4.1,0,7.3-3.3,7.3-7.3s-1.3-4.6-3-6c-6.2-5-13.9-7.6-22.2-7.6-18.9,0-33.7,15.1-33.7,33.7s14.4,33.7,33.1,33.7,12.3-1.2,17.3-4.9l.3.6c1.3,2,2.8,3.7,5.1,3.7s5.2-2.2,5.2-5.3v-25.5c0-3.8-3-7-6.9-7h-15.8c-3.8,0-6.9,3.1-6.9,7s3,6.9,6.9,6.9h5.9v8.5c-3.6,1.9-6,1.9-10.7,1.9-9.4,0-17.4-9.1-17.4-19.2s7.3-18.7,17.3-18.7"/>
+      <path d="M943.4,153.1h-16.4c-4.5,0-8.1,3.6-8.1,8.1v49.7c0,4.5,3.6,8.1,8.1,8.1h16.4c18.6,0,31.7-14.2,31.7-32.8s-13.1-33.2-31.7-33.2ZM941.8,203.8h-6.6v-35h6.6c9.9,0,17.1,8,17.1,17.9s-7.2,17.1-17.1,17.1Z"/>
+      <path d="M917.5,122.5c0,4.5,3.6,8.1,8.1,8.1s8.1-3.6,8.1-8.1v-32.4l25,19.3v13.1c0,4.5,3.6,8.1,8.1,8.1s8.1-3.6,8.1-8.1v-49.7c0-4.5-3.6-8.1-8.1-8.1s-8.1,3.6-8.1,8.1v15.8l-28.6-22.3c-1.4-1.3-3.5-1.6-5-1.6-4.2,0-7.7,3.6-7.7,7.9v50Z"/>
+    </svg>
+    <div class="cg-header__divider"></div>
+    <span class="cg-header__title">Common Ground — Initiatieven Register</span>
+    <a href="https://commonground.nl" target="_blank" rel="noopener noreferrer" class="cg-header__link">
+      commonground.nl ↗
+    </a>
+  </header>
+
+  <!-- ============================================================
+       Intro-banner
+       ============================================================ -->
+  <section class="cg-intro">
+    <div class="cg-intro__inner">
+      <h1>Initiatieven</h1>
+      <p>
+        Een overzicht van alle Common Ground initiatieven: open source toepassingen,
+        componenten en standaarden die bijdragen aan een gezamenlijke digitale basis
+        voor gemeenten. Gebruik de filters om te zoeken op type, laag of thema.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       Broodkruimel
+       ============================================================ -->
+  <nav class="cg-meta" aria-label="Broodkruimel">
+    <a href="https://commonground.nl">Home</a>
+    <span aria-hidden="true">›</span>
+    <a href="https://commonground.nl/page/view/abe4b047-4e25-4889-9938-c51edd478510/over">Over Common Ground</a>
+    <span aria-hidden="true">›</span>
+    <span aria-current="page">Initiatieven</span>
+  </nav>
+
+  <!-- ============================================================
+       IFrame — publicatiepagina met embed=1 zodat de eigen header
+       van het register verborgen is (?embed=1 vóór de hash).
+
+       ⚠ HTTPS-vereiste: als deze wrapper op een HTTPS-site staat
+         (zoals common-ground-lab.nl), moet de iframe-src ook HTTPS
+         zijn. Gebruik dan een Cloudflare Tunnel of andere HTTPS-proxy.
+         Pas de IFRAME_SRC variabele hieronder aan.
+       ============================================================ -->
+  <div class="cg-iframe-wrap">
+    <iframe
+      id="cg-register-iframe"
+      class="cg-iframe"
+      title="Common Ground Initiatieven Register"
+      loading="lazy"
+      sandbox="allow-scripts allow-same-origin allow-forms"
+    ></iframe>
+    <!-- Fallback: zichtbaar als de iframe geblokkeerd wordt -->
+    <div class="cg-iframe-fallback" id="cg-iframe-fallback">
+      <h2>Het register kan hier niet direct worden weergegeven</h2>
+      <p>
+        Browsers blokkeren HTTP-inhoud op een HTTPS-pagina (mixed content).<br />
+        Stel een HTTPS-URL in voor de register-server (bijv. via Cloudflare Tunnel)<br />
+        en pas de <code>IFRAME_SRC</code> variabele in deze pagina aan.
+      </p>
+      <a
+        href="http://77.161.190.210:8086/viz/react/publicatie.html#/t/initiatieven"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="cg-btn"
+      >
+        Open het register in een nieuw tabblad ↗
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // Pas IFRAME_SRC aan als je een HTTPS-URL hebt voor de server.
+    // Wanneer de pagina zelf over HTTPS wordt geserveerd (bijv.
+    // common-ground-lab.nl) moet dit ook https:// zijn.
+    // ============================================================
+    var IFRAME_SRC = "http://77.161.190.210:8086/viz/react/publicatie.html?embed=1#/t/initiatieven";
+
+    var frame    = document.getElementById("cg-register-iframe");
+    var fallback = document.getElementById("cg-iframe-fallback");
+
+    // Detecteer mixed-content situatie (HTTPS-pagina, HTTP-iframe)
+    var pageIsHttps   = window.location.protocol === "https:";
+    var frameIsHttp   = IFRAME_SRC.startsWith("http://");
+    var mixedContent  = pageIsHttps && frameIsHttp;
+
+    if (mixedContent) {
+      // Iframe zou geblokkeerd worden — toon fallback meteen
+      frame.style.display    = "none";
+      fallback.style.display = "block";
+    } else {
+      frame.src = IFRAME_SRC;
+      // Extra zekerheid: als het laden mislukt na 5 seconden, toon fallback
+      frame.addEventListener("error", function () {
+        frame.style.display    = "none";
+        fallback.style.display = "block";
+      });
+    }
+  </script>
+
+  <!-- ============================================================
+       Footer
+       ============================================================ -->
+  <footer class="cg-footer">
+    <div>
+      <span class="cg-footer__badge">OPEN SOURCE</span>
+      Common Ground is een programma van
+      <a href="https://vng.nl" target="_blank" rel="noopener noreferrer">VNG Realisatie B.V.</a>
+    </div>
+    <div>
+      <a href="https://commonground.nl" target="_blank" rel="noopener noreferrer">commonground.nl</a>
+      &nbsp;·&nbsp;
+      <a href="mailto:commonground@vng.nl">commonground@vng.nl</a>
+      &nbsp;·&nbsp;
+      Bisonspoor 3002 B8, 3605 LT Maarssen
+    </div>
+  </footer>
+
+</body>
+</html>

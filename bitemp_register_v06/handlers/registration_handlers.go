@@ -371,7 +371,7 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 		// om te bepalen op welke entiteit en/of gegevenselementen de registratie betrekking heeft
 
 		// Step 2: Process each wijziging
-		for _, wijziging := range request.Wijzigingen {
+		for wijzigingIdx, wijziging := range request.Wijzigingen {
 			var rep *model.RepresentatiePlusNaam
 			if wijziging.Opvoer != nil {
 				rep = wijziging.Opvoer // geen specifieke representatie verwacht; daar dealen we later wel mee
@@ -389,13 +389,13 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 			}
 
 			if rep == nil || rep.Representatie == nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "wijziging bevat geen representatie"})
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("wijziging[%d] bevat geen representatie", wijzigingIdx)})
 				return
 			}
 
 			temporalRep, ok := rep.Representatie.(model.FormeleRepresentatie)
 			if !ok {
-				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("representatie %T ondersteunt geen opvoer/afvoer interface", rep.Representatie)})
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("wijziging[%d]: representatie %T (veldnaam=%s) ondersteunt geen opvoer/afvoer interface", wijzigingIdx, rep.Representatie, rep.Veldnaam)})
 				return
 			}
 
@@ -410,14 +410,14 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 			case wijziging.Opvoer != nil:
 				if err := handleRepresentatieOpvoer(c, tx, request.Registratie,
 					"", "", rep.Representatienaam, temporalRep); err != nil {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to handle opvoer van %s: %v", rep.Representatienaam, err)})
+					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("wijziging[%d]: opvoer van %s (veldnaam=%s) mislukt: %v", wijzigingIdx, rep.Representatienaam, rep.Veldnaam, err)})
 					return
 				}
 			// AFVOER scenario's
 			case wijziging.Afvoer != nil:
 				if err := handleRepresentatieAfvoer(c, tx, registratieID, registratieTijdstip,
 					"", "", rep.Representatienaam, temporalRep); err != nil {
-					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to handle afvoer van %s: %v", rep.Representatienaam, err)})
+					c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("wijziging[%d]: afvoer van %s (veldnaam=%s) mislukt: %v", wijzigingIdx, rep.Representatienaam, rep.Veldnaam, err)})
 					return
 				}
 			}

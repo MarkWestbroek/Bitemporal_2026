@@ -49,6 +49,8 @@ type Initiatief struct {
 	AndereApiStandaarden     []Initiatief_AndereAPIStandaard   `bun:"rel:has-many,join:id=initiatief_id" json:"andere_api_standaarden,omitempty"`
 	Initiatiefinfos          []Initiatief_Initiatiefinfo       `bun:"rel:has-many,join:id=initiatief_id" json:"initiatiefinfos,omitempty"`
 	BetrokkenOrganisatie     []Initiatief_BetrokkenOrganisatie `bun:"rel:has-many,join:id=initiatief_id" json:"betrokken_organisatie,omitempty"`
+	Beoordelingen            []Initiatief_Beoordeling          `bun:"rel:has-many,join:id=initiatief_id" json:"beoordelingen,omitempty"`
+	Etalages                 []Initiatief_Etalage              `bun:"rel:has-many,join:id=initiatief_id" json:"etalages,omitempty"`
 	InitiatiefGemeenten      []InitiatiefGemeente              `bun:"rel:has-many,join:id=initiatief_id" json:"initiatief_gemeenten,omitempty"`
 	InitiatiefDomeinen       []InitiatiefDomein                `bun:"rel:has-many,join:id=initiatief_id" json:"initiatief_domeinen,omitempty"`
 	InitiatiefApiStandaarden []InitiatiefAPIStandaard          `bun:"rel:has-many,join:id=initiatief_id" json:"initiatief_api_standaarden,omitempty"`
@@ -80,14 +82,14 @@ type Initiatief_Einde struct {
 // Organisatie — Organisatie die betrokken is bij initiatieven in het portfolio.
 type Organisatie struct {
 	bun.BaseModel              `bun:"table:organisatie,alias:organisatie"`
-	ID                         int                           `json:"id" bun:"id,pk"`
-	Opvoer                     *time.Time                    `json:"opvoer,omitempty"`
-	Afvoer                     *time.Time                    `json:"afvoer,omitempty"`
-	OrganisatieContactgegevens []Organisatie_Contactgegevens `bun:"rel:has-many,join:id=organisatie_id" json:"organisatie_contactgegevens,omitempty"`
-	Organisatienamen           []Organisatie_Organisatienaam `bun:"rel:has-many,join:id=organisatie_id" json:"organisatienamen,omitempty"`
-	Contactpersonen            []Contactpersoon              `bun:"rel:has-many,join:id=organisatie_id" json:"contactpersonen,omitempty"`
-	Aanvang                    []Organisatie_Aanvang         `bun:"rel:has-many,join:id=organisatie_id" json:"aanvang,omitempty"`
-	Einde                      []Organisatie_Einde           `bun:"rel:has-many,join:id=organisatie_id" json:"einde,omitempty"`
+	ID                         int                                      `json:"id" bun:"id,pk"`
+	Opvoer                     *time.Time                               `json:"opvoer,omitempty"`
+	Afvoer                     *time.Time                               `json:"afvoer,omitempty"`
+	Organisatiecontactgegevens []Organisatie_Organisatiecontactgegevens `bun:"rel:has-many,join:id=organisatie_id" json:"organisatiecontactgegevens,omitempty"`
+	Organisatienamen           []Organisatie_Organisatienaam            `bun:"rel:has-many,join:id=organisatie_id" json:"organisatienamen,omitempty"`
+	Contactpersonen            []Contactpersoon                         `bun:"rel:has-many,join:id=organisatie_id" json:"contactpersonen,omitempty"`
+	Aanvang                    []Organisatie_Aanvang                    `bun:"rel:has-many,join:id=organisatie_id" json:"aanvang,omitempty"`
+	Einde                      []Organisatie_Einde                      `bun:"rel:has-many,join:id=organisatie_id" json:"einde,omitempty"`
 }
 
 // Organisatie_Aanvang — aanvangdatum van entiteit Organisatie.
@@ -112,14 +114,14 @@ type Organisatie_Einde struct {
 
 // Persoon — Persoon die betrokken is bij initiatieven in het portfolio.
 type Persoon struct {
-	bun.BaseModel          `bun:"table:persoon,alias:persoon"`
-	ID                     int                       `json:"id" bun:"id,pk"`
-	Opvoer                 *time.Time                `json:"opvoer,omitempty"`
-	Afvoer                 *time.Time                `json:"afvoer,omitempty"`
-	PersoonContactgegevens []Persoon_Contactgegevens `bun:"rel:has-many,join:id=persoon_id" json:"persoon_contactgegevens,omitempty"`
-	Persoonnamen           []Persoon_Persoonnaam     `bun:"rel:has-many,join:id=persoon_id" json:"persoonnamen,omitempty"`
-	Aanvang                []Persoon_Aanvang         `bun:"rel:has-many,join:id=persoon_id" json:"aanvang,omitempty"`
-	Einde                  []Persoon_Einde           `bun:"rel:has-many,join:id=persoon_id" json:"einde,omitempty"`
+	bun.BaseModel           `bun:"table:persoon,alias:persoon"`
+	ID                      int                               `json:"id" bun:"id,pk"`
+	Opvoer                  *time.Time                        `json:"opvoer,omitempty"`
+	Afvoer                  *time.Time                        `json:"afvoer,omitempty"`
+	Persoonscontactgegevens []Persoon_Persoonscontactgegevens `bun:"rel:has-many,join:id=persoon_id" json:"persoonscontactgegevens,omitempty"`
+	Persoonnamen            []Persoon_Persoonnaam             `bun:"rel:has-many,join:id=persoon_id" json:"persoonnamen,omitempty"`
+	Aanvang                 []Persoon_Aanvang                 `bun:"rel:has-many,join:id=persoon_id" json:"aanvang,omitempty"`
+	Einde                   []Persoon_Einde                   `bun:"rel:has-many,join:id=persoon_id" json:"einde,omitempty"`
 }
 
 // Persoon_Aanvang — aanvangdatum van entiteit Persoon.

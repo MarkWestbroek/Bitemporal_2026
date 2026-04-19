@@ -484,3 +484,72 @@ sequenceDiagram
 | --------------------------------------------- | -------------------------------------------------------------------------- |
 | `handlers/registration_handlers.go`           | `RegistreerMetNieuweAanpak()` — main handler + ongedaanmaking-logica      |
 | `handlers/registration_helpers_generiek.go`   | `handleRepresentatieOpvoer()`, `handleRepresentatieAfvoer()`, `handleRepresentatieOntOpvoer()`, `handleRepresentatieOntAfvoer()`, `sluitActieveEnkelvoudigeVoorgangersAf()`, `persisteerWijziging()`, `updateAfvoerByID()`, `haalRepresentatieUitDB()`, `vindEntiteitContext()`, `inputNaarHub()`, `bepaalRepIDenVersie()`, `haalActieveIDsMetScope()`, `updateAfvoerMetScope()` |
+| `model/REST request models.go`                | `RepresentatiePlusNaam.UnmarshalJSON()` — parse van opvoer/afvoer JSON-sleutels naar representatie-types |
+
+---
+
+## Veldnaam-disambiguatie bij het parsen van opvoer/afvoer
+
+Binnen de `wijzigingen[]`-array wordt elke `opvoer` en `afvoer` geparseerd door `RepresentatiePlusNaam.UnmarshalJSON()` in `model/REST request models.go`. De JSON-sleutel (bijv. `"naam"`) wordt via de MetaRegistry opgezocht naar een concreet representatietype.
+
+### Probleem: gedeelde veldnamen
+
+Meerdere types kunnen dezelfde `Veldnaam` hebben. Bijvoorbeeld:
+
+| Veldnaam | Types met die veldnaam          |
+| -------- | ------------------------------- |
+| `naam`   | `ApiStandaard_Naam`, `NatuurlijkPersoon_Naam`, `Land_Naam`, ... |
+
+Een simpele `GetByVeldnaam("naam")` retourneert de eerste match (niet-deterministisch op basis van map-iteratievolgorde), wat leidt tot fouten.
+
+### Oplossing: `GetByVeldnaamMetPayload()`
+
+De parser extraheert de JSON-sleutels uit de inner payload (bijv. `{ "apistandaard_id": 8, "naam": "Zaken API" }`) en roept `MetaRegistry.GetByVeldnaamMetPayload(veldnaam, payloadKeys)` aan. Die functie disambigueert op `EntiteitIDKolom`:
+
+```
+veldnaam = "naam", payloadKeys = {"apistandaard_id", "naam"}
+→ candidate ApiStandaard_Naam heeft EntiteitIDKolom = "apistandaard_id" → match ✓
+→ candidate NatuurlijkPersoon_Naam heeft EntiteitIDKolom = "natuurlijk_persoon_id" → geen match
+→ retourneert ApiStandaard_Naam
+```
+
+Als geen enkele kandidaat disambigueerbaar is, wordt de eerste kandidaat als fallback geretourneerd en een `WARN`-melding naar stderr geschreven.
+
+### Vereiste payload-conventies
+
+Zorg dat elke GE-opvoer het `EntiteitIDKolom` van de bovenliggende entiteit bevat, ook als het ID al bekend is uit de context. Voorbeeld:
+
+```json
+{
+  "opvoer": {
+    "naam": {
+      "apistandaard_id": 8,
+      "naam": "Zaken API"
+    }
+  }
+}
+```
+
+Zonder `apistandaard_id` in de payload kan de parser niet disambigueren en valt terug op de eerste match.
+
+---
+
+## Foutresponse-formaat
+
+Bij fouten geeft de handler een JSON-response terug met een `error`-veld:
+
+```json
+{ "error": "<beschrijving>" }
+```
+
+Bij fouten die optreden tijdens de verwerking van een specifieke wijziging bevat de melding:
+- **Het 0-gebaseerde index** van de wijziging in de `wijzigingen[]`-array
+- **De representatienaam** zoals opgelost door de MetaRegistry
+- **De veldnaam** zoals opgegeven in de JSON
+
+Voorbeeld:
+```
+wijziging[3]: opvoer van ApiStandaard_Naam (veldnaam=naam) mislukt: HANDLER: failed to insert ApiStandaard_Naam: ...
+```
+
+Dit maakt het mogelijk om direct in de replay-file of Postman-body te zien welke entry de fout veroorzaakte.

@@ -136,6 +136,7 @@ func NewRouter() *gin.Engine {
 
 	//Homepage
 	router.GET("/", handlers.HomePage)
+	router.GET("/index.html", handlers.HomePage)
 	router.GET("/docs", handlers.DocsIndex)
 	router.GET("/docs/*filepath", handlers.DocsPage)
 	router.GET("/api/viz/schema", handlers.MaakVizSchemaHandler())

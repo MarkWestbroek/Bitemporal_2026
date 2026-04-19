@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "../shared/schema-viz.css";
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -346,6 +346,7 @@ export default function RegistratieReplayPage() {
 
   const [selectedIds, setSelectedIds] = useState(() => new Set());
   const [importEntries, setImportEntries] = useState([]);
+  const [importFileJson, setImportFileJson] = useState(null);
   const [importError, setImportError] = useState("");
   const [runningReplay, setRunningReplay] = useState(false);
   const [ignoreDynamicFields, setIgnoreDynamicFields] = useState(true);
@@ -354,6 +355,7 @@ export default function RegistratieReplayPage() {
   const [schemaEntiteitNamen, setSchemaEntiteitNamen] = useState([]);
   const [schemaTypeNamen, setSchemaTypeNamen] = useState([]);
   const [replayResults, setReplayResults] = useState([]);
+  const [expandedReplayRows, setExpandedReplayRows] = useState(() => new Set());
   const [editingOpmerkingId, setEditingOpmerkingId] = useState(null);
   const [editingOpmerkingValue, setEditingOpmerkingValue] = useState("");
   const [savingOpmerkingId, setSavingOpmerkingId] = useState(null);
@@ -688,9 +690,11 @@ export default function RegistratieReplayPage() {
       if (entries.length === 0) {
         throw new Error("Importbestand bevat geen entries[].");
       }
+      setImportFileJson(json);
       setImportEntries(entries);
       setReplayResults([]);
     } catch (err) {
+      setImportFileJson(null);
       setImportEntries([]);
       setReplayResults([]);
       setImportError(String(err?.message || err));
@@ -732,6 +736,8 @@ export default function RegistratieReplayPage() {
         matches_status: null,
         matches_response: null,
         error: "",
+        responseBody: null,
+        requestBodySent: requestBodyForRun,
       };
 
       try {
@@ -752,6 +758,14 @@ export default function RegistratieReplayPage() {
         const bodyText = await response.text();
         const parsedActual = tryParseJson(bodyText);
         const actualBody = parsedActual.ok ? parsedActual.value : bodyText;
+        itemResult.responseBody = actualBody;
+
+        // Bij fout: sla de error-tekst uit de response op
+        if (!response.ok && parsedActual.ok && actualBody?.error) {
+          itemResult.error = actualBody.error;
+        } else if (!response.ok) {
+          itemResult.error = bodyText?.substring(0, 500) || `HTTP ${response.status}`;
+        }
 
         const parsedExpected = tryParseJson(expectedResponseBody);
         if (parsedExpected.ok && parsedActual.ok) {
@@ -1095,21 +1109,62 @@ export default function RegistratieReplayPage() {
                 <th style={{ textAlign: "left", borderBottom: "1px solid #cbd5e1", padding: 8 }}>Status</th>
                 <th style={{ textAlign: "left", borderBottom: "1px solid #cbd5e1", padding: 8 }}>Status match</th>
                 <th style={{ textAlign: "left", borderBottom: "1px solid #cbd5e1", padding: 8 }}>Response match</th>
-                <th style={{ textAlign: "left", borderBottom: "1px solid #cbd5e1", padding: 8 }}>Fout</th>
+                <th style={{ textAlign: "left", borderBottom: "1px solid #cbd5e1", padding: 8 }}>Fout / details</th>
               </tr>
             </thead>
             <tbody>
-              {replayResults.map((result) => (
-                <tr key={`${result.index}-${result.registratie_id ?? "n/a"}`}>
-                  <td style={{ borderBottom: "1px solid #e2e8f0", padding: 8 }}>{result.index + 1}</td>
-                  <td style={{ borderBottom: "1px solid #e2e8f0", padding: 8 }}>{result.registratie_id ?? "-"}</td>
-                  <td style={{ borderBottom: "1px solid #e2e8f0", padding: 8 }}>{result.request_method} {result.request_path}</td>
-                  <td style={{ borderBottom: "1px solid #e2e8f0", padding: 8 }}>{result.status ?? "-"}</td>
-                  <td style={{ borderBottom: "1px solid #e2e8f0", padding: 8 }}>{result.matches_status == null ? "-" : String(result.matches_status)}</td>
-                  <td style={{ borderBottom: "1px solid #e2e8f0", padding: 8 }}>{result.matches_response == null ? "-" : String(result.matches_response)}</td>
-                  <td style={{ borderBottom: "1px solid #e2e8f0", padding: 8, color: "#b91c1c" }}>{result.error || "-"}</td>
-                </tr>
-              ))}
+              {replayResults.map((result) => {
+                const hasError = !result.ok || result.error;
+                const isExpanded = expandedReplayRows.has(result.index);
+                const rowBg = hasError ? "#fef2f2" : undefined;
+                return (
+                  <React.Fragment key={`${result.index}-${result.registratie_id ?? "n/a"}`}>
+                    <tr
+                      style={{ background: rowBg, cursor: hasError ? "pointer" : undefined }}
+                      onClick={() => {
+                        if (!hasError) return;
+                        setExpandedReplayRows((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(result.index)) next.delete(result.index);
+                          else next.add(result.index);
+                          return next;
+                        });
+                      }}
+                      title={hasError ? "Klik om request/response details te tonen" : undefined}
+                    >
+                      <td style={{ borderBottom: "1px solid #e2e8f0", padding: 8 }}>
+                        {hasError ? (isExpanded ? "▾ " : "▸ ") : ""}{result.index + 1}
+                      </td>
+                      <td style={{ borderBottom: "1px solid #e2e8f0", padding: 8 }}>{result.registratie_id ?? "-"}</td>
+                      <td style={{ borderBottom: "1px solid #e2e8f0", padding: 8 }}>{result.request_method} {result.request_path}</td>
+                      <td style={{ borderBottom: "1px solid #e2e8f0", padding: 8 }}>{result.status ?? "-"}</td>
+                      <td style={{ borderBottom: "1px solid #e2e8f0", padding: 8 }}>{result.matches_status == null ? "-" : String(result.matches_status)}</td>
+                      <td style={{ borderBottom: "1px solid #e2e8f0", padding: 8 }}>{result.matches_response == null ? "-" : String(result.matches_response)}</td>
+                      <td style={{ borderBottom: "1px solid #e2e8f0", padding: 8, color: "#b91c1c" }}>{result.error || "-"}</td>
+                    </tr>
+                    {isExpanded && (
+                      <tr style={{ background: "#fef2f2" }}>
+                        <td colSpan={7} style={{ padding: "4px 8px 12px 8px", borderBottom: "1px solid #e2e8f0" }}>
+                          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                            <div style={{ flex: 1, minWidth: 300 }}>
+                              <strong style={{ fontSize: 12 }}>Request body (verzonden):</strong>
+                              <pre style={{ margin: "4px 0 0", maxHeight: 200, overflow: "auto", padding: 8, borderRadius: 6, border: "1px solid #fca5a5", background: "#fff", fontSize: 11, lineHeight: 1.4 }}>
+                                {toPrettyJson(result.requestBodySent)}
+                              </pre>
+                            </div>
+                            <div style={{ flex: 1, minWidth: 300 }}>
+                              <strong style={{ fontSize: 12 }}>Response body:</strong>
+                              <pre style={{ margin: "4px 0 0", maxHeight: 200, overflow: "auto", padding: 8, borderRadius: 6, border: "1px solid #fca5a5", background: "#fff", fontSize: 11, lineHeight: 1.4 }}>
+                                {toPrettyJson(result.responseBody)}
+                              </pre>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })}
               {replayResults.length === 0 && (
                 <tr>
                   <td colSpan={7} style={{ padding: 10, color: "#64748b" }}>
@@ -1123,14 +1178,18 @@ export default function RegistratieReplayPage() {
       </section>
 
       <section className="card">
-        <h2 style={{ marginTop: 0, marginBottom: 8, fontSize: 18 }}>Voorbeeld van huidige selectie</h2>
+        <h2 style={{ marginTop: 0, marginBottom: 8, fontSize: 18 }}>
+          {importFileJson ? "Geïmporteerde replay file" : "Voorbeeld van huidige selectie"}
+        </h2>
         <p className="muted" style={{ marginTop: 0 }}>
-          Handig om snel te controleren wat er in export/import meegaat.
+          {importFileJson
+            ? `Bron: ${importFileJson.source ?? "onbekend"} — ${importFileJson.count ?? importEntries.length} entries — geëxporteerd: ${importFileJson.exported_at ?? "?"}`
+            : "Handig om snel te controleren wat er in export/import meegaat."}
         </p>
         <pre
           style={{
             margin: 0,
-            maxHeight: 260,
+            maxHeight: 400,
             overflow: "auto",
             padding: 12,
             borderRadius: 8,
@@ -1140,7 +1199,9 @@ export default function RegistratieReplayPage() {
             lineHeight: 1.45,
           }}
         >
-          {toPrettyJson((selectedRegs[0] ? normalizeRegistrationForExport(selectedRegs[0]) : registraties[0] ? normalizeRegistrationForExport(registraties[0]) : null))}
+          {importFileJson
+            ? toPrettyJson(importFileJson)
+            : toPrettyJson((selectedRegs[0] ? normalizeRegistrationForExport(selectedRegs[0]) : registraties[0] ? normalizeRegistrationForExport(registraties[0]) : null))}
         </pre>
       </section>
     </div>
