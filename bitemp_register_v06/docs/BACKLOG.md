@@ -655,6 +655,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I38 | Jump naar view / edit pagina's data | nieuw |
 | I39 | Relatie naam labels tonen op diagram (rechtsklik toon/hide) | nieuw |
 | I40 | Model geheel (bi?)temporeel in database? | nieuw |
+| I41 | IDE diagram-positie synchronisatie: posities slaan alleen op in het actieve diagram, maar de V3 export leest altijd uit `overzicht` — 3 opties uitgewerkt in [docs/ide-diagram-positie-sync.md](ide-diagram-positie-sync.md) | nieuw |
 | I |  | nieuw |
 | I |  | nieuw |
 
@@ -700,6 +701,10 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | F35 | Geïntegreerde code-editor (één paneel, type "in" de gekleurde code). Opties: **react-simple-code-editor** (~3 KB, licht), **CodeMirror 6** (~150 KB, volledig), **Monaco** (~2 MB, overkill). Zie §12.8 in inhoud-editor-technisch.md | inhoud-editor-technisch.md |
 | F36 | Code splitting per doelgroep: publicatie (mobiel/licht), inhoud-editor (desktop), IDE (zwaar/desktop). Vite multi-entry is al ingericht. | inhoud-editor-technisch.md |
 | F37 | Inhoud.html (content editor): export data als Bootstrap / replay file / sql | nieuw |
+| F38 | zelfde loading en filtering als de publicatie pagina | nieuw  |
+| F |  |   |
+| F |  |   |
+| F |  |   |
 
 
 ### Frontend — Bestaande pagina's (Index/Tijdlijn/Registraties)

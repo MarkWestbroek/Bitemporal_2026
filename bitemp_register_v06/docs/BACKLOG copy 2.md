@@ -650,17 +650,9 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I33 | meer nodes (per element instelbaar / automatisch bij vergroten) | nieuw |
 | I34 | edges naar andere handle trekken of anderszins | nieuw |
 | I35 | domein selectie ; boundary element introduceren? | nieuw |
-<<<<<<< HEAD
-| I36 | IDE diagram-positie synchronisatie: posities slaan alleen op in het actieve diagram, maar de V3 export leest altijd uit `overzicht` — 3 opties uitgewerkt in [docs/ide-diagram-positie-sync.md](ide-diagram-positie-sync.md) | nieuw |
 | I |  | nieuw |
 | I |  | nieuw |
-=======
-| I36 | Refactor in model → refactor in db? (Ook data, nu alleen structuur SQL in Delta) | nieuw |
-| I37 | Link referentie data content: file (t.b.v. vulling) / live view | nieuw |
-| I38 | Jump naar view / edit pagina's data | nieuw |
-| I39 | Relatie naam labels tonen op diagram (rechtsklik toon/hide) | nieuw |
-| I40 | Model geheel (bi?)temporeel in database? | nieuw |
->>>>>>> af84119cb41a1d23d80bd40af1c524b861fb6576
+| I |  | nieuw |
 | I |  | nieuw |
 | I |  | nieuw |
 
@@ -705,14 +697,6 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | F34 | ✅ JSON- en Markdown-widget: side-by-side editor + live preview, full-width grid spanning, `widget: "json"` en `widget: "markdown"` in layout | inhoud-editor-technisch.md |
 | F35 | Geïntegreerde code-editor (één paneel, type "in" de gekleurde code). Opties: **react-simple-code-editor** (~3 KB, licht), **CodeMirror 6** (~150 KB, volledig), **Monaco** (~2 MB, overkill). Zie §12.8 in inhoud-editor-technisch.md | inhoud-editor-technisch.md |
 | F36 | Code splitting per doelgroep: publicatie (mobiel/licht), inhoud-editor (desktop), IDE (zwaar/desktop). Vite multi-entry is al ingericht. | inhoud-editor-technisch.md |
-<<<<<<< HEAD
-| F37 | zelfde loading en filtering als de publicatie pagina | nieuw  |
-| F |  |  |
-| F |  |  |
-| F |  |  |
-=======
-| F37 | Inhoud.html (content editor): export data als Bootstrap / replay file / sql | nieuw |
->>>>>>> af84119cb41a1d23d80bd40af1c524b861fb6576
 
 
 ### Frontend — Bestaande pagina's (Index/Tijdlijn/Registraties)
