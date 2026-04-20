@@ -104,6 +104,26 @@
       color: var(--cg-wit);
     }
 
+    .cg-header__logout {
+      background: none;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: rgba(255, 255, 255, 0.75);
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.3rem 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .cg-header__logout:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--cg-wit);
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+
     /* ============================================================
        Intro-banner (blauw)
        ============================================================ */
@@ -270,6 +290,9 @@
     <a href="https://commonground.nl" target="_blank" rel="noopener noreferrer" class="cg-header__link">
       commonground.nl ↗
     </a>
+    <button class="cg-header__logout" id="cg-logout-btn" title="Uitloggen uit het register">
+      Uitloggen
+    </button>
   </header>
 
   <!-- ============================================================
@@ -341,8 +364,21 @@
     // ============================================================
     var IFRAME_SRC = "http://77.161.190.210:8086/viz/react/publicatie.html?embed=1#/t/initiatieven";
 
-    var frame    = document.getElementById("cg-register-iframe");
-    var fallback = document.getElementById("cg-iframe-fallback");
+    var frame      = document.getElementById("cg-register-iframe");
+    var fallback   = document.getElementById("cg-iframe-fallback");
+    var logoutBtn  = document.getElementById("cg-logout-btn");
+
+    // Logout: POST naar /api/auth/logout op de register-server, daarna iframe herladen
+    logoutBtn.addEventListener("click", function () {
+      var apiBase = IFRAME_SRC.replace(/\/viz\/.*$/, "");
+      fetch(apiBase + "/api/auth/logout", {
+        method: "POST",
+        credentials: "include"
+      }).finally(function () {
+        // Herlaad iframe zodat de loginpagina verschijnt
+        frame.src = IFRAME_SRC;
+      });
+    });
 
     // Detecteer mixed-content situatie (HTTPS-pagina, HTTP-iframe)
     var pageIsHttps   = window.location.protocol === "https:";
