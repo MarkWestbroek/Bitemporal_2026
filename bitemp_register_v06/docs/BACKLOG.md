@@ -656,9 +656,14 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I39 | Relatie naam labels tonen op diagram (rechtsklik toon/hide) | nieuw |
 | I40 | Model geheel (bi?)temporeel in database? | nieuw |
 | I41 | IDE diagram-positie synchronisatie: posities slaan alleen op in het actieve diagram, maar de V3 export leest altijd uit `overzicht` — 3 opties uitgewerkt in [docs/ide-diagram-positie-sync.md](ide-diagram-positie-sync.md) | nieuw |
+| I42 | business rule in model | nieuw |
+| I43 | complex types achtig iets = combi gegevenstypen? | nieuw |
 | I |  | nieuw |
 | I |  | nieuw |
-
+| I |  | nieuw |
+| I |  | nieuw |
+| I |  | nieuw |
+| I |  | nieuw |
 
 ### Frontend — Content Editor (Inhoud-editor)
 
@@ -702,8 +707,14 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | F36 | Code splitting per doelgroep: publicatie (mobiel/licht), inhoud-editor (desktop), IDE (zwaar/desktop). Vite multi-entry is al ingericht. | inhoud-editor-technisch.md |
 | F37 | Inhoud.html (content editor): export data als Bootstrap / replay file / sql | nieuw |
 | F38 | zelfde loading en filtering als de publicatie pagina | nieuw  |
+| F39 | validatie bij opvoer waarden |   |
+| F40 | edit widgets |   |
 | F |  |   |
+
 | F |  |   |
+
+| F |  |   |
+
 | F |  |   |
 
 
@@ -809,6 +820,11 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | DU3 | Tijdreis over het gehele register (combinatie formeel + materieel peiltijdstip) | nieuw |
 | DU4 | Export van het complete register (JSON / CSV) | nieuw |
 | DU5 | Graaf-visualisatie van instantie-relaties (wie is verbonden met wie) | nieuw |
+
+
+### Model: inhoudelijk
+- type datum incompleet
+- kaart: geo iets
 
 ---
 
