@@ -8,7 +8,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import useModelStore, { DEFAULT_DIAGRAM_ID } from "../store/useModelStore";
 import useUIStore from "../store/useUIStore";
-import { VELDTYPEN, AFLEIDINGSTALEN, bouwVeldtypen } from "@editor/metamodel/types";
+import { VELDTYPEN, AFLEIDINGSTALEN, bouwVeldtypen } from "@umleditor/metamodel/types";
 
 // ─── Constanten ──────────────────────────────────────
 

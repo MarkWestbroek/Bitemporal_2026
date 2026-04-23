@@ -30,23 +30,12 @@ export default defineConfig({
   base: "/viz/react/",
   resolve: {
     alias: {
-      // Alias naar de UML-editor subtree, zodat imports via @editor/... werken
-      "@editor": resolve(__dirname, "../../uml-editor/src"),
-      // Zorg dat @xyflow/react vanuit de subtree-bestanden ook resolved wordt
-      // vanuit onze eigen node_modules (niet vanuit uml-editor/)
-      "@xyflow/react": resolve(__dirname, "node_modules/@xyflow/react"),
-      // Vite 8/Rolldown: resolve react en react-dom vanuit de subtree naar
-      // onze eigen node_modules (uml-editor heeft geen eigen node_modules)
-      "react": resolve(__dirname, "node_modules/react"),
-      "react-dom": resolve(__dirname, "node_modules/react-dom"),
+      // Alias naar de UML-editor module binnen web/vite/src/umleditor
+      "@umleditor": resolve(__dirname, "src/umleditor"),
     },
   },
   server: {
     port: 5174,
-    watch: {
-      // Zorg dat wijzigingen in de uml-editor subtree ook HMR triggeren
-      ignored: ["!**/uml-editor/src/**"],
-    },
   },
   build: {
     outDir: "../react",

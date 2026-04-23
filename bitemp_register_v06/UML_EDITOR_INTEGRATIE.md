@@ -1,6 +1,18 @@
 # UML Editor Integratie
 
-Deze documentatie beschrijft hoe de losse `UML-editor` is opgenomen in `bitemp_register_v06`, hoe de frontend-routing werkt, en hoe je de subtree later kunt synchroniseren.
+> **Status (april 2026)**: De UML-editor is **volledig geïntegreerd** in de Vite-app
+> en zit nu onder `bitemp_register_v06/web/vite/src/umleditor/`. De voormalige
+> standalone-map `bitemp_register_v06/uml-editor/` (met eigen `package.json`,
+> `vite.config.js`, `index.html`, etc.) is verwijderd. Alle imports gaan via de
+> alias `@umleditor` (voorheen `@umleditor`).
+>
+> Onderstaande paragrafen bevatten de **historische context** van de oorspronkelijke
+> Git-subtree-integratie. Padverwijzingen naar `uml-editor/...` lezen tegenwoordig
+> als `web/vite/src/umleditor/...`.
+>
+> Zie ook [`docs/ASOC.md`](docs/ASOC.md) voor de single-source-of-truth regel
+> die bepaalt of een relatie als associatieklasse (ASOC) of collapsed wordt
+> getekend.
 
 ## Doel
 
@@ -52,7 +64,7 @@ De subtree is toegevoegd op:
 
 In `web/vite/vite.config.js` is een alias toegevoegd:
 
-- `@editor` -> `../../uml-editor/src`
+- `@umleditor` -> `src/umleditor`
 
 Daardoor kan de Vite-app editor-code importeren zonder duplicatie van bestanden.
 
@@ -84,9 +96,9 @@ De daadwerkelijke editor wordt niet direct als zelfstandige app gestart, maar al
 
 Deze wrapper importeert:
 
-- `@editor/components/MetamodelEditor`
-- `@editor/metamodel/demoData`
-- `@editor/styles/editor.css`
+- `@umleditor/components/MetamodelEditor`
+- `@umleditor/metamodel/demoData`
+- `@umleditor/styles/editor.css`
 
 ## Routing en URLs
 
@@ -237,14 +249,14 @@ Relaties kunnen als `directioneel` worden gemarkeerd (boolean). Bij directionele
 ### Gewijzigde bestanden
 
 **Editor (React/JS)**:
-- `uml-editor/src/components/nodes/AssociatieAnkerNode.jsx` — nieuw ankerknooppunt
-- `uml-editor/src/components/nodes/RelatieNode.jsx` — collapsible mode toegevoegd
-- `uml-editor/src/components/edges/MetamodelEdge.jsx` — 5 edge-classificaties
-- `uml-editor/src/components/MetamodelEditor.jsx` — `associatieAnker` node type geregistreerd
-- `uml-editor/src/metamodel/v3ModelNaarEditor.js` — 3-edge + ankerpatroon voor relaties
-- `uml-editor/src/metamodel/types.js` — round-trip export via ankerpatroon
-- `uml-editor/src/import/importXMI.js` — XMI import met ankerpatroon
-- `uml-editor/src/export/exportXMI.js` — XMI export via ankerdetectie
+- `web/vite/src/umleditor/components/nodes/AssociatieAnkerNode.jsx` — nieuw ankerknooppunt
+- `web/vite/src/umleditor/components/nodes/RelatieNode.jsx` — collapsible mode toegevoegd
+- `web/vite/src/umleditor/components/edges/MetamodelEdge.jsx` — 5 edge-classificaties
+- `web/vite/src/umleditor/components/MetamodelEditor.jsx` — `associatieAnker` node type geregistreerd
+- `web/vite/src/umleditor/metamodel/v3ModelNaarEditor.js` — 3-edge + ankerpatroon voor relaties
+- `web/vite/src/umleditor/metamodel/types.js` — round-trip export via ankerpatroon
+- `web/vite/src/umleditor/import/importXMI.js` — XMI import met ankerpatroon
+- `web/vite/src/umleditor/export/exportXMI.js` — XMI export via ankerdetectie
 - `web/vite/src/ide/DiagramCanvas.jsx` — `associatieAnker` node type geregistreerd
 
 **Go backend**:
@@ -361,7 +373,7 @@ De editor kan ook modellen **importeren** uit de drie formaten. Importknoppen st
 
 #### XMI import
 
-De XMI importer (`uml-editor/src/import/importXMI.js`) ondersteunt:
+De XMI importer (`web/vite/src/umleditor/import/importXMI.js`) ondersteunt:
 
 - `UML:Class` met stereotype → entiteit / gegevenselement / relatie
 - `UML:Class` met `<<enumeration>>` → enumeratie
@@ -373,7 +385,7 @@ De XMI importer (`uml-editor/src/import/importXMI.js`) ondersteunt:
 
 #### Mermaid import
 
-De Mermaid importer (`uml-editor/src/import/importMermaid.js`) ondersteunt:
+De Mermaid importer (`web/vite/src/umleditor/import/importMermaid.js`) ondersteunt:
 
 - `class Foo { <<entiteit>> ... }` → node met stereotype-bepaling
 - Velden met `+type naam` (verplicht) of `-type naam` (optioneel)
@@ -383,7 +395,7 @@ De Mermaid importer (`uml-editor/src/import/importMermaid.js`) ondersteunt:
 
 #### PlantUML import
 
-De PlantUML importer (`uml-editor/src/import/importPlantUML.js`) ondersteunt:
+De PlantUML importer (`web/vite/src/umleditor/import/importPlantUML.js`) ondersteunt:
 
 - `class Foo <<entiteit, materieel>> { ... }` → node met metatype en materialiteit
 - `enum Foo { ... }` → enumeratie
@@ -396,12 +408,12 @@ De PlantUML importer (`uml-editor/src/import/importPlantUML.js`) ondersteunt:
 
 | Bestand | Doel |
 |---------|------|
-| `uml-editor/src/export/exportMermaid.js` | Editor → Mermaid class diagram |
-| `uml-editor/src/export/exportPlantUML.js` | Editor → PlantUML class diagram |
-| `uml-editor/src/export/exportXMI.js` | Editor → XMI 1.1 (incl. diagramposities) |
-| `uml-editor/src/import/importXMI.js` | XMI 1.1 → Editor (incl. EA diagramposities) |
-| `uml-editor/src/import/importMermaid.js` | Mermaid class diagram → Editor |
-| `uml-editor/src/import/importPlantUML.js` | PlantUML class diagram → Editor |
+| `web/vite/src/umleditor/export/exportMermaid.js` | Editor → Mermaid class diagram |
+| `web/vite/src/umleditor/export/exportPlantUML.js` | Editor → PlantUML class diagram |
+| `web/vite/src/umleditor/export/exportXMI.js` | Editor → XMI 1.1 (incl. diagramposities) |
+| `web/vite/src/umleditor/import/importXMI.js` | XMI 1.1 → Editor (incl. EA diagramposities) |
+| `web/vite/src/umleditor/import/importMermaid.js` | Mermaid class diagram → Editor |
+| `web/vite/src/umleditor/import/importPlantUML.js` | PlantUML class diagram → Editor |
 
 ## Bugfix: Unieke Handle IDs (removeChild crash)
 
@@ -424,15 +436,15 @@ Elke Handle heeft nu een uniek `id` in het formaat `{type}-{positie}`:
 
 | Bestand | Wijziging |
 |---------|-----------|
-| `uml-editor/src/components/nodes/*.jsx` (6 bestanden) | Handle `id` attributen geprefixed |
-| `uml-editor/src/components/MetamodelEditor.jsx` | `berekenKortsteHandles` retourneert geprefixte IDs; `swapConnectionDirection` past prefixes aan bij het omdraaien |
+| `web/vite/src/umleditor/components/nodes/*.jsx` (6 bestanden) | Handle `id` attributen geprefixed |
+| `web/vite/src/umleditor/components/MetamodelEditor.jsx` | `berekenKortsteHandles` retourneert geprefixte IDs; `swapConnectionDirection` past prefixes aan bij het omdraaien |
 | `web/vite/src/ide/DiagramCanvas.jsx` | `berekenKortsteHandles` idem |
-| `uml-editor/src/components/panels/EdgeEditPanel.jsx` | Dropdown option values geprefixed |
-| `uml-editor/src/metamodel/v3ModelNaarEditor.js` | Backward-compat migratiefuncties `migrateSourceHandle()`/`migrateTargetHandle()` voor oude DB-modellen met kale positienamen |
-| `uml-editor/src/metamodel/demoData.js` | Handle IDs bijgewerkt |
+| `web/vite/src/umleditor/components/panels/EdgeEditPanel.jsx` | Dropdown option values geprefixed |
+| `web/vite/src/umleditor/metamodel/v3ModelNaarEditor.js` | Backward-compat migratiefuncties `migrateSourceHandle()`/`migrateTargetHandle()` voor oude DB-modellen met kale positienamen |
+| `web/vite/src/umleditor/metamodel/demoData.js` | Handle IDs bijgewerkt |
 | `web/vite/src/demoV3Model.js` | Handle IDs bijgewerkt |
-| `uml-editor/src/metamodel/referentielijstRoundtrip.test.js` | Testverwachtingen bijgewerkt |
-| `uml-editor/src/metamodel/types.js` | Geen wijziging nodig — passthrough van handle waarden |
+| `web/vite/src/umleditor/metamodel/referentielijstRoundtrip.test.js` | Testverwachtingen bijgewerkt |
+| `web/vite/src/umleditor/metamodel/types.js` | Geen wijziging nodig — passthrough van handle waarden |
 
 ### Backward compatibiliteit
 

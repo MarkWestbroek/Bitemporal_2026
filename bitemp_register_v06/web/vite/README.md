@@ -21,13 +21,13 @@ Omdat Gin `router.Static("/viz", "./web")` gebruikt, worden de buildbestanden on
 - `/viz/react/tijdlijn.html` (tijdlijn)
 - `/viz/react/editor.html` (UML editor)
 
-De editorcode zelf staat niet in `web/vite/src`, maar in de subtree:
+De editorcode is volledig geïntegreerd binnen deze Vite-app:
 
-- `../../uml-editor/`
+- `src/umleditor/` — UML/metamodel-editor module (voorheen `../../uml-editor/`)
 
 Vite importeert die code via de alias:
 
-- `@editor` -> `../../uml-editor/src`
+- `@umleditor` -> `src/umleditor`
 
 Zie ook `../../UML_EDITOR_INTEGRATIE.md`.
 

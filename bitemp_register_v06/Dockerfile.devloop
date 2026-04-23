@@ -13,9 +13,7 @@ WORKDIR /app/web/vite
 COPY web/vite/package.json web/vite/package-lock.json ./
 RUN npm ci
 COPY web/vite/ ./
-# De Vite app importeert ook vanuit de aparte `uml-editor` subtree via @editor.
-# Die broncode moet dus ook aanwezig zijn tijdens de frontend build in Docker.
-COPY uml-editor/ /app/uml-editor/
+# De UML-editor module zit nu binnen web/vite/src/umleditor en komt automatisch mee.
 RUN npm run build
 
 # ---------- Stage 2: Devloop image met Go + Node + source ----------

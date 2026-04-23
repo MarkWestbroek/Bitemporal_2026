@@ -10,7 +10,7 @@
  * - Enums zijn top-level objecten, niet inline
  * - DoelEntiteit is direct beschikbaar (geen secondaireEntiteitIDKolom)
  */
-import { defaultKleur } from "@editor/metamodel/types";
+import { defaultKleur } from "@umleditor/metamodel/types";
 
 // ── Go type → editor veldtype mapping ──────────────────────────
 

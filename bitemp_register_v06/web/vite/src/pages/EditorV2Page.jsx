@@ -10,8 +10,8 @@
  *   Als de API niet beschikbaar is, wordt het ingebouwde demomodel gebruikt.
  */
 import { useState, useCallback, useEffect } from "react";
-import MetamodelEditor from "@editor/components/MetamodelEditor";
-import "@editor/styles/editor.css";
+import MetamodelEditor from "@umleditor/components/MetamodelEditor";
+import "@umleditor/styles/editor.css";
 import { v3ModelNaarEditor } from "../v3ModelNaarEditor";
 import { demoV3Model } from "../demoV3Model";
 

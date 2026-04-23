@@ -1,6 +1,6 @@
-import MetamodelEditor from "@editor/components/MetamodelEditor";
-import { demoNodes, demoEdges } from "@editor/metamodel/demoData";
-import "@editor/styles/editor.css";
+import MetamodelEditor from "@umleditor/components/MetamodelEditor";
+import { demoNodes, demoEdges } from "@umleditor/metamodel/demoData";
+import "@umleditor/styles/editor.css";
 
 /**
  * EditorPage — Wrapper die de UML-metamodel-editor uit het subtree-project

@@ -7,10 +7,9 @@ WORKDIR /app/web/vite
 COPY web/vite/package.json web/vite/package-lock.json ./
 RUN npm ci
 
-# Copy the frontend source and the UML-editor subtree used via the @editor alias.
-# Zonder deze subtree kan Vite `src/pages/EditorPage.jsx` niet resolven in Docker.
+# Copy de frontend source. De UML-editor module zit nu binnen web/vite/src/umleditor
+# en wordt dus automatisch meegenomen.
 COPY web/vite/ ./
-COPY uml-editor/ /app/uml-editor/
 RUN npm run build
 
 # Go build stage

@@ -11,6 +11,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { temporal } from "zundo";
+import { isAsoc, asocAnkerId } from "../shared/asoc.js";
 
 /**
  * @typedef {Object} ModelElement
@@ -350,6 +351,140 @@ const useModelStore = create(
                   (e) => e.source !== elementId && e.target !== elementId
                 ),
               },
+            },
+          };
+        }),
+
+      /**
+       * Ververs het ASOC-patroon voor één of meerdere relaties op een diagram.
+       *
+       * Gebruikt {@link relatieVorm} als single source of truth: een relatie
+       * met (afgeleide) velden krijgt het ASOC-patroon (anker + 3 edges),
+       * een relatie zonder velden krijgt het collapsed-patroon (label op de
+       * edge tussen bron en doel).
+       *
+       * Bestaande anker-positie blijft behouden; bestaande edge-handles gaan
+       * verloren omdat de edges opnieuw gebouwd worden. Dependency-edges
+       * (bijv. naar referentielijstInstantie) blijven ongewijzigd.
+       */
+      verversAsocVoorRelaties: (diagramId, relatieNamen) =>
+        set((state) => {
+          const diag = state.diagrams[diagramId];
+          if (!diag) return state;
+
+          const elements = { ...state.elements };
+          let nodes = [...diag.nodes];
+          let edges = [...diag.edges];
+
+          for (const relNaam of relatieNamen) {
+            const rel = elements[relNaam];
+            if (!rel || rel.type !== "relatie") continue;
+            const ankerId = asocAnkerId(relNaam);
+            const doelEnt = rel.data?.doelEntiteit || "";
+
+            // Bron-entiteit afleiden uit structuralEdges
+            const bronEdge = (state.structuralEdges || []).find(
+              (e) => e.target === relNaam && elements[e.source]?.type === "entiteit"
+            );
+            const bronEnt = bronEdge?.source;
+            if (!bronEnt) continue;
+
+            // Bewaar bestaande anker-positie of bereken middelpunt
+            const oldAnkerNode = nodes.find((n) => n.elementId === ankerId);
+            let ankerPos = oldAnkerNode?.position;
+            if (!ankerPos) {
+              const bronNode = nodes.find((n) => n.elementId === bronEnt);
+              const doelNode = nodes.find((n) => n.elementId === doelEnt);
+              if (bronNode && doelNode) {
+                ankerPos = {
+                  x: (bronNode.position.x + doelNode.position.x) / 2,
+                  y: (bronNode.position.y + doelNode.position.y) / 2,
+                };
+              } else {
+                ankerPos = { x: 0, y: 0 };
+              }
+            }
+
+            // Verwijder bestaande anker + bijbehorende structurele edges (NIET dependencies)
+            delete elements[ankerId];
+            nodes = nodes.filter((n) => n.elementId !== ankerId);
+            edges = edges.filter((e) => {
+              const isAnkerEdge = e.source === ankerId || e.target === ankerId;
+              const isRelStructuralEdge =
+                (e.source === relNaam || e.target === relNaam) && !e.data?.isDependency;
+              return !isAnkerEdge && !isRelStructuralEdge;
+            });
+
+            if (isAsoc(rel)) {
+              // ASOC-patroon: A ── o ── B + o╌╌REL
+              // UML-kardinaliteit: aan de bron-zijde bron-multiplicity, aan
+              // de doel-zijde doel-multiplicity (label tekent bij entity).
+              const bronKard = rel.data?.bronKardinaliteit
+                || (rel.data?.momentvoorkomen === "meervoudig" ? "0..*" : "0..1");
+              const doelKard = rel.data?.doelKardinaliteit || "0..*";
+              elements[ankerId] = {
+                id: ankerId,
+                naam: ankerId,
+                type: "associatieAnker",
+                domein: rel.domein || "",
+                data: { relatieNaam: relNaam },
+              };
+              nodes.push({ elementId: ankerId, position: ankerPos });
+              edges.push({
+                id: `${bronEnt}->${ankerId}`,
+                source: bronEnt,
+                target: ankerId,
+                type: "metamodel",
+                data: { isAssociation: true, directioneel: false, kardinaliteit: bronKard },
+              });
+              if (doelEnt) {
+                edges.push({
+                  id: `${ankerId}->${doelEnt}`,
+                  source: ankerId,
+                  target: doelEnt,
+                  type: "metamodel",
+                  data: { isAssociation: true, directioneel: false, kardinaliteit: doelKard },
+                });
+              }
+              edges.push({
+                id: `${ankerId}-->${relNaam}`,
+                source: ankerId,
+                target: relNaam,
+                type: "metamodel",
+                sourceHandle: "source-bottom",
+                targetHandle: "target-top",
+                data: { isAssociationClassLink: true },
+              });
+            } else {
+              // Collapsed-patroon: bron → REL → doel met labels op de edges
+              edges.push({
+                id: `${bronEnt}->${relNaam}`,
+                source: bronEnt,
+                target: relNaam,
+                type: "metamodel",
+                data: {
+                  rolnaam: relNaam,
+                  momentvoorkomen: rel.data?.momentvoorkomen || "meervoudig",
+                  kardinaliteit: "0..*",
+                },
+              });
+              if (doelEnt) {
+                edges.push({
+                  id: `${relNaam}->${doelEnt}`,
+                  source: relNaam,
+                  target: doelEnt,
+                  type: "metamodel",
+                  data: { rolnaam: `→ ${doelEnt}`, kardinaliteit: "0..*" },
+                });
+              }
+            }
+          }
+
+          return {
+            elements,
+            diagrams: {
+              ...state.diagrams,
+              [diagramId]: { ...diag, nodes, edges },
             },
           };
         }),

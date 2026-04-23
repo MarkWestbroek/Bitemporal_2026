@@ -661,7 +661,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I44 | import IDE: meerdere diagrammen? Hele IDE setup? | testen |
 | I45 | import V3: naam overnemen in diagram naam | nieuw |
 | I46 | verwijderen van diagrammen | nieuw |
-| I |  | nieuw |
+| I47 | attributen vak verbergen indien leeg | nieuw |
 | I |  | nieuw |
 | I |  | nieuw |
 | I |  | nieuw |

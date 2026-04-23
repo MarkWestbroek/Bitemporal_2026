@@ -9,8 +9,9 @@
  * - Elementen zijn een flat Record<id, element> (snelle lookup)
  * - Eén "overzicht" diagram wordt automatisch aangemaakt met alle posities
  */
-import { defaultKleur } from "@editor/metamodel/types.js";
+import { defaultKleur } from "@umleditor/metamodel/types.js";
 import { DEFAULT_DIAGRAM_ID } from "./useModelStore.js";
+import { isAsoc, asocAnkerId } from "../shared/asoc.js";
 
 // ─── Helpers ────────────────────────────────────────────────
 
@@ -337,8 +338,8 @@ export function v3ModelNaarStore(v3Full) {
       }
 
       // ── Kies ASOC-patroon (met anker) of collapsed-patroon (eenvoudige edges) ──
-      // Zelfde logica als v3ModelNaarEditor.js: ASOC als de relatie eigen velden heeft.
-      const heeftRelVelden = (rel.velden || []).length > 0 || (rel.afgeleideVelden || []).length > 0;
+      // Centrale beslissing via shared/asoc.js — single source of truth.
+      const heeftRelVelden = isAsoc(rel);
 
       // Structurele edge: entiteit → relatie (eigenaar, altijd aanwezig voor roundtrip)
       const relEdge = {
@@ -356,7 +357,7 @@ export function v3ModelNaarStore(v3Full) {
 
       if (heeftRelVelden) {
         // ── ASOC-patroon: A ── o ── B + o╌╌REL ──
-        const ankerId = `anker_${rel.naam}`;
+        const ankerId = asocAnkerId(rel.naam);
 
         // Voeg ankerelement toe (eenmalig per relatie)
         if (!elements[ankerId]) {
@@ -381,7 +382,11 @@ export function v3ModelNaarStore(v3Full) {
         }
 
         // Edge 1: Entiteit → Anker (associatie, solid)
-        const doelKardinaliteit = rel.doelKardinaliteit || "0..*";
+        // Het label wordt door MetamodelEdge nabij de bron-entiteit getekend,
+        // dus toon hier de bronKardinaliteit (UML: "hoeveel bron-instanties
+        // doen mee aan deze relatie").
+        const bronKardinaliteit1 = rel.bronKardinaliteit
+          || (rel.momentvoorkomen === "meervoudig" ? "0..*" : "0..1");
         diagramEdges.push({
           id: rel.id || `${ent.typenaam}->${ankerId}`,
           source: ent.typenaam,
@@ -395,14 +400,14 @@ export function v3ModelNaarStore(v3Full) {
             rolnaam: "",
             jsonRolnaam: "",
             momentvoorkomen: "",
-            kardinaliteit: rel.directioneel ? "" : doelKardinaliteit,
+            kardinaliteit: bronKardinaliteit1,
           },
         });
 
         // Edge 2: Anker → Doel-entiteit (associatie, solid, optioneel directionele pijl)
+        // Label wordt nabij de doel-entiteit getekend → doelKardinaliteit.
         if (rel.doelEntiteit) {
-          const bronKardinaliteit = rel.bronKardinaliteit
-            || (rel.momentvoorkomen === "meervoudig" ? "0..*" : "0..1");
+          const doelKardinaliteit2 = rel.doelKardinaliteit || "0..*";
           diagramEdges.push({
             id: rel.doelId || `${ankerId}->${rel.doelEntiteit}`,
             source: ankerId,
@@ -416,7 +421,7 @@ export function v3ModelNaarStore(v3Full) {
               rolnaam: "",
               jsonRolnaam: "",
               momentvoorkomen: "",
-              kardinaliteit: bronKardinaliteit,
+              kardinaliteit: rel.directioneel ? "" : doelKardinaliteit2,
             },
           });
         }
@@ -1026,12 +1031,23 @@ function buildV3Relatie(child, edgeData, diagEdge, diagrams, parentDomein) {
 /**
  * Exporteer de volledige store state als IDE JSON (model + diagrammen + meta).
  * Dit is het "IDE export" format, niet het V3 API format.
+ *
+ * Associatie-anker elementen (type=associatieAnker) worden bewust NIET
+ * geëxporteerd in `elements`: ze zijn pure viewmodel-state, afleidbaar uit de
+ * relatie via {@link relatieVorm}. Hun posities blijven wel bewaard in
+ * `diagrams[*].nodes` (gebruikerswaarde) en worden bij import opnieuw aan
+ * `elements` toegevoegd door {@link importStoreFromJson}.
  */
 export function exportStoreAsJson(state) {
+  const elementsZonderAnker = {};
+  for (const [id, el] of Object.entries(state.elements || {})) {
+    if (el?.type === "associatieAnker") continue; // viewmodel-only
+    elementsZonderAnker[id] = el;
+  }
   return {
     _format: "ide-v1",
     modelMeta: state.modelMeta,
-    elements: state.elements,
+    elements: elementsZonderAnker,
     structuralEdges: state.structuralEdges,
     diagrams: state.diagrams,
     domains: state.domains,
@@ -1041,15 +1057,46 @@ export function exportStoreAsJson(state) {
 
 /**
  * Importeer een eerder geëxporteerde IDE JSON.
+ *
+ * Reconstrueert associatie-anker elementen op basis van anker-nodes die in
+ * `diagrams[*].nodes` voorkomen (positie blijft zo behouden). Voor de
+ * data-eigenschap `relatieNaam` halen we het achtervoegsel uit het anker-id
+ * (`anker_<relNaam>`).
  */
 export function importStoreFromJson(json) {
   if (json?._format !== "ide-v1") {
     throw new Error("Onbekend export-format. Verwacht _format: 'ide-v1'.");
   }
+  const elements = { ...(json.elements || {}) };
+  const diagrams = json.diagrams || {};
+
+  // Reconstrueer associatie-anker elementen vanuit diagram-nodes.
+  // Verzamel alle anker-IDs die in een diagram voorkomen.
+  const ankerIds = new Set();
+  for (const diagram of Object.values(diagrams)) {
+    for (const node of (diagram?.nodes || [])) {
+      if (typeof node?.elementId === "string" && node.elementId.startsWith("anker_")) {
+        ankerIds.add(node.elementId);
+      }
+    }
+  }
+  for (const ankerId of ankerIds) {
+    if (elements[ankerId]) continue; // al aanwezig (vreemd, maar respecteer)
+    const relatieNaam = ankerId.slice("anker_".length);
+    const relEl = elements[relatieNaam];
+    elements[ankerId] = {
+      id: ankerId,
+      naam: ankerId,
+      type: "associatieAnker",
+      domein: relEl?.domein || "",
+      data: { relatieNaam },
+    };
+  }
+
   return {
-    elements: json.elements || {},
+    elements,
     structuralEdges: json.structuralEdges || [],
-    diagrams: json.diagrams || {},
+    diagrams,
     domains: json.domains || [],
     domainMeta: json.domainMeta || {},
     modelMeta: json.modelMeta || null,

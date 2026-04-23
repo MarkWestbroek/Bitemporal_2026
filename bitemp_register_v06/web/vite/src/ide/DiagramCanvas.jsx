@@ -20,23 +20,23 @@ import {
   useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import "@editor/styles/editor.css";
+import "@umleditor/styles/editor.css";
 import "./ide-diagram.css";
 
 // Bestaande node/edge types uit de editor subtree
-import EntiteitNode from "@editor/components/nodes/EntiteitNode";
-import GegevensElementNode from "@editor/components/nodes/GegevensElementNode";
-import RelatieNode from "@editor/components/nodes/RelatieNode";
-import EnumeratieNode from "@editor/components/nodes/EnumeratieNode";
-import DatatypeNode from "@editor/components/nodes/DatatypeNode";
-import ReferentielijstInstantieNode from "@editor/components/nodes/ReferentielijstInstantieNode";
-import AssociatieAnkerNode from "@editor/components/nodes/AssociatieAnkerNode";
-import MetamodelEdge from "@editor/components/edges/MetamodelEdge";
+import EntiteitNode from "@umleditor/components/nodes/EntiteitNode";
+import GegevensElementNode from "@umleditor/components/nodes/GegevensElementNode";
+import RelatieNode from "@umleditor/components/nodes/RelatieNode";
+import EnumeratieNode from "@umleditor/components/nodes/EnumeratieNode";
+import DatatypeNode from "@umleditor/components/nodes/DatatypeNode";
+import ReferentielijstInstantieNode from "@umleditor/components/nodes/ReferentielijstInstantieNode";
+import AssociatieAnkerNode from "@umleditor/components/nodes/AssociatieAnkerNode";
+import MetamodelEdge from "@umleditor/components/edges/MetamodelEdge";
 
 import useModelStore from "../store/useModelStore";
 import useUIStore from "../store/useUIStore";
 import { maakRelatieTussenEntiteiten, voegNieuwRepToe } from "./repCreation";
-import { generateId, EDGE_MODES } from "@editor/metamodel/types";
+import { generateId, EDGE_MODES } from "@umleditor/metamodel/types";
 
 const nodeTypes = {
   entiteit: EntiteitNode,
@@ -1146,6 +1146,7 @@ function DiagramCanvasInner({ diagramId }) {
   // ── Context menu op node/edge (rechtermuisklik) ───────────
   const [contextMenu, setContextMenu] = useState(null); // { x, y, nodeId?, edgeId? }
   const removeElementFromDiagram = useModelStore((s) => s.removeElementFromDiagram);
+  const verversAsocVoorRelaties = useModelStore((s) => s.verversAsocVoorRelaties);
 
   const handleNodeContextMenu = useCallback(
     (event, node) => {
@@ -1167,6 +1168,42 @@ function DiagramCanvasInner({ diagramId }) {
     setEdges((eds) => eds.filter((e) => e.source !== contextMenu.nodeId && e.target !== contextMenu.nodeId));
     setContextMenu(null);
   }, [contextMenu, diagramId, removeElementFromDiagram, setNodes, setEdges]);
+
+  /**
+   * Ververs ASOC: re-evalueer voor de geselecteerde relaties (en de
+   * relatie waarop rechtsgeklikt is, als dat een relatie of anker is)
+   * de ASOC-vorm op basis van velden + afgeleide velden. Dit gooit
+   * bestaande anker-elementen en gerelateerde edges weg en bouwt het
+   * juiste patroon (ASOC of collapsed) opnieuw op.
+   */
+  const handleVerversAsoc = useCallback(() => {
+    const relatieNamen = new Set();
+    const allElements = useModelStore.getState().elements;
+    // Vanuit context-menu node (relatie of anker)
+    if (contextMenu?.nodeId) {
+      const el = allElements[contextMenu.nodeId];
+      if (el?.type === "relatie") {
+        relatieNamen.add(el.id);
+      } else if (el?.type === "associatieAnker" && el.data?.relatieNaam) {
+        relatieNamen.add(el.data.relatieNaam);
+      }
+    }
+    // Vanuit selectie
+    nodes.forEach((n) => {
+      if (!n.selected) return;
+      const el = allElements[n.id];
+      if (el?.type === "relatie") relatieNamen.add(el.id);
+      else if (el?.type === "associatieAnker" && el.data?.relatieNaam) {
+        relatieNamen.add(el.data.relatieNaam);
+      }
+    });
+    if (relatieNamen.size === 0) {
+      setContextMenu(null);
+      return;
+    }
+    verversAsocVoorRelaties(diagramId, Array.from(relatieNamen));
+    setContextMenu(null);
+  }, [contextMenu, diagramId, nodes, verversAsocVoorRelaties]);
 
   const handleRemoveEdgeFromDiagram = useCallback(() => {
     if (!contextMenu?.edgeId) return;
@@ -2203,6 +2240,26 @@ function DiagramCanvasInner({ diagramId }) {
               </div>
             )}
             <div style={{ height: 1, background: "var(--ide-menu-sep, #444)", margin: "4px 8px" }} />
+            {/* Ververs ASOC: zichtbaar bij rechtsklik op een relatie/anker, of
+                wanneer er een selectie is met daarin minstens één relatie/anker. */}
+            {(() => {
+              const onNode = contextMenu.nodeId ? elements[contextMenu.nodeId] : null;
+              const onNodeIsRelatie = onNode?.type === "relatie" || onNode?.type === "associatieAnker";
+              const selectieHeeftRelatie = nodes.some((n) => n.selected && (
+                elements[n.id]?.type === "relatie" || elements[n.id]?.type === "associatieAnker"
+              ));
+              return (onNodeIsRelatie || selectieHeeftRelatie) ? (
+                <div
+                  style={{ padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" }}
+                  onMouseEnter={itemHover}
+                  onMouseLeave={itemLeave}
+                  onClick={handleVerversAsoc}
+                  title="Re-evalueer ASOC-patroon (anker + edges) op basis van velden van de relatie(s)"
+                >
+                  🔄 Ververs ASOC
+                </div>
+              ) : null;
+            })()}
             {contextMenu.nodeId && (
               <div
                 style={{ padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" }}

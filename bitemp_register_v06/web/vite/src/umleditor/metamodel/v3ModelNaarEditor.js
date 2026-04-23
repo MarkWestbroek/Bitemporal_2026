@@ -1,4 +1,5 @@
 import { defaultKleur } from "./types.js";
+import { isAsoc, asocAnkerId } from "../../shared/asoc.js";
 
 // Backward-compat: oude DB-modellen gebruiken kale positienamen ("top", "bottom", …)
 // als handle IDs. Nieuwe nodes gebruiken "source-top" / "target-top" etc.
@@ -352,12 +353,13 @@ export function v3ModelNaarEditor(v3Model) {
       }
 
       // ── Kies ASOC-patroon (met anker) of collapsed-patroon (eenvoudige edges) ──
-      const heeftRelVelden = (rel.velden || []).length > 0 || (rel.afgeleideVelden || []).length > 0;
+      // Centrale beslissing via shared/asoc.js — single source of truth.
+      const heeftRelVelden = isAsoc(rel);
 
       if (heeftRelVelden) {
         // ── Association class pattern: A ── o ── B + o╌╌REL ──
         // Maak een ankerpunt (o) tussen de primaire entiteit en de doelentiteit.
-        const ankerId = `anker_${rel.naam}`;
+        const ankerId = asocAnkerId(rel.naam);
         if (!nodes.find((n) => n.id === ankerId)) {
           const entPos = ent.positie || { x: entIdx * 500, y: 50 };
           const doelEnt = rel.doelEntiteit
@@ -377,7 +379,6 @@ export function v3ModelNaarEditor(v3Model) {
         }
 
         // Edge 1: Entiteit → Anker (associatie, solid)
-        const doelKardinaliteit = rel.doelKardinaliteit || "0..*";
         edges.push({
           id: rel.id || `${ent.typenaam}->${ankerId}`,
           source: ent.typenaam,
@@ -391,14 +392,16 @@ export function v3ModelNaarEditor(v3Model) {
             rolnaam: "",
             jsonRolnaam: "",
             momentvoorkomen: "",
-            kardinaliteit: rel.directioneel ? "" : doelKardinaliteit,
+            // Label wordt door MetamodelEdge bij de bron-entiteit getekend
+            // → toon hier de bronKardinaliteit (UML-conventie).
+            kardinaliteit: rel.bronKardinaliteit
+              || (rel.momentvoorkomen === "meervoudig" ? "0..*" : "0..1"),
           },
         });
 
         // Edge 2: Anker → Doel-entiteit (associatie, solid, optioneel directionele pijl)
         if (rel.doelEntiteit) {
-          const bronKardinaliteit = rel.bronKardinaliteit
-            || (rel.momentvoorkomen === "meervoudig" ? "0..*" : "0..1");
+          const doelKardinaliteit = rel.doelKardinaliteit || "0..*";
           edges.push({
             id: rel.doelId || `${ankerId}->${rel.doelEntiteit}`,
             source: ankerId,
@@ -412,7 +415,8 @@ export function v3ModelNaarEditor(v3Model) {
               rolnaam: "",
               jsonRolnaam: "",
               momentvoorkomen: "",
-              kardinaliteit: bronKardinaliteit,
+              // Label nabij doel-entiteit → doelKardinaliteit.
+              kardinaliteit: rel.directioneel ? "" : doelKardinaliteit,
             },
           });
         }

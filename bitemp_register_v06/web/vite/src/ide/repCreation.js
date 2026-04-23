@@ -14,7 +14,7 @@ import {
   maakLeegGegevenstype,
   maakReferentielijstSet,
   maakReferentielijstInstantie,
-} from "@editor/metamodel/types";
+} from "@umleditor/metamodel/types";
 
 const DEFAULT_DIAGRAM_ID = "overzicht";
 const GRID_SIZE = 15;

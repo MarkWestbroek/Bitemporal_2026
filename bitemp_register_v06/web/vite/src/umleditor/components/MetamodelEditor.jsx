@@ -78,7 +78,7 @@ import {
 } from "../metamodel/types";
 import { v3ModelNaarEditor } from "../metamodel/v3ModelNaarEditor";
 import { bepaalDependencyTargetIds } from "../metamodel/dependencyEdges";
-import { validateV3Model } from "../../../web/vite/src/validation/validateV3Model";
+import { validateV3Model } from "../../validation/validateV3Model";
 
 /**
  * nodeTypes vertelt React Flow welke React-component bij welk node type hoort.

@@ -12,7 +12,6 @@ COPY web/vite/package.json web/vite/package-lock.json ./
 RUN npm ci
 
 COPY web/vite/ ./
-COPY uml-editor/ /app/uml-editor/
 
 ARG VITE_API_BASE_URL=
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}

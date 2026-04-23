@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-23 21:53
 - **Sessie-ID**: `f4f1e496-95ee-40ab-8ab5-ecfaaeb6fac5`
-- **Berichten**: 8
+- **Berichten**: 12
 
 ---
 
@@ -384,5 +384,192 @@ Wil je dat ik begin met **M1–M5** (verplaatsing + imports + config + Docker), 
 Ja, graag eerste M1-M5 en dan S1-S7.
 
 extra punt: misschien is het slim om (al is dat tijdelijk) een rechtsklikmenu-item op te nemen: "ververs ASOC" (oid) dat de REL binnen een selectie her-evalueert. Daarmee zou ik oude probleem-imports kunnen repareren, mocht dat niet automatisch door aandachtspunt "Bestaande IDE-exports met bevroren ankers moeten bij import gemigreerd worden (filter wegfilteren op _format: "ide-v1")." opgepakt worden.
+
+---
+
+## 🤖 Assistant
+
+Begin met M1: verplaatsen. Ik gebruik `git mv` zodat history behouden blijft.  Er bestond al een . Laat me eerst even kijken wat daarin zat:    bestond al — voor de inhoud-editor. Andere naam nodig. Ik gebruik `web/vite/src/umleditor/`. Eerst undo:  Nu naar de juiste naam:    Verplaats overige reference-bestanden ook:     Nu de overgebleven standalone-bestanden van uml-editor weghalen (, `index.html`, , , ):     Alle deps bestaan al in . De standalone bestanden kunnen weg:     M1+M4 klaar. Nu M2: imports omzetten en cross-import fixen.   M1+M4 klaar. Nu M2: imports omzetten en cross-import fixen.    Strategie: alias hernoemen naar `@umleditor` en alle imports in één keer omzetten. Eerst de alias aanpassen:     
+```
+
+```
+Nu alle  imports vervangen door `@umleditor/`:     Nu de cross-import in MetamodelEditor (intern in umleditor) fixen:      
+```
+
+```
+Nu M3 al deels gedaan. Build-test:     Build slaagt. Nu M5: Docker, scripts, README's, etc.     
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+Check scripts en :     
+```
+
+```
+Voor  is gerichte herziening nodig. Ik zet een korte hoofdsectie bovenaan en laat het git-subtree-deel intact als historisch:      Ik vervang het kopstuk met een 'historische context' notitie en update padverwijzingen — de rest van het document is technisch en blijft grotendeels relevant. Eerst minimaal: nieuw kopje + path-aliases bovenaan, en oude  paden bulk-vervangen.     
+```
+
+```
+Voor  is gerichte herziening nodig. Ik zet een korte hoofdsectie bovenaan en laat het git-subtree-deel intact als historisch:      Ik vervang het kopstuk met een 'historische context' notitie en update padverwijzingen — de rest van het document is technisch en blijft grotendeels relevant. Eerst minimaal: nieuw kopje + path-aliases bovenaan, en oude  paden bulk-vervangen.     
+```
+
+```
+Bulk path-vervang voor alle  → `web/vite/src/umleditor/` en  → `@umleditor`:     
+```
+
+```
+De overige  mentions zitten in de Git-subtree-historie en zijn correct als historisch context. M5 grotendeels klaar — sla overige docs (BACKLOG.md, IDE.md, etc.) over: dat zijn descriptieve verwijzingen die ook als historische context lezen. Laatste check: build test:      Beide builds slagen. M1-M5 klaar. Nu naar S1: centrale ASOC helper.     Nu de centrale helper aanmaken:     Nu  gebruik laten maken van de helper:      
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+Nu hetzelfde toepassen in de umleditor :      
+```
+
+```
+S1 klaar. Build:       Nu S2: anker uit  halen (alleen in diagrams). Laten we eerst goed begrijpen waar elements wordt geserialiseerd voor de IDE-export, en wat de impact is:        Laat me eerst de IDE-export inventariseren om S2 (filter) gericht te kunnen toepassen:     Implementeer S2 voor de IDE-export: filter associatie-ankers uit  zodat het exportbestand geen viewmodel-state bevat. De ankers blijven wel in  (handgekozen posities) en worden bij import teruggezet in .        
+```
+
+```
+Nu voeg ik de "Ververs ASOC"-rechtsklik toe. Eerst de IDE-context-menu vinden:         Ik voeg een store-action Ik voeg een store-action `verversAsocVoorRelatie` toe en een menu-item dat hem aanroept. Eerst de store-action:         
+```
+
+```
+ werkt niet in ESM/Vite. Ik zet de import bovenaan:         
+```
+
+```
+Nu het menu-item in DiagramCanvas. Eerst kijken welke store-actions al beschikbaar zijn in DiagramCanvas:          Voeg een handler en menu-item toe:     
+```
+
+```
+
+```
+
+```
+Nu het menu-item zelf, voor "Verwijder node":      
+```
+
+```
+Build-test:         Build slaagt. S1 + S2 + rechtsklik klaar. Update voortgang:         Korte ASOC documentatie:            Voeg een korte verwijzing toe aan UML_EDITOR_INTEGRATIE.md:         
+```
+
+```
+Klaar. Korte samenvatting:
+
+**M1–M5 (verplaatsing UML-editor naar `web/vite/`)**
+-  → web/vite/src/umleditor/ (incl. README, gegevenstypen, vite_handleiding, model_exports). Standalone  map verwijderd (was naam-conflict met bestaande  van de InhoudEditor).
+- Alias  → `@umleditor` (); 8 importbestanden bijgewerkt; één cross-import in  gefixt.
+- : alias hernoemd,  workaround verwijderd, react/react-dom subtree-aliases verwijderd.
+- Drie Dockerfiles (, , ):  regels weggehaald.
+- web/vite/README.md en  bijgewerkt.
+- Vite-build slaagt (834ms).
+
+**S1+S2+rechtsklik (ASOC consolidatie)**
+- Nieuw: shared/asoc.js — single-source `relatieVorm()` /  / . Regel: velden óf afgeleide velden ⇒ ASOC.
+-  en  gebruiken nu .
+- IDE-export filtert  uit  (viewmodel-state); IDE-import reconstrueert ze vanuit diagram-nodes.
+- Nieuwe store-action  in .
+- Rechtsklik-menu-item **🔄 Ververs ASOC** in  — werkt op de aangeklikte relatie/anker en op alle geselecteerde relatie/anker-nodes; bewaart bestaande anker-positie.
+- Nieuw docs/ASOC.md met regel + impl-eisen.
+
+**Open (later)**: S3–S5 — vereenvoudig de edge-scan in `umleditor/metamodel/types.js` zodat ook die via  redeneert; daarna kan  +  worden geconsolideerd in één gedeelde helper. S6: roundtrip-tests (V3 met velden / zonder / alleen afgeleide velden).
+
+---
+
+## 🧑 User
+
+Dit lijkt beter te werken . Ik zie echter het Rechtsklik-menu-item 🔄 Ververs ASOC niet. ( screenshot 4)
+
+De edges van en naar het anker lijken wel consequent in de knoop (verkeerd om). Dat was eerder ook al wel. Misschien een verwisseling van source en target qua weergavelogica?
+
+Wil je naar die weergavedingen en rcehtklik
+
+---
+
+## 🧑 User
+
+Dit lijkt beter te werken . Ik zie echter het Rechtsklik-menu-item 🔄 Ververs ASOC niet. ( screenshot 4)
+
+De edges van en naar het anker lijken wel consequent in de knoop (verkeerd om). Dat was eerder ook al wel. Misschien een verwisseling van source en target qua weergavelogica?
+
+Wil je naar die weergavedingen en rechstklik item kijken en dan de rest ook doen? (S....)
+
+---
+
+## 🤖 Assistant
+
+Twee bugs bevestigd. Laten we kijken naar  voor dezelfde swap:         
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+Nu de same fix in  en de menu-gating:            
+```
+
+```
+
+```
+
+```
+Build:     Korte tests voor de centrale helper:         Bestaande tests gebruiken . Ik herschrijf snel:         10/10 tests pass. Update todo + ASOC.md met de kardinaliteit-conventie:         
+```
+
+```
+Klaar. Samenvatting van deze ronde:
+
+**Bugfix 1 — Rechtsklik 🔄 Ververs ASOC zichtbaar bij selectie**
+In  was het item alleen zichtbaar als  gezet was (rechtsklik op één node). Bij multi-selectie (jouw screenshot 4) komt het menu via  zonder . De gating is nu: zichtbaar zodra de geklikte node OF één van de geselecteerde nodes een  of  is.
+
+**Bugfix 2 — Kardinaliteit verkeerd om op ASOC associatie-edges**
+In  en  stond:
+- edge :  ❌
+- edge :  ❌
+
+ tekent het label bewust **bij de entity-zijde** (niet bij het anker). UML-conventie: het label nabij een klasse geeft aan hoeveel instanties van die klasse meedoen. Dus moet het zijn:
+- :  (label verschijnt bij bron-entiteit) ✅
+- :  (label verschijnt bij doel-entiteit) ✅
+
+Ook gefixt in .
+
+**S6 — Tests (node:test, 10/10 pass)**
+Nieuw shared/asoc.test.js — dekt collapsed/asoc voor velden, afgeleide velden, beide vorm-conventies ( en ), anker-id helpers en edge-id generatie. Uitvoerbaar met  (zelfde aanpak als ).
+
+**S7 — Docs**
+docs/ASOC.md bijgewerkt met de kardinaliteit-conventie en de uitleg dat het label bij de entity-zijde wordt gerenderd ondanks dat de edge via het anker loopt.
+
+**Open (deferred — S3-S5)**
+Consolidatie van  +  (twee bijna-identieke ASOC-builders) en de fragiele edge-scanning in . Dat is grotere refactor; de single-source-of-truth zit nu wel in `shared/asoc.js`, dus de duplicatie is begrensd.
+
+Test even in de browser (vergeet `Cmd+Shift+R` voor hard refresh ivm localStorage van de IDE-store).
 
 ---
