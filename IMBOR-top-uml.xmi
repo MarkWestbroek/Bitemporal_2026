@@ -1,0 +1,696 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xmi:XMI xmi:version="2.1"
+  xmlns:uml="http://www.omg.org/spec/UML/20090901"
+  xmlns:xmi="http://www.omg.org/spec/XMI/20090901">
+  <xmi:Documentation exporter="GitHub Copilot - IMBOR Top hierachie" exporterVersion="1.0"/>
+  <uml:Model xmi:type="uml:Model" xmi:id="IMBOR_Model" name="IMBOR Top hierachie">
+    <packagedElement xmi:type="uml:Package" xmi:id="IMBOR_Package" name="IMBOR Top hierachie">
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Rol" name="Rol">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Object" name="Object">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_FysiekObject" name="FysiekObject">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_15" general="cls_Object"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_InformatieObject" name="InformatieObject">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_16" general="cls_Object"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Activiteit" name="Activiteit">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Actor" name="Actor">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_59" general="cls_FysiekObject"/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_61" general="cls_Rol"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Materie" name="Materie">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_166" general="cls_FysiekObject"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_ReeelObject" name="ReeelObject">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_39" general="cls_FysiekObject"/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_163" general="cls_Materie"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Geo_object" name="Geo-object">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_27" general="cls_FysiekObject"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_RuimtelijkGebied" name="RuimtelijkGebied">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_157" general="cls_ReeelObject"/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_5" general="cls_FysiekObject"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Publiekrechtelijk_rechtspersoon" name="Publiekrechtelijk rechtspersoon">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_109" general="cls_Actor"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_TechnischeEntiteit" name="TechnischeEntiteit">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_FunctioneleEntiteit" name="FunctioneleEntiteit">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Privaatrechtelijk_rechtspersoon" name="Privaatrechtelijk rechtspersoon">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Registratie" name="Registratie">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_35" general="cls_InformatieObject"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Functie" name="Functie">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_170" general="cls_Activiteit"/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_167" general="cls_FunctioneleEntiteit"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Levensduur" name="Levensduur">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_TijdlijnGeldigheid" name="TijdlijnGeldigheid">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_26" general="cls_Registratie"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_TijdlijnRegistratie" name="TijdlijnRegistratie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Versies" name="Versies">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_DiscreetObject" name="DiscreetObject">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_4" general="cls_ReeelObject"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Reeel_object" name="Reeel object">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_3" general="cls_Geo_object"/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_33" general="cls_TechnischeEntiteit"/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_64" general="cls_ReeelObject"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Virtuele_ruimte" name="Virtuele ruimte">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_12" general="cls_Geo_object"/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_36" general="cls_FunctioneleEntiteit"/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_37" general="cls_RuimtelijkGebied"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Begroeing" name="Begroeing">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_46" general="cls_DiscreetObject"/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_47" general="cls_Reeel_object"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Bodem" name="Bodem">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_17" general="cls_DiscreetObject"/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_18" general="cls_Reeel_object"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Constructie" name="Constructie">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_10" general="cls_DiscreetObject"/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_11" general="cls_Reeel_object"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Onbepaald_terrein" name="Onbepaald terrein">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_4" general="cls_DiscreetObject"/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_3" general="cls_Reeel_object"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Oppervlaktewater" name="Oppervlaktewater">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_21" general="cls_Reeel_object"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Registratieve_ruimte" name="Registratieve ruimte">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_8" general="cls_Virtuele_ruimte"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Geometrische_Representatie" name="Geometrische-Representatie">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_98" general="cls_Versies"/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_99" general="cls_TijdlijnRegistratie"/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_50" general="cls_InformatieObject"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Groeiplaats" name="Groeiplaats">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Geografische_ruimte" name="Geografische ruimte">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Vegetatieobject" name="Vegetatieobject">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Aansluiting" name="Aansluiting">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Juridische_ruimte" name="Juridische ruimte">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Topologisch_Element" name="Topologisch-Element">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_41" general="cls_Geometrische_Representatie"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Surface" name="Surface">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_79" general="cls_Geometrische_Representatie"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Bron" name="Bron">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_138" general="cls_Oppervlaktewater"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Groenobject" name="Groenobject">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_81" general="cls_Begroeing"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Getijdengebied" name="Getijdengebied">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Stelsel" name="Stelsel">
+        <ownedComment xmi:type="uml:Comment" body="Een rioolleiding waarvan de bovenzijde niet is afgesloten."/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Functionele_ruimte" name="Functionele ruimte">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_MultiSurface" name="MultiSurface">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Greppel" name="Greppel">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Representatie_fysiek_object" name="Representatie fysiek object">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_37" general="cls_Topologisch_Element"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Systeem" name="Systeem">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Curve" name="Curve">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Netwerk" name="Netwerk">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Oever_of_slootkant" name="Oever of slootkant">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Apparaat" name="Apparaat">
+        <ownedComment xmi:type="uml:Comment" body="Een (vaak compact) mechanisch of elektronisch ding dat is gemaakt of toegepast voor een specifieke toepassing en doorgaans in één behuizing gevat is."/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_121" general="cls_Constructie"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Leiding" name="Leiding">
+        <ownedComment xmi:type="uml:Comment" body="Een geheel van geleiders of ruimte welke voorzien zijn van één ommanteling en bestemd is voor transport van materie, data of energie."/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_120" general="cls_Kunstwerk"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Kunstwerk" name="Kunstwerk">
+        <ownedComment xmi:type="uml:Comment" body="Civiel-technisch werk voor de infrastructuur van wegen, water, spoorbanen, waterkeringen en/of leidingen."/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_15" general="cls_Constructie"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Point" name="Point">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Hulpobject" name="Hulpobject">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Permanent_water" name="Permanent water">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Bak" name="Bak">
+        <ownedComment xmi:type="uml:Comment" body="Object met een permanent karakter dat dient om iets in te bergen of te verzamelen."/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Verharding" name="Verharding">
+        <ownedComment xmi:type="uml:Comment" body="Een door egaliseren, verstevigen en/of verruwen voor het beoogde gebruik geschikt gemaakte oppervlak, bestaande uit in één of meer lagen over een ondergrond of onderliggende constructie aangelegd materiaal"/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_49" general="cls_Constructie"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_MultiPoint" name="MultiPoint">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Vertex" name="Vertex">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Bord" name="Bord">
+        <ownedComment xmi:type="uml:Comment" body="Gegevens die specifiek zijn voor voor met de aarde verbonden duurzaam bouwwerk, dat niet valt onder de definities van een pand of kunstwerk."/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Gebouw" name="Gebouw">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_23" general="cls_Constructie"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Edge" name="Edge">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Bouwwerk" name="Bouwwerk">
+        <ownedComment xmi:type="uml:Comment" body="Een paneel waarop informatie wordt afgebeeld."/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Kabel" name="Kabel">
+        <ownedComment xmi:type="uml:Comment" body="Holle leiding voor het doorstromen van gassen, vloeistoffen of capsules, bestemd om hetzij gas, een vloeistof of capsules te transporteren, hetzij een vloeistof als intermediair te gebruiken voor het transport van warmte of een opgeloste of verpulverde stof."/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_127" general="cls_Leiding"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Ondertunneling" name="Ondertunneling">
+        <ownedComment xmi:type="uml:Comment" body="Ondergrondse of onder water gelegen verbinding tussen twee punten, aan beide einden voorzien van een open bakconstructie."/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_29" general="cls_Kunstwerk"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Functionele_zonering" name="Functionele zonering">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_106" general="cls_Functionele_ruimte"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Transportruimte" name="Transportruimte">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_53" general="cls_Functionele_ruimte"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Functioneel_gebouwobject" name="Functioneel gebouwobject">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_6" general="cls_Functionele_ruimte"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Constructielaag" name="Constructielaag">
+        <ownedComment xmi:type="uml:Comment" body="Constructieonderdeel, onderdeel van een objecttype die als zelfstandig objecttype beheerd kan worden."/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Holle_leiding" name="Holle leiding">
+        <ownedComment xmi:type="uml:Comment" body="Een geheel van geleiders welke voorzien zijn van 1 ommanteling en bestemd is voor transport van energie of data."/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Overbrugging" name="Overbrugging">
+        <ownedComment xmi:type="uml:Comment" body="Kunstwerk dat een beweegbare of vaste verbinding tussen twee punten betreft, die door water, een weg of anderszins gescheiden zijn, bestaande uit een brugdek/-bak met landhoofden en veelal gesteund door pijlers"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Watergang" name="Watergang">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_158" general="cls_Permanent_water"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_NetwerkLink" name="NetwerkLink">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_40" general="cls_Edge"/>
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_53" general="cls_NetwerkNode"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_NetwerkNode" name="NetwerkNode">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_39" general="cls_Vertex"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Constructieonderdeel" name="Constructieonderdeel">
+        <ownedComment xmi:type="uml:Comment" body="Constructieonderdeel, onderdeel van een objecttype die als zelfstandig objecttype beheerd kan worden."/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Waterstaatkundig_kunstwerk" name="Waterstaatkundig kunstwerk">
+        <ownedComment xmi:type="uml:Comment" body="Kunstwerk voor de beheersing van het oppervlaktewater en alles wat daarin voorkomt"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Watervlakte" name="Watervlakte">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Beheerzone" name="Beheerzone">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_131" general="cls_Functionele_zonering"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Waterverplaatsingsruimte" name="Waterverplaatsingsruimte">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Gebouwcomponent" name="Gebouwcomponent">
+        <ownedComment xmi:type="uml:Comment" body="Component aan de buitenzijde van een gebouw, die het aanzicht van het gebouw mede bepaalt"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Complex" name="Complex">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Verkeerruimte" name="Verkeerruimte">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_69" general="cls_Transportruimte"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Installatie" name="Installatie">
+        <ownedComment xmi:type="uml:Comment" body="Constructie die een technisch samenhangend systeem betreft dat een bepaald doel dient"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Ecologische_zone" name="Ecologische zone">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Kast" name="Kast">
+        <ownedComment xmi:type="uml:Comment" body="Constructie met een permanent karakter dat dient om iets in te bergen en te beschermen"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Aanschaf__informatie" name="Aanschaf- informatie">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_115" general="cls_InformatieObject"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Memo" name="Memo">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_WegLink" name="WegLink">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_45" general="cls_NetwerkLink"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Spoorverkeerruimte" name="Spoorverkeerruimte">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_Bgfdua_pi2qYU_GY_ST4_68" general="cls_Verkeerruimte"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Kunstwerkdeel" name="Kunstwerkdeel">
+        <ownedComment xmi:type="uml:Comment" body="  Onderdeel van een civieltechnisch werk voor de infrastructuur van wegen, water, spoorbanen, waterkeringen en/of leidingen"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Functioneel_ondergronds_object" name="Functioneel ondergronds object">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Adres_informatie" name="Adres-informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Modaliteit_informatie" name="Modaliteit-informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_WaterLink" name="WaterLink">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Markering" name="Markering">
+        <ownedComment xmi:type="uml:Comment" body="Hoge draagconstructie voor een installatie of het transport van energie en elektromagnetische straling"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Functioneel_rioleringsobject" name="Functioneel rioleringsobject">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Wegverkeerruimte" name="Wegverkeerruimte">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Baggeren_informatie" name="Baggeren-informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Monument__informatie" name="Monument- informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Mast" name="Mast">
+        <ownedComment xmi:type="uml:Comment" body="Hoge draagconstructie voor een installatie of het transport van energie en elektromagnetische straling"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Gebruikszone_water" name="Gebruikszone water">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Scheepvaartruimte" name="Scheepvaartruimte">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Bereikbaarheid__informatie" name="Bereikbaarheid- informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Onderhoud__informatie" name="Onderhoud- informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_WegNode" name="WegNode">
+        <generalization xmi:type="uml:Generalization" xmi:id="gen_49" general="cls_NetwerkNode"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Paalconstructie" name="Paalconstructie">
+        <ownedComment xmi:type="uml:Comment" body="Lage draagconstructie voor onder meer installaties of borden"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Kering" name="Kering">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Luchtvaartruimte" name="Luchtvaartruimte">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Bordopschrift" name="Bordopschrift">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Oplever_informatie" name="Oplever-informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_WaterNode" name="WaterNode">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Put" name="Put">
+        <ownedComment xmi:type="uml:Comment" body="Gegraven of geboorde kokervormige diepte waarin zich (vloei)stoffen bevinden."/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Recreatiezone" name="Recreatiezone">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Communicatie_informatie" name="Communicatie-informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Opening_kunstwerk" name="Opening kunstwerk">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Scheiding" name="Scheiding">
+        <ownedComment xmi:type="uml:Comment" body="Kunstmatig obstakel met een werende functie."/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Spoorzone" name="Spoorzone">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Constructiekleur" name="Constructiekleur">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Route_informatie" name="Route-informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Sensor" name="Sensor">
+        <ownedComment xmi:type="uml:Comment" body="Apparaat voor de meting van een fysieke grootheid (bijv. temperatuur, licht, druk, elektriciteit)."/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Verkeerskundigezone" name="Verkeerskundigezone">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Component_informatie" name="Component-informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Sluisdoorvaart" name="Sluisdoorvaart">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Straatmeubilair" name="Straatmeubilair">
+        <ownedComment xmi:type="uml:Comment" body="Een ruimtelijk object ter inrichting van de openbare ruimte."/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Waterbeheer_zone" name="Waterbeheer-zone">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Document" name="Document">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Sport_informatie" name="Sport-informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Tunneldeel" name="Tunneldeel">
+        <ownedComment xmi:type="uml:Comment" body="Onderdeel van een kunstmatig aangelegde, kokervormige onderdoorgang dat essentieel is voor de constructie."/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Flora_en_fauna_informatie" name="Flora en fauna-informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Software" name="Software">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Waterinrichtings_object" name="Waterinrichtings-object">
+        <ownedComment xmi:type="uml:Comment" body="Een ruimtelijk object ter inrichting van het water."/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Groeiplaats_bijzonderheid" name="Groeiplaats-bijzonderheid">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Soortnaam_informatie" name="Soortnaam-informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Wegconstructie" name="Wegconstructie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Groeiplaatsconstructie_informatie" name="Groeiplaatsconstructie-informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Valruimte_informatie" name="Valruimte-informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Weginrichtings_object" name="Weginrichtings-object">
+        <ownedComment xmi:type="uml:Comment" body="Een ruimtelijk object dat dient voor de inrichting van de openbare weg."/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Groenbeheer_informatie" name="Groenbeheer-informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Watergang_dimensionering" name="Watergang-dimensionering">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_IMKL_Informatie" name="IMKL-Informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Watergangbeheer_informatie" name="Watergangbeheer-informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Installatie__informatie" name="Installatie- informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Waterpeil_informatie" name="Waterpeil-informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Inwinning_informatie" name="Inwinning-informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Class" xmi:id="cls_Watervlaktebeheer_informatie" name="Watervlaktebeheer-informatie">
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="assoc_Bgfdua_pi2qYU_GY_ST4_60">
+        <memberEnd xmi:idref="assoc_Bgfdua_pi2qYU_GY_ST4_60_src"/>
+        <memberEnd xmi:idref="assoc_Bgfdua_pi2qYU_GY_ST4_60_tgt"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_Bgfdua_pi2qYU_GY_ST4_60_src" type="cls_Object" association="assoc_Bgfdua_pi2qYU_GY_ST4_60"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_Bgfdua_pi2qYU_GY_ST4_60_tgt" type="cls_InformatieObject" association="assoc_Bgfdua_pi2qYU_GY_ST4_60"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="assoc_Bgfdua_pi2qYU_GY_ST4_171">
+        <memberEnd xmi:idref="assoc_Bgfdua_pi2qYU_GY_ST4_171_src"/>
+        <memberEnd xmi:idref="assoc_Bgfdua_pi2qYU_GY_ST4_171_tgt"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_Bgfdua_pi2qYU_GY_ST4_171_src" type="cls_FysiekObject" association="assoc_Bgfdua_pi2qYU_GY_ST4_171"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_Bgfdua_pi2qYU_GY_ST4_171_tgt" type="cls_Functie" association="assoc_Bgfdua_pi2qYU_GY_ST4_171"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="assoc_Bgfdua_pi2qYU_GY_ST4_182">
+        <memberEnd xmi:idref="assoc_Bgfdua_pi2qYU_GY_ST4_182_src"/>
+        <memberEnd xmi:idref="assoc_Bgfdua_pi2qYU_GY_ST4_182_tgt"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_Bgfdua_pi2qYU_GY_ST4_182_src" type="cls_FysiekObject" association="assoc_Bgfdua_pi2qYU_GY_ST4_182"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_Bgfdua_pi2qYU_GY_ST4_182_tgt" type="cls_Geometrische_Representatie" association="assoc_Bgfdua_pi2qYU_GY_ST4_182"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="assoc_63">
+        <memberEnd xmi:idref="assoc_63_src"/>
+        <memberEnd xmi:idref="assoc_63_tgt"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_63_src" type="cls_Rol" association="assoc_63"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_63_tgt" type="cls_Geo_object" association="assoc_63"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="assoc_67">
+        <memberEnd xmi:idref="assoc_67_src"/>
+        <memberEnd xmi:idref="assoc_67_tgt"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_67_src" type="cls_Rol" association="assoc_67"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_67_tgt" type="cls_InformatieObject" association="assoc_67"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="assoc_96">
+        <memberEnd xmi:idref="assoc_96_src"/>
+        <memberEnd xmi:idref="assoc_96_tgt"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_96_src" type="cls_Activiteit" association="assoc_96"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_96_tgt" type="cls_TijdlijnRegistratie" association="assoc_96"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="assoc_100">
+        <memberEnd xmi:idref="assoc_100_src"/>
+        <memberEnd xmi:idref="assoc_100_tgt"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_100_src" type="cls_InformatieObject" association="assoc_100"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_100_tgt" type="cls_TijdlijnRegistratie" association="assoc_100"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="assoc_101">
+        <memberEnd xmi:idref="assoc_101_src"/>
+        <memberEnd xmi:idref="assoc_101_tgt"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_101_src" type="cls_InformatieObject" association="assoc_101"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_101_tgt" type="cls_Versies" association="assoc_101"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="assoc_97" name="geregistreerdMet">
+        <memberEnd xmi:idref="assoc_97_src"/>
+        <memberEnd xmi:idref="assoc_97_tgt"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_97_src" type="cls_Activiteit" association="assoc_97"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_97_tgt" type="cls_Versies" association="assoc_97"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="assoc_90">
+        <memberEnd xmi:idref="assoc_90_src"/>
+        <memberEnd xmi:idref="assoc_90_tgt"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_90_src" type="cls_FysiekObject" association="assoc_90"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_90_tgt" type="cls_TijdlijnGeldigheid" association="assoc_90"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="assoc_94">
+        <memberEnd xmi:idref="assoc_94_src"/>
+        <memberEnd xmi:idref="assoc_94_tgt"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_94_src" type="cls_FysiekObject" association="assoc_94"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_94_tgt" type="cls_Levensduur" association="assoc_94"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="assoc_128">
+        <memberEnd xmi:idref="assoc_128_src"/>
+        <memberEnd xmi:idref="assoc_128_tgt"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_128_src" type="cls_FysiekObject" association="assoc_128"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_128_tgt" type="cls_Versies" association="assoc_128"/>
+      </packagedElement>
+      <packagedElement xmi:type="uml:Association" xmi:id="assoc_88">
+        <memberEnd xmi:idref="assoc_88_src"/>
+        <memberEnd xmi:idref="assoc_88_tgt"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_88_src" type="cls_FysiekObject" association="assoc_88"/>
+        <ownedEnd xmi:type="uml:Property" xmi:id="assoc_88_tgt" type="cls_TijdlijnRegistratie" association="assoc_88"/>
+      </packagedElement>
+    </packagedElement>
+  </uml:Model>
+  <xmi:Extension extender="Enterprise Architect" extenderID="6.5">
+    <diagrams>
+      <diagram xmi:id="diag_IMBOR_Top" name="IMBOR Top hierachie" type="Logical">
+        <model package="IMBOR_Package" type="Logical"/>
+        <elements>
+          <element subject="cls_Rol" geometry="Left=0;Top=120;Right=120;Bottom=150;" label="Rol"/>
+          <element subject="cls_Object" geometry="Left=550;Top=120;Right=670;Bottom=150;" label="Object"/>
+          <element subject="cls_FysiekObject" geometry="Left=360;Top=182;Right=480;Bottom=212;" label="FysiekObject"/>
+          <element subject="cls_InformatieObject" geometry="Left=790;Top=182;Right=910;Bottom=212;" label="InformatieObject"/>
+          <element subject="cls_Activiteit" geometry="Left=1049;Top=182;Right=1169;Bottom=212;" label="Activiteit"/>
+          <element subject="cls_Actor" geometry="Left=0;Top=271;Right=120;Bottom=301;" label="Actor"/>
+          <element subject="cls_Materie" geometry="Left=130;Top=271;Right=250;Bottom=301;" label="Materie"/>
+          <element subject="cls_ReeelObject" geometry="Left=260;Top=271;Right=380;Bottom=301;" label="ReeelObject"/>
+          <element subject="cls_Geo_object" geometry="Left=500;Top=271;Right=620;Bottom=301;" label="Geo-object"/>
+          <element subject="cls_RuimtelijkGebied" geometry="Left=670;Top=271;Right=790;Bottom=301;" label="RuimtelijkGebied"/>
+          <element subject="cls_Publiekrechtelijk_rechtspersoon" geometry="Left=0;Top=321;Right=120;Bottom=351;" label="Publiekrechtelijk rechtspersoon"/>
+          <element subject="cls_TechnischeEntiteit" geometry="Left=410;Top=342;Right=530;Bottom=372;" label="TechnischeEntiteit"/>
+          <element subject="cls_FunctioneleEntiteit" geometry="Left=610;Top=342;Right=720;Bottom=372;" label="FunctioneleEntiteit"/>
+          <element subject="cls_Privaatrechtelijk_rechtspersoon" geometry="Left=0;Top=351;Right=120;Bottom=381;" label="Privaatrechtelijk rechtspersoon"/>
+          <element subject="cls_Registratie" geometry="Left=900;Top=407;Right=1020;Bottom=437;" label="Registratie"/>
+          <element subject="cls_Functie" geometry="Left=1049;Top=408;Right=1169;Bottom=438;" label="Functie"/>
+          <element subject="cls_Levensduur" geometry="Left=900;Top=457;Right=1020;Bottom=487;" label="Levensduur"/>
+          <element subject="cls_TijdlijnGeldigheid" geometry="Left=900;Top=487;Right=1020;Bottom=517;" label="TijdlijnGeldigheid"/>
+          <element subject="cls_TijdlijnRegistratie" geometry="Left=900;Top=517;Right=1020;Bottom=547;" label="TijdlijnRegistratie"/>
+          <element subject="cls_Versies" geometry="Left=900;Top=547;Right=1020;Bottom=577;" label="Versies"/>
+          <element subject="cls_DiscreetObject" geometry="Left=160;Top=548;Right=280;Bottom=578;" label="DiscreetObject"/>
+          <element subject="cls_Reeel_object" geometry="Left=290;Top=548;Right=410;Bottom=578;" label="Reeel object"/>
+          <element subject="cls_Virtuele_ruimte" geometry="Left=610;Top=548;Right=720;Bottom=578;" label="Virtuele ruimte"/>
+          <element subject="cls_Begroeing" geometry="Left=0;Top=638;Right=110;Bottom=668;" label="Begroeing"/>
+          <element subject="cls_Bodem" geometry="Left=120;Top=638;Right=230;Bottom=668;" label="Bodem"/>
+          <element subject="cls_Constructie" geometry="Left=240;Top=638;Right=350;Bottom=668;" label="Constructie"/>
+          <element subject="cls_Onbepaald_terrein" geometry="Left=360;Top=638;Right=470;Bottom=668;" label="Onbepaald terrein"/>
+          <element subject="cls_Oppervlaktewater" geometry="Left=480;Top=638;Right=590;Bottom=668;" label="Oppervlaktewater"/>
+          <element subject="cls_Registratieve_ruimte" geometry="Left=610;Top=638;Right=720;Bottom=668;" label="Registratieve ruimte"/>
+          <element subject="cls_Geometrische_Representatie" geometry="Left=900;Top=638;Right=1020;Bottom=668;" label="Geometrische-Representatie"/>
+          <element subject="cls_Groeiplaats" geometry="Left=360;Top=668;Right=470;Bottom=698;" label="Groeiplaats"/>
+          <element subject="cls_Geografische_ruimte" geometry="Left=610;Top=668;Right=720;Bottom=698;" label="Geografische ruimte"/>
+          <element subject="cls_Vegetatieobject" geometry="Left=0;Top=688;Right=110;Bottom=718;" label="Vegetatieobject"/>
+          <element subject="cls_Aansluiting" geometry="Left=360;Top=698;Right=470;Bottom=728;" label="Aansluiting"/>
+          <element subject="cls_Juridische_ruimte" geometry="Left=610;Top=698;Right=720;Bottom=728;" label="Juridische ruimte"/>
+          <element subject="cls_Topologisch_Element" geometry="Left=900;Top=698;Right=1020;Bottom=727;" label="Topologisch-Element"/>
+          <element subject="cls_Surface" geometry="Left=1049;Top=698;Right=1169;Bottom=728;" label="Surface"/>
+          <element subject="cls_Bron" geometry="Left=480;Top=698;Right=590;Bottom=728;" label="Bron"/>
+          <element subject="cls_Groenobject" geometry="Left=0;Top=718;Right=110;Bottom=748;" label="Groenobject"/>
+          <element subject="cls_Getijdengebied" geometry="Left=480;Top=727;Right=590;Bottom=757;" label="Getijdengebied"/>
+          <element subject="cls_Stelsel" geometry="Left=360;Top=728;Right=470;Bottom=758;" label="Stelsel"/>
+          <element subject="cls_Functionele_ruimte" geometry="Left=610;Top=728;Right=720;Bottom=758;" label="Functionele ruimte"/>
+          <element subject="cls_MultiSurface" geometry="Left=1049;Top=728;Right=1169;Bottom=758;" label="MultiSurface"/>
+          <element subject="cls_Greppel" geometry="Left=480;Top=753;Right=590;Bottom=783;" label="Greppel"/>
+          <element subject="cls_Representatie_fysiek_object" geometry="Left=900;Top=754;Right=1020;Bottom=784;" label="Representatie fysiek object"/>
+          <element subject="cls_Systeem" geometry="Left=360;Top=758;Right=470;Bottom=788;" label="Systeem"/>
+          <element subject="cls_Curve" geometry="Left=1049;Top=758;Right=1169;Bottom=788;" label="Curve"/>
+          <element subject="cls_Netwerk" geometry="Left=900;Top=783;Right=1020;Bottom=813;" label="Netwerk"/>
+          <element subject="cls_Oever_of_slootkant" geometry="Left=480;Top=784;Right=590;Bottom=814;" label="Oever of slootkant"/>
+          <element subject="cls_Apparaat" geometry="Left=0;Top=788;Right=110;Bottom=818;" label="Apparaat"/>
+          <element subject="cls_Leiding" geometry="Left=120;Top=788;Right=230;Bottom=818;" label="Leiding"/>
+          <element subject="cls_Kunstwerk" geometry="Left=240;Top=788;Right=350;Bottom=818;" label="Kunstwerk"/>
+          <element subject="cls_Point" geometry="Left=1049;Top=788;Right=1169;Bottom=818;" label="Point"/>
+          <element subject="cls_Hulpobject" geometry="Left=900;Top=813;Right=1020;Bottom=843;" label="Hulpobject"/>
+          <element subject="cls_Permanent_water" geometry="Left=480;Top=814;Right=590;Bottom=844;" label="Permanent water"/>
+          <element subject="cls_Bak" geometry="Left=0;Top=818;Right=110;Bottom=848;" label="Bak"/>
+          <element subject="cls_Verharding" geometry="Left=360;Top=818;Right=470;Bottom=848;" label="Verharding"/>
+          <element subject="cls_MultiPoint" geometry="Left=1049;Top=818;Right=1169;Bottom=848;" label="MultiPoint"/>
+          <element subject="cls_Vertex" geometry="Left=900;Top=844;Right=1020;Bottom=874;" label="Vertex"/>
+          <element subject="cls_Bord" geometry="Left=0;Top=848;Right=110;Bottom=878;" label="Bord"/>
+          <element subject="cls_Gebouw" geometry="Left=360;Top=849;Right=470;Bottom=879;" label="Gebouw"/>
+          <element subject="cls_Edge" geometry="Left=900;Top=874;Right=1020;Bottom=903;" label="Edge"/>
+          <element subject="cls_Bouwwerk" geometry="Left=0;Top=878;Right=110;Bottom=908;" label="Bouwwerk"/>
+          <element subject="cls_Kabel" geometry="Left=120;Top=882;Right=230;Bottom=912;" label="Kabel"/>
+          <element subject="cls_Ondertunneling" geometry="Left=240;Top=882;Right=350;Bottom=912;" label="Ondertunneling"/>
+          <element subject="cls_Functionele_zonering" geometry="Left=490;Top=889;Right=600;Bottom=922;" label="Functionele zonering"/>
+          <element subject="cls_Transportruimte" geometry="Left=610;Top=889;Right=720;Bottom=922;" label="Transportruimte"/>
+          <element subject="cls_Functioneel_gebouwobject" geometry="Left=730;Top=889;Right=840;Bottom=922;" label="Functioneel gebouwobject"/>
+          <element subject="cls_Constructielaag" geometry="Left=0;Top=908;Right=110;Bottom=938;" label="Constructielaag"/>
+          <element subject="cls_Holle_leiding" geometry="Left=120;Top=912;Right=230;Bottom=942;" label="Holle leiding"/>
+          <element subject="cls_Overbrugging" geometry="Left=240;Top=912;Right=350;Bottom=942;" label="Overbrugging"/>
+          <element subject="cls_Watergang" geometry="Left=360;Top=912;Right=470;Bottom=942;" label="Watergang"/>
+          <element subject="cls_NetwerkLink" geometry="Left=900;Top=925;Right=1020;Bottom=955;" label="NetwerkLink"/>
+          <element subject="cls_NetwerkNode" geometry="Left=1049;Top=925;Right=1169;Bottom=955;" label="NetwerkNode"/>
+          <element subject="cls_Constructieonderdeel" geometry="Left=0;Top=938;Right=110;Bottom=968;" label="Constructieonderdeel"/>
+          <element subject="cls_Waterstaatkundig_kunstwerk" geometry="Left=240;Top=942;Right=350;Bottom=972;" label="Waterstaatkundig kunstwerk"/>
+          <element subject="cls_Watervlakte" geometry="Left=360;Top=942;Right=470;Bottom=972;" label="Watervlakte"/>
+          <element subject="cls_Beheerzone" geometry="Left=490;Top=964;Right=600;Bottom=994;" label="Beheerzone"/>
+          <element subject="cls_Waterverplaatsingsruimte" geometry="Left=610;Top=964;Right=720;Bottom=997;" label="Waterverplaatsingsruimte"/>
+          <element subject="cls_Gebouwcomponent" geometry="Left=0;Top=968;Right=110;Bottom=998;" label="Gebouwcomponent"/>
+          <element subject="cls_Complex" geometry="Left=490;Top=994;Right=600;Bottom=1024;" label="Complex"/>
+          <element subject="cls_Verkeerruimte" geometry="Left=610;Top=997;Right=720;Bottom=1027;" label="Verkeerruimte"/>
+          <element subject="cls_Installatie" geometry="Left=0;Top=998;Right=110;Bottom=1028;" label="Installatie"/>
+          <element subject="cls_Ecologische_zone" geometry="Left=490;Top=1024;Right=600;Bottom=1054;" label="Ecologische zone"/>
+          <element subject="cls_Kast" geometry="Left=0;Top=1028;Right=110;Bottom=1058;" label="Kast"/>
+          <element subject="cls_Aanschaf__informatie" geometry="Left=740;Top=1032;Right=850;Bottom=1062;" label="Aanschaf- informatie"/>
+          <element subject="cls_Memo" geometry="Left=850;Top=1032;Right=960;Bottom=1062;" label="Memo"/>
+          <element subject="cls_WegLink" geometry="Left=970;Top=1032;Right=1090;Bottom=1062;" label="WegLink"/>
+          <element subject="cls_Spoorverkeerruimte" geometry="Left=610;Top=1052;Right=720;Bottom=1084;" label="Spoorverkeerruimte"/>
+          <element subject="cls_Kunstwerkdeel" geometry="Left=0;Top=1054;Right=110;Bottom=1084;" label="Kunstwerkdeel"/>
+          <element subject="cls_Functioneel_ondergronds_object" geometry="Left=490;Top=1054;Right=600;Bottom=1084;" label="Functioneel ondergronds object"/>
+          <element subject="cls_Adres_informatie" geometry="Left=740;Top=1062;Right=850;Bottom=1092;" label="Adres-informatie"/>
+          <element subject="cls_Modaliteit_informatie" geometry="Left=850;Top=1062;Right=960;Bottom=1092;" label="Modaliteit-informatie"/>
+          <element subject="cls_WaterLink" geometry="Left=970;Top=1062;Right=1090;Bottom=1091;" label="WaterLink"/>
+          <element subject="cls_Markering" geometry="Left=0;Top=1084;Right=110;Bottom=1114;" label="Markering"/>
+          <element subject="cls_Functioneel_rioleringsobject" geometry="Left=490;Top=1084;Right=600;Bottom=1114;" label="Functioneel rioleringsobject"/>
+          <element subject="cls_Wegverkeerruimte" geometry="Left=610;Top=1084;Right=720;Bottom=1117;" label="Wegverkeerruimte"/>
+          <element subject="cls_Baggeren_informatie" geometry="Left=740;Top=1092;Right=850;Bottom=1122;" label="Baggeren-informatie"/>
+          <element subject="cls_Monument__informatie" geometry="Left=850;Top=1092;Right=960;Bottom=1122;" label="Monument- informatie"/>
+          <element subject="cls_Mast" geometry="Left=0;Top=1114;Right=110;Bottom=1144;" label="Mast"/>
+          <element subject="cls_Gebruikszone_water" geometry="Left=490;Top=1114;Right=600;Bottom=1144;" label="Gebruikszone water"/>
+          <element subject="cls_Scheepvaartruimte" geometry="Left=610;Top=1117;Right=720;Bottom=1149;" label="Scheepvaartruimte"/>
+          <element subject="cls_Bereikbaarheid__informatie" geometry="Left=740;Top=1122;Right=850;Bottom=1152;" label="Bereikbaarheid- informatie"/>
+          <element subject="cls_Onderhoud__informatie" geometry="Left=850;Top=1122;Right=960;Bottom=1152;" label="Onderhoud- informatie"/>
+          <element subject="cls_WegNode" geometry="Left=1049;Top=1140;Right=1169;Bottom=1170;" label="WegNode"/>
+          <element subject="cls_Paalconstructie" geometry="Left=0;Top=1144;Right=110;Bottom=1174;" label="Paalconstructie"/>
+          <element subject="cls_Kering" geometry="Left=490;Top=1144;Right=600;Bottom=1174;" label="Kering"/>
+          <element subject="cls_Luchtvaartruimte" geometry="Left=610;Top=1149;Right=720;Bottom=1182;" label="Luchtvaartruimte"/>
+          <element subject="cls_Bordopschrift" geometry="Left=740;Top=1152;Right=850;Bottom=1182;" label="Bordopschrift"/>
+          <element subject="cls_Oplever_informatie" geometry="Left=850;Top=1152;Right=960;Bottom=1182;" label="Oplever-informatie"/>
+          <element subject="cls_WaterNode" geometry="Left=1049;Top=1170;Right=1169;Bottom=1200;" label="WaterNode"/>
+          <element subject="cls_Put" geometry="Left=0;Top=1174;Right=110;Bottom=1204;" label="Put"/>
+          <element subject="cls_Recreatiezone" geometry="Left=490;Top=1174;Right=600;Bottom=1204;" label="Recreatiezone"/>
+          <element subject="cls_Communicatie_informatie" geometry="Left=740;Top=1182;Right=850;Bottom=1212;" label="Communicatie-informatie"/>
+          <element subject="cls_Opening_kunstwerk" geometry="Left=850;Top=1182;Right=960;Bottom=1212;" label="Opening kunstwerk"/>
+          <element subject="cls_Scheiding" geometry="Left=0;Top=1204;Right=110;Bottom=1234;" label="Scheiding"/>
+          <element subject="cls_Spoorzone" geometry="Left=490;Top=1204;Right=600;Bottom=1234;" label="Spoorzone"/>
+          <element subject="cls_Constructiekleur" geometry="Left=740;Top=1212;Right=850;Bottom=1242;" label="Constructiekleur"/>
+          <element subject="cls_Route_informatie" geometry="Left=850;Top=1212;Right=960;Bottom=1242;" label="Route-informatie"/>
+          <element subject="cls_Sensor" geometry="Left=0;Top=1234;Right=110;Bottom=1264;" label="Sensor"/>
+          <element subject="cls_Verkeerskundigezone" geometry="Left=490;Top=1234;Right=600;Bottom=1264;" label="Verkeerskundigezone"/>
+          <element subject="cls_Component_informatie" geometry="Left=740;Top=1242;Right=850;Bottom=1272;" label="Component-informatie"/>
+          <element subject="cls_Sluisdoorvaart" geometry="Left=850;Top=1242;Right=960;Bottom=1272;" label="Sluisdoorvaart"/>
+          <element subject="cls_Straatmeubilair" geometry="Left=0;Top=1264;Right=110;Bottom=1294;" label="Straatmeubilair"/>
+          <element subject="cls_Waterbeheer_zone" geometry="Left=490;Top=1264;Right=600;Bottom=1294;" label="Waterbeheer-zone"/>
+          <element subject="cls_Document" geometry="Left=740;Top=1272;Right=850;Bottom=1302;" label="Document"/>
+          <element subject="cls_Sport_informatie" geometry="Left=850;Top=1272;Right=960;Bottom=1302;" label="Sport-informatie"/>
+          <element subject="cls_Tunneldeel" geometry="Left=0;Top=1294;Right=110;Bottom=1324;" label="Tunneldeel"/>
+          <element subject="cls_Flora_en_fauna_informatie" geometry="Left=740;Top=1302;Right=850;Bottom=1332;" label="Flora en fauna-informatie"/>
+          <element subject="cls_Software" geometry="Left=850;Top=1302;Right=960;Bottom=1332;" label="Software"/>
+          <element subject="cls_Waterinrichtings_object" geometry="Left=0;Top=1324;Right=110;Bottom=1354;" label="Waterinrichtings-object"/>
+          <element subject="cls_Groeiplaats_bijzonderheid" geometry="Left=740;Top=1332;Right=850;Bottom=1362;" label="Groeiplaats-bijzonderheid"/>
+          <element subject="cls_Soortnaam_informatie" geometry="Left=850;Top=1332;Right=960;Bottom=1362;" label="Soortnaam-informatie"/>
+          <element subject="cls_Wegconstructie" geometry="Left=0;Top=1354;Right=110;Bottom=1384;" label="Wegconstructie"/>
+          <element subject="cls_Groeiplaatsconstructie_informatie" geometry="Left=740;Top=1362;Right=850;Bottom=1392;" label="Groeiplaatsconstructie-informatie"/>
+          <element subject="cls_Valruimte_informatie" geometry="Left=850;Top=1362;Right=960;Bottom=1392;" label="Valruimte-informatie"/>
+          <element subject="cls_Weginrichtings_object" geometry="Left=0;Top=1384;Right=110;Bottom=1414;" label="Weginrichtings-object"/>
+          <element subject="cls_Groenbeheer_informatie" geometry="Left=740;Top=1392;Right=850;Bottom=1422;" label="Groenbeheer-informatie"/>
+          <element subject="cls_Watergang_dimensionering" geometry="Left=850;Top=1392;Right=960;Bottom=1422;" label="Watergang-dimensionering"/>
+          <element subject="cls_IMKL_Informatie" geometry="Left=740;Top=1422;Right=850;Bottom=1452;" label="IMKL-Informatie"/>
+          <element subject="cls_Watergangbeheer_informatie" geometry="Left=850;Top=1422;Right=960;Bottom=1452;" label="Watergangbeheer-informatie"/>
+          <element subject="cls_Installatie__informatie" geometry="Left=740;Top=1452;Right=850;Bottom=1482;" label="Installatie- informatie"/>
+          <element subject="cls_Waterpeil_informatie" geometry="Left=850;Top=1452;Right=960;Bottom=1482;" label="Waterpeil-informatie"/>
+          <element subject="cls_Inwinning_informatie" geometry="Left=740;Top=1482;Right=850;Bottom=1512;" label="Inwinning-informatie"/>
+          <element subject="cls_Watervlaktebeheer_informatie" geometry="Left=850;Top=1482;Right=960;Bottom=1512;" label="Watervlaktebeheer-informatie"/>
+        </elements>
+        <connectors>
+          <connector subject="assoc_Bgfdua_pi2qYU_GY_ST4_60" label=""/>
+          <connector subject="assoc_Bgfdua_pi2qYU_GY_ST4_171" label=""/>
+          <connector subject="assoc_Bgfdua_pi2qYU_GY_ST4_182" label=""/>
+          <connector subject="assoc_63" label=""/>
+          <connector subject="assoc_67" label=""/>
+          <connector subject="assoc_96" label=""/>
+          <connector subject="assoc_100" label=""/>
+          <connector subject="assoc_101" label=""/>
+          <connector subject="assoc_97" label="geregistreerdMet"/>
+          <connector subject="assoc_90" label=""/>
+          <connector subject="assoc_94" label=""/>
+          <connector subject="assoc_128" label=""/>
+          <connector subject="assoc_88" label=""/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_69"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_157"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_5"/>
+          <connector subject="gen_16"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_8"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_10"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_11"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_15"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_17"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_18"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_21"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_23"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_27"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_29"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_3"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_33"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_64"/>
+          <connector subject="gen_12"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_36"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_37"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_39"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_163"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_46"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_47"/>
+          <connector subject="gen_120"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_53"/>
+          <connector subject="gen_15"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_4"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_68"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_79"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_81"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_115"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_106"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_127"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_166"/>
+          <connector subject="gen_98"/>
+          <connector subject="gen_99"/>
+          <connector subject="gen_50"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_131"/>
+          <connector subject="gen_4"/>
+          <connector subject="gen_3"/>
+          <connector subject="gen_6"/>
+          <connector subject="gen_41"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_121"/>
+          <connector subject="gen_35"/>
+          <connector subject="gen_26"/>
+          <connector subject="gen_39"/>
+          <connector subject="gen_40"/>
+          <connector subject="gen_53"/>
+          <connector subject="gen_37"/>
+          <connector subject="gen_45"/>
+          <connector subject="gen_49"/>
+          <connector subject="gen_59"/>
+          <connector subject="gen_61"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_170"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_167"/>
+          <connector subject="gen_Bgfdua_pi2qYU_GY_ST4_49"/>
+          <connector subject="gen_109"/>
+          <connector subject="gen_138"/>
+          <connector subject="gen_158"/>
+        </connectors>
+      </diagram>
+    </diagrams>
+  </xmi:Extension>
+</xmi:XMI>
