@@ -658,8 +658,9 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I41 | IDE diagram-positie synchronisatie: posities slaan alleen op in het actieve diagram, maar de V3 export leest altijd uit `overzicht` — 3 opties uitgewerkt in [docs/ide-diagram-positie-sync.md](ide-diagram-positie-sync.md) | nieuw |
 | I42 | business rule in model | nieuw |
 | I43 | complex types achtig iets = combi gegevenstypen? | nieuw |
-| I |  | nieuw |
-| I |  | nieuw |
+| I44 | import IDE: meerdere diagrammen? Hele IDE setup? | testen |
+| I45 | import V3: naam overnemen in diagram naam | nieuw |
+| I46 | verwijderen van diagrammen | nieuw |
 | I |  | nieuw |
 | I |  | nieuw |
 | I |  | nieuw |

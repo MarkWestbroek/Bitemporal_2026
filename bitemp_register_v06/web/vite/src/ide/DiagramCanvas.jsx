@@ -487,14 +487,31 @@ const DEFAULT_TOOLBAR_LAYOUTS = {
   verbinding: { x: 12, y: 152, orientation: "horizontal" },
 };
 
+// Maximale coordinaatwaarden voor toolbar-posities — posities buiten deze
+// grenzen zijn off-screen (bijv. na slepen op een kleine viewport of op een
+// andere origin) en worden teruggezet naar de standaardpositie.
+const TOOLBAR_MAX_COORD = 4000;
+
+function sanitizeToolbarLayout(stored, defaultLayout) {
+  if (!stored) return defaultLayout;
+  const merged = { ...defaultLayout, ...stored };
+  if (
+    typeof merged.x !== "number" || merged.x < 0 || merged.x > TOOLBAR_MAX_COORD ||
+    typeof merged.y !== "number" || merged.y < 0 || merged.y > TOOLBAR_MAX_COORD
+  ) {
+    return defaultLayout;
+  }
+  return merged;
+}
+
 function leesToolbarLayouts() {
   if (typeof window === "undefined") return DEFAULT_TOOLBAR_LAYOUTS;
   try {
     const parsed = JSON.parse(window.localStorage.getItem(FLOATING_TOOLBAR_STORAGE_KEY) || "null");
     return {
-      create: { ...DEFAULT_TOOLBAR_LAYOUTS.create, ...(parsed?.create || {}) },
-      layout: { ...DEFAULT_TOOLBAR_LAYOUTS.layout, ...(parsed?.layout || {}) },
-      verbinding: { ...DEFAULT_TOOLBAR_LAYOUTS.verbinding, ...(parsed?.verbinding || {}) },
+      create: sanitizeToolbarLayout(parsed?.create, DEFAULT_TOOLBAR_LAYOUTS.create),
+      layout: sanitizeToolbarLayout(parsed?.layout, DEFAULT_TOOLBAR_LAYOUTS.layout),
+      verbinding: sanitizeToolbarLayout(parsed?.verbinding, DEFAULT_TOOLBAR_LAYOUTS.verbinding),
     };
   } catch {
     return DEFAULT_TOOLBAR_LAYOUTS;

@@ -336,7 +336,11 @@ export function v3ModelNaarStore(v3Full) {
         addFieldDependencyEdges(velden, rel.naam, rel.velden || [], datatypeLookup, diagramEdges, rel.useEdges, enumLookup);
       }
 
-      // Structurele edge: entiteit → relatie (eigenaar)
+      // ── Kies ASOC-patroon (met anker) of collapsed-patroon (eenvoudige edges) ──
+      // Zelfde logica als v3ModelNaarEditor.js: ASOC als de relatie eigen velden heeft.
+      const heeftRelVelden = (rel.velden || []).length > 0 || (rel.afgeleideVelden || []).length > 0;
+
+      // Structurele edge: entiteit → relatie (eigenaar, altijd aanwezig voor roundtrip)
       const relEdge = {
         id: rel.id || `${ent.typenaam}->${rel.naam}`,
         source: ent.typenaam,
@@ -349,32 +353,120 @@ export function v3ModelNaarStore(v3Full) {
         },
       };
       structuralEdges.push(relEdge);
-      diagramEdges.push({
-        ...relEdge,
-        type: "metamodel",
-        sourceHandle: rel.sourceHandle || null,
-        targetHandle: rel.targetHandle || null,
-      });
 
-      // Doel-edge: relatie → doel-entiteit
-      if (rel.doelEntiteit) {
+      if (heeftRelVelden) {
+        // ── ASOC-patroon: A ── o ── B + o╌╌REL ──
+        const ankerId = `anker_${rel.naam}`;
+
+        // Voeg ankerelement toe (eenmalig per relatie)
+        if (!elements[ankerId]) {
+          elements[ankerId] = {
+            id: ankerId,
+            naam: ankerId,
+            type: "associatieAnker",
+            domein: rel.domein || ent.domein || "",
+            data: { relatieNaam: rel.naam },
+          };
+          // Bereken ankerpositie: midden tussen eigenaar-entiteit en doel-entiteit
+          const entPos = ent.positie || { x: entIdx * 500, y: 50 };
+          const doelEnt = rel.doelEntiteit
+            ? (v3Model.entiteiten || []).find((e) => e.typenaam === rel.doelEntiteit)
+            : null;
+          const doelPos = doelEnt?.positie || { x: entPos.x + 400, y: entPos.y };
+          const ankerPos = rel.ankerPositie || {
+            x: (entPos.x + doelPos.x) / 2,
+            y: (entPos.y + doelPos.y) / 2,
+          };
+          diagramNodes.push({ elementId: ankerId, position: ankerPos });
+        }
+
+        // Edge 1: Entiteit → Anker (associatie, solid)
+        const doelKardinaliteit = rel.doelKardinaliteit || "0..*";
         diagramEdges.push({
-          id: rel.doelId || `${rel.naam}->${rel.doelEntiteit}`,
-          source: rel.naam,
-          target: rel.doelEntiteit,
+          id: rel.id || `${ent.typenaam}->${ankerId}`,
+          source: ent.typenaam,
+          target: ankerId,
           type: "metamodel",
-          sourceHandle: rel.doelSourceHandle || null,
-          targetHandle: rel.doelTargetHandle || null,
+          sourceHandle: rel.sourceHandle || null,
+          targetHandle: rel.targetHandle || null,
           data: {
-            rolnaam: `→ ${rel.doelEntiteit}`,
-            jsonRolnaam: rel.doelEntiteit.toLowerCase(),
-            momentvoorkomen: "meervoudig",
-            kardinaliteit: "0..*",
+            isAssociation: true,
+            directioneel: rel.directioneel || false,
+            rolnaam: "",
+            jsonRolnaam: "",
+            momentvoorkomen: "",
+            kardinaliteit: rel.directioneel ? "" : doelKardinaliteit,
           },
         });
+
+        // Edge 2: Anker → Doel-entiteit (associatie, solid, optioneel directionele pijl)
+        if (rel.doelEntiteit) {
+          const bronKardinaliteit = rel.bronKardinaliteit
+            || (rel.momentvoorkomen === "meervoudig" ? "0..*" : "0..1");
+          diagramEdges.push({
+            id: rel.doelId || `${ankerId}->${rel.doelEntiteit}`,
+            source: ankerId,
+            target: rel.doelEntiteit,
+            type: "metamodel",
+            sourceHandle: rel.doelSourceHandle || null,
+            targetHandle: rel.doelTargetHandle || null,
+            data: {
+              isAssociation: true,
+              directioneel: rel.directioneel || false,
+              rolnaam: "",
+              jsonRolnaam: "",
+              momentvoorkomen: "",
+              kardinaliteit: bronKardinaliteit,
+            },
+          });
+        }
+
+        // Edge 3: Anker ╌╌ Relatie-node (association class link, dashed)
+        const classLinkId = rel.classLinkId || `${ankerId}-->${rel.naam}`;
+        diagramEdges.push({
+          id: classLinkId,
+          source: ankerId,
+          target: rel.naam,
+          type: "metamodel",
+          sourceHandle: rel.classLinkSourceHandle || "source-bottom",
+          targetHandle: rel.classLinkTargetHandle || "target-top",
+          data: {
+            isAssociationClassLink: true,
+            rolnaam: "",
+            jsonRolnaam: "",
+            momentvoorkomen: "",
+            kardinaliteit: "",
+          },
+        });
+      } else {
+        // ── Collapsed-patroon: eenvoudige edges entiteit → REL → doelentiteit ──
+        diagramEdges.push({
+          ...relEdge,
+          type: "metamodel",
+          sourceHandle: rel.sourceHandle || null,
+          targetHandle: rel.targetHandle || null,
+        });
+
+        // Doel-edge: relatie → doel-entiteit
+        if (rel.doelEntiteit) {
+          diagramEdges.push({
+            id: rel.doelId || `${rel.naam}->${rel.doelEntiteit}`,
+            source: rel.naam,
+            target: rel.doelEntiteit,
+            type: "metamodel",
+            sourceHandle: rel.doelSourceHandle || null,
+            targetHandle: rel.doelTargetHandle || null,
+            data: {
+              rolnaam: `→ ${rel.doelEntiteit}`,
+              jsonRolnaam: rel.doelEntiteit.toLowerCase(),
+              momentvoorkomen: "meervoudig",
+              kardinaliteit: "0..*",
+            },
+          });
+        }
       }
 
-      // Binding edge: referentielijstInstantie → items-relatie
+      // Binding edge: referentielijstInstantie → items-relatie (altijd, onafhankelijk van patroon)
       if (rel.referentielijstInstantie) {
         const instantieNodeId = `refinstantie_${rel.referentielijstInstantie}`;
         diagramEdges.push({
@@ -919,6 +1011,10 @@ function buildV3Relatie(child, edgeData, diagEdge, diagrams, parentDomein) {
   // Edge handles voor roundtrip
   if (diagEdge.sourceHandle) v3Rel.sourceHandle = diagEdge.sourceHandle;
   if (diagEdge.targetHandle) v3Rel.targetHandle = diagEdge.targetHandle;
+
+  // Anker-positie bewaren voor ASOC roundtrip (anker_<naam> node in overzicht-diagram)
+  const ankerPos = elementPositie(diagrams, `anker_${cd.klassenaam || child.naam}`);
+  if (ankerPos) v3Rel.ankerPositie = ankerPos;
 
   // UseEdges: dependency-edge layout (handles + hidden) bewaren
   const relUseEdges = collectUseEdges(diagrams, child.id);
