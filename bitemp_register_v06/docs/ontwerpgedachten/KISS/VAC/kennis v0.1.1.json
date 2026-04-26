@@ -1,0 +1,154 @@
+{
+  "versie": "v0.7.3",
+  "naam": "config register financieel",
+  "beschrijving": "V3 export vanuit UML editor (codegen-ready)",
+  "datatypes": [],
+  "enums": [],
+  "entiteiten": [
+    {
+      "typenaam": "kennisartikel",
+      "domein": "kennis",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "kennisartikels",
+      "positie": {
+        "x": 50,
+        "y": 50
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "kennisartikelInterneInformatieItem",
+      "domein": "kennis",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "kennisartikelinterneinformatieitems",
+      "positie": {
+        "x": 350,
+        "y": 50
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "sectie",
+      "domein": "kennis",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "secties",
+      "positie": {
+        "x": 650,
+        "y": 50
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "trefwoord",
+      "domein": "kennis",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "trefwoords",
+      "positie": {
+        "x": 950,
+        "y": 50
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "vac",
+      "domein": "kennis",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "vacs",
+      "positie": {
+        "x": 50,
+        "y": 300
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "vacAfdeling",
+      "domein": "kennis",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "vacafdelings",
+      "positie": {
+        "x": 350,
+        "y": 300
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "vacRelatieProduct",
+      "domein": "kennis",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "vacrelatieproducts",
+      "positie": {
+        "x": 650,
+        "y": 300
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "berichtBase",
+      "domein": "kennis",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "berichtbases",
+      "positie": {
+        "x": 950,
+        "y": 300
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "nieuwsbericht",
+      "domein": "kennis",
+      "erft": "berichtBase",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "nieuwsberichts",
+      "positie": {
+        "x": 50,
+        "y": 550
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "werkinstructie",
+      "domein": "kennis",
+      "erft": "berichtBase",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "werkinstructies",
+      "positie": {
+        "x": 350,
+        "y": 550
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "skill",
+      "domein": "kennis",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "skills",
+      "positie": {
+        "x": 650,
+        "y": 550
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    }
+  ]
+}
