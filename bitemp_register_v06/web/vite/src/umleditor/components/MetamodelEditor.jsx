@@ -483,16 +483,24 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
 
   const normalizeConnection = useCallback(
     (connection, currentEdges) => {
-      const sourceType = nodeTypeById.get(connection.source);
-      const targetType = nodeTypeById.get(connection.target);
+      // Correctie: als de gebruiker begon te slepen vanaf een target-handle (id begint met
+      // "target-"), draait React Flow source/target intern om. We zetten dit terug zodat
+      // alle downstream-logica altijd source = de node waarvan de gebruiker sleepte.
+      let connection_ = connection;
+      if (connection_.sourceHandle?.startsWith("target-")) {
+        connection_ = swapConnectionDirection(connection_);
+      }
+
+      const sourceType = nodeTypeById.get(connection_.source);
+      const targetType = nodeTypeById.get(connection_.target);
 
       if (!sourceType || !targetType) {
-        return connection;
+        return connection_;
       }
 
       // GE hoort altijd onder entiteit te hangen.
       if (sourceType === "gegevenselement" && targetType === "entiteit") {
-        return swapConnectionDirection(connection);
+        return swapConnectionDirection(connection_);
       }
 
       // Enum/datatype dependency wijzen altijd van modeltype naar enum/datatype.
@@ -500,7 +508,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         (sourceType === "enumeratie" && targetType !== "enumeratie") ||
         (sourceType === "gegevenstype" && targetType !== "gegevenstype")
       ) {
-        return swapConnectionDirection(connection);
+        return swapConnectionDirection(connection_);
       }
 
       // Referentielijst-instantie → relatie (items-relatie): instantie is altijd bron.
@@ -509,10 +517,10 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         (sourceType === "relatie" && targetType === "referentielijstInstantie")
       ) {
         const instantieId = sourceType === "referentielijstInstantie"
-          ? connection.source : connection.target;
+          ? connection_.source : connection_.target;
         const relatieId = sourceType === "relatie"
-          ? connection.source : connection.target;
-        return { ...connection, source: instantieId, target: relatieId };
+          ? connection_.source : connection_.target;
+        return { ...connection_, source: instantieId, target: relatieId };
       }
 
       // Entiteit-relatie: eerste koppeling = entiteit -> relatie (owner),
@@ -521,8 +529,8 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         (sourceType === "entiteit" && targetType === "relatie") ||
         (sourceType === "relatie" && targetType === "entiteit")
       ) {
-        const relatieId = sourceType === "relatie" ? connection.source : connection.target;
-        const entiteitId = sourceType === "entiteit" ? connection.source : connection.target;
+        const relatieId = sourceType === "relatie" ? connection_.source : connection_.target;
+        const entiteitId = sourceType === "entiteit" ? connection_.source : connection_.target;
 
         const ownerEdge = currentEdges.find((e) => {
           if (e.type !== "metamodel") return false;
@@ -533,7 +541,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
 
         if (!ownerEdge) {
           return {
-            ...connection,
+            ...connection_,
             source: entiteitId,
             target: relatieId,
           };
@@ -541,20 +549,20 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
 
         if (ownerEdge.source === entiteitId) {
           return {
-            ...connection,
+            ...connection_,
             source: entiteitId,
             target: relatieId,
           };
         }
 
         return {
-          ...connection,
+          ...connection_,
           source: relatieId,
           target: entiteitId,
         };
       }
 
-      return connection;
+      return connection_;
     },
     [nodeTypeById, swapConnectionDirection]
   );
@@ -951,11 +959,14 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       const geselecteerd = nodes.filter((n) => n.selected);
       if (geselecteerd.length < 2) return false;
       event.preventDefault();
+      const modelNodeTypes = ["entiteit", "gegevenselement", "relatie", "associatieAnker", "referentielijstInstantie"];
+      const heeftDomeinWijziging = geselecteerd.some((n) => modelNodeTypes.includes(n.type));
       const canvasRect = canvasRef.current?.getBoundingClientRect?.() || { left: 0, top: 0 };
       setContextMenu({
         x: event.clientX - canvasRect.left,
         y: event.clientY - canvasRect.top,
         count: geselecteerd.length,
+        heeftDomeinWijziging,
       });
       return true;
     },
@@ -989,9 +1000,33 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
           return;
         }
       }
+
+      // Domein wijzigen voor model-nodes (entiteit, gegevenselement, relatie, etc.)
+      const modelNodeTypes = ["entiteit", "gegevenselement", "relatie", "associatieAnker", "referentielijstInstantie"];
+      if (node && modelNodeTypes.includes(node.type)) {
+        event.preventDefault();
+        // Zorg dat de rechts-geklikte node geselecteerd is
+        const geselecteerd = nodes.filter((n) => n.selected);
+        const inclusiefDitNode = geselecteerd.some((n) => n.id === node.id)
+          ? geselecteerd
+          : [node, ...geselecteerd];
+        const canvasRect = canvasRef.current?.getBoundingClientRect?.() || { left: 0, top: 0 };
+        setContextMenu({
+          menuType: "domein",
+          x: event.clientX - canvasRect.left,
+          y: event.clientY - canvasRect.top,
+          count: inclusiefDitNode.length,
+        });
+        // Selecteer ook dit node als het nog niet geselecteerd was
+        if (!geselecteerd.some((n) => n.id === node.id)) {
+          setNodes((nds) => nds.map((n) => ({ ...n, selected: n.id === node.id ? true : n.selected })));
+        }
+        return;
+      }
+
       toonContextMenu(event);
     },
-    [toonContextMenu, edges]
+    [toonContextMenu, edges, nodes, setNodes]
   );
 
   const onPaneContextMenu = useCallback(
@@ -1056,6 +1091,19 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       }
     },
     [contextMenu, setEdges]
+  );
+
+  /**
+   * Verander het domein van alle geselecteerde nodes.
+   */
+  const handleDomeinWijzigen = useCallback(
+    (domein) => {
+      pushCanvasUndo("domein-wijzigen");
+      setNodes((nds) =>
+        nds.map((n) => (n.selected ? { ...n, data: { ...n.data, domein } } : n))
+      );
+    },
+    [setNodes, pushCanvasUndo]
   );
 
   /**
@@ -2436,8 +2484,11 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
               itemCount={contextMenu.count}
               items={contextMenu.items}
               header={contextMenu.header}
+              beschikbareDomeinen={beschikbareDomeinen}
+              heeftDomeinWijziging={contextMenu.heeftDomeinWijziging}
               onAlign={handleAlign}
               onAction={handleDependencyAction}
+              onDomeinWijzigen={handleDomeinWijzigen}
               onClose={() => setContextMenu(null)}
             />
           )}

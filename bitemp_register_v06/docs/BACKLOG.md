@@ -609,6 +609,8 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | E14| ✅ Alt-drag vanuit ENT source-handle naar canvas = nieuwe GE aanmaken, genormaliseerde edge (was Ctrl-drag, gewijzigd wegens conflict met multiSelectionKeyCode) | nieuw |
 | E15| ✅ Edge-mode toolbar: Compositie (◆) en Generalisatie (▷) knoppen — selecteer mode, sleep edge, auto-reset | nieuw |
 | E16| ✅ Edge-mode indicator: visuele banner + crosshair cursor bij actieve mode, Escape om te annuleren | nieuw |
+| E17| ✅ rechtsklik domein wijzigen voor selectie | nieuw |
+| E18| ✅ importeren uit mermaid neemt ook overerving mee | nieuw |
 
 
 ### IDE (metamodel-ontwerp omgeving)
@@ -662,7 +664,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I45 | import V3: naam overnemen in diagram naam | nieuw |
 | I46 | verwijderen van diagrammen | nieuw |
 | I47 | attributen vak verbergen indien leeg | nieuw |
-| I |  | nieuw |
+| I48 | importeer UML, MIM en mermaid weer | nieuw |
 | I |  | nieuw |
 | I |  | nieuw |
 

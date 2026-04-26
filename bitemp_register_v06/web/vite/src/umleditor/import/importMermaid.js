@@ -47,8 +47,9 @@ export function importVanMermaid(text) {
     }
 
     // Relatie: Foo --> Bar : label  of  Foo "1" --> "0..*" Bar : label
+    // Let op: | is vereist voor generalisatiepijlen (<|-- en --|>)
     const relMatch = line.match(
-      /^\s*(\w+)\s*(?:"([^"]*)")?\s*([\-\.\*<>o]+)\s*(?:"([^"]*)")?\s*(\w+)\s*(?::\s*(.*))?$/
+      /^\s*(\w+)\s*(?:"([^"]*)")?\s*([\-\.\*<>o|]+)\s*(?:"([^"]*)")?\s*(\w+)\s*(?::\s*(.*))?$/
     );
     if (relMatch) {
       const [, srcNaam, leftKard, arrow, rightKard, tgtNaam, label] = relMatch;
@@ -195,7 +196,35 @@ function parseClassBlock(naam, lines, startIdx) {
 
 function maakEdge(srcNaam, tgtNaam, leftKard, rightKard, arrow, label, naamNaarId) {
   const isDependency = arrow.includes("..");
+
+  // Detecteer generalisatie-pijlen (ook met ..):
+  //   A <|-- B  of  A <|.. B  → A is ouder, B is kind  (srcNaam=A, tgtNaam=B) → omdraaien
+  //   A --|> B  of  A ..|> B  → B is ouder, A is kind  (srcNaam=A, tgtNaam=B) → goed zo
+  const isGeneralLeft  = arrow.includes("<|");  // ouder staat links  → omdraaien
+  const isGeneralRight = arrow.includes("|>");  // ouder staat rechts → niet omdraaien
+  const isGeneralization = isGeneralLeft || isGeneralRight;
+
+  // Pas richting aan: source = kind, target = ouder (editor-conventie)
+  const edgeSrcNaam = isGeneralLeft ? tgtNaam : srcNaam;
+  const edgeTgtNaam = isGeneralLeft ? srcNaam : tgtNaam;
+
   const kard = rightKard || leftKard || "0..*";
+
+  if (isGeneralization) {
+    return {
+      id: generateId("edge"),
+      _srcNaam: edgeSrcNaam,
+      _tgtNaam: edgeTgtNaam,
+      source: null,
+      target: null,
+      type: "metamodel",
+      data: {
+        isGeneralization: true,
+        naamLabelHeen: (label || "").trim(),
+        naamLabelTerug: "",
+      },
+    };
+  }
 
   return {
     id: generateId("edge"),

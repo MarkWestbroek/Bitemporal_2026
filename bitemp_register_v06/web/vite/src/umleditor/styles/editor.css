@@ -1023,6 +1023,45 @@ body {
   margin: 2px 0;
 }
 
+/* Domein-wijzigen row: input + OK button */
+.context-menu-domein-nieuw {
+  display: flex;
+  gap: 4px;
+  padding: 4px 8px;
+  pointer-events: all;
+}
+
+.context-menu-domein-input {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 6px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 12px;
+  outline: none;
+}
+
+.context-menu-domein-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+}
+
+.context-menu-domein-ok {
+  padding: 3px 8px;
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.context-menu-domein-ok:disabled {
+  background: #c7d2fe;
+  cursor: not-allowed;
+}
+
 /* === einde context menu === */
 
 .test-invoer-veld-wrapper {

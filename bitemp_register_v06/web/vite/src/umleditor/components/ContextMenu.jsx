@@ -1,21 +1,24 @@
 /**
  * ContextMenu — Rechtsklikmenu op het canvas.
  *
- * Twee varianten op basis van `menuType`:
- *   "align"      — Uitlijnacties (verschijnt bij ≥2 geselecteerde nodes)
+ * Drie varianten op basis van `menuType`:
+ *   "align"       — Uitlijnacties (verschijnt bij ≥2 geselecteerde nodes)
  *   "dependency"  — Verberg/toon «use» dependency edges
+ *   "domein"      — Verander domein van geselecteerde nodes
  *
  * Props:
- *   x, y        — schermcoördinaten (pixels) van het menu
- *   menuType    — "align" | "dependency"
- *   onAlign     — callback(actie: string)        (align)
- *   onAction    — callback(actie: string)         (dependency)
- *   onClose     — callback om het menu te sluiten
- *   itemCount   — aantal geselecteerde nodes      (align)
- *   items       — [{actie, label, icon?}]         (dependency)
- *   header      — optionele tekst bovenin         (dependency)
+ *   x, y              — schermcoördinaten (pixels) van het menu
+ *   menuType          — "align" | "dependency" | "domein"
+ *   onAlign           — callback(actie: string)        (align)
+ *   onAction          — callback(actie: string)         (dependency)
+ *   onDomeinWijzigen  — callback(domein: string)        (domein)
+ *   onClose           — callback om het menu te sluiten
+ *   itemCount         — aantal geselecteerde nodes      (align / domein)
+ *   items             — [{actie, label, icon?}]         (dependency)
+ *   header            — optionele tekst bovenin         (dependency)
+ *   beschikbareDomeinen — string[]                      (domein)
  */
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /* ── Compacte 16×16 SVG iconen ── */
 const C = "currentColor";
@@ -105,8 +108,9 @@ const ALIGN_ACTIES = [
   { actie: "snap-naar-grid",      label: "⊞ Snap naar grid",       minCount: 0 },
 ];
 
-export default function ContextMenu({ x, y, menuType = "align", onAlign, onAction, onClose, itemCount, items, header }) {
+export default function ContextMenu({ x, y, menuType = "align", onAlign, onAction, onDomeinWijzigen, onClose, itemCount, items, header, beschikbareDomeinen, heeftDomeinWijziging }) {
   const menuRef = useRef(null);
+  const [nieuwDomein, setNieuwDomein] = useState("");
 
   // Sluit het menu bij klik buiten het menu
   useEffect(() => {
@@ -155,6 +159,59 @@ export default function ContextMenu({ x, y, menuType = "align", onAlign, onActio
             )
           )}
         </>
+      ) : menuType === "domein" ? (
+        <>
+          <div className="context-menu-header">
+            Domein wijzigen — {itemCount} {itemCount === 1 ? "element" : "elementen"}
+          </div>
+          {/* Bestaande domeinen als snelknoppen */}
+          {(beschikbareDomeinen || []).map((d) => (
+            <button
+              key={d}
+              className="context-menu-item"
+              onClick={() => {
+                onDomeinWijzigen?.(d);
+                onClose();
+              }}
+            >
+              <span className="context-menu-icon">◈</span>
+              {d}
+            </button>
+          ))}
+          {(beschikbareDomeinen || []).length > 0 && (
+            <div className="context-menu-separator" />
+          )}
+          {/* Nieuw domein invoeren */}
+          <div className="context-menu-item context-menu-domein-nieuw">
+            <input
+              className="context-menu-domein-input"
+              type="text"
+              placeholder="Nieuw domein…"
+              value={nieuwDomein}
+              onChange={(e) => setNieuwDomein(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && nieuwDomein.trim()) {
+                  onDomeinWijzigen?.(nieuwDomein.trim());
+                  onClose();
+                }
+                e.stopPropagation();
+              }}
+              autoFocus
+            />
+            <button
+              className="context-menu-domein-ok"
+              disabled={!nieuwDomein.trim()}
+              onClick={() => {
+                if (nieuwDomein.trim()) {
+                  onDomeinWijzigen?.(nieuwDomein.trim());
+                  onClose();
+                }
+              }}
+            >
+              OK
+            </button>
+          </div>
+        </>
       ) : (
         <>
           <div className="context-menu-header">
@@ -176,6 +233,50 @@ export default function ContextMenu({ x, y, menuType = "align", onAlign, onActio
                 {item.label}
               </button>
             )
+          )}
+          {heeftDomeinWijziging && (
+            <>
+              <div className="context-menu-separator" />
+              <div className="context-menu-header" style={{ marginTop: 2 }}>Domein wijzigen</div>
+              {(beschikbareDomeinen || []).map((d) => (
+                <button
+                  key={d}
+                  className="context-menu-item"
+                  onClick={() => { onDomeinWijzigen?.(d); onClose(); }}
+                >
+                  <span className="context-menu-icon">◈</span>
+                  {d}
+                </button>
+              ))}
+              {(beschikbareDomeinen || []).length > 0 && (
+                <div className="context-menu-separator" />
+              )}
+              <div className="context-menu-item context-menu-domein-nieuw">
+                <input
+                  className="context-menu-domein-input"
+                  type="text"
+                  placeholder="Nieuw domein…"
+                  value={nieuwDomein}
+                  onChange={(e) => setNieuwDomein(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && nieuwDomein.trim()) {
+                      onDomeinWijzigen?.(nieuwDomein.trim());
+                      onClose();
+                    }
+                    e.stopPropagation();
+                  }}
+                />
+                <button
+                  className="context-menu-domein-ok"
+                  disabled={!nieuwDomein.trim()}
+                  onClick={() => {
+                    if (nieuwDomein.trim()) { onDomeinWijzigen?.(nieuwDomein.trim()); onClose(); }
+                  }}
+                >
+                  OK
+                </button>
+              </div>
+            </>
           )}
         </>
       )}
