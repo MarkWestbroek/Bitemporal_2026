@@ -2,8 +2,18 @@
  * ImportDialog — Modal dialoog voor het importeren van een model.
  *
  * Bronnen:
- * - 📂 Uit bestand (IDE-v1 of V3 JSON)
+ * - 📂 Uit bestand:
+ *     - V3 JSON (.json)
+ *     - IDE-v1 JSON (.json)
+ *     - Mermaid (.mmd / .md / .txt)
+ *     - PlantUML (.puml / .plantuml / .txt)
+ *     - XMI (.xmi / .xml)
  * - 🌐 Vanuit API (code/MetaRegistry, nieuwste DB versie, specifieke versie)
+ *
+ * Voor textuele UML-formaten wordt eerst de bijbehorende parser gedraaid;
+ * losliggende GE/relatie-nodes (orphans) worden via een aparte
+ * {@link OrphanDialog} aan de gebruiker voorgelegd voordat de afbeelding wordt
+ * omgezet naar V3 JSON en doorgegeven aan de IDE.
  *
  * Features:
  * - Domeinfilter — importeer alle domeinen of één specifiek domein
@@ -12,6 +22,12 @@
  *   met de posities uit het V3-model
  */
 import { useState, useEffect, useCallback } from "react";
+import { importVanMermaid } from "../umleditor/import/importMermaid";
+import { importVanPlantUML } from "../umleditor/import/importPlantUML";
+import { importVanXMI } from "../umleditor/import/importXMI";
+import { detecteerOrphans, pasOrphanActiesToe } from "../umleditor/import/rawuml";
+import { editorNaarV3Model } from "../umleditor/metamodel/types";
+import OrphanDialog from "../umleditor/components/OrphanDialog";
 
 // ── Herbruikbare stijlen (identiek aan ExportDialog) ──────
 const S = {
@@ -84,6 +100,31 @@ const API_CODE = "code";
 const API_DB_NIEUWSTE = "db_nieuwste";
 const API_DB_VERSIE = "db_versie";
 
+// Textuele UML-formaten en hun parsers/extensies.
+const UML_FORMATEN = {
+  mermaid: { label: "Mermaid", extensies: [".mmd"], parser: importVanMermaid },
+  plantuml: { label: "PlantUML", extensies: [".puml", ".plantuml"], parser: importVanPlantUML },
+  xmi: { label: "XMI", extensies: [".xmi"], parser: importVanXMI },
+};
+
+// .md, .txt, .xml zijn ambigu: eerst extensie matchen, daarna fallback op
+// inhoud ("classDiagram" → mermaid, "@startuml" → plantuml, "<XMI" → xmi).
+function detecteerUmlFormaatVanBestand(file, text) {
+  const naam = (file?.name || "").toLowerCase();
+  for (const [key, def] of Object.entries(UML_FORMATEN)) {
+    if (def.extensies.some((ext) => naam.endsWith(ext))) return key;
+  }
+  if (naam.endsWith(".json")) return null; // JSON-pad
+  const head = (text || "").slice(0, 4096);
+  if (/classDiagram/i.test(head)) return "mermaid";
+  if (/@startuml/i.test(head)) return "plantuml";
+  if (/<\s*XMI\b/i.test(head) || /<\?xml/i.test(head)) return "xmi";
+  if (naam.endsWith(".md") || naam.endsWith(".txt") || naam.endsWith(".xml")) {
+    return null; // onbekend; gebruiker zal de fout zien
+  }
+  return null;
+}
+
 function apiBase() {
   return window.location.port === "5174" ? "http://localhost:8082" : "";
 }
@@ -111,6 +152,13 @@ export default function ImportDialog({ open, domains, domainMeta, prefillDomein,
   const [laden, setLaden] = useState(false);
   const [fout, setFout] = useState(null);
 
+  // Wanneer een textuele UML-import orphans bevat, parkeren we de tussenstand
+  // hier en tonen we OrphanDialog. Na bevestiging worden de acties toegepast,
+  // de graaf naar V3 omgezet, en parsedJson gevuld zodat handleSubmit z'n
+  // gewone V3-pad kan volgen.
+  const [orphanDialoog, setOrphanDialoog] = useState(null);
+  // null | { orphans, graaf, formaat, bestandsnaam }
+
   // Pre-fill domein bij rechtsklik
   useEffect(() => {
     if (open && prefillDomein !== undefined) {
@@ -129,6 +177,7 @@ export default function ImportDialog({ open, domains, domainMeta, prefillDomein,
       setGeselecteerdeVersie(null);
       setFout(null);
       setModus("vervang");
+      setOrphanDialoog(null);
       // domeinFilter wordt NIET gereset — kan pre-filled zijn
     }
   }, [open]);
@@ -148,14 +197,53 @@ export default function ImportDialog({ open, domains, domainMeta, prefillDomein,
     return () => { cancelled = true; };
   }, [open, bron, apiBron]);
 
-  // ── Bestand selecteren & parsen ──
+  // ---- Hulp: editor-graaf → V3 + parsedJson invullen ----
+  // Wordt gebruikt na een textuele UML-import (eventueel na orphan-acties).
+  const zetEditorGraafAlsParsedJson = useCallback((graaf, formaat, bestandsnaam) => {
+    const v3 = editorNaarV3Model(graaf.nodes, graaf.edges, {});
+    // Wikkel in dezelfde envelope als V3-bestanden zodat handleSubmit hem als
+    // V3 herkent (json.model.versie === "v3").
+    const wrapped = { model: v3 };
+    setParsedJson(wrapped);
+    setBestandInfo({
+      format: "V3",
+      elementen: (v3.entiteiten || []).length,
+      versie: `${UML_FORMATEN[formaat]?.label || formaat} → ${bestandsnaam}`,
+    });
+  }, []);
+
+  // ---- Bestand selecteren & parsen ----
   const handleBestandKeuze = useCallback(async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setBestand(file);
     setFout(null);
+    setParsedJson(null);
+    setBestandInfo(null);
     try {
       const text = await file.text();
+      const umlFormaat = detecteerUmlFormaatVanBestand(file, text);
+
+      if (umlFormaat) {
+        // Textueel UML-formaat: parser draaien, orphans checken.
+        const parser = UML_FORMATEN[umlFormaat].parser;
+        let graaf;
+        try {
+          graaf = parser(text);
+        } catch (err) {
+          throw new Error(`${UML_FORMATEN[umlFormaat].label} parsen mislukt: ${err.message}`);
+        }
+        const orphans = detecteerOrphans(graaf);
+        if (orphans.length > 0) {
+          setOrphanDialoog({ orphans, graaf, formaat: umlFormaat, bestandsnaam: file.name });
+          setBestandInfo({ format: UML_FORMATEN[umlFormaat].label, elementen: 0, versie: `${orphans.length} orphans — actie vereist` });
+          return;
+        }
+        zetEditorGraafAlsParsedJson(graaf, umlFormaat, file.name);
+        return;
+      }
+
+      // Anders: JSON pad (V3 of IDE-v1)
       const json = JSON.parse(text);
       setParsedJson(json);
 
@@ -168,13 +256,46 @@ export default function ImportDialog({ open, domains, domainMeta, prefillDomein,
         setBestandInfo({ format: "V3", elementen: entCount, versie: model.modelVersie || model.versie || "" });
       } else {
         setBestandInfo({ format: "Onbekend", elementen: 0, versie: "" });
-        setFout("Onbekend bestandsformat. Verwacht IDE JSON of V3 model JSON.");
+        setFout("Onbekend bestandsformat. Verwacht IDE-v1, V3 JSON, Mermaid, PlantUML of XMI.");
       }
     } catch (err) {
       setFout(`Bestand lezen mislukt: ${err.message}`);
       setBestandInfo(null);
       setParsedJson(null);
     }
+  }, [zetEditorGraafAlsParsedJson]);
+
+  // ---- Orphan-dialoog acties ----
+  const bevestigOrphanDialoog = useCallback((keuzes) => {
+    if (!orphanDialoog) return;
+    try {
+      const { nodes, edges } = pasOrphanActiesToe(
+        orphanDialoog.graaf,
+        orphanDialoog.orphans,
+        keuzes
+      );
+      zetEditorGraafAlsParsedJson(
+        { nodes, edges },
+        orphanDialoog.formaat,
+        orphanDialoog.bestandsnaam
+      );
+      setOrphanDialoog(null);
+    } catch (err) {
+      setOrphanDialoog(null);
+      if (err && err.code === "ORPHAN_ABORT") {
+        setFout(err.message);
+      } else {
+        setFout(`Orphan-acties toepassen mislukt: ${err.message}`);
+      }
+      setBestandInfo(null);
+      setParsedJson(null);
+    }
+  }, [orphanDialoog, zetEditorGraafAlsParsedJson]);
+
+  const annuleerOrphanDialoog = useCallback(() => {
+    setOrphanDialoog(null);
+    setBestandInfo(null);
+    setParsedJson(null);
   }, []);
 
   // ── Import uitvoeren ──
@@ -278,13 +399,18 @@ export default function ImportDialog({ open, domains, domainMeta, prefillDomein,
           {/* --- Bestand-bron --- */}
           {bron === BRON_BESTAND && (
             <div style={S.field}>
-              <span style={S.label}>JSON-bestand</span>
-              <input type="file" accept=".json" onChange={handleBestandKeuze} style={{ fontSize: 12 }} />
+              <span style={S.label}>Bestand (JSON, Mermaid, PlantUML of XMI)</span>
+              <input
+                type="file"
+                accept=".json,.mmd,.md,.puml,.plantuml,.xmi,.xml,.txt"
+                onChange={handleBestandKeuze}
+                style={{ fontSize: 12 }}
+              />
               {bestandInfo && (
                 <div style={S.fileInfo}>
                   Format: <strong>{bestandInfo.format}</strong>
                   {bestandInfo.elementen > 0 && <> — {bestandInfo.elementen} {bestandInfo.format === "V3" ? "entiteiten" : "elementen"}</>}
-                  {bestandInfo.versie && <> — versie: {bestandInfo.versie}</>}
+                  {bestandInfo.versie && <> — {bestandInfo.versie}</>}
                 </div>
               )}
             </div>
@@ -392,6 +518,14 @@ export default function ImportDialog({ open, domains, domainMeta, prefillDomein,
           </button>
         </div>
       </div>
+
+      {orphanDialoog && (
+        <OrphanDialog
+          orphans={orphanDialoog.orphans}
+          onBevestig={bevestigOrphanDialoog}
+          onAnnuleer={annuleerOrphanDialoog}
+        />
+      )}
     </div>
   );
 }

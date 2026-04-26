@@ -10,6 +10,9 @@ Afgeleide velden zijn velden waarvan de waarde niet direct wordt opgeslagen, maa
 - [V3 metamodel JSON-structuur](#v3-metamodel-json-structuur)
 - [Ondersteunde afleidingstalen](#ondersteunde-afleidingstalen)
 - [CEL syntax en voorbeelden](#cel-syntax-en-voorbeelden)
+  - [CEL switch/case](#cel-switchcase-conditionele-toewijzing)
+  - [Enum-velden](#enum-velden)
+- [ExpressieEditor breakout-modal](#expressieeditor-breakout-modal)
 - [Visuele weergave in de UML-editor](#visuele-weergave-in-de-uml-editor)
 - [Opslag In Database En Roundtrip](#opslag-in-database-en-roundtrip)
 - [Codestructuur en bestanden](#codestructuur-en-bestanden)
@@ -278,7 +281,38 @@ timestamp(now).getFullYear() - timestamp(geboortedatum).getFullYear()
 > **Let op:** datum-/tijdfuncties zijn standaard beperkt in CEL. 
 > Bij implementatie in Go kan de CEL-omgeving uitgebreid worden met custom functies via `cel.Function()`.
 
-### Verschil met pseudo-code
+### CEL switch/case (conditionele toewijzing)
+
+CEL heeft geen `switch`- of `case`-statement. Het equivalent is een keten van ternary-expressies:
+
+```cel
+veld == "Waarde1" ? resultaat1 :
+veld == "Waarde2" ? resultaat2 :
+standaard
+```
+
+Voorbeeld met naamgebruik-enum:
+
+```cel
+Naamgebruik.naamgebruik == "PartnerNaam" ? Partnernaam.achternaam :
+Naamgebruik.naamgebruik == "EigenNaam"  ? Naam.achternaam :
+Naam.achternaam
+```
+
+Elke `veld == "Waarde" ? ... :` is één "case". De laatste waarde zonder `?` is de default.
+
+### Enum-velden
+
+Velden met een `enumNaam` (bijv. `naamgebruik : NaamgebruikSoort`) vergelijk je met string literals:
+
+```cel
+status == "Actief"    // Juist: string vergelijking
+status == Actief      // Fout: Actief wordt als variabele geïnterpreteerd
+```
+
+De enum-waarden zijn zichtbaar in de ExpressieEditor (zie hieronder) en worden met aanhalingstekens ingevoegd.
+
+
 
 Bij afleidingstaal `"pseudo"` wordt de regel niet geëvalueerd maar alleen als documentatie opgeslagen. Dit is handig voor complexe afleidingen die (nog) niet in CEL uit te drukken zijn:
 
@@ -400,10 +434,73 @@ Checklist bij troubleshooting:
 
 | Bestand | Rol |
 |---------|-----|
-| `uml-editor/src/components/panels/NodeEditPanel.jsx` | Edit-paneel met: afgeleid-checkbox per veld, afleidingstaal-selector, afleidingsregel-textarea, isWeergaveVeld-checkbox, en een aparte sectie "Afgeleide velden" (voor entiteit, GE en relatie) met CRUD |
+| `uml-editor/src/components/panels/NodeEditPanel.jsx` | Edit-paneel met: afgeleid-checkbox per veld, afleidingstaal-selector, afleidingsregel-textarea, isWeergaveVeld-checkbox, en een aparte sectie "Afgeleide velden" (voor entiteit, GE en relatie) met CRUD. Bevat knop **✎ Bewerken** die de `ExpressieEditor` modal opent. |
+| `uml-editor/src/components/panels/ExpressieEditor.jsx` | **Breakout-modal voor het bewerken van CEL/expr/jsonlogic-expressies.** Zie sectie [ExpressieEditor](#expressieeditor-breakout-modal) hieronder. |
+| `ide/src/DetailsPanel.jsx` | IDE-versie van het edit-paneel: zelfde **✎ Bewerken** knop voor zowel veld-niveau als afgeleide-velden-niveau, via `ExpressieEditor` met context uit de model-store. |
 | `uml-editor/src/components/nodes/EntiteitNode.jsx` | Oranje `/` prefix en cursieve weergave van afgeleide velden in de entiteitnode |
 | `uml-editor/src/components/nodes/GegevensElementNode.jsx` | Oranje `/` prefix bij afgeleide velden in GE-nodes |
 | `uml-editor/src/components/nodes/RelatieNode.jsx` | Oranje `/` prefix bij afgeleide velden in relatie-nodes |
+
+---
+
+## ExpressieEditor breakout-modal
+
+De `ExpressieEditor` is een verplaatsbare popup-modal voor het bewerken van afleidingsregels. Hij is geïntegreerd in zowel de UML-editor (via `NodeEditPanel`) als de IDE-detailpaneel (via `DetailsPanel`).
+
+### Functionaliteit
+
+| Feature | Beschrijving |
+|---------|--------------|
+| **Syntax highlighting** | Prism.js met eigen CEL-grammatica (keywords, operators, strings, getallen, comments) |
+| **Autocomplete** | Dropdown bij typen: suggereert velden uit de context (TypeNaam.veldnaam), max 10 items, gefilterd op het huidige woord |
+| **Contextpaneel** | Rechterkolom toont alle beschikbare variabelen, gegroepeerd per brontype. Klikken voegt in op cursorpositie. |
+| **Enum-waarden** | Velden met `enumNaam` tonen hun enum-waarden als aparte groep (`◇ EnumNaam`) met amber kleur. Klikken voegt `"Waarde"` in (inclusief aanhalingstekens). |
+| **Validatie** | Lichtgewichte design-time validatie: controleert of `TypeNaam.veldnaam` patronen voorkomen in de contextlijst. Toont fouten als rood in de footer. |
+| **Drag** | Modal verplaatsbaar via de header (cursor: grab). |
+| **Hint-tekst** | Taalspecifieke hints, inclusief switch/case chained ternary voorbeeld voor CEL. |
+
+### Context-berekening
+
+De context (beschikbare variabelen) wordt automatisch berekend uit het grafiek-model:
+
+**`berekenContextVelden(node, allNodes, edges)`** — voor UML-editor (React Flow):
+- Eigen velden van het geselecteerde GE/entiteit → eenvoudige naam (`roepnaam`) + hidden alias (`Naam.roepnaam` voor validatie)
+- Sibling-GEs van dezelfde parent → gekwalificeerde naam (`Naam.roepnaam`)
+- Velden van de parent-entiteit zelf → gekwalificeerde naam
+
+**`berekenContextVeldenFromStore(elementId, elements, structuralEdges)`** — voor IDE (Zustand store):
+- Zelfde logica, maar leest uit de IDE model-store in plaats van React Flow nodes/edges
+
+**Enum-waarden**: als een veld een `enumNaam` heeft, zoekt de context-builder automatisch de bijbehorende enum-node op en voegt de waarden toe als `{ soort: "enumwaarde", invoegTekst: '"Waarde"' }` entries.
+
+**Validatie-alias**: eigen velden worden dubbel opgenomen — als `roepnaam` én als `Naam.roepnaam` (met `verborgen: true`). Daardoor zijn beide schrijfwijzen geldig in de validator, terwijl de alias niet in de UI-lijst verschijnt.
+
+### Invoegen
+
+| Wijze | Gedrag |
+|-------|--------|
+| Autocomplete-klik / Tab/Enter | Vervangt het huidige woord op cursor; voor enum: insert `"Waarde"` (met quotes) |
+| Klik in contextpaneel | Voegt in op cursorpositie; voor enum: insert `"Waarde"` (met quotes) |
+
+### Locatie in de code
+
+```
+web/vite/src/umleditor/components/panels/ExpressieEditor.jsx
+web/vite/src/umleditor/styles/editor.css  (stijlen, incl. enum amber-tint)
+```
+
+### Geëxporteerde functies
+
+```javascript
+// Hoofd-component (default export)
+export default function ExpressieEditor({ value, taal, onChange, onClose, contextVelden })
+
+// Context helpers (named exports)
+export function berekenContextVelden(node, allNodes, edges)
+export function berekenContextVeldenFromStore(elementId, elements, structuralEdges)
+```
+
+
 
 ### Frontend visualisatie
 

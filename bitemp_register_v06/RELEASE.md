@@ -1,5 +1,107 @@
 # Release checklist
 
+## UML-editor + IDE: React 18 concurrent-mode + XyFlow ResizeObserver race-fix (2026-04-26)
+
+**Kritieke bug-fix**: crash op elke paginalaad van editor-v2 (`/react/editor-v2.html`) en IDE (`/react/ide.html`).
+
+### Symptomen
+- Bij paginalaad: error boundary toont "Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node"
+- Crash treedt op na initiële commit van MetamodelEditor/DiagramCanvasInner
+- Zou willekeurig lijken, maar reproduceerbaar op elke laad (niet HMR-gerelateerd)
+- StrictMode al uitgeschakeld; single-mount pattern al aanwezig in EditorV2Page
+
+### Root cause: React 18 concurrent mode + XyFlow 12 ResizeObserver race
+1. React 18 committeert DOM in meerdere microtask-fases
+2. XyFlow 12 plaatst een `ResizeObserver` in `useLayoutEffect` op het canvas-element
+3. In Chrome vuurt `ResizeObserver` **synchroon** zodra `observe()` wordt aangeroepen (als element al dimensies heeft)
+4. Dit gebeurt nog tijdens React's commit-fase → XyFlow probeert interne state te updaten en DOM-nodes te verplaatsen terwijl React nog bezig is met DOM-transfer
+5. Resultaat: DOM-tree-mismatch, `removeChild` op node die React nog niet heeft vrijgegeven
+
+### Fix: defer ReactFlow mount één animation frame
+```js
+const [reactFlowGereed, setReactFlowGereed] = useState(false);
+useEffect(() => {
+  const raf = requestAnimationFrame(() => setReactFlowGereed(true));
+  return () => cancelAnimationFrame(raf);
+}, []);
+
+// In JSX:
+{reactFlowGereed && <ReactFlow ... >...</ReactFlow>}
+```
+
+Hierdoor:
+- React's initiële commit is compleet vóór `requestAnimationFrame` fired
+- ResizeObserver vuurt in een schone phase, niet tijdens commit
+- All state (nodes, edges) is al geïnitialiseerd; de ~16ms delay is onmerkbaar
+
+**Bestanden**:
+- [web/vite/src/umleditor/components/MetamodelEditor.jsx](web/vite/src/umleditor/components/MetamodelEditor.jsx#L292-L300) — editor-v2 fix
+- [web/vite/src/ide/DiagramCanvas.jsx](web/vite/src/ide/DiagramCanvas.jsx#L728-L736) — IDE fix
+
+**Impact**: beide pagina's nu stabiel laadbaar; geen functionaliteitsverandering.
+
+---
+
+## UML-import: RuwUML-tussenformaat + parser/adapter-splitsing (2026-04-26)
+
+Derde slice van de UML-import-refactor. Doel: alle editor-conventies
+(stereotype-resolutie, ID-generatie, kleurkeuze, generalisatie-richting,
+edge-flags) op één plek concentreren, zodat de tekstuele parsers klein en
+puur blijven en bug-fixes niet drie keer hoeven te landen.
+
+### Nieuw: RuwUML als operationeel formaat
+- `web/vite/src/umleditor/import/ruwuml.js` is uitgebreid van een spec-only
+  bestand naar een volwaardige module: JSDoc-typedefs voor `RuwUMLModel` /
+  `RuwUMLNode` / `RuwUMLEdge` / `RuwUMLVeld`, plus een nieuwe
+  **`ruwUMLNaarEditor()`-adapter** die alle interpretatie naar editor-shape
+  doet (stereotype-mapping, ID/kleur/positie, edge-conversie,
+  auto-aanmaak van ontbrekende doel-nodes).
+- Nieuw uitgebreid ontwerpdocument: [`docs/RAWUML.md`](docs/RAWUML.md) met
+  het waarom, het formaat, de pijplijn en de motivatie waarom XMI buiten
+  RuwUML blijft.
+
+### Refactor: pure parsers
+- `importMermaid.js` is van 309 → ~175 regels gegaan: alleen tokenisatie en
+  block-parsing. `mermaidNaarRuw()` is nu apart geëxporteerd. `importVanMermaid`
+  is een 1-liner: `ruwUMLNaarEditor(mermaidNaarRuw(text))`.
+- `importPlantUML.js` op dezelfde manier herschreven (van 335 → ~175 regels,
+  `plantumlNaarRuw()` apart geëxporteerd).
+- `importXMI.js` blijft op zijn eigen pad — XMI heeft stabiele IDs, EA's
+  AssociationClass-patroon en MIM-tagged-values die direct op editor-vorm
+  mappen; een tussenstap zou informatie verliezen. Zie de uitleg in
+  `docs/RAWUML.md` §6.
+
+### Onveranderd
+- De orphan-helpers (`detecteerOrphans`, `pasOrphanActiesToe`) en de
+  OrphanDialog blijven ongewijzigd; ze werken op de editor-shape ná conversie
+  en zijn dus identiek bruikbaar voor alle drie de bronnen.
+
+## UML-editor + IDE: orphan-detectie bij UML-import + textuele formaten in IDE-importdialoog (2026-04-26)
+
+Tweede blok van de UML-import-refactor (zie `docs/ontwerpgedachten/KISS/VAC/2026-04-26 refactor uml to v3.md`). Doel: voorkomen dat losliggende GE/relatie-nodes na een UML-import stilletjes als "modelleerfout" in het canvas blijven hangen, en dezelfde Mermaid/PlantUML/XMI-bronnen ook vanuit de IDE kunnen worden ingelezen.
+
+### Nieuw: RuwUML-tussenformaat (JSDoc-spec) + orphan-helpers
+- `web/vite/src/umleditor/import/ruwuml.js` documenteert via JSDoc een neutraal tussenformaat (`RuwUMLModel`/`RuwUMLNode`/`RuwUMLEdge`) tussen de drie parsers en de editor. In deze iteratie is alleen de spec gevuld; de drie parsers blijven editor-shape produceren.
+- Twee runtime-helpers werken **direct op de editor-shape** (`{nodes, edges}`) en zijn dus meteen bruikbaar zonder parser-refactor:
+  - `detecteerOrphans(graaf)`: vindt GE-nodes zonder compositie-edge vanuit een entiteit en relatie-nodes zonder koppeling naar een entiteit/anker.
+  - `pasOrphanActiesToe(graaf, orphans, keuzes)`: voert per orphan de gekozen actie uit (`placeholder`, `overslaan`, `abort`) en geeft een nieuwe graaf + samenvattingsregels terug.
+- Placeholders krijgen een eigen kleur (`#fde68a`) en een vlag `isPlaceholder: true`.
+
+### Nieuw: OrphanDialog
+- `web/vite/src/umleditor/components/OrphanDialog.jsx` toont per orphan naam + reden + drie radio-keuzes en een bulk-actie-dropdown ("alles op …"). Bevestigen levert een `keuzes`-map op; annuleren breekt de hele import af.
+- Gestyled als overlay-modal in de bestaande IDE/editor-paletkleuren (geen nieuwe CSS-bestanden).
+
+### Editor-v2: import-handlers door één wrapper
+- `MetamodelEditor.jsx` heeft een nieuwe `importMetOrphanCheck(importerFn, accept, bron)`. De drie handlers (`handleImportXMI`, `handleImportMermaid`, `handleImportPlantUML`) zijn een 1-liner geworden die deze wrapper aanroepen. Bij orphans verschijnt de OrphanDialog; bij `abort` wordt er niets in het canvas geladen.
+
+### IDE-importdialoog: textuele UML-bronnen + auto-detect
+- `web/vite/src/ide/ImportDialog.jsx` accepteert nu naast V3/IDE-v1 JSON ook `.mmd`, `.md`, `.puml`, `.plantuml`, `.xmi`, `.xml` en `.txt`. Het formaat wordt automatisch bepaald op extensie en (bij ambigue extensies als `.md`/`.txt`/`.xml`) op een korte content-sniff (`classDiagram` → Mermaid, `@startuml` → PlantUML, `<XMI`/`<?xml` → XMI).
+- Voor textuele formaten wordt direct na het kiezen van het bestand de juiste parser gedraaid; orphans verschijnen in dezelfde `OrphanDialog` als in de editor. Daarna wordt de graaf via `editorNaarV3Model` omgezet naar V3 en als V3-bestand aan de bestaande IDE-importflow doorgegeven (de `onImport`-handler hoeft dus niets te weten van de bron-syntax).
+
+### Bewust niet in dit blok
+- De drie parsers leveren nog steeds editor-shape op; de RuwUML-conversie + gedeelde `ruwUMLNaarEditor`-adapter staat in een vervolgslice. De huidige orphan-laag werkt op de editor-shape, dus dit blokkeert geen nieuwe functionaliteit.
+- ENT→GE-cast en handmatige conversie naar associatieklasse blijven uitgesteld.
+
 ## UML-editor: import-roundtrip-bugs + stereotype-aliassen + ruwe save (2026-04-26)
 
 Eerste blok van de UML-import-refactor (zie `docs/ontwerpgedachten/KISS/VAC/2026-04-26 refactor uml to v3.md`). Dit blok lost concrete roundtrip-bugs op en voegt enkele kleine, defensieve uitbreidingen toe; de bredere architectuur-refactor (RuwUML-tussenformaat, IDE-integratie, placeholder-dialoog) volgt in een volgend blok.
@@ -29,6 +131,11 @@ Eerste blok van de UML-import-refactor (zie `docs/ontwerpgedachten/KISS/VAC/2026
 - **Oorzaak**: de HMR-handler in `main.jsx` triggerde alleen een volledige reload bij wijzigingen in `/uml-editor/src/` (oude editor-locatie) en `/web/vite/src/ide/`, niet bij `/web/vite/src/umleditor/` (de huidige editor-v2-module). Een partiële HMR-update liet React Flow met stale DOM-nodes achter; de eerstvolgende render gooide `Failed to execute 'removeChild' on 'Node'`.
 - **Fix**: `/web/vite/src/umleditor/` toegevoegd aan de `heeftDomIntensieveWijziging`-check, zodat wijzigingen in de editor-v2-module ook een volledige page-reload veroorzaken.
 - **Bestand**: `web/vite/src/main.jsx`.
+
+### Bug: `removeChild`-crash bij eerste paginalaad van editor-v2
+- **Echte oorzaak (al langer bestaand)**: `EditorV2Page` rendert eerst de editor met demo-data en doet daarna in een `useEffect` een fetch naar `/api/schema/versies`. Bij respons werd `setData(...)` én `setEditorKey(k+1)` aangeroepen om de editor met nieuwe data te remounten. Die geforceerde unmount-tijdens-startup race't met React Flow's interne DOM-cleanup (portals, observers); de reconciler ploft dan op `Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node`. Symptomen: foutoverlay direct na harde reload (Cmd+Shift+R), Vite herstarten "loste" het op omdat de timing dan toevallig weer goed viel.
+- **Fix**: editor wordt pas één keer gemount nádat de fetch klaar is (succes of fail-fallback naar demo). Tijdens het laden toont de pagina een lichte placeholder. `editorKey` is verwijderd; geen remount-trick meer nodig.
+- **Bestand**: `web/vite/src/pages/EditorV2Page.jsx`.
 
 ## UML-editor: Mermaid-import overerving + domeinmenu multi-selectie (2026-04-26)
 

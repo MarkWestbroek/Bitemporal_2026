@@ -1251,7 +1251,9 @@ body {
 
 /* Modal-venster */
 .expressie-editor-modal {
-  width: min(880px, 100%);
+  width: min(880px, 92vw);
+  min-width: 540px;
+  min-height: 360px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
@@ -1261,6 +1263,7 @@ body {
   color: #e2e8f0;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
   overflow: hidden;
+  resize: both;
 }
 
 /* Header — ook drag-handle */
@@ -1327,17 +1330,37 @@ body {
   border-right: 1px solid #334155;
 }
 
-/* Rechter kolom: variabelenpaneel */
+/* Rechter kolom: variabelenpaneel — breedte via inline style (versleepbaar) */
 .expressie-editor-modal__right {
-  width: 230px;
-  min-width: 180px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
   padding: 12px;
   overflow-y: auto;
   background: #111827;
+}
+
+/* Splitter: de versleepbare scheidingslijn tussen links en rechts */
+.expressie-editor-modal__splitter {
+  width: 5px;
   flex-shrink: 0;
+  cursor: col-resize;
+  background: #1e293b;
+  transition: background 0.15s;
+  position: relative;
+}
+
+.expressie-editor-modal__splitter::after {
+  content: '';
+  position: absolute;
+  inset: 0 -3px;
+  /* Vergroot klikgebied zodat je de splitter makkelijker pakt */
+}
+
+.expressie-editor-modal__splitter:hover,
+.expressie-editor-modal__splitter:active {
+  background: #3b82f6;
 }
 
 /* ── Code-editor (react-simple-code-editor in dark mode) ── */
@@ -1512,6 +1535,15 @@ body {
 
 .expressie-editor-modal__var-btn:hover {
   background: #1e293b;
+}
+
+/* Enum waarden krijgen een subtiel amber-tintje */
+.expressie-editor-modal__var-btn--enum .expressie-editor-modal__var-pad {
+  color: #fbbf24;
+}
+
+.expressie-editor-modal__vars-bron--enum {
+  color: #d97706;
 }
 
 .expressie-editor-modal__var-pad {

@@ -721,6 +721,13 @@ function DiagramCanvasInner({ diagramId }) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [toolbarLayouts, setToolbarLayouts] = useState(() => leesToolbarLayouts());
   const [activeEdgeMode, setActiveEdgeMode] = useState(EDGE_MODES.NONE);
+  // Defer ReactFlow één animatieframe na de initiële commit (zie MetamodelEditor
+  // voor de volledige uitleg van de ResizeObserver/concurrent-commit race).
+  const [reactFlowGereed, setReactFlowGereed] = useState(false);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setReactFlowGereed(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   // Escape-toets: reset edge-mode naar NONE.
   useEffect(() => {
@@ -2093,7 +2100,7 @@ function DiagramCanvasInner({ diagramId }) {
         </div>
       )}
 
-      <ReactFlow
+      {reactFlowGereed && <ReactFlow
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
@@ -2138,7 +2145,7 @@ function DiagramCanvasInner({ diagramId }) {
           zoomable
           style={{ height: 100, width: 140 }}
         />
-      </ReactFlow>
+      </ReactFlow>}
       {/* Node context menu */}
       {contextMenu && (() => {
         const selectedCount = nodes.filter((n) => n.selected).length;

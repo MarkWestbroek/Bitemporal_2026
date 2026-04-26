@@ -58,6 +58,49 @@ const TAAL_PRISM = {
   pseudo: null,      // Geen highlighting voor pseudo-code
 };
 
+// ── Helper: zoek enum-waarden op naam in een nodes-array ────────────────────
+function zoekEnumWaarden(enumNaam, nodes) {
+  const node = nodes.find((n) => {
+    const d = n.data || {};
+    const isEnum = n.type === "EnumeratieNode" || n.type === "enumeratie" ||
+      (Array.isArray(d.waarden) && d.waarden.length > 0 && !d.velden);
+    const naamMatch = d.naam === enumNaam || d.typenaam === enumNaam || d.klassenaam === enumNaam;
+    return isEnum && naamMatch;
+  });
+  return node?.data?.waarden ?? [];
+}
+
+// ── Helper: voeg velden + optionele enum-waarden toe aan de veldenlijst ──────
+// inclPrefix=false → eigen velden (simpele naam) + hidden gekwalificeerde alias
+// inclPrefix=true  → altijd prefixen (sibling / parent)
+function voegVeldenToe(velden, veldenLijst, bronNaam, inclPrefix, allNodesOfElements, verwerkteEnums) {
+  const nodes = allNodesOfElements
+    ? (Array.isArray(allNodesOfElements) ? allNodesOfElements : Object.values(allNodesOfElements))
+    : [];
+  for (const veld of veldenLijst || []) {
+    if (!veld.naam) continue;
+    const pad = inclPrefix ? `${bronNaam}.${veld.naam}` : veld.naam;
+    velden.push({ pad, type: veld.type || "string", bron: bronNaam });
+    if (!inclPrefix && bronNaam) {
+      // Hidden alias zodat TypeNaam.veldnaam ook geldig is wanneer je binnen dat type werkt
+      velden.push({ pad: `${bronNaam}.${veld.naam}`, type: veld.type || "string", bron: bronNaam, verborgen: true });
+    }
+    // Enum waarden (eenmalig per enum)
+    if (veld.enumNaam && verwerkteEnums && !verwerkteEnums.has(veld.enumNaam)) {
+      verwerkteEnums.add(veld.enumNaam);
+      for (const w of zoekEnumWaarden(veld.enumNaam, nodes)) {
+        velden.push({
+          pad: w,
+          type: "enumwaarde",
+          bron: veld.enumNaam,
+          soort: "enumwaarde",
+          invoegTekst: `"${w}"`,
+        });
+      }
+    }
+  }
+}
+
 // ── Syntaxvalidatie (lichtgewicht, design-time) ───────────────────────────────
 function valideerExpressie(expressie, taal, contextVelden) {
   if (!expressie || !expressie.trim()) return "";
@@ -107,24 +150,13 @@ export function berekenContextVelden(node, allNodes, edges) {
   if (!node) return [];
   const velden = [];
   const nodeData = node.data || {};
-
-  // Gebruik de UML-weergavenaam (klassenaam) als prefix, niet de Go-typenaam
   const eigenNaam = nodeData.klassenaam || nodeData.typenaam || "";
+  const verwerkteEnums = new Set();
 
-  // 1. Eigen velden — simpele namen, geen prefix
-  for (const veld of nodeData.velden || []) {
-    if (veld.naam) {
-      velden.push({
-        pad: veld.naam,
-        type: veld.type || "string",
-        bron: eigenNaam,
-      });
-    }
-  }
+  // 1. Eigen velden (simpele naam + hidden alias + enum waarden)
+  voegVeldenToe(velden, nodeData.velden, eigenNaam, false, allNodes, verwerkteEnums);
 
-  // 2. Zoek parent-entiteit via inkomende compositie-edges
-  //    (identificeer compositie door: bron=entiteit node, doel=dit node,
-  //     geen speciale flags zoals isAssociation / isDependency)
+  // 2. Parent zoeken via inkomende compositie-edges
   const inkomend = edges.filter(
     (e) =>
       e.target === node.id &&
@@ -138,7 +170,7 @@ export function berekenContextVelden(node, allNodes, edges) {
     const parent = allNodes.find((n) => n.id === edge.source);
     if (!parent) continue;
 
-    // 2a. Sibling-GEs: andere uitgaande compositie-edges van dezelfde parent
+    // 2a. Sibling-GEs
     const siblingEdges = edges.filter(
       (e) =>
         e.source === parent.id &&
@@ -151,30 +183,58 @@ export function berekenContextVelden(node, allNodes, edges) {
     for (const se of siblingEdges) {
       const sibling = allNodes.find((n) => n.id === se.target);
       if (!sibling?.data) continue;
-      // Gebruik de UML-weergavenaam (klassenaam) als prefix, niet de Go-typenaam
       const siblingNaam = sibling.data.klassenaam || sibling.data.typenaam;
       if (!siblingNaam) continue;
-      for (const veld of sibling.data.velden || []) {
-        if (veld.naam) {
-          velden.push({
-            pad: `${siblingNaam}.${veld.naam}`,
-            type: veld.type || "string",
-            bron: siblingNaam,
-          });
-        }
-      }
+      voegVeldenToe(velden, sibling.data.velden, siblingNaam, true, allNodes, verwerkteEnums);
     }
 
     // 2b. Velden van de parent-entiteit zelf
     const parentNaam = parent.data?.klassenaam || parent.data?.typenaam || "";
-    for (const veld of parent.data?.velden || []) {
-      if (veld.naam) {
-        velden.push({
-          pad: `${parentNaam}.${veld.naam}`,
-          type: veld.type || "string",
-          bron: parentNaam,
-        });
+    voegVeldenToe(velden, parent.data?.velden, parentNaam, true, allNodes, verwerkteEnums);
+  }
+
+  return velden;
+}
+
+// ── Context-variabelen berekenen vanuit de model store (IDE-context) ─────────
+/**
+ * Versie van berekenContextVelden die werkt met de Zustand model store
+ * in plaats van React Flow nodes/edges. Gebruikt in de IDE's DetailsPanel.
+ *
+ * @param {string} elementId      - ID van het geselecteerde element
+ * @param {object} elements       - map van id → element (uit useModelStore)
+ * @param {array}  structuralEdges - array van structurele edges (uit useModelStore)
+ * @returns {Array<{ pad: string, type: string, bron: string }>}
+ */
+export function berekenContextVeldenFromStore(elementId, elements, structuralEdges) {
+  const element = elements[elementId];
+  if (!element) return [];
+  const velden = [];
+  const eigenNaam = element.naam || "";
+  const verwerkteEnums = new Set();
+
+  // 1. Eigen velden (simpele naam + hidden alias + enum waarden)
+  voegVeldenToe(velden, element.data?.velden, eigenNaam, false, elements, verwerkteEnums);
+
+  // 2. Zoek parent via inkomende structurele edge
+  const parentEdge = structuralEdges.find((e) => e.target === elementId);
+  if (parentEdge) {
+    const parent = elements[parentEdge.source];
+    if (parent) {
+      const parentNaam = parent.naam || "";
+
+      // 2a. Sibling GEs
+      const siblingEdges = structuralEdges.filter(
+        (e) => e.source === parentEdge.source && e.target !== elementId
+      );
+      for (const se of siblingEdges) {
+        const sibling = elements[se.target];
+        if (!sibling?.naam) continue;
+        voegVeldenToe(velden, sibling.data?.velden, sibling.naam, true, elements, verwerkteEnums);
       }
+
+      // 2b. Velden van de parent-entiteit zelf
+      voegVeldenToe(velden, parent.data?.velden, parentNaam, true, elements, verwerkteEnums);
     }
   }
 
@@ -195,6 +255,12 @@ export default function ExpressieEditor({ value, taal, onChange, onClose, contex
   const dragStart = useRef({ x: 0, y: 0 });
   const didDrag = useRef(false);
 
+  // Splitter-state: breedte van het rechter variabelenpaneel
+  const [rightWidth, setRightWidth] = useState(230);
+  const isSplitting = useRef(false);
+  const splitterStartX = useRef(0);
+  const splitterStartWidth = useRef(0);
+
   // Container-ref: we zoeken de onderliggende <textarea> via DOM-query
   const containerRef = useRef(null);
 
@@ -205,10 +271,11 @@ export default function ExpressieEditor({ value, taal, onChange, onClose, contex
     [localValue, taal, contextVelden]
   );
 
-  // Groepeer context-velden per bron voor het rechter paneel
+  // Groepeer context-velden per bron — verborgen aliassen worden niet getoond
   const bronGroepen = useMemo(() => {
     const groepen = new Map();
     for (const v of contextVelden) {
+      if (v.verborgen) continue;
       const key = v.bron || "";
       if (!groepen.has(key)) groepen.set(key, []);
       groepen.get(key).push(v);
@@ -254,10 +321,11 @@ export default function ExpressieEditor({ value, taal, onChange, onClose, contex
     const filtered = contextVelden
       .filter(
         (v) =>
+          !v.verborgen &&
           v.pad.toLowerCase().startsWith(huidigWoord.toLowerCase()) &&
           v.pad !== huidigWoord
       )
-      .slice(0, 8);
+      .slice(0, 10);
 
     setSuggesties(filtered);
     setSelectedIdx(0);
@@ -269,7 +337,9 @@ export default function ExpressieEditor({ value, taal, onChange, onClose, contex
     const cursor = textarea?.selectionStart ?? localValue.length;
     const tekstVoor = localValue.slice(0, cursor);
     const huidigWoord = tekstVoor.match(/[\w.]+$/)?.[0] ?? "";
-    const nieuwVoor = tekstVoor.slice(0, tekstVoor.length - huidigWoord.length) + suggestie.pad;
+    // Enum waarden: invoegTekst bevat aanhalingstekens; anders het pad zelf
+    const invoegTekst = suggestie.invoegTekst ?? suggestie.pad;
+    const nieuwVoor = tekstVoor.slice(0, tekstVoor.length - huidigWoord.length) + invoegTekst;
     const nieuwVal = nieuwVoor + localValue.slice(cursor);
 
     setLocalValue(nieuwVal);
@@ -285,10 +355,11 @@ export default function ExpressieEditor({ value, taal, onChange, onClose, contex
   }
 
   // ── Variabele invoegen op cursor-positie (klik in rechter paneel) ──────
-  function voegInVariabele(pad) {
+  function voegInVariabele(pad, invoegTekst) {
+    const tekst = invoegTekst ?? pad;
     const textarea = containerRef.current?.querySelector("textarea");
     const cursor = textarea?.selectionStart ?? localValue.length;
-    const nieuwVal = localValue.slice(0, cursor) + pad + localValue.slice(cursor);
+    const nieuwVal = localValue.slice(0, cursor) + tekst + localValue.slice(cursor);
 
     setLocalValue(nieuwVal);
     onChange(nieuwVal);
@@ -297,7 +368,7 @@ export default function ExpressieEditor({ value, taal, onChange, onClose, contex
     requestAnimationFrame(() => {
       if (textarea) {
         textarea.focus();
-        const pos = cursor + pad.length;
+        const pos = cursor + tekst.length;
         textarea.setSelectionRange(pos, pos);
       }
     });
@@ -336,6 +407,12 @@ export default function ExpressieEditor({ value, taal, onChange, onClose, contex
   }, [modalPos]);
 
   const handleBackdropMouseMove = useCallback((e) => {
+    if (isSplitting.current) {
+      // Splitter verschuiven: cursor naar links = rechter kolom breder
+      const delta = splitterStartX.current - e.clientX;
+      setRightWidth(Math.max(160, Math.min(520, splitterStartWidth.current + delta)));
+      return;
+    }
     if (!isDragging.current) return;
     didDrag.current = true;
     setModalPos({
@@ -346,6 +423,7 @@ export default function ExpressieEditor({ value, taal, onChange, onClose, contex
 
   const handleBackdropMouseUp = useCallback(() => {
     isDragging.current = false;
+    isSplitting.current = false;
   }, []);
 
   const handleBackdropClick = useCallback((e) => {
@@ -355,6 +433,16 @@ export default function ExpressieEditor({ value, taal, onChange, onClose, contex
     }
     onClose();
   }, [onClose]);
+
+  // Splitter: start kolombreedteaanpassing
+  const handleSplitterMouseDown = useCallback((e) => {
+    isSplitting.current = true;
+    didDrag.current = true; // Voorkom backdrop-click bij loslaten
+    splitterStartX.current = e.clientX;
+    splitterStartWidth.current = rightWidth;
+    e.preventDefault();
+    e.stopPropagation();
+  }, [rightWidth]);
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
@@ -450,17 +538,19 @@ export default function ExpressieEditor({ value, taal, onChange, onClose, contex
             ) : null}
 
             {/* Hulptekst voor de geselecteerde taal */}
-            {taal === "cel" && (
+            {(taal === "cel" || taal === "expr") && (
               <div className="expressie-editor-modal__hint">
-                CEL: <code>+</code> tekst samenvoegen, <code>? :</code> ternary,{" "}
-                <code>!= null</code> null-check, <code>has(veld)</code> aanwezigheid.
-                Gebruik <code>TypeNaam.veldnaam</code> voor velden van gekoppelde types.
-              </div>
-            )}
-            {taal === "expr" && (
-              <div className="expressie-editor-modal__hint">
-                Expr: vergelijkbaar met CEL. Gebruik <code>TypeNaam.veldnaam</code>{" "}
-                voor velden.
+                <strong>CEL:</strong> <code>+</code> tekst, <code>? :</code> ternary,{" "}
+                <code>!= null</code> null-check, <code>has(veld)</code> aanwezigheid.<br />
+                <strong>Switch/case</strong> via chained ternary:<br />
+                <code style={{ display: "block", marginTop: 4, lineHeight: 1.7 }}>
+                  {`veld == "Waarde1" ? resultaat1 :`}<br />
+                  {`veld == "Waarde2" ? resultaat2 :`}<br />
+                  {`standaard`}
+                </code>
+                <span style={{ color: "#94a3b8", fontSize: "0.75rem" }}>
+                  Enum waarden staan rechts (klik = invoegen met aanhalingstekens).
+                </span>
               </div>
             )}
             {taal === "jsonlogic" && (
@@ -471,8 +561,14 @@ export default function ExpressieEditor({ value, taal, onChange, onClose, contex
             )}
           </div>
 
-          {/* Rechter kolom: beschikbare variabelen */}
-          <div className="expressie-editor-modal__right">
+          {/* Splitter: versleep om de kolomverhouding aan te passen */}
+          <div
+            className="expressie-editor-modal__splitter"
+            onMouseDown={handleSplitterMouseDown}
+          />
+
+          {/* Rechter kolom: beschikbare variabelen + enum waarden */}
+          <div className="expressie-editor-modal__right" style={{ width: rightWidth, minWidth: rightWidth }}>
             <div className="expressie-editor-modal__vars-header">Beschikbare variabelen</div>
 
             {bronGroepen.length === 0 ? (
@@ -483,28 +579,40 @@ export default function ExpressieEditor({ value, taal, onChange, onClose, contex
                 </span>
               </div>
             ) : (
-              bronGroepen.map(([bron, bVelden]) => (
-                <div key={bron} className="expressie-editor-modal__vars-groep">
-                  {bron && (
-                    <div className="expressie-editor-modal__vars-bron">{bron}</div>
-                  )}
-                  {bVelden.map((v) => (
-                    <button
-                      key={v.pad}
-                      className="expressie-editor-modal__var-btn"
-                      title={`Type: ${v.type} — klik om in te voegen op cursorpositie`}
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        voegInVariabele(v.pad);
-                      }}
-                    >
-                      <span className="expressie-editor-modal__var-pad">{v.pad}</span>
-                      <span className="expressie-editor-modal__var-type">{v.type}</span>
-                    </button>
-                  ))}
-                </div>
-              ))
+              bronGroepen.map(([bron, bVelden]) => {
+                const isEnumGroep = bVelden.some((v) => v.soort === "enumwaarde");
+                return (
+                  <div key={bron} className="expressie-editor-modal__vars-groep">
+                    {bron && (
+                      <div
+                        className={`expressie-editor-modal__vars-bron${isEnumGroep ? " expressie-editor-modal__vars-bron--enum" : ""}`}
+                        title={isEnumGroep ? `Enum: ${bron}` : undefined}
+                      >
+                        {isEnumGroep ? `◇ ${bron}` : bron}
+                      </div>
+                    )}
+                    {bVelden.map((v) => (
+                      <button
+                        key={v.pad}
+                        className={`expressie-editor-modal__var-btn${v.soort === "enumwaarde" ? " expressie-editor-modal__var-btn--enum" : ""}`}
+                        title={v.soort === "enumwaarde" ? `Enum waarde — inserts: "${v.pad}"` : `Type: ${v.type} — klik om in te voegen`}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          voegInVariabele(v.pad, v.invoegTekst);
+                        }}
+                      >
+                        <span className="expressie-editor-modal__var-pad">
+                          {v.soort === "enumwaarde" ? `"${v.pad}"` : v.pad}
+                        </span>
+                        <span className="expressie-editor-modal__var-type">
+                          {v.soort === "enumwaarde" ? "enum" : v.type}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                );
+              })
             )}
 
             <div className="expressie-editor-modal__vars-hint">

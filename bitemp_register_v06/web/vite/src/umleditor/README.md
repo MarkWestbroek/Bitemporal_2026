@@ -113,6 +113,23 @@ In XMI wordt naast `<<stereotype>>` ook de taggedValue `bitemp::metatype` herken
 
 **Associatie-promotie bij import (bewust niet)**: Mermaid en PlantUML produceren van nature directe entiteit↔entiteit-edges. Eerder is geprobeerd die direct na import te promoten naar het ASOC-patroon, maar dat is ingetrokken: het kan een eenvoudige UML-import onnodig zwaar maken, en een associatieklasse zonder velden hoort één enkele bubble (de relatie is het anker). De helper `promoteEntiteitAssociaties` blijft beschikbaar in `_helpers.js` voor toekomstig handmatig of opt-in gebruik. De ENT→GE-cast en handmatige conversie naar associatieklasse landen in een volgend blok.
 
+**Orphan-detectie bij import**: na het parsen van Mermaid, PlantUML of XMI loopt de geladen graaf door {@link import/ruwuml.js#detecteerOrphans}. Dit vindt:
+
+- gegevenselementen die geen compositie-edge vanuit een entiteit hebben;
+- relatie-nodes die geen koppeling naar een entiteit (of associatie-anker) hebben.
+
+Bij treffers verschijnt de **OrphanDialog** ([components/OrphanDialog.jsx](components/OrphanDialog.jsx)) met per orphan drie keuzes:
+
+| Actie | Effect |
+|---|---|
+| Placeholder-entiteit aanmaken | Maakt een entiteit `Placeholder_<naam>` (zachtgele kleur, `isPlaceholder: true`) en koppelt die via een compositie-edge (GE) of als bron+doel (relatie). |
+| Overslaan | Verwijdert de orphan-node + alle edges die hem aanraken uit de import. |
+| Hele import afbreken | Gooit een `ORPHAN_ABORT`-error; er wordt niets in het canvas geladen. |
+
+De bulk-keuzeknop onderin past dezelfde actie toe op alle orphans tegelijk. Dezelfde dialoog wordt ook hergebruikt door de **IDE-importdialoog** ([../ide/ImportDialog.jsx](../ide/ImportDialog.jsx)) wanneer daar een textueel UML-bestand binnenkomt.
+
+**RuwUML-tussenformaat (in opbouw)**: [import/ruwuml.js](import/ruwuml.js) bevat de JSDoc-spec van een neutraal tussenformaat (`RuwUMLModel`/`RuwUMLNode`/`RuwUMLEdge`) tussen de drie parsers en de editor. In deze iteratie zijn alleen de orphan-helpers daadwerkelijk in gebruik (op de editor-shape); een vervolgslice converteert de drie parsers eerst naar RuwUML en daarna via een gedeelde `ruwUMLNaarEditor` adapter — zodat stereotype-resolutie, ID-generatie en ASOC-mapping op één plek leven.
+
 Voor canvasinteracties is er een **kleine undo/redo-stack**: met `Ctrl + Z` kun je de laatste grafische acties terugdraaien, en met `Ctrl + Y` of `Ctrl + Shift + Z` zet je de laatste ongedaan gemaakte canvasactie weer terug. Dit geldt voor **verplaatsen**, **verbinden**, **verwijderen**, **uitlijnen** en **verdelen**. Deze sneltoetsen grijpen niet in als je in een invoerveld of tekstvak aan het typen bent; dan blijft de normale browser/input-undo gelden. Bewerkingen in het inhouds-/zijpaneel vallen bewust buiten deze canvas-undo.
 
 ### Edge-modus (Verbinding-tekenmodus)
@@ -179,9 +196,10 @@ src/
 │   └── exportXMI.js                 ← Editor → XMI 1.1 (incl. diagramposities)
 ├── import/
 │   ├── _helpers.js                 ← Gedeeld: stereotype-aliassen + ASOC-promotie
-│   ├── importXMI.js                 ← XMI 1.1 → Editor (incl. EA diagramposities)
-│   ├── importMermaid.js             ← Mermaid class diagram → Editor
-│   └── importPlantUML.js            ← PlantUML class diagram → Editor
+│   ├── ruwuml.js                   ← RuwUML JSDoc-spec + orphan-detectie/-acties
+│   ├── importXMI.js                ← XMI 1.1 → Editor (incl. EA diagramposities)
+│   ├── importMermaid.js            ← Mermaid class diagram → Editor
+│   └── importPlantUML.js           ← PlantUML class diagram → Editor
 ├── styles/
 │   └── editor.css
 ├── App.jsx

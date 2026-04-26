@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import useModelStore, { DEFAULT_DIAGRAM_ID } from "../store/useModelStore";
 import useUIStore from "../store/useUIStore";
+import ExpressieEditor, { berekenContextVeldenFromStore } from "@umleditor/components/panels/ExpressieEditor";
 import { VELDTYPEN, AFLEIDINGSTALEN, bouwVeldtypen } from "@umleditor/metamodel/types";
 
 // ─── Constanten ──────────────────────────────────────
@@ -161,7 +162,7 @@ function EditField({ label, value, onChange, type = "text", options, readOnly, p
 
 // ─── VeldenEditor — bewerkbare veldentabel met model-types ────
 
-function VeldenEditor({ velden = [], onChange, beschikbareVeldtypen }) {
+function VeldenEditor({ velden = [], onChange, beschikbareVeldtypen, elementId }) {
   const updateVeld = (index, key, val) => {
     const nieuw = velden.map((v, i) => (i === index ? { ...v, [key]: val } : v));
     onChange(nieuw);
@@ -206,6 +207,7 @@ function VeldenEditor({ velden = [], onChange, beschikbareVeldtypen }) {
             onUpdateMulti={updateVeldMulti}
             onRemove={removeVeld}
             onMove={moveVeld}
+            elementId={elementId}
           />
         ))
       )}
@@ -221,7 +223,7 @@ function veldTypeSelectValue(veld) {
   return `${veld.type || "string"}|${veld.format || ""}`;
 }
 
-function VeldEditBlock({ veld, index, total, beschikbareVeldtypen, onUpdate, onUpdateMulti, onRemove, onMove }) {
+function VeldEditBlock({ veld, index, total, beschikbareVeldtypen, onUpdate, onUpdateMulti, onRemove, onMove, elementId }) {
   const [naam, setNaam] = useState(veld.naam ?? "");
   const [desc, setDesc] = useState(veld.description ?? "");
   useEffect(() => { setNaam(veld.naam ?? ""); }, [veld.naam]);
@@ -312,32 +314,59 @@ function VeldEditBlock({ veld, index, total, beschikbareVeldtypen, onUpdate, onU
         )}
       </div>
       {isDerived && (
-        <VeldAfleidingsregel veld={veld} index={index} onUpdate={onUpdate} />
+        <VeldAfleidingsregel veld={veld} index={index} onUpdate={onUpdate} elementId={elementId} />
       )}
     </div>
   );
 }
 
-function VeldAfleidingsregel({ veld, index, onUpdate }) {
+function VeldAfleidingsregel({ veld, index, onUpdate, elementId }) {
   const [local, setLocal] = useState(veld.afleidingsregel ?? "");
   const [expanded, setExpanded] = useState(false);
+  const [expressieOpen, setExpressieOpen] = useState(false);
+  const elements = useModelStore((s) => s.elements);
+  const structuralEdges = useModelStore((s) => s.structuralEdges);
   useEffect(() => { setLocal(veld.afleidingsregel ?? ""); }, [veld.afleidingsregel]);
+  const contextVelden = useMemo(
+    () => elementId ? berekenContextVeldenFromStore(elementId, elements, structuralEdges) : [],
+    [elementId, elements, structuralEdges]
+  );
   return (
-    <div style={{ position: "relative", marginTop: 3 }}>
-      <textarea
-        value={local}
-        onChange={(e) => setLocal(e.target.value)}
-        onBlur={() => { if (local !== (veld.afleidingsregel ?? "")) onUpdate(index, "afleidingsregel", local); }}
-        style={{ ...S.textarea, fontSize: 11, minHeight: expanded ? 120 : 28, fontFamily: "monospace" }}
-        placeholder="Afleidingsregel…"
-        rows={expanded ? 6 : 1}
-      />
-      <button
-        onClick={() => setExpanded(!expanded)}
-        style={{ position: "absolute", top: 2, right: 4, background: "none", border: "none", color: "#888", cursor: "pointer", fontSize: 10 }}
-        title={expanded ? "Inklappen" : "Uitklappen"}
-      >{expanded ? "▲" : "▼"}</button>
-    </div>
+    <>
+      <div style={{ marginTop: 3 }}>
+        <textarea
+          value={local}
+          onChange={(e) => setLocal(e.target.value)}
+          onBlur={() => { if (local !== (veld.afleidingsregel ?? "")) onUpdate(index, "afleidingsregel", local); }}
+          style={{ ...S.textarea, fontSize: 11, minHeight: expanded ? 120 : 28, fontFamily: "monospace" }}
+          placeholder="Afleidingsregel…"
+          rows={expanded ? 6 : 1}
+        />
+        <div style={{ display: "flex", gap: 4, marginTop: 3 }}>
+          <button
+            type="button"
+            onClick={() => setExpressieOpen(true)}
+            style={{ ...S.btn, fontSize: 10, padding: "1px 6px" }}
+            title="Expressie bewerken met syntax-highlighting en autocomplete"
+          >✎ Bewerken</button>
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            style={{ background: "none", border: "none", color: "#888", cursor: "pointer", fontSize: 10 }}
+            title={expanded ? "Inklappen" : "Uitklappen"}
+          >{expanded ? "▲" : "▼"}</button>
+        </div>
+      </div>
+      {expressieOpen && (
+        <ExpressieEditor
+          value={local}
+          taal={veld.afleidingsregelTaal || "cel"}
+          contextVelden={contextVelden}
+          onChange={(v) => { setLocal(v); onUpdate(index, "afleidingsregel", v); }}
+          onClose={() => setExpressieOpen(false)}
+        />
+      )}
+    </>
   );
 }
 
@@ -418,7 +447,7 @@ function WaardeItem({ waarde, index, isLast, onUpdate, onRemove, onMove }) {
 
 // ─── AfgeleideVeldenEditor — bewerkbaar ───────────────
 
-function AfgeleideVeldenEditor({ afgeleideVelden = [], onChange }) {
+function AfgeleideVeldenEditor({ afgeleideVelden = [], onChange, elementId }) {
   const updateAV = (index, key, val) => {
     const nieuw = afgeleideVelden.map((av, i) => (i === index ? { ...av, [key]: val } : av));
     onChange(nieuw);
@@ -440,20 +469,27 @@ function AfgeleideVeldenEditor({ afgeleideVelden = [], onChange }) {
         <button style={S.btn} onClick={addAV}>+ Afgeleid veld</button>
       </div>
       {afgeleideVelden.map((av, i) => (
-        <AfgeleidVeldBlock key={i} av={av} index={i} onUpdate={updateAV} onRemove={removeAV} />
+        <AfgeleidVeldBlock key={i} av={av} index={i} onUpdate={updateAV} onRemove={removeAV} elementId={elementId} />
       ))}
     </div>
   );
 }
 
-function AfgeleidVeldBlock({ av, index, onUpdate, onRemove }) {
+function AfgeleidVeldBlock({ av, index, onUpdate, onRemove, elementId }) {
   const [naam, setNaam] = useState(av.naam ?? "");
   const [desc, setDesc] = useState(av.description ?? "");
   const [regel, setRegel] = useState(av.afleidingsregel ?? "");
   const [expanded, setExpanded] = useState(false);
+  const [expressieOpen, setExpressieOpen] = useState(false);
+  const elements = useModelStore((s) => s.elements);
+  const structuralEdges = useModelStore((s) => s.structuralEdges);
   useEffect(() => { setNaam(av.naam ?? ""); }, [av.naam]);
   useEffect(() => { setDesc(av.description ?? ""); }, [av.description]);
   useEffect(() => { setRegel(av.afleidingsregel ?? ""); }, [av.afleidingsregel]);
+  const contextVelden = useMemo(
+    () => elementId ? berekenContextVeldenFromStore(elementId, elements, structuralEdges) : [],
+    [elementId, elements, structuralEdges]
+  );
 
   return (
     <div style={{
@@ -490,7 +526,7 @@ function AfgeleidVeldBlock({ av, index, onUpdate, onRemove }) {
           {AFLEIDINGSTALEN.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
         </select>
       </div>
-      <div style={{ position: "relative" }}>
+      <div style={{ marginBottom: 3 }}>
         <textarea
           value={regel}
           onChange={(e) => setRegel(e.target.value)}
@@ -499,12 +535,30 @@ function AfgeleidVeldBlock({ av, index, onUpdate, onRemove }) {
           placeholder="Afleidingsregel"
           rows={expanded ? 6 : 2}
         />
-        <button
-          onClick={() => setExpanded(!expanded)}
-          style={{ position: "absolute", top: 2, right: 4, background: "none", border: "none", color: "#888", cursor: "pointer", fontSize: 10 }}
-          title={expanded ? "Inklappen" : "Uitklappen"}
-        >{expanded ? "▲" : "▼"}</button>
+        <div style={{ display: "flex", gap: 4, marginTop: 3 }}>
+          <button
+            type="button"
+            onClick={() => setExpressieOpen(true)}
+            style={{ ...S.btn, fontSize: 10, padding: "1px 6px" }}
+            title="Expressie bewerken met syntax-highlighting en autocomplete"
+          >✎ Bewerken</button>
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            style={{ background: "none", border: "none", color: "#888", cursor: "pointer", fontSize: 10 }}
+            title={expanded ? "Inklappen" : "Uitklappen"}
+          >{expanded ? "▲" : "▼"}</button>
+        </div>
       </div>
+      {expressieOpen && (
+        <ExpressieEditor
+          value={regel}
+          taal={av.afleidingsregelTaal || "cel"}
+          contextVelden={contextVelden}
+          onChange={(v) => { setRegel(v); onUpdate(index, "afleidingsregel", v); }}
+          onClose={() => setExpressieOpen(false)}
+        />
+      )}
       <label style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2, color: "#999", fontSize: 11 }}>
         <input
           type="checkbox"
@@ -859,7 +913,7 @@ function ElementEditor({ element, updateElement }) {
 
       {/* Velden editor (GE, Relatie) — met dynamische model-types */}
       {(type === "gegevenselement" || type === "relatie") && (
-        <VeldenEditor velden={data.velden} onChange={(v) => setData("velden", v)} beschikbareVeldtypen={beschikbareVeldtypen} />
+        <VeldenEditor velden={data.velden} onChange={(v) => setData("velden", v)} beschikbareVeldtypen={beschikbareVeldtypen} elementId={id} />
       )}
 
       {/* Enum waarden editor */}
@@ -901,7 +955,7 @@ function ElementEditor({ element, updateElement }) {
 
       {/* Afgeleide velden (entiteiten, GE's, relaties) */}
       {(type === "entiteit" || type === "gegevenselement" || type === "relatie") && (
-        <AfgeleideVeldenEditor afgeleideVelden={data.afgeleideVelden} onChange={(v) => setData("afgeleideVelden", v)} />
+        <AfgeleideVeldenEditor afgeleideVelden={data.afgeleideVelden} onChange={(v) => setData("afgeleideVelden", v)} elementId={id} />
       )}
     </div>
   );

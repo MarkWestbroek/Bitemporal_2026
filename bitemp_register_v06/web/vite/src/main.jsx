@@ -10,11 +10,27 @@ if (import.meta.hot) {
     const heeftDomIntensieveWijziging = Array.isArray(payload?.updates)
       && payload.updates.some((update) => {
         const pad = String(update?.path || "");
-        return pad.includes("/uml-editor/src/")
-          || pad.includes("/web/vite/src/umleditor/")
-          || pad.includes("/web/vite/src/ide/")
-          || pad.endsWith("/web/vite/src/pages/EditorV2Page.jsx")
-          || pad.endsWith("/web/vite/src/main.jsx");
+        // CSS- en asset-wijzigingen zijn veilig voor HMR en mogen partieel worden
+        // bijgewerkt. Alles wat React-componentbomen of Zustand-stores raakt, kan
+        // echter React Flow's interne DOM-staat (portals, observers) corrumperen als
+        // het via een partiële HMR-update binnenkomt — vandaar de brede matchlijst.
+        if (pad.endsWith(".css") || pad.endsWith(".svg") || pad.endsWith(".png")
+          || pad.endsWith(".jpg") || pad.endsWith(".jpeg") || pad.endsWith(".gif")
+          || pad.endsWith(".webp") || pad.endsWith(".woff") || pad.endsWith(".woff2")) {
+          return false; // CSS/assets: altijd veilig als HMR
+        }
+        return (
+          pad.includes("/uml-editor/src/")          // legacy editor locatie
+          || pad.includes("/web/vite/src/umleditor/") // editor-v2 module
+          || pad.includes("/web/vite/src/ide/")       // IDE-laag (DiagramCanvas etc.)
+          || pad.includes("/web/vite/src/pages/")     // alle pagina's (IdePage, EditorV2Page…)
+          || pad.includes("/web/vite/src/store/")     // Zustand stores
+          || pad.includes("/web/vite/src/context/")   // React context
+          || pad.endsWith("/web/vite/src/App.jsx")
+          || pad.endsWith("/web/vite/src/main.jsx")
+          || pad.endsWith("/web/vite/src/v3ModelNaarEditor.js")
+          || pad.endsWith("/web/vite/src/demoV3Model.js")
+        );
       });
 
     if (heeftDomIntensieveWijziging) {

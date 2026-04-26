@@ -31,8 +31,14 @@ function haalModelIdUitUrl(url) {
 }
 
 export default function EditorV2Page() {
-  const [data, setData] = useState(defaultData);
-  const [editorKey, setEditorKey] = useState(0);
+  // Belangrijk: we mounten MetamodelEditor pas NA de initiële DB-fetch.
+  // Eerder werd de editor eerst met demo-data gerenderd en daarna via een
+  // `editorKey++` geforceerd geremount zodra de DB-data binnen was.
+  // Die unmount-tijdens-startup raakt vaak in een race met React Flow's
+  // interne DOM-cleanup (portals, observers) en geeft dan
+  // "Failed to execute 'removeChild' on 'Node'". Door eenmalig te mounten
+  // met de definitieve data is die race verdwenen.
+  const [data, setData] = useState(null); // null = nog aan het laden
   const [modelBron, setModelBron] = useState("demo"); // toon herkomst in toolbar
   const [modelNaam, setModelNaam] = useState(demoV3Model.naam || "onbekend-model");
   const [modelVersie, setModelVersie] = useState(demoV3Model.versie || "v3");
@@ -50,7 +56,15 @@ export default function EditorV2Page() {
   }, []);
 
   // ── Bij opstart: probeer het nieuwste model uit de database te laden ──
+  // Pas NA dit effect (succes of fail) wordt de editor één keer gemount.
   useEffect(() => {
+    let geannuleerd = false;
+    const valTerugOpDemo = (reden) => {
+      if (geannuleerd) return;
+      if (reden) console.warn("Kon nieuwste model niet laden uit DB, gebruik demo:", reden);
+      setData(defaultData);
+    };
+
     const base = apiBase();
     fetch(`${base}/api/schema/versies`)
       .then((r) => {
@@ -70,17 +84,37 @@ export default function EditorV2Page() {
         });
       })
       .then((response) => {
+        if (geannuleerd) return;
         const v3 = response.model || response;
         const result = v3ModelNaarEditor(v3);
-        setData(result);
-        setEditorKey((k) => k + 1);
         pasModelMetadataToe(response);
+        setData(result);
       })
-      .catch((err) => {
-        console.warn("Kon nieuwste model niet laden uit DB, gebruik demo:", err.message);
-        // Blijf bij het demomodel
-      });
-  }, []);
+      .catch((err) => valTerugOpDemo(err?.message || String(err)));
+
+    return () => { geannuleerd = true; };
+  }, [pasModelMetadataToe]);
+
+  // Eerste render zonder data: toon een lichte placeholder. Geen MetamodelEditor
+  // mounten voordat we weten wat er in moet — anders krijg je het
+  // mount→unmount→remount-patroon dat React Flow niet verdraagt.
+  if (data === null) {
+    return (
+      <div
+        style={{
+          width: "100vw",
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "system-ui, -apple-system, Segoe UI, sans-serif",
+          color: "#64748b",
+        }}
+      >
+        Editor v2 wordt geladen…
+      </div>
+    );
+  }
 
   return (
     <div
@@ -92,7 +126,6 @@ export default function EditorV2Page() {
       }}
     >
       <MetamodelEditor
-        key={editorKey}
         initialNodes={data.nodes}
         initialEdges={data.edges}
         onV3ModelLoaded={pasModelMetadataToe}

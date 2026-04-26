@@ -65,6 +65,8 @@ import { exportNaarXMI } from "../export/exportXMI";
 import { importVanXMI } from "../import/importXMI";
 import { importVanMermaid } from "../import/importMermaid";
 import { importVanPlantUML } from "../import/importPlantUML";
+import { detecteerOrphans, pasOrphanActiesToe } from "../import/rawuml";
+import OrphanDialog from "./OrphanDialog";
 
 // Data helpers
 import {
@@ -273,6 +275,9 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   const [showTestInvoer, setShowTestInvoer] = useState(false);
   const [laatstGepubliceerdSchemaID, setLaatstGepubliceerdSchemaID] = useState(null);
   const [actieDialoog, setActieDialoog] = useState(null);
+  // OrphanDialog-state: { orphans, graaf, bron } of null. Wordt gevuld door
+  // importMetOrphanCheck wanneer Mermaid/PlantUML/XMI orphans bevatten.
+  const [orphanDialoog, setOrphanDialoog] = useState(null);
   const [actiefDomein, setActiefDomein] = useState(null); // null = alles tonen
   // Kleine undo/redo-stack voor canvasacties; inhoudspaneel-bewerkingen vallen hier bewust buiten.
   const undoStackRef = useRef([]);
@@ -283,6 +288,16 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   const [contextMenu, setContextMenu] = useState(null);
   // Actieve edge-mode: EDGE_MODES.NONE = auto-detectie, anders override.
   const [activeEdgeMode, setActiveEdgeMode] = useState(EDGE_MODES.NONE);
+  // Defer ReactFlow één animatieframe na de initiële commit om de race tussen
+  // React 18's concurrent commit-fase en XyFlow's ResizeObserver te voorkomen.
+  // Zonder deze defer vuurt ResizeObserver synchroon tijdens de commit en
+  // probeert XyFlow DOM-nodes te verwijderen die React nog niet volledig heeft
+  // overgedragen → "removeChild: node is not a child" crash.
+  const [reactFlowGereed, setReactFlowGereed] = useState(false);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setReactFlowGereed(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
   const canvasRef = useRef(null);
   const reactFlowRef = useRef(null);
 
@@ -2324,41 +2339,76 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
     });
   }, []);
 
-  const handleImportXMI = useCallback(async () => {
-    const text = await leesBestandAlsTekst(".xmi,.xml");
-    if (!text) return;
-    try {
-      const result = importVanXMI(text);
-      applyLoadedGraph(result);
-    } catch (err) {
-      console.error("XMI import mislukt:", err);
-      alert(`XMI import mislukt: ${err.message}`);
-    }
-  }, [leesBestandAlsTekst, applyLoadedGraph]);
+  /**
+   * Generieke import-wrapper: na het parsen door {@link importerFn} wordt
+   * gecontroleerd of er losliggende GE/relatie-nodes (orphans) zijn. Bij
+   * treffers wordt de OrphanDialog getoond zodat de gebruiker per orphan kan
+   * kiezen tussen placeholder-entiteit / overslaan / abort.
+   */
+  const importMetOrphanCheck = useCallback(
+    async (importerFn, accept, bronLabel) => {
+      const text = await leesBestandAlsTekst(accept);
+      if (!text) return;
+      let graaf;
+      try {
+        graaf = importerFn(text);
+      } catch (err) {
+        console.error(`${bronLabel} import mislukt:`, err);
+        alert(`${bronLabel} import mislukt: ${err.message}`);
+        return;
+      }
+      const orphans = detecteerOrphans(graaf);
+      if (orphans.length === 0) {
+        applyLoadedGraph(graaf);
+        return;
+      }
+      setOrphanDialoog({ orphans, graaf, bron: bronLabel });
+    },
+    [leesBestandAlsTekst, applyLoadedGraph]
+  );
 
-  const handleImportMermaid = useCallback(async () => {
-    const text = await leesBestandAlsTekst(".mmd,.md,.txt");
-    if (!text) return;
-    try {
-      const result = importVanMermaid(text);
-      applyLoadedGraph(result);
-    } catch (err) {
-      console.error("Mermaid import mislukt:", err);
-      alert(`Mermaid import mislukt: ${err.message}`);
-    }
-  }, [leesBestandAlsTekst, applyLoadedGraph]);
+  const handleImportXMI = useCallback(
+    () => importMetOrphanCheck(importVanXMI, ".xmi,.xml", "XMI"),
+    [importMetOrphanCheck]
+  );
+  const handleImportMermaid = useCallback(
+    () => importMetOrphanCheck(importVanMermaid, ".mmd,.md,.txt", "Mermaid"),
+    [importMetOrphanCheck]
+  );
+  const handleImportPlantUML = useCallback(
+    () => importMetOrphanCheck(importVanPlantUML, ".puml,.plantuml,.txt", "PlantUML"),
+    [importMetOrphanCheck]
+  );
 
-  const handleImportPlantUML = useCallback(async () => {
-    const text = await leesBestandAlsTekst(".puml,.plantuml,.txt");
-    if (!text) return;
-    try {
-      const result = importVanPlantUML(text);
-      applyLoadedGraph(result);
-    } catch (err) {
-      console.error("PlantUML import mislukt:", err);
-      alert(`PlantUML import mislukt: ${err.message}`);
-    }
-  }, [leesBestandAlsTekst, applyLoadedGraph]);
+  const bevestigOrphanDialoog = useCallback(
+    (keuzes) => {
+      if (!orphanDialoog) return;
+      try {
+        const { nodes: nieuweNodes, edges: nieuweEdges, samenvatting } =
+          pasOrphanActiesToe(orphanDialoog.graaf, orphanDialoog.orphans, keuzes);
+        applyLoadedGraph({ nodes: nieuweNodes, edges: nieuweEdges });
+        if (samenvatting && samenvatting.length > 0) {
+          console.info(
+            `${orphanDialoog.bron} import — orphan-acties:\n - ` +
+              samenvatting.join("\n - ")
+          );
+        }
+      } catch (err) {
+        if (err && err.code === "ORPHAN_ABORT") {
+          console.warn(err.message);
+          alert(err.message);
+        } else {
+          console.error("Orphan-acties toepassen mislukt:", err);
+          alert(`Orphan-acties toepassen mislukt: ${err.message}`);
+        }
+      } finally {
+        setOrphanDialoog(null);
+      }
+    },
+    [orphanDialoog, applyLoadedGraph]
+  );
+
+  const annuleerOrphanDialoog = useCallback(() => setOrphanDialoog(null), []);
 
   /**
    * MiniMap nodeColor: kleurt de minimap-nodes op basis van het metatype.
@@ -2451,6 +2501,14 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         onSubmit={submitActieDialoog}
       />
 
+      {orphanDialoog && (
+        <OrphanDialog
+          orphans={orphanDialoog.orphans}
+          onBevestig={bevestigOrphanDialoog}
+          onAnnuleer={annuleerOrphanDialoog}
+        />
+      )}
+
       <div className="editor-main">
         {/* Het React Flow canvas — dit is waar de magie gebeurt */}
         <div className={`editor-canvas${activeEdgeMode !== EDGE_MODES.NONE ? ` ${activeEdgeMode.cursorClass}` : ""}`} ref={canvasRef}>
@@ -2460,7 +2518,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
               <span style={{ opacity: 0.7, fontSize: "11px" }}>(Esc om te annuleren)</span>
             </div>
           )}
-          <ReactFlow
+          {reactFlowGereed && <ReactFlow
             nodes={visueleNodes}
             edges={edges}
             onNodesChange={onNodesChange}
@@ -2501,7 +2559,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
 
             {/* Domein boundary: gestippelde rectangle om actief domein */}
             <DomeinBoundaryOverlay boundary={domeinBoundary} domein={actiefDomein} />
-          </ReactFlow>
+          </ReactFlow>}
           {contextMenu && (
             <ContextMenu
               x={contextMenu.x}

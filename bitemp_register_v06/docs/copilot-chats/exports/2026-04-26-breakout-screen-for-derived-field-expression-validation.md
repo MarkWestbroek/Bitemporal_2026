@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-26 20:46
 - **Sessie-ID**: `ff97f520-f821-41da-9704-68e9bb6cd73b`
-- **Berichten**: 7
+- **Berichten**: 16
 
 ---
 
@@ -180,5 +180,207 @@ Technisch kan  ook vanuit de IDE-pagina (`IdePage`) worden aangeroepen — de co
 ## 🧑 User
 
 ja, graag
+
+---
+
+## 🤖 Assistant
+
+Nu heb ik alles wat ik nodig heb. Ik zoek nog hoe het geselecteerde element eruitziet en of er sibling-velden beschikbaar zijn via de store: Ik heb nu een volledig beeld. Ik kijk nog snel naar  en `VeldRij` om de prop-keten te begrijpen: Goed overzicht. Nu bekijk ik de exacte regels voor de prop-keten en check of  beschikbaar is in de store: Ik heb nu alles wat ik nodig heb. De aanpak:
+1. Exporteer `berekenContextVeldenFromStore` uit  (werkt met model store ipv React Flow nodes)
+2. Integreer in : zowel  als  
+```
+
+```
+
+```
+
+```
+Nu de 10 aanpassingen in  in één keer: 
+```
+
+```
+Build schoon.  is licht gegroeid (+1,2 kB) door de integratie.
+
+---
+
+De  is licht gegroeid (+1,2 kB) door de integratie.
+
+---
+
+De `✎ Bewerken`-knop staat nu op twee plekken in de IDE:
+
+1. **Veld-niveau** () — bij elk regulier veld met , onder de inline-textarea
+2. **Afgeleid-veld-blok** () — in elk `AfgeleideVelden`-item
+
+**Context-velden in de IDE-versie** worden berekend via :
+- Eigen velden van het geselecteerde type (simpele namen)
+- Sibling-GEs via  → veldnamen met `TypeNaam.` prefix (de /klassenaam, niet de Go-typenaam)
+- Velden van de parent-entiteit
+
+Het modal is identiek aan de UML-editor versie: zelfde syntax-highlighting, autocomplete, validatie en drag-functionaliteit. Alleen de manier waarop de context wordt samengesteld verschilt (model store vs. React Flow graph).
+
+---
+
+## 🧑 User
+
+Ziet er goed uit.
+twee vragen:
+1. Weet je zeker dat als je in Naam bent, de klassenaam weggelaten kan worden? Ik moet rebuilden om dat te testen. Is veel werk.
+2. Heeft CEL een soort switch-case statement? Dat zou voor het reageren op enums erg handig zijn. Als dat er is, kan dat gebouwd worden? Dus in de editor en in de evaluator.
+- subvraag: kunnen de enum waarden dan ook auto-complete?
+
+---
+
+## 🤖 Assistant
+
+Laat me eerst de exacte staat lezen van de relevante secties, dan beantwoord ik vraag 1 direct vanuit de code:  Nu heb ik alles. Antwoord op vraag 1 direct vanuit de code:
+
+**Vraag 1:** Er is een bug. Wanneer je binnen `Naam` bent, worden eigen velden opgeslagen als `"roepnaam"` (geen prefix). Als je dan `Naam.roepnaam` schrijft, staat dat NIET in  en krijg je onterecht "Onbekend veld". Ik fix dit door beide vormen toe te voegen.
+
+**Vraag 2:** CEL heeft geen switch/case, maar chained ternaries zijn het equivalent. Ik voeg dit toe aan de hint én implementeer enum-autocomplete. Te groot als één batch. Ik doe het in Te groot als één batch. Ik doe het in twee: 
+```
+
+```
+Goed — de 4e vervanging sloeg niet aan omdat de store-functie eerder in de sessie al was aangepast maar daarna toch niet volledig. Ik doe die twee resterende vervangingen apart:  
+```
+
+```
+ is al goed. Nu de autocomplete-filter,  en : 
+```
+
+```
+Nu CEL-hint + rechter paneel:  
+```
+
+```
+Nu CSS voor de enum-stijlen en dan de build:   
+```
+
+```
+Build geslaagd. Hier is een overzicht van wat er is geïmplementeerd:
+
+**Validatie-alias fix**  
+Eigen velden worden nu dubbel opgeslagen: `roepnaam` (voor CEL-gebruik) én een hidden `Naam.roepnaam` (enkel voor validatie). Schrijven `Naam.roepnaam` in de editor geeft niet langer een valse foutmelding.
+
+**Enum waarden in context**  
+Als een veld  heeft, worden de enum-waarden automatisch opgehaald uit de grafiek/store en toegevoegd als aparte entries met  en .
+
+**Autocomplete + invoegen**  
+- Verborgen aliassen worden gefilterd uit de dropdown (max 10 in plaats van 8)  
+- Klikken op een enum-waarde voegt `"Waarde"` in (met aanhalingstekens) via 
+
+**Rechter variabelenpaneel**  
+Enum-groepen worden getoond met `◇ EnumNaam` header (amber) en waarden als `"Waarde1"`, `"Waarde2"` (geel-amber tekst).
+
+**CEL hint**  
+Gecombineerd voor CEL + expr, inclusief switch/case chained ternary voorbeeld.
+
+---
+
+## 🧑 User
+
+wil je dit nog duidelijk documenteren?
+
+---
+
+## 🤖 Assistant
+
+Nu heb ik genoeg context. Ik ga de sectie "Codestructuur en bestanden > UI-componenten" en de CEL-syntaxsectie bijwerken met de nieuwe  functionaliteit: 
+```
+
+```
+Nu de codestructuurstabel bijwerken met de nieuwe bestanden: 
+```
+
+```
+Nu de inhoudsopgave bijwerken: 
+```
+
+```
+ is bijgewerkt met:
+
+1. **Inhoudsopgave** — twee nieuwe entries: CEL switch/case en ExpressieEditor
+2. **CEL switch/case sectie** — uitleg chained ternary als switch-equivalent, met voorbeeld voor naamgebruik-enum
+3. **Enum-velden sectie** — waarschuwing dat enum-waarden als strings (`"Actief"`) moeten worden vergeleken, niet als identifier
+4. **UI-componenten tabel** — `NodeEditPanel` en `DetailsPanel` bijgewerkt met vermelding van de ✎ Bewerken-knop;  toegevoegd als aparte rij
+5. **Nieuwe sectie: ExpressieEditor breakout-modal** — volledige beschrijving van alle features (syntax highlighting, autocomplete, contextpaneel, enum-weergave, validatie-alias, drag, invoegen), met uitleg van de context-berekening en een overzicht van geëxporteerde functies
+
+---
+
+## 🧑 User
+
+ziet er goed uit. Zou je nog 1 ding willen doen: kanhet schermpje resizeable? Nu valt er vaak een deel van de variabele namen rechts er af. Of het middenstuk verschuifbaar, kan ook. Of beide :-)
+
+---
+
+## 🤖 Assistant
+
+Nu ik de structuur volledig begrijp: ik implementeer beide tegelijk — een **versleepbare splitter** tussen de kolommen én een **resize-handle** op de modal Nu ik de structuur volledig begrijp: ik implementeer beide tegelijk — een **versleepbare splitter** tussen de kolommen én een **resize-handle** op de modal zelf (CSS `resize: both`).  
+```
+
+```
+Nu de CSS: 
+```
+
+```
+Splitter hover-kleur toevoegen na de splitter styles:  
+```
+
+```
+
+```
+
+```
+Build geslaagd. Twee dingen zijn nu toegevoegd:
+
+**Versleepbare splitter**  
+Een dunne `5px` scheidingslijn tussen de code-editor en het variabelenpaneel. Slepen naar links maakt het rechterpaneel breder (min 160px, max 520px). Bij hoveren licht de splitter blauw op.
+
+**Resizable modal**  
+`resize: both` op de modal zelf — het standaard browser resize-handvat verschijnt rechtsonder. Zo kun je de hele modal groter of kleiner maken. Minimumgrootte: 540×360px.
+
+---
+
+## 🧑 User
+
+super. Dank!
+
+Nog wel 1 vraag: hoe moeilijk zou het zijn om het thema mee te laten bewegen met donker of licht in de basis-editor?
+- editor-v2 heeft nu alleen licht (al dacht ik dat we daar ook een switch gemaakt hadden, maar ben daar niet meer zeker van; de knop is er daar iid niet)
+- IDE heeft een switch
+
+---
+
+## 🤖 Assistant
+
+Eerlijk antwoord: **niet heel moeilijk, maar wel ~1-2 uur** werk.
+
+### Wat er nodig is
+
+| Stap | Werk | Toelichting |
+|------|------|-------------|
+| **Zustand store** | ✅ al klaar | `useUIStore` met `theme` + `toggleTheme` bestaat al; slaat op in localStorage |
+| **Toggle-knop in Eerlijk antwoord: **niet heel moeilijk, maar wel ~1-2 uur** werk.
+
+### Wat er nodig is
+
+| Stap | Werk | Toelichting |
+|------|------|-------------|
+| **Zustand store** | ✅ al klaar | `useUIStore` met `theme` + `toggleTheme` bestaat al; slaat op in localStorage |
+| **Toggle-knop in UML-editor** | ~5 min | Zelfde sun/moon patroon als IDE, toevoegen in `Toolbar.jsx` |
+| **UML-editor volgt store** | ~10 min | `useUIStore` inlezen in `MetamodelEditor.jsx`, `data-uml-theme` op root-div zetten |
+| **CSS-variabelen in editor.css** | **~1-2 uur** | Dit is het echte werk: alle ~400 hardcoded kleuren omzetten naar `--uml-*` variabelen met twee thema-blokken |
+
+### De bottleneck: editor.css
+
+De IDE heeft dit al goed: 40+ `--ide-*` variabelen in twee blokken (`body[data-ide-theme="dark"]` / `"light"`). De UML-editor heeft nóg geen variabelen — alle kleuren staan als losse hex-waarden door de CSS.
+
+### Handige bijkomstigheid
+
+Doordat `useUIStore` al localStorage gebruikt, hoeft er maar één toggle-knop te zijn (bijv. alleen in de IDE). Je opent de UML-editor in een nieuw tabblad → die leest het thema direct uit localStorage en zit gelijk aan.
+
+### Conclusie
+
+Als je het wilt doen: ik kan het opzetten. De CSS-refactor is het enige dat echt aandacht vraagt — maar het is geen architectuurwijziging, puur zoek/vervang-werk met goede structuur.
 
 ---
