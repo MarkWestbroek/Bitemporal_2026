@@ -68,7 +68,8 @@ De editor kan het bestaande model inladen vanuit de **schema-API** (`/schema`) v
 | **Edge optimaliseren** | Dubbelklik op een lijn → handles worden herberekend voor kortste route |
 | **Gebiedsselectie** | Shift + sleep op canvas → rubber-band selectie van meerdere nodes |
 | **Multi-selectie** | Ctrl + klik op nodes om ze individueel bij de selectie te voegen |
-| **Uitlijnen / verdelen** | Selecteer 2+ nodes → rechtsklik voor `Links`, `Centreer`, `Rechts`, `Boven`, `Midden`, `Onder`; bij 3+ ook `Verdeel gelijk ↕` en `Verdeel gelijk ↔` |
+| **Uitlijnen / verdelen** | Selecteer 2+ nodes → rechtsklik voor `Links`, `Centreer`, `Rechts`, `Boven`, `Midden`, `Onder`; bij 3+ ook `Verdeel gelijk ↕` en `Verdeel gelijk ↔` |;
+wanneer de selectie model-nodes bevat (entiteit / GE / relatie / etc.) verschijnt onderaan hetzelfde menu ook een **Domein wijzigen**-sectie |
 | **Dependency verbergen / tonen** | Rechtsklik op een stippellijn `«use»` → `Verberg deze dependency`; rechtsklik op enum/gegevenstype → `Verberg dependencies` of `Toon dependencies` |
 | **Undo canvas-acties** | `Ctrl + Z` → maakt de laatste canvasactie ongedaan (kleine undo-stack, o.a. verplaatsen, verbinden, verwijderen, uitlijnen en verdelen) |
 | **Redo canvas-acties** | `Ctrl + Y` (of `Ctrl + Shift + Z`) → zet de laatste ongedaan gemaakte canvasactie opnieuw terug |
@@ -84,7 +85,7 @@ De editor kan het bestaande model inladen vanuit de **schema-API** (`/schema`) v
 | **Import Mermaid** | Toolbar: 📥 Mermaid → laad `.mmd`/`.md`/`.txt` bestand |
 | **Import PlantUML** | Toolbar: 📥 PlantUML → laad `.puml`/`.plantuml`/`.txt` bestand |
 
-Bij gebiedsselectie kan React Flow naast nodes ook relaties/edges als geselecteerd markeren. Het rechtsklikmenu voor uitlijnen blijft dan toch beschikbaar; de bewerking wordt bewust alleen op de geselecteerde nodes toegepast.
+Bij gebiedsselectie kan React Flow naast nodes ook relaties/edges als geselecteerd markeren. Het rechtsklikmenu voor uitlijnen blijft dan toch beschikbaar; de bewerking wordt bewust alleen op de geselecteerde nodes toegepast. Bevat de selectie ook model-nodes (entiteit/GE/relatie), dan is onderin hetzelfde uitlijnmenu ook de **Domein wijzigen**-sectie zichtbaar, zodat beide acties via één rechtsklik beschikbaar zijn.
 
 Voor **dependency-edges** (`«use»`, stippellijnen) is er daarnaast een tweede rechtsklikpad: je kunt een losse dependency direct verbergen, of op een enum/gegevenstype alle inkomende dependencies in één keer verbergen of weer tonen. Dit is handig in drukkere diagrammen waar dezelfde datatype- of enum-node op veel plekken wordt gebruikt.
 

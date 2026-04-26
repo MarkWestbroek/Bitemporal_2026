@@ -1,5 +1,19 @@
 # Release checklist
 
+## UML-editor: Mermaid-import overerving + domeinmenu multi-selectie (2026-04-26)
+
+### Bug: Mermaid import herkende generalisatiepijlen niet
+- **Oorzaak**: het regex-patroon voor pijlsyntax (`[\ \-\.\*<>o]+`) bevatte geen `|`, waardoor `<|--` en `--|>` pijlen (generalisatie/overerving) stil werden genegeerd en geen edge aanmaakten.
+- **Fix**: `|` toegevoegd aan de tekenklasse in `importMermaid.js` → `[\ \-\.\*<>o|]+`. Generalisatie-edges worden nu correct herkend en als `isGeneralization: true` edge aangemaakt.
+- **Bestand**: `web/vite/src/umleditor/import/importMermaid.js`
+
+### Verbetering: domein wijzigen toegankelijk bij multi-selectie met edges
+- **Probleem**: bij een selectie van meerdere nodes én edges vuurt React Flow `onSelectionContextMenu` in plaats van `onNodeContextMenu`. Hierdoor was het domein-wijzigen-menu niet bereikbaar via rechtsklik op een multi-selectie.
+- **Fix**: `toonContextMenu` detecteert nu of de selectie model-nodes bevat (`heeftDomeinWijziging`-vlag). `ContextMenu` toont in het uitlijnmenu onderaan een **Domein wijzigen**-sectie (met bestaande domein-snelknoppen + vrij invoerveld) wanneer deze vlag actief is.
+- **Bestanden**: `MetamodelEditor.jsx`, `ContextMenu.jsx`
+
+---
+
 Korte checklist voor een API-release met losse DB-stack.
 
 ## Replay: betere foutdiagnose + preview; fix GE-veldnaam-disambiguatie (2026-04-19)

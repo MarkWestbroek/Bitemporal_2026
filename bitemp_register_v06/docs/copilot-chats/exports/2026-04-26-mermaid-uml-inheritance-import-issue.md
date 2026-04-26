@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-26 13:02
 - **Sessie-ID**: `a23e9df4-1427-44d4-a4e4-58ed70e6e000`
-- **Berichten**: 7
+- **Berichten**: 9
 
 ---
 
@@ -87,5 +87,28 @@ The issue is that when multiple nodes are selected, React Flow fires  instead of
 Now I also need to pass  at the other ContextMenu render site (there are 2 in the JSX): Good, the main ContextMenu render already has . Now let me check the second one at line 2411 (that's in the Toolbar props, not a ContextMenu render - that was  as a toolbar prop, unrelated). Let me verify: Good, that's the Toolbar component, not the ContextMenu. Only one ContextMenu render exists and it already has . The fix is complete.
 
 Het uitlijnmenu toont nu aan de onderkant een **"Domein wijzigen"** sectie wanneer de selectie model-nodes (entiteit/GE/relatie etc.) bevat — zowel bestaande domeinen als het invoerveld voor een nieuw domein. Uitlijning en domain-wijziging zijn zo beide bereikbaar via één rechtsklikmenu.
+
+---
+
+## 🧑 User
+
+wil je wat we gedaan hebben nog documenteren?
+
+---
+
+## 🤖 Assistant
+
+
+```
+
+```
+
+```
+
+```
+Gedocumenteerd in twee bestanden:
+
+- umleditor/README.md — functietabel en uitleg multi-selectie rechtsklikmenu bijgewerkt
+-  — nieuwe sectie met beide fixes: Mermaid `|`-regex en domeinmenu multi-selectie
 
 ---
