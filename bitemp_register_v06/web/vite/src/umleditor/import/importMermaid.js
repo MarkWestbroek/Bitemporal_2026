@@ -12,6 +12,7 @@
  */
 
 import { generateId, defaultKleur } from "../metamodel/types";
+import { mapStereotypesNaarMeta } from "./_helpers";
 
 /**
  * Parseer Mermaid class diagram tekst en retourneer { nodes, edges }.
@@ -80,14 +81,17 @@ export function importVanMermaid(text) {
     }
   });
 
+  // Bewust GEEN ASOC-promotie hier: een directe entiteit↔entiteit-associatie
+  // blijft een eenvoudige edge. De gebruiker kan handmatig kiezen om er een
+  // associatieklasse (met velden) van te maken. Een veldloze associatieklasse
+  // is in dit model één bubble (de relatie zelf is het anker).
   return { nodes, edges };
 }
 
 // ============================================================================
 
 function parseClassBlock(naam, lines, startIdx) {
-  let stereotype = "";
-  let isMaterieel = false;
+  const stereotypes = [];
   const velden = [];
   const waarden = []; // voor enumeraties
 
@@ -96,15 +100,16 @@ function parseClassBlock(naam, lines, startIdx) {
     const l = lines[j].trim();
     if (l === "}") break;
 
-    // Stereotype: <<entiteit>>, <<enumeration>>, etc.
+    // Stereotype: <<entiteit>>, <<enumeration>>, <<ent, materieel>>, etc.
+    // Mermaid laat per regel één <<...>> toe; meerdere stereotypes worden als
+    // afzonderlijke regels of komma-gescheiden binnen één regel verwacht.
     const stereoMatch = l.match(/^<<(.+?)>>/);
     if (stereoMatch) {
-      const s = stereoMatch[1].toLowerCase();
-      if (s === "materieel") {
-        isMaterieel = true;
-      } else {
-        stereotype = s;
-      }
+      stereoMatch[1]
+        .split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean)
+        .forEach((s) => stereotypes.push(s));
       j++;
       continue;
     }
@@ -134,11 +139,10 @@ function parseClassBlock(naam, lines, startIdx) {
     j++;
   }
 
-  const metatype = mapStereotype(stereotype);
-  const isEnum = stereotype === "enumeration" || stereotype === "enum";
-  const isDatatype = stereotype === "datatype";
+  const meta = mapStereotypesNaarMeta(stereotypes);
+  const { metatype, entiteitSubtype, relatieSubtype, isMaterieel, isEnum, isDatatype, isRefInstantie } = meta;
 
-  const nodeId = generateId(isEnum ? "enum" : isDatatype ? "datatype" : metatype);
+  const nodeId = generateId(isEnum ? "enum" : isDatatype ? "datatype" : isRefInstantie ? "refinstantie" : metatype);
 
   if (isEnum) {
     return {
@@ -175,6 +179,18 @@ function parseClassBlock(naam, lines, startIdx) {
     };
   }
 
+  if (isRefInstantie) {
+    return {
+      node: {
+        id: nodeId,
+        type: "referentielijstInstantie",
+        position: { x: 0, y: 0 },
+        data: { systeemnaam: naam, naam, omschrijving: "" },
+      },
+      endIndex: j,
+    };
+  }
+
   return {
     node: {
       id: nodeId,
@@ -186,8 +202,10 @@ function parseClassBlock(naam, lines, startIdx) {
         description: "",
         metatype,
         isMaterieel,
-        kleur: defaultKleur(metatype),
+        kleur: defaultKleur(metatype, entiteitSubtype || relatieSubtype || ""),
         velden,
+        ...(entiteitSubtype ? { entiteitSubtype } : {}),
+        ...(relatieSubtype ? { relatieSubtype } : {}),
       },
     },
     endIndex: j,
@@ -267,13 +285,6 @@ function autoPositie(index) {
   const col = index % 4;
   const row = Math.floor(index / 4);
   return { x: 50 + col * 300, y: 50 + row * 250 };
-}
-
-function mapStereotype(s) {
-  if (s === "entiteit") return "entiteit";
-  if (s === "gegevenselement") return "gegevenselement";
-  if (s === "relatie") return "relatie";
-  return "entiteit"; // default
 }
 
 function mapMermaidType(typeStr) {

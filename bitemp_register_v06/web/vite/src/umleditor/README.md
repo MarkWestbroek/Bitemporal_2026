@@ -84,6 +84,7 @@ wanneer de selectie model-nodes bevat (entiteit / GE / relatie / etc.) verschijn
 | **Import XMI** | Toolbar: 📥 XMI → laad `.xmi`/`.xml` bestand (incl. EA diagramposities) |
 | **Import Mermaid** | Toolbar: 📥 Mermaid → laad `.mmd`/`.md`/`.txt` bestand |
 | **Import PlantUML** | Toolbar: 📥 PlantUML → laad `.puml`/`.plantuml`/`.txt` bestand |
+| **Ruwe staat opslaan** | Toolbar: 💾⚡ Ruwe staat → schrijft alleen `{ nodes, edges }` weg als `.editor-flow.json` (markering `_format: "editor-flow-v1"`). Bedoeld voor ontwikkeltijd: bewaar een werkende canvas-staat ook als die nog niet als V3 geldig is. Laden gaat via dezelfde `📂 Laden`-knop, die `flowState` automatisch herkent. |
 
 Bij gebiedsselectie kan React Flow naast nodes ook relaties/edges als geselecteerd markeren. Het rechtsklikmenu voor uitlijnen blijft dan toch beschikbaar; de bewerking wordt bewust alleen op de geselecteerde nodes toegepast. Bevat de selectie ook model-nodes (entiteit/GE/relatie), dan is onderin hetzelfde uitlijnmenu ook de **Domein wijzigen**-sectie zichtbaar, zodat beide acties via één rechtsklik beschikbaar zijn.
 
@@ -93,7 +94,24 @@ De editor bewaart deze keuze ook in **V3 JSON** via `useEdges[]`. Daarin worden 
 
 Dezelfde metadata blijft nu ook behouden bij een **code-roundtrip**: na een rebuild schrijft de codegenerator `useEdges[]` door naar `EditorLayout.UseEdges` in de gegenereerde `*_metaregistry.go` bestanden, en de V3 exporter geeft dit weer terug aan de editor. Daardoor blijft de route **editor → V3 → code → V3 → editor** layout-stabiel voor dependency-edges.
 
-**Generalisatie-roundtrip**: overerving (generalisatie-edges, `isAbstract`) wordt volledig bewaard in de V3 JSON via de velden `isAbstract` en `erft` op entiteiten. Bij V3 export schrijft de editor de generalisatie-edges als `erft`-referenties naar de parent-entiteit; bij V3 import worden deze weer gereconstrueerd als generalisatie-edges in het canvas. De codegenerator schrijft `IsAbstract` en `ParentTypenaam` door naar de gegenereerde MetaRegistry. Ook de XMI-export genereert nu dynamisch `isAbstract` en `UML:Generalization`-elements, en Mermaid/PlantUML exporteren generalisatie als `--|>` resp. `<|--` pijlen.
+**Generalisatie-roundtrip**: overerving (generalisatie-edges, `isAbstract`) wordt volledig bewaard in de V3 JSON via de velden `isAbstract` en `erft` op entiteiten. Bij V3 export schrijft de editor de generalisatie-edges als `erft`-referenties naar de parent-entiteit; bij V3 import worden deze weer gereconstrueerd als generalisatie-edges in het canvas. De codegenerator schrijft `IsAbstract` en `ParentTypenaam` door naar de gegenereerde MetaRegistry. Ook de XMI-export genereert nu dynamisch `isAbstract` en `UML:Generalization`-elements, en Mermaid/PlantUML exporteren generalisatie als `--|>` resp. `<|--` pijlen. Bij **import** zijn alle drie de formaten symmetrisch: Mermaid/PlantUML herkennen `<|--`, `--|>`, `<|..` en `..|>`; XMI parseert `UML:Generalization`-elementen (incl. MIM `«Generalisatie»`).
+
+**Stereotype-aliassen**: alle drie de importers (Mermaid, PlantUML, XMI) gebruiken een gedeelde resolver in `import/_helpers.js` met aliassen voor:
+
+| Canoniek | Aliassen |
+|---|---|
+| entiteit | `ent`, `entiteit`, `objecttype` (MIM) |
+| gegevenselement | `ge`, `gegevenselement`, `gegevensgroeptype` (MIM) |
+| relatie | `rel`, `relatie`, `relatiesoort` (MIM), `relatieklasse`, `associationclass` |
+| referentielijst | `reflijst`, `referentielijst` |
+| referentielijst-item | `refitem`, `referentielijstitem` |
+| referentielijst-items (relatie) | `refitems`, `referentielijstitems` |
+| referentielijst-instantie | `refinstantie`, `referentielijstinstantie` |
+| modifiers | `materieel`, `datatype`/`gestructureerd datatype` (MIM), `enum`/`enumeration` |
+
+In XMI wordt naast `<<stereotype>>` ook de taggedValue `bitemp::metatype` herkend en via dezelfde resolver afgehandeld.
+
+**Associatie-promotie bij import (bewust niet)**: Mermaid en PlantUML produceren van nature directe entiteit↔entiteit-edges. Eerder is geprobeerd die direct na import te promoten naar het ASOC-patroon, maar dat is ingetrokken: het kan een eenvoudige UML-import onnodig zwaar maken, en een associatieklasse zonder velden hoort één enkele bubble (de relatie is het anker). De helper `promoteEntiteitAssociaties` blijft beschikbaar in `_helpers.js` voor toekomstig handmatig of opt-in gebruik. De ENT→GE-cast en handmatige conversie naar associatieklasse landen in een volgend blok.
 
 Voor canvasinteracties is er een **kleine undo/redo-stack**: met `Ctrl + Z` kun je de laatste grafische acties terugdraaien, en met `Ctrl + Y` of `Ctrl + Shift + Z` zet je de laatste ongedaan gemaakte canvasactie weer terug. Dit geldt voor **verplaatsen**, **verbinden**, **verwijderen**, **uitlijnen** en **verdelen**. Deze sneltoetsen grijpen niet in als je in een invoerveld of tekstvak aan het typen bent; dan blijft de normale browser/input-undo gelden. Bewerkingen in het inhouds-/zijpaneel vallen bewust buiten deze canvas-undo.
 
@@ -160,6 +178,7 @@ src/
 │   ├── exportPlantUML.js            ← Editor → PlantUML class diagram
 │   └── exportXMI.js                 ← Editor → XMI 1.1 (incl. diagramposities)
 ├── import/
+│   ├── _helpers.js                 ← Gedeeld: stereotype-aliassen + ASOC-promotie
 │   ├── importXMI.js                 ← XMI 1.1 → Editor (incl. EA diagramposities)
 │   ├── importMermaid.js             ← Mermaid class diagram → Editor
 │   └── importPlantUML.js            ← PlantUML class diagram → Editor

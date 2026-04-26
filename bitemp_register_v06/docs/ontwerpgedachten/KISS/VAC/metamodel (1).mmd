@@ -1,0 +1,89 @@
+classDiagram
+
+  class kennisartikel {
+    <<entiteit>>
+    +string uuid
+    +string taal
+    +string~date~ publicatieDatum
+    +string~date-time~ datumWijziging
+  }
+
+  class kennisartikelInterneInformatieItem {
+    <<entiteit>>
+    +string taal
+    +string content
+  }
+
+  class sectie {
+    <<entiteit>>
+    +string type
+    +string content
+    +integer sortIndex
+    +string aanvullendeInformatie
+  }
+
+  class trefwoord {
+    <<entiteit>>
+    +string trefwoord
+  }
+
+  class vac {
+    <<entiteit>>
+    +string uuid
+    +string vraag
+    +string antwoord
+    +string status
+    +string doelgroep
+    +string toelichting
+  }
+
+  class vacAfdeling {
+    <<entiteit>>
+    +string afdelingId
+    +string afdelingNaam
+  }
+
+  class vacRelatieProduct {
+    <<entiteit>>
+    +string product
+  }
+
+  class berichtBase {
+    <<entiteit>>
+    +string uuid
+    +string titel
+    +string inhoud
+    +boolean isBelangrijk
+    +string~date-time~ publicatieDatum
+    +string~date-time~ publicatieEinddatum
+    +string~date-time~ datumAangemaakt
+    +string~date-time~ datumWijziging
+  }
+
+  class nieuwsbericht {
+    <<entiteit>>
+    +string type
+  }
+
+  class werkinstructie {
+    <<entiteit>>
+    +string type
+  }
+
+  class skill {
+    <<entiteit>>
+    +string uuid
+    +string naam
+    +string~date-time~ datumAangemaakt
+    +string~date-time~ datumWijziging
+  }
+  kennisartikel "1" --> "0..*" sectie : bevat
+  kennisartikel "1" --> "0..*" trefwoord : heeft
+  kennisartikel "1" --> "0..*" kennisartikelInterneInformatieItem : interneInformatie
+  vac "1" --> "0..*" vacAfdeling : heeft
+  vac "1" --> "0..*" vac : gerelateerdeVacs
+  vac "1" --> "0..*" vacRelatieProduct : gerelateerdeProducten
+  vac "1" --> "0..*" trefwoord : heeft
+  berichtBase "1" --> "0..*" skill : skills
+  nieuwsbericht --|> berichtBase
+  werkinstructie --|> berichtBase

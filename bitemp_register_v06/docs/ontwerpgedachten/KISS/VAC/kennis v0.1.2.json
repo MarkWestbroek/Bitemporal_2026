@@ -1,0 +1,143 @@
+{
+  "versie": "v0.7.3",
+  "naam": "config register financieel",
+  "beschrijving": "V3 export vanuit UML editor (codegen-ready)",
+  "datatypes": [],
+  "enums": [],
+  "entiteiten": [
+    {
+      "typenaam": "kennisartikel",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "kennisartikels",
+      "positie": {
+        "x": -225,
+        "y": 0
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "kennisartikelInterneInformatieItem",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "kennisartikelinterneinformatieitems",
+      "positie": {
+        "x": -435,
+        "y": 240
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "sectie",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "secties",
+      "positie": {
+        "x": -105,
+        "y": 240
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "trefwoord",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "trefwoords",
+      "positie": {
+        "x": 150,
+        "y": 120
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "vac",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "vacs",
+      "positie": {
+        "x": 450,
+        "y": 0
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "vacAfdeling",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "vacafdelings",
+      "positie": {
+        "x": 330,
+        "y": 285
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "vacRelatieProduct",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "vacrelatieproducts",
+      "positie": {
+        "x": 555,
+        "y": 285
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "berichtBase",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "berichtbases",
+      "positie": {
+        "x": 990,
+        "y": 390
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "nieuwsbericht",
+      "erft": "berichtBase",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "nieuwsberichts",
+      "positie": {
+        "x": 900,
+        "y": -30
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "werkinstructie",
+      "erft": "berichtBase",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "werkinstructies",
+      "positie": {
+        "x": 1170,
+        "y": -30
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    },
+    {
+      "typenaam": "skill",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "skills",
+      "positie": {
+        "x": 1020,
+        "y": 735
+      },
+      "gegevenselementen": [],
+      "relaties": []
+    }
+  ]
+}

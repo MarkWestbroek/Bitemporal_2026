@@ -1232,3 +1232,365 @@ body {
   overflow-y: auto;
   font-family: "Cascadia Code", "Fira Code", monospace;
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   Expressie-editor modal
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Backdrop — dekt de volledige viewport */
+.expressie-editor-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.72);
+  padding: 24px;
+}
+
+/* Modal-venster */
+.expressie-editor-modal {
+  width: min(880px, 100%);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  background: #0f172a;
+  color: #e2e8f0;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+/* Header — ook drag-handle */
+.expressie-editor-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #334155;
+  background: #1e293b;
+  flex-shrink: 0;
+  cursor: grab;
+  user-select: none;
+}
+
+.expressie-editor-modal__header:active {
+  cursor: grabbing;
+}
+
+.expressie-editor-modal__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.expressie-editor-modal__taal {
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+.expressie-editor-modal__close {
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.12s, color 0.12s;
+}
+
+.expressie-editor-modal__close:hover {
+  background: #334155;
+  color: #f8fafc;
+}
+
+/* Body: flex-rij met linker editor en rechter variabelenpaneel */
+.expressie-editor-modal__body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Linker kolom */
+.expressie-editor-modal__left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  overflow-y: auto;
+  border-right: 1px solid #334155;
+}
+
+/* Rechter kolom: variabelenpaneel */
+.expressie-editor-modal__right {
+  width: 230px;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  overflow-y: auto;
+  background: #111827;
+  flex-shrink: 0;
+}
+
+/* ── Code-editor (react-simple-code-editor in dark mode) ── */
+
+.expressie-editor-code {
+  background: #111827;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  color: #e2e8f0;
+  flex-shrink: 0;
+}
+
+.expressie-editor-code:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+.expressie-editor-textarea {
+  outline: none !important;
+  caret-color: #f8fafc;
+}
+
+.expressie-editor-pre {
+  min-height: 160px;
+}
+
+/* ── CEL / Expr token-kleuren (donker thema) ── */
+.expressie-editor-code .token.keyword    { color: #93c5fd; font-weight: 600; }
+.expressie-editor-code .token.string     { color: #86efac; }
+.expressie-editor-code .token.number     { color: #fca5a5; }
+.expressie-editor-code .token.operator   { color: #fde68a; }
+.expressie-editor-code .token.comment    { color: #475569; font-style: italic; }
+.expressie-editor-code .token.punctuation { color: #94a3b8; }
+/* JSON (JsonLogic) in dark mode */
+.expressie-editor-code .token.property   { color: #93c5fd; }
+.expressie-editor-code .token.boolean    { color: #c4b5fd; font-weight: 600; }
+.expressie-editor-code .token.null       { color: #94a3b8; font-style: italic; }
+
+/* ── Autocomplete-dropdown ── */
+
+.expressie-autocomplete {
+  border: 1px solid #475569;
+  border-radius: 8px;
+  background: #1e293b;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.expressie-autocomplete__item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #1e293b;
+  transition: background 0.1s;
+}
+
+.expressie-autocomplete__item:last-of-type { border-bottom: 0; }
+
+.expressie-autocomplete__item:hover,
+.expressie-autocomplete__item--selected {
+  background: #334155;
+}
+
+.expressie-autocomplete__pad {
+  font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, monospace;
+  font-size: 0.8125rem;
+  color: #93c5fd;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.expressie-autocomplete__type {
+  font-size: 0.6875rem;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.expressie-autocomplete__hint {
+  font-size: 0.6875rem;
+  color: #475569;
+  padding: 4px 10px;
+  background: #0f172a;
+}
+
+/* ── Validatie- en status-berichten ── */
+
+.expressie-editor-modal__fout {
+  font-size: 0.8125rem;
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  border-radius: 6px;
+  padding: 6px 10px;
+  flex-shrink: 0;
+}
+
+.expressie-editor-modal__ok {
+  font-size: 0.8125rem;
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.07);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  border-radius: 6px;
+  padding: 6px 10px;
+  flex-shrink: 0;
+}
+
+.expressie-editor-modal__hint {
+  font-size: 0.75rem;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  padding: 6px 10px;
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+
+.expressie-editor-modal__hint code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: ui-monospace, SF Mono, monospace;
+  font-size: 0.875em;
+  color: #fde68a;
+}
+
+/* ── Variabelenpaneel ── */
+
+.expressie-editor-modal__vars-header {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #1e293b;
+  margin-bottom: 4px;
+  flex-shrink: 0;
+}
+
+.expressie-editor-modal__vars-groep {
+  margin-bottom: 8px;
+}
+
+.expressie-editor-modal__vars-bron {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #f59e0b;
+  padding: 2px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.expressie-editor-modal__var-btn {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  padding: 3px 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+  color: inherit;
+}
+
+.expressie-editor-modal__var-btn:hover {
+  background: #1e293b;
+}
+
+.expressie-editor-modal__var-pad {
+  font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, monospace;
+  font-size: 0.8125rem;
+  color: #93c5fd;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.expressie-editor-modal__var-type {
+  font-size: 0.6875rem;
+  color: #475569;
+  flex-shrink: 0;
+}
+
+.expressie-editor-modal__vars-leeg {
+  font-size: 0.8125rem;
+  color: #475569;
+  padding: 6px 0;
+  font-style: italic;
+  line-height: 1.6;
+}
+
+.expressie-editor-modal__vars-hint {
+  font-size: 0.6875rem;
+  color: #334155;
+  margin-top: auto;
+  padding-top: 10px;
+  line-height: 1.5;
+}
+
+/* Footer */
+.expressie-editor-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  border-top: 1px solid #334155;
+  background: #1e293b;
+  flex-shrink: 0;
+}
+
+.expressie-editor-modal__btn {
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 22px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.expressie-editor-modal__btn--primary {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.expressie-editor-modal__btn--primary:hover {
+  background: #2563eb;
+}
+
+/* ── Open-knop naast de expressie-weergave in NodeEditPanel ── */
+.expressie-open-btn {
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border: 1px solid #94a3b8;
+  border-radius: 4px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  flex-shrink: 0;
+}
+
+.expressie-open-btn:hover {
+  background: #1e293b;
+  color: #f8fafc;
+  border-color: #f59e0b;
+}

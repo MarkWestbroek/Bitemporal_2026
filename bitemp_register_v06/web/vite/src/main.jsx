@@ -11,6 +11,7 @@ if (import.meta.hot) {
       && payload.updates.some((update) => {
         const pad = String(update?.path || "");
         return pad.includes("/uml-editor/src/")
+          || pad.includes("/web/vite/src/umleditor/")
           || pad.includes("/web/vite/src/ide/")
           || pad.endsWith("/web/vite/src/pages/EditorV2Page.jsx")
           || pad.endsWith("/web/vite/src/main.jsx");

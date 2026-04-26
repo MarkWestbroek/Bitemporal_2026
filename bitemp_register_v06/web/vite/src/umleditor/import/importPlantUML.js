@@ -13,6 +13,9 @@
  */
 
 import { generateId, defaultKleur } from "../metamodel/types";
+import {
+  mapStereotypesNaarMeta,
+} from "./_helpers";
 
 /**
  * Parseer PlantUML class diagram tekst en retourneer { nodes, edges }.
@@ -108,6 +111,7 @@ export function importVanPlantUML(text) {
     }
   });
 
+  // Bewust GEEN ASOC-promotie hier (zie importMermaid.js voor toelichting).
   return { nodes, edges };
 }
 
@@ -136,13 +140,8 @@ function parseEnumBlock(naam, lines, startIdx) {
 
 function parseClassBlock(naam, stereotypes, lines, startIdx) {
   const velden = [];
-  const isMaterieel = stereotypes.includes("materieel");
-  const isDatatype = stereotypes.includes("datatype");
-
-  // Bepaal metatype uit stereotypes
-  let metatype = "entiteit";
-  if (stereotypes.includes("gegevenselement")) metatype = "gegevenselement";
-  if (stereotypes.includes("relatie")) metatype = "relatie";
+  const meta = mapStereotypesNaarMeta(stereotypes);
+  const { metatype, entiteitSubtype, relatieSubtype, isMaterieel, isDatatype, isEnum, isRefInstantie } = meta;
 
   let j = startIdx + 1;
   while (j < lines.length) {
@@ -166,7 +165,35 @@ function parseClassBlock(naam, stereotypes, lines, startIdx) {
     j++;
   }
 
-  const nodeId = generateId(isDatatype ? "datatype" : metatype);
+  const nodeId = generateId(
+    isEnum ? "enum" : isDatatype ? "datatype" : isRefInstantie ? "refinstantie" : metatype
+  );
+
+  if (isEnum) {
+    // PlantUML kent een eigen `enum`-blok dat hierboven al wordt afgevangen;
+    // deze tak vangt klassen met <<enumeration>>-stereotype af.
+    return {
+      node: {
+        id: nodeId,
+        type: "enumeratie",
+        position: { x: 0, y: 0 },
+        data: { naam, waarden: [] },
+      },
+      endIndex: j,
+    };
+  }
+
+  if (isRefInstantie) {
+    return {
+      node: {
+        id: nodeId,
+        type: "referentielijstInstantie",
+        position: { x: 0, y: 0 },
+        data: { systeemnaam: naam, naam, omschrijving: "" },
+      },
+      endIndex: j,
+    };
+  }
 
   if (isDatatype) {
     const basistypeVeld = velden.find((v) => v.naam === "basistype");
@@ -202,8 +229,10 @@ function parseClassBlock(naam, stereotypes, lines, startIdx) {
         description: "",
         metatype,
         isMaterieel,
-        kleur: defaultKleur(metatype),
+        kleur: defaultKleur(metatype, entiteitSubtype || relatieSubtype || ""),
         velden,
+        ...(entiteitSubtype ? { entiteitSubtype } : {}),
+        ...(relatieSubtype ? { relatieSubtype } : {}),
       },
     },
     endIndex: j,
@@ -211,7 +240,34 @@ function parseClassBlock(naam, stereotypes, lines, startIdx) {
 }
 
 function maakEdge(srcNaam, tgtNaam, leftKard, rightKard, arrow, label) {
-  const isDependency = arrow.includes("..");
+  const isDependency = arrow.includes("..") && !arrow.includes("|");
+
+  // Generalisatie-detectie (analoog aan importMermaid):
+  //   Parent <|-- Child  (parent links, kind rechts)  → omdraaien
+  //   Child --|> Parent  (kind links, parent rechts)  → niet omdraaien
+  // Ook ondersteund: <|.. en ..|> (gestreepte realisatie/generalisatie).
+  const isGeneralLeft = arrow.includes("<|");
+  const isGeneralRight = arrow.includes("|>");
+  const isGeneralization = isGeneralLeft || isGeneralRight;
+
+  if (isGeneralization) {
+    const edgeSrcNaam = isGeneralLeft ? tgtNaam : srcNaam; // kind
+    const edgeTgtNaam = isGeneralLeft ? srcNaam : tgtNaam; // ouder
+    return {
+      id: generateId("edge"),
+      _srcNaam: edgeSrcNaam,
+      _tgtNaam: edgeTgtNaam,
+      source: null,
+      target: null,
+      type: "metamodel",
+      data: {
+        isGeneralization: true,
+        naamLabelHeen: (label || "").trim(),
+        naamLabelTerug: "",
+      },
+    };
+  }
+
   const kard = rightKard || leftKard || "0..*";
 
   return {

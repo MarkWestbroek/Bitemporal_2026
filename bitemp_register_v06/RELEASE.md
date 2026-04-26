@@ -1,5 +1,35 @@
 # Release checklist
 
+## UML-editor: import-roundtrip-bugs + stereotype-aliassen + ruwe save (2026-04-26)
+
+Eerste blok van de UML-import-refactor (zie `docs/ontwerpgedachten/KISS/VAC/2026-04-26 refactor uml to v3.md`). Dit blok lost concrete roundtrip-bugs op en voegt enkele kleine, defensieve uitbreidingen toe; de bredere architectuur-refactor (RuwUML-tussenformaat, IDE-integratie, placeholder-dialoog) volgt in een volgend blok.
+
+### Ingetrokken: ASOC-promotie bij import van directe entiteit↔entiteit-edges
+- **Eerdere aanpak (verwijderd)**: een gedeelde helper `promoteEntiteitAssociaties` zette directe entiteit↔entiteit-edges direct na de import om naar het ASOC-patroon (anker + relatie-node + drie edges).
+- **Reden van intrekking**: dit was te invasief voor eenvoudige UML-imports. Een associatieklasse ´zonder velden´ heeft conceptueel geen apart anker; de relatie í´s het anker (één bubble). Het patroon hoort een handmatige modelkeuze te zijn, niet een automatische import-bewerking. De ENT→GE-cast en de handmatige conversie naar associatieklasse landen in blok 2.
+- **Bestanden**: `importMermaid.js`, `importPlantUML.js` — alleen het aanroepen is verwijderd. `promoteEntiteitAssociaties` blijft als ongebruikt hulpmiddel in `_helpers.js` staan voor toekomstig gebruik.
+
+### Bug: PlantUML-import verloor generalisatie
+- **Oorzaak**: `maakEdge` in `importPlantUML.js` had geen detectie voor `<|--`/`--|>`/`<|..`/`..|>` en zette zulke pijlen weg als gewone associaties (of als dependency wegens de `..`).
+- **Fix**: generalisatie-detectie + bron/doel-omdraaiing analoog aan `importMermaid.js`. Dependency-detectie scherper gemaakt: `..` zonder `|` is dependency, `..|` is generalisatie.
+- **Bestand**: `web/vite/src/umleditor/import/importPlantUML.js`.
+
+### Uitbreiding: stereotype-aliassen + `bitemp::metatype` taggedValue
+- Nieuwe gedeelde resolver `mapStereotypesNaarMeta` in `_helpers.js` met aliasmap voor: `ent`/`entiteit`/`objecttype`, `ge`/`gegevenselement`/`gegevensgroeptype`, `rel`/`relatie`/`relatiesoort`/`relatieklasse`/`associationclass`, `reflijst`/`referentielijst`, `refitem`/`referentielijstitem`, `refitems`/`referentielijstitems`, `refinstantie`/`referentielijstinstantie`, plus modifiers `materieel`, `datatype`/`gestructureerd datatype`, `enum`/`enumeration`.
+- Mermaid en PlantUML gebruiken voortaan deze resolver; subtypes (`entiteitSubtype`, `relatieSubtype`) worden meegenomen.
+- XMI-import herkent nu ook taggedValue `bitemp::metatype` en behandelt die via dezelfde alias-resolver. MIM-stereotypen blijven werken via de bestaande `mapStereotypeNaarMetatype`-fallback.
+- **Bestanden**: `_helpers.js`, `importMermaid.js`, `importPlantUML.js`, `importXMI.js`.
+
+### Toevoeging: rauwe editor-staat opslaan (`.editor-flow.json`)
+- Extra toolbar-knop **💾⚡ Ruwe staat** slaat alleen `{ nodes, edges }` op met markering `_format: "editor-flow-v1"`. Bedoeld voor ontwikkeltijd: een werkende canvas-staat bewaren ook als die nog niet als V3 geldig is.
+- Laden vereist geen wijziging: `handleLoad` herkende `payload.flowState` al en past die direct toe.
+- **Bestanden**: `MetamodelEditor.jsx`, `panels/Toolbar.jsx`.
+
+### Bug: `removeChild` runtime-crash na hot-reload van editor-v2
+- **Oorzaak**: de HMR-handler in `main.jsx` triggerde alleen een volledige reload bij wijzigingen in `/uml-editor/src/` (oude editor-locatie) en `/web/vite/src/ide/`, niet bij `/web/vite/src/umleditor/` (de huidige editor-v2-module). Een partiële HMR-update liet React Flow met stale DOM-nodes achter; de eerstvolgende render gooide `Failed to execute 'removeChild' on 'Node'`.
+- **Fix**: `/web/vite/src/umleditor/` toegevoegd aan de `heeftDomIntensieveWijziging`-check, zodat wijzigingen in de editor-v2-module ook een volledige page-reload veroorzaken.
+- **Bestand**: `web/vite/src/main.jsx`.
+
 ## UML-editor: Mermaid-import overerving + domeinmenu multi-selectie (2026-04-26)
 
 ### Bug: Mermaid import herkende generalisatiepijlen niet

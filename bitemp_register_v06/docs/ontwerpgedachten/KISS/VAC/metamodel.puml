@@ -1,0 +1,84 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+hide empty methods
+
+class kennisartikel <<entiteit>> {
+  + uuid : string
+  + taal : string
+  + publicatieDatum : string {date}
+  + datumWijziging : string {date-time}
+}
+
+class kennisartikelInterneInformatieItem <<entiteit>> {
+  + taal : string
+  + content : string
+}
+
+class sectie <<entiteit>> {
+  + type : string
+  + content : string
+  + sortIndex : integer
+  + aanvullendeInformatie : string
+}
+
+class trefwoord <<entiteit>> {
+  + trefwoord : string
+}
+
+class vac <<entiteit>> {
+  + uuid : string
+  + vraag : string
+  + antwoord : string
+  + status : string
+  + doelgroep : string
+  + toelichting : string
+}
+
+class vacAfdeling <<entiteit>> {
+  + afdelingId : string
+  + afdelingNaam : string
+}
+
+class vacRelatieProduct <<entiteit>> {
+  + product : string
+}
+
+class berichtBase <<entiteit>> {
+  + uuid : string
+  + titel : string
+  + inhoud : string
+  + isBelangrijk : boolean
+  + publicatieDatum : string {date-time}
+  + publicatieEinddatum : string {date-time}
+  + datumAangemaakt : string {date-time}
+  + datumWijziging : string {date-time}
+}
+
+class nieuwsbericht <<entiteit>> {
+  + type : string
+}
+
+class werkinstructie <<entiteit>> {
+  + type : string
+}
+
+class skill <<entiteit>> {
+  + uuid : string
+  + naam : string
+  + datumAangemaakt : string {date-time}
+  + datumWijziging : string {date-time}
+}
+
+kennisartikel "1" --> "0..*" sectie : bevat
+kennisartikel "1" --> "0..*" trefwoord : heeft
+kennisartikel "1" --> "0..*" kennisartikelInterneInformatieItem : interneInformatie
+vac "1" --> "0..*" vacAfdeling : heeft
+vac "1" --> "0..*" vac : gerelateerdeVacs
+vac "1" --> "0..*" vacRelatieProduct : gerelateerdeProducten
+vac "1" --> "0..*" trefwoord : heeft
+berichtBase "1" --> "0..*" skill : skills
+berichtBase <|-- nieuwsbericht
+berichtBase <|-- werkinstructie
+
+@enduml

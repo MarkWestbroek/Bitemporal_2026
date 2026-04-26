@@ -2179,6 +2179,31 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   }, [actieDialoog, publiceerSchemaModel, sluitActieDialoog, voerRebuildUit, voerSaveUit]);
 
   const handleSave = useCallback(() => openActieDialoog("save"), [openActieDialoog]);
+  /**
+   * Sla de rauwe editor-staat (nodes + edges) op met extensie .editor-flow.json.
+   * Handig tijdens ontwikkelen om een werkende canvas-staat te bewaren, ook als
+   * die nog niet als V3-model geldig is. handleLoad herkent deze structuur al via
+   * het `flowState`-veld.
+   */
+  const handleSaveEditorFlow = useCallback(() => {
+    const naamHint = (modelNaam || "editor").replace(/[^a-zA-Z0-9_-]/g, "_");
+    const standaardNaam = `${naamHint}.editor-flow.json`;
+    const naam = window.prompt("Bestandsnaam voor rauwe editor-staat:", standaardNaam);
+    if (!naam) return;
+    const payload = {
+      _format: "editor-flow-v1",
+      modelNaam: modelNaam || "",
+      bewaardOp: new Date().toISOString(),
+      flowState: { nodes, edges },
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = naam.endsWith(".json") ? naam : `${naam}.editor-flow.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [modelNaam, nodes, edges]);
   const handlePublishSchemaModel = useCallback(() => openActieDialoog("publish"), [openActieDialoog]);
   const handleRebuildModel = useCallback(() => openActieDialoog("rebuild"), [openActieDialoog]);
   const handlePublishAndRebuild = useCallback(() => openActieDialoog("publishAndRebuild"), [openActieDialoog]);
@@ -2391,6 +2416,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         onAddReferentielijstSet={handleAddReferentielijstSet}
         onAddReferentielijstInstantie={handleAddReferentielijstInstantie}
         onSave={handleSave}
+        onSaveEditorFlow={handleSaveEditorFlow}
         onPublishSchemaModel={handlePublishSchemaModel}
         onPublishAndRebuild={handlePublishAndRebuild}
         onRebuildModel={handleRebuildModel}

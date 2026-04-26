@@ -9,7 +9,7 @@
  */
 import { maakLeegType, maakLegeEnumeratie, maakLeegGegevenstype, EDGE_MODES } from "../../metamodel/types";
 
-export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddReferentielijstInstantie, onSave, onPublishSchemaModel, onPublishAndRebuild, onRebuildModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI, onImportXMI, onImportMermaid, onImportPlantUML, modelNaam, modelBron, modelOpmerking, actiefDomein, beschikbareDomeinen, domeinSelectieActief = false, onSetActiefDomein, onSelecteerDomein, onNormaliseerAlleRelaties, onSnapAlleNaarGrid, activeEdgeMode, onSetActiveEdgeMode }) {
+export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddReferentielijstInstantie, onSave, onSaveEditorFlow, onPublishSchemaModel, onPublishAndRebuild, onRebuildModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI, onImportXMI, onImportMermaid, onImportPlantUML, modelNaam, modelBron, modelOpmerking, actiefDomein, beschikbareDomeinen, domeinSelectieActief = false, onSetActiefDomein, onSelecteerDomein, onNormaliseerAlleRelaties, onSnapAlleNaarGrid, activeEdgeMode, onSetActiveEdgeMode }) {
   const domeinen = beschikbareDomeinen || [];
   const domeinSelectieTitel = !actiefDomein
     ? "Kies eerst een actief domein"
@@ -159,6 +159,9 @@ export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddRefer
         <div className="toolbar-row-right">
           <div className="toolbar-group">
             <button onClick={onSave} className="btn-toolbar save" title="Sla het model lokaal op als JSON-bestand">💾 Opslaan</button>
+            {onSaveEditorFlow && (
+              <button onClick={onSaveEditorFlow} className="btn-toolbar save" title="Sla de rauwe editor-staat (nodes/edges) op als .editor-flow.json — handig tijdens ontwikkelen om een werkende canvas-staat te bewaren, ook als die nog niet als V3-model geldig is">💾⚡ Ruwe staat</button>
+            )}
             <button onClick={onLoad} className="btn-toolbar load" title="Laad een model vanuit een lokaal JSON-bestand">📂 Laden</button>
             {onPublishSchemaModel && <button onClick={onPublishSchemaModel} className="btn-toolbar publish" title="Publiceer het model naar de API-database">☁ Publiceer</button>}
             {onPublishAndRebuild && <button onClick={onPublishAndRebuild} className="btn-toolbar publish" title="Publiceer het model en rebuild daarna exact die opgeslagen schema-versie">☁🔁 Pub+Rebuild</button>}

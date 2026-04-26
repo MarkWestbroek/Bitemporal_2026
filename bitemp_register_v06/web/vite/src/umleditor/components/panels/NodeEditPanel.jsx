@@ -13,6 +13,7 @@
  */
 import { useState } from "react";
 import { METATYPES, ENTITEIT_SUBTYPES, RELATIE_SUBTYPES, VELDTYPEN, AFLEIDINGSTALEN, maakLeegVeld, maakLeegAfgeleidVeld, defaultKleur, bouwVeldtypen } from "../../metamodel/types";
+import ExpressieEditor, { berekenContextVelden } from "./ExpressieEditor";
 
 const BASISTYPES = ["string", "integer", "number", "boolean"];
 
@@ -97,6 +98,9 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
   function toggleVeldExpanded(index) {
     setExpandedVelden((prev) => ({ ...prev, [index]: !prev[index] }));
   }
+
+  // Index van het afgeleide veld waarvoor de expressie-editor open staat (null = gesloten)
+  const [expressieEditorIndex, setExpressieEditorIndex] = useState(null);
 
   // Afgeleide velden op entiteit-niveau
   function addAfgeleidVeld() {
@@ -535,6 +539,7 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
   }
 
   return (
+    <>
     <div className="edit-panel">
       <h3>
         {data.metatype === "entiteit"
@@ -1050,13 +1055,34 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
                 </label>
                 <label style={{ fontSize: "0.85em" }}>
                   Afleidingsregel
-                  <textarea
-                    value={av.afleidingsregel || ""}
-                    onChange={(e) => updateAfgeleidVeld(i, "afleidingsregel", e.target.value)}
-                    placeholder="bijv. Naam.roepnaam + ' ' + Naam.achternaam"
-                    rows={2}
-                    style={{ width: "100%", fontFamily: "monospace", fontSize: "0.85em" }}
-                  />
+                  <div style={{ display: "flex", gap: "6px", alignItems: "flex-start", marginTop: "4px" }}>
+                    <code
+                      style={{
+                        flex: 1,
+                        fontFamily: "monospace",
+                        fontSize: "0.8em",
+                        background: "#f8fafc",
+                        padding: "4px 6px",
+                        borderRadius: "4px",
+                        border: "1px solid #e2e8f0",
+                        wordBreak: "break-all",
+                        minHeight: "28px",
+                        color: av.afleidingsregel ? "#1e293b" : "#94a3b8",
+                        display: "block",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {av.afleidingsregel || "Geen expressie"}
+                    </code>
+                    <button
+                      type="button"
+                      className="expressie-open-btn"
+                      title="Expressie-editor openen"
+                      onClick={() => setExpressieEditorIndex(i)}
+                    >
+                      ✎ Bewerken
+                    </button>
+                  </div>
                 </label>
                 <label style={{ fontSize: "0.85em", display: "flex", alignItems: "center", gap: "6px" }}>
                   <input
@@ -1081,5 +1107,21 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
         </button>
       </div>
     </div>
+
+    {/* Expressie-editor modal — wordt gerenderd buiten de sidebar flow */}
+    {expressieEditorIndex !== null && (() => {
+      const av = (data.afgeleideVelden || [])[expressieEditorIndex];
+      if (!av) return null;
+      return (
+        <ExpressieEditor
+          value={av.afleidingsregel || ""}
+          taal={av.afleidingsregelTaal || "cel"}
+          onChange={(v) => updateAfgeleidVeld(expressieEditorIndex, "afleidingsregel", v)}
+          onClose={() => setExpressieEditorIndex(null)}
+          contextVelden={berekenContextVelden(node, allNodes, edges)}
+        />
+      );
+    })()}
+  </>
   );
 }

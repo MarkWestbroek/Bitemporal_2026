@@ -18,6 +18,7 @@
  */
 
 import { generateId, defaultKleur } from "../metamodel/types";
+import { mapStereotypesNaarMeta } from "./_helpers";
 
 /**
  * Parseer XMI-tekst en retourneer { nodes, edges }.
@@ -93,12 +94,28 @@ export function importVanXMI(xmlText) {
     // MIM stereotype mapping + bestaande mapping
     // EA AssociationClass: Class met conID tagged value → relatie
     // Heuristiek: klassen met naam "Rel_*" zonder expliciete stereotype → relatie
+    // bitemp::metatype taggedValue (bv. "Entiteit", "Gegevenselement",
+    // "Referentielijst", "Refitems") wordt via dezelfde alias-resolver afgehandeld.
     const conID = taggedValues.get("conID") || "";
-    const metatype = conID
-      ? "relatie"
-      : stereo
-        ? mapStereotypeNaarMetatype(stereo)
-        : (/^Rel_/i.test(naam) ? "relatie" : "entiteit");
+    const bitempMetatype = (taggedValues.get("bitemp::metatype") || "").trim();
+    const aliasMeta = mapStereotypesNaarMeta(
+      [stereo, bitempMetatype].filter(Boolean)
+    );
+    let metatype;
+    let entiteitSubtype = aliasMeta.entiteitSubtype;
+    let relatieSubtype = aliasMeta.relatieSubtype;
+    if (conID) {
+      metatype = "relatie";
+    } else if (aliasMeta.isDatatype) {
+      metatype = "gegevenstype";
+    } else if (aliasMeta.metatypeExpliciet) {
+      metatype = aliasMeta.metatype;
+    } else if (stereo) {
+      // Onbekend stereotype — val terug op de oorspronkelijke MIM-mapping.
+      metatype = mapStereotypeNaarMetatype(stereo);
+    } else {
+      metatype = /^Rel_/i.test(naam) ? "relatie" : "entiteit";
+    }
 
     // MIM: "Gestructureerd datatype" → gegevenstype-node (niet als Class/entiteit)
     if (metatype === "gegevenstype") {
@@ -133,6 +150,7 @@ export function importVanXMI(xmlText) {
     }
 
     const isMaterieel = taggedValues.get("isMaterieel") === "true"
+      || aliasMeta.isMaterieel
       || leesIndicatieMaterieelUitTVs(taggedValues);
     const description = taggedValues.get("documentation") || "";
     const velden = leesAttributen(cls);
@@ -151,8 +169,10 @@ export function importVanXMI(xmlText) {
         metatype,
         isMaterieel,
         isAbstract,
-        kleur: defaultKleur(metatype),
+        kleur: defaultKleur(metatype, entiteitSubtype || relatieSubtype || ""),
         velden,
+        ...(entiteitSubtype ? { entiteitSubtype } : {}),
+        ...(relatieSubtype ? { relatieSubtype } : {}),
         ...(Object.keys(mimMetadata).length > 0 ? { mimMetadata } : {}),
       },
     });
