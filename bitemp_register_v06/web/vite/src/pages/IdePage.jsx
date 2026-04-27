@@ -533,13 +533,24 @@ export default function IdePage() {
 
       // Domein-specifiek: filter en/of merge
       if (meta.domein) {
+        // Elementen zonder domeininformatie (bijv. uit Mermaid/PlantUML) krijgen
+        // het doeldomein toegewezen. Elementen die al een domein hebben, behouden dat.
+        const metForcedDomein = {
+          ...storeData,
+          elements: Object.fromEntries(
+            Object.entries(storeData.elements || {}).map(([id, el]) => [
+              id,
+              el.domein ? el : { ...el, domein: meta.domein },
+            ])
+          ),
+        };
         if (meta.modus === "merge") {
-          const gefilterd = filterStoreByDomein(storeData, meta.domein);
+          const gefilterd = filterStoreByDomein(metForcedDomein, meta.domein);
           const gemerged = mergeStoreDomein(useModelStore.getState(), gefilterd, meta.domein);
           loadModel(gemerged);
         } else {
           // Vervang: huidige state mergen met gefilterd domein uit import
-          const gefilterd = filterStoreByDomein(storeData, meta.domein);
+          const gefilterd = filterStoreByDomein(metForcedDomein, meta.domein);
           const gemerged = mergeStoreDomein(useModelStore.getState(), gefilterd, meta.domein);
           loadModel(gemerged);
         }
@@ -662,6 +673,13 @@ export default function IdePage() {
     return () => window.removeEventListener("keydown", handler);
   }, [handlePubliceer]);
 
+  // ── Nieuw domein toevoegen (via Project Browser header) ───
+  const handleNieuwDomein = useCallback(() => {
+    const naam = window.prompt("Naam van het nieuwe domein:");
+    if (!naam || !naam.trim()) return;
+    useModelStore.getState().addDomain(naam.trim());
+  }, []);
+
   // ── Rechtsklik domein → import/export ─────────────────────
   const handleImportDomein = useCallback((domein) => {
     setImportPrefillDomein(domein);
@@ -688,6 +706,7 @@ export default function IdePage() {
                 onCreateDiagram={handleNieuwDiagram}
                 onImportDomein={handleImportDomein}
                 onExportDomein={handleExportDomein}
+                onNieuwDomein={handleNieuwDomein}
               />
             </ErrorBoundary>
           );
@@ -701,7 +720,7 @@ export default function IdePage() {
           return <div style={{ padding: 16 }}>Onbekend component: {component}</div>;
       }
     },
-    [handleNieuwDiagram, handleOpenDiagram, handleImportDomein, handleExportDomein]
+    [handleNieuwDiagram, handleOpenDiagram, handleImportDomein, handleExportDomein, handleNieuwDomein]
   );
 
   return (
@@ -823,6 +842,45 @@ export default function IdePage() {
           model={layoutModel}
           factory={factory}
           onModelChange={handleLayoutChange}
+          onRenderTabSet={(tabSetNode, renderValues) => {
+            const selected = tabSetNode.getSelectedNode?.();
+            if (selected?.getComponent?.() === COMP_BROWSER) {
+              renderValues.stickyButtons.push(
+                <button
+                  key="pb-nieuw-domein"
+                  onClick={handleNieuwDomein}
+                  title="Nieuw domein toevoegen"
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: 14,
+                    padding: "0 4px",
+                    lineHeight: 1,
+                    color: "inherit",
+                  }}
+                >
+                  📁<span style={{ fontSize: 10, verticalAlign: "top", lineHeight: 1.8 }}>+</span>
+                </button>,
+                <button
+                  key="pb-nieuw-diagram"
+                  onClick={() => handleNieuwDiagram()}
+                  title="Nieuw diagram aanmaken"
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: 14,
+                    padding: "0 4px",
+                    lineHeight: 1,
+                    color: "inherit",
+                  }}
+                >
+                  📐<span style={{ fontSize: 10, verticalAlign: "top", lineHeight: 1.8 }}>+</span>
+                </button>
+              );
+            }
+          }}
         />
       </div>
 

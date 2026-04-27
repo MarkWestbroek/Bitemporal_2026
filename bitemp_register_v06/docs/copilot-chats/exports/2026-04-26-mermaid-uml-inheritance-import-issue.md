@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-26 13:02
 - **Sessie-ID**: `a23e9df4-1427-44d4-a4e4-58ed70e6e000`
-- **Berichten**: 37
+- **Berichten**: 41
 
 ---
 
@@ -815,5 +815,129 @@ Wil ik het `.gitignore` opschonen door  weg te halen (het verwijst nu naar een m
 ## 🧑 User
 
 ja, opruimen is altijd goed
+
+---
+
+## 🧑 User
+
+Is het mogelijk in de IDE een optie "voeg domein toe" te maken? Dat domein kan dan leeg zijn.
+
+de beste plek lijkt mij naast het woord project browser met een icoontje. Misschien dat +diagram (maar dan als icoontje) er ook nog wel past.
+
+Dan: importeer in het domein via rechtsklik zou de elementen die geimporteerd worden het domein "<domeinnaam>" moeten geven. Is dat nu ook al zo? Dat zou dan al automatisch goed zijn. Anders moeten we dat misschien zo maken. De meeste import-bestanden hebben geen notie van domein namelijk. Wat denk je?
+
+---
+
+## 🤖 Assistant
+
+Laat me ook de import-flow checken voor het domeinveld:  Nu heb ik alles wat ik nodig heb. Laat me de planning samenvatten voor ik implementeer:
+
+**Antwoord op Nu heb ik alles wat ik nodig heb. Laat me de planning samenvatten voor ik implementeer:
+
+**Antwoord op je vraag over import + domein**: Nee, dat werkt nu niet automatisch goed. De  behoudt alleen elementen met  — maar Mermaid/PlantUML elementen hebben , dus worden ze gefilterd op niets. Ik fix dat mee.
+
+**Wat ik bouw:**
+1. Header-strip boven de zoekbalk in ProjectBrowser met `📁+` (nieuw domein) en `📐+` (nieuw diagram) icoon-knoppen
+2. `onNieuwDomein` prop → roept  aan via een 
+3. Fix in de import-flow: elementen zonder domein krijgen het doeldomein toegewezen bij import-naar-domein Nu implementeer ik de drie wijzigingen in één keer:    
+```
+
+```
+
+```
+
+```
+Nu de wiring in IdePage — `handleNieuwDomein` toevoegen en doorgeven aan ProjectBrowser:   
+```
+
+```
+Nu de import-fix — elementen zonder domein krijgen het doeldomein bij import-naar-domein:    
+```
+
+```
+Nu ook de twee  calls updaten om  te gebruiken:     
+```
+
+```
+
+```
+
+```
+Build schoon.  Drie dingen gedaan:
+
+**1. Project Browser header-strip** — boven de zoekbalk zijn twee icoon-knoppen toegevoegd (rechts uitgelijnd):
+- `📁⁺` — nieuw domein (prompt voor naam)
+- `📐⁺` — nieuw diagram (zelfde als de toolbar-knop, maar contextual bij de browser)
+
+**2.  in IdePage** — roept  aan, trimt de naam en geeft die aan  in de store. Lege/geannuleerde input doet niets.
+
+**3. Import domain force-assign fix** — jouw analyse was correct: het werkte niet. Bij import met een doeldomein ingesteld worden nu elementen *zonder* domein (uit Mermaid/PlantUML/XMI zonder domain-stereotypes) automatisch het doeldomein gegeven, vóórdat de  wordt aangeroepen. Elementen die al een domein hebben, behowen dat.
+
+---
+
+## 🧑 User
+
+Zouden de + icoontjes ook echt naast de Project Browser tekst kunnen? Als dat lastig is, qua scope van de titelbalk o.i.d., dan naast de zoekbalk (de zoekbalk wat korter maken).
+
+ Rechtsklik kan ook een optie zijn, alleen is er geen root voor de PB, dus zou dat op de titelbalk moeten.
+
+ Wil je dit ook documenteren?
+
+Verder zijn we een beetje afgeleid geraakt van het oorspronkelijke plan. Ik herhaal jouw plan:
+```
+Deel 2 — eerst even scope afstemmen
+Voordat ik een groot blok werk doe en het verkeerde bouw: jouw bericht plaatste twee soorten werk onder "fase 2". Ik wil zeker weten welke je nu in deze sessie wilt zien.
+
+A. Oorspronkelijk fase 2 (UML-import refactor):
+
+RuwUML neutraal tussenformaat
+Importers (Mermaid/PlantUML/XMI) refactoren naar RuwUML + dunne adapters
+IDE-integratie: Mermaid/PlantUML/XMI in de bestaande IDE ImportDialog
+Placeholder-entiteit + waarschuwings/abort-dialoog voor orphan <<ge>>/<<rel>>
+
+B. Nieuwe editor-bewerkingen die jij hierboven noemde (post-import opschonen):
+5. ENT → GE cast: een geïmporteerde entiteit ombouwen tot GE onder een gekozen parent-entiteit (incl. inkomende edges hertekenen).
+6. ENT splitsen in ENT + losse GE's (één GE per veld of selectie).
+7. Handmatige conversie van een ENT↔ENT-relatie naar een echte associatieklasse (relatie-node + anker zodra er velden bijkomen).
+```
+
+A is gedaan? (Ik heb `Placeholder-entiteit + waarschuwings/abort-dialoog voor orphan` nog niet getest)
+
+B mag gedaan worden!
+
+Kun je ook testen schrijven voor de (gedane en te bouwen) frontend / BFF functionaliteit?
+
+---
+
+## 🤖 Assistant
+
+Ik pak eerst de icoon-verplaatsing + status check, en stel daarna een vraag over scope voor B + tests (grote brok werk).
+
+Laat me FlexLayout's tab-customisatie bekijken:  FlexLayout's `onRenderTabSet` is precies wat we nodig hebben — daarmee plaats ik de iconen in de tab-header rij (rechts van "Project Browser", links van de max-knop). Dat is dichter bij de titel dan de huidige plek.     
+```
+
+```
+
+```
+
+```
+Iconen zitten nu in de FlexLayout tab-set header rechts naast "Project Browser" (via  + ). De prop  blijft op ProjectBrowser staan voor evt. context-menu/keyboard later, maar wordt nu niet meer intern gerenderd.
+
+---
+
+**Antwoord op je vragen + scope-check voor het vervolg:**
+
+**Status A (UML-import refactor):**
+1. ✅ RuwUML neutraal tussenformaat (rawuml.js)
+2. ✅ Mermaid+PlantUML naar RawUML refactor + dunne adapters
+3. ✅ XMI bewust buiten RawUML (zie docs/RAWUML.md §6)
+4. ✅ IDE-integratie: Mermaid/PlantUML/XMI in ImportDialog
+5. ✅ Placeholder-entiteit + orphan-dialoog (code is af; jij hebt 'm nog niet getest)
+
+A is dus klaar — alleen jouw eindtest van de orphan-flow ontbreekt. Wil je dat ik daar een paar testbestanden voor genereer (Mermaid met opzettelijk losse  en  zonder parent-entiteit)?
+
+**Documentatie van de nieuwe knoppen:** zal ik doen samen met B.
+
+**Scope vraag voor B + tests** — dit is echt veel werk en ik wil het niet verkeerd inschatten:     Goed, dat is alles. Laat me eerst de bestaande infrastructuur verkennen voor (a) vitest setup, (b) bestaande transformatie-acties, (c) ImportDialog test bestanden.      
 
 ---

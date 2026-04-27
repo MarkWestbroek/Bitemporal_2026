@@ -379,7 +379,7 @@ function TreeNode({ node, style }) {
 
 // ─── Hoofdcomponent ─────────────────────────────────────────
 
-export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram, onImportDomein, onExportDomein }) {
+export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram, onImportDomein, onExportDomein, onNieuwDomein }) {
   const elements = useModelStore((s) => s.elements);
   const structuralEdges = useModelStore((s) => s.structuralEdges);
   const diagrams = useModelStore((s) => s.diagrams);

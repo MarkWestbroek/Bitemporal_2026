@@ -449,3 +449,77 @@ Elke Handle heeft nu een uniek `id` in het formaat `{type}-{positie}`:
 ### Backward compatibiliteit
 
 Modellen opgeslagen in de database met het oude formaat (`"top"`, `"bottom"`, etc.) worden automatisch gemigreerd bij het laden via `migrateSourceHandle()`/`migrateTargetHandle()` in `v3ModelNaarEditor.js`. Nieuw opgeslagen modellen gebruiken het geprefixte formaat.
+
+---
+
+## Donker/licht thema — gedeeld met IDE
+
+**Datum:** april 2026
+
+### Samenvatting
+
+De UML-editor v2 en de IDE delen één thema-toggle via de Zustand-store `useUIStore`. Beide editors bewegen mee op hetzelfde `data-ide-theme`-attribuut op `<body>`. De CEL-expressie-editor (breakout-modal in zowel de IDE als de UML-editor) volgt automatisch mee.
+
+### Architectuur
+
+```
+localStorage["ide-theme"]
+       │
+       ▼
+ useUIStore.theme ("dark" | "light")
+       │
+       ├─── IdePage.jsx (bestaand): body.setAttribute("data-ide-theme", theme)
+       │
+       └─── MetamodelEditor.jsx (nieuw): useEffect → body.setAttribute("data-ide-theme", theme)
+                                                     ▲
+                                              gedeelde store,
+                                              beide lezen dezelfde waarde
+```
+
+- De `useUIStore` persisteert het thema in `localStorage` onder de sleutel `ide-theme`.
+- Zodra een van beide editors het thema wisselt, ziet de andere het direct (zelfde tab) of na een herlaad (ander tabblad).
+- Er zijn geen afzonderlijke thema-variabelen nodig: de CSS-overrides luisteren op `body[data-ide-theme="dark"]` en `body[data-ide-theme="light"]`.
+
+### Gewijzigde bestanden
+
+| Bestand | Wijziging |
+|---------|-----------|
+| `web/vite/src/umleditor/components/MetamodelEditor.jsx` | Import `useUIStore`; lees `theme` + `toggleTheme`; `useEffect` die `data-ide-theme` op body synct; `theme` en `onToggleTheme` props doorgegeven aan `Toolbar` |
+| `web/vite/src/umleditor/components/panels/Toolbar.jsx` | Nieuwe props `theme` (default `"dark"`) en `onToggleTheme`; toggle-knop ☀️/🌙 toegevoegd als eerste knop in de rechter actierij |
+| `web/vite/src/umleditor/styles/editor.css` | ~250 regels thema-overrides toegevoegd **aan het einde** van het bestand (bestaande regels ongewijzigd) |
+
+### CSS-aanpak
+
+De bestaande `editor.css` gebruikt uitsluitend hardcoded hex-kleuren (geen variabelen). Om maximale backward-compatibiliteit te behouden, zijn er géén bestaande regels gewijzigd. Alle thema-overrides staan als **attribute-selector-blokken onderaan** het bestand:
+
+```css
+/* Donker thema: canvas, sidebar, panels, nodes, context menu, test-invoer */
+body[data-ide-theme="dark"] .editor-sidebar { ... }
+body[data-ide-theme="dark"] .edit-panel h3  { ... }
+/* ... */
+
+/* Licht thema: alleen de expressie-editor-modal (was altijd donker) */
+body[data-ide-theme="light"] .expressie-editor-modal          { ... }
+body[data-ide-theme="light"] .expressie-editor-code           { ... }
+body[data-ide-theme="light"] .expressie-editor-code .token.keyword { color: #1d4ed8; }
+/* ... */
+```
+
+**Wat schakelt per thema:**
+
+| Onderdeel | Donker | Licht |
+|-----------|--------|-------|
+| Canvas achtergrond | `#0d1117` | standaard `#f8fafc` (bestaande CSS) |
+| Sidebar / edit panel | `#0f172a`, lichte tekst | standaard wit |
+| Metamodel-nodes | `#1e293b` achtergrond | standaard wit |
+| Context menu | `#1e293b` | standaard wit |
+| CEL-expressie-editor | altijd donker (bestaand) | licht (override) |
+| CEL syntax-kleuren licht | n.v.t. | blauw keywords, groen strings, rood numbers |
+| Toolbar | altijd donker | altijd donker (geen override) |
+
+### Toggle-knop
+
+- In de **IDE**: bestaande ☀️/🌙 knop rechtsboven in de IDE-toolbar.
+- In de **UML-editor v2**: nieuwe ☀️/🌙 knop als eerste knop in de rechter actierij van de toolbar.
+
+Beide knoppen roepen `toggleTheme()` aan op dezelfde `useUIStore`; het resultaat is altijd synchroon zichtbaar in de actieve editor.

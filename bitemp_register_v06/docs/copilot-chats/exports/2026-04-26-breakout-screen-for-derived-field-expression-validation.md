@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-26 20:46
 - **Sessie-ID**: `ff97f520-f821-41da-9704-68e9bb6cd73b`
-- **Berichten**: 19
+- **Berichten**: 21
 
 ---
 
@@ -443,5 +443,29 @@ Build geslaagd.  Klaar. Dit is wat er nu werkt:
 - Als je in de IDE naar licht wisselt, wisselt de UML-editor mee (ook als die in een ander tabblad open staat, na eerste reload)
 - Als je de UML-editor standalone opent, is er een eigen toggle-knop bovenaan de toolbar
 - De CEL-editor volgt automatisch mee
+
+---
+
+## 🧑 User
+
+Heel mooi! Dank!
+
+Wil je dit nog degelijk documenteren?
+
+---
+
+## 🤖 Assistant
+
+Nu weet ik genoeg. Het meest specifieke document is . Ik voeg een goed gedocumenteerde sectie toe onderaan. 
+```
+
+```
+Documentatie is bijgewerkt in . De nieuwe sectie onderaan beschrijft:
+
+- **Architectuurschema** hoe de gedeelde Zustand-store () beide editors verbindt via 
+- **Gewijzigde bestanden** met een tabel van wat er per bestand is veranderd
+- **CSS-aanpak**: uitleg waarom er geen bestaande regels zijn aangepast (override-blokken onderaan), plus twee codevoorbeelden
+- **Wat schakelt per thema** — tabel met alle betrokken onderdelen
+- **Toggle-knop**: waar de knop in beide editors zit en dat ze dezelfde store aanroepen
 
 ---
