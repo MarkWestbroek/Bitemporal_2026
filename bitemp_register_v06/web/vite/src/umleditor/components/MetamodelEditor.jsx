@@ -81,6 +81,7 @@ import {
 import { v3ModelNaarEditor } from "../metamodel/v3ModelNaarEditor";
 import { bepaalDependencyTargetIds } from "../metamodel/dependencyEdges";
 import { validateV3Model } from "../../validation/validateV3Model";
+import useUIStore from "../../store/useUIStore";
 
 /**
  * nodeTypes vertelt React Flow welke React-component bij welk node type hoort.
@@ -300,6 +301,13 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   }, []);
   const canvasRef = useRef(null);
   const reactFlowRef = useRef(null);
+
+  // Thema: lees uit gedeelde IDE-store, sync naar body[data-ide-theme]
+  const theme = useUIStore((s) => s.theme);
+  const toggleTheme = useUIStore((s) => s.toggleTheme);
+  useEffect(() => {
+    document.body.setAttribute("data-ide-theme", theme);
+  }, [theme]);
 
   const selectedNode = nodes.find((n) => n.id === selectedNodeId) || null;
   const selectedEdge = edges.find((e) => e.id === selectedEdgeId) || null;
@@ -2492,6 +2500,8 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         onSnapAlleNaarGrid={handleSnapAlleNaarGrid}
         activeEdgeMode={activeEdgeMode}
         onSetActiveEdgeMode={setActiveEdgeMode}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       <ActionDialog

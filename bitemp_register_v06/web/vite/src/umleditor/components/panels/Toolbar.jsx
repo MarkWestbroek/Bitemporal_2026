@@ -9,7 +9,7 @@
  */
 import { maakLeegType, maakLegeEnumeratie, maakLeegGegevenstype, EDGE_MODES } from "../../metamodel/types";
 
-export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddReferentielijstInstantie, onSave, onSaveEditorFlow, onPublishSchemaModel, onPublishAndRebuild, onRebuildModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI, onImportXMI, onImportMermaid, onImportPlantUML, modelNaam, modelBron, modelOpmerking, actiefDomein, beschikbareDomeinen, domeinSelectieActief = false, onSetActiefDomein, onSelecteerDomein, onNormaliseerAlleRelaties, onSnapAlleNaarGrid, activeEdgeMode, onSetActiveEdgeMode }) {
+export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddReferentielijstInstantie, onSave, onSaveEditorFlow, onPublishSchemaModel, onPublishAndRebuild, onRebuildModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI, onImportXMI, onImportMermaid, onImportPlantUML, modelNaam, modelBron, modelOpmerking, actiefDomein, beschikbareDomeinen, domeinSelectieActief = false, onSetActiefDomein, onSelecteerDomein, onNormaliseerAlleRelaties, onSnapAlleNaarGrid, activeEdgeMode, onSetActiveEdgeMode, theme = "dark", onToggleTheme }) {
   const domeinen = beschikbareDomeinen || [];
   const domeinSelectieTitel = !actiefDomein
     ? "Kies eerst een actief domein"
@@ -158,6 +158,13 @@ export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddRefer
 
         <div className="toolbar-row-right">
           <div className="toolbar-group">
+            <button
+              onClick={onToggleTheme}
+              className="btn-toolbar theme-toggle"
+              title={`Wissel naar ${theme === "dark" ? "licht" : "donker"} thema`}
+            >
+              {theme === "dark" ? "☀️" : "🌙"}
+            </button>
             <button onClick={onSave} className="btn-toolbar save" title="Sla het model lokaal op als JSON-bestand">💾 Opslaan</button>
             {onSaveEditorFlow && (
               <button onClick={onSaveEditorFlow} className="btn-toolbar save" title="Sla de rauwe editor-staat (nodes/edges) op als .editor-flow.json — handig tijdens ontwikkelen om een werkende canvas-staat te bewaren, ook als die nog niet als V3-model geldig is">💾⚡ Ruwe staat</button>

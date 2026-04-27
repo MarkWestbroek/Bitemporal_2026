@@ -9,7 +9,6 @@ _tmp_*.mjs
 
 # Frontend generated artifacts
 web/vite/node_modules/
-web/vite/dist/
 web/vite/.vite/
 
 # OS noise

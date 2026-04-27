@@ -1626,3 +1626,438 @@ body {
   color: #f8fafc;
   border-color: #f59e0b;
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   Thema-overrides
+   • Donker thema  : body[data-ide-theme="dark"]
+   • Licht thema voor expressie-editor: body[data-ide-theme="light"]
+   De toolbar is altijd donker en vereist geen override.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* === Canvas en zijpaneel === */
+
+body[data-ide-theme="dark"] .editor-container {
+  background: #0d1117;
+  color: #e2e8f0;
+}
+
+body[data-ide-theme="dark"] .editor-sidebar {
+  background: #0f172a;
+  border-left-color: #1e293b;
+}
+
+/* === Edit panel === */
+
+body[data-ide-theme="dark"] .edit-panel h3 {
+  color: #e2e8f0;
+  border-bottom-color: #1e293b;
+}
+
+body[data-ide-theme="dark"] .edit-panel h4 {
+  color: #64748b;
+}
+
+body[data-ide-theme="dark"] .edit-panel label {
+  color: #94a3b8;
+}
+
+body[data-ide-theme="dark"] .edit-panel input[type="text"],
+body[data-ide-theme="dark"] .edit-panel input[type="color"],
+body[data-ide-theme="dark"] .edit-panel textarea,
+body[data-ide-theme="dark"] .edit-panel select {
+  background: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+body[data-ide-theme="dark"] .edit-panel.empty {
+  color: #475569;
+}
+
+body[data-ide-theme="dark"] .edit-panel.empty .hint {
+  color: #334155;
+}
+
+body[data-ide-theme="dark"] .veld-edit-row {
+  background: #111827;
+  border-color: #1e293b;
+}
+
+body[data-ide-theme="dark"] .panel-actions {
+  border-top-color: #1e293b;
+}
+
+body[data-ide-theme="dark"] .edge-endpoints {
+  background: #111827;
+}
+
+body[data-ide-theme="dark"] .endpoint-label {
+  color: #94a3b8;
+}
+
+body[data-ide-theme="dark"] .endpoint-value {
+  color: #e2e8f0;
+}
+
+/* === Kleine knoppen === */
+
+body[data-ide-theme="dark"] .btn-icon {
+  border-color: #475569;
+  color: #94a3b8;
+}
+
+body[data-ide-theme="dark"] .btn-icon:hover {
+  background: #334155;
+  color: #e2e8f0;
+}
+
+body[data-ide-theme="dark"] .btn-add {
+  border-color: #475569;
+  color: #94a3b8;
+}
+
+body[data-ide-theme="dark"] .btn-add:hover {
+  background: #1e293b;
+  border-color: #64748b;
+  color: #cbd5e1;
+}
+
+body[data-ide-theme="dark"] .btn-danger {
+  background: rgba(220, 38, 38, 0.12);
+  border-color: #7f1d1d;
+  color: #fca5a5;
+}
+
+body[data-ide-theme="dark"] .btn-danger:hover {
+  background: rgba(220, 38, 38, 0.22);
+}
+
+/* === Metamodel nodes === */
+
+body[data-ide-theme="dark"] .metamodel-node {
+  background: #1e293b;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+body[data-ide-theme="dark"] .node-typenaam {
+  color: #e2e8f0;
+}
+
+body[data-ide-theme="dark"] .node-stereotype {
+  color: #64748b;
+}
+
+body[data-ide-theme="dark"] .node-divider {
+  background: #334155;
+}
+
+body[data-ide-theme="dark"] .node-description-hint {
+  color: #64748b;
+}
+
+body[data-ide-theme="dark"] .veld-naam {
+  color: #cbd5e1;
+}
+
+body[data-ide-theme="dark"] .veld-type {
+  color: #64748b;
+}
+
+body[data-ide-theme="dark"] .node-veld.leeg {
+  color: #475569;
+}
+
+body[data-ide-theme="dark"] .node-veld.enum-waarde {
+  color: #fcd34d;
+}
+
+body[data-ide-theme="dark"] .node-veld.datatype-detail {
+  color: #64748b;
+}
+
+body[data-ide-theme="dark"] .node-badge.materieel {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  border-color: #1e40af;
+}
+
+/* === React Flow handles === */
+
+body[data-ide-theme="dark"] .react-flow__handle {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+/* === Edge labels === */
+
+body[data-ide-theme="dark"] .edge-label {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: #334155;
+}
+
+body[data-ide-theme="dark"] .edge-rolnaam {
+  color: #e2e8f0;
+}
+
+body[data-ide-theme="dark"] .edge-constraint {
+  color: #94a3b8;
+}
+
+/* === React Flow chrome === */
+
+body[data-ide-theme="dark"] .react-flow__minimap {
+  border-color: #334155;
+}
+
+body[data-ide-theme="dark"] .react-flow__controls {
+  border-color: #334155;
+}
+
+/* === Context menu === */
+
+body[data-ide-theme="dark"] .context-menu {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+body[data-ide-theme="dark"] .context-menu-header {
+  color: #64748b;
+  background: #0f172a;
+  border-bottom-color: #334155;
+}
+
+body[data-ide-theme="dark"] .context-menu-item {
+  color: #e2e8f0;
+}
+
+body[data-ide-theme="dark"] .context-menu-item:hover {
+  background: #0f172a;
+  color: #93c5fd;
+}
+
+body[data-ide-theme="dark"] .context-menu-separator {
+  background: #334155;
+}
+
+body[data-ide-theme="dark"] .context-menu-domein-input {
+  border-color: #475569;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+/* === Test invoer === */
+
+body[data-ide-theme="dark"] .test-invoer-header {
+  border-bottom-color: #1e293b;
+}
+
+body[data-ide-theme="dark"] .test-invoer-header h3 {
+  color: #e2e8f0;
+}
+
+body[data-ide-theme="dark"] .test-invoer-empty {
+  color: #475569;
+}
+
+body[data-ide-theme="dark"] .test-invoer-beschrijving {
+  background: rgba(8, 47, 73, 0.55);
+  color: #7dd3fc;
+}
+
+body[data-ide-theme="dark"] .test-invoer-veld-wrapper input {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-color: #334155;
+}
+
+body[data-ide-theme="dark"] .test-invoer-details pre {
+  background: #111827;
+  color: #cbd5e1;
+}
+
+body[data-ide-theme="dark"] .btn-voorbeeld {
+  background: #111827;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+body[data-ide-theme="dark"] .btn-voorbeeld:hover {
+  background: #1e293b;
+  border-color: #475569;
+}
+
+body[data-ide-theme="dark"] .test-invoer-resultaat.geldig {
+  background: rgba(21, 128, 61, 0.15);
+  border-color: #166534;
+}
+
+body[data-ide-theme="dark"] .test-invoer-resultaat.ongeldig {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: #7f1d1d;
+}
+
+body[data-ide-theme="dark"] .resultaat-normalisatie {
+  color: #94a3b8;
+}
+
+body[data-ide-theme="dark"] .resultaat-normalisatie code {
+  background: #334155;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   Expressie-editor: licht thema overrides
+   (De modal is standaard donker; bij licht thema wordt hij licht.)
+   ════════════════════════════════════════════════════════════════════ */
+
+body[data-ide-theme="light"] .expressie-editor-modal {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  color: #1e293b;
+}
+
+body[data-ide-theme="light"] .expressie-editor-modal__header {
+  background: #f1f5f9;
+  border-bottom-color: #e2e8f0;
+}
+
+body[data-ide-theme="light"] .expressie-editor-modal__title {
+  color: #1e293b;
+}
+
+body[data-ide-theme="light"] .expressie-editor-modal__close {
+  color: #475569;
+}
+
+body[data-ide-theme="light"] .expressie-editor-modal__close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+body[data-ide-theme="light"] .expressie-editor-modal__left {
+  border-right-color: #e2e8f0;
+}
+
+body[data-ide-theme="light"] .expressie-editor-modal__right {
+  background: #f1f5f9;
+}
+
+body[data-ide-theme="light"] .expressie-editor-modal__splitter {
+  background: #e2e8f0;
+}
+
+body[data-ide-theme="light"] .expressie-editor-modal__splitter:hover,
+body[data-ide-theme="light"] .expressie-editor-modal__splitter:active {
+  background: #3b82f6;
+}
+
+/* Code-editor */
+body[data-ide-theme="light"] .expressie-editor-code {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #1e293b;
+}
+
+body[data-ide-theme="light"] .expressie-editor-textarea {
+  caret-color: #1e293b;
+}
+
+/* Syntax-kleuren in licht thema */
+body[data-ide-theme="light"] .expressie-editor-code .token.keyword    { color: #1d4ed8; }
+body[data-ide-theme="light"] .expressie-editor-code .token.string     { color: #166534; }
+body[data-ide-theme="light"] .expressie-editor-code .token.number     { color: #b91c1c; }
+body[data-ide-theme="light"] .expressie-editor-code .token.operator   { color: #92400e; }
+body[data-ide-theme="light"] .expressie-editor-code .token.comment    { color: #94a3b8; font-style: italic; }
+body[data-ide-theme="light"] .expressie-editor-code .token.punctuation { color: #64748b; }
+body[data-ide-theme="light"] .expressie-editor-code .token.property   { color: #1d4ed8; }
+body[data-ide-theme="light"] .expressie-editor-code .token.boolean    { color: #7c3aed; font-weight: 600; }
+body[data-ide-theme="light"] .expressie-editor-code .token.null       { color: #64748b; font-style: italic; }
+
+/* Autocomplete */
+body[data-ide-theme="light"] .expressie-autocomplete {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+body[data-ide-theme="light"] .expressie-autocomplete__item {
+  border-bottom-color: #f1f5f9;
+}
+
+body[data-ide-theme="light"] .expressie-autocomplete__item:hover,
+body[data-ide-theme="light"] .expressie-autocomplete__item--selected {
+  background: #f1f5f9;
+}
+
+body[data-ide-theme="light"] .expressie-autocomplete__pad {
+  color: #1d4ed8;
+}
+
+body[data-ide-theme="light"] .expressie-autocomplete__type {
+  color: #94a3b8;
+}
+
+body[data-ide-theme="light"] .expressie-autocomplete__hint {
+  color: #94a3b8;
+  background: #f8fafc;
+}
+
+/* Hint-balk en code */
+body[data-ide-theme="light"] .expressie-editor-modal__hint {
+  background: rgba(0, 0, 0, 0.03);
+  color: #475569;
+}
+
+body[data-ide-theme="light"] .expressie-editor-modal__hint code {
+  background: rgba(0, 0, 0, 0.06);
+  color: #92400e;
+}
+
+/* Variabelenpaneel */
+body[data-ide-theme="light"] .expressie-editor-modal__vars-header {
+  color: #94a3b8;
+  border-bottom-color: #e2e8f0;
+}
+
+body[data-ide-theme="light"] .expressie-editor-modal__vars-bron {
+  color: #b45309;
+}
+
+body[data-ide-theme="light"] .expressie-editor-modal__var-btn:hover {
+  background: #e2e8f0;
+}
+
+body[data-ide-theme="light"] .expressie-editor-modal__var-pad {
+  color: #1d4ed8;
+}
+
+body[data-ide-theme="light"] .expressie-editor-modal__var-type {
+  color: #94a3b8;
+}
+
+body[data-ide-theme="light"] .expressie-editor-modal__vars-leeg {
+  color: #94a3b8;
+}
+
+body[data-ide-theme="light"] .expressie-editor-modal__vars-hint {
+  color: #cbd5e1;
+}
+
+/* Footer */
+body[data-ide-theme="light"] .expressie-editor-modal__footer {
+  background: #f1f5f9;
+  border-top-color: #e2e8f0;
+}
+
+/* Open-knop in licht thema */
+body[data-ide-theme="light"] .expressie-open-btn {
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+body[data-ide-theme="light"] .expressie-open-btn:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+  border-color: #3b82f6;
+}
+
+/* === einde thema-overrides === */

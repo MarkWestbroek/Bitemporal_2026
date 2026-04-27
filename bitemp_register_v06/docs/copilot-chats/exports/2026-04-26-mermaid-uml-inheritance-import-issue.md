@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-26 13:02
 - **Sessie-ID**: `a23e9df4-1427-44d4-a4e4-58ed70e6e000`
-- **Berichten**: 36
+- **Berichten**: 37
 
 ---
 
@@ -809,5 +809,11 @@ COPY --from=frontend-builder /app/web/react ./web/react
 De 40 changed files zijn gewoon het gevolg van de meest recente frontend-wijzigingen. Dat is het verwachte gedrag.
 
 Wil ik het `.gitignore` opschonen door  weg te halen (het verwijst nu naar een map die nooit aangemaakt wordt)?
+
+---
+
+## 🧑 User
+
+ja, opruimen is altijd goed
 
 ---

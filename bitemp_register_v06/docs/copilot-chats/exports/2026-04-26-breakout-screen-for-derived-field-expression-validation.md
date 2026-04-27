@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-26 20:46
 - **Sessie-ID**: `ff97f520-f821-41da-9704-68e9bb6cd73b`
-- **Berichten**: 16
+- **Berichten**: 19
 
 ---
 
@@ -382,5 +382,66 @@ Doordat `useUIStore` al localStorage gebruikt, hoeft er maar één toggle-knop t
 ### Conclusie
 
 Als je het wilt doen: ik kan het opzetten. De CSS-refactor is het enige dat echt aandacht vraagt — maar het is geen architectuurwijziging, puur zoek/vervang-werk met goede structuur.
+
+---
+
+## 🧑 User
+
+Ja, graag: gaat de CEL-editor dan ook mee in het kleurthema?
+
+---
+
+## 🧑 User
+
+Ja, graag: gaat de CEL-editor dan ook mee in het kleurthema?
+
+---
+
+## 🤖 Assistant
+
+Nu heb ik alles in beeld. Laat me de CSS lezen: Goed plan. Ik ga het doen via het **override-blok aanpak** (geen bestaande CSS aanraken, alleen toevoegen aan het einde), plus kleine JSX-aanpassingen voor de toggle-knop. Nu heb ik genoeg context. Ik ga de drie bestanden aanpassen: 
+```
+
+```
+Nu  aanpassen — useUIStore importeren en theme syncen: 
+```
+
+```
+Nu theme + toggleTheme uit de store halen en body-attribuut syncen. Ik voeg dit toe net na de / declaraties van het component, vlak voor : 
+```
+
+```
+Nu  en `onToggleTheme` doorgeven aan Toolbar:  
+```
+
+```
+Nu de toggle-knop in Toolbar.jsx:  
+```
+
+```
+Default export, niet named export. Fixen: 
+```
+
+```
+Build geslaagd.  Klaar. Dit is wat er nu werkt:
+
+### Wat er gedaan is
+
+**** — ~250 regels thema-overrides toegevoegd aan het einde (bestaande CSS ongewijzigd):
+- : canvas, sidebar, edit panel, inputs, nodes, context menu, test-invoer — alles wordt donker
+- : de CEL-expressie-editor (was altijd donker) wordt licht — inclusief aangepaste syntax-kleuren voor licht achtergrond (blauwe keywords, groene strings, etc.)
+
+****:
+- Importeert  (dezelfde Zustand-store die de IDE gebruikt)
+- Synct het thema naar  via 
+- Geeft  en  door aan Toolbar
+
+**** — toggle-knop toegevoegd (☀️/🌙) als eerste knop in de actierij rechts
+
+### Hoe het werkt
+- IDE en UML-editor v2 delen dezelfde  (via localStorage); ze zijn altijd in sync
+- Als je in de IDE naar licht wisselt, wisselt de UML-editor mee (ook als die in een ander tabblad open staat, na eerste reload)
+- Als je de UML-editor standalone opent, is er een eigen toggle-knop bovenaan de toolbar
+- De CEL-editor volgt automatisch mee
 
 ---
