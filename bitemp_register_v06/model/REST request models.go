@@ -43,9 +43,10 @@ Deze aanpak maakt het mogelijk om in de WijzigingRequest struct flexibele opvoer
 	terwijl we toch duidelijkheid hebben over wat er in die velden zit en hoe ermee om te gaan in de handlers.
 */
 type RepresentatiePlusNaam struct {
-	Representatie     Representatie `json:"-"`
-	Representatienaam string        `json:"-"` // Type-naam (bijv. A, B, A_U, Rel_A_B)
-	Veldnaam          string        `json:"-"` // JSON veldnaam (bijv. a, b, u, rel_a_b)
+	Representatie     Representatie   `json:"-"`
+	Representatienaam string          `json:"-"` // Type-naam (bijv. A, B, A_U, Rel_A_B)
+	Veldnaam          string          `json:"-"` // JSON veldnaam (bijv. a, b, u, rel_a_b)
+	RawPayload        json.RawMessage `json:"-"` // Originele JSON-payload van de representatie (vóór unmarshal naar de typed struct). Bewaard zodat de normalizer (handlers/registration_normalizer.go) geneste onderliggende GE's/relaties uit de boom kan splitsen.
 }
 
 func (rep RepresentatiePlusNaam) MarshalJSON() ([]byte, error) {
@@ -97,14 +98,47 @@ func (rep *RepresentatiePlusNaam) UnmarshalJSON(data []byte) error {
 			return fmt.Errorf("unsupported representatie key '%s'", veldnaam)
 		}
 
+		// Bewaar de originele (mogelijk geneste) payload zodat de normalizer
+		// (handlers/registration_normalizer.go, Fase 1) onderliggende
+		// GE's/relaties uit de boom kan splitsen.
+		fullPayload := append(json.RawMessage(nil), payload...)
+
+		// Voor het unmarshallen naar de typed Representatie strippen we
+		// kind-keys (JSONRolnaam van OnderliggendeGegevenselementen) uit de
+		// payload. De typed structvelden voor hub-children zijn arrays
+		// (`[]<Child>`), terwijl een geneste full-shape vaak een enkel
+		// object per kind aanlevert; bovendien horen die kinderen straks
+		// als aparte WijzigingRequests verwerkt te worden, niet als
+		// nested-attribute op de typed parent.
+		typedPayload := payload
+		if len(meta.OnderliggendeGegevenselementen) > 0 && len(payloadMap) > 0 {
+			gestript := make(map[string]json.RawMessage, len(payloadMap))
+			kindKeys := make(map[string]struct{}, len(meta.OnderliggendeGegevenselementen))
+			for _, og := range meta.OnderliggendeGegevenselementen {
+				if og.JSONRolnaam != "" {
+					kindKeys[og.JSONRolnaam] = struct{}{}
+				}
+			}
+			for k, v := range payloadMap {
+				if _, isKind := kindKeys[k]; isKind {
+					continue
+				}
+				gestript[k] = v
+			}
+			if buf, err := json.Marshal(gestript); err == nil {
+				typedPayload = buf
+			}
+		}
+
 		representatie := meta.Factory()
-		if err := json.Unmarshal(payload, representatie); err != nil {
+		if err := json.Unmarshal(typedPayload, representatie); err != nil {
 			return err
 		}
 
 		rep.Representatienaam = meta.Typenaam
 		rep.Veldnaam = veldnaam
 		rep.Representatie = representatie
+		rep.RawPayload = fullPayload
 
 		if debugLogsEnabled() {
 			fmt.Printf("MODELS: representatienaam=%s veldnaam=%s metatype=%s id=%v\n", meta.Typenaam, veldnaam, representatie.Metatype(), representatie.GetID())

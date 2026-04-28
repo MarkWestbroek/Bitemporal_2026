@@ -1,0 +1,152 @@
+# toevoegen meerdere registratie manieren
+Ik zou graag de volgende drie registratie manieren toevoegen aan de backend.
+
+## 1 eenvoudigere syntax voor eenduidige opvoer of afvoer
+Er zijn veel situaties waar er enkel een serie objecten opgevoerd of afgevoerd moet worden. Afvoeren van een ENT is al geregeld: dat triggert ook afvoer van alle onderliggende GE's, maar m.n. opvoer is nu een hele lijst aan wijzingen van het type opvoer met steeds één objectje.
+
+Mijn voorstel is om een soort 'full' registratie te maken waarin je een serie opvoeren en/of afvoeren (dus wijzigingen) in de payload kunt zetten die dieper gaan dan nu 1 object diep.
+
+Of: kan dat nu al?
+
+### opvoer
+Nu doen we:
+```
+{
+  "registratie": {
+    "registratietype": "registratie",
+    "opmerking": "Nieuwe NatuurlijkPersoon=1"
+  },
+  "wijzigingen": [
+    {
+      "opvoer": {
+        "natuurlijkpersoon": {
+          "id": 1
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "persoonsidentificatie": {
+          "natuurlijkpersoon_id": 1,
+          "bsn": "111222333",
+          "ingezetene": true
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "naam": {
+          "natuurlijkpersoon_id": 1,
+          "voorletters": "ABCD",
+          "roepnaam": "Ari",
+          "achternaam": "van Zap"
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "burgerschap": {
+          "natuurlijkpersoon_id": 1,
+          "landcode": "nl",
+          "nationaliteit": "Nederlandse",
+          "aanvang": "1969-02-01"
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "burgerschap": {
+          "natuurlijkpersoon_id": 1,
+          "landcode": "pl",
+          "nationaliteit": "Poolse",
+          "aanvang": "2025-05-01"
+        }
+      }
+    },
+    {
+      "opvoer": {
+        "natuurlijkpersoon_aanvang": {
+          "natuurlijkpersoon_id": 1,
+          "datum": "1969-02-01"
+        }
+      }
+    }
+  ]
+}
+```
+
+Maar wat ik mij voorstel is dat het meer zoals de full_XXX response is:
+```
+{
+  "registratie": {
+    "registratietype": "registratie",
+    "opmerking": "Nieuwe NatuurlijkPersoon=1"
+  },
+  "wijzigingen": [
+    {
+      "opvoer": {
+        "natuurlijkpersoon": {
+          "id": 1,
+          "persoonsidentificatie": {
+            "natuurlijkpersoon_id": 1,
+            "bsn": "111222333",
+            "ingezetene": true
+          },
+          "naam": {
+            "natuurlijkpersoon_id": 1,
+            "voorletters": "ABCD",
+            "roepnaam": "Ari",
+            "achternaam": "van Zap"
+          },
+          "burgerschap": [
+            {
+              "natuurlijkpersoon_id": 1,
+              "landcode": "nl",
+              "nationaliteit": "Nederlandse",
+              "aanvang": "1969-02-01"
+            },
+            {
+              "natuurlijkpersoon_id": 1,
+              "landcode": "pl",
+              "nationaliteit": "Poolse",
+              "aanvang": "2025-05-01"
+            }
+          ],
+          "natuurlijkpersoon_aanvang": {
+            "natuurlijkpersoon_id": 1,
+            "datum": "1969-02-01"
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+De handler moet dit dan uitsplitsen naar een serie wijzingen zoals in de eerste json hierboven.
+
+### afvoer
+Voor afvoer is het lastiger: je wilt misschien een deel van de GE's van een ENT afvoeren, maar de ENT intact laten. Dan kun je de ENT niet als toplevel element gebruiken, en dus moet je toch losse afvoeren in de payload zetten. Dat gaat dus weinig opleveren.
+
+De ENT inclusief alle GE's afvoeren gaat al vanzelf.
+
+## 2 backward compatible naar REST
+REST heeft het (voor registraties helemaal niet praktische) axioma van CRUD in zich.
+
+Er zijn nu veel registers in ons landschap (Common Ground, NL gemeenten) die volgens REST/microservices/CRUD opgezet zijn. Dus met CRUD = POST/GET/PATCH/DELETE.
+
+Zouden we met de kennis van het metamodel en de kennis van hoe we registeren ook een backward compatibele 'CRUD' endpoint kunnen maken per entiteit / GE / REL die dan daarna de request onderwater omzet naar een registratie met een serie wijzigingen.
+
+Kijk voor het huidige formaa naar:
+- NL API strategie
+- de projecten openKlant, OpenOrganisatie, OpenProduct, OpenZaak, OpenPlan op github (deels ook hier lokaal in de parallelle map Github/CG-OAS/) -> https://github.com/maykinmedia/open-plan en parallelle repos daar.
+
+## 3 GraphQL mutation
+Welk formaat zouden we in GraphQL kunnen hanteren om schrijven mogelijk te maken?
+We hadden al eens geconcludeerd dat GQL beter is de Query kant van CQRS, en dat het beter zou zijn om een apart C (Command) formaat te hanteren. Maar misschien denk je daar nu anders over.
+
+
+# PROMPT:
+above plus
+
+Wil je een plan maken waarin deze 3 zaken gecombineerd (omdat ze veel met elkaar te maken hebben) aan bod komen?

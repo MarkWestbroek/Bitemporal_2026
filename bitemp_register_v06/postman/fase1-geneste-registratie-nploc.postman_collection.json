@@ -1,0 +1,104 @@
+{
+  "info": {
+    "name": "Fase 1 — Geneste registratie (np_loc)",
+    "_postman_id": "f1-nploc-geneste-2026-04-28",
+    "description": "Voorbeeld-payloads voor Fase 1 van het plan 'Drie extra registratiemanieren' (2026-04-28). Eén `POST /registratie/` met een geneste full-shape payload (zoals `GET /full/natuurlijk_personen/:id` retourneert) wordt door de server gesplitst in N platte Wijziging-rijen, gekoppeld aan één Registratie. De originele geneste payload wordt audit-fideel opgeslagen in `Registratie.RequestBody`. Fake namen en BSN's; niet voor productie.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Opvoer NP — geneste full-shape (Anna van Dijk)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Geneste opvoer van NatuurlijkPersoon Anna van Dijk (Fase 1 demo)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"natuurlijkpersoon\": {\n          \"id\": 4201,\n          \"persoonsidentificaties\": {\n            \"natuurlijkpersoon_id\": 4201,\n            \"rel_id\": 1,\n            \"bsn\": \"123456782\",\n            \"ingezetene\": true\n          },\n          \"namen\": {\n            \"natuurlijkpersoon_id\": 4201,\n            \"rel_id\": 1,\n            \"voorletters\": \"A.M.\",\n            \"roepnaam\": \"Anna\",\n            \"tussenvoegsel\": \"van\",\n            \"achternaam\": \"Dijk\"\n          },\n          \"aanvang\": {\n            \"natuurlijkpersoon_id\": 4201,\n            \"datum\": \"1985-03-12\"\n          }\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "Server splitst dit blok in 5 wijzigingen (NP, Persoonsidentificatie, Naam, Aanvang, Einde) onder één Registratie. De geneste payload wordt audit-fideel opgeslagen in `Registratie.RequestBody`."
+      }
+    },
+    {
+      "name": "2. Opvoer NP — klassiek plat (back-compat, Karim el Idrissi)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"tijdstip\": \"2026-04-28T09:05:00Z\",\n    \"opmerking\": \"Klassieke platte opvoer (één representatie per wijziging) — moet onveranderd werken\"\n  },\n  \"wijzigingen\": [\n    { \"opvoer\": { \"natuurlijkpersoon\": { \"id\": 4202 } } },\n    { \"opvoer\": { \"persoonsidentificaties\": { \"natuurlijkpersoon_id\": 4202, \"rel_id\": 1, \"bsn\": \"234567893\", \"ingezetene\": true } } },\n    { \"opvoer\": { \"namen\": { \"natuurlijkpersoon_id\": 4202, \"rel_id\": 1, \"voorletters\": \"K.\", \"roepnaam\": \"Karim\", \"tussenvoegsel\": \"el\", \"achternaam\": \"Idrissi\" } } },\n    { \"opvoer\": { \"aanvang\": { \"natuurlijkpersoon_id\": 4202, \"datum\": \"1990-09-04\" } } }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "Identiek effect als #1 maar in de oude platte vorm — bewijst backward compatibility. `?modus=registratie|correctie` is nu nog niet actief; default = registratie."
+      }
+    },
+    {
+      "name": "3. Opvoer NP met meervoudige burgerschappen (Sofia Petrova)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Geneste opvoer met meervoudige burgerschappen als JSON-array\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"natuurlijkpersoon\": {\n          \"id\": 4203,\n          \"persoonsidentificaties\": { \"natuurlijkpersoon_id\": 4203, \"rel_id\": 1, \"bsn\": \"345678904\", \"ingezetene\": true },\n          \"namen\": { \"natuurlijkpersoon_id\": 4203, \"rel_id\": 1, \"voorletters\": \"S.\", \"roepnaam\": \"Sofia\", \"achternaam\": \"Petrova\" },\n          \"burgerschappen\": [\n            { \"natuurlijkpersoon_id\": 4203, \"rel_id\": 1, \"landcode\": \"NL\", \"nationaliteit\": \"Nederlandse\",  \"aanvang\": \"2010-06-01\" },\n            { \"natuurlijkpersoon_id\": 4203, \"rel_id\": 2, \"landcode\": \"BG\", \"nationaliteit\": \"Bulgaarse\",   \"aanvang\": \"1992-02-14\" }\n          ],\n          \"aanvang\": { \"natuurlijkpersoon_id\": 4203, \"datum\": \"1992-02-14\" }\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "Meervoudige onderliggende GE's mogen als JSON-array. Server splitst dit in 7 wijzigingen: NP + Persoonsidentificatie + Naam + 2× Burgerschap + Aanvang + Einde."
+      }
+    },
+    {
+      "name": "4. Correctie — alleen Naam wijzigen (geneste correctie-payload)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"correctie\",\n    \"opmerking\": \"Correctie: roepnaam wijzigen van Anna naar Annemarie\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"natuurlijkpersoon\": {\n          \"id\": 4201,\n          \"namen\": {\n            \"natuurlijkpersoon_id\": 4201,\n            \"rel_id\": 1,\n            \"voorletters\": \"A.M.\",\n            \"roepnaam\": \"Annemarie\",\n            \"tussenvoegsel\": \"van\",\n            \"achternaam\": \"Dijk\"\n          }\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "Correctie van een eerder geregistreerde naam (request #1). Server splitst in 2 wijzigingen (NP + Naam). Dezelfde geneste payload-vorm als opvoer (Fase 2 brengt PATCH met merge-semantiek)."
+      }
+    },
+    {
+      "name": "5. Verificatie — full GET na opvoer #1",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/full/natuurlijk_personen/4201",
+          "host": ["{{baseUrl}}"],
+          "path": ["full", "natuurlijk_personen", "4201"]
+        },
+        "description": "Roundtrip-check: het response zou dezelfde geneste shape moeten hebben als de payload van request #1, met server-afgeleide opvoer/afvoer-tijdstempels."
+      }
+    },
+    {
+      "name": "6. Verificatie — registratie + wijzigingen ophalen",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/full/registraties",
+          "host": ["{{baseUrl}}"],
+          "path": ["full", "registraties"]
+        },
+        "description": "Hier moet je per request van #1 één Registratie-rij zien met N gekoppelde Wijziging-rijen, en `request_body` met de originele geneste JSON."
+      }
+    }
+  ]
+}

@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"sort"
 	"time"
@@ -14,17 +16,39 @@ import (
 func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
+
+		// Lees de raw request body éérst (vóór JSON-binding) zodat we de
+		// originele payload — inclusief eventuele geneste 'full'-shape (zie
+		// handlers/registration_normalizer.go) — letterlijk in de audit-trail
+		// kunnen opslaan. ShouldBindJSON consumeert de body, waarna een
+		// re-marshal van de typed structs lossy zou zijn (geneste keys
+		// zonder corresponderend struct-veld worden weggegooid).
+		rawBody, err := c.GetRawData()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("failed to read request body: %v", err)})
+			return
+		}
+		// Herstel de body zodat downstream helpers (LogRequestBodyAsJSON)
+		// die opnieuw uit c.Request.Body lezen, nog steeds werken.
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(rawBody))
+
 		var request model.RegistreerRequest
-		if err := c.ShouldBindJSON(&request); err != nil {
+		if err := json.Unmarshal(rawBody, &request); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		requestBodyJSON, err := json.Marshal(request)
+		// Fase 1 (geneste full-payload): splits eventuele geneste
+		// onderliggende GE's/relaties in extra platte WijzigingRequests.
+		// Backward compatible: al-platte payloads passeren ongewijzigd.
+		genormaliseerd, err := NormaliseerWijzigingen(request.Wijzigingen)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to serialize request body for audit: %v", err)})
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("normaliseren van wijzigingen mislukt: %v", err)})
 			return
 		}
+		request.Wijzigingen = genormaliseerd
+
+		requestBodyJSON := rawBody
 		requestPath := c.Request.URL.Path
 		requestMethod := c.Request.Method
 		request.Registratie.RequestBody = requestBodyJSON
