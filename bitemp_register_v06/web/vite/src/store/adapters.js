@@ -1028,6 +1028,213 @@ function buildV3Relatie(child, edgeData, diagEdge, diagrams, parentDomein) {
   return v3Rel;
 }
 
+// ─── Ruwe editor-graaf → Store (lossless, geen V3-tussenstap) ─────────────
+//
+// Wordt gebruikt voor textuele UML-imports (Mermaid / PlantUML / XMI) na
+// `rawUMLNaarEditor`. Doel: zoveel mogelijk uit de bron op het canvas
+// krijgen, ook als het (nog) niet metamodel-conform is. De modelleur
+// refactort daarna met B5/B6/B7 (cast naar GE, splits entiteit, promoot
+// relatie tot associatieklasse) tot het model V3-exporteerbaar is.
+//
+// Bewust géén transformaties:
+// - velden op een entiteit-node blijven op het entiteit-element staan;
+// - directe entiteit→entiteit edges worden gewone structurele edges;
+// - generalisatie blijft een edge met `isGeneralization`.
+// Validatie tegen het V3-metamodel gebeurt pas bij export/build, zie
+// `valideerVoorV3()`.
+
+/**
+ * Genereer een unieke element-id (basisnaam + suffix bij collision).
+ */
+function uniekeId(basis, gebruikt) {
+  let id = basis;
+  let n = 2;
+  while (gebruikt.has(id)) {
+    id = `${basis}_${n++}`;
+  }
+  gebruikt.add(id);
+  return id;
+}
+
+/**
+ * Map een editor-node (uit `rawUMLNaarEditor`) naar een store-element.
+ * Behoudt typenaam, velden, kleur, isMaterieel, subtypes — alles wat de
+ * inspector nodig heeft. Geen veld wordt weggegooid.
+ */
+function rawNodeNaarElement(node, idOverride) {
+  const data = node.data || {};
+  const naam = data.typenaam || data.naam || data.systeemnaam || node.id;
+  const id = idOverride || naam;
+  // Bepaal metatype (top-level én in data) zodat refactor-acties (B5/B6/B7)
+  // en de inspector hetzelfde veld kunnen lezen als bij een V3-import.
+  // node.type is door rawUMLNaarEditor gezet op "entiteit" / "enumeratie" /
+  // "gegevenstype" / "referentielijstInstantie"; voor losse GE/relatie nodes
+  // valt het terug op data.metatype.
+  const metatype = data.metatype || node.type || "entiteit";
+  const baseEl = {
+    id,
+    naam,
+    type: node.type,
+    metatype,
+    domein: data.domein || "",
+    data: { ...data, typenaam: naam, klassenaam: naam, metatype },
+  };
+  return baseEl;
+}
+
+/**
+ * Transformeer een ruwe editor-graaf (uit rawUMLNaarEditor) naar IDE-store
+ * shape — lossless. Eén overzicht-diagram met alle nodes + edges en de
+ * posities die rawUMLNaarEditor heeft uitgedeeld.
+ *
+ * @param {{nodes: Array, edges: Array}} graaf
+ * @param {{ bron?: string, naam?: string, beschrijving?: string }} [opts]
+ * @returns {{ elements, structuralEdges, diagrams, domains, domainMeta, modelMeta }}
+ */
+export function rawEditorNaarStore(graaf, opts = {}) {
+  const ruwNodes = graaf?.nodes || [];
+  const ruwEdges = graaf?.edges || [];
+
+  const elements = {};
+  const structuralEdges = [];
+  const diagramNodes = [];
+  const diagramEdges = [];
+
+  // node.id (react-flow) → store-element-id (naam-gebaseerd)
+  const nodeIdNaarElementId = new Map();
+  const gebruikt = new Set();
+
+  for (const node of ruwNodes) {
+    const data = node.data || {};
+    const basis = String(data.typenaam || data.naam || data.systeemnaam || node.id).trim() || "naamloos";
+    const elementId = uniekeId(basis, gebruikt);
+    nodeIdNaarElementId.set(node.id, elementId);
+    elements[elementId] = rawNodeNaarElement(node, elementId);
+    diagramNodes.push({
+      elementId,
+      position: node.position || { x: 0, y: 0 },
+    });
+  }
+
+  for (const edge of ruwEdges) {
+    const source = nodeIdNaarElementId.get(edge.source);
+    const target = nodeIdNaarElementId.get(edge.target);
+    if (!source || !target) continue; // dangling edge — sla over
+    const edgeData = edge.data || {};
+    const id = edge.id || `edge_${source}_${target}_${structuralEdges.length}`;
+    const structEdge = {
+      id,
+      source,
+      target,
+      data: { ...edgeData },
+    };
+    structuralEdges.push(structEdge);
+    diagramEdges.push({
+      ...structEdge,
+      type: edge.type || "metamodel",
+      sourceHandle: edge.sourceHandle || null,
+      targetHandle: edge.targetHandle || null,
+    });
+  }
+
+  // Domeinen verzamelen (zoals v3ModelNaarStore)
+  const domeinSet = new Set();
+  for (const el of Object.values(elements)) {
+    if (el.domein) domeinSet.add(el.domein);
+  }
+  const domains = [...domeinSet].sort((a, b) => {
+    if (a === "register") return -1;
+    if (b === "register") return 1;
+    return a.localeCompare(b);
+  });
+
+  const diagrams = {
+    [DEFAULT_DIAGRAM_ID]: {
+      id: DEFAULT_DIAGRAM_ID,
+      naam: "Overzicht (import)",
+      domein: null,
+      nodes: diagramNodes,
+      edges: diagramEdges,
+      viewport: null,
+    },
+  };
+
+  const modelMeta = {
+    bron: opts.bron || "raw-editor-import",
+    build_versie: "",
+    go_module: "",
+    id: null,
+    indiener: "",
+    versie: "raw",
+    naam: opts.naam || "",
+    beschrijving: opts.beschrijving || "",
+  };
+
+  return {
+    elements,
+    structuralEdges,
+    diagrams,
+    domains,
+    domainMeta: {},
+    modelMeta,
+  };
+}
+
+/**
+ * Valideer een store-state tegen het V3-metamodel. Retourneert een lijst
+ * overtredingen ([{elementId, type, regel, boodschap, fixHint}]) — leeg
+ * betekent: klaar voor V3-export. UI gebruikt dit om bij "Exporteer V3" en
+ * "Publiceer / Rebuild" een overzicht te tonen, met directe links naar de
+ * refactor-actie (B5/B6/B7).
+ *
+ * Regels:
+ *  - V3-001: een entiteit mag geen `velden` hebben → splits met B6 of cast
+ *    individuele velden naar GE met B5.
+ *  - V3-002: een directe edge entiteit→entiteit (zonder GE/relatie/anker
+ *    ertussen, en niet `isGeneralization` of `isDependency`) is geen geldig
+ *    metamodel-construct → promoot tot associatieklasse met B7.
+ *
+ * @param {object} state - { elements, structuralEdges, ... }
+ * @returns {Array<{elementId?:string, edgeId?:string, regel:string, boodschap:string, fixHint:string}>}
+ */
+export function valideerVoorV3(state) {
+  const overtredingen = [];
+  const elements = state?.elements || {};
+  const edges = state?.structuralEdges || [];
+
+  // V3-001: velden op entiteit
+  for (const el of Object.values(elements)) {
+    if (el?.type !== "entiteit") continue;
+    const velden = el?.data?.velden || [];
+    if (velden.length > 0) {
+      overtredingen.push({
+        elementId: el.id,
+        regel: "V3-001",
+        boodschap: `Entiteit "${el.naam}" heeft ${velden.length} losse veld(en); V3 staat alleen velden op GE/relatie toe.`,
+        fixHint: "Gebruik B6 'Splits entiteit' (rechtermuisknop) of B5 'Cast veld naar GE' per veld.",
+      });
+    }
+  }
+
+  // V3-002: directe edges entiteit→entiteit zonder geldig tussen-element
+  for (const edge of edges) {
+    const src = elements[edge.source];
+    const tgt = elements[edge.target];
+    if (!src || !tgt) continue;
+    if (src.type !== "entiteit" || tgt.type !== "entiteit") continue;
+    const d = edge.data || {};
+    if (d.isGeneralization || d.isDependency) continue;
+    overtredingen.push({
+      edgeId: edge.id,
+      regel: "V3-002",
+      boodschap: `Directe edge tussen entiteiten "${src.naam}" en "${tgt.naam}" is geen geldig V3-construct.`,
+      fixHint: "Gebruik B7 'Promoot tot associatieklasse' (rechtermuisknop op de edge).",
+    });
+  }
+
+  return overtredingen;
+}
+
 /**
  * Exporteer de volledige store state als IDE JSON (model + diagrammen + meta).
  * Dit is het "IDE export" format, niet het V3 API format.

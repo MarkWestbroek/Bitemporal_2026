@@ -41,15 +41,19 @@ function EntiteitNode({ id, data, selected }) {
         lineStyle={{ borderColor }}
         handleStyle={{ width: 10, height: 10, borderRadius: 3, borderColor, background: "#ffffff" }}
       />
-      {/* Handles op alle zijden voor flexibele edge-aansluitingen */}
+      {/* Handles op alle zijden voor flexibele edge-aansluitingen.
+           Volgorde: target-* eerst, source-* als laatste — zodat source-handles
+           hogere z-index hebben en pointer-events vangen bij overlappende posities.
+           Dit voorkomt dat target-bottom per ongeluk gepakt wordt als gebruiker
+           vanaf de onderkant wil slepen (wat de verbindingsrichting omdraait). */}
       <Handle type="target" position={Position.Top} id="target-top" />
-      <Handle type="source" position={Position.Bottom} id="source-bottom" />
-      <Handle type="source" position={Position.Top} id="source-top" />
       <Handle type="target" position={Position.Bottom} id="target-bottom" />
-      <Handle type="source" position={Position.Left} id="source-left" />
       <Handle type="target" position={Position.Left} id="target-left" />
-      <Handle type="source" position={Position.Right} id="source-right" />
       <Handle type="target" position={Position.Right} id="target-right" />
+      <Handle type="source" position={Position.Top} id="source-top" />
+      <Handle type="source" position={Position.Bottom} id="source-bottom" />
+      <Handle type="source" position={Position.Left} id="source-left" />
+      <Handle type="source" position={Position.Right} id="source-right" />
 
       {/* Header: stereotype + typenaam */}
       <div className="node-header">

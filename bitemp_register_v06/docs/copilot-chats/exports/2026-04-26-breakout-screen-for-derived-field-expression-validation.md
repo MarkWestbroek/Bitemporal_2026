@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-26 20:46
 - **Sessie-ID**: `ff97f520-f821-41da-9704-68e9bb6cd73b`
-- **Berichten**: 21
+- **Berichten**: 22
 
 ---
 
@@ -467,5 +467,11 @@ Documentatie is bijgewerkt in . De nieuwe sectie onderaan beschrijft:
 - **CSS-aanpak**: uitleg waarom er geen bestaande regels zijn aangepast (override-blokken onderaan), plus twee codevoorbeelden
 - **Wat schakelt per thema** — tabel met alle betrokken onderdelen
 - **Toggle-knop**: waar de knop in beide editors zit en dat ze dezelfde store aanroepen
+
+---
+
+## 🧑 User
+
+dank
 
 ---

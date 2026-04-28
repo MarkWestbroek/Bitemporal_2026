@@ -25,6 +25,7 @@ import useModelStore from "../store/useModelStore";
 import useUIStore from "../store/useUIStore";
 import BrowserContextMenu from "./BrowserContextMenu";
 import { voegNieuwRepToe } from "./repCreation";
+import { promptCastNaarGE, promptSplitsEntiteit } from "./transformPrompts";
 
 // Iconen per element-type
 const ICONS = {
@@ -74,19 +75,28 @@ function buildTree(elements, structuralEdges, diagrams, domains) {
       };
       geplaatst.add(ent.id);
 
-      // Vind GE's die structureel onder deze entiteit hangen
+      // Vind GE's/relaties die structureel onder deze entiteit hangen.
+      // Entiteiten worden GEEN child-knoop: zij verschijnen top-level onder
+      // hun eigen domein. Dat voorkomt dubbele entries (bv. Plan onder
+      // OverkoepelendPlan én als losse entiteit) en de bijbehorende
+      // react-arborist key-collision (overlappende rendering bij domein-
+      // toggle, zie BACKLOG IDE I50).
       const childEdges = structuralEdges.filter((e) => e.source === ent.id);
       for (const edge of childEdges) {
         const child = elements[edge.target];
-        if (child && geldigId(child)) {
-          entNode.children.push({
-            id: child.id,
-            name: child.naam,
-            nodeType: child.type,
-            kleur: child.data?.kleur,
-          });
-          geplaatst.add(child.id);
-        }
+        if (!child || !geldigId(child)) continue;
+        if (child.type === "entiteit") continue; // skip — zie hierboven
+        entNode.children.push({
+          // `id` blijft de echte element-id; `treeKey` is uniek per pad
+          // zodat react-arborist (via idAccessor) geen key-collision
+          // krijgt als hetzelfde GE onder meerdere entiteiten zou hangen.
+          id: child.id,
+          treeKey: `${ent.id}::${child.id}`,
+          name: child.naam,
+          nodeType: child.type,
+          kleur: child.data?.kleur,
+        });
+        geplaatst.add(child.id);
       }
 
       domeinNode.children.push(entNode);
@@ -193,6 +203,9 @@ let _flatVisibleIds = [];          // platte lijst zichtbare draggable node-ids
 
 function TreeNode({ node, style }) {
   const selectedElementId = useUIStore((s) => s.selectedElementId);
+  // Tree-id (`node.data.id`) kan composite zijn (`<entId>::<childId>`); de
+  // echte element-id voor selectie/drag/multi-select staat in `elementId`.
+  const elementId = node.data.elementId || node.data.id;
   const dragGhostRef = useRef(null);
   const verwijderDragGhostVeilig = useCallback(() => {
     const ghost = dragGhostRef.current;
@@ -209,8 +222,8 @@ function TreeNode({ node, style }) {
     }
     dragGhostRef.current = null;
   }, []);
-  const isDetailSelected = node.data.id === selectedElementId;
-  const isMultiSelected = _multiSelected.has(node.data.id);
+  const isDetailSelected = elementId === selectedElementId;
+  const isMultiSelected = _multiSelected.has(elementId);
   const isHighlighted = isDetailSelected || isMultiSelected;
   const isFolder = node.children && node.children.length > 0;
   const isDraggable = !["domain", "diagrams", "diagram"].includes(node.data.nodeType);
@@ -222,14 +235,14 @@ function TreeNode({ node, style }) {
   const handleClick = useCallback((e) => {
     // Domein-klik: selecteer in DetailsPanel, maar niet draggable/multi-select
     if (node.data.nodeType === "domain") {
-      useUIStore.getState().setSelectedElementId(node.data.id);
+      useUIStore.getState().setSelectedElementId(elementId);
       return;
     }
     if (!isDraggable) return;
     if (e.shiftKey && _lastClickedId) {
       // Shift-klik: selecteer bereik tussen laatste klik en huidige
       const startIdx = _flatVisibleIds.indexOf(_lastClickedId);
-      const endIdx = _flatVisibleIds.indexOf(node.data.id);
+      const endIdx = _flatVisibleIds.indexOf(elementId);
       if (startIdx >= 0 && endIdx >= 0) {
         const lo = Math.min(startIdx, endIdx);
         const hi = Math.max(startIdx, endIdx);
@@ -247,22 +260,22 @@ function TreeNode({ node, style }) {
       // Toggle multi-selectie
       _setMultiSelected?.((prev) => {
         const next = new Set(prev);
-        if (next.has(node.data.id)) {
-          next.delete(node.data.id);
+        if (next.has(elementId)) {
+          next.delete(elementId);
         } else {
-          next.add(node.data.id);
+          next.add(elementId);
         }
         return next;
       });
-      _lastClickedId = node.data.id;
+      _lastClickedId = elementId;
       e.stopPropagation();
       e.preventDefault();
     } else {
       // Klik zonder Ctrl/Shift → wis multi-selectie, selecteer enkel element
       _setMultiSelected?.(new Set());
-      _lastClickedId = node.data.id;
+      _lastClickedId = elementId;
     }
-  }, [node.data.id, isDraggable, verwijderDragGhostVeilig]);
+  }, [elementId, isDraggable, verwijderDragGhostVeilig, node.data.nodeType]);
 
   return (
     <div
@@ -295,7 +308,7 @@ function TreeNode({ node, style }) {
         if (_multiSelected.size > 0) {
           // Multi-drag: alle geselecteerde + het huidige element
           const allIds = new Set(_multiSelected);
-          allIds.add(node.data.id);
+          allIds.add(elementId);
           for (const id of allIds) {
             // Haal naam en type op via de tree data (of fallback naar node.data)
             dragItems.push({ elementId: id });
@@ -303,19 +316,19 @@ function TreeNode({ node, style }) {
         } else if (e.shiftKey && node.data.nodeType === "entiteit") {
           // Shift+drag op entiteit: neem entiteit + alle onderliggende GE's/relaties mee
           dragItems.push({
-            elementId: node.data.id,
+            elementId,
             type: node.data.nodeType,
             name: node.data.name,
           });
           const { structuralEdges, elements } = useModelStore.getState();
           for (const se of structuralEdges) {
-            if (se.source === node.data.id && elements[se.target]) {
+            if (se.source === elementId && elements[se.target]) {
               dragItems.push({ elementId: se.target });
             }
           }
         } else {
           dragItems.push({
-            elementId: node.data.id,
+            elementId,
             type: node.data.nodeType,
             name: node.data.name,
           });
@@ -401,13 +414,15 @@ export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram, onImpor
     [elements, structuralEdges, diagrams, domains]
   );
 
-  // Bouw platte lijst van draggable node-ids voor shift-range selectie
+  // Bouw platte lijst van draggable element-ids voor shift-range selectie.
+  // Belangrijk: gebruik `elementId` (niet de composite tree-id) zodat
+  // de set in `_multiSelected` met canvas-selectie matched.
   useMemo(() => {
     const NON_DRAGGABLE = new Set(["domain", "diagrams", "diagram"]);
     const ids = [];
     function walk(nodes) {
       for (const n of nodes) {
-        if (!NON_DRAGGABLE.has(n.nodeType)) ids.push(n.id);
+        if (!NON_DRAGGABLE.has(n.nodeType)) ids.push(n.elementId || n.id);
         if (n.children) walk(n.children);
       }
     }
@@ -489,6 +504,14 @@ export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram, onImpor
         case "nieuwRelatie": {
           const el = useModelStore.getState().elements[nodeData.id];
           voegNieuwRepToe("relatie", { parentId: nodeData.id, parentDomein: el?.domein || "" });
+          break;
+        }
+        case "castNaarGE": {
+          promptCastNaarGE(useModelStore, nodeData.id);
+          break;
+        }
+        case "splitsEntiteit": {
+          promptSplitsEntiteit(useModelStore, nodeData.id);
           break;
         }
         case "nieuwDiagram": {
@@ -599,7 +622,7 @@ export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram, onImpor
         <Tree
           ref={treeRef}
           data={treeData}
-          idAccessor={(d) => String(d.id)}
+          idAccessor={(d) => String(d.treeKey || d.id)}
           openByDefault={false}
           width="100%"
           height={treeHeight - 32}

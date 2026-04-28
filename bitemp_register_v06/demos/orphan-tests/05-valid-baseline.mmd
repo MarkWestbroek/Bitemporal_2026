@@ -1,0 +1,27 @@
+classDiagram
+
+  class Persoon {
+    <<entiteit>>
+    +integer id
+  }
+
+  class Adres {
+    <<entiteit>>
+    +integer id
+  }
+
+  class PersoonNaam {
+    <<gegevenselement>>
+    +integer persoon_id
+    +string voornaam
+    +string achternaam
+  }
+
+  class WoontOp {
+    <<relatie>>
+    +date sinds
+  }
+
+  Persoon *-- PersoonNaam
+  Persoon -- WoontOp
+  WoontOp -- Adres

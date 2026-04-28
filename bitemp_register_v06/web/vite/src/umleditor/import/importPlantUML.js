@@ -15,7 +15,7 @@
  * @module import/importPlantUML
  */
 
-import { rawUMLNaarEditor } from "./rawuml";
+import { rawUMLNaarEditor } from "./rawuml.js";
 
 /**
  * Parseer PlantUML class diagram tekst en retourneer { nodes, edges } voor

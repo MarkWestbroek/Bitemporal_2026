@@ -16,7 +16,7 @@ import flexLightUrl from "flexlayout-react/style/light.css?url";
 
 import useModelStore from "../store/useModelStore";
 import useUIStore from "../store/useUIStore";
-import { v3ModelNaarStore, exportStoreAsJson, importStoreFromJson, storeNaarV3Model, filterStoreByDomein, mergeStoreDomein } from "../store/adapters";
+import { v3ModelNaarStore, exportStoreAsJson, importStoreFromJson, storeNaarV3Model, filterStoreByDomein, mergeStoreDomein, rawEditorNaarStore } from "../store/adapters";
 import { validateV3Model } from "../validation/validateV3Model";
 import { demoV3Model } from "../demoV3Model";
 import {
@@ -523,9 +523,15 @@ export default function IdePage() {
   const handleImportResult = useCallback((data, meta) => {
     try {
       let storeData;
-      const isIDE = meta.format === "ide";
-
-      if (isIDE) {
+      if (meta.format === "raw-editor") {
+        // Lossless pad voor textuele UML-imports (Mermaid/PlantUML/XMI):
+        // alles van rawUMLNaarEditor wordt 1-op-1 in de store gezet.
+        // Validatie tegen V3 gebeurt pas bij export/build via valideerVoorV3().
+        storeData = rawEditorNaarStore(
+          { nodes: data.nodes || [], edges: data.edges || [] },
+          { bron: data.bron || "raw-editor-import", naam: data.naam || "" }
+        );
+      } else if (meta.format === "ide") {
         storeData = importStoreFromJson(data);
       } else {
         storeData = v3ModelNaarStore(data);

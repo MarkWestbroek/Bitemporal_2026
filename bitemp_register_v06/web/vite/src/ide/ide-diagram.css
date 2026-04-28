@@ -31,6 +31,7 @@ body[data-ide-theme="dark"] {
   --ide-sep-color: #3a3a5c;
 
   /* Panels (ProjectBrowser, DetailsPanel) */
+  --ide-panel-bg: #252535;
   --ide-panel-color: #ccc;
   --ide-panel-color-muted: #999;
   --ide-panel-color-heading: #ddd;
@@ -91,6 +92,7 @@ body[data-ide-theme="light"] {
   --ide-sep-color: #ccc;
 
   /* Panels */
+  --ide-panel-bg: #ffffff;
   --ide-panel-color: #1e293b;
   --ide-panel-color-muted: #555;
   --ide-panel-color-heading: #111;

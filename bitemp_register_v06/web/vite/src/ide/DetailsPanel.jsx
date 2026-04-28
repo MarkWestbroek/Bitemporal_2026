@@ -916,6 +916,23 @@ function ElementEditor({ element, updateElement }) {
         <VeldenEditor velden={data.velden} onChange={(v) => setData("velden", v)} beschikbareVeldtypen={beschikbareVeldtypen} elementId={id} />
       )}
 
+      {/* Velden op entiteit — alleen toegestaan in tussentoestand (na ruwe import).
+          V3-export weigert dit; gebruik B6 'Splits entiteit' (rechtsklik) om
+          velden om te zetten naar GE's. Bewerken blijft mogelijk voor kleine
+          opschoning vóór de splitsing. */}
+      {type === "entiteit" && Array.isArray(data.velden) && data.velden.length > 0 && (
+        <div style={{ marginTop: 8 }}>
+          <div style={{
+            background: "#fff7ed", border: "1px solid #fdba74", color: "#9a3412",
+            padding: "6px 8px", borderRadius: 4, fontSize: 12, marginBottom: 6,
+          }}>
+            ⚠ Entiteit heeft losse velden — niet metamodel-conform. Gebruik
+            rechtsklik → "Splits entiteit" (B6) om naar GE's om te zetten.
+          </div>
+          <VeldenEditor velden={data.velden} onChange={(v) => setData("velden", v)} beschikbareVeldtypen={beschikbareVeldtypen} elementId={id} />
+        </div>
+      )}
+
       {/* Enum waarden editor */}
       {type === "enumeratie" && (
         <>

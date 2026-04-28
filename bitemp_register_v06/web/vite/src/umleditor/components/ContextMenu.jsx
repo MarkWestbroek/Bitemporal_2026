@@ -1,21 +1,22 @@
 /**
  * ContextMenu — Rechtsklikmenu op het canvas.
  *
- * Drie varianten op basis van `menuType`:
+ * Vier varianten op basis van `menuType`:
  *   "align"       — Uitlijnacties (verschijnt bij ≥2 geselecteerde nodes)
  *   "dependency"  — Verberg/toon «use» dependency edges
  *   "domein"      — Verander domein van geselecteerde nodes
+ *   "refactor"    — Structurele refactor-acties (B5 Cast naar GE, B6 Splits velden)
  *
  * Props:
  *   x, y              — schermcoördinaten (pixels) van het menu
- *   menuType          — "align" | "dependency" | "domein"
+ *   menuType          — "align" | "dependency" | "domein" | "refactor"
  *   onAlign           — callback(actie: string)        (align)
- *   onAction          — callback(actie: string)         (dependency)
+ *   onAction          — callback(actie: string)         (dependency / refactor)
  *   onDomeinWijzigen  — callback(domein: string)        (domein)
  *   onClose           — callback om het menu te sluiten
  *   itemCount         — aantal geselecteerde nodes      (align / domein)
- *   items             — [{actie, label, icon?}]         (dependency)
- *   header            — optionele tekst bovenin         (dependency)
+ *   items             — [{actie, label, icon?, disabled?, title?}]  (dependency / refactor)
+ *   header            — optionele tekst bovenin         (dependency / refactor)
  *   beschikbareDomeinen — string[]                      (domein)
  */
 import { useEffect, useRef, useState } from "react";
@@ -211,6 +212,32 @@ export default function ContextMenu({ x, y, menuType = "align", onAlign, onActio
               OK
             </button>
           </div>
+        </>
+      ) : menuType === "refactor" ? (
+        <>
+          <div className="context-menu-header context-menu-header--refactor">
+            🔧 Refactor — <em>{header}</em>
+          </div>
+          {(items || []).map((item, i) =>
+            item.separator ? (
+              <div key={`sep-${i}`} className="context-menu-separator" />
+            ) : (
+              <button
+                key={item.actie}
+                className={`context-menu-item${item.disabled ? " context-menu-item--disabled" : ""}`}
+                title={item.title || ""}
+                onClick={() => {
+                  if (!item.disabled) {
+                    onAction?.(item.actie);
+                    onClose();
+                  }
+                }}
+              >
+                {item.icon && <span className="context-menu-icon">{item.icon}</span>}
+                {item.label}
+              </button>
+            )
+          )}
         </>
       ) : (
         <>

@@ -1,0 +1,35 @@
+classDiagram
+
+  class Klant {
+    <<entiteit>>
+    +integer id
+  }
+
+  class KlantNaam {
+    <<gegevenselement>>
+    +integer klant_id
+    +string voornaam
+  }
+
+  %% Drie orphan-GE's
+  class Email {
+    <<gegevenselement>>
+    +string adres
+  }
+
+  class Telefoon {
+    <<gegevenselement>>
+    +string nummer
+  }
+
+  class Notitie {
+    <<gegevenselement>>
+    +string tekst
+  }
+
+  %% Eén orphan relatie
+  class GekoppeldAan {
+    <<relatie>>
+  }
+
+  Klant *-- KlantNaam

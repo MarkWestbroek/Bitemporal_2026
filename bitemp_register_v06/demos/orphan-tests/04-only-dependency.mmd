@@ -1,0 +1,19 @@
+classDiagram
+
+  class Order {
+    <<entiteit>>
+    +integer id
+  }
+
+  class Status {
+    <<enumeratie>>
+  }
+
+  %% OrderStatus heeft alleen een «use» dependency, geen compositie → ORPHAN
+  class OrderStatus {
+    <<gegevenselement>>
+    +integer order_id
+    +Status waarde
+  }
+
+  Order ..> OrderStatus : use

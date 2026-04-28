@@ -12,7 +12,7 @@
  * @module import/_helpers
  */
 
-import { generateId, defaultKleur } from "../metamodel/types";
+import { generateId, defaultKleur } from "../metamodel/types.js";
 
 // Aliastabel: lowercase stereotype-naam → canonieke meta.
 // Wordt door alle importers gebruikt; uitbreiden hier i.p.v. per importer.

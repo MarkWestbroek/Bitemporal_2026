@@ -38,15 +38,16 @@ function GegevensElementNode({ id, data, selected }) {
         lineStyle={{ borderColor }}
         handleStyle={{ width: 10, height: 10, borderRadius: 3, borderColor, background: "#ffffff" }}
       />
-      {/* Handles op alle zijden voor flexibele edge-aansluitingen */}
+      {/* Handles op alle zijden voor flexibele edge-aansluitingen.
+           Volgorde: target-* eerst, source-* als laatste (hogere z-index) — zie EntiteitNode. */}
       <Handle type="target" position={Position.Top} id="target-top" />
-      <Handle type="source" position={Position.Bottom} id="source-bottom" />
-      <Handle type="source" position={Position.Top} id="source-top" />
       <Handle type="target" position={Position.Bottom} id="target-bottom" />
-      <Handle type="source" position={Position.Left} id="source-left" />
       <Handle type="target" position={Position.Left} id="target-left" />
-      <Handle type="source" position={Position.Right} id="source-right" />
       <Handle type="target" position={Position.Right} id="target-right" />
+      <Handle type="source" position={Position.Top} id="source-top" />
+      <Handle type="source" position={Position.Bottom} id="source-bottom" />
+      <Handle type="source" position={Position.Left} id="source-left" />
+      <Handle type="source" position={Position.Right} id="source-right" />
 
       <div className="node-header">
         <div className="node-stereotype">«gegevenselement»</div>

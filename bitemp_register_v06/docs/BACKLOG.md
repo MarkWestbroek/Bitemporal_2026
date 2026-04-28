@@ -1,8 +1,69 @@
 `# Backlog — Bitemporeel Register v06
 
-> **Samengesteld**: 2026-04-07
+> **Samengesteld**: 2026-04-07 (laatst bijgewerkt 2026-04-28)
 > **Bron**: alle `.md` bestanden, Go-code TODOs, planbestanden, ontwerpgedachten en frontend-code in de v06 codebase.
 > **Doel**: één overzicht van alle openstaande features, ideeën, verbeterplannen en toekomstige stappen.
+
+---
+
+## 0. Acute issues — IDE / editor (2026-04-27)
+
+### 0.1 Editor-v2 `removeChild` crash blijft levensgroot in beeld
+- Symptoom: `Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node` toont na elke pagina-edit; alleen Vite-dev-server herstart helpt voorlopig.
+- Eerdere RAF-deferral fix in `MetamodelEditor.jsx` werkt niet voor alle render-paden (HMR vs cold load).
+- Onderzoek: ResizeObserver in XyFlow vs HMR-replace, eventueel `key`-strategie of strict-mode toggling per pagina-load.
+
+### 0.2 IDE mermaid-import is "kapot" — ✅ OPGELOST (2026-04-27)
+- Was: alleen klassen kwamen binnen, geen velden, geen edges, geen default diagram.
+- Root cause: IDE-pad ging `rawUMLNaarEditor` → `editorNaarV3Model` → `v3ModelNaarStore`. `editorNaarV3Model` (`src/umleditor/metamodel/types.js:669`) ondersteunt geen velden op entiteit-niveau (V3 EntiteitModel kent alleen GE's) en geen directe entiteit→entiteit edges, dus die werden stilletjes weggegooid.
+- Oplossing — "rawUML"-pad zonder V3-tussenstap, lossless:
+  - Nieuwe `rawEditorNaarStore(graaf, opts)` in `src/store/adapters.js`: 1-op-1 mapping van editor-nodes/edges naar IDE-store; behoudt velden op entiteiten en directe ent→ent edges; één overzicht-diagram met posities uit de bron.
+  - `ImportDialog.jsx`: textuele UML-imports worden ingepakt als `_format: "raw-editor"` (niet meer als V3-envelope).
+  - `pages/IdePage.jsx` `handleImportResult`: extra case `"raw-editor"` → `rawEditorNaarStore`.
+  - `DetailsPanel.jsx`: voor entiteit met losse velden tonen we `VeldenEditor` met een waarschuwingsbanner ("gebruik B6 om te splitsen"). Bewerkbaar — kleine opschoning vóór splitsen blijft mogelijk.
+  - Nieuwe `valideerVoorV3(state)` in `adapters.js`: vlagt entiteit met velden (V3-001) en directe ent→ent edges (V3-002). Pas bij export/build af te dwingen.
+  - 19 nieuwe unit-tests in `src/store/rawEditorAdapter.test.js`, inclusief end-to-end tegen alle 5 demo-`.mmd`-bestanden. Totaal 110/110 groen.
+- Vervolg (apart op te pakken): UI-banner bij "Exporteer V3" en "Publiceer/Rebuild" die `valideerVoorV3` aanroept en overtredingen toont met directe links naar B5/B6/B7.
+
+### 0.3 Orphan-testbestanden 01–04 falen bij IDE-import — ✅ OPGELOST (2026-04-27)
+- Direct gevolg van 0.2; opgelost via dezelfde `rawEditorNaarStore`-route.
+- End-to-end tests toegevoegd in `src/store/rawEditorAdapter.test.js` voor alle 5 demo-bestanden (orphan-detectie + placeholder-roundtrip).
+
+### 0.4 B5/B6/B7 alleen in IDE, niet in editor-v2 — ✅ OPGELOST (2026-04-28)
+- B5 (Cast entiteit naar GE) en B6 (Splits velden naar GE's) zijn nu ook beschikbaar in de editor-v2 via een rechtsklik-contextmenu op losse entiteitnodes.
+- Rechtsklik op enkelvoudige entiteit → nieuw "Refactor"-menu (menuType `"refactor"`) met:
+  - **✂️ Splits velden naar GE's...** (B6): opent dialoog met checkboxes per veld → maakt per veld een nieuw GE-node + compositie-edge; verwijdert velden uit de entiteit.
+  - **🔄 Cast entiteit naar GE...** (B5): opent dialoog met dropdown voor de parent-entiteit → converteert node-type naar `gegevenselement`; verwijdert losstaande entiteit-edges; voegt parent-edge toe.
+- Implementatie: `MetamodelEditor.jsx` (`handleSplitsBevestigen`, `handleCastBevestigen`, dialoog-state); `ContextMenu.jsx` (nieuw `"refactor"` menuType); `editor.css` (`.refactor-dialoog-overlay`, `.refactor-dialoog-*`, dark-mode).
+- Undo-integratie: beide acties pushen een canvas-snapshot → `Ctrl+Z` werkt.
+- Bij meervoudige selectie toont rechtsklik op entiteit nog steeds het domein-menu (ongewijzigd).
+- B7 (nieuwe relatie tussen twee entiteiten) is in editor-v2 al ingebouwd via de drag-connect-flow; geen aparte actie nodig.
+
+### 0.5 IDE B5 Cast-naar-GE: window.prompt → modal dropdown — ✅ OPGELOST (2026-04-28)
+- Was: `handleCastNaarGE` in `DiagramCanvas.jsx` delegeerde naar `promptCastNaarGE` (window.prompt + genummerde tekstlijst).
+- Opgelost: inline modal met `<select>` dropdown, analoog aan de B5-modal in editor-v2 en de B6-splits-modal in de IDE.
+  - `castDialoog` state: `{ entId, entNaam, kandidaten: [{id, naam, domein}], parentId }`.
+  - Kandidaten: alle entiteiten uit de store, gesorteerd op zelfde-domein-eerst, daarna alfabetisch, met domeinnaam als suffix.
+  - `handleCastDialoogBevestigen` roept `castEntiteitNaarGE` uit `transformations.js` aan, verwerkt warnings via `window.confirm`, past lokale RF-state aan (node-type → `gegevenselement`), en roept `passToePatch`.
+  - Import `promptCastNaarGE` verwijderd; `castEntiteitNaarGE` toegevoegd aan import uit `./transformations`.
+  - Theming via CSS-variabelen (`--ide-panel-bg`, `--ide-input-bg`, etc.) — werkt in zowel light als dark mode.
+- Bestanden: `DiagramCanvas.jsx`.
+
+### 0.6 Node-tekstleesbaarheid in dark mode — ✅ OPGELOST (2026-04-28)
+- Was: in dark IDE-modus waren `.node-typenaam`, `.veld-naam` en `.veld-type` licht van kleur (`#e2e8f0`, `#cbd5e1`, `#64748b`). Omdat node-achtergronden altijd lichte user-defined kleuren zijn (bijv. `#bbf7d0`), was de tekst slecht leesbaar.
+- Opgelost: dark-mode CSS-overrides voor node-tekstkleuren zetten tekst altijd op donker:
+  - `.node-typenaam`: `#0f172a` (was `#e2e8f0`).
+  - `.veld-naam`: `#1e293b` (was `#cbd5e1`).
+  - `.veld-type`: `#475569` (was `#64748b` — zelfde waarde maar nu bewust als "donker op lichte achtergrond").
+  - `.node-veld.enum-waarde`: `#92400e` donkere amber (was `#fcd34d` geel — onleesbaar op lichte achtergrond).
+  - `.node-veld.leeg`: `#64748b` (was `#475569` — iets lichter maar nog steeds leesbaar op wit/lichtgroen).
+- Motivatie: node-achtergronden zijn altijd lichte, user-defined `kleur`-waarden; de dark-mode-state geldt voor de IDE-omgeving (panelen, toolbars, canvas), niet voor node-inhoud.
+- Bestand: `editor.css`.
+
+### 0.7 Project Browser — domein hernoemen + verwijderen
+- Hernoemen: prompt voor nieuwe naam → controle of doelnaam al bestaat → alle elementen + diagrammen met `domein === oud` updaten.
+- Verwijderen: confirm-dialoog met telling van te raken elementen + diagrammen → cascade delete of verplaatsen naar `(geen domein)`.
+- Beide via rechter-muisklik op het domein-mapje in de Project Browser.
 
 ---
 
@@ -16,6 +77,18 @@
 10  Testdata, bootstrap
 11  Autogen testdata vanuit model
 ```
+
+### Drie extra registratiemanieren (plan 2026-04-28)
+
+Plan: één gedeelde engine `RegistreerCore` met drie schrijflagen.
+Sessieplan: zie `/memories/session/plan.md`.
+
+- ✅ **Fase 1 (geneste full-payload, 2026-04-28).** Een `WijzigingRequest.opvoer/afvoer` mag een geneste boom bevatten (zelfde shape als `GET /full/{padnaam}/:id`-response). De server splitst die in platte wijzigingen, één per representatie. Audit-granulariteit blijft fijnmazig; de originele geneste payload wordt letterlijk in `Registratie.RequestBody` bewaard. Implementatie: [handlers/registration_normalizer.go](handlers/registration_normalizer.go), `RepresentatiePlusNaam.RawPayload` in [model/REST request models.go](model/REST%20request%20models.go), wiring + raw-body-capture in [handlers/registration_handlers.go](handlers/registration_handlers.go). Tests: [handlers/registration_normalizer_test.go](handlers/registration_normalizer_test.go).
+- 🟡 **Fase 0 (refactor, openstaand).** Extract `RegistreerCore(ctx, db, req, audit)` uit `RegistreerMetNieuweAanpak` (en zet helpers over op `context.Context` i.p.v. `*gin.Context`). Voorwaarde voor Fase 2/3 zodat REST/CRUD- en GraphQL-mutations dezelfde engine kunnen aanroepen.
+- 🟡 **Fase 2 (REST/CRUD per padnaam, openstaand).** PATCH (JSON Merge Patch, RFC 7396) + DELETE per padnaam. Diff-engine `BerekenWijzigingen(huidig, gewenst, meta)` vertaalt patch-body naar wijzigingen. `?modus=registratie|correctie` (default `registratie`); `Prefer: return=representation`. OpenAPI uitbreiden.
+- 🟡 **Fase 3 (GraphQL Command-laag, openstaand).** Sterk getypeerde `<Type>OpvoerInput` / `<Type>PatchInput` per representatie, gegenereerd uit MetaRegistry. Mutations `registreer<Type>`, `corrigeer<Type>`, `voer<Type>Af`, `wijzig<Type>` delegeren naar `RegistreerCore`. Bestaande JSONScalar-mutations blijven voor back-compat.
+
+Out-of-scope (BACKLOG): server-side ID-allocatie; optimistic concurrency (`If-Match`/ETag); `Idempotency-Key` deduplicatie; bulk-operaties op collections.
 
 ### Afgeleide velden
 
@@ -540,6 +613,10 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | B21 | ✅ Backfill script bestaande registraties: `cmd/backfill_registratie_domeinen/` | nieuw |
 | B22 | ✅ API domein-filter: `?domein=` queryparameter op `GET /full/registraties` met `@>` array containment | nieuw |
 | B23 | ✅ GraphQL `domeinen` veld op RegistratieType | nieuw |
+| B24 | Extra endpoint voor registratie (per domein?) dat wijziging niet nodig heeft: kan alleen als alle wijzigingen gelijkvormig zijn: alle opvoer of afvoer | nieuw |
+| B25 | 'backward'-compatible REST PATCH / DELETE mapping naar wijziging | nieuw |
+| B | | nieuw |
+| B | | nieuw |
 
 ### Database / DDL
 
@@ -665,8 +742,14 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I46 | verwijderen van diagrammen | nieuw |
 | I47 | attributen vak verbergen indien leeg | nieuw |
 | I48 | importeer UML, MIM en mermaid weer | nieuw |
+| I49 | auto route model | nieuw |
+| I50 | ✅ PB nesting: ent→ent compositie-edges produceerden dubbele entries (Plan onder OverkoepelendPlan **én** als losse entiteit) → react-arborist key-collision → visuele overlap bij domein-toggle. Fix: entiteit-typed children worden niet meer als sub-knoop getoond, en `idAccessor` gebruikt een composite `treeKey` voor child-rows. (2026-04-28) | nieuw |
+| I51 | ✅ B5/B6/B7 (cast/splits/relatie) faalden op raw-imported elementen met "Element X is geen entiteit" omdat `rawNodeNaarElement` geen top-level `metatype` zette. Fix: metatype op top-level én in `data`; transformations.js `isEntiteit/isGE/isRelatie` accepteren nu ook `el.type` en `el.data.metatype` als fallback. Regression-test toegevoegd. (2026-04-28) | nieuw |
+| I52 | Editor-v2 `Failed to execute 'removeChild'` treedt nog steeds op na openen. De huidige defer (rAF + null-data-mount) is onvoldoende; vermoedelijk XyFlow ResizeObserver vs React 18 concurrent commits. Onderzoek: aparte `key` op `<MetamodelEditor>` per data-load; downgrade React-Flow; of `<Suspense>`-grens rond editor. Zie todo #2. | nieuw |
 | I |  | nieuw |
 | I |  | nieuw |
+| I |  | nieuw |
+
 
 ### Frontend — Content Editor (Inhoud-editor)
 

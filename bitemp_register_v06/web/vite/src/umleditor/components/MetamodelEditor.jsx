@@ -71,6 +71,7 @@ import OrphanDialog from "./OrphanDialog";
 // Data helpers
 import {
   generateId,
+  defaultKleur,
   editorNaarV3Model,
   schemaResponseNaarEditor,
   maakLeegType,
@@ -287,6 +288,12 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   const undoRestoreBezigRef = useRef(false);
   // { x, y } schermcoördinaten van het rechtsklikmenu; null = verborgen
   const [contextMenu, setContextMenu] = useState(null);
+  // Refactor dialoog: { type: "splits"|"cast", nodeId, entNaam, velden? } of null.
+  const [refactorDialoog, setRefactorDialoog] = useState(null);
+  // GE-naam per veld in het splits-dialoog: {[veldNaam]: geNaam} — leeg = niet splitsen.
+  const [dialoogVeldNamen, setDialoogVeldNamen] = useState({});
+  // Lokale state voor het cast-naar-GE dialoog (nodeId van de gekozen parent).
+  const [dialoogParentId, setDialoogParentId] = useState("");
   // Actieve edge-mode: EDGE_MODES.NONE = auto-detectie, anders override.
   const [activeEdgeMode, setActiveEdgeMode] = useState(EDGE_MODES.NONE);
   // Defer ReactFlow één animatieframe na de initiële commit om de race tussen
@@ -1024,6 +1031,41 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         }
       }
 
+      // Refactor menu voor enkelvoudige entiteit-node (niet in meervoudige selectie).
+      // B5 (Cast naar GE) en B6 (Splits velden) zijn alleen relevant voor losse entiteiten.
+      if (node && node.type === "entiteit") {
+        const geselecteerd = nodes.filter((n) => n.selected);
+        const isAlleenDitNode =
+          geselecteerd.length === 0 ||
+          (geselecteerd.length === 1 && geselecteerd[0].id === node.id);
+        if (isAlleenDitNode) {
+          event.preventDefault();
+          const velden = node.data?.velden || [];
+          const canvasRect = canvasRef.current?.getBoundingClientRect?.() || { left: 0, top: 0 };
+          setContextMenu({
+            menuType: "refactor",
+            x: event.clientX - canvasRect.left,
+            y: event.clientY - canvasRect.top,
+            targetNodeId: node.id,
+            header: node.data?.typenaam || node.id,
+            items: [
+              {
+                actie: "splits-velden",
+                icon: "✂️",
+                label: velden.length > 0
+                  ? `Splits velden naar GE's… (${velden.length})`
+                  : "Splits velden naar GE's…",
+                disabled: velden.length === 0,
+                title: velden.length === 0 ? "Deze entiteit heeft geen velden" : undefined,
+              },
+              { actie: "cast-naar-ge", icon: "🔄", label: "Cast entiteit naar GE…" },
+            ],
+          });
+          setNodes((nds) => nds.map((n) => ({ ...n, selected: n.id === node.id })));
+          return;
+        }
+      }
+
       // Domein wijzigen voor model-nodes (entiteit, gegevenselement, relatie, etc.)
       const modelNodeTypes = ["entiteit", "gegevenselement", "relatie", "associatieAnker", "referentielijstInstantie"];
       if (node && modelNodeTypes.includes(node.type)) {
@@ -1087,6 +1129,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
 
   /**
    * Verwerk een dependency-contextmenu actie: verberg/toon «use» edges.
+   * Verwerkt ook refactor-acties: splits-velden (B6) en cast-naar-ge (B5).
    */
   const handleDependencyAction = useCallback(
     (actie) => {
@@ -1111,9 +1154,40 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
               : e
           )
         );
+      } else if (actie === "splits-velden") {
+        // B6: open veld-splitser dialoog voor de rechts-geklikte entiteit
+        const nodeId = contextMenu.targetNodeId;
+        const node = nodes.find((n) => n.id === nodeId);
+        if (!node) return;
+        const velden = node.data?.velden || [];
+        // Default GE-naam per veld: korte weergavenaam (PascalCase van veldnaam).
+        // De entiteit-prefix wordt automatisch toegevoegd bij het splitsen.
+        const entNormNaam = normaliseerMetamodelNaam(node.data?.typenaam || "Entiteit", "Entiteit");
+        const defaultNamen = {};
+        velden.forEach((v) => {
+          defaultNamen[v.naam] = normaliseerMetamodelNaam(v.naam || "Veld", "Veld");
+        });
+        setDialoogVeldNamen(defaultNamen);
+        setRefactorDialoog({
+          type: "splits",
+          nodeId,
+          entNaam: node.data?.typenaam || nodeId,
+          velden,
+        });
+      } else if (actie === "cast-naar-ge") {
+        // B5: open entiteit→GE dialoog voor de rechts-geklikte entiteit
+        const nodeId = contextMenu.targetNodeId;
+        const node = nodes.find((n) => n.id === nodeId);
+        if (!node) return;
+        setDialoogParentId("");
+        setRefactorDialoog({
+          type: "cast",
+          nodeId,
+          entNaam: node.data?.typenaam || nodeId,
+        });
       }
     },
-    [contextMenu, setEdges]
+    [contextMenu, nodes, setEdges]
   );
 
   /**
@@ -1127,6 +1201,183 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       );
     },
     [setNodes, pushCanvasUndo]
+  );
+
+  /**
+   * B6: Splits velden van een entiteit uit naar GE-nodes op basis van dialoogVeldNamen.
+   * Velden met dezelfde GE-naam worden gegroepeerd in één GE-node.
+   * Velden met lege GE-naam worden overgeslagen (blijven op de entiteit).
+   */
+  const handleSplitsBevestigen = useCallback(
+    () => {
+      if (!refactorDialoog || refactorDialoog.type !== "splits") return;
+      const { nodeId, velden } = refactorDialoog;
+      const entNode = nodes.find((n) => n.id === nodeId);
+      if (!entNode) { setRefactorDialoog(null); return; }
+
+      // Groepeer velden per GE-naam; lege naam = veld overslaan
+      const geGroepen = new Map(); // geNaam → veld[]
+      const overgebleven = [];
+
+      velden.forEach((veld) => {
+        const geNaam = (dialoogVeldNamen[veld.naam] || "").trim();
+        if (!geNaam) {
+          overgebleven.push(veld);
+        } else {
+          if (!geGroepen.has(geNaam)) geGroepen.set(geNaam, []);
+          geGroepen.get(geNaam).push(veld);
+        }
+      });
+
+      if (geGroepen.size === 0) return; // Niets te doen
+
+      pushCanvasUndo("splits-velden");
+
+      const nieuweGENodes = [];
+      const nieuweEdges = [];
+      let geIdx = 0;
+      // Entiteit-typenaam voor het afleiden van de korte klassenaam.
+      // bijv. geNaam "Contactmoment_Status" → klassenaam "Status"
+      const entTypenaam = entNode.data?.typenaam || "";
+
+      for (const [geNaam, geVelden] of geGroepen) {
+        const geId = generateId("ge");
+        const gePos = {
+          x: entNode.position.x + (geIdx - (geGroepen.size - 1) / 2) * 220,
+          y: entNode.position.y + 200,
+        };
+        const geNodeStub = { position: gePos, measured: { width: 180, height: 80 } };
+        const handles = berekenKortsteHandles(entNode, geNodeStub);
+        // geNaam is de korte weergavenaam die de gebruiker heeft ingevoerd (bijv. "Status").
+        // typenaam volgt de Go-conventie: EntiteitNaam_GeNaam (bijv. "OverkoepelendPlan_Status").
+        const klassenaam = geNaam;
+        const typenaam = (entTypenaam && !geNaam.startsWith(entTypenaam + "_"))
+          ? `${entTypenaam}_${geNaam}`
+          : geNaam;
+
+        nieuweGENodes.push({
+          id: geId,
+          type: "gegevenselement",
+          position: gePos,
+          data: {
+            typenaam,
+            klassenaam,
+            meervoud: `${typenaam}s`,
+            description: geVelden[0]?.description || "",
+            domein: entNode.data?.domein || "",
+            metatype: "gegevenselement",
+            kleur: defaultKleur("gegevenselement"),
+            isMaterieel: false,
+            velden: geVelden.map((v) => ({ ...v })),
+            afgeleideVelden: [],
+          },
+        });
+
+        nieuweEdges.push({
+          id: generateId("edge"),
+          source: nodeId,
+          target: geId,
+          type: "metamodel",
+          sourceHandle: handles.sourceHandle,
+          targetHandle: handles.targetHandle,
+          data: {
+            rolnaam: klassenaam,
+            jsonRolnaam: klassenaam.toLowerCase(),
+            momentvoorkomen: "enkelvoudig",
+            kardinaliteit: "0..1",
+          },
+        });
+        geIdx++;
+      }
+
+      setNodes((nds) => [
+        ...nds.map((n) =>
+          n.id === nodeId ? { ...n, data: { ...n.data, velden: overgebleven } } : n
+        ),
+        ...nieuweGENodes,
+      ]);
+      setEdges((eds) => [...eds, ...nieuweEdges]);
+      setRefactorDialoog(null);
+    },
+    [refactorDialoog, dialoogVeldNamen, nodes, pushCanvasUndo, setNodes, setEdges]
+  );
+
+  /**
+   * B5: Cast een entiteit-node om naar een gegevenselement.
+   * Verwijdert inkomende compositie-edges vanuit andere entiteiten;
+   * voegt een nieuwe edge toe vanuit de gekozen parent-entiteit.
+   * @param {string|null} parentNodeId - nodeId van de gekozen parent-entiteit
+   */
+  const handleCastBevestigen = useCallback(
+    (parentNodeId) => {
+      if (!refactorDialoog || refactorDialoog.type !== "cast") return;
+      const { nodeId } = refactorDialoog;
+      const entNode = nodes.find((n) => n.id === nodeId);
+      if (!entNode) { setRefactorDialoog(null); return; }
+
+      pushCanvasUndo("cast-naar-ge");
+
+      // Verander node-type en kleur naar gegevenselement
+      setNodes((nds) =>
+        nds.map((n) =>
+          n.id === nodeId
+            ? {
+                ...n,
+                type: "gegevenselement",
+                data: {
+                  ...n.data,
+                  metatype: "gegevenselement",
+                  kleur: defaultKleur("gegevenselement"),
+                },
+              }
+            : n
+        )
+      );
+
+      setEdges((eds) => {
+        // Verwijder inkomende compositie-edges vanuit ANDERE entiteiten (niet de gekozen parent)
+        const gefilterd = eds.filter((e) => {
+          if (e.target !== nodeId) return true;
+          if (e.data?.isDependency || e.data?.isAssociation || e.data?.isAssociationClassLink) return true;
+          const srcType = nodes.find((n) => n.id === e.source)?.type;
+          if (srcType === "entiteit" && e.source !== parentNodeId) return false;
+          return true;
+        });
+
+        // Voeg parent→dit edge toe als de gekozen parent nog geen edge heeft
+        const heeftEdge =
+          parentNodeId &&
+          gefilterd.some(
+            (e) => e.source === parentNodeId && e.target === nodeId && !e.data?.isDependency
+          );
+        if (!heeftEdge && parentNodeId) {
+          const parentNode = nodes.find((n) => n.id === parentNodeId);
+          const handles =
+            parentNode && entNode
+              ? berekenKortsteHandles(parentNode, entNode)
+              : { sourceHandle: "source-bottom", targetHandle: "target-top" };
+          gefilterd.push({
+            id: generateId("edge"),
+            source: parentNodeId,
+            target: nodeId,
+            type: "metamodel",
+            sourceHandle: handles.sourceHandle,
+            targetHandle: handles.targetHandle,
+            data: {
+              rolnaam: "",
+              jsonRolnaam: (entNode.data?.typenaam || "").toLowerCase(),
+              momentvoorkomen: "enkelvoudig",
+              kardinaliteit: "0..1",
+            },
+          });
+        }
+
+        return gefilterd;
+      });
+
+      setRefactorDialoog(null);
+    },
+    [refactorDialoog, nodes, pushCanvasUndo, setNodes, setEdges]
   );
 
   /**
@@ -1682,9 +1933,15 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
 
       pushCanvasUndo("delete-node");
 
+      // Bij een relatie-node ook de bijbehorende associatieAnker-node opruimen
+      // (het ASOC-patroon bestaat uit: bron─o─doel + o╌╌REL; de o is de anker-node).
+      const ankerId = verwijderType === "relatie" ? `anker_${nodeId}` : null;
+      const teVerwijderen = new Set([nodeId]);
+      if (ankerId) teVerwijderen.add(ankerId);
+
       setNodes((nds) => {
         const cleaned = nds
-          .filter((n) => n.id !== nodeId)
+          .filter((n) => !teVerwijderen.has(n.id))
           .map((n) => {
             if (!Array.isArray(n.data?.velden)) return n;
             const velden = n.data.velden.map((v) => {
@@ -1701,7 +1958,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         return cleaned;
       });
       setEdges((eds) =>
-        eds.filter((e) => e.source !== nodeId && e.target !== nodeId)
+        eds.filter((e) => !teVerwijderen.has(e.source) && !teVerwijderen.has(e.target))
       );
       setSelectedNodeId(null);
     },
@@ -2585,6 +2842,120 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
               onDomeinWijzigen={handleDomeinWijzigen}
               onClose={() => setContextMenu(null)}
             />
+          )}
+
+          {/* B6: Splits velden dialoog — per veld een GE-naam opgeven */}
+          {refactorDialoog?.type === "splits" && (
+            <div className="refactor-dialoog-overlay" onClick={() => setRefactorDialoog(null)}>
+              <div className="refactor-dialoog" onClick={(e) => e.stopPropagation()}>
+                <div className="refactor-dialoog-header">
+                  ✂️ Splits velden — <em>{refactorDialoog.entNaam}</em>
+                </div>
+                <div className="refactor-dialoog-body">
+                  <p className="refactor-dialoog-uitleg">
+                    Geef per veld de GE-naam op. Zelfde naam = samen in één GE. Leeg = niet splitsen.
+                  </p>
+                  {refactorDialoog.velden.length === 0 ? (
+                    <p className="refactor-geen-velden">Deze entiteit heeft geen velden.</p>
+                  ) : (
+                    <table className="refactor-veld-tabel">
+                      <thead>
+                        <tr>
+                          <th>Veld</th>
+                          <th>Type</th>
+                          <th>GE-naam (leeg = niet splitsen)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {refactorDialoog.velden.map((v) => (
+                          <tr key={v.naam} className="refactor-veld-item">
+                            <td className="refactor-veld-naam">{v.naam}</td>
+                            <td className="refactor-veld-type">{v.type || "—"}</td>
+                            <td>
+                              <input
+                                type="text"
+                                className="refactor-veld-ge-naam"
+                                value={dialoogVeldNamen[v.naam] ?? ""}
+                                onChange={(e) =>
+                                  setDialoogVeldNamen((prev) => ({
+                                    ...prev,
+                                    [v.naam]: e.target.value,
+                                  }))
+                                }
+                                placeholder="leeg = niet splitsen"
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+                <div className="refactor-dialoog-footer">
+                  <button
+                    className="refactor-btn-primary"
+                    disabled={
+                      refactorDialoog.velden.length === 0 ||
+                      !Object.values(dialoogVeldNamen).some((n) => n.trim())
+                    }
+                    onClick={() => handleSplitsBevestigen()}
+                  >
+                    ✂️ Splits
+                  </button>
+                  <button
+                    className="refactor-btn-secondary"
+                    onClick={() => setRefactorDialoog(null)}
+                  >
+                    Annuleer
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* B5: Cast entiteit naar GE dialoog — kies de parent-entiteit */}
+          {refactorDialoog?.type === "cast" && (
+            <div className="refactor-dialoog-overlay" onClick={() => setRefactorDialoog(null)}>
+              <div className="refactor-dialoog" onClick={(e) => e.stopPropagation()}>
+                <div className="refactor-dialoog-header">
+                  🔄 Cast naar GE — <em>{refactorDialoog.entNaam}</em>
+                </div>
+                <div className="refactor-dialoog-body">
+                  <p className="refactor-dialoog-uitleg">
+                    Kies de bovenliggende entiteit (parent) voor dit gegevenselement:
+                  </p>
+                  <select
+                    className="refactor-parent-select"
+                    value={dialoogParentId}
+                    onChange={(e) => setDialoogParentId(e.target.value)}
+                    autoFocus
+                  >
+                    <option value="">— geen parent —</option>
+                    {entiteitNodes
+                      .filter((n) => n.id !== refactorDialoog.nodeId)
+                      .map((n) => (
+                        <option key={n.id} value={n.id}>
+                          {n.data?.typenaam || n.id}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+                <div className="refactor-dialoog-footer">
+                  <button
+                    className="refactor-btn-primary"
+                    onClick={() => handleCastBevestigen(dialoogParentId || null)}
+                  >
+                    🔄 Cast naar GE
+                  </button>
+                  <button
+                    className="refactor-btn-secondary"
+                    onClick={() => setRefactorDialoog(null)}
+                  >
+                    Annuleer
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
 

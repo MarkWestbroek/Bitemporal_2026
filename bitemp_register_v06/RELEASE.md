@@ -1,5 +1,120 @@
 # Release checklist
 
+## IDE: lossless mermaid/UML-import + V3-validator (2026-04-27)
+
+Mermaid/PlantUML/XMI-import in de IDE-pagina was kapot: alleen klassen kwamen binnen,
+geen velden, geen edges, geen default diagram. Root cause: het IDE-pad ging via
+`editorNaarV3Model`, dat geen velden op entiteit-niveau en geen directe ent→ent edges
+ondersteunt, dus die werden stilletjes weggegooid.
+
+### Wijzigingen
+
+- **`src/store/adapters.js`**:
+  - Nieuwe `rawEditorNaarStore(graaf, opts)`: 1-op-1 lossless mapping van
+    `rawUMLNaarEditor`-output naar IDE-store-shape (elements + structuralEdges +
+    overzicht-diagram). Behoudt velden op entiteiten en directe entiteit→entiteit edges.
+  - Nieuwe `valideerVoorV3(state)`: vlagt entiteiten met losse velden (regel V3-001) en
+    directe entiteit→entiteit edges (V3-002). Bedoeld om bij V3-export en build te
+    tonen, met directe links naar B5/B6/B7.
+- **`src/ide/ImportDialog.jsx`**: textuele UML-imports worden ingepakt als
+  `_format: "raw-editor"` envelope (niet meer omgezet naar V3). `editorNaarV3Model`-
+  import verwijderd.
+- **`src/pages/IdePage.jsx`** `handleImportResult`: extra case `"raw-editor"` →
+  `rawEditorNaarStore`.
+- **`src/ide/DetailsPanel.jsx`**: voor entiteit met losse velden tonen we de
+  `VeldenEditor` met een waarschuwingsbanner ("⚠ niet metamodel-conform — gebruik B6
+  om te splitsen"). Bewerkbaar zodat kleine opschoning (naam/type) vóór splitsen kan.
+- **`src/umleditor/import/importMermaid.js`** + **`importPlantUML.js`**: relatieve
+  imports `./rawuml` → `./rawuml.js` (node-ESM-compatibel, zoals al elders gedaan).
+
+### Tests
+
+- **`src/store/rawEditorAdapter.test.js`** (NIEUW, 19 tests):
+  - `rawEditorNaarStore`: lege/undefined input, behoud van velden op entiteit,
+    behoud van directe ent→ent edges, posities in overzicht-diagram, naam-collision.
+  - `valideerVoorV3`: lege store, V3-001 entiteit-velden, V3-002 directe edges,
+    generalisatie/dependency/GE-edges blijven OK.
+  - End-to-end import van alle 5 demo-bestanden in `demos/orphan-tests/`
+    (01–05): orphan-detectie + placeholder-roundtrip via `rawEditorNaarStore`.
+- **Totaal**: 110/110 groen (was 91/91); `npm run build` succesvol.
+
+### Backlog gevolgen
+
+- 0.2 (IDE mermaid-import) en 0.3 (orphan-tests) gemarkeerd als opgelost.
+- Vervolg: UI-banner bij "Exporteer V3" en "Publiceer/Rebuild" die `valideerVoorV3`
+  aanroept en overtredingen toont met klikbare links naar de B5/B6/B7-acties.
+
+---
+
+## IDE: editor-bewerkingen B5/B6/B7 + Project Browser-icoonplaatsing + node:test infra (2026-04-27)
+
+### Editor-bewerkingen (`src/ide/transformations.js`)
+
+Drie pure transformaties die structurele wijzigingen op model-niveau doorvoeren met
+gestructureerde `{ok, warnings, errors, elements, structuralEdges, newIds, removedIds}` output.
+
+- **B5 — Cast Entiteit naar GE** (`castEntiteitNaarGE`): zet metatype, synct `domein` met
+  parent (warning bij verschil), verwijdert inkomende edges van vreemde entiteiten en
+  uitgaande edges naar entiteiten/relaties; voegt parent→GE compositie toe indien afwezig.
+- **B6 — Splits Entiteit in GE's** (`splitsEntiteit`): genereert per geselecteerd veld
+  een nieuwe GE `${ent.typenaam}_${PascalCase(veld.naam)}` met kardinaliteit `1` of
+  `0..1` o.b.v. `verplicht`.
+- **B7 — Promoot relatie tot associatieklasse** (`relatieNaarAssociatieklasse`):
+  vervangt directe edge `A→B` door `A→Rel_A_B→B`. Velden=[] initieel — ASOC-vorm
+  activeert pas bij eerste veld via `relatieVorm()`.
+
+**UI-toegang**:
+- B5/B6: contextmenu op entiteit in `ProjectBrowser.jsx` ("Cast naar GE" / "Splits in GE's")
+- B7: edge-contextmenu in `DiagramCanvas.jsx` ("Promoot tot associatieklasse"), alleen
+  zichtbaar voor entiteit↔entiteit edges die geen dependency zijn.
+
+Caller patroon: `passToePatch(useModelStore, patch)` — controleert `ok`, toont warnings,
+en commit elements/structuralEdges atomair via `setState`.
+
+### Project Browser: + iconen in FlexLayout tab-titel (iteratie 2)
+
+Eerdere iteratie plaatste de "📁+" en "📐+" iconen in een vaste header-strip boven
+de tree. **Nieuwe plaatsing**: in de FlexLayout tab-titel zelf, links van de
+"maximize"-knop, via `onRenderTabSet` met `renderValues.stickyButtons`.
+
+```jsx
+<FlexLayout.Layout
+  onRenderTabSet={(tabSetNode, renderValues) => {
+    const selected = tabSetNode.getSelectedNode();
+    if (selected?.getComponent?.() === COMP_BROWSER) {
+      renderValues.stickyButtons.push(
+        <button onClick={handleNieuwDomein}>📁+</button>,
+        <button onClick={handleNieuwDiagram}>📐+</button>
+      );
+    }
+  }}
+/>
+```
+
+Voordeel: de iconen staan nu **echt naast** de "Project Browser" tab-tekst en
+nemen geen verticale ruimte meer in beslag.
+
+### Test-infrastructuur: `node:test` + Vite-alias resolver
+
+- `web/vite/test/register-aliases.mjs` + `alias-resolver.mjs`: minimale ESM-loader
+  die `@umleditor/...`, `@store/...`, `@shared/...`, `@ide/...` aliases naar
+  bestandspaden mapt zodat `node --test` de imports vindt.
+- `package.json` script: `npm test` → `node --import ./test/register-aliases.mjs --test 'src/**/*.test.js'`.
+- Nieuwe testbestanden:
+  - `src/ide/transformations.test.js` (18 tests B5/B6/B7)
+  - `src/umleditor/import/rawuml.test.js` (16 tests adapter + orphan-helpers)
+  - `src/store/adapters.test.js` (12 tests filterStoreByDomein + mergeStoreDomein)
+- Totaal: **91 tests groen**.
+- Demo-bestanden voor handmatige UI-validatie: `demos/orphan-tests/*.mmd` met README.
+
+### Side effects
+
+- `src/umleditor/import/rawuml.js` en `src/umleditor/import/_helpers.js`:
+  ontbrekende `.js` extensies toegevoegd op relatieve imports zodat
+  Node ESM-resolutie werkt (Vite was hier toleranter).
+
+---
+
 ## UML-editor + IDE: React 18 concurrent-mode + XyFlow ResizeObserver race-fix (2026-04-26)
 
 **Kritieke bug-fix**: crash op elke paginalaad van editor-v2 (`/react/editor-v2.html`) en IDE (`/react/ide.html`).

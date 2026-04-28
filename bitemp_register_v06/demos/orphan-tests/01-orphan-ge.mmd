@@ -1,0 +1,24 @@
+classDiagram
+
+  class Persoon {
+    <<entiteit>>
+    +integer id
+  }
+
+  class PersoonNaam {
+    <<gegevenselement>>
+    +integer persoon_id
+    +integer rel_id
+    +string voornaam
+    +string achternaam
+  }
+
+  %% LosseAdres heeft GEEN compositie vanuit een entiteit → ORPHAN
+  class LosseAdres {
+    <<gegevenselement>>
+    +string straat
+    +string postcode
+    +string woonplaats
+  }
+
+  Persoon *-- PersoonNaam

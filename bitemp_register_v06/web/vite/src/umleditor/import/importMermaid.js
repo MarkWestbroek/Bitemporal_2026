@@ -15,7 +15,7 @@
  * @module import/importMermaid
  */
 
-import { rawUMLNaarEditor } from "./rawuml";
+import { rawUMLNaarEditor } from "./rawuml.js";
 
 /**
  * Parseer Mermaid class diagram tekst en retourneer { nodes, edges } voor

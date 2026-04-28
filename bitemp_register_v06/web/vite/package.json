@@ -9,7 +9,8 @@
     "prepreview": "node scripts/ensure-local-deps.mjs",
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --import ./test/register-aliases.mjs --test 'src/**/*.test.js'"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.21.3",

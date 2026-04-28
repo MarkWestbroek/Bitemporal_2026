@@ -26,7 +26,6 @@ import { importVanMermaid } from "../umleditor/import/importMermaid";
 import { importVanPlantUML } from "../umleditor/import/importPlantUML";
 import { importVanXMI } from "../umleditor/import/importXMI";
 import { detecteerOrphans, pasOrphanActiesToe } from "../umleditor/import/rawuml";
-import { editorNaarV3Model } from "../umleditor/metamodel/types";
 import OrphanDialog from "../umleditor/components/OrphanDialog";
 
 // ── Herbruikbare stijlen (identiek aan ExportDialog) ──────
@@ -197,17 +196,24 @@ export default function ImportDialog({ open, domains, domainMeta, prefillDomein,
     return () => { cancelled = true; };
   }, [open, bron, apiBron]);
 
-  // ---- Hulp: editor-graaf → V3 + parsedJson invullen ----
-  // Wordt gebruikt na een textuele UML-import (eventueel na orphan-acties).
+  // ---- Hulp: editor-graaf als raw-editor parsedJson invullen ----
+  // Gebruikt na een textuele UML-import (eventueel na orphan-acties).
+  // Lossless: we wikkelen de ruwe nodes/edges in een envelope met
+  // `_format: "raw-editor"` zodat handleSubmit ze ongewijzigd kan
+  // doorgeven aan IdePage → rawEditorNaarStore. Géén V3-tussenstap, dus
+  // velden op entiteiten en directe ent→ent edges blijven behouden.
   const zetEditorGraafAlsParsedJson = useCallback((graaf, formaat, bestandsnaam) => {
-    const v3 = editorNaarV3Model(graaf.nodes, graaf.edges, {});
-    // Wikkel in dezelfde envelope als V3-bestanden zodat handleSubmit hem als
-    // V3 herkent (json.model.versie === "v3").
-    const wrapped = { model: v3 };
+    const wrapped = {
+      _format: "raw-editor",
+      nodes: graaf.nodes || [],
+      edges: graaf.edges || [],
+      bron: `${UML_FORMATEN[formaat]?.label || formaat} → ${bestandsnaam}`,
+      naam: bestandsnaam,
+    };
     setParsedJson(wrapped);
     setBestandInfo({
-      format: "V3",
-      elementen: (v3.entiteiten || []).length,
+      format: UML_FORMATEN[formaat]?.label || formaat,
+      elementen: (graaf.nodes || []).length,
       versie: `${UML_FORMATEN[formaat]?.label || formaat} → ${bestandsnaam}`,
     });
   }, []);
@@ -342,11 +348,12 @@ export default function ImportDialog({ open, domains, domainMeta, prefillDomein,
         }
       }
 
-      const format = json?._format === "ide-v1" ? "ide"
+      const format = json?._format === "raw-editor" ? "raw-editor"
+        : json?._format === "ide-v1" ? "ide"
         : (json?.model?.versie === "v3" || json?.versie === "v3") ? "v3"
         : "onbekend";
 
-      if (format === "onbekend") throw new Error("Onbekend JSON-format. Verwacht IDE-v1 of V3.");
+      if (format === "onbekend") throw new Error("Onbekend JSON-format. Verwacht IDE-v1, V3, Mermaid, PlantUML of XMI.");
 
       onImport(json, {
         format,

@@ -1062,7 +1062,282 @@ body {
   cursor: not-allowed;
 }
 
+/* context-menu-item disabled staat (refactor-menu) */
+.context-menu-item--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* context-menu-header refactor variant */
+.context-menu-header--refactor em {
+  font-style: italic;
+  font-weight: 600;
+}
+
 /* === einde context menu === */
+
+/* ═══════════════════════════════════════════════════════
+   Refactor dialoog — B5 (Cast naar GE) en B6 (Splits velden)
+   Verschijnt als modal overlay boven het canvas.
+   ═══════════════════════════════════════════════════════ */
+.refactor-dialoog-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.refactor-dialoog {
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  min-width: 320px;
+  max-width: 460px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.refactor-dialoog-header {
+  background: #f0fdf4;
+  border-bottom: 1px solid #d1fae5;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #065f46;
+}
+
+.refactor-dialoog-header em {
+  font-style: normal;
+}
+
+.refactor-dialoog-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.refactor-dialoog-uitleg {
+  font-size: 0.82rem;
+  color: #374151;
+  margin: 0 0 6px 0;
+}
+
+.refactor-geen-velden {
+  font-size: 0.82rem;
+  color: #9ca3af;
+  font-style: italic;
+  margin: 0;
+}
+
+.refactor-veld-tabel {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.83rem;
+}
+
+.refactor-veld-tabel thead th {
+  text-align: left;
+  padding: 3px 6px 5px;
+  color: #6b7280;
+  font-weight: 500;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.78rem;
+}
+
+.refactor-veld-item {
+  transition: background 0.1s;
+}
+
+.refactor-veld-item:hover {
+  background: #f0fdf4;
+}
+
+.refactor-veld-item td {
+  padding: 3px 6px;
+}
+
+.refactor-veld-naam {
+  font-weight: 500;
+  color: #111827;
+  white-space: nowrap;
+}
+
+.refactor-veld-type {
+  color: #6b7280;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.refactor-veld-ge-naam {
+  width: 100%;
+  min-width: 150px;
+  padding: 3px 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  background: #fff;
+  color: #111827;
+  outline: none;
+}
+
+.refactor-veld-ge-naam:focus {
+  border-color: #059669;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.12);
+}
+
+.refactor-veld-ge-naam::placeholder {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.refactor-parent-select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  background: #fff;
+  color: #111827;
+  outline: none;
+}
+
+.refactor-parent-select:focus {
+  border-color: #059669;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15);
+}
+
+.refactor-dialoog-footer {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  justify-content: flex-end;
+}
+
+.refactor-btn-primary {
+  padding: 6px 14px;
+  background: #059669;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.refactor-btn-primary:hover:not(:disabled) {
+  background: #047857;
+}
+
+.refactor-btn-primary:disabled {
+  background: #a7f3d0;
+  cursor: not-allowed;
+}
+
+.refactor-btn-secondary {
+  padding: 6px 14px;
+  background: #fff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.84rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.refactor-btn-secondary:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+/* Dark mode overrides */
+body[data-ide-theme="dark"] .refactor-dialoog {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+body[data-ide-theme="dark"] .refactor-dialoog-header {
+  background: #0f2d1f;
+  border-color: #16532d;
+  color: #6ee7b7;
+}
+
+body[data-ide-theme="dark"] .refactor-dialoog-body {
+  color: #cbd5e1;
+}
+
+body[data-ide-theme="dark"] .refactor-dialoog-uitleg {
+  color: #94a3b8;
+}
+
+body[data-ide-theme="dark"] .refactor-veld-item:hover {
+  background: #0f2d1f;
+}
+
+body[data-ide-theme="dark"] .refactor-veld-tabel thead th {
+  color: #64748b;
+  border-color: #334155;
+}
+
+body[data-ide-theme="dark"] .refactor-veld-naam {
+  color: #e2e8f0;
+}
+
+body[data-ide-theme="dark"] .refactor-veld-type {
+  color: #64748b;
+}
+
+body[data-ide-theme="dark"] .refactor-veld-ge-naam {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+body[data-ide-theme="dark"] .refactor-veld-ge-naam:focus {
+  border-color: #059669;
+}
+
+body[data-ide-theme="dark"] .refactor-parent-select {
+  background: #1e293b;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+body[data-ide-theme="dark"] .refactor-parent-select:focus {
+  border-color: #059669;
+}
+
+body[data-ide-theme="dark"] .refactor-dialoog-footer {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+body[data-ide-theme="dark"] .refactor-btn-secondary {
+  background: #1e293b;
+  color: #cbd5e1;
+  border-color: #475569;
+}
+
+body[data-ide-theme="dark"] .refactor-btn-secondary:hover {
+  background: #334155;
+  border-color: #64748b;
+}
+
+body[data-ide-theme="dark"] .context-menu-header--refactor em {
+  color: #6ee7b7;
+}
+
+/* === einde refactor dialoog === */
 
 .test-invoer-veld-wrapper {
   display: flex;
@@ -1740,10 +2015,13 @@ body[data-ide-theme="dark"] .metamodel-node {
 }
 
 body[data-ide-theme="dark"] .node-typenaam {
-  color: #e2e8f0;
+  /* Node backgrounds zijn altijd lichte kleuren (user-defined kleur);
+     daarom blijft node-typenaam donker, ook in dark mode. */
+  color: #0f172a;
 }
 
 body[data-ide-theme="dark"] .node-stereotype {
+  /* Stereotypetekst op lichte node-achtergrond: muted donker */
   color: #64748b;
 }
 
@@ -1756,19 +2034,23 @@ body[data-ide-theme="dark"] .node-description-hint {
 }
 
 body[data-ide-theme="dark"] .veld-naam {
-  color: #cbd5e1;
+  /* Node backgrounds zijn altijd lichte kleuren; veld-naam blijft donker. */
+  color: #1e293b;
 }
 
 body[data-ide-theme="dark"] .veld-type {
-  color: #64748b;
-}
-
-body[data-ide-theme="dark"] .node-veld.leeg {
+  /* Node backgrounds zijn altijd lichte kleuren; veld-type blijft donker/muted. */
   color: #475569;
 }
 
+body[data-ide-theme="dark"] .node-veld.leeg {
+  /* Lichte node-achtergrond: muted donker grijs */
+  color: #64748b;
+}
+
 body[data-ide-theme="dark"] .node-veld.enum-waarde {
-  color: #fcd34d;
+  /* Lichte node-achtergrond: donkere amber tint in plaats van lichtgeel */
+  color: #92400e;
 }
 
 body[data-ide-theme="dark"] .node-veld.datatype-detail {
@@ -1776,9 +2058,11 @@ body[data-ide-theme="dark"] .node-veld.datatype-detail {
 }
 
 body[data-ide-theme="dark"] .node-badge.materieel {
-  background: rgba(59, 130, 246, 0.15);
-  color: #93c5fd;
-  border-color: #1e40af;
+  /* Node achtergrond is altijd licht; badge houdt dezelfde donkere stijl als light mode.
+     Donkerblauwe tekst en witte achtergrond geven maximaal contrast. */
+  background: #ffffff;
+  color: #1e40af;
+  border-color: #3b82f6;
 }
 
 /* === React Flow handles === */

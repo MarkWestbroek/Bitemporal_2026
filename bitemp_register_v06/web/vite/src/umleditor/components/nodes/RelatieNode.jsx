@@ -53,13 +53,13 @@ function RelatieNode({ id, data, selected }) {
           handleStyle={{ width: 10, height: 10, borderRadius: 3, borderColor, background: "#ffffff" }}
         />
         <Handle type="target" position={Position.Top} id="target-top" />
-        <Handle type="source" position={Position.Bottom} id="source-bottom" />
-        <Handle type="source" position={Position.Top} id="source-top" />
         <Handle type="target" position={Position.Bottom} id="target-bottom" />
-        <Handle type="source" position={Position.Left} id="source-left" />
         <Handle type="target" position={Position.Left} id="target-left" />
-        <Handle type="source" position={Position.Right} id="source-right" />
         <Handle type="target" position={Position.Right} id="target-right" />
+        <Handle type="source" position={Position.Top} id="source-top" />
+        <Handle type="source" position={Position.Bottom} id="source-bottom" />
+        <Handle type="source" position={Position.Left} id="source-left" />
+        <Handle type="source" position={Position.Right} id="source-right" />
         <div className="node-typenaam" style={{ fontSize: "0.85em", margin: 0 }}>
           {data.klassenaam || data.typenaam || "(naamloos)"}
         </div>

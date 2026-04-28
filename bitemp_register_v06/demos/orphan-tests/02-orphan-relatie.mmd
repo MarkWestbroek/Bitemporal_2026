@@ -1,0 +1,17 @@
+classDiagram
+
+  class Auto {
+    <<entiteit>>
+    +integer id
+  }
+
+  class Bestuurder {
+    <<entiteit>>
+    +integer id
+  }
+
+  %% Bevat is een relatie zonder enige koppeling → ORPHAN
+  class Bevat {
+    <<relatie>>
+    +date sinds
+  }

@@ -36,7 +36,8 @@ import MetamodelEdge from "@umleditor/components/edges/MetamodelEdge";
 import useModelStore from "../store/useModelStore";
 import useUIStore from "../store/useUIStore";
 import { maakRelatieTussenEntiteiten, voegNieuwRepToe } from "./repCreation";
-import { generateId, EDGE_MODES } from "@umleditor/metamodel/types";
+import { relatieNaarAssociatieklasse, passToePatch, splitsEntiteit, castEntiteitNaarGE, pascalCase } from "./transformations";
+import { generateId, defaultKleur, EDGE_MODES } from "@umleditor/metamodel/types";
 
 const nodeTypes = {
   entiteit: EntiteitNode,
@@ -721,6 +722,10 @@ function DiagramCanvasInner({ diagramId }) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [toolbarLayouts, setToolbarLayouts] = useState(() => leesToolbarLayouts());
   const [activeEdgeMode, setActiveEdgeMode] = useState(EDGE_MODES.NONE);
+  // Splits-dialoog state: null of { entId, entNaam, velden, veldNamen: {[veldNaam]: geNaam} }
+  const [splitsDialoog, setSplitsDialoog] = useState(null);
+  // Cast-dialoog state: null of { entId, entNaam, kandidaten: [{id, naam, domein}], parentId: string }
+  const [castDialoog, setCastDialoog] = useState(null);
   // Defer ReactFlow één animatieframe na de initiële commit (zie MetamodelEditor
   // voor de volledige uitleg van de ResizeObserver/concurrent-commit race).
   const [reactFlowGereed, setReactFlowGereed] = useState(false);
@@ -782,12 +787,13 @@ function DiagramCanvasInner({ diagramId }) {
         const el = elements[n.id];
         if (!el) return n;
         const newData = { ...el.data, id: n.id };
-        // Snelle check: skip als data niet veranderd is (vergelijk naam, kleur, velden)
+        // Snelle check: skip als data niet veranderd is (vergelijk naam, kleur, velden, materieel)
         if (
           n.data?.klassenaam === newData.klassenaam &&
           n.data?.kleur === newData.kleur &&
           n.data?.description === newData.description &&
-          n.data?.velden === newData.velden
+          n.data?.velden === newData.velden &&
+          n.data?.isMaterieel === newData.isMaterieel
         ) {
           return n;
         }
@@ -1170,9 +1176,17 @@ function DiagramCanvasInner({ diagramId }) {
 
   const handleRemoveFromDiagram = useCallback(() => {
     if (!contextMenu?.nodeId) return;
-    removeElementFromDiagram(diagramId, contextMenu.nodeId);
-    setNodes((nds) => nds.filter((n) => n.id !== contextMenu.nodeId));
-    setEdges((eds) => eds.filter((e) => e.source !== contextMenu.nodeId && e.target !== contextMenu.nodeId));
+    const nodeId = contextMenu.nodeId;
+    const storeEl = useModelStore.getState().elements[nodeId];
+    // Bij een relatie ook de bijbehorende associatieAnker-node opruimen
+    const ankerId = storeEl?.type === "relatie" ? `anker_${nodeId}` : null;
+    const teVerwijderen = new Set([nodeId, ...(ankerId ? [ankerId] : [])]);
+
+    for (const id of teVerwijderen) {
+      removeElementFromDiagram(diagramId, id);
+    }
+    setNodes((nds) => nds.filter((n) => !teVerwijderen.has(n.id)));
+    setEdges((eds) => eds.filter((e) => !teVerwijderen.has(e.source) && !teVerwijderen.has(e.target)));
     setContextMenu(null);
   }, [contextMenu, diagramId, removeElementFromDiagram, setNodes, setEdges]);
 
@@ -1254,6 +1268,207 @@ function DiagramCanvasInner({ diagramId }) {
     },
     [elements, setSelectedElementId]
   );
+
+  // B5/B6: cast entiteit-node naar GE / splits in losse GE's via modal dialoog.
+  const handleCastNaarGE = useCallback(() => {
+    if (!contextMenu?.nodeId) return;
+    const ent = elements[contextMenu.nodeId];
+    if (!ent) { setContextMenu(null); return; }
+    const store = useModelStore.getState();
+    const kandidaten = Object.values(store.elements)
+      .filter((e) => (e.type === "entiteit" || e.metatype === "entiteit" || e.data?.metatype === "entiteit") && e.id !== ent.id)
+      .sort((a, b) => {
+        const da = a.domein === ent.domein ? 0 : 1;
+        const db = b.domein === ent.domein ? 0 : 1;
+        if (da !== db) return da - db;
+        return (a.naam || "").localeCompare(b.naam || "");
+      })
+      .map((e) => ({ id: e.id, naam: e.data?.typenaam || e.naam || e.id, domein: e.domein || "" }));
+    if (kandidaten.length === 0) {
+      window.alert("Geen andere entiteit beschikbaar als parent.");
+      setContextMenu(null);
+      return;
+    }
+    setCastDialoog({
+      entId: contextMenu.nodeId,
+      entNaam: ent.data?.typenaam || ent.naam || contextMenu.nodeId,
+      kandidaten,
+      parentId: kandidaten[0]?.id || "",
+    });
+    setContextMenu(null);
+  }, [contextMenu, elements]);
+
+  const handleCastDialoogBevestigen = useCallback(() => {
+    if (!castDialoog) return;
+    const { entId, parentId } = castDialoog;
+    const store = useModelStore.getState();
+    const patch = castEntiteitNaarGE(
+      { elements: store.elements, structuralEdges: store.structuralEdges },
+      entId,
+      parentId || null
+    );
+    if (!patch.ok) {
+      window.alert(`Cast mislukt:\n\n${patch.errors.join("\n")}`);
+      setCastDialoog(null);
+      return;
+    }
+    if (patch.warnings.length > 0) {
+      const door = window.confirm(`Cast slaagt met waarschuwingen:\n\n${patch.warnings.join("\n")}\n\nDoorgaan?`);
+      if (!door) { setCastDialoog(null); return; }
+    }
+    // Update React Flow local state: verander het node-type naar gegevenselement
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === entId
+          ? { ...n, type: "gegevenselement", data: { ...n.data, metatype: "gegevenselement", kleur: defaultKleur("gegevenselement") } }
+          : n
+      )
+    );
+    passToePatch(useModelStore, patch);
+    setCastDialoog(null);
+  }, [castDialoog, setNodes]);
+
+  const handleSplitsEntiteit = useCallback(() => {
+    if (!contextMenu?.nodeId) return;
+    const ent = elements[contextMenu.nodeId];
+    if (!ent) { setContextMenu(null); return; }
+    const velden = ent.data?.velden || [];
+    if (velden.length === 0) {
+      window.alert("Deze entiteit heeft geen velden om uit te splitsen.");
+      setContextMenu(null);
+      return;
+    }
+    const entTypenaam = ent.data?.typenaam || ent.naam || contextMenu.nodeId;
+    const defaultVeldNamen = {};
+    velden.forEach((v) => {
+      // Korte weergavenaam als default (bijv. "Status" i.p.v. "Entiteit_Status").
+      // Bij bevestigen wordt de entiteit-prefix automatisch toegevoegd.
+      defaultVeldNamen[v.naam] = pascalCase(v.naam, "Veld");
+    });
+    setSplitsDialoog({
+      entId: contextMenu.nodeId,
+      entNaam: entTypenaam,
+      velden,
+      veldNamen: defaultVeldNamen,
+    });
+    setContextMenu(null);
+  }, [contextMenu, elements]);
+
+  const handleSplitsDialoogBevestigen = useCallback(() => {
+    if (!splitsDialoog) return;
+    const { entId, entNaam, veldNamen } = splitsDialoog;
+    const store = useModelStore.getState();
+    // Dialog toont korte namen (bijv. "Status"); zet om naar volledige GE-typenamen
+    // (bijv. "Entiteit_Status") voor splitsEntiteit, zodat de store en structuralEdges
+    // de Go-conventie volgen. splitsEntiteit leidt klassenaam af door prefix te strippen.
+    const fullGeNaamPerVeld = {};
+    for (const [veldNaam, kortNaam] of Object.entries(veldNamen)) {
+      const trimmed = (kortNaam || "").trim();
+      if (!trimmed) {
+        fullGeNaamPerVeld[veldNaam] = "";
+      } else {
+        fullGeNaamPerVeld[veldNaam] = trimmed.startsWith(entNaam + "_")
+          ? trimmed
+          : `${entNaam}_${trimmed}`;
+      }
+    }
+    const patch = splitsEntiteit(
+      { elements: store.elements, structuralEdges: store.structuralEdges },
+      entId,
+      Object.keys(fullGeNaamPerVeld).filter((k) => (fullGeNaamPerVeld[k] || "").trim() !== ""),
+      fullGeNaamPerVeld
+    );
+    if (!patch.ok) {
+      window.alert(`Splits mislukt:\n\n${patch.errors.join("\n")}`);
+      setSplitsDialoog(null);
+      return;
+    }
+    if (patch.warnings.length > 0) {
+      console.info("[B6]", patch.warnings.join(" | "));
+    }
+
+    // Pas patch toe op de store (elements + structuralEdges)
+    passToePatch(useModelStore, patch);
+
+    // Voeg nieuwe GE-nodes toe aan het diagram (positie relatief aan entiteit-node)
+    if ((patch.newIds || []).length > 0) {
+      const diag = useModelStore.getState().diagrams[diagramId];
+      const entFlowNode = nodes.find((n) => n.id === entId);
+      const entPos = entFlowNode?.position || { x: 0, y: 0 };
+      const count = patch.newIds.length;
+      const newDiagNodes = [];
+      const newFlowNodes = [];
+      const newDiagEdges = [];
+      const currentElements = useModelStore.getState().elements;
+
+      patch.newIds.forEach((geId, i) => {
+        const el = currentElements[geId];
+        if (!el) return;
+        const pos = {
+          x: entPos.x + (i - (count - 1) / 2) * 240,
+          y: entPos.y + 220,
+        };
+        newDiagNodes.push({ elementId: geId, position: pos });
+        newFlowNodes.push({
+          id: geId,
+          type: el.type,
+          position: pos,
+          data: { ...el.data, id: geId },
+        });
+        // Compositie-edge entiteit → GE
+        const geStub = { position: pos, measured: { width: 180, height: 80 } };
+        const handles = berekenKortsteHandles(entFlowNode || { position: entPos, measured: { width: 180, height: 80 } }, geStub);
+        newDiagEdges.push({
+          id: generateId("edge"),
+          source: entId,
+          target: geId,
+          type: "metamodel",
+          sourceHandle: handles.sourceHandle,
+          targetHandle: handles.targetHandle,
+          data: {
+            rolnaam: el.naam || "",
+            jsonRolnaam: (el.naam || "").toLowerCase(),
+            momentvoorkomen: "enkelvoudig",
+            kardinaliteit: "0..1",
+          },
+        });
+      });
+
+      // Voeg toe aan diagram store
+      const existingDiagNodes = diag?.nodes || [];
+      updateDiagramNodes(diagramId, [...existingDiagNodes, ...newDiagNodes]);
+      const existingDiagEdges = diag?.edges || [];
+      updateDiagramEdges(diagramId, [...existingDiagEdges, ...newDiagEdges]);
+
+      // Voeg toe aan React Flow local state
+      setNodes((nds) => [...nds, ...newFlowNodes]);
+      setEdges((eds) => [...eds, ...newDiagEdges.map((e) => ({ ...e, selectable: false, selected: false }))]);
+    }
+
+    setSplitsDialoog(null);
+  }, [splitsDialoog, diagramId, nodes, updateDiagramNodes, updateDiagramEdges, setNodes, setEdges]);
+
+  // B7: directe ENT→ENT edge promoten tot associatieklasse (relatie-element + 2 edges)
+  const handlePromoteEdgeToAsoc = useCallback(() => {
+    if (!contextMenu?.edgeId) return;
+    const edgeId = contextMenu.edgeId;
+    const store = useModelStore.getState();
+    const patch = relatieNaarAssociatieklasse(
+      { elements: store.elements, structuralEdges: store.structuralEdges },
+      edgeId
+    );
+    if (!patch.ok) {
+      window.alert(`Promotie mislukt:\n\n${patch.errors.join("\n")}`);
+      setContextMenu(null);
+      return;
+    }
+    if (patch.warnings.length > 0) {
+      // Eén regel als info; geen blocking confirm — gebruiker heeft expliciet gekozen.
+      console.info("[B7] " + patch.warnings.join(" | "));
+    }
+    passToePatch(useModelStore, patch);
+    setContextMenu(null);
+  }, [contextMenu]);
 
   // ── Kopiëren/plakken van visuele elementen tussen diagrammen ──────
 
@@ -1711,11 +1926,24 @@ function DiagramCanvasInner({ diagramId }) {
       const removeChanges = changes.filter((c) => c.type === "remove");
       if (removeChanges.length > 0) {
         const rmStore = useModelStore.getState();
-        for (const rc of removeChanges) {
-          rmStore.removeElementFromDiagram(diagramId, rc.id);
-        }
-        // Verwijder ook edges die naar verwijderde nodes wijzen
+        // Bouw set van te-verwijderen IDs, inclusief bijbehorende anker-nodes
+        // voor relaties (ASOC-patroon: bron─o─doel + o╌╌REL).
         const removedIds = new Set(removeChanges.map((c) => c.id));
+        for (const rc of removeChanges) {
+          const el = rmStore.elements[rc.id];
+          if (el?.type === "relatie") {
+            const ankerId = `anker_${rc.id}`;
+            if (rmStore.elements[ankerId]) {
+              removedIds.add(ankerId);
+            }
+          }
+        }
+        for (const id of removedIds) {
+          rmStore.removeElementFromDiagram(diagramId, id);
+        }
+        // Verwijder ook edges die naar verwijderde nodes wijzen, en de eventuele
+        // extra anker-nodes die React Flow nog niet heeft verwijderd.
+        setNodes((nds) => nds.filter((n) => !removedIds.has(n.id)));
         setEdges((eds) => eds.filter((e) => !removedIds.has(e.source) && !removedIds.has(e.target)));
       }
 
@@ -2267,6 +2495,34 @@ function DiagramCanvasInner({ diagramId }) {
                 </div>
               ) : null;
             })()}
+            {/* B5/B6: alleen op entiteit-nodes */}
+            {(() => {
+              const onNode = contextMenu.nodeId ? elements[contextMenu.nodeId] : null;
+              // Ondersteun zowel top-level `metatype` (transformations.js) als `type` (V3-import/adapters)
+              if ((onNode?.metatype || onNode?.type) !== "entiteit") return null;
+              return (
+                <>
+                  <div
+                    style={{ padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" }}
+                    onMouseEnter={itemHover}
+                    onMouseLeave={itemLeave}
+                    onClick={handleCastNaarGE}
+                    title="Promoot deze entiteit tot gegevenselement onder een gekozen parent."
+                  >
+                    🔄 Cast naar gegevenselement…
+                  </div>
+                  <div
+                    style={{ padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" }}
+                    onMouseEnter={itemHover}
+                    onMouseLeave={itemLeave}
+                    onClick={handleSplitsEntiteit}
+                    title="Splits geselecteerde velden uit naar losse GE's onder deze entiteit."
+                  >
+                    ✂️ Splits velden uit naar GE's…
+                  </div>
+                </>
+              );
+            })()}
             {contextMenu.nodeId && (
               <div
                 style={{ padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" }}
@@ -2314,6 +2570,25 @@ function DiagramCanvasInner({ diagramId }) {
                       {edge.hidden ? "👁️ Toon «use» lijn" : "🙈 Verberg «use» lijn"}
                     </div>
                   )}
+                  {(() => {
+                    // B7: alleen tonen als edge tussen twee entiteiten loopt
+                    // (niet via relatie/anker), en geen dependency-edge is.
+                    const src = edge && elements[edge.source];
+                    const tgt = edge && elements[edge.target];
+                    const beideEnt = src?.metatype === "entiteit" && tgt?.metatype === "entiteit";
+                    if (!beideEnt || isDep) return null;
+                    return (
+                      <div
+                        style={{ padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" }}
+                        onMouseEnter={itemHover}
+                        onMouseLeave={itemLeave}
+                        onClick={handlePromoteEdgeToAsoc}
+                        title="Vervang directe edge door bron→relatie-element→doel; voeg velden toe voor de ASOC-vorm."
+                      >
+                        🔀 Promoot tot associatieklasse
+                      </div>
+                    );
+                  })()}
                   <div
                     style={{ padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" }}
                     onMouseEnter={itemHover}
@@ -2328,6 +2603,214 @@ function DiagramCanvasInner({ diagramId }) {
           </div>
         );
       })()}
+
+      {/* ── Cast naar GE dialoog modal (B5) ── */}
+      {castDialoog && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.55)",
+            zIndex: 10000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setCastDialoog(null); }}
+        >
+          <div
+            style={{
+              background: "var(--ide-panel-bg, #1e2330)",
+              border: "1px solid var(--ide-panel-border, #374151)",
+              borderRadius: 8,
+              padding: "20px 24px",
+              minWidth: 340,
+              maxWidth: 480,
+              maxHeight: "80vh",
+              overflowY: "auto",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+              color: "var(--ide-panel-color, #e2e8f0)",
+              fontSize: 13,
+            }}
+          >
+            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>
+              🔄 Cast naar GE — <em>{castDialoog.entNaam}</em>
+            </div>
+            <div style={{ color: "var(--ide-panel-color-muted, #94a3b8)", marginBottom: 14, fontSize: 12 }}>
+              Kies de bovenliggende entiteit (parent) voor dit gegevenselement:
+            </div>
+            <select
+              value={castDialoog.parentId}
+              onChange={(e) => setCastDialoog((d) => ({ ...d, parentId: e.target.value }))}
+              autoFocus
+              style={{
+                width: "100%",
+                background: "var(--ide-input-bg, #0f172a)",
+                color: "var(--ide-panel-color, #e2e8f0)",
+                border: "1px solid var(--ide-panel-border, #374151)",
+                borderRadius: 4,
+                padding: "6px 10px",
+                fontSize: 13,
+                marginBottom: 16,
+                outline: "none",
+              }}
+            >
+              <option value="">— geen parent —</option>
+              {castDialoog.kandidaten.map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.naam}{k.domein ? ` (${k.domein})` : ""}
+                </option>
+              ))}
+            </select>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button
+                onClick={() => setCastDialoog(null)}
+                style={{
+                  background: "transparent",
+                  color: "var(--ide-panel-color-muted, #94a3b8)",
+                  border: "1px solid var(--ide-panel-border, #374151)",
+                  borderRadius: 4,
+                  padding: "5px 14px",
+                  cursor: "pointer",
+                  fontSize: 12,
+                }}
+              >
+                Annuleer
+              </button>
+              <button
+                onClick={handleCastDialoogBevestigen}
+                style={{
+                  background: "var(--ide-accent, #3b82f6)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 4,
+                  padding: "5px 16px",
+                  cursor: "pointer",
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              >
+                🔄 Cast naar GE
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Splits-dialoog modal (B6) ── */}
+      {splitsDialoog && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.55)",
+            zIndex: 10000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setSplitsDialoog(null); }}
+        >
+          <div
+            style={{
+              background: "var(--ide-panel-bg, #1e2330)",
+              border: "1px solid var(--ide-panel-border, #374151)",
+              borderRadius: 8,
+              padding: "20px 24px",
+              minWidth: 380,
+              maxWidth: 560,
+              maxHeight: "80vh",
+              overflowY: "auto",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+              color: "var(--ide-panel-color, #e2e8f0)",
+              fontSize: 13,
+            }}
+          >
+            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>
+              ✂️ Splits velden uit naar GE's
+            </div>
+            <div style={{ color: "var(--ide-panel-color-muted, #94a3b8)", marginBottom: 14, fontSize: 12 }}>
+              Entiteit: <strong>{splitsDialoog.entNaam}</strong>
+              <br />
+              Geef per veld een GE-naam op. Laat leeg om het veld op de entiteit te laten.
+              Velden met dezelfde GE-naam worden samengevoegd in één GE.
+            </div>
+            <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 16 }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid var(--ide-panel-border, #374151)" }}>
+                  <th style={{ textAlign: "left", padding: "4px 8px 6px 0", fontWeight: 600, color: "var(--ide-panel-color-muted, #94a3b8)", fontSize: 11 }}>Veld</th>
+                  <th style={{ textAlign: "left", padding: "4px 0 6px 8px", fontWeight: 600, color: "var(--ide-panel-color-muted, #94a3b8)", fontSize: 11 }}>GE-naam (leeg = niet splitsen)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {splitsDialoog.velden.map((veld) => (
+                  <tr key={veld.naam} style={{ borderBottom: "1px solid var(--ide-panel-border-faint, #1e293b)" }}>
+                    <td style={{ padding: "5px 8px 5px 0", whiteSpace: "nowrap", color: "var(--ide-panel-color, #e2e8f0)" }}>
+                      {veld.naam}
+                      {veld.verplicht !== false && (
+                        <span style={{ color: "#f87171", marginLeft: 3 }}>*</span>
+                      )}
+                    </td>
+                    <td style={{ padding: "4px 0 4px 8px" }}>
+                      <input
+                        type="text"
+                        value={splitsDialoog.veldNamen[veld.naam] ?? ""}
+                        onChange={(e) => setSplitsDialoog((d) => ({
+                          ...d,
+                          veldNamen: { ...d.veldNamen, [veld.naam]: e.target.value },
+                        }))}
+                        style={{
+                          width: "100%",
+                          background: "var(--ide-input-bg, #0f172a)",
+                          color: "var(--ide-panel-color, #e2e8f0)",
+                          border: "1px solid var(--ide-panel-border, #374151)",
+                          borderRadius: 4,
+                          padding: "3px 7px",
+                          fontSize: 12,
+                          outline: "none",
+                          boxSizing: "border-box",
+                        }}
+                        placeholder="(leeg = niet splitsen)"
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button
+                onClick={() => setSplitsDialoog(null)}
+                style={{
+                  background: "transparent",
+                  color: "var(--ide-panel-color-muted, #94a3b8)",
+                  border: "1px solid var(--ide-panel-border, #374151)",
+                  borderRadius: 4,
+                  padding: "5px 14px",
+                  cursor: "pointer",
+                  fontSize: 12,
+                }}
+              >
+                Annuleer
+              </button>
+              <button
+                onClick={handleSplitsDialoogBevestigen}
+                style={{
+                  background: "var(--ide-accent, #3b82f6)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 4,
+                  padding: "5px 16px",
+                  cursor: "pointer",
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              >
+                Splits
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

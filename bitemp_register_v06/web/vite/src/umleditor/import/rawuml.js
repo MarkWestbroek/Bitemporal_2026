@@ -79,8 +79,8 @@
  * @module import/rawuml
  */
 
-import { generateId, defaultKleur } from "../metamodel/types";
-import { mapStereotypesNaarMeta } from "./_helpers";
+import { generateId, defaultKleur } from "../metamodel/types.js";
+import { mapStereotypesNaarMeta } from "./_helpers.js";
 
 // ============================================================================
 // Type-definities
