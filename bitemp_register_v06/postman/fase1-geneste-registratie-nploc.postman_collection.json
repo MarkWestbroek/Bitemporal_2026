@@ -13,7 +13,7 @@
         "header": [{ "key": "Content-Type", "value": "application/json" }],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Geneste opvoer van NatuurlijkPersoon Anna van Dijk (Fase 1 demo)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"natuurlijkpersoon\": {\n          \"id\": 4201,\n          \"persoonsidentificaties\": {\n            \"natuurlijkpersoon_id\": 4201,\n            \"rel_id\": 1,\n            \"bsn\": \"123456782\",\n            \"ingezetene\": true\n          },\n          \"namen\": {\n            \"natuurlijkpersoon_id\": 4201,\n            \"rel_id\": 1,\n            \"voorletters\": \"A.M.\",\n            \"roepnaam\": \"Anna\",\n            \"tussenvoegsel\": \"van\",\n            \"achternaam\": \"Dijk\"\n          },\n          \"aanvang\": {\n            \"natuurlijkpersoon_id\": 4201,\n            \"datum\": \"1985-03-12\"\n          }\n        }\n      }\n    }\n  ]\n}"
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Geneste opvoer van NatuurlijkPersoon Anna van Dijk (Fase 1 demo)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"natuurlijkpersoon\": {\n          \"id\": 4201,\n          \"persoonsidentificaties\": {\n            \"rel_id\": 1,\n            \"bsn\": \"123456782\",\n            \"ingezetene\": true\n          },\n          \"namen\": {\n            \"rel_id\": 1,\n            \"voorletters\": \"A.M.\",\n            \"roepnaam\": \"Anna\",\n            \"tussenvoegsel\": \"van\",\n            \"achternaam\": \"Dijk\"\n          },\n          \"aanvang\": {\n            \"datum\": \"1985-03-12\"\n          }\n        }\n      }\n    }\n  ]\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/registratie/",
@@ -30,7 +30,7 @@
         "header": [{ "key": "Content-Type", "value": "application/json" }],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"tijdstip\": \"2026-04-28T09:05:00Z\",\n    \"opmerking\": \"Klassieke platte opvoer (één representatie per wijziging) — moet onveranderd werken\"\n  },\n  \"wijzigingen\": [\n    { \"opvoer\": { \"natuurlijkpersoon\": { \"id\": 4202 } } },\n    { \"opvoer\": { \"persoonsidentificaties\": { \"natuurlijkpersoon_id\": 4202, \"rel_id\": 1, \"bsn\": \"234567893\", \"ingezetene\": true } } },\n    { \"opvoer\": { \"namen\": { \"natuurlijkpersoon_id\": 4202, \"rel_id\": 1, \"voorletters\": \"K.\", \"roepnaam\": \"Karim\", \"tussenvoegsel\": \"el\", \"achternaam\": \"Idrissi\" } } },\n    { \"opvoer\": { \"aanvang\": { \"natuurlijkpersoon_id\": 4202, \"datum\": \"1990-09-04\" } } }\n  ]\n}"
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Klassieke platte opvoer (één representatie per wijziging) — moet onveranderd werken\"\n  },\n  \"wijzigingen\": [\n    { \"opvoer\": { \"natuurlijkpersoon\": { \"id\": 4202 } } },\n    { \"opvoer\": { \"persoonsidentificaties\": { \"natuurlijkpersoon_id\": 4202, \"rel_id\": 1, \"bsn\": \"234567893\", \"ingezetene\": true } } },\n    { \"opvoer\": { \"namen\": { \"natuurlijkpersoon_id\": 4202, \"rel_id\": 1, \"voorletters\": \"K.\", \"roepnaam\": \"Karim\", \"tussenvoegsel\": \"el\", \"achternaam\": \"Idrissi\" } } },\n    { \"opvoer\": { \"aanvang\": { \"natuurlijkpersoon_id\": 4202, \"datum\": \"1990-09-04\" } } }\n  ]\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/registratie/",
@@ -47,7 +47,7 @@
         "header": [{ "key": "Content-Type", "value": "application/json" }],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Geneste opvoer met meervoudige burgerschappen als JSON-array\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"natuurlijkpersoon\": {\n          \"id\": 4203,\n          \"persoonsidentificaties\": { \"natuurlijkpersoon_id\": 4203, \"rel_id\": 1, \"bsn\": \"345678904\", \"ingezetene\": true },\n          \"namen\": { \"natuurlijkpersoon_id\": 4203, \"rel_id\": 1, \"voorletters\": \"S.\", \"roepnaam\": \"Sofia\", \"achternaam\": \"Petrova\" },\n          \"burgerschappen\": [\n            { \"natuurlijkpersoon_id\": 4203, \"rel_id\": 1, \"landcode\": \"NL\", \"nationaliteit\": \"Nederlandse\",  \"aanvang\": \"2010-06-01\" },\n            { \"natuurlijkpersoon_id\": 4203, \"rel_id\": 2, \"landcode\": \"BG\", \"nationaliteit\": \"Bulgaarse\",   \"aanvang\": \"1992-02-14\" }\n          ],\n          \"aanvang\": { \"natuurlijkpersoon_id\": 4203, \"datum\": \"1992-02-14\" }\n        }\n      }\n    }\n  ]\n}"
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Geneste opvoer met meervoudige burgerschappen als JSON-array\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"natuurlijkpersoon\": {\n          \"id\": 4203,\n          \"persoonsidentificaties\": { \"rel_id\": 1, \"bsn\": \"345678904\", \"ingezetene\": true },\n          \"namen\": { \"rel_id\": 1, \"voorletters\": \"S.\", \"roepnaam\": \"Sofia\", \"achternaam\": \"Petrova\" },\n          \"burgerschappen\": [\n            { \"rel_id\": 1, \"landcode\": \"NL\", \"nationaliteit\": \"Nederlandse\",  \"aanvang\": \"2010-06-01\" },\n            { \"rel_id\": 2, \"landcode\": \"BG\", \"nationaliteit\": \"Bulgaarse\",   \"aanvang\": \"1992-02-14\" }\n          ],\n          \"aanvang\": { \"datum\": \"1992-02-14\" }\n        }\n      }\n    }\n  ]\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/registratie/",
@@ -64,7 +64,7 @@
         "header": [{ "key": "Content-Type", "value": "application/json" }],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"correctie\",\n    \"opmerking\": \"Correctie: roepnaam wijzigen van Anna naar Annemarie\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"natuurlijkpersoon\": {\n          \"id\": 4201,\n          \"namen\": {\n            \"natuurlijkpersoon_id\": 4201,\n            \"rel_id\": 1,\n            \"voorletters\": \"A.M.\",\n            \"roepnaam\": \"Annemarie\",\n            \"tussenvoegsel\": \"van\",\n            \"achternaam\": \"Dijk\"\n          }\n        }\n      }\n    }\n  ]\n}"
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"correctie\",\n    \"opmerking\": \"Correctie: roepnaam wijzigen van Anna naar Annemarie\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"natuurlijkpersoon\": {\n          \"id\": 4201,\n          \"namen\": {\n            \"rel_id\": 1,\n            \"voorletters\": \"A.M.\",\n            \"roepnaam\": \"Annemarie\",\n            \"tussenvoegsel\": \"van\",\n            \"achternaam\": \"Dijk\"\n          }\n        }\n      }\n    }\n  ]\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/registratie/",

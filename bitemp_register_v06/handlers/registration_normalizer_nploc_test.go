@@ -18,19 +18,19 @@ import (
 // in de full-shape (zoals GET /full/natuurlijk_personen/:id retourneert)
 // correct wordt gesplitst in platte wijzigingen, één per representatie,
 // en dat de inhoud van elke sub-payload behouden blijft.
+// Belangrijk: de child-payloads bevatten GEEN `natuurlijkpersoon_id`; de
+// normalizer injecteert de FK automatisch op basis van de parent-ID (Fase 1.1).
 func TestNormaliseer_NPLoc_GenesteOpvoer_E2E(t *testing.T) {
 	payload := `{
 		"opvoer": {
 			"natuurlijkpersoon": {
 				"id": 42,
 				"persoonsidentificaties": {
-					"natuurlijkpersoon_id": 42,
 					"rel_id": 1,
 					"bsn": "123456789",
 					"ingezetene": true
 				},
 				"namen": {
-					"natuurlijkpersoon_id": 42,
 					"rel_id": 1,
 					"voorletters": "A.",
 					"roepnaam": "Anna",
@@ -38,12 +38,10 @@ func TestNormaliseer_NPLoc_GenesteOpvoer_E2E(t *testing.T) {
 					"achternaam": "Dijk"
 				},
 				"aanvang": {
-					"natuurlijkpersoon_id": 42,
 					"datum": "1980-05-17"
 				},
 				"einde": {
-					"natuurlijkpersoon_id": 42,
-					"datum": "2099-12-31"
+					"datum": "2030-01-01"
 				}
 			}
 		}
@@ -104,7 +102,22 @@ func TestNormaliseer_NPLoc_GenesteOpvoer_E2E(t *testing.T) {
 		t.Errorf("top-level NatuurlijkPersoon mist 'id' na strippen")
 	}
 
-	// Naam-payload moet inhoudelijke velden behouden hebben.
+	// Persoonsidentificatie-payload moet BSN behouden hebben.
+	pidWijz := out[1]
+	var pidMap map[string]any
+	if err := json.Unmarshal(pidWijz.Opvoer.RawPayload, &pidMap); err != nil {
+		t.Fatalf("persoonsidentificatie RawPayload niet als object te lezen: %v", err)
+	}
+	if pidMap["bsn"] != "123456789" {
+		t.Errorf("persoonsidentificatie: verwacht bsn=123456789, kreeg %v", pidMap["bsn"])
+	}
+	// FK-injectie: normalizer moet `natuurlijkpersoon_id` hebben injecteerd
+	// ook al stond dat NIET in de input-payload.
+	if pidMap["natuurlijkpersoon_id"] != float64(42) {
+		t.Errorf("persoonsidentificatie: verwacht natuurlijkpersoon_id=42 (geïnjecteerd), kreeg %v", pidMap["natuurlijkpersoon_id"])
+	}
+
+	// Naam-payload moet inhoudelijke velden behouden hebben + FK geïnjecteerd.
 	naamWijz := out[2]
 	var naamMap map[string]any
 	if err := json.Unmarshal(naamWijz.Opvoer.RawPayload, &naamMap); err != nil {
@@ -116,18 +129,11 @@ func TestNormaliseer_NPLoc_GenesteOpvoer_E2E(t *testing.T) {
 	if naamMap["roepnaam"] != "Anna" {
 		t.Errorf("naam: verwacht roepnaam=Anna, kreeg %v", naamMap["roepnaam"])
 	}
-
-	// Persoonsidentificatie-payload moet BSN behouden hebben.
-	pidWijz := out[1]
-	var pidMap map[string]any
-	if err := json.Unmarshal(pidWijz.Opvoer.RawPayload, &pidMap); err != nil {
-		t.Fatalf("persoonsidentificatie RawPayload niet als object te lezen: %v", err)
-	}
-	if pidMap["bsn"] != "123456789" {
-		t.Errorf("persoonsidentificatie: verwacht bsn=123456789, kreeg %v", pidMap["bsn"])
+	if naamMap["natuurlijkpersoon_id"] != float64(42) {
+		t.Errorf("naam: verwacht natuurlijkpersoon_id=42 (geïnjecteerd), kreeg %v", naamMap["natuurlijkpersoon_id"])
 	}
 
-	// Aanvang-payload moet datum behouden hebben.
+	// Aanvang-payload moet datum behouden hebben + FK geïnjecteerd.
 	aanvangWijz := out[3]
 	var aanvangMap map[string]any
 	if err := json.Unmarshal(aanvangWijz.Opvoer.RawPayload, &aanvangMap); err != nil {
@@ -135,6 +141,9 @@ func TestNormaliseer_NPLoc_GenesteOpvoer_E2E(t *testing.T) {
 	}
 	if aanvangMap["datum"] != "1980-05-17" {
 		t.Errorf("aanvang: verwacht datum=1980-05-17, kreeg %v", aanvangMap["datum"])
+	}
+	if aanvangMap["natuurlijkpersoon_id"] != float64(42) {
+		t.Errorf("aanvang: verwacht natuurlijkpersoon_id=42 (geïnjecteerd), kreeg %v", aanvangMap["natuurlijkpersoon_id"])
 	}
 }
 
@@ -167,15 +176,14 @@ func TestNormaliseer_NPLoc_PlatteOpvoer_BackCompat(t *testing.T) {
 
 // TestNormaliseer_NPLoc_GenesteAfvoer_E2E: ook bij afvoer moet de geneste
 // boom worden gesplitst in losse afvoer-wijzigingen per representatie.
-// (Dit illustreert ook dat afvoer per record blijft; ENT-cascade in de DB-engine
-//
-//	is een aparte mechaniek.)
+// De child-payload bevat geen `natuurlijkpersoon_id`; de normalizer injecteert
+// deze automatisch (FK-propagatie, Fase 1.1).
 func TestNormaliseer_NPLoc_GenesteAfvoer_E2E(t *testing.T) {
 	payload := `{
 		"afvoer": {
 			"natuurlijkpersoon": {
 				"id": 42,
-				"namen": { "natuurlijkpersoon_id": 42, "rel_id": 1 }
+				"namen": { "rel_id": 1 }
 			}
 		}
 	}`

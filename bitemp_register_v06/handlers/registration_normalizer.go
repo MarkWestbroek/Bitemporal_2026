@@ -196,15 +196,26 @@ func NormaliseerWijziging(w model.WijzigingRequest) ([]model.WijzigingRequest, e
 		if !ok {
 			return nil, fmt.Errorf("normaliseer: doeltype '%s' (kind van %s, rol %s) niet gevonden in MetaRegistry", ch.og.Doeltype, rep.Representatienaam, ch.og.JSONRolnaam)
 		}
+
+		// FK-propagatie: injecteer de parent-ID automatisch als het FK-veld
+		// nog niet aanwezig is in de child-payload. Dit maakt het voor clients
+		// overbodig om `{ent}_id` handmatig mee te sturen in geneste payloads;
+		// de parent-context (genesting) impliceert de FK al. Een al aanwezige
+		// FK-waarde wordt niet overschreven (client-waarde heeft voorrang).
+		childRaw, err := injecteerParentFK(ch.raw, childMeta.EntiteitIDKolom, rep.Representatie.GetID())
+		if err != nil {
+			return nil, fmt.Errorf("normaliseer: FK-injectie kind %s mislukt: %w", childMeta.Typenaam, err)
+		}
+
 		childRep := childMeta.Factory()
-		if err := json.Unmarshal(ch.raw, childRep); err != nil {
+		if err := json.Unmarshal(childRaw, childRep); err != nil {
 			return nil, fmt.Errorf("normaliseer: kan kind %s (rol %s onder %s) niet unmarshal'en: %w", childMeta.Typenaam, ch.og.JSONRolnaam, rep.Representatienaam, err)
 		}
 		childPN := &model.RepresentatiePlusNaam{
 			Representatie:     childRep,
 			Representatienaam: childMeta.Typenaam,
 			Veldnaam:          childMeta.Veldnaam,
-			RawPayload:        append(json.RawMessage(nil), ch.raw...),
+			RawPayload:        childRaw,
 		}
 		var childWijz model.WijzigingRequest
 		if isOpvoer {
@@ -220,4 +231,35 @@ func NormaliseerWijziging(w model.WijzigingRequest) ([]model.WijzigingRequest, e
 	}
 
 	return out, nil
+}
+
+// injecteerParentFK voegt de parent-ID toe aan een kind-payload als het FK-veld
+// (fkKolom) nog niet aanwezig is. Zo hoeft de client het `{ent}_id`-veld niet
+// zelf mee te sturen in geneste payloads — de parent-context impliceert de FK.
+//
+//   - Als fkKolom leeg is of parentID nil: ongewijzigd terug.
+//   - Als het veld al aanwezig is: ongewijzigd terug (client-waarde wint).
+//   - Anders: inject {fkKolom: parentID} in de payload-map.
+func injecteerParentFK(raw json.RawMessage, fkKolom string, parentID any) (json.RawMessage, error) {
+	if fkKolom == "" || parentID == nil {
+		return raw, nil
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &m); err != nil {
+		// geen JSON-object; ongewijzigd teruggeven (engine zal het afwijzen)
+		return raw, nil
+	}
+	if _, reeds := m[fkKolom]; reeds {
+		return raw, nil // al aanwezig; niet overschrijven
+	}
+	encoded, err := json.Marshal(parentID)
+	if err != nil {
+		return nil, fmt.Errorf("FK-injectie: kan parent-ID niet marshallen: %w", err)
+	}
+	m[fkKolom] = encoded
+	updated, err := json.Marshal(m)
+	if err != nil {
+		return nil, fmt.Errorf("FK-injectie: kan payload niet hermarshallen: %w", err)
+	}
+	return updated, nil
 }

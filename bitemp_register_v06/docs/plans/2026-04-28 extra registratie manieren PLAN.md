@@ -1,6 +1,6 @@
 # Plan: Drie extra registratiemanieren (v06)
 
-> Status: Fase 1 ✅ geïmplementeerd op 2026-04-28. Fasen 0/2/3 nog open.
+> Status: Fase 1 ✅ geïmplementeerd op 2026-04-28, incl. FK-propagatie ✅ E2E geverifieerd 2026-04-28. Fasen 0/2/3 nog open.
 > Dit plan is door de Plan-agent voorbereid en daarna door de coding-agent
 > geconcretiseerd; het hoort bij `docs/plans/2026-04-28 extra registratie manieren`.
 
@@ -68,10 +68,20 @@ Eén wijziging-blok mag een entiteit-boom bevatten in dezelfde shape als `GET /f
 - Geen geneste afvoer-shortcuts (afvoer blijft per record); ENT-cascade werkt al.
 - Geen ID-allocatie server-side: client levert ID's aan zoals nu.
 
+### FK-propagatie (onderdeel Fase 1, ✅ E2E geverifieerd 2026-04-28)
+Client hoeft de parent-FK (`{ent}_id`, bijv. `natuurlijkpersoon_id`) **niet** mee te sturen in geneste children. De normalizer injecteert de FK automatisch vanuit de parent-context, op basis van `childMeta.EntiteitIDKolom`.
+
+Implementatie in `handlers/registration_normalizer.go`:
+- `injecteerParentFK(raw, fkKolom, parentID)` — injecteert FK in child-JSON vóór `json.Unmarshal`; client-waarde heeft voorrang als al aanwezig.
+- Aanroep in `NormaliseerWijziging` vóór elk child-unmarshal.
+
+Dit principe geldt over alle fasen: **nooit FK verplicht in geneste payloads**.
+
 ### Verificatie
-- Unit: `TestNormaliseer_*` (4 tests) op ABUVWXY-model — geneste opvoer/afvoer + lijst-aggregatie + vlakke pass-through.
-- Integration (volgend): POST geneste payload in np_loc-domein → controleer aantal wijziging-rijen, één registratie, `full GET` round-trip.
-- Backward-compat: bestaande "platte" payloads blijven werken (regression suite groen).
+- Unit: `TestNormaliseer_*` (4 tests) op ABUVWXY-model — geneste opvoer/afvoer + lijst-aggregatie + vlakke pass-through. ✅
+- Integration: `TestNormaliseer_NPLoc_*` (3 tests) op np_loc-domein — FK-injectie assertions, geen FKs in input. ✅
+- E2E: POST geneste NatuurlijkPersoon zonder FKs in children → 201 met `natuurlijkpersoon_id` in alle child-responses. ✅
+- Backward-compat: bestaande "platte" payloads blijven werken (regression suite groen). ✅
 
 ---
 
