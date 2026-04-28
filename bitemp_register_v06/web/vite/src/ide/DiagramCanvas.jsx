@@ -793,7 +793,10 @@ function DiagramCanvasInner({ diagramId }) {
           n.data?.kleur === newData.kleur &&
           n.data?.description === newData.description &&
           n.data?.velden === newData.velden &&
-          n.data?.isMaterieel === newData.isMaterieel
+          n.data?.isMaterieel === newData.isMaterieel &&
+          n.data?.naam === newData.naam &&
+          n.data?.waarden === newData.waarden &&
+          n.data?.systeemnaam === newData.systeemnaam
         ) {
           return n;
         }
