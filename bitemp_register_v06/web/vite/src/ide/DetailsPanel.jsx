@@ -803,7 +803,9 @@ function ElementEditor({ element, updateElement }) {
    */
   const handleNaamChange = useCallback(
     (v) => {
-      const patch = { naam: v, data: { klassenaam: v } };
+      // naam wordt zowel top-level (el.naam) als in data.naam opgeslagen zodat
+      // node-renderers die data.naam lezen (EnumeratieNode, DatatypeNode) up-to-date zijn.
+      const patch = { naam: v, data: { naam: v, klassenaam: v } };
       if (type === "entiteit") {
         patch.data.typenaam = v;
       } else if (data.typenaam && naam && data.typenaam.endsWith(naam)) {

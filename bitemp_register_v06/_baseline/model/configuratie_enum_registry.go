@@ -10,6 +10,6 @@ func initConfiguratieEnumRegistry() {
 	EnumDomeinen["WeergaveDefinitieStatus"] = "configuratie"
 
 	// Enum editor-posities
-	EnumEditorLayouts["FormulierDefinitieStatus"] = &EditorLayout{Positie: &V3Positie{X: 2535, Y: 540}}
-	EnumEditorLayouts["WeergaveDefinitieStatus"] = &EditorLayout{Positie: &V3Positie{X: 3090, Y: 540}}
+	EnumEditorLayouts["FormulierDefinitieStatus"] = &EditorLayout{Positie: &V3Positie{X: 2895, Y: -330}}
+	EnumEditorLayouts["WeergaveDefinitieStatus"] = &EditorLayout{Positie: &V3Positie{X: 3480, Y: -315}}
 }

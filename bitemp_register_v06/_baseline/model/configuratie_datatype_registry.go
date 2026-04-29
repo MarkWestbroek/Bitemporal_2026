@@ -11,7 +11,7 @@ func initConfiguratieDatatypeRegistry() {
 			Basistype:   "string",
 			Format:      "versie",
 			Domein:      "configuratie",
-			Positie:     &V3Positie{X: 3390, Y: 495},
+			Positie:     &V3Positie{X: 3735, Y: -345},
 			Validatie: &V3Validatie{
 				Pattern:     `^\d+\.\d+(\.\d+)?(\.\d+)?$`,
 				Foutmelding: "Voer een geldig versienummer in (bijv. 1.0, 2.1.3 of 1.0.0.1)",

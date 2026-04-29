@@ -12,7 +12,7 @@ func initAbuvwxyMetaRegistry() {
 		IsMaterieel:            true,
 		Domein:                 "abuvwxy",
 		Kleur:                  "#bfdbfe",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: -555, Y: 450}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 285, Y: 555}},
 		Veldnaam:               "a",
 		Padnaam:                "as",
 		Meervoud:               "as",
@@ -66,7 +66,7 @@ func initAbuvwxyMetaRegistry() {
 		EntiteitIDKolom:        "a_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: -780, Y: 855},
+			Positie:      &V3Positie{X: 60, Y: 960},
 			SourceHandle: "source-bottom",
 			TargetHandle: "target-top",
 		},
@@ -97,7 +97,7 @@ func initAbuvwxyMetaRegistry() {
 		EntiteitIDKolom:        "a_id",
 		Momentvoorkomen:        Meervoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: -570, Y: 795},
+			Positie:      &V3Positie{X: 270, Y: 900},
 			SourceHandle: "source-bottom",
 			TargetHandle: "target-top",
 			UseEdges: []V3UseEdge{
@@ -131,7 +131,7 @@ func initAbuvwxyMetaRegistry() {
 		EntiteitIDKolom:        "a_id",
 		Momentvoorkomen:        Meervoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: -360, Y: 825},
+			Positie:      &V3Positie{X: 480, Y: 930},
 			SourceHandle: "source-bottom",
 			TargetHandle: "target-top",
 		},
@@ -165,7 +165,7 @@ func initAbuvwxyMetaRegistry() {
 		SecondaireEntiteitIDKolom: "b_id",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: -165, Y: 540},
+			Positie:      &V3Positie{X: 708, Y: 608},
 			SourceHandle: "source-right",
 			TargetHandle: "target-left",
 			UseEdges: []V3UseEdge{
@@ -406,7 +406,7 @@ func initAbuvwxyMetaRegistry() {
 		IsMaterieel:            true,
 		Domein:                 "abuvwxy",
 		Kleur:                  "#fecaca",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 210, Y: 435}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1050, Y: 540}},
 		Veldnaam:               "b",
 		Padnaam:                "bs",
 		Meervoud:               "bs",
@@ -448,7 +448,7 @@ func initAbuvwxyMetaRegistry() {
 		EntiteitIDKolom:        "b_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 105, Y: 840},
+			Positie:      &V3Positie{X: 945, Y: 945},
 			SourceHandle: "source-bottom",
 			TargetHandle: "target-top",
 		},
@@ -479,7 +479,7 @@ func initAbuvwxyMetaRegistry() {
 		EntiteitIDKolom:        "b_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 360, Y: 855},
+			Positie:      &V3Positie{X: 1200, Y: 960},
 			SourceHandle: "source-bottom",
 			TargetHandle: "target-top",
 		},
@@ -583,7 +583,7 @@ func initAbuvwxyMetaRegistry() {
 		IsMaterieel:            false,
 		Domein:                 "abuvwxy",
 		Kleur:                  "#e298ec",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 795, Y: 420}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1635, Y: 525}},
 		Veldnaam:               "c",
 		Padnaam:                "cs",
 		Meervoud:               "cs",
@@ -632,7 +632,7 @@ func initAbuvwxyMetaRegistry() {
 		EntiteitIDKolom:        "c_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 1095, Y: 585},
+			Positie:      &V3Positie{X: 1845, Y: 615},
 			SourceHandle: "source-right",
 			TargetHandle: "target-left",
 		},
@@ -663,7 +663,7 @@ func initAbuvwxyMetaRegistry() {
 		EntiteitIDKolom:           "c_id",
 		SecondaireEntiteitIDKolom: "b_id",
 		Momentvoorkomen:           Meervoudig,
-		Layout:                    &EditorLayout{Positie: &V3Positie{X: 510, Y: 495}},
+		Layout:                    &EditorLayout{Positie: &V3Positie{X: 1383, Y: 593}},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Rel_C_B_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -721,7 +721,7 @@ func initAbuvwxyMetaRegistry() {
 		ParentTypenaam:                 "C",
 		Domein:                         "abuvwxy",
 		Kleur:                          "#d2c1fb",
-		Layout:                         &EditorLayout{Positie: &V3Positie{X: 795, Y: 600}},
+		Layout:                         &EditorLayout{Positie: &V3Positie{X: 1635, Y: 705}},
 		Veldnaam:                       "c_sub",
 		Padnaam:                        "c_subs",
 		Meervoud:                       "c subs",

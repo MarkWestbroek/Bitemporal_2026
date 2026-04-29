@@ -13,7 +13,7 @@ func initCgMetaRegistry() {
 		IsMaterieel:            false,
 		Domein:                 "CG",
 		Kleur:                  "#fde68a",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1410, Y: -2370}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1683, Y: -2355}},
 		Veldnaam:               "apistandaard",
 		Padnaam:                "api_standaarden",
 		Meervoud:               "api standaarden",
@@ -61,7 +61,7 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "apistandaard_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 1755, Y: -2355},
+			Positie:      &V3Positie{X: 1983, Y: -2340},
 			SourceHandle: "source-right",
 			TargetHandle: "target-left",
 		},
@@ -100,7 +100,7 @@ func initCgMetaRegistry() {
 		IsMaterieel:            false,
 		Domein:                 "CG",
 		Kleur:                  "#a7f3d0",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1410, Y: -2610}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1638, Y: -2700}},
 		Veldnaam:               "domein",
 		Padnaam:                "domeinen",
 		Meervoud:               "domeinen",
@@ -148,7 +148,7 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "domein_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 1740, Y: -2610},
+			Positie:      &V3Positie{X: 1983, Y: -2700},
 			SourceHandle: "source-right",
 			TargetHandle: "target-left",
 		},
@@ -187,7 +187,7 @@ func initCgMetaRegistry() {
 		IsMaterieel:            false,
 		Domein:                 "CG",
 		Kleur:                  "#c4b5fd",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1395, Y: -2910}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 1665, Y: -2925}},
 		Veldnaam:               "gemeente",
 		Padnaam:                "gemeenten",
 		Meervoud:               "gemeenten",
@@ -235,7 +235,7 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "gemeente_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 1740, Y: -2910},
+			Positie:      &V3Positie{X: 1983, Y: -2940},
 			SourceHandle: "source-right",
 			TargetHandle: "target-left",
 		},
@@ -448,7 +448,7 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 1080, Y: -2505},
+			Positie:      &V3Positie{X: 1395, Y: -2505},
 			SourceHandle: "source-right",
 			TargetHandle: "target-left",
 		},
@@ -479,7 +479,7 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 1080, Y: -2820},
+			Positie:      &V3Positie{X: 1173, Y: -2895},
 			SourceHandle: "source-right",
 			TargetHandle: "target-left",
 		},
@@ -510,7 +510,7 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 1080, Y: -2175},
+			Positie:      &V3Positie{X: 1395, Y: -2205},
 			SourceHandle: "source-bottom",
 			TargetHandle: "target-left",
 		},
@@ -541,7 +541,7 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 435, Y: -2655},
+			Positie:      &V3Positie{X: 435, Y: -2685},
 			SourceHandle: "source-left",
 			TargetHandle: "target-right",
 		},
@@ -572,7 +572,7 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Meervoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 720, Y: -2835},
+			Positie:      &V3Positie{X: 720, Y: -2850},
 			SourceHandle: "source-top",
 			TargetHandle: "target-bottom",
 			UseEdges: []V3UseEdge{
@@ -606,7 +606,7 @@ func initCgMetaRegistry() {
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 6850, Y: 300},
+			Positie: &V3Positie{X: 1530, Y: -1905},
 			UseEdges: []V3UseEdge{
 				{Doel: "CGPortfolioFase", ID: "Initiatief_Beoordeling-->CGPortfolioFase", SourceHandle: "source-bottom", TargetHandle: "target-top"},
 			},
@@ -639,7 +639,7 @@ func initCgMetaRegistry() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "initiatief_id",
 		Momentvoorkomen:        Enkelvoudig,
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 7100, Y: 300}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 945, Y: -2310}},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "Initiatief_Etalage_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -668,7 +668,7 @@ func initCgMetaRegistry() {
 		SecondaireEntiteitIDKolom: "gemeente_id",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 1080, Y: -3000},
+			Positie:      &V3Positie{X: 1395, Y: -3030},
 			SourceHandle: "source-top",
 			TargetHandle: "target-bottom",
 			UseEdges: []V3UseEdge{
@@ -712,7 +712,7 @@ func initCgMetaRegistry() {
 		SecondaireEntiteitIDKolom: "domein_id",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 1080, Y: -2685},
+			Positie:      &V3Positie{X: 1395, Y: -2715},
 			SourceHandle: "source-right",
 			TargetHandle: "target-left",
 		},
@@ -753,7 +753,7 @@ func initCgMetaRegistry() {
 		SecondaireEntiteitIDKolom: "apistandaard_id",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 1080, Y: -2325},
+			Positie:      &V3Positie{X: 1395, Y: -2370},
 			SourceHandle: "source-right",
 			TargetHandle: "target-left",
 		},
@@ -794,7 +794,7 @@ func initCgMetaRegistry() {
 		SecondaireEntiteitIDKolom: "organisatie_id",
 		Momentvoorkomen:           Meervoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 420, Y: -2400},
+			Positie:      &V3Positie{X: 435, Y: -2460},
 			SourceHandle: "source-left",
 			TargetHandle: "target-right",
 			UseEdges: []V3UseEdge{
@@ -1470,7 +1470,7 @@ func initCgMetaRegistry() {
 		SecondaireEntiteitIDKolom: "persoon_id",
 		Momentvoorkomen:           Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 15, Y: -2250},
+			Positie:      &V3Positie{X: 0, Y: -2310},
 			SourceHandle: "source-bottom",
 			TargetHandle: "target-top",
 		},
@@ -1596,7 +1596,7 @@ func initCgMetaRegistry() {
 		IsMaterieel:            true,
 		Domein:                 "CG",
 		Kleur:                  "#fecaca",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 150, Y: -2055}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 165, Y: -2040}},
 		Veldnaam:               "persoon",
 		Padnaam:                "personen",
 		Meervoud:               "personen",

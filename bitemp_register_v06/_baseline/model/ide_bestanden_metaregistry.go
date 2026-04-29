@@ -12,6 +12,7 @@ func initIdeBestandenMetaRegistry() {
 		IsMaterieel:            true,
 		Domein:                 "ide-bestanden",
 		Kleur:                  "#fbbf24",
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 4605, Y: -880}},
 		Veldnaam:               "idebestand",
 		Padnaam:                "ide_bestanden",
 		Meervoud:               "ide bestanden",
@@ -52,6 +53,7 @@ func initIdeBestandenMetaRegistry() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "idebestand_id",
 		Momentvoorkomen:        Enkelvoudig,
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 4455, Y: -630}},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "IdeBestand_Meta_Data", Momentvoorkomen: Enkelvoudig},
 		},
@@ -78,6 +80,7 @@ func initIdeBestandenMetaRegistry() {
 		RelatieveAutoincrement: true,
 		EntiteitIDKolom:        "idebestand_id",
 		Momentvoorkomen:        Enkelvoudig,
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 4705, Y: -630}},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
 			{Rolnaam: "Data", JSONRolnaam: "data", Doeltype: "IdeBestand_Inhoud_Data", Momentvoorkomen: Enkelvoudig},
 		},

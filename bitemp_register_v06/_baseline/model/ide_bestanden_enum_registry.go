@@ -10,4 +10,9 @@ func initIdeBestandenEnumRegistry() {
 	EnumDomeinen["IdeBestandFormaat"] = "ide-bestanden"
 	EnumWaarden["IdeBestandOpslagType"] = []string{"inline", "minio"}
 	EnumDomeinen["IdeBestandOpslagType"] = "ide-bestanden"
+
+	// Enum editor-posities
+	EnumEditorLayouts["IdeBestandCategorie"] = &EditorLayout{Positie: &V3Positie{X: 4425, Y: -315}}
+	EnumEditorLayouts["IdeBestandFormaat"] = &EditorLayout{Positie: &V3Positie{X: 4645, Y: -315}}
+	EnumEditorLayouts["IdeBestandOpslagType"] = &EditorLayout{Positie: &V3Positie{X: 4865, Y: -315}}
 }

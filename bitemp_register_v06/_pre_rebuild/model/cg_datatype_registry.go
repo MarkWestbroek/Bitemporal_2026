@@ -12,8 +12,6 @@ func initCgDatatypeRegistry() {
 			Format:      "uri",
 			Domein:      "CG",
 			Positie:     &V3Positie{X: 1005, Y: -1575},
-			Validatie:   &V3Validatie{},
-			Weergave:    &V3Weergave{},
 		},
 		V3Datatype{
 			Naam:        "Emailadres",
@@ -21,9 +19,7 @@ func initCgDatatypeRegistry() {
 			Basistype:   "string",
 			Format:      "email",
 			Domein:      "CG",
-			Positie:     &V3Positie{X: -690, Y: -2250},
-			Validatie:   &V3Validatie{},
-			Weergave:    &V3Weergave{},
+			Positie:     &V3Positie{X: -390, Y: -2250},
 		},
 		V3Datatype{
 			Naam:        "Telefoonnummer",
@@ -31,9 +27,7 @@ func initCgDatatypeRegistry() {
 			Basistype:   "string",
 			Format:      "phone",
 			Domein:      "CG",
-			Positie:     &V3Positie{X: -465, Y: -2250},
-			Validatie:   &V3Validatie{},
-			Weergave:    &V3Weergave{},
+			Positie:     &V3Positie{X: -600, Y: -2250},
 		},
 		V3Datatype{
 			Naam:        "GitAdres",
@@ -42,8 +36,6 @@ func initCgDatatypeRegistry() {
 			Format:      "git-address",
 			Domein:      "CG",
 			Positie:     &V3Positie{X: 915, Y: -1725},
-			Validatie:   &V3Validatie{},
-			Weergave:    &V3Weergave{},
 		},
 	)
 }

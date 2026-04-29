@@ -25,12 +25,12 @@ func initCgEnumRegistry() {
 
 	// Enum editor-posities
 	EnumEditorLayouts["Fase"] = &EditorLayout{Positie: &V3Positie{X: 315, Y: -1560}}
-	EnumEditorLayouts["Producttype"] = &EditorLayout{Positie: &V3Positie{X: 645, Y: -1695}}
+	EnumEditorLayouts["Producttype"] = &EditorLayout{Positie: &V3Positie{X: 615, Y: -1695}}
 	EnumEditorLayouts["CGLaag"] = &EditorLayout{Positie: &V3Positie{X: 810, Y: -1530}}
 	EnumEditorLayouts["Bijdragetype"] = &EditorLayout{Positie: &V3Positie{X: 1290, Y: -1980}}
 	EnumEditorLayouts["Schaal"] = &EditorLayout{Positie: &V3Positie{X: 1290, Y: -1815}}
-	EnumEditorLayouts["Organisatietype"] = &EditorLayout{Positie: &V3Positie{X: 450, Y: -2865}}
-	EnumEditorLayouts["CGPortfolioFase"] = &EditorLayout{Positie: &V3Positie{X: 2690, Y: 550}}
-	EnumEditorLayouts["Gemeenterol"] = &EditorLayout{Positie: &V3Positie{X: 1080, Y: -3150}}
-	EnumEditorLayouts["Organisatierol"] = &EditorLayout{Positie: &V3Positie{X: 420, Y: -2235}}
+	EnumEditorLayouts["Organisatietype"] = &EditorLayout{Positie: &V3Positie{X: 420, Y: -2925}}
+	EnumEditorLayouts["CGPortfolioFase"] = &EditorLayout{Positie: &V3Positie{X: 1545, Y: -1590}}
+	EnumEditorLayouts["Gemeenterol"] = &EditorLayout{Positie: &V3Positie{X: 1395, Y: -3195}}
+	EnumEditorLayouts["Organisatierol"] = &EditorLayout{Positie: &V3Positie{X: 435, Y: -2280}}
 }

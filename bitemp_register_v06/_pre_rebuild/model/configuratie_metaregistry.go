@@ -12,7 +12,7 @@ func initConfiguratieMetaRegistry() {
 		IsMaterieel:            true,
 		Domein:                 "configuratie",
 		Kleur:                  "#c4b5fd",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 2650, Y: 80}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 3010, Y: -790}},
 		Veldnaam:               "formulierdefinitie",
 		Padnaam:                "formulier_definities",
 		Meervoud:               "formulier definities",
@@ -54,7 +54,7 @@ func initConfiguratieMetaRegistry() {
 		EntiteitIDKolom:        "formulierdefinitie_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 2500, Y: 330},
+			Positie: &V3Positie{X: 2860, Y: -540},
 			EdgeID:  "FormulierDefinitie->FormulierDefinitie_Meta",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -84,7 +84,7 @@ func initConfiguratieMetaRegistry() {
 		EntiteitIDKolom:        "formulierdefinitie_id",
 		Momentvoorkomen:        Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 2750, Y: 330},
+			Positie: &V3Positie{X: 3110, Y: -540},
 			EdgeID:  "FormulierDefinitie->FormulierDefinitie_Layout",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -187,7 +187,7 @@ func initConfiguratieMetaRegistry() {
 		IsMaterieel:            true,
 		Domein:                 "configuratie",
 		Kleur:                  "#a5f3fc",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: 3270, Y: 75}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: 3630, Y: -795}},
 		Veldnaam:               "weergavedefinitie",
 		Padnaam:                "weergave_definities",
 		Meervoud:               "weergave definities",
@@ -230,7 +230,7 @@ func initConfiguratieMetaRegistry() {
 		EntiteitIDKolom:        "weergavedefinitie_id",
 		Momentvoorkomen:        Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 3120, Y: 325},
+			Positie: &V3Positie{X: 3480, Y: -545},
 			EdgeID:  "WeergaveDefinitie->WeergaveDefinitie_Meta",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -260,7 +260,7 @@ func initConfiguratieMetaRegistry() {
 		EntiteitIDKolom:        "weergavedefinitie_id",
 		Momentvoorkomen:        Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 3370, Y: 325},
+			Positie: &V3Positie{X: 3730, Y: -545},
 			EdgeID:  "WeergaveDefinitie->WeergaveDefinitie_TabelConfig",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{
@@ -290,7 +290,7 @@ func initConfiguratieMetaRegistry() {
 		EntiteitIDKolom:        "weergavedefinitie_id",
 		Momentvoorkomen:        Meervoudig,
 		Layout: &EditorLayout{
-			Positie: &V3Positie{X: 3620, Y: 325},
+			Positie: &V3Positie{X: 3980, Y: -545},
 			EdgeID:  "WeergaveDefinitie->WeergaveDefinitie_DetailTemplate",
 		},
 		OnderliggendeGegevenselementen: []OnderliggendGegevenselement{

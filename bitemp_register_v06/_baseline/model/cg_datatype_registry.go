@@ -19,7 +19,7 @@ func initCgDatatypeRegistry() {
 			Basistype:   "string",
 			Format:      "email",
 			Domein:      "CG",
-			Positie:     &V3Positie{X: -690, Y: -2250},
+			Positie:     &V3Positie{X: -390, Y: -2250},
 		},
 		V3Datatype{
 			Naam:        "Telefoonnummer",
@@ -27,7 +27,7 @@ func initCgDatatypeRegistry() {
 			Basistype:   "string",
 			Format:      "phone",
 			Domein:      "CG",
-			Positie:     &V3Positie{X: -465, Y: -2250},
+			Positie:     &V3Positie{X: -600, Y: -2250},
 		},
 		V3Datatype{
 			Naam:        "GitAdres",

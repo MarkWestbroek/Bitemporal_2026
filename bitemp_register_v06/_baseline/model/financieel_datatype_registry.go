@@ -11,7 +11,7 @@ func initFinancieelDatatypeRegistry() {
 			Basistype:   "string",
 			Format:      "iban",
 			Domein:      "financieel",
-			Positie:     &V3Positie{X: 3870, Y: 900},
+			Positie:     &V3Positie{X: 3780, Y: 780},
 			Validatie: &V3Validatie{
 				Pattern:     `^[A-Z]{2}[0-9]{2}[A-Z0-9]{4}[0-9]{7}([A-Z0-9]?){0,16}$`,
 				MinLength:   intPtr(15),

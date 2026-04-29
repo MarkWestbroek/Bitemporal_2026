@@ -271,7 +271,7 @@ func initNpLocMetaRegistry() {
 		IsMaterieel:            true,
 		Domein:                 "np-loc",
 		Kleur:                  "#bfdbfe",
-		Layout:                 &EditorLayout{Positie: &V3Positie{X: -135, Y: -885}},
+		Layout:                 &EditorLayout{Positie: &V3Positie{X: -165, Y: -915}},
 		Veldnaam:               "natuurlijkpersoon",
 		Padnaam:                "natuurlijk_personen",
 		Meervoud:               "natuurlijk personen",
@@ -505,7 +505,7 @@ func initNpLocMetaRegistry() {
 		SecondaireEntiteitIDKolom: "locatie_id",
 		Momentvoorkomen:           Enkelvoudig,
 		Layout: &EditorLayout{
-			Positie:      &V3Positie{X: 210, Y: -870},
+			Positie:      &V3Positie{X: 225, Y: -825},
 			SourceHandle: "right",
 			TargetHandle: "left",
 			UseEdges: []V3UseEdge{

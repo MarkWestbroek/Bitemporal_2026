@@ -95,10 +95,14 @@ func main() {
 	if *domein != "" {
 		filtered := v3.Entiteiten[:0]
 		includeLegeDomeinen := *domein == "register"
+		// Als het model-niveau naam overeenkomt met het gevraagde domein, dan worden
+		// entiteiten zonder domein-veld ook opgenomen (editor-v2 exporteert domein niet altijd).
+		modelNaamMatchesDomein := v3.Naam == *domein
 		for _, ent := range v3.Entiteiten {
 			zelfdeDomein := ent.Domein == *domein
 			registerBasis := includeLegeDomeinen && ent.Domein == ""
-			if zelfdeDomein || registerBasis {
+			modelBasis := modelNaamMatchesDomein && ent.Domein == ""
+			if zelfdeDomein || registerBasis || modelBasis {
 				filtered = append(filtered, ent)
 			} else {
 				fmt.Printf("  Overgeslagen (domein=%q): %s\n", ent.Domein, ent.Typenaam)

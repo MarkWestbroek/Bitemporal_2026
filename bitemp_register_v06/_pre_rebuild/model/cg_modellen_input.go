@@ -24,29 +24,32 @@ type Gemeente_GemeenteGegevens_Input struct {
 }
 
 type Initiatief_Planning_Input struct {
-	INITIATIEF_ID       int    `json:"initiatief_id"`
-	Rel_ID              int    `json:"rel_id"`
-	Planningsinfo       string `json:"planningsinfo"`
-	Startdatum          Date   `json:"startdatum"`
-	ReadyForUse         Date   `json:"ready_for_use"`
-	WaarTegenaanGelopen string `json:"waar_tegenaan_gelopen"`
-	Fase                Fase   `json:"fase"`
-	Aanvang             *Date  `json:"aanvang,omitempty"`
-	Einde               *Date  `json:"einde,omitempty"`
+	INITIATIEF_ID       int     `json:"initiatief_id"`
+	Rel_ID              int     `json:"rel_id"`
+	Planningsinfo       string  `json:"planningsinfo"`
+	Startdatum          Date    `json:"startdatum"`
+	ReadyForUse         Date    `json:"ready_for_use"`
+	WaarTegenaanGelopen string  `json:"waar_tegenaan_gelopen"`
+	Fase                Fase    `json:"fase"`
+	Obstakels           *string `json:"obstakels,omitempty"`
+	VerwachtReadyDatum  *Date   `json:"verwacht_ready_datum,omitempty"`
+	Aanvang             *Date   `json:"aanvang,omitempty"`
+	Einde               *Date   `json:"einde,omitempty"`
 }
 
 type Initiatief_Product_Input struct {
-	INITIATIEF_ID int         `json:"initiatief_id"`
-	Rel_ID        int         `json:"rel_id"`
-	Naam          string      `json:"naam"`
-	Omschrijving  *string     `json:"omschrijving,omitempty"`
-	Type          Producttype `json:"type"`
-	CGLaag        CGLaag      `json:"CG_laag"`
-	Pitch         *string     `json:"pitch,omitempty"`
-	Website       *URL        `json:"website,omitempty"`
-	GitRepo       *GitAdres   `json:"git_repo,omitempty"`
-	Aanvang       *Date       `json:"aanvang,omitempty"`
-	Einde         *Date       `json:"einde,omitempty"`
+	INITIATIEF_ID        int         `json:"initiatief_id"`
+	Rel_ID               int         `json:"rel_id"`
+	Naam                 string      `json:"naam"`
+	Omschrijving         *string     `json:"omschrijving,omitempty"`
+	Type                 Producttype `json:"type"`
+	CGLaag               CGLaag      `json:"CG_laag"`
+	Pitch                *string     `json:"pitch,omitempty"`
+	VervangtOuderProduct *bool       `json:"vervangt_ouder_product,omitempty"`
+	Website              *string     `json:"website,omitempty"`
+	GitRepo              *string     `json:"git_repo,omitempty"`
+	Aanvang              *Date       `json:"aanvang,omitempty"`
+	Einde                *Date       `json:"einde,omitempty"`
 }
 
 type Initiatief_Bijdrage_Input struct {
@@ -55,6 +58,7 @@ type Initiatief_Bijdrage_Input struct {
 	TypeBijdrage  Bijdragetype `json:"type_bijdrage"`
 	Schaal        Schaal       `json:"schaal"`
 	Toelichting   string       `json:"toelichting"`
+	Score         *int         `json:"score,omitempty"`
 	Aanvang       *Date        `json:"aanvang,omitempty"`
 	Einde         *Date        `json:"einde,omitempty"`
 }
@@ -78,16 +82,39 @@ type Initiatief_AndereAPIStandaard_Input struct {
 }
 
 type Initiatief_Initiatiefinfo_Input struct {
-	INITIATIEF_ID int    `json:"initiatief_id"`
-	Rel_ID        int    `json:"rel_id"`
-	Informatie    string `json:"informatie"`
-	PbiID         int    `json:"PbiID"`
+	INITIATIEF_ID    int    `json:"initiatief_id"`
+	Rel_ID           int    `json:"rel_id"`
+	Informatie       string `json:"informatie"`
+	PbiID            int    `json:"PbiID"`
+	Aanmeldingsdatum *Date  `json:"aanmeldingsdatum,omitempty"`
 }
 
 type Initiatief_BetrokkenOrganisatie_Input struct {
 	INITIATIEF_ID int             `json:"initiatief_id"`
 	Rel_ID        int             `json:"rel_id"`
 	Type          Organisatietype `json:"type"`
+}
+
+type Initiatief_Beoordeling_Input struct {
+	INITIATIEF_ID            int             `json:"initiatief_id"`
+	Rel_ID                   int             `json:"rel_id"`
+	FaseCgPortfolio          CGPortfolioFase `json:"fase_cg_portfolio"`
+	DatumZilver              *Date           `json:"datum_zilver,omitempty"`
+	DatumGoud                *Date           `json:"datum_goud,omitempty"`
+	CheckZilver              *bool           `json:"check_zilver,omitempty"`
+	RedenatieZilver          *string         `json:"redenatie_zilver,omitempty"`
+	RedenatieGoud            *string         `json:"redenatie_goud,omitempty"`
+	GoudNietGehaald          *bool           `json:"goud_niet_gehaald,omitempty"`
+	RedenatieGoudNietGehaald *string         `json:"redenatie_goud_niet_gehaald,omitempty"`
+	Aanvang                  *Date           `json:"aanvang,omitempty"`
+	Einde                    *Date           `json:"einde,omitempty"`
+}
+
+type Initiatief_Etalage_Input struct {
+	INITIATIEF_ID int     `json:"initiatief_id"`
+	Rel_ID        int     `json:"rel_id"`
+	Level1        *string `json:"level1,omitempty"`
+	Level2        *string `json:"level2,omitempty"`
 }
 
 type InitiatiefGemeente_Input struct {
@@ -116,12 +143,12 @@ type InitiatiefOrganisatie_Input struct {
 	Rol            *Organisatierol `json:"rol,omitempty"`
 }
 
-type Organisatie_Contactgegevens_Input struct {
-	ORGANISATIE_ID int             `json:"organisatie_id"`
-	Rel_ID         int             `json:"rel_id"`
-	Url            *URL            `json:"url,omitempty"`
-	Email          *Emailadres     `json:"email,omitempty"`
-	Telefoonnummer *Telefoonnummer `json:"telefoonnummer,omitempty"`
+type Organisatie_Organisatiecontactgegevens_Input struct {
+	ORGANISATIE_ID int     `json:"organisatie_id"`
+	Rel_ID         int     `json:"rel_id"`
+	Url            *string `json:"url,omitempty"`
+	Email          *string `json:"email,omitempty"`
+	Telefoonnummer *string `json:"telefoonnummer,omitempty"`
 }
 
 type Organisatie_Organisatienaam_Input struct {
@@ -137,11 +164,11 @@ type Contactpersoon_Input struct {
 	Rol            string `json:"rol"`
 }
 
-type Persoon_Contactgegevens_Input struct {
-	PERSOON_ID     int             `json:"persoon_id"`
-	Rel_ID         int             `json:"rel_id"`
-	Email          *Emailadres     `json:"email,omitempty"`
-	Telefoonnummer *Telefoonnummer `json:"telefoonnummer,omitempty"`
+type Persoon_Persoonscontactgegevens_Input struct {
+	PERSOON_ID     int     `json:"persoon_id"`
+	Rel_ID         int     `json:"rel_id"`
+	Email          *string `json:"email,omitempty"`
+	Telefoonnummer *string `json:"telefoonnummer,omitempty"`
 }
 
 type Persoon_Persoonnaam_Input struct {
