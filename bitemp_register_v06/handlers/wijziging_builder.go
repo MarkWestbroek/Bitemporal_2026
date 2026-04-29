@@ -242,14 +242,48 @@ func bouwWijzigingVoorItem(doelMeta model.TypeMeta, og model.OnderliggendGegeven
 		}
 	}
 
-	// Bouw wrapped payload {Veldnaam: item} en hergebruik RepresentatiePlusNaam.UnmarshalJSON.
-	wrapped, err := json.Marshal(map[string]json.RawMessage{doelMeta.Veldnaam: item})
-	if err != nil {
-		return &RegistreerError{Status: http.StatusInternalServerError, Msg: fmt.Sprintf("rol %q: kon payload niet wrappen: %v", og.JSONRolnaam, err)}
+	// Bouw de RepresentatiePlusNaam DIRECT vanuit doelMeta (parent-context
+	// disambiguatie). We gebruiken bewust GEEN RepresentatiePlusNaam.UnmarshalJSON
+	// omdat die globaal op Veldnaam zoekt en bij collisions (bv. "naam" =
+	// NatuurlijkPersoon_Naam én ApiStandaard_Naam) het verkeerde type kan kiezen.
+	// In PATCH-context kennen we het exacte doel-type via og.Doeltype.
+	//
+	// We strippen kind-keys (JSONRolnamen van onderliggende GE's van het doel-type)
+	// uit de payload — die horen niet als typed-veld op de hub maar als aparte
+	// WijzigingRequests (zelfde semantiek als RepresentatiePlusNaam.UnmarshalJSON).
+	typedPayload := item
+	if len(doelMeta.OnderliggendeGegevenselementen) > 0 {
+		gestript := make(map[string]json.RawMessage, len(itemMap))
+		kindKeys := make(map[string]struct{}, len(doelMeta.OnderliggendeGegevenselementen))
+		for _, kog := range doelMeta.OnderliggendeGegevenselementen {
+			if kog.JSONRolnaam != "" {
+				kindKeys[kog.JSONRolnaam] = struct{}{}
+			}
+		}
+		stripped := false
+		for k, v := range itemMap {
+			if _, isKind := kindKeys[k]; isKind {
+				stripped = true
+				continue
+			}
+			gestript[k] = v
+		}
+		if stripped {
+			if buf, err := json.Marshal(gestript); err == nil {
+				typedPayload = buf
+			}
+		}
 	}
-	rep := &model.RepresentatiePlusNaam{}
-	if err := rep.UnmarshalJSON(wrapped); err != nil {
+
+	representatie := doelMeta.Factory()
+	if err := json.Unmarshal(typedPayload, representatie); err != nil {
 		return &RegistreerError{Status: http.StatusBadRequest, Msg: fmt.Sprintf("rol %q: kon payload niet unmarshallen naar %s: %v", og.JSONRolnaam, doelMeta.Typenaam, err)}
+	}
+	rep := &model.RepresentatiePlusNaam{
+		Representatie:     representatie,
+		Representatienaam: doelMeta.Typenaam,
+		Veldnaam:          doelMeta.Veldnaam,
+		RawPayload:        append(json.RawMessage(nil), item...),
 	}
 
 	// Voor correctie: voeg eerst Afvoer (met rel_id) toe, daarna Opvoer (met rel_id).

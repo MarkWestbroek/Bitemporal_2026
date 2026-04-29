@@ -37,10 +37,11 @@ func TestBouwWijzigingen_VariantBZonderWrapperWordtGeaccepteerd(t *testing.T) {
 	if res.Wijzigingen[0].Opvoer == nil {
 		t.Fatalf("verwacht Opvoer, kreeg %+v", res.Wijzigingen[0])
 	}
-	// Type-disambiguatie is een verantwoordelijkheid van GetByVeldnaamMetPayload —
-	// hier checken we alleen dat een _Naam-type is gekozen.
-	if !strings.Contains(res.Wijzigingen[0].Opvoer.Representatienaam, "Naam") {
-		t.Fatalf("verwacht een Naam-type, kreeg %s", res.Wijzigingen[0].Opvoer.Representatienaam)
+	// Parent-context disambiguatie: ondanks dat veldnaam "naam" 2 candidates
+	// heeft (NatuurlijkPersoon_Naam + ApiStandaard_Naam), moet de builder via
+	// og.Doeltype exact NatuurlijkPersoon_Naam kiezen.
+	if res.Wijzigingen[0].Opvoer.Representatienaam != "NatuurlijkPersoon_Naam" {
+		t.Fatalf("verwacht NatuurlijkPersoon_Naam (parent-context), kreeg %s", res.Wijzigingen[0].Opvoer.Representatienaam)
 	}
 }
 

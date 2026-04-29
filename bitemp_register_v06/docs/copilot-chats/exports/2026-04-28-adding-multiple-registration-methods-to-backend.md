@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-28 14:28
 - **Sessie-ID**: `fc469233-069a-4f14-9910-2d7c6a1d94cb`
-- **Berichten**: 47
+- **Berichten**: 49
 
 ---
 
@@ -1325,6 +1325,70 @@ Build + tests:      Alles groen. Nu unit-tests voor de wijziging-builder. Ik geb
 ```
 
 ```
-Alles groen. Nu de **ETag/If-Match** (optioneel) toevoegen en documentatie. Eerst ETag — minimaal: handler berekent een ETag (laatste registratie-id voor deze entiteit) en checkt If-Match. 
+Alles groen. Nu de **ETag/If-Match** (optioneel) toevoegen en documentatie. Eerst ETag — minimaal: handler berekent een ETag (laatste registratie-id voor deze entiteit) en checkt If-Match. ETag-implementatie zelf is niet triviaal (vereist een query die de laatste registratie-id voor *een specifieke entiteit* ophaalt — een wijziging refereert via opvoer/afvoer van representaties, dus de query loopt over meerdere onderliggende GE-tabellen). Ik lever het ontwerp in docs en BACKLOG, **niet in code in deze iteratie** — anders wordt de PR te breed. Ik documenteer dit expliciet als bewuste scope-afbakening.
+
+Documentatie:       BACKLOG bijwerken:       
+```
+
+```
+Sessie-plan bijwerken:         Fase 2 afgerond. Laatste todo-update:     **Fase 2 PATCH afgerond.** Samenvatting deze ronde:
+
+- **12 unit tests** voor  in handlers/wijziging_builder_test.go — alle groen, full suite groen.
+- **docs/REST_CRUD.md** nieuw: endpoints, body-formats (variant A/B), modus, foutcodes-tabel (200/400/404/409/412/500), ETag-ontwerp.
+- **docs/BACKLOG.md** bijgewerkt: PATCH ✅, ETag 🟡 follow-up (bewust scope-afgebakend — vergt niet-triviale "MAX(reg_id) per entiteit"-query over meerdere GE-tabellen).
+- Sessie-plan bijgewerkt.
+
+**Twee bewuste keuzes vooraf checken:**
+1. **ETag niet in code deze iteratie** — alleen ontwerp gedocumenteerd. Akkoord, of wil je het toch nu inbouwen voordat we Fase 3 starten?
+2. **Een test-aanname:**  met body  resolved naar `ApiStandaard_Naam` (niet `NatuurlijkPersoon_Naam`) omdat veldnaam "naam" 2 candidates heeft in de MetaRegistry. Test checkt nu alleen . Dit is bestaand engine-gedrag (`GetByVeldnaamMetPayload` log-warnt al). Mogelijk wil je later parent-context-gebaseerde disambiguatie (zie risk #1 in plan.md) — maar buiten scope nu.
+
+Doorzetten naar Fase 3 (GraphQL Command-laag)?
+
+---
+
+## 🧑 User
+
+1 akkoord
+2 niet akkoord: het zou heel duidelijk uit de context moeten zijn welke parent deze Naam heeft. Het wordt al elders opgelost (in /registratie? via de naam van de <ENT>_id). Hier is het nog gemakkelijker omdat we op een ENT-endpoint zitten. Als er meer dan 1 naam is, moet je de juiste kiezen. Of: we moeten een domein filter inbouwen in de GetByVeldnaamMetPayload. zoiets als GetByVeldnaamWithinDomeinMetPayload. Het kan niet heel moeilijk zijn en lost een hoop onverwachte problemen op...!
+
+Graag eerst punt 2 wel aanpakken, en dan okee om door te gaan naar de GQL. Dank!
+
+(werk je ook backlog en release-log bij?)
+
+---
+
+## 🤖 Assistant
+
+Goed punt — in de builder kennen we  al direct via . Dat omzeilt de globale veldnaam-lookup volledig. Fix:         
+```
+
+```
+Test bijwerken — nu MOETEN we exact `NatuurlijkPersoon_Naam` krijgen:     
+```
+
+```
+Alles groen. Nu BACKLOG, REST_CRUD doc en RELEASE bijwerken:         
+```
+
+```
+BACKLOG: voeg expliciet de domein/parent-filter follow-up toe en update PATCH-entry met "parent-context disambiguatie" notitie:         
+```
+
+```
+Sessie-plan kort updaten en build checken:         **Punt 2 opgelost + docs bijgewerkt.**
+
+**Wijziging:**  bouwt `RepresentatiePlusNaam` nu **direct** vanuit  — bypasst de globale `GetByVeldnaamMetPayload`. In PATCH-context kennen we het exacte doel-type via de parent's `OnderliggendeGegevenselementen`; veldnaam-collisions kunnen daar per definitie niet meer voorkomen. Test aangescherpt:  (exact). Alle 12 tests + volledige suite groen.
+
+**Bredere oplossing als  (exact). Alle 12 tests + volledige suite groen.
+
+**Bredere oplossing als BACKLOG-item toegevoegd** in docs/BACKLOG.md: `GetByVeldnaamBijOuder(ouderMeta, jsonRolnaam)` (sterkste vorm, zoals nu in PATCH) +  (jouw voorgestelde domein-filter) — voor toepassing in POST `/registratie/`, normalizer en GraphQL-mutations. Aparte iteratie omdat het meerdere callers raakt.
+
+**Documentatie bijgewerkt:**
+-  — nieuw release-blok bovenaan voor 2026-04-29 met DELETE + PATCH + parent-context disambiguatie
+- docs/BACKLOG.md — PATCH-entry uitgebreid met disambiguatie-noot; nieuw open punt voor domein/parent-filter
+- docs/REST_CRUD.md — bestaand
+- session/plan.md — bijgewerkt
+
+Door naar **Fase 3: GraphQL Command-laag**.
 
 ---
