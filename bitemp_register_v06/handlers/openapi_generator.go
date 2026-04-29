@@ -401,7 +401,7 @@ func voegFullPathsToe(paths oasMap, fullBase string, meta model.TypeMeta) {
 		},
 	}
 
-	// GET /full/{padnaam}/{id}
+	// GET / PATCH /full/{padnaam}/{id}
 	detailParams := []oasMap{idPathParameter(), peiltijdParam}
 	paths[fullBase+"/{id}"] = oasMap{
 		"get": oasMap{
@@ -419,6 +419,58 @@ func voegFullPathsToe(paths oasMap, fullBase string, meta model.TypeMeta) {
 					},
 				},
 				"404": oasMap{"description": "Niet gevonden"},
+			},
+		},
+		// FASE 2 (REST/CRUD-laag, 2026-04-29): PATCH op /full/{padnaam}/:id.
+		// JSON Merge Patch RFC 7396 op onderliggende GE's/RELs.
+		// ENT-velden zelf zijn niet patchable (alleen aanvang/einde plumbing-GE's en de onderliggende GE's/RELs).
+		"patch": oasMap{
+			"operationId": "patchFull" + meta.Typenaam,
+			"summary":     "Wijzig " + meta.Typenaam + " via JSON Merge Patch (RFC 7396)",
+			"description": "PATCH-body bevat alleen de te wijzigen onderliggende GE's/RELs. " +
+				"Body MAG met of zonder ENT-wrapper. Modus default `registratie` (engine sluit voorgaande versie automatisch af); `correctie` vereist `rel_id` per GE/REL. " +
+				"Foutcodes: 400 (ongeldige body, leeg, verboden ENT-veld, correctie zonder rel_id), 404 (URL-id bestaat niet), 409 (id-mismatch URL/body), 500 (DB-fout). " +
+				"Response bevat `meldingen[]` met niet-fatale waarschuwingen (bv. genegeerde rel_id in registratie, no-op items).",
+			"tags": []string{tag},
+			"parameters": []oasMap{
+				idPathParameter(),
+				oasMap{
+					"name":        "modus",
+					"in":          "query",
+					"required":    false,
+					"description": "registratie (default) of correctie",
+					"schema":      oasMap{"type": "string", "enum": []string{"registratie", "correctie"}, "default": "registratie"},
+				},
+			},
+			"requestBody": oasMap{
+				"required": true,
+				"content": oasMap{
+					"application/merge-patch+json": oasMap{
+						"schema": oasMap{"type": "object", "description": "Merge patch op onderliggende GE's/RELs van " + meta.Typenaam},
+					},
+					"application/json": oasMap{
+						"schema": oasMap{"type": "object"},
+					},
+				},
+			},
+			"responses": oasMap{
+				"200": oasMap{
+					"description": "Patch toegepast; response bevat verwijzing naar de aangemaakte registratie + meldingen[]",
+					"content": oasMap{"application/json": oasMap{"schema": oasMap{
+						"type": "object",
+						"properties": oasMap{
+							"message":        oasMap{"type": "string"},
+							"registratie_id": oasMap{"type": "integer", "format": "int64"},
+							"tijdstip":       oasMap{"type": "string", "format": "date-time"},
+							"modus":          oasMap{"type": "string"},
+							"meldingen":      oasMap{"type": "array", "items": oasMap{"type": "string"}},
+						},
+					}}},
+				},
+				"400": oasMap{"description": "Ongeldige body, lege effectieve patch, verboden ENT-veld, of correctie zonder rel_id"},
+				"404": oasMap{"description": "Niet gevonden"},
+				"409": oasMap{"description": "Id in payload komt niet overeen met id in URL"},
+				"500": oasMap{"description": "Interne serverfout"},
 			},
 		},
 	}

@@ -65,7 +65,7 @@
 - Verwijderen: confirm-dialoog met telling van te raken elementen + diagrammen → cascade delete of verplaatsen naar `(geen domein)`.
 - Beide via rechter-muisklik op het domein-mapje in de Project Browser.
 
-### 0.9 IDE-fixes: tab-naam sync + validatie scope & leesbaarheid (2026-04-29)
+### 0.9 IDE-fixes: tab-naam sync + validatie scope & leesbaarheid + verwijder-acties (2026-04-29)
 
 #### Tab-naam sync bij hernoemd diagram — ✅ OPGELOST
 - Was: `renameDiagram()` in de Zustand-store updaten de diagramnaam in de store, maar de FlexLayout-tab hield zijn oude naam.
@@ -81,6 +81,22 @@
   - `handleDialogChange` in `IdePage.jsx` hervalideert met de geselecteerde domeinen wanneer de `beschikbareDomeinen`-checkbox wijzigt.
 - Bestanden: `src/validation/validateV3Model.js`, `src/pages/IdePage.jsx`.
 
+#### A3: afgeleide velden op relatie triggeren ASOC-expansie — ✅ OPGELOST
+- Was: in `DiagramCanvas.jsx` werd de forward/reverse ASOC-trigger berekend op basis van `(el.data?.velden || []).length`. Een afgeleid veld toevoegen aan een relatie zonder gewone velden expandeerde de relatie niet.
+- Opgelost: trigger-formule telt nu zowel `velden` als `afgeleideVelden` mee — één regel wijziging in de `useEffect`. De canonieke `relatieVorm()`-helper in `shared/asoc.js` (al correct) blijft single source of truth voor de uiteindelijke vorm.
+- Bestanden: `src/ide/DiagramCanvas.jsx`.
+
+#### B6 + 0.7: diagram + domein verwijderen via PB-rechtsklik — ✅ OPGELOST
+- Was: rechtsklik in de Project Browser kon alleen elementen verwijderen. Diagrammen en domeinen waren alleen via omwegen weg te krijgen.
+- Opgelost:
+  - `BrowserContextMenu.jsx`: twee nieuwe menu-items "🗑️ Verwijder diagram…" (op `diagram`-nodes) en "🗑️ Verwijder domein…" (op `domain`-nodes).
+  - `layoutConfig.js`: nieuwe helper `closeDiagramTab(model, diagramId)` (analoog aan `renameDiagramTab`) sluit alle FlexLayout-tabs die op het diagram wijzen.
+  - `ProjectBrowser.jsx`:
+    - **Diagram verwijderen**: confirm met telling van nodes/edges + duidelijke melding dat elementen in het model blijven; daarna `deleteDiagram` + `onDeleteDiagram` callback voor tab-sluiten.
+    - **Domein verwijderen**: tweetraps-confirm. Eerste vraag toont telling van elementen + diagrammen en bevestigt verwijdering van het domein-label (elementen verhuizen impliciet naar "(geen domein)"). Tweede vraag biedt cascade-delete (alle elementen + diagrammen ook weg). "(geen domein)" pseudo-domein wordt expliciet geweigerd.
+  - `IdePage.jsx`: `handleDeleteDiagram` callback + `closeDiagramTab` import + nieuwe `onDeleteDiagram`-prop op `<ProjectBrowser>`.
+- Bestanden: `src/ide/BrowserContextMenu.jsx`, `src/ide/ProjectBrowser.jsx`, `src/ide/layoutConfig.js`, `src/pages/IdePage.jsx`.
+
 ---
 
 ### 0.8 Verzamelde UML-UI-issues / vragen (2026-04-29)
@@ -91,7 +107,7 @@ Inventarisatie van een batch vragen en bugs over editor-v2 én IDE. Ge­ordend o
 
 1. **ASOC edge-labels worden niet getoond.** Eerder werkte de spiegel-conventie: het label *aan de ankerkant* van de A→anker edge is feitelijk het label *bij B*, en omgekeerd. Daarbij hoort: alleen de relatie­eigenschappen (multipliciteit bij A, multipliciteit bij B, naamLabelHeen, naamLabelTerug) bewerken op de relatie-node; edges zijn slechts visualisatie. Status: regressie — ergens gesneuveld.
 2. **Lege veld-compartiment in entiteit-nodes** geeft een dubbele lijn. Wanneer een entiteit géén directe velden heeft (normale situatie in V3) moet het lege compartiment verborgen worden zodat er nog één scheidings­lijn overblijft.
-3. **Afgeleid veld toevoegen aan een relatie expandeert deze niet naar associatie­klasse.** Een gewoon veld toevoegen triggert het wel. De expansie-trigger moet ook luisteren op `afgeleideVelden.length > 0`.
+3. **Afgeleid veld toevoegen aan een relatie expandeert deze niet naar associatie­klasse.** ✅ OPGELOST (2026-04-29) — trigger in `DiagramCanvas.jsx` telt nu ook `afgeleideVelden` mee.
 4. **V3-import in IDE bouwt diagram niet op.** Bij import van een V3 JSON die uit editor-v2 komt (mét layout) wordt in de IDE geen diagram gereconstrueerd. Doel: editor-v2 als schetsblok kunnen gebruiken en naar IDE exporteren *inclusief* layout (posities, edges, anker-posities).
 
 **B. Features (middelgroot)**
@@ -101,8 +117,8 @@ Inventarisatie van een batch vragen en bugs over editor-v2 én IDE. Ge­ordend o
    - IDE-store / IDE-export
    - DB-publicatie + MetaRegistry round-trip
    - Beide UI's (editor-v2 en IDE) moeten lezen/schrijven
-6. **Diagram verwijderen via rechtsklik in IDE Project Browser.** Met confirm-dialoog. (Sluit aan op 0.7 voor domeinen.)
-7. **Domein verwijderen via rechtsklik in IDE Project Browser.** Reeds opgenomen in 0.7 — markeren als prioritair samen met (6).
+6. **Diagram verwijderen via rechtsklik in IDE Project Browser.** ✅ OPGELOST (2026-04-29) — confirm met telling, sluit ook open tabs.
+7. **Domein verwijderen via rechtsklik in IDE Project Browser.** ✅ OPGELOST (2026-04-29) — tweetraps-confirm met cascade-keuze; "(geen domein)" geweigerd.
 
 **C. Backlog / nieuwe features (groter)**
 
@@ -145,7 +161,8 @@ Sessieplan: zie `/memories/session/plan.md`.
 - ✅ **Fase 0 (refactor, 2026-04-29).** Pure engine `RegistreerCore(ctx, db, req, audit) (RegistreerResult, *RegistreerError)` geëxtraheerd in [handlers/registration_core.go](handlers/registration_core.go). Alle helpers in [handlers/registration_helpers_generiek.go](handlers/registration_helpers_generiek.go) gebruiken nu `context.Context` i.p.v. `*gin.Context` (mechanische refactor; helpers gebruikten `c` enkel voor `c.Request.Context()`). De ONGEDAANMAKING-tak leeft in `verwerkOngedaanmaking`. `RegistreerMetNieuweAanpak` in [handlers/registration_handlers.go](handlers/registration_handlers.go) is nu een dunne Gin-adapter (~75 regels, was ~513): rawBody lezen → normaliseren → `AuditMeta` bouwen → Core aanroepen → JSON-response. Response-shape (incl. `registratieId`-alias) ongewijzigd. Tests: 4 nieuwe core-tests in [handlers/registration_core_test.go](handlers/registration_core_test.go) (happy path, BeginTx-fout, Insert-fout/rollback, audit-velden); bestaande gin-handler-tests blijven groen.
 - 🟡 **Fase 2 (REST/CRUD per padnaam, deels af).**
   - ✅ **DELETE per padnaam (2026-04-29).** `MakeDeleteEntityByMetaHandler` in [handlers/crud_handlers.go](handlers/crud_handlers.go) laadt het record, bouwt een `RegistreerRequest` met één `Afvoer`-wijziging en delegeert naar `RegistreerCore`. Audit-trail + transactiegedrag identiek aan POST `/registratie/`. Geregistreerd in [routes/addroutes_helper.go](routes/addroutes_helper.go); OpenAPI uitgebreid in [handlers/openapi_generator.go](handlers/openapi_generator.go) (`delete`-operatie op `{padnaam}/{id}`). PFK-types worden expliciet afgewezen met 400 (composite key niet adresseerbaar via één URL-id) — gebruik daar POST `/registratie/`. Tests: 3 nieuwe scenario's in [handlers/crud_handlers_test.go](handlers/crud_handlers_test.go) (PFK afwijzing, 404, happy-path delegatie).
-  - 🟡 **PATCH per padnaam (openstaand).** JSON Merge Patch (RFC 7396); diff-engine `BerekenWijzigingen(huidig, gewenst, meta)` vertaalt patch-body naar wijzigingen. `?modus=registratie|correctie` (default `registratie`); `Prefer: return=representation`. Vergt ontwerpdiscussie: vlakke records hebben weinig velden (meeste data in onderliggende GE's), `correctie` genereert nieuwe IDs (incompatibel met merge-patch op same-ID), nesting via `/full/{padnaam}/:id` waarschijnlijk de juiste invalshoek.
+  - ✅ **PATCH /full/{padnaam}/:id (2026-04-29).** JSON Merge Patch (RFC 7396) op onderliggende GE's/RELs. Pure wijziging-builder in [handlers/wijziging_builder.go](handlers/wijziging_builder.go) (`BouwWijzigingen(input) → []WijzigingRequest + meldingen[]`); handler `MakePatchFullEntityByMetaHandler` in [handlers/crud_handlers.go](handlers/crud_handlers.go) delegeert naar `RegistreerCore`. Hybride wrapper-detectie (variant A mét, B zonder ENT-wrapper). `?modus=registratie|correctie` (default `registratie`); correctie vereist `rel_id` per GE/REL. ENT-velden zelf zijn niet patchable (400). Response bevat `meldingen[]` met niet-fatale waarschuwingen (genegeerde `rel_id` in registratie, no-op items in correctie). Route en OpenAPI bijgewerkt. Tests: 12 scenario's in [handlers/wijziging_builder_test.go](handlers/wijziging_builder_test.go). Foutcodes en design gedocumenteerd in [docs/REST_CRUD.md](docs/REST_CRUD.md).
+  - 🟡 **ETag / If-Match (concurrency, optioneel, follow-up).** Ontwerp gedocumenteerd in [docs/REST_CRUD.md](docs/REST_CRUD.md) (sectie "Concurrency"). Niet in code in deze iteratie — implementatie vergt een query die de hoogste `registratie_id` voor een entiteit bepaalt over meerdere onderliggende GE-tabellen.
 - 🟡 **Fase 3 (GraphQL Command-laag, openstaand).** Sterk getypeerde `<Type>OpvoerInput` / `<Type>PatchInput` per representatie, gegenereerd uit MetaRegistry. Mutations `registreer<Type>`, `corrigeer<Type>`, `voer<Type>Af`, `wijzig<Type>` delegeren naar `RegistreerCore`. Bestaande JSONScalar-mutations blijven voor back-compat.
 
 Out-of-scope (BACKLOG): server-side ID-allocatie; optimistic concurrency (`If-Match`/ETag); `Idempotency-Key` deduplicatie; bulk-operaties op collections.

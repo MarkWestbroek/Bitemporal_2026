@@ -59,6 +59,9 @@ func addMetaRegistryFullRoutes(router *gin.Engine) {
 		router.GET(basePath, handlers.MakeGetFullEntitiesByMetaHandler(meta))
 		router.GET(basePath+"/:id", handlers.MakeGetFullEntityByMetaHandler(meta))
 		router.POST(basePath, handlers.MakeAddFullEntityByMetaHandler(meta))
+		// FASE 2 (REST/CRUD-laag, 2026-04-29): PATCH op /full/{padnaam}/:id.
+		// JSON Merge Patch (RFC 7396) op onderliggende GE's/RELs; ?modus=registratie|correctie.
+		router.PATCH(basePath+"/:id", handlers.MakePatchFullEntityByMetaHandler(meta))
 	}
 }
 

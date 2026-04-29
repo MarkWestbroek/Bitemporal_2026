@@ -1,21 +1,23 @@
 // Package handlers — crud_handlers.go
 //
 // FASE 2 (REST/CRUD-laag, 2026-04-29):
-// Generieke DELETE-handler per padnaam, gebouwd op de pure RegistreerCore-engine
-// uit fase 0. PATCH (JSON Merge Patch RFC 7396) en de bijbehorende diff-engine
-// volgen in een vervolg-iteratie (zie docs/BACKLOG.md en /memories/session/plan.md).
+// Generieke DELETE- en PATCH-handlers per padnaam, gebouwd op de pure
+// RegistreerCore-engine uit fase 0.
 //
-// Ondersteunde scope (deze iteratie):
-//   - DELETE /{padnaam}/:id voor:
-//     * entiteit-types (cascade-afvoer via bestaande engine-logica)
-//     * niet-PFK GE/relatie-types (single-column PK)
-//   - PFK-types (composite key zoals _Data records met (ent_id, rel_id, versie))
-//     worden bewust afgewezen met 400 + uitleg, omdat de URL-shape `:id`
-//     onvoldoende informatie biedt. Gebruik daar `POST /registratie/` voor.
+// Ondersteunde scope:
+//   - DELETE /{padnaam}/:id voor entiteit-types + niet-PFK GE/relatie-types.
+//     PFK-types (composite key) worden afgewezen met 400 — gebruik daar
+//     POST /registratie/ voor.
+//   - PATCH /full/{padnaam}/:id voor entiteit-types (JSON Merge Patch
+//     RFC 7396 op onderliggende GE's/RELs). Body mag mét of zonder
+//     ENT-wrapper. Modus via ?modus=registratie|correctie (default registratie).
+//     Zie wijziging_builder.go voor de pure builder-logica.
 package handlers
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
@@ -119,6 +121,102 @@ func MakeDeleteEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 			"message":        result.Message,
 			"registratie_id": result.RegistratieID,
 			"tijdstip":       result.Tijdstip,
+		})
+	}
+}
+
+// MakePatchFullEntityByMetaHandler bouwt een handler voor PATCH /full/{padnaam}/:id.
+//
+// Werking:
+//  1. Lees rawBody.
+//  2. Bouw wijzigingen via BouwWijzigingen (pure functie).
+//  3. Verpak in RegistreerRequest, delegeer naar RegistreerCore.
+//  4. Response: 200 OK met registratie-info + meldingen[] (niet-fatale waarschuwingen).
+//
+// Foutcodes: 400 (body, lege patch, verboden ENT-veld), 404 (URL-id bestaat niet),
+// 409 (id-mismatch), 500 (DB/engine).
+func MakePatchFullEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if meta.Metatype != model.MetatypeEntiteit {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("PATCH /full is alleen ondersteund voor entiteit-types, niet voor %s", meta.Typenaam)})
+			return
+		}
+		if meta.IDKolom == "" || meta.Veldnaam == "" {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "IDKolom of Veldnaam ontbreekt voor type " + meta.Typenaam})
+			return
+		}
+
+		entityID := c.Param("id")
+		if entityID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "ID must be present"})
+			return
+		}
+
+		// Modus uit querystring; default registratie.
+		modus := PatchModusRegistratie
+		if raw := c.Query("modus"); raw != "" {
+			modus = PatchModus(raw)
+		}
+
+		rawBody, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("kon body niet lezen: %v", err)})
+			return
+		}
+		// Body terugzetten zodat eventuele middleware-loggers er nog bij kunnen.
+		c.Request.Body = io.NopCloser(bytes.NewReader(rawBody))
+
+		// Verifieer eerst dat het record bestaat (404-pad zonder DB-aanraking aan de engine te doen).
+		exists := meta.DBFactory()
+		if exists != nil {
+			if err := DB.NewSelect().Model(exists).Where(meta.IDKolom+" = ?", entityID).Scan(c.Request.Context()); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			if isZeroID(exists.GetID()) {
+				c.JSON(http.StatusNotFound, gin.H{"message": meta.Typenaam + " not found"})
+				return
+			}
+		}
+
+		res, rerr := BouwWijzigingen(BouwWijzigingenInput{
+			Meta:  meta,
+			URLID: entityID,
+			Body:  rawBody,
+			Modus: modus,
+		})
+		if rerr != nil {
+			c.JSON(rerr.Status, gin.H{"error": rerr.Msg})
+			return
+		}
+
+		regType := model.RegistratietypeRegistratie
+		if modus == PatchModusCorrectie {
+			regType = model.RegistratietypeCorrectie
+		}
+		req := model.RegistreerRequest{
+			Registratie: model.Registratie{Registratietype: regType},
+			Wijzigingen: res.Wijzigingen,
+		}
+
+		audit := AuditMeta{
+			RawBody:       rawBody,
+			RequestPath:   c.Request.URL.Path,
+			RequestMethod: c.Request.Method,
+			EntiteitID:    entityID,
+		}
+		coreRes, coreErr := RegistreerCore(c.Request.Context(), DB, req, audit)
+		if coreErr != nil {
+			c.JSON(coreErr.Status, gin.H{"error": coreErr.Msg, "meldingen": res.Meldingen})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message":        coreRes.Message,
+			"registratie_id": coreRes.RegistratieID,
+			"tijdstip":       coreRes.Tijdstip,
+			"modus":          string(modus),
+			"meldingen":      res.Meldingen,
 		})
 	}
 }

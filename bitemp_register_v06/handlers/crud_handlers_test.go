@@ -29,14 +29,14 @@ type crudTestDummy struct {
 	Afvoer        *time.Time `json:"afvoer" bun:"afvoer"`
 }
 
-func (d *crudTestDummy) GetID() any                { return d.ID }
-func (d *crudTestDummy) Metatype() model.Metatype  { return model.MetatypeEntiteit }
-func (d *crudTestDummy) String() string            { return "crudTestDummy" }
-func (d *crudTestDummy) GetOpvoer() *time.Time     { return d.Opvoer }
-func (d *crudTestDummy) SetOpvoer(t *time.Time)    { d.Opvoer = t }
-func (d *crudTestDummy) GetAfvoer() *time.Time     { return d.Afvoer }
-func (d *crudTestDummy) SetAfvoer(t *time.Time)    { d.Afvoer = t }
-func (d *crudTestDummy) ClearID()                  { d.ID = 0 }
+func (d *crudTestDummy) GetID() any               { return d.ID }
+func (d *crudTestDummy) Metatype() model.Metatype { return model.MetatypeEntiteit }
+func (d *crudTestDummy) String() string           { return "crudTestDummy" }
+func (d *crudTestDummy) GetOpvoer() *time.Time    { return d.Opvoer }
+func (d *crudTestDummy) SetOpvoer(t *time.Time)   { d.Opvoer = t }
+func (d *crudTestDummy) GetAfvoer() *time.Time    { return d.Afvoer }
+func (d *crudTestDummy) SetAfvoer(t *time.Time)   { d.Afvoer = t }
+func (d *crudTestDummy) ClearID()                 { d.ID = 0 }
 
 func crudDummyMeta() model.TypeMeta {
 	return model.TypeMeta{
