@@ -817,7 +817,8 @@ function DiagramCanvasInner({ diagramId }) {
 
     for (const [id, el] of Object.entries(elements)) {
       if (el.type !== "relatie" || !diagNodeIds.has(id)) continue;
-      const vCount = (el.data?.velden || []).length;
+      // Tel zowel gewone velden als afgeleide velden mee — beide triggeren ASOC-expansie
+      const vCount = (el.data?.velden || []).length + (el.data?.afgeleideVelden || []).length;
       nextVelden[id] = vCount;
       const prevCount = prevVelden[id] ?? 0;
       if (prevCount === 0 && vCount > 0) forwardIds.push(id);

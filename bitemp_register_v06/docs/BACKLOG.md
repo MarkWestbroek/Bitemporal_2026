@@ -65,6 +65,24 @@
 - Verwijderen: confirm-dialoog met telling van te raken elementen + diagrammen → cascade delete of verplaatsen naar `(geen domein)`.
 - Beide via rechter-muisklik op het domein-mapje in de Project Browser.
 
+### 0.9 IDE-fixes: tab-naam sync + validatie scope & leesbaarheid (2026-04-29)
+
+#### Tab-naam sync bij hernoemd diagram — ✅ OPGELOST
+- Was: `renameDiagram()` in de Zustand-store updaten de diagramnaam in de store, maar de FlexLayout-tab hield zijn oude naam.
+- Opgelost: nieuwe helper `renameDiagramTab(model, diagramId, nieuweNaam)` in `layoutConfig.js` loopt via `model.visitNodes()` alle tabs af, vergelijkt `node.getConfig().diagramId` en vuurt `FlexLayout.Actions.renameTab` af.
+- Twee aanroeppaden gedekt: rechtsklik in Project Browser (`ProjectBrowser.jsx` prop `onRenameDiagram`) en F2-toets in `IdePage.jsx`.
+- Bestanden: `src/ide/layoutConfig.js`, `src/ide/ProjectBrowser.jsx`, `src/pages/IdePage.jsx`.
+
+#### Rebuild-validatie: domein-scope + leesbare foutmeldingen — ✅ OPGELOST
+- Was: `validateV3Model()` valideerde altijd het volledige model, ook wanneer in de publiceer/rebuild-dialoog slechts één domein geselecteerd was. Foutmeldingen gebruikten index-context (`entiteiten[17].relaties[3]`) — onleesbaar.
+- Opgelost:
+  - Nieuwe optionele parameter `domeinFilter?: string[]` in `validateV3Model(v3, domeinFilter)`. Entiteiten waarvan `ent.domein` niet in de filter staat worden overgeslagen; cross-referentie-checks idem.
+  - Context-strings gebruiken nu typenamen: `Trefwoord`, `Trefwoord.Rel_KA` i.p.v. `entiteiten[17].relaties[3]`.
+  - `handleDialogChange` in `IdePage.jsx` hervalideert met de geselecteerde domeinen wanneer de `beschikbareDomeinen`-checkbox wijzigt.
+- Bestanden: `src/validation/validateV3Model.js`, `src/pages/IdePage.jsx`.
+
+---
+
 ### 0.8 Verzamelde UML-UI-issues / vragen (2026-04-29)
 
 Inventarisatie van een batch vragen en bugs over editor-v2 én IDE. Ge­ordend op grootte; onderlinge afhankelijkheden gemarkeerd.
@@ -227,7 +245,7 @@ Out-of-scope (BACKLOG): server-side ID-allocatie; optimistic concurrency (`If-Ma
     - ~~dubbelklik op edge: straighten~~ ✅ (berekenKortsteHandles)
     - undo / redo doet het niet ✅ 
     - edge types: ~~compositie~~✅, ~~overerving~~✅, ~~associatieklasse~~✅ (!)
-    - diagram of any element rename in PB
+    - ~~diagram of any element rename in PB~~ ✅ (tab-naam sync via `renameDiagramTab` + PB-prop + F2-handler — 2026-04-29)
     - domeinkleur instellen, uberhaupt properties van domein instellen mogelijk ✅
       - welke properties allemaal?
     - layout bar verplaatsbaar ✅
@@ -863,8 +881,8 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 |---|------|------|
 | DM1 | schema_domeinen tabel in database met endpoint | ontwerpgedachten/domeinen |
 | DM2 | Domein als "actief domein" in editor | ontwerpgedachten/domeinen |
-| DM3 | Validatie vóór publish: waarschuwing bij meerdere domeinen door elkaar | ontwerpgedachten/domeinen |
-| DM4 | Rebuild alleen voor geselecteerd domein | ontwerpgedachten/domeinen |
+| DM3 | ✅ Validatie vóór publish: scope beperkt tot geselecteerd domein + leesbare foutmeldingen (typenamen i.p.v. indices) — `validateV3Model(v3, domeinFilter)` + `handleDialogChange` hervalidatie (2026-04-29) | ontwerpgedachten/domeinen |
+| DM4 | ✅ Rebuild alleen voor geselecteerd domein — dialoog filtert validatie op gekozen domeinen (2026-04-29) | ontwerpgedachten/domeinen |
 | DM5 | Domein-boundary visualisatie | ontwerpgedachten/domeinen |
 | DM6 | Cross-model referentielijsten | Referentielijsten.md |
 | DM7 | Domein verwijderen: flow in frontend + opschoning codegen-bestanden, `datatype_aliases.go` en `metaregistry_plumbing.go` init-calls. Basisdomein `register` kan nooit verwijderd. | DEVLOOP.md §3 rebuild-scenario's |
