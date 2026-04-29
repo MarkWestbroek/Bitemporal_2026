@@ -25,6 +25,7 @@ import {
   resetLayout,
   openDiagramTab,
   openBestandenTab,
+  renameDiagramTab,
   COMP_BROWSER,
   COMP_DIAGRAM,
   COMP_PROPERTIES,
@@ -148,7 +149,20 @@ export default function IdePage() {
   }, []);
 
   const handleDialogChange = useCallback((key, value) => {
-    setDialogValues((prev) => ({ ...prev, [key]: value }));
+    setDialogValues((prev) => {
+      const next = { ...prev, [key]: value };
+      // Hervalideer bij wijziging van domein-selectie: toon alleen fouten
+      // die relevant zijn voor de geselecteerde domeinen.
+      if (key === "beschikbareDomeinen") {
+        const geselecteerd = (next.beschikbareDomeinen || [])
+          .filter((d) => d.geselecteerd)
+          .map((d) => d.naam);
+        const state = useModelStore.getState();
+        const v3 = storeNaarV3Model(state);
+        setValidationResult(validateV3Model(v3.model || v3, geselecteerd.length > 0 ? geselecteerd : undefined));
+      }
+      return next;
+    });
   }, []);
 
   // ── Bij opstart: laad model ──────────────────────────────
@@ -272,6 +286,14 @@ export default function IdePage() {
   const handleOpenDiagram = useCallback(
     (diagramId, naam) => {
       openDiagramTab(layoutModel, diagramId, naam);
+    },
+    [layoutModel]
+  );
+
+  // ── Diagram hernoemen: store + FlexLayout tab ────────────
+  const handleRenameDiagram = useCallback(
+    (diagramId, nieuweNaam) => {
+      renameDiagramTab(layoutModel, diagramId, nieuweNaam);
     },
     [layoutModel]
   );
@@ -576,10 +598,14 @@ export default function IdePage() {
         teller += 1;
       }
 
-      // Haal posities uit het overzicht-diagram (aangemaakt door v3ModelNaarStore)
-      // of uit de bestaande diagrammen in geval van IDE-import
-      const bron = useModelStore.getState().diagrams;
-      const overzicht = bron?.overzicht;
+      // Haal posities uit het overzicht-diagram. Dat is óf:
+      //  - de net-geladen storeData (bij vervang-alles), óf
+      //  - bij domein-import: de oorspronkelijke storeData vóór filterStoreByDomein,
+      //    want filterStoreByDomein dropt diagrams die geen domein hebben (zoals "overzicht").
+      // We gebruiken daarom altijd `storeData.diagrams.overzicht` als bron, niet de
+      // post-merge store-state.
+      const bronDiagrams = storeData?.diagrams || useModelStore.getState().diagrams || {};
+      const overzicht = bronDiagrams?.overzicht;
       const importNodes = overzicht?.nodes || [];
       const importEdges = overzicht?.edges || [];
 
@@ -668,6 +694,7 @@ export default function IdePage() {
             const nieuweNaam = window.prompt("Diagram hernoemen:", diag.naam || activeDiagram);
             if (nieuweNaam && nieuweNaam !== diag.naam) {
               useModelStore.getState().renameDiagram(activeDiagram, nieuweNaam);
+              renameDiagramTab(layoutModel, activeDiagram, nieuweNaam);
             }
           }
         }
@@ -713,6 +740,7 @@ export default function IdePage() {
                 onImportDomein={handleImportDomein}
                 onExportDomein={handleExportDomein}
                 onNieuwDomein={handleNieuwDomein}
+                onRenameDiagram={handleRenameDiagram}
               />
             </ErrorBoundary>
           );

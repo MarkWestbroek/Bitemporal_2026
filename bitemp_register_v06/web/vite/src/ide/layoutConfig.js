@@ -51,6 +51,23 @@ export function persistLayout(model) {
 }
 
 /**
+ * Hernoem de FlexLayout-tab van een diagram (sync na store-rename).
+ * Als de tab niet open staat, doet deze functie niets.
+ * @param {FlexLayout.Model} model
+ * @param {string} diagramId
+ * @param {string} nieuweNaam
+ */
+export function renameDiagramTab(model, diagramId, nieuweNaam) {
+  model.visitNodes((node) => {
+    if (node.getType?.() !== "tab") return;
+    if (node.getComponent?.() !== COMP_DIAGRAM) return;
+    if ((node.getConfig?.() || {}).diagramId === diagramId) {
+      model.doAction(FlexLayout.Actions.renameTab(node.getId(), nieuweNaam));
+    }
+  });
+}
+
+/**
  * Voeg een nieuwe diagram-tab toe aan het layout model.
  * @param {FlexLayout.Model} model
  * @param {string} diagramId

@@ -57,32 +57,32 @@ function GegevensElementNode({ id, data, selected }) {
         )}
       </div>
 
-      <div className="node-divider" />
-
-      <div className="node-velden">
-        {(data.velden || []).length === 0 ? (
-          <div className="node-veld leeg">&nbsp;</div>
-        ) : (
-          data.velden.map((v, i) => (
-            <div key={i} className="node-veld">
-              <span className="veld-naam">
-                {v.afgeleid && <span style={{ color: "#f59e0b" }}>/</span>}
-                {v.verplicht ? (
-                  <strong>{v.naam}</strong>
-                ) : (
-                  <span>{v.naam}</span>
-                )}
-              </span>
-              <span className="veld-type">
-                {v.enumNaam || v.datatypeNaam || v.refNaam || v.type}
-                {!v.enumNaam && !v.datatypeNaam && !v.refNaam && v.format ? ` «${v.format}»` : ""}
-                {v.autoIncrement ? " {AI}" : ""}
-                {!v.enumNaam && v.enum ? ` {${v.enum.join("|")}}` : ""}
-              </span>
-            </div>
-          ))
-        )}
-      </div>
+      {/* Vaste velden — compartiment alleen tonen als er velden zijn (anders 'collapse') */}
+      {(data.velden || []).length > 0 && (
+        <>
+          <div className="node-divider" />
+          <div className="node-velden">
+            {data.velden.map((v, i) => (
+              <div key={i} className="node-veld">
+                <span className="veld-naam">
+                  {v.afgeleid && <span style={{ color: "#f59e0b" }}>/</span>}
+                  {v.verplicht ? (
+                    <strong>{v.naam}</strong>
+                  ) : (
+                    <span>{v.naam}</span>
+                  )}
+                </span>
+                <span className="veld-type">
+                  {v.enumNaam || v.datatypeNaam || v.refNaam || v.type}
+                  {!v.enumNaam && !v.datatypeNaam && !v.refNaam && v.format ? ` «${v.format}»` : ""}
+                  {v.autoIncrement ? " {AI}" : ""}
+                  {!v.enumNaam && v.enum ? ` {${v.enum.join("|")}}` : ""}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Afgeleide velden op GE-niveau */}
       {(data.afgeleideVelden || []).length > 0 && (

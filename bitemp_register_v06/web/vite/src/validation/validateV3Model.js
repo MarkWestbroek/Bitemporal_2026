@@ -27,9 +27,16 @@ function isSnakeLike(s) {
 
 // ────────── Hoofdvalidatie ──────────
 
-export function validateV3Model(v3) {
+/**
+ * @param {object} v3 - een V3-model object (met entiteiten, enums, etc.)
+ * @param {string[]} [domeinFilter] - optioneel: valideer alleen entiteiten van deze domeinen.
+ *   Leeg array of undefined = valideer alles.
+ * @returns {{ errors: string[], warnings: string[] }}
+ */
+export function validateV3Model(v3, domeinFilter) {
   const errors = [];
   const warnings = [];
+  const domeinSet = domeinFilter && domeinFilter.length > 0 ? new Set(domeinFilter) : null;
 
   if (!v3) {
     errors.push("Geen V3-model aanwezig.");
@@ -77,19 +84,22 @@ export function validateV3Model(v3) {
   const datatypeNamen = new Set((v3.datatypes || []).map((dt) => dt?.naam).filter(Boolean));
 
   v3.entiteiten.forEach((ent, i) => {
-    const ctx = `entiteiten[${i}]`;
+    // Domein-filter: sla over als dit domein niet geselecteerd is
+    if (domeinSet && ent.domein && !domeinSet.has(ent.domein)) return;
+
+    const ctx = `${ent.typenaam || `entiteiten[${i}]`}`;
 
     if (!isPascalIdentifier(ent.typenaam)) {
-      errors.push(`${ctx}.typenaam '${ent.typenaam || ""}' is ongeldig; gebruik PascalCase zonder spaties/koppeltekens (bijv. Persoon)`);
+      errors.push(`${ctx}: typenaam '${ent.typenaam || ""}' is ongeldig; gebruik PascalCase zonder spaties/koppeltekens (bijv. Persoon)`);
     }
     if (!isSnakeLike(ent.meervoud)) {
-      errors.push(`${ctx}.meervoud '${ent.meervoud || ""}' is ongeldig; gebruik lowercase/snake_case (bijv. personen)`);
+      errors.push(`${ctx}: meervoud '${ent.meervoud || ""}' is ongeldig; gebruik lowercase/snake_case (bijv. ${(ent.typenaam || "Persoon").toLowerCase()}en)`);
     }
     entiteitNamen.add(ent.typenaam);
 
     // GE's
     (ent.gegevenselementen || []).forEach((ge, j) => {
-      const gctx = `${ctx}.gegevenselementen[${j}]`;
+      const gctx = `${ctx}.${ge.naam || `gegevenselementen[${j}]`}`;
       if (!isPascalIdentifier(ge.naam)) {
         errors.push(`${gctx}.naam '${ge.naam || ""}' is ongeldig; gebruik PascalCase (bijv. Persoonsidentificatie of Naam)`);
       }
@@ -128,7 +138,7 @@ export function validateV3Model(v3) {
 
     // Relaties
     (ent.relaties || []).forEach((rel, j) => {
-      const rctx = `${ctx}.relaties[${j}]`;
+      const rctx = `${ctx}.${rel.naam || `relaties[${j}]`}`;
       if (!isPascalIdentifier(rel.naam)) {
         errors.push(`${rctx}.naam '${rel.naam || ""}' is ongeldig; gebruik PascalCase (underscore mag, bijv. Rel_Persoon_Adres)`);
       }
@@ -170,14 +180,16 @@ export function validateV3Model(v3) {
   });
 
   // ── Cross-referenties: doelEntiteit bestaat? ──
-  v3.entiteiten.forEach((ent, i) => {
-    (ent.relaties || []).forEach((rel, j) => {
+  v3.entiteiten.forEach((ent) => {
+    // Zelfde domein-filter als hierboven
+    if (domeinSet && ent.domein && !domeinSet.has(ent.domein)) return;
+    (ent.relaties || []).forEach((rel) => {
       if (!rel.doelEntiteit) return;
       if (!entiteitNamen.has(rel.doelEntiteit)) {
         if (rel.relatieSubtype === "referentielijst_items") {
-          warnings.push(`entiteiten[${i}].relaties[${j}].doelEntiteit '${rel.doelEntiteit}' is cross-domein (wordt niet gegenereerd)`);
+          warnings.push(`${ent.typenaam}.${rel.naam}.doelEntiteit '${rel.doelEntiteit}' is cross-domein (wordt niet gegenereerd)`);
         } else {
-          errors.push(`entiteiten[${i}].relaties[${j}].doelEntiteit '${rel.doelEntiteit}' bestaat niet in model.entiteiten`);
+          errors.push(`${ent.typenaam}.${rel.naam}.doelEntiteit '${rel.doelEntiteit}' bestaat niet in model.entiteiten`);
         }
       }
     });

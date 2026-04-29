@@ -392,7 +392,7 @@ function TreeNode({ node, style }) {
 
 // ─── Hoofdcomponent ─────────────────────────────────────────
 
-export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram, onImportDomein, onExportDomein, onNieuwDomein }) {
+export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram, onImportDomein, onExportDomein, onNieuwDomein, onRenameDiagram }) {
   const elements = useModelStore((s) => s.elements);
   const structuralEdges = useModelStore((s) => s.structuralEdges);
   const diagrams = useModelStore((s) => s.diagrams);
@@ -460,6 +460,7 @@ export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram, onImpor
             const nieuweNaam = window.prompt("Diagram hernoemen:", nodeData.name);
             if (nieuweNaam && nieuweNaam !== nodeData.name) {
               useModelStore.getState().renameDiagram(nodeData.diagramId, nieuweNaam);
+              onRenameDiagram?.(nodeData.diagramId, nieuweNaam);
             }
           } else {
             const el = useModelStore.getState().elements[nodeData.id];
