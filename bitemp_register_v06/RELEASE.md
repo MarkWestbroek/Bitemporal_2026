@@ -1,5 +1,51 @@
 # Release checklist
 
+## REST/CRUD per padnaam: DELETE + PATCH + parent-context disambiguatie (2026-04-29)
+
+Generieke REST CRUD-endpoints op basis van MetaRegistry, bovenop de gedeelde
+`RegistreerCore`-engine (één audit-pad, één transactiemodel).
+
+### Wijzigingen
+
+- **`handlers/crud_handlers.go`** (nieuw):
+  - `MakeDeleteEntityByMetaHandler(meta)` — `DELETE /{padnaam}/:id` → één
+    `Afvoer`-wijziging via `RegistreerCore`. PFK-types (composite key) afgewezen
+    met 400 — gebruik daar `POST /registratie/`.
+  - `MakePatchFullEntityByMetaHandler(meta)` — `PATCH /full/{padnaam}/:id` met
+    JSON Merge Patch (RFC 7396). Hybride wrapper (variant A/B), `?modus=registratie|correctie`,
+    `meldingen[]` in response.
+- **`handlers/wijziging_builder.go`** (nieuw, ~290 regels): pure `BouwWijzigingen(in)`
+  vertaalt PATCH-body naar `[]WijzigingRequest`. Geen DB-toegang.
+  - **Parent-context disambiguatie**: bouwt `RepresentatiePlusNaam` direct vanuit
+    `og.Doeltype` i.p.v. via globale `GetByVeldnaamMetPayload`. Lost veldnaam-collisions
+    op (bv. `"naam"` = `NatuurlijkPersoon_Naam` én `ApiStandaard_Naam` → in PATCH-context
+    altijd correct het type van de parent).
+- **`routes/addroutes_helper.go`**: DELETE-route in `addMetaRegistryRoutes`,
+  PATCH-route in `addMetaRegistryFullRoutes`.
+- **`handlers/openapi_generator.go`**: `delete`-operatie op `{padnaam}/{id}`,
+  `patch`-operatie op `/full/{padnaam}/{id}` met modus-param + merge-patch+json
+  request body schemas.
+
+### Tests
+
+- **`handlers/crud_handlers_test.go`** (3 tests): PFK-afwijzing, NotFound,
+  happy-path delegatie naar `RegistreerCore`.
+- **`handlers/wijziging_builder_test.go`** (12 tests): variant A/B wrapper,
+  ID-mismatch (409), verboden ENT-veld (400), lege body (400), correctie zonder
+  rel_id (400), correctie met rel_id (afvoer+opvoer), no-op rel_id melding,
+  registratie genegeerd rel_id melding, onbekende modus (400), ongeldige JSON
+  (400), array op meervoudige rol, **parent-context disambiguatie naar exact
+  `NatuurlijkPersoon_Naam`** (vóór deze fix: `ApiStandaard_Naam`).
+- **Totaal**: alle suites groen (`go test ./...`).
+
+### Documentatie
+
+- **`docs/REST_CRUD.md`** (nieuw): endpoints, body-formats, modus, foutcodes-tabel
+  (200/400/404/409/412/500), ETag/If-Match-ontwerp (follow-up).
+- **`docs/BACKLOG.md`**: Fase 2 DELETE + PATCH ✅; ETag 🟡 follow-up; nieuw
+  open punt: domein/parent-filter op `GetByVeldnaamMetPayload` voor andere
+  callers (POST `/registratie/`, normalizer).
+
 ## IDE: lossless mermaid/UML-import + V3-validator (2026-04-27)
 
 Mermaid/PlantUML/XMI-import in de IDE-pagina was kapot: alleen klassen kwamen binnen,

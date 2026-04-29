@@ -520,5 +520,11 @@ const useModelStore = create(
   )
 );
 
+// Dev-only: expose store op window voor e2e/Playwright tests + handmatig debuggen.
+// In productie-build (import.meta.env.PROD) wordt dit eruit ge-treeshaked.
+if (typeof window !== "undefined" && import.meta.env && import.meta.env.DEV) {
+  window.__useModelStore = useModelStore;
+}
+
 export default useModelStore;
 export { DEFAULT_DIAGRAM_ID };

@@ -10,6 +10,8 @@ _tmp_*.mjs
 # Frontend generated artifacts
 web/vite/node_modules/
 web/vite/.vite/
+web/vite/playwright-report/
+web/vite/test-results/
 
 # OS noise
 .DS_Store
