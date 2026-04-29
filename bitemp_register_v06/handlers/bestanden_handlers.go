@@ -456,16 +456,6 @@ func detecteerFormaat(naam string) string {
 	}
 }
 
-// isTekstFormaat geeft aan of het bestandsformaat een tekstformaat is.
-func isTekstFormaat(formaat string) bool {
-	switch formaat {
-	case "json", "yaml", "xml", "markdown", "go_code", "sql", "tekst":
-		return true
-	default:
-		return false
-	}
-}
-
 // genereerObjectKey maakt een unieke MinIO object key aan.
 func genereerObjectKey(categorie, naam string) string {
 	if categorie == "" {

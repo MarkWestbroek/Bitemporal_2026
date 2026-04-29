@@ -742,7 +742,10 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
           const relatieId = normalized.source;
           const doelEntiteitId = normalized.target;
           const relatieNode = nodes.find((n) => n.id === relatieId);
-          const heeftVelden = (relatieNode?.data?.velden || []).length > 0;
+          // Een relatie geldt als associatieklasse zodra ze velden \u00f3f afgeleide velden heeft.
+          const heeftVelden =
+            (relatieNode?.data?.velden || []).length > 0 ||
+            (relatieNode?.data?.afgeleideVelden || []).length > 0;
 
           // Zoek de bestaande owner-edge (entiteitA → relatie)
           const ownerEdge = eds.find((e) => {
@@ -1722,9 +1725,15 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         }
 
         // === ASOC forward/reverse conversie bij velden-wijziging ===
+        // Een relatie geldt als "associatieklasse" zodra ze inhoud heeft: gewone
+        // velden óf afgeleide velden. Beide tellen mee voor de expansie-trigger.
         if (previousNode?.type === "relatie") {
-          const hadVelden = (previousNode.data?.velden || []).length > 0;
-          const heeftVelden = (newData.velden || []).length > 0;
+          const hadVelden =
+            (previousNode.data?.velden || []).length > 0 ||
+            (previousNode.data?.afgeleideVelden || []).length > 0;
+          const heeftVelden =
+            (newData.velden || []).length > 0 ||
+            (newData.afgeleideVelden || []).length > 0;
 
           if (!hadVelden && heeftVelden) {
             // Forward: eerste veld toegevoegd → converteer naar ASOC als er 2

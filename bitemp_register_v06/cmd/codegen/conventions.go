@@ -232,11 +232,6 @@ func contentField(v model.V3Veld) StructField {
 
 // ---- Bun relatie velden op entiteiten ----
 
-// entiteitRelatieField genereert een bun relatie-veld voor een entiteit naar een onderliggend type.
-func entiteitRelatieField(rolnaam string, jsonRolnaam string, sliceType string, entIDKolom string) StructField {
-	return entiteitRelatieFieldPK(rolnaam, jsonRolnaam, sliceType, "id", entIDKolom)
-}
-
 // entiteitRelatieFieldPK genereert een bun relatie-veld met een expliciete PK kolom.
 // Voor subtypes is de PK niet "id" maar bijv. "taak_id" (PFK naar parent).
 func entiteitRelatieFieldPK(rolnaam string, jsonRolnaam string, sliceType string, pkKolom string, entIDKolom string) StructField {

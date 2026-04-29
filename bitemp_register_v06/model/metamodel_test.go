@@ -71,3 +71,44 @@ func TestGetBovenliggendeEntiteitMeta_ViaHubChild(t *testing.T) {
 		t.Fatalf("expected Locatie, got %s", entMeta.Typenaam)
 	}
 }
+
+func TestGetByVeldnaamMetPayload_PadnaamFallback(t *testing.T) {
+	// GetByVeldnaamMetPayload moet ook Padnaam (meervoud) accepteren als fallback,
+	// zodat flat-format payloads zowel "naam" als "namen" kunnen gebruiken.
+	t.Run("veldnaam enkelvoud werkt", func(t *testing.T) {
+		meta, ok := MetaRegistry.GetByVeldnaamMetPayload("naam", map[string]struct{}{"natuurlijkpersoon_id": {}})
+		if !ok {
+			t.Fatal("expected match for veldnaam 'naam'")
+		}
+		if meta.Typenaam != "NatuurlijkPersoon_Naam" {
+			t.Fatalf("expected NatuurlijkPersoon_Naam, got %s", meta.Typenaam)
+		}
+	})
+
+	t.Run("padnaam meervoud werkt als fallback", func(t *testing.T) {
+		meta, ok := MetaRegistry.GetByVeldnaamMetPayload("namen", map[string]struct{}{"natuurlijkpersoon_id": {}})
+		if !ok {
+			t.Fatal("expected match for padnaam 'namen'")
+		}
+		if meta.Typenaam != "NatuurlijkPersoon_Naam" {
+			t.Fatalf("expected NatuurlijkPersoon_Naam, got %s", meta.Typenaam)
+		}
+	})
+
+	t.Run("persoonsidentificaties (padnaam) werkt als fallback", func(t *testing.T) {
+		meta, ok := MetaRegistry.GetByVeldnaamMetPayload("persoonsidentificaties", map[string]struct{}{"natuurlijkpersoon_id": {}})
+		if !ok {
+			t.Fatal("expected match for padnaam 'persoonsidentificaties'")
+		}
+		if meta.Typenaam != "NatuurlijkPersoon_Persoonsidentificatie" {
+			t.Fatalf("expected NatuurlijkPersoon_Persoonsidentificatie, got %s", meta.Typenaam)
+		}
+	})
+
+	t.Run("onbekend type geeft false terug", func(t *testing.T) {
+		_, ok := MetaRegistry.GetByVeldnaamMetPayload("bestaantniet", map[string]struct{}{})
+		if ok {
+			t.Fatal("expected no match for unknown key")
+		}
+	})
+}

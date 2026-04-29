@@ -161,7 +161,7 @@ func generateGeRel(v3 model.V3Model) (string, error) {
 }
 
 // generateHubStruct genereert een hub struct (GE of relatie).
-func generateHubStruct(b *strings.Builder, typeName string, parentEnt string, entIDKolom string, metatype string, isMaterieel bool, description string, secEntIDKolom string) {
+func generateHubStruct(b *strings.Builder, typeName string, parentEnt string, entIDKolom string, _ string, isMaterieel bool, description string, secEntIDKolom string) {
 	tabelnaam := strings.ToLower(typeName)
 	if description != "" {
 		b.WriteString(fmt.Sprintf("// %s — %s\n", typeName, description))
@@ -197,7 +197,7 @@ func generateHubStruct(b *strings.Builder, typeName string, parentEnt string, en
 }
 
 // generateDataStruct genereert een _Data struct.
-func generateDataStruct(b *strings.Builder, hubType string, parentEntType string, entIDKolom string, velden []model.V3Veld, description string) {
+func generateDataStruct(b *strings.Builder, hubType string, parentEntType string, entIDKolom string, velden []model.V3Veld, _ string) {
 	dataType := hubType + "_Data"
 	tabelnaam := strings.ToLower(dataType)
 

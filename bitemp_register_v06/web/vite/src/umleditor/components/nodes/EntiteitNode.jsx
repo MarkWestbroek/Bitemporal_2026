@@ -70,8 +70,10 @@ function EntiteitNode({ id, data, selected }) {
         )}
       </div>
 
-      {/* Scheidingslijn */}
-      <div className="node-divider" />
+      {/* Geen onvoorwaardelijke divider hier: elke onderstaande sectie (velden,
+          afgeleide velden, overerving) heeft zelf een divider erboven. Bij een
+          entiteit zonder enige sectie blijft er zo geen leeg compartiment / dubbele
+          lijn over. */}
 
       {/* Velden (attributen) — verborgen voor entiteiten als er geen zijn */}
       {(data.velden || []).length > 0 && (

@@ -33,8 +33,7 @@ type Initiatief_Planning_Input struct {
 	Fase                Fase    `json:"fase"`
 	Obstakels           *string `json:"obstakels,omitempty"`
 	VerwachtReadyDatum  *Date   `json:"verwacht_ready_datum,omitempty"`
-	Aanvang             *Date   `json:"aanvang,omitempty"`
-	Einde               *Date   `json:"einde,omitempty"`
+	// Aanvang en Einde zijn onderliggende GE's die via de normalizer worden uitgesplitst.
 }
 
 type Initiatief_Product_Input struct {
@@ -48,8 +47,7 @@ type Initiatief_Product_Input struct {
 	VervangtOuderProduct *bool       `json:"vervangt_ouder_product,omitempty"`
 	Website              *string     `json:"website,omitempty"`
 	GitRepo              *string     `json:"git_repo,omitempty"`
-	Aanvang              *Date       `json:"aanvang,omitempty"`
-	Einde                *Date       `json:"einde,omitempty"`
+	// Aanvang en Einde zijn onderliggende GE's die via de normalizer worden uitgesplitst.
 }
 
 type Initiatief_Bijdrage_Input struct {
@@ -59,8 +57,7 @@ type Initiatief_Bijdrage_Input struct {
 	Schaal        Schaal       `json:"schaal"`
 	Toelichting   string       `json:"toelichting"`
 	Score         *int         `json:"score,omitempty"`
-	Aanvang       *Date        `json:"aanvang,omitempty"`
-	Einde         *Date        `json:"einde,omitempty"`
+	// Aanvang en Einde zijn onderliggende GE's die via de normalizer worden uitgesplitst.
 }
 
 type Initiatief_AnderDomein_Input struct {
@@ -106,8 +103,7 @@ type Initiatief_Beoordeling_Input struct {
 	RedenatieGoud            *string         `json:"redenatie_goud,omitempty"`
 	GoudNietGehaald          *bool           `json:"goud_niet_gehaald,omitempty"`
 	RedenatieGoudNietGehaald *string         `json:"redenatie_goud_niet_gehaald,omitempty"`
-	Aanvang                  *Date           `json:"aanvang,omitempty"`
-	Einde                    *Date           `json:"einde,omitempty"`
+	// Aanvang en Einde zijn onderliggende GE's die via de normalizer worden uitgesplitst.
 }
 
 type Initiatief_Etalage_Input struct {

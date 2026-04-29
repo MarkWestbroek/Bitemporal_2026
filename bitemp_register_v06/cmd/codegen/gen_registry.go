@@ -172,7 +172,7 @@ func writeAllEntries(b *strings.Builder, v3 model.V3Model, opts codegenOptions) 
 }
 
 // writeEntiteitEntry schrijft de MetaRegistry entry voor een entiteit.
-func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType, entIDKolom string, domein string, li *layoutInfo) {
+func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType, _ string, domein string, li *layoutInfo) {
 	b.WriteString(fmt.Sprintf("\t%q: {\n", ent.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tTypenaam:    %q,\n", ent.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tKlassenaam:  %q,\n", d.Klassenaam))
@@ -252,7 +252,7 @@ func writeEntiteitEntry(b *strings.Builder, ent model.V3Entiteit, d DerivedType,
 }
 
 // writeHubEntry schrijft een MetaRegistry entry voor een GE hub.
-func writeHubEntry(b *strings.Builder, d DerivedType, desc string, kleur string, momentvoorkomenStr string, isMaterieel bool, geNaam string, afgeleideVelden []model.V3AfgeleidVeld, domein string, li *layoutInfo) {
+func writeHubEntry(b *strings.Builder, d DerivedType, desc string, kleur string, momentvoorkomenStr string, isMaterieel bool, _ string, afgeleideVelden []model.V3AfgeleidVeld, domein string, li *layoutInfo) {
 	b.WriteString(fmt.Sprintf("\t%q: {\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tTypenaam:     %q,\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tKlassenaam:   %q,\n", d.Klassenaam))
@@ -352,7 +352,7 @@ func writeRelHubEntry(b *strings.Builder, d DerivedType, rel model.V3Relatie, do
 }
 
 // writeDataEntry schrijft een MetaRegistry entry voor een _Data type.
-func writeDataEntry(b *strings.Builder, d DerivedType, desc string, kleur string) {
+func writeDataEntry(b *strings.Builder, d DerivedType, _ string, kleur string) {
 	b.WriteString(fmt.Sprintf("\t%q: {\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tTypenaam:               %q,\n", d.Typenaam))
 	b.WriteString(fmt.Sprintf("\t\tKlassenaam:             %q,\n", d.Klassenaam))

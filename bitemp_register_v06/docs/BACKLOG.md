@@ -65,6 +65,43 @@
 - Verwijderen: confirm-dialoog met telling van te raken elementen + diagrammen → cascade delete of verplaatsen naar `(geen domein)`.
 - Beide via rechter-muisklik op het domein-mapje in de Project Browser.
 
+### 0.8 Verzamelde UML-UI-issues / vragen (2026-04-29)
+
+Inventarisatie van een batch vragen en bugs over editor-v2 én IDE. Ge­ordend op grootte; onderlinge afhankelijkheden gemarkeerd.
+
+**A. Bugs (klein–middelgroot)**
+
+1. **ASOC edge-labels worden niet getoond.** Eerder werkte de spiegel-conventie: het label *aan de ankerkant* van de A→anker edge is feitelijk het label *bij B*, en omgekeerd. Daarbij hoort: alleen de relatie­eigenschappen (multipliciteit bij A, multipliciteit bij B, naamLabelHeen, naamLabelTerug) bewerken op de relatie-node; edges zijn slechts visualisatie. Status: regressie — ergens gesneuveld.
+2. **Lege veld-compartiment in entiteit-nodes** geeft een dubbele lijn. Wanneer een entiteit géén directe velden heeft (normale situatie in V3) moet het lege compartiment verborgen worden zodat er nog één scheidings­lijn overblijft.
+3. **Afgeleid veld toevoegen aan een relatie expandeert deze niet naar associatie­klasse.** Een gewoon veld toevoegen triggert het wel. De expansie-trigger moet ook luisteren op `afgeleideVelden.length > 0`.
+4. **V3-import in IDE bouwt diagram niet op.** Bij import van een V3 JSON die uit editor-v2 komt (mét layout) wordt in de IDE geen diagram gereconstrueerd. Doel: editor-v2 als schetsblok kunnen gebruiken en naar IDE exporteren *inclusief* layout (posities, edges, anker-posities).
+
+**B. Features (middelgroot)**
+
+5. **Verplaatsbare edge-labels.** Labels (rolnamen, multipliciteiten, anker-labels) moeten met de muis verplaatst kunnen worden, met persistente offset. Persistentie­paden:
+   - V3 JSON (per edge: `labelOffset`, eventueel per label-type)
+   - IDE-store / IDE-export
+   - DB-publicatie + MetaRegistry round-trip
+   - Beide UI's (editor-v2 en IDE) moeten lezen/schrijven
+6. **Diagram verwijderen via rechtsklik in IDE Project Browser.** Met confirm-dialoog. (Sluit aan op 0.7 voor domeinen.)
+7. **Domein verwijderen via rechtsklik in IDE Project Browser.** Reeds opgenomen in 0.7 — markeren als prioritair samen met (6).
+
+**C. Backlog / nieuwe features (groter)**
+
+8. **Notes en constraints als element.** UML-stijl note + constraint nodes met stippellijn-anchor naar een element of (liefst) ook naar een edge. Zowel in editor-v2 als IDE; persistentie in V3 + IDE-store + DB.
+9. **Afgeleide associaties / GE's / RELs.** Analoog aan afgeleide velden: een relatie of GE die compleet door regels berekend wordt (CEL-expressie over andere model­elementen). Vraagstukken om uit te werken:
+   - Berekening: live (FE) vs. gematerialiseerd (BE) — instelling per item
+   - Cache-invalidatie bij wijziging van bron-elementen (lijkt op view-refresh in DB)
+   - Effect op API/GraphQL: read-only veld vs. virtueel endpoint
+   - Visuele markering in UML (oranje + cursief, analoog aan afgeleide velden, maar dan op edge/node-niveau)
+   - Round-trip via V3 JSON + MetaRegistry
+   - Ontwerpdocument apart maken voordat er code geschreven wordt
+10. **Taal als fundamenteel aspect (i18n / meertaligheid).** Discussie­stuk in `docs/2026-04-29 taal aspect.md`: moet meertaligheid een **core-aspect** worden van representaties (à la `materieel` → optioneel `aanvang/einde`; analoog `talig` → optioneel `taal`-veld op _Data, met multipliciteit "enkelvoudig per taal"), of blijft het een per-register modellerings­keuze (zoals nu de `Taalvariant`-cluster in het kennis-domein)? Onderzoek nodig naar:
+    - Bestaande patronen / standaarden in CMS-, API- en register-wereld (Drupal/Magnolia/Adobe AEM, OData, JSON-LD `@language`, IETF BCP 47, ICU, INSPIRE, ISA²)
+    - Impact op MetaRegistry, codegen, schema-API, querystring (`?taal=nl`), GraphQL en frontend-rendering
+    - Multipliciteit-semantiek: "enkelvoudig in tijd én in taal" als gecombineerde constraint
+    - Migratie-pad voor bestaande registers
+
 ---
 
 ## 1. README.md — TODO-sectie (lijnnummers 811+)

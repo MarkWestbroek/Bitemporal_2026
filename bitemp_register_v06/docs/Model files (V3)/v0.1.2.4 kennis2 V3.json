@@ -1,0 +1,302 @@
+{
+  "versie": "v0.1.2",
+  "naam": "kennis",
+  "beschrijving": "V3 export vanuit UML editor (codegen-ready)",
+  "datatypes": [],
+  "enums": [
+    {
+      "goType": "Taal",
+      "domein": "kennis2",
+      "baseType": "string",
+      "positie": {
+        "x": 960,
+        "y": 165
+      },
+      "waarden": [
+        {
+          "constNaam": "Taalnl",
+          "waarde": "nl"
+        },
+        {
+          "constNaam": "Taalen",
+          "waarde": "en"
+        },
+        {
+          "constNaam": "Taalde",
+          "waarde": "de"
+        }
+      ]
+    },
+    {
+      "goType": "Kennissectietype",
+      "domein": "kennis2",
+      "baseType": "string",
+      "positie": {
+        "x": 630,
+        "y": 433
+      },
+      "waarden": [
+        {
+          "constNaam": "Kennissectietypesamenvatting",
+          "waarde": "samenvatting"
+        },
+        {
+          "constNaam": "Kennissectietypeinhoud",
+          "waarde": "inhoud"
+        },
+        {
+          "constNaam": "KennissectietypeprocedureBeschrijving",
+          "waarde": "procedureBeschrijving"
+        },
+        {
+          "constNaam": "Kennissectietypebewijs",
+          "waarde": "bewijs"
+        },
+        {
+          "constNaam": "Kennissectietypeenz",
+          "waarde": "enz"
+        }
+      ]
+    }
+  ],
+  "entiteiten": [
+    {
+      "typenaam": "Kennisartikel",
+      "domein": "kennis2",
+      "isMaterieel": true,
+      "kleur": "#bfdbfe",
+      "meervoud": "kennisartikelen",
+      "positie": {
+        "x": 255,
+        "y": -45
+      },
+      "afgeleideVelden": [
+        {
+          "naam": "nl-titel",
+          "goType": "string",
+          "afleidingsregelTaal": "cel",
+          "afleidingsregel": "",
+          "isWeergaveVeld": false
+        }
+      ],
+      "gegevenselementen": [],
+      "relaties": [
+        {
+          "naam": "KA_Tr",
+          "domein": "kennis2",
+          "meervoud": "kennisartikelTrefwoorden",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": false,
+          "directioneel": true,
+          "doelEntiteit": "Trefwoord",
+          "doelKardinaliteit": "0..1",
+          "positie": {
+            "x": 495,
+            "y": 34.125
+          },
+          "id": "edge_1777449661132_19",
+          "sourceHandle": "source-right",
+          "targetHandle": "target-left",
+          "doelId": "edge_1777449661132_20",
+          "doelSourceHandle": "source-right",
+          "doelTargetHandle": "target-left",
+          "velden": []
+        },
+        {
+          "naam": "KA_TV",
+          "domein": "kennis2",
+          "meervoud": "kennisartikelTaalvarianten",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": false,
+          "directioneel": true,
+          "doelEntiteit": "KennisartikelTaalvariant",
+          "positie": {
+            "x": 195,
+            "y": 105
+          },
+          "id": "edge_1777483380268_4",
+          "sourceHandle": "source-bottom",
+          "targetHandle": "target-top",
+          "doelId": "edge_1777483380268_5",
+          "doelSourceHandle": "source-bottom",
+          "doelTargetHandle": "target-top",
+          "afgeleideVelden": [],
+          "velden": []
+        }
+      ]
+    },
+    {
+      "typenaam": "KennisartikelTaalvariant",
+      "domein": "kennis2",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "KennisartikelTaalvariant",
+      "positie": {
+        "x": 255,
+        "y": 285
+      },
+      "afgeleideVelden": [
+        {
+          "naam": "taal",
+          "goType": "string",
+          "afleidingsregelTaal": "cel",
+          "afleidingsregel": "",
+          "isWeergaveVeld": false
+        },
+        {
+          "naam": "titel",
+          "goType": "string",
+          "afleidingsregelTaal": "cel",
+          "afleidingsregel": "",
+          "isWeergaveVeld": false
+        }
+      ],
+      "gegevenselementen": [
+        {
+          "naam": "KennisartikeltaalvariantTitel",
+          "domein": "kennis2",
+          "meervoud": "tvtitels",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 630,
+            "y": 285
+          },
+          "id": "edge_1777447084854_3",
+          "sourceHandle": "source-right",
+          "targetHandle": "target-left",
+          "velden": [
+            {
+              "naam": "titel",
+              "goType": "string"
+            }
+          ]
+        },
+        {
+          "naam": "Sectie",
+          "domein": "kennis2",
+          "meervoud": "kennissecties",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 264,
+            "y": 451.75
+          },
+          "id": "edge_1777448904198_9",
+          "sourceHandle": "source-bottom",
+          "targetHandle": "target-top",
+          "velden": [
+            {
+              "naam": "type",
+              "goType": "Kennissectietype",
+              "enum": "Kennissectietype"
+            },
+            {
+              "naam": "inhoud",
+              "goType": "string"
+            },
+            {
+              "naam": "positie",
+              "goType": "*int"
+            }
+          ],
+          "useEdges": [
+            {
+              "doel": "Kennissectietype",
+              "id": "Kennisartikel_Kennissectie-->Kennissectietype",
+              "sourceHandle": "source-right",
+              "targetHandle": "target-left"
+            }
+          ]
+        },
+        {
+          "naam": "KennisartikelTaalvariantTaal",
+          "domein": "kennis2",
+          "meervoud": "tvtalen",
+          "momentvoorkomen": "enkelvoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 630,
+            "y": 180
+          },
+          "id": "edge_1777448973200_12",
+          "sourceHandle": "source-right",
+          "targetHandle": "target-left",
+          "velden": [
+            {
+              "naam": "taal",
+              "goType": "Taal",
+              "enum": "Taal"
+            }
+          ],
+          "useEdges": [
+            {
+              "doel": "Taal",
+              "id": "edge_1777448962376_11",
+              "sourceHandle": "source-right",
+              "targetHandle": "target-left"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    },
+    {
+      "typenaam": "Trefwoord",
+      "domein": "kennis2",
+      "isMaterieel": false,
+      "entiteitSubtype": "referentielijst_item",
+      "kleur": "#fde68a",
+      "meervoud": "trefwoords",
+      "positie": {
+        "x": 630,
+        "y": 2
+      },
+      "afgeleideVelden": [
+        {
+          "naam": "nl-trefwoord",
+          "goType": "string",
+          "afleidingsregelTaal": "cel",
+          "afleidingsregel": "",
+          "isWeergaveVeld": false
+        }
+      ],
+      "gegevenselementen": [
+        {
+          "naam": "Trefwoord",
+          "domein": "kennis2",
+          "meervoud": "trefwoords",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 960,
+            "y": -4
+          },
+          "id": "edge_1777449657666_17",
+          "sourceHandle": "source-right",
+          "targetHandle": "target-left",
+          "velden": [
+            {
+              "naam": "woord",
+              "goType": "string"
+            },
+            {
+              "naam": "taal",
+              "goType": "Taal",
+              "enum": "Taal"
+            }
+          ],
+          "useEdges": [
+            {
+              "doel": "Taal",
+              "id": "edge_1777449587138_16",
+              "sourceHandle": "source-bottom",
+              "targetHandle": "target-top"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    }
+  ]
+}
