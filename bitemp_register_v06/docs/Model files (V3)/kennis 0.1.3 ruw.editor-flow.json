@@ -1,0 +1,613 @@
+{
+  "_format": "editor-flow-v1",
+  "modelNaam": "kennis",
+  "bewaardOp": "2026-04-29T08:02:24.585Z",
+  "flowState": {
+    "nodes": [
+      {
+        "id": "enum_Taal",
+        "type": "enumeratie",
+        "position": {
+          "x": 885,
+          "y": 210
+        },
+        "data": {
+          "naam": "Taal",
+          "domein": "kennis",
+          "baseType": "string",
+          "waarden": [
+            "nl",
+            "en",
+            "de"
+          ]
+        },
+        "measured": {
+          "width": 180,
+          "height": 119
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "enum_Kennissectietype",
+        "type": "enumeratie",
+        "position": {
+          "x": 600,
+          "y": 435
+        },
+        "data": {
+          "naam": "Kennissectietype",
+          "domein": "kennis",
+          "baseType": "string",
+          "waarden": [
+            "samenvatting",
+            "inhoud",
+            "procedureBeschrijving",
+            "bewijs"
+          ]
+        },
+        "measured": {
+          "width": 180,
+          "height": 137
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "Kennisartikel",
+        "type": "entiteit",
+        "position": {
+          "x": 270,
+          "y": -10.25
+        },
+        "data": {
+          "typenaam": "Kennisartikel",
+          "klassenaam": "Kennisartikel",
+          "description": "",
+          "domein": "kennis",
+          "meervoud": "kennisartikels",
+          "metatype": "entiteit",
+          "isMaterieel": true,
+          "entiteitSubtype": "",
+          "kleur": "#bfdbfe",
+          "velden": [],
+          "afgeleideVelden": [
+            {
+              "naam": "nl-titel",
+              "description": "",
+              "goType": "string",
+              "afleidingsregelTaal": "cel",
+              "afleidingsregel": "",
+              "isWeergaveVeld": false
+            }
+          ]
+        },
+        "measured": {
+          "width": 180,
+          "height": 107
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "Kennisartikel_Kennissectie",
+        "type": "gegevenselement",
+        "position": {
+          "x": 270,
+          "y": 450
+        },
+        "data": {
+          "typenaam": "Kennisartikel_Kennissectie",
+          "klassenaam": "Kennissectie",
+          "description": "",
+          "domein": "kennis",
+          "meervoud": "kennissecties",
+          "metatype": "gegevenselement",
+          "isMaterieel": false,
+          "kleur": "#bbf7d0",
+          "velden": [
+            {
+              "naam": "type",
+              "type": "string",
+              "format": "",
+              "datatypeNaam": null,
+              "enum": [
+                "titel",
+                "samenvatting",
+                "inhoud",
+                "procedureBeschrijving",
+                "bewijs"
+              ],
+              "enumNaam": "Kennissectietype",
+              "refNaam": null,
+              "verplicht": true,
+              "autoIncrement": false,
+              "description": "",
+              "afgeleid": false,
+              "afleidingsregelTaal": "cel",
+              "afleidingsregel": ""
+            },
+            {
+              "naam": "inhoud",
+              "type": "string",
+              "format": "",
+              "datatypeNaam": null,
+              "enum": null,
+              "enumNaam": null,
+              "refNaam": null,
+              "verplicht": true,
+              "autoIncrement": false,
+              "description": "",
+              "afgeleid": false,
+              "afleidingsregelTaal": "cel",
+              "afleidingsregel": ""
+            },
+            {
+              "naam": "positie",
+              "type": "integer",
+              "format": "",
+              "datatypeNaam": null,
+              "enum": null,
+              "enumNaam": null,
+              "refNaam": null,
+              "verplicht": false,
+              "autoIncrement": false,
+              "description": "",
+              "afgeleid": false,
+              "afleidingsregelTaal": "cel",
+              "afleidingsregel": ""
+            }
+          ],
+          "afgeleideVelden": []
+        },
+        "measured": {
+          "width": 180,
+          "height": 119
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "entiteit_1777446956430_1",
+        "type": "entiteit",
+        "position": {
+          "x": 260.25,
+          "y": 225
+        },
+        "data": {
+          "id": "entiteit_1777446956430_1",
+          "typenaam": "KennisartikelInEenTaal",
+          "meervoud": "KennisartiekTaalvariant",
+          "description": "",
+          "domein": "kennis",
+          "metatype": "entiteit",
+          "isMaterieel": false,
+          "kleur": "#bfdbfe",
+          "velden": [],
+          "klassenaam": "KennisartikelInEenTaal",
+          "afgeleideVelden": [
+            {
+              "naam": "taal",
+              "description": "",
+              "goType": "string",
+              "afleidingsregelTaal": "cel",
+              "afleidingsregel": "",
+              "isWeergaveVeld": false
+            },
+            {
+              "naam": "titel",
+              "description": "",
+              "goType": "string",
+              "afleidingsregelTaal": "cel",
+              "afleidingsregel": "",
+              "isWeergaveVeld": false
+            }
+          ]
+        },
+        "measured": {
+          "width": 195,
+          "height": 115
+        },
+        "selected": false,
+        "dragging": false,
+        "width": 195,
+        "height": 115,
+        "resizing": false
+      },
+      {
+        "id": "gegevenselement_1777447040854_2",
+        "type": "gegevenselement",
+        "position": {
+          "x": 600,
+          "y": 270
+        },
+        "data": {
+          "id": "gegevenselement_1777447040854_2",
+          "typenaam": "KennisartikeltaalvariantTitel",
+          "meervoud": "",
+          "description": "",
+          "domein": "",
+          "metatype": "gegevenselement",
+          "isMaterieel": false,
+          "kleur": "#bbf7d0",
+          "velden": [
+            {
+              "naam": "titel",
+              "type": "string",
+              "format": "",
+              "enum": null,
+              "verplicht": true,
+              "autoIncrement": false,
+              "description": "",
+              "afgeleid": false,
+              "afleidingsregelTaal": "cel",
+              "afleidingsregel": ""
+            }
+          ],
+          "klassenaam": "Titel"
+        },
+        "measured": {
+          "width": 180,
+          "height": 82
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "relatie_1777448813389_6",
+        "type": "relatie",
+        "position": {
+          "x": 329.25,
+          "y": 150
+        },
+        "data": {
+          "id": "relatie_1777448813389_6",
+          "typenaam": "KA-TV",
+          "meervoud": "Rel_Kennisartikel_Taalvarianten",
+          "description": "",
+          "domein": "kennis",
+          "metatype": "relatie",
+          "isMaterieel": false,
+          "kleur": "#ede9fe",
+          "velden": [],
+          "klassenaam": "KA-TV",
+          "doelEntiteit": "Taalvariant"
+        },
+        "measured": {
+          "width": 57,
+          "height": 24
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "gegevenselement_1777448933881_10",
+        "type": "gegevenselement",
+        "position": {
+          "x": 600,
+          "y": 165
+        },
+        "data": {
+          "id": "gegevenselement_1777448933881_10",
+          "typenaam": "TV_Taal",
+          "meervoud": "tvtalen",
+          "description": "",
+          "domein": "kennis",
+          "metatype": "gegevenselement",
+          "isMaterieel": false,
+          "kleur": "#bbf7d0",
+          "velden": [
+            {
+              "naam": "taal",
+              "type": "string",
+              "format": "",
+              "enum": [
+                "nl",
+                "en",
+                "de"
+              ],
+              "verplicht": true,
+              "autoIncrement": false,
+              "description": "",
+              "afgeleid": false,
+              "afleidingsregelTaal": "cel",
+              "afleidingsregel": "",
+              "enumNaam": "Taal",
+              "datatypeNaam": null,
+              "refItemNaam": null
+            }
+          ],
+          "klassenaam": "Taal"
+        },
+        "measured": {
+          "width": 180,
+          "height": 82
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "entiteit_1777449533978_14",
+        "type": "entiteit",
+        "position": {
+          "x": 600,
+          "y": 16
+        },
+        "data": {
+          "id": "entiteit_1777449533978_14",
+          "typenaam": "Trefwoord",
+          "meervoud": "",
+          "description": "",
+          "domein": "",
+          "metatype": "entiteit",
+          "isMaterieel": false,
+          "kleur": "#fde68a",
+          "velden": [],
+          "entiteitSubtype": "referentielijst_item",
+          "klassenaam": "Trefwoord"
+        },
+        "measured": {
+          "width": 180,
+          "height": 55
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "gegevenselement_1777449555693_15",
+        "type": "gegevenselement",
+        "position": {
+          "x": 885,
+          "y": -6.75
+        },
+        "data": {
+          "id": "gegevenselement_1777449555693_15",
+          "typenaam": "",
+          "meervoud": "",
+          "description": "",
+          "domein": "",
+          "metatype": "gegevenselement",
+          "isMaterieel": false,
+          "kleur": "#bbf7d0",
+          "velden": [
+            {
+              "naam": "woord",
+              "type": "string",
+              "format": "",
+              "enum": null,
+              "verplicht": true,
+              "autoIncrement": false,
+              "description": "",
+              "afgeleid": false,
+              "afleidingsregelTaal": "cel",
+              "afleidingsregel": ""
+            },
+            {
+              "naam": "taal",
+              "type": "string",
+              "format": "",
+              "enum": [
+                "nl",
+                "en",
+                "de"
+              ],
+              "verplicht": true,
+              "autoIncrement": false,
+              "description": "",
+              "afgeleid": false,
+              "afleidingsregelTaal": "cel",
+              "afleidingsregel": "",
+              "enumNaam": "Taal",
+              "datatypeNaam": null,
+              "refItemNaam": null
+            }
+          ],
+          "klassenaam": "Trefwoord"
+        },
+        "measured": {
+          "width": 180,
+          "height": 100
+        },
+        "selected": false,
+        "dragging": false
+      },
+      {
+        "id": "relatie_1777449661131_18",
+        "type": "relatie",
+        "position": {
+          "x": 495,
+          "y": 31.25
+        },
+        "data": {
+          "id": "relatie_1777449661131_18",
+          "typenaam": "KA_Tr",
+          "meervoud": "Rel_Kennisartikel_Trefwoorden",
+          "description": "",
+          "domein": "kennis",
+          "metatype": "relatie",
+          "isMaterieel": false,
+          "kleur": "#ede9fe",
+          "velden": [],
+          "klassenaam": "KA_Tr",
+          "doelEntiteit": "Trefwoord"
+        },
+        "measured": {
+          "width": 56,
+          "height": 24
+        },
+        "selected": false,
+        "dragging": false
+      }
+    ],
+    "edges": [
+      {
+        "type": "metamodel",
+        "source": "entiteit_1777446956430_1",
+        "sourceHandle": "source-right",
+        "target": "gegevenselement_1777447040854_2",
+        "targetHandle": "target-left",
+        "id": "edge_1777447084854_3",
+        "data": {
+          "rolnaam": "",
+          "jsonRolnaam": "",
+          "momentvoorkomen": "enkelvoudig",
+          "kardinaliteit": "0..*"
+        },
+        "selected": false
+      },
+      {
+        "id": "edge_1777448813389_7",
+        "source": "Kennisartikel",
+        "target": "relatie_1777448813389_6",
+        "sourceHandle": "source-bottom",
+        "targetHandle": "target-top",
+        "type": "metamodel",
+        "data": {
+          "rolnaam": "",
+          "jsonRolnaam": "rel_kennisartikel_taalvariant",
+          "momentvoorkomen": "meervoudig",
+          "kardinaliteit": "0..*"
+        },
+        "selected": false
+      },
+      {
+        "id": "edge_1777448813389_8",
+        "source": "relatie_1777448813389_6",
+        "target": "entiteit_1777446956430_1",
+        "sourceHandle": "source-bottom",
+        "targetHandle": "target-top",
+        "type": "metamodel",
+        "data": {
+          "rolnaam": "KennisartiekTaalvariant",
+          "jsonRolnaam": "rel_kennisartikel_taalvariant",
+          "momentvoorkomen": "meervoudig",
+          "kardinaliteit": "0..*"
+        },
+        "selected": false
+      },
+      {
+        "type": "metamodel",
+        "source": "entiteit_1777446956430_1",
+        "sourceHandle": "source-bottom",
+        "target": "Kennisartikel_Kennissectie",
+        "targetHandle": "target-top",
+        "id": "edge_1777448904198_9",
+        "data": {
+          "rolnaam": "",
+          "jsonRolnaam": "",
+          "momentvoorkomen": "meervoudig",
+          "kardinaliteit": "0..*"
+        },
+        "selected": false
+      },
+      {
+        "id": "edge_1777448962376_11",
+        "source": "gegevenselement_1777448933881_10",
+        "target": "enum_Taal",
+        "type": "metamodel",
+        "data": {
+          "isDependency": true,
+          "rolnaam": "",
+          "jsonRolnaam": "",
+          "momentvoorkomen": "",
+          "kardinaliteit": ""
+        },
+        "selected": false,
+        "sourceHandle": "source-right",
+        "targetHandle": "target-left"
+      },
+      {
+        "type": "metamodel",
+        "source": "entiteit_1777446956430_1",
+        "sourceHandle": "source-right",
+        "target": "gegevenselement_1777448933881_10",
+        "targetHandle": "target-left",
+        "id": "edge_1777448973200_12",
+        "data": {
+          "rolnaam": "",
+          "jsonRolnaam": "",
+          "momentvoorkomen": "enkelvoudig",
+          "kardinaliteit": "0..1"
+        },
+        "selected": false
+      },
+      {
+        "id": "Kennisartikel_Kennissectie-->Kennissectietype",
+        "source": "Kennisartikel_Kennissectie",
+        "target": "enum_Kennissectietype",
+        "type": "metamodel",
+        "data": {
+          "isDependency": true,
+          "rolnaam": "",
+          "jsonRolnaam": "",
+          "momentvoorkomen": "",
+          "kardinaliteit": ""
+        },
+        "selected": false,
+        "sourceHandle": "source-right",
+        "targetHandle": "target-left"
+      },
+      {
+        "id": "edge_1777449587138_16",
+        "source": "gegevenselement_1777449555693_15",
+        "target": "enum_Taal",
+        "type": "metamodel",
+        "data": {
+          "isDependency": true,
+          "rolnaam": "",
+          "jsonRolnaam": "",
+          "momentvoorkomen": "",
+          "kardinaliteit": ""
+        },
+        "selected": false,
+        "sourceHandle": "source-bottom",
+        "targetHandle": "target-top"
+      },
+      {
+        "type": "metamodel",
+        "source": "entiteit_1777449533978_14",
+        "sourceHandle": "source-right",
+        "target": "gegevenselement_1777449555693_15",
+        "targetHandle": "target-left",
+        "id": "edge_1777449657666_17",
+        "data": {
+          "rolnaam": "",
+          "jsonRolnaam": "",
+          "momentvoorkomen": "enkelvoudig",
+          "kardinaliteit": "0..1"
+        },
+        "selected": false
+      },
+      {
+        "id": "edge_1777449661132_19",
+        "source": "Kennisartikel",
+        "target": "relatie_1777449661131_18",
+        "sourceHandle": "source-right",
+        "targetHandle": "target-left",
+        "type": "metamodel",
+        "data": {
+          "rolnaam": "",
+          "jsonRolnaam": "rel_kennisartikel_trefwoord",
+          "momentvoorkomen": "meervoudig",
+          "kardinaliteit": "0..*"
+        },
+        "selected": false
+      },
+      {
+        "id": "edge_1777449661132_20",
+        "source": "relatie_1777449661131_18",
+        "target": "entiteit_1777449533978_14",
+        "sourceHandle": "source-right",
+        "targetHandle": "target-left",
+        "type": "metamodel",
+        "data": {
+          "rolnaam": "Trefwoord",
+          "jsonRolnaam": "rel_kennisartikel_trefwoord",
+          "momentvoorkomen": "meervoudig",
+          "kardinaliteit": "0..*"
+        },
+        "selected": false
+      }
+    ]
+  }
+}

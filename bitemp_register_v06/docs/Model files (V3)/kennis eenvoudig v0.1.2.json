@@ -1,0 +1,134 @@
+{
+  "versie": "v0.1.2",
+  "naam": "kennis",
+  "beschrijving": "V3 export vanuit UML editor (codegen-ready)",
+  "datatypes": [],
+  "enums": [
+    {
+      "goType": "Taal",
+      "domein": "kennis",
+      "baseType": "string",
+      "positie": {
+        "x": 675,
+        "y": 375
+      },
+      "waarden": [
+        {
+          "constNaam": "Taalnl",
+          "waarde": "nl"
+        },
+        {
+          "constNaam": "Taalen",
+          "waarde": "en"
+        },
+        {
+          "constNaam": "Taalde",
+          "waarde": "de"
+        }
+      ]
+    },
+    {
+      "goType": "Kennissectietype",
+      "domein": "kennis",
+      "baseType": "string",
+      "positie": {
+        "x": 660,
+        "y": 195
+      },
+      "waarden": [
+        {
+          "constNaam": "Kennissectietypetitel",
+          "waarde": "titel"
+        },
+        {
+          "constNaam": "Kennissectietypesamenvatting",
+          "waarde": "samenvatting"
+        },
+        {
+          "constNaam": "Kennissectietypeinhoud",
+          "waarde": "inhoud"
+        },
+        {
+          "constNaam": "KennissectietypeprocedureBeschrijving",
+          "waarde": "procedureBeschrijving"
+        },
+        {
+          "constNaam": "Kennissectietypebewijs",
+          "waarde": "bewijs"
+        }
+      ]
+    }
+  ],
+  "entiteiten": [
+    {
+      "typenaam": "Kennisartikel",
+      "isMaterieel": false,
+      "kleur": "#bfdbfe",
+      "meervoud": "kennisartikels",
+      "positie": {
+        "x": 270,
+        "y": 105
+      },
+      "afgeleideVelden": [
+        {
+          "naam": "titel",
+          "goType": "string",
+          "afleidingsregelTaal": "cel",
+          "afleidingsregel": "",
+          "isWeergaveVeld": false
+        }
+      ],
+      "gegevenselementen": [
+        {
+          "naam": "Kennissectie",
+          "domein": "kennis",
+          "meervoud": "kennissecties",
+          "momentvoorkomen": "meervoudig",
+          "isMaterieel": false,
+          "positie": {
+            "x": 285,
+            "y": 330
+          },
+          "id": "edge_1777443681987_2",
+          "sourceHandle": "source-bottom",
+          "targetHandle": "target-top",
+          "velden": [
+            {
+              "naam": "type",
+              "goType": "Kennissectietype",
+              "enum": "Kennissectietype"
+            },
+            {
+              "naam": "taal",
+              "goType": "Taal",
+              "enum": "Taal"
+            },
+            {
+              "naam": "inhoud",
+              "goType": "string"
+            },
+            {
+              "naam": "positie",
+              "goType": "int"
+            }
+          ],
+          "useEdges": [
+            {
+              "doel": "Kennissectietype",
+              "id": "Kennisartikel_Kennissectie-->Kennissectietype",
+              "sourceHandle": "source-right",
+              "targetHandle": "target-left"
+            },
+            {
+              "doel": "Taal",
+              "id": "Kennisartikel_Kennissectie-->Taal",
+              "sourceHandle": "source-right",
+              "targetHandle": "target-left"
+            }
+          ]
+        }
+      ],
+      "relaties": []
+    }
+  ]
+}

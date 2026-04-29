@@ -810,9 +810,11 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
 
     const relaties = Array.from(relPairsByRelId.values()).map(({ ankerEdge, ankerNode, classLinkEdge, doelEdge, relNode }) => {
       const doelEntiteitNode = doelEdge ? entiteitNodes.find((n) => n.id === doelEdge.target) : null;
+      // Live verbonden node heeft prioriteit boven opgeslagen waarde: dit voorkomt dat verouderde
+      // doelEntiteit-namen (na hernoemen van een entiteit) de export vervuilen.
       const doelEntiteitNaam =
-        relNode.data.doelEntiteit ||
         doelEntiteitNode?.data?.typenaam ||
+        relNode.data.doelEntiteit ||
         "";
       const instantieBinding = vindReferentielijstInstantieBinding(relNode.id, relNode.data, edges, nodesById);
 

@@ -113,7 +113,13 @@
         "https://open-forms.readthedocs.io/en/latest": true,
         "https://open-forms.readthedocs.io/en": true,
         "https://open-forms.readthedocs.io": true,
-        "https://*.readthedocs.io": true
+        "https://*.readthedocs.io": true,
+        "https://docs.valtimo.nl/fundamentals/overview": true,
+        "https://docs.valtimo.nl/fundamentals": true,
+        "https://docs.valtimo.nl": true,
+        "https://*.valtimo.nl": true,
+        "https://github.com/generiekzaakafhandelcomponent/gzac-frontend-template": true,
+        "https://github.com/generiekzaakafhandelcomponent": true
     },
     "chat.restoreLastPanelSession": false,
     "settingsSync.ignoredSettings": [

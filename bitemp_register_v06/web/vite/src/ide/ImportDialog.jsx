@@ -256,7 +256,11 @@ export default function ImportDialog({ open, domains, domainMeta, prefillDomein,
       if (json._format === "ide-v1") {
         const elCount = Object.keys(json.elements || {}).length;
         setBestandInfo({ format: "IDE-v1", elementen: elCount, versie: json.modelMeta?.versie || "" });
-      } else if (json.model?.versie === "v3" || json.versie === "v3") {
+      } else if (
+        // V3 herkenning: accept zowel versie="v3" als semver (v0.x.y) én op aanwezigheid van entiteiten-array
+        json.model?.versie === "v3" || json.versie === "v3" ||
+        Array.isArray(json.entiteiten) || Array.isArray(json.model?.entiteiten)
+      ) {
         const model = json.model || json;
         const entCount = (model.entiteiten || []).length;
         setBestandInfo({ format: "V3", elementen: entCount, versie: model.modelVersie || model.versie || "" });
@@ -350,7 +354,9 @@ export default function ImportDialog({ open, domains, domainMeta, prefillDomein,
 
       const format = json?._format === "raw-editor" ? "raw-editor"
         : json?._format === "ide-v1" ? "ide"
-        : (json?.model?.versie === "v3" || json?.versie === "v3") ? "v3"
+        // V3 herkenning: accept versie="v3", semver (v0.x.y) én aanwezigheid van entiteiten-array
+        : (json?.model?.versie === "v3" || json?.versie === "v3" ||
+           Array.isArray(json?.entiteiten) || Array.isArray(json?.model?.entiteiten)) ? "v3"
         : "onbekend";
 
       if (format === "onbekend") throw new Error("Onbekend JSON-format. Verwacht IDE-v1, V3, Mermaid, PlantUML of XMI.");

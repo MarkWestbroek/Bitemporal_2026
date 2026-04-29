@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-28 14:28
 - **Sessie-ID**: `fc469233-069a-4f14-9910-2d7c6a1d94cb`
-- **Berichten**: 22
+- **Berichten**: 24
 
 ---
 
@@ -622,5 +622,75 @@ Alles klaar. Samenvatting van wat er misging en de oplossing:
 ## 🧑 User
 
 okee, ik test het morgen. Dank voor nu.
+
+---
+
+## 🧑 User
+
+de platte opvoer test faalt:
+{
+  "registratie": {
+    "registratietype": "registratie",
+    "opmerking": "Klassieke platte opvoer (één representatie per wijziging) — moet onveranderd werken"
+  },
+  "wijzigingen": [
+    { "opvoer": { "natuurlijkpersoon": { "id": 4202 } } },
+    { "opvoer": { "persoonsidentificaties": { "natuurlijkpersoon_id": 4202, "rel_id": 1, "bsn": "234567893", "ingezetene": true } } },
+    { "opvoer": { "namen": { "natuurlijkpersoon_id": 4202, "rel_id": 1, "voorletters": "K.", "roepnaam": "Karim", "tussenvoegsel": "el", "achternaam": "Idrissi" } } },
+    { "opvoer": { "aanvang": { "natuurlijkpersoon_id": 4202, "datum": "1990-09-04" } } }
+  ]
+}
+-> {"error":"unsupported representatie key 'persoonsidentificaties'"}
+
+request 3 faalt:
+{
+  "registratie": {
+    "registratietype": "registratie",
+    "opmerking": "Geneste opvoer met meervoudige burgerschappen als JSON-array"
+  },
+  "wijzigingen": [
+    {
+      "opvoer": {
+        "natuurlijkpersoon": {
+          "id": 4203,
+          "persoonsidentificaties": { "rel_id": 1, "bsn": "345678904", "ingezetene": true },
+          "namen": { "rel_id": 1, "voorletters": "S.", "roepnaam": "Sofia", "achternaam": "Petrova" },
+          "burgerschappen": [
+            { "rel_id": 1, "landcode": "NL", "nationaliteit": "Nederlandse",  "aanvang": "2010-06-01" },
+            { "rel_id": 2, "landcode": "BG", "nationaliteit": "Bulgaarse",   "aanvang": "1992-02-14" }
+          ],
+          "aanvang": { "datum": "1992-02-14" }
+        }
+      }
+    }
+  ]
+}
+-> 
+{
+    "error": "normaliseren van wijzigingen mislukt: wijziging[0]: normaliseer: kan kind NatuurlijkPersoon_Burgerschap_Aanvang (rol aanvang onder NatuurlijkPersoon_Burgerschap) niet unmarshal'en: json: cannot unmarshal string into Go value of type model.NatuurlijkPersoon_Burgerschap_Aanvang"
+}
+
+request 4, en correctie gaat goed, alleen je schrijft:  "description": "Correctie van een eerder geregistreerde naam (request #1). Server splitst in 2 wijzigingen (NP + Naam). Dezelfde geneste payload-vorm als opvoer (Fase 2 brengt PATCH met merge-semantiek)."
+    -> de twee wijzigingen zijn: een afvoer van de te corrigeren naam (Anna) en een opvoer van de gecorrigeerde (Annemarie). Dat is wel goed gegaan in de DB, maar de omschrijving is wat verwarrend.
+
+---
+
+## 🤖 Assistant
+
+Laat me de drie problemen analyseren. Eerst de relevante code bekijken:  Nu begrijp ik alle drie de problemen helder:
+
+1. **Request 2**: De flat-format keys zijn verkeerd. In `UnmarshalJSON` wordt gematcht op  (enkelvoud), niet  (meervoud). `"persoonsidentificaties"` → `"persoonsidentificatie"`,  → `"naam"`, `"aanvang"` → `"natuurlijkpersoon_aanvang"` (dat is de echte ).
+
+2. **Request 3**: `"aanvang": "2010-06-01"` is een string, maar de normalizer probeert dit te unmarshalen als `NatuurlijkPersoon_Burgerschap_Aanvang` (een struct). Moet `"aanvang": {"datum": "2010-06-01"}` zijn.
+
+3. **Request 4 description**: en ook request 1's telling (`5 wijzigingen` inclusief einde klopt niet bij deze payload; het zijn er 4). 
+```
+
+```
+De burgerschap-replace mislukte — de aanvang-strings zitten in escaped JSON. Laat me de exacte tekst checken: 
+```
+
+```
+Nu snel de fixes verifiëren met een curl:  
 
 ---

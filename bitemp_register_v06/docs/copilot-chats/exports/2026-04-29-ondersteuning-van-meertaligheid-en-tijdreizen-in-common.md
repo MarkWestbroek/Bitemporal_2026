@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-29 10:56
 - **Sessie-ID**: `def89e9a-b62f-421e-81a2-d351a7256974`
-- **Berichten**: 4
+- **Berichten**: 13
 
 ---
 
@@ -81,5 +81,163 @@ Samenvatting van de bevindingen voor alle 5 systemen:
 | **openRegister** | ⚠️ Alleen via AI/LLM, geen native API | ⚠️ Versiegeschiedenis + revert, geen formele/materiële tijdsas |
 
 **Opvallende conclusie:** Alleen Open Object implementeert een volledig bitemporaal model — en dat op vergelijkbare wijze als v06, maar dan met records-in-object in plaats van een aparte wijzigingstabel. Geen enkel systeem combineert zowel meertaligheid als volledig bitemporaal tijdreizen.
+
+---
+
+## 🧑 User
+
+Dank. Wil je nog naar deze repo's kijken:
+https://git.contezza.nl/community/alfresco-documenten-api
+https://github.com/generiekzaakafhandelcomponent/
+
+Tevens: wat is het taalcode-formaat (nl-nl of gewoon nl? enz.) dat gebruikt wordt?
+
+---
+
+## 🤖 Assistant
+
+Goede vondst: `rgbz:taal` = **ISO 639-2/B** (3-letter, bijv. `nld`). Nu GZAC verder onderzoeken. Goede vondst - Valtimo heeft een volledige localisatiefunctie. Nu snel de tijdreizen-kant van GZAC/Valtimo checken: Nu heb ik genoeg informatie. Ik ga het document bijwerken met de 2 nieuwe systemen en een sectie over taalcode-formaten. Nu ga ik het document volledig bijwerken met de 2 nieuwe systemen, de taalcode-sectie en de uitgebreide conclusie. 
+```
+
+```
+Nu de nieuwe secties 6 en 7 plus de taalcode-sectie toevoegen na de bestaande sectie 5 en vóór de vergelijkende conclusie: 
+```
+
+```
+Nu de vergelijkende conclusie uitbreiden met de 2 nieuwe systemen: 
+```
+
+```
+Klaar. Het document is bijgewerkt. Hier een samenvatting van de bevindingen:
+
+---
+
+## Bevindingen Alfresco Documenten API & GZAC/Valtimo
+
+### Alfresco Documenten API (Contezza/DRC)
+- **Meertaligheid ⚠️**: Geen UI-meertaligheid. Wel een verplicht `rgbz:taal`-metadataveld op documentniveau, met **ISO 639-2/B** 3-letter codes (bijv. `nld`). Dit is een VNG ZGW-standaard conform RGBZ.
+- **Tijdreizen ⚠️**: Alfresco versiebeheer + audit trail. Het `download`-endpoint heeft een `?registratieOp=`-parameter voor formeel tijdreizen op individuele documenten — maar geen collectie-peilmoment. Geen materiële tijdsas.
+
+### GZAC / Valtimo (Ritense)
+- **Meertaligheid ✅**: Volledige UI-lokalisatie via `@ngx-translate/core`. Standaard NL/EN/DE, uitbreidbaar met JSON-bestanden. Vertalingen admin-configureerbaar via `/translation-management` (v12.0.0+). Taalcodes: **ISO 639-1 / BCP 47** (`nl`, `en`, `de`).
+- **Tijdreizen ⚠️**: Geen bitemporale queries in GZAC zelf. Wel case definition versioning (draft/final) en ZGW-integratie waarbij de onderliggende registers (bijv. Open Object) temporele mogelijkheden bieden.
+
+---
+
+## Taalcode-formaten
+
+| Standaard | Code | Gebruik in dit ecosysteem |
+|---|---|---|
+| **BCP 47 / RFC 5646** | `nl`, `nl-NL` | HTTP `Accept-Language`, Open Product API |
+| **ISO 639-1** | `nl`, `en` | UI-vertaalbestanden (Open Forms, GZAC/Valtimo) |
+| **ISO 639-2/B** | `nld`, `eng` | DRC `rgbz:taal` metadataveld (VNG ZGW-standaard) |
+
+Aanbeveling voor v06: **BCP 47** voor de API-laag, **ISO 639-2/B** voor documentinhoud-metadata.
+
+---
+
+## 🧑 User
+
+Dank. Kun je doornemen wat de NL API strategie eventueel over taal zegt? Over tijdreizen is volgens mij nog niets opgenomen. Ik hoop dat ik daar wat aan kan bijdragen in een werkgroep die aan het starten is.... :-)
+
+---
+
+## 🤖 Assistant
+
+Goed onderzocht — je hebt op beide punten gelijk. Hieronder de bevindingen uit de NL API Strategie (versies april 2026), gebaseerd op de hoofdmodules.
+
+## Wat de NL API Strategie zegt over **taal**
+
+De Strategie bestaat uit een hoofdmodule (Architectuur) + normatieve **API Design Rules v2.1.0** (ADR, april 2026) + losse modules (Geo, Transport Security, Signing, Encryption, Access Control, Naming Conventions, Hypermedia, Batching). Over taal vond ik **niets over meertaligheid van payloads of content** — alleen twee regels die gaan over de *taal van de interface zelf*:
+
+| Design rule | Wat het zegt |
+|---|---|
+| `/core/interface-language` | Resources en attributen SHOULD in het Nederlands gedefinieerd worden, tenzij er een officiële Engelstalige woordenlijst bestaat. Internationale doelgroep mag aanleiding zijn voor Engels. |
+| `/core/doc-language` | OAS-documentatie SHOULD in het Nederlands; mag verwijzen naar bestaande Engelstalige documentatie. |
+
+**Wat er niét in staat:**
+- Geen voorschrift over `Accept-Language` (RFC 9110) of content negotiation per taal.
+- Geen voorschrift over taalcode-formaat (BCP 47, ISO 639-1/2/3) in velden of headers.
+- Geen patroon voor meertalige attribuutwaarden (bv. `naam: { nl: "...", en: "..." }` vs. `naam_nl` / `naam_en` vs. taal als query/header).
+- Geen voorschrift voor lokalisatie van foutmeldingen (`application/problem+json` heeft een optionele `instance`, maar `title`/`detail` taal is niet voorgeschreven — ironisch genoeg in samenhang met `/core/doc-language` impliciet NL).
+- De Naming Conventions-module behandelt naamgevingsregels (kebab-case e.d.), niet taal van de inhoud.
+
+Kortom: **er is alleen een impliciete keuze voor Nederlands als interface-taal, en niets over meertaligheid van de gerepresenteerde gegevens.** Daar is dus ook nog wat te halen.
+
+## Wat de NL API Strategie zegt over **tijdreizen**
+
+**Niets** over bitemporaliteit, peilmoment, formele/materiële tijd, historie of temporele queries op resource-niveau. Bevestigd. Wat er wel is:
+
+| Onderwerp | Status in ADR v2.1.0 |
+|---|---|
+| Datum/tijd-formaten | `/core/date-time/format` (RFC 9557 + ISO 8601-1), `/core/date-time/timezone` (UTC in responses, alle offsets in requests), `/core/date-time/date-omit-time-portion`. Puur over notatie, niet over historische bevraging. |
+| Versionering | `/core/uri-version`, `/core/semver`, `/core/version-header`, `/core/transition-period` — over **API-contract**-versies, niet over resource-versies. |
+| Audit trail | Komt alleen voor in de Architectuurmodule §2.3.3.7 als **gateway/logging-capability** (wie raadpleegde wat, wanneer, waarom — doelbinding/AVG), niet als REST-pattern op resources. |
+| Operations | `/core/resource-operations` (sub-resource of `_zoek` patroon) — generiek, niets over `?peilmoment=` of `/historie`. |
+| Hypermedia / Batching | Modules behandelen geen tijdreizen. |
+
+Geen module of design rule benoemt patronen die we wel in de praktijk zien (BRP Haal Centraal `?peilmoment=`, ZGW `registratiedatum`/audittrail, Open Object `?date=`/`?registrationDate=`, Alfresco DRC `?registratieOp=`).
+
+## Bouwstenen die je mee kunt nemen naar de werkgroep
+
+Vanuit het Bitemp Register v06-onderzoek heb je een rijke bron. Concrete voorstellen:
+
+1. **Twee-assige terminologie standaardiseren** (formele tijd vs. materiële tijd, of registratie- vs. geldigheidstijd) met heldere NL-definities.
+2. **Naamgeving querystring-parameters**: Open Object gebruikt `?date=` + `?registrationDate=`, BRP `?peilmoment=`, Alfresco `?registratieOp=` + `?versie=`. Dit verdient een uniforme keuze (bv. `?materieelOp=` / `?formeelOp=` of internationaal `?validAt=` / `?recordedAt=`).
+3. **Formaat**: ISO 8601 / RFC 9557 ligt al vast; sluit daarbij aan voor peilmoment-parameters (incl. tijdzone-regel: UTC in respons).
+4. **Resource-pattern** voor historie: bijv. sub-resource `/{resource}/{id}/_historie` (past binnen `/core/resource-operations` met `_`-prefix conventie) vs. impliciet via querystring.
+5. **Snapshot-semantiek vs. delta-semantiek** (full state op tijdstip vs. wijzigingen tussen tijdstippen).
+6. **Audit-trail vs. tijdreizen** scherp onderscheiden: het ADR/architectuur kent alleen "wie heeft wanneer welke API-call gedaan", niet "wat was de inhoudelijke staat van de resource toen".
+7. **Cache-implicaties**: tijdreizen vs. `Cache-Control: no-store` regel (security headers) — een snapshot op verleden peilmoment is in principe immutable en uitstekend cachebaar.
+8. **Internationale context**: ISO/SQL:2011 application_time/system_time period, OGC API Features `?datetime=`, en de eerder gevonden Common Ground-implementaties als inspiratie.
+
+Zal ik dit als een nieuwe sectie "8. NL API Strategie" toevoegen aan ?
+
+---
+
+## 🧑 User
+
+ja, graag!
+
+---
+
+## 🤖 Assistant
+
+
+```
+
+```
+Nu nog de bronnen aanvullen: 
+```
+
+```
+Sectie 9 toegevoegd aan common-ground-analyse-meertaligheid-tijdreizen.md met:
+
+- **9.1 Meertaligheid** — alleen `/core/interface-language` Sectie 9 toegevoegd aan common-ground-analyse-meertaligheid-tijdreizen.md met:
+
+- **9.1 Meertaligheid** — alleen `/core/interface-language` en `/core/doc-language` (NL als interface-taal); niets over `Accept-Language`, taalcodes, meertalige attribuutwaarden of foutmelding-lokalisatie.
+- **9.2 Tijdreizen** — bevestigd dat de NL API Strategie hier **niets** over zegt; wel verwante onderwerpen (datum/tijd-formaten, API-versionering, gateway-audit-trail) maar geen resource-niveau peilmoment-pattern.
+- **9.3 Bouwstenen voor de werkgroep** — 9 concrete punten (terminologie, naamgeving querystring, formaat, resource-pattern, snapshot vs. delta, audit vs. tijdreizen, cache, cross-register, internationale context).
+- **9.4 Bouwstenen voor meertaligheid (bonus)** — patroonkeuze + `application/problem+json`-lokalisatie.
+
+Bronnen aangevuld met ADR v2.1.0, Architectuurmodule en Kennisplatform-overzicht. Veel succes met de werkgroep!
+
+---
+
+## 🧑 User
+
+het document staat wat plomp in de root. Zou je het in docs willen zetten?
+
+---
+
+## 🧑 User
+
+@agent Try Again
+
+---
+
+## 🧑 User
+
+@agent Try Again
 
 ---

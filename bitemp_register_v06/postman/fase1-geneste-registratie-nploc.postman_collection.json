@@ -20,7 +20,7 @@
           "host": ["{{baseUrl}}"],
           "path": ["registratie", ""]
         },
-        "description": "Server splitst dit blok in 5 wijzigingen (NP, Persoonsidentificatie, Naam, Aanvang, Einde) onder één Registratie. De geneste payload wordt audit-fideel opgeslagen in `Registratie.RequestBody`."
+        "description": "Server splitst dit blok in 4 wijzigingen (NP, Persoonsidentificatie, Naam, Aanvang) onder één Registratie. Er is geen Einde in de payload, dus die wordt niet aangemaakt. De geneste payload wordt audit-fideel opgeslagen in `Registratie.RequestBody`."
       }
     },
     {
@@ -30,7 +30,7 @@
         "header": [{ "key": "Content-Type", "value": "application/json" }],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Klassieke platte opvoer (één representatie per wijziging) — moet onveranderd werken\"\n  },\n  \"wijzigingen\": [\n    { \"opvoer\": { \"natuurlijkpersoon\": { \"id\": 4202 } } },\n    { \"opvoer\": { \"persoonsidentificaties\": { \"natuurlijkpersoon_id\": 4202, \"rel_id\": 1, \"bsn\": \"234567893\", \"ingezetene\": true } } },\n    { \"opvoer\": { \"namen\": { \"natuurlijkpersoon_id\": 4202, \"rel_id\": 1, \"voorletters\": \"K.\", \"roepnaam\": \"Karim\", \"tussenvoegsel\": \"el\", \"achternaam\": \"Idrissi\" } } },\n    { \"opvoer\": { \"aanvang\": { \"natuurlijkpersoon_id\": 4202, \"datum\": \"1990-09-04\" } } }\n  ]\n}"
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Klassieke platte opvoer (één representatie per wijziging) — moet onveranderd werken\"\n  },\n  \"wijzigingen\": [\n    { \"opvoer\": { \"natuurlijkpersoon\": { \"id\": 4202 } } },\n    { \"opvoer\": { \"persoonsidentificatie\": { \"natuurlijkpersoon_id\": 4202, \"rel_id\": 1, \"bsn\": \"234567893\", \"ingezetene\": true } } },\n    { \"opvoer\": { \"naam\": { \"natuurlijkpersoon_id\": 4202, \"rel_id\": 1, \"voorletters\": \"K.\", \"roepnaam\": \"Karim\", \"tussenvoegsel\": \"el\", \"achternaam\": \"Idrissi\" } } },\n    { \"opvoer\": { \"natuurlijkpersoon_aanvang\": { \"natuurlijkpersoon_id\": 4202, \"datum\": \"1990-09-04\" } } }\n  ]\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/registratie/",
@@ -47,7 +47,7 @@
         "header": [{ "key": "Content-Type", "value": "application/json" }],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Geneste opvoer met meervoudige burgerschappen als JSON-array\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"natuurlijkpersoon\": {\n          \"id\": 4203,\n          \"persoonsidentificaties\": { \"rel_id\": 1, \"bsn\": \"345678904\", \"ingezetene\": true },\n          \"namen\": { \"rel_id\": 1, \"voorletters\": \"S.\", \"roepnaam\": \"Sofia\", \"achternaam\": \"Petrova\" },\n          \"burgerschappen\": [\n            { \"rel_id\": 1, \"landcode\": \"NL\", \"nationaliteit\": \"Nederlandse\",  \"aanvang\": \"2010-06-01\" },\n            { \"rel_id\": 2, \"landcode\": \"BG\", \"nationaliteit\": \"Bulgaarse\",   \"aanvang\": \"1992-02-14\" }\n          ],\n          \"aanvang\": { \"datum\": \"1992-02-14\" }\n        }\n      }\n    }\n  ]\n}"
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Geneste opvoer met meervoudige burgerschappen als JSON-array\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"natuurlijkpersoon\": {\n          \"id\": 4203,\n          \"persoonsidentificaties\": { \"rel_id\": 1, \"bsn\": \"345678904\", \"ingezetene\": true },\n          \"namen\": { \"rel_id\": 1, \"voorletters\": \"S.\", \"roepnaam\": \"Sofia\", \"achternaam\": \"Petrova\" },\n          \"burgerschappen\": [\n            { \"rel_id\": 1, \"landcode\": \"NL\", \"nationaliteit\": \"Nederlandse\",  \"aanvang\": {\"datum\": \"2010-06-01\"} },\n            { \"rel_id\": 2, \"landcode\": \"BG\", \"nationaliteit\": \"Bulgaarse\",   \"aanvang\": {\"datum\": \"1992-02-14\"} }\n          ],\n          \"aanvang\": { \"datum\": \"1992-02-14\" }\n        }\n      }\n    }\n  ]\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/registratie/",
@@ -71,7 +71,7 @@
           "host": ["{{baseUrl}}"],
           "path": ["registratie", ""]
         },
-        "description": "Correctie van een eerder geregistreerde naam (request #1). Server splitst in 2 wijzigingen (NP + Naam). Dezelfde geneste payload-vorm als opvoer (Fase 2 brengt PATCH met merge-semantiek)."
+        "description": "Correctie van een eerder geregistreerde naam (request #1). Server genereert 2 wijzigingen: afvoer van de bestaande naam (roepnaam=Anna) + opvoer van de gecorrigeerde naam (roepnaam=Annemarie). De entiteit NP zelf wordt bij correctie niet opnieuw ingevoerd. Fase 2 brengt PATCH met merge-semantiek."
       }
     },
     {
