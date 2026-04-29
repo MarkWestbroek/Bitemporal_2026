@@ -30,6 +30,10 @@ func addMetaRegistryRoutes(router *gin.Engine) {
 		router.GET(basePath, handlers.MakeGetEntitiesByMetaHandler(meta))
 		router.GET(basePath+"/:id", handlers.MakeGetEntityByMetaHandler(meta))
 		router.POST(basePath, handlers.MakeAddEntityByMetaHandler(meta))
+		// FASE 2 (REST/CRUD-laag, 2026-04-29): DELETE per padnaam.
+		// Routes naar de generieke afvoer-handler die intern RegistreerCore aanroept,
+		// zodat audit-trail + transactiegedrag identiek zijn aan POST /registratie/.
+		router.DELETE(basePath+"/:id", handlers.MakeDeleteEntityByMetaHandler(meta))
 	}
 }
 

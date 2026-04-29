@@ -294,6 +294,40 @@ func voegCRUDPathsToe(paths oasMap, basePath string, meta model.TypeMeta) {
 			"parameters":  []oasMap{idPathParameter()},
 			"responses":   detailResponse(meta.Typenaam),
 		},
+		// FASE 2 (REST/CRUD-laag, 2026-04-29): DELETE per padnaam.
+		// Vertaalt intern naar één Afvoer-wijziging via RegistreerCore.
+		// Niet beschikbaar voor types met samengestelde sleutel (PFK); gebruik
+		// daar POST /registratie/ voor.
+		"delete": oasMap{
+			"operationId": "delete" + meta.Typenaam,
+			"summary":     "Voer één " + meta.Typenaam + " af (bitemporeel)",
+			"description": "Voert het record af door een Registratie + Afvoer-wijziging te genereren. " +
+				"Audit-trail en transactiegedrag identiek aan POST /registratie/. " +
+				"Niet ondersteund voor types met samengestelde sleutel (HeeftPFK).",
+			"tags":       []string{tag},
+			"parameters": []oasMap{idPathParameter()},
+			"responses": oasMap{
+				"200": oasMap{
+					"description": "Afgevoerd; response bevat verwijzing naar de aangemaakte registratie",
+					"content": oasMap{
+						"application/json": oasMap{
+							"schema": oasMap{
+								"type": "object",
+								"properties": oasMap{
+									"message":        oasMap{"type": "string"},
+									"registratie_id": oasMap{"type": "integer", "format": "int64"},
+									"tijdstip":       oasMap{"type": "string", "format": "date-time"},
+								},
+							},
+						},
+					},
+				},
+				"400": oasMap{"description": "Type ondersteunt geen DELETE (PFK) of ID ontbreekt"},
+				"404": oasMap{"description": "Niet gevonden"},
+				"409": oasMap{"description": "Reeds afgevoerd"},
+				"500": oasMap{"description": "Interne serverfout"},
+			},
+		},
 	}
 }
 

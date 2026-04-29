@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"reflect"
@@ -10,7 +11,6 @@ import (
 	"time"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
-	"github.com/gin-gonic/gin"
 	"github.com/uptrace/bun"
 )
 
@@ -22,7 +22,7 @@ import (
 //   - versie            = de daadwerkelijke versie-waarde
 //
 // Voor andere types is representatie_id direct de waarde van IDKolom.
-func handleRepresentatieOntOpvoer(c *gin.Context, tx bun.Tx, wijziging model.Wijziging) error {
+func handleRepresentatieOntOpvoer(ctx context.Context, tx bun.Tx, wijziging model.Wijziging) error {
 	typeName := wijziging.Representatienaam
 	targetIDRaw := wijziging.RepresentatieID
 
@@ -93,7 +93,7 @@ func handleRepresentatieOntOpvoer(c *gin.Context, tx bun.Tx, wijziging model.Wij
 		}
 	}
 
-	result, err := query.Exec(c.Request.Context())
+	result, err := query.Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("HANDLER: ont-opvoer update mislukt voor %s: %v", meta.Typenaam, err)
 	}
@@ -108,7 +108,7 @@ func handleRepresentatieOntOpvoer(c *gin.Context, tx bun.Tx, wijziging model.Wij
 
 // handleRepresentatieOntAfvoer maakt een eerdere afvoer ongedaan door afvoer weer leeg te maken.
 // Zie handleRepresentatieOntOpvoer voor de toelichting op versie-based types.
-func handleRepresentatieOntAfvoer(c *gin.Context, tx bun.Tx, wijziging model.Wijziging) error {
+func handleRepresentatieOntAfvoer(ctx context.Context, tx bun.Tx, wijziging model.Wijziging) error {
 	typeName := wijziging.Representatienaam
 	targetIDRaw := wijziging.RepresentatieID
 
@@ -175,7 +175,7 @@ func handleRepresentatieOntAfvoer(c *gin.Context, tx bun.Tx, wijziging model.Wij
 		}
 	}
 
-	result, err := query.Exec(c.Request.Context())
+	result, err := query.Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("HANDLER: ont-afvoer update mislukt voor %s: %v", meta.Typenaam, err)
 	}
@@ -197,7 +197,7 @@ func handleRepresentatieOntAfvoer(c *gin.Context, tx bun.Tx, wijziging model.Wij
 
 handleRepresentatieOpvoer verwerkt opvoer via de metaregistry.
 */
-func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratie model.Registratie,
+func handleRepresentatieOpvoer(ctx context.Context, tx bun.Tx, registratie model.Registratie,
 	entiteitnaam string, entiteitID string, representatienaam string, representatie model.FormeleRepresentatie) error {
 	meta, ok := model.MetaRegistry.GetTypeMeta(representatienaam)
 	if !ok {
@@ -210,7 +210,7 @@ func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratie model.Regi
 	if isHubChildSubtypeMetRelID(meta) {
 		relID, err := haalIntWaardeVoorKolomUitRepresentatie(representatie, "rel_id")
 		if err != nil || relID == 0 {
-			afgeleideRelID, inferErr := leidRelIDVoorHubKindAf(c, tx, meta, representatie)
+			afgeleideRelID, inferErr := leidRelIDVoorHubKindAf(ctx, tx, meta, representatie)
 			if inferErr != nil {
 				return inferErr
 			}
@@ -275,7 +275,7 @@ func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratie model.Regi
 			pfkEntiteitID = eid
 		}
 		// get huidige waarde van het gegevenselement op basis van ID in wijziging record
-		huidigeRep, err := haalRepresentatieUitDB(c, tx, meta, representatie.GetID(), pfkEntiteitID)
+		huidigeRep, err := haalRepresentatieUitDB(ctx, tx, meta, representatie.GetID(), pfkEntiteitID)
 		if err != nil {
 			return err
 		}
@@ -288,7 +288,7 @@ func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratie model.Regi
 			return fmt.Errorf("HANDLER: kan %s met ID %v niet corrigeren, want deze is al afgevoerd op %v", representatienaam, representatie.GetID(), huidigeRep.GetAfvoer())
 		}
 		// voer huidige representatie af en maak wijziging record aan
-		if err := handleRepresentatieAfvoer(c, tx, registratie.ID, registratie.Tijdstip, entiteitnaam, entiteitID, representatienaam, huidigeRep); err != nil {
+		if err := handleRepresentatieAfvoer(ctx, tx, registratie.ID, registratie.Tijdstip, entiteitnaam, entiteitID, representatienaam, huidigeRep); err != nil {
 			return fmt.Errorf("HANDLER: failed to afvoer existing %s for correction: %v", representatienaam, err)
 		}
 		// voer nieuwe representatie op en maak wijziging record aan
@@ -313,7 +313,7 @@ func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratie model.Regi
 	// v06: WEL voor data-subtypes bij correctie (hub-recursie: vorige data-versie afsluiten)
 	if meta.Metatype != model.MetatypeEntiteit && meta.Momentvoorkomen == model.Enkelvoudig {
 		if registratie.IsRegistratie() || isDataSubtype(meta) {
-			if err := sluitActieveEnkelvoudigeVoorgangersAf(c, tx, registratie.ID, registratie.Tijdstip, representatienaam, representatie, meta); err != nil {
+			if err := sluitActieveEnkelvoudigeVoorgangersAf(ctx, tx, registratie.ID, registratie.Tijdstip, representatienaam, representatie, meta); err != nil {
 				return err
 			}
 		}
@@ -331,7 +331,7 @@ func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratie model.Regi
 			if err != nil {
 				return err
 			}
-			if err := checkBovenliggendeEntiteitActief(c, tx, entiteitnaam, entiteitID); err != nil {
+			if err := checkBovenliggendeEntiteitActief(ctx, tx, entiteitnaam, entiteitID); err != nil {
 				return err
 			}
 		}
@@ -346,7 +346,7 @@ func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratie model.Regi
 		// Bij subtype-entiteiten: maak eerst de parent-record aan als deze nog niet bestaat.
 		// TPT patroon: child-tabel heeft PFK naar parent-tabel → parent moet eerst bestaan.
 		if meta.Metatype == model.MetatypeEntiteit && meta.ParentTypenaam != "" {
-			if err := ensureParentRecordBijOpvoer(c, tx, meta, representatie, registratie.Tijdstip); err != nil {
+			if err := ensureParentRecordBijOpvoer(ctx, tx, meta, representatie, registratie.Tijdstip); err != nil {
 				return fmt.Errorf("HANDLER: kon parent-record niet aanmaken voor %s: %v", representatienaam, err)
 			}
 		}
@@ -354,7 +354,7 @@ func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratie model.Regi
 		_, err := tx.NewInsert().
 			Model(representatie).
 			Returning("*").
-			Exec(c.Request.Context())
+			Exec(ctx)
 		if err != nil {
 			return fmt.Errorf("HANDLER: failed to insert %s: %v", representatienaam, err)
 		}
@@ -363,14 +363,14 @@ func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratie model.Regi
 		if meta.Metatype == model.MetatypeEntiteit {
 			entiteitnaam = representatienaam
 			entiteitID = fmt.Sprint(representatie.GetID())
-			if err := persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratie.ID,
+			if err := persisteerWijziging(ctx, tx, model.WijzigingstypeOpvoer, registratie.ID,
 				representatienaam, fmt.Sprint(representatie.GetID()), "", "", nil, registratie.Tijdstip); err != nil {
 				return err
 			}
 		} else {
 			// ** Geen entiteit: bepaal representatieID en versie op basis van meta **
 			repID, versie := bepaalRepIDenVersie(representatie, meta, representatie.GetID)
-			if err := persisteerWijziging(c, tx, model.WijzigingstypeOpvoer, registratie.ID,
+			if err := persisteerWijziging(ctx, tx, model.WijzigingstypeOpvoer, registratie.ID,
 				entiteitnaam, entiteitID, representatienaam, repID, versie, registratie.Tijdstip); err != nil {
 				return err
 			}
@@ -388,7 +388,7 @@ func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratie model.Regi
 		}
 
 		for _, onderliggende := range onderliggendeRepresentaties.GeefOnderliggendeGegevenselementen() {
-			if err := handleRepresentatieOpvoer(c, tx, registratie, entiteitnaam, entiteitID, onderliggende.Typenaam, onderliggende.Representatie); err != nil {
+			if err := handleRepresentatieOpvoer(ctx, tx, registratie, entiteitnaam, entiteitID, onderliggende.Typenaam, onderliggende.Representatie); err != nil {
 				return err
 			}
 		}
@@ -397,7 +397,7 @@ func handleRepresentatieOpvoer(c *gin.Context, tx bun.Tx, registratie model.Regi
 
 }
 
-func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, afvoerTijdstip time.Time,
+func handleRepresentatieAfvoer(ctx context.Context, tx bun.Tx, registratieID int64, afvoerTijdstip time.Time,
 	entiteitnaam string, entiteitID string, representatienaam string, representatie model.FormeleRepresentatie) error {
 
 	/* Scenario 1: Afvoer van hele entiteit met eventueel onderliggende gegevenselementen en/of relaties
@@ -430,7 +430,7 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 	}
 
 	// een reeds afgevoerde representatie mag niet nogmaals worden afgevoerd, dus eerst checken of deze al is afgevoerd, en indien ja, dan foutmelding en transactie afbreken.
-	huidigeRep, err := haalRepresentatieUitDB(c, tx, meta, representatie.GetID(), pfkEntiteitID)
+	huidigeRep, err := haalRepresentatieUitDB(ctx, tx, meta, representatie.GetID(), pfkEntiteitID)
 	if err != nil {
 		return err
 	}
@@ -440,7 +440,7 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 
 	if meta.Metatype != model.MetatypeEntiteit && meta.GESubtype != model.GESubtypeHub {
 		// Eenvoudige afvoer voor non-hub, non-entiteit types (data, plumbing, legacy GE's)
-		if err := updateAfvoerByID(c, tx, meta, representatie.GetID(), pfkEntiteitID, afvoerTijdstip); err != nil {
+		if err := updateAfvoerByID(ctx, tx, meta, representatie.GetID(), pfkEntiteitID, afvoerTijdstip); err != nil {
 			return err
 		}
 
@@ -451,7 +451,7 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 		}
 
 		repID, versie := bepaalRepIDenVersie(huidigeRep, meta, representatie.GetID)
-		return persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
+		return persisteerWijziging(ctx, tx, model.WijzigingstypeAfvoer, registratieID,
 			entiteitnaam, entiteitID, representatienaam, repID, versie, afvoerTijdstip)
 	}
 
@@ -467,10 +467,10 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 		}
 
 		// Afvoer de hub zelf
-		if err := updateAfvoerByID(c, tx, meta, representatie.GetID(), pfkEntiteitID, afvoerTijdstip); err != nil {
+		if err := updateAfvoerByID(ctx, tx, meta, representatie.GetID(), pfkEntiteitID, afvoerTijdstip); err != nil {
 			return err
 		}
-		if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
+		if err := persisteerWijziging(ctx, tx, model.WijzigingstypeAfvoer, registratieID,
 			entiteitnaam, entiteitID, representatienaam, fmt.Sprint(representatie.GetID()), nil, afvoerTijdstip); err != nil {
 			return err
 		}
@@ -494,17 +494,17 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 			}
 
 			scope := hubScopeVoorChild(childMeta, hubEntiteitIDInt, hubRelIDInt)
-			activeIDs, err := haalActieveIDsMetScope(c, tx, childMeta, scope)
+			activeIDs, err := haalActieveIDsMetScope(ctx, tx, childMeta, scope)
 			if err != nil {
 				return err
 			}
 
 			for _, versie := range activeIDs {
-				if err := updateAfvoerMetScope(c, tx, childMeta, versie, scope, afvoerTijdstip); err != nil {
+				if err := updateAfvoerMetScope(ctx, tx, childMeta, versie, scope, afvoerTijdstip); err != nil {
 					return err
 				}
 				v64 := int64(versie)
-				if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
+				if err := persisteerWijziging(ctx, tx, model.WijzigingstypeAfvoer, registratieID,
 					entiteitnaam, entiteitID, childMeta.Typenaam, fmt.Sprint(hubRelIDInt), &v64, afvoerTijdstip); err != nil {
 					return err
 				}
@@ -518,10 +518,10 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 	entiteitID = fmt.Sprint(representatie.GetID())
 
 	// ENTITEIT AFVOER
-	if err := updateAfvoerByID(c, tx, meta, representatie.GetID(), nil, afvoerTijdstip); err != nil {
+	if err := updateAfvoerByID(ctx, tx, meta, representatie.GetID(), nil, afvoerTijdstip); err != nil {
 		return err
 	}
-	if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
+	if err := persisteerWijziging(ctx, tx, model.WijzigingstypeAfvoer, registratieID,
 		entiteitnaam, entiteitID, "", "", nil, afvoerTijdstip); err != nil {
 		return err
 	}
@@ -544,13 +544,13 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 			return fmt.Errorf("HANDLER: no entity id column for %s", childMeta.Typenaam)
 		}
 
-		activeIDs, err := haalActieveIDsGegevenselementUitDB(c, tx, childMeta, fkColumn, entiteitIDInt)
+		activeIDs, err := haalActieveIDsGegevenselementUitDB(ctx, tx, childMeta, fkColumn, entiteitIDInt)
 		if err != nil {
 			return err
 		}
 
 		for _, id := range activeIDs {
-			if err := updateAfvoerByID(c, tx, childMeta, id, entiteitIDInt, afvoerTijdstip); err != nil {
+			if err := updateAfvoerByID(ctx, tx, childMeta, id, entiteitIDInt, afvoerTijdstip); err != nil {
 				return err
 			}
 			// Bij versie-PK types (entity-level plumbing): versie = id, representatieID leeg
@@ -562,7 +562,7 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 			} else {
 				childRepID = fmt.Sprint(id)
 			}
-			if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
+			if err := persisteerWijziging(ctx, tx, model.WijzigingstypeAfvoer, registratieID,
 				entiteitnaam, entiteitID, childMeta.Typenaam, childRepID, childVersie, afvoerTijdstip); err != nil {
 				return err
 			}
@@ -577,7 +577,7 @@ func handleRepresentatieAfvoer(c *gin.Context, tx bun.Tx, registratieID int64, a
 // Bij PFK-types (HeeftPFK=true) is de IDKolom (versie) alleen uniek binnen de
 // entiteit; entiteitID voegt dan een extra WHERE op EntiteitIDKolom toe zodat
 // het juiste record wordt geraakt.
-func updateAfvoerByID(c *gin.Context, tx bun.Tx, meta model.TypeMeta, id any, entiteitID any, afvoerTijdstip time.Time) error {
+func updateAfvoerByID(ctx context.Context, tx bun.Tx, meta model.TypeMeta, id any, entiteitID any, afvoerTijdstip time.Time) error {
 	query := tx.NewUpdate().
 		Table(meta.Tabelnaam).
 		Set("afvoer = ?", afvoerTijdstip).
@@ -588,7 +588,7 @@ func updateAfvoerByID(c *gin.Context, tx bun.Tx, meta model.TypeMeta, id any, en
 		query = query.Where(fmt.Sprintf("%s = ?", meta.EntiteitIDKolom), entiteitID)
 	}
 
-	_, err := query.Exec(c.Request.Context())
+	_, err := query.Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("HANDLER: failed to update %s afvoer: %v", meta.Typenaam, err)
 	}
@@ -598,7 +598,7 @@ func updateAfvoerByID(c *gin.Context, tx bun.Tx, meta model.TypeMeta, id any, en
 
 // haalRepresentatieUitDB haalt een representatie op uit de DB op basis van ID.
 // Bij PFK-types voegt entiteitID een extra WHERE toe (zie updateAfvoerByID).
-func haalRepresentatieUitDB(c *gin.Context, tx bun.Tx, meta model.TypeMeta, id any, entiteitID any) (model.FormeleRepresentatie, error) {
+func haalRepresentatieUitDB(ctx context.Context, tx bun.Tx, meta model.TypeMeta, id any, entiteitID any) (model.FormeleRepresentatie, error) {
 	if isZeroID(id) {
 		return nil, fmt.Errorf("HANDLER: lege ID voor %s", meta.Typenaam)
 	}
@@ -623,7 +623,7 @@ func haalRepresentatieUitDB(c *gin.Context, tx bun.Tx, meta model.TypeMeta, id a
 			return q
 		}).
 		Limit(1).
-		Scan(c.Request.Context())
+		Scan(ctx)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("HANDLER: geen %s gevonden met %s=%v", meta.Typenaam, meta.IDKolom, id)
@@ -634,7 +634,7 @@ func haalRepresentatieUitDB(c *gin.Context, tx bun.Tx, meta model.TypeMeta, id a
 	return rep, nil
 }
 
-func haalActieveIDsGegevenselementUitDB(c *gin.Context, tx bun.Tx, meta model.TypeMeta, fkColumn string, entiteitID int) ([]int, error) {
+func haalActieveIDsGegevenselementUitDB(ctx context.Context, tx bun.Tx, meta model.TypeMeta, fkColumn string, entiteitID int) ([]int, error) {
 	ids := make([]int, 0)
 	query := tx.NewSelect().
 		Table(meta.Tabelnaam).
@@ -642,7 +642,7 @@ func haalActieveIDsGegevenselementUitDB(c *gin.Context, tx bun.Tx, meta model.Ty
 		Where(fmt.Sprintf("%s = ?", fkColumn), entiteitID).
 		Where("opvoer IS NOT NULL").
 		Where("afvoer IS NULL")
-	if err := query.Scan(c.Request.Context(), &ids); err != nil && err != sql.ErrNoRows {
+	if err := query.Scan(ctx, &ids); err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("HANDLER: failed to query active %s records: %v", meta.Typenaam, err)
 	}
 
@@ -652,7 +652,7 @@ func haalActieveIDsGegevenselementUitDB(c *gin.Context, tx bun.Tx, meta model.Ty
 /*
 ===== Maak wijziging aan in wijzigingstabel ======
 */
-func persisteerWijziging(c *gin.Context, tx bun.Tx, wijzigingstype model.WijzigingstypeEnum,
+func persisteerWijziging(ctx context.Context, tx bun.Tx, wijzigingstype model.WijzigingstypeEnum,
 	registratieID int64, entiteitnaam string, entiteitID string,
 	representatienaam string, representatieID string, versie *int64, registratietijdstip time.Time) error {
 	wijziging := model.Wijziging{
@@ -668,7 +668,7 @@ func persisteerWijziging(c *gin.Context, tx bun.Tx, wijzigingstype model.Wijzigi
 
 	_, err := tx.NewInsert().
 		Model(&wijziging).
-		Exec(c.Request.Context())
+		Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to insert wijziging: %v", err)
 	}
@@ -752,7 +752,7 @@ func vindEntiteitContext(entiteitnaam string, entiteitID string, representatiena
 	return entiteitnaam, entiteitID, nil
 }
 
-func checkBovenliggendeEntiteitActief(c *gin.Context, tx bun.Tx, entiteitnaam string, entiteitID string) error {
+func checkBovenliggendeEntiteitActief(ctx context.Context, tx bun.Tx, entiteitnaam string, entiteitID string) error {
 	entiteitMeta, ok := model.MetaRegistry.GetTypeMeta(entiteitnaam)
 	if !ok {
 		return fmt.Errorf("HANDLER: geen meta gevonden voor bovenliggende entiteit %s", entiteitnaam)
@@ -763,7 +763,7 @@ func checkBovenliggendeEntiteitActief(c *gin.Context, tx bun.Tx, entiteitnaam st
 		entityIDAny = intID
 	}
 
-	entiteitRep, err := haalRepresentatieUitDB(c, tx, entiteitMeta, entityIDAny, nil) // entiteiten hebben geen PFK
+	entiteitRep, err := haalRepresentatieUitDB(ctx, tx, entiteitMeta, entityIDAny, nil) // entiteiten hebben geen PFK
 	if err != nil {
 		return err
 	}
@@ -774,7 +774,7 @@ func checkBovenliggendeEntiteitActief(c *gin.Context, tx bun.Tx, entiteitnaam st
 	return nil
 }
 
-func sluitActieveEnkelvoudigeVoorgangersAf(c *gin.Context, tx bun.Tx, registratieID int64, registratietijdstip time.Time,
+func sluitActieveEnkelvoudigeVoorgangersAf(ctx context.Context, tx bun.Tx, registratieID int64, registratietijdstip time.Time,
 	representatienaam string, representatie model.FormeleRepresentatie, meta model.TypeMeta) error {
 	if meta.Metatype == model.MetatypeEntiteit || meta.Momentvoorkomen != model.Enkelvoudig {
 		return nil
@@ -804,7 +804,7 @@ func sluitActieveEnkelvoudigeVoorgangersAf(c *gin.Context, tx bun.Tx, registrati
 		return fmt.Errorf("HANDLER: bovenliggende %s id ontbreekt voor %s", parentTypenaam, representatienaam)
 	}
 
-	activeIDs, err := haalActieveIDsGegevenselementUitDB(c, tx, meta, fkColumn, entiteitID)
+	activeIDs, err := haalActieveIDsGegevenselementUitDB(ctx, tx, meta, fkColumn, entiteitID)
 
 	// v06: Voor hub-child subtypes (_Data/_Aanvang/_Einde onder een hub/relatie) is de scope
 	// compound: (entiteitID, rel_id). Zonder rel_id filter zouden we data van ALLE hubs vinden.
@@ -816,7 +816,7 @@ func sluitActieveEnkelvoudigeVoorgangersAf(c *gin.Context, tx bun.Tx, registrati
 			return fmt.Errorf("HANDLER: kon rel_id niet bepalen voor %s: %v", representatienaam, err)
 		}
 		scope := map[string]any{fkColumn: entiteitID, "rel_id": relID}
-		scopedIDs, scopeErr := haalActieveIDsMetScope(c, tx, meta, scope)
+		scopedIDs, scopeErr := haalActieveIDsMetScope(ctx, tx, meta, scope)
 		if scopeErr != nil {
 			return scopeErr
 		}
@@ -842,12 +842,12 @@ func sluitActieveEnkelvoudigeVoorgangersAf(c *gin.Context, tx bun.Tx, registrati
 		// v06: data-subtypes gebruiken compound scope (entiteitID + rel_id) voor afvoer.
 		if isDataSubtype(meta) && relID != 0 {
 			scope := map[string]any{fkColumn: entiteitID, "rel_id": relID}
-			if err := updateAfvoerMetScope(c, tx, meta, id, scope, registratietijdstip); err != nil {
+			if err := updateAfvoerMetScope(ctx, tx, meta, id, scope, registratietijdstip); err != nil {
 				return fmt.Errorf("HANDLER: afvoer van voorganger %s id=%v mislukt: %v", representatienaam, id, err)
 			}
 		} else {
 			// updateAfvoerByID voegt automatisch EntiteitIDKolom toe bij PFK-types.
-			if err := updateAfvoerByID(c, tx, meta, id, entiteitID, registratietijdstip); err != nil {
+			if err := updateAfvoerByID(ctx, tx, meta, id, entiteitID, registratietijdstip); err != nil {
 				return fmt.Errorf("HANDLER: afvoer van voorganger %s id=%v mislukt: %v", representatienaam, id, err)
 			}
 		}
@@ -863,7 +863,7 @@ func sluitActieveEnkelvoudigeVoorgangersAf(c *gin.Context, tx bun.Tx, registrati
 		} else {
 			voorgangerRepID = fmt.Sprint(id)
 		}
-		if err := persisteerWijziging(c, tx, model.WijzigingstypeAfvoer, registratieID,
+		if err := persisteerWijziging(ctx, tx, model.WijzigingstypeAfvoer, registratieID,
 			parentTypenaam, fmt.Sprint(entiteitID), representatienaam, voorgangerRepID, voorgangerVersie, registratietijdstip); err != nil {
 			return err
 		}
@@ -952,7 +952,7 @@ func zetIntWaardeVoorKolomOpRepresentatie(representatie any, kolomnaam string, n
 	return fmt.Errorf("kolom %s niet gevonden in representatie", kolomnaam)
 }
 
-func leidRelIDVoorHubKindAf(c *gin.Context, tx bun.Tx, meta model.TypeMeta, representatie any) (int, error) {
+func leidRelIDVoorHubKindAf(ctx context.Context, tx bun.Tx, meta model.TypeMeta, representatie any) (int, error) {
 	if meta.BovenliggendTypenaam == "" {
 		return 0, fmt.Errorf("HANDLER: kan rel_id voor %s niet afleiden: er is geen bovenliggend hubtype geconfigureerd", meta.Typenaam)
 	}
@@ -969,7 +969,7 @@ func leidRelIDVoorHubKindAf(c *gin.Context, tx bun.Tx, meta model.TypeMeta, repr
 		return 0, fmt.Errorf("HANDLER: kan rel_id voor %s niet afleiden: veld %s ontbreekt of is 0 in de request; stuur rel_id expliciet mee voor hub-kinderen", meta.Typenaam, hubMeta.EntiteitIDKolom)
 	}
 
-	actieveHubIDs64, err := haalActieveIDsMetScope(c, tx, hubMeta, map[string]any{hubMeta.EntiteitIDKolom: entiteitID})
+	actieveHubIDs64, err := haalActieveIDsMetScope(ctx, tx, hubMeta, map[string]any{hubMeta.EntiteitIDKolom: entiteitID})
 	if err != nil {
 		return 0, err
 	}
@@ -1284,7 +1284,7 @@ func isHubChildSubtypeMetRelID(meta model.TypeMeta) bool {
 // haalActieveIDsMetScope haalt actieve (opvoer IS NOT NULL, afvoer IS NULL) record-IDs
 // (van meta.IDKolom) op, gefilterd door de meegegeven scope.
 // Scope is een map van kolomnaam → waarde voor de WHERE-clausules.
-func haalActieveIDsMetScope(c *gin.Context, tx bun.Tx, meta model.TypeMeta, scope map[string]any) ([]int64, error) {
+func haalActieveIDsMetScope(ctx context.Context, tx bun.Tx, meta model.TypeMeta, scope map[string]any) ([]int64, error) {
 	ids := make([]int64, 0)
 	query := tx.NewSelect().
 		Table(meta.Tabelnaam).
@@ -1294,7 +1294,7 @@ func haalActieveIDsMetScope(c *gin.Context, tx bun.Tx, meta model.TypeMeta, scop
 	for col, val := range scope {
 		query = query.Where(fmt.Sprintf("%s = ?", col), val)
 	}
-	if err := query.Scan(c.Request.Context(), &ids); err != nil && err != sql.ErrNoRows {
+	if err := query.Scan(ctx, &ids); err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("HANDLER: failed to query active %s records: %v", meta.Typenaam, err)
 	}
 	return ids, nil
@@ -1302,7 +1302,7 @@ func haalActieveIDsMetScope(c *gin.Context, tx bun.Tx, meta model.TypeMeta, scop
 
 // updateAfvoerMetScope zet het afvoer-tijdstip op een record, gefilterd door ID + extra scope.
 // Scope bevat aanvullende WHERE-clausules (bijv. entiteitIDKolom en rel_id).
-func updateAfvoerMetScope(c *gin.Context, tx bun.Tx, meta model.TypeMeta, id any, scope map[string]any, afvoerTijdstip time.Time) error {
+func updateAfvoerMetScope(ctx context.Context, tx bun.Tx, meta model.TypeMeta, id any, scope map[string]any, afvoerTijdstip time.Time) error {
 	query := tx.NewUpdate().
 		Table(meta.Tabelnaam).
 		Set("afvoer = ?", afvoerTijdstip).
@@ -1310,7 +1310,7 @@ func updateAfvoerMetScope(c *gin.Context, tx bun.Tx, meta model.TypeMeta, id any
 	for col, val := range scope {
 		query = query.Where(fmt.Sprintf("%s = ?", col), val)
 	}
-	_, err := query.Exec(c.Request.Context())
+	_, err := query.Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("HANDLER: failed to update %s afvoer: %v", meta.Typenaam, err)
 	}
@@ -1333,7 +1333,7 @@ func hubScopeVoorChild(childMeta model.TypeMeta, entiteitID int, relID int) map[
 // van het TPT (Table-per-Type) patroon. De child-entiteitstabel heeft een PFK naar de
 // parent-tabel, dus de parent moet bestaan voordat het child-record kan worden ge-inserted.
 // Werkt recursief: als de parent zelf ook een subtype is, wordt diens parent eerst aangemaakt.
-func ensureParentRecordBijOpvoer(c *gin.Context, tx bun.Tx, childMeta model.TypeMeta, childRep model.FormeleRepresentatie, opvoerTijdstip time.Time) error {
+func ensureParentRecordBijOpvoer(ctx context.Context, tx bun.Tx, childMeta model.TypeMeta, childRep model.FormeleRepresentatie, opvoerTijdstip time.Time) error {
 	parentMeta, ok := model.MetaRegistry.GetTypeMeta(childMeta.ParentTypenaam)
 	if !ok {
 		return fmt.Errorf("parent type %s niet gevonden in MetaRegistry", childMeta.ParentTypenaam)
@@ -1350,7 +1350,7 @@ func ensureParentRecordBijOpvoer(c *gin.Context, tx bun.Tx, childMeta model.Type
 	count, err := tx.NewSelect().
 		Model(parentRep).
 		Where(parentMeta.IDKolom+" = ?", childID).
-		Count(c.Request.Context())
+		Count(ctx)
 	if err != nil {
 		return fmt.Errorf("kon parent %s niet opzoeken: %v", parentMeta.Typenaam, err)
 	}
@@ -1372,7 +1372,7 @@ func ensureParentRecordBijOpvoer(c *gin.Context, tx bun.Tx, childMeta model.Type
 	// Recursie: als de parent zelf ook een subtype is, maak eerst diens parent aan.
 	if parentMeta.ParentTypenaam != "" {
 		if fRep, ok := newParent.(model.FormeleRepresentatie); ok {
-			if err := ensureParentRecordBijOpvoer(c, tx, parentMeta, fRep, opvoerTijdstip); err != nil {
+			if err := ensureParentRecordBijOpvoer(ctx, tx, parentMeta, fRep, opvoerTijdstip); err != nil {
 				return err
 			}
 		}
@@ -1380,7 +1380,7 @@ func ensureParentRecordBijOpvoer(c *gin.Context, tx bun.Tx, childMeta model.Type
 
 	_, err = tx.NewInsert().
 		Model(newParent).
-		Exec(c.Request.Context())
+		Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("kon parent %s record niet aanmaken: %v", parentMeta.Typenaam, err)
 	}

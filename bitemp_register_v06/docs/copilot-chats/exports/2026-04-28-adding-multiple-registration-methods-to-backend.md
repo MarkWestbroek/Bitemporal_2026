@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-28 14:28
 - **Sessie-ID**: `fc469233-069a-4f14-9910-2d7c6a1d94cb`
-- **Berichten**: 37
+- **Berichten**: 43
 
 ---
 
@@ -997,5 +997,154 @@ Alles opgelost:
 - **`entiteitRelatieField`** verwijderd — alleen  (de variant met expliciete PK) werd gebruikt
 - **`isTekstFormaat`** verwijderd — nergens aangeroepen  
 - **4 parameters** hernoemd naar  (Go-conventie voor bewust ongebruikte params):  in ,  in ,  in ,  in ,  in 
+
+---
+
+## 🧑 User
+
+okee, we waren even afgeleid door bugs, maar nu lijkt alles te werken. Kunnen we verder met de volgende fasen? Wil je dat nog even samenvatten?
+
+Zijn alle relevante wijzingen gedocumenteerd?
+
+---
+
+## 🤖 Assistant
+
+Goed. Nu de BACKLOG aanvullen met de twee fixes van vandaag (Padnaam-fallback + Input-struct sanering), en ook de plan.md bijwerken:  
+```
+
+```
+Documentatie bij. Nu de samenvatting:
+
+---
+
+## Status & samenvatting
+
+### ✅ Klaar (Fase 1 + cross-cutting)
+- **Fase 1**: Geneste full-payload in `POST /registratie/`; server splitst in N wijzigingen onder één Registratie. Originele payload audit-fideel in `Registratie.RequestBody`.
+- **FK-propagatie**: Client hoeft  niet mee te sturen in geneste children.
+- **Padnaam-fallback** (vandaag): Flat format werkt nu ook met meervoud-keys.
+- **Input-struct sanering** (vandaag): `Aanvang`/`Einde` als directe `*Date` weggehaald uit Input-structs van materiële GE's; ze leven correct als onderliggende GE's.
+
+Documentatie bijgewerkt in docs/BACKLOG.md en sessieplan.
+
+### 🟡 Volgende fasen (in plan-volgorde)
+
+**Fase 0 — refactor `RegistreerCore`** (voorwaarde voor 2/3)
+- Extract pure functie `RegistreerCore(ctx, db, req, audit)` uit `RegistreerMetNieuweAanpak`.
+- Helpers omzetten van `*gin.Context` naar  niet mee te sturen in geneste children.
+- **Padnaam-fallback** (vandaag): Flat format werkt nu ook met meervoud-keys.
+- **Input-struct sanering** (vandaag): `Aanvang`/`Einde` als directe `*Date` weggehaald uit Input-structs van materiële GE's; ze leven correct als onderliggende GE's.
+
+Documentatie bijgewerkt in docs/BACKLOG.md en sessieplan.
+
+### 🟡 Volgende fasen (in plan-volgorde)
+
+**Fase 0 — refactor `RegistreerCore`** (voorwaarde voor 2/3)
+- Extract pure functie `RegistreerCore(ctx, db, req, audit)` uit `RegistreerMetNieuweAanpak`.
+- Helpers omzetten van `*gin.Context` naar `context.Context`.
+- Doel: één engine die door REST/CRUD én GraphQL wordt aangeroepen.
+
+**Fase 2 — REST/CRUD per padnaam**
+-  met JSON Merge Patch (RFC 7396).
+- .
+- Diff-engine  vertaalt patch-body naar wijzigingen.
+- Query parameters: `?modus=registratie|correctie` (default `registratie`); header `Prefer: return=representation`.
+- OpenAPI uitbreiden met PATCH/DELETE per padnaam.
+
+**Fase 3 — GraphQL Command-laag**
+- Sterk-getypeerde inputs  /  per representatie, gegenereerd uit MetaRegistry.
+- Mutations: , , `voer<Type>Af`,  → delegeren naar `RegistreerCore`.
+- Bestaande JSONScalar-mutations blijven voor back-compat.
+
+### Suggestie volgorde
+**Fase 0 eerst** — kleine, technische refactor, geen functionele verandering, en blokkeert 2 én 3. Daarna Fase 2 (grootste user-visible meerwaarde: REST PATCH/DELETE) en tenslotte Fase 3.
+
+Welke fase wil je oppakken?
+
+---
+
+## 🧑 User
+
+In deze volgorde: 0, 2, 3 zoals je voorstelt. Als je doorkunt, kun je doorgaan. Anders even melden. Wil je documenteren en ook zorgen dat er voldoende testdekking is?
+
+---
+
+## 🤖 Assistant
+
+Ik begin met Fase 0. Eerst onderzoek ik de huidige `RegistreerMetNieuweAanpak`-structuur:    Laat ik kijken wat de handle-helpers van  (gin.Context) verwachten:   Mechanische refactor met sed (helpers gebruiken alleen ):   Nu de imports in dat bestand fixen:   
+```
+
+```
+Nu de callsites in  updaten naar :     
+```
+
+```
+Build groen. Helpers zijn nu pure `context.Context` consumers. Nu fase 2 — extract `RegistreerCore`. Eerst de hele handler nog eens doorlopen om te plannen: Nu de gin-wrapper afslanken:  Build groen. Nu tests draaien om te verifiëren dat de refactor geen regressie geeft:     Alle 4 nieuwe tests groen + alle bestaande tests groen. Nu volledige testsuite + linters checken:     Alles groen. Fase 0 is afgerond. Nu documentatie bijwerken en todo's bijwerken:  
+```
+
+```
+Fase 0 ✅ klaar. Nu **Fase 2** — REST/CRUD per padnaam met PATCH (JSON Merge Patch RFC 7396), DELETE, diff-engine. Eerst context: bestaande generieke handlers en routes-registratie:      Gegeven dat PATCH-semantiek (correctie vs. registratie, ID-allocatie, RFC 7396 op nested trees) wezenlijke ontwerpkeuzes raakt, lever ik in deze turn de duidelijk afgebakende delen op (DELETE + diff-engine skeleton + tests + OpenAPI), en check in voor PATCH. Eerst check welke afvoer-pad het bestaande engine kent:     Nu de DELETE handler + diff-engine skeleton + routing + OpenAPI: Nu route registreren + OpenAPI bijwerken:     
+```
+
+```
+Nu OpenAPI bijwerken — DELETE toevoegen aan :     
+```
+
+```
+Build + test:     Alles groen. Nu unit-test voor de DELETE-handler. Eerst kijken naar typen in MetaRegistry voor een testbaar PFK-loos type:     Nu test voor DELETE:  3/3 PASS. Volledige suite:      Alles groen. Documentatie bijwerken:     
+```
+
+```
+Fase 2 — DELETE deel afgerond en gedocumenteerd. Status:
+
+**Wat opgeleverd:**
+- handlers/crud_handlers.go — `MakeDeleteEntityByMetaHandler` delegeert naar  (één engine, één audit-pad).
+- routes/addroutes_helper.go —  route.
+- handlers/openapi_generator.go — `delete`-operatie op  met 200/400/404/409/500 responses.
+- handlers/crud_handlers_test.go — 3 tests (PFK-afwijzing, 404, happy-path delegatie). Alles groen, volledige suite groen.
+- docs/BACKLOG.md bijgewerkt; Fase 2 gesplitst in DELETE ✅ + PATCH 🟡.
+
+**Designcheckpoint vóór PATCH** — er zijn meerdere semantische keuzes te maken die ik liever met je afstem voordat ik de diff-engine bouw:
+
+1. **Vlak vs. genest.** Entiteit-rijen hebben buiten ID/materiele plumbing weinig velden — de meeste data leeft in onderliggende GE's. Pure flat PATCH op  is daarom vooral zinvol voor `_Data` rijen, maar die hebben composite keys (PFK) die niet via één URL-id adresseerbaar zijn. Voorstel: PATCH alleen via  (geneste merge-patch via diff-engine).
+2. **Modus.** Plan.md beschrijft `?modus=registratie|correctie` (default ). Bij `correctie` worden nieuwe IDs gegenereerd — dat is wezenlijk anders dan een "edit in place" semantiek. Bevestig je dat default  correct is, of wil je `correctie` als default voor PATCH?
+3. **Concurrency.** Out-of-scope per BACKLOG (geen `If-Match`/ETag). Bevestigen?
+
+Wil je dat ik (a) doorga met de `/full/...` PATCH + diff-engine op basis van bovenstaande aannames, (b) eerst expliciet bevestiging op deze keuzes, of (c) eerst Fase 3 (GraphQL typed mutations) starten?
+
+---
+
+## 🧑 User
+
+1. Ja, mee eens, een ENT is niet te wijzigen behalve de onderliggende model-GE's en RELs en de plumbing GE's aanvang en einde. Dus ook niet te corrigeren. Dus een Patch op een ENT is zinloos / onbestaanbaar.
+- hoe is formaat van full als je gaat registreren? Is het dan praktisch hetzelfde als het stukje json binnenin een wijziging in /registratie? Of zelfs geheel identiek. Dat laatste zou eigenlijk het beste zijn! Dan kun je de unmarshall hergebruiken of een stukje ervan? Hoe werkt dat?
+
+2. helemaal correct. Registratie is default, correctie de uitzondering. Denk er aan dat een registratie van een enkelvoudige GE/REL de voorgaande afsluit. Maar dat hoef je niet zelf te doen, dat doet als het goed is dan de generieke en reeds bestaande logica. Wil je dat expliciet bevestigen?
+- een reg van een GE/REL heeft geen id van die GE/REL nodig.
+- een correctie wel: we moeten immers weten welke wordt gecorrigeerd. De huidige data van het te corrigeren element (GE of REL dus) doet er niet toe, alleen het id. Hoe gaat dit in de payload eruit zien? Wil je dat eerst laten zien?
+
+3. Ja. Wel belangrijk. MOeten we wel over nadenken. Wat bedoel je met een If-Match / Etag? Je bedoelt dat er geen concurrent edits op hetzelfde record mogelijk moeten zijn. Doet de DB dat niet deels met de transactie? Hoe zou je dat aanpakken? Graag een iets duidelijker beeld dan alleen op de backlog zetten.
+
+Wel hierna eerst verder met de full PATCH en daarna de GQL starten
+
+3.
+
+---
+
+## 🤖 Assistant
+
+ GET-resultaat) en produceert paren `(Afvoer-oud, Opvoer-nieuw)` per gewijzigd onderliggend GE/REL.
+2. Resulterende lijst `[]WijzigingRequest` gaat ongewijzigd door `RegistreerCore` (Fase 0).
+
+**Voordeel:** geen tweede unmarshall-pad, geen tweede schema — full-shape ≡ wijziging-shape ≡ output van bestaande GET `/full/...`. Roundtrip GET → edit → PATCH werkt symmetrisch.
+
+**Bevestiging op jouw punt over ENT:** correct — een ENT zelf is niet patchable. PATCH/full opereert op de onderliggende GE's/RELs én op de plumbing-GE's `aanvang`/`einde`. De ENT-wrapper dient alleen als anker (). De diff-engine zal velden direct op ENT-niveau (anders dan  en de JSON-rolnamen van onderliggende GE's/RELs) negeren of als 400 afwijzen.
+
+---
+
+## 2. Registratie vs. correctie — payload + sluit-vorige-af
+
+**Bevestigd:** Bij modus `registratie` doet de bestaande engine in handlers/registration_helpers_generiek.go (`handleRepresentatieOpvoer`) al automatisch de afvoer van het voorgaande enkelvoudige GE/REL — die logica wordt niet door de 
 
 ---
