@@ -392,7 +392,7 @@ function TreeNode({ node, style }) {
 
 // ─── Hoofdcomponent ─────────────────────────────────────────
 
-export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram, onImportDomein, onExportDomein, onNieuwDomein, onRenameDiagram }) {
+export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram, onImportDomein, onExportDomein, onNieuwDomein, onRenameDiagram, onDeleteDiagram }) {
   const elements = useModelStore((s) => s.elements);
   const structuralEdges = useModelStore((s) => s.structuralEdges);
   const diagrams = useModelStore((s) => s.diagrams);
@@ -485,6 +485,65 @@ export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram, onImpor
           }
           break;
         }
+        case "verwijderDiagram": {
+          if (!nodeData.diagramId) break;
+          const store = useModelStore.getState();
+          const diag = store.diagrams[nodeData.diagramId];
+          const naam = nodeData.name || nodeData.diagramId;
+          const nNodes = diag?.nodes?.length || 0;
+          const nEdges = diag?.edges?.length || 0;
+          const tellingTekst = (nNodes === 0 && nEdges === 0)
+            ? ""
+            : `\n\nHet diagram bevat ${nNodes} node${nNodes === 1 ? "" : "s"} en ${nEdges} edge${nEdges === 1 ? "" : "s"}.`
+            + "\nElementen zelf blijven in het model staan — alleen het diagram (de visuele weergave) wordt verwijderd.";
+          if (window.confirm(`Weet je zeker dat je het diagram "${naam}" wilt verwijderen?${tellingTekst}`)) {
+            store.deleteDiagram(nodeData.diagramId);
+            onDeleteDiagram?.(nodeData.diagramId);
+          }
+          break;
+        }
+        case "verwijderDomein": {
+          const store = useModelStore.getState();
+          const naam = nodeData.name;
+          if (!naam || naam === "(geen domein)") {
+            window.alert("Het pseudo-domein '(geen domein)' kan niet worden verwijderd.");
+            break;
+          }
+          // Tel elementen + diagrammen in dit domein
+          const elsInDomein = Object.values(store.elements).filter((e) => e.domein === naam);
+          const diagsInDomein = Object.entries(store.diagrams)
+            .filter(([, d]) => (d.domein || null) === naam)
+            .map(([id]) => id);
+          const nEls = elsInDomein.length;
+          const nDiags = diagsInDomein.length;
+          if (nEls === 0 && nDiags === 0) {
+            if (window.confirm(`Verwijder leeg domein "${naam}"?`)) {
+              store.removeDomain(naam);
+            }
+            break;
+          }
+          const eersteVraag =
+            `Domein "${naam}" bevat:\n`
+            + `  • ${nEls} element${nEls === 1 ? "" : "en"}\n`
+            + `  • ${nDiags} diagram${nDiags === 1 ? "" : "men"}\n\n`
+            + `OK = verwijder het domein. Elementen behouden hun gegevens en verschijnen onder "(geen domein)". Diagrammen blijven bestaan.\n`
+            + `Annuleren = niets doen.`;
+          if (!window.confirm(eersteVraag)) break;
+          const tweedeVraag =
+            `Wil je ook de ${nEls} element${nEls === 1 ? "" : "en"} en ${nDiags} diagram${nDiags === 1 ? "" : "men"} écht verwijderen?\n\n`
+            + `OK = ja, verwijder alles (cascade).\n`
+            + `Annuleren = nee, behoud elementen en diagrammen (alleen domein-naam weg).`;
+          const cascade = window.confirm(tweedeVraag);
+          if (cascade) {
+            for (const el of elsInDomein) store.deleteElement(el.id);
+            for (const dId of diagsInDomein) {
+              store.deleteDiagram(dId);
+              onDeleteDiagram?.(dId);
+            }
+          }
+          store.removeDomain(naam);
+          break;
+        }
         case "nieuwEntiteit":
           voegNieuwRepToe("entiteit", { domein: nodeData.name === "(geen domein)" ? "" : nodeData.name });
           break;
@@ -536,7 +595,7 @@ export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram, onImpor
         }
       }
     },
-    [setSelectedElementId, onCreateDiagram, onOpenDiagram, onImportDomein, onExportDomein]
+    [setSelectedElementId, onCreateDiagram, onOpenDiagram, onImportDomein, onExportDomein, onRenameDiagram, onDeleteDiagram]
   );
 
   const handleSelect = useCallback(

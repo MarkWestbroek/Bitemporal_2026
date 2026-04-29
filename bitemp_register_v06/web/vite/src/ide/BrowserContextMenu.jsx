@@ -31,6 +31,8 @@ const MENU_ITEMS = {
   exporteerDomein: { label: "💾 Exporteer domein…", types: ["domain"] },
   separator3: { separator: true },
   verwijder: { label: "🗑️ Verwijder uit model", types: ["entiteit", "gegevenselement", "relatie", "enumeratie", "gegevenstype", "referentielijstInstantie"] },
+  verwijderDiagram: { label: "🗑️ Verwijder diagram…", types: ["diagram"] },
+  verwijderDomein: { label: "🗑️ Verwijder domein…", types: ["domain"] },
   nieuwDiagram: { label: "➕ Nieuw diagram", types: ["diagrams", "domain"] },
   openDiagram: { label: "📐 Open diagram", types: ["diagram"] },
 };

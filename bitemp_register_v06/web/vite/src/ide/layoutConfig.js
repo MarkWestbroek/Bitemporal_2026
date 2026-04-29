@@ -68,6 +68,27 @@ export function renameDiagramTab(model, diagramId, nieuweNaam) {
 }
 
 /**
+ * Sluit de FlexLayout-tab(s) van een diagram. Als het diagram in
+ * meerdere tabsets open staat, worden alle tabs gesloten. Als de
+ * tab niet open staat, doet deze functie niets.
+ * @param {FlexLayout.Model} model
+ * @param {string} diagramId
+ */
+export function closeDiagramTab(model, diagramId) {
+  const teVerwijderen = [];
+  model.visitNodes((node) => {
+    if (node.getType?.() !== "tab") return;
+    if (node.getComponent?.() !== COMP_DIAGRAM) return;
+    if ((node.getConfig?.() || {}).diagramId === diagramId) {
+      teVerwijderen.push(node.getId());
+    }
+  });
+  for (const id of teVerwijderen) {
+    model.doAction(FlexLayout.Actions.deleteTab(id));
+  }
+}
+
+/**
  * Voeg een nieuwe diagram-tab toe aan het layout model.
  * @param {FlexLayout.Model} model
  * @param {string} diagramId

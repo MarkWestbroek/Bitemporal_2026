@@ -26,6 +26,7 @@ import {
   openDiagramTab,
   openBestandenTab,
   renameDiagramTab,
+  closeDiagramTab,
   COMP_BROWSER,
   COMP_DIAGRAM,
   COMP_PROPERTIES,
@@ -294,6 +295,16 @@ export default function IdePage() {
   const handleRenameDiagram = useCallback(
     (diagramId, nieuweNaam) => {
       renameDiagramTab(layoutModel, diagramId, nieuweNaam);
+    },
+    [layoutModel]
+  );
+
+  // ── Diagram verwijderen: sluit eventuele open tab(s) ─────
+  // De store-mutatie (deleteDiagram) gebeurt al in ProjectBrowser; deze
+  // callback ruimt alleen de FlexLayout-tab op.
+  const handleDeleteDiagram = useCallback(
+    (diagramId) => {
+      closeDiagramTab(layoutModel, diagramId);
     },
     [layoutModel]
   );
@@ -741,6 +752,7 @@ export default function IdePage() {
                 onExportDomein={handleExportDomein}
                 onNieuwDomein={handleNieuwDomein}
                 onRenameDiagram={handleRenameDiagram}
+                onDeleteDiagram={handleDeleteDiagram}
               />
             </ErrorBoundary>
           );
