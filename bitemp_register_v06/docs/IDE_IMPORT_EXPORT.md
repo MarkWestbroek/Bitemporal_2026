@@ -241,3 +241,58 @@ De dropdown wordt gevuld uit twee bronnen:
 | `handlers/full_handlers.go` | ?domein= query parameter |
 | `dbsetup/createtables.go` | GIN index op domeinen |
 | `dynql/type_builder.go` | domeinen veld op RegistratieType |
+
+---
+
+## 9. V3 model-uitbreidingen die de import/export raken (A4-rev, B5, C8)
+
+De volgende uitbreidingen zijn toegevoegd aan het V3-formaat en worden verwerkt door de
+`storeNaarV3Model()` en `v3ModelNaarStore()` adapters:
+
+### Benoemde diagrammen (A4-rev)
+
+Bij V3-export (`storeNaarV3Model`) worden alle benoemde diagrammen — inclusief node-posities
+en edge-routes — geserialiseerd naar `v3Model.diagrammen[]`.
+Het **Overzicht**-diagram wordt expliciet overgeslagen: dat is altijd afgeleid uit de
+entiteit-posities en wordt niet als benoemd diagram opgeslagen.
+
+Bij V3-import (`v3ModelNaarStore`) worden de `diagrammen` teruggezet als diagram-entries
+in de store, inclusief hun nodes en edges.
+
+> Het IDE-formaat (`_format: "ide-v1"`) bevat eveneens diagram-data, maar als uitgebreider
+> snapshot (inclusief viewport en extra UI-state). Bij import van IDE-formaat worden
+> diagrammen meegenomen via de IDE-snapshot; bij import van zuiver V3-formaat via
+> `v3Model.diagrammen`.
+
+### Verplaatsbare edge-labels (B5)
+
+Elke edge in `v3Model.diagrammen[].edges[]` kan nu een optioneel `labelOffsets`-veld
+bevatten met de verschuiving van `naamLabelHeen` en/of `naamLabelTerug` ten opzichte
+van de standaard-positie:
+
+```json
+{
+  "id": "e_A_A_U",
+  "source": "A",
+  "target": "A_U",
+  "labelOffsets": {
+    "heen":  { "x": 12, "y": -6 },
+    "terug": { "x": -20, "y": 4 }
+  }
+}
+```
+
+Offsets worden alleen opgenomen als ze afwijken van nul. Bij import worden ze hersteld in
+`e.data.labelOffsets` per diagramedge.
+
+### Canvas-annotaties: notities & constraints (C8)
+
+`storeNaarV3Model` exporteert notities en constraints naar respectievelijk
+`v3Model.notities[]` en `v3Model.constraints[]`.
+
+**Scope-edges** van constraints (structurele edges met `data.kind === "scope"`) worden
+bij export omgezet naar `V3Constraint.scopeRefs` (array van element-typenamen).
+Bij import (`v3ModelNaarStore`) worden ze teruggereconstrueerd als structurele edges.
+
+Zie [roundtrip-engineering.md](roundtrip-engineering.md#83-annotaties-op-het-canvas--v3notitie-en-v3constraint-c8)
+voor de volledige typedefinities.

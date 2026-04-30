@@ -14,87 +14,7 @@ in http://localhost:5174/viz/react/inhoud.html#/t/weergave_definities/1 wordt er
 
 ## 🤖 Assistant
 
-De URL waar je naar wijst loopt niet via publicatie maar via de inhoud/editor-kant. Ik ga daarom ook de editor-detailcomponent erbij pakken, zodat de oplossing zowel voor weergave_definitie als formulier_definitie op de plek zelf configureerbaar wordt.Ik ga nu de definitiemodellen en bestaande configuratievoorbeelden lezen. Daarmee kan ik de configuratie minimaal houden: één expliciete widgetkeuze in de definitie, zonder al aan het onderliggende type te hoeven sleutelen.Ik heb de runtime-data bekeken:  en  zitten nu echt als string in de records. Ik ga daarom een kleine JSON-viewer toevoegen en die op twee manieren bruikbaar maken: expliciet via  in custom formulier-layouts, plus een gerichte fallback voor deze configuratievelden zelf.Ik heb de plek van de rendering scherp: de JSON-string wordt in geneste configuratie-GE’s via  getoond. Ik ga nu één gedeelde JSON-viewer toevoegen, die direct werkt voor  en , en daarnaast expliciet via  in custom formulieren aan te zetten is.Ik heb een logische doc-plek gevonden in de inhoud-editor-documentatie. Eerst maak ik de codewijziging af; daarna werk ik daar kort de nieuwe --optie bij.Plan:
-1. Een gedeelde JSON-weergavecomponent toevoegen met syntaxkleuren en parse-foutmelding.
-2.  uitbreiden met een expliciete `widgetOverride`, zodat  renderbaar is naast de bestaande datatype-widgets.
-3. De override bruikbaar maken vanuit custom formulier-layouts en als gerichte fallback voor  en  in de configuratie-entiteiten.
-4. De inhoud-editor-documentatie kort aanvullen met het nieuwe widgetgebruik en daarna de Vite-build valideren.Ik ga nu de code aanpassen in één compacte set: component, widget-resolutie en de twee aanhaakpunten waar de configuratie nu doorheen loopt.De patch liep stuk op exacte context in  en op de CSS-locatie. Ik lees die stukken nu gericht uit en zet daarna dezelfde wijziging opnieuw, kleiner en preciezer.
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-De code zit erin. Nu check ik eerst op frontend-fouten en daarna werk ik de documentatie bij met de nieuwe -widgetoptie en de huidige fallback voor configuratievelden.Ik werk de technische editor-doc nu bij op twee punten: de nieuwe -widget noteren en het uitgestelde-item aanscherpen naar de echte openstaande stap, namelijk een visuele layout-editor.Ik heb de plek van de rendering scherp: de JSON-string wordt in geneste configuratie-GE’s via  getoond. Ik ga nu één gedeelde JSON-viewer toevoegen, die direct werkt voor  en , en daarnaast expliciet via  in custom formulieren aan te zetten is.Ik heb een logische doc-plek gevonden in de inhoud-editor-documentatie. Eerst maak ik de codewijziging af; daarna werk ik daar kort de nieuwe -optie bij.Plan:
-1. Een gedeelde JSON-weergavecomponent toevoegen met syntaxkleuren en parse-foutmelding.
-2.  uitbreiden met een expliciete `widgetOverride`, zodat  renderbaar is naast de bestaande datatype-widgets.
-3. De override bruikbaar maken vanuit custom formulier-layouts en als gerichte fallback voor  en  in de configuratie-entiteiten.
-4. De inhoud-editor-documentatie kort aanvullen met het nieuwe widgetgebruik en daarna de Vite-build valideren.Ik ga nu de code aanpassen in één compacte set: component, widget-resolutie en de twee aanhaakpunten waar de configuratie nu doorheen loopt.De patch liep stuk op exacte context in  en op de CSS-locatie. Ik lees die stukken nu gericht uit en zet daarna dezelfde wijziging opnieuw, kleiner en preciezer.
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-De code zit erin. Nu check ik eerst op frontend-fouten en daarna werk ik de documentatie bij met de nieuwe -widgetoptie en de huidige fallback voor configuratievelden.Ik werk de technische editor-doc nu bij op twee punten: de nieuwe -widget noteren en het uitgestelde-item aanscherpen naar de echte openstaande stap, namelijk een visuele layout-editor.
-```
-
-```
-De implementatie en doc-update zijn rond. Ik draai nu nog de v06 Vite-build om te controleren dat de nieuwe componenten en CSS schoon door de bundler gaan.De build is schoon. Ik markeer dit af en vat daarna kort samen hoe je de widget nu kunt inzetten in een formulierdefinitie.Er is nu een nette JSON-weergavecomponent ingebouwd. Op  render ik JSON met syntaxkleuren, en  ondersteunt nu een expliciete `widgetOverride`, inclusief `json`. Daardoor wordt op je huidige pagina `inhoud.html#/t/weergave_definities/1` de `tabel_config_json` direct leesbaar getoond, en idem `layout_json` bij formulierdefinities. De velden blijven bewerkbaar; onder de textarea staat nu meteen een gekleurde preview en bij ongeldige JSON een parsefout.
-
- ondersteunt nu een expliciete `widgetOverride`, inclusief `json`. Daardoor wordt op je huidige pagina `inhoud.html#/t/weergave_definities/1` de `tabel_config_json` direct leesbaar getoond, en idem `layout_json` bij formulierdefinities. De velden blijven bewerkbaar; onder de textarea staat nu meteen een gekleurde preview en bij ongeldige JSON een parsefout.
-
-Voor configuratie zit het op twee niveaus. In custom formulierlayouts kun je nu per veld expliciet zetten:
-```json
-{ "type": "veld", "veld": "layout_json", "widget": "json" }
-```
-Dat loopt via . Daarnaast heb ik een gerichte fallback toegevoegd in , zodat `FormulierDefinitie_Layout.layout_json` en  nu ook zonder extra data-migratie meteen als JSON-widget renderen. De documentatie staat bijgewerkt in . De Vite-build is succesvol doorlopen.
-
-Als je wilt, zijn de logische vervolgstappen:
-1. Ook een  toevoegen voor .
-2. De widgetkeuze later verplaatsen van frontend-fallback naar model/schema-metadata, zodat het echt type-gedreven wordt.
+Ik ga de v06-frontend en de configuratie rond weergave_definitie/formulier_definitie eerst in kaart brengen, zodat ik gericht kan toevoegen waar JSON als apart weergavetype thuishoort.Ik heb de v06-instructies en frontendcontext binnen. Nu zoek ik waar weergave_definitie wordt gerenderd en hoe de veldconfiguratie nu bepaalt welk widget-type gebruikt wordt.Ik zie dat de configuratie al via JSON in weergave- en formulierdefinities binnenkomt. De volgende stap is de daadwerkelijke detailweergave te pakken en daar een configureerbare JSON-widget in te hangen.De detailrenderer zit in de publicatie/detailpagina en gebruikt nu alleen template-tekst of een platte fallback. Ik ga nu de route achter inhoud.html controleren en dan een klein uitbreidbaar widget-mechanisme toevoegen, zodat JSON expliciet via definities gekozen kan worden.
 
 ---
 
@@ -224,36 +144,7 @@ Is splitsen van onderdelen in dat geval een oplossing: view wel mobiel mogelijk,
 
 ## 🤖 Assistant
 
-
-```
-
-```
-
-```
-
-```
-Gedocumenteerd in  (F34–F36) en  (§12.8 en §12.9).
-
-### Je vragen beantwoord:
-
-**150 KB op desktop — is dat erg?**
-Nee. Ter vergelijking: de huidige `jsx-runtime` bundle is al 140 KB (gzip: 45 KB). CodeMirror in dezelfde orde van grootte is voor desktopgebruik onmerkbaar. Het is minder dan één foto.
-
-**Belast het de hele app?**
-Nee, en dat is precies het punt: jullie Vite-config heeft al **7 aparte entrypoints**. De publicatie-pagina (14 KB JS) laadt compleet andere bundles dan de inhoud-editor (52 KB). Een dependency die alleen in  wordt geïmporteerd, komt nooit bij  terecht. Daarnaast kun je met `React.lazy(() => import("./CodeEditor"))` zelfs *binnen* de inhoud-editor de editor pas laden wanneer iemand een JSON-veld opent — zero cost tot dat moment.
-
-**Splitsen per doelgroep?**
-Dat is al zo ingericht. De indeling is:
-
-| Pagina | Doelgroep | JS-bundle |
-|--------|-----------|-----------|
-|  | Eindgebruiker, mobiel OK | 14 KB |
-|  | Redacteur, desktop | 52 KB |
-|  | Beheerder, desktop | 212 KB |
-
-Zware editor-componenten (CodeMirror, Monaco) horen in de inhoud/IDE-bundles en raken de publicatie-pagina niet.
-
-**react-simple-code-editor** is de snelste upgrade: ~3 KB, één component dat een transparante  over een syntax-highlighted  legt. Je typt letterlijk "in" de gekleurde code, geen apart input- en preview-paneel meer. Als je wilt kan ik dat integreren als vervanging van de huidige side-by-side layout.
+Het project heeft al 7 aparte entrypoints — code splitting is al ingebouwd. Laat me de opties documenteren. 
 
 ---
 
@@ -338,18 +229,6 @@ Is dat een eigenschap van deze component, of moet er dan een format knopje bij?
 
 ## 🤖 Assistant
 
-
-```
-
-```
-
-```
-
-```
-Nu de CSS voor de knop: 
-```
-
-```
-De header moet ook flexbox zijn zodat de knop rechts uitlijnt: Header is al flex met `space-between` — de knop komt automatisch rechts via `margin-left: auto`. Herlaad de pagina — je ziet nu een "Formatteer"-knopje in de JSON headerbalk. Eén klik en de JSON wordt pretty-printed met indentatie. De knop verschijnt alleen als de JSON geldig is (geen foutmelding).
+De component toont precies wat-ie krijgt — als de opgeslagen JSON compact is, zie je het compact. De nette aanpak is een "Formatteer"-knop in de headerbalk die de JSON pretty-print en via  teruggeeft. 
 
 ---

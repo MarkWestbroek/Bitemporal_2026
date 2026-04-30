@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-29 10:56
 - **Sessie-ID**: `def89e9a-b62f-421e-81a2-d351a7256974`
-- **Berichten**: 13
+- **Berichten**: 14
 
 ---
 
@@ -203,24 +203,9 @@ ja, graag!
 
 ## 🤖 Assistant
 
+Now I'll add the new section 8 (NL API Strategie) and renumber the existing sections. Actually, simpler: insert new section before the "Vergelijkende conclusie" and call it section 9. Let me check section 8 number.
 
-```
-
-```
-Nu nog de bronnen aanvullen: 
-```
-
-```
-Sectie 9 toegevoegd aan common-ground-analyse-meertaligheid-tijdreizen.md met:
-
-- **9.1 Meertaligheid** — alleen `/core/interface-language` Sectie 9 toegevoegd aan common-ground-analyse-meertaligheid-tijdreizen.md met:
-
-- **9.1 Meertaligheid** — alleen `/core/interface-language` en `/core/doc-language` (NL als interface-taal); niets over `Accept-Language`, taalcodes, meertalige attribuutwaarden of foutmelding-lokalisatie.
-- **9.2 Tijdreizen** — bevestigd dat de NL API Strategie hier **niets** over zegt; wel verwante onderwerpen (datum/tijd-formaten, API-versionering, gateway-audit-trail) maar geen resource-niveau peilmoment-pattern.
-- **9.3 Bouwstenen voor de werkgroep** — 9 concrete punten (terminologie, naamgeving querystring, formaat, resource-pattern, snapshot vs. delta, audit vs. tijdreizen, cache, cross-register, internationale context).
-- **9.4 Bouwstenen voor meertaligheid (bonus)** — patroonkeuze + `application/problem+json`-lokalisatie.
-
-Bronnen aangevuld met ADR v2.1.0, Architectuurmodule en Kennisplatform-overzicht. Veel succes met de werkgroep!
+Section 8 = Taalcode-formaten. So new section becomes 9. 
 
 ---
 
@@ -239,5 +224,11 @@ het document staat wat plomp in de root. Zou je het in docs willen zetten?
 ## 🧑 User
 
 @agent Try Again
+
+---
+
+## 🤖 Assistant
+
+Gedaan! Het document staat nu in .
 
 ---

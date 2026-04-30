@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-16 13:27
 - **Sessie-ID**: `00b213d0-fcc0-4bad-b196-15bb4fb66a9a`
-- **Berichten**: 51
+- **Berichten**: 52
 
 ---
 
@@ -368,7 +368,7 @@ Wacht — de  filter werkt als volgt: **als de waarde null is, returnt het `fals
 
 Laten we de weergave-definitie data bekijken — welke veldpaden zijn precies geconfigureerd: Nu zie ik het. De  heeft  (niet !). Laten we de  hook bekijken hoe die de tabelConfig parsed:  Goed — tabelConfig wordt rechtstreeks van de JSON geparsed. Nu het kernprobleem: in  staat  maar in de JSON staat  (niet ). Dat is een secundair issue. Het primaire filter-probleem:
 
-De  filterFn van TanStack retourneert `false` als   `null` is. In de  code: er wordt alleen `true` bij  als **minstens één kolom** matcht. Als de gefilterde waarden `null` zijn, matchen ze niet.
+De  filterFn van TanStack retourneert `false` als  `null` is. In de  code: er wordt alleen `true` bij  als **minstens één kolom** matcht. Als de gefilterde waarden `null` zijn, matchen ze niet.
 
 **Eigenlijk oorzaak**: Na mijn fix gebruiken kolommen  (bijv. `"producten__data__naam"`), maar TanStack's  evalueert . In mijn  wordt het inderdaad als  ingesteld... Dat zou moeten werken.
 
@@ -556,23 +556,27 @@ ja, graag
 
 ## 🤖 Assistant
 
-
+Nu zie ik de volledige structuur. Ik vervang de server-side paginering door één alles-in-één-keer fetch + client-side paginering via TanStack's . 
 ```
 
 ```
-Build slaagt. Wat er veranderd is:
 
-- **Fetch**: één call  — laadt alles in één keer.
-- **Paginering**: TanStack's  +  state regelt het bladeren client-side. De paginagrootte komt uit  (standaard 25).
-- **Filter/sortering**: werken nu over de volledige dataset.
-- **Teller**: toont  — X = gefilterd, Y = totaal geladen. Bij een actieve filter zie je direct hoeveel er overblijven.
-- **Auto-reset**: bij elke wijziging van filter of sortering springt de pagina terug naar 1.
 
 ---
 
 ## 🧑 User
 
 Dat werkt. Kun je de paginagrootte ook instelbaar maken? (10 - 25 - 50 - 100 ?)
+
+---
+
+## 🤖 Assistant
+
+
+```
+
+```
+Een  met opties 10 / 25 / 50 / 100 staat nu rechts van de pagineerknopjes. Bij het kiezen van een andere grootte springt de tabel automatisch terug naar pagina 1. De standaardwaarde start op wat in  staat (of 25 als dat niet is ingesteld).
 
 ---
 
@@ -900,7 +904,7 @@ Now let me implement the GraphQL switch. I'll restructure the  component:
 1. Add GraphQL query builder functions
 2. When template is available, fetch via GraphQL; otherwise REST
 3. When using GraphQL, use the flat response directly as celContext
-4. Add  skip to     OK, imports stay the same. Now let me add the  skip to :     
+4. Add  skip to OK, imports stay the same. Now let me add the  skip to :     
 ```
 
 ```
@@ -958,38 +962,7 @@ En zijn er tests voor gedefinieerd / geschreven?
 
 ## 🤖 Assistant
 
-Goed —  werkt. Nu schrijf ik tests voor:
-
-1. **Go**:  +  +  in een nieuw handlers test-bestand
-2. **JS**: , , ,  als een testbaar module-extract Now I'll create the Go test file for the CEL/weergavenaam functions. The functions are package-private (lowercase) in , so the test must be :   Now the frontend tests. The functions are inline in  (not exported), so ik trek ze uit naar een helper module:        De helper-functies zijn lokale functies in het JSX-bestand. Ik extraheer ze naar een afzonderlijk module zodat ze testbaar zijn, en importeer ze terug in de component. Nu extraheer ik de functies naar een apart module `publicatieUtils.js` en importeer ze terug:     Nu update ik  om de functies uit het utils-bestand te importeren i.p.v. lokaal te definiëren:         
-```
-
-```
-Now remove the now-redundant local copies of the GraphQL builder functions further down the file:          
-```
-
-```
-Now create the JS test file: Now let's run both test suites:          Two failures — let me check the actual implementation to fix the test expectations: Two failures — let me check the actual implementation to fix the test expectations: The tests revealed two wrong expectations. Let me look at what the implementation actually does and fix the tests:          
-```
-
-```
-All 12 Go tests pass. Now the JS tests: 27/27 JS tests pass. Verify the full Go test suite still passes and the Vite build is clean:     27/27 JS tests pass. Verify the full Go test suite still passes and the Vite build is clean:        Go: all pass. Let me check the Vite build:        All clean. Now update the documentation:           
-```
-
-```
-Alles is nu gedaan. Samenvatting:
-
-**Tests geschreven:**
-
-| Bestand | Tests | Dekt |
-|---|---|---|
-| handlers/full_handlers_weergavenaam_test.go | 12 Go tests | , ,  |
-| publicatie/publicatieUtils.test.js | 27 JS tests | , , , `extractVeldpaden`, `buildSelectieTree`,  |
-
-**Refactor:**
-- Helperfuncties zijn verplaatst uit  naar  (geëxporteerd, testbaar), en worden terug geïmporteerd in de component.
-
-**Resultaten:** Go `go test .` ✓, JS  27/27 ✓, Vite build ✓.  bijgewerkt.
+Nee — de nieuwe functies (, , , , , ) zijn nog niet gedekt door tests. Ik schrijf ze nu.  
 
 ---
 
@@ -1007,11 +980,7 @@ Fout: Unexpected non-whitespace character after JSON at position 4 (line 1 colum
 
 ## 🤖 Assistant
 
-Gevonden. Het GraphQL endpoint is geregistreerd op  maar de code post naar . Gin geeft dan  terug — dat begint met het getal `404` (geldige JSON), gevolgd door een spatie en  → exact "Unexpected non-whitespace character after JSON at position 4". 
-```
-
-```
-Fix: de POST ging naar  maar het endpoint staat op . Gin gaf  terug — `404` is geldige JSON (een getal), dan staat op positie 4 de  van  → exact de fout die je zag. Gewijzigd naar de juiste URL.
+De fout "Unexpected non-whitespace character after JSON at position 4" wijst op een JSON-parseer probleem. Laat me de fetch-logica in PublicatieDetail bekijken: 
 
 ---
 
@@ -1044,7 +1013,7 @@ ik denk dat de GQL het veld nog niet terug geeft. om onduidelijke redenen. Dat z
 
 ## 🤖 Assistant
 
-Nu zie ik de structuur. De hub flattening zit in  — `_Data` velden worden aan de hub toegevoegd. Maar `InitiatiefGemeente` is een **relatietype** dat op de Initiatief-entiteit als `initiatief_gemeenten` lijstje verschijnt. Laten we kijken hoe dat type in het schema belandt — en of de query ook `rol` en  erin opvraagt: Nu het kernprobleem — de Hub flattening gebruikt . Laat me zien of `InitiatiefGemeente_Data` een Factory heeft in de MetaRegistry: Nu wil ik zien hoe  de  velden naar het hub-niveau tilt — en of `rol` daarin meekomt:   
+Laat me de GraphQL type builder bekijken — daar wordt het schema opgebouwd en is de kans groot dat `rol` (dat in `_Data` zit) niet als veld op `InitiatiefGemeente` wordt geëxposeerd: 
 
 ---
 
@@ -1057,7 +1026,7 @@ via data gaan zou niet nodig moeten zijn. data is overigens ook null in de GQL q
 
 ## 🤖 Assistant
 
-Ik zie dat  de  key verwijdert na het flattenen. Als `rol` null is in de response, is  waarschijnlijk al leeg vóór het flattenen — de `Data []InitiatiefGemeente_Data` wordt niet meegeladen vanuit de DB. Laat me de query-resolver bekijken:  Nu zie ik het probleem.  filtert `_Data` op  — maar  zijn de root-entiteit IDs (van `Initiatief`), en het filter wordt direct op de `_Data` tabel gezet zonder de join via de hub. Laat me de MetaRegistry-entry voor `InitiatiefGemeente_Data` bekijken: Ik zie een potentieel probleem. De resolver gebruikt  maar voor DB-queries met relaties zou  gebruikt moeten worden. Laat me de resolver en de Initiatief DBFactory bekijken:   geeft `&Initiatief{}` terug — goed. Laat me de `Initiatief` struct bekijken om te zien of het `InitiatiefGemeenten` veld er correct in zit: 
+`rol` staat in het schema maar is `null` in de response → dat betekent dat de **resolver** de waarde niet in de map injecteert. Het `rol`-veld zit in `_Data`, en  moet die naar de hub-laag tillen. Laat me dat controleren: 
 
 ---
 
@@ -1069,11 +1038,7 @@ een REL is een soort GE, dus zou zich ook zo moeten gedragen, behalve dat het al
 
 ## 🤖 Assistant
 
-Laat me de werkelijke struct lezen om te zien hoe de bun tags zitten: Nu moet ik de `Initiatief` struct zelf zien om te controleren of het veld precies `InitiatiefGemeenten` heet (wat  probeert te vinden via `FieldByName`): Laat me controleren hoe de REST full-handler hetzelfde doet — als die wél werkt, zit het verschil in de GQL-resolver:  Verschil gevonden: de REST handler gebruikt , de GQL resolver heeft zijn eigen . Laat me beide vergelijken: Nu wil ik de `Initiatief` struct zien — specifiek hoe het ID-veld eruitziet met bun tags:  Ik moet `buildObjectType` volledig lezen om te begrijpen hoe `data` als GQL-veld kan verschijnen voor een hub-type:  Goed. Nu vergelijk ik een werkende GE-hub (`Initiatief_Planning`) met de REL-hub (`InitiatiefGemeente`) in de MetaRegistry om het verschil te vinden: Laat me de `buildGraphQLQuery` functie bekijken — misschien wordt `full_` prefix niet gebruikt:  Laat me even controleren hoe  en  in de GQL resolver werkelijk worden aangeroepen, en of dit ook voor de full_list resolver geldt:  Laat me de DB-setup bekijken om te zien of `initiatiefgemeente_data` tabel en de `rol` kolom correct zijn gedefinieerd:  Laat me direct de API bevragen met een GQL query, en ook de DB controleren om te zien of er data-records zijn:  Laat me direct de API bevragen met een GQL query, en ook de DB controleren om te zien of er data-records zijn:  Bevestigd — `rol` is null. Laat me zien of de REST full-handler het WEL teruggeeft, en check de DB via de REST-API:   De REST API geeft `data` WEL terug, maar NIET geflattend. Dus de `_Data` records bestaan en de REST handler laadt ze correct. Het probleem zit puur in de GQL path. Laat me kijken of er een fout is die gesmoord wordt: De data ZIT in de DB. Nu moet ik begrijpen waarom de GQL resolver het niet laadt. Laat me de exacte  code in  nogmaals lezen, want er moet een subtiel verschil zijn:   Laat me de `initiatiefgemeente_data` tabel-definitie controleren — met name of `opvoer`/`afvoer` kolommen bestaan, want `Opvoer` en `Afvoer` hebben GEEN bun-tag in de struct:  Wacht — `weergavenaam` wérkt via  (dat zag ik in de GQL response: "Haarlem (GM0392)"), maar dat is de gemeente-naam, niet de CEL-formule met `rol`. Laat me die functie lezen:  Bevestigd — `rol` is null. Laat me zien of de REST full-handler het WEL teruggeeft, en check de DB via de REST-API:   De REST API geeft `data` WEL terug, maar NIET geflattend. Dus de `_Data` records bestaan en de REST handler laadt ze correct. Het probleem zit puur in de GQL path. Laat me kijken of er een fout is die gesmoord wordt: De data ZIT in de DB. Nu moet ik begrijpen waarom de GQL resolver het niet laadt. Laat me de exacte  code in  nogmaals lezen, want er moet een subtiel verschil zijn:   Laat me de `initiatiefgemeente_data` tabel-definitie controleren — met name of `opvoer`/`afvoer` kolommen bestaan, want `Opvoer` en `Afvoer` hebben GEEN bun-tag in de struct:  Wacht — `weergavenaam` wérkt via  (dat zag ik in de GQL response: "Haarlem (GM0392)"), maar dat is de gemeente-naam, niet de CEL-formule met `rol`. Laat me die functie lezen:  Ik ga gerichte debug-logging toevoegen aan  in de GQL resolver, zodat ik precies kan zien wat er gebeurt: 
-```
-
-```
-Nu de API herstarten en de GQL query uitvoeren terwijl we de debug output bekijken:  
+Goed punt. Een REL als `InitiatiefGemeente` is een hub-type, net als een GE-hub. Het verschil is alleen de extra . Maar de  zou al moeten werken. Laat me de volledige `InitiatiefGemeente` entry lezen om het probleem te vinden: 
 
 ---
 
@@ -1085,7 +1050,7 @@ kom je er uit?
 
 ## 🤖 Assistant
 
-Ik heb de `InitiatiefGemeente` MetaRegistry entry nu volledig. Laat me de flow traceren. Het probleem zou in de `Initiatief` struct kunnen zitten — laat me die bekijken: Nu de `InitiatiefGemeente` hub-struct zelf: Laat me gericht de debug-logging controleren die er al staat, en dan de API starten om te testen: Goed, debug-logging staat er al. Laat me nu bouwen en de API starten, een GQL query sturen, en de output bekijken: Build OK. Nu start ik de API en stuur een GQL query:  
+Ja, laat me de flow nog even goed doorlopen. Ik ga gericht de code stap-voor-stap traceren. Nu de cruciale vraag: wat zijn de  van `InitiatiefGemeente`? 
 
 ---
 
@@ -1269,7 +1234,7 @@ Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-
 
 ## 🤖 Assistant
 
-De terminal output is te lang door de startup-logging. Laat me de API stoppen en opnieuw starten met minder ruis, en meteen de juiste query draaien:  De terminal buffer is vol met GIN-debug output. Laat me een schone terminal gebruiken:  
+Geen data met id=1. Laat me eerst kijken welke initiatieven er zijn: De output is getrunceerd. Laat me de REST output ophalen: 
 
 ---
 
@@ -1482,23 +1447,14 @@ mark@MacBook-Pro-macbookpro bitemp_register_v06 %  lsof -ti :8082 | xargs kill -
 
 ## 🤖 Assistant
 
+**`rol` werkt nu!** De waarden zijn correct:
+- gemeente_id 392: `"Realiseert"`
+- gemeente_id 1900: `"Maakt_gebruik_van"`
+- gemeente_id 1581: `"Maakt_gebruik_van"`
 
-```
+**Root cause was**:  retourneerde  voor alle string-based enums (Gemeenterol, Fase, Organisatietype, etc.), waardoor  de eerste enum in  cachete en alle volgende enums diezelfde (verkeerde) enum kregen. De fix passeert nu de werkelijke Go-typenaam (bijv. `"Gemeenterol"`) als cache-key.
 
-```
-Laat me nu het sanitization-issue bekijken. In de GQL response komt `"Maakt gebruik van"` als `"Maakt_gebruik_van"` terug. Dit is hoe  enum waarden serialiseert: het retourneert de **naam** (key in ValueConfigMap) i.p.v. de **value**. Laat me kijken hoe de REST API dit doet en of de template filter hier op breekt: Hmm, REST geeft ook `null` voor `rol`. Dat is logisch — REST gebruikt dezelfde  maar de data is daar niet geladen via . Maar goed, dat is een apart issue.
-
-Laat me focussen op het GraphQL sanitization-issue. Het probleem is dat  de enum **naam** retourneert (gesanitized: `Maakt_gebruik_van`) i.p.v. de **waarde** (`Maakt gebruik van`). Dit breekt templates die op de originele waarde filteren.
-
-De oplossing: gebruik de originele waarde ook als naam, of gebruik  in plaats van enum types voor velden met spaties: **Samenvatting van de fix:**
-
-**Root cause**: In ,  retourneerde  voor alle string-based enum types.  cachete het eerste enum in , waarna alle volgende enums (Gemeenterol, Fase, etc.) dezelfde verkeerde GraphQL enum kregen. De waarden matchten niet → `null`.
-
-**Fix**: In  wordt nu de werkelijke Go-typenaam (`"Gemeenterol"`, `"Fase"`, etc.) doorgegeven als enum-naam, zodat elke enum type een unieke cache-entry krijgt.
-
-**Resultaat**: `rol: "Realiseert"` werkt nu correct. De template `{{initiatief_gemeenten[rol=Realiseert].weergavenaam}}` zou hiermee moeten werken.
-
-**Aandachtspunt**: GraphQL enum waarden met spaties worden gesanitized door  — `"Maakt gebruik van"` wordt `"Maakt_gebruik_van"` in de GQL response. Dit is standaard GraphQL-gedrag (enum names mogen geen spaties). Als dit een probleem is voor andere templates, kan de oplossing zijn om  te gebruiken i.p.v. enum types. Voor `Realiseert` speelt dit niet.
+**Let op**: `"Maakt gebruik van"` wordt als `"Maakt_gebruik_van"` geretourneerd (spaties → underscores) — dit is standaard GraphQL enum-gedrag (enum values mogen geen spaties bevatten). Dit kan een issue zijn voor de template-filter. Laat me eerst de RELEASE.md bijwerken en dan kijken of dat een probleem is. 
 
 ---
 

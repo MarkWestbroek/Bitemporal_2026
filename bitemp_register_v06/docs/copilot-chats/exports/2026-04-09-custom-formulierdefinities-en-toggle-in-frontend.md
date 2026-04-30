@@ -14,16 +14,11 @@ nu is er in de frontend iets gemaakt met custom formulierdefinities, en er zou e
 
 ## 🤖 Assistant
 
-Je ziet die toggle niet in het overzicht, maar op de detailpagina van één entiteit in de inhoud-editor. In de code zit hij in , direct onder de kaart met entiteitssamenvatting en boven de losse GE-secties. De knoptekst is “Custom formulier” en na omschakelen “Standaard weergave”.
+Ik controleer waar de toggle in de frontend zit en onder welke voorwaarden hij zichtbaar wordt, zodat ik je exact kan zeggen waar je moet kijken.Ik heb de relevante frontendpunten gevonden; nu lees ik de precieze voorwaarden uit de component, zodat ik je niet alleen de plek maar ook de reden kan geven waarom je hem mogelijk niet ziet.De voorwaarde is duidelijk: de toggle verschijnt alleen op een entiteit-detailpagina als er voor dat entiteittype een actieve standaard-FormulierDefinitie met geldige  gevonden wordt. Ik lees nog het stuk JSX waar die knop echt wordt getoond, zodat ik je de exacte plek in de UI kan aanwijzen.Ik heb de UI-plek en de zichtvoorwaarde bevestigd. Ik check nog één ding: of het voorbeeld-replaybestand er echt staat, zodat ik je meteen het kortste pad kan geven om het te zien.Je ziet die toggle niet in het overzicht, maar op de detailpagina van één entiteit in de inhoud-editor. In de code zit hij in , direct onder de kaart met entiteitssamenvatting en boven de losse GE-secties. De knoptekst is “Custom formulier” en na omschakelen “Standaard weergave”.
 
 Hij verschijnt alleen als aan drie voorwaarden voldaan is. Dat staat in : er moet een FormulierDefinitie bestaan voor precies dat doeltype, de status moet  zijn, en  moet `true` zijn. Daarnaast moet er geldige  in zitten. Als een van die dingen ontbreekt, zie je de toggle nergens.
 
-Er is wel een concreet voorbeeld klaar voor `Initiatief`. Het replaybestand staat hier: . De uitleg daarvan staat in . Na inladen van die replay moet je naar een detailpagina van een `Initiatief`, dus iets in de trant van . Daar zou de toggle zichtbaar moeten zijn.
-
-Als je wilt, kan ik nu ook meteen voor je nagaan:
-1. of die replay al in jouw database zit
-2. welke concrete `Initiatief`-id je moet openen
-3. waarom de toggle in jouw huidige scherm nog niet verschijnt
+Er is wel een concreet voorbeeld klaar voor `Initiatief`. Het replaybestand staat hier: 
 
 ---
 

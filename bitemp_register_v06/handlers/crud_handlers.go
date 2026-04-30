@@ -29,92 +29,17 @@ import (
 // naar RegistreerCore zodat audit + transactiegedrag identiek zijn aan POST /registratie/.
 func MakeDeleteEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if meta.DBFactory == nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "DBFactory ontbreekt voor type " + meta.Typenaam})
-			return
-		}
-		if meta.IDKolom == "" {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "IDKolom ontbreekt voor type " + meta.Typenaam})
-			return
-		}
-		// PFK-types vergen composite key — niet expressie-eerbaar via één URL-id.
-		if meta.HeeftPFK {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": fmt.Sprintf(
-					"DELETE /%s/:id is niet ondersteund voor types met samengestelde sleutel (%s heeft PFK). Gebruik POST /registratie/ met een expliciete Afvoer-wijziging.",
-					meta.Padnaam, meta.Typenaam,
-				),
-			})
-			return
-		}
-
 		entityID := c.Param("id")
-		if entityID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "ID must be present"})
-			return
-		}
-
-		// Laad bestaand record uit DB; daarmee zit de ID (en eventuele PFK-velden) op
-		// het juiste type voor de afvoer-helper. Levert ook 404 als het niet bestaat.
-		entity := meta.DBFactory()
-		err := DB.NewSelect().
-			Model(entity).
-			Where(meta.IDKolom+" = ?", entityID).
-			Scan(c.Request.Context())
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		if isZeroID(entity.GetID()) {
-			c.JSON(http.StatusNotFound, gin.H{"message": meta.Typenaam + " not found"})
-			return
-		}
-
-		// Cast naar FormeleRepresentatie (vereist voor afvoer-engine).
-		formeel, ok := entity.(model.FormeleRepresentatie)
-		if !ok {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": fmt.Sprintf("type %s ondersteunt geen formele afvoer (geen FormeleRepresentatie)", meta.Typenaam),
-			})
-			return
-		}
-		if formeel.GetAfvoer() != nil {
-			c.JSON(http.StatusConflict, gin.H{
-				"error": fmt.Sprintf("%s met ID %v is al afgevoerd", meta.Typenaam, entity.GetID()),
-			})
-			return
-		}
-
-		// Bouw RegistreerRequest: één wijziging met Afvoer.
-		req := model.RegistreerRequest{
-			Registratie: model.Registratie{
-				Registratietype: model.RegistratietypeRegistratie,
-			},
-			Wijzigingen: []model.WijzigingRequest{
-				{
-					Afvoer: &model.RepresentatiePlusNaam{
-						Representatie:     formeel,
-						Representatienaam: meta.Typenaam,
-						Veldnaam:          meta.Veldnaam,
-					},
-				},
-			},
-		}
-
 		audit := AuditMeta{
 			RequestPath:   c.Request.URL.Path,
 			RequestMethod: c.Request.Method,
 			EntiteitID:    entityID,
-			// Geen RawBody — DELETE heeft geen body; de gegenereerde
-			// RegistreerRequest dient als reconstrueerbaar audit-anker.
 		}
-
-		result, rerr := RegistreerCore(c.Request.Context(), DB, req, audit)
+		result, rerr := VoerEntiteitAfCore(c.Request.Context(), meta, entityID, audit)
 		if rerr != nil {
 			c.JSON(rerr.Status, gin.H{"error": rerr.Msg})
 			return
 		}
-
 		// Conform NL API Strategie: 200 OK met body bij succesvolle delete (mutatie),
 		// zodat client de registratie-verwijzing terugkrijgt voor audit-trail.
 		c.JSON(http.StatusOK, gin.H{
@@ -123,6 +48,76 @@ func MakeDeleteEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 			"tijdstip":       result.Tijdstip,
 		})
 	}
+}
+
+// VoerEntiteitAfCore is de transport-onafhankelijke variant van de DELETE-handler.
+// Wordt gebruikt door zowel de Gin-route als de GraphQL-mutation `voer<Type>Af`.
+//
+// Vereist: meta.Metatype = entiteit (of een niet-PFK GE/REL). Voor PFK-types
+// (composite key) faalt de aanroep met 400.
+func VoerEntiteitAfCore(ctx context.Context, meta model.TypeMeta, entityID string, audit AuditMeta) (*RegistreerResult, *RegistreerError) {
+	if meta.DBFactory == nil {
+		return nil, &RegistreerError{Status: http.StatusInternalServerError, Msg: "DBFactory ontbreekt voor type " + meta.Typenaam}
+	}
+	if meta.IDKolom == "" {
+		return nil, &RegistreerError{Status: http.StatusInternalServerError, Msg: "IDKolom ontbreekt voor type " + meta.Typenaam}
+	}
+	if meta.HeeftPFK {
+		return nil, &RegistreerError{
+			Status: http.StatusBadRequest,
+			Msg: fmt.Sprintf(
+				"Afvoer per id is niet ondersteund voor types met samengestelde sleutel (%s heeft PFK). Gebruik POST /registratie/ met een expliciete Afvoer-wijziging.",
+				meta.Typenaam,
+			),
+		}
+	}
+	if entityID == "" {
+		return nil, &RegistreerError{Status: http.StatusBadRequest, Msg: "ID must be present"}
+	}
+
+	entity := meta.DBFactory()
+	if err := DB.NewSelect().Model(entity).Where(meta.IDKolom+" = ?", entityID).Scan(ctx); err != nil {
+		return nil, &RegistreerError{Status: http.StatusInternalServerError, Msg: err.Error()}
+	}
+	if isZeroID(entity.GetID()) {
+		return nil, &RegistreerError{Status: http.StatusNotFound, Msg: meta.Typenaam + " not found"}
+	}
+
+	formeel, ok := entity.(model.FormeleRepresentatie)
+	if !ok {
+		return nil, &RegistreerError{
+			Status: http.StatusBadRequest,
+			Msg:    fmt.Sprintf("type %s ondersteunt geen formele afvoer (geen FormeleRepresentatie)", meta.Typenaam),
+		}
+	}
+	if formeel.GetAfvoer() != nil {
+		return nil, &RegistreerError{
+			Status: http.StatusConflict,
+			Msg:    fmt.Sprintf("%s met ID %v is al afgevoerd", meta.Typenaam, entity.GetID()),
+		}
+	}
+
+	req := model.RegistreerRequest{
+		Registratie: model.Registratie{Registratietype: model.RegistratietypeRegistratie},
+		Wijzigingen: []model.WijzigingRequest{
+			{
+				Afvoer: &model.RepresentatiePlusNaam{
+					Representatie:     formeel,
+					Representatienaam: meta.Typenaam,
+					Veldnaam:          meta.Veldnaam,
+				},
+			},
+		},
+	}
+
+	if audit.EntiteitID == "" {
+		audit.EntiteitID = entityID
+	}
+	res, rerr := RegistreerCore(ctx, DB, req, audit)
+	if rerr != nil {
+		return nil, rerr
+	}
+	return &res, nil
 }
 
 // MakePatchFullEntityByMetaHandler bouwt een handler voor PATCH /full/{padnaam}/:id.

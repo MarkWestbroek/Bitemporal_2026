@@ -528,6 +528,90 @@ export function v3ModelNaarStore(v3Full) {
     },
   };
 
+  // --- A4-omgekeerd: import benoemde diagrammen uit V3 indien aanwezig ---
+  // Elke V3Diagram entry wordt teruggevormd naar de store-vorm
+  // { id, naam, domein, nodes:[{id, position:{x,y}, width?, height?}], edges:[{...}] }
+  for (const v3Diag of v3Model?.diagrammen || []) {
+    if (!v3Diag?.id) continue;
+    if (v3Diag.id === DEFAULT_DIAGRAM_ID) continue; // Overzicht is afgeleid
+    diagrams[v3Diag.id] = {
+      id: v3Diag.id,
+      naam: v3Diag.naam || v3Diag.id,
+      domein: v3Diag.domein || null,
+      nodes: (v3Diag.nodes || []).map((n) => {
+        const out = {
+          id: n.elementId,
+          position: { x: n.x || 0, y: n.y || 0 },
+        };
+        if (n.width != null) out.width = n.width;
+        if (n.height != null) out.height = n.height;
+        return out;
+      }),
+      edges: (v3Diag.edges || []).map((e) => {
+        const out = {
+          id: e.id,
+          source: e.source,
+          target: e.target,
+        };
+        if (e.sourceHandle) out.sourceHandle = e.sourceHandle;
+        if (e.targetHandle) out.targetHandle = e.targetHandle;
+        if (e.animated) out.animated = true;
+        if (e.labelOffsets) {
+          out.data = { ...(out.data || {}), labelOffsets: e.labelOffsets };
+        }
+        return out;
+      }),
+      viewport: null,
+    };
+  }
+
+  // --- C8: notities en constraints importeren als element-types in de store ---
+  // Notities: type "notitie", visueel als gele post-it.
+  // Constraints: type "constraint", visueel als lichtblauwe rounded-rect.
+  // ScopeRefs van constraints worden vertaald naar structuralEdges met data.kind="scope"
+  // (altijd zichtbaar — kunnen niet verborgen worden in de UI).
+  for (const n of v3Model?.notities || []) {
+    if (!n?.id) continue;
+    elements[n.id] = {
+      id: n.id,
+      naam: n.id,
+      type: "notitie",
+      domein: n.domein || "",
+      data: {
+        tekst: n.tekst || "",
+        positie: n.positie ? { x: n.positie.x || 0, y: n.positie.y || 0 } : null,
+        kleur: n.kleur || "",
+        breedte: n.breedte ?? null,
+        hoogte: n.hoogte ?? null,
+      },
+    };
+  }
+  for (const c of v3Model?.constraints || []) {
+    if (!c?.id) continue;
+    elements[c.id] = {
+      id: c.id,
+      naam: c.naam || c.id,
+      type: "constraint",
+      domein: c.domein || "",
+      data: {
+        expressie: c.expressie || "",
+        taal: c.taal || "tekst",
+        positie: c.positie ? { x: c.positie.x || 0, y: c.positie.y || 0 } : null,
+        breedte: c.breedte ?? null,
+        hoogte: c.hoogte ?? null,
+      },
+    };
+    // ScopeRefs → structurele edges (kind="scope", altijd zichtbaar)
+    for (const targetId of c.scopeRefs || []) {
+      structuralEdges.push({
+        id: `scope-${c.id}-${targetId}`,
+        source: c.id,
+        target: targetId,
+        data: { kind: "scope" },
+      });
+    }
+  }
+
   // Model metadata
   const modelMeta = {
     bron: v3Full?.bron || "import",
@@ -973,6 +1057,94 @@ export function storeNaarV3Model(state) {
     })
     .filter((d) => d.versie || d.beschrijving || d.kleur || d.prefix);
   if (v3Domeinen.length) v3Model.domeinen = v3Domeinen;
+
+  // --- A4-omgekeerd: benoemde diagrammen exporteren (skip Overzicht; dat is afgeleid) ---
+  // Iedere diagram-entry uit de store wordt vertaald naar een V3Diagram met nodes en edges.
+  // De Overzicht (DEFAULT_DIAGRAM_ID) is afgeleid van structuralEdges en wordt niet geëxporteerd
+  // — die wordt bij import gereconstrueerd.
+  const v3Diagrammen = [];
+  for (const [diagId, diag] of Object.entries(diagrams)) {
+    if (diagId === DEFAULT_DIAGRAM_ID) continue;
+    if (!diag) continue;
+    const v3Diag = {
+      id: diagId,
+      naam: diag.naam || diagId,
+      nodes: (diag.nodes || []).map((n) => {
+        const out = {
+          elementId: n.id,
+          x: n.position?.x ?? 0,
+          y: n.position?.y ?? 0,
+        };
+        if (n.width != null) out.width = n.width;
+        if (n.height != null) out.height = n.height;
+        return out;
+      }),
+      edges: (diag.edges || []).map((e) => {
+        const out = {
+          id: e.id,
+          source: e.source,
+          target: e.target,
+        };
+        if (e.sourceHandle) out.sourceHandle = e.sourceHandle;
+        if (e.targetHandle) out.targetHandle = e.targetHandle;
+        if (e.animated) out.animated = true;
+        // B5: per-edge label-offsets meenemen als ze gezet zijn
+        if (e.data?.labelOffsets) {
+          const lo = e.data.labelOffsets;
+          const labelOffsets = {};
+          if (lo.heen && (lo.heen.x || lo.heen.y)) labelOffsets.heen = { x: lo.heen.x || 0, y: lo.heen.y || 0 };
+          if (lo.terug && (lo.terug.x || lo.terug.y)) labelOffsets.terug = { x: lo.terug.x || 0, y: lo.terug.y || 0 };
+          if (Object.keys(labelOffsets).length) out.labelOffsets = labelOffsets;
+        }
+        return out;
+      }),
+    };
+    if (diag.domein) v3Diag.domein = diag.domein;
+    v3Diagrammen.push(v3Diag);
+  }
+  if (v3Diagrammen.length) v3Model.diagrammen = v3Diagrammen;
+
+  // --- C8: notities en constraints exporteren ---
+  // Notities en constraints leven als eigen element-types in de store
+  // (`type: "notitie"` / `type: "constraint"`). Hun visuele positie wordt opgeslagen
+  // op het element zelf (data.positie), niet in een diagram, want ze zijn altijd
+  // canvas-globaal zichtbaar.
+  const v3Notities = [];
+  const v3Constraints = [];
+  for (const el of Object.values(elements)) {
+    if (!el) continue;
+    if (el.type === "notitie") {
+      const n = {
+        id: el.id,
+        tekst: el.data?.tekst || el.naam || "",
+      };
+      if (el.domein) n.domein = el.domein;
+      if (el.data?.positie) n.positie = { x: el.data.positie.x || 0, y: el.data.positie.y || 0 };
+      if (el.data?.kleur) n.kleur = el.data.kleur;
+      if (el.data?.breedte != null) n.breedte = el.data.breedte;
+      if (el.data?.hoogte != null) n.hoogte = el.data.hoogte;
+      v3Notities.push(n);
+    } else if (el.type === "constraint") {
+      const c = {
+        id: el.id,
+        expressie: el.data?.expressie || "",
+      };
+      if (el.naam) c.naam = el.naam;
+      if (el.data?.taal) c.taal = el.data.taal;
+      if (el.domein) c.domein = el.domein;
+      if (el.data?.positie) c.positie = { x: el.data.positie.x || 0, y: el.data.positie.y || 0 };
+      if (el.data?.breedte != null) c.breedte = el.data.breedte;
+      if (el.data?.hoogte != null) c.hoogte = el.data.hoogte;
+      // ScopeRefs uit structuralEdges met kind="scope" en source=this constraint
+      const scopeRefs = (structuralEdges || [])
+        .filter((e) => e.source === el.id && e.data?.kind === "scope")
+        .map((e) => e.target);
+      if (scopeRefs.length) c.scopeRefs = scopeRefs;
+      v3Constraints.push(c);
+    }
+  }
+  if (v3Notities.length) v3Model.notities = v3Notities;
+  if (v3Constraints.length) v3Model.constraints = v3Constraints;
 
   // Wrap in het top-level formaat dat de API verwacht
   return {

@@ -22,6 +22,9 @@ type V3Model struct {
 	Enums                     []V3Enum                     `json:"enums,omitempty"`                     // enum definities
 	ReferentielijstInstanties []V3ReferentielijstInstantie `json:"referentielijstInstanties,omitempty"` // referentielijst-instanties (Landenlijst, EULidstaten, etc.)
 	Entiteiten                []V3Entiteit                 `json:"entiteiten"`                          // top-level entiteiten
+	Diagrammen                []V3Diagram                  `json:"diagrammen,omitempty"`                // genoemde diagrams (A4-omgekeerd: IDE-layout-export)
+	Notities                  []V3Notitie                  `json:"notities,omitempty"`                  // C8: vrije tekst-notities (gele post-its) op canvas
+	Constraints               []V3Constraint               `json:"constraints,omitempty"`               // C8: UML constraints (lichtblauwe rounded-rects) met scope-edges
 }
 
 // V3Domein beschrijft de metadata van een domein in het model.
@@ -245,4 +248,76 @@ type V3AfgeleidVeld struct {
 	Afleidingsregel     string `json:"afleidingsregel,omitempty"`
 	IsWeergaveVeld      bool   `json:"isWeergaveVeld,omitempty"`
 	WeergaveVeld        bool   `json:"weergaveVeld,omitempty"` // legacy alias; keep for backward compatibility on older opgeslagen modellen
+}
+
+// V3Diagram beschrijft een benoemd diagram met nodes, edges en label-offsets.
+// A4-omgekeerd: IDE → V3 export inclusief diagram-layout.
+type V3Diagram struct {
+	ID     string          `json:"id"`               // unieke diagram-ID (UUID-style)
+	Naam   string          `json:"naam"`             // weergavenaam, bijv. "Mijn Kerndiagram"
+	Domein string          `json:"domein,omitempty"` // optionele domeinfilter
+	Nodes  []V3DiagramNode `json:"nodes"`            // nodes (entiteiten, GE's, relaties)
+	Edges  []V3DiagramEdge `json:"edges"`            // edges (verbindingen)
+}
+
+// V3DiagramNode beschrijft een node (vertex) in een diagram.
+type V3DiagramNode struct {
+	ElementID string   `json:"elementId"`        // ref naar entiteit/GE/relatie typenaam
+	X         float64  `json:"x"`                // canvas X-coördinaat
+	Y         float64  `json:"y"`                // canvas Y-coördinaat
+	Width     *float64 `json:"width,omitempty"`  // optionele node-breedte (voor sizing)
+	Height    *float64 `json:"height,omitempty"` // optionele node-hoogte (voor sizing)
+}
+
+// V3DiagramEdge beschrijft een edge (verbinding) in een diagram.
+type V3DiagramEdge struct {
+	ID           string          `json:"id"`                     // unieke edge-ID (UUID)
+	Source       string          `json:"source"`                 // node elementID (van)
+	Target       string          `json:"target"`                 // node elementID (naar)
+	SourceHandle string          `json:"sourceHandle,omitempty"` // React Flow handle ID op source-node
+	TargetHandle string          `json:"targetHandle,omitempty"` // React Flow handle ID op target-node
+	LabelOffsets *V3LabelOffsets `json:"labelOffsets,omitempty"` // offset-metadata voor naamLabels
+	Animated     bool            `json:"animated,omitempty"`     // optioneel: animatie-hint
+}
+
+// V3LabelOffsets beschrijft de X,Y offsets van labels (naamLabelHeen/naamLabelTerug) op een edge.
+// B5: dynamische label-positionering per diagram-edge.
+type V3LabelOffsets struct {
+	Heen  *V3Offset `json:"heen,omitempty"`  // offset voor naamLabelHeen (bijv. "heeft")
+	Terug *V3Offset `json:"terug,omitempty"` // offset voor naamLabelTerug (bijv. "behoort bij")
+}
+
+// V3Offset beschrijft een X,Y offset in pixels.
+type V3Offset struct {
+	X float64 `json:"x"` // X-offset
+	Y float64 `json:"y"` // Y-offset
+}
+
+// V3Notitie beschrijft een vrije tekst-notitie (gele post-it) op het canvas.
+// Notities zijn puur visueel; ze hebben geen scope-edges en worden door codegen genegeerd.
+// C8: notities + constraints in V3-uitwisseling.
+type V3Notitie struct {
+	ID      string     `json:"id"`                // unieke notitie-ID
+	Tekst   string     `json:"tekst"`             // vrije tekst (markdown toegestaan)
+	Domein  string     `json:"domein,omitempty"`  // optionele domein-binding voor filtering
+	Positie *V3Positie `json:"positie,omitempty"` // canvas-positie (x,y); genegeerd door codegen
+	Kleur   string     `json:"kleur,omitempty"`   // optionele override (default geel)
+	Breedte *float64   `json:"breedte,omitempty"` // optionele node-breedte
+	Hoogte  *float64   `json:"hoogte,omitempty"`  // optionele node-hoogte
+}
+
+// V3Constraint beschrijft een UML constraint (lichtblauwe rounded-rect) op het canvas.
+// Constraints hebben scope-edges naar de elementen waarop ze van toepassing zijn;
+// die scope-edges zijn altijd zichtbaar (kunnen niet verborgen worden).
+// C8: constraints in V3-uitwisseling.
+type V3Constraint struct {
+	ID        string     `json:"id"`                  // unieke constraint-ID
+	Naam      string     `json:"naam,omitempty"`      // korte naam (bijv. "C1")
+	Expressie string     `json:"expressie"`           // de constraint zelf (bijv. OCL of vrije tekst)
+	Taal      string     `json:"taal,omitempty"`      // expressietaal: "ocl", "cel", "tekst" (default "tekst")
+	Domein    string     `json:"domein,omitempty"`    // optionele domein-binding
+	Positie   *V3Positie `json:"positie,omitempty"`   // canvas-positie; genegeerd door codegen
+	Breedte   *float64   `json:"breedte,omitempty"`   // optionele node-breedte
+	Hoogte    *float64   `json:"hoogte,omitempty"`    // optionele node-hoogte
+	ScopeRefs []string   `json:"scopeRefs,omitempty"` // typenamen van entiteiten/GE's/relaties waarop de constraint van toepassing is
 }

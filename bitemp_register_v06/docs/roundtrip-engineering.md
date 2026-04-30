@@ -188,3 +188,177 @@ De V3 exporter leest deze tag en zet het `Datatype`-veld in `V3Veld`:
 ```
 
 De frontend en codegenerator gebruiken deze referentie om validatieregels en weergave-hints uit het corresponderende `V3Datatype`-object te halen.
+
+---
+
+## 8. V3 model-uitbreidingen (2026-04 / 2026-05)
+
+### 8.1 Benoemde diagrammen — `Diagrammen` (A4-rev)
+
+Het V3 model bevat nu een optioneel `diagrammen`-veld dat **benoemde diagrammen** uit de IDE exporteert en importeert. Dit sluit de roundtrip-cirkel ook voor IDE-layout: IDE → V3 → IDE.
+
+**Go-types** (in `model/v3_format.go`):
+
+```go
+type V3Model struct {
+    // ...
+    Diagrammen []V3Diagram `json:"diagrammen,omitempty"`
+}
+
+type V3Diagram struct {
+    ID     string          `json:"id"`
+    Naam   string          `json:"naam"`
+    Domein string          `json:"domein,omitempty"`
+    Nodes  []V3DiagramNode `json:"nodes"`
+    Edges  []V3DiagramEdge `json:"edges"`
+}
+
+type V3DiagramNode struct {
+    ElementID string   `json:"elementId"`
+    X         float64  `json:"x"`
+    Y         float64  `json:"y"`
+    Width     *float64 `json:"width,omitempty"`
+    Height    *float64 `json:"height,omitempty"`
+}
+```
+
+**Regels:**
+- Het **Overzicht**-diagram (`overzicht`) is **afgeleid** en wordt nooit geëxporteerd of geïmporteerd. Overzicht wordt bij import altijd opnieuw opgebouwd vanuit de positie-metadata in de entiteiten/GE's/relaties.
+- Benoemde diagrammen (niet `overzicht`) worden volledig serialiseerd inclusief node-posities, edge-IDs en handles.
+- Codegen en MetaRegistry kennen `Diagrammen` niet — het veld wordt transparant doorgegeven bij JSON-roundtrips.
+
+**Adapter-flow:**
+```
+storeNaarV3Model():  diagrams (store) → v3Model.diagrammen  (skip overzicht)
+v3ModelNaarStore():  v3Model.diagrammen → diagrams (store)  (skip overzicht)
+```
+
+---
+
+### 8.2 Verplaatsbare edge-labels — `V3LabelOffsets` (B5)
+
+Associatie- en compositie-edges kunnen twee optionele naam-labels dragen:
+`naamLabelHeen` (richting bron→doel) en `naamLabelTerug` (richting doel→bron).
+Beide labels zijn nu **op het canvas versleepbaar**; hun offset ten opzichte van de standaard-positie wordt opgeslagen.
+
+**Go-types** (in `model/v3_format.go`):
+
+```go
+type V3DiagramEdge struct {
+    ID           string          `json:"id"`
+    Source       string          `json:"source"`
+    Target       string          `json:"target"`
+    SourceHandle string          `json:"sourceHandle,omitempty"`
+    TargetHandle string          `json:"targetHandle,omitempty"`
+    LabelOffsets *V3LabelOffsets `json:"labelOffsets,omitempty"`
+    Animated     bool            `json:"animated,omitempty"`
+}
+
+type V3LabelOffsets struct {
+    Heen  *V3Offset `json:"heen,omitempty"`
+    Terug *V3Offset `json:"terug,omitempty"`
+}
+
+type V3Offset struct {
+    X float64 `json:"x"`
+    Y float64 `json:"y"`
+}
+```
+
+**UI-gedrag** (in `MetamodelEdge.jsx`):
+- `naamLabelHeen` verschijnt met een ▶-markering; `naamLabelTerug` met ◀.
+- Slepen verplaatst het label; de offset wordt zoom-gecorrigeerd via `getViewport().zoom`.
+- Dubbelklik reset de offset naar de standaard-positie.
+- Offsets worden persistent opgeslagen in `e.data.labelOffsets` in de store en geserialiseerd via de adapter.
+
+**Adapter-flow:**
+```
+storeNaarV3Model():  e.data.labelOffsets → v3DiagEdge.labelOffsets  (alleen als ≠ {0,0})
+v3ModelNaarStore():  v3DiagEdge.labelOffsets → e.data.labelOffsets
+```
+
+**Open follow-ups:** editor-v2 (`uml-editor/`) leest/schrijft `labelOffsets` nog niet; DB-publicatie en MetaRegistry roundtrip zijn nog niet gekoppeld.
+
+---
+
+### 8.3 Annotaties op het canvas — `V3Notitie` en `V3Constraint` (C8)
+
+Twee nieuwe annotatie-types zijn toegevoegd aan het V3 model:
+
+| Type | UML-analogie | Visueel | Scope-edges |
+|------|-------------|---------|-------------|
+| `V3Notitie` | UML Note | Gele post-it | Geen |
+| `V3Constraint` | UML Constraint | Lichtblauwe rounded-rect | Altijd zichtbaar (niet verbergbaar) |
+
+**Go-types** (in `model/v3_format.go`):
+
+```go
+type V3Model struct {
+    // ...
+    Notities    []V3Notitie    `json:"notities,omitempty"`
+    Constraints []V3Constraint `json:"constraints,omitempty"`
+}
+
+type V3Notitie struct {
+    ID      string     `json:"id"`
+    Tekst   string     `json:"tekst"`
+    Domein  string     `json:"domein,omitempty"`
+    Positie *V3Positie `json:"positie,omitempty"`
+    Kleur   string     `json:"kleur,omitempty"`
+    Breedte *float64   `json:"breedte,omitempty"`
+    Hoogte  *float64   `json:"hoogte,omitempty"`
+}
+
+type V3Constraint struct {
+    ID        string     `json:"id"`
+    Naam      string     `json:"naam,omitempty"`
+    Expressie string     `json:"expressie"`
+    Taal      string     `json:"taal,omitempty"`   // "ocl", "cel", "tekst"
+    Domein    string     `json:"domein,omitempty"`
+    Positie   *V3Positie `json:"positie,omitempty"`
+    Breedte   *float64   `json:"breedte,omitempty"`
+    Hoogte    *float64   `json:"hoogte,omitempty"`
+    ScopeRefs []string   `json:"scopeRefs,omitempty"`
+}
+```
+
+**Store-representatie:** Notities en constraints leven als eigen element-types in de IDE-store:
+- `type: "notitie"` — `data.tekst`, `data.positie`, `data.kleur`, `data.breedte`, `data.hoogte`
+- `type: "constraint"` — `data.expressie`, `data.taal`, `data.positie`, `data.breedte`, `data.hoogte`
+
+**Scope-edges van constraints** worden geserialiseerd als `structuralEdges` met `data.kind === "scope"` (source = constraint-ID, target = element-typenaam). Bij V3-export worden ze omgezet naar `scopeRefs`; bij V3-import teruggevormd naar structurele edges. Scope-edges zijn semantisch altijd zichtbaar.
+
+**Codegen-transparantie:** Codegen en MetaRegistry kennen `Notities` en `Constraints` niet — ze worden uitsluitend als visuele/documentatie-annotaties behandeld.
+
+**Status (2026-04-30):** Datalaag volledig geïmplementeerd en getest (`v3_b5_c8_roundtrip.test.js`). UI-rendering (canvas-nodes, palette-items) staat nog open.
+
+---
+
+### 8.4 Overzicht V3 model-structuur (volledig)
+
+```json
+{
+  "versie": "v1.0",
+  "naam": "Mijn model",
+  "domeinen":    [ { "naam", "versie", "beschrijving", "kleur", "prefix" } ],
+  "datatypes":   [ { "naam", "basistype", "format", "validatie", "weergave" } ],
+  "enums":       [ { "goType", "waarden": [{ "constNaam", "waarde" }] } ],
+  "entiteiten":  [ {
+    "typenaam", "erft", "isAbstract", "isMaterieel",
+    "gegevenselementen": [ { "naam", "naamLabelHeen", "naamLabelTerug",
+                              "id", "sourceHandle", "targetHandle", ... } ],
+    "relaties":          [ { "naam", "doelEntiteit", "directioneel",
+                              "naamLabelHeen", "naamLabelTerug", ... } ]
+  } ],
+  "diagrammen":  [ {                           // ← A4-rev (2026-04)
+    "id", "naam", "domein",
+    "nodes": [ { "elementId", "x", "y", "width?", "height?" } ],
+    "edges": [ { "id", "source", "target",
+                 "sourceHandle?", "targetHandle?",
+                 "labelOffsets?": { "heen?": {"x","y"}, "terug?": {"x","y"} } } ]  // ← B5
+  } ],
+  "notities":    [ { "id", "tekst", "positie", "kleur" } ],    // ← C8
+  "constraints": [ { "id", "naam", "expressie", "taal",        // ← C8
+                     "positie", "scopeRefs": ["TypeA", "TypeB"] } ]
+}
+```

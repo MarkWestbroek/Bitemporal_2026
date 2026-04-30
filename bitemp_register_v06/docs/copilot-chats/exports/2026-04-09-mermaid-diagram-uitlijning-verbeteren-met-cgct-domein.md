@@ -64,8 +64,10 @@ Wil je dezelfde wijzigingen daarop ook doen? = refernetielijst dingen wegdoen en
 
 ## 🤖 Assistant
 
-In bitemp_register_v06/model/json/model v3/CGCT.md staan nu dezelfde twee aanpassingen als in de andere Mermaid-file: de Referentielijst-gerelateerde onderdelen zijn verwijderd en de repository/analysis-cluster is ingepakt in `namespace CGCT`.
+Ik pas nu het diagram in  aan zodat het dezelfde twee wijzigingen heeft: de Referentielijst-onderdelen blijven weg en de CGCT-cluster krijgt een namespace.Ik zet nu de repository-gerelateerde definities in  binnen `namespace CGCT`, zodat dit bestand hetzelfde groeperingsgedrag krijgt als de metamodelfile.
+```
 
-Als je wilt, kan ik de namen `Unnamed`, `relatie_1775754208569_5` en `gegevenselement_1775755031727_25` ook meteen opschonen, zodat het diagram beter leesbaar wordt.
+```
+In 
 
 ---

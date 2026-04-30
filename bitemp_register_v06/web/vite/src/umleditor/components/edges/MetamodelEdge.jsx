@@ -26,6 +26,7 @@ import {
   BaseEdge,
   useReactFlow,
 } from "@xyflow/react";
+import useModelStore from "../../../store/useModelStore.js";
 
 function MetamodelEdge({
   id,
@@ -40,9 +41,58 @@ function MetamodelEdge({
   data,
   selected,
 }) {
-  const { getNode } = useReactFlow();
+  const { getNode, getViewport } = useReactFlow();
   const sourceNode = getNode(source);
   const targetNode = getNode(target);
+
+  // B5: helper voor drag-to-offset van naam-labels.
+  // Zoekt het diagram waarin deze edge leeft en patcht data.labelOffsets via store.
+  const findDiagramIdForEdge = () => {
+    const all = useModelStore.getState().diagrams || {};
+    for (const [dId, diag] of Object.entries(all)) {
+      if ((diag.edges || []).some((e) => e.id === id)) return dId;
+    }
+    return null;
+  };
+  const startLabelDrag = (which) => (ev) => {
+    ev.stopPropagation();
+    ev.preventDefault();
+    const startX = ev.clientX;
+    const startY = ev.clientY;
+    const off0 = (data?.labelOffsets && data.labelOffsets[which]) || { x: 0, y: 0 };
+    const zoom = (typeof getViewport === "function" && getViewport().zoom) || 1;
+    const onMove = (m) => {
+      const dx = (m.clientX - startX) / zoom;
+      const dy = (m.clientY - startY) / zoom;
+      const dId = findDiagramIdForEdge();
+      if (!dId) return;
+      const live = useModelStore
+        .getState()
+        .diagrams[dId]?.edges?.find((e) => e.id === id);
+      const liveOff = (live?.data && live.data.labelOffsets) || {};
+      const next = { ...liveOff, [which]: { x: off0.x + dx, y: off0.y + dy } };
+      useModelStore.getState().updateDiagramEdge(dId, id, { labelOffsets: next });
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
+  const resetLabelOffset = (which) => (ev) => {
+    ev.stopPropagation();
+    ev.preventDefault();
+    const dId = findDiagramIdForEdge();
+    if (!dId) return;
+    const live = useModelStore
+      .getState()
+      .diagrams[dId]?.edges?.find((e) => e.id === id);
+    const liveOff = (live?.data && live.data.labelOffsets) || {};
+    const next = { ...liveOff };
+    delete next[which];
+    useModelStore.getState().updateDiagramEdge(dId, id, { labelOffsets: next });
+  };
 
   const isDependency = data?.isDependency === true;
   const isGeneralization = data?.isGeneralization === true;
@@ -280,6 +330,72 @@ function MetamodelEdge({
           </div>
         </EdgeLabelRenderer>
       )}
+
+      {/* B5: heen/terug naam-labels met UML-driehoek (▶/◀) op compositie- en associatie-edges.
+           Offsets uit data.labelOffsets.{heen,terug}.{x,y} — default {0,0}.
+           Heen-label staat aan source-zijde, Terug-label aan target-zijde. */}
+      {(isComposition || isAssociation) && data?.naamLabelHeen && (() => {
+        const off = data?.labelOffsets?.heen || { x: 0, y: 0 };
+        // Heen = bron→doel, label dus dichter bij source
+        const baseX = isAssociation && targetNode?.type === "associatieAnker" ? geLabelX : srcLabelX;
+        const baseY = isAssociation && targetNode?.type === "associatieAnker" ? geLabelY : srcLabelY;
+        return (
+          <EdgeLabelRenderer>
+            <div
+              className="edge-label edge-naam-label edge-naam-heen nodrag nopan"
+              onMouseDown={startLabelDrag("heen")}
+              onDoubleClick={resetLabelOffset("heen")}
+              style={{
+                position: "absolute",
+                transform: `translate(-50%, -50%) translate(${baseX + (off.x || 0)}px, ${baseY + (off.y || 0)}px)`,
+                pointerEvents: "all",
+                cursor: "move",
+                userSelect: "none",
+                fontStyle: "italic",
+                color: "#475569",
+                background: "rgba(255,255,255,0.85)",
+                padding: "1px 4px",
+                borderRadius: 3,
+              }}
+              title="Naam in heen-richting (bron → doel) — sleep om te verplaatsen, dubbelklik om te resetten"
+            >
+              <span style={{ marginRight: 3 }}>▶</span>
+              {data.naamLabelHeen}
+            </div>
+          </EdgeLabelRenderer>
+        );
+      })()}
+      {(isComposition || isAssociation) && data?.naamLabelTerug && (() => {
+        const off = data?.labelOffsets?.terug || { x: 0, y: 0 };
+        // Terug = doel→bron, label dus dichter bij target
+        const baseX = isAssociation && targetNode?.type === "associatieAnker" ? srcLabelX : geLabelX;
+        const baseY = isAssociation && targetNode?.type === "associatieAnker" ? srcLabelY : geLabelY;
+        return (
+          <EdgeLabelRenderer>
+            <div
+              className="edge-label edge-naam-label edge-naam-terug nodrag nopan"
+              onMouseDown={startLabelDrag("terug")}
+              onDoubleClick={resetLabelOffset("terug")}
+              style={{
+                position: "absolute",
+                transform: `translate(-50%, -50%) translate(${baseX + (off.x || 0)}px, ${baseY + (off.y || 0)}px)`,
+                pointerEvents: "all",
+                cursor: "move",
+                userSelect: "none",
+                fontStyle: "italic",
+                color: "#475569",
+                background: "rgba(255,255,255,0.85)",
+                padding: "1px 4px",
+                borderRadius: 3,
+              }}
+              title="Naam in terug-richting (doel → bron) — sleep om te verplaatsen, dubbelklik om te resetten"
+            >
+              <span style={{ marginRight: 3 }}>◀</span>
+              {data.naamLabelTerug}
+            </div>
+          </EdgeLabelRenderer>
+        );
+      })()}
     </>
   );
 }

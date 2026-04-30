@@ -506,3 +506,128 @@ De V3 roundtrip voor entiteitsovererving (generalisatie/supertype) was incomplee
 | `model/v3_exporter.go` | `Erft: meta.ParentTypenaam` toegevoegd |
 | `web/vite/src/store/adapters.js` | V3 import: `erft` → generalisatie-edge; V3 export: generalisatie-edge → `erft` |
 | `web/vite/src/ide/DetailsPanel.jsx` | `SupertypeField` component met dropdown, import `DEFAULT_DIAGRAM_ID` |
+
+### Fase 7: Diagrammen-roundtrip, verplaatsbare edge-labels & canvas-annotaties
+
+#### A4-rev — Benoemde diagrammen in V3 roundtrip
+
+Voorheen gingen node-posities in benoemde diagrammen verloren bij een V3-export/import-cyclus.
+De positie-metadata in de entiteiten/GE's/relaties bewaarde alleen de layout van het **Overzicht**-diagram, niet van handmatig aangemaakte diagrammen.
+
+*Fix*: `storeNaarV3Model()` serialiseert nu alle benoemde diagrammen naar `v3Model.diagrammen[]`:
+
+```json
+{
+  "diagrammen": [
+    {
+      "id": "diagram-abc123",
+      "naam": "Kernmodel",
+      "domein": "kern",
+      "nodes": [{ "elementId": "A", "x": 120, "y": 80, "width": 200 }],
+      "edges": [{ "id": "e1", "source": "A", "target": "A_U",
+                  "sourceHandle": "bottom", "targetHandle": "top" }]
+    }
+  ]
+}
+```
+
+`v3ModelNaarStore()` laadt deze diagrammen terug. Het Overzicht-diagram (`DEFAULT_DIAGRAM_ID = "overzicht"`) wordt expliciet **overgeslagen** bij beide kanten van de roundtrip — overzicht wordt altijd opgebouwd vanuit de entiteit-posities.
+
+**Gewijzigde bestanden:**
+
+| Bestand | Wijziging |
+|---------|-----------|
+| `model/v3_format.go` | Nieuwe types `V3Diagram`, `V3DiagramNode`, `V3DiagramEdge`; `Diagrammen` op `V3Model` |
+| `web/vite/src/store/adapters.js` | `storeNaarV3Model`: diagrams → `diagrammen`; `v3ModelNaarStore`: `diagrammen` → diagrams |
+
+---
+
+#### B5 — Verplaatsbare edge-labels (naamLabelHeen / naamLabelTerug)
+
+Associatie- en compositie-edges kunnen twee naam-labels dragen naast hun rolnamen:
+- **naamLabelHeen** (▶): de naam van de relatie in leesrichting bron→doel
+- **naamLabelTerug** (◀): de naam in de tegengestelde richting (bijv. voor bidirectionele navigatie)
+
+Beide labels waren al aanwezig in het model, maar hadden een vaste positie op de edge.
+Nu zijn ze **op het canvas versleepbaar** en wordt hun positie bewaard.
+
+*UI-implementatie* (in `MetamodelEdge.jsx`):
+- Labels renderen als `<EdgeLabelRenderer>` blokken met `cursor:move` en klassen `nodrag nopan`.
+- **Drag**: `mousedown` start een handler die `mousemove`-deltas accumulteert; elke delta wordt gedeeld door `getViewport().zoom` voor zoom-correctie, zodat het label altijd onder de muiscursor blijft.
+- **Reset**: `dblclick` verwijdert de offset-key uit `data.labelOffsets`.
+- Updates schrijven via `useModelStore.getState().updateDiagramEdge()` (Zustand outside-React-pattern, voorkomt re-renders).
+
+*Store-representatie*:
+```js
+// edge.data.labelOffsets
+{
+  heen:  { x: 15, y: -8 },  // offset in canvas-eenheden
+  terug: { x: -20, y: 5 }
+}
+```
+
+*V3 roundtrip*: labelOffsets worden opgeslagen per diagram-edge in `v3DiagEdge.labelOffsets`:
+```json
+{ "id": "e1", "source": "A", "target": "Rel_A_B",
+  "labelOffsets": { "heen": { "x": 15, "y": -8 } } }
+```
+
+**Gewijzigde bestanden:**
+
+| Bestand | Wijziging |
+|---------|-----------|
+| `model/v3_format.go` | `V3LabelOffsets`, `V3Offset`; `LabelOffsets` op `V3DiagramEdge` |
+| `web/vite/src/store/adapters.js` | Serialisatie/deserialisatie van `labelOffsets` per edge |
+| `uml-editor/src/components/edges/MetamodelEdge.jsx` | Drag-logica, ▶/◀ labels, zoom-correctie, dblclick-reset |
+
+**Open follow-ups:** editor-v2 (`uml-editor/`) verwerkt labelOffsets nog niet bij V3-import/export. DB-publicatie koppelt de offsets nog niet.
+
+---
+
+#### C8 — Canvas-annotaties: notities en constraints (datalaag)
+
+Twee nieuwe annotatie-types zijn toegevoegd aan de IDE-store en het V3-formaat:
+
+| Type | UML-analogie | Visueel | Gebruik |
+|------|-------------|---------|---------|
+| `notitie` | UML Note | Gele post-it | Vrije tekst op het canvas |
+| `constraint` | UML Constraint `{...}` | Lichtblauwe rounded-rect | Formele restrictie met taal (OCL/CEL/tekst) |
+
+*Store-representatie*:
+```js
+// elements map
+"notitie-123": {
+  id: "notitie-123", type: "notitie",
+  data: { tekst: "Let op: ...", kleur: "#ffffcc", breedte: 200, hoogte: 80 },
+  position: { x: 300, y: 150 }
+}
+
+"constraint-456": {
+  id: "constraint-456", type: "constraint",
+  data: { naam: "geldig postcode formaat", expressie: "postcode.matches(...)",
+          taal: "cel", breedte: 240, hoogte: 60, scopeRefs: ["NP_Adres"] },
+  position: { x: 500, y: 200 }
+}
+```
+
+*Scope-edges* (constraints): een constraint kan meerdere `scopeRefs` bevatten — verwijzingen naar element-typenamen. In de store leven deze als `structuralEdges` met `data.kind === "scope"`. Bij V3-export worden ze omgezet naar de `scopeRefs`-array; bij V3-import teruggereconstrueerd.
+
+```
+export: structuralEdge { kind:"scope", source:"constraint-456", target:"NP_Adres" }
+         → V3Constraint.scopeRefs: ["NP_Adres"]
+
+import: V3Constraint.scopeRefs["NP_Adres"]
+         → structuralEdge { kind:"scope", source:"constraint-456", target:"NP_Adres" }
+```
+
+*V3 roundtrip getest* in `web/vite/src/store/__tests__/v3_b5_c8_roundtrip.test.js` (115/115 tests passeren).
+
+**Status:** Datalaag ✅. UI-rendering (canvas-nodes, palette-items, scope-edge styling) staat nog open.
+
+**Gewijzigde bestanden:**
+
+| Bestand | Wijziging |
+|---------|-----------|
+| `model/v3_format.go` | Nieuwe types `V3Notitie`, `V3Constraint`; `Notities`, `Constraints` op `V3Model` |
+| `web/vite/src/store/adapters.js` | Export + import van notities, constraints en scope-edges |
+| `web/vite/src/store/__tests__/v3_b5_c8_roundtrip.test.js` | **Nieuw** — 3 roundtrip-tests |

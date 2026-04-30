@@ -97,6 +97,19 @@
   - `IdePage.jsx`: `handleDeleteDiagram` callback + `closeDiagramTab` import + nieuwe `onDeleteDiagram`-prop op `<ProjectBrowser>`.
 - Bestanden: `src/ide/BrowserContextMenu.jsx`, `src/ide/ProjectBrowser.jsx`, `src/ide/layoutConfig.js`, `src/pages/IdePage.jsx`.
 
+#### Visuele e2e-tester (Playwright) — ✅ SKELET TOEGEVOEGD (2026-04-30)
+- Doel: agent (en mens) kan visueel UI-flows verifiëren met screenshots, traces en headless/UI-runs.
+- Toegevoegd:
+  - `web/vite/playwright.config.js`: chromium-project, baseURL via `PLAYWRIGHT_BASE_URL` (default `http://localhost:5173`), trace + screenshot on failure.
+  - `web/vite/tests/e2e/01-ide-laadt.spec.js`: smoke — `/ide/` laadt en window-hook is beschikbaar.
+  - `web/vite/tests/e2e/02-verwijder-diagram-context-menu.spec.js`: rechtsklik op diagram → "Verwijder diagram" zichtbaar → annuleren → diagram blijft staan.
+  - `web/vite/tests/e2e/helpers/model.js`: `injectMinimaalModel(page)` — vult store met 2 entiteiten + 1 diagram via `window.__useModelStore`.
+  - Dev-only hook in `src/store/useModelStore.js`: in `import.meta.env.DEV` exposeren we `window.__useModelStore` voor test-injectie. In productie tree-shaked.
+  - npm scripts: `test:e2e`, `test:e2e:ui`, `test:e2e:install`.
+  - `.gitignore`: `playwright-report/`, `test-results/` uitgesloten.
+- Setup eenmalig: `cd web/vite && npm i -D @playwright/test && npm run test:e2e:install`.
+- Voorwaarde: vite dev-server moet draaien (taak `vite: dev server (v06)`).
+
 ---
 
 ### 0.8 Verzamelde UML-UI-issues / vragen (2026-04-29)
@@ -135,6 +148,31 @@ Inventarisatie van een batch vragen en bugs over editor-v2 én IDE. Ge­ordend o
     - Impact op MetaRegistry, codegen, schema-API, querystring (`?taal=nl`), GraphQL en frontend-rendering
     - Multipliciteit-semantiek: "enkelvoudig in tijd én in taal" als gecombineerde constraint
     - Migratie-pad voor bestaande registers
+
+---
+
+### 0.9 V3 uitwisseling: A4-rev (diagrammen), B5 (label-offsets), C8 (notes/constraints) — datalaag IMPLEMENTED (2026-05)
+
+Voortgang op punten A4 (V3-import diagrammen), B5 (verplaatsbare edge-labels) en C8 (notes/constraints) op het niveau van het V3-uitwisselingsformaat en de IDE-adapter:
+
+- **A4-rev (V3 ↔ IDE diagram-roundtrip):**
+  - Go: `V3Diagram` / `V3DiagramNode` / `V3DiagramEdge` toegevoegd in `model/v3_format.go`; veld `Diagrammen` in `V3Model`.
+  - IDE: `storeNaarV3Model` exporteert benoemde diagrammen (`Overzicht` blijft afgeleid en wordt geskipt); `v3ModelNaarStore` importeert ze terug naar de zustand-store.
+  - Codegen blijft transparant: kent het veld niet, maar bewaart het door JSON-roundtrip.
+- **B5 (verplaatsbare edge-labels — datalaag + UI):**
+  - Go: `V3LabelOffsets { heen?, terug? }` met `V3Offset { x, y }` per `V3DiagramEdge`.
+  - IDE-store: edge `data.labelOffsets.{heen,terug}.{x,y}`; geüpdatet via bestaande `updateDiagramEdge(diagramId, edgeId, patch)`.
+  - Adapter: serialiseert offsets alleen als ze gezet zijn (≠ {0,0}).
+  - UI: `MetamodelEdge.jsx` rendert nu twee extra labels (`naamLabelHeen` en `naamLabelTerug`) met UML-driehoekjes (▶ / ◀), schaal-bewust draggable (zoom-correct), en met dubbelklik-reset naar default-positie. Werkt op compositie- én associatie-edges.
+  - Test: `v3_b5_c8_roundtrip.test.js` valideert dat offsets behouden blijven door storeNaarV3Model + v3ModelNaarStore.
+- **C8 (notes en constraints — datalaag):**
+  - Go: `V3Notitie` (gele post-it: tekst, positie, kleur, breedte, hoogte) en `V3Constraint` (lichtblauwe rounded-rect: naam, expressie, taal, scopeRefs[]) toegevoegd; velden `Notities` en `Constraints` op `V3Model`.
+  - IDE-store: nieuwe element-types `notitie` en `constraint`. Scope-edges van een constraint naar elementen (`structuralEdges` met `data.kind === "scope"`) worden bij export omgezet naar `scopeRefs` en bij import teruggevormd. Scope-edges zijn semantisch altijd zichtbaar en kunnen niet verborgen worden.
+  - Adapter-roundtrip getest in `v3_b5_c8_roundtrip.test.js`.
+
+**Open follow-ups:**
+- B5: cross-platform — editor-v2 leest/schrijft `labelOffsets` nog niet; idem MetaRegistry/DB-publicatie.
+- C8: UI-rendering ontbreekt nog (palette-icons voor "notitie" en "constraint", node-componenten in IDE-canvas, scope-edge styling als gestippelde grijze lijn). Datalaag is klaar zodat dit zonder format-wijziging kan worden aangevuld.
 
 ---
 

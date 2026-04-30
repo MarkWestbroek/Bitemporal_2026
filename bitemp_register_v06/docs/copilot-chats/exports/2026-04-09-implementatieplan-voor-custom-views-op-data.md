@@ -46,103 +46,7 @@ Wil je hier iets over zeggen en een plan maken hoe we dat hier kunnen implemente
 
 ## 🤖 Assistant
 
-Now let me check the exact BACKLOG items and the configuratie model JSON for the template pattern: Nu heb ik een compleet beeld. Laat me het plan opstellen. Eén vraag eerst: Hier is het plan:
-
----
-
-## Plan: Custom Views / Publicatie (Q2)
-
-**TL;DR**: Implementeer `WeergaveDefinitie` als bitemporele ENT in het configuratie-domein (analoog aan FormulierDefinitie), met een apart publicatie-entrypoint (`publicatie.html`) dat configureerbare tabelweergaven, server-side zoek/filter en detail-pagina templates biedt.
-
----
-
-### Datamodel — WeergaveDefinitie
-
-Volgt exact het FormulierDefinitie-patroon: 3 GE's met elk hun eigen wijzigingslevenscyclus.
-
-**ENT: WeergaveDefinitie** (materieel, configuratie-domein)
-
-| GE (enkelvoudig) | Velden | Doel |
-|---|---|---|
-| **Meta** | `naam`, `beschrijving`, `doeltype`, `status` (enum: concept/actief/inactief), `is_standaard` | Identificatie & levenscyclus |
-| **TabelConfig** | `tabel_config_json` (JSON string) | Kolommen, sortering, paginering |
-| **DetailTemplate** | `template_tekst` (string) | `{{veldpad}}`-template voor detailpagina |
-
-**TabelConfig JSON**:
-```json
-{
-  "kolommen": [
-    { "veldpad": "Naam.roepnaam", "label": "Roepnaam", "breedte": "200px", "sorteerbaar": true, "filterbaar": true }
-  ],
-  "standaardSortering": { "veldpad": "Naam.achternaam", "richting": "asc" },
-  "rijenPerPagina": 25
-}
-```
-
-**DetailTemplate voorbeeld**:
-```
-# {{Naam.roepnaam}} {{Naam.achternaam}}
-**Geboortedatum**: {{Geboorte.geboortedatum}}
-**Adres**: {{Bereikbaarheid.Locatie.Adres.straat}} {{Bereikbaarheid.Locatie.Adres.huisnummer}}
-```
-
-Veldpaden sluiten aan op het bestaande CEL-pad systeem (`celEvaluator.js`).
-
----
-
-### Steps
-
-**Fase A — Backend: WeergaveDefinitie model** (prerequisite voor B en C)
-
-1. Breid `configuratie_model.json` uit met WeergaveDefinitie ENT + 3 GEs + `WeergaveDefinitieStatus` enum
-2. Draai codegen (`go run ./cmd/codegen --input configuratie_model.json --output model/ --prefix configuratie --mode additive --domein configuratie`)
-3. Verificatie: `go build .` + `go test .`
-
-**Fase B — Frontend: Publicatie-entrypoint** (*na Fase A*)
-
-4. Maak `web/vite/publicatie.html` + `src/publicatie/main.jsx` (React root + HashRouter)
-5. Maak `PublicatieLanding.jsx` (type-selectie pagina, leest entiteitstypen uit SchemaContext)
-6. Maak `useWeergaveDefinitie.js` hook (fetcht actieve definitie voor doeltype, analoog aan `useFormulierDefinitie.js`)
-7. Maak `PublicatieTabel.jsx` — TanStack Table met kolommen uit `tabel_config_json`, veldwaarden via CEL-evaluator (*depends on 6*)
-8. Maak `PublicatieDetail.jsx` — template renderer: `{{veldpad}}` → CEL-evaluatie, Markdown → HTML (*parallel met 7*)
-9. Update `vite.config.js` (multi-page build) + Go static file serving
-10. Replay file met voorbeeld WeergaveDefinitie voor een bestaande ENT
-
-**Fase C — Server-side zoek/filter uitbreiding** (*parallel met Fase B*)
-
-11. Breid `MakeGetEntitiesByMetaHandler` uit met `?filter.veld=waarde` (veldspecifiek ILIKE)
-12. Voeg `?sort=` + `?order=` toe aan list handler
-13. Voeg `total_count` toe aan paginering-response
-14. Wire `PublicatieTabel` aan server-side paging/filtering (*depends on 7 + 11-13*)
-
----
-
-### Relevante bestanden
-
--  — uitbreiden met WeergaveDefinitie (Fase A)
-- `bitemp_register_v06/model/configuratie_*` — gegenereerde model-bestanden
-- handlers/core_handlers.go — bestaande `?q=` ILIKE logica, uitbreiden met `?filter.*` (Fase C)
--  — multi-page build config
-- src/hooks/useFormulierDefinitie.js — template voor `useWeergaveDefinitie`
-- src/components/editor/RepresentatieTabel.jsx — TanStack Table patroon (referentie)
-- src/shared/celEvaluator.js — hergebruiken voor veldpad → waarde extractie
-- src/editor/main.jsx — HashRouter referentie
-
-### Verificatie
-
-1. `go build .` + `go test .` slagen na Fase A
-2. `npm run build` slaagt met `publicatie.html` in output
-3. `GET /full/weergave_definities` retourneert lege lijst (of voorbeeld na replay)
-4. Publicatie tabel toont geconfigureerde kolommen uit WeergaveDefinitie
-5. Detail-pagina rendert template met werkelijke entity-data
-6. `?filter.naam=jan` retourneert gefilterde resultaten server-side
-7. BACKLOG.md: F22/F23 bijgewerkt
-
-### Verdere overwegingen
-
-1. **Performance bij grote datasets** — CEL-evaluatie per rij over full-entity objecten. Bij >100 entiteiten kan server-side paging (Fase C) dit beheersbaar houden. Eventueel later een gedenormaliseerd zoek-endpoint.
-2. **Template XSS-preventie** — `{{veldpad}}` waarden moeten HTML-escaped worden. Geen `dangerouslySetInnerHTML` zonder sanitization. Bestaande CEL-evaluator is safe (recursive-descent, geen eval).
-3. **WeergaveDefinitie editor** — dit plan betreft de *rendering*. Een visuele editor (drag-and-drop kolommen, template preview) is een apart vervolgitem, vergelijkbaar met F30.
+Laat me eerst de huidige codebase verkennen om te begrijpen wat er al staat en hoe Custom Views het beste past.  
 
 ---
 
@@ -506,62 +410,16 @@ Documenteer je / werk je doc bij?
 
 ## 🤖 Assistant
 
+Goed opgemerkt. Laat me eerst de Input-structs en hub Veldnamen verifiëren: Nu de hub Veldnamen bevestigen: Goed. De hub Veldnamen zijn:
+- `weergavedefinitie_meta` (Input: naam, beschrijving, doeltype, status, is_standaard)
+- `tabelconfig` (Input: tabel_config_json, definitie_versie)
+- `detailtemplate` (Input: template_tekst, definitie_versie)
 
-```
-
-```
-Nu het oud voorbeeld-bestand beoordelen: Het oud voorbeeld-bestand heeft meerdere problemen:
-
-1. Gebruikt `_data` veldnamen i.p.v. hub veldnamen
-2. Gebruikt PascalCase veldpaden (`Persoonsidentificatie.bsn`) i.p.v. de juiste snake_case paden (`persoonsidentificaties.data.bsn`)
-3. Mist `definitie_versie` veld
-4. ID 9101 — willekeurig hoog nummer
-5. Datum 2026-04-12 (oud)
-
-Dit is effectief **vervangen** door de NatuurlijkPersoon-entry in de nieuwe standaard file. Ik zou aanraden hem te verwijderen — wil je dat, of bewaren als archief?
-
-Nu de documentatie bijwerken: Ik update  F33 met de huidige status: 
-```
-
-```
-Nu zoek ik of er al replay-conventies gedocumenteerd staan: Er is geen replay-conventie in CODEGEN.md. Laat me Er is geen replay-conventie in CODEGEN.md. Laat me een sectie toevoegen in  over replay-bestandsconventies: Ik voeg een replay-conventies sectie toe vóór de FAQ:  
-```
-
-```
-Nu ook het FormulierDefinitie replay file controleren — dat gebruikt waarschijnlijk ook `_data` veldnamen:  Dit bestand gebruikt al hub-veldnamen (`formulierdefinitie_meta`, `layout`) — goed. Maar het ID is 9001, en de datum zou 2026-04-09 moeten zijn (die klopt). Ik corrigeer het ID: 
-```
-
-```
-Nu het layout GE mist ook `definitie_versie`. Laat me checken: `definitie_versie` ontbreekt in het FormulierDefinitie Layout. Toevoegen:  
-```
-
-```
-Samenvatting van alle wijzigingen:
-
-### Standaard replay file gecorrigeerd
-:
-- **Hub-veldnamen**: `weergavedefinitie_meta`, `tabelconfig`, `detailtemplate` (was: `*_data`)
-- **IDs**: 1, 2, 3, 4 (was: 9201–9204)
-- **Datums**: 2026-04-09 (was: 2026-06-10)
-- **definitie_versie**: "0.1" overal (was al aanwezig)
-
-### FormulierDefinitie replay file bijgewerkt
-:
-- **ID**: 1 (was: 9001)
-- **definitie_versie**: "0.1" toegevoegd aan layout
-
-### Oud voorbeeld — **vervangen, mag weg**
-registraties-replay-init-weergavedefinitie-natuurlijkpersoon-voorbeeld.json is achterhaald:
-- Gebruikt `_data` veldnamen en PascalCase veldpaden
-- Mist `definitie_versie`
-- ID 9101 / datum 2026-04-12
-- NatuurlijkPersoon zit nu al in het standaard-bestand
-
-→ Wil je dat ik dit bestand verwijder?
-
-### Documentatie bijgewerkt
-- : nieuwe sectie "Replay-bestandsconventies" toegevoegd
-- : F33 bijgewerkt met alle 4 entiteitstypen
+Nu de replay file herschrijven met alle correcties: Het hele bestand moet herschreven worden. De wijzigingen zijn substantieel (hub i.p.v. _data, datums, IDs, definitie_versie). Ik schrijf het bestand opnieuw: Nu herschrijf ik het bestand volledig met alle correcties:
+1. **Hub veldnamen** i.p.v. `_data` veldnamen 
+2. **IDs** beginnen bij 1
+3. **Datums** op 2026-04-09
+4. **definitie_versie** overal "0.1" 
 
 ---
 
@@ -599,54 +457,7 @@ Wat gaat daar fout?
 
 ## 🤖 Assistant
 
-Er ontbreken drie gegenereerde bestanden: `configuratie_metaregistry.go`, `configuratie_enum_registry.go`, `configuratie_datatype_registry.go`, en `presentatie_datatype_registry.go`. Laat me de codegen bekijken om te begrijpen hoe die gegenereerd worden:  Nu snap ik het. De codegen draait in additive mode per domein en registreert dan zichzelf via . Laat me kijken hoe die werkt en ook welke domeinen er via de Makefile/rebuild worden aangeroepen:  Geen codegen stappen in de Makefile. Laat me kijken hoe de rebuild vanuit de editor/UI werkt: Laat me de rebuild-handler bekijken, want de foutmelding komt uit een HTTP-endpoint: Now I understand the full picture. Let me check what's in the baseline: Daar zit het probleem. De `_baseline/model/metaregistry_plumbing.go` bevat init-calls naar functies die nooit gegenereerd zijn (of verloren zijn gegaan). Omdat de rebuild eerst de baseline terugzet en dán codegen draait — maar codegen importeert  en kan dus niet compileren.
-
-Er zijn **twee** ontbrekende groepen:
-
-1. **`presentatie`** — domeinonafhankelijke datatypes (KorteTekst, Datum, etc.) die geen  hebben in het V3 model
-2. **`configuratie`** — het configuratie-domein (FormulierDefinitie, WeergaveDefinitie, enums, datatypes)
-
-De init-calls zijn eerder door  toegevoegd, maar de bijbehorende gegenereerde bestanden zijn er niet. De oplossing: verwijder deze dangling calls uit zowel het huidige bestand als de baseline, zodat de rebuild weer werkt. De codegen zal ze automatisch weer toevoegen via  zodra dat domein succesvol gegenereerd is.
-
-Maar wacht — het probleem is dieper. De codegen draait maar voor **1 domein** (configuratie). Dan moet het -package compileren, maar dat verwijst ook naar  die ook ontbreekt. Laat me even eerst checken of "presentatie" ooit als apart domein gedraaid wordt: Nu is het helder. Er zijn twee problemen:
-
-1. **** — dit is handmatig toegevoegd, maar er is nooit een "presentatie" codegen-run geweest. Domeinloze datatypes vallen onder `register` (per codegen logica regel 47 van ).
-
-2. ** /  / ** — deze zijn door een eerdere  toegevoegd, maar de bijbehorende bestanden bestaan niet (niet in model/, noch in _baseline/).
-
-De oplossing: verwijder de dangling init-calls uit zowel het huidige bestand als de baseline. Zodra je een rebuild doet voor het configuratie-domein, zal  ze weer toevoegen samen met de gegenereerde bestanden. 
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-Laat me ook even het commentaar bovenaan aanpassen: 
-```
-
-```
-
-```
-
-```
-Nu verifiëren dat het bouwt: Build succesvol. Laten we ook de tests draaien:  Alle tests slagen. Het probleem is opgelost:
-
-**Oorzaak**:  (zowel in  als ) bevatte 4 init-calls naar functies die nooit gegenereerd zijn:
-- `initPresentatieDatatypeRegistry()` — "presentatie" was geen geldig codegen-domein; domeinloze datatypes vallen al onder `register`
-- `initConfiguratieEnumRegistry()`, `initConfiguratieDatatypeRegistry()`, `initConfiguratieMetaRegistry()` — eerder door  toegevoegd, maar de bijbehorende gegenereerde bestanden ontbreken
-
-**Fix**: De 4 dangling calls verwijderd uit beide bestanden. Bij een volgende rebuild met  zal  de configuratie-calls automatisch weer toevoegen zodra de bestanden succesvol gegenereerd zijn.
-
-Je kunt nu opnieuw publishen + rebuilden vanuit de editor.
+De  functie roept  aan (regel 374), maar die functie bestaat niet. Laat me checken welke bestanden er wél zijn:   
 
 ---
 
@@ -658,24 +469,7 @@ hmm, u komt er
 
 ## 🤖 Assistant
 
-Het probleem:  gebruikt  rechtstreeks als Go-type, maar het V3 model gebruikt JSON Schema types (`integer`, `number`, `boolean`) die geen geldige Go-types zijn. Er moet een mapping naar Go-types komen. Het probleem:  schrijft JSON Schema-types (`integer`, `number`, `boolean`) letterlijk als Go-types, maar die bestaan niet in Go. Er moet een mapping komen. Laat me ook even checken welke datatypes in het volledige model zitten dat gepubliceerd wordt: Duidelijk. `Geheel`→`integer`, `Decimaal`/`Bedrag`/`Percentage`→`number`, `Jaar`→`integer`, `JaNee`→`boolean`. Die moeten gemapped worden naar Go-types.  Nu de fix — een mapping van JSON Schema types naar Go types toevoegen: 
-```
-
-```
-Nu de mapping-functie toevoegen. Laat me eerst het einde van het bestand zien:  
-```
-
-```
-Nu controleren of het compileert:  Laat me nu ook verifiëren dat de codegen correct  genereert met de juiste Go-types:   De mapping werkt correct: `Geheel`→`int64`, `Decimaal`/`Bedrag`/`Percentage`→`float64`, `Jaar`→`int64`, `JaNee`→`bool`.   Laat me nu ook checken of de gegenereerde structs die deze types gebruiken correct compileren. Er is mogelijk ook een probleem bij structvelden die `int64`/`float64`/`bool` verwachten maar `Geheel`/`Decimaal`/`JaNee` als alias krijgen — dat moet goed matchen met de bun/json tags: Geen numeric/boolean velden in het configuratie-domein — die datatypes zitten in andere domeinen. De configuratie heeft alleen `Versie` (string). Laat me verifiëren met een volledige build na het draaien van de codegen:   Build en tests slagen. Nu kun je de rebuild opnieuw proberen via de UI.
-
-**Samenvatting van de fix:**
-- : nieuwe functie  die JSON Schema types mapt naar Go types:
-  - `integer` → `int64`
-  - `number` → `float64`  
-  - `boolean` → `bool`
-  -  / leeg → 
-
-De MIM-gebaseerde datatypes (Geheel, Decimaal, Bedrag, Percentage, Jaar, JaNee) krijgen nu correcte Go-onderliggende types in plaats van de letterlijke JSON Schema-typenamen.
+De codegen draait nu (de plumbing-fix werkt!), maar `datatype_aliases.go` bevat ongeldige Go-types. Laat me kijken wat er gegenereerd wordt.  
 
 ---
 
@@ -735,17 +529,7 @@ this screenshot, sorry
 
 ## 🤖 Assistant
 
-Twee bestanden gebruiken  i.p.v. . Fix:  
-```
-
-```
-
-```
-
-```
-Laat me ook checken of er nog andere publicatie-bestanden zijn die dezelfde fout hebben:  Alle drie correct. De Vite dev server zou automatisch hot-reloaden — probeer de publicatie-pagina opnieuw te laden.
-
-**Probleem**: `SchemaContext` exposeert de types als , maar  en  destructureerden  (= `undefined`). Daardoor kon het type `natuurlijk_personen` niet gevonden worden.
+De publicatie-pagina kan het type `natuurlijk_personen` niet vinden. Laat me de routing en type-lookup in de publicatie-frontend bekijken. Het probleem:  destructureert  uit , maar de SchemaContext exposeert het als . Laat me bevestigen:   Bevestigd — de context exposeert , niet .  en  moeten  gebruiken.   
 
 ---
 
@@ -761,40 +545,6 @@ Filteren werkt alleen nog op de geladen rijen
 
 ## 🤖 Assistant
 
- of in hoe de data opgehaald wordt. Laat me dit systematisch bekijken. Laat me nu de -functie en de API-response bekijken: Nu moet ik drie dingen begrijpen: (1) wat de API teruggeeft, (2) hoe  werkt, en (3) wat de WeergaveDefinitie-veldpaden zijn. Laat me eerst de API-response en de cel-evaluator bekijken:  Aha! De JSON-response gebruikt `"natuurlijk personen"` (met spatie) als key. Laat me ook even de schema/types bekijken:  Nu moet ik de WeergaveDefinitie zien — welke veldpaden worden er voor NatuurlijkPersoon verwacht?    Lat me nu een NatuurlijkPersoon WeergaveDefinitie checken en de bouwCelContext/celEvaluator bekijken:     Nu is het duidelijk. De veldpaden zijn , `burgerschappen.data.nationaliteit`, etc. Maar  bouwt een CEL-context gebaseerd op **rolnamen** (PascalCase: `Namen`, `Burgerschappen`), niet op de **jsonRolnamen** (lowercase: , `burgerschappen`).
-
-Laat me de  bekijken:  Nu snap ik het probleem.  bouwt context met keys als  (bijv. `"Naam"`, `"Burgerschap"`), maar de veldpaden uit de WeergaveDefinitie gebruiken  (bijv. , `"burgerschappen"`).
-
-Veldpad  matcht niet met . En het pad bevat ook  wat de hub-structuur volgt. Laat me even kijken hoe  te fixen:
-
-1. Veldpad  → JSON rolnaam  → child items →  navigeert naar de platgeslagen data → `.roepnaam`
-2. Maar  gebruikt  als key, niet /
-
-De oplossing is  aanpassen zodat het óók via  kan matchen, en correct door de hub/data structuur navigeert:     Het probleem is duidelijk. De  functie moet twee dingen fixen:
-
-1. **Direct entity-velden** (bijv. ) — niet via CEL context, direct op het entity-object
-2. **Nested veldpaden** (bijv. ) — de context gebruikt  als key, maar de veldpaden gebruiken . En het  segment moet overgeslagen worden (want  heeft de hub al platgeslagen) 
-```
-
-```
-Nu dezelfde fix toepassen in :    gebruikt  met  als key, en vervolgens  dat met  placeholders werkt. De template-veldpaden gebruiken waarschijnlijk dezelfde  conventie. Het  roept  aan die simpel op context-keys navigeert.
-
-De detail-pagina heeft hetzelfde probleem. De CEL-context wordt met  als key opgebouwd (via ), maar templates gebruiken . Laat me de context-opbouw aanpassen zodat ook  als alias beschikbaar is:     
-```
-
-```
-Nu controleren of er geen import meer nodig is die nu onbenut is ():   wordt niet meer gebruikt. Verwijder de ongebruikte import:    
-```
-
-```
-Controleer ook of  nog in PublicatieTabel gebruikt wordt:   Niet meer gebruikt in de code, alleen in de import:   
-```
-
-```
-Check of de Vite build slaagt:    Build OK. De Vite dev server doet automatisch HMR. Herlaad de publicatie-pagina. **Het probleem**: De veldpaden in de WeergaveDefinitie gebruiken  +  notatie (bijv. ), maar  bouwde een CEL-context met  als key (bijv. `Naam`). Die mismatch veroorzaakte dat elke waarde `null` werd → "—".
-
-**De fix** in beide bestanden:
-- :  herschreven — directe entity-velden () worden direct opgehaald, geneste veldpaden matchen nu op , en  segmenten worden overgeslagen (hub is al platgeslagen)
-- : CEL-context bouwt nu entries op zowel  als , met -alias voor de  notatie
+De kolommen worden blijkbaar gevonden (headers zijn correct), maar de waarden zijn allemaal "—". Dat wijst op een probleem in  of in hoe de data opgehaald wordt. Laat me dit systematisch 
 
 ---

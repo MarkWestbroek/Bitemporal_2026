@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-14 17:02
 - **Sessie-ID**: `fc266186-fe8e-4ecc-bc58-da1a87dd010c`
-- **Berichten**: 9
+- **Berichten**: 10
 
 ---
 
@@ -161,6 +161,12 @@ query {
 ik krijg nu opeens, als ik van windows naar mac sync via git, dat er een minimale wijziging in de html files wordt gedaan op de mac, en ik weet niet waardoor.
 Dat is lastig.
 Zie img of git: de klaarstaande 8 files en de pull origin. Ik wil de changes vanuit git wel ophalen maar kan dat nu niet. De 8 pagina's die hier op de mac zijn veranderd mogen overschreven.
+
+---
+
+## 🤖 Assistant
+
+Dit is vrijwel zeker een **line 
 
 ---
 

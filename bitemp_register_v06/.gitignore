@@ -12,6 +12,8 @@ web/vite/node_modules/
 web/vite/.vite/
 web/vite/playwright-report/
 web/vite/test-results/
+web/vite/tests/e2e/.auth/
+!web/vite/tests/e2e/.auth/.gitkeep
 
 # OS noise
 .DS_Store

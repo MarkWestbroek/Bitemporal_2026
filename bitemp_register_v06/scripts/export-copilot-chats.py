@@ -103,6 +103,20 @@ def find_workspace_storage_dirs(project_path: str) -> list[str]:
     return sorted(set(matches))
 
 
+def _extract_text_from_response_list(response_list: list) -> list[str]:
+    """Extraheer tekst-items uit een response-lijst (response-field of streaming chunks)."""
+    texts = []
+    for r in response_list:
+        if not isinstance(r, dict):
+            continue
+        r_kind = r.get("kind", "")
+        r_val = r.get("value", "")
+        if isinstance(r_val, str) and r_val.strip():
+            if r_kind in ("", "markdownContent") or "supportThemeIcons" in r:
+                texts.append(r_val)
+    return texts
+
+
 def replay_jsonl_state(filepath: str) -> dict:
     """
     Replay een JSONL state-journal naar bruikbare conversatie-data.
@@ -113,12 +127,33 @@ def replay_jsonl_state(filepath: str) -> dict:
     - kind=2: list patches (request markers, response parts)
 
     We extraheren user berichten en assistant responses uit de patches.
+
+    Strategie voor response-tekst:
+    - Request markers (requestId) bevatten een geconsolideerd 'response'-veld met de
+      volledige finale assistent-tekst (inclusief tekst na tool-calls).
+    - Losse streaming chunks in kind=2 patches bevatten tussentijdse fragmenten.
+    - We gebruiken het geconsolideerde response-veld als primaire bron en vallen
+      terug op streaming chunks als dat veld leeg is.
     """
     session_header = None
     messages = []
-    current_response_parts = []
+    current_response_parts = []      # streaming chunks (fallback)
+    current_consolidated = []        # geconsolideerde response uit marker (primair)
+    current_request_id = None
     latest_generated_title = ""
     first_message_timestamp = 0
+
+    def flush_pending_response() -> None:
+        """Voeg de lopende assistent-response toe als bericht."""
+        # Gebruik geconsolideerde marker-response als die gevuld is, anders streaming chunks.
+        resp_parts = current_consolidated if current_consolidated else current_response_parts
+        if resp_parts:
+            messages.append({
+                "role": "assistant",
+                "text": "".join(resp_parts)
+            })
+        current_consolidated.clear()
+        current_response_parts.clear()
 
     with open(filepath, "r", encoding="utf-8", errors="replace") as f:
         for line in f:
@@ -159,6 +194,31 @@ def replay_jsonl_state(filepath: str) -> dict:
                 continue
 
             if kind == 2 and isinstance(v, list):
+                patch_key = obj.get("k", [])
+
+                # Live streaming patches: k=['requests', N, 'response']
+                # VS Code schrijft response content stapsgewijs als losse patches naar
+                # requests[N].response, nog vóórdat de geconsolideerde marker beschikbaar is.
+                # Dit zijn dezelfde items die later in de marker's response-veld terechtkomen.
+                if (
+                    isinstance(patch_key, list)
+                    and len(patch_key) == 3
+                    and patch_key[0] == "requests"
+                    and isinstance(patch_key[1], int)
+                    and patch_key[2] == "response"
+                ):
+                    for item in v:
+                        if not isinstance(item, dict):
+                            continue
+                        item_kind = item.get("kind", "")
+                        item_val = item.get("value", "")
+                        if isinstance(item_val, str) and item_val.strip():
+                            if item_kind in ("", "markdownContent") or "supportThemeIcons" in item:
+                                # Alleen toevoegen als nog niet via de geconsolideerde marker gevuld
+                                if not current_consolidated:
+                                    current_response_parts.append(item_val)
+                    continue
+
                 for item in v:
                     if not isinstance(item, dict):
                         continue
@@ -175,14 +235,11 @@ def replay_jsonl_state(filepath: str) -> dict:
                     if isinstance(generated_title, str) and generated_title.strip():
                         latest_generated_title = " ".join(generated_title.split()).strip()
 
-                    # Request marker — bevat requestId en het user-bericht
+                    # Request marker — bevat requestId, user-bericht én (na voltooiing) geconsolideerde response
                     if "requestId" in item:
-                        if current_response_parts:
-                            messages.append({
-                                "role": "assistant",
-                                "text": "".join(current_response_parts)
-                            })
-                            current_response_parts = []
+                        flush_pending_response()
+                        current_request_id = item["requestId"]
+
                         msg_data = item.get("message", {})
                         if isinstance(msg_data, dict):
                             user_text = msg_data.get("text", "")
@@ -195,18 +252,27 @@ def replay_jsonl_state(filepath: str) -> dict:
                                 "role": "user",
                                 "text": user_text.strip()
                             })
-                    # Response content
+
+                        # Extraheer geconsolideerde response uit het response-veld van de marker.
+                        # Dit is aanwezig bij voltooide sessies; bij live sessies is het veld leeg
+                        # en komen de chunks via k=['requests',N,'response'] patches.
+                        consolidated = _extract_text_from_response_list(
+                            item.get("response", [])
+                        )
+                        if consolidated:
+                            # Geconsolideerde marker overschrijft eerder geaccumuleerde streaming chunks
+                            current_response_parts.clear()
+                            current_consolidated.extend(consolidated)
+
+                    # Losse streaming response chunk (zelden aanwezig; als extra fallback)
                     elif "value" in item and isinstance(item["value"], str):
                         item_kind = item.get("kind", "")
                         if (item_kind in ("", "markdownContent")
                                 or "supportThemeIcons" in item):
-                            current_response_parts.append(item["value"])
+                            if not current_consolidated:
+                                current_response_parts.append(item["value"])
 
-    if current_response_parts:
-        messages.append({
-            "role": "assistant",
-            "text": "".join(current_response_parts)
-        })
+    flush_pending_response()
 
     if not session_header:
         session_header = {}
@@ -331,6 +397,16 @@ def session_to_markdown(session: dict, session_id: str, source_path: str | None 
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Exporteer VS Code Copilot chatsessies naar Markdown.")
+    parser.add_argument(
+        "--force", "-f",
+        action="store_true",
+        help="Exporteer alle sessies opnieuw, ook als ze al up-to-date lijken.",
+    )
+    args = parser.parse_args()
+    force = args.force
+
     # Bepaal project root
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)  # bitemp_register_v06/
@@ -346,6 +422,8 @@ def main():
         sys.exit(1)
 
     print(f"Gevonden workspace storage directories: {len(ws_dirs)}")
+    if force:
+        print("  (--force actief: alle sessies worden opnieuw geëxporteerd)")
 
     exported = 0
     skipped = 0
@@ -409,7 +487,18 @@ def main():
                 existing_filepath and os.path.basename(existing_filepath) != filename
             )
 
-            if existing_filepath and current_msg_count <= existing_msg_count and not needs_filename_update:
+            # Controleer ook of de JSONL nieuwer is dan de bestaande export (mtime-check).
+            # Dit vangt het geval op waarbij VS Code de JSONL heeft bijgewerkt maar het
+            # berichtentelling nog niet veranderd is (bijv. bij gedeeltelijk geschreven responses).
+            jsonl_mtime = os.path.getmtime(jsonl_file)
+            export_mtime = os.path.getmtime(existing_filepath) if existing_filepath else 0.0
+            jsonl_is_newer = jsonl_mtime > export_mtime
+
+            if (not force
+                    and existing_filepath
+                    and current_msg_count <= existing_msg_count
+                    and not needs_filename_update
+                    and not jsonl_is_newer):
                 print(f"  Ongewijzigd ({current_msg_count} berichten): {session_id[:8]} → {os.path.basename(existing_filepath)}")
                 skipped += 1
                 continue
@@ -429,7 +518,12 @@ def main():
                         action = "Hernoemd"
                 else:
                     filepath = existing_filepath
-                    action = f"Bijgewerkt ({existing_msg_count}→{current_msg_count} berichten)"
+                    if current_msg_count > existing_msg_count:
+                        action = f"Bijgewerkt ({existing_msg_count}→{current_msg_count} berichten)"
+                    elif jsonl_is_newer or force:
+                        action = f"Ververst ({current_msg_count} berichten, JSONL bijgewerkt)"
+                    else:
+                        action = f"Bijgewerkt ({existing_msg_count}→{current_msg_count} berichten)"
             else:
                 counter = 1
                 base_filepath = filepath

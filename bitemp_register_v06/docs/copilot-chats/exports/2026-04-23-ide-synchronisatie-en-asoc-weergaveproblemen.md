@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-23 21:53
 - **Sessie-ID**: `f4f1e496-95ee-40ab-8ab5-ecfaaeb6fac5`
-- **Berichten**: 12
+- **Berichten**: 13
 
 ---
 
@@ -19,6 +19,12 @@ Verder hebben beide IDE's problemen met het weergeven van ASOCs
 De versie (code-gelijk, als het goed is, maar op mij windows machine gebouwd en naar Docker gepusht) op mijn NAS lijkt wel goed met ASOCs om te gaan. (ik kan geen derde image plakken)
 
 Wat kan daar fout gaan?
+
+---
+
+## 🤖 Assistant
+
+Laat me eerst de architectuur van de frontend en UML-editor verkennen om de oorzaken te begrijpen.  
 
 ---
 
