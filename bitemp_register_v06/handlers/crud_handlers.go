@@ -16,6 +16,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -132,22 +133,7 @@ func VoerEntiteitAfCore(ctx context.Context, meta model.TypeMeta, entityID strin
 // 409 (id-mismatch), 500 (DB/engine).
 func MakePatchFullEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if meta.Metatype != model.MetatypeEntiteit {
-			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("PATCH /full is alleen ondersteund voor entiteit-types, niet voor %s", meta.Typenaam)})
-			return
-		}
-		if meta.IDKolom == "" || meta.Veldnaam == "" {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "IDKolom of Veldnaam ontbreekt voor type " + meta.Typenaam})
-			return
-		}
-
 		entityID := c.Param("id")
-		if entityID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "ID must be present"})
-			return
-		}
-
-		// Modus uit querystring; default registratie.
 		modus := PatchModusRegistratie
 		if raw := c.Query("modus"); raw != "" {
 			modus = PatchModus(raw)
@@ -161,48 +147,15 @@ func MakePatchFullEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 		// Body terugzetten zodat eventuele middleware-loggers er nog bij kunnen.
 		c.Request.Body = io.NopCloser(bytes.NewReader(rawBody))
 
-		// Verifieer eerst dat het record bestaat (404-pad zonder DB-aanraking aan de engine te doen).
-		exists := meta.DBFactory()
-		if exists != nil {
-			if err := DB.NewSelect().Model(exists).Where(meta.IDKolom+" = ?", entityID).Scan(c.Request.Context()); err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-				return
-			}
-			if isZeroID(exists.GetID()) {
-				c.JSON(http.StatusNotFound, gin.H{"message": meta.Typenaam + " not found"})
-				return
-			}
-		}
-
-		res, rerr := BouwWijzigingen(BouwWijzigingenInput{
-			Meta:  meta,
-			URLID: entityID,
-			Body:  rawBody,
-			Modus: modus,
-		})
-		if rerr != nil {
-			c.JSON(rerr.Status, gin.H{"error": rerr.Msg})
-			return
-		}
-
-		regType := model.RegistratietypeRegistratie
-		if modus == PatchModusCorrectie {
-			regType = model.RegistratietypeCorrectie
-		}
-		req := model.RegistreerRequest{
-			Registratie: model.Registratie{Registratietype: regType},
-			Wijzigingen: res.Wijzigingen,
-		}
-
 		audit := AuditMeta{
 			RawBody:       rawBody,
 			RequestPath:   c.Request.URL.Path,
 			RequestMethod: c.Request.Method,
 			EntiteitID:    entityID,
 		}
-		coreRes, coreErr := RegistreerCore(c.Request.Context(), DB, req, audit)
-		if coreErr != nil {
-			c.JSON(coreErr.Status, gin.H{"error": coreErr.Msg, "meldingen": res.Meldingen})
+		coreRes, meldingen, rerr := WijzigEntiteitCore(c.Request.Context(), meta, entityID, rawBody, modus, audit)
+		if rerr != nil {
+			c.JSON(rerr.Status, gin.H{"error": rerr.Msg, "meldingen": meldingen})
 			return
 		}
 
@@ -211,7 +164,63 @@ func MakePatchFullEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 			"registratie_id": coreRes.RegistratieID,
 			"tijdstip":       coreRes.Tijdstip,
 			"modus":          string(modus),
-			"meldingen":      res.Meldingen,
+			"meldingen":      meldingen,
 		})
 	}
+}
+
+// WijzigEntiteitCore is de transport-onafhankelijke variant van de PATCH-handler.
+// Wordt gebruikt door zowel de Gin-route als de GraphQL-mutations
+// `wijzig<Type>` (modus=registratie) en `corrigeer<Type>` (modus=correctie).
+//
+// Retourneert ook `meldingen` (niet-fatale waarschuwingen uit BouwWijzigingen)
+// zodat de caller die kan teruggeven aan de eindgebruiker.
+func WijzigEntiteitCore(ctx context.Context, meta model.TypeMeta, entityID string, rawBody []byte, modus PatchModus, audit AuditMeta) (*RegistreerResult, []string, *RegistreerError) {
+	if meta.Metatype != model.MetatypeEntiteit {
+		return nil, nil, &RegistreerError{Status: http.StatusBadRequest, Msg: fmt.Sprintf("PATCH /full is alleen ondersteund voor entiteit-types, niet voor %s", meta.Typenaam)}
+	}
+	if meta.IDKolom == "" || meta.Veldnaam == "" {
+		return nil, nil, &RegistreerError{Status: http.StatusInternalServerError, Msg: "IDKolom of Veldnaam ontbreekt voor type " + meta.Typenaam}
+	}
+	if entityID == "" {
+		return nil, nil, &RegistreerError{Status: http.StatusBadRequest, Msg: "ID must be present"}
+	}
+
+	// 404-pad: bestaat het record? (Apart, omdat RegistreerCore geen pre-check doet.)
+	if meta.DBFactory != nil {
+		exists := meta.DBFactory()
+		if err := DB.NewSelect().Model(exists).Where(meta.IDKolom+" = ?", entityID).Scan(ctx); err != nil {
+			return nil, nil, &RegistreerError{Status: http.StatusInternalServerError, Msg: err.Error()}
+		}
+		if isZeroID(exists.GetID()) {
+			return nil, nil, &RegistreerError{Status: http.StatusNotFound, Msg: meta.Typenaam + " not found"}
+		}
+	}
+
+	res, rerr := BouwWijzigingen(BouwWijzigingenInput{
+		Meta:  meta,
+		URLID: entityID,
+		Body:  rawBody,
+		Modus: modus,
+	})
+	if rerr != nil {
+		return nil, nil, rerr
+	}
+
+	regType := model.RegistratietypeRegistratie
+	if modus == PatchModusCorrectie {
+		regType = model.RegistratietypeCorrectie
+	}
+	req := model.RegistreerRequest{
+		Registratie: model.Registratie{Registratietype: regType},
+		Wijzigingen: res.Wijzigingen,
+	}
+	if audit.EntiteitID == "" {
+		audit.EntiteitID = entityID
+	}
+	coreRes, coreErr := RegistreerCore(ctx, DB, req, audit)
+	if coreErr != nil {
+		return nil, res.Meldingen, coreErr
+	}
+	return &coreRes, res.Meldingen, nil
 }

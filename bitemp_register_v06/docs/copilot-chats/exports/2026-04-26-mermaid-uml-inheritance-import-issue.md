@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-26 13:01
 - **Sessie-ID**: `a23e9df4-1427-44d4-a4e4-58ed70e6e000`
-- **Berichten**: 69
+- **Berichten**: 70
 
 ---
 
@@ -1459,5 +1459,22 @@ Drie documenten zijn bijgewerkt. Hier een overzicht van wat er gedocumenteerd is
 - Domein-scoped export/import van notities (nu exporteert het alle notities)
 
 Goede volgende stap zou zijn: **C8 UI** (notitie- en constraint-nodes op het canvas), want de datalaag is al volledig en getest.
+
+---
+
+## 🧑 User
+
+Klopt het dat ik van B5 nog niets zie of kan?
+
+```
+B5 (verplaatsbare label-offsets, voltooid):
+
+Go-types V3LabelOffsets + V3Offset per edge
+Adapter exporteert/importeert offsets (alleen wanneer ≠ 0)
+UI: MetamodelEdge.jsx toont nu naamLabelHeen (▶) en naamLabelTerug (◀) als draggable labels, zoom-correct via React Flow viewport, dubbelklik-reset, op compositie- én associatie-edges
+```
+
+- ik kan een label niet 'pakken'  of verplaatsen
+- ik zie heen en terug labels nog niet verschijnen
 
 ---

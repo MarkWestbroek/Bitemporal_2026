@@ -1,5 +1,63 @@
 # Release checklist
 
+## GraphQL Command-laag: directe core-calls + per-ENT typed mutations (2026-04-30)
+
+Fase 3 van de PATCH/DELETE/GraphQL-roadmap. De GraphQL-mutations roepen de pure
+`handlers.*Core`-functies nu **direct** aan in plaats van een interne HTTP-roundtrip
+te maken. Daarnaast krijgt elk entiteit-type drie typed mutations
+(`wijzig<X>`, `corrigeer<X>`, `voer<X>Af`) bovenop de bestaande generieke
+`registreer` / `corrigeer` / `maak_ongedaan`.
+
+### Wijzigingen
+
+- **`handlers/registration_handlers.go`**:
+  - Nieuwe `RegistreerJSONCore(ctx, rawBody, defaultRegistratietype, audit)` —
+    transport-onafhankelijke variant van `RegistreerMetNieuweAanpak`. Doet
+    unmarshal + `NormaliseerWijzigingen` + `RegistreerCore`. Gebruikt door REST
+    en GraphQL.
+  - `RegistreerMetNieuweAanpak()` is nu een dunne Gin-adapter rond de core;
+    response-shape onveranderd (incl. `registratieId`-alias).
+- **`handlers/crud_handlers.go`**:
+  - Nieuwe `WijzigEntiteitCore(ctx, meta, id, rawBody, modus, audit)` — pure
+    PATCH-engine die `BouwWijzigingen` + `RegistreerCore` orkestreert. Retourneert
+    `*RegistreerResult`, `meldingen[]` en `*RegistreerError`.
+  - `MakePatchFullEntityByMetaHandler` is nu een dunne Gin-adapter rond de core.
+  - `VoerEntiteitAfCore` (al toegevoegd in vorige stap) wordt nu hergebruikt
+    door GraphQL.
+- **`dynql/mutation_resolvers.go`** (vervangen):
+  - `http.Post` naar `localhost:8082/registratie/...` is **weg**. Geen
+    `registreerBaseURL` of `findEntiteitMetaVoorVeldnaam` meer.
+  - `registreer`, `corrigeer`, `maak_ongedaan` roepen `RegistreerJSONCore` direct
+    aan met de juiste `defaultRegistratietype`.
+  - `SetRegistreerBaseURL` blijft als no-op (deprecated) voor back-compat.
+- **`dynql/typed_mutations.go`** (nieuw):
+  - `AddTypedMutationsForEntiteit(fields, meta)` registreert per ENT:
+    - `wijzig<Typenaam>(id, patch: JSON!)` — PATCH-modus registratie
+    - `corrigeer<Typenaam>(id, patch: JSON!)` — PATCH-modus correctie
+    - `voer<Typenaam>Af(id)` — afvoer
+  - Modus zit in de mutation-naam; geen `modus`-arg.
+  - Voor GE/REL-types is dit (nog) een no-op — die hebben (entId, relId) nodig
+    en volgen in de typed-input iteratie.
+- **`dynql/schema_builder.go`**: roept `AddTypedMutationsForEntiteit` voor elke
+  meta in de registry aan; `registeredEntiteitMetas` is verwijderd.
+
+### Tests
+
+- **`dynql/typed_mutations_test.go`** (nieuw, 3 testcases):
+  - `TestAddTypedMutationsForEntiteit_RegistreertWijzigCorrigeerVoerAf` — assert
+    `wijzigA`, `corrigeerA`, `voerAAf` aanwezig + arg-namen `id`/`patch`.
+  - `TestAddTypedMutationsForEntiteit_GeenOpVoorNietEntiteit` — GE/REL geeft 0 velden.
+  - `TestAddTypedMutationsForEntiteit_AlleEntiteitenKrijgenDrieMutations` — sweep
+    over hele MetaRegistry.
+
+### Vervolg (apart traject)
+
+- Volle typed `<Type>OpvoerInput` met recursieve graphql-input-types
+  (per onderliggende GE/REL-rol een veld), en typed mutations voor GE/REL
+  met (entId, relId) — gepland in de "typed-input"-iteratie.
+
+---
+
 ## REST/CRUD per padnaam: DELETE + PATCH + parent-context disambiguatie (2026-04-29)
 
 Generieke REST CRUD-endpoints op basis van MetaRegistry, bovenop de gedeelde

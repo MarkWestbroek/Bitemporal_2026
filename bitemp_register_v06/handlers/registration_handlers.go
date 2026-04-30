@@ -10,6 +10,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -19,11 +20,47 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// RegistreerJSONCore is de transport-onafhankelijke variant van
+// `RegistreerMetNieuweAanpak`. Krijgt rauwe JSON binnen, parsest +
+// normaliseert (Fase 1) en delegeert naar `RegistreerCore`.
+//
+// Wordt gebruikt door:
+//   - de Gin-adapter `RegistreerMetNieuweAanpak` (REST POST /registratie/...)
+//   - de GraphQL-resolvers `registreer` / `corrigeer` / `maak_ongedaan`
+//     (zonder HTTP-roundtrip).
+//
+// `defaultRegistratietype` wordt gezet als `request.Registratie.Registratietype`
+// leeg is (zodat GraphQL-resolvers per mutation een default kunnen forceren).
+func RegistreerJSONCore(ctx context.Context, rawBody []byte, defaultRegistratietype model.RegistratietypeEnum, audit AuditMeta) (*RegistreerResult, *RegistreerError) {
+	var request model.RegistreerRequest
+	if err := json.Unmarshal(rawBody, &request); err != nil {
+		return nil, &RegistreerError{Status: http.StatusBadRequest, Msg: err.Error()}
+	}
+
+	if request.Registratie.Registratietype == "" && defaultRegistratietype != "" {
+		request.Registratie.Registratietype = defaultRegistratietype
+	}
+
+	genormaliseerd, err := NormaliseerWijzigingen(request.Wijzigingen)
+	if err != nil {
+		return nil, &RegistreerError{Status: http.StatusBadRequest, Msg: fmt.Sprintf("normaliseren van wijzigingen mislukt: %v", err)}
+	}
+	request.Wijzigingen = genormaliseerd
+
+	if audit.RawBody == nil {
+		audit.RawBody = rawBody
+	}
+	res, rerr := RegistreerCore(ctx, DB, request, audit)
+	if rerr != nil {
+		return nil, rerr
+	}
+	return &res, nil
+}
+
 func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Lees raw body éérst zodat audittrail letterlijk de oorspronkelijke
-		// payload (incl. eventuele geneste 'full'-shape) bewaart. ShouldBindJSON
-		// consumeert de body, waarna re-marshal lossy zou zijn.
+		// payload (incl. eventuele geneste 'full'-shape) bewaart.
 		rawBody, err := c.GetRawData()
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("failed to read request body: %v", err)})
@@ -31,22 +68,6 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 		}
 		// Herstel body voor downstream lezers (LogRequestBodyAsJSON).
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(rawBody))
-
-		var request model.RegistreerRequest
-		if err := json.Unmarshal(rawBody, &request); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		// Fase 1: splits geneste full-payloads in platte WijzigingRequests.
-		genormaliseerd, err := NormaliseerWijzigingen(request.Wijzigingen)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("normaliseren van wijzigingen mislukt: %v", err)})
-			return
-		}
-		request.Wijzigingen = genormaliseerd
-
-		// Debug-logging blijft hier; vergt gin.Context.
 		LogRequestBodyAsJSON(c)
 
 		audit := AuditMeta{
@@ -55,8 +76,7 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 			RequestMethod: c.Request.Method,
 			EntiteitID:    c.Param("id"),
 		}
-
-		result, rerr := RegistreerCore(c.Request.Context(), DB, request, audit)
+		result, rerr := RegistreerJSONCore(c.Request.Context(), rawBody, "", audit)
 		if rerr != nil {
 			c.JSON(rerr.Status, gin.H{"error": rerr.Msg})
 			return

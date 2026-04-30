@@ -67,7 +67,7 @@ Relatie-hubs met een `SecondaireEntiteitIDKolom` (bijv. `gemeente_id` op Initiat
 
 ## Mutations
 
-Mutations gebruiken hetzelfde JSON-formaat als de REST endpoints:
+### Generieke mutations (vrij JSON)
 
 ```graphql
 registreer(input: JSON!)     # Nieuwe registratie (opvoer/afvoer)
@@ -76,6 +76,41 @@ maak_ongedaan(input: JSON!)  # Maak een registratie ongedaan
 ```
 
 > De `JSON` scalar accepteert vrije JSON-payloads — identiek aan het REST request-formaat.
+
+### Per-ENT typed mutations (sinds 2026-04-30)
+
+Voor elk entiteit-type registreert het schema automatisch drie typed mutations
+die de PATCH/DELETE-cores hergebruiken:
+
+```graphql
+wijzig<Typenaam>(id: ID!, patch: JSON!)     # JSON Merge Patch op onderliggende GE's/RELs (registratie-modus)
+corrigeer<Typenaam>(id: ID!, patch: JSON!)  # idem in correctie-modus (rel_id verplicht per item)
+voer<Typenaam>Af(id: ID!)                    # formele afvoer
+```
+
+De modus zit in de naam van de mutation — er is geen aparte `modus`-arg.
+Voorbeeld:
+
+```graphql
+mutation {
+  wijzigNatuurlijkPersoon(
+    id: 4202,
+    patch: { namen: [{ roepnaam: "Jan", achternaam: "Bakker" }] }
+  ) {
+    registratie_id
+    tijdstip
+    meldingen
+  }
+}
+```
+
+> **Architectuur (Fase 3A):** sinds 2026-04-30 doen alle GraphQL-mutations de
+> bewerking **direct** via de pure `handlers.*Core`-functies — geen interne
+> HTTP-roundtrip meer naar de eigen REST endpoints. Audit-trail en
+> transactiegedrag zijn identiek aan REST.
+
+> Volle typed `<Type>OpvoerInput`-types (recursief uit OnderliggendeGegevenselementen,
+> incl. typed mutations voor GE/REL met `(entId, relId)`) komen in een vervolg-iteratie.
 
 ## Voorbeelden
 

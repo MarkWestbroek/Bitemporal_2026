@@ -105,9 +105,6 @@ func BuildSchema(database *bun.DB) (*graphql.Schema, error) {
 			},
 			Resolve: makeFullListResolver(meta),
 		}
-
-		// Registreer de padnaam voor mutations
-		registeredEntiteitMetas = append(registeredEntiteitMetas, struct{ Padnaam string }{padnaam})
 	}
 
 	// Registratie queries
@@ -142,18 +139,17 @@ func BuildSchema(database *bun.DB) (*graphql.Schema, error) {
 	}
 
 	// Mutation velden
-	mutationFields := graphql.Fields{
-		"registreer": &graphql.Field{
-			Type:        JSONScalar,
-			Description: "Registreer nieuwe gegevens. Input is identiek aan het REST POST /registratie/<padnaam> format.",
-			Args: graphql.FieldConfigArgument{
-				"input": &graphql.ArgumentConfig{
-					Type:        graphql.NewNonNull(JSONScalar),
-					Description: "Volledige registratie-request als JSON (zelfde format als REST endpoint)",
-				},
+	mutationFields := graphql.Fields{"registreer": &graphql.Field{
+		Type:        JSONScalar,
+		Description: "Registreer nieuwe gegevens. Input is identiek aan het REST POST /registratie/<padnaam> format.",
+		Args: graphql.FieldConfigArgument{
+			"input": &graphql.ArgumentConfig{
+				Type:        graphql.NewNonNull(JSONScalar),
+				Description: "Volledige registratie-request als JSON (zelfde format als REST endpoint)",
 			},
-			Resolve: makeRegistreerMutationResolver(),
 		},
+		Resolve: makeRegistreerMutationResolver(),
+	},
 		"corrigeer": &graphql.Field{
 			Type:        JSONScalar,
 			Description: "Corrigeer een eerdere registratie. Input bevat corrigeert_registratie_id.",
@@ -176,6 +172,12 @@ func BuildSchema(database *bun.DB) (*graphql.Schema, error) {
 			},
 			Resolve: makeMaakOngedaanMutationResolver(),
 		},
+	}
+
+	// Per-ENT typed mutations: wijzig<X>, corrigeer<X>, voer<X>Af.
+	// Hergebruikt de WijzigEntiteitCore / VoerEntiteitAfCore pure functies.
+	for _, meta := range model.MetaRegistry {
+		AddTypedMutationsForEntiteit(mutationFields, meta)
 	}
 
 	// Bouw het schema
