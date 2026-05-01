@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-28 14:28
 - **Sessie-ID**: `fc469233-069a-4f14-9910-2d7c6a1d94cb`
-- **Berichten**: 67
+- **Berichten**: 69
 
 ---
 
@@ -1545,5 +1545,79 @@ Nu moet ik het resterende oude content (vanaf §1 Queries) verwijderen — ik he
 - §4 Maak ongedaan
 - §5 Stap-voor-stap typed workflow
 - Notities bijgewerkt: autocompletion, `rel_id` gedrag, enum-waarden
+
+---
+
+## 🧑 User
+
+De documenten zijn nu wel duidelijker, maar ik mis in beide de flow en voorbeelden van een normale (3B, niet de fallback met json er in) registratie van een NP. Eenvoudig, uitgebreid (hoewel bij een NP je bij een eerste registratie waarschijnlijk veel gegevens tegelijk opgeeft.)
+
+Wil je dat aanvullen, dat is een heel belangrijke flow. Voor wijzingen en corrigeren.
+
+Verder: is er voor ongedaanmaken geen normaal (geen fallback) pad in de GQL? Daar gaat het natuurlijk om de registratie die ongedaan gemaakt wordt, dus niet een ENT / GE of REL. Maar ook de registraties en wijzingen zelf zijn via GQL in te zien toch? Je wijzigt deze uiteraard nooit, maar ongedaan maken kan wel.
+
+---
+
+## 🤖 Assistant
+
+Goede observatie. Ik ga drie dingen doen:
+
+1. **Een typed `maakRegistratieOngedaan` mutation** toevoegen — die werkt op een `registratie_id`, niet op een entiteit
+2. Documenteren dat `registratie`/ queries al bestaan
+3. Uitgebreide 3B-flow voorbeelden voor NP (eenvoudige + uitgebreide opvoer + wijzigingen + correcties)
+
+Eerst de typed mutation:  
+```
+
+```
+
+```
+
+```
+Build is groen. Nu de docs uitbreiden. Eerst kijken naar de huidige staat van de requests-md (die door de gebruiker is bewerkt):   Nu de docs uitbreiden met (1) registratie/wijzigingen-query, (2) initiële opvoer als deel van de typed flow, en (3) typed `maakRegistratieOngedaan`.    
+```
+
+```
+
+```
+
+```
+Structuur is goed. Nu de bovenstaande tabel in de inleiding bijwerken, en de notities aanvullen:     
+```
+
+```
+Nu  aanvullen — eerst kijken naar de huidige mutations + queries-secties:  
+```
+
+```
+Nu de typed mutations sectie aanvullen met `maakRegistratieOngedaan` en de generieke fallback bijwerken:  
+```
+
+```
+Goed. Nu een test toevoegen voor de nieuwe mutation, en alles testen:  Tests groen. Een snelle test voor de nieuwe schema-veld toevoegen:     Alle tests groen. Tot slot RELEASE.md en BACKLOG.md bijwerken:  
+```
+
+```
+
+```
+
+```
+Klaar. Samenvatting van alle wijzigingen:
+
+**Code**:
+- dynql/mutation_resolvers.go —  toegevoegd: bouwt server-side de ongedaanmaking-payload op uit `registratie_id` +  en roept  aan.
+- dynql/schema_builder.go — `maakRegistratieOngedaan(registratie_id: Int!, opmerking: String)` field geregistreerd naast de bestaande `maak_ongedaan(input: JSON!)`.
+- dynql/maak_registratie_ongedaan_test.go — 2 nieuwe tests voor input-validatie.
+
+**Docs**:
+-  — registraties+wijzigingen-query expliciet gedocumenteerd als read-only audit-pad; Mutations-sectie nu inclusief "normale flow" uitleg (initiële opvoer via `registreer` is de enige niet-typed stap; alles daarna typed) en aparte typed `maakRegistratieOngedaan` subsectie.
+- postman/graphql-nploc-requests.md — §1g toegevoegd (registratie + wijzigingen ophalen), §2a/§2b uitgebreide NP-opvoer (eenvoudig + uitgebreid), §2c-§2k bestaande typed wijzigingen/correcties/afvoer hernummerd, §3 fallback met multi-entiteit-voorbeeld, §4a/§4b typed vs JSON ongedaanmaking, §5 stap-voor-stap tabel.
+-  — release entry toegevoegd.
+
+**Antwoord op je vragen**:
+- *Voor ongedaanmaken bestond geen typed pad* — die is er nu wel: .
+- *Registraties en wijzigingen zelf zijn via GraphQL in te zien* — ja, via `registratie(id)` en . Wijzigen kan niet (immutable), ongedaan maken wel via de nieuwe typed mutation. Dit staat nu expliciet in beide docs.
+
+Tests: alle pakketten groen.
 
 ---

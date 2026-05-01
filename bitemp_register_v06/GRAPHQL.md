@@ -50,11 +50,34 @@ De `full_*_list` query is het GraphQL-equivalent van `GET /full/{padnaam}?page=1
 
 **Formeel tijdreizen**: gebruik `peiltijdstip` (ISO 8601) of de shorthand `t` (uren + microseconden vanaf `2026-01-01T00:00:00Z`). Bij beide geeft `peiltijdstip` voorrang.
 
-### Registraties
+### Registraties en wijzigingen
+
+Elke registratie en de bijbehorende wijzigingen zijn read-only zichtbaar via GraphQL. Wijzigen kan niet (registraties zijn immutable) — ongedaan maken wel via `maakRegistratieOngedaan` (zie Mutations).
 
 ```graphql
-registratie(id: Int!)        { id, registratietype, tijdstip, opmerking, wijzigingen { ... } }
-registraties(limit, offset)  { id, registratietype, tijdstip, opmerking }
+registratie(id: Int!) {
+  id
+  registratietype                 # registratie | correctie | ongedaanmaking
+  tijdstip
+  opmerking
+  corrigeert_registratie_id
+  maakt_ongedaan_registratie_id
+  is_ongedaangemaakt
+  domeinen                        # afgeleid: unieke domeinen van de wijzigingen
+  wijzigingen {
+    id
+    wijzigingstype                # opvoer | afvoer
+    entiteitnaam
+    entiteit_id
+    representatienaam
+    representatie_id
+    versie
+    tijdstip
+    is_ongedaangemaakt
+  }
+}
+
+registraties(limit: Int = 20, offset: Int = 0) { id, registratietype, tijdstip, ... }
 ```
 
 ### Omgekeerde relaties (reverse navigation)
@@ -71,10 +94,20 @@ Het schema biedt twee stijlen van mutations die beide actief zijn:
 
 | Stijl | Mutations | Wanneer |
 |-------|-----------|---------|
-| **Typed** (voorkeur) | `wijzig<X>`, `corrigeer<X>`, `voer<X>Af` | Wijzigingen en correcties op bestaande entiteiten |
-| **Generiek JSON** (fallback) | `registreer`, `corrigeer`, `maak_ongedaan` | Initiële opvoer, multi-entiteit, ongedaanmaking |
+| **Typed** (voorkeur) | `wijzig<X>`, `corrigeer<X>`, `voer<X>Af`, `maakRegistratieOngedaan` | Wijzigingen en correcties op bestaande entiteiten; ongedaanmaking van een registratie |
+| **Generiek JSON** (fallback) | `registreer`, `corrigeer`, `maak_ongedaan` | Initiële opvoer (entiteit bestaat nog niet) en multi-entiteit-registraties in één call |
 
 Beide stijlen roepen dezelfde pure core-functies aan en hebben hetzelfde transactiegedrag en dezelfde audit-trail.
+
+### De normale flow voor een nieuwe entiteit
+
+Een typische 3B-stijl flow ziet er zo uit:
+
+1. **Initiële opvoer** — één call met `registreer` (JSON), die de entiteit en zoveel mogelijk GE's tegelijk aanmaakt. Dit is nodig omdat er nog geen entiteit-id bestaat om typed mutations op te kunnen toepassen.
+2. **Wijzigingen en correcties** — typed via `wijzig<X>` / `corrigeer<X>` / `voer<X>Af`.
+3. **Ongedaanmaking** — typed via `maakRegistratieOngedaan(registratie_id, opmerking?)`.
+
+Daarmee is de hele bewerkingsflow op één call na (de allereerste opvoer) volledig getypeerd.
 
 ### Typed mutations per entiteit (voorkeur)
 
@@ -169,15 +202,35 @@ mutation {
 ```graphql
 registreer(input: JSON!)     # Nieuwe registratie (opvoer/afvoer van entiteiten en GEs)
 corrigeer(input: JSON!)      # Correctie-registratie
-maak_ongedaan(input: JSON!)  # Ongedaanmaking van een registratie
+maak_ongedaan(input: JSON!)  # Ongedaanmaking van een registratie (JSON-variant)
 ```
 
 De `JSON!` scalar accepteert dezelfde payload als de REST `/registratie`-endpoint. Gebruik dit voor:
 - **Initiële opvoer** van een nieuwe entiteit (er bestaat nog geen ID om te wijzigen)
 - **Multi-entiteit-registraties** in één call (bijv. NP + Locatie + Bereikbaarheid tegelijk)
-- **Ongedaanmaking** — heeft geen typed equivalent
 
-> **Tip**: een gangbare aanpak is `registreer` voor de initiële aanmaak en daarna `wijzig<X>` voor alle wijzigingen. Zo combineer je de eenvoud van typed mutations met de flexibiliteit van de generieke opvoer.
+Voor ongedaanmaking is `maakRegistratieOngedaan` (typed) de voorkeur boven `maak_ongedaan` (JSON); beide doen functioneel hetzelfde.
+
+### Typed ongedaanmaking
+
+```graphql
+maakRegistratieOngedaan(registratie_id: Int!, opmerking: String) → JSON
+```
+
+Maakt een eerdere registratie ongedaan op basis van haar `id`. Werkt op een registratie (niet op een entiteit/GE/REL) en heeft daarom geen `<Typenaam>PatchInput`. De resolver bouwt de ongedaanmaking-payload server-side en delegeert aan dezelfde `RegistreerCore` als de JSON-variant — audit-trail en transactiegedrag identiek.
+
+```graphql
+mutation {
+  maakRegistratieOngedaan(
+    registratie_id: 42
+    opmerking: "Foutieve invoer"
+  ) {
+    registratie_id
+    tijdstip
+    wijzigingen
+  }
+}
+```
 
 ## Voorbeelden
 

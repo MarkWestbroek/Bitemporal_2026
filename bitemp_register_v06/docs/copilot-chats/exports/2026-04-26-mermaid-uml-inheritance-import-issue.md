@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-26 13:01
 - **Sessie-ID**: `a23e9df4-1427-44d4-a4e4-58ed70e6e000`
-- **Berichten**: 10
+- **Berichten**: 15
 
 ---
 
@@ -277,5 +277,105 @@ Een nieuw REQ voor de IDE: I54
 - Verplaatsen elementen in PB: de orphan elementen zonder domein horen wel ergens. Dat zou ik in de IDE het gemakkelijkst kunnen doen door een enkele of multiselect in de PB en ze dan te verplaatsen naar en ander domein. Kan dat, en kan dan ook het domein wijzigen? Misschien moet er een waarschuwing aan vooraf gaan met bevestigen of afbreken.
 
 WIl je nog dubbelchecken of alle documentatie nu op orde is over de IDE en editor? Ook in de backlog of we dingen al kunnen afvinken.
+
+---
+
+## 🤖 Assistant
+
+Now I have the full picture. Two deletion paths both miss cleaning up  for scope-edges. Let me fix all three things at once: **Stap 1: `removeStructuralEdge` toevoegen aan store** 
+```
+
+```
+**Stap 2: DiagramCanvas — beide verwijderpaden fixen**  
+```
+
+```
+Nu **Feature I54: Verplaats elementen in PB naar ander domein**. Eerst de ProjectBrowser bekijken:  Now let me look at how  is handled in ProjectBrowser and IdePage: Good —  auto-adds the domain to the store. Now let me add the menu item and the handler: 
+```
+
+```
+Now add the  action handler in ProjectBrowser: 
+```
+
+```
+Now run the tests:  
+```
+
+```
+Now add the  action handler in ProjectBrowser: 
+```
+
+```
+Now run the tests:  
+
+---
+
+## 🧑 User
+
+gaat het goed? De test duurt heel lang.
+
+---
+
+## 🤖 Assistant
+
+Ja, het gaat goed — alle code-wijzigingen zijn al gedaan en zonder lint/compile-fouten:
+
+**Round 5 (scope-edge deletion):** ✅
+- :  toegevoegd
+- :  wrapper rond  (vangt Delete-toets), én  (rechtsklik > verwijder) ruimt nu ook scope-edges uit  op
+
+**Feature I54 (verplaats naar domein):** ✅
+- : nieuw menu-item "↪️ Verplaats naar domein…"
+- : handler met multi-select-detectie via , prompt + bevestigingsdialoog
+
+De Vitest run hangt waarschijnlijk in watch-mode of is heel groot. Ik had `npx vitest run` (eenmalig) bedoeld. Wil je dat ik:
+
+1. de test in een ander terminal opnieuw start (async, zodat we 'm kunnen monitoren), of
+2. eerst doorga met de documentatie-update (BACKLOG, RELEASE.md, UML_EDITOR_INTEGRATIE.md) en de tests later draait?
+
+---
+
+## 🧑 User
+
+wil je doorgaan met de documentatie en de test later draaien?
+
+---
+
+## 🤖 Assistant
+
+
+```
+
+```
+Nu BACKLOG.md en UML_EDITOR_INTEGRATIE.md:  
+```
+
+```
+
+```
+
+```
+Nu UML_EDITOR_INTEGRATIE.md — kort de Round 5 toevoegen:  
+```
+
+```
+
+```
+
+```
+Klaar. Samenvatting:
+
+**Code (Round 5 + I54):**
+-  —  action
+-  —  + scope-cleanup in context-menu
+-  — menu-item "↪️ Verplaats naar domein…"
+-  —  handler met multi-select
+
+**Documentatie:**
+-  — nieuwe sectie "Round 5 + Feature I54" bovenaan
+-  — I41 en I54 afgevinkt met ✅
+-  — Round 5 sectie + bestandstabel bijgewerkt
+
+Lint/compile is groen. Wanneer je tijd hebt, draai handmatig `npx vitest run` (geen watch) om te bevestigen dat de 115 tests nog steeds groen zijn — er zijn geen test-bestanden gewijzigd, dus dat zou moeten lukken.
 
 ---

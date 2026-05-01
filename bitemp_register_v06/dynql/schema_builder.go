@@ -172,6 +172,21 @@ func BuildSchema(database *bun.DB) (*graphql.Schema, error) {
 			},
 			Resolve: makeMaakOngedaanMutationResolver(),
 		},
+		"maakRegistratieOngedaan": &graphql.Field{
+			Type:        JSONScalar,
+			Description: "Maak een eerdere registratie ongedaan op basis van registratie_id (typed variant van maak_ongedaan).",
+			Args: graphql.FieldConfigArgument{
+				"registratie_id": &graphql.ArgumentConfig{
+					Type:        graphql.NewNonNull(graphql.Int),
+					Description: "ID van de registratie die ongedaan moet worden gemaakt",
+				},
+				"opmerking": &graphql.ArgumentConfig{
+					Type:        graphql.String,
+					Description: "Optionele toelichting op de ongedaanmaking",
+				},
+			},
+			Resolve: makeMaakRegistratieOngedaanResolver(),
+		},
 	}
 
 	// Per-ENT typed mutations: wijzig<X>, corrigeer<X>, voer<X>Af.
