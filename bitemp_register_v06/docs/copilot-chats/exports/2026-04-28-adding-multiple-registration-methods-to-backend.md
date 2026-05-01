@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-28 14:28
 - **Sessie-ID**: `fc469233-069a-4f14-9910-2d7c6a1d94cb`
-- **Berichten**: 59
+- **Berichten**: 67
 
 ---
 
@@ -1395,5 +1395,155 @@ Goed — dan is de scope:
 GE/REL wijzig/corrigeer met (entId, relId) doe ik in de **typed-input iteratie** daarna — dan kan ik het netjes verwerken via parent-PATCH met `{rol: [{rel_id, ...}]}`.
 
 Even verkennen hoe `RegistreerCore` aangeroepen wordt en hoe de DELETE/PATCH-handlers hun lookup doen, zodat ik die logica niet dupliceer:     
+
+---
+
+## 🧑 User
+
+Wat staat er nu nog open? Is alles wat gemaakt is al gedocumenteerd?
+Ik denk iets met de GQL full registreer en nog iets, is wat er nog moet gebeuren.
+Zou je in het NP-loc domein een aantal GQL test requests kunnen maken? Voor wat er nu al is gemaakt. Dan kan ik dat zelf in de playground en/of met postman uitproberen.
+
+---
+
+## 🤖 Assistant
+
+---
+
+## Status-overzicht
+
+**Alles van Fase 3A + 3B-light is gedaan en gedocumenteerd** (RELEASE.md, BACKLOG.md, ). De todo-lijst was nog oud — die is bijgewerkt.
+
+### Nog openstaand (Fase 3B-full)
+
+Één groot openstaand item dat je noemde:
+
+> **Volle typed  via GQL**  
+> — recursieve graphql-input-types per representatie, gegenereerd uit `OnderliggendeGegevenselementen`  
+> — typed mutations voor GE/REL met `(entId, relId)`-args (bv. `wijzigBurgerschap(natuurlijkpersoonId, relId, patch)`)  
+> — zit in BACKLOG als Fase 3B-full
+
+Nu zijn `wijzig<X>` / `corrigeer<X>` al bruikbaar, maar de `patch`-arg is nog `JSON!` (vrij). De full-input iteratie maakt dat  met typed velden.
+
+---
+
+## GQL testrequests
+
+Aangemaakt in postman/graphql-nploc-requests.md met:
+
+| # | Wat |
+|---|-----|
+| §1 | Queries: lijst NP, full NP, formeel tijdreizen, lijst/full Locatie, recente registraties |
+| §2 | Generieke mutations: opvoer NP + Locatie, afvoer via `registreer` |
+| §3 | Per-ENT typed mutations: `wijzig`/`corrigeer`/ voor NP (naam, burgerschap, naamgebruik, bereikbaarheid) + Locatie (adres) |
+| §4 | `maak_ongedaan` |
+| §5 | Complete testworkflow stap-voor-stap |
+
+Onderaan staan notities over enum-waarden, `rel_id`-regels en Postman-instelling.
+
+---
+
+## 🧑 User
+
+Kun je deze zin beter uitleggen: `Nu zijn wijzig<X> / corrigeer<X> al bruikbaar, maar de patch-arg is nog JSON! (vrij). De full-input iteratie maakt dat namen: [NaamInput!] met typed velden.` De zin lijkt ook niet compleet.
+
+Heb je genoeg info om verder te gaan met 3B? Het mapt ook vrij direct op de full/registratie toch?
+
+---
+
+## 🤖 Assistant
+
+Betere uitleg van de zin:
+
+**Nu (3B-light):** `wijzigNatuurlijkPersoon(id: 1, patch: JSON!)` — de `patch`-arg is een vrij JSON-blob. GraphiQL geeft geen autocomplete, een client kan elke willekeurige JSON sturen, en pas bij runtime (in `BouwWijzigingen`) wordt gevalideerd of de veldnamen kloppen.
+
+**Na 3B-full:** `wijzigNatuurlijkPersoon(id: 1, patch: NatuurlijkPersoonPatchInput!)` waarbij het GraphQL-schema de shape van `patch` kent:
+
+```graphql
+input NatuurlijkPersoonPatchInput {
+  namen: [NatuurlijkPersoon_NaamInput]
+  burgerschappen: [NatuurlijkPersoon_BurgerschapInput]
+  naamgebruiken: [NatuurlijkPersoon_NaamgebruikInput]
+  # ...
+}
+
+input NatuurlijkPersoon_NaamInput {
+  rel_id: Int         # optioneel — alleen voor corrigeer
+  voorletters: String
+  roepnaam: String
+  tussenvoegsel: String
+  achternaam: String
+}
+```
+
+Je krijgt dan autocomplete in GraphiQL, type-veilige client-codegen, en schema-niveau validatie vóór de resolver draait.
+
+---
+
+**Vraag 2: genoeg info voor 3B-full?**
+
+Ja, en het mapt inderdaad direct. De benodigde onderdelen zijn al aanwezig:
+
+| Nodig voor 3B-full | Al aanwezig |
+|---|---|
+| Welke GE/REL-rollen een ENT heeft |  |
+| Velden per GE/REL | `_Data`-struct → via reflection (zelfde aanpak als ) |
+| Materiële plumbing (`aanvang`/`einde`) | `IsMaterieel` + bekende `datum`-field |
+| Resolver-logica | **ongewijzigd** — `makeWijzigResolver` doet `json.Marshal(patch)` → `WijzigEntiteitCore`. graphql-go deserialiseert de typed input al naar `map[string]interface{}`, en dat gaat dan gewoon via Marshal terug naar JSON. |
+| `rel_id` | Zit al in de Hub-struct; gewoon als optioneel `Int`-veld in de input |
+
+De enige echte toevoeging is `dynql/input_type_builder.go` die `BuildPatchInputTypes()` implementeert — analoog aan het bestaande  — plus het vervangen van  door het typed input-type in .
+
+Wil je dat ik nu begin?
+
+---
+
+## 🧑 User
+
+Dank voor de uitleg. ja, graag beginnen
+
+---
+
+## 🤖 Assistant
+
+Nu de  functie bekijken — die heeft het veld-naar-GraphQL-type logica die ik moet hergebruiken: 
+
+---
+
+## 🧑 User
+
+wil je deze md's nog iets meer bijwerken? In de test requests staan nog alleen de JSON-type requests. 
+
+In GraphQL.md is nog van alles over de fasen, maar die doen er niet meer zo toe. Het is belangrijk dat de informatie logisch bij elkaar staat. Werken nu zowel de JSON als puur GQL stijl registraties nog? De voorkeur is de pure, de JSON is een soort fallback optie, denk ik.
+
+Wil je dat duidelijker uitwerken. En in het requests document dus graag wat voorbeelden voor registratie 3B-stijl.
+
+---
+
+## 🤖 Assistant
+
+Let me also check the actual field names in the structs to ensure the examples are correct:  Nu heb ik genoeg context. Beide documenten herschrijven —  mutations-sectie herinrichten en de test requests grondig vernieuwen: 
+```
+
+```
+Nu het test requests document volledig herschrijven: 
+```
+
+```
+Nu moet ik het resterende oude content (vanaf §1 Queries) verwijderen — ik heb alleen de header vervangen. Laat me de huidige staat van het bestand bekijken: De oude secties (739–1090) staan er nog bij. Die verwijder ik: Goed, structuur is correct. Controleer het einde van het bestand: Goed, structuur is correct. Controleer het einde van het bestand:  Bestand is schoon. Laat me nu ook de  controleren of de rest van het document goed aansluit na de gewijzigde sectie: Structuur ziet er goed uit. Snel een sanity-check op de mutatie-sectie-koppen in GRAPHQL.md: Beide documenten zijn bijgewerkt. Overzicht van de wijzigingen:
+
+** — Mutations-sectie**:
+- Overzichtstabel "typed (voorkeur) vs generiek JSON (fallback)" bovenaan
+- `### Typed mutations per entiteit (voorkeur)` — veldnamen gecorrigeerd (`landcode`, `nationaliteit` i.p.v. `land_code`), `bereikbaarheden` toegevoegd aan schema, duidelijker uitleg
+- `### Generieke JSON mutations (fallback / initiële opvoer)` — gebruik-wanneer-lijst toegevoegd + tip over combineren van de twee stijlen
+- Fase-datums en "3B-light/3B-full" labels verwijderd; architectuurhistorie in één zin teruggebracht
+
+**postman/graphql-nploc-requests.md** — volledig herschreven:
+- §1 Queries — ongewijzigd qua inhoud, gecleand
+- §2 Typed mutations (voorkeur) — nieuwe primaire sectie met 9 voorbeelden: naam toevoegen/corrigeren, meerdere GEs tegelijk, burgerschap met materieel aanvang/einde, bereikbaarheid, locatie adres toevoegen/corrigeren, entiteit afvoeren
+- §3 Generieke JSON mutations (fallback) — opvoer NP (met GEs), opvoer Locatie, opvoer met materieel aanvang
+- §4 Maak ongedaan
+- §5 Stap-voor-stap typed workflow
+- Notities bijgewerkt: autocompletion, `rel_id` gedrag, enum-waarden
 
 ---

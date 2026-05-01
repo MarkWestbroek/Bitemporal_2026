@@ -176,6 +176,8 @@ func BuildSchema(database *bun.DB) (*graphql.Schema, error) {
 
 	// Per-ENT typed mutations: wijzig<X>, corrigeer<X>, voer<X>Af.
 	// Hergebruikt de WijzigEntiteitCore / VoerEntiteitAfCore pure functies.
+	// BuildPatchInputTypes vult patchInputTypeCache; getPatchInputType leest er uit.
+	BuildPatchInputTypes()
 	for _, meta := range model.MetaRegistry {
 		AddTypedMutationsForEntiteit(mutationFields, meta)
 	}

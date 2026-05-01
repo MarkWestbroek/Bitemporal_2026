@@ -2,22 +2,29 @@ package dynql
 
 // typed_mutations — per-ENT typed GraphQL mutations.
 //
-// FASE 3B-light (2026-04-30):
+// FASE 3B-full (2026-05-xx):
 // Voor elk entiteit-type in de MetaRegistry registreren we drie mutations
 // die de bestaande PATCH/DELETE-paden hergebruiken:
 //
-//   wijzig<Typenaam>(id, patch: JSON!) → JSON     // modus = registratie
-//   corrigeer<Typenaam>(id, patch: JSON!) → JSON  // modus = correctie
-//   voer<Typenaam>Af(id) → JSON                   // afvoer (DELETE-pad)
+//   wijzig<Typenaam>(id, patch: <Typenaam>PatchInput!) → JSON     // modus = registratie
+//   corrigeer<Typenaam>(id, patch: <Typenaam>PatchInput!) → JSON  // modus = correctie
+//   voer<Typenaam>Af(id) → JSON                                   // afvoer (DELETE-pad)
 //
-// `patch` is een JSON-merge-patch op onderliggende GE's/RELs van de ENT
-// (zelfde body-format als REST `PATCH /full/{padnaam}/:id`). De body MAG
-// met of zonder ENT-wrapper komen — `BouwWijzigingen` accepteert beide.
+// `patch` is een volledig getypeerde InputObject (gebouwd door input_type_builder.go).
+// De structuur volgt de OnderliggendeGegevenselementen van de ENT:
+//
+//   <Typenaam>PatchInput {
+//     <rolnaam>: [<GETypenaam>Input]   // één veld per GE/REL hub
+//   }
+//
+// graphql-go deserialiseert InputObject-waarden naar map[string]interface{}.
+// json.Marshal(patch) in de resolver produceert daarna dezelfde JSON als
+// bij het vrije JSON scalar — geen resolver-wijzigingen nodig.
+//
+// Fallback: als het PatchInput type niet (nog) beschikbaar is (bijv. ENT
+// zonder OnderliggendeGegevenselementen), wordt JSONScalar gebruikt.
 //
 // Modus zit in de naam (wijzig vs corrigeer); er is geen extra `modus`-arg.
-//
-// De volle typed `<Type>OpvoerInput` (recursief uit OnderliggendeGegevenselementen,
-// inclusief GE/REL-mutations met (entId, relId)) volgt in een aparte iteratie.
 
 import (
 	"encoding/json"
@@ -39,13 +46,14 @@ func AddTypedMutationsForEntiteit(fields graphql.Fields, meta model.TypeMeta) {
 	}
 
 	idArg := inferIDArgType(meta)
+	patchType := getPatchInputType(meta.Typenaam)
 
 	fields["wijzig"+meta.Typenaam] = &graphql.Field{
 		Type:        JSONScalar,
-		Description: fmt.Sprintf("Wijzig %s door één of meer onderliggende GE's/RELs op te voeren (registratie-modus). `patch` is een JSON Merge Patch op de full-shape.", meta.Typenaam),
+		Description: fmt.Sprintf("Wijzig %s door één of meer onderliggende GE's/RELs op te voeren (registratie-modus). `patch` is een getypeerde %sPatchInput.", meta.Typenaam, meta.Typenaam),
 		Args: graphql.FieldConfigArgument{
 			"id":    &graphql.ArgumentConfig{Type: graphql.NewNonNull(idArg), Description: "ID van de " + meta.Typenaam},
-			"patch": &graphql.ArgumentConfig{Type: graphql.NewNonNull(JSONScalar), Description: "JSON Merge Patch op onderliggende GE's/RELs"},
+			"patch": &graphql.ArgumentConfig{Type: graphql.NewNonNull(patchType), Description: "Getypeerde patch op onderliggende GE's/RELs"},
 		},
 		Resolve: makeWijzigResolver(meta, handlers.PatchModusRegistratie),
 	}
@@ -55,7 +63,7 @@ func AddTypedMutationsForEntiteit(fields graphql.Fields, meta model.TypeMeta) {
 		Description: fmt.Sprintf("Corrigeer %s — vervangt bestaande versies van GE's/RELs (correctie-modus). Elk item in `patch` vereist `rel_id`.", meta.Typenaam),
 		Args: graphql.FieldConfigArgument{
 			"id":    &graphql.ArgumentConfig{Type: graphql.NewNonNull(idArg), Description: "ID van de " + meta.Typenaam},
-			"patch": &graphql.ArgumentConfig{Type: graphql.NewNonNull(JSONScalar), Description: "JSON Merge Patch met `rel_id` per item"},
+			"patch": &graphql.ArgumentConfig{Type: graphql.NewNonNull(patchType), Description: "Getypeerde patch met `rel_id` per item"},
 		},
 		Resolve: makeWijzigResolver(meta, handlers.PatchModusCorrectie),
 	}
