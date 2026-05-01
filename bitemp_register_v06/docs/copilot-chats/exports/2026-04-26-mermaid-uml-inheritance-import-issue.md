@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-26 13:01
 - **Sessie-ID**: `a23e9df4-1427-44d4-a4e4-58ed70e6e000`
-- **Berichten**: 70
+- **Berichten**: 76
 
 ---
 
@@ -1476,5 +1476,103 @@ UI: MetamodelEdge.jsx toont nu naamLabelHeen (▶) en naamLabelTerug (◀) als d
 
 - ik kan een label niet 'pakken'  of verplaatsen
 - ik zie heen en terug labels nog niet verschijnen
+
+---
+
+## 🧑 User
+
+het pakken van de labels werkt in geen van beide UML editor pagina's (editorv2 en IDE)
+
+---
+
+## 🤖 Assistant
+
+Het probleem zit in twee dingen:
+
+1. **Labels verschijnen niet**:  /  worden door de gebruiker bewerkt op het **element** (GE / relatie via DetailsPanel), maar  leest  van de **edge data**. Bij het bouwen van edges (zowel in  als in ) worden deze velden niet doorgekopieerd naar de edge — dus  is altijd `undefined` en de labels worden nooit gerenderd.
+
+2. **Drag werkt niet**: vermoedelijk gevolg van probleem 1 (geen label = niet pakbaar). Daarnaast heeft React Flow een gedrag waarbij -content standaard  op de wrapper heeft —  op de div is correct, en `nodrag nopan` voorkomt panning.
+
+Snelste robuuste fix:  zelf laten **fallbacken** naar  /  voor de labels. Dat werkt direct in beide editors zonder elke edge-constructiesite aan te passen. 
+```
+
+```
+Hmm, ik heb  gebruikt maar nooit gedefinieerd. Laat ik het schoner doen door het bovenaan te berekenen: 
+```
+
+```
+Verifieer geen leftover refs: Geen errors. Nu zouden labels moeten verschijnen op:
+- **Compositie ENT→GE** edges → labels uit `GE.data.naamLabelHeen/Terug` (DetailsPanel: "Label heen / Label terug" sectie van een GE)
+- **ENT→relatie** of **relatie→ENT** simpele relatie-edges → labels uit 
+
+Voor de **ASOC-vorm** (anker→ENT) zit de relatie aan een dashed link via de anker; daar werkt de fallback nog niet automatisch — als je dat ook wilt zien, moet ik de relatie via de anker-naam opzoeken. Wil je dat ik die ook toevoeg?
+
+**Test stappen:**
+1. Vite dev server draait al — vernieuw de IDE/EditorV2 in browser.
+2. Selecteer een GE in DetailsPanel, vul "Label heen" in (bijv. "heeft").
+3. Op de compositie-edge ENT→GE moet nu verschijnen: ▶ heeft.
+4. Sleep dat label → het verplaatst (zoom-correct), dubbelklik = reset.
+
+**Wijziging samengevat:**
+- : leest /`Terug` met fallback . Geen wijzigingen in adapters of edge-constructie nodig.
+
+---
+
+## 🧑 User
+
+ah, ik zie het: de heen en weer labels zijn nu te verplaatsen. De andere echter nog niet. Dat moet ook wel, cq. dat was juist de vraag...
+
+Op een ASOC verschijnen nog geen heen en weer labels.
+
+---
+
+## 🤖 Assistant
+
+Laat me het ASOC-patroon begrijpen: drie edges (ENT→anker, anker→ENT, anker→relatie). De  zit op het **relatie-element**, maar bij ASOC zijn source/target beide  of  — geen GE of relatie, dus de huidige fallback slaat over. 
+```
+
+```
+Werkt nu zo:
+
+- **Edge 1 (ENT→anker)**: zoekt de relatie op via  → toont  (▶) aan de ENT-kant
+- **Edge 2 (anker→ENT)**: zelfde relatie-lookup → toont  (◀) aan de ENT-kant  
+- **Edge 3 (anker→relatie, dashed)**:  — valt buiten de conditie, geen labels
+
+Beiden zijn weer versleepbaar en dubbelklik-reset werkt. Vernieuw de browser.
+
+---
+
+## 🧑 User
+
+ik bedoelde de andere labels: die bij de uiteinden van de associatie: KennisartikelTaalvariantTaal, Sectie 0..*, enz.
+
+Verder komen er nu heen en terug labels bij een associatieklasse (UML stijl, expanded), maar verdwijnen ze bij collapsen (geen velden), bij een veld toevoegen komen ze wel weer terug.
+
+---
+
+## 🤖 Assistant
+
+Nu begrijp ik het volledig. Twee problemen:
+
+1. De **rolnaam/kardinaliteit labels** zijn niet draggable — dat was de eigenlijke bedoeling van B5.
+2. **Collapsed ASOC** (geen velden → geen ASOC-patroon, edges zijn direct ):  is `false` op die edges, dus labels verschijnen niet.
+
+Beide fix ik nu tegelijk: Nu de volledige oplossing: voeg `startRolnaamDrag` toe en maak alle rolnaam-blokken draggable, plus fix de collapsed-relatie conditie: 
+```
+
+```
+Twee problemen gefixet:
+
+**1. Rolnaam/kardinaliteit labels zijn nu draggable**
+-  / `"rolnaamSrc"` — aparte offset-keys zodat ze niet botsen met de heen/terug offsets
+- Werkt op compositie-edges (ENT→GE) én associatie-edges (A→o, o→B)
+- Dubbelklik reset de positie
+
+**2. Collapsed relatie** (geen velden → geen ASOC-patroon)
+- Nieuwe  flag: edges waarbij source of target  is maar zonder -flag
+- Heen/terug labels én rolnaam-labels verschijnen nu ook op deze edges
+- Labels worden opgehaald via de fallback naar 
+
+Vernieuw de browser en test: selecteer een compositie-edge of relatie-edge, de rolnaam moet nu versleepbaar zijn.
 
 ---

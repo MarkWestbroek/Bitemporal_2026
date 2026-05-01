@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-29 23:23
 - **Sessie-ID**: `20760b52-45a6-4eea-8606-61cf1aa5991a`
-- **Berichten**: 10
+- **Berichten**: 13
 
 ---
 
@@ -191,5 +191,29 @@ Nu testen: Werkt. `20760b52` is bijgewerkt van 4 naar 10 berichten. Laat me  ook
 2. **Live streaming patches** (`k=['requests', N, 'response']`): response chunks die VS Code stapsgewijs wegschrijft tijdens een actieve sessie worden nu ook verwerkt. Zodra de geconsolideerde marker aanwezig is (voltooide sessie), heeft die voorrang.
 
 3. ** /  flag**: forceert herexport van alle sessies, handig als je zeker wilt zijn dat alles up-to-date is. Gebruik: .
+
+---
+
+## 🧑 User
+
+ik gebruik altijd de tasks, met name deze (de bovenste in img) 
+
+Wil je die bijwerken en er eventueel een task bijzetten die de force parameter heeft?
+
+---
+
+## 🧑 User
+
+@agent Try Again
+
+---
+
+## 🤖 Assistant
+
+
+```
+
+```
+Klaar. Er is een nieuwe task **`copilot: export chats --force (v06)`** toegevoegd naast de bestaande. Beide verschijnen nu in de task-picker.
 
 ---

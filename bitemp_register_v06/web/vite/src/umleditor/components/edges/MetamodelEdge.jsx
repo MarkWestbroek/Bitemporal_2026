@@ -139,6 +139,79 @@ function MetamodelEdge({
   const srcLabelX = labelX + (sourceX - labelX) * 0.7;
   const srcLabelY = labelY + (sourceY - labelY) * 0.7;
 
+  // B5: heen/terug labels worden door de gebruiker bewerkt op het GE/relatie-element
+  // (DetailsPanel) maar niet automatisch in edge.data gepropageerd. Fallback-prioriteit:
+  //   1. edge.data.naamLabel*  (expliciet op edge gezet)
+  //   2. GE/relatie als direct target of source (compositie ENT→GE, simpele REL)
+  //   3. Voor ASOC-edges: relatie via associatieAnker.data.relatieNaam (de relatie-node-ID)
+  //      - Edge 1 (ENT→anker): toont alleen naamLabelHeen (heen-richting)
+  //      - Edge 2 (anker→ENT): toont alleen naamLabelTerug (terug-richting)
+  const directLabelHostNode =
+    (targetNode?.type === "gegevenselement" || targetNode?.type === "relatie")
+      ? targetNode
+      : (sourceNode?.type === "relatie" ? sourceNode : null);
+
+  const ankerNode = isAssociation && (
+    targetNode?.type === "associatieAnker" ? targetNode :
+    sourceNode?.type === "associatieAnker" ? sourceNode : null
+  );
+  const relatieNodeViaAnker = ankerNode ? getNode(ankerNode.data?.relatieNaam) : null;
+  const labelHostNode = directLabelHostNode || relatieNodeViaAnker;
+
+  // Voor ASOC: heen-label alleen op Edge1 (ENT→anker), terug-label alleen op Edge2 (anker→ENT)
+  // zodat elk label maar één keer op de lijn verschijnt (niet dubbel op beide ASOC-helften).
+  const isAsocEdge1 = isAssociation && targetNode?.type === "associatieAnker";
+  const isAsocEdge2 = isAssociation && sourceNode?.type === "associatieAnker";
+  const showHeen = !isAssociation || isAsocEdge1;
+  const showTerug = !isAssociation || isAsocEdge2;
+
+  const naamLabelHeen = showHeen ? (data?.naamLabelHeen || labelHostNode?.data?.naamLabelHeen || "") : "";
+  const naamLabelTerug = showTerug ? (data?.naamLabelTerug || labelHostNode?.data?.naamLabelTerug || "") : "";
+
+  // Collapsed relatie: edge ENT→relatie of relatie→ENT zonder isAssociation-flag (geen velden).
+  // Dezelfde heen/terug-logica moet hier ook gelden.
+  const isCollapsedRelatie =
+    !isDependency && !isGeneralization && !isAssociation && !isAssociationClassLink && !isComposition &&
+    (targetNode?.type === "relatie" || sourceNode?.type === "relatie");
+
+  // Drag-handler voor rolnaam/kardinaliteit labels (apart van heen/terug offsets).
+  // Offset-key: 'rolnaamSrc' (bij source-zijde) of 'rolnaamDst' (bij target-zijde).
+  const startRolnaamDrag = (which) => (ev) => {
+    ev.stopPropagation();
+    ev.preventDefault();
+    const startX = ev.clientX;
+    const startY = ev.clientY;
+    const off0 = (data?.labelOffsets && data.labelOffsets[which]) || { x: 0, y: 0 };
+    const zoom = (typeof getViewport === "function" && getViewport().zoom) || 1;
+    const onMove = (m) => {
+      const dx = (m.clientX - startX) / zoom;
+      const dy = (m.clientY - startY) / zoom;
+      const dId = findDiagramIdForEdge();
+      if (!dId) return;
+      const live = useModelStore.getState().diagrams[dId]?.edges?.find((e) => e.id === id);
+      const liveOff = (live?.data && live.data.labelOffsets) || {};
+      const next = { ...liveOff, [which]: { x: off0.x + dx, y: off0.y + dy } };
+      useModelStore.getState().updateDiagramEdge(dId, id, { labelOffsets: next });
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
+  const resetRolnaamOffset = (which) => (ev) => {
+    ev.stopPropagation();
+    ev.preventDefault();
+    const dId = findDiagramIdForEdge();
+    if (!dId) return;
+    const live = useModelStore.getState().diagrams[dId]?.edges?.find((e) => e.id === id);
+    const liveOff = (live?.data && live.data.labelOffsets) || {};
+    const next = { ...liveOff };
+    delete next[which];
+    useModelStore.getState().updateDiagramEdge(dId, id, { labelOffsets: next });
+  };
+
   const diamondColor = selected ? "#2563eb" : "#64748b";
   const dependencyColor = "#64748b";
   const generalizationColor = selected ? "#2563eb" : "#475569";
@@ -251,47 +324,60 @@ function MetamodelEdge({
         </g>
       )}
 
-      {/* Labels voor compositie-edges (entiteit → GE) */}
-      {isComposition && (
-        <EdgeLabelRenderer>
-          <div
-            className="edge-label"
-            style={{
-              position: "absolute",
-              transform: `translate(-50%, -50%) translate(${geLabelX}px, ${geLabelY}px)`,
-              pointerEvents: "all",
-            }}
-          >
-            {rolnaam && <span className="edge-rolnaam">{rolnaam}</span>}
-            {kardinaliteit && (
-              <span className="edge-kardinaliteit">{kardinaliteit}</span>
-            )}
-            {constraint && <span className="edge-constraint">{constraint}</span>}
-          </div>
-        </EdgeLabelRenderer>
-      )}
-
-      {/* Labels voor associatie-edges (A→o en o→B): kardinaliteit bij entiteit-zijde */}
-      {isAssociation && (kardinaliteit || constraint || rolnaam) && (() => {
-        // Label moet bij de entiteit staan, niet bij het anker.
-        // A→o (target=anker): toon bij source (srcLabel). o→B (source=anker): toon bij target (geLabel).
-        const nearAnker = targetNode?.type === "associatieAnker";
-        const lx = nearAnker ? srcLabelX : geLabelX;
-        const ly = nearAnker ? srcLabelY : geLabelY;
+      {/* Labels voor compositie-edges (entiteit → GE) — draggable via 'rolnaamDst' offset */}
+      {isComposition && (() => {
+        const off = data?.labelOffsets?.rolnaamDst || { x: 0, y: 0 };
         return (
           <EdgeLabelRenderer>
             <div
-              className="edge-label"
+              className="edge-label nodrag nopan"
+              onMouseDown={startRolnaamDrag("rolnaamDst")}
+              onDoubleClick={resetRolnaamOffset("rolnaamDst")}
               style={{
                 position: "absolute",
-                transform: `translate(-50%, -50%) translate(${lx}px, ${ly}px)`,
+                transform: `translate(-50%, -50%) translate(${geLabelX + off.x}px, ${geLabelY + off.y}px)`,
                 pointerEvents: "all",
+                cursor: "move",
+                userSelect: "none",
               }}
+              title="Sleep om te verplaatsen, dubbelklik om te resetten"
             >
               {rolnaam && <span className="edge-rolnaam">{rolnaam}</span>}
-              {kardinaliteit && (
-                <span className="edge-kardinaliteit">{kardinaliteit}</span>
-              )}
+              {kardinaliteit && <span className="edge-kardinaliteit">{kardinaliteit}</span>}
+              {constraint && <span className="edge-constraint">{constraint}</span>}
+            </div>
+          </EdgeLabelRenderer>
+        );
+      })()}
+
+      {/* Labels voor associatie-edges (A→o en o→B): bij entiteit-zijde — draggable */}
+      {(isAssociation || isCollapsedRelatie) && (kardinaliteit || constraint || rolnaam) && (() => {
+        // ASOC: A→o (target=anker) → label bij source. o→B (source=anker) → label bij target.
+        // Collapsed relatie: ENT→relatie → label bij ENT (src). relatie→ENT → label bij ENT (dst).
+        const nearAnker = targetNode?.type === "associatieAnker";
+        const nearCollapsedSrc = isCollapsedRelatie && targetNode?.type === "relatie";
+        const useSrcSide = nearAnker || nearCollapsedSrc;
+        const baseX = useSrcSide ? srcLabelX : geLabelX;
+        const baseY = useSrcSide ? srcLabelY : geLabelY;
+        const offsetKey = useSrcSide ? "rolnaamSrc" : "rolnaamDst";
+        const off = data?.labelOffsets?.[offsetKey] || { x: 0, y: 0 };
+        return (
+          <EdgeLabelRenderer>
+            <div
+              className="edge-label nodrag nopan"
+              onMouseDown={startRolnaamDrag(offsetKey)}
+              onDoubleClick={resetRolnaamOffset(offsetKey)}
+              style={{
+                position: "absolute",
+                transform: `translate(-50%, -50%) translate(${baseX + off.x}px, ${baseY + off.y}px)`,
+                pointerEvents: "all",
+                cursor: "move",
+                userSelect: "none",
+              }}
+              title="Sleep om te verplaatsen, dubbelklik om te resetten"
+            >
+              {rolnaam && <span className="edge-rolnaam">{rolnaam}</span>}
+              {kardinaliteit && <span className="edge-kardinaliteit">{kardinaliteit}</span>}
               {constraint && <span className="edge-constraint">{constraint}</span>}
             </div>
           </EdgeLabelRenderer>
@@ -331,10 +417,10 @@ function MetamodelEdge({
         </EdgeLabelRenderer>
       )}
 
-      {/* B5: heen/terug naam-labels met UML-driehoek (▶/◀) op compositie- en associatie-edges.
+      {/* B5: heen/terug naam-labels met UML-driehoek (▶/◀) op compositie-, associatie- en collapsed-relatie-edges.
            Offsets uit data.labelOffsets.{heen,terug}.{x,y} — default {0,0}.
-           Heen-label staat aan source-zijde, Terug-label aan target-zijde. */}
-      {(isComposition || isAssociation) && data?.naamLabelHeen && (() => {
+           Labels: edge.data heeft voorrang, anders fallback naar host-node (zie boven). */}
+      {(isComposition || isAssociation || isCollapsedRelatie) && naamLabelHeen && (() => {
         const off = data?.labelOffsets?.heen || { x: 0, y: 0 };
         // Heen = bron→doel, label dus dichter bij source
         const baseX = isAssociation && targetNode?.type === "associatieAnker" ? geLabelX : srcLabelX;
@@ -360,12 +446,12 @@ function MetamodelEdge({
               title="Naam in heen-richting (bron → doel) — sleep om te verplaatsen, dubbelklik om te resetten"
             >
               <span style={{ marginRight: 3 }}>▶</span>
-              {data.naamLabelHeen}
+              {naamLabelHeen}
             </div>
           </EdgeLabelRenderer>
         );
       })()}
-      {(isComposition || isAssociation) && data?.naamLabelTerug && (() => {
+      {(isComposition || isAssociation || isCollapsedRelatie) && naamLabelTerug && (() => {
         const off = data?.labelOffsets?.terug || { x: 0, y: 0 };
         // Terug = doel→bron, label dus dichter bij target
         const baseX = isAssociation && targetNode?.type === "associatieAnker" ? srcLabelX : geLabelX;
@@ -391,7 +477,7 @@ function MetamodelEdge({
               title="Naam in terug-richting (doel → bron) — sleep om te verplaatsen, dubbelklik om te resetten"
             >
               <span style={{ marginRight: 3 }}>◀</span>
-              {data.naamLabelTerug}
+              {naamLabelTerug}
             </div>
           </EdgeLabelRenderer>
         );
