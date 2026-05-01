@@ -67,35 +67,95 @@ Relatie-hubs met een `SecondaireEntiteitIDKolom` (bijv. `gemeente_id` op Initiat
 
 ## Mutations
 
-### Generieke mutations (vrij JSON)
+Het schema biedt twee stijlen van mutations die beide actief zijn:
+
+| Stijl | Mutations | Wanneer |
+|-------|-----------|---------|
+| **Typed** (voorkeur) | `wijzig<X>`, `corrigeer<X>`, `voer<X>Af` | Wijzigingen en correcties op bestaande entiteiten |
+| **Generiek JSON** (fallback) | `registreer`, `corrigeer`, `maak_ongedaan` | Initiële opvoer, multi-entiteit, ongedaanmaking |
+
+Beide stijlen roepen dezelfde pure core-functies aan en hebben hetzelfde transactiegedrag en dezelfde audit-trail.
+
+### Typed mutations per entiteit (voorkeur)
+
+Voor elk entiteit-type genereert het schema drie mutations:
 
 ```graphql
-registreer(input: JSON!)     # Nieuwe registratie (opvoer/afvoer)
-corrigeer(input: JSON!)      # Correctie (ongedaanmaking + heropvoer)
-maak_ongedaan(input: JSON!)  # Maak een registratie ongedaan
+wijzig<Typenaam>(id: <Int|String>!, patch: <Typenaam>PatchInput!) → JSON
+corrigeer<Typenaam>(id: <Int|String>!, patch: <Typenaam>PatchInput!) → JSON
+voer<Typenaam>Af(id: <Int|String>!) → JSON
 ```
 
-> De `JSON` scalar accepteert vrije JSON-payloads — identiek aan het REST request-formaat.
+- **`wijzig<X>`** — voert één of meer GE's/RELs op als nieuwe versie (registratie-modus). `rel_id` weglaten = nieuwe hub aanmaken.
+- **`corrigeer<X>`** — vervangt een bestaande versie; `rel_id` is verplicht per GE (correctie-modus).
+- **`voer<X>Af`** — formele afvoer van de entiteit; audit-trail blijft intact.
 
-### Per-ENT typed mutations (sinds 2026-04-30)
+De modus zit in de naam — geen extra `modus`-arg nodig.
 
-Voor elk entiteit-type registreert het schema automatisch drie typed mutations
-die de PATCH/DELETE-cores hergebruiken:
+#### PatchInput structuur
+
+De `<Typenaam>PatchInput` is een volledig getypeerde InputObject, dynamisch opgebouwd uit de MetaRegistry bij startup (geen codegen). Elk veld correspondeert met een onderliggend GE of relatie-type als lijst.
+
+Voorbeeld: `NatuurlijkPersoonPatchInput`
 
 ```graphql
-wijzig<Typenaam>(id: ID!, patch: JSON!)     # JSON Merge Patch op onderliggende GE's/RELs (registratie-modus)
-corrigeer<Typenaam>(id: ID!, patch: JSON!)  # idem in correctie-modus (rel_id verplicht per item)
-voer<Typenaam>Af(id: ID!)                    # formele afvoer
+input NatuurlijkPersoonPatchInput {
+  namen:                  [NatuurlijkPersoon_NaamInput]
+  persoonsidentificaties: [NatuurlijkPersoon_PersoonsidentificatieInput]
+  partnernamen:           [NatuurlijkPersoon_PartnernaamInput]
+  naamgebruiken:          [NatuurlijkPersoon_NaamgebruikInput]
+  burgerschappen:         [NatuurlijkPersoon_BurgerschapInput]
+  bereikbaarheden:        [BereikbaarheidInput]
+}
+
+input NatuurlijkPersoon_NaamInput {
+  rel_id:        Int     # weglaten bij nieuwe opvoer, verplicht bij correctie
+  voorletters:   String
+  roepnaam:      String
+  tussenvoegsel: String
+  achternaam:    String
+}
+
+input NatuurlijkPersoon_BurgerschapInput {
+  rel_id:        Int
+  landcode:      String
+  nationaliteit: String
+  aanvang:       PlumbingDatumInput   # materieel aanvang
+  einde:         PlumbingDatumInput   # materieel einde
+}
+
+input BereikbaarheidInput {
+  rel_id:     Int
+  locatie_id: Int                     # ID van de te koppelen Locatie
+  soort:      BereikbaarheidssoortEnum  # Woonadres | Briefadres | Correspondentieadres
+  aanvang:    PlumbingDatumInput
+  einde:      PlumbingDatumInput
+}
+
+input NatuurlijkPersoon_NaamgebruikInput {
+  rel_id:      Int
+  naamgebruik: NaamgebruiksoortEnum   # EigenNaam | PartnerNaam | EigenNaam-PartnerNaam | PartnerNaam-EigenNaam
+}
+
+input PlumbingDatumInput {
+  datum: Date   # YYYY-MM-DD
+}
 ```
 
-De modus zit in de naam van de mutation — er is geen aparte `modus`-arg.
 Voorbeeld:
 
 ```graphql
 mutation {
   wijzigNatuurlijkPersoon(
-    id: 4202,
-    patch: { namen: [{ roepnaam: "Jan", achternaam: "Bakker" }] }
+    id: 4202
+    patch: {
+      namen: [{ voorletters: "J.", roepnaam: "Jan", achternaam: "Bakker" }]
+      burgerschappen: [{
+        landcode: "NL"
+        nationaliteit: "Nederlandse"
+        aanvang: { datum: "1990-01-01" }
+      }]
+    }
   ) {
     registratie_id
     tijdstip
@@ -104,13 +164,20 @@ mutation {
 }
 ```
 
-> **Architectuur (Fase 3A):** sinds 2026-04-30 doen alle GraphQL-mutations de
-> bewerking **direct** via de pure `handlers.*Core`-functies — geen interne
-> HTTP-roundtrip meer naar de eigen REST endpoints. Audit-trail en
-> transactiegedrag zijn identiek aan REST.
+### Generieke JSON mutations (fallback / initiële opvoer)
 
-> Volle typed `<Type>OpvoerInput`-types (recursief uit OnderliggendeGegevenselementen,
-> incl. typed mutations voor GE/REL met `(entId, relId)`) komen in een vervolg-iteratie.
+```graphql
+registreer(input: JSON!)     # Nieuwe registratie (opvoer/afvoer van entiteiten en GEs)
+corrigeer(input: JSON!)      # Correctie-registratie
+maak_ongedaan(input: JSON!)  # Ongedaanmaking van een registratie
+```
+
+De `JSON!` scalar accepteert dezelfde payload als de REST `/registratie`-endpoint. Gebruik dit voor:
+- **Initiële opvoer** van een nieuwe entiteit (er bestaat nog geen ID om te wijzigen)
+- **Multi-entiteit-registraties** in één call (bijv. NP + Locatie + Bereikbaarheid tegelijk)
+- **Ongedaanmaking** — heeft geen typed equivalent
+
+> **Tip**: een gangbare aanpak is `registreer` voor de initiële aanmaak en daarna `wijzig<X>` voor alle wijzigingen. Zo combineer je de eenvoud van typed mutations met de flexibiliteit van de generieke opvoer.
 
 ## Voorbeelden
 
