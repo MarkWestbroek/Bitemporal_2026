@@ -576,6 +576,9 @@ Positie wordt opgeslagen in `V3Notitie.positie` / `V3Constraint.positie` en bij 
 | `web/vite/src/ide/repCreation.js` | `bouwStoreElement` cases voor `notitie` en `constraint` |
 | `web/vite/src/ide/components/edges/MetamodelEdge.jsx` | Scope-edge short-circuit (gestippeld grijs) |
 | `web/vite/src/store/adapters.js` | **mei 2026: 5 fixes — diagram nodes export/import, notitie naam+scopeRefs; round 4: namedDiagPos + scopeRefs deduplicatie** |
+| `web/vite/src/store/useModelStore.js` | **mei 2026 round 5: nieuwe `removeStructuralEdge` action** |
+| `web/vite/src/ide/DiagramCanvas.jsx` | **mei 2026 round 5: `handleEdgesChangeWrapped` + scope-edge cleanup in context-menu** |
+| `web/vite/src/ide/BrowserContextMenu.jsx` + `ide/ProjectBrowser.jsx` | **mei 2026 I54: "Verplaats naar domein…" menu-item + handler met multi-select** |
 | `web/vite/src/pages/IdePage.jsx` | **mei 2026: referentielijstInstanties domeinfilter in handleExportDialog** |
 | `model/v3_format.go` | `V3Notitie` en `V3Constraint` structs (eerder al toegevoegd) |
 | `web/vite/src/store/__tests__/v3_b5_c8_roundtrip.test.js` | Roundtrip-tests bijgewerkt (positie in `diagram.nodes` i.p.v. `data.positie`) |
@@ -628,7 +631,20 @@ User-rapportage: na import van een V3 JSON staan alle posities in EditorV2 nog s
 
 **Resultaat:** Posities IDE↔EditorV2 identiek bij import van V3 JSON, ongeacht of posities op entity-level of in `diagrammen[].nodes` staan. Geen dubbele scope-lijntjes meer.
 
+### Mei 2026: Round 5 — Scope-edge verwijdering persisteert nu
+
+User-rapportage: na het tekenen van 3 scope-lijntjes en visueel verwijderen van 2 ervan, exporteert V3 JSON tóch nog 3 `scopeRefs` per notitie/constraint. Bij re-import komen de oude lijntjes terug.
+
+**Root cause**: Scope-edges leven uitsluitend in `useModelStore.structuralEdges` (niet in `diagram.edges`). React Flow's `onEdgesChange` werkt alleen de lokale `useEdgesState` bij. `handleNodesChangeWrapped` had al een sync-pad voor node-deletions, maar voor edges ontbrak dat.
+
+**Fix**:
+- Nieuwe action `removeStructuralEdge(edgeId)` in `useModelStore.js`.
+- Nieuwe wrapper `handleEdgesChangeWrapped` in `DiagramCanvas.jsx`: vangt `type === "remove"` changes en verwijdert scope-edges óók uit `structuralEdges`.
+- `handleRemoveEdgeFromDiagram` (rechtsklik > "Verwijder uit diagram") roept nu ook `removeStructuralEdge` aan voor scope-edges.
+
+**Resultaat:** Scope-edges verwijderen via Delete-toets én rechtsklik werkt consistent en persisteert in de store; volgende V3-export bevat alleen nog actuele scope-references.
+
 ---
 
-**Resultaat round 1+2+3+4:** 115 tests groen; beide editors (IDE en EditorV2) kunnen C8-elementen zonder verlies of visuele inconsistenties uitwisselen.
+**Resultaat round 1+2+3+4+5:** Beide editors (IDE en EditorV2) kunnen C8-elementen zonder verlies of visuele inconsistenties uitwisselen.
 

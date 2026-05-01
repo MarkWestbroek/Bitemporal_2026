@@ -1,5 +1,66 @@
 # Release checklist
 
+## GraphQL: typed `maakRegistratieOngedaan` mutation + registratie-flow docs (2026-05-01)
+
+Aanvulling op de Fase 3B-full typed mutations: ongedaanmaking heeft nu ook een
+volledig getypeerd pad in GraphQL, en de docs leggen de complete 3B-stijl flow
+voor een NP uit (initiële opvoer → wijzigingen → correcties → afvoer → ongedaan).
+
+- **Nieuw**: `maakRegistratieOngedaan(registratie_id: Int!, opmerking: String)` —
+  typed mutation die op een `registratie_id` werkt (geen entiteit/GE/REL). De
+  resolver bouwt de ongedaanmaking-payload server-side en delegeert aan dezelfde
+  `RegistreerJSONCore` als de bestaande `maak_ongedaan(input: JSON!)`. Audit-trail
+  en transactiegedrag zijn identiek.
+- **Documentatie**:
+  - [GRAPHQL.md](GRAPHQL.md) — Mutations-sectie herschreven: typed (voorkeur)
+    vs JSON (fallback) met expliciete "normale flow" beschrijving (initiële
+    opvoer via `registreer`, vervolgstappen typed, ongedaanmaking typed).
+    Registraties+wijzigingen-query expliciet gedocumenteerd als read-only audit-pad.
+  - [postman/graphql-nploc-requests.md](postman/graphql-nploc-requests.md) —
+    Volledige NP-flow herschreven: §2a eenvoudige opvoer, §2b uitgebreide opvoer
+    (NP + naam + BSN + burgerschap + naamgebruik + bereikbaarheid in één
+    `registreer`), §2c-§2k typed wijzigingen/correcties/afvoer, §3 generieke
+    JSON-fallback (multi-entiteit), §4a typed `maakRegistratieOngedaan`,
+    §4b JSON-fallback, §5 stap-voor-stap workflow-tabel.
+- **Tests**: 2 nieuwe tests in `dynql/maak_registratie_ongedaan_test.go`
+  voor input-validatie van de nieuwe resolver.
+
+Bestanden:
+- `dynql/mutation_resolvers.go` — `makeMaakRegistratieOngedaanResolver()` toegevoegd
+- `dynql/schema_builder.go` — `maakRegistratieOngedaan` field geregistreerd
+- `dynql/maak_registratie_ongedaan_test.go` — nieuwe tests
+- `GRAPHQL.md`, `postman/graphql-nploc-requests.md` — flow & docs
+
+## C8 (Notities & Constraints) IDE↔EditorV2 roundtrip — Round 5 + Feature I54 (2026-05-01)
+
+Twee items in één release: bugfix scope-edge verwijdering (Round 5) + nieuwe feature "Verplaats elementen naar ander domein" (I54).
+
+### Wijzigingen
+
+**Frontend (`web/vite/src/`):**
+
+- **`store/useModelStore.js`** — Nieuwe action `removeStructuralEdge(edgeId)` voor het verwijderen van scope-edges (en andere structurele edges) uit de store.
+
+- **`ide/DiagramCanvas.jsx`** — Nieuwe `handleEdgesChangeWrapped` wrapper rond `onEdgesChange` van React Flow: vangt `type === "remove"` changes (Delete-toets) en verwijdert scope-edges óók uit `structuralEdges`. Zonder deze wrapper bleven scope-edges in de store hangen na visueel verwijderen, en doken bij volgende V3-export weer op.
+
+- **`ide/DiagramCanvas.jsx`** — `handleRemoveEdgeFromDiagram` (rechtsklik > "Verwijder uit diagram") roept nu ook `removeStructuralEdge` aan voor scope-edges.
+
+- **`ide/BrowserContextMenu.jsx`** — Nieuw menu-item "↪️ Verplaats naar domein…" voor alle element-types (entiteit, GE, relatie, enumeratie, gegevenstype, referentielijstInstantie, notitie, constraint).
+
+- **`ide/ProjectBrowser.jsx`** — Handler `verplaatsDomein`: detecteert multi-select (`_multiSelected.size > 1`), toont prompt met beschikbare domeinen + huidig domein als default, gevolgd door bevestigingsdialoog. Past `updateElement(id, { domein: ... })` toe op alle geselecteerde elementen. Lege invoer → "(geen domein)". Multi-selectie wordt na actie gewist.
+
+### Tests
+
+Test-run nog te draaien (Vitest watch-mode hing bij vorige poging).
+
+### Technisch detail
+
+**Root cause scope-edge bug**: Scope-edges leven uitsluitend in `useModelStore.structuralEdges` (niet in `diagram.edges`). React Flow's `onEdgesChange` werkt alleen de lokale `useEdgesState` bij. `handleNodesChangeWrapped` had al een sync-pad voor node-deletions, maar voor edges ontbrak die. Gevolg: V3-export las verouderde `structuralEdges` → scope-lijnen kwamen terug bij re-import.
+
+**I54 feature**: Bewust een eenvoudige `prompt`+`confirm`-flow gekozen (consistent met bestaande "Hernoem"/"Verwijder uit model" patterns in dezelfde handler). Een rijkere modaal kan later komen zodra meer elementen gepaard verplaatst moeten worden.
+
+---
+
 ## C8 (Notities & Constraints) IDE↔EditorV2 roundtrip — Position Fix Round 4 (2026-05-01)
 
 Positie-fix voor V3 JSON imports waarbij posities alleen in `diagrammen[].nodes` staan (niet als entity-level `positie` velden). Tevens dubbele scope-lijntjes (scopeRefs) gefixt.

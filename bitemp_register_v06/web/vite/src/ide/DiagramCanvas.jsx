@@ -734,6 +734,7 @@ function DiagramCanvasInner({ diagramId }) {
   const updateDiagramEdges = useModelStore((s) => s.updateDiagramEdges);
   const updateDiagramViewport = useModelStore((s) => s.updateDiagramViewport);
   const addStructuralEdge = useModelStore((s) => s.addStructuralEdge);
+  const removeStructuralEdge = useModelStore((s) => s.removeStructuralEdge);
   const selectedElementId = useUIStore((s) => s.selectedElementId);
   const selectedEdgeId = useUIStore((s) => s.selectedEdgeId);
   const setSelectedElementId = useUIStore((s) => s.setSelectedElementId);
@@ -1266,6 +1267,12 @@ function DiagramCanvasInner({ diagramId }) {
   const handleRemoveEdgeFromDiagram = useCallback(() => {
     if (!contextMenu?.edgeId) return;
     const edgeId = contextMenu.edgeId;
+    // Verwijder scope-edges ook uit structuralEdges (ze leven niet in diagram.edges)
+    const store = useModelStore.getState();
+    const se = store.structuralEdges.find((e) => e.id === edgeId);
+    if (se?.data?.kind === "scope") {
+      store.removeStructuralEdge(edgeId);
+    }
     // Verwijder edge uit diagram store
     const updateDE = useModelStore.getState().updateDiagramEdges;
     if (diagram) {
@@ -1984,6 +1991,27 @@ function DiagramCanvasInner({ diagramId }) {
     };
   }, [contextMenu]);
 
+  // ── onEdgesChange wrapper: scope-edges ook uit structuralEdges verwijderen bij Delete ──
+  // React Flow roept onEdgesChange aan met type="remove" bij Delete-toets, maar scope-edges
+  // leven exclusief in structuralEdges (niet in diagram.edges). Zonder deze wrapper blijven
+  // ze in de store na visueel verwijderen, waardoor ze bij de volgende export opduiken.
+  const handleEdgesChangeWrapped = useCallback(
+    (changes) => {
+      onEdgesChange(changes);
+      const removeChanges = changes.filter((c) => c.type === "remove");
+      if (removeChanges.length === 0) return;
+      const rmStore = useModelStore.getState();
+      for (const rc of removeChanges) {
+        // Alleen scope-edges (kind="scope") zijn exclusief in structuralEdges
+        const se = rmStore.structuralEdges.find((e) => e.id === rc.id);
+        if (se?.data?.kind === "scope") {
+          rmStore.removeStructuralEdge(rc.id);
+        }
+      }
+    },
+    [onEdgesChange]
+  );
+
   // Sla node-posities op in store na drag; sync verwijderingen naar store
   const handleNodesChangeWrapped = useCallback(
     (changes) => {
@@ -2418,7 +2446,7 @@ function DiagramCanvasInner({ diagramId }) {
         edgeTypes={edgeTypes}
         colorMode={theme}
         onNodesChange={handleNodesChangeWrapped}
-        onEdgesChange={onEdgesChange}
+        onEdgesChange={handleEdgesChangeWrapped}
         onConnect={handleConnect}
         onConnectEnd={handleConnectEnd}
         onNodeClick={handleNodeClick}

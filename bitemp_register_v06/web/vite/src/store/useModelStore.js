@@ -256,6 +256,13 @@ const useModelStore = create(
           };
         }),
 
+      /** Verwijder een structurele edge op basis van ID (bijv. scope-edges). */
+      removeStructuralEdge: (edgeId) =>
+        set((state) => ({
+          isDirty: true,
+          structuralEdges: state.structuralEdges.filter((e) => e.id !== edgeId),
+        })),
+
       /** Update data van een structurele edge */
       updateStructuralEdge: (edgeId, dataPatch) =>
         set((state) => ({

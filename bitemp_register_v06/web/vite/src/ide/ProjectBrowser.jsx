@@ -619,6 +619,37 @@ export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram, onImpor
           onExportDomein?.(domNaam);
           break;
         }
+        case "verplaatsDomein": {
+          const store = useModelStore.getState();
+          // Bepaal welke elementen verplaatst worden (multi-select bewust)
+          const teVerplaatsen =
+            _multiSelected.size > 1 && _multiSelected.has(nodeData.id)
+              ? Array.from(_multiSelected)
+              : [nodeData.id];
+          const aantalTekst =
+            teVerplaatsen.length > 1
+              ? `${teVerplaatsen.length} elementen`
+              : `"${store.elements[nodeData.id]?.naam || nodeData.id}"`;
+          const huidigDomein = store.elements[nodeData.id]?.domein || "";
+          const domeinsStr =
+            store.domains.length > 0 ? store.domains.join(", ") : "(nog geen domeinen)";
+          const invoer = window.prompt(
+            `Verplaats ${aantalTekst} naar domein.\n\nBeschikbare domeinen:\n  ${domeinsStr}\n\nLaat leeg voor "(geen domein)":`,
+            huidigDomein
+          );
+          if (invoer === null) break; // geannuleerd
+          const doelDomein = invoer.trim();
+          const bevestig = window.confirm(
+            `Verplaats ${aantalTekst} naar domein "${doelDomein || "(geen domein)"}".\n\nDoorgaan?`
+          );
+          if (!bevestig) break;
+          for (const elId of teVerplaatsen) {
+            store.updateElement(elId, { domein: doelDomein });
+          }
+          // Wis multi-selectie na actie
+          _setMultiSelected(new Set());
+          break;
+        }
       }
     },
     [setSelectedElementId, onCreateDiagram, onOpenDiagram, onImportDomein, onExportDomein, onRenameDiagram, onDeleteDiagram]

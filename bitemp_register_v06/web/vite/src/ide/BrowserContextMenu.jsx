@@ -26,6 +26,7 @@ const MENU_ITEMS = {
   hernoem: { label: "✏️ Hernoem", types: ["entiteit", "gegevenselement", "relatie", "enumeratie", "gegevenstype", "referentielijstInstantie", "notitie", "constraint", "diagram"] },
   separator1: { separator: true },
   kopieerID: { label: "📋 Kopieer ID", types: ["entiteit", "gegevenselement", "relatie", "enumeratie", "gegevenstype", "referentielijstInstantie", "notitie", "constraint"] },
+  verplaatsDomein: { label: "↪️ Verplaats naar domein…", types: ["entiteit", "gegevenselement", "relatie", "enumeratie", "gegevenstype", "referentielijstInstantie", "notitie", "constraint"] },
   separator2: { separator: true },
   importeerDomein: { label: "📂 Importeer domein…", types: ["domain"] },
   exporteerDomein: { label: "💾 Exporteer domein…", types: ["domain"] },

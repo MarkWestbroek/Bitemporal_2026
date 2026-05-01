@@ -856,7 +856,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I38 | Jump naar view / edit pagina's data | nieuw |
 | I39 | Relatie naam labels tonen op diagram (rechtsklik toon/hide) | nieuw |
 | I40 | Model geheel (bi?)temporeel in database? | nieuw |
-| I41 | IDE diagram-positie synchronisatie: posities slaan alleen op in het actieve diagram, maar de V3 export leest altijd uit `overzicht` — 3 opties uitgewerkt in [docs/ide-diagram-positie-sync.md](ide-diagram-positie-sync.md) | nieuw |
+| I41 | ✅ IDE diagram-positie synchronisatie: posities werden alleen in het actieve diagram opgeslagen, maar V3-export leest uit `overzicht`. Fix Round 3 + 4 (2026-05-01): `handleNodesChangeWrapped` synchroniseert posities naar Overzicht; bij V3-import wordt een `namedDiagPos` map gebouwd uit alle named diagrams als fallback voor entiteiten zonder `positie`-veld. Tevens scope-edge dedup. Zie RELEASE.md. | nieuw |
 | I42 | business rule in model | nieuw |
 | I43 | complex types achtig iets = combi gegevenstypen? | nieuw |
 | I44 | import IDE: meerdere diagrammen? Hele IDE setup? | testen |
@@ -869,7 +869,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I51 | ✅ B5/B6/B7 (cast/splits/relatie) faalden op raw-imported elementen met "Element X is geen entiteit" omdat `rawNodeNaarElement` geen top-level `metatype` zette. Fix: metatype op top-level én in `data`; transformations.js `isEntiteit/isGE/isRelatie` accepteren nu ook `el.type` en `el.data.metatype` als fallback. Regression-test toegevoegd. (2026-04-28) | nieuw |
 | I52 | Editor-v2 `Failed to execute 'removeChild'` treedt nog steeds op na openen. De huidige defer (rAF + null-data-mount) is onvoldoende; vermoedelijk XyFlow ResizeObserver vs React 18 concurrent commits. Onderzoek: aparte `key` op `<MetamodelEditor>` per data-load; downgrade React-Flow; of `<Suspense>`-grens rond editor. Zie todo #2. | nieuw |
 | I53 | Select elementen op een canvas - rechtsklik domein wijzigen -> of via I54?| vanuit editor |
-| I54 | Verplaatsen elementen in PB = mogelijk domein wijzigen | nieuw |
+| I54 | ✅ Verplaatsen elementen in PB → domein wijzigen. Rechtsklik > "↪️ Verplaats naar domein…" werkt op enkelvoudige selectie en multi-select (`_multiSelected`). Prompt + bevestigingsdialoog; updates via `updateElement(id, { domein })`. (2026-05-01) | nieuw |
 | I |  | nieuw |
 | I |  | nieuw |
 | I |  | nieuw |
