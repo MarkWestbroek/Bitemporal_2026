@@ -117,6 +117,21 @@ export function v3ModelNaarStore(v3Full) {
     datatypeLookup[dt.naam] = dt;
   });
 
+  // ── Positie-lookup vanuit named diagrams ──────────────────────────────────
+  // Wanneer entiteiten/GE's/relaties geen entity-level `positie` hebben (e.g.
+  // V3 export waarbij posities alleen in diagrammen[].nodes staan), gebruik dan
+  // de positie uit de named diagrams als fallback voor het Overzicht-diagram.
+  // Dit voorkomt dat de EditorV2 import default-grid-posities krijgt.
+  const namedDiagPos = new Map();
+  for (const diag of v3Model?.diagrammen || []) {
+    if (!diag?.id) continue;
+    for (const n of diag.nodes || []) {
+      if (n.elementId && !namedDiagPos.has(n.elementId)) {
+        namedDiagPos.set(n.elementId, { x: n.x || 0, y: n.y || 0 });
+      }
+    }
+  }
+
   // Domein-inferentie voor enums (zelfde logica als v3ModelNaarEditor)
   const inferredEnumDomein = {};
   const noteEnumDomein = (enumNaam, domeinKandidaat) => {
@@ -155,7 +170,7 @@ export function v3ModelNaarStore(v3Full) {
     };
     diagramNodes.push({
       elementId: id,
-      position: e.positie || { x: 50 + i * 220, y: 550 },
+      position: e.positie || namedDiagPos.get(id) || { x: 50 + i * 220, y: 550 },
     });
   });
 
@@ -180,7 +195,7 @@ export function v3ModelNaarStore(v3Full) {
     };
     diagramNodes.push({
       elementId: id,
-      position: dt.positie || { x: 500 + i * 280, y: 650 },
+      position: dt.positie || namedDiagPos.get(id) || { x: 500 + i * 280, y: 650 },
     });
   });
 
@@ -200,7 +215,7 @@ export function v3ModelNaarStore(v3Full) {
     };
     diagramNodes.push({
       elementId: id,
-      position: ri.positie || { x: 800 + i * 280, y: 50 },
+      position: ri.positie || namedDiagPos.get(id) || { x: 800 + i * 280, y: 50 },
     });
   });
 
@@ -243,7 +258,7 @@ export function v3ModelNaarStore(v3Full) {
     }
     diagramNodes.push({
       elementId: ent.typenaam,
-      position: ent.positie || { x: entIdx * 500, y: 50 },
+      position: ent.positie || namedDiagPos.get(ent.typenaam) || { x: entIdx * 500, y: 50 },
     });
 
     // GE's
@@ -273,7 +288,7 @@ export function v3ModelNaarStore(v3Full) {
       };
       diagramNodes.push({
         elementId: geId,
-        position: ge.positie || { x: entIdx * 500 - 150 + geIdx * 250, y: 300 },
+        position: ge.positie || namedDiagPos.get(geId) || { x: entIdx * 500 - 150 + geIdx * 250, y: 300 },
       });
 
       // Structurele edge: entiteit → GE
@@ -330,7 +345,7 @@ export function v3ModelNaarStore(v3Full) {
         };
         diagramNodes.push({
           elementId: rel.naam,
-          position: rel.positie || { x: entIdx * 500 + 200, y: 170 },
+          position: rel.positie || namedDiagPos.get(rel.naam) || { x: entIdx * 500 + 200, y: 170 },
         });
 
         // Dependency edges vanuit relatie-velden (met useEdges voor handles/hidden)
@@ -369,15 +384,16 @@ export function v3ModelNaarStore(v3Full) {
             data: { relatieNaam: rel.naam },
           };
           // Bereken ankerpositie: midden tussen eigenaar-entiteit en doel-entiteit
-          const entPos = ent.positie || { x: entIdx * 500, y: 50 };
+          const entPos = ent.positie || namedDiagPos.get(ent.typenaam) || { x: entIdx * 500, y: 50 };
           const doelEnt = rel.doelEntiteit
             ? (v3Model.entiteiten || []).find((e) => e.typenaam === rel.doelEntiteit)
             : null;
-          const doelPos = doelEnt?.positie || { x: entPos.x + 400, y: entPos.y };
-          const ankerPos = rel.ankerPositie || {
-            x: (entPos.x + doelPos.x) / 2,
-            y: (entPos.y + doelPos.y) / 2,
-          };
+          const doelPos = doelEnt?.positie
+            || (rel.doelEntiteit ? namedDiagPos.get(rel.doelEntiteit) : null)
+            || { x: entPos.x + 400, y: entPos.y };
+          const ankerPos = rel.ankerPositie
+            || namedDiagPos.get(ankerId)
+            || { x: (entPos.x + doelPos.x) / 2, y: (entPos.y + doelPos.y) / 2 };
           diagramNodes.push({ elementId: ankerId, position: ankerPos });
         }
 
@@ -539,14 +555,17 @@ export function v3ModelNaarStore(v3Full) {
       naam: v3Diag.naam || v3Diag.id,
       domein: v3Diag.domein || null,
       nodes: (v3Diag.nodes || []).map((n) => {
+        // Sla altijd op als { elementId, position } om consistent te zijn met
+        // de rest van de codebase (buildFlowNodes en handleNodesChangeWrapped).
+        if (!n.elementId) return null;  // skip nodes zonder ID (onkoppelbaar)
         const out = {
-          id: n.elementId,
+          elementId: n.elementId,
           position: { x: n.x || 0, y: n.y || 0 },
         };
         if (n.width != null) out.width = n.width;
         if (n.height != null) out.height = n.height;
         return out;
-      }),
+      }).filter(Boolean),
       edges: (v3Diag.edges || []).map((e) => {
         const out = {
           id: e.id,
@@ -570,24 +589,45 @@ export function v3ModelNaarStore(v3Full) {
   // Constraints: type "constraint", visueel als lichtblauwe rounded-rect.
   // ScopeRefs van constraints worden vertaald naar structuralEdges met data.kind="scope"
   // (altijd zichtbaar — kunnen niet verborgen worden in de UI).
+  // Zowel elements[] als diagramNodes (Overzicht) worden gevuld zodat ze op
+  // het canvas verschijnen na import.
+  let notitieOffsetX = 0;
   for (const n of v3Model?.notities || []) {
     if (!n?.id) continue;
+    const pos = n.positie ? { x: n.positie.x || 0, y: n.positie.y || 0 } : { x: 80 + notitieOffsetX, y: -120 };
+    notitieOffsetX += 220;
     elements[n.id] = {
       id: n.id,
-      naam: n.id,
+      naam: n.naam || n.id,
       type: "notitie",
       domein: n.domein || "",
       data: {
         tekst: n.tekst || "",
-        positie: n.positie ? { x: n.positie.x || 0, y: n.positie.y || 0 } : null,
         kleur: n.kleur || "",
         breedte: n.breedte ?? null,
         hoogte: n.hoogte ?? null,
       },
     };
+    // Voeg toe aan overzicht-diagram zodat het zichtbaar is op canvas
+    diagramNodes.push({ elementId: n.id, position: pos });
+    // ScopeRefs van notities → structurele edges (kind="scope")
+    const notitieSeenTargets = new Set();
+    for (const targetId of n.scopeRefs || []) {
+      if (notitieSeenTargets.has(targetId)) continue;  // dedupliceer duplicaten
+      notitieSeenTargets.add(targetId);
+      structuralEdges.push({
+        id: `scope-${n.id}-${targetId}`,
+        source: n.id,
+        target: targetId,
+        data: { kind: "scope" },
+      });
+    }
   }
+  let constraintOffsetX = 0;
   for (const c of v3Model?.constraints || []) {
     if (!c?.id) continue;
+    const pos = c.positie ? { x: c.positie.x || 0, y: c.positie.y || 0 } : { x: 80 + constraintOffsetX, y: -220 };
+    constraintOffsetX += 260;
     elements[c.id] = {
       id: c.id,
       naam: c.naam || c.id,
@@ -596,13 +636,17 @@ export function v3ModelNaarStore(v3Full) {
       data: {
         expressie: c.expressie || "",
         taal: c.taal || "tekst",
-        positie: c.positie ? { x: c.positie.x || 0, y: c.positie.y || 0 } : null,
         breedte: c.breedte ?? null,
         hoogte: c.hoogte ?? null,
       },
     };
+    // Voeg toe aan overzicht-diagram zodat het zichtbaar is op canvas
+    diagramNodes.push({ elementId: c.id, position: pos });
     // ScopeRefs → structurele edges (kind="scope", altijd zichtbaar)
+    const constraintSeenTargets = new Set();
     for (const targetId of c.scopeRefs || []) {
+      if (constraintSeenTargets.has(targetId)) continue;  // dedupliceer duplicaten
+      constraintSeenTargets.add(targetId);
       structuralEdges.push({
         id: `scope-${c.id}-${targetId}`,
         source: c.id,
@@ -1071,7 +1115,9 @@ export function storeNaarV3Model(state) {
       naam: diag.naam || diagId,
       nodes: (diag.nodes || []).map((n) => {
         const out = {
-          elementId: n.id,
+          // Diagram-nodes worden opgeslagen als { elementId, position } in Zustand;
+          // vang ook het legacy-formaat { id, position } op voor robustheid.
+          elementId: n.elementId || n.id,
           x: n.position?.x ?? 0,
           y: n.position?.y ?? 0,
         };
@@ -1106,25 +1152,55 @@ export function storeNaarV3Model(state) {
 
   // --- C8: notities en constraints exporteren ---
   // Notities en constraints leven als eigen element-types in de store
-  // (`type: "notitie"` / `type: "constraint"`). Hun visuele positie wordt opgeslagen
-  // op het element zelf (data.positie), niet in een diagram, want ze zijn altijd
-  // canvas-globaal zichtbaar.
+  // (`type: "notitie"` / `type: "constraint"`). Hun visuele positie wordt
+  // opgezocht in ALLE diagrammen (prioriteit: overzicht, daarna eerste gevonden).
+  // Dit voorkomt dat notities/constraints die in een ander diagram zijn aangemaakt
+  // geen positie krijgen in de export.
+  const posLookup = new Map();
+  // Doorloop alle diagrams; laadt as-last-wins, zodat overzicht wint als het
+  // ook in het overzicht staat (want overzicht wordt als EERSTE geladen).
+  for (const [, diag] of Object.entries(diagrams)) {
+    for (const dn of diag?.nodes || []) {
+      const key = dn.elementId || dn.id;
+      if (key && dn.position && !posLookup.has(key)) {
+        posLookup.set(key, dn.position);
+      }
+    }
+  }
+  // Overschrijf met de positie uit het overzicht-diagram als die aanwezig is
+  // (overzicht is de canonical bron voor de V3 export)
+  for (const dn of diagrams[DEFAULT_DIAGRAM_ID]?.nodes || []) {
+    const key = dn.elementId || dn.id;
+    if (key && dn.position) posLookup.set(key, dn.position);
+  }
+
   const v3Notities = [];
   const v3Constraints = [];
   for (const el of Object.values(elements)) {
     if (!el) continue;
     if (el.type === "notitie") {
+      const pos = posLookup.get(el.id);
       const n = {
         id: el.id,
-        tekst: el.data?.tekst || el.naam || "",
+        tekst: el.data?.tekst || "",
       };
+      // Exporteer naam alleen als die door de gebruiker is ingesteld (≠ auto-ID)
+      if (el.naam && el.naam !== el.id) n.naam = el.naam;
       if (el.domein) n.domein = el.domein;
-      if (el.data?.positie) n.positie = { x: el.data.positie.x || 0, y: el.data.positie.y || 0 };
+      if (pos) n.positie = { x: pos.x || 0, y: pos.y || 0 };
       if (el.data?.kleur) n.kleur = el.data.kleur;
       if (el.data?.breedte != null) n.breedte = el.data.breedte;
       if (el.data?.hoogte != null) n.hoogte = el.data.hoogte;
+      // ScopeRefs: alle scope-edges van deze notitie naar andere elementen
+      const nScopeRefs = [...new Set(
+        (structuralEdges || [])
+          .filter((e) => e.source === el.id && e.data?.kind === "scope")
+          .map((e) => e.target)
+      )];
+      if (nScopeRefs.length) n.scopeRefs = nScopeRefs;
       v3Notities.push(n);
     } else if (el.type === "constraint") {
+      const pos = posLookup.get(el.id);
       const c = {
         id: el.id,
         expressie: el.data?.expressie || "",
@@ -1132,13 +1208,15 @@ export function storeNaarV3Model(state) {
       if (el.naam) c.naam = el.naam;
       if (el.data?.taal) c.taal = el.data.taal;
       if (el.domein) c.domein = el.domein;
-      if (el.data?.positie) c.positie = { x: el.data.positie.x || 0, y: el.data.positie.y || 0 };
+      if (pos) c.positie = { x: pos.x || 0, y: pos.y || 0 };
       if (el.data?.breedte != null) c.breedte = el.data.breedte;
       if (el.data?.hoogte != null) c.hoogte = el.data.hoogte;
       // ScopeRefs uit structuralEdges met kind="scope" en source=this constraint
-      const scopeRefs = (structuralEdges || [])
-        .filter((e) => e.source === el.id && e.data?.kind === "scope")
-        .map((e) => e.target);
+      const scopeRefs = [...new Set(
+        (structuralEdges || [])
+          .filter((e) => e.source === el.id && e.data?.kind === "scope")
+          .map((e) => e.target)
+      )];
       if (scopeRefs.length) c.scopeRefs = scopeRefs;
       v3Constraints.push(c);
     }

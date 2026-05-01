@@ -99,6 +99,24 @@ function MetamodelEdge({
   const isAssociation = data?.isAssociation === true;
   const isAssociationClassLink = data?.isAssociationClassLink === true;
   const directioneel = data?.directioneel === true;
+
+  // C8: Scope-edge — gestippeld grijs van constraint naar element.
+  // Altijd zichtbaar, geen arrowhead, geen labels. Short-circuit voor de rest.
+  if (data?.kind === "scope") {
+    const [scopePath] = getBezierPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition });
+    return (
+      <BaseEdge
+        id={id}
+        path={scopePath}
+        style={{
+          stroke: selected ? "#6b7280" : "#9ca3af",
+          strokeWidth: selected ? 1.5 : 1,
+          strokeDasharray: "4 4",
+          opacity: 0.75,
+        }}
+      />
+    );
+  }
   // Pijl op: (1) anker→B edge bij ASOC, of (2) relatie→entiteit edge bij collapsed REL
   const showDirectionalArrow = directioneel && (
     (isAssociation && sourceNode?.type === "associatieAnker") ||

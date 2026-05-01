@@ -41,6 +41,9 @@ import AssociatieAnkerNode from "./nodes/AssociatieAnkerNode";
 import EnumeratieNode from "./nodes/EnumeratieNode";
 import DatatypeNode from "./nodes/DatatypeNode";
 import ReferentielijstInstantieNode from "./nodes/ReferentielijstInstantieNode";
+// C8: notities en constraints
+import NotitieNode from "./nodes/NotitieNode";
+import ConstraintNode from "./nodes/ConstraintNode";
 
 // Custom edge
 import MetamodelEdge from "./edges/MetamodelEdge";
@@ -97,6 +100,9 @@ const nodeTypes = {
   enumeratie: EnumeratieNode,
   gegevenstype: DatatypeNode,
   referentielijstInstantie: ReferentielijstInstantieNode,
+  // C8: notities en constraints
+  notitie: NotitieNode,
+  constraint: ConstraintNode,
 };
 
 const edgeTypes = {
@@ -609,6 +615,24 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         const normalized = normalizeConnection(connection, eds);
         const sourceType = nodeTypeById.get(normalized.source);
         const targetType = nodeTypeById.get(normalized.target);
+
+        // === C8: Notitie of constraint als source → scope-edge (gestippeld grijs) ===
+        if (sourceType === "notitie" || sourceType === "constraint") {
+          const alBestaat = eds.some(
+            (e) => e.source === normalized.source && e.target === normalized.target
+          );
+          if (alBestaat) return eds;
+          const scopeEdge = {
+            id: generateId("scope"),
+            source: normalized.source,
+            target: normalized.target,
+            sourceHandle: normalized.sourceHandle || null,
+            targetHandle: normalized.targetHandle || null,
+            type: "metamodel",
+            data: { kind: "scope" },
+          };
+          return [...eds, scopeEdge];
+        }
 
         // === Edge-mode override ===
         // Als een edge-mode actief is, override het standaardgedrag.

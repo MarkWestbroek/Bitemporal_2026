@@ -7,7 +7,7 @@
  *     Rij 1: Import (XMI / Mermaid / PlantUML) + Export (Mermaid / PlantUML / XMI)
  *     Rij 2: Opslaan / Laden / Publiceer / Publiceer+Rebuild / Rebuild / Haal op / Test invoer
  */
-import { maakLeegType, maakLegeEnumeratie, maakLeegGegevenstype, EDGE_MODES } from "../../metamodel/types";
+import { maakLeegType, maakLegeEnumeratie, maakLeegGegevenstype, maakLegeNotitie, maakLegeConstraint, EDGE_MODES } from "../../metamodel/types";
 
 export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddReferentielijstInstantie, onSave, onSaveEditorFlow, onPublishSchemaModel, onPublishAndRebuild, onRebuildModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI, onImportXMI, onImportMermaid, onImportPlantUML, modelNaam, modelBron, modelOpmerking, actiefDomein, beschikbareDomeinen, domeinSelectieActief = false, onSetActiefDomein, onSelecteerDomein, onNormaliseerAlleRelaties, onSnapAlleNaarGrid, activeEdgeMode, onSetActiveEdgeMode, theme = "dark", onToggleTheme }) {
   const domeinen = beschikbareDomeinen || [];
@@ -77,6 +77,29 @@ export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddRefer
               className="btn-toolbar datatype"
             >
               + Gegevenstype
+            </button>
+            {/* C8: notities en constraints */}
+            <button
+              onClick={() => {
+                const n = maakLegeNotitie();
+                onAddNode({ id: n.id, tekst: n.tekst, kleur: n.kleur, domein: n.domein }, "notitie");
+              }}
+              className="btn-toolbar"
+              style={{ background: "#fffde7", color: "#78350f", border: "1px solid #fbbf24" }}
+              title="Nieuwe notitie (annotatie)"
+            >
+              📝 Notitie
+            </button>
+            <button
+              onClick={() => {
+                const c = maakLegeConstraint();
+                onAddNode({ id: c.id, naam: c.naam, expressie: c.expressie, taal: c.taal, domein: c.domein }, "constraint");
+              }}
+              className="btn-toolbar"
+              style={{ background: "#e0f2fe", color: "#075985", border: "1px solid #38bdf8" }}
+              title="Nieuwe constraint (OCL/CEL/tekst)"
+            >
+              🔒 Constraint
             </button>
           </div>
 

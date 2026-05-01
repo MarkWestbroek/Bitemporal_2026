@@ -31,6 +31,9 @@ import EnumeratieNode from "@umleditor/components/nodes/EnumeratieNode";
 import DatatypeNode from "@umleditor/components/nodes/DatatypeNode";
 import ReferentielijstInstantieNode from "@umleditor/components/nodes/ReferentielijstInstantieNode";
 import AssociatieAnkerNode from "@umleditor/components/nodes/AssociatieAnkerNode";
+// C8: notities en constraints
+import NotitieNode from "@umleditor/components/nodes/NotitieNode";
+import ConstraintNode from "@umleditor/components/nodes/ConstraintNode";
 import MetamodelEdge from "@umleditor/components/edges/MetamodelEdge";
 
 import useModelStore from "../store/useModelStore";
@@ -47,6 +50,9 @@ const nodeTypes = {
   enumeratie: EnumeratieNode,
   gegevenstype: DatatypeNode,
   referentielijstInstantie: ReferentielijstInstantieNode,
+  // C8: notities en constraints
+  notitie: NotitieNode,
+  constraint: ConstraintNode,
 };
 
 const edgeTypes = {
@@ -327,6 +333,21 @@ function materialiseerDiagramEdges(store, elements, diagNodes, existingEdges = [
     }
   }
 
+  // ── 5. C8: Scope-edges (constraint → element, gestippeld grijs) ──
+  for (const se of store.structuralEdges) {
+    if (se.data?.kind !== "scope") continue;
+    if (!nodeIdSet.has(se.source) || !nodeIdSet.has(se.target)) continue;
+    addEdge({
+      id: se.id || `scope-${se.source}->${se.target}`,
+      source: se.source,
+      target: se.target,
+      sourceHandle: null,
+      targetHandle: null,
+      type: "metamodel",
+      data: { kind: "scope" },
+    });
+  }
+
   return { edges, extraNodes };
 }
 
@@ -449,6 +470,9 @@ const CREATE_BUTTONS = [
   { kind: "gegevenstype", label: "TYPE", title: "Nieuw gegevenstype" },
   { kind: "referentielijst", label: "REFSET", title: "Nieuwe referentielijst-set" },
   { kind: "referentielijstInstantie", label: "REF", title: "Nieuwe referentielijst-instantie" },
+  // C8: notities en constraints
+  { kind: "notitie", label: "📝", title: "Nieuwe notitie" },
+  { kind: "constraint", label: "🔒", title: "Nieuwe constraint" },
 ];
 
 function AlignToolbar({ alignNodes, onNormaliseer, onSnapGrid, embedded = false, isVertical = false }) {
@@ -786,8 +810,10 @@ function DiagramCanvasInner({ diagramId }) {
       nds.map((n) => {
         const el = elements[n.id];
         if (!el) return n;
-        const newData = { ...el.data, id: n.id };
-        // Snelle check: skip als data niet veranderd is (vergelijk naam, kleur, velden, materieel)
+        // Voor notitie/constraint: top-level el.naam doorgeven als data.naam
+        const newData = { ...el.data, id: n.id, naam: el.naam };
+        // Snelle check: skip als data niet veranderd is
+        // (vergelijk naam, kleur, velden, materieel, tekst, expressie, taal)
         if (
           n.data?.klassenaam === newData.klassenaam &&
           n.data?.kleur === newData.kleur &&
@@ -796,7 +822,10 @@ function DiagramCanvasInner({ diagramId }) {
           n.data?.isMaterieel === newData.isMaterieel &&
           n.data?.naam === newData.naam &&
           n.data?.waarden === newData.waarden &&
-          n.data?.systeemnaam === newData.systeemnaam
+          n.data?.systeemnaam === newData.systeemnaam &&
+          n.data?.tekst === newData.tekst &&
+          n.data?.expressie === newData.expressie &&
+          n.data?.taal === newData.taal
         ) {
           return n;
         }
@@ -1130,6 +1159,10 @@ function DiagramCanvasInner({ diagramId }) {
   // ── Dubbelklik op edge: bereken kortste handle-combinatie ──
   const handleEdgeDoubleClick = useCallback(
     (_event, edge) => {
+      // Scope-edges (gestippeld) mogen niet genormaliseerd worden; ze blijven stippel
+      if (edge.data?.kind === "scope") {
+        return;
+      }
       const srcNode = getNode(edge.source);
       const tgtNode = getNode(edge.target);
       if (!srcNode || !tgtNode) return;
@@ -1734,6 +1767,36 @@ function DiagramCanvasInner({ diagramId }) {
         return;
       }
 
+      // C8: Notitie of constraint als source → scope-edge (gestippeld grijs)
+      // Deze edges verbinden een annotatie met het element dat ze beschrijven.
+      if (sourceType === "notitie" || sourceType === "constraint") {
+        const alBestaat = currentEdges.some(
+          (e) => e.source === normalized.source && e.target === normalized.target
+        );
+        if (alBestaat) return;
+        const scopeEdge = {
+          id: `scope_${normalized.source}_${normalized.target}_${Date.now()}`,
+          source: normalized.source,
+          target: normalized.target,
+          sourceHandle: normalized.sourceHandle || null,
+          targetHandle: normalized.targetHandle || null,
+          type: "metamodel",
+          data: { kind: "scope" },
+        };
+        // Persisteer in structuralEdges (voor V3-export scopeRefs)
+        addStructuralEdge({
+          id: scopeEdge.id,
+          source: scopeEdge.source,
+          target: scopeEdge.target,
+          sourceHandle: scopeEdge.sourceHandle,
+          targetHandle: scopeEdge.targetHandle,
+          data: { kind: "scope" },
+        });
+        // Render direct in React Flow (materialiseerDiagramEdges pikt het op bij volgende rebuild)
+        setEdges((eds) => [...eds.filter((e) => e.id !== scopeEdge.id), scopeEdge]);
+        return;
+      }
+
       // ENT → ENT maakt in de IDE direct een lege relatie-node in collapsed mode.
       if (sourceType === "entiteit" && targetType === "entiteit") {
         const bronNode = getNode(normalized.source);
@@ -1962,6 +2025,22 @@ function DiagramCanvasInner({ diagramId }) {
           return dn;
         });
         updateDiagramNodes(diagramId, updatedDiagNodes);
+
+        // ── Sync posities naar Overzicht-diagram (single source of truth voor V3 export) ──
+        // Posities worden op element-level opgeslagen in V3 (element.positie),
+        // dus het Overzicht moet altijd up-to-date zijn, ongeacht welk diagram actief is.
+        if (diagramId !== DEFAULT_DIAGRAM_ID) {
+          const store = useModelStore.getState();
+          const overzichtDiagram = store.diagrams[DEFAULT_DIAGRAM_ID];
+          if (overzichtDiagram?.nodes) {
+            const syncedOvNodes = overzichtDiagram.nodes.map((ovNode) => {
+              const change = posChanges.find((c) => c.id === ovNode.elementId);
+              if (change) return { ...ovNode, position: change.position };
+              return ovNode;
+            });
+            updateDiagramNodes(DEFAULT_DIAGRAM_ID, syncedOvNodes);
+          }
+        }
       }
     },
     [onNodesChange, diagram, diagramId, updateDiagramNodes, setEdges]

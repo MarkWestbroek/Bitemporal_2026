@@ -4,6 +4,19 @@ Een **relatie** wordt op het diagram in twee mogelijke vormen weergegeven. De
 keuze tussen die vormen is geen aparte modeleigenschap maar **afgeleid** uit de
 inhoud van de relatie zelf.
 
+## Achtergrond
+er gaat nog iets fout bij de ASOC. zie imgs
+
+Lees ook ASOC.md nog eens.
+
+Het idee is dat de REL eigenlijk de relatie = de lijn tussen A en B **is**.  Heeft deze geen velden, dan is de weergave in UML "een lijn met een naam". De naam = de naam van de REL = het label in het midden . Dit is een speciaal soort GE omdat het zich hetzelfde gedraagt: er is uni- of bitemporeel gedrag. Formeel altijd, materieel naar keuze.
+
+Heeft de REL (afgeleide) velden, dan expandeert ie naar een UML associatieklasse. Dat is een lijn met via een stippellijn een klasse eraan. De klasse bevat extra eigenschappen van de lijn = van de relatie. Dus deze IS de relatie. Het is een uitbreiding van de lijn. Omdat je op een lijn geen attributen kwijt kunt (noch operaties).
+
+Onze react flow manier van tonen met edges heeft niets te maken met dat de edges UML relaties zijn. Het zijn gewoon stukjes lijn die samen een REL tekenen. Soms collapsed, soms expanded.
+
+**Daarom wil ik niet dat er informatie op de edges staat bij een REL. Omdat de edges soms van A naar REL naar B gaan en soms van A naar een anker naar B. Van het anker naar de REL loopt dan nog een stippellijn (3 edges dus). A->REL != A->anker.**
+
 ## Single source of truth
 
 De canonieke beslisregel staat in

@@ -15,20 +15,20 @@ function buildMinimaleStoreState() {
     elements: {
       A: { id: "A", naam: "A", type: "entiteit", domein: "test", data: { meervoud: "as" } },
       B: { id: "B", naam: "B", type: "entiteit", domein: "test", data: { meervoud: "bs" } },
-      // C8: notitie en constraint
+      // C8: notitie en constraint (positie staat in diagram.nodes, niet in data)
       note1: {
         id: "note1",
         naam: "note1",
         type: "notitie",
         domein: "test",
-        data: { tekst: "Eerste opmerking", positie: { x: 10, y: 20 } },
+        data: { tekst: "Eerste opmerking" },
       },
       cstr1: {
         id: "cstr1",
         naam: "C1",
         type: "constraint",
         domein: "test",
-        data: { expressie: "A.x > 0", taal: "ocl", positie: { x: 50, y: 60 } },
+        data: { expressie: "A.x > 0", taal: "ocl" },
       },
     },
     structuralEdges: [
@@ -58,6 +58,18 @@ function buildMinimaleStoreState() {
             },
           },
         ],
+        viewport: null,
+      },
+      // C8: overzicht-diagram bevat de notitie/constraint-nodes met hun positie
+      overzicht: {
+        id: "overzicht",
+        naam: "Overzicht",
+        domein: null,
+        nodes: [
+          { elementId: "note1", position: { x: 10, y: 20 } },
+          { elementId: "cstr1", position: { x: 50, y: 60 } },
+        ],
+        edges: [],
         viewport: null,
       },
     },
@@ -104,7 +116,12 @@ test("C8: notities overleven storeNaarV3Model + v3ModelNaarStore roundtrip", () 
   assert.ok(note, "notitie na re-import aanwezig");
   assert.equal(note.type, "notitie");
   assert.equal(note.data.tekst, "Eerste opmerking");
-  assert.deepEqual(note.data.positie, { x: 10, y: 20 });
+  // Positie staat in diagram.nodes (overzicht), niet in data
+  const overzichtDiag = r.diagrams["overzicht"];
+  assert.ok(overzichtDiag, "overzicht-diagram na re-import aanwezig");
+  const noteNode = overzichtDiag.nodes.find((n) => n.elementId === "note1");
+  assert.ok(noteNode, "note1 in overzicht-diagram nodes");
+  assert.deepEqual(noteNode.position, { x: 10, y: 20 });
 });
 
 test("C8: constraints + scopeRefs overleven storeNaarV3Model + v3ModelNaarStore roundtrip", () => {

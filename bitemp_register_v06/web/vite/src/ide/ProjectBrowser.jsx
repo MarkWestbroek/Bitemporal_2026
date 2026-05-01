@@ -36,6 +36,8 @@ const ICONS = {
   enumeratie: "📋",
   gegevenstype: "📄",
   referentielijstInstantie: "📌",
+  notitie: "📝",
+  constraint: "🔒",
   diagrams: "📐",
   diagram: "📐",
 };
@@ -130,6 +132,30 @@ function buildTree(elements, structuralEdges, diagrams, domains) {
         id: el.id,
         name: el.naam,
         nodeType: "referentielijstInstantie",
+        kleur: el.data?.kleur,
+      });
+      geplaatst.add(el.id);
+    }
+
+    // Notities (C8)
+    for (const el of domeinElements.filter((el) => el.type === "notitie")) {
+      // Toon de naam als die is ingesteld, anders een preview van de tekst
+      const hasCustomName = el.naam && el.naam !== el.id;
+      domeinNode.children.push({
+        id: el.id,
+        name: hasCustomName ? el.naam : (el.data?.tekst ? el.data.tekst.slice(0, 40) : "(notitie)"),
+        nodeType: "notitie",
+        kleur: el.data?.kleur,
+      });
+      geplaatst.add(el.id);
+    }
+
+    // Constraints (C8)
+    for (const el of domeinElements.filter((el) => el.type === "constraint")) {
+      domeinNode.children.push({
+        id: el.id,
+        name: el.naam || "(constraint)",
+        nodeType: "constraint",
         kleur: el.data?.kleur,
       });
       geplaatst.add(el.id);

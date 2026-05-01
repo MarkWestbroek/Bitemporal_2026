@@ -320,10 +320,30 @@ export default function IdePage() {
     }
 
     // Domein-filter toepassen op V3 export
-    if (domein && format !== "ide" && json?.model?.entiteiten) {
-      json.model.entiteiten = json.model.entiteiten.filter((e) => e.domein === domein);
-      json.model.enums = (json.model.enums || []).filter((e) => e.domein === domein || !e.domein);
-      json.model.datatypes = (json.model.datatypes || []).filter((dt) => dt.domein === domein || !dt.domein);
+    // Strikt filteren: alleen items van dit domein (geen "geen-domein" items meenemen
+    // want die horen bij een ander domein of zijn nog niet toegewezen).
+    if (domein && format !== "ide" && json?.model) {
+      const m = json.model;
+      m.entiteiten = (m.entiteiten || []).filter((e) => e.domein === domein);
+      m.enums = (m.enums || []).filter((e) => e.domein === domein);
+      m.datatypes = (m.datatypes || []).filter((dt) => dt.domein === domein);
+      // Referentielijst-instanties: alleen die van dit domein meenemen
+      m.referentielijstInstanties = (m.referentielijstInstanties || []).filter((ri) => ri.domein === domein);
+      // Diagrammen: alleen die met exact dit domein
+      m.diagrammen = (m.diagrammen || []).filter((d) => d.domein === domein);
+      // Notities en constraints: alleen die van dit domein
+      m.notities = (m.notities || []).filter((n) => n.domein === domein);
+      m.constraints = (m.constraints || []).filter((c) => c.domein === domein);
+      // Domeinen-array: alleen het geëxporteerde domein
+      if (m.domeinen) m.domeinen = m.domeinen.filter((d) => d.naam === domein);
+      // Leeg arrays weggooien
+      if (!m.entiteiten.length) delete m.entiteiten;
+      if (!m.enums.length) delete m.enums;
+      if (!m.datatypes.length) delete m.datatypes;
+      if (!m.referentielijstInstanties?.length) delete m.referentielijstInstanties;
+      if (!m.diagrammen.length) delete m.diagrammen;
+      if (!m.notities?.length) delete m.notities;
+      if (!m.constraints?.length) delete m.constraints;
     }
 
     const jsonStr = JSON.stringify(json, null, 2);

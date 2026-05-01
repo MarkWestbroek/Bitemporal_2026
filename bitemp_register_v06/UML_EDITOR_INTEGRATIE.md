@@ -523,3 +523,112 @@ body[data-ide-theme="light"] .expressie-editor-code .token.keyword { color: #1d4
 - In de **UML-editor v2**: nieuwe ☀️/🌙 knop als eerste knop in de rechter actierij van de toolbar.
 
 Beide knoppen roepen `toggleTheme()` aan op dezelfde `useUIStore`; het resultaat is altijd synchroon zichtbaar in de actieve editor.
+
+---
+
+## C8: Notities en constraints
+
+**Datum:** mei 2026
+
+### Samenvatting
+
+De editor (zowel EditorV2 als IDE) ondersteunt nu twee nieuwe node-typen voor annotaties en modelregels:
+
+| Type | Visueel | Doel |
+|------|---------|------|
+| **Notitie** | Gele post-it (📝) | Vrije tekst-annotatie op het canvas |
+| **Constraint** | Lichtblauwe rounded-rect (🔒) | Modelregel in OCL, CEL of tekst |
+
+### Gebruik
+
+- **EditorV2**: toolbar heeft nieuwe knoppen `📝 Notitie` en `🔒 Constraint`.
+- **IDE**: CREATE_BUTTONS-palette heeft knoppen `📝` en `🔒`.
+- Selecteer een notitie/constraint → **rechterpanel** toont een eenvoudige editor (tekst, kleur, naam, taal, expressie, domein).
+- Constraints kunnen via een **scope-edge** (gestippeld grijs, `data.kind="scope"`) worden gekoppeld aan een entiteit of GE. Die edges leven in `structuralEdges` en zijn altijd zichtbaar.
+
+### V3 JSON roundtrip
+
+Notities en constraints worden opgeslagen als eigen arrays in het V3-model:
+
+```json
+{
+  "notities": [{ "id": "note1", "tekst": "...", "positie": {"x":10,"y":20}, "kleur": "#fffde7" }],
+  "constraints": [{ "id": "cstr1", "naam": "C1", "expressie": "self.x > 0", "taal": "ocl", "scopeRefs": ["A"] }]
+}
+```
+
+Positie wordt opgeslagen in `V3Notitie.positie` / `V3Constraint.positie` en bij import teruggezet in `diagrams[overzicht].nodes`.
+
+### Gewijzigde bestanden
+
+| Bestand | Wijziging |
+|---------|-----------|
+| `web/vite/src/umleditor/components/nodes/NotitieNode.jsx` | **Nieuw** — gele post-it node component (resizable) |
+| `web/vite/src/umleditor/components/nodes/ConstraintNode.jsx` | **Nieuw** — lichtblauwe constraint node (naam+taal badge+expressie) |
+| `web/vite/src/umleditor/components/MetamodelEditor.jsx` | nodeTypes uitgebreid met `notitie`/`constraint`; **mei 2026: scope-edge-logica in `onConnect`** |
+| `web/vite/src/umleditor/components/panels/Toolbar.jsx` | Knoppen `📝 Notitie` en `🔒 Constraint` toegevoegd |
+| `web/vite/src/umleditor/components/panels/NodeEditPanel.jsx` | Early-return editors voor notitie en constraint |
+| `web/vite/src/umleditor/metamodel/types.js` | `maakLegeNotitie()` en `maakLegeConstraint()` factory-functies |
+| `web/vite/src/ide/DiagramCanvas.jsx` | nodeTypes + CREATE_BUTTONS uitgebreid; stap 5 scope-edges in `materialiseerDiagramEdges` |
+| `web/vite/src/ide/BrowserContextMenu.jsx` | **mei 2026: notitie/constraint toegevoegd aan alle menu-items** |
+| `web/vite/src/ide/ProjectBrowser.jsx` | **mei 2026: notities + constraints in domeinboom; naam vs tekst-preview** |
+| `web/vite/src/ide/DetailsPanel.jsx` | `NotitieEditor` + `ConstraintEditor`; **mei 2026: naam-veld in NotitieEditor** |
+| `web/vite/src/ide/repCreation.js` | `bouwStoreElement` cases voor `notitie` en `constraint` |
+| `web/vite/src/ide/components/edges/MetamodelEdge.jsx` | Scope-edge short-circuit (gestippeld grijs) |
+| `web/vite/src/store/adapters.js` | **mei 2026: 5 fixes — diagram nodes export/import, notitie naam+scopeRefs; round 4: namedDiagPos + scopeRefs deduplicatie** |
+| `web/vite/src/pages/IdePage.jsx` | **mei 2026: referentielijstInstanties domeinfilter in handleExportDialog** |
+| `model/v3_format.go` | `V3Notitie` en `V3Constraint` structs (eerder al toegevoegd) |
+| `web/vite/src/store/__tests__/v3_b5_c8_roundtrip.test.js` | Roundtrip-tests bijgewerkt (positie in `diagram.nodes` i.p.v. `data.positie`) |
+
+### Mei 2026: IDE↔EditorV2 roundtrip kwaliteit
+
+Aanvullende fixes voor bidirectionele uitwisseling:
+
+1. **PB context-menu** (BrowserContextMenu.jsx): Notitie/constraint nu ondersteuning voor `toonInDiagram`, `toonDetails`, `hernoem`, `kopieerID`, `verwijder`.
+
+2. **Notitie naam** (DetailsPanel.jsx, adapters.js): Notities krijgen een aangepaste `naam` (apart van `tekst`). Export/import respecteert dit onderscheid.
+
+3. **Diagram-nodes format** (adapters.js): Export gebruikt `elementId: n.elementId || n.id` (robuust tegen legacy-format). Import gebruikt `{ elementId, position }` format consistent met store.
+
+4. **referentielijstInstanties filter** (IdePage.jsx): Bij domeinexport nu ook gefilterd, zodat AdellijkeTitels/Landenlijst niet meekomen voor andere domeinen.
+
+5. **EditorV2 scope-edges** (MetamodelEditor.jsx): `onConnect` heeft nu dezelfde scope-edge-logica als DiagramCanvas — notitie/constraint als source → gestippelde lijn.
+
+6. **Notitie scopeRefs** (adapters.js): Export en import van meerdere scope-lijnen vanuit één notitie; volledig bidirectioneel.
+
+### Mei 2026: IDE↔EditorV2 Quality Fixes Round 3
+
+User-rapportage: drie bugs in IDE/EditorV2 roundtrip:
+
+1. **Notitienaam beklijft niet** (DetailsPanel.jsx): EditField ondersteunt geen `onBlur` prop.
+   - **Fix**: Custom input-element met `onBlur={handleNaamBlur}` callback. Naam wordt nu correct opgeslagen in `updateElement`.
+
+2. **Scope-edge verdwijnt bij dubbelklik** (DiagramCanvas.jsx): `handleEdgeDoubleClick` probeerde gestippelde scope-edges te normaliseren (kortste route).
+   - **Fix**: Early-return als `edge.data?.kind === "scope"`. Scope-edges blijven nu intact.
+
+3. **Posities IDE→EditorV2 totaal anders** (DiagramCanvas.jsx): Diagram nodes zijn **per diagram** opgeslagen (elk diagram eigen subset nodes+posities). Beweeg node in diagram "Kennis" → update naar `diagrams["kennis"].nodes`, maar `diagrams["overzicht"]` onveranderd. Bij V3-export, `posLookup()` leest uit Overzicht → stale/missing posities.
+   - **Fix**: Bij position-change, sync posities ook naar Overzicht-diagram. Het Overzicht is de single source of truth voor V3-export. Meerdiagram-scenario's nu consistent.
+
+**Resultaat:** Notitienamen blijven behouden, scope-edges normaliseren niet, posities IDE↔EditorV2 identiek.
+
+### Mei 2026: Positie-fix Round 4 — namedDiagPos en scopeRefs deduplicatie
+
+User-rapportage: na import van een V3 JSON staan alle posities in EditorV2 nog steeds verkeerd. Root cause: posities staan alleen in `diagrammen[].nodes` van de JSON, niet als `ent.positie` fields.
+
+**Problemen:**
+
+1. **Posities uit named diagram worden genegeerd bij import** (`adapters.js`, `v3ModelNaarEditor.js`): Import-code gebruikte `ent.positie || grid-fallback`; als `ent.positie` ontbrak, werden posities in `diagrammen[].nodes` genegeerd. Overzicht-diagram kreeg default-grid-posities. V3-export leest uit Overzicht → EditorV2 zag foute posities.
+   - **Fix**: `namedDiagPos` map scant alle `diagrammen[].nodes` (first-wins per elementId). Prioriteitsvolgorde: `ent.positie` → `namedDiagPos.get(id)` → grid-fallback. Geldt voor: entiteiten, GE's, relaties, anker-nodes, enums, datatypes, referentielijstInstanties.
+
+2. **Dubbele scope-lijntjes** (`adapters.js`): Scope-edges werden dubbel ingevoegd als `scopeRefs[]` dezelfde target meerdere keren bevatte. Bij import → meerdere structurele edges met gelijke source/target. Bij export → duplicaten in JSON.
+   - **Fix**: `Set`-deduplicatie bij zowel import als export van notitie- en constraint-scopeRefs.
+
+3. **Notitie scopeRefs ontbraken in EditorV2 direct-import** (`v3ModelNaarEditor.js`): Constraints hadden al scope-edge generatie; notities niet. Tevens `naam`-veld voor notities.
+   - **Fix**: ScopeRefs-loop toegevoegd voor notities; `naam`-veld doorgegeven; scope-edges in beide typen gededupliceerd.
+
+**Resultaat:** Posities IDE↔EditorV2 identiek bij import van V3 JSON, ongeacht of posities op entity-level of in `diagrammen[].nodes` staan. Geen dubbele scope-lijntjes meer.
+
+---
+
+**Resultaat round 1+2+3+4:** 115 tests groen; beide editors (IDE en EditorV2) kunnen C8-elementen zonder verlies of visuele inconsistenties uitwisselen.
+

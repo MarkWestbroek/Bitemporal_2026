@@ -20,6 +20,9 @@ const TYPE_LABELS = {
   enumeratie: "Enumeratie",
   gegevenstype: "Gegevenstype",
   referentielijstInstantie: "Referentielijst-instantie",
+  // C8
+  notitie: "Notitie",
+  constraint: "Constraint",
 };
 
 const MOMENTVOORKOMEN_OPTIES = ["enkelvoudig", "meervoudig"];
@@ -1048,6 +1051,141 @@ function EdgeEditor({ edgeId }) {
 
 // ─── Main DetailsPanel ────────────────────────────────
 
+// ─── NotitieEditor — bewerkt data.tekst en data.kleur ─
+
+const NOTITIE_KLEUREN = [
+  { label: "Geel", value: "#fffde7" },
+  { label: "Groen", value: "#f0fdf4" },
+  { label: "Blauw", value: "#eff6ff" },
+  { label: "Rood", value: "#fff1f2" },
+  { label: "Paars", value: "#faf5ff" },
+  { label: "Standaard", value: "" },
+];
+
+function NotitieEditor({ element, updateElement }) {
+  const { id, data = {} } = element;
+  const [tekst, setTekst] = useState(data.tekst ?? "");
+  const [naam, setNaam] = useState(element.naam && element.naam !== id ? element.naam : "");
+  useEffect(() => { setTekst(data.tekst ?? ""); }, [data.tekst]);
+  useEffect(() => { setNaam(element.naam && element.naam !== id ? element.naam : ""); }, [element.naam, id]);
+
+  const handleTekstBlur = () => {
+    if (tekst !== (data.tekst ?? "")) {
+      updateElement(id, { data: { tekst } });
+    }
+  };
+  const handleNaamBlur = () => {
+    const trimmed = naam.trim();
+    if (trimmed !== (element.naam !== id ? element.naam : "")) {
+      updateElement(id, { naam: trimmed || id });
+    }
+  };
+
+  return (
+    <div style={S.panel}>
+      <h3 style={S.heading}>📝 Notitie</h3>
+      <EditField label="ID" value={id} readOnly />
+      {/* Naam-veld: custom input met onBlur (EditField ondersteunt geen onBlur) */}
+      <div style={S.fieldRow}>
+        <span style={S.label}>Naam:</span>
+        <input
+          type="text"
+          value={naam}
+          onChange={(e) => setNaam(e.target.value)}
+          onBlur={handleNaamBlur}
+          placeholder="Optionele naam (voor Project Browser)"
+          style={{ ...S.input, flex: 1 }}
+        />
+      </div>
+      <EditField label="Domein" value={element.domein} onChange={(v) => updateElement(id, { domein: v })} />
+      <div style={{ ...S.fieldRow, alignItems: "flex-start" }}>
+        <span style={{ ...S.label, marginTop: 4 }}>Tekst:</span>
+        <textarea
+          value={tekst}
+          onChange={(e) => setTekst(e.target.value)}
+          onBlur={handleTekstBlur}
+          style={{ ...S.textarea, minHeight: 80, flex: 1 }}
+          placeholder="Notitie-tekst…"
+          rows={4}
+        />
+      </div>
+      <EditField label="Kleur" value={data.kleur || ""} onChange={(v) => updateElement(id, { data: { kleur: v } })} type="color" />
+      <div style={S.fieldRow}>
+        <span style={S.label}>Snelkleuren:</span>
+        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+          {NOTITIE_KLEUREN.map((k) => (
+            <button
+              key={k.value}
+              title={k.label}
+              onClick={() => updateElement(id, { data: { kleur: k.value } })}
+              style={{
+                width: 22, height: 22, borderRadius: 4,
+                border: (data.kleur || "") === k.value ? "2px solid #f59e0b" : "1px solid #555",
+                background: k.value || "#fffde7",
+                cursor: "pointer", padding: 0,
+              }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── ConstraintEditor — bewerkt naam, expressie, taal ─
+
+const CONSTRAINT_TALEN = [
+  { value: "ocl", label: "OCL" },
+  { value: "cel", label: "CEL" },
+  { value: "tekst", label: "Tekst" },
+];
+
+function ConstraintEditor({ element, updateElement }) {
+  const { id, data = {} } = element;
+  const [expressie, setExpressie] = useState(data.expressie ?? "");
+  useEffect(() => { setExpressie(data.expressie ?? ""); }, [data.expressie]);
+
+  const handleExpressieBlur = () => {
+    if (expressie !== (data.expressie ?? "")) {
+      updateElement(id, { data: { expressie } });
+    }
+  };
+
+  return (
+    <div style={S.panel}>
+      <h3 style={S.heading}>🔒 Constraint</h3>
+      <EditField label="ID" value={id} readOnly />
+      {/* naam wordt op twee plekken opgeslagen: el.naam (top-level) én data.naam (voor ConstraintNode rendering) */}
+      <EditField label="Naam" value={element.naam || ""} onChange={(v) => updateElement(id, { naam: v, data: { naam: v } })} />
+      <EditField label="Domein" value={element.domein} onChange={(v) => updateElement(id, { domein: v })} />
+      <div style={S.fieldRow}>
+        <span style={S.label}>Taal:</span>
+        <select
+          value={data.taal || "ocl"}
+          onChange={(e) => updateElement(id, { data: { taal: e.target.value } })}
+          style={S.select}
+        >
+          {CONSTRAINT_TALEN.map((t) => (
+            <option key={t.value} value={t.value}>{t.label}</option>
+          ))}
+        </select>
+      </div>
+      <div style={{ ...S.fieldRow, alignItems: "flex-start" }}>
+        <span style={{ ...S.label, marginTop: 4 }}>Expressie:</span>
+        <textarea
+          value={expressie}
+          onChange={(e) => setExpressie(e.target.value)}
+          onBlur={handleExpressieBlur}
+          style={{ ...S.textarea, minHeight: 80, flex: 1, fontFamily: "ui-monospace, monospace" }}
+          placeholder={data.taal === "cel" ? "bijv. self.geboortedatum <= now()" : data.taal === "ocl" ? "context Entity inv: …" : "Beschrijf de constraint…"}
+          rows={4}
+          spellCheck={false}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function DetailsPanel() {
   const selectedElementId = useUIStore((s) => s.selectedElementId);
   const selectedEdgeId = useUIStore((s) => s.selectedEdgeId);
@@ -1075,6 +1213,14 @@ export default function DetailsPanel() {
   const element = elements[selectedElementId];
   if (!element) {
     return <div style={S.placeholder}>Element "{selectedElementId}" niet gevonden.</div>;
+  }
+
+  // C8: notities en constraints hebben eigen editors
+  if (element.type === "notitie") {
+    return <NotitieEditor element={element} updateElement={updateElement} />;
+  }
+  if (element.type === "constraint") {
+    return <ConstraintEditor element={element} updateElement={updateElement} />;
   }
 
   return <ElementEditor element={element} updateElement={updateElement} />;

@@ -101,11 +101,25 @@ export function v3ModelNaarEditor(v3Model) {
     datatypeLookup[dt.naam] = dt;
   });
 
+  // ── Positie-lookup vanuit named diagrams ────────────────────────────────
+  // Wanneer entiteiten/GE's/relaties geen entity-level `positie` hebben (e.g.
+  // V3 export waarbij posities alleen in diagrammen[].nodes staan), gebruik dan
+  // de positie uit de named diagrams als fallback.
+  const namedDiagPos = new Map();
+  for (const diag of v3Model?.diagrammen || []) {
+    if (!diag?.id) continue;
+    for (const n of diag.nodes || []) {
+      if (n.elementId && !namedDiagPos.has(n.elementId)) {
+        namedDiagPos.set(n.elementId, { x: n.x || 0, y: n.y || 0 });
+      }
+    }
+  }
+
   (v3Model.enums || []).forEach((e, i) => {
     nodes.push({
       id: `enum_${e.goType}`,
       type: "enumeratie",
-      position: e.positie ? { x: e.positie.x, y: e.positie.y } : { x: 50 + i * 220, y: 550 },
+      position: e.positie ? { x: e.positie.x, y: e.positie.y } : namedDiagPos.get(`enum_${e.goType}`) || { x: 50 + i * 220, y: 550 },
       data: {
         naam: e.goType,
         domein: e.domein || inferredEnumDomein[e.goType] || "",
@@ -119,7 +133,7 @@ export function v3ModelNaarEditor(v3Model) {
     nodes.push({
       id: `dt_${dt.naam}`,
       type: "gegevenstype",
-      position: dt.positie ? { x: dt.positie.x, y: dt.positie.y } : { x: 500 + i * 280, y: 650 },
+      position: dt.positie ? { x: dt.positie.x, y: dt.positie.y } : namedDiagPos.get(`dt_${dt.naam}`) || { x: 500 + i * 280, y: 650 },
       data: {
         naam: dt.naam,
         description: dt.description || "",
@@ -142,7 +156,7 @@ export function v3ModelNaarEditor(v3Model) {
       type: "referentielijstInstantie",
       position: ri.positie
         ? { x: ri.positie.x, y: ri.positie.y }
-        : { x: 800 + i * 280, y: 50 },
+        : namedDiagPos.get(`refinstantie_${ri.systeemnaam}`) || { x: 800 + i * 280, y: 50 },
       data: {
         id: `refinstantie_${ri.systeemnaam}`,
         systeemnaam: ri.systeemnaam || "",
@@ -156,7 +170,7 @@ export function v3ModelNaarEditor(v3Model) {
     nodes.push({
       id: ent.typenaam,
       type: "entiteit",
-      position: ent.positie ? { x: ent.positie.x, y: ent.positie.y } : { x: entIdx * 500, y: 50 },
+      position: ent.positie ? { x: ent.positie.x, y: ent.positie.y } : namedDiagPos.get(ent.typenaam) || { x: entIdx * 500, y: 50 },
       data: {
         typenaam: ent.typenaam,
         klassenaam: ent.typenaam,
@@ -190,7 +204,7 @@ export function v3ModelNaarEditor(v3Model) {
         type: "gegevenselement",
         position: ge.positie
           ? { x: ge.positie.x, y: ge.positie.y }
-          : { x: entIdx * 500 - 150 + geIdx * 250, y: 300 },
+          : namedDiagPos.get(`${ent.typenaam}_${ge.naam}`) || { x: entIdx * 500 - 150 + geIdx * 250, y: 300 },
         data: {
           typenaam: geTypenaam,
           klassenaam: ge.naam,
@@ -322,7 +336,7 @@ export function v3ModelNaarEditor(v3Model) {
           type: "relatie",
           position: rel.positie
             ? { x: rel.positie.x, y: rel.positie.y }
-            : { x: entIdx * 500 + 200, y: 170 },
+            : namedDiagPos.get(rel.naam) || { x: entIdx * 500 + 200, y: 170 },
           data: {
             typenaam: rel.naam,
             klassenaam: rel.naam,
@@ -361,15 +375,16 @@ export function v3ModelNaarEditor(v3Model) {
         // Maak een ankerpunt (o) tussen de primaire entiteit en de doelentiteit.
         const ankerId = asocAnkerId(rel.naam);
         if (!nodes.find((n) => n.id === ankerId)) {
-          const entPos = ent.positie || { x: entIdx * 500, y: 50 };
+          const entPos = ent.positie || namedDiagPos.get(ent.typenaam) || { x: entIdx * 500, y: 50 };
           const doelEnt = rel.doelEntiteit
             ? (v3Model.entiteiten || []).find((e) => e.typenaam === rel.doelEntiteit)
             : null;
-          const doelPos = doelEnt?.positie || { x: entPos.x + 400, y: entPos.y };
-          const ankerPos = rel.ankerPositie || {
-            x: (entPos.x + doelPos.x) / 2,
-            y: (entPos.y + doelPos.y) / 2,
-          };
+          const doelPos = doelEnt?.positie
+            || (rel.doelEntiteit ? namedDiagPos.get(rel.doelEntiteit) : null)
+            || { x: entPos.x + 400, y: entPos.y };
+          const ankerPos = rel.ankerPositie
+            || namedDiagPos.get(ankerId)
+            || { x: (entPos.x + doelPos.x) / 2, y: (entPos.y + doelPos.y) / 2 };
           nodes.push({
             id: ankerId,
             type: "associatieAnker",
@@ -600,6 +615,67 @@ export function v3ModelNaarEditor(v3Model) {
       });
     }
   }
+
+  // C8: notities en constraints als eigen nodetypen importeren
+  (v3Model.notities || []).forEach((n, i) => {
+    const nodeId = n.id || `notitie_${i}`;
+    nodes.push({
+      id: nodeId,
+      type: "notitie",
+      position: n.positie ? { x: n.positie.x, y: n.positie.y } : { x: 100 + i * 220, y: 900 },
+      data: {
+        naam: n.naam || "",
+        tekst: n.tekst || "",
+        domein: n.domein || "",
+        kleur: n.kleur || undefined,
+        breedte: n.breedte || undefined,
+        hoogte: n.hoogte || undefined,
+      },
+    });
+    // ScopeRefs → scope-edges (gededupliceerd)
+    const notSeenTargets = new Set();
+    for (const ref of n.scopeRefs || []) {
+      if (notSeenTargets.has(ref)) continue;
+      notSeenTargets.add(ref);
+      edges.push({
+        id: `scope_${nodeId}_${ref}`,
+        source: nodeId,
+        target: ref,
+        type: "metamodel",
+        data: { kind: "scope" },
+      });
+    }
+  });
+
+  (v3Model.constraints || []).forEach((c, i) => {
+    const nodeId = c.id || `constraint_${i}`;
+    nodes.push({
+      id: nodeId,
+      type: "constraint",
+      position: c.positie ? { x: c.positie.x, y: c.positie.y } : { x: 350 + i * 220, y: 900 },
+      data: {
+        naam: c.naam || "",
+        expressie: c.expressie || "",
+        taal: c.taal || "tekst",
+        domein: c.domein || "",
+        breedte: c.breedte || undefined,
+        hoogte: c.hoogte || undefined,
+      },
+    });
+    // ScopeRefs → scope-edges (gededupliceerd)
+    const conSeenTargets = new Set();
+    for (const ref of c.scopeRefs || []) {
+      if (conSeenTargets.has(ref)) continue;
+      conSeenTargets.add(ref);
+      edges.push({
+        id: `scope_${nodeId}_${ref}`,
+        source: nodeId,
+        target: ref,
+        type: "metamodel",
+        data: { kind: "scope" },
+      });
+    }
+  });
 
   return { nodes, edges };
 }

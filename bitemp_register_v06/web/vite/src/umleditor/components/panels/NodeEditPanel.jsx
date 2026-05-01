@@ -83,6 +83,82 @@ export default function NodeEditPanel({ node, onUpdate, onDelete, datatypeNodes 
   const isDatatype = node.type === "gegevenstype";
   const isRelatie = node.type === "relatie";
   const isRefInstantie = node.type === "referentielijstInstantie";
+
+  // C8: notitie en constraint hebben eigen eenvoudige edit-UI
+  if (node.type === "notitie") {
+    return (
+      <div className="edit-panel">
+        <h3 style={{ color: "#78350f", marginBottom: 8 }}>📝 Notitie</h3>
+        <label className="field-label">Tekst</label>
+        <textarea
+          className="field-input"
+          rows={5}
+          value={data.tekst || ""}
+          onChange={(e) => onUpdate(node.id, { ...data, tekst: e.target.value })}
+          placeholder="Voer een opmerking in…"
+          style={{ width: "100%", fontFamily: "inherit", resize: "vertical" }}
+        />
+        <label className="field-label" style={{ marginTop: 8 }}>Domein</label>
+        <input
+          className="field-input"
+          value={data.domein || ""}
+          onChange={(e) => onUpdate(node.id, { ...data, domein: e.target.value })}
+        />
+        <label className="field-label" style={{ marginTop: 8 }}>Kleur</label>
+        <input
+          type="color"
+          value={data.kleur || "#fffde7"}
+          onChange={(e) => onUpdate(node.id, { ...data, kleur: e.target.value })}
+          style={{ width: "100%", height: 32, cursor: "pointer" }}
+        />
+        <button onClick={() => onDelete(node.id)} className="btn-danger" style={{ marginTop: 12, width: "100%" }}>
+          Verwijder notitie
+        </button>
+      </div>
+    );
+  }
+
+  if (node.type === "constraint") {
+    const TALEN = ["ocl", "cel", "tekst"];
+    return (
+      <div className="edit-panel">
+        <h3 style={{ color: "#075985", marginBottom: 8 }}>🔒 Constraint</h3>
+        <label className="field-label">Naam</label>
+        <input
+          className="field-input"
+          value={data.naam || ""}
+          onChange={(e) => onUpdate(node.id, { ...data, naam: e.target.value })}
+        />
+        <label className="field-label" style={{ marginTop: 8 }}>Taal</label>
+        <select
+          className="field-input"
+          value={data.taal || "ocl"}
+          onChange={(e) => onUpdate(node.id, { ...data, taal: e.target.value })}
+        >
+          {TALEN.map((t) => <option key={t} value={t}>{t.toUpperCase()}</option>)}
+        </select>
+        <label className="field-label" style={{ marginTop: 8 }}>Expressie</label>
+        <textarea
+          className="field-input"
+          rows={5}
+          value={data.expressie || ""}
+          onChange={(e) => onUpdate(node.id, { ...data, expressie: e.target.value })}
+          placeholder="Bijv. self.leeftijd >= 18"
+          style={{ width: "100%", fontFamily: "monospace", resize: "vertical" }}
+        />
+        <label className="field-label" style={{ marginTop: 8 }}>Domein</label>
+        <input
+          className="field-input"
+          value={data.domein || ""}
+          onChange={(e) => onUpdate(node.id, { ...data, domein: e.target.value })}
+        />
+        <button onClick={() => onDelete(node.id)} className="btn-danger" style={{ marginTop: 12, width: "100%" }}>
+          Verwijder constraint
+        </button>
+      </div>
+    );
+  }
+
   const beschikbareVeldtypen = bouwVeldtypen(
     datatypeNodes,
     enumNodes,

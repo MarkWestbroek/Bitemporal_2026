@@ -215,6 +215,31 @@ export function maakLeegGegevenstype() {
 }
 
 /**
+// C8: factory-functies voor notities en constraints in de MetamodelEditor
+
+/** Maak een lege notitie (gele post-it annotatie). */
+export function maakLegeNotitie() {
+  return {
+    id: generateId("notitie"),
+    tekst: "",
+    domein: "",
+    kleur: "",
+  };
+}
+
+/** Maak een lege constraint (lichtblauwe rounded-rect met expressie). */
+export function maakLegeConstraint() {
+  return {
+    id: generateId("constraint"),
+    naam: "NieuweConstraint",
+    expressie: "",
+    taal: "ocl",
+    domein: "",
+    scopeRefs: [],
+  };
+}
+
+/**
  * Maak een complete referentielijst-set: drie nodes (lijst, item, items-relatie) + twee edges.
  * De "+ Referentielijst" knop in de toolbar gebruikt dit om in één klik alles aan te maken.
  *
@@ -920,6 +945,39 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
     }))
     .filter((ri) => ri.systeemnaam); // filter lege instanties
 
+  // C8: notities en constraints exporteren
+  const notities = nodes
+    .filter((n) => n.type === "notitie")
+    .map((n) => {
+      const obj = {
+        id: n.id,
+        tekst: n.data?.tekst || "",
+      };
+      if (n.data?.domein) obj.domein = n.data.domein;
+      if (n.data?.kleur) obj.kleur = n.data.kleur;
+      if (n.position) obj.positie = { x: n.position.x, y: n.position.y };
+      return obj;
+    });
+
+  const constraints = nodes
+    .filter((n) => n.type === "constraint")
+    .map((n) => {
+      const obj = {
+        id: n.id,
+        expressie: n.data?.expressie || "",
+      };
+      if (n.data?.naam || n.data?.id) obj.naam = n.data?.naam || n.data?.id;
+      if (n.data?.taal) obj.taal = n.data.taal;
+      if (n.data?.domein) obj.domein = n.data.domein;
+      if (n.position) obj.positie = { x: n.position.x, y: n.position.y };
+      // ScopeRefs: edges waarvan source=deze constraint en data.isScope=true
+      const scopeRefs = edges
+        .filter((e) => e.source === n.id && (e.data?.isScope || e.data?.kind === "scope"))
+        .map((e) => e.target);
+      if (scopeRefs.length) obj.scopeRefs = scopeRefs;
+      return obj;
+    });
+
   return {
     versie: opts.versie || "v3",
     naam: opts.naam || "Editor export",
@@ -929,5 +987,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
     enums,
     entiteiten,
     ...(referentielijstInstanties.length > 0 ? { referentielijstInstanties } : {}),
+    ...(notities.length > 0 ? { notities } : {}),
+    ...(constraints.length > 0 ? { constraints } : {}),
   };
 }

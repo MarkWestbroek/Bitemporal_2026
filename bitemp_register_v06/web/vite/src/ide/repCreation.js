@@ -175,6 +175,38 @@ function bouwStoreElement(kind, domein = "") {
         },
       };
     }
+    // C8: notitie
+    case "notitie": {
+      const id = generateId("notitie");
+      return {
+        id,
+        naam: id,
+        type: "notitie",
+        domein,
+        data: {
+          tekst: "",
+          kleur: "",
+          breedte: null,
+          hoogte: null,
+        },
+      };
+    }
+    // C8: constraint
+    case "constraint": {
+      const id = generateId("constraint");
+      return {
+        id,
+        naam: "NieuweConstraint",
+        type: "constraint",
+        domein,
+        data: {
+          expressie: "",
+          taal: "ocl",
+          breedte: null,
+          hoogte: null,
+        },
+      };
+    }
     default:
       return null;
   }

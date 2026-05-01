@@ -1,5 +1,183 @@
 # Release checklist
 
+## C8 (Notities & Constraints) IDE↔EditorV2 roundtrip — Position Fix Round 4 (2026-05-01)
+
+Positie-fix voor V3 JSON imports waarbij posities alleen in `diagrammen[].nodes` staan (niet als entity-level `positie` velden). Tevens dubbele scope-lijntjes (scopeRefs) gefixt.
+
+### Wijzigingen
+
+**Frontend (`web/vite/src/`):**
+
+- **`store/adapters.js`** — `v3ModelNaarStore`: Bouwt nu `namedDiagPos` map uit alle named diagrams bij import. Gebruikt als fallback voor Overzicht-diagram wanneer `ent.positie` / `ge.positie` / `rel.positie` ontbreken. Geldt voor entiteiten, GE's, relaties, anker, enums, datatypes en referentielijstInstanties.
+
+- **`store/adapters.js`** — Import scopeRefs: Deduplicatie toegevoegd bij import van notitie- en constraint-scopeRefs (skip als target al gezien). Voorkomt dubbele scope-edges in de store.
+
+- **`store/adapters.js`** — Export scopeRefs: `[...new Set(...)]` toegevoegd voor zowel notitie- als constraint-scopeRefs bij export. Voorkomt duplicaten in de V3 JSON.
+
+- **`umleditor/metamodel/v3ModelNaarEditor.js`**: Zelfde `namedDiagPos` fallback toegevoegd voor directe EditorV2-import (alle 8 posities: enum, datatype, refInstantie, entiteit, GE, relatie, anker voor doelEnt en anker-node). Notities krijgen nu ook `naam`-veld en scopeRefs-edges bij directe import (was ontbrekend). Scope-edges gededupliceerd voor constraints én notities.
+
+### Tests
+
+Alle 115 unit-tests groen.
+
+### Technisch detail
+
+**Root cause positie-bug**: IDE exporteert posities via `elementPositie(diagrams, "overzicht")`. Wanneer een V3 JSON zonder entity-level `positie` velden wordt geïmporteerd, bouwen `v3ModelNaarStore` en `v3ModelNaarEditor.js` het Overzicht-diagram met default grid-posities. Vervolgens leest de export die defaults terug → EditorV2 ziet foute posities.
+
+**Fix**: `namedDiagPos` map scannen alle `diagrammen[].nodes` bij import. Volgorde van prioriteit: `ent.positie` → `namedDiagPos.get(id)` → grid-fallback.
+
+**Root cause dubbele scope-lijntjes**: Gebruiker tekende meerdere scope-lijntjes naar hetzelfde doel, of een V3 JSON had duplicaten in `scopeRefs[]`. Bij import werden alle entries omgezet naar structurele edges zonder deduplicatie. Fix: `Set` deduplicatie bij zowel import als export.
+
+---
+
+Drie additionele bugs gefixed in IDE/EditorV2 roundtrip na user-feedback:
+
+### Wijzigingen
+
+**Frontend (`web/vite/src/`):**
+
+- **`ide/DetailsPanel.jsx`**: Naam-input voor notities nu custom `<input>` met `onBlur`
+  callback (EditField ondersteunt geen `onBlur` prop). Naam beklijft nu correct.
+
+- **`ide/DiagramCanvas.jsx`**: `handleEdgeDoubleClick` nu met early-return voor scope-edges
+  (`data.kind === "scope"`). Gestippelde lijnen verdwijnen niet meer bij dubbelklik.
+  
+- **`ide/DiagramCanvas.jsx`**: Diagram-posities worden nu gesynchroniseerd. Bij drag/position-change,
+  niet alleen het actieve diagram updaten, maar ook het Overzicht-diagram (single source of truth
+  voor V3-export). Waarom: posities per diagram opgeslagen, maar V3-export leest uit Overzicht.
+  Meerdiagram-scenario's nu consistent.
+
+### Tests
+
+Alle 115 unit-tests groen.
+
+### Technisch detail
+
+**Diagram-synchronisatie**: Elk diagram (`diagrams[diagramId].nodes`) bevat unieke node-posities.
+Bij export, leest `posLookup()` prioritair uit `diagrams[overzicht]`. Maar als een element ALLEEN
+in benoemd diagram staat (niet in Overzicht), zijn oude/afwezige posities. Fix: sync posities
+naar Overzicht bij elke update. Dit voorkomt positie-divergentie en zorgt correcte IDE→EditorV2
+roundtrip.
+
+---
+
+## C8 (Notities & Constraints) IDE↔EditorV2 roundtrip (2026-05-01)
+
+Alle C8-elementen (notities en constraints) kunnen nu bidirectioneel
+uitgewisseld worden tussen de IDE en EditorV2 via V3 JSON, met correcte
+posities, scopeRefs en domeinfiltering.
+
+### Wijzigingen
+
+**Frontend (`web/vite/src/`):**
+
+- **`ide/BrowserContextMenu.jsx`**: `notitie` en `constraint` toegevoegd aan alle
+  context-menu-items (`toonInDiagram`, `toonDetails`, `hernoem`, `kopieerID`, `verwijder`).
+  Beide node-typen hebben nu een volledig rechts-klik menu.
+
+- **`ide/DetailsPanel.jsx`**: NotitieEditor krijgt een `naam`-veld. Notities kunnen
+  nu een aangepaste naam hebben (gescheiden van de `tekst`). Naam wordt opgeslagen
+  in `element.naam`; als niet ingesteld, valt terug op ID.
+
+- **`ide/ProjectBrowser.jsx`**: Notities en constraints verschijnen nu in de
+  domeinboom. Notities tonen hun `naam` (als ingesteld) of anders een preview
+  van de `tekst` (eerste 40 tekens). Constraints tonen hun `naam`.
+
+- **`store/adapters.js`**: 5 technische fixes:
+  1. **Diagram-nodes export**: `elementId: n.elementId || n.id` (Zustand slaat op
+     als `{ elementId, position }`, niet `{ id }`).
+  2. **Diagram-nodes import**: `{ elementId: n.elementId, position }` format;
+     nodes zonder elementId worden overgeslagen.
+  3. **Notitie import**: `naam: n.naam || n.id` (voordien werd naam altijd op ID gesteld).
+  4. **Notitie scopeRefs import**: Lus over `scopeRefs` array → stuctural edges
+     met `data: { kind: "scope" }`.
+  5. **Notitie export**: Teksteen en naam apart (voorheen fallback naar naam).
+     ScopeRefs geëxporteerd als array van doelId's.
+
+- **`pages/IdePage.jsx`**: `referentielijstInstanties` nu ook gefilterd bij
+  domeinexport (voordien werden AdellijkeTitels/Landenlijst meegenomen).
+
+- **`umleditor/components/MetamodelEditor.jsx`**: `onConnect` krijgt dezelfde
+  scope-edge-logica als DiagramCanvas: als source een notitie/constraint is,
+  wordt een scope-edge aangemaakt (type `"metamodel"`, `data: { kind: "scope" }`).
+  MetamodelEdge rendert dit correct als dashed lijn.
+
+### Testen
+
+Alle 115 unit-tests groen (geen nieuwe tests nodig; bestaande tests valideren
+de adapters.js-fixes).
+
+### Notities
+
+- **Positieverschil IDE ↔ EditorV2**: De IDE rendert ASOC-patronen met zichtbare
+  anchor-nodes; EditorV2 heeft geen visuele anchors. Positieverschillen in de
+  layout zijn daardoor normaal — element-level `positie` uit V3 is consistent.
+- **ScopeRefs**: Scope-edges worden nu bidirectioneel uitgewisseld; meerdere
+  scope-lijnen vanuit één notitie worden volledig bewaard.
+- **Naam vs Tekst**: Notities hebben nu beide velden; `tekst` is inhoud, `naam`
+  is optioneel label. V3 export/import respecteren dit onderscheid.
+
+---
+
+## GraphQL typed patch inputs: <Typenaam>PatchInput per ENT (2026-05-xx)
+
+Fase 3B-full: het vrije `JSON!` scalar in `wijzig<X>` en `corrigeer<X>` is vervangen
+door volledig getypeerde `<Typenaam>PatchInput` InputObject-types. Deze worden bij
+startup dynamisch gebouwd vanuit de MetaRegistry (geen codegen nodig).
+
+### Wijzigingen
+
+- **`dynql/input_type_builder.go`** (nieuw):
+  - `BuildPatchInputTypes()` — bouwt in twee stappen alle typed inputs:
+    - Stap 1: GE/REL hub InputObjects (`<GETypenaam>Input`) via reflectie op de
+      `_Data` struct. Bevat: `rel_id: Int`, inhoudsvelden uit `DataTypenaam`,
+      secundaire FK (bij relaties, `SecondaireEntiteitIDKolom`), en `aanvang`/`einde`
+      sub-inputs (`PlumbingDatumInput`) voor materiële types.
+    - Stap 2: ENT PatchInputObjects (`<Typenaam>PatchInput`) via
+      `OnderliggendeGegevenselementen`. Elk hub-type wordt als `[GEInput]`-lijst
+      opgenomen; aanvang/einde plumbing-subtypes worden overgeslagen.
+  - `PlumbingDatumInput` — gedeeld `{datum: Date}` input type voor materieel
+    aanvang/einde.
+  - `getPatchInputType(typenaam)` — geeft het gebouwde PatchInput type terug,
+    valt terug op `JSONScalar` als niet beschikbaar.
+  - `inputTypeCache` / `patchInputTypeCache` — voorkomen dubbele aanmaak.
+  - Helpers: `buildInputSkipSet`, `addStructInputFields`, `goTypeToGraphQLInput`
+    (parallellen aan de output type builder, maar produceren `graphql.Input`).
+
+- **`dynql/typed_mutations.go`** (bijgewerkt):
+  - `AddTypedMutationsForEntiteit` roept nu `getPatchInputType(meta.Typenaam)` aan
+    voor het `patch`-argument type. Resolvers zijn **onveranderd** — graphql-go
+    deserialiseert InputObject naar `map[string]interface{}`, en `json.Marshal`
+    produceert dezelfde JSON.
+
+- **`dynql/schema_builder.go`** (bijgewerkt):
+  - `BuildPatchInputTypes()` wordt aangeroepen vlak vóór de mutations loop, zodat
+    de `patchInputTypeCache` gevuld is wanneer `AddTypedMutationsForEntiteit` loopt.
+
+### Tests
+
+- **`dynql/input_type_builder_test.go`** (nieuw, 8 testcases):
+  - `TestBuildPatchInputTypes_VultCacheVoorAlleEntiteiten` — alle ENTs krijgen
+    een PatchInput type.
+  - `TestBuildPatchInputTypes_NatuurlijkPersoonHeeftGERollen` — `NatuurlijkPersoonPatchInput`
+    bevat `namen`, `persoonsidentificaties`, `burgerschappen`, `bereikbaarheden`;
+    aanvang/einde plumbing ontbreken correct.
+  - `TestBuildPatchInputTypes_GEInputHeeftRelID` — `rel_id` aanwezig.
+  - `TestBuildPatchInputTypes_GEInputHeeftDataVelden` — inhoudsvelden uit `_Data`
+    (`voorletters`, `achternaam`) aanwezig; PK-velden (`natuurlijkpersoon_id`,
+    `versie`) afwezig.
+  - `TestBuildPatchInputTypes_MaterieleGEHeeftAanvangEinde` — `aanvang`/`einde`
+    aanwezig op `NatuurlijkPersoon_BurgerschapInput`.
+  - `TestBuildPatchInputTypes_WijzigMutatieGebruiktTypedInput` — `wijzigNatuurlijkPersoon.Args["patch"]`
+    is een `*graphql.InputObject`, niet meer `JSONScalar`.
+  - `TestBuildPatchInputTypes_BereikbaarheidHeeftLocatieID` — `locatie_id` aanwezig,
+    `natuurlijkpersoon_id` afwezig.
+  - `TestGetPatchInputType_FallbackOpJSONScalar` — onbekend type valt terug op
+    `JSONScalar`.
+- **Totaal**: alle suites groen (`go test ./...`).
+
+---
+
 ## GraphQL Command-laag: directe core-calls + per-ENT typed mutations (2026-04-30)
 
 Fase 3 van de PATCH/DELETE/GraphQL-roadmap. De GraphQL-mutations roepen de pure
