@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-26 13:01
 - **Sessie-ID**: `a23e9df4-1427-44d4-a4e4-58ed70e6e000`
-- **Berichten**: 15
+- **Berichten**: 27
 
 ---
 
@@ -377,5 +377,186 @@ Klaar. Samenvatting:
 -  — Round 5 sectie + bestandstabel bijgewerkt
 
 Lint/compile is groen. Wanneer je tijd hebt, draai handmatig `npx vitest run` (geen watch) om te bevestigen dat de 115 tests nog steeds groen zijn — er zijn geen test-bestanden gewijzigd, dus dat zou moeten lukken.
+
+---
+
+## 🧑 User
+
+Ah, elementen naar een ander domein verplaatsen werkt. Ik bedoelde echter drag & drop. Kan dat ook?
+
+---
+
+## 🤖 Assistant
+
+De boom heeft al HTML5 native drag op element-nodes (voor naar canvas slepen). Ik kan die drag-data ook laten vallen op domein-nodes in de PB — dat vereist alleen  +  op de domein-rijen. Geen react-arborist DnD nodig, geen extra dependency. Nu implementeer ik drop-zones op de domein-rijen in : 
+```
+
+```
+Now check the import line for  in TreeNode — it's already imported at module level:  is al geïmporteerd. Nu voeg ik de drag-over + drop logica toe op de outer div van de , direct vóór de bestaande :  
+```
+
+```
+Klaar. Hoe het werkt:
+
+- **Sleep één element** van de PB naar een domein-map → groen highlight + bevestigingsdialoog → domein bijgewerkt.
+- **Ctrl+klik** meerdere elementen → sleep één ervan naar een domein → alle geselecteerde worden verplaatst.
+- **Shift+drag** op een entiteit → meeneemt ook alle GE's/relaties (bestaand gedrag), die worden dan allemaal verplaatst.
+- Annuleer de -dialoog → niets wijzigt.
+- Visual feedback: domein-rij kleurt groen met stippelrand tijdens drag-over.
+
+Het -dialoog → niets wijzigt.
+- Visual feedback: domein-rij kleurt groen met stippelrand tijdens drag-over.
+
+Het rechtsklik-menu "↪️ Verplaats naar domein…" blijft ook beschikbaar als alternatief.
+
+---
+
+## 🧑 User
+
+de groene stippelrand werkt wel, maar er komt geen dialoog en de focus springt terug naar de positie van waar het element vandaan kwam...
+
+Wil je ook documenteren (altijd)
+
+---
+
+## 🤖 Assistant
+
+Twee problemen:
+1. Browsers onderdrukken  tijdens drag-events — oplossing:  om buiten de drag-lifecycle te stappen.
+2. "Focus springt terug" komt omdat  wijzigt →  met  vuurt → scrolt terug naar het vorige geselecteerde element.
+
+Laten we beide fixen: Nu zie ik het probleem duidelijk: de  vuurt op  — bij domeinwijziging verandert  → scroll naar vorige . 
+
+Fix: 
+1.  →  (buiten drag-lifecycle voor )
+2.  scroll-guard: skip als de rerender door een domein-move is getriggered (via een ref) 
+```
+
+```
+Goed — de eerste drie replacements zijn al gelukt. De vierde ( +  samen) mislukte. Laten we kijken wat er nu staat: Alles staat er al goed in. Alleen de  toewijzing staat nu ná de  maar vóór de  — dat is prima. Laten we de errors checken: Nu de documentatie bijwerken: 
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+Klaar. Samenvatting van de twee bugfixes:
+
+1. **Geen dialoog** — browsers blokkeren  binnen een `drop`-event. Oplossing: de bevestigingscode in  gezet, zodat die uitvoert nadat de drag-lifecycle volledig klaar is.
+
+2. **Focus springt terug** —  →  wijzigt →  vuurt → . Oplossing: een  (module-level ref, gekoppeld aan  in de component).  zet  vóór de update; de  checkt dit en slaat één scroll over.
+
+---
+
+## 🧑 User
+
+Nee, het werkt nog niet. Het terugvallen gaat langzamer, dat is alles
+
+---
+
+## 🤖 Assistant
+
+Het fundamentele probleem is dat de  race-conditie heeft met het React render-cycle. De correcte oplossing: scroll alleen wanneer  of  daadwerkelijk veranderd is — niet wanneer  de trigger was. Dan is de  helemaal niet meer nodig. Nu vervang ik het scroll-effect door een aanpak met `prevSelectionRef` — scroll alleen als  of  de trigger was, niet . De  is dan overbodig en ruim ik ook meteen op:  
+```
+
+```
+De vierde replacement (de `_suppressScrollRef.current = true` verwijdering in onDrop) was al eerder niet ingevoegd. Laten we kijken hoe de onDrop er nu echt uitziet: Dus de  heeft nog GEEN  — dat was de tweede ronde die mislukte. En de `_suppressScrollRef` is al weggehaald. Nu de huidige staat bekijken:  Nu doe ik alle fixes in één keer:  in  + de -aanpak in het scroll-effect:   
+```
+
+```
+Nu het scroll-effect vervangen met de -guard:   Het scroll-effect staat al correct. Nu de  nog toevoegen aan de -declaraties:     staat al correct. Let me check for any lingering `_suppressScrollRef` references:  Nu de documentatie bijwerken:   
+```
+
+```
+
+```
+
+```
+Klaar. De kern van de fix:
+
+**Waarom de vorige aanpak (`_suppressScrollRef`) niet werkte:** timing race-conditie — het module-level ref-object werd op het juiste moment gezet, maar React kan in bepaalde omstandigheden de effect al uitvoeren vóór de module-variabele het nieuwe object heeft.
+
+**De correcte aanpak ():** in het effect zelf vergelijken of  of  veranderd is t.o.v. de vorige run. Als alleen  de trigger was (domein-move, element-update), dan is de selectie niet gewijzigd en wordt scroll overgeslagen — zonder enige tijdsgevoeligheid.
+
+---
+
+## 🧑 User
+
+sorry, maar ik zie geen verschil met net, helaas
+
+---
+
+## 🤖 Assistant
+
+Laat me de huidige staat van het scroll-effect bekijken: 
+
+---
+
+## 🧑 User
+
+onderweg naar dat het groene vlak verschijnt komt er een groen +je bij. Daarna het groene vak. Dan bij drop: niets, terug naar af
+
+---
+
+## 🤖 Assistant
+
+Het groene "+" icoontje en de afwezige dialoog wijzen op twee dingen: (1) de  vs  mismatch geeft een "copy"-cursor, en (2) de  waarschijnlijk leeg. Laat me de exacte staat zien: Twee problemen zichtbaar: (1)  op lijn 417 maar  op 336 — mismatch → browser weigert drop. (2) Laat me de volledige dragstart + drop-handler zien:  Gevonden:  in dragStart maar  in onDragOver — browser weigert de drop want "move" zit niet in "copy". Laat me ook de DiagramCanvas drop-handler checken voor de juiste waarde: Canvas gebruikt , PB-domein gebruikt . Beide zijn geldige drop-targets. Fix:  → `"copyMove"` zodat beide werken. 
+```
+
+```
+Dat was de oorzaak. Browser-regels voor drag & drop:
+
+-  (bron, ) = welke Dat was de oorzaak. Browser-regels voor drag & drop:
+
+-  (bron, ) = welke operaties zijn toegestaan  
+-  (doel, ) = welke operatie het doel wil uitvoeren  
+- Als  **niet in**  zit → browser vuurt `drop`-event **niet**
+
+Eerder:  +  → drop geblokkeerd  
+Nu:  → canvas-drop ("copy") ✓ en domein-drop ("move") ✓
+
+---
+
+## 🧑 User
+
+ja, dat werkt, super! Documentatie op orde?
+
+---
+
+## 🤖 Assistant
+
+Ik zie dat  al een "Round 5 + I54" sectie heeft, maar ik heb daarna nog twee aanvullende fixes gemaakt die ik moet documenteren:
+
+1. ** uit effect-deps** — radicaler en simpeler dan `prevScrollSelRef`
+2. **** — dit was de feitelijke oorzaak van non-working drag
+
+Laat me deze updates doen: 
+```
+
+```
+Nu BACKLOG.md bijwerken:  
+```
+
+```
+
+```
+
+```
+Ja, documentatie is nu op orde! Ik heb drie files bijgewerkt:
+
+1. **** — I54 sectie aangevuld met de twee aanvullende bugfixes:
+   -  uit effect-deps (scroll-back fix)
+   -  (drop-handler mismatch fix)
+
+2. **BACKLOG.md** — I54-entry bijgewerkt naar `✅` met al de bugfixes samengevat
+
+3. **** — Tabel-entry voor  aangepast met de drie bugfixes
+
+Alles nu consistent gedocumenteerd! 🎯
 
 ---

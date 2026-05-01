@@ -49,6 +49,8 @@ Twee items in één release: bugfix scope-edge verwijdering (Round 5) + nieuwe f
 
 - **`ide/ProjectBrowser.jsx`** — Handler `verplaatsDomein`: detecteert multi-select (`_multiSelected.size > 1`), toont prompt met beschikbare domeinen + huidig domein als default, gevolgd door bevestigingsdialoog. Past `updateElement(id, { domein: ... })` toe op alle geselecteerde elementen. Lege invoer → "(geen domein)". Multi-selectie wordt na actie gewist.
 
+- **`ide/ProjectBrowser.jsx`** — Drag & drop naar domein-rij: element(en) slepen vanuit de boom op een domein-map toont een bevestiging + verplaatst het domein. Visuele feedback: domein-rij kleurt groen met stippelrand (`--ide-tree-dragover`) tijdens hover. Multi-select (Ctrl+klik) wordt meegenomen bij de drop. Bugfixes: (1) `setTimeout(0)` in `onDrop` — browsers onderdrukken `window.confirm` tijdens drag-events. (2) **Scroll-back fix (iteratief)**: Eerst `prevScrollSelRef` getest, maar root cause bleek `treeData` in effect-deps. Definitieve fix: `treeData` volledig uit `useEffect([selectedElementId, selectieVersie])` verwijderd. Boom rendert nu zonder extra scroll-triggers. (3) `e.dataTransfer.effectAllowed = "copyMove"` — was `"copy"`, blokkeerde `dropEffect = "move"` in domein-drop-handler (browser vereist match tussen allowed ↔ drop). Canvas-drops ("copy") en domein-drops ("move") nu beide ondersteund.
+
 ### Tests
 
 Test-run nog te draaien (Vitest watch-mode hing bij vorige poging).

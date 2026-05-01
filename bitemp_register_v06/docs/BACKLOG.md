@@ -869,7 +869,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | I51 | ✅ B5/B6/B7 (cast/splits/relatie) faalden op raw-imported elementen met "Element X is geen entiteit" omdat `rawNodeNaarElement` geen top-level `metatype` zette. Fix: metatype op top-level én in `data`; transformations.js `isEntiteit/isGE/isRelatie` accepteren nu ook `el.type` en `el.data.metatype` als fallback. Regression-test toegevoegd. (2026-04-28) | nieuw |
 | I52 | Editor-v2 `Failed to execute 'removeChild'` treedt nog steeds op na openen. De huidige defer (rAF + null-data-mount) is onvoldoende; vermoedelijk XyFlow ResizeObserver vs React 18 concurrent commits. Onderzoek: aparte `key` op `<MetamodelEditor>` per data-load; downgrade React-Flow; of `<Suspense>`-grens rond editor. Zie todo #2. | nieuw |
 | I53 | Select elementen op een canvas - rechtsklik domein wijzigen -> of via I54?| vanuit editor |
-| I54 | ✅ Verplaatsen elementen in PB → domein wijzigen. Rechtsklik > "↪️ Verplaats naar domein…" werkt op enkelvoudige selectie en multi-select (`_multiSelected`). Prompt + bevestigingsdialoog; updates via `updateElement(id, { domein })`. (2026-05-01) | nieuw |
+| I54 | ✅ Verplaatsen elementen in PB → domein wijzigen. Rechtsklik > "↪️ Verplaats naar domein…" én drag & drop naar domein-map. Multi-select (Ctrl+klik) wordt meegenomen. Bevestigingsdialoog; updates via `updateElement(id, { domein })`. Bugfixes: `setTimeout(0)` in onDrop (confirm-suppression in drag), `treeData` uit effect-deps (scroll-back fix), `effectAllowed="copyMove"` (drop-handler mismatch). (2026-05-02) | ✅ |
 | I |  | nieuw |
 | I |  | nieuw |
 | I |  | nieuw |

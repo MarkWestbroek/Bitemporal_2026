@@ -578,7 +578,7 @@ Positie wordt opgeslagen in `V3Notitie.positie` / `V3Constraint.positie` en bij 
 | `web/vite/src/store/adapters.js` | **mei 2026: 5 fixes — diagram nodes export/import, notitie naam+scopeRefs; round 4: namedDiagPos + scopeRefs deduplicatie** |
 | `web/vite/src/store/useModelStore.js` | **mei 2026 round 5: nieuwe `removeStructuralEdge` action** |
 | `web/vite/src/ide/DiagramCanvas.jsx` | **mei 2026 round 5: `handleEdgesChangeWrapped` + scope-edge cleanup in context-menu** |
-| `web/vite/src/ide/BrowserContextMenu.jsx` + `ide/ProjectBrowser.jsx` | **mei 2026 I54: "Verplaats naar domein…" menu-item + handler met multi-select** |
+| `web/vite/src/ide/BrowserContextMenu.jsx` + `ide/ProjectBrowser.jsx` | **mei 2026 I54: "Verplaats naar domein…" menu-item + handler met multi-select + drag & drop naar domein-map. Bugfixes: setTimeout-fix (confirm-suppression), treeData uit effect-deps (scroll-back), effectAllowed="copyMove" (drop-handler mismatch).** |
 | `web/vite/src/pages/IdePage.jsx` | **mei 2026: referentielijstInstanties domeinfilter in handleExportDialog** |
 | `model/v3_format.go` | `V3Notitie` en `V3Constraint` structs (eerder al toegevoegd) |
 | `web/vite/src/store/__tests__/v3_b5_c8_roundtrip.test.js` | Roundtrip-tests bijgewerkt (positie in `diagram.nodes` i.p.v. `data.positie`) |

@@ -225,6 +225,7 @@ let _setMultiSelected = null;     // setter van useState in PB
 let _lastClickedId = null;        // voor shift-range selectie
 let _flatVisibleIds = [];          // platte lijst zichtbare draggable node-ids
 
+
 // ─── Node renderer ──────────────────────────────────────────
 
 function TreeNode({ node, style }) {
@@ -233,6 +234,7 @@ function TreeNode({ node, style }) {
   // echte element-id voor selectie/drag/multi-select staat in `elementId`.
   const elementId = node.data.elementId || node.data.id;
   const dragGhostRef = useRef(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   const verwijderDragGhostVeilig = useCallback(() => {
     const ghost = dragGhostRef.current;
     if (ghost) {
@@ -312,17 +314,62 @@ function TreeNode({ node, style }) {
         alignItems: "center",
         gap: 4,
         cursor: "pointer",
-        background: isMultiSelected ? "var(--ide-tree-selected-alpha, #264f78aa)" : isDetailSelected ? "var(--ide-tree-selected, #264f78)" : "transparent",
+        background: isDragOver
+          ? "var(--ide-tree-dragover, #2a5f3f)"
+          : isMultiSelected ? "var(--ide-tree-selected-alpha, #264f78aa)" : isDetailSelected ? "var(--ide-tree-selected, #264f78)" : "transparent",
         borderRadius: 2,
         paddingRight: 4,
         fontSize: 13,
         whiteSpace: "nowrap",
         overflow: "hidden",
         textOverflow: "ellipsis",
-        color: isHighlighted ? "var(--ide-tree-highlight-color, #fff)" : "var(--ide-panel-color, #ccc)",
+        color: (isDragOver || isHighlighted) ? "var(--ide-tree-highlight-color, #fff)" : "var(--ide-panel-color, #ccc)",
+        outline: isDragOver ? "1px dashed var(--ide-tree-dragover-border, #4caf8a)" : "none",
       }}
       onClick={handleClick}
       draggable={isDraggable}
+      onDragOver={(e) => {
+        // Alleen domein-nodes zijn drop-targets voor "verplaats naar domein"
+        if (node.data.nodeType !== "domain") return;
+        if (!e.dataTransfer.types.includes("application/ide-element")) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        setIsDragOver(true);
+      }}
+      onDragLeave={(e) => {
+        if (node.data.nodeType !== "domain") return;
+        // Alleen resetten als we echt de node verlaten (niet een child)
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+          setIsDragOver(false);
+        }
+      }}
+      onDrop={(e) => {
+        if (node.data.nodeType !== "domain") return;
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragOver(false);
+        const raw = e.dataTransfer.getData("application/ide-element")
+          || e.dataTransfer.getData("application/json");
+        if (!raw) return;
+        let dragData;
+        try { dragData = JSON.parse(raw); } catch { return; }
+        const teVerplaatsen = (dragData.elements || []).map((d) => d.elementId).filter(Boolean);
+        if (teVerplaatsen.length === 0) return;
+        const doelDomein = node.data.name === "(geen domein)" ? "" : node.data.name;
+        // Browsers onderdrukken window.confirm tijdens drop-events;
+        // setTimeout(0) stapt buiten de drag-lifecycle zodat de dialoog verschijnt.
+        setTimeout(() => {
+          const store = useModelStore.getState();
+          const aantalTekst = teVerplaatsen.length === 1
+            ? `"${store.elements[teVerplaatsen[0]]?.naam || teVerplaatsen[0]}"`
+            : `${teVerplaatsen.length} elementen`;
+          if (!window.confirm(`Verplaats ${aantalTekst} naar domein "${doelDomein || "(geen domein)"}"?`)) return;
+          for (const elId of teVerplaatsen) {
+            store.updateElement(elId, { domein: doelDomein });
+          }
+          _setMultiSelected?.(new Set());
+        }, 0);
+      }}
       onDragStart={(e) => {
         if (!isDraggable) {
           e.preventDefault();
@@ -367,7 +414,9 @@ function TreeNode({ node, style }) {
         // Fallback MIME voor browsers/drag-sources die custom types filteren.
         e.dataTransfer.setData("application/json", JSON.stringify({ elements: dragItems }));
         e.dataTransfer.setData("text/plain", dragItems.map((d) => d.name || d.elementId).join(", "));
-        e.dataTransfer.effectAllowed = "copy";
+        // "copyMove": canvas-drops zijn "copy", domein-drops in de browser zijn "move".
+        // "copy" alleen zou "move" blokkeren → browser vuurt geen drop-event op domein-nodes.
+        e.dataTransfer.effectAllowed = "copyMove";
 
         // Drag ghost
         verwijderDragGhostVeilig();
@@ -457,6 +506,12 @@ export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram, onImpor
   }, [treeData]);
 
   // ── Sync: diagram-selectie → browser opent parents + scrollt naar node ──────────
+  // Deps: alleen selectedElementId + selectieVersie (GEEN treeData).
+  // treeData is bewust weggelaten: het triggerde scroll bij domein-moves,
+  // model-updates en andere treeData-wijzigingen zonder selectiewijziging.
+  // selectieVersie wordt opgehoogd bij elke setSelectedElementId-aanroep en
+  // zorgt voor scroll ook als het dezelfde ID betreft (bijv. re-focus).
+  // setTimeout(0) geeft de boom tijd om te renderen vóór openParents/scrollTo.
   useEffect(() => {
     if (!selectedElementId || !treeRef.current) return;
 
@@ -471,7 +526,7 @@ export default function ProjectBrowser({ onOpenDiagram, onCreateDiagram, onImpor
     }, 0);
 
     return () => clearTimeout(timer);
-  }, [selectedElementId, selectieVersie, treeData]);
+  }, [selectedElementId, selectieVersie]);
 
   // ── Context menu acties ─────────────────────────────────
   const handleContextAction = useCallback(
