@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-05-12 09:49
 - **Sessie-ID**: `d0ae5cf2-6bef-4cf6-ba73-1f2a9f5cde01`
-- **Berichten**: 41
+- **Berichten**: 44
 
 ---
 
@@ -800,5 +800,31 @@ De terminal zit structureel vast in een alternate buffer. De `create_and_run_tas
 4. **** in  — NET GEFIXED: gebruikt nu  i.p.v. minimale , zodat ook lijst-expressies werken in de child-sectie weergave ✅
 
 De frontend (Vite dev server) pikt de JSX-wijziging automatisch op via HMR. Zodra de API draait met de nieuwe Go-code, zou je de `nl-trefwoord` en andere weergavevelden moeten zien.
+
+---
+
+## 🧑 User
+
+[Terminal 092b4878-e38b-4d41-a282-4c2272207edb notification: terminal exited. The terminal process ended before the command could complete normally; further commands cannot be sent to this terminal ID.]
+Terminal output:
+mark@MacBook-Pro-macbookpro Bitemporal_2026 %  go run ./cmd/api/main.go 2>&1 &
+[1] 91744
+stat ./cmd/api/main.go: no such file or directory                               
+[1]  + exit 1     go run ./cmd/api/main.go 2>&1
+mark@MacBook-Pro-macbookpro Bitemporal_2026 %
+
+---
+
+## 🧑 User
+
+Zou je die CEL expressie uitbreding willen documenteren?
+
+Er is niets veranderd in de frontend
+
+---
+
+## 🤖 Assistant
+
+De schema-API heeft de updated afgeleideVelden ✅. Laten we de exacte CEL-expressies inspecteren en de data-structuur van een Trefwoord entity checken: Alles klopt in het schema. Nu moet ik checken of  en de CEL evaluator correct worden gebruikt in : Laten we de huidige staat van `celEvaluator.js` controleren — specifiek  en of lijst-operaties er echt in zitten: 
 
 ---
