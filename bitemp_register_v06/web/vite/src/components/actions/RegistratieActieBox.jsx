@@ -81,6 +81,7 @@ export default function RegistratieActieBox({
                   const secondaireKolom = String(match?.group?.typeMeta?.secondaireEntiteitIDKolom || "");
                   const groupKey = match ? `${match.group.rolnaam}__${match.group.doeltype}` : "";
                   const secondaireIds = Array.isArray(relatieSecondaireOpties?.[groupKey]?.ids) ? relatieSecondaireOpties[groupKey].ids : [];
+                  const secondaireLabels = relatieSecondaireOpties?.[groupKey]?.labels || {};
                   const typeMeta = match?.group?.typeMeta;
                   const temporaal = new Set(["opvoer", "afvoer", "aanvang", "einde"]);
                   const entKolom = String(typeMeta?.entiteitIDKolom || "").toLowerCase();
@@ -120,7 +121,7 @@ export default function RegistratieActieBox({
                                       ...prev,
                                       [String(w.representatie_id)]: { ...(prev[String(w.representatie_id)] || {}), [k]: waarde },
                                     }))}
-                                    secondaireInfo={{ ids: secondaireIds, loading: false, error: "" }}
+                                    secondaireInfo={{ ids: secondaireIds, labels: secondaireLabels, loading: false, error: "" }}
                                     secondaireKolom={secondaireKolom}
                                   />
                                 </ActionLabeledEditorField>

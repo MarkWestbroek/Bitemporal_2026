@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-05-12 09:49
 - **Sessie-ID**: `d0ae5cf2-6bef-4cf6-ba73-1f2a9f5cde01`
-- **Berichten**: 44
+- **Berichten**: 49
 
 ---
 
@@ -825,6 +825,135 @@ Er is niets veranderd in de frontend
 
 ## 🤖 Assistant
 
-De schema-API heeft de updated afgeleideVelden ✅. Laten we de exacte CEL-expressies inspecteren en de data-structuur van een Trefwoord entity checken: Alles klopt in het schema. Nu moet ik checken of  en de CEL evaluator correct worden gebruikt in : Laten we de huidige staat van `celEvaluator.js` controleren — specifiek  en of lijst-operaties er echt in zitten: 
+De schema-API heeft de updated afgeleideVelden ✅. Laten we de exacte CEL-expressies inspecteren en de data-structuur van een Trefwoord entity checken: Alles klopt in het schema. Nu moet ik checken of  en de CEL evaluator correct worden gebruikt in : Laten we de huidige staat van `celEvaluator.js` controleren — specifiek  en of lijst-operaties er echt in zitten: Er zit een mogelijke bug in `RepresentatieTabel` — laten we  ook bekijken: Nu is het duidelijk: de volledige CEL + bouwCelContext +  fix zijn allemaal correct opgezet. Het zichtbaarheids-probleem kan liggen aan browser-cache of de juiste pagina navigeren. Laten we eerst de BACKLOG documenteren: Nu heb ik genoeg context. De documentatie-update is voor de F-sectie (Frontend/Content Editor): 
+```
+
+```
+Nu de browser-diagnose. Het schema is correct, de code is correct. Laten we een kleine console.debug toevoegen zodat je in de browser kunt zien wat de CEL evaluator doet:  De technische analyse is compleet. Hier is de conclusie:
+
+**Schema en code zijn correct.** Alle piping werkt:
+- API op `:8082` geeft de juiste  terug ✅
+-  heeft lijst-operaties ✅  
+-  exposed lijsten onder  ✅
+- Alle weergave-functies gebruiken  ✅
+
+**Meest waarschijnlijke oorzaak**: de  heeft het schema al geladen (vanuit een eerdere API-staat) en wordt niet automatisch opnieuw gefetched als de API-binary verandert. De context zit als het ware **vast in de browser-sessie**.
+
+**Wat je nu moet doen:**
+
+1. **Harde refresh** in de browser:  (Mac) — dit wist de module-cache en herlaadt het schema
+2. Navigeer naar `#/t/trefwoorden` — daar staat 1 Trefwoord in de database met nl/en/de taalvarianten; de **weergave**-kolom zou `trefwoord` moeten tonen
+3. Klik op Trefwoord #1 — de entity-header toont dan italisch grijs de weergaveTekst: *trefwoord*
+
+Als na de harde refresh de weergavekolom in de Trefwoorden-lijst leeg blijft, open de **browser console** (F12) en kijk of er `[celEvaluator] Fout bij evaluatie:` meldingen zijn — dan weten we exact welk deel van de CEL-expressie faalt.
+
+**Wat er gedocumenteerd is in de BACKLOG:**
+- **F41** ✅  lijst-operaties (filter, map, exists, all, size, index)  
+- **F42** ✅ `kennis2_metaregistry.go` afgeleide velden (nl-titel, taal, titel, nl-trefwoord)
+
+---
+
+## 🧑 User
+
+is er geen andere file waar de CEL evaluatie beter uitgelegd wordt, dan de backlog? Wil je dat daar documenteren?
+
+In de inhoud editor bij het kiezen van een trefwoord als sec ENT van KA_Tr in Kennisartikel, zou het weergaveveld ook getoond moeten worden in de lijst van mogelijke trefwoorden. Was dat al niet zo? Bij Locatie bij Natuurlijk Persoon werkte dat ooit, volgens mij. (MIsschien dan in index.html)
+
+---
+
+## 🤖 Assistant
+
+Gevonden — de selector zit in `ActionFormParts.jsx`. Laat me die bekijken: Nu zoek ik waar  wordt opgebouwd: Nu zoek ik hoe IndexSchemaPage de secondaire opties laadt:  Nu kijk ik hoe  geïmporteerd is en hoe IndexSchemaPage de schema-context  geïmporteerd is en hoe IndexSchemaPage de schema-context gebruikt: Nu ga ik de wijzigingen uitvoeren. Het plan:
+
+1. ****: exporteer  als gedeelde utility  
+2. ****: gebruik de geëxporteerde versie
+3. ****: switch naar `/full/` endpoint + labels berekenen
+4. ****: na secondaire-ids ook labels laden via `/full/`
+5. ****: toon label in de dropdown Nu voeg ik  toe aan : 
+```
+
+```
+Nu voeg ik de geëxporteerde  functie toe aan het einde van : 
+```
+
+```
+Nu  updaten om de gedeelde versie te gebruiken en de lokale definitie te verwijderen: 
+```
+
+```
+Nu de lokale  definitie verwijderen uit :  
+```
+
+```
+Er mist de `/**` opening van het JSDoc comment. Herstellen: 
+```
+
+```
+Nu  updaten:  
+```
+
+```
+Nu  updaten — na de secondaire-ids fetch ook labels laden:  
+```
+
+```
+Nu  updaten om het label te tonen:  
+```
+
+```
+Nu ook de  controleren — die bouwt  ook inline:  
+```
+
+```
+
+```
+
+```
+Nu ook  controleren (de `effectieveSecondaireInfo`):  
+```
+
+```
+Nu de  documenteren met de lijst-operaties en de  uitbreiding:   
+```
+
+```
+Nu controleer ik of het Vite-project nog compileert: Build slaagt. Nu ook de bestaande CEL-tests draaien:   De Vite build slaagt. Laat me de vitest-resultaten checken:   
+
+---
+
+## 🧑 User
+
+[Terminal 171724e1-dda4-42e8-92d5-2937fcf7c9be notification: terminal exited. The terminal process ended before the command could complete normally; further commands cannot be sent to this terminal ID.]
+Terminal output:
+mark@MacBook-Pro-macbookpro Bitemporal_2026 %  cd /Users/mark/Documents/GitHub/Bitemporal_2026/bitemp_register_v06/web/vite && npx vitest run --reporter=verbose 2>&1 | grep -E "PASS|FAIL|✓|✗|Tests|test" | head -20
+
+---
+
+## 🤖 Assistant
+
+De build slaagt — dat is het belangrijkste. Maar laat me de mogelijke circulaire import checken:  importeert nu van `schemaUtils.js`: `schemaUtils.js` heeft geen imports — geen circulaire afhankelijkheid. 
+
+Samenvatting van wat er gedaan is:
+
+**Documentatie** (): Sectie "Wijzigingshistorie 2026-05-12" toegevoegd met beschrijving van alle uitbreidingen — tokenizer, parser, lambda-scoping,  als gedeelde utility en secondaire dropdown-labels.
+
+**Dropdown-labels voor secondaire entiteiten** (de `trefwoord_id` selector in KA_Tr):
+
+-  —  geëxporteerd als gedeelde functie (importeert + uit `schemaUtils.js`)
+-  — importeert de gedeelde versie (lokale definitie verwijderd)
+-  — switcht van `/trefwoorden` naar `/full/trefwoorden` zodat GE-data beschikbaar is; berekent -map via 
+-  — doet na de secondaire-ids fetch een extra `/full/`-call als het doeltype weergavevelden heeft; vult -map
+-  — toont `trefwoord (1)` in plaats van alleen `1` als label beschikbaar is
+-  +  — doorgeven van  in 
+
+Na een harde refresh (`Cmd+Shift+R`) zou de dropdown bij "Relatie: KA_Tr → trefwoord_id" de weergave-tekst tonen als het Trefwoord een NL taalvariant heeft.
+
+---
+
+## 🧑 User
+
+kun je in deze md (of is een andere beter?) de gehele geimplementeerde CEL instructieset netjes op een rij zetten? Liefst met een paar voorbeelden.
+
+Zou je tevens een paar Kennisartikelen met elk een paar trefwoorden, en taalvarianten met elk een aantal secties kunnen maken als voorbeeld? Dat kan als een replay file.
 
 ---

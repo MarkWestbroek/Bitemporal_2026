@@ -288,9 +288,14 @@ export function ActionFieldControl({ veld, value, onChange, secondaireInfo, seco
       <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 0 }}>
         <select style={controlStyle} value={String(value ?? "")} onChange={(event) => onChange(event.target.value)}>
           <option value="">{heeftOpties ? "(kies id)" : "(geen opties beschikbaar)"}</option>
-          {heeftOpties ? secondaireInfo.ids.map((idOptie) => (
-            <option key={idOptie} value={String(idOptie)}>{String(idOptie)}</option>
-          )) : null}
+          {heeftOpties ? secondaireInfo.ids.map((idOptie) => {
+            const label = secondaireInfo.labels?.[String(idOptie)];
+            return (
+              <option key={idOptie} value={String(idOptie)}>
+                {label ? `${label} (${idOptie})` : String(idOptie)}
+              </option>
+            );
+          }) : null}
         </select>
         {secondaireInfo?.error ? <span style={{ fontSize: 11, color: "#b45309" }}>{secondaireInfo.error}</span> : null}
         {foutmelding ? <span style={{ fontSize: 11, color: "#dc2626" }}>{foutmelding}</span> : null}

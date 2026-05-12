@@ -10,50 +10,11 @@ import {
 import { useNavigate } from "react-router";
 import { useSchema } from "../../context/SchemaContext";
 import { safeArray, platSlaHubItems } from "../../shared/schemaUtils";
-import { evalueerCelExpressie, bouwCelContext, evalueerWeergaveVeldenVoorItem } from "../../shared/celEvaluator";
+import { evalueerCelExpressie, bouwCelContext, evalueerWeergaveVeldenVoorItem, berekenWeergaveveld } from "../../shared/celEvaluator";
 
 const PAGE_SIZE = 20;
 
 /**
- * Berekent weergaveveld-tekst voor een entiteit op basis van afgeleide velden.
- *
- * Bitemporele context:
- *   De weergavevelden (bijv. "Joris Vries" voor een NatuurlijkPersoon) worden
- *   berekend via CEL-expressies die refereren aan onderliggende GE-groepen.
- *   bouwCelContext selecteert automatisch het actuele record per groep
- *   (opvoer gezet, geen afvoer), zodat het weergaveveld altijd de huidige
- *   formele toestand weergeeft.
- */
-function berekenWeergaveveld(entity, typeMeta, typeMetaByTypenaam) {
-  const afgVelden = safeArray(typeMeta?.afgeleideVelden)
-    .filter((av) => av.isWeergaveVeld || av.weergaveVeld);
-  if (afgVelden.length === 0 || !entity) return "";
-
-  // Bouw child groups structuur zoals de index page dat verwacht
-  const onderliggende = safeArray(typeMeta?.onderliggende);
-  const childGroups = onderliggende.map((child) => {
-    const childMeta = typeMetaByTypenaam?.[child.doeltype];
-    const rawItems = safeArray(entity[child.jsonRolnaam] || entity[child.rolnaam]);
-    // Hubs platslaan zodat data-velden op het item komen
-    const items = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
-    return { doeltype: child.doeltype, rolnaam: child.rolnaam, items, typeMeta: childMeta };
-  });
-
-  const ctx = bouwCelContext(childGroups, typeMetaByTypenaam);
-  return afgVelden
-    .map((av) => {
-      if (av.afleidingsregelTaal === "cel" && av.afleidingsregel) {
-        return evalueerCelExpressie(av.afleidingsregel, ctx);
-      }
-      return null;
-    })
-    .filter((v) => v != null && String(v).trim() !== "")
-    .join(" | ");
-}
-
-/**
- * RepresentatieTabel — generiek tabel-component voor een entiteit- of GE-type.
- *
  * Kolommen worden dynamisch bepaald op basis van de schema-API (typeMeta):
  *   - Entiteiten: ID + weergaveveld (CEL) + tellerkolommen per GE + materiële tijd
  *   - Andere types: alle primitieve velden uit de schema

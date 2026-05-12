@@ -15,6 +15,8 @@
  * Geen eval(), geen Function() — veilige tokenizer + recursive-descent parser.
  */
 
+import { safeArray, platSlaHubItems } from "./schemaUtils.js";
+
 // ── Tokenizer ───────────────────────────────────────────────────────────
 
 const TokenType = {
@@ -546,4 +548,40 @@ export function evalueerWeergaveVeldenVoorItem(afgeleideVeldenDefs, item, typeMe
     }
   }
   return result;
+}
+
+/**
+ * Berekent de weergaveveld-tekst voor een entiteit op basis van afgeleide velden.
+ *
+ * Gedeelde helper — wordt gebruikt door RepresentatieTabel (lijst-kolom),
+ * NieuwEntiteitPagina (secondaire dropdown-labels) en IndexSchemaPage (idem).
+ *
+ * @param {Object} entity - Het entiteitsrecord incl. geneste GE-kinderen (van /full/ endpoint).
+ * @param {Object} typeMeta - TypeMeta van het entiteitstype.
+ * @param {Object} typeMetaByTypenaam - Map typenaam → TypeMeta.
+ * @returns {string} Weergave-tekst, of "" als geen weergaveveld beschikbaar is.
+ */
+export function berekenWeergaveveld(entity, typeMeta, typeMetaByTypenaam) {
+  const afgVelden = safeArray(typeMeta?.afgeleideVelden)
+    .filter((av) => av.isWeergaveVeld || av.weergaveVeld);
+  if (afgVelden.length === 0 || !entity) return "";
+
+  const onderliggende = safeArray(typeMeta?.onderliggende);
+  const childGroups = onderliggende.map((child) => {
+    const childMeta = typeMetaByTypenaam?.[child.doeltype];
+    const rawItems = safeArray(entity[child.jsonRolnaam] || entity[child.rolnaam]);
+    const items = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
+    return { doeltype: child.doeltype, rolnaam: child.rolnaam, items, typeMeta: childMeta };
+  });
+
+  const ctx = bouwCelContext(childGroups, typeMetaByTypenaam);
+  return afgVelden
+    .map((av) => {
+      if (av.afleidingsregelTaal === "cel" && av.afleidingsregel) {
+        return evalueerCelExpressie(av.afleidingsregel, ctx);
+      }
+      return null;
+    })
+    .filter((v) => v != null && String(v).trim() !== "")
+    .join(" | ");
 }

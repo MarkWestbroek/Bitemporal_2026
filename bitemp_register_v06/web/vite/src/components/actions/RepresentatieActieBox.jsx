@@ -26,7 +26,7 @@ export default function RepresentatieActieBox({
   setRepEindeDatum,
   repOortjes,
 }) {
-  const effectieveSecondaireInfo = secondaireInfo || { ids: secondaireIds || [], loading: false, error: "" };
+  const effectieveSecondaireInfo = secondaireInfo || { ids: secondaireIds || [], labels: {}, loading: false, error: "" };
 
   return (
     <ActionBodyCard accentColor={accentColor}>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "../shared/schema-viz.css";
 import "../styles/index-schema.css";
-import { evalueerCelExpressie, bouwCelContext, evalueerWeergaveVeldenVoorItem } from "../shared/celEvaluator";
+import { evalueerCelExpressie, bouwCelContext, evalueerWeergaveVeldenVoorItem, berekenWeergaveveld } from "../shared/celEvaluator";
 import {
   safeArray,
   combineerDomeinOpties,
@@ -965,15 +965,50 @@ export default function IndexSchemaPage() {
                 if (!ok) {
                   throw new Error(json?.error || `HTTP ${status}: ${statusText}`);
                 }
-                setRelatieSecondaireOpties((prev) => ({
-                  ...prev,
-                  [optie.groupKey]: { loading: false, ids: safeArray(json?.ids), error: '' },
-                }));
+                const ids = safeArray(json?.ids);
+                // Stel IDs in en start parallel labels-fetch via /full/ endpoint
+                const secTypenaam = json?.secondaireEntiteitType;
+                const secMeta = secTypenaam ? typeMetaByTypenaam?.[secTypenaam] : null;
+                if (secMeta?.padnaam && safeArray(secMeta.afgeleideVelden).some((av) => av.isWeergaveVeld || av.weergaveVeld)) {
+                  setRelatieSecondaireOpties((prev) => ({
+                    ...prev,
+                    [optie.groupKey]: { loading: true, ids, labels: {}, error: '' },
+                  }));
+                  fetch(`${baseUrl}/full/${secMeta.padnaam}?page=1&size=200`)
+                    .then((r) => r.json())
+                    .then((fullJson) => {
+                      const items = Array.isArray(fullJson)
+                        ? fullJson
+                        : safeArray(fullJson?.[secMeta.padnaam] || fullJson?.items || fullJson?.data || fullJson);
+                      const idKol = secMeta.idKolom || 'id';
+                      const labels = {};
+                      items.forEach((it) => {
+                        const id = String(it[idKol] ?? '');
+                        const weergave = berekenWeergaveveld(it, secMeta, typeMetaByTypenaam);
+                        if (weergave) labels[id] = weergave;
+                      });
+                      setRelatieSecondaireOpties((prev) => ({
+                        ...prev,
+                        [optie.groupKey]: { loading: false, ids, labels, error: '' },
+                      }));
+                    })
+                    .catch(() => {
+                      setRelatieSecondaireOpties((prev) => ({
+                        ...prev,
+                        [optie.groupKey]: { loading: false, ids, labels: {}, error: '' },
+                      }));
+                    });
+                } else {
+                  setRelatieSecondaireOpties((prev) => ({
+                    ...prev,
+                    [optie.groupKey]: { loading: false, ids, labels: {}, error: '' },
+                  }));
+                }
               })
               .catch((err) => {
                 setRelatieSecondaireOpties((prev) => ({
                   ...prev,
-                  [optie.groupKey]: { loading: false, ids: [], error: String(err?.message || err) },
+                  [optie.groupKey]: { loading: false, ids: [], labels: {}, error: String(err?.message || err) },
                 }));
               });
           });

@@ -15,6 +15,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router";
 import { useSchema } from "../../context/SchemaContext";
 import { safeArray } from "../../shared/schemaUtils";
+import { berekenWeergaveveld } from "../../shared/celEvaluator";
 import { coercedWaardeVoorVeld } from "../actions/ActionFormParts";
 import {
   bouwGroepOptiesVanTypeMeta,
@@ -110,19 +111,27 @@ export default function NieuwEntiteitPagina({ typeMeta, onSuccess }) {
         const doelEntMeta = typeMetaByTypenaam?.[doelEntTypenaam];
         if (!doelEntMeta?.padnaam) continue;
         try {
-          const res = await fetch(`${baseUrl}/${doelEntMeta.padnaam}?page=1&size=200`);
+          // Gebruik /full/ endpoint zodat geneste GE-data beschikbaar is voor weergaveveld-berekening
+          const res = await fetch(`${baseUrl}/full/${doelEntMeta.padnaam}?page=1&size=200`);
           if (!res.ok) continue;
           const json = await res.json();
           // API retourneert { "<padnaam>": [...] }, bv. { "trefwoorden": [...] }
           const items = Array.isArray(json)
             ? json
             : safeArray(json?.[doelEntMeta.padnaam] || json?.items || json?.data || json);
-          const ids = items.map((it) => String(it[doelEntMeta.idKolom || "id"] ?? ""));
-          // Transformeer naar het formaat dat ActionFieldControl verwacht: {ids: [...], loading: false, error: ""}
-          opties[optie.groupKey] = { ids, loading: false, error: "" };
+          const idKolom = doelEntMeta.idKolom || "id";
+          const ids = items.map((it) => String(it[idKolom] ?? ""));
+          // Bereken weergavelabels via CEL-expressies (zelfde als RepresentatieTabel)
+          const labels = {};
+          items.forEach((it) => {
+            const id = String(it[idKolom] ?? "");
+            const weergave = berekenWeergaveveld(it, doelEntMeta, typeMetaByTypenaam);
+            if (weergave) labels[id] = weergave;
+          });
+          opties[optie.groupKey] = { ids, labels, loading: false, error: "" };
         } catch (error) {
           // stil falen: dropdown blijft leeg
-          opties[optie.groupKey] = { ids: [], loading: false, error: String(error?.message || "Laden mislukt") };
+          opties[optie.groupKey] = { ids: [], labels: {}, loading: false, error: String(error?.message || "Laden mislukt") };
         }
       }
       setRelatieSecondaireOpties(opties);

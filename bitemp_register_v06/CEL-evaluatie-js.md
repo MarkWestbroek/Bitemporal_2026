@@ -249,3 +249,46 @@ Voor de huidige v06-situatie is de bestaande aanpak **verdedigbaar en verstandig
 - **makkelijk incrementeel uit te breiden**
 
 Een volledige CEL-library is dus zeker mogelijk, maar op dit moment vooral interessant als de expressies duidelijk ambitieuzer worden dan de huidige weergave- en labelregels.
+
+---
+
+## Wijzigingshistorie
+
+### 2026-05-12 — Lijstoperaties, lambda-scoping en `berekenWeergaveveld`
+
+De evaluator is uitgebreid met:
+
+**Tokenizer**
+- Nieuwe token-types: `>=`, `<=`, `>`, `<`, `[`, `]`, `,`
+
+**Parser**
+- `parsePostfix`-lus voor method-calls en veldtoegang: `.field`, `.method(args)`, `[key]`
+- Lambda-argumenten: `filter(x, pred)` syntax
+
+**Evaluate**
+- `index`: array-indexering (`list[n]`)
+- `methodcall`: `filter(var, pred)`, `map(var, expr)`, `exists(var, pred)`, `all(var, pred)`, `size()` op array/string
+- `gt` / `gte` / `lt` / `lte`: numerieke en string-vergelijkingen
+- Lambda-scoping: `innerCtx = { ...ctx, [node.varName]: item }` per iteratie-element
+- Case-insensitive identifier-lookup: `leesWaardeCaseOngevoelig(bron, sleutel)`
+
+**`bouwCelContext` uitbreiding**
+Naast enkelvoudige toegang via `ctx[klassenaam] = actiefItem` worden nu ook meervoudige GE-lijsten beschikbaar gesteld via `ctx[group.rolnaam] = actiefItems[]`. Hierdoor werken expressies als:
+```cel
+Trefwoordtaalvarianten.filter(t, t.taal == "nl")[0].woord
+```
+
+**`berekenWeergaveveld` — geëxporteerde gedeelde utility**
+De functie `berekenWeergaveveld(entity, typeMeta, typeMetaByTypenaam)` is verplaatst van een lokale definitie in `RepresentatieTabel.jsx` naar een geëxporteerde functie in `celEvaluator.js`. Hierdoor is de functie herbruikbaar in:
+
+- `RepresentatieTabel.jsx` — weergave-kolom in de lijst
+- `NieuwEntiteitPagina.jsx` — labels in de secondaire-entiteit dropdown (nieuw formulier)
+- `IndexSchemaPage.jsx` — labels in de secondaire-entiteit dropdown (index / tijdlijn-pagina)
+
+**Secondaire-entiteit dropdown met weergavelabels**
+De `secondaireInfo`-structuur is uitgebreid met een `labels`-map (`{ id: weergave }`):
+- `NieuwEntiteitPagina.jsx`: switcht van flat endpoint naar `/full/{padnaam}` om nested GE-data op te halen voor label-berekening
+- `IndexSchemaPage.jsx`: doet na de secondaire-ids fetch een extra `/full/`-fetch als het doeltype weergavevelden heeft
+- `ActionFormParts.jsx`: toont `${label} (${id})` als label beschikbaar is, anders alleen `id`
+
+Betrokken bestanden: `celEvaluator.js`, `RepresentatieTabel.jsx`, `NieuwEntiteitPagina.jsx`, `IndexSchemaPage.jsx`, `ActionFormParts.jsx`, `RegistratieActieBox.jsx`, `RepresentatieActieBox.jsx`
