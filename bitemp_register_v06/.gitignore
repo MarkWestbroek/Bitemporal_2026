@@ -14,13 +14,19 @@ _tmp_*.mjs
 
 # Frontend generated artifacts (Vite build output)
 web/react/assets/
-web/react/*.html
+web/react/*.html (web/vite)
 web/vite/node_modules/
+web/vite/node_modules_backup_*/
 web/vite/.vite/
+web/vite/.vite-temp/
 web/vite/playwright-report/
 web/vite/test-results/
 web/vite/tests/e2e/.auth/
 !web/vite/tests/e2e/.auth/.gitkeep
+
+# UML-editor build artifacts (editor broncode is verplaatst naar web/vite/src/)
+uml-editor/node_modules/
+uml-editor/dist/
 
 # OS noise
 .DS_Store
