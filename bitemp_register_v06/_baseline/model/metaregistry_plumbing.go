@@ -242,8 +242,16 @@ func (r MetaRegistryType) GetByVeldnaam(veldnaam string) (TypeMeta, bool) {
 // wanneer meerdere types dezelfde Veldnaam delen (bijv. "naam" → ApiStandaard_Naam_Data
 // / NatuurlijkPersoon_Naam_Data). De juiste TypeMeta wordt gekozen door te kijken welk
 // EntiteitIDKolom als JSON-sleutel in de payload voorkomt.
+//
+// Fallback op Padnaam: als de veldnaam niet als Veldnaam (enkelvoud) gevonden wordt,
+// wordt ook gezocht op Padnaam (meervoud). Zo werken zowel "naam" als "namen" in
+// flat-format payloads — consistent met het meervoud dat ook in nested-format gebruikt wordt.
 func (r MetaRegistryType) GetByVeldnaamMetPayload(veldnaam string, payloadKeys map[string]struct{}) (TypeMeta, bool) {
 	candidates := r.GetAllByVeldnaam(veldnaam)
+	if len(candidates) == 0 {
+		// Fallback: probeer Padnaam (meervoud), zodat bijv. "namen" werkt naast "naam".
+		candidates = r.GetAllByPadnaam(veldnaam)
+	}
 	if len(candidates) == 0 {
 		return TypeMeta{}, false
 	}
@@ -270,6 +278,19 @@ func (r MetaRegistryType) GetAllByVeldnaam(veldnaam string) []TypeMeta {
 	var matches []TypeMeta
 	for _, meta := range r {
 		if meta.Veldnaam == veldnaam {
+			matches = append(matches, meta)
+		}
+	}
+	return matches
+}
+
+// GetAllByPadnaam retourneert alle TypeMeta's die dezelfde Padnaam hebben.
+// Gebruikt als fallback in GetByVeldnaamMetPayload zodat meervoudsvormen
+// (bijv. "namen", "persoonsidentificaties") ook werken in flat-format payloads.
+func (r MetaRegistryType) GetAllByPadnaam(padnaam string) []TypeMeta {
+	var matches []TypeMeta
+	for _, meta := range r {
+		if meta.Padnaam == padnaam {
 			matches = append(matches, meta)
 		}
 	}
@@ -421,10 +442,10 @@ func init() {
 	initIdeBestandenDatatypeRegistry()
 	initIdeBestandenMetaRegistry()
 
-	// kennis — domein-specifieke uitbreiding
-	initKennisEnumRegistry()
-	initKennisDatatypeRegistry()
-	initKennisMetaRegistry()
+	// kennis2 — domein-specifieke uitbreiding
+	initKennis2EnumRegistry()
+	initKennis2DatatypeRegistry()
+	initKennis2MetaRegistry()
 
 	propageerDomeinNaarOnderliggende()
 }

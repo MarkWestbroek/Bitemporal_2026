@@ -74,7 +74,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if validationErrors := validateV3Model(v3); len(validationErrors) > 0 {
+	if validationErrors := validateV3Model(v3, *domein); len(validationErrors) > 0 {
 		fmt.Fprintln(os.Stderr, "V3 model validatie mislukt:")
 		for _, e := range validationErrors {
 			fmt.Fprintf(os.Stderr, "  - %s\n", e)
@@ -571,7 +571,10 @@ func ensureInitRegistration(outputDir, prefix string) error {
 	return nil
 }
 
-func validateV3Model(v3 model.V3Model) []string {
+// validateV3Model valideert het V3 model. Als domeinFilter niet leeg is, worden
+// entiteiten van andere domeinen overgeslagen (relevant voor additive codegen waarbij
+// het volledige multi-domein model wordt aangeboden maar slechts één domein wordt gegenereerd).
+func validateV3Model(v3 model.V3Model, domeinFilter string) []string {
 	var errs []string
 
 	if strings.TrimSpace(v3.Versie) == "" {
@@ -609,6 +612,12 @@ func validateV3Model(v3 model.V3Model) []string {
 
 	entiteiten := map[string]struct{}{}
 	for i, ent := range v3.Entiteiten {
+		// Sla entiteiten van andere domeinen over wanneer er een domeinfilter is.
+		// Entiteiten zonder expliciet domein worden altijd gevalideerd (register-basis).
+		if domeinFilter != "" && ent.Domein != "" && ent.Domein != domeinFilter {
+			entiteiten[ent.Typenaam] = struct{}{}
+			continue
+		}
 		ctx := fmt.Sprintf("entiteiten[%d]", i)
 		if !isPascalIdentifier(ent.Typenaam) {
 			errs = append(errs, fmt.Sprintf("%s.typenaam '%s' is ongeldig; gebruik PascalCase zonder spaties/koppeltekens (bijv. Persoon)", ctx, ent.Typenaam))

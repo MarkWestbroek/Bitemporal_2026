@@ -1,5 +1,6 @@
 import { useId } from "react";
 import RefCombobox from "../editor/RefCombobox";
+import "../../styles/action-form.css";
 
 function isNumeriekSchemaType(type) {
   return type === "number" || type === "integer";
@@ -281,20 +282,20 @@ export function ActionFieldControl({ veld, value, onChange, secondaireInfo, seco
     if (secondaireInfo?.loading) {
       return <input style={controlStyle} value="Laden..." readOnly />;
     }
-    if (Array.isArray(secondaireInfo?.ids) && secondaireInfo.ids.length > 0) {
-      return (
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 0 }}>
-          <select style={controlStyle} value={String(value ?? "")} onChange={(event) => onChange(event.target.value)}>
-            <option value="">(kies id)</option>
-            {secondaireInfo.ids.map((idOptie) => (
-              <option key={idOptie} value={String(idOptie)}>{String(idOptie)}</option>
-            ))}
-          </select>
-          {secondaireInfo?.error ? <span style={{ fontSize: 11, color: "#b45309" }}>{secondaireInfo.error}</span> : null}
-          {foutmelding ? <span style={{ fontSize: 11, color: "#dc2626" }}>{foutmelding}</span> : null}
-        </div>
-      );
-    }
+    // Toon altijd een <select> als het een secondaire-id-veld is (ook bij lege lijst)
+    const heeftOpties = Array.isArray(secondaireInfo?.ids) && secondaireInfo.ids.length > 0;
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 0 }}>
+        <select style={controlStyle} value={String(value ?? "")} onChange={(event) => onChange(event.target.value)}>
+          <option value="">{heeftOpties ? "(kies id)" : "(geen opties beschikbaar)"}</option>
+          {heeftOpties ? secondaireInfo.ids.map((idOptie) => (
+            <option key={idOptie} value={String(idOptie)}>{String(idOptie)}</option>
+          )) : null}
+        </select>
+        {secondaireInfo?.error ? <span style={{ fontSize: 11, color: "#b45309" }}>{secondaireInfo.error}</span> : null}
+        {foutmelding ? <span style={{ fontSize: 11, color: "#dc2626" }}>{foutmelding}</span> : null}
+      </div>
+    );
   }
 
   // Referentielijst-verwijzing → combobox/autocomplete

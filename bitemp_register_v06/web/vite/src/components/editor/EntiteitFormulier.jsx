@@ -43,9 +43,10 @@ function childWeergave(childMeta, items, typeMetaByTypenaam) {
   const actief = flat.find((i) => !i.afvoer) || flat[0];
   if (!actief) return null;
 
-  // Bouw een minimale context met de klassenaam als key
-  const klassenaam = childMeta?.klassenaam || childMeta?.typenaam;
-  const ctx = { [klassenaam]: actief };
+  // Bouw context via bouwCelContext zodat ook rolnaam-lijstexpressies werken
+  // (bijv. Trefwoordtaalvarianten.filter(t, t.taal == "nl")[0].woord)
+  const childGroups = [{ doeltype: childMeta?.typenaam, rolnaam: childMeta?.veldnaam, items: flat, typeMeta: childMeta }];
+  const ctx = bouwCelContext(childGroups, typeMetaByTypenaam);
 
   return afgVelden
     .map((av) => av.afleidingsregelTaal === "cel" ? evalueerCelExpressie(av.afleidingsregel, ctx) : null)

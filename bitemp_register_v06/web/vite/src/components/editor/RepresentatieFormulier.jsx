@@ -132,6 +132,9 @@ export default function RepresentatieFormulier({
     for (const v of alleVelden) {
       const naam = String(v.naam || "").toLowerCase();
       if (plumbingNamen.has(naam)) continue; // toon apart
+      // Array-type velden zijn GE-rolnamen (onderliggende GE's) — geen directe invoervelden.
+      // Ze worden beheerd vanuit EntiteitFormulier na aanmaak van de entiteit.
+      if (String(v.format || "") === "array") continue;
       // Secondaire ID kolom: bewerkbaar als dropdown, niet immutable
       if (secondaireIdKolom && naam === secondaireIdKolom) {
         secVeld = v;

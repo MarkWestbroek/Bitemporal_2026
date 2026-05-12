@@ -18,6 +18,30 @@ import (
 // typeCache voorkomt dubbelaanmaak en cycli.
 var typeCache = map[string]*graphql.Object{}
 
+// gqlSafeNaam converteert een naam naar een geldige GraphQL-identifier.
+// Koppeltekens en andere ongeldige tekens worden vervangen door underscores.
+// GraphQL-namen moeten voldoen aan /^[_a-zA-Z][_a-zA-Z0-9]*$/.
+func gqlSafeNaam(naam string) string {
+	if naam == "" {
+		return naam
+	}
+	var b strings.Builder
+	for i, r := range naam {
+		switch {
+		case r == '_' || (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z'):
+			b.WriteRune(r)
+		case r >= '0' && r <= '9':
+			if i == 0 {
+				b.WriteRune('_') // cijfer op positie 0 is niet geldig
+			}
+			b.WriteRune(r)
+		default:
+			b.WriteRune('_') // koppelteken, spatie, etc. → underscore
+		}
+	}
+	return b.String()
+}
+
 // ReverseRelationInfo beschrijft een omgekeerde relatie: vanuit doelentiteit B
 // terugkijkend naar bronentiteit A via een tussenliggende relatie.
 type ReverseRelationInfo struct {
@@ -226,7 +250,7 @@ func buildObjectType(typenaam string, meta model.TypeMeta) *graphql.Object {
 			// Afgeleide velden
 			for _, av := range meta.AfgeleideVelden {
 				avType := afgeleideVeldType(av.GoType)
-				fields[av.Naam] = &graphql.Field{
+				fields[gqlSafeNaam(av.Naam)] = &graphql.Field{
 					Type:        avType,
 					Description: av.Description,
 				}

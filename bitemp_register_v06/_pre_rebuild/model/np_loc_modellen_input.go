@@ -59,8 +59,9 @@ type NatuurlijkPersoon_Burgerschap_Input struct {
 	Landcode             *string `json:"landcode,omitempty"`
 	Nationaliteit        *string `json:"nationaliteit,omitempty"`
 	Landreferentie       *int    `json:"landreferentie,omitempty"`
-	Aanvang              *Date   `json:"aanvang,omitempty"`
-	Einde                *Date   `json:"einde,omitempty"`
+	// Aanvang en Einde zijn onderliggende GE's (NatuurlijkPersoon_Burgerschap_Aanvang/Einde)
+	// die via de normalizer als aparte wijzigingen worden uitgesplitst. Ze staan
+	// niet als directe velden in de Input-struct.
 }
 
 type Bereikbaarheid_Input struct {
@@ -68,6 +69,6 @@ type Bereikbaarheid_Input struct {
 	Rel_ID               int                  `json:"rel_id"`
 	LOCATIE_ID           int                  `json:"locatie_id"`
 	Soort                Bereikbaarheidssoort `json:"soort"`
-	Aanvang              *Date                `json:"aanvang,omitempty"`
-	Einde                *Date                `json:"einde,omitempty"`
+	// Aanvang en Einde zijn onderliggende GE's (Bereikbaarheid_Aanvang/Einde)
+	// die via de normalizer als aparte wijzigingen worden uitgesplitst.
 }

@@ -1,5 +1,10 @@
 .env.docker
 
+# Gecompileerde Go-binaries (root-niveau)
+app
+bitemp-go-api
+codegen
+
 # Local debug/temp artifacts
 __debug_bin*
 _temp/
@@ -7,7 +12,9 @@ _tmp_*/
 _tmp_*.json
 _tmp_*.mjs
 
-# Frontend generated artifacts
+# Frontend generated artifacts (Vite build output)
+web/react/assets/
+web/react/*.html
 web/vite/node_modules/
 web/vite/.vite/
 web/vite/playwright-report/

@@ -3,10 +3,19 @@ package dbsetup
 import (
 	"context"
 	"fmt"
+	"hash/crc32"
 	"reflect"
 
 	"github.com/uptrace/bun"
 )
+
+// getCRC32Hash genereert een korte, unieke hash van een tabelnaam.
+// Dit wordt gebruikt voor trigger-functienamen om PostgreSQL's 63-karakterslimiet te omzeilen.
+// Zonder dit kunnen lange tabelnamen afgekapt worden, waardoor _Data triggers HUB triggers overwritten.
+func getCRC32Hash(tableName string) string {
+	hash := crc32.ChecksumIEEE([]byte(tableName))
+	return fmt.Sprintf("t%x", hash) // "t" prefix + 8 hexadecimale karakters = "t12ab34cd"
+}
 
 // om de reflectie code te bewaren. maar wordt niet gebruikt
 func RegisterRelativeIDTriggerUsingReflection(ctx context.Context, db *bun.DB, model interface{}) error {
@@ -34,22 +43,28 @@ func RegisterRelativeIDTriggerUsingReflection(ctx context.Context, db *bun.DB, m
 func RegisterRelativeIDTrigger(ctx context.Context, db *bun.DB, model interface{},
 	tableName string, parentCol string, relativeCol string) error {
 
+	// Genereer korte, unieke functie-naam met CRC32 om PostgreSQL 63-karakters-limiet te omzeilen
+	// Lanke tabelnamen (bijv. kennisartikeltaalvariant_kennisartikeltaalvarianttitel)
+	// kunnen afgekapt worden, waardoor _Data functies HUB functies overwritten.
+	funcHash := getCRC32Hash(tableName)
+	funcName := fmt.Sprintf("fn_rel_id_%s", funcHash)
+
 	// 3. De SQL (Idempotent: kan veilig vaker gedraaid worden)
 	sql := fmt.Sprintf(`
-        CREATE OR REPLACE FUNCTION fn_rel_id_%[1]s() RETURNS TRIGGER AS $$
+        CREATE OR REPLACE FUNCTION %[1]s() RETURNS TRIGGER AS $$
         BEGIN
-            IF NEW."%[3]s" IS NULL OR NEW."%[3]s" = 0 THEN
-                SELECT COALESCE(MAX("%[3]s"), 0) + 1 INTO NEW."%[3]s"
-                FROM "%[1]s" WHERE "%[2]s" = NEW."%[2]s";
+            IF NEW."%[4]s" IS NULL OR NEW."%[4]s" = 0 THEN
+                SELECT COALESCE(MAX("%[4]s"), 0) + 1 INTO NEW."%[4]s"
+                FROM "%[2]s" WHERE "%[3]s" = NEW."%[3]s";
             END IF;
             RETURN NEW;
         END; $$ LANGUAGE plpgsql;
 
-        DROP TRIGGER IF EXISTS trg_rel_id_%[1]s ON "%[1]s";
-        CREATE TRIGGER trg_rel_id_%[1]s 
-        BEFORE INSERT ON "%[1]s" 
-        FOR EACH ROW EXECUTE FUNCTION fn_rel_id_%[1]s();
-    `, tableName, parentCol, relativeCol)
+        DROP TRIGGER IF EXISTS trg_rel_id_%[2]s ON "%[2]s";
+        CREATE TRIGGER trg_rel_id_%[2]s 
+        BEFORE INSERT ON "%[2]s" 
+        FOR EACH ROW EXECUTE FUNCTION %[1]s();
+    `, funcName, tableName, parentCol, relativeCol)
 
 	if _, err := db.ExecContext(ctx, sql); err != nil {
 		return err
@@ -75,21 +90,25 @@ func RegisterRelativeIDTrigger(ctx context.Context, db *bun.DB, model interface{
 func RegisterRelativeIDTriggerComposite(ctx context.Context, db *bun.DB,
 	tableName string, parentCol1 string, parentCol2 string, relativeCol string) error {
 
+	// Genereer korte, unieke functie-naam met CRC32 om PostgreSQL 63-karakters-limiet te omzeilen
+	funcHash := getCRC32Hash(tableName)
+	funcName := fmt.Sprintf("fn_rel_id_%s", funcHash)
+
 	sql := fmt.Sprintf(`
-        CREATE OR REPLACE FUNCTION fn_rel_id_%[1]s() RETURNS TRIGGER AS $$
+        CREATE OR REPLACE FUNCTION %[1]s() RETURNS TRIGGER AS $$
         BEGIN
-            IF NEW."%[4]s" IS NULL OR NEW."%[4]s" = 0 THEN
-                SELECT COALESCE(MAX("%[4]s"), 0) + 1 INTO NEW."%[4]s"
-                FROM "%[1]s" WHERE "%[2]s" = NEW."%[2]s" AND "%[3]s" = NEW."%[3]s";
+            IF NEW."%[5]s" IS NULL OR NEW."%[5]s" = 0 THEN
+                SELECT COALESCE(MAX("%[5]s"), 0) + 1 INTO NEW."%[5]s"
+                FROM "%[2]s" WHERE "%[3]s" = NEW."%[3]s" AND "%[4]s" = NEW."%[4]s";
             END IF;
             RETURN NEW;
         END; $$ LANGUAGE plpgsql;
 
-        DROP TRIGGER IF EXISTS trg_rel_id_%[1]s ON "%[1]s";
-        CREATE TRIGGER trg_rel_id_%[1]s
-        BEFORE INSERT ON "%[1]s"
-        FOR EACH ROW EXECUTE FUNCTION fn_rel_id_%[1]s();
-    `, tableName, parentCol1, parentCol2, relativeCol)
+        DROP TRIGGER IF EXISTS trg_rel_id_%[2]s ON "%[2]s";
+        CREATE TRIGGER trg_rel_id_%[2]s
+        BEFORE INSERT ON "%[2]s"
+        FOR EACH ROW EXECUTE FUNCTION %[1]s();
+    `, funcName, tableName, parentCol1, parentCol2, relativeCol)
 
 	if _, err := db.ExecContext(ctx, sql); err != nil {
 		return err

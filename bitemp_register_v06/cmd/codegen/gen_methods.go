@@ -165,17 +165,22 @@ func writeInterfaceMethods(b *strings.Builder, typeName string, rv string, metat
 	// ClearID
 	b.WriteString(fmt.Sprintf("func (%s *%s) ClearID() { %s.%s = 0 }\n", rv, typeName, rv, clearField))
 
+	// Vermijd conflict: als de receiver-letter 't' is, gebruik 'ts' als tijdparameternaam.
+	tp := "t"
+	if rv == "t" {
+		tp = "ts"
+	}
 	if isInput {
 		// Input types: no-op opvoer/afvoer
 		b.WriteString(fmt.Sprintf("func (%s %s) GetOpvoer() *time.Time { return nil }\n", rv, typeName))
-		b.WriteString(fmt.Sprintf("func (%s *%s) SetOpvoer(t *time.Time) {}\n", rv, typeName))
+		b.WriteString(fmt.Sprintf("func (%s *%s) SetOpvoer(%s *time.Time) {}\n", rv, typeName, tp))
 		b.WriteString(fmt.Sprintf("func (%s %s) GetAfvoer() *time.Time { return nil }\n", rv, typeName))
-		b.WriteString(fmt.Sprintf("func (%s *%s) SetAfvoer(t *time.Time) {}\n", rv, typeName))
+		b.WriteString(fmt.Sprintf("func (%s *%s) SetAfvoer(%s *time.Time) {}\n", rv, typeName, tp))
 	} else {
 		b.WriteString(fmt.Sprintf("func (%s %s) GetOpvoer() *time.Time { return %s.Opvoer }\n", rv, typeName, rv))
-		b.WriteString(fmt.Sprintf("func (%s *%s) SetOpvoer(t *time.Time) { %s.Opvoer = t }\n", rv, typeName, rv))
+		b.WriteString(fmt.Sprintf("func (%s *%s) SetOpvoer(%s *time.Time) { %s.Opvoer = %s }\n", rv, typeName, tp, rv, tp))
 		b.WriteString(fmt.Sprintf("func (%s %s) GetAfvoer() *time.Time { return %s.Afvoer }\n", rv, typeName, rv))
-		b.WriteString(fmt.Sprintf("func (%s *%s) SetAfvoer(t *time.Time) { %s.Afvoer = t }\n", rv, typeName, rv))
+		b.WriteString(fmt.Sprintf("func (%s *%s) SetAfvoer(%s *time.Time) { %s.Afvoer = %s }\n", rv, typeName, tp, rv, tp))
 	}
 
 	// String

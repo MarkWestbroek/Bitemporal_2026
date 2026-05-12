@@ -74,7 +74,10 @@ func BuildPatchInputTypes() map[string]*graphql.InputObject {
 	for typenaam, meta := range model.MetaRegistry {
 		if meta.Metatype == model.MetatypeEntiteit && meta.Factory != nil {
 			if _, ok := patchInputTypeCache[typenaam]; !ok {
-				patchInputTypeCache[typenaam] = buildEntiteitPatchInputType(typenaam, meta)
+				pt := buildEntiteitPatchInputType(typenaam, meta)
+				if pt != nil {
+					patchInputTypeCache[typenaam] = pt
+				}
 			}
 		}
 	}
@@ -146,7 +149,24 @@ func buildGEInputType(typenaam string, meta model.TypeMeta) *graphql.InputObject
 
 // buildEntiteitPatchInputType bouwt <Typenaam>PatchInput voor een ENT.
 // Eén veld per GE/REL hub uit OnderliggendeGegevenselementen (plumbing-subtypes overgeslagen).
+// Retourneert nil als er geen eligible hub-kinderen zijn (bijv. subtypes zonder eigen GE's).
 func buildEntiteitPatchInputType(typenaam string, meta model.TypeMeta) *graphql.InputObject {
+	// Controleer of er minstens één eligible hub-kind is; zo niet, geen PatchInput bouwen.
+	heeftHubs := false
+	for _, child := range meta.OnderliggendeGegevenselementen {
+		childMeta, ok := model.MetaRegistry.GetTypeMeta(child.Doeltype)
+		if !ok {
+			continue
+		}
+		if childMeta.GESubtype == model.GESubtypeHub {
+			heeftHubs = true
+			break
+		}
+	}
+	if !heeftHubs {
+		return nil
+	}
+
 	return graphql.NewInputObject(graphql.InputObjectConfig{
 		Name:        sanitizeTypeName(typenaam) + "PatchInput",
 		Description: "Patch-invoer voor " + typenaam + ": één of meer onderliggende GE's/RELs",

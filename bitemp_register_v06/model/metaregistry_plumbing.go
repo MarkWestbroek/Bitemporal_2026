@@ -442,10 +442,10 @@ func init() {
 	initIdeBestandenDatatypeRegistry()
 	initIdeBestandenMetaRegistry()
 
-	// kennis — domein-specifieke uitbreiding
-	initKennisEnumRegistry()
-	initKennisDatatypeRegistry()
-	initKennisMetaRegistry()
+	// kennis2 — domein-specifieke uitbreiding
+	initKennis2EnumRegistry()
+	initKennis2DatatypeRegistry()
+	initKennis2MetaRegistry()
 
 	propageerDomeinNaarOnderliggende()
 }

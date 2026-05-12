@@ -396,6 +396,40 @@ Zie [§4 Gegenereerde bestanden](#gegenereerde-bestanden-7-per-domein) voor de l
 
 ## 10. Veelgestelde vragen
 
+### Domein hernoemd (bijv. kennis → kennis2): wat moet ik doen?
+
+Als je een domein hernoemt in de UML-editor en opnieuw publiceert, genereert de devloop-rebuild nieuwe `<prefix2>_*.go` bestanden. De **oude** `<prefix>_*.go` bestanden blijven echter staan en veroorzaken een buildconflict (dubbele declaraties). Bij een mislukte rebuild worden de nieuwe bestanden teruggerold, maar de plumbing verwijst dan naar de nieuwe inits.
+
+**Handmatige herstelstappen:**
+
+1. Verwijder de oude prefixed Go-bestanden uit `model/`:
+   ```bash
+   rm model/<oude_prefix>_*.go
+   ```
+2. Verwijder ook de init-aanroepen voor het oude domein uit `model/metaregistry_plumbing.go`
+   (en verwijder evt. init-aanroepen voor het nieuwe domein als die al ingevoegd werden).
+3. Draai codegen handmatig:
+   ```bash
+   go run ./cmd/codegen --input _devloop_model.json --output model --domein <nieuw_domein> --prefix <nieuwe_prefix> --mode additive
+   ```
+4. Controleer met `go build ./...`.
+
+### Receiver-letter conflicteert met time-parameter ('t')
+
+Als een struct-naam begint met de letter **T** (bijv. `Trefwoord`), gebruikt de codegen `t` als receiver-variabele. Dat conflicteert met de parameter `t *time.Time` in `SetOpvoer` en `SetAfvoer`.
+
+**Fix (geïmplementeerd):** `cmd/codegen/gen_methods.go` detecteert dit geval en gebruikt `ts` als parameternaam wanneer `rv == "t"`:
+```go
+func (t *Trefwoord) SetOpvoer(ts *time.Time) { t.Opvoer = ts }
+func (t *Trefwoord) SetAfvoer(ts *time.Time) { t.Afvoer = ts }
+```
+
+### Validatie faalt op entiteiten uit andere domeinen ('meervoud leeg')
+
+De validator controleert standaard *alle* entiteiten in de volledige multi-domein V3 JSON, ook die van andere domeinen. Als een ander domein entiteiten heeft met een lege `meervoud`-waarde, faalt de validatie — ook al generate je dat domein niet.
+
+**Fix (geïmplementeerd):** `validateV3Model` accepteert nu een `domeinFilter`-parameter. Entiteiten met een ander domein worden bij validatie overgeslagen.
+
 ### Waarom additive mode en niet standalone?
 
 Standalone overschrijft de hele MetaRegistry. Met meerdere domeinen (register + np-loc) wil je dat elk domein *toevoegt* aan de bestaande registry, niet vervangt. Additive mode genereert named init-functies die je centraal aanroept in de juiste volgorde.

@@ -1,12 +1,16 @@
 /**
- * celEvaluator.js — Minimale CEL-expressie-evaluator voor afgeleide velden.
+ * celEvaluator.js — CEL-expressie-evaluator voor afgeleide velden.
  *
- * Ondersteunt de subset van CEL die nodig is voor afgeleide velden:
- *   - String/number/bool literals: 'tekst', 42, true, false, null
- *   - Variabele-referenties: Naam.roepnaam of direct `bsn` op platgeslagen GE-items
- *   - Operators:             +, ==, !=, &&, ||, !
- *   - Ternary:               cond ? then : else
- *   - Haakjes:               ( ... )
+ * Ondersteunde CEL-subset:
+ *   - Literals:          string ('...' / "..."), number, true, false, null
+ *   - Variabelen:        ident, ident.veld, geneste.paden
+ *   - Operatoren:        +, ==, !=, >, >=, <, <=, &&, ||, !
+ *   - Ternary:           cond ? then : else
+ *   - Lijstmethoden:     list.filter(x, pred), list.map(x, expr),
+ *                        list.exists(x, pred), list.all(x, pred), list.size()
+ *   - Indexering:        list[n]
+ *   - Ingebouwde func:   string(val), size(val)
+ *   - Haakjes:           ( expr )
  *
  * Geen eval(), geen Function() — veilige tokenizer + recursive-descent parser.
  */
@@ -22,15 +26,22 @@ const TokenType = {
   IDENT: "IDENT",
   DOT: "DOT",
   PLUS: "PLUS",
-  EQ: "EQ",       // ==
-  NEQ: "NEQ",     // !=
-  AND: "AND",     // &&
-  OR: "OR",       // ||
-  NOT: "NOT",     // !
+  EQ: "EQ",         // ==
+  NEQ: "NEQ",       // !=
+  GT: "GT",         // >
+  GTE: "GTE",       // >=
+  LT: "LT",         // <
+  LTE: "LTE",       // <=
+  AND: "AND",       // &&
+  OR: "OR",         // ||
+  NOT: "NOT",       // !
   QUESTION: "QUESTION",
   COLON: "COLON",
   LPAREN: "LPAREN",
   RPAREN: "RPAREN",
+  LBRACKET: "LBRACKET",
+  RBRACKET: "RBRACKET",
+  COMMA: "COMMA",
   EOF: "EOF",
 };
 
@@ -62,18 +73,25 @@ function tokenize(expr) {
       tokens.push({ type: TokenType.NUMBER, value: Number(num) });
       continue;
     }
-    // Two-char operators
+    // Two-char operators (check vóór single-char varianten)
     if (ch === "!" && expr[i + 1] === "=") { tokens.push({ type: TokenType.NEQ }); i += 2; continue; }
     if (ch === "=" && expr[i + 1] === "=") { tokens.push({ type: TokenType.EQ }); i += 2; continue; }
     if (ch === "&" && expr[i + 1] === "&") { tokens.push({ type: TokenType.AND }); i += 2; continue; }
     if (ch === "|" && expr[i + 1] === "|") { tokens.push({ type: TokenType.OR }); i += 2; continue; }
+    if (ch === ">" && expr[i + 1] === "=") { tokens.push({ type: TokenType.GTE }); i += 2; continue; }
+    if (ch === "<" && expr[i + 1] === "=") { tokens.push({ type: TokenType.LTE }); i += 2; continue; }
     // Single-char tokens
     if (ch === "+") { tokens.push({ type: TokenType.PLUS }); i++; continue; }
     if (ch === "!") { tokens.push({ type: TokenType.NOT }); i++; continue; }
+    if (ch === ">") { tokens.push({ type: TokenType.GT }); i++; continue; }
+    if (ch === "<") { tokens.push({ type: TokenType.LT }); i++; continue; }
     if (ch === "?") { tokens.push({ type: TokenType.QUESTION }); i++; continue; }
     if (ch === ":") { tokens.push({ type: TokenType.COLON }); i++; continue; }
     if (ch === "(") { tokens.push({ type: TokenType.LPAREN }); i++; continue; }
     if (ch === ")") { tokens.push({ type: TokenType.RPAREN }); i++; continue; }
+    if (ch === "[") { tokens.push({ type: TokenType.LBRACKET }); i++; continue; }
+    if (ch === "]") { tokens.push({ type: TokenType.RBRACKET }); i++; continue; }
+    if (ch === ",") { tokens.push({ type: TokenType.COMMA }); i++; continue; }
     if (ch === ".") { tokens.push({ type: TokenType.DOT }); i++; continue; }
     // Identifier or keyword (null/true/false)
     if (/[A-Za-z_]/.test(ch)) {
@@ -144,19 +162,16 @@ function createParser(tokens) {
     return left;
   }
 
-  // comparison = addition (('==' | '!=') addition)?
+  // comparison = addition (('==' | '!=' | '>' | '>=' | '<' | '<=') addition)?
   function parseComparison() {
     let left = parseAddition();
-    if (peek().type === TokenType.EQ) {
-      advance();
-      const right = parseAddition();
-      return { type: "eq", left, right };
-    }
-    if (peek().type === TokenType.NEQ) {
-      advance();
-      const right = parseAddition();
-      return { type: "neq", left, right };
-    }
+    const t = peek();
+    if (t.type === TokenType.EQ)  { advance(); return { type: "eq",  left, right: parseAddition() }; }
+    if (t.type === TokenType.NEQ) { advance(); return { type: "neq", left, right: parseAddition() }; }
+    if (t.type === TokenType.GT)  { advance(); return { type: "gt",  left, right: parseAddition() }; }
+    if (t.type === TokenType.GTE) { advance(); return { type: "gte", left, right: parseAddition() }; }
+    if (t.type === TokenType.LT)  { advance(); return { type: "lt",  left, right: parseAddition() }; }
+    if (t.type === TokenType.LTE) { advance(); return { type: "lte", left, right: parseAddition() }; }
     return left;
   }
 
@@ -171,23 +186,72 @@ function createParser(tokens) {
     return left;
   }
 
-  // unary = '!' unary | primary
+  // unary = '!' unary | postfix
   function parseUnary() {
     if (peek().type === TokenType.NOT) {
       advance();
       return { type: "not", expr: parseUnary() };
     }
-    return parsePrimary();
+    return parsePostfix();
   }
 
-  // primary = literal | ident(.ident)* | '(' expr ')'
-  function parsePrimary() {
+  // Methoden met lambda als eerste argument (var, body)
+  const LAMBDA_METHODEN = new Set(["filter", "map", "exists", "all"]);
+
+  /**
+   * parsePostfix — parseer een atoom gevolgd door postfix-operaties:
+   *   expr.veld            (veldtoegang)
+   *   expr.methode(args)   (methodaanroep: filter/map/exists/all of size etc.)
+   *   expr[sleutel]        (indexering)
+   */
+  function parsePostfix() {
+    let node = parseAtom();
+    while (true) {
+      if (peek().type === TokenType.DOT) {
+        advance(); // consume '.'
+        const name = expect(TokenType.IDENT).value;
+        if (peek().type === TokenType.LPAREN) {
+          advance(); // consume '('
+          if (LAMBDA_METHODEN.has(name)) {
+            // Eerste arg is de lambda-variabele (identifier), dan komma, dan body-expressie
+            const varName = expect(TokenType.IDENT).value;
+            expect(TokenType.COMMA);
+            const body = parseExpr();
+            expect(TokenType.RPAREN);
+            node = { type: "methodcall", obj: node, method: name, varName, body };
+          } else {
+            // Gewone methode zonder lambda (bijv. .size())
+            const args = [];
+            while (peek().type !== TokenType.RPAREN && peek().type !== TokenType.EOF) {
+              args.push(parseExpr());
+              if (peek().type === TokenType.COMMA) advance();
+            }
+            expect(TokenType.RPAREN);
+            node = { type: "methodcall", obj: node, method: name, args };
+          }
+        } else {
+          node = { type: "field", obj: node, field: name };
+        }
+      } else if (peek().type === TokenType.LBRACKET) {
+        advance(); // consume '['
+        const key = parseExpr();
+        expect(TokenType.RBRACKET);
+        node = { type: "index", obj: node, key };
+      } else {
+        break;
+      }
+    }
+    return node;
+  }
+
+  // primary = literal | ident (funcall?) | '(' expr ')'
+  function parseAtom() {
     const t = peek();
     if (t.type === TokenType.STRING) { advance(); return { type: "string", value: t.value }; }
     if (t.type === TokenType.NUMBER) { advance(); return { type: "number", value: t.value }; }
-    if (t.type === TokenType.NULL) { advance(); return { type: "null" }; }
-    if (t.type === TokenType.TRUE) { advance(); return { type: "bool", value: true }; }
-    if (t.type === TokenType.FALSE) { advance(); return { type: "bool", value: false }; }
+    if (t.type === TokenType.NULL)   { advance(); return { type: "null" }; }
+    if (t.type === TokenType.TRUE)   { advance(); return { type: "bool", value: true }; }
+    if (t.type === TokenType.FALSE)  { advance(); return { type: "bool", value: false }; }
     if (t.type === TokenType.LPAREN) {
       advance();
       const inner = parseExpr();
@@ -196,15 +260,24 @@ function createParser(tokens) {
     }
     if (t.type === TokenType.IDENT) {
       advance();
-      const parts = [t.value];
-      while (peek().type === TokenType.DOT) {
+      // Ingebouwde functie-aanroep: string(...), size(...)
+      if (peek().type === TokenType.LPAREN) {
         advance();
-        parts.push(expect(TokenType.IDENT).value);
+        const args = [];
+        while (peek().type !== TokenType.RPAREN && peek().type !== TokenType.EOF) {
+          args.push(parseExpr());
+          if (peek().type === TokenType.COMMA) advance();
+        }
+        expect(TokenType.RPAREN);
+        return { type: "funcall", name: t.value, args };
       }
-      return { type: "ref", parts };
+      return { type: "ident", name: t.value };
     }
     throw new Error(`Onverwacht token: ${t.type}`);
   }
+
+  // Alias voor backward-compat (parseUnary roept nu parsePostfix aan)
+  function parsePrimary() { return parsePostfix(); }
 
   return { parseExpr };
 }
@@ -223,12 +296,122 @@ function evaluate(node, ctx) {
   switch (node.type) {
     case "string": return node.value;
     case "number": return node.value;
-    case "bool": return node.value;
-    case "null": return null;
+    case "bool":   return node.value;
+    case "null":   return null;
+
+    // Enkelvoudige identifier: zoek in context (case-insensitief)
+    case "ident": {
+      const val = leesWaardeCaseOngevoelig(ctx, node.name);
+      return val !== undefined ? val : null;
+    }
+
+    // Veldtoegang: evalueer obj, haal daarna het veld op
+    case "field": {
+      const obj = evaluate(node.obj, ctx);
+      if (obj == null || Array.isArray(obj)) return null;
+      const val = leesWaardeCaseOngevoelig(obj, node.field);
+      return val !== undefined ? val : null;
+    }
+
+    // Array-indexering: list[n]
+    case "index": {
+      const obj = evaluate(node.obj, ctx);
+      const key = evaluate(node.key, ctx);
+      if (obj == null || key == null) return null;
+      if (Array.isArray(obj)) {
+        const idx = Number(key);
+        return (idx >= 0 && idx < obj.length) ? (obj[idx] ?? null) : null;
+      }
+      const val = leesWaardeCaseOngevoelig(obj, key);
+      return val !== undefined ? val : null;
+    }
+
+    // Methodaanroepen: list.filter(x, expr), list.size(), etc.
+    case "methodcall": {
+      const obj = evaluate(node.obj, ctx);
+      switch (node.method) {
+        case "size": {
+          if (obj == null) return 0;
+          if (Array.isArray(obj)) return obj.length;
+          if (typeof obj === "string") return obj.length;
+          return 0;
+        }
+        case "filter": {
+          if (!Array.isArray(obj)) return [];
+          return obj.filter((item) => {
+            const innerCtx = { ...ctx, [node.varName]: item };
+            return Boolean(evaluate(node.body, innerCtx));
+          });
+        }
+        case "map": {
+          if (!Array.isArray(obj)) return [];
+          return obj.map((item) => {
+            const innerCtx = { ...ctx, [node.varName]: item };
+            return evaluate(node.body, innerCtx);
+          });
+        }
+        case "exists": {
+          if (!Array.isArray(obj)) return false;
+          return obj.some((item) => {
+            const innerCtx = { ...ctx, [node.varName]: item };
+            return Boolean(evaluate(node.body, innerCtx));
+          });
+        }
+        case "all": {
+          if (!Array.isArray(obj)) return true;
+          return obj.every((item) => {
+            const innerCtx = { ...ctx, [node.varName]: item };
+            return Boolean(evaluate(node.body, innerCtx));
+          });
+        }
+        default:
+          return null;
+      }
+    }
+
+    // Ingebouwde functies: string(val), size(val)
+    case "funcall": {
+      const { name, args } = node;
+      if (name === "string") {
+        const val = evaluate(args[0], ctx);
+        return val == null ? "" : String(val);
+      }
+      if (name === "size") {
+        const val = evaluate(args[0], ctx);
+        if (val == null) return 0;
+        if (Array.isArray(val) || typeof val === "string") return val.length;
+        return 0;
+      }
+      if (name === "int") {
+        const val = evaluate(args[0], ctx);
+        return val == null ? 0 : parseInt(String(val), 10);
+      }
+      return null;
+    }
+
+    // Rekenkundige en logische operatoren
+    case "add": {
+      const l = evaluate(node.left, ctx);
+      const r = evaluate(node.right, ctx);
+      if (l == null || r == null) return (l ?? "") + (r ?? "");
+      return String(l) + String(r);
+    }
+    case "eq":  return evaluate(node.left, ctx) === evaluate(node.right, ctx);
+    case "neq": return evaluate(node.left, ctx) !== evaluate(node.right, ctx);
+    case "gt":  return evaluate(node.left, ctx) >   evaluate(node.right, ctx);
+    case "gte": return evaluate(node.left, ctx) >=  evaluate(node.right, ctx);
+    case "lt":  return evaluate(node.left, ctx) <   evaluate(node.right, ctx);
+    case "lte": return evaluate(node.left, ctx) <=  evaluate(node.right, ctx);
+    case "and": return Boolean(evaluate(node.left, ctx)) && Boolean(evaluate(node.right, ctx));
+    case "or":  return Boolean(evaluate(node.left, ctx)) || Boolean(evaluate(node.right, ctx));
+    case "not": return !Boolean(evaluate(node.expr, ctx));
+    case "ternary": {
+      const cond = evaluate(node.cond, ctx);
+      return cond ? evaluate(node.then, ctx) : evaluate(node.else, ctx);
+    }
+
+    // Backward-compat: oud ref-knooppunt (gegenereerd door versies vóór postfix-refactor)
     case "ref": {
-      // Navigeer door de context: Naam.roepnaam → ctx["Naam"]["roepnaam"].
-      // Gebruik een case-ongevoelige fallback zodat generated klassennamen en
-      // kortere schrijfwijzen robuust blijven in CEL-expressies.
       let val = ctx;
       for (const part of node.parts) {
         if (val == null) return null;
@@ -236,21 +419,7 @@ function evaluate(node, ctx) {
       }
       return val ?? null;
     }
-    case "add": {
-      const l = evaluate(node.left, ctx);
-      const r = evaluate(node.right, ctx);
-      if (l == null || r == null) return (l ?? "") + (r ?? "");
-      return String(l) + String(r);
-    }
-    case "eq": return evaluate(node.left, ctx) === evaluate(node.right, ctx);
-    case "neq": return evaluate(node.left, ctx) !== evaluate(node.right, ctx);
-    case "and": return Boolean(evaluate(node.left, ctx)) && Boolean(evaluate(node.right, ctx));
-    case "or": return Boolean(evaluate(node.left, ctx)) || Boolean(evaluate(node.right, ctx));
-    case "not": return !Boolean(evaluate(node.expr, ctx));
-    case "ternary": {
-      const cond = evaluate(node.cond, ctx);
-      return cond ? evaluate(node.then, ctx) : evaluate(node.else, ctx);
-    }
+
     default:
       return null;
   }
@@ -290,14 +459,22 @@ export function evalueerCelExpressie(expressie, ctx) {
 export function bouwCelContext(childGroups, typeMetaByTypenaam) {
   const ctx = {};
   for (const group of childGroups) {
-    // Gebruik de klassenaam als key (bijv. "Naam", niet "NatuurlijkPersoon_Naam")
     const meta = typeMetaByTypenaam?.[group.doeltype];
     const klassenaam = meta?.klassenaam || group.doeltype;
-    // Neem het eerste actieve item (zonder afvoer)
     const items = Array.isArray(group.items) ? group.items : [];
-    const actiefItem = items.find((item) => !item.afvoer) || items[0] || null;
+    // Actieve items: zonder afvoer
+    const actiefItems = items.filter((item) => !item.afvoer);
+    const actiefItem = actiefItems[0] || items[0] || null;
+
+    // Enkelvoudige toegang via klassenaam (bestaand gedrag, backward-compat)
     if (actiefItem) {
       ctx[klassenaam] = actiefItem;
+    }
+
+    // Meervoudige lijsttoegang via rolnaam — maakt .filter(x, ...) mogelijk
+    // in CEL-expressies voor meervoudige GE's (bijv. Trefwoordtaalvarianten.filter(...))
+    if (group.rolnaam) {
+      ctx[group.rolnaam] = actiefItems.length > 0 ? actiefItems : items;
     }
   }
   return ctx;
