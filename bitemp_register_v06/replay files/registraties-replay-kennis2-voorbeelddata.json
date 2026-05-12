@@ -1,0 +1,798 @@
+{
+  "version": 1,
+  "exported_at": "2026-05-13T10:00:00.000Z",
+  "source": "synthetic://kennis2-voorbeelddata",
+  "count": 12,
+  "notes": [
+    "Voorbeelddata voor het kennis2-domein: 3 trefwoorden, 6 KennisartikelTaalvarianten, 3 Kennisartikelen.",
+    "IDs starten bij 10 om conflicten te vermijden met eerder geregistreerde data (id=1..9).",
+    "Elk trefwoord heeft taalvarianten in nl, en en de.",
+    "Elk kennisartikel heeft twee taalvarianten (nl + en), elk met een taal-GE, titel-GE en meerdere secties.",
+    "KA_Tr-relaties leggen de trefwoorden aan het kennisartikel. KA_TV-relaties koppelen de taalvarianten.",
+    "Enumeratiewaarden voor Kennissectietype: samenvatting | inhoud | procedureBeschrijving | bewijs | enz",
+    "Enumeratiewaarden voor Taal: nl | en | de",
+    "Volgorde van registraties is van belang: trefwoorden en taalvarianten eerst, daarna kennisartikelen."
+  ],
+  "entries": [
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-05-13T10:01:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Trefwoord 10: Bitemporeel (nl/en/de)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "trefwoord": { "id": 10 }
+            }
+          },
+          {
+            "opvoer": {
+              "trefwoordtaalvariant": {
+                "trefwoord_id": 10,
+                "rel_id": 0,
+                "woord": "Bitemporeel",
+                "taal": "nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "trefwoordtaalvariant": {
+                "trefwoord_id": 10,
+                "rel_id": 0,
+                "woord": "Bitemporal",
+                "taal": "en"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "trefwoordtaalvariant": {
+                "trefwoord_id": 10,
+                "rel_id": 0,
+                "woord": "Bitemporal",
+                "taal": "de"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-05-13T10:02:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Trefwoord 11: Register (nl/en/de)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "trefwoord": { "id": 11 }
+            }
+          },
+          {
+            "opvoer": {
+              "trefwoordtaalvariant": {
+                "trefwoord_id": 11,
+                "rel_id": 0,
+                "woord": "Register",
+                "taal": "nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "trefwoordtaalvariant": {
+                "trefwoord_id": 11,
+                "rel_id": 0,
+                "woord": "Registry",
+                "taal": "en"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "trefwoordtaalvariant": {
+                "trefwoord_id": 11,
+                "rel_id": 0,
+                "woord": "Register",
+                "taal": "de"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-05-13T10:03:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Trefwoord 12: Tijdreizen (nl/en/de)",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "trefwoord": { "id": 12 }
+            }
+          },
+          {
+            "opvoer": {
+              "trefwoordtaalvariant": {
+                "trefwoord_id": 12,
+                "rel_id": 0,
+                "woord": "Tijdreizen",
+                "taal": "nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "trefwoordtaalvariant": {
+                "trefwoord_id": 12,
+                "rel_id": 0,
+                "woord": "Time Travel",
+                "taal": "en"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "trefwoordtaalvariant": {
+                "trefwoord_id": 12,
+                "rel_id": 0,
+                "woord": "Zeitreise",
+                "taal": "de"
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-05-13T10:10:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "KennisartikelTaalvariant 10: NL-variant voor KA10 'Bitemporele registers'",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "kennisartikeltaalvariant": { "id": 10 }
+            }
+          },
+          {
+            "opvoer": {
+              "kennisartikeltaalvarianttaal": {
+                "kennisartikeltaalvariant_id": 10,
+                "rel_id": 0,
+                "taal": "nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "kennisartikeltaalvarianttitel": {
+                "kennisartikeltaalvariant_id": 10,
+                "rel_id": 0,
+                "titel": "Bitemporele registers"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "sectie": {
+                "kennisartikeltaalvariant_id": 10,
+                "rel_id": 0,
+                "type": "samenvatting",
+                "inhoud": "Een bitemporeel register bewaart gegevens op twee onafhankelijke tijdsassen: de formele tijd (wanneer iets geregistreerd is) en de materiële tijd (wanneer iets geldig is in de werkelijkheid).",
+                "positie": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "sectie": {
+                "kennisartikeltaalvariant_id": 10,
+                "rel_id": 0,
+                "type": "inhoud",
+                "inhoud": "In een bitemporeel register kan altijd precies worden vastgesteld: wat was de situatie op tijdstip T in de werkelijkheid, en wat was er op tijdstip R geregistreerd? Dit maakt nauwkeurige audits en terugwerkende correcties mogelijk zonder historische data te wissen.",
+                "positie": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "sectie": {
+                "kennisartikeltaalvariant_id": 10,
+                "rel_id": 0,
+                "type": "bewijs",
+                "inhoud": "De combinatie van opvoer/afvoer-tijdstippen (formele tijdlijn) en aanvang/einde-datums (materiële tijdlijn) is de kern van het patroon zoals beschreven in Snodgrass (1999) 'Developing Time-Oriented Database Applications in SQL'.",
+                "positie": 3
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-05-13T10:11:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "KennisartikelTaalvariant 11: EN-variant voor KA10 'Bitemporal Registers'",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "kennisartikeltaalvariant": { "id": 11 }
+            }
+          },
+          {
+            "opvoer": {
+              "kennisartikeltaalvarianttaal": {
+                "kennisartikeltaalvariant_id": 11,
+                "rel_id": 0,
+                "taal": "en"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "kennisartikeltaalvarianttitel": {
+                "kennisartikeltaalvariant_id": 11,
+                "rel_id": 0,
+                "titel": "Bitemporal Registers"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "sectie": {
+                "kennisartikeltaalvariant_id": 11,
+                "rel_id": 0,
+                "type": "samenvatting",
+                "inhoud": "A bitemporal register stores data along two independent time axes: transaction time (when something was recorded) and valid time (when something was true in reality).",
+                "positie": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "sectie": {
+                "kennisartikeltaalvariant_id": 11,
+                "rel_id": 0,
+                "type": "inhoud",
+                "inhoud": "With a bitemporal register, it is always possible to determine exactly: what was the situation at time T in reality, and what was recorded at time R? This enables precise audits and retroactive corrections without deleting historical data.",
+                "positie": 2
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-05-13T10:12:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "KennisartikelTaalvariant 12: NL-variant voor KA11 'Formele tijdregistratie'",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "kennisartikeltaalvariant": { "id": 12 }
+            }
+          },
+          {
+            "opvoer": {
+              "kennisartikeltaalvarianttaal": {
+                "kennisartikeltaalvariant_id": 12,
+                "rel_id": 0,
+                "taal": "nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "kennisartikeltaalvarianttitel": {
+                "kennisartikeltaalvariant_id": 12,
+                "rel_id": 0,
+                "titel": "Formele tijdregistratie"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "sectie": {
+                "kennisartikeltaalvariant_id": 12,
+                "rel_id": 0,
+                "type": "samenvatting",
+                "inhoud": "De formele tijdlijn (registratietijd) legt vast wanneer een gegeven in het register is opgenomen. Het is de tijdlijn van de registrerende instantie.",
+                "positie": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "sectie": {
+                "kennisartikeltaalvariant_id": 12,
+                "rel_id": 0,
+                "type": "inhoud",
+                "inhoud": "Formele tijdregistratie gebruikt opvoer- en afvoertijdstippen per representatie. Deze tijdstippen worden nooit direct opgeslagen in de representatietabellen, maar afgeleid uit de wijzigingen-tabel in combinatie met de registratietijdstip.",
+                "positie": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "sectie": {
+                "kennisartikeltaalvariant_id": 12,
+                "rel_id": 0,
+                "type": "procedureBeschrijving",
+                "inhoud": "Tijdreizen op de formele tijdlijn: gebruik de query-parameter ?t=2024-06-01T00:00:00Z op elk GET-endpoint om de staat van het register op dat tijdstip op te vragen.",
+                "positie": 3
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-05-13T10:13:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "KennisartikelTaalvariant 13: EN-variant voor KA11 'Formal Time Registration'",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "kennisartikeltaalvariant": { "id": 13 }
+            }
+          },
+          {
+            "opvoer": {
+              "kennisartikeltaalvarianttaal": {
+                "kennisartikeltaalvariant_id": 13,
+                "rel_id": 0,
+                "taal": "en"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "kennisartikeltaalvarianttitel": {
+                "kennisartikeltaalvariant_id": 13,
+                "rel_id": 0,
+                "titel": "Formal Time Registration"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "sectie": {
+                "kennisartikeltaalvariant_id": 13,
+                "rel_id": 0,
+                "type": "samenvatting",
+                "inhoud": "The transaction timeline records when a fact was entered into the register. It is the timeline of the registering authority.",
+                "positie": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "sectie": {
+                "kennisartikeltaalvariant_id": 13,
+                "rel_id": 0,
+                "type": "inhoud",
+                "inhoud": "Transaction time is tracked via opvoer/afvoer timestamps per representation. These timestamps are derived from the changes table, never stored directly in the representation tables.",
+                "positie": 2
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-05-13T10:14:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "KennisartikelTaalvariant 14: NL-variant voor KA12 'Materiële tijdreizen'",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "kennisartikeltaalvariant": { "id": 14 }
+            }
+          },
+          {
+            "opvoer": {
+              "kennisartikeltaalvarianttaal": {
+                "kennisartikeltaalvariant_id": 14,
+                "rel_id": 0,
+                "taal": "nl"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "kennisartikeltaalvarianttitel": {
+                "kennisartikeltaalvariant_id": 14,
+                "rel_id": 0,
+                "titel": "Materiële tijdreizen"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "sectie": {
+                "kennisartikeltaalvariant_id": 14,
+                "rel_id": 0,
+                "type": "samenvatting",
+                "inhoud": "Materieel tijdreizen is het opvragen van de staat van het register op een bepaald materieel tijdstip: wanneer was iets geldig in de werkelijkheid?",
+                "positie": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "sectie": {
+                "kennisartikeltaalvariant_id": 14,
+                "rel_id": 0,
+                "type": "inhoud",
+                "inhoud": "Op de materiële tijdlijn kan zowel naar het verleden als naar de toekomst worden gereisd. Een voorgenomen verhuizing met aanvangsdatum over drie maanden kan al worden geregistreerd; de materiële tijdlijn toont dit al, de formele tijdlijn pas na registratie.",
+                "positie": 2
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "sectie": {
+                "kennisartikeltaalvariant_id": 14,
+                "rel_id": 0,
+                "type": "procedureBeschrijving",
+                "inhoud": "Tijdreizen op de materiële tijdlijn: gebruik ?tm=2024-06-01 (een datum) als query-parameter. Combineer met ?t= voor volledig bitemporeel opvragen.",
+                "positie": 3
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-05-13T10:15:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "KennisartikelTaalvariant 15: EN-variant voor KA12 'Valid Time Travel'",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "kennisartikeltaalvariant": { "id": 15 }
+            }
+          },
+          {
+            "opvoer": {
+              "kennisartikeltaalvarianttaal": {
+                "kennisartikeltaalvariant_id": 15,
+                "rel_id": 0,
+                "taal": "en"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "kennisartikeltaalvarianttitel": {
+                "kennisartikeltaalvariant_id": 15,
+                "rel_id": 0,
+                "titel": "Valid Time Travel"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "sectie": {
+                "kennisartikeltaalvariant_id": 15,
+                "rel_id": 0,
+                "type": "samenvatting",
+                "inhoud": "Valid time travel queries the register at a specific point in valid time: when was something actually true in the real world?",
+                "positie": 1
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "sectie": {
+                "kennisartikeltaalvariant_id": 15,
+                "rel_id": 0,
+                "type": "inhoud",
+                "inhoud": "On the valid timeline, travel is possible in both directions: past and future. A planned event with a start date months away can already be registered; the valid timeline shows it immediately, the transaction timeline shows it from the moment of registration.",
+                "positie": 2
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-05-13T10:20:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Kennisartikel 10: Bitemporele registers — trefwoorden 10+11, taalvarianten 10+11, aanvang 2026-01-01",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "kennisartikel": { "id": 10 }
+            }
+          },
+          {
+            "opvoer": {
+              "kennisartikel_aanvang": {
+                "kennisartikel_id": 10,
+                "datum": "2026-01-01"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "ka_tr": {
+                "kennisartikel_id": 10,
+                "rel_id": 0,
+                "trefwoord_id": 10
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "ka_tr": {
+                "kennisartikel_id": 10,
+                "rel_id": 0,
+                "trefwoord_id": 11
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "ka_tv": {
+                "kennisartikel_id": 10,
+                "rel_id": 0,
+                "kennisartikeltaalvariant_id": 10
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "ka_tv": {
+                "kennisartikel_id": 10,
+                "rel_id": 0,
+                "kennisartikeltaalvariant_id": 11
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-05-13T10:21:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Kennisartikel 11: Formele tijdregistratie — trefwoorden 10+11+12, taalvarianten 12+13, aanvang 2026-02-01",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "kennisartikel": { "id": 11 }
+            }
+          },
+          {
+            "opvoer": {
+              "kennisartikel_aanvang": {
+                "kennisartikel_id": 11,
+                "datum": "2026-02-01"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "ka_tr": {
+                "kennisartikel_id": 11,
+                "rel_id": 0,
+                "trefwoord_id": 10
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "ka_tr": {
+                "kennisartikel_id": 11,
+                "rel_id": 0,
+                "trefwoord_id": 11
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "ka_tr": {
+                "kennisartikel_id": 11,
+                "rel_id": 0,
+                "trefwoord_id": 12
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "ka_tv": {
+                "kennisartikel_id": 11,
+                "rel_id": 0,
+                "kennisartikeltaalvariant_id": 12
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "ka_tv": {
+                "kennisartikel_id": 11,
+                "rel_id": 0,
+                "kennisartikeltaalvariant_id": 13
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    },
+    {
+      "registratietype": "registratie",
+      "tijdstip": "2026-05-13T10:22:00.000Z",
+      "request_path": "/registratie/",
+      "request_method": "POST",
+      "request_body": {
+        "registratie": {
+          "id": 0,
+          "opmerking": "Kennisartikel 12: Materiële tijdreizen — trefwoorden 10+12, taalvarianten 14+15, aanvang 2026-03-01",
+          "registratietype": "registratie",
+          "tijdstip": "0001-01-01T00:00:00Z"
+        },
+        "wijzigingen": [
+          {
+            "opvoer": {
+              "kennisartikel": { "id": 12 }
+            }
+          },
+          {
+            "opvoer": {
+              "kennisartikel_aanvang": {
+                "kennisartikel_id": 12,
+                "datum": "2026-03-01"
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "ka_tr": {
+                "kennisartikel_id": 12,
+                "rel_id": 0,
+                "trefwoord_id": 10
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "ka_tr": {
+                "kennisartikel_id": 12,
+                "rel_id": 0,
+                "trefwoord_id": 12
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "ka_tv": {
+                "kennisartikel_id": 12,
+                "rel_id": 0,
+                "kennisartikeltaalvariant_id": 14
+              }
+            }
+          },
+          {
+            "opvoer": {
+              "ka_tv": {
+                "kennisartikel_id": 12,
+                "rel_id": 0,
+                "kennisartikeltaalvariant_id": 15
+              }
+            }
+          }
+        ]
+      },
+      "expected_response_code": 201,
+      "expected_response_body": null
+    }
+  ]
+}

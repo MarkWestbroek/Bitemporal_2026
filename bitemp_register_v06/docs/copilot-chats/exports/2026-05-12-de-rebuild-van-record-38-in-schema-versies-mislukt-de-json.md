@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-05-12 09:49
 - **Sessie-ID**: `d0ae5cf2-6bef-4cf6-ba73-1f2a9f5cde01`
-- **Berichten**: 49
+- **Berichten**: 50
 
 ---
 
@@ -955,5 +955,45 @@ Na een harde refresh (`Cmd+Shift+R`) zou de dropdown bij "Relatie: KA_Tr → tre
 kun je in deze md (of is een andere beter?) de gehele geimplementeerde CEL instructieset netjes op een rij zetten? Liefst met een paar voorbeelden.
 
 Zou je tevens een paar Kennisartikelen met elk een paar trefwoorden, en taalvarianten met elk een aantal secties kunnen maken als voorbeeld? Dat kan als een replay file.
+
+---
+
+## 🤖 Assistant
+
+Goed, ik heb de structuur. Nu even snel de kennis2-metaregistry en input-structs bekijken voor de replay-file:  Goed Goed beeld. Laat me ook de exacte evaluator-code inzien voor de volledige instructieset:  Laat me ook even de struct-namen/keys in de wijzigingen checken:  Laat me ook even de registratie-handler en een bestaande postman-collection bekijken om te begrijpen hoe de Hub+Data input werkt:    Nu heb ik alle info die ik nodig heb. Laat me beide taken uitvoeren. 
+```
+
+```
+Nu de replay file. Ik gebruik IDs 10+ om conflicten met bestaande data te vermijden. Klaar. Dit is wat er gedaan is:
+
+---
+
+###  — nieuwe sectie "Volledige geïmplementeerde instructieset"
+
+Toegevoegd vóór `## Wijzigingshistorie`, met een compleet overzicht van:
+
+- **Literals**: string, number, bool, null
+- **Identifiers** en veldtoegang (case-insensitief)
+- **Operator-tabel**: `+`, `==`, `!=`, `>`, `>=`, `<`, `<=`, `&&`, `||`, `!`
+- **Ternary**:  met meerdere voorbeelden
+- **Indexering**: `list[n]`
+- **Lijstmethoden**: , , `exists`, `all` — met lambda-syntax en scoping uitleg
+- **`size()`**: als methode én standalone functie
+- **Ingebouwde functies**: , `size()`, 
+- **Context-tabel**: hoe  variabelen beschikbaar maakt (enkelvoudig vs. meervoudig)
+- **Concrete voorbeelden** uit het kennis2-domein (nl-trefwoord, taal, titel, nl-titel)
+- **Niet-ondersteunde constructies** (list literals, , , wiskunde, etc.)
+
+---
+
+### 
+
+12 registraties, in de juiste afhankelijkheidsvolgorde:
+
+| # | Wat | IDs |
+|---|---|---|
+| 1–3 | Trefwoorden met nl/en/de taalvarianten | trefwoord 10 (Bitemporeel), 11 (Register), 12 (Tijdreizen) |
+| 4–9 | KennisartikelTaalvarianten met taal-GE, titel-GE en 2–3 secties per variant | KATV 10–15 (nl+en per KA) |
+| 10–12 | Kennisartikelen met aanvang, KA_Tr-trefwoorden en KA_TV-taalvarianten | KA 10–12 |
 
 ---

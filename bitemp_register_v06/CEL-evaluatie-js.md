@@ -252,6 +252,183 @@ Een volledige CEL-library is dus zeker mogelijk, maar op dit moment vooral inter
 
 ---
 
+## Volledige geïmplementeerde instructieset
+
+De onderstaande tabel geeft een volledig overzicht van alle CEL-constructies die door de huidige subset-evaluator (`celEvaluator.js`) worden ondersteund.
+
+### Literals
+
+| Syntaxis | Type | Voorbeeld | Resultaat |
+|---|---|---|---|
+| `"tekst"` of `'tekst'` | string | `"hello"` | `"hello"` |
+| `42`, `3.14`, `-1` | number | `42` | `42` |
+| `true`, `false` | bool | `true` | `true` |
+| `null` | null | `null` | `null` |
+
+### Identifiers en veldtoegang
+
+| Syntaxis | Beschrijving | Voorbeeld | Resultaat (context: `{naam: "Jan", adres: {stad: "Utrecht"}}`) |
+|---|---|---|---|
+| `ident` | Waarde uit context (case-insensitief) | `naam` | `"Jan"` |
+| `obj.veld` | Geneste veldtoegang | `adres.stad` | `"Utrecht"` |
+| `obj.veld.subveld` | Meervoudig genest | `adres.stad` | `"Utrecht"` |
+
+Veldtoegang is **case-insensitief**: `Naam`, `naam` en `NAAM` leveren hetzelfde resultaat.
+
+### Rekenkundige en string-operator
+
+| Operator | Type | Voorbeeld | Resultaat |
+|---|---|---|---|
+| `+` | string-concat of optelling | `"Hallo " + naam` | `"Hallo Jan"` |
+| `+` op null | null wordt lege string | `null + "x"` | `"x"` |
+
+### Vergelijkingsoperatoren
+
+| Operator | Beschrijving | Voorbeeld | Resultaat |
+|---|---|---|---|
+| `==` | Gelijkheid | `taal == "nl"` | `true` |
+| `!=` | Ongelijkheid | `taal != "en"` | `true` |
+| `>` | Groter dan | `positie > 0` | `true` |
+| `>=` | Groter of gelijk | `versie >= 1` | `true` |
+| `<` | Kleiner dan | `positie < 10` | `true` |
+| `<=` | Kleiner of gelijk | `positie <= 5` | `true` |
+
+### Logische operatoren
+
+| Operator | Beschrijving | Voorbeeld |
+|---|---|---|
+| `&&` | En (short-circuit) | `actief && goedgekeurd` |
+| `\|\|` | Of (short-circuit) | `taal == "nl" \|\| taal == "en"` |
+| `!` | Negatie | `!afgevoerd` |
+
+### Ternary (conditionele expressie)
+
+```cel
+conditie ? dan-waarde : anders-waarde
+```
+
+Voorbeelden:
+
+```cel
+ingezetene ? "ingezetene" : "niet-ingezetene"
+
+taal == "nl" ? titel : "(" + taal + ") " + titel
+
+Trefwoordtaalvarianten.size() > 0 ? Trefwoordtaalvarianten[0].woord : null
+```
+
+Ternary-expressies zijn volledig nestbaar.
+
+### Haakjes
+
+Haakjes groeperen operatoren: `(a || b) && c`.
+
+### Lijstindexering
+
+```cel
+lijst[n]          -- element op index n (0-gebaseerd)
+lijst[0].veld     -- veldtoegang op het eerste element
+```
+
+Geeft `null` terug als de index buiten het bereik valt of als `lijst` null is.
+
+### Lijstmethoden (met lambda)
+
+Alle methoden nemen een lijst als ontvanger, een lambdavariabele en een expressie.
+
+| Methode | Beschrijving | Voorbeeld |
+|---|---|---|
+| `list.filter(x, pred)` | Elementen waarvoor `pred` waar is | `Taalvarianten.filter(t, t.taal == "nl")` |
+| `list.map(x, expr)` | Transformeer elk element | `Secties.map(s, s.inhoud)` |
+| `list.exists(x, pred)` | Waar als minstens één element voldoet | `Taalvarianten.exists(t, t.taal == "nl")` |
+| `list.all(x, pred)` | Waar als alle elementen voldoen | `Secties.all(s, s.positie > 0)` |
+
+Lambda-variabelen zijn zichtbaar **alleen binnen hun expressie** (scoped `innerCtx`).
+
+### Grootte-methode en -functie
+
+| Syntaxis | Beschrijving | Voorbeeld |
+|---|---|---|
+| `lijst.size()` | Aantal elementen in lijst | `Taalvarianten.size()` |
+| `string.size()` | Lengte van een string | `naam.size()` |
+| `size(waarde)` | Standalone functie | `size(Taalvarianten)` |
+
+Geeft `0` bij null.
+
+### Ingebouwde standalone-functies
+
+| Functie | Beschrijving | Voorbeeld |
+|---|---|---|
+| `string(val)` | Naar string converteren | `string(positie)` → `"1"` |
+| `size(val)` | Grootte van lijst of string | `size(Secties)` |
+| `int(val)` | Naar integer converteren | `int("42")` → `42` |
+
+### Context — variabelen beschikbaar in CEL-expressies
+
+De context wordt opgebouwd door `bouwCelContext()` op basis van de `OnderliggendeGegevenselementen` van een entiteit:
+
+| Geval | Contextsleutel | Type | Toegang in CEL |
+|---|---|---|---|
+| Enkelvoudig GE (Hub+Data platgeslagen) | `TypeMeta.Klassenaam` | object | `KlasseNaam.veld` |
+| Meervoudig GE-lijst | `OnderliggendeGegevenselementen[i].Rolnaam` | array | `Rolnaam.filter(...)` |
+
+Voorbeeld voor `Trefwoord` met GE `Trefwoordtaalvarianten` (meervoudig):
+
+```cel
+-- Rolnaam = "Trefwoordtaalvarianten", items beschikbaar als array
+Trefwoordtaalvarianten.filter(t, t.taal == "nl").size() > 0
+  ? Trefwoordtaalvarianten.filter(t, t.taal == "nl")[0].woord
+  : Trefwoordtaalvarianten.size() > 0 ? Trefwoordtaalvarianten[0].woord : null
+```
+
+Voorbeeld voor `KennisartikelTaalvariant` met enkelvoudige GE `KennisartikeltaalvariantTitel`:
+
+```cel
+-- Klassenaam = "KennisartikeltaalvariantTitel", object beschikbaar direct
+KennisartikeltaalvariantTitel.titel
+```
+
+### Combinatie-voorbeelden uit het kennis2-domein
+
+**Trefwoord — nl-trefwoord (weergaveveld)**
+```cel
+Trefwoordtaalvarianten.filter(t, t.taal == "nl").size() > 0
+  ? Trefwoordtaalvarianten.filter(t, t.taal == "nl")[0].woord
+  : Trefwoordtaalvarianten.size() > 0 ? Trefwoordtaalvarianten[0].woord : null
+```
+
+**KennisartikelTaalvariant — taal (weergaveveld)**
+```cel
+KennisartikelTaalvariantTaal.taal
+```
+
+**KennisartikelTaalvariant — titel (weergaveveld)**
+```cel
+KennisartikeltaalvariantTitel.titel
+```
+
+**Kennisartikel — nl-titel (weergaveveld)**
+```cel
+KennisartikelTaalvarianten.filter(tv, tv.taal == "nl").size() > 0
+  ? KennisartikelTaalvarianten.filter(tv, tv.taal == "nl")[0].titel
+  : null
+```
+> _Opmerking: `KennisartikelTaalvarianten` is hier de context-array van platgeslagen KA_TV-items. Elk item heeft de afgeleide velden `taal` en `titel` beschikbaar._
+
+### Niet ondersteunde CEL-constructies
+
+De volgende standaard-CEL constructies zijn bewust **niet** geïmplementeerd in de huidige subset:
+
+- List/map literals (`[1, 2, 3]`, `{"a": 1}`)
+- `in`-operator (`x in lijst`)
+- `has(...)`-macro
+- `exists_one(...)`-macro
+- Wiskundige operatoren (`-`, `*`, `/`, `%`)
+- Type-checking (`type(x) == int`)
+- Proto-specifieke functionaliteit
+
+---
+
 ## Wijzigingshistorie
 
 ### 2026-05-12 — Lijstoperaties, lambda-scoping en `berekenWeergaveveld`
