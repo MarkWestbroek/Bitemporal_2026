@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-05-12 09:49
 - **Sessie-ID**: `d0ae5cf2-6bef-4cf6-ba73-1f2a9f5cde01`
-- **Berichten**: 50
+- **Berichten**: 54
 
 ---
 
@@ -995,5 +995,90 @@ Toegevoegd vóór `## Wijzigingshistorie`, met een compleet overzicht van:
 | 1–3 | Trefwoorden met nl/en/de taalvarianten | trefwoord 10 (Bitemporeel), 11 (Register), 12 (Tijdreizen) |
 | 4–9 | KennisartikelTaalvarianten met taal-GE, titel-GE en 2–3 secties per variant | KATV 10–15 (nl+en per KA) |
 | 10–12 | Kennisartikelen met aanvang, KA_Tr-trefwoorden en KA_TV-taalvarianten | KA 10–12 |
+
+---
+
+## 🧑 User
+
+in inhoud wordt voor de Locatie geen gemeentenaam getoond. Ook daar is een afgeleide naam beschikbaar. Dit werd wel getoond, dus dat is regressie.
+
+op de publicatiepagina is sowieso helemaal niets meer te zien in het overzicht (img3).
+
+---
+
+## 🤖 Assistant
+
+Let me look at the shared utilities and what changed recently: Let me look at the  function issue and the `celEvaluator.js` to understand what the "inhoud" context is: Let me check the actual schema to understand the  and child structure for Locatie: Now let me look at the full  to understand the weergave column (img1 shows it correctly, so that part works) and what changed: Let me look at how  handles reference fields Let me look at how  handles reference fields (like `gemeente`): 
+
+---
+
+## 🧑 User
+
+Het veld gemeente in Adres is van het type Gemeente = een REFlijst ITEM. Ref lijst items zijn een soort type, een soort uitgebreide enum, en het weergaveveld -als dat er is - zou getoond moeten worden. Dat is a.h.w. de waarde van het veld `gemeente` in adres.
+
+---
+
+## 🤖 Assistant
+
+Let me find where Let me find where  is computed in EntiteitFormulier, and also look at how the schema API handles the  tag:  Let me now look at how velden are resolved in RepresentatieFormulier to confirm ref fields get their correct SchemaFormField: Let me check the doelEntiteitCache section in EntiteitFormulier for exact context: Good. Now I have enough context to implement all the changes. Let me set up the todo list and proceed: 
+```
+
+```
+Now add the ref naam cache to PublicatieTabel — import, state, fetch effect, and cell renderer: 
+```
+
+```
+Now add the state and fetch effect for ref cache. I need to find the right place — after existing state declarations: 
+```
+
+```
+Now I need to add the fetch effect for ref names. Let me find a good place — after :  
+```
+
+```
+Now update the fallback column cell renderer to use . Find the current cell renderer for fallback columns:   
+```
+
+```
+The  useMemo also needs to depend on :   
+```
+
+```
+
+```
+
+```
+Now add `entityRefCache` to . First add the state, then the fetch effect, then update : 
+```
+
+```
+Now update  useMemo to enrich items with ref names and add  to deps:  
+```
+
+```
+Now add the useEffect to pre-fetch ref names. It should go right before the doelEntiteitCache useEffect:  
+```
+
+```
+Now fix  — when a large-list value is fetched, add it to  so Downshift can show the selected label in edit mode:   
+```
+
+```
+Now build to verify no errors: Both builds clean. Here's a summary of all changes made:
+
+**4 files changed:**
+
+**** (3 fixes):
+1.  now matches child GE by  or  (PascalCase, e.g. `"Adres"`) in addition to / — fixes the all-dashes regression
+2. New  state + fetch effect: pre-loads weergavenamen for all ref-FK types (Gemeente, Land, etc.) from 
+3. Fallback cell renderer: when a field has , shows the cached weergavenaam instead of the raw integer ID
+
+****: `weergaveadres` expression updated — removes non-existent `Adres.plaats`, now uses `Adres.gemeente_naam` (the enriched field, see below) for the municipality part: `Adres.straatnaam + ' ' + Adres.huisnummer + (Adres.postcode != null ? ', ' + Adres.postcode : '') + (Adres.gemeente_naam != null ? ' ' + Adres.gemeente_naam : '')`
+
+**** (2 additions):
+1. New  state + fetch effect: same pattern as PublicatieTabel — loads gemeente (and other ref) names
+2.  useMemo now enriches each flat item with `veld_naam` fields (e.g. `gemeente_naam: "Amsterdam (0363)"`) before building the CEL context, enabling the updated expression to resolve the gemeente name
+
+****: For large lists (>30 items), when the current value's option is fetched, it's now also added to  — so Downshift shows the gemeente name in the editable combobox input (not just in readOnly mode)
 
 ---

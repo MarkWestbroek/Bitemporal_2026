@@ -106,7 +106,14 @@ export default function RefCombobox({ refType, value, onChange, readOnly }) {
     fetchOpties(String(value), 5).then((items) => {
       if (cancelled) return;
       const match = items.find((o) => String(o.id) === String(value));
-      if (match) setSelectedLabel(maakWeergavenaam(match, weergaveRegel));
+      if (match) {
+        setSelectedLabel(maakWeergavenaam(match, weergaveRegel));
+        // Voeg het item toe aan opties zodat Downshift selectedItem kan vinden
+        // en de naam in het invoerveld toont (niet alleen in readOnly modus).
+        setOpties((prev) =>
+          prev.find((o) => String(o.id) === String(match.id)) ? prev : [match, ...prev]
+        );
+      }
     });
     return () => { cancelled = true; };
   }, [isKlein, value, fetchOpties, weergaveRegel]);

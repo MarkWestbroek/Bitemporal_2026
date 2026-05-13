@@ -11,6 +11,7 @@ import { useParams, useNavigate, Link } from "react-router";
 import { useSchema } from "../context/SchemaContext";
 import { useWeergaveDefinitie } from "../hooks/useWeergaveDefinitie";
 import { safeArray, platSlaHubItems } from "../shared/schemaUtils";
+import { evalueerCelExpressie } from "../shared/celEvaluator";
 
 /**
  * Resolvet een veldpad (bijv. "namen.data.roepnaam" of "id") naar een waarde
@@ -43,10 +44,16 @@ function resolveVeldpad(entity, veldpad, typeMeta, typeMetaByTypenaam) {
 
   const [geKey, ...restDelen] = delen;
 
-  // Zoek het onderliggende GE op basis van jsonRolnaam of rolnaam
+  // Zoek het onderliggende GE op basis van jsonRolnaam, rolnaam, doeltype of klassenaam.
+  // Klassenaam-matching (bijv. "Adres") is nodig voor fallback-kolommen die het pad
+  // opbouwen via childMeta.klassenaam (PascalCase) i.p.v. jsonRolnaam (snake_case).
   const onderliggende = safeArray(typeMeta?.onderliggende);
   const child = onderliggende.find(
-    (c) => c.jsonRolnaam === geKey || c.rolnaam === geKey
+    (c) =>
+      c.jsonRolnaam === geKey ||
+      c.rolnaam === geKey ||
+      c.doeltype === geKey ||
+      typeMetaByTypenaam?.[c.doeltype]?.klassenaam === geKey
   );
   if (!child) return null;
 
@@ -127,6 +134,8 @@ export default function PublicatieTabel() {
   const [columnFilters, setColumnFilters] = useState([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 });
+  // Cache voor ref-FK weergavenamen: { "TypeNaam": { "363": "Amsterdam (0363)" } }
+  const [refNaamCache, setRefNaamCache] = useState({});
 
   const apiPath = typeMeta?.padnaam || typeMeta?.meervoud || typeMeta?.veldnaam;
 
@@ -155,7 +164,59 @@ export default function PublicatieTabel() {
     fetchData();
   }, [fetchData]);
 
-  // Pre-bereken alle kolomwaarden zodat de filter altijd actuele waarden ziet.
+  // Pre-fetch weergavenamen voor ref-FK velden (bijv. gemeente → "Amsterdam (0363)").
+  // Bepaalt welke ref-types nodig zijn op basis van de GE-velden van dit entiteittype.
+  useEffect(() => {
+    if (!typeMeta || !baseUrl) return;
+    const toFetch = new Set();
+    for (const child of safeArray(typeMeta?.onderliggende)) {
+      const childMeta = typeMetaByTypenaam?.[child.doeltype];
+      if (!childMeta) continue;
+      const dataChild = safeArray(childMeta?.onderliggende).find(
+        (c) => typeMetaByTypenaam?.[c.doeltype]?.ge_subtype === "data"
+      );
+      const veldenBron = dataChild ? typeMetaByTypenaam?.[dataChild.doeltype] : childMeta;
+      for (const veld of safeArray(veldenBron?.velden)) {
+        if (veld.ref) toFetch.add(veld.ref);
+      }
+    }
+    if (toFetch.size === 0) return;
+    Promise.all(
+      [...toFetch].map(async (refType) => {
+        const refMeta = typeMetaByTypenaam?.[refType];
+        const weergaveAv = safeArray(refMeta?.afgeleideVelden)
+          .find((av) => av.isWeergaveVeld || av.weergaveVeld);
+        const regExp = weergaveAv?.afleidingsregelTaal === "cel" ? weergaveAv.afleidingsregel : null;
+        try {
+          const res = await fetch(
+            `${baseUrl}/api/viz/reflijst/${encodeURIComponent(refType)}/opties?size=200`
+          );
+          if (!res.ok) return [refType, {}];
+          const json = await res.json();
+          const lookup = {};
+          for (const optie of safeArray(json?.opties)) {
+            let label = null;
+            if (regExp && optie.velden) {
+              try {
+                const result = evalueerCelExpressie(regExp, { ...optie.velden });
+                if (result != null && String(result).trim() !== "") label = String(result);
+              } catch { /* */ }
+            }
+            if (!label) {
+              const vals = Object.values(optie.velden || {}).filter(Boolean);
+              label = vals.length > 0 ? vals.join(" — ") : String(optie.id ?? "");
+            }
+            lookup[String(optie.id)] = label;
+          }
+          return [refType, lookup];
+        } catch {
+          return [refType, {}];
+        }
+      })
+    ).then((entries) => setRefNaamCache(Object.fromEntries(entries)));
+  }, [typeMeta, typeMetaByTypenaam, baseUrl]);
+
+
   // Elke rij krijgt naast de originele entity-velden ook voor elke kolom een
   // gesaniteerde sleutel (punten → __), zodat TanStack de waarde direct kan
   // opzoeken via een simpele accessorKey-string zonder dots.
@@ -231,6 +292,7 @@ export default function PublicatieTabel() {
 
       for (const veld of inhoudsvelden.slice(0, 3)) {
         const klassenaam = childMeta?.klassenaam || child.doeltype;
+        const refType = veld.ref || null;
         cols.push({
           id: `${klassenaam}.${veld.naam}`,
           header: `${klassenaam} · ${veld.naam}`,
@@ -239,6 +301,10 @@ export default function PublicatieTabel() {
           cell: ({ getValue }) => {
             const val = getValue();
             if (val == null) return <span style={{ color: "var(--cg-donkergrijs)" }}>—</span>;
+            if (refType) {
+              const label = refNaamCache[refType]?.[String(val)];
+              if (label) return label;
+            }
             return String(val);
           },
         });
@@ -246,7 +312,7 @@ export default function PublicatieTabel() {
     }
 
     return cols;
-  }, [typeMeta, typeMetaByTypenaam, tabelConfig]);
+  }, [typeMeta, typeMetaByTypenaam, tabelConfig, refNaamCache]);
 
   // Initiële sortering uit tabelConfig
   const initialSorting = useMemo(() => {

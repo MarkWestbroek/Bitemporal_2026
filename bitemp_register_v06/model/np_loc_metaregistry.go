@@ -107,10 +107,10 @@ func initNpLocMetaRegistry() {
 		AfgeleideVelden: []AfgeleidVeld{
 			{
 				Naam:                "weergaveadres",
-				Description:         "Samengesteld weergaveadres, afgeleid uit straatnaam, huisnummer, postcode en plaats.",
+				Description:         "Samengesteld weergaveadres, afgeleid uit straatnaam, huisnummer, postcode en gemeente.",
 				GoType:              "string",
 				AfleidingsregelTaal: "cel",
-				Afleidingsregel:     "Adres.straatnaam + ' ' + Adres.huisnummer + ', ' + Adres.postcode + ' ' + Adres.plaats",
+				Afleidingsregel:     "Adres.straatnaam + ' ' + Adres.huisnummer + (Adres.postcode != null ? ', ' + Adres.postcode : '') + (Adres.gemeente_naam != null ? ' ' + Adres.gemeente_naam : '')",
 				IsWeergaveVeld:      true,
 			},
 		},

@@ -147,6 +147,9 @@ export default function EntiteitFormulier() {
   const [bewerkRij, setBewerkRij] = useState(null); // { doeltype, index } — meervoudig rij in correctiemodus
   const [toonHistorie, setToonHistorie] = useState({}); // { [doeltype]: true/false } — toggle per GE-type
   const [doelEntiteitCache, setDoelEntiteitCache] = useState({}); // { "Typenaam:id": platgeslagenData }
+  // Cache voor weergavenamen van ref-FK velden in onderliggende GE's
+  // (bijv. gemeente-id → "Amsterdam (0363)") — { "TypeNaam": { "363": "label" } }
+  const [entityRefCache, setEntityRefCache] = useState({});
   const [customWeergave, setCustomWeergave] = useState(false); // custom formulier layout modus
   const [customEditValues, setCustomEditValues] = useState({}); // werkwaarden custom formulier
   const [customBusy, setCustomBusy] = useState(false);
@@ -188,7 +191,30 @@ export default function EntiteitFormulier() {
       const childMeta = typeMetaByTypenaam?.[child.doeltype];
       const rawItems = safeArray(entity[child.jsonRolnaam] || entity[child.rolnaam]);
       const items = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
-      return { doeltype: child.doeltype, rolnaam: child.rolnaam, items, typeMeta: childMeta };
+
+      // Verrijk elk item: voeg voor elk ref-FK veld `veldnaam_naam` toe
+      // (bijv. gemeente: 363 → gemeente_naam: "Amsterdam (0363)") zodat
+      // CEL-expressies als `Adres.gemeente_naam` beschikbaar hebben.
+      const dataChild = safeArray(childMeta?.onderliggende).find(
+        (c) => typeMetaByTypenaam?.[c.doeltype]?.ge_subtype === "data"
+      );
+      const veldenBron = dataChild ? typeMetaByTypenaam?.[dataChild.doeltype] : childMeta;
+      const refVelden = safeArray(veldenBron?.velden).filter((v) => v.ref);
+      const enrichedItems =
+        refVelden.length > 0 && Object.keys(entityRefCache).length > 0
+          ? items.map((item) => {
+              const extra = {};
+              for (const veld of refVelden) {
+                const val = item[veld.naam];
+                if (val == null) continue;
+                const naam = entityRefCache[veld.ref]?.[String(val)];
+                if (naam) extra[`${veld.naam}_naam`] = naam;
+              }
+              return Object.keys(extra).length > 0 ? { ...item, ...extra } : item;
+            })
+          : items;
+
+      return { doeltype: child.doeltype, rolnaam: child.rolnaam, items: enrichedItems, typeMeta: childMeta };
     });
 
     const ctx = bouwCelContext(childGroups, typeMetaByTypenaam);
@@ -196,7 +222,68 @@ export default function EntiteitFormulier() {
       .map((av) => av.afleidingsregelTaal === "cel" ? evalueerCelExpressie(av.afleidingsregel, ctx) : null)
       .filter((v) => v != null && String(v).trim() !== "")
       .join(" | ");
-  }, [entity, typeMeta, typeMetaByTypenaam]);
+  }, [entity, typeMeta, typeMetaByTypenaam, entityRefCache]);
+
+  // ── Ref-FK weergavenamen ophalen ──────────────────────────────────────
+  // Wanneer een GE een veld heeft met `ref: "Gemeente"` (of andere ref.lijst items),
+  // halen we de weergavenamen op via de reflijst-opties API en cachen ze in
+  // entityRefCache. De weergaveTekst useMemo gebruikt deze cache om de CEL-context
+  // te verrijken met `veldnaam_naam` (bijv. `gemeente_naam = "Amsterdam (0363)"`).
+  useEffect(() => {
+    if (!entity || !typeMeta || !baseUrl) return;
+    let cancelled = false;
+    // Verzamel alle ref-types die voorkomen in de onderliggende GE-velden
+    const toFetch = new Set();
+    for (const child of safeArray(typeMeta.onderliggende)) {
+      const childMeta = typeMetaByTypenaam?.[child.doeltype];
+      if (!childMeta) continue;
+      const dataChild = safeArray(childMeta.onderliggende).find(
+        (c) => typeMetaByTypenaam?.[c.doeltype]?.ge_subtype === "data"
+      );
+      const veldenBron = dataChild ? typeMetaByTypenaam?.[dataChild.doeltype] : childMeta;
+      for (const veld of safeArray(veldenBron?.velden)) {
+        if (veld.ref) toFetch.add(veld.ref);
+      }
+    }
+    if (toFetch.size === 0) return;
+
+    Promise.all(
+      [...toFetch].map(async (refType) => {
+        const refMeta = typeMetaByTypenaam?.[refType];
+        const weergaveAv = safeArray(refMeta?.afgeleideVelden)
+          .find((av) => av.isWeergaveVeld || av.weergaveVeld);
+        const regExp = weergaveAv?.afleidingsregelTaal === "cel" ? weergaveAv.afleidingsregel : null;
+        try {
+          const res = await fetch(
+            `${baseUrl}/api/viz/reflijst/${encodeURIComponent(refType)}/opties?size=200`
+          );
+          if (!res.ok) return [refType, {}];
+          const json = await res.json();
+          const lookup = {};
+          for (const optie of safeArray(json?.opties)) {
+            let label = null;
+            if (regExp && optie.velden) {
+              try {
+                const result = evalueerCelExpressie(regExp, { ...optie.velden });
+                if (result != null && String(result).trim() !== "") label = String(result);
+              } catch { /* */ }
+            }
+            if (!label) {
+              const vals = Object.values(optie.velden || {}).filter(Boolean);
+              label = vals.length > 0 ? vals.join(" — ") : String(optie.id ?? "");
+            }
+            lookup[String(optie.id)] = label;
+          }
+          return [refType, lookup];
+        } catch {
+          return [refType, {}];
+        }
+      })
+    ).then((entries) => {
+      if (!cancelled) setEntityRefCache(Object.fromEntries(entries));
+    });
+    return () => { cancelled = true; };
+  }, [entity, typeMeta, typeMetaByTypenaam, baseUrl]);
 
   // ── Doelentiteiten ophalen voor weergavevelden van relatie-hubs ───────
   // Relaties als InitiatiefDomein hebben CEL-expressies die verwijzen naar
