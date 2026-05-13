@@ -147,4 +147,56 @@ Deze visualisatie is geen generieke tabellaire inspectie. Het is een leesvisuali
 - meer nadruk op herkenning, context en betekenis
 - details mogen pas zichtbaar worden in interactie of in bewerkdialogen
 
+## Ref-FK weergavenamen in CEL-expressies
+
+### Probleem
+
+Sommige GE-velden zijn integer foreign keys naar een referentielijst (bijv. `gemeente: int` met `schema:"ref:Gemeente"`). In de database en API-response staat alleen het ID (bijv. `363`). CEL-expressies voor weergavevelden kunnen echter een leesbare naam verwachten, bijv.:
+
+```
+Adres.straatnaam + ' ' + Adres.huisnummer + (Adres.gemeente_naam != null ? ' ' + Adres.gemeente_naam : '')
+```
+
+Zonder aanvullend mechanisme geeft `Adres.gemeente_naam` `null` en wordt de gemeente stilzwijgend weggelaten.
+
+### Oplossing: ref-naam cache + `{veld}_naam` verrijking
+
+Voor elk type dat ref-FK velden bevat in zijn onderliggende GE's wordt een **ref-naam cache** opgebouwd via de reflijst-opties API:
+
+```
+GET /api/viz/reflijst/{TypeNaam}/opties?size=200
+→ { opties: [{ id: 363, velden: { naam: "Amsterdam", code: "0363" } }, ...] }
+```
+
+De cache heeft de vorm `{ "Gemeente": { "363": "Amsterdam (0363)", ... } }`.
+
+Vóór het opbouwen van de CEL-context worden child-items verrijkt met **virtuele `{veld}_naam` velden**:
+
+```js
+// item.gemeente = 363  →  item.gemeente_naam = "Amsterdam (0363)"
+enriched = { ...item, gemeente_naam: refNaamCache["Gemeente"]["363"] }
+```
+
+De CEL-context bevat daarna `Adres.gemeente_naam = "Amsterdam (0363)"` en de expressie evalueert correct.
+
+### Waar toegepast
+
+| Component | State | Gebruik |
+|-----------|-------|---------|
+| `EntiteitFormulier.jsx` | `entityRefCache` | `weergaveTekst` useMemo (detail view) |
+| `RepresentatieTabel.jsx` | `refNaamCache` | `berekenWeergaveveld()` (lijst view weergavekolom) |
+| `PublicatieTabel.jsx` | `refNaamCache` | Fallback celweergave van ref-FK velden in kolommen |
+
+### Centraal aanspreekpunt
+
+`berekenWeergaveveld(entity, typeMeta, typeMetaByTypenaam, refNaamCache?)` in `shared/celEvaluator.js` accepteert een optionele vierde parameter. Wanneer meegegeven, worden child-items automatisch verrijkt vóór de CEL-evaluatie. Zo hoeft de verrijkingslogica niet gedupliceerd te worden in elk component.
+
+### Aandachtspunten
+
+- De cache wordt asynchroon gevuld na mount; een eerste render zonder gemeente_naam is normaal.
+- Testdata met `gemeente = 0` toont geen naam, want ID 0 bestaat niet in de Gemeente-referentielijst.
+- `size=200` haalt maximaal 200 opties op. Voor grote referentielijsten is een grotere pagesize of paginering nodig.
+- De `{veld}_naam` velden zijn puur virtueel (client-side); ze worden niet opgeslagen in de database.
+
+
 Als deze ontwerpfilosofie later wordt uitgebreid naar tijdlijn- of replay-schermen, dan moet dezelfde informatie-hiërarchie behouden blijven.

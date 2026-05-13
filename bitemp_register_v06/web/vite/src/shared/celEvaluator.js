@@ -561,16 +561,50 @@ export function evalueerWeergaveVeldenVoorItem(afgeleideVeldenDefs, item, typeMe
  * @param {Object} typeMetaByTypenaam - Map typenaam → TypeMeta.
  * @returns {string} Weergave-tekst, of "" als geen weergaveveld beschikbaar is.
  */
-export function berekenWeergaveveld(entity, typeMeta, typeMetaByTypenaam) {
+/**
+ * @param {Object} entity - Entiteitsrecord incl. geneste GE's.
+ * @param {Object} typeMeta - TypeMeta van het entiteitstype.
+ * @param {Object} typeMetaByTypenaam - Map typenaam → TypeMeta.
+ * @param {Object} [refNaamCache={}] - Optionele cache: { "TypeNaam": { "id": "label" } }.
+ *   Wanneer opgegeven, worden child-items verrijkt met `{veld}_naam` velden voor ref-FK
+ *   velden (bijv. gemeente: 363 → gemeente_naam: "Amsterdam (0363)"), zodat CEL-expressies
+ *   als `Adres.gemeente_naam` beschikbaar zijn.
+ */
+export function berekenWeergaveveld(entity, typeMeta, typeMetaByTypenaam, refNaamCache = {}) {
   const afgVelden = safeArray(typeMeta?.afgeleideVelden)
     .filter((av) => av.isWeergaveVeld || av.weergaveVeld);
   if (afgVelden.length === 0 || !entity) return "";
 
+  const heeftCache = Object.keys(refNaamCache).length > 0;
   const onderliggende = safeArray(typeMeta?.onderliggende);
   const childGroups = onderliggende.map((child) => {
     const childMeta = typeMetaByTypenaam?.[child.doeltype];
     const rawItems = safeArray(entity[child.jsonRolnaam] || entity[child.rolnaam]);
     const items = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
+
+    // Verrijk items met {veld}_naam voor ref-FK velden, zodat CEL-expressies
+    // als `Adres.gemeente_naam` werken wanneer een refNaamCache is meegegeven.
+    if (heeftCache) {
+      const dataChild = safeArray(childMeta?.onderliggende).find(
+        (c) => typeMetaByTypenaam?.[c.doeltype]?.ge_subtype === "data"
+      );
+      const veldenBron = dataChild ? typeMetaByTypenaam?.[dataChild.doeltype] : childMeta;
+      const refVelden = safeArray(veldenBron?.velden).filter((v) => v.ref && refNaamCache[v.ref]);
+      if (refVelden.length > 0) {
+        const enrichedItems = items.map((item) => {
+          const extra = {};
+          for (const veld of refVelden) {
+            const val = item[veld.naam];
+            if (val == null) continue;
+            const naam = refNaamCache[veld.ref][String(val)];
+            if (naam) extra[`${veld.naam}_naam`] = naam;
+          }
+          return Object.keys(extra).length > 0 ? { ...item, ...extra } : item;
+        });
+        return { doeltype: child.doeltype, rolnaam: child.rolnaam, items: enrichedItems, typeMeta: childMeta };
+      }
+    }
+
     return { doeltype: child.doeltype, rolnaam: child.rolnaam, items, typeMeta: childMeta };
   });
 

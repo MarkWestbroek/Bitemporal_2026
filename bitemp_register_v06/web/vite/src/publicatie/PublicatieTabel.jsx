@@ -189,7 +189,7 @@ export default function PublicatieTabel() {
         const regExp = weergaveAv?.afleidingsregelTaal === "cel" ? weergaveAv.afleidingsregel : null;
         try {
           const res = await fetch(
-            `${baseUrl}/api/viz/reflijst/${encodeURIComponent(refType)}/opties?size=200`
+            `${baseUrl}/api/viz/reflijst/${encodeURIComponent(refType)}/opties?size=500`
           );
           if (!res.ok) return [refType, {}];
           const json = await res.json();
@@ -203,8 +203,11 @@ export default function PublicatieTabel() {
               } catch { /* */ }
             }
             if (!label) {
-              const vals = Object.values(optie.velden || {}).filter(Boolean);
-              label = vals.length > 0 ? vals.join(" — ") : String(optie.id ?? "");
+              // Voorkeur: gebruik 'naam'-veld direct als het beschikbaar is,
+              // anders join alle velden
+              const velden = optie.velden || {};
+              label = velden.naam || velden.name ||
+                (Object.values(velden).filter(Boolean).join(" — ") || String(optie.id ?? ""));
             }
             lookup[String(optie.id)] = label;
           }

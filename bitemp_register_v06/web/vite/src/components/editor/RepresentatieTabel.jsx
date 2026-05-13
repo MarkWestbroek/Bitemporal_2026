@@ -32,6 +32,9 @@ export default function RepresentatieTabel({ typeMeta }) {
   const [error, setError] = useState(null);
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
+  // Ref-FK weergavenamen: { "TypeNaam": { "id": "label" } }
+  // Gevuld via de reflijst-opties API voor alle ref-FK velden in de onderliggende GE's.
+  const [refNaamCache, setRefNaamCache] = useState({});
 
   const isEntiteit = typeMeta?.metatype === "entiteit";
   // API-pad: padnaam is het URL-pad, meervoud is de weergavenaam
@@ -58,7 +61,7 @@ export default function RepresentatieTabel({ typeMeta }) {
         cols.push({
           id: "__weergave__",
           header: "weergave",
-          accessorFn: (row) => berekenWeergaveveld(row, typeMeta, typeMetaByTypenaam),
+          accessorFn: (row) => berekenWeergaveveld(row, typeMeta, typeMetaByTypenaam, refNaamCache),
           cell: ({ getValue }) => {
             const val = getValue();
             if (!val) return <span style={{ color: "var(--cg-donkergrijs)" }}>—</span>;
@@ -191,7 +194,7 @@ export default function RepresentatieTabel({ typeMeta }) {
     }
 
     return cols;
-  }, [typeMeta, isEntiteit, typeMetaByTypenaam]);
+  }, [typeMeta, isEntiteit, typeMetaByTypenaam, refNaamCache]);
 
   // Data ophalen — entiteiten via /full/ (met geneste GE's), overig via flat endpoint
   const fetchData = useCallback(async () => {
@@ -213,6 +216,67 @@ export default function RepresentatieTabel({ typeMeta }) {
   }, [baseUrl, typeMeta, apiPath, isEntiteit]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // ── Ref-FK weergavenamen ophalen ──────────────────────────────────────
+  // Haal voor alle ref-FK velden in de onderliggende GE's de weergavenamen op via de
+  // reflijst-opties API en sla ze op in refNaamCache. berekenWeergaveveld gebruikt deze
+  // cache om CEL-context te verrijken met `veldnaam_naam` velden (bijv. gemeente_naam).
+  useEffect(() => {
+    if (!typeMeta || !baseUrl || !isEntiteit) return;
+    let cancelled = false;
+    const toFetch = new Set();
+    for (const child of safeArray(typeMeta.onderliggende)) {
+      const childMeta = typeMetaByTypenaam?.[child.doeltype];
+      if (!childMeta) continue;
+      const dataChild = safeArray(childMeta.onderliggende).find(
+        (c) => typeMetaByTypenaam?.[c.doeltype]?.ge_subtype === "data"
+      );
+      const veldenBron = dataChild ? typeMetaByTypenaam?.[dataChild.doeltype] : childMeta;
+      for (const veld of safeArray(veldenBron?.velden)) {
+        if (veld.ref) toFetch.add(veld.ref);
+      }
+    }
+    if (toFetch.size === 0) return;
+    Promise.all(
+      [...toFetch].map(async (refType) => {
+        const refMeta = typeMetaByTypenaam?.[refType];
+        const weergaveAv = safeArray(refMeta?.afgeleideVelden)
+          .find((av) => av.isWeergaveVeld || av.weergaveVeld);
+        const regExp = weergaveAv?.afleidingsregelTaal === "cel" ? weergaveAv.afleidingsregel : null;
+        try {
+          const res = await fetch(
+            `${baseUrl}/api/viz/reflijst/${encodeURIComponent(refType)}/opties?size=500`
+          );
+          if (!res.ok) return [refType, {}];
+          const json = await res.json();
+          const lookup = {};
+          for (const optie of safeArray(json?.opties)) {
+            let label = null;
+            if (regExp && optie.velden) {
+              try {
+                const result = evalueerCelExpressie(regExp, { ...optie.velden });
+                if (result != null && String(result).trim() !== "") label = String(result);
+              } catch { /* */ }
+            }
+            if (!label) {
+              // Voorkeur: gebruik 'naam'-veld direct als het beschikbaar is,
+              // anders join alle velden
+              const velden = optie.velden || {};
+              label = velden.naam || velden.name ||
+                (Object.values(velden).filter(Boolean).join(" — ") || String(optie.id ?? ""));
+            }
+            lookup[String(optie.id)] = label;
+          }
+          return [refType, lookup];
+        } catch {
+          return [refType, {}];
+        }
+      })
+    ).then((entries) => {
+      if (!cancelled) setRefNaamCache(Object.fromEntries(entries));
+    });
+    return () => { cancelled = true; };
+  }, [typeMeta, typeMetaByTypenaam, baseUrl, isEntiteit]);
 
   const table = useReactTable({
     data,

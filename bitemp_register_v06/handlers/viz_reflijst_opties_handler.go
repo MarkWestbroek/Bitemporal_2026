@@ -38,6 +38,8 @@ func vindDataMeta(entiteitMeta model.TypeMeta) (dataMeta model.TypeMeta, entitei
 // zoekbareKolommenVanFactory extraheert kolomnamen van string-velden uit een
 // Representatie factory. Vergelijkbaar met zoekbareKolommen maar accepteert
 // een losse factory-functie.
+// Prioriteit: bun-tag > json-tag > veldnaam (lowercase). Velden zonder
+// kolom­naam (bun:"-" of json:"-") worden overgeslagen.
 func zoekbareKolommenVanFactory(factory func() model.Representatie) []string {
 	if factory == nil {
 		return nil
@@ -52,13 +54,23 @@ func zoekbareKolommenVanFactory(factory func() model.Representatie) []string {
 		if f.Type.Kind() != reflect.String {
 			continue
 		}
+		// Probeer bun-tag eerst
 		bunTag := f.Tag.Get("bun")
-		if bunTag == "" || bunTag == "-" {
+		if bunTag == "-" {
 			continue
 		}
 		col := strings.SplitN(bunTag, ",", 2)[0]
 		if col == "" {
-			continue
+			// Geen bun-tag: val terug op json-tag
+			jsonTag := f.Tag.Get("json")
+			if jsonTag == "-" {
+				continue
+			}
+			col = strings.SplitN(jsonTag, ",", 2)[0]
+		}
+		if col == "" {
+			// Geen json-tag: gebruik veldnaam als lowercase kolomnaam
+			col = strings.ToLower(f.Name)
 		}
 		cols = append(cols, col)
 	}
@@ -112,8 +124,8 @@ func MaakVizReflijstOptiesHandler() gin.HandlerFunc {
 		if s := strings.TrimSpace(c.Query("size")); s != "" {
 			var v int
 			if _, err := fmt.Sscan(s, &v); err == nil && v > 0 {
-				if v > 200 {
-					v = 200
+				if v > 500 {
+					v = 500
 				}
 				size = v
 			}
