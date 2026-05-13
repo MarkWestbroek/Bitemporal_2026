@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-05-12 09:49
 - **Sessie-ID**: `d0ae5cf2-6bef-4cf6-ba73-1f2a9f5cde01`
-- **Berichten**: 62
+- **Berichten**: 65
 
 ---
 
@@ -1271,5 +1271,40 @@ Het Gemeente REF LIJST ITEM heeft een /weergavenaam. Werkt die nu goed?
 ## 🤖 Assistant
 
 Je hebt gelijk - ik testte alleen de API endpoint (curl), niet de UI. Laat me dit nu echt onderzoeken. 
+
+---
+
+## 🧑 User
+
+Dat werkt. Nu geeft alleen de dropdown in Bereikbaarheid in het NP-edit scherm nog geen gemeente weer . Gebruikt die dan niet ook gewoon weergavenaam?
+
+---
+
+## 🤖 Assistant
+
+Laat me eerst kijken hoe `locatie_id` in Bereikbaarheid wordt weergegeven en welke velden `Locatie_Adres_Data` heeft:  Het kernprobleem is de CEL-expressie `Adres.gemeente_naam` terwijl het veld in de data `gemeente` (int ID) heet — er is geen `gemeente_naam` in de context. Laat me de Bereikbaarheid struct en de frontend EntityRef-weergave begrijpen:  Nu zie ik het. De  useEffect in  berekent `weergaveadres` zonder de ref-namen op te zoeken. Laat me de exacte code lezen: Duidelijk. De  useEffect bouwt de CEL-context voor `weergaveadres` maar verrijkt de items **niet** met `gemeente_naam` (de ref-lookup die in EntiteitFormulier wél gedaan wordt). Ik ga dit fixen door de useEffect async te maken en eerst de reflijst-opties op te halen: 
+```
+
+```
+NatuurlijkPersoon #2 (Thomas van Vries) geladen. Scrollen naar Bereikbaarheid:       **Gefixt.** De `locatie_id` dropdown in Bereikbaarheid toont nu:
+
+**`2 — Beukenhof 15A, 1074CD Rotterdam (GM05…)`**
+
+De gemeente naam (Rotterdam, GM05xx) wordt nu correct meegenomen in het `weergaveadres`. De dropdown is afgekapt in de weergave maar de gemeente is er.
+
+**Wat was het probleem:** De  useEffect in  berekende de `weergaveadres` CEL-expressie voor Locatie-entiteiten zonder eerst de ref-velden (zoals `gemeente` → `gemeente_naam`) op te halen. Daardoor was `Adres.gemeente_naam` altijd `null` in de CEL-evaluatie, waardoor het gemeente-gedeelte werd overgeslagen.
+
+**Fix:** De useEffect omgezet naar async, met twee extra stappen vóór de entiteit-fetch:
+1. Verzamel alle -velden uit de data-types van de doelentiteit (Locatie → Locatie_Adres_Data → `gemeente: ref:Gemeente`)
+2. Haal in parallel de reflijst-opties op en bouw een 
+3. Verrijk elk platgeslagen item met `gemeente_naam` enz. vóór CEL-evaluatie
+
+Dit is hetzelfde patroon dat al in  zit — nu consistent ook in .
+
+---
+
+## 🧑 User
+
+zou je dit nog kunnen documenteren in het bestand dat over de CEL expressies gaat?
 
 ---

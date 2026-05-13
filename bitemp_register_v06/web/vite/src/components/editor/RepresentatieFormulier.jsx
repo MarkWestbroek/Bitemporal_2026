@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useSchema } from "../../context/SchemaContext";
 import { safeArray, platSlaHubItems, tUitRegistratieTijdstip } from "../../shared/schemaUtils";
-import { evalueerCelExpressie, bouwCelContext } from "../../shared/celEvaluator";
+import { evalueerCelExpressie, bouwCelContext, bouwReflijstOptieLabel } from "../../shared/celEvaluator";
 import SchemaFormField from "./SchemaFormField";
 import { coercedWaardeVoorVeld } from "../actions/ActionFormParts";
 import { bepaalWidgetOverride } from "./widgetOverrides";
@@ -80,47 +80,111 @@ export default function RepresentatieFormulier({
   const [secondaireError, setSecondaireError] = useState("");
 
   // Fetch volledige secondaire entiteiten + bereken weergaveveld
+  // Ook ref-velden (bijv. gemeente_naam) worden opgelost zodat CEL-expressies
+  // zoals `Adres.gemeente_naam` correct werken.
   useEffect(() => {
     if (!secondaireIdKolom || !doelEntiteitMeta) return;
     const apiPad = doelEntiteitMeta.padnaam || doelEntiteitMeta.meervoud || doelEntiteitMeta.veldnaam;
     if (!apiPad) return;
+    let cancelled = false;
     setSecondaireLoading(true);
-    fetch(`${baseUrl}/full/${encodeURIComponent(apiPad)}?page=1&size=1000`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then((json) => {
-        const key = doelEntiteitMeta.meervoud || Object.keys(json).find((k) => Array.isArray(json[k]));
-        const entities = safeArray(json[key] || json);
-        const idKol = doelEntiteitMeta.idKolom || "id";
-        // Bereken weergaveveld per entiteit via CEL-expressies
-        const afgVelden = safeArray(doelEntiteitMeta?.afgeleideVelden)
-          .filter((av) => av.isWeergaveVeld || av.weergaveVeld);
-        const opties = entities.map((ent) => {
-          let weergave = "";
-          if (afgVelden.length > 0) {
-            const onderl = safeArray(doelEntiteitMeta?.onderliggende);
-            const childGroups = onderl.map((child) => {
-              const childMeta = typeMetaByTypenaam?.[child.doeltype];
-              const rawItems = safeArray(ent[child.jsonRolnaam] || ent[child.rolnaam]);
-              const items = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
-              return { doeltype: child.doeltype, rolnaam: child.rolnaam, items, typeMeta: childMeta };
-            });
-            const ctx = bouwCelContext(childGroups, typeMetaByTypenaam);
-            weergave = afgVelden
-              .map((av) => av.afleidingsregelTaal === "cel" && av.afleidingsregel
-                ? evalueerCelExpressie(av.afleidingsregel, ctx) : null)
-              .filter((v) => v != null && String(v).trim() !== "")
-              .join(" | ");
-          }
-          return { id: ent[idKol], weergave };
-        });
-        setSecondaireOpties(opties);
-        setSecondaireError("");
-      })
-      .catch((err) => { setSecondaireError(String(err?.message || err)); setSecondaireOpties([]); })
-      .finally(() => setSecondaireLoading(false));
+
+    async function laadOpties() {
+      // Stap 1: verzamel ref-types uit child-GE data-velden van de doelentiteit
+      const toFetch = new Set();
+      for (const child of safeArray(doelEntiteitMeta.onderliggende)) {
+        const childMeta = typeMetaByTypenaam?.[child.doeltype];
+        if (!childMeta) continue;
+        const dataChild = safeArray(childMeta.onderliggende).find(
+          (c) => typeMetaByTypenaam?.[c.doeltype]?.ge_subtype === "data"
+        );
+        const veldenBron = dataChild ? typeMetaByTypenaam?.[dataChild.doeltype] : childMeta;
+        for (const veld of safeArray(veldenBron?.velden)) {
+          if (veld.ref) toFetch.add(veld.ref);
+        }
+      }
+
+      // Stap 2: haal reflijst-opties op (parallel)
+      const refLookup = {};
+      await Promise.all(
+        [...toFetch].map(async (refType) => {
+          const refMeta = typeMetaByTypenaam?.[refType];
+          try {
+            const r = await fetch(
+              `${baseUrl}/api/viz/reflijst/${encodeURIComponent(refType)}/opties?size=500`
+            );
+            if (!r.ok) return;
+            const rj = await r.json();
+            const lookup = {};
+            for (const optie of safeArray(rj?.opties)) {
+              lookup[String(optie.id)] = bouwReflijstOptieLabel(optie, refMeta, typeMetaByTypenaam);
+            }
+            refLookup[refType] = lookup;
+          } catch { /* skip */ }
+        })
+      );
+
+      // Stap 3: haal entiteiten op
+      const res = await fetch(`${baseUrl}/full/${encodeURIComponent(apiPad)}?page=1&size=1000`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+
+      const key = doelEntiteitMeta.meervoud || Object.keys(json).find((k) => Array.isArray(json[k]));
+      const entities = safeArray(json[key] || json);
+      const idKol = doelEntiteitMeta.idKolom || "id";
+      const afgVelden = safeArray(doelEntiteitMeta?.afgeleideVelden)
+        .filter((av) => av.isWeergaveVeld || av.weergaveVeld);
+      const heeftRefs = Object.keys(refLookup).length > 0;
+
+      const opties = entities.map((ent) => {
+        let weergave = "";
+        if (afgVelden.length > 0) {
+          const onderl = safeArray(doelEntiteitMeta?.onderliggende);
+          const childGroups = onderl.map((child) => {
+            const childMeta = typeMetaByTypenaam?.[child.doeltype];
+            const rawItems = safeArray(ent[child.jsonRolnaam] || ent[child.rolnaam]);
+            let items = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
+
+            // Verrijk items met ref-namen (bijv. gemeente → gemeente_naam)
+            if (heeftRefs) {
+              const dataChild = safeArray(childMeta?.onderliggende).find(
+                (c) => typeMetaByTypenaam?.[c.doeltype]?.ge_subtype === "data"
+              );
+              const veldenBron = dataChild ? typeMetaByTypenaam?.[dataChild.doeltype] : childMeta;
+              const refVelden = safeArray(veldenBron?.velden).filter((v) => v.ref && refLookup[v.ref]);
+              if (refVelden.length > 0) {
+                items = items.map((item) => {
+                  const extra = {};
+                  for (const veld of refVelden) {
+                    const val = item[veld.naam];
+                    if (val == null) continue;
+                    const naam = refLookup[veld.ref]?.[String(val)];
+                    if (naam) extra[`${veld.naam}_naam`] = naam;
+                  }
+                  return Object.keys(extra).length > 0 ? { ...item, ...extra } : item;
+                });
+              }
+            }
+
+            return { doeltype: child.doeltype, rolnaam: child.rolnaam, items, typeMeta: childMeta };
+          });
+          const ctx = bouwCelContext(childGroups, typeMetaByTypenaam);
+          weergave = afgVelden
+            .map((av) => av.afleidingsregelTaal === "cel" && av.afleidingsregel
+              ? evalueerCelExpressie(av.afleidingsregel, ctx) : null)
+            .filter((v) => v != null && String(v).trim() !== "")
+            .join(" | ");
+        }
+        return { id: ent[idKol], weergave };
+      });
+      return opties;
+    }
+
+    laadOpties()
+      .then((opties) => { if (!cancelled) { setSecondaireOpties(opties); setSecondaireError(""); } })
+      .catch((err) => { if (!cancelled) { setSecondaireError(String(err?.message || err)); setSecondaireOpties([]); } })
+      .finally(() => { if (!cancelled) setSecondaireLoading(false); });
+    return () => { cancelled = true; };
   }, [baseUrl, secondaireIdKolom, doelEntiteitMeta, typeMetaByTypenaam]);
 
   // Splits immutable en bewerkbare velden

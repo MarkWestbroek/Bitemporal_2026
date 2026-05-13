@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useCombobox } from "downshift";
 import { useSchema } from "../../context/SchemaContext";
-import { evalueerCelExpressie } from "../../shared/celEvaluator";
+import { bouwReflijstOptieLabel } from "../../shared/celEvaluator";
 
 /**
  * RefCombobox — Downshift-gebaseerde combobox voor referentielijst-items.
@@ -20,22 +20,6 @@ import { evalueerCelExpressie } from "../../shared/celEvaluator";
 const DREMPEL_KLEIN = 30;
 const DEBOUNCE_MS = 250;
 
-function maakWeergavenaam(optie, weergaveRegel) {
-  if (!optie?.velden) return String(optie?.id ?? "");
-  if (weergaveRegel) {
-    try {
-      const ctx = { ...optie.velden };
-      const result = evalueerCelExpressie(weergaveRegel, ctx);
-      if (result != null && String(result).trim() !== "") return String(result);
-    } catch {
-      // val terug op concatenatie
-    }
-  }
-  // Fallback: alle veldwaarden samenvoegen
-  const vals = Object.values(optie.velden).filter(Boolean);
-  return vals.length > 0 ? vals.join(" — ") : String(optie.id ?? "");
-}
-
 export default function RefCombobox({ refType, value, onChange, readOnly }) {
   const { baseUrl, typeMetaByTypenaam } = useSchema();
 
@@ -43,13 +27,11 @@ export default function RefCombobox({ refType, value, onChange, readOnly }) {
   const itemCount = refMeta?.itemCount ?? null;
   const isKlein = itemCount !== null && itemCount <= DREMPEL_KLEIN;
 
-  // Zoek de weergavenaam afleidingsregel
-  const weergaveRegel = (() => {
-    const avs = refMeta?.afgeleideVelden;
-    if (!Array.isArray(avs)) return null;
-    const wv = avs.find((av) => av.isWeergaveVeld || av.weergaveVeld);
-    return wv?.afleidingsregelTaal === "cel" ? wv.afleidingsregel : null;
-  })();
+  // Helper die de label berekent voor een optie via de gedeelde celEvaluator-helper
+  const maakLabel = useCallback(
+    (optie) => bouwReflijstOptieLabel(optie, refMeta, typeMetaByTypenaam),
+    [refMeta, typeMetaByTypenaam]
+  );
 
   const [opties, setOpties] = useState([]);
   const [alleOpties, setAlleOpties] = useState(null); // alleen voor kleine lijsten
@@ -91,12 +73,12 @@ export default function RefCombobox({ refType, value, onChange, readOnly }) {
         // Zoek label voor huidige waarde
         if (value != null && value !== "") {
           const match = items.find((o) => String(o.id) === String(value));
-          if (match) setSelectedLabel(maakWeergavenaam(match, weergaveRegel));
+          if (match) setSelectedLabel(maakLabel(match));
         }
       }
     });
     return () => { cancelled = true; };
-  }, [isKlein, fetchOpties, weergaveRegel]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isKlein, fetchOpties, maakLabel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Voor grote lijsten: haal label voor huidige waarde op bij mount
   useEffect(() => {
@@ -107,7 +89,7 @@ export default function RefCombobox({ refType, value, onChange, readOnly }) {
       if (cancelled) return;
       const match = items.find((o) => String(o.id) === String(value));
       if (match) {
-        setSelectedLabel(maakWeergavenaam(match, weergaveRegel));
+        setSelectedLabel(maakLabel(match));
         // Voeg het item toe aan opties zodat Downshift selectedItem kan vinden
         // en de naam in het invoerveld toont (niet alleen in readOnly modus).
         setOpties((prev) =>
@@ -116,7 +98,7 @@ export default function RefCombobox({ refType, value, onChange, readOnly }) {
       }
     });
     return () => { cancelled = true; };
-  }, [isKlein, value, fetchOpties, weergaveRegel]);
+  }, [isKlein, value, fetchOpties, maakLabel]);
 
   function handleInputChange(inputValue) {
     if (isKlein && alleOpties) {
@@ -127,7 +109,7 @@ export default function RefCombobox({ refType, value, onChange, readOnly }) {
         const lower = inputValue.toLowerCase();
         setOpties(
           alleOpties.filter((o) =>
-            maakWeergavenaam(o, weergaveRegel).toLowerCase().includes(lower)
+            maakLabel(o).toLowerCase().includes(lower)
           )
         );
       }
@@ -143,6 +125,18 @@ export default function RefCombobox({ refType, value, onChange, readOnly }) {
     }
   }
 
+  // Gecontroleerde inputValue: synct met selectedLabel zolang gebruiker niet typt.
+  const [inputValue, setInputValue] = useState("");
+  const userTypingRef = useRef(false);
+
+  // Sync inputValue vanuit selectedLabel wanneer gebruiker niet zelf typt
+  // (bijv. bij eerste keer ophalen van label voor bestaande waarde).
+  useEffect(() => {
+    if (!userTypingRef.current) {
+      setInputValue(selectedLabel || "");
+    }
+  }, [selectedLabel]);
+
   const {
     isOpen,
     getToggleButtonProps,
@@ -153,16 +147,36 @@ export default function RefCombobox({ refType, value, onChange, readOnly }) {
     selectItem,
   } = useCombobox({
     items: opties,
-    itemToString: (item) => (item ? maakWeergavenaam(item, weergaveRegel) : ""),
+    itemToString: (item) => (item ? maakLabel(item) : ""),
     selectedItem: opties.find((o) => String(o.id) === String(value)) || null,
-    onInputValueChange: ({ inputValue }) => handleInputChange(inputValue),
+    inputValue,
+    onInputValueChange: ({ inputValue: iv, type }) => {
+      const next = iv ?? "";
+      setInputValue(next);
+      // Markeer als user-typing alleen bij echte invoerwijzigingen
+      if (type === useCombobox.stateChangeTypes.InputChange) {
+        userTypingRef.current = true;
+        handleInputChange(next);
+      }
+    },
     onSelectedItemChange: ({ selectedItem }) => {
+      userTypingRef.current = false;
       if (selectedItem) {
         onChange(selectedItem.id);
-        setSelectedLabel(maakWeergavenaam(selectedItem, weergaveRegel));
+        const label = maakLabel(selectedItem);
+        setSelectedLabel(label);
+        setInputValue(label);
       } else {
         onChange("");
         setSelectedLabel("");
+        setInputValue("");
+      }
+    },
+    onIsOpenChange: ({ isOpen }) => {
+      // Bij sluiten zonder selectie: reset inputValue naar selectedLabel
+      if (!isOpen) {
+        userTypingRef.current = false;
+        setInputValue(selectedLabel || "");
       }
     },
   });
@@ -206,6 +220,8 @@ export default function RefCombobox({ refType, value, onChange, readOnly }) {
               selectItem(null);
               onChange("");
               setSelectedLabel("");
+              setInputValue("");
+              userTypingRef.current = false;
             }}
           >
             ✕
@@ -241,7 +257,7 @@ export default function RefCombobox({ refType, value, onChange, readOnly }) {
                 fontSize: 13,
               }}
             >
-              <span style={{ fontWeight: 500 }}>{maakWeergavenaam(item, weergaveRegel)}</span>
+              <span style={{ fontWeight: 500 }}>{maakLabel(item)}</span>
               <span style={{ color: "#6b7280", marginLeft: 8, fontSize: 11 }}>ID: {item.id}</span>
             </li>
           ))}

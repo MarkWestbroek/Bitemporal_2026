@@ -863,3 +863,31 @@ zou dan in een ander domein zitten. Kun je, vanuit de code in dat domein, die La
 
 
 
+
+## RefCombobox — bekende valkuilen (2026-05)
+
+De `RefCombobox` (`web/vite/src/components/editor/RefCombobox.jsx`) gebruikt het
+afgeleide veld `weergavenaam` van het ref-lijst-itemtype (bv. Gemeente) om elke
+optie als label te tonen. Twee bugs die we tegenkwamen en hoe ze opgelost zijn:
+
+1. **Lege haakjes / "() ID: 1680"** — De CEL-expressie `GemeenteGegevens.naam +
+   " (" + GemeenteGegevens.code + ")"` werd geëvalueerd tegen een platte context
+   `{naam, code}` zonder `GemeenteGegevens` namespace. CEL geeft dan stille
+   `undefined`-waarden (lege strings) en het label werd letterlijk `" ()"`. Fix:
+   shared helper `bouwReflijstOptieLabel(optie, refMeta, typeMetaByTypenaam)` in
+   `shared/celEvaluator.js` die een nested context bouwt waarin de hub-Klassenaam
+   en rolnaam beide naar de afgevlakte `velden` wijzen. Gebruikt door
+   `RefCombobox`, `RepresentatieTabel`, `EntiteitFormulier`, `PublicatieTabel`.
+
+2. **Combobox toont placeholder ipv geselecteerde naam** — Downshift's interne
+   `inputValue` synct niet automatisch wanneer de controlled `selectedItem`-prop
+   asynchroon verandert (bv. nadat het label voor de bestaande `value` is
+   opgehaald). Fix: ook `inputValue` controlled maken in `useCombobox`, met een
+   `userTypingRef` om gebruikersinvoer niet te overschrijven, en reset bij
+   `onIsOpenChange(false)` en bij de wis-knop.
+
+3. **Backend SELECT-fallback voor `bun`-tagloze velden** — De
+   `viz_reflijst_opties_handler` selecteerde alleen kolommen met een `bun:`-tag.
+   `Naam`/`Code` op `Gemeente_GemeenteGegevens_Data` hebben alleen een
+   `json:`-tag. Fix: `zoekbareKolommenVanFactory` gebruikt nu een fallback naar
+   de `json`-tag (lowercased) als `bun` ontbreekt.

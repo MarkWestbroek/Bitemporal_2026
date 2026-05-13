@@ -551,6 +551,81 @@ export function evalueerWeergaveVeldenVoorItem(afgeleideVeldenDefs, item, typeMe
 }
 
 /**
+ * Bouwt de CEL-evaluatiecontext voor een referentielijst-optie zoals geleverd
+ * door /api/viz/reflijst/:type/opties (vorm: { id, velden: { naam, code, ... } }).
+ *
+ * Een referentielijst-entiteit heeft typisch één hub-GE (bijv.
+ * `Gemeente_GemeenteGegevens` met klassenaam `GemeenteGegevens`) waarvan de
+ * data-velden in de optie zijn afgevlakt. Een afgeleid veld als
+ * `GemeenteGegevens.naam + " (" + GemeenteGegevens.code + ")"` verwacht echter
+ * dat de velden onder de hub-klassenaam beschikbaar zijn.
+ *
+ * Deze helper geeft daarom zowel de afgevlakte velden direct in de context als
+ * onder de klassenaam-key van het hub-GE.
+ *
+ * @param {Object} optie - { id, velden }
+ * @param {Object} refMeta - TypeMeta van het referentielijst_item-type
+ * @param {Object} typeMetaByTypenaam - Map typenaam → TypeMeta
+ * @returns {Object} Context-object voor evalueerCelExpressie
+ */
+export function bouwReflijstOptieContext(optie, refMeta, typeMetaByTypenaam) {
+  const velden = optie?.velden || {};
+  const ctx = { ...velden, id: optie?.id };
+  // Voeg de hub-GE klassenaam-key toe zodat expressies als `GemeenteGegevens.naam` werken
+  const onderliggende = safeArray(refMeta?.onderliggende);
+  for (const child of onderliggende) {
+    const childMeta = typeMetaByTypenaam?.[child.doeltype];
+    if (!childMeta) continue;
+    const klassenaam = childMeta.klassenaam;
+    if (klassenaam && !(klassenaam in ctx)) {
+      ctx[klassenaam] = velden;
+    }
+    // Ook onder rolnaam (bijv. "GemeenteGegevens" of "Data") voor flexibiliteit
+    if (child.rolnaam && !(child.rolnaam in ctx)) {
+      ctx[child.rolnaam] = velden;
+    }
+  }
+  return ctx;
+}
+
+/**
+ * Bouwt het label voor een referentielijst-optie. Probeert eerst de CEL-expressie
+ * van het weergaveveld; valt terug op het `naam`-veld; valt verder terug op
+ * concatenatie van alle veldwaarden; uiteindelijk op de ID.
+ *
+ * @param {Object} optie - { id, velden }
+ * @param {Object} refMeta - TypeMeta van het referentielijst_item-type
+ * @param {Object} typeMetaByTypenaam - Map typenaam → TypeMeta
+ * @returns {string} Het label
+ */
+export function bouwReflijstOptieLabel(optie, refMeta, typeMetaByTypenaam) {
+  if (!optie) return "";
+  const velden = optie.velden || {};
+  // 1. Probeer CEL-weergaveveld
+  const weergaveAv = safeArray(refMeta?.afgeleideVelden)
+    .find((av) => av.isWeergaveVeld || av.weergaveVeld);
+  if (weergaveAv?.afleidingsregelTaal === "cel" && weergaveAv.afleidingsregel) {
+    try {
+      const ctx = bouwReflijstOptieContext(optie, refMeta, typeMetaByTypenaam);
+      const result = evalueerCelExpressie(weergaveAv.afleidingsregel, ctx);
+      if (result != null && String(result).trim() !== "") {
+        return String(result);
+      }
+    } catch {
+      // val terug
+    }
+  }
+  // 2. Voorkeur voor `naam`
+  if (velden.naam) return String(velden.naam);
+  if (velden.name) return String(velden.name);
+  // 3. Concatenatie van alle waarden
+  const vals = Object.values(velden).filter(Boolean);
+  if (vals.length > 0) return vals.join(" — ");
+  // 4. Fallback: ID
+  return String(optie.id ?? "");
+}
+
+/**
  * Berekent de weergaveveld-tekst voor een entiteit op basis van afgeleide velden.
  *
  * Gedeelde helper — wordt gebruikt door RepresentatieTabel (lijst-kolom),

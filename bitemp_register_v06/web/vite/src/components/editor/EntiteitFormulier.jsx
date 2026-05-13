@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useSchema } from "../../context/SchemaContext";
 import { safeArray, platSlaHubItems, platSlaAlleVersies, tUitRegistratieTijdstip } from "../../shared/schemaUtils";
-import { evalueerCelExpressie, bouwCelContext, evalueerWeergaveVeldenVoorItem } from "../../shared/celEvaluator";
+import { evalueerCelExpressie, bouwCelContext, evalueerWeergaveVeldenVoorItem, bouwReflijstOptieLabel } from "../../shared/celEvaluator";
 import RepresentatieFormulier from "./RepresentatieFormulier";
 import { useFormulierDefinitie } from "../../hooks/useFormulierDefinitie";
 import CustomFormulierRenderer from "./CustomFormulierRenderer";
@@ -250,9 +250,6 @@ export default function EntiteitFormulier() {
     Promise.all(
       [...toFetch].map(async (refType) => {
         const refMeta = typeMetaByTypenaam?.[refType];
-        const weergaveAv = safeArray(refMeta?.afgeleideVelden)
-          .find((av) => av.isWeergaveVeld || av.weergaveVeld);
-        const regExp = weergaveAv?.afleidingsregelTaal === "cel" ? weergaveAv.afleidingsregel : null;
         try {
           const res = await fetch(
             `${baseUrl}/api/viz/reflijst/${encodeURIComponent(refType)}/opties?size=500`
@@ -261,21 +258,7 @@ export default function EntiteitFormulier() {
           const json = await res.json();
           const lookup = {};
           for (const optie of safeArray(json?.opties)) {
-            let label = null;
-            if (regExp && optie.velden) {
-              try {
-                const result = evalueerCelExpressie(regExp, { ...optie.velden });
-                if (result != null && String(result).trim() !== "") label = String(result);
-              } catch { /* */ }
-            }
-            if (!label) {
-              // Voorkeur: gebruik 'naam'-veld direct als het beschikbaar is,
-              // anders join alle velden
-              const velden = optie.velden || {};
-              label = velden.naam || velden.name ||
-                (Object.values(velden).filter(Boolean).join(" — ") || String(optie.id ?? ""));
-            }
-            lookup[String(optie.id)] = label;
+            lookup[String(optie.id)] = bouwReflijstOptieLabel(optie, refMeta, typeMetaByTypenaam);
           }
           return [refType, lookup];
         } catch {
