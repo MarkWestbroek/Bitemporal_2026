@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-20 00:49
 - **Sessie-ID**: `52f20376-dfe8-453e-a30e-be7f52b45af5`
-- **Berichten**: 10
+- **Berichten**: 13
 
 ---
 
@@ -20,37 +20,7 @@ Dan kan ik die op common-ground-lab.nl plaatsen.
 
 ## 🤖 Assistant
 
-Now let me look at the publication page source:  Now let me check the existing Common Ground theme CSS: Let me check the nginx config for X-Frame-Options: Now I have everything I need. Let me implement both changes:
-
-1. Modify  to hide the header when `?embed=1` is in the URL
-2. Create the wrapper HTML file 
-```
-
-```
-
-```
-
-```
-Now create the wrapper HTML: Klaar. Dit is wat er gemaakt is:
-
-**1. ** — header verborgen bij `?embed=1`
-
-De  checkt nu  voor `?embed=1`. Zonder die querystring (lokaal op poort 5173) blijft de header gewoon staan.
-
-**2. demos/initiatieven-cg-wrapper.html** — de standalone wrapper voor common-ground-lab.nl
-
-Stijl: CG branding met:
-- Donkerblauwe topbalk (`#143462`) met logo + link naar commonground.nl
-- Blauwe intro-banner met titel en omschrijving
-- Broodkruimel met gele `border-bottom` (kenmerkende CG-stijl)
-- iframe die `?embed=1#/t/initiatieven` laadt (header van het register dus verborgen)
-- Donkerblauwe footer met Open Source badge + VNG-info
-
-De iframe src is: `http://77.161.190.210:8086/viz/react/publicatie.html?embed=1#/t/initiatieven`
-
-**Na een Vite-build** (`npm run build`) is de `?embed=1`-ondersteuning live. Voor common-ground-lab.nl: gewoon het HTML-bestand uploaden — geen andere dependencies.
-
-> **Let op**: het CG logo in de topbalk wordt opgehaald van de API-server. Als die verhuist, het -attribuut bijwerken of het SVG inline embedden.
+Let me also look at the publication page source code to understand its structure:  
 
 ---
 
@@ -134,71 +104,7 @@ Goede vragen. Hier een beknopt overzicht zodat je het morgen kunt oppakken.
 
 **Hoeveel werk?** ~30 minuten, eenmalig:
 1. Gratis Cloudflare-account aanmaken
-2. Domein (`common-ground-lab.nl`) bij Cloudflare DNS zetten (nameservers wijzigen bij je registrar)
-3. In Cloudflare dashboard een Tunnel aanmaken → je krijgt een `TUNNEL_TOKEN`
-4. Eén Docker-container toevoegen aan je compose (5 regels YAML, staat al in je TRUENAS_DEPLOYMENT.md)
-5. In het Tunnel-dashboard routes instellen: `common-ground-lab.nl` → `http://bitemp-viz-frontend:8080`
-
-Jij moet: nameservers wijzigen + token in Dockge plakken. Dat is het.
-
-**Nadelen:**
-- **VS-jurisdictie**: Cloudflare is een Amerikaans bedrijf. Al het verkeer loopt via hun edge-servers (wel het dichtstbijzijnde datacenter, voor NL is dat Amsterdam of Frankfurt). Ze kunnen in theorie meekijken — het is een **TLS-termination proxy**. Voor een publieke demo/PoC is dat prima; voor productie met persoonsgegevens is het een aandachtspunt.
-- **Latency**: Verwaarloosbaar, typisch +2-5ms. Cloudflare's edge zit in AMS/FRA, dat is dichterbij je bezoekers dan je thuisserver.
-- **Meerdere poorten**: Een Tunnel kan **alleen HTTP(S)** proxyen, geen raw TCP. Dus je kunt er wél meerdere web-services doorheen routeren (bijv. `api.common-ground-lab.nl` → `:8085`, `minio.common-ground-lab.nl` → `:9001`), maar **geen directe PostgreSQL-poort** (5433) of andere TCP-diensten doorheen sturen. Voor DB-toegang zou je dan nog steeds VPN of SSH nodig hebben.
-
----
-
-## Alternatief 1: Let's Encrypt rechtstreeks op de NAS
-
-**Hoe werkt het?**
-- **Caddy** of **Nginx Proxy Manager** als reverse proxy container, met automatische Let's Encrypt certificaten (gratis, 90 dagen, auto-renew)
-- Vereist: poort **80** en **443** port-forwarded op je router naar de NAS
-- Domein DNS A-record → je publieke IP (of DynDNS als je IP dynamisch is)
-
-**Hoeveel werk?** ~45 min:
-1. Port-forwarding 80+443 op router
-2. DNS A-record `common-ground-lab.nl` → publiek IP
-3. Caddy/NPM container toevoegen + config
-
-**Voordelen t.o.v. Cloudflare:**
-- **Geen derde partij** — TLS-terminatie op je eigen NAS, verkeer gaat nergens via de VS
-- **Alle poorten mogelijk** — je kunt ook TCP-poorten forwarden (DB, MinIO, etc.)
-- Volledige controle
-
-**Nadelen:**
-- Je NAS is **direct bereikbaar** vanaf internet → groter aanvalsoppervlak
-- Port-forwarding op je router nodig (sommige ISPs blokkeren poort 80/443)
-- Als je publiek IP wisselt: DynDNS nodig
-
----
-
-## Alternatief 2: Caddy met Cloudflare DNS-challenge (geen port 80 nodig)
-
-Een tussenoplossing: Caddy met de **Cloudflare DNS-01 challenge plugin**. Dan:
-- Geen poort 80 forwarden nodig (certificaat wordt gevalideerd via DNS API)
-- Wel poort 443 forwarden
-- TLS-terminatie op je eigen NAS (geen VS-proxy)
-- Domein moet bij Cloudflare DNS staan (maar de tunnel hoeft niet)
-
----
-
-## Aanbeveling voor jouw situatie
-
-| Criterium | Cloudflare Tunnel | Let's Encrypt + Caddy |
-|---|---|---|
-| Snelste opzet | ✅ ~30 min | ~45 min |
-| Geen port-forwarding | ✅ | ❌ |
-| Geen VS-partij | ❌ | ✅ |
-| DB-poorten bereikbaar | ❌ (alleen HTTP) | ✅ |
-| NAS niet exposed | ✅ | ❌ |
-
-**Voor nu (snel de demo live):** Cloudflare Tunnel — minimaal werk, geen router-config.
-
-**Als je DB-poorten ook wilt of VS-gevoeligheid weegt:** Caddy + Let's Encrypt direct op de NAS.
-
-Beide opties zijn ook te combineren: Cloudflare Tunnel voor de publieke webpagina's, en VPN/WireGuard voor DB-toegang op je interne netwerk.
-
-Morgen pak ik het graag met je op — welke richting je ook kiest, ik kan de compose-config en wrapper HTML aanpassen.
+2. Domein (`common-ground-lab.nl`) bij Cloudflare DNS zetten (nameservers 
 
 ---
 
@@ -228,5 +134,38 @@ Staat nu in de repo, dus die heb je op je laptop ook.
 ## 🧑 User
 
 dank!
+
+---
+
+## 🤖 Assistant
+
+Graag gedaan! Veel sterkte met je werk op de laptop de komende twee weken. Het document ligt klaar als je het nodig hebt. 
+
+Veel succes met de HTTPS-setup — zet je tegen het licht en roep als je vragen hebt. 🚀
+
+---
+
+## 🧑 User
+
+Het logo komt nu niet goed over, zie img.
+
+Het juiste png logo staat hier: https://common-ground-lab.nl/Common_gound_logo_rgb.png
+Het svg: https://common-ground-lab.nl/Common_gound_logo_rgb.svg
+
+wil je die in de html wrapper zetten?
+
+---
+
+## 🤖 Assistant
+
+Het probleem is dat de inline SVG alle paden wit kleurt, maar het echte logo heeft donkerblauwe tekst ("COMMON GROUND") die op de donkerblauwe header onzichtbaar wordt. Nu het logo op HTTPS staat (zelfde domein), kan ik gewoon  gebruiken — geen mixed content. 
+```
+
+```
+Klaar. Wijzigingen in demos/initiatieven-cg-wrapper.html:
+
+- **Inline SVG verwijderd** →  (SVG met PNG als fallback via `onerror`)
+- **Witte pill-wrapper** om het logo — de donkerblauwe "COMMON GROUND"-tekst is zo leesbaar op de donkerblauwe header
+- **Geen mixed content**: het logo staat op hetzelfde HTTPS-domein
 
 ---

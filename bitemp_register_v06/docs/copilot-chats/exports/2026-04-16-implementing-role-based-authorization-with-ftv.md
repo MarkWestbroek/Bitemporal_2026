@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-16 20:41
 - **Sessie-ID**: `21989e11-a412-45b9-bf0e-aaf628a7104b`
-- **Berichten**: 109
+- **Berichten**: 124
 
 ---
 
@@ -24,110 +24,7 @@ Second: how to start doing this keeping FTV in mind?
 
 ## 🤖 Assistant
 
-Let me explore the existing authorization design and the current frontend/backend architecture to understand what's already in place.  Now let me check the frontend App.jsx routing more closely to understand the exact routing mechanism:  I have all the context I need. Let me draft the plan. Here's the plan:
-
----
-
-## Plan: Authorization with PxP Pattern (Cedar + JWT)
-
-Add authentication (JWT) and authorization (PxP with in-process Cedar PDP) to the bitemporal register. Public pages remain open; Editor-v2, Editor v1, and IDE require login. Three roles (admin/editor/viewer) with Cedar policies. Frontend gets a login page + route guards. Designed for incremental FTV/AuthZEN adoption.
-
-### Key Decisions
-
-| Aspect | Choice | Rationale |
-|--------|--------|-----------|
-| **Public pages** | Index, Tijdlijn, Replay, Universum, Publicatie, Swagger/ReDoc/GraphiQL | Per your selection |
-| **Protected pages** | Editor-v2, Editor v1, IDE | Editing/admin tools |
-| **PDP engine** | `cedar-go` v1.6.0 (pure Go, in-process) | Aligns with autoriseren/autoriseren.md Cedar recommendation, no external service needed |
-| **PxP components** | PEP=Gin middleware, PDP=cedar-go, PIP=MetaRegistry+user DB, PAP=Cedar files+DB | FTV architecture, in-process for now |
-| **Users** | PostgreSQL `gebruiker` table, bcrypt passwords | Fits existing stack |
-| **Roles** | admin, editor, viewer | Three-tier |
-| **Auth token** | **JWT in httpOnly cookie** (recommended) | XSS-proof, auto-sent by browser, forward-compatible with OIDC. **Needs your confirmation** — see open question below |
-| **Feature flag** | `AUTH_ENABLED` env var | Gradual rollout, dev stays open |
-
-### PxP Component Mapping
-
-| Component | Implementation | File |
-|-----------|----------------|------|
-| **PEP** (Enforcement) | Gin middleware — intercepts requests, calls PDP, enforces decision | `middleware/authz_pep.go` |
-| **PDP** (Decision) | cedar-go `Authorize()` in-process | `authz/pdp.go` |
-| **PIP** (Information) | User attributes from DB + resource attributes from MetaRegistry | `authz/pip.go` |
-| **PAP** (Administration) | Cedar `.cedar` policy files + DB overrides | `authz/pap.go`, `authz/policies/*.cedar` |
-
-### Authentication Flow
-```
-POST /api/auth/login → validate bcrypt → issue JWT → set httpOnly cookie
-Subsequent requests → PEP reads JWT from cookie → validates → extracts subject → calls PDP
-```
-
----
-
-### Phase 1: Backend Authentication Foundation
-*No dependencies — start here*
-
-1. Add Go deps: `cedar-go`, `golang-jwt/jwt/v5`, `golang.org/x/crypto/bcrypt`
-2. Create `gebruiker` table (id, gebruikersnaam, wachtwoord_hash, email, rol, actief, aangemaakt_op) — add to dbsetup/createtables.go
-3. Create `model/gebruiker.go` — Gebruiker struct with Bun tags
-4. Create `handlers/auth_handler.go`: login (`POST /api/auth/login`), logout, me (`GET /api/auth/me`)
-5. Create `middleware/auth_middleware.go`: JWT extraction from cookie, validation, role check
-6. Seed default admin user at startup (username/password from env vars)
-7. Organize route groups in routes/addroutes.go: public group vs protected group (with JWT middleware)
-8. Replace password-in-URL admin pattern in , ,  with JWT admin role check
-9. Env vars: `JWT_SECRET`, `JWT_EXPIRY_HOURS`, `AUTH_ENABLED`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`
-
-### Phase 2: PxP Authorization Layer (Cedar)
-*Depends on Phase 1*
-
-1. Create `authz/` package: `pdp.go` (cedar-go wrapper), `pip.go` (attribute builder), `pap.go` (policy loader)
-2. Write initial Cedar policies in `authz/policies/`:
-   - Default deny (deny-overrides combining — safe baseline)
-   - Public pages: permit everyone
-   - Role policies: viewer=read-only, editor=+register/correct, admin=everything
-3. Create `middleware/authz_pep.go`: maps Gin route+method → Cedar action+resource, calls PDP, logs decision
-4. Wire PEP middleware into protected route group
-5. Add `autorisatie_besluit` audit table (subject, action, resource, decision, timestamp, policy_id)
-
-### Phase 3: Frontend Authentication
-*Depends on Phase 1, parallel with Phase 2*
-
-1. Create `AuthContext.jsx` — state (user, role, isAuthenticated), login/logout/checkAuth methods
-2. Create `LoginPage.jsx` — username + password form with Utrecht styling
-3. Refactor : wrap in `<AuthProvider>`, define protected routes list (`editor-v2`, `editor`, `ide`), redirect to login when unauthenticated
-4. Add login/logout controls to page header/navigation
-5. Cookie is httpOnly → browser sends automatically, no JS token handling
-
-### Phase 4: Fine-grained Authorization *(future, out of initial scope)*
-- Resource-type-level Cedar policies (e.g., "editor can register Initiatief")
-- `/api/auth/permissions` endpoint (PDP reverse query)
-- Frontend conditional rendering based on permissions
-- Per-field masking for viewer role
-
----
-
-### Verification
-1. `go build .` and `go test .` pass after each phase
-2. **Phase 1**: Login returns cookie; `/api/auth/me` returns user; protected routes return 401 without cookie
-3. **Phase 2**: Cedar policies load at startup; viewer gets 403 on editor routes; decisions logged in audit table
-4. **Phase 3**: Browser `/editor-v2` → login page; after login → editor; all public pages always accessible
-5. All existing tests remain green .` pass after each phase
-2. **Phase 1**: Login returns cookie; `/api/auth/me` returns user; protected routes return 401 without cookie
-3. **Phase 2**: Cedar policies load at startup; viewer gets 403 on editor routes; decisions logged in audit table
-4. **Phase 3**: Browser `/editor-v2` → login page; after login → editor; all public pages always accessible
-5. All existing tests remain green throughout
-
-### FTV Forward-Compatibility
-- The PEP→PDP interface matches **AuthZEN Access Evaluation API** shape — when migrating to external PDP, only the PDP client changes (HTTP instead of in-process)
-- JWT claims use standard **OIDC claims** (sub, name, roles) → ready for Keycloak/DigiD
-- Cedar policies in files → movable to centralized **PAP service**
-- Audit table schema aligns with **Authorization Decision Log** standard
-
----
-
-### Open Question
-
-**Auth token delivery**: The plan assumes **httpOnly cookie** (JWT baked into a secure cookie). This is the most secure option (no XSS exposure, no localStorage) and simplest for the frontend (browser sends cookies automatically). The alternative is a classic `Authorization: Bearer <token>` header, which requires the frontend to store the token in memory and attach it to every request — more work, more surface area. 
-
-You said "let me think about it" — **do you have a preference, or shall I go with httpOnly cookie?**
+Let me explore the existing authorization design and the current frontend/backend architecture to understand what's already in place. 
 
 ---
 
@@ -264,7 +161,9 @@ POST /authzen/v1/evaluation
 
 ## 🤖 Assistant
 
-Plan is finalized. Here's the summary of changes:
+Good — all questions resolved. The ODRL work is a fascinating angle; it means the policy engine choice truly doesn't matter for now since OpenFTV abstracts it.
+
+Let me finalize the plan. Plan is finalized. Here's the summary of changes:
 
 **All open questions resolved:**
 
@@ -276,16 +175,21 @@ Plan is finalized. Here's the summary of changes:
 
 **One addition for Phase 2**: the fork setup step. Before building the Docker images, you'll need to:
 - Fork `https://gitlab.com/digilab.overheid.nl/ecosystem/ftv/open-ftv` on GitLab
-- Clone your fork locally (as a submodule or sibling directory)
-- Docker build from that local source
-
-The rest of the plan (4 phases, architecture, files, verification) remains as presented. Ready to hand off to implementation when you are.
+- Clone 
 
 ---
 
 ## 🧑 User
 
 Can you also do phase 2. I forked and cloned the repo to D:\Git\open-ftv. Can you create the docker images etc?
+
+---
+
+## 🤖 Assistant
+
+I'm currently in **Plan mode** — I can only research and plan, not create or edit files. To execute Phase 1 and Phase 2, you'll need to switch to an implementation mode (e.g., use the handoff button or start a new chat in Code/Edit mode).
+
+The plan in `/memories/session/plan.md` is complete and ready for the implementing agent to pick up. It has all the details: files to create, compose services, policies, env vars, and verification steps.
 
 ---
 
@@ -297,66 +201,7 @@ Start implementation
 
 ## 🤖 Assistant
 
-Let me first gather context from the existing files I'll need to modify.   Now let me look at the OpenFTV docker compose for reference:  I have enough context now. Let me start implementing Phase 1 and Phase 2 in parallel. Now let me check the existing model patterns to match conventions: Now let me create the gebruiker model: Now add the gebruiker table to . Let me find the right insertion point: 
-```
-
-```
-Now create the auth middleware: No `middleware/` directory yet, I need to create it: Now let me check how existing handlers reference DB and what patterns they use:  Good —  is the shared DB reference. Now create the auth handlers:  I need to export the `jwtExpiryHours` function from middleware since the handler references it. Let me fix that:  
-```
-
-```
-Now wire up routes and seed admin in main.go. First let me check the CORS middleware to also allow credentials:   I need to add `Access-Control-Allow-Credentials: true` for the httpOnly cookie to work cross-origin, and add JWT middleware in the SetupMiddleware function:  
-```
-
-```
-Now add auth routes to . Let me also add the seed call:  
-```
-
-```
-Wait, I made an error with the import - there was an extra tab+import. Let me check: Fix the indentation on the import:  
-```
-
-```
-Now add auth routes in the NewRouter function. Let me find where routes are registered:   
-```
-
-```
-Now let me try to build and see what errors come up:   Clean build. Now let me run the tests:   All tests pass. Now let me also check if the  import in  is used properly (it was added for ):    Good. Phase 1 backend is complete. Now Phase 2 — OpenFTV Docker compose and initial policies.    Let me check the init-db.sh script that vlierdam uses:    Now let me also check the existing docker-compose files in bitemp to make sure they're consistent:   Now create the OpenFTV compose file. I'll use a separate docker directory and build from the OpenFTV source at :     Now create the init-db script and the authz directory structure:      Now create the manager directory structure with policies, data, bundles, and tags:        Now create the data (entities/attributes) for the manager:       Now create the bundle config for the PDP:         Create the PDP local data directory (for local policy evaluation before bundles arrive):            Now create a README for the authz directory:            Final verification — rebuild and test:     All green. Let me also add the `.env.example` entries for the new auth variables:       
-```
-
-```
-Now let me write a basic unit test for the auth middleware to verify JWT generation/validation:         All 6 tests pass. Let me do the final full test suite to confirm everything is still green:        Now update the session memory with progress:      Phase 1 and Phase 2 are fully implemented. Here's a summary:
-
-## Phase 1: Authentication Foundation — Done
-
-**New files:**
-- model/gebruiker.go — `Gebruiker` struct with Bun tags (id, gebruikersnaam, wachtwoord_hash, email, rol, actief, aangemaakt_op)
-- middleware/auth_middleware.go — `JWTAuthMiddleware()`, `RequireAuth()`, `RequireRol()`, JWT generation/validation, `IsAuthEnabled()` feature flag
-- middleware/auth_middleware_test.go — 6 tests (all pass)
-- handlers/auth_handler.go — `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `GET /api/auth/status`, `SeedAdminGebruiker()`
-
-**Modified files:**
--  — added `golang-jwt/jwt/v5`, `golang.org/x/crypto`
-- dbsetup/createtables.go — `gebruiker` table creation
-- routes/addroutes.go — CORS `Access-Control-Allow-Credentials`, JWT middleware registration
--  — auth routes group, admin seed on startup
--  — `AUTH_ENABLED`, `JWT_SECRET`, `JWT_EXPIRY_HOURS`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`
-
-## Phase 2: OpenFTV Sidecar Deployment — Done
-
-**New files:**
--  — 4 services: openftv-db, openftv-manager, openftv-pdp, openftv-mi
-- authz/manager/policies/bitemp_authz.rego — Rego policy with role hierarchy (admin > editor > viewer), public/protected pages, API access levels
-- authz/manager/data/entities/ — page and role definitions
-- authz/manager/bundles/bitemp-pdp.yaml — bundle config
-- authz/pdp/policies/bitemp_authz.rego — local fallback policy
-- authz/README.md — full documentation
-
-**Build: clean** | **Tests: all pass (including 6 new middleware tests)**
-
-Auth is **off by default** (`AUTH_ENABLED=false`). Set `AUTH_ENABLED=true` + `ADMIN_USERNAME`/`ADMIN_PASSWORD` in `.env` to activate. The OpenFTV sidecar starts with `docker compose -f docker-compose.auth.yml up --build`.
-
-Ready for **Phase 3** (PEP middleware / AuthZEN client) and **Phase 4** (frontend login page) when you want to continue.
+Let me first gather context from the existing files I'll need to modify. 
 
 ---
 
@@ -509,25 +354,7 @@ sequenceDiagram
 
 ## 🤖 Assistant
 
-The semicolons in `Set-Cookie:` header text within Mermaid sequence diagrams are treated as statement separators, causing the parse error. I need to fix all occurrences: 
-```
-
-```
-Nu even controleren of er nog andere `;` in mermaid-blokken zitten: 
-```
-
-```
-Nu even controleren of er nog andere `;` in mermaid-blokken zitten: Nog één — een `;` in een `Note over` in diagram 4.8:  
-```
-
-```
-Geen semicolons meer in Mermaid-blokken. Drie wijzigingen in :
-
-- **Diagram 4.1**: `Set-Cookie: bitemp_token=eyJhbG...; HttpOnly; Path=/; SameSite=Lax` → `...eyJhbG... (HttpOnly, Path=/, SameSite=Lax)`
-- **Diagram 4.6**: `Set-Cookie: bitemp_token=; Max-Age=-1; HttpOnly` → `...bitemp_token= (Max-Age=-1, HttpOnly)`
-- **Diagram 4.8**: `De PDP evalueert; de PEP dwingt af.` → `...evalueert, de PEP dwingt af.`
-
-Mermaid gebruikt `;` als statement-separator in sequence diagrams, dus alle puntkomma's in message-tekst veroorzaken een parse-error.
+The problem is the semicolons in `Set-Cookie: bitemp_token=eyJhbG...; HttpOnly; Path=/; SameSite=Lax` — Mermaid treats `;` as a statement separator. Let me check all the diagrams for this and other similar issues: 
 
 ---
 
@@ -625,59 +452,7 @@ vragen:
 
 ## 🤖 Assistant
 
-Hier zijn de antwoorden op beide vragen:
-
----
-
-### 1. Gebruikers configureren
-
-Er zijn nu twee manieren:
-
-**A. Admin via `.env` bij startup (automatisch)**
-Stel in je `.env` in:
-```
-AUTH_ENABLED=true
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=geheim123
-```
- maakt de admin-gebruiker aan als die nog niet bestaat. Dit is één gebruiker met rol .
-
-**B. Extra gebruikers direct in de database (handmatig)**
-```sql
--- Genereer bcrypt hash eerst via Go of een tool (bijv. htpasswd of online bcrypt generator)
-INSERT INTO gebruiker (gebruikersnaam, wachtwoord_hash, email, rol, actief)
-VALUES ('jan', '$2a$10$...hash...', 'jan@example.com', 'editor', true);
-```
-Of wachtwoord resetten:
-.
-
-**B. Extra gebruikers direct in de database (handmatig)**
-```sql
--- Genereer bcrypt hash eerst via Go of een tool (bijv. htpasswd of online bcrypt generator)
-INSERT INTO gebruiker (gebruikersnaam, wachtwoord_hash, email, rol, actief)
-VALUES ('jan', '$2a$10$...hash...', 'jan@example.com', 'editor', true);
-```
-Of wachtwoord resetten:
-```sql
-UPDATE gebruiker SET wachtwoord_hash = '$2a$10$...nieuwehash...' WHERE gebruikersnaam = 'jan';
-```
-
-Een gebruikersbeheer-UI/API staat in de backlog (toekomstige fase). Voor nu is dit de enige weg voor extra gebruikers.
-
----
-
-### 2. OpenFTV Docker — status en plan
-
-**Goed nieuws**: de `open-ftv` repo staat al op  met alle benodigde `apps/manager`, `apps/pdp` en `apps/management-interface` Dockerfiles. En  is al volledig geconfigureerd om die te bouwen.
-
-Starten kan dus gewoon vanuit hier:
-```bash
-docker compose -f docker-compose.auth.yml up --build
-```
-
-Dit bouwt 4 images (openftv-db, manager, pdp, mi) en start de sidecar op poorten 9000/9004/8180. De eerste build duurt een paar minuten (Go compile).
-
-Zal ik dat nu starten?
+Laat me de relevante bestanden bekijken om beide vragen goed te beantwoorden.  
 
 ---
 
@@ -689,16 +464,7 @@ kun je dat verhaal over SeedAdminGebruiker enz. ook in de dev-handleiding schrij
 
 ## 🤖 Assistant
 
-
-```
-
-```
-Klaar. In docs/AUTH_DEVELOPER_GUIDE.md is sectie 11 "Gebruikersbeheer" toegevoegd (FAQ is 12 geworden), met:
-
-- **Methode A** — admin-seed via `.env` (`ADMIN_USERNAME`/`ADMIN_PASSWORD`), met uitleg dat de seed idempotent is (doet niets als gebruiker al bestaat)
-- **Methode B** — extra gebruikers direct via SQL, inclusief hash genereren, INSERT, wachtwoord resetten en deactiveren
-- **Tabelstructuur** als snelle referentie voor alle kolommen
-- FAQ-vragen over gebruikers bijgewerkt met verwijzing naar de nieuwe sectie
+Laat me ook even de inhoudsopgave bekijken: Ik voeg een nieuwe sectie 11 toe (Gebruikersbeheer), verschuif de FAQ naar 12, en update de FAQ-vraag over het aanmaken van gebruikers zodat die verwijst naar de nieuwe sectie. 
 
 ---
 
@@ -710,37 +476,7 @@ deze problems zijn er nog. Moeten die opgelost?
 
 ## 🤖 Assistant
 
-Laat me ook de aanroepplaats van  bekijken want die heeft mogelijk een logicafout: Nu heb ik het volledige beeld. De 5 problemen zijn:
-
-- **go.mod (2x)**: `jwt/v5` en `x/crypto` worden direct gebruikt (in `auth_middleware.go` en ) maar staan als `// indirect` — dit klopt niet. `go mod tidy` lost dit op.
-- **3x unused param**: Parameters die nooit gebruikt worden. Bij  is het ook een logicagap: de functie zoekt niet echt op  (de struct heeft geen veldnamen). Fixes: hernoemen naar .
-
-Ja, ze moeten opgelost. Ga ik doen: Nu heb ik het volledige beeld. De 5 problemen zijn:
-
-- **go.mod (2x)**: `jwt/v5` en `x/crypto` worden direct gebruikt (in `auth_middleware.go` en ) maar staan als `// indirect` — dit klopt niet. `go mod tidy` lost dit op.
-- **3x unused param**: Parameters die nooit gebruikt worden. Bij  is het ook een logicagap: de functie zoekt niet echt op  (de struct heeft geen veldnamen). Fixes: hernoemen naar .
-
-Ja, ze moeten opgelost. Ga ik doen: 
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-Alles groen. Alle 5 problemen opgelost:
-
-| # | Probleem | Fix |
-|---|---------|-----|
-| go.mod | `jwt/v5 should be direct` | `go mod tidy` → verplaatst naar direct block |
-| go.mod | `x/crypto should be direct` | idem |
-| `mutation_resolvers.go:141` |  unused | hernoemd naar  + commentaar verduidelijkt dat index ontbreekt |
-| `query_resolvers.go:594` |  unused | hernoemd naar  |
-| `openapi_generator.go:540` |  unused | hernoemd naar  |
+Laat me de ernst van elk probleem beoordelen:   
 
 ---
 
@@ -773,15 +509,11 @@ Wil jij het starten en kijken wat er fout gaat? En zorgen dat het goed gaat? :_-
 
 ## 🤖 Assistant
 
-De build is gestart en draait — het is een grote Go-monorepo dus het downloaden van afhankelijkheden duurt even. Laat me wat later de status checken: De build loopt goed — de managers en PDP worden gebouwd (Go compile fase). Dit duurt een paar minuten vanwege de grote dependency-tree van OpenFTV. Ik houd het in de gaten:  Nog steeds aan het downloaden. Dit is een Nog steeds aan het downloaden. Dit is een grote monorepo build (manager + pdp + mi compileren elk afzonderlijk). Ik check nogmaals:  Goed teken — de MI bouwt al via npm/vite, de manager compileert Go. Nog even wachten: MI is al klaar (✓ built in 27.29s) en de image is geëxporteerd. Manager en PDP zijn nog aan het compileren. Nog even:  Manager en PDP zijn nog steeds aan het compileren (grote Go codebase). Ik wacht wat langer en check dan de eindstatus:  Nog steeds actief. De Go-compiles (#36 manager, #38 pdp) zijn de bottleneck — dat zijn grote binaries. Ik wacht iets langer:  De compilatie is nog actief. De output-buffer is volgezet met dezelfde snapshot — dat klopt, Docker logt niets tussentijds tijdens de `go build` compile-fase zelf. Ik word automatisch genotificeerd als het klaar of mislukt is.
+De fout is duidelijk: Docker zoekt `D:\Git\Bitemporal_2026\open-ftv` maar de repo staat op . Het pad  in de compose file klopt niet — dat moet `../../open-ftv` zijn. Het commentaar bovenaan zegt al `../../open-ftv` maar de contexts staan op . Alle drie de build contexts moeten worden gecorrigeerd: 
+```
 
-**Status tot nu toe:**
-- ✅  (Postgres) —  (Postgres) — gestart
-- ✅ `openftv-mi` — gebouwd en image geëxporteerd  
-- ⏳ `openftv-manager` — Go compile (~2-5 min, grote monorepo)
-- ⏳ `openftv-pdp` — Go compile (parallel)
-
-Zodra de Go-builds klaar zijn zullen de containers starten. Ik kom terug zodra ik de notificatie ontvang.
+```
+Nu starten: 
 
 ---
 
@@ -1024,23 +756,15 @@ Error response from daemon: failed to set up container networking: driver failed
 
 ## 🤖 Assistant
 
-Manager draait! Alle 3 services gestart. Laat me de container-status controleren: Alle 4 containers draaien en zijn healthy. Nu de  bijwerken met de gecorrigeerde poort: 
+Port 9000 is al in gebruik. Laat me kijken wat dat is: Dat is Docker zelf die port 9000 doorstuurt — waarschijnlijk een andere draaiende container. Laat me kijken:  `bitemp-minio-v06` heeft poort 9000 (en 9001). De OpenFTV Manager wil ook 9000. Twee opties:
+1. Minio tijdelijk stoppen
+2. OpenFTV Manager naar een andere externe poort mappen (bijv. 9010)
+
+Optie 2 is beter — Minio gewoon laten draaien, OpenFTV Manager op 9010 zetten: 
 ```
 
 ```
-Alles draait. Samenvatting:
-
-**Probleem opgelost**: Minio (`bitemp-minio-v06`) gebruikte al poort 9000. OpenFTV Manager port-mapping verschoven naar 9010/9110/8110.
-
-**Alle 4 containers zijn healthy:**
-| Container | Status | Externe poorten |
-|-----------|--------|-----------------|
-|  | healthy | 5400 |
-| `bitemp-openftv-manager` | healthy | **9010** (API), 9110 (bundles), 8110 (health) |
-| `bitemp-openftv-pdp` | healthy | 9004 (evaluatie), 9104, 8104 |
-| `bitemp-openftv-mi` | up | 8180 (web UI) |
-
- en  bijgewerkt met de nieuwe poort 9010.
+De interne container-poort (9443) in de bundle-yaml hoeft niet te wijzigen — dat is het interne Docker-netwerk-adres. Nu opnieuw starten:   
 
 ---
 
@@ -1155,80 +879,7 @@ Kan ik nu al de images pushen? We gebruikten eerder versienummers, maar latest k
 
 ## 🤖 Assistant
 
-Goed beeld. Nu ga ik de auth compose herschrijven (pre-built images) en daarna de TrueNAS compose aanmaken.
-
-**Om jouw vragen direct te beantwoorden:**
-- Ja, minio + postgres komen al van de store in de huidige compose files ✓
-- Ja, je kunt nu al pushen — `latest` overschrijft gewoon de vorige `:latest` op Docker Hub ✓
-
-Aan de slag: 
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-Nu de TrueNAS compose. Die combineert alles in één file — geen `build:` stappen, alle images komen van registries. De API en frontend-image-namen gebruik ik alvast op `markwestbroek/` (zag ik eerder in je lokale images): ---
-
-## Klaar. Samenvatting
-
-###  (bijgewerkt)
-Geen `build:` meer — gebruikt pre-built GitLab images. Starten met gewoon `docker compose -f  up` (pull + start). Healthchecks bijgewerkt naar `wget` (past bij Alpine-based images).
-
-### docker-compose.truenas.yml (nieuw)
-Alles gecombineerd in één file. Twee interne netwerken: `bitemp_net` (API + postgres + minio + frontend) en `bitemp_auth_net` (OpenFTV services). De API zit op beide.
-
-> **Let op**: In de `openftv-mi` service staat `<HOST>` als placeholder — vervang dat door het IP-adres of hostname van je TrueNAS voordat je deployt.
-
----
-
-### Images pushen (jij doet dit)
-
-Je hebt `:v06-split` images al lokaal. Taggen naar `:latest` en pushen:
-
-```powershell
-docker login
-
-# API
-docker tag bitemp-go-api:v06-split markwestbroek/bitemp-go-api:latest
-docker push markwestbroek/bitemp-go-api:latest
-
-# Frontend
-docker tag bitemp-viz-frontend:v06-split markwestbroek/bitemp-viz-frontend:latest
-docker push markwestbroek/bitemp-viz-frontend:latest
-```
-
-Ja, `:latest` overschrijft de vorige — Docker Hub houdt maar één manifest per tag bij.
-
----
-
-### Opruimen na de push
-
-```powershell
-# Verwijder build-cache + gestopte containers + dangling images
-docker system prune -f
-
-# Verwijder de grote devloop image (1.76GB):
-docker image rm bitemp_register_v06-api:latest
-
-# Verwijder de nu verouderde lokale buildresultaten van openftv:
-docker image rm bitemp_register_v06-openftv-manager:latest
-docker image rm bitemp_register_v06-openftv-pdp:latest
-docker image rm bitemp_register_v06-openftv-mi:latest
-```
-
-### Op TrueNAS / Dockge
-Kopieer naar de server:
-- `docker-compose.truenas.yml`
-- de map `authz/` (beleidsbestanden, `init-db.sh`)
-- een `.env` bestand met je wachtwoorden
-
-In Dockge: nieuwe stack aanmaken → paste de compose inhoud → klaar.
+Laat me eerst de huidige compose files goed bekijken:  
 
 ---
 
@@ -1267,6 +918,18 @@ quotation marks ("&") to pass it as part of a string.
     + FullyQualifiedErrorId : AmpersandNotAllowed
  
 PS D:\Git\Bitemporal_2026>
+
+---
+
+## 🤖 Assistant
+
+Geen probleem — de `&` is in PowerShell niet de command-chaining operator (dat is `;`). De frontend is nog niet gepushed. Voer dit uit:
+
+```powershell
+docker push markwestbroek/bitemp-viz-frontend:latest
+```
+
+De API-push is wél geslaagd (`digest: sha256:fc581...`). Na de frontend-push ben je klaar.
 
 ---
 
@@ -1373,7 +1036,7 @@ Kun je optie B uitleggen?
 
 ## 🤖 Assistant
 
-Goed. In de TrueNAS Shell (via de web UI → System → Shell) plak je dit blok voor blok. Ik geef je **één groot script** dat alles in één keer aanmaakt — je hoeft het alleen in te plakken en Enter te drukken.
+Laat me eerst de bestandsinhoud ophalen zodat ik de exacte shell-commando's kan geven:    Goed. In de TrueNAS Shell (via de web UI → System → Shell) plak je dit blok voor blok. Ik geef je **één groot script** dat alles in één keer aanmaakt — je hoeft het alleen in te plakken en Enter te drukken.
 
 ---
 
@@ -1395,117 +1058,7 @@ cat > /opt/stacks/bitemp/authz/init-db.sh << 'EOF'
 #!/bin/bash
 set -e
 
-# Initialiseer extra databases voor OpenFTV (ADL logging).
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
-    CREATE DATABASE openftv_adl;
-EOSQL
-EOF
-chmod +x /opt/stacks/bitemp/authz/init-db.sh
-
-# manager/bundles/bitemp-pdp.yaml
-cat > /opt/stacks/bitemp/authz/manager/bundles/bitemp-pdp.yaml << 'EOF'
----
-id: "bitemp-pdp"
-title: "Bitemp Register PDP deployment bundle"
-language: "rego"
-tags: ["bitemp"]
-policies: true
-data: true
-version: true
-targets:
-  - uri: "http://openftv-pdp:9443"
-    apikey: ""
-    encoding: "bzip2"
-EOF
-
-# manager/tags/tags.yaml
-cat > /opt/stacks/bitemp/authz/manager/tags/tags.yaml << 'EOF'
----
-- id: bitemp
-  name: Beleidsregels voor het bitemporeel register
-EOF
-
-# manager/policies/bitemp_authz.rego
-cat > /opt/stacks/bitemp/authz/manager/policies/bitemp_authz.rego << 'EOF'
-# Bitemp Register — Autorisatiebeleid (Rego / OPA)
-package bitemp.authz
-
-import rego.v1
-
-default allow := false
-
-rol_niveau := {
-    "admin": 3,
-    "editor": 2,
-    "viewer": 1,
-}
-
-heeft_minimaal_rol(vereist) if {
-    rol_niveau[input.subject.properties.role] >= rol_niveau[vereist]
-}
-
-publieke_paginas := {
-    "index", "tijdlijn", "registraties", "universum",
-    "swagger", "redoc", "graphiql", "publicatie",
-    "docs", "version", "openapi",
-}
-
-allow if {
-    input.action.name == "access"
-    input.resource.type == "page"
-    input.resource.id in publieke_paginas
-}
-
-beschermde_paginas := {
-    "editor-v2", "editor", "ide", "inhoud",
-}
-
-allow if {
-    input.action.name == "access"
-    input.resource.type == "page"
-    input.resource.id in beschermde_paginas
-    heeft_minimaal_rol("editor")
-}
-
-allow if {
-    input.action.name == "read"
-    input.resource.type == "api"
-    heeft_minimaal_rol("viewer")
-}
-
-allow if {
-    input.action.name == "write"
-    input.resource.type == "api"
-    heeft_minimaal_rol("editor")
-}
-
-allow if {
-    input.action.name == "admin"
-    input.resource.type == "api"
-    heeft_minimaal_rol("admin")
-}
-EOF
-
-echo "Klaar. Structuur:"
-find /opt/stacks/bitemp/authz -type f
-```
-
-### Stap 3 — Controleer de uitvoer
-Je ziet dan zoiets:
-```
-Klaar. Structuur:
-/opt/stacks/bitemp/authz/init-db.sh
-/opt/stacks/bitemp/authz/manager/policies/bitemp_authz.rego
-/opt/stacks/bitemp/authz/manager/bundles/bitemp-pdp.yaml
-/opt/stacks/bitemp/authz/manager/tags/tags.yaml
-```
-
-### Stap 4 — Daarna in Dockge
-1. Nieuwe stack maken → naam `bitemp`
-2. De inhoud van  plakken in het compose-vak
-3. Je `.env` waarden invullen in het `.env`-vak (de variabelen staan onderaan de compose file als commentaar)
-4. `<HOST>` in de `VITE_PAP_BASE_URL` regel vervangen door het TrueNAS IP (bijv. `192.168.2.22`)
-5. Opzetten klikken
+# Initialiseer extra databases voor
 
 ---
 
@@ -1538,21 +1091,38 @@ find /mnt -maxdepth 5 -name "dockge" -type d 2>/dev/null
 
 Zodra je de locatie weet (bijv. `/mnt/tank/dockge/stacks`), vervang je in het eerdere script overal `/opt/stacks/bitemp` door dat pad + `/bitemp`, bijv.:
 
-```bash
-STACKS=/mnt/tank/dockge/stacks   # ← aanpassen op basis van bovenstaande uitvoer
 
-mkdir -p $STACKS/bitemp/authz/manager/policies
-mkdir -p $STACKS/bitemp/authz/manager/bundles
-# etc.
-```
-
-Plak de uitvoer van de `find`-commando's hier en ik pas het volledige script voor je aan naar het juiste pad.
 
 ---
 
 ## 🧑 User
 
 op find /mnt -name "docker-compose.yml" -path "*bitemp*" 2>/dev/null komt niets
+
+---
+
+## 🤖 Assistant
+
+Dan is de bitemp stack nog niet aangemaakt in Dockge. Zoek eerst waar Dockge zelf staat:
+
+```bash
+find /mnt -name "docker-compose.yml" -path "*dockge*" 2>/dev/null
+```
+
+En tegelijk, zoek de Dockge config:
+
+```bash
+find /mnt -name "dockge" -type d 2>/dev/null
+```
+
+Als ook dat niets oplevert:
+
+```bash
+# Zoek alle stacks die je wél ziet (bitemp-api-4, bitemp-db, ix-dockge)
+find /mnt -name "docker-compose.yml" 2>/dev/null | head -20
+```
+
+De stacks `bitemp-api-4` en `bitemp-db` draaien al — die moeten ergens op `/mnt` staan. Zodra je dat pad hebt, weet je ook waar de nieuwe `bitemp`-stack terecht moet komen.
 
 ---
 
@@ -1563,6 +1133,30 @@ truenas_admin@truenas[~]$ find /mnt -name "dockge" -type d 2>/dev/null
 /mnt/.ix-apps/truenas_catalog/trains/community/dockge
 /mnt/.ix-apps/truenas_catalog/ix-dev/community/dockge
 /mnt/.ix-apps/app_configs/dockge
+
+---
+
+## 🤖 Assistant
+
+Dit is TrueNAS SCALE met de ix-apps engine — Dockge draait als een TrueNAS App. De stacks staan dan op een geconfigureerd dataset-pad. Kijk hier:
+
+```bash
+# Bekijk de Dockge app-configuratie (hier staat het stacks-pad in)
+cat /mnt/.ix-apps/app_configs/dockge/values.yaml 2>/dev/null || \
+ls /mnt/.ix-apps/app_configs/dockge/
+```
+
+En kijk wat er in de app_mounts zit:
+
+```bash
+ls /mnt/.ix-apps/app_mounts/dockge/
+```
+
+Waarschijnlijk zie je daar een pad zoals `/mnt/<jouw-pool>/dockge/stacks` of vergelijkbaar. Zodra je de uitvoer plakt weet ik het exacte pad.
+
+---
+
+**Alternatief**: Dockge UI → klik op een bestaande stack (`bitemp-api-4`) → klik **Bewerken** → kijk bovenaan of in de URL naar het pad. Of kijk in de Dockge-instellingen zelf naar "Stacks path".
 
 ---
 
@@ -1619,80 +1213,7 @@ data: true
 version: true
 targets:
   - uri: "http://openftv-pdp:9443"
-    apikey: ""
-    encoding: "bzip2"
-EOF
-
-cat > $STACKS/bitemp/authz/manager/tags/tags.yaml << 'EOF'
----
-- id: bitemp
-  name: Beleidsregels voor het bitemporeel register
-EOF
-
-cat > $STACKS/bitemp/authz/manager/policies/bitemp_authz.rego << 'EOF'
-package bitemp.authz
-
-import rego.v1
-
-default allow := false
-
-rol_niveau := {
-    "admin": 3,
-    "editor": 2,
-    "viewer": 1,
-}
-
-heeft_minimaal_rol(vereist) if {
-    rol_niveau[input.subject.properties.role] >= rol_niveau[vereist]
-}
-
-publieke_paginas := {
-    "index", "tijdlijn", "registraties", "universum",
-    "swagger", "redoc", "graphiql", "publicatie",
-    "docs", "version", "openapi",
-}
-
-allow if {
-    input.action.name == "access"
-    input.resource.type == "page"
-    input.resource.id in publieke_paginas
-}
-
-beschermde_paginas := {
-    "editor-v2", "editor", "ide", "inhoud",
-}
-
-allow if {
-    input.action.name == "access"
-    input.resource.type == "page"
-    input.resource.id in beschermde_paginas
-    heeft_minimaal_rol("editor")
-}
-
-allow if {
-    input.action.name == "read"
-    input.resource.type == "api"
-    heeft_minimaal_rol("viewer")
-}
-
-allow if {
-    input.action.name == "write"
-    input.resource.type == "api"
-    heeft_minimaal_rol("editor")
-}
-
-allow if {
-    input.action.name == "admin"
-    input.resource.type == "api"
-    heeft_minimaal_rol("admin")
-}
-EOF
-
-echo "Klaar. Bestanden:"
-find $STACKS/bitemp/authz -type f
-```
-
-Na de uitvoer ("Klaar. Bestanden: ...") → ga naar Dockge → **+ Nieuwe stack** → naam `bitemp` → plak de compose-inhoud en `.env`. De `authz/` map wordt dan automatisch gevonden via de `./authz/` volumes in de compose file.
+    api
 
 ---
 
@@ -1838,6 +1359,22 @@ De nieuwe  dockge stack moet dus bitemp heten? Kloppen de paden van de Volumes i
 
 ---
 
+## 🤖 Assistant
+
+Ja, precies — de stack moet `bitemp` heten. Dan klopt alles:
+
+| Compose volume-pad | Wordt door Dockge → | Bestanden aanwezig? |
+|---|---|---|
+| `./authz/init-db.sh` | `/mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/init-db.sh` | ✅ |
+| `./authz/manager` | `/mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/` | ✅ (policies, bundles, tags) |
+| `./authz/pdp` | `/mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/pdp/` | ✅ (policies/) |
+
+Dockge slaat de `docker-compose.yml` op in `/mnt/Pool1/share/Docker/Bitemporal/bitemp/` en `./` is relatief daaraan. De bestanden liggen precies daar waar de volumes ze verwachten.
+
+Ga naar Dockge → **+ Nieuwe stack** → naam **`bitemp`** → plak de inhoud van  in het compose-vak. Vergeet niet `<HOST>` te vervangen door `192.168.2.22` in de `VITE_PAP_BASE_URL` en `VITE_PIP_BASE_URL` regels.
+
+---
+
 ## 🧑 User
 
 er staat vaker localhost in de docker compose file: moet ik dat ook vervangen door 192.168.2.22?
@@ -1888,6 +1425,12 @@ Daarna verschijnt `bitemp` in Dockge als lege stack → klik erop → Bewerken �
 
 dockge zegt:
 dependency failed to start: container bitemp-openftv-db is unhealthy
+
+---
+
+## 🤖 Assistant
+
+Laat me de truenas compose file bekijken om de healthcheck van `bitemp-openftv-db` te inspecteren. Waarschijnlijk twee mogelijke oorzaken: de `start_period` is te kort (2s), of `init-db.sh` heeft Windows line endings. Laat me de init-db.sh bekijken: Het script ziet er goed uit. De meest waarschijnlijke oorzaak is de `start_period: 2s` — dat is te kort voor PostgreSQL om te initialiseren (zeker met een init-script). Ik verhoog dat naar 20s: 
 
 ---
 
@@ -2031,6 +1574,31 @@ dependency failed to start: container bitemp-openftv-manager is unhealthy
 
 ---
 
+## 🤖 Assistant
+
+Goede voortgang! De `start_period: 5s` voor de manager is ook te kort — die moet nog postgres-migraties draaien voor hij healthy is. Ik verhoog de start_period en retries voor zowel manager als pdp: 
+```
+
+```
+Nu in Dockge: **stop de stack**, kopieer de bijgewerkte compose-inhoud (zie hieronder), en start opnieuw.
+
+De gewijzigde healthcheck-instellingen voor alle drie OpenFTV-services zijn nu:
+- `openftv-db`: interval 5s, retries 10, **start_period 30s**
+- `openftv-manager`: interval 10s, retries 10, **start_period 60s**  
+- `openftv-pdp`: interval 10s, retries 10, **start_period 60s**
+
+De manager moet bij eerste start Postgres-migraties draaien, dat kost tijd. Met 60s start_period telt Docker die tijd niet mee als failures.
+
+Kopieer de volledige bijgewerkte compose via dit commando lokaal:
+
+```powershell
+Get-Content bitemp_register_v06\docker-compose.truenas.yml | Set-Clipboard
+```
+
+Dan in Dockge: stop → editor → alles vervangen → opslaan → opzetten.
+
+---
+
 ## 🧑 User
 
 hij gaat nu maar door met wachten... 
@@ -2159,19 +1727,9 @@ truenas_admin@truenas[~]$
 
 ## 🤖 Assistant
 
+De manager draait perfect (poort 8080 started), maar de container heeft geen `nc`, `wget`, `curl` of zelfs `/bin/sh` — het is een distroless Go-binary image. Geen enkele shell-healthcheck werkt erin.
 
-```
-
-```
-Kopieer naar clipboard:
-
-```powershell
-Get-Content bitemp_register_v06\docker-compose.truenas.yml | Set-Clipboard
-```
-
-Dan in Dockge: **stop → editor → alles vervangen → opslaan → opzetten**.
-
-De manager en pdp starten intern prima op — ze hebben alleen geen shell beschikbaar voor de healthcheck. Met `service_started` wacht de pdp gewoon tot de manager-container gestart is (wat snel gaat), en de MI doet hetzelfde.
+Oplossing: healthcheck weghalen bij manager en pdp, en `depends_on` wijzigen naar `service_started`: 
 
 ---
 
@@ -2315,6 +1873,38 @@ ik snap iets niet. Dit is toch een recent docker image? Of was het oud? De IDE i
 
 ---
 
+## 🤖 Assistant
+
+Het image is van deze sessie gepushed, maar het was een **lokale build** — de logs tonen `build commit: local, build time: dev`. Dat betekent dat het de staat was van je code op het moment van `docker build`, inclusief welke frontend toen gebuild was.
+
+Check wanneer de lokale frontend-build was gemaakt:
+
+```powershell
+Get-Item bitemp_register_v06\web\vite\dist\index.html | Select-Object LastWriteTime
+```
+
+Als die oud is, dan is de frontend-dist op het moment van `docker build` ook oud meegenomen. Oplossing: opnieuw builden en pushen:
+
+```powershell
+cd bitemp_register_v06
+
+# 1. Frontend opnieuw builden
+npm run build --prefix web/vite
+
+# 2. Docker image opnieuw bouwen en pushen
+docker build -f Dockerfile.frontend -t markwestbroek/bitemp-viz-frontend:latest .
+docker push markwestbroek/bitemp-viz-frontend:latest
+```
+
+Daarna op TrueNAS:
+
+```bash
+sudo docker pull markwestbroek/bitemp-viz-frontend:latest
+sudo docker restart bitemp-viz-frontend
+```
+
+---
+
 ## 🧑 User
 
 dan moeten we de backend ook opnieuw doen, want daar waren recent ook nog wijzigingen
@@ -2323,26 +1913,7 @@ dan moeten we de backend ook opnieuw doen, want daar waren recent ook nog wijzig
 
 ## 🤖 Assistant
 
-Frontend is al gebuild. Nu alles in één keer pushen en de API ook opnieuw bouwen:
-
-```powershell
-cd bitemp_register_v06
-
-# Push frontend (al gebuild)
-docker push markwestbroek/bitemp-viz-frontend:latest
-
-# Build en push API
-docker build -f Dockerfile.api -t markwestbroek/bitemp-go-api:latest .
-docker push markwestbroek/bitemp-go-api:latest
-```
-
-Daarna op TrueNAS alles pullen en herstarten:
-
-```bash
-sudo docker pull markwestbroek/bitemp-go-api:latest
-sudo docker pull markwestbroek/bitemp-viz-frontend:latest
-sudo docker restart bitemp-go-api-06 bitemp-viz-frontend
-```
+Frontend is al gebuild. 
 
 ---
 
@@ -2392,24 +1963,7 @@ Dan breekt misschien de link naar het UML-editor project, maar ik denk dat het i
 
 ## 🤖 Assistant
 
-De analyse is helder. De Docker-integratie werkt **al correct** — `uml-editor/` wordt gekopieerd en meegebundeld door Vite via de `@editor` alias. Het probleem is niet het build-systeem.
-
-**Waarom de UI oud is op TrueNAS:** je hebt de nieuwe images lokaal gebuild en gepushed, maar op TrueNAS draai je nog steeds de **oude** images. Je moet daar nog pullen en restarten:
-
-```bash
-sudo docker pull markwestbroek/bitemp-viz-frontend:latest
-sudo docker pull markwestbroek/bitemp-go-api:latest
-sudo docker restart bitemp-viz-frontend bitemp-go-api-06
-```
-
-**Over de refactoring:** de `uml-editor/` is een volledig apart Vite-project dat via een pad-alias (`@editor` → `../../uml-editor/src`) in `web/vite` wordt geïmporteerd. Verhuizen naar `web/uml-editor/` is simpel en prima te doen, maar het lost het **huidige probleem niet op** — dat is puur een kwestie van images pullen op TrueNAS.
-
-De refactoring is wél nuttig voor:
-- Duidelijkere projectstructuur (het IS geen onafhankelijk project meer)
-- Kortere pad-alias ( ipv `../../uml-editor/src`)
-- Simpelere Docker COPY instructies
-
-Wil je dat ik de refactoring doe nadat we bevestigd hebben dat de TrueNAS deployment werkt met de verse images? 
+Goed punt. Laat me eerst de huidige structuur en afhankelijkheden in kaart brengen. 
 
 ---
 
@@ -2470,15 +2024,75 @@ ja, dat werkt. Vreemd trouwens dat de API base URL wel poort 8086 lijkt te zijn 
 
 ---
 
+## 🤖 Assistant
+
+Dat is juist correct — dat is precies hoe de split-frontend werkt:
+
+- **Browser** → `192.168.2.22:8086` (nginx/frontend)
+- **nginx** proxiet intern `/api/`, `/full/`, `/registreer/`, etc. → `api:8080` (container-intern)
+- De browser hoeft poort 8085 nooit direct te zien
+
+De frontend **is** het API-accesspoint voor de browser. Poort 8085 is alleen nodig als je de API direct wil benaderen (bijv. voor Postman of DataGrip-achtige tools).
+
+De API base URL `http://192.168.2.22:8086` in de UI is dus correct gedrag. De deployment op TrueNAS werkt nu volledig. Wil je nog de refactoring van `uml-editor/` naar `web/uml-editor/` doen?
+
+---
+
 ## 🧑 User
 
 het werkt, er is wel nog geen login te zien. Dat is mogelijk een .env instelling?
 
 ---
 
+## 🤖 Assistant
+
+Ja, in de compose staat `AUTH_ENABLED: ${AUTH_ENABLED:-false}` — de default is `false`. Er is geen `.env` op TrueNAS, dus auth is uitgeschakeld.
+
+Voeg een `.env` toe in de stack-directory op TrueNAS:
+
+```bash
+sudo bash << 'EOF'
+cat > /mnt/Pool1/share/Docker/Bitemporal/bitemp/.env << 'ENVEOF'
+AUTH_ENABLED=true
+ADMIN_USERNAME=mark
+ADMIN_PASSWORD=M$rk0k12bi
+ENVEOF
+echo "Done"
+EOF
+```
+
+Daarna de API herstarten zodat hij de nieuwe env pikt:
+
+```bash
+cd /mnt/Pool1/share/Docker/Bitemporal/bitemp
+sudo docker compose up -d --force-recreate api
+```
+
+Of via Dockge: **Opzetten** (herstart alles met de nieuwe `.env`).
+
+---
+
 ## 🧑 User
 
 maar ik heb een .env ingevoerd in dockge bij het opzetten. Kan ik zomaar ngo een .env file maken dan?
+
+---
+
+## 🤖 Assistant
+
+De compose gebruikt `${AUTH_ENABLED:-false}` — dit is variabelensubstitutie via een `.env` bestand. In Dockge zijn er **twee verschillende plekken**:
+
+1. **"Environment"** in de service-editor → schrijft letterlijke waarden in de YAML (overschrijft de `${...}` niet, maar de service krijgt dan twee `AUTH_ENABLED` entries waarbij de laatste wint)
+2. **".env" tab** (als Dockge die heeft) → maakt een echt `.env` bestand aan dat de `${AUTH_ENABLED:-false}` substitutie vult
+
+**Kijk in Dockge**: zit er een `.env` tab of sectie bovenaan de stack-editor? Als je de waarden daar hebt ingevoerd, is het al goed ingesteld. Als je ze in de service `environment:` sectie hebt gezet als letterlijke waarde, werkt het ook — Docker geeft die direct mee aan de container.
+
+**Snelste controle op TrueNAS**:
+```bash
+sudo docker exec bitemp-api env | grep AUTH_ENABLED
+```
+
+Als die `true` teruggeeft is auth ingeschakeld en is er iets anders aan de hand in de frontend. Als het `false` is, is de env-waarde niet doorgekomen.
 
 ---
 
@@ -2542,20 +2156,11 @@ de stack stopt trouwens steeds
 
 ## 🤖 Assistant
 
+Dit is normaal gedrag in Dockge. De `bitemp-minio-init` container heeft `restart: "no"` — hij doet zijn werk (bucket aanmaken) en stopt dan netjes. Zodra één container in de stack gestopt is, toont Dockge de hele stack als "gestopt", ook al draaien alle andere services gewoon.
 
-```
+In de screenshot zijn alle echte services groen: postgres Healthy, minio Healthy, manager/api/pdp/frontend Running. Alleen minio-init toont "Started" (= al klaar, gestopt).
 
-```
-Nu draait minio-init **niet** automatisch mee bij `docker compose up -d`. Bij eerste opzet of als de bucket opnieuw aangemaakt moet worden, run je handmatig:
-
-```bash
-cd /mnt/Pool1/share/Docker/Bitemporal/bitemp
-sudo docker compose --profile init up minio-init
-```
-
-De bucket bestaat al op TrueNAS (die is eerder aangemaakt), dus je hoeft dit nu niet opnieuw te doen. Dockge toont de stack voortaan als "Running" zodra je "Start" klikt, omdat alle actieve containers blijven draaien.
-
-**Update TrueNAS**: kopieer de gewijzigde compose, of pas de `minio-init` service in de Dockge editor aan door `profiles: ["init"]` toe te voegen.
+**Oplossing**: negeer de Dockge-status, of verberg minio-init via een `profile` zodat hij alleen bij eerste opzet meedraait: 
 
 ---
 
@@ -2573,94 +2178,7 @@ Hier is wat je precies moet doen, stap voor stap:
 
 **Stap 1 — Bestand overschrijven op TrueNAS**
 
-Ga in de TrueNAS shell en plak dit commando in z'n geheel (het schrijft het bijgewerkte policy-bestand):
-
-```bash
-sudo tee /mnt/Pool1/share/Docker/Bitemporal/bitemp/authz/manager/policies/bitemp_authz.rego << 'ENDOFFILE'
-# Bitemp Register — Autorisatiebeleid (Rego / OPA)
-package bitemp.authz
-
-import rego.v1
-
-default allow := false
-
-rol_niveau := {
-    "admin": 3,
-    "editor": 2,
-    "viewer": 1,
-}
-
-heeft_minimaal_rol(vereist) if {
-    rol_niveau[input.subject.properties.role] >= rol_niveau[vereist]
-}
-
-publieke_paginas := {
-    "index", "tijdlijn", "registraties", "universum",
-    "swagger", "redoc", "graphiql", "publicatie",
-    "docs", "version", "openapi",
-}
-
-allow if {
-    input.action.name == "access"
-    input.resource.type == "page"
-    input.resource.id in publieke_paginas
-}
-
-beschermde_paginas := {
-    "editor-v2", "editor", "ide", "inhoud",
-}
-
-allow if {
-    input.action.name == "access"
-    input.resource.type == "page"
-    input.resource.id in beschermde_paginas
-    heeft_minimaal_rol("editor")
-}
-
-allow if {
-    input.action.name == "read"
-    input.resource.type == "api"
-    heeft_minimaal_rol("viewer")
-}
-
-allow if {
-    input.action.name == "write"
-    input.resource.type == "api"
-    heeft_minimaal_rol("editor")
-}
-
-allow if {
-    input.action.name == "admin"
-    input.resource.type == "api"
-    heeft_minimaal_rol("admin")
-}
-
-# Interne PDP→Manager bundle-ophaalverzoeken toestaan (geen JWT beschikbaar)
-allow if {
-    input.resource.type == "service"
-    startswith(input.resource.id, "/v1/bundle/")
-}
-ENDOFFILE
-```
-
----
-
-**Stap 2 — Manager en PDP herstarten**
-
-```bash
-sudo docker restart bitemp-openftv-manager
-sudo docker restart bitemp-openftv-pdp
-```
-
----
-
-**Stap 3 — Verifieer in de logs**
-
-```bash
-sudo docker logs bitemp-openftv-pdp --tail 20 -f
-```
-
-Je zou nu `"retrieved bundle"` of vergelijkbaar moeten zien i.p.v. de 403-fouten.
+Ga in de TrueNAS shell en plak dit commando in 
 
 ---
 
@@ -3265,6 +2783,25 @@ PS D:\Git\Bitemporal_2026\bitemp_register_v06>
 
 ---
 
+## 🤖 Assistant
+
+Dat is een PowerShell-syntaxfout door een per ongeluk samengevoegde opdracht. Maar kijk ook: een eerdere `docker build` had exit code 1 — dat betekent dat de build mislukt was. Voer de stappen los uit:
+
+```powershell
+cd D:\Git\Bitemporal_2026\bitemp_register_v06
+docker build -f Dockerfile.api -t markwestbroek/bitemp-go-api:latest .
+```
+
+Wacht tot de build klaar is, dan:
+
+```powershell
+docker push markwestbroek/bitemp-go-api:latest
+```
+
+Deel de buildoutput als de build opnieuw faalt.
+
+---
+
 ## 🧑 User
 
 sudo docker compose -f /mnt/Pool1/share/Docker/Bitemporal/bitemp/docker-compose.truenas.yml up -d --force-recreate api
@@ -3274,6 +2811,27 @@ Status: Image is up to date for markwestbroek/bitemp-go-api:latest
 docker.io/markwestbroek/bitemp-go-api:latest
 open /mnt/Pool1/share/Docker/Bitemporal/bitemp/docker-compose.truenas.yml: no such file or directory
 truenas_admin@truenas[~]$
+
+---
+
+## 🤖 Assistant
+
+Twee problemen:
+
+1. **Het bestand bestaat niet op dat pad** — Dockge slaat compose-bestanden op als `compose.yaml`. Zoek het op:
+```bash
+sudo find /mnt/Pool1/share/Docker/Bitemporal -name "*.yml" -o -name "*.yaml" 2>/dev/null
+```
+
+2. **Het image is niet bijgewerkt** — de digest is dezelfde als voorheen, wat betekent dat de `docker build` eerder (exit code 1) gefaald heeft en de push daarna de oude versie pushte.
+
+Voer de build opnieuw uit:
+```powershell
+cd D:\Git\Bitemporal_2026\bitemp_register_v06
+docker build -f Dockerfile.api -t markwestbroek/bitemp-go-api:latest .
+```
+
+En deel de uitvoer — want die build faalt al een tijdje en dat is de kernblokkade.
 
 ---
 
@@ -3292,18 +2850,7 @@ truenas_admin@truenas[~]$
 
 ## 🤖 Assistant
 
-De build is eigenlijk **geslaagd** — alle stappen zijn afgerond en het image is aangemaakt. De exit code 1 is waarschijnlijk een BuildKit-bijwerking. Push het gewoon: Gepushed met een nieuwe digest. Nu op TrueNAS:
-
-```bash
-cd /mnt/Pool1/share/Docker/Bitemporal/bitemp
-sudo docker compose pull api
-sudo docker compose up -d --force-recreate api
-```
-
-Daarna controleer of het werkt:
-```bash
-sudo docker logs bitemp-go-api-06 --tail 5
-```
+Het compose-bestand is `/mnt/Pool1/share/Docker/Bitemporal/bitemp/compose.yaml`. Maar eerst moet de build slagen. Laat me die draaien: 
 
 ---
 
@@ -3319,6 +2866,15 @@ truenas_admin@truenas[~]$
 
 ---
 
+## 🤖 Assistant
+
+```bash
+sudo docker compose -f /mnt/Pool1/share/Docker/Bitemporal/bitemp/compose.yaml pull api
+sudo docker compose -f /mnt/Pool1/share/Docker/Bitemporal/bitemp/compose.yaml up -d --force-recreate api
+```
+
+---
+
 ## 🧑 User
 
 en nu lijkt de BE niet te bereiken. Wat is er veranderd? Voor login aanzetten, werkte het wel
@@ -3331,6 +2887,19 @@ bitemp-viz-frontend     | 192.168.2.10 - - [17/Apr/2026:21:03:40 +0000] "GET /ap
 bitemp-viz-frontend     | 2026/04/17 21:03:40 [warn] 32#32: *124 upstream server temporarily disabled while connecting to upstream, client: 192.168.2.10, server: _, request: "GET /api/schema/model/code HTTP/1.1", upstream: "http://[fdd0:0:0:3::5]:8080/api/schema/model/code", host: "192.168.2.22:8086", referrer: "http://192.168.2.22:8086/viz/react/inhoud.html"
 bitemp-go-api-06        | [GIN] 2026/04/17 - 21:05:00 | 200 |    13.63703ms |    192.168.2.10 | GET      "/api/schema/model/code"
 bitemp-go-api-06        | [GIN] 2026/04/17 - 21:05:00 | 404 |       9.434µs |    192.168.2.10 | GET      "/favicon.ico"
+
+---
+
+## 🤖 Assistant
+
+De API draait weer (de laatste twee regels tonen 200-responses), maar nginx cached het oude IP-adres van de API-container. De `--force-recreate api` gaf de API een nieuw IP, maar nginx heeft nog het oude.
+
+Herstart de frontend:
+```bash
+sudo docker restart bitemp-viz-frontend
+```
+
+Dat forceert nginx om `api` opnieuw te resolven. Daarna zou alles weer werken.
 
 ---
 

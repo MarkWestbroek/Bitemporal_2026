@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-20 00:02
 - **Sessie-ID**: `8d34dd20-89e6-44b3-9260-6462952e6dea`
-- **Berichten**: 6
+- **Berichten**: 10
 
 ---
 
@@ -27,6 +27,16 @@ At line:1 char:30
 The token '&&' is not a valid statement separator in this version.
     + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
     + FullyQualifiedErrorId : InvalidEndOfLine
+
+---
+
+## 🤖 Assistant
+
+Het probleem is dat PowerShell `&&` niet ondersteunt als command separator — gebruik `;` in plaats daarvan.
+
+Laten we stap voor stap gaan. Eerst de **frontend Vite build + Docker image**:
+
+**Stap 1: Vite productie-build** (optioneel, Docker doet dit ook, maar handig om fouten vroeg te zien): Vite build geslaagd. Nu **stap 2: Docker frontend image bouwen**: Docker build loopt... even wachten. 
 
 ---
 
@@ -134,49 +144,7 @@ View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux
 
 ## 🤖 Assistant
 
-Frontend image gepusht. Laat me ook even checken of de API image al eerder gepusht is (je zei dat die gelukt was): API image is er ook, 2 minuten geleden gebouwd. Is die al gepusht? Zo niet, dan doen we dat nu: OK, die was al gepusht. Dan is alles klaar op de Windows-kant. Hier is wat je nu **op de TrueNAS/Dockge** moet doen:
-
----
-
-### Op TrueNAS (via SSH of Dockge terminal)
-
-**1. Pull de nieuwe images:**
-```bash
-sudo docker compose -f /mnt/Pool1/share/Docker/Bitemporal/bitemp/compose.yaml pull api frontend
-```
-
-**2. Recreate beide containers:**
-```bash
-sudo docker compose -f /mnt/Pool1/share/Docker/Bitemporal/bitemp/compose.yaml up -d --force-recreate api frontend
-```
-
-**3. BELANGRIJK — herstart altijd de frontend na een API recreate** (Nginx cached het oude IP):
-```bash
-sudo docker restart bitemp-viz-frontend
-```
-(Stap 3 is alleen nodig als je in stap 2 alléén `api` had gedaan. Doe je beide tegelijk zoals hierboven, dan is de frontend al vers.)
-
-**4. Controleer de logs:**
-```bash
-sudo docker logs bitemp-go-api-06 --tail 10
-sudo docker logs bitemp-viz-frontend --tail 5
-```
-
-### Of via Dockge UI
-- Ga naar de `bitemp` stack
-- Klik **Update** → Dockge pullt de nieuwe images
-- Klik **Opzetten** (of "Up") om de containers te herstarten
-
----
-
-**Samenvatting wat we gedaan hebben op Windows:**
-
-| Stap | Commando | Status |
-|------|----------|--------|
-| Vite build | `cd web\vite; npm run build` | Done |
-| Frontend image build | `docker build -f Dockerfile.frontend -t markwestbroek/bitemp-viz-frontend:latest .` | Done |
-| Frontend image push | `docker push markwestbroek/bitemp-viz-frontend:latest` | Done |
-| API image build + push | (eerder al gedaan) | Done |
+Frontend image is gebouwd. Nu **stap 3: push naar Docker Hub**: 
 
 ---
 
@@ -203,5 +171,32 @@ Gefikst. De `&&` in de frontend-sectie is vervangen door `;` (PowerShell-syntax)
 ## 🧑 User
 
 dank!
+
+---
+
+## 🤖 Assistant
+
+Graag gedaan! 👍 Veel succes met de deployment op de NAS. Laat me weten als er nog iets gaat knipperen!
+
+---
+
+## 🧑 User
+
+ik probeer op de NAS opnieuw in te loggen met een andere login maar ik blijf vanzelf ingelogd. Heb al cache geleegd en FE herstart. Kunnen we geen loguit knop maken?
+
+---
+
+## 🤖 Assistant
+
+Laat me eerst even checken welk logout-endpoint de Go API heeft: Het endpoint is `POST /api/auth/logout`. Nu voeg ik een uitlogknop toe aan de header: 
+```
+
+```
+Klaar. Er is een **Uitloggen**-knop toegevoegd rechts in de header (naast de commonground.nl link). Wat hij doet:
+
+1. `POST /api/auth/logout` aanroepen op de register-server (wist de sessie-cookie)
+2. Daarna het iframe herladen → de loginpagina verschijnt
+
+De knop werkt ook als het iframe op HTTP staat (`credentials: "include"` zorgt dat de cookie meegestuurd wordt). Na uitloggen kun je inloggen met een andere gebruiker.
 
 ---

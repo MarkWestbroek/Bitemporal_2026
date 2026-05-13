@@ -2,13 +2,36 @@
 
 - **Datum**: 2026-03-28 12:49
 - **Sessie-ID**: `b0eac12e-7cf0-426c-b730-d1761bcceae2`
-- **Berichten**: 17
+- **Berichten**: 20
 
 ---
 
 ## 🧑 User
 
 ik meen dat ik instructies voor chat geschreven had in dit project maar ik vind ze niet
+
+---
+
+## 🤖 Assistant
+
+Ik ga eerst gericht door de workspace zoeken naar instructiebestanden en vermeldingen van chat-specifieke instructies, zodat ik je meteen naar de meest waarschijnlijke locaties kan sturen.Ik heb de waarschijnlijkste plekken gevonden; ik verifieer nog even of er ook een aparte map voor chat-instructies bestaat of dat alleen de hoofd-instructiefile aanwezig is.De meest waarschijnlijke instructiefile die je bedoelt is . Dat is in deze workspace de enige echte Copilot-instructiefile die ik heb gevonden.
+
+Daarnaast zag ik dit:
+
+- In  staat dat VS Code ook zoekt in `.github/instructions`, maar die map bestaat op dit moment niet. Dat kan verklaren waarom je dacht dat er aparte chat-instructies waren.
+- In  staat nog een herbruikbaar promptblok voor Copilot.
+- In  staat een losse prompt/instructiezin.
+- In  staat documentatie over het bewaren van Copilot-chatexports en samenvattingen.
+
+Wat ik niet vond:
+- geen `.prompt.md` bestanden
+- geen `AGENTS.md`
+- geen aparte `.github/instructions/` map met losse chat-instructies
+
+Als je wilt, kan ik als volgende stap:
+1. de inhoud van  kort samenvatten,
+2. de workspace doorzoeken op oudere of verplaatste instructies in archiefmappen,
+3. een nette `.github/instructions/` structuur voor je aanmaken zodat chat-instructies voortaan vindbaar zijn.
 
 ---
 
@@ -32,32 +55,7 @@ copilot instructions wel in stand houden graag
 
 ## 🤖 Assistant
 
-Ik voeg nu alleen nieuwe bestanden toe, zonder de bestaande hoofdinstructies te wijzigen. Het doel is dat Copilot extra gerichte context krijgt bij v06- en v05-bestanden, plus een vaste plek met de opstartwerkwijze.
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-De structuur staat er nu. Ik controleer nog kort of de bestanden op de verwachte plek staan en leg daarna compact uit wat er is ingericht en hoe je dit gebruikt.Ik leg nog een klein repo-geheugen vast over deze instructiestructuur, zodat dezelfde setup later sneller terug te vinden is.De bestaande hoofdinstructies in  heb ik intact gelaten. Die blijven de leidende workspace-instructies. Inhoudelijk zeggen ze nu al: het domein is bitemporeel, de architectuur is MetaRegistry-gedreven, documentatie hoort standaard bij wijzigingen, en v06 is de huidige ontwikkelfocus terwijl v05 als referentie beschikbaar blijft.
-
-Daarom heb ik er een lichte, aanvullende structuur omheen gezet in plaats van de hoofdfile te vervangen. Je hebt nu:
--  met een vaste chat-startwerkwijze
--  voor gerichte context in bitemp_register_v06
--  voor v05 als referentiecontext
-
-Ik heb ook de oudere/losse contextbronnen bevestigd, zodat je weet waar nog bruikbare chatinhoud zit: , , bitemp_register_v06/json/instructies schrijven code voor registratie handler (1).txt.txt) en bitemporal_go_API_v05/json/instructies schrijven code voor registratie handler (1).txt.txt).
-
-De praktische werkwijze is nu: open eerst een bestand in het deel van de repo waar je werkt, start daarna de chat, en noem in je eerste bericht doel, doelpad en of je alleen analyse of ook codewijzigingen wilt. Daarmee krijgt Copilot sneller de juiste context zonder dat de bestaande hoofdinstructies worden aangetast.
-
-Als je wilt, kan ik als volgende stap ook nog:
-1. een herbruikbare startprompt toevoegen in .github/prompts voor nieuwe chats
-2. de huidige  inhoudelijk opschonen, maar dan zonder de bestaande bedoeling te verliezen
+Ik laat de bestaande  ongemoeid en richt eromheen een lichte standaardstructuur in, zodat nieuwe chats sneller met projectcontext starten zonder de hoofd-instructies te vervangen.Ik heb bevestigd dat er nog geen bestaande instructiestructuur onder `.github/instructions` is. Nu maak ik een minimale, gerichte setup: bestaande hoofdinstructies blijven staan, en daarbovenop komen een v06-specifieke instructie en een herbruikbare startprompt.
 
 ---
 
@@ -155,6 +153,23 @@ ja graag
 
 ---
 
+## 🤖 Assistant
+
+Ik maak nu een minimaal Mermaid smoke-testbestand aan in v06 zodat je meteen kunt checken of de preview engine zelf werkt los van je grote document.Top, ik heb een minimale testfile toegevoegd: .
+
+Open die in Markdown Preview.  
+Verwacht resultaat:
+1. Een simpele flowchart `Start -> OK`
+2. Een simpel class diagram `A -> B`
+
+Interpretatie:
+1. Als deze ook niet rendert: het is een globale VS Code/preview-config issue.
+2. Als deze wel rendert: dan zit het probleem nog in specifieke syntax in .
+
+Als je wilt, kan ik daarna direct stap 2 doen: de drie Mermaid-blokken in  één-voor-één isoleren met een bisection-aanpak om exact te vinden welke regel de preview breekt.
+
+---
+
 ## 🧑 User
 
 nope
@@ -163,32 +178,7 @@ nope
 
 ## 🤖 Assistant
 
-Ik ga nu automatisch checken of de VS Code CLI beschikbaar is en, als dat kan, direct een Mermaid-preview extensie toevoegen zodat rendering ook werkt als jouw VS Code-versie dit niet ingebouwd ondersteunt.De CLI-route is hier niet beschikbaar, dus ik zet nu preview-security expliciet op `disable` in workspace settings; dat lost vaak precies dit probleem op wanneer scripts voor diagram-rendering geblokkeerd worden.
-```
-
-```
-
-```
-
-```
-Ik heb de blokkade-instellingen nu aangepast; als dit nog niet helpt, ontbreekt waarschijnlijk Mermaid-ondersteuning in jouw VS Code-versie en dan geef ik je direct de exacte extensie-id om te installeren.Je screenshot bevestigt het: de preview ziet `mermaid` nu als gewone codeblock. Dat betekent dat Mermaid-ondersteuning in jouw VS Code ontbreekt of niet actief is.
-
-Ik heb al extra workspace-instellingen gezet in  om blokkades uit te sluiten:
-- `markdown.preview.mermaid.enabled: true`
-- `markdown.preview.security.level: "disable"`
-
-Volgende stap is dus de Mermaid-preview extensie activeren/installeren:
-
-```vscode-extensions
-bierner.markdown-mermaid
-```
-
-Daarna:
-1. Herstart VS Code.
-2. Open  in de ingebouwde preview.
-3. Als die rendert, werkt  ook.
-
-Als je wilt, zet ik daarna meteen de diagram-tekst terug naar de mooiere versie met stereotypes/notes (nu staat hij extra “strak” voor compatibiliteit).
+Ik ga nu de exacte VS Code settingnaam verifiëren (die is versieafhankelijk), zodat we gericht de juiste sleutel zetten in plaats van gokken.
 
 ---
 
@@ -200,26 +190,27 @@ ja, wil je de notes en stereotypen die je hebt weggegooid inderddaad weer terugb
 
 ## 🤖 Assistant
 
-
-```
-
-```
-Ik controleer nog kort of de notes/stereotypes nu echt terug staan in alle drie diagrammen.Ja, gedaan: de notes en stereotypes zijn teruggezet in de complexe Mermaid-diagrammen in .
-
-Hersteld in alle 3 blokken:
-- UML-stijl stereotypes met `«...»`
-- `note for ...` toelichtingen
-- de rijkere labels (zoals `↔`, `«bron 1»`, `«doel 1»`)
-- specifieke teksten zoals `<<bijzondere relatie>>`
-
-Controle bevestigt dat ze weer aanwezig zijn op o.a. , , en .
-
-Omdat Mermaid bij jou nog niet rendert, blijven deze blokken nu inhoudelijk correct voor documentatie/doelmodel, maar de rendering hangt nog steeds af van lokale preview-ondersteuning. Als je wilt, maak ik direct een tweede, “fallback” ASCII-variant per diagram onder een collapsible sectie, zodat het altijd zichtbaar blijft, ook zonder Mermaid-renderer.
+Ik zet nu de drie Mermaid-blokken in  terug naar de rijkere versie met notes en stereotypes, precies zoals je vroeg.
 
 ---
 
 ## 🧑 User
 
 ik zie de link naar extensie niet meer in de chat. Wil je hem nog eens laten zien?
+
+---
+
+## 🤖 Assistant
+
+Zeker. Dit is de extensie:
+
+```vscode-extensions
+bierner.markdown-mermaid
+```
+
+Directe Marketplace-link:
+https://marketplace.visualstudio.com/items?itemName=bierner.markdown-mermaid
+
+In VS Code kun je ook zoeken op: `bierner.markdown-mermaid` (naam: Markdown Preview Mermaid Support).
 
 ---

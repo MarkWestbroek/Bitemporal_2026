@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-17 11:04
 - **Sessie-ID**: `f88d473e-7365-4f9b-ba2d-6cb7bb0dc12c`
-- **Berichten**: 16
+- **Berichten**: 18
 
 ---
 
@@ -132,6 +132,24 @@ Kan ik dat gewoon opschuiven naar 8085 en 8086 bijv?
 
 ---
 
+## 🤖 Assistant
+
+Ja, gewoon. Die variabelen worden door de docker-compose files gebruikt als host-ports (de buitenkant van de container) — de container zelf blijft intern op 8080/8082. Je hoeft alleen  aan te passen.
+
+Laat me even checken of er hardcoded poorten in de compose-files staan: Alles gebruikt `${API_PORT:-8082}` en `${FRONTEND_PORT:-8083}` — geen hardcoded waarden. Eén wijziging in  is voldoende: 
+```
+
+```
+Klaar. Docker compose gebruikt nu:
+- API: `http://localhost:8085`
+- Frontend: `http://localhost:8086`
+- Postgres: poort 5433 (was al goed)
+- MinIO: 9000/9001 (die clashes niet want je lokale dev verbindt er alleen mee als client)
+
+De interne containerpoorten veranderen niet — alleen de host-side mapping.
+
+---
+
 ## 🧑 User
 
 Wil je dit nog ergens in de DOCKER.md verwerken, als dat er nog niet instaat?
@@ -159,6 +177,12 @@ MinIO verbonden: endpoint=localhost:9000, bucket=ide-bestanden-dev, ssl=false
 
 ---
 
+## 🤖 Assistant
+
+Werkt. De bucket is automatisch aangemaakt en de verbinding staat. Alles klopt: lokale dev gebruikt nu `ide-bestanden-dev`, gescheiden van wat Docker gebruikt.
+
+---
+
 ## 🧑 User
 
 maar ik zie geen bestand in de bucket nadat ik in de IDE dit doe
@@ -167,15 +191,7 @@ maar ik zie geen bestand in de bucket nadat ik in de IDE dit doe
 
 ## 🤖 Assistant
 
-Dat zegt al veel. Laat me de  functie checken — JSON is een tekstformaat en kleine bestanden gaan inline naar de database, niet naar MinIO. Gevonden. Het bestand **staat wel opgeslagen**, maar niet in MinIO. 
-
-Het is ontworpen logica: JSON-bestanden zijn "tekst" én een IDE Snapshot is bijna altijd < 1 MB → gaat **inline in de database** (tabel `IdeBestand_Inhoud_Data`, veld `inline_inhoud`). MinIO wordt alleen gebruikt voor grote of binaire bestanden (> 1 MB).
-
-Dus: de export werkt correct. Je ziet het bestand niet in de MinIO-bucket omdat het er bewust niet in staat — het zit in de DB. Je kunt het terugvinden via:
-- De IDE zelf (bestandenlijst)
-- Of direct in de DB: tabel `ide_bestand_inhoud_data` waar `opslag_type = 'inline'`
-
-Als je het toch in MinIO wil zien (bijv. voor inspectie), zou je de grens  kunnen verlagen of JSON uit de tekst-lijst halen — maar dat is een bewuste ontwerpkeuze om de DB te ontzien voor kleine bestanden.
+Laat me de filestore handler bekijken om te zien hoe bestanden worden opgeslagen.  
 
 ---
 

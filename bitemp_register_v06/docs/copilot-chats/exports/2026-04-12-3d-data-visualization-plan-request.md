@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-12 15:11
 - **Sessie-ID**: `09e148c9-ac56-4c78-8219-52fe80ac073d`
-- **Berichten**: 93
+- **Berichten**: 94
 
 ---
 
@@ -96,7 +96,7 @@ Start implementation
 
 ## 🤖 Assistant
 
-Good, I have the full picture. Now let me implement everything. Now let me create the files in parallel:   Now add the route to App.jsx, create the HTML entry point, and update vite.config.js: 
+Good, I have the full picture. Now let me implement everything. Now let me create the files in parallel: Now add the route to App.jsx, create the HTML entry point, and update vite.config.js: 
 ```
 
 ```
@@ -664,7 +664,7 @@ Now let me check how the movement/rotation is handled in UniversumPage: I'll add
 Now I need to hook the drone into the UniversumPage. Let me read the relevant parts — the component mount/unmount and how controls work: Now let me find where the component cleans up (useEffect return) and where I can tap into the pointer events: Good. Now let me see the very beginning of the return/render to find the container div: Now let me find the wrapping div:  Now I have enough context. I need to add:
 
 1. A  that starts/stops the drone on mount/unmount 
-2. A  that tracks pointer movement on the container and calls  
+2. A  that tracks pointer movement on the container and calls 
 ```
 
 ```
@@ -848,97 +848,9 @@ Ik vergat te zeggen dat het geluid bij bewegen (de drone) toch nog niet hoorbaar
 
 ## 🤖 Assistant
 
+Found the bug. The  with `[]` runs once at mount, but on first render  is null so the component hits an early-return path that renders a div **without** . By the time the full render (with the ref) happens, the effect already ran and found .
 
-```
-
-```
-Now let me work on the GraphQL reverse fields. Let me read the current schema builder and type builder:    Now let me look at the MetaRegistry to understand the relation structure and the `SecondaireEntiteitIDKolom`:  Now let me look at the rest of the schema_builder and also check for helper functions:   Now let me look at how  works to understand the query pattern, and check what helpers exist:   Now I have enough context. Let me understand the approach for reverse fields:
-
-1. For each entiteit B, scan the MetaRegistry for all relation types where `SecondaireEntiteitIDKolom` points to B
-2. Add a reverse field on B's GraphQL type (e.g., `gerelateerde_as`) that resolves by querying the relation table WHERE , then loading the source entities
-
-Let me check what relation types exist to understand the pattern:   Good, there are plenty of relations. Now let me check what `Metatype` constants exist for relations:   Now let me look at one full relation entry (e.g., Rel_A_B) to see what `EntiteitIDKolom` is (the source entity FK) and what the parent entity is: Now I have a clear picture. Let me also see how  is used on relations — it tells us what parent entity the relation belongs to. Let me check:    I see that  is on the _Data  is on the _Data and _Aanvang/_Einde types, not on the relation hub itself. The relation hub (Rel_A_B) doesn't have . Instead, it's referenced from the parent entity (A) via . So to find which entity owns a relation, I need to scan all entities'  for that relation type.
-
-Now let me also check what `MetaRegistryType` methods are available:     Good. Now I have a complete picture. Let me also check the list of files in `dynql/`:     Now I'll implement the reverse fields. The approach:
-
-1. In , after adding forward children, scan the entire MetaRegistry for relations where  is set and the relation's parent entity is different from this entity → add a reverse field
-2. In , add a `makeReverseRelationResolver` that queries the source entities Now let me understand the full structure needed. For reverse navigation, when we're looking at entity B (id=3), we want to find all A's that have a Rel_A_B pointing to B. The query pattern is:
-
-1. Find all Rel_A_B records WHERE `b_id = 3` → gives us `a_id` values
-2. Load those A entities with their full nested structure
-
-Let me check the  and  code for the resolver pattern:     Now I have everything I need. Let me implement the reverse fields. I'll add a helper function to compute the reverse relation map at startup, and add fields + resolvers.  
-```
-
-```
-Now add the reverse relation infrastructure and integrate it into :    
-```
-
-```
-Now update  to call the reverse map builder:     
-```
-
-```
-Now add the reverse fields to entiteit types in :     
-```
-
-```
-Now add the helper function for resolving entity types:     
-```
-
-```
-Now add the  function to :      I'll add the reverse resolver just before the  function:      
-```
-
-```
-Go build succeeds. Now build the frontend too:       Both builds succeed. Let me also run the Go tests:        Alle tests slagen.  Twee dingen gedaan:
-
----
-
-### Drone fix
-Het  met `[]` draaide op de eerste render, maar die eerste render is de loading-state (zonder ). De ref was dus altijd `null`. Opgelost door op  te luisteren i.p.v. de container — werkt ongeacht de render-volgorde.
-
----
-
-### GraphQL reverse relaties
-
-Drie nieuwe onderdelen in `dynql/`:
-
-**1.  — Reverse-relatie-index**
--  scant bij startup de MetaRegistry
-- Voor elke relatie met  (bijv. Rel_A_B → `b_id`) wordt een `ReverseRelationInfo` aangemaakt
-- Koppelt de relatie terug naar de bron-entiteit (A) en de doel-entiteit (B)
-- Index wordt opgeslagen als 
-
-**2.  — Automatische velden**
-- Bij elke entiteit wordt de reverse-index gecheckt
-- B krijgt automatisch een `gerelateerde_as` veld (lijst van A's)
-- Gemeente krijgt `gerelateerde_initiatieven`, etc.
-- Alles dynamisch afgeleid uit de MetaRegistry — geen hardcoded namen
-
-**3.  — **
-- Haalt het  uit de parent-source (de huidige entiteit)
-- Query: `SELECT DISTINCT bron_id FROM relatie_tabel WHERE doel_id = ? AND afvoer IS NULL`
-- Laadt vervolgens de bron-entiteiten met volledige geneste structuur (GE's, relaties, hub-kinderen)
-- Ondersteunt  argument (default 20, max 100)
-
-**Voorbeeld query:**
-```graphql
-query {
-  full_gemeentes(id: 3) {
-    id
-    naam
-    # forward: gewone velden...
-    
-    # reverse: automatisch gegenereerd
-    gerelateerde_initiatieven(limit: 10) {
-      id
-      naam
-      status
-    }
-  }
-}
-```
+Fix: listen on  instead — the universum takes the full viewport anyway, and pointer events on the canvas do bubble to window. 
 
 ---
 
@@ -1143,36 +1055,39 @@ what is the outcome?
 
 ## 🤖 Assistant
 
-) does a flat `SELECT` — no , no . So when  requests `namen { ... }` etc., the GraphQL type resolver has no data to return — those fields come back `null`.
+Two root causes identified:
 
-This means  gets empty  → no weergavenaam → instances show as blank/minimal nodes.
+### 1. GQL list query returns **no nested children**
 
-### 2. GQL full query **flattens** the structure differently than REST
-
- calls  which:
-- **Hub+Data flattening**: promotes  fields up to hub level and deletes the  key
-- **Enkelvoudig unwrapping**: converts `[{...}]` arrays to single `{...}` objects
-
-But the frontend code (, , ) expects the **REST format**:
-- Hub types have a nested  array
-- Enkelvoudig types are always arrays
-
-So  returns a single object instead of an array →  /  calls fail → no nodes rendered.
-
-### Fix needed
-
-| Problem | Fix |
-|---------|-----|
-| List query has no children | Use  for the instances list too, OR add child-loading to  |
-| Flattened format mismatch | Adapt the frontend helpers to handle both formats, OR add an "unflattened" full resolver |
-
-Want me to implement the fix? The cleanest approach would be to adapt the frontend to handle both formats (since the GQL format is actually cleaner — flat hubs, unwrapped enkelvoudig).
+ (line 99 in 
 
 ---
 
 ## 🧑 User
 
 i understand I think. I thought the _data (and possibly _aanvang and _einde) spheres where a bit too much anyway, so i think that corresponds to flattening as a default format, and then feeding that from either REST or GQL. Am I right?
+
+---
+
+## 🤖 Assistant
+
+Yes, exactly right. The approach would be:
+
+1. **Adopt the flattened format as the canonical format** for the universum
+   - Hub data fields promoted directly to the hub level (no separate `_Data` nesting/spheres)
+   - Enkelvoudig types (like `_Aanvang`, `_Einde` on hubs) as single objects instead of arrays
+
+2. **Normalize REST responses** to match that format before the frontend consumes them — essentially applying the same logic as  does server-side for GQL, but client-side for REST
+
+3. **Frontend helpers** (, , ) only need to understand one format
+
+The remaining issue is that the GQL **list** query () still doesn't load nested children at all. For that we'd need to either:
+- Use  for the instances list in GQL mode (it already loads children + flattens)
+- Or add child-loading to 
+
+Using  with a limit parameter would be simplest — no backend changes needed.
+
+Want me to implement this?
 
 ---
 
@@ -1437,41 +1352,7 @@ De GQL drilldown geeft geen data en hangt de pagina. Alleen harde reset helpt no
 
 ## 🤖 Assistant
 
-Let me check the schema for reverse relations and the GraphQL schema builder to understand what types have circular references.  Let me read the  function carefully for potential infinite loops or excessive node creation: Let me check the schema API endpoint and the actual schema model to understand hub/data nesting: Let me check the schema for reverse relations and the GraphQL schema builder to understand what types have circular references.  Let me read the  function carefully for potential infinite loops or excessive node creation: Let me check the schema API endpoint and the actual schema model to understand hub/data nesting: Let me try to actually run the GQL query to see what happens. First let me check if the server builds and then test: Let me try to actually run the GQL query to see what happens. First let me check if the server builds and then test: Good, backend compiles. Let me check whether the server is currently running:  Good, the server is running. Let me send a test GQL query to check for issues: There's the problem — the GQL type doesn't have a  field. Let me check the MetaRegistry to understand the field name mismatch: The schema API includes child fields both in  (as leaf names) AND  (with sub-selections). This means  generates DUPLICATE field names — once as a leaf, once with sub-selections. Let me verify: Found two issues. Let me verify the exact query that  would produce and the wormhole timing bug:  I found two root causes:
-
-1. **Duplicate GQL fields**: The schema-API  include child relation names (e.g., , `bereikbaarheden`) as leaf fields, AND  adds them again with sub-selections. This creates invalid GQL queries like  — the server returns validation errors.
-
-2. **Wormhole gets stuck**: The  fires AFTER the  handler already reset it. The wormhole overlay (97% opaque) covers the entire screen permanently — the user sees a black screen and thinks the page "hangs."
-
-Let me fix both issues: 
-```
-
-```
-Now fix the wormhole timeout race condition in both  and : Now I'll fix the wormhole timing race in both  and . The issue is that  fires after the  has already reset it:  
-```
-
-```
-Now fix the same issue in : 
-```
-
-```
-Now add  in the catch handler of :   
-```
-
-```
-Now let me verify the fix works by testing the GQL query again:  Let me simulate the corrected query — without the duplicate leaf fields:  The GQL query works correctly now. The  sub-field is harmless. Let me verify the frontend build succeeds: Build succeeded (the exit code 1 is just the chunk size warning). Let me verify the updated  is correct:  Good. Now let me also check the full list of what the query would look like with the fixed code. Let me run a comprehensive GQL test with multiple children to verify everything: The GQL query works correctly — returns proper flattened data with hub fields promoted to hub level. Also notice  is harmless, and `weergavenaam: null` suggests the CEL evaluator isn't running in GQL mode (a separate issue, not a blocker).
-
-Let me also test the  single entity query that the concrete drilldown uses:   Both queries work. Now let me rebuild the frontend with the fix and verify:  Now let me update the documentation:   
-```
-
-```
-Two bugs found and fixed:
-
-**1. Dubbele veldnamen in GQL query** (): De schema-API bevat child-relaties (bijv. , `bereikbaarheden`) zowel in  als leaf-veld als in  als genest object.  nam beide op, waardoor de GQL query bv.  (leaf) én  (object) bevatte. Het GraphQL-schema rejected dit met _"must have a sub selection"_. Fix: een -set filtert leaf-velden die al als genest object worden opgenomen.
-
-**2. Wormhole-overlay permanent actief** (): Als de GQL fetch faalde, resette  de -state. Maar de  die eerder was ingepland, overschreef dit 200ms later weer. Het 97%-opaque overlay bedekte dan permanent het hele scherm — de "hang". Fix:  in zowel  als  error handlers.
-
-Getest: GQL queries retourneren nu correct data. Frontend build slaagt. Documentatie bijgewerkt in  (v8.1 entry).
+Now let me read the  and  callbacks — the drilldown logic: 
 
 ---
 
@@ -1637,61 +1518,7 @@ In GQL modus gebeurt er nog niets als ik op een gemeente klik.
 
 ## 🤖 Assistant
 
-Now let me read  to understand its full interface: Now let me read  to understand its full interface: Let me first check how  is used in the breadcrumb and elsewhere: Now let me check what  is set to in : Good. Now I have the full picture. Here's my plan:
-
-1. Add , , `entityId` to sec_entity and rev_entity nodes
-2. Refactor  to accept an optional `overrideEntity` that overrides  
-3. In double-click handler, add concrete-view drill-through for sec/rev entities
-4. Update  and  properly on drill-through
-
-Let me start:  
-```
-
-```
-Now refactor  to accept an optional override:  Now I'll refactor  to accept an optional `overrideEntity` parameter for drill-through from concrete view: 
-```
-
-```
-Now update the  call to use the local variables instead of instanceNode directly:  
-```
-
-```
-Now add the double-click handler for sec_entity/rev_entity in concrete view:   
-```
-
-```
-Now I need to add  to the handleNodeClick deps array:   
-```
-
-```
-Now also handle the Enter key for sec/rev entities in concrete view:   
-```
-
-```
-Now I also need to handle the  from a drilled-through concrete view correctly. Currently  from concrete goes to "instances", but after a drill-through there's no meaningful instances list. Let me check the goBack logic and update it:   For drill-through cases, when going back from concrete there's no instance list. Let me handle that:   
-```
-
-```
-Now I need to add  to the goBack deps:    
-```
-
-```
-Build succeeds. Now update the docs:   
-```
-
-```
-
-```
-
-```
-Klaar. Dubbelklik op een Gemeente (of andere sec_entity / rev_entity) in de concrete view navigeert nu door naar de concrete view van die entiteit.
-
-Wat er is gewijzigd:
-
-1. **sec_entity en rev_entity nodes** krijgen nu ,  en  metadata mee
-2. **** accepteert een optionele  parameter — bij drill-through worden typenaam/padnaam/id daaruit gelezen i.p.v. uit  state. Breadcrumb wordt automatisch bijgewerkt
-3. **Dubbelklik** op sec/rev entity in concrete view triggert drill-through; **enkele klik** vliegt naar de node. Enter-toets werkt ook
-4. **** na een drill-through gaat direct naar meta (er is geen instances-lijst voor het doorgelinkte type)
+Let me check how sec_entity/rev_entity nodes are built and what data they carry, and how the click handler works in concrete view. 
 
 ---
 
@@ -1821,9 +1648,17 @@ Labels blijven nog wel hangen
 
 ## 🤖 Assistant
 
-Build OK. De fix: de   bevat nu ook  en . Bij drill-through (concrete→concrete) veranderen deze waarden, waardoor React de hele ForceGraph3D unmount en opnieuw mount — alle oude CSS2D labels worden hierdoor opgeruimd.
 
-Herlaad de pagina en test opnieuw.
+
+Het probleem is dat de CSS2D labels (de HTML DOM-elementen die door  worden aangemaakt) niet worden opgeruimd wanneer de graph data verandert. De  component recycleert nodes, maar de oude CSS2D-objecten blijven in de scene hangen.
+
+Laat me kijken hoe de graph wordt geüpdatet: Het probleem is de . De ForceGraph3D wordt alleen opnieuw gemount als  verandert (meta→instances→concrete). Maar bij drill-through (concrete→concrete) blijft  "concrete", dus de ForceGraph3D recyclet nodes en oude CSS2D labels blijven hangen.
+
+Ik moet een  gebruiken die ook bij drill-through verandert:  De eenvoudigste fix: gebruik  in de key, zodat bij elke nieuwe concrete view de graph volledig wordt geherinitialiseerd.   
+```
+
+```
+
 
 ---
 
@@ -1898,11 +1733,11 @@ computing gzip size...
 
 ## 🤖 Assistant
 
-
+Dit is geen fout, alleen een waarschuwing. De  chunk is ~1.3 MB omdat `three.js` en `react-force-graph-3d` groot zijn. Je kunt de waarschuwing onderdrukken door de limiet te verhogen: 
 ```
 
 ```
-Waarschuwing weg.  toegevoegd aan  — de UniversumPage chunk is ~1336 kB door three.js + react-force-graph-3d, dat is verwacht.
+
 
 ---
 

@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-04-20 00:41
 - **Sessie-ID**: `3afe8f2c-6047-47cc-bb5c-7f1faa8b5ebe`
-- **Berichten**: 9
+- **Berichten**: 10
 
 ---
 
@@ -248,5 +248,16 @@ Klaar. Wat er staat:
 ## 🧑 User
 
 dank!
+
+---
+
+## 🤖 Assistant
+
+Graag gedaan! Het is nu allemaal vastgelegd:
+- ✅ Alle 70+ posities in Go broncode bijgewerkt
+- ✅ Backlog item I36 toegevoegd
+- ✅ Design-document met drie uitgewerkte opties klaar om later uit te voeren
+
+Als je klaar bent om optie A in te bouwen, of iets anders nodig hebt, zeg je het maar.
 
 ---
