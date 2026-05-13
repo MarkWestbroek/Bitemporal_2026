@@ -17,6 +17,8 @@ Afgeleide velden zijn velden waarvan de waarde niet direct wordt opgeslagen, maa
 - [Opslag In Database En Roundtrip](#opslag-in-database-en-roundtrip)
 - [Codestructuur en bestanden](#codestructuur-en-bestanden)
 - [Toekomstige doorontwikkeling](#toekomstige-doorontwikkeling)
+- [Inhoud-detailpagina: weergavevelden in meervoudige tabellen](#inhoud-detailpagina-weergavevelden-in-meervoudige-tabellen-april-2026)
+- [CEL-context voor referentielijst-velden](#cel-context-voor-referentielijst-velden-mei-2026)
 
 ---
 
@@ -699,6 +701,105 @@ In plaats van alleen:
   2        8
   3        12
 ```
+
+---
+
+## CEL-context voor referentielijst-velden (mei 2026)
+
+### Probleem
+
+CEL-expressies op entiteiten kunnen verwijzen naar ref-FK-velden in onderliggende GE's via een gesynthetiseerde naam: `{veldnaam}_naam`. Voorbeeld:
+
+```cel
+Adres.straatnaam + ' ' + Adres.huisnummer + (Adres.postcode != null ? ', ' + Adres.postcode : '') + (Adres.gemeente_naam != null ? ' ' + Adres.gemeente_naam : '')
+```
+
+Het veld `gemeente` in `Locatie_Adres_Data` is een `int` (FK naar `Gemeente`). De expressie verwacht `gemeente_naam` — een gesynthetiseerde string die de weergavenaam van de gemeente bevat.
+
+Zonder expliciete verrijking is `gemeente_naam` in de CEL-context `null`, waardoor het gemeente-gedeelte stilletjes wordt overgeslagen.
+
+### Wortel: Hub + _Data namespacing in reflijst-opties
+
+Een tweede, verwant probleem deed zich voor bij de RefCombobox die opties uit de reflijst-opties API toont. De Gemeente-entiteit heeft een afgeleide weergavenaam:
+
+```cel
+GemeenteGegevens.naam + " (" + GemeenteGegevens.code + ")"
+```
+
+De reflijst-opties API retourneert opties als afgevlakte objecten: `{ id, velden: { naam, code } }`. Wanneer de CEL-evaluator dit evalueert met context `{ naam: "Utrecht", code: "GM0344" }` (plat, zonder `GemeenteGegevens`-namespace), wordt `GemeenteGegevens` undefined. CEL geeft dan lege strings terug — het resultaat is letterlijk `" ()"` in plaats van een foutmelding, waardoor de bug onzichtbaar was.
+
+### Oplossing: gedeelde helper `bouwReflijstOptieLabel`
+
+Toegevoegd aan `web/vite/src/shared/celEvaluator.js`:
+
+```js
+// Bouwt een CEL-context voor een reflijst-optie waarbij ook de hub-Klassenaam
+// en rolnaam als namespace beschikbaar zijn.
+export function bouwReflijstOptieContext(optie, refMeta, typeMetaByTypenaam) {
+  const velden = optie?.velden || {};
+  const ctx = { ...velden, id: optie?.id };
+  // Voeg ook de hub-GE klassenaam als key toe (bijv. "GemeenteGegevens" → velden)
+  for (const child of safeArray(refMeta?.onderliggende)) {
+    const childMeta = typeMetaByTypenaam?.[child.doeltype];
+    const klassenaam = childMeta?.klassenaam;
+    if (klassenaam && !(klassenaam in ctx)) ctx[klassenaam] = velden;
+    if (child.rolnaam && !(child.rolnaam in ctx)) ctx[child.rolnaam] = velden;
+  }
+  return ctx;
+}
+
+// Berekent het weergave-label voor een reflijst-optie:
+// 1. Probeer de CEL isWeergaveVeld-expressie met correcte namespace-context
+// 2. Fallback: velden.naam || velden.name
+// 3. Fallback: alle veld-waarden samengevoegd
+// 4. Fallback: String(optie.id)
+export function bouwReflijstOptieLabel(optie, refMeta, typeMetaByTypenaam) { ... }
+```
+
+De helper wordt gebruikt door: `RefCombobox`, `RepresentatieTabel`, `EntiteitFormulier`, `PublicatieTabel`.
+
+### Verrijking met `{veldnaam}_naam` voor entiteit-weergaveadressen
+
+Zowel `EntiteitFormulier.jsx` als `RepresentatieFormulier.jsx` verrijken platgeslagen GE-items nu vóór CEL-evaluatie:
+
+```js
+// Voor elk ref-veld (bijv. gemeente: int met schema:"ref:Gemeente")
+// wordt het label uit de refcache als extra veld toegevoegd:
+for (const veld of refVelden) {
+  const naam = refLookup[veld.ref]?.[String(item[veld.naam])];
+  if (naam) extra[`${veld.naam}_naam`] = naam;  // bijv. gemeente_naam = "Utrecht (GM0344)"
+}
+```
+
+Daarna evalueert de expressie `Adres.gemeente_naam` correct.
+
+### RepresentatieFormulier: secondaire entiteit-dropdown
+
+De dropdown voor het secondaire entiteits-ID (bijv. `locatie_id` in Bereikbaarheid) toont de weergavenaam van de doelentiteit. De berekening hiervan gebruikt ook CEL-expressies op de doelentiteit (bijv. Locatie's `weergaveadres`).
+
+Vóór deze fix haalde `RepresentatieFormulier.jsx` de doelentiteiten op en evalueerde CEL, maar **zonder** de reflijst-namen op te halen. Het resultaat: Locatie-opties toonden alleen straatnaam + huisnummer, zonder gemeente.
+
+De fix in `RepresentatieFormulier.jsx` voegt twee stappen toe vóór de entiteit-fetch:
+
+1. Verzamel alle `ref:`-velden uit de data-types van de doelentiteit.
+2. Haal de reflijst-opties parallel op en bouw een `refLookup`.
+3. Verrijk elk platgeslagen item met `{veldnaam}_naam` vóór CEL-evaluatie.
+
+### Betrokken bestanden
+
+| Bestand | Wijziging |
+|---------|-----------|
+| `web/vite/src/shared/celEvaluator.js` | Nieuwe exports `bouwReflijstOptieContext`, `bouwReflijstOptieLabel` |
+| `web/vite/src/components/editor/RefCombobox.jsx` | Gebruikt `bouwReflijstOptieLabel` ipv lokale `maakWeergavenaam`; `inputValue` controlled met `userTypingRef` voor sync |
+| `web/vite/src/components/editor/RepresentatieTabel.jsx` | Refcache-builder gebruikt `bouwReflijstOptieLabel` |
+| `web/vite/src/components/editor/EntiteitFormulier.jsx` | Ref-verrijking van child-items met `{veldnaam}_naam` vóór CEL; refcache via `bouwReflijstOptieLabel` |
+| `web/vite/src/components/editor/RepresentatieFormulier.jsx` | Secondaire entiteit-dropdown: reflijst-opties ophalen + verrijking vóór CEL |
+| `web/vite/src/publicatie/PublicatieTabel.jsx` | Refcache-builder gebruikt `bouwReflijstOptieLabel` |
+| `handlers/viz_reflijst_opties_handler.go` | `zoekbareKolommenVanFactory` gebruikt `json`-tag als fallback wanneer `bun`-tag ontbreekt |
+
+### Vuistregel
+
+Elke CEL-expressie die verwijst naar `X.naam` (bijv. `Adres.gemeente_naam`) vereist dat het frontend-component de naam-string vóór evaluatie injecteert. De expressie mag **niet** verwachten dat de API dit automatisch doet — de API retourneert ruwe FK-integers.
 
 ---
 

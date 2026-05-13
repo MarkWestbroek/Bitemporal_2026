@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-05-12 09:49
 - **Sessie-ID**: `d0ae5cf2-6bef-4cf6-ba73-1f2a9f5cde01`
-- **Berichten**: 65
+- **Berichten**: 66
 
 ---
 
@@ -1306,5 +1306,29 @@ Dit is hetzelfde patroon dat al in  zit — nu consistent ook in .
 ## 🧑 User
 
 zou je dit nog kunnen documenteren in het bestand dat over de CEL expressies gaat?
+
+---
+
+## 🤖 Assistant
+
+Nu heb ik alle context. Ik voeg een nieuwe sectie toe aan het einde van het bestand: 
+```
+
+```
+Ook de inhoudsopgave bijwerken: 
+```
+
+```
+Gedocumenteerd in  als nieuwe sectie **"CEL-context voor referentielijst-velden (mei 2026)"**. De sectie beschrijft:
+
+- Het stille-fout-probleem (CEL geeft `" ()"` ipv een fout bij ontbrekende namespace)
+- De Hub+_Data namespacing wortel oorzaak voor Gemeente's 
+- De gedeelde helper  met uitleg
+- Het  verrijkingspatroon voor entiteit-expressies als `Adres.gemeente_naam`
+- De fix in  voor de secondaire entiteit-dropdown
+- Een tabel van alle betrokken bestanden
+- De vuistregel: de frontend injecteert  voor de secondaire entiteit-dropdown
+- Een tabel van alle betrokken bestanden
+- De vuistregel: de frontend injecteert ref-namen vóór CEL, de API retourneert ruwe integers
 
 ---
