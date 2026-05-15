@@ -281,12 +281,30 @@ func inputPlumbingFields(entIDKolom string) []StructField {
 	}
 }
 
-// inputContentField genereert een inhoudsveld voor een _Input struct (zonder bun tags).
+// inputContentField genereert een inhoudsveld voor een _Input struct.
+// Bun-tags worden weggelaten (geen DB-mapping op _Input); schema-tags
+// (datatype, enum) worden wél doorgegeven zodat de request-validator
+// dezelfde regels hanteert als op de _Data structs.
 func inputContentField(v model.V3Veld) StructField {
 	goNaam := toPascalCase(v.Naam)
 	goType := v.GoType
 	naam := v.Naam
-	tags := "`" + jsonTag(naam, isPointerType(goType)) + "`"
+
+	tags := "`" + jsonTag(naam, isPointerType(goType))
+
+	var schemaParts []string
+	if v.Enum != "" && v.Enum != v.Datatype {
+		schemaParts = append(schemaParts, fmt.Sprintf("enum=%s", v.Enum))
+	}
+	if v.Datatype != "" {
+		schemaParts = append(schemaParts, fmt.Sprintf("datatype:%s", v.Datatype))
+	}
+	if len(schemaParts) > 0 {
+		tags += fmt.Sprintf(` schema:"%s"`, strings.Join(schemaParts, ","))
+	}
+
+	tags += "`"
+
 	return StructField{
 		Name: goNaam,
 		Type: goType,

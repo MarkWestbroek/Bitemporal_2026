@@ -1,0 +1,541 @@
+{
+  "info": {
+    "name": "Validatietest — Gegevenstypen",
+    "_postman_id": "validatietest-gegevenstypen-2026",
+    "description": "Integratietest voor de validatie-walker op alle string-gebaseerde gegevenstypen.\n\nGebruikt de TestEntiteitGegevenstypen (entiteit) met één Hub+Data GE (TestEntiteitGegevenstypen_TestGEGegevenstypen) die elk valideerbaar gegevenstype in een eigen veld heeft.\n\nVolgorde:\n0. Maak de testentiteit aan (id 9001)\n1. Happy path — alle geldige waarden\n2–11. Eén ongeldig veld per test (verwacht HTTP 422)\n12. Meerdere fouten tegelijk\n\nVereiste omgevingsvariabele: `baseUrl` (bijv. http://localhost:8082).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0. Maak TestEntiteitGegevenstypen aan (id 9001)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Aanmaken testentiteit voor validatietest gegevenstypen\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testentiteitgegevenstypen\": {\n          \"id\": 9001\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "Maakt de testentiteit (id=9001) aan. Moet als eerste worden uitgevoerd zodat de GE-registraties een geldige parent-entiteit hebben. Verwacht HTTP 201."
+      }
+    },
+    {
+      "name": "1. Happy path — alle geldige waarden (verwacht 201)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Happy path: alle gegevenstypen-velden gevuld met geldige waarden\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 1,\n          \"bsn\": \"111222333\",\n          \"kvknummer\": \"12345678\",\n          \"postcode\": \"1234 AB\",\n          \"iban\": \"NL91ABNA0417164300\",\n          \"emailadres\": \"test@example.com\",\n          \"telefoonnummer\": \"+31 6 12345678\",\n          \"url\": \"https://example.com/test\",\n          \"url_https\": \"https://example.nl\",\n          \"kleur\": \"#1a2b3c\",\n          \"geopunt\": \"52.3676,4.9041\",\n          \"kortetekst\": \"Een korte testtekst\",\n          \"an40\": \"Max veertig tekens tekst hier\",\n          \"an200\": \"Vrije tekst tot tweehonderd tekens\",\n          \"datum\": \"2024-01-15\",\n          \"duur\": \"P1Y2M\",\n          \"agbcode\": \"04010700\",\n          \"tin\": \"DE123456789\",\n          \"eu_btw_nummer\": \"NL123456789B01\",\n          \"kenteken\": \"AB-12-34\",\n          \"paspoortnummer\": \"NX5R38654\",\n          \"rijbewijsnummer\": \"1234567890\",\n          \"bignummer\": \"19025051601\",\n          \"oin\": \"00000001001234567000\",\n          \"loonheffingsnummer\": \"123456789L01\",\n          \"bag_pand_id\": \"0518100000258732\",\n          \"bag_vbo_id\": \"0518010000258732\",\n          \"bag_nummeraanduiding_id\": \"0518200000258732\",\n          \"woz_objectnummer\": \"030300001234\",\n          \"oid_code\": \"2.16.528.1.1007.3.1\",\n          \"isbn10\": \"0306406152\",\n          \"isbn13\": \"9780306406157\",\n          \"lei\": \"AAAAAAAAAAAAAAAAAA26\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "Registreert een GE met alle velden gevuld met geldige waarden. Alle validatoren moeten slagen. Verwacht HTTP 201."
+      }
+    },
+    {
+      "name": "2. Ongeldig BSN — 11-proef mislukt (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldige BSN (11-proef mislukt)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 2,\n          \"bsn\": \"123456789\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "BSN '123456789' voldoet niet aan de 11-proef. Verwacht HTTP 422 met een foutbericht dat 'bsn' noemt."
+      }
+    },
+    {
+      "name": "3. Ongeldige NLPostcode — lowercase letters (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldige NLPostcode (lowercase letters)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 3,\n          \"postcode\": \"1234ab\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "Postcode '1234ab' heeft lowercase letters; het patroon eist uppercase [A-Z]{2}. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "4. Ongeldig IBAN — checksum mislukt (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldig IBAN (mod-97 checksum mislukt)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 4,\n          \"iban\": \"NL91ABNA0417164301\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "IBAN 'NL91ABNA0417164301' wijkt één cijfer af van het geldige NL91ABNA0417164300; de mod-97-check faalt. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "5. Ongeldig emailadres — geen @ (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldig emailadres (geen @-teken)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 5,\n          \"emailadres\": \"geen-at-teken.com\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "Emailadres zonder @-teken. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "6. Ongeldige URL — geen http/https schema (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldige URL (geen http/https schema)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 6,\n          \"url\": \"ik-ben-geen-url\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "URL zonder http:// of https:// schema; het patroon ^https?:// matcht niet. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "7. Ongeldige UrlHttps — http in plaats van https (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldige UrlHttps (http niet https)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 7,\n          \"url_https\": \"http://example.nl\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "UrlHttps accepteert alleen ^https://...; http:// is ongeldig. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "8. Ongeldige Kleur — naam i.p.v. hex (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldige Kleur (kleurenaam i.p.v. hex-code)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 8,\n          \"kleur\": \"blauw\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "Kleur-waarde 'blauw' is een CSS-naam, geen hex-code (#RRGGBB). Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "9. Ongeldig GeoPunt — tekst i.p.v. lat,lng (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldig GeoPunt (plaatsnaam i.p.v. lat,lng)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 9,\n          \"geopunt\": \"Amsterdam\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "GeoPunt verwacht het formaat 'lat,lng' (bijv. 52.3676,4.9041). Een plaatsnaam matcht het patroon niet. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "10. Ongeldige Datum — Europees formaat (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldige Datum (dd-mm-jjjj in plaats van jjjj-mm-dd)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 10,\n          \"datum\": \"15-01-2024\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "Datum in Europees formaat dd-mm-jjjj; het systeem verwacht ISO-8601 jjjj-mm-dd. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "11. Ongeldige Duur — ontbrekende P (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldige ISO-8601 duur (ontbrekende P)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 11,\n          \"duur\": \"30M\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "ISO-8601 duurnotatie vereist een P-prefix (bijv. PT30M of P1Y). '30M' is ongeldig. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "12. Meerdere fouten tegelijk — BSN + postcode + email (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: drie ongeldige velden tegelijk\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 12,\n          \"bsn\": \"123456789\",\n          \"postcode\": \"1234ab\",\n          \"emailadres\": \"geen-at-teken.com\",\n          \"url\": \"ik-ben-geen-url\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "Vier ongeldige velden tegelijk: BSN (11-proef), postcode (lowercase), emailadres (geen @), URL (geen schema). De foutmelding moet alle vier velden benoemen. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "13. Ongeldig AGB-code — 7 cijfers (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldige AGB-code (7 i.p.v. 8 cijfers)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 13,\n          \"agbcode\": \"0401070\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "AGB-code moet exact 8 cijfers zijn. '0401070' (7 cijfers) is ongeldig. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "14. Ongeldig TIN — geen landcode (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldig TIN (geen ISO-3166 landcode, begint met cijfer)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 14,\n          \"tin\": \"123456789\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "TIN '123456789' mist de verplichte 2-letter ISO-3166 landcode. Verwacht HTTP 422. (Voor een NL-ingezetene zou het BSN-type gebruikt moeten worden, niet TIN.)"
+      }
+    },
+    {
+      "name": "15. Ongeldig EU BTW-nummer — geen landcode (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldig EU BTW-nummer (geen 2-letterige landcode)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 15,\n          \"eu_btw_nummer\": \"123456789B01\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "EU BTW-nummer zonder 2-letterige landcode is ongeldig ('123456789B01' start niet met twee hoofdletters). Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "16. Ongeldig kenteken — koppeltekens ontbreken (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldig kenteken (geen koppeltekens)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 16,\n          \"kenteken\": \"AB1234\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "Kenteken 'AB1234' mist de verplichte koppeltekens. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "17. Ongeldig paspoortnummer — 8 i.p.v. 9 tekens (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldig paspoortnummer (8 i.p.v. 9 tekens)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 17,\n          \"paspoortnummer\": \"NX5R3865\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "Paspoortnummer 'NX5R3865' heeft slechts 8 tekens. Vereist exact 9. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "18. Ongeldig rijbewijsnummer — 9 i.p.v. 10 cijfers (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldig rijbewijsnummer (9 i.p.v. 10 cijfers)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 18,\n          \"rijbewijsnummer\": \"123456789\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "Rijbewijsnummer '123456789' heeft 9 cijfers. Vereist exact 10. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "19. Ongeldig BIG-nummer — 10 i.p.v. 11 cijfers (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldig BIG-nummer (10 i.p.v. 11 cijfers)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 19,\n          \"bignummer\": \"1902505160\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "BIG-nummer '1902505160' heeft 10 cijfers. Vereist exact 11. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "20. Ongeldig OIN — 19 i.p.v. 20 cijfers (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldig OIN (19 i.p.v. 20 cijfers)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 20,\n          \"oin\": \"0000000100123456700\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "OIN '0000000100123456700' heeft 19 cijfers. Vereist exact 20. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "21. Ongeldig loonheffingsnummer — L ontbreekt (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldig loonheffingsnummer (L + volgnummer ontbreekt)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 21,\n          \"loonheffingsnummer\": \"123456789\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "Loonheffingsnummer '123456789' mist het verplichte 'L' + volgnummer-suffix. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "23. Ongeldig BAGPandID \u2014 15 i.p.v. 16 cijfers (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldig BAGPandID (15 cijfers)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 23,\n          \"bag_pand_id\": \"051810000025873\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "BAGPandID '051810000025873' heeft 15 i.p.v. de vereiste 16 cijfers. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "24. Ongeldige BAGVBOID \u2014 letters in nummerreeks (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldige BAGVBOID (bevat letters)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 24,\n          \"bag_vbo_id\": \"ABC0518010000258\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "BAGVBOID 'ABC0518010000258' bevat letters; alleen 16 cijfers zijn geldig. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "25. Ongeldige BAGNummeraanduidingID \u2014 17 i.p.v. 16 cijfers (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldige BAGNummeraanduidingID (17 cijfers)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 25,\n          \"bag_nummeraanduiding_id\": \"05182000002587320\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "BAGNummeraanduidingID '05182000002587320' heeft 17 i.p.v. de vereiste 16 cijfers. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "26. Ongeldig WOZObjectnummer \u2014 11 i.p.v. 12 cijfers (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldig WOZ-objectnummer (11 cijfers)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 26,\n          \"woz_objectnummer\": \"03030000123\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "WOZ-objectnummer '03030000123' heeft 11 i.p.v. de vereiste 12 cijfers. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "27. Ongeldige OIDCode \u2014 geen punten (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldige OIDCode (geen punten)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 27,\n          \"oid_code\": \"2165281\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "OIDCode '2165281' mist de verplichte punten tussen de componenten. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "29. Ongeldig ISBN-10 \u2014 mod-11 mislukt (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldig ISBN-10 (mod-11 mislukt)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 29,\n          \"isbn10\": \"0306406153\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "ISBN-10 '0306406153': correct formaat (10 cijfers), maar controlecijfer 3 i.p.v. het geldige 2 — mod-11 mislukt. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "30. Ongeldige ISBN-13 \u2014 EAN-13 checksum mislukt (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldige ISBN-13 (EAN-13 checksum mislukt)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 30,\n          \"isbn13\": \"9780306406158\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "ISBN-13 '9780306406158': correct formaat (13 cijfers, prefix 978), maar controlecijfer 8 i.p.v. het geldige 7 — EAN-13 checksum mislukt. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "31. Ongeldige LEI \u2014 ISO 7064 mod-97 mislukt (verwacht 422)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"registratie\": {\n    \"registratietype\": \"registratie\",\n    \"opmerking\": \"Validatietest: ongeldige LEI (mod-97 mislukt)\"\n  },\n  \"wijzigingen\": [\n    {\n      \"opvoer\": {\n        \"testgegegevenstypen\": {\n          \"testentiteitgegevenstypen_id\": 9001,\n          \"rel_id\": 31,\n          \"lei\": \"AAAAAAAAAAAAAAAAAA27\"\n        }\n      }\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/registratie/",
+          "host": ["{{baseUrl}}"],
+          "path": ["registratie", ""]
+        },
+        "description": "LEI 'AAAAAAAAAAAAAAAAAA27': correct formaat (18 hoofdletters + 2 cijfers), maar checksum 27 i.p.v. het geldige 26 — ISO 7064 mod-97 geeft geen 1. Verwacht HTTP 422."
+      }
+    },
+    {
+      "name": "32. Verificatie \u2014 GET entiteit 9001",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/full/testentiteiten_gegevenstypen/9001",
+          "host": ["{{baseUrl}}"],
+          "path": ["full", "testentiteiten_gegevenstypen", "9001"]
+        },
+        "description": "Haalt entiteit 9001 op met alle geneste GE-data. Verwacht HTTP 200 met alle gegevenstype-velden uit de happy-path-registratie (request #1)."
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8082",
+      "type": "string",
+      "description": "Base URL van de API-server. Overschrijf met de Postman-omgevingsvariabele {{baseUrl}}."
+    }
+  ]
+}

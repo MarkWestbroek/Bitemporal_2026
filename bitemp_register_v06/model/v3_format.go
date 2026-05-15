@@ -59,6 +59,10 @@ type V3Datatype struct {
 	Validatie    *V3Validatie `json:"validatie,omitempty"`
 	Normalisatie string       `json:"normalisatie,omitempty"`
 	Weergave     *V3Weergave  `json:"weergave,omitempty"`
+	// ExterneReferentie is een optionele URL naar de raadpleeg-API of officiële
+	// documentatie voor dit datatype (bijv. LVBAG-API voor BAGPandID, VIES
+	// voor EUBTWNummer, COR voor OIN). Wordt getoond als "meer info"-link.
+	ExterneReferentie string `json:"externeReferentie,omitempty"`
 }
 
 // V3Validatie beschrijft validatieregels voor een datatype.

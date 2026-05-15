@@ -207,3 +207,49 @@ func TestNormaliseer_NPLoc_GenesteAfvoer_E2E(t *testing.T) {
 		t.Fatalf("verwacht NatuurlijkPersoon_Naam-afvoer, kreeg %+v", out[1])
 	}
 }
+
+// TestNormaliseer_BurgerschapAanvangShorthand verifieert dat een aanvang-waarde
+// als bare JSON-string ("1969-02-01") in een burgerschap-payload automatisch
+// gewrapped wordt als {"datum":"1969-02-01"} zodat de unmarshal naar
+// NatuurlijkPersoon_Burgerschap_Aanvang slaagt.
+func TestNormaliseer_BurgerschapAanvangShorthand(t *testing.T) {
+	payload := `{
+		"opvoer": {
+			"burgerschap": {
+				"natuurlijkpersoon_id": 1,
+				"landcode": "nl",
+				"nationaliteit": "Nederlandse",
+				"aanvang": "1969-02-01"
+			}
+		}
+	}`
+
+	var w model.WijzigingRequest
+	if err := json.Unmarshal([]byte(payload), &w); err != nil {
+		t.Fatalf("unmarshal payload mislukt: %v", err)
+	}
+	out, err := NormaliseerWijziging(w)
+	if err != nil {
+		t.Fatalf("normaliseer mislukt: %v", err)
+	}
+
+	// Verwacht: 1 burgerschap + 1 burgerschap_aanvang
+	if len(out) != 2 {
+		t.Fatalf("verwacht 2 wijzigingen (burgerschap + aanvang), kreeg %d", len(out))
+	}
+	if out[0].Opvoer == nil || out[0].Opvoer.Representatienaam != "NatuurlijkPersoon_Burgerschap" {
+		t.Fatalf("eerste wijziging moet NatuurlijkPersoon_Burgerschap zijn, kreeg %+v", out[0].Opvoer)
+	}
+	if out[1].Opvoer == nil || out[1].Opvoer.Representatienaam != "NatuurlijkPersoon_Burgerschap_Aanvang" {
+		t.Fatalf("tweede wijziging moet NatuurlijkPersoon_Burgerschap_Aanvang zijn, kreeg %+v", out[1].Opvoer)
+	}
+
+	// Datum moet kloppen
+	aanv, ok := out[1].Opvoer.Representatie.(*model.NatuurlijkPersoon_Burgerschap_Aanvang)
+	if !ok {
+		t.Fatalf("representatie is geen *NatuurlijkPersoon_Burgerschap_Aanvang")
+	}
+	if aanv.Datum == nil || aanv.Datum.String() != "1969-02-01" {
+		t.Fatalf("verwacht datum 1969-02-01, kreeg %v", aanv.Datum)
+	}
+}

@@ -212,6 +212,22 @@ Out-of-scope (BACKLOG): server-side ID-allocatie; optimistic concurrency (`If-Ma
   - `GetByVeldnaamWithinDomein(veldnaam, domein, payloadKeys)` — beperkt tot één domein. Nuttig in `RepresentatiePlusNaam.UnmarshalJSON` als parent al bekend is (POST `/registratie/` met geneste payload, normalizer).
   - Doel: ook in POST `/registratie/`, full-POST en GraphQL-mutations parent-context-aware disambigueren in plaats van te leunen op `<ent>_id` in de payload of de WARN-fallback. Verwijdert een hele klasse "verkeerd type gekozen"-bugs.
 
+### Validatie (R1 + R2, input-structs, gegevenstypen-testmodel)
+
+**Validatie-walker** (`model/validation_walker.go`): reflecteert over exported fields op zoek naar `schema:"datatype:X"` tags; voor string-kinded velden wordt `ValideerWaarde(datatypeNaam, s, veldPad)` aangeroepen. Gecombineerd resultaat = één `ValidationResult` met alle fouten. Aanroeppad: `ValideerRepresentatie(rep)` → walker → `ValideerWaarde` per veld.
+
+- ✅ **R1: BSN 11-proef + IBAN mod-97 + NLPostcode regex (sessie 2026-04).** `ValideerWaarde` dispatcht op datatypeNaam; eigen implementaties voor BSN (11-proef), IBAN (mod-97), NLPostcode, Emailadres, URL, Kleur, GeoPunt enz. in `gegevenstypen_datatype_registry.go`. Tests in `model/validation_test.go`.
+- ✅ **R2: Validatie-walker + `ValideerRepresentatie` (sessie 2026-04).** Walker reflecteert `_Input`-structs; groepeert foutmeldingen per veldpad; retourneert HTTP 422 bij eerste ongeldige request in `registration_core.go`. `ValideerRepresentaties([]Representatie) error` als batch-helper. Tests: `TestValideerRepresentatie_Walker` + `TestValideerRepresentatie_InputStructBSN` in `model/validation_test.go`.
+- ✅ **Normalizer-regressions gefixed (sessie 2026-04).** Twee bugs in batch-registraties:
+  1. FK-injectie (`injecteerParentFK`) gebruikte `GetID()` i.p.v. `leesIntUitRawMap(rawMap, childMeta.EntiteitIDKolom)` — nieuwe helper in `handlers/registration_normalizer.go`.
+  2. `leidRelIDVoorHubKindAf` gaf "niet eenduidig"-error bij >1 actieve hub; nu `max(actieveHubIDs64)` retourneren (normalizer interleaved [hub, aanvang, hub, aanvang]). Test bijgewerkt: `TestLeidRelIDVoorHubKindAf_ErrorsOnAmbiguousActiveHub`.
+- ✅ **`_Input`-structs missen `schema:"datatype:..."` tag (sessie 2026-04).** Walker werkt op de `_Input`-struct (die gematerialiseerd wordt in `registration_core.go`), niet op `_Data`. Oplossing: (1) tag handmatig toegevoegd aan `NatuurlijkPersoon_Persoonsidentificatie_Input.Bsn`; (2) `inputContentField` in `cmd/codegen/conventions.go` propageert nu `schema:`-tags (datatype, enum) naar gegenereerde `_Input`-structs. Test: `TestValideerRepresentatie_InputStructBSN`.
+- ✅ **`TestEntiteitGegevenstypen` + Postman collection (sessie 2026-04).** Handmatig aangemaakt testmodel in het gegevenstypen-domein:
+  - 6 nieuwe Go-bestanden: `model/gegevenstypen_modellen_entiteiten.go`, `_ge_rel.go`, `_methods.go`, `_input.go`, `gegevenstypen_metaregistry.go`, `gegevenstypen_enum_registry.go`.
+  - Entiteit `TestEntiteitGegevenstypen` + Hub GE `TestEntiteitGegevenstypen_TestGEGegevenstypen` met één `_Data`-struct die elk string-gebaseerd valideerbaar gegevenstype (BSN, KvK, NLPostcode, IBAN, Emailadres, Telefoonnummer, URL, UrlHttps, Kleur, GeoPunt, KorteTekst, AN40, AN200, Datum, Duur) als apart veld met `schema:"datatype:X"` tag bevat.
+  - Init-functies gekoppeld in `model/metaregistry_plumbing.go` (na `initGegevenstypenDatatypeRegistry`).
+  - Postman-collectie: `postman/validatietest-gegevenstypen.postman_collection.json` met 13 requests: entity aanmaken, happy path, één invalid request per datatype (requests 2–11), en multi-fout test (request 12). Verwacht HTTP 422 bij elke invalid request.
+
 ### Afgeleide velden
 
 ```
@@ -287,6 +303,7 @@ Out-of-scope (BACKLOG): server-side ID-allocatie; optimistic concurrency (`If-Ma
     - ~~default bestandsnaam opslaan = versie~~ ✅
     - ~~normaliseer alle relaties (toolbar + context menu)~~ ✅
     - ~~snap alle elementen naar grid (toolbar + context menu)~~ ✅
+    - ~~auto-layout: logische ordening van alle REPs (ENT centraal, GE's eronder/ring, RELs tussen ENTs, per domein gegroepeerd) — toolbar `🎯 Auto-layout` + rechtsklik op canvas~~ ✅
     - ~~kopiëren/plakken van nodes tussen diagrammen (Ctrl+C/V + rechtsklik)~~ ✅
     - ~~Shift+drag entiteit vanuit PB = ENT + alle onderliggende GE's/relaties~~ ✅
     - edge-eigenschappen conceptueel incorrect: A-anker en anker-B zijn geen relaties maar links
@@ -737,8 +754,12 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | B23 | ✅ GraphQL `domeinen` veld op RegistratieType | nieuw |
 | B24 | Extra endpoint voor registratie (per domein?) dat wijziging niet nodig heeft: kan alleen als alle wijzigingen gelijkvormig zijn: alle opvoer of afvoer | nieuw |
 | B25 | 'backward'-compatible REST PATCH / DELETE mapping naar wijziging | nieuw |
-| B | | nieuw |
-| B | | nieuw |
+| B26 | 🟡 **Sterkere typering**: uitbreiding aantal first-class datatypes (Telefoon, IBAN, GeoPunt, GeoVlak, Kleur, Bestand-FK, Bedrag, Percentage, …); koppelt direct aan widget-laag (D.2) en validatie (B27). *Eerste iteratie 2026-05-13: Kleur, Duur, UrlHttps, GeoPunt toegevoegd in `model/datatype_aliases_extra.go` + `model/extra_datatype_registry.go`. Open: GeoVlak, Bestand, DatumIncompleet.* | brainstorm 2026-05-13 |
+| B27 | 🟡 **Validatieregels op alle typen**: per-datatype regels (regex, range, checksum, lengte) + optionele veld- en cross-veld-CEL-regels op MetaRegistry; *opt-in* uitvoering in registratie-API met response-melding (warning vs hard fail). *Fundament geleverd 2026-05-13: `model/validation.go` + walker + integratie in `RegistreerCore` met query-flag `?validatiestrengheid=strict\|lenient\|warnings-only`. Builtin: BSN-11-proef, IBAN mod-97, NLPostcode, Email, GeoPunt range, Kleur. Open: per-veld `Validatieregels`, cross-veld CEL (afh. B4), client-side preview (B6).* | brainstorm 2026-05-13 |
+| B28 | **Modelvarianten verder doortesten**: combinaties materieel × overerving × Hub+_Data × meervoudig × cross-domein-relatie systematisch dekken met test-fixtures | brainstorm 2026-05-13 |
+| B29 | **Berekende klassen** (afgeleide entiteiten/GE's/REL's): analoog aan afgeleide velden, complete representatie wordt door regels berekend uit andere model-elementen. Beslispunten: live (FE) vs gematerialiseerd (BE), cache-invalidatie, read-only API (zie 0.8 C9) | brainstorm 2026-05-13 |
+| B30 | **Afgeleide velden optioneel materialiseren in DB**: actuele aanvang/einde projecteren naar Hub-record (analoog aan opvoer/afvoer), eventueel andere afgeleide velden ook. Vereist dependency-tracking: bij wijziging van bron-record alle records die het in afgeleid veld gebruiken hertriggeren. Beslissing of dit wenselijk is per veld vastleggen. | brainstorm 2026-05-13 |
+| B31 | **Materieel tijdreizen** (was B7) — eerst formele semantiek goed, daarna materieel `?geldig_op=` over de hele API + GraphQL | brainstorm 2026-05-13 |
 
 ### Database / DDL
 
@@ -810,6 +831,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | E16| ✅ Edge-mode indicator: visuele banner + crosshair cursor bij actieve mode, Escape om te annuleren | nieuw |
 | E17| ✅ rechtsklik domein wijzigen voor selectie | nieuw |
 | E18| ✅ importeren uit mermaid neemt ook overerving mee | nieuw |
+| E19| ✅ Auto-layout: hiërarchische ordening van alle (zichtbare) REPs op het canvas — ENT centraal/bovenaan, GE's eronder (rij of grid; ring bij ≥ 8 GE's), enums/datatypes/reflijsten als kleine boxen onder de bijbehorende GE, RELs op halverwege tussen ENT-uiteinden, ankers tussen REL en ENT, ENT-clusters per **domein** gegroepeerd in eigen blokken. Inclusief toolbar-knop `🎯 Auto-layout` en context-menu item `🎯 Auto-layout (alles)` (canvas-rechtsklik werkt nu ook zonder selectie). Implementatie in [`metamodel/autoLayout.js`](../web/vite/src/umleditor/metamodel/autoLayout.js) | nieuw |
 
 
 ### IDE (metamodel-ontwerp omgeving)
@@ -952,6 +974,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | DM5 | Domein-boundary visualisatie | ontwerpgedachten/domeinen |
 | DM6 | Cross-model referentielijsten | Referentielijsten.md |
 | DM7 | Domein verwijderen: flow in frontend + opschoning codegen-bestanden, `datatype_aliases.go` en `metaregistry_plumbing.go` init-calls. Basisdomein `register` kan nooit verwijderd. | DEVLOOP.md §3 rebuild-scenario's |
+| DM8 | **Meertaligheid als domein-instelling** (uitwerking van punt 10 in 0.8): per domein aan/uit. Indien aan, krijgen *talige* content-velden op _Data een **taal-as** naast de formele tijds-as: extra kolommen `taal` (BCP 47) + `taaltype` (eigen / automatisch / juridisch / variant) op het _Data-record (geen extra tabellen). Multipliciteit-constraint: enkelvoudig in tijd én per taal — er kan dus per moment per taal maar één geldige waarde zijn; meervoudige GE's hebben die constraint niet. | brainstorm 2026-05-13 |
 
 ### CEL / Evaluatie
 
@@ -973,6 +996,9 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | R5 | Codegenerator aanpassen voor referentielijsten | Referentielijsten.md |
 | R6 | Omschrijvingen updaten (NP, Locatie, Adres, BAGLocatie) | Referentielijsten.md |
 | R7 | Ref lijst id uniek maken: hoe? Unieke shorthand code, id of uuid? | nieuw |
+| R8 | **Aparte registreer-variant voor ref-lijst-items**: simpeler en-masse-opvoer; verbergt de complexiteit van een replay-file zoals nu gebruikt | brainstorm 2026-05-13 |
+| R9 | **Ref-lijst items wijzigen**: standaard-flow voor de meeste gevallen; specifieker pad voor uitzonderingen (correctie vs. opvolger) | brainstorm 2026-05-13 |
+| R10 | **Materiele tijd in ref-lijsten**: typisch oneindig aan beide kanten, maar soms niet — visueel duidelijk maken (icoon / tooltip / kleur) wanneer aanvang/einde bewust beperkt zijn | brainstorm 2026-05-13 |
 
 ### Publicatie site
 
@@ -1037,6 +1063,40 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 ### Model: inhoudelijk
 - type datum incompleet
 - kaart: geo iets
+
+### Autorisatie / FTV / PBAC
+
+> Aansluitend op het ontwerp in `autoriseren/autoriseren.md` (PxP-patroon op basis van XACML 3.0).
+
+| # | Item | Bron |
+|---|------|------|
+| AUTH1 | **FTV-policy editor aansluiten en gebruiken** in v06: niet alleen ontwerp maar ook in de IDE/admin-UI policies bewerken en publiceren | brainstorm 2026-05-13 |
+| AUTH2 | **Experimenteren met policies, rollen, gebruikers**: meerdere policy-sets, rolovererving, attribuut-gedreven scenario's | brainstorm 2026-05-13 |
+| AUTH3 | **Organisatieregister opzetten** (bitemporeel, eigen domein): Organisatie, OrganisatieEenheid, Functie, Gebruiker, Lidmaatschap, met aanvang/einde | brainstorm 2026-05-13 |
+| AUTH4 | **PBAC ophangen aan organisatieregister**: PIP haalt principal-attributen direct uit het org-register; tijdsdimensie maakt "wie was er bevoegd op tijdstip t" beantwoordbaar | brainstorm 2026-05-13 |
+| AUTH5 | **AuthZEN tokens experimenteren**: PEP→PDP via OpenID AuthZEN evaluatie-API; vergelijken met directe Go-PDP | brainstorm 2026-05-13 |
+
+### Documentatie by example
+
+| # | Item | Bron |
+|---|------|------|
+| DOC1 | **Voorbeelden als first-class element op REPs**: per ENT/GE/REL een lijst voorbeeld-instanties met JSON-payload + label; roundtrippen in V3 + MetaRegistry; tonen op detailpagina's en in API-docs | brainstorm 2026-05-13 |
+| DOC2 | **Data-scenario's als object-diagrammen**: scenario beschrijft een verzameling instanties + relaties, gerenderd als UML-object-diagram (lollipop met instantienaam:Klassenaam); zelfde editor als metamodel maar met *instances* als nodes; basis voor testdata-generatie (TD1) en uitleg (DOC1) | brainstorm 2026-05-13 |
+
+### Testdata-generatie
+
+| # | Item | Bron |
+|---|------|------|
+| TD1 | **Testdata genereren via UI/IDE**: kies groepje REPs, geef variatie-eisen (aantal, distributie, randwaarden, talenmix), genereer en publiceer als replay-file of direct via registratie-API | brainstorm 2026-05-13 |
+| TD2 | **MCP-koppeling voor AI-gestuurde testdata**: Model Context Protocol-server zodat een LLM met sampled schema-context realistische data kan voorstellen; aandachtspunten: kostenbegrenzing, authenticatie, rate-limit, dry-run-preview | brainstorm 2026-05-13 |
+| TD3 | **Bij rebuild ook data-variaties binnenhalen**: data-bootstrap vanuit replay-files in `replay files/`, met variant-keuze (leeg / minimaal / demo / stress) | brainstorm 2026-05-13 |
+| TD4 | Data-scenario's (DOC2) als bron voor TD1: scenario → fixture → replay-file → DB | brainstorm 2026-05-13 |
+
+### Backlog-hygiëne
+
+| # | Item | Bron |
+|---|------|------|
+| BH1 | **Backlog opschonen**: meerdere items zijn al gebouwd maar niet afgevinkt. Aanpak: per increment-afsluiting backlog-pass; ✅-marker + datum + verwijzing naar implementatie-bestand. Optioneel: `cmd/backlog-check/` script dat per item zoekt naar "BACKLOG_REF: B27" o.i.d. in code-comments en automatisch open/dicht-status bijhoudt | brainstorm 2026-05-13 |
 
 ---
 

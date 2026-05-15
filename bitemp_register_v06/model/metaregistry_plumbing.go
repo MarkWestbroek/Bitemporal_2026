@@ -447,6 +447,21 @@ func init() {
 	initKennis2DatatypeRegistry()
 	initKennis2MetaRegistry()
 
+	// extra — handmatig onderhouden datatypes (Kleur, Duur, UrlHttps, GeoPunt e.d.)
+	// die niet door cmd/codegen worden overschreven. Zie extra_datatype_registry.go.
+	initExtraDatatypeRegistry()
+
+	// gegevenstypen — canonieke, handmatig onderhouden registry van algemene
+	// (cross-domein) datatypes met validatie-regels. Wordt als LAATSTE
+	// uitgevoerd zodat duplicates uit register/cg/financieel/extra
+	// vervangen worden door de canonieke versie. Zie
+	// gegevenstypen_datatype_registry.go en docs/validatie.md.
+	initGegevenstypenDatatypeRegistry()
+
+	// gegevenstypen — testmodel voor validatie-integratietests (handmatig).
+	initGegevenstypenEnumRegistry()
+	initGegevenstypenMetaRegistry()
+
 	propageerDomeinNaarOnderliggende()
 }
 

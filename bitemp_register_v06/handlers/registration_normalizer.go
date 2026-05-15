@@ -197,12 +197,30 @@ func NormaliseerWijziging(w model.WijzigingRequest) ([]model.WijzigingRequest, e
 			return nil, fmt.Errorf("normaliseer: doeltype '%s' (kind van %s, rol %s) niet gevonden in MetaRegistry", ch.og.Doeltype, rep.Representatienaam, ch.og.JSONRolnaam)
 		}
 
-		// FK-propagatie: injecteer de parent-ID automatisch als het FK-veld
-		// nog niet aanwezig is in de child-payload. Dit maakt het voor clients
-		// overbodig om `{ent}_id` handmatig mee te sturen in geneste payloads;
-		// de parent-context (genesting) impliceert de FK al. Een al aanwezige
-		// FK-waarde wordt niet overschreven (client-waarde heeft voorrang).
-		childRaw, err := injecteerParentFK(ch.raw, childMeta.EntiteitIDKolom, rep.Representatie.GetID())
+		// Aanvang/einde shorthand: als het kind-GESubtype aanvang of einde is
+		// en de client stuurde een bare JSON-string (bijv. "1969-02-01"), wrap
+		// dat automatisch als {"datum": <waarde>} zodat de unmarshal slaagt.
+		// Dit maakt het mogelijk om "aanvang": "2024-01-01" te schrijven als
+		// shorthand voor "aanvang": {"datum": "2024-01-01"}.
+		childRaw := ch.raw
+		if trimmedChild := bytes.TrimSpace(childRaw); len(trimmedChild) > 0 && trimmedChild[0] == '"' {
+			if childMeta.GESubtype == model.GESubtypeAanvang || childMeta.GESubtype == model.GESubtypeEinde {
+				childRaw = append([]byte(`{"datum":`), append(trimmedChild, '}')...)
+			}
+		}
+
+		// FK-propagatie: injecteer de entity-ID automatisch als het FK-veld nog
+		// niet aanwezig is in de child-payload. Voor hub-types retourneert
+		// GetID() de rel_id (niet de entity-ID); lees de juiste FK-waarde
+		// daarom direct uit rawMap van de parent-payload.
+		fkWaarde := leesIntUitRawMap(rawMap, childMeta.EntiteitIDKolom)
+		if fkWaarde == 0 {
+			// Fallback: GetID() — werkt correct voor entiteiten (retourneert entity-ID)
+			if id, ok := rep.Representatie.GetID().(int); ok && id != 0 {
+				fkWaarde = id
+			}
+		}
+		childRaw, err := injecteerParentFK(childRaw, childMeta.EntiteitIDKolom, fkWaarde)
 		if err != nil {
 			return nil, fmt.Errorf("normaliseer: FK-injectie kind %s mislukt: %w", childMeta.Typenaam, err)
 		}
@@ -231,6 +249,23 @@ func NormaliseerWijziging(w model.WijzigingRequest) ([]model.WijzigingRequest, e
 	}
 
 	return out, nil
+}
+
+// leesIntUitRawMap leest een integer-waarde voor een gegeven sleutel uit een
+// JSON-rawmap. Retourneert 0 als de sleutel ontbreekt of geen integer is.
+func leesIntUitRawMap(m map[string]json.RawMessage, sleutel string) int {
+	if sleutel == "" {
+		return 0
+	}
+	raw, ok := m[sleutel]
+	if !ok {
+		return 0
+	}
+	var v int
+	if json.Unmarshal(raw, &v) != nil {
+		return 0
+	}
+	return v
 }
 
 // injecteerParentFK voegt de parent-ID toe aan een kind-payload als het FK-veld

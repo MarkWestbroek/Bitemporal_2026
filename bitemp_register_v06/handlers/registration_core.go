@@ -31,9 +31,12 @@ import (
 
 // RegistreerError combineert een HTTP-status met een foutboodschap.
 // Het transport (REST/GraphQL) vertaalt dit naar het juiste responseformaat.
+// Bij validatiefouten wordt `Problem` gevuld zodat de REST-adapter een
+// RFC 9457 (NL API Strategie) `application/problem+json`-response kan sturen.
 type RegistreerError struct {
-	Status int
-	Msg    string
+	Status  int
+	Msg     string
+	Problem *model.ProblemDetails
 }
 
 func (e *RegistreerError) Error() string { return e.Msg }
@@ -49,6 +52,9 @@ type AuditMeta struct {
 	RequestPath   string
 	RequestMethod string
 	EntiteitID    string // optioneel: uit URL :id (REST) of GraphQL-argument
+	// Strengheid bepaalt of validatiefouten blokkeren (strict) of slechts
+	// gerapporteerd worden (lenient/warnings-only). Default = strict.
+	Strengheid model.Validatiestrengheid
 }
 
 // RegistreerResult bevat het succesresultaat van RegistreerCore.
@@ -60,6 +66,11 @@ type RegistreerResult struct {
 	Wijzigingen   []model.WijzigingRequest
 	ResponseBody  json.RawMessage
 	DurationMs    int64
+	// Validatie bevat de gevonden fouten/waarschuwingen op basis van
+	// V3Datatype-regels (B.A.2). Bij StrengheidStrict en aanwezige fouten
+	// wordt RegistreerCore al eerder afgebroken met een RegistreerError;
+	// in lenient/warnings-only modus komt de inhoud hier terug.
+	Validatie *model.ValidatieResultaat
 }
 
 // RegistreerCore voert de registratie/correctie/ongedaanmaking transactioneel uit.
@@ -106,6 +117,29 @@ func RegistreerCore(ctx context.Context, db *bun.DB, req model.RegistreerRequest
 
 	registratieID := req.Registratie.ID
 	registratieTijdstip := req.Registratie.Tijdstip
+
+	// B.A.2: valideer alle representaties op basis van V3Datatype-regels.
+	// In strict-modus → eerste fout = HTTP 422 + rollback. In lenient/warnings-only
+	// → fouten verzamelen en doorgeven via RegistreerResult.Validatie.
+	validatie := valideerWijzigingen(req.Wijzigingen)
+	strengheid := audit.Strengheid
+	if strengheid == "" {
+		strengheid = model.StrengheidStrict
+	}
+	if strengheid == model.StrengheidWarningsOnly {
+		// alle fouten degraderen naar waarschuwingen
+		validatie.Waarschuwingen = append(validatie.Waarschuwingen, validatie.Fouten...)
+		validatie.Fouten = nil
+	}
+	if strengheid.IsBlokkerend() && validatie.HeeftFouten() {
+		pd := model.BuildProblemDetails(validatie, audit.RequestPath)
+		return RegistreerResult{}, &RegistreerError{
+			Status: http.StatusUnprocessableEntity,
+			Msg: fmt.Sprintf("validatie mislukt (%d fout(en)): %s",
+				len(validatie.Fouten), beschrijfFouten(validatie.Fouten)),
+			Problem: &pd,
+		}
+	}
 
 	// ONGEDAANMAKING scenario.
 	if req.Registratie.Registratietype == model.RegistratietypeOngedaanmaking {
@@ -215,7 +249,70 @@ func RegistreerCore(ctx context.Context, db *bun.DB, req model.RegistreerRequest
 		Wijzigingen:   req.Wijzigingen,
 		ResponseBody:  responseBodyJSON,
 		DurationMs:    elapsedMs,
+		Validatie:     validatieOfNil(validatie),
 	}, nil
+}
+
+// valideerWijzigingen valideert alle representaties in de request.
+func valideerWijzigingen(wijzigingen []model.WijzigingRequest) model.ValidatieResultaat {
+	var res model.ValidatieResultaat
+	for idx, w := range wijzigingen {
+		var rep *model.RepresentatiePlusNaam
+		if w.Opvoer != nil {
+			rep = w.Opvoer
+		} else if w.Afvoer != nil {
+			rep = w.Afvoer
+		}
+		if rep == nil || rep.Representatie == nil {
+			continue
+		}
+		pad := fmt.Sprintf("wijzigingen[%d].%s", idx, rep.Veldnaam)
+		fouten := model.ValideerRepresentatie(rep.Representatie, pad)
+		for _, f := range fouten {
+			if f.Severity == model.SeverityWarning {
+				res.Waarschuwingen = append(res.Waarschuwingen, f)
+			} else {
+				res.Fouten = append(res.Fouten, f)
+			}
+		}
+	}
+	return res
+}
+
+// beschrijfFouten produceert een leesbare samenvatting voor in de errormessage.
+func beschrijfFouten(fouten []model.ValidatieFout) string {
+	parts := make([]string, 0, len(fouten))
+	for _, f := range fouten {
+		parts = append(parts, fmt.Sprintf("%s [%s]: %s", f.Veld, f.Code, f.Bericht))
+	}
+	return joinKort(parts, "; ", 5)
+}
+
+// joinKort beperkt het aantal getoonde items om de errormessage compact te houden.
+func joinKort(items []string, sep string, max int) string {
+	if len(items) <= max {
+		return joinAll(items, sep)
+	}
+	head := items[:max]
+	return joinAll(head, sep) + fmt.Sprintf("%s… (+%d meer)", sep, len(items)-max)
+}
+
+func joinAll(items []string, sep string) string {
+	out := ""
+	for i, it := range items {
+		if i > 0 {
+			out += sep
+		}
+		out += it
+	}
+	return out
+}
+
+func validatieOfNil(v model.ValidatieResultaat) *model.ValidatieResultaat {
+	if len(v.Fouten) == 0 && len(v.Waarschuwingen) == 0 {
+		return nil
+	}
+	return &v
 }
 
 // verwerkOngedaanmaking voert de ONGEDAANMAKING-scenario-logica uit.

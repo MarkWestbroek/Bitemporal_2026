@@ -28,7 +28,7 @@ type Locatie_BAGlocatie_Input struct {
 type NatuurlijkPersoon_Persoonsidentificatie_Input struct {
 	NATUURLIJKPERSOON_ID int    `json:"natuurlijkpersoon_id"`
 	Rel_ID               int    `json:"rel_id"`
-	Bsn                  string `json:"bsn"`
+	Bsn                  string `json:"bsn" schema:"datatype:BSN"`
 	Ingezetene           *bool  `json:"ingezetene,omitempty"`
 }
 

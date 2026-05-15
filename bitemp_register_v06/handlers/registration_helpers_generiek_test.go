@@ -254,18 +254,16 @@ func TestLeidRelIDVoorHubKindAf_ErrorsOnAmbiguousActiveHub(t *testing.T) {
 	}
 	representatie := &model.A_W_Aanvang{A_ID: 2}
 
+	// Rows 3 en 4: meerdere actieve hubs — verwacht dat de hoogste (4) wordt gekozen.
 	mock.ExpectQuery(`SELECT CAST\(rel_id AS BIGINT\) FROM "a_w".*opvoer IS NOT NULL.*afvoer IS NULL.*a_id =`).
 		WillReturnRows(sqlmock.NewRows([]string{"rel_id"}).AddRow(3).AddRow(4))
 
-	_, err = leidRelIDVoorHubKindAf(ctx, tx, meta, representatie)
-	if err == nil {
-		t.Fatal("expected ambiguity error, got nil")
+	relID, err := leidRelIDVoorHubKindAf(ctx, tx, meta, representatie)
+	if err != nil {
+		t.Fatalf("expected no error (hoogste rel_id), got %v", err)
 	}
-	if !strings.Contains(err.Error(), "niet eenduidig") {
-		t.Fatalf("expected ambiguity error, got %v", err)
-	}
-	if !strings.Contains(err.Error(), "stuur rel_id expliciet mee") {
-		t.Fatalf("expected explicit rel_id guidance, got %v", err)
+	if relID != 4 {
+		t.Fatalf("expected rel_id 4 (hoogste), got %d", relID)
 	}
 
 	mock.ExpectRollback()

@@ -980,7 +980,18 @@ func leidRelIDVoorHubKindAf(ctx context.Context, tx bun.Tx, meta model.TypeMeta,
 	case 1:
 		return int(actieveHubIDs64[0]), nil
 	default:
-		return 0, fmt.Errorf("HANDLER: kan rel_id voor %s niet eenduidig afleiden: %d actieve %s hubs gevonden voor %s=%d; stuur rel_id expliciet mee in de request voor dit hub-kind", meta.Typenaam, len(actieveHubIDs64), hubMeta.Typenaam, hubMeta.EntiteitIDKolom, entiteitID)
+		// Meerdere actieve hubs: kies de meest recent ingevoegde (hoogste rel_id).
+		// Dit is correct bij batch-registraties waarbij de normalizer hub + kind
+		// direct na elkaar interleaved: de net-ingevoegde hub heeft altijd de
+		// hoogste rel_id. Als je een kind aan een specifieke OUDERE hub wilt
+		// koppelen, stuur dan rel_id expliciet mee in de request.
+		var max int64 = actieveHubIDs64[0]
+		for _, id := range actieveHubIDs64[1:] {
+			if id > max {
+				max = id
+			}
+		}
+		return int(max), nil
 	}
 }
 

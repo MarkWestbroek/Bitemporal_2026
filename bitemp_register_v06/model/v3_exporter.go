@@ -234,6 +234,11 @@ func datatypeDomeinScore(datatypeDomein, filterDomein string) int {
 	if d == f {
 		return 3
 	}
+	// Cross-domein basisbibliotheek: "gegevenstypen" en (legacy) "register"
+	// zijn altijd toegankelijk vanuit elk domein.
+	if d == "gegevenstypen" {
+		return 2
+	}
 	if d == "register" {
 		return 2
 	}

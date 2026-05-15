@@ -75,20 +75,35 @@ func RegistreerMetNieuweAanpak() gin.HandlerFunc {
 			RequestPath:   c.Request.URL.Path,
 			RequestMethod: c.Request.Method,
 			EntiteitID:    c.Param("id"),
+			Strengheid:    model.ParseStrengheid(c.Query("validatiestrengheid")),
 		}
 		result, rerr := RegistreerJSONCore(c.Request.Context(), rawBody, "", audit)
 		if rerr != nil {
+			// RFC 9457 (NL API Strategie): bij validatiefouten een gestructureerde
+			// `application/problem+json`-response met `invalidParams[]`. Voor
+			// andere fouten houden we de bestaande `{"error": ...}`-vorm.
+			if rerr.Problem != nil {
+				c.Header("Content-Type", "application/problem+json")
+				c.JSON(rerr.Status, rerr.Problem)
+				return
+			}
 			c.JSON(rerr.Status, gin.H{"error": rerr.Msg})
 			return
 		}
 
 		// Response identiek aan pre-refactor (incl. registratieId-alias).
-		c.JSON(result.Status, gin.H{
+		response := gin.H{
 			"message":        result.Message,
 			"registratie_id": result.RegistratieID,
 			"registratieId":  result.RegistratieID,
 			"tijdstip":       result.Tijdstip,
 			"wijzigingen":    result.Wijzigingen,
-		})
+		}
+		// B.A.2: bij lenient/warnings-only meegeven; in strict-modus komt
+		// validatie-output alleen bij hard-fail terug (via error).
+		if result.Validatie != nil {
+			response["validatie"] = result.Validatie
+		}
+		c.JSON(result.Status, response)
 	}
 }
