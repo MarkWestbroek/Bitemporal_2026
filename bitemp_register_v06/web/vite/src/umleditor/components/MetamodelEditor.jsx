@@ -84,6 +84,7 @@ import {
 } from "../metamodel/types";
 import { v3ModelNaarEditor } from "../metamodel/v3ModelNaarEditor";
 import { bepaalDependencyTargetIds } from "../metamodel/dependencyEdges";
+import { pasAutoLayoutToe } from "../metamodel/autoLayout";
 import { validateV3Model } from "../../validation/validateV3Model";
 import useUIStore from "../../store/useUIStore";
 
@@ -1014,7 +1015,9 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   const toonContextMenu = useCallback(
     (event) => {
       const geselecteerd = nodes.filter((n) => n.selected);
-      if (geselecteerd.length < 2) return false;
+      // Toon menu altijd (ook zonder selectie): canvas-brede acties zoals
+      // auto-layout/normaliseer/snap-grid zijn altijd zinvol; uitlijnacties
+      // worden in het menu zelf verborgen op basis van `minCount`.
       event.preventDefault();
       const modelNodeTypes = ["entiteit", "gegevenselement", "relatie", "associatieAnker", "referentielijstInstantie"];
       const heeftDomeinWijziging = geselecteerd.some((n) => modelNodeTypes.includes(n.type));
@@ -1441,12 +1444,45 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   }, [setNodes, pushCanvasUndo]);
 
   /**
+   * Auto-layout: orden alle (zichtbare) nodes logisch op het canvas.
+   *
+   * - ENT centraal/bovenaan binnen zijn cluster, GE's eronder (rij of grid)
+   *   of in een ring rondom de ENT bij ≥ 8 GE's
+   * - Enums/datatypes/reflijsten als kleine boxen onder de bijbehorende GE
+   * - RELs op halverwege tussen hun ENT-uiteinden, ankers tussen REL en ENT
+   * - ENT-clusters per domein gegroepeerd in eigen blok
+   *
+   * Na de herordening worden alle relaties automatisch genormaliseerd
+   * (kortste handle-keuze) zodat de lijnen netjes aansluiten op de
+   * nieuwe posities. Zie `metamodel/autoLayout.js` voor het algoritme.
+   */
+  const handleAutoLayout = useCallback(() => {
+    pushCanvasUndo("auto-layout");
+    const nieuweNodes = pasAutoLayoutToe(nodes, edges, { alleenZichtbaar: true });
+    setNodes(nieuweNodes);
+    setEdges((eds) =>
+      eds.map((e) => {
+        const srcNode = nieuweNodes.find((n) => n.id === e.source);
+        const tgtNode = nieuweNodes.find((n) => n.id === e.target);
+        if (!srcNode || !tgtNode) return e;
+        const best = berekenKortsteHandles(srcNode, tgtNode);
+        return { ...e, sourceHandle: best.sourceHandle, targetHandle: best.targetHandle };
+      })
+    );
+  }, [nodes, edges, setNodes, setEdges, pushCanvasUndo]);
+
+  /**
    * Voer een uitlijnactie uit op alle geselecteerde nodes.
    * Elke actie past de position van de geselecteerde nodes aan;
    * breedte en hoogte komen uit measured (React Flow) of defaults.
    */
   const handleAlign = useCallback(
     (actie) => {
+      // Acties die zonder selectie werken (canvas-breed)
+      if (actie === "auto-layout") {
+        handleAutoLayout();
+        return;
+      }
       const geselecteerd = nodes.filter((n) => n.selected);
       if (geselecteerd.length < 2) return;
 
@@ -1527,7 +1563,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         })
       );
     },
-    [nodes, setNodes, pushCanvasUndo, handleSnapAlleNaarGrid, handleNormaliseerAlleRelaties]
+    [nodes, setNodes, pushCanvasUndo, handleSnapAlleNaarGrid, handleNormaliseerAlleRelaties, handleAutoLayout]
   );
 
   /**
@@ -2788,6 +2824,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         onSelecteerDomein={handleSelecteerDomein}
         onNormaliseerAlleRelaties={handleNormaliseerAlleRelaties}
         onSnapAlleNaarGrid={handleSnapAlleNaarGrid}
+        onAutoLayout={handleAutoLayout}
         activeEdgeMode={activeEdgeMode}
         onSetActiveEdgeMode={setActiveEdgeMode}
         theme={theme}

@@ -105,6 +105,7 @@ const ALIGN_ACTIES = [
   { actie: "verdeel-verticaal",   label: "Verdeel gelijk ↕",   icon: iconen.verdeelV,  minCount: 3 },
   { actie: "verdeel-horizontaal", label: "Verdeel gelijk ↔",   icon: iconen.verdeelH,  minCount: 3 },
   { separator: true },
+  { actie: "auto-layout",         label: "🎯 Auto-layout (alles)", minCount: 0 },
   { actie: "normaliseer-relaties", label: "↔ Normaliseer relaties", minCount: 0 },
   { actie: "snap-naar-grid",      label: "⊞ Snap naar grid",       minCount: 0 },
 ];
@@ -242,12 +243,12 @@ export default function ContextMenu({ x, y, menuType = "align", onAlign, onActio
       ) : (
         <>
           <div className="context-menu-header">
-            {itemCount} elementen
+            {itemCount > 0 ? `${itemCount} ${itemCount === 1 ? "element" : "elementen"} geselecteerd` : "Canvas-acties"}
           </div>
           {ALIGN_ACTIES.map((item, i) =>
             item.separator ? (
               <div key={`sep-${i}`} className="context-menu-separator" />
-            ) : itemCount < (item.minCount || 2) ? null : (
+            ) : itemCount < (item.minCount ?? 2) ? null : (
               <button
                 key={item.actie}
                 className="context-menu-item"

@@ -9,7 +9,7 @@
  */
 import { maakLeegType, maakLegeEnumeratie, maakLeegGegevenstype, maakLegeNotitie, maakLegeConstraint, EDGE_MODES } from "../../metamodel/types";
 
-export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddReferentielijstInstantie, onSave, onSaveEditorFlow, onPublishSchemaModel, onPublishAndRebuild, onRebuildModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI, onImportXMI, onImportMermaid, onImportPlantUML, modelNaam, modelBron, modelOpmerking, actiefDomein, beschikbareDomeinen, domeinSelectieActief = false, onSetActiefDomein, onSelecteerDomein, onNormaliseerAlleRelaties, onSnapAlleNaarGrid, activeEdgeMode, onSetActiveEdgeMode, theme = "dark", onToggleTheme }) {
+export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddReferentielijstInstantie, onSave, onSaveEditorFlow, onPublishSchemaModel, onPublishAndRebuild, onRebuildModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI, onImportXMI, onImportMermaid, onImportPlantUML, modelNaam, modelBron, modelOpmerking, actiefDomein, beschikbareDomeinen, domeinSelectieActief = false, onSetActiefDomein, onSelecteerDomein, onNormaliseerAlleRelaties, onSnapAlleNaarGrid, onAutoLayout, activeEdgeMode, onSetActiveEdgeMode, theme = "dark", onToggleTheme }) {
   const domeinen = beschikbareDomeinen || [];
   const domeinSelectieTitel = !actiefDomein
     ? "Kies eerst een actief domein"
@@ -105,6 +105,7 @@ export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddRefer
 
           <div className="toolbar-group">
             <span className="toolbar-label">Layout:</span>
+            {onAutoLayout && <button onClick={onAutoLayout} className="btn-toolbar" title="Orden alle elementen logisch (ENT centraal, GE's eronder, RELs tussen ENTs, per domein gegroepeerd)">🎯 Auto-layout</button>}
             {onNormaliseerAlleRelaties && <button onClick={onNormaliseerAlleRelaties} className="btn-toolbar" title="Normaliseer alle relaties (kortste weg)">↔ Normaliseer</button>}
             {onSnapAlleNaarGrid && <button onClick={onSnapAlleNaarGrid} className="btn-toolbar" title="Snap alle elementen naar het grid">⊞ Snap grid</button>}
           </div>
