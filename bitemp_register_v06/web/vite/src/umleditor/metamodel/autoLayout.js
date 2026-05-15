@@ -28,6 +28,12 @@
  *   - domainGap        : extra ruimte tussen domeinblokken (default 200)
  *   - geMaxPerRij      : max aantal GE's naast elkaar onder ENT (default 4)
  *   - geRingDrempel    : vanaf dit aantal GE's → ring rondom ENT (default 8)
+ *   - selectie         : Set<nodeId>|nodeId[] → layout alleen deze nodes (sub-graaf).
+ *                        Het resultaatblok wordt gecentreerd in de bounding-box van
+ *                        de oorspronkelijke selectie zodat de rest van het diagram
+ *                        op zijn plek blijft.
+ *   - respecteerLocked : true (default) → nodes met `data.layoutLocked === true`
+ *                        houden hun bestaande positie en worden niet verplaatst.
  *
  * Voor de eerste realisatie is gekozen voor een hiërarchische blok-layout
  * (per domein, per ENT-cluster). Een toekomstige uitbreiding kan force-directed
@@ -36,11 +42,33 @@
 
 const DEFAULT_OPTS = {
   alleenZichtbaar: true,
+  respecteerLocked: true,
+  selectie: null,
   paddingX: 80,
   paddingY: 80,
   domainGap: 200,
   geMaxPerRij: 4,
   geRingDrempel: 8,
+  // Richting waarin het hiërarchische blok wordt opgebouwd:
+  //   "TB" = top-bottom (default), "BT" = bottom-top, "LR" = left-right,
+  //   "RL" = right-left, "radial" = clusters in een waaier rond een centrum.
+  richting: "TB",
+  // Cross-domein hub-detectie: ENT's met (uitgaande+inkomende) verbindingen >= drempel
+  // krijgen ringmodus voor hun eigen GE/REL-buren.
+  hubDrempel: 6,
+  // Force-directed nabewerking (na de deterministische blok-layout).
+  // 0 = uit. 50–150 geeft typisch goede spreiding zonder structuur te slopen.
+  forceIteraties: 80,
+  // Streefafstand tussen randen van twee nodes; afstoting houdt op zodra ≥.
+  forcePadding: 60,
+  // Veerconstantes voor de spring-pass (Hooke). De rust-lengte is afgeleid van
+  // de huidige afstand zodat de structuur grotendeels behouden blijft.
+  forceSpring: 0.02,
+  forceRepel: 1400,
+  // Bij selectie: schaal het resultaat zodat het de bounding-box van de
+  // oorspronkelijke selectie vult (i.p.v. alleen te hercentreren). Dit
+  // voorkomt dat de selectie-layout opgepropt aanvoelt terwijl er ruimte is.
+  vulSelectie: true,
   // Schattingen voor afmetingen wanneer measured/width/height ontbreken.
   // Deze waarden zijn iets ruimer dan de werkelijke nodes om overlap te voorkomen.
   defaultBreedte: { entiteit: 220, gegevenselement: 200, relatie: 200, associatieAnker: 24, enumeratie: 140, gegevenstype: 140, referentielijstInstantie: 160, notitie: 200, constraint: 200 },
@@ -282,45 +310,42 @@ function layoutEntCluster(entNode, geNodes, secundairPerGe, opts) {
 
   let totHoogte = entH + 50 + rowHeights.reduce((a, b) => a + b, 0) + rowGap * (rows - 1);
 
-  // Secundaire nodes (enums/datatypes/reflijsten) onderaan, gegroepeerd per consumer-GE.
-  // Doel: een compact, ~vierkant blok in plaats van een lange smalle kolom of een
-  // ultra-brede strook. Daarom kiezen we het aantal kolommen op basis van het totaal
-  // aantal secundairen en hun gemiddelde aspect ratio, met een ondergrens van 4 en
-  // een bovengrens van 8 zodat het blok visueel hanteerbaar blijft.
-  const allSec = [];
-  geNodes.forEach((g) => {
+  // Secundaire nodes (enums/datatypes/reflijsten) — geplaatst direct ONDER hun
+  // consumer-GE in dezelfde kolom van het GE-grid. Zo blijven datatype/enum/reflijst
+  // dicht bij hun owner en ontstaan er geen lange kruisende dependency-lijnen
+  // tussen een eind-rij en de losse GE's bovenin.
+  //
+  // Algoritme:
+  //  - Per GE-kolom: bereken de stack-hoogte van alle secundairen onder de GE's
+  //    in die kolom (verticaal opgestapeld, kleinste lijn-overspanning).
+  //  - Werkelijke kolombreedte wordt eventueel opgerekt voor brede secundairen.
+  //  - Cluster-breedte/hoogte worden hierop aangepast en ENT/GE's gehercentreerd.
+  const secGap = 18;
+  const secKolomStacks = new Array(cols).fill(null).map(() => []); // {ge, sec[]}
+  let heeftSec = false;
+  geNodes.forEach((g, i) => {
     const sec = secundairPerGe.get(g.id);
-    if (sec && sec.length > 0) allSec.push(...sec);
+    if (!sec || sec.length === 0) return;
+    heeftSec = true;
+    const c = i % cols;
+    secKolomStacks[c].push({ geIdx: i, sec });
+    // Kolombreedte oprekken voor brede secundairen
+    for (const s of sec) {
+      colWidths[c] = Math.max(colWidths[c], nodeBreedte(s, opts));
+    }
   });
-  if (allSec.length > 0) {
-    const secGap = 20;
-    const avgSw =
-      allSec.reduce((a, s) => a + nodeBreedte(s, opts), 0) / allSec.length + secGap;
-    const avgSh =
-      allSec.reduce((a, s) => a + nodeHoogte(s, opts), 0) / allSec.length + secGap;
-    // Ideale kolommen voor ~vierkant blok: cols ≈ sqrt(N * h / w)
-    const idealCols = Math.max(
-      4,
-      Math.min(8, Math.ceil(Math.sqrt((allSec.length * avgSh) / avgSw)))
-    );
-    const secCols = Math.min(idealCols, allSec.length);
-    const secColW = new Array(secCols).fill(0);
-    const secRows = Math.ceil(allSec.length / secCols);
-    const secRowH = new Array(secRows).fill(0);
-    allSec.forEach((s, i) => {
-      const c = i % secCols;
-      const r = Math.floor(i / secCols);
-      secColW[c] = Math.max(secColW[c], nodeBreedte(s, opts));
-      secRowH[r] = Math.max(secRowH[r], nodeHoogte(s, opts));
-    });
-    const secBlokBreedte =
-      secColW.reduce((a, b) => a + b, 0) + secGap * (secCols - 1);
-    // Cluster mag breder worden als secundair-blok dat vereist (compactheid wint)
-    if (secBlokBreedte > breedte) breedte = secBlokBreedte;
-    // Eventueel ENT herpositioneren (gecentreerd)
+
+  if (heeftSec) {
+    // Hercompute cluster-breedte na kolom-oprek
+    const totalGeBreedte2 =
+      colWidths.reduce((a, b) => a + b, 0) + colGap * (cols - 1);
+    breedte = Math.max(entW, totalGeBreedte2);
+
+    // ENT herpositioneren (gecentreerd op nieuwe breedte)
     posMap.set(entNode.id, { x: (breedte - entW) / 2, y: 0 });
-    // GE's herpositioneren naar nieuwe (bredere) cluster-breedte
-    const geStartX2 = (breedte - totalGeBreedte) / 2;
+
+    // GE's herpositioneren met nieuwe colWidths
+    const geStartX2 = (breedte - totalGeBreedte2) / 2;
     geNodes.forEach((g, i) => {
       const r = Math.floor(i / cols);
       const c = i % cols;
@@ -332,20 +357,28 @@ function layoutEntCluster(entNode, geNodes, secundairPerGe, opts) {
       posMap.set(g.id, { x: gx, y: yC });
     });
 
-    const secStartX = (breedte - secBlokBreedte) / 2;
-    let secYStart = totHoogte + 50;
-    allSec.forEach((s, i) => {
-      const c = i % secCols;
-      const r = Math.floor(i / secCols);
-      let xC = secStartX;
-      for (let k = 0; k < c; k++) xC += secColW[k] + secGap;
-      let yC = secYStart;
-      for (let k = 0; k < r; k++) yC += secRowH[k] + secGap;
-      const sx = xC + (secColW[c] - nodeBreedte(s, opts)) / 2;
-      posMap.set(s.id, { x: sx, y: yC });
+    // Plaats secundairen per kolom, gestapeld direct onder de laatste GE in die kolom
+    const baseY = entH + 50 + rowHeights.reduce((a, b) => a + b, 0) + rowGap * (rows - 1) + secGap * 2;
+    let maxKolomBodem = baseY;
+    secKolomStacks.forEach((stack, c) => {
+      if (stack.length === 0) return;
+      let xC = geStartX2;
+      for (let k = 0; k < c; k++) xC += colWidths[k] + colGap;
+      let yCur = baseY;
+      // Sorteer op GE-positie zodat de stack overeenkomt met de visuele volgorde
+      stack.sort((a, b) => a.geIdx - b.geIdx);
+      for (const { sec } of stack) {
+        for (const s of sec) {
+          const sw = nodeBreedte(s, opts);
+          const sh = nodeHoogte(s, opts);
+          const sx = xC + (colWidths[c] - sw) / 2;
+          posMap.set(s.id, { x: sx, y: yCur });
+          yCur += sh + secGap;
+        }
+      }
+      if (yCur > maxKolomBodem) maxKolomBodem = yCur;
     });
-    totHoogte =
-      secYStart + secRowH.reduce((a, b) => a + b, 0) + secGap * (secRows - 1);
+    totHoogte = maxKolomBodem;
   }
 
   return { posMap, breedte, hoogte: totHoogte };
@@ -358,11 +391,36 @@ export function berekenAutoLayout(nodes, edges, opts = {}) {
   const o = { ...DEFAULT_OPTS, ...opts };
   const result = new Map();
 
+  // Normaliseer selectie naar Set<id>
+  const selectieSet = o.selectie
+    ? new Set(o.selectie instanceof Set ? [...o.selectie] : Array.from(o.selectie))
+    : null;
+
   // Filter zichtbare nodes (hidden:true overslaan, maar wel in topologie laten meedoen)
   const zichtbaar = (n) => !o.alleenZichtbaar || !n.hidden;
-  const werkNodes = nodes.filter(zichtbaar);
+  const alleZichtbaar = nodes.filter(zichtbaar);
 
-  const topo = bouwTopologie(werkNodes, edges, o);
+  // Bepaal werkset:
+  //  - Bij selectie: alleen geselecteerde nodes worden gerepositioneerd; de rest
+  //    fungeert nog wel als referentie voor topologie (bv. om bron/doel-richting
+  //    of ENT-eigenaar van een GE te kunnen bepalen).
+  //  - Bij respecteerLocked: locked nodes blijven uit de werkset; ze worden later
+  //    direct met hun originele positie ingevuld.
+  const isLocked = (n) => o.respecteerLocked && n.data?.layoutLocked === true;
+  const inSelectie = (n) => !selectieSet || selectieSet.has(n.id);
+  const werkNodes = alleZichtbaar.filter((n) => inSelectie(n) && !isLocked(n));
+
+  // Vooraf: locked + niet-geselecteerde nodes krijgen direct hun bestaande positie
+  // in `result`, zodat REL-/anker-berekeningen op basis van resultaat werken.
+  for (const n of alleZichtbaar) {
+    if (n.position && (isLocked(n) || (selectieSet && !selectieSet.has(n.id)))) {
+      result.set(n.id, { x: n.position.x, y: n.position.y });
+    }
+  }
+
+  // Topologie wordt opgebouwd over ALLE zichtbare nodes (niet alleen werk),
+  // zodat selectie-layout de juiste relaties met buiten-selectie ENTs kent.
+  const topo = bouwTopologie(alleZichtbaar, edges, o);
   const { nodeMap, geNaarEnt, geNaarSecundair, relNaarEnts } = topo;
 
   // 1) Verzamel ENT-clusters
@@ -611,12 +669,195 @@ export function berekenAutoLayout(nodes, edges, opts = {}) {
     }
   }
 
-  // 7) Notities/constraints: rechts van het hele blok stapelen
+  // 6b) Hub-ringmodus voor cross-domein hubs.
+  //     Een ENT met >= o.hubDrempel verbindingen waarvan de tegenpartijen
+  //     in meerdere domeinen leven, is een "hub". De midpoint-plaatsing
+  //     van zijn RELs raakt dan vaak gepropt; we herverdelen die RELs
+  //     daarom op een cirkel rondom de hub. Force-directed (stap 10)
+  //     pikt dit op en spreidt verder uit.
+  const entDomein = (en) => en?.data?.domein || "_geen";
+  for (const ent of entNodes) {
+    const tot = topo.entVerbindingen.get(ent.id) || 0;
+    if (tot < o.hubDrempel) continue;
+
+    // Verzamel RELs verbonden met deze ENT
+    const eigenRels = relNodes.filter((rel) => {
+      const ends = topo.relNaarEnts.get(rel.id) || [];
+      return ends.includes(ent.id);
+    });
+    if (eigenRels.length < o.hubDrempel) continue;
+
+    // Verzamel domeinen van de tegenpartijen
+    const buurDomeinen = new Set();
+    for (const rel of eigenRels) {
+      const ends = topo.relNaarEnts.get(rel.id) || [];
+      for (const otherId of ends) {
+        if (otherId === ent.id) continue;
+        const otherEnt = nodeMap.get(otherId);
+        if (otherEnt) buurDomeinen.add(entDomein(otherEnt));
+      }
+    }
+    if (buurDomeinen.size < 2) continue; // alleen cross-domein hubs
+
+    // Herverdeel RELs op een cirkel rond de hub.
+    const hubPos = result.get(ent.id);
+    if (!hubPos) continue;
+    const wEnt = nodeBreedte(ent, o);
+    const hEnt = nodeHoogte(ent, o);
+    const radius = Math.max(wEnt, hEnt) + 180;
+    const N = eigenRels.length;
+    // Sorteer RELs op huidige hoek t.o.v. hub-centrum, zodat de visuele
+    // volgorde grofweg behouden blijft.
+    const hubCx = hubPos.x + wEnt / 2;
+    const hubCy = hubPos.y + hEnt / 2;
+    const sorted = [...eigenRels].sort((a, b) => {
+      const pa = result.get(a.id);
+      const pb = result.get(b.id);
+      const ta = Math.atan2((pa?.y ?? hubCy) - hubCy, (pa?.x ?? hubCx) - hubCx);
+      const tb = Math.atan2((pb?.y ?? hubCy) - hubCy, (pb?.x ?? hubCx) - hubCx);
+      return ta - tb;
+    });
+    for (let i = 0; i < N; i++) {
+      const rel = sorted[i];
+      const wRel = nodeBreedte(rel, o);
+      const hRel = nodeHoogte(rel, o);
+      const theta = (i / N) * 2 * Math.PI - Math.PI / 2;
+      const cx = hubCx + radius * Math.cos(theta);
+      const cy = hubCy + radius * Math.sin(theta);
+      // Locked RELs niet verplaatsen
+      if (isLocked(rel)) continue;
+      result.set(rel.id, { x: cx - wRel / 2, y: cy - hRel / 2 });
+
+      // Bijbehorend anker meeplaatsen tussen hub en deze REL
+      const anker = ankerNodes.find((a) => topo.ankerNaarRel.get(a.id) === rel.id);
+      if (anker && !isLocked(anker)) {
+        result.set(anker.id, {
+          x: (hubCx + cx) / 2 - nodeBreedte(anker, o) / 2,
+          y: (hubCy + cy) / 2 - nodeHoogte(anker, o) / 2,
+        });
+      }
+    }
+  }
+
+  // 7) Notities/constraints: probeer ze nabij hun "onderwerp" te plaatsen.
+  //    Een notitie/constraint heeft typisch een (dependency-)edge naar de node
+  //    waar het over gaat. We plaatsen 'm dan rechts naast die node. Heeft de
+  //    notitie geen edges, dan stapelen we ze rechts van het hele diagram.
   let floatY = 0;
   const floatX = globaleMaxBreedte + o.paddingX * 2;
   for (const f of floatNodes) {
-    result.set(f.id, { x: floatX, y: floatY });
-    floatY += nodeHoogte(f, o) + 20;
+    const buren = [];
+    for (const e of edges) {
+      if (e.source === f.id) buren.push(e.target);
+      else if (e.target === f.id) buren.push(e.source);
+    }
+    const buurPos = buren.map((id) => result.get(id)).filter(Boolean);
+    if (buurPos.length > 0) {
+      const cx = buurPos.reduce((s, p) => s + p.x, 0) / buurPos.length;
+      const cy = buurPos.reduce((s, p) => s + p.y, 0) / buurPos.length;
+      const fw = nodeBreedte(f, o);
+      // Plaats rechts naast het zwaartepunt van de buren
+      let probeY = cy - 10;
+      let conflict = true;
+      let safety = 8;
+      while (conflict && safety-- > 0) {
+        conflict = false;
+        for (const other of floatNodes) {
+          if (other.id === f.id) continue;
+          const op = result.get(other.id);
+          if (!op) continue;
+          if (Math.abs(op.x - (cx + 220)) < fw && Math.abs(op.y - probeY) < 60) {
+            probeY = op.y + nodeHoogte(other, o) + 20;
+            conflict = true;
+          }
+        }
+      }
+      result.set(f.id, { x: cx + 220, y: probeY });
+    } else {
+      result.set(f.id, { x: floatX, y: floatY });
+      floatY += nodeHoogte(f, o) + 20;
+    }
+  }
+
+  // 8) Selectie-modus: hercentreer het hele resultaat zodat het in de
+  //    bounding-box van de oorspronkelijke selectie past (zo blijft de rest
+  //    van het diagram visueel op zijn plek). Verwijder daarna alle posities
+  //    voor nodes die niet in de selectie zitten.
+  if (selectieSet) {
+    const oldBox = boundingBox(
+      alleZichtbaar.filter((n) => selectieSet.has(n.id)),
+      o
+    );
+    const newPunten = [];
+    for (const id of selectieSet) {
+      const p = result.get(id);
+      const node = nodeMap.get(id);
+      if (p && node) {
+        newPunten.push({
+          x: p.x,
+          y: p.y,
+          w: nodeBreedte(node, o),
+          h: nodeHoogte(node, o),
+        });
+      }
+    }
+    if (oldBox && newPunten.length > 0) {
+      const minX = Math.min(...newPunten.map((p) => p.x));
+      const minY = Math.min(...newPunten.map((p) => p.y));
+      const maxX = Math.max(...newPunten.map((p) => p.x + p.w));
+      const maxY = Math.max(...newPunten.map((p) => p.y + p.h));
+      const newCx = (minX + maxX) / 2;
+      const newCy = (minY + maxY) / 2;
+      const oldCx = (oldBox.minX + oldBox.maxX) / 2;
+      const oldCy = (oldBox.minY + oldBox.maxY) / 2;
+
+      // Optioneel: schaal de layout zodat hij de oude bbox vult.
+      // Dit voorkomt het "opgepropt" gevoel als er duidelijk ruimte beschikbaar is.
+      let scale = 1;
+      if (o.vulSelectie) {
+        const newW = Math.max(1, maxX - minX);
+        const newH = Math.max(1, maxY - minY);
+        const oldW = Math.max(1, oldBox.maxX - oldBox.minX);
+        const oldH = Math.max(1, oldBox.maxY - oldBox.minY);
+        const sx = oldW / newW;
+        const sy = oldH / newH;
+        // Behoud aspectratio en sta opschalen toe (max 2.5×); inkrimpen mag ook,
+        // maar niet onder 1× anders kunnen nodes gaan overlappen.
+        scale = Math.max(1, Math.min(2.5, Math.min(sx, sy)));
+      }
+
+      for (const id of selectieSet) {
+        const p = result.get(id);
+        if (p) {
+          // Schaal rond het nieuwe centrum, en hercentreer naar het oude centrum.
+          const sxNew = newCx + (p.x - newCx) * scale;
+          const syNew = newCy + (p.y - newCy) * scale;
+          result.set(id, { x: sxNew + (oldCx - newCx), y: syNew + (oldCy - newCy) });
+        }
+      }
+    }
+    for (const id of [...result.keys()]) {
+      if (!selectieSet.has(id)) result.delete(id);
+    }
+  }
+
+  // 9) Richting-transformatie: het kerngedeelte rekent altijd in TB.
+  //    Vertaal nu naar de gewenste richting. Locked / niet-selectie posities
+  //    worden mee-getransformeerd want zij staan al in result.
+  if (o.richting && o.richting !== "TB") {
+    pasRichtingToe(result, o.richting, o, alleZichtbaar, selectieSet);
+  }
+
+  // 10) Force-directed nabewerking (optioneel): spring-edges + Coulomb-repulsie.
+  //    Locked nodes en (bij selectie) niet-selectie nodes worden vastgepind.
+  //    Iteraties = o.forceIteraties; 0 → overslaan.
+  if (o.forceIteraties > 0) {
+    const pinSet = new Set();
+    for (const n of alleZichtbaar) {
+      if (isLocked(n)) pinSet.add(n.id);
+      if (selectieSet && !selectieSet.has(n.id)) pinSet.add(n.id);
+    }
+    runForceDirected(result, edges, alleZichtbaar, pinSet, o);
   }
 
   // Nodes zonder positie (vergeten edge-cases): laat hun bestaande positie staan
@@ -627,6 +868,192 @@ export function berekenAutoLayout(nodes, edges, opts = {}) {
   }
 
   return result;
+}
+
+/** Bounding-box helper voor een set nodes (met fallback-afmetingen). */
+function boundingBox(nodes, opts) {
+  if (!nodes || nodes.length === 0) return null;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const n of nodes) {
+    const x = n.position?.x ?? 0;
+    const y = n.position?.y ?? 0;
+    const w = nodeBreedte(n, opts);
+    const h = nodeHoogte(n, opts);
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x + w > maxX) maxX = x + w;
+    if (y + h > maxY) maxY = y + h;
+  }
+  return { minX, minY, maxX, maxY };
+}
+
+/**
+ * Transformeer een TB-layout in-place naar BT, LR, RL of radial.
+ *  - LR: swap (x,y); cluster-stromen lopen nu links→rechts
+ *  - RL: LR, daarna x-spiegelen
+ *  - BT: y-spiegelen
+ *  - radial: parametrische polar(r=y, θ=x) plaatsing zodat domeinen als waaier
+ *           rond een centrum komen te liggen
+ */
+function pasRichtingToe(result, richting, opts, alleZichtbaar, selectieSet) {
+  const ids = selectieSet
+    ? [...result.keys()].filter((id) => selectieSet.has(id))
+    : [...result.keys()];
+  if (ids.length === 0) return;
+
+  // Bepaal huidige bbox
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const id of ids) {
+    const p = result.get(id);
+    if (!p) continue;
+    if (p.x < minX) minX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y > maxY) maxY = p.y;
+  }
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+
+  if (richting === "BT") {
+    for (const id of ids) {
+      const p = result.get(id);
+      result.set(id, { x: p.x, y: 2 * cy - p.y });
+    }
+    return;
+  }
+  if (richting === "LR") {
+    for (const id of ids) {
+      const p = result.get(id);
+      // Swap rond centrum, anders verschuift het blok
+      result.set(id, { x: cx + (p.y - cy), y: cy + (p.x - cx) });
+    }
+    return;
+  }
+  if (richting === "RL") {
+    for (const id of ids) {
+      const p = result.get(id);
+      const lx = cx + (p.y - cy);
+      result.set(id, { x: 2 * cx - lx, y: cy + (p.x - cx) });
+    }
+    return;
+  }
+  if (richting === "radial") {
+    // Map x → hoek (volle cirkel verdeeld over breedte), y → straal.
+    // Resultaat: domeinblokken (die in TB naast elkaar staan) komen als
+    // taartpunten rondom het centrum te liggen.
+    const breedte = Math.max(1, maxX - minX);
+    const baseR = 240;
+    for (const id of ids) {
+      const p = result.get(id);
+      const t = (p.x - minX) / breedte; // 0..1
+      const theta = -Math.PI / 2 + t * 2 * Math.PI;
+      const r = baseR + (p.y - minY);
+      result.set(id, { x: cx + r * Math.cos(theta), y: cy + r * Math.sin(theta) });
+    }
+    return;
+  }
+}
+
+/**
+ * Force-directed nabewerking. Spring-aantrekking op edges (Hooke met
+ * rust-lengte = huidige afstand zodat de structuur grofweg behouden blijft)
+ * + Coulomb-achtige afstoting op overlappende/te-dichte node-paren.
+ *
+ * Eenvoudige semi-impliciete Verlet: verplaatsing per iteratie wordt geclamped
+ * om instabiliteit te vermijden. Locked/gepinde nodes blijven exact staan.
+ */
+function runForceDirected(result, edges, alleZichtbaar, pinSet, opts) {
+  const nodeMap = new Map(alleZichtbaar.map((n) => [n.id, n]));
+  // Werkset = alleen nodes met een resultaatpositie
+  const ids = [...result.keys()].filter((id) => nodeMap.has(id));
+  if (ids.length < 2) return;
+
+  // Alleen edges waarvan beide eindpunten in werkset zitten en niet beide gepind
+  const springs = [];
+  for (const e of edges) {
+    if (!result.has(e.source) || !result.has(e.target)) continue;
+    if (pinSet.has(e.source) && pinSet.has(e.target)) continue;
+    const a = result.get(e.source);
+    const b = result.get(e.target);
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const rest = Math.max(80, Math.sqrt(dx * dx + dy * dy));
+    springs.push({ s: e.source, t: e.target, rest });
+  }
+
+  const iters = Math.max(1, Math.min(300, opts.forceIteraties | 0));
+  const kSpring = opts.forceSpring;
+  const kRepel = opts.forceRepel;
+  const padding = opts.forcePadding;
+  const maxStep = 25; // pixels per iteratie
+
+  for (let it = 0; it < iters; it++) {
+    const fx = new Map();
+    const fy = new Map();
+    for (const id of ids) {
+      fx.set(id, 0);
+      fy.set(id, 0);
+    }
+
+    // Springs (aantrekkend richting rust-lengte)
+    for (const sp of springs) {
+      const a = result.get(sp.s);
+      const b = result.get(sp.t);
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const dist = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+      const f = kSpring * (dist - sp.rest);
+      const ux = (dx / dist) * f;
+      const uy = (dy / dist) * f;
+      fx.set(sp.s, fx.get(sp.s) + ux);
+      fy.set(sp.s, fy.get(sp.s) + uy);
+      fx.set(sp.t, fx.get(sp.t) - ux);
+      fy.set(sp.t, fy.get(sp.t) - uy);
+    }
+
+    // Coulomb-repulsie (alleen als nodes te dicht op elkaar zitten)
+    for (let i = 0; i < ids.length; i++) {
+      const idA = ids[i];
+      const a = result.get(idA);
+      const na = nodeMap.get(idA);
+      const wA = nodeBreedte(na, opts);
+      const hA = nodeHoogte(na, opts);
+      for (let j = i + 1; j < ids.length; j++) {
+        const idB = ids[j];
+        const b = result.get(idB);
+        const nb = nodeMap.get(idB);
+        const wB = nodeBreedte(nb, opts);
+        const hB = nodeHoogte(nb, opts);
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+        // Minimale gewenste afstand = som van halve diameters + padding
+        const desired = (Math.max(wA, hA) + Math.max(wB, hB)) / 2 + padding;
+        if (dist >= desired * 1.4) continue; // ver weg → geen kracht
+        const f = kRepel / (dist * dist);
+        const ux = (dx / dist) * f;
+        const uy = (dy / dist) * f;
+        fx.set(idA, fx.get(idA) - ux);
+        fy.set(idA, fy.get(idA) - uy);
+        fx.set(idB, fx.get(idB) + ux);
+        fy.set(idB, fy.get(idB) + uy);
+      }
+    }
+
+    // Pas krachten toe (geclamped)
+    for (const id of ids) {
+      if (pinSet.has(id)) continue;
+      let dx = fx.get(id);
+      let dy = fy.get(id);
+      const mag = Math.sqrt(dx * dx + dy * dy);
+      if (mag > maxStep) {
+        dx = (dx / mag) * maxStep;
+        dy = (dy / mag) * maxStep;
+      }
+      const p = result.get(id);
+      result.set(id, { x: p.x + dx, y: p.y + dy });
+    }
+  }
 }
 
 /**

@@ -9,7 +9,7 @@
  */
 import { maakLeegType, maakLegeEnumeratie, maakLeegGegevenstype, maakLegeNotitie, maakLegeConstraint, EDGE_MODES } from "../../metamodel/types";
 
-export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddReferentielijstInstantie, onSave, onSaveEditorFlow, onPublishSchemaModel, onPublishAndRebuild, onRebuildModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI, onImportXMI, onImportMermaid, onImportPlantUML, modelNaam, modelBron, modelOpmerking, actiefDomein, beschikbareDomeinen, domeinSelectieActief = false, onSetActiefDomein, onSelecteerDomein, onNormaliseerAlleRelaties, onSnapAlleNaarGrid, onAutoLayout, activeEdgeMode, onSetActiveEdgeMode, theme = "dark", onToggleTheme }) {
+export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddReferentielijstInstantie, onSave, onSaveEditorFlow, onPublishSchemaModel, onPublishAndRebuild, onRebuildModel, onLoad, onLoadSchema, onToggleTestInvoer, showTestInvoer, onExportMermaid, onExportPlantUML, onExportXMI, onImportXMI, onImportMermaid, onImportPlantUML, modelNaam, modelBron, modelOpmerking, actiefDomein, beschikbareDomeinen, domeinSelectieActief = false, onSetActiefDomein, onSelecteerDomein, onNormaliseerAlleRelaties, onSnapAlleNaarGrid, onAutoLayout, layoutRichting = "TB", onSetLayoutRichting, activeEdgeMode, onSetActiveEdgeMode, theme = "dark", onToggleTheme }) {
   const domeinen = beschikbareDomeinen || [];
   const domeinSelectieTitel = !actiefDomein
     ? "Kies eerst een actief domein"
@@ -106,6 +106,21 @@ export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddRefer
           <div className="toolbar-group">
             <span className="toolbar-label">Layout:</span>
             {onAutoLayout && <button onClick={onAutoLayout} className="btn-toolbar" title="Orden alle elementen logisch (ENT centraal, GE's eronder, RELs tussen ENTs, per domein gegroepeerd)">🎯 Auto-layout</button>}
+            {onSetLayoutRichting && (
+              <select
+                className="btn-toolbar"
+                value={layoutRichting}
+                onChange={(e) => onSetLayoutRichting(e.target.value)}
+                title="Richting waarin de auto-layout zijn blokken bouwt"
+                style={{ padding: "2px 6px" }}
+              >
+                <option value="TB">↓ Top→Bottom</option>
+                <option value="BT">↑ Bottom→Top</option>
+                <option value="LR">→ Left→Right</option>
+                <option value="RL">← Right→Left</option>
+                <option value="radial">⊙ Radial</option>
+              </select>
+            )}
             {onNormaliseerAlleRelaties && <button onClick={onNormaliseerAlleRelaties} className="btn-toolbar" title="Normaliseer alle relaties (kortste weg)">↔ Normaliseer</button>}
             {onSnapAlleNaarGrid && <button onClick={onSnapAlleNaarGrid} className="btn-toolbar" title="Snap alle elementen naar het grid">⊞ Snap grid</button>}
           </div>

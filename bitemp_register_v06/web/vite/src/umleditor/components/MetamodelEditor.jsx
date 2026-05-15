@@ -303,6 +303,16 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   const [dialoogParentId, setDialoogParentId] = useState("");
   // Actieve edge-mode: EDGE_MODES.NONE = auto-detectie, anders override.
   const [activeEdgeMode, setActiveEdgeMode] = useState(EDGE_MODES.NONE);
+  // Richting voor auto-layout (TB/BT/LR/RL/radial). Persistent in localStorage.
+  const [layoutRichting, _setLayoutRichting] = useState(() => {
+    try {
+      return localStorage.getItem("umleditor.layoutRichting") || "TB";
+    } catch { return "TB"; }
+  });
+  const setLayoutRichting = useCallback((richting) => {
+    _setLayoutRichting(richting);
+    try { localStorage.setItem("umleditor.layoutRichting", richting); } catch (_e) { /* ignore */ }
+  }, []);
   // Defer ReactFlow één animatieframe na de initiële commit om de race tussen
   // React 18's concurrent commit-fase en XyFlow's ResizeObserver te voorkomen.
   // Zonder deze defer vuurt ResizeObserver synchroon tijdens de commit en
@@ -1458,7 +1468,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
    */
   const handleAutoLayout = useCallback(() => {
     pushCanvasUndo("auto-layout");
-    const nieuweNodes = pasAutoLayoutToe(nodes, edges, { alleenZichtbaar: true });
+    const nieuweNodes = pasAutoLayoutToe(nodes, edges, { alleenZichtbaar: true, richting: layoutRichting });
     setNodes(nieuweNodes);
     setEdges((eds) =>
       eds.map((e) => {
@@ -1469,7 +1479,36 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         return { ...e, sourceHandle: best.sourceHandle, targetHandle: best.targetHandle };
       })
     );
-  }, [nodes, edges, setNodes, setEdges, pushCanvasUndo]);
+  }, [nodes, edges, setNodes, setEdges, pushCanvasUndo, layoutRichting]);
+
+  /**
+   * Auto-layout, maar alleen op de geselecteerde nodes (sub-graaf).
+   * Het nieuwe blok wordt gecentreerd in de bounding-box van de oorspronkelijke
+   * selectie, zodat de rest van het diagram visueel op zijn plek blijft.
+   * Nodes met `data.layoutLocked === true` worden door autoLayout overgeslagen.
+   */
+  const handleAutoLayoutSelectie = useCallback(() => {
+    const selIds = nodes.filter((n) => n.selected).map((n) => n.id);
+    if (selIds.length < 2) return;
+    pushCanvasUndo("auto-layout-selectie");
+    const nieuweNodes = pasAutoLayoutToe(nodes, edges, {
+      alleenZichtbaar: true,
+      selectie: selIds,
+      richting: layoutRichting,
+    });
+    setNodes(nieuweNodes);
+    setEdges((eds) =>
+      eds.map((e) => {
+        const srcNode = nieuweNodes.find((n) => n.id === e.source);
+        const tgtNode = nieuweNodes.find((n) => n.id === e.target);
+        if (!srcNode || !tgtNode) return e;
+        // Normaliseer alleen edges waarvan ten minste één eindpunt in de selectie zit
+        if (!selIds.includes(e.source) && !selIds.includes(e.target)) return e;
+        const best = berekenKortsteHandles(srcNode, tgtNode);
+        return { ...e, sourceHandle: best.sourceHandle, targetHandle: best.targetHandle };
+      })
+    );
+  }, [nodes, edges, setNodes, setEdges, pushCanvasUndo, layoutRichting]);
 
   /**
    * Voer een uitlijnactie uit op alle geselecteerde nodes.
@@ -1481,6 +1520,24 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
       // Acties die zonder selectie werken (canvas-breed)
       if (actie === "auto-layout") {
         handleAutoLayout();
+        return;
+      }
+      if (actie === "auto-layout-selectie") {
+        handleAutoLayoutSelectie();
+        return;
+      }
+      if (actie === "vergrendel-positie" || actie === "ontgrendel-positie") {
+        const lock = actie === "vergrendel-positie";
+        const selIds = new Set(nodes.filter((n) => n.selected).map((n) => n.id));
+        if (selIds.size === 0) return;
+        pushCanvasUndo(actie);
+        setNodes((nds) =>
+          nds.map((n) =>
+            selIds.has(n.id)
+              ? { ...n, data: { ...(n.data || {}), layoutLocked: lock } }
+              : n
+          )
+        );
         return;
       }
       const geselecteerd = nodes.filter((n) => n.selected);
@@ -1563,7 +1620,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         })
       );
     },
-    [nodes, setNodes, pushCanvasUndo, handleSnapAlleNaarGrid, handleNormaliseerAlleRelaties, handleAutoLayout]
+    [nodes, setNodes, pushCanvasUndo, handleSnapAlleNaarGrid, handleNormaliseerAlleRelaties, handleAutoLayout, handleAutoLayoutSelectie]
   );
 
   /**
@@ -2825,6 +2882,8 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
         onNormaliseerAlleRelaties={handleNormaliseerAlleRelaties}
         onSnapAlleNaarGrid={handleSnapAlleNaarGrid}
         onAutoLayout={handleAutoLayout}
+        layoutRichting={layoutRichting}
+        onSetLayoutRichting={setLayoutRichting}
         activeEdgeMode={activeEdgeMode}
         onSetActiveEdgeMode={setActiveEdgeMode}
         theme={theme}

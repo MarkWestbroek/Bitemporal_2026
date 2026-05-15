@@ -41,6 +41,7 @@ import useUIStore from "../store/useUIStore";
 import { maakRelatieTussenEntiteiten, voegNieuwRepToe } from "./repCreation";
 import { relatieNaarAssociatieklasse, passToePatch, splitsEntiteit, castEntiteitNaarGE, pascalCase } from "./transformations";
 import { generateId, defaultKleur, EDGE_MODES } from "@umleditor/metamodel/types";
+import { pasAutoLayoutToe } from "@umleditor/metamodel/autoLayout";
 
 const nodeTypes = {
   entiteit: EntiteitNode,
@@ -475,7 +476,7 @@ const CREATE_BUTTONS = [
   { kind: "constraint", label: "🔒", title: "Nieuwe constraint" },
 ];
 
-function AlignToolbar({ alignNodes, onNormaliseer, onSnapGrid, embedded = false, isVertical = false }) {
+function AlignToolbar({ alignNodes, onNormaliseer, onSnapGrid, onAutoLayout, onAutoLayoutSelectie, layoutRichting = "TB", onSetLayoutRichting, embedded = false, isVertical = false }) {
   return (
     <div
       className="ide-align-toolbar"
@@ -490,7 +491,31 @@ function AlignToolbar({ alignNodes, onNormaliseer, onSnapGrid, embedded = false,
           </button>
         )
       )}
-      {(onNormaliseer || onSnapGrid) && <span className="ide-align-sep" />}
+      {(onNormaliseer || onSnapGrid || onAutoLayout || onAutoLayoutSelectie) && <span className="ide-align-sep" />}
+      {onAutoLayout && (
+        <button title="Auto-layout (alles)" onClick={onAutoLayout}>
+          🎯
+        </button>
+      )}
+      {onAutoLayoutSelectie && (
+        <button title="Auto-layout (selectie ≥ 2)" onClick={onAutoLayoutSelectie}>
+          🎯ˢ
+        </button>
+      )}
+      {onSetLayoutRichting && (
+        <select
+          value={layoutRichting}
+          onChange={(e) => onSetLayoutRichting(e.target.value)}
+          title="Richting voor auto-layout"
+          style={{ padding: "1px 4px", fontSize: 12 }}
+        >
+          <option value="TB">↓</option>
+          <option value="BT">↑</option>
+          <option value="LR">→</option>
+          <option value="RL">←</option>
+          <option value="radial">⊙</option>
+        </select>
+      )}
       {onNormaliseer && (
         <button title="Normaliseer alle relaties" onClick={onNormaliseer}>
           ↔
@@ -1196,6 +1221,13 @@ function DiagramCanvasInner({ diagramId }) {
 
   // ── Context menu op node/edge (rechtermuisklik) ───────────
   const [contextMenu, setContextMenu] = useState(null); // { x, y, nodeId?, edgeId? }
+  const [layoutRichting, _setLayoutRichting] = useState(() => {
+    try { return localStorage.getItem("ide.layoutRichting") || "TB"; } catch { return "TB"; }
+  });
+  const setLayoutRichting = useCallback((r) => {
+    _setLayoutRichting(r);
+    try { localStorage.setItem("ide.layoutRichting", r); } catch (_e) { /* ignore */ }
+  }, []);
   const removeElementFromDiagram = useModelStore((s) => s.removeElementFromDiagram);
   const verversAsocVoorRelaties = useModelStore((s) => s.verversAsocVoorRelaties);
 
@@ -2202,6 +2234,24 @@ function DiagramCanvasInner({ diagramId }) {
     });
   }, [diagram, diagramId, setNodes, updateDiagramNodes]);
 
+  /**
+   * Vergrendel of ontgrendel positie van geselecteerde nodes (of één node
+   * via context-menu). Wordt gerespecteerd door `pasAutoLayoutToe`.
+   * Persistentie loopt via de runtime React Flow node-state; her-import van
+   * het diagram reset de lock-status.
+   */
+  const setLockOpNodes = useCallback((nodeIds, lock) => {
+    if (!nodeIds || nodeIds.length === 0) return;
+    const idSet = new Set(nodeIds);
+    setNodes((nds) =>
+      nds.map((n) =>
+        idSet.has(n.id)
+          ? { ...n, data: { ...(n.data || {}), layoutLocked: lock } }
+          : n
+      )
+    );
+  }, [setNodes]);
+
   const normaliseerRelaties = useCallback(() => {
     setEdges((eds) => {
       const updated = eds.map((edge) => {
@@ -2221,6 +2271,44 @@ function DiagramCanvasInner({ diagramId }) {
     });
   }, [diagram, diagramId, getNode, setEdges, updateDiagramEdges]);
 
+  /**
+   * Auto-layout: orden alle (zichtbare) nodes hiërarchisch met
+   * `pasAutoLayoutToe` uit de gedeelde umleditor/metamodel-laag.
+   * Optioneel `selectieIds` → alleen die sub-graaf wordt gerepositioneerd
+   * en gecentreerd in de bounding-box van de oorspronkelijke selectie.
+   * Posities worden direct doorgegeven aan de diagram-store, en alle
+   * edges met een eindpunt in de geraakte set worden genormaliseerd.
+   */
+  const handleAutoLayout = useCallback(
+    (selectieIds = null) => {
+      const huidigeNodes = getNodes();
+      const huidigeEdges = getEdges();
+      const opts = { alleenZichtbaar: true, richting: layoutRichting };
+      if (selectieIds && selectieIds.length >= 2) opts.selectie = selectieIds;
+      const nieuweNodes = pasAutoLayoutToe(huidigeNodes, huidigeEdges, opts);
+      setNodes(nieuweNodes);
+      const geraaktSet = selectieIds ? new Set(selectieIds) : null;
+      setEdges((eds) =>
+        eds.map((e) => {
+          const srcNode = nieuweNodes.find((n) => n.id === e.source);
+          const tgtNode = nieuweNodes.find((n) => n.id === e.target);
+          if (!srcNode || !tgtNode) return e;
+          if (geraaktSet && !geraaktSet.has(e.source) && !geraaktSet.has(e.target)) return e;
+          const { sourceHandle, targetHandle } = berekenKortsteHandles(srcNode, tgtNode);
+          return { ...e, sourceHandle, targetHandle };
+        })
+      );
+      if (diagram) {
+        const updatedDiagNodes = diagram.nodes.map((dn) => {
+          const flowNode = nieuweNodes.find((n) => n.id === dn.elementId);
+          return flowNode ? { ...dn, position: flowNode.position } : dn;
+        });
+        updateDiagramNodes(diagramId, updatedDiagNodes);
+      }
+    },
+    [getNodes, getEdges, setNodes, setEdges, diagram, diagramId, updateDiagramNodes, layoutRichting]
+  );
+
   const handleCreateRep = useCallback((kind, extra = {}) => {
     voegNieuwRepToe(kind, {
       diagramId,
@@ -2237,6 +2325,16 @@ function DiagramCanvasInner({ diagramId }) {
       }
       if (mode === "snap-grid") {
         snapNodesToGrid();
+        return;
+      }
+      if (mode === "auto-layout") {
+        handleAutoLayout(null);
+        return;
+      }
+      if (mode === "auto-layout-selectie") {
+        const selIds = getNodes().filter((n) => n.selected).map((n) => n.id);
+        if (selIds.length < 2) return;
+        handleAutoLayout(selIds);
         return;
       }
 
@@ -2392,6 +2490,13 @@ function DiagramCanvasInner({ diagramId }) {
           alignNodes={alignNodes}
           onNormaliseer={normaliseerRelaties}
           onSnapGrid={snapNodesToGrid}
+          onAutoLayout={() => handleAutoLayout(null)}
+          onAutoLayoutSelectie={() => {
+            const selIds = getNodes().filter((n) => n.selected).map((n) => n.id);
+            if (selIds.length >= 2) handleAutoLayout(selIds);
+          }}
+          layoutRichting={layoutRichting}
+          onSetLayoutRichting={setLayoutRichting}
           embedded
           isVertical={toolbarLayouts.layout?.orientation === "vertical"}
         />
@@ -2550,6 +2655,28 @@ function DiagramCanvasInner({ diagramId }) {
               style={{ padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" }}
               onMouseEnter={itemHover}
               onMouseLeave={itemLeave}
+              onClick={() => { handleAutoLayout(null); setContextMenu(null); }}
+            >
+              🎯 Auto-layout (alles)
+            </div>
+            {selectedCount >= 2 && (
+              <div
+                style={{ padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" }}
+                onMouseEnter={itemHover}
+                onMouseLeave={itemLeave}
+                onClick={() => {
+                  const selIds = getNodes().filter((n) => n.selected).map((n) => n.id);
+                  if (selIds.length >= 2) handleAutoLayout(selIds);
+                  setContextMenu(null);
+                }}
+              >
+                🎯 Auto-layout (selectie)
+              </div>
+            )}
+            <div
+              style={{ padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" }}
+              onMouseEnter={itemHover}
+              onMouseLeave={itemLeave}
               onClick={() => { normaliseerRelaties(); setContextMenu(null); }}
             >
               ↔ Normaliseer relaties
@@ -2632,6 +2759,24 @@ function DiagramCanvasInner({ diagramId }) {
                     ✂️ Splits velden uit naar GE's…
                   </div>
                 </>
+              );
+            })()}
+            {contextMenu.nodeId && (() => {
+              const flowNode = nodes.find((n) => n.id === contextMenu.nodeId);
+              const isLocked = !!flowNode?.data?.layoutLocked;
+              const selIds = nodes.filter((n) => n.selected).map((n) => n.id);
+              const targetIds = selIds.length > 0 ? selIds : [contextMenu.nodeId];
+              return (
+                <div
+                  style={{ padding: "5px 12px", cursor: "pointer", whiteSpace: "nowrap" }}
+                  onMouseEnter={itemHover}
+                  onMouseLeave={itemLeave}
+                  onClick={() => { setLockOpNodes(targetIds, !isLocked); setContextMenu(null); }}
+                  title="Vergrendelde nodes worden bij auto-layout op hun positie gehouden."
+                >
+                  {isLocked ? "🔓 Ontgrendel positie" : "🔒 Vergrendel positie"}
+                  {selIds.length > 1 ? ` (${selIds.length})` : ""}
+                </div>
               );
             })()}
             {contextMenu.nodeId && (

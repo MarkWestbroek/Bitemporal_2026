@@ -106,6 +106,9 @@ const ALIGN_ACTIES = [
   { actie: "verdeel-horizontaal", label: "Verdeel gelijk ↔",   icon: iconen.verdeelH,  minCount: 3 },
   { separator: true },
   { actie: "auto-layout",         label: "🎯 Auto-layout (alles)", minCount: 0 },
+  { actie: "auto-layout-selectie", label: "🎯 Auto-layout (selectie)", minCount: 2 },
+  { actie: "vergrendel-positie",   label: "🔒 Vergrendel positie",     minCount: 1 },
+  { actie: "ontgrendel-positie",   label: "🔓 Ontgrendel positie",     minCount: 1 },
   { actie: "normaliseer-relaties", label: "↔ Normaliseer relaties", minCount: 0 },
   { actie: "snap-naar-grid",      label: "⊞ Snap naar grid",       minCount: 0 },
 ];
