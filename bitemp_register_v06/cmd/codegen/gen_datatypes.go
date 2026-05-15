@@ -84,6 +84,9 @@ func writeDatatypeEntry(b *strings.Builder, dt model.V3Datatype, typed bool) {
 	if dt.Positie != nil {
 		b.WriteString(fmt.Sprintf("\t\tPositie:   &V3Positie{X: %g, Y: %g},\n", dt.Positie.X, dt.Positie.Y))
 	}
+	if dt.LayoutLocked {
+		b.WriteString("\t\tLayoutLocked: true,\n")
+	}
 
 	if dt.Validatie != nil {
 		writeValidatie(b, dt.Validatie)

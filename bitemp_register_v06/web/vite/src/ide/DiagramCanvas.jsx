@@ -77,7 +77,10 @@ function buildFlowNodes(diagram, elements) {
         id: ref.elementId,
         type: el.type,
         position: ref.position || { x: 0, y: 0 },
-        data: { ...el.data, id: ref.elementId },
+        // `layoutLocked` is per-diagram persistent (op DiagramNode-level), niet
+        // op het element zelf, zodat dezelfde GE/REL op verschillende diagrammen
+        // anders gelockt kan zijn.
+        data: { ...el.data, id: ref.elementId, layoutLocked: ref.layoutLocked || false },
       };
     })
     .filter(Boolean);
@@ -2237,8 +2240,8 @@ function DiagramCanvasInner({ diagramId }) {
   /**
    * Vergrendel of ontgrendel positie van geselecteerde nodes (of één node
    * via context-menu). Wordt gerespecteerd door `pasAutoLayoutToe`.
-   * Persistentie loopt via de runtime React Flow node-state; her-import van
-   * het diagram reset de lock-status.
+   * De lock-status wordt per diagram persistent opgeslagen op `DiagramNode`
+   * (`ref.layoutLocked`), zodat deze een herstart of her-import overleeft.
    */
   const setLockOpNodes = useCallback((nodeIds, lock) => {
     if (!nodeIds || nodeIds.length === 0) return;
@@ -2250,7 +2253,13 @@ function DiagramCanvasInner({ diagramId }) {
           : n
       )
     );
-  }, [setNodes]);
+    if (diagram) {
+      const updatedDiagNodes = diagram.nodes.map((dn) =>
+        idSet.has(dn.elementId) ? { ...dn, layoutLocked: lock } : dn
+      );
+      updateDiagramNodes(diagramId, updatedDiagNodes);
+    }
+  }, [setNodes, diagram, diagramId, updateDiagramNodes]);
 
   const normaliseerRelaties = useCallback(() => {
     setEdges((eds) => {

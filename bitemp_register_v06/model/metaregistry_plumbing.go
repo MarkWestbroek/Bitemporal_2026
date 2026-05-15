@@ -71,6 +71,7 @@ type HeeftOnderliggendeGegevenselementen interface {
 // Deze gegevens worden genegeerd door codegen maar bewaard voor stabiele editor-layouts.
 type EditorLayout struct {
 	Positie               *V3Positie  // node-positie in de editor
+	LayoutLocked          bool        // node-positie is door gebruiker vergrendeld (auto-layout slaat 'm over)
 	EdgeID                string      // persistente edge-id (entiteit→anker)
 	SourceHandle          string      // handle op de bron-zijde van de owner-edge
 	TargetHandle          string      // handle op de doel-zijde van de owner-edge
@@ -78,6 +79,7 @@ type EditorLayout struct {
 	DoelSourceHandle      string      // alleen relaties: handle op anker (uitgaand naar doel)
 	DoelTargetHandle      string      // alleen relaties: handle op doel-entiteit (inkomend)
 	AnkerPositie          *V3Positie  // alleen relaties: positie van het associatie-ankerpunt
+	AnkerLayoutLocked     bool        // alleen relaties: anker-positie is door gebruiker vergrendeld
 	ClassLinkEdgeID       string      // alleen relaties: edge-id anker╌╌relatie (association class link)
 	ClassLinkSourceHandle string      // alleen relaties: handle op anker (uitgaand naar relatie)
 	ClassLinkTargetHandle string      // alleen relaties: handle op relatie (inkomend van anker)

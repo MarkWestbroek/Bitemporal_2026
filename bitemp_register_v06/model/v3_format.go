@@ -46,16 +46,18 @@ type V3ReferentielijstInstantie struct {
 	Naam         string     `json:"naam,omitempty"`         // leesbare naam, bijv. "Landen"
 	Omschrijving string     `json:"omschrijving,omitempty"` // korte beschrijving
 	Positie      *V3Positie `json:"positie,omitempty"`      // editor-layout positie (genegeerd door codegen)
+	LayoutLocked bool       `json:"layoutLocked,omitempty"` // editor-lock op de positie (auto-layout slaat 'm over)
 }
 
 // V3Datatype beschrijft een custom gegevenstype met validatie en weergave.
 type V3Datatype struct {
 	Naam         string       `json:"naam"`
 	Description  string       `json:"description,omitempty"`
-	Basistype    string       `json:"basistype"`         // string, integer, number
-	Format       string       `json:"format,omitempty"`  // bijv. "nl-postcode", "bsn"
-	Domein       string       `json:"domein,omitempty"`  // domeingroep: "register" = registerbasis, "" = ongegroepeerd
-	Positie      *V3Positie   `json:"positie,omitempty"` // editor-layout positie (genegeerd door codegen)
+	Basistype    string       `json:"basistype"`              // string, integer, number
+	Format       string       `json:"format,omitempty"`       // bijv. "nl-postcode", "bsn"
+	Domein       string       `json:"domein,omitempty"`       // domeingroep: "register" = registerbasis, "" = ongegroepeerd
+	Positie      *V3Positie   `json:"positie,omitempty"`      // editor-layout positie (genegeerd door codegen)
+	LayoutLocked bool         `json:"layoutLocked,omitempty"` // editor-lock op de positie
 	Validatie    *V3Validatie `json:"validatie,omitempty"`
 	Normalisatie string       `json:"normalisatie,omitempty"`
 	Weergave     *V3Weergave  `json:"weergave,omitempty"`
@@ -97,11 +99,12 @@ type V3Weergave struct {
 
 // V3Enum beschrijft een enum type met zijn waarden.
 type V3Enum struct {
-	GoType   string         `json:"goType"`
-	BaseType string         `json:"baseType"`          // bijv. "string"
-	Domein   string         `json:"domein,omitempty"`  // domeingroep: "register" = registerbasis, "" = ongegroepeerd
-	Positie  *V3Positie     `json:"positie,omitempty"` // editor-layout positie (genegeerd door codegen)
-	Waarden  []V3EnumWaarde `json:"waarden"`
+	GoType       string         `json:"goType"`
+	BaseType     string         `json:"baseType"`               // bijv. "string"
+	Domein       string         `json:"domein,omitempty"`       // domeingroep: "register" = registerbasis, "" = ongegroepeerd
+	Positie      *V3Positie     `json:"positie,omitempty"`      // editor-layout positie (genegeerd door codegen)
+	LayoutLocked bool           `json:"layoutLocked,omitempty"` // editor-lock op de positie
+	Waarden      []V3EnumWaarde `json:"waarden"`
 }
 
 // V3EnumWaarde beschrijft een enkele enum-waarde.
@@ -122,9 +125,10 @@ type V3Entiteit struct {
 	NaamLabelTerug    string              `json:"naamLabelTerug,omitempty"`  // UML-label op de terug-richting van de generalisatie-relatie
 	IsMaterieel       bool                `json:"isMaterieel,omitempty"`
 	Kleur             string              `json:"kleur,omitempty"`
-	Meervoud          string              `json:"meervoud"`          // URL-padnaam, bijv. "as", "personen"
-	Positie           *V3Positie          `json:"positie,omitempty"` // editor-layout positie (genegeerd door codegen)
-	Runtime           *V3Runtime          `json:"runtime,omitempty"` // V3.1: runtime/deployment metadata (genegeerd door codegen/UML-editor)
+	Meervoud          string              `json:"meervoud"`               // URL-padnaam, bijv. "as", "personen"
+	Positie           *V3Positie          `json:"positie,omitempty"`      // editor-layout positie (genegeerd door codegen)
+	LayoutLocked      bool                `json:"layoutLocked,omitempty"` // editor-lock op de positie (auto-layout slaat 'm over)
+	Runtime           *V3Runtime          `json:"runtime,omitempty"`      // V3.1: runtime/deployment metadata (genegeerd door codegen/UML-editor)
 	AfgeleideVelden   []V3AfgeleidVeld    `json:"afgeleideVelden,omitempty"`
 	Gegevenselementen []V3Gegevenselement `json:"gegevenselementen,omitempty"`
 	Relaties          []V3Relatie         `json:"relaties,omitempty"`
@@ -141,6 +145,7 @@ type V3Gegevenselement struct {
 	NaamLabelHeen   string           `json:"naamLabelHeen,omitempty"`  // UML-label op de heen-richting van de compositie (bijv. "heeft")
 	NaamLabelTerug  string           `json:"naamLabelTerug,omitempty"` // UML-label op de terug-richting van de compositie (bijv. "behoort bij")
 	Positie         *V3Positie       `json:"positie,omitempty"`        // editor-layout positie (genegeerd door codegen)
+	LayoutLocked    bool             `json:"layoutLocked,omitempty"`   // editor-lock op de positie (auto-layout slaat 'm over)
 	ID              string           `json:"id,omitempty"`             // persistente edge-id van entiteit→GE voor stabiele editor round-trips
 	SourceHandle    string           `json:"sourceHandle,omitempty"`   // verbindingspunt op de entiteit (genegeerd door codegen)
 	TargetHandle    string           `json:"targetHandle,omitempty"`   // verbindingspunt op het GE-node (genegeerd door codegen)
@@ -167,7 +172,9 @@ type V3Relatie struct {
 	BronKardinaliteit        string           `json:"bronKardinaliteit,omitempty"`     // kardinaliteit aan de bronkant (bijv. "0..*"); default afgeleid uit momentvoorkomen
 	DoelKardinaliteit        string           `json:"doelKardinaliteit,omitempty"`     // kardinaliteit aan de doel-entiteitkant (bijv. "0..*")
 	Positie                  *V3Positie       `json:"positie,omitempty"`               // editor-layout positie van het relatieblok (genegeerd door codegen)
+	LayoutLocked             bool             `json:"layoutLocked,omitempty"`          // editor-lock op de relatie-positie (auto-layout slaat 'm over)
 	AnkerPositie             *V3Positie       `json:"ankerPositie,omitempty"`          // editor-layout positie van het associatie-anker (genegeerd door codegen)
+	AnkerLayoutLocked        bool             `json:"ankerLayoutLocked,omitempty"`     // editor-lock op de anker-positie (auto-layout slaat 'm over)
 	ID                       string           `json:"id,omitempty"`                    // persistente edge-id van entiteit→anker voor stabiele editor round-trips
 	SourceHandle             string           `json:"sourceHandle,omitempty"`          // verbindingspunt op de entiteit→anker edge (genegeerd door codegen)
 	TargetHandle             string           `json:"targetHandle,omitempty"`          // verbindingspunt op het anker (inkomend vanuit entiteit, genegeerd door codegen)
@@ -301,13 +308,14 @@ type V3Offset struct {
 // Notities zijn puur visueel; ze hebben geen scope-edges en worden door codegen genegeerd.
 // C8: notities + constraints in V3-uitwisseling.
 type V3Notitie struct {
-	ID      string     `json:"id"`                // unieke notitie-ID
-	Tekst   string     `json:"tekst"`             // vrije tekst (markdown toegestaan)
-	Domein  string     `json:"domein,omitempty"`  // optionele domein-binding voor filtering
-	Positie *V3Positie `json:"positie,omitempty"` // canvas-positie (x,y); genegeerd door codegen
-	Kleur   string     `json:"kleur,omitempty"`   // optionele override (default geel)
-	Breedte *float64   `json:"breedte,omitempty"` // optionele node-breedte
-	Hoogte  *float64   `json:"hoogte,omitempty"`  // optionele node-hoogte
+	ID           string     `json:"id"`                     // unieke notitie-ID
+	Tekst        string     `json:"tekst"`                  // vrije tekst (markdown toegestaan)
+	Domein       string     `json:"domein,omitempty"`       // optionele domein-binding voor filtering
+	Positie      *V3Positie `json:"positie,omitempty"`      // canvas-positie (x,y); genegeerd door codegen
+	LayoutLocked bool       `json:"layoutLocked,omitempty"` // editor-lock op de canvas-positie (auto-layout slaat 'm over)
+	Kleur        string     `json:"kleur,omitempty"`        // optionele override (default geel)
+	Breedte      *float64   `json:"breedte,omitempty"`      // optionele node-breedte
+	Hoogte       *float64   `json:"hoogte,omitempty"`       // optionele node-hoogte
 }
 
 // V3Constraint beschrijft een UML constraint (lichtblauwe rounded-rect) op het canvas.
@@ -315,13 +323,14 @@ type V3Notitie struct {
 // die scope-edges zijn altijd zichtbaar (kunnen niet verborgen worden).
 // C8: constraints in V3-uitwisseling.
 type V3Constraint struct {
-	ID        string     `json:"id"`                  // unieke constraint-ID
-	Naam      string     `json:"naam,omitempty"`      // korte naam (bijv. "C1")
-	Expressie string     `json:"expressie"`           // de constraint zelf (bijv. OCL of vrije tekst)
-	Taal      string     `json:"taal,omitempty"`      // expressietaal: "ocl", "cel", "tekst" (default "tekst")
-	Domein    string     `json:"domein,omitempty"`    // optionele domein-binding
-	Positie   *V3Positie `json:"positie,omitempty"`   // canvas-positie; genegeerd door codegen
-	Breedte   *float64   `json:"breedte,omitempty"`   // optionele node-breedte
-	Hoogte    *float64   `json:"hoogte,omitempty"`    // optionele node-hoogte
-	ScopeRefs []string   `json:"scopeRefs,omitempty"` // typenamen van entiteiten/GE's/relaties waarop de constraint van toepassing is
+	ID           string     `json:"id"`                     // unieke constraint-ID
+	Naam         string     `json:"naam,omitempty"`         // korte naam (bijv. "C1")
+	Expressie    string     `json:"expressie"`              // de constraint zelf (bijv. OCL of vrije tekst)
+	Taal         string     `json:"taal,omitempty"`         // expressietaal: "ocl", "cel", "tekst" (default "tekst")
+	Domein       string     `json:"domein,omitempty"`       // optionele domein-binding
+	Positie      *V3Positie `json:"positie,omitempty"`      // canvas-positie; genegeerd door codegen
+	LayoutLocked bool       `json:"layoutLocked,omitempty"` // editor-lock op de canvas-positie (auto-layout slaat 'm over)
+	Breedte      *float64   `json:"breedte,omitempty"`      // optionele node-breedte
+	Hoogte       *float64   `json:"hoogte,omitempty"`       // optionele node-hoogte
+	ScopeRefs    []string   `json:"scopeRefs,omitempty"`    // typenamen van entiteiten/GE's/relaties waarop de constraint van toepassing is
 }

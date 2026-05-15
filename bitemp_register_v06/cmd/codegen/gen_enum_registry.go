@@ -59,20 +59,28 @@ func writeEnumRegistryEntries(b *strings.Builder, enums []model.V3Enum) {
 		}
 	}
 
-	// Editor-posities (alleen als er posities zijn)
-	hasPosities := false
+	// Editor-posities en -locks (alleen als er iets te bewaren is)
+	hasLayout := false
 	for _, enum := range enums {
-		if enum.Positie != nil {
-			hasPosities = true
+		if enum.Positie != nil || enum.LayoutLocked {
+			hasLayout = true
 			break
 		}
 	}
-	if hasPosities {
-		b.WriteString("\n\t// Enum editor-posities\n")
+	if hasLayout {
+		b.WriteString("\n\t// Enum editor-layout (positie + lock)\n")
 		for _, enum := range enums {
-			if enum.Positie != nil {
-				b.WriteString(fmt.Sprintf("\tEnumEditorLayouts[%q] = &EditorLayout{Positie: &V3Positie{X: %g, Y: %g}}\n", enum.GoType, enum.Positie.X, enum.Positie.Y))
+			if enum.Positie == nil && !enum.LayoutLocked {
+				continue
 			}
+			parts := []string{}
+			if enum.Positie != nil {
+				parts = append(parts, fmt.Sprintf("Positie: &V3Positie{X: %g, Y: %g}", enum.Positie.X, enum.Positie.Y))
+			}
+			if enum.LayoutLocked {
+				parts = append(parts, "LayoutLocked: true")
+			}
+			b.WriteString(fmt.Sprintf("\tEnumEditorLayouts[%q] = &EditorLayout{%s}\n", enum.GoType, strings.Join(parts, ", ")))
 		}
 	}
 }

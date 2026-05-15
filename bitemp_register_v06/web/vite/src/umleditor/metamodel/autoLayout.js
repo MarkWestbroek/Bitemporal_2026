@@ -100,6 +100,7 @@ function bouwTopologie(nodes, edges, _opts) {
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
   const geNaarEnt = new Map();
   const geNaarSecundair = new Map();
+  const relNaarSecundair = new Map();
   const relNaarEnts = new Map();
   const relRichting = new Map();
   const ankerNaarRel = new Map();
@@ -159,6 +160,12 @@ function bouwTopologie(nodes, edges, _opts) {
       geNaarSecundair.get(src.id).add(tgt.id);
     }
 
+    // REL → enum/datatype/reflijst (typisch voor REL-velden zoals Bereikbaarheid.soort)
+    if (src.type === "relatie" && SECUNDAIR_TYPES.has(tgt.type)) {
+      if (!relNaarSecundair.has(src.id)) relNaarSecundair.set(src.id, new Set());
+      relNaarSecundair.get(src.id).add(tgt.id);
+    }
+
     // REL ↔ ENT (direct of via anker)
     const collect = (relId, otherId) => {
       const arr = relNaarEnts.get(relId) || [];
@@ -184,7 +191,7 @@ function bouwTopologie(nodes, edges, _opts) {
     }
   }
 
-  return { nodeMap, geNaarEnt, geNaarSecundair, relNaarEnts, relRichting, ankerNaarRel, entVerbindingen, entFlow };
+  return { nodeMap, geNaarEnt, geNaarSecundair, relNaarSecundair, relNaarEnts, relRichting, ankerNaarRel, entVerbindingen, entFlow };
 }
 
 /**
@@ -640,6 +647,34 @@ export function berekenAutoLayout(nodes, edges, opts = {}) {
       result.set(rel.id, { x: 0, y: blokYCursor });
       blokYCursor += nodeHoogte(rel, o) + 20;
     }
+  }
+
+  // 5b) Secundairen die door een REL worden geconsumeerd (en nog geen positie
+  //     hebben) plaatsen we direct ONDER de REL, zodat de dependency-lijn
+  //     kort blijft (bv. Bereikbaarheid.soort → Bereikbaarheidssoort enum).
+  //     Voor secundairen die door een GE worden geconsumeerd doet
+  //     `layoutEntCluster` het werk al; deze pass is alleen voor REL-eigen secs.
+  const secGapRel = 18;
+  const relSecCursor = new Map(); // relId → volgende y-offset
+  for (const sec of secNodes) {
+    if (result.has(sec.id)) continue;
+    // Zoek de REL die deze sec aanstuurt
+    let relId = null;
+    for (const [rid, set] of topo.relNaarSecundair.entries()) {
+      if (set.has(sec.id)) { relId = rid; break; }
+    }
+    if (!relId) continue;
+    const relPos = result.get(relId);
+    if (!relPos) continue;
+    const relNode = nodeMap.get(relId);
+    const rw = nodeBreedte(relNode, o);
+    const rh = nodeHoogte(relNode, o);
+    const sw = nodeBreedte(sec, o);
+    const sh = nodeHoogte(sec, o);
+    const yStart = relSecCursor.get(relId) ?? (relPos.y + rh + 30);
+    const sx = relPos.x + (rw - sw) / 2;
+    result.set(sec.id, { x: sx, y: yStart });
+    relSecCursor.set(relId, yStart + sh + secGapRel);
   }
 
   // 6) Anker-nodes: midden tussen REL en eerstvolgende ENT-uiteinde.

@@ -340,6 +340,7 @@ func ExportMetaRegistryToV3(domein ...string) V3Model {
 		}
 		if meta.Layout != nil {
 			ent.Positie = meta.Layout.Positie
+			ent.LayoutLocked = meta.Layout.LayoutLocked
 		}
 
 		// Verwerk onderliggende gegevenselementen en relaties
@@ -382,6 +383,7 @@ func ExportMetaRegistryToV3(domein ...string) V3Model {
 				inst.Omschrijving = info.Omschrijving
 				if info.Layout != nil {
 					inst.Positie = info.Layout.Positie
+					inst.LayoutLocked = info.Layout.LayoutLocked
 				}
 			}
 			model.ReferentielijstInstanties = append(model.ReferentielijstInstanties, inst)
@@ -474,6 +476,7 @@ func v3GegevenseElementVanMeta(meta TypeMeta, child OnderliggendGegevenselement)
 	}
 	if meta.Layout != nil {
 		ge.Positie = meta.Layout.Positie
+		ge.LayoutLocked = meta.Layout.LayoutLocked
 		ge.ID = meta.Layout.EdgeID
 		ge.SourceHandle = meta.Layout.SourceHandle
 		ge.TargetHandle = meta.Layout.TargetHandle
@@ -501,7 +504,9 @@ func v3RelatieVanMeta(meta TypeMeta, child OnderliggendGegevenselement) V3Relati
 	}
 	if meta.Layout != nil {
 		rel.Positie = meta.Layout.Positie
+		rel.LayoutLocked = meta.Layout.LayoutLocked
 		rel.AnkerPositie = meta.Layout.AnkerPositie
+		rel.AnkerLayoutLocked = meta.Layout.AnkerLayoutLocked
 		rel.ID = meta.Layout.EdgeID
 		rel.SourceHandle = meta.Layout.SourceHandle
 		rel.TargetHandle = meta.Layout.TargetHandle
@@ -590,6 +595,7 @@ func buildV3Enum(goTypeName string) *V3Enum {
 	}
 	if layout, ok := EnumEditorLayouts[goTypeName]; ok {
 		enum.Positie = layout.Positie
+		enum.LayoutLocked = layout.LayoutLocked
 	}
 	return enum
 }

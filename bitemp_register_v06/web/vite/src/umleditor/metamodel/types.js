@@ -717,6 +717,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
       domein: n.data.domein || undefined,
       baseType: n.data.baseType || "string",
       positie: n.position ? { x: n.position.x, y: n.position.y } : undefined,
+      layoutLocked: n.data?.layoutLocked || undefined,
       waarden: (n.data.waarden || [])
         .map((w) => (w || "").trim())
         .filter(Boolean)
@@ -735,6 +736,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
       basistype: n.data.basistype || "string",
       format: n.data.format || undefined,
       positie: n.position ? { x: n.position.x, y: n.position.y } : undefined,
+      layoutLocked: n.data?.layoutLocked || undefined,
       validatie: n.data.validatie || undefined,
       normalisatie: n.data.normalisatie || undefined,
       weergave: n.data.weergave || undefined,
@@ -817,6 +819,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         naamLabelHeen: geNode.data.naamLabelHeen || undefined,
         naamLabelTerug: geNode.data.naamLabelTerug || undefined,
         positie: geNode.position ? { x: geNode.position.x, y: geNode.position.y } : undefined,
+        layoutLocked: geNode.data?.layoutLocked || undefined,
         // Bewaar editor-edge id zodat export/import en DB-round-trips merge-stabiel blijven.
         id: e.id || undefined,
         sourceHandle: e.sourceHandle || undefined,
@@ -870,8 +873,10 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         bronKardinaliteit: bronKardinaliteit !== "0..*" ? bronKardinaliteit : undefined,
         doelKardinaliteit: doelKardinaliteit !== "0..*" ? doelKardinaliteit : undefined,
         positie: relNode.position ? { x: relNode.position.x, y: relNode.position.y } : undefined,
+        layoutLocked: relNode.data?.layoutLocked || undefined,
         // Anker-positie voor round-trip
         ankerPositie: ankerNode?.position ? { x: ankerNode.position.x, y: ankerNode.position.y } : undefined,
+        ankerLayoutLocked: ankerNode?.data?.layoutLocked || undefined,
         // Primaire edge (ent → anker)
         id: ankerEdge.id || undefined,
         sourceHandle: ankerEdge.sourceHandle || undefined,
@@ -924,6 +929,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
         opts.padnaamByEntiteit?.[ent.data.typenaam] ||
         `${(ent.data.typenaam || "entiteit").toLowerCase()}s`,
       positie: ent.position ? { x: ent.position.x, y: ent.position.y } : undefined,
+      layoutLocked: ent.data?.layoutLocked || undefined,
       afgeleideVelden: (ent.data.afgeleideVelden || []).length > 0
         ? ent.data.afgeleideVelden
             .filter((v) => (v.naam || "").trim() !== "")
@@ -942,6 +948,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
       naam: n.data.naam || "",
       omschrijving: n.data.omschrijving || "",
       positie: n.position ? { x: n.position.x, y: n.position.y } : undefined,
+      layoutLocked: n.data?.layoutLocked || undefined,
     }))
     .filter((ri) => ri.systeemnaam); // filter lege instanties
 
@@ -956,6 +963,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
       if (n.data?.domein) obj.domein = n.data.domein;
       if (n.data?.kleur) obj.kleur = n.data.kleur;
       if (n.position) obj.positie = { x: n.position.x, y: n.position.y };
+      if (n.data?.layoutLocked) obj.layoutLocked = true;
       return obj;
     });
 
@@ -970,6 +978,7 @@ export function editorNaarV3Model(nodes, edges, opts = {}) {
       if (n.data?.taal) obj.taal = n.data.taal;
       if (n.data?.domein) obj.domein = n.data.domein;
       if (n.position) obj.positie = { x: n.position.x, y: n.position.y };
+      if (n.data?.layoutLocked) obj.layoutLocked = true;
       // ScopeRefs: edges waarvan source=deze constraint en data.isScope=true
       const scopeRefs = edges
         .filter((e) => e.source === n.id && (e.data?.isScope || e.data?.kind === "scope"))

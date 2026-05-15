@@ -124,6 +124,7 @@ export function v3ModelNaarEditor(v3Model) {
         naam: e.goType,
         domein: e.domein || inferredEnumDomein[e.goType] || "",
         baseType: e.baseType || "string",
+        layoutLocked: e.layoutLocked || false,
         waarden: (e.waarden || []).map((w) => w.waarde),
       },
     });
@@ -143,6 +144,7 @@ export function v3ModelNaarEditor(v3Model) {
         validatie: dt.validatie || {},
         normalisatie: dt.normalisatie || "",
         weergave: dt.weergave || {},
+        layoutLocked: dt.layoutLocked || false,
       },
     });
   });
@@ -162,6 +164,7 @@ export function v3ModelNaarEditor(v3Model) {
         systeemnaam: ri.systeemnaam || "",
         naam: ri.naam || "",
         omschrijving: ri.omschrijving || "",
+        layoutLocked: ri.layoutLocked || false,
       },
     });
   });
@@ -183,6 +186,7 @@ export function v3ModelNaarEditor(v3Model) {
         // Referentielijst-subtypes (zie Referentielijsten.md)
         entiteitSubtype: ent.entiteitSubtype || "",
         kleur: ent.kleur || defaultKleur("entiteit", ent.entiteitSubtype || ""),
+        layoutLocked: ent.layoutLocked || false,
         velden: [],
         afgeleideVelden: (ent.afgeleideVelden || []).map((av) => ({
           naam: av.naam || "",
@@ -214,6 +218,7 @@ export function v3ModelNaarEditor(v3Model) {
           metatype: "gegevenselement",
           isMaterieel: ge.isMaterieel || false,
           kleur: defaultKleur("gegevenselement"),
+          layoutLocked: ge.layoutLocked || false,
           naamLabelHeen: ge.naamLabelHeen || "",
           naamLabelTerug: ge.naamLabelTerug || "",
           velden,
@@ -349,6 +354,7 @@ export function v3ModelNaarEditor(v3Model) {
             relatieSubtype: rel.relatieSubtype || "",
             referentielijstInstantie: rel.referentielijstInstantie || "",
             kleur: defaultKleur("relatie", rel.relatieSubtype || ""),
+            layoutLocked: rel.layoutLocked || false,
             velden,
             afgeleideVelden: (rel.afgeleideVelden || []).map((av) => ({
               naam: av.naam || "",
@@ -389,7 +395,7 @@ export function v3ModelNaarEditor(v3Model) {
             id: ankerId,
             type: "associatieAnker",
             position: ankerPos,
-            data: { relatieNaam: rel.naam },
+            data: { relatieNaam: rel.naam, layoutLocked: rel.ankerLayoutLocked || false },
           });
         }
 
@@ -630,6 +636,7 @@ export function v3ModelNaarEditor(v3Model) {
         kleur: n.kleur || undefined,
         breedte: n.breedte || undefined,
         hoogte: n.hoogte || undefined,
+        layoutLocked: n.layoutLocked || false,
       },
     });
     // ScopeRefs → scope-edges (gededupliceerd)
@@ -660,6 +667,7 @@ export function v3ModelNaarEditor(v3Model) {
         domein: c.domein || "",
         breedte: c.breedte || undefined,
         hoogte: c.hoogte || undefined,
+        layoutLocked: c.layoutLocked || false,
       },
     });
     // ScopeRefs → scope-edges (gededupliceerd)
