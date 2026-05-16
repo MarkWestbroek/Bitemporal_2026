@@ -226,3 +226,70 @@ func TestValideerRepresentatie_InputStructBSN(t *testing.T) {
 		}
 	})
 }
+
+// TestValideerGeoLijn controleert de geolijn_geojson named function.
+func TestValideerGeoLijn(t *testing.T) {
+	cases := []struct {
+		input  string
+		geldig bool
+	}{
+		{`{"type":"LineString","coordinates":[[4.9041,52.3676],[5.1,52.5]]}`, true},
+		{`{"type":"LineString","coordinates":[[4.9,52.3],[5.0,52.4],[5.1,52.5]]}`, true},
+		{`{"type":"LineString","coordinates":[[4.9,52.3]]}`, false},                      // slechts 1 punt
+		{`{"type":"Point","coordinates":[4.9,52.3]}`, false},                             // verkeerd type
+		{`{"type":"Polygon","coordinates":[[[4.9,52.3],[5.1,52.3],[4.9,52.3]]]}`, false}, // Polygon i.p.v. LineString
+		{"niet-geldig-json", false},
+	}
+	for _, c := range cases {
+		ok, err := valideerGeoLijnGeoJson(c.input)
+		short := c.input
+		if len(short) > 30 {
+			short = short[:30]
+		}
+		if err != nil && c.geldig {
+			t.Errorf("GeoLijn %q: onverwachte error: %v", short, err)
+		}
+		if ok != c.geldig {
+			short := c.input
+			if len(short) > 30 {
+				short = short[:30]
+			}
+			t.Errorf("GeoLijn %q: geldig=%v, wil %v", short, ok, c.geldig)
+		}
+	}
+}
+
+// TestValideerGeoVlak controleert de geovlak_geojson named function.
+func TestValideerGeoVlak(t *testing.T) {
+	cases := []struct {
+		input  string
+		geldig bool
+	}{
+		{`{"type":"Polygon","coordinates":[[[4.9,52.3],[5.1,52.3],[5.1,52.5],[4.9,52.3]]]}`, true},
+		{`{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[0,1],[0,0]]]}`, true},
+		// niet gesloten: eerste != laatste
+		{`{"type":"Polygon","coordinates":[[[4.9,52.3],[5.1,52.3],[5.1,52.5],[4.9,52.6]]]}`, false},
+		// te weinig punten (3)
+		{`{"type":"Polygon","coordinates":[[[0,0],[1,0],[0,0]]]}`, false},
+		// verkeerd type
+		{`{"type":"LineString","coordinates":[[4.9,52.3],[5.1,52.5]]}`, false},
+		{"niet-geldig-json", false},
+	}
+	for _, c := range cases {
+		ok, err := valideerGeoVlakGeoJson(c.input)
+		if err != nil && c.geldig {
+			short := c.input
+			if len(short) > 30 {
+				short = short[:30]
+			}
+			t.Errorf("GeoVlak %q: onverwachte error: %v", short, err)
+		}
+		if ok != c.geldig {
+			short := c.input
+			if len(short) > 30 {
+				short = short[:30]
+			}
+			t.Errorf("GeoVlak %q: geldig=%v, wil %v", short, ok, c.geldig)
+		}
+	}
+}

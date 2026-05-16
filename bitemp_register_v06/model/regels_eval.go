@@ -31,6 +31,7 @@ package model
 // minimaal en safe (geen side effects mogelijk).
 
 import (
+	"encoding/json"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -53,11 +54,13 @@ type ValidatieFunctie func(waarde string) (bool, error)
 // expressie te schrijven zijn. Frontend heeft een parallelle map in
 // web/vite/src/umleditor/validatie/regels.js.
 var validatieFuncties = map[string]ValidatieFunctie{
-	"iban_mod97":   valideerIbanMod97,
-	"bsn_11proef":  valideerBsn11Proef, // legacy alias; checksum-regel doet hetzelfde
-	"geo_range":    valideerGeoRange,
-	"isbn10_mod11": valideerIsbn10Mod11,
-	"lei_mod97":    valideerLeiMod97,
+	"iban_mod97":      valideerIbanMod97,
+	"bsn_11proef":     valideerBsn11Proef, // legacy alias; checksum-regel doet hetzelfde
+	"geo_range":       valideerGeoRange,
+	"isbn10_mod11":    valideerIsbn10Mod11,
+	"lei_mod97":       valideerLeiMod97,
+	"geolijn_geojson": valideerGeoLijnGeoJson,
+	"geovlak_geojson": valideerGeoVlakGeoJson,
 }
 
 // RegistreerValidatieFunctie maakt een Go-validatiefunctie beschikbaar onder
@@ -539,6 +542,60 @@ func valideerIsbn10Mod11(s string) (bool, error) {
 		return false, nil
 	}
 	return sum%11 == 0, nil
+}
+
+// valideerGeoLijnGeoJson controleert of de waarde een geldig GeoJSON LineString-
+// object is met minimaal 2 coördinatenparen (RFC 7946). De coördinaten worden
+// niet op WGS84-range gecontroleerd — dat doet geo_range indien gecombineerd.
+func valideerGeoLijnGeoJson(s string) (bool, error) {
+	s = strings.TrimSpace(s)
+	var geom struct {
+		Type        string      `json:"type"`
+		Coordinates [][]float64 `json:"coordinates"`
+	}
+	if err := json.Unmarshal([]byte(s), &geom); err != nil {
+		return false, fmt.Errorf("ongeldige JSON voor GeoLijn: %w", err)
+	}
+	if geom.Type != "LineString" {
+		return false, nil
+	}
+	if len(geom.Coordinates) < 2 {
+		return false, nil
+	}
+	return true, nil
+}
+
+// valideerGeoVlakGeoJson controleert of de waarde een geldig GeoJSON Polygon-
+// object is met minimaal 4 coördinatenparen in de eerste ring en een gesloten
+// ring (eerste == laatste coördinaat) conform RFC 7946.
+func valideerGeoVlakGeoJson(s string) (bool, error) {
+	s = strings.TrimSpace(s)
+	var geom struct {
+		Type        string        `json:"type"`
+		Coordinates [][][]float64 `json:"coordinates"`
+	}
+	if err := json.Unmarshal([]byte(s), &geom); err != nil {
+		return false, fmt.Errorf("ongeldige JSON voor GeoVlak: %w", err)
+	}
+	if geom.Type != "Polygon" {
+		return false, nil
+	}
+	if len(geom.Coordinates) == 0 {
+		return false, nil
+	}
+	ring := geom.Coordinates[0]
+	if len(ring) < 4 {
+		return false, nil
+	}
+	// RFC 7946: eerste en laatste coördinaat moeten gelijk zijn (gesloten ring)
+	first, last := ring[0], ring[len(ring)-1]
+	if len(first) < 2 || len(last) < 2 {
+		return false, nil
+	}
+	if first[0] != last[0] || first[1] != last[1] {
+		return false, nil
+	}
+	return true, nil
 }
 
 // valideerLeiMod97 voert de ISO 17442 / ISO 7064 (mod-97) controle uit op een LEI.

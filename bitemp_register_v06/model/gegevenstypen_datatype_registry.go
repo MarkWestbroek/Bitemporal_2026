@@ -347,6 +347,103 @@ func gegevenstypen() []V3Datatype {
 			ExterneReferentie: "https://www.cibg.nl/oid-informatie",
 			Weergave:          &V3Weergave{Placeholder: "2.16.528.1.1007.3.1"}},
 
+		// — Datum incompleet / BRP —
+		// DatumIncompleet is de MIM/BRP-standaard voor een gedeeltelijk bekende
+		// datum. Onbekende dag of maand worden als "00" genoteerd.
+		// Formaat: YYYY | YYYY-MM | YYYY-MM-DD (met optioneel "00" als placeholder).
+		{Naam: "DatumIncompleet", Description: "Gedeeltelijk bekende datum (MIM-standaard / BRP-GBA). Formaat: YYYY, YYYY-MM of YYYY-MM-DD. Onbekende onderdelen worden als '00' genoteerd (bijv. '1975-06-00' = juni 1975, dag onbekend; '1975-00-00' = 1975, maand+dag onbekend).",
+			Basistype: "string", Format: "date-incomplete", Domein: "gegevenstypen",
+			Validatie: &V3Validatie{
+				Pattern:   `^\d{4}(-\d{2}(-\d{2})?)?$`,
+				MinLength: intPtr(4), MaxLength: intPtr(10),
+				Voorbeelden: []string{"1975", "1975-06", "1975-06-15", "1975-06-00", "1975-00-00"},
+				Foutmelding: "Voer een geldige onvolledige datum in (JJJJ, JJJJ-MM of JJJJ-MM-DD; gebruik 00 voor onbekende onderdelen)",
+			},
+			Weergave: &V3Weergave{Placeholder: "JJJJ-MM-00"}},
+
+		// — Identificatie rechtspersonen (NL) —
+		// RSIN heeft dezelfde 11-proef als BSN; de uitwisselbaarheid is bewust:
+		// BSN identificeert een persoon, RSIN een rechtspersoon/samenwerkingsverband.
+		{Naam: "RSIN", Description: "Rechtspersonen en Samenwerkingsverbanden Identificatienummer: 9 cijfers met 11-proef (zelfde algoritme als BSN). Identificeert rechtspersonen en samenwerkingsverbanden; beheerd door de KvK en het Handelsregister.",
+			Basistype: "string", Format: "rsin", Domein: "gegevenstypen",
+			Validatie: &V3Validatie{
+				Pattern:   `^[0-9]{9}$`,
+				MinLength: intPtr(9), MaxLength: intPtr(9),
+				Voorbeelden: []string{"123456782", "807729217"},
+				Foutmelding: "Voer een geldig RSIN in (9 cijfers, 11-proef)",
+				Regels: []V3Regel{
+					{Naam: "11-proef", Type: "checksum",
+						Expressie: "(9*d1 + 8*d2 + 7*d3 + 6*d4 + 5*d5 + 4*d6 + 3*d7 + 2*d8 - 1*d9) % 11 == 0"},
+				},
+			},
+			Weergave: &V3Weergave{Placeholder: "123456782", InputMask: "000000000"}},
+		{Naam: "Vestigingsnummer", Description: "KvK-vestigingsnummer: 12-cijferig identificatienummer voor een vestiging (hoofd- of nevenvestiging) in het Handelsregister. Geen publieke checksum.",
+			Basistype: "string", Format: "vestigingsnummer", Domein: "gegevenstypen",
+			Validatie: &V3Validatie{
+				Pattern:   `^[0-9]{12}$`,
+				MinLength: intPtr(12), MaxLength: intPtr(12),
+				Voorbeelden: []string{"000012345678", "123456789012"},
+				Foutmelding: "Voer een geldig vestigingsnummer in (12 cijfers)",
+			},
+			Weergave: &V3Weergave{Placeholder: "000012345678", InputMask: "000000000000"}},
+
+		// — Bestanden —
+		{Naam: "Bestand", Description: "Verwijzing naar een bestand in de filestore als RFC 4122 UUID-string. Het bestand zelf wordt beheerd in de filestore-service (/bestanden-API). Opslagformaat: UUID met koppeltekens.",
+			Basistype: "string", Format: "file-ref", Domein: "gegevenstypen",
+			Validatie: &V3Validatie{
+				Pattern:   `^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`,
+				MinLength: intPtr(36), MaxLength: intPtr(36),
+				Voorbeelden: []string{"550e8400-e29b-41d4-a716-446655440000"},
+				Foutmelding: "Voer een geldige UUID in voor de bestandsverwijzing (bijv. 550e8400-e29b-41d4-a716-446655440000)",
+			},
+			Weergave: &V3Weergave{Placeholder: "550e8400-e29b-41d4-a716-446655440000"}},
+
+		// — Geo (uitgebreid) —
+		// GeoJSON-types: waarde is een volledig JSON-object, opgeslagen als tekst.
+		// Coördinaten zijn WGS84 [longitude, latitude] per GeoJSON RFC 7946.
+		{Naam: "GeoLijn", Description: "Geografische lijn als GeoJSON LineString-object (RFC 7946). Minimaal 2 coördinatenparen [longitude, latitude] in WGS84. Waarde is een JSON-string. Voorbeeld: {\"type\":\"LineString\",\"coordinates\":[[4.9,52.3],[5.1,52.5]]}",
+			Basistype: "string", Format: "geo-linestring", Domein: "gegevenstypen",
+			Validatie: &V3Validatie{
+				Voorbeelden: []string{`{"type":"LineString","coordinates":[[4.9041,52.3676],[5.1,52.5]]}`},
+				Foutmelding: "Voer een geldige GeoJSON LineString in met minimaal 2 coördinaten",
+				Regels: []V3Regel{
+					{Naam: "geojson-linestring", Type: "function", Expressie: "geolijn_geojson"},
+				},
+			},
+			Weergave: &V3Weergave{Placeholder: `{"type":"LineString","coordinates":[[lon,lat],[lon,lat]]}`}},
+		{Naam: "GeoVlak", Description: "Geografisch vlak als GeoJSON Polygon-object (RFC 7946). Minimaal 4 coördinatenparen; eerste en laatste coördinaat zijn identiek (gesloten ring). WGS84 [longitude, latitude]. Voorbeeld: {\"type\":\"Polygon\",\"coordinates\":[[[4.9,52.3],[5.1,52.3],[5.1,52.5],[4.9,52.3]]]}",
+			Basistype: "string", Format: "geo-polygon", Domein: "gegevenstypen",
+			Validatie: &V3Validatie{
+				Voorbeelden: []string{`{"type":"Polygon","coordinates":[[[4.9,52.3],[5.1,52.3],[5.1,52.5],[4.9,52.3]]]}`},
+				Foutmelding: "Voer een geldige GeoJSON Polygon in met een gesloten ring van minimaal 4 coördinaten",
+				Regels: []V3Regel{
+					{Naam: "geojson-polygon", Type: "function", Expressie: "geovlak_geojson"},
+				},
+			},
+			Weergave: &V3Weergave{Placeholder: `{"type":"Polygon","coordinates":[[[lon,lat],...]]}`}},
+
+		// — BAG (aanvullende object-types) —
+		{Naam: "BAGLigplaatsID", Description: "BAG Ligplaats-ID: 16-cijferige unieke identificatiecode van een ligplaats (watergebonden perceel voor een woonboot o.d.) in de BAG. Objecttypecode: 02. Zelfde 16-cijferig formaat als BAGPandID.",
+			Basistype: "string", Format: "bag-ligplaats-id", Domein: "gegevenstypen",
+			Validatie: &V3Validatie{
+				Pattern:   `^[0-9]{16}$`,
+				MinLength: intPtr(16), MaxLength: intPtr(16),
+				Voorbeelden: []string{"0518020000258732", "0363020012345678"},
+				Foutmelding: "Voer een geldig BAG Ligplaats-ID in (16 cijfers)",
+			},
+			ExterneReferentie: "https://lvbag.github.io/BAG-API/Technische%20specificatie/",
+			Weergave:          &V3Weergave{Placeholder: "0518020000258732", InputMask: "0000000000000000"}},
+		{Naam: "BAGStandplaatsID", Description: "BAG Standplaats-ID: 16-cijferige unieke identificatiecode van een standplaats (terreingebonden perceel voor een stacaravan o.d.) in de BAG. Objecttypecode: 03. Zelfde 16-cijferig formaat als BAGPandID.",
+			Basistype: "string", Format: "bag-standplaats-id", Domein: "gegevenstypen",
+			Validatie: &V3Validatie{
+				Pattern:   `^[0-9]{16}$`,
+				MinLength: intPtr(16), MaxLength: intPtr(16),
+				Voorbeelden: []string{"0518030000258732", "0363030012345678"},
+				Foutmelding: "Voer een geldig BAG Standplaats-ID in (16 cijfers)",
+			},
+			ExterneReferentie: "https://lvbag.github.io/BAG-API/Technische%20specificatie/",
+			Weergave:          &V3Weergave{Placeholder: "0518030000258732", InputMask: "0000000000000000"}},
+
 		// — Boekidentificatoren / internationaal —
 		// ISBN-10 gebruikt mod-11 met een speciaal controlecijfer (0-9 of X=10),
 		// waarvoor de checksum-expressie niet volstaat → function-regel.

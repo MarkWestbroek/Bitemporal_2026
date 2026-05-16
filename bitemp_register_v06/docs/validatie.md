@@ -25,12 +25,12 @@ Types met een **function-regel** (mod-97, mod-11, 11-proef, geo-bereik) zijn uit
 | Tijdgerelateerd | `DatumTijd` | `date-time` | — | ✅ |
 | Tijdgerelateerd | `Jaar` | — | 4 cijfers | ✅ |
 | Tijdgerelateerd | `Duur` | `duration` | ISO 8601 P-prefix | ✅ |
-| Tijdgerelateerd | `DatumIncompleet` | `date-incomplete` | `^(\d{4}\|\d{4}-\d{2}\|\d{4}-\d{2}-\d{2})$` | 🔄 |
+| Tijdgerelateerd | `DatumIncompleet` | `date-incomplete` | `^\d{4}(-\d{2}(-\d{2})?)?$` (YYYY, YYYY-MM, YYYY-MM-DD; `00` voor onbekend) | ✅ |
 | Boolean | `JaNee` | `boolean` | — | ✅ |
 | Identificatie (NL) | `BSN` | `bsn` | 9 cijfers + 11-proef (function-regel) | ✅ |
 | Identificatie (NL) | `KvKNummer` | `kvk-nummer` | 8 cijfers | ✅ |
-| Identificatie (NL) | `RSIN` | `rsin` | 9 cijfers + 11-proef (rechtspersonen; zelfde als BSN) | 🔄 |
-| Identificatie (NL) | `Vestigingsnummer` | `vestigingsnummer` | 12 cijfers, geen checksum | 🔄 |
+| Identificatie (NL) | `RSIN` | `rsin` | 9 cijfers + 11-proef (checksum-regel, identiek aan BSN) | ✅ |
+| Identificatie (NL) | `Vestigingsnummer` | `vestigingsnummer` | 12 cijfers, geen checksum | ✅ |
 | Identificatie (NL) | `NLPostcode` | `nl-postcode` | `^[1-9][0-9]{3}\s?[A-Za-z]{2}$` | ✅ |
 | Financieel | `IBAN` | `iban` | ISO 13616 + mod-97 (function-regel) | ✅ |
 | Financieel | `EUBTWNummer` | `eu-vat` | 2-letter landcode + 2–12 alfanumeriek | ✅ |
@@ -42,9 +42,9 @@ Types met een **function-regel** (mod-97, mod-11, 11-proef, geo-bereik) zijn uit
 | Communicatie | `UrlHttps` | `uri-https` | `^https://` | ✅ |
 | Visueel | `Kleur` | `color-hex` | `^#([0-9A-Fa-f]{3,6,8})$` | ✅ |
 | Geo | `GeoPunt` | `geo-point` | `lat,lng` bereikcheck (function-regel) | ✅ |
-| Geo | `GeoLijn` | `geo-linestring` | GeoJSON LineString, min 2 punten | 🔄 |
-| Geo | `GeoVlak` | `geo-polygon` | GeoJSON Polygon, gesloten ring | 🔄 |
-| Bestanden | `Bestand` | `file-ref` | UUID-formaat; FK naar filestore | 🔄 |
+| Geo | `GeoLijn` | `geo-linestring` | GeoJSON LineString (RFC 7946), min 2 coördinaten (function-regel) | ✅ |
+| Geo | `GeoVlak` | `geo-polygon` | GeoJSON Polygon (RFC 7946), gesloten ring, min 4 punten (function-regel) | ✅ |
+| Bestanden | `Bestand` | `file-ref` | RFC 4122 UUID-formaat (36 tekens incl. koppeltekens) | ✅ |
 | Zorg | `AGBCode` | `agb-code` | 8 cijfers (Vektis/Agb) | ✅ |
 | Zorg | `BIGNummer` | `big-nummer` | 11 cijfers (CIBG) | ✅ |
 | Overheid (NL) | `OIN` | `oin` | 20 cijfers (Logius/DigiKoppeling) | ✅ |
@@ -54,8 +54,8 @@ Types met een **function-regel** (mod-97, mod-11, 11-proef, geo-bereik) zijn uit
 | BAG / WOZ | `BAGPandID` | `bag-pand-id` | 16 cijfers (gem.code 4 + typecode 10 + volgnr 10) | ✅ |
 | BAG / WOZ | `BAGVBOID` | `bag-vbo-id` | 16 cijfers (objecttypecode 01) | ✅ |
 | BAG / WOZ | `BAGNummeraanduidingID` | `bag-nummeraanduiding-id` | 16 cijfers (objecttypecode 20) | ✅ |
-| BAG / WOZ | `BAGLigplaatsID` | `bag-ligplaats-id` | 16 cijfers (objecttypecode 02); zelfde patroon als `BAGPandID` | 🔄 |
-| BAG / WOZ | `BAGStandplaatsID` | `bag-standplaats-id` | 16 cijfers (objecttypecode 03) | 🔄 |
+| BAG / WOZ | `BAGLigplaatsID` | `bag-ligplaats-id` | 16 cijfers (objecttypecode 02); zelfde patroon als `BAGPandID` | ✅ |
+| BAG / WOZ | `BAGStandplaatsID` | `bag-standplaats-id` | 16 cijfers (objecttypecode 03) | ✅ |
 | BAG / WOZ | `WOZObjectnummer` | `woz-objectnummer` | 12 cijfers (gem.code 4 + volgnr 8) | ✅ |
 | Kadaster | `KadastraleAanduiding` | — | Composiet: gemeentenaam/CBS-code + sectieletter + perceelnr; geen enkelvoudige regex | ⚠️ Bewust overgeslagen |
 | Overheid (Int.) | `OIDCode` | `oid` | Punt-gescheiden integers (ISO/IEC 9834) | ✅ |

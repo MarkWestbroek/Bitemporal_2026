@@ -106,6 +106,46 @@ type ISBN10 string
 // Voorbeeld: "9780306406157".
 type ISBN13 string
 
+// DatumIncompleet is een datum waarbij dag, maand of beide onbekend kunnen
+// zijn. Formaat: YYYY, YYYY-MM, of YYYY-MM-DD. Onbekende onderdelen worden
+// als "00" genoteerd (BRP-/GBA-conventie en MIM-standaard).
+// Voorbeeld: "1975-06-00" = geboren in juni 1975, dag onbekend.
+type DatumIncompleet string
+
+// RSIN is het Rechtspersonen en Samenwerkingsverbanden Identificatienummer:
+// 9 cijfers met dezelfde 11-proef als het BSN. Identificeert rechtspersonen
+// en samenwerkingsverbanden bij de KvK en het Handelsregister.
+type RSIN string
+
+// Vestigingsnummer is het KvK-vestigingsnummer: 12 cijfers; identificeert
+// een individuele vestiging (nevenvestiging, hoofdvestiging) bij de KvK.
+// Geen publieke checksum.
+type Vestigingsnummer string
+
+// Bestand is een verwijzing naar een bestand in de filestore als UUID-string.
+// De waarde is een RFC 4122 UUID (inclusief koppeltekens).
+// Voorbeeld: "550e8400-e29b-41d4-a716-446655440000".
+type Bestand string
+
+// GeoLijn is een geografische lijn als GeoJSON LineString-object.
+// Minimaal 2 coördinatenparen (WGS84 [longitude, latitude]).
+// Voorbeeld: {"type":"LineString","coordinates":[[4.9,52.3],[5.1,52.5]]}
+type GeoLijn string
+
+// GeoVlak is een geografisch vlak als GeoJSON Polygon-object.
+// Minimaal 4 coördinatenparen; eerste en laatste coördinaat zijn gelijk
+// (gesloten ring). WGS84 [longitude, latitude].
+// Voorbeeld: {"type":"Polygon","coordinates":[[[4.9,52.3],[5.1,52.3],[5.1,52.5],[4.9,52.3]]]}
+type GeoVlak string
+
+// BAGLigplaatsID is de 16-cijferige unieke identificatiecode van een
+// ligplaats in de BAG. Objecttypecode: 02. Zelfde formaat als BAGPandID.
+type BAGLigplaatsID string
+
+// BAGStandplaatsID is de 16-cijferige unieke identificatiecode van een
+// standplaats in de BAG. Objecttypecode: 03. Zelfde formaat als BAGPandID.
+type BAGStandplaatsID string
+
 // LEI is een Legal Entity Identifier conform ISO 17442: 20 alfanumerieke
 // tekens (18 vrij + 2 numerieke controlecijfers). Unieke identificatie van
 // rechtspersonen wereldwijd; uitgifte via GLEIF-erkende LOU's.

@@ -51,6 +51,24 @@ type TestEntiteitGegevenstypen_TestGEGegevenstypen_Input struct {
 	WozObjectnummer       string `json:"woz_objectnummer,omitempty" schema:"datatype:WOZObjectnummer"`
 	OidCode               string `json:"oid_code,omitempty" schema:"datatype:OIDCode"`
 
+	// — BRP / datum incompleet —
+	DatumIncompleet string `json:"datum_incompleet,omitempty" schema:"datatype:DatumIncompleet"`
+
+	// — Identificatie rechtspersonen (NL) —
+	Rsin             string `json:"rsin,omitempty" schema:"datatype:RSIN"`
+	Vestigingsnummer string `json:"vestigingsnummer,omitempty" schema:"datatype:Vestigingsnummer"`
+
+	// — Bestanden —
+	Bestand string `json:"bestand,omitempty" schema:"datatype:Bestand"`
+
+	// — Geo (uitgebreid) —
+	GeoLijn string `json:"geo_lijn,omitempty" schema:"datatype:GeoLijn"`
+	GeoVlak string `json:"geo_vlak,omitempty" schema:"datatype:GeoVlak"`
+
+	// — BAG aanvullend —
+	BagLigplaatsId   string `json:"bag_ligplaats_id,omitempty" schema:"datatype:BAGLigplaatsID"`
+	BagStandplaatsId string `json:"bag_standplaats_id,omitempty" schema:"datatype:BAGStandplaatsID"`
+
 	// — Boekidentificatoren / internationaal —
 	Isbn10 string `json:"isbn10,omitempty" schema:"datatype:ISBN10"`
 	Isbn13 string `json:"isbn13,omitempty" schema:"datatype:ISBN13"`
