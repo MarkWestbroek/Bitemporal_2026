@@ -1,4 +1,33 @@
-# Release checklist
+﻿## Operaton-provenance op Registratie + PoC Process Engine v2 (2026-05-21)
+
+Twee gekoppelde wijzigingen: (1) `bron`/`bron_kenmerk` velden op `Registratie` in bitemp v06, en (2) de Go-worker en BPMN v2-flow in `process_engine_v01`.
+
+### Wijzigingen in bitemp_register_v06
+
+- **`model/model_plumbing.go`** — Twee nieuwe nullable velden op de `Registratie`-struct:
+  - `Bron *string` (JSON: `bron`, Bun: `bron,nullzero`) — systeem of component dat de registratie aanmaakte
+  - `BronKenmerk *string` (JSON: `bron_kenmerk`, Bun: `bron_kenmerk,nullzero`) — referentie in het bronsysteem (bijv. process instance ID)
+- **`dbsetup/createtables.go`** — Nieuwe idempotente migratiefunctie `ensureRegistratieBronMigrated`: voegt `bron` en `bron_kenmerk` VARCHAR-kolommen toe aan de `registratie`-tabel als die nog niet bestaan. Aanroep in `CreateTables()` na `ensureRegistratieDomeinenMigrated`.
+
+### Wijzigingen in process_engine_v01
+
+- **`internal/worker/service_task.go`** — Worker v2 volledig herschreven met 5 topics en correcte padnamen uit de bitemp MetaRegistry:
+  - `check-locatie` → GET `/full/locaties/{locatie_id}`
+  - `check-np` → GET `/full/natuurlijk_personen/{np_id}`
+  - `registreer-np-bereikbaarheid` → POST `/registratie/` (NP + bereikbaarheid in één registratie)
+  - `registreer-bereikbaarheid` → POST `/registratie/` (alleen bereikbaarheid)
+  - `register-call` → POST `/registratie/` (NP-only, v1-compatibel)
+  - Alle `handleRegistreer`-aanroepen injecteren `"bron": "operaton"` + `"bron_kenmerk": processInstanceID`
+- **`deployments/poc/registreer_inwoner_v2.bpmn`** — Nieuw multi-branch BPMN-proces: `check-locatie` → gateway → (locatie bestaat) → `check-np` → gateway → 3 paden (niet gevonden, actueel inwoner-fout, historisch)
+- **`deployments/poc/start_pieter_v2.json`** — Testpayload met geldig BSN `430050100` (11-proef: 88 = 8×11)
+
+### Smoke-test (2026-05-21)
+
+Process `registreer_inwoner_v2` COMPLETED, registratie_id=888, `bron=operaton`, `bron_kenmerk=e8574958-5499-11f1-83f4-aaf489597b8d`.
+
+Zie `process_engine_v01/README.md` voor volledige details en padnamen-referentie.
+
+---
 
 ## GraphQL: typed `maakRegistratieOngedaan` mutation + registratie-flow docs (2026-05-01)
 

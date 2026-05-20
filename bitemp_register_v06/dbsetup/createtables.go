@@ -101,6 +101,34 @@ END $$;
 	return err
 }
 
+func ensureRegistratieBronMigrated(ctx context.Context, db *bun.DB) error {
+	// Voegt bron en bron_kenmerk toe als ze nog niet bestaan.
+	// Hiermee kunnen registraties worden teruggevoerd naar het bron-systeem
+	// (bijv. Operaton process-instance-id).
+	_, err := db.ExecContext(ctx, `
+DO $$
+BEGIN
+	IF NOT EXISTS (
+		SELECT 1 FROM information_schema.columns
+		WHERE table_schema = 'public'
+		  AND table_name   = 'registratie'
+		  AND column_name  = 'bron'
+	) THEN
+		ALTER TABLE registratie ADD COLUMN bron TEXT;
+	END IF;
+	IF NOT EXISTS (
+		SELECT 1 FROM information_schema.columns
+		WHERE table_schema = 'public'
+		  AND table_name   = 'registratie'
+		  AND column_name  = 'bron_kenmerk'
+	) THEN
+		ALTER TABLE registratie ADD COLUMN bron_kenmerk TEXT;
+	END IF;
+END $$;
+`)
+	return err
+}
+
 func CreateTables(db *bun.DB) error {
 	ctx := context.Background()
 
@@ -153,6 +181,11 @@ func CreateTables(db *bun.DB) error {
 	}
 
 	err = ensureRegistratieDomeinenMigrated(ctx, db)
+	if err != nil {
+		return err
+	}
+
+	err = ensureRegistratieBronMigrated(ctx, db)
 	if err != nil {
 		return err
 	}

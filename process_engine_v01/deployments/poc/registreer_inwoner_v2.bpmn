@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  registreer_inwoner_v2.bpmn — Registreer nieuwe inwoner (gemeente-proces)
+  Process Engine v01 PoC
+
+  Flow:
+    1. Start: aanmelding met locatie_id + persoonsgegevens
+    2. check-locatie: GET /full/locatie/{locatie_id} → locatie_bestaat
+    3. GW_Locatie: niet gevonden → CallActivity "Registreer locatie" (wacht op sub-proces)
+    4. check-np: GET /full/natuurlijkpersoon/{np_id} → np_bestaat, np_actueel
+    5. GW_NP:
+         - niet gevonden           → registreer-np-bereikbaarheid (nieuwe NP + woonadres)
+         - al actueel inwoner      → Error End Event
+         - historisch (was inwoner)→ registreer-bereikbaarheid (alleen nieuw woonadres)
+
+  Worker topics:
+    check-locatie, check-np, registreer-np-bereikbaarheid, registreer-bereikbaarheid
+
+  Nota bene: "Registreer locatie" (callActivity) verwijst naar proces "registreer_locatie",
+  dat nog niet bestaat in de PoC. De branch is wel modelleerbaar en werkt zodra
+  dat subproces is gedefinieerd.
+-->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_RegistreerInwonerV2"
+                  targetNamespace="http://process-engine-v01"
+                  exporter="process-engine-v01"
+                  exporterVersion="0.1.0">
+
+  <bpmn:error id="Error_AlInwoner" name="Al inwoner" errorCode="AL_INWONER" />
+
+  <bpmn:process id="registreer_inwoner_v2" name="Registreer nieuwe inwoner" isExecutable="true" camunda:historyTimeToLive="P30D">
+
+    <!-- ═══════════════════ START ═══════════════════ -->
+    <bpmn:startEvent id="StartEvent_1" name="Aanmelding&#10;inwoner">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="register_id"    label="Register ID"       type="string"  defaultValue="hoofdregister" />
+          <camunda:formField id="locatie_id"     label="Locatie ID"        type="long"    defaultValue="1" />
+          <camunda:formField id="np_id"          label="NP ID"             type="long"    defaultValue="4201" />
+          <camunda:formField id="bsn"            label="BSN"               type="string"  defaultValue="123456782" />
+          <camunda:formField id="voorletters"    label="Voorletters"       type="string"  defaultValue="A.M." />
+          <camunda:formField id="roepnaam"       label="Roepnaam"          type="string"  defaultValue="Anna" />
+          <camunda:formField id="tussenvoegsel"  label="Tussenvoegsel"     type="string"  defaultValue="van" />
+          <camunda:formField id="achternaam"     label="Achternaam"        type="string"  defaultValue="Dijk" />
+          <camunda:formField id="geboortedatum"  label="Geboortedatum"     type="string"  defaultValue="1985-03-12" />
+          <camunda:formField id="ingezetene"     label="Ingezetene"        type="boolean" defaultValue="true" />
+          <camunda:formField id="opmerking"      label="Opmerking"         type="string"  defaultValue="Aanmelding nieuwe inwoner via process engine v01" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- ═══════════════════ CHECK LOCATIE ═══════════════════ -->
+    <bpmn:serviceTask id="ServiceTask_CheckLocatie"
+                      name="Check: locatie bestaat"
+                      camunda:type="external"
+                      camunda:topic="check-locatie">
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ═══════════════════ GW: LOCATIE GEVONDEN? ═══════════════════ -->
+    <bpmn:exclusiveGateway id="Gateway_LocatieBestaat" name="Locatie&#10;gevonden?" default="Flow_GW_Ja">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_GW_Ja</bpmn:outgoing>
+      <bpmn:outgoing>Flow_GW_Nee</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- ═══════════════════ CALL ACTIVITY: REGISTREER LOCATIE ═══════════════════ -->
+    <bpmn:callActivity id="CallActivity_RegistreerLocatie"
+                       name="Registreer locatie&#10;(sub-proces)"
+                       calledElement="registreer_locatie">
+      <bpmn:incoming>Flow_GW_Nee</bpmn:incoming>
+      <bpmn:outgoing>Flow_CA_Merge</bpmn:outgoing>
+    </bpmn:callActivity>
+
+    <!-- ═══════════════════ GW: MERGE LOCATIE ═══════════════════ -->
+    <bpmn:exclusiveGateway id="Gateway_MergeLocatie">
+      <bpmn:incoming>Flow_GW_Ja</bpmn:incoming>
+      <bpmn:incoming>Flow_CA_Merge</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- ═══════════════════ CHECK NP ═══════════════════ -->
+    <bpmn:serviceTask id="ServiceTask_CheckNP"
+                      name="Check: NP in register"
+                      camunda:type="external"
+                      camunda:topic="check-np">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ═══════════════════ GW: NP STATUS ═══════════════════ -->
+    <bpmn:exclusiveGateway id="Gateway_NPStatus" name="NP status?" default="Flow_NietGevonden">
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_NietGevonden</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Actueel</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Historisch</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- ═══════════════════ REGISTREER NP + BEREIKBAARHEID ═══════════════════ -->
+    <bpmn:serviceTask id="ServiceTask_RegistreerNPBereikbaarheid"
+                      name="Registreer NP +&#10;bereikbaarheid"
+                      camunda:type="external"
+                      camunda:topic="registreer-np-bereikbaarheid">
+      <bpmn:incoming>Flow_NietGevonden</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ═══════════════════ ERROR END: AL INWONER ═══════════════════ -->
+    <bpmn:endEvent id="EndEvent_AlInwoner" name="Al inwoner!">
+      <bpmn:incoming>Flow_Actueel</bpmn:incoming>
+      <bpmn:errorEventDefinition id="ErrDef_AlInwoner" errorRef="Error_AlInwoner" />
+    </bpmn:endEvent>
+
+    <!-- ═══════════════════ REGISTREER BEREIKBAARHEID ═══════════════════ -->
+    <bpmn:serviceTask id="ServiceTask_RegistreerBereikbaarheid"
+                      name="Registreer&#10;bereikbaarheid"
+                      camunda:type="external"
+                      camunda:topic="registreer-bereikbaarheid">
+      <bpmn:incoming>Flow_Historisch</bpmn:incoming>
+      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ═══════════════════ END EVENTS ═══════════════════ -->
+    <bpmn:endEvent id="EndEvent_Voltooid1" name="Inwoner&#10;geregistreerd">
+      <bpmn:incoming>Flow_5</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="EndEvent_Voltooid2" name="Bereikbaarheid&#10;bijgewerkt">
+      <bpmn:incoming>Flow_6</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- ═══════════════════ SEQUENCE FLOWS ═══════════════════ -->
+    <bpmn:sequenceFlow id="Flow_1"         sourceRef="StartEvent_1"                      targetRef="ServiceTask_CheckLocatie" />
+    <bpmn:sequenceFlow id="Flow_2"         sourceRef="ServiceTask_CheckLocatie"           targetRef="Gateway_LocatieBestaat" />
+    <!-- default flow: locatie bestaat → skip callactivity -->
+    <bpmn:sequenceFlow id="Flow_GW_Ja"     sourceRef="Gateway_LocatieBestaat"             targetRef="Gateway_MergeLocatie" />
+    <bpmn:sequenceFlow id="Flow_GW_Nee"    name="nee"   sourceRef="Gateway_LocatieBestaat" targetRef="CallActivity_RegistreerLocatie">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!locatie_bestaat}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_CA_Merge"  sourceRef="CallActivity_RegistreerLocatie"     targetRef="Gateway_MergeLocatie" />
+    <bpmn:sequenceFlow id="Flow_3"         sourceRef="Gateway_MergeLocatie"               targetRef="ServiceTask_CheckNP" />
+    <bpmn:sequenceFlow id="Flow_4"         sourceRef="ServiceTask_CheckNP"                targetRef="Gateway_NPStatus" />
+    <!-- default flow: NP niet gevonden → nieuwe NP + bereikbaarheid -->
+    <bpmn:sequenceFlow id="Flow_NietGevonden" sourceRef="Gateway_NPStatus"               targetRef="ServiceTask_RegistreerNPBereikbaarheid" />
+    <bpmn:sequenceFlow id="Flow_Actueel"   name="al actueel"  sourceRef="Gateway_NPStatus" targetRef="EndEvent_AlInwoner">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${np_bestaat &amp;&amp; np_actueel}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_Historisch" name="historisch" sourceRef="Gateway_NPStatus" targetRef="ServiceTask_RegistreerBereikbaarheid">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${np_bestaat &amp;&amp; !np_actueel}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_5"         sourceRef="ServiceTask_RegistreerNPBereikbaarheid" targetRef="EndEvent_Voltooid1" />
+    <bpmn:sequenceFlow id="Flow_6"         sourceRef="ServiceTask_RegistreerBereikbaarheid"   targetRef="EndEvent_Voltooid2" />
+
+  </bpmn:process>
+
+  <!-- ═══════════════════ DIAGRAM (BPMNDI) ═══════════════════
+    Coördinaten (px, linksonder-oorsprong):
+    Hoofdas: y-center = 200
+    CallActivity (locatie): y-center = 320 (onder hoofdas)
+    NP-bereikbaarheid branch: y-center = 90 (boven hoofdas)
+    Bereikbaarheid branch: y-center = 320 (onder hoofdas, rechts)
+  -->
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="registreer_inwoner_v2">
+
+      <!-- Start -->
+      <bpmndi:BPMNShape id="Shape_StartEvent_1" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="136" y="225" width="68" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- ServiceTask: Check locatie -->
+      <bpmndi:BPMNShape id="Shape_CheckLocatie" bpmnElement="ServiceTask_CheckLocatie">
+        <dc:Bounds x="240" y="160" width="180" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- GW: Locatie gevonden? -->
+      <bpmndi:BPMNShape id="Shape_GW_LocatieBestaat" bpmnElement="Gateway_LocatieBestaat" isMarkerVisible="true">
+        <dc:Bounds x="470" y="176" width="48" height="48" />
+        <bpmndi:BPMNLabel><dc:Bounds x="452" y="231" width="84" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- CallActivity: Registreer locatie -->
+      <bpmndi:BPMNShape id="Shape_CA_Locatie" bpmnElement="CallActivity_RegistreerLocatie" isExpanded="false">
+        <dc:Bounds x="460" y="280" width="200" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- GW: Merge locatie -->
+      <bpmndi:BPMNShape id="Shape_GW_MergeLocatie" bpmnElement="Gateway_MergeLocatie" isMarkerVisible="true">
+        <dc:Bounds x="710" y="176" width="48" height="48" />
+      </bpmndi:BPMNShape>
+
+      <!-- ServiceTask: Check NP -->
+      <bpmndi:BPMNShape id="Shape_CheckNP" bpmnElement="ServiceTask_CheckNP">
+        <dc:Bounds x="810" y="160" width="180" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- GW: NP status -->
+      <bpmndi:BPMNShape id="Shape_GW_NPStatus" bpmnElement="Gateway_NPStatus" isMarkerVisible="true">
+        <dc:Bounds x="1040" y="176" width="48" height="48" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1038" y="231" width="52" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- ServiceTask: Registreer NP + bereikbaarheid (boven) -->
+      <bpmndi:BPMNShape id="Shape_RegistreerNPB" bpmnElement="ServiceTask_RegistreerNPBereikbaarheid">
+        <dc:Bounds x="1140" y="50" width="200" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- EndEvent: Al inwoner (error, rechts van GW_NP) -->
+      <bpmndi:BPMNShape id="Shape_EE_AlInwoner" bpmnElement="EndEvent_AlInwoner">
+        <dc:Bounds x="1152" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1138" y="225" width="64" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- ServiceTask: Registreer bereikbaarheid (onder) -->
+      <bpmndi:BPMNShape id="Shape_RegistreerB" bpmnElement="ServiceTask_RegistreerBereikbaarheid">
+        <dc:Bounds x="1140" y="280" width="200" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- EndEvent: Inwoner geregistreerd -->
+      <bpmndi:BPMNShape id="Shape_EE_Voltooid1" bpmnElement="EndEvent_Voltooid1">
+        <dc:Bounds x="1402" y="72" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1381" y="115" width="79" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- EndEvent: Bereikbaarheid bijgewerkt -->
+      <bpmndi:BPMNShape id="Shape_EE_Voltooid2" bpmnElement="EndEvent_Voltooid2">
+        <dc:Bounds x="1402" y="302" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1378" y="345" width="84" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Flows -->
+      <bpmndi:BPMNEdge id="Edge_Flow_1" bpmnElement="Flow_1">
+        <di:waypoint x="188" y="200" /><di:waypoint x="240" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_2" bpmnElement="Flow_2">
+        <di:waypoint x="420" y="200" /><di:waypoint x="470" y="200" />
+      </bpmndi:BPMNEdge>
+      <!-- ja (default): recht door naar merge -->
+      <bpmndi:BPMNEdge id="Edge_Flow_GW_Ja" bpmnElement="Flow_GW_Ja">
+        <di:waypoint x="518" y="200" /><di:waypoint x="710" y="200" />
+        <bpmndi:BPMNLabel><dc:Bounds x="603" y="182" width="18" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <!-- nee: omlaag naar call activity -->
+      <bpmndi:BPMNEdge id="Edge_Flow_GW_Nee" bpmnElement="Flow_GW_Nee">
+        <di:waypoint x="494" y="224" /><di:waypoint x="494" y="280" />
+        <bpmndi:BPMNLabel><dc:Bounds x="501" y="248" width="22" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <!-- call activity → merge (omhoog rechts) -->
+      <bpmndi:BPMNEdge id="Edge_Flow_CA_Merge" bpmnElement="Flow_CA_Merge">
+        <di:waypoint x="660" y="320" /><di:waypoint x="734" y="320" /><di:waypoint x="734" y="224" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_3" bpmnElement="Flow_3">
+        <di:waypoint x="758" y="200" /><di:waypoint x="810" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_4" bpmnElement="Flow_4">
+        <di:waypoint x="990" y="200" /><di:waypoint x="1040" y="200" />
+      </bpmndi:BPMNEdge>
+      <!-- niet gevonden (default): omhoog naar NP+bereikbaarheid -->
+      <bpmndi:BPMNEdge id="Edge_Flow_NietGevonden" bpmnElement="Flow_NietGevonden">
+        <di:waypoint x="1064" y="176" /><di:waypoint x="1064" y="90" /><di:waypoint x="1140" y="90" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1070" y="126" width="72" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <!-- al actueel: rechts naar error end -->
+      <bpmndi:BPMNEdge id="Edge_Flow_Actueel" bpmnElement="Flow_Actueel">
+        <di:waypoint x="1088" y="200" /><di:waypoint x="1152" y="200" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1091" y="182" width="58" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <!-- historisch: omlaag naar bereikbaarheid -->
+      <bpmndi:BPMNEdge id="Edge_Flow_Historisch" bpmnElement="Flow_Historisch">
+        <di:waypoint x="1064" y="224" /><di:waypoint x="1064" y="320" /><di:waypoint x="1140" y="320" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1069" y="264" width="54" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_5" bpmnElement="Flow_5">
+        <di:waypoint x="1340" y="90" /><di:waypoint x="1402" y="90" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_6" bpmnElement="Flow_6">
+        <di:waypoint x="1340" y="320" /><di:waypoint x="1402" y="320" />
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

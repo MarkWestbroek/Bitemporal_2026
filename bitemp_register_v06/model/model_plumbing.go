@@ -159,6 +159,8 @@ type Registratie struct {
 	Registratietype            RegistratietypeEnum `json:"registratietype"`                                        // Registratie, Correctie, Ongedaanmaking
 	Tijdstip                   time.Time           `json:"tijdstip"`                                               // Het tijdstip van de registratie, correctie of ongedaanmaking
 	Opmerking                  *string             `json:"opmerking,omitempty"`                                    // optioneel veld voor extra informatie
+	Bron                       *string             `json:"bron,omitempty" bun:"bron,nullzero"`                     // bron-systeem dat de registratie initieerde (bv. "operaton", "handmatig")
+	BronKenmerk                *string             `json:"bron_kenmerk,omitempty" bun:"bron_kenmerk,nullzero"`     // kenmerk uit het bron-systeem (bv. Operaton process-instance-id)
 	CorrigeertRegistratieID    *int64              `json:"corrigeert_registratie_id,omitempty"`                    // bij correcties: verwijzing naar de registratie die gecorrigeerd wordt
 	MaaktOngedaanRegistratieID *int64              `json:"maakt_ongedaan_registratie_id,omitempty"`                // bij ongedaanmakings: verwijzing naar de registratie die ongedaan wordt gemaakt
 	IsOngedaangemaakt          bool                `json:"is_ongedaangemaakt,omitempty" bun:"is_ongedaan_gemaakt"` // afgeleid (wordt op true gezet bij een ongedaanmaking van deze registratie)

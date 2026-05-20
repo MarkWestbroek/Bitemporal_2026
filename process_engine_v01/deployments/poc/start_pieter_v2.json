@@ -1,0 +1,17 @@
+{
+  "businessKey": "inwoner-pieter-1",
+  "variables": {
+    "register_id":    { "value": "hoofdregister", "type": "String"  },
+    "locatie_id":     { "value": 1,               "type": "Long"    },
+    "np_id":          { "value": 4300,             "type": "Long"    },
+    "bsn":            { "value": "430050100",      "type": "String"  },
+    "voorletters":    { "value": "P.J.",           "type": "String"  },
+    "roepnaam":       { "value": "Pieter",         "type": "String"  },
+    "tussenvoegsel":  { "value": "de",             "type": "String"  },
+    "achternaam":     { "value": "Jong",           "type": "String"  },
+    "geboortedatum":  { "value": "1990-06-15",     "type": "String"  },
+    "einde_datum":    { "value": "2099-12-31",     "type": "String"  },
+    "ingezetene":     { "value": true,             "type": "Boolean" },
+    "opmerking":      { "value": "Nieuwe inwoner Pieter de Jong via process engine v01 (v2 flow)", "type": "String" }
+  }
+}

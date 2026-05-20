@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_RegistreerInwoner"
+                  targetNamespace="http://process-engine-v01"
+                  exporter="process-engine-v01"
+                  exporterVersion="0.1.0">
+  <bpmn:process id="registreer_inwoner" name="Registreer nieuwe inwoner" isExecutable="true" camunda:historyTimeToLive="P30D">
+
+    <bpmn:startEvent id="StartEvent_1" name="Aanmelding inwoner">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="np_id"          label="NP ID"            type="long"   defaultValue="4201" />
+          <camunda:formField id="bsn"            label="BSN"              type="string" defaultValue="123456782" />
+          <camunda:formField id="voorletters"    label="Voorletters"      type="string" defaultValue="A.M." />
+          <camunda:formField id="roepnaam"       label="Roepnaam"         type="string" defaultValue="Anna" />
+          <camunda:formField id="tussenvoegsel"  label="Tussenvoegsel"    type="string" defaultValue="van" />
+          <camunda:formField id="achternaam"     label="Achternaam"       type="string" defaultValue="Dijk" />
+          <camunda:formField id="geboortedatum"  label="Geboortedatum"    type="string" defaultValue="1985-03-12" />
+          <camunda:formField id="einde_datum"    label="Einde (max)"      type="string" defaultValue="2099-12-31" />
+          <camunda:formField id="ingezetene"     label="Ingezetene"       type="boolean" defaultValue="true" />
+          <camunda:formField id="opmerking"      label="Opmerking"        type="string" defaultValue="Aangemeld via process engine v01" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:outgoing>Flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="ServiceTask_RegistreerNP" />
+
+    <bpmn:serviceTask id="ServiceTask_RegistreerNP"
+                      name="Registreer NP in bitemp register"
+                      camunda:type="external"
+                      camunda:topic="register-call">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="register_id">hoofdregister</camunda:inputParameter>
+          <camunda:inputParameter name="endpoint">/registratie/</camunda:inputParameter>
+          <camunda:inputParameter name="registratietype">registratie</camunda:inputParameter>
+          <camunda:inputParameter name="entiteit_padnaam">natuurlijkpersoon</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="ServiceTask_RegistreerNP" targetRef="EndEvent_1" />
+
+    <bpmn:endEvent id="EndEvent_1" name="Inwoner geregistreerd">
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+    </bpmn:endEvent>
+
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="registreer_inwoner">
+      <!-- Start event -->
+      <bpmndi:BPMNShape id="Shape_StartEvent_1" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="112" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="128" y="155" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <!-- Service task -->
+      <bpmndi:BPMNShape id="Shape_ServiceTask_RegistreerNP" bpmnElement="ServiceTask_RegistreerNP">
+        <dc:Bounds x="260" y="90" width="200" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <!-- End event -->
+      <bpmndi:BPMNShape id="Shape_EndEvent_1" bpmnElement="EndEvent_1">
+        <dc:Bounds x="542" y="112" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="516" y="155" width="88" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <!-- Flows -->
+      <bpmndi:BPMNEdge id="Edge_Flow_1" bpmnElement="Flow_1">
+        <di:waypoint xmlns:di="http://www.omg.org/spec/DD/20100524/DI" x="188" y="130" />
+        <di:waypoint xmlns:di="http://www.omg.org/spec/DD/20100524/DI" x="260" y="130" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_2" bpmnElement="Flow_2">
+        <di:waypoint xmlns:di="http://www.omg.org/spec/DD/20100524/DI" x="460" y="130" />
+        <di:waypoint xmlns:di="http://www.omg.org/spec/DD/20100524/DI" x="542" y="130" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

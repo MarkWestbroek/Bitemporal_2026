@@ -1,0 +1,15 @@
+{
+  "businessKey": "inwoner-anna-1",
+  "variables": {
+    "np_id":         { "value": 4201,         "type": "Long" },
+    "bsn":           { "value": "123456782",  "type": "String" },
+    "voorletters":   { "value": "A.M.",       "type": "String" },
+    "roepnaam":      { "value": "Anna",       "type": "String" },
+    "tussenvoegsel": { "value": "van",        "type": "String" },
+    "achternaam":    { "value": "Dijk",       "type": "String" },
+    "geboortedatum": { "value": "1985-03-12", "type": "String" },
+    "einde_datum":   { "value": "2099-12-31", "type": "String" },
+    "ingezetene":    { "value": true,         "type": "Boolean" },
+    "opmerking":     { "value": "Geneste opvoer van NatuurlijkPersoon Anna van Dijk (PoC via process engine v01)", "type": "String" }
+  }
+}
