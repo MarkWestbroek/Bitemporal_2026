@@ -1,0 +1,26 @@
+# Voorbeeld-configuratie voor de Process Engine.
+#
+# Eén of meerdere bitemporele registers, elk met een eigen ID, base-URL en
+# de subset van domeinen die voor BPMN/DMN beschikbaar zijn.
+#
+# Auth-types:
+#   - none     : geen authenticatie (lokale dev)
+#   - bearer   : Bearer-token uit env-var `token_env`
+
+registers:
+  - id: hoofdregister
+    base_url: http://bitemp-v06:8082
+    auth:
+      type: none
+    domeinen:
+      - np_loc
+      - configuratie
+      - abuvwxy
+  # Voorbeeld van een tweede register op een ander adres:
+  # - id: portfolio
+  #   base_url: http://bitemp-portfolio:8082
+  #   auth:
+  #     type: bearer
+  #     token_env: BITEMP_PORTFOLIO_TOKEN
+  #   domeinen:
+  #     - cg

@@ -1,0 +1,15 @@
+# Build artefacten
+/process-engine
+/process-engine.exe
+/dist/
+
+# Go cache
+/.gocache/
+
+# IDE
+.vscode/
+.idea/
+
+# Lokale env
+.env
+.env.local

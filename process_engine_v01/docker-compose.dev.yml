@@ -1,0 +1,40 @@
+# Dev/test-override: laat de aparte process-engine-db weg en wijs Operaton
+# naar de Postgres-instantie van het bitemp register, met een aparte database
+# `operaton` daarin.
+#
+# Gebruik:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# Vereiste:
+#   De Postgres-container van bitemp_register_v06 draait en is bereikbaar
+#   op het netwerk `bitemp_default` (of pas onderstaand aan).
+#   In die instantie moet een database `operaton` met user `operaton`
+#   bestaan; aanmaken bv. via:
+#     docker exec -it <bitemp-pg> psql -U postgres -c \
+#       "CREATE USER operaton WITH PASSWORD 'operaton'; \
+#        CREATE DATABASE operaton OWNER operaton;"
+
+services:
+
+  process-engine-db:
+    # In dev-profiel niet starten: we gebruiken de Postgres van het register.
+    profiles: ["never"]
+
+  operaton:
+    environment:
+      DB_DRIVER: org.postgresql.Driver
+      DB_URL: jdbc:postgresql://bitemp-pg:5432/operaton
+      DB_USERNAME: operaton
+      DB_PASSWORD: operaton
+      WAIT_FOR: bitemp-pg:5432
+    networks:
+      - bitemp_default
+    depends_on: []
+
+  process-engine:
+    networks:
+      - bitemp_default
+
+networks:
+  bitemp_default:
+    external: true
