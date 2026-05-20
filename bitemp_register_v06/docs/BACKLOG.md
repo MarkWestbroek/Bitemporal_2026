@@ -1207,32 +1207,38 @@ Toegevoegd 2026-05-21 — externe integratie via BPMN-workfloworkestratie boveno
 | # | Item | Status |
 |---|------|--------|
 | PE1 | Operaton 2.1.0 als Docker-sidecar met eigen PostgreSQL-backend | ✅ |
-| PE2 | Go external-task worker v2 (long-poll, 5 topics) | ✅ |
-| PE3 | BPMN v2: egistreer_inwoner_v2 — multi-branch locatie+NP-flow | ✅ |
+| PE2 | Go external-task worker v2 (long-poll, **6 topics**) | ✅ |
+| PE3 | BPMN v2: 
+egistreer_inwoner_v2 — multi-branch locatie+NP-flow | ✅ |
 | PE4 | check-locatie topic — GET /full/locaties/{id} met estaat/ctueel variabelen | ✅ |
 | PE5 | check-np topic — GET /full/natuurlijk_personen/{id} met 
 p_bestaat/
 p_actueel | ✅ |
-| PE6 | egistreer-np-bereikbaarheid topic — nieuw NP + bereikbaarheid in 1 registratie | ✅ |
-| PE7 | egistreer-bereikbaarheid topic — alleen bereikbaarheid (NP bestaat al, historisch) | ✅ |
+| PE6 | 
+egistreer-np-bereikbaarheid topic — nieuw NP + bereikbaarheid in 1 registratie | ✅ |
+| PE7 | 
+egistreer-bereikbaarheid topic — alleen bereikbaarheid (NP bestaat al, historisch) | ✅ |
 | PE8 | ron/ron_kenmerk Operaton-provenance in elke registratie (zie B32) | ✅ |
 
 ### Openstaand / toekomstig
 
 | # | Item | Prio |
 |---|------|------|
-| PE9 | CallActivity egistreer_locatie sub-process deployen (locatie bestaat niet-pad) | Hoog |
+| PE9 | CallActivity registreer_locatie sub-process deployen (locatie bestaat niet-pad) | ✅ |
 | PE10 | Error-handling op AL_INWONER BPMN-fout (persoon al geregistreerd als actueel inwoner) | Hoog |
 | PE11 | DMN-tabel voor beslissingslogica (bijv. welk bereikbaarheidstype) | Midden |
 | PE12 | CMMN / ad-hoc taken voor niet-gestructureerde gemeenteprocessen | Laag |
 | PE13 | Worker-retry-strategie voor transiënte fouten (HTTP 5xx, timeout) — nu 0 retries bij zakelijke fout | Hoog |
 | PE14 | BSN-generatie in testdata-helpers (geldige 11-proef BSN's) | Laag |
 | PE15 | Operaton Cockpit Tasklist koppelen aan bitemp-formulieren | Laag |
+| PE16 | Landen-referentielijst vullen (nu leeg); land=0 is tijdelijke waarde in locatie-adres | Midden |
 
 ### Referentie
 
 - process_engine_v01/README.md — volledige architectuurbeschrijving, worker-setup, smoke-test resultaten
-- process_engine_v01/deployments/poc/registreer_inwoner_v2.bpmn — BPMN v2 definitie
-- process_engine_v01/internal/worker/service_task.go — external-task worker implementatie
+- process_engine_v01/deployments/poc/registreer_inwoner_v2.bpmn — BPMN v2 definitie (versie 2, met locatie-adresvelden + camunda:in/out)
+- process_engine_v01/deployments/poc/registreer_locatie.bpmn — CallActivity sub-proces
+- process_engine_v01/deployments/poc/start_locatie_nieuw.json — testpayload voor locatie_bestaat=false pad
+- process_engine_v01/internal/worker/service_task.go — external-task worker implementatie (6 topics)
 - Padnamen: zie MetaRegistry — altijd snake_case + meervoud (bijv. locaties, 
 atuurlijk_personen)

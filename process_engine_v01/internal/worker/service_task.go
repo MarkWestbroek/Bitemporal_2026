@@ -75,6 +75,7 @@ var allTopics = []string{
 	"register-call",
 	"check-locatie",
 	"check-np",
+	"registreer-locatie",
 	"registreer-np-bereikbaarheid",
 	"registreer-bereikbaarheid",
 }
@@ -140,6 +141,9 @@ func dispatch(ctx context.Context, httpc *http.Client, cfg Config, t lockedTask,
 	case "check-np":
 		// padnaam in metaregistry: "natuurlijk_personen"
 		handleCheckEntiteit(ctx, httpc, cfg, t, "np_id", "natuurlijk_personen", "np", logger)
+	case "registreer-locatie":
+		// Sub-proces: maak nieuwe locatie aan (aangeroepen via CallActivity)
+		handleRegistreer(ctx, httpc, cfg, t, "locatie", logger)
 	case "registreer-np-bereikbaarheid":
 		handleRegistreer(ctx, httpc, cfg, t, "np_bereikbaarheid", logger)
 	case "registreer-bereikbaarheid":
@@ -233,6 +237,8 @@ func handleRegistreer(ctx context.Context, httpc *http.Client, cfg Config, t loc
 		err     error
 	)
 	switch actie {
+	case "locatie":
+		payload, err = bouwLocatiePayload(t)
 	case "np_bereikbaarheid":
 		payload, err = bouwNPBereikbaarheidPayload(t)
 	case "bereikbaarheid":
@@ -376,6 +382,65 @@ func bouwBereikbaarheidPayload(t lockedTask) (map[string]any, error) {
 		"wijzigingen": []any{
 			map[string]any{"opvoer": map[string]any{
 				"bereikbaarheid": bereikbaarheidOpvoer(npID, locatieID, 1, vandaag),
+			}},
+		},
+	}, nil
+}
+
+// bouwLocatiePayload: registreer een nieuwe locatie met optioneel een adres-GE.
+// Variabelen uit procescontext:
+//   - locatie_id  (Long)   — entity-ID voor de nieuwe locatie
+//   - straatnaam  (String) — straatnaam voor het adres (optioneel, maar aanbevolen)
+//   - huisnummer  (String) — huisnummer (optioneel)
+//   - postcode    (String) — NL-postcode, bijv. "1234AB" (optioneel)
+//   - gemeente_id (Long)   — ID uit de gemeentenlijst (default 0 als niet opgegeven)
+//   - opmerking   (String) — toelichting op de registratie
+//
+// Let op: de landen-referentielijst is leeg in de PoC. Het veld land=0
+// is een tijdelijke waarde; dit kan gecorrigeerd worden zodra land-data is geladen.
+func bouwLocatiePayload(t lockedTask) (map[string]any, error) {
+	locatieID, err := varInt64(t, "locatie_id")
+	if err != nil {
+		return nil, fmt.Errorf("locatie_id: %w", err)
+	}
+	straatnaam, _ := varString(t, "straatnaam")
+	huisnummer, _ := varString(t, "huisnummer")
+	postcode, _ := varString(t, "postcode")
+	gemeenteID, _ := varInt64(t, "gemeente_id")
+	opmerking, _ := varString(t, "opmerking")
+	vandaag := time.Now().Format("2006-01-02")
+
+	locatie := map[string]any{
+		"id": int(locatieID),
+		// Materieel: aanvang op vandaag (kan later gecorrigeerd worden)
+		"aanvang": map[string]any{
+			"locatie_id": int(locatieID),
+			"datum":      vandaag,
+		},
+	}
+
+	// Voeg adres-GE toe als straatnaam beschikbaar is
+	if straatnaam != "" {
+		adres := map[string]any{
+			"locatie_id": int(locatieID),
+			"rel_id":     1,
+			"straatnaam": straatnaam,
+			"huisnummer": huisnummer,
+			"gemeente":   int(gemeenteID),
+			// landen-tabel is leeg in PoC: land=0 als tijdelijke waarde
+			"land": 0,
+		}
+		if postcode != "" {
+			adres["postcode"] = postcode
+		}
+		locatie["adressen"] = []any{adres}
+	}
+
+	return map[string]any{
+		"registratie": registratieHeader("registratie", opmerking),
+		"wijzigingen": []any{
+			map[string]any{"opvoer": map[string]any{
+				"locatie": locatie,
 			}},
 		},
 	}, nil

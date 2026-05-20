@@ -1,0 +1,21 @@
+{
+  "variables": {
+    "register_id":   { "value": "hoofdregister", "type": "String" },
+
+    "locatie_id":    { "value": 9001, "type": "Long" },
+    "straatnaam":    { "value": "Teststraat", "type": "String" },
+    "huisnummer":    { "value": "42", "type": "String" },
+    "postcode":      { "value": "1234AB", "type": "String" },
+    "gemeente_id":   { "value": 1680, "type": "Long" },
+
+    "np_id":         { "value": 5001, "type": "Long" },
+    "bsn":           { "value": "123456782", "type": "String" },
+    "voorletters":   { "value": "K.L.", "type": "String" },
+    "roepnaam":      { "value": "Karel", "type": "String" },
+    "tussenvoegsel": { "value": "de", "type": "String" },
+    "achternaam":    { "value": "Vries", "type": "String" },
+    "geboortedatum": { "value": "1978-07-04", "type": "String" },
+    "ingezetene":    { "value": true, "type": "Boolean" },
+    "opmerking":     { "value": "Smoke-test locatie_bestaat=false branch: registreer_locatie sub-proces", "type": "String" }
+  }
+}

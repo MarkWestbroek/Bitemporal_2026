@@ -16,6 +16,7 @@ type Locatie_Adres_Input struct {
 	Huisnummer string  `json:"huisnummer"`
 	Postcode   *string `json:"postcode,omitempty"`
 	Gemeente   int     `json:"gemeente"`
+	Plaats     *string `json:"plaats,omitempty"`
 	Land       int     `json:"land"`
 }
 

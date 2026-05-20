@@ -41,6 +41,12 @@
         <camunda:formData>
           <camunda:formField id="register_id"    label="Register ID"       type="string"  defaultValue="hoofdregister" />
           <camunda:formField id="locatie_id"     label="Locatie ID"        type="long"    defaultValue="1" />
+          <!-- Adresvelden: alleen gebruikt wanneer locatie_bestaat=false (CallActivity RegistreerLocatie) -->
+          <camunda:formField id="straatnaam"     label="Straatnaam"        type="string"  defaultValue="Hoofdstraat" />
+          <camunda:formField id="huisnummer"     label="Huisnummer"        type="string"  defaultValue="1" />
+          <camunda:formField id="postcode"       label="Postcode"          type="string"  defaultValue="1234AB" />
+          <camunda:formField id="gemeente_id"    label="Gemeente ID"       type="long"    defaultValue="1680" />
+          <!-- NP-velden -->
           <camunda:formField id="np_id"          label="NP ID"             type="long"    defaultValue="4201" />
           <camunda:formField id="bsn"            label="BSN"               type="string"  defaultValue="123456782" />
           <camunda:formField id="voorletters"    label="Voorletters"       type="string"  defaultValue="A.M." />
@@ -75,6 +81,12 @@
     <bpmn:callActivity id="CallActivity_RegistreerLocatie"
                        name="Registreer locatie&#10;(sub-proces)"
                        calledElement="registreer_locatie">
+      <bpmn:extensionElements>
+        <!-- Geef alle processvariabelen door aan het sub-proces -->
+        <camunda:in variables="all"/>
+        <!-- Haal alle uitkomstvariabelen terug uit het sub-proces -->
+        <camunda:out variables="all"/>
+      </bpmn:extensionElements>
       <bpmn:incoming>Flow_GW_Nee</bpmn:incoming>
       <bpmn:outgoing>Flow_CA_Merge</bpmn:outgoing>
     </bpmn:callActivity>

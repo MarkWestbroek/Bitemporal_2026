@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  registreer_locatie.bpmn — Sub-proces: Registreer een nieuwe locatie
+  Process Engine v01 PoC
+
+  Dit sub-proces wordt als CallActivity aangeroepen vanuit registreer_inwoner_v2
+  wanneer de gevraagde locatie nog niet in het register bestaat.
+
+  Flow:
+    1. Start (geen formulier — variabelen komen via camunda:in vanuit de aanroeper)
+    2. ServiceTask "registreer-locatie": POST /registratie/ met Locatie + Adres-GE
+    3. End — locatie_id is nu aanwezig in het register
+
+  Variabelen verwacht (van parent via <camunda:in variables="all"/>):
+    - register_id    (String)  — register waartegen geregistreerd wordt
+    - locatie_id     (Long)    — gewenste entity-ID voor de nieuwe locatie
+    - straatnaam     (String)  — straatnaam van het adres
+    - huisnummer     (String)  — huisnummer
+    - postcode       (String)  — postcode (NL-formaat, bijv. "1234AB")
+    - gemeente_id    (Long)    — ID van de gemeente (uit de gemeentenlijst)
+    - opmerking      (String)  — doorgegeven aan de registratie
+-->
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_RegistreerLocatie"
+                  targetNamespace="http://process-engine-v01"
+                  exporter="process-engine-v01"
+                  exporterVersion="0.1.0">
+
+  <bpmn:process id="registreer_locatie" name="Registreer locatie" isExecutable="true" camunda:historyTimeToLive="P30D">
+
+    <!-- ═══════════════════ START ═══════════════════ -->
+    <!-- Geen formulier: variabelen worden doorgegeven via camunda:in van aanroeper -->
+    <bpmn:startEvent id="StartEvent_Locatie" name="Locatie&#10;opvragen">
+      <bpmn:outgoing>Flow_L1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <!-- ═══════════════════ SERVICE TASK: REGISTREER LOCATIE ═══════════════════ -->
+    <bpmn:serviceTask id="ServiceTask_RegistreerLocatie"
+                      name="Registreer locatie&#10;in register"
+                      camunda:type="external"
+                      camunda:topic="registreer-locatie">
+      <bpmn:incoming>Flow_L1</bpmn:incoming>
+      <bpmn:outgoing>Flow_L2</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- ═══════════════════ END ═══════════════════ -->
+    <bpmn:endEvent id="EndEvent_LocatieGeregistreerd" name="Locatie&#10;geregistreerd">
+      <bpmn:incoming>Flow_L2</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- ═══════════════════ SEQUENCE FLOWS ═══════════════════ -->
+    <bpmn:sequenceFlow id="Flow_L1" sourceRef="StartEvent_Locatie"          targetRef="ServiceTask_RegistreerLocatie" />
+    <bpmn:sequenceFlow id="Flow_L2" sourceRef="ServiceTask_RegistreerLocatie" targetRef="EndEvent_LocatieGeregistreerd" />
+
+  </bpmn:process>
+
+  <!-- ═══════════════════ DIAGRAM (BPMNDI) ═══════════════════ -->
+  <bpmndi:BPMNDiagram id="BPMNDiagram_Locatie">
+    <bpmndi:BPMNPlane id="BPMNPlane_Locatie" bpmnElement="registreer_locatie">
+
+      <!-- Start -->
+      <bpmndi:BPMNShape id="Shape_StartEvent_Locatie" bpmnElement="StartEvent_Locatie">
+        <dc:Bounds x="152" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="132" y="225" width="76" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- ServiceTask: Registreer locatie -->
+      <bpmndi:BPMNShape id="Shape_ST_RegistreerLocatie" bpmnElement="ServiceTask_RegistreerLocatie">
+        <dc:Bounds x="240" y="160" width="200" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- End -->
+      <bpmndi:BPMNShape id="Shape_EndEvent_Locatie" bpmnElement="EndEvent_LocatieGeregistreerd">
+        <dc:Bounds x="492" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="472" y="225" width="76" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Flows -->
+      <bpmndi:BPMNEdge id="Edge_L1" bpmnElement="Flow_L1">
+        <di:waypoint x="188" y="200" /><di:waypoint x="240" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_L2" bpmnElement="Flow_L2">
+        <di:waypoint x="440" y="200" /><di:waypoint x="492" y="200" />
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+
+</bpmn:definitions>
