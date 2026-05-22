@@ -85,14 +85,14 @@ classDiagram
     }
 
     class handleCheckEntiteit {
-        <<topic: check-locatie / check-np>>
-        +GET /full/{pad}/{id}
+        <<check-locatie en check-np>>
+        +getFullEntiteit(pad, id) bool
         +complete(bestaat, actueel)
     }
 
     class handleRegistreer {
-        <<topic: registreer-*>>
-        +POST /registratie/
+        <<registreer-locatie, registreer-np, etc.>>
+        +postRegistratie(payload)
         +complete(registratie_id)
     }
 
