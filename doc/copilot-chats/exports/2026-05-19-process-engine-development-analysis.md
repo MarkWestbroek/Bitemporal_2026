@@ -2,7 +2,70 @@
 
 - **Datum**: 2026-05-19 18:47
 - **Sessie-ID**: `5022d490-be55-478b-8fc4-3081f4798ea2`
-- **Berichten**: 29
+- **Berichten**: 31
+
+---
+
+## 🧑 User
+
+# Process Engine
+I would like to have a process engine that is flexible enough to configure
+- BPMN
+- DMN
+- CMMI
+and use these action-definitions in relation to each other.
+
+I know open source tools like Operaton and Valtimo (not sure that is open source) (Camunda spin-off(s) after it went closed source) exist. I could work on top of them if that pays off.
+
+Important is that:
+- the complete BPMN definition is implemented, including sub-process and call-activity
+- data can be linked to a canonical data model, e.g. the type of metamodels we make in this project
+- DMN can use this REPs and their velden / afgeleide velden as input
+- DMN output can be defined in terms of the same data types, enums and reflistitems as we use in the canonical model
+- processes can use this data definitions in the same manner and also produce data in the same canonical model language via the input and output event definitions and within the process when delegating service tasks to APIs
+- script tasks can use one or more script languages and data can be used in the same way we use it in CEL expressions in derived fields, or expressions in our form definitions
+
+The reason that I would like to include CMMI, but not necessairily exactly CMMI is that:
+- we often have context tasks, that van be executed at any time
+- they may be modeled via ad hoc processes or in other ways, but in fact, I think they just don't obey the process axioma. They are context tasks, that respond to events or data state. Or are user related.
+- examples:
+  - ask a colleague a question about this case
+  - delegate a task to a third party (can be modelled in the process, but some tasks just are always possible)
+  - ask for a review
+  - attach client feedback to a case (at almost any moment)
+
+Can you analyse the trade-off between working on top of these or bravely starting our own engine?
+
+---
+
+## 🤖 Assistant
+
+# Trade-off: bouwen op een bestaande engine vs. zelf bouwen
+
+Voordat ik een plan maak: hier is mijn analyse. Dit is een denkstuk om op te reageren, geen voorgenomen plan.
+
+## Het landschap (kort)
+
+| Engine | BPMN | DMN | Case/ad-hoc | Stack | Licentie | Status |
+|---|---|---|---|---|---|---|
+| **Operaton** | volledig (C7-fork) | volledig (FEEL) | CMMN aanwezig (legacy) | JVM/Spring | Apache 2.0 | Actief, community-fork na Camunda 7 EOL |
+| **Camunda 7 CE** | volledig | volledig | CMMN | JVM | Apache 2.0 (EOL okt 2025) | End-of-life — niet starten |
+| **Camunda 8 / Zeebe** | volledig | apart (DMN-engine) | géén CMMN | JVM + gRPC | Camunda License (source-available, niet OSS) | Actief, cloud-first |
+| **Flowable CE** | volledig | volledig | CMMN | JVM | Apache 2.0 | Actief |
+| **Valtimo** | bovenop Camunda/Flowable | via onder | ja (case-mgmt opinionated) | JVM/Kotlin + Angular | EUPL/LGPL-achtig | Actief, NL-overheid georiënteerd |
+| **jBPM / Activiti** | volledig | volledig | wisselend | JVM | Apache 2.0 | Activiti rustig, jBPM (KIE) actief |
+| **Go-native** (bv. shar, temporal-bpmn-experimenten) | beperkt/onvolwassen | nee/beperkt | nee | Go | varieert | Geen serieuze kandidaat voor productie |
+
+Belangrijke realiteit: **er is geen volwassen Go-native BPMN+DMN+CMMN-engine**. Alle serieuze opties zijn JVM. CMMN is door OMG/Camunda effectief afgeschreven; Camunda 8 ondersteunt het bewust niet meer.
+
+## Past dit bij jullie wensen?
+
+Je vereisten gemapt op de opties:
+
+1. **Volledige BPMN incl. sub-process & call-activity** — Operaton/Flowable/Camunda hebben dit allemaal native. Zelfbouw = jaren werk om dezelfde dekking te krijgen (boundary events, compensation, multi-instance, escalation, message correlation, timers).
+2. **Data gekoppeld aan canoniek (MetaRegistry) model** — geen enkele engine doet dit out-of-the-box. Process-variabelen zijn typisch JSON/POJO. Dit is hoe dan ook integratie-werk, ongeacht engine-keuze. Hetzelfde geldt voor 5 en 6.
+3. **DMN met REPs/velden/afgeleide velden als input** — FEEL accepteert objecten/contexten; je voert gewoon je REP-snapshot in. Output mappen naar jullie types/enums/reflistitems vergt een adapterlaag — vergelijkbaar werk in elke engine.
+4. **Script tasks met meerdere talen** — Operaton/Flowable ondersteunen JSR-223 (JavaScript/Groovy/Python via GraalVM/Nashorn). CEL kun je als custom script-engine 
 
 ---
 
@@ -267,6 +330,10 @@ Geef antwoord op (in elk geval) 1, 2 en 5, dan schrijf ik een concreet plan met 
 
 ## 🤖 Assistant
 
+
+
+*Created memory file plan.md*
+
 ## Plan: Process Engine — UML-BPMN-DMN driehoek met Operaton sidecar
 
 PoC waarin **Operaton** (Camunda 7-fork, Apache 2.0) als JVM-sidecar BPMN+DMN draait, een dunne Go-gateway de brug vormt naar de bestaande MetaRegistry/handlers, **CEL via external-task-pattern** in Go wordt uitgevoerd, en context-/ad-hoc taken in een **eigen lichte Go-laag** leven (geen CMMN). **Camunda Modeler wordt hergebruikt** — Operaton consumeert dezelfde standaard `.bpmn`/`.dmn` XML 1-op-1 (het is een directe fork van Camunda 7 CE).
@@ -294,9 +361,9 @@ PoC waarin **Operaton** (Camunda 7-fork, Apache 2.0) als JVM-sidecar BPMN+DMN dr
 
 - `bitemp_register_v06/docker-compose.process.yml` — nieuw.
 - `bitemp_register_v06/processengine/` — nieuw pakket: `client.go`, `gateway.go`, `variables.go`, `dmn.go`, `worker/service_task.go`, `worker/cel_script.go`.
--  — registreer `/api/process/*` en `/api/context_taak/*`.
+- `addroutes.go` — registreer `/api/process/*` en `/api/context_taak/*`.
 - `bitemp_register_v06/model/proces_*.go` — codegen-output (uit `proces_model.json`) voor de twee context-taak REPs.
--  — start gateway + workers in dezelfde binary.
+- `main.go` — start gateway + workers in dezelfde binary.
 - Hergebruik: bestaande CEL-evaluator, `handlers/`, `model/v3_format.go`, MetaRegistry.
 - `bitemp_register_v06/docs/PROCESS_ENGINE.md` — nieuw, driehoek + contracten.
 
@@ -304,7 +371,7 @@ PoC waarin **Operaton** (Camunda 7-fork, Apache 2.0) als JVM-sidecar BPMN+DMN dr
 
 PoC-scenario: BPMN met service-task + sub-process + call-activity + user-task + business-rule-task → DMN; daarnaast één CEL script-task en één tijdens-het-proces gestarte context-taak.
 
-1. `go build .` en `go test .` groen.
+1. `go build `Git`.` en `go test .` groen.
 2. `docker compose -f docker-compose.process.yml up` clean.
 3. Camunda Modeler roundtrip: open → edit → redeploy via gateway → run.
 4. End-to-end run via Postman-collectie; procesvariabelen blijven typed door de pipeline.
@@ -330,7 +397,7 @@ PoC-scenario: BPMN met service-task + sub-process + call-activity + user-task + 
 
 ---
 
-Plan staat in  is jouw plek; ik heb een werkversie in session-memory gezet (`/memories/session/plan.md`). Wil je dat ik 'm ook in dat openstaande markdown-bestand schrijf? En wat is je voorkeur op de drie verdere overwegingen — vooral #1 (BPMN-scope) en #2 (snapshot vs. handle)?
+Plan staat in `2026-05-19 Process Engine.md` is jouw plek; ik heb een werkversie in session-memory gezet (`/memories/session/plan.md`). Wil je dat ik 'm ook in dat openstaande markdown-bestand schrijf? En wat is je voorkeur op de drie verdere overwegingen — vooral #1 (BPMN-scope) en #2 (snapshot vs. handle)?
 
 ---
 
@@ -373,9 +440,72 @@ Als je tijd hebt mag je die contracten er wel bij doen. Het kan parallel zelfs d
 
 ## 🤖 Assistant
 
-Ik gebruik de officiële Docker image — geen reden voor een PoC om zelf te builden, en Operaton publiceert nette images op Docker Hub. Laat me dat even verifiëren en dan parallel het skelet + contracten opzetten. Operaton's nieuwste stable is `2.1.0` (gepubliceerd 26 dagen geleden, ook getagd als `latest`). Ik pin op `2.1.0` — geen reden om zelf te builden voor een PoC.
+Ik gebruik de officiële Docker image — geen reden voor een PoC om zelf te builden, en Operaton publiceert nette images op Docker Hub. Laat me dat even verifiëren en dan parallel het skelet + contracten opzetten. 
 
-Nu het skelet plus contracten in één keer:  Nu een sanity-build om te bevestigen dat het skelet compileert:  Schoon. Skelet bouwt en vet'tet zonder fouten.
+*Fetched https://hub.docker.com/r/operaton/operaton/tags*
+
+
+
+*Fetched https://hub.docker.com/r/operaton/operaton/tags · Read go.mod, lines 1 to 10*
+
+
+
+*Read go.mod, lines 1 to 10*
+
+Operaton's nieuwste stable is `2.1.0` (gepubliceerd 26 dagen geleden, ook getagd als `latest`). Ik pin op `2.1.0` — geen reden om zelf te builden voor een PoC.
+
+Nu het skelet plus contracten in één keer:  
+
+*Created go.mod · Created main.go · Created registry.go · Created router.go*
+
+
+
+<details>
+<summary><em>Created client.go</em> (+9 meer)</summary>
+
+- Created client.go
+- Created variables.go
+- Created resolver.go
+- Created service_task.go
+- Created cel_script.go
+- Created evaluator.go
+- Created registers.yaml
+- Created Dockerfile
+- Created docker-compose.yml
+- Created docker-compose.dev.yml
+</details>
+
+
+
+*Created README.md*
+
+
+
+<details>
+<summary><em>Created go.mod</em> (+18 meer)</summary>
+
+- Created go.mod
+- Created main.go
+- Created registry.go
+- Created router.go
+- Created client.go
+- Created variables.go
+- Created resolver.go
+- Created service_task.go
+- Created cel_script.go
+- Created evaluator.go
+- Created registers.yaml
+- Created Dockerfile
+- Created docker-compose.yml
+- Created docker-compose.dev.yml
+- Created README.md
+- Created CONTRACTEN.md
+- Created MODELER_TEMPLATES.md
+- Created README.md
+- Created .gitignore
+</details>
+
+Nu een sanity-build om te bevestigen dat het skelet compileert:  Schoon. Skelet bouwt en vet'tet zonder fouten.
 
 ## Wat staat er nu
 
@@ -446,7 +576,7 @@ process_engine_v01/
 - **Engine-port**: `:8090` (vermijdt conflict met v06's `:8082` en Operaton's `:8080`).
 - **Geen externe Go-deps in skelet**: alleen stdlib, zodat het skelet zonder `go mod tidy`/netwerk bouwt. Gin/yaml-parser/HTTP-clients komen in Fase 1/2 erbij.
 - **Dev-profiel** verwacht extern netwerk `bitemp_default` en een database `operaton` in de bestaande Postgres — instructies in de compose-file.
-- **Contracten** zijn volledig uitgeschreven in : procesvariabele (handle vs inline vs scalar/enum/reflist), service-task (external-task topics), DMN-IO (typeRef-conventie naar MetaRegistry), CEL script-task.
+- **Contracten** zijn volledig uitgeschreven in `CONTRACTEN.md`: procesvariabele (handle vs inline vs scalar/enum/reflist), service-task (external-task topics), DMN-IO (typeRef-conventie naar MetaRegistry), CEL script-task.
 
 ## Volgende stap
 
@@ -466,20 +596,38 @@ Verder helemaal okee, en ik ben benieuwd naar een hello world!
 
 ## 🤖 Assistant
 
-Goed — "gegevenstypen" zit in het `register`-domein als `V3Datatype`-entries in de  (MIM-aligned: KorteTekst, LangeTekst, AN40/200, Geheel, Decimaal, …) met additieve uitbreidingen per domein (CG: URL, Emailadres, Telefoonnummer, GitAdres). API-endpoint: `/api/viz/schema/datatypes`. Ik werk de contracten bij.  
-```
 
-```
+
+*Searched for regex `gegevenstype|datatype_registry|DatatypeRegistry` (`**/bitemp_register_v06/**/*.go`), 40 results · Searched for text `V3Datatype` (`**/bitemp_register_v06/model/cg_datatype_registry.go`), 4 results · Read cg_datatype_registry.go*
+
+
+
+<details>
+<summary><em>Searched for regex `gegevenstype|datatype_registry|DatatypeRegistry` (`**/bitemp_register_v06/**/*.go`), 40 results</em> (+7 meer)</summary>
+
+- Searched for regex `gegevenstype|datatype_registry|DatatypeRegistry` (`**/bitemp_register_v06/**/*.go`), 40 results
+- Searched for text `V3Datatype` (`**/bitemp_register_v06/model/cg_datatype_registry.go`), 4 results
+- Read cg_datatype_registry.go
+- Searched for text `Domein:` (`**/bitemp_register_v06/model/*_datatype_registry.go`), 10 results
+- Read register_datatype_registry.go, lines 1 to 60
+- Searched for regex `DatatypeRegistry|datatypes` (`**/bitemp_register_v06/handlers/**/*.go`), 7 results
+- Searched for text `VizSchemaDatatypes` (`**/bitemp_register_v06/routes/**/*.go`), no results
+- Searched for text `MaakVizSchemaDatatypesHandler` (`**/bitemp_register_v06/**/*.go`), 3 results
+</details>
+
+Goed — "gegevenstypen" zit in het `register`-domein als `V3Datatype`-entries in de `DatatypeRegistry` (MIM-aligned: KorteTekst, LangeTekst, AN40/200, Geheel, Decimaal, …) met additieve uitbreidingen per domein (CG: URL, Emailadres, Telefoonnummer, GitAdres). API-endpoint: `/api/viz/schema/datatypes`. Ik werk de contracten bij.  
 Contracten zijn bijgewerkt: lowercase Nederlandse codes (`man`, `nl`, `ja`, `nee`), en datatypes verwijzen nu expliciet naar het `register`-domein als generieke gegevenstypen-bron + additieve domein-uitbreidingen, met `/api/viz/schema/datatypes` als API-endpoint.
 
 Nu hello-world. Eerst Docker check, dan compose up:   Voor hello-world brengen we alleen Operaton + Postgres omhoog — de Go-engine container is voor later. Dit kan even duren door de image-pulls (~280MB Operaton, ~250MB Postgres):   Operaton draait. Nu een hello-world BPMN deployen en starten: 
-```
 
-```
+*Created hello_world.bpmn*
 
-```
 
-```
+
+
+*Created hello_world.bpmn*
+
+
 Gedeployed. Nu instantie starten en de user-task afhandelen:   End-to-end groen. Hello-world draait:
 
 - **Deployed**: `hello_world` v1
@@ -501,7 +649,7 @@ Operaton vereist standaard `camunda:historyTimeToLive` op elk `<bpmn:process>` (
 
 ## Waar staan we
 
- is opgeslagen. CONTRACTEN.md is bijgewerkt met lowercase Nederlandse codes en verwijzing naar  / `/api/viz/schema/datatypes` per register.
+`hello_world.bpmn` is opgeslagen. CONTRACTEN.md is bijgewerkt met lowercase Nederlandse codes en verwijzing naar `DatatypeRegistry` / `/api/viz/schema/datatypes` per register.
 
 ## Volgende logische stap
 
@@ -588,9 +736,6 @@ Twee dingen zijn zichtbaar:
 2. **"No process instances"** — de instantie is al voltooid (history), actieve filter toont alleen lopende. Dat klopt.
 
 Fix: BPMN opnieuw deployen met een volledige diagram-sectie (coördinaten voor alle shapes/edges). Dan verschijnt ook de rode/groene doorloop-visualisatie in Cockpit. 
-```
-
-```
 Version 2 gedeployed. Nu nog een testinstantie starten zodat je ook in de Cockpit-history iets met het diagram kan zien:     De tweede run faalt correct op een duplicate-key (NP 4201 bestaat al) — precies zoals je zou verwachten. Goed teken: de error-flow werkt ook.
 
 Nu naar de Cockpit. Doe het volgende:
@@ -616,27 +761,124 @@ Ik zou het proces wel iets ingewikkelder willen maken, zie md. Kun je daar een b
 
 ## 🤖 Assistant
 
-Goed plan. Even checken hoe bereikbaarheid en locatie eruitzien in v06 voordat ik de BPMN en worker bouw:  Nu heb ik het complete beeld. Ik doe dit in één ronde:
 
-1. **v06**: `bron` + `bron_kenmerk` toevoegen aan  struct + DB-migratie
+
+*Asked a question (Welk md-bestand?)*
+
+
+
+*Searched for files matching `**/process_engine_v01/docs/**/*.md`, 4 matches · Read registreer nwe inwoner.md*
+
+
+
+*Searched for text `Registratie struct` (`**/bitemp_register_v06/model/model_plumbing.go`), 2 results · Read registreer nwe inwoner.md · Read model_plumbing.go, lines 150 to 210*
+
+
+
+<details>
+<summary><em>Searched for files matching `**/process_engine_v01/docs/**/*.md`, 4 matches</em> (+4 meer)</summary>
+
+- Searched for files matching `**/process_engine_v01/docs/**/*.md`, 4 matches
+- Read registreer nwe inwoner.md
+- Searched for text `Registratie struct` (`**/bitemp_register_v06/model/model_plumbing.go`), 2 results
+- Read registreer nwe inwoner.md
+- Read model_plumbing.go, lines 150 to 210
+</details>
+
+Goed plan. Even checken hoe bereikbaarheid en locatie eruitzien in v06 voordat ik de BPMN en worker bouw:  
+
+*Searched for regex `Bereikbaarheid|bereikbaarheid` (`**/bitemp_register_v06/model/**`), 20 results · Searched for regex `type Locatie struct|type NatuurlijkPersoon struct` (`**/bitemp_register_v06/model/**`), 2 results · Read np_loc_modellen_ge_rel.go, lines 90 to 238 · Read np_loc_modellen_input.go, lines 60 to 75*
+
+
+
+<details>
+<summary><em>Searched for text `RegistreerRequest` (`**/bitemp_register_v06/model/model_plumbing.go`), no results</em> (+6 meer)</summary>
+
+- Searched for text `RegistreerRequest` (`**/bitemp_register_v06/model/model_plumbing.go`), no results
+- Searched for regex `CREATE TABLE registratie|registratie_table` (`**/bitemp_register_v06/dbsetup/**`), no results
+- Searched for text `RegistreerRequest` (`**/bitemp_register_v06/**`), 20 results
+- Searched for regex `registratie` (`**/bitemp_register_v06/dbsetup/**`), 20 results
+- Searched for regex `registratie|CREATE TABLE` (`**/bitemp_register_v06/dbsetup/createtables.go`), 12 results
+- Read REST request models.go, lines 1 to 45
+- Read createtables.go, lines 60 to 110
+</details>
+
+
+
+*Read registration_core.go, lines 78 to 130*
+
+
+
+<details>
+<summary><em>Searched for regex `Bereikbaarheid|bereikbaarheid` (`**/bitemp_register_v06/model/**`), 20 results</em> (+11 meer)</summary>
+
+- Searched for regex `Bereikbaarheid|bereikbaarheid` (`**/bitemp_register_v06/model/**`), 20 results
+- Searched for regex `type Locatie struct|type NatuurlijkPersoon struct` (`**/bitemp_register_v06/model/**`), 2 results
+- Read np_loc_modellen_ge_rel.go, lines 90 to 238
+- Read np_loc_modellen_input.go, lines 60 to 75
+- Searched for text `RegistreerRequest` (`**/bitemp_register_v06/model/model_plumbing.go`), no results
+- Searched for regex `CREATE TABLE registratie|registratie_table` (`**/bitemp_register_v06/dbsetup/**`), no results
+- Searched for text `RegistreerRequest` (`**/bitemp_register_v06/**`), 20 results
+- Searched for regex `registratie` (`**/bitemp_register_v06/dbsetup/**`), 20 results
+- Searched for regex `registratie|CREATE TABLE` (`**/bitemp_register_v06/dbsetup/createtables.go`), 12 results
+- Read REST request models.go, lines 1 to 45
+- Read createtables.go, lines 60 to 110
+- Read registration_core.go, lines 78 to 130
+</details>
+
+Nu heb ik het complete beeld. Ik doe dit in één ronde:
+
+1. **v06**: `bron` + `bron_kenmerk` toevoegen aan `Registratie` struct + DB-migratie
 2. **Nieuwe BPMN v2** met het volledige gemeenteproces (locatie-check, NP-check, branching)
 3. **Worker uitbreiden** met `check-locatie`, `check-np`, `registreer-np-bereikbaarheid`, `registreer-bereikbaarheid` topics 
-```
 
-```
+*Created 5 todos · Starting: *v06 Registratie bron/bron_kenmerk velden* (1/5)*
 
-```
 
-```
 
-```
 
-```
-Nu de migratiefunctie toevoegen vlak boven :   
-```
+*Starting: *v06 DB-migratie bron-kolommen* (2/5) · Read createtables.go, lines 145 to 175*
 
-```
-Nu de worker vervangen met de uitgebreide versie:    Nu alles bouwen en deployen: Beide compileren foutloos. Nu de worker binary herbouwen, de oude worker stoppen, v06 herstarten en de nieuwe BPMN deployen: Nu v06 herstarten (voor de DB-migratie van de nieuwe kolommen), en daarna nieuwe worker starten: V06 draait. Verificeer dat de DB-migratie is gedraaid door een test-request:  Good - `omitempty` maakt dat ze niet zichtbaar zijn in historische records (null). Nu de nieuwe worker starten en de BPMN v2 deployen:  Worker v2 draait met alle 5 topics. Nu de BPMN v2 deployen:   Worker v2 draait met alle 5 topics. Nu de BPMN v2 deployen:   
+
+
+*Created 5 todos · Starting: *v06 Registratie bron/bron_kenmerk velden* (1/5)*
+
+
+
+
+*Starting: *v06 DB-migratie bron-kolommen* (2/5) · Read createtables.go, lines 145 to 175*
+
+
+Nu de migratiefunctie toevoegen vlak boven `CreateTables`:   
+
+
+*Starting: *BPMN v2 registreer_inwoner_v2* (3/5)*
+
+
+
+*Starting: *BPMN v2 registreer_inwoner_v2* (3/5) · Created registreer_inwoner_v2.bpmn · Starting: *Worker: nieuwe topics + bron-velden* (4/5)*
+
+Nu de worker vervangen met de uitgebreide versie:    
+
+*Created service_task.go*
+
+
+
+*Starting: *Build + deploy + smoke test* (5/5)*
+
+Nu alles bouwen en deployen: Beide compileren foutloos. Nu de worker binary herbouwen, de oude worker stoppen, v06 herstarten en de nieuwe BPMN deployen: Nu v06 herstarten (voor de DB-migratie van de nieuwe kolommen), en daarna nieuwe worker starten: 
+
+*Read content.txt, lines 1 to 30*
+
+V06 draait. Verificeer dat de DB-migratie is gedraaid door een test-request:  Good - `omitempty` maakt dat ze niet zichtbaar zijn in historische records (null). Nu de nieuwe worker starten en de BPMN v2 deployen:  Worker v2 draait met alle 5 topics. Nu de BPMN v2 deployen:   
+
+*Sent `N` to terminal*
+
+Worker v2 draait met alle 5 topics. Nu de BPMN v2 deployen:   
+
+*Sent `N` to terminal*
+
+
 
 ---
 
@@ -866,6 +1108,10 @@ At line:1 char:9
 
 De BPMN v2 is al succesvol gedeployed (`registreer_inwoner_v2:1`) via de `Invoke-RestMethod` aanroep. Nu een locatie ID ophalen en een test starten: Geen locaties. Ik maak er eerst een aan zodat we het volledige blije pad kunnen testen: 
 
+*Searched for text `type Locatie struct` (`**/bitemp_register_v06/model/**`), 1 result · Read np_loc_modellen_entiteiten.go, lines 22 to 55 · Searched for text `type Locatie_Input struct` (`**/bitemp_register_v06/model/**`), no results · Searched for text `Locatie_Input` (`**/bitemp_register_v06/model/np_loc_modellen_input.go`), 1 result*
+
+
+
 ---
 
 ## 🧑 User
@@ -876,22 +1122,81 @@ wil je deze call activity ook maken?
 
 ## 🤖 Assistant
 
-Nu kijk ik naar de Locatie-struct in v06 voor de payload:  Laat me eerst de structuur van een bestaande locatie checken:   Nu heb ik alle info die ik nodig heb. Ik implementeer:
+
+
+*Read service_task.go, lines 100 to 300 · Read service_task.go, lines 300 to 500*
+
+
+
+<details>
+<summary><em>Read registreer_inwoner_v2.bpmn, lines 1 to 80</em> (+4 meer)</summary>
+
+- Read registreer_inwoner_v2.bpmn, lines 1 to 80
+- Read registreer_inwoner_v2.bpmn, lines 80 to 200
+- Read service_task.go, lines 1 to 100
+- Read service_task.go, lines 100 to 300
+- Read service_task.go, lines 300 to 500
+</details>
+
+Nu kijk ik naar de Locatie-struct in v06 voor de payload:  
+
+*Searched codebase for "Locatie struct fields straat huisnummer postcode woonplaats GE bitemp v06", 23 results*
+
+
+
+*Searched codebase for "Locatie struct fields straat huisnummer postcode woonplaats GE bitemp v06", 23 results*
+
+Laat me eerst de structuur van een bestaande locatie checken:   Nu heb ik alle info die ik nodig heb. Ik implementeer:
 1. **`registreer_locatie.bpmn`** — nieuw sub-proces
-2. **** — `<camunda:in/out>` toevoegen aan CallActivity + locatie-adresvelden in startformulier
-3. **** — topic `registreer-locatie` + payload-builder
-4. Worker herbouwen + beide BPMNs deployen Nu de ouder-BPMN lezen en updaten: 
-```
+2. **`registreer_inwoner_v2.bpmn`** — `<camunda:in/out>` toevoegen aan CallActivity + locatie-adresvelden in startformulier
+3. **`service_task.go`** — topic `registreer-locatie` + payload-builder
+4. Worker herbouwen + beide BPMNs deployen 
 
-```
-Nu de worker updaten. Eerst lees ik de relevante delen van : Ik zoek de locatie-input structs op voor de correcte veldnamen: Ik controleer hoe Locatie is gemodelleerd (JSON veldnamen voor sub-GEs): Nu de  updaten — 3 wijzigingen: allTopics, dispatch-case, en nieuwe payload-builder:  
-```
+*Created 5 todos · Created registreer_locatie.bpmn · Starting: *Ouder-BPMN CallActivity updaten* (2/5)*
 
-```
-Nu de  functie toevoegen, direct na :  
-```
+Nu de ouder-BPMN lezen en updaten: 
 
-```
+*Searched for text `CallActivity_RegistreerLocatie` (`**/process_engine_v01/deployments/poc/registreer_inwoner_v2.bpmn`), 4 results*
+
+
+
+*Searched for text `CallActivity_RegistreerLocatie` (`**/process_engine_v01/deployments/poc/registreer_inwoner_v2.bpmn`), 4 results · Read registreer_inwoner_v2.bpmn, lines 1 to 100*
+
+
+
+
+*Starting: *Worker: registreer-locatie topic toevoegen* (3/5)*
+
+Nu de worker updaten. Eerst lees ik de relevante delen van `service_task.go`: 
+
+*Searched for regex `allTopics|func bouw|func handle|case \"register-call\"|case \"check-locatie\"` (`**/process_engine_v01/internal/worker/service_task.go`), 11 results · Read service_task.go, lines 73 to 165 · Read service_task.go, lines 219 to 400*
+
+Ik zoek de locatie-input structs op voor de correcte veldnamen: 
+
+*Searched for text `Locatie` (`**/bitemp_register_v06/model/np_loc_modellen_input.go`), 9 results · Read np_loc_modellen_input.go*
+
+
+
+*Searched for text `Locatie` (`**/bitemp_register_v06/model/np_loc_modellen_input.go`), 9 results · Read np_loc_modellen_input.go*
+
+Ik controleer hoe Locatie is gemodelleerd (JSON veldnamen voor sub-GEs): 
+
+*Searched for text `Locatie|adressen|JSONRolnaam` (`**/bitemp_register_v06/model/np_loc_metaregistry.go`), 30 results*
+
+Nu de `service_task.go` updaten — 3 wijzigingen: allTopics, dispatch-case, en nieuwe payload-builder:  
+Nu de `bouwLocatiePayload` functie toevoegen, direct na `bouwBereikbaarheidPayload`:  
+
+*Read service_task.go, lines 362 to 430*
+
+
+
+*Read service_task.go, lines 362 to 430*
+
+
+
+
+*Starting: *Worker herbouwen + BPMNs deployen* (4/5)*
+
 Worker bouwen en fouten checken:  Build succesvol. Nu de beide BPMNs deployen. Eerst kijk ik of Operaton draait:   Sub-proces succesvol gedeployed als `registreer_locatie:1`. Nu de ouder-BPMN re-deployen:  Beide BPMNs succesvol gedeployed (`registreer_locatie:1`, `registreer_inwoner_v2:2`). Nu de worker herstarten:   
 
 ---
@@ -920,7 +1225,15 @@ time=2026-05-21T00:19:03.774+02:00 level=INFO msg="register-call ok" taskId=e8c4
 
 ## 🤖 Assistant
 
-De oude worker is gestopt. Nu de nieuwe binary starten (met het nieuwe  topic): Worker gestart met 6 topics inclusief . Nu een testpayload aanmaken voor de `locatie_bestaat=false` branch:  Eerst verifiëren dat `locatie_id=9001` niet bestaat, dan het proces starten:  Goed — locatie 9001 bestaat niet. Proces starten:   
+De oude worker is gestopt. Nu de nieuwe binary starten (met het nieuwe `registreer-locatie` topic): 
+
+*Sent `$env:OPERATON_BASE_URL="http://localhost:8080/engine-rest"; $env:WORKER_ID="g...` to terminal*
+
+Worker gestart met 6 topics inclusief `registreer-locatie`. Nu een testpayload aanmaken voor de `locatie_bestaat=false` branch:  
+
+*Starting: *Smoke-test nieuwe pad testen* (5/5) · Created start_locatie_nieuw.json*
+
+Eerst verifiëren dat `locatie_id=9001` niet bestaat, dan het proces starten:  Goed — locatie 9001 bestaat niet. Proces starten:   
 
 ---
 
@@ -932,7 +1245,7 @@ is het nu gemeente_id?
 
 ## 🤖 Assistant
 
-Ja — het BPMN-formulierveld heet `gemeente_id` en de worker leest het als , waarna het als `"gemeente"` in de API-payload belandt (conform het struct-veld json:"gemeente"\``).
+Ja — het BPMN-formulierveld heet `gemeente_id` en de worker leest het als `varInt64(t, "gemeente_id")`, waarna het als `"gemeente"` in de API-payload belandt (conform het struct-veld `Gemeente int \`json:"gemeente"\``).
 
 ---
 
@@ -1933,7 +2246,11 @@ exit status 0xffffffff
 
 ## 🤖 Assistant
 
-De INSERT zelf slaagde, maar `RETURNING *` scant `plaats` terug — de oude binary. De struct is al gepatcht; ik herstart de API met de nieuwe build: API draait. Nu de smoke-test opnieuw starten — locatie 9001 bestaat nu al in de DB (gedeeltelijk ingevoerd voor de rollback), dus ik gebruik een nieuw ID:  Rollback was correct — 9001 is leeg. Nieuw proces starten:   
+De INSERT zelf slaagde, maar `RETURNING *` scant `plaats` terug — de oude binary. De struct is al gepatcht; ik herstart de API met de nieuwe build: 
+
+*Sent `Set-Location "D:\Git\Bitemporal_2026\bitemp_register_v06"; go run . 2>&1` to terminal*
+
+API draait. Nu de smoke-test opnieuw starten — locatie 9001 bestaat nu al in de DB (gedeeltelijk ingevoerd voor de rollback), dus ik gebruik een nieuw ID:  Rollback was correct — 9001 is leeg. Nieuw proces starten:   
 
 ---
 
@@ -1952,15 +2269,72 @@ Misschien met een ontwerp.md file waarin mermaid UML class en sequence diagramme
 
 ## 🤖 Assistant
 
-Nu de overige internal-packages snel scannen:   Ik heb genoeg context. Ik schrijf de ontwerp.md in .  Klaar. Aangemaakt: .
+
+
+<details>
+<summary><em>Read process_engine_v01</em> (+6 meer)</summary>
+
+- Read process_engine_v01
+- Read cmd
+- Read worker
+- Read main.go
+- Read client.go
+- Read service_task.go, lines 1 to 300
+- Read service_task.go, lines 300 to 620
+</details>
+
+Nu de overige internal-packages snel scannen:   
+
+<details>
+<summary><em>Read resolver.go</em> (+4 meer)</summary>
+
+- Read resolver.go
+- Read variables.go
+- Read registry.go
+- Read evaluator.go
+- Read router.go
+</details>
+
+
+
+*Read cel_script.go · Read process-engine*
+
+
+
+*Read main.go*
+
+
+
+<details>
+<summary><em>Read resolver.go</em> (+7 meer)</summary>
+
+- Read resolver.go
+- Read variables.go
+- Read registry.go
+- Read evaluator.go
+- Read router.go
+- Read cel_script.go
+- Read process-engine
+- Read main.go
+</details>
+
+Ik heb genoeg context. Ik schrijf de ontwerp.md in `docs`.  
+
+*Read docs*
+
+
+
+*Read docs · Created ontwerp.md*
+
+Klaar. Aangemaakt: `ontwerp.md`.
 
 De doc bevat zeven secties die je vier vragen beantwoorden:
 
-1. **Mappen/files** met tabel "Werkend vs. Skeleton" (alleen  + `internal/worker/service_task.go` doet vandaag echt werk; de rest is bewust skeleton).
-2. **Class-diagram** (mermaid) van de werkende worker —  →  →  /  → `PayloadBuilders` + `OperatonRESTHelpers`.
+1. **Mappen/files** met tabel "Werkend vs. Skeleton" (alleen `cmd/worker` + `internal/worker/service_task.go` doet vandaag echt werk; de rest is bewust skeleton).
+2. **Class-diagram** (mermaid) van de werkende worker — `Run` → `dispatch` → `handleCheckEntiteit` / `handleRegistreer` → `PayloadBuilders` + `OperatonRESTHelpers`.
 3. **Sequence-diagram** (mermaid) voor `registreer_inwoner_v2` met het `locatie_bestaat=false`-pad: Operaton ↔ Worker ↔ bitemp v06, inclusief CallActivity naar `registreer_locatie`.
 4. **Metamodel-koppeling**: tabel met élke plek waar de code een string-literal gebruikt die eigenlijk uit `MetaRegistry` zou moeten komen (padnamen, JSONRolnamen, enum-waarden).
-5. **Drie niveaus van metamodel-koppeling** (mermaid class-diagram) — Hardcoded → Schema-lookup → Generieke builder — met een concrete `handleRegistreerGeneriek` pseudo-implementatie die `model.MetaRegistry[typenaam].OnderliggendeGegevenselementen` walkt, plus een tussenstap die je vandaag kunt doen (alleen padnamen vervangen door ).
+5. **Drie niveaus van metamodel-koppeling** (mermaid class-diagram) — Hardcoded → Schema-lookup → Generieke builder — met een concrete `handleRegistreerGeneriek` pseudo-implementatie die `model.MetaRegistry[typenaam].OnderliggendeGegevenselementen` walkt, plus een tussenstap die je vandaag kunt doen (alleen padnamen vervangen door `MustTypeMeta(...).Padnaam`).
 6. **Flowchart "Nu vs. Doel"**.
 7. **TL;DR**.
 
@@ -1985,10 +2359,7 @@ For more information, see https://docs.github.com/get-started/writing-on-github/
 
 ## 🤖 Assistant
 
-De `{` `}` en `/` in methodenamen zijn niet geldig in Mermaid class-diagram syntax. Ik pas de - en -class aan. 
-```
-
-```
+De `{` `}` en `/` in methodenamen zijn niet geldig in Mermaid class-diagram syntax. Ik pas de `handleCheckEntiteit`- en `handleRegistreer`-class aan. 
 Opgelost. De `/` en `{}`-tekens zijn verwijderd uit de class-body — die zijn niet geldig in Mermaid class-diagram syntax. De HTTP-details (GET/POST + URL-patroon) staan in de buurtliggende toelichting in de tekst.
 
 ---
