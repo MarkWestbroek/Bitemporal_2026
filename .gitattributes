@@ -8,3 +8,6 @@
 
 # POSIX shell scripts must stay LF.
 *.sh text eol=lf
+
+# md niet scramblen
+*.md text eol=lf
