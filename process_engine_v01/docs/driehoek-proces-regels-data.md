@@ -244,7 +244,7 @@ Voortgang ten opzichte van de fasering in §6:
 |---|---|---|
 | 1. Model Picker op schema-API | ✅ klaar | `web/vite/src/modelpicker/` |
 | 2. DMN-input/output binding | ✅ klaar | `web/vite/src/dmn/` |
-| 3. Berichttype-concept (V3 JSON + editor) | ⬜ open | — |
+| 3. Berichttype-concept (V3 JSON + editor) | ✅ klaar | `web/vite/src/bericht/` |
 | 4. bpmn-js message/signal-events | ⬜ open | — |
 | 5. Procescontract + getypeerde CallActivity | ⬜ open | — |
 | 6. Lineage-view | ⬜ open | — |
@@ -294,12 +294,55 @@ canoniek model**.
 ### 8.3 Wiring & draaien
 
 - Routes geregistreerd in `web/vite/src/App.jsx` (`/modelpicker`,
-  `/dmn-demo`) en als build-entrypoints in `vite.config.js`
-  (`modelpicker.html`, `dmn-demo.html`).
+  `/dmn-demo`, `/bericht-demo`) en als build-entrypoints in `vite.config.js`
+  (`modelpicker.html`, `dmn-demo.html`, `bericht-demo.html`).
 - Draaien: VS Code-task **`vite: dev server (v06)`** (Vite op `:5174`, Go API
-  op `:8082`); open `/modelpicker` of `/dmn-demo`.
-- Tests: vanuit `web/vite/` → `node --test src/modelpicker/modelTree.test.js`
-  en `node --test src/dmn/dmnModel.test.js`.
+  op `:8082`); open `/modelpicker`, `/dmn-demo` of `/bericht-demo`.
+- Tests: vanuit `web/vite/` → `node --test src/modelpicker/modelTree.test.js`,
+  `node --test src/dmn/dmnModel.test.js` en
+  `node --test src/bericht/berichtModel.test.js`.
+
+### 8.4 Stap 3 — Berichttype (klaar)
+
+Een **Berichttype** is een benoemde projectie over het canoniek model: een
+geordende bundel FieldRefs (MIM-conform een subset/aggregatie van objecttypen
++ attribuutsoorten). Een message/signal-event "eet" een berichttype in plaats
+van losse velden, waardoor álle proces-payload herleidbaar blijft tot het
+metamodel.
+
+- **Bestanden** (in `bitemp_register_v06/web/vite/src/bericht/`):
+  - `berichtModel.js` — pure logica. `voegVeldToe`/`verwijderVeld`/
+    `zetVerplicht`/`verplaatsVeld` bewerken de projectie (deduplicatie op
+    FieldRef-sleutel). `valideerBerichttype` bewaakt: niet-lege naam, niet-lege
+    projectie, geen dubbele veldnamen in de payload.
+  - `BerichttypeEditor.jsx` — controlled editor; velden komen binnen via
+    drag-drop of via een gekoppelde ModelPicker (`onPick`); per veld een
+    verplicht-toggle + volgorde-/verwijderknoppen; export-tabs onderaan.
+  - `bericht.css` — `.bt-`-geprefixte stijlen.
+  - `index.js` — barrel-export.
+  - `berichtModel.test.js` — 11 unit-tests (alle groen).
+- **Demo**: route `/bericht-demo` (`pages/BerichtEditorDemoPage.jsx`) — links
+  de Model Picker (multi-select, reeds gekozen velden aangevinkt), rechts de
+  Berichttype-editor.
+
+#### Bruikbaar vanuit Valtimo / Operaton
+
+Het berichttype exporteert naar formaten die Valtimo en **Operaton** (de
+open-source Camunda 7-fork) direct begrijpen — zo hangt een message-event
+getypeerd aan het metamodel, iets wat de standaard-tooling niet biedt:
+
+| Exporter | Doel | Vorm |
+|---|---|---|
+| `naarOperatonMessage()` | Message-correlatie-contract (`POST /message`) | `{messageName, processVariables:{veld:{type, valueInfo._canoniek}}}` |
+| `naarJSONSchema()` | Payload-validatie (Valtimo-formulieren, externe tooling) | JSON Schema 2020-12 met `x-canoniek` per property |
+| `naarBpmnExtensionElements()` | Inbedden in BPMN-message | `<bpmn:message>` + `<canoniek:berichttype>`/`<canoniek:fieldRef>` |
+| `naarV3Berichttype()` | Intern V3 JSON `berichttypen[]` | platte veldreferenties |
+
+De OAS-types worden gemapt naar Operaton-variabeletypen (`integer→Long`,
+`number→Double`, `boolean→Boolean`, `string`+`date→Date`, anders `String`).
+Elke variabele/property draagt een `_canoniek`/`x-canoniek`-annotatie met
+`typenaam`, `veldpad`, `tDimensie` en `afgeleid`, zodat de **lineage naar het
+canoniek model** behouden blijft tot in de proces-engine.
 
 ---
 

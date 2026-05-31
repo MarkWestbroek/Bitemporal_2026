@@ -12,6 +12,7 @@ const IdePage = lazy(() => import("./pages/IdePage"));
 const UniversumPage = lazy(() => import("./universum/UniversumPage"));
 const ModelPickerDemoPage = lazy(() => import("./pages/ModelPickerDemoPage"));
 const DmnEditorDemoPage = lazy(() => import("./pages/DmnEditorDemoPage"));
+const BerichtEditorDemoPage = lazy(() => import("./pages/BerichtEditorDemoPage"));
 
 function routeFromPath(pathname) {
   const path = String(pathname || "").toLowerCase();
@@ -59,6 +60,13 @@ function routeFromPath(pathname) {
     path.endsWith("/dmn-demo.html")
   ) {
     return "dmn-demo";
+  }
+  if (
+    path.endsWith("/bericht-demo") ||
+    path.endsWith("/bericht-demo/") ||
+    path.endsWith("/bericht-demo.html")
+  ) {
+    return "bericht-demo";
   }
   if (
     path.endsWith("/ide") ||
@@ -118,6 +126,14 @@ export default function App() {
     return (
       <Suspense fallback={<div style={{ padding: 32 }}>DMN-editor laden…</div>}>
         <DmnEditorDemoPage />
+      </Suspense>
+    );
+  }
+
+  if (route === "bericht-demo") {
+    return (
+      <Suspense fallback={<div style={{ padding: 32 }}>Berichttype-editor laden…</div>}>
+        <BerichtEditorDemoPage />
       </Suspense>
     );
   }
