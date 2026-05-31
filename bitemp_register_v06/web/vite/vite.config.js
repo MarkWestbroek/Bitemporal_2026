@@ -54,6 +54,7 @@ export default defineConfig({
         modelpicker: resolve(__dirname, "modelpicker.html"),
         "dmn-demo": resolve(__dirname, "dmn-demo.html"),
         "bericht-demo": resolve(__dirname, "bericht-demo.html"),
+        "bpmn-demo": resolve(__dirname, "bpmn-demo.html"),
         publicatie: resolve(__dirname, "publicatie.html"),
       },
     },

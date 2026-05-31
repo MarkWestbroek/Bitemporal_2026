@@ -13,6 +13,7 @@ const UniversumPage = lazy(() => import("./universum/UniversumPage"));
 const ModelPickerDemoPage = lazy(() => import("./pages/ModelPickerDemoPage"));
 const DmnEditorDemoPage = lazy(() => import("./pages/DmnEditorDemoPage"));
 const BerichtEditorDemoPage = lazy(() => import("./pages/BerichtEditorDemoPage"));
+const BpmnEditorDemoPage = lazy(() => import("./pages/BpmnEditorDemoPage"));
 
 function routeFromPath(pathname) {
   const path = String(pathname || "").toLowerCase();
@@ -67,6 +68,13 @@ function routeFromPath(pathname) {
     path.endsWith("/bericht-demo.html")
   ) {
     return "bericht-demo";
+  }
+  if (
+    path.endsWith("/bpmn-demo") ||
+    path.endsWith("/bpmn-demo/") ||
+    path.endsWith("/bpmn-demo.html")
+  ) {
+    return "bpmn-demo";
   }
   if (
     path.endsWith("/ide") ||
@@ -134,6 +142,14 @@ export default function App() {
     return (
       <Suspense fallback={<div style={{ padding: 32 }}>Berichttype-editor laden…</div>}>
         <BerichtEditorDemoPage />
+      </Suspense>
+    );
+  }
+
+  if (route === "bpmn-demo") {
+    return (
+      <Suspense fallback={<div style={{ padding: 32 }}>BPMN-editor laden…</div>}>
+        <BpmnEditorDemoPage />
       </Suspense>
     );
   }

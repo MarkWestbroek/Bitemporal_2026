@@ -245,8 +245,8 @@ Voortgang ten opzichte van de fasering in §6:
 | 1. Model Picker op schema-API | ✅ klaar | `web/vite/src/modelpicker/` |
 | 2. DMN-input/output binding | ✅ klaar | `web/vite/src/dmn/` |
 | 3. Berichttype-concept (V3 JSON + editor) | ✅ klaar | `web/vite/src/bericht/` |
-| 4. bpmn-js message/signal-events | ⬜ open | — |
-| 5. Procescontract + getypeerde CallActivity | ⬜ open | — |
+| 4. bpmn-js message/signal-events | ✅ klaar | `web/vite/src/bpmn/` |
+| 5. Procescontract + getypeerde CallActivity | ✅ klaar | `web/vite/src/bpmn/` |
 | 6. Lineage-view | ⬜ open | — |
 
 ### 8.1 Stap 1 — Model Picker (klaar)
@@ -294,13 +294,17 @@ canoniek model**.
 ### 8.3 Wiring & draaien
 
 - Routes geregistreerd in `web/vite/src/App.jsx` (`/modelpicker`,
-  `/dmn-demo`, `/bericht-demo`) en als build-entrypoints in `vite.config.js`
-  (`modelpicker.html`, `dmn-demo.html`, `bericht-demo.html`).
+  `/dmn-demo`, `/bericht-demo`, `/bpmn-demo`) en als build-entrypoints in
+  `vite.config.js` (`modelpicker.html`, `dmn-demo.html`, `bericht-demo.html`,
+  `bpmn-demo.html`).
 - Draaien: VS Code-task **`vite: dev server (v06)`** (Vite op `:5174`, Go API
-  op `:8082`); open `/modelpicker`, `/dmn-demo` of `/bericht-demo`.
+  op `:8082`); open `/modelpicker`, `/dmn-demo`, `/bericht-demo` of
+  `/bpmn-demo`.
 - Tests: vanuit `web/vite/` → `node --test src/modelpicker/modelTree.test.js`,
-  `node --test src/dmn/dmnModel.test.js` en
-  `node --test src/bericht/berichtModel.test.js`.
+  `node --test src/dmn/dmnModel.test.js`,
+  `node --test src/bericht/berichtModel.test.js`,
+  `node --test src/bpmn/bpmnBinding.test.js` en
+  `node --test src/bpmn/procesContract.test.js`.
 
 ### 8.4 Stap 3 — Berichttype (klaar)
 
@@ -343,6 +347,100 @@ De OAS-types worden gemapt naar Operaton-variabeletypen (`integer→Long`,
 Elke variabele/property draagt een `_canoniek`/`x-canoniek`-annotatie met
 `typenaam`, `veldpad`, `tDimensie` en `afgeleid`, zodat de **lineage naar het
 canoniek model** behouden blijft tot in de proces-engine.
+
+### 8.5 Stap 4 — BPMN message/signal-events (klaar)
+
+Een echte **bpmn-js**-editor (`bpmn-js@17`) waarin message- en signal-events
+gebonden worden aan een Berichttype. De binding overleeft round-trip als
+geldige BPMN `extensionElements` dankzij een custom moddle-extensie.
+
+- **Bestanden** (in `bitemp_register_v06/web/vite/src/bpmn/`):
+  - `canoniekModdle.js` — moddle-descriptor voor het `canoniek`-namespace
+    (`Berichttype` + `FieldRef`), zodat bpmn-js de binding leest én schrijft.
+  - `bpmnBinding.js` — pure helpers: `eventKind` (message/signal/null),
+    `isBerichtBindbaar`, `berichttypeNaarBindingData` (Berichttype → moddle-
+    attrs), `leesBinding` (extensionElements → binding), en `STARTER_BPMN`.
+  - `BpmnEditor.jsx` — React-wrapper om `BpmnModeler`; registreert de
+    moddle-extensie, meldt selectiewijzigingen, en biedt een imperatieve API
+    (`bindBerichttype`, `wisBinding`, `exportXML`) die via
+    `modeling.updateProperties` de `canoniek:Berichttype` op het event zet.
+  - `bpmn.css` — `.bpmn-`-geprefixte stijlen voor canvas + binding-paneel.
+  - `index.js` — barrel-export.
+  - `bpmnBinding.test.js` — 6 unit-tests (alle groen).
+- **Demo**: route `/bpmn-demo` (`pages/BpmnEditorDemoPage.jsx`) — de volledige
+  keten in één scherm: selecteer een event in het diagram → stel via de Model
+  Picker een Berichttype samen → "Koppel aan geselecteerd event" → exporteer
+  geldige BPMN XML met `canoniek:`-extensies.
+
+#### Resultaat: getypeerde BPMN bruikbaar in Valtimo/Operaton
+
+De geëxporteerde XML is een geldig BPMN 2.0-bestand met op elk gebonden event:
+
+```xml
+<bpmn:extensionElements>
+  <canoniek:berichttype naam="InwonerAanmelding">
+    <canoniek:fieldRef typenaam="NP_Naam_Data" veldpad="NatuurlijkPersoon.namen.bsn"
+      veldnaam="bsn" type="string" datatype="BSN" t="formeel"
+      afgeleid="false" verplicht="true"/>
+  </canoniek:berichttype>
+</bpmn:extensionElements>
+```
+
+Dit is precies het haakje dat de Valtimo Designer mist: een message-event "eet"
+nu geen losse variabelen maar een berichttype dat per definitie een projectie
+over het canoniek model is — data kan het proces niet in/uit zonder herleidbaar
+te zijn tot het metamodel.
+
+### 8.6 Stap 5 — Procescontract + getypeerde CallActivity (klaar)
+
+Waar stap 4 een berichttype aan één event hangt, beschrijft een **Procescontract**
+het koppelvlak van een héél proces (of subproces achter een CallActivity): een
+**input**-berichttype en een **output**-berichttype. Daarmee verdwijnt het
+beruchte `variables="all"` van CallActivity-aanroepen — de gevreesde lek waarbij
+elke procesvariabele ongezien meelift (zie §4.3, het `Plaats`-kolomincident).
+In plaats daarvan genereert het contract een **per-veld getypeerde**
+`camunda:in`/`camunda:out`-mapping: alleen velden die in het contract staan —
+en dus in het canoniek model bestaan — gaan het subproces in of uit.
+
+- **Bestanden** (in `bitemp_register_v06/web/vite/src/bpmn/`):
+  - `canoniekModdle.js` — uitgebreid met `Procescontract` (bevat
+    `ContractBericht`-kinderen) en `ContractBericht` (subclass van
+    `Berichttype` met extra `kant`-attribuut `input`/`output`), zodat het
+    contract als `extensionElements` op het proces/CallActivity overleeft.
+  - `procesContract.js` — pure logica: `leegContract`, `isContractDrager`
+    (Process/Participant/CallActivity), `isCallActivity`, `bindbaarSoort`
+    (`contract`/`event`/`null`), `leesContract` (extensionElements → 
+    `{input, output}`), `contractNaarIoMapping` (1-op-1 per veld → in/out),
+    `valideerContract` (lege projectie = fout; leeg contract = waarschuwing;
+    getypeerde CallActivity-mapping = info i.p.v. `variables="all"`),
+    `naarCamundaIoXml` (getypeerde `<camunda:in>`/`<camunda:out>` met
+    `canoniek:t`/`canoniek:veldpad`) en `naarV3Contract`.
+  - `BpmnEditor.jsx` — imperatieve API uitgebreid met `bindContract`
+    (zet `canoniek:Procescontract` met `canoniek:ContractBericht`-kinderen
+    per kant) en `wisContract`; de selectiemelding bevat nu `soort`,
+    `isCall` en het ingelezen `contract`.
+  - `procesContract.test.js` — 11 unit-tests (alle groen).
+- **Demo**: route `/bpmn-demo` (`pages/BpmnEditorDemoPage.jsx`) — de starter
+  bevat nu een **CallActivity** (`Beoordeel aanmelding`). Selecteer die of het
+  proces → stel een berichttype samen → "Zet als input" / "Zet als output" →
+  het paneel toont de getypeerde `camunda:in/out`-mapping en validatie.
+
+#### Resultaat: getypeerde CallActivity i.p.v. `variables="all"`
+
+```xml
+<bpmn:callActivity id="Task_1" name="Beoordeel aanmelding" calledElement="Subproces_Beoordeling">
+  <bpmn:extensionElements>
+    <camunda:in source="bsn" target="bsn" canoniek:t="formeel" canoniek:veldpad="NatuurlijkPersoon.namen.bsn"/>
+    <camunda:out source="besluit" target="besluit" canoniek:t="formeel" canoniek:veldpad="Aanmelding.besluit"/>
+  </bpmn:extensionElements>
+</bpmn:callActivity>
+```
+
+Elke regel verwijst naar een veld dat in het canoniek model bestaat; het
+subproces krijgt precies de input die het contract toestaat en geeft precies de
+output terug die is afgesproken. Dit is de procesvariant van het kernprincipe:
+**niets stroomt door het proces zonder herleidbaar te zijn tot het metamodel.**
+
 
 ---
 
