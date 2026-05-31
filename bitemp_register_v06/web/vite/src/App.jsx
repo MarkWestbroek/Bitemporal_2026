@@ -10,6 +10,8 @@ const EditorPage = lazy(() => import("./pages/EditorPage"));
 const EditorV2Page = lazy(() => import("./pages/EditorV2Page"));
 const IdePage = lazy(() => import("./pages/IdePage"));
 const UniversumPage = lazy(() => import("./universum/UniversumPage"));
+const ModelPickerDemoPage = lazy(() => import("./pages/ModelPickerDemoPage"));
+const DmnEditorDemoPage = lazy(() => import("./pages/DmnEditorDemoPage"));
 
 function routeFromPath(pathname) {
   const path = String(pathname || "").toLowerCase();
@@ -43,6 +45,20 @@ function routeFromPath(pathname) {
     path.endsWith("/universum.html")
   ) {
     return "universum";
+  }
+  if (
+    path.endsWith("/modelpicker") ||
+    path.endsWith("/modelpicker/") ||
+    path.endsWith("/modelpicker.html")
+  ) {
+    return "modelpicker";
+  }
+  if (
+    path.endsWith("/dmn-demo") ||
+    path.endsWith("/dmn-demo/") ||
+    path.endsWith("/dmn-demo.html")
+  ) {
+    return "dmn-demo";
   }
   if (
     path.endsWith("/ide") ||
@@ -86,6 +102,22 @@ export default function App() {
     return (
       <Suspense fallback={<div style={{ padding: 32 }}>Universum laden…</div>}>
         <UniversumPage />
+      </Suspense>
+    );
+  }
+
+  if (route === "modelpicker") {
+    return (
+      <Suspense fallback={<div style={{ padding: 32 }}>ModelPicker laden…</div>}>
+        <ModelPickerDemoPage />
+      </Suspense>
+    );
+  }
+
+  if (route === "dmn-demo") {
+    return (
+      <Suspense fallback={<div style={{ padding: 32 }}>DMN-editor laden…</div>}>
+        <DmnEditorDemoPage />
       </Suspense>
     );
   }

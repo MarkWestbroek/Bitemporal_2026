@@ -1,0 +1,228 @@
+/* ModelPicker — zelfstandige styling, geprefixt met .mp- om botsingen te voorkomen. */
+
+.mp-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  color: #1e293b;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.mp-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.mp-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.mp-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.mp-search {
+  flex: 1 1 140px;
+  min-width: 120px;
+  padding: 5px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+}
+.mp-search:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.25);
+}
+
+.mp-dim {
+  display: inline-flex;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.mp-dim button {
+  border: none;
+  background: #fff;
+  padding: 5px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #475569;
+}
+.mp-dim button.mp-dim-active {
+  background: #2563eb;
+  color: #fff;
+}
+
+.mp-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: #475569;
+  cursor: pointer;
+  user-select: none;
+}
+
+.mp-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 6px 4px 10px;
+}
+
+.mp-empty,
+.mp-loading,
+.mp-error {
+  padding: 16px 12px;
+  color: #64748b;
+  font-style: italic;
+}
+.mp-error {
+  color: #b91c1c;
+}
+
+.mp-domein > .mp-row,
+.mp-entiteit > .mp-row,
+.mp-ge > .mp-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  border-radius: 5px;
+  cursor: pointer;
+  user-select: none;
+}
+.mp-row:hover {
+  background: #f1f5f9;
+}
+
+.mp-caret {
+  width: 14px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 10px;
+  flex: 0 0 14px;
+}
+
+.mp-domein-naam {
+  font-weight: 600;
+  color: #334155;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.mp-entiteit-naam {
+  font-weight: 600;
+  color: #1d4ed8;
+}
+.mp-ge-naam {
+  color: #15803d;
+  font-weight: 500;
+}
+.mp-rol {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.mp-children {
+  margin-left: 14px;
+  border-left: 1px dashed #e2e8f0;
+  padding-left: 6px;
+}
+
+/* Veld-rij */
+.mp-veld {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px 3px 20px;
+  border-radius: 5px;
+  cursor: grab;
+}
+.mp-veld:hover {
+  background: #eff6ff;
+}
+.mp-veld:active {
+  cursor: grabbing;
+}
+.mp-veld.mp-selected {
+  background: #dbeafe;
+  outline: 1px solid #93c5fd;
+}
+
+.mp-veld-naam {
+  font-weight: 500;
+}
+.mp-veld-naam.mp-afgeleid {
+  font-style: italic;
+  color: #c2410c;
+}
+.mp-afgeleid-prefix {
+  color: #ea580c;
+  font-weight: 700;
+  margin-right: 1px;
+}
+
+.mp-badges {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+  align-items: center;
+}
+.mp-badge {
+  font-size: 10px;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #475569;
+  white-space: nowrap;
+}
+.mp-badge-datatype {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+.mp-badge-enum {
+  background: #fef9c3;
+  color: #854d0e;
+}
+.mp-badge-dim {
+  background: #ccfbf1;
+  color: #0f766e;
+}
+.mp-badge-ref {
+  background: #fce7f3;
+  color: #be185d;
+}
+
+.mp-pick-btn {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #2563eb;
+  border-radius: 5px;
+  padding: 1px 7px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.mp-pick-btn:hover {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}

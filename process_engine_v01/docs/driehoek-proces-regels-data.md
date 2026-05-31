@@ -236,6 +236,73 @@ onderscheidende kracht van de canoniek-model-aanpak.
 
 ---
 
+## 8. Implementatiestatus
+
+Voortgang ten opzichte van de fasering in §6:
+
+| Stap | Status | Locatie |
+|---|---|---|
+| 1. Model Picker op schema-API | ✅ klaar | `web/vite/src/modelpicker/` |
+| 2. DMN-input/output binding | ✅ klaar | `web/vite/src/dmn/` |
+| 3. Berichttype-concept (V3 JSON + editor) | ⬜ open | — |
+| 4. bpmn-js message/signal-events | ⬜ open | — |
+| 5. Procescontract + getypeerde CallActivity | ⬜ open | — |
+| 6. Lineage-view | ⬜ open | — |
+
+### 8.1 Stap 1 — Model Picker (klaar)
+
+Herbruikbaar React-component dat het canoniek model uit de schema-API
+(`/api/schema/model/code`) als boom toont (Domein → Entiteit → GE → Veld).
+
+- **Bestanden** (in `bitemp_register_v06/web/vite/src/modelpicker/`):
+  - `useSchemaModel.js` — fetch-hook (`baseUrl` of `injectedTypes`).
+  - `modelTree.js` — pure logica: `bouwModelTree`, `filterTree`,
+    `maakFieldRef`, `fieldRefKey`.
+  - `ModelPicker.jsx` — boom, zoeken, t_f/t_m-toggle, afgeleide-velden,
+    drag-source (MIME `application/x-canoniek-fieldref`, geëxporteerd als
+    `FIELDREF_MIME`), enkel/multi-select.
+  - `modelpicker.css` — `.mp-`-geprefixte stijlen (afgeleid veld = oranje `/`
+    + cursief).
+  - `index.js` — barrel-export.
+  - `modelTree.test.js` — 7 unit-tests (alle groen).
+- **FieldRef-contract**: `{typenaam, veldnaam, veldpad, entiteit, datatype,
+  type, format, enum[], ref, afgeleid, tDimensie}` waarbij `tDimensie` =
+  `formeel` (t_f) of `materieel` (t_m).
+- **Demo**: route `/modelpicker` (`pages/ModelPickerDemoPage.jsx`).
+
+### 8.2 Stap 2 — DMN-binding (klaar)
+
+DMN-beslistabel waarvan input/output-kolommen binden aan FieldRefs uit het
+canoniek model. Bewijst het kernprincipe: **data kan niet bestaan buiten het
+canoniek model**.
+
+- **Bestanden** (in `bitemp_register_v06/web/vite/src/dmn/`):
+  - `dmnModel.js` — pure beslistabel-logica. `bindInput`/`bindOutput`
+    kopiëren automatisch `type`/`datatype`/`enum` uit de FieldRef.
+    `valideerTabel` dwingt af dat ongebonden, niet-ad-hoc kolommen een
+    **fout** zijn. `adhocNaarAfgeleidVeldVoorstel` promoveert een ad-hoc
+    output naar een afgeleid-veld-voorstel (taal `dmn`).
+  - `DmnTableEditor.jsx` — controlled editor; kolommen binden via drop op de
+    kop óf "bind…"-knop; enum-cellen worden dropdowns met metamodel-waarden;
+    ad-hoc outputs zijn promoveerbaar tot afgeleid veld.
+  - `dmntable.css` — `.dmn-`-geprefixte stijlen.
+  - `index.js` — barrel-export.
+  - `dmnModel.test.js` — 10 unit-tests (alle groen).
+- **Demo**: route `/dmn-demo` (`pages/DmnEditorDemoPage.jsx`) — links de
+  Model Picker, rechts de beslistabel + JSON-output met zichtbare binding.
+
+### 8.3 Wiring & draaien
+
+- Routes geregistreerd in `web/vite/src/App.jsx` (`/modelpicker`,
+  `/dmn-demo`) en als build-entrypoints in `vite.config.js`
+  (`modelpicker.html`, `dmn-demo.html`).
+- Draaien: VS Code-task **`vite: dev server (v06)`** (Vite op `:5174`, Go API
+  op `:8082`); open `/modelpicker` of `/dmn-demo`.
+- Tests: vanuit `web/vite/` → `node --test src/modelpicker/modelTree.test.js`
+  en `node --test src/dmn/dmnModel.test.js`.
+
+---
+
 ## Referenties
 
 - [process_engine_v01/docs/ontwerp.md](ontwerp.md) — huidige worker-architectuur

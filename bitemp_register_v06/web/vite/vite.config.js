@@ -51,6 +51,8 @@ export default defineConfig({
         inhoud: resolve(__dirname, "inhoud.html"),
         ide: resolve(__dirname, "ide.html"),
         universum: resolve(__dirname, "universum.html"),
+        modelpicker: resolve(__dirname, "modelpicker.html"),
+        "dmn-demo": resolve(__dirname, "dmn-demo.html"),
         publicatie: resolve(__dirname, "publicatie.html"),
       },
     },
