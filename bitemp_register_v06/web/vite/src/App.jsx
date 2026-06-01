@@ -14,6 +14,7 @@ const ModelPickerDemoPage = lazy(() => import("./pages/ModelPickerDemoPage"));
 const DmnEditorDemoPage = lazy(() => import("./pages/DmnEditorDemoPage"));
 const BerichtEditorDemoPage = lazy(() => import("./pages/BerichtEditorDemoPage"));
 const BpmnEditorDemoPage = lazy(() => import("./pages/BpmnEditorDemoPage"));
+const LineageDemoPage = lazy(() => import("./pages/LineageDemoPage"));
 
 function routeFromPath(pathname) {
   const path = String(pathname || "").toLowerCase();
@@ -75,6 +76,13 @@ function routeFromPath(pathname) {
     path.endsWith("/bpmn-demo.html")
   ) {
     return "bpmn-demo";
+  }
+  if (
+    path.endsWith("/lineage-demo") ||
+    path.endsWith("/lineage-demo/") ||
+    path.endsWith("/lineage-demo.html")
+  ) {
+    return "lineage-demo";
   }
   if (
     path.endsWith("/ide") ||
@@ -150,6 +158,14 @@ export default function App() {
     return (
       <Suspense fallback={<div style={{ padding: 32 }}>BPMN-editor laden…</div>}>
         <BpmnEditorDemoPage />
+      </Suspense>
+    );
+  }
+
+  if (route === "lineage-demo") {
+    return (
+      <Suspense fallback={<div style={{ padding: 32 }}>Lineage laden…</div>}>
+        <LineageDemoPage />
       </Suspense>
     );
   }

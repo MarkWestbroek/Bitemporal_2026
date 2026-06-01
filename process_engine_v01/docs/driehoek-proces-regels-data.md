@@ -247,7 +247,7 @@ Voortgang ten opzichte van de fasering in §6:
 | 3. Berichttype-concept (V3 JSON + editor) | ✅ klaar | `web/vite/src/bericht/` |
 | 4. bpmn-js message/signal-events | ✅ klaar | `web/vite/src/bpmn/` |
 | 5. Procescontract + getypeerde CallActivity | ✅ klaar | `web/vite/src/bpmn/` |
-| 6. Lineage-view | ⬜ open | — |
+| 6. Lineage-view | ✅ klaar | `web/vite/src/lineage/` |
 
 ### 8.1 Stap 1 — Model Picker (klaar)
 
@@ -294,16 +294,18 @@ canoniek model**.
 ### 8.3 Wiring & draaien
 
 - Routes geregistreerd in `web/vite/src/App.jsx` (`/modelpicker`,
-  `/dmn-demo`, `/bericht-demo`, `/bpmn-demo`) en als build-entrypoints in
-  `vite.config.js` (`modelpicker.html`, `dmn-demo.html`, `bericht-demo.html`,
-  `bpmn-demo.html`).
+  `/dmn-demo`, `/bericht-demo`, `/bpmn-demo`, `/lineage-demo`) en als
+  build-entrypoints in `vite.config.js` (`modelpicker.html`, `dmn-demo.html`,
+  `bericht-demo.html`, `bpmn-demo.html`, `lineage-demo.html`).
 - Draaien: VS Code-task **`vite: dev server (v06)`** (Vite op `:5174`, Go API
-  op `:8082`); open `/modelpicker`, `/dmn-demo`, `/bericht-demo` of
-  `/bpmn-demo`.
+  op `:8082`); open `/modelpicker`, `/dmn-demo`, `/bericht-demo`, `/bpmn-demo`
+  of `/lineage-demo`.
 - Tests: vanuit `web/vite/` → `node --test src/modelpicker/modelTree.test.js`,
   `node --test src/dmn/dmnModel.test.js`,
   `node --test src/bericht/berichtModel.test.js`,
-  `node --test src/bpmn/bpmnBinding.test.js` en
+  `node --test src/bpmn/bpmnBinding.test.js`,
+  `node --test src/bpmn/procesContract.test.js` en
+  `node --test src/lineage/lineageIndex.test.js`.
   `node --test src/bpmn/procesContract.test.js`.
 
 ### 8.4 Stap 3 — Berichttype (klaar)
@@ -440,6 +442,40 @@ Elke regel verwijst naar een veld dat in het canoniek model bestaat; het
 subproces krijgt precies de input die het contract toestaat en geeft precies de
 output terug die is afgesproken. Dit is de procesvariant van het kernprincipe:
 **niets stroomt door het proces zonder herleidbaar te zijn tot het metamodel.**
+
+### 8.7 Stap 6 — Lineage-view (klaar)
+
+De sluitsteen van de driehoek: een **read-only** herkomst-/impactview die
+volledig is **afgeleid**. Zij voegt geen data toe, maar leest de FieldRefs die
+de DMN-beslistabellen, berichttypen, BPMN-events en procescontracten al delen.
+Omdat elk van die artefacten zijn velden uit het canoniek model haalt, valt de
+analyse kosteloos uit:
+
+- kies een **veld** → elke DMN-regel, berichttype, event-payload en contract
+  dat het raakt (met de rol: input-kolom, output-veld, message-payload, …);
+- kies een **artefact** → alle andere artefacten die er via een gedeeld veld
+  aan vasthangen — de proces↔regels↔data-brug.
+
+- **Bestanden** (in `bitemp_register_v06/web/vite/src/lineage/`):
+  - `lineageIndex.js` — pure logica: `veldKey`, `extractRefs` (per soort:
+    dmn/bericht/bpmn-event/contract), `bouwLineageIndex` (veld → gebruik +
+    artefact → veld-keys), `lineageVoorVeld`, `alleVelden`,
+    `gekoppeldeArtefacten` (gedeelde velden tussen artefacten) en
+    `veldenVanArtefact`.
+  - `LineageView.jsx` — read-only twee-panelen-view: links de veldenlijst
+    met gebruikstelling + zoekfilter, rechts de gebruiks-plekken en de
+    gekoppelde artefacten.
+  - `lineage.css` — `.ln-`-geprefixte stijlen (badge-kleur per artefactsoort).
+  - `index.js` — barrel-export.
+  - `lineageIndex.test.js` — 10 unit-tests (alle groen).
+- **Demo**: route `/lineage-demo` (`pages/LineageDemoPage.jsx`) — bouwt een
+  index uit een representatieve set (DMN-beslistabel, berichttype, twee events
+  en een procescontract) en toont hoe één veld (bv. `bsn`) door regels, payloads
+  en het contract heen loopt.
+
+Hiermee is de driehoek rond: data leeft uitsluitend in het canoniek model,
+regels (DMN) en proces (BPMN, contracten) consumeren projecties daarvan, en de
+lineage-view maakt die samenhang — zonder extra administratie — zichtbaar.
 
 
 ---

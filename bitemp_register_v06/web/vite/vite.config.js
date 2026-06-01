@@ -55,6 +55,7 @@ export default defineConfig({
         "dmn-demo": resolve(__dirname, "dmn-demo.html"),
         "bericht-demo": resolve(__dirname, "bericht-demo.html"),
         "bpmn-demo": resolve(__dirname, "bpmn-demo.html"),
+        "lineage-demo": resolve(__dirname, "lineage-demo.html"),
         publicatie: resolve(__dirname, "publicatie.html"),
       },
     },
