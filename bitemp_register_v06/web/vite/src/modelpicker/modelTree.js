@@ -63,7 +63,8 @@ export function fieldRefKey(ref) {
  * @param {string} opties.tDimensie         "formeel" | "materieel" voor emitted refs
  * @returns {Array} domeinen: [{ naam, entiteiten: [{ type, velden, kinderen }] }]
  */
-export function bouwModelTree(types, { includeAfgeleid = true, tDimensie = "formeel" } = {}) {
+export function bouwModelTree(types, { includeAfgeleid = true, tDimensie = "formeel", hiddenDomains = [] } = {}) {
+  const verborgen = new Set(safeArray(hiddenDomains).map(normDomein));
   const lijst = safeArray(types);
   const byTypenaam = new Map();
   lijst.forEach((t) => {
@@ -109,6 +110,7 @@ export function bouwModelTree(types, { includeAfgeleid = true, tDimensie = "form
   lijst
     .filter((t) => t?.metatype === "entiteit")
     .forEach((ent) => {
+      if (verborgen.has(normDomein(ent.domein))) return;
       const kinderen = [];
       // Onderliggende GE's/relaties resolven naar hun type-DTO.
       safeArray(ent.onderliggende).forEach((child) => {

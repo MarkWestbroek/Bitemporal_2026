@@ -43,6 +43,12 @@ test("bouwModelTree groepeert per domein en sorteert", () => {
   );
 });
 
+test("bouwModelTree verbergt configuratie-domein wanneer hiddenDomains is ingesteld", () => {
+  const tree = bouwModelTree(types, { hiddenDomains: ["configuratie"] });
+  assert.equal(tree.length, 1);
+  assert.equal(tree[0].naam, "np-loc");
+});
+
 test("bouwModelTree nest GE onder entiteit met velden", () => {
   const tree = bouwModelTree(types);
   const npLoc = tree.find((d) => d.naam === "np-loc");

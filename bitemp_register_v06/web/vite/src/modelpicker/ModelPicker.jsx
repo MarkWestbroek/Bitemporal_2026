@@ -21,6 +21,7 @@
  */
 import { useMemo, useState } from "react";
 import { useSchemaModel } from "./useSchemaModel";
+import { modelPickerConfig } from "./modelpicker.config.js";
 import { bouwModelTree, filterTree, fieldRefKey, safeArray } from "./modelTree";
 import "./modelpicker.css";
 
@@ -140,7 +141,7 @@ function EntiteitRij({ ent, selectedKeys, onPick, multiSelect, defaultOpen }) {
 }
 
 function DomeinRij({ domein, selectedKeys, onPick, multiSelect, defaultOpen }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(Boolean(defaultOpen));
   return (
     <div className="mp-domein">
       <div className="mp-row" onClick={() => setOpen((v) => !v)}>
@@ -177,7 +178,9 @@ function DomeinRij({ domein, selectedKeys, onPick, multiSelect, defaultOpen }) {
  * @param {Array}    [props.selected=[]]       geselecteerde FieldRefs (controlled, alleen visueel)
  * @param {string}   [props.title="Canoniek model"] paneeltitel
  * @param {boolean}  [props.includeAfgeleid=true]   toon afgeleide velden
+ * @param {boolean}  [props.expandDomeinen=false]   domeinen standaard uitgeklapt
  * @param {boolean}  [props.expandEntiteiten=false] entiteiten standaard uitgeklapt
+ * @param {string[]} [props.hiddenDomains=[]]      domeinen die niet weergegeven mogen worden
  */
 export default function ModelPicker({
   baseUrl = "",
@@ -187,7 +190,9 @@ export default function ModelPicker({
   selected = [],
   title = "Canoniek model",
   includeAfgeleid = true,
-  expandEntiteiten = false,
+  expandDomeinen = modelPickerConfig.defaultExpandDomeinen,
+  expandEntiteiten = modelPickerConfig.defaultExpandEntiteiten,
+  hiddenDomains = modelPickerConfig.hiddenDomains,
 }) {
   const { types, loading, error } = useSchemaModel({ baseUrl, injectedTypes });
   const [zoekterm, setZoekterm] = useState("");
@@ -195,8 +200,8 @@ export default function ModelPicker({
   const [toonAfgeleid, setToonAfgeleid] = useState(includeAfgeleid);
 
   const tree = useMemo(
-    () => bouwModelTree(types, { includeAfgeleid: toonAfgeleid, tDimensie }),
-    [types, toonAfgeleid, tDimensie]
+    () => bouwModelTree(types, { includeAfgeleid: toonAfgeleid, tDimensie, hiddenDomains }),
+    [types, toonAfgeleid, tDimensie, hiddenDomains]
   );
   const zichtbaar = useMemo(() => filterTree(tree, zoekterm), [tree, zoekterm]);
 
