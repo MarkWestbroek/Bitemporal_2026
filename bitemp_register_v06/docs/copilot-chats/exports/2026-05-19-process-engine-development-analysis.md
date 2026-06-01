@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-05-19 18:47
 - **Sessie-ID**: `5022d490-be55-478b-8fc4-3081f4798ea2`
-- **Berichten**: 47
+- **Berichten**: 49
 
 ---
 
@@ -2412,5 +2412,71 @@ Stap 6 (lineage-view) is klaar — daarmee is de hele driehoek (alle 6 stappen) 
 **Validatie:** 10 lineage-tests groen, geen lint-errors, build slaagt (`lineage-demo.html` aanwezig).
 
 De kern: omdat DMN, berichttypen, events en contracten al hun velden uit het canoniek model halen, valt de herkomst/impact-analyse kosteloos uit — kies een veld en zie elke regel/payload/contract die het raakt, plus de artefacten die er via gedeelde velden aan vasthangen. Daarmee is de driehoek proces ↔ regels ↔ data compleet.
+
+---
+
+## 🧑 User
+
+In de canoniek model browsers (in dmn-demo, bericht-demo en bpmn-demo) zouden twee dingen fijn zijn:
+1. kunnen configureren welke domeinen niet weergegeven worden. Configuratie en IDE-bestanden zijn altijd plumbing domeinen voor het register. ABUVWXY is een test domein. Graag niet hard gecodeerd maar via een config file ergens.
+2. de domein-tree mag default gesloten zijn.
+
+---
+
+## 🤖 Assistant
+
+Eerst check ik de huidige modelpicker implementatie en hoe de demo-pagina’s de tree gebruiken.Ik voeg een centrale config toe en gebruik die in de ModelPicker. De domeintak staat voortaan standaard dicht.
+```
+
+```
+De ModelPicker gebruikt nu config en de domeintakken starten gesloten. Nog  aanpassen om domeinen te verbergen.
+```
+
+```
+
+```
+
+```
+Even de propdocumentatie van ModelPicker afronden en een unit-test toevoegen.
+```
+
+```
+
+```
+
+```
+Korte build-run om te controleren dat de nieuwe config en ModelPicker wijziging geen bundelfouten geven.Ik controleer het nogmaals met een absolute pad.## Gereed
+
+✅  ondersteunt nu configuratie via een config file in plaats van hardcoded domeinen.
+
+Wat is aangepast:
+
+- Nieuwe configfile: 
+  - 
+  - 
+  - 
+
+- 
+  - importeert 
+  - gebruikt  standaard uit config
+  - nieuwe prop `expandDomeinen` (default false)
+  - domeintakken starten nu standaard gesloten
+
+- 
+  - 
+  - filtert domeinen uit vóór het bouwen van de boom
+
+- 
+  - nieuwe test voor verborgen domeinen
+
+## Resultaat
+
+- In `dmn-demo`,  en `bpmn-demo` wordt de canonieke modelbrowser nu standaard met gesloten domeintakken weergegeven.
+- `configuratie` en `abuvwxy` worden standaard niet meer getoond via config.
+
+## Validatie
+
+-  ✅
+- `npm run build` ✅
 
 ---

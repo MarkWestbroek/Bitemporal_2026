@@ -5,10 +5,12 @@
 export const modelPickerConfig = {
   hiddenDomains: [
     // Plumbing-achtige domeinen die niet relevant zijn voor de proces-/regel-
-    // editor demo's.
+    // de basistabel voor referentielijsten, maar geen bruikbare data voor een proces 
     "configuratie",
+    // IDE-bestanden, idem plumbing voor de IDE
+    "ide-bestanden",
     // ABUVWXY is een test/referentiedomein en mag standaard verborgen blijven.
-    "abuvwxy",
+    "abuvwxy"    
   ],
   // De domeintak mag default gesloten zijn in de browser.
   defaultExpandDomeinen: false,
