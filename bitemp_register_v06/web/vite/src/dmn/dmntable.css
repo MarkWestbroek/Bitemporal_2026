@@ -1,0 +1,215 @@
+/* DmnTableEditor — styling, geprefixt met .dmn- om botsingen te voorkomen. */
+
+.dmn-root {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  color: #1e293b;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dmn-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dmn-naam {
+  font-size: 15px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 3px 6px;
+}
+.dmn-naam:hover,
+.dmn-naam:focus {
+  border-color: #cbd5e1;
+  outline: none;
+}
+
+.dmn-hit {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+.dmn-btn {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #334155;
+}
+.dmn-btn:hover {
+  background: #f1f5f9;
+}
+.dmn-btn-primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+.dmn-btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.dmn-table-wrap {
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+table.dmn-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 600px;
+}
+
+.dmn-table th,
+.dmn-table td {
+  border: 1px solid #e2e8f0;
+  padding: 0;
+  vertical-align: top;
+}
+
+.dmn-corner {
+  background: #f8fafc;
+  width: 34px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.dmn-th-input {
+  background: #eff6ff;
+}
+.dmn-th-output {
+  background: #f0fdf4;
+}
+
+.dmn-th-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 7px 8px;
+  min-width: 150px;
+}
+
+.dmn-th-label {
+  font-weight: 600;
+  font-size: 12px;
+}
+.dmn-th-unbound {
+  color: #b91c1c;
+  font-style: italic;
+  font-weight: 500;
+}
+.dmn-th-veld {
+  color: #1d4ed8;
+}
+.dmn-th-veld.dmn-out {
+  color: #15803d;
+}
+.dmn-th-adhoc {
+  color: #c2410c;
+  font-style: italic;
+}
+
+.dmn-th-meta {
+  display: inline-flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.dmn-chip {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #475569;
+}
+.dmn-chip-dt {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+.dmn-chip-enum {
+  background: #fef9c3;
+  color: #854d0e;
+}
+.dmn-chip-dim {
+  background: #ccfbf1;
+  color: #0f766e;
+}
+
+.dmn-th-actions {
+  display: inline-flex;
+  gap: 4px;
+  margin-top: 2px;
+}
+.dmn-link {
+  background: none;
+  border: none;
+  color: #2563eb;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 0;
+  text-decoration: underline;
+}
+.dmn-link-danger {
+  color: #b91c1c;
+}
+
+.dmn-cell-input {
+  width: 100%;
+  border: none;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+  background: transparent;
+}
+.dmn-cell-input:focus {
+  outline: 2px solid #93c5fd;
+  outline-offset: -2px;
+  background: #fff;
+}
+
+.dmn-cell-drop {
+  outline: 2px dashed #60a5fa;
+  outline-offset: -2px;
+}
+
+.dmn-rownum {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 12px;
+  padding: 4px;
+}
+
+.dmn-meldingen {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dmn-melding {
+  font-size: 12px;
+  padding: 5px 8px;
+  border-radius: 6px;
+}
+.dmn-melding-fout {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+.dmn-melding-info {
+  background: #f0f9ff;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.dmn-hint {
+  font-size: 12px;
+  color: #64748b;
+}

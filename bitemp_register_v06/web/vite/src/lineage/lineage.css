@@ -1,0 +1,185 @@
+/* lineage.css — stijlen voor de lineage-view (stap 6). Prefix: .ln- */
+
+.ln-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  font-family: system-ui, sans-serif;
+  color: #1e293b;
+}
+
+.ln-kop {
+  flex: 0 0 auto;
+}
+.ln-titel {
+  margin: 0 0 2px;
+  font-size: 15px;
+}
+.ln-uitleg {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.ln-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.ln-lijst {
+  width: 320px;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ln-zoek {
+  border: none;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 8px 10px;
+  font-size: 13px;
+  outline: none;
+}
+
+.ln-velden {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.ln-veld {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+  padding: 6px 10px;
+  border: none;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fff;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+.ln-veld:hover {
+  background: #f8fafc;
+}
+.ln-veld.actief {
+  background: #eff6ff;
+  font-weight: 600;
+}
+.ln-veld-pad {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ln-veld-telling {
+  flex: 0 0 auto;
+  min-width: 20px;
+  text-align: center;
+  background: #e2e8f0;
+  border-radius: 10px;
+  padding: 0 6px;
+  font-size: 11px;
+  color: #475569;
+}
+
+.ln-detail {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.ln-detail-kop {
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+.ln-detail-pad {
+  font-size: 15px;
+  font-weight: 600;
+}
+.ln-detail-type {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.ln-sectie {
+  margin: 12px 0 6px;
+  font-size: 13px;
+  color: #334155;
+}
+
+.ln-gebruik,
+.ln-koppel-lijst {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ln-gebruik-rij {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.ln-gebruik-naam {
+  font-weight: 600;
+}
+.ln-gebruik-rol {
+  color: #94a3b8;
+}
+
+.ln-koppel {
+  margin-bottom: 8px;
+  padding: 8px;
+  background: #f8fafc;
+  border-radius: 6px;
+}
+.ln-koppel-bron {
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.ln-koppel-lijst {
+  margin-left: 12px;
+}
+
+.ln-badge {
+  flex: 0 0 auto;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  color: #fff;
+  white-space: nowrap;
+}
+.ln-badge-dmn {
+  background: #7c3aed;
+}
+.ln-badge-bericht {
+  background: #0891b2;
+}
+.ln-badge-bpmn-event {
+  background: #ea580c;
+}
+.ln-badge-contract {
+  background: #16a34a;
+}
+
+.ln-leeg {
+  padding: 12px;
+  font-size: 12px;
+  color: #94a3b8;
+}

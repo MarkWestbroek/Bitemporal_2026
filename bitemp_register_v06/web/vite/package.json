@@ -21,6 +21,7 @@
     "@utrecht/component-library-react": "^13.0.3",
     "@utrecht/design-tokens": "^5.0.2",
     "@xyflow/react": "^12.10.1",
+    "bpmn-js": "^17.11.1",
     "downshift": "^9.3.2",
     "flexlayout-react": "^0.8.19",
     "html2canvas": "^1.4.1",

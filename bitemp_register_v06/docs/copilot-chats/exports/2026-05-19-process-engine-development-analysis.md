@@ -2,7 +2,7 @@
 
 - **Datum**: 2026-05-19 18:47
 - **Sessie-ID**: `5022d490-be55-478b-8fc4-3081f4798ea2`
-- **Berichten**: 29
+- **Berichten**: 49
 
 ---
 
@@ -1990,5 +1990,493 @@ De `{` `}` en `/` in methodenamen zijn niet geldig in Mermaid class-diagram synt
 
 ```
 Opgelost. De `/` en `{}`-tekens zijn verwijderd uit de class-body — die zijn niet geldig in Mermaid class-diagram syntax. De HTTP-details (GET/POST + URL-patroon) staan in de buurtliggende toelichting in de tekst.
+
+---
+
+## 🧑 User
+
+ritense is met iemand bezig geweest met een eigen BPMN editor: https://github.com/creatoratnight/bpmn-modeler en https://designer.valtimo.nl/ (om te proberen).
+
+Wat ik zie is een eenvoudige BPMN editor met bpmn.io. Misschien om onafhankelijk te zijn van de camunda modeler.
+
+Er zou ook DMN in zitten, maar ik vind dat nog niet.
+
+Nu zou ik zelf heel graag de driehoek proces - regels - data compleet maken. Het een kan niet zonder het ander.
+
+Ik heb een mooi metamodel formaat dat MIM compliant is (maar een superset met de bitemporele logica), en een UML editor daarop.
+
+Hier is blijkbaar een bpmn editor en iets met DMN. DMN 'eet' data(-typen): uiteindelijk in de input van een DMN altijd een veld uit het metamodel. Anders kan die data niet bestaan. Dat wil zeggen: in mijn wereld waar een canoniek model centraal staat in het landschap. Als het geen primair veld is, dan is het wel een afgeleid veld.
+
+Dus: DMN kan volledig opgebouwd worden met velden uit het metamodel. De output kan tussentijds ad hoc zijn, maar dan komen we bij het proces.
+
+Processen eten ook data. Hetzij via message events, hetzij via signals, hetzij via het token dat ook data is. Al die dingen moeten in het formaat van het metamodel beschreven worden.
+
+In EA kun je een message event beschrijven. In Camunda modeller ook?
+In Valtimo designer zie ik het nog niet. Er is maar 1 type start event, 1 stop en 1 intermediate, dus geen message, signal etc.
+
+Ik zou input van een proces in dus in mm termen willen beschrijven. Idem de output.
+
+Kun je een voorstel doen van een UI die dit mogelijk maakt?
+
+---
+
+## 🤖 Assistant
+
+Mooi vraagstuk — dit raakt precies de kern van waar jouw canoniek-model-aanpak sterker is dan de losse tooling van Valtimo/Camunda. Hieronder een concreet UI-voorstel. Ik heb het (nog) niet als bestand weggeschreven; zeg het als je wilt dat ik het in bijvoorbeeld `process_engine_v01/docs/driehoek-proces-regels-data.md` zet.
+
+## Eerst je concrete vraag: kan bpmn.io message-events aan?
+
+Ja. `bpmn-js` (de engine achter zowel de Camunda Modeler als de Valtimo Designer) ondersteunt volledig `bpmn:Message`, `bpmn:Signal`, `MessageEventDefinition`, `SignalEventDefinition`, timer, error, escalation, conditional. Wat je in de Valtimo Designer ziet is een **bewust uitgeklede palette + properties-panel**, niet een beperking van bpmn-js. Met een eigen "replace menu"-entry en een custom properties-provider zet je message/signal start-, catch- en throw-events er gewoon bij. Dat is precies het haakje dat je nodig hebt om data het proces in/uit te laten lopen in metamodel-termen.
+
+Dus: jouw plan is technisch goed haalbaar bovenop deze stack.
+
+## Kernidee: het canoniek model is de naaf, niet een vierde editor
+
+De driehoek werkt alleen als alle drie de editors **dezelfde type-provider** delen. Die heb je al: de MetaRegistry + schema-API (V3 JSON). Die wordt de "single source of truth" waaruit DMN-inputs, proces-berichten en token-variabelen worden **gebonden** in plaats van vrij ingetypt.
+
+```mermaid
+flowchart TB
+    MM[(Canoniek model<br/>MetaRegistry / V3 JSON<br/>velden, afgeleide velden, enums, datatypes, bitemp-dimensies)]
+    subgraph Editors
+        UML[UML / Data-editor<br/>definieert velden]
+        DMN[DMN-editor<br/>input/output = veldreferenties]
+        BPMN[BPMN-editor<br/>events/token = berichttypen]
+    end
+    MM -- "type-provider (ModelPicker)" --> DMN
+    MM -- "type-provider (ModelPicker)" --> BPMN
+    UML -- "publiceert velden" --> MM
+    DMN -. "ad-hoc output wordt<br/>kandidaat afgeleid veld" .-> MM
+```
+
+## Drie concepten die je metamodel-formaat moet toevoegen
+
+Alles wat nu "los" is (DMN-kolomnaam, proces-variabele, message-payload) wordt een **verwijzing naar het canoniek model**:
+
+| Concept | Wat het is | Waar gebruikt |
+Mooi vraagstuk — dit raakt precies de kern van waar jouw canoniek-model-aanpak sterker is dan de losse tooling van Valtimo/Camunda. Hieronder een concreet UI-voorstel. Ik heb het (nog) niet als bestand weggeschreven; zeg het als je wilt dat ik het in bijvoorbeeld `process_engine_v01/docs/driehoek-proces-regels-data.md` zet.
+
+## Eerst je concrete vraag: kan bpmn.io message-events aan?
+
+Ja. `bpmn-js` (de engine achter zowel de Camunda Modeler als de Valtimo Designer) ondersteunt volledig `bpmn:Message`, `bpmn:Signal`, `MessageEventDefinition`, `SignalEventDefinition`, timer, error, escalation, conditional. Wat je in de Valtimo Designer ziet is een **bewust uitgeklede palette + properties-panel**, niet een beperking van bpmn-js. Met een eigen "replace menu"-entry en een custom properties-provider zet je message/signal start-, catch- en throw-events er gewoon bij. Dat is precies het haakje dat je nodig hebt om data het proces in/uit te laten lopen in metamodel-termen.
+
+Dus: jouw plan is technisch goed haalbaar bovenop deze stack.
+
+## Kernidee: het canoniek model is de naaf, niet een vierde editor
+
+De driehoek werkt alleen als alle drie de editors **dezelfde type-provider** delen. Die heb je al: de MetaRegistry + schema-API (V3 JSON). Die wordt de "single source of truth" waaruit DMN-inputs, proces-berichten en token-variabelen worden **gebonden** in plaats van vrij ingetypt.
+
+```mermaid
+flowchart TB
+    MM[(Canoniek model<br/>MetaRegistry / V3 JSON<br/>velden, afgeleide velden, enums, datatypes, bitemp-dimensies)]
+    subgraph Editors
+        UML[UML / Data-editor<br/>definieert velden]
+        DMN[DMN-editor<br/>input/output = veldreferenties]
+        BPMN[BPMN-editor<br/>events/token = berichttypen]
+    end
+    MM -- "type-provider (ModelPicker)" --> DMN
+    MM -- "type-provider (ModelPicker)" --> BPMN
+    UML -- "publiceert velden" --> MM
+    DMN -. "ad-hoc output wordt<br/>kandidaat afgeleid veld" .-> MM
+```
+
+## Drie concepten die je metamodel-formaat moet toevoegen
+
+Alles wat nu "los" is (DMN-kolomnaam, proces-variabele, message-payload) wordt een **verwijzing naar het canoniek model**:
+
+| Concept | Wat het is | Waar gebruikt |
+|---|---|---|
+| **Veldreferentie** (`FieldRef`) | Pointer `{typenaam, veldpad, t-dimensie}` naar een primair óf afgeleid veld | DMN-inputs, proces-variabelen, condition-expressions |
+| **Berichttype** (`MessageType`) | Benoemde **projectie/view** over het canoniek model: een geordende bundel veldreferenties (MIM-conform: een subset/aggregatie van objecttypen + attribuutsoorten) | Message-events, signals, het token-payload |
+| **Procescontract** | Input-berichttype + output-berichttype van een proces (en per CallActivity) | BPMN proces-niveau, koppelvlak-documentatie |
+
+Het **Berichttype** is hier het scharnier dat je nog mist. Een message-event "eet" geen losse velden maar een berichttype, en een berichttype is per definitie een view over het canoniek model. Daarmee is álle data die een proces in- of uitgaat herleidbaar tot metamodel-velden — precies jouw eis.
+
+## Het UI-voorstel
+
+### Gedeeld: de Model Picker (één component, overal)
+
+Een herbruikbaar React-paneel gevoed door de schema-API:
+
+- **Boom**: Domein → Entiteit → GE → Veld
+- Per veld een **badge**: primair / afgeleid (oranje `/`, zoals je UML-editor al doet), datatype, enum, en de **bitemporele dimensie** (formeel `t_f` / materieel `t_m`)
+- Zoekbaar, en **drag-source**: je sleept een veld in een DMN-kolom, een message-veld of een proces-variabele
+
+Dit ene component verschijnt als rechter- of linkerlade in alle drie de editors. Dat geeft de gebruiker het gevoel van één samenhangende wereld.
+
+### In de DMN-editor: inputs/outputs binden i.p.v. typen
+
+```mermaid
+sequenceDiagram
+    actor U as Modelleur
+    participant DMN as DMN-editor
+    participant MP as Model Picker
+    participant API as schema-API
+    U->>DMN: klik "+ input clause"
+    DMN->>MP: open picker
+    MP->>API: GET /api/schema/model
+    API-->>MP: typen + velden + enums
+    U->>MP: kies NatuurlijkPersoon.leeftijd (afgeleid)
+    MP-->>DMN: FieldRef + datatype=integer + t-dimensie
+    DMN->>DMN: kolomtype/allowed-values auto-ingevuld
+```
+
+- **Input-clause**: knop "Bind veld" → Model Picker → de kolom krijgt `typenaam.veldpad`, datatype en (bij enums) de toegestane waarden komen **automatisch** uit het metamodel. Geen handmatige FEEL-typefouten meer.
+- **Bitemporele keuze** per input: lees je het veld op het **formele** peiltijdstip van de registratie of op een **materieel** peilmoment? Klein dropdownetje op de clause.
+- **Output-clause**: twee opties — (a) **bind aan bestaand veld** (primair of afgeleid), of (b) markeer als **ad-hoc tussenresultaat**. Bij (b) bied je één klik: "promoveer tot afgeleid veld" → het wordt teruggeschreven naar het canoniek model als afgeleid veld met de DMN als regelbron. Zo lekt er nooit data buiten het model om.
+
+### In de BPMN-editor: getypeerde events + token-contract
+
+Drie uitbreidingen op het Valtimo/bpmn-js palette:
+
+1. **Getypeerde events**: message-start, message-catch/throw, signal. Elk event-property-panel heeft een veld **"Berichttype"** → Model Picker / Berichttype-kiezer.
+2. **Berichttype-editor** (nieuw, klein): stel een bericht samen als projectie over het metamodel — vink velden/subtrees aan (bv. , , `bereikbaarheid.locatie_id`). Resultaat is een herbruikbaar, MIM-conform berichttype.
+3. **Proces-data-contract paneel** (op het proces/pool-niveau): **Input-berichttype** en **Output-berichttype**. Hetzelfde paneel verschijnt op een CallActivity, zodat je `camunda:in`/`camunda:out` niet meer met `variables="all"` hoeft te doen maar **per veld getypeerd** mapt — dat had je `Plaats`-kolom-incident voorkomen.
+
+```mermaid
+flowchart LR
+    subgraph BPMN-canvas
+        S((Message start<br/>Berichttype: InwonerAanmelding)) --> ST[Service task]
+        ST --> G{DMN gateway}
+        G --> E((Message end<br/>Berichttype: RegistratieBevestiging))
+    end
+    S -. "payload-velden" .-> MM[(Canoniek model)]
+    E -. "payload-velden" .-> MM
+    G -. "inputs = FieldRefs" .-> MM
+```
+
+### De "driehoek"-view: lineage als vierde scherm
+
+Een read-only overzicht dat de cirkel rond maakt en het meest verkoopt aan stakeholders:
+
+- Kies een **veld** → zie welke **DMN-regels** het lezen/schrijven en welke **processtappen/berichten** het raken.
+- Kies een **processtap** → zie welke DMN's worden aangeroepen en welke velden in/uit gaan.
+- Dit is puur afgeleid uit de FieldRefs/Berichttypen, dus "gratis" zodra de binding bestaat.
+
+## Opslag: uitbreiding van V3 JSON
+
+Je houdt één formaat. Drie kleine toevoegingen:
+
+- `berichttypen[]`: naam + lijst veldreferenties (projectie)
+- Op DMN-artefacten: `inputs[].fieldRef`, `outputs[].fieldRef | adhoc`
+- Op BPMN: per message/signal-event een `berichttypeRef`; op proces/CallActivity een `contract {inputRef, outputRef}`
+
+Omdat BPMN/DMN hun eigen XML hebben, leg je de binding vast als **extensionElements** (), net zoals Camunda dat met `camunda:` doet. Zo blijft het bestand een geldig BPMN/DMN-bestand én metamodel-gekoppeld.
+
+## Fasering
+
+1. **Model Picker** als losse React-component op de schema-API (herbruikbaar) — laagste risico, direct nut.
+2. **DMN-input binding** (grootste, snelste winst: DMN ráákt per definitie velden).
+3. **Berichttype-concept** in V3 JSON + simpele Berichttype-editor.
+4. **bpmn-js message/signal-events** aanzetten + Berichttype-property.
+5. **Procescontract** + getypeerde CallActivity-mapping.
+6. **Lineage-view**.
+
+## Aanbeveling
+
+Begin bij stap 1+2: één gedeelde Model Picker en DMN-inputs die binden aan velden. Dat bewijst het principe ("data kan niet bestaan buiten het canoniek model") met minimale code en levert meteen waarde. Het Berichttype-concept is daarna de sleutel die processen net zo strak aan het model bindt als DMN — en dat is precies wat Valtimo/Camunda standaard níét bieden, dus daar zit jouw onderscheidende kracht.
+
+Wil je dat ik dit als ontwerpdocument vastleg (met deze diagrammen) onder , en/of een eerste schets maak van de `ModelPicker`-component tegen jouw schema-API?
+
+---
+
+## 🧑 User
+
+ja graag
+
+---
+
+## 🤖 Assistant
+
+Ik leg het ontwerp vast als document met de diagrammen. 
+
+---
+
+## 🧑 User
+
+eerst het react component graag
+
+---
+
+## 🤖 Assistant
+
+Eerst de bestaande frontend-conventies en de schema-API-vorm bekijken zodat de component aansluit. Nu de veld-structuur binnen een type bekijken:  
+
+---
+
+## 🧑 User
+
+een kleine demopagina is wel handig, maar dan snel doorpakken naar stap 2 graag
+
+---
+
+## 🤖 Assistant
+
+Even kijken hoe routing en pages werken zodat de demopagina goed aansluit.  
+
+---
+
+## 🧑 User
+
+ja, heel graag
+
+---
+
+## 🤖 Assistant
+
+Ik documenteer de implementatiestatus in `driehoek-proces-regels-data.md`. Eerst de huidige inhoud bekijken. Ik voeg een implementatiestatus-sectie toe vóór de Referenties, met markering van stappen 1 en 2 als klaar.     
+```
+
+```
+Gedocumenteerd. Ik heb sectie **8. Implementatiestatus** toegevoegd aan  met:
+
+- **Statustabel** tegen de fasering van §6: stappen 1 (Model Picker) en 2 (DMN-binding) ✅, stappen 3–6 nog open.
+- **§8.1** — alle ModelPicker-bestanden, het FieldRef-contract en de demo-route.
+- **§8.2** — alle DMN-bestanden, het kernprincipe (data kan niet buiten het canoniek model), en de demo-route.
+- **§8.3** — routing/entrypoints, hoe te draaien (task, poorten) en de testcommando's.
+
+Klaar om door te pakken naar stap 3 (Berichttype-concept) wanneer je wilt.
+
+---
+
+## 🧑 User
+
+ja, graag door naar stap 3. Dan maak je ook een editor voor berichten, toch, die vanuit Valtimo/operaton te gebruiken is?
+
+---
+
+## 🤖 Assistant
+
+Goed plan. Stap 3 = **Berichttype**: een benoemde projectie (bundel FieldRefs) over het canoniek model. Voor bruikbaarheid vanuit Valtimo/Operaton (Operaton = de open-source Camunda 7-fork) exporteer ik het berichttype naar formaten die zij begrijpen: een **message-naam + getypeerde payload-variabelen**, plus **JSON Schema** voor validatie, en **BPMN `extensionElements`** (`canoniek:fieldRef`) zoals beschreven in §5 van het ontwerp.
+
+Eerst de bestaande conventies bekijken om consistent te blijven. Nu de DMN-editor om de drop/MIME-conventies te spiegelen:  
+
+---
+
+## 🧑 User
+
+ja, heel graag!
+
+---
+
+## 🤖 Assistant
+
+Stap 4: een bpmn-js editor met getypeerde message/signal-events die aan onze Berichttypen binden. Eerst checken of bpmn-js al een dependency is.  bpmn-js is not yet a dependency. I'll install it, then build a real bpmn-js editor with a custom properties panel that binds message/signal events to our Berichttypen, plus a moddle extension so the `canoniek` bindings round-trip in valid BPMN XML. bpmn-js 17.11.1 installed; the 3 high vulns are pre-existing (Utrecht component lib → lodash-es), unrelated to bpmn-js. 
+
+Now the moddle extension (so `canoniek` bindings round-trip in BPMN XML) and pure binding helpers:  6/6 groen. Nu de React-editor die bpmn-js Modeler omhult, met imperatieve API om een Berichttype aan het geselecteerde event te koppelen:     Nu de demo-pagina die de hele driehoek verbindt: ModelPicker → Berichttype samenstellen → koppelen aan het geselecteerde BPMN-event.    Nu de wiring in App.jsx, het HTML-entrypoint en vite.config:     
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+Build slaagt met bpmn-js gebundeld. Even alle nieuwe pure-tests samen draaien ter bevestiging:     34/34 groen over alle vier de stappen. Nu de documentatie bijwerken — statustabel + nieuwe §8.5 voor stap 4.    
+```
+
+```
+Stap 4 klaar en gevalideerd. Samenvatting:
+
+## Stap 4 — BPMN message/signal-events (klaar)
+
+Ja, een **echte bpmn-js editor** (`bpmn-js@17.11.1`) waarin message- en signal-events binden aan onze Berichttypen, en die geldige BPMN XML exporteert die je in **Valtimo/Operaton** kunt gebruiken.
+
+Nieuwe bestanden in `web/vite/src/bpmn/`:
+
+| Bestand | Rol |
+|---|---|
+| `canoniekModdle.js` | Moddle-extensie voor het `canoniek`-namespace (`Berichttype` + `FieldRef`), zodat bpmn-js de binding **leest én schrijft** in `extensionElements`. |
+| `bpmnBinding.js` | Pure helpers: `eventKind`, `isBerichtBindbaar`, `berichttypeNaarBindingData`, `leesBinding`, `STARTER_BPMN`. |
+| `BpmnEditor.jsx` | React-wrapper om `BpmnModeler` met imperatieve API (`bindBerichttype`/`wisBinding`/`exportXML`) via `modeling.updateProperties`. |
+| `bpmn.css`,  | Stijlen + barrel. |
+| `bpmnBinding.test.js` | 6 tests, groen. |
+| `pages/BpmnEditorDemoPage.jsx` | Demo op `/bpmn-demo`. |
+
+### Hoe het de Valtimo-leemte dicht
+De Valtimo Designer toont message-events zonder typering. Hier "eet" een event geen losse variabelen maar een **Berichttype** — een projectie over het canoniek model. De export levert valide BPMN met:
+
+```xml
+<bpmn:extensionElements>
+  <canoniek:berichttype naam="InwonerAanmelding">
+    <canoniek:fieldRef typenaam="NP_Naam_Data" veldpad="NatuurlijkPersoon.namen.bsn"
+      veldnaam="bsn" type="string" datatype="BSN" t="formeel" afgeleid="false" verplicht="true"/>
+  </canoniek:berichttype>
+</bpmn:extensionElements>
+```
+
+Zo kan data het proces niet in/uit zonder herleidbaar te zijn tot het metamodel — inclusief de bitemporele dimensie (/`"materieel"`).
+
+### De volledige driehoek in één scherm
+`/bpmn-demo` verbindt alle stappen: BPMN-canvas bovenaan → selecteer een event → ModelPicker → Berichttype samenstellen → "Koppel aan geselecteerd event" → exporteer XML.
+
+**Validatie**: 34/34 pure-tests groen (stappen /`"materieel"`).
+
+### De volledige driehoek in één scherm
+`/bpmn-demo` verbindt alle stappen: BPMN-canvas bovenaan → selecteer een event → ModelPicker → Berichttype samenstellen → "Koppel aan geselecteerd event" → exporteer XML.
+
+**Validatie**: 34/34 pure-tests groen (stappen 1–4), geen lint-errors, productiebuild slaagt met bpmn-js gebundeld en `bpmn-demo.html` als entrypoint. De 3 high-audit-meldingen zijn pre-existing (Utrecht-componentlib → lodash-es), niet van bpmn-js. Gedocumenteerd in  §8 (statustabel + nieuwe §8.5).
+
+Door naar stap 5 (Procescontract: input/output-berichttype op proces- en CallActivity-niveau, getypeerde `camunda:in`/`out`-mapping)?
+
+---
+
+## 🧑 User
+
+super. Graag door naar 5
+
+---
+
+## 🤖 Assistant
+
+Stap 5: Procescontract. Een proces (en elke CallActivity) krijgt een **input-** en **output-berichttype**, en de CallActivity-mapping wordt **per veld getypeerd** (`camunda:in`/`camunda:out`) i.p.v. `variables="all"`. Eerst de moddle uitbreiden, dan de pure helpers.
+
+Ik bekijk eerst even de bestaande moddle om consistent uit te breiden.  Nu voeg ik een `Procescontract` type toe aan de moddle, met geneste input/output-berichttypen:     
+```
+
+```
+Nu de pure helpers voor het procescontract, inclusief de getypeerde `camunda:in`/`out`-mapping en Operaton-export.    Node vereist de `.js`-extensie in de import. Vite is toleranter, maar voor `node --test` fix ik het.    
+```
+
+```
+11/11 groen. Nu de imperatieve API in `BpmnEditor.jsx` uitbreiden met contract-binding, en `bindbaarSoort` in de selectie-melding opnemen. Eerst de relevante delen lezen.    Nu breid ik de editor uit: imports, selectie-melding met  + `contract`, en de contract-bind/wis-API.    
+```
+
+```
+Nu de barrel uitbreiden en de starter-BPMN een CallActivity geven zodat de demo het getypeerde geval toont. Eerst de barrel:     
+```
+
+```
+Nu maak ik in de starter-BPMN één stap een CallActivity, zodat de demo de getypeerde in/out-mapping toont. Ik vervang de gewone taak door een CallActivity.     Andersom — ik vervang de bestaande task door een CallActivity:      
+```
+
+```
+Nu de demo-pagina uitbreiden zodat een proces/CallActivity een contract krijgt (input/output), naast de bestaande event-binding. Ik herschrijf de demo.     I'll replace the existing file's content via targeted edits. The imports and body need updating. Let me do a few replacements. 
+```
+
+```
+Nu errors checken op de gewijzigde bestanden en daarna build. Build slaagt. Nu de documentatie bijwerken (§8 status + nieuwe §8.6). Eerst de relevante sectie lezen. Nu update ik de statusregel en voeg §8.6 toe.     
+```
+
+```
+Stap 5 is klaar. Volledige run van de bpmn-tests ter bevestiging. Stap 5 (Procescontract) is klaar.
+
+**Wat is toegevoegd:**
+- `procesContract.js` — pure logica: , , , , `naarV3Contract` + helpers (11 tests groen).
+-  — uitgebreid met `Procescontract` en `ContractBericht` (subclass van `Berichttype`, met ).
+-  — imperatieve API /; selectiemelding bevat nu ,  en .
+- `bpmnBinding.js` — starter heeft nu een CallActivity (`Beoordeel aanmelding`).
+- Demo `/bpmn-demo` — proces/CallActivity selecteren → berichttype als input/output zetten → getypeerde -mapping + validatie zichtbaar.
+- Barrel  + doc §8 (status ✅, nieuwe §8.6) bijgewerkt.
+
+**Validatie:** 17 BPMN-tests groen, geen lint-errors, productie-build slaagt (`bpmn-demo.html` aanwezig).
+
+De kern: een CallActivity krijgt nu per-veld getypeerde in/out-mapping in plaats van `variables="all"` — alleen velden die in het canoniek model bestaan stromen het subproces in/uit, bruikbaar vanuit Valtimo/Operaton.
+
+Zal ik door naar stap 6 (lineage-view)?
+
+---
+
+## 🧑 User
+
+ja, graag
+
+---
+
+## 🤖 Assistant
+
+Door naar stap 6: de lineage-view. Eerst de exacte datavormen van DMN, bericht en bpmn ophalen zodat de index-logica precies aansluit. Helder. Nu de pure index-module met test.  10/10 groen. Todo bijwerken en de view + barrel + css maken.  Nu de demo-pagina. Eerst conventies van routing, vite-config en een bestaand html-entrypoint bekijken.  Now let me add the lineage route. Edit  imports, routeFromPath, and render branch. 
+```
+
+```
+Nu de demo-pagina met voorbeeld-artefacten die de drie eerdere stappen vertegenwoordigen.   Nu het HTML-entrypoint en vite.config-entry. Eerst een bestaande html bekijken en de vite.config input-map.   
+```
+
+```
+Build slaagt, `lineage-demo.html` is aanwezig. Doc bijwerken: status + §8.3 testlijst + nieuwe §8.7.     
+```
+
+```
+Stap 6 (lineage-view) is klaar — daarmee is de hele driehoek (alle 6 stappen) rond.
+
+**Toegevoegd in `web/vite/src/lineage/`:**
+- `lineageIndex.js` — pure, afgeleide logica: `bouwLineageIndex`, `lineageVoorVeld`, `alleVelden`, `gekoppeldeArtefacten`, `veldenVanArtefact` + `extractRefs` per artefactsoort (dmn/bericht/bpmn-event/contract). 10 tests groen.
+- `LineageView.jsx` + `lineage.css` — read-only twee-panelen-view (veldenlijst met telling/zoek links; gebruiks-plekken + gekoppelde artefacten rechts).
+- `index.js` barrel.
+- `pages/LineageDemoPage.jsx` op route `/lineage-demo` met representatieve voorbeeld-set.
+- App.jsx-route, `lineage-demo.html`, vite.config-entry.
+- Doc §8 bijgewerkt: status ✅, testlijst, nieuwe §8.7.
+
+**Validatie:** 10 lineage-tests groen, geen lint-errors, build slaagt (`lineage-demo.html` aanwezig).
+
+De kern: omdat DMN, berichttypen, events en contracten al hun velden uit het canoniek model halen, valt de herkomst/impact-analyse kosteloos uit — kies een veld en zie elke regel/payload/contract die het raakt, plus de artefacten die er via gedeelde velden aan vasthangen. Daarmee is de driehoek proces ↔ regels ↔ data compleet.
+
+---
+
+## 🧑 User
+
+In de canoniek model browsers (in dmn-demo, bericht-demo en bpmn-demo) zouden twee dingen fijn zijn:
+1. kunnen configureren welke domeinen niet weergegeven worden. Configuratie en IDE-bestanden zijn altijd plumbing domeinen voor het register. ABUVWXY is een test domein. Graag niet hard gecodeerd maar via een config file ergens.
+2. de domein-tree mag default gesloten zijn.
+
+---
+
+## 🤖 Assistant
+
+Eerst check ik de huidige modelpicker implementatie en hoe de demo-pagina’s de tree gebruiken.Ik voeg een centrale config toe en gebruik die in de ModelPicker. De domeintak staat voortaan standaard dicht.
+```
+
+```
+De ModelPicker gebruikt nu config en de domeintakken starten gesloten. Nog  aanpassen om domeinen te verbergen.
+```
+
+```
+
+```
+
+```
+Even de propdocumentatie van ModelPicker afronden en een unit-test toevoegen.
+```
+
+```
+
+```
+
+```
+Korte build-run om te controleren dat de nieuwe config en ModelPicker wijziging geen bundelfouten geven.Ik controleer het nogmaals met een absolute pad.## Gereed
+
+✅  ondersteunt nu configuratie via een config file in plaats van hardcoded domeinen.
+
+Wat is aangepast:
+
+- Nieuwe configfile: 
+  - 
+  - 
+  - 
+
+- 
+  - importeert 
+  - gebruikt  standaard uit config
+  - nieuwe prop `expandDomeinen` (default false)
+  - domeintakken starten nu standaard gesloten
+
+- 
+  - 
+  - filtert domeinen uit vóór het bouwen van de boom
+
+- 
+  - nieuwe test voor verborgen domeinen
+
+## Resultaat
+
+- In `dmn-demo`,  en `bpmn-demo` wordt de canonieke modelbrowser nu standaard met gesloten domeintakken weergegeven.
+- `configuratie` en `abuvwxy` worden standaard niet meer getoond via config.
+
+## Validatie
+
+-  ✅
+- `npm run build` ✅
 
 ---
