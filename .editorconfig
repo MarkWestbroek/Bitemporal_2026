@@ -1,0 +1,17 @@
+# EditorConfig — https://editorconfig.org
+# Forces all editors (VS Code, JetBrains, Vim, Emacs, etc.) to use UTF-8
+# for all text files in this repository, regardless of OS/platform.
+# This prevents the Windows ↔ Mac mojibake problem where an editor opens
+# a UTF-8 file as Windows-1252 and saves it back with double-encoded chars.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Windows-native scripts keep CRLF (consistent with .gitattributes)
+[*.{bat,cmd,ps1}]
+end_of_line = crlf

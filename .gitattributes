@@ -1,4 +1,5 @@
 # Normalize all text files to LF in git history and working trees.
+# Character encoding is enforced by .editorconfig (charset=utf-8).
 * text=auto eol=lf
 
 # Windows-native script formats should stay CRLF for compatibility.
