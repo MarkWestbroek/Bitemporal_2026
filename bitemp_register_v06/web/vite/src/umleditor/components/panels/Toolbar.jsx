@@ -119,6 +119,7 @@ export default function Toolbar({ onAddNode, onAddReferentielijstSet, onAddRefer
                 <option value="LR">→ Left→Right</option>
                 <option value="RL">← Right→Left</option>
                 <option value="radial">⊙ Radial</option>
+                <option value="hierarchisch">🌳 Hiërarchisch</option>
               </select>
             )}
             {onNormaliseerAlleRelaties && <button onClick={onNormaliseerAlleRelaties} className="btn-toolbar" title="Normaliseer alle relaties (kortste weg)">↔ Normaliseer</button>}

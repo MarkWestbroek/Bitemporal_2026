@@ -303,7 +303,7 @@ export default function MetamodelEditor({ initialNodes = [], initialEdges = [], 
   const [dialoogParentId, setDialoogParentId] = useState("");
   // Actieve edge-mode: EDGE_MODES.NONE = auto-detectie, anders override.
   const [activeEdgeMode, setActiveEdgeMode] = useState(EDGE_MODES.NONE);
-  // Richting voor auto-layout (TB/BT/LR/RL/radial). Persistent in localStorage.
+  // Richting voor auto-layout (TB/BT/LR/RL/radial/hierarchisch). Persistent in localStorage.
   const [layoutRichting, _setLayoutRichting] = useState(() => {
     try {
       return localStorage.getItem("umleditor.layoutRichting") || "TB";

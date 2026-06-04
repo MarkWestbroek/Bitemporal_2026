@@ -35,9 +35,13 @@
  *   - respecteerLocked : true (default) → nodes met `data.layoutLocked === true`
  *                        houden hun bestaande positie en worden niet verplaatst.
  *
- * Voor de eerste realisatie is gekozen voor een hiërarchische blok-layout
- * (per domein, per ENT-cluster). Een toekomstige uitbreiding kan force-directed
- * fine-tuning toevoegen.
+ * Layout-modi:
+ *   - TB/BT/LR/RL/radial: domein-gebaseerde blok-layout met geometrische
+ *     richtingtransformatie (default: TB).
+ *   - hierarchisch: gelaagde boomlayout op basis van generalisatie-edges.
+ *     Entiteiten worden in lagen geplaatst (ouders boven, kinderen onder),
+ *     met horizontale spreiding op basis van subboom-breedte.
+ *     GE's en overige nodes worden per entiteit-cluster geordend.
  */
 
 const DEFAULT_OPTS = {
@@ -49,9 +53,10 @@ const DEFAULT_OPTS = {
   domainGap: 200,
   geMaxPerRij: 4,
   geRingDrempel: 8,
-  // Richting waarin het hiërarchische blok wordt opgebouwd:
+  // Richting waarin de layout wordt opgebouwd:
   //   "TB" = top-bottom (default), "BT" = bottom-top, "LR" = left-right,
-  //   "RL" = right-left, "radial" = clusters in een waaier rond een centrum.
+  //   "RL" = right-left, "radial" = clusters in een waaier rond een centrum,
+  //   "hierarchisch" = gelaagde boomlayout o.b.v. generalisatie-edges.
   richting: "TB",
   // Cross-domein hub-detectie: ENT's met (uitgaande+inkomende) verbindingen >= drempel
   // krijgen ringmodus voor hun eigen GE/REL-buren.
@@ -392,6 +397,454 @@ function layoutEntCluster(entNode, geNodes, secundairPerGe, opts) {
 }
 
 /**
+ * Hiërarchische boomlayout — plaatst entiteiten in lagen op basis van
+ * generalisatie-edges (kind → ouder). Gelaagde Sugiyama-achtige aanpak:
+ *
+ * 1. Bouw een boom uit generalisatie-edges (target=ouder, source=kind).
+ * 2. Wijs lagen toe: wortels op laag 0, kinderen op ouder+1.
+ * 3. Sorteer knopen binnen een laag op basis van subboom-breedte en
+ *    ouderpositie om kruisingen te minimaliseren.
+ * 4. Bereken horizontale posities recursief: elke ouder centreert zich
+ *    boven zijn kinderen.
+ * 5. Entiteiten zonder generalisatie-relaties worden onderaan (grootste
+ *    laag+1) in een grid geplaatst.
+ * 6. GE's, REL's, secundairen etc. worden per entiteit-cluster geplaatst
+ *    zoals in de standaard TB-layout.
+ */
+function berekenHierarchischeLayout(nodes, edges, opts) {
+  const result = new Map();
+  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+
+  // --- Topologie ---
+  const topo = bouwTopologie(nodes, edges, opts);
+  const { geNaarEnt, geNaarSecundair, relNaarEnts, relNaarSecundair: topoRelNaarSecundair, ankerNaarRel } = topo;
+
+  // --- Classificeer nodes ---
+  const entNodes = nodes.filter((n) => n.type === "entiteit");
+  const geNodes = nodes.filter((n) => n.type === "gegevenselement");
+  const relNodes = nodes.filter((n) => n.type === "relatie");
+  const ankerNodes = nodes.filter((n) => n.type === "associatieAnker");
+  const secNodes = nodes.filter((n) => SECUNDAIR_TYPES.has(n.type));
+  const floatNodes = nodes.filter((n) => FLOAT_TYPES.has(n.type));
+
+  // --- Bouw parent-kind boom uit edges ---
+  // generalisatie: source=kind, target=ouder (data.isGeneralization=true)
+  // compositie: source=ouder(container), target=kind (data.isCompositie=true)
+  // aggregatie: source=ouder, target=kind (data.isAggregatie=true)
+  const parentMap = new Map();   // kindId → ouderId
+  const childrenMap = new Map(); // ouderId → [kindIds]
+  for (const n of entNodes) {
+    childrenMap.set(n.id, []);
+  }
+
+  for (const e of edges) {
+    let kindId = null, ouderId = null;
+    if (e.data?.isGeneralization) {
+      // generalisatie: source=kind, target=ouder
+      kindId = e.source;
+      ouderId = e.target;
+    } else if (e.data?.isCompositie || e.data?.isAggregatie) {
+      // compositie/aggregatie: source=ouder(container), target=kind
+      ouderId = e.source;
+      kindId = e.target;
+    }
+    if (kindId === null || ouderId === null) continue;
+    const kind = nodeMap.get(kindId);
+    const ouder = nodeMap.get(ouderId);
+    if (!kind || !ouder || kind.type !== "entiteit" || ouder.type !== "entiteit") continue;
+    // Voorkom dat een entiteit twee parents krijgt (overschrijven)
+    if (!parentMap.has(kind.id)) {
+      parentMap.set(kind.id, ouder.id);
+    }
+    if (!childrenMap.has(ouder.id)) childrenMap.set(ouder.id, []);
+    if (!childrenMap.get(ouder.id).includes(kind.id)) {
+      childrenMap.get(ouder.id).push(kind.id);
+    }
+  }
+
+  // Diepte per entiteit (BFS vanaf wortels)
+  const entDepth = new Map();
+  const bfsQueue = [];
+  for (const ent of entNodes) {
+    if (!parentMap.has(ent.id)) {
+      entDepth.set(ent.id, 0);
+      bfsQueue.push(ent.id);
+    }
+  }
+  while (bfsQueue.length > 0) {
+    const current = bfsQueue.shift();
+    const curDepth = entDepth.get(current) ?? 0;
+    for (const child of childrenMap.get(current) || []) {
+      const nd = curDepth + 1;
+      if (!entDepth.has(child) || entDepth.get(child) > nd) {
+        entDepth.set(child, nd);
+        bfsQueue.push(child);
+      }
+    }
+  }
+  for (const ent of entNodes) {
+    if (!entDepth.has(ent.id)) entDepth.set(ent.id, 0);
+  }
+
+  // --- Groepeer per diepte ---
+  const depthGroups = new Map(); // depth → [entId]
+  for (const [id, d] of entDepth) {
+    if (!depthGroups.has(d)) depthGroups.set(d, []);
+    depthGroups.get(d).push(id);
+  }
+  const sortedDepths = [...depthGroups.keys()].sort((a, b) => a - b);
+  const maxDepth = sortedDepths.length > 0 ? sortedDepths[sortedDepths.length - 1] : 0;
+
+  // --- DEBUG: boomstructuur naar console ---
+  if (typeof console !== "undefined") {
+    console.log("=== HIERARCHISCHE LAYOUT: boomstructuur ===");
+    for (let d = 0; d <= maxDepth; d++) {
+      const ids = depthGroups.get(d) || [];
+      const lines = ids.map((id) => {
+        const kids = childrenMap.get(id) || [];
+        const parent = parentMap.get(id);
+        return `  ${id}${parent ? ` (parent:${parent})` : " (root)"}${kids.length ? ` → [${kids.join(", ")}]` : " (leaf)"}`;
+      });
+      console.log(`Diepte ${d}:`);
+      lines.forEach((l) => console.log(l));
+    }
+    console.log("=== einde boomstructuur ===");
+  }
+
+  // --- Hulpfuncties ---
+  const entW = new Map();
+  for (const ent of entNodes) entW.set(ent.id, nodeBreedte(ent, opts));
+
+  const nodeGap = 60;       // afstand tussen nodes
+  const groupGap = 100;     // extra afstand tussen parent-groepjes
+  const layerGap = 220;     // verticale afstand tussen lagen
+  const entPos = new Map(); // entId → getal (x-positie, y later)
+
+  // --- Bepaal L→R volgorde per diepte (top-down) ---
+  const depthOrder = new Map(); // depth → [entId] in L→R volgorde
+  const roots = depthGroups.get(0) || [];
+  roots.sort((a, b) => {
+    const ka = (childrenMap.get(a) || []).length;
+    const kb = (childrenMap.get(b) || []).length;
+    if (kb !== ka) return kb - ka;
+    return (a || "").localeCompare(b || "");
+  });
+  depthOrder.set(0, [...roots]);
+  for (let d = 0; d < maxDepth; d++) {
+    const orderAbove = depthOrder.get(d) || [];
+    const ids = depthGroups.get(d + 1) || [];
+    const byParent = new Map();
+    for (const id of ids) {
+      const p = parentMap.get(id) ?? "__orphan__";
+      if (!byParent.has(p)) byParent.set(p, []);
+      byParent.get(p).push(id);
+    }
+    const result = [];
+    for (const pid of orderAbove) {
+      if (byParent.has(pid)) {
+        result.push(...byParent.get(pid));
+        byParent.delete(pid);
+      }
+    }
+    const rest = [...byParent.entries()].sort((a, b) => {
+      const ka = (childrenMap.get(a[0]) || []).length;
+      const kb = (childrenMap.get(b[0]) || []).length;
+      if (kb !== ka) return kb - ka;
+      return (a[0] || "").localeCompare(b[0] || "");
+    });
+    for (const [, kids] of rest) result.push(...kids);
+    depthOrder.set(d + 1, result);
+  }
+
+  // --- Plaats bottom-up: exact volgens stappen 10-40 ---
+  //
+  // 10: Diepste laag: leaves naast elkaar, per parent gegroepeerd
+  // 20: Parents centreren boven hun kinderen (al geplaatst in depth+1)
+  // 30: Rechts van meest rechtse node in depth+1: leaves toevoegen
+  // 40: Goto 20 als depth > 0
+
+  for (let d = maxDepth; d >= 0; d--) {
+    const ids = depthOrder.get(d) || [];
+    const parents = ids.filter((id) => (childrenMap.get(id) || []).length > 0);
+    const leaves = ids.filter((id) => (childrenMap.get(id) || []).length === 0);
+
+    // Stap 20: parents centreren boven hun kinderen
+    let rightmostEdge = 0;
+    for (const id of parents) {
+      const kids = childrenMap.get(id) || [];
+      const kidsMetPos = kids.filter((k) => entPos.has(k));
+      if (kidsMetPos.length > 0) {
+        let minX = Infinity, maxX = -Infinity;
+        for (const kid of kidsMetPos) {
+          const kx = entPos.get(kid);
+          const kw = entW.get(kid) || 220;
+          minX = Math.min(minX, kx);
+          maxX = Math.max(maxX, kx + kw);
+        }
+        const kidsMidden = (minX + maxX) / 2;
+        const pw = entW.get(id) || 220;
+        entPos.set(id, kidsMidden - pw / 2);
+        rightmostEdge = Math.max(rightmostEdge, (entPos.get(id) || 0) + pw);
+      }
+    }
+
+    // Stap 30: leaves rechts van parents, gegroepeerd per parent (depth d-1)
+    if (leaves.length > 0) {
+      const groups = new Map();
+      for (const id of leaves) {
+        const p = parentMap.get(id) ?? "__orphan__";
+        if (!groups.has(p)) groups.set(p, []);
+        groups.get(p).push(id);
+      }
+
+      const parentOrder = depthOrder.get(d - 1) || [];
+      const orderedGroups = [];
+      for (const pid of parentOrder) {
+        if (groups.has(pid)) {
+          orderedGroups.push(groups.get(pid));
+          groups.delete(pid);
+        }
+      }
+      for (const [, kids] of groups.entries()) {
+        orderedGroups.push(kids);
+      }
+
+      let cx = rightmostEdge > 0 ? rightmostEdge + groupGap : 0;
+      for (const group of orderedGroups) {
+        let sx = cx;
+        for (const kid of group) {
+          entPos.set(kid, sx);
+          sx += (entW.get(kid) || 220) + nodeGap;
+        }
+        cx = sx;
+      }
+    }
+
+    // Stap 35: order-correctie — als een parent links staat van zijn
+    // depthOrder-voorganger, schuif hem + hele subboom rechts.
+    // Dit is de ENIGE correctie, en corrigeert alleen de parent-ordening.
+    let orderRight = -Infinity;
+    for (const id of ids) {
+      if (!entPos.has(id)) continue;
+      const x = entPos.get(id) || 0;
+      const w = entW.get(id) || 220;
+      if (orderRight > -Infinity && x < orderRight + nodeGap) {
+        const shift = orderRight + nodeGap - x;
+        (function shiftSub(nid, s) {
+          if (s === 0) return;
+          entPos.set(nid, (entPos.get(nid) || 0) + s);
+          for (const c of (childrenMap.get(nid) || [])) shiftSub(c, s);
+        })(id, shift);
+        orderRight = x + shift + w;
+      } else {
+        orderRight = x + w;
+      }
+    }
+  }
+
+  // Alle overgebleven entiteiten zonder positie
+  for (const ent of entNodes) {
+    if (!entPos.has(ent.id)) {
+      const lastX = Math.max(0, ...entPos.values()) + nodeGap;
+      entPos.set(ent.id, lastX);
+    }
+  }
+
+  // --- Cluster-layout voor GE's etc. ---
+  const gePerEnt = new Map();
+  for (const ent of entNodes) gePerEnt.set(ent.id, []);
+  for (const ge of geNodes) {
+    const entId = geNaarEnt.get(ge.id);
+    if (entId && gePerEnt.has(entId)) gePerEnt.get(entId).push(ge);
+  }
+
+  const subRank = (g) => {
+    const s = (g.data?.geSubtype || "").toLowerCase();
+    if (s === "hub") return 0;
+    if (s === "data") return 1;
+    if (s === "aanvang") return 2;
+    if (s === "einde") return 3;
+    return 4;
+  };
+  for (const arr of gePerEnt.values()) {
+    arr.sort((a, b) => {
+      const r = subRank(a) - subRank(b);
+      if (r !== 0) return r;
+      return (a.data?.naam || a.data?.typenaam || "").localeCompare(
+        b.data?.naam || b.data?.typenaam || ""
+      );
+    });
+  }
+
+  const secPerGe = new Map();
+  for (const ge of geNodes) {
+    const ids = geNaarSecundair.get(ge.id);
+    if (!ids) continue;
+    const arr = [...ids].map((id) => nodeMap.get(id)).filter(Boolean);
+    if (arr.length > 0) secPerGe.set(ge.id, arr);
+  }
+
+  const clusterResultaten = new Map();
+  for (const ent of entNodes) {
+    const ges = gePerEnt.get(ent.id) || [];
+    const cl = layoutEntCluster(ent, ges, secPerGe, opts);
+    clusterResultaten.set(ent.id, cl);
+  }
+
+  // --- Y-posities op basis van cluster-hoogtes ---
+  const laagMaxHoogte = new Map();
+  for (const [id, d] of entDepth) {
+    const cl = clusterResultaten.get(id);
+    const h = cl ? cl.hoogte : 120;
+    const cur = laagMaxHoogte.get(d) || 0;
+    laagMaxHoogte.set(d, Math.max(cur, h));
+  }
+
+  const laagY = new Map();
+  let cumY = 0;
+  for (const d of sortedDepths) {
+    laagY.set(d, cumY);
+    cumY += (laagMaxHoogte.get(d) || 120) + layerGap - 80;
+  }
+
+  for (const ent of entNodes) {
+    const px = entPos.get(ent.id);
+    const cl = clusterResultaten.get(ent.id);
+    if (px === undefined || !cl) continue;
+    const d = entDepth.get(ent.id) || 0;
+    const offsetY = laagY.get(d) || 0;
+    const entClusterPos = cl.posMap.get(ent.id);
+    const entClusterX = entClusterPos ? entClusterPos.x : 0;
+
+    result.set(ent.id, { x: px, y: offsetY });
+
+    for (const [nid, pos] of cl.posMap.entries()) {
+      if (nid === ent.id) continue;
+      result.set(nid, {
+        x: px - entClusterX + pos.x,
+        y: offsetY + pos.y,
+      });
+    }
+  }
+
+  // --- REL's, ankers, floats, fallback (zelfde als TB) ---
+  const relGeplaatst = new Set();
+  for (const rel of relNodes) {
+    const enden = (relNaarEnts.get(rel.id) || [])
+      .map((id) => result.get(id))
+      .filter(Boolean);
+    if (enden.length >= 2) {
+      const rw = nodeBreedte(rel, opts);
+      const rh = nodeHoogte(rel, opts);
+      result.set(rel.id, {
+        x: (enden[0].x + enden[1].x) / 2 - rw / 2,
+        y: (enden[0].y + enden[1].y) / 2 - rh / 2,
+      });
+      relGeplaatst.add(rel.id);
+    } else if (enden.length === 1) {
+      const rw = nodeBreedte(rel, opts);
+      result.set(rel.id, { x: enden[0].x + 250, y: enden[0].y });
+      relGeplaatst.add(rel.id);
+    }
+  }
+
+  let relY = cumY + 40;
+  for (const rel of relNodes) {
+    if (relGeplaatst.has(rel.id)) continue;
+    result.set(rel.id, { x: 0, y: relY });
+    relY += nodeHoogte(rel, opts) + 20;
+  }
+
+  const relSecCursor = new Map();
+  for (const sec of secNodes) {
+    if (result.has(sec.id)) continue;
+    let relId = null;
+    for (const [rid, set] of topoRelNaarSecundair.entries()) {
+      if (set.has(sec.id)) { relId = rid; break; }
+    }
+    if (!relId) continue;
+    const relPos = result.get(relId);
+    if (!relPos) continue;
+    const relNode = nodeMap.get(relId);
+    const rw = nodeBreedte(relNode, opts);
+    const rh = nodeHoogte(relNode, opts);
+    const sw = nodeBreedte(sec, opts);
+    const sh = nodeHoogte(sec, opts);
+    const yStart = relSecCursor.get(relId) ?? (relPos.y + rh + 30);
+    result.set(sec.id, { x: relPos.x + (rw - sw) / 2, y: yStart });
+    relSecCursor.set(relId, yStart + sh + 18);
+  }
+
+  for (const anker of ankerNodes) {
+    const relId = ankerNaarRel.get(anker.id);
+    const relPos = relId ? result.get(relId) : null;
+    if (!relPos) continue;
+    let entPosAnker = null;
+    for (const e of edges) {
+      if (e.source === anker.id && nodeMap.get(e.target)?.type === "entiteit") {
+        entPosAnker = result.get(e.target);
+        break;
+      }
+      if (e.target === anker.id && nodeMap.get(e.source)?.type === "entiteit") {
+        entPosAnker = result.get(e.source);
+        break;
+      }
+    }
+    if (entPosAnker) {
+      result.set(anker.id, {
+        x: (relPos.x + entPosAnker.x) / 2,
+        y: (relPos.y + entPosAnker.y) / 2,
+      });
+    } else {
+      result.set(anker.id, { x: relPos.x - 60, y: relPos.y });
+    }
+  }
+
+  let floatY = 0;
+  const entXMax = entNodes.reduce((m, n) => {
+    const p = result.get(n.id);
+    const bw = entW.get(n.id) || 220;
+    return p ? Math.max(m, p.x + bw) : m;
+  }, 0);
+  const floatX = entXMax > 0 ? entXMax + 80 : 600;
+
+  for (const f of floatNodes) {
+    const buren = [];
+    for (const e of edges) {
+      if (e.source === f.id) buren.push(e.target);
+      else if (e.target === f.id) buren.push(e.source);
+    }
+    const buurPos = buren.map((id) => result.get(id)).filter(Boolean);
+    if (buurPos.length > 0) {
+      const cx = buurPos.reduce((s, p) => s + p.x, 0) / buurPos.length;
+      result.set(f.id, { x: cx + 220, y: buurPos[0].y });
+    } else {
+      result.set(f.id, { x: floatX, y: floatY });
+      floatY += nodeHoogte(f, opts) + 20;
+    }
+  }
+
+  const ongeplaatst = nodes.filter((n) => !result.has(n.id));
+  if (ongeplaatst.length > 0) {
+    const cols = Math.min(ongeplaatst.length, 4);
+    const maxW = Math.max(...ongeplaatst.map((n) => nodeBreedte(n, opts)), 180);
+    const maxH = Math.max(...ongeplaatst.map((n) => nodeHoogte(n, opts)), 80);
+    const gapX = 30;
+    const gapY = 25;
+    ongeplaatst.forEach((n, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      result.set(n.id, {
+        x: col * (maxW + gapX),
+        y: cumY + row * (maxH + gapY),
+      });
+    });
+  }
+
+  return result;
+}
+
+/**
  * Hoofdfunctie: bereken nieuwe posities voor alle (zichtbare) nodes.
  */
 export function berekenAutoLayout(nodes, edges, opts = {}) {
@@ -476,7 +929,96 @@ export function berekenAutoLayout(nodes, edges, opts = {}) {
   // GE's die nergens via composition aan een ENT hangen → "wees-cluster"
   const weesGE = geNodes.filter((g) => !geNaarEnt.has(g.id));
 
-  // 2) Domein-groepering van ENTs
+  // === Hiërarchische layout (generalisatie-boom) ===
+  // Wordt gekozen als richting="hierarchisch". Bouwt een gelaagde boom
+  // op basis van generalisatie-edges en plaatst entiteiten in lagen.
+  if (o.richting === "hierarchisch") {
+    // Bouw hiërarchische layout over ALLE zichtbare nodes (nodig voor
+    // correcte boomstructuur), maar overschrijf alleen posities van
+    // nodes in de werkset. Locked nodes behouden hun bestaande positie.
+    const hierResult = berekenHierarchischeLayout(alleZichtbaar, edges, o);
+
+    // Voeg alleen werkset-posities toe aan result
+    const werkSet = new Set(werkNodes.map((n) => n.id));
+    for (const [id, pos] of hierResult.entries()) {
+      if (werkSet.has(id)) {
+        result.set(id, pos);
+      }
+    }
+
+    // Selectie-modus: hercentreer (zelfde logica als stap 8)
+    if (selectieSet) {
+      const oldBox = boundingBox(
+        alleZichtbaar.filter((n) => selectieSet.has(n.id)),
+        o
+      );
+      const newPunten = [];
+      for (const id of selectieSet) {
+        const p = result.get(id);
+        const node = nodeMap.get(id);
+        if (p && node) {
+          newPunten.push({
+            x: p.x, y: p.y,
+            w: nodeBreedte(node, o),
+            h: nodeHoogte(node, o),
+          });
+        }
+      }
+      if (oldBox && newPunten.length > 0) {
+        const minX = Math.min(...newPunten.map((p) => p.x));
+        const minY = Math.min(...newPunten.map((p) => p.y));
+        const maxX = Math.max(...newPunten.map((p) => p.x + p.w));
+        const maxY = Math.max(...newPunten.map((p) => p.y + p.h));
+        const newCx = (minX + maxX) / 2;
+        const newCy = (minY + maxY) / 2;
+        const oldCx = (oldBox.minX + oldBox.maxX) / 2;
+        const oldCy = (oldBox.minY + oldBox.maxY) / 2;
+
+        let scale = 1;
+        if (o.vulSelectie) {
+          const newW = Math.max(1, maxX - minX);
+          const newH = Math.max(1, maxY - minY);
+          const oldW = Math.max(1, oldBox.maxX - oldBox.minX);
+          const oldH = Math.max(1, oldBox.maxY - oldBox.minY);
+          scale = Math.max(1, Math.min(2.5, Math.min(oldW / newW, oldH / newH)));
+        }
+
+        for (const id of selectieSet) {
+          const p = result.get(id);
+          if (p) {
+            result.set(id, {
+              x: newCx + (p.x - newCx) * scale + (oldCx - newCx),
+              y: newCy + (p.y - newCy) * scale + (oldCy - newCy),
+            });
+          }
+        }
+      }
+      for (const id of [...result.keys()]) {
+        if (!selectieSet.has(id)) result.delete(id);
+      }
+    }
+
+    // Force-directed nabewerking (optioneel)
+    if (o.forceIteraties > 0) {
+      const pinSet = new Set();
+      for (const n of alleZichtbaar) {
+        if (isLocked(n)) pinSet.add(n.id);
+        if (selectieSet && !selectieSet.has(n.id)) pinSet.add(n.id);
+      }
+      runForceDirected(result, edges, alleZichtbaar, pinSet, o);
+    }
+
+    // Nodes zonder positie: behoud bestaande
+    for (const n of werkNodes) {
+      if (!result.has(n.id)) {
+        result.set(n.id, { x: n.position?.x ?? 0, y: n.position?.y ?? 0 });
+      }
+    }
+
+    return result;
+  }
+
+  // 2) Domein-groepering van ENTs (standaard TB/BT/LR/RL/radial)
   const domeinen = groepeerEntsPerDomein(entNodes);
 
   // Voeg een pseudo-domein "_wees" toe voor losse GE's die geen ENT hebben
