@@ -425,6 +425,7 @@ De resolver (`makeForwardRelationResolver`) leest de FK-waarde (bijv. `gemeente_
 ## Referenties
 
 - [`docs/dynamische-graphql-laag.md`](docs/dynamische-graphql-laag.md) — Architectuurdocument
+- [`docs/trusted-documents.md`](docs/trusted-documents.md) — Trusted Documents ontwerp (persisted queries, security, caching)
 - [`graphql-go/graphql`](https://github.com/graphql-go/graphql) — Library
 - [GraphQL Best Practices](https://graphql.org/learn/best-practices/)
 - [Bun ORM](https://bun.uptrace.dev/)

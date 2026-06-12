@@ -763,3 +763,14 @@ Dit retourneert de Locatie met al haar adresgegevens, plus alle NatuurlijkPerson
 |---------|-----------|
 | `dynql/type_builder.go` | `ReverseRelationInfo` struct, `reverseRelationMap`, `buildReverseRelationMap()`, `vindDoelEntiteit()`, reverse-velden in `buildObjectType()`, `resolveEntityGraphQLType()` |
 | `dynql/query_resolvers.go` | `makeReverseRelationResolver()` — 2-staps query (bron-IDs + volledige entiteiten) |
+
+---
+
+## Trusted Documents (ontwerp)
+
+Zie [`docs/trusted-documents.md`](./trusted-documents.md) voor het volledige ontwerp van **Trusted Documents** (persisted queries) bovenop deze dynamische GraphQL-laag. Het ontwerp beschrijft:
+
+- Wat TD's zijn en hoe ze werken (wire-formaat, variabelen, mutations)
+- Waarom ze nuttig zijn voor dit project (natuurlijke fit met dynamisch schema, security, parse-cache)
+- Hoe caching en TD's samenhangen (parse-cache, HTTP/CDN-cache, response-cache)
+- Een concreet implementatievoorstel in 5 fases

@@ -527,6 +527,16 @@ Visualisatie:
 
 N.B. deze worden potentieel vervangen door het dynamische GraphQL plan (item 8).
 
+### 11a. Trusted Documents (ontwerp 2026-06-12) 🟡
+
+Ontwerp: [`docs/trusted-documents.md`](trusted-documents.md)
+
+- **Fase 1**: `dynql/trusted_documents.go` — DocumentRegistry + startup-generatie + handler-aanpassing voor `documentId`
+- **Fase 2**: AST parse-cache + manifest-endpoint `/graphql/documents`
+- **Fase 3**: Strict mode (`--strict-documents`) + security-integratie met PBAC
+- **Fase 4**: Client-side integratie (frontend gebruikt `documentId` i.p.v. query-string)
+- **Fase 5**: HTTP/CDN-caching met `Cache-Control` headers voor GET TD-requests
+
 ---
 
 ## 12. afgeleide-velden.md — Toekomstige doorontwikkeling
