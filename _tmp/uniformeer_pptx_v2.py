@@ -10,6 +10,7 @@ Verbeterde v2: slimme titel-detectie via positie + font-size.
 """
 from pptx import Presentation
 from pptx.util import Pt
+from pptx.dml.color import RGBColor
 import os
 
 # === CONFIG ===
@@ -22,12 +23,14 @@ TITLE_TOP    = 939641
 TITLE_WIDTH  = 5200650
 TITLE_HEIGHT = 438150
 TITLE_FONT   = Pt(28)
+TITLE_COLOR  = RGBColor(0xF5, 0xF5, 0xF5)  # bijna wit (matcht slide 3)
 
 CONTENT_LEFT   = 589788
 CONTENT_TOP    = 1832705
 CONTENT_WIDTH  = 4953000
 CONTENT_HEIGHT = 3453061
 CONTENT_FONT   = Pt(16)
+CONTENT_COLOR  = RGBColor(0xDA, 0xFF, 0xDE)  # licht mintgroen (matcht slide 3)
 
 # De standaard "bottom title" positie in originele slides 5-15:
 BOTTOM_TITLE_TOP = 571500  # T-waarde van de 28pt titel in slides 5+
@@ -58,6 +61,18 @@ def remove_text_shapes(slide):
         sp.getparent().remove(sp)
     return len(to_remove)
 
+def send_pictures_to_back(slide):
+    """Verplaats alle PICTURE shapes naar het begin van de z-order (achtergrond)."""
+    sp_tree = slide.shapes[0].element.getparent()  # het <p:spTree> element
+    pictures = []
+    for shape in slide.shapes:
+        if shape.shape_type == 13:  # PICTURE
+            pictures.append(shape.element)
+    # Verplaats elk picture element naar positie 0 (begin)
+    for i, pic_el in enumerate(pictures):
+        sp_tree.remove(pic_el)
+        sp_tree.insert(i, pic_el)
+
 def add_title(slide, text):
     box = slide.shapes.add_textbox(TITLE_LEFT, TITLE_TOP, TITLE_WIDTH, TITLE_HEIGHT)
     tf = box.text_frame
@@ -68,6 +83,7 @@ def add_title(slide, text):
     run.text = text
     run.font.size = TITLE_FONT
     run.font.bold = True
+    run.font.color.rgb = TITLE_COLOR
     return box
 
 def add_content(slide, lines):
@@ -82,6 +98,7 @@ def add_content(slide, lines):
         run.text = line
         run.font.size = CONTENT_FONT
         run.font.bold = True
+        run.font.color.rgb = CONTENT_COLOR
     return box
 
 # === HOOFDPROGRAMMA ===
@@ -202,6 +219,9 @@ for slide_idx in range(4, total):
     
     if content_lines:
         add_content(slide, content_lines)
+    
+    # Zet alle afbeeldingen naar de achtergrond zodat tekst altijd zichtbaar is
+    send_pictures_to_back(slide)
     
     transformed += 1
 
