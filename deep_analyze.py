@@ -2,8 +2,8 @@
 from pptx import Presentation
 from pptx.util import Pt
 
-# Gebruik de niet-17p versie als basis
-pptx_file = 'd:\\Git\\Bitemporal_2026\\bitemp_register_v06\\docs\\presentaties\\apidays\\FOST & apidays Amsterdam 2026 - Volledige Recap.pptx'
+# Gebruik het herstelde 17p bestand
+pptx_file = 'd:\\Git\\Bitemporal_2026\\bitemp_register_v06\\docs\\presentaties\\apidays\\FOST & apidays Amsterdam 2026 - Volledige Recap 17p.pptx'
 
 prs = Presentation(pptx_file)
 print(f'Totaal slides: {len(prs.slides)}\n')
