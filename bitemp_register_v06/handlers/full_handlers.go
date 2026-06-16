@@ -1030,7 +1030,7 @@ func MakeGetRegistratiesMetWijzigingenHandler() gin.HandlerFunc {
 		const (
 			defaultPage = 1
 			defaultSize = 20
-			maxSize     = 100
+			maxSize     = 2000
 		)
 
 		page := defaultPage
@@ -1374,7 +1374,7 @@ func MakeGetFullEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 		const (
 			defaultPage = 1
 			defaultSize = 20
-			maxSize     = 100
+			maxSize     = 2000
 		)
 
 		if meta.Factory == nil {

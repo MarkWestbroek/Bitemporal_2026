@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -32,6 +32,8 @@ export default function RepresentatieTabel({ typeMeta }) {
   const [error, setError] = useState(null);
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const debounceRef = useRef(null);
   // Ref-FK weergavenamen: { "TypeNaam": { "id": "label" } }
   // Gevuld via de reflijst-opties API voor alle ref-FK velden in de onderliggende GE's.
   const [refNaamCache, setRefNaamCache] = useState({});
@@ -197,13 +199,16 @@ export default function RepresentatieTabel({ typeMeta }) {
   }, [typeMeta, isEntiteit, typeMetaByTypenaam, refNaamCache]);
 
   // Data ophalen — entiteiten via /full/ (met geneste GE's), overig via flat endpoint
-  const fetchData = useCallback(async () => {
+  // Bij een zoekterm (q) wordt server-side ILIKE search gebruikt op alle string-kolommen.
+  const fetchData = useCallback(async (q = "") => {
     if (!apiPath) return;
     setLoading(true);
     setError(null);
     try {
       const prefix = isEntiteit ? "full/" : "";
-      const res = await fetch(`${baseUrl}/${prefix}${apiPath}?page=1&size=1000`);
+      const params = new URLSearchParams({ page: "1", size: "1000" });
+      if (q) params.set("q", q);
+      const res = await fetch(`${baseUrl}/${prefix}${apiPath}?${params}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       const key = typeMeta.meervoud || Object.keys(json).find((k) => Array.isArray(json[k]));
@@ -216,6 +221,26 @@ export default function RepresentatieTabel({ typeMeta }) {
   }, [baseUrl, typeMeta, apiPath, isEntiteit]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // ── Server-side zoeken via ?q= ────────────────────────────────────────
+  // Wanneer de gebruiker een kolomfilter invult, wordt de waarde na een korte
+  // debounce als ?q= parameter naar de backend gestuurd. De backend doet een
+  // ILIKE-search over alle string-kolommen (zie core_handlers.go). Zo vind je
+  // ook records die niet in de eerste 2000 passen.
+  useEffect(() => {
+    const actieveFilter = columnFilters.find((f) => f.value);
+    const q = actieveFilter ? String(actieveFilter.value).trim() : "";
+    setSearchQuery(q);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetchData(q);
+    }, 250);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [columnFilters, fetchData]);
 
   // ── Ref-FK weergavenamen ophalen ──────────────────────────────────────
   // Haal voor alle ref-FK velden in de onderliggende GE's de weergavenamen op via de
