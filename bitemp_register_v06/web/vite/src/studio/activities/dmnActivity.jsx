@@ -16,6 +16,7 @@ import DmnModeler from "../../dmn/DmnModeler";
 import DmnTreeBrowser from "../../dmn/DmnTreeBrowser";
 import { STARTER_DMN_XML } from "../../dmn/starterDmn";
 import { nieuweBeslistabel, bindInput, bindOutput } from "../../dmn/dmnModel";
+import DmnPropertiesPanel from "../../dmn/DmnPropertiesPanel";
 import { IconDMN } from "../icons";
 import { menuBus } from "../menuBus";
 
@@ -53,6 +54,7 @@ function DmnProvider({ children }) {
   const [afgeleidVoorstel, setAfgeleidVoorstel] = useState(null);
   const [activeTab, setActiveTab] = useState("drd"); // "drd" | "tabel"
   const [dmnViews, setDmnViews] = useState([]);
+  const [selectedElement, setSelectedElement] = useState(null);
   const modelerRef = useRef(null);
 
   // Laatste tabel in een ref, zodat de menu-export altijd de actuele waarde pakt.
@@ -95,6 +97,147 @@ function DmnProvider({ children }) {
     }
   }, []);
 
+  const handleSelectionChange = useCallback((newSelection) => {
+    // newSelection is een array van geselecteerde elementen
+    // We pakken het eerste element (of null als leeg)
+    const element = newSelection && newSelection.length > 0 ? newSelection[0] : null;
+    console.log('[DMN] Selection changed:', {
+      newSelection,
+      element,
+      elementType: element?.$type || element?.type,
+      elementId: element?.id,
+      elementName: element?.name || element?.businessObject?.name
+    });
+    setSelectedElement(element);
+  }, []);
+
+  const handleElementUpdate = useCallback((updates) => {
+    if (!selectedElement || !modelerRef.current) return;
+    const activeViewer = modelerRef.current.getActiveViewer?.();
+    if (!activeViewer) return;
+    const modeling = activeViewer.get?.("modeling");
+    const elementRegistry = activeViewer.get?.("elementRegistry");
+    if (!modeling || !elementRegistry) return;
+
+    // Haal het echte diagram-element op (niet het businessObject)
+    const elementId = selectedElement.id || selectedElement.businessObject?.id;
+    const element = elementRegistry.get(elementId);
+    if (!element) return;
+
+    // modeling.updateProperties met het echte element triggert automatisch
+    // een visuele re-render via commandStack.changed
+    modeling.updateProperties(element, updates);
+
+    // Haal het verse element opnieuw op uit de registry — dit is een echt
+    // dmn-js element met $type, businessObject, etc. intact
+    const refreshed = elementRegistry.get(elementId);
+    setSelectedElement(refreshed || element);
+  }, [selectedElement]);
+
+  /** Drop-handler: FieldRef uit ModelPicker op een DMN-element zetten. */
+  const handleDropFieldRef = useCallback(async (dmnElement, fieldRef) => {
+    if (!modelerRef.current) return;
+
+    const activeViewer = modelerRef.current.getActiveViewer?.();
+    if (!activeViewer) return;
+    const modeling = activeViewer.get?.("modeling");
+    const elementRegistry = activeViewer.get?.("elementRegistry");
+    if (!modeling || !elementRegistry) return;
+
+    const element = elementRegistry.get(dmnElement.id);
+    if (!element) return;
+
+    const variableName = fieldRef.veldnaam || fieldRef.veldpad || "";
+    const typeRef = fieldRef.datatype || fieldRef.type || "string";
+    const bo = element.businessObject;
+    const oudeLabel = bo.variable?.name || bo.name || "";
+
+    // Stap 1: update de InputData in het DRD
+    modeling.updateProperties(element, {
+      name: fieldRef.veldpad || fieldRef.veldnaam,
+      variable: {
+        ...(bo.variable || { $type: "dmn:InformationItem", id: `${bo.id}_variable` }),
+        name: variableName,
+        typeRef,
+      },
+    });
+
+    // Stap 2: muteer de decision-table input-labels direct in de gedeelde
+    // business-objects.
+    const allElements = elementRegistry.getAll();
+    // eslint-disable-next-line no-console
+    console.log("[DMN] elementRegistry count:", allElements.length, "targetId:", dmnElement.id);
+    let affectedDecisionId = null;
+    let mutated = false;
+    for (const el of allElements) {
+      const elBo = el.businessObject;
+      if (!elBo || elBo.$type !== "dmn:Decision") continue;
+
+      const infoReqs = elBo.informationRequirement || [];
+      // Href kan met of zonder # zijn na dmn-js parsing
+      const refsUs = infoReqs.some((ir) => {
+        const href = ir.requiredInput?.href || ir.requiredDecision?.href || "";
+        return href === dmnElement.id || href.endsWith("#" + dmnElement.id) || href.includes("#" + dmnElement.id);
+      });
+      // eslint-disable-next-line no-console
+      console.log("[DMN] Decision", elBo.id, "infoReqs:", infoReqs.length, "refsUs:", refsUs);
+      if (!refsUs) continue;
+
+      const dt = elBo.decisionLogic || elBo.decisionTable || elBo.encapsulatedLogic?.decisionTable || elBo.encapsulatedLogic?.decisionLogic;
+      if (!dt || !dt.input) {
+        // eslint-disable-next-line no-console
+        console.log("[DMN]   no dt or dt.input — elBo keys:", Object.keys(elBo).filter(k => !k.startsWith("$")), "decisionLogic:", elBo.decisionLogic);
+        continue;
+      }
+
+      // eslint-disable-next-line no-console
+      console.log("[DMN] Updating DT inputs, count:", dt.input.length, "oldLabel:", oudeLabel);
+      for (const inp of dt.input) {
+        const expr = inp.inputExpression;
+        if (!expr) continue;
+        // eslint-disable-next-line no-console
+        console.log("[DMN]   input label:", inp.label, "expr.text:", expr.text, "match?", expr.text === oudeLabel || inp.label === oudeLabel);
+        if (expr.text === oudeLabel || inp.label === oudeLabel) {
+          inp.label = variableName;
+          expr.text = variableName;
+          expr.typeRef = typeRef;
+          mutated = true;
+        }
+      }
+      affectedDecisionId = elBo.id;
+    }
+    // eslint-disable-next-line no-console
+    console.log("[DMN] Mutated:", mutated, "affectedDecisionId:", affectedDecisionId);
+
+    // Stap 3: forceer de decision-table viewer te refreshen door de view
+    // te openen (als die bestaat) en terug te keren naar DRD.
+    if (mutated && affectedDecisionId) {
+      const allViews = modelerRef.current.getViews?.() || [];
+      // eslint-disable-next-line no-console
+      console.log("[DMN] Views:", allViews.map(v => `${v.type}:${v.element?.id}`));
+      const dtView = allViews.find((v) => v.type === "decisionTable" && v.element?.id === affectedDecisionId);
+      if (dtView) {
+        // eslint-disable-next-line no-console
+        console.log("[DMN] Toggling decision table view:", dtView.id);
+        await modelerRef.current.openView(dtView.id);
+        await new Promise((r) => setTimeout(r, 100));
+        const drdView = allViews.find((v) => v.type === "drd");
+        if (drdView) {
+          await modelerRef.current.openView(drdView.id);
+        }
+      } else {
+        // eslint-disable-next-line no-console
+        console.log("[DMN] No decisionTable view yet — mutation will be picked up when view is created");
+      }
+    }
+
+    // Visuele refresh + update context
+    const refreshed = elementRegistry.get(dmnElement.id);
+    if (refreshed) {
+      setSelectedElement(refreshed);
+    }
+  }, []);
+
   return (
     <Ctx.Provider
       value={{
@@ -108,8 +251,12 @@ function DmnProvider({ children }) {
         setActiveTab,
         dmnViews,
         modelerRef,
+        selectedElement,
         handleViewChange,
         handleOpenView,
+        handleSelectionChange,
+        handleElementUpdate,
+        handleDropFieldRef,
       }}
     >
       {children}
@@ -165,7 +312,7 @@ function DmnSidebar() {
 }
 
 function DmnMain() {
-  const { table, setTable, setBindDoel, setAfgeleidVoorstel, activeTab, setActiveTab, modelerRef, handleViewChange } = useContext(Ctx);
+  const { table, setTable, setBindDoel, setAfgeleidVoorstel, activeTab, setActiveTab, modelerRef, handleViewChange, handleSelectionChange, handleDropFieldRef } = useContext(Ctx);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -209,6 +356,8 @@ function DmnMain() {
               ref={modelerRef}
               xml={STARTER_DMN_XML}
               onViewChange={handleViewChange}
+              onSelectionChange={handleSelectionChange}
+              onDropFieldRef={handleDropFieldRef}
               style={{ height: "100%" }}
             />
           </div>
@@ -228,9 +377,18 @@ function DmnMain() {
 }
 
 function DmnInspector() {
-  const { table, afgeleidVoorstel } = useContext(Ctx);
+  const { table, afgeleidVoorstel, selectedElement, activeTab, handleElementUpdate } = useContext(Ctx);
+
   return (
     <div className="studio-inspector-pad">
+      {/* DMN Element Properties (alleen in DRD tab) — bewerkbaar formulier */}
+      {activeTab === "drd" && (
+        <section style={{ marginBottom: 12 }}>
+          <DmnPropertiesPanel element={selectedElement} onUpdate={handleElementUpdate} />
+        </section>
+      )}
+
+      {/* Afgeleid veld voorstel (Tabel tab) */}
       {afgeleidVoorstel && (
         <section style={{ marginBottom: 12 }}>
           <h3 style={{ margin: "0 0 6px", fontSize: 13 }}>Voorstel afgeleid veld</h3>
@@ -239,10 +397,16 @@ function DmnInspector() {
           </pre>
         </section>
       )}
-      <h3 style={{ margin: "0 0 6px", fontSize: 13 }}>Tabel (FieldRef-binding)</h3>
-      <pre style={{ margin: 0, background: "var(--s-panel-head)", padding: 10, borderRadius: 8, fontSize: 11, overflow: "auto" }}>
-        {JSON.stringify(table, null, 2)}
-      </pre>
+
+      {/* Tabel JSON (Tabel tab) */}
+      {activeTab === "tabel" && (
+        <>
+          <h3 style={{ margin: "0 0 6px", fontSize: 13 }}>Tabel (FieldRef-binding)</h3>
+          <pre style={{ margin: 0, background: "var(--s-panel-head)", padding: 10, borderRadius: 8, fontSize: 11, overflow: "auto" }}>
+            {JSON.stringify(table, null, 2)}
+          </pre>
+        </>
+      )}
     </div>
   );
 }
