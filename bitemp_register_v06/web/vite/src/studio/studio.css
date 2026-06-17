@@ -85,6 +85,15 @@
 .studio-menubar__right { display: flex; align-items: center; padding: 0 10px; }
 .studio-menubar__brand { font-size: 12px; font-weight: 600; color: var(--s-bar-fg); display: inline-flex; align-items: center; }
 
+/* ── Flyout-submenu's (item met geneste items) ─ */
+.studio-menubar__subwrap { position: relative; }
+.studio-menubar__caret { color: var(--s-fg-muted); font-size: 10px; margin-left: 4px; }
+.studio-menubar__entry:hover:not(.is-disabled) .studio-menubar__caret { color: #dbeafe; }
+.studio-menubar__dropdown.is-flyout {
+  top: -5px; left: 100%; margin-left: 1px;
+  border-radius: 6px;
+}
+
 /* ── Shell-rij (activity bar + main), vult resterende hoogte ─ */
 .studio-shell-row { flex: 1; min-height: 0; display: flex; }
 

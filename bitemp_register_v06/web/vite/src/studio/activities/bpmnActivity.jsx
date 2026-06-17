@@ -8,11 +8,12 @@
  *
  * Gedeelde state (berichttype, selectie, editor-ref, xml) loopt via context.
  */
-import React, { createContext, useContext, useRef, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
 import { ModelPicker } from "../../modelpicker";
 import { nieuwBerichttype, voegVeldToe } from "../../bericht";
 import { BpmnEditor, STARTER_BPMN, contractNaarIoMapping, valideerContract } from "../../bpmn";
 import { IconBPMN } from "../icons";
+import { menuBus } from "../menuBus";
 
 const Ctx = createContext(null);
 
@@ -20,11 +21,36 @@ function apiBase() {
   return window.location.port === "5174" ? "http://localhost:8082" : "";
 }
 
+/** Download tekst als bestand. */
+function downloadTekst(tekst, bestandsnaam, mime = "text/plain") {
+  const blob = new Blob([tekst], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = bestandsnaam;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function BpmnProvider({ children }) {
   const editorRef = useRef(null);
   const [bericht, setBericht] = useState(() => nieuwBerichttype("InwonerAanmelding"));
   const [selectie, setSelectie] = useState(null);
   const [xml, setXml] = useState("");
+
+  // Menubalk-acties (activiteit-specifiek "Proces"-menu) via de menuBus.
+  useEffect(() => {
+    const af = [
+      menuBus.on("bpmn:nieuw-bericht", () => setBericht(nieuwBerichttype("NieuwBerichttype"))),
+      menuBus.on("bpmn:export-xml", async () => {
+        const out = (await editorRef.current?.exportXML()) || "";
+        setXml(out);
+        if (out) downloadTekst(out, "proces.bpmn", "application/xml");
+      }),
+    ];
+    return () => af.forEach((off) => off());
+  }, []);
+
   return (
     <Ctx.Provider value={{ editorRef, bericht, setBericht, selectie, setSelectie, xml, setXml }}>
       {children}
@@ -135,4 +161,16 @@ export default {
   Inspector: BpmnInspector,
   sidebarLabel: "Canoniek model",
   inspectorLabel: "Koppeling & export",
+  // Activiteit-specifiek "Proces"-menu via de menuBus.
+  menus: [
+    {
+      id: "proces",
+      label: "Proces",
+      items: [
+        { id: "bpmn-nieuw-bericht", label: "Nieuw berichttype", onClick: () => menuBus.emit("bpmn:nieuw-bericht") },
+        { type: "separator" },
+        { id: "bpmn-export-xml", label: "Exporteer BPMN XML…", onClick: () => menuBus.emit("bpmn:export-xml") },
+      ],
+    },
+  ],
 };

@@ -122,17 +122,54 @@ Een klassieke applicatie-menubalk (`MenuBar.jsx`), **flexibel per activiteit**:
 
 - **Standaardmenu's** (`buildMenus.js`): **Bestand** (overzicht/herladen), **Beeld**
   (panelen tonen/verbergen, vastpinnen, thema), **Ga naar** (wisselen tussen
-  activiteiten), **Help**.
+  activiteiten), **Help** (documentatie via de `/docs`-server, over).
 - **Per-activiteit menu's**: een activiteit levert optioneel `menus` aan (array of
-  `(ctx) => array`). Menu's met een bestaand id *overschrijven* de standaard; nieuwe
-  menu's worden vóór **Help** ingevoegd. Voorbeeld: de DMN-activiteit voegt een
-  **Tabel → Nieuwe beslistabel** toe.
+  `(ctx) => array`). De volgorde is verankerd: **Bestand** vooraan, daarna de
+  activiteit-eigen menu's (bv. **Bewerken**, **Publiceer**, **Tabel**), gevolgd door
+  **Beeld**, **Ga naar** en **Help**. Een activiteit-menu met een bestaand id
+  (`bestand`/`beeld`) *overschrijft* de standaard op die ankerplek.
+- **Submenu's (flyout)**: een item met een geneste `items`-array opent een flyout naar
+  rechts (gebruikt voor o.a. **Bewerken → Maak ▸** en **Beeld → Uitlijnen ▸**).
 - **Ontkoppeling**: activiteit-menu-acties bereiken de interne state van een activiteit
   via de `menuBus` (bv. `menuBus.emit("dmn:nieuw")`), zodat de shell de interne
-  werking niet hoeft te kennen.
+  werking niet hoeft te kennen. Acties die op globale stores werken (undo/redo,
+  representatie aanmaken) worden direct aangeroepen, zonder bus.
 
-Het menu-itemmodel: `{ id, label, onClick, shortcut?, disabled?, checked? }` of
-`{ type: "separator" }`.
+Het menu-itemmodel:
+`{ id, label, onClick, shortcut?, disabled?, checked? }`,
+`{ id, label, items: [ … ] }` (submenu) of `{ type: "separator" }`.
+
+#### UML-menubalk (rijk, `fullMain`)
+
+Omdat de UML-IDE `fullMain` is, vervangt zij vrijwel de hele menubalk:
+
+| Menu          | Items                                                                                   |
+|---------------|-----------------------------------------------------------------------------------------|
+| **Bestand**   | Importeer… (bestand of API), Exporteer…, Upload bestand…, Overzicht (index), Pagina herladen |
+| **Bewerken**  | Ongedaan maken (Ctrl+Z), Opnieuw (Ctrl+Y), **Maak ▸** (Entiteit, Gegevenselement, Relatie, Referentielijst, Enumeratie, Gegevenstype, Notitie, Constraint) |
+| **Publiceer** | Publiceer schema-versie…, Delta-analyse…, Rebuild…, Publiceer + Rebuild…                 |
+| **Beeld**     | Nieuw diagram…, Herlaad uit database, Bestanden-paneel, Auto-layout (heel/selectie), Uitlijnen op raster, Relaties normaliseren, **Uitlijnen ▸** (links/rechts/boven/onder, centreren, verdelen), thema |
+
+De koppeling loopt op drie manieren:
+- **Direct op de store**: undo/redo (`useModelStore.temporal`), en **Maak** via
+  `voegNieuwRepToe(kind)` (werkt op het actieve diagram — `useUIStore.activeDiagramId`).
+- **`menuBus` → `IdePage`**: dialoog-/paneel-acties. `IdePage` abonneert zich op
+  `uml:import`, `uml:export`, `uml:upload`, `uml:nieuw-diagram`, `uml:herlaad`,
+  `uml:bestanden`, `uml:publiceer`, `uml:delta`, `uml:rebuild`, `uml:publiceer-rebuild`.
+- **`menuBus` → actief `DiagramCanvas`**: `uml:layout` met een mode (align/distribute/
+  auto-layout/snap-grid/normaliseer). Alleen het actieve diagram reageert.
+
+#### Menu's van de overige activiteiten
+
+| Activiteit  | Menu       | Items                                                       |
+|-------------|------------|-------------------------------------------------------------|
+| DMN         | **Tabel**  | Nieuwe beslistabel (`dmn:nieuw`), Exporteer als JSON (`dmn:export`) |
+| BPMN        | **Proces** | Nieuw berichttype (`bpmn:nieuw-bericht`), Exporteer BPMN XML (`bpmn:export-xml`) |
+| Bericht     | **Bericht**| Nieuw berichttype (`bericht:nieuw`), Exporteer als JSON (`bericht:export`) |
+
+Elke activiteit-`Provider` abonneert zich in een `useEffect` op zijn eigen
+`menuBus`-events en voert de actie uit op de lokale context-state (export gebruikt een
+ref voor de actuele waarde). Zo blijven de onderliggende modules ongewijzigd.
 
 ## Een nieuwe functie toevoegen
 

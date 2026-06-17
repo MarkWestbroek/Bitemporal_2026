@@ -6,10 +6,11 @@
  *   Main      → BerichttypeEditor (projectie + export-tabs)
  *   Inspector → samenvatting van gekozen velden
  */
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
 import { ModelPicker } from "../../modelpicker";
 import { BerichttypeEditor, nieuwBerichttype, voegVeldToe } from "../../bericht";
 import { IconBericht } from "../icons";
+import { menuBus } from "../menuBus";
 
 const Ctx = createContext(null);
 
@@ -17,8 +18,36 @@ function apiBase() {
   return window.location.port === "5174" ? "http://localhost:8082" : "";
 }
 
+/** Download een object als ingesprongen JSON-bestand. */
+function downloadJson(obj, bestandsnaam) {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = bestandsnaam;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function BerichtProvider({ children }) {
   const [bericht, setBericht] = useState(() => nieuwBerichttype("InwonerAanmelding"));
+
+  // Laatste bericht in een ref voor de menu-export.
+  const berichtRef = useRef(bericht);
+  berichtRef.current = bericht;
+
+  // Menubalk-acties (activiteit-specifiek "Bericht"-menu) via de menuBus.
+  useEffect(() => {
+    const af = [
+      menuBus.on("bericht:nieuw", () => setBericht(nieuwBerichttype("NieuwBerichttype"))),
+      menuBus.on("bericht:export", () => {
+        const b = berichtRef.current;
+        downloadJson(b, `${(b?.naam || "berichttype").replace(/\s+/g, "_")}.json`);
+      }),
+    ];
+    return () => af.forEach((off) => off());
+  }, []);
+
   return <Ctx.Provider value={{ bericht, setBericht }}>{children}</Ctx.Provider>;
 }
 
@@ -77,4 +106,16 @@ export default {
   Inspector: BerichtInspector,
   sidebarLabel: "Canoniek model",
   inspectorLabel: "Berichttype",
+  // Activiteit-specifiek "Bericht"-menu via de menuBus.
+  menus: [
+    {
+      id: "bericht",
+      label: "Bericht",
+      items: [
+        { id: "bericht-nieuw", label: "Nieuw berichttype", onClick: () => menuBus.emit("bericht:nieuw") },
+        { type: "separator" },
+        { id: "bericht-export", label: "Exporteer als JSON…", onClick: () => menuBus.emit("bericht:export") },
+      ],
+    },
+  ],
 };

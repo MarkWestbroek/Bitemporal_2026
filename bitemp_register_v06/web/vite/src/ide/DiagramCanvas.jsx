@@ -42,7 +42,7 @@ import { maakRelatieTussenEntiteiten, voegNieuwRepToe } from "./repCreation";
 import { relatieNaarAssociatieklasse, passToePatch, splitsEntiteit, castEntiteitNaarGE, pascalCase } from "./transformations";
 import { generateId, defaultKleur, EDGE_MODES } from "@umleditor/metamodel/types";
 import { pasAutoLayoutToe } from "@umleditor/metamodel/autoLayout";
-
+import { menuBus } from "../studio/menuBus";
 const nodeTypes = {
   entiteit: EntiteitNode,
   gegevenselement: GegevensElementNode,
@@ -2430,6 +2430,17 @@ function DiagramCanvasInner({ diagramId }) {
     },
     [getNodes, setNodes, diagram, diagramId, updateDiagramNodes, normaliseerRelaties, snapNodesToGrid]
   );
+
+  // ── Menubalk-acties (Studio-shell): layout-commando's via de menuBus ──
+  // Alleen het actieve diagram reageert, zodat bij meerdere geopende diagram-tabs
+  // de juiste canvas de uitlijning/auto-layout uitvoert.
+  useEffect(() => {
+    const off = menuBus.on("uml:layout", (mode) => {
+      if (useUIStore.getState().activeDiagramId !== diagramId) return;
+      alignNodes(mode);
+    });
+    return off;
+  }, [diagramId, alignNodes]);
 
   const handleMoveEnd = useCallback(
     (_event, viewport) => {

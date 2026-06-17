@@ -41,6 +41,7 @@ import ExportDialog from "../ide/ExportDialog";
 import ImportDialog from "../ide/ImportDialog";
 import ActionDialog from "../ide/ActionDialog";
 import ErrorBoundary from "../ide/ErrorBoundary";
+import { menuBus } from "../studio/menuBus";
 
 const DEFAULT_MODEL_VERSIE = "v0.";
 const DEFAULT_INDIENER = "MW";
@@ -754,6 +755,34 @@ export default function IdePage({ embedded = false } = {}) {
     setExportPrefillDomein(domein);
     setExportOpen(true);
   }, []);
+
+  // ── Menubalk-acties (Studio-shell) via de menuBus ─────────
+  // De Studio-werkbank toont een applicatie-menubalk boven de IDE; die stuurt
+  // hier "uml:*"-events heen die we koppelen aan de bestaande toolbar-acties.
+  useEffect(() => {
+    const af = [
+      menuBus.on("uml:import", () => handleImport()),
+      menuBus.on("uml:export", () => setExportOpen(true)),
+      menuBus.on("uml:upload", () => setUploadOpen(true)),
+      menuBus.on("uml:nieuw-diagram", () => handleNieuwDiagram()),
+      menuBus.on("uml:herlaad", () => handleHerlaad()),
+      menuBus.on("uml:bestanden", () => handleOpenBestanden()),
+      menuBus.on("uml:publiceer", () => handlePubliceer()),
+      menuBus.on("uml:delta", () => handleDiff()),
+      menuBus.on("uml:rebuild", () => handleRebuild()),
+      menuBus.on("uml:publiceer-rebuild", () => handlePublishAndRebuild()),
+    ];
+    return () => af.forEach((off) => off());
+  }, [
+    handleImport,
+    handleNieuwDiagram,
+    handleHerlaad,
+    handleOpenBestanden,
+    handlePubliceer,
+    handleDiff,
+    handleRebuild,
+    handlePublishAndRebuild,
+  ]);
 
   // ── Factory: bepaalt welk component in welke tab ─────────
   const factory = useCallback(

@@ -9,7 +9,7 @@
  * Gedeelde state (tabel, bind-modus) loopt via een lokale React-context, zodat de
  * onderliggende dmn/-module ongewijzigd blijft en netjes gescheiden is van de shell.
  */
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
 import { ModelPicker } from "../../modelpicker";
 import DmnTableEditor from "../../dmn/DmnTableEditor";
 import { nieuweBeslistabel, bindInput, bindOutput } from "../../dmn/dmnModel";
@@ -22,18 +22,39 @@ function apiBase() {
   return window.location.port === "5174" ? "http://localhost:8082" : "";
 }
 
+/** Download een object als ingesprongen JSON-bestand. */
+function downloadJson(obj, bestandsnaam) {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = bestandsnaam;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function DmnProvider({ children }) {
   const [table, setTable] = useState(() => nieuweBeslistabel("Bepaal ingezetene-status"));
   const [bindDoel, setBindDoel] = useState(null);
   const [afgeleidVoorstel, setAfgeleidVoorstel] = useState(null);
 
+  // Laatste tabel in een ref, zodat de menu-export altijd de actuele waarde pakt.
+  const tableRef = useRef(table);
+  tableRef.current = table;
+
   // Menubalk-acties (activiteit-specifiek "Tabel"-menu) via de menuBus.
   useEffect(() => {
-    const af1 = menuBus.on("dmn:nieuw", () => {
-      setTable(nieuweBeslistabel("Nieuwe beslistabel"));
-      setAfgeleidVoorstel(null);
-    });
-    return () => { af1(); };
+    const af = [
+      menuBus.on("dmn:nieuw", () => {
+        setTable(nieuweBeslistabel("Nieuwe beslistabel"));
+        setAfgeleidVoorstel(null);
+      }),
+      menuBus.on("dmn:export", () => {
+        const t = tableRef.current;
+        downloadJson(t, `${(t?.naam || "beslistabel").replace(/\s+/g, "_")}.json`);
+      }),
+    ];
+    return () => af.forEach((off) => off());
   }, []);
 
   return (
@@ -124,6 +145,8 @@ export default {
       label: "Tabel",
       items: [
         { id: "dmn-nieuw", label: "Nieuwe beslistabel", onClick: () => menuBus.emit("dmn:nieuw") },
+        { type: "separator" },
+        { id: "dmn-export", label: "Exporteer als JSON…", onClick: () => menuBus.emit("dmn:export") },
       ],
     },
   ],

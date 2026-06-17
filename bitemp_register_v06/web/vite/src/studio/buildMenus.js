@@ -33,6 +33,12 @@ function standaardMenus(ctx) {
     window.location.href = window.location.pathname.replace(/[^/]*$/, "") || "/";
   };
 
+  // Documentatie wordt door de API-server gerenderd onder /docs/<pad>.
+  // In dev draait Vite op :5174 en de API op :8082.
+  const docsBasis = window.location.port === "5174" ? "http://localhost:8082" : "";
+  const openDocs = () =>
+    window.open(`${docsBasis}/docs/bitemp_register_v06/docs/STUDIO.md`, "_blank", "noopener");
+
   return [
     {
       id: "bestand",
@@ -97,29 +103,33 @@ function standaardMenus(ctx) {
       id: "help",
       label: "Help",
       items: [
-        { id: "docs", label: "Documentatie (STUDIO.md)…", onClick: () => window.open("https://github.com", "_blank") },
+        { id: "docs", label: "Documentatie (STUDIO.md)…", onClick: openDocs },
         { id: "about", label: "Over Studio", onClick: () => window.alert("Studio — geïntegreerde werkbank voor het bitemporeel register.") },
       ],
     },
   ];
 }
 
-/** Voeg activiteit-menu's samen met de standaard (override by id, nieuwe vóór Help). */
+/** Voeg activiteit-menu's samen met de standaard (override by id, nette volgorde).
+ *
+ * Vaste ankers: Bestand staat vooraan, daarna de activiteit-eigen menu's
+ * (bv. Bewerken, Publiceer, Tabel), gevolgd door Beeld, Ga naar en Help.
+ * Een activiteit-menu met een bestaand id (bestand/beeld/…) overschrijft de
+ * standaard op die ankerplek; nieuwe id's komen in het "midden".
+ */
 export function buildMenus(ctx) {
   const standaard = standaardMenus(ctx);
   const ruw = typeof ctx.actief?.menus === "function" ? ctx.actief.menus(ctx) : ctx.actief?.menus;
   const eigen = Array.isArray(ruw) ? ruw : [];
-  if (eigen.length === 0) return standaard;
 
-  const result = standaard.map((m) => {
-    const override = eigen.find((e) => e.id === m.id);
-    return override || m;
-  });
-  const helpIdx = result.findIndex((m) => m.id === "help");
-  const nieuwe = eigen.filter((e) => !standaard.some((m) => m.id === e.id));
-  if (nieuwe.length) {
-    const pos = helpIdx >= 0 ? helpIdx : result.length;
-    result.splice(pos, 0, ...nieuwe);
-  }
-  return result;
+  const stdById = new Map(standaard.map((m) => [m.id, m]));
+  const eigenById = new Map(eigen.map((m) => [m.id, m]));
+  const pick = (id) => eigenById.get(id) || stdById.get(id) || null;
+
+  // Ankers die hun vaste plek houden; al het overige (eigen) komt in het midden.
+  const ankers = new Set(["bestand", "beeld", "ganaar", "help"]);
+  const midden = eigen.filter((m) => !ankers.has(m.id));
+
+  const result = [pick("bestand"), ...midden, pick("beeld"), pick("ganaar"), pick("help")];
+  return result.filter(Boolean);
 }

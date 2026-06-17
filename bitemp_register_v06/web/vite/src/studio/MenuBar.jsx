@@ -8,15 +8,72 @@
  * Menu-model:
  *   menus: [
  *     { id, label, items: [
- *        { id, label, onClick, shortcut?, disabled?, checked? } |
+ *        { id, label, onClick, shortcut?, disabled?, checked? }      // gewoon item
+ *        { id, label, items: [ … ] }                                 // submenu (flyout)
  *        { type: "separator" }
  *     ]}
  *   ]
  *
  * Bediening: klik op een titel opent het menu; bewegen over andere titels wisselt
- * (zoals een desktop-menubalk); klik buiten of Escape sluit.
+ * (zoals een desktop-menubalk); een item met `items` opent een flyout-submenu bij
+ * hover; klik buiten of Escape sluit.
  */
 import React, { useCallback, useEffect, useRef, useState } from "react";
+
+/** Eén dropdown-niveau; rendert items en beheert de open flyout-submenu. */
+function Dropdown({ items, onKies, flyout = false }) {
+  const [openSubId, setOpenSubId] = useState(null);
+
+  return (
+    <div className={"studio-menubar__dropdown" + (flyout ? " is-flyout" : "")} role="menu">
+      {(items || []).map((item, i) => {
+        if (item.type === "separator") {
+          return <div key={`sep-${i}`} className="studio-menubar__sep" />;
+        }
+        const heeftSub = Array.isArray(item.items) && item.items.length > 0;
+        if (heeftSub) {
+          const sid = item.id || i;
+          return (
+            <div
+              key={sid}
+              className="studio-menubar__subwrap"
+              onMouseEnter={() => setOpenSubId(sid)}
+              onMouseLeave={() => setOpenSubId(null)}
+            >
+              <button
+                type="button"
+                role="menuitem"
+                className={"studio-menubar__entry" + (item.disabled ? " is-disabled" : "")}
+                disabled={item.disabled}
+                aria-haspopup="true"
+                aria-expanded={openSubId === sid}
+              >
+                <span className="studio-menubar__check">{item.checked ? "✓" : ""}</span>
+                <span className="studio-menubar__label">{item.label}</span>
+                <span className="studio-menubar__caret">▸</span>
+              </button>
+              {openSubId === sid && <Dropdown items={item.items} onKies={onKies} flyout />}
+            </div>
+          );
+        }
+        return (
+          <button
+            key={item.id || i}
+            type="button"
+            role="menuitem"
+            className={"studio-menubar__entry" + (item.disabled ? " is-disabled" : "")}
+            onClick={() => onKies(item)}
+            disabled={item.disabled}
+          >
+            <span className="studio-menubar__check">{item.checked ? "✓" : ""}</span>
+            <span className="studio-menubar__label">{item.label}</span>
+            {item.shortcut && <span className="studio-menubar__shortcut">{item.shortcut}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function MenuBar({ menus, links = null }) {
   const [openId, setOpenId] = useState(null);
@@ -58,30 +115,7 @@ export default function MenuBar({ menus, links = null }) {
             >
               {menu.label}
             </button>
-            {openId === menu.id && (
-              <div className="studio-menubar__dropdown" role="menu">
-                {(menu.items || []).map((item, i) =>
-                  item.type === "separator" ? (
-                    <div key={`sep-${i}`} className="studio-menubar__sep" />
-                  ) : (
-                    <button
-                      key={item.id || i}
-                      type="button"
-                      role="menuitem"
-                      className={"studio-menubar__entry" + (item.disabled ? " is-disabled" : "")}
-                      onClick={() => kies(item)}
-                      disabled={item.disabled}
-                    >
-                      <span className="studio-menubar__check">{item.checked ? "✓" : ""}</span>
-                      <span className="studio-menubar__label">{item.label}</span>
-                      {item.shortcut && (
-                        <span className="studio-menubar__shortcut">{item.shortcut}</span>
-                      )}
-                    </button>
-                  )
-                )}
-              </div>
-            )}
+            {openId === menu.id && <Dropdown items={menu.items} onKies={kies} />}
           </div>
         ))}
       </div>
