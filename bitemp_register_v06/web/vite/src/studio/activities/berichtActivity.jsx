@@ -1,0 +1,80 @@
+/**
+ * berichtActivity — berichtdefinities als activiteit (was: BerichtEditorDemoPage).
+ *
+ * Slot-indeling:
+ *   Sidebar   → ModelPicker (multi-select) — velden kiezen voor de projectie
+ *   Main      → BerichttypeEditor (projectie + export-tabs)
+ *   Inspector → samenvatting van gekozen velden
+ */
+import React, { createContext, useContext, useState, useCallback } from "react";
+import { ModelPicker } from "../../modelpicker";
+import { BerichttypeEditor, nieuwBerichttype, voegVeldToe } from "../../bericht";
+import { IconBericht } from "../icons";
+
+const Ctx = createContext(null);
+
+function apiBase() {
+  return window.location.port === "5174" ? "http://localhost:8082" : "";
+}
+
+function BerichtProvider({ children }) {
+  const [bericht, setBericht] = useState(() => nieuwBerichttype("InwonerAanmelding"));
+  return <Ctx.Provider value={{ bericht, setBericht }}>{children}</Ctx.Provider>;
+}
+
+function BerichtSidebar() {
+  const { bericht, setBericht } = useContext(Ctx);
+  const onPick = useCallback((ref) => setBericht((b) => voegVeldToe(b, ref)), [setBericht]);
+  const geselecteerd = bericht.velden.map((v) => ({ typenaam: v.ref.typenaam, veldnaam: v.ref.veldnaam }));
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <p style={{ margin: 0, padding: "8px 10px", fontSize: 12, color: "var(--s-fg-muted)" }}>
+        Kies of sleep velden om het berichttype samen te stellen.
+      </p>
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <ModelPicker baseUrl={apiBase()} onPick={onPick} multiSelect selected={geselecteerd} expandEntiteiten />
+      </div>
+    </div>
+  );
+}
+
+function BerichtMain() {
+  const { bericht, setBericht } = useContext(Ctx);
+  return (
+    <div style={{ padding: 16, fontFamily: "system-ui, sans-serif" }}>
+      <BerichttypeEditor bericht={bericht} onChange={setBericht} />
+    </div>
+  );
+}
+
+function BerichtInspector() {
+  const { bericht } = useContext(Ctx);
+  return (
+    <div className="studio-inspector-pad">
+      <h3 style={{ margin: "0 0 6px", fontSize: 13 }}>Berichttype</h3>
+      <p style={{ margin: "0 0 8px", color: "var(--s-fg-muted)" }}>{bericht.naam}</p>
+      <h3 style={{ margin: "0 0 6px", fontSize: 13 }}>Velden ({bericht.velden.length})</h3>
+      <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12 }}>
+        {bericht.velden.map((v) => (
+          <li key={`${v.ref.typenaam}.${v.ref.veldnaam}`}>
+            {v.ref.typenaam}.<b>{v.ref.veldnaam}</b>
+          </li>
+        ))}
+        {bericht.velden.length === 0 && <li style={{ color: "var(--s-fg-muted)" }}>nog geen velden</li>}
+      </ul>
+    </div>
+  );
+}
+
+export default {
+  id: "bericht",
+  label: "Berichtdefinities",
+  icon: <IconBericht />,
+  groep: "modelleren",
+  Provider: BerichtProvider,
+  Sidebar: BerichtSidebar,
+  Main: BerichtMain,
+  Inspector: BerichtInspector,
+  sidebarLabel: "Canoniek model",
+  inspectorLabel: "Berichttype",
+};

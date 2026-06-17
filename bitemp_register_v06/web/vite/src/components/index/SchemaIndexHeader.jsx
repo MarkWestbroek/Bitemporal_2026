@@ -8,6 +8,8 @@ export default function SchemaIndexHeader({ schemaError, vizSchema }) {
         <a className="muted" href="/viz/react/tijdlijn.html">Open schema-tijdslijnvisualisatie</a>
         {" | "}
         <a className="muted" href="/viz/react/registraties.html">Open registraties replay</a>
+        {" | "}
+        <a className="muted" href="/viz/react/studio.html">Open Studio (werkbank)</a>
       </p>
       <p className="muted">
         Kies registratie-id of peilmoment, en volg desgewenst een specifieke entiteit.

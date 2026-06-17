@@ -8,6 +8,17 @@
 
 ## 0. Acute issues — IDE / editor (2026-04-27)
 
+### 0.0 Studio — geïntegreerde werkbank (VS Code-stijl) — ✅ RAAMWERK GEREED (2026-06-17)
+- Nieuwe geïntegreerde werkbank op `/studio` (`web/vite/studio.html`) die de losse functie-pagina's onder één VS Code-achtige schil brengt: uitbreidbare iconenbalk links + centrale werkvlakken met auto-hide tree-browser (links) en eigenschappen-paneel (rechts).
+- Architectuur in `src/studio/`: `activityRegistry.js` (uitbreidbaar register), `useStudioStore.js` (Zustand, paneel-stand + pin-stand per activiteit, persist), `ActivityBar.jsx`, `SidePanel.jsx` (auto-hide overlay + resize + pin), `StudioShell.jsx`, `MenuBar.jsx` + `buildMenus.js` + `menuBus.js` (menubalk), `icons.jsx`, `studio.css`.
+- Activiteit-contract (`Sidebar`/`Main`/`Inspector` + optionele `Provider`/`menus`) houdt de onderliggende modules (`dmn/`, `bpmn/`, `bericht/`, `umleditor/`) ongewijzigd en gescheiden.
+- **Auto-hide panelen**: pin/unpin per paneel per activiteit. Unpinned = rail in de layout; hover toont een overlay die vanzelf inklapt bij focusverlies (~350 ms, behalve bij focus op een invoerveld). Te bedienen via menu **Beeld**.
+- **Menubalk bovenin** (Bestand · Beeld · Ga naar · [activiteit] · Help), flexibel per activiteit via `menus` (override/extend) + `menuBus` voor ontkoppelde acties. Voorbeeld: DMN "Tabel → Nieuwe beslistabel".
+- **Index-link**: `SchemaIndexHeader.jsx` linkt nu naar `/viz/react/studio.html`.
+- Geregistreerd: UML-model (fullMain → `IdePage`), DMN-tabellen, BPMN-processen, berichtdefinities (allen herbruikt). Placeholders (concept): API's, Toegangverlening (FTV/PBAC), Rollen, Referentielijsten.
+- Volledige uitleg: `docs/STUDIO.md`. Hergebruikt bestaande libs (React, Zustand, FlexLayout via IdePage, bpmn-js).
+- Vervolg: placeholders invullen (API/OpenAPI-beheer, FTV-policies, rollen-data, referentielijst-beheer); DMN-modellering t.z.t. bij de UML-activiteit voegen.
+
 ### 0.1 Editor-v2 `removeChild` crash blijft levensgroot in beeld
 - Symptoom: `Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node` toont na elke pagina-edit; alleen Vite-dev-server herstart helpt voorlopig.
 - Eerdere RAF-deferral fix in `MetamodelEditor.jsx` werkt niet voor alle render-paden (HMR vs cold load).

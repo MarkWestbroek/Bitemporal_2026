@@ -1,0 +1,74 @@
+/**
+ * activities/index.js — registreert alle activiteiten in het activityRegistry.
+ *
+ * De volgorde hieronder bepaalt de volgorde van de iconen in de activity bar.
+ * Een nieuwe functie toevoegen = hier één descriptor toevoegen (of importeren).
+ *
+ * Groepen:
+ *   "modelleren" → UML, DMN, BPMN, Berichten
+ *   "diensten"   → API's, Toegangverlening
+ *   "data"       → Rollen, Referentielijsten
+ */
+import { registreerActiviteiten } from "../activityRegistry";
+import { maakPlaceholderActiviteit } from "./PlaceholderActivity";
+import { IconAPI, IconToegang, IconRollen, IconReferentielijst } from "../icons";
+
+import umlActivity from "./umlActivity";
+import dmnActivity from "./dmnActivity";
+import bpmnActivity from "./bpmnActivity";
+import berichtActivity from "./berichtActivity";
+
+// ── Nog te bouwen functies: uniforme placeholder met de drie-slot-structuur ──
+const apiActivity = maakPlaceholderActiviteit({
+  id: "api",
+  label: "API's",
+  icon: <IconAPI />,
+  groep: "diensten",
+  sidebarLabel: "API's",
+  toelichting: "Beheer van API-definities (OpenAPI 3.1) bovenop het canoniek model.",
+  voorbeeldItems: [],
+});
+
+const toegangActivity = maakPlaceholderActiviteit({
+  id: "toegang",
+  label: "Toegangverlening",
+  icon: <IconToegang />,
+  groep: "diensten",
+  sidebarLabel: "Policies (FTV)",
+  toelichting: "PBAC/FTV-policies (PIP/PAP/PDP/PEP, XACML 3.0) voor toegangverlening.",
+  voorbeeldItems: [],
+});
+
+const rollenActivity = maakPlaceholderActiviteit({
+  id: "rollen",
+  label: "Rollen",
+  icon: <IconRollen />,
+  groep: "data",
+  sidebarLabel: "Rollen",
+  toelichting: "Inhoudelijke rollen-data die de toegangverlening en policies voeden.",
+  voorbeeldItems: [],
+});
+
+const referentielijstenActivity = maakPlaceholderActiviteit({
+  id: "referentielijsten",
+  label: "Referentielijsten",
+  icon: <IconReferentielijst />,
+  groep: "data",
+  sidebarLabel: "Referentielijsten",
+  toelichting: "Beheer van referentielijsten en hun instantie-items.",
+  voorbeeldItems: [],
+});
+
+registreerActiviteiten([
+  // modelleren
+  umlActivity,
+  dmnActivity,
+  bpmnActivity,
+  berichtActivity,
+  // diensten
+  apiActivity,
+  toegangActivity,
+  // data
+  rollenActivity,
+  referentielijstenActivity,
+]);

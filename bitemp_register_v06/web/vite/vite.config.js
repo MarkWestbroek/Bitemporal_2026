@@ -50,6 +50,7 @@ export default defineConfig({
         "editor-v2": resolve(__dirname, "editor-v2.html"),
         inhoud: resolve(__dirname, "inhoud.html"),
         ide: resolve(__dirname, "ide.html"),
+        studio: resolve(__dirname, "studio.html"),
         universum: resolve(__dirname, "universum.html"),
         modelpicker: resolve(__dirname, "modelpicker.html"),
         "dmn-demo": resolve(__dirname, "dmn-demo.html"),

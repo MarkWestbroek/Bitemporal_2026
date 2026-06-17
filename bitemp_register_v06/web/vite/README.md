@@ -31,6 +31,17 @@ Vite importeert die code via de alias:
 
 Zie ook `../../UML_EDITOR_INTEGRATIE.md`.
 
+## Studio — geïntegreerde werkbank (`/studio`)
+
+`src/studio/` bevat een VS Code-achtige werkbank die de losse functie-pagina's
+(UML, DMN, BPMN, berichten, …) onder één schil brengt: een uitbreidbare iconenbalk
+links en centrale werkvlakken met auto-hide tree-browser (links) en eigenschappen-paneel
+(rechts). Elke functie is een *activiteit* met een dun contract (`Sidebar`/`Main`/`Inspector`);
+de onderliggende modules blijven ongewijzigd. Een nieuwe functie toevoegen = één
+descriptor registreren in `src/studio/activities/index.jsx`.
+
+Volledige uitleg: `../../docs/STUDIO.md`.
+
 ## Ontwikkelen
 
 1. Zorg dat Node.js + npm beschikbaar zijn op je machine.

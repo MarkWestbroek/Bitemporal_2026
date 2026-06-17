@@ -23,6 +23,7 @@ if (import.meta.hot) {
           pad.includes("/uml-editor/src/")          // legacy editor locatie
           || pad.includes("/web/vite/src/umleditor/") // editor-v2 module
           || pad.includes("/web/vite/src/ide/")       // IDE-laag (DiagramCanvas etc.)
+          || pad.includes("/web/vite/src/studio/")    // Studio-werkbank (shell + activiteiten)
           || pad.includes("/web/vite/src/pages/")     // alle pagina's (IdePage, EditorV2Page…)
           || pad.includes("/web/vite/src/store/")     // Zustand stores
           || pad.includes("/web/vite/src/context/")   // React context

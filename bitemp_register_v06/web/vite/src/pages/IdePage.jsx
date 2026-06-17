@@ -49,7 +49,7 @@ function apiBase() {
   return window.location.port === "5174" ? "http://localhost:8082" : "";
 }
 
-export default function IdePage() {
+export default function IdePage({ embedded = false } = {}) {
   const loadModel = useModelStore((s) => s.loadModel);
   const addDiagram = useModelStore((s) => s.addDiagram);
   const modelMeta = useModelStore((s) => s.modelMeta);
@@ -792,8 +792,8 @@ export default function IdePage() {
   return (
     <div
       style={{
-        width: "100vw",
-        height: "100vh",
+        width: embedded ? "100%" : "100vw",
+        height: embedded ? "100%" : "100vh",
         display: "flex",
         flexDirection: "column",
         background: "var(--ide-body-bg, #1e1e1e)",

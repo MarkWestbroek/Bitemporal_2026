@@ -9,6 +9,7 @@ import RegistratieReplayPage from "./pages/RegistratieReplayPage";
 const EditorPage = lazy(() => import("./pages/EditorPage"));
 const EditorV2Page = lazy(() => import("./pages/EditorV2Page"));
 const IdePage = lazy(() => import("./pages/IdePage"));
+const StudioPage = lazy(() => import("./pages/StudioPage"));
 const UniversumPage = lazy(() => import("./universum/UniversumPage"));
 const ModelPickerDemoPage = lazy(() => import("./pages/ModelPickerDemoPage"));
 const DmnEditorDemoPage = lazy(() => import("./pages/DmnEditorDemoPage"));
@@ -90,6 +91,13 @@ function routeFromPath(pathname) {
     path.endsWith("/ide.html")
   ) {
     return "ide";
+  }
+  if (
+    path.endsWith("/studio") ||
+    path.endsWith("/studio/") ||
+    path.endsWith("/studio.html")
+  ) {
+    return "studio";
   }
   if (
     path.endsWith("/editor") ||
@@ -175,6 +183,16 @@ export default function App() {
       <AuthBeschermd vereistRol="editor">
         <Suspense fallback={<div style={{ padding: 32 }}>IDE laden…</div>}>
           <IdePage />
+        </Suspense>
+      </AuthBeschermd>
+    );
+  }
+
+  if (route === "studio") {
+    return (
+      <AuthBeschermd vereistRol="editor">
+        <Suspense fallback={<div style={{ padding: 32 }}>Studio laden…</div>}>
+          <StudioPage />
         </Suspense>
       </AuthBeschermd>
     );
