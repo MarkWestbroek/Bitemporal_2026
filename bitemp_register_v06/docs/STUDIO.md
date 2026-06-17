@@ -46,7 +46,7 @@ src/studio/
     index.jsx             ← registreert alle activiteiten (= iconvolgorde)
     PlaceholderActivity.jsx← fabriek voor nog-te-bouwen functies
     umlActivity.jsx        ← UML-IDE (fullMain: IdePage)
-    dmnActivity.jsx        ← DMN-beslistabellen (+ voorbeeld "Tabel"-menu)
+    dmnActivity.jsx        ← DMN-beslistabellen met DRD/Tabel-tabs + tree browser
     bpmnActivity.jsx       ← BPMN-processen (bpmn.io)
     berichtActivity.jsx    ← berichtdefinities
 src/pages/StudioPage.jsx  ← instappunt (importeert activiteiten + css)
@@ -197,3 +197,77 @@ te wijzigen.
 | data         | Referentielijsten  | concept  | placeholder                        |
 
 DMN-modellering komt later bij de UML-activiteit (zelfde IDE), zoals gewenst.
+
+## DMN-activiteit: DRD + Tabel met dmn-js
+
+> Toegevoegd: 2026-06-18. dmn-js v17.8.1 integratie.
+
+De DMN-activiteit (`dmnActivity.jsx`) combineert nu twee views in tabs:
+
+- **DRD-tab**: de volledige dmn-js Modeler voor Decision Requirements Diagrams
+- **Tabel-tab**: de bestaande DmnTableEditor voor beslistabellen met FieldRef-binding
+
+### Architectuur
+
+```
+src/dmn/
+  DmnModeler.jsx          ← React-wrapper voor dmn-js Modeler (forwardRef)
+  DmnTreeBrowser.jsx      ← Tree-view van DRD-elementen + diagrammen
+  DmnTableEditor.jsx      ← Bestaande beslistabel-editor (ongewijzigd)
+  starterDmn.js           ← Voorbeeld DMN 1.3 XML met DRD
+  dmnModel.js             ← Helpers voor tabel-model (ongewijzigd)
+  index.js                ← Module-exports
+```
+
+### DmnModeler component
+
+De `DmnModeler` is een React-wrapper die dmn-js integreert via `forwardRef`:
+
+- **Import**: laadt DMN XML via `importXML(xml)`
+- **Export**: haalt XML op via `exportXML()`
+- **View-management**: `getViews()`, `openView(viewId)`, `getActiveView()`
+- **Events**: luistert naar `views.changed` en roept `onViewChange` callback
+- **CSS**: importeert alle dmn-js assets (diagram-js, dmn-font, dmn-js-shared)
+
+De component gebruikt `useImperativeHandle` om een imperative API bloot te geven, vergelijkbaar met het BPMN-patroon.
+
+### DmnTreeBrowser component
+
+De sidebar toont een tree-browser (react-arborist) met twee secties:
+
+1. **Diagrammen** (40% hoogte): DRD-views uit de Modeler
+   - Klik op een view opent die view in de Modeler
+   - Iconen: 📐 voor DRD, 📊 voor Decision Table, 📝 voor Literal Expression
+2. **Canoniek model** (60% hoogte): ModelPicker voor veld-binding
+
+De tree wordt dynamisch opgebouwd vanuit `dmnViews` (uit de Modeler) en groepeert views per type.
+
+### Tab-systeem
+
+De main-area heeft twee tabs:
+
+- **DRD**: toont de dmn-js Modeler met volledige editing-capaciteiten
+- **Tabel**: toont de DmnTableEditor met FieldRef-binding
+
+Tab-state wordt gedeeld via de lokale React-context (`Ctx`).
+
+### Menu-integratie
+
+Het "Tabel"-menu exporteert context-afhankelijk:
+
+- **DRD-tab actief**: exporteert DMN XML (`diagram.dmn`)
+- **Tabel-tab actief**: exporteert tabel als JSON
+
+### Starter DMN
+
+`starterDmn.js` bevat een voorbeeld DMN 1.3 document met:
+
+- 2 input data: `Leeftijd`, `Inkomen`
+- 2 decisions: `Bepaal categorie` (4 regels), `Bepaal korting` (4 regels, chained)
+- Volledige DMNDI layout met shapes en edges
+
+### Volgende stappen
+
+- Input/output variabelen mappen op metamodel-velden (FieldRef-binding voor DRD)
+- DMN-evaluatie integratie met process engine
+- Cross-referentie tussen DRD en tabel (decision → table mapping)

@@ -2,16 +2,19 @@
  * dmnActivity — DMN-beslistabellen als activiteit (was: DmnEditorDemoPage).
  *
  * Slot-indeling:
- *   Sidebar   → ModelPicker (canoniek model, bind-bron)
- *   Main      → DmnTableEditor (de beslistabel)
+ *   Sidebar   → DmnTreeBrowser (DRD diagrammen + elementen) + ModelPicker (canoniek model)
+ *   Main      → Tabs: DRD view (dmn-js Modeler) + Tabel view (DmnTableEditor)
  *   Inspector → tabel als JSON + voorstel afgeleid veld
  *
- * Gedeelde state (tabel, bind-modus) loopt via een lokale React-context, zodat de
+ * Gedeelde state (tabel, bind-modus, activeTab, dmnViews) loopt via een lokale React-context, zodat de
  * onderliggende dmn/-module ongewijzigd blijft en netjes gescheiden is van de shell.
  */
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from "react";
 import { ModelPicker } from "../../modelpicker";
 import DmnTableEditor from "../../dmn/DmnTableEditor";
+import DmnModeler from "../../dmn/DmnModeler";
+import DmnTreeBrowser from "../../dmn/DmnTreeBrowser";
+import { STARTER_DMN_XML } from "../../dmn/starterDmn";
 import { nieuweBeslistabel, bindInput, bindOutput } from "../../dmn/dmnModel";
 import { IconDMN } from "../icons";
 import { menuBus } from "../menuBus";
@@ -33,10 +36,24 @@ function downloadJson(obj, bestandsnaam) {
   URL.revokeObjectURL(url);
 }
 
+/** Download tekst als bestand. */
+function downloadTekst(tekst, bestandsnaam, mime = "text/xml") {
+  const blob = new Blob([tekst], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = bestandsnaam;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function DmnProvider({ children }) {
   const [table, setTable] = useState(() => nieuweBeslistabel("Bepaal ingezetene-status"));
   const [bindDoel, setBindDoel] = useState(null);
   const [afgeleidVoorstel, setAfgeleidVoorstel] = useState(null);
+  const [activeTab, setActiveTab] = useState("drd"); // "drd" | "tabel"
+  const [dmnViews, setDmnViews] = useState([]);
+  const modelerRef = useRef(null);
 
   // Laatste tabel in een ref, zodat de menu-export altijd de actuele waarde pakt.
   const tableRef = useRef(table);
@@ -50,22 +67,59 @@ function DmnProvider({ children }) {
         setAfgeleidVoorstel(null);
       }),
       menuBus.on("dmn:export", () => {
-        const t = tableRef.current;
-        downloadJson(t, `${(t?.naam || "beslistabel").replace(/\s+/g, "_")}.json`);
+        if (activeTab === "tabel") {
+          const t = tableRef.current;
+          downloadJson(t, `${(t?.naam || "beslistabel").replace(/\s+/g, "_")}.json`);
+        } else {
+          // Exporteer DMN XML vanuit de Modeler
+          modelerRef.current?.exportXML().then((xml) => {
+            downloadTekst(xml, "diagram.dmn", "text/xml");
+          });
+        }
       }),
     ];
     return () => af.forEach((off) => off());
+  }, [activeTab]);
+
+  const handleViewChange = useCallback((view) => {
+    // Update de lijst met beschikbare views wanneer de Modeler views verandert
+    if (modelerRef.current) {
+      const views = modelerRef.current.getViews();
+      setDmnViews(views);
+    }
+  }, []);
+
+  const handleOpenView = useCallback((viewId) => {
+    if (modelerRef.current) {
+      modelerRef.current.openView(viewId);
+    }
   }, []);
 
   return (
-    <Ctx.Provider value={{ table, setTable, bindDoel, setBindDoel, afgeleidVoorstel, setAfgeleidVoorstel }}>
+    <Ctx.Provider
+      value={{
+        table,
+        setTable,
+        bindDoel,
+        setBindDoel,
+        afgeleidVoorstel,
+        setAfgeleidVoorstel,
+        activeTab,
+        setActiveTab,
+        dmnViews,
+        modelerRef,
+        handleViewChange,
+        handleOpenView,
+      }}
+    >
       {children}
     </Ctx.Provider>
   );
 }
 
 function DmnSidebar() {
-  const { bindDoel, setBindDoel, setTable } = useContext(Ctx);
+  const { bindDoel, setBindDoel, setTable, activeTab, dmnViews, handleOpenView } = useContext(Ctx);
+
   const onPick = useCallback(
     (ref) => {
       if (!bindDoel) return;
@@ -79,30 +133,96 @@ function DmnSidebar() {
     [bindDoel, setTable, setBindDoel]
   );
 
+  // Bepaal de hint-tekst voor de sidebar afhankelijk van actieve tab en bind-modus.
+  let hintText;
+  if (activeTab === "tabel" && bindDoel) {
+    hintText = `Bind-modus: kies een veld voor de ${bindDoel.kant}-kolom.`;
+  } else if (activeTab === "tabel") {
+    hintText = "Sleep een veld op een kolomkop of klik eerst \u201cbind\u2026\u201d in de tabel.";
+  } else {
+    hintText = "Canoniek model (voor tabel-binding)";
+  }
+  const hintKleur = bindDoel ? "#3b82f6" : "var(--s-fg-muted)";
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <p style={{ margin: 0, padding: "8px 10px", fontSize: 12, color: bindDoel ? "#3b82f6" : "var(--s-fg-muted)" }}>
-        {bindDoel
-          ? `Bind-modus: kies een veld voor de ${bindDoel.kant}-kolom.`
-          : "Sleep een veld op een kolomkop of klik eerst \u201cbind\u2026\u201d in de tabel."}
-      </p>
-      <div style={{ flex: 1, minHeight: 0 }}>
-        <ModelPicker baseUrl={apiBase()} onPick={onPick} expandEntiteiten />
+      {/* DMN Tree Browser (altijd zichtbaar) */}
+      <div style={{ height: "40%", borderBottom: "1px solid var(--s-border, #e5e7eb)" }}>
+        <DmnTreeBrowser views={dmnViews} onOpenView={handleOpenView} />
+      </div>
+
+      {/* ModelPicker (voor tabel-binding) */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+        <p style={{ margin: 0, padding: "8px 10px", fontSize: 12, color: hintKleur }}>
+          {hintText}
+        </p>
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <ModelPicker baseUrl={apiBase()} onPick={onPick} expandEntiteiten />
+        </div>
       </div>
     </div>
   );
 }
 
 function DmnMain() {
-  const { table, setTable, setBindDoel, setAfgeleidVoorstel } = useContext(Ctx);
+  const { table, setTable, setBindDoel, setAfgeleidVoorstel, activeTab, setActiveTab, modelerRef, handleViewChange } = useContext(Ctx);
+
   return (
-    <div style={{ padding: 16, fontFamily: "system-ui, sans-serif" }}>
-      <DmnTableEditor
-        table={table}
-        onChange={setTable}
-        onRequestBind={(clauseId, kant) => setBindDoel({ clauseId, kant })}
-        onPromoveerAdhoc={setAfgeleidVoorstel}
-      />
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      {/* Tab-balk */}
+      <div style={{ display: "flex", borderBottom: "1px solid var(--s-border, #e5e7eb)", background: "var(--s-panel-head)" }}>
+        <button
+          onClick={() => setActiveTab("drd")}
+          style={{
+            padding: "8px 16px",
+            background: activeTab === "drd" ? "var(--s-bg)" : "transparent",
+            border: "none",
+            borderBottom: activeTab === "drd" ? "2px solid #3b82f6" : "2px solid transparent",
+            cursor: "pointer",
+            fontSize: 13,
+            fontWeight: activeTab === "drd" ? 600 : 400,
+          }}
+        >
+          DRD
+        </button>
+        <button
+          onClick={() => setActiveTab("tabel")}
+          style={{
+            padding: "8px 16px",
+            background: activeTab === "tabel" ? "var(--s-bg)" : "transparent",
+            border: "none",
+            borderBottom: activeTab === "tabel" ? "2px solid #3b82f6" : "2px solid transparent",
+            cursor: "pointer",
+            fontSize: 13,
+            fontWeight: activeTab === "tabel" ? 600 : 400,
+          }}
+        >
+          Tabel
+        </button>
+      </div>
+
+      {/* Tab-inhoud */}
+      <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+        {activeTab === "drd" ? (
+          <div style={{ height: "100%", position: "relative" }}>
+            <DmnModeler
+              ref={modelerRef}
+              xml={STARTER_DMN_XML}
+              onViewChange={handleViewChange}
+              style={{ height: "100%" }}
+            />
+          </div>
+        ) : (
+          <div style={{ padding: 16, fontFamily: "system-ui, sans-serif" }}>
+            <DmnTableEditor
+              table={table}
+              onChange={setTable}
+              onRequestBind={(clauseId, kant) => setBindDoel({ clauseId, kant })}
+              onPromoveerAdhoc={setAfgeleidVoorstel}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
