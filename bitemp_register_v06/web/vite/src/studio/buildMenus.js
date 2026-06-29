@@ -104,7 +104,7 @@ function standaardMenus(ctx) {
       label: "Help",
       items: [
         { id: "docs", label: "Documentatie (STUDIO.md)…", onClick: openDocs },
-        { id: "about", label: "Over Studio", onClick: () => window.alert("Studio — geïntegreerde werkbank voor het bitemporeel register.") },
+        { id: "about", label: "Over Omnium Studio", onClick: () => window.alert("Omnium Studio — één rondom blik op je informatievoorziening: gegevens, processen, regels, connectiviteit, autorisatie en basisgegevens in één geïntegreerde werkbank.") },
       ],
     },
   ];

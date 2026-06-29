@@ -75,7 +75,7 @@ function Dropdown({ items, onKies, flyout = false }) {
   );
 }
 
-export default function MenuBar({ menus, links = null }) {
+export default function MenuBar({ menus, links = null, brand = null }) {
   const [openId, setOpenId] = useState(null);
   const barRef = useRef(null);
 
@@ -104,6 +104,7 @@ export default function MenuBar({ menus, links = null }) {
 
   return (
     <div className="studio-menubar" ref={barRef}>
+      {brand && <div className="studio-menubar__product">{brand}</div>}
       <div className="studio-menubar__menus">
         {(menus || []).map((menu) => (
           <div className="studio-menubar__item" key={menu.id}>

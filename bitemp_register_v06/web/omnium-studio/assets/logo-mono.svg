@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 228 48" role="img" aria-label="Omnium Studio">
+  <!-- Monochrome lockup: uses currentColor, so it adapts to any background. -->
+  <g fill="currentColor" stroke="currentColor">
+    <circle cx="24" cy="24" r="18" fill="none" stroke-width="3"/>
+    <circle cx="24"    cy="6"  r="3.4" stroke="none"/>
+    <circle cx="39.59" cy="15" r="3.4" stroke="none"/>
+    <circle cx="39.59" cy="33" r="3.4" stroke="none"/>
+    <circle cx="24"    cy="42" r="3.4" stroke="none"/>
+    <circle cx="8.41"  cy="33" r="3.4" stroke="none"/>
+    <circle cx="8.41"  cy="15" r="3.4" stroke="none"/>
+    <rect x="19.5" y="19.5" width="9" height="9" rx="2.2" transform="rotate(45 24 24)" stroke="none"/>
+  </g>
+  <text x="49" y="32" fill="currentColor" stroke="none"
+        font-family="Inter, 'Segoe UI', system-ui, sans-serif" font-size="24" letter-spacing="-0.4">
+    <tspan font-weight="700">Omnium</tspan><tspan font-weight="300" opacity="0.7" dx="3">Studio</tspan>
+  </text>
+</svg>

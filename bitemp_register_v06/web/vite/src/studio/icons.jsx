@@ -76,6 +76,35 @@ export const IconReferentielijst = (p) => (
   </svg>
 );
 
+/**
+ * OmniumMark — het productmerk-logo (de "O" als orbit met facet-knooppunten rond
+ * een centrale hub). Eigen kleurstijl (gradient-spectrum), los van de currentColor-
+ * iconenset, zodat het merk altijd herkenbaar blijft. Gebruikt in de menubalk.
+ */
+export const OmniumMark = ({ size = 22, ...p }) => (
+  <svg viewBox="0 0 48 48" width={size} height={size} role="img" aria-label="Omnium Studio" {...p}>
+    <defs>
+      <linearGradient id="om-ring-studio" x1="6" y1="6" x2="42" y2="42" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stopColor="#60a5fa" />
+        <stop offset="0.5" stopColor="#6366f1" />
+        <stop offset="1" stopColor="#22d3ee" />
+      </linearGradient>
+      <linearGradient id="om-hub-studio" x1="18" y1="18" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stopColor="#a5b4fc" />
+        <stop offset="1" stopColor="#38bdf8" />
+      </linearGradient>
+    </defs>
+    <circle cx="24" cy="24" r="18" fill="none" stroke="url(#om-ring-studio)" strokeWidth="3" />
+    <circle cx="24" cy="6" r="3.4" fill="#3b82f6" />
+    <circle cx="39.59" cy="15" r="3.4" fill="#6366f1" />
+    <circle cx="39.59" cy="33" r="3.4" fill="#8b5cf6" />
+    <circle cx="24" cy="42" r="3.4" fill="#22d3ee" />
+    <circle cx="8.41" cy="33" r="3.4" fill="#0ea5e9" />
+    <circle cx="8.41" cy="15" r="3.4" fill="#38bdf8" />
+    <rect x="19.5" y="19.5" width="9" height="9" rx="2.2" transform="rotate(45 24 24)" fill="url(#om-hub-studio)" />
+  </svg>
+);
+
 export const IconChevronLeft = (p) => (
   <svg {...base} width={16} height={16} {...p}>
     <path d="m15 18-6-6 6-6" />

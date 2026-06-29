@@ -21,6 +21,7 @@ import ActivityBar from "./ActivityBar";
 import SidePanel from "./SidePanel";
 import MenuBar from "./MenuBar";
 import { buildMenus } from "./buildMenus";
+import { OmniumMark } from "./icons";
 
 function ThemaKnop() {
   const theme = useUIStore((s) => s.theme);
@@ -96,6 +97,14 @@ export default function StudioShell() {
   const menubar = (
     <MenuBar
       menus={menus}
+      brand={
+        <span className="studio-menubar__product-brand" title="Omnium Studio">
+          <OmniumMark size={20} />
+          <span className="studio-menubar__product-name">
+            Omnium<span className="studio-menubar__product-sub">Studio</span>
+          </span>
+        </span>
+      }
       links={
         <span className="studio-menubar__brand">
           {actief.label}
