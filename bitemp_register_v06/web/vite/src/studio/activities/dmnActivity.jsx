@@ -76,13 +76,6 @@ function DmnProvider({ children }) {
     // newSelection is een array van geselecteerde elementen
     // We pakken het eerste element (of null als leeg)
     const element = newSelection && newSelection.length > 0 ? newSelection[0] : null;
-    console.log('[DMN] Selection changed:', {
-      newSelection,
-      element,
-      elementType: element?.$type || element?.type,
-      elementId: element?.id,
-      elementName: element?.name || element?.businessObject?.name
-    });
     setSelectedElement(element);
   }, []);
 
@@ -140,8 +133,6 @@ function DmnProvider({ children }) {
     // Stap 2: muteer de decision-table input-labels direct in de gedeelde
     // business-objects.
     const allElements = elementRegistry.getAll();
-    // eslint-disable-next-line no-console
-    console.log("[DMN] elementRegistry count:", allElements.length, "targetId:", dmnElement.id);
     let affectedDecisionId = null;
     let mutated = false;
     for (const el of allElements) {
@@ -154,24 +145,14 @@ function DmnProvider({ children }) {
         const href = ir.requiredInput?.href || ir.requiredDecision?.href || "";
         return href === dmnElement.id || href.endsWith("#" + dmnElement.id) || href.includes("#" + dmnElement.id);
       });
-      // eslint-disable-next-line no-console
-      console.log("[DMN] Decision", elBo.id, "infoReqs:", infoReqs.length, "refsUs:", refsUs);
       if (!refsUs) continue;
 
       const dt = elBo.decisionLogic || elBo.decisionTable || elBo.encapsulatedLogic?.decisionTable || elBo.encapsulatedLogic?.decisionLogic;
-      if (!dt || !dt.input) {
-        // eslint-disable-next-line no-console
-        console.log("[DMN]   no dt or dt.input — elBo keys:", Object.keys(elBo).filter(k => !k.startsWith("$")), "decisionLogic:", elBo.decisionLogic);
-        continue;
-      }
+      if (!dt || !dt.input) continue;
 
-      // eslint-disable-next-line no-console
-      console.log("[DMN] Updating DT inputs, count:", dt.input.length, "oldLabel:", oudeLabel);
       for (const inp of dt.input) {
         const expr = inp.inputExpression;
         if (!expr) continue;
-        // eslint-disable-next-line no-console
-        console.log("[DMN]   input label:", inp.label, "expr.text:", expr.text, "match?", expr.text === oudeLabel || inp.label === oudeLabel);
         if (expr.text === oudeLabel || inp.label === oudeLabel) {
           inp.label = variableName;
           expr.text = variableName;
@@ -181,28 +162,19 @@ function DmnProvider({ children }) {
       }
       affectedDecisionId = elBo.id;
     }
-    // eslint-disable-next-line no-console
-    console.log("[DMN] Mutated:", mutated, "affectedDecisionId:", affectedDecisionId);
 
     // Stap 3: forceer de decision-table viewer te refreshen door de view
     // te openen (als die bestaat) en terug te keren naar DRD.
     if (mutated && affectedDecisionId) {
       const allViews = modelerRef.current.getViews?.() || [];
-      // eslint-disable-next-line no-console
-      console.log("[DMN] Views:", allViews.map(v => `${v.type}:${v.element?.id}`));
       const dtView = allViews.find((v) => v.type === "decisionTable" && v.element?.id === affectedDecisionId);
       if (dtView) {
-        // eslint-disable-next-line no-console
-        console.log("[DMN] Toggling decision table view:", dtView.id);
         await modelerRef.current.openView(dtView.id);
         await new Promise((r) => setTimeout(r, 100));
         const drdView = allViews.find((v) => v.type === "drd");
         if (drdView) {
           await modelerRef.current.openView(drdView.id);
         }
-      } else {
-        // eslint-disable-next-line no-console
-        console.log("[DMN] No decisionTable view yet — mutation will be picked up when view is created");
       }
     }
 
