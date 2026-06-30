@@ -39,6 +39,17 @@ function standaardMenus(ctx) {
   const openDocs = () =>
     window.open(`${docsBasis}/docs/bitemp_register_v06/docs/STUDIO.md`, "_blank", "noopener");
 
+  // Versie-/build-info (compile-time geïnjecteerd via vite.config.js → define).
+  const versie = typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "dev";
+  const buildDatum = typeof __BUILD_DATE__ !== "undefined" ? __BUILD_DATE__ : "";
+  const sha = typeof __GIT_SHA__ !== "undefined" ? __GIT_SHA__ : "";
+  const overTekst =
+    `Omnium Studio v${versie}` +
+    (sha ? ` (${sha})` : "") +
+    (buildDatum ? ` — build ${buildDatum}` : "") +
+    "\n\nÉén rondom blik op je informatievoorziening: gegevens, processen, regels, " +
+    "connectiviteit, autorisatie en basisgegevens in één geïntegreerde werkbank.";
+
   return [
     {
       id: "bestand",
@@ -104,7 +115,7 @@ function standaardMenus(ctx) {
       label: "Help",
       items: [
         { id: "docs", label: "Documentatie (STUDIO.md)…", onClick: openDocs },
-        { id: "about", label: "Over Omnium Studio", onClick: () => window.alert("Omnium Studio — één rondom blik op je informatievoorziening: gegevens, processen, regels, connectiviteit, autorisatie en basisgegevens in één geïntegreerde werkbank.") },
+        { id: "about", label: `Over Omnium Studio (v${versie})`, onClick: () => window.alert(overTekst) },
       ],
     },
   ];
