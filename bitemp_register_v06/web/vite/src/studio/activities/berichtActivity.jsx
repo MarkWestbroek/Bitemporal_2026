@@ -11,23 +11,9 @@ import { ModelPicker } from "../../modelpicker";
 import { BerichttypeEditor, nieuwBerichttype, voegVeldToe } from "../../bericht";
 import { IconBericht } from "../icons";
 import { menuBus } from "../menuBus";
+import { apiBase, downloadJson } from "../studioUtils";
 
 const Ctx = createContext(null);
-
-function apiBase() {
-  return window.location.port === "5174" ? "http://localhost:8082" : "";
-}
-
-/** Download een object als ingesprongen JSON-bestand. */
-function downloadJson(obj, bestandsnaam) {
-  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = bestandsnaam;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 function BerichtProvider({ children }) {
   const [bericht, setBericht] = useState(() => nieuwBerichttype("InwonerAanmelding"));

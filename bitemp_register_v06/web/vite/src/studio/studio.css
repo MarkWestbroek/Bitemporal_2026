@@ -290,3 +290,36 @@
 .studio-list li.is-actief { background: var(--s-accent); color: #fff; }
 
 .studio-inspector-pad { padding: 12px; font-size: 13px; line-height: 1.5; }
+
+/* ── Tab-balk (bv. DMN: DRD/Tabel) ────────────────────────── */
+.studio-tabs {
+  flex: 0 0 auto;
+  display: flex;
+  background: var(--s-panel-head);
+  border-bottom: 1px solid var(--s-border);
+}
+.studio-tab {
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--s-fg-muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+.studio-tab:hover { color: var(--s-fg); }
+.studio-tab.is-actief {
+  color: var(--s-fg);
+  background: var(--s-bg);
+  border-bottom-color: var(--s-accent);
+  font-weight: 600;
+}
+
+/* ── Diagram-papier (dmn-js / bpmn-js) ────────────────────── */
+/* Deze third-party canvassen ondersteunen geen dark-thema. Geef ze bewust een
+   vaste lichte "papier"-ondergrond, zodat de tekening (lijnen, vormen) in zowel
+   het lichte als het donkere studio-thema leesbaar blijft. */
+.studio-paper {
+  background: #ffffff;
+  color: #1f2937;
+}

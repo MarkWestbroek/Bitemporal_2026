@@ -19,34 +19,9 @@ import { nieuweBeslistabel, bindInput, bindOutput } from "../../dmn/dmnModel";
 import DmnPropertiesPanel from "../../dmn/DmnPropertiesPanel";
 import { IconDMN } from "../icons";
 import { menuBus } from "../menuBus";
+import { apiBase, downloadJson, downloadTekst } from "../studioUtils";
 
 const Ctx = createContext(null);
-
-function apiBase() {
-  return window.location.port === "5174" ? "http://localhost:8082" : "";
-}
-
-/** Download een object als ingesprongen JSON-bestand. */
-function downloadJson(obj, bestandsnaam) {
-  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = bestandsnaam;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-/** Download tekst als bestand. */
-function downloadTekst(tekst, bestandsnaam, mime = "text/xml") {
-  const blob = new Blob([tekst], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = bestandsnaam;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 function DmnProvider({ children }) {
   const [table, setTable] = useState(() => nieuweBeslistabel("Bepaal ingezetene-status"));
@@ -101,13 +76,6 @@ function DmnProvider({ children }) {
     // newSelection is een array van geselecteerde elementen
     // We pakken het eerste element (of null als leeg)
     const element = newSelection && newSelection.length > 0 ? newSelection[0] : null;
-    console.log('[DMN] Selection changed:', {
-      newSelection,
-      element,
-      elementType: element?.$type || element?.type,
-      elementId: element?.id,
-      elementName: element?.name || element?.businessObject?.name
-    });
     setSelectedElement(element);
   }, []);
 
@@ -165,8 +133,6 @@ function DmnProvider({ children }) {
     // Stap 2: muteer de decision-table input-labels direct in de gedeelde
     // business-objects.
     const allElements = elementRegistry.getAll();
-    // eslint-disable-next-line no-console
-    console.log("[DMN] elementRegistry count:", allElements.length, "targetId:", dmnElement.id);
     let affectedDecisionId = null;
     let mutated = false;
     for (const el of allElements) {
@@ -179,24 +145,14 @@ function DmnProvider({ children }) {
         const href = ir.requiredInput?.href || ir.requiredDecision?.href || "";
         return href === dmnElement.id || href.endsWith("#" + dmnElement.id) || href.includes("#" + dmnElement.id);
       });
-      // eslint-disable-next-line no-console
-      console.log("[DMN] Decision", elBo.id, "infoReqs:", infoReqs.length, "refsUs:", refsUs);
       if (!refsUs) continue;
 
       const dt = elBo.decisionLogic || elBo.decisionTable || elBo.encapsulatedLogic?.decisionTable || elBo.encapsulatedLogic?.decisionLogic;
-      if (!dt || !dt.input) {
-        // eslint-disable-next-line no-console
-        console.log("[DMN]   no dt or dt.input — elBo keys:", Object.keys(elBo).filter(k => !k.startsWith("$")), "decisionLogic:", elBo.decisionLogic);
-        continue;
-      }
+      if (!dt || !dt.input) continue;
 
-      // eslint-disable-next-line no-console
-      console.log("[DMN] Updating DT inputs, count:", dt.input.length, "oldLabel:", oudeLabel);
       for (const inp of dt.input) {
         const expr = inp.inputExpression;
         if (!expr) continue;
-        // eslint-disable-next-line no-console
-        console.log("[DMN]   input label:", inp.label, "expr.text:", expr.text, "match?", expr.text === oudeLabel || inp.label === oudeLabel);
         if (expr.text === oudeLabel || inp.label === oudeLabel) {
           inp.label = variableName;
           expr.text = variableName;
@@ -206,28 +162,19 @@ function DmnProvider({ children }) {
       }
       affectedDecisionId = elBo.id;
     }
-    // eslint-disable-next-line no-console
-    console.log("[DMN] Mutated:", mutated, "affectedDecisionId:", affectedDecisionId);
 
     // Stap 3: forceer de decision-table viewer te refreshen door de view
     // te openen (als die bestaat) en terug te keren naar DRD.
     if (mutated && affectedDecisionId) {
       const allViews = modelerRef.current.getViews?.() || [];
-      // eslint-disable-next-line no-console
-      console.log("[DMN] Views:", allViews.map(v => `${v.type}:${v.element?.id}`));
       const dtView = allViews.find((v) => v.type === "decisionTable" && v.element?.id === affectedDecisionId);
       if (dtView) {
-        // eslint-disable-next-line no-console
-        console.log("[DMN] Toggling decision table view:", dtView.id);
         await modelerRef.current.openView(dtView.id);
         await new Promise((r) => setTimeout(r, 100));
         const drdView = allViews.find((v) => v.type === "drd");
         if (drdView) {
           await modelerRef.current.openView(drdView.id);
         }
-      } else {
-        // eslint-disable-next-line no-console
-        console.log("[DMN] No decisionTable view yet — mutation will be picked up when view is created");
       }
     }
 
@@ -317,39 +264,24 @@ function DmnMain() {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       {/* Tab-balk */}
-      <div style={{ display: "flex", borderBottom: "1px solid var(--s-border, #e5e7eb)", background: "var(--s-panel-head)" }}>
+      <div className="studio-tabs">
         <button
+          className={"studio-tab" + (activeTab === "drd" ? " is-actief" : "")}
           onClick={() => setActiveTab("drd")}
-          style={{
-            padding: "8px 16px",
-            background: activeTab === "drd" ? "var(--s-bg)" : "transparent",
-            border: "none",
-            borderBottom: activeTab === "drd" ? "2px solid #3b82f6" : "2px solid transparent",
-            cursor: "pointer",
-            fontSize: 13,
-            fontWeight: activeTab === "drd" ? 600 : 400,
-          }}
         >
           DRD
         </button>
         <button
+          className={"studio-tab" + (activeTab === "tabel" ? " is-actief" : "")}
           onClick={() => setActiveTab("tabel")}
-          style={{
-            padding: "8px 16px",
-            background: activeTab === "tabel" ? "var(--s-bg)" : "transparent",
-            border: "none",
-            borderBottom: activeTab === "tabel" ? "2px solid #3b82f6" : "2px solid transparent",
-            cursor: "pointer",
-            fontSize: 13,
-            fontWeight: activeTab === "tabel" ? 600 : 400,
-          }}
         >
           Tabel
         </button>
       </div>
 
-      {/* Tab-inhoud */}
-      <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+      {/* Tab-inhoud — op een vaste lichte "papier"-ondergrond, want dmn-js en de
+          tabel-editor renderen niet leesbaar op het donkere studio-canvas. */}
+      <div className="studio-paper" style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
         {activeTab === "drd" ? (
           <div style={{ height: "100%", position: "relative" }}>
             <DmnModeler
@@ -392,7 +324,7 @@ function DmnInspector() {
       {afgeleidVoorstel && (
         <section style={{ marginBottom: 12 }}>
           <h3 style={{ margin: "0 0 6px", fontSize: 13 }}>Voorstel afgeleid veld</h3>
-          <pre style={{ margin: 0, background: "#0f172a", color: "#e2e8f0", padding: 10, borderRadius: 8, fontSize: 11, overflow: "auto" }}>
+          <pre style={{ margin: 0, background: "var(--s-panel-head)", color: "var(--s-fg)", padding: 10, borderRadius: 8, fontSize: 11, overflow: "auto" }}>
             {JSON.stringify(afgeleidVoorstel, null, 2)}
           </pre>
         </section>

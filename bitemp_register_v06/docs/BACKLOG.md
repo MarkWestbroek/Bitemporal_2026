@@ -20,6 +20,14 @@
 - Volledige uitleg: `docs/STUDIO.md`. Hergebruikt bestaande libs (React, Zustand, FlexLayout via IdePage, bpmn-js).
 - Vervolg: placeholders invullen (API/OpenAPI-beheer, FTV-policies, rollen-data, referentielijst-beheer); DMN-modellering t.z.t. bij de UML-activiteit voegen.
 
+### 0.0.1 Beslissing: DMN-representatie — dmn-js vs. zelfgebouwde tabel-editor (open, 2026-06-30)
+- **Situatie**: de DMN-activiteit gebruikt nu **beide** naast elkaar als tabs: de **DRD-tab** draait op `dmn-js` (Camunda/bpmn.io, `src/dmn/DmnModeler.jsx`) voor de DRD-graaf + standaard beslistabel-viewer en DMN 1.3 XML import/export; de **Tabel-tab** draait op de **zelfgebouwde** `src/dmn/DmnTableEditor.jsx`, waarvan de kolommen binden aan velden uit het canoniek model (drag-drop FieldRef, enum/type-inferentie uit het metamodel).
+- **Afweging**:
+  - *dmn-js*: standaard-conform (DMN 1.3, FEEL), interop/export naar Camunda e.d., DRD-graaf gratis, vendor-onderhoud. Maar: zware bundle (~1 MB), eigen styling die we niet beheren (geen dark-thema → "papier"-workaround toegepast), kent het canoniek model niet.
+  - *DmnTableEditor*: diepe integratie met het canoniek model + metamodel, volledige controle over UX/thema, lichter. Maar: zelf onderhouden, geen DMN-standaard-interop tenzij we zelf naar DMN-XML serialiseren, geen DRD-graaf.
+- **Voorlopige richting** (te bevestigen): omdat de kern van dit project *model-gedreven generatie vanuit het canoniek model* is, is de zelfgebouwde, model-gebonden representatie het strategische middel en is `dmn-js` het best te positioneren als optionele *view/export-laag* (DRD tekenen, naar DMN-XML exporteren) i.p.v. bron van waarheid. Twee representaties synchroon houden is de echte onderhoudslast → één bron aanwijzen (het model).
+- **Vervolg**: keuze maken; bij "model = bron" een serializer model → DMN-XML overwegen zodat dmn-js puur als viewer kan draaien.
+
 ### 0.1 Editor-v2 `removeChild` crash blijft levensgroot in beeld
 - Symptoom: `Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node` toont na elke pagina-edit; alleen Vite-dev-server herstart helpt voorlopig.
 - Eerdere RAF-deferral fix in `MetamodelEditor.jsx` werkt niet voor alle render-paden (HMR vs cold load).

@@ -33,7 +33,7 @@ function schrijfOpslag(state) {
 
 const opgeslagen = leesOpslag();
 
-const useStudioStore = create((set, get) => ({
+const useStudioStore = create((set) => ({
   /** id van de actieve activiteit */
   activeId: opgeslagen.activeId || null,
   /** breedte (px) van linker- en rechterpaneel */
@@ -98,15 +98,6 @@ const useStudioStore = create((set, get) => ({
       return { paneelStand };
     }),
 
-  /** Is een paneel gepind (vast) voor een activiteit? Default true. */
-  isPinned: (activiteitId, kant, defaultPinned = true) => {
-    const stand = get().paneelStand[activiteitId];
-    const sleutel = kant === "sidebar" ? "sidebarPinned" : "inspectorPinned";
-    if (!stand) return defaultPinned;
-    return stand[sleutel] ?? defaultPinned;
-  },
-
-
   /** Expliciet zetten (gebruikt door de splitter / resize). */
   setSidebarWidth: (px) =>
     set((s) => {
@@ -121,13 +112,6 @@ const useStudioStore = create((set, get) => ({
       schrijfOpslag({ ...s, inspectorWidth });
       return { inspectorWidth };
     }),
-
-  /** Stand van een paneel voor een activiteit (default open=true). */
-  isOpen: (activiteitId, kant, defaultOpen = true) => {
-    const stand = get().paneelStand[activiteitId];
-    if (!stand) return defaultOpen;
-    return stand[kant] ?? defaultOpen;
-  },
 }));
 
 export default useStudioStore;
