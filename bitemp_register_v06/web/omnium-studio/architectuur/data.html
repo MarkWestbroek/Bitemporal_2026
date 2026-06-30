@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Data-architectuur — Omnium Studio</title>
+<meta name="description" content="De data-laag van Omnium Studio: een bitemporeel fundament (formele én materiële tijd), het Hub + _Data-patroon, multi-domein modellering en gegenereerde registers." />
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="om-ring" x1="6" y1="6" x2="42" y2="42" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#60a5fa"/><stop offset="0.5" stop-color="#6366f1"/><stop offset="1" stop-color="#22d3ee"/></linearGradient>
+  <linearGradient id="om-hub" x1="18" y1="18" x2="30" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#a5b4fc"/><stop offset="1" stop-color="#38bdf8"/></linearGradient>
+</defs></svg>
+
+<header class="nav"><div class="wrap nav-inner">
+  <a class="brand" href="../index.html"><svg viewBox="0 0 48 48" aria-label="Omnium Studio"><circle cx="24" cy="24" r="18" fill="none" stroke="url(#om-ring)" stroke-width="3"/><circle cx="24" cy="6" r="3.4" fill="#3b82f6"/><circle cx="39.59" cy="15" r="3.4" fill="#6366f1"/><circle cx="39.59" cy="33" r="3.4" fill="#8b5cf6"/><circle cx="24" cy="42" r="3.4" fill="#22d3ee"/><circle cx="8.41" cy="33" r="3.4" fill="#0ea5e9"/><circle cx="8.41" cy="15" r="3.4" fill="#38bdf8"/><rect x="19.5" y="19.5" width="9" height="9" rx="2.2" transform="rotate(45 24 24)" fill="url(#om-hub)"/></svg>Omnium<span class="sub">Studio</span></a>
+  <nav class="nav-links"><a href="../index.html#breed">Domeinen</a><a href="../index.html#diep">Architectuur</a><a class="btn btn-primary" href="../../vite/studio.html">Open de Studio</a></nav>
+</div></header>
+
+<section class="subhero"><div class="wrap">
+  <div class="crumbs"><a href="../index.html">Omnium Studio</a> &nbsp;/&nbsp; <a href="../index.html#diep">Architectuur</a> &nbsp;/&nbsp; Data</div>
+  <div class="eyebrow-row"><span class="platcat">▣ Architectuurlaag · Data</span></div>
+  <h1>Het <span class="grad-text">bitemporele fundament</span></h1>
+  <p class="lead">De data-laag is de stabiele onderlaag: gegevensstructuur en basisgegevens, vastgelegd met
+  <b>twee tijdsdimensies</b>. Niet alleen wát geldt, maar ook wannéér het is vastgelegd — met een audit-trail die je
+  foutloos kunt teruglezen.</p>
+
+  <div class="layerstack">
+    <div class="lay"><span class="n">Laag 1</span><span class="t">Business — processen · regels · rollen</span></div>
+    <div class="lay"><span class="n">Laag 2</span><span class="t">Applicatie — berichten · API's · autorisatie</span></div>
+    <div class="lay on"><span class="n">Laag 3</span><span class="t">Data — gegevensstructuur · basisgegevens</span></div>
+  </div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="sec-tag">Bitemporeel</div>
+  <h2>Twee tijdsassen, volledige historie</h2>
+  <p>Elk gegeven kent twee onafhankelijke tijdlijnen. Daardoor kun je <b>tijdreizen</b>: de toestand van het register
+  opvragen op elk gewenst moment, formeel én materieel.</p>
+  <div class="feat">
+    <div class="fcard"><h3><span class="ic">🗓️</span> Formele tijd (registratie)</h3><p>Wanneer is iets vastgelegd? Velden <code>opvoer</code>/<code>afvoer</code>. Je reist alleen naar het verleden — registreren in de toekomst kan niet.</p></div>
+    <div class="fcard"><h3><span class="ic">⏳</span> Materiële tijd (geldigheid)</h3><p>Wanneer geldt iets in werkelijkheid? Velden <code>aanvang</code>/<code>einde</code>. Hier reis je vooruit én achteruit (bv. een geplande verhuizing).</p></div>
+    <div class="fcard"><h3><span class="ic">🧾</span> Registratie → wijziging → representatie</h3><p>Eén registratie bundelt wijzigingen; elke wijziging voert representaties op of af. Formele tijdstippen leven in een aparte wijzigingen-tabel.</p></div>
+    <div class="fcard"><h3><span class="ic">🧭</span> Tijdreizen over registers</h3><p>Mits dezelfde architectuur kun je zelfs over meerdere registers heen tijdreizen — cruciaal voor een naadloze audit-trail.</p></div>
+  </div>
+  <div class="callout"><b>Afgeleid, niet opgeslagen.</b> De <code>opvoer</code>/<code>afvoer</code> op een record zijn de afgeleide actuele situatie na verwerking van alle wijzigingen tot het heden.</div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="cols">
+    <div>
+      <div class="sec-tag">Patroon</div>
+      <h2>Hub + _Data</h2>
+      <p>v06 scheidt het stabiele anker van de veranderlijke inhoud, zodat correcties netjes geversioneerd zijn:</p>
+      <ul class="checks">
+        <li><b>Hub</b> — stabiel associatief anker met structurele FK's en afgeleide <code>opvoer</code>/<code>afvoer</code>.</li>
+        <li><b>_Data</b> — geversioneerd content-record (<code>ent_id, rel_id, versie</code>); correcties en inhoudelijke wijzigingen leven hier.</li>
+        <li><b>_Aanvang / _Einde</b> — materiële plumbing op hub-niveau, alleen voor types met <code>IsMaterieel</code>.</li>
+        <li>Elk type is een <b>representatie</b>: entiteit, gegevenselement of relatie.</li>
+      </ul>
+    </div>
+    <aside class="specs">
+      <h3>Onder de motorkap</h3>
+      <dl class="deflist">
+        <dt>Taal</dt><dd>Go + PostgreSQL</dd>
+        <dt>ORM</dt><dd>Bun</dd>
+        <dt>Patroon</dt><dd>Hub + _Data</dd>
+        <dt>Tijd</dt><dd>formeel + materieel</dd>
+        <dt>Metadata</dt><dd>MetaRegistry</dd>
+        <dt>Modelrepresentatie</dt><dd>interne JSON</dd>
+      </dl>
+      <div class="callout"><b>Voorbeelddomein:</b> <code>np-loc</code> (natuurlijk persoon &amp; locatie) — zichtbaar in de UML-IDE.</div>
+    </aside>
+  </div>
+  <div class="shot">
+    <div class="bar"><i></i><i></i><i></i><span>Omnium Studio — canoniek model (data-laag) · np-loc</span></div>
+    <img src="../assets/shots/uml-overzicht.png" alt="Canoniek gegevensmodel np-loc als voorbeeld van de data-laag" />
+  </div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="sec-tag">Schaalbaar</div>
+  <h2>Multi-domein &amp; gegenereerde registers</h2>
+  <p>Het model is opgedeeld in domeinen met een eigen prefix en codegen-uitvoer. Vanuit het model genereert het
+  systeem werkende code én — waar gewenst — volledige registers.</p>
+  <div class="feat">
+    <a class="fcard" href="../features/uml.html"><h3><span class="ic">🧩</span> Domeinen</h3><p>Register, NL Personen/Locatie (np-loc), referentie-modellen, portfolio en configuratie — elk met eigen prefix.</p></a>
+    <a class="fcard" href="../features/basisgegevens.html"><h3><span class="ic">📚</span> Basisgegevens</h3><p>Referentielijsten (en straks configuratiedata) als bitemporele onderlaag, herbruikbaar als veldtype.</p></a>
+    <a class="fcard" href="../features/register.html"><h3><span class="ic">⚙️</span> Codegen &amp; rebuild</h3><p>Per domein worden Go-structs, registries en methodes gegenereerd; rebuild bouwt de API én het register zelf.</p></a>
+    <a class="fcard" href="../features/register.html"><h3><span class="ic">🗃️</span> Registers on demand</h3><p>Consistente, herbouwbare registers, rechtstreeks uit het canonieke model — de bestaansreden van de IDE.</p></a>
+  </div>
+</div></section>
+
+<div class="wrap"><div class="pager">
+  <a class="prev" href="applicatie.html"><div class="k">← Vorige laag</div><div class="t">Applicatie-architectuur</div></a>
+  <a class="next" href="business.html"><div class="k">Volgende laag →</div><div class="t">Business-architectuur</div></a>
+</div></div>
+
+<div class="wrap"><div class="cta">
+  <h2>Verken het model in de IDE</h2>
+  <p>Open de UML-activiteit en bekijk het bitemporele np-loc-model.</p>
+  <a class="btn btn-primary" href="../../vite/studio.html">Open Omnium Studio →</a>
+</div></div>
+
+<footer><div class="wrap foot-inner"><div>© 2026 Omnium Studio · Data-architectuur</div><div><a href="../index.html">← Terug naar overzicht</a></div></div></footer>
+</body></html>

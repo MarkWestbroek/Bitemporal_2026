@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Applicatie-architectuur — Omnium Studio</title>
+<meta name="description" content="De applicatie-laag van Omnium Studio: berichten, API's en autorisatie definiëren hoe systemen samenwerken — afgeleid van hetzelfde canonieke model." />
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="om-ring" x1="6" y1="6" x2="42" y2="42" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#60a5fa"/><stop offset="0.5" stop-color="#6366f1"/><stop offset="1" stop-color="#22d3ee"/></linearGradient>
+  <linearGradient id="om-hub" x1="18" y1="18" x2="30" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#a5b4fc"/><stop offset="1" stop-color="#38bdf8"/></linearGradient>
+</defs></svg>
+
+<header class="nav"><div class="wrap nav-inner">
+  <a class="brand" href="../index.html"><svg viewBox="0 0 48 48" aria-label="Omnium Studio"><circle cx="24" cy="24" r="18" fill="none" stroke="url(#om-ring)" stroke-width="3"/><circle cx="24" cy="6" r="3.4" fill="#3b82f6"/><circle cx="39.59" cy="15" r="3.4" fill="#6366f1"/><circle cx="39.59" cy="33" r="3.4" fill="#8b5cf6"/><circle cx="24" cy="42" r="3.4" fill="#22d3ee"/><circle cx="8.41" cy="33" r="3.4" fill="#0ea5e9"/><circle cx="8.41" cy="15" r="3.4" fill="#38bdf8"/><rect x="19.5" y="19.5" width="9" height="9" rx="2.2" transform="rotate(45 24 24)" fill="url(#om-hub)"/></svg>Omnium<span class="sub">Studio</span></a>
+  <nav class="nav-links"><a href="../index.html#breed">Domeinen</a><a href="../index.html#diep">Architectuur</a><a class="btn btn-primary" href="../../vite/studio.html">Open de Studio</a></nav>
+</div></header>
+
+<section class="subhero"><div class="wrap">
+  <div class="crumbs"><a href="../index.html">Omnium Studio</a> &nbsp;/&nbsp; <a href="../index.html#diep">Architectuur</a> &nbsp;/&nbsp; Applicatie</div>
+  <div class="eyebrow-row"><span class="platcat">▣ Architectuurlaag · Applicatie</span></div>
+  <h1>Hoe systemen <span class="grad-text">samenwerken</span></h1>
+  <p class="lead">De applicatie-laag beschrijft de <b>koppelvlakken</b>: berichten, API's en de afdwinging van autorisatie.
+  Allemaal afgeleid van het canonieke model, zodat contracten nooit losraken van de structuur eronder.</p>
+
+  <div class="layerstack">
+    <div class="lay"><span class="n">Laag 1</span><span class="t">Business — processen · regels · rollen</span></div>
+    <div class="lay on"><span class="n">Laag 2</span><span class="t">Applicatie — berichten · API's · autorisatie</span></div>
+    <div class="lay"><span class="n">Laag 3</span><span class="t">Data — gegevensstructuur · basisgegevens</span></div>
+  </div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="sec-tag">Wat valt eronder</div>
+  <h2>Contracten als projectie van het model</h2>
+  <p>Een koppelvlak is een selectie over het canonieke model. Wijzigt het model, dan wijzigt het contract mee —
+  geen handmatig nabouwen van schema's.</p>
+  <div class="feat">
+    <a class="fcard" href="../features/connectiviteit.html"><h3><span class="ic">{ }</span> API's, GraphQL &amp; gRPC</h3><p>De koppelvlakken van deze laag: OpenAPI 3.1 (concept), een dynamische GraphQL-laag uit de MetaRegistry, en op termijn gRPC.</p></a>
+    <a class="fcard" href="../features/bpmn.html"><h3><span class="ic">✉️</span> Berichten (business-laag)</h3><p>Berichttypen zijn de payload-contracten achter BPMN-messages; ze horen bij de business-laag en worden hier als koppelvlak ontsloten.</p></a>
+    <a class="fcard" href="../features/toegang.html"><h3><span class="ic">🛡️</span> Autorisatie-afdwinging</h3><p>PAP, PIP, PDP en PEP dwingen het toegangsbeleid af op de koppelvlakken — gedacht in <b>commando's en queries (CQRS)</b>, niet in CRUD.</p></a>
+    <a class="fcard" href="../features/uml.html"><h3><span class="ic">🧩</span> Eén bron</h3><p>Velden in koppelvlakken verwijzen naar entiteiten en gegevenselementen uit het canonieke model.</p></a>
+  </div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="cols">
+    <div>
+      <div class="sec-tag">Aansluiting</div>
+      <h2>Tussen business en data</h2>
+      <p>De applicatie-laag is de scharnier: ze vertaalt processtappen naar uitwisselbare contracten en bevraagt
+      de data-laag bitemporeel:</p>
+      <ul class="checks">
+        <li><b>Berichten</b> ↔ message-events in BPMN (business-laag).</li>
+        <li><b>API-resources</b> ↔ entiteiten uit het canonieke model (data-laag).</li>
+        <li><b>Tijdreizen</b> ↔ formele/materiële query-parameters op endpoints.</li>
+        <li><b>Gateways</b> ↔ Apollo, WunderGraph of KrakenD ervoor.</li>
+      </ul>
+    </div>
+    <aside class="specs">
+      <h3>Activiteiten in deze laag</h3>
+      <dl class="deflist">
+        <dt>Berichten</dt><dd>actief</dd>
+        <dt>GraphQL</dt><dd>runtime-laag</dd>
+        <dt>API's</dt><dd>concept</dd>
+        <dt>Autorisatie</dt><dd>concept</dd>
+      </dl>
+      <div class="callout"><b>Universeel maken.</b> Koppel <a href="../platforms/apollo.html">Apollo</a>, <a href="../platforms/wundergraph.html">WunderGraph</a> of <a href="../platforms/krakend.html">KrakenD</a> als laag ervoor.</div>
+    </aside>
+  </div>
+  <div class="shot">
+    <div class="bar"><i></i><i></i><i></i><span>Omnium Studio — Berichtdefinitie (applicatie-laag)</span></div>
+    <img src="../assets/shots/bericht.png" alt="Berichtdefinitie als voorbeeld van de applicatie-laag" />
+  </div>
+</div></section>
+
+<div class="wrap"><div class="pager">
+  <a class="prev" href="business.html"><div class="k">← Vorige laag</div><div class="t">Business-architectuur</div></a>
+  <a class="next" href="data.html"><div class="k">Volgende laag →</div><div class="t">Data-architectuur</div></a>
+</div></div>
+
+<div class="wrap"><div class="cta">
+  <h2>Bekijk de koppelvlakken</h2>
+  <p>Open de connectiviteit-activiteit en zie hoe contracten uit het model ontstaan.</p>
+  <a class="btn btn-primary" href="../../vite/studio.html">Open Omnium Studio →</a>
+</div></div>
+
+<footer><div class="wrap foot-inner"><div>© 2026 Omnium Studio · Applicatie-architectuur</div><div><a href="../index.html">← Terug naar overzicht</a></div></div></footer>
+</body></html>

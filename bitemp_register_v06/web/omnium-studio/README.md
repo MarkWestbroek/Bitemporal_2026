@@ -11,7 +11,12 @@ Breed over domeinen, diep over business-, applicatie- en data-architectuur.
 
 | Bestand | Gebruik |
 |---|---|
-| `index.html` | Zelfstandige product-landing page (start voor de website). Inline CSS, Inter-webfont, geen build nodig. |
+| `index.html` | Zelfstandige product-landing page (start voor de website). Inline CSS, Inter-webfont, geen build nodig. De zes domein-kaarten linken naar de subpagina's. |
+| `features/*.html` | Detail-subpagina's: `uml`, `bpmn`, `dmn`, `connectiviteit`, `toegang` (ODRL-gebaseerd toegangsbeleid), `basisgegevens`, en `register` (het gegenereerde bitemporele register — de bestaansreden). Gedeeld stylesheet: `assets/site.css`. |
+| `architectuur/*.html` | De drie architectuurlagen: `business`, `applicatie`, `data` (bitemporeel / Hub + _Data). Gelinkt vanuit de "Diep"-sectie. |
+| `platforms/*.html` | De vier koppel-platforms: `operaton`, `apollo`, `wundergraph`, `krakend`. Gelinkt vanuit de "Universeel"-sectie. |
+| `assets/site.css` | Gedeeld stylesheet voor de feature-subpagina's (zelfde ontwerptaal als de landing page). |
+| `assets/shots/*.png` | Schermafdrukken uit de draaiende Studio per activiteit (UML, DMN, BPMN, bericht, API, toegang, rollen, referentielijsten), gebruikt op de subpagina's. |
 | `assets/mark.svg` | Het logo-merk (orbit + facet-knooppunten + hub). Vierkant, met halo/spokes. |
 | `assets/logo.svg` | Horizontale lockup (donkere achtergrond): merk + woordmerk "Omnium Studio". |
 | `assets/logo-light.svg` | Lockup voor **lichte/witte** achtergronden (donker woordmerk, vollere mark-kleuren). |
@@ -28,6 +33,8 @@ Breed over domeinen, diep over business-, applicatie- en data-architectuur.
 **OG-images opnieuw genereren:** open `assets/og-image.html` (1200×630) resp. `assets/og-square.html` (1200×1200) en maak een schermafdruk van exact die afmeting naar `assets/og-image.png` / `assets/og-square.png`. De landing page verwijst naar `og-image.png` via `og:image` / `twitter:image`.
 
 **App-iconen opnieuw genereren:** render de SVG-bronnen naar PNG op de doelmaten — `favicon.svg` → `favicon-16/32/48`, `icon.svg` → `apple-touch-icon` (180) / `icon-192` / `icon-512`, `icon-maskable.svg` → `icon-512-maskable`. De `<link rel="icon|apple-touch-icon|manifest">`-tags staan al in `index.html`.
+
+**Screenshots opnieuw maken:** start de Studio (Vite dev server) en open `http://localhost:5174/viz/react/studio.html`. Schakel per activiteit (UML/DMN/BPMN/Bericht/API/Toegang/Rollen/Referentielijsten) en maak een schermafdruk naar `assets/shots/<naam>.png`. De Studio toont standaard het voorbeelddomein **np-loc**. De subpagina's verwijzen naar deze bestanden via `../assets/shots/`.
 
 ## Logo-concept
 

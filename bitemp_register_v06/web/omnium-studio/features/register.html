@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Het gegenereerde register — Omnium Studio</title>
+<meta name="description" content="De bestaansreden van Omnium Studio: vanuit het canonieke model genereert een rebuild een volledig draaiend bitemporeel register — code én database, met modelhistorie en migraties." />
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="om-ring" x1="6" y1="6" x2="42" y2="42" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#60a5fa"/><stop offset="0.5" stop-color="#6366f1"/><stop offset="1" stop-color="#22d3ee"/></linearGradient>
+  <linearGradient id="om-hub" x1="18" y1="18" x2="30" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#a5b4fc"/><stop offset="1" stop-color="#38bdf8"/></linearGradient>
+</defs></svg>
+
+<header class="nav"><div class="wrap nav-inner">
+  <a class="brand" href="../index.html"><svg viewBox="0 0 48 48" aria-label="Omnium Studio"><circle cx="24" cy="24" r="18" fill="none" stroke="url(#om-ring)" stroke-width="3"/><circle cx="24" cy="6" r="3.4" fill="#3b82f6"/><circle cx="39.59" cy="15" r="3.4" fill="#6366f1"/><circle cx="39.59" cy="33" r="3.4" fill="#8b5cf6"/><circle cx="24" cy="42" r="3.4" fill="#22d3ee"/><circle cx="8.41" cy="33" r="3.4" fill="#0ea5e9"/><circle cx="8.41" cy="15" r="3.4" fill="#38bdf8"/><rect x="19.5" y="19.5" width="9" height="9" rx="2.2" transform="rotate(45 24 24)" fill="url(#om-hub)"/></svg>Omnium<span class="sub">Studio</span></a>
+  <nav class="nav-links"><a href="../index.html#breed">Domeinen</a><a href="../index.html#diep">Architectuur</a><a class="btn btn-primary" href="../../vite/studio.html">Open de Studio</a></nav>
+</div></header>
+
+<section class="subhero"><div class="wrap">
+  <div class="crumbs"><a href="../index.html">Omnium Studio</a> &nbsp;/&nbsp; <a href="../index.html#diep">Architectuur</a> &nbsp;/&nbsp; Gegenereerd register</div>
+  <div class="eyebrow-row">
+    <span class="platcat">★ Kern · de bestaansreden</span>
+    <span class="status actief">Actief · in ontwikkeling</span>
+  </div>
+  <h1>Van model naar een <span class="grad-text">draaiend bitemporeel register</span></h1>
+  <p class="lead">Hier komt alles samen. Een <b>rebuild</b> genereert vanuit het canonieke model niet alleen een API, maar
+  het <b>register zelf</b>: de Go-code én de database. Modelleren in Omnium Studio is daarmee geen documentatie —
+  het is het bouwen van een werkend, tijdreisbaar register.</p>
+
+  <div class="flow">
+    <div class="fnode accent"><div class="k">Omnium Studio</div><div class="t">Canoniek model</div><div class="d">entiteiten · relaties · regels</div></div>
+    <div class="farr">→</div>
+    <div class="fnode"><div class="k">Rebuild</div><div class="t">Codegen + DB-bouw</div><div class="d">per domein</div></div>
+    <div class="farr">→</div>
+    <div class="fnode"><div class="k">Resultaat</div><div class="t">Draaiend register</div><div class="d">API + bitemporele database</div></div>
+  </div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="sec-tag">Wat een rebuild oplevert</div>
+  <h2>Code én database, niet alleen een API</h2>
+  <p>Een rebuild verwerkt het model per domein en levert een compleet, draaiend register op.</p>
+  <div class="feat">
+    <div class="fcard"><h3><span class="ic">⚙️</span> Gegenereerde code</h3><p>Per domein 7 Go-bestanden: structs voor entiteiten, GE's en relaties, methodes, input-types en de registries (Meta/datatype/enum).</p></div>
+    <div class="fcard"><h3><span class="ic">🗄️</span> Bitemporele database</h3><p>De tabelstructuur volgens het Hub + _Data-patroon, met formele en materiële tijd-plumbing waar nodig.</p></div>
+    <div class="fcard"><h3><span class="ic">🔌</span> Werkende API</h3><p>REST/OpenAPI en een dynamische GraphQL-laag bovenop het register — meteen bevraagbaar, inclusief tijdreizen.</p></div>
+    <div class="fcard"><h3><span class="ic">🔁</span> Herhaalbaar</h3><p>Rebuild is herbouwbaar en consistent: hetzelfde model levert hetzelfde register — de basis voor registers on demand.</p></div>
+  </div>
+  <div class="callout">Het bitemporele fundament (twee tijdsassen, Hub + _Data, tijdreizen) staat beschreven op de <a href="../architectuur/data.html">data-architectuur</a>-pagina.</div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="cols">
+    <div>
+      <div class="sec-tag">Evolueren</div>
+      <h2>Modelhistorie &amp; migraties</h2>
+      <p>Een register leeft: het model verandert in de tijd. Omnium houdt de modelhistorie bij en voorziet — ten dele —
+      in migratie bij wijzigingen. Dit is een gebied dat actief wordt uitgebreid.</p>
+      <ul class="checks">
+        <li><b>Modelhistorie</b> wordt bijgehouden per versie.</li>
+        <li><b>Migratiescripts</b> worden ten dele gegenereerd bij delta's op het model.</li>
+        <li><b>Roadmap:</b> expliciete <b>delta's tussen versies</b> én de bijbehorende gegenereerde <b>SQL-upgradescripts</b>.</li>
+      </ul>
+    </div>
+    <aside class="specs">
+      <h3>Onder de motorkap</h3>
+      <dl class="deflist">
+        <dt>Taal</dt><dd>Go + PostgreSQL</dd>
+        <dt>Patroon</dt><dd>Hub + _Data</dd>
+        <dt>Per domein</dt><dd>7 bestanden</dd>
+        <dt>Tijd</dt><dd>formeel + materieel</dd>
+        <dt>Migratie</dt><dd>ten dele · in opbouw</dd>
+      </dl>
+      <div class="callout"><b>Omnium bevat zelf geen data.</b> De Studio modelleert en genereert; de geregistreerde gegevens leven in het <i>gegenereerde</i> register, niet in de IDE.</div>
+    </aside>
+  </div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="sec-tag">Aandachtspunt</div>
+  <h2>Breaking vs. non-breaking wijzigingen</h2>
+  <p>Niet elke modelwijziging is gelijk. Het verschil bepaalt of bestaande gegevens en API-consumenten ongestoord
+  doorwerken:</p>
+  <div class="feat">
+    <div class="fcard"><h3><span class="ic">🟢</span> Non-breaking</h3><p>Een <b>optioneel</b> veld toevoegen verandert niets aan bestaande records of contracten — die blijven geldig.</p></div>
+    <div class="fcard"><h3><span class="ic">🔴</span> Breaking</h3><p>Een <b>verplicht</b> veld toevoegen breekt bestaande records: ze missen immers die verplichte waarde.</p></div>
+  </div>
+  <p style="margin-top:18px">Twee strategieën om daarmee om te gaan — een open ontwerpvraag waar het register naartoe groeit:</p>
+  <ul class="checks">
+    <li><b>Tolerant leveren:</b> oude records via de API blijven serveren zonder de nieuwe verplichte waarde (bijv. als nullable in oudere versies).</li>
+    <li><b>Data-commando:</b> een gerichte actie die het nieuwe veld <b>aanvult</b> bij bestaande records — waarbij de vraag is: alleen de <i>actieve</i> records, of <i>alle</i> (historische) records?</li>
+  </ul>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="cols">
+    <div>
+      <div class="sec-tag">Toepassing</div>
+      <h2>Registers on demand &amp; werkmappen</h2>
+      <p>Omdat een register volledig uit het model volgt, kun je gericht registers genereren — niet alleen
+      basisregistraties, maar ook <b>werkmap-registers</b> zoals een zaak, dossier of plan, om informatie
+      registratief en tijdreisbaar vast te leggen.</p>
+      <ul class="checks">
+        <li><b>Werkmap-register</b> (zaak/dossier/plan) als eerste-klas modelconcept.</li>
+        <li><b>Procesdata</b> uit een engine als <a href="../platforms/operaton.html">Operaton</a> landt in zo'n gegenereerd register.</li>
+        <li><b>Audit-trail</b> gratis door de bitemporele opzet.</li>
+      </ul>
+    </div>
+    <aside class="specs">
+      <h3>Zie ook</h3>
+      <dl class="deflist">
+        <dt>Model</dt><dd><a href="uml.html">UML-IDE</a></dd>
+        <dt>Fundament</dt><dd><a href="../architectuur/data.html">Data-laag</a></dd>
+        <dt>Basisdata</dt><dd><a href="basisgegevens.html">Referentielijsten</a></dd>
+        <dt>Uitvoering</dt><dd><a href="../platforms/operaton.html">Operaton</a></dd>
+      </dl>
+    </aside>
+  </div>
+</div></section>
+
+<div class="wrap"><div class="pager">
+  <a class="prev" href="../architectuur/data.html"><div class="k">← Verwant</div><div class="t">Data-architectuur</div></a>
+  <a class="next" href="uml.html"><div class="k">Verwant →</div><div class="t">Gegevensstructuur (UML)</div></a>
+</div></div>
+
+<div class="wrap"><div class="cta">
+  <h2>Bouw je eigen register</h2>
+  <p>Modelleer in de UML-IDE en rebuild het tot een draaiend bitemporeel register.</p>
+  <a class="btn btn-primary" href="../../vite/studio.html">Open Omnium Studio →</a>
+</div></div>
+
+<footer><div class="wrap foot-inner"><div>© 2026 Omnium Studio · Het gegenereerde register</div><div><a href="../index.html">← Terug naar overzicht</a></div></div></footer>
+</body></html>

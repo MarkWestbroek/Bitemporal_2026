@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Procesflow (BPMN) — Omnium Studio</title>
+<meta name="description" content="Processen modelleren in BPMN bovenop het canonieke model van Omnium Studio, met koppeling aan berichten en gegevens en export naar BPMN XML." />
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="om-ring" x1="6" y1="6" x2="42" y2="42" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#60a5fa"/><stop offset="0.5" stop-color="#6366f1"/><stop offset="1" stop-color="#22d3ee"/></linearGradient>
+  <linearGradient id="om-hub" x1="18" y1="18" x2="30" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#a5b4fc"/><stop offset="1" stop-color="#38bdf8"/></linearGradient>
+</defs></svg>
+
+<header class="nav"><div class="wrap nav-inner">
+  <a class="brand" href="../index.html">
+    <svg viewBox="0 0 48 48" aria-label="Omnium Studio"><circle cx="24" cy="24" r="18" fill="none" stroke="url(#om-ring)" stroke-width="3"/><circle cx="24" cy="6" r="3.4" fill="#3b82f6"/><circle cx="39.59" cy="15" r="3.4" fill="#6366f1"/><circle cx="39.59" cy="33" r="3.4" fill="#8b5cf6"/><circle cx="24" cy="42" r="3.4" fill="#22d3ee"/><circle cx="8.41" cy="33" r="3.4" fill="#0ea5e9"/><circle cx="8.41" cy="15" r="3.4" fill="#38bdf8"/><rect x="19.5" y="19.5" width="9" height="9" rx="2.2" transform="rotate(45 24 24)" fill="url(#om-hub)"/></svg>Omnium<span class="sub">Studio</span>
+  </a>
+  <nav class="nav-links"><a href="../index.html#breed">Domeinen</a><a href="../index.html#diep">Architectuur</a><a class="btn btn-primary" href="../../vite/studio.html">Open de Studio</a></nav>
+</div></header>
+
+<section class="subhero"><div class="wrap">
+  <div class="crumbs"><a href="../index.html">Omnium Studio</a> &nbsp;/&nbsp; <a href="../index.html#breed">Domeinen</a> &nbsp;/&nbsp; Procesflow</div>
+  <div class="eyebrow-row">
+    <span class="domchip"><span class="dot" style="color:#6366f1;background:currentColor"></span> Procesflow · BPMN</span>
+    <span class="status actief">Actief</span>
+  </div>
+  <h1>Processen die je <span class="grad-text">gegevens en regels</span> aansturen</h1>
+  <p class="lead">Modelleer bedrijfsprocessen in BPMN 2.0 (bpmn.io) bovenop hetzelfde canonieke model. Koppel events
+  en taken aan berichttypen en gegevens, zodat een proces geen losse tekening is maar onderdeel van één samenhangend geheel.</p>
+  <div class="tagrow"><span class="tag">BPMN 2.0</span><span class="tag">bpmn.io modeler</span><span class="tag">Model Picker-binding</span><span class="tag">Export BPMN XML</span><span class="tag">Richting Operaton</span></div>
+
+  <div class="shot">
+    <div class="bar"><i></i><i></i><i></i><span>Omnium Studio — BPMN-processen</span></div>
+    <img src="../assets/shots/bpmn.png" alt="BPMN-proces in Omnium Studio met koppeling aan het canoniek model" />
+    <div class="cap">Een aanmeldproces — <b>Aanmelding ontvangen → Beoordeel aanmelding → Adreswijziging → Bevestiging verstuurd</b> — met links de Model Picker om events en taken aan modelvelden te binden.</div>
+  </div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="sec-tag">Wat het doet</div>
+  <h2>Volwaardige BPMN-modeler in de werkbank</h2>
+  <p>De BPMN-activiteit hergebruikt de bpmn.io-modeler en plaatst er de gedeelde Model Picker naast, zodat
+  procesinhoud direct aan het canonieke model gekoppeld kan worden.</p>
+  <div class="feat">
+    <div class="fcard"><h3><span class="ic">🔧</span> bpmn.io modeler</h3><p>Volledige BPMN 2.0-paletten: events, taken, gateways, sub-processen — met pan/zoom en eigenschappen.</p></div>
+    <div class="fcard"><h3><span class="ic">🔗</span> Koppeling aan het model</h3><p>Bind message-events en taken aan velden, gegevenselementen en berichttypen via de Model Picker (formeel/materieel tijdas).</p></div>
+    <div class="fcard"><h3><span class="ic">✉️</span> Berichten als events</h3><p>Message-events verwijzen naar de berichtdefinities, zodat proces en payload synchroon blijven.</p></div>
+    <div class="fcard"><h3><span class="ic">📤</span> Export BPMN XML</h3><p>Exporteer het proces als standaard BPMN XML voor uitvoering of uitwisseling met andere tools.</p></div>
+  </div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="cols">
+    <div>
+      <div class="sec-tag">Hoe het samenhangt</div>
+      <h2>Eén model, drie aanzichten</h2>
+      <p>Een proces raakt vrijwel altijd de andere domeinen. In Omnium Studio lopen die koppelingen via het canonieke model:</p>
+      <ul class="checks">
+        <li><b>Events</b> ↔ berichttypen uit de connectiviteit-activiteit.</li>
+        <li><b>Taken</b> ↔ functies waarop autorisatie wordt verleend (PBAC).</li>
+        <li><b>Datastromen</b> ↔ entiteiten en gegevenselementen uit het UML-model.</li>
+        <li><b>Beslissingen</b> ↔ DMN-decisions, aanroepbaar als business-rule task.</li>
+      </ul>
+    </div>
+    <aside class="specs">
+      <h3>Onder de motorkap</h3>
+      <dl class="deflist">
+        <dt>Modeler</dt><dd>bpmn-js (bpmn.io)</dd>
+        <dt>Notatie</dt><dd>BPMN 2.0</dd>
+        <dt>Binding</dt><dd>Model Picker</dd>
+        <dt>Export</dt><dd>BPMN XML</dd>
+        <dt>Engine</dt><dd>Operaton (roadmap)</dd>
+      </dl>
+      <div class="callout"><b>Richting uitvoering.</b> De koppeling met een proces-engine als Operaton maakt van het model een draaiend proces.</div>
+    </aside>
+  </div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="sec-tag">Status &amp; roadmap</div>
+  <h2>Modeleren werkt; uitvoeren is de volgende stap</h2>
+  <ul class="checks">
+    <li>Modeler, canvas en <b>export naar BPMN XML</b> zijn er.</li>
+    <li>Koppeling van events/taken aan het canonieke model via de Model Picker.</li>
+    <li><b>Roadmap:</b> uitvoerbare koppeling met <b>Operaton</b>, DMN-call-activities en validatie tegen het model.</li>
+  </ul>
+</div></section>
+
+<div class="wrap"><div class="pager">
+  <a class="prev" href="uml.html"><div class="k">← Vorige</div><div class="t">Gegevensstructuur (UML)</div></a>
+  <a class="next" href="dmn.html"><div class="k">Volgende →</div><div class="t">Regels (DMN)</div></a>
+</div></div>
+
+<div class="wrap"><div class="cta">
+  <h2>Open de proces-werkbank</h2>
+  <p>Teken een proces en koppel het aan je gegevens, regels en berichten.</p>
+  <a class="btn btn-primary" href="../../vite/studio.html">Open Omnium Studio →</a>
+</div></div>
+
+<footer><div class="wrap foot-inner"><div>© 2026 Omnium Studio · Procesflow (BPMN)</div><div><a href="../index.html">← Terug naar overzicht</a></div></div></footer>
+</body></html>

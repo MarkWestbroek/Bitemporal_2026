@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gegevensstructuur (UML/MIM) — Omnium Studio</title>
+<meta name="description" content="De UML/MIM-modelleeromgeving van Omnium Studio: een Eclipse-achtige IDE rond één canoniek model, met afgeleide velden (CEL), overerving, en een volledige V3-roundtrip naar code." />
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="om-ring" x1="6" y1="6" x2="42" y2="42" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#60a5fa"/><stop offset="0.5" stop-color="#6366f1"/><stop offset="1" stop-color="#22d3ee"/></linearGradient>
+  <linearGradient id="om-hub" x1="18" y1="18" x2="30" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#a5b4fc"/><stop offset="1" stop-color="#38bdf8"/></linearGradient>
+</defs></svg>
+
+<header class="nav"><div class="wrap nav-inner">
+  <a class="brand" href="../index.html">
+    <svg viewBox="0 0 48 48" aria-label="Omnium Studio">
+      <circle cx="24" cy="24" r="18" fill="none" stroke="url(#om-ring)" stroke-width="3"/>
+      <circle cx="24" cy="6" r="3.4" fill="#3b82f6"/><circle cx="39.59" cy="15" r="3.4" fill="#6366f1"/><circle cx="39.59" cy="33" r="3.4" fill="#8b5cf6"/><circle cx="24" cy="42" r="3.4" fill="#22d3ee"/><circle cx="8.41" cy="33" r="3.4" fill="#0ea5e9"/><circle cx="8.41" cy="15" r="3.4" fill="#38bdf8"/>
+      <rect x="19.5" y="19.5" width="9" height="9" rx="2.2" transform="rotate(45 24 24)" fill="url(#om-hub)"/>
+    </svg>Omnium<span class="sub">Studio</span>
+  </a>
+  <nav class="nav-links">
+    <a href="../index.html#breed">Domeinen</a>
+    <a href="../index.html#diep">Architectuur</a>
+    <a class="btn btn-primary" href="../../vite/studio.html">Open de Studio</a>
+  </nav>
+</div></header>
+
+<section class="subhero"><div class="wrap">
+  <div class="crumbs"><a href="../index.html">Omnium Studio</a> &nbsp;/&nbsp; <a href="../index.html#breed">Domeinen</a> &nbsp;/&nbsp; Gegevensstructuur</div>
+  <div class="eyebrow-row">
+    <span class="domchip"><span class="dot" style="color:#3b82f6;background:currentColor"></span> Gegevensstructuur · UML / MIM</span>
+    <span class="status actief">Actief · vergevorderd</span>
+  </div>
+  <h1>De modelleeromgeving voor je <span class="grad-text">canonieke model</span></h1>
+  <p class="lead">Een Eclipse-achtige IDE rond één canoniek informatiemodel. Teken entiteiten, gegevenselementen,
+  relaties, enumeraties en gegevenstypen — met dockbare panelen, een project-browser en meerdere diagrammen.
+  Het model is de enige bron van waarheid waaruit processen, regels, berichten en registers worden afgeleid.</p>
+  <div class="tagrow">
+    <span class="tag">Entiteiten &amp; relaties</span><span class="tag">Afgeleide velden (CEL)</span>
+    <span class="tag">Overerving</span><span class="tag">Composities</span><span class="tag">Undo/redo</span>
+    <span class="tag">Import &amp; export (XMI/Mermaid/MIM)</span><span class="tag">Publiceer &amp; Rebuild</span>
+  </div>
+
+  <div class="shot">
+    <div class="bar"><i></i><i></i><i></i><span>Omnium Studio — UML-model · domein “np-loc”</span></div>
+    <img src="../assets/shots/uml-overzicht.png" alt="UML-model overzicht met het np-loc domein in Omnium Studio" />
+    <div class="cap">Het voorbeelddomein <b>np-loc</b> (natuurlijk persoon &amp; locatie): NatuurlijkPersoon, Naam, Adres, BAGlocatie, NLPostcode, Land en de referentielijst-structuur — links de project-browser, midden het diagram, rechts het Details-paneel.</div>
+  </div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="sec-tag">Wat het doet</div>
+  <h2>Modelleren met de diepgang van een echte IDE</h2>
+  <p>De losse UML-editor is opgetild tot een werkbank: panelen zijn verplaatsbaar en dockbaar (FlexLayout),
+  de project-browser groepeert alles per domein, en wijzigingen lopen live door naar het canvas.</p>
+  <div class="feat">
+    <div class="fcard"><h3><span class="ic">🗂️</span> Project-browser per domein</h3><p>Gevirtualiseerde boom (react-arborist) met zoeken, multi-select, drag&amp;drop naar het diagram en gekleurde domein-stippen.</p></div>
+    <div class="fcard"><h3><span class="ic">📝</span> Bewerkbaar Details-paneel</h3><p>Inline editen van entiteiten, velden, enum-waarden, edge-rolnamen, kardinaliteit en gegevenstype-validatie (pattern, min/max, mask).</p></div>
+    <div class="fcard"><h3><span class="ic">⚡</span> Snelle creatie op canvas</h3><p>ENT→ENT trekt automatisch een relatie; <code>Ctrl</code>-drag vanaf een entiteit maakt direct een nieuw gegevenselement.</p></div>
+    <div class="fcard"><h3><span class="ic">ƒ</span> Afgeleide velden met CEL</h3><p>Bereken waarden met Common Expression Language, gebonden aan modelvelden — bijv. <code>/weergavenaam</code> of <code>/leeftijd</code>.</p></div>
+    <div class="fcard"><h3><span class="ic">⇄</span> Import &amp; export</h3><p>UML via <b>XMI</b> (Sparx EA, inclusief elementposities), <b>Mermaid</b>, <b>PlantUML</b> en <b>MIM</b> (nog niet de volledige MIM-tagverzameling).</p></div>
+    <div class="fcard"><h3><span class="ic">△</span> Overerving &amp; composities</h3><p>Generalisatie (driehoekpijl), compositie-diamanten en dependency-stippellijnen renderen correct, inclusief roundtrip.</p></div>
+    <div class="fcard"><h3><span class="ic">🧷</span> Notities &amp; constraints</h3><p>UML-notities en formele constraints (OCL/CEL) als annotaties op het canvas, met scope naar elementen.</p></div>
+    <div class="fcard"><h3><span class="ic">↩</span> Undo/redo &amp; sneltoetsen</h3><p>50 stappen historie voor model én layout (zundo), met <code>Ctrl+Z/Y</code>, <code>F2</code> hernoemen en <code>Ctrl+S</code> publiceren.</p></div>
+    <div class="fcard"><h3><span class="ic">⊞</span> Auto-layout &amp; uitlijnen</h3><p>Uitlijnen, verdelen, relaties normaliseren en snap-to-grid via verplaatsbare toolbars en het canvas-contextmenu.</p></div>
+  </div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="cols">
+    <div>
+      <div class="sec-tag">In beeld</div>
+      <h2>Eén element, alle eigenschappen</h2>
+      <p>Selecteer een element en het Details-paneel toont de volledige metadata. Hieronder <b>NatuurlijkPersoon</b>
+      met domein, beschrijving, meervoud, kleur en een afgeleid veld <code>weergavenaam</code> dat via een
+      CEL-expressie de roepnaam/voorletters samenstelt.</p>
+      <div class="shot">
+        <div class="bar"><i></i><i></i><i></i><span>Details — Entiteit: NatuurlijkPersoon</span></div>
+        <img src="../assets/shots/uml-detail.png" alt="Details-paneel van NatuurlijkPersoon met een afgeleid CEL-veld" />
+      </div>
+    </div>
+    <aside class="specs">
+      <h3>Onder de motorkap</h3>
+      <dl class="deflist">
+        <dt>Shell</dt><dd>FlexLayout (docking)</dd>
+        <dt>Browser</dt><dd>react-arborist</dd>
+        <dt>State</dt><dd>Zustand + persist</dd>
+        <dt>Historie</dt><dd>zundo (50 stappen)</dd>
+        <dt>Canvas</dt><dd>React Flow (@xyflow)</dd>
+        <dt>Im-/export</dt><dd>XMI · Mermaid · MIM</dd>
+        <dt>Opslag</dt><dd>localStorage + DB</dd>
+        <dt>Thema</dt><dd>donker / licht</dd>
+      </dl>
+      <div class="callout"><b>Roundtrip-vast.</b> Posities, edge-handles, label-offsets, overerving, afgeleide velden en domein-metadata overleven een volledige export/import-cyclus.</div>
+    </aside>
+  </div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="sec-tag">Hoe het samenhangt</div>
+  <h2>Van model naar werkende code</h2>
+  <p>Het canonieke model is geen plaatje maar een uitvoerbare bron. Vanuit de IDE:</p>
+  <ul class="checks">
+    <li><b>Publiceer</b> legt het model vast als voorgestelde versie.</li>
+    <li><b>Rebuild</b> genereert vanuit het model de werkende code én het <b>bitemporele register zelf</b> (database) en herstart — met domein-selectie, prefix en mode.</li>
+    <li><b>Importeer / Exporteer</b> via XMI (Sparx EA, incl. posities), Mermaid, PlantUML of MIM — met versienummering per domein.</li>
+    <li>Hetzelfde model voedt de DMN-, BPMN- en bericht-activiteiten via de gedeelde <b>Model Picker</b>.</li>
+  </ul>
+  <div class="callout"><b>De kern van Omnium Studio.</b> Rebuilden levert niet alleen een API, maar een volledig draaiend <b>bitemporeel register</b> — de eigenlijke bestaansreden van deze IDE. <a href="register.html">Lees over het gegenereerde register →</a></div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="sec-tag">Status &amp; roadmap</div>
+  <h2>Vergevorderd, met scherpe vervolgstappen</h2>
+  <p>De UML-modelleeromgeving is het verst ontwikkelde onderdeel. De fundering, het bewerkbare Details-paneel,
+  multi-diagram, undo/redo, de V3-roundtrip en publiceren/rebuilden zijn er. Open punten:</p>
+  <ul class="checks">
+    <li>Canvas-rendering van <b>notities &amp; constraints</b> (datalaag is klaar, UI volgt).</li>
+    <li>Meerdere diagram-tabs <b>naast elkaar</b> en diagram-scoped viewport-persistentie.</li>
+    <li><b>Label-offsets</b> ook in editor-v2 verwerken en koppelen aan DB-publicatie.</li>
+    <li>DMN-modellering te zijner tijd <b>binnen dezelfde IDE</b> i.p.v. een aparte activiteit.</li>
+  </ul>
+</div></section>
+
+<div class="wrap"><div class="pager">
+  <a class="prev" href="basisgegevens.html"><div class="k">← Vorige</div><div class="t">Basisgegevens</div></a>
+  <a class="next" href="bpmn.html"><div class="k">Volgende →</div><div class="t">Procesflow (BPMN)</div></a>
+</div></div>
+
+<div class="wrap"><div class="cta">
+  <h2>Bekijk het zelf in de werkbank</h2>
+  <p>Open de UML-activiteit en verken het np-loc-model — of laad je eigen V3-model in.</p>
+  <a class="btn btn-primary" href="../../vite/studio.html">Open Omnium Studio →</a>
+</div></div>
+
+<footer><div class="wrap foot-inner">
+  <div>© 2026 Omnium Studio · Gegevensstructuur (UML/MIM)</div>
+  <div><a href="../index.html">← Terug naar overzicht</a></div>
+</div></footer>
+
+</body>
+</html>

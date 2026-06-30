@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Business-architectuur — Omnium Studio</title>
+<meta name="description" content="De business-laag van Omnium Studio: processen (BPMN), regels (DMN) en rollen/autorisatie beschrijven hoe de organisatie haar diensten levert — in taal die de business herkent." />
+<link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../assets/site.css" />
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="om-ring" x1="6" y1="6" x2="42" y2="42" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#60a5fa"/><stop offset="0.5" stop-color="#6366f1"/><stop offset="1" stop-color="#22d3ee"/></linearGradient>
+  <linearGradient id="om-hub" x1="18" y1="18" x2="30" y2="30" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#a5b4fc"/><stop offset="1" stop-color="#38bdf8"/></linearGradient>
+</defs></svg>
+
+<header class="nav"><div class="wrap nav-inner">
+  <a class="brand" href="../index.html"><svg viewBox="0 0 48 48" aria-label="Omnium Studio"><circle cx="24" cy="24" r="18" fill="none" stroke="url(#om-ring)" stroke-width="3"/><circle cx="24" cy="6" r="3.4" fill="#3b82f6"/><circle cx="39.59" cy="15" r="3.4" fill="#6366f1"/><circle cx="39.59" cy="33" r="3.4" fill="#8b5cf6"/><circle cx="24" cy="42" r="3.4" fill="#22d3ee"/><circle cx="8.41" cy="33" r="3.4" fill="#0ea5e9"/><circle cx="8.41" cy="15" r="3.4" fill="#38bdf8"/><rect x="19.5" y="19.5" width="9" height="9" rx="2.2" transform="rotate(45 24 24)" fill="url(#om-hub)"/></svg>Omnium<span class="sub">Studio</span></a>
+  <nav class="nav-links"><a href="../index.html#breed">Domeinen</a><a href="../index.html#diep">Architectuur</a><a class="btn btn-primary" href="../../vite/studio.html">Open de Studio</a></nav>
+</div></header>
+
+<section class="subhero"><div class="wrap">
+  <div class="crumbs"><a href="../index.html">Omnium Studio</a> &nbsp;/&nbsp; <a href="../index.html#diep">Architectuur</a> &nbsp;/&nbsp; Business</div>
+  <div class="eyebrow-row"><span class="platcat">▣ Architectuurlaag · Business</span></div>
+  <h1>Hoe de organisatie haar <span class="grad-text">diensten levert</span></h1>
+  <p class="lead">De business-laag beschrijft het <b>wat</b> en <b>waarom</b>: welke processen er lopen, welke regels gelden
+  en wie wat mag. In taal die de business herkent — en gebonden aan hetzelfde canonieke model als de rest.</p>
+
+  <div class="layerstack">
+    <div class="lay on"><span class="n">Laag 1</span><span class="t">Business — processen · regels · rollen</span></div>
+    <div class="lay"><span class="n">Laag 2</span><span class="t">Applicatie — berichten · API's · autorisatie</span></div>
+    <div class="lay"><span class="n">Laag 3</span><span class="t">Data — gegevensstructuur · basisgegevens</span></div>
+  </div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="sec-tag">Wat valt eronder</div>
+  <h2>Processen, regels en bevoegdheden</h2>
+  <p>Drie disciplines bepalen samen hoe de dienstverlening werkt. In Omnium Studio zijn het geen losse documenten,
+  maar gekoppelde modellen.</p>
+  <div class="feat">
+    <a class="fcard" href="../features/bpmn.html"><h3><span class="ic">🔀</span> Procesflow (BPMN)</h3><p>De volgorde van stappen: events, taken en beslismomenten die de dienstverlening structureren.</p></a>
+    <a class="fcard" href="../features/dmn.html"><h3><span class="ic">▦</span> Regels (DMN)</h3><p>De expliciete beslislogica achter de stappen — toetsbaar en herbruikbaar.</p></a>
+    <a class="fcard" href="../features/toegang.html"><h3><span class="ic">🔑</span> Rollen &amp; autorisatie</h3><p>Wie welke functie mag uitvoeren (PBAC) — verankerd in dezelfde resources.</p></a>
+    <a class="fcard" href="../features/connectiviteit.html"><h3><span class="ic">✉️</span> Berichten als triggers</h3><p>Gebeurtenissen die processen starten of voortzetten, afgeleid uit het model.</p></a>
+  </div>
+</div></section>
+
+<section class="block"><div class="wrap">
+  <div class="cols">
+    <div>
+      <div class="sec-tag">Aansluiting</div>
+      <h2>Verankerd in het canonieke model</h2>
+      <p>De business-laag staat niet los van de techniek. Elk procesonderdeel verwijst naar concrete elementen lager
+      in de stack, zodat ontwerp en uitvoering niet uit elkaar lopen:</p>
+      <ul class="checks">
+        <li><b>Taken</b> ↔ functies waarop autorisatie wordt verleend.</li>
+        <li><b>Beslissingen</b> ↔ DMN-decisions met in-/outputs uit het model.</li>
+        <li><b>Events</b> ↔ berichttypen (applicatie-laag).</li>
+        <li><b>Gegevens in het proces</b> ↔ entiteiten en gegevenselementen (data-laag).</li>
+      </ul>
+    </div>
+    <aside class="specs">
+      <h3>Activiteiten in deze laag</h3>
+      <dl class="deflist">
+        <dt>BPMN</dt><dd>actief</dd>
+        <dt>DMN</dt><dd>actief</dd>
+        <dt>Toegang</dt><dd>concept</dd>
+        <dt>Rollen</dt><dd>concept</dd>
+      </dl>
+      <div class="callout"><b>Uitvoerbaar maken.</b> Via een proces-engine als <a href="../platforms/operaton.html">Operaton</a> wordt deze laag van model tot draaiend proces.</div>
+    </aside>
+  </div>
+  <div class="shot">
+    <div class="bar"><i></i><i></i><i></i><span>Omnium Studio — BPMN-proces (business-laag)</span></div>
+    <img src="../assets/shots/bpmn.png" alt="BPMN-proces als voorbeeld van de business-laag" />
+  </div>
+</div></section>
+
+<div class="wrap"><div class="pager">
+  <a class="prev" href="data.html"><div class="k">← Vorige laag</div><div class="t">Data-architectuur</div></a>
+  <a class="next" href="applicatie.html"><div class="k">Volgende laag →</div><div class="t">Applicatie-architectuur</div></a>
+</div></div>
+
+<div class="wrap"><div class="cta">
+  <h2>Bekijk de business-activiteiten</h2>
+  <p>Open de werkbank en verken de proces- en regel-activiteiten.</p>
+  <a class="btn btn-primary" href="../../vite/studio.html">Open Omnium Studio →</a>
+</div></div>
+
+<footer><div class="wrap foot-inner"><div>© 2026 Omnium Studio · Business-architectuur</div><div><a href="../index.html">← Terug naar overzicht</a></div></div></footer>
+</body></html>
