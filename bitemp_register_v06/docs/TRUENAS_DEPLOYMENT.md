@@ -139,18 +139,30 @@ Of via Dockge: **Update** knop → **Opzetten**.
 
 ### Frontend (Vite/React) updaten
 
+> **Versionering**: de frontend-versie staat in `web/vite/package.json` (`version`) en
+> wordt bij de build in de bundle gezet (zie het "Over Omnium Studio"-dialoog). Tag het
+> image met diezelfde versie **én** `latest`: de versie-tag is onveranderlijk (rollback =
+> `pull :<versie>`), `latest` blijft de bewegende tag voor de NAS. **Bump de version in
+> package.json vóór een release.**
+
 **Op je lokale machine (Windows, PowerShell):**
 ```powershell
 cd D:\Git\Bitemporal_2026\bitemp_register_v06
 
-# 1. Bouw Vite productie-build (optioneel, zit al in Docker build)
+# 1. Lees de frontend-versie uit package.json
+$versie = (Get-Content web\vite\package.json -Raw | ConvertFrom-Json).version
+
+# 2. Bouw Vite productie-build (optioneel, zit al in Docker build)
 # Let op: PowerShell gebruikt ; als separator, niet &&
 cd web\vite; npm run build; cd ..\..
 
-# 2. Build het image
-docker build -f Dockerfile.frontend -t markwestbroek/bitemp-viz-frontend:latest .
+# 3. Build het image — tag met de versie én latest
+docker build -f Dockerfile.frontend `
+  -t markwestbroek/bitemp-viz-frontend:$versie `
+  -t markwestbroek/bitemp-viz-frontend:latest .
 
-# 3. Push naar Docker Hub
+# 4. Push beide tags naar Docker Hub
+docker push markwestbroek/bitemp-viz-frontend:$versie
 docker push markwestbroek/bitemp-viz-frontend:latest
 ```
 
