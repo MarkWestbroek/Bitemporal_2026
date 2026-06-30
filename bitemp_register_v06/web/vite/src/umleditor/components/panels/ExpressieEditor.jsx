@@ -21,7 +21,7 @@
 import { useState, useRef, useMemo, useCallback } from "react";
 import EditorModule from "react-simple-code-editor";
 const Editor = EditorModule.default ?? EditorModule;
-import Prism from "prismjs";
+import Prism from "../../../shared/prismSetup";
 import "prismjs/components/prism-json";
 import { AFLEIDINGSTALEN } from "../../metamodel/types";
 
