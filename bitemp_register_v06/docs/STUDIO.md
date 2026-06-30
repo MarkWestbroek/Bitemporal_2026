@@ -1,6 +1,9 @@
 # Studio — geïntegreerde werkbank (VS Code-stijl)
 
 > Toegevoegd: 2026-06-17. Route: `/studio` (build: `/viz/react/studio.html`).
+>
+> **Code review (2026-06-30):** zie [`STUDIO-code-review-2026-06-30.md`](STUDIO-code-review-2026-06-30.md)
+> voor bevindingen over onderhoudbaarheid, dubbelingen, veiligheid en toegankelijkheid.
 
 De **Studio** is een geïntegreerde werkbank die de losse functie-pagina's onder één
 VS Code-achtige schil brengt: een uitbreidbare **iconenbalk** links (activity bar) en
