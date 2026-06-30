@@ -23,6 +23,17 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
+# Forceer UTF-8 op stdout/stderr. Op Windows is de console standaard cp1252,
+# waardoor print() met Unicode-tekens (→, ✓, …) crasht met UnicodeEncodeError.
+# De bestanden zelf worden los met encoding="utf-8" weggeschreven; dit raakt
+# alleen de console-uitvoer (bv. wanneer dit script vanuit de pre-commit hook draait).
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        if hasattr(_stream, "reconfigure"):
+            _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (ValueError, OSError):
+        pass
+
 
 def decode_file_uri(value: str) -> str:
     """Zet een file:// URI om naar een lokaal pad als dat nodig is."""
