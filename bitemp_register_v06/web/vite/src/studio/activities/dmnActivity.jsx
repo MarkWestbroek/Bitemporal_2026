@@ -264,39 +264,24 @@ function DmnMain() {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       {/* Tab-balk */}
-      <div style={{ display: "flex", borderBottom: "1px solid var(--s-border, #e5e7eb)", background: "var(--s-panel-head)" }}>
+      <div className="studio-tabs">
         <button
+          className={"studio-tab" + (activeTab === "drd" ? " is-actief" : "")}
           onClick={() => setActiveTab("drd")}
-          style={{
-            padding: "8px 16px",
-            background: activeTab === "drd" ? "var(--s-bg)" : "transparent",
-            border: "none",
-            borderBottom: activeTab === "drd" ? "2px solid #3b82f6" : "2px solid transparent",
-            cursor: "pointer",
-            fontSize: 13,
-            fontWeight: activeTab === "drd" ? 600 : 400,
-          }}
         >
           DRD
         </button>
         <button
+          className={"studio-tab" + (activeTab === "tabel" ? " is-actief" : "")}
           onClick={() => setActiveTab("tabel")}
-          style={{
-            padding: "8px 16px",
-            background: activeTab === "tabel" ? "var(--s-bg)" : "transparent",
-            border: "none",
-            borderBottom: activeTab === "tabel" ? "2px solid #3b82f6" : "2px solid transparent",
-            cursor: "pointer",
-            fontSize: 13,
-            fontWeight: activeTab === "tabel" ? 600 : 400,
-          }}
         >
           Tabel
         </button>
       </div>
 
-      {/* Tab-inhoud */}
-      <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+      {/* Tab-inhoud — op een vaste lichte "papier"-ondergrond, want dmn-js en de
+          tabel-editor renderen niet leesbaar op het donkere studio-canvas. */}
+      <div className="studio-paper" style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
         {activeTab === "drd" ? (
           <div style={{ height: "100%", position: "relative" }}>
             <DmnModeler

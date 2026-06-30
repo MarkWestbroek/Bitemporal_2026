@@ -62,8 +62,9 @@ function BpmnSidebar() {
 
 function BpmnMain() {
   const { editorRef, setSelectie } = useContext(Ctx);
+  // Vaste lichte "papier"-ondergrond: bpmn-js ondersteunt geen dark-thema.
   return (
-    <div style={{ position: "absolute", inset: 0 }}>
+    <div className="studio-paper" style={{ position: "absolute", inset: 0 }}>
       <BpmnEditor ref={editorRef} xml={STARTER_BPMN} onSelectionChange={setSelectie} />
     </div>
   );
