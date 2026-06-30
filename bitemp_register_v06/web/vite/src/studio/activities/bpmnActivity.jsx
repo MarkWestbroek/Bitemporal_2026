@@ -14,23 +14,9 @@ import { nieuwBerichttype, voegVeldToe } from "../../bericht";
 import { BpmnEditor, STARTER_BPMN, contractNaarIoMapping, valideerContract } from "../../bpmn";
 import { IconBPMN } from "../icons";
 import { menuBus } from "../menuBus";
+import { apiBase, downloadTekst } from "../studioUtils";
 
 const Ctx = createContext(null);
-
-function apiBase() {
-  return window.location.port === "5174" ? "http://localhost:8082" : "";
-}
-
-/** Download tekst als bestand. */
-function downloadTekst(tekst, bestandsnaam, mime = "text/plain") {
-  const blob = new Blob([tekst], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = bestandsnaam;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 function BpmnProvider({ children }) {
   const editorRef = useRef(null);

@@ -19,34 +19,9 @@ import { nieuweBeslistabel, bindInput, bindOutput } from "../../dmn/dmnModel";
 import DmnPropertiesPanel from "../../dmn/DmnPropertiesPanel";
 import { IconDMN } from "../icons";
 import { menuBus } from "../menuBus";
+import { apiBase, downloadJson, downloadTekst } from "../studioUtils";
 
 const Ctx = createContext(null);
-
-function apiBase() {
-  return window.location.port === "5174" ? "http://localhost:8082" : "";
-}
-
-/** Download een object als ingesprongen JSON-bestand. */
-function downloadJson(obj, bestandsnaam) {
-  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = bestandsnaam;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-/** Download tekst als bestand. */
-function downloadTekst(tekst, bestandsnaam, mime = "text/xml") {
-  const blob = new Blob([tekst], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = bestandsnaam;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 function DmnProvider({ children }) {
   const [table, setTable] = useState(() => nieuweBeslistabel("Bepaal ingezetene-status"));
@@ -392,7 +367,7 @@ function DmnInspector() {
       {afgeleidVoorstel && (
         <section style={{ marginBottom: 12 }}>
           <h3 style={{ margin: "0 0 6px", fontSize: 13 }}>Voorstel afgeleid veld</h3>
-          <pre style={{ margin: 0, background: "#0f172a", color: "#e2e8f0", padding: 10, borderRadius: 8, fontSize: 11, overflow: "auto" }}>
+          <pre style={{ margin: 0, background: "var(--s-panel-head)", color: "var(--s-fg)", padding: 10, borderRadius: 8, fontSize: 11, overflow: "auto" }}>
             {JSON.stringify(afgeleidVoorstel, null, 2)}
           </pre>
         </section>
