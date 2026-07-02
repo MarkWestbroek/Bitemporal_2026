@@ -195,6 +195,7 @@ te wijzigen.
 | Groep        | Functie            | Status   | Hergebruikt                        |
 |--------------|--------------------|----------|------------------------------------|
 | modelleren   | UML-model          | actief   | `IdePage` (FlexLayout, fullMain)   |
+| modelleren   | Diagrammen (0.5)   | preview  | `diagramcore` + `diagramprofielen/canoniek-uml` (read-only spiegel) |
 | modelleren   | DMN-tabellen       | actief   | `dmn/DmnTableEditor` + ModelPicker |
 | modelleren   | BPMN-processen     | actief   | `bpmn/BpmnEditor` + ModelPicker    |
 | modelleren   | Berichtdefinities  | actief   | `bericht/BerichttypeEditor`        |
@@ -204,6 +205,26 @@ te wijzigen.
 | data         | Referentielijsten  | concept  | placeholder                        |
 
 DMN-modellering komt later bij de UML-activiteit (zelfde IDE), zoals gewenst.
+
+### Diagrammen (0.5) — preview van de generieke diagram-motor
+
+> Toegevoegd: 2026-07-03 (fase 1 van [`STUDIO-05-diagramcore-plan.md`](STUDIO-05-diagramcore-plan.md)).
+
+De activiteit **Diagrammen (0.5)** toont het bestaande UML-model **read-only**
+via de nieuwe generieke motor (`src/diagramcore/` + profiel
+`src/diagramprofielen/canoniek-uml/`). Doel: side-by-side pariteit kunnen
+vergelijken met de UML-activiteit. Werking:
+
+- Bij activeren (en via menu **Diagram (0.5) → Herlaad uit UML-model** of de
+  ⟳-knop in de sidebar) leest de adapter de actuele `useModelStore`-state en
+  spiegelt die naar een eigen, niet-persistente store — er wordt nooit
+  teruggeschreven.
+- Sidebar: diagrammenlijst; Main: generieke canvas (één `ElementNode`, shapes
+  uit de shape-registry, declaratieve `ConnectorEdge`); Inspector: geselecteerd
+  element (read-only).
+- Bekende fase-1-verschillen: geen overgeërfde-velden-compartiment, geen
+  domein-overlay, edge-labels niet sleepbaar (bestaande offsets worden wel
+  gerespecteerd), nodes niet versleepbaar.
 
 ## DMN-activiteit: DRD + Tabel met dmn-js
 

@@ -2,8 +2,11 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** fase 0 gestart (2026-07-02): besluiten §8.1/6/6b vastgelegd,
-  `apiBase` gecentraliseerd, `diagramcore/`-typecontract opgezet
+- **Status:** fase 1 opgeleverd (2026-07-03): activiteit **"Diagrammen (0.5)"**
+  (preview) rendert het bestaande model read-only via de generieke motor —
+  generieke `ElementNode`/`ConnectorEdge`/shapes + canoniek-uml-profiel met
+  adapter. Fase 0 (2026-07-02): besluiten §8.1/6/6b, `apiBase` gecentraliseerd,
+  typecontract + typeRegistry.
 - **Context:** [`STUDIO.md`](STUDIO.md), [`STUDIO-code-review-2026-06-30.md`](STUDIO-code-review-2026-06-30.md)
 
 ## 1. Doel

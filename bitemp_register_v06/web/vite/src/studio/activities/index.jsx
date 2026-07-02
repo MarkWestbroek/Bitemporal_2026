@@ -14,6 +14,7 @@ import { maakPlaceholderActiviteit } from "./PlaceholderActivity";
 import { IconAPI, IconToegang, IconRollen, IconReferentielijst } from "../icons";
 
 import umlActivity from "./umlActivity";
+import diagramActivity from "./diagramActivity";
 import dmnActivity from "./dmnActivity";
 import bpmnActivity from "./bpmnActivity";
 import berichtActivity from "./berichtActivity";
@@ -62,6 +63,7 @@ const referentielijstenActivity = maakPlaceholderActiviteit({
 registreerActiviteiten([
   // modelleren
   umlActivity,
+  diagramActivity, // Studio 0.5 preview (generieke diagram-motor, read-only)
   dmnActivity,
   bpmnActivity,
   berichtActivity,

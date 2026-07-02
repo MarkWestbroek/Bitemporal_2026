@@ -76,6 +76,16 @@ export const IconReferentielijst = (p) => (
   </svg>
 );
 
+/* Diagrammen (0.5): drie verbonden element-boxen — de generieke diagram-motor. */
+export const IconDiagram = (p) => (
+  <svg {...base} {...p}>
+    <rect x="3" y="3" width="7" height="5" rx="1" />
+    <rect x="14" y="3" width="7" height="5" rx="1" />
+    <rect x="14" y="16" width="7" height="5" rx="1" />
+    <path d="M10 5.5h4M6.5 8v8a2.5 2.5 0 0 0 2.5 2.5h5" />
+  </svg>
+);
+
 /**
  * OmniumMark — het productmerk-logo (de "O" als orbit met facet-knooppunten rond
  * een centrale hub). Eigen kleurstijl (gradient-spectrum), los van de currentColor-

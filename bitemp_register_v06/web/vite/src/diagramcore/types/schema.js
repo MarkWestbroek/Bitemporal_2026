@@ -81,6 +81,7 @@
  * @property {string} shape                 - ShapeType-id (bv. "class-box", "note", "boundary")
  * @property {string} [stereotype]          - headerregel, bv. "«entiteit»"
  * @property {string} [kleur]               - default; instantie kan overriden
+ * @property {"standaard"|"onzichtbaar"} [handleStijl] - aansluitpunten tonen of niet
  * @property {boolean} [isConnector]
  * @property {ConnectorEindpunt} [bron]     - verplicht als isConnector
  * @property {ConnectorEindpunt} [doel]     - verplicht als isConnector
@@ -108,6 +109,7 @@
  * @property {string} label
  * @property {string} style                 - StyleType-id (Implementatie-domein)
  * @property {ElementType[]} elementTypes
+ * @property {FieldType[]} [fieldTypes]     - de veldtypen waar CompartmentTypes naar verwijzen
  * @property {TaskbarType[]} [taakbalken]
  * @property {LayoutStrategie[]} [layouts]
  * @property {{exporteer?: Function, importeer?: Function}} [serialisatie]
