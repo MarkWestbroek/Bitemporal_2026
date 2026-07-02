@@ -11,10 +11,7 @@
 import { useState, useCallback } from "react";
 import { ModelPicker } from "../modelpicker";
 import { BerichttypeEditor, nieuwBerichttype, voegVeldToe, berichtVeldKey } from "../bericht";
-
-function apiBase() {
-  return window.location.port === "5174" ? "http://localhost:8082" : "";
-}
+import { apiBase } from "../shared/apiBase.js";
 
 export default function BerichtEditorDemoPage() {
   const [bericht, setBericht] = useState(() => nieuwBerichttype("InwonerAanmelding"));

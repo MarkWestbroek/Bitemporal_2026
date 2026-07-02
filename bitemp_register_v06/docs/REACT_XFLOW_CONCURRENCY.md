@@ -210,3 +210,71 @@ Instead: rely on **integration testing** (Vite dev server + manual browser testi
 1. **XyFlow Upstream**: if XyFlow v13+ adds a debounce/batching mechanism to ResizeObserver, this deferral can be removed.
 2. **React 19**: if React 19 changes concurrent-mode semantics, the deferral may become unnecessary (TBD).
 3. **Measurement**: profile the actual delay with `performance.mark()` / `performance.measure()` to confirm imperceptibility.
+
+---
+
+# Tweede oorzaak: dubbele main.jsx-instantie in dev (Fast Refresh footer)
+
+**Status**: Fixed (2026-07-03)
+**Severity**: High (crash bij page load, alleen dev-server)
+**Impact**: alle pagina's die via `src/main.jsx` laden (`/studio`, `/ide`, …)
+
+Naast de ResizeObserver-race hierboven bleek er een **tweede, onafhankelijke**
+bron van dezelfde `removeChild`-crash te bestaan — dev-only, grillig, en
+jarenlang onvindbaar. Symptomen bij page load:
+
+```
+Warning: You are calling ReactDOMClient.createRoot() on a container that has
+already been passed to createRoot() before.
+NotFoundError: Failed to execute 'removeChild' on 'Node': …
+```
+
+## Oorzaak (drie schakels)
+
+1. **Fast Refresh-footer importeert de module zichzelf.** `@vitejs/plugin-react`
+   injecteert onderin elk JSX-bestand — dus ook entry `src/main.jsx` — een
+   footer met `import * as currentExports from "<eigen module>"`. Vite's
+   import-analysis plakt daar een `?t=<timestamp>` achter zodra de module ooit
+   in deze serversessie geïnvalideerd is.
+2. **De HTML laadt de module zónder query.** `studio.html` verwijst naar
+   `/src/main.jsx` (plain). Zodra de footer `?t=…` draagt, ziet de browser
+   **twee verschillende URL's → twee module-instanties → main.jsx executeert
+   twee keer → twee `createRoot()` op dezelfde `#root`**. Beide roots muteren
+   dezelfde DOM en de tweede commit crasht op `removeChild`.
+3. **De timestamp raakte "vergiftigd" buiten je om.** Twee triggers gezien:
+   Vite's **dep-optimizer** die bij (her)start of nieuwe dependencies modules
+   invalideert, en de eigen HMR-guard in `main.jsx` die
+   `import.meta.hot.invalidate()` aanriep. Eén keer vergiftigd = crash bij
+   **elke volgende page load** tot de dev-server herstart — vandaar het
+   grillige, onreproduceerbare karakter.
+
+Bijvangst: de HMR-guard zelf was **dode code** — hij matchte op bestandspaden
+(`/web/vite/src/studio/…`) terwijl `vite:beforeUpdate` root-relatieve URL's
+levert (`/src/studio/…`). De "volledige reload bij React Flow/FlexLayout-
+wijzigingen" heeft dus nooit gewerkt; partiële HMR-updates kwamen altijd door.
+
+## Fix (drielaags, alle in `src/main.jsx`)
+
+1. **Idempotente root** — de `Root` wordt op de container zelf bewaard
+   (`container.__omniumRoot`); een tweede module-instantie kan nooit meer een
+   tweede `createRoot()` doen. Dit dooft de crash definitief, ongeacht wie de
+   timestamp nog vergiftigt (dep-optimizer blijft dat doen).
+2. **`window.location.reload()` i.p.v. `import.meta.hot.invalidate()`** in de
+   HMR-guard — een echte page-reload zonder de module graph te vervuilen
+   (invalidate maakte het probleem juist erger: door de Fast Refresh-footer is
+   main.jsx self-accepting, dus invalidate her-executeerde de entry in-place).
+3. **Matchlijst gerepareerd** naar root-relatieve paden (`/src/studio/` enz.,
+   incl. de nieuwe `/src/diagramcore/` en `/src/diagramprofielen/`), zodat de
+   guard nu wél doet wat hij belooft.
+
+## Verificatie (Playwright, 2026-07-03)
+
+- Vergiftigde graph + fix: page load → **0 errors** (voorheen 4).
+- Schone serverstart: footer krijgt door de dep-optimizer alsnog `?t`;
+  main.jsx wordt aantoonbaar dubbel gefetcht (plain + `?t`) maar is nu
+  onschadelijk — 0 errors.
+- Guard-trigger: bewerken van `src/studio/menuBus.js` met open pagina → nette
+  volledige page-reload per wijziging, 0 errors, graph blijft schoon.
+
+Productie-builds hadden hier nooit last van (`import.meta.hot` en de Fast
+Refresh-footer bestaan alleen in dev).

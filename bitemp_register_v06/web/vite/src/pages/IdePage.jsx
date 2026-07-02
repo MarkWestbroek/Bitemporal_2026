@@ -42,13 +42,10 @@ import ImportDialog from "../ide/ImportDialog";
 import ActionDialog from "../ide/ActionDialog";
 import ErrorBoundary from "../ide/ErrorBoundary";
 import { menuBus } from "../studio/menuBus";
+import { apiBase } from "../shared/apiBase.js";
 
 const DEFAULT_MODEL_VERSIE = "v0.";
 const DEFAULT_INDIENER = "MW";
-
-function apiBase() {
-  return window.location.port === "5174" ? "http://localhost:8082" : "";
-}
 
 export default function IdePage({ embedded = false } = {}) {
   const loadModel = useModelStore((s) => s.loadModel);

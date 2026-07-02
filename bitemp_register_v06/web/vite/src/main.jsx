@@ -19,24 +19,38 @@ if (import.meta.hot) {
           || pad.endsWith(".webp") || pad.endsWith(".woff") || pad.endsWith(".woff2")) {
           return false; // CSS/assets: altijd veilig als HMR
         }
+        // LET OP: update.path is een URL relatief aan de Vite-root, dus
+        // "/src/…" — NIET het bestandspad "/web/vite/src/…". De oude
+        // matchlijst gebruikte dat laatste en matchte daardoor nooit
+        // (de guard was dode code; partiële HMR-updates kwamen altijd door).
         return (
-          pad.includes("/uml-editor/src/")          // legacy editor locatie
-          || pad.includes("/web/vite/src/umleditor/") // editor-v2 module
-          || pad.includes("/web/vite/src/ide/")       // IDE-laag (DiagramCanvas etc.)
-          || pad.includes("/web/vite/src/studio/")    // Studio-werkbank (shell + activiteiten)
-          || pad.includes("/web/vite/src/pages/")     // alle pagina's (IdePage, EditorV2Page…)
-          || pad.includes("/web/vite/src/store/")     // Zustand stores
-          || pad.includes("/web/vite/src/context/")   // React context
-          || pad.endsWith("/web/vite/src/App.jsx")
-          || pad.endsWith("/web/vite/src/main.jsx")
-          || pad.endsWith("/web/vite/src/v3ModelNaarEditor.js")
-          || pad.endsWith("/web/vite/src/demoV3Model.js")
+          pad.includes("/src/umleditor/")   // editor-v2 module
+          || pad.includes("/src/ide/")      // IDE-laag (DiagramCanvas etc.)
+          || pad.includes("/src/studio/")   // Studio-werkbank (shell + activiteiten)
+          || pad.includes("/src/pages/")    // alle pagina's (IdePage, EditorV2Page…)
+          || pad.includes("/src/store/")    // Zustand stores
+          || pad.includes("/src/context/")  // React context
+          || pad.includes("/src/diagramcore/")      // generieke diagram-motor (0.5)
+          || pad.includes("/src/diagramprofielen/") // diagramprofielen (0.5)
+          || pad.endsWith("/src/App.jsx")
+          || pad.endsWith("/src/main.jsx")
+          || pad.endsWith("/src/v3ModelNaarEditor.js")
+          || pad.endsWith("/src/demoV3Model.js")
         );
       });
 
     if (heeftDomIntensieveWijziging) {
       volledigeReloadAangevraagd = true;
-      import.meta.hot.invalidate("Volledige reload voor ReactFlow/FlexLayout HMR-wijziging");
+      // Expliciete page-reload — NIET import.meta.hot.invalidate().
+      // invalidate() markeert main.jsx servergraph-breed als "gewijzigd";
+      // omdat de Fast Refresh-footer van @vitejs/plugin-react deze module
+      // self-accepting maakt, her-executeerde Vite main.jsx dan in-place
+      // (tweede createRoot op #root → "removeChild"-crash) en bleef de
+      // ?t-timestamp in de module graph staan, waardoor de footer-self-import
+      // (main.jsx?t=…) bij élke volgende page-load een tweede module-instantie
+      // laadde. location.reload() forceert dezelfde volledige herlaad zonder
+      // de module graph te vervuilen.
+      window.location.reload();
     }
   });
 }
@@ -94,10 +108,21 @@ class RootErrorBoundary extends React.Component {
 // NB: Geen React.StrictMode — flexlayout-react, react-arborist en @xyflow/react
 // manipuleren de DOM direct. StrictMode's dubbele mount/unmount veroorzaakt
 // "removeChild" fouten met deze libraries.
-createRoot(document.getElementById("root")).render(
-  <RootErrorBoundary>
-    <AuthProvider>
-      <App />
-    </AuthProvider>
-  </RootErrorBoundary>
-);
+//
+// Idempotente root als vangnet: mocht deze module ooit tóch dubbel uitgevoerd
+// worden (bv. een tweede instantie via een ?t-self-import van de Fast
+// Refresh-footer, zie de toelichting in de HMR-guard hierboven), dan mag er
+// nooit een tweede createRoot op dezelfde container komen — dat geeft
+// "removeChild"-crashes zodra beide roots dezelfde DOM muteren. De root wordt
+// daarom op de container zelf bewaard (overleeft dubbele module-instanties).
+const container = document.getElementById("root");
+if (!container.__omniumRoot) {
+  container.__omniumRoot = createRoot(container);
+  container.__omniumRoot.render(
+    <RootErrorBoundary>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </RootErrorBoundary>
+  );
+}

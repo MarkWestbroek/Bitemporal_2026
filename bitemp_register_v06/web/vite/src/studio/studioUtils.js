@@ -5,11 +5,8 @@
  * zodat er één bron is (DRY) en gedrag consistent blijft.
  */
 
-/** API-basis: in dev draait Vite op :5174 en de Go-API op :8082; in de build
- *  serveert dezelfde origin de API, dus dan leeg. */
-export function apiBase() {
-  return window.location.port === "5174" ? "http://localhost:8082" : "";
-}
+// apiBase is projectbreed gecentraliseerd; re-export voor bestaande importeurs.
+export { apiBase } from "../shared/apiBase.js";
 
 /** Trigger een browser-download van een Blob met de gegeven inhoud. */
 function downloadBlob(inhoud, bestandsnaam, mime) {

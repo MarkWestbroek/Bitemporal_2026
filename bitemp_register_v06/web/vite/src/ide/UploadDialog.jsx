@@ -10,10 +10,7 @@
  *  - onSuccess: (result) => void — na succesvolle upload
  */
 import { useState, useCallback, useRef } from "react";
-
-function apiBase() {
-  return window.location.port === "5174" ? "http://localhost:8082" : "";
-}
+import { apiBase } from "../shared/apiBase.js";
 
 const CATEGORIEEN = [
   "model_snapshot", "ide_snapshot", "gegenereerde_code",

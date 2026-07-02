@@ -9,11 +9,7 @@
  */
 import { useState } from "react";
 import { ModelPicker, FIELDREF_MIME } from "../modelpicker";
-
-function apiBase() {
-  // In dev draait Vite op :5174 en de Go API op :8082
-  return window.location.port === "5174" ? "http://localhost:8082" : "";
-}
+import { apiBase } from "../shared/apiBase.js";
 
 export default function ModelPickerDemoPage() {
   const [laatste, setLaatste] = useState(null);

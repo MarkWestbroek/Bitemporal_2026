@@ -6,10 +6,7 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import BestandViewer from "../components/editor/BestandViewer";
-
-function apiBase() {
-  return window.location.port === "5174" ? "http://localhost:8082" : "";
-}
+import { apiBase } from "../shared/apiBase.js";
 
 const CATEGORIE_LABELS = {
   model_snapshot: "Model snapshots",
