@@ -14,16 +14,10 @@ import MetamodelEditor from "@umleditor/components/MetamodelEditor";
 import "@umleditor/styles/editor.css";
 import { v3ModelNaarEditor } from "../v3ModelNaarEditor";
 import { demoV3Model } from "../demoV3Model";
+import { apiBase } from "../shared/apiBase.js";
 
 // Converteer V3 demo model naar editor nodes/edges (directe fallback)
 const defaultData = v3ModelNaarEditor(demoV3Model);
-
-function apiBase() {
-  // In dev draait Vite op :5174 en de Go API op :8082
-  return window.location.port === "5174"
-    ? "http://localhost:8082"
-    : "";
-}
 
 function haalModelIdUitUrl(url) {
   const match = String(url || "").match(/\/api\/schema\/model\/(\d+)(?:\?.*)?$/);

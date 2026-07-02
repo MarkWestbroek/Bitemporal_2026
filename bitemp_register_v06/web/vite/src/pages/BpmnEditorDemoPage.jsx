@@ -17,10 +17,7 @@ import { useCallback, useRef, useState } from "react";
 import { ModelPicker } from "../modelpicker";
 import { BerichttypeEditor, nieuwBerichttype, voegVeldToe } from "../bericht";
 import { BpmnEditor, STARTER_BPMN, contractNaarIoMapping, valideerContract, naarCamundaIoXml } from "../bpmn";
-
-function apiBase() {
-  return window.location.port === "5174" ? "http://localhost:8082" : "";
-}
+import { apiBase } from "../shared/apiBase.js";
 
 export default function BpmnEditorDemoPage() {
   const editorRef = useRef(null);

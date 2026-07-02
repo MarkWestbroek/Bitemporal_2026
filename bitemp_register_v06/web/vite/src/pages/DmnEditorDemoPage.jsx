@@ -16,10 +16,7 @@ import { useState, useCallback } from "react";
 import { ModelPicker } from "../modelpicker";
 import DmnTableEditor from "../dmn/DmnTableEditor";
 import { nieuweBeslistabel, bindInput, bindOutput } from "../dmn/dmnModel";
-
-function apiBase() {
-  return window.location.port === "5174" ? "http://localhost:8082" : "";
-}
+import { apiBase } from "../shared/apiBase.js";
 
 export default function DmnEditorDemoPage() {
   const [table, setTable] = useState(() => {

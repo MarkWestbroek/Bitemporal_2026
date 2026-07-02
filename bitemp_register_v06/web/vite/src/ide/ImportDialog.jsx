@@ -27,6 +27,7 @@ import { importVanPlantUML } from "../umleditor/import/importPlantUML";
 import { importVanXMI } from "../umleditor/import/importXMI";
 import { detecteerOrphans, pasOrphanActiesToe } from "../umleditor/import/rawuml";
 import OrphanDialog from "../umleditor/components/OrphanDialog";
+import { apiBase } from "../shared/apiBase.js";
 
 // ── Herbruikbare stijlen (identiek aan ExportDialog) ──────
 const S = {
@@ -122,10 +123,6 @@ function detecteerUmlFormaatVanBestand(file, text) {
     return null; // onbekend; gebruiker zal de fout zien
   }
   return null;
-}
-
-function apiBase() {
-  return window.location.port === "5174" ? "http://localhost:8082" : "";
 }
 
 /**

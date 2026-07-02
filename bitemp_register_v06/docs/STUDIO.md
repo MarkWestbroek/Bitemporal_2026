@@ -4,6 +4,10 @@
 >
 > **Code review (2026-06-30):** zie [`STUDIO-code-review-2026-06-30.md`](STUDIO-code-review-2026-06-30.md)
 > voor bevindingen over onderhoudbaarheid, dubbelingen, veiligheid en toegankelijkheid.
+>
+> **Plan Studio 0.5 (2026-07-02):** zie [`STUDIO-05-diagramcore-plan.md`](STUDIO-05-diagramcore-plan.md)
+> voor het voorstel om de UML-editor te veralgemeniseren naar een configureerbare
+> diagram-kern (diagramcore + profielen), parallel naast de huidige versie.
 
 De **Studio** is een geïntegreerde werkbank die de losse functie-pagina's onder één
 VS Code-achtige schil brengt: een uitbreidbare **iconenbalk** links (activity bar) en
