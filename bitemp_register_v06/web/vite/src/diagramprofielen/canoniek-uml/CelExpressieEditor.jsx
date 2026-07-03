@@ -13,7 +13,17 @@
  */
 import { lazy, Suspense, useMemo, useState } from "react";
 
-const ExpressieEditor = lazy(() => import("../../umleditor/components/panels/ExpressieEditor.jsx"));
+// De modal-styling (backdrop, kolommen, tokenkleuren + licht-thema-overrides)
+// leeft in umleditor/styles/editor.css. Die is normaal pas geladen zodra de
+// (lazy) IdePage ooit gemount is — wie de Studio rechtstreeks in 0.5 opent
+// heeft hem dus nog niet, en dan rendert de modal "plat" in de inspector.
+// Daarom laden we de CSS mee in dezelfde lazy chunk als de editor.
+const ExpressieEditor = lazy(() =>
+  Promise.all([
+    import("../../umleditor/components/panels/ExpressieEditor.jsx"),
+    import("../../umleditor/styles/editor.css"),
+  ]).then(([module]) => module)
+);
 
 export default function CelExpressieEditor({ regel, waarde, onChange, element }) {
   const [open, setOpen] = useState(false);

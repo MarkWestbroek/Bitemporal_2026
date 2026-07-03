@@ -25,6 +25,7 @@ import React, {
 import { IconDiagram } from "../icons";
 import { menuBus } from "../menuBus";
 import useModelStore from "../../store/useModelStore";
+import useUIStore from "../../store/useUIStore";
 import { createDiagramStore } from "../../diagramcore/model/createDiagramStore.js";
 import { Taskbar, useTaakbalkVoorkeuren } from "../../diagramcore/taskbar/Taskbar.jsx";
 import ElementInspector from "../../diagramcore/inspector/ElementInspector.jsx";
@@ -256,6 +257,16 @@ const TAAKBALK_DEFAULTS = {
 function Diagram05Main() {
   const { setSelectieId, verbindingsType, setVerbindingsType, plaatsNieuwElement, verbind } =
     useContext(Ctx);
+  const theme = useUIStore((s) => s.theme);
+
+  // Spiegel het studio-thema naar body[data-ide-theme] zolang deze activiteit
+  // actief is: hergebruikte umleditor-componenten (o.a. de CEL-ExpressieEditor)
+  // hebben hun licht-thema-overrides op dat attribuut. IdePage doet dit zelf
+  // maar verwijdert het attribuut bij unmount (activiteit-wissel); daarom hier
+  // opnieuw zetten. Bewust geen cleanup: een volgende activiteit zet hem zelf.
+  useEffect(() => {
+    document.body.setAttribute("data-ide-theme", theme);
+  }, [theme]);
   const elements = useDiagram05Store((s) => s.elements);
   const diagrams = useDiagram05Store((s) => s.diagrams);
   const viewports = useDiagram05Store((s) => s.viewports);
