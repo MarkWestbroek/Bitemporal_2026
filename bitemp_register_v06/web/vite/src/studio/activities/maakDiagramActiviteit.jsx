@@ -216,6 +216,85 @@ export function maakDiagramActiviteit(opties) {
           })
         );
       }
+      // 0.5-werkbestand: het eigen formaat integraal (elements + diagrammen
+      // incl. viewports + meta) — voor élk profiel beschikbaar, zodat een
+      // zorgvuldig geschoven view niet in localStorage gevangen zit.
+      af.push(
+        menuBus.on(ev("exporteer-05"), () => {
+          const s = useStore.getState();
+          const diagrams = Object.fromEntries(
+            Object.entries(s.diagrams).map(([did, d]) => [
+              did,
+              { ...d, ...(s.viewports?.[did] ? { viewport: s.viewports[did] } : {}) },
+            ])
+          );
+          const inhoud = {
+            formaat: "studio05-diagram",
+            versie: 1,
+            diagramType: descriptor.id,
+            geexporteerd: new Date().toISOString(),
+            elements: s.elements,
+            diagrams,
+            meta: s.meta || null,
+          };
+          const naam = (Object.values(s.diagrams)[0]?.naam || id)
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-");
+          const blob = new Blob([JSON.stringify(inhoud, null, 2)], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${naam}-05.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+        })
+      );
+      af.push(
+        menuBus.on(ev("importeer-05"), () => {
+          const input = document.createElement("input");
+          input.type = "file";
+          input.accept = ".json,application/json";
+          input.onchange = () => {
+            const file = input.files?.[0];
+            if (!file) return;
+            file.text().then((tekst) => {
+              let inhoud;
+              try {
+                inhoud = JSON.parse(tekst);
+              } catch {
+                window.alert("Dit bestand is geen geldige JSON.");
+                return;
+              }
+              if (inhoud?.formaat !== "studio05-diagram") {
+                window.alert("Dit is geen 0.5-werkbestand (formaat-veld ontbreekt).");
+                return;
+              }
+              if (inhoud.diagramType !== descriptor.id) {
+                window.alert(
+                  `Dit werkbestand hoort bij het profiel "${inhoud.diagramType}" — open het in die activiteit.`
+                );
+                return;
+              }
+              const s = useStore.getState();
+              if (Object.keys(s.elements).length > 0) {
+                const ok = window.confirm(
+                  "Importeren vervangt de hele sandbox door het gekozen werkbestand.\nJe lokale wijzigingen gaan verloren. Doorgaan?"
+                );
+                if (!ok) return;
+              }
+              s.laadModel({
+                diagramTypeId: descriptor.id,
+                elements: inhoud.elements || {},
+                diagrams: inhoud.diagrams || {},
+                meta: inhoud.meta || null,
+              });
+              useStore.temporal.getState().clear();
+              setSelectieId(null);
+            });
+          };
+          input.click();
+        })
+      );
       // Profiel-eigen bestandsformaat (bv. OAS 3.1 YAML → coreModel).
       if (koppeling?.importBestand) {
         af.push(
@@ -734,50 +813,50 @@ export function maakDiagramActiviteit(opties) {
     );
 
   const menus = () => [
-    ...(koppeling
-      ? [
-          // Eigen Bestand-menu (overschrijft de standaard op ankerplek
-          // "bestand", zelfde patroon als umlActivity).
-          {
-            id: "bestand",
-            label: "Bestand",
-            items: schoonSeparators([
-              ...(koppeling.DialogenComponent
-                ? [
-                    { id: `${menuPrefix}-api-laden`, label: "Laden vanaf API…", onClick: () => menuBus.emit(ev("api-laden")) },
-                    { id: `${menuPrefix}-api-publiceer`, label: "Publiceer naar API…", onClick: () => menuBus.emit(ev("api-publiceer")) },
-                    { type: "separator" },
-                  ]
-                : []),
-              ...(koppeling.importBestand
-                ? [
-                    {
-                      id: `${menuPrefix}-import-bestand`,
-                      label: koppeling.importBestand.label || "Importeer bestand…",
-                      onClick: () => menuBus.emit(ev("import-bestand")),
-                    },
-                    { type: "separator" },
-                  ]
-                : []),
-              ...(koppeling.importeerV3
-                ? [{ id: `${menuPrefix}-import-v3`, label: "Importeer V3 JSON…", onClick: () => menuBus.emit(ev("importeer-v3")) }]
-                : []),
-              ...(koppeling.exporteerV3
-                ? [{ id: `${menuPrefix}-export-v3`, label: "Exporteer V3 JSON…", onClick: () => menuBus.emit(ev("exporteer-v3")) }]
-                : []),
+    // Eigen Bestand-menu (overschrijft de standaard op ankerplek "bestand",
+    // zelfde patroon als umlActivity). Het 0.5-werkbestand is er altijd;
+    // API/V3/profielformaat alleen per koppeling-onderdeel.
+    {
+      id: "bestand",
+      label: "Bestand",
+      items: schoonSeparators([
+        ...(koppeling?.DialogenComponent
+          ? [
+              { id: `${menuPrefix}-api-laden`, label: "Laden vanaf API…", onClick: () => menuBus.emit(ev("api-laden")) },
+              { id: `${menuPrefix}-api-publiceer`, label: "Publiceer naar API…", onClick: () => menuBus.emit(ev("api-publiceer")) },
               { type: "separator" },
+            ]
+          : []),
+        ...(koppeling?.importBestand
+          ? [
               {
-                id: "index",
-                label: "Overzicht (index)…",
-                onClick: () => {
-                  window.location.href = window.location.pathname.replace(/[^/]*$/, "") || "/";
-                },
+                id: `${menuPrefix}-import-bestand`,
+                label: koppeling.importBestand.label || "Importeer bestand…",
+                onClick: () => menuBus.emit(ev("import-bestand")),
               },
-              { id: "herlaad-pagina", label: "Pagina herladen", shortcut: "F5", onClick: () => window.location.reload() },
-            ]),
+              { type: "separator" },
+            ]
+          : []),
+        ...(koppeling?.importeerV3
+          ? [{ id: `${menuPrefix}-import-v3`, label: "Importeer V3 JSON…", onClick: () => menuBus.emit(ev("importeer-v3")) }]
+          : []),
+        ...(koppeling?.exporteerV3
+          ? [{ id: `${menuPrefix}-export-v3`, label: "Exporteer V3 JSON…", onClick: () => menuBus.emit(ev("exporteer-v3")) }]
+          : []),
+        { type: "separator" },
+        { id: `${menuPrefix}-import-05`, label: "Importeer 0.5-werkbestand…", onClick: () => menuBus.emit(ev("importeer-05")) },
+        { id: `${menuPrefix}-export-05`, label: "Exporteer 0.5-werkbestand…", onClick: () => menuBus.emit(ev("exporteer-05")) },
+        { type: "separator" },
+        {
+          id: "index",
+          label: "Overzicht (index)…",
+          onClick: () => {
+            window.location.href = window.location.pathname.replace(/[^/]*$/, "") || "/";
           },
-        ]
-      : []),
+        },
+        { id: "herlaad-pagina", label: "Pagina herladen", shortcut: "F5", onClick: () => window.location.reload() },
+      ]),
+    },
     {
       id: "bewerken",
       label: "Bewerken",

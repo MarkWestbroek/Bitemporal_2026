@@ -248,6 +248,14 @@ fase 2 een **bewerkbare sandbox**:
   UML-model…** vervangt het model in de klassieke UML-activiteit door de
   sandbox (met bevestiging; de API blijft onaangeroerd) — de inverse van
   "Herlaad uit UML-model".
+- **0.5-werkbestand**: elk 0.5-profiel heeft **Bestand →
+  Exporteer/Importeer 0.5-werkbestand…** — het eigen formaat integraal als
+  JSON (elements + diagrammen incl. viewports + meta, met profiel-check bij
+  import). Zo is een handmatig geschoven view (bv. een OAS-import) deelbaar
+  en niet aan localStorage gebonden.
+- **Lijnvormen**: edges kennen `presentatie.vorm` — bezier (default),
+  hoekig (orthogonaal) of recht. Het puur-UML-profiel gebruikt hoekig voor
+  de klassieke UML-look.
 - **Fabriek + tweede profiel (fase 5)**: de activiteit-mechaniek zit in
   `studio/activities/maakDiagramActiviteit.jsx` (descriptor + opties →
   complete activiteit; model-/V3-/API-koppeling optioneel). De activiteit

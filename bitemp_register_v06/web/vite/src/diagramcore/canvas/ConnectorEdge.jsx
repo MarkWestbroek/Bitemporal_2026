@@ -9,6 +9,9 @@
  *
  * data.presentatie:
  *   lijn:        "solid" | "dash-6-3" | "dash-4-3" | "dash-4-4"
+ *   vorm:        "bezier" (default) | "hoekig" (orthogonaal) | "recht"
+ *                — de route van de lijn (§8.5c-familie); UML oogt
+ *                herkenbaarder hoekig, grafen juist met krommen
  *   kleur:       basiskleur (selected → accent, tenzij `vasteKleur`)
  *   opacity?:    number
  *   markerStart: "ruit" | "ruit-open" | null — compositie- (◆) of
@@ -18,7 +21,13 @@
  *               delen: [ { tekst, soort: "rolnaam"|"kardinaliteit"|"constraint"|"naam", kleur? } ] } ]
  */
 import { useLayoutEffect, useRef, useState } from "react";
-import { getBezierPath, EdgeLabelRenderer, BaseEdge } from "@xyflow/react";
+import {
+  getBezierPath,
+  getSmoothStepPath,
+  getStraightPath,
+  EdgeLabelRenderer,
+  BaseEdge,
+} from "@xyflow/react";
 
 const DASHES = {
   "dash-6-3": "6 3",
@@ -45,14 +54,13 @@ function ConnectorEdge({
   selected,
 }) {
   const p = data?.presentatie || {};
-  const [edgePath, labelX, labelY] = getBezierPath({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition,
-    targetPosition,
-  });
+  const padArgs = { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition };
+  const [edgePath, labelX, labelY] =
+    p.vorm === "hoekig"
+      ? getSmoothStepPath({ ...padArgs, borderRadius: 4 })
+      : p.vorm === "recht"
+        ? getStraightPath(padArgs)
+        : getBezierPath(padArgs);
 
   const kleur = selected && !p.vasteKleur ? "#2563eb" : p.kleur || "#64748b";
   const pijlId = `dc-pijl-${id}`;
