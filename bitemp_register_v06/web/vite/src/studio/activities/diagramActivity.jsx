@@ -41,6 +41,7 @@ import {
 import { registreerCanoniekUmlImplementaties } from "../../diagramprofielen/canoniek-uml/implementaties.jsx";
 import { vanCanoniekModel } from "../../diagramprofielen/canoniek-uml/adapter.js";
 import { exporteerV3, importeerV3 } from "../../diagramprofielen/canoniek-uml/serialisatie.js";
+import ApiDialogen from "./diagram05ApiDialogen.jsx";
 
 const DiagramCanvas = lazy(() => import("../../diagramcore/canvas/DiagramCanvas.jsx"));
 
@@ -216,6 +217,8 @@ function Diagram05Provider({ children }) {
       }}
     >
       {children}
+      {/* Fase 4B: laden/publiceren via de API (opent via menuBus-events). */}
+      <ApiDialogen store={useDiagram05Store} onGeladen={() => setSelectieId(null)} />
     </Ctx.Provider>
   );
 }
@@ -670,6 +673,9 @@ export default {
       id: "bestand",
       label: "Bestand",
       items: [
+        { id: "d05-api-laden", label: "Laden vanaf API…", onClick: () => menuBus.emit("d05:api-laden") },
+        { id: "d05-api-publiceer", label: "Publiceer naar API…", onClick: () => menuBus.emit("d05:api-publiceer") },
+        { type: "separator" },
         { id: "d05-import-v3", label: "Importeer V3 JSON…", onClick: () => menuBus.emit("d05:importeer-v3") },
         { id: "d05-export-v3", label: "Exporteer V3 JSON…", onClick: () => menuBus.emit("d05:exporteer-v3") },
         { type: "separator" },

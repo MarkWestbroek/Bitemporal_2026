@@ -234,6 +234,13 @@ fase 2 een **bewerkbare sandbox**:
   V3-ids (V3 kent geen vrije element-ids). Elementen zonder
   V3-tegenhanger (zoals kaders) worden bij export gemeld en overgeslagen.
   Round-trip-tests: `diagramprofielen/canoniek-uml/terugreis.test.js`.
+- **API-koppeling (fase 4B)**: **Bestand → Laden vanaf API…** haalt de
+  versielijst op en laadt het actieve model of een gekozen versie in de
+  sandbox (met bevestiging); **Bestand → Publiceer naar API…** maakt een
+  nieuwe schema-versie aan (`POST /api/schema/model`, bron "studio-0.5",
+  status "proposed" — activeren blijft een aparte stap, zoals in de UML-IDE).
+  Dialogen in `studio/activities/diagram05ApiDialogen.jsx`; de V3-vertaling
+  loopt via dezelfde `exporteerV3`/`importeerV3`.
 - **Gegevenstype-validatie bewerken**: validatie, normalisatie en weergave
   zijn element-properties van het gegevenstype met eigen PropertyTypeEditors
   (`ValidatieEditors.jsx`, datatypes "validatieregels"/"weergaveregels"):
@@ -292,7 +299,8 @@ fase 2 een **bewerkbare sandbox**:
   **Overgeërfde velden** verschijnen in het kind (generalisatie-keten,
   ↑-kopregel, cursief) — weergave-compartiment via de profiel-hook, geen
   modeldata.
-- Nog niet (bekend): opslaan/publiceren via de API (fase 4B), clipboard,
+- Nog niet (bekend): activeren/rebuild vanuit 0.5 en terugschrijven naar de
+  UML-store (rest van fase 4B), clipboard,
   validatie-hook, domein-overlay, sleepbare edge-labels, licht/donker-tokens
   per StyleType (plan §8.5b), integrale iconenset voor de Maken-balk
   (ontwerp-sessie, plan §8.6a), overerving in de gespiegelde weergave

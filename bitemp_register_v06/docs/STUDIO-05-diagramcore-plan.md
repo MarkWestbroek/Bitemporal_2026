@@ -2,7 +2,18 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** fase 4A-feedbackronde (2026-07-03): (1) **round-trip-bug
+- **Status:** fase 4B gestart (2026-07-03, branch `feat/studio05-fase4b`; 4A
+  gemerged in `70e0141`): **laden vanaf en publiceren naar de Go-API** in het
+  Bestand-menu van de 0.5-activiteit (`diagram05ApiDialogen.jsx`) — zelfde
+  endpoints als de UML-IDE (`GET /api/schema/versies|model|model/{id}`,
+  `POST /api/schema/model?opmerking=…` met `{bron: "studio-0.5", indiener,
+  model}`). Laden toont de versielijst (of het actieve model) en vervangt de
+  sandbox met bevestiging; publiceren maakt een nieuwe versie (status
+  "proposed" — activeren blijft een aparte stap) en loopt via
+  `exporteerV3` (dus incl. default-diagram en canonieke ids).
+  E2E-geverifieerd tegen de echte API (laden versie-lijst + actief model;
+  testpublicatie #91). Nog open in 4B: activeren/rebuild vanuit 0.5 en de
+  terugschrijf-flow naar de UML-store. Eerdere ronde: fase 4A-feedbackronde (2026-07-03): (1) **round-trip-bug
   gefixt** — het default-diagram ("overzicht") kan hernoemd en samengesteld
   zijn (bv. "np-loc" met 29 van de 114 elementen), maar de oude adapters
   beschouwen het als afgeleid: export liet het weg en import reconstrueerde
