@@ -62,8 +62,8 @@ function ElementNode({ id, data, selected }) {
     >
       {magResizen && (
         <NodeResizer
-          minWidth={120}
-          minHeight={48}
+          minWidth={180}
+          minHeight={56}
           isVisible={!!selected}
           lineStyle={{ borderColor: "#2563eb" }}
           handleStyle={{ width: 10, height: 10, borderRadius: 3, borderColor: "#2563eb", background: "#ffffff" }}

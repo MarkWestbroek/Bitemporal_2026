@@ -2,7 +2,18 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** fase 3B opgeleverd (2026-07-04): **ASOC-materialisatie in de
+- **Status:** fase 3B-feedbackronde opgeleverd (2026-07-04):
+  **rechtsklik-contextmenu** op de canvas (uitlijnen met disabled-status,
+  auto-layout, normaliseer, snap — core-raamwerk, acties uit de activiteit),
+  **"Normaliseer relaties"** terug als menu-/contextmenu-actie én dubbelklik
+  op een connector-edge (reset anker naar het middelpunt), nieuwe elementen
+  landen in het **zichtbare viewport-midden**, **overgeërfde velden** in het
+  kind via de `extraCompartimenten`-hook (generalisatie-keten, ↑-kopregel,
+  cursief), veld-verwijderen ruimt box en anker op (kale gedaante), en het
+  smalle-node-artefact is gefixt (resizer-minima = CSS-minima + overflow
+  hidden). ⚠️ Onopgelost: incidenteel "leeg canvas" na inspector-bewerking +
+  canvas-klik (derde melding; transient — diagramwissel herstelt; repro
+  gezocht, graag console-output bij volgende keer). Fase 3B opgeleverd (2026-07-04): **ASOC-materialisatie in de
   core** — een connector mét velden materialiseert automatisch als anker +
   box + drie edges (synthetische canvas-nodes; anker-positie als
   `ankerPosition` op het diagram-lidmaatschap), zonder velden als kale edge.

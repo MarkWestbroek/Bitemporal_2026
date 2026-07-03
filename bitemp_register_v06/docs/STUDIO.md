@@ -258,12 +258,21 @@ fase 2 een **bewerkbare sandbox**:
   Taakbalken-menu toont ✓ voor zichtbare balken. De CEL-editor kent de
   **familie-context**: velden van de eigen en gerelateerde GE's
   (`Naam.roepnaam`) met autocomplete.
-- Nog niet (bekend): clipboard, validatie-hook,
-  overgeërfde-velden-compartiment, domein-overlay, sleepbare edge-labels,
-  licht/donker-tokens per StyleType (plan §8.5b), integrale iconenset voor
-  de Maken-balk (ontwerp-sessie, plan §8.6a). Na deze update een bestaande
-  sandbox eerst verversen via "Herlaad uit UML-model" (adapter-structuur
-  gewijzigd).
+- **Rechtsklik** op de canvas opent een contextmenu (uitlijnen — grijs bij
+  <2 geselecteerd —, auto-layout, normaliseer relaties, snap). **Dubbelklik**
+  op een connector-edge normaliseert die connector (anker terug naar het
+  middelpunt); "Normaliseer relaties" in menu/contextmenu doet dat voor
+  alle. Nieuwe elementen landen in het zichtbare viewport-midden.
+  **Overgeërfde velden** verschijnen in het kind (generalisatie-keten,
+  ↑-kopregel, cursief) — weergave-compartiment via de profiel-hook, geen
+  modeldata.
+- Nog niet (bekend): clipboard, validatie-hook, domein-overlay, sleepbare
+  edge-labels, licht/donker-tokens per StyleType (plan §8.5b), integrale
+  iconenset voor de Maken-balk (ontwerp-sessie, plan §8.6a), overerving in
+  de gespiegelde weergave (generalisaties uit het oude model zijn daar nog
+  presentatie-edges). Bekend en onopgelost: incidenteel transient leeg
+  canvas (diagramwissel herstelt; repro gezocht). Na deze update een
+  bestaande sandbox eerst verversen via "Herlaad uit UML-model".
 
 ## DMN-activiteit: DRD + Tabel met dmn-js
 

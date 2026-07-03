@@ -87,6 +87,43 @@ const elementTypes = [
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
       { id: "overerving", label: null, fieldType: "attribuut" },
     ],
+    hooks: {
+      /**
+       * Overgeërfde velden (weergave-compartiment, niet in het element zelf):
+       * volg de generalisatie-connectoren kind → ouder en toon de velden van
+       * de supertype-keten, cursief met een ↑-kopregel per supertype.
+       */
+      extraCompartimenten: (element, { elements }) => {
+        const velden = [];
+        let huidigeId = element.id;
+        const bezocht = new Set([element.id]);
+        for (;;) {
+          const gen = Object.values(elements || {}).find(
+            (el) => el.elementType === "generalisatie" && el.source === huidigeId
+          );
+          const ouder = gen ? elements[gen.target] : null;
+          if (!ouder || bezocht.has(ouder.id)) break;
+          bezocht.add(ouder.id);
+          const ouderVelden = [];
+          for (const c of ouder.compartimenten || []) {
+            if (c.compartmentType !== "velden" && c.compartmentType !== "afgeleid") continue;
+            for (const v of c.velden || []) if (v.naam) ouderVelden.push(v);
+          }
+          if (ouderVelden.length) {
+            velden.push({ naam: `↑ ${ouder.naam}`, fieldType: "regel", data: {} });
+            for (const v of ouderVelden) {
+              velden.push({
+                naam: v.naam,
+                fieldType: "attribuut",
+                data: { ...v.data, verplicht: false, cursief: true },
+              });
+            }
+          }
+          huidigeId = ouder.id;
+        }
+        return velden.length ? [{ compartmentType: "overerving", velden }] : [];
+      },
+    },
   },
   {
     id: "gegevenselement",

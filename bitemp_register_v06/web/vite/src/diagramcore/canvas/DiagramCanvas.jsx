@@ -18,7 +18,7 @@
  * Edges = geïmporteerde presentatie-edges (diagram.edges, fase 1-adapter)
  *       + gematerialiseerde connector-elementen (materialiseerConnectoren).
  */
-import { useMemo, useCallback, useEffect, useImperativeHandle } from "react";
+import { useMemo, useCallback, useEffect, useImperativeHandle, useState } from "react";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -76,16 +76,44 @@ function CanvasBinnenkant({
   onVerbind,
   onVerwijder,
   onVerwijderConnectoren,
+  onNormaliseer,
   onViewport,
   layoutApiRef,
+  bouwContextMenu,
 }) {
   const lookups = useMemo(() => bouwLookups(diagramType), [diagramType]);
-  const { getNodes } = useReactFlow();
+  const { getNodes, screenToFlowPosition } = useReactFlow();
+  // Contextmenu (rechtsklik): positie in schermcoördinaten, of null.
+  const [contextMenu, setContextMenu] = useState(null);
+  useEffect(() => {
+    if (!contextMenu) return;
+    const dicht = (e) => {
+      if (!e.target.closest?.(".dc-contextmenu")) setContextMenu(null);
+    };
+    const esc = (e) => e.key === "Escape" && setContextMenu(null);
+    window.addEventListener("pointerdown", dicht, true);
+    window.addEventListener("keydown", esc);
+    return () => {
+      window.removeEventListener("pointerdown", dicht, true);
+      window.removeEventListener("keydown", esc);
+    };
+  }, [contextMenu]);
 
   // Connector-materialisatie: kale edges + (bij velden) anker/box-structuur.
   const gematerialiseerd = useMemo(
     () => materialiseerConnectoren(elements, diagram, lookups.elementTypesById),
     [elements, diagram, lookups]
+  );
+
+  // Afgeleide weergave-compartimenten (bv. overgeërfde velden) via de
+  // profiel-hook elementType.hooks.extraCompartimenten(element, ctx).
+  const verrijk = useCallback(
+    (element, elementType) => {
+      const extra = elementType.hooks?.extraCompartimenten?.(element, { elements });
+      if (!extra?.length) return element;
+      return { ...element, compartimenten: [...(element.compartimenten || []), ...extra] };
+    },
+    [elements]
   );
 
   // Nodes als interne React Flow-state, gevoed vanuit de props. Nodig omdat
@@ -99,6 +127,14 @@ function CanvasBinnenkant({
         if (!element) return null;
         const elementType = lookups.elementTypesById[element.elementType];
         if (!elementType) return null;
+        // Een kale connector (geen velden) heeft geen box-gedaante: zijn
+        // lidmaatschap bewaart alleen posities voor als hij weer velden krijgt.
+        if (
+          elementType.isConnector &&
+          !(element.compartimenten || []).some((c) => (c.velden || []).length > 0)
+        ) {
+          return null;
+        }
         return {
           id: ref.elementId,
           type: "element",
@@ -108,7 +144,7 @@ function CanvasBinnenkant({
           // Achtergrond-elementen (boundaries/kaders) renderen ónder de rest
           ...(elementType.achtergrond ? { zIndex: -1 } : {}),
           data: {
-            element,
+            element: verrijk(element, elementType),
             elementType,
             bewerkbaar,
             onResize: onNodeSize,
@@ -145,7 +181,7 @@ function CanvasBinnenkant({
           type: "element",
           position: extra.position,
           data: {
-            element,
+            element: verrijk(element, elementType),
             elementType,
             bewerkbaar,
             onResize: onNodeSize,
@@ -169,7 +205,7 @@ function CanvasBinnenkant({
       }
       return flowNodes.map((n) => (geselecteerd.has(n.id) ? { ...n, selected: true } : n));
     });
-  }, [diagram, elements, lookups, gematerialiseerd, setNodes, bewerkbaar, onNodeSize, selectieId]);
+  }, [diagram, elements, lookups, gematerialiseerd, verrijk, setNodes, bewerkbaar, onNodeSize, selectieId]);
 
   // Edges óók als interne React Flow-state: edge-selectie loopt (net als bij
   // nodes) via changes, en zonder toegepaste changes "plakt" een klik niet —
@@ -279,6 +315,29 @@ function CanvasBinnenkant({
     [onViewport]
   );
 
+  // Dubbelklik op een connector-edge → normaliseer die connector (anker
+  // terug naar het middelpunt), zoals in de oude editor.
+  const handleEdgeDoubleClick = useCallback(
+    (_ev, edge) => {
+      if (bewerkbaar && onNormaliseer && edge.data?.connectorId) {
+        onNormaliseer([edge.data.connectorId]);
+      }
+    },
+    [bewerkbaar, onNormaliseer]
+  );
+
+  // Rechtsklik: contextmenu met acties uit de activiteit (bouwContextMenu).
+  const openContextMenu = useCallback(
+    (ev) => {
+      if (!bouwContextMenu) return;
+      ev.preventDefault();
+      const selectieAantal = getNodes().filter((n) => n.selected).length;
+      const items = bouwContextMenu({ selectieAantal });
+      if (items?.length) setContextMenu({ x: ev.clientX, y: ev.clientY, items });
+    },
+    [bouwContextMenu, getNodes]
+  );
+
   // ── Imperatieve layout-API (plan §4.5) ─────────────────────────────────────
   // Uitlijnen/snap is core-geometrie op de live (gemeten) nodes; auto-layout
   // voert een LayoutStrategie van het profiel uit. Resultaten gaan als één
@@ -309,6 +368,13 @@ function CanvasBinnenkant({
         snapRaster: (raster = 16) => {
           pasToe(berekenRasterSnap(naarItems(getNodes()), raster));
         },
+        /** Flow-coördinaat van het midden van het zichtbare canvas. */
+        viewportMidden: () => {
+          const el = document.querySelector(".dc-canvas");
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          return screenToFlowPosition({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+        },
         /** Voer een profiel-LayoutStrategie uit (heel diagram of selectie). */
         voerLayoutUit: (strategie, alleenSelectie = false) => {
           if (!strategie?.run) return;
@@ -330,7 +396,7 @@ function CanvasBinnenkant({
         },
       };
     },
-    [getNodes, edges, elements, diagram, onNodePosities]
+    [getNodes, screenToFlowPosition, edges, elements, diagram, onNodePosities]
   );
 
   return (
@@ -349,6 +415,11 @@ function CanvasBinnenkant({
       isValidConnection={isValidConnection}
       onNodesDelete={handleNodesDelete}
       onEdgesDelete={handleEdgesDelete}
+      onEdgeDoubleClick={handleEdgeDoubleClick}
+      onPaneContextMenu={openContextMenu}
+      onNodeContextMenu={openContextMenu}
+      onSelectionContextMenu={openContextMenu}
+      onPaneClick={() => setContextMenu(null)}
       onMoveEnd={handleMoveEnd}
       nodesDraggable={bewerkbaar}
       nodesConnectable={bewerkbaar}
@@ -363,6 +434,34 @@ function CanvasBinnenkant({
     >
       <Background gap={16} size={1} />
       <Controls showInteractive={false} />
+      {contextMenu && (
+        <div
+          className="dc-contextmenu"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          {contextMenu.items.map((item, i) =>
+            item.sep ? (
+              <div key={i} className="dc-contextmenu-sep" />
+            ) : item.kop ? (
+              <div key={i} className="dc-contextmenu-kop">{item.label}</div>
+            ) : (
+              <button
+                key={item.id || i}
+                className="dc-contextmenu-item"
+                disabled={item.disabled}
+                onClick={() => {
+                  setContextMenu(null);
+                  item.onClick?.();
+                }}
+              >
+                {item.icoon ? <span className="dc-contextmenu-icoon">{item.icoon}</span> : null}
+                {item.label}
+              </button>
+            )
+          )}
+        </div>
+      )}
       <MiniMap
         pannable
         zoomable

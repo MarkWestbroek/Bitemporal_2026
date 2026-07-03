@@ -64,6 +64,8 @@ const Ctx = createContext(null);
 function Diagram05Provider({ children }) {
   const [selectieId, setSelectieId] = useState(null);
   const [verbindingsType, setVerbindingsType] = useState(null);
+  // Imperatieve layout-API van de canvas (uitlijnen/snap/auto-layout/viewport).
+  const layoutApiRef = useRef(null);
 
   /** Spiegel het UML-model in de sandbox (vervangt alles). */
   const herlaad = useCallback((vraagBevestiging = true) => {
@@ -115,19 +117,14 @@ function Diagram05Provider({ children }) {
     const s = useDiagram05Store.getState();
     const dId = s.actiefDiagramId;
     if (!dId) return;
-    const nodes = s.diagrams[dId]?.nodes || [];
     _plaatsTeller += 1;
-    let positie = { x: 120, y: 120 };
-    if (nodes.length > 0) {
-      const som = nodes.reduce(
-        (acc, n) => ({ x: acc.x + n.position.x, y: acc.y + n.position.y }),
-        { x: 0, y: 0 }
-      );
-      positie = {
-        x: som.x / nodes.length + 60 + (_plaatsTeller % 4) * 36,
-        y: som.y / nodes.length + 60 + (_plaatsTeller % 4) * 36,
-      };
-    }
+    // Plaats in het midden van wat de gebruiker nu ziet (kleine cascade zodat
+    // opeenvolgende elementen elkaar niet exact bedekken).
+    const midden = layoutApiRef.current?.viewportMidden?.();
+    const cascade = (_plaatsTeller % 4) * 28;
+    const positie = midden
+      ? { x: midden.x - 90 + cascade, y: midden.y - 50 + cascade }
+      : { x: 120 + cascade, y: 120 + cascade };
     s.addElement(el);
     s.addElementToDiagram(dId, el.id, positie);
     setSelectieId(el.id);
@@ -157,6 +154,7 @@ function Diagram05Provider({ children }) {
         herlaad,
         plaatsNieuwElement,
         verbind,
+        layoutApiRef,
       }}
     >
       {children}
@@ -271,7 +269,7 @@ const TAAKBALK_DEFAULTS = {
 };
 
 function Diagram05Main() {
-  const { selectieId, setSelectieId, verbindingsType, setVerbindingsType, plaatsNieuwElement, verbind } =
+  const { selectieId, setSelectieId, verbindingsType, setVerbindingsType, plaatsNieuwElement, verbind, layoutApiRef } =
     useContext(Ctx);
   const theme = useUIStore((s) => s.theme);
 
@@ -296,9 +294,6 @@ function Diagram05Main() {
     TAAKBALK_DEFAULTS
   );
 
-  // Imperatieve layout-API van de canvas (uitlijnen/snap/auto-layout).
-  const layoutApiRef = useRef(null);
-
   // Menubalk → layout-acties (Diagram (0.5) → Uitlijnen ▸ / Auto-layout).
   useEffect(() => {
     const af = [
@@ -312,9 +307,35 @@ function Diagram05Main() {
         );
         if (strategie) layoutApiRef.current?.voerLayoutUit(strategie, !!selectie);
       }),
+      menuBus.on("d05:normaliseer", () => {
+        const s = useDiagram05Store.getState();
+        if (s.actiefDiagramId) s.resetAnkerPositions(s.actiefDiagramId, null);
+      }),
     ];
     return () => af.forEach((off) => off());
-  }, []);
+  }, [layoutApiRef]);
+
+  // Rechtsklik-contextmenu: zelfde acties als taakbalken/menu (vgl. v0.2).
+  const bouwContextMenu = useCallback(
+    ({ selectieAantal }) => [
+      { kop: true, label: "Uitlijnen" },
+      ...UITLIJN_MODES.flatMap((m, i) => {
+        const item = {
+          id: m.mode,
+          label: m.titel,
+          icoon: UITLIJN_ICONEN[m.mode],
+          disabled: selectieAantal < 2,
+          onClick: () => layoutApiRef.current?.lijnUit(m.mode),
+        };
+        return i === 3 || i === 6 ? [{ sep: true }, item] : [item];
+      }),
+      { sep: true },
+      { id: "auto", label: "Auto-layout (alles)", icoon: "🎯", onClick: () => menuBus.emit("d05:auto-layout", { selectie: false }) },
+      { id: "normaliseer", label: "Normaliseer relaties", icoon: "↔", onClick: () => menuBus.emit("d05:normaliseer") },
+      { id: "snap", label: "Snap nodes naar grid", icoon: UITLIJN_ICONEN.snap, onClick: () => layoutApiRef.current?.snapRaster() },
+    ],
+    [layoutApiRef]
+  );
 
   // Taakbalk-toggles vanuit het menu (Diagram (0.5) → Taakbalken ▸).
   useEffect(() => {
@@ -468,6 +489,10 @@ function Diagram05Main() {
                 onVerwijderConnectoren={(connectorIds) =>
                   connectorIds.forEach((id) => useDiagram05Store.getState().deleteElement(id))
                 }
+                onNormaliseer={(connectorIds) =>
+                  useDiagram05Store.getState().resetAnkerPositions(diagram.id, connectorIds)
+                }
+                bouwContextMenu={bouwContextMenu}
                 onViewport={(vp) =>
                   useDiagram05Store.getState().updateDiagramViewport(diagram.id, vp)
                 }
@@ -585,6 +610,7 @@ export default {
         { id: "d05-auto", label: "Auto-layout (heel diagram)", onClick: () => menuBus.emit("d05:auto-layout", { selectie: false }) },
         { id: "d05-auto-sel", label: "Auto-layout (selectie)", onClick: () => menuBus.emit("d05:auto-layout", { selectie: true }) },
         { id: "d05-snap", label: "Uitlijnen op raster", onClick: () => menuBus.emit("d05:layout", "snap") },
+        { id: "d05-normaliseer", label: "Normaliseer relaties", onClick: () => menuBus.emit("d05:normaliseer") },
         {
           id: "d05-uitlijnen",
           label: "Uitlijnen (selectie)",

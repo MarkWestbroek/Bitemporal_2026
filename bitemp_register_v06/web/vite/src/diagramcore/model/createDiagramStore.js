@@ -274,6 +274,32 @@ export function createDiagramStore({ persistKey } = {}) {
         };
       }),
 
+    /**
+     * Normaliseer ASOC-posities: wis de opgeslagen anker-positie(s) zodat het
+     * anker terugvalt op het middelpunt bron—doel. `connectorIds` null → alle.
+     */
+    resetAnkerPositions: (diagramId, connectorIds = null) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d) return state;
+        const doelwit = connectorIds ? new Set(connectorIds) : null;
+        return {
+          isDirty: true,
+          diagrams: {
+            ...state.diagrams,
+            [diagramId]: {
+              ...d,
+              nodes: d.nodes.map((n) => {
+                if (!n.ankerPosition) return n;
+                if (doelwit && !doelwit.has(n.elementId)) return n;
+                const { ankerPosition, ...rest } = n;
+                return rest;
+              }),
+            },
+          },
+        };
+      }),
+
     /** Grootte van een element op één diagram (metamodel: Position.elementSize). */
     updateNodeSize: (diagramId, elementId, size) =>
       set((state) => {

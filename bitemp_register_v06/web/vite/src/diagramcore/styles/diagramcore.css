@@ -19,6 +19,64 @@
   font-size: 12px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   cursor: grab;
+  /* Inhoud nooit buiten de node laten steken (artefact bij smal resizen). */
+  overflow: hidden;
+}
+
+/* === Contextmenu (rechtsklik op de canvas) === */
+
+.dc-contextmenu {
+  position: fixed;
+  z-index: 60;
+  min-width: 210px;
+  padding: 6px;
+  background: var(--s-panel, #ffffff);
+  border: 1px solid var(--s-border, #cbd5e1);
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.25);
+  font-size: 13px;
+}
+
+.dc-contextmenu-kop {
+  padding: 4px 10px 6px;
+  font-weight: 700;
+  color: var(--s-fg, #1e293b);
+}
+
+.dc-contextmenu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--s-fg, #1e293b);
+  cursor: pointer;
+}
+
+.dc-contextmenu-item:hover:not(:disabled) {
+  background: var(--s-hover, #f1f5f9);
+}
+
+.dc-contextmenu-item:disabled {
+  color: var(--s-fg-muted, #94a3b8);
+  cursor: default;
+}
+
+.dc-contextmenu-icoon {
+  display: inline-flex;
+  width: 16px;
+  justify-content: center;
+}
+
+.dc-contextmenu-sep {
+  height: 1px;
+  margin: 5px 8px;
+  background: var(--s-border, #e2e8f0);
 }
 
 .dc-node:active {
