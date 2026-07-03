@@ -21,6 +21,7 @@ import ActivityBar from "./ActivityBar";
 import SidePanel from "./SidePanel";
 import MenuBar from "./MenuBar";
 import { buildMenus } from "./buildMenus";
+import { menuBus } from "./menuBus";
 import { OmniumMark } from "./icons";
 
 function ThemaKnop() {
@@ -52,6 +53,12 @@ export default function StudioShell() {
   const setInspectorWidth = useStudioStore((s) => s.setInspectorWidth);
   const theme = useUIStore((s) => s.theme);
   const toggleTheme = useUIStore((s) => s.toggleTheme);
+
+  // Generiek verversmechanisme voor de menubalk: een activiteit die state
+  // wijzigt waar menu-items (checked/disabled) van afhangen, emit
+  // "menu:ververs" — de shell bouwt de menu's dan opnieuw op.
+  const [, setMenuVersie] = React.useState(0);
+  React.useEffect(() => menuBus.on("menu:ververs", () => setMenuVersie((v) => v + 1)), []);
 
   // Eerste activiteit selecteren als er nog geen actief is.
   const actief =

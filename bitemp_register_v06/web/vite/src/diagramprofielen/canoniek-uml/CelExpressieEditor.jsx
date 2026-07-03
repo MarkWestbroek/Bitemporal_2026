@@ -12,6 +12,7 @@
  * geselecteerde element (pad = veldnaam).
  */
 import { lazy, Suspense, useMemo, useState } from "react";
+import { berekenCelContextVelden } from "./celContext.js";
 
 // De modal-styling (backdrop, kolommen, tokenkleuren + licht-thema-overrides)
 // leeft in umleditor/styles/editor.css. Die is normaal pas geladen zodra de
@@ -25,11 +26,16 @@ const ExpressieEditor = lazy(() =>
   ]).then(([module]) => module)
 );
 
-export default function CelExpressieEditor({ regel, waarde, onChange, element }) {
+export default function CelExpressieEditor({ regel, waarde, onChange, element, context }) {
   const [open, setOpen] = useState(false);
 
-  // Autocomplete-context: de velden van het element zelf.
+  // Autocomplete-context: eigen velden + de familie (GE's van de parent-
+  // entiteit, als `GE.veld`) — zie celContext.js. Zonder modelcontext valt hij
+  // terug op alleen de eigen velden.
   const contextVelden = useMemo(() => {
+    if (context?.elements && element?.id) {
+      return berekenCelContextVelden(context.elements, context.diagrams || {}, element.id);
+    }
     const velden = [];
     for (const c of element?.compartimenten || []) {
       for (const v of c.velden || []) {
@@ -37,7 +43,7 @@ export default function CelExpressieEditor({ regel, waarde, onChange, element })
       }
     }
     return velden;
-  }, [element]);
+  }, [context, element]);
 
   return (
     <div style={{ flex: 1, minWidth: 0, display: "flex", gap: 3, alignItems: "center" }}>

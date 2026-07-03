@@ -9,14 +9,15 @@
  * «use») met verbindingsregels en `edgePresentatie`, en `taakbalken`
  * beschrijft de "Maken"- en "Verbinding"-balken.
  *
- * Let op: `relatie` en `associatieAnker` staan hier nog als gewone
- * (node-)elementen, omdat de gespiegelde diagrammen de gematerialiseerde
- * ASOC-vorm bevatten. Bij de connector-materialisatie in fase 3 wordt
- * `relatie` een echt `isConnector`-type en verdwijnt het anker.
+ * Fase 3B: `relatie` is een echt `isConnector`-type; de adapter vouwt de
+ * oude REL-node + anker + edges terug tot één connector-element, en de core
+ * materialiseert het ASOC-patroon zelf (het anker is een synthetische node
+ * van de canvas — geen elementtype meer).
  *
  * Kleuren komen overeen met defaultKleur() in umleditor/metamodel/types.js.
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
+import { berekenAutoLayout } from "../../umleditor/metamodel/autoLayout.js";
 
 export const CANONIEK_UML_ID = "canoniek-uml";
 
@@ -84,8 +85,45 @@ const elementTypes = [
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
-      { id: "overerving", label: null, fieldType: "attribuut" },
+      { id: "overerving", label: null, fieldType: "attribuut", alleenWeergave: true },
     ],
+    hooks: {
+      /**
+       * Overgeërfde velden (weergave-compartiment, niet in het element zelf):
+       * volg de generalisatie-connectoren kind → ouder en toon de velden van
+       * de supertype-keten, cursief met een ↑-kopregel per supertype.
+       */
+      extraCompartimenten: (element, { elements }) => {
+        const velden = [];
+        let huidigeId = element.id;
+        const bezocht = new Set([element.id]);
+        for (;;) {
+          const gen = Object.values(elements || {}).find(
+            (el) => el.elementType === "generalisatie" && el.source === huidigeId
+          );
+          const ouder = gen ? elements[gen.target] : null;
+          if (!ouder || bezocht.has(ouder.id)) break;
+          bezocht.add(ouder.id);
+          const ouderVelden = [];
+          for (const c of ouder.compartimenten || []) {
+            if (c.compartmentType !== "velden" && c.compartmentType !== "afgeleid") continue;
+            for (const v of c.velden || []) if (v.naam) ouderVelden.push(v);
+          }
+          if (ouderVelden.length) {
+            velden.push({ naam: `↑ ${ouder.naam}`, fieldType: "regel", data: {} });
+            for (const v of ouderVelden) {
+              velden.push({
+                naam: v.naam,
+                fieldType: "attribuut",
+                data: { ...v.data, verplicht: false, cursief: true },
+              });
+            }
+          }
+          huidigeId = ouder.id;
+        }
+        return velden.length ? [{ compartmentType: "overerving", velden }] : [];
+      },
+    },
   },
   {
     id: "gegevenselement",
@@ -101,24 +139,53 @@ const elementTypes = [
     ],
   },
   {
+    // Fase 3B: REL is een écht connector-type (metamodel: Connector = Element
+    // met source/target). Zonder velden → kale edge; mét velden → het
+    // ASOC-patroon (anker + box + 3 edges), automatisch gematerialiseerd —
+    // het oude "normaliseer relaties" is daarmee ingebouwd gedrag.
+    // Staat vóór generalisatie in de lijst: ENT→ENT slepen zonder expliciete
+    // keuze maakt dus een relatie (generalisatie kies je in "Verbinding").
     id: "relatie",
     label: "Relatie",
     kort: "REL",
     stereotype: "«relatie»",
     shape: "class-box",
     kleur: "#ede9fe",
+    isConnector: true,
+    bron: { elementTypes: ["entiteit"] },
+    doel: { elementTypes: ["entiteit"] },
+    edgePresentatie: { lijn: "solid", kleur: "#64748b" },
     properties: [KLEUR_VELD],
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
     ],
-  },
-  {
-    id: "associatieAnker",
-    label: "Associatie-anker",
-    shape: "anker",
-    handleStijl: "onzichtbaar",
-    resizebaar: false,
+    hooks: {
+      /** Labels voor de gematerialiseerde/kale gedaante (UML-conventies). */
+      edgeLabels: (conn) => {
+        const d = conn.data || {};
+        const bron = [];
+        const doel = [];
+        const kaal = [];
+        if (d.bronKardinaliteit) {
+          bron.push({ zijde: "bron", delen: [{ tekst: d.bronKardinaliteit, soort: "kardinaliteit" }] });
+          kaal.push({ zijde: "bron", delen: [{ tekst: d.bronKardinaliteit, soort: "kardinaliteit" }] });
+        }
+        if (d.naamLabelHeen) {
+          bron.push({ zijde: "doel", delen: [{ tekst: `▶ ${d.naamLabelHeen}`, soort: "naam" }] });
+          kaal.push({ zijde: "bron", delen: [{ tekst: `▶ ${d.naamLabelHeen}`, soort: "naam" }] });
+        }
+        if (d.doelKardinaliteit) {
+          doel.push({ zijde: "doel", delen: [{ tekst: d.doelKardinaliteit, soort: "kardinaliteit" }] });
+          kaal.push({ zijde: "doel", delen: [{ tekst: d.doelKardinaliteit, soort: "kardinaliteit" }] });
+        }
+        if (d.naamLabelTerug) {
+          doel.push({ zijde: "bron", delen: [{ tekst: `◀ ${d.naamLabelTerug}`, soort: "naam" }] });
+          kaal.push({ zijde: "doel", delen: [{ tekst: `◀ ${d.naamLabelTerug}`, soort: "naam" }] });
+        }
+        return { bron, doel, kaal };
+      },
+    },
   },
   {
     id: "enumeratie",
@@ -171,6 +238,18 @@ const elementTypes = [
     kleur: "#e0f2fe",
     handleStijl: "onzichtbaar",
     properties: [{ key: "expressie", label: "expressie (OCL/CEL)", datatype: "cel-expressie" }, KLEUR_VELD],
+  },
+  {
+    id: "boundary",
+    label: "Kader",
+    kort: "KADER",
+    shape: "boundary",
+    achtergrond: true,
+    handleStijl: "onzichtbaar",
+    properties: [
+      { key: "kleur", label: "rand", datatype: "colour" },
+      { key: "achtergrondKleur", label: "achtergrond", datatype: "colour" },
+    ],
   },
 
   // ── Connector-typen (fase 2: kale edges; ASOC-materialisatie volgt in fase 3) ──
@@ -274,6 +353,34 @@ export const canoniekUmlDiagramType = {
   taakbalken: [
     { id: "maken", label: "Maken", acties: "elementTypes" },
     { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
+    { id: "auto-layout", label: "Auto-layout", acties: "layouts" },
+  ],
+  /**
+   * Plaatsingsstrategieën (plan §4.5): semantiek, dus profiel-werk. Hergebruikt
+   * het gelaagde algoritme van de umleditor (entiteiten boven, GE's eronder,
+   * ankers op middelpunten). `run` krijgt de live canvas-context en geeft
+   * posities terug (Map/Record) die de core als één undo-stap toepast.
+   */
+  layouts: [
+    {
+      id: "gelaagd",
+      label: "Auto-layout",
+      run: ({ flowNodes, flowEdges, selectieIds }) =>
+        berekenAutoLayout(
+          // Synthetische ankers van de core ("__anker") spreken in het oude
+          // algoritme de taal van de umleditor ("associatieAnker" + relatieNaam).
+          flowNodes.map((n) =>
+            n.type === "__anker"
+              ? { ...n, type: "associatieAnker", data: { ...n.data, relatieNaam: n.data?.connectorId } }
+              : n
+          ),
+          flowEdges,
+          {
+            selectie: selectieIds || undefined,
+            respecteerLocked: true,
+          }
+        ),
+    },
   ],
 };
 

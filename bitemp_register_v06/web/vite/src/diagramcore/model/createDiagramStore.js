@@ -220,6 +220,106 @@ export function createDiagramStore({ persistKey } = {}) {
         };
       }),
 
+    /**
+     * Bulk-variant: meerdere posities in één mutatie (= één undo-stap).
+     * Gebruikt door uitlijnen/verdelen/auto-layout.
+     * @param {Record<string, {x:number,y:number}>} posities
+     */
+    updateNodePositions: (diagramId, posities) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d || !posities || Object.keys(posities).length === 0) return state;
+        return {
+          isDirty: true,
+          diagrams: {
+            ...state.diagrams,
+            [diagramId]: {
+              ...d,
+              nodes: d.nodes.map((n) =>
+                posities[n.elementId] ? { ...n, position: posities[n.elementId] } : n
+              ),
+            },
+          },
+        };
+      }),
+
+    /**
+     * Anker-positie van een gematerialiseerde connector op één diagram
+     * (het kleine rondje op de lijn bron—doel; ASOC-patroon). Maakt het
+     * diagram-lidmaatschap aan als dat nog ontbreekt.
+     */
+    updateAnkerPosition: (diagramId, connectorId, ankerPosition) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d) return state;
+        const bestaat = d.nodes.some((n) => n.elementId === connectorId);
+        return {
+          isDirty: true,
+          diagrams: {
+            ...state.diagrams,
+            [diagramId]: {
+              ...d,
+              nodes: bestaat
+                ? d.nodes.map((n) => (n.elementId === connectorId ? { ...n, ankerPosition } : n))
+                : [
+                    ...d.nodes,
+                    {
+                      elementId: connectorId,
+                      position: { x: ankerPosition.x - 93, y: ankerPosition.y + 90 },
+                      ankerPosition,
+                    },
+                  ],
+            },
+          },
+        };
+      }),
+
+    /**
+     * Normaliseer ASOC-posities: wis de opgeslagen anker-positie(s) zodat het
+     * anker terugvalt op het middelpunt bron—doel. `connectorIds` null → alle.
+     */
+    resetAnkerPositions: (diagramId, connectorIds = null) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d) return state;
+        const doelwit = connectorIds ? new Set(connectorIds) : null;
+        return {
+          isDirty: true,
+          diagrams: {
+            ...state.diagrams,
+            [diagramId]: {
+              ...d,
+              nodes: d.nodes.map((n) => {
+                if (!n.ankerPosition) return n;
+                if (doelwit && !doelwit.has(n.elementId)) return n;
+                const { ankerPosition, ...rest } = n;
+                return rest;
+              }),
+            },
+          },
+        };
+      }),
+
+    /**
+     * Wis de expliciete handles van de (geïmporteerde) presentatie-edges van
+     * een diagram, zodat de canvas de kortste weg kiest (normaliseren).
+     */
+    resetEdgeHandles: (diagramId) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d) return state;
+        return {
+          isDirty: true,
+          diagrams: {
+            ...state.diagrams,
+            [diagramId]: {
+              ...d,
+              edges: (d.edges || []).map((e) => ({ ...e, sourceHandle: null, targetHandle: null })),
+            },
+          },
+        };
+      }),
+
     /** Grootte van een element op één diagram (metamodel: Position.elementSize). */
     updateNodeSize: (diagramId, elementId, size) =>
       set((state) => {

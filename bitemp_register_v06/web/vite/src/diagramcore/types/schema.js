@@ -69,6 +69,8 @@
  * @property {string} id
  * @property {string|null} [label]  - null → geen kopregel
  * @property {string} fieldType     - id van het FieldType voor de regels
+ * @property {boolean} [alleenWeergave] - true → gevuld door een hook
+ *   (extraCompartimenten), niet handmatig bewerkbaar in de inspector
  */
 
 /**
@@ -91,6 +93,7 @@
  * @property {string} [kleur]               - default; instantie kan overriden
  * @property {"standaard"|"onzichtbaar"} [handleStijl] - aansluitpunten tonen of niet
  * @property {boolean} [resizebaar]         - default true; false → geen NodeResizer
+ * @property {boolean} [achtergrond]        - true → rendert onder de andere nodes (boundaries/kaders)
  * @property {string} [kort]                - korte knop-tekst voor de "Maken"-taakbalk (bv. "ENT")
  * @property {boolean} [isConnector]
  * @property {ConnectorEindpunt} [bron]     - verplicht als isConnector

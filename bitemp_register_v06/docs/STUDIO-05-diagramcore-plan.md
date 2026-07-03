@@ -2,7 +2,63 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** inspector-stap opgeleverd (2026-07-04): code getrokken op de
+- **Status:** fase 3B-feedbackronde 3 opgeleverd (2026-07-04): de
+  kortste-weg-handles gelden nu ook **aan de anker-zijden** (ASOC-lijnen lopen
+  strak door het anker, geen "haakje"; de link-edge vertrekt onderuit het
+  anker naar de gecentreerde box) én voor **gespiegelde presentatie-edges**
+  zonder handles — "Normaliseer relaties (alles)" wist daarom ook de handles
+  van gespiegelde composities e.d. Lijntypen (recht/hoekig/boom) als
+  connector-ShapeType genoteerd als §8.5c. Dev-hulp: `window.__diagram05Store`
+  (alleen dev) voor e2e-tests en debugging. Eerdere ronde (2026-07-04):
+  **normaliseren = kortste weg** — de materialisatie kiest automatisch de
+  beste handle-zijden (op basis van relatieve posities) zodra een connector
+  geen expliciete handles heeft; "Normaliseer relaties" (menu, contextmenu,
+  ↔-knop in de Uitlijnen-balk, dubbelklik op een edge) wist de handles + de
+  anker-positie en dwingt dat af. Rechtsklik werkt nu ook **op edges**
+  (eigen contextmenu i.p.v. het browser-menu), en de **overgeërfde velden**
+  staan ook in de inspector — als platte viewer-rijen (PropertyTypeViewer-
+  kant, geen editors; `alleenWeergave` op het compartiment onderdrukt
+  "+ veld"). Eerdere ronde (2026-07-04):
+  **rechtsklik-contextmenu** op de canvas (uitlijnen met disabled-status,
+  auto-layout, normaliseer, snap — core-raamwerk, acties uit de activiteit),
+  **"Normaliseer relaties"** terug als menu-/contextmenu-actie én dubbelklik
+  op een connector-edge (reset anker naar het middelpunt), nieuwe elementen
+  landen in het **zichtbare viewport-midden**, **overgeërfde velden** in het
+  kind via de `extraCompartimenten`-hook (generalisatie-keten, ↑-kopregel,
+  cursief), veld-verwijderen ruimt box en anker op (kale gedaante), en het
+  smalle-node-artefact is gefixt (resizer-minima = CSS-minima + overflow
+  hidden). ⚠️ Onopgelost: incidenteel "leeg canvas" na inspector-bewerking +
+  canvas-klik (derde melding; transient — diagramwissel herstelt; repro
+  gezocht, graag console-output bij volgende keer). Fase 3B opgeleverd (2026-07-04): **ASOC-materialisatie in de
+  core** — een connector mét velden materialiseert automatisch als anker +
+  box + drie edges (synthetische canvas-nodes; anker-positie als
+  `ankerPosition` op het diagram-lidmaatschap), zonder velden als kale edge.
+  `relatie` is nu een écht `isConnector`-type: ENT→ENT slepen maakt een REL
+  (generalisatie via expliciete keuze), edge-klik selecteert de connector in
+  de inspector, en velden toevoegen laat het ASOC-patroon live verschijnen —
+  het oude "normaliseer relaties" is daarmee ingebouwd gedrag. De adapter
+  vouwt oude REL+anker+edges terug tot connector-elementen (bestaande
+  sandbox: eerst "Herlaad uit UML-model"). Delete op box of anker verwijdert
+  de connector. Restpunten fase 3: validatie-hook, uitgebreide
+  zij-aan-zij-pariteitscheck. Fase 3A + feedbackronde opgeleverd (2026-07-04): uitlijn-balk
+  met de vertrouwde SVG-iconen, taakbalken resizebaar (breed/plat of
+  smal/hoog, persistent) en geclamped binnen het canvas, menubalk toont
+  ✓-checkmarks per taakbalk (generiek `menu:ververs`-mechanisme in de shell),
+  en de CEL-editor kent nu de **familie-context** (`GE.veld`-paden +
+  autocomplete via `celContext.js`). Tweede feedbackronde: groep-separators in
+  de uitlijn-balk, taakbalk-breedte gemaximeerd op de inhoud
+  (`max-content`), kader met aparte rand- en achtergrondkleur + subtiele
+  minimap-weergave, vers geplaatste elementen blijven geselecteerd, en de
+  **undo-naar-leeg-bug** gefixt (persist-rehydratie telde als undo-stap;
+  history wordt nu bij mount gewist). "Normaliseer relaties" keert terug in
+  fase 3B (ASOC). **Layout-core** —
+  uitlijnen/verdelen/snap-grid als pure geometrie in `diagramcore/layout/`
+  met core-taakbalk "Uitlijnen" en menu-items; **auto-layout** als eerste
+  `layouts`-strategie van canoniek-uml (hergebruikt `berekenAutoLayout`,
+  eigen taakbalkje, één undo-stap); **boundary/kader-element** (§8.6b,
+  `achtergrond: true` → onder de nodes). Nog te doen in fase 3B:
+  ASOC-materialisatie (REL als echt connector-type), validatie-hook,
+  pariteitscheck. Inspector-stap opgeleverd (2026-07-04): code getrokken op de
   metamodel-naamgeving — `PropertyType` (met **datatype-registry**: string,
   tekst, boolean, colour + profiel-eigen "cel-expressie"),
   `ReferenceType`/`ReferenceResolver` gesplitst (Definitie/Implementatie,
@@ -634,6 +690,19 @@ met `npm run build` + visuele check, en levert iets werkends op.
    **notities en constraints zijn eigen ElementTypes** met dientengevolge hun
    eigen ShapeType (`note`, `rounded`); ShapeType is uitsluitend vorm, alles met
    betekenis is een ElementType.
+5c. **Lijntypen als ShapeType van connectoren.** De edge-vorm (nu hardcoded
+   bezier in `ConnectorEdge`) hoort — net als bij nodes — uit een ShapeType te
+   komen: een connector is immers ook een element. Gewenste varianten: kromme
+   (bezier), recht, hoekig (orthogonaal/step), boom. Per connector(-type)
+   instelbaar, later via het rechtsklik-contextmenu op de edge. Sluit aan op
+   §8.5b (thema-tokens) en het bestaande `edgePresentatie`-veld.
+6a. **Integrale iconenset (ontwerp-sessie).** De "Maken"-taakbalk gebruikt nu
+   tekstknoppen (ENT/GE/…); de uitlijn-balk heeft al SVG-iconen. Wens: één
+   integrale iconenset per ElementType, hergebruikt in de Maken-balk, de
+   tree-browser, de activity bar en (later) de minibrowser. Hoort bij het
+   Implementatie-domein: een icoon-registry naast de shape-registry, met
+   per-thema-varianten waar nodig (§8.5b). Bewust als ontwerp-sessie plannen
+   (niet ad hoc), samen met de Omnium-merkstijl.
 6b. **Boundaries komen wél vroeg mee.** ✅ *Besloten (2026-07-02):* kaders zoals
    de Definition/Implementation-boundaries in Sparx EA worden een **eigen
    ElementType** met een eigen `boundary`-ShapeType: een resizebaar kader dat

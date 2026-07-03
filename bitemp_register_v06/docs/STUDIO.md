@@ -225,8 +225,12 @@ fase 2 een **bewerkbare sandbox**:
   uit de verbindingsregels van het DiagramType). Ongeldige verbindingen worden
   op de canvas geweigerd.
 - **Connectoren zijn elementen** met source/target (metamodel); de motor
-  materialiseert ze als kale edges (compositie ◆, generalisatie ▷, «use»).
-  Het ASOC-patroon (connector mét velden → node) volgt in fase 3.
+  materialiseert ze als kale edges (compositie ◆, generalisatie ▷, «use»,
+  relatie) — en een connector **mét velden** automatisch als het
+  **ASOC-patroon** (anker + relatiebox + drie edges). ENT→ENT slepen maakt
+  een REL; klik op een connector-edge of -anker selecteert de connector in
+  de inspector; velden toevoegen laat de box live verschijnen ("normaliseer
+  relaties" is ingebouwd gedrag).
 - **Gegenereerde inspector**: het eigenschappen-paneel wordt opgebouwd uit
   `FieldType.editor`-regels van het profiel — naam, element-datavelden
   (notitietekst, constraint-expressie) en compartiment-velden met
@@ -243,11 +247,34 @@ fase 2 een **bewerkbare sandbox**:
   ReferenceResolvers van het profiel. Afleidingsregels openen de bestaande
   **CEL-ExpressieEditor** (hergebruikt uit de umleditor, lazy). Pan/zoom en
   het actieve diagram vallen buiten de undo-history.
-- Nog niet (bekend): clipboard, checkmarks in het taakbalken-menu,
-  overgeërfde-velden-compartiment, domein-overlay, sleepbare edge-labels,
-  verbinden naar een REL (fase 3, ASOC), layout-taakbalk (fase 3),
-  licht/donker-tokens per StyleType (plan §8.5b), CEL-autocomplete over
-  gerelateerde elementen (nu alleen eigen velden).
+- **Layout (fase 3A)**: core-taakbalk **Uitlijnen** (links/rechts/boven/onder,
+  centreren, verdelen — op de selectie via Ctrl-klik — plus alles-op-raster)
+  en de **Auto-layout**-taakbalk met de gelaagde plaatsingsstrategie van het
+  profiel; ook via menu Diagram (0.5). Iedere layout-actie is één undo-stap.
+  Verder is er een **Kader**-element (boundary, §8.6b): gestippeld resizebaar
+  kader dat achter de andere elementen rendert.
+- Taakbalken zijn **resizebaar** (hoekgreep: breed & plat of smal & hoog,
+  persistent) en blijven bij het slepen binnen het canvas; het
+  Taakbalken-menu toont ✓ voor zichtbare balken. De CEL-editor kent de
+  **familie-context**: velden van de eigen en gerelateerde GE's
+  (`Naam.roepnaam`) met autocomplete.
+- **Rechtsklik** op canvas, nodes én edges opent een contextmenu (uitlijnen
+  — grijs bij <2 geselecteerd —, auto-layout, normaliseer relaties, snap).
+  **Normaliseren = kortste weg**: expliciete handles en de anker-positie
+  worden gewist, waarna de materialisatie automatisch de beste zijden en
+  het middelpunt kiest. Te bereiken via menu, contextmenu, de ↔-knop in de
+  Uitlijnen-balk, of dubbelklik op een connector-edge (alleen die ene).
+  Nieuwe elementen landen in het zichtbare viewport-midden.
+  **Overgeërfde velden** verschijnen in het kind (generalisatie-keten,
+  ↑-kopregel, cursief) — weergave-compartiment via de profiel-hook, geen
+  modeldata.
+- Nog niet (bekend): clipboard, validatie-hook, domein-overlay, sleepbare
+  edge-labels, licht/donker-tokens per StyleType (plan §8.5b), integrale
+  iconenset voor de Maken-balk (ontwerp-sessie, plan §8.6a), overerving in
+  de gespiegelde weergave (generalisaties uit het oude model zijn daar nog
+  presentatie-edges). Bekend en onopgelost: incidenteel transient leeg
+  canvas (diagramwissel herstelt; repro gezocht). Na deze update een
+  bestaande sandbox eerst verversen via "Herlaad uit UML-model".
 
 ## DMN-activiteit: DRD + Tabel met dmn-js
 

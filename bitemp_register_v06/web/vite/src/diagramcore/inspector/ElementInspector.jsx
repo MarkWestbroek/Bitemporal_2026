@@ -25,7 +25,7 @@ import {
 } from "./propertyTypeEditors.jsx";
 
 /** Eén property: kiezer bij referenceTypes, anders editor op datatype. */
-function PropertyWidget({ regel, waarde, onChange, element, kandidatenVoor }) {
+function PropertyWidget({ regel, waarde, onChange, element, kandidatenVoor, editorContext }) {
   if (regel.referenceTypes?.length) {
     return (
       <VerwijzingsKiezer
@@ -37,11 +37,13 @@ function PropertyWidget({ regel, waarde, onChange, element, kandidatenVoor }) {
     );
   }
   const Editor = getPropertyTypeEditor(regel.datatype || "string") || getPropertyTypeEditor("string");
-  return <Editor regel={regel} waarde={waarde} onChange={onChange} element={element} />;
+  return (
+    <Editor regel={regel} waarde={waarde} onChange={onChange} element={element} context={editorContext} />
+  );
 }
 
 /** Eén veld-rij binnen een compartiment: widgets volgens FieldType.properties. */
-function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, onChange, onVerwijder }) {
+function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, editorContext, onChange, onVerwijder }) {
   const regels = fieldType?.properties || [{ key: "naam", datatype: "string" }];
   const waardeVan = (key) => (key === "naam" ? veld.naam : veld.data?.[key]);
   const zet = (key, waarde) => {
@@ -57,6 +59,7 @@ function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, onChang
           waarde={waardeVan(regel.key)}
           element={element}
           kandidatenVoor={kandidatenVoor}
+          editorContext={editorContext}
           onChange={(w) => bewerkbaar && zet(regel.key, w)}
         />
       ))}
@@ -74,12 +77,20 @@ export default function ElementInspector({
   elementType,
   fieldTypesById,
   kandidatenVoor,
+  editorContext,
   bewerkbaar = false,
   onUpdate,
   onVerwijderVanDiagram,
   onVerwijderUitModel,
 }) {
   const compartimenten = element.compartimenten || [];
+
+  // Weergave-compartimenten uit de profiel-hook (bv. overgeërfde velden):
+  // read-only getoond in de bijbehorende sectie, nooit opgeslagen.
+  const extraCompartimenten =
+    elementType?.hooks?.extraCompartimenten?.(element, {
+      elements: editorContext?.elements || {},
+    }) || [];
 
   /** Vervang de velden van één compartiment (maakt het aan als het ontbreekt). */
   const zetCompartiment = useCallback(
@@ -121,6 +132,7 @@ export default function ElementInspector({
             waarde={element.data?.[regel.key]}
             element={element}
             kandidatenVoor={kandidatenVoor}
+            editorContext={editorContext}
             onChange={(w) => bewerkbaar && onUpdate({ data: { [regel.key]: w } })}
           />
         </div>
@@ -131,9 +143,28 @@ export default function ElementInspector({
         const instantie = compartimenten.find((c) => c.compartmentType === def.id);
         const velden = instantie?.velden || [];
         const fieldType = fieldTypesById?.[def.fieldType];
+        const weergaveVelden = extraCompartimenten
+          .filter((c) => c.compartmentType === def.id)
+          .flatMap((c) => c.velden || []);
         return (
           <div className="dc-inspector-sectie" key={def.id}>
             <div className="dc-inspector-sectie-titel">{def.label || def.id}</div>
+            {/* Weergave-velden: platte viewer-rijen (PropertyTypeViewer-kant),
+                geen editors — dit is afgeleide informatie, geen invoer. */}
+            {weergaveVelden.map((veld, i) => (
+              <div
+                key={`w${i}`}
+                className="dc-inspector-rij"
+                style={{ color: "var(--s-fg-muted, #64748b)", fontSize: 12 }}
+              >
+                <span style={{ flex: 1, fontStyle: veld.data?.cursief ? "italic" : undefined }}>
+                  {veld.naam}
+                </span>
+                {veld.data?.typeLabel ? (
+                  <span style={{ fontSize: 11 }}>{veld.data.typeLabel}</span>
+                ) : null}
+              </div>
+            ))}
             {velden.map((veld, i) => (
               <VeldRij
                 key={i}
@@ -142,11 +173,12 @@ export default function ElementInspector({
                 bewerkbaar={bewerkbaar}
                 element={element}
                 kandidatenVoor={kandidatenVoor}
+                editorContext={editorContext}
                 onChange={(nieuw) => zetCompartiment(def.id, velden.map((v, j) => (j === i ? nieuw : v)))}
                 onVerwijder={() => zetCompartiment(def.id, velden.filter((_, j) => j !== i))}
               />
             ))}
-            {bewerkbaar && (
+            {bewerkbaar && !def.alleenWeergave && (
               <button
                 className="dc-mini-knop"
                 onClick={() =>
