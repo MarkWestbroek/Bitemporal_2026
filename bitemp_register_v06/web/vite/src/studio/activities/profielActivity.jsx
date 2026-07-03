@@ -12,71 +12,15 @@
  * een herlaad overleven.
  */
 import { useCallback, useContext, useState, createContext } from "react";
-import { IconReferentielijst, IconDiagram } from "../icons";
-import { registreerActiviteit } from "../activityRegistry";
+import { IconReferentielijst } from "../icons";
 import useStudioStore from "../useStudioStore";
-import { vervangDiagramType, valideerDiagramType } from "../../diagramcore/types/typeRegistry.js";
-import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
+import { valideerDiagramType } from "../../diagramcore/types/typeRegistry.js";
+import { HOOK_CATALOGUS, vertaalHooks, LEEG_SJABLOON, GRAAF_DEMO } from "./profielGereedschap.js";
 import {
-  HOOK_CATALOGUS,
-  vertaalHooks,
-  maakGeneriekeMaakElement,
-  LEEG_SJABLOON,
-  GRAAF_DEMO,
-} from "./profielGereedschap.js";
-
-const OPSLAG_SLEUTEL = "studio05-profielen";
-
-function leesProfielen() {
-  try {
-    return JSON.parse(localStorage.getItem(OPSLAG_SLEUTEL) || "{}") || {};
-  } catch {
-    return {};
-  }
-}
-
-function bewaarProfielen(profielen) {
-  try {
-    localStorage.setItem(OPSLAG_SLEUTEL, JSON.stringify(profielen));
-  } catch {
-    /* opslag vol — niet kritisch */
-  }
-}
-
-/**
- * Registreer een descriptor-kern als DiagramType + activiteit. Retourneert
- * het activiteit-id. Gooit bij validatie-/hookfouten.
- */
-function registreerProfielAlsActiviteit(kern) {
-  const descriptor = vertaalHooks(kern);
-  vervangDiagramType(descriptor);
-  const activiteitId = `dyn-${kern.id}`;
-  registreerActiviteit(
-    maakDiagramActiviteit({
-      id: activiteitId,
-      label: kern.label || kern.id,
-      icon: <IconDiagram />,
-      descriptor,
-      maakElement: maakGeneriekeMaakElement(descriptor),
-      persistKey: `studio05-dyn-${kern.id}`,
-      taakbalkSleutel: `studio05-taakbalken-dyn-${kern.id}`,
-      menuPrefix: `dyn-${kern.id}`,
-      menuLabel: kern.label || kern.id,
-      previewTekst: `Eigen profiel "${kern.label || kern.id}" — gemaakt met de meta-editor.`,
-      devHookNaam: `__dyn_${kern.id.replace(/[^a-zA-Z0-9]/g, "_")}Store`,
-    })
-  );
-  return activiteitId;
-}
-
-// Bij het laden van de Studio: opgeslagen profielen opnieuw registreren.
-for (const [id, kern] of Object.entries(leesProfielen())) {
-  try {
-    registreerProfielAlsActiviteit(kern);
-  } catch (e) {
-    console.warn(`Opgeslagen profiel "${id}" niet geregistreerd:`, e?.message || e);
-  }
-}
+  leesProfielen,
+  bewaarProfielen,
+  registreerProfielAlsActiviteit,
+} from "./profielRegistratie.jsx";
 
 const Ctx = createContext(null);
 

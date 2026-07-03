@@ -199,6 +199,7 @@ te wijzigen.
 | modelleren   | UML (0.5)          | preview  | `diagramcore` + `diagramprofielen/puur-uml` (fase 5-lakmoesproef) |
 | modelleren   | OAS (0.5)          | preview  | `diagramcore` + `diagramprofielen/oas31` (fase 5-vuurproef) |
 | modelleren   | Profiel (0.5)      | preview  | meta-editor: eigen profielen maken en live registreren (plan §8.9) |
+| modelleren   | Profiel-ontwerp (0.5) | preview | meta-editor trede 2: profielen tékenen en genereren (plan §8.9) |
 | modelleren   | DMN-tabellen       | actief   | `dmn/DmnTableEditor` + ModelPicker |
 | modelleren   | BPMN-processen     | actief   | `bpmn/BpmnEditor` + ModelPicker    |
 | modelleren   | Berichtdefinities  | actief   | `bericht/BerichttypeEditor`        |
@@ -276,6 +277,15 @@ fase 2 een **bewerkbare sandbox**:
   persistent in localStorage (overleven herlaad), sjablonen "leeg" en
   "Graaf-demo". Die demo gebruikt de nieuwe **"bol"-ShapeType** (§8.10-POC):
   naam in een ronde kern, velden als satelliet-bolletjes eromheen.
+- **Meta-editor trede 2: "Profiel-ontwerp (0.5)"** — conform het metamodel:
+  teken **Elementtypen ◆ Compartimenttypen ◆ Veldtypen** (elk met eigen
+  properties; de ◆-connector legt de bevat-relaties) plus verbindingsregels
+  (lijnstijl/markers, kardinaliteiten- en richting-vinkjes). *Ontwerp →
+  Genereer & registreer profiel…* maakt er live een activiteit van (zelfde
+  kanaal als trede 1); *Bekijk bestaand profiel als ontwerp…* laadt elk
+  geregistreerd profiel als diagram, en een lege sandbox start met het
+  voorbeeld-ontwerp. De minimap volgt tegenwoordig de ShapeType (bol →
+  cirkel; kader → transparant vlak, ook met eigen achtergrondkleur).
 - **Derde profiel: "OAS (0.5)"** (`diagramprofielen/oas31/`, vuurproef op een
   niet-UML-domein): «schema»-elementen met properties (JSON-typen/formats,
   required), «enum», «operation» (method/pad/summary als element-properties

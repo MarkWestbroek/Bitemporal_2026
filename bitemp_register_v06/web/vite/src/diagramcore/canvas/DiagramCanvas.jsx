@@ -28,6 +28,7 @@ import {
   useNodesState,
   useEdgesState,
   useReactFlow,
+  useStore as useRFStore,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import "../styles/diagramcore.css";
@@ -48,6 +49,46 @@ import { berekenUitlijning, berekenRasterSnap } from "../layout/uitlijnen.js";
 
 const nodeTypes = { element: ElementNode };
 const edgeTypes = { connector: ConnectorEdge };
+
+/** "#rrggbb" → rgba met alpha (voor subtiele kader-preview in de minimap). */
+function hexTransparant(hex, alpha) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
+  if (!m) return `rgba(148, 163, 184, ${alpha})`;
+  const n = parseInt(m[1], 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+
+/**
+ * Minimap-preview per node: de vorm volgt de ShapeType — een bol wordt een
+ * cirkel, een kader blijft een subtiel transparant vlak (ook mét eigen
+ * achtergrondkleur), de rest een rechthoek in de elementkleur.
+ */
+function MiniMapNode({ id, x, y, width, height }) {
+  const node = useRFStore((s) => s.nodeLookup?.get(id));
+  const et = node?.data?.elementType;
+  const el = node?.data?.element;
+  if (et?.achtergrond) {
+    return (
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        rx={4}
+        fill={el?.data?.achtergrondKleur ? hexTransparant(el.data.achtergrondKleur, 0.22) : "rgba(148, 163, 184, 0.18)"}
+        stroke={el?.data?.kleur || "#94a3b8"}
+        strokeWidth={1}
+      />
+    );
+  }
+  const vulling = el?.data?.kleur || et?.kleur || "#e2e8f0";
+  if (et?.shape === "bol") {
+    return (
+      <circle cx={x + width / 2} cy={y + height / 2} r={Math.min(width, height) / 2} fill={vulling} />
+    );
+  }
+  return <rect x={x} y={y} width={width} height={height} rx={2} fill={vulling} />;
+}
 
 function bouwLookups(diagramType) {
   const elementTypesById = {};
@@ -527,18 +568,7 @@ function CanvasBinnenkant({
           )}
         </div>
       )}
-      <MiniMap
-        pannable
-        zoomable
-        nodeColor={(n) => {
-          // Achtergrond-elementen (kaders) niet als dekkend blok tonen —
-          // zelfde subtiele tint als op het canvas.
-          if (n.data?.elementType?.achtergrond) {
-            return n.data?.element?.data?.achtergrondKleur || "rgba(148, 163, 184, 0.18)";
-          }
-          return n.data?.element?.data?.kleur || n.data?.elementType?.kleur || "#e2e8f0";
-        }}
-      />
+      <MiniMap pannable zoomable nodeComponent={MiniMapNode} />
     </ReactFlow>
   );
 }

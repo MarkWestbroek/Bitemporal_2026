@@ -2,7 +2,37 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** feedbackronde bol-shape 2 (2026-07-04): (1) **dubbel
+- **Status:** trede 2 **conform het metamodel** + seed + inverse
+  (2026-07-04, feedback Mark: "in een compartiment zitten nog weer
+  properties"): het ontwerp-profiel volgt nu ElementType ◆ CompartmentType ◆
+  FieldType — **Compartimenttypen en Veldtypen zijn eigen nodes**, gekoppeld
+  via ◆-compositie-connectoren, en een Veldtype heeft (net als het
+  Elementtype) een eigen "eigenschappen"-compartiment met PropertyTypes.
+  `bouwProfielUitOntwerp` vertaalt die structuur naar echte FieldTypes met
+  eigen properties. Nieuw: **`ontwerpUitProfiel`** (de omgekeerde weg) —
+  *Ontwerp → Bekijk bestaand profiel als ontwerp…* laadt elk geregistreerd
+  profiel (canoniek-uml, puur-uml, oas31, eigen) als ontwerp-diagram; de
+  activiteit **seedt** bovendien het voorbeeld-ontwerp
+  (Ster ◆ Metingen ◆ meting, Planeet, "draait om") bij een lege sandbox en
+  heeft *Laad voorbeeld-ontwerp…* als reset. Round-trip getest
+  (ontwerp → kern → ontwerp). Let op: een bestaande
+  profiel-ontwerp-sandbox van vóór deze wijziging eerst verversen via
+  *Laad voorbeeld-ontwerp…*. Eerdere ronde: **meta-editor trede 2 + minimap-fixes** (2026-07-04): nieuwe
+  activiteit **"Profiel-ontwerp (0.5)"** — een profiel *tekenen* i.p.v.
+  typen (het metamodel-als-model, §8.9 trede 2). Elementtype-nodes dragen
+  shape/kleur/kort als properties en hun "eigenschappen"- en
+  "compartimenten"-compartimenten beschrijven het doeltype;
+  verbindingsregel-connectoren worden connector-typen (lijn/vorm/markers +
+  vinkjes voor kardinaliteiten-labels en richting → hook-catalogus).
+  *Ontwerp → Genereer & registreer profiel…* vertaalt het getekende ontwerp
+  (`profielOntwerp.js`: `bouwProfielUitOntwerp`, puur + getest) naar een
+  descriptor-kern en registreert hem via hetzelfde kanaal als trede 1
+  (gedeeld in `profielRegistratie.jsx`) — het resultaat staat dus ook in de
+  JSON-editor om bij te schaven. De fabriek kreeg daarvoor een generieke
+  `hoofdmenuExtra`-optie. Bugfixes: de **minimap** rendert nu per ShapeType
+  (`MiniMapNode` in DiagramCanvas): een bol wordt een cirkel en een kader
+  blijft óók met eigen achtergrondkleur een subtiel transparant vlak
+  (voorheen een dekkend blok dat alles verborg). Eerdere ronde: feedbackronde bol-shape 2 (2026-07-04): (1) **dubbel
   naam-label gefixt** — de core zet de connector-naam al automatisch als
   midden-label, maar de kardinaliteiten-hooks (catalogus + puur-uml) deden
   dat óók; exact over elkaar heen viel dat nooit op, tot het slepen ze uit
