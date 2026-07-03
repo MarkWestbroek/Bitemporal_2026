@@ -346,7 +346,7 @@ fase 2 een **bewerkbare sandbox**:
   ↑-kopregel, cursief) — weergave-compartiment via de profiel-hook, geen
   modeldata.
 - Nog niet (bekend): rebuild vanuit 0.5, clipboard,
-  validatie-hook, domein-overlay, sleepbare edge-labels, licht/donker-tokens
+  validatie-hook, domein-overlay, licht/donker-tokens
   per StyleType (plan §8.5b), integrale iconenset voor de Maken-balk
   (ontwerp-sessie, plan §8.6a), overerving in de gespiegelde weergave
   (generalisaties uit het oude model zijn daar nog presentatie-edges),

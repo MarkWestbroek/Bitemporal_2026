@@ -27,6 +27,7 @@ import {
   getStraightPath,
   EdgeLabelRenderer,
   BaseEdge,
+  useStore,
 } from "@xyflow/react";
 
 const DASHES = {
@@ -65,6 +66,43 @@ function ConnectorEdge({
   const kleur = selected && !p.vasteKleur ? "#2563eb" : p.kleur || "#64748b";
   const pijlId = `dc-pijl-${id}`;
   const driehoekId = `dc-driehoek-${id}`;
+
+  // Sleepbare labels (vgl. editor 0.2): pointer-drag in flow-coördinaten
+  // (schermafstand gedeeld door de zoom); bij loslaten meldt de edge de
+  // nieuwe offset per zijde via data.onLabelOffset — de activiteit bewaart
+  // hem op het connector-element (data.labelOffsets).
+  const zoom = useStore((s) => s.transform[2]) || 1;
+  const [sleep, setSleep] = useState(null); // {index, x, y} tijdens het slepen
+  const magSlepen = typeof data?.onLabelOffset === "function";
+  const startLabelSleep = (e, index, label) => {
+    if (!magSlepen || e.button !== 0) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const doelEl = e.currentTarget;
+    doelEl.setPointerCapture?.(e.pointerId);
+    const basis = label.offset || { x: 0, y: 0 };
+    const startX = e.clientX;
+    const startY = e.clientY;
+    let laatste = { x: basis.x || 0, y: basis.y || 0 };
+    const beweeg = (ev) => {
+      laatste = {
+        x: (basis.x || 0) + (ev.clientX - startX) / zoom,
+        y: (basis.y || 0) + (ev.clientY - startY) / zoom,
+      };
+      setSleep({ index, ...laatste });
+    };
+    const klaar = () => {
+      doelEl.removeEventListener("pointermove", beweeg);
+      doelEl.removeEventListener("pointerup", klaar);
+      setSleep(null);
+      data.onLabelOffset(label.zijde || "midden", {
+        x: Math.round(laatste.x),
+        y: Math.round(laatste.y),
+      });
+    };
+    doelEl.addEventListener("pointermove", beweeg);
+    doelEl.addEventListener("pointerup", klaar);
+  };
 
   // Compositie- (◆, gevuld) of aggregatie-ruit (◇, open): de hoekpunten
   // liggen óp het pad zelf (punt-op-lengte 0, ½L en L, dwarsas loodrecht op
@@ -164,17 +202,20 @@ function ConnectorEdge({
 
       {(p.labels || []).map((label, i) => {
         const basis = posities[label.zijde] || posities.midden;
-        const off = label.offset || { x: 0, y: 0 };
+        const off = sleep?.index === i ? sleep : label.offset || { x: 0, y: 0 };
         const alleenNaam = label.delen?.length === 1 && label.delen[0].soort === "naam";
         return (
           <EdgeLabelRenderer key={i}>
             <div
               className={alleenNaam ? undefined : "dc-edge-label"}
+              onPointerDown={(e) => startLabelSleep(e, i, label)}
+              title={magSlepen ? "Sleep om het label te verplaatsen" : undefined}
               style={{
                 position: "absolute",
                 transform: `translate(-50%, -50%) translate(${basis.x + (off.x || 0)}px, ${basis.y + (off.y || 0)}px)`,
                 pointerEvents: "all",
                 userSelect: "none",
+                cursor: magSlepen ? "move" : undefined,
               }}
             >
               {label.delen.map((deel, j) => (

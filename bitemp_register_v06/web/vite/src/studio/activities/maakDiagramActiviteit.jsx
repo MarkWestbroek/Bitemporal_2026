@@ -723,6 +723,14 @@ export function maakDiagramActiviteit(opties) {
                     connectorIds.forEach((cid) => useStore.getState().deleteElement(cid))
                   }
                   onNormaliseer={(connectorIds) => menuBus.emit(ev("normaliseer"), connectorIds)}
+                  onLabelOffset={(connectorId, zijde, offset) => {
+                    const s = useStore.getState();
+                    const el = s.elements[connectorId];
+                    if (!el) return;
+                    s.updateElement(connectorId, {
+                      data: { labelOffsets: { ...(el.data?.labelOffsets || {}), [zijde]: offset } },
+                    });
+                  }}
                   bouwContextMenu={bouwContextMenu}
                   onViewport={(vp) => useStore.getState().updateDiagramViewport(diagram.id, vp)}
                 />

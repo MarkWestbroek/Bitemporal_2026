@@ -2,7 +2,17 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** **meta-editor trede 1 + bol-shape-POC** (2026-07-04, branch
+- **Status:** feedbackronde bol-shape (2026-07-04): (1) **handles op de
+  kern** — de aansluitpunten van de bol-shape zaten op de bounding box van
+  de hele compositie; ze liggen nu op de kern zelf, zodat kanten visueel op
+  de bol beginnen en eindigen (de shape wikkelt de standaard-handles in een
+  kern-groot kader — geen core-wijziging). (2) **Sleepbare edge-labels**
+  (pariteit met editor 0.2): labels van connectoren zijn te verslepen; de
+  offset wordt per zijde bewaard op het connector-element
+  (`data.labelOffsets`) en reist dus mee met undo/persist/werkbestand.
+  Core: pointer-drag in ConnectorEdge (schermafstand ÷ zoom) +
+  `onLabelOffset`-prop; de materialisatie past de offsets per zijde toe in
+  álle gedaanten (kaal én ASOC). Eerdere ronde: **meta-editor trede 1 + bol-shape-POC** (2026-07-04, branch
   `feat/studio05-meta-editor`): nieuwe activiteit **"Profiel (0.5)"**
   (`profielActivity.jsx`) — bewerk een profiel-descriptor (de
   JSON-serialiseerbare Definitie-kern) met Valideer- en

@@ -78,6 +78,7 @@ function CanvasBinnenkant({
   onVerwijderConnectoren,
   onNormaliseer,
   onViewport,
+  onLabelOffset,
   layoutApiRef,
   bouwContextMenu,
 }) {

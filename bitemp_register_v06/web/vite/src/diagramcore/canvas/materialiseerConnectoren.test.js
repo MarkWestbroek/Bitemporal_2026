@@ -218,3 +218,39 @@ test("hooks.edgePresentatie: dynamische presentatie o.b.v. connector-data (richt
   assert.equal(bronEdge.data.presentatie.markerStart, "ruit-open");
   assert.equal(doelEdge.data.presentatie.markerEnd, "pijl-open");
 });
+
+test("labelOffsets op de connector verschuiven de labels per zijde", () => {
+  const elements = {
+    A,
+    B,
+    r1: {
+      id: "r1",
+      naam: "kent",
+      elementType: "relatie",
+      source: "A",
+      target: "B",
+      compartimenten: [],
+      data: { bronKardinaliteit: "1", labelOffsets: { bron: { x: 20, y: -10 }, midden: { x: 5, y: 5 } } },
+    },
+  };
+  const diagram = {
+    id: "d",
+    nodes: [
+      { elementId: "A", position: { x: 0, y: 0 } },
+      { elementId: "B", position: { x: 400, y: 0 } },
+    ],
+  };
+  // Kale gedaante: het naam-label (midden) krijgt zijn offset.
+  let { edges } = materialiseerConnectoren(elements, diagram, elementTypesById);
+  const naamLabel = edges[0].data.presentatie.labels.find((l) => l.zijde === "midden");
+  assert.deepEqual(naamLabel.offset, { x: 5, y: 5 });
+
+  // ASOC-gedaante: het bron-label (kardinaliteit) krijgt zijn offset.
+  elements.r1.compartimenten = [
+    { compartmentType: "velden", velden: [{ naam: "soort", fieldType: "attribuut" }] },
+  ];
+  ({ edges } = materialiseerConnectoren(elements, diagram, elementTypesById));
+  const bronEdge = edges.find((e) => e.id.endsWith(":bron"));
+  const bronLabel = bronEdge.data.presentatie.labels.find((l) => l.zijde === "bron");
+  assert.deepEqual(bronLabel.offset, { x: 20, y: -10 });
+});
