@@ -98,7 +98,12 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
     const doelMid = midden(doelRef);
 
     const labels = et.hooks?.edgeLabels?.(el) || {};
-    const basisPresentatie = { ...(et.edgePresentatie || {}) };
+    // Statisch (edgePresentatie) + dynamisch (hooks.edgePresentatie op basis
+    // van de connector-data, bv. richting → pijl; §8.5c-familie).
+    const basisPresentatie = {
+      ...(et.edgePresentatie || {}),
+      ...(et.hooks?.edgePresentatie?.(el) || {}),
+    };
 
     if (!heeftVelden(el)) {
       // ── Kale gedaante: één edge ──────────────────────────────────────────
@@ -151,7 +156,14 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
       targetHandle: `target-${besteZijde(ankerMid, bronMid)}`,
       data: {
         connectorId: el.id,
-        presentatie: { lijn: "solid", kleur: basisPresentatie.kleur || "#64748b", labels: labels.bron || [] },
+        // markerStart (bv. ruit) blijft in de gematerialiseerde gedaante
+        // zichtbaar aan de bronzijde.
+        presentatie: {
+          lijn: "solid",
+          kleur: basisPresentatie.kleur || "#64748b",
+          markerStart: basisPresentatie.markerStart,
+          labels: labels.bron || [],
+        },
       },
     });
     edges.push({
@@ -165,7 +177,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
         presentatie: {
           lijn: "solid",
           kleur: basisPresentatie.kleur || "#64748b",
-          markerEnd: el.data?.directioneel ? "pijl-open" : null,
+          markerEnd: basisPresentatie.markerEnd ?? (el.data?.directioneel ? "pijl-open" : null),
           labels: labels.doel || [],
         },
       },

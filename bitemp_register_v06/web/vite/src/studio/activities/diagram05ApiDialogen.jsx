@@ -192,6 +192,28 @@ function PubliceerDialoog({ store, onSluit }) {
   const [resultaat, setResultaat] = useState(null);
   const [fout, setFout] = useState(null);
 
+  /** Nieuwe versie activeren (register gaat hem gebruiken) — aparte, bewuste stap. */
+  const activeer = useCallback(async () => {
+    if (!resultaat?.id) return;
+    const ok = window.confirm(
+      `Versie #${resultaat.id} activeren?\nHet register gaat deze schema-versie dan gebruiken.`
+    );
+    if (!ok) return;
+    setFout(null);
+    try {
+      const resp = await fetch(`${apiBase()}/api/schema/model/${resultaat.id}/activeer`, {
+        method: "PUT",
+      });
+      if (!resp.ok) {
+        const tekst = await resp.text();
+        throw new Error(`HTTP ${resp.status}: ${tekst.slice(0, 200)}`);
+      }
+      setResultaat((r) => ({ ...r, status: "actief" }));
+    } catch (e) {
+      setFout(`Activeren mislukt: ${e.message}`);
+    }
+  }, [resultaat]);
+
   const publiceer = useCallback(async () => {
     setBezig(true);
     setFout(null);
@@ -268,6 +290,11 @@ function PubliceerDialoog({ store, onSluit }) {
       </div>
       <div style={VOET}>
         <button style={KNOP} onClick={onSluit}>{resultaat ? "Sluiten" : "Annuleren"}</button>
+        {resultaat && resultaat.status !== "actief" && (
+          <button style={KNOP} onClick={activeer} title="Het register gaat deze versie gebruiken">
+            Activeer #{resultaat.id}…
+          </button>
+        )}
         {!resultaat && (
           <button style={KNOP_PRIMAIR} disabled={bezig} onClick={publiceer}>
             {bezig ? "Publiceren…" : "Publiceer"}

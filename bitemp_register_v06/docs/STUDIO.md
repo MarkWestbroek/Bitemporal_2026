@@ -196,6 +196,7 @@ te wijzigen.
 |--------------|--------------------|----------|------------------------------------|
 | modelleren   | UML-model          | actief   | `IdePage` (FlexLayout, fullMain)   |
 | modelleren   | Diagrammen (0.5)   | preview  | `diagramcore` + `diagramprofielen/canoniek-uml` (bewerkbare sandbox) |
+| modelleren   | UML (0.5)          | preview  | `diagramcore` + `diagramprofielen/puur-uml` (fase 5-lakmoesproef) |
 | modelleren   | DMN-tabellen       | actief   | `dmn/DmnTableEditor` + ModelPicker |
 | modelleren   | BPMN-processen     | actief   | `bpmn/BpmnEditor` + ModelPicker    |
 | modelleren   | Berichtdefinities  | actief   | `bericht/BerichttypeEditor`        |
@@ -238,9 +239,26 @@ fase 2 een **bewerkbare sandbox**:
   versielijst op en laadt het actieve model of een gekozen versie in de
   sandbox (met bevestiging); **Bestand → Publiceer naar API…** maakt een
   nieuwe schema-versie aan (`POST /api/schema/model`, bron "studio-0.5",
-  status "proposed" — activeren blijft een aparte stap, zoals in de UML-IDE).
+  status "proposed") met daarna een optionele **Activeer #id…**-knop
+  (`PUT /api/schema/model/{id}/activeer`, met bevestiging).
   Dialogen in `studio/activities/diagram05ApiDialogen.jsx`; de V3-vertaling
   loopt via dezelfde `exporteerV3`/`importeerV3`.
+- **Terugschrijven (fase 4B)**: **Diagram (0.5) → Zet terug naar
+  UML-model…** vervangt het model in de klassieke UML-activiteit door de
+  sandbox (met bevestiging; de API blijft onaangeroerd) — de inverse van
+  "Herlaad uit UML-model".
+- **Fabriek + tweede profiel (fase 5)**: de activiteit-mechaniek zit in
+  `studio/activities/maakDiagramActiviteit.jsx` (descriptor + opties →
+  complete activiteit; model-/V3-/API-koppeling optioneel). De activiteit
+  **"UML (0.5)"** (`diagramprofielen/puur-uml/`) is de lakmoesproef: pure
+  UML-klassediagrammen (klasse/interface/enumeratie, attributen/operaties,
+  associatie mét attributen → associatieklasse via de ASOC-materialisatie,
+  aggregatie ◇ én compositie ◆, generalisatie, realisatie, dependency) —
+  eigen persistente store, start leeg. Associaties hebben bewerkbare
+  kardinaliteiten en een **"gericht (→ doel)"**-vinkje (open pijl aan de
+  doelzijde) via de nieuwe `hooks.edgePresentatie` op connector-typen:
+  presentatie-overrides o.b.v. connector-data; markers reizen in de
+  ASOC-gedaante mee naar de bron-/doel-edge.
 - **Gegevenstype-validatie bewerken**: validatie, normalisatie en weergave
   zijn element-properties van het gegevenstype met eigen PropertyTypeEditors
   (`ValidatieEditors.jsx`, datatypes "validatieregels"/"weergaveregels"):
