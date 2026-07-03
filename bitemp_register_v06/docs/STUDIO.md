@@ -197,6 +197,7 @@ te wijzigen.
 | modelleren   | UML-model          | actief   | `IdePage` (FlexLayout, fullMain)   |
 | modelleren   | Diagrammen (0.5)   | preview  | `diagramcore` + `diagramprofielen/canoniek-uml` (bewerkbare sandbox) |
 | modelleren   | UML (0.5)          | preview  | `diagramcore` + `diagramprofielen/puur-uml` (fase 5-lakmoesproef) |
+| modelleren   | OAS (0.5)          | preview  | `diagramcore` + `diagramprofielen/oas31` (fase 5-vuurproef) |
 | modelleren   | DMN-tabellen       | actief   | `dmn/DmnTableEditor` + ModelPicker |
 | modelleren   | BPMN-processen     | actief   | `bpmn/BpmnEditor` + ModelPicker    |
 | modelleren   | Berichtdefinities  | actief   | `bericht/BerichttypeEditor`        |
@@ -260,6 +261,12 @@ fase 2 een **bewerkbare sandbox**:
   doelzijde) via de nieuwe `hooks.edgePresentatie` op connector-typen:
   presentatie-overrides o.b.v. connector-data; markers reizen in de
   ASOC-gedaante mee naar de bron-/doel-edge.
+- **Derde profiel: "OAS (0.5)"** (`diagramprofielen/oas31/`, vuurproef op een
+  niet-UML-domein): «schema»-elementen met properties (JSON-typen/formats,
+  required), «enum», «operation» (method/pad/summary als element-properties
+  met live signatuurregel op de node), en de connectoren **$ref** (met
+  property-naam als rolnaam), **allOf** (overerving) en **items**
+  (array-elementtype). Ook hier: alleen een descriptor + fabriek-aanroep.
 - **Gegevenstype-validatie bewerken**: validatie, normalisatie en weergave
   zijn element-properties van het gegevenstype met eigen PropertyTypeEditors
   (`ValidatieEditors.jsx`, datatypes "validatieregels"/"weergaveregels"):

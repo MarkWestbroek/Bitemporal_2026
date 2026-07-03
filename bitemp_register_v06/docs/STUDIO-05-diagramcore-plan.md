@@ -2,7 +2,22 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** fase 5-feedbackronde 1 (2026-07-03): **aggregatie** (◇) naast
+- **Status:** fase 5-vuurproef: **OAS 3.1 als derde profiel** (2026-07-03,
+  branch `feat/studio05-fase5`): activiteit **"OAS (0.5)"**
+  (`diagramprofielen/oas31/` + fabriek-aanroep, verder niets). Schemas zijn
+  elementen, verwijzingen connectoren: «schema» met properties
+  (JSON-typen/formats, `verplicht` = OAS `required`), «enum», en «operation»
+  — een element zónder bewerkbare compartimenten (method/pad/summary zijn
+  element-properties, met een live "GET /personen/{id}"-weergaveregel via de
+  `extraCompartimenten`-hook). Connectoren: **$ref** (gestippeld, met de
+  property-naam als rolnaam), **allOf** (driehoek — compositie-overerving)
+  en **items** (array-elementtype). Type-kiezer: JSON-primitieven (incl.
+  formats) of een schema-$ref via de resolvers. Uitkomst van de vuurproef:
+  **geen core- of shell-wijziging nodig** — descriptor-vocabulaire
+  (compartimenten, properties, verbindingsregels, edge-presentatie, hooks)
+  bleek toereikend voor een niet-UML-domein. Bewust nog niet: oneOf/anyOf,
+  parameters/headers als elementen, YAML-import/-export (eigen
+  serialisatie-fase, vgl. canoniek-uml fase 4). Eerdere ronde: fase 5-feedbackronde 1 (2026-07-03): **aggregatie** (◇) naast
   compositie en **associatie-richting**. Core: `ConnectorEdge` kent
   `markerStart: "ruit-open"` (zelfde pad-volgende geometrie, witte vulling —
   consistent met de generalisatie-driehoek, in beide thema's onderscheidbaar)
