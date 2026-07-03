@@ -2,7 +2,20 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** inspector-stap opgeleverd (2026-07-04): code getrokken op de
+- **Status:** fase 3A + feedbackronde opgeleverd (2026-07-04): uitlijn-balk
+  met de vertrouwde SVG-iconen, taakbalken resizebaar (breed/plat of
+  smal/hoog, persistent) en geclamped binnen het canvas, menubalk toont
+  ✓-checkmarks per taakbalk (generiek `menu:ververs`-mechanisme in de shell),
+  en de CEL-editor kent nu de **familie-context** (`GE.veld`-paden +
+  autocomplete via `celContext.js`). "Normaliseer relaties" keert terug in
+  fase 3B (ASOC). **Layout-core** —
+  uitlijnen/verdelen/snap-grid als pure geometrie in `diagramcore/layout/`
+  met core-taakbalk "Uitlijnen" en menu-items; **auto-layout** als eerste
+  `layouts`-strategie van canoniek-uml (hergebruikt `berekenAutoLayout`,
+  eigen taakbalkje, één undo-stap); **boundary/kader-element** (§8.6b,
+  `achtergrond: true` → onder de nodes). Nog te doen in fase 3B:
+  ASOC-materialisatie (REL als echt connector-type), validatie-hook,
+  pariteitscheck. Inspector-stap opgeleverd (2026-07-04): code getrokken op de
   metamodel-naamgeving — `PropertyType` (met **datatype-registry**: string,
   tekst, boolean, colour + profiel-eigen "cel-expressie"),
   `ReferenceType`/`ReferenceResolver` gesplitst (Definitie/Implementatie,
@@ -634,6 +647,13 @@ met `npm run build` + visuele check, en levert iets werkends op.
    **notities en constraints zijn eigen ElementTypes** met dientengevolge hun
    eigen ShapeType (`note`, `rounded`); ShapeType is uitsluitend vorm, alles met
    betekenis is een ElementType.
+6a. **Integrale iconenset (ontwerp-sessie).** De "Maken"-taakbalk gebruikt nu
+   tekstknoppen (ENT/GE/…); de uitlijn-balk heeft al SVG-iconen. Wens: één
+   integrale iconenset per ElementType, hergebruikt in de Maken-balk, de
+   tree-browser, de activity bar en (later) de minibrowser. Hoort bij het
+   Implementatie-domein: een icoon-registry naast de shape-registry, met
+   per-thema-varianten waar nodig (§8.5b). Bewust als ontwerp-sessie plannen
+   (niet ad hoc), samen met de Omnium-merkstijl.
 6b. **Boundaries komen wél vroeg mee.** ✅ *Besloten (2026-07-02):* kaders zoals
    de Definition/Implementation-boundaries in Sparx EA worden een **eigen
    ElementType** met een eigen `boundary`-ShapeType: een resizebaar kader dat

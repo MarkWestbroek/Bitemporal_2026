@@ -243,11 +243,22 @@ fase 2 een **bewerkbare sandbox**:
   ReferenceResolvers van het profiel. Afleidingsregels openen de bestaande
   **CEL-ExpressieEditor** (hergebruikt uit de umleditor, lazy). Pan/zoom en
   het actieve diagram vallen buiten de undo-history.
-- Nog niet (bekend): clipboard, checkmarks in het taakbalken-menu,
+- **Layout (fase 3A)**: core-taakbalk **Uitlijnen** (links/rechts/boven/onder,
+  centreren, verdelen — op de selectie via Ctrl-klik — plus alles-op-raster)
+  en de **Auto-layout**-taakbalk met de gelaagde plaatsingsstrategie van het
+  profiel; ook via menu Diagram (0.5). Iedere layout-actie is één undo-stap.
+  Verder is er een **Kader**-element (boundary, §8.6b): gestippeld resizebaar
+  kader dat achter de andere elementen rendert.
+- Taakbalken zijn **resizebaar** (hoekgreep: breed & plat of smal & hoog,
+  persistent) en blijven bij het slepen binnen het canvas; het
+  Taakbalken-menu toont ✓ voor zichtbare balken. De CEL-editor kent de
+  **familie-context**: velden van de eigen en gerelateerde GE's
+  (`Naam.roepnaam`) met autocomplete.
+- Nog niet (bekend): clipboard, normaliseer relaties (fase 3B, ASOC),
   overgeërfde-velden-compartiment, domein-overlay, sleepbare edge-labels,
-  verbinden naar een REL (fase 3, ASOC), layout-taakbalk (fase 3),
-  licht/donker-tokens per StyleType (plan §8.5b), CEL-autocomplete over
-  gerelateerde elementen (nu alleen eigen velden).
+  verbinden naar een REL (fase 3B, ASOC), licht/donker-tokens per StyleType
+  (plan §8.5b), integrale iconenset voor de Maken-balk (ontwerp-sessie,
+  plan §8.6a).
 
 ## DMN-activiteit: DRD + Tabel met dmn-js
 

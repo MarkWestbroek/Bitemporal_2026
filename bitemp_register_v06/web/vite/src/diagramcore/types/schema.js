@@ -91,6 +91,7 @@
  * @property {string} [kleur]               - default; instantie kan overriden
  * @property {"standaard"|"onzichtbaar"} [handleStijl] - aansluitpunten tonen of niet
  * @property {boolean} [resizebaar]         - default true; false → geen NodeResizer
+ * @property {boolean} [achtergrond]        - true → rendert onder de andere nodes (boundaries/kaders)
  * @property {string} [kort]                - korte knop-tekst voor de "Maken"-taakbalk (bv. "ENT")
  * @property {boolean} [isConnector]
  * @property {ConnectorEindpunt} [bron]     - verplicht als isConnector

@@ -17,6 +17,7 @@
  * Kleuren komen overeen met defaultKleur() in umleditor/metamodel/types.js.
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
+import { berekenAutoLayout } from "../../umleditor/metamodel/autoLayout.js";
 
 export const CANONIEK_UML_ID = "canoniek-uml";
 
@@ -172,6 +173,15 @@ const elementTypes = [
     handleStijl: "onzichtbaar",
     properties: [{ key: "expressie", label: "expressie (OCL/CEL)", datatype: "cel-expressie" }, KLEUR_VELD],
   },
+  {
+    id: "boundary",
+    label: "Kader",
+    kort: "KADER",
+    shape: "boundary",
+    achtergrond: true,
+    handleStijl: "onzichtbaar",
+    properties: [KLEUR_VELD],
+  },
 
   // ── Connector-typen (fase 2: kale edges; ASOC-materialisatie volgt in fase 3) ──
   {
@@ -274,6 +284,24 @@ export const canoniekUmlDiagramType = {
   taakbalken: [
     { id: "maken", label: "Maken", acties: "elementTypes" },
     { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
+    { id: "auto-layout", label: "Auto-layout", acties: "layouts" },
+  ],
+  /**
+   * Plaatsingsstrategieën (plan §4.5): semantiek, dus profiel-werk. Hergebruikt
+   * het gelaagde algoritme van de umleditor (entiteiten boven, GE's eronder,
+   * ankers op middelpunten). `run` krijgt de live canvas-context en geeft
+   * posities terug (Map/Record) die de core als één undo-stap toepast.
+   */
+  layouts: [
+    {
+      id: "gelaagd",
+      label: "Auto-layout",
+      run: ({ flowNodes, flowEdges, selectieIds }) =>
+        berekenAutoLayout(flowNodes, flowEdges, {
+          selectie: selectieIds || undefined,
+          respecteerLocked: true,
+        }),
+    },
   ],
 };
 

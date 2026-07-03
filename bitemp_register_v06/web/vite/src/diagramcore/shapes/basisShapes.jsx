@@ -176,9 +176,49 @@ function AnkerShape({ selected, children }) {
   );
 }
 
+/**
+ * Boundary/kader (plan §8.6b): resizebaar kader dat achter de andere
+ * elementen rendert (ElementType.achtergrond → zIndex -1 in de canvas).
+ * Meestal puur vormgeving; een profiel kan er betekenis aan hangen.
+ */
+function BoundaryShape({ element, selected, children }) {
+  const d = element.data || {};
+  const rand = selected ? "#2563eb" : d.kleur || "#94a3b8";
+  return (
+    <div
+      className="dc-node"
+      style={{
+        minWidth: 240,
+        minHeight: 160,
+        border: `2px dashed ${rand}`,
+        borderRadius: 10,
+        background: d.kleur ? `${d.kleur}14` : "transparent", // ~8% tint
+        boxShadow: "none",
+      }}
+    >
+      {children}
+      <div
+        style={{
+          position: "absolute",
+          top: 4,
+          left: 10,
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: "0.03em",
+          color: rand,
+          pointerEvents: "none",
+        }}
+      >
+        {element.naam || "(kader)"}
+      </div>
+    </div>
+  );
+}
+
 registreerShape("class-box", ClassBoxShape);
 registreerShape("note", NoteShape);
 registreerShape("rounded", RoundedShape);
 registreerShape("anker", AnkerShape);
+registreerShape("boundary", BoundaryShape);
 
-export { ClassBoxShape, NoteShape, RoundedShape, AnkerShape };
+export { ClassBoxShape, NoteShape, RoundedShape, AnkerShape, BoundaryShape };

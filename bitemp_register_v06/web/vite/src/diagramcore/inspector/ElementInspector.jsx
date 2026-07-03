@@ -25,7 +25,7 @@ import {
 } from "./propertyTypeEditors.jsx";
 
 /** Eén property: kiezer bij referenceTypes, anders editor op datatype. */
-function PropertyWidget({ regel, waarde, onChange, element, kandidatenVoor }) {
+function PropertyWidget({ regel, waarde, onChange, element, kandidatenVoor, editorContext }) {
   if (regel.referenceTypes?.length) {
     return (
       <VerwijzingsKiezer
@@ -37,11 +37,13 @@ function PropertyWidget({ regel, waarde, onChange, element, kandidatenVoor }) {
     );
   }
   const Editor = getPropertyTypeEditor(regel.datatype || "string") || getPropertyTypeEditor("string");
-  return <Editor regel={regel} waarde={waarde} onChange={onChange} element={element} />;
+  return (
+    <Editor regel={regel} waarde={waarde} onChange={onChange} element={element} context={editorContext} />
+  );
 }
 
 /** Eén veld-rij binnen een compartiment: widgets volgens FieldType.properties. */
-function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, onChange, onVerwijder }) {
+function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, editorContext, onChange, onVerwijder }) {
   const regels = fieldType?.properties || [{ key: "naam", datatype: "string" }];
   const waardeVan = (key) => (key === "naam" ? veld.naam : veld.data?.[key]);
   const zet = (key, waarde) => {
@@ -57,6 +59,7 @@ function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, onChang
           waarde={waardeVan(regel.key)}
           element={element}
           kandidatenVoor={kandidatenVoor}
+          editorContext={editorContext}
           onChange={(w) => bewerkbaar && zet(regel.key, w)}
         />
       ))}
@@ -74,6 +77,7 @@ export default function ElementInspector({
   elementType,
   fieldTypesById,
   kandidatenVoor,
+  editorContext,
   bewerkbaar = false,
   onUpdate,
   onVerwijderVanDiagram,
@@ -121,6 +125,7 @@ export default function ElementInspector({
             waarde={element.data?.[regel.key]}
             element={element}
             kandidatenVoor={kandidatenVoor}
+            editorContext={editorContext}
             onChange={(w) => bewerkbaar && onUpdate({ data: { [regel.key]: w } })}
           />
         </div>
@@ -142,6 +147,7 @@ export default function ElementInspector({
                 bewerkbaar={bewerkbaar}
                 element={element}
                 kandidatenVoor={kandidatenVoor}
+                editorContext={editorContext}
                 onChange={(nieuw) => zetCompartiment(def.id, velden.map((v, j) => (j === i ? nieuw : v)))}
                 onVerwijder={() => zetCompartiment(def.id, velden.filter((_, j) => j !== i))}
               />

@@ -19,6 +19,7 @@ import React, {
   useEffect,
   useState,
   useCallback,
+  useRef,
   lazy,
   Suspense,
 } from "react";
@@ -27,7 +28,9 @@ import { menuBus } from "../menuBus";
 import useModelStore from "../../store/useModelStore";
 import useUIStore from "../../store/useUIStore";
 import { createDiagramStore } from "../../diagramcore/model/createDiagramStore.js";
-import { Taskbar, useTaakbalkVoorkeuren } from "../../diagramcore/taskbar/Taskbar.jsx";
+import { UITLIJN_MODES } from "../../diagramcore/layout/uitlijnen.js";
+import { UITLIJN_ICONEN } from "../../diagramcore/taskbar/uitlijnIcons.jsx";
+import { Taskbar, useTaakbalkVoorkeuren, leesTaakbalkVoorkeuren } from "../../diagramcore/taskbar/Taskbar.jsx";
 import ElementInspector from "../../diagramcore/inspector/ElementInspector.jsx";
 import {
   registreerCanoniekUml,
@@ -249,9 +252,17 @@ function Diagram05Sidebar() {
   );
 }
 
+const TAAKBALK_SLEUTEL = "studio05-taakbalken-canoniek-uml";
+
+/** Vers uit localStorage, zodat menu-checkmarks kloppen bij elke menu-opbouw. */
+const taakbalkZichtbaar = (balkId) =>
+  leesTaakbalkVoorkeuren(TAAKBALK_SLEUTEL, TAAKBALK_DEFAULTS)[balkId]?.zichtbaar ?? true;
+
 const TAAKBALK_DEFAULTS = {
   maken: { zichtbaar: true, positie: { x: 12, y: 12 } },
-  verbinding: { zichtbaar: true, positie: { x: 12, y: 260 } },
+  verbinding: { zichtbaar: true, positie: { x: 12, y: 300 } },
+  "auto-layout": { zichtbaar: true, positie: { x: 150, y: 12 } },
+  uitlijnen: { zichtbaar: true, positie: { x: 12, y: 430 } },
 };
 
 function Diagram05Main() {
@@ -275,15 +286,38 @@ function Diagram05Main() {
   // Fallback: na undo van "nieuw diagram" kan het actieve id verdwenen zijn.
   const diagram = (actief && diagrams[actief]) || Object.values(diagrams)[0] || null;
 
-  const { voorkeuren, zetZichtbaar, zetPositie } = useTaakbalkVoorkeuren(
-    "studio05-taakbalken-canoniek-uml",
+  const { voorkeuren, zetZichtbaar, zetPositie, zetBreedte } = useTaakbalkVoorkeuren(
+    TAAKBALK_SLEUTEL,
     TAAKBALK_DEFAULTS
   );
+
+  // Imperatieve layout-API van de canvas (uitlijnen/snap/auto-layout).
+  const layoutApiRef = useRef(null);
+
+  // Menubalk → layout-acties (Diagram (0.5) → Uitlijnen ▸ / Auto-layout).
+  useEffect(() => {
+    const af = [
+      menuBus.on("d05:layout", (mode) => {
+        if (mode === "snap") layoutApiRef.current?.snapRaster();
+        else layoutApiRef.current?.lijnUit(mode);
+      }),
+      menuBus.on("d05:auto-layout", ({ id, selectie } = {}) => {
+        const strategie = (canoniekUmlDiagramType.layouts || []).find(
+          (l) => l.id === (id || canoniekUmlDiagramType.layouts?.[0]?.id)
+        );
+        if (strategie) layoutApiRef.current?.voerLayoutUit(strategie, !!selectie);
+      }),
+    ];
+    return () => af.forEach((off) => off());
+  }, []);
 
   // Taakbalk-toggles vanuit het menu (Diagram (0.5) → Taakbalken ▸).
   useEffect(() => {
     return menuBus.on("d05:taakbalk-toggle", (balkId) => {
       zetZichtbaar(balkId, !(voorkeuren[balkId]?.zichtbaar ?? true));
+      // Menubalk opnieuw laten opbouwen zodat het vinkje klopt (StudioShell
+      // luistert generiek op "menu:ververs").
+      setTimeout(() => menuBus.emit("menu:ververs"), 0);
     });
   }, [voorkeuren, zetZichtbaar]);
 
@@ -326,8 +360,32 @@ function Diagram05Main() {
           actief: verbindingsType === et.id,
           onClick: () => setVerbindingsType(verbindingsType === et.id ? null : et.id),
         }));
+    } else if (balk.acties === "layouts") {
+      acties = (canoniekUmlDiagramType.layouts || []).map((strategie) => ({
+        id: strategie.id,
+        label: strategie.label,
+        titel: `${strategie.label} (heel diagram)`,
+        onClick: () => layoutApiRef.current?.voerLayoutUit(strategie, false),
+      }));
     }
     return { ...balk, actieLijst: acties };
+  });
+
+  // Core-taakbalk "Uitlijnen" (plan §4.5/§4.6): pure geometrie, bij élk
+  // diagramtype beschikbaar — staat daarom buiten de DiagramType-configuratie.
+  taakbalken.push({
+    id: "uitlijnen",
+    label: "Uitlijnen",
+    actieLijst: [
+      ...UITLIJN_MODES.map((m) => ({
+        id: m.mode,
+        label: m.label,
+        icoon: UITLIJN_ICONEN[m.mode],
+        titel: `${m.titel} (selectie — Ctrl+klik)`,
+        onClick: () => layoutApiRef.current?.lijnUit(m.mode),
+      })),
+      { id: "snap", label: "▦", icoon: UITLIJN_ICONEN.snap, titel: "Alles op raster", onClick: () => layoutApiRef.current?.snapRaster() },
+    ],
   });
 
   return (
@@ -355,6 +413,10 @@ function Diagram05Main() {
                 onNodePositie={(elementId, positie) =>
                   useDiagram05Store.getState().updateNodePosition(diagram.id, elementId, positie)
                 }
+                onNodePosities={(posities) =>
+                  useDiagram05Store.getState().updateNodePositions(diagram.id, posities)
+                }
+                layoutApiRef={layoutApiRef}
                 onNodeSize={(elementId, size) =>
                   useDiagram05Store.getState().updateNodeSize(diagram.id, elementId, size)
                 }
@@ -380,7 +442,9 @@ function Diagram05Main() {
                   label={b.label || b.id}
                   acties={b.actieLijst}
                   positie={voorkeuren[b.id]?.positie || { x: 12, y: 12 }}
+                  breedte={voorkeuren[b.id]?.breedte}
                   onPositie={(p) => zetPositie(b.id, p)}
+                  onBreedte={(breedte) => zetBreedte(b.id, breedte)}
                 />
               ))}
           </>
@@ -399,6 +463,8 @@ function Diagram05Inspector() {
   const element = useDiagram05Store((s) => (selectieId ? s.elements[selectieId] : null));
   const actief = useDiagram05Store((s) => s.actiefDiagramId);
   const elements = useDiagram05Store((s) => s.elements);
+  const diagrams = useDiagram05Store((s) => s.diagrams);
+  const editorContext = React.useMemo(() => ({ elements, diagrams }), [elements, diagrams]);
 
   // Kandidaten via de ReferenceResolvers van het profiel (plan §4.5b):
   // de inspector vraagt per PropertyType met referenceTypes de kandidaten op
@@ -431,6 +497,7 @@ function Diagram05Inspector() {
         elementType={elementType}
         fieldTypesById={fieldTypesById}
         kandidatenVoor={kandidatenVoor}
+        editorContext={editorContext}
         bewerkbaar
         onUpdate={(patch) => useDiagram05Store.getState().updateElement(element.id, patch)}
         onVerwijderVanDiagram={() => {
@@ -460,7 +527,7 @@ export default {
   Inspector: Diagram05Inspector,
   sidebarLabel: "Diagrammen",
   inspectorLabel: "Element",
-  menus: [
+  menus: () => [
     {
       id: "bewerken",
       label: "Bewerken",
@@ -476,13 +543,40 @@ export default {
         { id: "d05-nieuw-diagram", label: "Nieuw diagram…", onClick: () => menuBus.emit("d05:nieuw-diagram") },
         { id: "d05-herlaad", label: "Herlaad uit UML-model…", onClick: () => menuBus.emit("d05:herlaad") },
         { type: "separator" },
+        { id: "d05-auto", label: "Auto-layout (heel diagram)", onClick: () => menuBus.emit("d05:auto-layout", { selectie: false }) },
+        { id: "d05-auto-sel", label: "Auto-layout (selectie)", onClick: () => menuBus.emit("d05:auto-layout", { selectie: true }) },
+        { id: "d05-snap", label: "Uitlijnen op raster", onClick: () => menuBus.emit("d05:layout", "snap") },
+        {
+          id: "d05-uitlijnen",
+          label: "Uitlijnen (selectie)",
+          items: [
+            { id: "d05-align-left", label: "Links", onClick: () => menuBus.emit("d05:layout", "left") },
+            { id: "d05-align-right", label: "Rechts", onClick: () => menuBus.emit("d05:layout", "right") },
+            { id: "d05-align-top", label: "Boven", onClick: () => menuBus.emit("d05:layout", "top") },
+            { id: "d05-align-bottom", label: "Onder", onClick: () => menuBus.emit("d05:layout", "bottom") },
+            { type: "separator" },
+            { id: "d05-align-ch", label: "Horizontaal centreren", onClick: () => menuBus.emit("d05:layout", "center-h") },
+            { id: "d05-align-cv", label: "Verticaal centreren", onClick: () => menuBus.emit("d05:layout", "center-v") },
+            { type: "separator" },
+            { id: "d05-dist-h", label: "Horizontaal verdelen", onClick: () => menuBus.emit("d05:layout", "distribute-h") },
+            { id: "d05-dist-v", label: "Verticaal verdelen", onClick: () => menuBus.emit("d05:layout", "distribute-v") },
+          ],
+        },
+        { type: "separator" },
         {
           id: "d05-taakbalken",
           label: "Taakbalken",
           items: [
-            { id: "d05-tb-maken", label: "Maken", onClick: () => menuBus.emit("d05:taakbalk-toggle", "maken") },
-            { id: "d05-tb-verbinding", label: "Verbinding", onClick: () => menuBus.emit("d05:taakbalk-toggle", "verbinding") },
-          ],
+            ["maken", "Maken"],
+            ["verbinding", "Verbinding"],
+            ["auto-layout", "Auto-layout"],
+            ["uitlijnen", "Uitlijnen"],
+          ].map(([balkId, label]) => ({
+            id: `d05-tb-${balkId}`,
+            label,
+            checked: taakbalkZichtbaar(balkId),
+            onClick: () => menuBus.emit("d05:taakbalk-toggle", balkId),
+          })),
         },
       ],
     },

@@ -188,13 +188,17 @@
 .dc-taakbalk {
   position: absolute;
   z-index: 20;
-  min-width: 60px;
+  min-width: 52px;
+  max-width: 100%;
   background: var(--s-panel, #ffffff);
   border: 1px solid var(--s-border, #e2e8f0);
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.14);
   font-size: 12px;
   user-select: none;
+  /* Vervormbaar: breed & plat of smal & hoog (hoekgreep rechtsonder). */
+  resize: horizontal;
+  overflow: hidden;
 }
 
 .dc-taakbalk-kop {
@@ -225,7 +229,14 @@
   flex-wrap: wrap;
   gap: 4px;
   padding: 6px;
-  max-width: 260px;
+}
+
+.dc-taakbalk-knop.is-icoon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 5px;
+  line-height: 0;
 }
 
 .dc-taakbalk-knop {

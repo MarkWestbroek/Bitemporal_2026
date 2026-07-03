@@ -220,6 +220,29 @@ export function createDiagramStore({ persistKey } = {}) {
         };
       }),
 
+    /**
+     * Bulk-variant: meerdere posities in één mutatie (= één undo-stap).
+     * Gebruikt door uitlijnen/verdelen/auto-layout.
+     * @param {Record<string, {x:number,y:number}>} posities
+     */
+    updateNodePositions: (diagramId, posities) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d || !posities || Object.keys(posities).length === 0) return state;
+        return {
+          isDirty: true,
+          diagrams: {
+            ...state.diagrams,
+            [diagramId]: {
+              ...d,
+              nodes: d.nodes.map((n) =>
+                posities[n.elementId] ? { ...n, position: posities[n.elementId] } : n
+              ),
+            },
+          },
+        };
+      }),
+
     /** Grootte van een element op één diagram (metamodel: Position.elementSize). */
     updateNodeSize: (diagramId, elementId, size) =>
       set((state) => {

@@ -18,7 +18,7 @@
  * Edges = geïmporteerde presentatie-edges (diagram.edges, fase 1-adapter)
  *       + gematerialiseerde connector-elementen (materialiseerConnectoren).
  */
-import { useMemo, useCallback, useEffect } from "react";
+import { useMemo, useCallback, useEffect, useImperativeHandle } from "react";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -27,6 +27,7 @@ import {
   MiniMap,
   useNodesState,
   useEdgesState,
+  useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import "../styles/diagramcore.css";
@@ -34,6 +35,7 @@ import "../shapes/basisShapes.jsx"; // registreert de standaard-shapes
 import ElementNode from "./ElementNode.jsx";
 import ConnectorEdge from "./ConnectorEdge.jsx";
 import { materialiseerConnectoren, vindConnectorType } from "./materialiseerConnectoren.js";
+import { berekenUitlijning, berekenRasterSnap } from "../layout/uitlijnen.js";
 
 const nodeTypes = { element: ElementNode };
 const edgeTypes = { connector: ConnectorEdge };
@@ -59,13 +61,16 @@ function CanvasBinnenkant({
   verbindingsType = null,
   onSelectElement,
   onNodePositie,
+  onNodePosities,
   onNodeSize,
   onVerbind,
   onVerwijder,
   onVerwijderConnectoren,
   onViewport,
+  layoutApiRef,
 }) {
   const lookups = useMemo(() => bouwLookups(diagramType), [diagramType]);
+  const { getNodes } = useReactFlow();
 
   // Nodes als interne React Flow-state, gevoed vanuit de props. Nodig omdat
   // selectie en slepen via node-changes lopen; de store blijft de waarheid
@@ -84,6 +89,8 @@ function CanvasBinnenkant({
           position: ref.position || { x: 0, y: 0 },
           // Grootte per diagram-lidmaatschap (metamodel: Position.elementSize)
           ...(ref.size ? { style: { width: ref.size.width, height: ref.size.height } } : {}),
+          // Achtergrond-elementen (boundaries/kaders) renderen ónder de rest
+          ...(elementType.achtergrond ? { zIndex: -1 } : {}),
           data: {
             element,
             elementType,
@@ -195,6 +202,60 @@ function CanvasBinnenkant({
       if (onViewport) onViewport(viewport);
     },
     [onViewport]
+  );
+
+  // ── Imperatieve layout-API (plan §4.5) ─────────────────────────────────────
+  // Uitlijnen/snap is core-geometrie op de live (gemeten) nodes; auto-layout
+  // voert een LayoutStrategie van het profiel uit. Resultaten gaan als één
+  // bulk-mutatie terug naar de store (één undo-stap).
+  useImperativeHandle(
+    layoutApiRef,
+    () => {
+      const naarItems = (flowNodes) =>
+        flowNodes.map((n) => ({
+          id: n.id,
+          x: n.position.x,
+          y: n.position.y,
+          width: n.measured?.width ?? 200,
+          height: n.measured?.height ?? 100,
+        }));
+      const pasToe = (posities) => {
+        const record =
+          posities instanceof Map ? Object.fromEntries(posities) : posities || {};
+        if (Object.keys(record).length && onNodePosities) onNodePosities(record);
+      };
+      return {
+        /** Uitlijnen/verdelen op de selectie (minimaal 2 nodes). */
+        lijnUit: (mode) => {
+          const selectie = getNodes().filter((n) => n.selected);
+          pasToe(berekenUitlijning(mode, naarItems(selectie)));
+        },
+        /** Alle nodes op het raster. */
+        snapRaster: (raster = 16) => {
+          pasToe(berekenRasterSnap(naarItems(getNodes()), raster));
+        },
+        /** Voer een profiel-LayoutStrategie uit (heel diagram of selectie). */
+        voerLayoutUit: (strategie, alleenSelectie = false) => {
+          if (!strategie?.run) return;
+          const flowNodes = getNodes().map((n) => ({
+            id: n.id,
+            type: n.data?.element?.elementType,
+            position: n.position,
+            measured: n.measured,
+            hidden: n.hidden,
+            data: n.data?.element?.data || {},
+          }));
+          const selectieIds = alleenSelectie
+            ? getNodes().filter((n) => n.selected).map((n) => n.id)
+            : null;
+          if (alleenSelectie && (selectieIds?.length ?? 0) < 2) return;
+          pasToe(
+            strategie.run({ flowNodes, flowEdges: edges, selectieIds, elements, diagram })
+          );
+        },
+      };
+    },
+    [getNodes, edges, elements, diagram, onNodePosities]
   );
 
   return (
