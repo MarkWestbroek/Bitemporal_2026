@@ -117,18 +117,22 @@ export function Taskbar({ label, acties, positie, breedte, onPositie, onBreedte 
         <span className="dc-taakbalk-grip">⠿</span> {label}
       </div>
       <div className="dc-taakbalk-acties">
-        {acties.map((a) => (
-          <button
-            key={a.id}
-            className={
-              "dc-taakbalk-knop" + (a.actief ? " is-actief" : "") + (a.icoon ? " is-icoon" : "")
-            }
-            title={a.titel || a.label}
-            onClick={a.onClick}
-          >
-            {a.icoon || a.label}
-          </button>
-        ))}
+        {acties.map((a) =>
+          a.sep ? (
+            <span key={a.id} className="dc-taakbalk-sep" aria-hidden="true" />
+          ) : (
+            <button
+              key={a.id}
+              className={
+                "dc-taakbalk-knop" + (a.actief ? " is-actief" : "") + (a.icoon ? " is-icoon" : "")
+              }
+              title={a.titel || a.label}
+              onClick={a.onClick}
+            >
+              {a.icoon || a.label}
+            </button>
+          )
+        )}
       </div>
     </div>
   );

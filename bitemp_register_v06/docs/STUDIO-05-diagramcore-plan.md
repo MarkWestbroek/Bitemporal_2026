@@ -7,7 +7,12 @@
   smal/hoog, persistent) en geclamped binnen het canvas, menubalk toont
   ✓-checkmarks per taakbalk (generiek `menu:ververs`-mechanisme in de shell),
   en de CEL-editor kent nu de **familie-context** (`GE.veld`-paden +
-  autocomplete via `celContext.js`). "Normaliseer relaties" keert terug in
+  autocomplete via `celContext.js`). Tweede feedbackronde: groep-separators in
+  de uitlijn-balk, taakbalk-breedte gemaximeerd op de inhoud
+  (`max-content`), kader met aparte rand- en achtergrondkleur + subtiele
+  minimap-weergave, vers geplaatste elementen blijven geselecteerd, en de
+  **undo-naar-leeg-bug** gefixt (persist-rehydratie telde als undo-stap;
+  history wordt nu bij mount gewist). "Normaliseer relaties" keert terug in
   fase 3B (ASOC). **Layout-core** —
   uitlijnen/verdelen/snap-grid als pure geometrie in `diagramcore/layout/`
   met core-taakbalk "Uitlijnen" en menu-items; **auto-layout** als eerste

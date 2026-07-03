@@ -184,6 +184,9 @@ function AnkerShape({ selected, children }) {
 function BoundaryShape({ element, selected, children }) {
   const d = element.data || {};
   const rand = selected ? "#2563eb" : d.kleur || "#94a3b8";
+  // Rand- en achtergrondkleur zijn apart instelbaar; zonder achtergrondkleur
+  // een subtiele tint van de randkleur (~8%).
+  const achtergrond = d.achtergrondKleur || (d.kleur ? `${d.kleur}14` : "transparent");
   return (
     <div
       className="dc-node"
@@ -192,7 +195,7 @@ function BoundaryShape({ element, selected, children }) {
         minHeight: 160,
         border: `2px dashed ${rand}`,
         borderRadius: 10,
-        background: d.kleur ? `${d.kleur}14` : "transparent", // ~8% tint
+        background: achtergrond,
         boxShadow: "none",
       }}
     >

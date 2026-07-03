@@ -189,7 +189,8 @@
   position: absolute;
   z-index: 20;
   min-width: 52px;
-  max-width: 100%;
+  /* Niet verder oprekken dan de inhoud op één rij nodig heeft. */
+  max-width: max-content;
   background: var(--s-panel, #ffffff);
   border: 1px solid var(--s-border, #e2e8f0);
   border-radius: 8px;
@@ -237,6 +238,13 @@
   justify-content: center;
   padding: 3px 5px;
   line-height: 0;
+}
+
+.dc-taakbalk-sep {
+  align-self: stretch;
+  width: 1px;
+  margin: 1px 2px;
+  background: var(--s-border, #e2e8f0);
 }
 
 .dc-taakbalk-knop {

@@ -180,7 +180,10 @@ const elementTypes = [
     shape: "boundary",
     achtergrond: true,
     handleStijl: "onzichtbaar",
-    properties: [KLEUR_VELD],
+    properties: [
+      { key: "kleur", label: "rand", datatype: "colour" },
+      { key: "achtergrondKleur", label: "achtergrond", datatype: "colour" },
+    ],
   },
 
   // ── Connector-typen (fase 2: kale edges; ASOC-materialisatie volgt in fase 3) ──

@@ -80,8 +80,12 @@ function Diagram05Provider({ children }) {
   }, []);
 
   // Eerste keer: alleen laden als de (persistente) sandbox nog leeg is.
+  // Daarna altijd de undo-history wissen: de persist-rehydratie telt anders
+  // als eerste undo-stap, waardoor ver terug-undo'en het canvas leegmaakte
+  // (eerst de connectoren, dan alles).
   useEffect(() => {
     if (Object.keys(useDiagram05Store.getState().elements).length === 0) herlaad(false);
+    useDiagram05Store.temporal.getState().clear();
   }, [herlaad]);
 
   // Menubalk-acties via de menuBus.
@@ -266,7 +270,7 @@ const TAAKBALK_DEFAULTS = {
 };
 
 function Diagram05Main() {
-  const { setSelectieId, verbindingsType, setVerbindingsType, plaatsNieuwElement, verbind } =
+  const { selectieId, setSelectieId, verbindingsType, setVerbindingsType, plaatsNieuwElement, verbind } =
     useContext(Ctx);
   const theme = useUIStore((s) => s.theme);
 
@@ -376,16 +380,19 @@ function Diagram05Main() {
   taakbalken.push({
     id: "uitlijnen",
     label: "Uitlijnen",
-    actieLijst: [
-      ...UITLIJN_MODES.map((m) => ({
+    actieLijst: UITLIJN_MODES.flatMap((m, i) => {
+      const knop = {
         id: m.mode,
         label: m.label,
         icoon: UITLIJN_ICONEN[m.mode],
         titel: `${m.titel} (selectie — Ctrl+klik)`,
         onClick: () => layoutApiRef.current?.lijnUit(m.mode),
-      })),
+      };
+      // Groepen: verticaal (3) | horizontaal (3) | ruimtelijk (verdelen+raster)
+      return i === 3 || i === 6 ? [{ id: `sep-${i}`, sep: true }, knop] : [knop];
+    }).concat([
       { id: "snap", label: "▦", icoon: UITLIJN_ICONEN.snap, titel: "Alles op raster", onClick: () => layoutApiRef.current?.snapRaster() },
-    ],
+    ]),
   });
 
   return (
@@ -409,6 +416,7 @@ function Diagram05Main() {
                 viewport={viewports[diagram.id] || null}
                 bewerkbaar
                 verbindingsType={verbindingsType}
+                selectieId={selectieId}
                 onSelectElement={(el) => setSelectieId(el?.id || null)}
                 onNodePositie={(elementId, positie) =>
                   useDiagram05Store.getState().updateNodePosition(diagram.id, elementId, positie)

@@ -59,6 +59,7 @@ function CanvasBinnenkant({
   viewport = null,
   bewerkbaar = false,
   verbindingsType = null,
+  selectieId = null,
   onSelectElement,
   onNodePositie,
   onNodePosities,
@@ -107,9 +108,15 @@ function CanvasBinnenkant({
     // de selectie laten vallen — waardoor de inspector na één edit leegt.
     setNodes((huidige) => {
       const geselecteerd = new Set(huidige.filter((n) => n.selected).map((n) => n.id));
+      // Programmatische selectie (bv. net geplaatst element) ook markeren,
+      // anders "verliest" de inspector het element bij de eerstvolgende rebuild.
+      if (selectieId && !huidige.length) geselecteerd.add(selectieId);
+      if (selectieId && flowNodes.some((n) => n.id === selectieId) && geselecteerd.size === 0) {
+        geselecteerd.add(selectieId);
+      }
       return flowNodes.map((n) => (geselecteerd.has(n.id) ? { ...n, selected: true } : n));
     });
-  }, [diagram, elements, lookups, setNodes, bewerkbaar, onNodeSize]);
+  }, [diagram, elements, lookups, setNodes, bewerkbaar, onNodeSize, selectieId]);
 
   // Edges óók als interne React Flow-state: edge-selectie loopt (net als bij
   // nodes) via changes, en zonder toegepaste changes "plakt" een klik niet —
@@ -291,7 +298,14 @@ function CanvasBinnenkant({
       <MiniMap
         pannable
         zoomable
-        nodeColor={(n) => n.data?.element?.data?.kleur || n.data?.elementType?.kleur || "#e2e8f0"}
+        nodeColor={(n) => {
+          // Achtergrond-elementen (kaders) niet als dekkend blok tonen —
+          // zelfde subtiele tint als op het canvas.
+          if (n.data?.elementType?.achtergrond) {
+            return n.data?.element?.data?.achtergrondKleur || "rgba(148, 163, 184, 0.18)";
+          }
+          return n.data?.element?.data?.kleur || n.data?.elementType?.kleur || "#e2e8f0";
+        }}
       />
     </ReactFlow>
   );
