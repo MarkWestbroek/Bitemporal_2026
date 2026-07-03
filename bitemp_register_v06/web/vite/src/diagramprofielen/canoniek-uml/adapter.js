@@ -18,6 +18,10 @@
 import { CANONIEK_UML_ID } from "./index.js";
 
 /** Type-kolomtekst voor een veld — zelfde opbouw als EntiteitNode. */
+export function veldTypeLabel(v) {
+  return typeLabel(v);
+}
+
 function typeLabel(v) {
   let t = v.enumNaam || v.datatypeNaam || v.type || "";
   if (!v.enumNaam && !v.datatypeNaam && v.format) t += ` «${v.format}»`;
@@ -76,6 +80,10 @@ function naarCoreElement(el) {
       abstract: d.isAbstract === true,
       materieel: d.isMaterieel === true,
       domein: el.domein || d.domein || "",
+      // Verliesvrije terugreis (fase 4): de volledige oude element-data als
+      // bijlage. De terug-adapter gebruikt dit als basis en overschrijft met
+      // wat in 0.5 bewerkt is.
+      bron: d,
     },
   };
 
@@ -286,9 +294,11 @@ export function vanCanoniekModel(state) {
     }
   }
   const bronVoorRel = new Map(); // relId → bron-entiteit-id
+  const bronEdgeVoorRel = new Map(); // relId → structural-edge (voor terugreis)
   for (const e of structuralEdges) {
     if (relIds.has(e.target) && bronElements[e.source]?.type === "entiteit") {
       bronVoorRel.set(e.target, e.source);
+      bronEdgeVoorRel.set(e.target, e);
     }
   }
 
@@ -311,6 +321,7 @@ export function vanCanoniekModel(state) {
         if (d.naamLabelHeen) core.data.naamLabelHeen = d.naamLabelHeen;
         if (d.naamLabelTerug) core.data.naamLabelTerug = d.naamLabelTerug;
         if (d.directioneel) core.data.directioneel = true;
+        core.data.bronEdge = bronEdgeVoorRel.get(el.id)?.data || {};
       }
       // Zonder herleidbare bron/doel blijft het een losse (wees-)box.
     }
@@ -362,7 +373,9 @@ export function vanCanoniekModel(state) {
         sourceHandle: e.sourceHandle || null,
         targetHandle: e.targetHandle || null,
         hidden: e.hidden || false,
-        data: { presentatie: presentatieVoorEdge(e, bronElements) },
+        // `bron` = de ruwe oude edge-data — nodig voor de verliesvrije
+        // terugreis (rolnaam/momentvoorkomen/isGeneralization/…).
+        data: { presentatie: presentatieVoorEdge(e, bronElements), bron: e.data || {} },
       }));
 
     diagrams[id] = {
@@ -375,5 +388,388 @@ export function vanCanoniekModel(state) {
     };
   }
 
-  return { diagramTypeId: CANONIEK_UML_ID, elements, diagrams };
+  return {
+    diagramTypeId: CANONIEK_UML_ID,
+    elements,
+    diagrams,
+    // Meta voor de terugreis (storeNaarV3Model): niet-diagramgebonden info.
+    // compositieEdges: structurele ENT→kind-edges die géén relatie-bron zijn.
+    // Zonder deze kopie zou een compositie waarvan het kind op geen enkel
+    // diagram staat (geen presentatie-edge) verloren gaan in de spiegel.
+    meta: {
+      modelMeta: state?.modelMeta || null,
+      domains: state?.domains || [],
+      domainMeta: state?.domainMeta || {},
+      compositieEdges: structuralEdges
+        .filter((e) => !relIds.has(e.target))
+        .map((e) => ({ id: e.id, source: e.source, target: e.target, data: e.data || {} })),
+    },
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Terug-adapter (fase 4): diagramcore-model → oude storevorm, zodat de
+// bewezen serialisatie (store/adapters.js: storeNaarV3Model) hergebruikt kan
+// worden. Basisprincipe "spiegel + delta": de bij de heenreis bewaarde
+// `data.bron` is de basis; alles wat in 0.5 bewerkt is (naam, velden,
+// kleuren, kardinaliteiten, verbindingen) overschrijft dat.
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** typeLabel → oude type-informatie (basistype/format of enum/datatype/ref). */
+function parseTypeLabel(label, coreElements) {
+  const schoon = (label || "").replace(/\s*\{[^}]*\}\s*$/g, "").trim();
+  if (!schoon) return { type: "string", format: "" };
+  for (const el of Object.values(coreElements || {})) {
+    if (el.naam !== schoon) continue;
+    if (el.elementType === "enumeratie") {
+      return { type: "string", format: "", enumNaam: schoon };
+    }
+    if (el.elementType === "gegevenstype") {
+      const b = el.data?.bron || {};
+      return { type: b.basistype || "string", format: b.format || "", datatypeNaam: schoon };
+    }
+    if (el.elementType === "entiteit" && el.data?.stereotype === "«ref.lijst item»") {
+      return { type: "integer", format: "", refItemNaam: schoon };
+    }
+  }
+  const m = /^([\w.-]+)(?:\s*«(.+)»)?$/.exec(schoon);
+  if (m) return { type: m[1], format: m[2] || "" };
+  return { type: "string", format: "" };
+}
+
+/** Core-veld → oude veldvorm (bron-veld als basis, delta overschrijft). */
+function veldTerug(coreVeld, coreElements, bronVelden) {
+  const d = coreVeld.data || {};
+  const bron = (bronVelden || []).find((v) => v.naam === coreVeld.naam) || {};
+  const veld = { ...bron, naam: coreVeld.naam };
+  veld.verplicht = d.verplicht !== false;
+  veld.afgeleid = d.afgeleid === true;
+  if (d.afleidingsregel !== undefined) {
+    veld.afleidingsregel = d.afleidingsregel;
+    veld.afleidingsregelTaal = bron.afleidingsregelTaal || "cel";
+  }
+  const huidigLabel = bron.naam !== undefined ? veldTypeLabel(bron) : null;
+  const label = (d.typeLabel || "").trim();
+  if ((label && label !== huidigLabel) || bron.naam === undefined) {
+    delete veld.enumNaam;
+    delete veld.datatypeNaam;
+    delete veld.refItemNaam;
+    delete veld.enum;
+    Object.assign(veld, parseTypeLabel(label, coreElements));
+  }
+  return veld;
+}
+
+function afgeleidVeldTerug(coreVeld, bronLijst) {
+  const d = coreVeld.data || {};
+  const bron = (bronLijst || []).find((v) => v.naam === coreVeld.naam) || {};
+  return {
+    ...bron,
+    naam: coreVeld.naam,
+    goType: (d.typeLabel || bron.goType || "string").trim() || "string",
+    afleidingsregelTaal: bron.afleidingsregelTaal || "cel",
+    afleidingsregel: d.afleidingsregel !== undefined ? d.afleidingsregel : bron.afleidingsregel || "",
+  };
+}
+
+function compVelden(el, compartmentType) {
+  return (
+    (el.compartimenten || []).find((c) => c.compartmentType === compartmentType)?.velden || []
+  );
+}
+
+/**
+ * Converteer het diagramcore-model terug naar de oude storevorm
+ * (elements/structuralEdges/diagrams + meta), klaar voor storeNaarV3Model.
+ *
+ * @param {{elements: Record<string, Object>, diagrams: Record<string, Object>, viewports?: Object, meta?: Object}} coreState
+ * @returns {{elements: Object, structuralEdges: Array, diagrams: Object,
+ *   domains: string[], domainMeta: Object, modelMeta: Object|null,
+ *   overgeslagen: string[]}}
+ */
+export function naarCanoniekModel(coreState) {
+  const coreEls = coreState?.elements || {};
+  const elements = {};
+  const structuralEdges = [];
+  const overgeslagen = [];
+  const composities = new Map(); // "src->tgt" → {source, target, data}
+  const generalisaties = []; // {id, source, target, data}
+  const gebruikConnectoren = [];
+
+  // Seed met de bij de heenreis bewaarde structurele compositie-edges
+  // (laagste prioriteit: connector-elementen en ruit-edges overschrijven).
+  for (const e of coreState?.meta?.compositieEdges || []) {
+    composities.set(`${e.source}->${e.target}`, {
+      id: e.id,
+      source: e.source,
+      target: e.target,
+      data: e.data || {},
+    });
+  }
+
+  for (const el of Object.values(coreEls)) {
+    const d = el.data || {};
+    const bron = d.bron || {};
+    const basisVelden = () => compVelden(el, "velden").map((v) => veldTerug(v, coreEls, bron.velden));
+    const basisAfgeleid = () =>
+      compVelden(el, "afgeleid").map((v) => afgeleidVeldTerug(v, bron.afgeleideVelden));
+
+    switch (el.elementType) {
+      case "entiteit":
+        elements[el.id] = {
+          id: el.id,
+          naam: el.naam,
+          type: "entiteit",
+          domein: d.domein || "",
+          data: {
+            ...bron,
+            typenaam: el.naam,
+            kleur: d.kleur ?? bron.kleur,
+            isAbstract: d.abstract === true,
+            isMaterieel: d.materieel === true,
+            velden: basisVelden(),
+            afgeleideVelden: basisAfgeleid(),
+          },
+        };
+        break;
+      case "gegevenselement":
+        elements[el.id] = {
+          id: el.id,
+          naam: el.naam,
+          type: "gegevenselement",
+          domein: d.domein || "",
+          data: {
+            ...bron,
+            klassenaam: el.naam,
+            typenaam: bron.typenaam || el.naam,
+            kleur: d.kleur ?? bron.kleur,
+            isMaterieel: d.materieel === true,
+            velden: basisVelden(),
+            afgeleideVelden: basisAfgeleid(),
+          },
+        };
+        break;
+      case "relatie": {
+        const bronKard = d.bronKardinaliteit ?? bron.bronKardinaliteit;
+        elements[el.id] = {
+          id: el.id,
+          naam: el.naam,
+          type: "relatie",
+          domein: d.domein || "",
+          data: {
+            ...bron,
+            typenaam: el.naam,
+            kleur: d.kleur ?? bron.kleur,
+            isMaterieel: d.materieel === true,
+            doelEntiteit: el.target || bron.doelEntiteit || "",
+            bronKardinaliteit: bronKard,
+            doelKardinaliteit: d.doelKardinaliteit ?? bron.doelKardinaliteit,
+            naamLabelHeen: d.naamLabelHeen ?? bron.naamLabelHeen,
+            naamLabelTerug: d.naamLabelTerug ?? bron.naamLabelTerug,
+            directioneel: d.directioneel ?? bron.directioneel,
+            momentvoorkomen:
+              bronKard === "0..1" || bronKard === "1" ? "enkelvoudig" : "meervoudig",
+            velden: basisVelden(),
+            afgeleideVelden: basisAfgeleid(),
+          },
+        };
+        if (el.source && el.target) {
+          structuralEdges.push({
+            id: `se_${el.id}`,
+            source: el.source,
+            target: el.id,
+            data: { ...(d.bronEdge || {}) },
+          });
+        }
+        break;
+      }
+      case "enumeratie":
+        elements[el.id] = {
+          id: el.id,
+          naam: el.naam,
+          type: "enumeratie",
+          domein: d.domein || "",
+          data: { ...bron, naam: el.naam, waarden: compVelden(el, "waarden").map((v) => v.naam) },
+        };
+        break;
+      case "gegevenstype": {
+        const eigenschap = (naam) =>
+          compVelden(el, "eigenschappen").find((v) => v.naam === naam)?.data?.typeLabel;
+        elements[el.id] = {
+          id: el.id,
+          naam: el.naam,
+          type: "gegevenstype",
+          domein: d.domein || "",
+          data: {
+            ...bron,
+            naam: el.naam,
+            basistype: eigenschap("basistype") || bron.basistype || "string",
+            format: eigenschap("format") ?? bron.format,
+            // Validatie/weergave/normalisatie: bron wint (0.5 toont ze als
+            // platte tekstregels; structureel bewerken is een later punt).
+          },
+        };
+        break;
+      }
+      case "referentielijstInstantie":
+        elements[el.id] = {
+          id: el.id,
+          naam: el.naam,
+          type: "referentielijstInstantie",
+          domein: d.domein || "",
+          data: { ...bron, naam: el.naam, systeemnaam: bron.systeemnaam || el.naam },
+        };
+        break;
+      case "notitie":
+        elements[el.id] = {
+          id: el.id,
+          naam: el.id,
+          type: "notitie",
+          domein: d.domein || "",
+          data: { ...bron, tekst: d.tekst || "", kleur: d.kleur ?? bron.kleur },
+        };
+        break;
+      case "constraint":
+        elements[el.id] = {
+          id: el.id,
+          naam: el.naam,
+          type: "constraint",
+          domein: d.domein || "",
+          data: { ...bron, naam: el.naam, expressie: d.expressie || "", kleur: d.kleur ?? bron.kleur },
+        };
+        break;
+      case "compositie":
+        if (el.source && el.target) {
+          composities.set(`${el.source}->${el.target}`, {
+            source: el.source,
+            target: el.target,
+            data: {},
+          });
+        }
+        break;
+      case "generalisatie":
+        if (el.source && el.target) {
+          generalisaties.push({
+            id: `gen_${el.id}`,
+            source: el.source,
+            target: el.target,
+            data: { isGeneralization: true },
+          });
+        }
+        break;
+      case "gebruik":
+        if (el.source && el.target) gebruikConnectoren.push(el);
+        break;
+      default:
+        // Types zonder oude tegenhanger (bv. boundary/kader) gaan niet mee.
+        overgeslagen.push(el.naam || el.id);
+        break;
+    }
+  }
+
+  // ── Diagrammen: nodes + presentatie-edges terug naar de oude vorm ──
+  const diagrams = {};
+  for (const [id, diag] of Object.entries(coreState?.diagrams || {})) {
+    diagrams[id] = {
+      id,
+      naam: diag.naam || id,
+      nodes: (diag.nodes || [])
+        .filter((n) => elements[n.elementId])
+        .map((n) => ({
+          elementId: n.elementId,
+          position: n.position,
+          ...(n.layoutLocked ? { layoutLocked: true } : {}),
+        })),
+      edges: (diag.edges || []).map((e) => ({
+        id: e.id,
+        source: e.source,
+        target: e.target,
+        type: "metamodel",
+        ...(e.sourceHandle ? { sourceHandle: e.sourceHandle } : {}),
+        ...(e.targetHandle ? { targetHandle: e.targetHandle } : {}),
+        ...(e.hidden ? { hidden: true } : {}),
+        data: e.data?.bron || {},
+      })),
+    };
+    const viewport = coreState?.viewports?.[id] || diag.viewport;
+    if (viewport) diagrams[id].viewport = viewport;
+
+    // Gespiegelde composities/generalisaties uit de presentatie-edges
+    for (const e of diag.edges || []) {
+      const b = e.data?.bron || {};
+      if (e.data?.presentatie?.markerStart === "ruit") {
+        const sleutel = `${e.source}->${e.target}`;
+        const bestaand = composities.get(sleutel);
+        composities.set(sleutel, {
+          id: bestaand?.id,
+          source: e.source,
+          target: e.target,
+          data: { ...(bestaand?.data || {}), ...b },
+        });
+      }
+      if (b.isGeneralization) {
+        generalisaties.push({ id: e.id, source: e.source, target: e.target, data: b });
+      }
+    }
+
+    // «use»-connectoren → dependency-edges op elk diagram met beide uiteinden
+    const opDiagram = new Set((diag.nodes || []).map((n) => n.elementId));
+    for (const conn of gebruikConnectoren) {
+      if (opDiagram.has(conn.source) && opDiagram.has(conn.target)) {
+        diagrams[id].edges.push({
+          id: `use_${conn.id}_${id}`,
+          source: conn.source,
+          target: conn.target,
+          type: "metamodel",
+          data: { isDependency: true },
+        });
+      }
+    }
+  }
+
+  for (const [sleutel, c] of composities) {
+    // Sla composities over waarvan een uiteinde niet (meer) bestaat,
+    // bv. omdat het gegevenselement in 0.5 verwijderd is.
+    if (!elements[c.source] || !elements[c.target]) continue;
+    structuralEdges.push({
+      id: c.id || `se_${sleutel}`,
+      source: c.source,
+      target: c.target,
+      data: c.data || {},
+    });
+  }
+
+  // Generalisaties horen in het "overzicht"-diagram (daar leest
+  // storeNaarV3Model ze); dedupliceer op bron→doel.
+  if (!diagrams.overzicht) {
+    diagrams.overzicht = { id: "overzicht", naam: "Overzicht", nodes: [], edges: [] };
+  }
+  const genBestaand = new Set(
+    diagrams.overzicht.edges
+      .filter((e) => e.data?.isGeneralization)
+      .map((e) => `${e.source}->${e.target}`)
+  );
+  for (const g of generalisaties) {
+    const sleutel = `${g.source}->${g.target}`;
+    if (genBestaand.has(sleutel)) continue;
+    genBestaand.add(sleutel);
+    diagrams.overzicht.edges.push({
+      id: g.id,
+      source: g.source,
+      target: g.target,
+      type: "metamodel",
+      data: g.data,
+    });
+  }
+
+  const meta = coreState?.meta || {};
+  return {
+    elements,
+    structuralEdges,
+    diagrams,
+    domains: meta.domains || [],
+    domainMeta: meta.domainMeta || {},
+    modelMeta: meta.modelMeta || null,
+    overgeslagen,
+  };
 }

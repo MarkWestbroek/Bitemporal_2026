@@ -217,8 +217,17 @@ fase 2 een **bewerkbare sandbox**:
 - **Eigen persistente store** (localStorage `studio05-canoniek-uml`, met
   undo/redo via zundo). Het UML-model wordt alleen ingeladen als de sandbox
   leeg is, of expliciet via **Diagram (0.5) → Herlaad uit UML-model** (met
-  bevestiging bij lokale wijzigingen). Er wordt **nooit** teruggeschreven naar
-  het UML-model — serialisatie is fase 4.
+  bevestiging bij lokale wijzigingen). Er wordt **nooit** ongevraagd
+  teruggeschreven naar het UML-model.
+- **Serialisatie (fase 4A)**: **Diagram (0.5) → Exporteer V3 JSON…** downloadt
+  het sandbox-model als V3-JSON; **Importeer V3 JSON…** laadt een V3-bestand
+  in de sandbox (met bevestiging — vervangt alles). Onder water werkt dit via
+  **spiegel + delta**: de heenreis-adapter bewaart de volledige oude data als
+  `bron`-bijlagen plus model-meta, de terug-adapter (`naarCanoniekModel`)
+  reconstrueert daaruit de oude storevorm en de bestaande
+  `storeNaarV3Model`/`v3ModelNaarStore` doen de rest. Elementen zonder
+  V3-tegenhanger (zoals kaders) worden bij export gemeld en overgeslagen.
+  Round-trip-tests: `diagramprofielen/canoniek-uml/terugreis.test.js`.
 - **Taakbalken** (zwevend, versleepbaar, aan/uit via Diagram (0.5) →
   Taakbalken ▸): **Maken** (één knop per elementtype) en **Verbinding**
   (kies een connector-type; zonder keuze wordt het type automatisch afgeleid
@@ -268,13 +277,15 @@ fase 2 een **bewerkbare sandbox**:
   **Overgeërfde velden** verschijnen in het kind (generalisatie-keten,
   ↑-kopregel, cursief) — weergave-compartiment via de profiel-hook, geen
   modeldata.
-- Nog niet (bekend): clipboard, validatie-hook, domein-overlay, sleepbare
-  edge-labels, licht/donker-tokens per StyleType (plan §8.5b), integrale
-  iconenset voor de Maken-balk (ontwerp-sessie, plan §8.6a), overerving in
-  de gespiegelde weergave (generalisaties uit het oude model zijn daar nog
-  presentatie-edges). Bekend en onopgelost: incidenteel transient leeg
-  canvas (diagramwissel herstelt; repro gezocht). Na deze update een
-  bestaande sandbox eerst verversen via "Herlaad uit UML-model".
+- Nog niet (bekend): opslaan/publiceren via de API (fase 4B), clipboard,
+  validatie-hook, domein-overlay, sleepbare edge-labels, licht/donker-tokens
+  per StyleType (plan §8.5b), integrale iconenset voor de Maken-balk
+  (ontwerp-sessie, plan §8.6a), overerving in de gespiegelde weergave
+  (generalisaties uit het oude model zijn daar nog presentatie-edges).
+  Bekend en onopgelost: incidenteel transient leeg canvas (diagramwissel
+  herstelt; repro gezocht). Na deze update een bestaande sandbox eerst
+  verversen via "Herlaad uit UML-model" — anders missen de `bron`-bijlagen
+  die de export verliesvrij maken.
 
 ## DMN-activiteit: DRD + Tabel met dmn-js
 

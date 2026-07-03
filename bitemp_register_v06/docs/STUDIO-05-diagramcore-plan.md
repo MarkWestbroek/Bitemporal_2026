@@ -2,7 +2,25 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** fase 3B-feedbackronde 3 opgeleverd (2026-07-04): de
+- **Status:** fase 4A opgeleverd (2026-07-03, branch `feat/studio05-fase4`):
+  **serialisatie via spiegel + delta.** De heenreis (`vanCanoniekModel`) is
+  verliesvrij gemaakt: elk element krijgt zijn volledige oude data als
+  `data.bron`-bijlage, REL-connectoren de structurele edge als `data.bronEdge`,
+  presentatie-edges hun ruwe edge-data als `data.bron`, en het model-brede deel
+  (modelMeta, domains, domainMeta én `compositieEdges` — composities waarvan
+  het kind op geen enkel diagram staat zouden anders verdwijnen) reist mee als
+  `meta` (ook in de persist van de sandbox-store). De nieuwe **terug-adapter
+  `naarCanoniekModel`** reconstrueert daaruit de oude storevorm (bron als
+  basis, 0.5-bewerkingen als delta erover), waarna de bewezen
+  `storeNaarV3Model`/`v3ModelNaarStore` uit `store/adapters.js` de V3-JSON
+  doen. Menu *Diagram (0.5)*: **"Exporteer V3 JSON…"** (download; meldt
+  elementen zonder V3-tegenhanger, zoals kaders) en **"Importeer V3 JSON…"**
+  (file-picker, met bevestiging; vervangt de sandbox). Round-trip-tests in
+  `canoniek-uml/terugreis.test.js` (V3-niveau op het demo-model + store-niveau
+  met generalisatie/compositie/kardinaliteiten/afgeleid veld/delta-wint);
+  e2e-geverifieerd incl. behoud van `entiteitSubtype` op refitem-entiteiten.
+  Nog open in fase 4B: opslaan/publiceren via de API en de
+  terugschrijf-flow naar het UML-model. Eerdere stand: fase 3B-feedbackronde 3 opgeleverd (2026-07-04): de
   kortste-weg-handles gelden nu ook **aan de anker-zijden** (ASOC-lijnen lopen
   strak door het anker, geen "haakje"; de link-edge vertrekt onderuit het
   anker naar de gecentreerde box) én voor **gespiegelde presentatie-edges**
