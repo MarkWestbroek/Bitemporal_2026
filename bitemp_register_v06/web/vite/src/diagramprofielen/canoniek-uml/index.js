@@ -85,7 +85,7 @@ const elementTypes = [
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
-      { id: "overerving", label: null, fieldType: "attribuut" },
+      { id: "overerving", label: null, fieldType: "attribuut", alleenWeergave: true },
     ],
     hooks: {
       /**

@@ -79,6 +79,9 @@ test("kale connector (geen velden) → één edge", () => {
   assert.equal(edges.length, 1);
   assert.equal(edges[0].source, "A");
   assert.equal(edges[0].target, "B");
+  // Kortste-weg-handles (B ligt rechts van A)
+  assert.equal(edges[0].sourceHandle, "source-right");
+  assert.equal(edges[0].targetHandle, "target-left");
   assert.equal(extraNodes.length, 0);
 });
 
@@ -110,10 +113,17 @@ test("connector mét velden → ASOC: anker + 3 edges (+ auto-box zonder lidmaat
     edges.map((e) => [e.source, e.target]),
     [["A", ankerId], [ankerId, "B"], [ankerId, "r1"]]
   );
-  // Anker op het middelpunt; box automatisch eronder geplaatst
+  // Anker rond het middelpunt (van de node-middens); box automatisch eronder
   const anker = extraNodes.find((n) => n.soort === "anker");
-  assert.deepEqual(anker.position, { x: 200, y: 0 });
+  assert.deepEqual(anker.position, { x: 293, y: 33 });
   assert.ok(extraNodes.some((n) => n.soort === "box" && n.id === "r1"));
+  // Kortste-weg-handles richting het anker — óók aan de anker-zijde,
+  // zodat de lijn recht door het anker loopt (geen "haakje").
+  assert.equal(edges[0].sourceHandle, "source-right");
+  assert.equal(edges[0].targetHandle, "target-left");
+  assert.equal(edges[1].sourceHandle, "source-right");
+  assert.equal(edges[1].targetHandle, "target-left");
+  assert.equal(edges[2].sourceHandle, "source-bottom"); // link naar de box eronder
   // Labels-hook + directionele pijl
   assert.equal(edges[0].data.presentatie.labels[0].delen[0].tekst, "0..1");
   assert.equal(edges[1].data.presentatie.markerEnd, "pijl-open");

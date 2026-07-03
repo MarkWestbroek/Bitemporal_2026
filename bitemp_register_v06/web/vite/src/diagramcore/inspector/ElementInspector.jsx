@@ -85,6 +85,13 @@ export default function ElementInspector({
 }) {
   const compartimenten = element.compartimenten || [];
 
+  // Weergave-compartimenten uit de profiel-hook (bv. overgeërfde velden):
+  // read-only getoond in de bijbehorende sectie, nooit opgeslagen.
+  const extraCompartimenten =
+    elementType?.hooks?.extraCompartimenten?.(element, {
+      elements: editorContext?.elements || {},
+    }) || [];
+
   /** Vervang de velden van één compartiment (maakt het aan als het ontbreekt). */
   const zetCompartiment = useCallback(
     (compartmentTypeId, velden) => {
@@ -136,9 +143,28 @@ export default function ElementInspector({
         const instantie = compartimenten.find((c) => c.compartmentType === def.id);
         const velden = instantie?.velden || [];
         const fieldType = fieldTypesById?.[def.fieldType];
+        const weergaveVelden = extraCompartimenten
+          .filter((c) => c.compartmentType === def.id)
+          .flatMap((c) => c.velden || []);
         return (
           <div className="dc-inspector-sectie" key={def.id}>
             <div className="dc-inspector-sectie-titel">{def.label || def.id}</div>
+            {/* Weergave-velden: platte viewer-rijen (PropertyTypeViewer-kant),
+                geen editors — dit is afgeleide informatie, geen invoer. */}
+            {weergaveVelden.map((veld, i) => (
+              <div
+                key={`w${i}`}
+                className="dc-inspector-rij"
+                style={{ color: "var(--s-fg-muted, #64748b)", fontSize: 12 }}
+              >
+                <span style={{ flex: 1, fontStyle: veld.data?.cursief ? "italic" : undefined }}>
+                  {veld.naam}
+                </span>
+                {veld.data?.typeLabel ? (
+                  <span style={{ fontSize: 11 }}>{veld.data.typeLabel}</span>
+                ) : null}
+              </div>
+            ))}
             {velden.map((veld, i) => (
               <VeldRij
                 key={i}
@@ -152,7 +178,7 @@ export default function ElementInspector({
                 onVerwijder={() => zetCompartiment(def.id, velden.filter((_, j) => j !== i))}
               />
             ))}
-            {bewerkbaar && (
+            {bewerkbaar && !def.alleenWeergave && (
               <button
                 className="dc-mini-knop"
                 onClick={() =>

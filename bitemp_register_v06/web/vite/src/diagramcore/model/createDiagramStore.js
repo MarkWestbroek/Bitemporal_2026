@@ -265,7 +265,7 @@ export function createDiagramStore({ persistKey } = {}) {
                     ...d.nodes,
                     {
                       elementId: connectorId,
-                      position: { x: ankerPosition.x + 40, y: ankerPosition.y + 90 },
+                      position: { x: ankerPosition.x - 93, y: ankerPosition.y + 90 },
                       ankerPosition,
                     },
                   ],
@@ -295,6 +295,26 @@ export function createDiagramStore({ persistKey } = {}) {
                 const { ankerPosition, ...rest } = n;
                 return rest;
               }),
+            },
+          },
+        };
+      }),
+
+    /**
+     * Wis de expliciete handles van de (geïmporteerde) presentatie-edges van
+     * een diagram, zodat de canvas de kortste weg kiest (normaliseren).
+     */
+    resetEdgeHandles: (diagramId) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d) return state;
+        return {
+          isDirty: true,
+          diagrams: {
+            ...state.diagrams,
+            [diagramId]: {
+              ...d,
+              edges: (d.edges || []).map((e) => ({ ...e, sourceHandle: null, targetHandle: null })),
             },
           },
         };

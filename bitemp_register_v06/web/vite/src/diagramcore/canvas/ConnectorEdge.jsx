@@ -16,6 +16,7 @@
  *   labels: [ { zijde: "bron"|"doel"|"midden", offset?: {x,y},
  *               delen: [ { tekst, soort: "rolnaam"|"kardinaliteit"|"constraint"|"naam", kleur? } ] } ]
  */
+import { useLayoutEffect, useRef, useState } from "react";
 import { getBezierPath, EdgeLabelRenderer, BaseEdge } from "@xyflow/react";
 
 const DASHES = {
@@ -53,9 +54,42 @@ function ConnectorEdge({
   });
 
   const kleur = selected && !p.vasteKleur ? "#2563eb" : p.kleur || "#64748b";
-  const ruitId = `dc-ruit-${id}`;
   const pijlId = `dc-pijl-${id}`;
   const driehoekId = `dc-driehoek-${id}`;
+
+  // Compositie-ruit (◆): de hoekpunten liggen óp het pad zelf (punt-op-
+  // lengte 0, ½L en L, dwarsas loodrecht op de raaklijn in het midden),
+  // zodat de ruit met de kromming van de curve meebuigt — onder elke hoek.
+  const heeftRuit = p.markerStart === "ruit";
+  const meetRef = useRef(null);
+  const [ruitPunten, setRuitPunten] = useState(null);
+  useLayoutEffect(() => {
+    if (!heeftRuit) return;
+    const pad = meetRef.current;
+    if (!pad) return;
+    try {
+      const totaal = pad.getTotalLength();
+      const L = Math.min(RUIT_LENGTE, Math.max(8, totaal - 2));
+      const p0 = pad.getPointAtLength(0);
+      const pm = pad.getPointAtLength(L / 2);
+      const p1 = pad.getPointAtLength(L);
+      // Normaal op de raaklijn in het midden van de ruit
+      const ta = pad.getPointAtLength(Math.max(L / 2 - 1, 0));
+      const tb = pad.getPointAtLength(Math.min(L / 2 + 1, totaal));
+      let nx = -(tb.y - ta.y);
+      let ny = tb.x - ta.x;
+      const nl = Math.hypot(nx, ny) || 1;
+      nx = (nx / nl) * (RUIT_BREEDTE / 2);
+      ny = (ny / nl) * (RUIT_BREEDTE / 2);
+      setRuitPunten(
+        `${p0.x},${p0.y} ${pm.x + nx},${pm.y + ny} ${p1.x},${p1.y} ${pm.x - nx},${pm.y - ny}`
+      );
+    } catch {
+      setRuitPunten(null);
+    }
+  }, [heeftRuit, edgePath]);
+  // Fallback (eerste render, vóór de meting): richting van de handle-zijde.
+  const fallbackHoek = { right: 0, left: 180, top: -90, bottom: 90 }[sourcePosition] ?? 0;
 
   // Labelposities: 70% richting doel resp. bron (zelfde heuristiek als de
   // umleditor-edge, voor visuele pariteit).
@@ -68,11 +102,6 @@ function ConnectorEdge({
   return (
     <>
       <defs>
-        {p.markerStart === "ruit" && (
-          <marker id={ruitId} markerWidth="22" markerHeight="16" refX="2" refY="8" orient="auto" markerUnits="userSpaceOnUse">
-            <polygon points="2,8 11,3 20,8 11,13" fill={kleur} stroke={kleur} strokeWidth="1" />
-          </marker>
-        )}
         {p.markerEnd === "pijl-open" && (
           <marker id={pijlId} markerWidth="12" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
             <path d="M 1 2 L 9 5 L 1 8" fill="none" stroke={kleur} strokeWidth="1.0" strokeLinecap="round" strokeLinejoin="round" />
@@ -88,7 +117,6 @@ function ConnectorEdge({
       <BaseEdge
         id={id}
         path={edgePath}
-        markerStart={p.markerStart === "ruit" ? `url(#${ruitId})` : undefined}
         markerEnd={
           p.markerEnd === "pijl-open" ? `url(#${pijlId})`
           : p.markerEnd === "driehoek" ? `url(#${driehoekId})`
@@ -101,6 +129,25 @@ function ConnectorEdge({
           opacity: p.opacity,
         }}
       />
+
+      {heeftRuit && (
+        <>
+          {/* Onzichtbaar meetpad voor de curve-geometrie */}
+          <path ref={meetRef} d={edgePath} fill="none" stroke="none" style={{ pointerEvents: "none" }} />
+          {ruitPunten ? (
+            <polygon points={ruitPunten} fill={kleur} stroke={kleur} strokeWidth="1" strokeLinejoin="round" />
+          ) : (
+            <g transform={`translate(${sourceX} ${sourceY}) rotate(${fallbackHoek})`}>
+              <polygon
+                points={`0,0 ${RUIT_LENGTE / 2},${-RUIT_BREEDTE / 2} ${RUIT_LENGTE},0 ${RUIT_LENGTE / 2},${RUIT_BREEDTE / 2}`}
+                fill={kleur}
+                stroke={kleur}
+                strokeWidth="1"
+              />
+            </g>
+          )}
+        </>
+      )}
 
       {(p.labels || []).map((label, i) => {
         const basis = posities[label.zijde] || posities.midden;
@@ -129,5 +176,9 @@ function ConnectorEdge({
     </>
   );
 }
+
+/** Ruit-maat: lange as langs de lijn, dunne as dwars erop. */
+const RUIT_LENGTE = 22;
+const RUIT_BREEDTE = 16;
 
 export default ConnectorEdge;

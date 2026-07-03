@@ -258,11 +258,13 @@ fase 2 een **bewerkbare sandbox**:
   Taakbalken-menu toont ✓ voor zichtbare balken. De CEL-editor kent de
   **familie-context**: velden van de eigen en gerelateerde GE's
   (`Naam.roepnaam`) met autocomplete.
-- **Rechtsklik** op de canvas opent een contextmenu (uitlijnen — grijs bij
-  <2 geselecteerd —, auto-layout, normaliseer relaties, snap). **Dubbelklik**
-  op een connector-edge normaliseert die connector (anker terug naar het
-  middelpunt); "Normaliseer relaties" in menu/contextmenu doet dat voor
-  alle. Nieuwe elementen landen in het zichtbare viewport-midden.
+- **Rechtsklik** op canvas, nodes én edges opent een contextmenu (uitlijnen
+  — grijs bij <2 geselecteerd —, auto-layout, normaliseer relaties, snap).
+  **Normaliseren = kortste weg**: expliciete handles en de anker-positie
+  worden gewist, waarna de materialisatie automatisch de beste zijden en
+  het middelpunt kiest. Te bereiken via menu, contextmenu, de ↔-knop in de
+  Uitlijnen-balk, of dubbelklik op een connector-edge (alleen die ene).
+  Nieuwe elementen landen in het zichtbare viewport-midden.
   **Overgeërfde velden** verschijnen in het kind (generalisatie-keten,
   ↑-kopregel, cursief) — weergave-compartiment via de profiel-hook, geen
   modeldata.

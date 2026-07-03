@@ -2,7 +2,23 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** fase 3B-feedbackronde opgeleverd (2026-07-04):
+- **Status:** fase 3B-feedbackronde 3 opgeleverd (2026-07-04): de
+  kortste-weg-handles gelden nu ook **aan de anker-zijden** (ASOC-lijnen lopen
+  strak door het anker, geen "haakje"; de link-edge vertrekt onderuit het
+  anker naar de gecentreerde box) én voor **gespiegelde presentatie-edges**
+  zonder handles — "Normaliseer relaties (alles)" wist daarom ook de handles
+  van gespiegelde composities e.d. Lijntypen (recht/hoekig/boom) als
+  connector-ShapeType genoteerd als §8.5c. Dev-hulp: `window.__diagram05Store`
+  (alleen dev) voor e2e-tests en debugging. Eerdere ronde (2026-07-04):
+  **normaliseren = kortste weg** — de materialisatie kiest automatisch de
+  beste handle-zijden (op basis van relatieve posities) zodra een connector
+  geen expliciete handles heeft; "Normaliseer relaties" (menu, contextmenu,
+  ↔-knop in de Uitlijnen-balk, dubbelklik op een edge) wist de handles + de
+  anker-positie en dwingt dat af. Rechtsklik werkt nu ook **op edges**
+  (eigen contextmenu i.p.v. het browser-menu), en de **overgeërfde velden**
+  staan ook in de inspector — als platte viewer-rijen (PropertyTypeViewer-
+  kant, geen editors; `alleenWeergave` op het compartiment onderdrukt
+  "+ veld"). Eerdere ronde (2026-07-04):
   **rechtsklik-contextmenu** op de canvas (uitlijnen met disabled-status,
   auto-layout, normaliseer, snap — core-raamwerk, acties uit de activiteit),
   **"Normaliseer relaties"** terug als menu-/contextmenu-actie én dubbelklik
@@ -674,6 +690,12 @@ met `npm run build` + visuele check, en levert iets werkends op.
    **notities en constraints zijn eigen ElementTypes** met dientengevolge hun
    eigen ShapeType (`note`, `rounded`); ShapeType is uitsluitend vorm, alles met
    betekenis is een ElementType.
+5c. **Lijntypen als ShapeType van connectoren.** De edge-vorm (nu hardcoded
+   bezier in `ConnectorEdge`) hoort — net als bij nodes — uit een ShapeType te
+   komen: een connector is immers ook een element. Gewenste varianten: kromme
+   (bezier), recht, hoekig (orthogonaal/step), boom. Per connector(-type)
+   instelbaar, later via het rechtsklik-contextmenu op de edge. Sluit aan op
+   §8.5b (thema-tokens) en het bestaande `edgePresentatie`-veld.
 6a. **Integrale iconenset (ontwerp-sessie).** De "Maken"-taakbalk gebruikt nu
    tekstknoppen (ENT/GE/…); de uitlijn-balk heeft al SVG-iconen. Wens: één
    integrale iconenset per ElementType, hergebruikt in de Maken-balk, de

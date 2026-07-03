@@ -49,6 +49,11 @@ registreerCanoniekUmlImplementaties();
 /** Bewerkbare sandbox-store, persistent per profiel. */
 const useDiagram05Store = createDiagramStore({ persistKey: "studio05-canoniek-uml" });
 
+// Dev-only: store op window voor e2e-tests en debugging (vgl. __useModelStore).
+if (typeof window !== "undefined" && import.meta.env && import.meta.env.DEV) {
+  window.__diagram05Store = useDiagram05Store;
+}
+
 const fieldTypesById = Object.fromEntries(
   (canoniekUmlDiagramType.fieldTypes || []).map((ft) => [ft.id, ft])
 );
@@ -307,9 +312,23 @@ function Diagram05Main() {
         );
         if (strategie) layoutApiRef.current?.voerLayoutUit(strategie, !!selectie);
       }),
-      menuBus.on("d05:normaliseer", () => {
+      menuBus.on("d05:normaliseer", (connectorIds = null) => {
+        // Normaliseren = kortste weg: wis expliciete handles op de
+        // connector(en) én de anker-positie(s); de materialisatie kiest dan
+        // automatisch de beste zijden en het middelpunt.
         const s = useDiagram05Store.getState();
-        if (s.actiefDiagramId) s.resetAnkerPositions(s.actiefDiagramId, null);
+        if (!s.actiefDiagramId) return;
+        const doelwit =
+          connectorIds ||
+          Object.values(s.elements)
+            .filter((el) => el.source && el.target && elementTypesById[el.elementType]?.isConnector)
+            .map((el) => el.id);
+        for (const id of doelwit) {
+          s.updateElement(id, { data: { sourceHandle: null, targetHandle: null } });
+        }
+        s.resetAnkerPositions(s.actiefDiagramId, connectorIds);
+        // Bij "alles": ook de gespiegelde presentatie-edges (composities e.d.)
+        if (!connectorIds) s.resetEdgeHandles(s.actiefDiagramId);
       }),
     ];
     return () => af.forEach((off) => off());
@@ -414,6 +433,8 @@ function Diagram05Main() {
       return i === 3 || i === 6 ? [{ id: `sep-${i}`, sep: true }, knop] : [knop];
     }).concat([
       { id: "snap", label: "▦", icoon: UITLIJN_ICONEN.snap, titel: "Alles op raster", onClick: () => layoutApiRef.current?.snapRaster() },
+      { id: "sep-norm", sep: true },
+      { id: "normaliseer", label: "↔", titel: "Normaliseer relaties (kortste weg)", onClick: () => menuBus.emit("d05:normaliseer") },
     ]),
   });
 
@@ -489,9 +510,7 @@ function Diagram05Main() {
                 onVerwijderConnectoren={(connectorIds) =>
                   connectorIds.forEach((id) => useDiagram05Store.getState().deleteElement(id))
                 }
-                onNormaliseer={(connectorIds) =>
-                  useDiagram05Store.getState().resetAnkerPositions(diagram.id, connectorIds)
-                }
+                onNormaliseer={(connectorIds) => menuBus.emit("d05:normaliseer", connectorIds)}
                 bouwContextMenu={bouwContextMenu}
                 onViewport={(vp) =>
                   useDiagram05Store.getState().updateDiagramViewport(diagram.id, vp)

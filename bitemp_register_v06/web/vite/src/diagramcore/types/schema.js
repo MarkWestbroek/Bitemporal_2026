@@ -69,6 +69,8 @@
  * @property {string} id
  * @property {string|null} [label]  - null → geen kopregel
  * @property {string} fieldType     - id van het FieldType voor de regels
+ * @property {boolean} [alleenWeergave] - true → gevuld door een hook
+ *   (extraCompartimenten), niet handmatig bewerkbaar in de inspector
  */
 
 /**

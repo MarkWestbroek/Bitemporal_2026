@@ -54,6 +54,25 @@ function heeftVelden(connector) {
   return (connector.compartimenten || []).some((c) => (c.velden || []).length > 0);
 }
 
+/** Geschat middelpunt van een node (posities zijn linksboven; maat geschat). */
+function midden(ref) {
+  const w = ref?.size?.width ?? 200;
+  const h = ref?.size?.height ?? 80;
+  return { x: ref.position.x + w / 2, y: ref.position.y + h / 2 };
+}
+
+/**
+ * Kortste-weg-handlekeuze: de zijde van `van` die naar `naar` wijst.
+ * Gebruikt wanneer een connector geen expliciete handles heeft — en dat is
+ * precies wat "normaliseer relaties" afdwingt door de handles te wissen.
+ */
+export function besteZijde(van, naar) {
+  const dx = naar.x - van.x;
+  const dy = naar.y - van.y;
+  if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? "right" : "left";
+  return dy >= 0 ? "bottom" : "top";
+}
+
 /**
  * @param {Record<string, Object>} elements
  * @param {Object} diagram
@@ -68,15 +87,15 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
   const edges = [];
   const extraNodes = [];
 
-  const positieVan = (id) => nodeRefs.get(id)?.position || null;
-
   for (const el of Object.values(elements || {})) {
     const et = elementTypesById[el.elementType];
     if (!et?.isConnector || !el.source || !el.target) continue;
 
-    const bronPos = positieVan(el.source);
-    const doelPos = positieVan(el.target);
-    if (!bronPos || !doelPos) continue; // beide uiteinden moeten op het diagram staan
+    const bronRef = nodeRefs.get(el.source);
+    const doelRef = nodeRefs.get(el.target);
+    if (!bronRef || !doelRef) continue; // beide uiteinden moeten op het diagram staan
+    const bronMid = midden(bronRef);
+    const doelMid = midden(doelRef);
 
     const labels = et.hooks?.edgeLabels?.(el) || {};
     const basisPresentatie = { ...(et.edgePresentatie || {}) };
@@ -91,8 +110,9 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
         id: `conn:${el.id}`,
         source: el.source,
         target: el.target,
-        sourceHandle: el.data?.sourceHandle || null,
-        targetHandle: el.data?.targetHandle || null,
+        // Expliciete handles winnen; anders de kortste weg.
+        sourceHandle: el.data?.sourceHandle || `source-${besteZijde(bronMid, doelMid)}`,
+        targetHandle: el.data?.targetHandle || `target-${besteZijde(doelMid, bronMid)}`,
         data: { connectorId: el.id, presentatie: { ...basisPresentatie, labels: kaalLabels } },
       });
       continue;
@@ -100,11 +120,10 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
 
     // ── Gematerialiseerde gedaante: anker + box + 3 edges ──────────────────
     const connRef = nodeRefs.get(el.id);
-    const midden = {
-      x: (bronPos.x + doelPos.x) / 2,
-      y: (bronPos.y + doelPos.y) / 2,
+    const ankerPos = connRef?.ankerPosition || {
+      x: (bronMid.x + doelMid.x) / 2 - 7,
+      y: (bronMid.y + doelMid.y) / 2 - 7,
     };
-    const ankerPos = connRef?.ankerPosition || midden;
     const ankerId = `${ANKER_PREFIX}${el.id}`;
 
     extraNodes.push({
@@ -114,21 +133,22 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
       soort: "anker",
     });
     if (!connRef) {
-      // Box nog niet op het diagram geplaatst → default onder het anker.
+      // Box nog niet op het diagram geplaatst → gecentreerd onder het anker.
       extraNodes.push({
         id: el.id,
-        position: { x: ankerPos.x + 40, y: ankerPos.y + 90 },
+        position: { x: ankerPos.x - 93, y: ankerPos.y + 90 },
         connectorId: el.id,
         soort: "box",
       });
     }
 
+    const ankerMid = { x: ankerPos.x + 7, y: ankerPos.y + 7 };
     edges.push({
       id: `conn:${el.id}:bron`,
       source: el.source,
       target: ankerId,
-      sourceHandle: el.data?.sourceHandle || null,
-      targetHandle: null,
+      sourceHandle: el.data?.sourceHandle || `source-${besteZijde(bronMid, ankerMid)}`,
+      targetHandle: `target-${besteZijde(ankerMid, bronMid)}`,
       data: {
         connectorId: el.id,
         presentatie: { lijn: "solid", kleur: basisPresentatie.kleur || "#64748b", labels: labels.bron || [] },
@@ -138,8 +158,8 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
       id: `conn:${el.id}:doel`,
       source: ankerId,
       target: el.target,
-      sourceHandle: null,
-      targetHandle: el.data?.targetHandle || null,
+      sourceHandle: `source-${besteZijde(ankerMid, doelMid)}`,
+      targetHandle: el.data?.targetHandle || `target-${besteZijde(doelMid, ankerMid)}`,
       data: {
         connectorId: el.id,
         presentatie: {
@@ -150,12 +170,14 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
         },
       },
     });
+    const boxRef = connRef || extraNodes.find((n) => n.soort === "box" && n.id === el.id);
+    const boxMid = boxRef ? midden({ position: boxRef.position, size: boxRef.size }) : ankerMid;
     edges.push({
       id: `conn:${el.id}:link`,
       source: ankerId,
       target: el.id,
-      sourceHandle: null,
-      targetHandle: null,
+      sourceHandle: `source-${besteZijde(ankerMid, boxMid)}`,
+      targetHandle: `target-${besteZijde(boxMid, ankerMid)}`,
       data: {
         connectorId: el.id,
         presentatie: { lijn: "dash-4-3", kleur: "#94a3b8", labels: [] },

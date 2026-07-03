@@ -34,7 +34,7 @@ import "../styles/diagramcore.css";
 import "../shapes/basisShapes.jsx"; // registreert de standaard-shapes
 import ElementNode from "./ElementNode.jsx";
 import ConnectorEdge from "./ConnectorEdge.jsx";
-import { materialiseerConnectoren, vindConnectorType, ANKER_PREFIX } from "./materialiseerConnectoren.js";
+import { materialiseerConnectoren, vindConnectorType, besteZijde, ANKER_PREFIX } from "./materialiseerConnectoren.js";
 
 /** Intern core-ElementType voor de synthetische anker-nodes (ASOC-patroon). */
 const ANKER_ELEMENT_TYPE = {
@@ -212,12 +212,36 @@ function CanvasBinnenkant({
   // waardoor Delete op een connector nooit kon werken.
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   useEffect(() => {
-    const geimporteerd = (diagram?.edges || []).map((e) => ({
-      ...e,
-      type: "connector",
-      hidden: e.hidden || false,
-      selectable: false, // geïmporteerde presentatie-edges zijn geen elementen
-    }));
+    // Kortste-weg-handles voor presentatie-edges zonder expliciete handles
+    // (na "normaliseer relaties" zijn ze gewist).
+    const refs = new Map((diagram?.nodes || []).map((n) => [n.elementId, n]));
+    const mid = (id) => {
+      const r = refs.get(id);
+      if (!r) return null;
+      return {
+        x: r.position.x + (r.size?.width ?? 200) / 2,
+        y: r.position.y + (r.size?.height ?? 80) / 2,
+      };
+    };
+    const geimporteerd = (diagram?.edges || []).map((e) => {
+      let { sourceHandle, targetHandle } = e;
+      if (!sourceHandle || !targetHandle) {
+        const b = mid(e.source);
+        const d = mid(e.target);
+        if (b && d) {
+          sourceHandle = sourceHandle || `source-${besteZijde(b, d)}`;
+          targetHandle = targetHandle || `target-${besteZijde(d, b)}`;
+        }
+      }
+      return {
+        ...e,
+        sourceHandle,
+        targetHandle,
+        type: "connector",
+        hidden: e.hidden || false,
+        selectable: false, // geïmporteerde presentatie-edges zijn geen elementen
+      };
+    });
     // Gematerialiseerde connectoren zijn wél selecteerbaar (en dus met Delete
     // te wissen) zodra de canvas bewerkbaar is.
     const connectorEdges = gematerialiseerd.edges.map((e) => ({
@@ -418,6 +442,7 @@ function CanvasBinnenkant({
       onEdgeDoubleClick={handleEdgeDoubleClick}
       onPaneContextMenu={openContextMenu}
       onNodeContextMenu={openContextMenu}
+      onEdgeContextMenu={openContextMenu}
       onSelectionContextMenu={openContextMenu}
       onPaneClick={() => setContextMenu(null)}
       onMoveEnd={handleMoveEnd}
