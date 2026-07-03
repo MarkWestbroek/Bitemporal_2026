@@ -195,7 +195,7 @@ te wijzigen.
 | Groep        | Functie            | Status   | Hergebruikt                        |
 |--------------|--------------------|----------|------------------------------------|
 | modelleren   | UML-model          | actief   | `IdePage` (FlexLayout, fullMain)   |
-| modelleren   | Diagrammen (0.5)   | preview  | `diagramcore` + `diagramprofielen/canoniek-uml` (read-only spiegel) |
+| modelleren   | Diagrammen (0.5)   | preview  | `diagramcore` + `diagramprofielen/canoniek-uml` (bewerkbare sandbox) |
 | modelleren   | DMN-tabellen       | actief   | `dmn/DmnTableEditor` + ModelPicker |
 | modelleren   | BPMN-processen     | actief   | `bpmn/BpmnEditor` + ModelPicker    |
 | modelleren   | Berichtdefinities  | actief   | `bericht/BerichttypeEditor`        |
@@ -206,25 +206,44 @@ te wijzigen.
 
 DMN-modellering komt later bij de UML-activiteit (zelfde IDE), zoals gewenst.
 
-### Diagrammen (0.5) — preview van de generieke diagram-motor
+### Diagrammen (0.5) — de generieke diagram-motor (bewerkbare sandbox)
 
-> Toegevoegd: 2026-07-03 (fase 1 van [`STUDIO-05-diagramcore-plan.md`](STUDIO-05-diagramcore-plan.md)).
+> Toegevoegd: 2026-07-03 (fase 1+2 van [`STUDIO-05-diagramcore-plan.md`](STUDIO-05-diagramcore-plan.md)).
 
-De activiteit **Diagrammen (0.5)** toont het bestaande UML-model **read-only**
-via de nieuwe generieke motor (`src/diagramcore/` + profiel
-`src/diagramprofielen/canoniek-uml/`). Doel: side-by-side pariteit kunnen
-vergelijken met de UML-activiteit. Werking:
+De activiteit **Diagrammen (0.5)** draait op de nieuwe generieke motor
+(`src/diagramcore/` + profiel `src/diagramprofielen/canoniek-uml/`) en is sinds
+fase 2 een **bewerkbare sandbox**:
 
-- Bij activeren (en via menu **Diagram (0.5) → Herlaad uit UML-model** of de
-  ⟳-knop in de sidebar) leest de adapter de actuele `useModelStore`-state en
-  spiegelt die naar een eigen, niet-persistente store — er wordt nooit
-  teruggeschreven.
-- Sidebar: diagrammenlijst; Main: generieke canvas (één `ElementNode`, shapes
-  uit de shape-registry, declaratieve `ConnectorEdge`); Inspector: geselecteerd
-  element (read-only).
-- Bekende fase-1-verschillen: geen overgeërfde-velden-compartiment, geen
-  domein-overlay, edge-labels niet sleepbaar (bestaande offsets worden wel
-  gerespecteerd), nodes niet versleepbaar.
+- **Eigen persistente store** (localStorage `studio05-canoniek-uml`, met
+  undo/redo via zundo). Het UML-model wordt alleen ingeladen als de sandbox
+  leeg is, of expliciet via **Diagram (0.5) → Herlaad uit UML-model** (met
+  bevestiging bij lokale wijzigingen). Er wordt **nooit** teruggeschreven naar
+  het UML-model — serialisatie is fase 4.
+- **Taakbalken** (zwevend, versleepbaar, aan/uit via Diagram (0.5) →
+  Taakbalken ▸): **Maken** (één knop per elementtype) en **Verbinding**
+  (kies een connector-type; zonder keuze wordt het type automatisch afgeleid
+  uit de verbindingsregels van het DiagramType). Ongeldige verbindingen worden
+  op de canvas geweigerd.
+- **Connectoren zijn elementen** met source/target (metamodel); de motor
+  materialiseert ze als kale edges (compositie ◆, generalisatie ▷, «use»).
+  Het ASOC-patroon (connector mét velden → node) volgt in fase 3.
+- **Gegenereerde inspector**: het eigenschappen-paneel wordt opgebouwd uit
+  `FieldType.editor`-regels van het profiel — naam, element-datavelden
+  (notitietekst, constraint-expressie) en compartiment-velden met
+  toevoegen/verwijderen.
+- Multi-diagram: aanmaken (＋), hernoemen (✎) en verwijderen (×) in de sidebar;
+  sneltoetsen Ctrl+Z/Ctrl+Y (undo/redo) en Delete (element van diagram,
+  connector uit het model). Elementen zijn resizebaar (grootte wordt per
+  diagram onthouden); de inspector heeft een colorpicker en een
+  type-keuzelijst die via de **VerwijzingsBronnen** van het profiel gevuld
+  wordt (plan §4.5b): basistypen, gegevenstypen ✦, enumeraties ◇ en
+  ref.lijstitems ▣ uit het model, gegroepeerd per soort. Dezelfde bronnen
+  voeden later de minibrowser (zoeken + per package browsen). Pan/zoom en het actieve diagram vallen buiten de undo-history.
+- Nog niet (bekend): clipboard, checkmarks in het taakbalken-menu,
+  CEL-expressie-editor in de inspector, overgeërfde-velden-compartiment,
+  domein-overlay, sleepbare edge-labels, verbinden naar een REL (fase 3,
+  ASOC), layout-taakbalk (fase 3), licht/donker-tokens per StyleType
+  (plan §8.5b).
 
 ## DMN-activiteit: DRD + Tabel met dmn-js
 

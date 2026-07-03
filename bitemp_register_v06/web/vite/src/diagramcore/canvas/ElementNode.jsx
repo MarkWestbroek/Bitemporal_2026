@@ -13,7 +13,7 @@
  *   - fieldTypesById / compartmentTypesById — opgeloste lookups uit het DiagramType
  */
 import { memo } from "react";
-import { Handle, Position } from "@xyflow/react";
+import { Handle, NodeResizer, Position } from "@xyflow/react";
 import { getShape } from "../shapes/shapeRegistry.js";
 
 const ONZICHTBAAR = {
@@ -43,12 +43,14 @@ function StandaardHandles({ stijl }) {
   );
 }
 
-function ElementNode({ data, selected }) {
-  const { element, elementType, fieldTypesById, compartmentTypesById } = data;
+function ElementNode({ id, data, selected }) {
+  const { element, elementType, bewerkbaar, onResize, fieldTypesById, compartmentTypesById } = data;
   if (!element || !elementType) return null;
 
   const Shape = getShape(elementType.shape) || getShape("class-box");
   if (!Shape) return null;
+
+  const magResizen = bewerkbaar && elementType.resizebaar !== false;
 
   return (
     <Shape
@@ -58,6 +60,18 @@ function ElementNode({ data, selected }) {
       fieldTypesById={fieldTypesById}
       compartmentTypesById={compartmentTypesById}
     >
+      {magResizen && (
+        <NodeResizer
+          minWidth={120}
+          minHeight={48}
+          isVisible={!!selected}
+          lineStyle={{ borderColor: "#2563eb" }}
+          handleStyle={{ width: 10, height: 10, borderRadius: 3, borderColor: "#2563eb", background: "#ffffff" }}
+          onResizeEnd={(_ev, params) =>
+            onResize?.(id, { width: Math.round(params.width), height: Math.round(params.height) })
+          }
+        />
+      )}
       <StandaardHandles stijl={elementType.handleStijl} />
     </Shape>
   );

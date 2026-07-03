@@ -40,9 +40,11 @@
  *
  * @typedef {Object} EditorRegel
  * @property {string} key
- * @property {"text"|"textarea"|"select"|"checkbox"|"number"} widget
+ * @property {"text"|"textarea"|"select"|"checkbox"|"number"|"kleur"} widget
  * @property {boolean} [verplicht]
- * @property {any}     [opties]    - statisch; dynamische opties via een hook
+ * @property {string[]|string} [opties] - array = statisch; string = sleutel in de
+ *   `widgetContext` die de activiteit aan de inspector meegeeft (dynamisch,
+ *   bv. "veldtypen" → basistypen + gegevenstypen + enums + ref.lijstitems)
  */
 
 /**
@@ -82,12 +84,42 @@
  * @property {string} [stereotype]          - headerregel, bv. "«entiteit»"
  * @property {string} [kleur]               - default; instantie kan overriden
  * @property {"standaard"|"onzichtbaar"} [handleStijl] - aansluitpunten tonen of niet
+ * @property {boolean} [resizebaar]         - default true; false → geen NodeResizer
+ * @property {string} [kort]                - korte knop-tekst voor de "Maken"-taakbalk (bv. "ENT")
  * @property {boolean} [isConnector]
  * @property {ConnectorEindpunt} [bron]     - verplicht als isConnector
  * @property {ConnectorEindpunt} [doel]     - verplicht als isConnector
+ * @property {Object} [edgePresentatie]     - declaratieve edge-vorm voor kale
+ *   connectoren: { lijn, kleur, markerStart, markerEnd, labels } (zie ConnectorEdge)
+ * @property {Array<{key: string, label?: string, widget: string}>} [dataVelden]
+ *   - element-data-velden voor de gegenereerde inspector (bv. tekst, expressie)
  * @property {CompartmentType[]} [compartments] - max 9, {ordered}
  * @property {Object} [hooks]               - Implementatie-domein: valideer,
  *   extraSecties, materialiseerAlsNode, … (functies; NIET serialiseren)
+ */
+
+/**
+ * VerwijzingsKandidaat — één keuzemogelijkheid uit een VerwijzingsBron.
+ *
+ * @typedef {Object} VerwijzingsKandidaat
+ * @property {string} waarde   - wat er in het veld/de data terechtkomt
+ * @property {string} label
+ * @property {string} [icoon]  - soort-aanduiding, bv. "✦" | "◇" | "▣"
+ * @property {string} [groep]  - groepskop in de keuzelijst (optgroup)
+ * @property {string[]} [pad]  - boom-pad voor de minibrowser (bv. [domein])
+ */
+
+/**
+ * VerwijzingsBron — Implementatie-domein (plan §4.5b): levert kandidaten voor
+ * keuze-widgets die naar iets anders verwijzen (attribuuttype, $ref, typeRef).
+ * Eén bron per soort kandidaat; een profiel registreert er zoveel als nodig.
+ * De pluriformiteit zit in de verwijzing, niet in het FieldType.
+ *
+ * @typedef {Object} VerwijzingsBron
+ * @property {string} id       - bv. "gegevenstype", "enumeratie", "oas-schema"
+ * @property {string} label
+ * @property {string} [icoon]
+ * @property {(ctx: {elements: Record<string, Object>, element?: Object, veld?: Object}) => VerwijzingsKandidaat[]} kandidaten
  */
 
 /**
@@ -110,6 +142,7 @@
  * @property {string} style                 - StyleType-id (Implementatie-domein)
  * @property {ElementType[]} elementTypes
  * @property {FieldType[]} [fieldTypes]     - de veldtypen waar CompartmentTypes naar verwijzen
+ * @property {VerwijzingsBron[]} [verwijzingsBronnen] - kandidaat-leveranciers voor keuze-widgets (§4.5b)
  * @property {TaskbarType[]} [taakbalken]
  * @property {LayoutStrategie[]} [layouts]
  * @property {{exporteer?: Function, importeer?: Function}} [serialisatie]

@@ -2,11 +2,21 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** fase 1 opgeleverd (2026-07-03): activiteit **"Diagrammen (0.5)"**
-  (preview) rendert het bestaande model read-only via de generieke motor —
-  generieke `ElementNode`/`ConnectorEdge`/shapes + canoniek-uml-profiel met
-  adapter. Fase 0 (2026-07-02): besluiten §8.1/6/6b, `apiBase` gecentraliseerd,
-  typecontract + typeRegistry.
+- **Status:** fase 2 opgeleverd (2026-07-03): de activiteit is een **bewerkbare
+  sandbox** (eigen persistente store + undo/redo) — elementen maken via de
+  "Maken"-taakbalk, verbinden via "Verbinding" met verbindingsregels
+  (connector-elementen + kale-edge-materialisatie), gegenereerde inspector uit
+  `FieldType.editor` (incl. colorpicker en type-keuzelijst uit de
+  modelcontext), element-resize (size per diagram-lidmaatschap), connecties
+  wissen met Delete, viewport/actief-diagram buiten de undo-history.
+  **Restpunten fase 2**: clipboard, checkmarks in het taakbalken-menu,
+  herbruikbare CEL-expressie-editor als custom inspector-widget
+  (widget-registry), rijkere details-pariteit (beschrijving/meervoud/subtype/
+  supertype). Verbinden naar een REL en de layout-taakbalk zijn fase 3
+  (ASOC-materialisatie resp. §4.5); terugschrijven naar het UML-model fase 4;
+  thema-tokens per StyleType zie §8.5b.
+  Fase 1 (2026-07-03): read-only spiegel. Fase 0 (2026-07-02): besluiten,
+  `apiBase`, typecontract.
 - **Context:** [`STUDIO.md`](STUDIO.md), [`STUDIO-code-review-2026-06-30.md`](STUDIO-code-review-2026-06-30.md)
 
 ## 1. Doel
@@ -69,11 +79,20 @@ classDiagram
       class ElementType { name }
       class CompartmentType { name }
       class FieldType { name }
+      class PropertyType {
+        name
+        type
+      }
+      class ReferenceType { name }
     }
     namespace Implementatie {
       class ActionHook
       class StyleType { name }
       class ShapeType { name }
+      class FieldTypeViewer
+      class PropertyTypeViewer
+      class PropertyTypeEditor
+      class ReferenceResolver
     }
 
     User *-- "0..*" Workspace
@@ -103,10 +122,19 @@ classDiagram
     DiagramType o-- "0..*" TaskbarType
     TaskbarType o-- "1..*" ActionType
 
+    FieldType o-- "0..*" PropertyType
+    PropertyType o-- "0..*" ReferenceType
+
     ActionType --> ActionHook
     DiagramType --> StyleType
     StyleType *-- ShapeType
     ElementType --> ShapeType
+    FieldType --> FieldTypeViewer
+    PropertyType --> PropertyTypeViewer
+    PropertyType --> PropertyTypeEditor
+    ReferenceType --> ReferenceResolver
+    FieldTypeViewer ..> PropertyTypeViewer : uses
+    PropertyTypeEditor ..> ReferenceResolver : uses
 ```
 
 *(Mermaid kent geen echte associatieklasse-notatie; de gestippelde lijnen bij
@@ -123,12 +151,40 @@ Lezing:
   DiagramType = één "profiel" (canoniek-UML, OAS 3.1, GraphQL, …). Dit domein is
   per constructie JSON-serialiseerbaar — en daarmee de kandidaat voor het
   configuratie-register (§8.5).
-- **Implementatie-domein**: `ActionHook`, `StyleType`, `ShapeType` — de *code*
+- **Implementatie-domein**: `ActionHook`, `StyleType`, `ShapeType`,
+  `PropertyTypeViewer`/`PropertyTypeEditor`, `ReferenceResolver` — de *code*
   waar de definities naar verwijzen. `ActionType → ActionHook` formaliseert de
   splitsing declaratief/code die het plan al maakte: het *wat* (naam, plek in
   menu/balk) staat in de definitie, het *hoe* is een frontend-hook, gekoppeld op
   id. Hetzelfde geldt voor `ElementType → ShapeType`: betekenis in de definitie,
   vorm (class-box, note, diamant, pill) in code.
+- **Property-laag (vierde iteratie, 2026-07-04)**: een `FieldType` (attribuut,
+  afgeleidVeld, …) heeft 0..* **`PropertyType`s** (naam, **datatype**) — de
+  eigenschappen van zo'n veld (naam, type, verplicht, afleidingsregel, …).
+  Elke PropertyType heeft een **viewer** (tonen) en een **editor** (bewerken)
+  in het Implementatie-domein, gekoppeld via een **registry op datatype**:
+  `string` → tekstveld, `boolean` → checkbox, `colour` → colorpicker,
+  `cel-expressie` → CEL-editor, … Het datatype-assortiment is dus uitbreidbaar
+  (een kleur is gewoon een waardenruimte die de widget zelf kent) zonder dat
+  de core-inspector verandert; declaratief blijft het één string.
+  Is de waarde een *verwijzing* — kandidaten die uit het model of runtime
+  komen — dan somt de PropertyType 0..* **`ReferenceType`s** op (basistype,
+  gegevenstype, enum, ref.lijstitem, …), elk met een **`ReferenceResolver`**
+  die de kandidaten levert; de editor gebruikt die resolvers om de keuze aan
+  te bieden (keuzelijst nu, minibrowser later — §4.5b). Regel: heeft een
+  PropertyType ReferenceTypes, dan kiest de editor via resolvers; anders
+  bepaalt het `datatype` de widget. Dit generaliseert de in fase 2 gebouwde
+  `EditorRegel`/`VerwijzingsBron` (de code wordt bij de volgende
+  inspector-stap op deze naamgeving getrokken).
+- **`FieldTypeViewer`** (veld-weergave op de node): naast de
+  inspector-weergave (alle PropertyTypes) heeft elk veld een compacte
+  rij-weergave in het compartiment (bv. `postcode  NLPostcode`, vet bij
+  verplicht, "/" bij afgeleid). De FieldTypeViewer is de veld-tegenhanger van
+  `ElementType → ShapeType` en **componeert de PropertyTypeViewers** (uses):
+  hij bepaalt welke properties zichtbaar zijn en hoe ze de regel beïnvloeden,
+  het tonen zelf hergebruikt dezelfde viewers als de inspector. In de code
+  heet dit nu `FieldType.render`. Wie in het register een FieldType
+  definieert, kiest dus twee dingen: de PropertyTypes én de FieldTypeViewer.
 - **`Position` is een associatieklasse** op Diagram–Element (elementpositie en
   -grootte per *diagram-lidmaatschap*, niet op het element zelf — zodat één
   element op meerdere diagrammen kan staan) en op de `source`/`target`-uiteinden
@@ -367,6 +423,40 @@ mechanisme van de shell:
 Zo blijft de menustructuur consistent over diagramtypen heen, terwijl de inhoud
 per DiagramType meebeweegt.
 
+### 4.5b Verwijzingen kiezen: het VerwijzingsBron-patroon
+
+Veel veld-regels zijn geen vrije tekst maar een **verwijzing** naar iets anders
+in (of buiten) het model: het type van een UML-attribuut (basistype |
+gegevenstype | enumeratie | ref.lijstitem), een `$ref` in OAS 3.1, een
+`typeRef`/itemDefinition in DMN, een type in GraphQL. De verleiding is om
+hiervoor per geval een keuzelijst te bouwen — dan groeit er domeinkennis in de
+inspector. Het patroon in plaats daarvan:
+
+- **De pluriformiteit zit niet in het FieldType maar in de verwijzing.**
+  "attribuut" blijft één FieldType; zijn type-property is een keuze waarvan de
+  kandidaten uit meerdere soorten bronnen komen.
+- **Metamodel-vorm (vierde iteratie)**: de property is een **`PropertyType`**
+  van het FieldType; verwijst hij, dan somt hij **`ReferenceType`s** op
+  (Definitie, register-klaar) en levert per ReferenceType een
+  **`ReferenceResolver`** (Implementatie) de kandidaten —
+  `resolver(ctx) → [{ waarde, label, icoon, groep, pad }]`, met in `ctx` het
+  model en het element/veld voor contextuele filtering. Canoniek-uml heeft er
+  vier: basistypen (statisch), gegevenstypen ✦, enumeraties ◇ en
+  ref.lijstitems ▣. Een OAS-profiel levert straks "schemas" en
+  "primitieven+formats"; DMN levert "FEEL-basistypen" en "itemDefinitions".
+  Zelfde interface, ander lijstje. *(De fase 2-code heet nog
+  `EditorRegel`/`VerwijzingsBron` — één object dat declaratie en code mengde;
+  de metamodel-splitsing PropertyType/ReferenceType↔Resolver is zuiverder en
+  wordt bij de minibrowser/CEL-stap in de code doorgevoerd.)*
+- **Twee weergaven op dezelfde bronnen**:
+  1. *nu*: een gegroepeerde keuzelijst (optgroups per bron, icoontjes zoals de
+     oude editor: ✦ ◇ ▣);
+  2. *later*: de **minibrowser** — een popover met zoekveld en een boom
+     (`pad`, bv. domein/package → soort → item) om binnen context te kiezen,
+     zoals de gebruiker voorstelt. Zelfde `VerwijzingsBron`-interface, alleen
+     een rijkere kiezer; herbruikbaar overal waar naar elementen verwezen
+     wordt (doel-entiteit, scopeRefs, DMN-binding, …).
+
 ### 4.6 Taakbalken (TaskbarType/Action)
 
 De huidige zwevende balkjes op het canvas ("Layout", "Verbinding", "Maken") worden
@@ -510,9 +600,10 @@ met `npm run build` + visuele check, en levert iets werkends op.
      custom renderers, `layouts.run`) blijven frontend-code en worden op
      descriptor-id gekoppeld. Het metamodel formaliseert dit nu zelf als de
      domeinen **Definitie** (register) en **Implementatie** (frontend):
-     `ActionType → ActionHook` en `ElementType → ShapeType` zijn precies die
-     koppelvlakken. Deze splitsing is de reden om de serialiseerbare kern vanaf
-     fase 1 strikt te bewaken.
+     `ActionType → ActionHook`, `ElementType → ShapeType`,
+     `PropertyType → PropertyTypeViewer/-Editor` en `ReferenceType →
+     ReferenceResolver` zijn precies die koppelvlakken. Deze splitsing is de
+     reden om de serialiseerbare kern vanaf fase 1 strikt te bewaken.
    - **Frontend-caching**: configuratie laden bij het openen van de activiteit,
      cachen in localStorage met versie-/ETag-check, en **gebundelde
      fallback-descriptors** in de frontend — zowel voor offline gebruik als voor
@@ -521,6 +612,17 @@ met `npm run build` + visuele check, en levert iets werkends op.
    - **Volgorde**: pas ná fase 5, als de descriptor-vorm door een tweede profiel
      is gevalideerd — anders migreren we een nog bewegend schema het register in.
      Opgenomen als optionele fase 7 in §7.
+5b. **Licht/donker-thema is een StyleType-verantwoordelijkheid.** ✅ *Besloten
+   (2026-07-03):* elke `StyleType`/`ShapeType` moet **altijd een licht- én een
+   donker-plan** hebben. Concreet: shapes en edges gebruiken geen letterlijke
+   kleuren maar tokens die de StyleType per thema invult (CSS-variabelen onder
+   `[data-studio-theme]`, zoals de shell dat al doet met `--s-*`). De vaste
+   UML-pastels van canoniek-uml zijn dan het *lichte* plan van "uml-klassiek";
+   het donkere plan mag dezelfde pastels houden (zoals de oude editor doet) of
+   gedempte varianten kiezen — maar dat is een keuze ín de StyleType, niet in
+   de shape-code. Uit te werken bij de StyleType-implementatie (fase 3-4);
+   geldt ook als eis voor het configuratie-register (§8.5): de tokensets zijn
+   onderdeel van het Definitie/Implementatie-koppelvlak.
 6. **Waar de grens "shape vs. elementtype" ligt.** ✅ *Besloten (2026-07-02):*
    **notities en constraints zijn eigen ElementTypes** met dientengevolge hun
    eigen ShapeType (`note`, `rounded`); ShapeType is uitsluitend vorm, alles met
