@@ -2,7 +2,39 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** fase 5-vuurproef: **OAS 3.1 als derde profiel** (2026-07-03,
+- **Status:** vermoedelijke oorzaak **transient leeg canvas** gevonden en
+  gefixt (2026-07-04, na React Flow-fout #015 in de console bij Mark): elke
+  store-wijziging (elke toetsaanslag in de inspector) verving álle
+  node-objecten, waardoor React Flow v12 ze compleet her-initialiseerde
+  (meting `measured` zit op het node-object). Slepen in dat venster gaf
+  #015 ("trying to drag a node that is not initialized"); tijdens de
+  hermeting kon het hele canvas (tijdelijk) verborgen blijven — bij grote
+  diagrammen (OAS-import, 100+ nodes) een flink venster. Fix: de rebuild
+  **reconcilieert per id** en neemt het bestaande node-object als basis
+  (measured/dragging/selected blijven bewaard; tijdens een actieve drag wint
+  de sleep-positie). Stress-e2e (edit+drag-storm) blijft schoon; ook een
+  prestatieverbetering. Praktijkbevestiging gevraagd — dit was de
+  al drie keer gemelde heisenbug. Eerdere ronde: bugfix **multi-drag** (2026-07-03, gemeld bij het testen van de
+  OAS-import): bij het slepen van een multi-selectie bleef alleen de
+  daadwerkelijk gesleepte node op zijn nieuwe plek — `handleNodeDragStop`
+  gebruikte alleen het tweede React Flow-argument, terwijl het derde álle
+  meegesleepte nodes bevat; die gaan nu als bulk naar `onNodePosities`
+  (met lidmaatschap-aanmaak voor auto-geplaatste connector-boxen).
+  E2E: twee Ctrl-geselecteerde nodes samen verslepen → beide persistent,
+  derde onaangeroerd. Eerdere stand: OAS 3.1 **YAML-import** (2026-07-03): *Bestand → Importeer
+  OAS 3.1 (YAML/JSON)…* in de OAS-activiteit. Nieuwe pure adapter
+  `diagramprofielen/oas31/adapter.js` (`vanOasDocument`):
+  `components.schemas` → schema-/enum-elementen (properties met
+  typen/formats, `required` → verplicht; `$ref`-properties → ref-connectoren
+  met rolnaam; array-`items`-$refs → items-connectoren; `allOf` →
+  allOf-connector + inline delen als eigen properties), `paths` →
+  operatie-elementen met request-/response-refs (ook array-responses), en
+  één grid-geplaatst diagram met de titel uit `info.title`. De fabriek
+  kreeg daarvoor een **generiek `koppeling.importBestand`**-koppelpunt
+  ({label, accept, verwerk(tekst) → coreModel}) en de Bestand-menu-items
+  zijn per koppeling-onderdeel conditioneel. Parser: `yaml`
+  (nieuwe dependency; YAML is een superset van JSON, dus .json werkt ook).
+  Nog niet: YAML-export (terugreis) en oneOf/anyOf. Eerdere stand: fase 5-vuurproef: **OAS 3.1 als derde profiel** (2026-07-03,
   branch `feat/studio05-fase5`): activiteit **"OAS (0.5)"**
   (`diagramprofielen/oas31/` + fabriek-aanroep, verder niets). Schemas zijn
   elementen, verwijzingen connectoren: «schema» met properties

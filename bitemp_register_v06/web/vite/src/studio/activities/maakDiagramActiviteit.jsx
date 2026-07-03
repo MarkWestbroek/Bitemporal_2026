@@ -23,8 +23,10 @@
  * @param {string} [opties.devHookNaam]     - window-hook voor e2e (alleen dev)
  * @param {Object} [opties.koppeling]       - optionele model-koppeling:
  *   {herlaadUitModel?, zetTerugNaarModel?, exporteerV3?, importeerV3?,
- *    DialogenComponent?} — zonder koppeling start de activiteit leeg en
- *   ontbreken de herlaad-/terugzet-/V3-/API-menu-items.
+ *    DialogenComponent?, importBestand?} — zonder koppeling start de
+ *   activiteit leeg en ontbreken de bijbehorende Bestand-menu-items.
+ *   importBestand = {label, accept, verwerk(tekst, bestandsnaam) → coreModel}
+ *   voor profiel-eigen bestandsformaten (bv. OAS 3.1 YAML).
  */
 import React, {
   createContext,
@@ -206,6 +208,40 @@ export function maakDiagramActiviteit(opties) {
                   window.alert(`Import mislukt: ${e?.message || e}`);
                   return;
                 }
+                useStore.temporal.getState().clear();
+                setSelectieId(null);
+              });
+            };
+            input.click();
+          })
+        );
+      }
+      // Profiel-eigen bestandsformaat (bv. OAS 3.1 YAML → coreModel).
+      if (koppeling?.importBestand) {
+        af.push(
+          menuBus.on(ev("import-bestand"), () => {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = koppeling.importBestand.accept || "";
+            input.onchange = () => {
+              const file = input.files?.[0];
+              if (!file) return;
+              file.text().then((tekst) => {
+                let model;
+                try {
+                  model = koppeling.importBestand.verwerk(tekst, file.name);
+                } catch (e) {
+                  window.alert(`Import mislukt: ${e?.message || e}`);
+                  return;
+                }
+                const s = useStore.getState();
+                if (Object.keys(s.elements).length > 0) {
+                  const ok = window.confirm(
+                    "Importeren vervangt de hele sandbox door het gekozen bestand.\nJe lokale wijzigingen gaan verloren. Doorgaan?"
+                  );
+                  if (!ok) return;
+                }
+                s.laadModel(model);
                 useStore.temporal.getState().clear();
                 setSelectieId(null);
               });
@@ -566,15 +602,23 @@ export function maakDiagramActiviteit(opties) {
                   }}
                   onNodePosities={(posities) => {
                     const s = useStore.getState();
+                    const leden = new Set(
+                      (s.diagrams[diagram.id]?.nodes || []).map((n) => n.elementId)
+                    );
                     const rest = {};
                     for (const [pid, pos] of Object.entries(posities)) {
                       if (pid.startsWith(ANKER_PREFIX)) {
                         s.updateAnkerPosition(diagram.id, pid.slice(ANKER_PREFIX.length), pos);
+                      } else if (!leden.has(pid)) {
+                        // Auto-geplaatste connector-box in een multi-drag:
+                        // eerst lidmaatschap aanmaken, anders is de positie
+                        // niet persistent (zelfde regel als onNodePositie).
+                        s.addElementToDiagram(diagram.id, pid, pos);
                       } else {
                         rest[pid] = pos;
                       }
                     }
-                    s.updateNodePositions(diagram.id, rest);
+                    if (Object.keys(rest).length) s.updateNodePositions(diagram.id, rest);
                   }}
                   layoutApiRef={layoutApiRef}
                   onNodeSize={(elementId, size) =>
@@ -683,6 +727,12 @@ export function maakDiagramActiviteit(opties) {
     );
   }
 
+  /** Geen dubbele/voorloop-separators als koppeling-onderdelen ontbreken. */
+  const schoonSeparators = (items) =>
+    items.filter(
+      (it, i, arr) => !(it.type === "separator" && (i === 0 || arr[i - 1]?.type === "separator"))
+    );
+
   const menus = () => [
     ...(koppeling
       ? [
@@ -691,12 +741,30 @@ export function maakDiagramActiviteit(opties) {
           {
             id: "bestand",
             label: "Bestand",
-            items: [
-              { id: `${menuPrefix}-api-laden`, label: "Laden vanaf API…", onClick: () => menuBus.emit(ev("api-laden")) },
-              { id: `${menuPrefix}-api-publiceer`, label: "Publiceer naar API…", onClick: () => menuBus.emit(ev("api-publiceer")) },
-              { type: "separator" },
-              { id: `${menuPrefix}-import-v3`, label: "Importeer V3 JSON…", onClick: () => menuBus.emit(ev("importeer-v3")) },
-              { id: `${menuPrefix}-export-v3`, label: "Exporteer V3 JSON…", onClick: () => menuBus.emit(ev("exporteer-v3")) },
+            items: schoonSeparators([
+              ...(koppeling.DialogenComponent
+                ? [
+                    { id: `${menuPrefix}-api-laden`, label: "Laden vanaf API…", onClick: () => menuBus.emit(ev("api-laden")) },
+                    { id: `${menuPrefix}-api-publiceer`, label: "Publiceer naar API…", onClick: () => menuBus.emit(ev("api-publiceer")) },
+                    { type: "separator" },
+                  ]
+                : []),
+              ...(koppeling.importBestand
+                ? [
+                    {
+                      id: `${menuPrefix}-import-bestand`,
+                      label: koppeling.importBestand.label || "Importeer bestand…",
+                      onClick: () => menuBus.emit(ev("import-bestand")),
+                    },
+                    { type: "separator" },
+                  ]
+                : []),
+              ...(koppeling.importeerV3
+                ? [{ id: `${menuPrefix}-import-v3`, label: "Importeer V3 JSON…", onClick: () => menuBus.emit(ev("importeer-v3")) }]
+                : []),
+              ...(koppeling.exporteerV3
+                ? [{ id: `${menuPrefix}-export-v3`, label: "Exporteer V3 JSON…", onClick: () => menuBus.emit(ev("exporteer-v3")) }]
+                : []),
               { type: "separator" },
               {
                 id: "index",
@@ -706,7 +774,7 @@ export function maakDiagramActiviteit(opties) {
                 },
               },
               { id: "herlaad-pagina", label: "Pagina herladen", shortcut: "F5", onClick: () => window.location.reload() },
-            ],
+            ]),
           },
         ]
       : []),
