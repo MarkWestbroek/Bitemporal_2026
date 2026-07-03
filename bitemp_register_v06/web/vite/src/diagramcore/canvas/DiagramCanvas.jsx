@@ -268,13 +268,22 @@ function CanvasBinnenkant({
       ...e,
       type: "connector",
       selectable: bewerkbaar,
+      // Sleepbare labels (vgl. 0.2): de edge meldt de nieuwe offset per
+      // zijde; de activiteit bewaart hem op het connector-element.
+      data:
+        bewerkbaar && onLabelOffset && e.data?.connectorId
+          ? {
+              ...e.data,
+              onLabelOffset: (zijde, offset) => onLabelOffset(e.data.connectorId, zijde, offset),
+            }
+          : e.data,
     }));
     const flowEdges = [...geimporteerd, ...connectorEdges];
     setEdges((huidige) => {
       const geselecteerd = new Set(huidige.filter((e) => e.selected).map((e) => e.id));
       return flowEdges.map((e) => (geselecteerd.has(e.id) ? { ...e, selected: true } : e));
     });
-  }, [diagram, gematerialiseerd, bewerkbaar, setEdges]);
+  }, [diagram, gematerialiseerd, bewerkbaar, setEdges, onLabelOffset]);
 
   const handleSelectionChange = useCallback(
     ({ nodes: sel, edges: selEdges }) => {

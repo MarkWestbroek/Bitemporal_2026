@@ -2,7 +2,25 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** 0.5-**werkbestand** + **lijnvormen** (2026-07-04): elk profiel
+- **Status:** **meta-editor trede 1 + bol-shape-POC** (2026-07-04, branch
+  `feat/studio05-meta-editor`): nieuwe activiteit **"Profiel (0.5)"**
+  (`profielActivity.jsx`) — bewerk een profiel-descriptor (de
+  JSON-serialiseerbare Definitie-kern) met Valideer- en
+  "Opslaan & registreren"-knoppen; registreren maakt er **live** een
+  activiteit van (`vervangDiagramType` + fabriek-aanroep) en springt ernaar.
+  Hooks verwijzen **op id** naar de `HOOK_CATALOGUS`
+  (`profielGereedschap.js`: edgeLabels "kardinaliteiten"/"naam",
+  edgePresentatie "directioneel-pijl") — precies het koppelvlak dat fase 7
+  nodig heeft, hiermee gevalideerd. Profielen staan in localStorage
+  ("studio05-profielen") en worden bij het laden opnieuw geregistreerd
+  (overleven een herlaad). Twee sjablonen: leeg + **Graaf-demo** met de
+  nieuwe **"bol"-ShapeType** (§8.10-POC, `basisShapes.jsx`): naam in een
+  ronde kern, velden als satelliet-bolletjes met spaken eromheen — bewijst
+  dat een shape zijn compartiment-velden zelf mag positioneren, zonder
+  core-wijziging. De inspector van de meta-editor toont de bouwstenen
+  (shapes, viewers, datatypes, presentatie-vocabulaire, hook-ids). E2E:
+  demo laden → registreren → knopen met satellieten + gerichte kant →
+  herlaad → activiteit bestaat nog. Eerdere ronde: 0.5-**werkbestand** + **lijnvormen** (2026-07-04): elk profiel
   heeft nu *Bestand → Exporteer/Importeer 0.5-werkbestand…* — het eigen
   formaat integraal als JSON (formaat "studio05-diagram": elements +
   diagrammen incl. viewports + meta, met profiel-check bij import), zodat

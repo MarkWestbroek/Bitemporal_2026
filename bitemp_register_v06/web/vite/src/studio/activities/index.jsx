@@ -17,6 +17,7 @@ import umlActivity from "./umlActivity";
 import diagramActivity from "./diagramActivity";
 import puurUmlActivity from "./puurUmlActivity";
 import oasActivity from "./oasActivity";
+import profielActivity from "./profielActivity";
 import dmnActivity from "./dmnActivity";
 import bpmnActivity from "./bpmnActivity";
 import berichtActivity from "./berichtActivity";
@@ -68,6 +69,7 @@ registreerActiviteiten([
   diagramActivity, // Studio 0.5 preview (canoniek-uml op de generieke motor)
   puurUmlActivity, // Studio 0.5: tweede profiel (fase 5-lakmoesproef)
   oasActivity, // Studio 0.5: derde profiel (OAS 3.1, fase 5-vuurproef)
+  profielActivity, // Studio 0.5: meta-editor (profielen maken in de editor, §8.9)
   dmnActivity,
   bpmnActivity,
   berichtActivity,

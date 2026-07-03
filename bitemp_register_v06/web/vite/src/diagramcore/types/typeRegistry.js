@@ -99,6 +99,20 @@ export function registreerDiagramType(descriptor) {
 }
 
 /**
+ * Registreer of vervang een DiagramType (zelfde validatie). Voor de
+ * meta-editor (plan §8.9): een bewerkt profiel opnieuw registreren zonder
+ * pagina-herlaad.
+ * @param {DiagramType} descriptor
+ */
+export function vervangDiagramType(descriptor) {
+  const fouten = valideerDiagramType(descriptor);
+  if (fouten.length > 0) {
+    throw new Error(`Ongeldig DiagramType:\n- ${fouten.join("\n- ")}`);
+  }
+  _diagramTypes.set(descriptor.id, descriptor);
+}
+
+/**
  * @param {string} id
  * @returns {DiagramType|undefined}
  */
