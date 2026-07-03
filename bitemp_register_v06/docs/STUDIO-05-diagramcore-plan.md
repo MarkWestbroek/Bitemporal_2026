@@ -2,7 +2,48 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** fase 4A-feedbackronde (2026-07-03): (1) **round-trip-bug
+- **Status:** fase 5-feedbackronde 1 (2026-07-03): **aggregatie** (◇) naast
+  compositie en **associatie-richting**. Core: `ConnectorEdge` kent
+  `markerStart: "ruit-open"` (zelfde pad-volgende geometrie, witte vulling —
+  consistent met de generalisatie-driehoek, in beide thema's onderscheidbaar)
+  en `materialiseerConnectoren` ondersteunt een **`hooks.edgePresentatie`**
+  op het connector-ElementType: dynamische presentatie-overrides o.b.v. de
+  connector-data (voorloper van de lijntypen-familie §8.5c). In de
+  ASOC-gedaante verhuizen de markers mee (markerStart → bron-edge,
+  markerEnd → doel-edge). Profiel puur-uml: aggregatie-connector, en op de
+  associatie de properties kardinaliteit bron/doel + **"gericht (→ doel)"**
+  (boolean; hook zet de open pijl). Eerdere stand: fase 4B afgerond + fase 5-lakmoesproef geslaagd (2026-07-03,
+  branch `feat/studio05-fase4b`): (1) **4B-rest** — *Diagram (0.5) → Zet
+  terug naar UML-model…* schrijft de sandbox terug naar de klassieke
+  UML-activiteit (`naarCanoniekModel` → `useModelStore.loadModel`, met
+  bevestiging; de API blijft onaangeroerd), en de publiceer-dialoog kreeg een
+  **Activeer #id…**-knop (`PUT /api/schema/model/{id}/activeer`, met
+  bevestiging — het register gaat die versie dan gebruiken). (2) **Fase 5**:
+  de activiteit is gerefactord naar een fabriek
+  (`studio/activities/maakDiagramActiviteit.jsx`) — descriptor + opties erin,
+  complete activiteit (store, taakbalken, inspector, layout, menu's,
+  optionele model-/V3-/API-koppeling) eruit; `diagramActivity.jsx` is nu een
+  dunne aanroep. Het tweede profiel **puur-uml**
+  (`diagramprofielen/puur-uml/`: klasse/interface/enumeratie, attributen +
+  operaties, associatie mét attributen → **associatieklasse via de bestaande
+  ASOC-materialisatie**, compositie, generalisatie, realisatie ⊳┄,
+  dependency «use») draait als activiteit **"UML (0.5)"** zonder één regel
+  core- of shell-wijziging — de abstractie houdt. Restpunten fase 5:
+  zichtbaarheid (+/-/#), open aggregatie-ruit (marker-familie §8.5c), eigen
+  auto-layout, eigen StyleType-tokens (§8.5b; leent nu "uml-klassiek").
+  E2E: beide activiteiten naast elkaar, elk met eigen persistente store.
+  Eerdere stand: fase 4B gestart (2026-07-03, branch `feat/studio05-fase4b`; 4A
+  gemerged in `70e0141`): **laden vanaf en publiceren naar de Go-API** in het
+  Bestand-menu van de 0.5-activiteit (`diagram05ApiDialogen.jsx`) — zelfde
+  endpoints als de UML-IDE (`GET /api/schema/versies|model|model/{id}`,
+  `POST /api/schema/model?opmerking=…` met `{bron: "studio-0.5", indiener,
+  model}`). Laden toont de versielijst (of het actieve model) en vervangt de
+  sandbox met bevestiging; publiceren maakt een nieuwe versie (status
+  "proposed" — activeren blijft een aparte stap) en loopt via
+  `exporteerV3` (dus incl. default-diagram en canonieke ids).
+  E2E-geverifieerd tegen de echte API (laden versie-lijst + actief model;
+  testpublicatie #91). Nog open in 4B: activeren/rebuild vanuit 0.5 en de
+  terugschrijf-flow naar de UML-store. Eerdere ronde: fase 4A-feedbackronde (2026-07-03): (1) **round-trip-bug
   gefixt** — het default-diagram ("overzicht") kan hernoemd en samengesteld
   zijn (bv. "np-loc" met 29 van de 114 elementen), maar de oude adapters
   beschouwen het als afgeleid: export liet het weg en import reconstrueerde

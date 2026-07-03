@@ -169,3 +169,52 @@ test("connector met ontbrekend uiteinde op het diagram → niets", () => {
   assert.equal(edges.length, 0);
   assert.equal(extraNodes.length, 0);
 });
+
+test("hooks.edgePresentatie: dynamische presentatie o.b.v. connector-data (richting)", () => {
+  const types = {
+    entiteit: { id: "entiteit", shape: "class-box" },
+    associatie: {
+      id: "associatie",
+      shape: "class-box",
+      isConnector: true,
+      bron: { elementTypes: ["entiteit"] },
+      doel: { elementTypes: ["entiteit"] },
+      edgePresentatie: { lijn: "solid", markerStart: "ruit-open" },
+      hooks: {
+        edgePresentatie: (conn) => (conn.data?.directioneel ? { markerEnd: "pijl-open" } : {}),
+      },
+    },
+  };
+  const diagram = {
+    id: "d",
+    nodes: [
+      { elementId: "A", position: { x: 0, y: 0 } },
+      { elementId: "B", position: { x: 400, y: 0 } },
+    ],
+  };
+  const maak = (data) => ({
+    A: { id: "A", elementType: "entiteit" },
+    B: { id: "B", elementType: "entiteit" },
+    as1: { id: "as1", naam: "", elementType: "associatie", source: "A", target: "B", compartimenten: [], data },
+  });
+
+  // Kaal, niet gericht: statische presentatie (open ruit), geen pijl.
+  let { edges } = materialiseerConnectoren(maak({}), diagram, types);
+  assert.equal(edges[0].data.presentatie.markerStart, "ruit-open");
+  assert.equal(edges[0].data.presentatie.markerEnd, undefined);
+
+  // Kaal, gericht: hook voegt de pijl toe.
+  ({ edges } = materialiseerConnectoren(maak({ directioneel: true }), diagram, types));
+  assert.equal(edges[0].data.presentatie.markerEnd, "pijl-open");
+
+  // ASOC-gedaante (met veld): markers verhuizen mee naar de bron-/doel-edge.
+  const metVeld = maak({ directioneel: true });
+  metVeld.as1.compartimenten = [
+    { compartmentType: "attributen", velden: [{ naam: "sinds", fieldType: "attribuut" }] },
+  ];
+  ({ edges } = materialiseerConnectoren(metVeld, diagram, types));
+  const bronEdge = edges.find((e) => e.id.endsWith(":bron"));
+  const doelEdge = edges.find((e) => e.id.endsWith(":doel"));
+  assert.equal(bronEdge.data.presentatie.markerStart, "ruit-open");
+  assert.equal(doelEdge.data.presentatie.markerEnd, "pijl-open");
+});

@@ -11,7 +11,8 @@
  *   lijn:        "solid" | "dash-6-3" | "dash-4-3" | "dash-4-4"
  *   kleur:       basiskleur (selected → accent, tenzij `vasteKleur`)
  *   opacity?:    number
- *   markerStart: "ruit" | null            — compositie-ruit aan bronzijde
+ *   markerStart: "ruit" | "ruit-open" | null — compositie- (◆) of
+ *                aggregatie-ruit (◇) aan de bronzijde
  *   markerEnd:   "pijl-open" | "driehoek" | null
  *   labels: [ { zijde: "bron"|"doel"|"midden", offset?: {x,y},
  *               delen: [ { tekst, soort: "rolnaam"|"kardinaliteit"|"constraint"|"naam", kleur? } ] } ]
@@ -57,10 +58,14 @@ function ConnectorEdge({
   const pijlId = `dc-pijl-${id}`;
   const driehoekId = `dc-driehoek-${id}`;
 
-  // Compositie-ruit (◆): de hoekpunten liggen óp het pad zelf (punt-op-
-  // lengte 0, ½L en L, dwarsas loodrecht op de raaklijn in het midden),
-  // zodat de ruit met de kromming van de curve meebuigt — onder elke hoek.
-  const heeftRuit = p.markerStart === "ruit";
+  // Compositie- (◆, gevuld) of aggregatie-ruit (◇, open): de hoekpunten
+  // liggen óp het pad zelf (punt-op-lengte 0, ½L en L, dwarsas loodrecht op
+  // de raaklijn in het midden), zodat de ruit met de kromming van de curve
+  // meebuigt — onder elke hoek.
+  const heeftRuit = p.markerStart === "ruit" || p.markerStart === "ruit-open";
+  // Open ruit: witte vulling, net als de generalisatie-driehoek — in beide
+  // thema's duidelijk te onderscheiden van de gevulde compositie-ruit.
+  const ruitVulling = p.markerStart === "ruit-open" ? "white" : kleur;
   const meetRef = useRef(null);
   const [ruitPunten, setRuitPunten] = useState(null);
   useLayoutEffect(() => {
@@ -135,14 +140,14 @@ function ConnectorEdge({
           {/* Onzichtbaar meetpad voor de curve-geometrie */}
           <path ref={meetRef} d={edgePath} fill="none" stroke="none" style={{ pointerEvents: "none" }} />
           {ruitPunten ? (
-            <polygon points={ruitPunten} fill={kleur} stroke={kleur} strokeWidth="1" strokeLinejoin="round" />
+            <polygon points={ruitPunten} fill={ruitVulling} stroke={kleur} strokeWidth="1.2" strokeLinejoin="round" />
           ) : (
             <g transform={`translate(${sourceX} ${sourceY}) rotate(${fallbackHoek})`}>
               <polygon
                 points={`0,0 ${RUIT_LENGTE / 2},${-RUIT_BREEDTE / 2} ${RUIT_LENGTE},0 ${RUIT_LENGTE / 2},${RUIT_BREEDTE / 2}`}
-                fill={kleur}
+                fill={ruitVulling}
                 stroke={kleur}
-                strokeWidth="1"
+                strokeWidth="1.2"
               />
             </g>
           )}
