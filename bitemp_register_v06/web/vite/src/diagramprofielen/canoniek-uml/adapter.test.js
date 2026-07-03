@@ -5,7 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { vanCanoniekModel, presentatieVoorEdge } from "./adapter.js";
-import { CANONIEK_UML_ID } from "./index.js";
+import { CANONIEK_UML_ID, canoniekUmlDiagramType } from "./index.js";
 
 /** Kleine representatieve store-state (vorm van useModelStore). */
 function maakBronState() {
@@ -134,6 +134,21 @@ test("presentatie: dependency en generalisatie", () => {
   const gen = presentatieVoorEdge({ source: "A", target: "A", data: { isGeneralization: true } }, state.elements);
   assert.equal(gen.markerEnd, "driehoek");
   assert.equal(gen.labels[0].delen[0].tekst, "«Generalisatie»");
+});
+
+test("verwijzingsBronnen: kandidaten per soort, met groep en icoon (§4.5b)", () => {
+  const core = vanCanoniekModel(maakBronState());
+  const alle = canoniekUmlDiagramType.verwijzingsBronnen.flatMap((b) =>
+    b.kandidaten({ elements: core.elements })
+  );
+  // Basistypen altijd aanwezig, zonder icoon
+  assert.ok(alle.some((k) => k.waarde === "string" && k.groep === "Basistypen" && !k.icoon));
+  // Enumeratie uit het model, met ◇ en eigen groep
+  const geslacht = alle.find((k) => k.waarde === "Geslacht");
+  assert.equal(geslacht.icoon, "◇");
+  assert.equal(geslacht.groep, "Enumeraties");
+  // Geen gegevenstypen in deze fixture → bron levert leeg, geen fout
+  assert.ok(!alle.some((k) => k.groep === "Gegevenstypen"));
 });
 
 test("presentatie: ASOC-edges — anker-zijden, class-link en terug-label", () => {

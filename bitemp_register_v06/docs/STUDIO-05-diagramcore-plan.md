@@ -2,11 +2,21 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** fase 1 opgeleverd (2026-07-03): activiteit **"Diagrammen (0.5)"**
-  (preview) rendert het bestaande model read-only via de generieke motor —
-  generieke `ElementNode`/`ConnectorEdge`/shapes + canoniek-uml-profiel met
-  adapter. Fase 0 (2026-07-02): besluiten §8.1/6/6b, `apiBase` gecentraliseerd,
-  typecontract + typeRegistry.
+- **Status:** fase 2 opgeleverd (2026-07-03): de activiteit is een **bewerkbare
+  sandbox** (eigen persistente store + undo/redo) — elementen maken via de
+  "Maken"-taakbalk, verbinden via "Verbinding" met verbindingsregels
+  (connector-elementen + kale-edge-materialisatie), gegenereerde inspector uit
+  `FieldType.editor` (incl. colorpicker en type-keuzelijst uit de
+  modelcontext), element-resize (size per diagram-lidmaatschap), connecties
+  wissen met Delete, viewport/actief-diagram buiten de undo-history.
+  **Restpunten fase 2**: clipboard, checkmarks in het taakbalken-menu,
+  herbruikbare CEL-expressie-editor als custom inspector-widget
+  (widget-registry), rijkere details-pariteit (beschrijving/meervoud/subtype/
+  supertype). Verbinden naar een REL en de layout-taakbalk zijn fase 3
+  (ASOC-materialisatie resp. §4.5); terugschrijven naar het UML-model fase 4;
+  thema-tokens per StyleType zie §8.5b.
+  Fase 1 (2026-07-03): read-only spiegel. Fase 0 (2026-07-02): besluiten,
+  `apiBase`, typecontract.
 - **Context:** [`STUDIO.md`](STUDIO.md), [`STUDIO-code-review-2026-06-30.md`](STUDIO-code-review-2026-06-30.md)
 
 ## 1. Doel
@@ -367,6 +377,38 @@ mechanisme van de shell:
 Zo blijft de menustructuur consistent over diagramtypen heen, terwijl de inhoud
 per DiagramType meebeweegt.
 
+### 4.5b Verwijzingen kiezen: het VerwijzingsBron-patroon
+
+Veel veld-regels zijn geen vrije tekst maar een **verwijzing** naar iets anders
+in (of buiten) het model: het type van een UML-attribuut (basistype |
+gegevenstype | enumeratie | ref.lijstitem), een `$ref` in OAS 3.1, een
+`typeRef`/itemDefinition in DMN, een type in GraphQL. De verleiding is om
+hiervoor per geval een keuzelijst te bouwen — dan groeit er domeinkennis in de
+inspector. Het patroon in plaats daarvan:
+
+- **De pluriformiteit zit niet in het FieldType maar in de verwijzing.**
+  "attribuut" blijft één FieldType; zijn type-regel is een keuze-widget
+  waarvan de kandidaten uit meerdere **bronnen** komen.
+- **`VerwijzingsBron`** (Implementatie-domein, naast ActionHook/ShapeType):
+  per soort kandidaat één stukje code met een uniforme interface —
+  `{ id, label, icoon, kandidaten(ctx) → [{ waarde, label, icoon, groep, pad }] }`.
+  De `ctx` bevat het model (elements) en het element/veld in kwestie, zodat een
+  bron contextueel kan filteren. Canoniek-uml levert er vier: basistypen
+  (statisch), gegevenstypen ✦, enumeraties ◇ en ref.lijstitems ▣. Een
+  OAS-profiel levert straks "schemas" en "primitieven+formats"; DMN levert
+  "FEEL-basistypen" en "itemDefinitions". Zelfde interface, ander lijstje.
+- **Declaratief blijft declaratief**: de EditorRegel zegt alleen *welke*
+  bronnen zijn toegestaan (JSON-serialiseerbaar, dus register-klaar §8.5);
+  de bron-code is frontend-implementatie, gekoppeld op id.
+- **Twee weergaven op dezelfde bronnen**:
+  1. *nu*: een gegroepeerde keuzelijst (optgroups per bron, icoontjes zoals de
+     oude editor: ✦ ◇ ▣);
+  2. *later*: de **minibrowser** — een popover met zoekveld en een boom
+     (`pad`, bv. domein/package → soort → item) om binnen context te kiezen,
+     zoals de gebruiker voorstelt. Zelfde `VerwijzingsBron`-interface, alleen
+     een rijkere kiezer; herbruikbaar overal waar naar elementen verwezen
+     wordt (doel-entiteit, scopeRefs, DMN-binding, …).
+
 ### 4.6 Taakbalken (TaskbarType/Action)
 
 De huidige zwevende balkjes op het canvas ("Layout", "Verbinding", "Maken") worden
@@ -521,6 +563,17 @@ met `npm run build` + visuele check, en levert iets werkends op.
    - **Volgorde**: pas ná fase 5, als de descriptor-vorm door een tweede profiel
      is gevalideerd — anders migreren we een nog bewegend schema het register in.
      Opgenomen als optionele fase 7 in §7.
+5b. **Licht/donker-thema is een StyleType-verantwoordelijkheid.** ✅ *Besloten
+   (2026-07-03):* elke `StyleType`/`ShapeType` moet **altijd een licht- én een
+   donker-plan** hebben. Concreet: shapes en edges gebruiken geen letterlijke
+   kleuren maar tokens die de StyleType per thema invult (CSS-variabelen onder
+   `[data-studio-theme]`, zoals de shell dat al doet met `--s-*`). De vaste
+   UML-pastels van canoniek-uml zijn dan het *lichte* plan van "uml-klassiek";
+   het donkere plan mag dezelfde pastels houden (zoals de oude editor doet) of
+   gedempte varianten kiezen — maar dat is een keuze ín de StyleType, niet in
+   de shape-code. Uit te werken bij de StyleType-implementatie (fase 3-4);
+   geldt ook als eis voor het configuratie-register (§8.5): de tokensets zijn
+   onderdeel van het Definitie/Implementatie-koppelvlak.
 6. **Waar de grens "shape vs. elementtype" ligt.** ✅ *Besloten (2026-07-02):*
    **notities en constraints zijn eigen ElementTypes** met dientengevolge hun
    eigen ShapeType (`note`, `rounded`); ShapeType is uitsluitend vorm, alles met

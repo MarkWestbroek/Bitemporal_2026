@@ -1,15 +1,22 @@
 /**
  * DiagramCanvas (diagramcore) — dunne React Flow-wrapper voor de generieke motor.
  *
- * Props-gedreven en read-only (fase 1): rendert één diagram uit een core-model.
- * Kent geen store en geen profiel — alles komt binnen via props:
+ * Props-gedreven en store-loos; kent geen profiel. Alles komt binnen via props:
  *
- *   diagramType   — DiagramType-descriptor (voor element-/field-type-lookups)
- *   elements      — Record<id, Element> (model/schema.js)
- *   diagram       — Diagram (nodes/edges/viewport)
- *   onSelectElement? — (element|null) => void
+ *   diagramType        — DiagramType-descriptor (element-/field-type-lookups)
+ *   elements           — Record<id, Element> (model/schema.js)
+ *   diagram            — Diagram (nodes/edges/viewport)
+ *   bewerkbaar?        — false (default, fase 1-spiegel) | true (fase 2)
+ *   verbindingsType?   — expliciet gekozen connector-ElementType-id (taakbalk
+ *                        "Verbinding"); null → automatisch afleiden uit de regels
+ *   onSelectElement?   — (element|null) => void
+ *   onNodePositie?     — (elementId, {x,y}) => void          (na slepen)
+ *   onVerbind?         — ({connectorType, source, target, sourceHandle, targetHandle}) => void
+ *   onVerwijder?       — (elementIds: string[]) => void      (Delete op selectie)
+ *   onViewport?        — ({x,y,zoom}) => void                (na pannen/zoomen)
  *
- * Bewerken (slepen, verbinden, verwijderen) komt in fase 2 via de store-acties.
+ * Edges = geïmporteerde presentatie-edges (diagram.edges, fase 1-adapter)
+ *       + gematerialiseerde connector-elementen (materialiseerConnectoren).
  */
 import { useMemo, useCallback, useEffect } from "react";
 import {
@@ -19,12 +26,14 @@ import {
   Controls,
   MiniMap,
   useNodesState,
+  useEdgesState,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import "../styles/diagramcore.css";
 import "../shapes/basisShapes.jsx"; // registreert de standaard-shapes
 import ElementNode from "./ElementNode.jsx";
 import ConnectorEdge from "./ConnectorEdge.jsx";
+import { materialiseerConnectoren, vindConnectorType } from "./materialiseerConnectoren.js";
 
 const nodeTypes = { element: ElementNode };
 const edgeTypes = { connector: ConnectorEdge };
@@ -41,12 +50,26 @@ function bouwLookups(diagramType) {
   return { elementTypesById, fieldTypesById, compartmentTypesById };
 }
 
-function CanvasBinnenkant({ diagramType, elements, diagram, onSelectElement }) {
+function CanvasBinnenkant({
+  diagramType,
+  elements,
+  diagram,
+  viewport = null,
+  bewerkbaar = false,
+  verbindingsType = null,
+  onSelectElement,
+  onNodePositie,
+  onNodeSize,
+  onVerbind,
+  onVerwijder,
+  onVerwijderConnectoren,
+  onViewport,
+}) {
   const lookups = useMemo(() => bouwLookups(diagramType), [diagramType]);
 
   // Nodes als interne React Flow-state, gevoed vanuit de props. Nodig omdat
-  // selectie via node-changes loopt: zonder toegepaste changes "plakt" een
-  // klik-selectie niet. Posities blijven read-only (nodesDraggable=false).
+  // selectie en slepen via node-changes lopen; de store blijft de waarheid
+  // (posities gaan bij dragstop via onNodePositie terug).
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   useEffect(() => {
     const flowNodes = (diagram?.nodes || [])
@@ -59,28 +82,50 @@ function CanvasBinnenkant({ diagramType, elements, diagram, onSelectElement }) {
           id: ref.elementId,
           type: "element",
           position: ref.position || { x: 0, y: 0 },
+          // Grootte per diagram-lidmaatschap (metamodel: Position.elementSize)
+          ...(ref.size ? { style: { width: ref.size.width, height: ref.size.height } } : {}),
           data: {
             element,
             elementType,
+            bewerkbaar,
+            onResize: onNodeSize,
             fieldTypesById: lookups.fieldTypesById,
             compartmentTypesById: lookups.compartmentTypesById,
           },
         };
       })
       .filter(Boolean);
-    setNodes(flowNodes);
-  }, [diagram, elements, lookups, setNodes]);
+    // Behoud de selectie-vlag over rebuilds heen: elke store-wijziging (bv.
+    // typen in de inspector) vervangt de nodes, en zonder dit zou React Flow
+    // de selectie laten vallen — waardoor de inspector na één edit leegt.
+    setNodes((huidige) => {
+      const geselecteerd = new Set(huidige.filter((n) => n.selected).map((n) => n.id));
+      return flowNodes.map((n) => (geselecteerd.has(n.id) ? { ...n, selected: true } : n));
+    });
+  }, [diagram, elements, lookups, setNodes, bewerkbaar, onNodeSize]);
 
-  const edges = useMemo(
-    () =>
-      (diagram?.edges || []).map((e) => ({
-        ...e,
-        type: "connector",
-        hidden: e.hidden || false,
-        selectable: false,
-      })),
-    [diagram]
-  );
+  // Edges óók als interne React Flow-state: edge-selectie loopt (net als bij
+  // nodes) via changes, en zonder toegepaste changes "plakt" een klik niet —
+  // waardoor Delete op een connector nooit kon werken.
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  useEffect(() => {
+    const geimporteerd = (diagram?.edges || []).map((e) => ({
+      ...e,
+      type: "connector",
+      hidden: e.hidden || false,
+      selectable: false, // geïmporteerde presentatie-edges zijn geen elementen
+    }));
+    // Gematerialiseerde connectoren zijn wél selecteerbaar (en dus met Delete
+    // te wissen) zodra de canvas bewerkbaar is.
+    const gematerialiseerd = materialiseerConnectoren(elements, diagram, lookups.elementTypesById).map(
+      (e) => ({ ...e, type: "connector", selectable: bewerkbaar })
+    );
+    const flowEdges = [...geimporteerd, ...gematerialiseerd];
+    setEdges((huidige) => {
+      const geselecteerd = new Set(huidige.filter((e) => e.selected).map((e) => e.id));
+      return flowEdges.map((e) => (geselecteerd.has(e.id) ? { ...e, selected: true } : e));
+    });
+  }, [diagram, elements, lookups, bewerkbaar, setEdges]);
 
   const handleSelectionChange = useCallback(
     ({ nodes: sel }) => {
@@ -90,7 +135,67 @@ function CanvasBinnenkant({ diagramType, elements, diagram, onSelectElement }) {
     [onSelectElement, elements]
   );
 
-  const viewport = diagram?.viewport;
+  const handleNodeDragStop = useCallback(
+    (_ev, node) => {
+      if (bewerkbaar && onNodePositie && node?.id) onNodePositie(node.id, node.position);
+    },
+    [bewerkbaar, onNodePositie]
+  );
+
+  const isValidConnection = useCallback(
+    (verbinding) => {
+      if (!bewerkbaar) return false;
+      const bron = elements[verbinding.source];
+      const doel = elements[verbinding.target];
+      return !!vindConnectorType(diagramType, bron, doel, verbindingsType);
+    },
+    [bewerkbaar, elements, diagramType, verbindingsType]
+  );
+
+  const handleConnect = useCallback(
+    (verbinding) => {
+      if (!bewerkbaar || !onVerbind) return;
+      const bron = elements[verbinding.source];
+      const doel = elements[verbinding.target];
+      const connectorType = vindConnectorType(diagramType, bron, doel, verbindingsType);
+      if (!connectorType) return;
+      onVerbind({
+        connectorType,
+        source: verbinding.source,
+        target: verbinding.target,
+        sourceHandle: verbinding.sourceHandle || null,
+        targetHandle: verbinding.targetHandle || null,
+      });
+    },
+    [bewerkbaar, onVerbind, elements, diagramType, verbindingsType]
+  );
+
+  const handleNodesDelete = useCallback(
+    (verwijderd) => {
+      if (bewerkbaar && onVerwijder && verwijderd?.length) {
+        onVerwijder(verwijderd.map((n) => n.id));
+      }
+    },
+    [bewerkbaar, onVerwijder]
+  );
+
+  const handleEdgesDelete = useCallback(
+    (verwijderd) => {
+      if (!bewerkbaar || !onVerwijderConnectoren) return;
+      const connectorIds = (verwijderd || [])
+        .map((e) => e.data?.connectorId)
+        .filter(Boolean);
+      if (connectorIds.length) onVerwijderConnectoren(connectorIds);
+    },
+    [bewerkbaar, onVerwijderConnectoren]
+  );
+
+  const handleMoveEnd = useCallback(
+    (_ev, viewport) => {
+      if (onViewport) onViewport(viewport);
+    },
+    [onViewport]
+  );
 
   return (
     <ReactFlow
@@ -101,12 +206,22 @@ function CanvasBinnenkant({ diagramType, elements, diagram, onSelectElement }) {
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
       onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
       onSelectionChange={handleSelectionChange}
-      nodesDraggable={false}
-      nodesConnectable={false}
+      onNodeDragStop={handleNodeDragStop}
+      onConnect={handleConnect}
+      isValidConnection={isValidConnection}
+      onNodesDelete={handleNodesDelete}
+      onEdgesDelete={handleEdgesDelete}
+      onMoveEnd={handleMoveEnd}
+      nodesDraggable={bewerkbaar}
+      nodesConnectable={bewerkbaar}
       elementsSelectable
-      defaultViewport={viewport || undefined}
-      fitView={!viewport}
+      deleteKeyCode={bewerkbaar ? ["Delete"] : null}
+      // Zonder opgeslagen viewport: fitView op bestaande inhoud, maar een leeg
+      // (nieuw) diagram start gewoon op zoom 1 — anders is de eerste node mini.
+      defaultViewport={viewport || { x: 0, y: 0, zoom: 1 }}
+      fitView={!viewport && (diagram?.nodes?.length || 0) > 0}
       minZoom={0.1}
       proOptions={{ hideAttribution: true }}
     >
