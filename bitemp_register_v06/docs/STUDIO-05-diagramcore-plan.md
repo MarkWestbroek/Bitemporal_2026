@@ -2,7 +2,64 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** fase 5-feedbackronde 1 (2026-07-03): **aggregatie** (◇) naast
+- **Status:** 0.5-**werkbestand** + **lijnvormen** (2026-07-04): elk profiel
+  heeft nu *Bestand → Exporteer/Importeer 0.5-werkbestand…* — het eigen
+  formaat integraal als JSON (formaat "studio05-diagram": elements +
+  diagrammen incl. viewports + meta, met profiel-check bij import), zodat
+  een zorgvuldig geschoven view (bv. de OAS-import) niet in localStorage
+  gevangen zit. En `presentatie.vorm` op edges: "bezier" (default),
+  **"hoekig"** (orthogonaal, smoothstep) of "recht" — puur-uml staat nu
+  op hoekig voor de klassieke UML-look; markers en het ASOC-patroon reizen
+  mee. Nieuwe voorzetten genoteerd: elementen-browser (§8.8), meta-editor
+  in drie treden (§8.9) en de bolletjes-graaf-shape-POC (§8.10).
+  Eerdere ronde: vermoedelijke oorzaak **transient leeg canvas** gevonden en
+  gefixt (2026-07-04, na React Flow-fout #015 in de console bij Mark): elke
+  store-wijziging (elke toetsaanslag in de inspector) verving álle
+  node-objecten, waardoor React Flow v12 ze compleet her-initialiseerde
+  (meting `measured` zit op het node-object). Slepen in dat venster gaf
+  #015 ("trying to drag a node that is not initialized"); tijdens de
+  hermeting kon het hele canvas (tijdelijk) verborgen blijven — bij grote
+  diagrammen (OAS-import, 100+ nodes) een flink venster. Fix: de rebuild
+  **reconcilieert per id** en neemt het bestaande node-object als basis
+  (measured/dragging/selected blijven bewaard; tijdens een actieve drag wint
+  de sleep-positie). Stress-e2e (edit+drag-storm) blijft schoon; ook een
+  prestatieverbetering. Praktijkbevestiging gevraagd — dit was de
+  al drie keer gemelde heisenbug. Eerdere ronde: bugfix **multi-drag** (2026-07-03, gemeld bij het testen van de
+  OAS-import): bij het slepen van een multi-selectie bleef alleen de
+  daadwerkelijk gesleepte node op zijn nieuwe plek — `handleNodeDragStop`
+  gebruikte alleen het tweede React Flow-argument, terwijl het derde álle
+  meegesleepte nodes bevat; die gaan nu als bulk naar `onNodePosities`
+  (met lidmaatschap-aanmaak voor auto-geplaatste connector-boxen).
+  E2E: twee Ctrl-geselecteerde nodes samen verslepen → beide persistent,
+  derde onaangeroerd. Eerdere stand: OAS 3.1 **YAML-import** (2026-07-03): *Bestand → Importeer
+  OAS 3.1 (YAML/JSON)…* in de OAS-activiteit. Nieuwe pure adapter
+  `diagramprofielen/oas31/adapter.js` (`vanOasDocument`):
+  `components.schemas` → schema-/enum-elementen (properties met
+  typen/formats, `required` → verplicht; `$ref`-properties → ref-connectoren
+  met rolnaam; array-`items`-$refs → items-connectoren; `allOf` →
+  allOf-connector + inline delen als eigen properties), `paths` →
+  operatie-elementen met request-/response-refs (ook array-responses), en
+  één grid-geplaatst diagram met de titel uit `info.title`. De fabriek
+  kreeg daarvoor een **generiek `koppeling.importBestand`**-koppelpunt
+  ({label, accept, verwerk(tekst) → coreModel}) en de Bestand-menu-items
+  zijn per koppeling-onderdeel conditioneel. Parser: `yaml`
+  (nieuwe dependency; YAML is een superset van JSON, dus .json werkt ook).
+  Nog niet: YAML-export (terugreis) en oneOf/anyOf. Eerdere stand: fase 5-vuurproef: **OAS 3.1 als derde profiel** (2026-07-03,
+  branch `feat/studio05-fase5`): activiteit **"OAS (0.5)"**
+  (`diagramprofielen/oas31/` + fabriek-aanroep, verder niets). Schemas zijn
+  elementen, verwijzingen connectoren: «schema» met properties
+  (JSON-typen/formats, `verplicht` = OAS `required`), «enum», en «operation»
+  — een element zónder bewerkbare compartimenten (method/pad/summary zijn
+  element-properties, met een live "GET /personen/{id}"-weergaveregel via de
+  `extraCompartimenten`-hook). Connectoren: **$ref** (gestippeld, met de
+  property-naam als rolnaam), **allOf** (driehoek — compositie-overerving)
+  en **items** (array-elementtype). Type-kiezer: JSON-primitieven (incl.
+  formats) of een schema-$ref via de resolvers. Uitkomst van de vuurproef:
+  **geen core- of shell-wijziging nodig** — descriptor-vocabulaire
+  (compartimenten, properties, verbindingsregels, edge-presentatie, hooks)
+  bleek toereikend voor een niet-UML-domein. Bewust nog niet: oneOf/anyOf,
+  parameters/headers als elementen, YAML-import/-export (eigen
+  serialisatie-fase, vgl. canoniek-uml fase 4). Eerdere ronde: fase 5-feedbackronde 1 (2026-07-03): **aggregatie** (◇) naast
   compositie en **associatie-richting**. Core: `ConnectorEdge` kent
   `markerStart: "ruit-open"` (zelfde pad-volgende geometrie, witte vulling —
   consistent met de generalisatie-driehoek, in beide thema's onderscheidbaar)
@@ -796,6 +853,50 @@ met `npm run build` + visuele check, en levert iets werkends op.
 7. **Naam en zichtbaarheid**: "Diagrammen (0.5)" als aparte activiteit met status
    "preview" in de activity bar, of verborgen achter een instelling? Voorstel:
    gewoon zichtbaar met preview-badge, dat dwingt tot echt gebruik.
+8. **Elementen-browser (gepland).** De sidebar toont nu alleen diagrammen; een
+   tweede sectie eronder moet álle model-elementen tonen (boom per elementtype,
+   zoals de ProjectBrowser van de oude IDE): klik = selecteren in de inspector,
+   dubbelklik = naar het diagram springen/toevoegen, en (later) slepen naar het
+   canvas. Generiek te bouwen in de fabriek — de descriptor levert de groepering
+   (elementTypes) en iconen (t.z.t. §8.6a). Vooral waardevol bij grote imports
+   (OAS met tientallen schemas): elementen die op geen enkel diagram staan zijn
+   nu onvindbaar.
+9. **Meta-editor: een editor-profiel maken ín de editor (voorzet).** De
+   descriptors zijn bewust gesplitst in een JSON-serialiseerbare kern
+   (Definitie-domein: DiagramType/ElementType/FieldType/PropertyType/
+   verbindingsregels/taakbalken) en functie-hooks (Implementatie-domein). Die
+   kern is zelf een canoniek datamodel — en dus te bewerken met onze eigen
+   gereedschappen. Voorstel in drie treden:
+   - **Trede 1 — profiel-JSON als werkbestand:** een "Profiel (0.5)"-activiteit
+     die een descriptor-JSON laadt/bewerkt via de bestaande gegenereerde
+     inspector (het metamodel van §2 als descriptor voor descriptors — de
+     motor bewerkt dan zijn eigen configuratie), en hem via
+     `registreerDiagramType` + een fabriek-aanroep **live als activiteit
+     registreert**. Hooks blijven op id verwijzen naar een vaste catalogus
+     (edgeLabels-varianten, extraCompartimenten-patronen), zodat alles
+     serialiseerbaar blijft.
+   - **Trede 2 — tekenen i.p.v. formulieren:** hetzelfde, maar als diagram:
+     ElementTypes als nodes, verbindingsregels als connectoren — het
+     metamodel-als-model (dogfooding zoals §8.5 al schetst).
+   - **Trede 3 — register:** de descriptors verhuizen naar het bitemporele
+     configuratie-register (fase 7); de meta-editor wordt dan de beheer-UI
+     van dat register, met versies en tijdreizen.
+   Trede 1 is klein genoeg om na de elementen-browser op te pakken; het
+   valideert meteen of de hook-catalogus-op-id werkt (de randvoorwaarde voor
+   fase 7).
+10. **Shape-variatie & graaf-weergave (POC-idee).** ShapeTypes zijn al een
+   registry (class-box, note, rounded, boundary, anker) maar de profielen
+   gebruiken vrijwel alleen class-box; nieuwe vormen zijn puur een
+   Implementatie-domein-toevoeging. Idee van Mark: een **ronde shape**
+   ("bol") waarbij de velden van een gekozen compartiment als kleine
+   satelliet-bolletjes róndom de vorm gerangschikt worden (weergave via de
+   PropertyTypeViewer-kant) — grafen lezen als bolletjes, UML als dozen.
+   Vergt in de core alleen: een shape-component die zijn compartiment-velden
+   zelf mag positioneren (nu rendert class-box ze als rijen) — de
+   shape-props geven element + compartimenten al door, dus dit kan als
+   zelfstandige POC-shape zonder core-wijziging. Sluit aan op §8.5b
+   (StyleType-tokens) en de lijnvormen (`presentatie.vorm`, inmiddels
+   gebouwd: bezier/hoekig/recht — puur-uml is hoekig).
 
 ## 9. Relatie met de code review van 2026-06-30
 

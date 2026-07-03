@@ -192,10 +192,16 @@ function CanvasBinnenkant({
       }
     }
 
-    // Behoud de selectie-vlag over rebuilds heen: elke store-wijziging (bv.
-    // typen in de inspector) vervangt de nodes, en zonder dit zou React Flow
-    // de selectie laten vallen — waardoor de inspector na één edit leegt.
+    // Behoud selectie én node-identiteit over rebuilds heen. Elke
+    // store-wijziging (bv. typen in de inspector) bouwt de nodes opnieuw op;
+    // door per id het bestaande node-object als basis te nemen blijven de
+    // interne React Flow-velden (measured, dragging, …) bewaard. Zonder dat
+    // werden alle nodes opnieuw geïnitialiseerd — met React Flow-fout #015
+    // ("trying to drag a node that is not initialized") bij slepen tijdens
+    // dat venster, en incidenteel een (transient) leeg canvas doordat de
+    // hermeting alles verborg.
     setNodes((huidige) => {
+      const perIdHuidig = new Map(huidige.map((n) => [n.id, n]));
       const geselecteerd = new Set(huidige.filter((n) => n.selected).map((n) => n.id));
       // Programmatische selectie (bv. net geplaatst element) ook markeren,
       // anders "verliest" de inspector het element bij de eerstvolgende rebuild.
@@ -203,7 +209,21 @@ function CanvasBinnenkant({
       if (selectieId && flowNodes.some((n) => n.id === selectieId) && geselecteerd.size === 0) {
         geselecteerd.add(selectieId);
       }
-      return flowNodes.map((n) => (geselecteerd.has(n.id) ? { ...n, selected: true } : n));
+      return flowNodes.map((n) => {
+        const oud = perIdHuidig.get(n.id);
+        const selected = geselecteerd.has(n.id);
+        if (!oud) return selected ? { ...n, selected: true } : n;
+        return {
+          ...oud,
+          // Tijdens een actieve drag wint de sleep-positie; de store volgt
+          // pas bij dragstop (onNodePositie/onNodePosities).
+          position: oud.dragging ? oud.position : n.position,
+          style: n.style,
+          zIndex: n.zIndex,
+          data: n.data,
+          selected,
+        };
+      });
     });
   }, [diagram, elements, lookups, gematerialiseerd, verrijk, setNodes, bewerkbaar, onNodeSize, selectieId]);
 
@@ -278,10 +298,20 @@ function CanvasBinnenkant({
   );
 
   const handleNodeDragStop = useCallback(
-    (_ev, node) => {
-      if (bewerkbaar && onNodePositie && node?.id) onNodePositie(node.id, node.position);
+    (_ev, node, nodes) => {
+      if (!bewerkbaar) return;
+      // Bij multi-drag geeft React Flow álle meegesleepte nodes als derde
+      // argument — alleen `node` persisteren liet de rest terugspringen.
+      const gesleept = nodes?.length ? nodes : node ? [node] : [];
+      if (gesleept.length > 1 && onNodePosities) {
+        const record = {};
+        for (const n of gesleept) if (n?.id) record[n.id] = n.position;
+        onNodePosities(record);
+      } else if (gesleept[0]?.id && onNodePositie) {
+        onNodePositie(gesleept[0].id, gesleept[0].position);
+      }
     },
-    [bewerkbaar, onNodePositie]
+    [bewerkbaar, onNodePositie, onNodePosities]
   );
 
   const isValidConnection = useCallback(

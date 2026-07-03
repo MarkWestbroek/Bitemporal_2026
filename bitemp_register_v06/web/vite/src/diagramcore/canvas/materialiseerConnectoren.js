@@ -160,6 +160,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
         // zichtbaar aan de bronzijde.
         presentatie: {
           lijn: "solid",
+          vorm: basisPresentatie.vorm,
           kleur: basisPresentatie.kleur || "#64748b",
           markerStart: basisPresentatie.markerStart,
           labels: labels.bron || [],
@@ -176,6 +177,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
         connectorId: el.id,
         presentatie: {
           lijn: "solid",
+          vorm: basisPresentatie.vorm,
           kleur: basisPresentatie.kleur || "#64748b",
           markerEnd: basisPresentatie.markerEnd ?? (el.data?.directioneel ? "pijl-open" : null),
           labels: labels.doel || [],

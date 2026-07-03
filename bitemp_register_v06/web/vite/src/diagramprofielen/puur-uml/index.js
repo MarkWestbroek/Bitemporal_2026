@@ -136,7 +136,7 @@ const elementTypes = [
     isConnector: true,
     bron: { elementTypes: KLASSIFIERS },
     doel: { elementTypes: KLASSIFIERS },
-    edgePresentatie: { lijn: "solid", kleur: "#475569" },
+    edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: "#475569" },
     properties: [
       KLEUR_VELD,
       { key: "bronKardinaliteit", label: "kardinaliteit (bron)", datatype: "string" },
@@ -177,7 +177,7 @@ const elementTypes = [
     isConnector: true,
     bron: { elementTypes: ["klasse"] },
     doel: { elementTypes: ["klasse"] },
-    edgePresentatie: { lijn: "solid", kleur: "#475569", markerStart: "ruit-open" },
+    edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: "#475569", markerStart: "ruit-open" },
   },
   {
     id: "compositie",
@@ -187,7 +187,7 @@ const elementTypes = [
     isConnector: true,
     bron: { elementTypes: ["klasse"] },
     doel: { elementTypes: ["klasse"] },
-    edgePresentatie: { lijn: "solid", kleur: "#475569", markerStart: "ruit" },
+    edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: "#475569", markerStart: "ruit" },
   },
   {
     id: "generalisatie",
@@ -197,7 +197,7 @@ const elementTypes = [
     isConnector: true,
     bron: { elementTypes: MET_DATATYPE },
     doel: { elementTypes: MET_DATATYPE },
-    edgePresentatie: { lijn: "solid", kleur: "#475569", markerEnd: "driehoek" },
+    edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: "#475569", markerEnd: "driehoek" },
   },
   {
     id: "realisatie",
@@ -207,7 +207,7 @@ const elementTypes = [
     isConnector: true,
     bron: { elementTypes: ["klasse"] },
     doel: { elementTypes: ["interface"] },
-    edgePresentatie: { lijn: "dash-6-3", kleur: "#475569", markerEnd: "driehoek" },
+    edgePresentatie: { lijn: "dash-6-3", vorm: "hoekig", kleur: "#475569", markerEnd: "driehoek" },
   },
   {
     id: "dependency",
@@ -219,6 +219,7 @@ const elementTypes = [
     doel: { elementTypes: MET_DATATYPE },
     edgePresentatie: {
       lijn: "dash-6-3",
+      vorm: "hoekig",
       kleur: "#64748b",
       markerEnd: "pijl-open",
       labels: [{ zijde: "midden", delen: [{ tekst: "«use»", soort: "constraint", kleur: "#7c3aed" }] }],

@@ -197,6 +197,7 @@ te wijzigen.
 | modelleren   | UML-model          | actief   | `IdePage` (FlexLayout, fullMain)   |
 | modelleren   | Diagrammen (0.5)   | preview  | `diagramcore` + `diagramprofielen/canoniek-uml` (bewerkbare sandbox) |
 | modelleren   | UML (0.5)          | preview  | `diagramcore` + `diagramprofielen/puur-uml` (fase 5-lakmoesproef) |
+| modelleren   | OAS (0.5)          | preview  | `diagramcore` + `diagramprofielen/oas31` (fase 5-vuurproef) |
 | modelleren   | DMN-tabellen       | actief   | `dmn/DmnTableEditor` + ModelPicker |
 | modelleren   | BPMN-processen     | actief   | `bpmn/BpmnEditor` + ModelPicker    |
 | modelleren   | Berichtdefinities  | actief   | `bericht/BerichttypeEditor`        |
@@ -247,6 +248,14 @@ fase 2 een **bewerkbare sandbox**:
   UML-model…** vervangt het model in de klassieke UML-activiteit door de
   sandbox (met bevestiging; de API blijft onaangeroerd) — de inverse van
   "Herlaad uit UML-model".
+- **0.5-werkbestand**: elk 0.5-profiel heeft **Bestand →
+  Exporteer/Importeer 0.5-werkbestand…** — het eigen formaat integraal als
+  JSON (elements + diagrammen incl. viewports + meta, met profiel-check bij
+  import). Zo is een handmatig geschoven view (bv. een OAS-import) deelbaar
+  en niet aan localStorage gebonden.
+- **Lijnvormen**: edges kennen `presentatie.vorm` — bezier (default),
+  hoekig (orthogonaal) of recht. Het puur-UML-profiel gebruikt hoekig voor
+  de klassieke UML-look.
 - **Fabriek + tweede profiel (fase 5)**: de activiteit-mechaniek zit in
   `studio/activities/maakDiagramActiviteit.jsx` (descriptor + opties →
   complete activiteit; model-/V3-/API-koppeling optioneel). De activiteit
@@ -260,6 +269,17 @@ fase 2 een **bewerkbare sandbox**:
   doelzijde) via de nieuwe `hooks.edgePresentatie` op connector-typen:
   presentatie-overrides o.b.v. connector-data; markers reizen in de
   ASOC-gedaante mee naar de bron-/doel-edge.
+- **Derde profiel: "OAS (0.5)"** (`diagramprofielen/oas31/`, vuurproef op een
+  niet-UML-domein): «schema»-elementen met properties (JSON-typen/formats,
+  required), «enum», «operation» (method/pad/summary als element-properties
+  met live signatuurregel op de node), en de connectoren **$ref** (met
+  property-naam als rolnaam), **allOf** (overerving) en **items**
+  (array-elementtype). Ook hier: alleen een descriptor + fabriek-aanroep.
+  **Bestand → Importeer OAS 3.1 (YAML/JSON)…** leest een echt
+  OpenAPI-document in (`oas31/adapter.js`, parser: `yaml`): schemas, enums,
+  paths → operaties, en alle $ref/allOf/items-relaties als connectoren, met
+  een grid-geplaatst diagram genoemd naar `info.title`. Export terug naar
+  YAML is een later punt (eigen terugreis, vgl. canoniek-uml fase 4).
 - **Gegevenstype-validatie bewerken**: validatie, normalisatie en weergave
   zijn element-properties van het gegevenstype met eigen PropertyTypeEditors
   (`ValidatieEditors.jsx`, datatypes "validatieregels"/"weergaveregels"):
@@ -318,16 +338,18 @@ fase 2 een **bewerkbare sandbox**:
   **Overgeërfde velden** verschijnen in het kind (generalisatie-keten,
   ↑-kopregel, cursief) — weergave-compartiment via de profiel-hook, geen
   modeldata.
-- Nog niet (bekend): activeren/rebuild vanuit 0.5 en terugschrijven naar de
-  UML-store (rest van fase 4B), clipboard,
+- Nog niet (bekend): rebuild vanuit 0.5, clipboard,
   validatie-hook, domein-overlay, sleepbare edge-labels, licht/donker-tokens
   per StyleType (plan §8.5b), integrale iconenset voor de Maken-balk
   (ontwerp-sessie, plan §8.6a), overerving in de gespiegelde weergave
-  (generalisaties uit het oude model zijn daar nog presentatie-edges).
-  Bekend en onopgelost: incidenteel transient leeg canvas (diagramwissel
-  herstelt; repro gezocht). Na deze update een bestaande sandbox eerst
-  verversen via "Herlaad uit UML-model" — anders missen de `bron`-bijlagen
-  die de export verliesvrij maken.
+  (generalisaties uit het oude model zijn daar nog presentatie-edges),
+  YAML-export en oneOf/anyOf in het OAS-profiel.
+  Het incidentele **transient lege canvas** is vermoedelijk opgelost
+  (2026-07-04): node-rebuilds reconciliëren nu per id zodat React Flow de
+  nodes niet her-initialiseert (fout #015) — graag melden als het nog
+  optreedt. Na de fase 4-update een bestaande sandbox eerst verversen via
+  "Herlaad uit UML-model" — anders missen de `bron`-bijlagen die de export
+  verliesvrij maken.
 
 ## DMN-activiteit: DRD + Tabel met dmn-js
 

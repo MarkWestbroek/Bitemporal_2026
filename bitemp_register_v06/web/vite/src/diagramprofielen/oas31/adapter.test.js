@@ -1,0 +1,139 @@
+// adapter.test.js — OAS 3.1-document → diagramcore-model (oas31-profiel).
+// Run: node --import ./test/register-aliases.mjs --test src/diagramprofielen/oas31/adapter.test.js
+
+import test from "node:test";
+import assert from "node:assert/strict";
+
+import { vanOasDocument } from "./adapter.js";
+
+const doc = {
+  openapi: "3.1.0",
+  info: { title: "Personen-API", version: "1.0" },
+  paths: {
+    "/personen/{id}": {
+      get: {
+        operationId: "getPersoon",
+        summary: "Haal één persoon op",
+        responses: {
+          200: { content: { "application/json": { schema: { $ref: "#/components/schemas/Persoon" } } } },
+          404: { description: "niet gevonden" },
+        },
+      },
+    },
+    "/personen": {
+      get: {
+        operationId: "listPersonen",
+        responses: {
+          200: {
+            content: {
+              "application/json": {
+                schema: { type: "array", items: { $ref: "#/components/schemas/Persoon" } },
+              },
+            },
+          },
+        },
+      },
+      post: {
+        operationId: "createPersoon",
+        requestBody: { content: { "application/json": { schema: { $ref: "#/components/schemas/Persoon" } } } },
+        responses: { 201: { description: "aangemaakt" } },
+      },
+    },
+  },
+  components: {
+    schemas: {
+      Persoon: {
+        type: "object",
+        description: "Een natuurlijk persoon.",
+        required: ["bsn"],
+        properties: {
+          bsn: { type: "string" },
+          geboortedatum: { type: "string", format: "date" },
+          adres: { $ref: "#/components/schemas/Adres" },
+          hobbies: { type: "array", items: { type: "string" } },
+          kleuren: { type: "array", items: { $ref: "#/components/schemas/Kleur" } },
+        },
+      },
+      Adres: {
+        type: "object",
+        required: ["straat"],
+        properties: { straat: { type: "string" }, postcode: { type: "string" } },
+      },
+      Werknemer: {
+        allOf: [
+          { $ref: "#/components/schemas/Persoon" },
+          { type: "object", required: ["personeelsnummer"], properties: { personeelsnummer: { type: "integer" } } },
+        ],
+      },
+      Kleur: { type: "string", enum: ["rood", "blauw"] },
+    },
+  },
+};
+
+test("oas-import: schemas worden elementen met properties, required en formats", () => {
+  const { elements } = vanOasDocument(doc);
+  const persoon = elements.Persoon;
+  assert.equal(persoon.elementType, "schema");
+  assert.equal(persoon.data.beschrijving, "Een natuurlijk persoon.");
+  const velden = Object.fromEntries(persoon.compartimenten[0].velden.map((v) => [v.naam, v.data]));
+  assert.equal(velden.bsn.verplicht, true);
+  assert.equal(velden.geboortedatum.typeLabel, "string «date»");
+  assert.equal(velden.geboortedatum.verplicht, false);
+  assert.equal(velden.adres.typeLabel, "Adres");
+  assert.equal(velden.hobbies.typeLabel, "string[]");
+  assert.equal(velden.kleuren.typeLabel, "Kleur[]");
+});
+
+test("oas-import: $ref-properties en array-items worden connectoren met rolnaam", () => {
+  const { elements } = vanOasDocument(doc);
+  const conns = Object.values(elements).filter((el) => el.source);
+  const adresRef = conns.find((c) => c.elementType === "ref" && c.source === "Persoon" && c.target === "Adres");
+  assert.equal(adresRef.data.rolnaam, "adres");
+  const kleurItems = conns.find((c) => c.elementType === "items" && c.source === "Persoon" && c.target === "Kleur");
+  assert.equal(kleurItems.data.rolnaam, "kleuren");
+});
+
+test("oas-import: allOf wordt een allOf-connector plus eigen properties", () => {
+  const { elements } = vanOasDocument(doc);
+  const werknemer = elements.Werknemer;
+  const velden = werknemer.compartimenten[0].velden;
+  assert.deepEqual(velden.map((v) => v.naam), ["personeelsnummer"]);
+  assert.equal(velden[0].data.verplicht, true);
+  const allOf = Object.values(elements).find(
+    (el) => el.elementType === "allOf" && el.source === "Werknemer" && el.target === "Persoon"
+  );
+  assert.ok(allOf, "Werknemer «allOf» Persoon");
+});
+
+test("oas-import: enum-schema wordt een enum-element met literals", () => {
+  const { elements } = vanOasDocument(doc);
+  assert.equal(elements.Kleur.elementType, "enum");
+  assert.deepEqual(elements.Kleur.compartimenten[0].velden.map((v) => v.naam), ["rood", "blauw"]);
+});
+
+test("oas-import: paths worden operaties met request-/response-refs (ook array-responses)", () => {
+  const { elements } = vanOasDocument(doc);
+  const ops = Object.values(elements).filter((el) => el.elementType === "operatie");
+  assert.deepEqual(ops.map((o) => o.naam).sort(), ["createPersoon", "getPersoon", "listPersonen"]);
+  const get = ops.find((o) => o.naam === "getPersoon");
+  assert.equal(get.data.method, "GET");
+  assert.equal(get.data.pad, "/personen/{id}");
+  assert.equal(get.data.samenvatting, "Haal één persoon op");
+
+  const conns = Object.values(elements).filter((el) => el.source);
+  assert.ok(conns.some((c) => c.source === get.id && c.target === "Persoon" && c.data.rolnaam === "response 200"));
+  const list = ops.find((o) => o.naam === "listPersonen");
+  assert.ok(conns.some((c) => c.source === list.id && c.target === "Persoon"), "array-response → ref");
+  const create = ops.find((o) => o.naam === "createPersoon");
+  assert.ok(conns.some((c) => c.source === create.id && c.data.rolnaam === "request"));
+});
+
+test("oas-import: één diagram met alle niet-connector-elementen in een grid", () => {
+  const { diagrams, meta } = vanOasDocument(doc);
+  const diag = diagrams.componenten;
+  assert.equal(diag.naam, "Personen-API");
+  const geplaatst = diag.nodes.map((n) => n.elementId).sort();
+  assert.ok(geplaatst.includes("Persoon") && geplaatst.includes("Kleur"));
+  assert.equal(diag.nodes.length, 7, "4 schemas/enums + 3 operaties");
+  assert.equal(meta.oasInfo.title, "Personen-API");
+});
