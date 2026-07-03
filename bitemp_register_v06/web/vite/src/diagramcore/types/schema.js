@@ -71,6 +71,9 @@
  * @property {string} fieldType     - id van het FieldType voor de regels
  * @property {boolean} [alleenWeergave] - true → gevuld door een hook
  *   (extraCompartimenten), niet handmatig bewerkbaar in de inspector
+ * @property {boolean} [verbergInInspector] - true → alleen op de node tonen;
+ *   de inspector slaat de sectie over (bv. als dezelfde informatie daar al
+ *   via element-properties bewerkbaar is, zoals gegevenstype-validatie)
  */
 
 /**

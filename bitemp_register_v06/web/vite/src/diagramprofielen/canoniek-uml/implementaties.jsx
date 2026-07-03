@@ -10,10 +10,15 @@
  */
 import { registreerPropertyTypeEditor, getPropertyTypeEditor } from "../../diagramcore/inspector/propertyTypeEditors.jsx";
 import CelExpressieEditor from "./CelExpressieEditor.jsx";
+import { ValidatieRegelsEditor, WeergaveRegelsEditor } from "./ValidatieEditors.jsx";
 
 /** Idempotent (veilig bij HMR/dubbele import). */
 export function registreerCanoniekUmlImplementaties() {
   if (!getPropertyTypeEditor("cel-expressie")) {
     registreerPropertyTypeEditor("cel-expressie", CelExpressieEditor);
+  }
+  if (!getPropertyTypeEditor("validatieregels")) {
+    registreerPropertyTypeEditor("validatieregels", ValidatieRegelsEditor);
+    registreerPropertyTypeEditor("weergaveregels", WeergaveRegelsEditor);
   }
 }

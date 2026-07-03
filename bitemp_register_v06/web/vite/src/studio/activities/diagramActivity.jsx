@@ -40,6 +40,7 @@ import {
 } from "../../diagramprofielen/canoniek-uml/index.js";
 import { registreerCanoniekUmlImplementaties } from "../../diagramprofielen/canoniek-uml/implementaties.jsx";
 import { vanCanoniekModel } from "../../diagramprofielen/canoniek-uml/adapter.js";
+import { exporteerV3, importeerV3 } from "../../diagramprofielen/canoniek-uml/serialisatie.js";
 
 const DiagramCanvas = lazy(() => import("../../diagramcore/canvas/DiagramCanvas.jsx"));
 
@@ -110,6 +111,58 @@ function Diagram05Provider({ children }) {
           naam,
           diagramType: canoniekUmlDiagramType.id,
         });
+      }),
+      // Fase 4: serialisatie. Sandbox → oude storevorm (naarCanoniekModel)
+      // → V3 JSON via de bewezen adapter, en dezelfde route terug.
+      menuBus.on("d05:exporteer-v3", () => {
+        const { v3, overgeslagen } = exporteerV3(useDiagram05Store.getState());
+        const naam = (v3.model?.naam || "model").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        const blob = new Blob([JSON.stringify(v3, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${naam}-v3.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        if (overgeslagen.length) {
+          window.alert(
+            `Niet meegenomen in de V3-export (geen V3-tegenhanger):\n• ${overgeslagen.join("\n• ")}`
+          );
+        }
+      }),
+      menuBus.on("d05:importeer-v3", () => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".json,application/json";
+        input.onchange = () => {
+          const file = input.files?.[0];
+          if (!file) return;
+          file.text().then((tekst) => {
+            let v3;
+            try {
+              v3 = JSON.parse(tekst);
+            } catch {
+              window.alert("Dit bestand is geen geldige JSON.");
+              return;
+            }
+            const s = useDiagram05Store.getState();
+            if (Object.keys(s.elements).length > 0) {
+              const ok = window.confirm(
+                "Importeren vervangt de hele 0.5-sandbox door het gekozen V3-model.\nJe lokale wijzigingen gaan verloren. Doorgaan?"
+              );
+              if (!ok) return;
+            }
+            try {
+              s.laadModel(importeerV3(v3));
+            } catch (e) {
+              window.alert(`Import mislukt: ${e?.message || e}`);
+              return;
+            }
+            useDiagram05Store.temporal.getState().clear();
+            setSelectieId(null);
+          });
+        };
+        input.click();
       }),
     ];
     return () => af.forEach((off) => off());
@@ -611,6 +664,25 @@ export default {
   sidebarLabel: "Diagrammen",
   inspectorLabel: "Element",
   menus: () => [
+    // Eigen Bestand-menu (overschrijft de standaard op ankerplek "bestand",
+    // zelfde patroon als umlActivity): import/export horen thuis in Bestand.
+    {
+      id: "bestand",
+      label: "Bestand",
+      items: [
+        { id: "d05-import-v3", label: "Importeer V3 JSON…", onClick: () => menuBus.emit("d05:importeer-v3") },
+        { id: "d05-export-v3", label: "Exporteer V3 JSON…", onClick: () => menuBus.emit("d05:exporteer-v3") },
+        { type: "separator" },
+        {
+          id: "index",
+          label: "Overzicht (index)…",
+          onClick: () => {
+            window.location.href = window.location.pathname.replace(/[^/]*$/, "") || "/";
+          },
+        },
+        { id: "herlaad-pagina", label: "Pagina herladen", shortcut: "F5", onClick: () => window.location.reload() },
+      ],
+    },
     {
       id: "bewerken",
       label: "Bewerken",

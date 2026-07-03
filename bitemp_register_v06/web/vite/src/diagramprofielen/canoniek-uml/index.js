@@ -72,6 +72,13 @@ const fieldTypes = [
 /** Gedeelde element-PropertyType: achtergrondkleur (datatype "colour"). */
 const KLEUR_VELD = { key: "kleur", datatype: "colour" };
 
+/** "sleutel: waarde"-regels voor weergave-compartimenten (lege waarden vallen weg). */
+function regelVelden(paren) {
+  return paren
+    .filter(([, waarde]) => waarde !== undefined && waarde !== null && waarde !== "")
+    .map(([sleutel, waarde]) => ({ naam: `${sleutel}: ${waarde}`, fieldType: "regel" }));
+}
+
 /** @type {import("../../diagramcore/types/schema.js").ElementType[]} */
 const elementTypes = [
   {
@@ -204,12 +211,55 @@ const elementTypes = [
     stereotype: "«gegevenstype»",
     shape: "class-box",
     kleur: "#dbeafe",
-    properties: [KLEUR_VELD],
+    // Validatie/normalisatie/weergave zijn element-properties met eigen
+    // PropertyTypeEditors (implementaties.jsx registreert "validatieregels"
+    // en "weergaveregels" in de datatype-registry) — het PropertyType-patroon
+    // uit plan §2, zoals "cel-expressie".
+    properties: [
+      KLEUR_VELD,
+      { key: "validatie", label: "Validatie", datatype: "validatieregels" },
+      { key: "normalisatie", label: "Normalisatie", datatype: "string" },
+      { key: "weergave", label: "Weergave", datatype: "weergaveregels" },
+    ],
     compartments: [
       { id: "eigenschappen", label: null, fieldType: "eigenschap" },
-      { id: "validatie", label: null, fieldType: "regel" },
-      { id: "weergave", label: null, fieldType: "regel" },
+      // Alleen op de node: in de inspector zijn validatie/weergave al
+      // bewerkbaar via de element-properties hierboven (dubbelop vermeden).
+      { id: "validatie", label: null, fieldType: "regel", alleenWeergave: true, verbergInInspector: true },
+      { id: "weergave", label: null, fieldType: "regel", alleenWeergave: true, verbergInInspector: true },
     ],
+    hooks: {
+      /**
+       * Validatie- en weergave-compartimenten live uit element.data, zodat de
+       * node meebeweegt met wat de inspector wijzigt (voorheen statisch bij
+       * de adapter-heenreis gegenereerd, waardoor bewerken onzichtbaar bleef).
+       */
+      extraCompartimenten: (element) => {
+        const d = element.data || {};
+        const val = d.validatie || {};
+        const wg = d.weergave || {};
+        const validatie = regelVelden([
+          ["pattern", val.pattern],
+          ["minLength", val.minLength],
+          ["maxLength", val.maxLength],
+          ["minimum", val.minimum],
+          ["maximum", val.maximum],
+          ["multipleOf", val.multipleOf],
+          ...(val.regels || []).map((r) => ["regel", r?.naam || r]),
+          ["norm", d.normalisatie],
+        ]);
+        const weergave = regelVelden([
+          ["placeholder", wg.placeholder],
+          ["mask", wg.inputMask],
+          ["prefix", wg.prefix],
+          ["suffix", wg.suffix],
+        ]);
+        return [
+          ...(validatie.length ? [{ compartmentType: "validatie", velden: validatie }] : []),
+          ...(weergave.length ? [{ compartmentType: "weergave", velden: weergave }] : []),
+        ];
+      },
+    },
   },
   {
     id: "referentielijstInstantie",

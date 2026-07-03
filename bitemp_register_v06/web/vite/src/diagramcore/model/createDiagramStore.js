@@ -45,6 +45,8 @@ export function createDiagramStore({ persistKey } = {}) {
     diagrams: {},
     /** @type {Record<string, {x:number,y:number,zoom:number}>} pan/zoom per diagram, buiten de undo-history */
     viewports: {},
+    /** Niet-diagramgebonden meta van de bron (modelMeta/domains/…), passthrough voor serialisatie. */
+    meta: null,
     actiefDiagramId: null,
     isDirty: false,
   };
@@ -53,7 +55,7 @@ export function createDiagramStore({ persistKey } = {}) {
     ...leeg,
 
     /** Vervang het volledige model (vanuit een adapter). Zet isDirty op false. */
-    laadModel: ({ diagramTypeId, elements, diagrams, actiefDiagramId }) =>
+    laadModel: ({ diagramTypeId, elements, diagrams, actiefDiagramId, meta }) =>
       set((state) => {
         const { kaal, viewports } = splitsViewports(diagrams);
         return {
@@ -61,6 +63,7 @@ export function createDiagramStore({ persistKey } = {}) {
           elements: elements || {},
           diagrams: kaal,
           viewports,
+          meta: meta ?? state.meta,
           isDirty: false,
           actiefDiagramId:
             actiefDiagramId ??
@@ -365,6 +368,7 @@ export function createDiagramStore({ persistKey } = {}) {
         elements: state.elements,
         diagrams: state.diagrams,
         viewports: state.viewports,
+        meta: state.meta,
         actiefDiagramId: state.actiefDiagramId,
       }),
     })
