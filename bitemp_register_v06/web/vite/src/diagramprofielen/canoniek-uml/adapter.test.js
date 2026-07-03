@@ -136,10 +136,10 @@ test("presentatie: dependency en generalisatie", () => {
   assert.equal(gen.labels[0].delen[0].tekst, "«Generalisatie»");
 });
 
-test("verwijzingsBronnen: kandidaten per soort, met groep en icoon (§4.5b)", () => {
+test("referenceResolvers: kandidaten per ReferenceType, met groep en icoon (§4.5b)", () => {
   const core = vanCanoniekModel(maakBronState());
-  const alle = canoniekUmlDiagramType.verwijzingsBronnen.flatMap((b) =>
-    b.kandidaten({ elements: core.elements })
+  const alle = canoniekUmlDiagramType.referenceTypes.flatMap((rt) =>
+    canoniekUmlDiagramType.referenceResolvers[rt.id]({ elements: core.elements })
   );
   // Basistypen altijd aanwezig, zonder icoon
   assert.ok(alle.some((k) => k.waarde === "string" && k.groep === "Basistypen" && !k.icoon));
