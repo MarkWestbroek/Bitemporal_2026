@@ -47,7 +47,12 @@ function afgeleidCompartiment(d) {
     velden: avs.map((av) => ({
       naam: av.naam,
       fieldType: "afgeleidVeld",
-      data: { afgeleid: true, cursief: true, typeLabel: av.goType || "string" },
+      data: {
+        afgeleid: true,
+        cursief: true,
+        typeLabel: av.goType || "string",
+        afleidingsregel: av.afleidingsregel || "",
+      },
     })),
   };
 }

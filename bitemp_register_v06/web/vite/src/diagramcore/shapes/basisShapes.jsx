@@ -12,15 +12,15 @@
  */
 import { registreerShape } from "./shapeRegistry.js";
 
-/** Eén veld-regel, gerenderd volgens FieldType.render. */
+/** Eén veld-regel, gerenderd volgens de FieldTypeViewer (fieldType.viewer). */
 function VeldRegel({ veld, fieldType }) {
-  const render = fieldType?.render || "naam-type";
+  const viewer = fieldType?.viewer || fieldType?.render || "naam-type";
   const d = veld.data || {};
 
-  if (render === "waarde") {
+  if (viewer === "waarde") {
     return <div className="dc-veld is-waarde">{veld.naam}</div>;
   }
-  if (render === "tekst") {
+  if (viewer === "tekst") {
     return <div className="dc-veld is-tekst">{veld.naam}</div>;
   }
   // "naam-type": naam links (vet indien verplicht), typeLabel rechts

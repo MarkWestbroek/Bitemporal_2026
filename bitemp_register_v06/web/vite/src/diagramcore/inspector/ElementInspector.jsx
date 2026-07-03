@@ -1,94 +1,48 @@
 /**
  * ElementInspector (diagramcore) — gegenereerd eigenschappen-paneel.
  *
- * Volledig configuratie-gedreven: het formulier wordt opgebouwd uit
- *   1. de naam van het element,
- *   2. `elementType.dataVelden` (element-brede data zoals notitie-tekst),
- *   3. `elementType.compartments` × `FieldType.editor` (regels per veld).
+ * Volledig metamodel-gedreven (vierde iteratie, plan §2):
+ *   - een veld wordt bewerkt via de **PropertyTypes** van zijn FieldType;
+ *   - een element-brede eigenschap (tekst, expressie, kleur) via de
+ *     **PropertyTypes** van het ElementType (`properties`);
+ *   - de widget per property komt uit de **registry datatype →
+ *     PropertyTypeEditor** (propertyTypeEditors.jsx) — string, tekst,
+ *     boolean, colour, en door profielen geregistreerde datatypes zoals
+ *     "cel-expressie";
+ *   - heeft een property `referenceTypes`, dan wint de VerwijzingsKiezer:
+ *     kandidaten via de ReferenceResolvers van het DiagramType
+ *     (keuzelijst + minibrowser, plan §4.5b).
  *
- * De inspector kent geen domein: hij rendert widgets ("text" | "textarea" |
- * "checkbox") volgens de descriptor en levert wijzigingen als patch terug via
- * `onUpdate` (zelfde vorm als store.updateElement).
+ * Props:
+ *   element, elementType, fieldTypesById  — model + definitie
+ *   kandidatenVoor(referenceTypeIds) → VerwijzingsKandidaat[]
+ *   bewerkbaar, onUpdate(patch), onVerwijderVanDiagram?, onVerwijderUitModel?
  */
 import { useCallback } from "react";
+import {
+  getPropertyTypeEditor,
+  VerwijzingsKiezer,
+} from "./propertyTypeEditors.jsx";
 
-function Widget({ regel, waarde, onChange, widgetContext }) {
-  if (regel.widget === "checkbox") {
+/** Eén property: kiezer bij referenceTypes, anders editor op datatype. */
+function PropertyWidget({ regel, waarde, onChange, element, kandidatenVoor }) {
+  if (regel.referenceTypes?.length) {
     return (
-      <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11 }}>
-        <input type="checkbox" checked={!!waarde} onChange={(e) => onChange(e.target.checked)} />
-        {regel.label || regel.key}
-      </label>
-    );
-  }
-  if (regel.widget === "textarea") {
-    return <textarea value={waarde || ""} onChange={(e) => onChange(e.target.value)} />;
-  }
-  if (regel.widget === "kleur") {
-    return (
-      <input
-        type="color"
-        value={waarde || "#e2e8f0"}
-        title={regel.label || regel.key}
-        style={{ width: 36, height: 24, padding: 1, border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, cursor: "pointer" }}
-        onChange={(e) => onChange(e.target.value)}
+      <VerwijzingsKiezer
+        regel={regel}
+        waarde={waarde}
+        onChange={onChange}
+        kandidaten={kandidatenVoor ? kandidatenVoor(regel.referenceTypes) : []}
       />
     );
   }
-  if (regel.widget === "select") {
-    // Opties: array = statisch; string = sleutel in de widgetContext van de
-    // activiteit. Kandidaten mogen strings zijn of VerwijzingsKandidaten
-    // ({waarde, label, icoon, groep}) — die laatste worden per groep als
-    // optgroup gerenderd (VerwijzingsBron-patroon, plan §4.5b).
-    const ruw = Array.isArray(regel.opties) ? regel.opties : widgetContext?.[regel.opties] || [];
-    const kandidaten = ruw.map((o) => (typeof o === "string" ? { waarde: o, label: o } : o));
-    const groepen = [];
-    for (const k of kandidaten) {
-      const naam = k.groep || "";
-      let g = groepen.find((x) => x.naam === naam);
-      if (!g) groepen.push((g = { naam, items: [] }));
-      g.items.push(k);
-    }
-    const bekend = kandidaten.some((k) => k.waarde === waarde);
-    const optie = (k) => (
-      <option key={k.waarde} value={k.waarde}>
-        {k.label}
-        {k.icoon ? ` ${k.icoon}` : ""}
-      </option>
-    );
-    return (
-      <select
-        value={waarde ?? ""}
-        onChange={(e) => onChange(e.target.value)}
-        style={{ flex: 1, minWidth: 0, font: "inherit", fontSize: 12, padding: "3px 4px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, background: "var(--s-panel, #fff)", color: "var(--s-fg, #1e293b)" }}
-      >
-        {waarde && !bekend && <option value={waarde}>{waarde}</option>}
-        <option value="">{`(${regel.label || regel.key})`}</option>
-        {groepen.map((g) =>
-          g.naam ? (
-            <optgroup key={g.naam} label={g.naam}>
-              {g.items.map(optie)}
-            </optgroup>
-          ) : (
-            g.items.map(optie)
-          )
-        )}
-      </select>
-    );
-  }
-  return (
-    <input
-      type="text"
-      value={waarde ?? ""}
-      placeholder={regel.label || regel.key}
-      onChange={(e) => onChange(e.target.value)}
-    />
-  );
+  const Editor = getPropertyTypeEditor(regel.datatype || "string") || getPropertyTypeEditor("string");
+  return <Editor regel={regel} waarde={waarde} onChange={onChange} element={element} />;
 }
 
-/** Eén veld-rij binnen een compartiment: widgets volgens FieldType.editor. */
-function VeldRij({ veld, fieldType, bewerkbaar, widgetContext, onChange, onVerwijder }) {
-  const regels = fieldType?.editor || [{ key: "naam", widget: "text" }];
+/** Eén veld-rij binnen een compartiment: widgets volgens FieldType.properties. */
+function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, onChange, onVerwijder }) {
+  const regels = fieldType?.properties || [{ key: "naam", datatype: "string" }];
   const waardeVan = (key) => (key === "naam" ? veld.naam : veld.data?.[key]);
   const zet = (key, waarde) => {
     if (key === "naam") onChange({ ...veld, naam: waarde });
@@ -97,11 +51,12 @@ function VeldRij({ veld, fieldType, bewerkbaar, widgetContext, onChange, onVerwi
   return (
     <div className="dc-inspector-rij">
       {regels.map((regel) => (
-        <Widget
+        <PropertyWidget
           key={regel.key}
           regel={regel}
           waarde={waardeVan(regel.key)}
-          widgetContext={widgetContext}
+          element={element}
+          kandidatenVoor={kandidatenVoor}
           onChange={(w) => bewerkbaar && zet(regel.key, w)}
         />
       ))}
@@ -118,7 +73,7 @@ export default function ElementInspector({
   element,
   elementType,
   fieldTypesById,
-  widgetContext,
+  kandidatenVoor,
   bewerkbaar = false,
   onUpdate,
   onVerwijderVanDiagram,
@@ -157,14 +112,15 @@ export default function ElementInspector({
         />
       </div>
 
-      {/* Element-brede data-velden (bv. notitie-tekst, constraint-expressie) */}
-      {(elementType?.dataVelden || []).map((regel) => (
+      {/* PropertyTypes van het ElementType (tekst, expressie, kleur, …) */}
+      {(elementType?.properties || []).map((regel) => (
         <div className="dc-inspector-rij" key={regel.key}>
           <label className="dc-veldlabel">{regel.label || regel.key}</label>
-          <Widget
+          <PropertyWidget
             regel={regel}
             waarde={element.data?.[regel.key]}
-            widgetContext={widgetContext}
+            element={element}
+            kandidatenVoor={kandidatenVoor}
             onChange={(w) => bewerkbaar && onUpdate({ data: { [regel.key]: w } })}
           />
         </div>
@@ -184,7 +140,8 @@ export default function ElementInspector({
                 veld={veld}
                 fieldType={fieldType}
                 bewerkbaar={bewerkbaar}
-                widgetContext={widgetContext}
+                element={element}
+                kandidatenVoor={kandidatenVoor}
                 onChange={(nieuw) => zetCompartiment(def.id, velden.map((v, j) => (j === i ? nieuw : v)))}
                 onVerwijder={() => zetCompartiment(def.id, velden.filter((_, j) => j !== i))}
               />

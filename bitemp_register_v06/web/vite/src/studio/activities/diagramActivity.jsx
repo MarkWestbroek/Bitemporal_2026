@@ -25,6 +25,7 @@ import React, {
 import { IconDiagram } from "../icons";
 import { menuBus } from "../menuBus";
 import useModelStore from "../../store/useModelStore";
+import useUIStore from "../../store/useUIStore";
 import { createDiagramStore } from "../../diagramcore/model/createDiagramStore.js";
 import { Taskbar, useTaakbalkVoorkeuren } from "../../diagramcore/taskbar/Taskbar.jsx";
 import ElementInspector from "../../diagramcore/inspector/ElementInspector.jsx";
@@ -33,11 +34,13 @@ import {
   canoniekUmlDiagramType,
   maakElement,
 } from "../../diagramprofielen/canoniek-uml/index.js";
+import { registreerCanoniekUmlImplementaties } from "../../diagramprofielen/canoniek-uml/implementaties.jsx";
 import { vanCanoniekModel } from "../../diagramprofielen/canoniek-uml/adapter.js";
 
 const DiagramCanvas = lazy(() => import("../../diagramcore/canvas/DiagramCanvas.jsx"));
 
 registreerCanoniekUml();
+registreerCanoniekUmlImplementaties();
 
 /** Bewerkbare sandbox-store, persistent per profiel. */
 const useDiagram05Store = createDiagramStore({ persistKey: "studio05-canoniek-uml" });
@@ -254,6 +257,16 @@ const TAAKBALK_DEFAULTS = {
 function Diagram05Main() {
   const { setSelectieId, verbindingsType, setVerbindingsType, plaatsNieuwElement, verbind } =
     useContext(Ctx);
+  const theme = useUIStore((s) => s.theme);
+
+  // Spiegel het studio-thema naar body[data-ide-theme] zolang deze activiteit
+  // actief is: hergebruikte umleditor-componenten (o.a. de CEL-ExpressieEditor)
+  // hebben hun licht-thema-overrides op dat attribuut. IdePage doet dit zelf
+  // maar verwijdert het attribuut bij unmount (activiteit-wissel); daarom hier
+  // opnieuw zetten. Bewust geen cleanup: een volgende activiteit zet hem zelf.
+  useEffect(() => {
+    document.body.setAttribute("data-ide-theme", theme);
+  }, [theme]);
   const elements = useDiagram05Store((s) => s.elements);
   const diagrams = useDiagram05Store((s) => s.diagrams);
   const viewports = useDiagram05Store((s) => s.viewports);
@@ -387,15 +400,16 @@ function Diagram05Inspector() {
   const actief = useDiagram05Store((s) => s.actiefDiagramId);
   const elements = useDiagram05Store((s) => s.elements);
 
-  // Type-keuzelijst via de VerwijzingsBronnen van het profiel (plan §4.5b):
-  // basistypen + gegevenstypen ✦ + enumeraties ◇ + ref.lijstitems ▣,
-  // gegroepeerd per bron (optgroups; later dezelfde bronnen in de minibrowser).
-  const widgetContext = React.useMemo(
-    () => ({
-      veldtypen: (canoniekUmlDiagramType.verwijzingsBronnen || []).flatMap((bron) =>
-        bron.kandidaten({ elements })
-      ),
-    }),
+  // Kandidaten via de ReferenceResolvers van het profiel (plan §4.5b):
+  // de inspector vraagt per PropertyType met referenceTypes de kandidaten op
+  // (keuzelijst + minibrowser gebruiken dezelfde resolvers).
+  const kandidatenVoor = useCallback(
+    (referenceTypeIds) => {
+      const resolvers = canoniekUmlDiagramType.referenceResolvers || {};
+      return (referenceTypeIds || []).flatMap((id) =>
+        resolvers[id] ? resolvers[id]({ elements }) : []
+      );
+    },
     [elements]
   );
 
@@ -416,7 +430,7 @@ function Diagram05Inspector() {
         element={element}
         elementType={elementType}
         fieldTypesById={fieldTypesById}
-        widgetContext={widgetContext}
+        kandidatenVoor={kandidatenVoor}
         bewerkbaar
         onUpdate={(patch) => useDiagram05Store.getState().updateElement(element.id, patch)}
         onVerwijderVanDiagram={() => {

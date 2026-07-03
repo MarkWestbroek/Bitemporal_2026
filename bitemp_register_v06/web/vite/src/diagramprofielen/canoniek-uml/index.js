@@ -20,48 +20,56 @@ import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/t
 
 export const CANONIEK_UML_ID = "canoniek-uml";
 
+/**
+ * FieldTypes met hun PropertyTypes (metamodel, vierde iteratie): declaratief
+ * {key, datatype, referenceTypes?}; de widget volgt uit de datatype-registry.
+ * `TYPE_REFS` = de vier soorten kandidaten voor een attribuuttype.
+ */
+const TYPE_REFS = ["basistype", "gegevenstype", "enumeratie", "refitem"];
+
 /** @type {import("../../diagramcore/types/schema.js").FieldType[]} */
 const fieldTypes = [
   {
     id: "attribuut",
-    render: "naam-type",
-    editor: [
-      { key: "naam", widget: "text", verplicht: true },
-      { key: "typeLabel", label: "type", widget: "select", opties: "veldtypen" },
-      { key: "verplicht", widget: "checkbox" },
-      { key: "afgeleid", widget: "checkbox" },
+    viewer: "naam-type",
+    properties: [
+      { key: "naam", datatype: "string", verplicht: true },
+      { key: "typeLabel", label: "type", referenceTypes: TYPE_REFS },
+      { key: "verplicht", datatype: "boolean" },
+      { key: "afgeleid", datatype: "boolean" },
     ],
   },
   {
     id: "afgeleidVeld",
-    render: "naam-type",
-    editor: [
-      { key: "naam", widget: "text", verplicht: true },
-      { key: "typeLabel", label: "type", widget: "select", opties: "veldtypen" },
+    viewer: "naam-type",
+    properties: [
+      { key: "naam", datatype: "string", verplicht: true },
+      { key: "typeLabel", label: "type", referenceTypes: TYPE_REFS },
+      { key: "afleidingsregel", label: "afleidingsregel (CEL)", datatype: "cel-expressie" },
     ],
   },
   {
     id: "waarde",
-    render: "waarde",
-    editor: [{ key: "naam", label: "waarde", widget: "text", verplicht: true }],
+    viewer: "waarde",
+    properties: [{ key: "naam", label: "waarde", datatype: "string", verplicht: true }],
   },
   {
     id: "eigenschap",
-    render: "naam-type",
-    editor: [
-      { key: "naam", widget: "text", verplicht: true },
-      { key: "typeLabel", label: "waarde", widget: "text" },
+    viewer: "naam-type",
+    properties: [
+      { key: "naam", datatype: "string", verplicht: true },
+      { key: "typeLabel", label: "waarde", datatype: "string" },
     ],
   },
   {
     id: "regel",
-    render: "tekst",
-    editor: [{ key: "naam", label: "regel", widget: "text", verplicht: true }],
+    viewer: "tekst",
+    properties: [{ key: "naam", label: "regel", datatype: "string", verplicht: true }],
   },
 ];
 
-/** Gedeeld inspector-dataveld: achtergrondkleur (colorpicker). */
-const KLEUR_VELD = { key: "kleur", widget: "kleur" };
+/** Gedeelde element-PropertyType: achtergrondkleur (datatype "colour"). */
+const KLEUR_VELD = { key: "kleur", datatype: "colour" };
 
 /** @type {import("../../diagramcore/types/schema.js").ElementType[]} */
 const elementTypes = [
@@ -72,7 +80,7 @@ const elementTypes = [
     stereotype: "«entiteit»",
     shape: "class-box",
     kleur: "#bfdbfe",
-    dataVelden: [KLEUR_VELD],
+    properties: [KLEUR_VELD],
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
@@ -86,7 +94,7 @@ const elementTypes = [
     stereotype: "«gegevenselement»",
     shape: "class-box",
     kleur: "#bbf7d0",
-    dataVelden: [KLEUR_VELD],
+    properties: [KLEUR_VELD],
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
@@ -99,7 +107,7 @@ const elementTypes = [
     stereotype: "«relatie»",
     shape: "class-box",
     kleur: "#ede9fe",
-    dataVelden: [KLEUR_VELD],
+    properties: [KLEUR_VELD],
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
@@ -119,7 +127,7 @@ const elementTypes = [
     stereotype: "«enumeratie»",
     shape: "class-box",
     kleur: "#fef3c7",
-    dataVelden: [KLEUR_VELD],
+    properties: [KLEUR_VELD],
     compartments: [{ id: "waarden", label: null, fieldType: "waarde" }],
   },
   {
@@ -129,7 +137,7 @@ const elementTypes = [
     stereotype: "«gegevenstype»",
     shape: "class-box",
     kleur: "#dbeafe",
-    dataVelden: [KLEUR_VELD],
+    properties: [KLEUR_VELD],
     compartments: [
       { id: "eigenschappen", label: null, fieldType: "eigenschap" },
       { id: "validatie", label: null, fieldType: "regel" },
@@ -143,7 +151,7 @@ const elementTypes = [
     stereotype: "«instantie»",
     shape: "class-box",
     kleur: "#fde68a",
-    dataVelden: [KLEUR_VELD],
+    properties: [KLEUR_VELD],
     compartments: [{ id: "eigenschappen", label: null, fieldType: "eigenschap" }],
   },
   {
@@ -152,7 +160,7 @@ const elementTypes = [
     kort: "NOT",
     shape: "note",
     handleStijl: "onzichtbaar",
-    dataVelden: [{ key: "tekst", widget: "textarea" }, KLEUR_VELD],
+    properties: [{ key: "tekst", datatype: "tekst" }, KLEUR_VELD],
   },
   {
     id: "constraint",
@@ -162,7 +170,7 @@ const elementTypes = [
     shape: "rounded",
     kleur: "#e0f2fe",
     handleStijl: "onzichtbaar",
-    dataVelden: [{ key: "expressie", widget: "textarea" }, KLEUR_VELD],
+    properties: [{ key: "expressie", label: "expressie (OCL/CEL)", datatype: "cel-expressie" }, KLEUR_VELD],
   },
 
   // ── Connector-typen (fase 2: kale edges; ASOC-materialisatie volgt in fase 3) ──
@@ -211,56 +219,48 @@ const elementTypes = [
 ];
 
 /**
- * VerwijzingsBronnen (plan §4.5b) — kandidaat-leveranciers voor het
- * attribuuttype. Iconen volgen de oude editor: ✦ gegevenstype, ◇ enumeratie,
- * ▣ ref.lijstitem. Elke bron levert kandidaten met groep (optgroup nu,
- * boom-niveau in de minibrowser later) en pad (domein/package).
- * @type {import("../../diagramcore/types/schema.js").VerwijzingsBron[]}
+ * ReferenceTypes (declaratief) + ReferenceResolvers (implementatie) —
+ * metamodel §4.5b. Iconen volgen de oude editor: ✦ gegevenstype,
+ * ◇ enumeratie, ▣ ref.lijstitem. Elke resolver levert kandidaten met groep
+ * (optgroup/minibrowser-sectie) en pad (domein/package, minibrowser-kolom).
+ * @type {import("../../diagramcore/types/schema.js").ReferenceType[]}
  */
-const verwijzingsBronnen = [
-  {
-    id: "basistype",
-    label: "Basistypen",
-    kandidaten: () =>
-      ["string", "integer", "number", "boolean", "date", "date-time"].map((t) => ({
-        waarde: t,
-        label: t,
-        groep: "Basistypen",
-      })),
-  },
-  {
-    id: "gegevenstype",
-    label: "Gegevenstypen",
-    icoon: "✦",
-    kandidaten: ({ elements }) =>
-      Object.values(elements || {})
-        .filter((el) => el.elementType === "gegevenstype" && el.naam)
-        .map((el) => ({ waarde: el.naam, label: el.naam, icoon: "✦", groep: "Gegevenstypen", pad: [el.data?.domein || ""] }))
-        .sort((a, b) => a.label.localeCompare(b.label)),
-  },
-  {
-    id: "enumeratie",
-    label: "Enumeraties",
-    icoon: "◇",
-    kandidaten: ({ elements }) =>
-      Object.values(elements || {})
-        .filter((el) => el.elementType === "enumeratie" && el.naam)
-        .map((el) => ({ waarde: el.naam, label: el.naam, icoon: "◇", groep: "Enumeraties", pad: [el.data?.domein || ""] }))
-        .sort((a, b) => a.label.localeCompare(b.label)),
-  },
-  {
-    id: "refitem",
-    label: "Referentielijst-items",
-    icoon: "▣",
-    kandidaten: ({ elements }) =>
-      Object.values(elements || {})
-        .filter(
-          (el) => el.elementType === "entiteit" && el.data?.stereotype === "«ref.lijst item»" && el.naam
-        )
-        .map((el) => ({ waarde: el.naam, label: `${el.naam} (ref.lijst)`, icoon: "▣", groep: "Referentielijst-items", pad: [el.data?.domein || ""] }))
-        .sort((a, b) => a.label.localeCompare(b.label)),
-  },
+const referenceTypes = [
+  { id: "basistype", label: "Basistypen" },
+  { id: "gegevenstype", label: "Gegevenstypen", icoon: "✦" },
+  { id: "enumeratie", label: "Enumeraties", icoon: "◇" },
+  { id: "refitem", label: "Referentielijst-items", icoon: "▣" },
 ];
+
+/** Hulpje: elementen van een soort → gesorteerde kandidaten. */
+function elementKandidaten(elements, filter, icoon, groep, labelFn = (el) => el.naam) {
+  return Object.values(elements || {})
+    .filter((el) => el.naam && filter(el))
+    .map((el) => ({ waarde: el.naam, label: labelFn(el), icoon, groep, pad: [el.data?.domein || ""] }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+}
+
+/** @type {Record<string, import("../../diagramcore/types/schema.js").ReferenceResolver>} */
+const referenceResolvers = {
+  basistype: () =>
+    ["string", "integer", "number", "boolean", "date", "date-time"].map((t) => ({
+      waarde: t,
+      label: t,
+      groep: "Basistypen",
+    })),
+  gegevenstype: ({ elements }) =>
+    elementKandidaten(elements, (el) => el.elementType === "gegevenstype", "✦", "Gegevenstypen"),
+  enumeratie: ({ elements }) =>
+    elementKandidaten(elements, (el) => el.elementType === "enumeratie", "◇", "Enumeraties"),
+  refitem: ({ elements }) =>
+    elementKandidaten(
+      elements,
+      (el) => el.elementType === "entiteit" && el.data?.stereotype === "«ref.lijst item»",
+      "▣",
+      "Referentielijst-items",
+      (el) => `${el.naam} (ref.lijst)`
+    ),
+};
 
 /** @type {import("../../diagramcore/types/schema.js").DiagramType} */
 export const canoniekUmlDiagramType = {
@@ -269,7 +269,8 @@ export const canoniekUmlDiagramType = {
   style: "uml-klassiek",
   elementTypes,
   fieldTypes,
-  verwijzingsBronnen,
+  referenceTypes,
+  referenceResolvers,
   taakbalken: [
     { id: "maken", label: "Maken", acties: "elementTypes" },
     { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
@@ -303,7 +304,14 @@ export function maakElement(elementTypeId) {
   return element;
 }
 
-/** Idempotente registratie (veilig bij HMR/dubbele import). */
+/**
+ * Idempotente registratie (veilig bij HMR/dubbele import).
+ *
+ * LET OP: dit bestand is het Definitie-deel en blijft bewust vrij van
+ * .jsx-imports (node-testbaar). De Implementatie-registraties (o.a. de
+ * "cel-expressie"-PropertyTypeEditor) staan in implementaties.jsx en worden
+ * door de activiteit geladen.
+ */
 export function registreerCanoniekUml() {
   if (!getDiagramType(CANONIEK_UML_ID)) {
     registreerDiagramType(canoniekUmlDiagramType);

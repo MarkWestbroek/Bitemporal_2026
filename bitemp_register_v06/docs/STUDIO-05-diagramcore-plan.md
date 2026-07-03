@@ -2,7 +2,14 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** fase 2 opgeleverd (2026-07-03): de activiteit is een **bewerkbare
+- **Status:** inspector-stap opgeleverd (2026-07-04): code getrokken op de
+  metamodel-naamgeving — `PropertyType` (met **datatype-registry**: string,
+  tekst, boolean, colour + profiel-eigen "cel-expressie"),
+  `ReferenceType`/`ReferenceResolver` gesplitst (Definitie/Implementatie,
+  descriptor blijft node-testbaar), `FieldTypeViewer` (rij-weergave),
+  **VerwijzingsKiezer met minibrowser** (zoeken + per soort/pad), en de
+  bestaande **CEL-ExpressieEditor** hergebruikt als PropertyTypeEditor.
+  Fase 2 opgeleverd (2026-07-03): de activiteit is een **bewerkbare
   sandbox** (eigen persistente store + undo/redo) — elementen maken via de
   "Maken"-taakbalk, verbinden via "Verbinding" met verbindingsregels
   (connector-elementen + kale-edge-materialisatie), gegenereerde inspector uit

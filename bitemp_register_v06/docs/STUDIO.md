@@ -235,15 +235,19 @@ fase 2 een **bewerkbare sandbox**:
   sneltoetsen Ctrl+Z/Ctrl+Y (undo/redo) en Delete (element van diagram,
   connector uit het model). Elementen zijn resizebaar (grootte wordt per
   diagram onthouden); de inspector heeft een colorpicker en een
-  type-keuzelijst die via de **VerwijzingsBronnen** van het profiel gevuld
-  wordt (plan §4.5b): basistypen, gegevenstypen ✦, enumeraties ◇ en
-  ref.lijstitems ▣ uit het model, gegroepeerd per soort. Dezelfde bronnen
-  voeden later de minibrowser (zoeken + per package browsen). Pan/zoom en het actieve diagram vallen buiten de undo-history.
+  type-keuzelijst via het **PropertyType/ReferenceType-patroon** (plan §2,
+  vierde iteratie): widgets uit de datatype-registry (string, tekst, boolean,
+  colour, cel-expressie) en verwijzende properties via de
+  **VerwijzingsKiezer** — keuzelijst met optgroups (✦ ◇ ▣) én een
+  🔍-**minibrowser** met zoekveld en pad (domein), gevoed door de
+  ReferenceResolvers van het profiel. Afleidingsregels openen de bestaande
+  **CEL-ExpressieEditor** (hergebruikt uit de umleditor, lazy). Pan/zoom en
+  het actieve diagram vallen buiten de undo-history.
 - Nog niet (bekend): clipboard, checkmarks in het taakbalken-menu,
-  CEL-expressie-editor in de inspector, overgeërfde-velden-compartiment,
-  domein-overlay, sleepbare edge-labels, verbinden naar een REL (fase 3,
-  ASOC), layout-taakbalk (fase 3), licht/donker-tokens per StyleType
-  (plan §8.5b).
+  overgeërfde-velden-compartiment, domein-overlay, sleepbare edge-labels,
+  verbinden naar een REL (fase 3, ASOC), layout-taakbalk (fase 3),
+  licht/donker-tokens per StyleType (plan §8.5b), CEL-autocomplete over
+  gerelateerde elementen (nu alleen eigen velden).
 
 ## DMN-activiteit: DRD + Tabel met dmn-js
 

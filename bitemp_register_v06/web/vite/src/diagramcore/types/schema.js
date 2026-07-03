@@ -36,24 +36,30 @@
  */
 
 /**
- * Widget-regel voor de gegenereerde inspector (plan §4.2, FieldType.editor).
+ * PropertyType — één eigenschap van een FieldType of ElementType (metamodel,
+ * vierde iteratie). Declaratief: naam/key + datatype (+ evt. referenceTypes).
+ * De widget volgt uit de registry datatype → PropertyTypeEditor
+ * (inspector/propertyTypeEditors.jsx); profielen kunnen datatypes toevoegen
+ * (bv. "cel-expressie"). Heeft de property `referenceTypes`, dan kiest de
+ * editor via ReferenceResolvers (VerwijzingsKiezer: keuzelijst + minibrowser).
  *
- * @typedef {Object} EditorRegel
- * @property {string} key
- * @property {"text"|"textarea"|"select"|"checkbox"|"number"|"kleur"} widget
+ * @typedef {Object} PropertyType
+ * @property {string} key                  - waar de waarde leeft (veld.naam of data[key])
+ * @property {string} [label]
+ * @property {string} [datatype]           - "string" (default) | "tekst" | "boolean" | "colour" | profiel-eigen
  * @property {boolean} [verplicht]
- * @property {string[]|string} [opties] - array = statisch; string = sleutel in de
- *   `widgetContext` die de activiteit aan de inspector meegeeft (dynamisch,
- *   bv. "veldtypen" → basistypen + gegevenstypen + enums + ref.lijstitems)
+ * @property {string[]} [referenceTypes]   - ReferenceType-ids; kandidaten via resolvers
  */
 
 /**
- * FieldType — bepaalt hoe een veld rendert en bewerkt wordt.
+ * FieldType — bepaalt hoe een veld rendert (FieldTypeViewer) en welke
+ * eigenschappen het heeft (PropertyTypes).
  *
  * @typedef {Object} FieldType
  * @property {string} id
- * @property {"naam-type"|"tekst"|"waarde"} render - ingebouwde regel-renderers
- * @property {EditorRegel[]} [editor]
+ * @property {"naam-type"|"tekst"|"waarde"} viewer - FieldTypeViewer-id: de
+ *   compacte rij-weergave op de node (componeert de property-weergaven)
+ * @property {PropertyType[]} [properties]
  */
 
 /**
@@ -91,8 +97,8 @@
  * @property {ConnectorEindpunt} [doel]     - verplicht als isConnector
  * @property {Object} [edgePresentatie]     - declaratieve edge-vorm voor kale
  *   connectoren: { lijn, kleur, markerStart, markerEnd, labels } (zie ConnectorEdge)
- * @property {Array<{key: string, label?: string, widget: string}>} [dataVelden]
- *   - element-data-velden voor de gegenereerde inspector (bv. tekst, expressie)
+ * @property {PropertyType[]} [properties]  - element-brede eigenschappen voor de
+ *   inspector (bv. tekst, expressie, kleur) — PropertyTypes van het ElementType
  * @property {CompartmentType[]} [compartments] - max 9, {ordered}
  * @property {Object} [hooks]               - Implementatie-domein: valideer,
  *   extraSecties, materialiseerAlsNode, … (functies; NIET serialiseren)
@@ -110,16 +116,20 @@
  */
 
 /**
- * VerwijzingsBron — Implementatie-domein (plan §4.5b): levert kandidaten voor
- * keuze-widgets die naar iets anders verwijzen (attribuuttype, $ref, typeRef).
- * Eén bron per soort kandidaat; een profiel registreert er zoveel als nodig.
- * De pluriformiteit zit in de verwijzing, niet in het FieldType.
+ * ReferenceType — declaratieve soort-aanduiding van verwijzings-kandidaten
+ * (plan §4.5b): basistype, gegevenstype, enum, ref.lijstitem, oas-schema, …
+ * De bijbehorende **ReferenceResolver** (Implementatie-domein) levert de
+ * kandidaten runtime en staat in `DiagramType.referenceResolvers`, gekoppeld
+ * op dit id — zelfde koppelvlak-patroon als ActionType → ActionHook.
  *
- * @typedef {Object} VerwijzingsBron
+ * @typedef {Object} ReferenceType
  * @property {string} id       - bv. "gegevenstype", "enumeratie", "oas-schema"
  * @property {string} label
  * @property {string} [icoon]
- * @property {(ctx: {elements: Record<string, Object>, element?: Object, veld?: Object}) => VerwijzingsKandidaat[]} kandidaten
+ */
+
+/**
+ * @typedef {(ctx: {elements: Record<string, Object>, element?: Object, veld?: Object}) => VerwijzingsKandidaat[]} ReferenceResolver
  */
 
 /**
@@ -142,7 +152,9 @@
  * @property {string} style                 - StyleType-id (Implementatie-domein)
  * @property {ElementType[]} elementTypes
  * @property {FieldType[]} [fieldTypes]     - de veldtypen waar CompartmentTypes naar verwijzen
- * @property {VerwijzingsBron[]} [verwijzingsBronnen] - kandidaat-leveranciers voor keuze-widgets (§4.5b)
+ * @property {ReferenceType[]} [referenceTypes] - declaratieve soorten verwijzings-kandidaten (§4.5b)
+ * @property {Record<string, ReferenceResolver>} [referenceResolvers] - Implementatie:
+ *   resolver per ReferenceType-id (kandidaten uit model/runtime)
  * @property {TaskbarType[]} [taakbalken]
  * @property {LayoutStrategie[]} [layouts]
  * @property {{exporteer?: Function, importeer?: Function}} [serialisatie]
