@@ -251,7 +251,8 @@ fase 2 een **bewerkbare sandbox**:
   `studio/activities/maakDiagramActiviteit.jsx` (descriptor + opties →
   complete activiteit; model-/V3-/API-koppeling optioneel). De activiteit
   **"UML (0.5)"** (`diagramprofielen/puur-uml/`) is de lakmoesproef: pure
-  UML-klassediagrammen (klasse/interface/enumeratie, attributen/operaties,
+  UML-klassediagrammen (klasse/interface/enumeratie/«dataType»,
+  attributen/operaties met typen uit primitieven + datatypes + enumeraties,
   associatie mét attributen → associatieklasse via de ASOC-materialisatie,
   aggregatie ◇ én compositie ◆, generalisatie, realisatie, dependency) —
   eigen persistente store, start leeg. Associaties hebben bewerkbare

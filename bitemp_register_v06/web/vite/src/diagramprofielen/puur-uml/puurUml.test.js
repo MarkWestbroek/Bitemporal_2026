@@ -46,15 +46,22 @@ test("puur-uml: maakElement maakt klassifiers, geen connectoren", () => {
   assert.equal(maakElement("associatie"), null, "connectoren ontstaan via edge-drag");
 });
 
-test("puur-uml: klassifier-resolver levert klassen, interfaces en enumeraties", () => {
+test("puur-uml: attribuuttypen zijn primitieven en enumeraties — geen klassen", () => {
   const elements = {
     a: { id: "a", naam: "Persoon", elementType: "klasse" },
     b: { id: "b", naam: "Serialiseerbaar", elementType: "interface" },
     c: { id: "c", naam: "Kleur", elementType: "enumeratie" },
     d: { id: "d", naam: "los", elementType: "notitie" },
   };
-  const kandidaten = puurUmlDiagramType.referenceResolvers.klassifier({ elements });
-  assert.deepEqual(kandidaten.map((k) => k.waarde), ["Kleur", "Persoon", "Serialiseerbaar"]);
+  const enums = puurUmlDiagramType.referenceResolvers.enumeratie({ elements });
+  assert.deepEqual(enums.map((k) => k.waarde), ["Kleur"]);
   const primitieven = puurUmlDiagramType.referenceResolvers.primitief({});
   assert.ok(primitieven.some((k) => k.waarde === "String"));
+  // «dataType» is wél een type-soort (naast primitief en enumeratie).
+  const metDatatype = { ...elements, e: { id: "e", naam: "Geldbedrag", elementType: "datatype" } };
+  const datatypes = puurUmlDiagramType.referenceResolvers.datatype({ elements: metDatatype });
+  assert.deepEqual(datatypes.map((k) => k.waarde), ["Geldbedrag"]);
+  const attribuut = puurUmlDiagramType.fieldTypes.find((f) => f.id === "attribuut");
+  const typeProp = attribuut.properties.find((p) => p.key === "typeLabel");
+  assert.deepEqual(typeProp.referenceTypes, ["primitief", "datatype", "enumeratie"]);
 });

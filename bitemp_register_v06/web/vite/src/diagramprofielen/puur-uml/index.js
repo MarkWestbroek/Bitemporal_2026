@@ -17,8 +17,13 @@ import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/t
 
 export const PUUR_UML_ID = "puur-uml";
 
-/** Kandidaat-types voor attribuut-/operatietypes. */
-const TYPE_REFS = ["klassifier", "primitief"];
+/**
+ * Kandidaat-types voor attribuut-/operatietypes: primitieven, «dataType»s en
+ * enumeraties. Klassen/interfaces zijn bewust géén type-soort — een
+ * verwijzing naar een klasse modelleer je met een associatie, niet met een
+ * attribuuttype.
+ */
+const TYPE_REFS = ["primitief", "datatype", "enumeratie"];
 
 /** @type {import("../../diagramcore/types/schema.js").FieldType[]} */
 const fieldTypes = [
@@ -47,6 +52,9 @@ const fieldTypes = [
 
 const KLEUR_VELD = { key: "kleur", datatype: "colour" };
 const KLASSIFIERS = ["klasse", "interface", "enumeratie"];
+// Generalisatie/dependency mogen ook tussen/naar «dataType»s (associatie
+// niet: een datatype heeft geen identiteit — daar is het attribuuttype voor).
+const MET_DATATYPE = [...KLASSIFIERS, "datatype"];
 
 /** @type {import("../../diagramcore/types/schema.js").ElementType[]} */
 const elementTypes = [
@@ -81,6 +89,18 @@ const elementTypes = [
     kleur: "#fef3c7",
     properties: [KLEUR_VELD],
     compartments: [{ id: "literals", label: null, fieldType: "literal" }],
+  },
+  {
+    // UML «dataType»: waardetype zonder identiteit; mag zelf attributen
+    // hebben (gestructureerd datatype, bv. Geldbedrag met bedrag + valuta).
+    id: "datatype",
+    label: "Datatype",
+    kort: "DT",
+    stereotype: "«dataType»",
+    shape: "class-box",
+    kleur: "#dbeafe",
+    properties: [KLEUR_VELD],
+    compartments: [{ id: "attributen", label: null, fieldType: "attribuut" }],
   },
   {
     id: "notitie",
@@ -175,8 +195,8 @@ const elementTypes = [
     kort: "▷",
     shape: "edge",
     isConnector: true,
-    bron: { elementTypes: KLASSIFIERS },
-    doel: { elementTypes: KLASSIFIERS },
+    bron: { elementTypes: MET_DATATYPE },
+    doel: { elementTypes: MET_DATATYPE },
     edgePresentatie: { lijn: "solid", kleur: "#475569", markerEnd: "driehoek" },
   },
   {
@@ -195,8 +215,8 @@ const elementTypes = [
     kort: "use",
     shape: "edge",
     isConnector: true,
-    bron: { elementTypes: [...KLASSIFIERS] },
-    doel: { elementTypes: [...KLASSIFIERS] },
+    bron: { elementTypes: MET_DATATYPE },
+    doel: { elementTypes: MET_DATATYPE },
     edgePresentatie: {
       lijn: "dash-6-3",
       kleur: "#64748b",
@@ -223,19 +243,17 @@ const referenceResolvers = {
       groep: "Primitieven",
       pad: [],
     })),
-  klassifier: ({ elements }) =>
-    elementKandidaten(
-      elements,
-      (el) => ["klasse", "interface", "enumeratie"].includes(el.elementType),
-      "▭",
-      "Klassifiers"
-    ),
+  datatype: ({ elements }) =>
+    elementKandidaten(elements, (el) => el.elementType === "datatype", "✦", "Datatypes"),
+  enumeratie: ({ elements }) =>
+    elementKandidaten(elements, (el) => el.elementType === "enumeratie", "◇", "Enumeraties"),
 };
 
 /** @type {import("../../diagramcore/types/schema.js").ReferenceType[]} */
 const referenceTypes = [
   { id: "primitief", label: "Primitief type" },
-  { id: "klassifier", label: "Klassifier (klasse/interface/enumeratie)" },
+  { id: "datatype", label: "Datatype («dataType»)" },
+  { id: "enumeratie", label: "Enumeratie" },
 ];
 
 export const puurUmlDiagramType = {
