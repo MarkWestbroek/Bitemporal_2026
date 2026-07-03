@@ -243,6 +243,37 @@ export function createDiagramStore({ persistKey } = {}) {
         };
       }),
 
+    /**
+     * Anker-positie van een gematerialiseerde connector op één diagram
+     * (het kleine rondje op de lijn bron—doel; ASOC-patroon). Maakt het
+     * diagram-lidmaatschap aan als dat nog ontbreekt.
+     */
+    updateAnkerPosition: (diagramId, connectorId, ankerPosition) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d) return state;
+        const bestaat = d.nodes.some((n) => n.elementId === connectorId);
+        return {
+          isDirty: true,
+          diagrams: {
+            ...state.diagrams,
+            [diagramId]: {
+              ...d,
+              nodes: bestaat
+                ? d.nodes.map((n) => (n.elementId === connectorId ? { ...n, ankerPosition } : n))
+                : [
+                    ...d.nodes,
+                    {
+                      elementId: connectorId,
+                      position: { x: ankerPosition.x + 40, y: ankerPosition.y + 90 },
+                      ankerPosition,
+                    },
+                  ],
+            },
+          },
+        };
+      }),
+
     /** Grootte van een element op één diagram (metamodel: Position.elementSize). */
     updateNodeSize: (diagramId, elementId, size) =>
       set((state) => {

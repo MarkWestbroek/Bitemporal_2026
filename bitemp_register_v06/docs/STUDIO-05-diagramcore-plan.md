@@ -2,7 +2,18 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** fase 3A + feedbackronde opgeleverd (2026-07-04): uitlijn-balk
+- **Status:** fase 3B opgeleverd (2026-07-04): **ASOC-materialisatie in de
+  core** — een connector mét velden materialiseert automatisch als anker +
+  box + drie edges (synthetische canvas-nodes; anker-positie als
+  `ankerPosition` op het diagram-lidmaatschap), zonder velden als kale edge.
+  `relatie` is nu een écht `isConnector`-type: ENT→ENT slepen maakt een REL
+  (generalisatie via expliciete keuze), edge-klik selecteert de connector in
+  de inspector, en velden toevoegen laat het ASOC-patroon live verschijnen —
+  het oude "normaliseer relaties" is daarmee ingebouwd gedrag. De adapter
+  vouwt oude REL+anker+edges terug tot connector-elementen (bestaande
+  sandbox: eerst "Herlaad uit UML-model"). Delete op box of anker verwijdert
+  de connector. Restpunten fase 3: validatie-hook, uitgebreide
+  zij-aan-zij-pariteitscheck. Fase 3A + feedbackronde opgeleverd (2026-07-04): uitlijn-balk
   met de vertrouwde SVG-iconen, taakbalken resizebaar (breed/plat of
   smal/hoog, persistent) en geclamped binnen het canvas, menubalk toont
   ✓-checkmarks per taakbalk (generiek `menu:ververs`-mechanisme in de shell),

@@ -9,10 +9,10 @@
  * «use») met verbindingsregels en `edgePresentatie`, en `taakbalken`
  * beschrijft de "Maken"- en "Verbinding"-balken.
  *
- * Let op: `relatie` en `associatieAnker` staan hier nog als gewone
- * (node-)elementen, omdat de gespiegelde diagrammen de gematerialiseerde
- * ASOC-vorm bevatten. Bij de connector-materialisatie in fase 3 wordt
- * `relatie` een echt `isConnector`-type en verdwijnt het anker.
+ * Fase 3B: `relatie` is een echt `isConnector`-type; de adapter vouwt de
+ * oude REL-node + anker + edges terug tot één connector-element, en de core
+ * materialiseert het ASOC-patroon zelf (het anker is een synthetische node
+ * van de canvas — geen elementtype meer).
  *
  * Kleuren komen overeen met defaultKleur() in umleditor/metamodel/types.js.
  */
@@ -102,24 +102,53 @@ const elementTypes = [
     ],
   },
   {
+    // Fase 3B: REL is een écht connector-type (metamodel: Connector = Element
+    // met source/target). Zonder velden → kale edge; mét velden → het
+    // ASOC-patroon (anker + box + 3 edges), automatisch gematerialiseerd —
+    // het oude "normaliseer relaties" is daarmee ingebouwd gedrag.
+    // Staat vóór generalisatie in de lijst: ENT→ENT slepen zonder expliciete
+    // keuze maakt dus een relatie (generalisatie kies je in "Verbinding").
     id: "relatie",
     label: "Relatie",
     kort: "REL",
     stereotype: "«relatie»",
     shape: "class-box",
     kleur: "#ede9fe",
+    isConnector: true,
+    bron: { elementTypes: ["entiteit"] },
+    doel: { elementTypes: ["entiteit"] },
+    edgePresentatie: { lijn: "solid", kleur: "#64748b" },
     properties: [KLEUR_VELD],
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
     ],
-  },
-  {
-    id: "associatieAnker",
-    label: "Associatie-anker",
-    shape: "anker",
-    handleStijl: "onzichtbaar",
-    resizebaar: false,
+    hooks: {
+      /** Labels voor de gematerialiseerde/kale gedaante (UML-conventies). */
+      edgeLabels: (conn) => {
+        const d = conn.data || {};
+        const bron = [];
+        const doel = [];
+        const kaal = [];
+        if (d.bronKardinaliteit) {
+          bron.push({ zijde: "bron", delen: [{ tekst: d.bronKardinaliteit, soort: "kardinaliteit" }] });
+          kaal.push({ zijde: "bron", delen: [{ tekst: d.bronKardinaliteit, soort: "kardinaliteit" }] });
+        }
+        if (d.naamLabelHeen) {
+          bron.push({ zijde: "doel", delen: [{ tekst: `▶ ${d.naamLabelHeen}`, soort: "naam" }] });
+          kaal.push({ zijde: "bron", delen: [{ tekst: `▶ ${d.naamLabelHeen}`, soort: "naam" }] });
+        }
+        if (d.doelKardinaliteit) {
+          doel.push({ zijde: "doel", delen: [{ tekst: d.doelKardinaliteit, soort: "kardinaliteit" }] });
+          kaal.push({ zijde: "doel", delen: [{ tekst: d.doelKardinaliteit, soort: "kardinaliteit" }] });
+        }
+        if (d.naamLabelTerug) {
+          doel.push({ zijde: "bron", delen: [{ tekst: `◀ ${d.naamLabelTerug}`, soort: "naam" }] });
+          kaal.push({ zijde: "doel", delen: [{ tekst: `◀ ${d.naamLabelTerug}`, soort: "naam" }] });
+        }
+        return { bron, doel, kaal };
+      },
+    },
   },
   {
     id: "enumeratie",
@@ -300,10 +329,20 @@ export const canoniekUmlDiagramType = {
       id: "gelaagd",
       label: "Auto-layout",
       run: ({ flowNodes, flowEdges, selectieIds }) =>
-        berekenAutoLayout(flowNodes, flowEdges, {
-          selectie: selectieIds || undefined,
-          respecteerLocked: true,
-        }),
+        berekenAutoLayout(
+          // Synthetische ankers van de core ("__anker") spreken in het oude
+          // algoritme de taal van de umleditor ("associatieAnker" + relatieNaam).
+          flowNodes.map((n) =>
+            n.type === "__anker"
+              ? { ...n, type: "associatieAnker", data: { ...n.data, relatieNaam: n.data?.connectorId } }
+              : n
+          ),
+          flowEdges,
+          {
+            selectie: selectieIds || undefined,
+            respecteerLocked: true,
+          }
+        ),
     },
   ],
 };

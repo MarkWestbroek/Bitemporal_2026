@@ -34,7 +34,16 @@ import "../styles/diagramcore.css";
 import "../shapes/basisShapes.jsx"; // registreert de standaard-shapes
 import ElementNode from "./ElementNode.jsx";
 import ConnectorEdge from "./ConnectorEdge.jsx";
-import { materialiseerConnectoren, vindConnectorType } from "./materialiseerConnectoren.js";
+import { materialiseerConnectoren, vindConnectorType, ANKER_PREFIX } from "./materialiseerConnectoren.js";
+
+/** Intern core-ElementType voor de synthetische anker-nodes (ASOC-patroon). */
+const ANKER_ELEMENT_TYPE = {
+  id: "__anker",
+  label: "Anker",
+  shape: "anker",
+  handleStijl: "onzichtbaar",
+  resizebaar: false,
+};
 import { berekenUitlijning, berekenRasterSnap } from "../layout/uitlijnen.js";
 
 const nodeTypes = { element: ElementNode };
@@ -73,6 +82,12 @@ function CanvasBinnenkant({
   const lookups = useMemo(() => bouwLookups(diagramType), [diagramType]);
   const { getNodes } = useReactFlow();
 
+  // Connector-materialisatie: kale edges + (bij velden) anker/box-structuur.
+  const gematerialiseerd = useMemo(
+    () => materialiseerConnectoren(elements, diagram, lookups.elementTypesById),
+    [elements, diagram, lookups]
+  );
+
   // Nodes als interne React Flow-state, gevoed vanuit de props. Nodig omdat
   // selectie en slepen via node-changes lopen; de store blijft de waarheid
   // (posities gaan bij dragstop via onNodePositie terug).
@@ -103,6 +118,44 @@ function CanvasBinnenkant({
         };
       })
       .filter(Boolean);
+
+    // Synthetische nodes uit de connector-materialisatie: ankers (klein
+    // rondje op de lijn) en auto-geplaatste connector-boxen zonder eigen
+    // diagram-lidmaatschap.
+    for (const extra of gematerialiseerd.extraNodes) {
+      if (extra.soort === "anker") {
+        flowNodes.push({
+          id: extra.id,
+          type: "element",
+          position: extra.position,
+          data: {
+            element: { id: extra.id, naam: "", elementType: "__anker", data: { connectorId: extra.connectorId } },
+            elementType: ANKER_ELEMENT_TYPE,
+            bewerkbaar,
+            fieldTypesById: lookups.fieldTypesById,
+            compartmentTypesById: lookups.compartmentTypesById,
+          },
+        });
+      } else if (extra.soort === "box") {
+        const element = elements[extra.connectorId];
+        const elementType = element ? lookups.elementTypesById[element.elementType] : null;
+        if (!element || !elementType) continue;
+        flowNodes.push({
+          id: element.id,
+          type: "element",
+          position: extra.position,
+          data: {
+            element,
+            elementType,
+            bewerkbaar,
+            onResize: onNodeSize,
+            fieldTypesById: lookups.fieldTypesById,
+            compartmentTypesById: lookups.compartmentTypesById,
+          },
+        });
+      }
+    }
+
     // Behoud de selectie-vlag over rebuilds heen: elke store-wijziging (bv.
     // typen in de inspector) vervangt de nodes, en zonder dit zou React Flow
     // de selectie laten vallen — waardoor de inspector na één edit leegt.
@@ -116,7 +169,7 @@ function CanvasBinnenkant({
       }
       return flowNodes.map((n) => (geselecteerd.has(n.id) ? { ...n, selected: true } : n));
     });
-  }, [diagram, elements, lookups, setNodes, bewerkbaar, onNodeSize, selectieId]);
+  }, [diagram, elements, lookups, gematerialiseerd, setNodes, bewerkbaar, onNodeSize, selectieId]);
 
   // Edges óók als interne React Flow-state: edge-selectie loopt (net als bij
   // nodes) via changes, en zonder toegepaste changes "plakt" een klik niet —
@@ -131,20 +184,35 @@ function CanvasBinnenkant({
     }));
     // Gematerialiseerde connectoren zijn wél selecteerbaar (en dus met Delete
     // te wissen) zodra de canvas bewerkbaar is.
-    const gematerialiseerd = materialiseerConnectoren(elements, diagram, lookups.elementTypesById).map(
-      (e) => ({ ...e, type: "connector", selectable: bewerkbaar })
-    );
-    const flowEdges = [...geimporteerd, ...gematerialiseerd];
+    const connectorEdges = gematerialiseerd.edges.map((e) => ({
+      ...e,
+      type: "connector",
+      selectable: bewerkbaar,
+    }));
+    const flowEdges = [...geimporteerd, ...connectorEdges];
     setEdges((huidige) => {
       const geselecteerd = new Set(huidige.filter((e) => e.selected).map((e) => e.id));
       return flowEdges.map((e) => (geselecteerd.has(e.id) ? { ...e, selected: true } : e));
     });
-  }, [diagram, elements, lookups, bewerkbaar, setEdges]);
+  }, [diagram, gematerialiseerd, bewerkbaar, setEdges]);
 
   const handleSelectionChange = useCallback(
-    ({ nodes: sel }) => {
+    ({ nodes: sel, edges: selEdges }) => {
       if (!onSelectElement) return;
-      onSelectElement(sel?.length ? elements[sel[0].id] || null : null);
+      if (sel?.length) {
+        const eerste = sel[0];
+        // Anker aangeklikt → selecteer de achterliggende connector.
+        const id = eerste.id.startsWith(ANKER_PREFIX)
+          ? eerste.id.slice(ANKER_PREFIX.length)
+          : eerste.id;
+        onSelectElement(elements[id] || null);
+        return;
+      }
+      // Edge van een connector aangeklikt → selecteer dat connector-element,
+      // zodat je een kale connector (bv. lege REL) in de inspector kunt
+      // bewerken en er velden aan kunt geven (waarna hij materialiseert).
+      const connectorId = selEdges?.find((e) => e.data?.connectorId)?.data?.connectorId;
+      onSelectElement(connectorId ? elements[connectorId] || null : null);
     },
     [onSelectElement, elements]
   );

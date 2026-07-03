@@ -29,6 +29,7 @@ import useModelStore from "../../store/useModelStore";
 import useUIStore from "../../store/useUIStore";
 import { createDiagramStore } from "../../diagramcore/model/createDiagramStore.js";
 import { UITLIJN_MODES } from "../../diagramcore/layout/uitlijnen.js";
+import { ANKER_PREFIX } from "../../diagramcore/canvas/materialiseerConnectoren.js";
 import { UITLIJN_ICONEN } from "../../diagramcore/taskbar/uitlijnIcons.jsx";
 import { Taskbar, useTaakbalkVoorkeuren, leesTaakbalkVoorkeuren } from "../../diagramcore/taskbar/Taskbar.jsx";
 import ElementInspector from "../../diagramcore/inspector/ElementInspector.jsx";
@@ -418,22 +419,52 @@ function Diagram05Main() {
                 verbindingsType={verbindingsType}
                 selectieId={selectieId}
                 onSelectElement={(el) => setSelectieId(el?.id || null)}
-                onNodePositie={(elementId, positie) =>
-                  useDiagram05Store.getState().updateNodePosition(diagram.id, elementId, positie)
-                }
-                onNodePosities={(posities) =>
-                  useDiagram05Store.getState().updateNodePositions(diagram.id, posities)
-                }
+                onNodePositie={(elementId, positie) => {
+                  const s = useDiagram05Store.getState();
+                  if (elementId.startsWith(ANKER_PREFIX)) {
+                    // Anker van een gematerialiseerde connector versleept
+                    s.updateAnkerPosition(diagram.id, elementId.slice(ANKER_PREFIX.length), positie);
+                  } else if (!s.diagrams[diagram.id]?.nodes.some((n) => n.elementId === elementId)) {
+                    // Auto-geplaatste connector-box voor het eerst versleept →
+                    // lidmaatschap aanmaken zodat de positie persistent wordt
+                    s.addElementToDiagram(diagram.id, elementId, positie);
+                  } else {
+                    s.updateNodePosition(diagram.id, elementId, positie);
+                  }
+                }}
+                onNodePosities={(posities) => {
+                  const s = useDiagram05Store.getState();
+                  const rest = {};
+                  for (const [pid, pos] of Object.entries(posities)) {
+                    if (pid.startsWith(ANKER_PREFIX)) {
+                      s.updateAnkerPosition(diagram.id, pid.slice(ANKER_PREFIX.length), pos);
+                    } else {
+                      rest[pid] = pos;
+                    }
+                  }
+                  s.updateNodePositions(diagram.id, rest);
+                }}
                 layoutApiRef={layoutApiRef}
                 onNodeSize={(elementId, size) =>
                   useDiagram05Store.getState().updateNodeSize(diagram.id, elementId, size)
                 }
                 onVerbind={verbind}
-                onVerwijder={(ids) =>
-                  ids.forEach((id) =>
-                    useDiagram05Store.getState().removeElementFromDiagram(diagram.id, id)
-                  )
-                }
+                onVerwijder={(ids) => {
+                  const s = useDiagram05Store.getState();
+                  ids.forEach((id) => {
+                    if (id.startsWith(ANKER_PREFIX)) {
+                      // Delete op het anker = de connector zelf verwijderen
+                      s.deleteElement(id.slice(ANKER_PREFIX.length));
+                      return;
+                    }
+                    const el = s.elements[id];
+                    if (el && elementTypesById[el.elementType]?.isConnector) {
+                      s.deleteElement(id); // connector-box → connector weg
+                    } else {
+                      s.removeElementFromDiagram(diagram.id, id);
+                    }
+                  });
+                }}
                 onVerwijderConnectoren={(connectorIds) =>
                   connectorIds.forEach((id) => useDiagram05Store.getState().deleteElement(id))
                 }

@@ -225,8 +225,12 @@ fase 2 een **bewerkbare sandbox**:
   uit de verbindingsregels van het DiagramType). Ongeldige verbindingen worden
   op de canvas geweigerd.
 - **Connectoren zijn elementen** met source/target (metamodel); de motor
-  materialiseert ze als kale edges (compositie ◆, generalisatie ▷, «use»).
-  Het ASOC-patroon (connector mét velden → node) volgt in fase 3.
+  materialiseert ze als kale edges (compositie ◆, generalisatie ▷, «use»,
+  relatie) — en een connector **mét velden** automatisch als het
+  **ASOC-patroon** (anker + relatiebox + drie edges). ENT→ENT slepen maakt
+  een REL; klik op een connector-edge of -anker selecteert de connector in
+  de inspector; velden toevoegen laat de box live verschijnen ("normaliseer
+  relaties" is ingebouwd gedrag).
 - **Gegenereerde inspector**: het eigenschappen-paneel wordt opgebouwd uit
   `FieldType.editor`-regels van het profiel — naam, element-datavelden
   (notitietekst, constraint-expressie) en compartiment-velden met
@@ -254,11 +258,12 @@ fase 2 een **bewerkbare sandbox**:
   Taakbalken-menu toont ✓ voor zichtbare balken. De CEL-editor kent de
   **familie-context**: velden van de eigen en gerelateerde GE's
   (`Naam.roepnaam`) met autocomplete.
-- Nog niet (bekend): clipboard, normaliseer relaties (fase 3B, ASOC),
+- Nog niet (bekend): clipboard, validatie-hook,
   overgeërfde-velden-compartiment, domein-overlay, sleepbare edge-labels,
-  verbinden naar een REL (fase 3B, ASOC), licht/donker-tokens per StyleType
-  (plan §8.5b), integrale iconenset voor de Maken-balk (ontwerp-sessie,
-  plan §8.6a).
+  licht/donker-tokens per StyleType (plan §8.5b), integrale iconenset voor
+  de Maken-balk (ontwerp-sessie, plan §8.6a). Na deze update een bestaande
+  sandbox eerst verversen via "Herlaad uit UML-model" (adapter-structuur
+  gewijzigd).
 
 ## DMN-activiteit: DRD + Tabel met dmn-js
 

@@ -151,6 +151,40 @@ test("referenceResolvers: kandidaten per ReferenceType, met groep en icoon (§4.
   assert.ok(!alle.some((k) => k.groep === "Gegevenstypen"));
 });
 
+test("fase 3B: REL wordt teruggevouwen tot connector-element", () => {
+  const state = maakBronState();
+  state.structuralEdges = [{ id: "se1", source: "A", target: "REL" }];
+  state.elements.REL.data.doelEntiteit = "A"; // zelf-relatie voor de test
+  state.diagrams.overzicht.nodes.push(
+    { elementId: "REL", position: { x: 300, y: 300 } },
+    { elementId: "anker_REL", position: { x: 250, y: 150 } }
+  );
+  state.diagrams.overzicht.edges.push(
+    { id: "A->anker", source: "A", target: "anker_REL", data: { isAssociation: true } },
+    { id: "anker->A", source: "anker_REL", target: "A", data: { isAssociation: true } },
+    { id: "anker-->REL", source: "anker_REL", target: "REL", data: { isAssociationClassLink: true } },
+    { id: "REL-->enum", source: "REL", target: "Geslacht", data: { isDependency: true } }
+  );
+
+  const core = vanCanoniekModel(state);
+  // Anker-element verdwenen; REL is connector met bron/doel + kardinaliteiten
+  assert.equal(core.elements.anker_REL, undefined);
+  const rel = core.elements.REL;
+  assert.equal(rel.source, "A");
+  assert.equal(rel.target, "A");
+  assert.equal(rel.data.doelKardinaliteit, "0..*");
+  assert.equal(rel.data.naamLabelTerug, "van");
+
+  const d = core.diagrams.overzicht;
+  // Anker-node weg; ankerPosition verhuisd naar het REL-lidmaatschap
+  assert.ok(!d.nodes.some((n) => n.elementId === "anker_REL"));
+  assert.deepEqual(d.nodes.find((n) => n.elementId === "REL").ankerPosition, { x: 250, y: 150 });
+  // ASOC-edges gestript; «use» vanaf de (velden-hebbende) REL blijft
+  const edgeIds = d.edges.map((e) => e.id);
+  assert.ok(!edgeIds.includes("A->anker") && !edgeIds.includes("anker-->REL"));
+  assert.ok(edgeIds.includes("REL-->enum"));
+});
+
 test("presentatie: ASOC-edges — anker-zijden, class-link en terug-label", () => {
   const state = maakBronState();
   // Edge 1: ENT → anker (labels bij bron, heen-label bij doel)

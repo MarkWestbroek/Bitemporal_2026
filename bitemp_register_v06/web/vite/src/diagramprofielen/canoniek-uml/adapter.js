@@ -258,26 +258,104 @@ export function presentatieVoorEdge(edge, bronElements) {
 
 /**
  * Converteer de volledige useModelStore-state naar een diagramcore-model.
- * @param {{elements: Record<string, Object>, diagrams: Record<string, Object>}} state
+ *
+ * Fase 3B: relaties worden **teruggevouwen tot connector-elementen**
+ * (metamodel: Connector = Element met source/target):
+ *  - de REL-node wordt het connector-element (bron via structuralEdges,
+ *    doel via data.doelEntiteit), mét kardinaliteiten/naamlabels in data;
+ *  - het associatieAnker verdwijnt als element — de anker-positie verhuist
+ *    naar `ankerPosition` op het diagram-lidmaatschap van de connector;
+ *  - de oude ASOC-/collapsed-edges vervallen (de core materialiseert ze);
+ *    dependencies («use») en scope-edges blijven, behalve «use»-edges vanaf
+ *    een kale connector (geen box om aan te hangen).
+ *
+ * @param {{elements: Record<string, Object>, structuralEdges?: Array, diagrams: Record<string, Object>}} state
  */
 export function vanCanoniekModel(state) {
   const bronElements = state?.elements || {};
+  const structuralEdges = state?.structuralEdges || [];
+
+  const relIds = new Set();
+  const ankerIds = new Set();
+  const ankerVoorRel = new Map(); // relId → anker-element-id
+  for (const el of Object.values(bronElements)) {
+    if (el?.type === "relatie") relIds.add(el.id);
+    if (el?.type === "associatieAnker") {
+      ankerIds.add(el.id);
+      if (el.data?.relatieNaam) ankerVoorRel.set(el.data.relatieNaam, el.id);
+    }
+  }
+  const bronVoorRel = new Map(); // relId → bron-entiteit-id
+  for (const e of structuralEdges) {
+    if (relIds.has(e.target) && bronElements[e.source]?.type === "entiteit") {
+      bronVoorRel.set(e.target, e.source);
+    }
+  }
+
   const elements = {};
   for (const el of Object.values(bronElements)) {
     if (!el?.id) continue;
-    elements[el.id] = naarCoreElement(el);
+    if (el.type === "associatieAnker") continue; // wordt synthetische canvas-node
+    const core = naarCoreElement(el);
+    if (el.type === "relatie") {
+      const bron = bronVoorRel.get(el.id) || null;
+      const doelNaam = el.data?.doelEntiteit;
+      const doel = doelNaam && bronElements[doelNaam] ? doelNaam : null;
+      if (bron && doel) {
+        const d = el.data || {};
+        core.source = bron;
+        core.target = doel;
+        core.data.bronKardinaliteit =
+          d.bronKardinaliteit || (d.momentvoorkomen === "meervoudig" ? "0..*" : "0..1");
+        core.data.doelKardinaliteit = d.doelKardinaliteit || "0..*";
+        if (d.naamLabelHeen) core.data.naamLabelHeen = d.naamLabelHeen;
+        if (d.naamLabelTerug) core.data.naamLabelTerug = d.naamLabelTerug;
+        if (d.directioneel) core.data.directioneel = true;
+      }
+      // Zonder herleidbare bron/doel blijft het een losse (wees-)box.
+    }
+    elements[el.id] = core;
   }
+
+  const heeftVelden = (id) =>
+    (elements[id]?.compartimenten || []).some((c) => (c.velden || []).length > 0);
 
   const diagrams = {};
   for (const [id, diag] of Object.entries(state?.diagrams || {})) {
-    diagrams[id] = {
-      id,
-      naam: diag.naam || id,
-      diagramType: CANONIEK_UML_ID,
-      nodes: (diag.nodes || [])
-        .filter((n) => elements[n.elementId])
-        .map((n) => ({ elementId: n.elementId, position: n.position || { x: 0, y: 0 }, layoutLocked: n.layoutLocked || false })),
-      edges: (diag.edges || []).map((e) => ({
+    // Anker-posities op dít diagram → ankerPosition op het rel-lidmaatschap
+    const relAnkerPos = new Map();
+    for (const n of diag.nodes || []) {
+      const bronEl = bronElements[n.elementId];
+      if (bronEl?.type === "associatieAnker" && bronEl.data?.relatieNaam) {
+        relAnkerPos.set(bronEl.data.relatieNaam, n.position);
+      }
+    }
+
+    const nodes = (diag.nodes || [])
+      .filter((n) => elements[n.elementId])
+      .map((n) => {
+        const ref = {
+          elementId: n.elementId,
+          position: n.position || { x: 0, y: 0 },
+          layoutLocked: n.layoutLocked || false,
+        };
+        if (relAnkerPos.has(n.elementId)) ref.ankerPosition = relAnkerPos.get(n.elementId);
+        return ref;
+      });
+
+    const edges = (diag.edges || [])
+      .filter((e) => {
+        if (ankerIds.has(e.source) || ankerIds.has(e.target)) return false;
+        const raaktRel = relIds.has(e.source) || relIds.has(e.target);
+        if (!raaktRel) return true;
+        const isBijzonder = e.data?.isDependency === true || e.data?.kind === "scope";
+        if (!isBijzonder) return false; // ASOC-/collapsed-vorm → materialisatie
+        // «use»/scope vanaf een kale connector heeft geen box om aan te hangen
+        const relId = relIds.has(e.source) ? e.source : e.target;
+        const isConnector = !!elements[relId]?.source;
+        return !isConnector || heeftVelden(relId);
+      })
+      .map((e) => ({
         id: e.id,
         source: e.source,
         target: e.target,
@@ -285,7 +363,14 @@ export function vanCanoniekModel(state) {
         targetHandle: e.targetHandle || null,
         hidden: e.hidden || false,
         data: { presentatie: presentatieVoorEdge(e, bronElements) },
-      })),
+      }));
+
+    diagrams[id] = {
+      id,
+      naam: diag.naam || id,
+      diagramType: CANONIEK_UML_ID,
+      nodes,
+      edges,
       viewport: diag.viewport,
     };
   }
