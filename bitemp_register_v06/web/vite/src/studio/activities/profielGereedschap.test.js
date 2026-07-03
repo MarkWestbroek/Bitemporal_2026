@@ -28,7 +28,10 @@ test("vertaalHooks: catalogus-id's worden functies; onbekende id's geven een net
     markerEnd: "pijl-open",
   });
   const labels = kant.hooks.edgeLabels({ naam: "kent", data: { bronKardinaliteit: "1" } });
-  assert.ok(labels.kaal.some((l) => l.delen.some((d) => d.tekst === "kent")));
+  assert.ok(labels.kaal.some((l) => l.delen.some((d) => d.tekst === "1")));
+  // Géén naam-label uit de hook: de core voegt de connector-naam zelf toe
+  // (anders verschijnt hij dubbel — gemeld bij het label-slepen).
+  assert.ok(!labels.kaal.some((l) => l.delen.some((d) => d.tekst === "kent")));
 
   assert.throws(
     () =>

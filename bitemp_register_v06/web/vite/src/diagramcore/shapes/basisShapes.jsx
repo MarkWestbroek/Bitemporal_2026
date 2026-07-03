@@ -223,6 +223,11 @@ function BoundaryShape({ element, selected, children }) {
  * de compartimenten als kleine satelliet-bolletjes eromheen (spaak-lijntjes
  * naar de kern). Grafen lezen als bolletjes, UML als dozen — zelfde element,
  * andere ShapeType; de shape bepaalt zelf hoe hij zijn velden rendert.
+ *
+ * De node zélf is alleen de kern (hit-box en handles = de cirkel); de
+ * satellieten steken er als decoratie overheen uit (pointer-events: none),
+ * zodat edge-labels en andere elementen achter de "lege hoeken" gewoon
+ * aanklikbaar blijven.
  */
 function BolShape({ element, elementType, selected, children }) {
   const d = element.data || {};
@@ -237,48 +242,57 @@ function BolShape({ element, elementType, selected, children }) {
   const ORBIT = KERN_R + SAT_R + 14;
   const MAAT = 2 * (ORBIT + SAT_R + 4);
   const M = MAAT / 2;
+  // Posities relatief aan de container (kern-vierkant); centrum = (KERN_R, KERN_R).
   const posities = velden.map((_, i) => {
     const hoek = (i / Math.max(velden.length, 1)) * 2 * Math.PI - Math.PI / 2;
-    return { x: M + ORBIT * Math.cos(hoek), y: M + ORBIT * Math.sin(hoek) };
+    return { x: KERN_R + ORBIT * Math.cos(hoek), y: KERN_R + ORBIT * Math.sin(hoek) };
   });
 
   return (
-    <div className="dc-bol" style={{ width: MAAT, height: MAAT, position: "relative" }}>
-      {/* Handles op de kérn (niet op de bounding box van de hele compositie):
-          kanten beginnen en eindigen dan visueel op de bol zelf. */}
-      <div
-        style={{
-          position: "absolute",
-          left: M - KERN_R,
-          top: M - KERN_R,
-          width: KERN_R * 2,
-          height: KERN_R * 2,
-        }}
-      >
-        {children}
-      </div>
+    <div
+      className="dc-bol"
+      style={{
+        width: KERN_R * 2,
+        height: KERN_R * 2,
+        position: "relative",
+        borderRadius: "50%",
+        background: kleur,
+        border: `${selected ? 2.5 : 1.5}px solid ${rand}`,
+        boxSizing: "border-box",
+      }}
+    >
+      {children}
+      {/* Spaken + satellieten: decoratie búiten de node-box (geen hit-area). */}
       <svg
         width={MAAT}
         height={MAAT}
-        style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+        style={{
+          position: "absolute",
+          left: KERN_R - M,
+          top: KERN_R - M,
+          pointerEvents: "none",
+          overflow: "visible",
+          zIndex: -1,
+        }}
       >
         {posities.map((p, i) => (
-          <line key={i} x1={M} y1={M} x2={p.x} y2={p.y} stroke={rand} strokeWidth="1" opacity="0.45" />
+          <line
+            key={i}
+            x1={M}
+            y1={M}
+            x2={M - KERN_R + p.x}
+            y2={M - KERN_R + p.y}
+            stroke={rand}
+            strokeWidth="1"
+            opacity="0.45"
+          />
         ))}
-        <circle
-          cx={M}
-          cy={M}
-          r={KERN_R}
-          fill={kleur}
-          stroke={rand}
-          strokeWidth={selected ? 2.5 : 1.5}
-        />
         {posities.map((p, i) => (
           <circle
             key={`s${i}`}
             className="dc-bol-sat"
-            cx={p.x}
-            cy={p.y}
+            cx={M - KERN_R + p.x}
+            cy={M - KERN_R + p.y}
             r={SAT_R}
             fill="var(--s-panel, #ffffff)"
             stroke={rand}
@@ -289,10 +303,7 @@ function BolShape({ element, elementType, selected, children }) {
       <div
         style={{
           position: "absolute",
-          left: M - KERN_R,
-          top: M - KERN_R,
-          width: KERN_R * 2,
-          height: KERN_R * 2,
+          inset: 0,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",

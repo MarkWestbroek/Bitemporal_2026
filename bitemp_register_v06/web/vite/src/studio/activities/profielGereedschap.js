@@ -32,14 +32,10 @@ export const HOOK_CATALOGUS = {
         doel.push({ zijde: "doel", delen: [{ tekst: d.doelKardinaliteit, soort: "kardinaliteit" }] });
         kaal.push({ zijde: "doel", delen: [{ tekst: d.doelKardinaliteit, soort: "kardinaliteit" }] });
       }
-      if (conn.naam) kaal.push({ zijde: "midden", delen: [{ tekst: conn.naam, soort: "naam" }] });
+      // Let op: geen naam-label toevoegen — de core zet de connector-naam
+      // al automatisch als midden-label (anders verschijnt hij dubbel).
       return { bron, doel, kaal };
     },
-    /** Alleen de connector-naam in het midden. */
-    naam: (conn) =>
-      conn.naam
-        ? { bron: [], doel: [], kaal: [{ zijde: "midden", delen: [{ tekst: conn.naam, soort: "naam" }] }] }
-        : { bron: [], doel: [], kaal: [] },
   },
   edgePresentatie: {
     /** data.directioneel === true → open pijl aan de doelzijde. */

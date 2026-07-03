@@ -2,7 +2,17 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** feedbackronde bol-shape (2026-07-04): (1) **handles op de
+- **Status:** feedbackronde bol-shape 2 (2026-07-04): (1) **dubbel
+  naam-label gefixt** — de core zet de connector-naam al automatisch als
+  midden-label, maar de kardinaliteiten-hooks (catalogus + puur-uml) deden
+  dat óók; exact over elkaar heen viel dat nooit op, tot het slepen ze uit
+  elkaar trok. Hooks voegen geen naam-label meer toe. (2) **Bol-hitbox =
+  kern** — de node-box van de bol-shape was de hele compositie (incl.
+  transparante hoeken), waardoor edge-labels erachter onbereikbaar waren;
+  de node is nu alleen de kern (~92px) en de satellieten steken er als
+  decoratie overheen uit (pointer-events: none). Handles liggen daardoor
+  vanzelf op de kern (de eerdere wrapper-truc is weg) en labels naast een
+  bol zijn direct pakbaar. Eerdere ronde: feedbackronde bol-shape (2026-07-04): (1) **handles op de
   kern** — de aansluitpunten van de bol-shape zaten op de bounding box van
   de hele compositie; ze liggen nu op de kern zelf, zodat kanten visueel op
   de bol beginnen en eindigen (de shape wikkelt de standaard-handles in een
