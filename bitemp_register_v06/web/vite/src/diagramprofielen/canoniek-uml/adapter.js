@@ -112,33 +112,17 @@ function naarCoreElement(el) {
       break;
     }
     case "gegevenstype": {
-      const val = d.validatie || {};
-      const wg = d.weergave || {};
       const eigenschappen = [
         { naam: "basistype", fieldType: "eigenschap", data: { typeLabel: d.basistype || "string" } },
         ...(d.format ? [{ naam: "format", fieldType: "eigenschap", data: { typeLabel: d.format } }] : []),
       ];
-      const validatie = regelVelden([
-        ["pattern", val.pattern],
-        ["minLength", val.minLength],
-        ["maxLength", val.maxLength],
-        ["minimum", val.minimum],
-        ["maximum", val.maximum],
-        ["multipleOf", val.multipleOf],
-        ...(val.regels || []).map((r) => ["regel", r?.naam || r]),
-        ["norm", d.normalisatie],
-      ]);
-      const weergave = regelVelden([
-        ["placeholder", wg.placeholder],
-        ["mask", wg.inputMask],
-        ["prefix", wg.prefix],
-        ["suffix", wg.suffix],
-      ]);
-      basis.compartimenten = [
-        { compartmentType: "eigenschappen", velden: eigenschappen },
-        ...(validatie.length ? [{ compartmentType: "validatie", velden: validatie }] : []),
-        ...(weergave.length ? [{ compartmentType: "weergave", velden: weergave }] : []),
-      ];
+      basis.compartimenten = [{ compartmentType: "eigenschappen", velden: eigenschappen }];
+      // Validatie/normalisatie/weergave zijn bewerkbare element-properties;
+      // de validatie-/weergave-compartimenten op de node worden live
+      // gegenereerd door de extraCompartimenten-hook van het profiel.
+      if (d.validatie) basis.data.validatie = d.validatie;
+      if (d.normalisatie) basis.data.normalisatie = d.normalisatie;
+      if (d.weergave) basis.data.weergave = d.weergave;
       break;
     }
     case "referentielijstInstantie": {
@@ -605,8 +589,11 @@ export function naarCanoniekModel(coreState) {
             naam: el.naam,
             basistype: eigenschap("basistype") || bron.basistype || "string",
             format: eigenschap("format") ?? bron.format,
-            // Validatie/weergave/normalisatie: bron wint (0.5 toont ze als
-            // platte tekstregels; structureel bewerken is een later punt).
+            // Bewerkbaar via de PropertyType-editors (validatieregels/
+            // weergaveregels); de 0.5-waarde wint van de bron-spiegel.
+            validatie: d.validatie ?? bron.validatie,
+            normalisatie: d.normalisatie ?? bron.normalisatie,
+            weergave: d.weergave ?? bron.weergave,
           },
         };
         break;

@@ -375,6 +375,7 @@
 }
 
 .dc-inspector input[type="text"],
+.dc-inspector input[type="number"],
 .dc-inspector textarea {
   flex: 1;
   min-width: 0;

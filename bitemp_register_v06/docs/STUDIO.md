@@ -219,15 +219,30 @@ fase 2 een **bewerkbare sandbox**:
   leeg is, of expliciet via **Diagram (0.5) → Herlaad uit UML-model** (met
   bevestiging bij lokale wijzigingen). Er wordt **nooit** ongevraagd
   teruggeschreven naar het UML-model.
-- **Serialisatie (fase 4A)**: **Diagram (0.5) → Exporteer V3 JSON…** downloadt
-  het sandbox-model als V3-JSON; **Importeer V3 JSON…** laadt een V3-bestand
-  in de sandbox (met bevestiging — vervangt alles). Onder water werkt dit via
+- **Serialisatie (fase 4A)**: **Bestand → Exporteer V3 JSON…** downloadt
+  het sandbox-model als V3-JSON; **Bestand → Importeer V3 JSON…** laadt een
+  V3-bestand in de sandbox (met bevestiging — vervangt alles). De activiteit
+  levert daarvoor een eigen Bestand-menu (zelfde patroon als de UML-IDE). Onder water werkt dit via
   **spiegel + delta**: de heenreis-adapter bewaart de volledige oude data als
   `bron`-bijlagen plus model-meta, de terug-adapter (`naarCanoniekModel`)
   reconstrueert daaruit de oude storevorm en de bestaande
-  `storeNaarV3Model`/`v3ModelNaarStore` doen de rest. Elementen zonder
+  `storeNaarV3Model`/`v3ModelNaarStore` doen de rest — georkestreerd door
+  `diagramprofielen/canoniek-uml/serialisatie.js` (`exporteerV3`/
+  `importeerV3`), die bovendien het **default-diagram** ("overzicht", vaak
+  hernoemd en zelf samengesteld) als gewone diagrammen-entry meeneemt en bij
+  import terugzet, en alle diagram-verwijzingen hernoemt naar de canonieke
+  V3-ids (V3 kent geen vrije element-ids). Elementen zonder
   V3-tegenhanger (zoals kaders) worden bij export gemeld en overgeslagen.
   Round-trip-tests: `diagramprofielen/canoniek-uml/terugreis.test.js`.
+- **Gegevenstype-validatie bewerken**: validatie, normalisatie en weergave
+  zijn element-properties van het gegevenstype met eigen PropertyTypeEditors
+  (`ValidatieEditors.jsx`, datatypes "validatieregels"/"weergaveregels"):
+  pattern, min/max-lengte (string) of minimum/maximum/veelvoud (numeriek —
+  volgt het basistype), foutmelding, voorbeelden en checksum-regels;
+  placeholder, invoermasker, prefix en suffix. De validatie-/weergave-regels
+  op de node bewegen live mee (`extraCompartimenten`-hook, met
+  `verbergInInspector` zodat de inspector ze niet dubbel toont) en de
+  wijzigingen gaan als delta mee in de V3-export.
 - **Taakbalken** (zwevend, versleepbaar, aan/uit via Diagram (0.5) →
   Taakbalken ▸): **Maken** (één knop per elementtype) en **Verbinding**
   (kies een connector-type; zonder keuze wordt het type automatisch afgeleid

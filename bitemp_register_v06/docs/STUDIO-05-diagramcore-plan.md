@@ -2,7 +2,29 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** fase 4A opgeleverd (2026-07-03, branch `feat/studio05-fase4`):
+- **Status:** fase 4A-feedbackronde (2026-07-03): (1) **round-trip-bug
+  gefixt** — het default-diagram ("overzicht") kan hernoemd en samengesteld
+  zijn (bv. "np-loc" met 29 van de 114 elementen), maar de oude adapters
+  beschouwen het als afgeleid: export liet het weg en import reconstrueerde
+  het met álles. De nieuwe `serialisatie.js` (profiel-laag; oude adapters
+  ongemoeid) voert nu de hele V3-route (`exporteerV3`/`importeerV3`), neemt
+  het default-diagram als gewone diagrammen-entry mee (mét edge-data:
+  generalisaties!) en zet het bij import terug. Daarbij worden alle
+  diagram-verwijzingen hernoemd naar de **canonieke V3-ids** die de import
+  afleidt (entiteit → typenaam, GE → `Ent_naam`, enum → `enum_…`, …) — V3
+  kent geen vrije element-ids, dus 0.5-ids als `el_…` zouden anders verweesde
+  diagram-nodes geven. Diagram-samenstelling is nu stabiel over meerdere
+  export/import-cycli (e2e-geverifieerd). (2) **Validatie-editor voor
+  gegevenstypen** (was vergeten): validatie/normalisatie/weergave zijn nu
+  element-properties met eigen PropertyTypeEditors ("validatieregels" en
+  "weergaveregels" in de datatype-registry, `ValidatieEditors.jsx`) — pattern,
+  lengtes (string) of bereik/veelvoud (numeriek, o.b.v. het basistype),
+  foutmelding, voorbeelden, checksum-regels; placeholder/invoermasker/
+  prefix/suffix. De validatie-/weergave-compartimenten op de node worden live
+  gegenereerd via een `extraCompartimenten`-hook (voorheen statisch bij de
+  heenreis), en de terugreis neemt de bewerkte waarden als delta mee naar V3.
+  (3) Import/export verhuisd naar een eigen **Bestand**-menu (zelfde patroon
+  als de UML-IDE). Eerdere stand: fase 4A opgeleverd (2026-07-03, branch `feat/studio05-fase4`):
   **serialisatie via spiegel + delta.** De heenreis (`vanCanoniekModel`) is
   verliesvrij gemaakt: elk element krijgt zijn volledige oude data als
   `data.bron`-bijlage, REL-connectoren de structurele edge als `data.bronEdge`,
@@ -13,9 +35,10 @@
   `naarCanoniekModel`** reconstrueert daaruit de oude storevorm (bron als
   basis, 0.5-bewerkingen als delta erover), waarna de bewezen
   `storeNaarV3Model`/`v3ModelNaarStore` uit `store/adapters.js` de V3-JSON
-  doen. Menu *Diagram (0.5)*: **"Exporteer V3 JSON…"** (download; meldt
-  elementen zonder V3-tegenhanger, zoals kaders) en **"Importeer V3 JSON…"**
-  (file-picker, met bevestiging; vervangt de sandbox). Round-trip-tests in
+  doen. Menu *Bestand* (eigen bestand-menu van de activiteit, zoals de
+  UML-IDE): **"Exporteer V3 JSON…"** (download; meldt elementen zonder
+  V3-tegenhanger, zoals kaders) en **"Importeer V3 JSON…"** (file-picker,
+  met bevestiging; vervangt de sandbox). Round-trip-tests in
   `canoniek-uml/terugreis.test.js` (V3-niveau op het demo-model + store-niveau
   met generalisatie/compositie/kardinaliteiten/afgeleid veld/delta-wint);
   e2e-geverifieerd incl. behoud van `entiteitSubtype` op refitem-entiteiten.

@@ -140,6 +140,7 @@ export default function ElementInspector({
 
       {/* Compartimenten volgens het ElementType */}
       {(elementType?.compartments || []).map((def) => {
+        if (def.verbergInInspector) return null;
         const instantie = compartimenten.find((c) => c.compartmentType === def.id);
         const velden = instantie?.velden || [];
         const fieldType = fieldTypesById?.[def.fieldType];

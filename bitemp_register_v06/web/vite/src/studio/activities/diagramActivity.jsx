@@ -39,8 +39,8 @@ import {
   maakElement,
 } from "../../diagramprofielen/canoniek-uml/index.js";
 import { registreerCanoniekUmlImplementaties } from "../../diagramprofielen/canoniek-uml/implementaties.jsx";
-import { vanCanoniekModel, naarCanoniekModel } from "../../diagramprofielen/canoniek-uml/adapter.js";
-import { v3ModelNaarStore, storeNaarV3Model } from "../../store/adapters.js";
+import { vanCanoniekModel } from "../../diagramprofielen/canoniek-uml/adapter.js";
+import { exporteerV3, importeerV3 } from "../../diagramprofielen/canoniek-uml/serialisatie.js";
 
 const DiagramCanvas = lazy(() => import("../../diagramcore/canvas/DiagramCanvas.jsx"));
 
@@ -115,8 +115,7 @@ function Diagram05Provider({ children }) {
       // Fase 4: serialisatie. Sandbox → oude storevorm (naarCanoniekModel)
       // → V3 JSON via de bewezen adapter, en dezelfde route terug.
       menuBus.on("d05:exporteer-v3", () => {
-        const { overgeslagen, ...oudeStore } = naarCanoniekModel(useDiagram05Store.getState());
-        const v3 = storeNaarV3Model(oudeStore);
+        const { v3, overgeslagen } = exporteerV3(useDiagram05Store.getState());
         const naam = (v3.model?.naam || "model").toLowerCase().replace(/[^a-z0-9]+/g, "-");
         const blob = new Blob([JSON.stringify(v3, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
@@ -154,7 +153,7 @@ function Diagram05Provider({ children }) {
               if (!ok) return;
             }
             try {
-              s.laadModel(vanCanoniekModel(v3ModelNaarStore(v3)));
+              s.laadModel(importeerV3(v3));
             } catch (e) {
               window.alert(`Import mislukt: ${e?.message || e}`);
               return;
@@ -665,6 +664,25 @@ export default {
   sidebarLabel: "Diagrammen",
   inspectorLabel: "Element",
   menus: () => [
+    // Eigen Bestand-menu (overschrijft de standaard op ankerplek "bestand",
+    // zelfde patroon als umlActivity): import/export horen thuis in Bestand.
+    {
+      id: "bestand",
+      label: "Bestand",
+      items: [
+        { id: "d05-import-v3", label: "Importeer V3 JSON…", onClick: () => menuBus.emit("d05:importeer-v3") },
+        { id: "d05-export-v3", label: "Exporteer V3 JSON…", onClick: () => menuBus.emit("d05:exporteer-v3") },
+        { type: "separator" },
+        {
+          id: "index",
+          label: "Overzicht (index)…",
+          onClick: () => {
+            window.location.href = window.location.pathname.replace(/[^/]*$/, "") || "/";
+          },
+        },
+        { id: "herlaad-pagina", label: "Pagina herladen", shortcut: "F5", onClick: () => window.location.reload() },
+      ],
+    },
     {
       id: "bewerken",
       label: "Bewerken",
@@ -679,9 +697,6 @@ export default {
       items: [
         { id: "d05-nieuw-diagram", label: "Nieuw diagram…", onClick: () => menuBus.emit("d05:nieuw-diagram") },
         { id: "d05-herlaad", label: "Herlaad uit UML-model…", onClick: () => menuBus.emit("d05:herlaad") },
-        { type: "separator" },
-        { id: "d05-export-v3", label: "Exporteer V3 JSON…", onClick: () => menuBus.emit("d05:exporteer-v3") },
-        { id: "d05-import-v3", label: "Importeer V3 JSON…", onClick: () => menuBus.emit("d05:importeer-v3") },
         { type: "separator" },
         { id: "d05-auto", label: "Auto-layout (heel diagram)", onClick: () => menuBus.emit("d05:auto-layout", { selectie: false }) },
         { id: "d05-auto-sel", label: "Auto-layout (selectie)", onClick: () => menuBus.emit("d05:auto-layout", { selectie: true }) },
