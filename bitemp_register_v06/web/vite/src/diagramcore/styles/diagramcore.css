@@ -5,19 +5,20 @@
    één StyleType is ("uml-klassiek") ís dit die tokenset.
    v2 (vormgevingssessie 2026-07-04/05, besluiten B3+B4):
    - selectie in merk-indigo (Omnium-gradientmidden) i.p.v. generiek blauw;
-   - marker-vulling = canvaskleur, zodat open UML-markers (◇ ▷) in het
-     donkere thema écht open ogen — v1 vulde ze lichtgrijs, waardoor ◇
-     niet van ◆ te onderscheiden was;
-   - canvas-achtergrond expliciet als token (volgt de shell via --s-canvas);
-   - label-achtergrond voor edge-labelchips (licht chipje op licht canvas,
-     donker chipje op donker canvas). */
+   - marker-vulling = canvaskleur, zodat open UML-markers (◇ ▷) écht open
+     ogen — v1-donker vulde ze slate-200, waardoor ◇ op ◆ leek;
+   - canvas-achtergrond en label-achtergrond expliciet als tokens.
+   Let op: het 0.5-canvas tekent op `.studio-paper` en dat is bewust wit in
+   béide thema's (het diagram is een vel papier; nodes houden hun pastel).
+   Canvas-, marker- en label-tokens en de selectiekleur krijgen daarom géén
+   donker-variant — pas dat pas aan als het papier zelf ooit donker wordt. */
 .dc-canvas {
   --dc-lijn: #64748b;
   --dc-lijn-zacht: #94a3b8;
   --dc-node-rand: #94a3b8;
   --dc-node-vulling: #f1f5f9;
   --dc-selectie: #4f46e5;
-  --dc-canvas-achtergrond: var(--s-canvas, #ffffff);
+  --dc-canvas-achtergrond: #ffffff;
   --dc-marker-vulling: var(--dc-canvas-achtergrond);
   --dc-label-achtergrond: rgba(255, 255, 255, 0.92);
 }
@@ -26,10 +27,6 @@
   --dc-lijn-zacht: #64748b;
   --dc-node-rand: #64748b;
   --dc-node-vulling: #e2e8f0;
-  --dc-selectie: #818cf8;
-  --dc-canvas-achtergrond: var(--s-canvas, #1b1b1f);
-  --dc-marker-vulling: var(--dc-canvas-achtergrond);
-  --dc-label-achtergrond: rgba(27, 27, 31, 0.92);
 }
 
 /**
@@ -251,7 +248,8 @@
   background: var(--dc-label-achtergrond, rgba(255, 255, 255, 0.92));
   padding: 2px 6px;
   border-radius: 4px;
-  border: 1px solid var(--s-border, #e2e8f0);
+  /* Vast licht randje: het label ligt op het witte papier, ook in donker. */
+  border: 1px solid #e2e8f0;
   white-space: nowrap;
 }
 
@@ -269,24 +267,6 @@
   color: #64748b;
   font-style: italic;
   font-size: 9px;
-}
-
-/* Donker thema: de labelchip wordt canvas-donker (--dc-label-achtergrond),
-   dus de vaste tekstkleuren hierboven flippen mee naar lichte varianten. */
-[data-studio-theme="dark"] .dc-edge-rolnaam {
-  color: #e2e8f0;
-}
-
-[data-studio-theme="dark"] .dc-edge-kardinaliteit {
-  color: #a78bfa;
-}
-
-[data-studio-theme="dark"] .dc-edge-constraint {
-  color: #94a3b8;
-}
-
-[data-studio-theme="dark"] .dc-edge-naam {
-  color: #94a3b8;
 }
 
 .dc-edge-naam {

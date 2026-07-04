@@ -5,6 +5,34 @@
 > deze sessie levert **ontwerp** (vormen, kleuren, waarden) — registreren is
 > daarna puur invullen.
 
+## Uitkomst (sessie 2026-07-04/05, uitgevoerd)
+
+De sessie is gehouden (Claude-chat, proefopzet als artifact) en de besluiten
+zijn geïmplementeerd. Samenvatting:
+
+- **Stijlrichting**: outline + **één gevuld accent** per icoon
+  (currentColor-fill op het betekenisdragende kenmerk), 14×14, stroke 1.2 —
+  familie van de neutrale set en de uitlijn-iconen.
+- **Besluiten B1–B6**: accent op het kenmerk (niet overal de kopbalk);
+  open UML-markers blijven open (◇ ▷); selectie naar merk-indigo
+  (`#4f46e5`); marker-vulling = canvaskleur + nieuwe tokens
+  `--dc-canvas-achtergrond`/`--dc-label-achtergrond`; OAS-trio als
+  cirkelsymboliek (oneOf = 1 van 3 gevuld, anyOf = 2, allOf = venn-overlap);
+  activity-bar-iconen in een **aparte ronde** (nog open).
+- **Geïmplementeerd**: `diagramcore/shapes/iconenVocabulaire.jsx`
+  (28 iconen, geregistreerd via `maakDiagramActiviteit`), `icoon`-ids op de
+  elementtypen van canoniek-uml, puur-uml, oas31 en profiel-ontwerp
+  (gedeelde concepten delen een id: Entiteit/Klasse → `klasse`), en
+  **tokens v2** bovenin `diagramcore/styles/diagramcore.css`.
+- **Leerpunt**: het 0.5-canvas tekent op `.studio-paper` — bewust **wit in
+  beide thema's**. Canvas-/marker-/label-tokens en de selectiekleur hebben
+  daarom géén donker-variant; het eerdere donker-`marker-vulling: #e2e8f0`
+  (waardoor ◇ gevuld oogde) is daarmee vervallen.
+- **Nog open**: element-pastel-richtlijn is beschreven maar niet
+  genormaliseerd (huidige kleuren blijven), eigen tokenset per StyleType-id
+  blijft wachten tot er een tweede StyleType is, activity-bar-iconen (B6).
+- Chatverslag: `copilot-chats/summaries/2026-07-05-vormgevingssessie-iconen-en-tokens-v2.md`.
+
 ## Doel van de sessie
 
 1. **Integrale iconenset**: één herkenbare familie iconen voor

@@ -262,14 +262,19 @@ fase 2 een **bewerkbare sandbox**:
 - **Lijnvormen**: edges kennen `presentatie.vorm` — bezier (default),
   hoekig (orthogonaal) of recht. Het puur-UML-profiel gebruikt hoekig voor
   de klassieke UML-look.
-- **Vormgeving (plan §8.5b/§8.5c/§8.6a, eerste treden)**: rechtsklik op een
+- **Vormgeving (plan §8.5b/§8.5c/§8.6a)**: rechtsklik op een
   connector geeft **"Lijnvorm"** (kromme/hoekig/recht, per connector bewaard
-  in `data.vorm`); de core kent **StyleType-tokens v1** (CSS-variabelen
-  `--dc-*` voor lijnen/randen/selectie/marker-vullingen, met een
-  donker-variant) en een **icoon-registry per ElementType**
-  (`shapes/typeIconen.jsx`: `elementType.icoon`-id of shape-fallback) die de
-  Maken-/Verbinding-taakbalken en de elementen-browser van vorm-iconen
-  voorziet. De merk-iconenset zelf blijft een ontwerp-sessie.
+  in `data.vorm`); de core kent **StyleType-tokens v2** (CSS-variabelen
+  `--dc-*` voor lijnen/randen/selectie/marker-vullingen plus
+  canvas-/label-achtergrond; selectie in merk-indigo `#4f46e5`) en een
+  **icoon-registry per ElementType** (`shapes/typeIconen.jsx`:
+  `elementType.icoon`-id of shape-fallback). De **integrale iconenset** uit
+  de vormgevingssessie (2026-07-04/05) staat in
+  `shapes/iconenVocabulaire.jsx`: 28 iconen (outline + één gevuld accent,
+  14×14, currentColor) die alle elementtypen van de vier profielen dekken;
+  gedeelde concepten delen een icoon-id (Entiteit en Klasse → `klasse`).
+  Let op: het 0.5-canvas tekent op `.studio-paper` (bewust wit in beide
+  thema's), dus canvas-/marker-/label-tokens hebben géén donker-variant.
 - **Elementen-browser** (plan §8.8): onder de diagrammenlijst staat in elk
   0.5-profiel een boom van álle model-elementen, met zoekveld. Wijst de
   descriptor een **hiërarchie-connectortype** aan (`hierarchie:
@@ -395,9 +400,10 @@ fase 2 een **bewerkbare sandbox**:
   ↑-kopregel, cursief) — weergave-compartiment via de profiel-hook, geen
   modeldata.
 - Nog niet (bekend): rebuild vanuit 0.5, clipboard,
-  validatie-hook, domein-overlay, licht/donker-tokens
-  per StyleType (plan §8.5b), integrale iconenset voor de Maken-balk
-  (ontwerp-sessie, plan §8.6a), overerving in de gespiegelde weergave
+  validatie-hook, domein-overlay, eigen tokensets per StyleType-id
+  (plan §8.5b — het register bestaat; zolang "uml-klassiek" de enige is,
+  ís de default die set), merk-iconen voor de activity bar (aparte ronde,
+  besluit B6 vormgevingssessie), overerving in de gespiegelde weergave
   (generalisaties uit het oude model zijn daar nog presentatie-edges),
   YAML-export en oneOf/anyOf in het OAS-profiel.
   Het incidentele **transient lege canvas** is vermoedelijk opgelost
