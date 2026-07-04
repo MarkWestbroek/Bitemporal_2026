@@ -271,8 +271,13 @@ fase 2 een **bewerkbare sandbox**:
   Maken-/Verbinding-taakbalken en de elementen-browser van vorm-iconen
   voorziet. De merk-iconenset zelf blijft een ontwerp-sessie.
 - **Elementen-browser** (plan §8.8): onder de diagrammenlijst staat in elk
-  0.5-profiel een boom van álle model-elementen, gegroepeerd per elementtype,
-  met zoekveld. Klik = selecteren in de inspector; elementen die niet op het
+  0.5-profiel een boom van álle model-elementen, met zoekveld. Wijst de
+  descriptor een **hiërarchie-connectortype** aan (`hierarchie:
+  "compositie"`, P02/E01) dan nest de browser de elementen langs die
+  bevat-relatie (canoniek-uml: GE's onder hun entiteit — ook gespiegelde
+  composities via de `hierarchieParen`-hook; de profiel-ontwerper: VT's
+  onder CT's onder ET's); zonder hiërarchie of bij zoeken groepeert hij
+  plat per elementtype. Klik = selecteren in de inspector; elementen die niet op het
   actieve diagram staan zijn cursief/gedempt en hebben een ＋-knop om ze in
   het zichtbare viewport-midden toe te voegen.
 - **Fabriek + tweede profiel (fase 5)**: de activiteit-mechaniek zit in
@@ -297,7 +302,8 @@ fase 2 een **bewerkbare sandbox**:
 - **Meta-editor trede 2: "Profiel-ontwerp (0.5)"** — conform het metamodel:
   teken **Elementtypen ◆ Compartimenttypen ◆ Veldtypen** (elk met eigen
   properties; de ◆-connector legt de bevat-relaties) plus verbindingsregels
-  (lijnstijl/markers, kardinaliteiten- en richting-vinkjes).
+  (lijnstijl/markers, kardinaliteiten-, richting- en
+  bevat-relatie-vinkjes — dat laatste zet `hierarchie` van het doelprofiel).
   **Verbindingsregels zijn 1..*** per connectortype (metamodel:
   ConnectorType ◆ Verbindingsregel): regel-lijnen met dezelfde náám
   bundelen bij het genereren tot één connectortype dat zich als meerdere
