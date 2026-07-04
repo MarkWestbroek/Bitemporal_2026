@@ -175,3 +175,15 @@ test("elementenVanDiagram: alleen nodes van het diagram + connectoren met beide 
   const d2 = elementenVanDiagram(state, "d2");
   assert.deepEqual(Object.keys(d2), ["C"]);
 });
+
+test("hiërarchie (P02): bevat-vinkje op een regel-lijn wordt kern.hierarchie en terug", () => {
+  const ontwerp = maakOntwerp();
+  ontwerp.elements.R1.data.isHierarchie = true;
+  const kern = bouwProfielUitOntwerp(ontwerp, { id: "zonnestelsel" });
+  assert.equal(kern.hierarchie, "draait-om");
+  assert.deepEqual(valideerDiagramType(vertaalHooks(kern)), []);
+
+  const terug = ontwerpUitProfiel(kern);
+  const lijn = Object.values(terug.elements).find((el) => el.elementType === "verbindingsregel");
+  assert.equal(lijn.data.isHierarchie, true);
+});

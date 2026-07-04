@@ -438,7 +438,39 @@ export function maakDiagramActiviteit(opties) {
       (diagrams[actiefDiagram]?.nodes || []).map((n) => n.elementId)
     );
     const term = zoek.trim().toLowerCase();
+    // E01/P02: met een hierarchie-connectortype in de descriptor nesten we de
+    // niet-connector-elementen als boom (zoeken schakelt terug naar plat).
+    const boomModus = !!descriptor.hierarchie && !term;
+    const kinderenVan = new Map();
+    const heeftOuder = new Set();
+    if (boomModus) {
+      const voegPaar = (ouder, kind) => {
+        if (!elements[ouder] || !elements[kind]) return;
+        if (!kinderenVan.has(ouder)) kinderenVan.set(ouder, []);
+        if (!kinderenVan.get(ouder).includes(kind)) kinderenVan.get(ouder).push(kind);
+        heeftOuder.add(kind);
+      };
+      for (const el of Object.values(elements)) {
+        if (el.elementType !== descriptor.hierarchie || !el.source || !el.target) continue;
+        voegPaar(el.source, el.target);
+      }
+      // Profiel-hook voor extra paren (bv. canoniek-uml: gespiegelde
+      // composities zijn presentatie-edges, geen connector-elementen).
+      for (const [ouder, kind] of descriptor.hooks?.hierarchieParen?.({ elements, diagrams }) || []) {
+        voegPaar(ouder, kind);
+      }
+    }
+    const sorteer = (lijst) => lijst.sort((a, b) => (a.naam || a.id).localeCompare(b.naam || b.id));
+    const wortels = boomModus
+      ? sorteer(
+          Object.values(elements).filter((el) => {
+            const et = elementTypesById[el.elementType];
+            return et && !et.isConnector && !heeftOuder.has(el.id);
+          })
+        )
+      : [];
     const groepen = descriptor.elementTypes
+      .filter((et) => !boomModus || et.isConnector)
       .map((et) => ({
         et,
         items: Object.values(elements)
@@ -455,6 +487,58 @@ export function maakDiagramActiviteit(opties) {
         y: midden.y - 50,
       });
       setSelectieId(el.id);
+    };
+
+    const Rij = (el, diepte = 0) => {
+      const et = elementTypesById[el.elementType];
+      const zichtbaar = opDiagram.has(el.id);
+      return (
+        <div key={el.id}>
+          <div
+            onClick={() => setSelectieId(el.id)}
+            title={zichtbaar ? el.naam || el.id : `${el.naam || el.id} — niet op dit diagram`}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: `2px 6px 2px ${20 + diepte * 14}px`,
+              borderRadius: 6,
+              cursor: "pointer",
+              color: zichtbaar ? "var(--s-fg)" : "var(--s-fg-muted)",
+              background: el.id === selectieId ? "var(--s-hover)" : "transparent",
+            }}
+          >
+            <TypeIcoon elementType={et} maat={11} />
+            <span
+              style={{
+                flex: 1,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                fontStyle: zichtbaar ? undefined : "italic",
+              }}
+            >
+              {el.naam || `(${el.id})`}
+            </span>
+            {!zichtbaar && !et?.isConnector && actiefDiagram && (
+              <button
+                className="dc-mini-knop"
+                title="Toevoegen aan het huidige diagram"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  voegToe(el);
+                }}
+              >
+                ＋
+              </button>
+            )}
+          </div>
+          {diepte < 8 &&
+            sorteer((kinderenVan.get(el.id) || []).map((kid) => elements[kid]).filter(Boolean)).map(
+              (kind) => Rij(kind, diepte + 1)
+            )}
+        </div>
+      );
     };
 
     return (
@@ -491,9 +575,10 @@ export function maakDiagramActiviteit(opties) {
           />
         </div>
         <div style={{ flex: 1, overflow: "auto", padding: 6 }}>
-          {groepen.length === 0 && (
+          {groepen.length === 0 && wortels.length === 0 && (
             <p style={{ margin: 8, color: "var(--s-fg-muted)" }}>Geen elementen{term ? " gevonden" : ""}.</p>
           )}
+          {boomModus && wortels.map((el) => Rij(el))}
           {groepen.map(({ et, items }) => (
             <div key={et.id} style={{ marginBottom: 2 }}>
               <div

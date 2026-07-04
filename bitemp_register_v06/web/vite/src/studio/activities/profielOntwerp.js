@@ -35,6 +35,7 @@ export const profielOntwerpKern = {
   id: PROFIEL_ONTWERP_ID,
   label: "Profiel-ontwerp",
   style: "uml-klassiek",
+  hierarchie: "compositie",
   fieldTypes: [{ id: "eigenschapDef", viewer: "naam-type", properties: EIGENSCHAP_VELDEN }],
   elementTypes: [
     {
@@ -105,6 +106,7 @@ export const profielOntwerpKern = {
         { key: "doelKleur", label: "lijnkleur", datatype: "colour" },
         { key: "metKardinaliteiten", label: "kardinaliteiten-labels", datatype: "boolean" },
         { key: "richtingOptie", label: "richting-vinkje (→)", datatype: "boolean" },
+        { key: "isHierarchie", label: "bevat-relatie (hiërarchie, P02)", datatype: "boolean" },
       ],
     },
     {
@@ -248,12 +250,16 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       if (!bron || !doel) return;
       const connectorId = slug(regel.naam) !== "naamloos" ? slug(regel.naam) : `regel-${i + 1}`;
       if (!perConnectorType.has(connectorId)) {
-        perConnectorType.set(connectorId, { eerste: regel, regels: [] });
+        perConnectorType.set(connectorId, { eerste: regel, regels: [], isHierarchie: false });
       }
-      perConnectorType.get(connectorId).regels.push({ bron: [bron], doel: [doel] });
+      const groep = perConnectorType.get(connectorId);
+      groep.regels.push({ bron: [bron], doel: [doel] });
+      if (regel.data?.isHierarchie) groep.isHierarchie = true;
     });
 
-  for (const [connectorId, { eerste, regels }] of perConnectorType) {
+  let hierarchieConnector = null;
+  for (const [connectorId, { eerste, regels, isHierarchie }] of perConnectorType) {
+    if (isHierarchie && !hierarchieConnector) hierarchieConnector = connectorId;
     const d = eerste.data || {};
     const hooks = {};
     const properties = [{ key: "kleur", datatype: "colour" }];
@@ -293,6 +299,7 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
     id: slug(id),
     label: label || id,
     style: "uml-klassiek",
+    ...(hierarchieConnector ? { hierarchie: hierarchieConnector } : {}),
     fieldTypes,
     elementTypes,
     taakbalken: [
@@ -471,6 +478,7 @@ export function ontwerpUitProfiel(descriptor) {
               doelKleur: p.kleur || "#64748b",
               metKardinaliteiten: props.some((pr) => pr.key === "bronKardinaliteit"),
               richtingOptie: props.some((pr) => pr.key === "directioneel"),
+              ...(descriptor.hierarchie === et.id ? { isHierarchie: true } : {}),
             },
           };
         }

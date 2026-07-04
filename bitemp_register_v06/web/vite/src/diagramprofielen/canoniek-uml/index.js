@@ -424,6 +424,25 @@ export const canoniekUmlDiagramType = {
   id: CANONIEK_UML_ID,
   label: "Canoniek datamodel",
   style: "uml-klassiek",
+  // P02: de compositie (ENT ◆ GE) is de bevat-relatie — de
+  // elementen-browser nest gegevenselementen onder hun entiteit.
+  hierarchie: "compositie",
+  hooks: {
+    /**
+     * Gespiegelde composities uit het oude model zijn presentatie-edges
+     * (markerStart "ruit"), geen connector-elementen — lever ze als extra
+     * hiërarchie-paren aan de elementen-browser.
+     */
+    hierarchieParen: ({ diagrams }) => {
+      const paren = [];
+      for (const d of Object.values(diagrams || {})) {
+        for (const e of d.edges || []) {
+          if (e.data?.presentatie?.markerStart === "ruit") paren.push([e.source, e.target]);
+        }
+      }
+      return paren;
+    },
+  },
   elementTypes,
   fieldTypes,
   referenceTypes,

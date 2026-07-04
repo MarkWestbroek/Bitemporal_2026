@@ -88,6 +88,16 @@ export function valideerDiagramType(dt) {
       gezien.add(et.id);
     }
   }
+  // Hiërarchie (P02): optioneel connectortype-id dat de bevat-relatie is;
+  // de elementen-browser nest elementen langs die relatie.
+  if (dt.hierarchie) {
+    const doelwit = dt.elementTypes.find((et) => et?.id === dt.hierarchie);
+    if (!doelwit) {
+      fouten.push(`DiagramType "${dt.id}": hierarchie verwijst naar onbekend ElementType "${dt.hierarchie}"`);
+    } else if (!doelwit.isConnector) {
+      fouten.push(`DiagramType "${dt.id}": hierarchie "${dt.hierarchie}" is geen connector-type`);
+    }
+  }
   // Verbindingsregels: 1..* per connector, en verwijzingen moeten bestaan.
   for (const et of dt.elementTypes) {
     if (!et?.isConnector) continue;
