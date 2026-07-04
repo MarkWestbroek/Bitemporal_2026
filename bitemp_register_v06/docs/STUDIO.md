@@ -303,9 +303,14 @@ fase 2 een **bewerkbare sandbox**:
   (array-elementtype). Ook hier: alleen een descriptor + fabriek-aanroep.
   **Bestand → Importeer OAS 3.1 (YAML/JSON)…** leest een echt
   OpenAPI-document in (`oas31/adapter.js`, parser: `yaml`): schemas, enums,
-  paths → operaties, en alle $ref/allOf/items-relaties als connectoren, met
-  een grid-geplaatst diagram genoemd naar `info.title`. Export terug naar
-  YAML is een later punt (eigen terugreis, vgl. canoniek-uml fase 4).
+  paths → operaties, en alle $ref/allOf/items/**oneOf/anyOf**-relaties als
+  connectoren. Naast het totaaloverzicht komt er **per tag** (of pad-groep)
+  een eigen diagram met de operaties plus de (transitief) geraakte schemas —
+  zo blijft een grote OAS leesbaar. Er is een **gelaagde auto-layout**
+  (operaties → per $ref-stap een kolom) en **Bestand → Exporteer OAS 3.1
+  (YAML)…** schrijft het model terug (spiegel + delta: properties/required/
+  allOf/oneOf/paths gereconstrueerd; round-trip-getest). Nog niet:
+  parameters/headers als elementen, inline oneOf-varianten.
 - **Gegevenstype-validatie bewerken**: validatie, normalisatie en weergave
   zijn element-properties van het gegevenstype met eigen PropertyTypeEditors
   (`ValidatieEditors.jsx`, datatypes "validatieregels"/"weergaveregels"):

@@ -3,10 +3,10 @@
  * diagram-motor. Derde profiel (fase 5-vuurproef): descriptor + fabriek,
  * verder niets — zie diagramprofielen/oas31/.
  */
-import { parse as parseYaml } from "yaml";
+import { parse as parseYaml, stringify as naarYaml } from "yaml";
 import { IconAPI } from "../icons";
 import { registreerOas31, oas31DiagramType, maakElement } from "../../diagramprofielen/oas31/index.js";
-import { vanOasDocument } from "../../diagramprofielen/oas31/adapter.js";
+import { vanOasDocument, naarOasDocument } from "../../diagramprofielen/oas31/adapter.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
 
 registreerOas31();
@@ -35,6 +35,13 @@ export default maakDiagramActiviteit({
         }
         return vanOasDocument(doc);
       },
+    },
+    /** Terugreis: sandbox → OpenAPI 3.1 YAML (spiegel + delta). */
+    exportBestand: {
+      label: "Exporteer OAS 3.1 (YAML)…",
+      bestandsnaam: (staat) =>
+        `${(staat.meta?.oasInfo?.title || "openapi").toLowerCase().replace(/[^a-z0-9]+/g, "-")}.yaml`,
+      maak: (staat) => naarYaml(naarOasDocument(staat)),
     },
   },
 });

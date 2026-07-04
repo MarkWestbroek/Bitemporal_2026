@@ -298,6 +298,28 @@ export function maakDiagramActiviteit(opties) {
           input.click();
         })
       );
+      // Profiel-eigen bestandsexport (bv. coreModel → OAS 3.1 YAML).
+      if (koppeling?.exportBestand) {
+        af.push(
+          menuBus.on(ev("export-bestand"), () => {
+            const staat = useStore.getState();
+            let tekst;
+            try {
+              tekst = koppeling.exportBestand.maak(staat);
+            } catch (e) {
+              window.alert(`Export mislukt: ${e?.message || e}`);
+              return;
+            }
+            const blob = new Blob([tekst], { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = koppeling.exportBestand.bestandsnaam?.(staat) || "export.txt";
+            a.click();
+            URL.revokeObjectURL(url);
+          })
+        );
+      }
       // Profiel-eigen bestandsformaat (bv. OAS 3.1 YAML → coreModel).
       if (koppeling?.importBestand) {
         af.push(
@@ -992,9 +1014,18 @@ export function maakDiagramActiviteit(opties) {
                 label: koppeling.importBestand.label || "Importeer bestand…",
                 onClick: () => menuBus.emit(ev("import-bestand")),
               },
-              { type: "separator" },
             ]
           : []),
+        ...(koppeling?.exportBestand
+          ? [
+              {
+                id: `${menuPrefix}-export-bestand`,
+                label: koppeling.exportBestand.label || "Exporteer bestand…",
+                onClick: () => menuBus.emit(ev("export-bestand")),
+              },
+            ]
+          : []),
+        ...(koppeling?.importBestand || koppeling?.exportBestand ? [{ type: "separator" }] : []),
         ...(koppeling?.importeerV3
           ? [{ id: `${menuPrefix}-import-v3`, label: "Importeer V3 JSON…", onClick: () => menuBus.emit(ev("importeer-v3")) }]
           : []),

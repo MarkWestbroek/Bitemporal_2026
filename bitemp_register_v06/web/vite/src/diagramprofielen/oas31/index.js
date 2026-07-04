@@ -179,6 +179,37 @@ const elementTypes = [
           : { bron: [], doel: [], kaal: [] },
     },
   },
+  {
+    // oneOf/anyOf: variant-verwijzingen (discriminator-achtige structuren).
+    id: "oneOf",
+    label: "oneOf",
+    kort: "1..1",
+    shape: "edge",
+    isConnector: true,
+    bron: { elementTypes: ["schema"] },
+    doel: { elementTypes: SCHEMAS },
+    edgePresentatie: {
+      lijn: "dash-4-4",
+      kleur: "#d946ef",
+      markerEnd: "pijl-open",
+      labels: [{ zijde: "midden", delen: [{ tekst: "«oneOf»", soort: "constraint", kleur: "#d946ef" }] }],
+    },
+  },
+  {
+    id: "anyOf",
+    label: "anyOf",
+    kort: "0..n",
+    shape: "edge",
+    isConnector: true,
+    bron: { elementTypes: ["schema"] },
+    doel: { elementTypes: SCHEMAS },
+    edgePresentatie: {
+      lijn: "dash-4-4",
+      kleur: "#f59e0b",
+      markerEnd: "pijl-open",
+      labels: [{ zijde: "midden", delen: [{ tekst: "«anyOf»", soort: "constraint", kleur: "#f59e0b" }] }],
+    },
+  },
 ];
 
 function elementKandidaten(elements, filter, icoon, groep) {
@@ -224,8 +255,63 @@ export const oas31DiagramType = {
   taakbalken: [
     { id: "maken", label: "Maken", acties: "elementTypes" },
     { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
+    { id: "auto-layout", label: "Auto-layout", acties: "layouts" },
   ],
-  layouts: [],
+  /**
+   * Gelaagde OAS-layout: operaties in kolom 0, daarna per $ref-stap een
+   * kolom naar rechts (schemas op afhankelijkheidsafstand); wat nergens aan
+   * hangt komt in de laatste kolom. Puur op flowNodes/flowEdges.
+   */
+  layouts: [
+    {
+      id: "oas-lagen",
+      label: "Auto-layout",
+      run: ({ flowNodes, flowEdges }) => {
+        const nodes = flowNodes.filter((n) => !n.hidden);
+        const idSet = new Set(nodes.map((n) => n.id));
+        const uitgaand = new Map();
+        for (const e of flowEdges || []) {
+          if (!idSet.has(e.source) || !idSet.has(e.target)) continue;
+          if (!uitgaand.has(e.source)) uitgaand.set(e.source, []);
+          uitgaand.get(e.source).push(e.target);
+        }
+        const laag = new Map();
+        let rand = nodes.filter((n) => n.type === "operatie").map((n) => n.id);
+        rand.forEach((id) => laag.set(id, 0));
+        let diepte = 0;
+        while (rand.length) {
+          diepte += 1;
+          const volgende = [];
+          for (const vanId of rand) {
+            for (const doel of uitgaand.get(vanId) || []) {
+              if (!laag.has(doel)) {
+                laag.set(doel, diepte);
+                volgende.push(doel);
+              }
+            }
+          }
+          rand = volgende;
+        }
+        const maxLaag = Math.max(0, ...laag.values());
+        for (const n of nodes) if (!laag.has(n.id)) laag.set(n.id, maxLaag + 1);
+
+        const perLaag = new Map();
+        for (const n of nodes) {
+          const l = laag.get(n.id);
+          if (!perLaag.has(l)) perLaag.set(l, []);
+          perLaag.get(l).push(n);
+        }
+        const posities = {};
+        for (const [l, groep] of perLaag) {
+          groep.sort((a, b) => a.id.localeCompare(b.id));
+          groep.forEach((n, i) => {
+            posities[n.id] = { x: 80 + l * 380, y: 60 + i * 240 };
+          });
+        }
+        return posities;
+      },
+    },
+  ],
 };
 
 let _teller = 0;
