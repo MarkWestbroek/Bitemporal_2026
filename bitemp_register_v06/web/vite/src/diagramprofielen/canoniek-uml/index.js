@@ -88,7 +88,8 @@ const elementTypes = [
     stereotype: "«entiteit»",
     shape: "class-box",
     kleur: "#bfdbfe",
-    properties: [KLEUR_VELD],
+    // tijdlijnvoorkomen (LGM): materieel ↔ isMaterieel; formeel = uit.
+    properties: [KLEUR_VELD, { key: "materieel", label: "materieel (tijdlijn)", datatype: "boolean" }],
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
@@ -139,7 +140,7 @@ const elementTypes = [
     stereotype: "«gegevenselement»",
     shape: "class-box",
     kleur: "#bbf7d0",
-    properties: [KLEUR_VELD],
+    properties: [KLEUR_VELD, { key: "materieel", label: "materieel (tijdlijn)", datatype: "boolean" }],
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
@@ -162,7 +163,11 @@ const elementTypes = [
     bron: { elementTypes: ["entiteit"] },
     doel: { elementTypes: ["entiteit"] },
     edgePresentatie: { lijn: "solid", kleur: "#64748b" },
-    properties: [KLEUR_VELD],
+    properties: [
+      KLEUR_VELD,
+      { key: "materieel", label: "materieel (tijdlijn)", datatype: "boolean" },
+      { key: "geordend", label: "geordend {ordered}", datatype: "boolean" },
+    ],
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
@@ -189,6 +194,17 @@ const elementTypes = [
         if (d.naamLabelTerug) {
           doel.push({ zijde: "bron", delen: [{ tekst: `◀ ${d.naamLabelTerug}`, soort: "naam" }] });
           kaal.push({ zijde: "doel", delen: [{ tekst: `◀ ${d.naamLabelTerug}`, soort: "naam" }] });
+        }
+        // Tijdlijnvoorkomen (LGM): «materieel» op de lijn; formeel is default.
+        if (d.materieel) {
+          const label = { zijde: "midden", delen: [{ tekst: "«materieel»", soort: "constraint", kleur: "#0369a1" }] };
+          kaal.push(label);
+          bron.push(label);
+        }
+        if (d.geordend) {
+          const label = { zijde: "doel", delen: [{ tekst: "{ordered}", soort: "constraint" }] };
+          kaal.push(label);
+          doel.push(label);
         }
         return { bron, doel, kaal };
       },

@@ -551,6 +551,7 @@ export function naarCanoniekModel(coreState) {
             naamLabelHeen: d.naamLabelHeen ?? bron.naamLabelHeen,
             naamLabelTerug: d.naamLabelTerug ?? bron.naamLabelTerug,
             directioneel: d.directioneel ?? bron.directioneel,
+            geordend: d.geordend ?? bron.geordend,
             momentvoorkomen:
               bronKard === "0..1" || bronKard === "1" ? "enkelvoudig" : "meervoudig",
             velden: basisVelden(),
