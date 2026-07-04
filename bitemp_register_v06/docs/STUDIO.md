@@ -297,7 +297,13 @@ fase 2 een **bewerkbare sandbox**:
 - **Meta-editor trede 2: "Profiel-ontwerp (0.5)"** — conform het metamodel:
   teken **Elementtypen ◆ Compartimenttypen ◆ Veldtypen** (elk met eigen
   properties; de ◆-connector legt de bevat-relaties) plus verbindingsregels
-  (lijnstijl/markers, kardinaliteiten- en richting-vinkjes). *Ontwerp →
+  (lijnstijl/markers, kardinaliteiten- en richting-vinkjes).
+  **Verbindingsregels zijn 1..*** per connectortype (metamodel:
+  ConnectorType ◆ Verbindingsregel): regel-lijnen met dezelfde náám
+  bundelen bij het genereren tot één connectortype dat zich als meerdere
+  lijnen manifesteert, en de core staat een verbinding toe zodra één regel
+  de bron×doel-combinatie dekt (de verkorte bron/doel-vorm = cartesiaans
+  product blijft ondersteund). *Ontwerp →
   Genereer & registreer profiel…* maakt er live een activiteit van (zelfde
   kanaal als trede 1); *Bekijk bestaand profiel als ontwerp…* laadt elk
   geregistreerd profiel als diagram, en een lege sandbox start met het
@@ -319,6 +325,11 @@ fase 2 een **bewerkbare sandbox**:
   (YAML)…** schrijft het model terug (spiegel + delta: properties/required/
   allOf/oneOf/paths gereconstrueerd; round-trip-getest). Nog niet:
   parameters/headers als elementen, inline oneOf-varianten.
+- **Tijdlijnvoorkomen & geordend (LGM)**: entiteit, gegevenselement en
+  relatie hebben een **materieel (tijdlijn)**-vinkje (mapping op
+  `isMaterieel`; formeel = uit) — op de node als MATERIEEL-badge, op de
+  relatie-lijn als «materieel»-label; relaties hebben daarnaast
+  **geordend** ({ordered}-label aan de doelzijde, 0.5-eigen).
 - **Gegevenstype-validatie bewerken**: validatie, normalisatie en weergave
   zijn element-properties van het gegevenstype met eigen PropertyTypeEditors
   (`ValidatieEditors.jsx`, datatypes "validatieregels"/"weergaveregels"):
