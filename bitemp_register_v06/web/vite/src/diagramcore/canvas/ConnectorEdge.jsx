@@ -63,7 +63,9 @@ function ConnectorEdge({
         ? getStraightPath(padArgs)
         : getBezierPath(padArgs);
 
-  const kleur = selected && !p.vasteKleur ? "#2563eb" : p.kleur || "#64748b";
+  const kleur = selected && !p.vasteKleur
+    ? "var(--dc-selectie, #2563eb)"
+    : p.kleur || "var(--dc-lijn, #64748b)";
   const pijlId = `dc-pijl-${id}`;
   const driehoekId = `dc-driehoek-${id}`;
 
@@ -111,7 +113,7 @@ function ConnectorEdge({
   const heeftRuit = p.markerStart === "ruit" || p.markerStart === "ruit-open";
   // Open ruit: witte vulling, net als de generalisatie-driehoek — in beide
   // thema's duidelijk te onderscheiden van de gevulde compositie-ruit.
-  const ruitVulling = p.markerStart === "ruit-open" ? "white" : kleur;
+  const ruitVulling = p.markerStart === "ruit-open" ? "var(--dc-marker-vulling, #ffffff)" : kleur;
   const meetRef = useRef(null);
   const [ruitPunten, setRuitPunten] = useState(null);
   useLayoutEffect(() => {
@@ -160,7 +162,7 @@ function ConnectorEdge({
         )}
         {p.markerEnd === "driehoek" && (
           <marker id={driehoekId} markerWidth="14" markerHeight="14" refX="13" refY="7" orient="auto" markerUnits="strokeWidth">
-            <path d="M 1 1 L 13 7 L 1 13 Z" fill="white" stroke={kleur} strokeWidth="1.2" />
+            <path d="M 1 1 L 13 7 L 1 13 Z" fill="var(--dc-marker-vulling, #ffffff)" stroke={kleur} strokeWidth="1.2" />
           </marker>
         )}
       </defs>

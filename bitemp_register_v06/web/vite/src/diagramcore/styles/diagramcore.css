@@ -1,3 +1,24 @@
+/* ── StyleType-tokens v1 (plan §8.5b): licht + donker per canvas. ─────────
+   Shapes/edges gebruiken deze variabelen voor alles wat geen element-eigen
+   (pastel)kleur is: lijnen, randen, selectie, marker-vullingen. Profielen
+   kunnen ze later per StyleType overschrijven (fase 7-register). */
+.dc-canvas {
+  --dc-lijn: #64748b;
+  --dc-lijn-zacht: #94a3b8;
+  --dc-node-rand: #94a3b8;
+  --dc-node-vulling: #f1f5f9;
+  --dc-selectie: #2563eb;
+  --dc-marker-vulling: #ffffff;
+}
+[data-studio-theme="dark"] .dc-canvas {
+  --dc-lijn: #94a3b8;
+  --dc-lijn-zacht: #64748b;
+  --dc-node-rand: #64748b;
+  --dc-node-vulling: #e2e8f0;
+  --dc-selectie: #60a5fa;
+  --dc-marker-vulling: #e2e8f0;
+}
+
 /**
  * diagramcore.css — opmaak voor de generieke diagram-motor (Studio 0.5).
  *
@@ -27,7 +48,9 @@
 
 .dc-contextmenu {
   position: fixed;
-  z-index: 60;
+  /* Ruim boven taakbalken/minimap/panelen — het menu opent op muispositie
+     en mag nergens onder liggen. */
+  z-index: 200;
   min-width: 210px;
   padding: 6px;
   background: var(--s-panel, #ffffff);
@@ -512,4 +535,12 @@
   border-radius: 4px;
   color: #ffffff;
   background: linear-gradient(90deg, #60a5fa, #6366f1, #22d3ee);
+}
+
+/* Icoon + korte code in taakbalk-knoppen (typeIconen.jsx). */
+.dc-taakbalk-icoonlabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
 }

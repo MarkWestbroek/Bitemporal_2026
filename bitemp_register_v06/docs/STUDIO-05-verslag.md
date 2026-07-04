@@ -173,10 +173,10 @@ meta-editor is de beheer-UI, met versies en tijdreizen.
 
 | Onderwerp | Wat |
 |---|---|
-| **Elementen-browser** (plan §8.8) | boom van álle elementen in de sidebar; nu zijn elementen zonder diagram onvindbaar (zeker na OAS-import) |
-| **OAS ontpluizen** | grote documenten: import per tag/padgroep in aparte diagrammen, auto-layout-strategie; YAML-**export**; oneOf/anyOf; parameters/headers |
+| ~~Elementen-browser~~ | ✅ gebouwd (2026-07-04): boom per elementtype met zoekveld, selecteren + toevoegen aan diagram |
+| ~~OAS ontpluizen~~ | ✅ gebouwd (2026-07-04): tag-diagrammen, gelaagde auto-layout, YAML-export, oneOf/anyOf — rest: parameters/headers, inline varianten |
 | **Keuzelijst-datatype** | "select"-PropertyTypeEditor in de registry; dan worden shape/lijn/marker in de profiel-ontwerper échte keuzelijsten i.p.v. vrije tekst |
-| **Vormgeving** | StyleType-tokens licht/donker (§8.5b), integrale iconenset (§8.6a — ontwerp-sessie), lijntype per connector via contextmenu (rest van §8.5c) |
+| ~~Vormgeving (eerste treden)~~ | ✅ gebouwd (2026-07-04): lijnvorm per connector via contextmenu, StyleType-tokens v1 (--dc-*), icoon-registry + taakbalk-/browser-iconen — rest: merk-iconenset (ontwerp-sessie), tokens per StyleType-id |
 | **Puur-uml rest** | zichtbaarheid (+/−/#), auto-layout-strategie |
 | **Fase 4B rest** | rebuild vanuit 0.5 (admin-endpoint) |
 | **Kleinere eindjes** | validatie-hook, clipboard, domein-overlay, CEL-familie over spiegel-generalisaties, overerving-weergave bij gespiegelde generalisaties, bevestiging dat het lege canvas weg is |

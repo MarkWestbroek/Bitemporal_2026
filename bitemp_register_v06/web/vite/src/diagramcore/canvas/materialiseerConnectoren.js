@@ -124,7 +124,15 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
         // Expliciete handles winnen; anders de kortste weg.
         sourceHandle: el.data?.sourceHandle || `source-${besteZijde(bronMid, doelMid)}`,
         targetHandle: el.data?.targetHandle || `target-${besteZijde(doelMid, bronMid)}`,
-        data: { connectorId: el.id, presentatie: { ...basisPresentatie, labels: metOffsets(kaalLabels) } },
+        data: {
+          connectorId: el.id,
+          presentatie: {
+            ...basisPresentatie,
+            // Per-connector lijnvorm (contextmenu) wint van het type-default.
+            vorm: el.data?.vorm || basisPresentatie.vorm,
+            labels: metOffsets(kaalLabels),
+          },
+        },
       });
       continue;
     }
@@ -166,7 +174,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
         // zichtbaar aan de bronzijde.
         presentatie: {
           lijn: "solid",
-          vorm: basisPresentatie.vorm,
+          vorm: el.data?.vorm || basisPresentatie.vorm,
           kleur: basisPresentatie.kleur || "#64748b",
           markerStart: basisPresentatie.markerStart,
           labels: metOffsets(labels.bron || []),
@@ -183,7 +191,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
         connectorId: el.id,
         presentatie: {
           lijn: "solid",
-          vorm: basisPresentatie.vorm,
+          vorm: el.data?.vorm || basisPresentatie.vorm,
           kleur: basisPresentatie.kleur || "#64748b",
           markerEnd: basisPresentatie.markerEnd ?? (el.data?.directioneel ? "pijl-open" : null),
           labels: metOffsets(labels.doel || []),

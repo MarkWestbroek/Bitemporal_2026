@@ -433,11 +433,19 @@ function CanvasBinnenkant({
 
   // Rechtsklik: contextmenu met acties uit de activiteit (bouwContextMenu).
   const openContextMenu = useCallback(
-    (ev) => {
+    (ev, doelwit) => {
       if (!bouwContextMenu) return;
       ev.preventDefault();
       const selectieAantal = getNodes().filter((n) => n.selected).length;
-      const items = bouwContextMenu({ selectieAantal });
+      // Op een connector (edge of gematerialiseerde box/anker) krijgt de
+      // activiteit het connector-id — voor connector-acties zoals lijnvorm.
+      const connectorId =
+        doelwit?.data?.connectorId ||
+        (doelwit?.data?.elementType?.isConnector ? doelwit.id : null) ||
+        (typeof doelwit?.id === "string" && doelwit.id.startsWith(ANKER_PREFIX)
+          ? doelwit.id.slice(ANKER_PREFIX.length)
+          : null);
+      const items = bouwContextMenu({ selectieAantal, connectorId });
       if (items?.length) setContextMenu({ x: ev.clientX, y: ev.clientY, items });
     },
     [bouwContextMenu, getNodes]

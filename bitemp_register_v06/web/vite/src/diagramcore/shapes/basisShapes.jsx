@@ -63,14 +63,14 @@ export function CompartimentLijst({ element, fieldTypesById, compartmentTypesByI
 /** UML-klassenbox. */
 function ClassBoxShape({ element, elementType, selected, fieldTypesById, compartmentTypesById, children }) {
   const d = element.data || {};
-  const borderColor = selected ? "#2563eb" : "#94a3b8";
+  const borderColor = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #94a3b8)";
   return (
     <div
       className="dc-node"
       style={{
         borderColor,
         borderWidth: elementType.id === "entiteit" ? 3 : 2,
-        backgroundColor: d.kleur || elementType.kleur || "#f1f5f9",
+        backgroundColor: d.kleur || elementType.kleur || "var(--dc-node-vulling, #f1f5f9)",
       }}
     >
       {children}
@@ -159,7 +159,7 @@ function RoundedShape({ element, elementType, selected, children }) {
 
 /** Klein cirkelvormig ankerpunt (associatieklasse-constructie). */
 function AnkerShape({ selected, children }) {
-  const borderColor = selected ? "#2563eb" : "#94a3b8";
+  const borderColor = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #94a3b8)";
   return (
     <div
       style={{
@@ -232,7 +232,7 @@ function BoundaryShape({ element, selected, children }) {
 function BolShape({ element, elementType, selected, children }) {
   const d = element.data || {};
   const kleur = d.kleur || elementType.kleur || "#a5b4fc";
-  const rand = selected ? "#2563eb" : "#64748b";
+  const rand = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #64748b)";
   const velden = (element.compartimenten || [])
     .flatMap((c) => c.velden || [])
     .filter((v) => v.naam);

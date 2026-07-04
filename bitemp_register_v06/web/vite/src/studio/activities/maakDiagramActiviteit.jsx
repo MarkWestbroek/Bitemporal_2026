@@ -46,6 +46,7 @@ import { ANKER_PREFIX } from "../../diagramcore/canvas/materialiseerConnectoren.
 import { UITLIJN_ICONEN } from "../../diagramcore/taskbar/uitlijnIcons.jsx";
 import { Taskbar, useTaakbalkVoorkeuren, leesTaakbalkVoorkeuren } from "../../diagramcore/taskbar/Taskbar.jsx";
 import ElementInspector from "../../diagramcore/inspector/ElementInspector.jsx";
+import { TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
 
 const DiagramCanvas = lazy(() => import("../../diagramcore/canvas/DiagramCanvas.jsx"));
 
@@ -504,6 +505,7 @@ export function maakDiagramActiviteit(opties) {
                 }}
               >
                 <span style={{ width: 10 }}>{dicht[et.id] ? "▸" : "▾"}</span>
+                <TypeIcoon elementType={et} maat={12} />
                 <span style={{ flex: 1 }}>{et.label || et.id}</span>
                 <span>{items.length}</span>
               </div>
@@ -718,7 +720,7 @@ export function maakDiagramActiviteit(opties) {
 
     // Rechtsklik-contextmenu: zelfde acties als taakbalken/menu.
     const bouwContextMenu = useCallback(
-      ({ selectieAantal }) => [
+      ({ selectieAantal, connectorId }) => [
         { kop: true, label: "Uitlijnen" },
         ...UITLIJN_MODES.flatMap((m, i) => {
           const item = {
@@ -736,6 +738,29 @@ export function maakDiagramActiviteit(opties) {
           : []),
         { id: "normaliseer", label: "Normaliseer relaties", icoon: "↔", onClick: () => menuBus.emit(ev("normaliseer")) },
         { id: "snap", label: "Snap nodes naar grid", icoon: UITLIJN_ICONEN.snap, onClick: () => layoutApiRef.current?.snapRaster() },
+        // Rechtsklik op een connector: lijnvorm per connector (§8.5c).
+        ...(connectorId
+          ? (() => {
+              const huidig = useStore.getState().elements[connectorId]?.data?.vorm || "bezier";
+              return [
+                { sep: true },
+                { kop: true, label: "Lijnvorm" },
+                ...[
+                  ["bezier", "Kromme (bezier)", "∿"],
+                  ["hoekig", "Hoekig", "⌐"],
+                  ["recht", "Recht", "—"],
+                ].map(([vorm, vormLabel, icoon]) => ({
+                  id: `vorm-${vorm}`,
+                  label: vormLabel + (huidig === vorm ? "  ✓" : ""),
+                  icoon,
+                  onClick: () =>
+                    useStore.getState().updateElement(connectorId, {
+                      data: { vorm: vorm === "bezier" ? null : vorm },
+                    }),
+                })),
+              ];
+            })()
+          : []),
       ],
       [layoutApiRef]
     );
@@ -774,6 +799,12 @@ export function maakDiagramActiviteit(opties) {
           .map((et) => ({
             id: et.id,
             label: et.kort,
+            icoon: (
+              <span className="dc-taakbalk-icoonlabel">
+                <TypeIcoon elementType={et} />
+                {et.kort}
+              </span>
+            ),
             titel: `Nieuw: ${et.label}`,
             onClick: () => plaatsNieuwElement(et.id),
           }));
@@ -783,6 +814,12 @@ export function maakDiagramActiviteit(opties) {
           .map((et) => ({
             id: et.id,
             label: `${et.kort} ${et.label}`,
+            icoon: (
+              <span className="dc-taakbalk-icoonlabel">
+                <TypeIcoon elementType={et} />
+                {`${et.kort} ${et.label}`}
+              </span>
+            ),
             titel: `Verbindingsmodus: ${et.label} (klik nogmaals voor automatisch)`,
             actief: verbindingsType === et.id,
             onClick: () => setVerbindingsType(verbindingsType === et.id ? null : et.id),

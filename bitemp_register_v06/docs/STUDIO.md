@@ -262,6 +262,14 @@ fase 2 een **bewerkbare sandbox**:
 - **Lijnvormen**: edges kennen `presentatie.vorm` — bezier (default),
   hoekig (orthogonaal) of recht. Het puur-UML-profiel gebruikt hoekig voor
   de klassieke UML-look.
+- **Vormgeving (plan §8.5b/§8.5c/§8.6a, eerste treden)**: rechtsklik op een
+  connector geeft **"Lijnvorm"** (kromme/hoekig/recht, per connector bewaard
+  in `data.vorm`); de core kent **StyleType-tokens v1** (CSS-variabelen
+  `--dc-*` voor lijnen/randen/selectie/marker-vullingen, met een
+  donker-variant) en een **icoon-registry per ElementType**
+  (`shapes/typeIconen.jsx`: `elementType.icoon`-id of shape-fallback) die de
+  Maken-/Verbinding-taakbalken en de elementen-browser van vorm-iconen
+  voorziet. De merk-iconenset zelf blijft een ontwerp-sessie.
 - **Elementen-browser** (plan §8.8): onder de diagrammenlijst staat in elk
   0.5-profiel een boom van álle model-elementen, gegroepeerd per elementtype,
   met zoekveld. Klik = selecteren in de inspector; elementen die niet op het
