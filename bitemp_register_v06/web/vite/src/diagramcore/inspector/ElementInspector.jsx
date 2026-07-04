@@ -138,6 +138,23 @@ export default function ElementInspector({
         </div>
       ))}
 
+      {/* z-order (voor/achter op het canvas) — generiek, altijd zichtbaar
+          zodat de werking van "naar voor-/achtergrond" verifieerbaar is. */}
+      {bewerkbaar && (
+        <div className="dc-inspector-rij">
+          <label className="dc-veldlabel">z-order</label>
+          <input
+            type="number"
+            style={{ width: 90, flex: "0 0 auto" }}
+            value={element.data?.zOrde ?? 0}
+            onChange={(e) => onUpdate({ data: { zOrde: Number(e.target.value) || 0 } })}
+          />
+          <span style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)" }}>
+            hoger = meer naar voren{elementType?.achtergrond ? " (kader start op −10)" : ""}
+          </span>
+        </div>
+      )}
+
       {/* Compartimenten volgens het ElementType */}
       {(elementType?.compartments || []).map((def) => {
         if (def.verbergInInspector) return null;

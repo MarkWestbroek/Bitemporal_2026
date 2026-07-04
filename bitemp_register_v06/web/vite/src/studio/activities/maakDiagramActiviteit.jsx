@@ -102,6 +102,9 @@ export function maakDiagramActiviteit(opties) {
   function Provider({ children }) {
     const [selectieId, setSelectieId] = useState(null);
     const [verbindingsType, setVerbindingsType] = useState(null);
+    // Werkbestand-import met keuze: het gelezen bestand wacht hier tot de
+    // gebruiker kiest (over huidig diagram / ernaast / alles vervangen).
+    const [importWacht, setImportWacht] = useState(null);
     // Imperatieve layout-API van de canvas (uitlijnen/snap/auto-layout/viewport).
     const layoutApiRef = useRef(null);
 
@@ -286,68 +289,11 @@ export function maakDiagramActiviteit(opties) {
                 return;
               }
               const s = useStore.getState();
-              const heeftInhoud = Object.keys(s.elements).length > 0;
-              if (heeftInhoud) {
-                // P01-vervolg: naast "alles vervangen" ook toevoegen náást de
-                // bestaande diagrammen (id-botsingen worden geprefixt).
-                const toevoegen = window.confirm(
-                  "Werkbestand toevoegen náást de bestaande diagrammen?\nOK = toevoegen · Annuleren = alles vervangen (met bevestiging)"
-                );
-                if (toevoegen) {
-                  const ts = Date.now();
-                  const idMap = new Map(
-                    Object.keys(inhoud.elements || {}).map((oudId) => [
-                      oudId,
-                      s.elements[oudId] ? `imp${ts}_${oudId}` : oudId,
-                    ])
-                  );
-                  const her = (x) => idMap.get(x) || x;
-                  const nieuweEls = {};
-                  for (const [oudId, el] of Object.entries(inhoud.elements || {})) {
-                    nieuweEls[her(oudId)] = {
-                      ...el,
-                      id: her(oudId),
-                      ...(el.source ? { source: her(el.source) } : {}),
-                      ...(el.target ? { target: her(el.target) } : {}),
-                    };
-                  }
-                  // Bestaande diagrammen behouden (incl. hun viewport).
-                  const bestaande = Object.fromEntries(
-                    Object.entries(s.diagrams).map(([dk, d]) => [
-                      dk,
-                      { ...d, ...(s.viewports?.[dk] ? { viewport: s.viewports[dk] } : {}) },
-                    ])
-                  );
-                  let eersteNieuw = null;
-                  for (const [dk, d] of Object.entries(inhoud.diagrams || {})) {
-                    const nieuwDk = bestaande[dk] ? `imp${ts}_${dk}` : dk;
-                    if (!eersteNieuw) eersteNieuw = nieuwDk;
-                    bestaande[nieuwDk] = {
-                      ...d,
-                      id: nieuwDk,
-                      nodes: (d.nodes || []).map((n) => ({ ...n, elementId: her(n.elementId) })),
-                      edges: (d.edges || []).map((e) => ({
-                        ...e,
-                        source: her(e.source),
-                        target: her(e.target),
-                      })),
-                    };
-                  }
-                  s.laadModel({
-                    diagramTypeId: descriptor.id,
-                    elements: { ...s.elements, ...nieuweEls },
-                    diagrams: bestaande,
-                    meta: s.meta || inhoud.meta || null,
-                    actiefDiagramId: eersteNieuw || s.actiefDiagramId,
-                  });
-                  useStore.temporal.getState().clear();
-                  setSelectieId(null);
-                  return;
-                }
-                const vervangen = window.confirm(
-                  "Alles vervangen door het werkbestand?\nJe huidige sandbox gaat verloren."
-                );
-                if (!vervangen) return;
+              if (Object.keys(s.elements).length > 0) {
+                // Keuzedialoog: over het huidige diagram heen, ernaast, of
+                // alles vervangen (zie de import-helpers hieronder).
+                setImportWacht(inhoud);
+                return;
               }
               s.laadModel({
                 diagramTypeId: descriptor.id,
@@ -421,6 +367,109 @@ export function maakDiagramActiviteit(opties) {
       return () => af.forEach((off) => off());
     }, [herlaad]);
 
+    /** Import-keuze: toevoegen náást de bestaande diagrammen (id-remap). */
+    const importErnaast = useCallback((inhoud) => {
+      const s = useStore.getState();
+      const ts = Date.now();
+      const idMap = new Map(
+        Object.keys(inhoud.elements || {}).map((oudId) => [
+          oudId,
+          s.elements[oudId] ? `imp${ts}_${oudId}` : oudId,
+        ])
+      );
+      const her = (x) => idMap.get(x) || x;
+      const nieuweEls = {};
+      for (const [oudId, el] of Object.entries(inhoud.elements || {})) {
+        nieuweEls[her(oudId)] = {
+          ...el,
+          id: her(oudId),
+          ...(el.source ? { source: her(el.source) } : {}),
+          ...(el.target ? { target: her(el.target) } : {}),
+        };
+      }
+      const bestaande = Object.fromEntries(
+        Object.entries(s.diagrams).map(([dk, d]) => [
+          dk,
+          { ...d, ...(s.viewports?.[dk] ? { viewport: s.viewports[dk] } : {}) },
+        ])
+      );
+      let eersteNieuw = null;
+      for (const [dk, d] of Object.entries(inhoud.diagrams || {})) {
+        const nieuwDk = bestaande[dk] ? `imp${ts}_${dk}` : dk;
+        if (!eersteNieuw) eersteNieuw = nieuwDk;
+        bestaande[nieuwDk] = {
+          ...d,
+          id: nieuwDk,
+          nodes: (d.nodes || []).map((n) => ({ ...n, elementId: her(n.elementId) })),
+          edges: (d.edges || []).map((e) => ({ ...e, source: her(e.source), target: her(e.target) })),
+        };
+      }
+      s.laadModel({
+        diagramTypeId: descriptor.id,
+        elements: { ...s.elements, ...nieuweEls },
+        diagrams: bestaande,
+        meta: s.meta || inhoud.meta || null,
+        actiefDiagramId: eersteNieuw || s.actiefDiagramId,
+      });
+      useStore.temporal.getState().clear();
+      setSelectieId(null);
+    }, []);
+
+    /**
+     * Import-keuze: over het huidige diagram heen — bv. een eerdere layout
+     * terughalen. Vervangt alleen het actieve diagram (nodes/edges/viewport)
+     * door het overeenkomstige diagram uit het bestand; onbekende elementen
+     * worden toegevoegd, bestaande element-data blijft ongemoeid.
+     */
+    const importOverHuidig = useCallback((inhoud) => {
+      const s = useStore.getState();
+      const actief = s.actiefDiagramId;
+      if (!actief) return;
+      const bronDiag =
+        (inhoud.diagrams || {})[actief] || Object.values(inhoud.diagrams || {})[0];
+      if (!bronDiag) {
+        window.alert("Het werkbestand bevat geen diagram.");
+        return;
+      }
+      const elements = { ...s.elements };
+      for (const [eid, el] of Object.entries(inhoud.elements || {})) {
+        if (!elements[eid]) elements[eid] = el;
+      }
+      const diagrams = Object.fromEntries(
+        Object.entries(s.diagrams).map(([dk, d]) => [
+          dk,
+          { ...d, ...(s.viewports?.[dk] ? { viewport: s.viewports[dk] } : {}) },
+        ])
+      );
+      diagrams[actief] = {
+        ...bronDiag,
+        id: actief,
+        naam: s.diagrams[actief]?.naam || bronDiag.naam,
+        nodes: (bronDiag.nodes || []).filter((n) => elements[n.elementId]),
+      };
+      s.laadModel({
+        diagramTypeId: descriptor.id,
+        elements,
+        diagrams,
+        meta: s.meta || inhoud.meta || null,
+        actiefDiagramId: actief,
+      });
+      useStore.temporal.getState().clear();
+      setSelectieId(null);
+    }, []);
+
+    /** Import-keuze: alles vervangen door het werkbestand. */
+    const importVervangAlles = useCallback((inhoud) => {
+      useStore.getState().laadModel({
+        diagramTypeId: descriptor.id,
+        elements: inhoud.elements || {},
+        diagrams: inhoud.diagrams || {},
+        meta: inhoud.meta || null,
+      });
+      useStore.temporal.getState().clear();
+      setSelectieId(null);
+    }, []);
+
     /** Nieuw element plaatsen op het actieve diagram (cascade rond het zwaartepunt). */
     const plaatsNieuwElement = useCallback((elementTypeId) => {
       const el = maakElement(elementTypeId);
@@ -473,6 +522,74 @@ export function maakDiagramActiviteit(opties) {
       >
         {children}
         {Dialogen && <Dialogen store={useStore} onGeladen={() => setSelectieId(null)} />}
+        {importWacht && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(15, 23, 42, 0.45)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 10000,
+            }}
+            onClick={(e) => e.target === e.currentTarget && setImportWacht(null)}
+          >
+            <div
+              style={{
+                background: "var(--s-panel, #fff)",
+                color: "var(--s-fg, #1e293b)",
+                border: "1px solid var(--s-border, #cbd5e1)",
+                borderRadius: 10,
+                boxShadow: "0 12px 40px rgba(15, 23, 42, 0.25)",
+                width: 420,
+                maxWidth: "92vw",
+                padding: "14px 16px",
+                fontSize: 13,
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+              }}
+            >
+              <strong>Werkbestand importeren — hoe?</strong>
+              <span style={{ color: "var(--s-fg-muted, #64748b)", fontSize: 12 }}>
+                De sandbox bevat al inhoud. Kies wat er met het werkbestand moet gebeuren.
+              </span>
+              <button
+                className="dc-mini-knop"
+                onClick={() => {
+                  importOverHuidig(importWacht);
+                  setImportWacht(null);
+                }}
+              >
+                Over het huidige diagram heen (layout terughalen)
+              </button>
+              <button
+                className="dc-mini-knop"
+                onClick={() => {
+                  importErnaast(importWacht);
+                  setImportWacht(null);
+                }}
+              >
+                Ernaast toevoegen (als extra diagrammen)
+              </button>
+              <button
+                className="dc-mini-knop is-gevaar"
+                onClick={() => {
+                  if (window.confirm("Alles vervangen? Je huidige sandbox gaat verloren.")) {
+                    importVervangAlles(importWacht);
+                    setImportWacht(null);
+                  }
+                }}
+              >
+                Alles vervangen
+              </button>
+              <button className="dc-mini-knop" onClick={() => setImportWacht(null)}>
+                Annuleren
+              </button>
+            </div>
+          </div>
+        )}
       </Ctx.Provider>
     );
   }
@@ -552,7 +669,10 @@ export function maakDiagramActiviteit(opties) {
       return (
         <div key={el.id}>
           <div
-            onClick={() => setSelectieId(el.id)}
+            onClick={() => {
+              setSelectieId(el.id);
+              if (zichtbaar) layoutApiRef.current?.focusNode?.(el.id);
+            }}
             title={zichtbaar ? el.naam || el.id : `${el.naam || el.id} — niet op dit diagram`}
             style={{
               display: "flex",
@@ -663,7 +783,10 @@ export function maakDiagramActiviteit(opties) {
                   return (
                     <div
                       key={el.id}
-                      onClick={() => setSelectieId(el.id)}
+                      onClick={() => {
+                        setSelectieId(el.id);
+                        if (zichtbaar) layoutApiRef.current?.focusNode?.(el.id);
+                      }}
                       title={zichtbaar ? el.naam || el.id : `${el.naam || el.id} — niet op dit diagram`}
                       style={{
                         display: "flex",
@@ -1085,7 +1208,9 @@ export function maakDiagramActiviteit(opties) {
           </span>
           <span style={{ marginLeft: "auto" }}>{diagram?.naam || ""}</span>
         </div>
-        <div className="studio-paper" style={{ flex: 1, minHeight: 0, position: "relative" }}>
+        {/* Eigen canvas (geen third-party zoals bpmn/dmn-js) → volgt het
+            studio-thema via dc-canvasvlak, i.p.v. het vaste witte papier. */}
+        <div className="dc-canvasvlak" style={{ flex: 1, minHeight: 0, position: "relative" }}>
           {diagram ? (
             <>
               <Suspense fallback={<div style={{ padding: 16, color: "#64748b" }}>Canvas laden…</div>}>

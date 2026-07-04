@@ -590,6 +590,7 @@ function CanvasBinnenkant({
       nodesConnectable={bewerkbaar}
       elementsSelectable
       deleteKeyCode={bewerkbaar ? ["Delete"] : null}
+      elevateNodesOnSelect={false}
       // Zonder opgeslagen viewport: fitView op bestaande inhoud, maar een leeg
       // (nieuw) diagram start gewoon op zoom 1 — anders is de eerste node mini.
       defaultViewport={viewport || { x: 0, y: 0, zoom: 1 }}
