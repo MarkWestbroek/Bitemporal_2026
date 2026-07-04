@@ -303,6 +303,30 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
   };
 }
 
+/**
+ * De elementen die bij één ontwerp-diagram horen (P01: meerdere profielen
+ * naast elkaar in de sandbox): nodes van het diagram plus de connectoren
+ * waarvan beide uiteinden erop staan. Hiermee genereert de ontwerper per
+ * díagram een profiel in plaats van alles samen te vegen.
+ *
+ * @param {{elements: Record<string, Object>, diagrams: Record<string, Object>}} state
+ * @param {string} diagramId
+ * @returns {Record<string, Object>}
+ */
+export function elementenVanDiagram(state, diagramId) {
+  const diagram = state?.diagrams?.[diagramId];
+  const opDiagram = new Set((diagram?.nodes || []).map((n) => n.elementId));
+  const subset = {};
+  for (const [id, el] of Object.entries(state?.elements || {})) {
+    if (el.source && el.target) {
+      if (opDiagram.has(el.source) && opDiagram.has(el.target)) subset[id] = el;
+    } else if (opDiagram.has(id)) {
+      subset[id] = el;
+    }
+  }
+  return subset;
+}
+
 // ── Omgekeerde weg: bestaande descriptor → ontwerp-diagram ────────────────
 
 let _ontwerpTeller = 0;

@@ -1,22 +1,35 @@
-/* ── StyleType-tokens v1 (plan §8.5b): licht + donker per canvas. ─────────
+/* ── StyleType-tokens v2 (plan §8.5b): licht + donker per canvas. ─────────
    Shapes/edges gebruiken deze variabelen voor alles wat geen element-eigen
    (pastel)kleur is: lijnen, randen, selectie, marker-vullingen. Profielen
-   kunnen ze later per StyleType overschrijven (fase 7-register). */
+   kunnen ze later per StyleType overschrijven (fase 7-register); zolang er
+   één StyleType is ("uml-klassiek") ís dit die tokenset.
+   v2 (vormgevingssessie 2026-07-04/05, besluiten B3+B4):
+   - selectie in merk-indigo (Omnium-gradientmidden) i.p.v. generiek blauw;
+   - marker-vulling = canvaskleur, zodat open UML-markers (◇ ▷) in het
+     donkere thema écht open ogen — v1 vulde ze lichtgrijs, waardoor ◇
+     niet van ◆ te onderscheiden was;
+   - canvas-achtergrond expliciet als token (volgt de shell via --s-canvas);
+   - label-achtergrond voor edge-labelchips (licht chipje op licht canvas,
+     donker chipje op donker canvas). */
 .dc-canvas {
   --dc-lijn: #64748b;
   --dc-lijn-zacht: #94a3b8;
   --dc-node-rand: #94a3b8;
   --dc-node-vulling: #f1f5f9;
-  --dc-selectie: #2563eb;
-  --dc-marker-vulling: #ffffff;
+  --dc-selectie: #4f46e5;
+  --dc-canvas-achtergrond: var(--s-canvas, #ffffff);
+  --dc-marker-vulling: var(--dc-canvas-achtergrond);
+  --dc-label-achtergrond: rgba(255, 255, 255, 0.92);
 }
 [data-studio-theme="dark"] .dc-canvas {
   --dc-lijn: #94a3b8;
   --dc-lijn-zacht: #64748b;
   --dc-node-rand: #64748b;
   --dc-node-vulling: #e2e8f0;
-  --dc-selectie: #60a5fa;
-  --dc-marker-vulling: #e2e8f0;
+  --dc-selectie: #818cf8;
+  --dc-canvas-achtergrond: var(--s-canvas, #1b1b1f);
+  --dc-marker-vulling: var(--dc-canvas-achtergrond);
+  --dc-label-achtergrond: rgba(27, 27, 31, 0.92);
 }
 
 /**
@@ -235,10 +248,10 @@
   gap: 4px;
   align-items: center;
   font-size: 10px;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--dc-label-achtergrond, rgba(255, 255, 255, 0.92));
   padding: 2px 6px;
   border-radius: 4px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--s-border, #e2e8f0);
   white-space: nowrap;
 }
 
@@ -258,12 +271,30 @@
   font-size: 9px;
 }
 
+/* Donker thema: de labelchip wordt canvas-donker (--dc-label-achtergrond),
+   dus de vaste tekstkleuren hierboven flippen mee naar lichte varianten. */
+[data-studio-theme="dark"] .dc-edge-rolnaam {
+  color: #e2e8f0;
+}
+
+[data-studio-theme="dark"] .dc-edge-kardinaliteit {
+  color: #a78bfa;
+}
+
+[data-studio-theme="dark"] .dc-edge-constraint {
+  color: #94a3b8;
+}
+
+[data-studio-theme="dark"] .dc-edge-naam {
+  color: #94a3b8;
+}
+
 .dc-edge-naam {
   font-style: italic;
   color: #475569;
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--dc-label-achtergrond, rgba(255, 255, 255, 0.85));
   padding: 1px 4px;
-  border-radius: 3;
+  border-radius: 3px;
 }
 
 /* === Taakbalken (zwevend op de canvas) === */

@@ -124,8 +124,9 @@ function ConnectorEdge({
   // de raaklijn in het midden), zodat de ruit met de kromming van de curve
   // meebuigt — onder elke hoek.
   const heeftRuit = p.markerStart === "ruit" || p.markerStart === "ruit-open";
-  // Open ruit: witte vulling, net als de generalisatie-driehoek — in beide
-  // thema's duidelijk te onderscheiden van de gevulde compositie-ruit.
+  // Open ruit: gevuld met de canvaskleur (--dc-marker-vulling, tokens v2) —
+  // net als de generalisatie-driehoek. Zo blijft ◇ ook in het donkere thema
+  // duidelijk te onderscheiden van de gevulde compositie-ruit ◆.
   const ruitVulling = p.markerStart === "ruit-open" ? "var(--dc-marker-vulling, #ffffff)" : kleur;
   const meetRef = useRef(null);
   const [ruitPunten, setRuitPunten] = useState(null);

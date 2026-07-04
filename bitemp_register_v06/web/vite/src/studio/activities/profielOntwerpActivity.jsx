@@ -21,6 +21,7 @@ import {
   bouwProfielUitOntwerp,
   ontwerpUitProfiel,
   voorbeeldOntwerpMetRegel,
+  elementenVanDiagram,
 } from "./profielOntwerp.js";
 import { bewaarProfiel, registreerProfielAlsActiviteit } from "./profielRegistratie.jsx";
 
@@ -54,7 +55,13 @@ export default maakDiagramActiviteit({
         if (!id) return;
         const label = window.prompt("Naam in de activity bar:", id) || id;
         try {
-          const kern = bouwProfielUitOntwerp(useStore.getState(), { id, label });
+          // P01: genereer uit het áctieve diagram — de sandbox kan meerdere
+          // profielen naast elkaar bevatten (één per diagram).
+          const staat = useStore.getState();
+          const kern = bouwProfielUitOntwerp(
+            { elements: elementenVanDiagram(staat, staat.actiefDiagramId) },
+            { id, label }
+          );
           const activiteitId = registreerProfielAlsActiviteit(kern);
           bewaarProfiel(kern);
           useStudioStore.getState().setActief(activiteitId);
@@ -77,15 +84,22 @@ export default maakDiagramActiviteit({
           window.alert(`Onbekend profiel "${keuze}".`);
           return;
         }
-        const s = useStore.getState();
-        if (Object.keys(s.elements).length > 0) {
-          const ok = window.confirm(
-            "Dit vervangt het huidige ontwerp door een weergave van het gekozen profiel.\nDoorgaan?"
-          );
-          if (!ok) return;
+        // P01: elk bekeken profiel wordt een éigen diagram in de sandbox,
+        // naast wat er al staat — genereren werkt per diagram.
+        const ontwerp = ontwerpUitProfiel(gekozen);
+        useStore.getState().addDiagram({
+          id: `ontw_${gekozen.id}_${Date.now()}`,
+          naam: gekozen.label || gekozen.id,
+          diagramType: PROFIEL_ONTWERP_ID,
+        });
+        const dId = useStore.getState().actiefDiagramId;
+        for (const el of Object.values(ontwerp.elements)) {
+          useStore.getState().addElement(el);
         }
-        s.laadModel(ontwerpUitProfiel(gekozen));
-        useStore.temporal.getState().clear();
+        const nodes = Object.values(ontwerp.diagrams)[0]?.nodes || [];
+        for (const n of nodes) {
+          useStore.getState().addElementToDiagram(dId, n.elementId, n.position);
+        }
       },
     },
   ],

@@ -9,6 +9,7 @@ import {
   bouwProfielUitOntwerp,
   ontwerpUitProfiel,
   voorbeeldOntwerpMetRegel,
+  elementenVanDiagram,
 } from "./profielOntwerp.js";
 import { vertaalHooks } from "./profielGereedschap.js";
 import { valideerDiagramType } from "../../diagramcore/types/typeRegistry.js";
@@ -153,4 +154,24 @@ test("verbindingsregel-lijnen met dezelfde naam bundelen tot één connectortype
   const terug = ontwerpUitProfiel(kern);
   const lijnen = Object.values(terug.elements).filter((el) => el.elementType === "verbindingsregel");
   assert.equal(lijnen.filter((l) => l.naam === "draait om").length, 2);
+});
+
+test("elementenVanDiagram: alleen nodes van het diagram + connectoren met beide uiteinden erop", () => {
+  const state = {
+    elements: {
+      A: { id: "A", elementType: "elementDef" },
+      B: { id: "B", elementType: "elementDef" },
+      C: { id: "C", elementType: "elementDef" },
+      R1: { id: "R1", elementType: "verbindingsregel", source: "A", target: "B" },
+      R2: { id: "R2", elementType: "verbindingsregel", source: "A", target: "C" },
+    },
+    diagrams: {
+      d1: { id: "d1", nodes: [{ elementId: "A" }, { elementId: "B" }] },
+      d2: { id: "d2", nodes: [{ elementId: "C" }] },
+    },
+  };
+  const d1 = elementenVanDiagram(state, "d1");
+  assert.deepEqual(Object.keys(d1).sort(), ["A", "B", "R1"], "R2 hangt half buiten d1");
+  const d2 = elementenVanDiagram(state, "d2");
+  assert.deepEqual(Object.keys(d2), ["C"]);
 });
