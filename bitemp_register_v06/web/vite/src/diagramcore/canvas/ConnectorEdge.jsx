@@ -225,8 +225,11 @@ function ConnectorEdge({
         const basis = posities[label.zijde] || posities.midden;
         const zijdeKey = label.zijde || "midden";
         const stapelIdx = (stapel[zijdeKey] = (stapel[zijdeKey] ?? -1) + 1);
-        const eigen = sleep?.index === i ? sleep : label.offset;
-        const off = eigen || { x: 0, y: stapelIdx * 18 };
+        // Stapeling komt bóvenop een (gesleepte) offset: offsets gelden per
+        // zijde en zijn dus voor alle labels op die zijde gelijk — zonder
+        // stapel-bijdrage vielen ze na één keer slepen weer samen.
+        const basisOff = sleep?.index === i ? sleep : label.offset || { x: 0, y: 0 };
+        const off = { x: basisOff.x || 0, y: (basisOff.y || 0) + stapelIdx * 18 };
         const alleenNaam = label.delen?.length === 1 && label.delen[0].soort === "naam";
         return (
           <EdgeLabelRenderer key={i}>

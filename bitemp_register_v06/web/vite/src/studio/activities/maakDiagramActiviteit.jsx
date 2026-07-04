@@ -286,11 +286,68 @@ export function maakDiagramActiviteit(opties) {
                 return;
               }
               const s = useStore.getState();
-              if (Object.keys(s.elements).length > 0) {
-                const ok = window.confirm(
-                  "Importeren vervangt de hele sandbox door het gekozen werkbestand.\nJe lokale wijzigingen gaan verloren. Doorgaan?"
+              const heeftInhoud = Object.keys(s.elements).length > 0;
+              if (heeftInhoud) {
+                // P01-vervolg: naast "alles vervangen" ook toevoegen náást de
+                // bestaande diagrammen (id-botsingen worden geprefixt).
+                const toevoegen = window.confirm(
+                  "Werkbestand toevoegen náást de bestaande diagrammen?\nOK = toevoegen · Annuleren = alles vervangen (met bevestiging)"
                 );
-                if (!ok) return;
+                if (toevoegen) {
+                  const ts = Date.now();
+                  const idMap = new Map(
+                    Object.keys(inhoud.elements || {}).map((oudId) => [
+                      oudId,
+                      s.elements[oudId] ? `imp${ts}_${oudId}` : oudId,
+                    ])
+                  );
+                  const her = (x) => idMap.get(x) || x;
+                  const nieuweEls = {};
+                  for (const [oudId, el] of Object.entries(inhoud.elements || {})) {
+                    nieuweEls[her(oudId)] = {
+                      ...el,
+                      id: her(oudId),
+                      ...(el.source ? { source: her(el.source) } : {}),
+                      ...(el.target ? { target: her(el.target) } : {}),
+                    };
+                  }
+                  // Bestaande diagrammen behouden (incl. hun viewport).
+                  const bestaande = Object.fromEntries(
+                    Object.entries(s.diagrams).map(([dk, d]) => [
+                      dk,
+                      { ...d, ...(s.viewports?.[dk] ? { viewport: s.viewports[dk] } : {}) },
+                    ])
+                  );
+                  let eersteNieuw = null;
+                  for (const [dk, d] of Object.entries(inhoud.diagrams || {})) {
+                    const nieuwDk = bestaande[dk] ? `imp${ts}_${dk}` : dk;
+                    if (!eersteNieuw) eersteNieuw = nieuwDk;
+                    bestaande[nieuwDk] = {
+                      ...d,
+                      id: nieuwDk,
+                      nodes: (d.nodes || []).map((n) => ({ ...n, elementId: her(n.elementId) })),
+                      edges: (d.edges || []).map((e) => ({
+                        ...e,
+                        source: her(e.source),
+                        target: her(e.target),
+                      })),
+                    };
+                  }
+                  s.laadModel({
+                    diagramTypeId: descriptor.id,
+                    elements: { ...s.elements, ...nieuweEls },
+                    diagrams: bestaande,
+                    meta: s.meta || inhoud.meta || null,
+                    actiefDiagramId: eersteNieuw || s.actiefDiagramId,
+                  });
+                  useStore.temporal.getState().clear();
+                  setSelectieId(null);
+                  return;
+                }
+                const vervangen = window.confirm(
+                  "Alles vervangen door het werkbestand?\nJe huidige sandbox gaat verloren."
+                );
+                if (!vervangen) return;
               }
               s.laadModel({
                 diagramTypeId: descriptor.id,

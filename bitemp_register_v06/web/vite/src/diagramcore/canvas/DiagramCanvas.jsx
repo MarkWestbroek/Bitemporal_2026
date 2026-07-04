@@ -124,7 +124,7 @@ function CanvasBinnenkant({
   bouwContextMenu,
 }) {
   const lookups = useMemo(() => bouwLookups(diagramType), [diagramType]);
-  const { getNodes, screenToFlowPosition } = useReactFlow();
+  const { getNodes, screenToFlowPosition, setCenter, getZoom } = useReactFlow();
   // Contextmenu (rechtsklik): positie in schermcoördinaten, of null.
   const [contextMenu, setContextMenu] = useState(null);
   useEffect(() => {
@@ -204,13 +204,12 @@ function CanvasBinnenkant({
           position: ref.position || { x: 0, y: 0 },
           // Grootte per diagram-lidmaatschap (metamodel: Position.elementSize)
           ...(ref.size ? { style: { width: ref.size.width, height: ref.size.height } } : {}),
-          // Achtergrond-elementen (boundaries/kaders) renderen ónder de rest;
-          // daarbinnen/daarbuiten telt de handmatige z-order (contextmenu).
-          ...(elementType.achtergrond
-            ? { zIndex: -1 }
-            : element.data?.zOrde
-              ? { zIndex: element.data.zOrde }
-              : {}),
+          // Achtergrond-elementen (kaders) starten diep onder de rest (-10);
+          // de handmatige z-order (contextmenu) telt daar bovenop, zodat ook
+          // kaders onderling naar voren/achteren kunnen.
+          ...(elementType.achtergrond || element.data?.zOrde
+            ? { zIndex: (elementType.achtergrond ? -10 : 0) + (element.data?.zOrde || 0) }
+            : {}),
           data: {
             element: verrijk(element, elementType),
             elementType,
@@ -506,6 +505,18 @@ function CanvasBinnenkant({
         lijnUit: (mode) => {
           const selectie = getNodes().filter((n) => n.selected);
           pasToe(berekenUitlijning(mode, naarItems(selectie)));
+        },
+        /** Selecteer een node op het canvas en centreer erop (tree-klik). */
+        focusNode: (elementId) => {
+          const n = getNodes().find((x) => x.id === elementId);
+          if (!n) return;
+          setNodes((huidige) => huidige.map((x) => ({ ...x, selected: x.id === elementId })));
+          const w = n.measured?.width ?? 200;
+          const h = n.measured?.height ?? 80;
+          setCenter(n.position.x + w / 2, n.position.y + h / 2, {
+            zoom: getZoom(),
+            duration: 300,
+          });
         },
         /** Geselecteerde nodes dezelfde maat geven als de bron-node (L02). */
         maakGelijkeMaat: (bronId) => {
