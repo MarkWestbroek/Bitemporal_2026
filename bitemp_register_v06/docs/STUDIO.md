@@ -198,6 +198,8 @@ te wijzigen.
 | modelleren   | Diagrammen (0.5)   | preview  | `diagramcore` + `diagramprofielen/canoniek-uml` (bewerkbare sandbox) |
 | modelleren   | UML (0.5)          | preview  | `diagramcore` + `diagramprofielen/puur-uml` (fase 5-lakmoesproef) |
 | modelleren   | OAS (0.5)          | preview  | `diagramcore` + `diagramprofielen/oas31` (fase 5-vuurproef) |
+| modelleren   | Profiel (0.5)      | preview  | meta-editor: eigen profielen maken en live registreren (plan §8.9) |
+| modelleren   | Profiel-ontwerp (0.5) | preview | meta-editor trede 2: profielen tékenen en genereren (plan §8.9) |
 | modelleren   | DMN-tabellen       | actief   | `dmn/DmnTableEditor` + ModelPicker |
 | modelleren   | BPMN-processen     | actief   | `bpmn/BpmnEditor` + ModelPicker    |
 | modelleren   | Berichtdefinities  | actief   | `bericht/BerichttypeEditor`        |
@@ -269,6 +271,21 @@ fase 2 een **bewerkbare sandbox**:
   doelzijde) via de nieuwe `hooks.edgePresentatie` op connector-typen:
   presentatie-overrides o.b.v. connector-data; markers reizen in de
   ASOC-gedaante mee naar de bron-/doel-edge.
+- **Meta-editor: "Profiel (0.5)"** (trede 1, plan §8.9): bewerk een
+  profiel-descriptor (JSON, de serialiseerbare Definitie-kern) en registreer
+  hem live als activiteit — hooks op id uit de `HOOK_CATALOGUS`, profielen
+  persistent in localStorage (overleven herlaad), sjablonen "leeg" en
+  "Graaf-demo". Die demo gebruikt de nieuwe **"bol"-ShapeType** (§8.10-POC):
+  naam in een ronde kern, velden als satelliet-bolletjes eromheen.
+- **Meta-editor trede 2: "Profiel-ontwerp (0.5)"** — conform het metamodel:
+  teken **Elementtypen ◆ Compartimenttypen ◆ Veldtypen** (elk met eigen
+  properties; de ◆-connector legt de bevat-relaties) plus verbindingsregels
+  (lijnstijl/markers, kardinaliteiten- en richting-vinkjes). *Ontwerp →
+  Genereer & registreer profiel…* maakt er live een activiteit van (zelfde
+  kanaal als trede 1); *Bekijk bestaand profiel als ontwerp…* laadt elk
+  geregistreerd profiel als diagram, en een lege sandbox start met het
+  voorbeeld-ontwerp. De minimap volgt tegenwoordig de ShapeType (bol →
+  cirkel; kader → transparant vlak, ook met eigen achtergrondkleur).
 - **Derde profiel: "OAS (0.5)"** (`diagramprofielen/oas31/`, vuurproef op een
   niet-UML-domein): «schema»-elementen met properties (JSON-typen/formats,
   required), «enum», «operation» (method/pad/summary als element-properties
@@ -339,7 +356,7 @@ fase 2 een **bewerkbare sandbox**:
   ↑-kopregel, cursief) — weergave-compartiment via de profiel-hook, geen
   modeldata.
 - Nog niet (bekend): rebuild vanuit 0.5, clipboard,
-  validatie-hook, domein-overlay, sleepbare edge-labels, licht/donker-tokens
+  validatie-hook, domein-overlay, licht/donker-tokens
   per StyleType (plan §8.5b), integrale iconenset voor de Maken-balk
   (ontwerp-sessie, plan §8.6a), overerving in de gespiegelde weergave
   (generalisaties uit het oude model zijn daar nog presentatie-edges),

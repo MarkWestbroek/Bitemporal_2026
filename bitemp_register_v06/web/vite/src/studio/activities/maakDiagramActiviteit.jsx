@@ -72,6 +72,9 @@ export function maakDiagramActiviteit(opties) {
     status = "preview",
     devHookNaam,
     koppeling = null,
+    // Activiteit-eigen menu-acties bovenin het hoofdmenu:
+    // [{id, label, run(useStore)}] — bv. "Genereer profiel…" (trede 2).
+    hoofdmenuExtra = [],
   } = opties;
 
   const ev = (naam) => `${menuPrefix}:${naam}`;
@@ -723,6 +726,14 @@ export function maakDiagramActiviteit(opties) {
                     connectorIds.forEach((cid) => useStore.getState().deleteElement(cid))
                   }
                   onNormaliseer={(connectorIds) => menuBus.emit(ev("normaliseer"), connectorIds)}
+                  onLabelOffset={(connectorId, zijde, offset) => {
+                    const s = useStore.getState();
+                    const el = s.elements[connectorId];
+                    if (!el) return;
+                    s.updateElement(connectorId, {
+                      data: { labelOffsets: { ...(el.data?.labelOffsets || {}), [zijde]: offset } },
+                    });
+                  }}
                   bouwContextMenu={bouwContextMenu}
                   onViewport={(vp) => useStore.getState().updateDiagramViewport(diagram.id, vp)}
                 />
@@ -869,9 +880,15 @@ export function maakDiagramActiviteit(opties) {
       id: `${menuPrefix}-hoofdmenu`,
       label: menuLabel,
       items: [
+        ...hoofdmenuExtra.map((actie) => ({
+          id: `${menuPrefix}-${actie.id}`,
+          label: actie.label,
+          onClick: () => actie.run(useStore),
+        })),
+        ...(hoofdmenuExtra.length ? [{ type: "separator" }] : []),
         { id: `${menuPrefix}-nieuw-diagram`, label: "Nieuw diagram…", onClick: () => menuBus.emit(ev("nieuw-diagram")) },
         ...(koppeling?.herlaadUitModel
-          ? [{ id: `${menuPrefix}-herlaad`, label: "Herlaad uit UML-model…", onClick: () => menuBus.emit(ev("herlaad")) }]
+          ? [{ id: `${menuPrefix}-herlaad`, label: koppeling.herlaadLabel || "Herlaad uit UML-model…", onClick: () => menuBus.emit(ev("herlaad")) }]
           : []),
         ...(koppeling?.zetTerugNaarModel
           ? [{ id: `${menuPrefix}-zet-terug`, label: "Zet terug naar UML-model…", onClick: () => menuBus.emit(ev("zet-terug")) }]

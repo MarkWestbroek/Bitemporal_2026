@@ -2,7 +2,75 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** 0.5-**werkbestand** + **lijnvormen** (2026-07-04): elk profiel
+- **Status:** trede 2 **conform het metamodel** + seed + inverse
+  (2026-07-04, feedback Mark: "in een compartiment zitten nog weer
+  properties"): het ontwerp-profiel volgt nu ElementType ◆ CompartmentType ◆
+  FieldType — **Compartimenttypen en Veldtypen zijn eigen nodes**, gekoppeld
+  via ◆-compositie-connectoren, en een Veldtype heeft (net als het
+  Elementtype) een eigen "eigenschappen"-compartiment met PropertyTypes.
+  `bouwProfielUitOntwerp` vertaalt die structuur naar echte FieldTypes met
+  eigen properties. Nieuw: **`ontwerpUitProfiel`** (de omgekeerde weg) —
+  *Ontwerp → Bekijk bestaand profiel als ontwerp…* laadt elk geregistreerd
+  profiel (canoniek-uml, puur-uml, oas31, eigen) als ontwerp-diagram; de
+  activiteit **seedt** bovendien het voorbeeld-ontwerp
+  (Ster ◆ Metingen ◆ meting, Planeet, "draait om") bij een lege sandbox en
+  heeft *Laad voorbeeld-ontwerp…* als reset. Round-trip getest
+  (ontwerp → kern → ontwerp). Let op: een bestaande
+  profiel-ontwerp-sandbox van vóór deze wijziging eerst verversen via
+  *Laad voorbeeld-ontwerp…*. Eerdere ronde: **meta-editor trede 2 + minimap-fixes** (2026-07-04): nieuwe
+  activiteit **"Profiel-ontwerp (0.5)"** — een profiel *tekenen* i.p.v.
+  typen (het metamodel-als-model, §8.9 trede 2). Elementtype-nodes dragen
+  shape/kleur/kort als properties en hun "eigenschappen"- en
+  "compartimenten"-compartimenten beschrijven het doeltype;
+  verbindingsregel-connectoren worden connector-typen (lijn/vorm/markers +
+  vinkjes voor kardinaliteiten-labels en richting → hook-catalogus).
+  *Ontwerp → Genereer & registreer profiel…* vertaalt het getekende ontwerp
+  (`profielOntwerp.js`: `bouwProfielUitOntwerp`, puur + getest) naar een
+  descriptor-kern en registreert hem via hetzelfde kanaal als trede 1
+  (gedeeld in `profielRegistratie.jsx`) — het resultaat staat dus ook in de
+  JSON-editor om bij te schaven. De fabriek kreeg daarvoor een generieke
+  `hoofdmenuExtra`-optie. Bugfixes: de **minimap** rendert nu per ShapeType
+  (`MiniMapNode` in DiagramCanvas): een bol wordt een cirkel en een kader
+  blijft óók met eigen achtergrondkleur een subtiel transparant vlak
+  (voorheen een dekkend blok dat alles verborg). Eerdere ronde: feedbackronde bol-shape 2 (2026-07-04): (1) **dubbel
+  naam-label gefixt** — de core zet de connector-naam al automatisch als
+  midden-label, maar de kardinaliteiten-hooks (catalogus + puur-uml) deden
+  dat óók; exact over elkaar heen viel dat nooit op, tot het slepen ze uit
+  elkaar trok. Hooks voegen geen naam-label meer toe. (2) **Bol-hitbox =
+  kern** — de node-box van de bol-shape was de hele compositie (incl.
+  transparante hoeken), waardoor edge-labels erachter onbereikbaar waren;
+  de node is nu alleen de kern (~92px) en de satellieten steken er als
+  decoratie overheen uit (pointer-events: none). Handles liggen daardoor
+  vanzelf op de kern (de eerdere wrapper-truc is weg) en labels naast een
+  bol zijn direct pakbaar. Eerdere ronde: feedbackronde bol-shape (2026-07-04): (1) **handles op de
+  kern** — de aansluitpunten van de bol-shape zaten op de bounding box van
+  de hele compositie; ze liggen nu op de kern zelf, zodat kanten visueel op
+  de bol beginnen en eindigen (de shape wikkelt de standaard-handles in een
+  kern-groot kader — geen core-wijziging). (2) **Sleepbare edge-labels**
+  (pariteit met editor 0.2): labels van connectoren zijn te verslepen; de
+  offset wordt per zijde bewaard op het connector-element
+  (`data.labelOffsets`) en reist dus mee met undo/persist/werkbestand.
+  Core: pointer-drag in ConnectorEdge (schermafstand ÷ zoom) +
+  `onLabelOffset`-prop; de materialisatie past de offsets per zijde toe in
+  álle gedaanten (kaal én ASOC). Eerdere ronde: **meta-editor trede 1 + bol-shape-POC** (2026-07-04, branch
+  `feat/studio05-meta-editor`): nieuwe activiteit **"Profiel (0.5)"**
+  (`profielActivity.jsx`) — bewerk een profiel-descriptor (de
+  JSON-serialiseerbare Definitie-kern) met Valideer- en
+  "Opslaan & registreren"-knoppen; registreren maakt er **live** een
+  activiteit van (`vervangDiagramType` + fabriek-aanroep) en springt ernaar.
+  Hooks verwijzen **op id** naar de `HOOK_CATALOGUS`
+  (`profielGereedschap.js`: edgeLabels "kardinaliteiten"/"naam",
+  edgePresentatie "directioneel-pijl") — precies het koppelvlak dat fase 7
+  nodig heeft, hiermee gevalideerd. Profielen staan in localStorage
+  ("studio05-profielen") en worden bij het laden opnieuw geregistreerd
+  (overleven een herlaad). Twee sjablonen: leeg + **Graaf-demo** met de
+  nieuwe **"bol"-ShapeType** (§8.10-POC, `basisShapes.jsx`): naam in een
+  ronde kern, velden als satelliet-bolletjes met spaken eromheen — bewijst
+  dat een shape zijn compartiment-velden zelf mag positioneren, zonder
+  core-wijziging. De inspector van de meta-editor toont de bouwstenen
+  (shapes, viewers, datatypes, presentatie-vocabulaire, hook-ids). E2E:
+  demo laden → registreren → knopen met satellieten + gerichte kant →
+  herlaad → activiteit bestaat nog. Eerdere ronde: 0.5-**werkbestand** + **lijnvormen** (2026-07-04): elk profiel
   heeft nu *Bestand → Exporteer/Importeer 0.5-werkbestand…* — het eigen
   formaat integraal als JSON (formaat "studio05-diagram": elements +
   diagrammen incl. viewports + meta, met profiel-check bij import), zodat

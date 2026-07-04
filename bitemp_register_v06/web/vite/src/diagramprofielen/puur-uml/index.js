@@ -162,9 +162,7 @@ const elementTypes = [
           doel.push({ zijde: "doel", delen: [{ tekst: d.doelKardinaliteit, soort: "kardinaliteit" }] });
           kaal.push({ zijde: "doel", delen: [{ tekst: d.doelKardinaliteit, soort: "kardinaliteit" }] });
         }
-        if (conn.naam) {
-          kaal.push({ zijde: "midden", delen: [{ tekst: conn.naam, soort: "naam" }] });
-        }
+        // Geen naam-label hier: de core voegt de connector-naam al toe.
         return { bron, doel, kaal };
       },
     },

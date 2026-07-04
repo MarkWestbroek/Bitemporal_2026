@@ -1,0 +1,495 @@
+// @ts-check
+/**
+ * profielOntwerp — trede 2 van de meta-editor (plan §8.9): een profiel
+ * *tekenen* in plaats van typen — en wel conform het metamodel (§2):
+ *
+ *   ElementType ◆── CompartmentType ◆── FieldType, elk met eigen properties.
+ *
+ * Drie node-soorten plus twee connector-soorten:
+ *   - **Elementtype** («elementtype»): shape/kleur/kort als properties; het
+ *     compartiment "eigenschappen" beschrijft de PropertyTypes van het type.
+ *   - **Compartimenttype** («compartimenttype»): een sectie in het element;
+ *     hangt via een ◆-compositie aan een Elementtype.
+ *   - **Veldtype** («veldtype»): de regels in zo'n sectie; hangt via ◆ aan
+ *     een Compartimenttype en heeft (naast de intrinsieke naam) zijn eigen
+ *     "eigenschappen" — precies FieldType 0..* PropertyType.
+ *   - **compositie** (◆): de bevat-relaties hierboven.
+ *   - **verbindingsregel** (→): tussen Elementtypes; wordt een
+ *     connector-ElementType van het doelprofiel.
+ *
+ * `bouwProfielUitOntwerp` vertaalt de tekening naar een descriptor-kern
+ * (trede 1-vorm, hooks op id); `ontwerpUitProfiel` is de omgekeerde weg —
+ * een bestaande descriptor als ontwerp-diagram bekijken (en desgewenst
+ * onder een nieuw id opnieuw genereren).
+ */
+
+export const PROFIEL_ONTWERP_ID = "profiel-ontwerp";
+
+const EIGENSCHAP_VELDEN = [
+  { key: "naam", label: "key", datatype: "string", verplicht: true },
+  { key: "typeLabel", label: "datatype (string/tekst/boolean/colour)", datatype: "string" },
+];
+
+/** @type {Object} descriptor-kern van de ontwerper zelf (hooks op id). */
+export const profielOntwerpKern = {
+  id: PROFIEL_ONTWERP_ID,
+  label: "Profiel-ontwerp",
+  style: "uml-klassiek",
+  fieldTypes: [{ id: "eigenschapDef", viewer: "naam-type", properties: EIGENSCHAP_VELDEN }],
+  elementTypes: [
+    {
+      id: "elementDef",
+      label: "Elementtype",
+      kort: "ET",
+      stereotype: "«elementtype»",
+      shape: "class-box",
+      kleur: "#bae6fd",
+      properties: [
+        { key: "kort", label: "korte code (taakbalk)", datatype: "string" },
+        { key: "shape", label: "shape (class-box/bol/note/boundary)", datatype: "string" },
+        { key: "doelKleur", label: "kleur van het type", datatype: "colour" },
+        { key: "stereotype", label: "stereotype («…»)", datatype: "string" },
+      ],
+      compartments: [{ id: "eigenschappen", label: "eigenschappen", fieldType: "eigenschapDef" }],
+    },
+    {
+      id: "compartimentDef",
+      label: "Compartimenttype",
+      kort: "CT",
+      stereotype: "«compartimenttype»",
+      shape: "class-box",
+      kleur: "#ddd6fe",
+      properties: [],
+      compartments: [],
+    },
+    {
+      id: "fieldDef",
+      label: "Veldtype",
+      kort: "VT",
+      stereotype: "«veldtype»",
+      shape: "class-box",
+      kleur: "#bbf7d0",
+      properties: [],
+      compartments: [{ id: "eigenschappen", label: "eigenschappen", fieldType: "eigenschapDef" }],
+    },
+    {
+      // ET ◆ CT en CT ◆ VT — de bevat-relaties van het metamodel.
+      id: "compositie",
+      label: "Bevat (◆)",
+      kort: "◆",
+      shape: "edge",
+      isConnector: true,
+      bron: { elementTypes: ["elementDef", "compartimentDef"] },
+      doel: { elementTypes: ["compartimentDef", "fieldDef"] },
+      edgePresentatie: { lijn: "solid", kleur: "#7c3aed", markerStart: "ruit" },
+    },
+    {
+      id: "verbindingsregel",
+      label: "Verbindingsregel",
+      kort: "→",
+      shape: "edge",
+      isConnector: true,
+      bron: { elementTypes: ["elementDef"] },
+      doel: { elementTypes: ["elementDef"] },
+      edgePresentatie: { lijn: "solid", kleur: "#0ea5e9" },
+      properties: [
+        { key: "lijn", label: "lijn (solid/dash-6-3/…)", datatype: "string" },
+        { key: "vorm", label: "vorm (bezier/hoekig/recht)", datatype: "string" },
+        { key: "markerStart", label: "markerStart (ruit/ruit-open)", datatype: "string" },
+        { key: "markerEnd", label: "markerEnd (driehoek/pijl-open)", datatype: "string" },
+        { key: "doelKleur", label: "lijnkleur", datatype: "colour" },
+        { key: "metKardinaliteiten", label: "kardinaliteiten-labels", datatype: "boolean" },
+        { key: "richtingOptie", label: "richting-vinkje (→)", datatype: "boolean" },
+      ],
+    },
+    {
+      id: "notitie",
+      label: "Notitie",
+      kort: "NOT",
+      shape: "note",
+      handleStijl: "onzichtbaar",
+      properties: [{ key: "tekst", datatype: "tekst" }],
+    },
+  ],
+  taakbalken: [
+    { id: "maken", label: "Maken", acties: "elementTypes" },
+    { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
+  ],
+  layouts: [],
+};
+
+/** "Mijn Type!" → "mijn-type" (element-/compartiment-/veldtype-id's). */
+function slug(tekst) {
+  return (
+    String(tekst || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "naamloos"
+  );
+}
+
+const GELDIGE_SHAPES = new Set(["class-box", "bol", "note", "rounded", "boundary"]);
+const GELDIGE_DATATYPES = new Set(["string", "tekst", "boolean", "colour"]);
+
+function compVelden(el, compartmentType) {
+  return (
+    (el.compartimenten || []).find((c) => c.compartmentType === compartmentType)?.velden || []
+  );
+}
+
+/** "eigenschappen"-compartiment → PropertyType-lijst. */
+function eigenschappenVan(el) {
+  return compVelden(el, "eigenschappen").map((v) => ({
+    key: slug(v.naam),
+    label: v.naam,
+    datatype: GELDIGE_DATATYPES.has(v.data?.typeLabel) ? v.data.typeLabel : "string",
+  }));
+}
+
+/**
+ * Vertaal een getekend profiel-ontwerp naar een descriptor-kern
+ * (trede 1-vorm, hooks als catalogus-id's).
+ *
+ * @param {{elements: Record<string, Object>}} state
+ * @param {{id: string, label?: string}} opties
+ */
+export function bouwProfielUitOntwerp(state, { id, label }) {
+  const els = Object.values(state?.elements || {});
+  const perSoort = (soort) => els.filter((el) => el.elementType === soort);
+  const defs = perSoort("elementDef");
+  if (!defs.length) {
+    throw new Error("Het ontwerp bevat nog geen Elementtype-nodes.");
+  }
+
+  // Bevat-relaties (composities): ET → CT's en CT → VT's.
+  const composities = perSoort("compositie").filter((c) => c.source && c.target);
+  const elementen = new Map(els.map((el) => [el.id, el]));
+  const kinderenVan = (ouderId, soort) =>
+    composities
+      .filter((c) => c.source === ouderId && elementen.get(c.target)?.elementType === soort)
+      .map((c) => elementen.get(c.target));
+
+  const doelIdVoor = new Map();
+  for (const def of defs) doelIdVoor.set(def.id, slug(def.naam));
+
+  // Veldtypen (FieldTypes) van het doelprofiel: één per fieldDef-node.
+  const fieldTypes = [];
+  const fieldTypeIdVoor = new Map(); // fieldDef-node-id → fieldType-id
+  for (const veldDef of perSoort("fieldDef")) {
+    const ftId = slug(veldDef.naam);
+    if (!fieldTypeIdVoor.has(veldDef.id)) {
+      fieldTypeIdVoor.set(veldDef.id, ftId);
+      if (!fieldTypes.some((ft) => ft.id === ftId)) {
+        fieldTypes.push({
+          id: ftId,
+          viewer: "naam-type",
+          properties: [{ key: "naam", datatype: "string", verplicht: true }, ...eigenschappenVan(veldDef)],
+        });
+      }
+    }
+  }
+  if (!fieldTypes.length) {
+    // Vangnet zodat compartimenten zonder getekend veldtype toch werken.
+    fieldTypes.push({
+      id: "veld",
+      viewer: "naam-type",
+      properties: [
+        { key: "naam", datatype: "string", verplicht: true },
+        { key: "typeLabel", label: "type", datatype: "string" },
+      ],
+    });
+  }
+
+  const elementTypes = [];
+  for (const def of defs) {
+    const d = def.data || {};
+    const shape = GELDIGE_SHAPES.has(d.shape) ? d.shape : "class-box";
+    // CompartmentTypes: de CT-nodes die via ◆ aan dit ET hangen; hun
+    // veldtype is de (eerste) VT-node die via ◆ aan de CT hangt.
+    const compartments = kinderenVan(def.id, "compartimentDef").map((ct) => {
+      const veldDef = kinderenVan(ct.id, "fieldDef")[0];
+      return {
+        id: slug(ct.naam),
+        label: ct.naam,
+        fieldType: veldDef ? fieldTypeIdVoor.get(veldDef.id) : fieldTypes[0].id,
+      };
+    });
+    elementTypes.push({
+      id: doelIdVoor.get(def.id),
+      label: def.naam,
+      kort: d.kort || def.naam.slice(0, 3).toUpperCase(),
+      ...(d.stereotype ? { stereotype: d.stereotype } : {}),
+      shape,
+      ...(shape === "boundary" ? { achtergrond: true, handleStijl: "onzichtbaar" } : {}),
+      ...(shape === "note" ? { handleStijl: "onzichtbaar" } : {}),
+      kleur: d.doelKleur || "#e2e8f0",
+      properties: [{ key: "kleur", datatype: "colour" }, ...eigenschappenVan(def)],
+      compartments,
+    });
+  }
+
+  const regels = perSoort("verbindingsregel").filter((el) => el.source && el.target);
+  regels.forEach((regel, i) => {
+    const d = regel.data || {};
+    const bron = doelIdVoor.get(regel.source);
+    const doel = doelIdVoor.get(regel.target);
+    if (!bron || !doel) return;
+    const connectorId = slug(regel.naam) !== "naamloos" ? slug(regel.naam) : `regel-${i + 1}`;
+    const hooks = {};
+    const properties = [{ key: "kleur", datatype: "colour" }];
+    if (d.metKardinaliteiten) {
+      hooks.edgeLabels = "kardinaliteiten";
+      properties.push(
+        { key: "bronKardinaliteit", label: "kardinaliteit (bron)", datatype: "string" },
+        { key: "doelKardinaliteit", label: "kardinaliteit (doel)", datatype: "string" }
+      );
+    }
+    if (d.richtingOptie) {
+      hooks.edgePresentatie = "directioneel-pijl";
+      properties.push({ key: "directioneel", label: "gericht (→ doel)", datatype: "boolean" });
+    }
+    elementTypes.push({
+      id: connectorId,
+      label: regel.naam || connectorId,
+      kort: d.markerStart === "ruit" ? "◆" : d.markerEnd === "driehoek" ? "▷" : "—",
+      shape: "edge",
+      isConnector: true,
+      bron: { elementTypes: [bron] },
+      doel: { elementTypes: [doel] },
+      edgePresentatie: {
+        lijn: d.lijn || "solid",
+        ...(d.vorm ? { vorm: d.vorm } : {}),
+        kleur: d.doelKleur || "#64748b",
+        ...(d.markerStart ? { markerStart: d.markerStart } : {}),
+        ...(d.markerEnd ? { markerEnd: d.markerEnd } : {}),
+      },
+      properties,
+      ...(Object.keys(hooks).length ? { hooks } : {}),
+    });
+  });
+
+  return {
+    id: slug(id),
+    label: label || id,
+    style: "uml-klassiek",
+    fieldTypes,
+    elementTypes,
+    taakbalken: [
+      { id: "maken", label: "Maken", acties: "elementTypes" },
+      { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
+    ],
+    layouts: [],
+  };
+}
+
+// ── Omgekeerde weg: bestaande descriptor → ontwerp-diagram ────────────────
+
+let _ontwerpTeller = 0;
+
+function eigenschapVelden(properties) {
+  return (properties || [])
+    .filter((p) => p.key !== "kleur")
+    .map((p) => ({
+      naam: p.label || p.key,
+      fieldType: "eigenschapDef",
+      data: { typeLabel: p.datatype || "string" },
+    }));
+}
+
+/**
+ * Zet een descriptor(-kern) om in een ontwerp-diagram (elements + diagram),
+ * klaar voor `laadModel` van de profiel-ontwerp-store. Werkt ook op de
+ * ingebouwde profielen (functie-hooks worden herkend aan hun properties:
+ * bronKardinaliteit → kardinaliteiten-vinkje, directioneel → richting).
+ *
+ * @param {Object} descriptor
+ * @returns {{elements: Record<string, Object>, diagrams: Record<string, Object>}}
+ */
+export function ontwerpUitProfiel(descriptor) {
+  _ontwerpTeller += 1;
+  const prefix = `ow${_ontwerpTeller}`;
+  const elements = {};
+  const nodes = [];
+  let vrijeVeldX = 60;
+
+  const fieldTypesById = Object.fromEntries((descriptor.fieldTypes || []).map((ft) => [ft.id, ft]));
+  const nodeIdVoorElementType = new Map();
+  const veldDefVoorFieldType = new Map();
+
+  const nietConnectoren = (descriptor.elementTypes || []).filter((et) => !et.isConnector);
+  const connectoren = (descriptor.elementTypes || []).filter((et) => et.isConnector);
+
+  nietConnectoren.forEach((et, kolom) => {
+    const etNodeId = `${prefix}_et_${et.id}`;
+    nodeIdVoorElementType.set(et.id, etNodeId);
+    elements[etNodeId] = {
+      id: etNodeId,
+      naam: et.label || et.id,
+      elementType: "elementDef",
+      compartimenten: [
+        { compartmentType: "eigenschappen", velden: eigenschapVelden(et.properties) },
+      ],
+      data: {
+        kort: et.kort || "",
+        shape: et.shape || "class-box",
+        doelKleur: et.kleur || "#e2e8f0",
+        ...(et.stereotype ? { stereotype: et.stereotype } : {}),
+      },
+    };
+    const x = 60 + kolom * 340;
+    nodes.push({ elementId: etNodeId, position: { x, y: 60 } });
+
+    (et.compartments || []).forEach((ct, rij) => {
+      const ctNodeId = `${prefix}_ct_${et.id}_${ct.id}`;
+      elements[ctNodeId] = {
+        id: ctNodeId,
+        naam: ct.label || ct.id,
+        elementType: "compartimentDef",
+        compartimenten: [],
+        data: {},
+      };
+      nodes.push({ elementId: ctNodeId, position: { x, y: 330 + rij * 150 } });
+      elements[`${ctNodeId}_c`] = {
+        id: `${ctNodeId}_c`,
+        naam: "",
+        elementType: "compositie",
+        source: etNodeId,
+        target: ctNodeId,
+        compartimenten: [],
+        data: {},
+      };
+
+      const ft = fieldTypesById[ct.fieldType];
+      if (!ft) return;
+      if (!veldDefVoorFieldType.has(ft.id)) {
+        const vtNodeId = `${prefix}_vt_${ft.id}`;
+        veldDefVoorFieldType.set(ft.id, vtNodeId);
+        elements[vtNodeId] = {
+          id: vtNodeId,
+          naam: ft.id,
+          elementType: "fieldDef",
+          compartimenten: [
+            {
+              compartmentType: "eigenschappen",
+              velden: eigenschapVelden((ft.properties || []).filter((p) => p.key !== "naam")),
+            },
+          ],
+          data: {},
+        };
+        nodes.push({ elementId: vtNodeId, position: { x: vrijeVeldX, y: 640 } });
+        vrijeVeldX += 300;
+      }
+      elements[`${ctNodeId}_v`] = {
+        id: `${ctNodeId}_v`,
+        naam: "",
+        elementType: "compositie",
+        source: ctNodeId,
+        target: veldDefVoorFieldType.get(ft.id),
+        compartimenten: [],
+        data: {},
+      };
+    });
+  });
+
+  connectoren.forEach((et, i) => {
+    const bron = nodeIdVoorElementType.get(et.bron?.elementTypes?.[0]);
+    const doel = nodeIdVoorElementType.get(et.doel?.elementTypes?.[0]);
+    if (!bron || !doel) return;
+    const p = et.edgePresentatie || {};
+    const props = et.properties || [];
+    elements[`${prefix}_regel_${i}`] = {
+      id: `${prefix}_regel_${i}`,
+      naam: et.label || et.id,
+      elementType: "verbindingsregel",
+      source: bron,
+      target: doel,
+      compartimenten: [],
+      data: {
+        lijn: p.lijn || "solid",
+        ...(p.vorm ? { vorm: p.vorm } : {}),
+        ...(p.markerStart ? { markerStart: p.markerStart } : {}),
+        ...(p.markerEnd ? { markerEnd: p.markerEnd } : {}),
+        doelKleur: p.kleur || "#64748b",
+        metKardinaliteiten: props.some((pr) => pr.key === "bronKardinaliteit"),
+        richtingOptie: props.some((pr) => pr.key === "directioneel"),
+      },
+    };
+  });
+
+  return {
+    elements,
+    diagrams: {
+      ontwerp: {
+        id: "ontwerp",
+        naam: descriptor.label || descriptor.id,
+        nodes,
+        edges: [],
+      },
+    },
+  };
+}
+
+/** Voorbeeld-ontwerp (het e2e-scenario): Ster (bol) ◆ Metingen ◆ meting, Planeet, "draait om". */
+export function voorbeeldOntwerp() {
+  return ontwerpUitProfiel({
+    id: "sterrenstelsel-voorbeeld",
+    label: "Voorbeeld: sterrenstelsel",
+    fieldTypes: [
+      {
+        id: "meting",
+        viewer: "naam-type",
+        properties: [
+          { key: "naam", datatype: "string", verplicht: true },
+          { key: "eenheid", label: "eenheid", datatype: "string" },
+        ],
+      },
+    ],
+    elementTypes: [
+      {
+        id: "ster",
+        label: "Ster",
+        kort: "ST",
+        shape: "bol",
+        kleur: "#fde68a",
+        properties: [
+          { key: "kleur", datatype: "colour" },
+          { key: "helderheid", label: "helderheid", datatype: "string" },
+        ],
+        compartments: [{ id: "metingen", label: "Metingen", fieldType: "meting" }],
+      },
+      {
+        id: "planeet",
+        label: "Planeet",
+        kort: "PL",
+        shape: "class-box",
+        kleur: "#bbf7d0",
+        properties: [{ key: "kleur", datatype: "colour" }],
+        compartments: [{ id: "kenmerken", label: "Kenmerken", fieldType: "meting" }],
+      },
+    ],
+    connectorVoorbeeld: true,
+  });
+}
+
+// Het voorbeeld heeft ook een verbindingsregel; ontwerpUitProfiel leest die
+// uit de descriptor — voeg hem daar toe via een kleine nabewerking.
+const _voorbeeldBasis = voorbeeldOntwerp;
+export function voorbeeldOntwerpMetRegel() {
+  const ontwerp = _voorbeeldBasis();
+  const ids = Object.values(ontwerp.elements).filter((el) => el.elementType === "elementDef");
+  const ster = ids.find((el) => el.naam === "Ster");
+  const planeet = ids.find((el) => el.naam === "Planeet");
+  if (ster && planeet) {
+    ontwerp.elements.voorbeeld_regel = {
+      id: "voorbeeld_regel",
+      naam: "draait om",
+      elementType: "verbindingsregel",
+      source: planeet.id,
+      target: ster.id,
+      compartimenten: [],
+      data: { lijn: "solid", vorm: "recht", metKardinaliteiten: true, richtingOptie: true, doelKleur: "#64748b" },
+    };
+  }
+  return ontwerp;
+}

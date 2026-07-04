@@ -98,6 +98,12 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
     const doelMid = midden(doelRef);
 
     const labels = et.hooks?.edgeLabels?.(el) || {};
+    // Handmatig versleepte label-posities (data.labelOffsets, per zijde).
+    const offsets = el.data?.labelOffsets || null;
+    const metOffsets = (lijst) =>
+      offsets
+        ? lijst.map((l) => (offsets[l.zijde] ? { ...l, offset: offsets[l.zijde] } : l))
+        : lijst;
     // Statisch (edgePresentatie) + dynamisch (hooks.edgePresentatie op basis
     // van de connector-data, bv. richting → pijl; §8.5c-familie).
     const basisPresentatie = {
@@ -118,7 +124,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
         // Expliciete handles winnen; anders de kortste weg.
         sourceHandle: el.data?.sourceHandle || `source-${besteZijde(bronMid, doelMid)}`,
         targetHandle: el.data?.targetHandle || `target-${besteZijde(doelMid, bronMid)}`,
-        data: { connectorId: el.id, presentatie: { ...basisPresentatie, labels: kaalLabels } },
+        data: { connectorId: el.id, presentatie: { ...basisPresentatie, labels: metOffsets(kaalLabels) } },
       });
       continue;
     }
@@ -163,7 +169,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
           vorm: basisPresentatie.vorm,
           kleur: basisPresentatie.kleur || "#64748b",
           markerStart: basisPresentatie.markerStart,
-          labels: labels.bron || [],
+          labels: metOffsets(labels.bron || []),
         },
       },
     });
@@ -180,7 +186,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
           vorm: basisPresentatie.vorm,
           kleur: basisPresentatie.kleur || "#64748b",
           markerEnd: basisPresentatie.markerEnd ?? (el.data?.directioneel ? "pijl-open" : null),
-          labels: labels.doel || [],
+          labels: metOffsets(labels.doel || []),
         },
       },
     });
