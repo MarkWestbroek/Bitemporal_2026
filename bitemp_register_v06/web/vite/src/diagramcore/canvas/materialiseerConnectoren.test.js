@@ -279,3 +279,29 @@ test("verbindingsregels 1..*: paren gelden, het cartesiaans product niet", () =>
   assert.equal(vindConnectorType(dt, el("entiteit"), el("gegevenstype")), null);
   assert.equal(vindConnectorType(dt, el("gegevenselement"), el("enumeratie")), null);
 });
+
+test("kortste-weg gebruikt gemeten maten: brede lage node onder de bron → bottom/top", () => {
+  const elements = {
+    A,
+    B,
+    r1: { id: "r1", naam: "", elementType: "relatie", source: "A", target: "B", compartimenten: [], data: {} },
+  };
+  const diagram = {
+    id: "d",
+    nodes: [
+      { elementId: "A", position: { x: 20, y: 100 } },
+      // B is in werkelijkheid breed en laag en ligt recht ónder A, maar met
+      // de 200×80-schatting lijkt zijn middelpunt links te liggen → "left".
+      { elementId: "B", position: { x: -60, y: 160 } },
+    ],
+  };
+  let { edges } = materialiseerConnectoren(elements, diagram, elementTypesById);
+  assert.equal(edges[0].sourceHandle, "source-left");
+
+  // Mét gemeten maten (A klein, B breed en laag) klopt de geometrie: B's
+  // middelpunt ligt vrijwel recht onder A → bottom/top.
+  const maten = { A: { width: 150, height: 60 }, B: { width: 380, height: 120 } };
+  ({ edges } = materialiseerConnectoren(elements, diagram, elementTypesById, maten));
+  assert.equal(edges[0].sourceHandle, "source-bottom");
+  assert.equal(edges[0].targetHandle, "target-top");
+});

@@ -141,12 +141,6 @@ function CanvasBinnenkant({
     };
   }, [contextMenu]);
 
-  // Connector-materialisatie: kale edges + (bij velden) anker/box-structuur.
-  const gematerialiseerd = useMemo(
-    () => materialiseerConnectoren(elements, diagram, lookups.elementTypesById),
-    [elements, diagram, lookups]
-  );
-
   // Afgeleide weergave-compartimenten (bv. overgeërfde velden) via de
   // profiel-hook elementType.hooks.extraCompartimenten(element, ctx).
   const verrijk = useCallback(
@@ -162,6 +156,33 @@ function CanvasBinnenkant({
   // selectie en slepen via node-changes lopen; de store blijft de waarheid
   // (posities gaan bij dragstop via onNodePositie terug).
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
+
+  // Gemeten node-maten (React Flow): de kortste-weg-keuze rekent daarmee in
+  // plaats van met de 200×80-schatting — anders kiest hij bij brede/lage
+  // nodes de verkeerde zijde (Marks normaliseer-melding, 2026-07-04).
+  const [maten, setMaten] = useState({});
+  useEffect(() => {
+    const volgende = {};
+    for (const n of nodes) {
+      if (n.measured?.width) {
+        volgende[n.id] = { width: n.measured.width, height: n.measured.height };
+      }
+    }
+    setMaten((huidig) => {
+      const items = Object.entries(volgende);
+      const zelfde =
+        items.length === Object.keys(huidig).length &&
+        items.every(([k, v]) => huidig[k]?.width === v.width && huidig[k]?.height === v.height);
+      return zelfde ? huidig : volgende;
+    });
+  }, [nodes]);
+
+  // Connector-materialisatie: kale edges + (bij velden) anker/box-structuur.
+  const gematerialiseerd = useMemo(
+    () => materialiseerConnectoren(elements, diagram, lookups.elementTypesById, maten),
+    [elements, diagram, lookups, maten]
+  );
+
   useEffect(() => {
     const flowNodes = (diagram?.nodes || [])
       .map((ref) => {
@@ -281,8 +302,8 @@ function CanvasBinnenkant({
       const r = refs.get(id);
       if (!r) return null;
       return {
-        x: r.position.x + (r.size?.width ?? 200) / 2,
-        y: r.position.y + (r.size?.height ?? 80) / 2,
+        x: r.position.x + (r.size?.width ?? maten[id]?.width ?? 200) / 2,
+        y: r.position.y + (r.size?.height ?? maten[id]?.height ?? 80) / 2,
       };
     };
     const geimporteerd = (diagram?.edges || []).map((e) => {
@@ -325,7 +346,7 @@ function CanvasBinnenkant({
       const geselecteerd = new Set(huidige.filter((e) => e.selected).map((e) => e.id));
       return flowEdges.map((e) => (geselecteerd.has(e.id) ? { ...e, selected: true } : e));
     });
-  }, [diagram, gematerialiseerd, bewerkbaar, setEdges, onLabelOffset]);
+  }, [diagram, gematerialiseerd, bewerkbaar, setEdges, onLabelOffset, maten]);
 
   const handleSelectionChange = useCallback(
     ({ nodes: sel, edges: selEdges }) => {

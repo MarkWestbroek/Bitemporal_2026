@@ -1028,6 +1028,38 @@ met `npm run build` + visuele check, en levert iets werkends op.
    ConnectorEdge tekent nu een lus buitenom de node. ✅ gebouwd
    (2026-07-04).
 
+12. **Ideeënlijst van Mark (2026-07-04, uit `STUDIO ideas.md`) — duiding.**
+   - **L01 z-order** (voor/achter): klein; core kent al `zIndex` voor
+     achtergrond-elementen → contextmenu-acties "naar voren/achteren" +
+     `data.zIndex`.
+   - **L02 maak gelijk van maat**: past in de uitlijn-familie (core-
+     geometrie); "laatst geselecteerde is de maatbron" zoals de klassieke
+     conventie.
+   - **L03 normalisatie overriden (clip)**: bestaat de facto — een expliciet
+     gekozen handle (edge verslepen) wint al van de kortste weg; nog nodig:
+     per uiteinde kunnen "vastpinnen" via het contextmenu i.p.v. alleen
+     via slepen. De kortste-weg-keuze zelf rekent sinds vandaag met de
+     gemeten node-maten (normaliseer-fix).
+   - **G01 eigen shapes (SVG-upload)**: spannend; veilig te doen als
+     "svg-sjabloon"-ShapeType die een (gesanitiseerde) SVG-string uit de
+     descriptor rendert met placeholders voor naam/velden — serialiseerbaar
+     en dus register-klaar. Ontwerpvraag voor de vormgevingssessie.
+   - **G03 font**: hoort bij de StyleType-tokens (§8.5b): --dc-font-tokens.
+   - **P01 meerdere profielen als ontwerp-diagram**: de ontwerper is een
+     gewone activiteit met multi-diagram — elk profiel zijn eigen diagram
+     in dezelfde sandbox + per diagram genereren/exporteren. Vooral een
+     kwestie van "Bekijk bestaand profiel" een nieuw diagram laten maken
+     i.p.v. alles te vervangen.
+   - **P02 hiërarchie in het profiel**: een descriptor-veld dat een
+     bevat-connectortype aanwijst (bv. `hierarchie: "compositie"`); de
+     elementen-browser (en straks de tree van een gegenereerde activiteit)
+     nest dan op die relatie i.p.v. plat te groeperen. Samen met **E01**
+     (geneste tree-browser) één bouwstap.
+   - **P02b placement handler zichtbaar / P03 autoroute in de ontwerper**:
+     de ontwerper is een fabriek-activiteit — een layout-strategie voor het
+     ontwerp-profiel (ET's boven, CT's midden, VT's onder — het grid van
+     `ontwerpUitProfiel` als échte auto-layout) geeft beide in één klap.
+
 ## 9. Relatie met de code review van 2026-06-30
 
 De nieuwe core neemt de review-aanbevelingen als ontwerpeisen mee in plaats van ze

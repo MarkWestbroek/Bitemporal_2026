@@ -65,10 +65,15 @@ function heeftVelden(connector) {
   return (connector.compartimenten || []).some((c) => (c.velden || []).length > 0);
 }
 
-/** Geschat middelpunt van een node (posities zijn linksboven; maat geschat). */
-function midden(ref) {
-  const w = ref?.size?.width ?? 200;
-  const h = ref?.size?.height ?? 80;
+/**
+ * Middelpunt van een node: expliciete size (diagram-lidmaatschap) wint,
+ * daarna de gemeten maat (React Flow, via de `maten`-parameter), en pas
+ * als laatste de 200×80-schatting. Zonder echte maten koos de kortste-weg
+ * bij brede/lage nodes geregeld de verkeerde zijde.
+ */
+function midden(ref, maat) {
+  const w = ref?.size?.width ?? maat?.width ?? 200;
+  const h = ref?.size?.height ?? maat?.height ?? 80;
   return { x: ref.position.x + w / 2, y: ref.position.y + h / 2 };
 }
 
@@ -93,7 +98,7 @@ export function besteZijde(van, naar) {
  *   extraNodes  — synthetische nodes: ankers (id `anker:<conn>`) en, waar een
  *                 DiagramNode ontbreekt, de connector-box zelf (id = conn.id)
  */
-export function materialiseerConnectoren(elements, diagram, elementTypesById) {
+export function materialiseerConnectoren(elements, diagram, elementTypesById, maten = null) {
   const nodeRefs = new Map((diagram?.nodes || []).map((n) => [n.elementId, n]));
   const edges = [];
   const extraNodes = [];
@@ -105,8 +110,8 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
     const bronRef = nodeRefs.get(el.source);
     const doelRef = nodeRefs.get(el.target);
     if (!bronRef || !doelRef) continue; // beide uiteinden moeten op het diagram staan
-    const bronMid = midden(bronRef);
-    const doelMid = midden(doelRef);
+    const bronMid = midden(bronRef, maten?.[el.source]);
+    const doelMid = midden(doelRef, maten?.[el.target]);
 
     const labels = et.hooks?.edgeLabels?.(el) || {};
     // Handmatig versleepte label-posities (data.labelOffsets, per zijde).
