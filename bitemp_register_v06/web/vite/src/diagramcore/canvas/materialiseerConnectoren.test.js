@@ -254,3 +254,28 @@ test("labelOffsets op de connector verschuiven de labels per zijde", () => {
   const bronLabel = bronEdge.data.presentatie.labels.find((l) => l.zijde === "bron");
   assert.deepEqual(bronLabel.offset, { x: 20, y: -10 });
 });
+
+test("verbindingsregels 1..*: paren gelden, het cartesiaans product niet", () => {
+  const types = {
+    entiteit: { id: "entiteit", shape: "class-box" },
+    gegevenselement: { id: "gegevenselement", shape: "class-box" },
+    enumeratie: { id: "enumeratie", shape: "class-box" },
+    gegevenstype: { id: "gegevenstype", shape: "class-box" },
+    gebruik: {
+      id: "gebruik",
+      shape: "edge",
+      isConnector: true,
+      // ENT→enum en GE→gegevenstype zijn toegestaan; ENT→gegevenstype niet.
+      verbindingsregels: [
+        { bron: ["entiteit"], doel: ["enumeratie"] },
+        { bron: ["gegevenselement"], doel: ["gegevenstype"] },
+      ],
+    },
+  };
+  const dt = { id: "t", elementTypes: Object.values(types) };
+  const el = (t) => ({ id: t, elementType: t });
+  assert.equal(vindConnectorType(dt, el("entiteit"), el("enumeratie"))?.id, "gebruik");
+  assert.equal(vindConnectorType(dt, el("gegevenselement"), el("gegevenstype"))?.id, "gebruik");
+  assert.equal(vindConnectorType(dt, el("entiteit"), el("gegevenstype")), null);
+  assert.equal(vindConnectorType(dt, el("gegevenselement"), el("enumeratie")), null);
+});

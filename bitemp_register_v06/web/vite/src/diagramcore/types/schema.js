@@ -77,7 +77,11 @@
  */
 
 /**
- * Verbindingsregel voor een connector-uiteinde.
+ * Verbindingsregels: een connector-ElementType heeft er 1..* (metamodel:
+ * ConnectorType ◆ 1..* Verbindingsregel). `verbindingsregels` is de
+ * volledige vorm: elke regel is een toegestane bron×doel-combinatie.
+ * De verkorte vorm `bron`/`doel` (één regel, cartesiaans product) blijft
+ * ondersteund. Zie ook: Verbindingsregel voor een connector-uiteinde.
  *
  * @typedef {Object} ConnectorEindpunt
  * @property {string[]} elementTypes        - toegestane element-typen

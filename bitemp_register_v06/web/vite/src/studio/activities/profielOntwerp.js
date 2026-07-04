@@ -229,13 +229,26 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
     });
   }
 
-  const regels = perSoort("verbindingsregel").filter((el) => el.source && el.target);
-  regels.forEach((regel, i) => {
-    const d = regel.data || {};
-    const bron = doelIdVoor.get(regel.source);
-    const doel = doelIdVoor.get(regel.target);
-    if (!bron || !doel) return;
-    const connectorId = slug(regel.naam) !== "naamloos" ? slug(regel.naam) : `regel-${i + 1}`;
+  // Verbindingsregel-lijnen met dezelfde náám vormen samen één connectortype
+  // met meerdere verbindingsregels (metametamodel: ConnectorType ◆ 1..*
+  // Verbindingsregel) — het connectortype manifesteert zich als meerdere
+  // lijnen. Presentatie-properties van de eerste lijn winnen.
+  const perConnectorType = new Map();
+  perSoort("verbindingsregel")
+    .filter((el) => el.source && el.target)
+    .forEach((regel, i) => {
+      const bron = doelIdVoor.get(regel.source);
+      const doel = doelIdVoor.get(regel.target);
+      if (!bron || !doel) return;
+      const connectorId = slug(regel.naam) !== "naamloos" ? slug(regel.naam) : `regel-${i + 1}`;
+      if (!perConnectorType.has(connectorId)) {
+        perConnectorType.set(connectorId, { eerste: regel, regels: [] });
+      }
+      perConnectorType.get(connectorId).regels.push({ bron: [bron], doel: [doel] });
+    });
+
+  for (const [connectorId, { eerste, regels }] of perConnectorType) {
+    const d = eerste.data || {};
     const hooks = {};
     const properties = [{ key: "kleur", datatype: "colour" }];
     if (d.metKardinaliteiten) {
@@ -251,12 +264,13 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
     }
     elementTypes.push({
       id: connectorId,
-      label: regel.naam || connectorId,
+      label: eerste.naam || connectorId,
       kort: d.markerStart === "ruit" ? "◆" : d.markerEnd === "driehoek" ? "▷" : "—",
       shape: "edge",
       isConnector: true,
-      bron: { elementTypes: [bron] },
-      doel: { elementTypes: [doel] },
+      ...(regels.length === 1
+        ? { bron: { elementTypes: regels[0].bron }, doel: { elementTypes: regels[0].doel } }
+        : { verbindingsregels: regels }),
       edgePresentatie: {
         lijn: d.lijn || "solid",
         ...(d.vorm ? { vorm: d.vorm } : {}),
@@ -267,7 +281,7 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       properties,
       ...(Object.keys(hooks).length ? { hooks } : {}),
     });
-  });
+  }
 
   return {
     id: slug(id),
@@ -393,28 +407,45 @@ export function ontwerpUitProfiel(descriptor) {
   });
 
   connectoren.forEach((et, i) => {
-    const bron = nodeIdVoorElementType.get(et.bron?.elementTypes?.[0]);
-    const doel = nodeIdVoorElementType.get(et.doel?.elementTypes?.[0]);
-    if (!bron || !doel) return;
     const p = et.edgePresentatie || {};
     const props = et.properties || [];
-    elements[`${prefix}_regel_${i}`] = {
-      id: `${prefix}_regel_${i}`,
-      naam: et.label || et.id,
-      elementType: "verbindingsregel",
-      source: bron,
-      target: doel,
-      compartimenten: [],
-      data: {
-        lijn: p.lijn || "solid",
-        ...(p.vorm ? { vorm: p.vorm } : {}),
-        ...(p.markerStart ? { markerStart: p.markerStart } : {}),
-        ...(p.markerEnd ? { markerEnd: p.markerEnd } : {}),
-        doelKleur: p.kleur || "#64748b",
-        metKardinaliteiten: props.some((pr) => pr.key === "bronKardinaliteit"),
-        richtingOptie: props.some((pr) => pr.key === "directioneel"),
-      },
-    };
+    // Elk toegestaan (bron, doel)-paar wordt één regel-lijn; lijnen met
+    // dezelfde naam bundelen bij het genereren weer tot dit connectortype.
+    const regels =
+      Array.isArray(et.verbindingsregels) && et.verbindingsregels.length
+        ? et.verbindingsregels
+        : [{ bron: et.bron?.elementTypes || [], doel: et.doel?.elementTypes || [] }];
+    let volgnr = 0;
+    for (const regel of regels) {
+      const bronnen = regel.bron?.elementTypes || regel.bron || [];
+      const doelen = regel.doel?.elementTypes || regel.doel || [];
+      for (const bronType of bronnen) {
+        for (const doelType of doelen) {
+          const bron = nodeIdVoorElementType.get(bronType);
+          const doel = nodeIdVoorElementType.get(doelType);
+          if (!bron || !doel) continue;
+          volgnr += 1;
+          const id = `${prefix}_regel_${i}_${volgnr}`;
+          elements[id] = {
+            id,
+            naam: et.label || et.id,
+            elementType: "verbindingsregel",
+            source: bron,
+            target: doel,
+            compartimenten: [],
+            data: {
+              lijn: p.lijn || "solid",
+              ...(p.vorm ? { vorm: p.vorm } : {}),
+              ...(p.markerStart ? { markerStart: p.markerStart } : {}),
+              ...(p.markerEnd ? { markerEnd: p.markerEnd } : {}),
+              doelKleur: p.kleur || "#64748b",
+              metKardinaliteiten: props.some((pr) => pr.key === "bronKardinaliteit"),
+              richtingOptie: props.some((pr) => pr.key === "directioneel"),
+            },
+          };
+        }
+      }
+    }
   });
 
   return {

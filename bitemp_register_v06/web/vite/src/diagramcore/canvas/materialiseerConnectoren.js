@@ -39,9 +39,20 @@ export const ANKER_PREFIX = "anker:";
 export function vindConnectorType(diagramType, bronElement, doelElement, voorkeur = null) {
   if (!bronElement || !doelElement) return null;
   const kandidaten = (diagramType?.elementTypes || []).filter((et) => et.isConnector);
+  // 1..* verbindingsregels (volledige vorm) of de verkorte bron/doel-vorm:
+  // een verbinding past zodra één regel de combinatie toestaat.
+  const regelsVan = (et) =>
+    Array.isArray(et.verbindingsregels) && et.verbindingsregels.length
+      ? et.verbindingsregels.map((r) => ({
+          bron: r?.bron?.elementTypes || r?.bron || [],
+          doel: r?.doel?.elementTypes || r?.doel || [],
+        }))
+      : [{ bron: et.bron?.elementTypes || [], doel: et.doel?.elementTypes || [] }];
   const past = (et) =>
-    (et.bron?.elementTypes || []).includes(bronElement.elementType) &&
-    (et.doel?.elementTypes || []).includes(doelElement.elementType);
+    regelsVan(et).some(
+      (r) =>
+        r.bron.includes(bronElement.elementType) && r.doel.includes(doelElement.elementType)
+    );
   if (voorkeur) {
     const gekozen = kandidaten.find((et) => et.id === voorkeur);
     return gekozen && past(gekozen) ? gekozen : null;

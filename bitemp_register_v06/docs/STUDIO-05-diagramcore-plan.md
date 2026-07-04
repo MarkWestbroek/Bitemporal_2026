@@ -1015,6 +1015,13 @@ met `npm run build` + visuele check, en levert iets werkends op.
      ontwerp met eigen properties én compartimenten (want: soort GE),
      waar regel-lijnen aan refereren — één-op-één met het metametamodel.
 
+   ✅ **b gebouwd** (2026-07-04): materieel-vinkje op ENT/GE/REL
+   (badge + «materieel»-label), geordend op REL ({ordered});
+   aggregatie-besluit staat nog open. ✅ **c gebouwd** (2026-07-04):
+   `verbindingsregels` 1..* in schema/validatie/matching
+   (`verbindingsregelsVan`), ontwerper bundelt regel-lijnen op naam en de
+   inverse toont elk bron×doel-paar als eigen lijn.
+
    **d. Zelf-verwijzende regels zichtbaar: het "oortje".** Een connector
    met source == target (bv. de verbindingsregels Relatie/Generalisatie
    ENT→ENT in de ontwerp-weergave van canoniek-uml) was onzichtbaar;

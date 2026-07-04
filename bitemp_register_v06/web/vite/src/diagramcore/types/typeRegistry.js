@@ -26,6 +26,24 @@ const _diagramTypes = new Map();
  * @param {ElementType} et
  * @returns {string[]} foutmeldingen (leeg = geldig)
  */
+/**
+ * Alle verbindingsregels van een connector-ElementType, in de volledige
+ * vorm [{bron: string[], doel: string[]}]. Ondersteunt zowel
+ * `verbindingsregels` (1..*) als de verkorte `bron`/`doel`-vorm.
+ */
+export function verbindingsregelsVan(et) {
+  if (Array.isArray(et?.verbindingsregels) && et.verbindingsregels.length) {
+    return et.verbindingsregels.map((r) => ({
+      bron: r?.bron?.elementTypes || r?.bron || [],
+      doel: r?.doel?.elementTypes || r?.doel || [],
+    }));
+  }
+  if (et?.bron || et?.doel) {
+    return [{ bron: et.bron?.elementTypes || [], doel: et.doel?.elementTypes || [] }];
+  }
+  return [];
+}
+
 function valideerElementType(diagramTypeId, et) {
   const fouten = [];
   const ctx = `DiagramType "${diagramTypeId}", ElementType "${et?.id ?? "?"}"`;
@@ -38,8 +56,12 @@ function valideerElementType(diagramTypeId, et) {
     );
   }
   if (et?.isConnector) {
-    if (!et.bron?.elementTypes?.length) fouten.push(`${ctx}: connector zonder bron.elementTypes`);
-    if (!et.doel?.elementTypes?.length) fouten.push(`${ctx}: connector zonder doel.elementTypes`);
+    // Volledige vorm (verbindingsregels 1..*) of verkorte vorm (bron/doel);
+    // de regel-inhoud zelf wordt op DiagramType-niveau gevalideerd.
+    const regels = verbindingsregelsVan(et);
+    if (!regels.length) {
+      fouten.push(`${ctx}: connector zonder verbindingsregels (of bron/doel)`);
+    }
   }
   return fouten;
 }
@@ -66,15 +88,23 @@ export function valideerDiagramType(dt) {
       gezien.add(et.id);
     }
   }
-  // Verbindingsregels moeten naar bestaande element-typen verwijzen
+  // Verbindingsregels: 1..* per connector, en verwijzingen moeten bestaan.
   for (const et of dt.elementTypes) {
     if (!et?.isConnector) continue;
-    for (const kant of ["bron", "doel"]) {
-      for (const doelId of et[kant]?.elementTypes ?? []) {
-        if (!gezien.has(doelId)) {
-          fouten.push(
-            `DiagramType "${dt.id}", connector "${et.id}": ${kant} verwijst naar onbekend ElementType "${doelId}"`
-          );
+    const regels = verbindingsregelsVan(et);
+    if (!regels.length || regels.some((r) => !r.bron.length || !r.doel.length)) {
+      fouten.push(
+        `DiagramType "${dt.id}", connector "${et.id}": minimaal één verbindingsregel met bron én doel vereist`
+      );
+    }
+    for (const [ri, regel] of regels.entries()) {
+      for (const kant of ["bron", "doel"]) {
+        for (const doelId of regel[kant]) {
+          if (!gezien.has(doelId)) {
+            fouten.push(
+              `DiagramType "${dt.id}", connector "${et.id}", regel ${ri + 1}: ${kant} verwijst naar onbekend ElementType "${doelId}"`
+            );
+          }
         }
       }
     }

@@ -127,3 +127,30 @@ test("ontwerpUitProfiel ⇄ bouwProfielUitOntwerp: round-trip behoudt de structu
 test("bouwProfielUitOntwerp: leeg ontwerp geeft een nette fout", () => {
   assert.throws(() => bouwProfielUitOntwerp({ elements: {} }, { id: "x" }), /geen Elementtype/);
 });
+
+test("verbindingsregel-lijnen met dezelfde naam bundelen tot één connectortype (1..*)", () => {
+  const ontwerp = maakOntwerp();
+  // Tweede lijn met dezelfde naam "draait om": Ster → Planeet
+  ontwerp.elements.R2 = {
+    id: "R2",
+    naam: "draait om",
+    elementType: "verbindingsregel",
+    source: "E1",
+    target: "E2",
+    compartimenten: [],
+    data: {},
+  };
+  const kern = bouwProfielUitOntwerp(ontwerp, { id: "zonnestelsel" });
+  const regel = kern.elementTypes.find((et) => et.id === "draait-om");
+  assert.ok(Array.isArray(regel.verbindingsregels), "gebundeld tot verbindingsregels 1..*");
+  assert.equal(regel.verbindingsregels.length, 2);
+  assert.deepEqual(regel.verbindingsregels[0], { bron: ["planeet"], doel: ["ster"] });
+  assert.deepEqual(regel.verbindingsregels[1], { bron: ["ster"], doel: ["planeet"] });
+  // en het geheel blijft registreerbaar
+  assert.deepEqual(valideerDiagramType(vertaalHooks(kern)), []);
+
+  // De inverse tekent per paar weer een lijn met dezelfde naam
+  const terug = ontwerpUitProfiel(kern);
+  const lijnen = Object.values(terug.elements).filter((el) => el.elementType === "verbindingsregel");
+  assert.equal(lijnen.filter((l) => l.naam === "draait om").length, 2);
+});
