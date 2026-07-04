@@ -45,6 +45,8 @@ const SOORT_KLASSE = {
 
 function ConnectorEdge({
   id,
+  source,
+  target,
   sourceX,
   sourceY,
   targetX,
@@ -56,8 +58,19 @@ function ConnectorEdge({
 }) {
   const p = data?.presentatie || {};
   const padArgs = { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition };
-  const [edgePath, labelX, labelY] =
-    p.vorm === "hoekig"
+  // Zelf-verwijzing (source == target): een "oortje" buitenom de node —
+  // anders valt het pad samen met één punt en is de connector onzichtbaar
+  // (bv. de ENT→ENT-verbindingsregels in de profiel-ontwerper).
+  const isLus = source && source === target;
+  const [edgePath, labelX, labelY] = isLus
+    ? [
+        `M ${sourceX} ${sourceY} C ${sourceX + 52} ${sourceY - 40}, ${sourceX + 52} ${
+          sourceY + 40
+        }, ${targetX} ${targetY}`,
+        sourceX + 44,
+        sourceY,
+      ]
+    : p.vorm === "hoekig"
       ? getSmoothStepPath({ ...padArgs, borderRadius: 4 })
       : p.vorm === "recht"
         ? getStraightPath(padArgs)

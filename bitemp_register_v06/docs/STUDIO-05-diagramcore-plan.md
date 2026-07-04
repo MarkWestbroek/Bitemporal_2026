@@ -970,6 +970,57 @@ met `npm run build` + visuele check, en levert iets werkends op.
    (StyleType-tokens) en de lijnvormen (`presentatie.vorm`, inmiddels
    gebouwd: bezier/hoekig/recht — puur-uml is hoekig).
 
+11. **Relatie, Relatietype, tijdlijn en verbindingsregels 1..*** **(plan,
+   n.a.v. Marks metamodel-review 2026-07-04).** Vier samenhangende punten:
+
+   **a. Waar "een relatie is een soort GE" al vastligt.** In de core geldt
+   Connector ⊳ Element (zoals {Relatie} ⊳ {Representatie} in het
+   LGM-metamodel): het ElementType "relatie" heeft `isConnector: true` én
+   gewone compartimenten/properties — een relatie mét waarden
+   materialiseert als associatieklasse (ASOC). De **verbindingsregel
+   beschrijft dus alleen de aansluiting** (welke uiteinden mogen), nooit de
+   aard van de relatie; de aard (velden, kardinaliteiten, presentatie) zit
+   in het ElementType zelf. Dat de ontwerper een verbindingsregel als kale
+   lijn toont is dus correct maar onvolledig: het connectortype-als-element
+   (met compartimenten) verdient daar een eigen gedaante — zie c.
+
+   **b. Ontbrekende LGM-begrippen in het canoniek-uml-profiel.**
+   - `tijdlijn` ({Tijdlijnvoorkomen}: formeel/materieel) als property op
+     relatie én GE — bestaat in het oude model als `isMaterieel` (mapping:
+     materieel ↔ true); toevoegen als property + «formeel»/«materieel» in de
+     edge-/compartimentlabels, terugreis via de bestaande delta.
+   - `geordend` (Indicatie op {Rol}) → boolean-property + `{ordered}`-label.
+   - {Relatietype} (associatie/directioneel/aggregatie/compositie/
+     overerving/afhankelijkheid): blijft gemodelleerd als **aparte
+     connector-ElementTypes** (zoals nu: relatie/compositie/generalisatie/
+     gebruik) — dat matcht de taakbalk en de verbindingsregels het best.
+     Aggregatie ontbreekt in canoniek-uml (bewust? besluiten); directioneel
+     is al een vinkje op de relatie.
+
+   **c. Verbindingsregels worden 1..*** **(metametamodel-correctie).** Marks
+   model (ConnectorType ◆ 1..* Verbindingsregel{sourceType, targetType})
+   is rijker dan ons huidige `bron/doel` (één regel; lijsten = cartesiaans
+   product — "gebruik ENT→enum én GE→datatype maar niet ENT→datatype" kan
+   nu niet). Plan:
+   - schema: `ElementType.verbindingsregels?: [{bron: string[], doel:
+     string[]}]` naast het bestaande `bron`/`doel` (dat als één regel blijft
+     werken); `vindConnectorType`/`isValidConnection`/registry-validatie
+     lopen over álle regels.
+   - profiel-ontwerper: **ConnectorType prominenter** — meerdere
+     regel-lijnen kunnen hetzelfde connectortype vertegenwoordigen.
+     Trede 1: regel-lijnen met dezelfde náám bundelen bij het genereren
+     tot één connectortype met meerdere verbindingsregels
+     (presentatie-properties van de eerste lijn winnen). Trede 2 (zodra
+     het keuzelijst-datatype er is): een «connectortype»-node in het
+     ontwerp met eigen properties én compartimenten (want: soort GE),
+     waar regel-lijnen aan refereren — één-op-één met het metametamodel.
+
+   **d. Zelf-verwijzende regels zichtbaar: het "oortje".** Een connector
+   met source == target (bv. de verbindingsregels Relatie/Generalisatie
+   ENT→ENT in de ontwerp-weergave van canoniek-uml) was onzichtbaar;
+   ConnectorEdge tekent nu een lus buitenom de node. ✅ gebouwd
+   (2026-07-04).
+
 ## 9. Relatie met de code review van 2026-06-30
 
 De nieuwe core neemt de review-aanbevelingen als ontwerpeisen mee in plaats van ze
