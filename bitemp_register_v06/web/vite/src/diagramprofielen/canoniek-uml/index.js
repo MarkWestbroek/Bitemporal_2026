@@ -88,6 +88,7 @@ const elementTypes = [
     stereotype: "«entiteit»",
     shape: "class-box",
     kleur: "#bfdbfe",
+    icoon: "klasse",
     // tijdlijnvoorkomen (LGM): materieel ↔ isMaterieel; formeel = uit.
     properties: [KLEUR_VELD, { key: "materieel", label: "materieel (tijdlijn)", datatype: "boolean" }],
     compartments: [
@@ -140,6 +141,7 @@ const elementTypes = [
     stereotype: "«gegevenselement»",
     shape: "class-box",
     kleur: "#bbf7d0",
+    icoon: "veld",
     properties: [KLEUR_VELD, { key: "materieel", label: "materieel (tijdlijn)", datatype: "boolean" }],
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
@@ -159,6 +161,7 @@ const elementTypes = [
     stereotype: "«relatie»",
     shape: "class-box",
     kleur: "#ede9fe",
+    icoon: "relatie-box",
     isConnector: true,
     bron: { elementTypes: ["entiteit"] },
     doel: { elementTypes: ["entiteit"] },
@@ -217,6 +220,7 @@ const elementTypes = [
     stereotype: "«enumeratie»",
     shape: "class-box",
     kleur: "#fef3c7",
+    icoon: "enumeratie",
     properties: [KLEUR_VELD],
     compartments: [{ id: "waarden", label: null, fieldType: "waarde" }],
   },
@@ -227,6 +231,7 @@ const elementTypes = [
     stereotype: "«gegevenstype»",
     shape: "class-box",
     kleur: "#dbeafe",
+    icoon: "datatype",
     // Validatie/normalisatie/weergave zijn element-properties met eigen
     // PropertyTypeEditors (implementaties.jsx registreert "validatieregels"
     // en "weergaveregels" in de datatype-registry) — het PropertyType-patroon
@@ -284,6 +289,7 @@ const elementTypes = [
     stereotype: "«instantie»",
     shape: "class-box",
     kleur: "#fde68a",
+    icoon: "lijst",
     properties: [KLEUR_VELD],
     compartments: [{ id: "eigenschappen", label: null, fieldType: "eigenschap" }],
   },
@@ -292,6 +298,7 @@ const elementTypes = [
     label: "Notitie",
     kort: "NOT",
     shape: "note",
+    icoon: "notitie",
     handleStijl: "onzichtbaar",
     properties: [{ key: "tekst", datatype: "tekst" }, KLEUR_VELD],
   },
@@ -302,6 +309,7 @@ const elementTypes = [
     stereotype: "«constraint»",
     shape: "rounded",
     kleur: "#e0f2fe",
+    icoon: "constraint",
     handleStijl: "onzichtbaar",
     properties: [{ key: "expressie", label: "expressie (OCL/CEL)", datatype: "cel-expressie" }, KLEUR_VELD],
   },
@@ -310,6 +318,7 @@ const elementTypes = [
     label: "Kader",
     kort: "KADER",
     shape: "boundary",
+    icoon: "kader",
     achtergrond: true,
     handleStijl: "onzichtbaar",
     properties: [
@@ -324,6 +333,7 @@ const elementTypes = [
     label: "Compositie",
     kort: "◆",
     shape: "edge",
+    icoon: "compositie",
     isConnector: true,
     bron: { elementTypes: ["entiteit"] },
     doel: { elementTypes: ["gegevenselement"] },
@@ -334,6 +344,7 @@ const elementTypes = [
     label: "Generalisatie",
     kort: "▷",
     shape: "edge",
+    icoon: "generalisatie",
     isConnector: true,
     bron: { elementTypes: ["entiteit"] },
     doel: { elementTypes: ["entiteit"] },
@@ -351,6 +362,7 @@ const elementTypes = [
     label: "Gebruik («use»)",
     kort: "use",
     shape: "edge",
+    icoon: "gebruik",
     isConnector: true,
     bron: { elementTypes: ["entiteit", "gegevenselement", "relatie"] },
     doel: { elementTypes: ["enumeratie", "gegevenstype", "referentielijstInstantie"] },

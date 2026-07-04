@@ -47,8 +47,14 @@ import { UITLIJN_ICONEN } from "../../diagramcore/taskbar/uitlijnIcons.jsx";
 import { Taskbar, useTaakbalkVoorkeuren, leesTaakbalkVoorkeuren } from "../../diagramcore/taskbar/Taskbar.jsx";
 import ElementInspector from "../../diagramcore/inspector/ElementInspector.jsx";
 import { TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
+import { registreerIconenVocabulaire } from "../../diagramcore/shapes/iconenVocabulaire.jsx";
 
 const DiagramCanvas = lazy(() => import("../../diagramcore/canvas/DiagramCanvas.jsx"));
+
+// De integrale iconenset (vormgevingssessie §8.6a) — één keer registreren,
+// vóór de eerste TypeIcoon-render; alle 0.5-activiteiten lopen langs deze
+// fabriek, dus dit dekt taakbalken, elementen-browser én profiel-ontwerper.
+registreerIconenVocabulaire();
 
 const STANDAARD_TAAKBALK_DEFAULTS = {
   maken: { zichtbaar: true, positie: { x: 12, y: 12 } },
@@ -720,7 +726,7 @@ export function maakDiagramActiviteit(opties) {
 
     // Rechtsklik-contextmenu: zelfde acties als taakbalken/menu.
     const bouwContextMenu = useCallback(
-      ({ selectieAantal, connectorId }) => [
+      ({ selectieAantal, connectorId, nodeId }) => [
         { kop: true, label: "Uitlijnen" },
         ...UITLIJN_MODES.flatMap((m, i) => {
           const item = {
@@ -738,6 +744,45 @@ export function maakDiagramActiviteit(opties) {
           : []),
         { id: "normaliseer", label: "Normaliseer relaties", icoon: "↔", onClick: () => menuBus.emit(ev("normaliseer")) },
         { id: "snap", label: "Snap nodes naar grid", icoon: UITLIJN_ICONEN.snap, onClick: () => layoutApiRef.current?.snapRaster() },
+        // Rechtsklik op een element-node: z-order (L01) en gelijke maat (L02).
+        ...(nodeId
+          ? (() => {
+              const s = useStore.getState();
+              const zOrdes = Object.values(s.elements)
+                .map((el) => el.data?.zOrde || 0);
+              const items = [
+                { sep: true },
+                { kop: true, label: "Element" },
+                {
+                  id: "naar-voren",
+                  label: "Naar voorgrond",
+                  icoon: "⬆",
+                  onClick: () =>
+                    useStore.getState().updateElement(nodeId, {
+                      data: { zOrde: Math.max(0, ...zOrdes) + 1 },
+                    }),
+                },
+                {
+                  id: "naar-achteren",
+                  label: "Naar achtergrond",
+                  icoon: "⬇",
+                  onClick: () =>
+                    useStore.getState().updateElement(nodeId, {
+                      data: { zOrde: Math.min(0, ...zOrdes) - 1 },
+                    }),
+                },
+              ];
+              if (selectieAantal >= 2) {
+                items.push({
+                  id: "gelijke-maat",
+                  label: "Zelfde maat als dit element",
+                  icoon: "⧉",
+                  onClick: () => layoutApiRef.current?.maakGelijkeMaat(nodeId),
+                });
+              }
+              return items;
+            })()
+          : []),
         // Rechtsklik op een connector: lijnvorm per connector (§8.5c).
         ...(connectorId
           ? (() => {
@@ -758,6 +803,39 @@ export function maakDiagramActiviteit(opties) {
                       data: { vorm: vorm === "bezier" ? null : vorm },
                     }),
                 })),
+                // L03: uiteinden vastzetten (wint van de kortste weg; "auto"
+                // geeft het uiteinde weer vrij — normaliseren doet dat ook).
+                ...(() => {
+                  const conn = useStore.getState().elements[connectorId];
+                  const zijden = [
+                    ["top", "boven"],
+                    ["bottom", "onder"],
+                    ["left", "links"],
+                    ["right", "rechts"],
+                    [null, "automatisch"],
+                  ];
+                  const sectie = (kant, veld, prefix) => [
+                    { kop: true, label: `${kant}-uiteinde vastzetten` },
+                    ...zijden.map(([zijde, zijdeLabel]) => {
+                      const waarde = zijde ? `${prefix}-${zijde}` : null;
+                      const actief = (conn?.data?.[veld] || null) === waarde;
+                      return {
+                        id: `${veld}-${zijde || "auto"}`,
+                        label: zijdeLabel + (actief ? "  ✓" : ""),
+                        onClick: () =>
+                          useStore.getState().updateElement(connectorId, {
+                            data: { [veld]: waarde },
+                          }),
+                      };
+                    }),
+                  ];
+                  return [
+                    { sep: true },
+                    ...sectie("Bron", "sourceHandle", "source"),
+                    { sep: true },
+                    ...sectie("Doel", "targetHandle", "target"),
+                  ];
+                })(),
               ];
             })()
           : []),

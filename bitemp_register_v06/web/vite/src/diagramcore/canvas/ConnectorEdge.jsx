@@ -215,9 +215,17 @@ function ConnectorEdge({
         </>
       )}
 
-      {(p.labels || []).map((label, i) => {
+      {(() => {
+        // Meerdere labels op dezelfde zijde (bv. kardinaliteit + {ordered})
+        // zouden exact stapelen; zonder eigen offset schuiven volgende
+        // labels 18px omlaag zodat ze naast elkaar leesbaar blijven.
+        const stapel = {};
+        return (p.labels || []).map((label, i) => {
         const basis = posities[label.zijde] || posities.midden;
-        const off = sleep?.index === i ? sleep : label.offset || { x: 0, y: 0 };
+        const zijdeKey = label.zijde || "midden";
+        const stapelIdx = (stapel[zijdeKey] = (stapel[zijdeKey] ?? -1) + 1);
+        const eigen = sleep?.index === i ? sleep : label.offset;
+        const off = eigen || { x: 0, y: stapelIdx * 18 };
         const alleenNaam = label.delen?.length === 1 && label.delen[0].soort === "naam";
         return (
           <EdgeLabelRenderer key={i}>
@@ -241,7 +249,8 @@ function ConnectorEdge({
             </div>
           </EdgeLabelRenderer>
         );
-      })}
+        });
+      })()}
     </>
   );
 }

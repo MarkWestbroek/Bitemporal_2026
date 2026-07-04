@@ -51,6 +51,8 @@
   /* Ruim boven taakbalken/minimap/panelen — het menu opent op muispositie
      en mag nergens onder liggen. */
   z-index: 200;
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
   min-width: 210px;
   padding: 6px;
   background: var(--s-panel, #ffffff);

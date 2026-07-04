@@ -204,8 +204,13 @@ function CanvasBinnenkant({
           position: ref.position || { x: 0, y: 0 },
           // Grootte per diagram-lidmaatschap (metamodel: Position.elementSize)
           ...(ref.size ? { style: { width: ref.size.width, height: ref.size.height } } : {}),
-          // Achtergrond-elementen (boundaries/kaders) renderen ónder de rest
-          ...(elementType.achtergrond ? { zIndex: -1 } : {}),
+          // Achtergrond-elementen (boundaries/kaders) renderen ónder de rest;
+          // daarbinnen/daarbuiten telt de handmatige z-order (contextmenu).
+          ...(elementType.achtergrond
+            ? { zIndex: -1 }
+            : element.data?.zOrde
+              ? { zIndex: element.data.zOrde }
+              : {}),
           data: {
             element: verrijk(element, elementType),
             elementType,
@@ -466,7 +471,11 @@ function CanvasBinnenkant({
         (typeof doelwit?.id === "string" && doelwit.id.startsWith(ANKER_PREFIX)
           ? doelwit.id.slice(ANKER_PREFIX.length)
           : null);
-      const items = bouwContextMenu({ selectieAantal, connectorId });
+      // Gewone element-node (geen connector/anker): voor node-acties zoals
+      // z-order en "zelfde maat als deze".
+      const nodeId =
+        !connectorId && doelwit?.position && doelwit?.data?.element ? doelwit.id : null;
+      const items = bouwContextMenu({ selectieAantal, connectorId, nodeId });
       if (items?.length) setContextMenu({ x: ev.clientX, y: ev.clientY, items });
     },
     [bouwContextMenu, getNodes]
@@ -497,6 +506,16 @@ function CanvasBinnenkant({
         lijnUit: (mode) => {
           const selectie = getNodes().filter((n) => n.selected);
           pasToe(berekenUitlijning(mode, naarItems(selectie)));
+        },
+        /** Geselecteerde nodes dezelfde maat geven als de bron-node (L02). */
+        maakGelijkeMaat: (bronId) => {
+          const alle = getNodes();
+          const maat = alle.find((n) => n.id === bronId)?.measured;
+          if (!maat?.width || !onNodeSize) return;
+          for (const n of alle) {
+            if (!n.selected || n.id === bronId || n.id.startsWith(ANKER_PREFIX)) continue;
+            onNodeSize(n.id, { width: maat.width, height: maat.height });
+          }
         },
         /** Alle nodes op het raster. */
         snapRaster: (raster = 16) => {
