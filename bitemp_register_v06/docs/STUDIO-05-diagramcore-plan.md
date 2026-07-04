@@ -2,7 +2,11 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** trede 2 **conform het metamodel** + seed + inverse
+- **Status:** fase 0 t/m 5 + meta-editor afgerond; zie het **verslag**
+  [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
+  stand van zaken, open punten). Koers: eerst stabiel & compleet
+  (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
+  fase 7 (register). Laatste ronde: trede 2 **conform het metamodel** + seed + inverse
   (2026-07-04, feedback Mark: "in een compartiment zitten nog weer
   properties"): het ontwerp-profiel volgt nu ElementType ◆ CompartmentType ◆
   FieldType — **Compartimenttypen en Veldtypen zijn eigen nodes**, gekoppeld
@@ -806,21 +810,21 @@ pariteitslijst expliciet bij zodat de overstap toetsbaar is.
 Elke fase is afzonderlijk te bouwen op een eigen feature-branch, te verifiëren
 met `npm run build` + visuele check, en levert iets werkends op.
 
-- **Fase 0 — fundering (klein).** Besluiten over de open keuzes (§8). Optioneel
+- ✅ **Fase 0 — fundering (klein).** Besluiten over de open keuzes (§8). Optioneel
   vooraf: de opschoning uit de code review (gedeelde `apiBase`/`download*`-utils),
   zodat de nieuwe code schoon start. `// @ts-check` + JSDoc-typedefs aanzetten
   voor alles onder `diagramcore/` zodat het type-contract afdwingbaar is.
-- **Fase 1 — read-only bewijs.** `diagramcore` model + typeRegistry + generieke
+- ✅ **Fase 1 — read-only bewijs.** `diagramcore` model + typeRegistry + generieke
   `ElementNode` met `class-box`-shape; profiel `canoniek-uml` met alleen
   elementTypes/compartments; adapter die het bestaande model inleest; activiteit
   "Diagrammen (0.5)". **Klaar als:** een bestaand diagram er in de nieuwe motor
   (vrijwel) hetzelfde uitziet als in de oude.
-- **Fase 2 — bewerken.** Elementen maken/hernoemen/verwijderen via de
+- ✅ **Fase 2 — bewerken.** Elementen maken/hernoemen/verwijderen via de
   "Maken"-taakbalk, connectoren tekenen via de "Verbinding"-taakbalk (met
   verbindingsregels), het taakbalk-raamwerk zelf incl. `Beeld → Taakbalken ▸`
   (§4.6), velden bewerken via de gegenereerde inspector, undo/clipboard/
   multi-diagram. **Klaar als:** een klein model volledig in 0.5 te bouwen is.
-- **Fase 3 — connector-materialisatie & layout.** Het generieke ASOC-patroon
+- ✅ **Fase 3 — connector-materialisatie & layout.** Het generieke ASOC-patroon
   (connector-met-velden → node + 3 edges), generalisatie- en dependency-connectoren,
   uitlijnen/verdelen/snap-grid naar core (incl. de core-menu-items en het
   uitlijn-balkje), auto-layout als eerste `layouts`-strategie van het
@@ -828,18 +832,18 @@ met `npm run build` + visuele check, en levert iets werkends op.
   (eigen ElementType + `boundary`-shape, achter de elementen — §8.6b),
   validatie-hook. **Klaar als:**
   de canoniek-uml-weergave pariteit heeft met de oude editor op een referentiemodel.
-- **Fase 4 — serialisatie & persist.** Profiel-eigen import/export met hergebruik
+- ✅ **Fase 4 — serialisatie & persist.** (rest: rebuild vanuit 0.5) Profiel-eigen import/export met hergebruik
   van `editorNaarV3Model`/import-functies; opslaan/laden via de bestaande API.
   **Klaar als:** een V3-round-trip door de nieuwe motor byte-vergelijkbaar is
   (m.u.v. bekende volgorde-verschillen).
-- **Fase 5 — tweede profiel als lakmoesproef.** Voorstel: **puur UML** eerst
+- ✅ **Fase 5 — tweede profiel als lakmoesproef.** Voorstel: **puur UML** eerst
   (kleinste afstand: klasse, attribuut, operatie, associatie, generalisatie),
   daarna **OAS 3.1** (schemas als elementen, `$ref`s als connectoren). Pas hier
   blijkt of de abstractie klopt; verwacht: bijstellen van Field/CompartmentType.
-- **Fase 6 — omschakeling (aparte beslissing).** Pariteitschecklist aflopen,
+- ⬜ **Fase 6 — omschakeling (aparte beslissing).** Pariteitschecklist aflopen,
   oude `umlActivity` markeren als "klassiek", en pas na een gewenningsperiode
   opruimen. DRD en sequence-diagrammen: eerst een kort onderzoek (§8).
-- **Fase 7 (optioneel) — configuratie in het register.** De declaratieve kern van
+- ⬜ **Fase 7 (optioneel) — configuratie in het register.** (koppelvlak gevalideerd via de meta-editor, §8.9) De declaratieve kern van
   de descriptors verhuist naar een gegenereerd bitemporeel configuratie-register
   met API; de Studio laadt profielen daarvandaan, met frontend-caching en
   gebundelde fallback (uitwerking in §8.5). Pas zinvol na fase 5.

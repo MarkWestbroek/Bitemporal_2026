@@ -5,6 +5,10 @@
 > **Code review (2026-06-30):** zie [`STUDIO-code-review-2026-06-30.md`](STUDIO-code-review-2026-06-30.md)
 > voor bevindingen over onderhoudbaarheid, dubbelingen, veiligheid en toegankelijkheid.
 >
+> **Verslag Studio 0.5 (2026-07-04):** zie [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md)
+> voor het complete overzicht van fase 0 t/m de meta-editor (architectuur,
+> screenshots, stand van zaken).
+>
 > **Plan Studio 0.5 (2026-07-02):** zie [`STUDIO-05-diagramcore-plan.md`](STUDIO-05-diagramcore-plan.md)
 > voor het voorstel om de UML-editor te veralgemeniseren naar een configureerbare
 > diagram-kern (diagramcore + profielen), parallel naast de huidige versie.
@@ -258,6 +262,11 @@ fase 2 een **bewerkbare sandbox**:
 - **Lijnvormen**: edges kennen `presentatie.vorm` — bezier (default),
   hoekig (orthogonaal) of recht. Het puur-UML-profiel gebruikt hoekig voor
   de klassieke UML-look.
+- **Elementen-browser** (plan §8.8): onder de diagrammenlijst staat in elk
+  0.5-profiel een boom van álle model-elementen, gegroepeerd per elementtype,
+  met zoekveld. Klik = selecteren in de inspector; elementen die niet op het
+  actieve diagram staan zijn cursief/gedempt en hebben een ＋-knop om ze in
+  het zichtbare viewport-midden toe te voegen.
 - **Fabriek + tweede profiel (fase 5)**: de activiteit-mechaniek zit in
   `studio/activities/maakDiagramActiviteit.jsx` (descriptor + opties →
   complete activiteit; model-/V3-/API-koppeling optioneel). De activiteit

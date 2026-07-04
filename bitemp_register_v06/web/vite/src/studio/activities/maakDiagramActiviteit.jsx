@@ -391,6 +391,152 @@ export function maakDiagramActiviteit(opties) {
     );
   }
 
+  /**
+   * Elementen-browser (plan §8.8): alle model-elementen, gegroepeerd per
+   * elementtype — óók wat op geen enkel diagram staat (na een import het
+   * grootste gat). Klik = selecteren in de inspector; ＋ = toevoegen aan
+   * het actieve diagram (in het zichtbare viewport-midden).
+   */
+  function ElementenBrowser() {
+    const elements = useStore((s) => s.elements);
+    const diagrams = useStore((s) => s.diagrams);
+    const actiefDiagram = useStore((s) => s.actiefDiagramId);
+    const { selectieId, setSelectieId, layoutApiRef } = useContext(Ctx);
+    const [zoek, setZoek] = useState("");
+    const [dicht, setDicht] = useState({});
+
+    const opDiagram = new Set(
+      (diagrams[actiefDiagram]?.nodes || []).map((n) => n.elementId)
+    );
+    const term = zoek.trim().toLowerCase();
+    const groepen = descriptor.elementTypes
+      .map((et) => ({
+        et,
+        items: Object.values(elements)
+          .filter((el) => el.elementType === et.id)
+          .filter((el) => !term || (el.naam || el.id).toLowerCase().includes(term))
+          .sort((a, b) => (a.naam || a.id).localeCompare(b.naam || b.id)),
+      }))
+      .filter((g) => g.items.length > 0);
+
+    const voegToe = (el) => {
+      const midden = layoutApiRef.current?.viewportMidden?.() || { x: 200, y: 160 };
+      useStore.getState().addElementToDiagram(actiefDiagram, el.id, {
+        x: midden.x - 90,
+        y: midden.y - 50,
+      });
+      setSelectieId(el.id);
+    };
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", minHeight: 0, flex: 1 }}>
+        <div
+          style={{
+            padding: "6px 8px",
+            borderTop: "1px solid var(--s-border)",
+            borderBottom: "1px solid var(--s-border)",
+            display: "flex",
+            gap: 6,
+            alignItems: "center",
+          }}
+        >
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", color: "var(--s-fg-muted)" }}>
+            ELEMENTEN
+          </span>
+          <input
+            type="text"
+            value={zoek}
+            onChange={(e) => setZoek(e.target.value)}
+            placeholder="zoek…"
+            style={{
+              flex: 1,
+              minWidth: 0,
+              font: "inherit",
+              fontSize: 12,
+              padding: "2px 6px",
+              border: "1px solid var(--s-border)",
+              borderRadius: 6,
+              background: "var(--s-panel, transparent)",
+              color: "var(--s-fg)",
+            }}
+          />
+        </div>
+        <div style={{ flex: 1, overflow: "auto", padding: 6 }}>
+          {groepen.length === 0 && (
+            <p style={{ margin: 8, color: "var(--s-fg-muted)" }}>Geen elementen{term ? " gevonden" : ""}.</p>
+          )}
+          {groepen.map(({ et, items }) => (
+            <div key={et.id} style={{ marginBottom: 2 }}>
+              <div
+                onClick={() => setDicht((v) => ({ ...v, [et.id]: !v[et.id] }))}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "3px 6px",
+                  cursor: "pointer",
+                  color: "var(--s-fg-muted)",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  userSelect: "none",
+                }}
+              >
+                <span style={{ width: 10 }}>{dicht[et.id] ? "▸" : "▾"}</span>
+                <span style={{ flex: 1 }}>{et.label || et.id}</span>
+                <span>{items.length}</span>
+              </div>
+              {!dicht[et.id] &&
+                items.map((el) => {
+                  const zichtbaar = opDiagram.has(el.id);
+                  return (
+                    <div
+                      key={el.id}
+                      onClick={() => setSelectieId(el.id)}
+                      title={zichtbaar ? el.naam || el.id : `${el.naam || el.id} — niet op dit diagram`}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        padding: "2px 6px 2px 20px",
+                        borderRadius: 6,
+                        cursor: "pointer",
+                        color: zichtbaar ? "var(--s-fg)" : "var(--s-fg-muted)",
+                        background: el.id === selectieId ? "var(--s-hover)" : "transparent",
+                      }}
+                    >
+                      <span
+                        style={{
+                          flex: 1,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          fontStyle: zichtbaar ? undefined : "italic",
+                        }}
+                      >
+                        {el.naam || `(${el.id})`}
+                      </span>
+                      {!zichtbaar && !et.isConnector && actiefDiagram && (
+                        <button
+                          className="dc-mini-knop"
+                          title="Toevoegen aan het huidige diagram"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            voegToe(el);
+                          }}
+                        >
+                          ＋
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   function Sidebar() {
     const diagrams = useStore((s) => s.diagrams);
     const actief = useStore((s) => s.actiefDiagramId);
@@ -420,7 +566,7 @@ export function maakDiagramActiviteit(opties) {
             ＋ Nieuw diagram
           </button>
         </div>
-        <div style={{ flex: 1, overflow: "auto", padding: 6 }}>
+        <div style={{ maxHeight: "40%", overflow: "auto", padding: 6, flexShrink: 0 }}>
           {lijst.length === 0 && (
             <p style={{ margin: 8, color: "var(--s-fg-muted)" }}>
               Nog geen diagrammen — maak er een met ＋{heeftKoppeling ? ", of haal het UML-model op via ⟳" : ""}.
@@ -460,6 +606,7 @@ export function maakDiagramActiviteit(opties) {
             </div>
           ))}
         </div>
+        <ElementenBrowser />
         <div
           style={{
             padding: "6px 10px",
