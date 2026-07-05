@@ -35,7 +35,11 @@ implementatie.
   `--dc-canvas-achtergrond` en `--dc-label-achtergrond`.
 - **B5**: OAS-combinatoren als cirkelsymboliek — oneOf = 1 van 3 bolletjes
   gevuld, anyOf = 2 gevuld, allOf = venn-overlap gevuld.
-- **B6**: merk-iconen voor de activity bar in een aparte ronde.
+- **B6**: merk-iconen voor de activity bar in een aparte ronde — die ronde
+  is direct aansluitend gehouden (agendapunt 7 van het artifact): concept
+  **familie-embleem** per profiel (het kenmerkende vocabulaire-icoon op het
+  24-raster) met het gevulde accent als 0.5-kenmerk; klassieke activiteiten
+  blijven puur outline.
 - **Vocabulaire-principe**: zelfde concept = zelfde icoon-id; 28 iconen
   dekken ±33 elementtypen (Entiteit/Klasse delen `klasse`, drie Enums delen
   `enumeratie`).
@@ -71,6 +75,10 @@ donkere edge-labelchips en selectie `#818cf8`.
     edge-labels op tokens (+ `border-radius: 3` → `3px`-fix).
   - `web/vite/src/diagramcore/canvas/ConnectorEdge.jsx`: comment
     gelijkgetrokken met het marker-vulling-gedrag.
+  - `web/vite/src/studio/icons.jsx`: vijf 0.5-emblemen (`IconDiagram05`,
+    `IconUML05`, `IconOAS05`, `IconProfiel05`, `IconProfielOntwerp05`),
+    toegewezen in `diagramActivity`, `puurUmlActivity`, `oasActivity`,
+    `profielActivity`, `profielOntwerpActivity` en `profielRegistratie`.
   - Docs: `docs/STUDIO.md` (§Vormgeving), `docs/STUDIO-05-vormgeving-handover.md`
     (Uitkomst-sectie).
 - Frontend: alleen presentatie (iconen + tokenwaarden), geen gedrag.
@@ -79,7 +87,9 @@ donkere edge-labelchips en selectie `#818cf8`.
 
 ## Open punten
 
-- Activity-bar-iconen voor de vijf 0.5-activiteiten (B6, aparte ronde).
+- Dynamisch geregistreerde profielen (`profielRegistratie`) delen voorlopig
+  `IconProfiel05` met de vaste "Profiel (0.5)"-activiteit; een eigen embleem
+  per gegenereerd profiel is een latere trede.
 - Element-pastel-richtlijn (Tailwind 100/200, tekst donker) is beschreven
   maar bestaande kleuren zijn niet genormaliseerd.
 - Eigen tokenset per StyleType-id zodra er een tweede StyleType komt.
