@@ -6,7 +6,29 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **feedbackronde rust & OAS** (2026-07-05):
+  fase 7 (register). Laatste ronde: **knikpunten, packages & OAS-vervolg**
+  (2026-07-05): (1) **knikpunten op connectoren** — ctrl-klik op een lijn
+  voegt een knikpunt toe (`data.knikken` op het connector-element; polylijn
+  door de punten), slepen verplaatst, dubbelklikken wist er één, contextmenu
+  *Knikpunten wissen* wist alles; alleen op de directe gedaante (de
+  gematerialiseerde heeft het anker al als handvat); (2) het **zelf-lus-oortje
+  respecteert nu de lijnvorm**: *Hoekig* geeft rechte segmenten buitenom
+  (boven→rechts gaat om de hoek, zelfde zijde gaat langs de verste uitsteek,
+  zelfde punt wordt een rechthoekig oor; boven↔onder valt terug op de
+  kromme); (3) **OAS-import plaatst nu ook operaties bovenaan** — de
+  rijen/CRUD-layout is gedeeld (`oasRijenPosities` in oas31/index.js) tussen
+  de Auto-layout-knop en `vanOasDocument` (hoofd- én tag-diagrammen); (4) de
+  browser **verbergt naamloze connectoren** ("(oascon_ref_32)"-ruis na een
+  OAS-import); (5) **package als gewoon ElementType** (besluit
+  domeinen-vs-package): puur-uml en canoniek-uml kregen `package` +
+  `bevat`-connector ("plaatsing in" — een connector die je meestal níet
+  tekent), `DiagramType.hierarchie` accepteert nu een **lijstje**
+  (`["bevat", "compositie"]`; typeRegistry valideert per stuk, de
+  profiel-ontwerper bundelt meerdere isHierarchie-regels), en de
+  canoniek-adapter converteert **V3-domein ↔ package/bevat** beide kanten op
+  (bevat-connector wint bij de terugreis van het gespiegelde domein-veld;
+  nieuwe packages komen in de `domains`-lijst; packages/bevat staan bewust op
+  geen enkel diagram). Eerdere ronde: **feedbackronde rust & OAS** (2026-07-05):
   (1) tree-klik **centreert niet meer** — `focusNode` schuift het beeld alleen
   minimaal bij als de node (deels) buiten beeld valt ("net binnen het beeld
   trekken is voldoende"); (2) import *Over het huidige diagram heen* neemt

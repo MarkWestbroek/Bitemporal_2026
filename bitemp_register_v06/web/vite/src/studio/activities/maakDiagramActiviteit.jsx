@@ -620,9 +620,11 @@ export function maakDiagramActiviteit(opties) {
       (diagrams[actiefDiagram]?.nodes || []).map((n) => n.elementId)
     );
     const term = zoek.trim().toLowerCase();
-    // E01/P02: met een hierarchie-connectortype in de descriptor nesten we de
-    // niet-connector-elementen als boom (zoeken schakelt terug naar plat).
-    const boomModus = !!descriptor.hierarchie && !term;
+    // E01/P02: met één of meer hierarchie-connectortypen in de descriptor
+    // nesten we de niet-connector-elementen als boom (zoeken → plat).
+    // Meerdere typen (bv. ["bevat", "compositie"]): de paren stapelen.
+    const hierIds = [].concat(descriptor.hierarchie || []);
+    const boomModus = hierIds.length > 0 && !term;
     const kinderenVan = new Map();
     const heeftOuder = new Set();
     if (boomModus) {
@@ -636,7 +638,7 @@ export function maakDiagramActiviteit(opties) {
         heeftOuder.add(kind);
       };
       for (const el of Object.values(elements)) {
-        if (el.elementType !== descriptor.hierarchie || !el.source || !el.target) continue;
+        if (!hierIds.includes(el.elementType) || !el.source || !el.target) continue;
         voegPaar(el.source, el.target);
       }
       // Profiel-hook voor extra paren (bv. canoniek-uml: gespiegelde
@@ -660,6 +662,9 @@ export function maakDiagramActiviteit(opties) {
         et,
         items: Object.values(elements)
           .filter((el) => el.elementType === et.id)
+          // Naamloze connectoren ("(oascon_ref_32)" enz.) zijn ruis in de
+          // browser: ze zijn via hun uiteinden op de canvas te vinden.
+          .filter((el) => !et.isConnector || (el.naam || "").trim())
           .filter((el) => !term || (el.naam || el.id).toLowerCase().includes(term))
           .sort((a, b) => (a.naam || a.id).localeCompare(b.naam || b.id)),
       }))
@@ -1065,6 +1070,21 @@ export function maakDiagramActiviteit(opties) {
               const huidig = useStore.getState().elements[connectorId]?.data?.vorm || "bezier";
               return [
                 { sep: true },
+                // Knikpunten: toevoegen gaat met ctrl-klik óp de lijn; hier
+                // alleen het wissen.
+                ...(() => {
+                  const knikken = useStore.getState().elements[connectorId]?.data?.knikken || [];
+                  return knikken.length
+                    ? [
+                        {
+                          id: "knikken-wissen",
+                          label: `Knikpunten wissen (${knikken.length})`,
+                          onClick: () =>
+                            useStore.getState().updateElement(connectorId, { data: { knikken: [] } }),
+                        },
+                      ]
+                    : [];
+                })(),
                 { kop: true, label: "Lijnvorm" },
                 ...[
                   ["bezier", "Kromme (bezier)", "∿"],
@@ -1296,6 +1316,9 @@ export function maakDiagramActiviteit(opties) {
                       data: { labelOffsets: { ...(el.data?.labelOffsets || {}), [zijde]: offset } },
                     });
                   }}
+                  onKnikken={(connectorId, lijst) =>
+                    useStore.getState().updateElement(connectorId, { data: { knikken: lijst } })
+                  }
                   bouwContextMenu={bouwContextMenu}
                   onViewport={(vp) => useStore.getState().updateDiagramViewport(diagram.id, vp)}
                 />

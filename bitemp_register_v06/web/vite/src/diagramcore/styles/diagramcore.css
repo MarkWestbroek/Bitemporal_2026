@@ -487,6 +487,19 @@
   color: #991b1b;
 }
 
+
+/* === Knikpunten op connectoren (ctrl-klik) === */
+
+.dc-knik {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--dc-selectie, #2563eb);
+  border: 1.5px solid var(--dc-marker-vulling, #ffffff);
+  box-sizing: border-box;
+  cursor: grab;
+}
+
 /* === Minibrowser (VerwijzingsKiezer-popover) === */
 
 .dc-minibrowser {

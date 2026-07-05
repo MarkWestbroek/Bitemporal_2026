@@ -13,9 +13,11 @@
  *   paths → «operation»-elementen (method/pad/summary) met ref-connectoren
  *   naar de request- en response-schemas.
  *
- * Het resultaat krijgt één diagram ("componenten") met een eenvoudige
- * grid-plaatsing — geen auto-layout-afhankelijkheid.
+ * Het resultaat krijgt één diagram ("componenten"), geplaatst met de
+ * gedeelde rijen-layout (operaties bovenaan op CRUD-volgorde, schemas per
+ * $ref-afstand eronder) — hetzelfde beeld als de Auto-layout-knop.
  */
+import { oasRijenPosities } from "./index.js";
 
 /** "#/components/schemas/Persoon" → "Persoon" (anders null). */
 function refNaam(ref) {
@@ -183,26 +185,20 @@ export function vanOasDocument(doc) {
     if (elements[conn.target]) elements[conn.id] = conn;
   }
 
-  // ── Eén diagram met grid-plaatsing: schemas/enums boven, operaties onder ──
-  const PER_RIJ = 4;
-  const nodes = [];
-  const plaats = (ids, yStart) => {
-    ids.forEach((id, i) => {
-      nodes.push({
-        elementId: id,
-        position: { x: 60 + (i % PER_RIJ) * 320, y: yStart + Math.floor(i / PER_RIJ) * 260 },
-      });
-    });
-    return yStart + Math.ceil(ids.length / PER_RIJ) * 260;
-  };
+  // ── Eén diagram, geplaatst met de gedeelde rijen-layout: operaties
+  // bovenaan op CRUD-volgorde, schemas per $ref-afstand eronder (zelfde
+  // beeld als de Auto-layout-knop).
+  const alleEdges = Object.values(elements)
+    .filter((el) => el.source && el.target)
+    .map((el) => ({ source: el.source, target: el.target }));
+  const nietConnectorIds = Object.values(elements)
+    .filter((el) => !el.source && !el.target)
+    .map((el) => el.id);
   const schemaIds = Object.values(elements)
     .filter((el) => el.elementType === "schema" || el.elementType === "enum")
     .map((el) => el.id);
-  const operatieIds = Object.values(elements)
-    .filter((el) => el.elementType === "operatie")
-    .map((el) => el.id);
-  const yNa = plaats(schemaIds, 60);
-  plaats(operatieIds, yNa + 120);
+  const hoofdPosities = oasRijenPosities({ ids: nietConnectorIds, elements, edges: alleEdges });
+  const nodes = nietConnectorIds.map((eid) => ({ elementId: eid, position: hoofdPosities[eid] }));
 
   const diagrams = {
     componenten: { id: "componenten", naam: doc?.info?.title || "Componenten", nodes, edges: [] },
@@ -244,20 +240,9 @@ export function vanOasDocument(doc) {
         const t = elements[eid]?.elementType;
         return t === "schema" || t === "enum";
       });
-      const tagNodes = [];
-      tagSchemas.forEach((eid, i) => {
-        tagNodes.push({
-          elementId: eid,
-          position: { x: 60 + (i % PER_RIJ) * 320, y: 60 + Math.floor(i / PER_RIJ) * 260 },
-        });
-      });
-      const yOps = 60 + Math.ceil(tagSchemas.length / PER_RIJ) * 260 + 120;
-      opIds.forEach((eid, i) => {
-        tagNodes.push({
-          elementId: eid,
-          position: { x: 60 + (i % PER_RIJ) * 320, y: yOps + Math.floor(i / PER_RIJ) * 200 },
-        });
-      });
+      const tagIds = [...opIds, ...tagSchemas];
+      const tagPosities = oasRijenPosities({ ids: tagIds, elements, edges: alleEdges });
+      const tagNodes = tagIds.map((eid) => ({ elementId: eid, position: tagPosities[eid] }));
       diagrams[`tag_${tag}`] = { id: `tag_${tag}`, naam: `# ${tag}`, nodes: tagNodes, edges: [] };
     }
   }

@@ -107,6 +107,19 @@ const elementTypes = [
     compartments: [{ id: "attributen", label: null, fieldType: "attribuut" }],
   },
   {
+    // UML-package: de "grotere ordening" (nesting mag). De bevat-relatie is
+    // "plaatsing in": een gewone connector die je meestal níet tekent — de
+    // elementen-browser nest erlangs (DiagramType.hierarchie).
+    id: "package",
+    label: "Package",
+    kort: "PKG",
+    stereotype: "«package»",
+    shape: "class-box",
+    kleur: "#f1f5f9",
+    icoon: "package",
+    properties: [KLEUR_VELD],
+  },
+  {
     id: "notitie",
     label: "Notitie",
     kort: "NOT",
@@ -235,6 +248,19 @@ const elementTypes = [
       labels: [{ zijde: "midden", delen: [{ tekst: "«use»", soort: "constraint", kleur: "#7c3aed" }] }],
     },
   },
+  {
+    // Package-lidmaatschap: getekend als subtiele stippellijn, maar meestal
+    // alleen aanwezig als model-feit (boomordening in de browser).
+    id: "bevat",
+    label: "Bevat (package)",
+    kort: "pkg ∋",
+    shape: "edge",
+    icoon: "bevat",
+    isConnector: true,
+    bron: { elementTypes: ["package"] },
+    doel: { elementTypes: [...MET_DATATYPE, "package"] },
+    edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#94a3b8" },
+  },
 ];
 
 /** Zelfde kandidaat-vorm als canoniek-uml (waarde/label/icoon/groep/pad). */
@@ -273,6 +299,8 @@ export const puurUmlDiagramType = {
   // Zelfde StyleType als canoniek-uml: klassieke UML-pastels. Een eigen
   // tokenset is een §8.5b-punt (thema's per StyleType), geen fase 5-blokker.
   style: "uml-klassiek",
+  // Boomordening: eerst package-lidmaatschap ("plaatsing in").
+  hierarchie: "bevat",
   fieldTypes,
   elementTypes,
   referenceTypes,

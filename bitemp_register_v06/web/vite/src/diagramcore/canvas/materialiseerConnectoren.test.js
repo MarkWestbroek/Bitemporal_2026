@@ -305,3 +305,31 @@ test("kortste-weg gebruikt gemeten maten: brede lage node onder de bron → bott
   assert.equal(edges[0].sourceHandle, "source-bottom");
   assert.equal(edges[0].targetHandle, "target-top");
 });
+
+test("knikpunten op de connector-data komen mee op de kale edge", () => {
+  const elements = {
+    A: { id: "A", naam: "A", elementType: "knoop" },
+    B: { id: "B", naam: "B", elementType: "knoop" },
+    c1: {
+      id: "c1",
+      naam: "",
+      elementType: "kant",
+      source: "A",
+      target: "B",
+      compartimenten: [],
+      data: { knikken: [{ x: 100, y: 40 }] },
+    },
+  };
+  const diagram = {
+    nodes: [
+      { elementId: "A", position: { x: 0, y: 0 } },
+      { elementId: "B", position: { x: 300, y: 0 } },
+    ],
+  };
+  const elementTypesById = {
+    knoop: { id: "knoop" },
+    kant: { id: "kant", isConnector: true, bron: { elementTypes: ["knoop"] }, doel: { elementTypes: ["knoop"] } },
+  };
+  const { edges } = materialiseerConnectoren(elements, diagram, elementTypesById);
+  assert.deepEqual(edges[0].data.knikken, [{ x: 100, y: 40 }]);
+});

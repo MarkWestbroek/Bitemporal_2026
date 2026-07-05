@@ -257,9 +257,9 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       if (regel.data?.isHierarchie) groep.isHierarchie = true;
     });
 
-  let hierarchieConnector = null;
+  const hierarchieConnectoren = [];
   for (const [connectorId, { eerste, regels, isHierarchie }] of perConnectorType) {
-    if (isHierarchie && !hierarchieConnector) hierarchieConnector = connectorId;
+    if (isHierarchie) hierarchieConnectoren.push(connectorId);
     const d = eerste.data || {};
     const hooks = {};
     const properties = [{ key: "kleur", datatype: "colour" }];
@@ -299,7 +299,10 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
     id: slug(id),
     label: label || id,
     style: "uml-klassiek",
-    ...(hierarchieConnector ? { hierarchie: hierarchieConnector } : {}),
+    // 1 hierarchie-connector → string (compat), meerdere → lijstje.
+    ...(hierarchieConnectoren.length
+      ? { hierarchie: hierarchieConnectoren.length === 1 ? hierarchieConnectoren[0] : hierarchieConnectoren }
+      : {}),
     fieldTypes,
     elementTypes,
     taakbalken: [
@@ -478,7 +481,7 @@ export function ontwerpUitProfiel(descriptor) {
               doelKleur: p.kleur || "#64748b",
               metKardinaliteiten: props.some((pr) => pr.key === "bronKardinaliteit"),
               richtingOptie: props.some((pr) => pr.key === "directioneel"),
-              ...(descriptor.hierarchie === et.id ? { isHierarchie: true } : {}),
+              ...([].concat(descriptor.hierarchie || []).includes(et.id) ? { isHierarchie: true } : {}),
             },
           };
         }

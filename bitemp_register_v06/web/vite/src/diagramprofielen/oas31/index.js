@@ -254,6 +254,74 @@ const referenceTypes = [
   { id: "schema-ref", label: "Schema ($ref)" },
 ];
 
+/**
+ * Gedeelde rijen-layout (auto-layout én import-plaatsing): operaties op rij 0
+ * gesorteerd op CRUD (POST, GET, PUT, PATCH, DELETE, daarbinnen op pad),
+ * daarna per $ref-stap een rij naar beneden; wat nergens aan hangt komt op de
+ * onderste rij. Binnen een rij wordt per `perRij` elementen omgeslagen.
+ *
+ * @param {{ids: string[], elements: Record<string, any>, edges: {source: string, target: string}[], perRij?: number}} opties
+ * @returns {Record<string, {x: number, y: number}>} posities per element-id
+ */
+export function oasRijenPosities({ ids, elements, edges, perRij = 5 }) {
+  const idSet = new Set(ids);
+  const uitgaand = new Map();
+  for (const e of edges || []) {
+    if (!idSet.has(e.source) || !idSet.has(e.target)) continue;
+    if (!uitgaand.has(e.source)) uitgaand.set(e.source, []);
+    uitgaand.get(e.source).push(e.target);
+  }
+  const laag = new Map();
+  let rand = ids.filter((eid) => elements?.[eid]?.elementType === "operatie");
+  rand.forEach((eid) => laag.set(eid, 0));
+  let diepte = 0;
+  while (rand.length) {
+    diepte += 1;
+    const volgende = [];
+    for (const vanId of rand) {
+      for (const doel of uitgaand.get(vanId) || []) {
+        if (!laag.has(doel)) {
+          laag.set(doel, diepte);
+          volgende.push(doel);
+        }
+      }
+    }
+    rand = volgende;
+  }
+  const maxLaag = Math.max(0, ...laag.values());
+  for (const eid of ids) if (!laag.has(eid)) laag.set(eid, maxLaag + 1);
+
+  const perLaag = new Map();
+  for (const eid of ids) {
+    const l = laag.get(eid);
+    if (!perLaag.has(l)) perLaag.set(l, []);
+    perLaag.get(l).push(eid);
+  }
+  const CRUD = { post: 0, get: 1, put: 2, patch: 3, delete: 4 };
+  const posities = {};
+  let y = 60;
+  for (const l of [...perLaag.keys()].sort((a, b) => a - b)) {
+    const groep = perLaag.get(l);
+    if (l === 0) {
+      groep.sort((a, b) => {
+        const ea = elements?.[a]?.data || {};
+        const eb = elements?.[b]?.data || {};
+        const ra = CRUD[(ea.method || "").toLowerCase()] ?? 9;
+        const rb = CRUD[(eb.method || "").toLowerCase()] ?? 9;
+        if (ra !== rb) return ra - rb;
+        return (ea.pad || a).localeCompare(eb.pad || b);
+      });
+    } else {
+      groep.sort((a, b) => (elements?.[a]?.naam || a).localeCompare(elements?.[b]?.naam || b));
+    }
+    groep.forEach((eid, i) => {
+      posities[eid] = { x: 80 + (i % perRij) * 320, y: y + Math.floor(i / perRij) * 280 };
+    });
+    y += Math.ceil(groep.length / perRij) * 280 + 40;
+  }
+  return posities;
+}
+
 export const oas31DiagramType = {
   id: OAS31_ID,
   label: "OpenAPI 3.1",
@@ -280,64 +348,12 @@ export const oas31DiagramType = {
     {
       id: "oas-lagen",
       label: "Auto-layout",
-      run: ({ flowNodes, flowEdges, elements }) => {
-        const nodes = flowNodes.filter((n) => !n.hidden);
-        const idSet = new Set(nodes.map((n) => n.id));
-        const uitgaand = new Map();
-        for (const e of flowEdges || []) {
-          if (!idSet.has(e.source) || !idSet.has(e.target)) continue;
-          if (!uitgaand.has(e.source)) uitgaand.set(e.source, []);
-          uitgaand.get(e.source).push(e.target);
-        }
-        const laag = new Map();
-        let rand = nodes.filter((n) => n.type === "operatie").map((n) => n.id);
-        rand.forEach((id) => laag.set(id, 0));
-        let diepte = 0;
-        while (rand.length) {
-          diepte += 1;
-          const volgende = [];
-          for (const vanId of rand) {
-            for (const doel of uitgaand.get(vanId) || []) {
-              if (!laag.has(doel)) {
-                laag.set(doel, diepte);
-                volgende.push(doel);
-              }
-            }
-          }
-          rand = volgende;
-        }
-        const maxLaag = Math.max(0, ...laag.values());
-        for (const n of nodes) if (!laag.has(n.id)) laag.set(n.id, maxLaag + 1);
-
-        const perLaag = new Map();
-        for (const n of nodes) {
-          const l = laag.get(n.id);
-          if (!perLaag.has(l)) perLaag.set(l, []);
-          perLaag.get(l).push(n);
-        }
-        const CRUD = { post: 0, get: 1, put: 2, patch: 3, delete: 4 };
-        const posities = {};
-        for (const [l, groep] of perLaag) {
-          if (l === 0) {
-            groep.sort((a, b) => {
-              const ea = elements?.[a.id]?.data || {};
-              const eb = elements?.[b.id]?.data || {};
-              const ra = CRUD[(ea.method || "").toLowerCase()] ?? 9;
-              const rb = CRUD[(eb.method || "").toLowerCase()] ?? 9;
-              if (ra !== rb) return ra - rb;
-              return (ea.pad || a.id).localeCompare(eb.pad || b.id);
-            });
-          } else {
-            groep.sort((a, b) =>
-              (elements?.[a.id]?.naam || a.id).localeCompare(elements?.[b.id]?.naam || b.id)
-            );
-          }
-          groep.forEach((n, i) => {
-            posities[n.id] = { x: 80 + i * 320, y: 60 + l * 300 };
-          });
-        }
-        return posities;
-      },
+      run: ({ flowNodes, flowEdges, elements }) =>
+        oasRijenPosities({
+          ids: flowNodes.filter((n) => !n.hidden).map((n) => n.id),
+          elements,
+          edges: flowEdges || [],
+        }),
     },
   ],
 };

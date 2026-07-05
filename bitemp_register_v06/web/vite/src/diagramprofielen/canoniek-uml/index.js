@@ -294,6 +294,20 @@ const elementTypes = [
     compartments: [{ id: "eigenschappen", label: null, fieldType: "eigenschap" }],
   },
   {
+    // Package = het V3-domein als gewoon elementtype (geen core-concept).
+    // Het bevat-lidmaatschap is een connector die je meestal niet tekent;
+    // de elementen-browser ordent er de boom mee en de adapter vertaalt
+    // hem heen en terug naar het domein-veld van V3.
+    id: "package",
+    label: "Package (domein)",
+    kort: "PKG",
+    stereotype: "«package»",
+    shape: "class-box",
+    kleur: "#f1f5f9",
+    icoon: "package",
+    properties: [KLEUR_VELD],
+  },
+  {
     id: "notitie",
     label: "Notitie",
     kort: "NOT",
@@ -373,6 +387,27 @@ const elementTypes = [
       labels: [{ zijde: "midden", delen: [{ tekst: "«use»", soort: "constraint", kleur: "#7c3aed" }] }],
     },
   },
+  {
+    // Package-lidmaatschap ("plaatsing in"): meestal alleen een model-feit
+    // (boomordening, V3-domein), maar tekenbaar als subtiele stippellijn.
+    id: "bevat",
+    label: "Bevat (package)",
+    kort: "pkg ∋",
+    shape: "edge",
+    icoon: "bevat",
+    isConnector: true,
+    bron: { elementTypes: ["package"] },
+    doel: {
+      elementTypes: [
+        "entiteit",
+        "enumeratie",
+        "gegevenstype",
+        "referentielijstInstantie",
+        "package",
+      ],
+    },
+    edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#94a3b8" },
+  },
 ];
 
 /**
@@ -424,9 +459,9 @@ export const canoniekUmlDiagramType = {
   id: CANONIEK_UML_ID,
   label: "Canoniek datamodel",
   style: "uml-klassiek",
-  // P02: de compositie (ENT ◆ GE) is de bevat-relatie — de
-  // elementen-browser nest gegevenselementen onder hun entiteit.
-  hierarchie: "compositie",
+  // P02: eerst package-lidmaatschap (domein), daarna de compositie
+  // (ENT ◆ GE) — de browser toont packages → entiteiten → gegevenselementen.
+  hierarchie: ["bevat", "compositie"],
   hooks: {
     /**
      * Gespiegelde composities uit het oude model zijn presentatie-edges
@@ -505,6 +540,7 @@ export function maakElement(elementTypeId) {
     element.data.tekst = "";
   }
   if (et.id === "constraint") element.data.expressie = "";
+  if (et.id === "package") element.naam = "NieuwPackage";
   return element;
 }
 

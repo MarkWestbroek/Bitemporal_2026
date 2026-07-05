@@ -322,9 +322,44 @@ test("V3-route: generalisatie (erft) overleeft ook een tweede export", () => {
 test("V3-route: import zonder overzicht-entry reconstrueert zoals voorheen", () => {
   // Oude-IDE-export (geen diagrammen-entry met id "overzicht"): de default
   // wordt afgeleid met alle elementen — bestaand gedrag blijft intact.
+  // Packages en bevat-connectoren (uit de V3-domeinen) zijn bewust
+  // model-only en tellen niet mee als canvas-nodes.
   const core = importeerV3(demoV3Model);
-  const aantalElementen = Object.keys(core.elements).length;
+  const aantalElementen = Object.values(core.elements).filter(
+    (el) => el.elementType !== "package" && el.elementType !== "bevat"
+  ).length;
   assert.ok(core.diagrams.overzicht.nodes.length >= aantalElementen - 1);
+});
+
+test("packages: V3-domein ↔ package/bevat, verhangen wint bij de terugreis", () => {
+  const bron = {
+    elements: {
+      E1: {
+        id: "E1",
+        naam: "E1",
+        type: "entiteit",
+        domein: "kern",
+        data: { typenaam: "E1", velden: [] },
+      },
+    },
+    structuralEdges: [],
+    diagrams: {},
+  };
+  const core = vanCanoniekModel(bron);
+  const pkg = Object.values(core.elements).find((el) => el.elementType === "package");
+  const bevat = Object.values(core.elements).find((el) => el.elementType === "bevat");
+  assert.equal(pkg?.naam, "kern", "domein wordt een package-element");
+  assert.equal(bevat?.source, pkg.id);
+  assert.equal(bevat?.target, "E1");
+
+  // Verhangen in 0.5: bevat wijst naar een nieuw package → de terugreis
+  // volgt de connector, niet het gespiegelde domein-veld.
+  core.elements.pkg2 = { id: "pkg2", naam: "anders", elementType: "package", compartimenten: [], data: {} };
+  core.elements[bevat.id] = { ...bevat, source: "pkg2" };
+  const terug = naarCanoniekModel(core);
+  assert.equal(terug.elements.E1.domein, "anders");
+  assert.ok(terug.domains.includes("anders"), "nieuw package komt in de domains-lijst");
+  assert.ok(!terug.overgeslagen.length, "package/bevat horen niet bij 'overgeslagen'");
 });
 
 test("gegevenstype: validatie/normalisatie/weergave zijn bewerkbaar en winnen van de bron", () => {

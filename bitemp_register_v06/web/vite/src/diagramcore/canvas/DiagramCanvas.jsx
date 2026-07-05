@@ -121,6 +121,7 @@ function CanvasBinnenkant({
   onNormaliseer,
   onViewport,
   onLabelOffset,
+  onKnikken,
   layoutApiRef,
   bouwContextMenu,
 }) {
@@ -340,10 +341,17 @@ function CanvasBinnenkant({
       // Sleepbare labels (vgl. 0.2): de edge meldt de nieuwe offset per
       // zijde; de activiteit bewaart hem op het connector-element.
       data:
-        bewerkbaar && onLabelOffset && e.data?.connectorId
+        bewerkbaar && e.data?.connectorId
           ? {
               ...e.data,
-              onLabelOffset: (zijde, offset) => onLabelOffset(e.data.connectorId, zijde, offset),
+              ...(onLabelOffset
+                ? { onLabelOffset: (zijde, offset) => onLabelOffset(e.data.connectorId, zijde, offset) }
+                : {}),
+              // Knikpunten alleen op de directe gedaante (daar zet de
+              // materialisatie het knikken-veld, evt. null).
+              ...(onKnikken && e.data.knikken !== undefined
+                ? { onKnikken: (lijst) => onKnikken(e.data.connectorId, lijst) }
+                : {}),
             }
           : e.data,
     }));
@@ -352,7 +360,7 @@ function CanvasBinnenkant({
       const geselecteerd = new Set(huidige.filter((e) => e.selected).map((e) => e.id));
       return flowEdges.map((e) => (geselecteerd.has(e.id) ? { ...e, selected: true } : e));
     });
-  }, [diagram, gematerialiseerd, bewerkbaar, setEdges, onLabelOffset, maten]);
+  }, [diagram, gematerialiseerd, bewerkbaar, setEdges, onLabelOffset, onKnikken, maten]);
 
   const handleSelectionChange = useCallback(
     ({ nodes: sel, edges: selEdges }) => {

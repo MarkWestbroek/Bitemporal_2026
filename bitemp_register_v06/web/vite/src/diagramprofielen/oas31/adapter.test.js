@@ -5,6 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { vanOasDocument } from "./adapter.js";
+import { oasRijenPosities } from "./index.js";
 
 const doc = {
   openapi: "3.1.0",
@@ -202,4 +203,38 @@ test("oas-terugreis: naarOasDocument reconstrueert schemas, refs, allOf en paths
   assert.deepEqual(post.requestBody.content["application/json"].schema, {
     $ref: "#/components/schemas/Persoon",
   });
+});
+
+test("oasRijenPosities: operaties op rij 0 in CRUD-volgorde, schemas eronder", () => {
+  const elements = {
+    opDel: { id: "opDel", elementType: "operatie", naam: "del", data: { method: "DELETE", pad: "/x" } },
+    opPost: { id: "opPost", elementType: "operatie", naam: "post", data: { method: "POST", pad: "/x" } },
+    sch: { id: "sch", elementType: "schema", naam: "S", data: {} },
+  };
+  const pos = oasRijenPosities({
+    ids: ["opDel", "opPost", "sch"],
+    elements,
+    edges: [{ source: "opPost", target: "sch" }],
+  });
+  assert.equal(pos.opPost.y, pos.opDel.y, "operaties delen rij 0");
+  assert.ok(pos.opPost.x < pos.opDel.x, "POST staat links van DELETE (CRUD)");
+  assert.ok(pos.sch.y > pos.opPost.y, "schema staat onder de operaties");
+});
+
+test("vanOasDocument: operaties staan boven de schemas in het componenten-diagram", () => {
+  const core = vanOasDocument(doc);
+  const posities = Object.fromEntries(
+    core.diagrams.componenten.nodes.map((n) => [n.elementId, n.position])
+  );
+  const opY = Math.max(
+    ...Object.values(core.elements)
+      .filter((el) => el.elementType === "operatie")
+      .map((el) => posities[el.id].y)
+  );
+  const schemaMinY = Math.min(
+    ...Object.values(core.elements)
+      .filter((el) => el.elementType === "schema" && posities[el.id])
+      .map((el) => posities[el.id].y)
+  );
+  assert.ok(opY < schemaMinY, `operaties (y<=${opY}) horen boven de schemas (y>=${schemaMinY})`);
 });

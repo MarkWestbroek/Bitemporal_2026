@@ -142,6 +142,10 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
         targetHandle: el.data?.targetHandle || `target-${besteZijde(doelMid, bronMid)}`,
         data: {
           connectorId: el.id,
+          // Handmatige knikpunten (ctrl-klik; alleen in deze directe gedaante —
+          // de gematerialiseerde gedaante heeft het anker al als handvat).
+          knikken:
+            Array.isArray(el.data?.knikken) && el.data.knikken.length ? el.data.knikken : null,
           presentatie: {
             ...basisPresentatie,
             // Per-connector lijnvorm (contextmenu) wint van het type-default.
