@@ -10,7 +10,7 @@
  *   descriptor-kern en registreert hem live — zelfde kanaal als trede 1,
  *   dus daarna ook zichtbaar/bij te schaven in "Profiel (0.5)".
  */
-import { IconDiagram } from "../icons";
+import { IconProfielOntwerp05 } from "../icons";
 import useStudioStore from "../useStudioStore";
 import { vervangDiagramType, getDiagramType, alleDiagramTypes } from "../../diagramcore/types/typeRegistry.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
@@ -31,7 +31,7 @@ vervangDiagramType(descriptor);
 export default maakDiagramActiviteit({
   id: "profielOntwerp05",
   label: "Profiel-ontwerp (0.5)",
-  icon: <IconDiagram />,
+  icon: <IconProfielOntwerp05 />,
   descriptor,
   maakElement: maakGeneriekeMaakElement(descriptor),
   persistKey: "studio05-profiel-ontwerp",

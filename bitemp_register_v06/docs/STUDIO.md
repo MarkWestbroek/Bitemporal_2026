@@ -273,8 +273,14 @@ fase 2 een **bewerkbare sandbox**:
   `shapes/iconenVocabulaire.jsx`: 28 iconen (outline + één gevuld accent,
   14×14, currentColor) die alle elementtypen van de vier profielen dekken;
   gedeelde concepten delen een icoon-id (Entiteit en Klasse → `klasse`).
-  Let op: het 0.5-canvas tekent op `.studio-paper` (bewust wit in beide
-  thema's), dus canvas-/marker-/label-tokens hebben géén donker-variant.
+  Het 0.5-canvas **volgt het studio-thema** (`dc-canvasvlak`, sessiebesluit
+  2026-07-05): donker canvas met lichte pastel-kaarten; alleen de
+  third-party-canvassen (bpmn/dmn-js) houden het vaste witte
+  `.studio-paper`. De **activity bar** draagt sinds dezelfde sessie eigen
+  0.5-emblemen (`studio/icons.jsx`: `IconDiagram05`, `IconUML05`,
+  `IconOAS05`, `IconProfiel05`, `IconProfielOntwerp05`) — familie-embleem
+  per profiel, met het ene gevulde accent als 0.5-kenmerk naast de puur
+  outline-getekende klassieke activiteiten.
 - **Elementen-browser** (plan §8.8): onder de diagrammenlijst staat in elk
   0.5-profiel een boom van álle model-elementen, met zoekveld. Wijst de
   descriptor een **hiërarchie-connectortype** aan (`hierarchie:
@@ -402,8 +408,7 @@ fase 2 een **bewerkbare sandbox**:
 - Nog niet (bekend): rebuild vanuit 0.5, clipboard,
   validatie-hook, domein-overlay, eigen tokensets per StyleType-id
   (plan §8.5b — het register bestaat; zolang "uml-klassiek" de enige is,
-  ís de default die set), merk-iconen voor de activity bar (aparte ronde,
-  besluit B6 vormgevingssessie), overerving in de gespiegelde weergave
+  ís de default die set), overerving in de gespiegelde weergave
   (generalisaties uit het oude model zijn daar nog presentatie-edges),
   YAML-export en oneOf/anyOf in het OAS-profiel.
   Het incidentele **transient lege canvas** is vermoedelijk opgelost

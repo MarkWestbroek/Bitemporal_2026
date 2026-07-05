@@ -86,6 +86,66 @@ export const IconDiagram = (p) => (
   </svg>
 );
 
+/* ── 0.5-familie (vormgevingssessie 2026-07-05, agendapunt 7) ─────────────
+   Elk 0.5-profiel draagt zijn familie-embleem: het kenmerkende taakbalk-
+   icoon uit diagramcore/shapes/iconenVocabulaire.jsx, hertekend op het
+   24-raster. Familiekenmerk: precies één gevuld vlak in currentColor —
+   klassieke activiteiten blijven puur outline (gevuld = 0.5). */
+const vul = { fill: "currentColor", stroke: "none" };
+
+/* Diagrammen (0.5): mini-datamodel, accent = compositie-ruit ◆. */
+export const IconDiagram05 = (p) => (
+  <svg {...base} {...p}>
+    <rect x="3" y="3" width="9" height="7" rx="1" />
+    <line x1="3" y1="6" x2="12" y2="6" />
+    <rect x="14" y="15" width="7" height="6" rx="1" />
+    <path d="M7.5 10v5.5a2.5 2.5 0 0 0 2.5 2.5h0.8" />
+    <path d="M14 18 12.4 16.6 10.8 18 12.4 19.4Z" {...vul} />
+  </svg>
+);
+
+/* UML (0.5): klasse met gevulde kopbalk + open generalisatie-driehoek ▷. */
+export const IconUML05 = (p) => (
+  <svg {...base} {...p}>
+    <rect x="3" y="3" width="11" height="9" rx="1" />
+    <path d="M3 6.5V4a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v2.5Z" {...vul} />
+    <line x1="5" y1="9.5" x2="11" y2="9.5" />
+    <line x1="4.5" y1="19" x2="13.5" y2="19" />
+    <path d="M13.5 15.8 19.5 19 13.5 22.2Z" />
+  </svg>
+);
+
+/* OAS (0.5): schema-accolade, accent = de property-keys. */
+export const IconOAS05 = (p) => (
+  <svg {...base} {...p}>
+    <path d="M9.5 3.5c-2.7 0-1.3 5.4-4.2 8 2.9 2.6 1.5 8 4.2 8" />
+    <circle cx="13" cy="9" r="1.4" {...vul} />
+    <line x1="16" y1="9" x2="20.5" y2="9" />
+    <circle cx="13" cy="15" r="1.4" {...vul} />
+    <line x1="16" y1="15" x2="20.5" y2="15" />
+  </svg>
+);
+
+/* Profiel (0.5): register van gestapelde kaders, accent = de naam-tab. */
+export const IconProfiel05 = (p) => (
+  <svg {...base} {...p}>
+    <path d="M8 6V4.5A1.5 1.5 0 0 1 9.5 3h10A1.5 1.5 0 0 1 21 4.5v10a1.5 1.5 0 0 1-1.5 1.5H18" />
+    <rect x="3" y="7" width="14" height="13" rx="1.5" />
+    <path d="M3 11.5V8.5A1.5 1.5 0 0 1 4.5 7H9v4.5Z" {...vul} />
+  </svg>
+);
+
+/* Profiel-ontwerp (0.5): elementtype-stencil (gevuld sjabloonblok) + afgeleide. */
+export const IconProfielOntwerp05 = (p) => (
+  <svg {...base} {...p}>
+    <rect x="3.5" y="3" width="13" height="10.5" rx="1" />
+    <rect x="6" y="5.5" width="5" height="3.5" rx="0.7" {...vul} />
+    <line x1="6" y1="11" x2="14" y2="11" />
+    <line x1="10" y1="13.5" x2="10" y2="16.5" />
+    <rect x="6.5" y="16.5" width="7" height="4.5" rx="0.8" />
+  </svg>
+);
+
 /**
  * OmniumMark — het productmerk-logo (de "O" als orbit met facet-knooppunten rond
  * een centrale hub). Eigen kleurstijl (gradient-spectrum), los van de currentColor-

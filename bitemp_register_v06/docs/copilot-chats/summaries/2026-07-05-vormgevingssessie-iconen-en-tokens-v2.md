@@ -46,11 +46,15 @@ Eén gevuld vlak per icoon geeft op 12–14 px méér onderscheid dan puur
 outline (het accent is een herkenningssignaal per type) zonder de
 thema-onafhankelijkheid van currentColor op te geven. Uniform de kopbalk
 vullen zou het accent betekenisloos maken en negen bijna identieke doosjes
-opleveren. Tijdens implementatie bleek bovendien dat het 0.5-canvas op
-`.studio-paper` tekent — **bewust wit in beide thema's** (net als BPMN/DMN).
-Daarom hebben canvas-/marker-/label-tokens en de selectiekleur géén
-donker-variant; het v1-donker `marker-vulling: #e2e8f0` (waardoor ◇ als ◆
-oogde) is vervallen.
+opleveren.
+
+**Nagekomen canvasbesluit**: tijdens implementatie bleek het 0.5-canvas op
+`.studio-paper` te tekenen — vast wit in beide thema's, een erfenis van de
+bpmn/dmn-wrapper (third-party, geen donker thema). Dat was Mark nooit als
+keuze voorgelegd; hij wil het donkere thema wél op het eigen canvas. De
+fabriek gebruikt nu `dc-canvasvlak` (volgt `--s-canvas`), met donkere
+token-varianten: marker-vulling = canvaskleur (fixt "◇ oogt als ◆"),
+donkere edge-labelchips en selectie `#818cf8`.
 
 ## Gewijzigde onderdelen
 
@@ -58,7 +62,8 @@ oogde) is vervallen.
   - `web/vite/src/diagramcore/shapes/iconenVocabulaire.jsx` (nieuw): de 28
     iconen + `registreerIconenVocabulaire()`.
   - `web/vite/src/studio/activities/maakDiagramActiviteit.jsx`: registratie
-    bij module-load (dekt alle 0.5-activiteiten).
+    bij module-load (dekt alle 0.5-activiteiten) + canvas-wrapper van
+    `.studio-paper` naar `.dc-canvasvlak` (themavolgend).
   - `icoon`-ids op de elementtypen in `diagramprofielen/canoniek-uml`,
     `diagramprofielen/puur-uml`, `diagramprofielen/oas31` en
     `studio/activities/profielOntwerp.js`.
@@ -78,9 +83,8 @@ oogde) is vervallen.
 - Element-pastel-richtlijn (Tailwind 100/200, tekst donker) is beschreven
   maar bestaande kleuren zijn niet genormaliseerd.
 - Eigen tokenset per StyleType-id zodra er een tweede StyleType komt.
-- De donkere "0..1 (enkelvoudig)"-chips boven node-koppen zijn bestaande
-  styling (los van deze sessie) — eventueel later meenemen in een
-  papier-contrastronde.
+- De React Flow-minimap en -controls blijven licht op het donkere canvas
+  (eigen componentstijl) — kandidaat voor een kleine contrastronde.
 
 ## Volgende stap
 

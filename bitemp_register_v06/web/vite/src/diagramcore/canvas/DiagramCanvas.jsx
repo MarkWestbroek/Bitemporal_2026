@@ -29,6 +29,7 @@ import {
   useEdgesState,
   useReactFlow,
   useStore as useRFStore,
+  useStoreApi,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import "../styles/diagramcore.css";
@@ -124,7 +125,8 @@ function CanvasBinnenkant({
   bouwContextMenu,
 }) {
   const lookups = useMemo(() => bouwLookups(diagramType), [diagramType]);
-  const { getNodes, screenToFlowPosition, setCenter, getZoom } = useReactFlow();
+  const { getNodes, screenToFlowPosition, getViewport, setViewport } = useReactFlow();
+  const rfStoreApi = useStoreApi();
   // Contextmenu (rechtsklik): positie in schermcoördinaten, of null.
   const [contextMenu, setContextMenu] = useState(null);
   useEffect(() => {
@@ -506,17 +508,36 @@ function CanvasBinnenkant({
           const selectie = getNodes().filter((n) => n.selected);
           pasToe(berekenUitlijning(mode, naarItems(selectie)));
         },
-        /** Selecteer een node op het canvas en centreer erop (tree-klik). */
+        /**
+         * Selecteer een node op het canvas (tree-klik). Alleen als hij
+         * (deels) buiten beeld valt wordt het beeld minimaal bijgeschoven —
+         * centreren op elke klik gaf te veel onrust.
+         */
         focusNode: (elementId) => {
           const n = getNodes().find((x) => x.id === elementId);
           if (!n) return;
           setNodes((huidige) => huidige.map((x) => ({ ...x, selected: x.id === elementId })));
+          const { width, height } = rfStoreApi.getState();
+          const vp = getViewport();
           const w = n.measured?.width ?? 200;
           const h = n.measured?.height ?? 80;
-          setCenter(n.position.x + w / 2, n.position.y + h / 2, {
-            zoom: getZoom(),
-            duration: 300,
-          });
+          const marge = 32;
+          const links = n.position.x * vp.zoom + vp.x;
+          const boven = n.position.y * vp.zoom + vp.y;
+          const rechts = links + w * vp.zoom;
+          const onder = boven + h * vp.zoom;
+          let dx = 0;
+          let dy = 0;
+          if (links < marge) dx = marge - links;
+          else if (rechts > width - marge) dx = width - marge - rechts;
+          if (boven < marge) dy = marge - boven;
+          else if (onder > height - marge) dy = height - marge - onder;
+          // Node groter dan het beeld: lijn de linker-/bovenkant uit.
+          if (w * vp.zoom > width - 2 * marge) dx = marge - links;
+          if (h * vp.zoom > height - 2 * marge) dy = marge - boven;
+          if (dx || dy) {
+            setViewport({ x: vp.x + dx, y: vp.y + dy, zoom: vp.zoom }, { duration: 200 });
+          }
         },
         /** Geselecteerde nodes dezelfde maat geven als de bron-node (L02). */
         maakGelijkeMaat: (bronId) => {

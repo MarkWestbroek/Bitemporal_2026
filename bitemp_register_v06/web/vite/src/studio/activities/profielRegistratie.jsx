@@ -3,7 +3,7 @@
  * visuele profiel-ontwerper (trede 2, diagram): descriptor-kern → live
  * geregistreerde activiteit, plus de localStorage-opslag van eigen profielen.
  */
-import { IconDiagram } from "../icons";
+import { IconProfiel05 } from "../icons";
 import { registreerActiviteit } from "../activityRegistry";
 import { vervangDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
@@ -44,7 +44,7 @@ export function registreerProfielAlsActiviteit(kern) {
     maakDiagramActiviteit({
       id: activiteitId,
       label: kern.label || kern.id,
-      icon: <IconDiagram />,
+      icon: <IconProfiel05 />,
       descriptor,
       maakElement: maakGeneriekeMaakElement(descriptor),
       persistKey: `studio05-dyn-${kern.id}`,

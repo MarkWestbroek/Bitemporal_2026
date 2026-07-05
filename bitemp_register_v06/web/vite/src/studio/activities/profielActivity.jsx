@@ -12,7 +12,7 @@
  * een herlaad overleven.
  */
 import { useCallback, useContext, useState, createContext } from "react";
-import { IconReferentielijst } from "../icons";
+import { IconProfiel05 } from "../icons";
 import useStudioStore from "../useStudioStore";
 import { valideerDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { HOOK_CATALOGUS, vertaalHooks, LEEG_SJABLOON, GRAAF_DEMO } from "./profielGereedschap.js";
@@ -287,7 +287,7 @@ function ProfielInspector() {
 export default {
   id: "profiel05",
   label: "Profiel (0.5)",
-  icon: <IconReferentielijst />,
+  icon: <IconProfiel05 />,
   groep: "modelleren",
   status: "preview",
   Provider: ProfielProvider,

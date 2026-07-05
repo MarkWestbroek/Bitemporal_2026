@@ -18,16 +18,31 @@ zijn geïmplementeerd. Samenvatting:
   (`#4f46e5`); marker-vulling = canvaskleur + nieuwe tokens
   `--dc-canvas-achtergrond`/`--dc-label-achtergrond`; OAS-trio als
   cirkelsymboliek (oneOf = 1 van 3 gevuld, anyOf = 2, allOf = venn-overlap);
-  activity-bar-iconen in een **aparte ronde** (nog open).
+  activity-bar-iconen in een aparte ronde.
+- **B6-ronde (2026-07-05, uitgevoerd)**: de vijf 0.5-activiteiten dragen nu
+  een **familie-embleem** — het kenmerkende vocabulaire-icoon van het
+  profiel op het 24-raster (stroke 1.7), met het ene gevulde accent als
+  0.5-kenmerk (klassieke activiteiten blijven puur outline). Registraties:
+  `studio/icons.jsx` → `IconDiagram05` (mini-datamodel, ◆), `IconUML05`
+  (klasse + open ▷), `IconOAS05` (accolade + property-keys),
+  `IconProfiel05` (gestapelde kaders + naam-tab), `IconProfielOntwerp05`
+  (stencil + afgeleide). Daarmee zijn de eerdere botsingen weg (drie
+  activiteiten deelden IconDiagram; UML (0.5) was gelijk aan UML-model,
+  OAS (0.5) aan API's). Dynamisch geregistreerde profielen
+  (`profielRegistratie`) delen voorlopig `IconProfiel05`.
 - **Geïmplementeerd**: `diagramcore/shapes/iconenVocabulaire.jsx`
   (28 iconen, geregistreerd via `maakDiagramActiviteit`), `icoon`-ids op de
   elementtypen van canoniek-uml, puur-uml, oas31 en profiel-ontwerp
   (gedeelde concepten delen een id: Entiteit/Klasse → `klasse`), en
   **tokens v2** bovenin `diagramcore/styles/diagramcore.css`.
-- **Leerpunt**: het 0.5-canvas tekent op `.studio-paper` — bewust **wit in
-  beide thema's**. Canvas-/marker-/label-tokens en de selectiekleur hebben
-  daarom géén donker-variant; het eerdere donker-`marker-vulling: #e2e8f0`
-  (waardoor ◇ gevuld oogde) is daarmee vervallen.
+- **Canvasbesluit (nagekomen, 2026-07-05)**: het 0.5-canvas stond tot deze
+  sessie op `.studio-paper` (vast wit, zoals bpmn/dmn-js — die zijn
+  third-party en kennen geen donker thema). Mark wil dat het donkere thema
+  zich wél uitstrekt tot het eigen canvas: de fabriek zet nu `dc-canvasvlak`
+  op de canvas-wrapper en de tokens hebben donker-varianten
+  (canvas volgt `--s-canvas`, marker-vulling = canvaskleur, donkere
+  labelchips, selectie `#818cf8`) — "lichte pastel-kaarten op donker
+  canvas", conform de proefopzet.
 - **Nog open**: element-pastel-richtlijn is beschreven maar niet
   genormaliseerd (huidige kleuren blijven), eigen tokenset per StyleType-id
   blijft wachten tot er een tweede StyleType is, activity-bar-iconen (B6).

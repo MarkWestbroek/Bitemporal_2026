@@ -4,7 +4,7 @@
  * verder niets — zie diagramprofielen/oas31/.
  */
 import { parse as parseYaml, stringify as naarYaml } from "yaml";
-import { IconAPI } from "../icons";
+import { IconOAS05 } from "../icons";
 import { registreerOas31, oas31DiagramType, maakElement } from "../../diagramprofielen/oas31/index.js";
 import { vanOasDocument, naarOasDocument } from "../../diagramprofielen/oas31/adapter.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
@@ -14,7 +14,7 @@ registreerOas31();
 export default maakDiagramActiviteit({
   id: "oas05",
   label: "OAS (0.5)",
-  icon: <IconAPI />,
+  icon: <IconOAS05 />,
   descriptor: oas31DiagramType,
   maakElement,
   persistKey: "studio05-oas31",
