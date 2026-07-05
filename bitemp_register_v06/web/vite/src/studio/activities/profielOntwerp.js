@@ -50,7 +50,10 @@ export const profielOntwerpKern = {
         { key: "kort", label: "korte code (taakbalk)", datatype: "string" },
         { key: "shape", label: "shape (class-box/bol/note/boundary)", datatype: "string" },
         { key: "doelKleur", label: "kleur van het type", datatype: "colour" },
-        { key: "stereotype", label: "stereotype («…»)", datatype: "string" },
+        // Niet "stereotype": dat dataveld is de generieke per-element
+        // weergave-override (ClassBox toont hem), waardoor de ET-node zelf
+        // ineens «package» i.p.v. «elementtype» zou heten.
+        { key: "doelStereotype", label: "stereotype van het type («…»)", datatype: "string" },
         // Boom/packages: container = drop-doel (containerVoor volgt uit de
         // bevat-verbindingsregel), standaard dicht = ingeklapt beginnen.
         { key: "container", label: "container (drop-doel, package)", datatype: "boolean" },
@@ -231,7 +234,9 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       id: doelIdVoor.get(def.id),
       label: def.naam,
       kort: d.kort || def.naam.slice(0, 3).toUpperCase(),
-      ...(d.stereotype ? { stereotype: d.stereotype } : {}),
+      ...((d.doelStereotype ?? d.stereotype)
+        ? { stereotype: d.doelStereotype ?? d.stereotype }
+        : {}),
       shape,
       ...(shape === "boundary" ? { achtergrond: true, handleStijl: "onzichtbaar" } : {}),
       ...(shape === "note" ? { handleStijl: "onzichtbaar" } : {}),
@@ -414,7 +419,7 @@ export function ontwerpUitProfiel(descriptor) {
         kort: et.kort || "",
         shape: et.shape || "class-box",
         doelKleur: et.kleur || "#e2e8f0",
-        ...(et.stereotype ? { stereotype: et.stereotype } : {}),
+        ...(et.stereotype ? { doelStereotype: et.stereotype } : {}),
         ...(et.containerVoor ? { container: true } : {}),
         ...(et.standaardDichtInBoom ? { standaardDichtInBoom: true } : {}),
       },

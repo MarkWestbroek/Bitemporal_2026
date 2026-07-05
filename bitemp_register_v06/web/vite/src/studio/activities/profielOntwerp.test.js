@@ -263,3 +263,20 @@ test("container-vinkje en standaard-dicht reizen mee door ontwerp en bouw", () =
   assert.equal(mapEt.containerVoor, inCt.id, "containerVoor wijst naar de hiërarchie-connector");
   assert.ok(!("_containerWens" in mapEt), "werk-vlag blijft niet achter");
 });
+
+test("ET-stereotype reist als doelStereotype (ontwerp-node toont zijn eigen «elementtype»)", () => {
+  const ontwerp = ontwerpUitProfiel({
+    id: "st-test",
+    label: "St",
+    fieldTypes: [],
+    elementTypes: [
+      { id: "pak", label: "Pak", shape: "class-box", stereotype: "«package»", properties: [] },
+    ],
+  });
+  const def = Object.values(ontwerp.elements).find((el) => el.naam === "Pak");
+  assert.equal(def.data.doelStereotype, "«package»");
+  assert.equal(def.data.stereotype, undefined, "weergave-override blijft vrij voor de ET-node zelf");
+
+  const kern = bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "st-test", label: "St" });
+  assert.equal(kern.elementTypes[0].stereotype, "«package»", "terugreis levert het doel-stereotype");
+});
