@@ -1519,6 +1519,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                   ["bezier", "Kromme (bezier)", "∿"],
                   ["hoekig", "Hoekig", "⌐"],
                   ["recht", "Recht", "—"],
+                  ["boom", "Boom (haaks)", "⊦"],
                 ].map(([vorm, vormLabel, icoon]) => ({
                   id: `vorm-${vorm}`,
                   label: vormLabel + (huidig === vorm ? "  ✓" : ""),
@@ -1528,6 +1529,26 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                       data: { vorm: vorm === "bezier" ? null : vorm },
                     }),
                 })),
+                // Boomstijl in één klik: haakse vorm + uiteinden vastgezet
+                // (EA "tree style") — verticaal = ouder boven de kinderen,
+                // horizontaal = ouder links van de kinderen.
+                { kop: true, label: "Boomstijl" },
+                {
+                  id: "boom-verticaal",
+                  label: "Verticaal (ouder boven)",
+                  onClick: () =>
+                    useStore.getState().updateElement(connectorId, {
+                      data: { vorm: "boom", sourceHandle: "source-bottom", targetHandle: "target-top" },
+                    }),
+                },
+                {
+                  id: "boom-horizontaal",
+                  label: "Horizontaal (ouder links)",
+                  onClick: () =>
+                    useStore.getState().updateElement(connectorId, {
+                      data: { vorm: "boom", sourceHandle: "source-right", targetHandle: "target-left" },
+                    }),
+                },
                 // L03: uiteinden vastzetten (wint van de kortste weg; "auto"
                 // geeft het uiteinde weer vrij — normaliseren doet dat ook).
                 ...(() => {
@@ -1564,16 +1585,45 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
               ];
             })()
           : []),
-        // Rechtsklik op een node: losmaken uit zijn container (package).
+        // Rechtsklik op een node: kinderen in boomstijl + losmaken uit container.
         ...(nodeId && !connectorId
           ? (() => {
               const s = useStore.getState();
+              const items = [];
+              // Alle uitgaande hiërarchie-/lidmaatschaps-connectoren van deze
+              // node in één keer in boomstijl (vgl. EA "alle kinderen").
+              const boomTypen = new Set([
+                ...[].concat(descriptor.hierarchie || []),
+                ...containerConnectorIds,
+              ]);
+              const uitgaand = Object.values(s.elements).filter(
+                (c) => boomTypen.has(c.elementType) && c.source === nodeId
+              );
+              if (uitgaand.length > 0) {
+                const zetBoomstijl = (richting) => {
+                  for (const c of uitgaand) {
+                    s.updateElement(c.id, {
+                      data:
+                        richting === "verticaal"
+                          ? { vorm: "boom", sourceHandle: "source-bottom", targetHandle: "target-top" }
+                          : { vorm: "boom", sourceHandle: "source-right", targetHandle: "target-left" },
+                    });
+                  }
+                };
+                items.push(
+                  { sep: true },
+                  { kop: true, label: `Kinderen in boomstijl (${uitgaand.length})` },
+                  { id: "kinderen-boom-v", label: "Verticaal (deze ouder boven)", onClick: () => zetBoomstijl("verticaal") },
+                  { id: "kinderen-boom-h", label: "Horizontaal (deze ouder links)", onClick: () => zetBoomstijl("horizontaal") }
+                );
+              }
               const lidmaatschappen = Object.values(s.elements).filter(
                 (c) => containerConnectorIds.has(c.elementType) && c.target === nodeId
               );
-              if (!lidmaatschappen.length) return [];
+              if (!lidmaatschappen.length) return items;
               const containerNaam = s.elements[lidmaatschappen[0].source]?.naam || "package";
               return [
+                ...items,
                 { sep: true },
                 {
                   id: "uit-container",

@@ -6,7 +6,19 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **boomvolgorde, PE-herlaad &
+  fase 7 (register). Laatste ronde: **boomstijl-lijnen + PE-vlaggen**
+  (2026-07-05): (1) nieuwe lijnvorm **"boom"** (EA tree style: haaks met
+  scherpe hoeken — kinderen op dezelfde rij delen visueel hun aftakking);
+  rechtsklik op een connector: *Boomstijl → Verticaal (ouder boven) /
+  Horizontaal (ouder links)* zet vorm + beide uiteinden in één klik, en
+  rechtsklik op een óuder-node: *Kinderen in boomstijl (n)* doet dat voor
+  álle uitgaande hiërarchie-/bevat-connectoren tegelijk (het warrige
+  package→kinderen-beeld wordt zo een nette boom); (2) de profiel-vlaggen
+  **container (drop-doel)** en **standaard dicht in boom** zijn nu ook in
+  de PE te bewerken: elementDef kreeg de twee vinkjes, `bouwProfielUitOntwerp`
+  leidt `containerVoor` af uit de (hiërarchie-)verbindingsregel waarvan het
+  ET bron is, en `ontwerpUitProfiel` neemt beide vlaggen mee terug het
+  ontwerp in (roundtrip getest). Eerdere ronde: **boomvolgorde, PE-herlaad &
   layout-persistentie** (2026-07-05): (1) **packages bovenaan in de boom** —
   wortels waarvan het type `containerVoor` heeft (packages) komen eerst, de
   "losse flodders" alfabetisch daaronder (die vlag is dus hét

@@ -9,7 +9,8 @@
  *
  * data.presentatie:
  *   lijn:        "solid" | "dash-6-3" | "dash-4-3" | "dash-4-4"
- *   vorm:        "bezier" (default) | "hoekig" (orthogonaal) | "recht"
+ *   vorm:        "bezier" (default) | "hoekig" (orthogonaal) | "recht" |
+ *                "boom" (haaks, scherpe hoeken — EA tree style)
  *                — de route van de lijn (§8.5c-familie); UML oogt
  *                herkenbaarder hoekig, grafen juist met krommen
  *   kleur:       basiskleur (selected → accent, tenzij `vasteKleur`)
@@ -145,9 +146,13 @@ function ConnectorEdge({
       ? knikPad()
       : p.vorm === "hoekig"
         ? getSmoothStepPath({ ...padArgs, borderRadius: 4 })
-        : p.vorm === "recht"
-          ? getStraightPath(padArgs)
-          : getBezierPath(padArgs);
+        : p.vorm === "boom"
+          ? // Boomstijl (EA "tree style"): haaks met scherpe hoeken; kinderen
+            // op dezelfde rij delen zo hun aftakking tot één stam-beeld.
+            getSmoothStepPath({ ...padArgs, borderRadius: 0 })
+          : p.vorm === "recht"
+            ? getStraightPath(padArgs)
+            : getBezierPath(padArgs);
 
   const kleur = selected && !p.vasteKleur
     ? "var(--dc-selectie, #2563eb)"

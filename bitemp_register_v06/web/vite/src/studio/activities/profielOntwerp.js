@@ -51,6 +51,10 @@ export const profielOntwerpKern = {
         { key: "shape", label: "shape (class-box/bol/note/boundary)", datatype: "string" },
         { key: "doelKleur", label: "kleur van het type", datatype: "colour" },
         { key: "stereotype", label: "stereotype («…»)", datatype: "string" },
+        // Boom/packages: container = drop-doel (containerVoor volgt uit de
+        // bevat-verbindingsregel), standaard dicht = ingeklapt beginnen.
+        { key: "container", label: "container (drop-doel, package)", datatype: "boolean" },
+        { key: "standaardDichtInBoom", label: "standaard dicht in boom", datatype: "boolean" },
       ],
       compartments: [{ id: "eigenschappen", label: "eigenschappen", fieldType: "eigenschapDef" }],
     },
@@ -100,7 +104,7 @@ export const profielOntwerpKern = {
       edgePresentatie: { lijn: "solid", kleur: "#0ea5e9" },
       properties: [
         { key: "lijn", label: "lijn (solid/dash-6-3/…)", datatype: "string" },
-        { key: "vorm", label: "vorm (bezier/hoekig/recht)", datatype: "string" },
+        { key: "vorm", label: "vorm (bezier/hoekig/recht/boom)", datatype: "string" },
         { key: "markerStart", label: "markerStart (ruit/ruit-open)", datatype: "string" },
         { key: "markerEnd", label: "markerEnd (driehoek/pijl-open)", datatype: "string" },
         { key: "doelKleur", label: "lijnkleur", datatype: "colour" },
@@ -232,6 +236,8 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       ...(shape === "boundary" ? { achtergrond: true, handleStijl: "onzichtbaar" } : {}),
       ...(shape === "note" ? { handleStijl: "onzichtbaar" } : {}),
       kleur: d.doelKleur || "#e2e8f0",
+      ...(d.standaardDichtInBoom ? { standaardDichtInBoom: true } : {}),
+      ...(d.container ? { _containerWens: true } : {}),
       properties: [{ key: "kleur", datatype: "colour" }, ...eigenschappenVan(def)],
       compartments,
     });
@@ -293,6 +299,26 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       properties,
       ...(Object.keys(hooks).length ? { hooks } : {}),
     });
+  }
+
+  // containerVoor: een ET met het container-vinkje krijgt het (liefst
+  // hiërarchie-)connectortype waarvan hij bron is als lidmaatschapsrelatie.
+  const regelsVanCt = (ct) =>
+    ct.verbindingsregels || [{ bron: ct.bron?.elementTypes || [], doel: ct.doel?.elementTypes || [] }];
+  for (const et of elementTypes) {
+    if (!et._containerWens) continue;
+    delete et._containerWens;
+    const kandidaat =
+      elementTypes.find(
+        (ct) =>
+          ct.isConnector &&
+          hierarchieConnectoren.includes(ct.id) &&
+          regelsVanCt(ct).some((r) => r.bron.includes(et.id))
+      ) ||
+      elementTypes.find(
+        (ct) => ct.isConnector && regelsVanCt(ct).some((r) => r.bron.includes(et.id))
+      );
+    if (kandidaat) et.containerVoor = kandidaat.id;
   }
 
   return {
@@ -389,6 +415,8 @@ export function ontwerpUitProfiel(descriptor) {
         shape: et.shape || "class-box",
         doelKleur: et.kleur || "#e2e8f0",
         ...(et.stereotype ? { stereotype: et.stereotype } : {}),
+        ...(et.containerVoor ? { container: true } : {}),
+        ...(et.standaardDichtInBoom ? { standaardDichtInBoom: true } : {}),
       },
     };
     const x = 60 + kolom * 340;

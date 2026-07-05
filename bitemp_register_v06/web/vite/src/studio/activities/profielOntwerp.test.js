@@ -225,3 +225,41 @@ test("layoutSleutels: naamgenoten krijgen stabiele volgnummers", () => {
   const sleutels = layoutSleutels(elements, nodes).map((x) => x.sleutel);
   assert.deepEqual(sleutels, ["compartimentDef:velden#1", "compartimentDef:velden#2"]);
 });
+
+test("container-vinkje en standaard-dicht reizen mee door ontwerp en bouw", () => {
+  const ontwerp = ontwerpUitProfiel({
+    id: "pkg-test",
+    label: "Pkg",
+    fieldTypes: [],
+    elementTypes: [
+      {
+        id: "map",
+        label: "Map",
+        shape: "class-box",
+        containerVoor: "in",
+        standaardDichtInBoom: true,
+        properties: [],
+      },
+      { id: "blad", label: "Blad", shape: "class-box", properties: [] },
+      {
+        id: "in",
+        label: "In",
+        shape: "edge",
+        isConnector: true,
+        bron: { elementTypes: ["map"] },
+        doel: { elementTypes: ["blad"] },
+      },
+    ],
+    hierarchie: "in",
+  });
+  const mapDef = Object.values(ontwerp.elements).find((el) => el.naam === "Map");
+  assert.equal(mapDef.data.container, true, "containerVoor wordt het container-vinkje");
+  assert.equal(mapDef.data.standaardDichtInBoom, true);
+
+  const kern = bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "pkg-test", label: "Pkg" });
+  const mapEt = kern.elementTypes.find((et) => et.label === "Map");
+  const inCt = kern.elementTypes.find((et) => et.isConnector);
+  assert.equal(mapEt.standaardDichtInBoom, true);
+  assert.equal(mapEt.containerVoor, inCt.id, "containerVoor wijst naar de hiërarchie-connector");
+  assert.ok(!("_containerWens" in mapEt), "werk-vlag blijft niet achter");
+});
