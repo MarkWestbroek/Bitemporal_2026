@@ -818,6 +818,8 @@ export function maakDiagramActiviteit(opties) {
     const { selectieId, setSelectieId, layoutApiRef } = useContext(Ctx);
     const [zoek, setZoek] = useState("");
     const [dicht, setDicht] = useState({});
+    // In-/uitklappen van boomrijen (per element-id, alleen deze sessie).
+    const [ingeklapt, setIngeklapt] = useState({});
     // Rechtsklik-menu op boomrijen (vgl. de IDE-ProjectBrowser).
     const [zijMenu, setZijMenu] = useState(null);
     const openRijMenu = (e, el, et, zichtbaar) => {
@@ -971,6 +973,11 @@ export function maakDiagramActiviteit(opties) {
     const Rij = (el, diepte = 0) => {
       const et = elementTypesById[el.elementType];
       const zichtbaar = opDiagram.has(el.id);
+      const kinderen =
+        diepte < 8
+          ? sorteer((kinderenVan.get(el.id) || []).map((kid) => elements[kid]).filter(Boolean))
+          : [];
+      const dichtgeklapt = !!ingeklapt[el.id];
       return (
         <div key={el.id}>
           <div
@@ -985,7 +992,7 @@ export function maakDiagramActiviteit(opties) {
               display: "flex",
               alignItems: "center",
               gap: 6,
-              padding: `2px 6px 2px ${20 + diepte * 14}px`,
+              padding: `2px 6px 2px ${6 + diepte * 14}px`,
               borderRadius: 6,
               cursor: "pointer",
               color: zichtbaar ? "var(--s-fg)" : "var(--s-fg-muted)",
@@ -993,6 +1000,25 @@ export function maakDiagramActiviteit(opties) {
               outline: sleepDoel === el.id ? "1px dashed var(--s-accent, #6366f1)" : "none",
             }}
           >
+            <span
+              style={{
+                width: 12,
+                flexShrink: 0,
+                fontSize: 10,
+                color: "var(--s-fg-muted)",
+                userSelect: "none",
+                cursor: kinderen.length ? "pointer" : "default",
+                textAlign: "center",
+              }}
+              title={kinderen.length ? (dichtgeklapt ? "Uitklappen" : "Inklappen") : undefined}
+              onClick={(e) => {
+                if (!kinderen.length) return;
+                e.stopPropagation();
+                setIngeklapt((v) => ({ ...v, [el.id]: !v[el.id] }));
+              }}
+            >
+              {kinderen.length ? (dichtgeklapt ? "▸" : "▾") : ""}
+            </span>
             <TypeIcoon elementType={et} maat={11} />
             <span
               style={{
@@ -1018,10 +1044,7 @@ export function maakDiagramActiviteit(opties) {
               </button>
             )}
           </div>
-          {diepte < 8 &&
-            sorteer((kinderenVan.get(el.id) || []).map((kid) => elements[kid]).filter(Boolean)).map(
-              (kind) => Rij(kind, diepte + 1)
-            )}
+          {!dichtgeklapt && kinderen.map((kind) => Rij(kind, diepte + 1))}
         </div>
       );
     };
