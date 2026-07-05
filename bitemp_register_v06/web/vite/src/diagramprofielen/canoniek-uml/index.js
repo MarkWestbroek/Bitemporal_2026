@@ -305,6 +305,8 @@ const elementTypes = [
     shape: "class-box",
     kleur: "#f1f5f9",
     icoon: "package",
+    // Drop-doel op canvas en in de boom: erin slepen legt de bevat-connector.
+    containerVoor: "bevat",
     properties: [KLEUR_VELD],
   },
   {

@@ -103,6 +103,9 @@
  * @property {boolean} [achtergrond]        - true → rendert onder de andere nodes (boundaries/kaders)
  * @property {string} [kort]                - korte knop-tekst voor de "Maken"-taakbalk (bv. "ENT")
  * @property {boolean} [isConnector]
+ * @property {string} [containerVoor]       - connectortype-id: dit type is een
+ *   container (bv. package); een element erin slepen (canvas of boom) legt
+ *   die lidmaatschaps-connector, "Losmaken uit …" haalt hem weer weg
  * @property {ConnectorEindpunt} [bron]     - verplicht als isConnector
  * @property {ConnectorEindpunt} [doel]     - verplicht als isConnector
  * @property {Object} [edgePresentatie]     - declaratieve edge-vorm voor kale

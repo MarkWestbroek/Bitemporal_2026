@@ -117,6 +117,8 @@ const elementTypes = [
     shape: "class-box",
     kleur: "#f1f5f9",
     icoon: "package",
+    // Drop-doel op canvas en in de boom: erin slepen legt de bevat-connector.
+    containerVoor: "bevat",
     properties: [KLEUR_VELD],
   },
   {
@@ -299,8 +301,9 @@ export const puurUmlDiagramType = {
   // Zelfde StyleType als canoniek-uml: klassieke UML-pastels. Een eigen
   // tokenset is een §8.5b-punt (thema's per StyleType), geen fase 5-blokker.
   style: "uml-klassiek",
-  // Boomordening: eerst package-lidmaatschap ("plaatsing in").
-  hierarchie: "bevat",
+  // Boomordening: eerst package-lidmaatschap ("plaatsing in"), daarna de
+  // compositie — wie in een package hangt neemt zo zijn ◆-kinderen mee.
+  hierarchie: ["bevat", "compositie"],
   fieldTypes,
   elementTypes,
   referenceTypes,

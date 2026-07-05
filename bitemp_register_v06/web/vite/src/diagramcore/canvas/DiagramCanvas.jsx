@@ -122,6 +122,7 @@ function CanvasBinnenkant({
   onViewport,
   onLabelOffset,
   onKnikken,
+  onContainerDrop,
   layoutApiRef,
   bouwContextMenu,
 }) {
@@ -396,8 +397,40 @@ function CanvasBinnenkant({
       } else if (gesleept[0]?.id && onNodePositie) {
         onNodePositie(gesleept[0].id, gesleept[0].position);
       }
+      // "Slepen ín een package": eindigt een enkele sleep met het middelpunt
+      // binnen een container-node (ElementType.containerVoor), meld dat aan
+      // de activiteit — die legt/verhangt de lidmaatschaps-connector.
+      if (onContainerDrop && gesleept.length === 1 && gesleept[0]?.id) {
+        const n = gesleept[0];
+        const mid = {
+          x: n.position.x + (n.measured?.width ?? 200) / 2,
+          y: n.position.y + (n.measured?.height ?? 80) / 2,
+        };
+        const kandidaten = getNodes().filter((k) => {
+          if (k.id === n.id) return false;
+          const et = lookups.elementTypesById[k.data?.element?.elementType];
+          if (!et?.containerVoor) return false;
+          const w = k.measured?.width ?? 200;
+          const h = k.measured?.height ?? 80;
+          return (
+            mid.x >= k.position.x &&
+            mid.x <= k.position.x + w &&
+            mid.y >= k.position.y &&
+            mid.y <= k.position.y + h
+          );
+        });
+        if (kandidaten.length) {
+          // Bij geneste containers wint de kleinste (binnenste).
+          kandidaten.sort(
+            (a, b) =>
+              (a.measured?.width ?? 200) * (a.measured?.height ?? 80) -
+              (b.measured?.width ?? 200) * (b.measured?.height ?? 80)
+          );
+          onContainerDrop(n.id, kandidaten[0].id);
+        }
+      }
     },
-    [bewerkbaar, onNodePositie, onNodePosities]
+    [bewerkbaar, onNodePositie, onNodePosities, onContainerDrop, getNodes, lookups]
   );
 
   const isValidConnection = useCallback(

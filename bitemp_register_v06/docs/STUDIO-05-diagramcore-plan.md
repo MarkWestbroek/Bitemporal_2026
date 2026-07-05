@@ -6,7 +6,25 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **knikpunten, packages & OAS-vervolg**
+  fase 7 (register). Laatste ronde: **slepen-in-package, boom-DnD &
+  profiel-editor-UX** (2026-07-05): (1) **`ElementType.containerVoor`** —
+  een containertype (package) is nu drop-doel: een node erop slepen op de
+  canvas legt/verhangt de bevat-connector (kleinste container wint bij
+  nesting, cycle-guard, verbindingsregels gerespecteerd), rechtsklik op de
+  node geeft *Losmaken uit "…"*; (2) **drag & drop in de elementen-boom**
+  (naar het voorbeeld van de IDE-ProjectBrowser, incl. de copyMove-les):
+  rij op een package-rij slepen = verhangen, op de achtergrond = losmaken;
+  (3) **puur-uml `hierarchie: ["bevat", "compositie"]`** — wie in een
+  package hangt neemt zijn ◆-kinderen mee in de boom; (4) de **export van
+  het 0.5-werkbestand is een keuzedialoog** geworden (zoals de import):
+  bestandsnaam kiezen + *Alleen dit diagram/profiel* (elementen gefilterd op
+  het actieve diagram) of *Alles*; ook bereikbaar via **rechtsklik op leeg
+  canvas** (generiek item); (5) de fabriek kent **`diagramTerm`** — de
+  profiel-ontwerper zegt overal "profiel" i.p.v. "diagram" — en
+  **`canvasMenuExtra`** voor activiteit-eigen rechtsklik-acties; (6)
+  *Genereer & registreer profiel…* heet nu **"Activeer profiel…
+  (registreer/ververs)"** (genereer botste met het register-genereren), ook
+  als rechtsklik-actie. Eerdere ronde: **knikpunten, packages & OAS-vervolg**
   (2026-07-05): (1) **knikpunten op connectoren** — ctrl-klik op een lijn
   voegt een knikpunt toe (`data.knikken` op het connector-element; polylijn
   door de punten), slepen verplaatst, dubbelklikken wist er één, contextmenu

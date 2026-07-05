@@ -43,6 +43,7 @@ import useUIStore from "../../store/useUIStore";
 import { createDiagramStore } from "../../diagramcore/model/createDiagramStore.js";
 import { UITLIJN_MODES } from "../../diagramcore/layout/uitlijnen.js";
 import { ANKER_PREFIX } from "../../diagramcore/canvas/materialiseerConnectoren.js";
+import { verbindingsregelsVan } from "../../diagramcore/types/typeRegistry.js";
 import { UITLIJN_ICONEN } from "../../diagramcore/taskbar/uitlijnIcons.jsx";
 import { Taskbar, useTaakbalkVoorkeuren, leesTaakbalkVoorkeuren } from "../../diagramcore/taskbar/Taskbar.jsx";
 import ElementInspector from "../../diagramcore/inspector/ElementInspector.jsx";
@@ -80,11 +81,17 @@ export function maakDiagramActiviteit(opties) {
     devHookNaam,
     koppeling = null,
     // Activiteit-eigen menu-acties bovenin het hoofdmenu:
-    // [{id, label, run(useStore)}] — bv. "Genereer profiel…" (trede 2).
+    // [{id, label, run(useStore)}] — bv. "Activeer profiel…" (trede 2).
     hoofdmenuExtra = [],
+    // Zelfde vorm, maar dan in het rechtsklik-menu op een leeg stuk canvas.
+    canvasMenuExtra = [],
+    // Hoe heet een "diagram" in deze activiteit? De profiel-ontwerper zegt
+    // bv. "profiel" — elk diagram stelt daar een profiel voor.
+    diagramTerm = "diagram",
   } = opties;
 
   const ev = (naam) => `${menuPrefix}:${naam}`;
+  const diagramTermMv = diagramTerm === "diagram" ? "diagrammen" : `${diagramTerm}en`;
 
   const useStore = createDiagramStore({ persistKey });
   if (devHookNaam && typeof window !== "undefined" && import.meta.env && import.meta.env.DEV) {
@@ -93,6 +100,58 @@ export function maakDiagramActiviteit(opties) {
 
   const fieldTypesById = Object.fromEntries((descriptor.fieldTypes || []).map((ft) => [ft.id, ft]));
   const elementTypesById = Object.fromEntries(descriptor.elementTypes.map((et) => [et.id, et]));
+  // Containertypen ("slepen in een package"): ElementType.containerVoor wijst
+  // naar het connectortype dat het lidmaatschap vastlegt (bv. "bevat").
+  const containerConnectorIds = new Set(
+    descriptor.elementTypes.filter((et) => et.containerVoor).map((et) => et.containerVoor)
+  );
+
+  /**
+   * Verhang een element naar een container (of maak het los met
+   * containerId = null): verwijder bestaande lidmaatschaps-connectoren en
+   * leg zo nodig een nieuwe. Met cycle-guard (package in zichzelf).
+   */
+  function verhangNaarContainer(useStoreRef, elementId, containerId) {
+    const s = useStoreRef.getState();
+    const el = s.elements[elementId];
+    if (!el || elementId === containerId) return;
+    const bestaande = Object.values(s.elements).filter(
+      (c) => containerConnectorIds.has(c.elementType) && c.target === elementId
+    );
+    if (containerId) {
+      const container = s.elements[containerId];
+      const ct = elementTypesById[elementTypesById[container?.elementType]?.containerVoor];
+      if (!ct) return;
+      // Verbindingsregels respecteren (bv. geen notitie in een package).
+      const mag = verbindingsregelsVan(ct).some(
+        (r) => r.bron.includes(container.elementType) && r.doel.includes(el.elementType)
+      );
+      if (!mag) return;
+      // Cycle-guard: containerId mag niet (indirect) ín elementId zitten.
+      let cursor = containerId;
+      for (let i = 0; i < 50 && cursor; i += 1) {
+        if (cursor === elementId) return;
+        const ouderConn = Object.values(s.elements).find(
+          (c) => containerConnectorIds.has(c.elementType) && c.target === cursor
+        );
+        cursor = ouderConn?.source || null;
+      }
+      if (bestaande.some((c) => c.source === containerId)) return; // zit er al in
+      for (const c of bestaande) s.deleteElement(c.id);
+      _connTeller += 1;
+      s.addElement({
+        id: `bev_${Date.now()}_${_connTeller}`,
+        naam: "",
+        elementType: ct.id,
+        source: containerId,
+        target: elementId,
+        compartimenten: [],
+        data: {},
+      });
+    } else {
+      for (const c of bestaande) s.deleteElement(c.id);
+    }
+  }
 
   let _connTeller = 0;
   let _plaatsTeller = 0;
@@ -105,6 +164,8 @@ export function maakDiagramActiviteit(opties) {
     // Werkbestand-import met keuze: het gelezen bestand wacht hier tot de
     // gebruiker kiest (over huidig diagram / ernaast / alles vervangen).
     const [importWacht, setImportWacht] = useState(null);
+    // Export-keuzedialoog: {naam} zolang de gebruiker bereik/naam kiest.
+    const [exportWacht, setExportWacht] = useState(null);
     // Imperatieve layout-API van de canvas (uitlijnen/snap/auto-layout/viewport).
     const layoutApiRef = useRef(null);
 
@@ -140,7 +201,7 @@ export function maakDiagramActiviteit(opties) {
         menuBus.on(ev("undo"), () => useStore.temporal.getState().undo()),
         menuBus.on(ev("redo"), () => useStore.temporal.getState().redo()),
         menuBus.on(ev("nieuw-diagram"), () => {
-          const naam = window.prompt("Naam van het nieuwe diagram:", "Nieuw diagram");
+          const naam = window.prompt(`Naam van het nieuwe ${diagramTerm}:`, `Nieuw ${diagramTerm}`);
           if (!naam) return;
           useStore.getState().addDiagram({
             id: `${menuPrefix}_${Date.now()}`,
@@ -235,31 +296,10 @@ export function maakDiagramActiviteit(opties) {
       af.push(
         menuBus.on(ev("exporteer-05"), () => {
           const s = useStore.getState();
-          const diagrams = Object.fromEntries(
-            Object.entries(s.diagrams).map(([did, d]) => [
-              did,
-              { ...d, ...(s.viewports?.[did] ? { viewport: s.viewports[did] } : {}) },
-            ])
-          );
-          const inhoud = {
-            formaat: "studio05-diagram",
-            versie: 1,
-            diagramType: descriptor.id,
-            geexporteerd: new Date().toISOString(),
-            elements: s.elements,
-            diagrams,
-            meta: s.meta || null,
-          };
-          const naam = (Object.values(s.diagrams)[0]?.naam || id)
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-");
-          const blob = new Blob([JSON.stringify(inhoud, null, 2)], { type: "application/json" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `${naam}-05.json`;
-          a.click();
-          URL.revokeObjectURL(url);
+          const basis = s.diagrams[s.actiefDiagramId]?.naam || Object.values(s.diagrams)[0]?.naam || id;
+          setExportWacht({
+            naam: `${basis.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-05`,
+          });
         })
       );
       af.push(
@@ -478,6 +518,48 @@ export function maakDiagramActiviteit(opties) {
       setSelectieId(null);
     }, []);
 
+    /** Bouw en download het 0.5-werkbestand (alleen het huidige diagram, of alles). */
+    const voerExportUit = useCallback((naam, alleenHuidig) => {
+      const s = useStore.getState();
+      let elements = s.elements;
+      let diagramIds = Object.keys(s.diagrams);
+      if (alleenHuidig && s.actiefDiagramId) {
+        diagramIds = [s.actiefDiagramId];
+        const opDiag = new Set(
+          (s.diagrams[s.actiefDiagramId]?.nodes || []).map((n) => n.elementId)
+        );
+        elements = Object.fromEntries(
+          Object.entries(s.elements).filter(
+            ([eid, el]) =>
+              opDiag.has(eid) ||
+              (el.source && el.target && opDiag.has(el.source) && opDiag.has(el.target))
+          )
+        );
+      }
+      const diagrams = Object.fromEntries(
+        diagramIds.map((did) => [
+          did,
+          { ...s.diagrams[did], ...(s.viewports?.[did] ? { viewport: s.viewports[did] } : {}) },
+        ])
+      );
+      const inhoud = {
+        formaat: "studio05-diagram",
+        versie: 1,
+        diagramType: descriptor.id,
+        geexporteerd: new Date().toISOString(),
+        elements,
+        diagrams,
+        meta: s.meta || null,
+      };
+      const blob = new Blob([JSON.stringify(inhoud, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${(naam || "diagram").trim().replace(/\.json$/i, "") || "diagram"}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }, []);
+
     /** Nieuw element plaatsen op het actieve diagram (cascade rond het zwaartepunt). */
     const plaatsNieuwElement = useCallback((elementTypeId) => {
       const el = maakElement(elementTypeId);
@@ -570,7 +652,7 @@ export function maakDiagramActiviteit(opties) {
                   setImportWacht(null);
                 }}
               >
-                Over het huidige diagram heen (layout terughalen)
+                Over het huidige {diagramTerm} heen (layout terughalen)
               </button>
               <button
                 className="dc-mini-knop"
@@ -579,7 +661,7 @@ export function maakDiagramActiviteit(opties) {
                   setImportWacht(null);
                 }}
               >
-                Ernaast toevoegen (als extra diagrammen)
+                Ernaast toevoegen (als extra {diagramTermMv})
               </button>
               <button
                 className="dc-mini-knop is-gevaar"
@@ -593,6 +675,78 @@ export function maakDiagramActiviteit(opties) {
                 Alles vervangen
               </button>
               <button className="dc-mini-knop" onClick={() => setImportWacht(null)}>
+                Annuleren
+              </button>
+            </div>
+          </div>
+        )}
+        {exportWacht && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(15, 23, 42, 0.45)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 10000,
+            }}
+            onClick={(e) => e.target === e.currentTarget && setExportWacht(null)}
+          >
+            <div
+              style={{
+                background: "var(--s-panel, #fff)",
+                color: "var(--s-fg, #1e293b)",
+                border: "1px solid var(--s-border, #cbd5e1)",
+                borderRadius: 10,
+                boxShadow: "0 12px 40px rgba(15, 23, 42, 0.25)",
+                width: 420,
+                maxWidth: "92vw",
+                padding: "14px 16px",
+                fontSize: 13,
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+              }}
+            >
+              <strong>Werkbestand exporteren</strong>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
+                Bestandsnaam
+                <input
+                  type="text"
+                  autoFocus
+                  value={exportWacht.naam}
+                  onChange={(e) => setExportWacht({ naam: e.target.value })}
+                  style={{
+                    font: "inherit",
+                    fontSize: 13,
+                    padding: "4px 8px",
+                    border: "1px solid var(--s-border, #cbd5e1)",
+                    borderRadius: 6,
+                    background: "transparent",
+                    color: "var(--s-fg)",
+                  }}
+                />
+              </label>
+              <button
+                className="dc-mini-knop"
+                onClick={() => {
+                  voerExportUit(exportWacht.naam, true);
+                  setExportWacht(null);
+                }}
+              >
+                Alleen dit {diagramTerm}
+              </button>
+              <button
+                className="dc-mini-knop"
+                onClick={() => {
+                  voerExportUit(exportWacht.naam, false);
+                  setExportWacht(null);
+                }}
+              >
+                Alles (alle {diagramTermMv})
+              </button>
+              <button className="dc-mini-knop" onClick={() => setExportWacht(null)}>
                 Annuleren
               </button>
             </div>
@@ -615,6 +769,48 @@ export function maakDiagramActiviteit(opties) {
     const { selectieId, setSelectieId, layoutApiRef } = useContext(Ctx);
     const [zoek, setZoek] = useState("");
     const [dicht, setDicht] = useState({});
+    // Drag & drop in de boom (vgl. IDE-ProjectBrowser): element op een
+    // container (package) slepen = verhangen; op de achtergrond = losmaken.
+    const [sleepDoel, setSleepDoel] = useState(null);
+    const SLEEP_MIME = "application/studio05-element";
+    const sleepProps = (el, et) => ({
+      draggable: !et?.isConnector,
+      onDragStart: (e) => {
+        e.dataTransfer.setData(SLEEP_MIME, JSON.stringify({ elementId: el.id }));
+        e.dataTransfer.setData("text/plain", el.naam || el.id);
+        // Les uit de IDE: alléén "move" laat sommige browsers geen
+        // drop-event vuren — copyMove houdt beide routes open.
+        e.dataTransfer.effectAllowed = "copyMove";
+      },
+      ...(et?.containerVoor
+        ? {
+            onDragOver: (e) => {
+              if (![...e.dataTransfer.types].includes(SLEEP_MIME)) return;
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+              setSleepDoel(el.id);
+            },
+            onDragLeave: (e) => {
+              if (!e.currentTarget.contains(e.relatedTarget)) {
+                setSleepDoel((v) => (v === el.id ? null : v));
+              }
+            },
+            onDrop: (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setSleepDoel(null);
+              const rauw = e.dataTransfer.getData(SLEEP_MIME);
+              if (!rauw) return;
+              try {
+                const { elementId } = JSON.parse(rauw);
+                if (elementId) verhangNaarContainer(useStore, elementId, el.id);
+              } catch {
+                /* geen geldig sleep-pakketje */
+              }
+            },
+          }
+        : {}),
+    });
 
     const opDiagram = new Set(
       (diagrams[actiefDiagram]?.nodes || []).map((n) => n.elementId)
@@ -685,6 +881,7 @@ export function maakDiagramActiviteit(opties) {
       return (
         <div key={el.id}>
           <div
+            {...sleepProps(el, et)}
             onClick={() => {
               setSelectieId(el.id);
               if (zichtbaar) layoutApiRef.current?.focusNode?.(el.id);
@@ -699,6 +896,7 @@ export function maakDiagramActiviteit(opties) {
               cursor: "pointer",
               color: zichtbaar ? "var(--s-fg)" : "var(--s-fg-muted)",
               background: el.id === selectieId ? "var(--s-hover)" : "transparent",
+              outline: sleepDoel === el.id ? "1px dashed var(--s-accent, #6366f1)" : "none",
             }}
           >
             <TypeIcoon elementType={et} maat={11} />
@@ -767,7 +965,27 @@ export function maakDiagramActiviteit(opties) {
             }}
           />
         </div>
-        <div style={{ flex: 1, overflow: "auto", padding: 6 }}>
+        <div
+          style={{ flex: 1, overflow: "auto", padding: 6 }}
+          onDragOver={(e) => {
+            if ([...e.dataTransfer.types].includes(SLEEP_MIME)) {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+            }
+          }}
+          onDrop={(e) => {
+            const rauw = e.dataTransfer.getData(SLEEP_MIME);
+            if (!rauw) return;
+            e.preventDefault();
+            setSleepDoel(null);
+            try {
+              const { elementId } = JSON.parse(rauw);
+              if (elementId) verhangNaarContainer(useStore, elementId, null);
+            } catch {
+              /* geen geldig sleep-pakketje */
+            }
+          }}
+        >
           {groepen.length === 0 && wortels.length === 0 && (
             <p style={{ margin: 8, color: "var(--s-fg-muted)" }}>Geen elementen{term ? " gevonden" : ""}.</p>
           )}
@@ -799,6 +1017,7 @@ export function maakDiagramActiviteit(opties) {
                   return (
                     <div
                       key={el.id}
+                      {...sleepProps(el, et)}
                       onClick={() => {
                         setSelectieId(el.id);
                         if (zichtbaar) layoutApiRef.current?.focusNode?.(el.id);
@@ -813,6 +1032,7 @@ export function maakDiagramActiviteit(opties) {
                         cursor: "pointer",
                         color: zichtbaar ? "var(--s-fg)" : "var(--s-fg-muted)",
                         background: el.id === selectieId ? "var(--s-hover)" : "transparent",
+                        outline: sleepDoel === el.id ? "1px dashed var(--s-accent, #6366f1)" : "none",
                       }}
                     >
                       <span
@@ -874,7 +1094,7 @@ export function maakDiagramActiviteit(opties) {
             style={{ width: "100%" }}
             onClick={() => menuBus.emit(ev("nieuw-diagram"))}
           >
-            ＋ Nieuw diagram
+            ＋ Nieuw {diagramTerm}
           </button>
         </div>
         <div style={{ maxHeight: "40%", overflow: "auto", padding: 6, flexShrink: 0 }}>
@@ -1135,6 +1355,42 @@ export function maakDiagramActiviteit(opties) {
               ];
             })()
           : []),
+        // Rechtsklik op een node: losmaken uit zijn container (package).
+        ...(nodeId && !connectorId
+          ? (() => {
+              const s = useStore.getState();
+              const lidmaatschappen = Object.values(s.elements).filter(
+                (c) => containerConnectorIds.has(c.elementType) && c.target === nodeId
+              );
+              if (!lidmaatschappen.length) return [];
+              const containerNaam = s.elements[lidmaatschappen[0].source]?.naam || "package";
+              return [
+                { sep: true },
+                {
+                  id: "uit-container",
+                  label: `Losmaken uit "${containerNaam}"`,
+                  onClick: () => verhangNaarContainer(useStore, nodeId, null),
+                },
+              ];
+            })()
+          : []),
+        // Rechtsklik op leeg canvas: activiteit-eigen acties (bv. "Activeer
+        // profiel…") + exporteren zonder eerst naar het menu te hoeven.
+        ...(!nodeId && !connectorId
+          ? [
+              { sep: true },
+              ...canvasMenuExtra.map((m) => ({
+                id: m.id,
+                label: m.label,
+                onClick: () => m.run(useStore),
+              })),
+              {
+                id: "ctx-export-05",
+                label: "Exporteer 0.5-werkbestand…",
+                onClick: () => menuBus.emit(ev("exporteer-05")),
+              },
+            ]
+          : []),
       ],
       [layoutApiRef]
     );
@@ -1319,6 +1575,9 @@ export function maakDiagramActiviteit(opties) {
                   onKnikken={(connectorId, lijst) =>
                     useStore.getState().updateElement(connectorId, { data: { knikken: lijst } })
                   }
+                  onContainerDrop={(elementId, containerId) =>
+                    verhangNaarContainer(useStore, elementId, containerId)
+                  }
                   bouwContextMenu={bouwContextMenu}
                   onViewport={(vp) => useStore.getState().updateDiagramViewport(diagram.id, vp)}
                 />
@@ -1480,7 +1739,7 @@ export function maakDiagramActiviteit(opties) {
           onClick: () => actie.run(useStore),
         })),
         ...(hoofdmenuExtra.length ? [{ type: "separator" }] : []),
-        { id: `${menuPrefix}-nieuw-diagram`, label: "Nieuw diagram…", onClick: () => menuBus.emit(ev("nieuw-diagram")) },
+        { id: `${menuPrefix}-nieuw-diagram`, label: `Nieuw ${diagramTerm}…`, onClick: () => menuBus.emit(ev("nieuw-diagram")) },
         ...(koppeling?.herlaadUitModel
           ? [{ id: `${menuPrefix}-herlaad`, label: koppeling.herlaadLabel || "Herlaad uit UML-model…", onClick: () => menuBus.emit(ev("herlaad")) }]
           : []),
