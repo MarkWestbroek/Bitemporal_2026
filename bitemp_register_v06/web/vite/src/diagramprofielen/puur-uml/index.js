@@ -119,6 +119,8 @@ const elementTypes = [
     icoon: "package",
     // Drop-doel op canvas en in de boom: erin slepen legt de bevat-connector.
     containerVoor: "bevat",
+    // Zoals mappen in een verkenner: dicht beginnen, openklikken op verzoek.
+    standaardDichtInBoom: true,
     properties: [KLEUR_VELD],
   },
   {

@@ -105,7 +105,10 @@
  * @property {boolean} [isConnector]
  * @property {string} [containerVoor]       - connectortype-id: dit type is een
  *   container (bv. package); een element erin slepen (canvas of boom) legt
- *   die lidmaatschaps-connector, "Losmaken uit …" haalt hem weer weg
+ *   die lidmaatschaps-connector, "Losmaken uit …" haalt hem weer weg.
+ *   Containers sorteren bovenaan in de elementen-boom
+ * @property {boolean} [standaardDichtInBoom] - boomrijen van dit type beginnen
+ *   ingeklapt (zoals mappen in een verkenner); de chevron-klik wint daarna
  * @property {ConnectorEindpunt} [bron]     - verplicht als isConnector
  * @property {ConnectorEindpunt} [doel]     - verplicht als isConnector
  * @property {Object} [edgePresentatie]     - declaratieve edge-vorm voor kale

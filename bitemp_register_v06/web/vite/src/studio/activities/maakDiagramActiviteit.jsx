@@ -1031,7 +1031,9 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
         diepte < 8
           ? sorteer((kinderenVan.get(el.id) || []).map((kid) => inbegrepen.get(kid)).filter(Boolean))
           : [];
-      const dichtgeklapt = !!ingeklapt[el.id];
+      // Profiel-vlag standaardDichtInBoom (bv. packages) = beginstand;
+      // een klik op de chevron wint daarna altijd.
+      const dichtgeklapt = ingeklapt[el.id] ?? !!et?.standaardDichtInBoom;
       return (
         <div key={el.id}>
           <div
@@ -1068,7 +1070,9 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
               onClick={(e) => {
                 if (!kinderen.length) return;
                 e.stopPropagation();
-                setIngeklapt((v) => ({ ...v, [el.id]: !v[el.id] }));
+                // Expliciet de éffectieve stand omkeren: de default kan per
+                // type "dicht" zijn (standaardDichtInBoom) zonder map-entry.
+                setIngeklapt((v) => ({ ...v, [el.id]: !dichtgeklapt }));
               }}
             >
               {kinderen.length ? (dichtgeklapt ? "▸" : "▾") : ""}
@@ -1266,6 +1270,10 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
             setActief(d.id);
             setTimeout(() => menuBus.emit(ev("exporteer-05")), 0);
           },
+        },
+        {
+          label: `Importeer ${diagramTerm} uit bestand…`,
+          onClick: () => menuBus.emit(ev("importeer-05")),
         },
         ...canvasMenuExtra.map((m) => ({
           label: m.label,
@@ -1589,6 +1597,11 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                 id: "ctx-export-05",
                 label: "Exporteer 0.5-werkbestand…",
                 onClick: () => menuBus.emit(ev("exporteer-05")),
+              },
+              {
+                id: "ctx-import-05",
+                label: "Importeer 0.5-werkbestand…",
+                onClick: () => menuBus.emit(ev("importeer-05")),
               },
             ]
           : []),
