@@ -31,7 +31,7 @@ zijn geïmplementeerd. Samenvatting:
   OAS (0.5) aan API's). Dynamisch geregistreerde profielen
   (`profielRegistratie`) delen voorlopig `IconProfiel05`.
 - **Geïmplementeerd**: `diagramcore/shapes/iconenVocabulaire.jsx`
-  (28 iconen, geregistreerd via `maakDiagramActiviteit`), `icoon`-ids op de
+  (30 iconen, geregistreerd via `maakDiagramActiviteit`), `icoon`-ids op de
   elementtypen van canoniek-uml, puur-uml, oas31 en profiel-ontwerp
   (gedeelde concepten delen een id: Entiteit/Klasse → `klasse`), en
   **tokens v2** bovenin `diagramcore/styles/diagramcore.css`.
@@ -46,6 +46,12 @@ zijn geïmplementeerd. Samenvatting:
 - **Nog open**: element-pastel-richtlijn is beschreven maar niet
   genormaliseerd (huidige kleuren blijven), eigen tokenset per StyleType-id
   blijft wachten tot er een tweede StyleType is, activity-bar-iconen (B6).
+- **Package (nagekomen, 2026-07-05)**: voor het nieuwe `package`-elementtype
+  (puur-uml en canoniek-uml) zijn de UML-hangmap-shape
+  (`basisShapes.jsx → PackageShape`, ShapeType `"package"`: naam-tab
+  linksboven die zijn onderrand deelt met de romp) en de iconen `package`
+  (romp + gevulde tab) en `bevat` (stippellijn de mini-hangmap in)
+  toegevoegd; `package` is ook een geldige shape in de profiel-ontwerper.
 - Chatverslag: `copilot-chats/summaries/2026-07-05-vormgevingssessie-iconen-en-tokens-v2.md`.
 
 ## Doel van de sessie

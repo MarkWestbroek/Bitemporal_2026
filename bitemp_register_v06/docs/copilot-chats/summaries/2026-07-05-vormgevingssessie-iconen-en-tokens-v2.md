@@ -42,7 +42,11 @@ implementatie.
   blijven puur outline.
 - **Vocabulaire-principe**: zelfde concept = zelfde icoon-id; 28 iconen
   dekken ±33 elementtypen (Entiteit/Klasse delen `klasse`, drie Enums delen
-  `enumeratie`).
+  `enumeratie`). Nagekomen (package-elementtype in puur-uml/canoniek-uml):
+  `package` (hangmap met gevulde tab) en `bevat` (stippellijn de
+  mini-hangmap in) → 30 iconen, plus de **PackageShape** ("hangmap":
+  naam-tab linksboven, romp eronder) als nieuwe ShapeType in
+  `basisShapes.jsx`, ook toegestaan in de profiel-ontwerper.
 
 ## Waarom deze keuze
 

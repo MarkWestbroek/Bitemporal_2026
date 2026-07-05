@@ -16,7 +16,7 @@
  *    (Definitie-domein, `ElementType.icoon`); de componenten hier zijn
  *    Implementatie-domein.
  *
- * 28 iconen dekken de elementtypen van canoniek-uml, puur-uml, oas31 en
+ * 30 iconen dekken de elementtypen van canoniek-uml, puur-uml, oas31 en
  * profiel-ontwerp. Registratie is idempotent (veilig bij HMR).
  */
 import { registreerTypeIcoon } from "./typeIconen.jsx";
@@ -108,6 +108,13 @@ const VOCABULAIRE = {
     <>
       <rect x="1.5" y="2.5" width="11" height="9.5" rx="1" strokeDasharray="2.4 1.8" />
       <path d="M1.5 5.2V3.5a1 1 0 0 1 1-1h3.2v2.7Z" {...vul} />
+    </>
+  ),
+  /** Package: de hangmap — romp met gevulde naam-tab die erbóven uitsteekt. */
+  package: (
+    <>
+      <path d="M1.5 4.9V3.3a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1.6Z" {...vul} />
+      <rect x="1.5" y="4.9" width="11" height="7.1" rx="1" />
     </>
   ),
   /** Interface: lollipop met gevulde voet. */
@@ -262,6 +269,14 @@ const VOCABULAIRE = {
       <line x1="1" y1="7" x2="4.5" y2="7" />
       <line x1="9.5" y1="7" x2="13" y2="7" />
       <rect x="4.5" y="4.5" width="5" height="5" rx="1" {...vul} />
+    </>
+  ),
+  /** Bevat (package-lidmaatschap): stippellijn het package (mini-hangmap) in. */
+  bevat: (
+    <>
+      <line x1="1.5" y1="7" x2="6.8" y2="7" strokeDasharray="2.2 1.8" />
+      <path d="M7.6 5V3.9a0.9 0.9 0 0 1 0.9-0.9h1.6a0.9 0.9 0 0 1 0.9 0.9V5Z" {...vul} />
+      <rect x="7.6" y="5" width="4.9" height="4" rx="0.7" />
     </>
   ),
   /** Verbindingsregel (profiel-ontwerp): gevulde bron, open doel. */

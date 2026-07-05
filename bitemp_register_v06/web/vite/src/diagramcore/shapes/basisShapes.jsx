@@ -346,11 +346,77 @@ function BolShape({ element, elementType, selected, children }) {
   );
 }
 
+/**
+ * UML-package: de "hangmap" — een naam-tab linksboven die zijn onderrand
+ * deelt met de romp eronder (UML §12.2). De tab draagt de naam; de romp is
+ * verder leeg en fungeert als drop-doel (ElementType.containerVoor).
+ */
+function PackageShape({ element, elementType, selected, children }) {
+  const d = element.data || {};
+  const rand = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #94a3b8)";
+  const vulling = d.kleur || elementType.kleur || "var(--dc-node-vulling, #f1f5f9)";
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minWidth: 200,
+        minHeight: 110,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        position: "relative",
+        cursor: "grab",
+      }}
+    >
+      {children}
+      {/* De tab overlapt de bovenrand van de romp (marginBottom -2 + zIndex),
+          zodat tab en romp één doorlopende contour vormen — de hangmap. */}
+      <div
+        style={{
+          maxWidth: "65%",
+          padding: "3px 14px 4px",
+          borderTop: `2px solid ${rand}`,
+          borderLeft: `2px solid ${rand}`,
+          borderRight: `2px solid ${rand}`,
+          borderRadius: "6px 6px 0 0",
+          background: vulling,
+          fontSize: 12,
+          fontWeight: 700,
+          color: "#0f172a",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          position: "relative",
+          zIndex: 1,
+          marginBottom: -2,
+        }}
+      >
+        {element.naam || "(naamloos)"}
+      </div>
+      <div
+        style={{
+          flex: 1,
+          alignSelf: "stretch",
+          border: `2px solid ${rand}`,
+          borderRadius: "0 8px 8px 8px",
+          background: vulling,
+          boxShadow: "0 1px 4px rgba(0, 0, 0, 0.1)",
+          padding: "6px 10px",
+        }}
+      >
+        <div className="dc-stereotype">{d.stereotype || elementType.stereotype || ""}</div>
+      </div>
+    </div>
+  );
+}
+
 registreerShape("class-box", ClassBoxShape);
 registreerShape("note", NoteShape);
 registreerShape("rounded", RoundedShape);
 registreerShape("anker", AnkerShape);
 registreerShape("boundary", BoundaryShape);
 registreerShape("bol", BolShape);
+registreerShape("package", PackageShape);
 
-export { ClassBoxShape, NoteShape, RoundedShape, AnkerShape, BoundaryShape, BolShape };
+export { ClassBoxShape, NoteShape, RoundedShape, AnkerShape, BoundaryShape, BolShape, PackageShape };

@@ -270,7 +270,7 @@ fase 2 een **bewerkbare sandbox**:
   **icoon-registry per ElementType** (`shapes/typeIconen.jsx`:
   `elementType.icoon`-id of shape-fallback). De **integrale iconenset** uit
   de vormgevingssessie (2026-07-04/05) staat in
-  `shapes/iconenVocabulaire.jsx`: 28 iconen (outline + één gevuld accent,
+  `shapes/iconenVocabulaire.jsx`: 30 iconen (outline + één gevuld accent,
   14×14, currentColor) die alle elementtypen van de vier profielen dekken;
   gedeelde concepten delen een icoon-id (Entiteit en Klasse → `klasse`).
   Het 0.5-canvas **volgt het studio-thema** (`dc-canvasvlak`, sessiebesluit

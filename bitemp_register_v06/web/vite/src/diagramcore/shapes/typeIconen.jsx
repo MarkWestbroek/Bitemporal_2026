@@ -58,6 +58,14 @@ const IcoonNote = ({ maat = 14 }) =>
 const IcoonKader = ({ maat = 14 }) =>
   basis(maat, <rect x="1.5" y="2" width="11" height="10" rx="1" strokeDasharray="2.4 1.8" />);
 
+const IcoonPackage = ({ maat = 14 }) =>
+  basis(maat, (
+    <>
+      <path d="M1.5 4.9V3.3a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v1.6Z" fill="currentColor" stroke="none" />
+      <rect x="1.5" y="4.9" width="11" height="7.1" rx="1" />
+    </>
+  ));
+
 const IcoonRounded = ({ maat = 14 }) =>
   basis(maat, <rect x="1.5" y="3" width="11" height="8" rx="3.6" />);
 
@@ -75,6 +83,7 @@ const perShape = {
   note: IcoonNote,
   boundary: IcoonKader,
   rounded: IcoonRounded,
+  package: IcoonPackage,
   edge: IcoonLijn,
 };
 

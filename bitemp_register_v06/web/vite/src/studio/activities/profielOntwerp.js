@@ -137,7 +137,7 @@ function slug(tekst) {
   );
 }
 
-const GELDIGE_SHAPES = new Set(["class-box", "bol", "note", "rounded", "boundary"]);
+const GELDIGE_SHAPES = new Set(["class-box", "bol", "note", "rounded", "boundary", "package"]);
 const GELDIGE_DATATYPES = new Set(["string", "tekst", "boolean", "colour"]);
 
 function compVelden(el, compartmentType) {
