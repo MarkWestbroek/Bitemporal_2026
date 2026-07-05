@@ -1590,14 +1590,17 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           ? (() => {
               const s = useStore.getState();
               const items = [];
-              // Alle uitgaande hiërarchie-/lidmaatschaps-connectoren van deze
-              // node in één keer in boomstijl (vgl. EA "alle kinderen").
-              const boomTypen = new Set([
-                ...[].concat(descriptor.hierarchie || []),
-                ...containerConnectorIds,
-              ]);
+              // Alle uitgaande connectoren van deze node in één keer in
+              // boomstijl (vgl. EA "alle kinderen") — niet beperkt tot
+              // hiërarchie-typen: in de profiel-ontwerper zijn de
+              // bevat-lijnen bv. gewone verbindingsregels. Zelf-lussen
+              // (oortjes) slaan we over: die hebben hun eigen vorm.
               const uitgaand = Object.values(s.elements).filter(
-                (c) => boomTypen.has(c.elementType) && c.source === nodeId
+                (c) =>
+                  c.source === nodeId &&
+                  c.target &&
+                  c.target !== nodeId &&
+                  elementTypesById[c.elementType]?.isConnector
               );
               if (uitgaand.length > 0) {
                 const zetBoomstijl = (richting) => {

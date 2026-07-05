@@ -7,12 +7,14 @@
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
   fase 7 (register). Laatste ronde: **boomstijl-lijnen + PE-vlaggen**
-  (2026-07-05): (1) nieuwe lijnvorm **"boom"** (EA tree style: haaks met
-  scherpe hoeken — kinderen op dezelfde rij delen visueel hun aftakking);
+  (2026-07-05): (1) nieuwe lijnvorm **"boom"** (EA tree style: dwarslat op
+  vaste afstand van de ouder-handle, zodat álle kinderen één hark delen —
+  ook op ongelijke hoogtes; zelf-lussen doen niet mee);
   rechtsklik op een connector: *Boomstijl → Verticaal (ouder boven) /
   Horizontaal (ouder links)* zet vorm + beide uiteinden in één klik, en
   rechtsklik op een óuder-node: *Kinderen in boomstijl (n)* doet dat voor
-  álle uitgaande hiërarchie-/bevat-connectoren tegelijk (het warrige
+  álle uitgaande connectoren tegelijk (niet beperkt tot hiërarchie-typen —
+  in de PE zijn de bevat-lijnen gewone verbindingsregels) (het warrige
   package→kinderen-beeld wordt zo een nette boom); (2) de profiel-vlaggen
   **container (drop-doel)** en **standaard dicht in boom** zijn nu ook in
   de PE te bewerken: elementDef kreeg de twee vinkjes, `bouwProfielUitOntwerp`

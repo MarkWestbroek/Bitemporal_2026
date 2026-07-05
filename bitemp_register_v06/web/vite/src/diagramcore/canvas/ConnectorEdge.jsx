@@ -10,7 +10,8 @@
  * data.presentatie:
  *   lijn:        "solid" | "dash-6-3" | "dash-4-3" | "dash-4-4"
  *   vorm:        "bezier" (default) | "hoekig" (orthogonaal) | "recht" |
- *                "boom" (haaks, scherpe hoeken — EA tree style)
+ *                "boom" (EA tree style: dwarslat op vaste afstand van de
+ *                ouder, zodat alle kinderen één hark delen)
  *                — de route van de lijn (§8.5c-familie); UML oogt
  *                herkenbaarder hoekig, grafen juist met krommen
  *   kleur:       basiskleur (selected → accent, tenzij `vasteKleur`)
@@ -140,16 +141,35 @@ function ConnectorEdge({
     const midI = Math.floor(pts.length / 2);
     return [pad, (pts[midI - 1].x + pts[midI].x) / 2, (pts[midI - 1].y + pts[midI].y) / 2];
   };
+  // Boomstijl (EA "tree style"): korte stam uit de ouder, één dwarslat op
+  // váste afstand van de ouder-handle, en per kind een rechte poot. Doordat
+  // de lat-positie alleen van de bron afhangt, delen alle kinderen van
+  // dezelfde ouder één lat — óók als ze op ongelijke hoogtes staan.
+  const boomPad = () => {
+    const LAT = 40;
+    if (sourcePosition === "left" || sourcePosition === "right") {
+      const latX = sourceX + (sourcePosition === "right" ? LAT : -LAT);
+      return [
+        `M ${sourceX} ${sourceY} L ${latX} ${sourceY} L ${latX} ${targetY} L ${targetX} ${targetY}`,
+        latX,
+        (sourceY + targetY) / 2,
+      ];
+    }
+    const latY = sourceY + (sourcePosition === "top" ? -LAT : LAT);
+    return [
+      `M ${sourceX} ${sourceY} L ${sourceX} ${latY} L ${targetX} ${latY} L ${targetX} ${targetY}`,
+      (sourceX + targetX) / 2,
+      latY,
+    ];
+  };
   const [edgePath, labelX, labelY] = isLus
     ? lusPad()
     : knikken
       ? knikPad()
-      : p.vorm === "hoekig"
-        ? getSmoothStepPath({ ...padArgs, borderRadius: 4 })
-        : p.vorm === "boom"
-          ? // Boomstijl (EA "tree style"): haaks met scherpe hoeken; kinderen
-            // op dezelfde rij delen zo hun aftakking tot één stam-beeld.
-            getSmoothStepPath({ ...padArgs, borderRadius: 0 })
+      : p.vorm === "boom"
+        ? boomPad()
+        : p.vorm === "hoekig"
+          ? getSmoothStepPath({ ...padArgs, borderRadius: 4 })
           : p.vorm === "recht"
             ? getStraightPath(padArgs)
             : getBezierPath(padArgs);
