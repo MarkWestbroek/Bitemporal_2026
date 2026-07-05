@@ -502,6 +502,57 @@ export function ontwerpUitProfiel(descriptor) {
   };
 }
 
+// ── Standaard-layouts per profiel (PE-persistentie) ────────────────────────
+
+/**
+ * Stabiele layout-sleutel per node: elementType + naam + volgnummer.
+ * ontwerpUitProfiel is deterministisch, dus de volgorde (en daarmee het
+ * volgnummer bij naamgenoten, bv. twee compartimenten "velden") is stabiel
+ * zolang het profiel niet wijzigt — de gegenereerde ow{n}_-ids zijn dat
+ * juist níet, dus die zijn onbruikbaar als sleutel.
+ */
+export function layoutSleutels(elements, nodes) {
+  const teller = new Map();
+  return (nodes || []).map((node) => {
+    const el = elements[node.elementId] || {};
+    const basis = `${el.elementType || "?"}:${el.naam || ""}`;
+    const n = (teller.get(basis) || 0) + 1;
+    teller.set(basis, n);
+    return { node, sleutel: `${basis}#${n}` };
+  });
+}
+
+/** Pas een bewaarde standaard-layout ({sleutel: {x, y}}) toe op verse nodes. */
+export function pasStandaardLayoutToe(elements, nodes, layout) {
+  if (!layout) return nodes;
+  return layoutSleutels(elements, nodes).map(({ node, sleutel }) =>
+    layout[sleutel] ? { ...node, position: { ...layout[sleutel] } } : node
+  );
+}
+
+/**
+ * Alle (geregistreerde) profielen als ontwerp-diagrammen naast elkaar — de
+ * herlaad-routine van de profiel-ontwerper. `layoutVoor(profielId)` mag een
+ * bewaarde standaard-layout teruggeven (zie layoutSleutels).
+ */
+export function ontwerpUitAlleProfielen(descriptors, layoutVoor = null) {
+  const elements = {};
+  const diagrams = {};
+  for (const dt of descriptors || []) {
+    const ontwerp = ontwerpUitProfiel(dt);
+    Object.assign(elements, ontwerp.elements);
+    const basis = Object.values(ontwerp.diagrams)[0];
+    const id = `ontw_${dt.id}`;
+    diagrams[id] = {
+      ...basis,
+      id,
+      naam: dt.label || dt.id,
+      nodes: pasStandaardLayoutToe(ontwerp.elements, basis.nodes, layoutVoor?.(dt.id)),
+    };
+  }
+  return { elements, diagrams };
+}
+
 /** Voorbeeld-ontwerp (het e2e-scenario): Ster (bol) ◆ Metingen ◆ meting, Planeet, "draait om". */
 export function voorbeeldOntwerp() {
   return ontwerpUitProfiel({

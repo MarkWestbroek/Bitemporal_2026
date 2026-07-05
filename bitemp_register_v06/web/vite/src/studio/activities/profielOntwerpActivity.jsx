@@ -24,10 +24,18 @@ import {
   PROFIEL_ONTWERP_ID,
   bouwProfielUitOntwerp,
   ontwerpUitProfiel,
+  ontwerpUitAlleProfielen,
+  pasStandaardLayoutToe,
+  layoutSleutels,
   voorbeeldOntwerpMetRegel,
   elementenVanDiagram,
 } from "./profielOntwerp.js";
-import { bewaarProfiel, registreerProfielAlsActiviteit } from "./profielRegistratie.jsx";
+import {
+  bewaarProfiel,
+  registreerProfielAlsActiviteit,
+  leesProfielLayouts,
+  bewaarProfielLayout,
+} from "./profielRegistratie.jsx";
 
 const descriptor = vertaalHooks(profielOntwerpKern);
 vervangDiagramType(descriptor);
@@ -80,10 +88,54 @@ function bekijkBestaandProfiel(useStore) {
   for (const el of Object.values(ontwerp.elements)) {
     useStore.getState().addElement(el);
   }
-  const nodes = Object.values(ontwerp.diagrams)[0]?.nodes || [];
+  // Een eerder bewaarde standaard-layout voor dit profiel wint van de
+  // gegenereerde posities.
+  const nodes = pasStandaardLayoutToe(
+    ontwerp.elements,
+    Object.values(ontwerp.diagrams)[0]?.nodes || [],
+    leesProfielLayouts()[gekozen.id]
+  );
   for (const n of nodes) {
     useStore.getState().addElementToDiagram(dId, n.elementId, n.position);
   }
+}
+
+/**
+ * Bewaar de layout van het actieve ontwerp-diagram als standaard voor het
+ * profiel: bij elk volgend laden (herlaad of "Bekijk bestaand…") komen de
+ * nodes weer zo te staan. Sleutels zijn naam-gebaseerd (zie layoutSleutels),
+ * want de gegenereerde element-ids verschillen per laadbeurt.
+ */
+function bewaarLayoutAlsStandaard(useStore) {
+  const s = useStore.getState();
+  const d = s.diagrams[s.actiefDiagramId];
+  if (!d) return;
+  const m = /^ontw_(.+?)(?:_\d{10,})?$/.exec(d.id);
+  if (!m) {
+    window.alert(
+      "Dit ontwerp is niet uit een geregistreerd profiel geladen.\n" +
+        "Activeer het eerst (dan krijgt het een profiel-id) en laad het opnieuw."
+    );
+    return;
+  }
+  const layout = {};
+  for (const { node, sleutel } of layoutSleutels(s.elements, d.nodes)) {
+    layout[sleutel] = { x: Math.round(node.position.x), y: Math.round(node.position.y) };
+  }
+  bewaarProfielLayout(m[1], layout);
+  window.alert(`Layout bewaard als standaard voor profiel "${m[1]}".`);
+}
+
+/** Voorbeeld-ontwerp (Ster ◆ Planeet) laden — vervangt de sandbox. */
+function laadVoorbeeld(useStore) {
+  if (
+    Object.keys(useStore.getState().elements).length &&
+    !window.confirm("Voorbeeld-ontwerp laden? De huidige sandbox wordt vervangen.")
+  ) {
+    return;
+  }
+  useStore.getState().laadModel(voorbeeldOntwerpMetRegel());
+  useStore.temporal.getState().clear();
 }
 
 export default maakDiagramActiviteit({
@@ -101,15 +153,32 @@ export default maakDiagramActiviteit({
   previewTekst:
     "Teken Elementtypen ◆ Compartimenttypen ◆ Veldtypen + verbindingsregels; Ontwerp → Activeer profiel maakt er een activiteit van.",
   devHookNaam: "__profielOntwerpStore",
+  // Eén profiel per diagram: de browser toont alleen het actieve profiel
+  // (anders stapelen de verbindingsregels van alle profielen op).
+  browserAlleenActiefDiagram: true,
   koppeling: {
-    /** Seed/reset: het voorbeeld-ontwerp (e2e-scenario) als startdiagram. */
-    herlaadUitModel: () => voorbeeldOntwerpMetRegel(),
-    herlaadLabel: "Laad voorbeeld-ontwerp…",
+    /**
+     * Herlaad = álle geregistreerde profielen als ontwerp-diagrammen naast
+     * elkaar (met hun bewaarde standaard-layouts); zonder registraties valt
+     * hij terug op het voorbeeld-ontwerp.
+     */
+    herlaadUitModel: () => {
+      const dts = alleDiagramTypes().filter((dt) => dt.id !== PROFIEL_ONTWERP_ID);
+      if (!dts.length) return voorbeeldOntwerpMetRegel();
+      const layouts = leesProfielLayouts();
+      return ontwerpUitAlleProfielen(dts, (pid) => layouts[pid]);
+    },
+    herlaadLabel: "Laad alle geregistreerde profielen…",
   },
   hoofdmenuExtra: [
     { id: "activeer", label: "Activeer profiel… (registreer/ververs)", run: activeerProfiel },
     { id: "bekijk-profiel", label: "Bekijk bestaand profiel als ontwerp…", run: bekijkBestaandProfiel },
+    { id: "bewaar-layout", label: "Bewaar layout als standaard voor dit profiel", run: bewaarLayoutAlsStandaard },
+    { id: "voorbeeld", label: "Laad voorbeeld-ontwerp (Ster ◆ Planeet)…", run: laadVoorbeeld },
   ],
-  // Zelfde actie onder de rechtermuisknop op een leeg stuk canvas.
-  canvasMenuExtra: [{ id: "activeer-ctx", label: "Activeer profiel…", run: activeerProfiel }],
+  // Zelfde acties onder de rechtermuisknop op een leeg stuk canvas.
+  canvasMenuExtra: [
+    { id: "activeer-ctx", label: "Activeer profiel…", run: activeerProfiel },
+    { id: "bewaar-layout-ctx", label: "Bewaar layout als standaard", run: bewaarLayoutAlsStandaard },
+  ],
 });

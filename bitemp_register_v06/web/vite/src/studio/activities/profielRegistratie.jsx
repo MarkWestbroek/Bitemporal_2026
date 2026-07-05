@@ -32,6 +32,28 @@ export function bewaarProfiel(kern) {
   bewaarProfielen({ ...leesProfielen(), [kern.id]: kern });
 }
 
+// ── Standaard-layouts per profiel (PE): {profielId: {sleutel: {x, y}}} ─────
+export const LAYOUT_OPSLAG_SLEUTEL = "studio05-profiel-layouts";
+
+export function leesProfielLayouts() {
+  try {
+    return JSON.parse(localStorage.getItem(LAYOUT_OPSLAG_SLEUTEL) || "{}") || {};
+  } catch {
+    return {};
+  }
+}
+
+export function bewaarProfielLayout(profielId, layout) {
+  try {
+    localStorage.setItem(
+      LAYOUT_OPSLAG_SLEUTEL,
+      JSON.stringify({ ...leesProfielLayouts(), [profielId]: layout })
+    );
+  } catch {
+    /* opslag vol — niet kritisch */
+  }
+}
+
 /**
  * Registreer een descriptor-kern als DiagramType + activiteit. Retourneert
  * het activiteit-id. Gooit bij validatie-/hookfouten.

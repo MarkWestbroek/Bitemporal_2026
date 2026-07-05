@@ -88,6 +88,9 @@ export function maakDiagramActiviteit(opties) {
     // Hoe heet een "diagram" in deze activiteit? De profiel-ontwerper zegt
     // bv. "profiel" — elk diagram stelt daar een profiel voor.
     diagramTerm = "diagram",
+    // PE: één profiel per diagram — de browser toont dan alleen de elementen
+    // van het actieve diagram (plus wat nergens op een diagram staat).
+    browserAlleenActiefDiagram = false,
   } = opties;
 
   const ev = (naam) => `${menuPrefix}:${naam}`;
@@ -844,6 +847,34 @@ export function maakDiagramActiviteit(opties) {
       } else if (!et?.isConnector && actiefDiagram) {
         items.push({ label: `Toevoegen aan dit ${diagramTerm}`, onClick: () => voegToe(el) });
       }
+      items.push({ label: "Toon details", onClick: () => setSelectieId(el.id) });
+      items.push({
+        label: "Hernoemen…",
+        onClick: () => {
+          const naam = window.prompt("Nieuwe naam:", el.naam || "");
+          if (naam) useStore.getState().updateElement(el.id, { naam });
+        },
+      });
+      items.push({ sep: true });
+      items.push({ label: "Kopieer ID", onClick: () => navigator.clipboard?.writeText(el.id) });
+      // Verplaatsen/losmaken (vgl. "Verplaats naar domein…" in de IDE).
+      const containers = Object.values(s.elements).filter(
+        (c) => elementTypesById[c.elementType]?.containerVoor && c.id !== el.id
+      );
+      if (containers.length && !et?.isConnector) {
+        items.push({
+          label: "Verplaats naar package…",
+          onClick: () => {
+            const namen = containers.map((c) => c.naam || c.id);
+            const keuze = window.prompt(`Naar welk package?
+Beschikbaar: ${namen.join(", ")}`, namen[0]);
+            if (!keuze) return;
+            const doel = containers.find((c) => (c.naam || c.id) === keuze.trim());
+            if (doel) verhangNaarContainer(useStore, el.id, doel.id);
+            else window.alert(`Onbekend package "${keuze}".`);
+          },
+        });
+      }
       const lidmaatschappen = Object.values(s.elements).filter(
         (c) => containerConnectorIds.has(c.elementType) && c.target === el.id
       );
@@ -910,6 +941,23 @@ export function maakDiagramActiviteit(opties) {
     const opDiagram = new Set(
       (diagrams[actiefDiagram]?.nodes || []).map((n) => n.elementId)
     );
+    // Standaard toont de browser het hele model; met browserAlleenActiefDiagram
+    // (PE) alleen het actieve diagram/profiel — anders stapelen bv. de
+    // verbindingsregels van álle geladen profielen op tot één lange lijst.
+    let bronElementen = Object.values(elements);
+    if (browserAlleenActiefDiagram) {
+      const ergens = new Set();
+      for (const d of Object.values(diagrams)) {
+        for (const n of d.nodes || []) ergens.add(n.elementId);
+      }
+      bronElementen = bronElementen.filter(
+        (el) =>
+          opDiagram.has(el.id) ||
+          (el.source && el.target && opDiagram.has(el.source) && opDiagram.has(el.target)) ||
+          (!ergens.has(el.id) && !(el.source && el.target))
+      );
+    }
+    const inbegrepen = new Map(bronElementen.map((el) => [el.id, el]));
     const term = zoek.trim().toLowerCase();
     // E01/P02: met één of meer hierarchie-connectortypen in de descriptor
     // nesten we de niet-connector-elementen als boom (zoeken → plat).
@@ -923,12 +971,12 @@ export function maakDiagramActiviteit(opties) {
         // Zelf-verwijzing (bv. een recursief OAS-schema) zou het element uit
         // de wortels halen én alleen onder zichzelf tonen — overslaan.
         if (ouder === kind) return;
-        if (!elements[ouder] || !elements[kind]) return;
+        if (!inbegrepen.has(ouder) || !inbegrepen.has(kind)) return;
         if (!kinderenVan.has(ouder)) kinderenVan.set(ouder, []);
         if (!kinderenVan.get(ouder).includes(kind)) kinderenVan.get(ouder).push(kind);
         heeftOuder.add(kind);
       };
-      for (const el of Object.values(elements)) {
+      for (const el of bronElementen) {
         if (!hierIds.includes(el.elementType) || !el.source || !el.target) continue;
         voegPaar(el.source, el.target);
       }
@@ -940,18 +988,24 @@ export function maakDiagramActiviteit(opties) {
     }
     const sorteer = (lijst) => lijst.sort((a, b) => (a.naam || a.id).localeCompare(b.naam || b.id));
     const wortels = boomModus
-      ? sorteer(
-          Object.values(elements).filter((el) => {
-            const et = elementTypesById[el.elementType];
-            return et && !et.isConnector && !heeftOuder.has(el.id);
-          })
-        )
+      ? (() => {
+          const alle = sorteer(
+            bronElementen.filter((el) => {
+              const et = elementTypesById[el.elementType];
+              return et && !et.isConnector && !heeftOuder.has(el.id);
+            })
+          );
+          // Containers (packages, ElementType.containerVoor) bovenaan; de
+          // "losse flodders" volgen daaronder, elk alfabetisch.
+          const isContainer = (el) => !!elementTypesById[el.elementType]?.containerVoor;
+          return [...alle.filter(isContainer), ...alle.filter((el) => !isContainer(el))];
+        })()
       : [];
     const groepen = descriptor.elementTypes
       .filter((et) => !boomModus || et.isConnector)
       .map((et) => ({
         et,
-        items: Object.values(elements)
+        items: bronElementen
           .filter((el) => el.elementType === et.id)
           // Naamloze connectoren ("(oascon_ref_32)" enz.) zijn ruis in de
           // browser: ze zijn via hun uiteinden op de canvas te vinden.
@@ -975,7 +1029,7 @@ export function maakDiagramActiviteit(opties) {
       const zichtbaar = opDiagram.has(el.id);
       const kinderen =
         diepte < 8
-          ? sorteer((kinderenVan.get(el.id) || []).map((kid) => elements[kid]).filter(Boolean))
+          ? sorteer((kinderenVan.get(el.id) || []).map((kid) => inbegrepen.get(kid)).filter(Boolean))
           : [];
       const dichtgeklapt = !!ingeklapt[el.id];
       return (

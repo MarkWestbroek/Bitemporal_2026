@@ -6,7 +6,27 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **notities in packages + rechtsklik in
+  fase 7 (register). Laatste ronde: **boomvolgorde, PE-herlaad &
+  layout-persistentie** (2026-07-05): (1) **packages bovenaan in de boom** —
+  wortels waarvan het type `containerVoor` heeft (packages) komen eerst, de
+  "losse flodders" alfabetisch daaronder (die vlag is dus hét
+  top-level-signaal in het profiel); (2) het **rijmenu** is verrijkt naar
+  IDE-pariteit waar generiek kan: *Toon details*, *Hernoemen…*,
+  *Kopieer ID*, *Verplaats naar package…* (naast toevoegen/losmaken/
+  verwijderen; de canoniek-casts blijven IDE-specifiek); (3) de "51
+  verbindingsregels" in de PE waren **geen bug** maar de som van alle
+  geladen profielen (elke bron×doel-combinatie is één regel-lijn, bv.
+  Associatie 3×3 = 9) — de PE zet nu `browserAlleenActiefDiagram`: de
+  browser toont alleen het actieve profiel (oas31 = 11 regels i.p.v. 77
+  totaal); (4) **PE-herlaad laadt nu álle geregistreerde profielen** als
+  ontwerp-diagrammen naast elkaar (`ontwerpUitAlleProfielen`); het
+  Ster ◆ Planeet-voorbeeld zit als apart menu-item; (5)
+  **layout-persistentie per profiel**: *Bewaar layout als standaard voor
+  dit profiel* (menu + rechtsklik) bewaart naam-gebaseerde posities
+  (`layoutSleutels` — de ow{n}_-ids zijn per laadbeurt anders) in
+  localStorage `studio05-profiel-layouts`; herlaad en *Bekijk bestaand…*
+  passen hem toe. Een échte persistente profiel-registry (API i.p.v.
+  localStorage) blijft trede 3 / fase 7. Eerdere ronde: **notities in packages + rechtsklik in
   de sidebar** (2026-07-05): (1) de `bevat`-doelregel in de profielen
   toegelaten voor **notitie** (puur-uml en canoniek) en **constraint**
   (canoniek) — de regel wás te streng; dit is een profiel-wijziging

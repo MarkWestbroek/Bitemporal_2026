@@ -8,6 +8,8 @@ import {
   profielOntwerpKern,
   bouwProfielUitOntwerp,
   ontwerpUitProfiel,
+  ontwerpUitAlleProfielen,
+  layoutSleutels,
   voorbeeldOntwerpMetRegel,
   elementenVanDiagram,
 } from "./profielOntwerp.js";
@@ -186,4 +188,40 @@ test("hiërarchie (P02): bevat-vinkje op een regel-lijn wordt kern.hierarchie en
   const terug = ontwerpUitProfiel(kern);
   const lijn = Object.values(terug.elements).find((el) => el.elementType === "verbindingsregel");
   assert.equal(lijn.data.isHierarchie, true);
+});
+
+test("ontwerpUitAlleProfielen: diagram per profiel + bewaarde layout wint", () => {
+  const profielA = {
+    id: "prof-a",
+    label: "Profiel A",
+    fieldTypes: [],
+    elementTypes: [{ id: "ding", label: "Ding", shape: "class-box", properties: [] }],
+  };
+  const profielB = {
+    id: "prof-b",
+    label: "Profiel B",
+    fieldTypes: [],
+    elementTypes: [{ id: "zaak", label: "Zaak", shape: "class-box", properties: [] }],
+  };
+  const layouts = { "prof-a": { "elementDef:Ding#1": { x: 555, y: 66 } } };
+  const { elements, diagrams } = ontwerpUitAlleProfielen([profielA, profielB], (pid) => layouts[pid]);
+  assert.deepEqual(Object.keys(diagrams).sort(), ["ontw_prof-a", "ontw_prof-b"]);
+  const nodeA = diagrams["ontw_prof-a"].nodes.find(
+    (n) => elements[n.elementId]?.naam === "Ding"
+  );
+  assert.deepEqual(nodeA.position, { x: 555, y: 66 }, "bewaarde standaard-layout wint");
+  const nodeB = diagrams["ontw_prof-b"].nodes.find(
+    (n) => elements[n.elementId]?.naam === "Zaak"
+  );
+  assert.ok(nodeB, "tweede profiel heeft zijn eigen diagram met nodes");
+});
+
+test("layoutSleutels: naamgenoten krijgen stabiele volgnummers", () => {
+  const elements = {
+    a: { id: "a", naam: "velden", elementType: "compartimentDef" },
+    b: { id: "b", naam: "velden", elementType: "compartimentDef" },
+  };
+  const nodes = [{ elementId: "a" }, { elementId: "b" }];
+  const sleutels = layoutSleutels(elements, nodes).map((x) => x.sleutel);
+  assert.deepEqual(sleutels, ["compartimentDef:velden#1", "compartimentDef:velden#2"]);
 });
