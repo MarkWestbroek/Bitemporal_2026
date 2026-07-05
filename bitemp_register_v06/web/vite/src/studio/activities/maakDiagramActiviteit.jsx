@@ -757,10 +757,59 @@ export function maakDiagramActiviteit(opties) {
   }
 
   /**
+   * Klein rechtsklik-menu voor de sidebar (boom + diagrammen-/profielenlijst),
+   * in dezelfde look als het canvas-contextmenu (dc-contextmenu) maar
+   * fixed-positioned, met viewport-klem.
+   */
+  function ZijContextMenu({ menu, sluit }) {
+    useEffect(() => {
+      if (!menu) return undefined;
+      const dicht = (e) => {
+        if (!e.target.closest?.(".dc-contextmenu")) sluit();
+      };
+      const esc = (e) => e.key === "Escape" && sluit();
+      window.addEventListener("pointerdown", dicht, true);
+      window.addEventListener("keydown", esc);
+      return () => {
+        window.removeEventListener("pointerdown", dicht, true);
+        window.removeEventListener("keydown", esc);
+      };
+    }, [menu, sluit]);
+    if (!menu) return null;
+    const links = Math.max(8, Math.min(menu.x, window.innerWidth - 250));
+    const boven = Math.max(8, Math.min(menu.y, window.innerHeight - 16 - menu.items.length * 28));
+    return (
+      <div
+        className="dc-contextmenu"
+        style={{ position: "fixed", left: links, top: boven, zIndex: 400 }}
+        onContextMenu={(e) => e.preventDefault()}
+      >
+        {menu.items.map((item, i) =>
+          item.sep ? (
+            <div key={i} className="dc-contextmenu-sep" />
+          ) : (
+            <button
+              key={item.id || i}
+              className="dc-contextmenu-item"
+              onClick={() => {
+                sluit();
+                item.onClick?.();
+              }}
+            >
+              {item.label}
+            </button>
+          )
+        )}
+      </div>
+    );
+  }
+
+  /**
    * Elementen-browser (plan §8.8): alle model-elementen, gegroepeerd per
    * elementtype — óók wat op geen enkel diagram staat (na een import het
    * grootste gat). Klik = selecteren in de inspector; ＋ = toevoegen aan
-   * het actieve diagram (in het zichtbare viewport-midden).
+   * het actieve diagram (in het zichtbare viewport-midden); rechtsklik =
+   * acties (toevoegen/losmaken/verwijderen — vgl. de IDE-ProjectBrowser).
    */
   function ElementenBrowser() {
     const elements = useStore((s) => s.elements);
@@ -769,6 +818,50 @@ export function maakDiagramActiviteit(opties) {
     const { selectieId, setSelectieId, layoutApiRef } = useContext(Ctx);
     const [zoek, setZoek] = useState("");
     const [dicht, setDicht] = useState({});
+    // Rechtsklik-menu op boomrijen (vgl. de IDE-ProjectBrowser).
+    const [zijMenu, setZijMenu] = useState(null);
+    const openRijMenu = (e, el, et, zichtbaar) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const s = useStore.getState();
+      const items = [];
+      if (zichtbaar) {
+        items.push({
+          label: "Toon op canvas",
+          onClick: () => {
+            setSelectieId(el.id);
+            layoutApiRef.current?.focusNode?.(el.id);
+          },
+        });
+        if (!et?.isConnector && actiefDiagram) {
+          items.push({
+            label: `Verwijderen van dit ${diagramTerm}`,
+            onClick: () => useStore.getState().removeElementFromDiagram(actiefDiagram, el.id),
+          });
+        }
+      } else if (!et?.isConnector && actiefDiagram) {
+        items.push({ label: `Toevoegen aan dit ${diagramTerm}`, onClick: () => voegToe(el) });
+      }
+      const lidmaatschappen = Object.values(s.elements).filter(
+        (c) => containerConnectorIds.has(c.elementType) && c.target === el.id
+      );
+      if (lidmaatschappen.length) {
+        items.push({
+          label: `Losmaken uit "${s.elements[lidmaatschappen[0].source]?.naam || "package"}"`,
+          onClick: () => verhangNaarContainer(useStore, el.id, null),
+        });
+      }
+      items.push({ sep: true });
+      items.push({
+        label: "Verwijderen uit model…",
+        onClick: () => {
+          if (window.confirm(`"${el.naam || el.id}" uit het model verwijderen?`)) {
+            useStore.getState().deleteElement(el.id);
+          }
+        },
+      });
+      setZijMenu({ x: e.clientX, y: e.clientY, items });
+    };
     // Drag & drop in de boom (vgl. IDE-ProjectBrowser): element op een
     // container (package) slepen = verhangen; op de achtergrond = losmaken.
     const [sleepDoel, setSleepDoel] = useState(null);
@@ -886,6 +979,7 @@ export function maakDiagramActiviteit(opties) {
               setSelectieId(el.id);
               if (zichtbaar) layoutApiRef.current?.focusNode?.(el.id);
             }}
+            onContextMenu={(e) => openRijMenu(e, el, et, zichtbaar)}
             title={zichtbaar ? el.naam || el.id : `${el.naam || el.id} — niet op dit diagram`}
             style={{
               display: "flex",
@@ -1022,6 +1116,7 @@ export function maakDiagramActiviteit(opties) {
                         setSelectieId(el.id);
                         if (zichtbaar) layoutApiRef.current?.focusNode?.(el.id);
                       }}
+                      onContextMenu={(e) => openRijMenu(e, el, et, zichtbaar)}
                       title={zichtbaar ? el.naam || el.id : `${el.naam || el.id} — niet op dit diagram`}
                       style={{
                         display: "flex",
@@ -1064,6 +1159,7 @@ export function maakDiagramActiviteit(opties) {
             </div>
           ))}
         </div>
+        <ZijContextMenu menu={zijMenu} sluit={() => setZijMenu(null)} />
       </div>
     );
   }
@@ -1076,9 +1172,35 @@ export function maakDiagramActiviteit(opties) {
     const { herlaad, heeftKoppeling } = useContext(Ctx);
     const lijst = Object.values(diagrams);
 
+    const [zijMenu, setZijMenu] = useState(null);
     const hernoem = (d) => {
       const naam = window.prompt("Nieuwe naam:", d.naam);
       if (naam) useStore.getState().renameDiagram(d.id, naam);
+    };
+    /** Rechtsklik op een diagram-/profielrij: dezelfde acties als de knopjes
+     *  plus exporteren en de activiteit-eigen acties (bv. Activeer profiel). */
+    const openDiagramMenu = (e, d) => {
+      e.preventDefault();
+      const items = [
+        { label: "Hernoemen…", onClick: () => hernoem(d) },
+        {
+          label: `Exporteer dit ${diagramTerm}…`,
+          onClick: () => {
+            setActief(d.id);
+            setTimeout(() => menuBus.emit(ev("exporteer-05")), 0);
+          },
+        },
+        ...canvasMenuExtra.map((m) => ({
+          label: m.label,
+          onClick: () => {
+            setActief(d.id);
+            setTimeout(() => m.run(useStore), 0);
+          },
+        })),
+        { sep: true },
+        { label: "Verwijderen…", onClick: () => verwijder(d) },
+      ];
+      setZijMenu({ x: e.clientX, y: e.clientY, items });
     };
     const verwijder = (d) => {
       if (window.confirm(`Diagram "${d.naam}" verwijderen? (Elementen blijven in het model.)`)) {
@@ -1107,6 +1229,7 @@ export function maakDiagramActiviteit(opties) {
             <div
               key={d.id}
               onClick={() => setActief(d.id)}
+              onContextMenu={(e) => openDiagramMenu(e, d)}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -1138,6 +1261,7 @@ export function maakDiagramActiviteit(opties) {
           ))}
         </div>
         <ElementenBrowser />
+        <ZijContextMenu menu={zijMenu} sluit={() => setZijMenu(null)} />
         <div
           style={{
             padding: "6px 10px",

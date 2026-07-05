@@ -6,7 +6,21 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **slepen-in-package, boom-DnD &
+  fase 7 (register). Laatste ronde: **notities in packages + rechtsklik in
+  de sidebar** (2026-07-05): (1) de `bevat`-doelregel in de profielen
+  toegelaten voor **notitie** (puur-uml en canoniek) en **constraint**
+  (canoniek) — de regel wás te streng; dit is een profiel-wijziging
+  (descriptor), geen core-wijziging, en de adapter maakt nu ook voor
+  notities/constraints met een V3-domein een bevat-connector; (2)
+  **rechtsklik-menu in de sidebar** (vgl. de IDE-ProjectBrowser): op een
+  boomrij (toon op canvas / toevoegen aan dit diagram / verwijderen van dit
+  diagram / losmaken uit package / verwijderen uit model) en op een
+  diagram-/profielrij (hernoemen, exporteer dit diagram/profiel, de
+  activiteit-eigen acties zoals *Activeer profiel…*, verwijderen) — gedeelde
+  `ZijContextMenu`-component in de dc-contextmenu-stijl; (3) e2e bevestigd
+  dat **V3-import én "Herlaad uit UML-model" dezelfde adapter delen**: het
+  demo-model levert packages "np-loc"/"register" met geneste leden in de
+  boom. Eerdere ronde: **slepen-in-package, boom-DnD &
   profiel-editor-UX** (2026-07-05): (1) **`ElementType.containerVoor`** —
   een containertype (package) is nu drop-doel: een node erop slepen op de
   canvas legt/verhangt de bevat-connector (kleinste container wint bij

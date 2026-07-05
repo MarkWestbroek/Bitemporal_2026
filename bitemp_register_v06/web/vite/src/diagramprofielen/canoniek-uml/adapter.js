@@ -316,7 +316,14 @@ export function vanCanoniekModel(state) {
   // de elementen-browser ordent er de boom mee. Alleen voor typen die het
   // bevat-doel toestaat; gegevenselementen/relaties hangen al via de
   // compositie resp. hun uiteinden, en houden hun domein in data.domein.
-  const PKG_DOELEN = new Set(["entiteit", "enumeratie", "gegevenstype", "referentielijstInstantie"]);
+  const PKG_DOELEN = new Set([
+    "entiteit",
+    "enumeratie",
+    "gegevenstype",
+    "referentielijstInstantie",
+    "notitie",
+    "constraint",
+  ]);
   const pkgIdVoor = new Map();
   for (const el of Object.values(bronElements)) {
     const dom = (el?.domein || "").trim();

@@ -114,7 +114,7 @@ const elementTypes = [
     label: "Package",
     kort: "PKG",
     stereotype: "«package»",
-    shape: "class-box",
+    shape: "package",
     kleur: "#f1f5f9",
     icoon: "package",
     // Drop-doel op canvas en in de boom: erin slepen legt de bevat-connector.
@@ -260,7 +260,7 @@ const elementTypes = [
     icoon: "bevat",
     isConnector: true,
     bron: { elementTypes: ["package"] },
-    doel: { elementTypes: [...MET_DATATYPE, "package"] },
+    doel: { elementTypes: [...MET_DATATYPE, "package", "notitie"] },
     edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#94a3b8" },
   },
 ];
