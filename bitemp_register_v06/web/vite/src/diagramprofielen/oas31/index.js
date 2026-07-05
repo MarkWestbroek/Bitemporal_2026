@@ -258,6 +258,8 @@ export const oas31DiagramType = {
   id: OAS31_ID,
   label: "OpenAPI 3.1",
   style: "uml-klassiek",
+  // Boomordening in de elementen-browser: operatie → ($ref) → schema → ….
+  hierarchie: "ref",
   fieldTypes,
   elementTypes,
   referenceTypes,
@@ -268,15 +270,17 @@ export const oas31DiagramType = {
     { id: "auto-layout", label: "Auto-layout", acties: "layouts" },
   ],
   /**
-   * Gelaagde OAS-layout: operaties in kolom 0, daarna per $ref-stap een
-   * kolom naar rechts (schemas op afhankelijkheidsafstand); wat nergens aan
-   * hangt komt in de laatste kolom. Puur op flowNodes/flowEdges.
+   * Gelaagde OAS-layout: operaties op rij 0 (bovenaan), daarna per $ref-stap
+   * een rij naar beneden (schemas op afhankelijkheidsafstand); wat nergens
+   * aan hangt komt op de onderste rij. De operatie-rij sorteert van links
+   * naar rechts volgens CRUD (POST, GET, PUT/PATCH, DELETE), daarbinnen op
+   * pad; schema-rijen alfabetisch op naam.
    */
   layouts: [
     {
       id: "oas-lagen",
       label: "Auto-layout",
-      run: ({ flowNodes, flowEdges }) => {
+      run: ({ flowNodes, flowEdges, elements }) => {
         const nodes = flowNodes.filter((n) => !n.hidden);
         const idSet = new Set(nodes.map((n) => n.id));
         const uitgaand = new Map();
@@ -311,11 +315,25 @@ export const oas31DiagramType = {
           if (!perLaag.has(l)) perLaag.set(l, []);
           perLaag.get(l).push(n);
         }
+        const CRUD = { post: 0, get: 1, put: 2, patch: 3, delete: 4 };
         const posities = {};
         for (const [l, groep] of perLaag) {
-          groep.sort((a, b) => a.id.localeCompare(b.id));
+          if (l === 0) {
+            groep.sort((a, b) => {
+              const ea = elements?.[a.id]?.data || {};
+              const eb = elements?.[b.id]?.data || {};
+              const ra = CRUD[(ea.method || "").toLowerCase()] ?? 9;
+              const rb = CRUD[(eb.method || "").toLowerCase()] ?? 9;
+              if (ra !== rb) return ra - rb;
+              return (ea.pad || a.id).localeCompare(eb.pad || b.id);
+            });
+          } else {
+            groep.sort((a, b) =>
+              (elements?.[a.id]?.naam || a.id).localeCompare(elements?.[b.id]?.naam || b.id)
+            );
+          }
           groep.forEach((n, i) => {
-            posities[n.id] = { x: 80 + l * 380, y: 60 + i * 240 };
+            posities[n.id] = { x: 80 + i * 320, y: 60 + l * 300 };
           });
         }
         return posities;

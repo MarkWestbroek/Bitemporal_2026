@@ -432,8 +432,16 @@ export function maakDiagramActiviteit(opties) {
         return;
       }
       const elements = { ...s.elements };
+      // Alleen elementen die bij het gekozen diagram horen: een werkbestand
+      // met meerdere diagrammen sleepte anders tientallen zwevende elementen
+      // mee de sandbox in (boom vol schuingedrukte rijen met ＋-knoppen).
+      const opBron = new Set((bronDiag.nodes || []).map((n) => n.elementId));
       for (const [eid, el] of Object.entries(inhoud.elements || {})) {
-        if (!elements[eid]) elements[eid] = el;
+        if (elements[eid]) continue;
+        const hoortErbij =
+          opBron.has(eid) ||
+          (el.source && el.target && opBron.has(el.source) && opBron.has(el.target));
+        if (hoortErbij) elements[eid] = el;
       }
       const diagrams = Object.fromEntries(
         Object.entries(s.diagrams).map(([dk, d]) => [
@@ -619,6 +627,9 @@ export function maakDiagramActiviteit(opties) {
     const heeftOuder = new Set();
     if (boomModus) {
       const voegPaar = (ouder, kind) => {
+        // Zelf-verwijzing (bv. een recursief OAS-schema) zou het element uit
+        // de wortels halen én alleen onder zichzelf tonen — overslaan.
+        if (ouder === kind) return;
         if (!elements[ouder] || !elements[kind]) return;
         if (!kinderenVan.has(ouder)) kinderenVan.set(ouder, []);
         if (!kinderenVan.get(ouder).includes(kind)) kinderenVan.get(ouder).push(kind);

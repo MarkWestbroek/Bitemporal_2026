@@ -60,16 +60,37 @@ function ConnectorEdge({
   const padArgs = { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition };
   // Zelf-verwijzing (source == target): een "oortje" buitenom de node —
   // anders valt het pad samen met één punt en is de connector onzichtbaar
-  // (bv. de ENT→ENT-verbindingsregels in de profiel-ontwerper).
+  // (bv. de ENT→ENT-verbindingsregels in de profiel-ontwerper). De lus volgt
+  // de gekozen handles: de controlepunten steken uit in de richting van elk
+  // uiteinde, zodat boven→rechts óm de hoek gaat i.p.v. onderlangs.
   const isLus = source && source === target;
+  const lusPad = () => {
+    const UIT = {
+      top: { x: 0, y: -1 },
+      bottom: { x: 0, y: 1 },
+      left: { x: -1, y: 0 },
+      right: { x: 1, y: 0 },
+    };
+    const nS = UIT[sourcePosition] || UIT.right;
+    const nT = UIT[targetPosition] || UIT.right;
+    const L = 56;
+    let c1 = { x: sourceX + nS.x * L, y: sourceY + nS.y * L };
+    let c2 = { x: targetX + nT.x * L, y: targetY + nT.y * L };
+    if (Math.abs(c1.x - c2.x) < 8 && Math.abs(c1.y - c2.y) < 8) {
+      // Beide uiteinden op (vrijwel) hetzelfde punt: spreid de controle-
+      // punten haaks op de uitrichting, anders is de lus plat.
+      const t = { x: -nS.y, y: nS.x };
+      c1 = { x: c1.x + t.x * 34, y: c1.y + t.y * 34 };
+      c2 = { x: c2.x - t.x * 34, y: c2.y - t.y * 34 };
+    }
+    return [
+      `M ${sourceX} ${sourceY} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${targetX} ${targetY}`,
+      (c1.x + c2.x) / 2,
+      (c1.y + c2.y) / 2,
+    ];
+  };
   const [edgePath, labelX, labelY] = isLus
-    ? [
-        `M ${sourceX} ${sourceY} C ${sourceX + 52} ${sourceY - 40}, ${sourceX + 52} ${
-          sourceY + 40
-        }, ${targetX} ${targetY}`,
-        sourceX + 44,
-        sourceY,
-      ]
+    ? lusPad()
     : p.vorm === "hoekig"
       ? getSmoothStepPath({ ...padArgs, borderRadius: 4 })
       : p.vorm === "recht"

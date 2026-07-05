@@ -6,7 +6,25 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: trede 2 **conform het metamodel** + seed + inverse
+  fase 7 (register). Laatste ronde: **feedbackronde rust & OAS** (2026-07-05):
+  (1) tree-klik **centreert niet meer** — `focusNode` schuift het beeld alleen
+  minimaal bij als de node (deels) buiten beeld valt ("net binnen het beeld
+  trekken is voldoende"); (2) import *Over het huidige diagram heen* neemt
+  **alleen de elementen van het gekozen diagram** mee — een werkbestand met
+  meerdere diagrammen sleepte anders tientallen zwevende elementen de sandbox
+  in (boom vol ＋-rijen); (3) de **＋-knoppen in de elementen-browser** waren
+  enorm: `.dc-mini-knop` was alleen binnen `.dc-inspector` gestyled, waardoor
+  de sidebar terugviel op de globale button-stijl van `schema-viz.css` —
+  regels ontscoopt in `diagramcore.css`; (4) het **zelf-lus-oortje volgt nu de
+  gekozen handles** (controlepunten steken uit in de richting van elk
+  uiteinde: boven→rechts gaat óm de hoek i.p.v. onderlangs); (5) **oas31**
+  kreeg `hierarchie: "ref"` (boom: operatie → schema → schema; zelf-verwijzende
+  schema's worden als paar genegeerd, anders verdwenen ze uit de wortels) en
+  de lagen-layout legt nu **rijen** i.p.v. kolommen: operaties bovenaan
+  gesorteerd op **CRUD** (POST, GET, PUT, PATCH, DELETE, daarbinnen op pad),
+  schema's per $ref-afstand eronder (alfabetisch). Open punten: knikpunten op
+  lijnen (ctrl-klik → waypoint, met de hand rekken), besluit
+  domeinen-vs-package-elementtype (V3-conversie). Eerdere ronde: trede 2 **conform het metamodel** + seed + inverse
   (2026-07-04, feedback Mark: "in een compartiment zitten nog weer
   properties"): het ontwerp-profiel volgt nu ElementType ◆ CompartmentType ◆
   FieldType — **Compartimenttypen en Veldtypen zijn eigen nodes**, gekoppeld
