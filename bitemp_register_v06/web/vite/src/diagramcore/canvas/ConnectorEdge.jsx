@@ -131,10 +131,15 @@ function ConnectorEdge({
   // Knikpunten (ctrl-klik op de lijn): het pad loopt als polylijn door de
   // punten in data.knikken — de gebruiker "rekt" de lijn met de hand.
   const [sleepKnik, setSleepKnik] = useState(null); // {index, x, y} tijdens slepen
-  const knikkenBasis = !isLus && Array.isArray(data?.knikken) && data.knikken.length ? data.knikken : null;
-  const knikken = knikkenBasis
-    ? knikkenBasis.map((k, i) => (sleepKnik?.index === i ? { x: sleepKnik.x, y: sleepKnik.y } : k))
-    : null;
+  // Segment-slepen (duwen/trekken van haakse lijnen): tijdens de sleep staat
+  // hier de volledige tussenpunten-lijst als voorbeeld.
+  const [sleepSegment, setSleepSegment] = useState(null); // {interieur: [{x,y}]}
+  const knikkenBasis = Array.isArray(data?.knikken) && data.knikken.length ? data.knikken : null;
+  const knikken = sleepSegment
+    ? sleepSegment.interieur
+    : knikkenBasis
+      ? knikkenBasis.map((k, i) => (sleepKnik?.index === i ? { x: sleepKnik.x, y: sleepKnik.y } : k))
+      : null;
   const knikPad = () => {
     const pts = [{ x: sourceX, y: sourceY }, ...knikken, { x: targetX, y: targetY }];
     const pad = pts.map((q, i) => `${i ? "L" : "M"} ${q.x} ${q.y}`).join(" ");
@@ -162,10 +167,10 @@ function ConnectorEdge({
       latY,
     ];
   };
-  const [edgePath, labelX, labelY] = isLus
-    ? lusPad()
-    : knikken
-      ? knikPad()
+  const [edgePath, labelX, labelY] = knikken
+    ? knikPad()
+    : isLus
+      ? lusPad()
       : p.vorm === "boom"
         ? boomPad()
         : p.vorm === "hoekig"
@@ -220,8 +225,137 @@ function ConnectorEdge({
     doelEl.addEventListener("pointerup", klaar);
   };
 
-  // ── Knikpunten: ctrl-klik voegt toe, slepen verplaatst, dubbelklik wist ──
-  const magKnikken = typeof data?.onKnikken === "function" && !isLus;
+  // ── Knikpunten: ctrl-klik voegt toe, slepen verplaatst, dubbelklik wist.
+  // Ook op zelf-lussen (oortjes): zo kun je het oor vrij vervormen. ──
+  const magKnikken = typeof data?.onKnikken === "function";
+
+  /**
+   * Polylijn van het huidige pad (alleen haakse vormen). Basis voor
+   * segment-slepen: M/L-punten plus Q-eindpunten (smoothstep-bochtjes),
+   * daarna vereenvoudigd (dubbele/collineaire punten weg).
+   */
+  const huidigePolyline = () => {
+    if (knikkenBasis) {
+      return [{ x: sourceX, y: sourceY }, ...knikkenBasis, { x: targetX, y: targetY }];
+    }
+    if (/C/.test(edgePath)) return null; // bezier-krommen: niet segmenteerbaar
+    const pts = [];
+    const re = /([MLQ])\s*([-\d.]+)[ ,]+([-\d.]+)(?:[ ,]+([-\d.]+)[ ,]+([-\d.]+))?/g;
+    let m;
+    while ((m = re.exec(edgePath))) {
+      if (m[1] === "Q" && m[4] !== undefined) pts.push({ x: +m[4], y: +m[5] });
+      else pts.push({ x: +m[2], y: +m[3] });
+    }
+    if (pts.length < 3) return null;
+    const uit = [pts[0]];
+    for (let i = 1; i < pts.length - 1; i += 1) {
+      const a = uit[uit.length - 1];
+      const b = pts[i];
+      const c = pts[i + 1];
+      if (Math.hypot(b.x - a.x, b.y - a.y) < 2) continue;
+      const kruis = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+      if (Math.abs(kruis) < 0.5) continue; // collineair: overslaan
+      uit.push(b);
+    }
+    uit.push(pts[pts.length - 1]);
+    return uit.length >= 3 ? uit : null;
+  };
+
+  const netGesleeptRef = useRef(false);
+  /**
+   * Duwen/trekken van een haaks segment: pak de lijn vast en beweeg haaks op
+   * het segment. De vorm wordt bij loslaten als knikpunten vastgelegd, dus
+   * daarna blijft hij zo staan (en is hij verder te verfijnen).
+   */
+  const startSegmentSleep = (e) => {
+    if (!magKnikken || e.ctrlKey || e.button !== 0) return;
+    const basisPts = huidigePolyline();
+    if (!basisPts) return;
+    const rect = vlak?.getBoundingClientRect?.();
+    if (!rect) return;
+    const naarFlow = (ev) => ({
+      x: (ev.clientX - rect.left - verschuifX) / zoom,
+      y: (ev.clientY - rect.top - verschuifY) / zoom,
+    });
+    const start = naarFlow(e);
+    // Dichtstbijzijnde (grijpbare) segment: mini-hoekjes overslaan.
+    let beste = -1;
+    let besteAfstand = Infinity;
+    for (let i = 0; i < basisPts.length - 1; i += 1) {
+      const a = basisPts[i];
+      const b = basisPts[i + 1];
+      if (Math.hypot(b.x - a.x, b.y - a.y) < 14) continue;
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const l2 = dx * dx + dy * dy || 1;
+      const t = Math.max(0, Math.min(1, ((start.x - a.x) * dx + (start.y - a.y) * dy) / l2));
+      const afstand = Math.hypot(start.x - (a.x + t * dx), start.y - (a.y + t * dy));
+      if (afstand < besteAfstand) {
+        besteAfstand = afstand;
+        beste = i;
+      }
+    }
+    if (beste < 0) return;
+    const a = basisPts[beste];
+    const b = basisPts[beste + 1];
+    const horizontaal = Math.abs(b.x - a.x) >= Math.abs(b.y - a.y);
+    // Interieur-lijst met het gepakte segment volledig binnenin: grenst het
+    // aan een uiteinde, voeg dan een hoekpunt op het uiteinde toe zodat de
+    // stomp haaks blijft (EA-gedrag).
+    let interieur = basisPts.slice(1, -1).map((q) => ({ ...q }));
+    let ia = beste - 1; // index van punt a binnen interieur
+    if (beste === 0) {
+      interieur = [{ x: basisPts[0].x, y: basisPts[0].y }, ...interieur];
+      ia = 0;
+    }
+    const ib = ia + 1;
+    if (ib > interieur.length - 1) {
+      interieur = [
+        ...interieur,
+        { x: basisPts[basisPts.length - 1].x, y: basisPts[basisPts.length - 1].y },
+      ];
+    }
+    const doelEl = e.currentTarget;
+    let begonnen = false;
+    const beweeg = (ev) => {
+      const nu = naarFlow(ev);
+      const dx = nu.x - start.x;
+      const dy = nu.y - start.y;
+      if (!begonnen && Math.hypot(dx, dy) < 4) return; // klik is geen sleep
+      if (!begonnen) {
+        begonnen = true;
+        doelEl.setPointerCapture?.(ev.pointerId);
+      }
+      const volgende = interieur.map((q, i) =>
+        i === ia || i === ib
+          ? horizontaal
+            ? { x: q.x, y: q.y + dy }
+            : { x: q.x + dx, y: q.y }
+          : q
+      );
+      setSleepSegment({ interieur: volgende });
+    };
+    const klaar = (ev) => {
+      doelEl.removeEventListener("pointermove", beweeg);
+      doelEl.removeEventListener("pointerup", klaar);
+      if (!begonnen) return;
+      const nu = naarFlow(ev);
+      const dx = nu.x - start.x;
+      const dy = nu.y - start.y;
+      const eind = interieur.map((q, i) =>
+        i === ia || i === ib
+          ? horizontaal
+            ? { x: Math.round(q.x), y: Math.round(q.y + dy) }
+            : { x: Math.round(q.x + dx), y: Math.round(q.y) }
+          : { x: Math.round(q.x), y: Math.round(q.y) }
+      );
+      setSleepSegment(null);
+      netGesleeptRef.current = true;
+      data.onKnikken(eind);
+    };
+    doelEl.addEventListener("pointermove", beweeg);
+    doelEl.addEventListener("pointerup", klaar);
+  };
   const klikVoegKnik = (e) => {
     if (!magKnikken || !e.ctrlKey || e.button !== 0) return;
     e.stopPropagation();
@@ -426,7 +560,16 @@ function ConnectorEdge({
           fill="none"
           stroke="transparent"
           strokeWidth={18}
-          onClick={klikVoegKnik}
+          onPointerDown={startSegmentSleep}
+          onClick={(e) => {
+            if (netGesleeptRef.current) {
+              // Na een segment-sleep geen selectie-klik laten doorbubbelen.
+              netGesleeptRef.current = false;
+              e.stopPropagation();
+              return;
+            }
+            klikVoegKnik(e);
+          }}
           style={{ pointerEvents: "stroke", cursor: "default" }}
         />
       )}

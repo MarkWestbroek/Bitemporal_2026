@@ -6,7 +6,18 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **boomstijl-lijnen + PE-vlaggen**
+  fase 7 (register). Laatste ronde: **segment-slepen & vervormbare oortjes**
+  (2026-07-05): haakse lijnen (hoekig/boom/knik-paden en hoekige oortjes)
+  zijn nu met de hand te **duwen en trekken**: pak een segment en beweeg
+  haaks erop (horizontaal segment ↑↓, verticaal ←→); bij loslaten wordt de
+  vorm als knikpunten vastgelegd (dus persistent en verder te verfijnen).
+  Segmenten aan een uiteinde krijgen automatisch een extra hoekpunt op de
+  handle zodat de stomp haaks blijft (EA-gedrag); de polylijn komt uit de
+  eigen vormen of wordt uit het smoothstep-pad geparseerd
+  (M/L + Q-eindpunten, collineair vereenvoudigd; bezier niet). **Ctrl-klik
+  werkt nu ook op oortjes** (zelf-lussen waren uitgesloten): een knik op de
+  lus maakt het oor vrij vervormbaar — knikken winnen van de lus-vorm.
+  Eerdere ronde: **boomstijl-lijnen + PE-vlaggen**
   (2026-07-05): (1) nieuwe lijnvorm **"boom"** (EA tree style: dwarslat op
   vaste afstand van de ouder-handle, zodat álle kinderen één hark delen —
   ook op ongelijke hoogtes; zelf-lussen doen niet mee);
