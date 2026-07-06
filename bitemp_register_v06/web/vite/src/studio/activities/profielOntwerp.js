@@ -57,7 +57,7 @@ export const profielOntwerpKern = {
       icoon: "elementtype",
       properties: [
         { key: "kort", label: "korte code (taakbalk)", datatype: "string" },
-        { key: "shape", label: "shape (class-box/bol/note/boundary)", datatype: "string" },
+        { key: "shape", label: "shape (class-box/bol/note/boundary/package/dmn-…)", datatype: "string" },
         { key: "doelKleur", label: "kleur van het type", datatype: "colour" },
         // Niet "stereotype": dat dataveld is de generieke per-element
         // weergave-override (ClassBox toont hem), waardoor de ET-node zelf
@@ -123,7 +123,7 @@ export const profielOntwerpKern = {
         { key: "lijn", label: "lijn (solid/dash-6-3/…)", datatype: "string" },
         { key: "vorm", label: "vorm (bezier/hoekig/recht/boom)", datatype: "string" },
         { key: "markerStart", label: "markerStart (ruit/ruit-open)", datatype: "string" },
-        { key: "markerEnd", label: "markerEnd (driehoek/pijl-open)", datatype: "string" },
+        { key: "markerEnd", label: "markerEnd (driehoek/pijl-open/pijl-dicht/bol)", datatype: "string" },
         { key: "doelKleur", label: "lijnkleur", datatype: "colour" },
         { key: "metKardinaliteiten", label: "kardinaliteiten-labels", datatype: "boolean" },
         { key: "richtingOptie", label: "richting-vinkje (→)", datatype: "boolean" },
@@ -158,7 +158,17 @@ function slug(tekst) {
   );
 }
 
-const GELDIGE_SHAPES = new Set(["class-box", "bol", "note", "rounded", "boundary", "package"]);
+const GELDIGE_SHAPES = new Set([
+  "class-box",
+  "bol",
+  "note",
+  "rounded",
+  "boundary",
+  "package",
+  "dmn-input-data",
+  "dmn-bkm",
+  "dmn-knowledge-source",
+]);
 const GELDIGE_DATATYPES = new Set(["string", "tekst", "boolean", "colour"]);
 
 function compVelden(el, compartmentType) {
@@ -544,7 +554,11 @@ export function ontwerpUitProfiel(descriptor) {
               doelKleur: p.kleur || "#64748b",
               metKardinaliteiten: props.some((pr) => pr.key === "bronKardinaliteit"),
               richtingOptie: props.some((pr) => pr.key === "directioneel"),
-              ...([].concat(descriptor.hierarchie || []).includes(et.id) ? { isHierarchie: true } : {}),
+              ...([].concat(descriptor.hierarchie || [])
+                .map((h) => (typeof h === "string" ? h : h?.type))
+                .includes(et.id)
+                ? { isHierarchie: true }
+                : {}),
             },
           };
         }

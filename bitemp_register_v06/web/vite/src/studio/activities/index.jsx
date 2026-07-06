@@ -20,6 +20,7 @@ import oasActivity from "./oasActivity";
 import profielActivity from "./profielActivity";
 import profielOntwerpActivity from "./profielOntwerpActivity";
 import dmnActivity from "./dmnActivity";
+import dmnDrdActivity from "./dmnDrdActivity";
 import bpmnActivity from "./bpmnActivity";
 import berichtActivity from "./berichtActivity";
 
@@ -73,6 +74,7 @@ registreerActiviteiten([
   profielActivity, // Studio 0.5: meta-editor trede 1 (JSON, §8.9)
   profielOntwerpActivity, // Studio 0.5: meta-editor trede 2 (tekenen, §8.9)
   dmnActivity,
+  dmnDrdActivity, // Studio 0.5: vierde profiel (DMN DRD)
   bpmnActivity,
   berichtActivity,
   // diensten

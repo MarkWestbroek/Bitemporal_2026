@@ -6,7 +6,21 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **OAS-zwaartepunt, lus-defaults &
+  fase 7 (register). Laatste ronde: **DMN DRD als vierde profiel**
+  (2026-07-06): nieuwe activiteit **"DRD (0.5)"** op `diagramprofielen/dmn-drd/`
+  — decision («decision»), input data (placeholder "rounded"), BKM en
+  knowledge source (placeholder class-box) met de drie requirements:
+  information (dicht + gevulde pijl "pijl-dicht"), knowledge (gestippeld +
+  open pijl) en authority (gestippeld + bolpunt "bol" — de markers van de
+  vormgevingssessie worden meteen gebruikt). Nieuw in de core:
+  **hierarchie-entries mogen `{type, omgekeerd}` zijn** — de
+  requirement-pijl wijst náár de beslissing, maar in de boom is de
+  beslissing de ouder van haar vereisten. Eigen `drd-lagen`-layout:
+  eindbeslissing bovenaan, vereisten per rij eronder (zwaartepunt-sortering).
+  Nog van de designer nodig: ShapeTypes `dmn-input-data` (ovaal), `dmn-bkm`
+  (afgeknipte hoeken) en `dmn-knowledge-source` (golf-onderrand); het profiel
+  hoeft dan alleen de shape-ids om te zetten. Eerdere ronde:
+  **OAS-zwaartepunt, lus-defaults &
   Implementation zichtbaar** (2026-07-06): (1) `oasRijenPosities` sorteert
   vervolg-rijen op het **zwaartepunt van hun (al geplaatste) ouders** —
   schema's komen zo (ongeveer) ónder hun operaties i.p.v. alfabetisch

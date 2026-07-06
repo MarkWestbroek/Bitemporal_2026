@@ -961,9 +961,12 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     const term = zoek.trim().toLowerCase();
     // E01/P02: met één of meer hierarchie-connectortypen in de descriptor
     // nesten we de niet-connector-elementen als boom (zoeken → plat).
-    // Meerdere typen (bv. ["bevat", "compositie"]): de paren stapelen.
-    const hierIds = [].concat(descriptor.hierarchie || []);
-    const boomModus = hierIds.length > 0 && !term;
+    // Meerdere typen stapelen; een entry mag ook {type, omgekeerd} zijn —
+    // bv. DMN, waar de requirement-pijl náár de ouder (beslissing) wijst.
+    const hierRegels = [].concat(descriptor.hierarchie || [])
+      .map((h) => (typeof h === "string" ? { type: h } : h))
+      .filter((h) => h?.type);
+    const boomModus = hierRegels.length > 0 && !term;
     const kinderenVan = new Map();
     const heeftOuder = new Set();
     if (boomModus) {
@@ -977,8 +980,10 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
         heeftOuder.add(kind);
       };
       for (const el of bronElementen) {
-        if (!hierIds.includes(el.elementType) || !el.source || !el.target) continue;
-        voegPaar(el.source, el.target);
+        const regel = hierRegels.find((h) => h.type === el.elementType);
+        if (!regel || !el.source || !el.target) continue;
+        if (regel.omgekeerd) voegPaar(el.target, el.source);
+        else voegPaar(el.source, el.target);
       }
       // Profiel-hook voor extra paren (bv. canoniek-uml: gespiegelde
       // composities zijn presentatie-edges, geen connector-elementen).

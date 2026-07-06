@@ -91,8 +91,10 @@ export function valideerDiagramType(dt) {
   // Hiërarchie (P02): optioneel connectortype-id — of een lijstje, bv.
   // ["bevat", "compositie"] — dat de bevat-relatie(s) vormt; de
   // elementen-browser nest elementen langs die relaties (in die volgorde
-  // gestapeld).
-  for (const hierId of [].concat(dt.hierarchie || [])) {
+  // gestapeld). Een entry mag ook {type, omgekeerd} zijn wanneer de pijl
+  // náár de ouder wijst (bv. DMN-requirements naar de beslissing).
+  for (const hier of [].concat(dt.hierarchie || [])) {
+    const hierId = typeof hier === "string" ? hier : hier?.type;
     const doelwit = dt.elementTypes.find((et) => et?.id === hierId);
     if (!doelwit) {
       fouten.push(`DiagramType "${dt.id}": hierarchie verwijst naar onbekend ElementType "${hierId}"`);
