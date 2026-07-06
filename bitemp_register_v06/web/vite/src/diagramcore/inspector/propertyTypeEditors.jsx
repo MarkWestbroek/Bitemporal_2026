@@ -43,15 +43,22 @@ function StringEditor({ regel, waarde, onChange }) {
 }
 
 function TekstEditor({ waarde, onChange }) {
-  return <textarea value={waarde || ""} onChange={(e) => onChange(e.target.value)} />;
+  // rows=2: metagegevens-teksten (definitie/toelichting) zijn meestal kort;
+  // de textarea groeit gewoon mee met de schuifbalk.
+  return <textarea rows={2} value={waarde || ""} onChange={(e) => onChange(e.target.value)} />;
 }
 
 function BooleanEditor({ regel, waarde, onChange }) {
+  // Alleen de checkbox: het label staat al vóór de rij (element-properties)
+  // of in het veld-detailpaneel — dubbel label maakte de inspector breed.
   return (
-    <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11 }}>
-      <input type="checkbox" checked={!!waarde} onChange={(e) => onChange(e.target.checked)} />
-      {regel.label || regel.key}
-    </label>
+    <input
+      type="checkbox"
+      title={regel.label || regel.key}
+      checked={!!waarde}
+      onChange={(e) => onChange(e.target.checked)}
+      style={{ flex: "0 0 auto" }}
+    />
   );
 }
 

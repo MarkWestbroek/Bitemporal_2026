@@ -6,6 +6,10 @@
  * (zie docs/STUDIO-05-mim-verkenning.md voor de volledige mapping en wat
  * naar fase 2+ gaat: keuze-varianten 2–5, validator, import).
  *
+ * Vormgeving: MIM 1.2 normeert alleen semantiek, geen weergave — en op
+ * verzoek tonen we geen stereotypen (kleur/vorm draagt het type, zoals in
+ * DMN); eigen MIM-ShapeTypes zijn aan de vormgeving.
+ *
  * Structuurkeuzes:
  *   - Objecttype/Gegevensgroeptype: class-box met attribuutsoorten; de
  *     MIM-metagegevens zijn PropertyTypes (op het type én per veld).
@@ -88,7 +92,6 @@ const elementTypes = [
     id: "objecttype",
     label: "Objecttype",
     kort: "OT",
-    stereotype: "«objecttype»",
     shape: "class-box",
     kleur: "#bfdbfe",
     icoon: "klasse",
@@ -107,7 +110,6 @@ const elementTypes = [
     id: "gegevensgroeptype",
     label: "Gegevensgroeptype",
     kort: "GGT",
-    stereotype: "«gegevensgroeptype»",
     shape: "class-box",
     kleur: "#bbf7d0",
     icoon: "veld",
@@ -118,7 +120,6 @@ const elementTypes = [
     id: "enumeratie",
     label: "Enumeratie",
     kort: "ENUM",
-    stereotype: "«enumeratie»",
     shape: "class-box",
     kleur: "#fef3c7",
     icoon: "enumeratie",
@@ -130,7 +131,6 @@ const elementTypes = [
     id: "codelijst",
     label: "Codelijst",
     kort: "CODE",
-    stereotype: "«codelijst»",
     shape: "class-box",
     kleur: "#fde68a",
     icoon: "lijst",
@@ -144,7 +144,6 @@ const elementTypes = [
     id: "referentielijst",
     label: "Referentielijst",
     kort: "REF",
-    stereotype: "«referentielijst»",
     shape: "class-box",
     kleur: "#fed7aa",
     icoon: "lijst",
@@ -159,7 +158,6 @@ const elementTypes = [
     id: "primitiefDatatype",
     label: "Primitief datatype",
     kort: "PDT",
-    stereotype: "«primitief datatype»",
     shape: "class-box",
     kleur: "#dbeafe",
     icoon: "datatype",
@@ -175,7 +173,6 @@ const elementTypes = [
     id: "gestructureerdDatatype",
     label: "Gestructureerd datatype",
     kort: "GDT",
-    stereotype: "«gestructureerd datatype»",
     shape: "class-box",
     kleur: "#e0e7ff",
     icoon: "datatype",
@@ -188,7 +185,6 @@ const elementTypes = [
     id: "keuze",
     label: "Keuze",
     kort: "KEUZE",
-    stereotype: "«keuze»",
     shape: "rounded",
     kleur: "#f5d0fe",
     icoon: "keuze-een",
@@ -198,7 +194,6 @@ const elementTypes = [
     id: "constraint",
     label: "Constraint",
     kort: "CON",
-    stereotype: "«constraint»",
     shape: "rounded",
     kleur: "#e0f2fe",
     icoon: "constraint",
@@ -214,7 +209,6 @@ const elementTypes = [
     id: "package",
     label: "Package",
     kort: "PKG",
-    stereotype: "«package»",
     shape: "package",
     kleur: "#f1f5f9",
     icoon: "package",
@@ -257,7 +251,6 @@ const elementTypes = [
     id: "relatiesoort",
     label: "Relatiesoort",
     kort: "REL",
-    stereotype: "«relatiesoort»",
     shape: "class-box",
     kleur: "#ede9fe",
     icoon: "relatie-box",

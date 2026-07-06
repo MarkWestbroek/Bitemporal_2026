@@ -18,7 +18,7 @@
  *   kandidatenVoor(referenceTypeIds) → VerwijzingsKandidaat[]
  *   bewerkbaar, onUpdate(patch), onVerwijderVanDiagram?, onVerwijderUitModel?
  */
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   getPropertyTypeEditor,
   VerwijzingsKiezer,
@@ -42,31 +42,83 @@ function PropertyWidget({ regel, waarde, onChange, element, kandidatenVoor, edit
   );
 }
 
-/** Eén veld-rij binnen een compartiment: widgets volgens FieldType.properties. */
+/**
+ * Eén veld-rij binnen een compartiment. Compact (MIM heeft 10 metagegevens
+ * per attribuutsoort): de eerste drie "lichte" properties (typisch naam,
+ * type, kardinaliteit) staan inline; de rest — vinkjes, definities — zit
+ * achter de ⋯-knop in een detailpaneel met eigen labeltjes.
+ */
 function VeldRij({ veld, fieldType, bewerkbaar, element, kandidatenVoor, editorContext, onChange, onVerwijder }) {
   const regels = fieldType?.properties || [{ key: "naam", datatype: "string" }];
+  const [detailOpen, setDetailOpen] = useState(false);
+  const inline = [];
+  const detail = [];
+  for (const regel of regels) {
+    const zwaar = regel.datatype === "boolean" || regel.datatype === "tekst";
+    if (!zwaar && inline.length < 3) inline.push(regel);
+    else detail.push(regel);
+  }
   const waardeVan = (key) => (key === "naam" ? veld.naam : veld.data?.[key]);
   const zet = (key, waarde) => {
     if (key === "naam") onChange({ ...veld, naam: waarde });
     else onChange({ ...veld, data: { ...veld.data, [key]: waarde } });
   };
+  const widget = (regel) => (
+    <PropertyWidget
+      key={regel.key}
+      regel={regel}
+      waarde={waardeVan(regel.key)}
+      element={element}
+      kandidatenVoor={kandidatenVoor}
+      editorContext={editorContext}
+      onChange={(w) => bewerkbaar && zet(regel.key, w)}
+    />
+  );
+  // Aantal gevulde detail-properties: hint op de ⋯-knop.
+  const gevuld = detail.filter((r) => {
+    const w = waardeVan(r.key);
+    return w !== undefined && w !== null && w !== "" && w !== false;
+  }).length;
   return (
-    <div className="dc-inspector-rij">
-      {regels.map((regel) => (
-        <PropertyWidget
-          key={regel.key}
-          regel={regel}
-          waarde={waardeVan(regel.key)}
-          element={element}
-          kandidatenVoor={kandidatenVoor}
-          editorContext={editorContext}
-          onChange={(w) => bewerkbaar && zet(regel.key, w)}
-        />
-      ))}
-      {bewerkbaar && (
-        <button className="dc-mini-knop is-gevaar" title="Veld verwijderen" onClick={onVerwijder}>
-          ×
-        </button>
+    <div>
+      <div className="dc-inspector-rij">
+        {inline.map(widget)}
+        {detail.length > 0 && (
+          <button
+            className="dc-mini-knop"
+            title={detailOpen ? "Details verbergen" : `${detail.length} details${gevuld ? ` (${gevuld} gevuld)` : ""}`}
+            style={gevuld && !detailOpen ? { borderColor: "var(--s-accent, #6366f1)" } : undefined}
+            onClick={() => setDetailOpen((v) => !v)}
+          >
+            {detailOpen ? "▾" : "⋯"}
+          </button>
+        )}
+        {bewerkbaar && (
+          <button className="dc-mini-knop is-gevaar" title="Veld verwijderen" onClick={onVerwijder}>
+            ×
+          </button>
+        )}
+      </div>
+      {detailOpen && (
+        <div
+          style={{
+            margin: "0 0 8px 10px",
+            padding: "4px 0 4px 10px",
+            borderLeft: "2px solid var(--s-border, #cbd5e1)",
+            display: "flex",
+            flexDirection: "column",
+            gap: 4,
+          }}
+        >
+          {detail.map((regel) => (
+            <div key={regel.key} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <label className="dc-veldlabel" style={{ fontSize: 11 }}>
+                {regel.label || regel.key}
+              </label>
+              {widget(regel)}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

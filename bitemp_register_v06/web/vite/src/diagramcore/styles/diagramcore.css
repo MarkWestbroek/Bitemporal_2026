@@ -462,7 +462,8 @@
 
 .dc-inspector textarea {
   resize: vertical;
-  min-height: 56px;
+  /* Compact: metagegevens-teksten zijn meestal kort; slepen maakt groter. */
+  min-height: 34px;
 }
 
 .dc-mini-knop {
