@@ -6,7 +6,17 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **segment-slepen & vervormbare oortjes**
+  fase 7 (register). Laatste ronde: **OAS-zwaartepunt, lus-defaults &
+  Implementation zichtbaar** (2026-07-06): (1) `oasRijenPosities` sorteert
+  vervolg-rijen op het **zwaartepunt van hun (al geplaatste) ouders** —
+  schema's komen zo (ongeveer) ónder hun operaties i.p.v. alfabetisch
+  verspreid; (2) **verse zelf-lussen zijn standaard hoekig en lopen
+  boven→rechts** (de kortste-weg is bij één punt betekenisloos; expliciete
+  handles/vorm winnen); (3) het **Implementation-domein is zichtbaar in de
+  PE**: elke ET-node krijgt een alleen-lezen "implementatie"-compartiment
+  met zijn hooks (`hook: extraCompartimenten`), eigen property-editors
+  (`editor: cel-expressie (…)`) en resolvers (`resolver: basistype (…)`) —
+  informatief, reist niet mee terug bij activeren. Eerdere ronde: **segment-slepen & vervormbare oortjes**
   (2026-07-05): haakse lijnen (hoekig/boom/knik-paden en hoekige oortjes)
   zijn nu met de hand te **duwen en trekken**: pak een segment en beweeg
   haaks erop (horizontaal segment ↑↓, verticaal ←→); bij loslaten wordt de

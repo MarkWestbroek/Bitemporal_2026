@@ -238,3 +238,24 @@ test("vanOasDocument: operaties staan boven de schemas in het componenten-diagra
   );
   assert.ok(opY < schemaMinY, `operaties (y<=${opY}) horen boven de schemas (y>=${schemaMinY})`);
 });
+
+test("oasRijenPosities: kinderen sorteren onder hun ouders (zwaartepunt)", () => {
+  const elements = {
+    opA: { id: "opA", elementType: "operatie", naam: "a", data: { method: "POST", pad: "/a" } },
+    opB: { id: "opB", elementType: "operatie", naam: "b", data: { method: "GET", pad: "/b" } },
+    sA: { id: "sA", elementType: "schema", naam: "Zebra", data: {} },
+    sB: { id: "sB", elementType: "schema", naam: "Aap", data: {} },
+  };
+  const pos = oasRijenPosities({
+    ids: ["opA", "opB", "sA", "sB"],
+    elements,
+    edges: [
+      { source: "opA", target: "sA" },
+      { source: "opB", target: "sB" },
+    ],
+  });
+  assert.ok(pos.opA.x < pos.opB.x, "POST links van GET");
+  // alfabetisch zou Aap eerst komen; het ouder-zwaartepunt zet Zebra (kind
+  // van de linker operatie) links van Aap (kind van de rechter operatie)
+  assert.ok(pos.sA.x < pos.sB.x, "kind volgt zijn ouder, niet het alfabet");
+});

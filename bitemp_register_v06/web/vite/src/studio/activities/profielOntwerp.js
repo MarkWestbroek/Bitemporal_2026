@@ -36,7 +36,16 @@ export const profielOntwerpKern = {
   label: "Profiel-ontwerp",
   style: "uml-klassiek",
   hierarchie: "compositie",
-  fieldTypes: [{ id: "eigenschapDef", viewer: "naam-type", properties: EIGENSCHAP_VELDEN }],
+  fieldTypes: [
+    { id: "eigenschapDef", viewer: "naam-type", properties: EIGENSCHAP_VELDEN },
+    // Alleen-lezen regels die tonen welk Implementation-domein (hooks,
+    // property-editors, resolvers — zie het metamodel) aan het type hangt.
+    {
+      id: "implementatieDef",
+      viewer: "waarde",
+      properties: [{ key: "naam", datatype: "string", verplicht: true }],
+    },
+  ],
   elementTypes: [
     {
       id: "elementDef",
@@ -59,7 +68,12 @@ export const profielOntwerpKern = {
         { key: "container", label: "container (drop-doel, package)", datatype: "boolean" },
         { key: "standaardDichtInBoom", label: "standaard dicht in boom", datatype: "boolean" },
       ],
-      compartments: [{ id: "eigenschappen", label: "eigenschappen", fieldType: "eigenschapDef" }],
+      compartments: [
+        { id: "eigenschappen", label: "eigenschappen", fieldType: "eigenschapDef" },
+        // Gevuld door ontwerpUitProfiel; puur informatief — het
+        // Implementation-domein is niet tekenbaar, wel zichtbaar.
+        { id: "implementatie", label: "implementatie", fieldType: "implementatieDef" },
+      ],
     },
     {
       id: "compartimentDef",
@@ -408,12 +422,28 @@ export function ontwerpUitProfiel(descriptor) {
   nietConnectoren.forEach((et, kolom) => {
     const etNodeId = `${prefix}_et_${et.id}`;
     nodeIdVoorElementType.set(et.id, etNodeId);
+    // Implementation-domein zichtbaar maken (metamodel: ActionHook,
+    // ShapeRenderer, PropertyTypeEditor, ReferenceResolver, …): hooks op het
+    // type plus properties met een niet-standaard datatype (eigen editor).
+    const BASIS_DATATYPES = new Set(["string", "tekst", "boolean", "colour", undefined]);
+    const implementatieRegels = [
+      ...Object.keys(et.hooks || {}).map((h) => ({ naam: `hook: ${h}`, fieldType: "implementatieDef" })),
+      ...(et.properties || [])
+        .filter((pr) => !BASIS_DATATYPES.has(pr.datatype) && !pr.referenceTypes)
+        .map((pr) => ({ naam: `editor: ${pr.datatype} (${pr.key})`, fieldType: "implementatieDef" })),
+      ...(et.properties || [])
+        .filter((pr) => pr.referenceTypes?.length)
+        .map((pr) => ({ naam: `resolver: ${pr.referenceTypes.join(", ")} (${pr.key})`, fieldType: "implementatieDef" })),
+    ];
     elements[etNodeId] = {
       id: etNodeId,
       naam: et.label || et.id,
       elementType: "elementDef",
       compartimenten: [
         { compartmentType: "eigenschappen", velden: eigenschapVelden(et.properties) },
+        ...(implementatieRegels.length
+          ? [{ compartmentType: "implementatie", velden: implementatieRegels }]
+          : []),
       ],
       data: {
         kort: et.kort || "",

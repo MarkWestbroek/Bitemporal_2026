@@ -280,3 +280,33 @@ test("ET-stereotype reist als doelStereotype (ontwerp-node toont zijn eigen «el
   const kern = bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "st-test", label: "St" });
   assert.equal(kern.elementTypes[0].stereotype, "«package»", "terugreis levert het doel-stereotype");
 });
+
+test("implementatie-compartiment toont hooks, eigen editors en resolvers", () => {
+  const ontwerp = ontwerpUitProfiel({
+    id: "impl-test",
+    label: "Impl",
+    fieldTypes: [],
+    elementTypes: [
+      {
+        id: "ding",
+        label: "Ding",
+        shape: "class-box",
+        properties: [
+          { key: "expressie", datatype: "cel-expressie" },
+          { key: "type", referenceTypes: ["basistype"] },
+        ],
+        hooks: { extraCompartimenten: () => [] },
+      },
+      { id: "kaal", label: "Kaal", shape: "class-box", properties: [] },
+    ],
+  });
+  const def = Object.values(ontwerp.elements).find((el) => el.naam === "Ding");
+  const impl = (def.compartimenten || []).find((c) => c.compartmentType === "implementatie");
+  const namen = (impl?.velden || []).map((v) => v.naam);
+  assert.ok(namen.includes("hook: extraCompartimenten"), namen.join(", "));
+  assert.ok(namen.some((n) => n.startsWith("editor: cel-expressie")));
+  assert.ok(namen.some((n) => n.startsWith("resolver: basistype")));
+  // zonder implementatie geen (leeg) compartiment
+  const kaal = Object.values(ontwerp.elements).find((el) => el.naam === "Kaal");
+  assert.ok(!(kaal.compartimenten || []).some((c) => c.compartmentType === "implementatie"));
+});

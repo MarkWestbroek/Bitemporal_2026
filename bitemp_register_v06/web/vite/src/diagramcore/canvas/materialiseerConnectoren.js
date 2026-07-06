@@ -133,13 +133,18 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
       if (el.naam) {
         kaalLabels.push({ zijde: "midden", delen: [{ tekst: el.naam, soort: "rolnaam" }] });
       }
+      // Zelf-lus (oortje): standaard hoekig en van boven naar rechts —
+      // de kortste weg is bij één punt betekenisloos.
+      const isLus = el.source === el.target;
       edges.push({
         id: `conn:${el.id}`,
         source: el.source,
         target: el.target,
-        // Expliciete handles winnen; anders de kortste weg.
-        sourceHandle: el.data?.sourceHandle || `source-${besteZijde(bronMid, doelMid)}`,
-        targetHandle: el.data?.targetHandle || `target-${besteZijde(doelMid, bronMid)}`,
+        // Expliciete handles winnen; anders de kortste weg (of de lus-default).
+        sourceHandle:
+          el.data?.sourceHandle || (isLus ? "source-top" : `source-${besteZijde(bronMid, doelMid)}`),
+        targetHandle:
+          el.data?.targetHandle || (isLus ? "target-right" : `target-${besteZijde(doelMid, bronMid)}`),
         data: {
           connectorId: el.id,
           // Handmatige knikpunten (ctrl-klik; alleen in deze directe gedaante —
@@ -148,8 +153,9 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
             Array.isArray(el.data?.knikken) && el.data.knikken.length ? el.data.knikken : null,
           presentatie: {
             ...basisPresentatie,
-            // Per-connector lijnvorm (contextmenu) wint van het type-default.
-            vorm: el.data?.vorm || basisPresentatie.vorm,
+            // Per-connector lijnvorm (contextmenu) wint van het type-default;
+            // een lus is standaard hoekig (het nette EA-oortje).
+            vorm: el.data?.vorm || (isLus ? "hoekig" : basisPresentatie.vorm),
             labels: metOffsets(kaalLabels),
           },
         },

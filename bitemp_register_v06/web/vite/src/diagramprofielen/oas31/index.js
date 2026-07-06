@@ -298,6 +298,13 @@ export function oasRijenPosities({ ids, elements, edges, perRij = 5 }) {
     perLaag.get(l).push(eid);
   }
   const CRUD = { post: 0, get: 1, put: 2, patch: 3, delete: 4 };
+  // Ouders per kind (voor het zwaartepunt van volgende rijen).
+  const inkomend = new Map();
+  for (const e of edges || []) {
+    if (!idSet.has(e.source) || !idSet.has(e.target)) continue;
+    if (!inkomend.has(e.target)) inkomend.set(e.target, []);
+    inkomend.get(e.target).push(e.source);
+  }
   const posities = {};
   let y = 60;
   for (const l of [...perLaag.keys()].sort((a, b) => a - b)) {
@@ -312,7 +319,21 @@ export function oasRijenPosities({ ids, elements, edges, perRij = 5 }) {
         return (ea.pad || a).localeCompare(eb.pad || b);
       });
     } else {
-      groep.sort((a, b) => (elements?.[a]?.naam || a).localeCompare(elements?.[b]?.naam || b));
+      // Zwaartepunt van de (al geplaatste) ouders: kinderen komen zo
+      // (ongeveer) ónder hun operatie/schema te staan; alfabetisch als
+      // scheidsrechter bij gelijkspel of zonder geplaatste ouder.
+      const zwaartepunt = (eid) => {
+        const xs = (inkomend.get(eid) || [])
+          .map((ouder) => posities[ouder]?.x)
+          .filter((x) => x !== undefined);
+        return xs.length ? xs.reduce((som, x) => som + x, 0) / xs.length : Infinity;
+      };
+      groep.sort((a, b) => {
+        const za = zwaartepunt(a);
+        const zb = zwaartepunt(b);
+        if (za !== zb) return za - zb;
+        return (elements?.[a]?.naam || a).localeCompare(elements?.[b]?.naam || b);
+      });
     }
     groep.forEach((eid, i) => {
       posities[eid] = { x: 80 + (i % perRij) * 320, y: y + Math.floor(i / perRij) * 280 };
