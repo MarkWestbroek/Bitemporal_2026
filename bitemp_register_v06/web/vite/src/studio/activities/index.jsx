@@ -21,6 +21,7 @@ import profielActivity from "./profielActivity";
 import profielOntwerpActivity from "./profielOntwerpActivity";
 import dmnActivity from "./dmnActivity";
 import dmnDrdActivity from "./dmnDrdActivity";
+import mimActivity from "./mimActivity";
 import bpmnActivity from "./bpmnActivity";
 import berichtActivity from "./berichtActivity";
 
@@ -71,6 +72,7 @@ registreerActiviteiten([
   diagramActivity, // Studio 0.5 preview (canoniek-uml op de generieke motor)
   puurUmlActivity, // Studio 0.5: tweede profiel (fase 5-lakmoesproef)
   oasActivity, // Studio 0.5: derde profiel (OAS 3.1, fase 5-vuurproef)
+  mimActivity, // Studio 0.5: vijfde profiel (MIM 1.2, pas-toe-of-leg-uit)
   profielActivity, // Studio 0.5: meta-editor trede 1 (JSON, §8.9)
   profielOntwerpActivity, // Studio 0.5: meta-editor trede 2 (tekenen, §8.9)
   dmnActivity,

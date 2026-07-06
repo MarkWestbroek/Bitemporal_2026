@@ -6,7 +6,20 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **DMN DRD als vierde profiel**
+  fase 7 (register). Laatste ronde: **MIM 1.2 als vijfde profiel**
+  (2026-07-06): verkenning + werkende kern van het Metamodel voor
+  Informatie Modellering (Geonovum, **pas-toe-of-leg-uit**) — zie
+  [`STUDIO-05-mim-verkenning.md`](STUDIO-05-mim-verkenning.md) voor de
+  volledige mapping (MIM-metaclasses ↔ motor-concepten blijken vrijwel
+  1-op-1 te rijmen: relatieklasse = ASOC-materialisatie, packages =
+  informatiemodel/domein/extern/view, historie-indicaties ≈ ons bitemporele
+  materieel/formeel). Profiel `diagramprofielen/mim12/` + activiteit
+  **"MIM (0.5)"**: objecttype/gegevensgroeptype met attribuutsoort-
+  metagegevens, relatiesoort met rollen per zijde, generalisatie (ook
+  datatypen), externe koppeling, waardelijsten (enumeratie/codelijst/
+  referentielijst), datatypen, keuze (variant 1) en constraint. Fase 2+:
+  keuze-varianten 2–5, MIM-validator, import van bestaande MIM-modellen.
+  Eerdere ronde: **DMN DRD als vierde profiel**
   (2026-07-06): nieuwe activiteit **"DRD (0.5)"** op `diagramprofielen/dmn-drd/`
   — decision («decision»), input data (placeholder "rounded"), BKM en
   knowledge source (placeholder class-box) met de drie requirements:
