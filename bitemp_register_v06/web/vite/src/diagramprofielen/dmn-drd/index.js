@@ -4,17 +4,15 @@
  * het vierde profiel op de generieke motor, puur declaratief.
  *
  *   - decision («decision»): de beslissing zelf (rechthoek).
- *   - inputData («input data»): gegevensinvoer (DMN: ovaal — placeholder
- *     "rounded" tot de designer de DMN-ShapeTypes levert).
- *   - bkm («bkm»): Business Knowledge Model (DMN: rechthoek met afgeknipte
- *     hoeken — placeholder class-box).
- *   - knowledgeSource («knowledge source»): autoriteit/bron (DMN: golvende
- *     onderrand — placeholder class-box).
+ *   - inputData: gegevensinvoer (ShapeType "dmn-input-data", stadium/ovaal).
+ *   - bkm: Business Knowledge Model ("dmn-bkm", afgeknipte hoeken).
+ *   - knowledgeSource: autoriteit/bron ("dmn-knowledge-source",
+ *     golvende onderrand). De vorm is in DMN de betekenis — geen
+ *     stereotypes nodig.
  *
  *   - information requirement: dichte lijn met pijl naar de beslissing.
  *   - knowledge requirement:   gestippeld met open pijl (vanuit een BKM).
- *   - authority requirement:   gestippeld (DMN: bolpunt — marker volgt met
- *     de designer-shapes).
+ *   - authority requirement:   gestippeld met bolpunt ("bol").
  *
  * De boom nest omgekeerd (hierarchie met `omgekeerd`): de pijlen wijzen
  * náár de beslissing, maar in de boom is de beslissing de ouder van haar
@@ -33,7 +31,6 @@ const elementTypes = [
     id: "decision",
     label: "Beslissing",
     kort: "DEC",
-    stereotype: "«decision»",
     shape: "class-box",
     kleur: "#dbeafe",
     icoon: "beslissing",
@@ -44,13 +41,10 @@ const elementTypes = [
     ],
   },
   {
-    // DMN tekent input data als ovaal; "rounded" is de placeholder tot de
-    // designer een dmn-input-data-ShapeType levert.
     id: "inputData",
     label: "Invoergegeven",
     kort: "IN",
-    stereotype: "«input data»",
-    shape: "rounded",
+    shape: "dmn-input-data",
     kleur: "#dcfce7",
     icoon: "invoer",
     properties: [KLEUR_VELD, { key: "toelichting", label: "toelichting", datatype: "tekst" }],
@@ -59,8 +53,7 @@ const elementTypes = [
     id: "bkm",
     label: "Business Knowledge Model",
     kort: "BKM",
-    stereotype: "«bkm»",
-    shape: "class-box",
+    shape: "dmn-bkm",
     kleur: "#fef9c3",
     icoon: "kennisregel",
     properties: [KLEUR_VELD, { key: "toelichting", label: "toelichting", datatype: "tekst" }],
@@ -69,8 +62,7 @@ const elementTypes = [
     id: "knowledgeSource",
     label: "Kennisbron",
     kort: "KS",
-    stereotype: "«knowledge source»",
-    shape: "class-box",
+    shape: "dmn-knowledge-source",
     kleur: "#fde68a",
     icoon: "kennisbron",
     properties: [KLEUR_VELD, { key: "toelichting", label: "toelichting", datatype: "tekst" }],

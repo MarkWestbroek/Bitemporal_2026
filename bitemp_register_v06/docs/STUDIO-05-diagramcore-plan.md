@@ -17,9 +17,11 @@
   requirement-pijl wijst náár de beslissing, maar in de boom is de
   beslissing de ouder van haar vereisten. Eigen `drd-lagen`-layout:
   eindbeslissing bovenaan, vereisten per rij eronder (zwaartepunt-sortering).
-  Nog van de designer nodig: ShapeTypes `dmn-input-data` (ovaal), `dmn-bkm`
-  (afgeknipte hoeken) en `dmn-knowledge-source` (golf-onderrand); het profiel
-  hoeft dan alleen de shape-ids om te zetten. Eerdere ronde:
+  De vormgevingssessie leverde de ShapeTypes (`dmn-input-data`, `dmn-bkm`,
+  `dmn-knowledge-source` + de package-tab en de pijl-dicht-/bol-markers);
+  het profiel gebruikt ze nu — alleen de shape-ids hoefden om, precies
+  volgens de core/profiel-splitsing. Stereotypes zijn daar weg: in DMN is
+  de vorm de betekenis. Eerdere ronde:
   **OAS-zwaartepunt, lus-defaults &
   Implementation zichtbaar** (2026-07-06): (1) `oasRijenPosities` sorteert
   vervolg-rijen op het **zwaartepunt van hun (al geplaatste) ouders** —

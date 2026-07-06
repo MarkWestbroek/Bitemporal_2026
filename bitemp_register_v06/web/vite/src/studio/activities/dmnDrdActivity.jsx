@@ -1,9 +1,9 @@
 /**
  * dmnDrdActivity — "DRD (0.5)": het DMN Decision Requirements Diagram op de
  * generieke diagram-motor. Vierde profiel: descriptor + fabriek, verder
- * niets — zie diagramprofielen/dmn-drd/ (placeholder-shapes tot de designer
- * de DMN-ShapeTypes levert: ovaal, afgeknipte hoeken, golf-onderrand,
- * bolpunt-marker).
+ * niets — zie diagramprofielen/dmn-drd/. Gebruikt de DMN-ShapeTypes van de
+ * vormgeving (dmn-input-data, dmn-bkm, dmn-knowledge-source) en de
+ * pijl-dicht-/bol-markers.
  */
 import { IconDMN } from "../icons";
 import { registreerDmnDrd, dmnDrdDiagramType, maakElement } from "../../diagramprofielen/dmn-drd/index.js";
@@ -21,7 +21,6 @@ export default maakDiagramActiviteit({
   taakbalkSleutel: "studio05-taakbalken-dmn-drd",
   menuPrefix: "drd05",
   menuLabel: "DRD (0.5)",
-  previewTekst:
-    "DMN Decision Requirements Diagram — vierde profiel; DMN-shapes volgen met de vormgeving.",
+  previewTekst: "DMN Decision Requirements Diagram — vierde profiel op de generieke motor.",
   devHookNaam: "__dmnDrd05Store",
 });
