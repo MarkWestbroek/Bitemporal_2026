@@ -64,6 +64,13 @@ fabriek gebruikt nu `dc-canvasvlak` (volgt `--s-canvas`), met donkere
 token-varianten: marker-vulling = canvaskleur (fixt "◇ oogt als ◆"),
 donkere edge-labelchips en selectie `#818cf8`.
 
+**Nagekomen (2026-07-07, verzoek techniek): DMN/DRD-shapes.** Drie nieuwe
+ShapeTypes (`dmn-input-data` stadium, `dmn-bkm` afgeknipte hoeken,
+`dmn-knowledge-source` golf-onderrand) plus markereinden `pijl-dicht`
+(gevulde pijl, information requirement) en `bol` (gevulde stip, authority
+requirement) in `ConnectorEdge`; geldig in de profiel-ontwerper, met
+shape-fallback-iconen. End-to-end geverifieerd via "Activeer profiel…".
+
 ## Gewijzigde onderdelen
 
 - Bestanden:

@@ -18,7 +18,10 @@
  *   opacity?:    number
  *   markerStart: "ruit" | "ruit-open" | null — compositie- (◆) of
  *                aggregatie-ruit (◇) aan de bronzijde
- *   markerEnd:   "pijl-open" | "driehoek" | null
+ *   markerEnd:   "pijl-open" | "driehoek" | "pijl-dicht" | "bol" | null
+ *                — driehoek = open (canvas-gevuld, generalisatie ▷);
+ *                pijl-dicht = gevulde driehoek (DMN information requirement);
+ *                bol = gevulde stip (DMN authority requirement)
  *   labels: [ { zijde: "bron"|"doel"|"midden", offset?: {x,y},
  *               delen: [ { tekst, soort: "rolnaam"|"kardinaliteit"|"constraint"|"naam", kleur? } ] } ]
  */
@@ -184,6 +187,8 @@ function ConnectorEdge({
     : p.kleur || "var(--dc-lijn, #64748b)";
   const pijlId = `dc-pijl-${id}`;
   const driehoekId = `dc-driehoek-${id}`;
+  const pijlDichtId = `dc-pijl-dicht-${id}`;
+  const bolId = `dc-bol-${id}`;
 
   // Sleepbare labels (vgl. editor 0.2): pointer-drag in flow-coördinaten
   // (schermafstand gedeeld door de zoom); bij loslaten meldt de edge de
@@ -474,6 +479,16 @@ function ConnectorEdge({
             <path d="M 1 1 L 13 7 L 1 13 Z" fill="var(--dc-marker-vulling, #ffffff)" stroke={kleur} strokeWidth="1.2" />
           </marker>
         )}
+        {p.markerEnd === "pijl-dicht" && (
+          <marker id={pijlDichtId} markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+            <path d="M 1 1.5 L 10.5 6 L 1 10.5 Z" fill={kleur} stroke="none" />
+          </marker>
+        )}
+        {p.markerEnd === "bol" && (
+          <marker id={bolId} markerWidth="10" markerHeight="10" refX="7.6" refY="5" orient="auto" markerUnits="strokeWidth">
+            <circle cx="5" cy="5" r="3" fill={kleur} />
+          </marker>
+        )}
       </defs>
 
       <BaseEdge
@@ -482,6 +497,8 @@ function ConnectorEdge({
         markerEnd={
           p.markerEnd === "pijl-open" ? `url(#${pijlId})`
           : p.markerEnd === "driehoek" ? `url(#${driehoekId})`
+          : p.markerEnd === "pijl-dicht" ? `url(#${pijlDichtId})`
+          : p.markerEnd === "bol" ? `url(#${bolId})`
           : undefined
         }
         style={{

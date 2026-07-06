@@ -411,6 +411,138 @@ function PackageShape({ element, elementType, selected, children }) {
   );
 }
 
+/* ── DMN/DRD-shapes (vormgevingssessie 2026-07-05, t.b.v. het DMN-profiel) ──
+   DMN §6.2 schrijft de DRD-vormen voor: Decision = rechthoek (class-box),
+   Input Data = "stadium" (rechthoek met halfronde uiteinden), Business
+   Knowledge Model = rechthoek met afgeknipte hoeken linksboven/rechtsonder,
+   Knowledge Source = rechthoek met golvende onderrand. DRD-nodes tonen
+   alleen hun naam (geen compartimenten). Kleuren komen uit het profiel. */
+
+/** Gedeelde naam-overlay voor de DMN-shapes (stereotype klein, naam vet). */
+function DmnNaam({ element, elementType, extraStijl }) {
+  const d = element.data || {};
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+        padding: "4px 14px",
+        pointerEvents: "none",
+        ...extraStijl,
+      }}
+    >
+      <div className="dc-stereotype">{d.stereotype || elementType.stereotype || ""}</div>
+      <div className="dc-naam" style={{ fontSize: 13 }}>{element.naam || "(naamloos)"}</div>
+    </div>
+  );
+}
+
+/** DMN Input Data: stadiumvorm — twee rechte zijden, halfronde uiteinden. */
+function DmnInputDataShape({ element, elementType, selected, children }) {
+  const d = element.data || {};
+  const rand = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #94a3b8)";
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minWidth: 150,
+        minHeight: 56,
+        position: "relative",
+        border: `2px solid ${rand}`,
+        borderRadius: 999,
+        background: d.kleur || elementType.kleur || "var(--dc-node-vulling, #f1f5f9)",
+        boxShadow: "0 1px 4px rgba(0, 0, 0, 0.1)",
+        cursor: "grab",
+      }}
+    >
+      {children}
+      <DmnNaam element={element} elementType={elementType} />
+    </div>
+  );
+}
+
+/**
+ * DMN Business Knowledge Model: rechthoek met afgeknipte hoeken (linksboven
+ * en rechtsonder). Twee gelijk geknipte lagen op elkaar — de onderste in de
+ * randkleur, de bovenste 2px kleiner in de vulkleur — geven een strakke rand
+ * die de diagonale knippen volgt (CSS-borders kunnen dat niet).
+ */
+function DmnBkmShape({ element, elementType, selected, children }) {
+  const d = element.data || {};
+  const rand = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #94a3b8)";
+  const KNIP = 14;
+  const knip = (k) =>
+    `polygon(${k}px 0, 100% 0, 100% calc(100% - ${k}px), calc(100% - ${k}px) 100%, 0 100%, 0 ${k}px)`;
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minWidth: 160,
+        minHeight: 64,
+        position: "relative",
+        cursor: "grab",
+        filter: "drop-shadow(0 1px 3px rgba(0, 0, 0, 0.12))",
+      }}
+    >
+      {children}
+      <div style={{ position: "absolute", inset: 0, clipPath: knip(KNIP), background: rand }} />
+      <div
+        style={{
+          position: "absolute",
+          inset: 2,
+          clipPath: knip(KNIP - 1),
+          background: d.kleur || elementType.kleur || "var(--dc-node-vulling, #f1f5f9)",
+        }}
+      />
+      <DmnNaam element={element} elementType={elementType} />
+    </div>
+  );
+}
+
+/** DMN Knowledge Source: rechthoek met golvende onderrand. */
+function DmnKnowledgeSourceShape({ element, elementType, selected, children }) {
+  const d = element.data || {};
+  const rand = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #94a3b8)";
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minWidth: 160,
+        minHeight: 80,
+        position: "relative",
+        cursor: "grab",
+      }}
+    >
+      {children}
+      {/* preserveAspectRatio="none": de golf rekt mee met de node; de stroke
+          blijft 2px door vector-effect. De golf zakt onder de tekstzone. */}
+      <svg
+        viewBox="0 0 200 130"
+        preserveAspectRatio="none"
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible" }}
+      >
+        <path
+          d="M2 2 H198 V104 C165 84 135 124 100 104 C65 84 35 124 2 104 Z"
+          fill={d.kleur || elementType.kleur || "var(--dc-node-vulling, #f1f5f9)"}
+          stroke={rand}
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <DmnNaam element={element} elementType={elementType} extraStijl={{ paddingBottom: "22%" }} />
+    </div>
+  );
+}
+
 registreerShape("class-box", ClassBoxShape);
 registreerShape("note", NoteShape);
 registreerShape("rounded", RoundedShape);
@@ -418,5 +550,19 @@ registreerShape("anker", AnkerShape);
 registreerShape("boundary", BoundaryShape);
 registreerShape("bol", BolShape);
 registreerShape("package", PackageShape);
+registreerShape("dmn-input-data", DmnInputDataShape);
+registreerShape("dmn-bkm", DmnBkmShape);
+registreerShape("dmn-knowledge-source", DmnKnowledgeSourceShape);
 
-export { ClassBoxShape, NoteShape, RoundedShape, AnkerShape, BoundaryShape, BolShape, PackageShape };
+export {
+  ClassBoxShape,
+  NoteShape,
+  RoundedShape,
+  AnkerShape,
+  BoundaryShape,
+  BolShape,
+  PackageShape,
+  DmnInputDataShape,
+  DmnBkmShape,
+  DmnKnowledgeSourceShape,
+};

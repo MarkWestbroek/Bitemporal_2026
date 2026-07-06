@@ -52,6 +52,18 @@ zijn geïmplementeerd. Samenvatting:
   linksboven die zijn onderrand deelt met de romp) en de iconen `package`
   (romp + gevulde tab) en `bevat` (stippellijn de mini-hangmap in)
   toegevoegd; `package` is ook een geldige shape in de profiel-ontwerper.
+- **DMN/DRD-shapes (nagekomen, 2026-07-07, verzoek techniek)**: drie nieuwe
+  ShapeTypes in `basisShapes.jsx` voor het komende DMN-profiel —
+  `dmn-input-data` (stadium), `dmn-bkm` (afgeknipte hoeken
+  linksboven/rechtsonder, twee geknipte lagen voor een strakke diagonaalrand)
+  en `dmn-knowledge-source` (golvende onderrand, meerekkend via
+  `preserveAspectRatio="none"` + non-scaling-stroke). Daarnaast twee nieuwe
+  markereinden in `ConnectorEdge`: **`pijl-dicht`** (gevulde pijl —
+  information requirement; bestond nog niet, "driehoek" is de open variant)
+  en **`bol`** (gevulde stip — authority requirement). Alle drie de shapes
+  zijn geldig in de profiel-ontwerper en hebben neutrale
+  taakbalk-fallback-iconen. End-to-end geverifieerd via profiel-ontwerper →
+  "Activeer profiel…" → DRD met alle vormen en markers.
 - Chatverslag: `copilot-chats/summaries/2026-07-05-vormgevingssessie-iconen-en-tokens-v2.md`.
 
 ## Doel van de sessie

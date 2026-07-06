@@ -66,6 +66,18 @@ const IcoonPackage = ({ maat = 14 }) =>
     </>
   ));
 
+/* DMN/DRD-vormen (§6.2): stadium, afgeknipte hoeken, golf-onderrand. */
+const IcoonStadium = ({ maat = 14 }) =>
+  basis(maat, <rect x="1.5" y="4" width="11" height="6" rx="3" />);
+
+const IcoonHoekAf = ({ maat = 14 }) =>
+  basis(maat, <path d="M3.8 3H12.5V8.7L10.2 11H1.5V5.3Z" />);
+
+const IcoonGolfrand = ({ maat = 14 }) =>
+  basis(maat, (
+    <path d="M1.5 2.5H12.5V9.8C10.7 8.7 9.6 10.9 7 9.8C4.4 8.7 3.3 10.9 1.5 9.8Z" />
+  ));
+
 const IcoonRounded = ({ maat = 14 }) =>
   basis(maat, <rect x="1.5" y="3" width="11" height="8" rx="3.6" />);
 
@@ -84,6 +96,9 @@ const perShape = {
   boundary: IcoonKader,
   rounded: IcoonRounded,
   package: IcoonPackage,
+  "dmn-input-data": IcoonStadium,
+  "dmn-bkm": IcoonHoekAf,
+  "dmn-knowledge-source": IcoonGolfrand,
   edge: IcoonLijn,
 };
 
