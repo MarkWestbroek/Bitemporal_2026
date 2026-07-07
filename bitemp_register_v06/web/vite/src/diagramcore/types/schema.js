@@ -95,9 +95,13 @@
  * @typedef {Object} ElementType
  * @property {string} id
  * @property {string} label
- * @property {string} shape                 - ShapeType-id (bv. "class-box", "note", "boundary")
+ * @property {string} shape                 - ShapeType-id (bv. "class-box", "chip", "knip-box", "note", "boundary")
  * @property {string} [stereotype]          - headerregel, bv. "«entiteit»"
  * @property {string} [kleur]               - default; instantie kan overriden
+ * @property {number} [randDikte]           - vormgrammatica: randbreedte in px (identiteit = dik, bv. 3)
+ * @property {number} [hoekRadius]          - vormgrammatica: hoekafronding in px (structuur = rond)
+ * @property {"dashed"} [randStijl]         - vormgrammatica: gestippeld = inhoud elders beheerd
+ *   (ook per element via data.randStijl); geldt voor class-box, chip en package
  * @property {"standaard"|"onzichtbaar"} [handleStijl] - aansluitpunten tonen of niet
  * @property {boolean} [resizebaar]         - default true; false → geen NodeResizer
  * @property {boolean} [achtergrond]        - true → rendert onder de andere nodes (boundaries/kaders)
@@ -168,6 +172,8 @@
  * @property {string} id                    - bv. "canoniek-uml", "puur-uml", "oas31"
  * @property {string} label
  * @property {string} style                 - StyleType-id (Implementatie-domein)
+ * @property {"geen"|"icoon"|"tekst"} [typeWeergave] - default voor de
+ *   Typering-toggle: alleen vorm, mini-icoon of stereotype-tekst (default "tekst")
  * @property {ElementType[]} elementTypes
  * @property {FieldType[]} [fieldTypes]     - de veldtypen waar CompartmentTypes naar verwijzen
  * @property {ReferenceType[]} [referenceTypes] - declaratieve soorten verwijzings-kandidaten (§4.5b)

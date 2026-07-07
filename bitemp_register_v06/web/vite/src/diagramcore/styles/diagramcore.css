@@ -144,6 +144,26 @@
   font-style: italic;
 }
 
+/* ── Typering-weergave (MIM-besluit 2026-07-07): shapes renderen zowel het
+   mini-icoon als de stereotype-regel; `data-dc-typering` op het canvasvlak
+   kiest wat zichtbaar is. Zonder attribuut of bij "tekst" geldt het oude
+   gedrag (alleen stereotype) — bestaande profielen veranderen dus niet. */
+.dc-type-icoon {
+  display: none;
+  justify-content: center;
+  color: #64748b;
+  padding-top: 1px;
+}
+
+[data-dc-typering="geen"] .dc-stereotype,
+[data-dc-typering="icoon"] .dc-stereotype {
+  display: none;
+}
+
+[data-dc-typering="icoon"] .dc-type-icoon {
+  display: flex;
+}
+
 .dc-naam {
   font-size: 14px;
   font-weight: 700;

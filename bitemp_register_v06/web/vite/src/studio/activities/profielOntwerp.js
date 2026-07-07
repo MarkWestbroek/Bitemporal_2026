@@ -160,6 +160,8 @@ function slug(tekst) {
 
 const GELDIGE_SHAPES = new Set([
   "class-box",
+  "chip",
+  "knip-box",
   "bol",
   "note",
   "rounded",

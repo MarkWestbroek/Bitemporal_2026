@@ -11,6 +11,29 @@
  * elementType. Registratie gebeurt onderaan dit bestand.
  */
 import { registreerShape } from "./shapeRegistry.js";
+import { TypeIcoon } from "./typeIconen.jsx";
+
+/**
+ * Typering-regel in de node-kop (vormgevingssessie 2026-07-07, MIM-besluit):
+ * rendert zowel het mini-icoon als de stereotype-tekst; welke zichtbaar is
+ * bepaalt `data-dc-typering` op het canvasvlak (geen | icoon | tekst) via
+ * CSS. Default ("tekst") = het huidige gedrag: alleen de stereotype-regel.
+ */
+function NodeTypering({ element, elementType }) {
+  const d = element.data || {};
+  return (
+    <>
+      <div className="dc-type-icoon">
+        <TypeIcoon elementType={elementType} maat={13} />
+      </div>
+      <div className="dc-stereotype">{d.stereotype || elementType.stereotype || ""}</div>
+    </>
+  );
+}
+
+/** Gestippelde rand = "inhoud elders beheerd" (element-data wint van het type). */
+const isDashed = (element, elementType) =>
+  (element.data?.randStijl || elementType.randStijl) === "dashed";
 
 /** Eén veld-regel, gerenderd volgens de FieldTypeViewer (fieldType.viewer). */
 function VeldRegel({ veld, fieldType }) {
@@ -60,7 +83,11 @@ export function CompartimentLijst({ element, fieldTypesById, compartmentTypesByI
   );
 }
 
-/** UML-klassenbox. */
+/**
+ * UML-klassenbox. Vormgrammatica-knoppen (per ElementType, allemaal
+ * optioneel): `randDikte` (identiteit = dik), `hoekRadius` (structuur =
+ * rond), `randStijl: "dashed"` (inhoud elders beheerd).
+ */
 function ClassBoxShape({ element, elementType, selected, fieldTypesById, compartmentTypesById, children }) {
   const d = element.data || {};
   const borderColor = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #94a3b8)";
@@ -69,13 +96,15 @@ function ClassBoxShape({ element, elementType, selected, fieldTypesById, compart
       className="dc-node"
       style={{
         borderColor,
-        borderWidth: elementType.id === "entiteit" ? 3 : 2,
+        borderWidth: elementType.randDikte ?? (elementType.id === "entiteit" ? 3 : 2),
+        ...(elementType.hoekRadius !== undefined ? { borderRadius: elementType.hoekRadius } : {}),
+        ...(isDashed(element, elementType) ? { borderStyle: "dashed" } : {}),
         backgroundColor: d.kleur || elementType.kleur || "var(--dc-node-vulling, #f1f5f9)",
       }}
     >
       {children}
       <div className="dc-node-header">
-        <div className="dc-stereotype">{d.stereotype || elementType.stereotype || ""}</div>
+        <NodeTypering element={element} elementType={elementType} />
         <div className={"dc-naam" + (d.abstract ? " is-abstract" : "")}>
           {element.naam || "(naamloos)"}
         </div>
@@ -86,6 +115,95 @@ function ClassBoxShape({ element, elementType, selected, fieldTypesById, compart
         fieldTypesById={fieldTypesById}
         compartmentTypesById={compartmentTypesById}
       />
+    </div>
+  );
+}
+
+/**
+ * Chip — de waarde-familie van de vormgrammatica (MIM-besluit 2026-07-07):
+ * sterk afgeronde uiteinden, dunne rand. Gestippeld (`randStijl: "dashed"`)
+ * = de inhoud leeft buiten het model (codelijst). Compartimenten (waarden,
+ * data-elementen) renderen gewoon binnen de chip.
+ */
+function ChipShape({ element, elementType, selected, fieldTypesById, compartmentTypesById, children }) {
+  const d = element.data || {};
+  const borderColor = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #94a3b8)";
+  return (
+    <div
+      className="dc-node"
+      style={{
+        minWidth: 150,
+        borderColor,
+        borderWidth: 1.5,
+        borderRadius: 22,
+        ...(isDashed(element, elementType) ? { borderStyle: "dashed" } : {}),
+        backgroundColor: d.kleur || elementType.kleur || "var(--dc-node-vulling, #f1f5f9)",
+        padding: "2px 8px 4px",
+      }}
+    >
+      {children}
+      <div className="dc-node-header" style={{ padding: "4px 10px 3px" }}>
+        <NodeTypering element={element} elementType={elementType} />
+        <div className={"dc-naam" + (d.abstract ? " is-abstract" : "")} style={{ fontSize: 13 }}>
+          {element.naam || "(naamloos)"}
+        </div>
+      </div>
+      <CompartimentLijst
+        element={element}
+        fieldTypesById={fieldTypesById}
+        compartmentTypesById={compartmentTypesById}
+      />
+    </div>
+  );
+}
+
+/**
+ * Knip-box — vier afgeknipte hoeken: "meerdere gedaanten" (MIM-keuze).
+ * Zelfde laag-techniek als de DMN-BKM (CSS-borders kunnen geen diagonale
+ * knippen volgen): rand-laag + 1.5px kleinere vul-laag, inhoud erbovenop.
+ */
+function KnipBoxShape({ element, elementType, selected, fieldTypesById, compartmentTypesById, children }) {
+  const d = element.data || {};
+  const rand = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #94a3b8)";
+  const KNIP = 13;
+  const knip = (k) =>
+    `polygon(${k}px 0, calc(100% - ${k}px) 0, 100% ${k}px, 100% calc(100% - ${k}px), calc(100% - ${k}px) 100%, ${k}px 100%, 0 calc(100% - ${k}px), 0 ${k}px)`;
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minWidth: 160,
+        minHeight: 52,
+        position: "relative",
+        cursor: "grab",
+        fontSize: 12,
+        filter: "drop-shadow(0 1px 3px rgba(0, 0, 0, 0.12))",
+      }}
+    >
+      {children}
+      <div style={{ position: "absolute", inset: 0, clipPath: knip(KNIP), background: rand }} />
+      <div
+        style={{
+          position: "absolute",
+          inset: 1.5,
+          clipPath: knip(KNIP - 1),
+          background: d.kleur || elementType.kleur || "var(--dc-node-vulling, #f1f5f9)",
+        }}
+      />
+      <div style={{ position: "relative", zIndex: 1, padding: "2px 14px 4px" }}>
+        <div className="dc-node-header" style={{ padding: "4px 0 3px" }}>
+          <NodeTypering element={element} elementType={elementType} />
+          <div className={"dc-naam" + (d.abstract ? " is-abstract" : "")} style={{ fontSize: 13 }}>
+            {element.naam || "(naamloos)"}
+          </div>
+        </div>
+        <CompartimentLijst
+          element={element}
+          fieldTypesById={fieldTypesById}
+          compartmentTypesById={compartmentTypesById}
+        />
+      </div>
     </div>
   );
 }
@@ -355,6 +473,8 @@ function PackageShape({ element, elementType, selected, children }) {
   const d = element.data || {};
   const rand = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #94a3b8)";
   const vulling = d.kleur || elementType.kleur || "var(--dc-node-vulling, #f1f5f9)";
+  // Gestippeld = extern beheerd (bv. het MIM-«extern»-package).
+  const stijl = isDashed(element, elementType) ? "dashed" : "solid";
   return (
     <div
       style={{
@@ -376,9 +496,9 @@ function PackageShape({ element, elementType, selected, children }) {
         style={{
           maxWidth: "65%",
           padding: "3px 14px 4px",
-          borderTop: `2px solid ${rand}`,
-          borderLeft: `2px solid ${rand}`,
-          borderRight: `2px solid ${rand}`,
+          borderTop: `2px ${stijl} ${rand}`,
+          borderLeft: `2px ${stijl} ${rand}`,
+          borderRight: `2px ${stijl} ${rand}`,
           borderRadius: "6px 6px 0 0",
           background: vulling,
           fontSize: 12,
@@ -398,7 +518,7 @@ function PackageShape({ element, elementType, selected, children }) {
         style={{
           flex: 1,
           alignSelf: "stretch",
-          border: `2px solid ${rand}`,
+          border: `2px ${stijl} ${rand}`,
           borderRadius: "0 8px 8px 8px",
           background: vulling,
           boxShadow: "0 1px 4px rgba(0, 0, 0, 0.1)",
@@ -454,7 +574,7 @@ function DmnInputDataShape({ element, elementType, selected, children }) {
         minWidth: 150,
         minHeight: 56,
         position: "relative",
-        border: `2px solid ${rand}`,
+        border: `2px ${stijl} ${rand}`,
         borderRadius: 999,
         background: d.kleur || elementType.kleur || "var(--dc-node-vulling, #f1f5f9)",
         boxShadow: "0 1px 4px rgba(0, 0, 0, 0.1)",
@@ -544,6 +664,8 @@ function DmnKnowledgeSourceShape({ element, elementType, selected, children }) {
 }
 
 registreerShape("class-box", ClassBoxShape);
+registreerShape("chip", ChipShape);
+registreerShape("knip-box", KnipBoxShape);
 registreerShape("note", NoteShape);
 registreerShape("rounded", RoundedShape);
 registreerShape("anker", AnkerShape);
@@ -556,6 +678,8 @@ registreerShape("dmn-knowledge-source", DmnKnowledgeSourceShape);
 
 export {
   ClassBoxShape,
+  ChipShape,
+  KnipBoxShape,
   NoteShape,
   RoundedShape,
   AnkerShape,

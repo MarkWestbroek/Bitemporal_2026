@@ -1382,10 +1382,39 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
   const taakbalkZichtbaar = (balkId) =>
     leesTaakbalkVoorkeuren(taakbalkSleutel, taakbalkDefaults)[balkId]?.zichtbaar ?? true;
 
+  // Typering-weergave (MIM-besluit 2026-07-07): "geen" (alleen vorm),
+  // "icoon" (mini-icoon in de kop) of "tekst" (stereotype-regel, het oude
+  // gedrag). Profieldefault via descriptor.typeWeergave; gebruikerskeuze
+  // wint en wordt per activiteit bewaard.
+  const typeringSleutel = `${taakbalkSleutel}-typering`;
+  const leesTypering = () => {
+    try {
+      return window.localStorage.getItem(typeringSleutel) || descriptor.typeWeergave || "tekst";
+    } catch {
+      return descriptor.typeWeergave || "tekst";
+    }
+  };
+
   function Main() {
     const { selectieId, setSelectieId, verbindingsType, setVerbindingsType, plaatsNieuwElement, verbind, layoutApiRef } =
       useContext(Ctx);
     const theme = useUIStore((s) => s.theme);
+
+    // Typering-weergave: CSS op het canvasvlak schakelt wat de shapes tonen
+    // (mini-icoon of stereotype-tekst renderen ze allebei al).
+    const [typering, setTypering] = useState(leesTypering);
+    useEffect(
+      () =>
+        menuBus.on(ev("typering"), (waarde) => {
+          try {
+            window.localStorage.setItem(typeringSleutel, waarde);
+          } catch {
+            /* localStorage kan uit staan; de state werkt dan alleen deze sessie */
+          }
+          setTypering(waarde);
+        }),
+      []
+    );
 
     // Spiegel het studio-thema naar body[data-ide-theme] zolang deze activiteit
     // actief is: hergebruikte umleditor-componenten (o.a. de CEL-ExpressieEditor)
@@ -1769,7 +1798,11 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
         </div>
         {/* Eigen canvas (geen third-party zoals bpmn/dmn-js) → volgt het
             studio-thema via dc-canvasvlak, i.p.v. het vaste witte papier. */}
-        <div className="dc-canvasvlak" style={{ flex: 1, minHeight: 0, position: "relative" }}>
+        <div
+          className="dc-canvasvlak"
+          data-dc-typering={typering}
+          style={{ flex: 1, minHeight: 0, position: "relative" }}
+        >
           {diagram ? (
             <>
               <Suspense fallback={<div style={{ padding: 16, color: "#64748b" }}>Canvas laden…</div>}>
@@ -2055,6 +2088,20 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
             label: balkLabel,
             checked: taakbalkZichtbaar(balkId),
             onClick: () => menuBus.emit(ev("taakbalk-toggle"), balkId),
+          })),
+        },
+        {
+          id: `${menuPrefix}-typering`,
+          label: "Typering",
+          items: [
+            ["geen", "Alleen vorm"],
+            ["icoon", "Mini-icoon"],
+            ["tekst", "Stereotype (tekst)"],
+          ].map(([waarde, waardeLabel]) => ({
+            id: `${menuPrefix}-typ-${waarde}`,
+            label: waardeLabel,
+            checked: leesTypering() === waarde,
+            onClick: () => menuBus.emit(ev("typering"), waarde),
           })),
         },
       ],
