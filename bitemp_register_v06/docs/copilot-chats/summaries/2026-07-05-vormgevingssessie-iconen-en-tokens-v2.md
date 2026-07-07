@@ -64,6 +64,18 @@ fabriek gebruikt nu `dc-canvasvlak` (volgt `--s-canvas`), met donkere
 token-varianten: marker-vulling = canvaskleur (fixt "◇ oogt als ◆"),
 donkere edge-labelchips en selectie `#818cf8`.
 
+**Nagekomen (2026-07-07): MIM-vormgrammatica.** Mark wil MIM 1.2 zonder
+stereotypen ("de vorm is het type, zoals bij DMN"). Besluit: voorzet A —
+contour = familie (identiteit = scherpe rechthoek/dikke rand, structuur =
+afgeronde rechthoek, waarde = chip), gestippeld = elders beheerd
+(codelijst), afgeknipte hoeken = keuze — plus een **Typering-menu** met
+drie standen (alleen vorm / mini-icoon / stereotype-tekst; MIM-default
+"geen", andere profielen ongewijzigd op "tekst"). Nieuw: ShapeTypes
+`chip` en `knip-box`, `randDikte`/`hoekRadius`/`randStijl` op class-box,
+`DiagramType.typeWeergave`, en `NodeTypering` (icoon + tekst beide
+gerenderd, CSS `data-dc-typering` schakelt). End-to-end geverifieerd in
+de MIM-activiteit in alle drie de standen.
+
 **Nagekomen (2026-07-07, verzoek techniek): DMN/DRD-shapes.** Drie nieuwe
 ShapeTypes (`dmn-input-data` stadium, `dmn-bkm` afgeknipte hoeken,
 `dmn-knowledge-source` golf-onderrand) plus markereinden `pijl-dicht`

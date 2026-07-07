@@ -64,6 +64,19 @@ zijn geïmplementeerd. Samenvatting:
   zijn geldig in de profiel-ontwerper en hebben neutrale
   taakbalk-fallback-iconen. End-to-end geverifieerd via profiel-ontwerper →
   "Activeer profiel…" → DRD met alle vormen en markers.
+- **MIM-vormgrammatica (2026-07-07, besluit Mark: voorzet A + toggle)**:
+  MIM 1.2 toont standaard géén stereotypen — de vorm draagt het type.
+  Drie assen: contour = familie (identiteit = scherpe rechthoek met dikke
+  rand; structuur = afgeronde rechthoek; waarde = **chip**), randstijl =
+  herkomst (gestippeld = elders beheerd, bv. codelijst), detail = soort
+  (**knip-box** met vier afgeknipte hoeken = keuze). Nieuw in de core:
+  ShapeTypes `chip` en `knip-box`, vormknoppen `randDikte`/`hoekRadius`/
+  `randStijl` op de class-box (en dashed op package), en een
+  **Typering-menu** per activiteit (alleen vorm / mini-icoon /
+  stereotype-tekst; profieldefault via `DiagramType.typeWeergave`, keuze
+  per gebruiker bewaard). De stereotype-teksten staan als officiële
+  MIM-termen in de descriptor voor de tekst-stand. Bestaande profielen
+  veranderen niet (default "tekst" = oude gedrag).
 - Chatverslag: `copilot-chats/summaries/2026-07-05-vormgevingssessie-iconen-en-tokens-v2.md`.
 
 ## Doel van de sessie
