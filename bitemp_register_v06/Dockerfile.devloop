@@ -34,7 +34,7 @@ COPY . .
 COPY --from=frontend-builder /app/web/react ./web/react
 
 # Initiële compilatie van het register
-RUN CGO_ENABLED=0 go build -o /app/bitemp-go-api .
+RUN CGO_ENABLED=0 go build -tags devtools -o /app/bitemp-go-api .
 
 # Zorg dat codegen- en export-tools ook gecompileerd zijn (snellere en robuustere rebuilds)
 RUN CGO_ENABLED=0 go build -o /app/bin/codegen ./cmd/codegen

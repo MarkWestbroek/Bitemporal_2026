@@ -37,6 +37,10 @@ func main() {
 	if dropTablesEnabled && isProductionEnvironment() {
 		fmt.Println("WARNING: ALLOW_DROP_TABLES=true while running in production context")
 	}
+	fmt.Printf("devtools endpoints (/admin/*) meegecompileerd: %t\n", handlers.DevtoolsEnabled)
+	if !handlers.DevtoolsEnabled {
+		fmt.Println("  (devloop/rebuild/droptables vereisen een build met -tags devtools)")
+	}
 
 	// Registratie-tijdmodus: synthetisch (demo, default) of klok (productie).
 	// Zie handlers/registratie_tijd.go en .env.example (REGISTRATIE_TIJD).
@@ -209,15 +213,25 @@ func NewRouter() *gin.Engine {
 		fmt.Println("GraphQL endpoint geregistreerd op /graphql/query")
 	}
 
-	// admin routes — naast de bestaande flag/wachtwoord-checks in de handlers
-	// vereisen deze nu ook rol "admin" zodra AUTH_ENABLED=true.
-	router.DELETE("/admin/db/droptables/:password", admin, handlers.DropTables)
-	router.POST("/admin/db/createtables", admin, handlers.CreateTables)
+	// admin/devloop routes — drie beveiligingsringen (BE-review 2026-07-07, §3.3):
+	//  1. Alleen meegecompileerd met `go build -tags devtools` (devloop-builds);
+	//     productie-builds (Dockerfile, Dockerfile.api) hebben deze routes niet.
+	//  2. Rol "admin" vereist zodra AUTH_ENABLED=true.
+	//  3. Eigen flag- en wachtwoordchecks in de handlers (constant-time;
+	//     wachtwoord bij voorkeur via header X-Beheer-Wachtwoord — de
+	//     :password-padvariant blijft werken maar lekt via access-logs).
+	if handlers.DevtoolsEnabled {
+		router.DELETE("/admin/db/droptables", admin, handlers.DropTables)
+		router.DELETE("/admin/db/droptables/:password", admin, handlers.DropTables)
+		router.POST("/admin/db/createtables", admin, handlers.CreateTables)
 
-	// Devloop rebuild routes (alleen actief als DEVLOOP=true)
-	router.POST("/admin/rebuild/:password", admin, handlers.MaakRebuildHandler())
-	router.GET("/admin/rebuild/status", admin, handlers.MaakRebuildStatusHandler())
-	router.POST("/admin/diff/:password", admin, handlers.MaakDiffHandler())
+		// Devloop rebuild routes (alleen actief als DEVLOOP=true)
+		router.POST("/admin/rebuild", admin, handlers.MaakRebuildHandler())
+		router.POST("/admin/rebuild/:password", admin, handlers.MaakRebuildHandler())
+		router.GET("/admin/rebuild/status", admin, handlers.MaakRebuildStatusHandler())
+		router.POST("/admin/diff", admin, handlers.MaakDiffHandler())
+		router.POST("/admin/diff/:password", admin, handlers.MaakDiffHandler())
+	}
 
 	//Add all functional routes
 	routes.AddRoutes(router)

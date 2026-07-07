@@ -25,7 +25,7 @@ echo "Crash threshold: ${CRASH_THRESHOLD_SECONDS}s"
 if [ ! -f /app/bitemp-go-api ]; then
     echo "Geen binary gevonden, compileren..."
     cd /app
-    CGO_ENABLED=0 go build -o /app/bitemp-go-api .
+    CGO_ENABLED=0 go build -tags devtools -o /app/bitemp-go-api .
 fi
 
 # rollback_en_herbouw — herstelt model/ vanuit baseline en bouwt opnieuw.
@@ -41,7 +41,7 @@ rollback_en_herbouw() {
 
         echo "Binary hercompileren met hersteld model..."
         cd /app
-        if CGO_ENABLED=0 go build -o /app/bitemp-go-api .; then
+        if CGO_ENABLED=0 go build -tags devtools -o /app/bitemp-go-api .; then
             echo "Herbouw succesvol — API wordt herstart met baseline-model"
             return 0
         else

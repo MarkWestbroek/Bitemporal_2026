@@ -91,9 +91,7 @@ func MaakDiffHandler() gin.HandlerFunc {
 			return
 		}
 
-		password := c.Param("password")
-		if password != getDevloopPassword() {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "ongeldig wachtwoord"})
+		if !eisBeheerWachtwoord(c, "DEVLOOP_PASSWORD") {
 			return
 		}
 

@@ -23,6 +23,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
@@ -35,14 +36,9 @@ func isDevloopEnabled() bool {
 	return v == "true" || v == "1" || v == "yes"
 }
 
-// getDevloopPassword retourneert het wachtwoord voor de devloop rebuild endpoint.
-func getDevloopPassword() string {
-	pw := os.Getenv("DEVLOOP_PASSWORD")
-	if pw == "" {
-		return "1234"
-	}
-	return pw
-}
+// rebuildMutex serialiseert rebuilds: twee gelijktijdige rebuilds zouden
+// elkaars backup/rollback en codegen-output corrumperen (BE-review §3.3).
+var rebuildMutex sync.Mutex
 
 // resolveAppDir bepaalt de projectroot voor devloop rebuilds.
 // In Docker is dat normaal `/app`; lokaal zoeken we dynamisch de map met `go.mod`.
@@ -486,11 +482,18 @@ func MaakRebuildHandler() gin.HandlerFunc {
 			return
 		}
 
-		password := c.Param("password")
-		if password != getDevloopPassword() {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "ongeldig wachtwoord"})
+		if !eisBeheerWachtwoord(c, "DEVLOOP_PASSWORD") {
 			return
 		}
+
+		// Eén rebuild tegelijk: bij een lopende rebuild direct 409 teruggeven.
+		if !rebuildMutex.TryLock() {
+			c.JSON(http.StatusConflict, gin.H{
+				"error": "er loopt al een rebuild; probeer het zo opnieuw",
+			})
+			return
+		}
+		defer rebuildMutex.Unlock()
 
 		// Parse request. Een lege body is toegestaan, maar ongeldige JSON niet.
 		// We lezen de raw body expliciet zodat fouten zichtbaar worden en zodat
@@ -725,7 +728,8 @@ func MaakRebuildHandler() gin.HandlerFunc {
 
 		// Stap 3: Go build
 		stappen = append(stappen, "Binary hercompileren...")
-		buildCmd := exec.Command("go", "build", "-o", filepath.Join(appDir, "bitemp-go-api"), ".")
+		// -tags devtools: de devloop-binary moet zijn eigen rebuild-endpoint behouden.
+	buildCmd := exec.Command("go", "build", "-tags", "devtools", "-o", filepath.Join(appDir, "bitemp-go-api"), ".")
 		buildCmd.Dir = appDir
 		buildCmd.Env = append(os.Environ(), "CGO_ENABLED=0")
 		buildOutput, err := buildCmd.CombinedOutput()

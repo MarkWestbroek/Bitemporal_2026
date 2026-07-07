@@ -19,8 +19,23 @@
 > 4. ✅ Regressietests toegevoegd: `routes/auth_routes_test.go` (401 op alle muterende routes bij auth-aan) en
 >    `middleware/auth_config_test.go` (configvalidatie + rolhiërarchie).
 >
-> Nog open uit de blockers: §3.3 (admin-wachtwoorden/build-tags) en §3.5 (audit-trail-bypass). Die zijn wel al deels
-> gemitigeerd doordat de admin-routes en directe POST-routes nu achter rol-checks zitten zodra auth aanstaat.
+> **Aanvulling (vervolgsessie, zelfde branch):** ook §3.3 en §3.5 zijn uitgevoerd:
+>
+> 5. ✅ **§3.5 audit-trail-bypass gedicht.** `POST /{padnaam}` en `POST /full/{padnaam}` lopen nu via
+>    `MakeAddEntityViaEngineHandler` (`handlers/opvoer_handlers.go`): de body wordt verpakt als reguliere opvoer en
+>    gedelegeerd naar `RegistreerJSONCore` — normalisatie, validatie, audit-trail en transactie identiek aan
+>    `POST /registratie/`. De directe-insert handlers zijn verwijderd. `POST /registraties` en `POST /wijzigingen`
+>    bestaan niet meer (audit-records waren daarmee te vervalsen); die resources zijn read-only.
+>    Response van de POST-routes bevat nu ook `registratie_id` + `tijdstip`.
+> 6. ✅ **§3.3 admin-hardening.** De `/admin/*`-routes bestaan alleen nog in builds met `-tags devtools`
+>    (Dockerfile.devloop en devloop-entrypoint.sh bouwen met die tag; de in-container rebuild ook, anders verliest de
+>    herbouwde binary zijn eigen rebuild-endpoint). Productie-images hebben de endpoints simpelweg niet (getest: 404).
+>    Wachtwoordchecks zijn constant-time, kunnen via header `X-Beheer-Wachtwoord` (padvariant blijft werken voor de FE),
+>    en de dev-default "1234" is in productiecontext geweigerd. Rebuilds zijn geserialiseerd met een mutex (409 bij
+>    gelijktijdige rebuild). Zie docs/DEVLOOP.md, sectie "Beveiliging van de devloop-endpoints".
+>
+> Daarmee zijn alle vier de §3-blockers geadresseerd. `go build`, `go vet` en `go test ./...` zijn groen, zowel mét als
+> zónder `-tags devtools`.
 
 ## 1. Eindoordeel
 
@@ -219,8 +234,8 @@ Bevindingen die je vermoeden bevestigen:
 | 1 | ✅ (tests gefixt; CI-workflow nog toe te voegen) CI: `go build && go vet && go test ./...` verplicht groen; 2 falende tests fixen | klein | 4.9 |
 | 2 | ✅ Echt registratietijdstip via `REGISTRATIE_TIJD=klok`; synthetisch blijft demo-default voor de FE-tijdlijnen | klein–middel | 3.1 |
 | 3 | ✅ `RequireAuth`/`RequireRol` aangesloten; fail-closed PDP; JWT-secret verplicht | klein | 3.2, 3.4 |
-| 4 | Admin/devloop-endpoints: build-tag, wachtwoord uit URL, constant-time, mutex op rebuild | klein | 3.3 |
-| 5 | `POST /{padnaam}` en `/registraties`,`/wijzigingen` door `RegistreerCore` laten lopen / read-only maken | middel | 3.5 |
+| 4 | ✅ Admin/devloop-endpoints: build-tag, wachtwoord via header, constant-time, mutex op rebuild | klein | 3.3 |
+| 5 | ✅ `POST /{padnaam}` (+ `/full`) door `RegistreerCore`; `/registraties`,`/wijzigingen` read-only | middel | 3.5 |
 | 6 | `ErrNoRows`→404-helper; foutteksten niet naar client; `slog` invoeren | klein | 4.2, 4.3, 5.3 |
 | 7 | Ongedaanmaking-reads binnen tx; `FOR UPDATE`; partial unique index op enkelvoudige GE's | middel | 4.1 |
 | 8 | N+1 bij peiltijdstip set-based maken; EXPLAIN-meting toevoegen aan perf-results | middel–groot | 4.4 |

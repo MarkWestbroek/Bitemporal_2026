@@ -570,3 +570,26 @@ Omgevingsvariabelen in `docker-compose.devloop.yml`:
 | Broncode | Niet aanwezig | Volledig aanwezig |
 | Rebuild mogelijk | Nee | Ja |
 | Doel | Deployment | Ontwikkeling / demo |
+
+## Beveiliging van de devloop-endpoints (BE-review 2026-07-07, §3.3)
+
+De `/admin/*`-endpoints (droptables, createtables, rebuild, diff) zijn nu op drie
+manieren afgeschermd:
+
+1. **Build-tag `devtools`** — de routes worden alleen geregistreerd in builds met
+   `go build -tags devtools`. `Dockerfile.devloop` en `scripts/devloop-entrypoint.sh`
+   bouwen met deze tag (ook de in-container rebuild zelf, anders zou de herbouwde
+   binary zijn eigen rebuild-endpoint verliezen). Productie-images (`Dockerfile`,
+   `Dockerfile.api`) bouwen zónder tag: daar bestaan de endpoints niet (404).
+   **Let op bij lokale devloop buiten Docker:** start de API dan ook met
+   `go run -tags devtools .` (of build met die tag), anders geeft `/admin/rebuild` 404.
+2. **Rol "admin"** zodra `AUTH_ENABLED=true` (no-op zolang auth uit staat).
+3. **Wachtwoordcheck in de handler** — constante-tijd vergelijking; wachtwoord bij
+   voorkeur via de header `X-Beheer-Wachtwoord` op `POST /admin/rebuild` /
+   `POST /admin/diff` / `DELETE /admin/db/droptables` (de `:password`-padvariant
+   blijft werken voor bestaande clients, maar padsegmenten lekken via access-logs).
+   De dev-default `1234` geldt alléén buiten productie; in productiecontext zonder
+   `DEVLOOP_PASSWORD`/`ADMIN_DROP_PASSWORD` weigert het endpoint (403).
+
+Rebuilds zijn bovendien geserialiseerd met een mutex: een tweede gelijktijdige
+rebuild krijgt direct `409 Conflict` in plaats van een corrupte backup/rollback.
