@@ -78,7 +78,13 @@ func VoerEntiteitAfCore(ctx context.Context, meta model.TypeMeta, entityID strin
 
 	entity := meta.DBFactory()
 	if err := DB.NewSelect().Model(entity).Where(meta.IDKolom+" = ?", entityID).Scan(ctx); err != nil {
-		return nil, &RegistreerError{Status: http.StatusInternalServerError, Msg: err.Error()}
+		// §4.2: onbekend ID (sql.ErrNoRows) is een 404; andere DB-fouten worden
+		// server-side gelogd en niet naar de client gelekt (§4.3).
+		if isNoRows(err) {
+			return nil, &RegistreerError{Status: http.StatusNotFound, Msg: meta.Typenaam + " not found"}
+		}
+		fmt.Printf("ERROR: afvoer-precheck %s id=%s: %v\n", meta.Typenaam, entityID, err)
+		return nil, &RegistreerError{Status: http.StatusInternalServerError, Msg: "databasefout bij ophalen " + meta.Typenaam}
 	}
 	if isZeroID(entity.GetID()) {
 		return nil, &RegistreerError{Status: http.StatusNotFound, Msg: meta.Typenaam + " not found"}
@@ -190,7 +196,12 @@ func WijzigEntiteitCore(ctx context.Context, meta model.TypeMeta, entityID strin
 	if meta.DBFactory != nil {
 		exists := meta.DBFactory()
 		if err := DB.NewSelect().Model(exists).Where(meta.IDKolom+" = ?", entityID).Scan(ctx); err != nil {
-			return nil, nil, &RegistreerError{Status: http.StatusInternalServerError, Msg: err.Error()}
+			// §4.2/§4.3: zie VoerEntiteitAfCore.
+			if isNoRows(err) {
+				return nil, nil, &RegistreerError{Status: http.StatusNotFound, Msg: meta.Typenaam + " not found"}
+			}
+			fmt.Printf("ERROR: patch-precheck %s id=%s: %v\n", meta.Typenaam, entityID, err)
+			return nil, nil, &RegistreerError{Status: http.StatusInternalServerError, Msg: "databasefout bij ophalen " + meta.Typenaam}
 		}
 		if isZeroID(exists.GetID()) {
 			return nil, nil, &RegistreerError{Status: http.StatusNotFound, Msg: meta.Typenaam + " not found"}

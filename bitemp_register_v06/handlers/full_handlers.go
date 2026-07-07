@@ -1019,7 +1019,7 @@ func MakeGetRegistratiesMetWijzigingenHandler() gin.HandlerFunc {
 			Offset(offset).
 			Scan(c.Request.Context())
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			interneFout(c, "kon lijst van registraties niet ophalen", err)
 			return
 		}
 
@@ -1065,11 +1065,11 @@ func MakeGetRegistratieMetWijzigingenByIDHandler() gin.HandlerFunc {
 			Relation("Wijzigingen").
 			Scan(c.Request.Context())
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if isNoRows(err) {
 				c.JSON(http.StatusNotFound, gin.H{"message": "Registratie not found"})
 				return
 			}
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			interneFout(c, "kon registratie niet ophalen", err)
 			return
 		}
 
@@ -1333,7 +1333,7 @@ func MakeGetFullEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 			Offset(offset).
 			Scan(c.Request.Context())
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			interneFout(c, "kon lijst van "+meta.Typenaam+" niet ophalen", err)
 			return
 		}
 
@@ -1352,7 +1352,7 @@ func MakeGetFullEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 
 		total, err := DB.NewSelect().Model(meta.Factory()).Count(c.Request.Context())
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			interneFout(c, "kon aantal "+meta.Typenaam+" niet bepalen", err)
 			return
 		}
 		hasMore := offset+size < total
@@ -1420,8 +1420,8 @@ func MakeGetFullEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 		err = query.
 			Where(meta.IDKolom+" = ?", entityID).
 			Scan(c.Request.Context())
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// §4.2: bun geeft sql.ErrNoRows bij een onbekend ID → 404 (geen 500).
+		if scanFoutNaar404OfInterneFout(c, err, meta.Typenaam) {
 			return
 		}
 

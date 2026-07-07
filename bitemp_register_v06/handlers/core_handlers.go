@@ -164,10 +164,9 @@ func MakeGetEntitiesHandler[T any](entity_name string) gin.HandlerFunc {
 			Model(&entities). // laadt alleen de entiteiten, zonder gerelateerde gegevenselementen
 			Limit(size).
 			Offset(offset).
-			Scan(c.Request.
-				Context())
+			Scan(c.Request.Context())
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			interneFout(c, "kon lijst van "+entity_name+" niet ophalen", err)
 			return
 		}
 
@@ -193,8 +192,8 @@ func MakeGetEntityHandler[T model.HasID](entity_name string) gin.HandlerFunc {
 
 		var entity T
 		err := DB.NewSelect().Model(&entity).Where("id = ?", entityID).Scan(c.Request.Context())
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// §4.2: bun geeft sql.ErrNoRows bij een onbekend ID → 404 (geen 500).
+		if scanFoutNaar404OfInterneFout(c, err, entity_name) {
 			return
 		}
 
@@ -323,7 +322,7 @@ func MakeGetEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 
 		err := query.Scan(c.Request.Context())
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			interneFout(c, "kon lijst van "+meta.Typenaam+" niet ophalen", err)
 			return
 		}
 
@@ -334,7 +333,7 @@ func MakeGetEntitiesByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 		}
 		total, err := countQuery.Count(c.Request.Context())
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			interneFout(c, "kon aantal "+meta.Typenaam+" niet bepalen", err)
 			return
 		}
 		hasMore := offset+size < total
@@ -372,8 +371,8 @@ func MakeGetEntityByMetaHandler(meta model.TypeMeta) gin.HandlerFunc {
 			Model(entity).
 			Where(meta.IDKolom+" = ?", entityID).
 			Scan(c.Request.Context())
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// §4.2: bun geeft sql.ErrNoRows bij een onbekend ID → 404 (geen 500).
+		if scanFoutNaar404OfInterneFout(c, err, meta.Typenaam) {
 			return
 		}
 
