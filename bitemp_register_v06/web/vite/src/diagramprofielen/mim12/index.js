@@ -92,7 +92,13 @@ const elementTypes = [
     id: "objecttype",
     label: "Objecttype",
     kort: "OT",
+    // Vormgrammatica (besluit 2026-07-07): identiteit = scherpe rechthoek
+    // met dikke rand. Stereotypen staan er voor de "tekst"-stand van de
+    // Typering-toggle; standaard toont MIM ze niet (typeWeergave "geen").
+    stereotype: "«objecttype»",
     shape: "class-box",
+    randDikte: 3,
+    hoekRadius: 2,
     kleur: "#bfdbfe",
     icoon: "klasse",
     properties: [
@@ -110,7 +116,10 @@ const elementTypes = [
     id: "gegevensgroeptype",
     label: "Gegevensgroeptype",
     kort: "GGT",
+    // Structuur zonder identiteit = afgeronde rechthoek.
+    stereotype: "«gegevensgroeptype»",
     shape: "class-box",
+    hoekRadius: 14,
     kleur: "#bbf7d0",
     icoon: "veld",
     properties: [KLEUR_VELD, ...MIM_BASIS],
@@ -120,7 +129,9 @@ const elementTypes = [
     id: "enumeratie",
     label: "Enumeratie",
     kort: "ENUM",
-    shape: "class-box",
+    // Waarde-familie = chip (dunne rand, sterk afgeronde uiteinden).
+    stereotype: "«enumeratie»",
+    shape: "chip",
     kleur: "#fef3c7",
     icoon: "enumeratie",
     properties: [KLEUR_VELD, ...MIM_BASIS],
@@ -131,7 +142,10 @@ const elementTypes = [
     id: "codelijst",
     label: "Codelijst",
     kort: "CODE",
-    shape: "class-box",
+    // Gestippelde chip: de waarden leven búiten het model (URI).
+    stereotype: "«codelijst»",
+    shape: "chip",
+    randStijl: "dashed",
     kleur: "#fde68a",
     icoon: "lijst",
     properties: [
@@ -144,7 +158,8 @@ const elementTypes = [
     id: "referentielijst",
     label: "Referentielijst",
     kort: "REF",
-    shape: "class-box",
+    stereotype: "«referentielijst»",
+    shape: "chip",
     kleur: "#fed7aa",
     icoon: "lijst",
     properties: [
@@ -158,7 +173,8 @@ const elementTypes = [
     id: "primitiefDatatype",
     label: "Primitief datatype",
     kort: "PDT",
-    shape: "class-box",
+    stereotype: "«primitief datatype»",
+    shape: "chip",
     kleur: "#dbeafe",
     icoon: "datatype",
     properties: [
@@ -173,7 +189,8 @@ const elementTypes = [
     id: "gestructureerdDatatype",
     label: "Gestructureerd datatype",
     kort: "GDT",
-    shape: "class-box",
+    stereotype: "«gestructureerd datatype»",
+    shape: "chip",
     kleur: "#e0e7ff",
     icoon: "datatype",
     properties: [KLEUR_VELD, ...MIM_BASIS],
@@ -185,7 +202,9 @@ const elementTypes = [
     id: "keuze",
     label: "Keuze",
     kort: "KEUZE",
-    shape: "rounded",
+    // Afgeknipte hoeken = "meerdere gedaanten".
+    stereotype: "«keuze»",
+    shape: "knip-box",
     kleur: "#f5d0fe",
     icoon: "keuze-een",
     properties: [KLEUR_VELD, ...MIM_BASIS],
@@ -194,6 +213,7 @@ const elementTypes = [
     id: "constraint",
     label: "Constraint",
     kort: "CON",
+    stereotype: "«constraint»",
     shape: "rounded",
     kleur: "#e0f2fe",
     icoon: "constraint",
@@ -209,6 +229,7 @@ const elementTypes = [
     id: "package",
     label: "Package",
     kort: "PKG",
+    stereotype: "«package»",
     shape: "package",
     kleur: "#f1f5f9",
     icoon: "package",
@@ -251,6 +272,7 @@ const elementTypes = [
     id: "relatiesoort",
     label: "Relatiesoort",
     kort: "REL",
+    stereotype: "«relatiesoort»",
     shape: "class-box",
     kleur: "#ede9fe",
     icoon: "relatie-box",
@@ -418,6 +440,10 @@ export const mim12DiagramType = {
   id: MIM12_ID,
   label: "MIM 1.2",
   style: "uml-klassiek",
+  // Vormgrammatica (besluit 2026-07-07): de vorm draagt het type; de
+  // Typering-toggle (hoofdmenu) kan het mini-icoon of de stereotype-tekst
+  // erbij tonen. Standaard: alleen vorm.
+  typeWeergave: "geen",
   // Boom: packages (informatiemodel → domein → …) en daarbinnen de
   // gegevensgroep-composities.
   hierarchie: ["bevat", "gegevensgroep"],
