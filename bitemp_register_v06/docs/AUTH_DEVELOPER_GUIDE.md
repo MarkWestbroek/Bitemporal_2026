@@ -187,15 +187,18 @@ Request binnenkomst
     │                          • Mapt method+pad → AuthZEN actie+resource
     │                          • Stuurt evaluatieverzoek naar OpenFTV PDP
     │                          • Bij decision=false → 403 Forbidden
-    │                          • Bij PDP-fout → fail-open (of fail-closed via AUTHZ_DENY_ON_ERROR)
+    │                          • Bij PDP-fout → fail-closed / deny (default sinds 2026-07-07;
+    │                            fail-open alleen expliciet via AUTHZ_DENY_ON_ERROR=false)
     │                        Als AUTHZ_PDP_ENABLED=false:
     │                          • Doet niets (c.Next())
     ▼
-[5] RequireAuth()           — Optioneel per route-groep:
+[5] RequireAuth()           — Aangesloten op /graphql/query (BE-review 2026-07-07):
     │                          • Checkt of "gebruiker" in context staat
     │                          • Zo nee: 401 Unauthorized
     ▼
-[6] RequireRol("editor")   — Optioneel per route-groep:
+[6] RequireRol("editor")   — Aangesloten op alle muterende routes;
+    │                        RequireRol("admin") op /admin/* en schema-activeren
+    │                        (BE-review 2026-07-07, actiepunt 3):
     │                          • Checkt rol-hiërarchie
     │                          • Zo onvoldoende: 403 Forbidden
     ▼
@@ -534,8 +537,18 @@ Dit wordt gecontroleerd in `middleware.IsAuthEnabled()` en gelezen uit de `AUTH_
 
 | Waarde | Effect |
 |--------|--------|
-| `false` / niet gezet (default) | **Fail-open**: bij PDP-communicatiefouten wordt het request doorgelaten met een waarschuwing in de logs. Voorkomt dat een onbereikbare PDP de gehele API blokkeert. |
-| `true` | **Fail-closed**: bij PDP-fouten wordt het request geweigerd met 403 Forbidden. Veiliger, maar vereist een stabiele PDP. |
+| `true` / niet gezet (default sinds 2026-07-07) | **Fail-closed**: bij PDP-fouten wordt het request geweigerd met 403 Forbidden. Wie autorisatie aanzet, wil niet dat een onbereikbare PDP alles openzet. |
+| `false` / `0` / `no` / `off` | **Fail-open**: bij PDP-communicatiefouten wordt het request doorgelaten met een waarschuwing in de logs. Alleen bedoeld voor dev-testen zonder stabiele PDP. |
+
+### JWT_SECRET verplicht bij AUTH_ENABLED=true
+
+Sinds 2026-07-07 (BE-review actiepunt 3) valideert de applicatie bij startup de
+auth-configuratie via `middleware.ValideerAuthConfiguratie()`:
+
+- `AUTH_ENABLED=true` zonder `JWT_SECRET` → **startup geweigerd**.
+- `JWT_SECRET` gelijk aan de dev-default → **startup geweigerd in productie**
+  (`APP_ENV=production` of `GIN_MODE=release`), waarschuwing daarbuiten.
+- Kort secret (< 32 tekens) → waarschuwing.
 
 ---
 

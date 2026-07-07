@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/handlers"
+	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/middleware"
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 	"github.com/gin-gonic/gin"
 )
@@ -27,13 +28,15 @@ func addMetaRegistryRoutes(router *gin.Engine) {
 		}
 
 		basePath := "/" + meta.Padnaam
+		// Muterende routes vereisen minimaal rol "editor" (no-op als AUTH_ENABLED=false).
+		editor := middleware.RequireRol("editor")
 		router.GET(basePath, handlers.MakeGetEntitiesByMetaHandler(meta))
 		router.GET(basePath+"/:id", handlers.MakeGetEntityByMetaHandler(meta))
-		router.POST(basePath, handlers.MakeAddEntityByMetaHandler(meta))
+		router.POST(basePath, editor, handlers.MakeAddEntityByMetaHandler(meta))
 		// FASE 2 (REST/CRUD-laag, 2026-04-29): DELETE per padnaam.
 		// Routes naar de generieke afvoer-handler die intern RegistreerCore aanroept,
 		// zodat audit-trail + transactiegedrag identiek zijn aan POST /registratie/.
-		router.DELETE(basePath+"/:id", handlers.MakeDeleteEntityByMetaHandler(meta))
+		router.DELETE(basePath+"/:id", editor, handlers.MakeDeleteEntityByMetaHandler(meta))
 	}
 }
 
@@ -56,12 +59,14 @@ func addMetaRegistryFullRoutes(router *gin.Engine) {
 		}
 
 		basePath := "/full/" + meta.Padnaam
+		// Muterende routes vereisen minimaal rol "editor" (no-op als AUTH_ENABLED=false).
+		editor := middleware.RequireRol("editor")
 		router.GET(basePath, handlers.MakeGetFullEntitiesByMetaHandler(meta))
 		router.GET(basePath+"/:id", handlers.MakeGetFullEntityByMetaHandler(meta))
-		router.POST(basePath, handlers.MakeAddFullEntityByMetaHandler(meta))
+		router.POST(basePath, editor, handlers.MakeAddFullEntityByMetaHandler(meta))
 		// FASE 2 (REST/CRUD-laag, 2026-04-29): PATCH op /full/{padnaam}/:id.
 		// JSON Merge Patch (RFC 7396) op onderliggende GE's/RELs; ?modus=registratie|correctie.
-		router.PATCH(basePath+"/:id", handlers.MakePatchFullEntityByMetaHandler(meta))
+		router.PATCH(basePath+"/:id", editor, handlers.MakePatchFullEntityByMetaHandler(meta))
 	}
 }
 
@@ -96,15 +101,17 @@ func addReferentielijstRoutes(router *gin.Engine) {
 		}
 
 		basePath := "/referentielijsten/" + meta.Padnaam
+		// Muterende routes vereisen minimaal rol "editor" (no-op als AUTH_ENABLED=false).
+		editor := middleware.RequireRol("editor")
 		router.GET(basePath, handlers.MakeGetEntitiesByMetaHandler(meta))
 		router.GET(basePath+"/:id", handlers.MakeGetEntityByMetaHandler(meta))
-		router.POST(basePath, handlers.MakeAddEntityByMetaHandler(meta))
+		router.POST(basePath, editor, handlers.MakeAddEntityByMetaHandler(meta))
 
 		if meta.Factory != nil && meta.SliceFactory != nil {
 			fullPath := "/full/referentielijsten/" + meta.Padnaam
 			router.GET(fullPath, handlers.MakeGetFullEntitiesByMetaHandler(meta))
 			router.GET(fullPath+"/:id", handlers.MakeGetFullEntityByMetaHandler(meta))
-			router.POST(fullPath, handlers.MakeAddFullEntityByMetaHandler(meta))
+			router.POST(fullPath, editor, handlers.MakeAddFullEntityByMetaHandler(meta))
 		}
 	}
 }

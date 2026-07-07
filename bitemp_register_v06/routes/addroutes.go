@@ -77,12 +77,18 @@ func SetupMiddleware(router *gin.Engine) {
 
 func AddRoutes(router *gin.Engine) {
 
+	// Autorisatie (BE-review 2026-07-07, actiepunt 3):
+	// alle muterende routes vereisen minimaal de rol "editor".
+	// RequireRol is een no-op zolang AUTH_ENABLED=false (dev-default),
+	// dus dit verandert niets aan een omgeving zonder auth.
+	editor := middleware.RequireRol("editor")
+
 	//Add Tests routes to router
 	router.GET("/tests", handlers.GetTests)
 	router.GET("/tests/:id", handlers.GetTest)
-	router.DELETE("/tests/:id", handlers.RemoveTest)
-	router.POST("/tests", handlers.AddTest)
-	router.PUT("/tests/:id", handlers.UpdateTest)
+	router.DELETE("/tests/:id", editor, handlers.RemoveTest)
+	router.POST("/tests", editor, handlers.AddTest)
+	router.PUT("/tests/:id", editor, handlers.UpdateTest)
 
 	//Add Entities routes to router (via metamap)
 	addMetaRegistryRoutes(router)
@@ -96,13 +102,13 @@ func AddRoutes(router *gin.Engine) {
 	// Registratie routes (dedicated, want plumbing,maar gebruikt een generieke handler)
 	router.GET("/registraties", handlers.MakeGetEntitiesHandler[model.Registratie]("Registraties"))
 	router.GET("/registraties/:id", handlers.MakeGetEntityHandler[model.Registratie]("Registratie"))
-	router.POST("/registraties", handlers.MakeAddEntityHandler[model.Registratie]("Registratie"))
-	router.PATCH("/registraties/:id", handlers.PatchRegistratie())
+	router.POST("/registraties", editor, handlers.MakeAddEntityHandler[model.Registratie]("Registratie"))
+	router.PATCH("/registraties/:id", editor, handlers.PatchRegistratie())
 
 	// Wijziging routes (idem dedicated, generieke handler)
 	router.GET("/wijzigingen", handlers.MakeGetEntitiesHandler[model.Wijziging]("Wijzigingen"))
 	router.GET("/wijzigingen/:id", handlers.MakeGetEntityHandler[model.Wijziging]("Wijziging"))
-	router.POST("/wijzigingen", handlers.MakeAddEntityHandler[model.Wijziging]("Wijziging"))
+	router.POST("/wijzigingen", editor, handlers.MakeAddEntityHandler[model.Wijziging]("Wijziging"))
 
 	// Get registratie met onderliggende wijzigingen (geen generieke handler gebruikt,
 	// omdat dit een specifiek afhandeling vroeg, en bovendien toch plumbing is)
@@ -118,10 +124,10 @@ func AddRoutes(router *gin.Engine) {
 
 		Zie voorbeelden in de readme.
 	*/
-	router.POST("/registratie/", handlers.RegistreerMetNieuweAanpak())
+	router.POST("/registratie/", editor, handlers.RegistreerMetNieuweAanpak())
 
 	// Bestanden (IdeBestand) — upload, download en preview routes
-	router.POST("/api/bestanden/upload", handlers.MaakUploadBestandHandler())
+	router.POST("/api/bestanden/upload", editor, handlers.MaakUploadBestandHandler())
 	router.GET("/api/bestanden/:id/download", handlers.MaakDownloadBestandHandler())
 	router.GET("/api/bestanden/:id/preview", handlers.MaakPreviewBestandHandler())
 
