@@ -1387,6 +1387,16 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
   // gedrag). Profieldefault via descriptor.typeWeergave; gebruikerskeuze
   // wint en wordt per activiteit bewaard.
   const typeringSleutel = `${taakbalkSleutel}-typering`;
+  // Shape-set (P07): welke van de descriptor.shapeSets actief is ("" =
+  // standaard, d.w.z. de shapes van de elementtypen zelf).
+  const shapeSetSleutel = `${taakbalkSleutel}-shapeset`;
+  const leesShapeSet = () => {
+    try {
+      return window.localStorage.getItem(shapeSetSleutel) || "";
+    } catch {
+      return "";
+    }
+  };
   const leesTypering = () => {
     try {
       return window.localStorage.getItem(typeringSleutel) || descriptor.typeWeergave || "tekst";
@@ -1403,8 +1413,18 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     // Typering-weergave: CSS op het canvasvlak schakelt wat de shapes tonen
     // (mini-icoon of stereotype-tekst renderen ze allebei al).
     const [typering, setTypering] = useState(leesTypering);
+    const [shapeSetId, setShapeSetId] = useState(leesShapeSet);
     useEffect(
       () =>
+        menuBus.on(ev("shape-set"), (setId) => {
+          try {
+            window.localStorage.setItem(shapeSetSleutel, setId || "");
+          } catch {
+            /* opslag vol — niet kritisch */
+          }
+          setShapeSetId(setId || "");
+          setTimeout(() => menuBus.emit("menu:ververs"), 0);
+        }),
         menuBus.on(ev("typering"), (waarde) => {
           try {
             window.localStorage.setItem(typeringSleutel, waarde);
@@ -1883,6 +1903,9 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                   onContainerDrop={(elementId, containerId) =>
                     verhangNaarContainer(useStore, elementId, containerId)
                   }
+                  shapeSet={
+                    (descriptor.shapeSets || []).find((set) => set.id === shapeSetId)?.shapes || null
+                  }
                   bouwContextMenu={bouwContextMenu}
                   onViewport={(vp) => useStore.getState().updateDiagramViewport(diagram.id, vp)}
                 />
@@ -2090,6 +2113,23 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
             onClick: () => menuBus.emit(ev("taakbalk-toggle"), balkId),
           })),
         },
+        ...(descriptor.shapeSets?.length
+          ? [
+              {
+                id: `${menuPrefix}-shapesets`,
+                label: "Shape-set",
+                items: [
+                  { id: `${menuPrefix}-ss-standaard`, label: "Standaard", checked: !leesShapeSet(), onClick: () => menuBus.emit(ev("shape-set"), "") },
+                  ...descriptor.shapeSets.map((set) => ({
+                    id: `${menuPrefix}-ss-${set.id}`,
+                    label: set.label || set.id,
+                    checked: leesShapeSet() === set.id,
+                    onClick: () => menuBus.emit(ev("shape-set"), set.id),
+                  })),
+                ],
+              },
+            ]
+          : []),
         {
           id: `${menuPrefix}-typering`,
           label: "Typering",

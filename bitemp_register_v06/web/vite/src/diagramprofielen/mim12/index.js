@@ -447,6 +447,22 @@ export const mim12DiagramType = {
   // Boom: packages (informatiemodel → domein → …) en daarbinnen de
   // gegevensgroep-composities.
   hierarchie: ["bevat", "gegevensgroep"],
+  // P07: één profiel, meerdere gedaanten. Standaard = de vormgrammatica
+  // (chip/knip-box); dit is de klassieke EA/UML-look voor MIM-modelleurs.
+  shapeSets: [
+    {
+      id: "mim-uml",
+      label: "MIM-UML (klassiek)",
+      shapes: {
+        enumeratie: "class-box",
+        codelijst: "class-box",
+        referentielijst: "class-box",
+        primitiefDatatype: "class-box",
+        gestructureerdDatatype: "class-box",
+        keuze: "class-box",
+      },
+    },
+  ],
   fieldTypes,
   elementTypes,
   referenceTypes,

@@ -92,6 +92,11 @@
  * ElementType — de betekenis-definitie van een soort element.
  * De vorm komt uit het ShapeType (Implementatie-domein), gekoppeld via `shape`.
  *
+ * DiagramType.shapeSets (P07): optionele alternatieve gedaanten voor één
+ * profiel — [{id, label, shapes: {elementTypeId: shapeId}}]. De gekozen set
+ * overschrijft per elementtype de shape (menu "Shape-set"); de Definitie
+ * blijft gelijk, alleen de vorm wisselt.
+ *
  * @typedef {Object} ElementType
  * @property {string} id
  * @property {string} label

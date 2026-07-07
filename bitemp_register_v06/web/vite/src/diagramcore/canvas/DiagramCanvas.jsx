@@ -123,10 +123,21 @@ function CanvasBinnenkant({
   onLabelOffset,
   onKnikken,
   onContainerDrop,
+  shapeSet,
   layoutApiRef,
   bouwContextMenu,
 }) {
-  const lookups = useMemo(() => bouwLookups(diagramType), [diagramType]);
+  const lookups = useMemo(() => {
+    const basis = bouwLookups(diagramType);
+    // Shape-set (P07): een gekozen set overschrijft per elementtype de shape
+    // — zelfde Definitie, andere gedaante (bv. MIM-vormgrammatica vs klassiek).
+    if (!shapeSet) return basis;
+    const overlay = { ...basis.elementTypesById };
+    for (const [etId, shapeId] of Object.entries(shapeSet)) {
+      if (overlay[etId]) overlay[etId] = { ...overlay[etId], shape: shapeId };
+    }
+    return { ...basis, elementTypesById: overlay };
+  }, [diagramType, shapeSet]);
   const { getNodes, screenToFlowPosition, getViewport, setViewport } = useReactFlow();
   const rfStoreApi = useStoreApi();
   // Contextmenu (rechtsklik): positie in schermcoördinaten, of null.
