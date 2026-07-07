@@ -566,6 +566,8 @@ function DmnNaam({ element, elementType, extraStijl }) {
 function DmnInputDataShape({ element, elementType, selected, children }) {
   const d = element.data || {};
   const rand = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #94a3b8)";
+  // Zelfde dashed-conventie als de andere shapes (isDashed-vlag van het type).
+  const stijl = isDashed(element, elementType) ? "dashed" : "solid";
   return (
     <div
       style={{
