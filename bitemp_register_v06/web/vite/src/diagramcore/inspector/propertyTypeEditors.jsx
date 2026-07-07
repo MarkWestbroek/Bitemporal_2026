@@ -16,6 +16,8 @@
  *   { regel, waarde, onChange, element?, kandidaten? }
  */
 import { useMemo, useRef, useState } from "react";
+import { getShape, alleShapeIds } from "../shapes/shapeRegistry.js";
+import { TypeIcoon, alleIcoonIds } from "../shapes/typeIconen.jsx";
 
 const _editors = new Map();
 
@@ -74,7 +76,72 @@ function ColourEditor({ regel, waarde, onChange }) {
   );
 }
 
+/**
+ * Shape-kiezer (P06): keuzelijst over de shape-registry met een live
+ * mini-preview van de gekozen shape — zo zie je in de PE wat een
+ * ElementType gaat worden. De preview gebruikt de kleur van het ontwerp
+ * (data.doelKleur) als die er is.
+ */
+function ShapeKeuzeEditor({ regel, waarde, onChange, element }) {
+  const ids = alleShapeIds().filter((id) => !["anker", "edge"].includes(id));
+  const gekozen = waarde || "class-box";
+  const Shape = getShape(gekozen);
+  const dummyElement = {
+    naam: element?.naam || "Aa",
+    data: { kleur: element?.data?.doelKleur },
+    compartimenten: [],
+  };
+  const dummyType = { kleur: element?.data?.doelKleur || "#e2e8f0", compartments: [] };
+  return (
+    <div style={{ flex: 1, minWidth: 0, display: "flex", gap: 6, alignItems: "center" }}>
+      <select
+        value={gekozen}
+        onChange={(e) => onChange(e.target.value)}
+        style={{ flex: 1, minWidth: 0, font: "inherit", fontSize: 12, padding: "3px 4px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, background: "var(--s-panel, #fff)", color: "var(--s-fg, #1e293b)" }}
+      >
+        {ids.map((id) => (
+          <option key={id} value={id}>{id}</option>
+        ))}
+      </select>
+      <div
+        title={`preview: ${gekozen}`}
+        style={{ flex: "0 0 auto", width: 78, height: 40, overflow: "hidden", borderRadius: 6, border: "1px dashed var(--s-border, #cbd5e1)", position: "relative", pointerEvents: "none" }}
+      >
+        <div style={{ position: "absolute", top: 2, left: 2, width: 152, height: 72, transform: "scale(0.48)", transformOrigin: "top left" }}>
+          {Shape ? (
+            <Shape element={dummyElement} elementType={dummyType} selected={false} fieldTypesById={{}} compartmentTypesById={{}} />
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Icoon-kiezer (P05/P06): registry-lijst met het icoon zelf ernaast. */
+function IcoonKeuzeEditor({ regel, waarde, onChange }) {
+  const ids = alleIcoonIds();
+  return (
+    <div style={{ flex: 1, minWidth: 0, display: "flex", gap: 6, alignItems: "center" }}>
+      <select
+        value={waarde || ""}
+        onChange={(e) => onChange(e.target.value)}
+        style={{ flex: 1, minWidth: 0, font: "inherit", fontSize: 12, padding: "3px 4px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, background: "var(--s-panel, #fff)", color: "var(--s-fg, #1e293b)" }}
+      >
+        <option value="">(volgt de shape)</option>
+        {ids.map((id) => (
+          <option key={id} value={id}>{id}</option>
+        ))}
+      </select>
+      <span style={{ flex: "0 0 auto", display: "inline-flex", width: 20, justifyContent: "center" }} title={waarde || "shape-fallback"}>
+        <TypeIcoon elementType={{ icoon: waarde || undefined, shape: "class-box" }} maat={16} />
+      </span>
+    </div>
+  );
+}
+
 registreerPropertyTypeEditor("string", StringEditor);
+registreerPropertyTypeEditor("shape-keuze", ShapeKeuzeEditor);
+registreerPropertyTypeEditor("icoon-keuze", IcoonKeuzeEditor);
 registreerPropertyTypeEditor("tekst", TekstEditor);
 registreerPropertyTypeEditor("boolean", BooleanEditor);
 registreerPropertyTypeEditor("colour", ColourEditor);

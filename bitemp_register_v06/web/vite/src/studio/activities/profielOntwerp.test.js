@@ -310,3 +310,18 @@ test("implementatie-compartiment toont hooks, eigen editors en resolvers", () =>
   const kaal = Object.values(ontwerp.elements).find((el) => el.naam === "Kaal");
   assert.ok(!(kaal.compartimenten || []).some((c) => c.compartmentType === "implementatie"));
 });
+
+test("icoon en embleem reizen mee door ontwerp en bouw", () => {
+  const ontwerp = ontwerpUitProfiel({
+    id: "ico-test",
+    label: "Ico",
+    fieldTypes: [],
+    elementTypes: [
+      { id: "ding", label: "Ding", shape: "class-box", icoon: "enumeratie", properties: [] },
+    ],
+  });
+  const def = Object.values(ontwerp.elements).find((el) => el.naam === "Ding");
+  assert.equal(def.data.icoon, "enumeratie");
+  const kern = bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "ico-test", label: "Ico" });
+  assert.equal(kern.elementTypes[0].icoon, "enumeratie");
+});

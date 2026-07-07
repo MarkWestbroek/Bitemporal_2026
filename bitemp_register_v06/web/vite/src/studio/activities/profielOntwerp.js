@@ -57,7 +57,9 @@ export const profielOntwerpKern = {
       icoon: "elementtype",
       properties: [
         { key: "kort", label: "korte code (taakbalk)", datatype: "string" },
-        { key: "shape", label: "shape (class-box/bol/note/boundary/package/dmn-…)", datatype: "string" },
+        // Kiezers met preview (P06): de registry levert de opties.
+        { key: "shape", label: "shape", datatype: "shape-keuze" },
+        { key: "icoon", label: "icoon (taakbalk/boom)", datatype: "icoon-keuze" },
         { key: "doelKleur", label: "kleur van het type", datatype: "colour" },
         // Niet "stereotype": dat dataveld is de generieke per-element
         // weergave-override (ClassBox toont hem), waardoor de ET-node zelf
@@ -267,6 +269,7 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       ...(shape === "boundary" ? { achtergrond: true, handleStijl: "onzichtbaar" } : {}),
       ...(shape === "note" ? { handleStijl: "onzichtbaar" } : {}),
       kleur: d.doelKleur || "#e2e8f0",
+      ...(d.icoon ? { icoon: d.icoon } : {}),
       ...(d.standaardDichtInBoom ? { standaardDichtInBoom: true } : {}),
       ...(d.container ? { _containerWens: true } : {}),
       properties: [{ key: "kleur", datatype: "colour" }, ...eigenschappenVan(def)],
@@ -461,6 +464,7 @@ export function ontwerpUitProfiel(descriptor) {
         kort: et.kort || "",
         shape: et.shape || "class-box",
         doelKleur: et.kleur || "#e2e8f0",
+        ...(et.icoon ? { icoon: et.icoon } : {}),
         ...(et.stereotype ? { doelStereotype: et.stereotype } : {}),
         ...(et.containerVoor ? { container: true } : {}),
         ...(et.standaardDichtInBoom ? { standaardDichtInBoom: true } : {}),

@@ -48,6 +48,11 @@ function activeerProfiel(useStore) {
   const id = window.prompt("Profiel-id (kleine letters en koppeltekens):", "mijn-profiel");
   if (!id) return;
   const label = window.prompt("Naam in de activity bar:", id) || id;
+  // P05: eigen embleem in de activity bar (1-2 tekens); git-persistent via
+  // de kern. Leeg = het standaard profiel-icoon.
+  const embleem = (window.prompt("Embleem voor de activity bar (1-2 tekens, leeg = standaard):", "") || "")
+    .trim()
+    .slice(0, 2);
   try {
     // P01: activeer het áctieve diagram — de sandbox kan meerdere
     // profielen naast elkaar bevatten (één per diagram).
@@ -56,6 +61,7 @@ function activeerProfiel(useStore) {
       { elements: elementenVanDiagram(staat, staat.actiefDiagramId) },
       { id, label }
     );
+    if (embleem) kern.embleem = embleem;
     const activiteitId = registreerProfielAlsActiviteit(kern);
     bewaarProfiel(kern);
     useStudioStore.getState().setActief(activiteitId);

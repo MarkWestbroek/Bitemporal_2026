@@ -99,11 +99,20 @@ export function registreerProfielAlsActiviteit(kern) {
   const descriptor = vertaalHooks(kern);
   vervangDiagramType(descriptor);
   const activiteitId = `dyn-${kern.id}`;
+  // P05: eigen embleem (1-2 tekens) in de activity bar, anders het
+  // standaard profiel-icoon.
+  const icoon = kern.embleem ? (
+    <span style={{ fontSize: kern.embleem.length > 1 ? 11 : 14, fontWeight: 700, letterSpacing: "0.02em" }}>
+      {kern.embleem}
+    </span>
+  ) : (
+    <IconProfiel05 />
+  );
   registreerActiviteit(
     maakDiagramActiviteit({
       id: activiteitId,
       label: kern.label || kern.id,
-      icon: <IconProfiel05 />,
+      icon: icoon,
       descriptor,
       maakElement: maakGeneriekeMaakElement(descriptor),
       persistKey: `studio05-dyn-${kern.id}`,

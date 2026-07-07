@@ -109,6 +109,11 @@ export function registreerTypeIcoon(id, Component) {
   _registraties.set(id, Component);
 }
 
+/** Alle geregistreerde icoon-ids (voor de icoon-kiezer in de PE). */
+export function alleIcoonIds() {
+  return [..._registraties.keys()].sort();
+}
+
 /** Icoon voor een ElementType: expliciete `icoon`-id wint, anders de shape. */
 export function TypeIcoon({ elementType, maat = 14 }) {
   const Component =
