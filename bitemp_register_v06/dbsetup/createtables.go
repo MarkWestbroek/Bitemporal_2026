@@ -2,6 +2,8 @@ package dbsetup
 
 import (
 	"context"
+	"fmt"
+	"sort"
 
 	"github.com/MarkWestbroek/Bitemporal_2026/bitemp_register_v06/model"
 	"github.com/uptrace/bun"
@@ -231,6 +233,11 @@ func CreateTables(db *bun.DB) error {
 		return err
 	}
 
+	// Partial unique indexes die de enkelvoudig-invariant in de database borgen
+	// (BE-review 2026-07-07, §4.1). Niet-fataal: bestaande data met dubbelingen
+	// mag de startup niet blokkeren.
+	createEnkelvoudigInvariantIndexes(ctx, db)
+
 	// Views voor formele tijdreisquery's
 	err = createFormeleTijdViews(ctx, db)
 	if err != nil {
@@ -241,3 +248,54 @@ func CreateTables(db *bun.DB) error {
 
 // syncReferentielijstRegister is verwijderd: Referentielijst heeft geen Systeemnaam-veld meer.
 // Referentielijst-instanties worden nu aangemaakt via de registratie-flow of replay-bestanden.
+
+// createEnkelvoudigInvariantIndexes maakt per enkelvoudig GE/REL-type een
+// partial unique index aan die de invariant "maximaal één actief record per
+// scope" ook in de database afdwingt (BE-review 2026-07-07, §4.1).
+//
+// De applicatie bewaakt dit al in sluitActieveEnkelvoudigeVoorgangersAf, maar
+// dat is een read-then-write: twee gelijktijdige registraties op dezelfde
+// entiteit konden allebei "geen actieve voorganger" zien en beide inserten.
+// Met deze index weigert Postgres de tweede insert (unique violation), waarna
+// de transactie netjes rolt.
+//
+// Scope per type (spiegel van de engine-logica):
+//   - hub-kinderen (_Data/_Aanvang/_Einde onder een hub/relatie): (entiteit_id, rel_id)
+//   - overige enkelvoudige GE's/RELs en entiteit-level plumbing: (entiteit_id)
+//
+// Fouten zijn niet-fataal (waarschuwing): een bestaande database met historische
+// dubbelingen mag de startup niet blokkeren; de warning maakt de schending zichtbaar.
+func createEnkelvoudigInvariantIndexes(ctx context.Context, db *bun.DB) {
+	typeNames := make([]string, 0, len(model.MetaRegistry))
+	for typeName := range model.MetaRegistry {
+		typeNames = append(typeNames, typeName)
+	}
+	sort.Strings(typeNames)
+
+	for _, typeName := range typeNames {
+		meta := model.MetaRegistry[typeName]
+		if meta.Metatype == model.MetatypeEntiteit {
+			continue
+		}
+		if meta.Momentvoorkomen != model.Enkelvoudig {
+			continue
+		}
+		if meta.Tabelnaam == "" || meta.EntiteitIDKolom == "" {
+			continue
+		}
+
+		kolommen := fmt.Sprintf("%q", meta.EntiteitIDKolom)
+		if meta.HeeftHubChildRelIDScope() {
+			kolommen += `, "rel_id"`
+		}
+
+		indexNaam := fmt.Sprintf("ux_%s_enkelvoudig_actief", meta.Tabelnaam)
+		stmt := fmt.Sprintf(
+			`CREATE UNIQUE INDEX IF NOT EXISTS %q ON %q (%s) WHERE opvoer IS NOT NULL AND afvoer IS NULL`,
+			indexNaam, meta.Tabelnaam, kolommen,
+		)
+		if _, err := db.ExecContext(ctx, stmt); err != nil {
+			fmt.Printf("WARN: enkelvoudig-invariant index %s niet aangemaakt (%s): %v\n", indexNaam, meta.Tabelnaam, err)
+		}
+	}
+}

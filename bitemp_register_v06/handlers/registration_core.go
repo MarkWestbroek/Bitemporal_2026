@@ -151,7 +151,7 @@ func RegistreerCore(ctx context.Context, db *bun.DB, req model.RegistreerRequest
 
 	// ONGEDAANMAKING scenario.
 	if req.Registratie.Registratietype == model.RegistratietypeOngedaanmaking {
-		if rerr := verwerkOngedaanmaking(ctx, tx, db, &req); rerr != nil {
+		if rerr := verwerkOngedaanmaking(ctx, tx, &req); rerr != nil {
 			return RegistreerResult{}, rerr
 		}
 	}
@@ -325,15 +325,23 @@ func validatieOfNil(v model.ValidatieResultaat) *model.ValidatieResultaat {
 
 // verwerkOngedaanmaking voert de ONGEDAANMAKING-scenario-logica uit.
 // Wordt alleen aangeroepen wanneer req.Registratie.Registratietype = Ongedaanmaking.
-func verwerkOngedaanmaking(ctx context.Context, tx bun.Tx, db *bun.DB, req *model.RegistreerRequest) *RegistreerError {
+//
+// Concurrency (BE-review 2026-07-07, §4.1): alle reads lopen binnen de
+// transactie, en de ongedaan te maken registratie-rij wordt met FOR UPDATE
+// gelockt. Twee gelijktijdige ongedaanmakingen van dezelfde registratie
+// serialiseren daardoor: de tweede ziet is_ongedaan_gemaakt=true en faalt
+// netjes. Ook de check op "latere wijzigingen" leest nu de tx-consistente
+// toestand in plaats van een losse connectie buiten de transactie.
+func verwerkOngedaanmaking(ctx context.Context, tx bun.Tx, req *model.RegistreerRequest) *RegistreerError {
 	if req.Registratie.MaaktOngedaanRegistratieID == nil {
 		return newRegistreerErr(http.StatusBadRequest, "De ongedaan te maken registratie moet worden meegegeven via 'maakt_ongedaan_registratie_id' (of alias 'MaaktOngedaanRegistratieID')")
 	}
 
 	var ongedaanTeMakenRegistratie model.Registratie
-	if err := db.NewSelect().
+	if err := tx.NewSelect().
 		Model(&ongedaanTeMakenRegistratie).
 		Where("id = ?", *req.Registratie.MaaktOngedaanRegistratieID).
+		For("UPDATE").
 		Scan(ctx); err != nil {
 		return newRegistreerErr(http.StatusBadRequest, "De te ongedaan maken registratie met ID %d bestaat niet", *req.Registratie.MaaktOngedaanRegistratieID)
 	}
@@ -343,7 +351,7 @@ func verwerkOngedaanmaking(ctx context.Context, tx bun.Tx, db *bun.DB, req *mode
 	}
 
 	var wijzigingenOnderTeOngedaanMakenRegistratie []model.Wijziging
-	if err := db.NewSelect().
+	if err := tx.NewSelect().
 		Model(&wijzigingenOnderTeOngedaanMakenRegistratie).
 		Where("registratie_id = ?", ongedaanTeMakenRegistratie.ID).
 		Scan(ctx); err != nil {
@@ -352,7 +360,7 @@ func verwerkOngedaanmaking(ctx context.Context, tx bun.Tx, db *bun.DB, req *mode
 
 	for _, doelWijziging := range wijzigingenOnderTeOngedaanMakenRegistratie {
 		var latereWijzigingen []model.Wijziging
-		if err := db.NewSelect().
+		if err := tx.NewSelect().
 			Model(&latereWijzigingen).
 			Where("registratie_id <> ?", ongedaanTeMakenRegistratie.ID).
 			Where("tijdstip > ?", ongedaanTeMakenRegistratie.Tijdstip).

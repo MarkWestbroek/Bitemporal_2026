@@ -56,6 +56,29 @@ type AfgeleidVeld struct {
 }
 
 // OnderliggendeRepresentatie koppelt een typenaam aan een concrete FormeleRepresentatie.
+// IsDataSubtype is true voor _Data/_Aanvang/_Einde subtypes (geversioneerde
+// inhoud/materiële plumbing onder een hub of entiteit).
+func (meta TypeMeta) IsDataSubtype() bool {
+	return meta.GESubtype == GESubtypeData ||
+		meta.GESubtype == GESubtypeAanvang ||
+		meta.GESubtype == GESubtypeEinde
+}
+
+// HeeftHubChildRelIDScope is true voor _Data/_Aanvang/_Einde die onder een
+// hub/relatie hangen en daarom een compound scope (entiteit_id, rel_id) hebben.
+// Entiteit-level _Aanvang/_Einde (bovenliggend type is een entiteit) vallen
+// hier buiten: die hebben geen rel_id.
+func (meta TypeMeta) HeeftHubChildRelIDScope() bool {
+	if !meta.IsDataSubtype() || meta.BovenliggendTypenaam == "" {
+		return false
+	}
+	parentMeta, ok := MetaRegistry.GetTypeMeta(meta.BovenliggendTypenaam)
+	if !ok {
+		return false
+	}
+	return parentMeta.Metatype == MetatypeGegevenselement || parentMeta.Metatype == MetatypeRelatie
+}
+
 type OnderliggendeRepresentatie struct {
 	Typenaam      string
 	Representatie FormeleRepresentatie

@@ -623,6 +623,9 @@ func haalRepresentatieUitDB(ctx context.Context, tx bun.Tx, meta model.TypeMeta,
 			return q
 		}).
 		Limit(1).
+		// FOR UPDATE (§4.1): de engine muteert deze rij daarna (afvoer/correctie);
+		// lock voorkomt dat twee transacties dezelfde rij tegelijk afvoeren.
+		For("UPDATE").
 		Scan(ctx)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -641,7 +644,10 @@ func haalActieveIDsGegevenselementUitDB(ctx context.Context, tx bun.Tx, meta mod
 		Column(meta.IDKolom).
 		Where(fmt.Sprintf("%s = ?", fkColumn), entiteitID).
 		Where("opvoer IS NOT NULL").
-		Where("afvoer IS NULL")
+		Where("afvoer IS NULL").
+		// FOR UPDATE (§4.1): de gevonden actieve records worden hierna afgevoerd;
+		// lock serialiseert concurrente registraties op dezelfde entiteit.
+		For("UPDATE")
 	if err := query.Scan(ctx, &ids); err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("HANDLER: failed to query active %s records: %v", meta.Typenaam, err)
 	}
@@ -1270,26 +1276,15 @@ func inputNaarHub(input model.FormeleRepresentatie, meta model.TypeMeta) (model.
 	return hub, nil
 }
 
-// isDataSubtype controleert of het meta-type een _Data, _Aanvang of _Einde subtype is.
+// isDataSubtype — dunne wrapper om model.TypeMeta.IsDataSubtype (gedeeld met dbsetup).
 func isDataSubtype(meta model.TypeMeta) bool {
-	return meta.GESubtype == model.GESubtypeData ||
-		meta.GESubtype == model.GESubtypeAanvang ||
-		meta.GESubtype == model.GESubtypeEinde
+	return meta.IsDataSubtype()
 }
 
-// isHubChildSubtypeMetRelID is true voor _Data/_Aanvang/_Einde die onder een hub/relatie hangen
-// en daarom een rel_id scope nodig hebben. Entiteit-level _Aanvang/_Einde vallen hier buiten.
+// isHubChildSubtypeMetRelID — dunne wrapper om model.TypeMeta.HeeftHubChildRelIDScope
+// (gedeeld met dbsetup voor de enkelvoudig-invariant indexen).
 func isHubChildSubtypeMetRelID(meta model.TypeMeta) bool {
-	if !isDataSubtype(meta) || meta.BovenliggendTypenaam == "" {
-		return false
-	}
-
-	parentMeta, ok := model.MetaRegistry.GetTypeMeta(meta.BovenliggendTypenaam)
-	if !ok {
-		return false
-	}
-
-	return parentMeta.Metatype == model.MetatypeGegevenselement || parentMeta.Metatype == model.MetatypeRelatie
+	return meta.HeeftHubChildRelIDScope()
 }
 
 // haalActieveIDsMetScope haalt actieve (opvoer IS NOT NULL, afvoer IS NULL) record-IDs
@@ -1301,7 +1296,9 @@ func haalActieveIDsMetScope(ctx context.Context, tx bun.Tx, meta model.TypeMeta,
 		Table(meta.Tabelnaam).
 		ColumnExpr(fmt.Sprintf("CAST(%s AS BIGINT)", meta.IDKolom)).
 		Where("opvoer IS NOT NULL").
-		Where("afvoer IS NULL")
+		Where("afvoer IS NULL").
+		// FOR UPDATE (§4.1): zie haalActieveIDsGegevenselementUitDB.
+		For("UPDATE")
 	for col, val := range scope {
 		query = query.Where(fmt.Sprintf("%s = ?", col), val)
 	}
