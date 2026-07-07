@@ -11,6 +11,36 @@ import { vertaalHooks, maakGeneriekeMaakElement } from "./profielGereedschap.js"
 
 export const OPSLAG_SLEUTEL = "studio05-profielen";
 
+// ── Git-persistentie (P04): dev-endpoint ↔ web/vite/profielen/*.json ────────
+// Elk bestand is { kern?, layout?, activiteitIcoon? }. De bestanden reizen
+// via git mee naar andere dev-machines; localStorage blijft de runtime-cache
+// en de fallback wanneer het endpoint er niet is (productie-build).
+const PROFIEL_ENDPOINT = "/__studio05/profielen";
+
+/** Alle profiel-bestanden uit de git-map, of null zonder endpoint. */
+export async function leesProfielBestanden() {
+  try {
+    const r = await fetch(PROFIEL_ENDPOINT);
+    if (!r.ok) return null;
+    return await r.json();
+  } catch {
+    return null;
+  }
+}
+
+/** Schrijf één profiel-bestand (fire-and-forget; dev-only). */
+export function bewaarProfielBestand(id, inhoud) {
+  try {
+    fetch(`${PROFIEL_ENDPOINT}/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(inhoud, null, 2),
+    }).catch(() => {});
+  } catch {
+    /* geen endpoint (productie): localStorage volstaat */
+  }
+}
+
 export function leesProfielen() {
   try {
     return JSON.parse(localStorage.getItem(OPSLAG_SLEUTEL) || "{}") || {};
@@ -27,9 +57,12 @@ export function bewaarProfielen(profielen) {
   }
 }
 
-/** Bewaar één profiel-kern (voegt toe/overschrijft op kern.id). */
+/** Bewaar één profiel-kern (voegt toe/overschrijft op kern.id) — ook als
+ *  bestand in de git-map, samen met een eventuele standaard-layout. */
 export function bewaarProfiel(kern) {
   bewaarProfielen({ ...leesProfielen(), [kern.id]: kern });
+  const layout = leesProfielLayouts()[kern.id];
+  bewaarProfielBestand(kern.id, { kern, ...(layout ? { layout } : {}) });
 }
 
 // ── Standaard-layouts per profiel (PE): {profielId: {sleutel: {x, y}}} ─────
@@ -52,6 +85,10 @@ export function bewaarProfielLayout(profielId, layout) {
   } catch {
     /* opslag vol — niet kritisch */
   }
+  // Ook naar de git-map: mét de kern als dit een eigen (PE-)profiel is;
+  // voor ingebouwde profielen (mim12, oas31, …) alleen de layout.
+  const kern = leesProfielen()[profielId];
+  bewaarProfielBestand(profielId, { ...(kern ? { kern } : {}), layout });
 }
 
 /**
@@ -89,3 +126,35 @@ for (const [id, kern] of Object.entries(leesProfielen())) {
     console.warn(`Opgeslagen profiel "${id}" niet geregistreerd:`, e?.message || e);
   }
 }
+
+// Daarna asynchroon de git-map (dev-endpoint): die is de gedeelde bron van
+// waarheid en wint van localStorage — zo verschijnen profielen die op een
+// andere machine zijn gemaakt hier vanzelf na een git pull.
+leesProfielBestanden().then((bestanden) => {
+  if (!bestanden) return; // geen endpoint (productie) — klaar
+  const lokaal = leesProfielen();
+  const layouts = leesProfielLayouts();
+  let layoutsGewijzigd = false;
+  for (const [id, inhoud] of Object.entries(bestanden)) {
+    if (inhoud?.layout) {
+      layouts[id] = inhoud.layout;
+      layoutsGewijzigd = true;
+    }
+    if (inhoud?.kern) {
+      try {
+        registreerProfielAlsActiviteit(inhoud.kern);
+        lokaal[inhoud.kern.id] = inhoud.kern;
+      } catch (e) {
+        console.warn(`Profiel-bestand "${id}" niet geregistreerd:`, e?.message || e);
+      }
+    }
+  }
+  if (layoutsGewijzigd) {
+    try {
+      localStorage.setItem(LAYOUT_OPSLAG_SLEUTEL, JSON.stringify(layouts));
+    } catch {
+      /* opslag vol — niet kritisch */
+    }
+  }
+  bewaarProfielen(lokaal);
+});
