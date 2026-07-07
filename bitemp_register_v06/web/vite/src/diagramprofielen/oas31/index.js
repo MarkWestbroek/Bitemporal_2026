@@ -19,6 +19,17 @@
  * is een eigen fase — vgl. canoniek-uml fase 4).
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
+import { registreerHandlerInfo } from "../../diagramcore/types/handlerCatalogus.js";
+
+// P02: benoem de OAS-resolvers voor de handler-catalogus (PE-weergave).
+registreerHandlerInfo("resolver", "json-type", {
+  naam: "JSON-typen",
+  beschrijving: "Vaste lijst JSON-primitieven, eventueel met format (string «date», …).",
+});
+registreerHandlerInfo("resolver", "schema-ref", {
+  naam: "Schemas ($ref)",
+  beschrijving: "Alle getekende schemas/enums als $ref-doel voor een property.",
+});
 
 export const OAS31_ID = "oas31";
 

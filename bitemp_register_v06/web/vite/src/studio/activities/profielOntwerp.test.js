@@ -304,8 +304,13 @@ test("implementatie-compartiment toont hooks, eigen editors en resolvers", () =>
   const impl = (def.compartimenten || []).find((c) => c.compartmentType === "implementatie");
   const namen = (impl?.velden || []).map((v) => v.naam);
   assert.ok(namen.includes("hook: extraCompartimenten"), namen.join(", "));
+  const hookVeld = (impl?.velden || []).find((v) => v.naam === "hook: extraCompartimenten");
+  assert.equal(hookVeld.data.typeLabel, "Extra compartimenten", "catalogus-naam als handler-label");
+  assert.ok(hookVeld.data.beschrijving.length > 20, "beschrijving uit de catalogus");
   assert.ok(namen.some((n) => n.startsWith("editor: cel-expressie")));
   assert.ok(namen.some((n) => n.startsWith("resolver: basistype")));
+  const resolverVeld = (impl?.velden || []).find((v) => v.naam.startsWith("resolver: basistype"));
+  assert.ok(resolverVeld.data.beschrijving, "fallback-beschrijving voor ongeregistreerde resolver");
   // zonder implementatie geen (leeg) compartiment
   const kaal = Object.values(ontwerp.elements).find((el) => el.naam === "Kaal");
   assert.ok(!(kaal.compartimenten || []).some((c) => c.compartmentType === "implementatie"));

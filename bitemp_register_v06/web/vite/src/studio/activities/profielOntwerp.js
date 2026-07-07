@@ -23,6 +23,8 @@
  * onder een nieuw id opnieuw genereren).
  */
 
+import { handlerInfo } from "../../diagramcore/types/handlerCatalogus.js";
+
 export const PROFIEL_ONTWERP_ID = "profiel-ontwerp";
 
 const EIGENSCHAP_VELDEN = [
@@ -42,8 +44,13 @@ export const profielOntwerpKern = {
     // property-editors, resolvers — zie het metamodel) aan het type hangt.
     {
       id: "implementatieDef",
-      viewer: "waarde",
-      properties: [{ key: "naam", datatype: "string", verplicht: true }],
+      viewer: "naam-type",
+      properties: [
+        { key: "naam", datatype: "string", verplicht: true },
+        { key: "typeLabel", label: "handler", datatype: "string" },
+        // Uit de handler-catalogus (P02); zichtbaar in het veld-detail (…).
+        { key: "beschrijving", label: "beschrijving", datatype: "tekst" },
+      ],
     },
   ],
   elementTypes: [
@@ -441,14 +448,25 @@ export function ontwerpUitProfiel(descriptor) {
     // ShapeRenderer, PropertyTypeEditor, ReferenceResolver, …): hooks op het
     // type plus properties met een niet-standaard datatype (eigen editor).
     const BASIS_DATATYPES = new Set(["string", "tekst", "boolean", "colour", undefined]);
+    // Naam + beschrijving uit de handler-catalogus (P02): de code zelf is
+    // niet tekenbaar, maar zo is wél zichtbaar wélke handlers aan het type
+    // hangen en wat ze doen (beschrijving in het veld-detail).
+    const implRegel = (soort, id, context) => {
+      const info = handlerInfo(soort, id);
+      return {
+        naam: `${soort}: ${id}${context ? ` (${context})` : ""}`,
+        fieldType: "implementatieDef",
+        data: { typeLabel: info.naam, beschrijving: info.beschrijving },
+      };
+    };
     const implementatieRegels = [
-      ...Object.keys(et.hooks || {}).map((h) => ({ naam: `hook: ${h}`, fieldType: "implementatieDef" })),
+      ...Object.keys(et.hooks || {}).map((h) => implRegel("hook", h)),
       ...(et.properties || [])
         .filter((pr) => !BASIS_DATATYPES.has(pr.datatype) && !pr.referenceTypes)
-        .map((pr) => ({ naam: `editor: ${pr.datatype} (${pr.key})`, fieldType: "implementatieDef" })),
-      ...(et.properties || [])
-        .filter((pr) => pr.referenceTypes?.length)
-        .map((pr) => ({ naam: `resolver: ${pr.referenceTypes.join(", ")} (${pr.key})`, fieldType: "implementatieDef" })),
+        .map((pr) => implRegel("editor", pr.datatype, pr.key)),
+      ...(et.properties || []).flatMap((pr) =>
+        (pr.referenceTypes || []).map((rt) => implRegel("resolver", rt, pr.key))
+      ),
     ];
     elements[etNodeId] = {
       id: etNodeId,

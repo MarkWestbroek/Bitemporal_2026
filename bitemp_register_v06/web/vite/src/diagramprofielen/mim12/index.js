@@ -21,6 +21,21 @@
  *     een soort-property; bevat-connector = boom + drop-doel.
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
+import { registreerHandlerInfo } from "../../diagramcore/types/handlerCatalogus.js";
+
+// P02: benoem de MIM-resolvers voor de handler-catalogus (PE-weergave).
+registreerHandlerInfo("resolver", "mim-primitief", {
+  naam: "MIM-primitieven",
+  beschrijving: "Vaste lijst MIM-basisdatatypen (CharacterString, Integer, Date, …).",
+});
+registreerHandlerInfo("resolver", "mim-datatype", {
+  naam: "Datatypen uit het model",
+  beschrijving: "Alle getekende primitieve/gestructureerde datatypen en keuzes als typekandidaat.",
+});
+registreerHandlerInfo("resolver", "mim-waardelijst", {
+  naam: "Waardelijsten uit het model",
+  beschrijving: "Alle getekende enumeraties, codelijsten en referentielijsten als typekandidaat.",
+});
 
 export const MIM12_ID = "mim12";
 

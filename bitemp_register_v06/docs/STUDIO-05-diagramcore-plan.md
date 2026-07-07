@@ -6,7 +6,23 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **MIM-import & -transformatie**
+  fase 7 (register). Laatste ronde: **PE-uitbouw P02/P04–P07**
+  (2026-07-07, vier commits): (1) **git-persistentie** — vite-dev-endpoint
+  `/__studio05/profielen` ↔ `web/vite/profielen/*.json` ({kern, layout});
+  *Activeer profiel* en *Bewaar layout* schrijven bestanden, bij het laden
+  wint de git-map van localStorage; activityRegistry kreeg abonnementen
+  zodat async registraties direct in de bar verschijnen; (2) **shape-/
+  icoon-kiezers** in de PE (registry-selects met live shape-preview in de
+  doelkleur; icoon roundtript door bouw/ontwerp) + **activiteit-embleem**
+  (1–2 tekens, git-persistent via de kern); (3) **shape-sets** —
+  `DiagramType.shapeSets` overschrijft per elementtype de shape; menu
+  "Shape-set" naast de Typering-toggle; mim12 heeft de demo-set "MIM-UML
+  (klassiek)" naast de vormgrammatica; (4) **handler-catalogus**
+  (`handlerCatalogus.js`): hooks/editors/resolvers hebben nu een naam en
+  beschrijving (core registreert de hook-soorten, profielen hun resolvers;
+  fallback per soort) — de PE toont ze in het implementatie-compartiment
+  met de beschrijving in het veld-detail. Open: shape-sets bewérken in de
+  PE, illustraties bij handlers. Eerdere ronde: **MIM-import & -transformatie**
   (2026-07-06): `mim12/adapter.js` met twee routes — (1) **XMI-import**
   (MIM-UML-profiel, EA-vorm): packages/classes/enumeraties/datatypen met
   stereotypes uit de xmi:Extension, attributen met kardinaliteit +
