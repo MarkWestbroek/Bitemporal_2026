@@ -36,6 +36,21 @@
 >
 > Daarmee zijn alle vier de §3-blockers geadresseerd. `go build`, `go vet` en `go test ./...` zijn groen, zowel mét als
 > zónder `-tags devtools`.
+>
+> **Tweede aanvulling (zelfde branch):** ook de P1-punten §4.1 t/m §4.4 zijn uitgevoerd:
+>
+> 7. ✅ **§4.1 concurrency.** Ongedaanmaking-reads lopen binnen de tx met `FOR UPDATE` op de registratie-rij; de
+>    engine-reads die daarna muteren (`haalRepresentatieUitDB`, actieve-IDs-queries) locken hun rijen; en de
+>    enkelvoudig-invariant wordt nu ook in Postgres geborgd met partial unique indexes
+>    (`dbsetup.createEnkelvoudigInvariantIndexes`: `UNIQUE (entiteit_id[, rel_id]) WHERE opvoer IS NOT NULL AND afvoer IS NULL`,
+>    niet-fataal bij bestaande schendingen).
+> 8. ✅ **§4.2/§4.3 foutafhandeling.** Onbekend ID geeft 404 (bun's `sql.ErrNoRows` werd 500); interne DB-fouten gaan
+>    naar de server-log en de client krijgt generieke teksten (`handlers/http_fouten.go`); prechecks van DELETE/PATCH idem.
+> 9. ✅ **§4.4 N+1 bij peiltijdstip.** De formele-tijdafleiding doet nu één set-based query per request op
+>    `f_formele_wijziging_op_peil` voor alle entiteit-IDs samen (`laadFormeleTijdCache`), met "laatste wint" in Go
+>    (zelfde ordering als voorheen). Een lijst van 100 entiteiten × 10 kinderen ging van 1000+ queries naar 1.
+>    **Nog open uit §4.4:** de gecorreleerde subquery per rij in `applyFormeleTijdFilterVoorModel` (het WHERE-filter
+>    bij `?peiltijdstip=` op lijsten) — kandidaat voor een `LATERAL JOIN`-herschrijving, meten met `EXPLAIN ANALYZE`.
 
 ## 1. Eindoordeel
 
@@ -236,9 +251,9 @@ Bevindingen die je vermoeden bevestigen:
 | 3 | ✅ `RequireAuth`/`RequireRol` aangesloten; fail-closed PDP; JWT-secret verplicht | klein | 3.2, 3.4 |
 | 4 | ✅ Admin/devloop-endpoints: build-tag, wachtwoord via header, constant-time, mutex op rebuild | klein | 3.3 |
 | 5 | ✅ `POST /{padnaam}` (+ `/full`) door `RegistreerCore`; `/registraties`,`/wijzigingen` read-only | middel | 3.5 |
-| 6 | `ErrNoRows`→404-helper; foutteksten niet naar client; `slog` invoeren | klein | 4.2, 4.3, 5.3 |
-| 7 | Ongedaanmaking-reads binnen tx; `FOR UPDATE`; partial unique index op enkelvoudige GE's | middel | 4.1 |
-| 8 | N+1 bij peiltijdstip set-based maken; EXPLAIN-meting toevoegen aan perf-results | middel–groot | 4.4 |
+| 6 | ✅ (m.u.v. slog) `ErrNoRows`→404-helper; foutteksten niet naar client; `slog` invoeren | klein | 4.2, 4.3, 5.3 |
+| 7 | ✅ Ongedaanmaking-reads binnen tx; `FOR UPDATE`; partial unique index op enkelvoudige GE's | middel | 4.1 |
+| 8 | ✅ (afleiding set-based; WHERE-filter + EXPLAIN nog open) N+1 bij peiltijdstip | middel–groot | 4.4 |
 | 9 | Duplicatie-lijst wegwerken (tabel §5.1) | klein, incrementeel | 5.1 |
 | 10 | Schema-migratie-administratie (`schema_migraties`) + transactioneel activeren | middel | 6 |
 | 11 | Codegen: ast-gebaseerde (of merge-vrije) registratie; reflectie in hot path vervangen door gegenereerde accessors | groot, gefaseerd | 5.4, 4.5 |

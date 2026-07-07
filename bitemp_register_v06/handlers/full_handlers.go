@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -691,74 +690,137 @@ func applyFormeleTijdFilterVoorModel(query *bun.SelectQuery, modelNaam string, p
 	`, target.EntiteitIDExpr, target.RepresentatieIDExpr, versieCondition), peiltijdstip, target.Entiteitnaam, target.Representatienaam, activeWijziging)
 }
 
+// ─── Afgeleide formele tijd op peiltijdstip ────────────────────────────────
+//
+// §4.4 (BE-review 2026-07-07): voorheen deed deze laag per entiteit én per
+// onderliggend GE/hub-kind een aparte query op f_formele_wijziging_op_peil —
+// een N+1 die bij een lijst van 100 entiteiten met 10 kinderen 1000+ queries
+// per request opleverde. Nu wordt per request één set-based query gedaan voor
+// alle entiteit-IDs tegelijk; de "laatste wijziging per representatie" wordt
+// in Go bepaald (zelfde ordering als de vroegere per-rij query) en via een
+// cache opgezocht tijdens de entity-walk.
+
 type laatsteWijzigingOpPeil struct {
 	Wijzigingstype      model.WijzigingstypeEnum `bun:"wijzigingstype"`
 	RegistratieTijdstip time.Time                `bun:"registratie_tijdstip"`
 }
 
-func haalLaatsteNietOngedaanGemaakteWijzigingOpPeil(
-	c *gin.Context,
-	entiteitnaam string,
-	entiteitID string,
-	representatienaam string,
-	representatieID string,
-	versie *int64,
-	peiltijdstip time.Time,
-) (*laatsteWijzigingOpPeil, error) {
-	row := new(laatsteWijzigingOpPeil)
-	query := DB.NewSelect().
+// formeleWijzigingRij is één rij uit f_formele_wijziging_op_peil.
+type formeleWijzigingRij struct {
+	WijzigingID         int64                    `bun:"wijziging_id"`
+	Wijzigingstype      model.WijzigingstypeEnum `bun:"wijzigingstype"`
+	RegistratieTijdstip time.Time                `bun:"registratie_tijdstip"`
+	EntiteitID          string                   `bun:"entiteit_id"`
+	Representatienaam   string                   `bun:"representatienaam"`
+	RepresentatieID     string                   `bun:"representatie_id"`
+	Versie              *int64                   `bun:"versie"`
+}
+
+// isNieuwerDan spiegelt de ordering van de vroegere per-rij query:
+// ORDER BY registratie_tijdstip DESC, wijziging_id DESC LIMIT 1.
+func (rij formeleWijzigingRij) isNieuwerDan(ander formeleWijzigingRij) bool {
+	if rij.RegistratieTijdstip.After(ander.RegistratieTijdstip) {
+		return true
+	}
+	return rij.RegistratieTijdstip.Equal(ander.RegistratieTijdstip) && rij.WijzigingID > ander.WijzigingID
+}
+
+// formeleTijdKey identificeert een representatie binnen de cache.
+type formeleTijdKey struct {
+	EntiteitID        string
+	Representatienaam string
+	RepresentatieID   string
+	Versie            int64
+	HeeftVersie       bool
+}
+
+// formeleTijdCache bevat per sleutel de laatste wijziging op peil. Twee kaarten
+// omdat de lookup zowel mét als zonder versie moet kunnen — precies zoals de
+// vroegere per-rij query wel/niet op versie filterde.
+type formeleTijdCache struct {
+	metVersie    map[formeleTijdKey]formeleWijzigingRij
+	zonderVersie map[formeleTijdKey]formeleWijzigingRij
+}
+
+func (cache *formeleTijdCache) bewaar(rij formeleWijzigingRij) {
+	zonder := formeleTijdKey{EntiteitID: rij.EntiteitID, Representatienaam: rij.Representatienaam, RepresentatieID: rij.RepresentatieID}
+	if huidig, ok := cache.zonderVersie[zonder]; !ok || rij.isNieuwerDan(huidig) {
+		cache.zonderVersie[zonder] = rij
+	}
+	if rij.Versie == nil {
+		return
+	}
+	met := zonder
+	met.Versie = *rij.Versie
+	met.HeeftVersie = true
+	if huidig, ok := cache.metVersie[met]; !ok || rij.isNieuwerDan(huidig) {
+		cache.metVersie[met] = rij
+	}
+}
+
+// laatste zoekt de laatste wijziging voor een representatie; versie==nil
+// betekent (net als vroeger) geen versie-filter.
+func (cache *formeleTijdCache) laatste(entiteitID, representatienaam, representatieID string, versie *int64) *laatsteWijzigingOpPeil {
+	key := formeleTijdKey{EntiteitID: entiteitID, Representatienaam: representatienaam, RepresentatieID: representatieID}
+	var rij formeleWijzigingRij
+	var ok bool
+	if versie != nil {
+		key.Versie = *versie
+		key.HeeftVersie = true
+		rij, ok = cache.metVersie[key]
+	} else {
+		rij, ok = cache.zonderVersie[key]
+	}
+	if !ok {
+		return nil
+	}
+	return &laatsteWijzigingOpPeil{Wijzigingstype: rij.Wijzigingstype, RegistratieTijdstip: rij.RegistratieTijdstip}
+}
+
+// laadFormeleTijdCache haalt in één query alle wijzigingen-op-peil op voor de
+// gegeven entiteit-IDs (van één entiteitstype) en bouwt de lookup-cache.
+func laadFormeleTijdCache(c *gin.Context, entiteitnaam string, entiteitIDs []string, peiltijdstip time.Time) (*formeleTijdCache, error) {
+	cache := &formeleTijdCache{
+		metVersie:    make(map[formeleTijdKey]formeleWijzigingRij),
+		zonderVersie: make(map[formeleTijdKey]formeleWijzigingRij),
+	}
+	if len(entiteitIDs) == 0 {
+		return cache, nil
+	}
+
+	var rijen []formeleWijzigingRij
+	err := DB.NewSelect().
 		TableExpr("f_formele_wijziging_op_peil(?) AS v", peiltijdstip).
+		ColumnExpr("v.wijziging_id").
 		ColumnExpr("v.wijzigingstype").
 		ColumnExpr("v.registratie_tijdstip").
+		ColumnExpr("v.entiteit_id").
+		ColumnExpr("v.representatienaam").
+		ColumnExpr("v.representatie_id").
+		ColumnExpr("v.versie").
 		Where("v.entiteitnaam = ?", entiteitnaam).
-		Where("v.entiteit_id = ?", entiteitID).
-		Where("v.representatienaam = ?", representatienaam).
-		Where("v.representatie_id = ?", representatieID)
-	if versie != nil {
-		query = query.Where("v.versie = ?", *versie)
-	}
-	err := query.
-		OrderExpr("v.registratie_tijdstip DESC, v.wijziging_id DESC").
-		Limit(1).
-		Scan(c.Request.Context(), row)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
+		Where("v.entiteit_id IN (?)", bun.In(entiteitIDs)).
+		Scan(c.Request.Context(), &rijen)
+	if err != nil && !isNoRows(err) {
 		return nil, err
 	}
 
-	return row, nil
+	for _, rij := range rijen {
+		cache.bewaar(rij)
+	}
+	return cache, nil
 }
 
-func zetAfgeleideFormeleTijdVoorRepresentatie(
-	c *gin.Context,
-	representatie model.HeeftOpvoerAfvoer,
-	entiteitnaam string,
-	entiteitID string,
-	representatienaam string,
-	representatieID string,
-	versie *int64,
-	peiltijdstip time.Time,
-) error {
-	wijziging, err := haalLaatsteNietOngedaanGemaakteWijzigingOpPeil(
-		c,
-		entiteitnaam,
-		entiteitID,
-		representatienaam,
-		representatieID,
-		versie,
-		peiltijdstip,
-	)
-	if err != nil {
-		return err
-	}
-
+// zetAfgeleideFormeleTijdUitCache zet opvoer/afvoer op een representatie op
+// basis van de cache (vervangt de vroegere per-representatie query).
+func zetAfgeleideFormeleTijdUitCache(representatie model.HeeftOpvoerAfvoer, cache *formeleTijdCache,
+	entiteitID, representatienaam, representatieID string, versie *int64) {
 	representatie.SetOpvoer(nil)
 	representatie.SetAfvoer(nil)
 
+	wijziging := cache.laatste(entiteitID, representatienaam, representatieID, versie)
 	if wijziging == nil {
-		return nil
+		return
 	}
 
 	t := wijziging.RegistratieTijdstip
@@ -768,8 +830,6 @@ func zetAfgeleideFormeleTijdVoorRepresentatie(
 	case model.WijzigingstypeAfvoer:
 		representatie.SetAfvoer(&t)
 	}
-
-	return nil
 }
 
 // entiteitMetaVoorFullEntity bepaalt op basis van het concrete full-model de bijbehorende
@@ -792,9 +852,30 @@ func entiteitMetaVoorFullEntity(entity any) (model.TypeMeta, error) {
 	return meta, nil
 }
 
-// vulAfgeleideFormeleTijdVoorFullSlice verwerkt een volledige lijst van full entiteiten generiek.
-// Dit vervangt hardcoded type-switches op A/B: elk slice-element wordt als pointer
-// doorgegeven aan de generieke entity-routine hieronder.
+// bepaalRepIDVersieVoorFormeleTijd bepaalt de cache-sleutelvelden voor een
+// (hub-)kindrepresentatie: versie-PK types gebruiken GetID() als versie en
+// rel_id (indien aanwezig) als representatieID; overige types gebruiken GetID()
+// als representatieID zonder versie.
+func bepaalRepIDVersieVoorFormeleTijd(typenaam string, rep model.FormeleRepresentatie) (string, *int64) {
+	kindMeta, ok := model.MetaRegistry.GetTypeMeta(typenaam)
+	if ok && kindMeta.IDKolom == "versie" {
+		var versie *int64
+		if vi, viOK := anyNaarInt(rep.GetID()); viOK {
+			v64 := int64(vi)
+			versie = &v64
+		}
+		repID := ""
+		if relID, err := haalIntWaardeVoorKolomUitRepresentatie(rep, "rel_id"); err == nil && relID != 0 {
+			repID = fmt.Sprint(relID)
+		}
+		return repID, versie
+	}
+	return fmt.Sprint(rep.GetID()), nil
+}
+
+// vulAfgeleideFormeleTijdVoorFullSlice verwerkt een volledige lijst van full
+// entiteiten set-based: één cache-query voor alle entiteit-IDs, daarna een
+// pure in-memory walk per entiteit.
 func vulAfgeleideFormeleTijdVoorFullSlice(c *gin.Context, entities any, peiltijdstip time.Time) error {
 	v := reflect.ValueOf(entities)
 	if !v.IsValid() || v.Kind() != reflect.Ptr || v.IsNil() {
@@ -805,10 +886,32 @@ func vulAfgeleideFormeleTijdVoorFullSlice(c *gin.Context, entities any, peiltijd
 	if sliceValue.Kind() != reflect.Slice {
 		return fmt.Errorf("entities moet een pointer naar slice zijn")
 	}
+	if sliceValue.Len() == 0 {
+		return nil
+	}
+
+	// Alle elementen zijn van hetzelfde type; meta afleiden van het eerste.
+	meta, err := entiteitMetaVoorFullEntity(sliceValue.Index(0).Addr().Interface())
+	if err != nil {
+		return err
+	}
+
+	entiteitIDs := make([]string, 0, sliceValue.Len())
+	for i := 0; i < sliceValue.Len(); i++ {
+		hasID, ok := sliceValue.Index(i).Addr().Interface().(model.HasID)
+		if !ok {
+			return fmt.Errorf("full entity %s implementeert HasID niet", meta.Typenaam)
+		}
+		entiteitIDs = append(entiteitIDs, fmt.Sprint(hasID.GetID()))
+	}
+
+	cache, err := laadFormeleTijdCache(c, meta.Typenaam, entiteitIDs, peiltijdstip)
+	if err != nil {
+		return err
+	}
 
 	for i := 0; i < sliceValue.Len(); i++ {
-		entityPtr := sliceValue.Index(i).Addr().Interface()
-		if err := vulAfgeleideFormeleTijdVoorFullEntity(c, entityPtr, peiltijdstip); err != nil {
+		if err := vulFormeleTijdVoorEntityUitCache(sliceValue.Index(i).Addr().Interface(), meta, cache); err != nil {
 			return err
 		}
 	}
@@ -816,12 +919,8 @@ func vulAfgeleideFormeleTijdVoorFullSlice(c *gin.Context, entities any, peiltijd
 	return nil
 }
 
-// vulAfgeleideFormeleTijdVoorFullEntity leidt opvoer/afvoer af voor een full entiteit en
-// haar onderliggende representaties via interfaces i.p.v. concrete type-switches.
-// Vereiste interfaces op de entiteit:
-// - HasID: voor entiteit-ID
-// - HeeftOpvoerAfvoer: voor opvoer/afvoer op entiteitsniveau
-// - HeeftOnderliggendeGegevenselementen: voor iteratie over kind-representaties
+// vulAfgeleideFormeleTijdVoorFullEntity leidt opvoer/afvoer af voor één full
+// entiteit (één cache-query voor dit ene ID, daarna de in-memory walk).
 func vulAfgeleideFormeleTijdVoorFullEntity(c *gin.Context, entity any, peiltijdstip time.Time) error {
 	meta, err := entiteitMetaVoorFullEntity(entity)
 	if err != nil {
@@ -833,15 +932,30 @@ func vulAfgeleideFormeleTijdVoorFullEntity(c *gin.Context, entity any, peiltijds
 		return fmt.Errorf("full entity %s implementeert HasID niet", meta.Typenaam)
 	}
 
+	cache, err := laadFormeleTijdCache(c, meta.Typenaam, []string{fmt.Sprint(hasID.GetID())}, peiltijdstip)
+	if err != nil {
+		return err
+	}
+
+	return vulFormeleTijdVoorEntityUitCache(entity, meta, cache)
+}
+
+// vulFormeleTijdVoorEntityUitCache is de generieke walk over entiteit →
+// GE's/relaties → hub-kinderen, nu zonder queries: alle lookups komen uit de
+// vooraf geladen cache.
+func vulFormeleTijdVoorEntityUitCache(entity any, meta model.TypeMeta, cache *formeleTijdCache) error {
+	hasID, ok := entity.(model.HasID)
+	if !ok {
+		return fmt.Errorf("full entity %s implementeert HasID niet", meta.Typenaam)
+	}
+
 	formeleEntiteit, ok := entity.(model.HeeftOpvoerAfvoer)
 	if !ok {
 		return fmt.Errorf("full entity %s implementeert HeeftOpvoerAfvoer niet", meta.Typenaam)
 	}
 
 	entiteitID := fmt.Sprint(hasID.GetID())
-	if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, formeleEntiteit, meta.Typenaam, entiteitID, "", "", nil, peiltijdstip); err != nil {
-		return err
-	}
+	zetAfgeleideFormeleTijdUitCache(formeleEntiteit, cache, entiteitID, "", "", nil)
 
 	metKinderen, ok := entity.(model.HeeftOnderliggendeGegevenselementen)
 	if !ok {
@@ -853,25 +967,8 @@ func vulAfgeleideFormeleTijdVoorFullEntity(c *gin.Context, entity any, peiltijds
 			continue
 		}
 
-		// Bepaal repID en versie op basis van het kindtype (via metaregistry)
-		kindMeta, kindOK := model.MetaRegistry.GetTypeMeta(kind.Typenaam)
-		var repID string
-		var versie *int64
-		if kindOK && kindMeta.IDKolom == "versie" {
-			// Versie-PK type: GetID() = versie; probeer rel_id op te halen
-			if vi, viOK := anyNaarInt(kind.Representatie.GetID()); viOK {
-				v64 := int64(vi)
-				versie = &v64
-			}
-			if relID, relErr := haalIntWaardeVoorKolomUitRepresentatie(kind.Representatie, "rel_id"); relErr == nil && relID != 0 {
-				repID = fmt.Sprint(relID)
-			}
-		} else {
-			repID = fmt.Sprint(kind.Representatie.GetID())
-		}
-		if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, kind.Representatie, meta.Typenaam, entiteitID, kind.Typenaam, repID, versie, peiltijdstip); err != nil {
-			return err
-		}
+		repID, versie := bepaalRepIDVersieVoorFormeleTijd(kind.Typenaam, kind.Representatie)
+		zetAfgeleideFormeleTijdUitCache(kind.Representatie, cache, entiteitID, kind.Typenaam, repID, versie)
 
 		// Afdalen in hub-kinderen (Data/Aanvang/Einde) voor formele-tijdafleiding
 		if hubMetKinderen, hubOK := kind.Representatie.(model.HeeftOnderliggendeGegevenselementen); hubOK {
@@ -879,23 +976,8 @@ func vulAfgeleideFormeleTijdVoorFullEntity(c *gin.Context, entity any, peiltijds
 				if hubKind.Representatie == nil {
 					continue
 				}
-				hubKindMeta, hkOK := model.MetaRegistry.GetTypeMeta(hubKind.Typenaam)
-				var hkRepID string
-				var hkVersie *int64
-				if hkOK && hubKindMeta.IDKolom == "versie" {
-					if vi, viOK := anyNaarInt(hubKind.Representatie.GetID()); viOK {
-						v64 := int64(vi)
-						hkVersie = &v64
-					}
-					if relID, relErr := haalIntWaardeVoorKolomUitRepresentatie(hubKind.Representatie, "rel_id"); relErr == nil && relID != 0 {
-						hkRepID = fmt.Sprint(relID)
-					}
-				} else {
-					hkRepID = fmt.Sprint(hubKind.Representatie.GetID())
-				}
-				if err := zetAfgeleideFormeleTijdVoorRepresentatie(c, hubKind.Representatie, meta.Typenaam, entiteitID, hubKind.Typenaam, hkRepID, hkVersie, peiltijdstip); err != nil {
-					return err
-				}
+				hkRepID, hkVersie := bepaalRepIDVersieVoorFormeleTijd(hubKind.Typenaam, hubKind.Representatie)
+				zetAfgeleideFormeleTijdUitCache(hubKind.Representatie, cache, entiteitID, hubKind.Typenaam, hkRepID, hkVersie)
 			}
 		}
 	}
