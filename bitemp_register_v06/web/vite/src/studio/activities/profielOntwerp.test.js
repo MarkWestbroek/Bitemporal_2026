@@ -330,3 +330,25 @@ test("icoon en embleem reizen mee door ontwerp en bouw", () => {
   const kern = bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "ico-test", label: "Ico" });
   assert.equal(kern.elementTypes[0].icoon, "enumeratie");
 });
+
+test("profiel-instellingen (typering-default + shape-sets) reizen door ontwerp en bouw", () => {
+  const ontwerp = ontwerpUitProfiel({
+    id: "set-test",
+    label: "Set",
+    typeWeergave: "geen",
+    shapeSets: [{ id: "klassiek", label: "Klassiek", shapes: { ding: "class-box" } }],
+    fieldTypes: [],
+    elementTypes: [{ id: "ding", label: "Ding", shape: "chip", properties: [] }],
+  });
+  const prf = Object.values(ontwerp.elements).find((el) => el.elementType === "profielDef");
+  assert.ok(prf, "instellingen-node aanwezig");
+  assert.equal(prf.data.typeWeergave, "geen");
+  const regel = prf.compartimenten[0].velden[0];
+  assert.equal(regel.naam, "Klassiek");
+  assert.equal(regel.data.typeLabel, "1 shapes");
+  assert.ok(/ding → class-box/.test(regel.data.beschrijving));
+
+  const kern = bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "set-test", label: "Set" });
+  assert.equal(kern.typeWeergave, "geen", "typering-default terug in de kern");
+  assert.deepEqual(kern.shapeSets, [{ id: "klassiek", label: "Klassiek", shapes: { ding: "class-box" } }]);
+});

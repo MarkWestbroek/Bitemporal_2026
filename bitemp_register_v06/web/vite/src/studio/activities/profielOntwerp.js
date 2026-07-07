@@ -140,6 +140,23 @@ export const profielOntwerpKern = {
       ],
     },
     {
+      // Profiel-brede instellingen (één node per ontwerp): de typering-
+      // standaard en de shape-sets van het profiel — zichtbaar als
+      // compartiment, bewerkbaar als json (pass-through bij activeren).
+      id: "profielDef",
+      label: "Profiel-instellingen",
+      kort: "PRF",
+      stereotype: "«profiel»",
+      shape: "rounded",
+      kleur: "#f8fafc",
+      handleStijl: "onzichtbaar",
+      properties: [
+        { key: "typeWeergave", label: "typering-standaard (geen/icoon/tekst)", datatype: "string" },
+        { key: "shapeSetsJson", label: "shape-sets (json)", datatype: "tekst" },
+      ],
+      compartments: [{ id: "shapeSets", label: "shape-sets", fieldType: "implementatieDef" }],
+    },
+    {
       id: "notitie",
       label: "Notitie",
       kort: "NOT",
@@ -362,10 +379,22 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
     if (kandidaat) et.containerVoor = kandidaat.id;
   }
 
+  const profielDef = perSoort("profielDef")[0];
+  const profielData = profielDef?.data || {};
+  let shapeSets = null;
+  try {
+    const geparsed = JSON.parse(profielData.shapeSetsJson || "null");
+    if (Array.isArray(geparsed) && geparsed.length) shapeSets = geparsed;
+  } catch {
+    /* ongeldige json: shape-sets overslaan, de rest gewoon activeren */
+  }
+
   return {
     id: slug(id),
     label: label || id,
     style: "uml-klassiek",
+    ...(profielData.typeWeergave ? { typeWeergave: profielData.typeWeergave } : {}),
+    ...(shapeSets ? { shapeSets } : {}),
     // 1 hierarchie-connector → string (compat), meerdere → lijstje.
     ...(hierarchieConnectoren.length
       ? { hierarchie: hierarchieConnectoren.length === 1 ? hierarchieConnectoren[0] : hierarchieConnectoren }
@@ -589,6 +618,36 @@ export function ontwerpUitProfiel(descriptor) {
       }
     }
   });
+
+  // Profiel-brede instellingen als eigen node: de typering-standaard en de
+  // shape-sets (P07) — zo is de definitie in de PE zichtbaar én (via de
+  // json-property) bij te stellen; activeren neemt ze mee terug.
+  const setRegels = (descriptor.shapeSets || []).map((set) => ({
+    naam: set.label || set.id,
+    fieldType: "implementatieDef",
+    data: {
+      typeLabel: `${Object.keys(set.shapes || {}).length} shapes`,
+      beschrijving: Object.entries(set.shapes || {})
+        .map(([etId, shapeId]) => `${etId} → ${shapeId}`)
+        .join("\n"),
+    },
+  }));
+  const profielNodeId = `${prefix}_profiel`;
+  elements[profielNodeId] = {
+    id: profielNodeId,
+    naam: `${descriptor.label || descriptor.id} — instellingen`,
+    elementType: "profielDef",
+    compartimenten: setRegels.length
+      ? [{ compartmentType: "shapeSets", velden: setRegels }]
+      : [],
+    data: {
+      typeWeergave: descriptor.typeWeergave || "tekst",
+      ...(descriptor.shapeSets?.length
+        ? { shapeSetsJson: JSON.stringify(descriptor.shapeSets, null, 2) }
+        : {}),
+    },
+  };
+  nodes.push({ elementId: profielNodeId, position: { x: 60, y: -170 } });
 
   return {
     elements,

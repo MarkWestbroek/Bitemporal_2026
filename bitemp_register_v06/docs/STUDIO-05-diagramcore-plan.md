@@ -6,7 +6,16 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **PE-uitbouw P02/P04–P07**
+  fase 7 (register). Laatste ronde: **profiel-instellingen in de PE +
+  vinkje-fix** (2026-07-07): (1) elk ontwerp-diagram heeft nu een
+  **«profiel»-instellingen-node**: de typering-standaard (geen/icoon/tekst)
+  en de shape-sets van het profiel zijn daar zichtbaar (leesbaar
+  compartiment per set, met de element→shape-mapping in het detail) én
+  bewerkbaar via de json-property; *Activeer profiel…* neemt beide mee
+  terug (`typeWeergave`/`shapeSets` pass-through, roundtrip getest);
+  (2) het **Typering-menuvinkje liep één stand achter** — de handler
+  miste de `menu:ververs` die taakbalk-toggle en shape-set wél hadden.
+  Eerdere ronde: **PE-uitbouw P02/P04–P07**
   (2026-07-07, vier commits): (1) **git-persistentie** — vite-dev-endpoint
   `/__studio05/profielen` ↔ `web/vite/profielen/*.json` ({kern, layout});
   *Activeer profiel* en *Bewaar layout* schrijven bestanden, bij het laden

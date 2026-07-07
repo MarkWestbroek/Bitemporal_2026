@@ -1432,6 +1432,8 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
             /* localStorage kan uit staan; de state werkt dan alleen deze sessie */
           }
           setTypering(waarde);
+          // Zonder ververs blijft het menu-vinkje op de vórige stand hangen.
+          setTimeout(() => menuBus.emit("menu:ververs"), 0);
         }),
       []
     );
