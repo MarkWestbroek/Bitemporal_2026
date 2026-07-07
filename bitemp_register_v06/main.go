@@ -38,6 +38,14 @@ func main() {
 		fmt.Println("WARNING: ALLOW_DROP_TABLES=true while running in production context")
 	}
 
+	// Registratie-tijdmodus: synthetisch (demo, default) of klok (productie).
+	// Zie handlers/registratie_tijd.go en .env.example (REGISTRATIE_TIJD).
+	tijdModus := handlers.RegistratieTijdModus()
+	fmt.Printf("registratie-tijdmodus: %s\n", tijdModus)
+	if tijdModus == handlers.RegistratieTijdSynthetisch && isProductionEnvironment() {
+		fmt.Println("WARNING: REGISTRATIE_TIJD=synthetisch in productiecontext — registraties krijgen fictieve demo-tijdstippen; zet REGISTRATIE_TIJD=klok voor echte implementaties")
+	}
+
 	// Establish a connection to the PostgreSQL database
 	db, err := connectToDatabase()
 	if err != nil {
@@ -75,6 +83,12 @@ func main() {
 
 	// Seed admin-gebruiker als AUTH_ENABLED en ADMIN_USERNAME/ADMIN_PASSWORD zijn ingesteld
 	if middleware.IsAuthEnabled() {
+		// BE-review actiepunt 3: met auth aan is een expliciet JWT_SECRET verplicht
+		// (en in productie geen dev-default). Anders weigeren we te starten.
+		if err := middleware.ValideerAuthConfiguratie(isProductionEnvironment()); err != nil {
+			fmt.Println("FATAL:", err)
+			return
+		}
 		if err := handlers.SeedAdminGebruiker(context.Background()); err != nil {
 			fmt.Println("WARN: Admin-seed mislukt:", err)
 		}
@@ -146,17 +160,23 @@ func NewRouter() *gin.Engine {
 	router.GET("/api/viz/reflijst/:typenaam/opties", handlers.MaakVizReflijstOptiesHandler())
 	router.Static("/viz", "./web")
 
+	// Autorisatie (BE-review 2026-07-07, actiepunt 3): muterende routes vereisen
+	// minimaal "editor", beheer-routes "admin". Beide zijn no-ops zolang
+	// AUTH_ENABLED=false, dus dev-omgevingen zonder auth merken hier niets van.
+	editor := middleware.RequireRol("editor")
+	admin := middleware.RequireRol("admin")
+
 	// Schema model endpoints (v3-formaat, zie ontwerpkeuzen.md §7)
 	router.GET("/api/schema/model", handlers.MaakGetSchemaModelHandler())
 	router.GET("/api/schema/model/code", handlers.MaakGetSchemaModelCodeHandler())
 	router.GET("/api/schema/model/:id", handlers.MaakGetSchemaModelVersieHandler())
-	router.POST("/api/schema/model", handlers.MaakPostSchemaModelHandler())
-	router.PUT("/api/schema/model/:id/activeer", handlers.MaakActiveerSchemaVersieHandler())
+	router.POST("/api/schema/model", editor, handlers.MaakPostSchemaModelHandler())
+	router.PUT("/api/schema/model/:id/activeer", admin, handlers.MaakActiveerSchemaVersieHandler())
 	router.GET("/api/schema/versies", handlers.MaakLijstSchemaVersiesHandler())
 
 	// Schema-domeinen endpoints
 	router.GET("/api/schema/domeinen", handlers.MaakGetSchemaDomeinenHandler())
-	router.POST("/api/schema/domeinen", handlers.MaakPostSchemaDomeinHandler())
+	router.POST("/api/schema/domeinen", editor, handlers.MaakPostSchemaDomeinHandler())
 
 	// Version endpoint
 	router.GET("/version", func(c *gin.Context) {
@@ -179,20 +199,25 @@ func NewRouter() *gin.Engine {
 	if err != nil {
 		fmt.Println("WARN: GraphQL schema bouwen mislukt:", err)
 	} else {
+		// GraphQL kan zowel queries als mutaties uitvoeren en is op routeniveau
+		// niet te splitsen; daarom vereist het query-endpoint een ingelogde
+		// gebruiker (RequireAuth, no-op als AUTH_ENABLED=false). Fijnmaziger
+		// rol-checks per mutatie zijn vervolgwerk (zie BE-review §5.6).
 		router.GET("/graphql/playground", dynql.PlaygroundHandler("/graphql/query"))
-		router.POST("/graphql/query", dynql.GraphQLHandler(gqlSchema))
-		router.GET("/graphql/query", dynql.GraphQLHandler(gqlSchema))
+		router.POST("/graphql/query", middleware.RequireAuth(), dynql.GraphQLHandler(gqlSchema))
+		router.GET("/graphql/query", middleware.RequireAuth(), dynql.GraphQLHandler(gqlSchema))
 		fmt.Println("GraphQL endpoint geregistreerd op /graphql/query")
 	}
 
-	// admin routes
-	router.DELETE("/admin/db/droptables/:password", handlers.DropTables)
-	router.POST("/admin/db/createtables", handlers.CreateTables)
+	// admin routes — naast de bestaande flag/wachtwoord-checks in de handlers
+	// vereisen deze nu ook rol "admin" zodra AUTH_ENABLED=true.
+	router.DELETE("/admin/db/droptables/:password", admin, handlers.DropTables)
+	router.POST("/admin/db/createtables", admin, handlers.CreateTables)
 
 	// Devloop rebuild routes (alleen actief als DEVLOOP=true)
-	router.POST("/admin/rebuild/:password", handlers.MaakRebuildHandler())
-	router.GET("/admin/rebuild/status", handlers.MaakRebuildStatusHandler())
-	router.POST("/admin/diff/:password", handlers.MaakDiffHandler())
+	router.POST("/admin/rebuild/:password", admin, handlers.MaakRebuildHandler())
+	router.GET("/admin/rebuild/status", admin, handlers.MaakRebuildStatusHandler())
+	router.POST("/admin/diff/:password", admin, handlers.MaakDiffHandler())
 
 	//Add all functional routes
 	routes.AddRoutes(router)

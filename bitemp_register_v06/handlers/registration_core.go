@@ -102,17 +102,25 @@ func RegistreerCore(ctx context.Context, db *bun.DB, req model.RegistreerRequest
 	}()
 
 	// Stap 1: Insert Registratie en haal ID op.
+	//
+	// Registratietijdstip — twee modi (zie registratie_tijd.go):
+	//   - klok (productie): echte UTC-kloktijd, gezet vóór de insert.
+	//   - synthetisch (default, demo): 2026-01-01 + ID uren + ID µs; wordt
+	//     ná de insert afgeleid uit het toegekende ID en apart bijgewerkt.
+	klokModus := IsKlokTijdModus()
+	if klokModus {
+		req.Registratie.Tijdstip = time.Now().UTC()
+	}
 	if _, err := tx.NewInsert().Model(&req.Registratie).Returning("id").Exec(ctx); err != nil {
 		return RegistreerResult{}, newRegistreerErr(http.StatusInternalServerError, "failed to insert registratie: %v", err)
 	}
-
-	// TIJDELIJK: oplopend testtijdstip op basis van ID, zoals in originele handler.
-	req.Registratie.Tijdstip = time.
-		Date(2026, 1, 1, 0, 0, 0, 0, time.UTC).
-		Add(time.Duration(req.Registratie.ID) * time.Hour).
-		Add(time.Microsecond * time.Duration(req.Registratie.ID))
-	if _, err := tx.NewUpdate().Model(&req.Registratie).Where("id = ?", req.Registratie.ID).Exec(ctx); err != nil {
-		return RegistreerResult{}, newRegistreerErr(http.StatusInternalServerError, "failed to update registratie with tijdstip: %v", err)
+	if !klokModus {
+		// Synthetisch tijdstip afleiden uit het toegekende ID (zelfde afbeelding
+		// als de ?t=-querystring shorthand, zie tijdstipUitT in full_handlers.go).
+		req.Registratie.Tijdstip = tijdstipUitT(int(req.Registratie.ID))
+		if _, err := tx.NewUpdate().Model(&req.Registratie).Where("id = ?", req.Registratie.ID).Exec(ctx); err != nil {
+			return RegistreerResult{}, newRegistreerErr(http.StatusInternalServerError, "failed to update registratie with tijdstip: %v", err)
+		}
 	}
 
 	registratieID := req.Registratie.ID
