@@ -19,5 +19,8 @@ Elk `.json`-bestand hier is één profiel uit de profiel-editor (PE):
   layout als standaard* gebruikt, en bij het laden van de Studio weer
   ingelezen (ze winnen van localStorage).
 - **Committen dus**: zo reizen profielen — inclusief layout — via git mee
-  naar andere dev-machines. In een productie-build bestaat het endpoint
-  niet en valt de Studio terug op localStorage.
+  naar andere dev-machines. Voor **productie** worden de gecommitte
+  bestanden bij `vite build` in de bundle meegebakken (import.meta.glob in
+  `profielRegistratie.jsx`): dezelfde git-bron, alleen lezen. Wijzigingen
+  die je in een productie-omgeving maakt blijven in localStorage van die
+  browser; een gedeelde runtime-registry (Go-API) is fase 7.

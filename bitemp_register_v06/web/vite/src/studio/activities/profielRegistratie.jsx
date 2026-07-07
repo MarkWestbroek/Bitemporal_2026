@@ -126,8 +126,37 @@ export function registreerProfielAlsActiviteit(kern) {
   return activiteitId;
 }
 
+// Build-time gebundelde profielen: vite bakt alle gecommitte
+// profielen/*.json in de bundle, zodat de git-bron óók in een
+// productie-build (zonder dev-endpoint) beschikbaar is. Zelfde semantiek
+// als het endpoint: git wint van localStorage.
+const _gebundeld = import.meta.glob("../../../profielen/*.json", { eager: true });
+{
+  const layouts = leesProfielLayouts();
+  const lokaal = leesProfielen();
+  let layoutsGewijzigd = false;
+  for (const [pad, module] of Object.entries(_gebundeld)) {
+    const inhoud = module?.default || module;
+    const id = pad.split("/").pop().replace(/\.json$/, "");
+    if (inhoud?.layout) {
+      layouts[id] = inhoud.layout;
+      layoutsGewijzigd = true;
+    }
+    if (inhoud?.kern) lokaal[inhoud.kern.id] = inhoud.kern;
+  }
+  if (layoutsGewijzigd) {
+    try {
+      localStorage.setItem(LAYOUT_OPSLAG_SLEUTEL, JSON.stringify(layouts));
+    } catch {
+      /* opslag vol — niet kritisch */
+    }
+  }
+  bewaarProfielen(lokaal);
+}
+
 // Bij het laden van de Studio: opgeslagen profielen opnieuw registreren,
-// zodat dynamische activiteiten een herlaad overleven.
+// zodat dynamische activiteiten een herlaad overleven (de gebundelde
+// git-profielen zitten hier inmiddels bij).
 for (const [id, kern] of Object.entries(leesProfielen())) {
   try {
     registreerProfielAlsActiviteit(kern);

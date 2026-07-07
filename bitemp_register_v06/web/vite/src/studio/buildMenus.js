@@ -135,7 +135,17 @@ export function buildMenus(ctx) {
 
   const stdById = new Map(standaard.map((m) => [m.id, m]));
   const eigenById = new Map(eigen.map((m) => [m.id, m]));
-  const pick = (id) => eigenById.get(id) || stdById.get(id) || null;
+  // `aanvullen: true` op een activiteit-menu met een anker-id: de eigen
+  // items komen ónder de standaarditems (bv. weergave-instellingen in
+  // Beeld) in plaats van het hele menu te vervangen.
+  const pick = (id) => {
+    const eigenMenu = eigenById.get(id);
+    const stdMenu = stdById.get(id);
+    if (eigenMenu?.aanvullen && stdMenu) {
+      return { ...stdMenu, items: [...stdMenu.items, { type: "separator" }, ...eigenMenu.items] };
+    }
+    return eigenMenu || stdMenu || null;
+  };
 
   // Ankers die hun vaste plek houden; al het overige (eigen) komt in het midden.
   const ankers = new Set(["bestand", "beeld", "ganaar", "help"]);

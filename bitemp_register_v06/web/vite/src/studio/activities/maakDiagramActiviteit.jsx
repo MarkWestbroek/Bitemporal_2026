@@ -2099,7 +2099,15 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
             { id: `${menuPrefix}-dist-v`, label: "Verticaal verdelen", onClick: () => menuBus.emit(ev("layout"), "distribute-v") },
           ],
         },
-        { type: "separator" },
+
+      ],
+    },
+    // Weergave-instellingen (taakbalken, shape-set, typering) vullen het
+    // standaard Beeld-menu aan — daar zoekt iedereen ze.
+    {
+      id: "beeld",
+      aanvullen: true,
+      items: [
         {
           id: `${menuPrefix}-taakbalken`,
           label: "Taakbalken",
