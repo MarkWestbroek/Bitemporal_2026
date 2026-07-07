@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -21,27 +20,9 @@ type testFullDummy struct {
 	Naam          string `json:"naam" bun:"naam"`
 }
 
-type testFullDummyWithChildren struct {
-	bun.BaseModel `bun:"table:dummy_full"`
-	ID            int              `json:"id" bun:"id,pk"`
-	Naam          string           `json:"naam" bun:"naam"`
-	Children      []testDummyChild `json:"children" bun:"rel:has-many,join:id=parent_id"`
-}
-
-type testDummyChild struct {
-	bun.BaseModel `bun:"table:dummy_child"`
-	RelID         int    `json:"rel_id" bun:"rel_id,pk"`
-	ParentID      int    `json:"parent_id" bun:"parent_id"`
-	Waarde        string `json:"waarde" bun:"waarde"`
-}
-
 func (d *testFullDummy) GetID() any               { return d.ID }
 func (d *testFullDummy) Metatype() model.Metatype { return model.MetatypeEntiteit }
 func (d *testFullDummy) String() string           { return "testFullDummy" }
-
-func (d *testFullDummyWithChildren) GetID() any               { return d.ID }
-func (d *testFullDummyWithChildren) Metatype() model.Metatype { return model.MetatypeEntiteit }
-func (d *testFullDummyWithChildren) String() string           { return "testFullDummyWithChildren" }
 
 func dummyFullTypeMeta() model.TypeMeta {
 	return model.TypeMeta{
@@ -52,18 +33,6 @@ func dummyFullTypeMeta() model.TypeMeta {
 		Padnaam:      "dummies",
 		Factory:      func() model.Representatie { return &testFullDummy{} },
 		SliceFactory: func() any { return &[]testFullDummy{} },
-	}
-}
-
-func dummyFullTypeMetaWithChildren() model.TypeMeta {
-	return model.TypeMeta{
-		Typenaam: "Dummy",
-		Factory: func() model.Representatie {
-			return &testFullDummyWithChildren{}
-		},
-		OnderliggendeGegevenselementen: []model.OnderliggendGegevenselement{
-			{Rolnaam: "Children", Doeltype: "DummyChild"},
-		},
 	}
 }
 
@@ -162,49 +131,6 @@ func TestMakeGetFullEntityByMetaHandler_ReturnsEntity(t *testing.T) {
 
 	if id, ok := body["id"].(float64); !ok || int(id) != 7 {
 		t.Fatalf("expected id 7, got %#v", body["id"])
-	}
-
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Fatalf("unmet sql expectations: %v", err)
-	}
-}
-
-func TestMakeAddFullEntityByMetaHandler_InsertsParentAndChildren(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-
-	sqlDB, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("failed to create sqlmock: %v", err)
-	}
-	defer sqlDB.Close()
-
-	db := bun.NewDB(sqlDB, pgdialect.New())
-	defer db.Close()
-
-	oldDB := DB
-	DB = db
-	defer func() { DB = oldDB }()
-
-	meta := dummyFullTypeMetaWithChildren()
-
-	mock.ExpectExec(`INSERT INTO "dummy_full"`).
-		WillReturnResult(sqlmock.NewResult(0, 1))
-	mock.ExpectExec(`INSERT INTO "dummy_child"`).
-		WillReturnResult(sqlmock.NewResult(0, 1))
-	mock.ExpectExec(`INSERT INTO "dummy_child"`).
-		WillReturnResult(sqlmock.NewResult(0, 1))
-
-	body := `{"id":21,"naam":"parent","children":[{"rel_id":1,"waarde":"a"},{"rel_id":2,"waarde":"b"}]}`
-	rec := httptest.NewRecorder()
-	ctx, _ := gin.CreateTestContext(rec)
-	ctx.Request = httptest.NewRequest(http.MethodPost, "/full/dummies", strings.NewReader(body))
-	ctx.Request.Header.Set("Content-Type", "application/json")
-
-	handler := MakeAddFullEntityByMetaHandler(meta)
-	handler(ctx)
-
-	if rec.Code != http.StatusCreated {
-		t.Fatalf("expected status 201, got %d: %s", rec.Code, rec.Body.String())
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {

@@ -99,16 +99,17 @@ func AddRoutes(router *gin.Engine) {
 	// Referentielijst routes (/referentielijsten/...)
 	addReferentielijstRoutes(router)
 
-	// Registratie routes (dedicated, want plumbing,maar gebruikt een generieke handler)
+	// Registratie routes (read-only + PATCH voor opmerking/bron-velden).
+	// POST /registraties en POST /wijzigingen zijn verwijderd (BE-review §3.5):
+	// clients konden er audit-records mee aanmaken of vervalsen. Registraties
+	// ontstaan uitsluitend via POST /registratie/ (RegistreerCore).
 	router.GET("/registraties", handlers.MakeGetEntitiesHandler[model.Registratie]("Registraties"))
 	router.GET("/registraties/:id", handlers.MakeGetEntityHandler[model.Registratie]("Registratie"))
-	router.POST("/registraties", editor, handlers.MakeAddEntityHandler[model.Registratie]("Registratie"))
 	router.PATCH("/registraties/:id", editor, handlers.PatchRegistratie())
 
-	// Wijziging routes (idem dedicated, generieke handler)
+	// Wijziging routes (read-only)
 	router.GET("/wijzigingen", handlers.MakeGetEntitiesHandler[model.Wijziging]("Wijzigingen"))
 	router.GET("/wijzigingen/:id", handlers.MakeGetEntityHandler[model.Wijziging]("Wijziging"))
-	router.POST("/wijzigingen", editor, handlers.MakeAddEntityHandler[model.Wijziging]("Wijziging"))
 
 	// Get registratie met onderliggende wijzigingen (geen generieke handler gebruikt,
 	// omdat dit een specifiek afhandeling vroeg, en bovendien toch plumbing is)

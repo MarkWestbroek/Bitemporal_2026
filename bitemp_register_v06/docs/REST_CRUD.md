@@ -13,10 +13,25 @@ Deze laag biedt generieke REST CRUD-endpoints **per padnaam** bovenop dezelfde
 |---------|------------------------------|-------------------------------------------------------------------|
 | GET     | `/{padnaam}`                 | Lijst (paginering)                                                |
 | GET     | `/{padnaam}/:id`             | Eén record                                                        |
-| POST    | `/{padnaam}`                 | Insert                                                            |
+| POST    | `/{padnaam}`                 | Bitemporeel opvoeren (via `RegistreerCore`, zie POST-semantiek)   |
 | **DELETE** | `/{padnaam}/:id`         | Bitemporeel afvoeren (entiteit / niet-PFK GE/REL)                 |
 | GET     | `/full/{padnaam}/:id`        | Entiteit met geneste GE's/RELs                                    |
 | **PATCH**  | `/full/{padnaam}/:id`     | JSON Merge Patch (RFC 7396) op onderliggende GE's/RELs            |
+
+## POST-semantiek
+
+Sinds de BE-review van 2026-07-07 (§3.5) loopt ook `POST /{padnaam}` (en
+`POST /full/{padnaam}`) via de registratie-engine: de body wordt intern verpakt
+als `{"registratie":{...},"wijzigingen":[{"opvoer":{"<veldnaam>": <body>}}]}` en
+gedelegeerd naar `RegistreerJSONCore`. Daarmee gelden normalisatie (geneste
+full-shape wordt gesplitst), validatie, audit-trail en transactiegedrag exact
+zoals bij `POST /registratie/`. De vroegere directe-insert handlers (records
+zonder `Registratie`/`Wijziging`/`opvoer`, onzichtbaar voor tijdreizen) zijn
+verwijderd. De 201-response bevat naast `message` nu ook `registratie_id` en
+`tijdstip`.
+
+`POST /registraties` en `POST /wijzigingen` bestaan niet meer: audit-records
+zijn read-only en ontstaan uitsluitend via de engine.
 
 ## DELETE-semantiek
 

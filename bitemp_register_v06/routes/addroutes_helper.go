@@ -32,7 +32,8 @@ func addMetaRegistryRoutes(router *gin.Engine) {
 		editor := middleware.RequireRol("editor")
 		router.GET(basePath, handlers.MakeGetEntitiesByMetaHandler(meta))
 		router.GET(basePath+"/:id", handlers.MakeGetEntityByMetaHandler(meta))
-		router.POST(basePath, editor, handlers.MakeAddEntityByMetaHandler(meta))
+		// POST via de registratie-engine (BE-review §3.5): audit + transactie zoals POST /registratie/.
+		router.POST(basePath, editor, handlers.MakeAddEntityViaEngineHandler(meta))
 		// FASE 2 (REST/CRUD-laag, 2026-04-29): DELETE per padnaam.
 		// Routes naar de generieke afvoer-handler die intern RegistreerCore aanroept,
 		// zodat audit-trail + transactiegedrag identiek zijn aan POST /registratie/.
@@ -63,7 +64,8 @@ func addMetaRegistryFullRoutes(router *gin.Engine) {
 		editor := middleware.RequireRol("editor")
 		router.GET(basePath, handlers.MakeGetFullEntitiesByMetaHandler(meta))
 		router.GET(basePath+"/:id", handlers.MakeGetFullEntityByMetaHandler(meta))
-		router.POST(basePath, editor, handlers.MakeAddFullEntityByMetaHandler(meta))
+		// POST via de registratie-engine (BE-review §3.5); geneste full-shape wordt genormaliseerd.
+		router.POST(basePath, editor, handlers.MakeAddEntityViaEngineHandler(meta))
 		// FASE 2 (REST/CRUD-laag, 2026-04-29): PATCH op /full/{padnaam}/:id.
 		// JSON Merge Patch (RFC 7396) op onderliggende GE's/RELs; ?modus=registratie|correctie.
 		router.PATCH(basePath+"/:id", editor, handlers.MakePatchFullEntityByMetaHandler(meta))
@@ -105,13 +107,14 @@ func addReferentielijstRoutes(router *gin.Engine) {
 		editor := middleware.RequireRol("editor")
 		router.GET(basePath, handlers.MakeGetEntitiesByMetaHandler(meta))
 		router.GET(basePath+"/:id", handlers.MakeGetEntityByMetaHandler(meta))
-		router.POST(basePath, editor, handlers.MakeAddEntityByMetaHandler(meta))
+		// POST via de registratie-engine (BE-review §3.5): audit + transactie zoals POST /registratie/.
+		router.POST(basePath, editor, handlers.MakeAddEntityViaEngineHandler(meta))
 
 		if meta.Factory != nil && meta.SliceFactory != nil {
 			fullPath := "/full/referentielijsten/" + meta.Padnaam
 			router.GET(fullPath, handlers.MakeGetFullEntitiesByMetaHandler(meta))
 			router.GET(fullPath+"/:id", handlers.MakeGetFullEntityByMetaHandler(meta))
-			router.POST(fullPath, editor, handlers.MakeAddFullEntityByMetaHandler(meta))
+			router.POST(fullPath, editor, handlers.MakeAddEntityViaEngineHandler(meta))
 		}
 	}
 }

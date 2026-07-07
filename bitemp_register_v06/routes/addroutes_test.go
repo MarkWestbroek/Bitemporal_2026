@@ -78,4 +78,19 @@ func TestAddRoutes_RegistersMetaRegistryRoutes(t *testing.T) {
 			t.Fatalf("expected static route %s %s", required.method, required.path)
 		}
 	}
+
+	// BE-review 2026-07-07 (§3.5): POST /registraties en POST /wijzigingen zijn
+	// verwijderd — clients konden er audit-records mee aanmaken of vervalsen.
+	verwijderd := []struct {
+		method string
+		path   string
+	}{
+		{method: "POST", path: "/registraties"},
+		{method: "POST", path: "/wijzigingen"},
+	}
+	for _, verboden := range verwijderd {
+		if routeExists(routes, verboden.method, verboden.path) {
+			t.Fatalf("route %s %s hoort niet meer te bestaan (audit-trail-bypass)", verboden.method, verboden.path)
+		}
+	}
 }

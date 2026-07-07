@@ -36,8 +36,6 @@ func TestMuterendeRoutesVereisenAuth(t *testing.T) {
 		path   string
 	}{
 		{http.MethodPost, "/registratie/"},
-		{http.MethodPost, "/registraties"},
-		{http.MethodPost, "/wijzigingen"},
 		{http.MethodPatch, "/registraties/1"},
 		{http.MethodPost, "/tests"},
 		{http.MethodPut, "/tests/1"},
