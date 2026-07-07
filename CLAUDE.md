@@ -36,6 +36,13 @@ Bewaar betekenisvolle AI-chats (Copilot én Claude) als markdown in
 - Controleer vóór commit op secrets, persoonsgegevens en interne URL's.
 - Doe dit wanneer de gebruiker erom vraagt of wanneer een chat tot concrete code-/ontwerp-
   beslissingen leidde. Zie `bitemp_register_v06/docs/copilot-chat-sync.md` voor de export-hook.
+- **Claude-sessies** exporteer je met `bitemp_register_v06/scripts/export-claude-chats.py`
+  (tegenhanger van het Copilot-script; leest `~/.claude/projects/<project>/*.jsonl`, vindt de
+  projectmap zelf via git — ook vanuit een worktree). Draai bijv.:
+  `python bitemp_register_v06/scripts/export-claude-chats.py --latest --title <onderwerp> --summary`.
+  Dat schrijft de export naar `exports/` én een samenvattingsstub naar `summaries/` (een reeds
+  bestaande, handgeschreven samenvatting wordt nooit overschreven); werk die stub daarna inhoudelijk
+  bij. Draai zónder `--title` (of met `--all`) voor een deterministische naam op datum + session-id.
 
 ## Git
 
