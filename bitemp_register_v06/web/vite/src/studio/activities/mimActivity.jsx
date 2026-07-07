@@ -8,7 +8,7 @@
  *    vanCanoniekModel → vanCanoniekCoreNaarMim; layouts blijven staan).
  *  - Importeer MIM XMI… = een XMI-export met het MIM-UML-profiel (EA-vorm).
  */
-import { IconDiagram05 } from "../icons";
+import { IconMIM05 } from "../icons";
 import useModelStore from "../../store/useModelStore";
 import { registreerMim12, mim12DiagramType, maakElement } from "../../diagramprofielen/mim12/index.js";
 import { vanCanoniekCoreNaarMim, vanMimXmi } from "../../diagramprofielen/mim12/adapter.js";
@@ -20,7 +20,7 @@ registreerMim12();
 export default maakDiagramActiviteit({
   id: "mim05",
   label: "MIM (0.5)",
-  icon: <IconDiagram05 />,
+  icon: <IconMIM05 />,
   descriptor: mim12DiagramType,
   maakElement,
   persistKey: "studio05-mim12",

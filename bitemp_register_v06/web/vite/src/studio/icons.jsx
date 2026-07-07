@@ -135,6 +135,17 @@ export const IconProfiel05 = (p) => (
   </svg>
 );
 
+/* MIM (0.5): de vormgrammatica in het klein — objecttype (scherpe rechthoek
+   met dikke rand = identiteit) + waarde-chip (accent, gevuld). */
+export const IconMIM05 = (p) => (
+  <svg {...base} {...p}>
+    <rect x="3" y="3" width="12" height="8.5" rx="1" strokeWidth="2.4" />
+    <line x1="5.5" y1="6.6" x2="12.5" y2="6.6" />
+    <path d="M9 11.5v3.5a2.5 2.5 0 0 0 2.5 2.5h0.5" />
+    <rect x="12" y="14.8" width="9" height="6.2" rx="3.1" {...vul} />
+  </svg>
+);
+
 /* Profiel-ontwerp (0.5): elementtype-stencil (gevuld sjabloonblok) + afgeleide. */
 export const IconProfielOntwerp05 = (p) => (
   <svg {...base} {...p}>
