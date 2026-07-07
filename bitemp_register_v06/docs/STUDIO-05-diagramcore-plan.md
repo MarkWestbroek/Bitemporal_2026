@@ -6,7 +6,18 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **MIM 1.2 als vijfde profiel**
+  fase 7 (register). Laatste ronde: **MIM-import & -transformatie**
+  (2026-07-06): `mim12/adapter.js` met twee routes — (1) **XMI-import**
+  (MIM-UML-profiel, EA-vorm): packages/classes/enumeraties/datatypen met
+  stereotypes uit de xmi:Extension, attributen met kardinaliteit +
+  type-verwijzing, associaties met rollen, generalisaties, nesting;
+  (2) **transformatie canoniek → MIM** als ⟳-herlaad van de MIM-activiteit
+  (keten `vanCanoniekModel` → `vanCanoniekCoreNaarMim`; layouts blijven
+  staan; materieel → indicatie materiële historie; domeinen onder een
+  informatiemodel-wortel). De MIM-vormgrammatica (chip/knip-box +
+  Typering-toggle) kwam uit de vormgevingssessie. Volgende: terugweg
+  MIM → canoniek, tagged values, en bijstellen op een echte IMGeo/IMBOR-
+  export. Eerdere ronde: **MIM 1.2 als vijfde profiel**
   (2026-07-06): verkenning + werkende kern van het Metamodel voor
   Informatie Modellering (Geonovum, **pas-toe-of-leg-uit**) — zie
   [`STUDIO-05-mim-verkenning.md`](STUDIO-05-mim-verkenning.md) voor de

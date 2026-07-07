@@ -71,3 +71,97 @@ test("attribuutsoort-veld draagt de MIM-metagegevens", () => {
     assert.ok(sleutels.includes(verwacht), verwacht);
   }
 });
+
+// ── Transformatie canoniek → MIM ────────────────────────────────────────────
+import { vanCanoniekCoreNaarMim } from "./adapter.js";
+
+test("vanCanoniekCoreNaarMim: entiteit/relatie/enum/domein worden MIM-tegenhangers", () => {
+  const veld = (naam, data = {}) => ({ naam, fieldType: "attribuut", data });
+  const core = {
+    elements: {
+      E1: {
+        id: "E1", naam: "Persoon", elementType: "entiteit",
+        compartimenten: [{ compartmentType: "velden", velden: [
+          veld("bsn", { typeLabel: "string", verplicht: true }),
+          veld("roepnaam", { typeLabel: "string", verplicht: false }),
+        ] }],
+        data: { materieel: true },
+      },
+      E2: { id: "E2", naam: "Adres", elementType: "entiteit", compartimenten: [], data: {} },
+      GE1: {
+        id: "GE1", naam: "Naam", elementType: "gegevenselement",
+        compartimenten: [{ compartmentType: "velden", velden: [veld("voornaam", {})] }],
+        data: {},
+      },
+      REL1: {
+        id: "REL1", naam: "woont op", elementType: "relatie", source: "E1", target: "E2",
+        compartimenten: [{ compartmentType: "velden", velden: [veld("sinds", {})] }],
+        data: { bronKardinaliteit: "1", doelKardinaliteit: "0..*", naamLabelHeen: "woonadres", directioneel: true, materieel: true },
+      },
+      EN1: {
+        id: "EN1", naam: "Geslacht", elementType: "enumeratie",
+        compartimenten: [{ compartmentType: "waarden", velden: [{ naam: "man", fieldType: "waarde" }, { naam: "vrouw", fieldType: "waarde" }] }],
+        data: {},
+      },
+      PKG1: { id: "PKG1", naam: "kern", elementType: "package", compartimenten: [], data: {} },
+      BEV1: { id: "BEV1", naam: "", elementType: "bevat", source: "PKG1", target: "E1", compartimenten: [], data: {} },
+    },
+    diagrams: {
+      d1: { id: "d1", naam: "Overzicht", diagramType: "canoniek-uml", nodes: [
+        { elementId: "E1", position: { x: 10, y: 20 } },
+        { elementId: "E2", position: { x: 400, y: 20 } },
+      ], edges: [] },
+    },
+    meta: { compositieEdges: [{ id: "ce1", source: "E1", target: "GE1" }] },
+  };
+  const mim = vanCanoniekCoreNaarMim(core);
+  const el = (id) => mim.elements[id];
+
+  assert.equal(el("E1").elementType, "objecttype");
+  const attrs = el("E1").compartimenten[0].velden;
+  assert.equal(attrs[0].data.kardinaliteit, "1", "verplicht → 1");
+  assert.equal(attrs[1].data.kardinaliteit, "0..1", "optioneel → 0..1");
+
+  assert.equal(el("GE1").elementType, "gegevensgroeptype");
+  const gg = Object.values(mim.elements).find((e) => e.elementType === "gegevensgroep");
+  assert.deepEqual([gg.source, gg.target], ["E1", "GE1"], "compositie-meta → gegevensgroep");
+
+  assert.equal(el("REL1").elementType, "relatiesoort");
+  assert.equal(el("REL1").data.doelRolNaam, "woonadres");
+  assert.equal(el("REL1").data.unidirectioneel, true);
+  assert.equal(el("REL1").data.indicatieMaterieleHistorie, true, "materieel → MIM-historie");
+  assert.equal(el("REL1").compartimenten.length, 1, "velden blijven (relatieklasse)");
+
+  assert.equal(el("EN1").compartimenten[0].velden.length, 2);
+  assert.equal(el("PKG1").data.soort, "domein");
+
+  // wortel-informatiemodel boven de losse domein-packages... PKG1 heeft al
+  // geen ouder → hangt onder het gegenereerde informatiemodel
+  const im = Object.values(mim.elements).find((e) => e.data?.soort === "informatiemodel");
+  assert.ok(im, "informatiemodel-wortel aangemaakt");
+  const imBevat = Object.values(mim.elements).some(
+    (e) => e.elementType === "bevat" && e.source === im.id && e.target === "PKG1"
+  );
+  assert.ok(imBevat, "domein hangt onder het informatiemodel");
+
+  // layout behouden, diagramType omgezet
+  assert.equal(mim.diagrams.d1.diagramType, "mim12");
+  assert.deepEqual(mim.diagrams.d1.nodes[0].position, { x: 10, y: 20 });
+});
+
+test("vanCanoniekCoreNaarMim: presentatie-generalisatie wordt een echte connector", () => {
+  const core = {
+    elements: {
+      A: { id: "A", naam: "Sub", elementType: "entiteit", compartimenten: [], data: {} },
+      B: { id: "B", naam: "Super", elementType: "entiteit", compartimenten: [], data: {} },
+    },
+    diagrams: {
+      d1: { id: "d1", naam: "x", nodes: [], edges: [
+        { id: "e1", source: "A", target: "B", data: { bron: { isGeneralization: true } } },
+      ] },
+    },
+  };
+  const mim = vanCanoniekCoreNaarMim(core);
+  const gen = Object.values(mim.elements).find((e) => e.elementType === "generalisatie");
+  assert.deepEqual([gen.source, gen.target], ["A", "B"]);
+});

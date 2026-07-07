@@ -94,14 +94,25 @@ is daar te bekijken, aan te passen en opnieuw te activeren).
 4. **Metagegevens-volledigheid**: MIM schrijft per metaclass een precieze
    verplicht/optioneel-set voor. V1 heeft de belangrijkste; de rest is
    declaratief bij te vullen (alleen PropertyTypes toevoegen).
-5. **Uitwisseling**: MIM kent serialisaties (o.a. het MIM-UML-profiel/XMI en
-   Linked Data). Een `vanMimModel`/`naarMimModel`-adapter (vgl. de
-   OAS-adapter) is de logische fase 3 — dan kunnen bestaande MIM-modellen
-   (bv. IMGeo, IMBOR) geïmporteerd worden.
-6. **Relatie met het canonieke model**: het canonieke profiel ís bijna een
-   MIM-dialect (entiteit≈objecttype, gegevenselement≈gegevensgroep,
-   materieel≈indicatie materiële historie). Een vertaling canoniek ↔ MIM is
-   daarmee een reële optie — interessant voor de PTOLU-uitleg.
+5. **Uitwisseling — eerste versie gebouwd** (`mim12/adapter.js`):
+   *Importeer MIM XMI/XML…* leest een XMI-export met het MIM-UML-profiel
+   (de gangbare EA-vorm): packages/classes/enumeraties/datatypen met
+   stereotypes uit de xmi:Extension, attributen met kardinaliteit en
+   type-verwijzing, associaties met rollen per zijde, generalisaties en
+   package-nesting. Nog niet: tagged values (de metagegevens-teksten),
+   Linked Data, en export terug naar XMI. Bij echte exports (IMGeo, IMBOR)
+   zullen tool-varianten opduiken — bijstellen op een echt bestand is de
+   volgende stap.
+6. **Transformatie canoniek → MIM — gebouwd**: ⟳ herlaad in "MIM (0.5)"
+   voert *Zet canoniek model om naar MIM…* uit: de keten `vanCanoniekModel`
+   → `vanCanoniekCoreNaarMim`. Entiteit→objecttype (velden→attribuutsoorten
+   met kardinaliteit uit verplicht), gegevenselement→gegevensgroeptype met
+   ◆-gegevensgroep, relatie→relatiesoort (rollen uit de naam-labels,
+   materieel→indicatie materiële historie), enum/gegevenstype/referentie-
+   lijst→waardelijsten en datatypen, domein-packages onder een gegenereerde
+   informatiemodel-wortel — en de diagram-layouts blijven staan. De
+   terugweg (MIM → canoniek) is de volgende stap; samen vormen ze de
+   PTOLU-brug.
 
 ## 5. Advies
 
