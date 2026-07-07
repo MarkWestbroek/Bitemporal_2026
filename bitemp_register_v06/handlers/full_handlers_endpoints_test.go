@@ -546,12 +546,14 @@ func TestMakeGetRegistratiesMetWijzigingenHandler_CapsSizeAndHasMoreFalse(t *tes
 	DB = db
 	defer func() { DB = oldDB }()
 
-	mock.ExpectQuery(`SELECT .*FROM "registratie".*LIMIT 100`).
+	// maxSize is 2000 (verhoogd van 100, zie commit "more records (>100)"):
+	// een grotere size-parameter wordt op 2000 afgekapt.
+	mock.ExpectQuery(`SELECT .*FROM "registratie".*LIMIT 2000`).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "registratietype", "tijdstip"}))
 
 	rec := httptest.NewRecorder()
 	ctx, _ := gin.CreateTestContext(rec)
-	ctx.Request = httptest.NewRequest(http.MethodGet, "/full/registraties?size=1000", nil)
+	ctx.Request = httptest.NewRequest(http.MethodGet, "/full/registraties?size=5000", nil)
 
 	handler := MakeGetRegistratiesMetWijzigingenHandler()
 	handler(ctx)
@@ -565,8 +567,8 @@ func TestMakeGetRegistratiesMetWijzigingenHandler_CapsSizeAndHasMoreFalse(t *tes
 		t.Fatalf("failed to decode response: %v", err)
 	}
 
-	if size, ok := body["size"].(float64); !ok || int(size) != 100 {
-		t.Fatalf("expected capped size 100, got %#v", body["size"])
+	if size, ok := body["size"].(float64); !ok || int(size) != 2000 {
+		t.Fatalf("expected capped size 2000, got %#v", body["size"])
 	}
 	if hasMore, ok := body["has_more"].(bool); !ok || hasMore {
 		t.Fatalf("expected has_more false, got %#v", body["has_more"])

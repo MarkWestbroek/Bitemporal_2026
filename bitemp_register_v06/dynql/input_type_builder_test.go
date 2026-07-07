@@ -11,7 +11,10 @@ import (
 )
 
 // TestBuildPatchInputTypes_VultCacheVoorAlleEntiteiten controleert dat voor
-// elke ENT met Factory een PatchInput type in de cache wordt opgeslagen.
+// elke ENT met Factory én minstens één hub-kind een PatchInput type in de
+// cache wordt opgeslagen. Entiteiten zonder hub-kinderen (bijv. TPT-subtypes
+// zonder eigen GE's, zoals C_sub) krijgen bewust géén PatchInput; hun
+// wijzig-mutatie valt terug op JSONScalar (zie buildEntiteitPatchInputType).
 func TestBuildPatchInputTypes_VultCacheVoorAlleEntiteiten(t *testing.T) {
 	// Reset caches zodat parallel-tests niet interfereren.
 	inputTypeCache = map[string]*graphql.InputObject{}
@@ -23,6 +26,13 @@ func TestBuildPatchInputTypes_VultCacheVoorAlleEntiteiten(t *testing.T) {
 		if meta.Metatype != model.MetatypeEntiteit || meta.Factory == nil {
 			continue
 		}
+		if !heeftHubKind(meta) {
+			// Geen hub-kinderen → geen PatchInput verwacht.
+			if _, ok := result[typenaam]; ok {
+				t.Errorf("onverwacht PatchInput type voor ENT %q zonder hub-kinderen", typenaam)
+			}
+			continue
+		}
 		if _, ok := result[typenaam]; !ok {
 			t.Errorf("geen PatchInput type voor ENT %q in resultaat", typenaam)
 		}
@@ -30,6 +40,18 @@ func TestBuildPatchInputTypes_VultCacheVoorAlleEntiteiten(t *testing.T) {
 			t.Errorf("geen PatchInput type voor ENT %q in patchInputTypeCache", typenaam)
 		}
 	}
+}
+
+// heeftHubKind is de test-spiegel van de eligibility-check in
+// buildEntiteitPatchInputType: minstens één onderliggend GE/REL met GESubtype hub.
+func heeftHubKind(meta model.TypeMeta) bool {
+	for _, child := range meta.OnderliggendeGegevenselementen {
+		childMeta, ok := model.MetaRegistry.GetTypeMeta(child.Doeltype)
+		if ok && childMeta.GESubtype == model.GESubtypeHub {
+			return true
+		}
+	}
+	return false
 }
 
 // TestBuildPatchInputTypes_NatuurlijkPersoonHeeftGERollen controleert dat
