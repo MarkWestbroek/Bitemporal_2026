@@ -18,6 +18,7 @@ import { IconProfielOntwerp05 } from "../icons";
 import useStudioStore from "../useStudioStore";
 import { vervangDiagramType, getDiagramType, alleDiagramTypes } from "../../diagramcore/types/typeRegistry.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
+import ShapeSetPaneel from "./shapeSetPaneel.jsx";
 import { vertaalHooks, maakGeneriekeMaakElement } from "./profielGereedschap.js";
 import {
   profielOntwerpKern,
@@ -55,10 +56,17 @@ function activeerProfiel(useStore) {
     .slice(0, 2);
   try {
     // P01: activeer het áctieve diagram — de sandbox kan meerdere
-    // profielen naast elkaar bevatten (één per diagram).
+    // profielen naast elkaar bevatten (één per diagram). Shape-sets en de
+    // typering-standaard zijn Style-data op het diagram (P07) en gaan
+    // pass-through mee.
     const staat = useStore.getState();
+    const diag = staat.diagrams[staat.actiefDiagramId] || {};
     const kern = bouwProfielUitOntwerp(
-      { elements: elementenVanDiagram(staat, staat.actiefDiagramId) },
+      {
+        elements: elementenVanDiagram(staat, staat.actiefDiagramId),
+        shapeSets: diag.shapeSets,
+        typeWeergave: diag.typeWeergave,
+      },
       { id, label }
     );
     if (embleem) kern.embleem = embleem;
@@ -162,6 +170,9 @@ export default maakDiagramActiviteit({
   // Eén profiel per diagram: de browser toont alleen het actieve profiel
   // (anders stapelen de verbindingsregels van alle profielen op).
   browserAlleenActiefDiagram: true,
+  // P07: shape-set-matrix in een verstelbaar onder-dock (Style-domein,
+  // alleen in de profiel-editor — een gewoon diagram heeft dit niet).
+  onderPaneel: { id: "shapesets", label: "Shape-sets (vorm per elementtype)", Component: ShapeSetPaneel },
   koppeling: {
     /**
      * Herlaad = álle geregistreerde profielen als ontwerp-diagrammen naast

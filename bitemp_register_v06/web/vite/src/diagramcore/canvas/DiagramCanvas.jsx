@@ -129,12 +129,21 @@ function CanvasBinnenkant({
 }) {
   const lookups = useMemo(() => {
     const basis = bouwLookups(diagramType);
-    // Shape-set (P07): een gekozen set overschrijft per elementtype de shape
-    // — zelfde Definitie, andere gedaante (bv. MIM-vormgrammatica vs klassiek).
+    // Shape-set (P07): een gekozen set overschrijft per elementtype de vorm —
+    // zelfde Definitie, andere gedaante (bv. MIM-vormgrammatica vs klassiek).
+    // Een entry is een volledige "skin": shape + icoon + kleur. Terugwaarts
+    // compatibel: een kale string telt als alleen-shape.
     if (!shapeSet) return basis;
     const overlay = { ...basis.elementTypesById };
-    for (const [etId, shapeId] of Object.entries(shapeSet)) {
-      if (overlay[etId]) overlay[etId] = { ...overlay[etId], shape: shapeId };
+    for (const [etId, waarde] of Object.entries(shapeSet)) {
+      if (!overlay[etId] || !waarde) continue;
+      const skin = typeof waarde === "string" ? { shape: waarde } : waarde;
+      overlay[etId] = {
+        ...overlay[etId],
+        ...(skin.shape ? { shape: skin.shape } : {}),
+        ...(skin.icoon ? { icoon: skin.icoon } : {}),
+        ...(skin.kleur ? { kleur: skin.kleur } : {}),
+      };
     }
     return { ...basis, elementTypesById: overlay };
   }, [diagramType, shapeSet]);

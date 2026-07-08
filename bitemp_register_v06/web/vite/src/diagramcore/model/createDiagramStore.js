@@ -343,6 +343,21 @@ export function createDiagramStore({ persistKey } = {}) {
     /** Viewport: apart van de diagrammen, geen isDirty en geen undo-entry. */
     updateDiagramViewport: (diagramId, viewport) =>
       set((state) => ({ viewports: { ...state.viewports, [diagramId]: viewport } })),
+
+    /**
+     * Style-data op diagram-niveau (Style-domein, geen model-elementen):
+     * bv. de shape-sets en typering-standaard van een profiel-ontwerp.
+     * Merget de patch in het diagram-object.
+     */
+    updateDiagramStijl: (diagramId, patch) =>
+      set((state) => {
+        const d = state.diagrams[diagramId];
+        if (!d) return state;
+        return {
+          isDirty: true,
+          diagrams: { ...state.diagrams, [diagramId]: { ...d, ...patch } },
+        };
+      }),
   });
 
   const metUndo = temporal(definitie, {
