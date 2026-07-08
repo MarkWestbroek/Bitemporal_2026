@@ -17,12 +17,16 @@
       "y": 84
     },
     "elementDef:Notitie#1": {
-      "x": 1112,
-      "y": -322
+      "x": 1146,
+      "y": -232
     },
     "elementDef:Kader#1": {
-      "x": 1760,
-      "y": 60
+      "x": 1131,
+      "y": -369
+    },
+    "profielDef:DMN DRD — instellingen#1": {
+      "x": 193,
+      "y": -359
     }
   }
 }

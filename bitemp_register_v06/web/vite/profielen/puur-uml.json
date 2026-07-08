@@ -17,8 +17,8 @@
       "y": 480
     },
     "fieldDef:operatie#1": {
-      "x": 422,
-      "y": 447
+      "x": 435,
+      "y": 460
     },
     "elementDef:Interface#1": {
       "x": 447,
@@ -45,8 +45,8 @@
       "y": 60
     },
     "compartimentDef:attributen#2": {
-      "x": 1051,
-      "y": 655
+      "x": 1074,
+      "y": 661
     },
     "elementDef:Package#1": {
       "x": 394,
@@ -57,8 +57,12 @@
       "y": -133
     },
     "elementDef:Kader#1": {
-      "x": 1264,
-      "y": -395
+      "x": 60,
+      "y": -362
+    },
+    "profielDef:Puur UML (klassediagram) — instellingen#1": {
+      "x": 53,
+      "y": -451
     }
   }
 }
