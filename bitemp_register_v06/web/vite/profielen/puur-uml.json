@@ -1,0 +1,64 @@
+{
+  "layout": {
+    "elementDef:Klasse#1": {
+      "x": 60,
+      "y": 60
+    },
+    "compartimentDef:attributen#1": {
+      "x": 60,
+      "y": 330
+    },
+    "fieldDef:attribuut#1": {
+      "x": 60,
+      "y": 640
+    },
+    "compartimentDef:operaties#1": {
+      "x": 60,
+      "y": 480
+    },
+    "fieldDef:operatie#1": {
+      "x": 422,
+      "y": 447
+    },
+    "elementDef:Interface#1": {
+      "x": 447,
+      "y": -43
+    },
+    "compartimentDef:operaties#2": {
+      "x": 438,
+      "y": 239
+    },
+    "elementDef:Enumeratie#1": {
+      "x": 740,
+      "y": 60
+    },
+    "compartimentDef:literals#1": {
+      "x": 740,
+      "y": 330
+    },
+    "fieldDef:literal#1": {
+      "x": 742,
+      "y": 485
+    },
+    "elementDef:Datatype#1": {
+      "x": 1080,
+      "y": 60
+    },
+    "compartimentDef:attributen#2": {
+      "x": 1051,
+      "y": 655
+    },
+    "elementDef:Package#1": {
+      "x": 394,
+      "y": -336
+    },
+    "elementDef:Notitie#1": {
+      "x": 1281,
+      "y": -133
+    },
+    "elementDef:Kader#1": {
+      "x": 1264,
+      "y": -395
+    }
+  }
+}

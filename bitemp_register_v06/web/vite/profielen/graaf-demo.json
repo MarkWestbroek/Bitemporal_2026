@@ -1,0 +1,115 @@
+{
+  "kern": {
+    "id": "graaf-demo",
+    "label": "Graaf (demo)",
+    "style": "uml-klassiek",
+    "fieldTypes": [
+      {
+        "id": "eigenschap",
+        "viewer": "naam-type",
+        "properties": [
+          {
+            "key": "naam",
+            "datatype": "string",
+            "verplicht": true
+          },
+          {
+            "key": "typeLabel",
+            "label": "waarde",
+            "datatype": "string"
+          }
+        ]
+      }
+    ],
+    "elementTypes": [
+      {
+        "id": "knoop",
+        "label": "Knoop",
+        "kort": "◉",
+        "shape": "bol",
+        "kleur": "#a5b4fc",
+        "properties": [
+          {
+            "key": "kleur",
+            "datatype": "colour"
+          }
+        ],
+        "compartments": [
+          {
+            "id": "eigenschappen",
+            "fieldType": "eigenschap"
+          }
+        ]
+      },
+      {
+        "id": "kant",
+        "label": "Kant",
+        "kort": "—",
+        "shape": "edge",
+        "isConnector": true,
+        "bron": {
+          "elementTypes": [
+            "knoop"
+          ]
+        },
+        "doel": {
+          "elementTypes": [
+            "knoop"
+          ]
+        },
+        "edgePresentatie": {
+          "lijn": "solid",
+          "kleur": "#6366f1"
+        },
+        "properties": [
+          {
+            "key": "bronKardinaliteit",
+            "label": "kardinaliteit (bron)",
+            "datatype": "string"
+          },
+          {
+            "key": "doelKardinaliteit",
+            "label": "kardinaliteit (doel)",
+            "datatype": "string"
+          },
+          {
+            "key": "directioneel",
+            "label": "gericht (→ doel)",
+            "datatype": "boolean"
+          }
+        ],
+        "hooks": {
+          "edgeLabels": "kardinaliteiten",
+          "edgePresentatie": "directioneel-pijl"
+        }
+      }
+    ],
+    "taakbalken": [
+      {
+        "id": "maken",
+        "label": "Maken",
+        "acties": "elementTypes"
+      },
+      {
+        "id": "verbinding",
+        "label": "Verbinding",
+        "acties": "connectorTypes"
+      }
+    ],
+    "layouts": []
+  },
+  "layout": {
+    "elementDef:Knoop#1": {
+      "x": 60,
+      "y": 60
+    },
+    "compartimentDef:eigenschappen#1": {
+      "x": 67,
+      "y": 210
+    },
+    "fieldDef:eigenschap#1": {
+      "x": 51,
+      "y": 361
+    }
+  }
+}
