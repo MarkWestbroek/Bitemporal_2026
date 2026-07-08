@@ -145,10 +145,11 @@ export const profielOntwerpKern = {
       // compartiment, bewerkbaar als json (pass-through bij activeren).
       id: "profielDef",
       label: "Profiel-instellingen",
-      kort: "PRF",
-      stereotype: "«profiel»",
+      kort: "⚙ PRF",
+      stereotype: "«profiel-instellingen»",
       shape: "rounded",
-      kleur: "#f8fafc",
+      // Rose: valt op tussen de blauwe/groene ET-/CT-/VT-nodes.
+      kleur: "#fecdd3",
       handleStijl: "onzichtbaar",
       properties: [
         { key: "typeWeergave", label: "typering-standaard (geen/icoon/tekst)", datatype: "string" },
@@ -647,7 +648,10 @@ export function ontwerpUitProfiel(descriptor) {
         : {}),
     },
   };
-  nodes.push({ elementId: profielNodeId, position: { x: 60, y: -170 } });
+  // Boven de cluster, horizontaal gecentreerd — vrij van de zwevende
+  // taakbalken (die links-boven staan), zodat de instellingen-kaart opvalt.
+  const midX = Math.max(80, (nietConnectoren.length * 340) / 2 - 110);
+  nodes.push({ elementId: profielNodeId, position: { x: midX, y: -260 } });
 
   return {
     elements,
