@@ -5,6 +5,10 @@
 > **Code review (2026-06-30):** zie [`STUDIO-code-review-2026-06-30.md`](STUDIO-code-review-2026-06-30.md)
 > voor bevindingen over onderhoudbaarheid, dubbelingen, veiligheid en toegankelijkheid.
 >
+> **Verslag Studio 0.5 (2026-07-04):** zie [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md)
+> voor het complete overzicht van fase 0 t/m de meta-editor (architectuur,
+> screenshots, stand van zaken).
+>
 > **Plan Studio 0.5 (2026-07-02):** zie [`STUDIO-05-diagramcore-plan.md`](STUDIO-05-diagramcore-plan.md)
 > voor het voorstel om de UML-editor te veralgemeniseren naar een configureerbare
 > diagram-kern (diagramcore + profielen), parallel naast de huidige versie.
@@ -258,6 +262,35 @@ fase 2 een **bewerkbare sandbox**:
 - **Lijnvormen**: edges kennen `presentatie.vorm` — bezier (default),
   hoekig (orthogonaal) of recht. Het puur-UML-profiel gebruikt hoekig voor
   de klassieke UML-look.
+- **Vormgeving (plan §8.5b/§8.5c/§8.6a)**: rechtsklik op een
+  connector geeft **"Lijnvorm"** (kromme/hoekig/recht, per connector bewaard
+  in `data.vorm`); de core kent **StyleType-tokens v2** (CSS-variabelen
+  `--dc-*` voor lijnen/randen/selectie/marker-vullingen plus
+  canvas-/label-achtergrond; selectie in merk-indigo `#4f46e5`) en een
+  **icoon-registry per ElementType** (`shapes/typeIconen.jsx`:
+  `elementType.icoon`-id of shape-fallback). De **integrale iconenset** uit
+  de vormgevingssessie (2026-07-04/05) staat in
+  `shapes/iconenVocabulaire.jsx`: 30 iconen (outline + één gevuld accent,
+  14×14, currentColor) die alle elementtypen van de vier profielen dekken;
+  gedeelde concepten delen een icoon-id (Entiteit en Klasse → `klasse`).
+  Het 0.5-canvas **volgt het studio-thema** (`dc-canvasvlak`, sessiebesluit
+  2026-07-05): donker canvas met lichte pastel-kaarten; alleen de
+  third-party-canvassen (bpmn/dmn-js) houden het vaste witte
+  `.studio-paper`. De **activity bar** draagt sinds dezelfde sessie eigen
+  0.5-emblemen (`studio/icons.jsx`: `IconDiagram05`, `IconUML05`,
+  `IconOAS05`, `IconProfiel05`, `IconProfielOntwerp05`) — familie-embleem
+  per profiel, met het ene gevulde accent als 0.5-kenmerk naast de puur
+  outline-getekende klassieke activiteiten.
+- **Elementen-browser** (plan §8.8): onder de diagrammenlijst staat in elk
+  0.5-profiel een boom van álle model-elementen, met zoekveld. Wijst de
+  descriptor een **hiërarchie-connectortype** aan (`hierarchie:
+  "compositie"`, P02/E01) dan nest de browser de elementen langs die
+  bevat-relatie (canoniek-uml: GE's onder hun entiteit — ook gespiegelde
+  composities via de `hierarchieParen`-hook; de profiel-ontwerper: VT's
+  onder CT's onder ET's); zonder hiërarchie of bij zoeken groepeert hij
+  plat per elementtype. Klik = selecteren in de inspector; elementen die niet op het
+  actieve diagram staan zijn cursief/gedempt en hebben een ＋-knop om ze in
+  het zichtbare viewport-midden toe te voegen.
 - **Fabriek + tweede profiel (fase 5)**: de activiteit-mechaniek zit in
   `studio/activities/maakDiagramActiviteit.jsx` (descriptor + opties →
   complete activiteit; model-/V3-/API-koppeling optioneel). De activiteit
@@ -280,7 +313,14 @@ fase 2 een **bewerkbare sandbox**:
 - **Meta-editor trede 2: "Profiel-ontwerp (0.5)"** — conform het metamodel:
   teken **Elementtypen ◆ Compartimenttypen ◆ Veldtypen** (elk met eigen
   properties; de ◆-connector legt de bevat-relaties) plus verbindingsregels
-  (lijnstijl/markers, kardinaliteiten- en richting-vinkjes). *Ontwerp →
+  (lijnstijl/markers, kardinaliteiten-, richting- en
+  bevat-relatie-vinkjes — dat laatste zet `hierarchie` van het doelprofiel).
+  **Verbindingsregels zijn 1..*** per connectortype (metamodel:
+  ConnectorType ◆ Verbindingsregel): regel-lijnen met dezelfde náám
+  bundelen bij het genereren tot één connectortype dat zich als meerdere
+  lijnen manifesteert, en de core staat een verbinding toe zodra één regel
+  de bron×doel-combinatie dekt (de verkorte bron/doel-vorm = cartesiaans
+  product blijft ondersteund). *Ontwerp →
   Genereer & registreer profiel…* maakt er live een activiteit van (zelfde
   kanaal als trede 1); *Bekijk bestaand profiel als ontwerp…* laadt elk
   geregistreerd profiel als diagram, en een lege sandbox start met het
@@ -294,9 +334,19 @@ fase 2 een **bewerkbare sandbox**:
   (array-elementtype). Ook hier: alleen een descriptor + fabriek-aanroep.
   **Bestand → Importeer OAS 3.1 (YAML/JSON)…** leest een echt
   OpenAPI-document in (`oas31/adapter.js`, parser: `yaml`): schemas, enums,
-  paths → operaties, en alle $ref/allOf/items-relaties als connectoren, met
-  een grid-geplaatst diagram genoemd naar `info.title`. Export terug naar
-  YAML is een later punt (eigen terugreis, vgl. canoniek-uml fase 4).
+  paths → operaties, en alle $ref/allOf/items/**oneOf/anyOf**-relaties als
+  connectoren. Naast het totaaloverzicht komt er **per tag** (of pad-groep)
+  een eigen diagram met de operaties plus de (transitief) geraakte schemas —
+  zo blijft een grote OAS leesbaar. Er is een **gelaagde auto-layout**
+  (operaties → per $ref-stap een kolom) en **Bestand → Exporteer OAS 3.1
+  (YAML)…** schrijft het model terug (spiegel + delta: properties/required/
+  allOf/oneOf/paths gereconstrueerd; round-trip-getest). Nog niet:
+  parameters/headers als elementen, inline oneOf-varianten.
+- **Tijdlijnvoorkomen & geordend (LGM)**: entiteit, gegevenselement en
+  relatie hebben een **materieel (tijdlijn)**-vinkje (mapping op
+  `isMaterieel`; formeel = uit) — op de node als MATERIEEL-badge, op de
+  relatie-lijn als «materieel»-label; relaties hebben daarnaast
+  **geordend** ({ordered}-label aan de doelzijde, 0.5-eigen).
 - **Gegevenstype-validatie bewerken**: validatie, normalisatie en weergave
   zijn element-properties van het gegevenstype met eigen PropertyTypeEditors
   (`ValidatieEditors.jsx`, datatypes "validatieregels"/"weergaveregels"):
@@ -356,9 +406,9 @@ fase 2 een **bewerkbare sandbox**:
   ↑-kopregel, cursief) — weergave-compartiment via de profiel-hook, geen
   modeldata.
 - Nog niet (bekend): rebuild vanuit 0.5, clipboard,
-  validatie-hook, domein-overlay, licht/donker-tokens
-  per StyleType (plan §8.5b), integrale iconenset voor de Maken-balk
-  (ontwerp-sessie, plan §8.6a), overerving in de gespiegelde weergave
+  validatie-hook, domein-overlay, eigen tokensets per StyleType-id
+  (plan §8.5b — het register bestaat; zolang "uml-klassiek" de enige is,
+  ís de default die set), overerving in de gespiegelde weergave
   (generalisaties uit het oude model zijn daar nog presentatie-edges),
   YAML-export en oneOf/anyOf in het OAS-profiel.
   Het incidentele **transient lege canvas** is vermoedelijk opgelost

@@ -2,7 +2,203 @@
 
 - **Datum:** 2026-07-02
 - **Auteur:** Claude (Claude Code, Fable 5), op verzoek van Mark
-- **Status:** trede 2 **conform het metamodel** + seed + inverse
+- **Status:** fase 0 t/m 5 + meta-editor afgerond; zie het **verslag**
+  [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
+  stand van zaken, open punten). Koers: eerst stabiel & compleet
+  (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
+  fase 7 (register). Laatste ronde: **profiel-instellingen in de PE +
+  vinkje-fix** (2026-07-07): (1) elk ontwerp-diagram heeft nu een
+  **«profiel»-instellingen-node**: de typering-standaard (geen/icoon/tekst)
+  en de shape-sets van het profiel zijn daar zichtbaar (leesbaar
+  compartiment per set, met de element→shape-mapping in het detail) én
+  bewerkbaar via de json-property; *Activeer profiel…* neemt beide mee
+  terug (`typeWeergave`/`shapeSets` pass-through, roundtrip getest);
+  (2) het **Typering-menuvinkje liep één stand achter** — de handler
+  miste de `menu:ververs` die taakbalk-toggle en shape-set wél hadden.
+  Eerdere ronde: **PE-uitbouw P02/P04–P07**
+  (2026-07-07, vier commits): (1) **git-persistentie** — vite-dev-endpoint
+  `/__studio05/profielen` ↔ `web/vite/profielen/*.json` ({kern, layout});
+  *Activeer profiel* en *Bewaar layout* schrijven bestanden, bij het laden
+  wint de git-map van localStorage; activityRegistry kreeg abonnementen
+  zodat async registraties direct in de bar verschijnen; (2) **shape-/
+  icoon-kiezers** in de PE (registry-selects met live shape-preview in de
+  doelkleur; icoon roundtript door bouw/ontwerp) + **activiteit-embleem**
+  (1–2 tekens, git-persistent via de kern); (3) **shape-sets** —
+  `DiagramType.shapeSets` overschrijft per elementtype de shape; menu
+  "Shape-set" naast de Typering-toggle; mim12 heeft de demo-set "MIM-UML
+  (klassiek)" naast de vormgrammatica; (4) **handler-catalogus**
+  (`handlerCatalogus.js`): hooks/editors/resolvers hebben nu een naam en
+  beschrijving (core registreert de hook-soorten, profielen hun resolvers;
+  fallback per soort) — de PE toont ze in het implementatie-compartiment
+  met de beschrijving in het veld-detail. Open: shape-sets bewérken in de
+  PE, illustraties bij handlers. Eerdere ronde: **MIM-import & -transformatie**
+  (2026-07-06): `mim12/adapter.js` met twee routes — (1) **XMI-import**
+  (MIM-UML-profiel, EA-vorm): packages/classes/enumeraties/datatypen met
+  stereotypes uit de xmi:Extension, attributen met kardinaliteit +
+  type-verwijzing, associaties met rollen, generalisaties, nesting;
+  (2) **transformatie canoniek → MIM** als ⟳-herlaad van de MIM-activiteit
+  (keten `vanCanoniekModel` → `vanCanoniekCoreNaarMim`; layouts blijven
+  staan; materieel → indicatie materiële historie; domeinen onder een
+  informatiemodel-wortel). De MIM-vormgrammatica (chip/knip-box +
+  Typering-toggle) kwam uit de vormgevingssessie. Volgende: terugweg
+  MIM → canoniek, tagged values, en bijstellen op een echte IMGeo/IMBOR-
+  export. Eerdere ronde: **MIM 1.2 als vijfde profiel**
+  (2026-07-06): verkenning + werkende kern van het Metamodel voor
+  Informatie Modellering (Geonovum, **pas-toe-of-leg-uit**) — zie
+  [`STUDIO-05-mim-verkenning.md`](STUDIO-05-mim-verkenning.md) voor de
+  volledige mapping (MIM-metaclasses ↔ motor-concepten blijken vrijwel
+  1-op-1 te rijmen: relatieklasse = ASOC-materialisatie, packages =
+  informatiemodel/domein/extern/view, historie-indicaties ≈ ons bitemporele
+  materieel/formeel). Profiel `diagramprofielen/mim12/` + activiteit
+  **"MIM (0.5)"**: objecttype/gegevensgroeptype met attribuutsoort-
+  metagegevens, relatiesoort met rollen per zijde, generalisatie (ook
+  datatypen), externe koppeling, waardelijsten (enumeratie/codelijst/
+  referentielijst), datatypen, keuze (variant 1) en constraint. Fase 2+:
+  keuze-varianten 2–5, MIM-validator, import van bestaande MIM-modellen.
+  Eerdere ronde: **DMN DRD als vierde profiel**
+  (2026-07-06): nieuwe activiteit **"DRD (0.5)"** op `diagramprofielen/dmn-drd/`
+  — decision («decision»), input data (placeholder "rounded"), BKM en
+  knowledge source (placeholder class-box) met de drie requirements:
+  information (dicht + gevulde pijl "pijl-dicht"), knowledge (gestippeld +
+  open pijl) en authority (gestippeld + bolpunt "bol" — de markers van de
+  vormgevingssessie worden meteen gebruikt). Nieuw in de core:
+  **hierarchie-entries mogen `{type, omgekeerd}` zijn** — de
+  requirement-pijl wijst náár de beslissing, maar in de boom is de
+  beslissing de ouder van haar vereisten. Eigen `drd-lagen`-layout:
+  eindbeslissing bovenaan, vereisten per rij eronder (zwaartepunt-sortering).
+  De vormgevingssessie leverde de ShapeTypes (`dmn-input-data`, `dmn-bkm`,
+  `dmn-knowledge-source` + de package-tab en de pijl-dicht-/bol-markers);
+  het profiel gebruikt ze nu — alleen de shape-ids hoefden om, precies
+  volgens de core/profiel-splitsing. Stereotypes zijn daar weg: in DMN is
+  de vorm de betekenis. Eerdere ronde:
+  **OAS-zwaartepunt, lus-defaults &
+  Implementation zichtbaar** (2026-07-06): (1) `oasRijenPosities` sorteert
+  vervolg-rijen op het **zwaartepunt van hun (al geplaatste) ouders** —
+  schema's komen zo (ongeveer) ónder hun operaties i.p.v. alfabetisch
+  verspreid; (2) **verse zelf-lussen zijn standaard hoekig en lopen
+  boven→rechts** (de kortste-weg is bij één punt betekenisloos; expliciete
+  handles/vorm winnen); (3) het **Implementation-domein is zichtbaar in de
+  PE**: elke ET-node krijgt een alleen-lezen "implementatie"-compartiment
+  met zijn hooks (`hook: extraCompartimenten`), eigen property-editors
+  (`editor: cel-expressie (…)`) en resolvers (`resolver: basistype (…)`) —
+  informatief, reist niet mee terug bij activeren. Eerdere ronde: **segment-slepen & vervormbare oortjes**
+  (2026-07-05): haakse lijnen (hoekig/boom/knik-paden en hoekige oortjes)
+  zijn nu met de hand te **duwen en trekken**: pak een segment en beweeg
+  haaks erop (horizontaal segment ↑↓, verticaal ←→); bij loslaten wordt de
+  vorm als knikpunten vastgelegd (dus persistent en verder te verfijnen).
+  Segmenten aan een uiteinde krijgen automatisch een extra hoekpunt op de
+  handle zodat de stomp haaks blijft (EA-gedrag); de polylijn komt uit de
+  eigen vormen of wordt uit het smoothstep-pad geparseerd
+  (M/L + Q-eindpunten, collineair vereenvoudigd; bezier niet). **Ctrl-klik
+  werkt nu ook op oortjes** (zelf-lussen waren uitgesloten): een knik op de
+  lus maakt het oor vrij vervormbaar — knikken winnen van de lus-vorm.
+  Eerdere ronde: **boomstijl-lijnen + PE-vlaggen**
+  (2026-07-05): (1) nieuwe lijnvorm **"boom"** (EA tree style: dwarslat op
+  vaste afstand van de ouder-handle, zodat álle kinderen één hark delen —
+  ook op ongelijke hoogtes; zelf-lussen doen niet mee);
+  rechtsklik op een connector: *Boomstijl → Verticaal (ouder boven) /
+  Horizontaal (ouder links)* zet vorm + beide uiteinden in één klik, en
+  rechtsklik op een óuder-node: *Kinderen in boomstijl (n)* doet dat voor
+  álle uitgaande connectoren tegelijk (niet beperkt tot hiërarchie-typen —
+  in de PE zijn de bevat-lijnen gewone verbindingsregels) (het warrige
+  package→kinderen-beeld wordt zo een nette boom); (2) de profiel-vlaggen
+  **container (drop-doel)** en **standaard dicht in boom** zijn nu ook in
+  de PE te bewerken: elementDef kreeg de twee vinkjes, `bouwProfielUitOntwerp`
+  leidt `containerVoor` af uit de (hiërarchie-)verbindingsregel waarvan het
+  ET bron is, en `ontwerpUitProfiel` neemt beide vlaggen mee terug het
+  ontwerp in (roundtrip getest). Eerdere ronde: **boomvolgorde, PE-herlaad &
+  layout-persistentie** (2026-07-05): (1) **packages bovenaan in de boom** —
+  wortels waarvan het type `containerVoor` heeft (packages) komen eerst, de
+  "losse flodders" alfabetisch daaronder (die vlag is dus hét
+  top-level-signaal in het profiel); (2) het **rijmenu** is verrijkt naar
+  IDE-pariteit waar generiek kan: *Toon details*, *Hernoemen…*,
+  *Kopieer ID*, *Verplaats naar package…* (naast toevoegen/losmaken/
+  verwijderen; de canoniek-casts blijven IDE-specifiek); (3) de "51
+  verbindingsregels" in de PE waren **geen bug** maar de som van alle
+  geladen profielen (elke bron×doel-combinatie is één regel-lijn, bv.
+  Associatie 3×3 = 9) — de PE zet nu `browserAlleenActiefDiagram`: de
+  browser toont alleen het actieve profiel (oas31 = 11 regels i.p.v. 77
+  totaal); (4) **PE-herlaad laadt nu álle geregistreerde profielen** als
+  ontwerp-diagrammen naast elkaar (`ontwerpUitAlleProfielen`); het
+  Ster ◆ Planeet-voorbeeld zit als apart menu-item; (5)
+  **layout-persistentie per profiel**: *Bewaar layout als standaard voor
+  dit profiel* (menu + rechtsklik) bewaart naam-gebaseerde posities
+  (`layoutSleutels` — de ow{n}_-ids zijn per laadbeurt anders) in
+  localStorage `studio05-profiel-layouts`; herlaad en *Bekijk bestaand…*
+  passen hem toe. Een échte persistente profiel-registry (API i.p.v.
+  localStorage) blijft trede 3 / fase 7. Eerdere ronde: **notities in packages + rechtsklik in
+  de sidebar** (2026-07-05): (1) de `bevat`-doelregel in de profielen
+  toegelaten voor **notitie** (puur-uml en canoniek) en **constraint**
+  (canoniek) — de regel wás te streng; dit is een profiel-wijziging
+  (descriptor), geen core-wijziging, en de adapter maakt nu ook voor
+  notities/constraints met een V3-domein een bevat-connector; (2)
+  **rechtsklik-menu in de sidebar** (vgl. de IDE-ProjectBrowser): op een
+  boomrij (toon op canvas / toevoegen aan dit diagram / verwijderen van dit
+  diagram / losmaken uit package / verwijderen uit model) en op een
+  diagram-/profielrij (hernoemen, exporteer dit diagram/profiel, de
+  activiteit-eigen acties zoals *Activeer profiel…*, verwijderen) — gedeelde
+  `ZijContextMenu`-component in de dc-contextmenu-stijl; (3) e2e bevestigd
+  dat **V3-import én "Herlaad uit UML-model" dezelfde adapter delen**: het
+  demo-model levert packages "np-loc"/"register" met geneste leden in de
+  boom. Eerdere ronde: **slepen-in-package, boom-DnD &
+  profiel-editor-UX** (2026-07-05): (1) **`ElementType.containerVoor`** —
+  een containertype (package) is nu drop-doel: een node erop slepen op de
+  canvas legt/verhangt de bevat-connector (kleinste container wint bij
+  nesting, cycle-guard, verbindingsregels gerespecteerd), rechtsklik op de
+  node geeft *Losmaken uit "…"*; (2) **drag & drop in de elementen-boom**
+  (naar het voorbeeld van de IDE-ProjectBrowser, incl. de copyMove-les):
+  rij op een package-rij slepen = verhangen, op de achtergrond = losmaken;
+  (3) **puur-uml `hierarchie: ["bevat", "compositie"]`** — wie in een
+  package hangt neemt zijn ◆-kinderen mee in de boom; (4) de **export van
+  het 0.5-werkbestand is een keuzedialoog** geworden (zoals de import):
+  bestandsnaam kiezen + *Alleen dit diagram/profiel* (elementen gefilterd op
+  het actieve diagram) of *Alles*; ook bereikbaar via **rechtsklik op leeg
+  canvas** (generiek item); (5) de fabriek kent **`diagramTerm`** — de
+  profiel-ontwerper zegt overal "profiel" i.p.v. "diagram" — en
+  **`canvasMenuExtra`** voor activiteit-eigen rechtsklik-acties; (6)
+  *Genereer & registreer profiel…* heet nu **"Activeer profiel…
+  (registreer/ververs)"** (genereer botste met het register-genereren), ook
+  als rechtsklik-actie. Eerdere ronde: **knikpunten, packages & OAS-vervolg**
+  (2026-07-05): (1) **knikpunten op connectoren** — ctrl-klik op een lijn
+  voegt een knikpunt toe (`data.knikken` op het connector-element; polylijn
+  door de punten), slepen verplaatst, dubbelklikken wist er één, contextmenu
+  *Knikpunten wissen* wist alles; alleen op de directe gedaante (de
+  gematerialiseerde heeft het anker al als handvat); (2) het **zelf-lus-oortje
+  respecteert nu de lijnvorm**: *Hoekig* geeft rechte segmenten buitenom
+  (boven→rechts gaat om de hoek, zelfde zijde gaat langs de verste uitsteek,
+  zelfde punt wordt een rechthoekig oor; boven↔onder valt terug op de
+  kromme); (3) **OAS-import plaatst nu ook operaties bovenaan** — de
+  rijen/CRUD-layout is gedeeld (`oasRijenPosities` in oas31/index.js) tussen
+  de Auto-layout-knop en `vanOasDocument` (hoofd- én tag-diagrammen); (4) de
+  browser **verbergt naamloze connectoren** ("(oascon_ref_32)"-ruis na een
+  OAS-import); (5) **package als gewoon ElementType** (besluit
+  domeinen-vs-package): puur-uml en canoniek-uml kregen `package` +
+  `bevat`-connector ("plaatsing in" — een connector die je meestal níet
+  tekent), `DiagramType.hierarchie` accepteert nu een **lijstje**
+  (`["bevat", "compositie"]`; typeRegistry valideert per stuk, de
+  profiel-ontwerper bundelt meerdere isHierarchie-regels), en de
+  canoniek-adapter converteert **V3-domein ↔ package/bevat** beide kanten op
+  (bevat-connector wint bij de terugreis van het gespiegelde domein-veld;
+  nieuwe packages komen in de `domains`-lijst; packages/bevat staan bewust op
+  geen enkel diagram). Eerdere ronde: **feedbackronde rust & OAS** (2026-07-05):
+  (1) tree-klik **centreert niet meer** — `focusNode` schuift het beeld alleen
+  minimaal bij als de node (deels) buiten beeld valt ("net binnen het beeld
+  trekken is voldoende"); (2) import *Over het huidige diagram heen* neemt
+  **alleen de elementen van het gekozen diagram** mee — een werkbestand met
+  meerdere diagrammen sleepte anders tientallen zwevende elementen de sandbox
+  in (boom vol ＋-rijen); (3) de **＋-knoppen in de elementen-browser** waren
+  enorm: `.dc-mini-knop` was alleen binnen `.dc-inspector` gestyled, waardoor
+  de sidebar terugviel op de globale button-stijl van `schema-viz.css` —
+  regels ontscoopt in `diagramcore.css`; (4) het **zelf-lus-oortje volgt nu de
+  gekozen handles** (controlepunten steken uit in de richting van elk
+  uiteinde: boven→rechts gaat óm de hoek i.p.v. onderlangs); (5) **oas31**
+  kreeg `hierarchie: "ref"` (boom: operatie → schema → schema; zelf-verwijzende
+  schema's worden als paar genegeerd, anders verdwenen ze uit de wortels) en
+  de lagen-layout legt nu **rijen** i.p.v. kolommen: operaties bovenaan
+  gesorteerd op **CRUD** (POST, GET, PUT, PATCH, DELETE, daarbinnen op pad),
+  schema's per $ref-afstand eronder (alfabetisch). Open punten: knikpunten op
+  lijnen (ctrl-klik → waypoint, met de hand rekken), besluit
+  domeinen-vs-package-elementtype (V3-conversie). Eerdere ronde: trede 2 **conform het metamodel** + seed + inverse
   (2026-07-04, feedback Mark: "in een compartiment zitten nog weer
   properties"): het ontwerp-profiel volgt nu ElementType ◆ CompartmentType ◆
   FieldType — **Compartimenttypen en Veldtypen zijn eigen nodes**, gekoppeld
@@ -806,21 +1002,21 @@ pariteitslijst expliciet bij zodat de overstap toetsbaar is.
 Elke fase is afzonderlijk te bouwen op een eigen feature-branch, te verifiëren
 met `npm run build` + visuele check, en levert iets werkends op.
 
-- **Fase 0 — fundering (klein).** Besluiten over de open keuzes (§8). Optioneel
+- ✅ **Fase 0 — fundering (klein).** Besluiten over de open keuzes (§8). Optioneel
   vooraf: de opschoning uit de code review (gedeelde `apiBase`/`download*`-utils),
   zodat de nieuwe code schoon start. `// @ts-check` + JSDoc-typedefs aanzetten
   voor alles onder `diagramcore/` zodat het type-contract afdwingbaar is.
-- **Fase 1 — read-only bewijs.** `diagramcore` model + typeRegistry + generieke
+- ✅ **Fase 1 — read-only bewijs.** `diagramcore` model + typeRegistry + generieke
   `ElementNode` met `class-box`-shape; profiel `canoniek-uml` met alleen
   elementTypes/compartments; adapter die het bestaande model inleest; activiteit
   "Diagrammen (0.5)". **Klaar als:** een bestaand diagram er in de nieuwe motor
   (vrijwel) hetzelfde uitziet als in de oude.
-- **Fase 2 — bewerken.** Elementen maken/hernoemen/verwijderen via de
+- ✅ **Fase 2 — bewerken.** Elementen maken/hernoemen/verwijderen via de
   "Maken"-taakbalk, connectoren tekenen via de "Verbinding"-taakbalk (met
   verbindingsregels), het taakbalk-raamwerk zelf incl. `Beeld → Taakbalken ▸`
   (§4.6), velden bewerken via de gegenereerde inspector, undo/clipboard/
   multi-diagram. **Klaar als:** een klein model volledig in 0.5 te bouwen is.
-- **Fase 3 — connector-materialisatie & layout.** Het generieke ASOC-patroon
+- ✅ **Fase 3 — connector-materialisatie & layout.** Het generieke ASOC-patroon
   (connector-met-velden → node + 3 edges), generalisatie- en dependency-connectoren,
   uitlijnen/verdelen/snap-grid naar core (incl. de core-menu-items en het
   uitlijn-balkje), auto-layout als eerste `layouts`-strategie van het
@@ -828,18 +1024,18 @@ met `npm run build` + visuele check, en levert iets werkends op.
   (eigen ElementType + `boundary`-shape, achter de elementen — §8.6b),
   validatie-hook. **Klaar als:**
   de canoniek-uml-weergave pariteit heeft met de oude editor op een referentiemodel.
-- **Fase 4 — serialisatie & persist.** Profiel-eigen import/export met hergebruik
+- ✅ **Fase 4 — serialisatie & persist.** (rest: rebuild vanuit 0.5) Profiel-eigen import/export met hergebruik
   van `editorNaarV3Model`/import-functies; opslaan/laden via de bestaande API.
   **Klaar als:** een V3-round-trip door de nieuwe motor byte-vergelijkbaar is
   (m.u.v. bekende volgorde-verschillen).
-- **Fase 5 — tweede profiel als lakmoesproef.** Voorstel: **puur UML** eerst
+- ✅ **Fase 5 — tweede profiel als lakmoesproef.** Voorstel: **puur UML** eerst
   (kleinste afstand: klasse, attribuut, operatie, associatie, generalisatie),
   daarna **OAS 3.1** (schemas als elementen, `$ref`s als connectoren). Pas hier
   blijkt of de abstractie klopt; verwacht: bijstellen van Field/CompartmentType.
-- **Fase 6 — omschakeling (aparte beslissing).** Pariteitschecklist aflopen,
+- ⬜ **Fase 6 — omschakeling (aparte beslissing).** Pariteitschecklist aflopen,
   oude `umlActivity` markeren als "klassiek", en pas na een gewenningsperiode
   opruimen. DRD en sequence-diagrammen: eerst een kort onderzoek (§8).
-- **Fase 7 (optioneel) — configuratie in het register.** De declaratieve kern van
+- ⬜ **Fase 7 (optioneel) — configuratie in het register.** (koppelvlak gevalideerd via de meta-editor, §8.9) De declaratieve kern van
   de descriptors verhuist naar een gegenereerd bitemporeel configuratie-register
   met API; de Studio laadt profielen daarvandaan, met frontend-caching en
   gebundelde fallback (uitwerking in §8.5). Pas zinvol na fase 5.
@@ -965,6 +1161,96 @@ met `npm run build` + visuele check, en levert iets werkends op.
    zelfstandige POC-shape zonder core-wijziging. Sluit aan op §8.5b
    (StyleType-tokens) en de lijnvormen (`presentatie.vorm`, inmiddels
    gebouwd: bezier/hoekig/recht — puur-uml is hoekig).
+
+11. **Relatie, Relatietype, tijdlijn en verbindingsregels 1..*** **(plan,
+   n.a.v. Marks metamodel-review 2026-07-04).** Vier samenhangende punten:
+
+   **a. Waar "een relatie is een soort GE" al vastligt.** In de core geldt
+   Connector ⊳ Element (zoals {Relatie} ⊳ {Representatie} in het
+   LGM-metamodel): het ElementType "relatie" heeft `isConnector: true` én
+   gewone compartimenten/properties — een relatie mét waarden
+   materialiseert als associatieklasse (ASOC). De **verbindingsregel
+   beschrijft dus alleen de aansluiting** (welke uiteinden mogen), nooit de
+   aard van de relatie; de aard (velden, kardinaliteiten, presentatie) zit
+   in het ElementType zelf. Dat de ontwerper een verbindingsregel als kale
+   lijn toont is dus correct maar onvolledig: het connectortype-als-element
+   (met compartimenten) verdient daar een eigen gedaante — zie c.
+
+   **b. Ontbrekende LGM-begrippen in het canoniek-uml-profiel.**
+   - `tijdlijn` ({Tijdlijnvoorkomen}: formeel/materieel) als property op
+     relatie én GE — bestaat in het oude model als `isMaterieel` (mapping:
+     materieel ↔ true); toevoegen als property + «formeel»/«materieel» in de
+     edge-/compartimentlabels, terugreis via de bestaande delta.
+   - `geordend` (Indicatie op {Rol}) → boolean-property + `{ordered}`-label.
+   - {Relatietype} (associatie/directioneel/aggregatie/compositie/
+     overerving/afhankelijkheid): blijft gemodelleerd als **aparte
+     connector-ElementTypes** (zoals nu: relatie/compositie/generalisatie/
+     gebruik) — dat matcht de taakbalk en de verbindingsregels het best.
+     Aggregatie ontbreekt in canoniek-uml (bewust? besluiten); directioneel
+     is al een vinkje op de relatie.
+
+   **c. Verbindingsregels worden 1..*** **(metametamodel-correctie).** Marks
+   model (ConnectorType ◆ 1..* Verbindingsregel{sourceType, targetType})
+   is rijker dan ons huidige `bron/doel` (één regel; lijsten = cartesiaans
+   product — "gebruik ENT→enum én GE→datatype maar niet ENT→datatype" kan
+   nu niet). Plan:
+   - schema: `ElementType.verbindingsregels?: [{bron: string[], doel:
+     string[]}]` naast het bestaande `bron`/`doel` (dat als één regel blijft
+     werken); `vindConnectorType`/`isValidConnection`/registry-validatie
+     lopen over álle regels.
+   - profiel-ontwerper: **ConnectorType prominenter** — meerdere
+     regel-lijnen kunnen hetzelfde connectortype vertegenwoordigen.
+     Trede 1: regel-lijnen met dezelfde náám bundelen bij het genereren
+     tot één connectortype met meerdere verbindingsregels
+     (presentatie-properties van de eerste lijn winnen). Trede 2 (zodra
+     het keuzelijst-datatype er is): een «connectortype»-node in het
+     ontwerp met eigen properties én compartimenten (want: soort GE),
+     waar regel-lijnen aan refereren — één-op-één met het metametamodel.
+
+   ✅ **b gebouwd** (2026-07-04): materieel-vinkje op ENT/GE/REL
+   (badge + «materieel»-label), geordend op REL ({ordered});
+   aggregatie-besluit staat nog open. ✅ **c gebouwd** (2026-07-04):
+   `verbindingsregels` 1..* in schema/validatie/matching
+   (`verbindingsregelsVan`), ontwerper bundelt regel-lijnen op naam en de
+   inverse toont elk bron×doel-paar als eigen lijn.
+
+   **d. Zelf-verwijzende regels zichtbaar: het "oortje".** Een connector
+   met source == target (bv. de verbindingsregels Relatie/Generalisatie
+   ENT→ENT in de ontwerp-weergave van canoniek-uml) was onzichtbaar;
+   ConnectorEdge tekent nu een lus buitenom de node. ✅ gebouwd
+   (2026-07-04).
+
+12. **Ideeënlijst van Mark (2026-07-04, uit `STUDIO ideas.md`) — duiding.**
+   - **L01 z-order** (voor/achter): klein; core kent al `zIndex` voor
+     achtergrond-elementen → contextmenu-acties "naar voren/achteren" +
+     `data.zIndex`.
+   - **L02 maak gelijk van maat**: past in de uitlijn-familie (core-
+     geometrie); "laatst geselecteerde is de maatbron" zoals de klassieke
+     conventie.
+   - **L03 normalisatie overriden (clip)**: bestaat de facto — een expliciet
+     gekozen handle (edge verslepen) wint al van de kortste weg; nog nodig:
+     per uiteinde kunnen "vastpinnen" via het contextmenu i.p.v. alleen
+     via slepen. De kortste-weg-keuze zelf rekent sinds vandaag met de
+     gemeten node-maten (normaliseer-fix).
+   - **G01 eigen shapes (SVG-upload)**: spannend; veilig te doen als
+     "svg-sjabloon"-ShapeType die een (gesanitiseerde) SVG-string uit de
+     descriptor rendert met placeholders voor naam/velden — serialiseerbaar
+     en dus register-klaar. Ontwerpvraag voor de vormgevingssessie.
+   - **G03 font**: hoort bij de StyleType-tokens (§8.5b): --dc-font-tokens.
+   - **P01 meerdere profielen als ontwerp-diagram**: de ontwerper is een
+     gewone activiteit met multi-diagram — elk profiel zijn eigen diagram
+     in dezelfde sandbox + per diagram genereren/exporteren. Vooral een
+     kwestie van "Bekijk bestaand profiel" een nieuw diagram laten maken
+     i.p.v. alles te vervangen.
+   - **P02 hiërarchie in het profiel**: een descriptor-veld dat een
+     bevat-connectortype aanwijst (bv. `hierarchie: "compositie"`); de
+     elementen-browser (en straks de tree van een gegenereerde activiteit)
+     nest dan op die relatie i.p.v. plat te groeperen. Samen met **E01**
+     (geneste tree-browser) één bouwstap.
+   - **P02b placement handler zichtbaar / P03 autoroute in de ontwerper**:
+     de ontwerper is een fabriek-activiteit — een layout-strategie voor het
+     ontwerp-profiel (ET's boven, CT's midden, VT's onder — het grid van
+     `ontwerpUitProfiel` als échte auto-layout) geeft beide in één klap.
 
 ## 9. Relatie met de code review van 2026-06-30
 

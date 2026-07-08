@@ -19,6 +19,17 @@
  * is een eigen fase — vgl. canoniek-uml fase 4).
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
+import { registreerHandlerInfo } from "../../diagramcore/types/handlerCatalogus.js";
+
+// P02: benoem de OAS-resolvers voor de handler-catalogus (PE-weergave).
+registreerHandlerInfo("resolver", "json-type", {
+  naam: "JSON-typen",
+  beschrijving: "Vaste lijst JSON-primitieven, eventueel met format (string «date», …).",
+});
+registreerHandlerInfo("resolver", "schema-ref", {
+  naam: "Schemas ($ref)",
+  beschrijving: "Alle getekende schemas/enums als $ref-doel voor een property.",
+});
 
 export const OAS31_ID = "oas31";
 
@@ -55,6 +66,7 @@ const elementTypes = [
     stereotype: "«schema»",
     shape: "class-box",
     kleur: "#d1fae5",
+    icoon: "schema",
     properties: [KLEUR_VELD, { key: "beschrijving", label: "description", datatype: "tekst" }],
     compartments: [{ id: "properties", label: null, fieldType: "property" }],
   },
@@ -65,6 +77,7 @@ const elementTypes = [
     stereotype: "«enum»",
     shape: "class-box",
     kleur: "#fef3c7",
+    icoon: "enumeratie",
     properties: [KLEUR_VELD],
     compartments: [{ id: "waarden", label: null, fieldType: "literal" }],
   },
@@ -76,6 +89,7 @@ const elementTypes = [
     stereotype: "«operation»",
     shape: "class-box",
     kleur: "#e0f2fe",
+    icoon: "operatie",
     properties: [
       KLEUR_VELD,
       { key: "method", label: "method (GET/POST/…)", datatype: "string" },
@@ -102,6 +116,7 @@ const elementTypes = [
     label: "Notitie",
     kort: "NOT",
     shape: "note",
+    icoon: "notitie",
     handleStijl: "onzichtbaar",
     properties: [{ key: "tekst", datatype: "tekst" }, KLEUR_VELD],
   },
@@ -110,6 +125,7 @@ const elementTypes = [
     label: "Kader",
     kort: "KADER",
     shape: "boundary",
+    icoon: "kader",
     achtergrond: true,
     handleStijl: "onzichtbaar",
     properties: [
@@ -125,6 +141,7 @@ const elementTypes = [
     label: "$ref",
     kort: "$ref",
     shape: "edge",
+    icoon: "verwijzing",
     isConnector: true,
     bron: { elementTypes: ["schema", "operatie"] },
     doel: { elementTypes: SCHEMAS },
@@ -146,6 +163,7 @@ const elementTypes = [
     label: "allOf",
     kort: "▷ allOf",
     shape: "edge",
+    icoon: "samenvoeging",
     isConnector: true,
     bron: { elementTypes: ["schema"] },
     doel: { elementTypes: ["schema"] },
@@ -162,6 +180,7 @@ const elementTypes = [
     label: "items (array)",
     kort: "[ ]",
     shape: "edge",
+    icoon: "reeks",
     isConnector: true,
     bron: { elementTypes: ["schema"] },
     doel: { elementTypes: SCHEMAS },
@@ -177,6 +196,39 @@ const elementTypes = [
         conn.data?.rolnaam
           ? { bron: [], doel: [], kaal: [{ zijde: "bron", delen: [{ tekst: conn.data.rolnaam, soort: "rolnaam" }] }] }
           : { bron: [], doel: [], kaal: [] },
+    },
+  },
+  {
+    // oneOf/anyOf: variant-verwijzingen (discriminator-achtige structuren).
+    id: "oneOf",
+    label: "oneOf",
+    kort: "1..1",
+    shape: "edge",
+    icoon: "keuze-een",
+    isConnector: true,
+    bron: { elementTypes: ["schema"] },
+    doel: { elementTypes: SCHEMAS },
+    edgePresentatie: {
+      lijn: "dash-4-4",
+      kleur: "#d946ef",
+      markerEnd: "pijl-open",
+      labels: [{ zijde: "midden", delen: [{ tekst: "«oneOf»", soort: "constraint", kleur: "#d946ef" }] }],
+    },
+  },
+  {
+    id: "anyOf",
+    label: "anyOf",
+    kort: "0..n",
+    shape: "edge",
+    icoon: "keuze-elk",
+    isConnector: true,
+    bron: { elementTypes: ["schema"] },
+    doel: { elementTypes: SCHEMAS },
+    edgePresentatie: {
+      lijn: "dash-4-4",
+      kleur: "#f59e0b",
+      markerEnd: "pijl-open",
+      labels: [{ zijde: "midden", delen: [{ tekst: "«anyOf»", soort: "constraint", kleur: "#f59e0b" }] }],
     },
   },
 ];
@@ -213,10 +265,101 @@ const referenceTypes = [
   { id: "schema-ref", label: "Schema ($ref)" },
 ];
 
+/**
+ * Gedeelde rijen-layout (auto-layout én import-plaatsing): operaties op rij 0
+ * gesorteerd op CRUD (POST, GET, PUT, PATCH, DELETE, daarbinnen op pad),
+ * daarna per $ref-stap een rij naar beneden; wat nergens aan hangt komt op de
+ * onderste rij. Binnen een rij wordt per `perRij` elementen omgeslagen.
+ *
+ * @param {{ids: string[], elements: Record<string, any>, edges: {source: string, target: string}[], perRij?: number}} opties
+ * @returns {Record<string, {x: number, y: number}>} posities per element-id
+ */
+export function oasRijenPosities({ ids, elements, edges, perRij = 5 }) {
+  const idSet = new Set(ids);
+  const uitgaand = new Map();
+  for (const e of edges || []) {
+    if (!idSet.has(e.source) || !idSet.has(e.target)) continue;
+    if (!uitgaand.has(e.source)) uitgaand.set(e.source, []);
+    uitgaand.get(e.source).push(e.target);
+  }
+  const laag = new Map();
+  let rand = ids.filter((eid) => elements?.[eid]?.elementType === "operatie");
+  rand.forEach((eid) => laag.set(eid, 0));
+  let diepte = 0;
+  while (rand.length) {
+    diepte += 1;
+    const volgende = [];
+    for (const vanId of rand) {
+      for (const doel of uitgaand.get(vanId) || []) {
+        if (!laag.has(doel)) {
+          laag.set(doel, diepte);
+          volgende.push(doel);
+        }
+      }
+    }
+    rand = volgende;
+  }
+  const maxLaag = Math.max(0, ...laag.values());
+  for (const eid of ids) if (!laag.has(eid)) laag.set(eid, maxLaag + 1);
+
+  const perLaag = new Map();
+  for (const eid of ids) {
+    const l = laag.get(eid);
+    if (!perLaag.has(l)) perLaag.set(l, []);
+    perLaag.get(l).push(eid);
+  }
+  const CRUD = { post: 0, get: 1, put: 2, patch: 3, delete: 4 };
+  // Ouders per kind (voor het zwaartepunt van volgende rijen).
+  const inkomend = new Map();
+  for (const e of edges || []) {
+    if (!idSet.has(e.source) || !idSet.has(e.target)) continue;
+    if (!inkomend.has(e.target)) inkomend.set(e.target, []);
+    inkomend.get(e.target).push(e.source);
+  }
+  const posities = {};
+  let y = 60;
+  for (const l of [...perLaag.keys()].sort((a, b) => a - b)) {
+    const groep = perLaag.get(l);
+    if (l === 0) {
+      groep.sort((a, b) => {
+        const ea = elements?.[a]?.data || {};
+        const eb = elements?.[b]?.data || {};
+        const ra = CRUD[(ea.method || "").toLowerCase()] ?? 9;
+        const rb = CRUD[(eb.method || "").toLowerCase()] ?? 9;
+        if (ra !== rb) return ra - rb;
+        return (ea.pad || a).localeCompare(eb.pad || b);
+      });
+    } else {
+      // Zwaartepunt van de (al geplaatste) ouders: kinderen komen zo
+      // (ongeveer) ónder hun operatie/schema te staan; alfabetisch als
+      // scheidsrechter bij gelijkspel of zonder geplaatste ouder.
+      const zwaartepunt = (eid) => {
+        const xs = (inkomend.get(eid) || [])
+          .map((ouder) => posities[ouder]?.x)
+          .filter((x) => x !== undefined);
+        return xs.length ? xs.reduce((som, x) => som + x, 0) / xs.length : Infinity;
+      };
+      groep.sort((a, b) => {
+        const za = zwaartepunt(a);
+        const zb = zwaartepunt(b);
+        if (za !== zb) return za - zb;
+        return (elements?.[a]?.naam || a).localeCompare(elements?.[b]?.naam || b);
+      });
+    }
+    groep.forEach((eid, i) => {
+      posities[eid] = { x: 80 + (i % perRij) * 320, y: y + Math.floor(i / perRij) * 280 };
+    });
+    y += Math.ceil(groep.length / perRij) * 280 + 40;
+  }
+  return posities;
+}
+
 export const oas31DiagramType = {
   id: OAS31_ID,
   label: "OpenAPI 3.1",
   style: "uml-klassiek",
+  // Boomordening in de elementen-browser: operatie → ($ref) → schema → ….
+  hierarchie: "ref",
   fieldTypes,
   elementTypes,
   referenceTypes,
@@ -224,8 +367,27 @@ export const oas31DiagramType = {
   taakbalken: [
     { id: "maken", label: "Maken", acties: "elementTypes" },
     { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },
+    { id: "auto-layout", label: "Auto-layout", acties: "layouts" },
   ],
-  layouts: [],
+  /**
+   * Gelaagde OAS-layout: operaties op rij 0 (bovenaan), daarna per $ref-stap
+   * een rij naar beneden (schemas op afhankelijkheidsafstand); wat nergens
+   * aan hangt komt op de onderste rij. De operatie-rij sorteert van links
+   * naar rechts volgens CRUD (POST, GET, PUT/PATCH, DELETE), daarbinnen op
+   * pad; schema-rijen alfabetisch op naam.
+   */
+  layouts: [
+    {
+      id: "oas-lagen",
+      label: "Auto-layout",
+      run: ({ flowNodes, flowEdges, elements }) =>
+        oasRijenPosities({
+          ids: flowNodes.filter((n) => !n.hidden).map((n) => n.id),
+          elements,
+          edges: flowEdges || [],
+        }),
+    },
+  ],
 };
 
 let _teller = 0;

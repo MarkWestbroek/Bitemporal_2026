@@ -5,6 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { vanOasDocument } from "./adapter.js";
+import { oasRijenPosities } from "./index.js";
 
 const doc = {
   openapi: "3.1.0",
@@ -136,4 +137,125 @@ test("oas-import: één diagram met alle niet-connector-elementen in een grid", 
   assert.ok(geplaatst.includes("Persoon") && geplaatst.includes("Kleur"));
   assert.equal(diag.nodes.length, 7, "4 schemas/enums + 3 operaties");
   assert.equal(meta.oasInfo.title, "Personen-API");
+});
+
+test("oas-import: oneOf-varianten worden connectoren; tags worden diagrammen", async () => {
+  const { vanOasDocument: van } = await import("./adapter.js");
+  const docMetTags = {
+    openapi: "3.1.0",
+    info: { title: "Tags-API", version: "1" },
+    paths: {
+      "/personen": { get: { operationId: "listPersonen", tags: ["personen"], responses: { 200: { content: { "application/json": { schema: { $ref: "#/components/schemas/Persoon" } } } } } } },
+      "/orders": { get: { operationId: "listOrders", tags: ["orders"], responses: { 200: { content: { "application/json": { schema: { $ref: "#/components/schemas/Order" } } } } } } },
+    },
+    components: {
+      schemas: {
+        Persoon: { type: "object", properties: { naam: { type: "string" } } },
+        Order: { type: "object", properties: { regels: { type: "array", items: { $ref: "#/components/schemas/Orderregel" } } } },
+        Orderregel: { type: "object", properties: { aantal: { type: "integer" } } },
+        Betaalwijze: { oneOf: [{ $ref: "#/components/schemas/Persoon" }, { $ref: "#/components/schemas/Order" }] },
+      },
+    },
+  };
+  const { elements, diagrams } = van(docMetTags);
+  const oneOfs = Object.values(elements).filter((el) => el.elementType === "oneOf");
+  assert.equal(oneOfs.length, 2, "beide oneOf-varianten");
+  assert.ok(oneOfs.every((c) => c.source === "Betaalwijze"));
+
+  assert.ok(diagrams.tag_personen, "diagram per tag");
+  assert.ok(diagrams.tag_orders);
+  const ordersNodes = diagrams.tag_orders.nodes.map((n) => n.elementId);
+  assert.ok(ordersNodes.includes("Order"), "direct geraakte schema");
+  assert.ok(ordersNodes.includes("Orderregel"), "transitief (items) geraakte schema");
+  assert.ok(!ordersNodes.includes("Persoon"), "andere tag blijft erbuiten");
+});
+
+test("oas-terugreis: naarOasDocument reconstrueert schemas, refs, allOf en paths", async () => {
+  const { vanOasDocument: van, naarOasDocument: naar } = await import("./adapter.js");
+  const core = van(doc);
+  const terug = naar({ elements: core.elements, meta: core.meta });
+
+  assert.equal(terug.openapi, "3.1.0");
+  assert.equal(terug.info.title, "Personen-API");
+
+  const persoon = terug.components.schemas.Persoon;
+  assert.deepEqual(persoon.required, ["bsn"]);
+  assert.deepEqual(persoon.properties.geboortedatum, { type: "string", format: "date" });
+  assert.deepEqual(persoon.properties.adres, { $ref: "#/components/schemas/Adres" });
+  assert.deepEqual(persoon.properties.kleuren, {
+    type: "array",
+    items: { $ref: "#/components/schemas/Kleur" },
+  });
+
+  const werknemer = terug.components.schemas.Werknemer;
+  assert.ok(Array.isArray(werknemer.allOf), "allOf blijft");
+  assert.deepEqual(werknemer.allOf[0], { $ref: "#/components/schemas/Persoon" });
+  assert.deepEqual(werknemer.allOf[1].required, ["personeelsnummer"]);
+
+  assert.deepEqual(terug.components.schemas.Kleur.enum, ["rood", "blauw"]);
+
+  const get = terug.paths["/personen/{id}"].get;
+  assert.equal(get.operationId, "getPersoon");
+  assert.deepEqual(get.responses["200"].content["application/json"].schema, {
+    $ref: "#/components/schemas/Persoon",
+  });
+  const post = terug.paths["/personen"].post;
+  assert.deepEqual(post.requestBody.content["application/json"].schema, {
+    $ref: "#/components/schemas/Persoon",
+  });
+});
+
+test("oasRijenPosities: operaties op rij 0 in CRUD-volgorde, schemas eronder", () => {
+  const elements = {
+    opDel: { id: "opDel", elementType: "operatie", naam: "del", data: { method: "DELETE", pad: "/x" } },
+    opPost: { id: "opPost", elementType: "operatie", naam: "post", data: { method: "POST", pad: "/x" } },
+    sch: { id: "sch", elementType: "schema", naam: "S", data: {} },
+  };
+  const pos = oasRijenPosities({
+    ids: ["opDel", "opPost", "sch"],
+    elements,
+    edges: [{ source: "opPost", target: "sch" }],
+  });
+  assert.equal(pos.opPost.y, pos.opDel.y, "operaties delen rij 0");
+  assert.ok(pos.opPost.x < pos.opDel.x, "POST staat links van DELETE (CRUD)");
+  assert.ok(pos.sch.y > pos.opPost.y, "schema staat onder de operaties");
+});
+
+test("vanOasDocument: operaties staan boven de schemas in het componenten-diagram", () => {
+  const core = vanOasDocument(doc);
+  const posities = Object.fromEntries(
+    core.diagrams.componenten.nodes.map((n) => [n.elementId, n.position])
+  );
+  const opY = Math.max(
+    ...Object.values(core.elements)
+      .filter((el) => el.elementType === "operatie")
+      .map((el) => posities[el.id].y)
+  );
+  const schemaMinY = Math.min(
+    ...Object.values(core.elements)
+      .filter((el) => el.elementType === "schema" && posities[el.id])
+      .map((el) => posities[el.id].y)
+  );
+  assert.ok(opY < schemaMinY, `operaties (y<=${opY}) horen boven de schemas (y>=${schemaMinY})`);
+});
+
+test("oasRijenPosities: kinderen sorteren onder hun ouders (zwaartepunt)", () => {
+  const elements = {
+    opA: { id: "opA", elementType: "operatie", naam: "a", data: { method: "POST", pad: "/a" } },
+    opB: { id: "opB", elementType: "operatie", naam: "b", data: { method: "GET", pad: "/b" } },
+    sA: { id: "sA", elementType: "schema", naam: "Zebra", data: {} },
+    sB: { id: "sB", elementType: "schema", naam: "Aap", data: {} },
+  };
+  const pos = oasRijenPosities({
+    ids: ["opA", "opB", "sA", "sB"],
+    elements,
+    edges: [
+      { source: "opA", target: "sA" },
+      { source: "opB", target: "sB" },
+    ],
+  });
+  assert.ok(pos.opA.x < pos.opB.x, "POST links van GET");
+  // alfabetisch zou Aap eerst komen; het ouder-zwaartepunt zet Zebra (kind
+  // van de linker operatie) links van Aap (kind van de rechter operatie)
+  assert.ok(pos.sA.x < pos.sB.x, "kind volgt zijn ouder, niet het alfabet");
 });

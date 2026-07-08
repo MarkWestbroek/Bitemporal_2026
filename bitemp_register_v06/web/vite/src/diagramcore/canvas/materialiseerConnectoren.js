@@ -39,9 +39,20 @@ export const ANKER_PREFIX = "anker:";
 export function vindConnectorType(diagramType, bronElement, doelElement, voorkeur = null) {
   if (!bronElement || !doelElement) return null;
   const kandidaten = (diagramType?.elementTypes || []).filter((et) => et.isConnector);
+  // 1..* verbindingsregels (volledige vorm) of de verkorte bron/doel-vorm:
+  // een verbinding past zodra één regel de combinatie toestaat.
+  const regelsVan = (et) =>
+    Array.isArray(et.verbindingsregels) && et.verbindingsregels.length
+      ? et.verbindingsregels.map((r) => ({
+          bron: r?.bron?.elementTypes || r?.bron || [],
+          doel: r?.doel?.elementTypes || r?.doel || [],
+        }))
+      : [{ bron: et.bron?.elementTypes || [], doel: et.doel?.elementTypes || [] }];
   const past = (et) =>
-    (et.bron?.elementTypes || []).includes(bronElement.elementType) &&
-    (et.doel?.elementTypes || []).includes(doelElement.elementType);
+    regelsVan(et).some(
+      (r) =>
+        r.bron.includes(bronElement.elementType) && r.doel.includes(doelElement.elementType)
+    );
   if (voorkeur) {
     const gekozen = kandidaten.find((et) => et.id === voorkeur);
     return gekozen && past(gekozen) ? gekozen : null;
@@ -54,10 +65,15 @@ function heeftVelden(connector) {
   return (connector.compartimenten || []).some((c) => (c.velden || []).length > 0);
 }
 
-/** Geschat middelpunt van een node (posities zijn linksboven; maat geschat). */
-function midden(ref) {
-  const w = ref?.size?.width ?? 200;
-  const h = ref?.size?.height ?? 80;
+/**
+ * Middelpunt van een node: expliciete size (diagram-lidmaatschap) wint,
+ * daarna de gemeten maat (React Flow, via de `maten`-parameter), en pas
+ * als laatste de 200×80-schatting. Zonder echte maten koos de kortste-weg
+ * bij brede/lage nodes geregeld de verkeerde zijde.
+ */
+function midden(ref, maat) {
+  const w = ref?.size?.width ?? maat?.width ?? 200;
+  const h = ref?.size?.height ?? maat?.height ?? 80;
   return { x: ref.position.x + w / 2, y: ref.position.y + h / 2 };
 }
 
@@ -82,7 +98,7 @@ export function besteZijde(van, naar) {
  *   extraNodes  — synthetische nodes: ankers (id `anker:<conn>`) en, waar een
  *                 DiagramNode ontbreekt, de connector-box zelf (id = conn.id)
  */
-export function materialiseerConnectoren(elements, diagram, elementTypesById) {
+export function materialiseerConnectoren(elements, diagram, elementTypesById, maten = null) {
   const nodeRefs = new Map((diagram?.nodes || []).map((n) => [n.elementId, n]));
   const edges = [];
   const extraNodes = [];
@@ -94,8 +110,8 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
     const bronRef = nodeRefs.get(el.source);
     const doelRef = nodeRefs.get(el.target);
     if (!bronRef || !doelRef) continue; // beide uiteinden moeten op het diagram staan
-    const bronMid = midden(bronRef);
-    const doelMid = midden(doelRef);
+    const bronMid = midden(bronRef, maten?.[el.source]);
+    const doelMid = midden(doelRef, maten?.[el.target]);
 
     const labels = et.hooks?.edgeLabels?.(el) || {};
     // Handmatig versleepte label-posities (data.labelOffsets, per zijde).
@@ -117,14 +133,32 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
       if (el.naam) {
         kaalLabels.push({ zijde: "midden", delen: [{ tekst: el.naam, soort: "rolnaam" }] });
       }
+      // Zelf-lus (oortje): standaard hoekig en van boven naar rechts —
+      // de kortste weg is bij één punt betekenisloos.
+      const isLus = el.source === el.target;
       edges.push({
         id: `conn:${el.id}`,
         source: el.source,
         target: el.target,
-        // Expliciete handles winnen; anders de kortste weg.
-        sourceHandle: el.data?.sourceHandle || `source-${besteZijde(bronMid, doelMid)}`,
-        targetHandle: el.data?.targetHandle || `target-${besteZijde(doelMid, bronMid)}`,
-        data: { connectorId: el.id, presentatie: { ...basisPresentatie, labels: metOffsets(kaalLabels) } },
+        // Expliciete handles winnen; anders de kortste weg (of de lus-default).
+        sourceHandle:
+          el.data?.sourceHandle || (isLus ? "source-top" : `source-${besteZijde(bronMid, doelMid)}`),
+        targetHandle:
+          el.data?.targetHandle || (isLus ? "target-right" : `target-${besteZijde(doelMid, bronMid)}`),
+        data: {
+          connectorId: el.id,
+          // Handmatige knikpunten (ctrl-klik; alleen in deze directe gedaante —
+          // de gematerialiseerde gedaante heeft het anker al als handvat).
+          knikken:
+            Array.isArray(el.data?.knikken) && el.data.knikken.length ? el.data.knikken : null,
+          presentatie: {
+            ...basisPresentatie,
+            // Per-connector lijnvorm (contextmenu) wint van het type-default;
+            // een lus is standaard hoekig (het nette EA-oortje).
+            vorm: el.data?.vorm || (isLus ? "hoekig" : basisPresentatie.vorm),
+            labels: metOffsets(kaalLabels),
+          },
+        },
       });
       continue;
     }
@@ -166,7 +200,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
         // zichtbaar aan de bronzijde.
         presentatie: {
           lijn: "solid",
-          vorm: basisPresentatie.vorm,
+          vorm: el.data?.vorm || basisPresentatie.vorm,
           kleur: basisPresentatie.kleur || "#64748b",
           markerStart: basisPresentatie.markerStart,
           labels: metOffsets(labels.bron || []),
@@ -183,7 +217,7 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById) {
         connectorId: el.id,
         presentatie: {
           lijn: "solid",
-          vorm: basisPresentatie.vorm,
+          vorm: el.data?.vorm || basisPresentatie.vorm,
           kleur: basisPresentatie.kleur || "#64748b",
           markerEnd: basisPresentatie.markerEnd ?? (el.data?.directioneel ? "pijl-open" : null),
           labels: metOffsets(labels.doel || []),

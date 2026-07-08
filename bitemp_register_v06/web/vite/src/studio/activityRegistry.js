@@ -37,6 +37,23 @@
 const _activiteiten = [];
 const _index = new Map();
 
+// Abonnementen: async registraties (bv. profielen uit de git-map) moeten de
+// activity bar kunnen verversen. useSyncExternalStore-vriendelijk: een
+// versienummer als snapshot.
+let _versie = 0;
+const _luisteraars = new Set();
+
+/** @param {() => void} fn @returns {() => void} afmelden */
+export function abonneerOpActiviteiten(fn) {
+  _luisteraars.add(fn);
+  return () => _luisteraars.delete(fn);
+}
+
+/** Snapshot voor useSyncExternalStore. */
+export function activiteitenVersie() {
+  return _versie;
+}
+
 /**
  * Registreer één activiteit. Volgorde van registratie = volgorde in de activity bar.
  * @param {object} descriptor
@@ -53,6 +70,8 @@ export function registreerActiviteit(descriptor) {
     _activiteiten.push(descriptor);
   }
   _index.set(descriptor.id, descriptor);
+  _versie += 1;
+  _luisteraars.forEach((fn) => fn());
 }
 
 /** Registreer meerdere activiteiten in volgorde. */

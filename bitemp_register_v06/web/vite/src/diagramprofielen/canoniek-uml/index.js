@@ -88,7 +88,9 @@ const elementTypes = [
     stereotype: "«entiteit»",
     shape: "class-box",
     kleur: "#bfdbfe",
-    properties: [KLEUR_VELD],
+    icoon: "klasse",
+    // tijdlijnvoorkomen (LGM): materieel ↔ isMaterieel; formeel = uit.
+    properties: [KLEUR_VELD, { key: "materieel", label: "materieel (tijdlijn)", datatype: "boolean" }],
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
@@ -139,7 +141,8 @@ const elementTypes = [
     stereotype: "«gegevenselement»",
     shape: "class-box",
     kleur: "#bbf7d0",
-    properties: [KLEUR_VELD],
+    icoon: "veld",
+    properties: [KLEUR_VELD, { key: "materieel", label: "materieel (tijdlijn)", datatype: "boolean" }],
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
@@ -158,11 +161,16 @@ const elementTypes = [
     stereotype: "«relatie»",
     shape: "class-box",
     kleur: "#ede9fe",
+    icoon: "relatie-box",
     isConnector: true,
     bron: { elementTypes: ["entiteit"] },
     doel: { elementTypes: ["entiteit"] },
     edgePresentatie: { lijn: "solid", kleur: "#64748b" },
-    properties: [KLEUR_VELD],
+    properties: [
+      KLEUR_VELD,
+      { key: "materieel", label: "materieel (tijdlijn)", datatype: "boolean" },
+      { key: "geordend", label: "geordend {ordered}", datatype: "boolean" },
+    ],
     compartments: [
       { id: "velden", label: null, fieldType: "attribuut" },
       { id: "afgeleid", label: null, fieldType: "afgeleidVeld" },
@@ -190,6 +198,17 @@ const elementTypes = [
           doel.push({ zijde: "bron", delen: [{ tekst: `◀ ${d.naamLabelTerug}`, soort: "naam" }] });
           kaal.push({ zijde: "doel", delen: [{ tekst: `◀ ${d.naamLabelTerug}`, soort: "naam" }] });
         }
+        // Tijdlijnvoorkomen (LGM): «materieel» op de lijn; formeel is default.
+        if (d.materieel) {
+          const label = { zijde: "midden", delen: [{ tekst: "«materieel»", soort: "constraint", kleur: "#0369a1" }] };
+          kaal.push(label);
+          bron.push(label);
+        }
+        if (d.geordend) {
+          const label = { zijde: "doel", delen: [{ tekst: "{ordered}", soort: "constraint" }] };
+          kaal.push(label);
+          doel.push(label);
+        }
         return { bron, doel, kaal };
       },
     },
@@ -201,6 +220,7 @@ const elementTypes = [
     stereotype: "«enumeratie»",
     shape: "class-box",
     kleur: "#fef3c7",
+    icoon: "enumeratie",
     properties: [KLEUR_VELD],
     compartments: [{ id: "waarden", label: null, fieldType: "waarde" }],
   },
@@ -211,6 +231,7 @@ const elementTypes = [
     stereotype: "«gegevenstype»",
     shape: "class-box",
     kleur: "#dbeafe",
+    icoon: "datatype",
     // Validatie/normalisatie/weergave zijn element-properties met eigen
     // PropertyTypeEditors (implementaties.jsx registreert "validatieregels"
     // en "weergaveregels" in de datatype-registry) — het PropertyType-patroon
@@ -268,14 +289,34 @@ const elementTypes = [
     stereotype: "«instantie»",
     shape: "class-box",
     kleur: "#fde68a",
+    icoon: "lijst",
     properties: [KLEUR_VELD],
     compartments: [{ id: "eigenschappen", label: null, fieldType: "eigenschap" }],
+  },
+  {
+    // Package = het V3-domein als gewoon elementtype (geen core-concept).
+    // Het bevat-lidmaatschap is een connector die je meestal niet tekent;
+    // de elementen-browser ordent er de boom mee en de adapter vertaalt
+    // hem heen en terug naar het domein-veld van V3.
+    id: "package",
+    label: "Package (domein)",
+    kort: "PKG",
+    stereotype: "«package»",
+    shape: "package",
+    kleur: "#f1f5f9",
+    icoon: "package",
+    // Drop-doel op canvas en in de boom: erin slepen legt de bevat-connector.
+    containerVoor: "bevat",
+    // Zoals mappen in een verkenner: dicht beginnen, openklikken op verzoek.
+    standaardDichtInBoom: true,
+    properties: [KLEUR_VELD],
   },
   {
     id: "notitie",
     label: "Notitie",
     kort: "NOT",
     shape: "note",
+    icoon: "notitie",
     handleStijl: "onzichtbaar",
     properties: [{ key: "tekst", datatype: "tekst" }, KLEUR_VELD],
   },
@@ -286,6 +327,7 @@ const elementTypes = [
     stereotype: "«constraint»",
     shape: "rounded",
     kleur: "#e0f2fe",
+    icoon: "constraint",
     handleStijl: "onzichtbaar",
     properties: [{ key: "expressie", label: "expressie (OCL/CEL)", datatype: "cel-expressie" }, KLEUR_VELD],
   },
@@ -294,6 +336,7 @@ const elementTypes = [
     label: "Kader",
     kort: "KADER",
     shape: "boundary",
+    icoon: "kader",
     achtergrond: true,
     handleStijl: "onzichtbaar",
     properties: [
@@ -308,6 +351,7 @@ const elementTypes = [
     label: "Compositie",
     kort: "◆",
     shape: "edge",
+    icoon: "compositie",
     isConnector: true,
     bron: { elementTypes: ["entiteit"] },
     doel: { elementTypes: ["gegevenselement"] },
@@ -318,6 +362,7 @@ const elementTypes = [
     label: "Generalisatie",
     kort: "▷",
     shape: "edge",
+    icoon: "generalisatie",
     isConnector: true,
     bron: { elementTypes: ["entiteit"] },
     doel: { elementTypes: ["entiteit"] },
@@ -335,6 +380,7 @@ const elementTypes = [
     label: "Gebruik («use»)",
     kort: "use",
     shape: "edge",
+    icoon: "gebruik",
     isConnector: true,
     bron: { elementTypes: ["entiteit", "gegevenselement", "relatie"] },
     doel: { elementTypes: ["enumeratie", "gegevenstype", "referentielijstInstantie"] },
@@ -344,6 +390,29 @@ const elementTypes = [
       markerEnd: "pijl-open",
       labels: [{ zijde: "midden", delen: [{ tekst: "«use»", soort: "constraint", kleur: "#7c3aed" }] }],
     },
+  },
+  {
+    // Package-lidmaatschap ("plaatsing in"): meestal alleen een model-feit
+    // (boomordening, V3-domein), maar tekenbaar als subtiele stippellijn.
+    id: "bevat",
+    label: "Bevat (package)",
+    kort: "pkg ∋",
+    shape: "edge",
+    icoon: "bevat",
+    isConnector: true,
+    bron: { elementTypes: ["package"] },
+    doel: {
+      elementTypes: [
+        "entiteit",
+        "enumeratie",
+        "gegevenstype",
+        "referentielijstInstantie",
+        "package",
+        "notitie",
+        "constraint",
+      ],
+    },
+    edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#94a3b8" },
   },
 ];
 
@@ -396,6 +465,25 @@ export const canoniekUmlDiagramType = {
   id: CANONIEK_UML_ID,
   label: "Canoniek datamodel",
   style: "uml-klassiek",
+  // P02: eerst package-lidmaatschap (domein), daarna de compositie
+  // (ENT ◆ GE) — de browser toont packages → entiteiten → gegevenselementen.
+  hierarchie: ["bevat", "compositie"],
+  hooks: {
+    /**
+     * Gespiegelde composities uit het oude model zijn presentatie-edges
+     * (markerStart "ruit"), geen connector-elementen — lever ze als extra
+     * hiërarchie-paren aan de elementen-browser.
+     */
+    hierarchieParen: ({ diagrams }) => {
+      const paren = [];
+      for (const d of Object.values(diagrams || {})) {
+        for (const e of d.edges || []) {
+          if (e.data?.presentatie?.markerStart === "ruit") paren.push([e.source, e.target]);
+        }
+      }
+      return paren;
+    },
+  },
   elementTypes,
   fieldTypes,
   referenceTypes,
@@ -458,6 +546,7 @@ export function maakElement(elementTypeId) {
     element.data.tekst = "";
   }
   if (et.id === "constraint") element.data.expressie = "";
+  if (et.id === "package") element.naam = "NieuwPackage";
   return element;
 }
 

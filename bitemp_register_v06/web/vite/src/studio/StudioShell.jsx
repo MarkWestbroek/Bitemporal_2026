@@ -13,8 +13,8 @@
  * De shell kent alleen het activiteit-*contract* (Sidebar/Main/Inspector + Provider).
  * Welke activiteiten bestaan komt uit het activityRegistry — volledig uitbreidbaar.
  */
-import React, { Fragment, Suspense } from "react";
-import { getActiviteiten } from "./activityRegistry";
+import React, { Fragment, Suspense, useSyncExternalStore } from "react";
+import { getActiviteiten, abonneerOpActiviteiten, activiteitenVersie } from "./activityRegistry";
 import useStudioStore from "./useStudioStore";
 import useUIStore from "../store/useUIStore";
 import ActivityBar from "./ActivityBar";
@@ -40,6 +40,9 @@ function ThemaKnop() {
 }
 
 export default function StudioShell() {
+  // Hertekent zodra er (async) activiteiten bijkomen — bv. profielen die na
+  // het laden uit de git-map (dev-endpoint) geregistreerd worden.
+  useSyncExternalStore(abonneerOpActiviteiten, activiteitenVersie);
   const activiteiten = getActiviteiten();
   const activeId = useStudioStore((s) => s.activeId);
   const setActief = useStudioStore((s) => s.setActief);

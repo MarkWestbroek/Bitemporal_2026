@@ -1,0 +1,32 @@
+{
+  "layout": {
+    "elementDef:Beslissing#1": {
+      "x": 141,
+      "y": 74
+    },
+    "elementDef:Invoergegeven#1": {
+      "x": 619,
+      "y": -348
+    },
+    "elementDef:Business Knowledge Model#1": {
+      "x": 604,
+      "y": -62
+    },
+    "elementDef:Kennisbron#1": {
+      "x": 1104,
+      "y": 84
+    },
+    "elementDef:Notitie#1": {
+      "x": 1146,
+      "y": -232
+    },
+    "elementDef:Kader#1": {
+      "x": 1131,
+      "y": -369
+    },
+    "profielDef:DMN DRD — instellingen#1": {
+      "x": 193,
+      "y": -359
+    }
+  }
+}

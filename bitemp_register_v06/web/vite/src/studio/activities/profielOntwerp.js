@@ -23,6 +23,8 @@
  * onder een nieuw id opnieuw genereren).
  */
 
+import { handlerInfo } from "../../diagramcore/types/handlerCatalogus.js";
+
 export const PROFIEL_ONTWERP_ID = "profiel-ontwerp";
 
 const EIGENSCHAP_VELDEN = [
@@ -35,7 +37,22 @@ export const profielOntwerpKern = {
   id: PROFIEL_ONTWERP_ID,
   label: "Profiel-ontwerp",
   style: "uml-klassiek",
-  fieldTypes: [{ id: "eigenschapDef", viewer: "naam-type", properties: EIGENSCHAP_VELDEN }],
+  hierarchie: "compositie",
+  fieldTypes: [
+    { id: "eigenschapDef", viewer: "naam-type", properties: EIGENSCHAP_VELDEN },
+    // Alleen-lezen regels die tonen welk Implementation-domein (hooks,
+    // property-editors, resolvers — zie het metamodel) aan het type hangt.
+    {
+      id: "implementatieDef",
+      viewer: "naam-type",
+      properties: [
+        { key: "naam", datatype: "string", verplicht: true },
+        { key: "typeLabel", label: "handler", datatype: "string" },
+        // Uit de handler-catalogus (P02); zichtbaar in het veld-detail (…).
+        { key: "beschrijving", label: "beschrijving", datatype: "tekst" },
+      ],
+    },
+  ],
   elementTypes: [
     {
       id: "elementDef",
@@ -44,13 +61,28 @@ export const profielOntwerpKern = {
       stereotype: "«elementtype»",
       shape: "class-box",
       kleur: "#bae6fd",
+      icoon: "elementtype",
       properties: [
         { key: "kort", label: "korte code (taakbalk)", datatype: "string" },
-        { key: "shape", label: "shape (class-box/bol/note/boundary)", datatype: "string" },
+        // Kiezers met preview (P06): de registry levert de opties.
+        { key: "shape", label: "shape", datatype: "shape-keuze" },
+        { key: "icoon", label: "icoon (taakbalk/boom)", datatype: "icoon-keuze" },
         { key: "doelKleur", label: "kleur van het type", datatype: "colour" },
-        { key: "stereotype", label: "stereotype («…»)", datatype: "string" },
+        // Niet "stereotype": dat dataveld is de generieke per-element
+        // weergave-override (ClassBox toont hem), waardoor de ET-node zelf
+        // ineens «package» i.p.v. «elementtype» zou heten.
+        { key: "doelStereotype", label: "stereotype van het type («…»)", datatype: "string" },
+        // Boom/packages: container = drop-doel (containerVoor volgt uit de
+        // bevat-verbindingsregel), standaard dicht = ingeklapt beginnen.
+        { key: "container", label: "container (drop-doel, package)", datatype: "boolean" },
+        { key: "standaardDichtInBoom", label: "standaard dicht in boom", datatype: "boolean" },
       ],
-      compartments: [{ id: "eigenschappen", label: "eigenschappen", fieldType: "eigenschapDef" }],
+      compartments: [
+        { id: "eigenschappen", label: "eigenschappen", fieldType: "eigenschapDef" },
+        // Gevuld door ontwerpUitProfiel; puur informatief — het
+        // Implementation-domein is niet tekenbaar, wel zichtbaar.
+        { id: "implementatie", label: "implementatie", fieldType: "implementatieDef" },
+      ],
     },
     {
       id: "compartimentDef",
@@ -59,6 +91,7 @@ export const profielOntwerpKern = {
       stereotype: "«compartimenttype»",
       shape: "class-box",
       kleur: "#ddd6fe",
+      icoon: "compartimenttype",
       properties: [],
       compartments: [],
     },
@@ -69,6 +102,7 @@ export const profielOntwerpKern = {
       stereotype: "«veldtype»",
       shape: "class-box",
       kleur: "#bbf7d0",
+      icoon: "veldtype",
       properties: [],
       compartments: [{ id: "eigenschappen", label: "eigenschappen", fieldType: "eigenschapDef" }],
     },
@@ -78,6 +112,7 @@ export const profielOntwerpKern = {
       label: "Bevat (◆)",
       kort: "◆",
       shape: "edge",
+      icoon: "compositie",
       isConnector: true,
       bron: { elementTypes: ["elementDef", "compartimentDef"] },
       doel: { elementTypes: ["compartimentDef", "fieldDef"] },
@@ -88,25 +123,46 @@ export const profielOntwerpKern = {
       label: "Verbindingsregel",
       kort: "→",
       shape: "edge",
+      icoon: "verbindingsregel",
       isConnector: true,
       bron: { elementTypes: ["elementDef"] },
       doel: { elementTypes: ["elementDef"] },
       edgePresentatie: { lijn: "solid", kleur: "#0ea5e9" },
       properties: [
         { key: "lijn", label: "lijn (solid/dash-6-3/…)", datatype: "string" },
-        { key: "vorm", label: "vorm (bezier/hoekig/recht)", datatype: "string" },
+        { key: "vorm", label: "vorm (bezier/hoekig/recht/boom)", datatype: "string" },
         { key: "markerStart", label: "markerStart (ruit/ruit-open)", datatype: "string" },
-        { key: "markerEnd", label: "markerEnd (driehoek/pijl-open)", datatype: "string" },
+        { key: "markerEnd", label: "markerEnd (driehoek/pijl-open/pijl-dicht/bol)", datatype: "string" },
         { key: "doelKleur", label: "lijnkleur", datatype: "colour" },
         { key: "metKardinaliteiten", label: "kardinaliteiten-labels", datatype: "boolean" },
         { key: "richtingOptie", label: "richting-vinkje (→)", datatype: "boolean" },
+        { key: "isHierarchie", label: "bevat-relatie (hiërarchie, P02)", datatype: "boolean" },
       ],
+    },
+    {
+      // Profiel-brede instellingen (één node per ontwerp): de typering-
+      // standaard en de shape-sets van het profiel — zichtbaar als
+      // compartiment, bewerkbaar als json (pass-through bij activeren).
+      id: "profielDef",
+      label: "Profiel-instellingen",
+      kort: "⚙ PRF",
+      stereotype: "«profiel-instellingen»",
+      shape: "rounded",
+      // Rose: valt op tussen de blauwe/groene ET-/CT-/VT-nodes.
+      kleur: "#fecdd3",
+      handleStijl: "onzichtbaar",
+      properties: [
+        { key: "typeWeergave", label: "typering-standaard (geen/icoon/tekst)", datatype: "string" },
+        { key: "shapeSetsJson", label: "shape-sets (json)", datatype: "tekst" },
+      ],
+      compartments: [{ id: "shapeSets", label: "shape-sets", fieldType: "implementatieDef" }],
     },
     {
       id: "notitie",
       label: "Notitie",
       kort: "NOT",
       shape: "note",
+      icoon: "notitie",
       handleStijl: "onzichtbaar",
       properties: [{ key: "tekst", datatype: "tekst" }],
     },
@@ -129,7 +185,19 @@ function slug(tekst) {
   );
 }
 
-const GELDIGE_SHAPES = new Set(["class-box", "bol", "note", "rounded", "boundary"]);
+const GELDIGE_SHAPES = new Set([
+  "class-box",
+  "chip",
+  "knip-box",
+  "bol",
+  "note",
+  "rounded",
+  "boundary",
+  "package",
+  "dmn-input-data",
+  "dmn-bkm",
+  "dmn-knowledge-source",
+]);
 const GELDIGE_DATATYPES = new Set(["string", "tekst", "boolean", "colour"]);
 
 function compVelden(el, compartmentType) {
@@ -219,23 +287,45 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       id: doelIdVoor.get(def.id),
       label: def.naam,
       kort: d.kort || def.naam.slice(0, 3).toUpperCase(),
-      ...(d.stereotype ? { stereotype: d.stereotype } : {}),
+      ...((d.doelStereotype ?? d.stereotype)
+        ? { stereotype: d.doelStereotype ?? d.stereotype }
+        : {}),
       shape,
       ...(shape === "boundary" ? { achtergrond: true, handleStijl: "onzichtbaar" } : {}),
       ...(shape === "note" ? { handleStijl: "onzichtbaar" } : {}),
       kleur: d.doelKleur || "#e2e8f0",
+      ...(d.icoon ? { icoon: d.icoon } : {}),
+      ...(d.standaardDichtInBoom ? { standaardDichtInBoom: true } : {}),
+      ...(d.container ? { _containerWens: true } : {}),
       properties: [{ key: "kleur", datatype: "colour" }, ...eigenschappenVan(def)],
       compartments,
     });
   }
 
-  const regels = perSoort("verbindingsregel").filter((el) => el.source && el.target);
-  regels.forEach((regel, i) => {
-    const d = regel.data || {};
-    const bron = doelIdVoor.get(regel.source);
-    const doel = doelIdVoor.get(regel.target);
-    if (!bron || !doel) return;
-    const connectorId = slug(regel.naam) !== "naamloos" ? slug(regel.naam) : `regel-${i + 1}`;
+  // Verbindingsregel-lijnen met dezelfde náám vormen samen één connectortype
+  // met meerdere verbindingsregels (metametamodel: ConnectorType ◆ 1..*
+  // Verbindingsregel) — het connectortype manifesteert zich als meerdere
+  // lijnen. Presentatie-properties van de eerste lijn winnen.
+  const perConnectorType = new Map();
+  perSoort("verbindingsregel")
+    .filter((el) => el.source && el.target)
+    .forEach((regel, i) => {
+      const bron = doelIdVoor.get(regel.source);
+      const doel = doelIdVoor.get(regel.target);
+      if (!bron || !doel) return;
+      const connectorId = slug(regel.naam) !== "naamloos" ? slug(regel.naam) : `regel-${i + 1}`;
+      if (!perConnectorType.has(connectorId)) {
+        perConnectorType.set(connectorId, { eerste: regel, regels: [], isHierarchie: false });
+      }
+      const groep = perConnectorType.get(connectorId);
+      groep.regels.push({ bron: [bron], doel: [doel] });
+      if (regel.data?.isHierarchie) groep.isHierarchie = true;
+    });
+
+  const hierarchieConnectoren = [];
+  for (const [connectorId, { eerste, regels, isHierarchie }] of perConnectorType) {
+    if (isHierarchie) hierarchieConnectoren.push(connectorId);
+    const d = eerste.data || {};
     const hooks = {};
     const properties = [{ key: "kleur", datatype: "colour" }];
     if (d.metKardinaliteiten) {
@@ -251,12 +341,13 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
     }
     elementTypes.push({
       id: connectorId,
-      label: regel.naam || connectorId,
+      label: eerste.naam || connectorId,
       kort: d.markerStart === "ruit" ? "◆" : d.markerEnd === "driehoek" ? "▷" : "—",
       shape: "edge",
       isConnector: true,
-      bron: { elementTypes: [bron] },
-      doel: { elementTypes: [doel] },
+      ...(regels.length === 1
+        ? { bron: { elementTypes: regels[0].bron }, doel: { elementTypes: regels[0].doel } }
+        : { verbindingsregels: regels }),
       edgePresentatie: {
         lijn: d.lijn || "solid",
         ...(d.vorm ? { vorm: d.vorm } : {}),
@@ -267,12 +358,48 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
       properties,
       ...(Object.keys(hooks).length ? { hooks } : {}),
     });
-  });
+  }
+
+  // containerVoor: een ET met het container-vinkje krijgt het (liefst
+  // hiërarchie-)connectortype waarvan hij bron is als lidmaatschapsrelatie.
+  const regelsVanCt = (ct) =>
+    ct.verbindingsregels || [{ bron: ct.bron?.elementTypes || [], doel: ct.doel?.elementTypes || [] }];
+  for (const et of elementTypes) {
+    if (!et._containerWens) continue;
+    delete et._containerWens;
+    const kandidaat =
+      elementTypes.find(
+        (ct) =>
+          ct.isConnector &&
+          hierarchieConnectoren.includes(ct.id) &&
+          regelsVanCt(ct).some((r) => r.bron.includes(et.id))
+      ) ||
+      elementTypes.find(
+        (ct) => ct.isConnector && regelsVanCt(ct).some((r) => r.bron.includes(et.id))
+      );
+    if (kandidaat) et.containerVoor = kandidaat.id;
+  }
+
+  const profielDef = perSoort("profielDef")[0];
+  const profielData = profielDef?.data || {};
+  let shapeSets = null;
+  try {
+    const geparsed = JSON.parse(profielData.shapeSetsJson || "null");
+    if (Array.isArray(geparsed) && geparsed.length) shapeSets = geparsed;
+  } catch {
+    /* ongeldige json: shape-sets overslaan, de rest gewoon activeren */
+  }
 
   return {
     id: slug(id),
     label: label || id,
     style: "uml-klassiek",
+    ...(profielData.typeWeergave ? { typeWeergave: profielData.typeWeergave } : {}),
+    ...(shapeSets ? { shapeSets } : {}),
+    // 1 hierarchie-connector → string (compat), meerdere → lijstje.
+    ...(hierarchieConnectoren.length
+      ? { hierarchie: hierarchieConnectoren.length === 1 ? hierarchieConnectoren[0] : hierarchieConnectoren }
+      : {}),
     fieldTypes,
     elementTypes,
     taakbalken: [
@@ -281,6 +408,30 @@ export function bouwProfielUitOntwerp(state, { id, label }) {
     ],
     layouts: [],
   };
+}
+
+/**
+ * De elementen die bij één ontwerp-diagram horen (P01: meerdere profielen
+ * naast elkaar in de sandbox): nodes van het diagram plus de connectoren
+ * waarvan beide uiteinden erop staan. Hiermee genereert de ontwerper per
+ * díagram een profiel in plaats van alles samen te vegen.
+ *
+ * @param {{elements: Record<string, Object>, diagrams: Record<string, Object>}} state
+ * @param {string} diagramId
+ * @returns {Record<string, Object>}
+ */
+export function elementenVanDiagram(state, diagramId) {
+  const diagram = state?.diagrams?.[diagramId];
+  const opDiagram = new Set((diagram?.nodes || []).map((n) => n.elementId));
+  const subset = {};
+  for (const [id, el] of Object.entries(state?.elements || {})) {
+    if (el.source && el.target) {
+      if (opDiagram.has(el.source) && opDiagram.has(el.target)) subset[id] = el;
+    } else if (opDiagram.has(id)) {
+      subset[id] = el;
+    }
+  }
+  return subset;
 }
 
 // ── Omgekeerde weg: bestaande descriptor → ontwerp-diagram ────────────────
@@ -323,18 +474,48 @@ export function ontwerpUitProfiel(descriptor) {
   nietConnectoren.forEach((et, kolom) => {
     const etNodeId = `${prefix}_et_${et.id}`;
     nodeIdVoorElementType.set(et.id, etNodeId);
+    // Implementation-domein zichtbaar maken (metamodel: ActionHook,
+    // ShapeRenderer, PropertyTypeEditor, ReferenceResolver, …): hooks op het
+    // type plus properties met een niet-standaard datatype (eigen editor).
+    const BASIS_DATATYPES = new Set(["string", "tekst", "boolean", "colour", undefined]);
+    // Naam + beschrijving uit de handler-catalogus (P02): de code zelf is
+    // niet tekenbaar, maar zo is wél zichtbaar wélke handlers aan het type
+    // hangen en wat ze doen (beschrijving in het veld-detail).
+    const implRegel = (soort, id, context) => {
+      const info = handlerInfo(soort, id);
+      return {
+        naam: `${soort}: ${id}${context ? ` (${context})` : ""}`,
+        fieldType: "implementatieDef",
+        data: { typeLabel: info.naam, beschrijving: info.beschrijving },
+      };
+    };
+    const implementatieRegels = [
+      ...Object.keys(et.hooks || {}).map((h) => implRegel("hook", h)),
+      ...(et.properties || [])
+        .filter((pr) => !BASIS_DATATYPES.has(pr.datatype) && !pr.referenceTypes)
+        .map((pr) => implRegel("editor", pr.datatype, pr.key)),
+      ...(et.properties || []).flatMap((pr) =>
+        (pr.referenceTypes || []).map((rt) => implRegel("resolver", rt, pr.key))
+      ),
+    ];
     elements[etNodeId] = {
       id: etNodeId,
       naam: et.label || et.id,
       elementType: "elementDef",
       compartimenten: [
         { compartmentType: "eigenschappen", velden: eigenschapVelden(et.properties) },
+        ...(implementatieRegels.length
+          ? [{ compartmentType: "implementatie", velden: implementatieRegels }]
+          : []),
       ],
       data: {
         kort: et.kort || "",
         shape: et.shape || "class-box",
         doelKleur: et.kleur || "#e2e8f0",
-        ...(et.stereotype ? { stereotype: et.stereotype } : {}),
+        ...(et.icoon ? { icoon: et.icoon } : {}),
+        ...(et.stereotype ? { doelStereotype: et.stereotype } : {}),
+        ...(et.containerVoor ? { container: true } : {}),
+        ...(et.standaardDichtInBoom ? { standaardDichtInBoom: true } : {}),
       },
     };
     const x = 60 + kolom * 340;
@@ -393,29 +574,84 @@ export function ontwerpUitProfiel(descriptor) {
   });
 
   connectoren.forEach((et, i) => {
-    const bron = nodeIdVoorElementType.get(et.bron?.elementTypes?.[0]);
-    const doel = nodeIdVoorElementType.get(et.doel?.elementTypes?.[0]);
-    if (!bron || !doel) return;
     const p = et.edgePresentatie || {};
     const props = et.properties || [];
-    elements[`${prefix}_regel_${i}`] = {
-      id: `${prefix}_regel_${i}`,
-      naam: et.label || et.id,
-      elementType: "verbindingsregel",
-      source: bron,
-      target: doel,
-      compartimenten: [],
-      data: {
-        lijn: p.lijn || "solid",
-        ...(p.vorm ? { vorm: p.vorm } : {}),
-        ...(p.markerStart ? { markerStart: p.markerStart } : {}),
-        ...(p.markerEnd ? { markerEnd: p.markerEnd } : {}),
-        doelKleur: p.kleur || "#64748b",
-        metKardinaliteiten: props.some((pr) => pr.key === "bronKardinaliteit"),
-        richtingOptie: props.some((pr) => pr.key === "directioneel"),
-      },
-    };
+    // Elk toegestaan (bron, doel)-paar wordt één regel-lijn; lijnen met
+    // dezelfde naam bundelen bij het genereren weer tot dit connectortype.
+    const regels =
+      Array.isArray(et.verbindingsregels) && et.verbindingsregels.length
+        ? et.verbindingsregels
+        : [{ bron: et.bron?.elementTypes || [], doel: et.doel?.elementTypes || [] }];
+    let volgnr = 0;
+    for (const regel of regels) {
+      const bronnen = regel.bron?.elementTypes || regel.bron || [];
+      const doelen = regel.doel?.elementTypes || regel.doel || [];
+      for (const bronType of bronnen) {
+        for (const doelType of doelen) {
+          const bron = nodeIdVoorElementType.get(bronType);
+          const doel = nodeIdVoorElementType.get(doelType);
+          if (!bron || !doel) continue;
+          volgnr += 1;
+          const id = `${prefix}_regel_${i}_${volgnr}`;
+          elements[id] = {
+            id,
+            naam: et.label || et.id,
+            elementType: "verbindingsregel",
+            source: bron,
+            target: doel,
+            compartimenten: [],
+            data: {
+              lijn: p.lijn || "solid",
+              ...(p.vorm ? { vorm: p.vorm } : {}),
+              ...(p.markerStart ? { markerStart: p.markerStart } : {}),
+              ...(p.markerEnd ? { markerEnd: p.markerEnd } : {}),
+              doelKleur: p.kleur || "#64748b",
+              metKardinaliteiten: props.some((pr) => pr.key === "bronKardinaliteit"),
+              richtingOptie: props.some((pr) => pr.key === "directioneel"),
+              ...([].concat(descriptor.hierarchie || [])
+                .map((h) => (typeof h === "string" ? h : h?.type))
+                .includes(et.id)
+                ? { isHierarchie: true }
+                : {}),
+            },
+          };
+        }
+      }
+    }
   });
+
+  // Profiel-brede instellingen als eigen node: de typering-standaard en de
+  // shape-sets (P07) — zo is de definitie in de PE zichtbaar én (via de
+  // json-property) bij te stellen; activeren neemt ze mee terug.
+  const setRegels = (descriptor.shapeSets || []).map((set) => ({
+    naam: set.label || set.id,
+    fieldType: "implementatieDef",
+    data: {
+      typeLabel: `${Object.keys(set.shapes || {}).length} shapes`,
+      beschrijving: Object.entries(set.shapes || {})
+        .map(([etId, shapeId]) => `${etId} → ${shapeId}`)
+        .join("\n"),
+    },
+  }));
+  const profielNodeId = `${prefix}_profiel`;
+  elements[profielNodeId] = {
+    id: profielNodeId,
+    naam: `${descriptor.label || descriptor.id} — instellingen`,
+    elementType: "profielDef",
+    compartimenten: setRegels.length
+      ? [{ compartmentType: "shapeSets", velden: setRegels }]
+      : [],
+    data: {
+      typeWeergave: descriptor.typeWeergave || "tekst",
+      ...(descriptor.shapeSets?.length
+        ? { shapeSetsJson: JSON.stringify(descriptor.shapeSets, null, 2) }
+        : {}),
+    },
+  };
+  // Boven de cluster, horizontaal gecentreerd — vrij van de zwevende
+  // taakbalken (die links-boven staan), zodat de instellingen-kaart opvalt.
+  const midX = Math.max(80, (nietConnectoren.length * 340) / 2 - 110);
+  nodes.push({ elementId: profielNodeId, position: { x: midX, y: -260 } });
 
   return {
     elements,
@@ -428,6 +664,57 @@ export function ontwerpUitProfiel(descriptor) {
       },
     },
   };
+}
+
+// ── Standaard-layouts per profiel (PE-persistentie) ────────────────────────
+
+/**
+ * Stabiele layout-sleutel per node: elementType + naam + volgnummer.
+ * ontwerpUitProfiel is deterministisch, dus de volgorde (en daarmee het
+ * volgnummer bij naamgenoten, bv. twee compartimenten "velden") is stabiel
+ * zolang het profiel niet wijzigt — de gegenereerde ow{n}_-ids zijn dat
+ * juist níet, dus die zijn onbruikbaar als sleutel.
+ */
+export function layoutSleutels(elements, nodes) {
+  const teller = new Map();
+  return (nodes || []).map((node) => {
+    const el = elements[node.elementId] || {};
+    const basis = `${el.elementType || "?"}:${el.naam || ""}`;
+    const n = (teller.get(basis) || 0) + 1;
+    teller.set(basis, n);
+    return { node, sleutel: `${basis}#${n}` };
+  });
+}
+
+/** Pas een bewaarde standaard-layout ({sleutel: {x, y}}) toe op verse nodes. */
+export function pasStandaardLayoutToe(elements, nodes, layout) {
+  if (!layout) return nodes;
+  return layoutSleutels(elements, nodes).map(({ node, sleutel }) =>
+    layout[sleutel] ? { ...node, position: { ...layout[sleutel] } } : node
+  );
+}
+
+/**
+ * Alle (geregistreerde) profielen als ontwerp-diagrammen naast elkaar — de
+ * herlaad-routine van de profiel-ontwerper. `layoutVoor(profielId)` mag een
+ * bewaarde standaard-layout teruggeven (zie layoutSleutels).
+ */
+export function ontwerpUitAlleProfielen(descriptors, layoutVoor = null) {
+  const elements = {};
+  const diagrams = {};
+  for (const dt of descriptors || []) {
+    const ontwerp = ontwerpUitProfiel(dt);
+    Object.assign(elements, ontwerp.elements);
+    const basis = Object.values(ontwerp.diagrams)[0];
+    const id = `ontw_${dt.id}`;
+    diagrams[id] = {
+      ...basis,
+      id,
+      naam: dt.label || dt.id,
+      nodes: pasStandaardLayoutToe(ontwerp.elements, basis.nodes, layoutVoor?.(dt.id)),
+    };
+  }
+  return { elements, diagrams };
 }
 
 /** Voorbeeld-ontwerp (het e2e-scenario): Ster (bol) ◆ Metingen ◆ meting, Planeet, "draait om". */

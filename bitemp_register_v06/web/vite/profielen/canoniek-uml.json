@@ -1,0 +1,104 @@
+{
+  "layout": {
+    "elementDef:Entiteit#1": {
+      "x": -5,
+      "y": 11
+    },
+    "compartimentDef:velden#1": {
+      "x": 123,
+      "y": 341
+    },
+    "fieldDef:attribuut#1": {
+      "x": 246,
+      "y": 455
+    },
+    "compartimentDef:afgeleid#1": {
+      "x": -311,
+      "y": 477
+    },
+    "fieldDef:afgeleidVeld#1": {
+      "x": 138,
+      "y": 711
+    },
+    "compartimentDef:overerving#1": {
+      "x": -100,
+      "y": 387
+    },
+    "elementDef:Gegevenselement#1": {
+      "x": 438,
+      "y": -74
+    },
+    "compartimentDef:velden#2": {
+      "x": 400,
+      "y": 330
+    },
+    "compartimentDef:afgeleid#2": {
+      "x": 551,
+      "y": 471
+    },
+    "elementDef:Enumeratie#1": {
+      "x": 797,
+      "y": 214
+    },
+    "compartimentDef:waarden#1": {
+      "x": 805,
+      "y": 337
+    },
+    "fieldDef:waarde#1": {
+      "x": 812,
+      "y": 458
+    },
+    "elementDef:Gegevenstype#1": {
+      "x": 1080,
+      "y": 60
+    },
+    "compartimentDef:eigenschappen#1": {
+      "x": 1294,
+      "y": 343
+    },
+    "fieldDef:eigenschap#1": {
+      "x": 1445,
+      "y": 492
+    },
+    "compartimentDef:validatie#1": {
+      "x": 948,
+      "y": 673
+    },
+    "fieldDef:regel#1": {
+      "x": 1254,
+      "y": 690
+    },
+    "compartimentDef:weergave#1": {
+      "x": 1135,
+      "y": 518
+    },
+    "elementDef:Referentielijst-instantie#1": {
+      "x": 1420,
+      "y": 60
+    },
+    "compartimentDef:eigenschappen#2": {
+      "x": 1539,
+      "y": 353
+    },
+    "elementDef:Package (domein)#1": {
+      "x": 329,
+      "y": -275
+    },
+    "elementDef:Notitie#1": {
+      "x": 1032,
+      "y": -314
+    },
+    "elementDef:Constraint#1": {
+      "x": 1274,
+      "y": -324
+    },
+    "elementDef:Kader#1": {
+      "x": -204,
+      "y": -209
+    },
+    "profielDef:Canoniek datamodel — instellingen#1": {
+      "x": -233,
+      "y": -320
+    }
+  }
+}

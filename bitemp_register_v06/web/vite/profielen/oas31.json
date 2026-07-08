@@ -1,0 +1,44 @@
+{
+  "layout": {
+    "elementDef:Schema (object)#1": {
+      "x": 60,
+      "y": 60
+    },
+    "compartimentDef:properties#1": {
+      "x": 60,
+      "y": 330
+    },
+    "fieldDef:property#1": {
+      "x": 67,
+      "y": 539
+    },
+    "elementDef:Enum#1": {
+      "x": 433,
+      "y": 210
+    },
+    "compartimentDef:waarden#1": {
+      "x": 421,
+      "y": 343
+    },
+    "fieldDef:literal#1": {
+      "x": 596,
+      "y": 521
+    },
+    "elementDef:Operatie#1": {
+      "x": 749,
+      "y": 29
+    },
+    "compartimentDef:signatuur#1": {
+      "x": 742,
+      "y": 366
+    },
+    "elementDef:Notitie#1": {
+      "x": 677,
+      "y": -163
+    },
+    "elementDef:Kader#1": {
+      "x": 425,
+      "y": -166
+    }
+  }
+}

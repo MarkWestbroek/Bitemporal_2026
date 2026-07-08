@@ -29,6 +29,7 @@ import {
   useEdgesState,
   useReactFlow,
   useStore as useRFStore,
+  useStoreApi,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import "../styles/diagramcore.css";
@@ -120,11 +121,25 @@ function CanvasBinnenkant({
   onNormaliseer,
   onViewport,
   onLabelOffset,
+  onKnikken,
+  onContainerDrop,
+  shapeSet,
   layoutApiRef,
   bouwContextMenu,
 }) {
-  const lookups = useMemo(() => bouwLookups(diagramType), [diagramType]);
-  const { getNodes, screenToFlowPosition } = useReactFlow();
+  const lookups = useMemo(() => {
+    const basis = bouwLookups(diagramType);
+    // Shape-set (P07): een gekozen set overschrijft per elementtype de shape
+    // — zelfde Definitie, andere gedaante (bv. MIM-vormgrammatica vs klassiek).
+    if (!shapeSet) return basis;
+    const overlay = { ...basis.elementTypesById };
+    for (const [etId, shapeId] of Object.entries(shapeSet)) {
+      if (overlay[etId]) overlay[etId] = { ...overlay[etId], shape: shapeId };
+    }
+    return { ...basis, elementTypesById: overlay };
+  }, [diagramType, shapeSet]);
+  const { getNodes, screenToFlowPosition, getViewport, setViewport } = useReactFlow();
+  const rfStoreApi = useStoreApi();
   // Contextmenu (rechtsklik): positie in schermcoördinaten, of null.
   const [contextMenu, setContextMenu] = useState(null);
   useEffect(() => {
@@ -141,12 +156,6 @@ function CanvasBinnenkant({
     };
   }, [contextMenu]);
 
-  // Connector-materialisatie: kale edges + (bij velden) anker/box-structuur.
-  const gematerialiseerd = useMemo(
-    () => materialiseerConnectoren(elements, diagram, lookups.elementTypesById),
-    [elements, diagram, lookups]
-  );
-
   // Afgeleide weergave-compartimenten (bv. overgeërfde velden) via de
   // profiel-hook elementType.hooks.extraCompartimenten(element, ctx).
   const verrijk = useCallback(
@@ -162,6 +171,33 @@ function CanvasBinnenkant({
   // selectie en slepen via node-changes lopen; de store blijft de waarheid
   // (posities gaan bij dragstop via onNodePositie terug).
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
+
+  // Gemeten node-maten (React Flow): de kortste-weg-keuze rekent daarmee in
+  // plaats van met de 200×80-schatting — anders kiest hij bij brede/lage
+  // nodes de verkeerde zijde (Marks normaliseer-melding, 2026-07-04).
+  const [maten, setMaten] = useState({});
+  useEffect(() => {
+    const volgende = {};
+    for (const n of nodes) {
+      if (n.measured?.width) {
+        volgende[n.id] = { width: n.measured.width, height: n.measured.height };
+      }
+    }
+    setMaten((huidig) => {
+      const items = Object.entries(volgende);
+      const zelfde =
+        items.length === Object.keys(huidig).length &&
+        items.every(([k, v]) => huidig[k]?.width === v.width && huidig[k]?.height === v.height);
+      return zelfde ? huidig : volgende;
+    });
+  }, [nodes]);
+
+  // Connector-materialisatie: kale edges + (bij velden) anker/box-structuur.
+  const gematerialiseerd = useMemo(
+    () => materialiseerConnectoren(elements, diagram, lookups.elementTypesById, maten),
+    [elements, diagram, lookups, maten]
+  );
+
   useEffect(() => {
     const flowNodes = (diagram?.nodes || [])
       .map((ref) => {
@@ -183,8 +219,12 @@ function CanvasBinnenkant({
           position: ref.position || { x: 0, y: 0 },
           // Grootte per diagram-lidmaatschap (metamodel: Position.elementSize)
           ...(ref.size ? { style: { width: ref.size.width, height: ref.size.height } } : {}),
-          // Achtergrond-elementen (boundaries/kaders) renderen ónder de rest
-          ...(elementType.achtergrond ? { zIndex: -1 } : {}),
+          // Achtergrond-elementen (kaders) starten diep onder de rest (-10);
+          // de handmatige z-order (contextmenu) telt daar bovenop, zodat ook
+          // kaders onderling naar voren/achteren kunnen.
+          ...(elementType.achtergrond || element.data?.zOrde
+            ? { zIndex: (elementType.achtergrond ? -10 : 0) + (element.data?.zOrde || 0) }
+            : {}),
           data: {
             element: verrijk(element, elementType),
             elementType,
@@ -281,8 +321,8 @@ function CanvasBinnenkant({
       const r = refs.get(id);
       if (!r) return null;
       return {
-        x: r.position.x + (r.size?.width ?? 200) / 2,
-        y: r.position.y + (r.size?.height ?? 80) / 2,
+        x: r.position.x + (r.size?.width ?? maten[id]?.width ?? 200) / 2,
+        y: r.position.y + (r.size?.height ?? maten[id]?.height ?? 80) / 2,
       };
     };
     const geimporteerd = (diagram?.edges || []).map((e) => {
@@ -313,10 +353,17 @@ function CanvasBinnenkant({
       // Sleepbare labels (vgl. 0.2): de edge meldt de nieuwe offset per
       // zijde; de activiteit bewaart hem op het connector-element.
       data:
-        bewerkbaar && onLabelOffset && e.data?.connectorId
+        bewerkbaar && e.data?.connectorId
           ? {
               ...e.data,
-              onLabelOffset: (zijde, offset) => onLabelOffset(e.data.connectorId, zijde, offset),
+              ...(onLabelOffset
+                ? { onLabelOffset: (zijde, offset) => onLabelOffset(e.data.connectorId, zijde, offset) }
+                : {}),
+              // Knikpunten alleen op de directe gedaante (daar zet de
+              // materialisatie het knikken-veld, evt. null).
+              ...(onKnikken && e.data.knikken !== undefined
+                ? { onKnikken: (lijst) => onKnikken(e.data.connectorId, lijst) }
+                : {}),
             }
           : e.data,
     }));
@@ -325,7 +372,7 @@ function CanvasBinnenkant({
       const geselecteerd = new Set(huidige.filter((e) => e.selected).map((e) => e.id));
       return flowEdges.map((e) => (geselecteerd.has(e.id) ? { ...e, selected: true } : e));
     });
-  }, [diagram, gematerialiseerd, bewerkbaar, setEdges, onLabelOffset]);
+  }, [diagram, gematerialiseerd, bewerkbaar, setEdges, onLabelOffset, onKnikken, maten]);
 
   const handleSelectionChange = useCallback(
     ({ nodes: sel, edges: selEdges }) => {
@@ -361,8 +408,40 @@ function CanvasBinnenkant({
       } else if (gesleept[0]?.id && onNodePositie) {
         onNodePositie(gesleept[0].id, gesleept[0].position);
       }
+      // "Slepen ín een package": eindigt een enkele sleep met het middelpunt
+      // binnen een container-node (ElementType.containerVoor), meld dat aan
+      // de activiteit — die legt/verhangt de lidmaatschaps-connector.
+      if (onContainerDrop && gesleept.length === 1 && gesleept[0]?.id) {
+        const n = gesleept[0];
+        const mid = {
+          x: n.position.x + (n.measured?.width ?? 200) / 2,
+          y: n.position.y + (n.measured?.height ?? 80) / 2,
+        };
+        const kandidaten = getNodes().filter((k) => {
+          if (k.id === n.id) return false;
+          const et = lookups.elementTypesById[k.data?.element?.elementType];
+          if (!et?.containerVoor) return false;
+          const w = k.measured?.width ?? 200;
+          const h = k.measured?.height ?? 80;
+          return (
+            mid.x >= k.position.x &&
+            mid.x <= k.position.x + w &&
+            mid.y >= k.position.y &&
+            mid.y <= k.position.y + h
+          );
+        });
+        if (kandidaten.length) {
+          // Bij geneste containers wint de kleinste (binnenste).
+          kandidaten.sort(
+            (a, b) =>
+              (a.measured?.width ?? 200) * (a.measured?.height ?? 80) -
+              (b.measured?.width ?? 200) * (b.measured?.height ?? 80)
+          );
+          onContainerDrop(n.id, kandidaten[0].id);
+        }
+      }
     },
-    [bewerkbaar, onNodePositie, onNodePosities]
+    [bewerkbaar, onNodePositie, onNodePosities, onContainerDrop, getNodes, lookups]
   );
 
   const isValidConnection = useCallback(
@@ -433,11 +512,23 @@ function CanvasBinnenkant({
 
   // Rechtsklik: contextmenu met acties uit de activiteit (bouwContextMenu).
   const openContextMenu = useCallback(
-    (ev) => {
+    (ev, doelwit) => {
       if (!bouwContextMenu) return;
       ev.preventDefault();
       const selectieAantal = getNodes().filter((n) => n.selected).length;
-      const items = bouwContextMenu({ selectieAantal });
+      // Op een connector (edge of gematerialiseerde box/anker) krijgt de
+      // activiteit het connector-id — voor connector-acties zoals lijnvorm.
+      const connectorId =
+        doelwit?.data?.connectorId ||
+        (doelwit?.data?.elementType?.isConnector ? doelwit.id : null) ||
+        (typeof doelwit?.id === "string" && doelwit.id.startsWith(ANKER_PREFIX)
+          ? doelwit.id.slice(ANKER_PREFIX.length)
+          : null);
+      // Gewone element-node (geen connector/anker): voor node-acties zoals
+      // z-order en "zelfde maat als deze".
+      const nodeId =
+        !connectorId && doelwit?.position && doelwit?.data?.element ? doelwit.id : null;
+      const items = bouwContextMenu({ selectieAantal, connectorId, nodeId });
       if (items?.length) setContextMenu({ x: ev.clientX, y: ev.clientY, items });
     },
     [bouwContextMenu, getNodes]
@@ -468,6 +559,47 @@ function CanvasBinnenkant({
         lijnUit: (mode) => {
           const selectie = getNodes().filter((n) => n.selected);
           pasToe(berekenUitlijning(mode, naarItems(selectie)));
+        },
+        /**
+         * Selecteer een node op het canvas (tree-klik). Alleen als hij
+         * (deels) buiten beeld valt wordt het beeld minimaal bijgeschoven —
+         * centreren op elke klik gaf te veel onrust.
+         */
+        focusNode: (elementId) => {
+          const n = getNodes().find((x) => x.id === elementId);
+          if (!n) return;
+          setNodes((huidige) => huidige.map((x) => ({ ...x, selected: x.id === elementId })));
+          const { width, height } = rfStoreApi.getState();
+          const vp = getViewport();
+          const w = n.measured?.width ?? 200;
+          const h = n.measured?.height ?? 80;
+          const marge = 32;
+          const links = n.position.x * vp.zoom + vp.x;
+          const boven = n.position.y * vp.zoom + vp.y;
+          const rechts = links + w * vp.zoom;
+          const onder = boven + h * vp.zoom;
+          let dx = 0;
+          let dy = 0;
+          if (links < marge) dx = marge - links;
+          else if (rechts > width - marge) dx = width - marge - rechts;
+          if (boven < marge) dy = marge - boven;
+          else if (onder > height - marge) dy = height - marge - onder;
+          // Node groter dan het beeld: lijn de linker-/bovenkant uit.
+          if (w * vp.zoom > width - 2 * marge) dx = marge - links;
+          if (h * vp.zoom > height - 2 * marge) dy = marge - boven;
+          if (dx || dy) {
+            setViewport({ x: vp.x + dx, y: vp.y + dy, zoom: vp.zoom }, { duration: 200 });
+          }
+        },
+        /** Geselecteerde nodes dezelfde maat geven als de bron-node (L02). */
+        maakGelijkeMaat: (bronId) => {
+          const alle = getNodes();
+          const maat = alle.find((n) => n.id === bronId)?.measured;
+          if (!maat?.width || !onNodeSize) return;
+          for (const n of alle) {
+            if (!n.selected || n.id === bronId || n.id.startsWith(ANKER_PREFIX)) continue;
+            onNodeSize(n.id, { width: maat.width, height: maat.height });
+          }
         },
         /** Alle nodes op het raster. */
         snapRaster: (raster = 16) => {
@@ -531,6 +663,7 @@ function CanvasBinnenkant({
       nodesConnectable={bewerkbaar}
       elementsSelectable
       deleteKeyCode={bewerkbaar ? ["Delete"] : null}
+      elevateNodesOnSelect={false}
       // Zonder opgeslagen viewport: fitView op bestaande inhoud, maar een leeg
       // (nieuw) diagram start gewoon op zoom 1 — anders is de eerste node mini.
       defaultViewport={viewport || { x: 0, y: 0, zoom: 1 }}

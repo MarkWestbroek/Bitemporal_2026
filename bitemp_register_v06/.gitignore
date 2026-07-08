@@ -13,8 +13,9 @@ _tmp_*.json
 _tmp_*.mjs
 
 # Frontend generated artifacts (Vite build output)
+# Build-output van web/vite
 web/react/assets/
-web/react/*.html (web/vite)
+web/react/*.html
 web/vite/node_modules/
 web/vite/node_modules_backup_*/
 web/vite/.vite/

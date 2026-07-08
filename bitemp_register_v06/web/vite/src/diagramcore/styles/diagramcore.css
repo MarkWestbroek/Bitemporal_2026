@@ -1,3 +1,49 @@
+/* ── StyleType-tokens v2 (plan §8.5b): licht + donker per canvas. ─────────
+   Shapes/edges gebruiken deze variabelen voor alles wat geen element-eigen
+   (pastel)kleur is: lijnen, randen, selectie, marker-vullingen. Profielen
+   kunnen ze later per StyleType overschrijven (fase 7-register); zolang er
+   één StyleType is ("uml-klassiek") ís dit die tokenset.
+   v2 (vormgevingssessie 2026-07-04/05, besluiten B3+B4):
+   - selectie in merk-indigo (Omnium-gradientmidden) i.p.v. generiek blauw;
+   - marker-vulling = canvaskleur, zodat open UML-markers (◇ ▷) in het
+     donkere thema écht open ogen — v1 vulde ze slate-200, waardoor ◇
+     op ◆ leek;
+   - canvas-achtergrond en label-achtergrond expliciet als tokens.
+   Het 0.5-canvas volgt het studio-thema (sessiebesluit 2026-07-05): de
+   fabriek zet `dc-canvasvlak` op de canvas-wrapper (derde-partij-canvassen
+   zoals bpmn/dmn-js houden het vaste witte `.studio-paper`). De tokens
+   staan op beide klassen: het vlak kleurt de achtergrond, de shapes/edges
+   erbinnen lezen dezelfde variabelen. Nodes houden hun lichte pastel —
+   "lichte kaarten op donker canvas", conform de goedgekeurde proefopzet. */
+.dc-canvas,
+.dc-canvasvlak {
+  --dc-lijn: #64748b;
+  --dc-lijn-zacht: #94a3b8;
+  --dc-node-rand: #94a3b8;
+  --dc-node-vulling: #f1f5f9;
+  --dc-selectie: #4f46e5;
+  --dc-canvas-achtergrond: var(--s-canvas, #ffffff);
+  --dc-marker-vulling: var(--dc-canvas-achtergrond);
+  --dc-label-achtergrond: rgba(255, 255, 255, 0.92);
+}
+[data-studio-theme="dark"] .dc-canvas,
+[data-studio-theme="dark"] .dc-canvasvlak {
+  --dc-lijn: #94a3b8;
+  --dc-lijn-zacht: #64748b;
+  --dc-node-rand: #64748b;
+  --dc-node-vulling: #e2e8f0;
+  --dc-selectie: #818cf8;
+  --dc-canvas-achtergrond: var(--s-canvas, #1b1b1f);
+  --dc-label-achtergrond: rgba(24, 24, 28, 0.92);
+}
+
+/* Het canvasvlak van de 0.5-activiteiten (wrapper om DiagramCanvas én de
+   "geen diagram"-melding): kleurt mee met het thema. */
+.dc-canvasvlak {
+  background: var(--dc-canvas-achtergrond);
+  color: var(--s-fg, #1f2937);
+}
+
 /**
  * diagramcore.css — opmaak voor de generieke diagram-motor (Studio 0.5).
  *
@@ -27,7 +73,11 @@
 
 .dc-contextmenu {
   position: fixed;
-  z-index: 60;
+  /* Ruim boven taakbalken/minimap/panelen — het menu opent op muispositie
+     en mag nergens onder liggen. */
+  z-index: 200;
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
   min-width: 210px;
   padding: 6px;
   background: var(--s-panel, #ffffff);
@@ -92,6 +142,26 @@
   font-size: 10px;
   color: #64748b;
   font-style: italic;
+}
+
+/* ── Typering-weergave (MIM-besluit 2026-07-07): shapes renderen zowel het
+   mini-icoon als de stereotype-regel; `data-dc-typering` op het canvasvlak
+   kiest wat zichtbaar is. Zonder attribuut of bij "tekst" geldt het oude
+   gedrag (alleen stereotype) — bestaande profielen veranderen dus niet. */
+.dc-type-icoon {
+  display: none;
+  justify-content: center;
+  color: #64748b;
+  padding-top: 1px;
+}
+
+[data-dc-typering="geen"] .dc-stereotype,
+[data-dc-typering="icoon"] .dc-stereotype {
+  display: none;
+}
+
+[data-dc-typering="icoon"] .dc-type-icoon {
+  display: flex;
 }
 
 .dc-naam {
@@ -210,11 +280,33 @@
   gap: 4px;
   align-items: center;
   font-size: 10px;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--dc-label-achtergrond, rgba(255, 255, 255, 0.92));
   padding: 2px 6px;
   border-radius: 4px;
   border: 1px solid #e2e8f0;
   white-space: nowrap;
+}
+
+/* Donker thema: de labelchip wordt canvas-donker (--dc-label-achtergrond),
+   dus rand en vaste tekstkleuren flippen mee naar donkere/lichte varianten. */
+[data-studio-theme="dark"] .dc-edge-label {
+  border-color: #3d3d46;
+}
+
+[data-studio-theme="dark"] .dc-edge-rolnaam {
+  color: #e2e8f0;
+}
+
+[data-studio-theme="dark"] .dc-edge-kardinaliteit {
+  color: #a78bfa;
+}
+
+[data-studio-theme="dark"] .dc-edge-constraint {
+  color: #94a3b8;
+}
+
+[data-studio-theme="dark"] .dc-edge-naam {
+  color: #94a3b8;
 }
 
 .dc-edge-rolnaam {
@@ -236,9 +328,9 @@
 .dc-edge-naam {
   font-style: italic;
   color: #475569;
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--dc-label-achtergrond, rgba(255, 255, 255, 0.85));
   padding: 1px 4px;
-  border-radius: 3;
+  border-radius: 3px;
 }
 
 /* === Taakbalken (zwevend op de canvas) === */
@@ -390,12 +482,14 @@
 
 .dc-inspector textarea {
   resize: vertical;
-  min-height: 56px;
+  /* Compact: metagegevens-teksten zijn meestal kort; slepen maakt groter. */
+  min-height: 34px;
 }
 
-.dc-inspector .dc-mini-knop {
+.dc-mini-knop {
   font: inherit;
   font-size: 11px;
+  line-height: 1.3;
   padding: 2px 8px;
   border-radius: 6px;
   border: 1px solid var(--s-border, #cbd5e1);
@@ -404,14 +498,27 @@
   cursor: pointer;
 }
 
-.dc-inspector .dc-mini-knop:hover {
+.dc-mini-knop:hover {
   background: var(--s-hover, #f1f5f9);
 }
 
-.dc-inspector .dc-mini-knop.is-gevaar:hover {
+.dc-mini-knop.is-gevaar:hover {
   background: #fee2e2;
   border-color: #fca5a5;
   color: #991b1b;
+}
+
+
+/* === Knikpunten op connectoren (ctrl-klik) === */
+
+.dc-knik {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--dc-selectie, #2563eb);
+  border: 1.5px solid var(--dc-marker-vulling, #ffffff);
+  box-sizing: border-box;
+  cursor: grab;
 }
 
 /* === Minibrowser (VerwijzingsKiezer-popover) === */
@@ -512,4 +619,12 @@
   border-radius: 4px;
   color: #ffffff;
   background: linear-gradient(90deg, #60a5fa, #6366f1, #22d3ee);
+}
+
+/* Icoon + korte code in taakbalk-knoppen (typeIconen.jsx). */
+.dc-taakbalk-icoonlabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
 }

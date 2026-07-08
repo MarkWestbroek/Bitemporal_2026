@@ -77,7 +77,11 @@
  */
 
 /**
- * Verbindingsregel voor een connector-uiteinde.
+ * Verbindingsregels: een connector-ElementType heeft er 1..* (metamodel:
+ * ConnectorType ◆ 1..* Verbindingsregel). `verbindingsregels` is de
+ * volledige vorm: elke regel is een toegestane bron×doel-combinatie.
+ * De verkorte vorm `bron`/`doel` (één regel, cartesiaans product) blijft
+ * ondersteund. Zie ook: Verbindingsregel voor een connector-uiteinde.
  *
  * @typedef {Object} ConnectorEindpunt
  * @property {string[]} elementTypes        - toegestane element-typen
@@ -88,17 +92,32 @@
  * ElementType — de betekenis-definitie van een soort element.
  * De vorm komt uit het ShapeType (Implementatie-domein), gekoppeld via `shape`.
  *
+ * DiagramType.shapeSets (P07): optionele alternatieve gedaanten voor één
+ * profiel — [{id, label, shapes: {elementTypeId: shapeId}}]. De gekozen set
+ * overschrijft per elementtype de shape (menu "Shape-set"); de Definitie
+ * blijft gelijk, alleen de vorm wisselt.
+ *
  * @typedef {Object} ElementType
  * @property {string} id
  * @property {string} label
- * @property {string} shape                 - ShapeType-id (bv. "class-box", "note", "boundary")
+ * @property {string} shape                 - ShapeType-id (bv. "class-box", "chip", "knip-box", "note", "boundary")
  * @property {string} [stereotype]          - headerregel, bv. "«entiteit»"
  * @property {string} [kleur]               - default; instantie kan overriden
+ * @property {number} [randDikte]           - vormgrammatica: randbreedte in px (identiteit = dik, bv. 3)
+ * @property {number} [hoekRadius]          - vormgrammatica: hoekafronding in px (structuur = rond)
+ * @property {"dashed"} [randStijl]         - vormgrammatica: gestippeld = inhoud elders beheerd
+ *   (ook per element via data.randStijl); geldt voor class-box, chip en package
  * @property {"standaard"|"onzichtbaar"} [handleStijl] - aansluitpunten tonen of niet
  * @property {boolean} [resizebaar]         - default true; false → geen NodeResizer
  * @property {boolean} [achtergrond]        - true → rendert onder de andere nodes (boundaries/kaders)
  * @property {string} [kort]                - korte knop-tekst voor de "Maken"-taakbalk (bv. "ENT")
  * @property {boolean} [isConnector]
+ * @property {string} [containerVoor]       - connectortype-id: dit type is een
+ *   container (bv. package); een element erin slepen (canvas of boom) legt
+ *   die lidmaatschaps-connector, "Losmaken uit …" haalt hem weer weg.
+ *   Containers sorteren bovenaan in de elementen-boom
+ * @property {boolean} [standaardDichtInBoom] - boomrijen van dit type beginnen
+ *   ingeklapt (zoals mappen in een verkenner); de chevron-klik wint daarna
  * @property {ConnectorEindpunt} [bron]     - verplicht als isConnector
  * @property {ConnectorEindpunt} [doel]     - verplicht als isConnector
  * @property {Object} [edgePresentatie]     - declaratieve edge-vorm voor kale
@@ -158,6 +177,8 @@
  * @property {string} id                    - bv. "canoniek-uml", "puur-uml", "oas31"
  * @property {string} label
  * @property {string} style                 - StyleType-id (Implementatie-domein)
+ * @property {"geen"|"icoon"|"tekst"} [typeWeergave] - default voor de
+ *   Typering-toggle: alleen vorm, mini-icoon of stereotype-tekst (default "tekst")
  * @property {ElementType[]} elementTypes
  * @property {FieldType[]} [fieldTypes]     - de veldtypen waar CompartmentTypes naar verwijzen
  * @property {ReferenceType[]} [referenceTypes] - declaratieve soorten verwijzings-kandidaten (§4.5b)

@@ -11,6 +11,29 @@
  * elementType. Registratie gebeurt onderaan dit bestand.
  */
 import { registreerShape } from "./shapeRegistry.js";
+import { TypeIcoon } from "./typeIconen.jsx";
+
+/**
+ * Typering-regel in de node-kop (vormgevingssessie 2026-07-07, MIM-besluit):
+ * rendert zowel het mini-icoon als de stereotype-tekst; welke zichtbaar is
+ * bepaalt `data-dc-typering` op het canvasvlak (geen | icoon | tekst) via
+ * CSS. Default ("tekst") = het huidige gedrag: alleen de stereotype-regel.
+ */
+function NodeTypering({ element, elementType }) {
+  const d = element.data || {};
+  return (
+    <>
+      <div className="dc-type-icoon">
+        <TypeIcoon elementType={elementType} maat={13} />
+      </div>
+      <div className="dc-stereotype">{d.stereotype || elementType.stereotype || ""}</div>
+    </>
+  );
+}
+
+/** Gestippelde rand = "inhoud elders beheerd" (element-data wint van het type). */
+const isDashed = (element, elementType) =>
+  (element.data?.randStijl || elementType.randStijl) === "dashed";
 
 /** Eén veld-regel, gerenderd volgens de FieldTypeViewer (fieldType.viewer). */
 function VeldRegel({ veld, fieldType }) {
@@ -60,22 +83,28 @@ export function CompartimentLijst({ element, fieldTypesById, compartmentTypesByI
   );
 }
 
-/** UML-klassenbox. */
+/**
+ * UML-klassenbox. Vormgrammatica-knoppen (per ElementType, allemaal
+ * optioneel): `randDikte` (identiteit = dik), `hoekRadius` (structuur =
+ * rond), `randStijl: "dashed"` (inhoud elders beheerd).
+ */
 function ClassBoxShape({ element, elementType, selected, fieldTypesById, compartmentTypesById, children }) {
   const d = element.data || {};
-  const borderColor = selected ? "#2563eb" : "#94a3b8";
+  const borderColor = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #94a3b8)";
   return (
     <div
       className="dc-node"
       style={{
         borderColor,
-        borderWidth: elementType.id === "entiteit" ? 3 : 2,
-        backgroundColor: d.kleur || elementType.kleur || "#f1f5f9",
+        borderWidth: elementType.randDikte ?? (elementType.id === "entiteit" ? 3 : 2),
+        ...(elementType.hoekRadius !== undefined ? { borderRadius: elementType.hoekRadius } : {}),
+        ...(isDashed(element, elementType) ? { borderStyle: "dashed" } : {}),
+        backgroundColor: d.kleur || elementType.kleur || "var(--dc-node-vulling, #f1f5f9)",
       }}
     >
       {children}
       <div className="dc-node-header">
-        <div className="dc-stereotype">{d.stereotype || elementType.stereotype || ""}</div>
+        <NodeTypering element={element} elementType={elementType} />
         <div className={"dc-naam" + (d.abstract ? " is-abstract" : "")}>
           {element.naam || "(naamloos)"}
         </div>
@@ -86,6 +115,95 @@ function ClassBoxShape({ element, elementType, selected, fieldTypesById, compart
         fieldTypesById={fieldTypesById}
         compartmentTypesById={compartmentTypesById}
       />
+    </div>
+  );
+}
+
+/**
+ * Chip — de waarde-familie van de vormgrammatica (MIM-besluit 2026-07-07):
+ * sterk afgeronde uiteinden, dunne rand. Gestippeld (`randStijl: "dashed"`)
+ * = de inhoud leeft buiten het model (codelijst). Compartimenten (waarden,
+ * data-elementen) renderen gewoon binnen de chip.
+ */
+function ChipShape({ element, elementType, selected, fieldTypesById, compartmentTypesById, children }) {
+  const d = element.data || {};
+  const borderColor = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #94a3b8)";
+  return (
+    <div
+      className="dc-node"
+      style={{
+        minWidth: 150,
+        borderColor,
+        borderWidth: 1.5,
+        borderRadius: 22,
+        ...(isDashed(element, elementType) ? { borderStyle: "dashed" } : {}),
+        backgroundColor: d.kleur || elementType.kleur || "var(--dc-node-vulling, #f1f5f9)",
+        padding: "2px 8px 4px",
+      }}
+    >
+      {children}
+      <div className="dc-node-header" style={{ padding: "4px 10px 3px" }}>
+        <NodeTypering element={element} elementType={elementType} />
+        <div className={"dc-naam" + (d.abstract ? " is-abstract" : "")} style={{ fontSize: 13 }}>
+          {element.naam || "(naamloos)"}
+        </div>
+      </div>
+      <CompartimentLijst
+        element={element}
+        fieldTypesById={fieldTypesById}
+        compartmentTypesById={compartmentTypesById}
+      />
+    </div>
+  );
+}
+
+/**
+ * Knip-box — vier afgeknipte hoeken: "meerdere gedaanten" (MIM-keuze).
+ * Zelfde laag-techniek als de DMN-BKM (CSS-borders kunnen geen diagonale
+ * knippen volgen): rand-laag + 1.5px kleinere vul-laag, inhoud erbovenop.
+ */
+function KnipBoxShape({ element, elementType, selected, fieldTypesById, compartmentTypesById, children }) {
+  const d = element.data || {};
+  const rand = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #94a3b8)";
+  const KNIP = 13;
+  const knip = (k) =>
+    `polygon(${k}px 0, calc(100% - ${k}px) 0, 100% ${k}px, 100% calc(100% - ${k}px), calc(100% - ${k}px) 100%, ${k}px 100%, 0 calc(100% - ${k}px), 0 ${k}px)`;
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minWidth: 160,
+        minHeight: 52,
+        position: "relative",
+        cursor: "grab",
+        fontSize: 12,
+        filter: "drop-shadow(0 1px 3px rgba(0, 0, 0, 0.12))",
+      }}
+    >
+      {children}
+      <div style={{ position: "absolute", inset: 0, clipPath: knip(KNIP), background: rand }} />
+      <div
+        style={{
+          position: "absolute",
+          inset: 1.5,
+          clipPath: knip(KNIP - 1),
+          background: d.kleur || elementType.kleur || "var(--dc-node-vulling, #f1f5f9)",
+        }}
+      />
+      <div style={{ position: "relative", zIndex: 1, padding: "2px 14px 4px" }}>
+        <div className="dc-node-header" style={{ padding: "4px 0 3px" }}>
+          <NodeTypering element={element} elementType={elementType} />
+          <div className={"dc-naam" + (d.abstract ? " is-abstract" : "")} style={{ fontSize: 13 }}>
+            {element.naam || "(naamloos)"}
+          </div>
+        </div>
+        <CompartimentLijst
+          element={element}
+          fieldTypesById={fieldTypesById}
+          compartmentTypesById={compartmentTypesById}
+        />
+      </div>
     </div>
   );
 }
@@ -159,7 +277,7 @@ function RoundedShape({ element, elementType, selected, children }) {
 
 /** Klein cirkelvormig ankerpunt (associatieklasse-constructie). */
 function AnkerShape({ selected, children }) {
-  const borderColor = selected ? "#2563eb" : "#94a3b8";
+  const borderColor = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #94a3b8)";
   return (
     <div
       style={{
@@ -232,7 +350,7 @@ function BoundaryShape({ element, selected, children }) {
 function BolShape({ element, elementType, selected, children }) {
   const d = element.data || {};
   const kleur = d.kleur || elementType.kleur || "#a5b4fc";
-  const rand = selected ? "#2563eb" : "#64748b";
+  const rand = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #64748b)";
   const velden = (element.compartimenten || [])
     .flatMap((c) => c.velden || [])
     .filter((v) => v.naam);
@@ -346,11 +464,231 @@ function BolShape({ element, elementType, selected, children }) {
   );
 }
 
+/**
+ * UML-package: de "hangmap" — een naam-tab linksboven die zijn onderrand
+ * deelt met de romp eronder (UML §12.2). De tab draagt de naam; de romp is
+ * verder leeg en fungeert als drop-doel (ElementType.containerVoor).
+ */
+function PackageShape({ element, elementType, selected, children }) {
+  const d = element.data || {};
+  const rand = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #94a3b8)";
+  const vulling = d.kleur || elementType.kleur || "var(--dc-node-vulling, #f1f5f9)";
+  // Gestippeld = extern beheerd (bv. het MIM-«extern»-package).
+  const stijl = isDashed(element, elementType) ? "dashed" : "solid";
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minWidth: 200,
+        minHeight: 110,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        position: "relative",
+        cursor: "grab",
+      }}
+    >
+      {children}
+      {/* De tab overlapt de bovenrand van de romp (marginBottom -2 + zIndex),
+          zodat tab en romp één doorlopende contour vormen — de hangmap. */}
+      <div
+        style={{
+          maxWidth: "65%",
+          padding: "3px 14px 4px",
+          borderTop: `2px ${stijl} ${rand}`,
+          borderLeft: `2px ${stijl} ${rand}`,
+          borderRight: `2px ${stijl} ${rand}`,
+          borderRadius: "6px 6px 0 0",
+          background: vulling,
+          fontSize: 12,
+          fontWeight: 700,
+          color: "#0f172a",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          position: "relative",
+          zIndex: 1,
+          marginBottom: -2,
+        }}
+      >
+        {element.naam || "(naamloos)"}
+      </div>
+      <div
+        style={{
+          flex: 1,
+          alignSelf: "stretch",
+          border: `2px ${stijl} ${rand}`,
+          borderRadius: "0 8px 8px 8px",
+          background: vulling,
+          boxShadow: "0 1px 4px rgba(0, 0, 0, 0.1)",
+          padding: "6px 10px",
+        }}
+      >
+        <div className="dc-stereotype">{d.stereotype || elementType.stereotype || ""}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ── DMN/DRD-shapes (vormgevingssessie 2026-07-05, t.b.v. het DMN-profiel) ──
+   DMN §6.2 schrijft de DRD-vormen voor: Decision = rechthoek (class-box),
+   Input Data = "stadium" (rechthoek met halfronde uiteinden), Business
+   Knowledge Model = rechthoek met afgeknipte hoeken linksboven/rechtsonder,
+   Knowledge Source = rechthoek met golvende onderrand. DRD-nodes tonen
+   alleen hun naam (geen compartimenten). Kleuren komen uit het profiel. */
+
+/** Gedeelde naam-overlay voor de DMN-shapes (stereotype klein, naam vet). */
+function DmnNaam({ element, elementType, extraStijl }) {
+  const d = element.data || {};
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+        padding: "4px 14px",
+        pointerEvents: "none",
+        ...extraStijl,
+      }}
+    >
+      <div className="dc-stereotype">{d.stereotype || elementType.stereotype || ""}</div>
+      <div className="dc-naam" style={{ fontSize: 13 }}>{element.naam || "(naamloos)"}</div>
+    </div>
+  );
+}
+
+/** DMN Input Data: stadiumvorm — twee rechte zijden, halfronde uiteinden. */
+function DmnInputDataShape({ element, elementType, selected, children }) {
+  const d = element.data || {};
+  const rand = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #94a3b8)";
+  // Zelfde dashed-conventie als de andere shapes (isDashed-vlag van het type).
+  const stijl = isDashed(element, elementType) ? "dashed" : "solid";
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minWidth: 150,
+        minHeight: 56,
+        position: "relative",
+        border: `2px ${stijl} ${rand}`,
+        borderRadius: 999,
+        background: d.kleur || elementType.kleur || "var(--dc-node-vulling, #f1f5f9)",
+        boxShadow: "0 1px 4px rgba(0, 0, 0, 0.1)",
+        cursor: "grab",
+      }}
+    >
+      {children}
+      <DmnNaam element={element} elementType={elementType} />
+    </div>
+  );
+}
+
+/**
+ * DMN Business Knowledge Model: rechthoek met afgeknipte hoeken (linksboven
+ * en rechtsonder). Twee gelijk geknipte lagen op elkaar — de onderste in de
+ * randkleur, de bovenste 2px kleiner in de vulkleur — geven een strakke rand
+ * die de diagonale knippen volgt (CSS-borders kunnen dat niet).
+ */
+function DmnBkmShape({ element, elementType, selected, children }) {
+  const d = element.data || {};
+  const rand = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #94a3b8)";
+  const KNIP = 14;
+  const knip = (k) =>
+    `polygon(${k}px 0, 100% 0, 100% calc(100% - ${k}px), calc(100% - ${k}px) 100%, 0 100%, 0 ${k}px)`;
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minWidth: 160,
+        minHeight: 64,
+        position: "relative",
+        cursor: "grab",
+        filter: "drop-shadow(0 1px 3px rgba(0, 0, 0, 0.12))",
+      }}
+    >
+      {children}
+      <div style={{ position: "absolute", inset: 0, clipPath: knip(KNIP), background: rand }} />
+      <div
+        style={{
+          position: "absolute",
+          inset: 2,
+          clipPath: knip(KNIP - 1),
+          background: d.kleur || elementType.kleur || "var(--dc-node-vulling, #f1f5f9)",
+        }}
+      />
+      <DmnNaam element={element} elementType={elementType} />
+    </div>
+  );
+}
+
+/** DMN Knowledge Source: rechthoek met golvende onderrand. */
+function DmnKnowledgeSourceShape({ element, elementType, selected, children }) {
+  const d = element.data || {};
+  const rand = selected ? "var(--dc-selectie, #2563eb)" : "var(--dc-node-rand, #94a3b8)";
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        minWidth: 160,
+        minHeight: 80,
+        position: "relative",
+        cursor: "grab",
+      }}
+    >
+      {children}
+      {/* preserveAspectRatio="none": de golf rekt mee met de node; de stroke
+          blijft 2px door vector-effect. De golf zakt onder de tekstzone. */}
+      <svg
+        viewBox="0 0 200 130"
+        preserveAspectRatio="none"
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible" }}
+      >
+        <path
+          d="M2 2 H198 V104 C165 84 135 124 100 104 C65 84 35 124 2 104 Z"
+          fill={d.kleur || elementType.kleur || "var(--dc-node-vulling, #f1f5f9)"}
+          stroke={rand}
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <DmnNaam element={element} elementType={elementType} extraStijl={{ paddingBottom: "22%" }} />
+    </div>
+  );
+}
+
 registreerShape("class-box", ClassBoxShape);
+registreerShape("chip", ChipShape);
+registreerShape("knip-box", KnipBoxShape);
 registreerShape("note", NoteShape);
 registreerShape("rounded", RoundedShape);
 registreerShape("anker", AnkerShape);
 registreerShape("boundary", BoundaryShape);
 registreerShape("bol", BolShape);
+registreerShape("package", PackageShape);
+registreerShape("dmn-input-data", DmnInputDataShape);
+registreerShape("dmn-bkm", DmnBkmShape);
+registreerShape("dmn-knowledge-source", DmnKnowledgeSourceShape);
 
-export { ClassBoxShape, NoteShape, RoundedShape, AnkerShape, BoundaryShape, BolShape };
+export {
+  ClassBoxShape,
+  ChipShape,
+  KnipBoxShape,
+  NoteShape,
+  RoundedShape,
+  AnkerShape,
+  BoundaryShape,
+  BolShape,
+  PackageShape,
+  DmnInputDataShape,
+  DmnBkmShape,
+  DmnKnowledgeSourceShape,
+};

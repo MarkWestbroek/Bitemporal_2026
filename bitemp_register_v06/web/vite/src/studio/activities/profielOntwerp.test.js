@@ -8,7 +8,10 @@ import {
   profielOntwerpKern,
   bouwProfielUitOntwerp,
   ontwerpUitProfiel,
+  ontwerpUitAlleProfielen,
+  layoutSleutels,
   voorbeeldOntwerpMetRegel,
+  elementenVanDiagram,
 } from "./profielOntwerp.js";
 import { vertaalHooks } from "./profielGereedschap.js";
 import { valideerDiagramType } from "../../diagramcore/types/typeRegistry.js";
@@ -126,4 +129,226 @@ test("ontwerpUitProfiel ⇄ bouwProfielUitOntwerp: round-trip behoudt de structu
 
 test("bouwProfielUitOntwerp: leeg ontwerp geeft een nette fout", () => {
   assert.throws(() => bouwProfielUitOntwerp({ elements: {} }, { id: "x" }), /geen Elementtype/);
+});
+
+test("verbindingsregel-lijnen met dezelfde naam bundelen tot één connectortype (1..*)", () => {
+  const ontwerp = maakOntwerp();
+  // Tweede lijn met dezelfde naam "draait om": Ster → Planeet
+  ontwerp.elements.R2 = {
+    id: "R2",
+    naam: "draait om",
+    elementType: "verbindingsregel",
+    source: "E1",
+    target: "E2",
+    compartimenten: [],
+    data: {},
+  };
+  const kern = bouwProfielUitOntwerp(ontwerp, { id: "zonnestelsel" });
+  const regel = kern.elementTypes.find((et) => et.id === "draait-om");
+  assert.ok(Array.isArray(regel.verbindingsregels), "gebundeld tot verbindingsregels 1..*");
+  assert.equal(regel.verbindingsregels.length, 2);
+  assert.deepEqual(regel.verbindingsregels[0], { bron: ["planeet"], doel: ["ster"] });
+  assert.deepEqual(regel.verbindingsregels[1], { bron: ["ster"], doel: ["planeet"] });
+  // en het geheel blijft registreerbaar
+  assert.deepEqual(valideerDiagramType(vertaalHooks(kern)), []);
+
+  // De inverse tekent per paar weer een lijn met dezelfde naam
+  const terug = ontwerpUitProfiel(kern);
+  const lijnen = Object.values(terug.elements).filter((el) => el.elementType === "verbindingsregel");
+  assert.equal(lijnen.filter((l) => l.naam === "draait om").length, 2);
+});
+
+test("elementenVanDiagram: alleen nodes van het diagram + connectoren met beide uiteinden erop", () => {
+  const state = {
+    elements: {
+      A: { id: "A", elementType: "elementDef" },
+      B: { id: "B", elementType: "elementDef" },
+      C: { id: "C", elementType: "elementDef" },
+      R1: { id: "R1", elementType: "verbindingsregel", source: "A", target: "B" },
+      R2: { id: "R2", elementType: "verbindingsregel", source: "A", target: "C" },
+    },
+    diagrams: {
+      d1: { id: "d1", nodes: [{ elementId: "A" }, { elementId: "B" }] },
+      d2: { id: "d2", nodes: [{ elementId: "C" }] },
+    },
+  };
+  const d1 = elementenVanDiagram(state, "d1");
+  assert.deepEqual(Object.keys(d1).sort(), ["A", "B", "R1"], "R2 hangt half buiten d1");
+  const d2 = elementenVanDiagram(state, "d2");
+  assert.deepEqual(Object.keys(d2), ["C"]);
+});
+
+test("hiërarchie (P02): bevat-vinkje op een regel-lijn wordt kern.hierarchie en terug", () => {
+  const ontwerp = maakOntwerp();
+  ontwerp.elements.R1.data.isHierarchie = true;
+  const kern = bouwProfielUitOntwerp(ontwerp, { id: "zonnestelsel" });
+  assert.equal(kern.hierarchie, "draait-om");
+  assert.deepEqual(valideerDiagramType(vertaalHooks(kern)), []);
+
+  const terug = ontwerpUitProfiel(kern);
+  const lijn = Object.values(terug.elements).find((el) => el.elementType === "verbindingsregel");
+  assert.equal(lijn.data.isHierarchie, true);
+});
+
+test("ontwerpUitAlleProfielen: diagram per profiel + bewaarde layout wint", () => {
+  const profielA = {
+    id: "prof-a",
+    label: "Profiel A",
+    fieldTypes: [],
+    elementTypes: [{ id: "ding", label: "Ding", shape: "class-box", properties: [] }],
+  };
+  const profielB = {
+    id: "prof-b",
+    label: "Profiel B",
+    fieldTypes: [],
+    elementTypes: [{ id: "zaak", label: "Zaak", shape: "class-box", properties: [] }],
+  };
+  const layouts = { "prof-a": { "elementDef:Ding#1": { x: 555, y: 66 } } };
+  const { elements, diagrams } = ontwerpUitAlleProfielen([profielA, profielB], (pid) => layouts[pid]);
+  assert.deepEqual(Object.keys(diagrams).sort(), ["ontw_prof-a", "ontw_prof-b"]);
+  const nodeA = diagrams["ontw_prof-a"].nodes.find(
+    (n) => elements[n.elementId]?.naam === "Ding"
+  );
+  assert.deepEqual(nodeA.position, { x: 555, y: 66 }, "bewaarde standaard-layout wint");
+  const nodeB = diagrams["ontw_prof-b"].nodes.find(
+    (n) => elements[n.elementId]?.naam === "Zaak"
+  );
+  assert.ok(nodeB, "tweede profiel heeft zijn eigen diagram met nodes");
+});
+
+test("layoutSleutels: naamgenoten krijgen stabiele volgnummers", () => {
+  const elements = {
+    a: { id: "a", naam: "velden", elementType: "compartimentDef" },
+    b: { id: "b", naam: "velden", elementType: "compartimentDef" },
+  };
+  const nodes = [{ elementId: "a" }, { elementId: "b" }];
+  const sleutels = layoutSleutels(elements, nodes).map((x) => x.sleutel);
+  assert.deepEqual(sleutels, ["compartimentDef:velden#1", "compartimentDef:velden#2"]);
+});
+
+test("container-vinkje en standaard-dicht reizen mee door ontwerp en bouw", () => {
+  const ontwerp = ontwerpUitProfiel({
+    id: "pkg-test",
+    label: "Pkg",
+    fieldTypes: [],
+    elementTypes: [
+      {
+        id: "map",
+        label: "Map",
+        shape: "class-box",
+        containerVoor: "in",
+        standaardDichtInBoom: true,
+        properties: [],
+      },
+      { id: "blad", label: "Blad", shape: "class-box", properties: [] },
+      {
+        id: "in",
+        label: "In",
+        shape: "edge",
+        isConnector: true,
+        bron: { elementTypes: ["map"] },
+        doel: { elementTypes: ["blad"] },
+      },
+    ],
+    hierarchie: "in",
+  });
+  const mapDef = Object.values(ontwerp.elements).find((el) => el.naam === "Map");
+  assert.equal(mapDef.data.container, true, "containerVoor wordt het container-vinkje");
+  assert.equal(mapDef.data.standaardDichtInBoom, true);
+
+  const kern = bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "pkg-test", label: "Pkg" });
+  const mapEt = kern.elementTypes.find((et) => et.label === "Map");
+  const inCt = kern.elementTypes.find((et) => et.isConnector);
+  assert.equal(mapEt.standaardDichtInBoom, true);
+  assert.equal(mapEt.containerVoor, inCt.id, "containerVoor wijst naar de hiërarchie-connector");
+  assert.ok(!("_containerWens" in mapEt), "werk-vlag blijft niet achter");
+});
+
+test("ET-stereotype reist als doelStereotype (ontwerp-node toont zijn eigen «elementtype»)", () => {
+  const ontwerp = ontwerpUitProfiel({
+    id: "st-test",
+    label: "St",
+    fieldTypes: [],
+    elementTypes: [
+      { id: "pak", label: "Pak", shape: "class-box", stereotype: "«package»", properties: [] },
+    ],
+  });
+  const def = Object.values(ontwerp.elements).find((el) => el.naam === "Pak");
+  assert.equal(def.data.doelStereotype, "«package»");
+  assert.equal(def.data.stereotype, undefined, "weergave-override blijft vrij voor de ET-node zelf");
+
+  const kern = bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "st-test", label: "St" });
+  assert.equal(kern.elementTypes[0].stereotype, "«package»", "terugreis levert het doel-stereotype");
+});
+
+test("implementatie-compartiment toont hooks, eigen editors en resolvers", () => {
+  const ontwerp = ontwerpUitProfiel({
+    id: "impl-test",
+    label: "Impl",
+    fieldTypes: [],
+    elementTypes: [
+      {
+        id: "ding",
+        label: "Ding",
+        shape: "class-box",
+        properties: [
+          { key: "expressie", datatype: "cel-expressie" },
+          { key: "type", referenceTypes: ["basistype"] },
+        ],
+        hooks: { extraCompartimenten: () => [] },
+      },
+      { id: "kaal", label: "Kaal", shape: "class-box", properties: [] },
+    ],
+  });
+  const def = Object.values(ontwerp.elements).find((el) => el.naam === "Ding");
+  const impl = (def.compartimenten || []).find((c) => c.compartmentType === "implementatie");
+  const namen = (impl?.velden || []).map((v) => v.naam);
+  assert.ok(namen.includes("hook: extraCompartimenten"), namen.join(", "));
+  const hookVeld = (impl?.velden || []).find((v) => v.naam === "hook: extraCompartimenten");
+  assert.equal(hookVeld.data.typeLabel, "Extra compartimenten", "catalogus-naam als handler-label");
+  assert.ok(hookVeld.data.beschrijving.length > 20, "beschrijving uit de catalogus");
+  assert.ok(namen.some((n) => n.startsWith("editor: cel-expressie")));
+  assert.ok(namen.some((n) => n.startsWith("resolver: basistype")));
+  const resolverVeld = (impl?.velden || []).find((v) => v.naam.startsWith("resolver: basistype"));
+  assert.ok(resolverVeld.data.beschrijving, "fallback-beschrijving voor ongeregistreerde resolver");
+  // zonder implementatie geen (leeg) compartiment
+  const kaal = Object.values(ontwerp.elements).find((el) => el.naam === "Kaal");
+  assert.ok(!(kaal.compartimenten || []).some((c) => c.compartmentType === "implementatie"));
+});
+
+test("icoon en embleem reizen mee door ontwerp en bouw", () => {
+  const ontwerp = ontwerpUitProfiel({
+    id: "ico-test",
+    label: "Ico",
+    fieldTypes: [],
+    elementTypes: [
+      { id: "ding", label: "Ding", shape: "class-box", icoon: "enumeratie", properties: [] },
+    ],
+  });
+  const def = Object.values(ontwerp.elements).find((el) => el.naam === "Ding");
+  assert.equal(def.data.icoon, "enumeratie");
+  const kern = bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "ico-test", label: "Ico" });
+  assert.equal(kern.elementTypes[0].icoon, "enumeratie");
+});
+
+test("profiel-instellingen (typering-default + shape-sets) reizen door ontwerp en bouw", () => {
+  const ontwerp = ontwerpUitProfiel({
+    id: "set-test",
+    label: "Set",
+    typeWeergave: "geen",
+    shapeSets: [{ id: "klassiek", label: "Klassiek", shapes: { ding: "class-box" } }],
+    fieldTypes: [],
+    elementTypes: [{ id: "ding", label: "Ding", shape: "chip", properties: [] }],
+  });
+  const prf = Object.values(ontwerp.elements).find((el) => el.elementType === "profielDef");
+  assert.ok(prf, "instellingen-node aanwezig");
+  assert.equal(prf.data.typeWeergave, "geen");
+  const regel = prf.compartimenten[0].velden[0];
+  assert.equal(regel.naam, "Klassiek");
+  assert.equal(regel.data.typeLabel, "1 shapes");
+  assert.ok(/ding → class-box/.test(regel.data.beschrijving));
+
+  const kern = bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "set-test", label: "Set" });
+  assert.equal(kern.typeWeergave, "geen", "typering-default terug in de kern");
+  assert.deepEqual(kern.shapeSets, [{ id: "klassiek", label: "Klassiek", shapes: { ding: "class-box" } }]);
 });

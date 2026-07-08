@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 import { readdir, readFile, writeFile } from "fs/promises";
-import { readFileSync } from "fs";
+import { readFileSync, existsSync, mkdirSync, readdirSync, writeFileSync, unlinkSync } from "fs";
 import { execSync } from "child_process";
 
 // ── Versie-/build-info voor de frontend ───────────────────────────────────
@@ -49,8 +49,72 @@ function normalizeBuildLineEndings() {
   };
 }
 
+// Plugin (alleen dev): /__studio05/profielen ↔ de map web/vite/profielen/.
+// Zo persisteren PE-profielen (kern + layout + icoon) als json-bestanden in
+// de repo en reizen ze via git mee naar andere dev-machines (P04). In een
+// productie-build bestaat het endpoint niet; de studio valt dan terug op
+// localStorage.
+function studio05Profielen() {
+  const map = resolve(__dirname, "profielen");
+  const geldigId = (id) => /^[a-z0-9][a-z0-9-]*$/.test(id);
+  return {
+    name: "studio05-profielen",
+    apply: "serve",
+    configureServer(server) {
+      server.middlewares.use("/__studio05/profielen", (req, res) => {
+        try {
+          if (!existsSync(map)) mkdirSync(map, { recursive: true });
+          const pad = (req.url || "/").split("?")[0];
+          const id = decodeURIComponent(pad.replace(/^\//, ""));
+          if (req.method === "GET" && !id) {
+            const alles = {};
+            for (const f of readdirSync(map).filter((n) => n.endsWith(".json"))) {
+              try {
+                alles[f.replace(/\.json$/, "")] = JSON.parse(readFileSync(resolve(map, f), "utf8"));
+              } catch {
+                /* kapot bestand: overslaan, niet crashen */
+              }
+            }
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify(alles));
+            return;
+          }
+          if (req.method === "PUT" && geldigId(id)) {
+            let body = "";
+            req.on("data", (d) => (body += d));
+            req.on("end", () => {
+              try {
+                JSON.parse(body); // valideer vóór schrijven
+                writeFileSync(resolve(map, `${id}.json`), body.endsWith("\n") ? body : `${body}\n`, "utf8");
+                res.statusCode = 204;
+                res.end();
+              } catch (e) {
+                res.statusCode = 400;
+                res.end(String(e?.message || e));
+              }
+            });
+            return;
+          }
+          if (req.method === "DELETE" && geldigId(id)) {
+            const bestand = resolve(map, `${id}.json`);
+            if (existsSync(bestand)) unlinkSync(bestand);
+            res.statusCode = 204;
+            res.end();
+            return;
+          }
+          res.statusCode = 405;
+          res.end();
+        } catch (e) {
+          res.statusCode = 500;
+          res.end(String(e?.message || e));
+        }
+      });
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), normalizeBuildLineEndings()],
+  plugins: [react(), normalizeBuildLineEndings(), studio05Profielen()],
   base: "/viz/react/",
   define: {
     __APP_VERSION__: JSON.stringify(APP_VERSION),

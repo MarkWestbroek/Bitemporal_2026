@@ -67,10 +67,26 @@ test("maximaal 9 compartimenten per ElementType (metamodel 0..9)", () => {
   assert.equal(valideerDiagramType(dt).length, 0);
 });
 
-test("connector vereist bron- en doel-regels", () => {
+test("connector vereist minimaal één verbindingsregel met bron én doel", () => {
   const dt = maakGeldigDiagramType();
   delete dt.elementTypes[1].bron;
-  assert.match(valideerDiagramType(dt).join("\n"), /zonder bron/);
+  assert.match(valideerDiagramType(dt).join("\n"), /verbindingsregel met bron én doel/);
+});
+
+test("verbindingsregels 1..* (volledige vorm) valideren per regel", () => {
+  const dt = maakGeldigDiagramType();
+  delete dt.elementTypes[1].bron;
+  delete dt.elementTypes[1].doel;
+  dt.elementTypes[1].verbindingsregels = [
+    { bron: ["blok"], doel: ["blok"] },
+    { bron: ["blok"], doel: ["bestaat-niet"] },
+  ];
+  assert.match(
+    valideerDiagramType(dt).join("\n"),
+    /regel 2: doel verwijst naar onbekend ElementType "bestaat-niet"/
+  );
+  dt.elementTypes[1].verbindingsregels = [{ bron: ["blok"], doel: ["blok"] }];
+  assert.deepEqual(valideerDiagramType(dt), []);
 });
 
 test("verbindingsregels moeten naar bestaande element-typen verwijzen", () => {

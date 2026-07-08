@@ -4,7 +4,7 @@
  * niet meer dan een descriptor + een fabriek-aanroep — geen koppeling met
  * het canonieke model, geen serialisatie, geen eigen componenten.
  */
-import { IconUML } from "../icons";
+import { IconUML05 } from "../icons";
 import { registreerPuurUml, puurUmlDiagramType, maakElement } from "../../diagramprofielen/puur-uml/index.js";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
 
@@ -13,7 +13,7 @@ registreerPuurUml();
 export default maakDiagramActiviteit({
   id: "puurUml05",
   label: "UML (0.5)",
-  icon: <IconUML />,
+  icon: <IconUML05 />,
   descriptor: puurUmlDiagramType,
   maakElement,
   persistKey: "studio05-puur-uml",
