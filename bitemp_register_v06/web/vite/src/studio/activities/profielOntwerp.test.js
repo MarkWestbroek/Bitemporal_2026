@@ -331,24 +331,29 @@ test("icoon en embleem reizen mee door ontwerp en bouw", () => {
   assert.equal(kern.elementTypes[0].icoon, "enumeratie");
 });
 
-test("profiel-instellingen (typering-default + shape-sets) reizen door ontwerp en bouw", () => {
+test("shape-sets + typering zijn Style-data op het diagram (geen canvas-node) en reizen mee", () => {
+  const skinSet = [
+    { id: "klassiek", label: "Klassiek", shapes: { ding: { shape: "class-box", icoon: "klasse", kleur: "#eeeeee" } } },
+  ];
   const ontwerp = ontwerpUitProfiel({
     id: "set-test",
     label: "Set",
     typeWeergave: "geen",
-    shapeSets: [{ id: "klassiek", label: "Klassiek", shapes: { ding: "class-box" } }],
+    shapeSets: skinSet,
     fieldTypes: [],
     elementTypes: [{ id: "ding", label: "Ding", shape: "chip", properties: [] }],
   });
-  const prf = Object.values(ontwerp.elements).find((el) => el.elementType === "profielDef");
-  assert.ok(prf, "instellingen-node aanwezig");
-  assert.equal(prf.data.typeWeergave, "geen");
-  const regel = prf.compartimenten[0].velden[0];
-  assert.equal(regel.naam, "Klassiek");
-  assert.equal(regel.data.typeLabel, "1 shapes");
-  assert.ok(/ding → class-box/.test(regel.data.beschrijving));
+  // Geen «profiel»-node meer op het canvas; het leeft op het diagram.
+  assert.ok(!Object.values(ontwerp.elements).some((el) => el.elementType === "profielDef"));
+  const diag = Object.values(ontwerp.diagrams)[0];
+  assert.equal(diag.typeWeergave, "geen");
+  assert.deepEqual(diag.shapeSets, skinSet);
 
-  const kern = bouwProfielUitOntwerp({ elements: ontwerp.elements }, { id: "set-test", label: "Set" });
+  // Bouw krijgt Style-data als eigen state-velden (niet als elementen).
+  const kern = bouwProfielUitOntwerp(
+    { elements: ontwerp.elements, shapeSets: diag.shapeSets, typeWeergave: diag.typeWeergave },
+    { id: "set-test", label: "Set" }
+  );
   assert.equal(kern.typeWeergave, "geen", "typering-default terug in de kern");
-  assert.deepEqual(kern.shapeSets, [{ id: "klassiek", label: "Klassiek", shapes: { ding: "class-box" } }]);
+  assert.deepEqual(kern.shapeSets, skinSet, "volledige skin (shape+icoon+kleur) pass-through");
 });

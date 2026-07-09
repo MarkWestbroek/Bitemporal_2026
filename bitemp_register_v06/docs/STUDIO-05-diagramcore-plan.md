@@ -6,7 +6,32 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **profiel-instellingen in de PE +
+  fase 7 (register). Laatste ronde: **lijnstijlen in de shape-set-matrix**
+  (2026-07-09, branch `feat/studio05-shapesets`): de matrix heeft nu een
+  tweede sectie met **connectortype-rijen** — kolom 0 = de eigen lijnstijl
+  van de verbindingsregel(s), kolom 1..n = per-set overrides. De cel is een
+  lijn-editor (lijn/dash, vorm bezier/hoekig/recht/boom, markerStart,
+  markerEnd, kleur) met mini-preview. Voor een connectortype overschrijft de
+  set de `edgePresentatie` (de canvas-overlay merget nu context-afhankelijk:
+  node → shape/icoon/kleur, connector → edgePresentatie); gelijknamige
+  verbindingsregels vormen één rij (= één connectortype bij het bouwen).
+  Vorige stap in deze ronde: **grafische shape-set-matrix (Style-domein)**
+  (branch `feat/studio05-shapesets`): shape-sets horen in het
+  **Style-domein** (vorm), niet in de profiel-definitie — dus géén canvas-node
+  (de vorige «profiel»-instellingen-node is verwijderd). In plaats daarvan een
+  **matrix-paneel in een verstelbaar/inklapbaar onder-dock**, alleen in de PE:
+  rijen = de elementtypen (de "ElementtypeSet"), kolom 0 = **Standaard** (de
+  eigen shape/icoon/kleur van het type — bewerken hier ⇄ op de node), kolom
+  1..n = extra **shape-sets** die op volgorde overriden (lege cel = standaard).
+  Een set-entry is nu een volledige **skin: shape + icoon + kleur** (datamodel
+  `{type: {shape,icoon,kleur}}`, terugwaarts compatibel met de kale
+  string-vorm; de canvas-overlay past alle drie toe). Shape-sets +
+  typering-standaard zijn **Style-data op het ontwerp-diagram**
+  (`updateDiagramStijl`), gaan pass-through door `bouwProfielUitOntwerp` naar
+  `descriptor.shapeSets`/`typeWeergave`, en persisteren via git. De fabriek
+  kreeg een generieke `onderPaneel`-optie (dock). Open/later: connector-/
+  lijnstijlen in dezelfde matrix, en het toevoegen van níeuwe vormen (SVG,
+  G01). Eerdere ronde: **profiel-instellingen in de PE +
   vinkje-fix** (2026-07-07): (1) elk ontwerp-diagram heeft nu een
   **«profiel»-instellingen-node**: de typering-standaard (geen/icoon/tekst)
   en de shape-sets van het profiel zijn daar zichtbaar (leesbaar

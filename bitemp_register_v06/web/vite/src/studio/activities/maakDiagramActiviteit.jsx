@@ -91,6 +91,10 @@ export function maakDiagramActiviteit(opties) {
     // PE: één profiel per diagram — de browser toont dan alleen de elementen
     // van het actieve diagram (plus wat nergens op een diagram staat).
     browserAlleenActiefDiagram = false,
+    // Optioneel onder-dock (verstelbaar + inklapbaar) onder de canvas:
+    // { id, label, Component }. De Component krijgt { useStore } als props.
+    // Bv. het shape-set-matrixpaneel van de profiel-editor.
+    onderPaneel = null,
   } = opties;
 
   const ev = (naam) => `${menuPrefix}:${naam}`;
@@ -1932,6 +1936,92 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
             </div>
           )}
         </div>
+        {onderPaneel && diagram && <OnderDock useStore={useStore} />}
+      </div>
+    );
+  }
+
+  /**
+   * Onder-dock: een verstelbare, inklapbare strook onder de canvas voor het
+   * activiteit-eigen `onderPaneel` (bv. het shape-set-matrixpaneel). Hoogte en
+   * open/dicht blijven in localStorage per activiteit.
+   */
+  function OnderDock({ useStore }) {
+    const hoogteSleutel = `${taakbalkSleutel}-onderdock-h`;
+    const openSleutel = `${taakbalkSleutel}-onderdock-open`;
+    const [hoogte, setHoogte] = useState(() => {
+      const v = Number(window.localStorage.getItem(hoogteSleutel));
+      return v >= 80 ? v : 240;
+    });
+    const [open, setOpen] = useState(() => window.localStorage.getItem(openSleutel) !== "0");
+    const Component = onderPaneel.Component;
+    const sleep = (e) => {
+      e.preventDefault();
+      const startY = e.clientY;
+      const startH = hoogte;
+      const beweeg = (ev) => {
+        const nieuw = Math.max(80, Math.min(startH + (startY - ev.clientY), window.innerHeight - 200));
+        setHoogte(nieuw);
+      };
+      const klaar = () => {
+        window.removeEventListener("pointermove", beweeg);
+        window.removeEventListener("pointerup", klaar);
+        setHoogte((h) => {
+          window.localStorage.setItem(hoogteSleutel, String(h));
+          return h;
+        });
+      };
+      window.addEventListener("pointermove", beweeg);
+      window.addEventListener("pointerup", klaar);
+    };
+    const toggle = () => {
+      setOpen((v) => {
+        window.localStorage.setItem(openSleutel, v ? "0" : "1");
+        return !v;
+      });
+    };
+    return (
+      <div
+        className="dc-onderdock"
+        style={{
+          flexShrink: 0,
+          borderTop: "1px solid var(--s-border, #cbd5e1)",
+          display: "flex",
+          flexDirection: "column",
+          height: open ? hoogte : 30,
+          background: "var(--s-panel, #fff)",
+        }}
+      >
+        {open && (
+          <div
+            onPointerDown={sleep}
+            title="Sleep om de hoogte aan te passen"
+            style={{ height: 5, cursor: "ns-resize", flexShrink: 0, background: "transparent" }}
+          />
+        )}
+        <div
+          onClick={toggle}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "4px 10px",
+            cursor: "pointer",
+            fontSize: 12,
+            fontWeight: 600,
+            color: "var(--s-fg-muted, #64748b)",
+            userSelect: "none",
+            flexShrink: 0,
+          }}
+        >
+          <span style={{ width: 10 }}>{open ? "▾" : "▸"}</span>
+          <span>{onderPaneel.label}</span>
+        </div>
+        {open && (
+          <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+            <Component useStore={useStore} />
+          </div>
+        )}
       </div>
     );
   }
