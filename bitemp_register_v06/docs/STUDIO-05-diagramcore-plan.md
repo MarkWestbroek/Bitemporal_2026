@@ -6,8 +6,20 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **Studio-instellingen: vorm-/icoon-galerij**
-  (2026-07-09, branch `feat/studio05-shape-editor`): een globale activiteit
+  fase 7 (register). Laatste ronde: **data-shapes + vorm-editor**
+  (2026-07-09, branch `feat/studio05-shape-editor`): shapes kunnen nu ook
+  **data** zijn i.p.v. alleen code-componenten. `dataShape.jsx` heeft een
+  generieke renderer (grondvorm rechthoek/afgerond/stadium/chip/zeshoek/
+  afgeknipt + hoekradius/randstijl/dikte/vulling/eigen clip-path; clip-vormen
+  via de twee-lagen-techniek voor een nette rand) die de standaard header +
+  `CompartimentLijst` hergebruikt. In **Studio-instellingen → Eigen vormen**
+  maak/bewerk je ze met live preview; ze worden in de shapeRegistry gezet en
+  zijn overal bruikbaar (galerij, PE-kiezers, shape-sets). Git-persistent via
+  `web/vite/vormen/*.json` (de vite-plugin is veralgemeniseerd tot
+  `studio05Map(sub)` voor profielen én vormen; build-glob voor productie).
+  Volgende: een echte vrije SVG-teken-editor (nu is het parametrisch). Vorige
+  stap in deze ronde: **Studio-instellingen: vorm-/icoon-galerij**
+  (branch `feat/studio05-shape-editor`): een globale activiteit
   "Studio-instellingen" (groep beheer, fullMain) met als eerste onderdeel de
   **read-only galerij** van de gedeelde shape- en icoon-registry's — elke
   shape/icon met live preview + registry-id. Dit maakt zichtbaar wát er is
