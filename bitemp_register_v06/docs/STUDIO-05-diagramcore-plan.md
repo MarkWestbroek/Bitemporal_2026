@@ -6,8 +6,17 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **lijnstijlen in de shape-set-matrix**
-  (2026-07-09, branch `feat/studio05-shapesets`): de matrix heeft nu een
+  fase 7 (register). Laatste ronde: **Studio-instellingen: vorm-/icoon-galerij**
+  (2026-07-09, branch `feat/studio05-shape-editor`): een globale activiteit
+  "Studio-instellingen" (groep beheer, fullMain) met als eerste onderdeel de
+  **read-only galerij** van de gedeelde shape- en icoon-registry's — elke
+  shape/icon met live preview + registry-id. Dit maakt zichtbaar wát er is
+  (het Style-domein leeft globaal, niet per profiel) en is het fundament voor
+  de shape-editor. `basisShapes.jsx` wordt hier als side-effect geïmporteerd,
+  zodat de galerij de volledige registry toont ook zonder geopende canvas.
+  Volgende in deze branch: **data-shapes + SVG-editor** (shapes als
+  declaratieve data i.p.v. alleen code-componenten). Eerdere ronde: **lijnstijlen in de shape-set-matrix**
+  (branch `feat/studio05-shapesets`): de matrix heeft nu een
   tweede sectie met **connectortype-rijen** — kolom 0 = de eigen lijnstijl
   van de verbindingsregel(s), kolom 1..n = per-set overrides. De cel is een
   lijn-editor (lijn/dash, vorm bezier/hoekig/recht/boom, markerStart,

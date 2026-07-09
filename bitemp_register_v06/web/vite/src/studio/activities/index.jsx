@@ -21,6 +21,7 @@ import profielActivity from "./profielActivity";
 import profielOntwerpActivity from "./profielOntwerpActivity";
 import dmnActivity from "./dmnActivity";
 import dmnDrdActivity from "./dmnDrdActivity";
+import studioInstellingenActivity from "./studioInstellingenActivity";
 import mimActivity from "./mimActivity";
 import bpmnActivity from "./bpmnActivity";
 import berichtActivity from "./berichtActivity";
@@ -85,4 +86,6 @@ registreerActiviteiten([
   // data
   rollenActivity,
   referentielijstenActivity,
+  // beheer
+  studioInstellingenActivity, // globale vorm-/icoon-galerij (P07-vervolg)
 ]);

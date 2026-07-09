@@ -186,6 +186,13 @@ export const OmniumMark = ({ size = 22, ...p }) => (
   </svg>
 );
 
+export const IconInstellingen = (p) => (
+  <svg {...base} {...p}>
+    <circle cx="12" cy="12" r="3.2" />
+    <path d="M12 2.2v2.4M12 19.4v2.4M4.1 4.1l1.7 1.7M18.2 18.2l1.7 1.7M2.2 12h2.4M19.4 12h2.4M4.1 19.9l1.7-1.7M18.2 5.8l1.7-1.7" />
+  </svg>
+);
+
 export const IconChevronLeft = (p) => (
   <svg {...base} width={16} height={16} {...p}>
     <path d="m15 18-6-6 6-6" />
