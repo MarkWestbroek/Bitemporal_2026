@@ -103,6 +103,72 @@ function Cel({ skin, standaard, metLeeg, onChange }) {
   );
 }
 
+// ── Lijnstijl-cel (connectortypen): lijn + vorm + markers + kleur ──────────
+const LIJNEN = ["solid", "dash-6-3", "dash-4-3", "dash-4-4"];
+const VORMEN = ["bezier", "hoekig", "recht", "boom"];
+const START_MARKERS = ["", "ruit", "ruit-open"];
+const EIND_MARKERS = ["", "pijl-open", "driehoek", "pijl-dicht", "bol"];
+const DASH = { "dash-6-3": "6 3", "dash-4-3": "4 3", "dash-4-4": "4 4" };
+
+/** Mini-preview van een lijn: dash-patroon, kleur en globale marker-hint. */
+function LijnPreview({ stijl }) {
+  const kleur = stijl.kleur || "#64748b";
+  return (
+    <svg width={54} height={20} style={{ flexShrink: 0 }}>
+      {stijl.markerStart === "ruit" && <polygon points="3,10 8,6 13,10 8,14" fill={kleur} />}
+      {stijl.markerStart === "ruit-open" && <polygon points="3,10 8,6 13,10 8,14" fill="var(--s-panel,#fff)" stroke={kleur} />}
+      <line
+        x1={stijl.markerStart ? 13 : 3}
+        y1={10}
+        x2={stijl.markerEnd ? 41 : 51}
+        y2={10}
+        stroke={kleur}
+        strokeWidth={1.6}
+        strokeDasharray={DASH[stijl.lijn] || undefined}
+      />
+      {stijl.markerEnd === "driehoek" && <polygon points="41,5 51,10 41,15" fill="var(--s-panel,#fff)" stroke={kleur} />}
+      {stijl.markerEnd === "pijl-dicht" && <polygon points="41,5 51,10 41,15" fill={kleur} />}
+      {stijl.markerEnd === "pijl-open" && <polyline points="43,6 51,10 43,14" fill="none" stroke={kleur} strokeWidth={1.4} />}
+      {stijl.markerEnd === "bol" && <circle cx={48} cy={10} r={4} fill={kleur} />}
+    </svg>
+  );
+}
+
+function LijnCel({ stijl, standaard, metLeeg, onChange }) {
+  const s = stijl || {};
+  const eff = { lijn: s.lijn || standaard?.lijn || "solid", kleur: s.kleur || standaard?.kleur, markerStart: s.markerStart ?? standaard?.markerStart, markerEnd: s.markerEnd ?? standaard?.markerEnd };
+  const sel = (waarde, opties, key, leegLabel) => (
+    <select style={selStijl} value={waarde || ""} onChange={(e) => onChange({ ...s, [key]: e.target.value || undefined })}>
+      {opties.map((o) => (
+        <option key={o || "geen"} value={o}>{o || leegLabel}</option>
+      ))}
+    </select>
+  );
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 128 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+        <LijnPreview stijl={eff} />
+        {sel(s.lijn, metLeeg ? ["", ...LIJNEN] : LIJNEN, "lijn", metLeeg ? "— (std)" : "solid")}
+        {sel(s.vorm, metLeeg ? ["", ...VORMEN] : VORMEN, "vorm", metLeeg ? "— (std)" : "bezier")}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+        {sel(s.markerStart, START_MARKERS, "markerStart", "start:—")}
+        {sel(s.markerEnd, EIND_MARKERS, "markerEnd", "eind:—")}
+        <input
+          type="color"
+          title="lijnkleur"
+          value={s.kleur || standaard?.kleur || "#64748b"}
+          onChange={(e) => onChange({ ...s, kleur: e.target.value })}
+          style={{ width: 22, height: 20, padding: 0, border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 4, cursor: "pointer", flexShrink: 0 }}
+        />
+        {metLeeg && Object.keys(s).length > 0 && (
+          <button className="dc-mini-knop" title="Cel leegmaken (neemt de standaard over)" onClick={() => onChange(null)} style={{ padding: "0 5px" }}>×</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function ShapeSetPaneel({ useStore }) {
   const actief = useStore((s) => s.actiefDiagramId);
   const diagram = useStore((s) => s.diagrams[s.actiefDiagramId]);
@@ -111,10 +177,27 @@ export default function ShapeSetPaneel({ useStore }) {
     return <p style={{ margin: 10, color: "var(--s-fg-muted)" }}>Geen profiel actief.</p>;
   }
 
-  // Rijen = de Elementtype-nodes van dit ontwerp (de ElementtypeSet).
-  const rijen = (diagram.nodes || [])
-    .map((n) => elements[n.elementId])
-    .filter((el) => el?.elementType === "elementDef");
+  const opDiagram = (diagram.nodes || []).map((n) => elements[n.elementId]).filter(Boolean);
+  // Node-rijen = de Elementtype-nodes (de ElementtypeSet).
+  const rijen = opDiagram.filter((el) => el?.elementType === "elementDef");
+  // Connector-rijen = de verbindingsregels, gegroepeerd op naam (bij het
+  // bouwen worden gelijknamige lijnen één connectortype). Connectoren zijn
+  // edges — niet in diagram.nodes — dus zoek ze via source/target die op
+  // het diagram staan.
+  const opDiagramIds = new Set((diagram.nodes || []).map((n) => n.elementId));
+  const connGroepen = [];
+  const connIndex = new Map();
+  for (const el of Object.values(elements)) {
+    if (el.elementType !== "verbindingsregel" || !(el.naam || "").trim()) continue;
+    if (!(opDiagramIds.has(el.source) && opDiagramIds.has(el.target))) continue;
+    const key = slug(el.naam);
+    if (!connIndex.has(key)) {
+      connIndex.set(key, connGroepen.length);
+      connGroepen.push({ key, naam: el.naam, ids: [el.id], voorbeeld: el });
+    } else {
+      connGroepen[connIndex.get(key)].ids.push(el.id);
+    }
+  }
   const sets = diagram.shapeSets || [];
 
   const standaardVan = (el) => ({
@@ -122,6 +205,27 @@ export default function ShapeSetPaneel({ useStore }) {
     icoon: el.data?.icoon,
     kleur: el.data?.doelKleur,
   });
+  // Connector-standaard uit de verbindingsregel-data (edgePresentatie-vorm).
+  const lijnStandaardVan = (el) => ({
+    lijn: el.data?.lijn || "solid",
+    vorm: el.data?.vorm,
+    markerStart: el.data?.markerStart,
+    markerEnd: el.data?.markerEnd,
+    kleur: el.data?.doelKleur,
+  });
+  const zetLijnStandaard = (groep, stijl) => {
+    for (const id of groep.ids) {
+      useStore.getState().updateElement(id, {
+        data: {
+          lijn: stijl.lijn || "solid",
+          vorm: stijl.vorm || undefined,
+          markerStart: stijl.markerStart || undefined,
+          markerEnd: stijl.markerEnd || undefined,
+          doelKleur: stijl.kleur || undefined,
+        },
+      });
+    }
+  };
 
   const zetStandaard = (el, skin) =>
     useStore.getState().updateElement(el.id, {
@@ -216,6 +320,35 @@ export default function ShapeSetPaneel({ useStore }) {
                       standaard={std}
                       metLeeg
                       onChange={(skin) => zetCel(i, sleutel, skin)}
+                    />
+                  </td>
+                ))}
+                <td style={celStijl} />
+              </tr>
+            );
+          })}
+          {connGroepen.length > 0 && (
+            <tr>
+              <td colSpan={sets.length + 3} style={{ ...kopStijl, position: "static", fontStyle: "italic", paddingTop: 8 }}>
+                Connectortypen (lijnstijl)
+              </td>
+            </tr>
+          )}
+          {connGroepen.map((groep) => {
+            const std = lijnStandaardVan(groep.voorbeeld);
+            return (
+              <tr key={groep.key}>
+                <td style={{ ...celStijl, fontWeight: 600, whiteSpace: "nowrap" }}>{groep.naam}</td>
+                <td style={celStijl}>
+                  <LijnCel stijl={std} standaard={std} metLeeg={false} onChange={(stijl) => zetLijnStandaard(groep, stijl)} />
+                </td>
+                {sets.map((set, i) => (
+                  <td key={set.id} style={celStijl}>
+                    <LijnCel
+                      stijl={set.shapes?.[groep.key]}
+                      standaard={std}
+                      metLeeg
+                      onChange={(stijl) => zetCel(i, groep.key, stijl)}
                     />
                   </td>
                 ))}

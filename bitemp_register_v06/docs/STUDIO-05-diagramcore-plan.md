@@ -6,8 +6,17 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **grafische shape-set-matrix (Style-domein)**
-  (2026-07-09, branch `feat/studio05-shapesets`): shape-sets horen in het
+  fase 7 (register). Laatste ronde: **lijnstijlen in de shape-set-matrix**
+  (2026-07-09, branch `feat/studio05-shapesets`): de matrix heeft nu een
+  tweede sectie met **connectortype-rijen** — kolom 0 = de eigen lijnstijl
+  van de verbindingsregel(s), kolom 1..n = per-set overrides. De cel is een
+  lijn-editor (lijn/dash, vorm bezier/hoekig/recht/boom, markerStart,
+  markerEnd, kleur) met mini-preview. Voor een connectortype overschrijft de
+  set de `edgePresentatie` (de canvas-overlay merget nu context-afhankelijk:
+  node → shape/icoon/kleur, connector → edgePresentatie); gelijknamige
+  verbindingsregels vormen één rij (= één connectortype bij het bouwen).
+  Vorige stap in deze ronde: **grafische shape-set-matrix (Style-domein)**
+  (branch `feat/studio05-shapesets`): shape-sets horen in het
   **Style-domein** (vorm), niet in de profiel-definitie — dus géén canvas-node
   (de vorige «profiel»-instellingen-node is verwijderd). In plaats daarvan een
   **matrix-paneel in een verstelbaar/inklapbaar onder-dock**, alleen in de PE:
