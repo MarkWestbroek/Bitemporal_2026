@@ -207,6 +207,16 @@ Naam.voorletters + (Naam.tussenvoegsel != null ? " " + Naam.tussenvoegsel : "") 
 | `s.size()`                       | Lengte van de string             | `naam.size() > 0`                 |
 | `string(x)`                     | Conversie naar string            | `string(huisnummer)`              |
 
+### Datum-/leeftijdfuncties
+
+| Functie                              | Beschrijving                                  | Voorbeeld                              |
+|--------------------------------------|-----------------------------------------------|----------------------------------------|
+| `leeftijd(geb)`                      | Leeftijd in hele jaren op vandaag             | `leeftijd(Persoonsgegevens.geboortedatum)` |
+| `leeftijd(geb, peildatum)`           | Leeftijd op een expliciete peildatum          | `leeftijd(geb, "2026-07-09")`          |
+
+Zie [Leeftijdsberekening — `leeftijd()`](#leeftijdsberekening--leeftijd-juli-2026) voor
+DatumIncompleet-gedrag en peildatum-semantiek.
+
 ### Voorbeelden voor bitemporeel register
 
 #### Weergavenaam NatuurlijkPersoon (BRP-naamgebruik)
@@ -273,15 +283,51 @@ Burgerschap_Data.nationaliteit + ' (' + Burgerschap_Data.landcode + ')'
 
 Levert bijv. `"Nederlandse (NL)"`.
 
-#### Leeftijdsberekening (als geboortedatum beschikbaar zou zijn)
+#### Leeftijdsberekening — `leeftijd()` (juli 2026)
+
+Er is een ingebouwde functie `leeftijd()` die de leeftijd in **hele jaren**
+berekent uit een geboortedatum. Er is bewust géén generieke `now()`/`today()`:
+leeftijd is de enige afgeleide die "vandaag" nodig heeft, en die zit ingekapseld
+in `leeftijd()`.
 
 ```cel
-// Pseudo — exacte datumfuncties hangen af van de CEL-omgeving
-timestamp(now).getFullYear() - timestamp(geboortedatum).getFullYear()
+leeftijd(geboortedatum)                 // leeftijd op vandaag (wandklok)
+leeftijd(geboortedatum, "2026-07-09")   // leeftijd op een expliciete peildatum
 ```
 
-> **Let op:** datum-/tijdfuncties zijn standaard beperkt in CEL. 
-> Bij implementatie in Go kan de CEL-omgeving uitgebreid worden met custom functies via `cel.Function()`.
+- **Argument 1** — de geboortedatum. Een `Datum` (`JJJJ-MM-DD`) óf een `DatumTijd`
+  (ISO date-time; het tijd-deel wordt genegeerd) is toegestaan.
+- **Argument 2** (optioneel) — de peildatum. Weggelaten → **vandaag** (wandklok).
+  De peildatum is *geen* tijdreis-peiltijdstip: dat is kennistijd (opvoer/afvoer),
+  terwijl leeftijd op geldigheidstijd hoort te draaien. Wie op een bepaald moment
+  wil peilen, geeft dat expliciet als tweede argument mee.
+- **Retour** — een geheel getal, of `null`/leeg als de leeftijd niet bepaalbaar is
+  (jaar onbekend, lege of onparsbare datum, of peildatum vóór de geboorte).
+
+**DatumIncompleet (BRP).** Onbekende componenten zijn `00`. `leeftijd()` volgt de
+midpoint-conventie:
+
+| Bekend            | Aangenomen geboortedatum | Voorbeeld                    |
+|-------------------|--------------------------|------------------------------|
+| alleen jaar       | 1 juli van dat jaar      | `1990-00-00` → `1990-07-01`  |
+| jaar + maand      | de 15e van die maand     | `1990-06-00` → `1990-06-15`  |
+| volledig onbekend | — (niet bepaalbaar)      | `0000-00-00` → `null`        |
+
+`leeftijd()` werkt ook binnen een concatenatie, bijv. in een weergavenaam
+(`string(...)` maakt er een tekst van):
+
+```cel
+Naam.achternaam + " (" + string(leeftijd(Persoonsgegevens.geboortedatum)) + " jr)"
+```
+
+> **Implementatie.** De berekening staat gedeeld in `model/leeftijd.go`
+> (`BerekenLeeftijd` / `BerekenLeeftijdVanArgs`) en wordt aangeroepen door de
+> full-REST-API (`handlers/full_handlers.go`) én de GraphQL-resolvers
+> (`dynql/query_resolvers.go`). De front-end heeft een equivalente implementatie
+> in `web/vite/src/shared/celEvaluator.js` — houd die in de pas. Een niet-weergave
+> afgeleid veld zoals `leeftijd` wordt door de backend als eigen veld in de
+> `/full/...`-response en het GraphQL-type geïnjecteerd; als `GoType: "int"` is
+> gezet komt het als getal terug.
 
 ### CEL switch/case (conditionele toewijzing)
 
