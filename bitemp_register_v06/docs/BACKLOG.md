@@ -28,6 +28,12 @@
 - **Voorlopige richting** (te bevestigen): omdat de kern van dit project *model-gedreven generatie vanuit het canoniek model* is, is de zelfgebouwde, model-gebonden representatie het strategische middel en is `dmn-js` het best te positioneren als optionele *view/export-laag* (DRD tekenen, naar DMN-XML exporteren) i.p.v. bron van waarheid. Twee representaties synchroon houden is de echte onderhoudslast → één bron aanwijzen (het model).
 - **Vervolg**: keuze maken; bij "model = bron" een serializer model → DMN-XML overwegen zodat dmn-js puur als viewer kan draaien.
 
+### 0.0.2 OAS 3.0-ondersteuning in het oas31-profiel — ✅ KERN GEREED (2026-07-11), restpunt: volledige transformatie
+- Het `oas31`-profiel is per 2026-07-10 een vrijwel volledige **OAS 3.1**-representatie (api/servers, parameters/responses op operaties, property-details, benoemde componenten als pass-through — zie `docs/STUDIO.md`).
+- **Gekozen aanpak (2026-07-11)**: géén apart `oas30`-profiel maar één adapter met een **versie-schakelaar** — de descriptor is voor beide dialecten gelijk. Bij de import volgt na de bestandskeuze een dialectkeuze (auto/3.0/3.1, default auto = volg het openapi-veld); de keuze landt als **oas-version**-property op het api-element (metamodel) en stuurt de export: 3.0 vouwt `type: [T,"null"]` terug naar `nullable: true` en laat `$ref`-siblings weg. Het interne model is 3.1-vormig (`nullable` → `|null`-type; `example` en `examples` beide gelezen).
+- **Bijvangst**: de oas-version op het api-element omzetten transformeert de export al tussen de dialecten op de beheerde onderdelen (nullable/type-arrays, $ref-siblings, voorbeeld-vorm).
+- **Restpunt (t.z.t., "leuk voor later")**: volledige 3.0↔3.1-transformatie — `exclusiveMinimum/Maximum` (boolean ↔ getal), content-/mediatype-vormen, `example` → `examples`-array bij promotie naar 3.1, en pass-through-delen (benoemde componenten in `meta`) meevertalen.
+
 ### 0.1 Editor-v2 `removeChild` crash blijft levensgroot in beeld
 - Symptoom: `Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node` toont na elke pagina-edit; alleen Vite-dev-server herstart helpt voorlopig.
 - Eerdere RAF-deferral fix in `MetamodelEditor.jsx` werkt niet voor alle render-paden (HMR vs cold load).

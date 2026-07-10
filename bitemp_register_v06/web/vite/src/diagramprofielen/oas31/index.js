@@ -3,19 +3,27 @@
  * oas31 — het derde diagramprofiel (fase 5, vuurproef): OpenAPI 3.1 als
  * diagram. Schemas zijn elementen, verwijzingen zijn connectoren:
  *
+ *   - api («api»): het info-object van het document (titel/versie/
+ *     beschrijving/licentie/contact) — één element per spec.
+ *   - server («server»): één servers-item; de element-naam is de url.
  *   - schema («schema», object): properties-compartiment met JSON-typen;
- *     `verplicht` spiegelt de OAS `required`-lijst.
+ *     `verplicht` spiegelt de OAS `required`-lijst. Properties dragen ook
+ *     description/example/pattern/default; primitieve schemas (string met
+ *     format, …) tonen hun type als weergave-regel, externe $ref-schemas
+ *     (./bestand.json) hun verwijzing.
  *   - enum («enum»): string-schema met een vaste waardenlijst.
- *   - operatie («operation», bv. GET /personen): method/pad/samenvatting als
- *     element-properties — een element zónder compartimenten.
+ *   - operatie («operation», bv. GET /personen): method/pad/summary/
+ *     description/tag/deprecated als element-properties, plus bewerkbare
+ *     parameters- en responses-compartimenten (alle statussen, ook 4xx/5xx).
  *   - $ref        → gestippelde pijl (property of operatie verwijst naar een
  *                   schema; de rolnaam is de property-naam).
  *   - allOf       → dichte pijl met driehoek (compositie-overerving in OAS).
  *   - items       → «items»-pijl (array-elementtype).
+ *   - servers     → pijl van de api naar zijn servers.
  *
  * Vuurproef-doel: een domein dat géén UML is op dezelfde motor, zonder core-
- * of shell-wijziging. Bewust nog niet: oneOf/anyOf (discriminator-weergave),
- * parameters/headers als aparte elementen, YAML-import/-export (serialisatie
+ * of shell-wijziging. Bewust nog niet: securitySchemes/headers/links als
+ * eigen elementen (pass-through via meta), YAML-import/-export (serialisatie
  * is een eigen fase — vgl. canoniek-uml fase 4).
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
@@ -45,6 +53,33 @@ const fieldTypes = [
       { key: "naam", datatype: "string", verplicht: true },
       { key: "typeLabel", label: "type", referenceTypes: TYPE_REFS },
       { key: "verplicht", label: "required", datatype: "boolean" },
+      { key: "beschrijving", label: "description", datatype: "tekst" },
+      { key: "voorbeeld", label: "example", datatype: "string" },
+      { key: "patroon", label: "pattern", datatype: "string" },
+      { key: "standaard", label: "default", datatype: "string" },
+    ],
+  },
+  {
+    // Parameter van een operatie (query/path/header/cookie); `in` en de
+    // description leven in de inspector, de node toont naam + type.
+    id: "parameter",
+    viewer: "naam-type",
+    properties: [
+      { key: "naam", datatype: "string", verplicht: true },
+      { key: "in", label: "in (query/path/header/cookie)", datatype: "string" },
+      { key: "typeLabel", label: "type", referenceTypes: TYPE_REFS },
+      { key: "verplicht", label: "required", datatype: "boolean" },
+      { key: "beschrijving", label: "description", datatype: "tekst" },
+    ],
+  },
+  {
+    // Response-regel van een operatie: statuscode + (schema)type + tekst.
+    id: "response",
+    viewer: "naam-type",
+    properties: [
+      { key: "naam", label: "status (200/400/…)", datatype: "string", verplicht: true },
+      { key: "typeLabel", label: "schema", referenceTypes: TYPE_REFS },
+      { key: "beschrijving", label: "description", datatype: "tekst" },
     ],
   },
   {
@@ -60,6 +95,55 @@ const SCHEMAS = ["schema", "enum"];
 /** @type {import("../../diagramcore/types/schema.js").ElementType[]} */
 const elementTypes = [
   {
+    // Het info-object van het document: één element per spec; de element-
+    // naam is de titel, versie/licentie verschijnen als weergave-regels.
+    id: "api",
+    label: "API (info)",
+    kort: "API",
+    stereotype: "«api»",
+    shape: "class-box",
+    kleur: "#ede9fe",
+    icoon: "interface",
+    randDikte: 3,
+    properties: [
+      KLEUR_VELD,
+      // De OAS-dialectversie van het document (3.0.x of 3.1.x): bepaalt hoe
+      // de export serialiseert (nullable vs. type-arrays, $ref-siblings).
+      { key: "oasVersie", label: "oas-version (3.0.x / 3.1.x)", datatype: "string" },
+      { key: "versie", label: "version", datatype: "string" },
+      { key: "beschrijving", label: "description", datatype: "tekst" },
+      { key: "licentie", label: "license", datatype: "string" },
+      { key: "contact", label: "contact (naam · e-mail · url)", datatype: "string" },
+    ],
+    compartments: [
+      { id: "api-info", label: null, fieldType: "literal", alleenWeergave: true, verbergInInspector: true },
+    ],
+    hooks: {
+      extraCompartimenten: (element) => {
+        const d = element.data || {};
+        const regels = [
+          d.oasVersie ? `openapi ${d.oasVersie}` : null,
+          d.versie ? `v${d.versie}` : null,
+          d.licentie || null,
+        ].filter(Boolean);
+        return regels.length
+          ? [{ compartmentType: "api-info", velden: regels.map((r) => ({ naam: r, fieldType: "literal" })) }]
+          : [];
+      },
+    },
+  },
+  {
+    // Eén servers-item; de element-naam is de url.
+    id: "server",
+    label: "Server",
+    kort: "SRV",
+    stereotype: "«server»",
+    shape: "class-box",
+    kleur: "#fae8ff",
+    icoon: "package",
+    properties: [KLEUR_VELD, { key: "beschrijving", label: "description", datatype: "tekst" }],
+  },
+  {
     id: "schema",
     label: "Schema (object)",
     kort: "SCH",
@@ -67,8 +151,34 @@ const elementTypes = [
     shape: "class-box",
     kleur: "#d1fae5",
     icoon: "schema",
-    properties: [KLEUR_VELD, { key: "beschrijving", label: "description", datatype: "tekst" }],
-    compartments: [{ id: "properties", label: null, fieldType: "property" }],
+    properties: [
+      KLEUR_VELD,
+      { key: "beschrijving", label: "description", datatype: "tekst" },
+      // Primitieve schemas (TraceID: string «uuid», …) hebben géén
+      // properties maar wel een type; externe $ref-schemas alleen een
+      // verwijzing naar een ander bestand/URL.
+      { key: "typeLabel", label: "type (primitief schema)", referenceTypes: ["json-type"] },
+      { key: "voorbeeld", label: "example", datatype: "string" },
+      { key: "patroon", label: "pattern", datatype: "string" },
+      { key: "externRef", label: "$ref (extern bestand/URL)", datatype: "string" },
+    ],
+    compartments: [
+      { id: "properties", label: null, fieldType: "property" },
+      { id: "typering", label: null, fieldType: "literal", alleenWeergave: true, verbergInInspector: true },
+    ],
+    hooks: {
+      // Weergave-regels voor wat niet in properties past: het primitieve
+      // type en/of de externe verwijzing.
+      extraCompartimenten: (element) => {
+        const d = element.data || {};
+        const regels = [];
+        if (d.typeLabel) regels.push(`: ${d.typeLabel}`);
+        if (d.externRef) regels.push(`→ ${d.externRef}`);
+        return regels.length
+          ? [{ compartmentType: "typering", velden: regels.map((r) => ({ naam: r, fieldType: "literal" })) }]
+          : [];
+      },
+    },
   },
   {
     id: "enum",
@@ -78,11 +188,10 @@ const elementTypes = [
     shape: "class-box",
     kleur: "#fef3c7",
     icoon: "enumeratie",
-    properties: [KLEUR_VELD],
+    properties: [KLEUR_VELD, { key: "beschrijving", label: "description", datatype: "tekst" }],
     compartments: [{ id: "waarden", label: null, fieldType: "literal" }],
   },
   {
-    // Een element zonder compartimenten: alles zit in element-properties.
     id: "operatie",
     label: "Operatie",
     kort: "OP",
@@ -95,10 +204,16 @@ const elementTypes = [
       { key: "method", label: "method (GET/POST/…)", datatype: "string" },
       { key: "pad", label: "pad (/personen/{id})", datatype: "string" },
       { key: "samenvatting", label: "summary", datatype: "tekst" },
+      { key: "beschrijving", label: "description", datatype: "tekst" },
+      { key: "tag", label: "tag", datatype: "string" },
+      { key: "verouderd", label: "deprecated", datatype: "boolean" },
     ],
-    // Alleen een weergave-compartiment: "GET /personen/{id}" live uit de
-    // properties (zelfde patroon als de gegevenstype-validatie).
+    // Bewerkbare parameters- en responses-compartimenten, plus de live
+    // signatuur "GET /personen/{id}" uit de properties (zelfde patroon als
+    // de gegevenstype-validatie).
     compartments: [
+      { id: "parameters", label: "parameters", fieldType: "parameter" },
+      { id: "responses", label: "responses", fieldType: "response" },
       { id: "signatuur", label: null, fieldType: "literal", alleenWeergave: true, verbergInInspector: true },
     ],
     hooks: {
@@ -231,6 +346,25 @@ const elementTypes = [
       labels: [{ zijde: "midden", delen: [{ tekst: "«anyOf»", soort: "constraint", kleur: "#f59e0b" }] }],
     },
   },
+  {
+    // servers: de api wijst naar zijn servers (één edge per servers-item).
+    // NB: label ≠ "server" — de PE-terugvertaling slugificeert labels naar
+    // ids en zou anders botsen met het server-élement.
+    id: "servers",
+    label: "servers",
+    kort: "srv",
+    shape: "edge",
+    icoon: "dependency",
+    isConnector: true,
+    bron: { elementTypes: ["api"] },
+    doel: { elementTypes: ["server"] },
+    edgePresentatie: {
+      lijn: "solid",
+      kleur: "#7c3aed",
+      markerEnd: "pijl-open",
+      labels: [{ zijde: "midden", delen: [{ tekst: "«server»", soort: "constraint", kleur: "#7c3aed" }] }],
+    },
+  },
 ];
 
 function elementKandidaten(elements, filter, icoon, groep) {
@@ -254,6 +388,12 @@ const referenceResolvers = {
       "string «date-time»",
       "string «uuid»",
       "string «email»",
+      "string «uri»",
+      "string «binary»",
+      "integer «int32»",
+      "integer «int64»",
+      "number «float»",
+      "number «double»",
     ].map((t) => ({ waarde: t, label: t, groep: "JSON-typen", pad: [] })),
   "schema-ref": ({ elements }) =>
     elementKandidaten(elements, (el) => SCHEMAS.includes(el.elementType), "▣", "Schemas ($ref)"),
@@ -299,6 +439,11 @@ export function oasRijenPosities({ ids, elements, edges, perRij = 5 }) {
     }
     rand = volgende;
   }
+  // De api en zijn servers horen bovenaan (rij -1), boven de operaties.
+  for (const eid of ids) {
+    const t = elements?.[eid]?.elementType;
+    if (t === "api" || t === "server") laag.set(eid, -1);
+  }
   const maxLaag = Math.max(0, ...laag.values());
   for (const eid of ids) if (!laag.has(eid)) laag.set(eid, maxLaag + 1);
 
@@ -320,7 +465,15 @@ export function oasRijenPosities({ ids, elements, edges, perRij = 5 }) {
   let y = 60;
   for (const l of [...perLaag.keys()].sort((a, b) => a - b)) {
     const groep = perLaag.get(l);
-    if (l === 0) {
+    if (l === -1) {
+      // api eerst, dan de servers (alfabetisch op url).
+      groep.sort((a, b) => {
+        const ta = elements?.[a]?.elementType === "api" ? 0 : 1;
+        const tb = elements?.[b]?.elementType === "api" ? 0 : 1;
+        if (ta !== tb) return ta - tb;
+        return (elements?.[a]?.naam || a).localeCompare(elements?.[b]?.naam || b);
+      });
+    } else if (l === 0) {
       groep.sort((a, b) => {
         const ea = elements?.[a]?.data || {};
         const eb = elements?.[b]?.data || {};
@@ -408,6 +561,14 @@ export function maakElement(elementTypeId) {
     element.naam = "nieuweOperatie";
     element.data.method = "GET";
     element.data.pad = "/";
+  }
+  if (et.id === "api") {
+    element.naam = "Nieuwe API";
+    element.data.versie = "1.0";
+    element.data.oasVersie = "3.1.0";
+  }
+  if (et.id === "server") {
+    element.naam = "https://voorbeeld.nl/api/v1";
   }
   if (et.id === "notitie") {
     element.naam = "";

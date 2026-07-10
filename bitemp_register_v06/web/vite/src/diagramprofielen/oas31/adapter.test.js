@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { vanOasDocument } from "./adapter.js";
+import { vanOasDocument, naarOasDocument } from "./adapter.js";
 import { oasRijenPosities } from "./index.js";
 
 const doc = {
@@ -135,7 +135,7 @@ test("oas-import: één diagram met alle niet-connector-elementen in een grid", 
   assert.equal(diag.naam, "Personen-API");
   const geplaatst = diag.nodes.map((n) => n.elementId).sort();
   assert.ok(geplaatst.includes("Persoon") && geplaatst.includes("Kleur"));
-  assert.equal(diag.nodes.length, 7, "4 schemas/enums + 3 operaties");
+  assert.equal(diag.nodes.length, 8, "4 schemas/enums + 3 operaties + het api-element");
   assert.equal(meta.oasInfo.title, "Personen-API");
 });
 
@@ -237,6 +237,265 @@ test("vanOasDocument: operaties staan boven de schemas in het componenten-diagra
       .map((el) => posities[el.id].y)
   );
   assert.ok(opY < schemaMinY, `operaties (y<=${opY}) horen boven de schemas (y>=${schemaMinY})`);
+});
+
+// ── Volledige-spec-dekking: info/servers/tags, benoemde componenten,
+// externe $refs, primitieve schemas en property-details ───────────────────
+const volledigDoc = {
+  openapi: "3.1.0",
+  info: {
+    title: "Logboek API",
+    version: "1.1.0",
+    description: "API voor het lezen van een logboek",
+    license: { name: "CC4", url: "https://example.org/LICENSE" },
+    contact: { name: "Beheer", email: "api@example.org" },
+  },
+  servers: [{ url: "https://example.org/lezenapi/v1", description: "productie" }],
+  tags: [{ name: "Activiteiten", description: "Alles rond activiteiten." }],
+  paths: {
+    "/activiteiten": {
+      post: {
+        operationId: "zoekActiviteiten",
+        summary: "Zoek activiteiten",
+        description: "Alle activiteiten ophalen",
+        tags: ["Activiteiten"],
+        parameters: [
+          { name: "expand", in: "query", schema: { type: "string" }, description: "extra velden" },
+        ],
+        requestBody: { $ref: "#/components/requestBodies/ZoekRequest" },
+        responses: {
+          200: { $ref: "#/components/responses/ActiviteitenResponse" },
+          400: { $ref: "#/components/responses/BadRequest" },
+        },
+      },
+    },
+  },
+  components: {
+    requestBodies: {
+      ZoekRequest: {
+        required: true,
+        content: { "application/json": { schema: { $ref: "#/components/schemas/ZoekVraag" } } },
+      },
+    },
+    responses: {
+      ActiviteitenResponse: {
+        description: "OK",
+        content: { "application/json": { schema: { $ref: "#/components/schemas/Activiteit" } } },
+      },
+      BadRequest: {
+        description: "Bad Request",
+        content: { "application/problem+json": { schema: { $ref: "#/components/schemas/Probleem" } } },
+      },
+    },
+    schemas: {
+      Probleem: { $ref: "./ProblemJson.schema.json" },
+      TraceID: {
+        type: "string",
+        format: "uuid",
+        description: "Unieke code van de trace",
+        example: "ef4e77b9-b03b-585f-b613-5fcf8d8555fb",
+      },
+      ZoekVraag: {
+        type: "object",
+        minProperties: 1,
+        description: "Minimaal één veld vullen",
+        properties: { traceId: { $ref: "#/components/schemas/TraceID" } },
+      },
+      Activiteit: {
+        type: "object",
+        required: ["spanId"],
+        properties: {
+          traceId: { $ref: "#/components/schemas/TraceID" },
+          spanId: {
+            type: "string",
+            pattern: "^[0-9a-fA-F]{16}$",
+            description: "Unieke code van de actie",
+            examples: ["beb0291b5162d850"],
+          },
+          naam: { type: ["string", "null"], default: "onbekend" },
+        },
+      },
+    },
+  },
+};
+
+test("oas-import: info wordt een api-element, servers worden server-elementen", () => {
+  const { elements } = vanOasDocument(volledigDoc);
+  const api = Object.values(elements).find((el) => el.elementType === "api");
+  assert.equal(api.naam, "Logboek API");
+  assert.equal(api.data.versie, "1.1.0");
+  assert.equal(api.data.beschrijving, "API voor het lezen van een logboek");
+  assert.equal(api.data.licentie, "CC4");
+  assert.equal(api.data.contact, "Beheer · api@example.org");
+
+  const server = Object.values(elements).find((el) => el.elementType === "server");
+  assert.equal(server.naam, "https://example.org/lezenapi/v1");
+  assert.equal(server.data.beschrijving, "productie");
+  const conn = Object.values(elements).find((el) => el.elementType === "servers");
+  assert.equal(conn.source, api.id);
+  assert.equal(conn.target, server.id);
+});
+
+test("oas-import: benoemde requestBodies/responses worden gevolgd, óók 4xx", () => {
+  const { elements } = vanOasDocument(volledigDoc);
+  const op = Object.values(elements).find((el) => el.elementType === "operatie");
+  assert.equal(op.data.beschrijving, "Alle activiteiten ophalen");
+
+  const conns = Object.values(elements).filter((el) => el.source === op.id && el.elementType === "ref");
+  assert.ok(conns.some((c) => c.target === "ZoekVraag" && c.data.rolnaam === "request"), "$ref-requestBody gevolgd");
+  assert.ok(conns.some((c) => c.target === "Activiteit" && c.data.rolnaam === "response 200"));
+  assert.ok(conns.some((c) => c.target === "Probleem" && c.data.rolnaam === "response 400"), "ook fout-responses");
+
+  const responses = op.compartimenten.find((c) => c.compartmentType === "responses").velden;
+  assert.deepEqual(responses.map((v) => v.naam), ["200", "400"]);
+  assert.equal(responses[1].data.beschrijving, "Bad Request");
+  const parameters = op.compartimenten.find((c) => c.compartmentType === "parameters").velden;
+  assert.equal(parameters[0].naam, "expand");
+  assert.equal(parameters[0].data.in, "query");
+  assert.equal(parameters[0].data.beschrijving, "extra velden");
+});
+
+test("oas-import: primitieve, externe en detailrijke schemas komen volledig mee", () => {
+  const { elements } = vanOasDocument(volledigDoc);
+  assert.equal(elements.TraceID.data.typeLabel, "string «uuid»");
+  assert.equal(elements.TraceID.data.voorbeeld, "ef4e77b9-b03b-585f-b613-5fcf8d8555fb");
+  assert.equal(elements.Probleem.data.externRef, "./ProblemJson.schema.json");
+
+  const velden = Object.fromEntries(
+    elements.Activiteit.compartimenten[0].velden.map((v) => [v.naam, v.data])
+  );
+  assert.equal(velden.spanId.beschrijving, "Unieke code van de actie");
+  assert.equal(velden.spanId.patroon, "^[0-9a-fA-F]{16}$");
+  assert.equal(velden.spanId.voorbeeld, "beb0291b5162d850", "3.1 examples-array");
+  assert.equal(velden.naam.typeLabel, "string|null", "3.1 type-array");
+  assert.equal(velden.naam.standaard, "onbekend");
+});
+
+test("oas-terugreis: info/servers/tags/componenten en details reizen mee terug", () => {
+  const core = vanOasDocument(volledigDoc);
+  const terug = naarOasDocument(core);
+
+  assert.equal(terug.info.title, "Logboek API");
+  assert.equal(terug.info.license.name, "CC4");
+  assert.equal(terug.info.contact.email, "api@example.org", "contact pass-through via de bron");
+  assert.deepEqual(terug.servers, [{ url: "https://example.org/lezenapi/v1", description: "productie" }]);
+  assert.deepEqual(terug.tags, volledigDoc.tags);
+  assert.deepEqual(terug.components.requestBodies, volledigDoc.components.requestBodies, "pass-through");
+  assert.deepEqual(terug.components.responses, volledigDoc.components.responses, "pass-through");
+
+  const op = terug.paths["/activiteiten"].post;
+  assert.deepEqual(op.requestBody, { $ref: "#/components/requestBodies/ZoekRequest" }, "$ref blijft");
+  assert.deepEqual(op.responses["400"], { $ref: "#/components/responses/BadRequest" }, "$ref blijft");
+  assert.equal(op.parameters[0].name, "expand");
+  assert.deepEqual(op.parameters[0].schema, { type: "string" });
+
+  const traceId = terug.components.schemas.TraceID;
+  assert.equal(traceId.type, "string");
+  assert.equal(traceId.format, "uuid");
+  assert.equal(traceId.example, "ef4e77b9-b03b-585f-b613-5fcf8d8555fb");
+  assert.deepEqual(terug.components.schemas.Probleem, { $ref: "./ProblemJson.schema.json" });
+  assert.equal(terug.components.schemas.ZoekVraag.minProperties, 1, "onbeheerde sleutels blijven");
+
+  const spanId = terug.components.schemas.Activiteit.properties.spanId;
+  assert.equal(spanId.pattern, "^[0-9a-fA-F]{16}$");
+  assert.deepEqual(spanId.examples, ["beb0291b5162d850"], "examples blijft een array");
+  const naam = terug.components.schemas.Activiteit.properties.naam;
+  assert.deepEqual(naam.type, ["string", "null"], "3.1 type-array terug");
+  assert.equal(naam.default, "onbekend");
+});
+
+// ── OAS 3.0-dialect: nullable ↔ type-arrays, oas-version stuurt de export ──
+const doc30 = {
+  openapi: "3.0.2",
+  info: { title: "Oud-API", version: "1.0" },
+  paths: {
+    "/dingen": {
+      get: {
+        operationId: "listDingen",
+        responses: {
+          200: { description: "OK", content: { "application/json": { schema: { $ref: "#/components/schemas/Ding" } } } },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {
+      Ding: {
+        type: "object",
+        required: ["naam"],
+        properties: {
+          naam: { type: "string" },
+          bijnaam: { type: "string", nullable: true, description: "Roepnaam" },
+        },
+      },
+      Maat: { type: "string", format: "uuid", nullable: true },
+    },
+  },
+};
+
+test("oas-3.0-import: nullable wordt |null en de oas-version komt op het api-element", () => {
+  const { elements, meta } = vanOasDocument(doc30);
+  const api = Object.values(elements).find((el) => el.elementType === "api");
+  assert.equal(api.data.oasVersie, "3.0.2");
+  assert.equal(meta.oasVersie, "3.0.2");
+  const velden = Object.fromEntries(elements.Ding.compartimenten[0].velden.map((v) => [v.naam, v.data]));
+  assert.equal(velden.bijnaam.typeLabel, "string|null");
+  assert.equal(elements.Maat.data.typeLabel, "string|null «uuid»");
+});
+
+test("oas-3.0-terugreis: het 3.0-dialect vouwt |null terug naar nullable", () => {
+  const core = vanOasDocument(doc30);
+  const terug = naarOasDocument(core);
+  assert.equal(terug.openapi, "3.0.2");
+  assert.deepEqual(terug.components.schemas.Ding.properties.bijnaam, {
+    type: "string",
+    nullable: true,
+    description: "Roepnaam",
+  });
+  assert.deepEqual(terug.components.schemas.Maat, { type: "string", format: "uuid", nullable: true });
+});
+
+test("oas-versiekeuze: 3.0-document geforceerd als 3.1 exporteert type-arrays zonder nullable", () => {
+  const core = vanOasDocument(doc30, { oasVersie: "3.1" });
+  const api = Object.values(core.elements).find((el) => el.elementType === "api");
+  assert.equal(api.data.oasVersie, "3.1.0", "geforceerde keuze wint van het openapi-veld");
+  const terug = naarOasDocument(core);
+  assert.equal(terug.openapi, "3.1.0");
+  assert.deepEqual(terug.components.schemas.Ding.properties.bijnaam, {
+    type: ["string", "null"],
+    description: "Roepnaam",
+  });
+  assert.deepEqual(terug.components.schemas.Maat, { type: ["string", "null"], format: "uuid" });
+});
+
+test("oas-versiekeuze: oas-version op het api-element omzetten transformeert de export", () => {
+  const core = vanOasDocument(doc30);
+  const api = Object.values(core.elements).find((el) => el.elementType === "api");
+  api.data.oasVersie = "3.1.0"; // gebruiker zet de property om in de inspector
+  const terug = naarOasDocument(core);
+  assert.equal(terug.openapi, "3.1.0");
+  assert.deepEqual(terug.components.schemas.Ding.properties.bijnaam.type, ["string", "null"]);
+});
+
+test("oasRijenPosities: api en servers staan op de rij bóven de operaties", () => {
+  const elements = {
+    api: { id: "api", elementType: "api", naam: "API", data: {} },
+    srv: { id: "srv", elementType: "server", naam: "https://x", data: {} },
+    op: { id: "op", elementType: "operatie", naam: "op", data: { method: "GET", pad: "/x" } },
+    sch: { id: "sch", elementType: "schema", naam: "S", data: {} },
+  };
+  const pos = oasRijenPosities({
+    ids: ["api", "srv", "op", "sch"],
+    elements,
+    edges: [
+      { source: "api", target: "srv" },
+      { source: "op", target: "sch" },
+    ],
+  });
+  assert.equal(pos.api.y, pos.srv.y, "api en server delen de bovenste rij");
+  assert.ok(pos.api.x < pos.srv.x, "api links van zijn servers");
+  assert.ok(pos.api.y < pos.op.y, "boven de operaties");
+  assert.ok(pos.op.y < pos.sch.y, "operaties boven de schemas");
 });
 
 test("oasRijenPosities: kinderen sorteren onder hun ouders (zwaartepunt)", () => {
