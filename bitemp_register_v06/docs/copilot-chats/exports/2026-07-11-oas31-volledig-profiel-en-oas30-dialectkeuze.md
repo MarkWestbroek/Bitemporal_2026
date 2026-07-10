@@ -115,3 +115,28 @@ beide dialecten identiek):
 4 nieuwe 3.0-tests (import, round-trip, geforceerde keuze, omzetten van de
 property); volledige suite groen (291). Docs: `STUDIO.md` + `BACKLOG.md`
 bijgewerkt; chat gearchiveerd (dit bestand + samenvatting).
+
+## 🧑 User
+
+Wil je deze chat nog een keer archiveren? Ik heb op Windows een task gemaakt
+die het exportscript globaal (voor alle VS Code-instanties) afdraait. Het
+script staat ook hier — werkt dat op de Mac, of is een ander script nodig?
+[Correctie: dat script betreft de Copilot-chat, niet de Claude-chat.]
+
+## 🤖 Claude
+
+Archief bijgewerkt met deze uitwisseling. Antwoord op de scriptvraag:
+
+- `scripts/export-copilot-chats.py` is **cross-platform** (probeert eerst het
+  macOS-pad `~/Library/Application Support/Code/User/workspaceStorage`, dan
+  Windows `%APPDATA%`, dan Linux) en draait op deze Mac al automatisch via de
+  geïnstalleerde **pre-commit hook** — beide commits van vandaag toonden de
+  `[chat-export]`-uitvoer. Alleen het schedulen zelf is platform-eigen: de
+  Windows-task heeft op macOS een launchd- of cron-equivalent nodig, maar met
+  de hook is dat hier feitelijk overbodig.
+- Belangrijker: dat script leest de **Copilot**-chatopslag (VS Code
+  workspaceStorage) en ziet **Claude Code-sessies niet** — die staan als
+  JSONL in `~/.claude/projects/<project-slug>/`. Claude-chats archiveren
+  blijft dus (voorlopig) een handmatige/door-Claude-gedane actie, zoals in
+  deze sessie; een `export-claude-chats.py` naar hetzelfde stramien is een
+  mogelijk vervolg.
