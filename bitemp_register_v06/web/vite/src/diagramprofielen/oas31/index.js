@@ -107,6 +107,9 @@ const elementTypes = [
     randDikte: 3,
     properties: [
       KLEUR_VELD,
+      // De OAS-dialectversie van het document (3.0.x of 3.1.x): bepaalt hoe
+      // de export serialiseert (nullable vs. type-arrays, $ref-siblings).
+      { key: "oasVersie", label: "oas-version (3.0.x / 3.1.x)", datatype: "string" },
       { key: "versie", label: "version", datatype: "string" },
       { key: "beschrijving", label: "description", datatype: "tekst" },
       { key: "licentie", label: "license", datatype: "string" },
@@ -118,7 +121,11 @@ const elementTypes = [
     hooks: {
       extraCompartimenten: (element) => {
         const d = element.data || {};
-        const regels = [d.versie ? `v${d.versie}` : null, d.licentie || null].filter(Boolean);
+        const regels = [
+          d.oasVersie ? `openapi ${d.oasVersie}` : null,
+          d.versie ? `v${d.versie}` : null,
+          d.licentie || null,
+        ].filter(Boolean);
         return regels.length
           ? [{ compartmentType: "api-info", velden: regels.map((r) => ({ naam: r, fieldType: "literal" })) }]
           : [];
@@ -558,6 +565,7 @@ export function maakElement(elementTypeId) {
   if (et.id === "api") {
     element.naam = "Nieuwe API";
     element.data.versie = "1.0";
+    element.data.oasVersie = "3.1.0";
   }
   if (et.id === "server") {
     element.naam = "https://voorbeeld.nl/api/v1";

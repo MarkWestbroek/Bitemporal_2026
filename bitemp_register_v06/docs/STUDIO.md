@@ -341,21 +341,28 @@ fase 2 een **bewerkbare sandbox**:
   connectoren **$ref** (met property-naam als rolnaam), **allOf**
   (overerving), **items** (array-elementtype), **oneOf/anyOf** en
   **servers** (api → server). Ook hier: alleen een descriptor +
-  fabriek-aanroep. **Bestand → Importeer OAS 3.1 (YAML/JSON)…** leest een
-  echt OpenAPI-document in (`oas31/adapter.js`, parser: `yaml`); lokale
-  $refs naar benoemde componenten (components.requestBodies/responses/
-  parameters) worden voor de wéérgave gevolgd, terwijl de componenten zelf —
-  net als tags, security en andere document-sleutels — als pass-through in
-  `meta` meereizen. Naast het totaaloverzicht komt er **per tag** (of
-  pad-groep) een eigen diagram met de operaties plus de (transitief)
-  geraakte schemas — zo blijft een grote OAS leesbaar. Er is een **gelaagde
-  auto-layout** (api/servers → operaties → per $ref-stap een rij) en
-  **Bestand → Exporteer OAS 3.1 (YAML)…** schrijft het model terug (spiegel
-  + delta: info/servers/tags, properties/required/allOf/oneOf/paths/
-  parameters/responses gereconstrueerd, $refs naar benoemde componenten
-  blijven staan; round-trip-getest). Nog niet: securitySchemes/headers/links
-  als eigen elementen, inline oneOf-varianten, en **OAS 3.0** (nullable,
-  `example` vs `examples`) — dat wordt een apart profiel (zie BACKLOG).
+  fabriek-aanroep. **Bestand → Importeer OAS 3.0/3.1 (YAML/JSON)…** leest
+  een echt OpenAPI-document in (`oas31/adapter.js`, parser: `yaml`); na de
+  bestandskeuze volgt de **dialectkeuze** — auto (default: volg het
+  openapi-veld), 3.0 of 3.1 — die als **oas-version** op het api-element
+  landt. Het interne model is 3.1-vormig (3.0-`nullable` wordt een
+  `|null`-type, `example` én 3.1-`examples` worden gelezen); lokale $refs
+  naar benoemde componenten (components.requestBodies/responses/parameters)
+  worden voor de wéérgave gevolgd, terwijl de componenten zelf — net als
+  tags, security en andere document-sleutels — als pass-through in `meta`
+  meereizen. Naast het totaaloverzicht komt er **per tag** (of pad-groep)
+  een eigen diagram met de operaties plus de (transitief) geraakte schemas —
+  zo blijft een grote OAS leesbaar. Er is een **gelaagde auto-layout**
+  (api/servers → operaties → per $ref-stap een rij) en **Bestand →
+  Exporteer OAS (YAML)…** schrijft het model terug in het dialect van de
+  oas-version (spiegel + delta: info/servers/tags, properties/required/
+  allOf/oneOf/paths/parameters/responses gereconstrueerd, $refs naar
+  benoemde componenten blijven staan; 3.0 vouwt `type: [T,"null"]` terug
+  naar `nullable: true` en laat $ref-siblings weg — de oas-version op het
+  api-element omzetten transformeert dus meteen tussen de dialecten;
+  round-trip-getest in beide). Nog niet: securitySchemes/headers/links als
+  eigen elementen, inline oneOf-varianten, volledige 3.0↔3.1-transformatie
+  (exclusiveMinimum/Maximum, content-vormen).
 - **Tijdlijnvoorkomen & geordend (LGM)**: entiteit, gegevenselement en
   relatie hebben een **materieel (tijdlijn)**-vinkje (mapping op
   `isMaterieel`; formeel = uit) — op de node als MATERIEEL-badge, op de

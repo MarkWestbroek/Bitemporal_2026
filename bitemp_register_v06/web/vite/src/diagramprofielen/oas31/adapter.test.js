@@ -404,6 +404,79 @@ test("oas-terugreis: info/servers/tags/componenten en details reizen mee terug",
   assert.equal(naam.default, "onbekend");
 });
 
+// ── OAS 3.0-dialect: nullable ↔ type-arrays, oas-version stuurt de export ──
+const doc30 = {
+  openapi: "3.0.2",
+  info: { title: "Oud-API", version: "1.0" },
+  paths: {
+    "/dingen": {
+      get: {
+        operationId: "listDingen",
+        responses: {
+          200: { description: "OK", content: { "application/json": { schema: { $ref: "#/components/schemas/Ding" } } } },
+        },
+      },
+    },
+  },
+  components: {
+    schemas: {
+      Ding: {
+        type: "object",
+        required: ["naam"],
+        properties: {
+          naam: { type: "string" },
+          bijnaam: { type: "string", nullable: true, description: "Roepnaam" },
+        },
+      },
+      Maat: { type: "string", format: "uuid", nullable: true },
+    },
+  },
+};
+
+test("oas-3.0-import: nullable wordt |null en de oas-version komt op het api-element", () => {
+  const { elements, meta } = vanOasDocument(doc30);
+  const api = Object.values(elements).find((el) => el.elementType === "api");
+  assert.equal(api.data.oasVersie, "3.0.2");
+  assert.equal(meta.oasVersie, "3.0.2");
+  const velden = Object.fromEntries(elements.Ding.compartimenten[0].velden.map((v) => [v.naam, v.data]));
+  assert.equal(velden.bijnaam.typeLabel, "string|null");
+  assert.equal(elements.Maat.data.typeLabel, "string|null «uuid»");
+});
+
+test("oas-3.0-terugreis: het 3.0-dialect vouwt |null terug naar nullable", () => {
+  const core = vanOasDocument(doc30);
+  const terug = naarOasDocument(core);
+  assert.equal(terug.openapi, "3.0.2");
+  assert.deepEqual(terug.components.schemas.Ding.properties.bijnaam, {
+    type: "string",
+    nullable: true,
+    description: "Roepnaam",
+  });
+  assert.deepEqual(terug.components.schemas.Maat, { type: "string", format: "uuid", nullable: true });
+});
+
+test("oas-versiekeuze: 3.0-document geforceerd als 3.1 exporteert type-arrays zonder nullable", () => {
+  const core = vanOasDocument(doc30, { oasVersie: "3.1" });
+  const api = Object.values(core.elements).find((el) => el.elementType === "api");
+  assert.equal(api.data.oasVersie, "3.1.0", "geforceerde keuze wint van het openapi-veld");
+  const terug = naarOasDocument(core);
+  assert.equal(terug.openapi, "3.1.0");
+  assert.deepEqual(terug.components.schemas.Ding.properties.bijnaam, {
+    type: ["string", "null"],
+    description: "Roepnaam",
+  });
+  assert.deepEqual(terug.components.schemas.Maat, { type: ["string", "null"], format: "uuid" });
+});
+
+test("oas-versiekeuze: oas-version op het api-element omzetten transformeert de export", () => {
+  const core = vanOasDocument(doc30);
+  const api = Object.values(core.elements).find((el) => el.elementType === "api");
+  api.data.oasVersie = "3.1.0"; // gebruiker zet de property om in de inspector
+  const terug = naarOasDocument(core);
+  assert.equal(terug.openapi, "3.1.0");
+  assert.deepEqual(terug.components.schemas.Ding.properties.bijnaam.type, ["string", "null"]);
+});
+
 test("oasRijenPosities: api en servers staan op de rij bóven de operaties", () => {
   const elements = {
     api: { id: "api", elementType: "api", naam: "API", data: {} },

@@ -1,9 +1,16 @@
 // @ts-check
 /**
- * adapter — OpenAPI 3.1-document → diagramcore-model voor het oas31-profiel.
- * (OAS 3.0 is een aparte opgave — zie BACKLOG; veel 3.0-documenten importeren
- * grotendeels, maar 3.0-eigenaardigheden zoals `nullable` vertalen we hier
- * bewust niet.)
+ * adapter — OpenAPI 3.0/3.1-document → diagramcore-model voor het
+ * oas31-profiel.
+ *
+ * Versie-strategie: het ínterne model is 3.1-vormig (nullable wordt bij
+ * import een `|null`-type, `examples`/`example` worden beide gelezen); de
+ * **oas-version op het api-element** (of de import-keuze: 3.0 / 3.1 / auto)
+ * bepaalt het dialect van de terugreis — 3.0 vouwt `type: [T,"null"]` terug
+ * naar `type: T, nullable: true` en laat geen $ref-siblings toe. Door de
+ * oas-version op het api-element om te zetten transformeer je dus (op deze
+ * beheerde onderdelen) tussen 3.0 en 3.1; een volledige transformatie
+ * (exclusiveMinimum/Maximum, content-vormen, …) is een latere opgave.
  *
  * Puur (neemt een geparsed document-object aan; YAML/JSON-parsing gebeurt bij
  * de aanroeper) en verliesarm:
@@ -72,10 +79,12 @@ function typeLabelVoor(schema) {
     if (itemRef) return `${itemRef}[]`;
     return `${typeLabelVoor(items) || "object"}[]`;
   }
-  // 3.1: type mag een array zijn (["string","null"]) → "string|null".
+  // 3.1: type mag een array zijn (["string","null"]) → "string|null";
+  // 3.0: `nullable: true` betekent hetzelfde en krijgt hetzelfde label.
   let t = Array.isArray(schema.type)
     ? schema.type.join("|")
     : schema.type || (schema.$ref ? refNaam(schema.$ref) || "object" : "object");
+  if (schema.nullable === true && !t.includes("null")) t += "|null";
   if (schema.format) t += ` «${schema.format}»`;
   return t;
 }
@@ -98,10 +107,23 @@ let _connTeller = 0;
 const nieuwConnId = (soort) => `oasconn_${soort}_${++_connTeller}`;
 
 /**
- * @param {Object} doc - geparsed OpenAPI 3.1-document
+ * Bepaal de effectieve oas-version: een expliciete keuze ("3.0"/"3.1") wint
+ * van het openapi-veld; "auto" (default) volgt het document.
+ */
+export function bepaalOasVersie(doc, keuze) {
+  const uitDoc = String(doc?.openapi || "");
+  if (keuze === "3.0") return uitDoc.startsWith("3.0") ? uitDoc : "3.0.3";
+  if (keuze === "3.1") return uitDoc.startsWith("3.1") ? uitDoc : "3.1.0";
+  return uitDoc || "3.1.0";
+}
+
+/**
+ * @param {Object} doc - geparsed OpenAPI 3.0/3.1-document
+ * @param {{oasVersie?: "3.0"|"3.1"|"auto"}} [opties] - dialectkeuze (default "auto")
  * @returns {{elements: Record<string, Object>, diagrams: Record<string, Object>, meta: Object}}
  */
-export function vanOasDocument(doc) {
+export function vanOasDocument(doc, opties = {}) {
+  const oasVersie = bepaalOasVersie(doc, opties.oasVersie);
   const elements = {};
   const connectoren = [];
 
@@ -130,6 +152,7 @@ export function vanOasDocument(doc) {
       elementType: "api",
       compartimenten: [],
       data: {
+        oasVersie,
         ...(info.version ? { versie: info.version } : {}),
         ...(info.description ? { beschrijving: info.description } : {}),
         ...(info.license?.name ? { licentie: info.license.name } : {}),
@@ -424,7 +447,7 @@ export function vanOasDocument(doc) {
     diagrams,
     meta: {
       oasInfo: doc?.info || null,
-      ...(doc?.openapi ? { oasVersie: doc.openapi } : {}),
+      oasVersie,
       ...(Array.isArray(doc?.tags) && doc.tags.length ? { oasTags: doc.tags } : {}),
       ...(Object.keys(componentsRest).length ? { oasComponents: componentsRest } : {}),
       ...(Object.keys(docRest).length ? { oasDocRest: docRest } : {}),
@@ -462,6 +485,26 @@ function schemaVoorTypeLabel(label, schemaNamen) {
 function bewerktOf(bewerkt, origineel) {
   if (bewerkt === undefined || bewerkt === "" || bewerkt === String(origineel ?? "")) return origineel;
   return bewerkt;
+}
+
+/**
+ * Vouw een 3.1-vormig schema naar het gekozen dialect. Het typeLabel is de
+ * waarheid over nullability: een `nullable` uit de bron gaat er altijd af,
+ * en voor 3.0 wordt `type: [T, "null"]` weer `type: T, nullable: true`
+ * (recursief, ook array-items). Zo transformeert het omzetten van de
+ * oas-version op het api-element meteen tussen de dialecten.
+ */
+function naarDialect(schema, is30) {
+  if (!schema || typeof schema !== "object" || schema.$ref) return schema;
+  const uit = { ...schema };
+  delete uit.nullable;
+  if (Array.isArray(uit.type) && is30) {
+    const zonderNull = uit.type.filter((t) => t !== "null");
+    if (zonderNull.length < uit.type.length) uit.nullable = true;
+    uit.type = zonderNull.length === 1 ? zonderNull[0] : zonderNull;
+  }
+  if (uit.items) uit.items = naarDialect(uit.items, is30);
+  return uit;
 }
 
 /** Schrijf een (eventueel bewerkt) voorbeeld terug: een 3.1 `examples`-array blijft een array, anders `example`. */
@@ -528,6 +571,10 @@ export function naarOasDocument(state) {
       ...(el.data?.beschrijving ? { description: el.data.beschrijving } : {}),
     }));
 
+  // Dialect van de terugreis: de oas-version op het api-element wint.
+  const oasVersie = api?.data?.oasVersie || state?.meta?.oasVersie || "3.1.0";
+  const is30 = oasVersie.startsWith("3.0");
+
   // ── components.schemas ────────────────────────────────────────────────
   const schemas = {};
   for (const el of els) {
@@ -564,8 +611,8 @@ export function naarOasDocument(state) {
       const kern = schemaVoorTypeLabel(vd.typeLabel, schemaNamen);
       let prop;
       if (kern.$ref) {
-        // 3.1 staat description naast $ref toe; meer sturen we niet mee.
-        prop = { ...kern, ...(vd.beschrijving ? { description: vd.beschrijving } : {}) };
+        // 3.1 staat description naast $ref toe; 3.0 niet — dan alleen de $ref.
+        prop = { ...kern, ...(!is30 && vd.beschrijving ? { description: vd.beschrijving } : {}) };
       } else {
         prop = { ...(typeof bronProp === "object" && !bronProp.$ref ? bronProp : {}), ...kern };
         if (vd.beschrijving) prop.description = vd.beschrijving;
@@ -573,6 +620,7 @@ export function naarOasDocument(state) {
         schrijfVoorbeeld(prop, vd.voorbeeld);
         const standaard = bewerktOf(vd.standaard, prop.default);
         if (standaard !== undefined) prop.default = standaard;
+        prop = naarDialect(prop, is30);
       }
       properties[veld.naam] = prop;
       if (vd.verplicht) required.push(veld.naam);
@@ -611,7 +659,7 @@ export function naarOasDocument(state) {
       const kern = d.typeLabel
         ? schemaVoorTypeLabel(d.typeLabel, schemaNamen)
         : { type: bron.type, ...(bron.format ? { format: bron.format } : {}) };
-      schemas[el.naam] = { ...basis, ...kern };
+      schemas[el.naam] = naarDialect({ ...basis, ...kern }, is30);
     } else {
       schemas[el.naam] = { ...basis, ...eigenObject };
     }
@@ -643,7 +691,7 @@ export function naarOasDocument(state) {
         const p = { ...(vd.bronParam || {}), name: veld.naam };
         if (vd.in) p.in = vd.in;
         if (vd.beschrijving) p.description = vd.beschrijving;
-        if (vd.typeLabel) p.schema = schemaVoorTypeLabel(vd.typeLabel, schemaNamen);
+        if (vd.typeLabel) p.schema = naarDialect(schemaVoorTypeLabel(vd.typeLabel, schemaNamen), is30);
         if (vd.verplicht) p.required = true;
         else delete p.required;
         return p;
@@ -677,7 +725,9 @@ export function naarOasDocument(state) {
       const bronResp = bron.responses?.[status];
       const resp = { ...(bronResp || {}) };
       if (vd?.beschrijving) resp.description = vd.beschrijving;
-      const schema = vd?.typeLabel ? schemaVoorTypeLabel(vd.typeLabel, schemaNamen) : schemaRef;
+      const schema = vd?.typeLabel
+        ? naarDialect(schemaVoorTypeLabel(vd.typeLabel, schemaNamen), is30)
+        : schemaRef;
       if (schema) {
         const mt = Object.keys(bronResp?.content || {})[0] || "application/json";
         resp.content = {
@@ -713,7 +763,7 @@ export function naarOasDocument(state) {
   }
 
   return {
-    openapi: state?.meta?.oasVersie || "3.1.0",
+    openapi: oasVersie,
     info,
     ...(servers.length ? { servers } : {}),
     ...(state?.meta?.oasTags ? { tags: state.meta.oasTags } : {}),
