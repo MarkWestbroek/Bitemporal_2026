@@ -331,7 +331,8 @@ func bepaalVerrijkingTargets(entityMeta model.TypeMeta) []verrijkingTarget {
 // Retourneert de verrijkte response als []map of map (JSON-compatibel).
 func verrijkResponseMetWeergavenamen(c *gin.Context, entities any, entityMeta model.TypeMeta) (any, error) {
 	targets := bepaalVerrijkingTargets(entityMeta)
-	if len(targets) == 0 {
+	eigenAfgeleiden := nietWeergaveAfgeleideVelden(entityMeta)
+	if len(targets) == 0 && len(eigenAfgeleiden) == 0 {
 		return entities, nil
 	}
 
@@ -412,6 +413,13 @@ func verrijkResponseMetWeergavenamen(c *gin.Context, entities any, entityMeta mo
 		}
 	}
 
+	// Injecteer de entiteit-eigen afgeleide velden (bijv. leeftijd) op top-niveau.
+	for _, entityMap := range maps {
+		for _, av := range eigenAfgeleiden {
+			entityMap[av.Naam] = evalueerAfgeleidVeldWaarde(entityMap, av, entityMeta)
+		}
+	}
+
 	if isSlice {
 		return maps, nil
 	}
@@ -480,9 +488,9 @@ func berekenWeergavenaamVanEntiteit(entityMap map[string]any, meta model.TypeMet
 //   - "DomeinGegevens.naam"                                        → eenvoudig pad
 //   - "GemeenteGegevens.naam + \" (\" + GemeenteGegevens.code + \")\""  → concatenatie
 func evalueerCELConcatenatie(entityMap map[string]any, expressie string, meta model.TypeMeta) string {
-	// Snelle check: als er geen + in zit, is het een eenvoudig pad
+	// Snelle check: als er geen + in zit, is het één segment (pad of functie-aanroep)
 	if !strings.Contains(expressie, "+") {
-		return navigeerAfgeleidPad(entityMap, strings.TrimSpace(expressie), meta)
+		return evalueerCELSegment(entityMap, strings.TrimSpace(expressie), meta)
 	}
 
 	// Splits op + en evalueer elk segment
@@ -501,12 +509,77 @@ func evalueerCELConcatenatie(entityMap map[string]any, expressie string, meta mo
 			literal = strings.ReplaceAll(literal, `\\`, `\`)
 			resultaat.WriteString(literal)
 		} else {
-			// Pad-navigatie
-			waarde := navigeerAfgeleidPad(entityMap, segment, meta)
-			resultaat.WriteString(waarde)
+			resultaat.WriteString(evalueerCELSegment(entityMap, segment, meta))
 		}
 	}
 	return resultaat.String()
+}
+
+// evalueerCELSegment evalueert één segment van een afgeleide-veld-expressie:
+// een functie-aanroep (nu: leeftijd(...)) of anders een pad-navigatie.
+// De string-representatie wordt teruggegeven; leeftijd wordt als geheel getal
+// geformatteerd en een niet-bepaalbare leeftijd (nil) als lege string.
+func evalueerCELSegment(entityMap map[string]any, segment string, meta model.TypeMeta) string {
+	if lft, ok := evalueerLeeftijdCall(entityMap, segment, meta); ok {
+		if lft == nil {
+			return ""
+		}
+		return strconv.Itoa(*lft)
+	}
+	return navigeerAfgeleidPad(entityMap, segment, meta)
+}
+
+// evalueerLeeftijdCall herkent en evalueert een leeftijd(geboortedatum[, peildatum])
+// aanroep. ok is true als het segment zo'n aanroep is (ook al is de uitkomst nil).
+func evalueerLeeftijdCall(entityMap map[string]any, segment string, meta model.TypeMeta) (*int, bool) {
+	naam, args, ok := model.ParseAfgeleideFunctieAanroep(segment)
+	if !ok || naam != "leeftijd" || len(args) == 0 {
+		return nil, false
+	}
+	geboorte := evalueerAfgeleidArgument(entityMap, args[0], meta)
+	peil := ""
+	if len(args) > 1 {
+		peil = evalueerAfgeleidArgument(entityMap, args[1], meta)
+	}
+	return model.BerekenLeeftijdVanArgs(geboorte, peil), true
+}
+
+// evalueerAfgeleidArgument evalueert één functie-argument: een string-literal
+// wordt ont-quote, anders wordt het als pad genavigeerd.
+func evalueerAfgeleidArgument(entityMap map[string]any, arg string, meta model.TypeMeta) string {
+	arg = strings.TrimSpace(arg)
+	if len(arg) >= 2 && arg[0] == '"' && arg[len(arg)-1] == '"' {
+		lit := arg[1 : len(arg)-1]
+		lit = strings.ReplaceAll(lit, `\"`, `"`)
+		lit = strings.ReplaceAll(lit, `\\`, `\`)
+		return lit
+	}
+	return navigeerAfgeleidPad(entityMap, arg, meta)
+}
+
+// evalueerAfgeleidVeldWaarde evalueert een afgeleid veld en behoudt het type:
+// een leeftijd(...)-expressie levert een *int (nil = niet bepaalbaar), overige
+// expressies leveren de string uit de concatenatie-evaluator.
+func evalueerAfgeleidVeldWaarde(entityMap map[string]any, av model.AfgeleidVeld, meta model.TypeMeta) any {
+	if lft, ok := evalueerLeeftijdCall(entityMap, strings.TrimSpace(av.Afleidingsregel), meta); ok {
+		if lft == nil {
+			return nil
+		}
+		return *lft
+	}
+	return evalueerCELConcatenatie(entityMap, av.Afleidingsregel, meta)
+}
+
+// nietWeergaveAfgeleideVelden geeft de afgeleide velden terug die géén
+// weergavenaam zijn (die laatste worden per relatie apart verrijkt).
+func nietWeergaveAfgeleideVelden(meta model.TypeMeta) []model.AfgeleidVeld {
+	var out []model.AfgeleidVeld
+	for _, av := range meta.AfgeleideVelden {
+		if !av.IsWeergaveVeld {
+			out = append(out, av)
+		}
+	}
+	return out
 }
 
 // navigeerAfgeleidPad navigeert een punt-gescheiden pad (bijv. "DomeinGegevens.naam")
