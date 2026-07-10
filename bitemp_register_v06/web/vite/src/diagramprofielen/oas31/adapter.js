@@ -1,21 +1,36 @@
 // @ts-check
 /**
  * adapter — OpenAPI 3.1-document → diagramcore-model voor het oas31-profiel.
+ * (OAS 3.0 is een aparte opgave — zie BACKLOG; veel 3.0-documenten importeren
+ * grotendeels, maar 3.0-eigenaardigheden zoals `nullable` vertalen we hier
+ * bewust niet.)
  *
  * Puur (neemt een geparsed document-object aan; YAML/JSON-parsing gebeurt bij
- * de aanroeper) en verliesarm op schema-niveau:
+ * de aanroeper) en verliesarm:
  *
- *   components.schemas → «schema»-elementen (properties + required) en
- *   «enum»-elementen; $ref-properties worden ref-connectoren met de
- *   property-naam als rolnaam, array-items met $ref worden items-connectoren,
- *   allOf wordt een allOf-connector (+ de inline delen als eigen properties).
+ *   info → één «api»-element (titel/versie/beschrijving/licentie/contact);
+ *   servers → «server»-elementen met een servers-connector vanaf de api.
  *
- *   paths → «operation»-elementen (method/pad/summary) met ref-connectoren
- *   naar de request- en response-schemas.
+ *   components.schemas → «schema»-elementen (properties + required, incl.
+ *   description/example/pattern/default per property) en «enum»-elementen;
+ *   $ref-properties worden ref-connectoren met de property-naam als rolnaam,
+ *   array-items met $ref worden items-connectoren, allOf wordt een
+ *   allOf-connector (+ de inline delen als eigen properties). Primitieve
+ *   schemas (string met format, …) dragen hun type als element-property,
+ *   externe $ref-schemas (./bestand.json, URL) hun verwijzing.
+ *
+ *   paths → «operation»-elementen (method/pad/summary/description/tag/
+ *   deprecated) met parameters- en responses-compartimenten (álle
+ *   statussen) en ref-connectoren naar request- en response-schemas.
+ *   Lokale $refs naar components.requestBodies/responses/parameters worden
+ *   voor de weergave gevolgd; die componenten zelf reizen als pass-through
+ *   mee in meta (net als tags, security en andere document-sleutels), zodat
+ *   de export ze reproduceert.
  *
  * Het resultaat krijgt één diagram ("componenten"), geplaatst met de
- * gedeelde rijen-layout (operaties bovenaan op CRUD-volgorde, schemas per
- * $ref-afstand eronder) — hetzelfde beeld als de Auto-layout-knop.
+ * gedeelde rijen-layout (api/servers bovenaan, dan operaties op
+ * CRUD-volgorde, schemas per $ref-afstand eronder) — hetzelfde beeld als de
+ * Auto-layout-knop.
  */
 import { oasRijenPosities } from "./index.js";
 
@@ -23,6 +38,29 @@ import { oasRijenPosities } from "./index.js";
 function refNaam(ref) {
   const m = /^#\/components\/schemas\/([^/]+)$/.exec(ref || "");
   return m ? m[1] : null;
+}
+
+/**
+ * Volg lokale $refs ("#/components/…") binnen het document — voor
+ * requestBodies/responses/parameters die als benoemde componenten leven.
+ * Externe $refs (andere bestanden/URL's) blijven staan.
+ */
+function derefLocal(doc, obj) {
+  let huidig = obj;
+  for (let hop = 0; hop < 10 && huidig && typeof huidig.$ref === "string" && huidig.$ref.startsWith("#/"); hop++) {
+    const doel = huidig.$ref
+      .slice(2)
+      .split("/")
+      .reduce((o, k) => o?.[decodeURIComponent(k).replace(/~1/g, "/").replace(/~0/g, "~")], doc);
+    if (!doel) break;
+    huidig = doel;
+  }
+  return huidig;
+}
+
+/** info.contact → één leesbare regel ("naam · e-mail · url"). */
+function contactTekst(contact) {
+  return [contact?.name, contact?.email, contact?.url].filter(Boolean).join(" · ");
 }
 
 /** Type-kolomtekst voor een property-schema (zonder $ref-afhandeling). */
@@ -34,9 +72,19 @@ function typeLabelVoor(schema) {
     if (itemRef) return `${itemRef}[]`;
     return `${typeLabelVoor(items) || "object"}[]`;
   }
-  let t = schema.type || (schema.$ref ? refNaam(schema.$ref) || "object" : "object");
+  // 3.1: type mag een array zijn (["string","null"]) → "string|null".
+  let t = Array.isArray(schema.type)
+    ? schema.type.join("|")
+    : schema.type || (schema.$ref ? refNaam(schema.$ref) || "object" : "object");
   if (schema.format) t += ` «${schema.format}»`;
   return t;
+}
+
+/** Eerste voorbeeld van een schema: 3.1 `examples`-array of `example`. */
+function voorbeeldVan(schema) {
+  if (schema?.example !== undefined) return String(schema.example);
+  if (Array.isArray(schema?.examples) && schema.examples.length) return String(schema.examples[0]);
+  return undefined;
 }
 
 /** Eerste schema uit een content-map (application/json wint). */
@@ -72,6 +120,49 @@ export function vanOasDocument(doc) {
     return true;
   };
 
+  // ── info + servers ────────────────────────────────────────────────────
+  const API_ID = "__api__";
+  if (doc?.info) {
+    const info = doc.info;
+    elements[API_ID] = {
+      id: API_ID,
+      naam: info.title || "API",
+      elementType: "api",
+      compartimenten: [],
+      data: {
+        ...(info.version ? { versie: info.version } : {}),
+        ...(info.description ? { beschrijving: info.description } : {}),
+        ...(info.license?.name ? { licentie: info.license.name } : {}),
+        ...(contactTekst(info.contact) ? { contact: contactTekst(info.contact) } : {}),
+        bron: info,
+      },
+    };
+  }
+  (Array.isArray(doc?.servers) ? doc.servers : []).forEach((server, i) => {
+    const sid = `__server_${i + 1}`;
+    elements[sid] = {
+      id: sid,
+      naam: server.url || sid,
+      elementType: "server",
+      compartimenten: [],
+      data: {
+        ...(server.description ? { beschrijving: server.description } : {}),
+        bron: server,
+      },
+    };
+    if (elements[API_ID]) {
+      connectoren.push({
+        id: nieuwConnId("servers"),
+        naam: "",
+        elementType: "servers",
+        source: API_ID,
+        target: sid,
+        compartimenten: [],
+        data: {},
+      });
+    }
+  });
+
   // ── components.schemas ────────────────────────────────────────────────
   const schemas = doc?.components?.schemas || {};
   for (const [naam, schema] of Object.entries(schemas)) {
@@ -86,7 +177,29 @@ export function vanOasDocument(doc) {
             velden: schema.enum.map((w) => ({ naam: String(w), fieldType: "literal" })),
           },
         ],
-        data: { bron: schema },
+        data: {
+          ...(schema.description ? { beschrijving: schema.description } : {}),
+          bron: schema,
+        },
+      };
+      continue;
+    }
+
+    // Een schema dat zélf een $ref is: lokaal = alias (ref-connector),
+    // extern (./bestand.json, URL) = schema-element met de verwijzing.
+    if (schema?.$ref) {
+      const lokaal = refNaam(schema.$ref);
+      if (lokaal) voegRef(naam, schema.$ref, "ref", "(alias)");
+      elements[naam] = {
+        id: naam,
+        naam,
+        elementType: "schema",
+        compartimenten: [],
+        data: {
+          ...(lokaal ? {} : { externRef: schema.$ref }),
+          ...(schema.description ? { beschrijving: schema.description } : {}),
+          bron: schema,
+        },
       };
       continue;
     }
@@ -110,6 +223,15 @@ export function vanOasDocument(doc) {
       }
     }
 
+    // Detail-data van een property-schema (description/example/pattern/
+    // default) — example/default als tekst, de bron bewaart het type.
+    const propDetails = (prop) => ({
+      ...(prop?.description ? { beschrijving: prop.description } : {}),
+      ...(voorbeeldVan(prop) !== undefined ? { voorbeeld: voorbeeldVan(prop) } : {}),
+      ...(prop?.pattern ? { patroon: prop.pattern } : {}),
+      ...(prop?.default !== undefined ? { standaard: String(prop.default) } : {}),
+    });
+
     const velden = [];
     for (const [propNaam, prop] of Object.entries(eigen.properties)) {
       const verplicht = eigen.required.includes(propNaam);
@@ -118,7 +240,7 @@ export function vanOasDocument(doc) {
         velden.push({
           naam: propNaam,
           fieldType: "property",
-          data: { typeLabel: refNaam(prop.$ref) || "object", verplicht },
+          data: { typeLabel: refNaam(prop.$ref) || "object", verplicht, ...propDetails(prop) },
         });
         continue;
       }
@@ -128,10 +250,13 @@ export function vanOasDocument(doc) {
       velden.push({
         naam: propNaam,
         fieldType: "property",
-        data: { typeLabel: typeLabelVoor(prop), verplicht },
+        data: { typeLabel: typeLabelVoor(prop), verplicht, ...propDetails(prop) },
       });
     }
 
+    // Primitief schema (TraceID: string «uuid», …): geen properties, wel
+    // een eigen type — dat wordt een element-property (+ weergave-regel).
+    const primitief = !velden.length && schema?.type && schema.type !== "object";
     elements[naam] = {
       id: naam,
       naam,
@@ -139,6 +264,9 @@ export function vanOasDocument(doc) {
       compartimenten: velden.length ? [{ compartmentType: "properties", velden }] : [],
       data: {
         ...(schema?.description ? { beschrijving: schema.description } : {}),
+        ...(primitief ? { typeLabel: typeLabelVoor(schema) } : {}),
+        ...(voorbeeldVan(schema) !== undefined ? { voorbeeld: voorbeeldVan(schema) } : {}),
+        ...(schema?.pattern ? { patroon: schema.pattern } : {}),
         bron: schema,
       },
     };
@@ -151,31 +279,69 @@ export function vanOasDocument(doc) {
       const op = padItem?.[method];
       if (!op) continue;
       const id = `op_${method}_${pad}`.replace(/[^a-zA-Z0-9_]/g, "_");
-      const tag = op.tags?.[0] || pad.split("/").filter(Boolean)[0] || "overig";
+
+      // Parameters (pad-niveau + operatie-niveau); benoemde componenten
+      // ($ref naar components.parameters) worden voor de weergave gevolgd.
+      const parameterVelden = [...(padItem.parameters || []), ...(op.parameters || [])]
+        .map((p) => derefLocal(doc, p))
+        .filter((p) => p && p.name)
+        .map((p) => ({
+          naam: p.name,
+          fieldType: "parameter",
+          data: {
+            ...(p.in ? { in: p.in } : {}),
+            typeLabel: p.schema?.$ref ? refNaam(p.schema.$ref) || "object" : typeLabelVoor(p.schema),
+            verplicht: !!p.required,
+            ...(p.description ? { beschrijving: p.description } : {}),
+            bronParam: p,
+          },
+        }));
+
+      // Responses: álle statussen als compartiment-regel; schemas ($ref,
+      // ook in arrays en ook voor 4xx/5xx) worden ref-connectoren.
+      const responseVelden = [];
+      for (const [status, response] of Object.entries(op.responses || {})) {
+        const resp = derefLocal(doc, response) || {};
+        const respSchema = contentSchema(resp.content);
+        const doelRef = respSchema?.$ref || respSchema?.items?.$ref;
+        const doelNaam = refNaam(doelRef);
+        responseVelden.push({
+          naam: status,
+          fieldType: "response",
+          data: {
+            ...(doelNaam
+              ? { typeLabel: respSchema?.items ? `${doelNaam}[]` : doelNaam }
+              : respSchema
+                ? { typeLabel: typeLabelVoor(respSchema) }
+                : {}),
+            ...(resp.description ? { beschrijving: resp.description } : {}),
+          },
+        });
+        if (doelRef) voegRef(id, doelRef, "ref", `response ${status}`);
+      }
+
       elements[id] = {
         id,
         naam: op.operationId || `${method.toUpperCase()} ${pad}`,
         elementType: "operatie",
-        compartimenten: [],
+        compartimenten: [
+          ...(parameterVelden.length ? [{ compartmentType: "parameters", velden: parameterVelden }] : []),
+          ...(responseVelden.length ? [{ compartmentType: "responses", velden: responseVelden }] : []),
+        ],
         data: {
           method: method.toUpperCase(),
           pad,
-          tag,
+          ...(op.tags?.[0] ? { tag: op.tags[0] } : {}),
           ...(op.summary ? { samenvatting: op.summary } : {}),
+          ...(op.description ? { beschrijving: op.description } : {}),
+          ...(op.deprecated ? { verouderd: true } : {}),
           bron: op,
         },
       };
 
-      const reqSchema = contentSchema(op.requestBody?.content);
+      const reqSchema = contentSchema(derefLocal(doc, op.requestBody)?.content);
       if (reqSchema) {
         voegRef(id, reqSchema.$ref || reqSchema.items?.$ref, "ref", "request");
-      }
-      for (const [status, response] of Object.entries(op.responses || {})) {
-        if (!/^2\d\d$/.test(status)) continue;
-        const respSchema = contentSchema(response?.content);
-        if (respSchema) {
-          voegRef(id, respSchema.$ref || respSchema.items?.$ref, "ref", `response ${status}`);
-        }
       }
     }
   }
@@ -210,7 +376,8 @@ export function vanOasDocument(doc) {
   const perTag = new Map();
   for (const el of Object.values(elements)) {
     if (el.elementType !== "operatie") continue;
-    const tag = el.data?.tag || "overig";
+    // Zonder expliciete OAS-tag groepeert het eerste pad-segment.
+    const tag = el.data?.tag || (el.data?.pad || "").split("/").filter(Boolean)[0] || "overig";
     if (!perTag.has(tag)) perTag.set(tag, []);
     perTag.get(tag).push(el.id);
   }
@@ -247,7 +414,22 @@ export function vanOasDocument(doc) {
     }
   }
 
-  return { elements, diagrams, meta: { oasInfo: doc?.info || null } };
+  // Pass-through voor de terugreis: benoemde componenten (requestBodies,
+  // responses, parameters, securitySchemes, …), tags en overige
+  // document-sleutels (security, externalDocs, webhooks, …).
+  const { schemas: _schemas, ...componentsRest } = doc?.components || {};
+  const { openapi: _o, info: _i, servers: _sv, tags: _tg, paths: _pa, components: _c, ...docRest } = doc || {};
+  return {
+    elements,
+    diagrams,
+    meta: {
+      oasInfo: doc?.info || null,
+      ...(doc?.openapi ? { oasVersie: doc.openapi } : {}),
+      ...(Array.isArray(doc?.tags) && doc.tags.length ? { oasTags: doc.tags } : {}),
+      ...(Object.keys(componentsRest).length ? { oasComponents: componentsRest } : {}),
+      ...(Object.keys(docRest).length ? { oasDocRest: docRest } : {}),
+    },
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -256,7 +438,7 @@ export function vanOasDocument(doc) {
 // wat in 0.5 bewerkt is (properties, connectoren, teksten) overschrijft dat.
 // ═══════════════════════════════════════════════════════════════════════════
 
-/** typeLabel-tekst → property-schema ("Adres" → $ref, "string «date»" → type+format). */
+/** typeLabel-tekst → property-schema ("Adres" → $ref, "string «date»" → type+format, "string|null" → type-array). */
 function schemaVoorTypeLabel(label, schemaNamen) {
   const schoon = (label || "").trim();
   if (!schoon) return { type: "string" };
@@ -265,16 +447,47 @@ function schemaVoorTypeLabel(label, schemaNamen) {
     return { type: "array", items: schemaVoorTypeLabel(arrayMatch[1], schemaNamen) };
   }
   if (schemaNamen.has(schoon)) return { $ref: `#/components/schemas/${schoon}` };
-  const fmtMatch = /^([\w-]+)\s*«(.+)»$/.exec(schoon);
-  if (fmtMatch) return { type: fmtMatch[1], format: fmtMatch[2] };
-  return { type: schoon };
+  const fmtMatch = /^([\w|-]+)\s*«(.+)»$/.exec(schoon);
+  const [kaal, format] = fmtMatch ? [fmtMatch[1], fmtMatch[2]] : [schoon, null];
+  // 3.1: "string|null" → type: ["string","null"]
+  const type = kaal.includes("|") ? kaal.split("|") : kaal;
+  return { type, ...(format ? { format } : {}) };
+}
+
+/**
+ * Delta-waarde voor tekst-bewerkbare velden (example/default): niet gezet of
+ * ongewijzigd t.o.v. de bron → de bronwaarde (met zijn oorspronkelijke
+ * JSON-type); anders de bewerkte tekst.
+ */
+function bewerktOf(bewerkt, origineel) {
+  if (bewerkt === undefined || bewerkt === "" || bewerkt === String(origineel ?? "")) return origineel;
+  return bewerkt;
+}
+
+/** Schrijf een (eventueel bewerkt) voorbeeld terug: een 3.1 `examples`-array blijft een array, anders `example`. */
+function schrijfVoorbeeld(doelSchema, bewerkt) {
+  const origineel =
+    doelSchema.example !== undefined
+      ? doelSchema.example
+      : Array.isArray(doelSchema.examples)
+        ? doelSchema.examples[0]
+        : undefined;
+  const waarde = bewerktOf(bewerkt, origineel);
+  if (waarde === undefined || waarde === origineel) return;
+  if (Array.isArray(doelSchema.examples)) doelSchema.examples = [waarde, ...doelSchema.examples.slice(1)];
+  else doelSchema.example = waarde;
 }
 
 /**
  * Converteer de 0.5-sandbox terug naar een OpenAPI 3.1-document.
  *
+ * Pass-through-regel: verwijst de bron van een operatie voor requestBody,
+ * een response of een parameter naar een benoemd component ($ref), dan wint
+ * die $ref — de componenten zelf reizen mee via meta.oasComponents; edits
+ * doe je dan dáár, niet in de gedereferenceerde weergave-regels.
+ *
  * @param {{elements: Record<string, Object>, meta?: Object}} state
- * @returns {Object} OpenAPI-document (components.schemas + paths)
+ * @returns {Object} OpenAPI-document (info/servers/tags + paths + components)
  */
 export function naarOasDocument(state) {
   const els = Object.values(state?.elements || {});
@@ -292,6 +505,30 @@ export function naarOasDocument(state) {
   const naamVan = (id) => state.elements[id]?.naam || id;
   const refNaar = (id) => ({ $ref: `#/components/schemas/${naamVan(id)}` });
 
+  // ── info + servers uit de api-/server-elementen ───────────────────────
+  const api = els.find((el) => el.elementType === "api");
+  const infoBron = api?.data?.bron || state?.meta?.oasInfo || {};
+  const info = {
+    ...infoBron,
+    ...(api ? { title: api.naam || infoBron.title || "API" } : {}),
+    ...(api?.data?.versie ? { version: api.data.versie } : {}),
+    ...(api?.data?.beschrijving ? { description: api.data.beschrijving } : {}),
+    // contact is pass-through via de bron (de éénregelige weergave is niet
+    // betrouwbaar terug te splitsen); de licentie-naam wél als delta.
+    ...(api?.data?.licentie ? { license: { ...(infoBron.license || {}), name: api.data.licentie } } : {}),
+  };
+  if (!info.title) info.title = "Omnium Studio export";
+  if (!info.version) info.version = "1.0";
+
+  const servers = els
+    .filter((el) => el.elementType === "server")
+    .map((el) => ({
+      ...(el.data?.bron || {}),
+      url: el.naam,
+      ...(el.data?.beschrijving ? { description: el.data.beschrijving } : {}),
+    }));
+
+  // ── components.schemas ────────────────────────────────────────────────
   const schemas = {};
   for (const el of els) {
     if (el.elementType === "enum") {
@@ -300,52 +537,87 @@ export function naarOasDocument(state) {
         ...bron,
         type: bron.type || "string",
         enum: compVeldenVan(el, "waarden").map((v) => v.naam),
+        ...(el.data?.beschrijving ? { description: el.data.beschrijving } : {}),
       };
       continue;
     }
     if (el.elementType !== "schema") continue;
     const bron = el.data?.bron || {};
-    const conns = connsVan.get(el.id) || [];
+    const d = el.data || {};
+
+    // Extern/alias-schema: de $ref wint (plus x-…-sleutels uit de bron).
+    if (d.externRef || bron.$ref) {
+      schemas[el.naam] = { ...bron, $ref: d.externRef || bron.$ref };
+      continue;
+    }
 
     const properties = {};
     const required = [];
     for (const veld of compVeldenVan(el, "properties")) {
+      const vd = veld.data || {};
       const bronProp =
         (bron.properties || {})[veld.naam] ||
         (Array.isArray(bron.allOf)
-          ? bron.allOf.find((d) => d?.properties?.[veld.naam])?.properties?.[veld.naam]
+          ? bron.allOf.find((deel) => deel?.properties?.[veld.naam])?.properties?.[veld.naam]
           : undefined) ||
         {};
-      properties[veld.naam] = {
-        ...(typeof bronProp === "object" && !bronProp.$ref ? bronProp : {}),
-        ...schemaVoorTypeLabel(veld.data?.typeLabel, schemaNamen),
-      };
-      if (veld.data?.verplicht) required.push(veld.naam);
+      const kern = schemaVoorTypeLabel(vd.typeLabel, schemaNamen);
+      let prop;
+      if (kern.$ref) {
+        // 3.1 staat description naast $ref toe; meer sturen we niet mee.
+        prop = { ...kern, ...(vd.beschrijving ? { description: vd.beschrijving } : {}) };
+      } else {
+        prop = { ...(typeof bronProp === "object" && !bronProp.$ref ? bronProp : {}), ...kern };
+        if (vd.beschrijving) prop.description = vd.beschrijving;
+        if (vd.patroon) prop.pattern = vd.patroon;
+        schrijfVoorbeeld(prop, vd.voorbeeld);
+        const standaard = bewerktOf(vd.standaard, prop.default);
+        if (standaard !== undefined) prop.default = standaard;
+      }
+      properties[veld.naam] = prop;
+      if (vd.verplicht) required.push(veld.naam);
     }
 
-    const eigen = {
+    // Schema-brede sleutels uit de bron (description, example, pattern,
+    // minProperties, x-…, externalDocs, …) blijven staan; wat de tekening
+    // structureel beheert (type/properties/…) wordt hieronder opnieuw
+    // opgebouwd, de tekst-details komen als delta eroverheen.
+    const basis = { ...bron };
+    for (const k of ["properties", "required", "allOf", "oneOf", "anyOf", "type", "format", "enum"]) {
+      delete basis[k];
+    }
+    if (d.beschrijving) basis.description = d.beschrijving;
+    if (d.patroon) basis.pattern = d.patroon;
+    schrijfVoorbeeld(basis, d.voorbeeld);
+
+    const eigenObject = {
       type: "object",
-      ...(el.data?.beschrijving ? { description: el.data.beschrijving } : bron.description ? { description: bron.description } : {}),
       ...(Object.keys(properties).length ? { properties } : {}),
       ...(required.length ? { required } : {}),
     };
-
+    const conns = connsVan.get(el.id) || [];
     const allOfRefs = conns.filter((c) => c.elementType === "allOf").map((c) => refNaar(c.target));
     const oneOfRefs = conns.filter((c) => c.elementType === "oneOf").map((c) => refNaar(c.target));
     const anyOfRefs = conns.filter((c) => c.elementType === "anyOf").map((c) => refNaar(c.target));
 
     if (allOfRefs.length) {
-      schemas[el.naam] = { allOf: [...allOfRefs, eigen] };
+      schemas[el.naam] = { ...basis, allOf: [...allOfRefs, eigenObject] };
     } else if (oneOfRefs.length) {
-      schemas[el.naam] = { oneOf: oneOfRefs, ...(Object.keys(properties).length ? { ...eigen } : {}) };
+      schemas[el.naam] = { ...basis, oneOf: oneOfRefs, ...(Object.keys(properties).length ? eigenObject : {}) };
     } else if (anyOfRefs.length) {
-      schemas[el.naam] = { anyOf: anyOfRefs, ...(Object.keys(properties).length ? { ...eigen } : {}) };
+      schemas[el.naam] = { ...basis, anyOf: anyOfRefs, ...(Object.keys(properties).length ? eigenObject : {}) };
+    } else if (!Object.keys(properties).length && (d.typeLabel || (bron.type && bron.type !== "object"))) {
+      // Primitief schema: type/format uit het bewerkbare typeLabel (of de bron).
+      const kern = d.typeLabel
+        ? schemaVoorTypeLabel(d.typeLabel, schemaNamen)
+        : { type: bron.type, ...(bron.format ? { format: bron.format } : {}) };
+      schemas[el.naam] = { ...basis, ...kern };
     } else {
-      schemas[el.naam] = eigen;
+      schemas[el.naam] = { ...basis, ...eigenObject };
     }
   }
 
-  // paths uit operatie-elementen; request/response-refs uit hun connectoren.
+  // ── paths uit operatie-elementen ──────────────────────────────────────
   const paths = {};
   for (const el of els) {
     if (el.elementType !== "operatie") continue;
@@ -357,29 +629,97 @@ export function naarOasDocument(state) {
       ...bron,
       operationId: el.naam || bron.operationId,
       ...(d.samenvatting ? { summary: d.samenvatting } : {}),
-      ...(d.tag ? { tags: [d.tag] } : bron.tags ? { tags: bron.tags } : {}),
+      ...(d.beschrijving ? { description: d.beschrijving } : {}),
+      ...(d.verouderd ? { deprecated: true } : {}),
+      ...(d.tag ? { tags: [d.tag, ...(bron.tags || []).slice(1)] } : {}),
     };
+
+    // Parameters: compartiment-regels; benoemde $ref-parameters zijn bij
+    // import gederefereerd en gaan dus inline terug.
+    const parameterVelden = compVeldenVan(el, "parameters");
+    if (parameterVelden.length) {
+      op.parameters = parameterVelden.map((veld) => {
+        const vd = veld.data || {};
+        const p = { ...(vd.bronParam || {}), name: veld.naam };
+        if (vd.in) p.in = vd.in;
+        if (vd.beschrijving) p.description = vd.beschrijving;
+        if (vd.typeLabel) p.schema = schemaVoorTypeLabel(vd.typeLabel, schemaNamen);
+        if (vd.verplicht) p.required = true;
+        else delete p.required;
+        return p;
+      });
+    }
+
+    // Request-/response-schemas uit de ref-connectoren.
     const conns = connsVan.get(el.id) || [];
+    const responsesUitConns = new Map();
     for (const conn of conns.filter((c) => c.elementType === "ref")) {
       const rol = conn.data?.rolnaam || "response";
-      const inhoud = { content: { "application/json": { schema: refNaar(conn.target) } } };
       if (rol === "request") {
-        op.requestBody = { ...(bron.requestBody || {}), ...inhoud };
-      } else {
-        const status = /response (\d{3})/.exec(rol)?.[1] || "200";
-        op.responses = { ...(op.responses || {}), [status]: { ...(bron.responses?.[status] || {}), ...inhoud } };
+        if (bron.requestBody?.$ref) continue; // benoemd component: pass-through
+        const mt = Object.keys(bron.requestBody?.content || {})[0] || "application/json";
+        op.requestBody = {
+          ...(bron.requestBody || {}),
+          content: {
+            ...(bron.requestBody?.content || {}),
+            [mt]: { ...(bron.requestBody?.content?.[mt] || {}), schema: refNaar(conn.target) },
+          },
+        };
+        continue;
+      }
+      const status = /response (\d{3})/.exec(rol)?.[1] || "200";
+      responsesUitConns.set(status, refNaar(conn.target));
+    }
+
+    // Responses: compartiment-regels (alle statussen) + connector-schemas;
+    // het typeLabel van de regel weet meer dan de connector (arrays).
+    const maakResponse = (status, vd, schemaRef) => {
+      const bronResp = bron.responses?.[status];
+      const resp = { ...(bronResp || {}) };
+      if (vd?.beschrijving) resp.description = vd.beschrijving;
+      const schema = vd?.typeLabel ? schemaVoorTypeLabel(vd.typeLabel, schemaNamen) : schemaRef;
+      if (schema) {
+        const mt = Object.keys(bronResp?.content || {})[0] || "application/json";
+        resp.content = {
+          ...(bronResp?.content || {}),
+          [mt]: { ...(bronResp?.content?.[mt] || {}), schema },
+        };
+      }
+      return resp;
+    };
+    const responseVelden = compVeldenVan(el, "responses");
+    if (responseVelden.length || responsesUitConns.size) {
+      op.responses = {};
+      for (const veld of responseVelden) {
+        const status = veld.naam;
+        const bronResp = bron.responses?.[status];
+        if (bronResp?.$ref) {
+          op.responses[status] = bronResp; // benoemd component: pass-through
+        } else {
+          op.responses[status] = maakResponse(status, veld.data, responsesUitConns.get(status));
+        }
+        responsesUitConns.delete(status);
+      }
+      // Connectoren zonder eigen regel (handmatig getekend).
+      for (const [status, schemaRef] of responsesUitConns) {
+        const bronResp = bron.responses?.[status];
+        op.responses[status] = bronResp?.$ref ? bronResp : maakResponse(status, null, schemaRef);
       }
     }
     if (!op.responses) op.responses = bron.responses || { 200: { description: "OK" } };
+
     if (!paths[pad]) paths[pad] = {};
     paths[pad][method] = op;
   }
 
   return {
-    openapi: "3.1.0",
-    info: state?.meta?.oasInfo || { title: "Omnium Studio export", version: "1.0" },
+    openapi: state?.meta?.oasVersie || "3.1.0",
+    info,
+    ...(servers.length ? { servers } : {}),
+    ...(state?.meta?.oasTags ? { tags: state.meta.oasTags } : {}),
+    ...(state?.meta?.oasDocRest || {}),
     ...(Object.keys(paths).length ? { paths } : {}),
-    components: { schemas },
+    components: { ...(state?.meta?.oasComponents || {}), schemas },
   };
 }
 

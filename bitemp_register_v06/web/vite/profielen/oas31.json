@@ -1,44 +1,76 @@
 {
   "layout": {
-    "elementDef:Schema (object)#1": {
-      "x": 60,
-      "y": 60
+    "elementDef:API (info)#1": {
+      "x": -381,
+      "y": -238
     },
-    "compartimentDef:properties#1": {
-      "x": 60,
-      "y": 330
-    },
-    "fieldDef:property#1": {
-      "x": 67,
-      "y": 539
-    },
-    "elementDef:Enum#1": {
-      "x": 433,
-      "y": 210
-    },
-    "compartimentDef:waarden#1": {
-      "x": 421,
-      "y": 343
+    "compartimentDef:api-info#1": {
+      "x": -335,
+      "y": 500
     },
     "fieldDef:literal#1": {
-      "x": 596,
-      "y": 521
+      "x": 697,
+      "y": 478
+    },
+    "elementDef:Server#1": {
+      "x": -320,
+      "y": -437
+    },
+    "elementDef:Schema (object)#1": {
+      "x": 1161,
+      "y": -291
+    },
+    "compartimentDef:properties#1": {
+      "x": 1305,
+      "y": 59
+    },
+    "fieldDef:property#1": {
+      "x": 1312,
+      "y": 222
+    },
+    "compartimentDef:typering#1": {
+      "x": 989,
+      "y": 64
+    },
+    "elementDef:Enum#1": {
+      "x": 688,
+      "y": -105
+    },
+    "compartimentDef:waarden#1": {
+      "x": 682,
+      "y": 60
     },
     "elementDef:Operatie#1": {
-      "x": 749,
-      "y": 29
+      "x": 53,
+      "y": -280
+    },
+    "compartimentDef:parameters#1": {
+      "x": 146,
+      "y": 53
+    },
+    "fieldDef:parameter#1": {
+      "x": 121,
+      "y": 228
+    },
+    "compartimentDef:responses#1": {
+      "x": -133,
+      "y": 65
+    },
+    "fieldDef:response#1": {
+      "x": -136,
+      "y": 214
     },
     "compartimentDef:signatuur#1": {
-      "x": 742,
-      "y": 366
+      "x": 371,
+      "y": 46
     },
     "elementDef:Notitie#1": {
-      "x": 677,
-      "y": -163
+      "x": 671,
+      "y": -473
     },
     "elementDef:Kader#1": {
-      "x": 425,
-      "y": -166
+      "x": 409,
+      "y": -478
     }
   }
 }

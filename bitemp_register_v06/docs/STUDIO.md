@@ -327,21 +327,35 @@ fase 2 een **bewerkbare sandbox**:
   voorbeeld-ontwerp. De minimap volgt tegenwoordig de ShapeType (bol →
   cirkel; kader → transparant vlak, ook met eigen achtergrondkleur).
 - **Derde profiel: "OAS (0.5)"** (`diagramprofielen/oas31/`, vuurproef op een
-  niet-UML-domein): «schema»-elementen met properties (JSON-typen/formats,
-  required), «enum», «operation» (method/pad/summary als element-properties
-  met live signatuurregel op de node), en de connectoren **$ref** (met
-  property-naam als rolnaam), **allOf** (overerving) en **items**
-  (array-elementtype). Ook hier: alleen een descriptor + fabriek-aanroep.
-  **Bestand → Importeer OAS 3.1 (YAML/JSON)…** leest een echt
-  OpenAPI-document in (`oas31/adapter.js`, parser: `yaml`): schemas, enums,
-  paths → operaties, en alle $ref/allOf/items/**oneOf/anyOf**-relaties als
-  connectoren. Naast het totaaloverzicht komt er **per tag** (of pad-groep)
-  een eigen diagram met de operaties plus de (transitief) geraakte schemas —
-  zo blijft een grote OAS leesbaar. Er is een **gelaagde auto-layout**
-  (operaties → per $ref-stap een kolom) en **Bestand → Exporteer OAS 3.1
-  (YAML)…** schrijft het model terug (spiegel + delta: properties/required/
-  allOf/oneOf/paths gereconstrueerd; round-trip-getest). Nog niet:
-  parameters/headers als elementen, inline oneOf-varianten.
+  niet-UML-domein, sinds juli 2026 een **vrijwel volledige OAS
+  3.1-representatie**): «api» (het info-object: titel/versie/description/
+  licentie/contact, met versie-regel op de node), «server» (één per
+  servers-item, de url als naam), «schema»-elementen met properties
+  (JSON-typen/formats incl. 3.1-type-arrays zoals `string|null`, required,
+  én description/example/pattern/default per property), primitieve schemas
+  (bv. `TraceID: string «uuid»` — type als weergave-regel), externe
+  $ref-schemas (`./bestand.json` als weergave-regel), «enum», «operation»
+  (method/pad/summary/description/tag/deprecated als element-properties, met
+  live signatuurregel plus bewerkbare **parameters**- en
+  **responses**-compartimenten — álle statussen, ook 4xx/5xx), en de
+  connectoren **$ref** (met property-naam als rolnaam), **allOf**
+  (overerving), **items** (array-elementtype), **oneOf/anyOf** en
+  **servers** (api → server). Ook hier: alleen een descriptor +
+  fabriek-aanroep. **Bestand → Importeer OAS 3.1 (YAML/JSON)…** leest een
+  echt OpenAPI-document in (`oas31/adapter.js`, parser: `yaml`); lokale
+  $refs naar benoemde componenten (components.requestBodies/responses/
+  parameters) worden voor de wéérgave gevolgd, terwijl de componenten zelf —
+  net als tags, security en andere document-sleutels — als pass-through in
+  `meta` meereizen. Naast het totaaloverzicht komt er **per tag** (of
+  pad-groep) een eigen diagram met de operaties plus de (transitief)
+  geraakte schemas — zo blijft een grote OAS leesbaar. Er is een **gelaagde
+  auto-layout** (api/servers → operaties → per $ref-stap een rij) en
+  **Bestand → Exporteer OAS 3.1 (YAML)…** schrijft het model terug (spiegel
+  + delta: info/servers/tags, properties/required/allOf/oneOf/paths/
+  parameters/responses gereconstrueerd, $refs naar benoemde componenten
+  blijven staan; round-trip-getest). Nog niet: securitySchemes/headers/links
+  als eigen elementen, inline oneOf-varianten, en **OAS 3.0** (nullable,
+  `example` vs `examples`) — dat wordt een apart profiel (zie BACKLOG).
 - **Tijdlijnvoorkomen & geordend (LGM)**: entiteit, gegevenselement en
   relatie hebben een **materieel (tijdlijn)**-vinkje (mapping op
   `isMaterieel`; formeel = uit) — op de node als MATERIEEL-badge, op de
