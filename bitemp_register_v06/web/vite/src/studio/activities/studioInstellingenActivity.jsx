@@ -390,10 +390,12 @@ function Main() {
 
   const eigenVormen = leesVormen();
   const eigenIds = new Set(Object.keys(eigenVormen));
-  const shapeIds = alleShapeIds().filter((id) => id !== "anker");
-  const icoonIds = alleIcoonIds();
   const eigenIconen = leesIconen();
   const eigenIcoonIds = new Set(Object.keys(eigenIconen));
+  // Eigen vormen/iconen hebben hun eigen sectie; toon ze niet nóg eens tussen de
+  // ingebouwde (anders dubbel, en die galerij labelt op id → oude naam blijft staan).
+  const shapeIds = alleShapeIds().filter((id) => id !== "anker" && !eigenIds.has(id));
+  const icoonIds = alleIcoonIds().filter((id) => !eigenIcoonIds.has(id));
 
   const nieuwIcoon = () => {
     const naam = window.prompt("Naam van het nieuwe icoon:", "Mijn icoon");
@@ -478,7 +480,7 @@ function Main() {
           {shapeIds.map((id) => (
             <div key={id} style={kaartStijl}>
               <ShapePreviewBox Shape={getShape(id)} naam={id} />
-              <code style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)" }}>{id}{eigenIds.has(id) ? " (eigen)" : ""}</code>
+              <code style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)" }}>{id}</code>
             </div>
           ))}
         </div>
@@ -516,14 +518,14 @@ function Main() {
       </div>
 
       <div style={sectie}>
-        <h3 style={{ margin: 0, fontSize: 13, color: "var(--s-fg-muted, #64748b)" }}>Alle iconen ({icoonIds.length})</h3>
+        <h3 style={{ margin: 0, fontSize: 13, color: "var(--s-fg-muted, #64748b)" }}>Ingebouwde iconen ({icoonIds.length})</h3>
         <div style={grid(96)}>
           {icoonIds.map((id) => (
             <div key={id} style={{ ...kaartStijl, padding: "10px 6px" }}>
               <span style={{ color: "var(--s-fg)" }}>
                 <TypeIcoon elementType={{ icoon: id, shape: "class-box" }} maat={28} />
               </span>
-              <code style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)", textAlign: "center" }}>{id}{eigenIcoonIds.has(id) ? " (eigen)" : ""}</code>
+              <code style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)", textAlign: "center" }}>{id}</code>
             </div>
           ))}
         </div>
