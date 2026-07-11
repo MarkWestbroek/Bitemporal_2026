@@ -13,7 +13,9 @@
   en **undo/redo** met Ctrl+Z / Ctrl+Y via een lokaal history-stack — geen aparte
   zundo-store, want de punten zijn transiënte editor-state). Een klik op een punt
   voegt niet langer per ongeluk een nieuw punt toe (stopPropagation op de handle).
-  Dat schrijft live een
+  Het tekencanvas heeft dezelfde **node-verhouding** (≈2:1) i.p.v. vierkant, want
+  clip-path-percentages rekken mee met de node-box; tekenen op node-proporties is
+  dus WYSIWYG (geen horizontale uitrekking in de preview). Dat schrijft live een
   `clip-path: polygon(…)` op de data-shape — i.p.v. de coördinaten te
   typen — met directe preview. Een volledige vrije SVG-editor (beziers,
   meerdere paden) blijft bewust buiten scope. Vorige stap: **icoon-import (data-iconen)**

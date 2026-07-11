@@ -9,8 +9,13 @@
  */
 import { useEffect, useRef, useState } from "react";
 
-const MAAT = 180; // px; het canvas beeldt de 0–100%-box af
-const px = (pct) => (pct / 100) * MAAT;
+// Het canvas heeft dezelfde verhouding als een node (≈2:1), niet vierkant:
+// clip-path-percentages rekken mee met de node-box, dus tekenen op node-
+// proporties is WYSIWYG — geen horizontale uitrekking in de preview.
+const BREEDTE = 280;
+const HOOGTE = 138;
+const px = (pct) => (pct / 100) * BREEDTE; // x-as
+const py = (pct) => (pct / 100) * HOOGTE; // y-as
 
 /** "polygon(10% 0%, 90% 50%)" → [{x:10,y:0},{x:90,y:50}] (of []). */
 export function polygonNaarPunten(clipPath) {
@@ -120,14 +125,14 @@ export default function PolygonTekenaar({ initieel = [], onChange }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const polyPunten = punten.map((p) => `${px(p.x)},${px(p.y)}`).join(" ");
+  const polyPunten = punten.map((p) => `${px(p.x)},${py(p.y)}`).join(" ");
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-start" }}>
       <svg
         ref={svgRef}
-        width={MAAT}
-        height={MAAT}
+        width={BREEDTE}
+        height={HOOGTE}
         onClick={canvasKlik}
         onPointerMove={beweeg}
         onPointerUp={stop}
@@ -135,8 +140,8 @@ export default function PolygonTekenaar({ initieel = [], onChange }) {
       >
         {[25, 50, 75].map((g) => (
           <g key={g} stroke="var(--s-border, #e2e8f0)" strokeWidth="0.5">
-            <line x1={px(g)} y1="0" x2={px(g)} y2={MAAT} />
-            <line x1="0" y1={px(g)} x2={MAAT} y2={px(g)} />
+            <line x1={px(g)} y1="0" x2={px(g)} y2={HOOGTE} />
+            <line x1="0" y1={py(g)} x2={BREEDTE} y2={py(g)} />
           </g>
         ))}
         {punten.length >= 2 && (
@@ -146,7 +151,7 @@ export default function PolygonTekenaar({ initieel = [], onChange }) {
           <circle
             key={i}
             cx={px(p.x)}
-            cy={px(p.y)}
+            cy={py(p.y)}
             r={5}
             fill="var(--s-accent, #6366f1)"
             stroke="#fff"
