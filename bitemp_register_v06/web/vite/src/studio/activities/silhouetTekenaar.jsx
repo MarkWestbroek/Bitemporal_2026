@@ -9,7 +9,7 @@
  * tekenaar in beeld is.
  */
 import { useEffect, useRef, useState } from "react";
-import { polygonNaarPunten, puntenNaarPad } from "./silhouetPad.js";
+import { invoegIndex, polygonNaarPunten, puntenNaarPad } from "./silhouetPad.js";
 
 export { polygonNaarPunten, puntenNaarPad };
 
@@ -52,7 +52,12 @@ export default function SilhouetTekenaar({ initieel = [], onChange }) {
 
   const canvasKlik = (e) => {
     duw();
-    zetBeide([...puntenRef.current, { ...uitEvent(e), r: false }]);
+    const p = { ...uitEvent(e), r: false };
+    // Voeg in op de dichtstbijzijnde rand, zodat het punt bij de klik verschijnt
+    // (niet achteraan, wat de vorm liet kruisen).
+    const cur = puntenRef.current;
+    const idx = invoegIndex(cur, p);
+    zetBeide([...cur.slice(0, idx), p, ...cur.slice(idx)]);
   };
   const startPunt = (e, i) => {
     e.stopPropagation(); // geen nieuw punt bij het pakken

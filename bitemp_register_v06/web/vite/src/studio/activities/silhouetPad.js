@@ -18,6 +18,37 @@ export function polygonNaarPunten(clipPath) {
     .filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
 }
 
+/** Afstand van punt p tot lijnstuk a–b. */
+function afstandPuntSegment(p, a, b) {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len2 = dx * dx + dy * dy;
+  let t = len2 ? ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2 : 0;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+}
+
+/**
+ * Index waar een nieuw punt `p` moet worden ingevoegd: op de dichtstbijzijnde
+ * rand (segment tussen opeenvolgende punten, inclusief het sluitsegment), zodat
+ * het punt bij de klik verschijnt i.p.v. altijd achteraan (wat de vorm liet
+ * kruisen). Bij < 2 punten gewoon achteraan.
+ */
+export function invoegIndex(punten, p) {
+  const n = punten.length;
+  if (n < 2) return n;
+  let best = Infinity;
+  let idx = n;
+  for (let i = 0; i < n; i++) {
+    const d = afstandPuntSegment(p, punten[i], punten[(i + 1) % n]);
+    if (d < best) {
+      best = d;
+      idx = i + 1;
+    }
+  }
+  return idx;
+}
+
 /**
  * [{x,y,r}] → gesloten SVG-pad (`d`). Hoekpunten worden met rechte lijnen
  * verbonden, ronde punten (`r:true`) met een kromme: de raaklijn volgt de richting
