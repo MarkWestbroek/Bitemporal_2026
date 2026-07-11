@@ -6,8 +6,14 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **icoon-import (data-iconen)**
-  (2026-07-11, branch `feat/studio05-shape-editor`): iconen kunnen nu ook
+  fase 7 (register). Laatste ronde: **polygon-tekenaar voor data-shapes**
+  (2026-07-11, branch `feat/studio05-shape-editor`): in de vorm-editor teken
+  je nu de silhouet op de 0–100%-box (`polygonTekenaar.jsx`: klik = punt,
+  sleep = verplaatsen, dubbelklik = wissen), wat live een
+  `clip-path: polygon(…)` op de data-shape schrijft — i.p.v. de coördinaten te
+  typen — met directe preview. Een volledige vrije SVG-editor (beziers,
+  meerdere paden) blijft bewust buiten scope. Vorige stap: **icoon-import (data-iconen)**
+  (branch `feat/studio05-shape-editor`): iconen kunnen nu ook
   **data** zijn — geïmporteerde/geplakte SVG i.p.v. code-componenten.
   `dataIcoon.jsx` ontleedt de SVG (viewBox + inhoud) en rendert 'm op maat;
   met `monochroom` volgt het icoon de tekstkleur (currentColor, eigen
@@ -15,9 +21,7 @@
   ze (SVG plakken of een `.svg`-bestand kiezen) met live preview; ze belanden
   in de icoon-registry en zijn overal bruikbaar (galerij, PE icoon-kiezers,
   shape-set-cellen). Git-persistent via `web/vite/iconen/*.json` (vite-plugin
-  `studio05Map` nu ook voor `iconen`; build-glob voor productie). Volgende in
-  deze branch: **polygon-puntjeseditor** voor shapes (silhouet tekenen →
-  clip-path). Vorige stap: **data-shapes + vorm-editor**
+  `studio05Map` nu ook voor `iconen`; build-glob voor productie). Vorige stap: **data-shapes + vorm-editor**
   (branch `feat/studio05-shape-editor`): shapes kunnen nu ook
   **data** zijn i.p.v. alleen code-componenten. `dataShape.jsx` heeft een
   generieke renderer (grondvorm rechthoek/afgerond/stadium/chip/zeshoek/
