@@ -23,8 +23,15 @@
   is generiek: bij openen laadt hij de bestaande tekening terug — een silhouet,
   óf een polygon-clip (omgezet naar een pad, `polygonClipNaarSvg`), óf een icoon —
   en dezelfde modal bewerkt nu ook **data-iconen** (IcoonEditor → "✎ Method Draw";
-  daar blijft de volledige SVG met kleuren behouden i.p.v. gestript). "Annuleren"
-  sluit zonder toe te passen. Vorige ronde: **polygon-tekenaar voor data-shapes**: in de vorm-editor teken
+  daar blijft de volledige SVG mét kleuren behouden i.p.v. gestript — een icoon
+  is dus niet per se zwart-wit; het vinkje "volg tekstkleur" maakt 'm monochroom).
+  De laad-SVG wordt genormaliseerd (`normaliseerLaadSvg`: inhoud via `<g
+  transform>` naar ~420px geschaald, width/height/viewBox consistent) zodat een
+  klein icoon niet als spikkeltje buiten beeld belandt; en de modal wordt bij een
+  léég concept expliciet leeggemaakt, zodat MD's eigen localStorage geen vorige
+  tekening laat staan. "Nieuw icoon" (voorheen "icoon importeren") maakt een leeg
+  icoon dat je meteen in MD kunt tekenen. "Annuleren" sluit zonder toe te passen.
+  Vorige ronde: **polygon-tekenaar voor data-shapes**: in de vorm-editor teken
   je nu de silhouet op de 0–100%-box (`polygonTekenaar.jsx`: klik = punt,
   sleep = verplaatsen, dubbelklik of rechtsklik = punt wissen, **wis alles**-knop,
   en **undo/redo** met Ctrl+Z / Ctrl+Y via een lokaal history-stack — geen aparte

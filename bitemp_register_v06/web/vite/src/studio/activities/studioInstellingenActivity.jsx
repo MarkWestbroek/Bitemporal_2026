@@ -64,6 +64,49 @@ const invoer = {
 };
 const GRONDVORMEN = ["rechthoek", "afgerond", "stadium", "chip", "zeshoek", "afgeknipt"];
 
+// Leeg canvas om Method Draw mee te openen (voorkomt dat een oude tekening uit
+// MD's eigen localStorage blijft staan bij een nieuwe/lege vorm of icoon).
+const LEEG_LAAD_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="420" height="320" viewBox="0 0 420 320"></svg>';
+
+/**
+ * Normaliseer een laad-SVG voor Method Draw: schaal de inhoud naar een werkbare
+ * canvasmaat (~420px) via een `<g transform>`, zodat width/height én viewBox
+ * consistent blijven (MD weigert een width/height die niet met de viewBox
+ * klopt) en een klein icoon (bv. viewBox 0 0 24 24) niet als spikkeltje buiten
+ * beeld belandt. De inhoud wordt niet herschreven, alleen geschaald/verschoven.
+ */
+function normaliseerLaadSvg(svgString, doelMax = 420) {
+  try {
+    const doc = new DOMParser().parseFromString(svgString, "image/svg+xml");
+    const svg = doc.querySelector("svg");
+    if (!svg || doc.querySelector("parsererror")) return svgString;
+    let w = parseFloat(svg.getAttribute("width"));
+    let h = parseFloat(svg.getAttribute("height"));
+    let vbx = 0;
+    let vby = 0;
+    const vb = (svg.getAttribute("viewBox") || "").split(/[\s,]+/).map(Number);
+    if (vb.length === 4) {
+      vbx = vb[0];
+      vby = vb[1];
+      if (!w || !h) {
+        w = vb[2];
+        h = vb[3];
+      }
+    }
+    if (!w || !h) {
+      w = 100;
+      h = 100;
+    }
+    const S = doelMax / Math.max(w, h);
+    const W = Math.round(w * S);
+    const H = Math.round(h * S);
+    const inner = [...svg.childNodes].map((n) => (n.nodeType === 1 ? new XMLSerializer().serializeToString(n) : "")).join("");
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><g transform="scale(${S}) translate(${-vbx} ${-vby})">${inner}</g></svg>`;
+  } catch {
+    return svgString;
+  }
+}
+
 /** {inner, box} → volledige SVG-string om terug in Method Draw te laden. */
 function silhouetNaarSvg(sil) {
   if (!sil?.inner || !Array.isArray(sil.box)) return null;
@@ -104,12 +147,12 @@ function MethodDrawModal({ startSvg, onGebruik, onSluiten, titel = "Tekenen — 
       const win = iframeRef.current?.contentWindow;
       if (win && win.svgCanvas) {
         setKlaar(true);
-        if (startSvg) {
-          try {
-            win.svgCanvas.setSvgString(startSvg);
-          } catch {
-            /* niet fataal: begin dan met leeg canvas */
-          }
+        // Altijd zetten (ook leeg), zodat MD's eigen localStorage-herstel niet
+        // een vorige tekening laat staan.
+        try {
+          win.svgCanvas.setSvgString(startSvg ? normaliseerLaadSvg(startSvg) : LEEG_LAAD_SVG);
+        } catch {
+          /* niet fataal: begin dan met leeg canvas */
         }
       } else if (pogingen++ < 40) {
         setTimeout(tik, 100);
@@ -434,7 +477,7 @@ function Main() {
       <div style={sectie}>
         <h3 style={{ margin: 0, fontSize: 13, color: "var(--s-fg-muted, #64748b)", display: "flex", alignItems: "center", gap: 10 }}>
           Eigen iconen ({eigenIcoonIds.size})
-          <button className="dc-mini-knop" onClick={nieuwIcoon}>＋ icoon importeren</button>
+          <button className="dc-mini-knop" onClick={nieuwIcoon}>＋ nieuw icoon</button>
         </h3>
         {icoonBewerk && (
           <div style={{ marginTop: 8 }}>
