@@ -114,7 +114,7 @@ function studio05Map(sub) {
 }
 
 export default defineConfig({
-  plugins: [react(), normalizeBuildLineEndings(), studio05Map("profielen"), studio05Map("vormen")],
+  plugins: [react(), normalizeBuildLineEndings(), studio05Map("profielen"), studio05Map("vormen"), studio05Map("iconen")],
   base: "/viz/react/",
   define: {
     __APP_VERSION__: JSON.stringify(APP_VERSION),

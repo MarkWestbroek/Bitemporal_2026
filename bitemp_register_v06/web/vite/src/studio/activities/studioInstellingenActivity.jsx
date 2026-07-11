@@ -18,6 +18,8 @@ import { alleShapeIds, getShape } from "../../diagramcore/shapes/shapeRegistry.j
 import { alleIcoonIds, TypeIcoon } from "../../diagramcore/shapes/typeIconen.jsx";
 import { maakDataShapeComponent } from "../../diagramcore/shapes/dataShape.jsx";
 import { leesVormen, bewaarVorm, verwijderVorm } from "./vormenRegistratie.js";
+import { maakDataIcoonComponent } from "../../diagramcore/shapes/dataIcoon.jsx";
+import { leesIconen, bewaarIcoon, verwijderIcoon } from "./iconenRegistratie.js";
 
 const kaartStijl = {
   border: "1px solid var(--s-border, #cbd5e1)",
@@ -113,15 +115,89 @@ function VormEditor({ start, onOpslaan, onVerwijderen, onSluiten }) {
   );
 }
 
+/** Import-/bewerk-editor voor één data-icoon (SVG plakken of een .svg-bestand). */
+function IcoonEditor({ start, onOpslaan, onVerwijderen, onSluiten }) {
+  const [def, setDef] = useState(start);
+  const zet = (patch) => setDef((d) => ({ ...d, ...patch }));
+  const Preview = def.svg ? maakDataIcoonComponent(def) : null;
+  const kiesBestand = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    file.text().then((tekst) => {
+      const naam = file.name.replace(/\.svg$/i, "");
+      zet({ svg: tekst, label: def.label || naam });
+    });
+  };
+  return (
+    <div style={{ ...kaartStijl, alignItems: "stretch", gap: 10, maxWidth: 560 }}>
+      <div style={{ display: "flex", gap: 14 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
+            <span style={{ width: 90, color: "var(--s-fg-muted, #64748b)" }}>naam</span>
+            <input style={{ ...invoer, flex: 1 }} value={def.label || ""} onChange={(e) => zet({ label: e.target.value })} />
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
+            <span style={{ width: 90, color: "var(--s-fg-muted, #64748b)" }}>bestand</span>
+            <input type="file" accept=".svg,image/svg+xml" onChange={kiesBestand} style={{ fontSize: 11 }} />
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
+            <span style={{ width: 90, color: "var(--s-fg-muted, #64748b)" }}>volg tekstkleur</span>
+            <input type="checkbox" checked={!!def.monochroom} onChange={(e) => zet({ monochroom: e.target.checked })} title="currentColor" />
+            <span style={{ color: "var(--s-fg-muted, #64748b)" }}>(monochroom / currentColor)</span>
+          </label>
+          <textarea
+            rows={5}
+            style={{ ...invoer, fontFamily: "monospace", fontSize: 11, resize: "vertical" }}
+            placeholder="<svg viewBox=…>…</svg> — plak hier je SVG"
+            value={def.svg || ""}
+            onChange={(e) => zet({ svg: e.target.value })}
+          />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+          <span style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)" }}>preview</span>
+          <span style={{ color: "var(--s-fg)" }}>{Preview ? <Preview maat={40} /> : <span style={{ color: "var(--s-fg-muted)" }}>—</span>}</span>
+          <code style={{ fontSize: 10, color: "var(--s-fg-muted, #64748b)" }}>{def.id}</code>
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>
+        <button className="dc-mini-knop" disabled={!def.svg} onClick={() => onOpslaan(def)}>Opslaan</button>
+        <button className="dc-mini-knop" onClick={onSluiten}>Annuleren</button>
+        {onVerwijderen && <button className="dc-mini-knop is-gevaar" style={{ marginLeft: "auto" }} onClick={onVerwijderen}>Verwijderen</button>}
+      </div>
+    </div>
+  );
+}
+
 function Main() {
   const [versie, setVersie] = useState(0);
   const [bewerk, setBewerk] = useState(null); // data-shape-concept in bewerking, of null
+  const [icoonBewerk, setIcoonBewerk] = useState(null); // data-icoon-concept, of null
   const ververs = () => setVersie((v) => v + 1);
 
   const eigenVormen = leesVormen();
   const eigenIds = new Set(Object.keys(eigenVormen));
   const shapeIds = alleShapeIds().filter((id) => id !== "anker");
   const icoonIds = alleIcoonIds();
+  const eigenIconen = leesIconen();
+  const eigenIcoonIds = new Set(Object.keys(eigenIconen));
+
+  const nieuwIcoon = () => {
+    const naam = window.prompt("Naam van het nieuwe icoon:", "Mijn icoon");
+    if (!naam) return;
+    const id = naam.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "icoon";
+    setIcoonBewerk({ id, label: naam, monochroom: true, svg: "" });
+  };
+  const opslaanIcoon = (def) => {
+    bewaarIcoon(def);
+    setIcoonBewerk(null);
+    ververs();
+  };
+  const verwijderenIcoon = (def) => {
+    if (!window.confirm(`Icoon "${def.label || def.id}" verwijderen?`)) return;
+    verwijderIcoon(def.id);
+    setIcoonBewerk(null);
+    ververs();
+  };
 
   const nieuweVorm = () => {
     const naam = window.prompt("Naam van de nieuwe vorm:", "Mijn vorm");
@@ -194,15 +270,46 @@ function Main() {
         </div>
       </div>
 
+      {/* Eigen iconen (data-iconen): SVG importeren/plakken. */}
       <div style={sectie}>
-        <h3 style={{ margin: 0, fontSize: 13, color: "var(--s-fg-muted, #64748b)" }}>Iconen ({icoonIds.length})</h3>
+        <h3 style={{ margin: 0, fontSize: 13, color: "var(--s-fg-muted, #64748b)", display: "flex", alignItems: "center", gap: 10 }}>
+          Eigen iconen ({eigenIcoonIds.size})
+          <button className="dc-mini-knop" onClick={nieuwIcoon}>＋ icoon importeren</button>
+        </h3>
+        {icoonBewerk && (
+          <div style={{ marginTop: 8 }}>
+            <IcoonEditor
+              key={icoonBewerk.id}
+              start={icoonBewerk}
+              onOpslaan={opslaanIcoon}
+              onVerwijderen={eigenIcoonIds.has(icoonBewerk.id) ? () => verwijderenIcoon(icoonBewerk) : null}
+              onSluiten={() => setIcoonBewerk(null)}
+            />
+          </div>
+        )}
+        {eigenIcoonIds.size > 0 && (
+          <div style={grid(96)}>
+            {Object.values(eigenIconen).map((def) => (
+              <div key={def.id} style={{ ...kaartStijl, padding: "10px 6px", cursor: "pointer" }} onClick={() => setIcoonBewerk(def)} title="Klik om te bewerken">
+                <span style={{ color: "var(--s-fg)" }}>
+                  <TypeIcoon elementType={{ icoon: def.id, shape: "class-box" }} maat={28} />
+                </span>
+                <code style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)", textAlign: "center" }}>{def.id} ✎</code>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div style={sectie}>
+        <h3 style={{ margin: 0, fontSize: 13, color: "var(--s-fg-muted, #64748b)" }}>Alle iconen ({icoonIds.length})</h3>
         <div style={grid(96)}>
           {icoonIds.map((id) => (
             <div key={id} style={{ ...kaartStijl, padding: "10px 6px" }}>
               <span style={{ color: "var(--s-fg)" }}>
                 <TypeIcoon elementType={{ icoon: id, shape: "class-box" }} maat={28} />
               </span>
-              <code style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)", textAlign: "center" }}>{id}</code>
+              <code style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)", textAlign: "center" }}>{id}{eigenIcoonIds.has(id) ? " (eigen)" : ""}</code>
             </div>
           ))}
         </div>

@@ -24,6 +24,7 @@ import dmnDrdActivity from "./dmnDrdActivity";
 // Data-shapes globaal registreren bij startup (side-effect), zodat ze in
 // elk profiel beschikbaar zijn.
 import "./vormenRegistratie.js";
+import "./iconenRegistratie.js";
 import studioInstellingenActivity from "./studioInstellingenActivity";
 import mimActivity from "./mimActivity";
 import bpmnActivity from "./bpmnActivity";
