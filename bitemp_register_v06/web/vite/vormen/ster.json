@@ -6,5 +6,13 @@
   "vulling": "#e2e8f0",
   "hoekRadius": 50,
   "randStijl": "solid",
-  "clipPath": "polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)"
+  "silhouet": {
+    "inner": "<g xmlns=\"http://www.w3.org/2000/svg\">\n  \n  <path d=\"m50,0l11,35l37,0l-30,22l11,34l-29,-21l-29,21l11,-34l-30,-22l37,0l11,-35z\"/>\n </g>",
+    "box": [
+      2,
+      0,
+      96,
+      91
+    ]
+  }
 }

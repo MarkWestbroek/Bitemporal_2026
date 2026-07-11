@@ -1,6 +1,6 @@
 {
   "id": "vlag",
-  "label": "Vlag",
-  "monochroom": true,
-  "svg": "<svg viewBox=\"0 0 24 24\"><path d=\"M5 3v18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\"/><path d=\"M5 4h11l-2 3 2 3H5z\" fill=\"currentColor\"/></svg>"
+  "label": "Vlag-met-hartje",
+  "monochroom": false,
+  "svg": "<svg width=\"420\" height=\"420\" xmlns=\"http://www.w3.org/2000/svg\">\n\n <g>\n  <title>Layer 1</title>\n  <g id=\"svg_1\" transform=\"scale(17.5) translate(0 0)\">\n   <path id=\"svg_2\" stroke-linecap=\"round\" stroke-width=\"1.7\" stroke=\"currentColor\" fill=\"none\" d=\"m5,3l0,18\"/>\n   <path id=\"svg_3\" fill=\"currentColor\" d=\"m5,4l11,0l-2,3l2,3l-11,0l0,-6z\"/>\n  </g>\n  <path id=\"svg_4\" d=\"m167.68855,110.62744c15.25492,-35.43902 75.02421,0 0,45.56446c-75.02421,-45.56446 -15.25492,-81.00348 0,-45.56446z\" stroke=\"#000\" fill=\"#bf0000\"/>\n </g>\n</svg>"
 }
