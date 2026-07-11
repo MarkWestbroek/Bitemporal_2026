@@ -78,6 +78,10 @@ export function maakDiagramActiviteit(opties) {
     menuLabel,
     previewTekst = "Bewerkbare sandbox — wijzigingen blijven lokaal.",
     status = "preview",
+    groep = "modelleren",
+    // true → niet in de activity bar; alleen bereikbaar via menu Ga naar
+    // (bv. de 0.5-DRD zolang DMN één ingang in de balk heeft).
+    verborgenInBalk = false,
     devHookNaam,
     koppeling = null,
     // Activiteit-eigen menu-acties bovenin het hoofdmenu:
@@ -2252,8 +2256,9 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     id,
     label,
     icon,
-    groep: "modelleren",
+    groep,
     status,
+    verborgenInBalk,
     Provider,
     Sidebar,
     Main,

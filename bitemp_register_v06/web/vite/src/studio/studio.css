@@ -95,6 +95,24 @@
 .studio-menubar__shortcut { color: var(--s-fg-muted); font-size: 11px; }
 .studio-menubar__entry:hover:not(.is-disabled) .studio-menubar__shortcut { color: #dbeafe; }
 .studio-menubar__sep { height: 1px; margin: 4px 6px; background: var(--s-border); }
+/* Groepskop in een dropdown (bv. Ga naar: Modelleren / Diensten / Data / Beheer). */
+.studio-menubar__kop {
+  padding: 6px 10px 2px;
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .06em;
+  color: var(--s-fg-muted);
+  user-select: none;
+}
+.studio-menubar__kop:not(:first-child) { margin-top: 4px; border-top: 1px solid var(--s-border); padding-top: 8px; }
+/* Status-chip achter een menu-item (preview/concept). */
+.studio-menubar__badge {
+  font-size: 9px; text-transform: uppercase; letter-spacing: .04em;
+  color: #f59e0b; border: 1px solid #f59e0b55; border-radius: 4px;
+  padding: 0 4px; margin-left: 8px;
+}
+/* Gedempt maar klikbaar (concept-activiteiten in Ga naar). */
+.studio-menubar__entry.is-muted .studio-menubar__label { opacity: .55; }
+.studio-menubar__entry.is-muted:hover .studio-menubar__label { opacity: 1; }
 .studio-menubar__right { display: flex; align-items: center; padding: 0 10px; margin-left: auto; }
 .studio-menubar__brand { font-size: 12px; font-weight: 600; color: var(--s-bar-fg); display: inline-flex; align-items: center; }
 
@@ -144,14 +162,22 @@
   border-radius: 0 6px 6px 0;
 }
 .studio-activitybar__icon { display: inline-flex; }
+/* Status-stip op een balk-icoon: preview = open ringetje, concept = gevuld. */
 .studio-activitybar__badge {
-  position: absolute; top: 6px; right: 6px;
-  color: #f59e0b; font-size: 14px; line-height: 1;
+  position: absolute; top: 7px; right: 7px;
+  width: 7px; height: 7px; border-radius: 50%;
 }
+.studio-activitybar__badge--preview {
+  border: 1.5px solid #f59e0b;
+  background: transparent;
+}
+.studio-activitybar__badge--concept { background: #f59e0b; }
 .studio-activitybar__sep {
   width: 28px; height: 1px; margin: 6px 0;
   background: var(--s-border);
 }
+/* Duwt de beheer-groep (⚙ e.d.) naar de onderkant van de balk. */
+.studio-activitybar__spacer { flex: 1; }
 
 /* ── Main column ──────────────────────────────────────────── */
 .studio-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -167,7 +193,7 @@
 }
 .studio-topbar__left, .studio-topbar__right { display: flex; align-items: center; gap: 6px; }
 .studio-topbar__titel { font-size: 13px; font-weight: 600; }
-.studio-topbar__concept {
+.studio-topbar__status {
   font-size: 10px; text-transform: uppercase; letter-spacing: .04em;
   color: #f59e0b; border: 1px solid #f59e0b55; border-radius: 4px; padding: 1px 5px;
 }

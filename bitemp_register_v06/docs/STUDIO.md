@@ -88,7 +88,7 @@ volgorde komt volledig uit het `activityRegistry`.
 ```js
 {
   id, label, icon,            // identiteit + iconenbalk
-  groep,                      // visuele groepering ("modelleren" | "diensten" | "data")
+  groep,                      // groepering ("modelleren" | "diensten" | "data" | "beheer")
   Provider?,                  // optioneel: deelt state tussen de slots via context
   Sidebar?,                   // links (tree-browser). null → geen linkerpaneel
   Main,                       // midden (editor/canvas) — verplicht
@@ -96,7 +96,9 @@ volgorde komt volledig uit het `activityRegistry`.
   sidebarLabel?, inspectorLabel?,
   fullMain?,                  // true → activiteit brengt eigen volledige layout mee
   menus?,                     // array of (ctx)=>array: extra/override menubalk-menu's
-  status?,                    // bv. "concept" voor nog-te-bouwen functies
+  status?,                    // "preview" (in aanbouw, bruikbaar) of "concept"
+                              // (nog te maken) — getoond als badge in topbar/menu
+  verborgenInBalk?,           // true → niet in de activity bar, wél in Ga naar
 }
 ```
 
@@ -196,29 +198,45 @@ te wijzigen.
 
 ## Geregistreerde activiteiten
 
-| Groep        | Functie            | Status   | Hergebruikt                        |
+> **Consolidatie fase 0 (2026-07-11):** zie het
+> [consolidatieplan](plans/2026-07-11%20STUDIO%20consolidatie.md). Labels dragen
+> geen bouwfase meer ("(0.5)"/"(concept)") — status is een **badge** (topbar +
+> Ga naar-menu; open ringetje = preview, gevulde stip = concept op een
+> balk-icoon). **Concept-activiteiten staan niet meer in de activity bar**: een
+> icoon dat een lege pagina opent is een valse belofte; ze blijven bereikbaar
+> via **Ga naar** (gedempt, met badge). Het Ga naar-menu heeft **groepskoppen**
+> (Modelleren · Diensten · Data · Beheer), de balk-tooltips noemen de groep, en
+> de **beheer-groep zit onderaan** de balk (VS Code-tandwielpatroon).
+
+| Groep        | Functie (label)    | Status   | Hergebruikt                        |
 |--------------|--------------------|----------|------------------------------------|
 | modelleren   | UML-model          | actief   | `IdePage` (FlexLayout, fullMain)   |
-| modelleren   | Diagrammen (0.5)   | preview  | `diagramcore` + `diagramprofielen/canoniek-uml` (bewerkbare sandbox) |
-| modelleren   | UML (0.5)          | preview  | `diagramcore` + `diagramprofielen/puur-uml` (fase 5-lakmoesproef) |
-| modelleren   | OAS (0.5)          | preview  | `diagramcore` + `diagramprofielen/oas31` (fase 5-vuurproef) |
-| modelleren   | Profiel (0.5)      | preview  | meta-editor: eigen profielen maken en live registreren (plan §8.9) |
-| modelleren   | Profiel-ontwerp (0.5) | preview | meta-editor trede 2: profielen tékenen en genereren (plan §8.9) |
-| modelleren   | DMN-tabellen       | actief   | `dmn/DmnTableEditor` + ModelPicker |
+| modelleren   | Canoniek model     | preview  | `diagramcore` + `diagramprofielen/canoniek-uml` (bewerkbare sandbox; heette "Diagrammen (0.5)") |
+| modelleren   | UML                | preview  | `diagramcore` + `diagramprofielen/puur-uml` (fase 5-lakmoesproef) |
+| modelleren   | OAS                | preview  | `diagramcore` + `diagramprofielen/oas31` (fase 5-vuurproef) |
+| modelleren   | MIM                | preview  | `diagramcore` + `diagramprofielen/mim12` (MIM 1.2, pas-toe-of-leg-uit) |
+| modelleren   | DMN-beslissingen   | actief   | `dmn/DmnTableEditor` + dmn-js DRD + ModelPicker (heette "DMN-tabellen") |
+| modelleren   | DMN DRD            | preview  | `diagramcore` + `diagramprofielen/dmn-drd` — **niet in de balk** (één DMN-ingang; via Ga naar) |
 | modelleren   | BPMN-processen     | actief   | `bpmn/BpmnEditor` + ModelPicker    |
 | modelleren   | Berichtdefinities  | actief   | `bericht/BerichttypeEditor`        |
-| diensten     | API's              | concept  | placeholder                        |
-| diensten     | Toegangverlening   | concept  | placeholder (FTV/PBAC)             |
-| data         | Rollen             | concept  | placeholder                        |
-| data         | Referentielijsten  | concept  | placeholder                        |
+| diensten     | API's              | concept  | placeholder — alleen via Ga naar   |
+| diensten     | Toegangverlening   | concept  | placeholder (FTV/PBAC) — alleen via Ga naar |
+| data         | Rollen             | concept  | placeholder — alleen via Ga naar   |
+| data         | Referentielijsten  | concept  | placeholder — alleen via Ga naar   |
+| beheer       | Profiel-editor     | preview  | meta-editor trede 1 (JSON, plan §8.9; heette "Profiel (0.5)") |
+| beheer       | Profiel-ontwerp    | preview  | meta-editor trede 2: profielen tékenen en genereren (plan §8.9) |
+| beheer       | Studio-instellingen| actief   | vorm-/icoon-galerij + eigen data-shapes |
 
-DMN-modellering komt later bij de UML-activiteit (zelfde IDE), zoals gewenst.
+De profiel-editors zijn gereedschap (geen modelleeractiviteit) en staan daarom
+in de beheer-groep. Zelfgemaakte profielen (meta-editor) registreren als
+preview-activiteit in de modelleren-groep. DMN-modellering komt later bij de
+UML-activiteit (zelfde IDE), zoals gewenst.
 
-### Diagrammen (0.5) — de generieke diagram-motor (bewerkbare sandbox)
+### Canoniek model — de generieke diagram-motor (bewerkbare sandbox)
 
 > Toegevoegd: 2026-07-03 (fase 1+2 van [`STUDIO-05-diagramcore-plan.md`](STUDIO-05-diagramcore-plan.md)).
 
-De activiteit **Diagrammen (0.5)** draait op de nieuwe generieke motor
+De activiteit **Canoniek model** (tot 2026-07-11 "Diagrammen (0.5)") draait op de nieuwe generieke motor
 (`src/diagramcore/` + profiel `src/diagramprofielen/canoniek-uml/`) en is sinds
 fase 2 een **bewerkbare sandbox**:
 

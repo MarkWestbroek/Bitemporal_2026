@@ -118,8 +118,8 @@ export default function StudioShell() {
       links={
         <span className="studio-menubar__brand">
           {actief.label}
-          {actief.status === "concept" && (
-            <span className="studio-topbar__concept" style={{ marginLeft: 8 }}>concept</span>
+          {actief.status && (
+            <span className="studio-topbar__status" style={{ marginLeft: 8 }}>{actief.status}</span>
           )}
         </span>
       }
@@ -168,8 +168,8 @@ export default function StudioShell() {
                 </button>
               )}
               <span className="studio-topbar__titel">{actief.label}</span>
-              {actief.status === "concept" && (
-                <span className="studio-topbar__concept">concept</span>
+              {actief.status && (
+                <span className="studio-topbar__status">{actief.status}</span>
               )}
             </div>
             <div className="studio-topbar__right">

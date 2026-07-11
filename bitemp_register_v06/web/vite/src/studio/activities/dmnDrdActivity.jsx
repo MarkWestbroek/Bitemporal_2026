@@ -13,14 +13,17 @@ registreerDmnDrd();
 
 export default maakDiagramActiviteit({
   id: "dmnDrd05",
-  label: "DRD (0.5)",
+  label: "DMN DRD",
   icon: <IconDMN />,
   descriptor: dmnDrdDiagramType,
   maakElement,
   persistKey: "studio05-dmn-drd",
   taakbalkSleutel: "studio05-taakbalken-dmn-drd",
   menuPrefix: "drd05",
-  menuLabel: "DRD (0.5)",
+  menuLabel: "DRD",
+  // Eén DMN-ingang in de balk: de klassieke DMN-activiteit (DRD + Tabel).
+  // Deze 0.5-DRD blijft bereikbaar via menu Ga naar.
+  verborgenInBalk: true,
   previewTekst: "DMN Decision Requirements Diagram — vierde profiel op de generieke motor.",
   devHookNaam: "__dmnDrd05Store",
 });

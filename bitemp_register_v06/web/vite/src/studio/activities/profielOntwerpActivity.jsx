@@ -154,8 +154,10 @@ function laadVoorbeeld(useStore) {
 
 export default maakDiagramActiviteit({
   id: "profielOntwerp05",
-  label: "Profiel-ontwerp (0.5)",
+  label: "Profiel-ontwerp",
   icon: <IconProfielOntwerp05 />,
+  // Gereedschap, geen modelleeractiviteit (zie profielActivity).
+  groep: "beheer",
   descriptor,
   maakElement: maakGeneriekeMaakElement(descriptor),
   persistKey: "studio05-profiel-ontwerp",

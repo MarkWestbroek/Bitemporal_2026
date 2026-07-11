@@ -26,14 +26,14 @@ registreerCanoniekUmlImplementaties();
 
 export default maakDiagramActiviteit({
   id: "diagram05",
-  label: "Diagrammen (0.5)",
+  label: "Canoniek model",
   icon: <IconDiagram05 />,
   descriptor: canoniekUmlDiagramType,
   maakElement,
   persistKey: "studio05-canoniek-uml",
   taakbalkSleutel: "studio05-taakbalken-canoniek-uml",
   menuPrefix: "d05",
-  menuLabel: "Diagram (0.5)",
+  menuLabel: "Diagram",
   previewTekst: "Bewerkbare sandbox — wijzigingen blijven lokaal en raken het UML-model niet.",
   devHookNaam: "__diagram05Store",
   koppeling: {

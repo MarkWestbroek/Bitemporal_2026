@@ -217,16 +217,28 @@ Kernbesluiten daarbij:
 
 Elke fase is los shipbaar; fase 0–1 raken geen editor-code.
 
-### Fase 0 — Opruimen (dagen, quick wins)
-1. Labels ontdoen van "(0.5)"/"(concept)"; status wordt een badge
-   ("preview"/"concept") via het bestaande `status`-veld.
-2. Studio-instellingen naar de onderkant van de balk (⚙, eigen sectie).
-3. Concept-placeholders **uit de balk**; alleen bereikbaar via Ga naar,
-   gedempt weergegeven met concept-badge.
-4. Eén DMN-ingang: "DMN-tabellen" en "DRD (0.5)" samenvoegen (het
-   DRD+Tabel-tabpatroon bestaat al in `dmnActivity`).
-5. Groepskoppen/tooltips in de balk en in Ga naar (modelleren · software ·
-   data · instellingen) zodat de indeling zichtbaar is.
+### Fase 0 — Opruimen (dagen, quick wins) — ✅ gebouwd 2026-07-11
+Branch `feat/studio-consolidatie-fase0`; zie ook de bijgewerkte
+activiteiten-tabel in `docs/STUDIO.md`.
+
+1. ✅ Labels ontdoen van "(0.5)"/"(concept)"; status is een badge
+   ("preview"/"concept") in topbar en Ga naar; op een balk-icoon een open
+   ringetje (preview). Nieuwe namen: "Diagrammen (0.5)" → **Canoniek
+   model**, "Profiel (0.5)" → **Profiel-editor**, "DMN-tabellen" →
+   **DMN-beslissingen** (er zit immers ook een DRD-tab in).
+2. ✅ Beheer-groep (Profiel-editor, Profiel-ontwerp, Studio-instellingen)
+   onderaan de balk via een flex-spacer (VS Code-tandwielpatroon). De
+   profiel-editors verhuisden daarbij van "modelleren" naar "beheer" —
+   het zijn gereedschappen, vooruitlopend op de Instellingen-ingang (§2).
+3. ✅ Concept-placeholders uit de balk (`status: "concept"` wordt
+   gefilterd); in Ga naar gedempt + concept-badge, wél aanklikbaar.
+4. ✅ Eén DMN-ingang in de balk: de 0.5-DRD kreeg `verborgenInBalk: true`
+   (nieuw descriptor-veld) en heet "DMN DRD" in Ga naar. Echte
+   samenvoeging (0.5-DRD als tab in de DMN-activiteit) is fase 2-werk —
+   de twee draaien op verschillende motoren.
+5. ✅ Groepskoppen in Ga naar (Modelleren · Diensten · Data · Beheer,
+   `{type:"kop"}` in het menu-itemmodel) en groepsnaam in de
+   balk-tooltips.
 
 ### Fase 1 — Zichtbaarheid & palette (week)
 1. Instellingen-paneel "Activiteiten": per gebruiker aan/uit + Labs-toggle

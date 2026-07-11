@@ -9,6 +9,33 @@
  * vóór "Help" ingevoegd.
  */
 
+import { groepLabel } from "./activityRegistry";
+
+/**
+ * Items van het Ga naar-menu: per groep een kop, daaronder de activiteiten.
+ * Status verschijnt als badge; concept-activiteiten (niet in de activity bar)
+ * zijn hier gedempt maar wél aanklikbaar — dit menu is hun enige ingang.
+ */
+function gaNaarItems(activiteiten, actief, setActief) {
+  const items = [];
+  let vorigeGroep;
+  for (const a of activiteiten || []) {
+    if (a.groep !== vorigeGroep) {
+      items.push({ type: "kop", label: groepLabel(a.groep) });
+      vorigeGroep = a.groep;
+    }
+    items.push({
+      id: `ga-${a.id}`,
+      label: a.label,
+      badge: a.status || undefined,
+      muted: a.status === "concept",
+      checked: a.id === actief?.id,
+      onClick: () => setActief(a.id),
+    });
+  }
+  return items;
+}
+
 /** Bouw de standaard-menu's (Bestand, Beeld, Ga naar, Help). */
 function standaardMenus(ctx) {
   const {
@@ -103,12 +130,7 @@ function standaardMenus(ctx) {
     {
       id: "ganaar",
       label: "Ga naar",
-      items: (activiteiten || []).map((a) => ({
-        id: `ga-${a.id}`,
-        label: a.label + (a.status === "concept" ? "  (concept)" : ""),
-        checked: a.id === actief?.id,
-        onClick: () => setActief(a.id),
-      })),
+      items: gaNaarItems(activiteiten, actief, setActief),
     },
     {
       id: "help",

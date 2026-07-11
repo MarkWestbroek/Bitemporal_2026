@@ -13,14 +13,14 @@ registreerOas31();
 
 export default maakDiagramActiviteit({
   id: "oas05",
-  label: "OAS (0.5)",
+  label: "OAS",
   icon: <IconOAS05 />,
   descriptor: oas31DiagramType,
   maakElement,
   persistKey: "studio05-oas31",
   taakbalkSleutel: "studio05-taakbalken-oas31",
   menuPrefix: "o05",
-  menuLabel: "OAS (0.5)",
+  menuLabel: "OAS",
   previewTekst: "OpenAPI 3.1-schemas — derde profiel (fase 5-vuurproef), lege sandbox.",
   devHookNaam: "__oas05Store",
   koppeling: {

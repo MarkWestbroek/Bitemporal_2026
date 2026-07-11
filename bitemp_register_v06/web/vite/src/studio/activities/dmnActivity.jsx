@@ -345,7 +345,7 @@ function DmnInspector() {
 
 export default {
   id: "dmn",
-  label: "DMN-tabellen",
+  label: "DMN-beslissingen",
   icon: <IconDMN />,
   groep: "modelleren",
   Provider: DmnProvider,
