@@ -9,8 +9,12 @@
   fase 7 (register). Laatste ronde: **polygon-tekenaar voor data-shapes**
   (2026-07-11, branch `feat/studio05-shape-editor`): in de vorm-editor teken
   je nu de silhouet op de 0–100%-box (`polygonTekenaar.jsx`: klik = punt,
-  sleep = verplaatsen, dubbelklik = wissen), wat live een
-  `clip-path: polygon(…)` op de data-shape schrijft — i.p.v. de coördinaten te
+  sleep = verplaatsen, dubbelklik of rechtsklik = punt wissen, **wis alles**-knop,
+  en **undo/redo** met Ctrl+Z / Ctrl+Y via een lokaal history-stack — geen aparte
+  zundo-store, want de punten zijn transiënte editor-state). Een klik op een punt
+  voegt niet langer per ongeluk een nieuw punt toe (stopPropagation op de handle).
+  Dat schrijft live een
+  `clip-path: polygon(…)` op de data-shape — i.p.v. de coördinaten te
   typen — met directe preview. Een volledige vrije SVG-editor (beziers,
   meerdere paden) blijft bewust buiten scope. Vorige stap: **icoon-import (data-iconen)**
   (branch `feat/studio05-shape-editor`): iconen kunnen nu ook
