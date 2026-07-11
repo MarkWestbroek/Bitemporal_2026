@@ -20,7 +20,7 @@ import { maakDataShapeComponent } from "../../diagramcore/shapes/dataShape.jsx";
 import { leesVormen, bewaarVorm, verwijderVorm } from "./vormenRegistratie.js";
 import { maakDataIcoonComponent } from "../../diagramcore/shapes/dataIcoon.jsx";
 import { leesIconen, bewaarIcoon, verwijderIcoon } from "./iconenRegistratie.js";
-import PolygonTekenaar, { polygonNaarPunten, puntenNaarPolygon } from "./polygonTekenaar.jsx";
+import SilhouetTekenaar, { polygonNaarPunten, puntenNaarPad } from "./silhouetTekenaar.jsx";
 import { extraheerSilhouet } from "./silhouetExtractie.js";
 
 const METHOD_DRAW_URL = `${import.meta.env.BASE_URL}method-draw/index.html`;
@@ -197,7 +197,7 @@ function MethodDrawModal({ startSvg, onGebruik, onSluiten, titel = "Tekenen — 
 /** Editor voor één data-shape-concept (live preview + opslaan/verwijderen). */
 function VormEditor({ start, onOpslaan, onVerwijderen, onSluiten }) {
   const [def, setDef] = useState(start);
-  const [teken, setTeken] = useState(!!start.clipPath);
+  const [teken, setTeken] = useState(!!(start.silhouet?.punten || start.clipPath));
   const [mdOpen, setMdOpen] = useState(false);
   const zet = (patch) => setDef((d) => ({ ...d, ...patch }));
   const Preview = maakDataShapeComponent(def);
@@ -237,7 +237,7 @@ function VormEditor({ start, onOpslaan, onVerwijderen, onSluiten }) {
           {rij(
             "silhouet",
             <span style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-              <button className="dc-mini-knop" onClick={() => setTeken((v) => !v)}>{teken ? "verberg tekenaar" : "✏ polygon"}</button>
+              <button className="dc-mini-knop" onClick={() => setTeken((v) => !v)}>{teken ? "verberg tekenaar" : "✏ tekenaar"}</button>
               <button className="dc-mini-knop" onClick={() => setMdOpen(true)} title="Vrij tekenen met béziers in Method Draw">✎ Method Draw</button>
               {heeftSilhouet && (
                 <span style={{ display: "flex", gap: 4, alignItems: "center" }}>
@@ -265,13 +265,24 @@ function VormEditor({ start, onOpslaan, onVerwijderen, onSluiten }) {
       </div>
       {teken && (
         <div style={{ display: "flex", gap: 12, alignItems: "flex-start", paddingTop: 4, borderTop: "1px solid var(--s-border, #e2e8f0)" }}>
-          <PolygonTekenaar
-            initieel={polygonNaarPunten(def.clipPath)}
-            onChange={(pts) => zet({ clipPath: puntenNaarPolygon(pts) || undefined })}
+          <SilhouetTekenaar
+            initieel={def.silhouet?.punten || polygonNaarPunten(def.clipPath)}
+            onChange={(pts) => {
+              const pad = puntenNaarPad(pts);
+              // Tekenaar-silhouet vult standaard de node-box (passen:false), net als
+              // de oude polygon-clip; bestaande vullen/passen-keuze blijft behouden.
+              zet({
+                silhouet: pad
+                  ? { inner: `<path d="${pad}"/>`, box: [0, 0, 100, 100], passen: def.silhouet?.passen ?? false, punten: pts }
+                  : undefined,
+                clipPath: undefined,
+              });
+            }}
           />
           <p style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)", maxWidth: 200, margin: 0 }}>
-            Teken de omtrek op de 0–100%-box. Het resultaat komt in het clip-path-veld en
-            wint van de grondvorm. Minstens 3 punten voor een vlak.
+            Teken de omtrek op de 0–100-box. <strong>Klik een punt</strong> om het rond of
+            hoekig te maken (krommen). Het resultaat wordt het silhouet en wint van de
+            grondvorm. Minstens 3 punten voor een vlak.
           </p>
         </div>
       )}

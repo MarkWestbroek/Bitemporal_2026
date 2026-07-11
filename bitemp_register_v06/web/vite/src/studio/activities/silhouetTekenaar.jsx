@@ -1,60 +1,42 @@
 /**
- * polygonTekenaar — een klein tekencanvas voor data-shapes: klik punten, sleep
- * ze, wis ze. Levert een CSS `clip-path: polygon(…)` op de 0–100%-box, precies
- * de vorm die je anders met de hand in het clip-path-veld typt.
+ * silhouetTekenaar — een lichte vorm-editor voor data-shapes: klik punten, sleep
+ * ze, en maak een punt **rond of hoekig** (klik erop) voor krommen. Levert een
+ * gesloten SVG-`path` op de 0–100-box op, die als `silhouet` (zie `dataShape.jsx`)
+ * met de node-box meerekt — béziers blijven behouden. Voor snel/simpel werk; voor
+ * complexe vormen is er de Method Draw-modal.
  *
- * Undo/redo: een lokaal history-stack (refs), niet de zustand/zundo-store — dit
- * is een transiënte editor, dus een aparte store zou overkill zijn. Ctrl+Z /
- * Ctrl+Y (of Ctrl+Shift+Z) werken zolang de tekenaar in beeld is.
+ * Undo/redo via een lokaal history-stack (refs). Ctrl+Z / Ctrl+Y werken zolang de
+ * tekenaar in beeld is.
  */
 import { useEffect, useRef, useState } from "react";
+import { polygonNaarPunten, puntenNaarPad } from "./silhouetPad.js";
 
-// Het canvas heeft dezelfde verhouding als een node (≈2:1), niet vierkant:
-// clip-path-percentages rekken mee met de node-box, dus tekenen op node-
-// proporties is WYSIWYG — geen horizontale uitrekking in de preview.
+export { polygonNaarPunten, puntenNaarPad };
+
+// Canvas op node-verhouding (≈2:1), niet vierkant: het silhouet vult standaard de
+// (brede) node-box, dus tekenen op node-proporties is WYSIWYG.
 const BREEDTE = 280;
 const HOOGTE = 138;
-const px = (pct) => (pct / 100) * BREEDTE; // x-as
-const py = (pct) => (pct / 100) * HOOGTE; // y-as
+const px = (pct) => (pct / 100) * BREEDTE;
+const py = (pct) => (pct / 100) * HOOGTE;
 
-/** "polygon(10% 0%, 90% 50%)" → [{x:10,y:0},{x:90,y:50}] (of []). */
-export function polygonNaarPunten(clipPath) {
-  const m = /polygon\(([^)]*)\)/i.exec(clipPath || "");
-  if (!m) return [];
-  return m[1]
-    .split(",")
-    .map((paar) => {
-      const [x, y] = paar.trim().split(/\s+/);
-      return { x: parseFloat(x), y: parseFloat(y) };
-    })
-    .filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
-}
-
-/** [{x,y}] → "polygon(10% 0%, …)" (of "" bij < 3 punten). */
-export function puntenNaarPolygon(punten) {
-  if (!punten || punten.length < 3) return "";
-  return `polygon(${punten.map((p) => `${Math.round(p.x)}% ${Math.round(p.y)}%`).join(", ")})`;
-}
-
-export default function PolygonTekenaar({ initieel = [], onChange }) {
-  const [punten, setPunten] = useState(initieel);
-  // Refs met de actuele waarden — voorkomt verouderde closures in de
-  // pointer-/toets-handlers en houdt de history-side-effects buiten de setState.
+export default function SilhouetTekenaar({ initieel = [], onChange }) {
+  const [punten, setPunten] = useState(() => initieel.map((p) => ({ x: p.x, y: p.y, r: !!p.r })));
   const puntenRef = useRef(punten);
   puntenRef.current = punten;
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
-  const historie = useRef([]); // stapels vorige toestanden
+  const historie = useRef([]);
   const redo = useRef([]);
   const svgRef = useRef(null);
   const sleepIdx = useRef(-1);
+  const neer = useRef(null); // {cx, cy, moved} — klik-vs-sleep
 
   const zetBeide = (next) => {
     setPunten(next);
     onChangeRef.current?.(next);
   };
-  /** Snapshot van de huidige punten vóór een wijziging (voor undo). */
   const duw = () => {
     historie.current.push(puntenRef.current);
     if (historie.current.length > 100) historie.current.shift();
@@ -70,23 +52,34 @@ export default function PolygonTekenaar({ initieel = [], onChange }) {
 
   const canvasKlik = (e) => {
     duw();
-    zetBeide([...puntenRef.current, uitEvent(e)]);
+    zetBeide([...puntenRef.current, { ...uitEvent(e), r: false }]);
   };
-  const startSleep = (e, i) => {
+  const startPunt = (e, i) => {
     e.stopPropagation(); // geen nieuw punt bij het pakken
     duw();
     sleepIdx.current = i;
+    neer.current = { cx: e.clientX, cy: e.clientY, moved: false };
     e.currentTarget.setPointerCapture?.(e.pointerId);
   };
   const beweeg = (e) => {
     if (sleepIdx.current < 0) return;
+    const nd = neer.current;
+    if (!nd.moved && Math.hypot(e.clientX - nd.cx, e.clientY - nd.cy) < 4) return;
+    nd.moved = true;
     const p = uitEvent(e);
-    zetBeide(puntenRef.current.map((q, i) => (i === sleepIdx.current ? p : q))); // geen snapshot tijdens slepen
+    zetBeide(puntenRef.current.map((q, i) => (i === sleepIdx.current ? { ...q, x: p.x, y: p.y } : q)));
   };
   const stop = () => {
+    // Klik zonder sleep op een punt → rond/hoek togglen (snapshot al bij down).
+    if (sleepIdx.current >= 0 && neer.current && !neer.current.moved) {
+      const i = sleepIdx.current;
+      zetBeide(puntenRef.current.map((q, j) => (j === i ? { ...q, r: !q.r } : q)));
+    }
     sleepIdx.current = -1;
+    neer.current = null;
   };
   const wisPunt = (e, i) => {
+    e.preventDefault();
     e.stopPropagation();
     duw();
     zetBeide(puntenRef.current.filter((_, j) => j !== i));
@@ -107,7 +100,6 @@ export default function PolygonTekenaar({ initieel = [], onChange }) {
     zetBeide(redo.current.pop());
   };
 
-  // Ctrl+Z / Ctrl+Y (of Ctrl+Shift+Z) zolang de tekenaar in beeld is.
   useEffect(() => {
     const onKey = (e) => {
       const t = e.target;
@@ -125,7 +117,9 @@ export default function PolygonTekenaar({ initieel = [], onChange }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const polyPunten = punten.map((p) => `${px(p.x)},${py(p.y)}`).join(" ");
+  // Preview-pad in canvas-px (echte cirkels als handvatten; pad volgt de krommen).
+  const pxPunten = punten.map((p) => ({ x: px(p.x), y: py(p.y), r: p.r }));
+  const previewPad = puntenNaarPad(pxPunten);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-start" }}>
@@ -144,24 +138,23 @@ export default function PolygonTekenaar({ initieel = [], onChange }) {
             <line x1="0" y1={py(g)} x2={BREEDTE} y2={py(g)} />
           </g>
         ))}
-        {punten.length >= 2 && (
-          <polygon points={polyPunten} fill="var(--s-accent, #6366f1)" fillOpacity="0.18" stroke="var(--s-accent, #6366f1)" strokeWidth="1.5" />
-        )}
+        {previewPad && <path d={previewPad} fill="var(--s-accent, #6366f1)" fillOpacity="0.18" stroke="var(--s-accent, #6366f1)" strokeWidth="1.5" />}
         {punten.map((p, i) => (
           <circle
             key={i}
             cx={px(p.x)}
             cy={py(p.y)}
             r={5}
-            fill="var(--s-accent, #6366f1)"
-            stroke="#fff"
-            strokeWidth="1.5"
+            fill={p.r ? "#fff" : "var(--s-accent, #6366f1)"}
+            stroke="var(--s-accent, #6366f1)"
+            strokeWidth={p.r ? 2 : 1.5}
             style={{ cursor: "grab" }}
-            onPointerDown={(e) => startSleep(e, i)}
+            onPointerDown={(e) => startPunt(e, i)}
             onClick={(e) => e.stopPropagation()}
-            onDoubleClick={(e) => wisPunt(e, i)}
-            onContextMenu={(e) => { e.preventDefault(); wisPunt(e, i); }}
-          />
+            onContextMenu={(e) => wisPunt(e, i)}
+          >
+            <title>{p.r ? "rond punt — klik voor hoek · rechtsklik = wissen" : "hoekpunt — klik voor rond · rechtsklik = wissen"}</title>
+          </circle>
         ))}
       </svg>
       <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
@@ -170,7 +163,7 @@ export default function PolygonTekenaar({ initieel = [], onChange }) {
         <button className="dc-mini-knop is-gevaar" onClick={wisAlles} disabled={!punten.length}>wis alles</button>
       </div>
       <span style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)" }}>
-        Klik = punt · sleep = verplaatsen · dubbelklik of rechtsklik = punt wissen ({punten.length})
+        Klik = punt toevoegen · sleep = verplaatsen · klik een punt = rond/hoek · rechtsklik = wissen ({punten.length})
       </span>
     </div>
   );

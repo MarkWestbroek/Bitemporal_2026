@@ -6,8 +6,20 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **Method Draw als silhouet-editor**
-  (2026-07-11, branch `feat/studio05-shape-editor`): naast de eigen polygon-
+  fase 7 (register). Laatste ronde: **silhouet-tekenaar met krommen**
+  (2026-07-11, branch `feat/studio05-shape-editor`): de eigen kleine tekenaar is
+  van polygon-only naar een lichte **curve-editor** gegaan. Elk punt is rond of
+  hoekig — **klik een punt** om te wisselen — en de tekenaar levert nu een gesloten
+  SVG-`path` op (Catmull-Rom-achtige raaklijnen voor ronde punten; hoekpunten
+  blijven recht), opgeslagen als `silhouet: { inner, box:[0,0,100,100], punten }`.
+  Dat rendert via dezelfde silhouet-renderer (`dataShape.jsx`) als de Method
+  Draw-silhouetten en vult standaard de node-box (`passen:false`). De pure
+  padlogica staat in `silhouetPad.js` (`puntenNaarPad`, unit-getest); de UI in
+  `silhouetTekenaar.jsx` (sleep = verplaatsen, rechtsklik = wissen, wis alles,
+  undo/redo Ctrl+Z/Y). Het `punten`-veld op het silhouet laat de tekenaar zijn
+  eigen vormen terugladen; een Method Draw-silhouet (zonder `punten`) opent de
+  tekenaar leeg. Vorige ronde: **Method Draw als silhouet-editor**
+  (branch `feat/studio05-shape-editor`): naast de eigen kleine-
   tekenaar kun je een vorm nu ook vrij tekenen (béziers, meerdere paden) in de
   gevendorde **Method Draw** SVG-editor (`public/method-draw/`, MIT), die in een
   ruime modal in een `<iframe>` draait. "Gebruik als silhouet" leest de tekening
@@ -39,10 +51,9 @@
   voegt niet langer per ongeluk een nieuw punt toe (stopPropagation op de handle).
   Het tekencanvas heeft dezelfde **node-verhouding** (≈2:1) i.p.v. vierkant, want
   clip-path-percentages rekken mee met de node-box; tekenen op node-proporties is
-  dus WYSIWYG (geen horizontale uitrekking in de preview). Dat schrijft live een
-  `clip-path: polygon(…)` op de data-shape — i.p.v. de coördinaten te
-  typen — met directe preview. Een volledige vrije SVG-editor (beziers,
-  meerdere paden) blijft bewust buiten scope. Vorige stap: **icoon-import (data-iconen)**
+  dus WYSIWYG (geen horizontale uitrekking in de preview). Schreef toen nog een
+  `clip-path: polygon(…)`; inmiddels een SVG-`path`-silhouet met krommen (zie de
+  laatste ronde hierboven). Vorige stap: **icoon-import (data-iconen)**
   (branch `feat/studio05-shape-editor`): iconen kunnen nu ook
   **data** zijn — geïmporteerde/geplakte SVG i.p.v. code-componenten.
   `dataIcoon.jsx` ontleedt de SVG (viewBox + inhoud) en rendert 'm op maat;
