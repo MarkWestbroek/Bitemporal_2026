@@ -113,6 +113,55 @@
 /* Gedempt maar klikbaar (concept-activiteiten in Ga naar). */
 .studio-menubar__entry.is-muted .studio-menubar__label { opacity: .55; }
 .studio-menubar__entry.is-muted:hover .studio-menubar__label { opacity: 1; }
+
+/* ── Opdrachtenpalet (Ctrl+K) ─────────────────────────────── */
+.studio-palette-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex; justify-content: center; align-items: flex-start;
+  padding-top: 12vh;
+}
+.studio-palette {
+  width: min(560px, 90vw);
+  background: var(--s-panel);
+  color: var(--s-fg);
+  border: 1px solid var(--s-border);
+  border-radius: 10px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+.studio-palette__input {
+  width: 100%; box-sizing: border-box;
+  padding: 12px 14px;
+  font: inherit; font-size: 14px;
+  color: var(--s-fg);
+  background: transparent;
+  border: none; border-bottom: 1px solid var(--s-border);
+  outline: none;
+}
+.studio-palette__lijst { max-height: 46vh; overflow-y: auto; padding: 6px; }
+.studio-palette__leeg { padding: 14px; color: var(--s-fg-muted); font-size: 13px; }
+.studio-palette__item {
+  width: 100%; box-sizing: border-box;
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px;
+  font: inherit; font-size: 13px; text-align: left;
+  color: var(--s-fg);
+  background: transparent; border: none; border-radius: 6px;
+  cursor: pointer;
+}
+.studio-palette__item.is-selectie { background: var(--s-accent, #4f46e5); color: #fff; }
+.studio-palette__item.is-selectie .studio-palette__categorie,
+.studio-palette__item.is-selectie .studio-palette__shortcut { color: #dbeafe; }
+.studio-palette__categorie {
+  flex: 0 0 auto;
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .05em;
+  color: var(--s-fg-muted);
+  min-width: 64px;
+}
+.studio-palette__label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.studio-palette__shortcut { color: var(--s-fg-muted); font-size: 11px; }
 .studio-menubar__right { display: flex; align-items: center; padding: 0 10px; margin-left: auto; }
 .studio-menubar__brand { font-size: 12px; font-weight: 600; color: var(--s-bar-fg); display: inline-flex; align-items: center; }
 
@@ -176,6 +225,8 @@
   width: 28px; height: 1px; margin: 6px 0;
   background: var(--s-border);
 }
+/* Scheiding onder de favorieten-sectie: iets nadrukkelijker (amber). */
+.studio-activitybar__sep--fav { background: #f59e0b66; }
 /* Duwt de beheer-groep (⚙ e.d.) naar de onderkant van de balk. */
 .studio-activitybar__spacer { flex: 1; }
 

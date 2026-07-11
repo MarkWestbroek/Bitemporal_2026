@@ -6,9 +6,15 @@
  * descriptor.groep (scheidingslijn tussen groepen); de "beheer"-groep staat
  * onderaan, gescheiden door een flexibele ruimte (zoals het tandwiel in VS Code).
  *
- * Niet in de balk (wel in menu Ga naar): activiteiten met status "concept"
- * (nog te maken — een lege pagina hoort niet in de primaire navigatie) en
- * activiteiten met verborgenInBalk: true.
+ * Wat de balk toont is configureerbaar (consolidatieplan fase 1, instellingen
+ * in Studio-instellingen → Activiteiten); álles blijft bereikbaar via menu
+ * Ga naar en het opdrachtenpalet. Niet in de balk:
+ *  - status "concept" (nog te maken — een lege pagina hoort niet in de
+ *    primaire navigatie) en verborgenInBalk: true (descriptor);
+ *  - door de gebruiker verborgen activiteiten (balkVerborgen);
+ *  - bij Labs uit: preview-activiteiten (tenzij favoriet).
+ * Favorieten (gepind) staan bovenin, in pinvolgorde, en niet nóg eens in hun
+ * eigen groep.
  */
 import React from "react";
 import useStudioStore from "./useStudioStore";
@@ -25,11 +31,11 @@ function groepeer(activiteiten) {
   return groepen;
 }
 
-function ActiviteitKnop({ activiteit, actief, onClick }) {
+function ActiviteitKnop({ activiteit, actief, favoriet, onClick }) {
   const tooltip =
     activiteit.label +
     (activiteit.status ? ` (${activiteit.status})` : "") +
-    (activiteit.groep ? ` — ${groepLabel(activiteit.groep)}` : "");
+    (favoriet ? " — favoriet" : activiteit.groep ? ` — ${groepLabel(activiteit.groep)}` : "");
   return (
     <button
       type="button"
@@ -52,31 +58,53 @@ function ActiviteitKnop({ activiteit, actief, onClick }) {
 export default function ActivityBar({ activiteiten }) {
   const activeId = useStudioStore((s) => s.activeId);
   const setActief = useStudioStore((s) => s.setActief);
+  const balkVerborgen = useStudioStore((s) => s.balkVerborgen);
+  const labsAan = useStudioStore((s) => s.labsAan);
+  const favorieten = useStudioStore((s) => s.favorieten);
 
+  const favorietenSet = new Set(favorieten);
   const zichtbaar = activiteiten.filter(
-    (a) => a.status !== "concept" && !a.verborgenInBalk
+    (a) =>
+      a.status !== "concept" &&
+      !a.verborgenInBalk &&
+      !balkVerborgen[a.id] &&
+      (labsAan || a.status !== "preview" || favorietenSet.has(a.id))
   );
-  const groepen = groepeer(zichtbaar);
+
+  // Favorieten bovenin (pinvolgorde); de rest gegroepeerd, zonder dubbelingen.
+  const byId = new Map(zichtbaar.map((a) => [a.id, a]));
+  const favActiviteiten = favorieten.map((id) => byId.get(id)).filter(Boolean);
+  const rest = zichtbaar.filter((a) => !favorietenSet.has(a.id));
+  const groepen = groepeer(rest);
   const boven = groepen.filter((g) => g.groep !== "beheer");
   const onder = groepen.filter((g) => g.groep === "beheer");
+
+  const knop = (a, favoriet = false) => (
+    <ActiviteitKnop
+      key={a.id}
+      activiteit={a}
+      actief={a.id === activeId}
+      favoriet={favoriet}
+      onClick={() => setActief(a.id)}
+    />
+  );
 
   const renderGroep = (g, i, eersteVanSectie) => (
     <React.Fragment key={`groep-${g.groep ?? i}`}>
       {!eersteVanSectie && <div className="studio-activitybar__sep" />}
-      {g.activiteiten.map((a) => (
-        <ActiviteitKnop
-          key={a.id}
-          activiteit={a}
-          actief={a.id === activeId}
-          onClick={() => setActief(a.id)}
-        />
-      ))}
+      {g.activiteiten.map((a) => knop(a))}
     </React.Fragment>
   );
 
   return (
     <nav className="studio-activitybar" aria-label="Hoofdfuncties">
-      {boven.map((g, i) => renderGroep(g, i, i === 0))}
+      {favActiviteiten.length > 0 && (
+        <>
+          {favActiviteiten.map((a) => knop(a, true))}
+          <div className="studio-activitybar__sep studio-activitybar__sep--fav" />
+        </>
+      )}
+      {boven.map((g, i) => renderGroep(g, i, i === 0 && favActiviteiten.length === 0))}
       {onder.length > 0 && <div className="studio-activitybar__spacer" />}
       {onder.map((g, i) => renderGroep(g, i, true))}
     </nav>

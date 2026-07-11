@@ -207,6 +207,17 @@ te wijzigen.
 > via **Ga naar** (gedempt, met badge). Het Ga naar-menu heeft **groepskoppen**
 > (Modelleren · Diensten · Data · Beheer), de balk-tooltips noemen de groep, en
 > de **beheer-groep zit onderaan** de balk (VS Code-tandwielpatroon).
+>
+> **Consolidatie fase 1 (2026-07-11) — configureerbare complexiteit:**
+> **Studio-instellingen → Activiteiten** bepaalt per gebruiker (localStorage)
+> wat de balk toont: activiteiten aan/uit, **★ favorieten** (gepind bovenin,
+> in pinvolgorde, met amber scheidingslijn) en de **Labs**-schakelaar (uit →
+> preview-activiteiten uit de balk; favorieten winnen van Labs-uit). Alles
+> blijft bereikbaar via Ga naar en het **opdrachtenpalet** (`Ctrl+K`, ook via
+> Ga naar → Opdrachtenpalet…): één zoekveld over alle activiteiten én de
+> menubalk-acties van de actieve activiteit ("Menu › Submenu › Item").
+> Componenten: `CommandPalette.jsx`, `ActiviteitenInstellingen.jsx`; state in
+> `useStudioStore` (`balkVerborgen`, `labsAan`, `favorieten`).
 
 | Groep        | Functie (label)    | Status   | Hergebruikt                        |
 |--------------|--------------------|----------|------------------------------------|

@@ -240,11 +240,19 @@ activiteiten-tabel in `docs/STUDIO.md`.
    `{type:"kop"}` in het menu-itemmodel) en groepsnaam in de
    balk-tooltips.
 
-### Fase 1 — Zichtbaarheid & palette (week)
-1. Instellingen-paneel "Activiteiten": per gebruiker aan/uit + Labs-toggle
-   (persist in `useStudioStore`).
-2. Favorieten/pins bovenin de balk.
-3. Command palette (Ctrl+K) over activiteiten + menu-acties.
+### Fase 1 — Zichtbaarheid & palette (week) — ✅ gebouwd 2026-07-11
+1. ✅ Instellingen-paneel "Activiteiten" (in Studio-instellingen, bovenaan):
+   per activiteit aan/uit + Labs-toggle (uit → previews niet in de balk),
+   persist in `useStudioStore` (localStorage). Concepten en
+   `verborgenInBalk`-activiteiten zijn er zichtbaar maar niet instelbaar
+   ("alleen via Ga naar").
+2. ✅ Favorieten: ★ pint een activiteit bovenin de balk (pinvolgorde,
+   amber scheidingslijn); favorieten winnen van Labs-uit en verschijnen
+   niet dubbel in hun groep.
+3. ✅ Opdrachtenpalet (Ctrl+K, en Ga naar → Opdrachtenpalet…): zoekt over
+   alle activiteiten (ook wat niet in de balk staat) plus de
+   menubalk-acties van de actieve activiteit, inclusief submenu's;
+   dezelfde onClick's als de menubalk (`CommandPalette.jsx`).
 
 ### Fase 2 — Profieltype-registry & diagram-tabs (weken)
 1. Profieltype-contract definiëren; bestaande activiteit-descriptors

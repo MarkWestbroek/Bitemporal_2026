@@ -1,11 +1,13 @@
 /**
  * studioInstellingenActivity — "Studio-instellingen": globale, profiel-
  * overstijgende instellingen (het Style-domein leeft globaal, niet per
- * profiel). Twee onderdelen:
+ * profiel). Drie onderdelen:
  *
- *   1. Galerij (read-only): de gedeelde shape- en icoon-registry's, elk met
+ *   1. Activiteiten (fase 1 consolidatieplan): welke activiteiten de balk
+ *      toont — aan/uit, favorieten (★, bovenin) en de Labs-schakelaar.
+ *   2. Galerij (read-only): de gedeelde shape- en icoon-registry's, elk met
  *      live preview — dezelfde shapes/icons die álle profielen gebruiken.
- *   2. Eigen vormen: een editor voor **data-shapes** (vorm als data), die
+ *   3. Eigen vormen: een editor voor **data-shapes** (vorm als data), die
  *      git-persistent zijn en overal bruikbaar worden (galerij, PE-kiezers,
  *      shape-sets) — zonder code te schrijven.
  */
@@ -22,6 +24,7 @@ import { maakDataIcoonComponent } from "../../diagramcore/shapes/dataIcoon.jsx";
 import { leesIconen, bewaarIcoon, verwijderIcoon } from "./iconenRegistratie.js";
 import SilhouetTekenaar, { polygonNaarPunten, puntenNaarPad } from "./silhouetTekenaar.jsx";
 import { extraheerSilhouet } from "./silhouetExtractie.js";
+import ActiviteitenInstellingen from "../ActiviteitenInstellingen.jsx";
 
 const METHOD_DRAW_URL = `${import.meta.env.BASE_URL}method-draw/index.html`;
 
@@ -439,6 +442,16 @@ function Main() {
   return (
     <div style={{ height: "100%", overflow: "auto", color: "var(--s-fg)" }}>
       <div style={{ padding: "12px 16px 0" }}>
+        <h2 style={{ margin: "0 0 2px" }}>Activiteiten</h2>
+        <p style={{ margin: 0, color: "var(--s-fg-muted, #64748b)", fontSize: 13 }}>
+          Welke activiteiten de iconenbalk toont — jouw werkruimte, per browser bewaard.
+        </p>
+      </div>
+      <div style={sectie}>
+        <ActiviteitenInstellingen />
+      </div>
+
+      <div style={{ padding: "12px 16px 0", borderTop: "1px solid var(--s-border, #cbd5e1)" }}>
         <h2 style={{ margin: "0 0 2px" }}>Vormen &amp; iconen</h2>
         <p style={{ margin: 0, color: "var(--s-fg-muted, #64748b)", fontSize: 13 }}>
           De gedeelde registry's — dezelfde shapes en iconen die álle profielen gebruiken.

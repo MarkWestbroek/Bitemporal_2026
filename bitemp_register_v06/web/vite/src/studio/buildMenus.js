@@ -10,14 +10,23 @@
  */
 
 import { groepLabel } from "./activityRegistry";
+import { menuBus } from "./menuBus";
 
 /**
- * Items van het Ga naar-menu: per groep een kop, daaronder de activiteiten.
- * Status verschijnt als badge; concept-activiteiten (niet in de activity bar)
- * zijn hier gedempt maar wél aanklikbaar — dit menu is hun enige ingang.
+ * Items van het Ga naar-menu: het opdrachtenpalet bovenaan, daarna per groep
+ * een kop met de activiteiten. Status verschijnt als badge; concept-
+ * activiteiten (niet in de activity bar) zijn hier gedempt maar wél
+ * aanklikbaar — dit menu is hun enige ingang.
  */
 function gaNaarItems(activiteiten, actief, setActief) {
-  const items = [];
+  const items = [
+    {
+      id: "palette",
+      label: "Opdrachtenpalet…",
+      shortcut: "Ctrl+K",
+      onClick: () => menuBus.emit("palette:open"),
+    },
+  ];
   let vorigeGroep;
   for (const a of activiteiten || []) {
     if (a.groep !== vorigeGroep) {

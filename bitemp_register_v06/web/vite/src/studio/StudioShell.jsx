@@ -20,6 +20,7 @@ import useUIStore from "../store/useUIStore";
 import ActivityBar from "./ActivityBar";
 import SidePanel from "./SidePanel";
 import MenuBar from "./MenuBar";
+import CommandPalette from "./CommandPalette";
 import { buildMenus } from "./buildMenus";
 import { menuBus } from "./menuBus";
 import { OmniumMark } from "./icons";
@@ -126,12 +127,23 @@ export default function StudioShell() {
     />
   );
 
+  // Opdrachtenpalet (Ctrl+K) — altijd gemount, beheert zijn eigen open-stand.
+  const palette = (
+    <CommandPalette
+      menus={menus}
+      activiteiten={activiteiten}
+      actiefId={actief.id}
+      setActief={setActief}
+    />
+  );
+
   // fullMain-activiteiten (bv. UML-IDE) brengen hun eigen volledige layout +
   // toolbar mee; de shell toont dan alleen de menubalk + activity bar.
   if (actief.fullMain) {
     return (
       <div className="studio" data-studio-theme={theme}>
         {menubar}
+        {palette}
         <div className="studio-shell-row">
           <ActivityBar activiteiten={activiteiten} />
           <div className="studio-main">
@@ -151,6 +163,7 @@ export default function StudioShell() {
   return (
     <div className="studio" data-studio-theme={theme}>
       {menubar}
+      {palette}
       <div className="studio-shell-row">
         <ActivityBar activiteiten={activiteiten} />
 
