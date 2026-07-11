@@ -114,6 +114,90 @@
 .studio-menubar__entry.is-muted .studio-menubar__label { opacity: .55; }
 .studio-menubar__entry.is-muted:hover .studio-menubar__label { opacity: 1; }
 
+/* ── Modelleren: projectbrowser (sidebar) ─────────────────── */
+.studio-project { padding: 6px 4px; font-size: 13px; }
+.studio-project__sectie { margin-bottom: 10px; }
+.studio-project__kop {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 6px;
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .05em;
+  color: var(--s-fg-muted);
+}
+.studio-project__stip { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+.studio-project__icoon { display: inline-flex; }
+.studio-project__icoon svg { width: 14px; height: 14px; }
+.studio-project__naam { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.studio-project__nieuw {
+  width: 20px; height: 20px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: none; border-radius: 4px;
+  color: var(--s-fg-muted); font-size: 12px; cursor: pointer;
+}
+.studio-project__nieuw:hover { background: var(--s-hover); color: var(--s-fg); }
+.studio-project__leeg { padding: 2px 10px 2px 26px; color: var(--s-fg-muted); font-size: 12px; font-style: italic; }
+.studio-project__diagram {
+  display: block; width: 100%; box-sizing: border-box;
+  padding: 3px 10px 3px 26px;
+  font: inherit; font-size: 13px; text-align: left;
+  color: var(--s-fg);
+  background: transparent; border: none; border-radius: 5px;
+  cursor: pointer;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.studio-project__diagram:hover { background: var(--s-hover); }
+.studio-project__diagram.is-actief { background: var(--s-accent, #4f46e5); color: #fff; }
+
+/* ── Modelleren: tab-host (main) ──────────────────────────── */
+.studio-modelleren { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+.studio-modelleren__inhoud { flex: 1; min-height: 0; position: relative; }
+.studio-tabbalk {
+  flex: 0 0 auto;
+  display: flex; align-items: stretch; gap: 1px;
+  padding: 0 4px;
+  background: var(--s-panel-head);
+  border-bottom: 1px solid var(--s-border);
+  overflow-x: auto;
+}
+.studio-tab {
+  display: inline-flex; align-items: center;
+  border-top: 2px solid transparent;
+  border-right: 1px solid var(--s-border);
+  color: var(--s-fg-muted);
+  max-width: 220px;
+}
+.studio-tab.is-actief { background: var(--s-canvas); color: var(--s-fg); }
+.studio-tab__kies {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 4px 6px 10px;
+  font: inherit; font-size: 12px;
+  color: inherit; background: transparent; border: none; cursor: pointer;
+  min-width: 0;
+}
+.studio-tab__icoon { display: inline-flex; flex: 0 0 auto; }
+.studio-tab__icoon svg { width: 14px; height: 14px; }
+.studio-tab__naam { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.studio-tab__sluit {
+  width: 18px; height: 18px; margin: 0 4px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px; line-height: 1;
+  color: var(--s-fg-muted); background: transparent; border: none; border-radius: 4px;
+  cursor: pointer;
+}
+.studio-tab__sluit:hover { background: var(--s-hover); color: var(--s-fg); }
+.studio-modelleren__leeg { padding: 32px; color: var(--s-fg-muted); max-width: 560px; }
+.studio-modelleren__leeg-knoppen { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.studio-modelleren__leeg-knop {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 12px;
+  font: inherit; font-size: 13px;
+  color: var(--s-fg);
+  background: var(--s-panel); border: 1px solid var(--s-border); border-radius: 8px;
+  cursor: pointer;
+}
+.studio-modelleren__leeg-knop:hover { background: var(--s-hover); }
+.studio-modelleren__leeg-knop svg { width: 16px; height: 16px; }
+
 /* ── Opdrachtenpalet (Ctrl+K) ─────────────────────────────── */
 .studio-palette-overlay {
   position: fixed; inset: 0; z-index: 200;

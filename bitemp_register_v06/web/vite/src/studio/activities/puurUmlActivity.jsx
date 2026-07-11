@@ -20,6 +20,7 @@ export default maakDiagramActiviteit({
   taakbalkSleutel: "studio05-taakbalken-puur-uml",
   menuPrefix: "u05",
   menuLabel: "UML",
+  kleur: "#60a5fa",
   previewTekst: "Puur UML-klassediagram — tweede profiel (fase 5-lakmoesproef), lege sandbox.",
   devHookNaam: "__puurUml05Store",
 });

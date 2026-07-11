@@ -164,6 +164,7 @@ export default maakDiagramActiviteit({
   taakbalkSleutel: "studio05-taakbalken-profiel-ontwerp",
   menuPrefix: "po05",
   menuLabel: "Ontwerp",
+  kleur: "#94a3b8",
   // Elk diagram is hier een profiel — menu's en dialogen praten mee.
   diagramTerm: "profiel",
   previewTekst:

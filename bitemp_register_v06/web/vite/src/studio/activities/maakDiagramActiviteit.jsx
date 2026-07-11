@@ -39,6 +39,7 @@ import React, {
   Suspense,
 } from "react";
 import { menuBus } from "../menuBus";
+import { registreerProfieltype } from "../profieltypeRegistry";
 import useUIStore from "../../store/useUIStore";
 import { createDiagramStore } from "../../diagramcore/model/createDiagramStore.js";
 import { UITLIJN_MODES } from "../../diagramcore/layout/uitlijnen.js";
@@ -82,6 +83,9 @@ export function maakDiagramActiviteit(opties) {
     // true → niet in de activity bar; alleen bereikbaar via menu Ga naar
     // (bv. de 0.5-DRD zolang DMN één ingang in de balk heeft).
     verborgenInBalk = false,
+    // Accentkleur van het profieltype (tab-streepje en sectie-stip in de
+    // Modelleren-projectbrowser). Optioneel; zonder kleur een neutrale stip.
+    kleur,
     devHookNaam,
     koppeling = null,
     // Activiteit-eigen menu-acties bovenin het hoofdmenu:
@@ -2251,6 +2255,28 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
       ],
     },
   ];
+
+  // Fase 2: meld dit profiel bij het profieltype-register, zodat de
+  // "Modelleren"-activiteit het in haar projectbrowser + tab-host kan tonen.
+  // Zelfde store en componenten — de inhoud is identiek, hoe je hem ook opent.
+  // Alleen modelleerprofielen; gereedschap (groep "beheer", zoals de
+  // profiel-ontwerper) hoort niet in de projectbrowser.
+  if (groep === "modelleren") {
+    registreerProfieltype({
+      id,
+      label,
+      icon,
+      kleur,
+      useStore,
+      descriptor,
+      Provider,
+      Main,
+      Inspector,
+      menus,
+      menuPrefix,
+      diagramTerm,
+    });
+  }
 
   return {
     id,

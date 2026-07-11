@@ -21,6 +21,7 @@ export default maakDiagramActiviteit({
   taakbalkSleutel: "studio05-taakbalken-dmn-drd",
   menuPrefix: "drd05",
   menuLabel: "DRD",
+  kleur: "#a78bfa",
   // Eén DMN-ingang in de balk: de klassieke DMN-activiteit (DRD + Tabel).
   // Deze 0.5-DRD blijft bereikbaar via menu Ga naar.
   verborgenInBalk: true,

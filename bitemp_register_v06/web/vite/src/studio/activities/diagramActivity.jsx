@@ -34,6 +34,7 @@ export default maakDiagramActiviteit({
   taakbalkSleutel: "studio05-taakbalken-canoniek-uml",
   menuPrefix: "d05",
   menuLabel: "Diagram",
+  kleur: "#6366f1",
   previewTekst: "Bewerkbare sandbox — wijzigingen blijven lokaal en raken het UML-model niet.",
   devHookNaam: "__diagram05Store",
   koppeling: {

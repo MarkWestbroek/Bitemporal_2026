@@ -21,6 +21,7 @@ export default maakDiagramActiviteit({
   taakbalkSleutel: "studio05-taakbalken-oas31",
   menuPrefix: "o05",
   menuLabel: "OAS",
+  kleur: "#22d3ee",
   previewTekst: "OpenAPI 3.1-schemas — derde profiel (fase 5-vuurproef), lege sandbox.",
   devHookNaam: "__oas05Store",
   koppeling: {

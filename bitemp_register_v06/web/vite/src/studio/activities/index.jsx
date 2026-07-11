@@ -18,6 +18,7 @@ import { maakPlaceholderActiviteit } from "./PlaceholderActivity";
 import { IconAPI, IconToegang, IconRollen, IconReferentielijst } from "../icons";
 
 import umlActivity from "./umlActivity";
+import modellerenActivity from "./modellerenActivity";
 import diagramActivity from "./diagramActivity";
 import puurUmlActivity from "./puurUmlActivity";
 import oasActivity from "./oasActivity";
@@ -77,6 +78,7 @@ const referentielijstenActivity = maakPlaceholderActiviteit({
 
 registreerActiviteiten([
   // modelleren
+  modellerenActivity, // fase 2: één ingang — projectbrowser + diagram-tabs over alle profielen
   umlActivity,
   diagramActivity, // "Canoniek model" — canoniek-uml op de generieke motor (preview)
   puurUmlActivity, // "UML" — tweede profiel (preview)

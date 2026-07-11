@@ -218,6 +218,18 @@ te wijzigen.
 > menubalk-acties van de actieve activiteit ("Menu › Submenu › Item").
 > Componenten: `CommandPalette.jsx`, `ActiviteitenInstellingen.jsx`; state in
 > `useStudioStore` (`balkVerborgen`, `labsAan`, `favorieten`).
+>
+> **Consolidatie fase 2 (2026-07-11) — Modelleren als één ingang:** nieuwe
+> activiteit **Modelleren** (bovenaan de balk, preview) met een
+> **projectbrowser** (per profieltype zijn diagrammen, ＋ voor nieuw) en een
+> **tab-host**: open diagrammen als tabs met profiel-icoon en accentkleur,
+> persist per browser; inspector en menubalk volgen het profiel van de
+> actieve tab. Onder water: `studio/profieltypeRegistry.js` — elk
+> `maakDiagramActiviteit`-profiel (groep "modelleren", incl. live
+> meta-editor-profielen) registreert zich met zijn store, slots, menu's en
+> `kleur`. De losse profiel-activiteiten blijven bestaan en delen dezelfde
+> store: de inhoud is identiek, hoe je hem ook opent. Zie
+> `activities/modellerenActivity.jsx`.
 
 | Groep        | Functie (label)    | Status   | Hergebruikt                        |
 |--------------|--------------------|----------|------------------------------------|

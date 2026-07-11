@@ -254,13 +254,24 @@ activiteiten-tabel in `docs/STUDIO.md`.
    menubalk-acties van de actieve activiteit, inclusief submenu's;
    dezelfde onClick's als de menubalk (`CommandPalette.jsx`).
 
-### Fase 2 — Profieltype-registry & diagram-tabs (weken)
-1. Profieltype-contract definiëren; bestaande activiteit-descriptors
-   mappen naar profieltypen (adapters, editors ongewijzigd).
-2. Main van "Modelleren" wordt tab-host: meerdere open diagrammen,
-   tab-icoon/kleur per profieltype, open-diagrammen persist.
-3. `fullMain`-uitzondering van de UML-IDE verkleinen of de klassieke IDE
-   achter Labs zetten zodra 0.5 pariteit heeft.
+### Fase 2 — Profieltype-registry & diagram-tabs (weken) — grotendeels ✅ 2026-07-11
+1. ✅ Profieltype-registry (`studio/profieltypeRegistry.js`): id, label,
+   icoon, **kleur**, store, descriptor, slots en menu's per profiel.
+   `maakDiagramActiviteit` registreert automatisch (alleen groep
+   "modelleren" — gereedschap zoals de profiel-ontwerper hoort er niet in);
+   dynamische meta-editor-profielen doen dus vanzelf mee.
+2. ✅ Nieuwe activiteit **"Modelleren"** (bovenaan de balk, preview):
+   sidebar = projectbrowser v0 (per profieltype zijn diagrammen, ＋ voor
+   nieuw), Main = **tab-host** (open diagrammen als tabs met profiel-icoon
+   en accentkleur; persist in localStorage; een elders verwijderd diagram
+   sluit zijn eigen tab), inspector én menubalk volgen het profiel van de
+   actieve tab. Zelfde stores en componenten als de losse
+   profiel-activiteiten — de inhoud is identiek, hoe je hem ook opent.
+3. ⬜ `fullMain`-uitzondering van de UML-IDE verkleinen of de klassieke IDE
+   achter Labs zetten zodra 0.5 pariteit heeft. Ook nog open: dmn-js/bpmn-
+   berichten als profieltypen in de host (andere motor), en de losse
+   0.5-profiel-activiteiten uit de balk nemen zodra "Modelleren" volwassen
+   is (via de fase 1-zichtbaarheidsinstellingen kan dat nu al per gebruiker).
 
 ### Fase 3 — Projectbrowser (weken)
 1. Eén boom met vrije mappen (Sparx-model: de indeling is van de gebruiker)

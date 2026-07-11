@@ -27,6 +27,7 @@ export default maakDiagramActiviteit({
   taakbalkSleutel: "studio05-taakbalken-mim12",
   menuPrefix: "mim05",
   menuLabel: "MIM",
+  kleur: "#f59e0b",
   previewTekst: "MIM 1.2-informatiemodellen (Geonovum, pas-toe-of-leg-uit) — vijfde profiel.",
   devHookNaam: "__mim05Store",
   koppeling: {
