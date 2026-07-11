@@ -20,6 +20,7 @@ import { maakDataShapeComponent } from "../../diagramcore/shapes/dataShape.jsx";
 import { leesVormen, bewaarVorm, verwijderVorm } from "./vormenRegistratie.js";
 import { maakDataIcoonComponent } from "../../diagramcore/shapes/dataIcoon.jsx";
 import { leesIconen, bewaarIcoon, verwijderIcoon } from "./iconenRegistratie.js";
+import PolygonTekenaar, { polygonNaarPunten, puntenNaarPolygon } from "./polygonTekenaar.jsx";
 
 const kaartStijl = {
   border: "1px solid var(--s-border, #cbd5e1)",
@@ -63,8 +64,18 @@ const GRONDVORMEN = ["rechthoek", "afgerond", "stadium", "chip", "zeshoek", "afg
 /** Editor voor één data-shape-concept (live preview + opslaan/verwijderen). */
 function VormEditor({ start, onOpslaan, onVerwijderen, onSluiten }) {
   const [def, setDef] = useState(start);
+  const [teken, setTeken] = useState(!!start.clipPath);
+  // Punten in eigen state (niet afgeleid uit clipPath): onder de 3 punten
+  // serialiseert een polygon naar leeg, dus afleiden zou tussenpunten wissen.
+  const [punten, setPunten] = useState(() => polygonNaarPunten(start.clipPath));
   const zet = (patch) => setDef((d) => ({ ...d, ...patch }));
   const Preview = maakDataShapeComponent(def);
+  // Tekenaar → clip-path: punten bewerken schrijft live de polygon in
+  // def.clipPath, zodat de preview meteen de getekende silhouet toont.
+  const zetPunten = (next) => {
+    setPunten(next);
+    zet({ clipPath: puntenNaarPolygon(next) || undefined });
+  };
   const rij = (label, node) => (
     <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
       <span style={{ width: 120, color: "var(--s-fg-muted, #64748b)" }}>{label}</span>
@@ -97,6 +108,15 @@ function VormEditor({ start, onOpslaan, onVerwijderen, onSluiten }) {
           )}
           {rij("vulling", <input type="color" value={def.vulling || "#e2e8f0"} onChange={(e) => zet({ vulling: e.target.value })} style={{ width: 40, height: 24, padding: 0, border: "1px solid var(--s-border)", borderRadius: 6, cursor: "pointer" }} />)}
           {rij("clip-path", <input style={{ ...invoer, flex: 1, fontFamily: "monospace", fontSize: 11 }} value={def.clipPath || ""} placeholder="(eigen polygon/path — wint van grondvorm)" onChange={(e) => zet({ clipPath: e.target.value || undefined })} />)}
+          {rij(
+            "silhouet",
+            <span style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <button className="dc-mini-knop" onClick={() => setTeken((v) => !v)}>{teken ? "verberg tekenaar" : "✏ teken silhouet"}</button>
+              {def.clipPath && (
+                <button className="dc-mini-knop is-gevaar" title="Silhouet (clip-path) wissen" onClick={() => zet({ clipPath: undefined })}>×</button>
+              )}
+            </span>
+          )}
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
           <span style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)" }}>preview</span>
@@ -104,6 +124,15 @@ function VormEditor({ start, onOpslaan, onVerwijderen, onSluiten }) {
           <code style={{ fontSize: 10, color: "var(--s-fg-muted, #64748b)" }}>{def.id}</code>
         </div>
       </div>
+      {teken && (
+        <div style={{ display: "flex", gap: 12, alignItems: "flex-start", paddingTop: 4, borderTop: "1px solid var(--s-border, #e2e8f0)" }}>
+          <PolygonTekenaar punten={punten} onChange={zetPunten} />
+          <p style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)", maxWidth: 200, margin: 0 }}>
+            Teken de omtrek op de 0–100%-box. Het resultaat komt in het clip-path-veld en
+            wint van de grondvorm. Minstens 3 punten voor een vlak.
+          </p>
+        </div>
+      )}
       <div style={{ display: "flex", gap: 8 }}>
         <button className="dc-mini-knop" onClick={() => onOpslaan(def)}>Opslaan</button>
         <button className="dc-mini-knop" onClick={onSluiten}>Annuleren</button>
