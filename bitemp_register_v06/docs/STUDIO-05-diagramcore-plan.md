@@ -6,8 +6,19 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **polygon-tekenaar voor data-shapes**
-  (2026-07-11, branch `feat/studio05-shape-editor`): in de vorm-editor teken
+  fase 7 (register). Laatste ronde: **Method Draw als silhouet-editor**
+  (2026-07-11, branch `feat/studio05-shape-editor`): naast de eigen polygon-
+  tekenaar kun je een vorm nu ook vrij tekenen (béziers, meerdere paden) in de
+  gevendorde **Method Draw** SVG-editor (`public/method-draw/`, MIT), die in een
+  ruime modal in een `<iframe>` draait. "Gebruik als silhouet" leest de tekening
+  (`svgCanvas.getSvgString()` via `omnium-bridge.js`, die de lexicale globals op
+  `window` zet) en normaliseert die naar een `silhouet: { inner, box }` op de
+  data-shape (`silhouetExtractie.js`: fills/strokes strippen, bounding box meten).
+  De renderer toont het silhouet als inline `<svg viewBox=box
+  preserveAspectRatio="none">` met `vector-effect: non-scaling-stroke`, zodat
+  béziers behouden blijven, de vorm met de node-box meerekt én de rand overal
+  even dik blijft (`dataShape.jsx`; `silhouet` wint van `clipPath`/grondvorm).
+  Vorige ronde: **polygon-tekenaar voor data-shapes**: in de vorm-editor teken
   je nu de silhouet op de 0–100%-box (`polygonTekenaar.jsx`: klik = punt,
   sleep = verplaatsen, dubbelklik of rechtsklik = punt wissen, **wis alles**-knop,
   en **undo/redo** met Ctrl+Z / Ctrl+Y via een lokaal history-stack — geen aparte

@@ -9,7 +9,7 @@
  *      git-persistent zijn en overal bruikbaar worden (galerij, PE-kiezers,
  *      shape-sets) — zonder code te schrijven.
  */
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IconInstellingen } from "../icons";
 // Side-effect: registreert alle basis-shapes én de data-shapes in de registry,
 // zodat de galerij de volledige registry toont ook zonder geopende canvas.
@@ -21,6 +21,9 @@ import { leesVormen, bewaarVorm, verwijderVorm } from "./vormenRegistratie.js";
 import { maakDataIcoonComponent } from "../../diagramcore/shapes/dataIcoon.jsx";
 import { leesIconen, bewaarIcoon, verwijderIcoon } from "./iconenRegistratie.js";
 import PolygonTekenaar, { polygonNaarPunten, puntenNaarPolygon } from "./polygonTekenaar.jsx";
+import { extraheerSilhouet } from "./silhouetExtractie.js";
+
+const METHOD_DRAW_URL = `${import.meta.env.BASE_URL}method-draw/index.html`;
 
 const kaartStijl = {
   border: "1px solid var(--s-border, #cbd5e1)",
@@ -61,12 +64,95 @@ const invoer = {
 };
 const GRONDVORMEN = ["rechthoek", "afgerond", "stadium", "chip", "zeshoek", "afgeknipt"];
 
+/**
+ * MethodDrawModal — ruime modal met de gevendorde Method Draw SVG-editor in een
+ * iframe. Bij openen laadt een bestaand silhouet terug in de editor; "Gebruik als
+ * silhouet" leest de tekening (svgCanvas.getSvgString()) en levert een
+ * genormaliseerd `{inner, box}` op.
+ */
+function MethodDrawModal({ start, onGebruik, onSluiten }) {
+  const iframeRef = useRef(null);
+  const [klaar, setKlaar] = useState(false);
+
+  // Escape sluit; achtergrond-scroll blokkeren zolang de modal open is.
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && onSluiten();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onSluiten]);
+
+  // Wacht tot Method Draw's svgCanvas beschikbaar is (scripts laden async) en
+  // laad dan een bestaand silhouet terug in de editor.
+  const bijLaden = () => {
+    let pogingen = 0;
+    const tik = () => {
+      const win = iframeRef.current?.contentWindow;
+      if (win && win.svgCanvas) {
+        setKlaar(true);
+        if (start?.inner && Array.isArray(start.box)) {
+          const [x, y, w, h] = start.box;
+          const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="${x} ${y} ${w} ${h}">${start.inner}</svg>`;
+          try {
+            win.svgCanvas.setSvgString(svg);
+          } catch {
+            /* niet fataal: begin dan met leeg canvas */
+          }
+        }
+      } else if (pogingen++ < 40) {
+        setTimeout(tik, 100);
+      }
+    };
+    tik();
+  };
+
+  const gebruik = () => {
+    const win = iframeRef.current?.contentWindow;
+    if (!win || !win.svgCanvas) return;
+    const sil = extraheerSilhouet(win.svgCanvas.getSvgString());
+    if (!sil) {
+      alert("Geen tekenbare vorm op het canvas gevonden. Teken eerst een vorm (pad, rechthoek, cirkel …).");
+      return;
+    }
+    onGebruik(sil);
+  };
+
+  return (
+    <div
+      onClick={onSluiten}
+      style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)", zIndex: 1000, display: "flex", flexDirection: "column", padding: "2.5vh 2.5vw" }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{ background: "var(--s-panel, #fff)", borderRadius: 10, boxShadow: "0 10px 40px rgba(0,0,0,0.35)", display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderBottom: "1px solid var(--s-border, #e2e8f0)" }}>
+          <strong style={{ fontSize: 13 }}>Silhouet tekenen — Method Draw</strong>
+          <span style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)" }}>
+            Teken een vorm; kleur/rand komen uit de vorm-editor. {klaar ? "" : "· editor laadt…"}
+          </span>
+          <button className="dc-mini-knop" style={{ marginLeft: "auto" }} onClick={gebruik} disabled={!klaar}>Gebruik als silhouet</button>
+          <button className="dc-mini-knop" onClick={onSluiten}>Sluiten</button>
+        </div>
+        <iframe
+          ref={iframeRef}
+          src={METHOD_DRAW_URL}
+          title="Method Draw"
+          onLoad={bijLaden}
+          style={{ border: 0, flex: 1, width: "100%", background: "#fff" }}
+        />
+      </div>
+    </div>
+  );
+}
+
 /** Editor voor één data-shape-concept (live preview + opslaan/verwijderen). */
 function VormEditor({ start, onOpslaan, onVerwijderen, onSluiten }) {
   const [def, setDef] = useState(start);
   const [teken, setTeken] = useState(!!start.clipPath);
+  const [mdOpen, setMdOpen] = useState(false);
   const zet = (patch) => setDef((d) => ({ ...d, ...patch }));
   const Preview = maakDataShapeComponent(def);
+  const heeftSilhouet = !!def.silhouet?.inner;
   const rij = (label, node) => (
     <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
       <span style={{ width: 120, color: "var(--s-fg-muted, #64748b)" }}>{label}</span>
@@ -101,7 +187,16 @@ function VormEditor({ start, onOpslaan, onVerwijderen, onSluiten }) {
           {rij("clip-path", <input style={{ ...invoer, flex: 1, fontFamily: "monospace", fontSize: 11 }} value={def.clipPath || ""} placeholder="(eigen polygon/path — wint van grondvorm)" onChange={(e) => zet({ clipPath: e.target.value || undefined })} />)}
           {rij(
             "silhouet",
-            <button className="dc-mini-knop" onClick={() => setTeken((v) => !v)}>{teken ? "verberg tekenaar" : "✏ teken silhouet"}</button>
+            <span style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+              <button className="dc-mini-knop" onClick={() => setTeken((v) => !v)}>{teken ? "verberg tekenaar" : "✏ polygon"}</button>
+              <button className="dc-mini-knop" onClick={() => setMdOpen(true)} title="Vrij tekenen met béziers in Method Draw">✎ Method Draw</button>
+              {heeftSilhouet && (
+                <span style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                  <span style={{ fontSize: 11, color: "var(--s-accent, #6366f1)" }}>● silhouet</span>
+                  <button className="dc-mini-knop is-gevaar" title="Silhouet wissen" onClick={() => zet({ silhouet: undefined })}>×</button>
+                </span>
+              )}
+            </span>
           )}
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
@@ -129,6 +224,16 @@ function VormEditor({ start, onOpslaan, onVerwijderen, onSluiten }) {
           <button className="dc-mini-knop is-gevaar" style={{ marginLeft: "auto" }} onClick={onVerwijderen}>Verwijderen</button>
         )}
       </div>
+      {mdOpen && (
+        <MethodDrawModal
+          start={def.silhouet}
+          onGebruik={(sil) => {
+            zet({ silhouet: sil });
+            setMdOpen(false);
+          }}
+          onSluiten={() => setMdOpen(false)}
+        />
+      )}
     </div>
   );
 }
