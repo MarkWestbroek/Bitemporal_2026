@@ -14,11 +14,17 @@
   (`svgCanvas.getSvgString()` via `omnium-bridge.js`, die de lexicale globals op
   `window` zet) en normaliseert die naar een `silhouet: { inner, box }` op de
   data-shape (`silhouetExtractie.js`: fills/strokes strippen, bounding box meten).
-  De renderer toont het silhouet als inline `<svg viewBox=box
-  preserveAspectRatio="none">` met `vector-effect: non-scaling-stroke`, zodat
-  béziers behouden blijven, de vorm met de node-box meerekt én de rand overal
-  even dik blijft (`dataShape.jsx`; `silhouet` wint van `clipPath`/grondvorm).
-  Vorige ronde: **polygon-tekenaar voor data-shapes**: in de vorm-editor teken
+  De renderer toont het silhouet als inline `<svg viewBox=box>` met
+  `vector-effect: non-scaling-stroke`, zodat béziers behouden blijven én de rand
+  overal even dik blijft (`dataShape.jsx`; `silhouet` wint van `clipPath`/
+  grondvorm). Per vorm kies je **verhouding behouden** (default,
+  `preserveAspectRatio="xMidYMid meet"` — herkenbaar silhouet, gecentreerd) of
+  **uitrekken/vullen** (`none` — achtergrond-stijl die de node-box vult). De modal
+  is generiek: bij openen laadt hij de bestaande tekening terug — een silhouet,
+  óf een polygon-clip (omgezet naar een pad, `polygonClipNaarSvg`), óf een icoon —
+  en dezelfde modal bewerkt nu ook **data-iconen** (IcoonEditor → "✎ Method Draw";
+  daar blijft de volledige SVG met kleuren behouden i.p.v. gestript). "Annuleren"
+  sluit zonder toe te passen. Vorige ronde: **polygon-tekenaar voor data-shapes**: in de vorm-editor teken
   je nu de silhouet op de 0–100%-box (`polygonTekenaar.jsx`: klik = punt,
   sleep = verplaatsen, dubbelklik of rechtsklik = punt wissen, **wis alles**-knop,
   en **undo/redo** met Ctrl+Z / Ctrl+Y via een lokaal history-stack — geen aparte

@@ -92,11 +92,14 @@ export function maakDataShapeComponent(def) {
     // meerekt (viewBox + preserveAspectRatio="none"); rand als non-scaling stroke.
     if (silhouet) {
       const [bx, by, bw, bh] = silhouet.box;
+      // Standaard verhouding behouden (herkenbaar silhouet, gecentreerd);
+      // passen === false = uitrekken tot de node-box (achtergrond-stijl).
+      const par = silhouet.passen === false ? "none" : "xMidYMid meet";
       return (
         <div style={{ position: "relative", minWidth: 150, minHeight: 48, cursor: "grab" }}>
           <svg
             viewBox={`${bx} ${by} ${bw} ${bh}`}
-            preserveAspectRatio="none"
+            preserveAspectRatio={par}
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", overflow: "visible" }}
             aria-hidden="true"
           >
