@@ -6,8 +6,85 @@
   [`STUDIO-05-verslag.md`](STUDIO-05-verslag.md) (architectuur, screenshots,
   stand van zaken, open punten). Koers: eerst stabiel & compleet
   (elementen-browser, OAS ontpluizen, vormgeving — zie verslag §6), daarna
-  fase 7 (register). Laatste ronde: **lijnstijlen in de shape-set-matrix**
-  (2026-07-09, branch `feat/studio05-shapesets`): de matrix heeft nu een
+  fase 7 (register). Laatste ronde: **silhouet-tekenaar met krommen**
+  (2026-07-11, branch `feat/studio05-shape-editor`): de eigen kleine tekenaar is
+  van polygon-only naar een lichte **curve-editor** gegaan. Elk punt is rond of
+  hoekig — **klik een punt** om te wisselen — en de tekenaar levert nu een gesloten
+  SVG-`path` op (Catmull-Rom-achtige raaklijnen voor ronde punten; hoekpunten
+  blijven recht), opgeslagen als `silhouet: { inner, box:[0,0,100,100], punten }`.
+  Dat rendert via dezelfde silhouet-renderer (`dataShape.jsx`) als de Method
+  Draw-silhouetten en vult standaard de node-box (`passen:false`). De pure
+  padlogica staat in `silhouetPad.js` (`puntenNaarPad`, unit-getest); de UI in
+  `silhouetTekenaar.jsx` (sleep = verplaatsen, rechtsklik = wissen, wis alles,
+  undo/redo Ctrl+Z/Y). Het `punten`-veld op het silhouet laat de tekenaar zijn
+  eigen vormen terugladen; een Method Draw-silhouet (zonder `punten`) opent de
+  tekenaar leeg. Vorige ronde: **Method Draw als silhouet-editor**
+  (branch `feat/studio05-shape-editor`): naast de eigen kleine-
+  tekenaar kun je een vorm nu ook vrij tekenen (béziers, meerdere paden) in de
+  gevendorde **Method Draw** SVG-editor (`public/method-draw/`, MIT), die in een
+  ruime modal in een `<iframe>` draait. "Gebruik als silhouet" leest de tekening
+  (`svgCanvas.getSvgString()` via `omnium-bridge.js`, die de lexicale globals op
+  `window` zet) en normaliseert die naar een `silhouet: { inner, box }` op de
+  data-shape (`silhouetExtractie.js`: fills/strokes strippen, bounding box meten).
+  De renderer toont het silhouet als inline `<svg viewBox=box>` met
+  `vector-effect: non-scaling-stroke`, zodat béziers behouden blijven én de rand
+  overal even dik blijft (`dataShape.jsx`; `silhouet` wint van `clipPath`/
+  grondvorm). Per vorm kies je **verhouding behouden** (default,
+  `preserveAspectRatio="xMidYMid meet"` — herkenbaar silhouet, gecentreerd) of
+  **uitrekken/vullen** (`none` — achtergrond-stijl die de node-box vult). De modal
+  is generiek: bij openen laadt hij de bestaande tekening terug — een silhouet,
+  óf een polygon-clip (omgezet naar een pad, `polygonClipNaarSvg`), óf een icoon —
+  en dezelfde modal bewerkt nu ook **data-iconen** (IcoonEditor → "✎ Method Draw";
+  daar blijft de volledige SVG mét kleuren behouden i.p.v. gestript — een icoon
+  is dus niet per se zwart-wit; het vinkje "volg tekstkleur" maakt 'm monochroom).
+  De laad-SVG wordt genormaliseerd (`normaliseerLaadSvg`: inhoud via `<g
+  transform>` naar ~420px geschaald, width/height/viewBox consistent) zodat een
+  klein icoon niet als spikkeltje buiten beeld belandt; en de modal wordt bij een
+  léég concept expliciet leeggemaakt, zodat MD's eigen localStorage geen vorige
+  tekening laat staan. "Nieuw icoon" (voorheen "icoon importeren") maakt een leeg
+  icoon dat je meteen in MD kunt tekenen. "Annuleren" sluit zonder toe te passen.
+  Vorige ronde: **polygon-tekenaar voor data-shapes**: in de vorm-editor teken
+  je nu de silhouet op de 0–100%-box (`polygonTekenaar.jsx`: klik = punt,
+  sleep = verplaatsen, dubbelklik of rechtsklik = punt wissen, **wis alles**-knop,
+  en **undo/redo** met Ctrl+Z / Ctrl+Y via een lokaal history-stack — geen aparte
+  zundo-store, want de punten zijn transiënte editor-state). Een klik op een punt
+  voegt niet langer per ongeluk een nieuw punt toe (stopPropagation op de handle).
+  Het tekencanvas heeft dezelfde **node-verhouding** (≈2:1) i.p.v. vierkant, want
+  clip-path-percentages rekken mee met de node-box; tekenen op node-proporties is
+  dus WYSIWYG (geen horizontale uitrekking in de preview). Schreef toen nog een
+  `clip-path: polygon(…)`; inmiddels een SVG-`path`-silhouet met krommen (zie de
+  laatste ronde hierboven). Vorige stap: **icoon-import (data-iconen)**
+  (branch `feat/studio05-shape-editor`): iconen kunnen nu ook
+  **data** zijn — geïmporteerde/geplakte SVG i.p.v. code-componenten.
+  `dataIcoon.jsx` ontleedt de SVG (viewBox + inhoud) en rendert 'm op maat;
+  met `monochroom` volgt het icoon de tekstkleur (currentColor, eigen
+  fills/strokes weg). In **Studio-instellingen → Eigen iconen** importeer je
+  ze (SVG plakken of een `.svg`-bestand kiezen) met live preview; ze belanden
+  in de icoon-registry en zijn overal bruikbaar (galerij, PE icoon-kiezers,
+  shape-set-cellen). Git-persistent via `web/vite/iconen/*.json` (vite-plugin
+  `studio05Map` nu ook voor `iconen`; build-glob voor productie). Vorige stap: **data-shapes + vorm-editor**
+  (branch `feat/studio05-shape-editor`): shapes kunnen nu ook
+  **data** zijn i.p.v. alleen code-componenten. `dataShape.jsx` heeft een
+  generieke renderer (grondvorm rechthoek/afgerond/stadium/chip/zeshoek/
+  afgeknipt + hoekradius/randstijl/dikte/vulling/eigen clip-path; clip-vormen
+  via de twee-lagen-techniek voor een nette rand) die de standaard header +
+  `CompartimentLijst` hergebruikt. In **Studio-instellingen → Eigen vormen**
+  maak/bewerk je ze met live preview; ze worden in de shapeRegistry gezet en
+  zijn overal bruikbaar (galerij, PE-kiezers, shape-sets). Git-persistent via
+  `web/vite/vormen/*.json` (de vite-plugin is veralgemeniseerd tot
+  `studio05Map(sub)` voor profielen én vormen; build-glob voor productie).
+  Volgende: een echte vrije SVG-teken-editor (nu is het parametrisch). Vorige
+  stap in deze ronde: **Studio-instellingen: vorm-/icoon-galerij**
+  (branch `feat/studio05-shape-editor`): een globale activiteit
+  "Studio-instellingen" (groep beheer, fullMain) met als eerste onderdeel de
+  **read-only galerij** van de gedeelde shape- en icoon-registry's — elke
+  shape/icon met live preview + registry-id. Dit maakt zichtbaar wát er is
+  (het Style-domein leeft globaal, niet per profiel) en is het fundament voor
+  de shape-editor. `basisShapes.jsx` wordt hier als side-effect geïmporteerd,
+  zodat de galerij de volledige registry toont ook zonder geopende canvas.
+  Volgende in deze branch: **data-shapes + SVG-editor** (shapes als
+  declaratieve data i.p.v. alleen code-componenten). Eerdere ronde: **lijnstijlen in de shape-set-matrix**
+  (branch `feat/studio05-shapesets`): de matrix heeft nu een
   tweede sectie met **connectortype-rijen** — kolom 0 = de eigen lijnstijl
   van de verbindingsregel(s), kolom 1..n = per-set overrides. De cel is een
   lijn-editor (lijn/dash, vorm bezier/hoekig/recht/boom, markerStart,

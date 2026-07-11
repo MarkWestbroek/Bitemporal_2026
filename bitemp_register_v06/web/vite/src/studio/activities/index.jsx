@@ -21,6 +21,11 @@ import profielActivity from "./profielActivity";
 import profielOntwerpActivity from "./profielOntwerpActivity";
 import dmnActivity from "./dmnActivity";
 import dmnDrdActivity from "./dmnDrdActivity";
+// Data-shapes globaal registreren bij startup (side-effect), zodat ze in
+// elk profiel beschikbaar zijn.
+import "./vormenRegistratie.js";
+import "./iconenRegistratie.js";
+import studioInstellingenActivity from "./studioInstellingenActivity";
 import mimActivity from "./mimActivity";
 import bpmnActivity from "./bpmnActivity";
 import berichtActivity from "./berichtActivity";
@@ -85,4 +90,6 @@ registreerActiviteiten([
   // data
   rollenActivity,
   referentielijstenActivity,
+  // beheer
+  studioInstellingenActivity, // globale vorm-/icoon-galerij (P07-vervolg)
 ]);

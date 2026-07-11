@@ -1,0 +1,18 @@
+{
+  "id": "ster",
+  "label": "ster",
+  "grondvorm": "rechthoek",
+  "randDikte": 2,
+  "vulling": "#e2e8f0",
+  "hoekRadius": 50,
+  "randStijl": "solid",
+  "silhouet": {
+    "inner": "<g xmlns=\"http://www.w3.org/2000/svg\">\n  \n  <path d=\"m50,0l11,35l37,0l-30,22l11,34l-29,-21l-29,21l11,-34l-30,-22l37,0l11,-35z\"/>\n </g>",
+    "box": [
+      2,
+      0,
+      96,
+      91
+    ]
+  }
+}

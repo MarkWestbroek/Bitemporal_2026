@@ -49,19 +49,19 @@ function normalizeBuildLineEndings() {
   };
 }
 
-// Plugin (alleen dev): /__studio05/profielen ↔ de map web/vite/profielen/.
-// Zo persisteren PE-profielen (kern + layout + icoon) als json-bestanden in
-// de repo en reizen ze via git mee naar andere dev-machines (P04). In een
-// productie-build bestaat het endpoint niet; de studio valt dan terug op
-// localStorage.
-function studio05Profielen() {
-  const map = resolve(__dirname, "profielen");
+// Plugin (alleen dev): /__studio05/<sub> ↔ de map web/vite/<sub>/.
+// Zo persisteren Studio-artefacten (profielen: kern+layout+icoon — P04; en
+// vormen: data-shapes) als json-bestanden in de repo, die via git meereizen
+// naar andere dev-machines. In een productie-build bestaat het endpoint niet;
+// de studio valt dan terug op localStorage (+ build-glob).
+function studio05Map(sub) {
+  const map = resolve(__dirname, sub);
   const geldigId = (id) => /^[a-z0-9][a-z0-9-]*$/.test(id);
   return {
-    name: "studio05-profielen",
+    name: `studio05-${sub}`,
     apply: "serve",
     configureServer(server) {
-      server.middlewares.use("/__studio05/profielen", (req, res) => {
+      server.middlewares.use(`/__studio05/${sub}`, (req, res) => {
         try {
           if (!existsSync(map)) mkdirSync(map, { recursive: true });
           const pad = (req.url || "/").split("?")[0];
@@ -114,7 +114,7 @@ function studio05Profielen() {
 }
 
 export default defineConfig({
-  plugins: [react(), normalizeBuildLineEndings(), studio05Profielen()],
+  plugins: [react(), normalizeBuildLineEndings(), studio05Map("profielen"), studio05Map("vormen"), studio05Map("iconen")],
   base: "/viz/react/",
   define: {
     __APP_VERSION__: JSON.stringify(APP_VERSION),

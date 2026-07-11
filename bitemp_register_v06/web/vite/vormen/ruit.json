@@ -1,0 +1,9 @@
+{
+  "id": "ruit",
+  "label": "ruit",
+  "grondvorm": "rechthoek",
+  "randDikte": 2,
+  "vulling": "#e2e8f0",
+  "clipPath": "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
+  "randStijl": "dashed"
+}

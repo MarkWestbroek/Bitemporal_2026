@@ -1,0 +1,8 @@
+{
+  "id": "pijl-naar-rechts",
+  "label": "pijl naar rechts",
+  "grondvorm": "afgerond",
+  "randDikte": 2,
+  "vulling": "#98b6dd",
+  "clipPath": "polygon(0% 20%, 60% 20%, 60% 0%, 100% 50%, 60% 100%, 60% 80%, 0% 80%)"
+}
