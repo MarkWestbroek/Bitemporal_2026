@@ -86,8 +86,8 @@ export const useModellerenStore = create((set, get) => ({
       const next = { ...s, tabs, actieveTab: id };
       schrijfOpslag(next);
       // Een diagram openen haalt de focus van een eventueel geselecteerde
-      // map — de inspector toont dan weer het profiel.
-      return { tabs, actieveTab: id, mapSelectie: null };
+      // map of diagram-eigenschap — de inspector toont dan weer het profiel.
+      return { tabs, actieveTab: id, mapSelectie: null, diagramSelectie: null };
     });
     get().activeer(id);
   },
@@ -170,7 +170,12 @@ export const useModellerenStore = create((set, get) => ({
 
   /** Geselecteerde map (voor het eigenschappen-paneel), of null. */
   mapSelectie: null,
-  selecteerMap: (id) => set({ mapSelectie: id }),
+  selecteerMap: (id) => set({ mapSelectie: id, diagramSelectie: null }),
+
+  /** Geselecteerd diagram (eigenschappen-paneel): {profielId, diagramId}|null. */
+  diagramSelectie: null,
+  selecteerDiagram: (profielId, diagramId) =>
+    set({ diagramSelectie: profielId ? { profielId, diagramId } : null, mapSelectie: null }),
 
   /** Verwijder een map; submappen en plaatsingen vallen naar de ouder. */
   verwijderMap: (id) =>
@@ -240,25 +245,32 @@ function actieveTabInfo() {
 
 // ── Sidebar: projectbrowser — vrije mappen + "Niet ingedeeld" ───────
 
-/** Eén diagram-regel; overal dezelfde: klikbaar, versleepbaar. */
+/**
+ * Eén diagram-regel; overal dezelfde. Klikmodel (sessiebesluit 2026-07-12):
+ * klik = eigenschappen in de inspector, dubbelklik = openen (tab) — zoals
+ * in Sparx EA. Rechtsklik biedt beide expliciet.
+ */
 function DiagramRegel({ profiel, diagram, inMap = false }) {
   const actieveTab = useModellerenStore((s) => s.actieveTab);
   const openTab = useModellerenStore((s) => s.openTab);
   const plaatsDiagram = useModellerenStore((s) => s.plaatsDiagram);
   const id = tabId(profiel.id, diagram.id);
   const stijl = effectieveStijl(profiel);
+  const selecteerDiagram = useModellerenStore((s) => s.selecteerDiagram);
   const ctx = (e) =>
     openCtxMenu(e, [
       { label: "Openen", onClick: () => openTab(profiel.id, diagram.id) },
+      { label: "Eigenschappen", onClick: () => selecteerDiagram(profiel.id, diagram.id) },
       ...(inMap ? [{ sep: true }, { label: "Uit de map halen", onClick: () => plaatsDiagram(id, null) }] : []),
     ]);
   return (
     <button
       type="button"
       className={"studio-project__diagram" + (id === actieveTab ? " is-actief" : "")}
-      onClick={() => openTab(profiel.id, diagram.id)}
+      onClick={() => selecteerDiagram(profiel.id, diagram.id)}
+      onDoubleClick={() => openTab(profiel.id, diagram.id)}
       onContextMenu={ctx}
-      title={`${diagram.naam} — ${profiel.label} (sleep naar een map)`}
+      title={`${diagram.naam} — ${profiel.label} (klik = eigenschappen, dubbelklik = openen)`}
       draggable
       onDragStart={(e) => {
         e.dataTransfer.setData(PLAATSING_MIME, id);
@@ -400,13 +412,13 @@ const openCtxMenu = (e, items) => {
  */
 function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
   const elements = profiel.useStore((s) => s.elements);
-  const openTab = useModellerenStore((s) => s.openTab);
   const plaatsDiagram = useModellerenStore((s) => s.plaatsDiagram);
   const element = elements[elementId];
   const et = element
     ? (profiel.descriptor.elementTypes || []).find((t) => t.id === element.elementType)
     : null;
   const [dicht, setDicht] = React.useState(null); // null = volg profiel-default
+  const [bewerk, setBewerk] = React.useState(false);
   if (!element) return null;
 
   const { kinderenVan } = bepaalHierarchie(profiel, elements);
@@ -414,25 +426,62 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
   const isDicht = dicht ?? !!et?.standaardDichtInBoom;
   const stijl = effectieveStijl(profiel);
 
-  // Klik = het element selecteren in zijn profiel: activeer een tab van dat
-  // profiel (liefst een diagram waar het element op staat) en stuur daarna
-  // de selectie via de menuBus (Provider van het profiel luistert).
+  /**
+   * Klik = eigenschappen in de inspector (sessiebesluit 2026-07-12), en het
+   * element focussen op een open diagram als het daarop staat: wissel
+   * hooguit tussen ópen tabs — er wordt niets (her)geopend. Staat het
+   * element nergens op een open diagram van een ander profiel, dan
+   * gebeurt er niets.
+   */
   const selecteer = () => {
-    const s = profiel.useStore.getState();
-    const opDiagram = Object.values(s.diagrams).find((d) =>
-      (d.nodes || []).some((n) => n.elementId === elementId)
+    const ms = useModellerenStore.getState();
+    const st = profiel.useStore.getState();
+    const openTabsVanProfiel = ms.tabs.filter((t) => t.profielId === profiel.id);
+    const tabMetElement = openTabsVanProfiel.find((t) =>
+      (st.diagrams[t.diagramId]?.nodes || []).some((n) => n.elementId === elementId)
     );
-    const doel = opDiagram || s.diagrams[s.actiefDiagramId] || Object.values(s.diagrams)[0];
-    if (doel) openTab(profiel.id, doel.id);
-    setTimeout(() => menuBus.emit(`${profiel.menuPrefix}:selecteer-element`, elementId), 120);
+    const isActiefProfiel = actieveTabInfo().profiel?.id === profiel.id;
+    if (tabMetElement && ms.actieveTab !== tabMetElement.id) ms.activeer(tabMetElement.id);
+    if (tabMetElement || isActiefProfiel) {
+      setTimeout(
+        () => menuBus.emit(`${profiel.menuPrefix}:selecteer-element`, elementId),
+        tabMetElement && ms.actieveTab !== tabMetElement.id ? 120 : 0
+      );
+    }
+  };
+
+  const commitNaam = (naam) => {
+    setBewerk(false);
+    const schoon = (naam || "").trim();
+    if (schoon && schoon !== element.naam) {
+      profiel.useStore.getState().updateElement(elementId, { naam: schoon });
+    }
+  };
+
+  /**
+   * "Uit de map halen" bestaat bewust niet voor elementen (waar zou hij
+   * heen moeten?); wel verwijderen uit het model — achter een bevestiging,
+   * met Ctrl+Z als vangnet (zundo).
+   */
+  const verwijderUitModel = () => {
+    if (
+      !window.confirm(
+        `"${element.naam || elementId}" uit het model verwijderen?\n` +
+          "Dit haalt het element (en zijn connectoren) ook van alle diagrammen. Ctrl+Z maakt het ongedaan."
+      )
+    ) {
+      return;
+    }
+    profiel.useStore.getState().deleteElement(elementId);
+    if (sleutel) plaatsDiagram(sleutel, null);
   };
 
   const ctx = (e) =>
     openCtxMenu(e, [
       { label: "Selecteer in inspector", onClick: selecteer },
-      ...(sleutel
-        ? [{ sep: true }, { label: "Uit de map halen", onClick: () => plaatsDiagram(sleutel, null) }]
-        : []),
+      { label: "Hernoemen", onClick: () => setBewerk(true) },
+      { sep: true },
+      { label: "Verwijderen uit model…", onClick: verwijderUitModel },
     ]);
 
   return (
@@ -445,24 +494,39 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
         ) : (
           <span className="studio-project__caret" />
         )}
-        <button
-          type="button"
-          className="studio-project__diagram studio-project__element"
-          onClick={selecteer}
-          onContextMenu={ctx}
-          title={`${element.naam || elementId} — ${et?.label || "element"} (${profiel.label})`}
-          draggable={!!sleutel}
-          onDragStart={(e) => {
-            if (!sleutel) return;
-            e.dataTransfer.setData(PLAATSING_MIME, sleutel);
-            e.dataTransfer.effectAllowed = "move";
-          }}
-        >
-          <span className="studio-project__regel-profiel" style={{ color: stijl.kleur || "inherit" }}>
-            {et ? <TypeIcoon elementType={et} maat={13} /> : <ProfielIcoon profiel={profiel} />}
-          </span>
-          {element.naam || elementId}
-        </button>
+        {bewerk ? (
+          <input
+            className="studio-project__mapnaam-invoer"
+            defaultValue={element.naam || ""}
+            autoFocus
+            onFocus={(e) => e.target.select()}
+            onBlur={(e) => commitNaam(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitNaam(e.target.value);
+              else if (e.key === "Escape") setBewerk(false);
+            }}
+          />
+        ) : (
+          <button
+            type="button"
+            className="studio-project__diagram studio-project__element"
+            onClick={selecteer}
+            onDoubleClick={() => setBewerk(true)}
+            onContextMenu={ctx}
+            title={`${element.naam || elementId} — ${et?.label || "element"} (${profiel.label})`}
+            draggable={!!sleutel}
+            onDragStart={(e) => {
+              if (!sleutel) return;
+              e.dataTransfer.setData(PLAATSING_MIME, sleutel);
+              e.dataTransfer.effectAllowed = "move";
+            }}
+          >
+            <span className="studio-project__regel-profiel" style={{ color: stijl.kleur || "inherit" }}>
+              {et ? <TypeIcoon elementType={et} maat={13} /> : <ProfielIcoon profiel={profiel} />}
+            </span>
+            {element.naam || elementId}
+          </button>
+        )}
       </div>
       {!isDicht &&
         kinderen.map((kindId) => (
@@ -676,9 +740,25 @@ function ProfielSectie({ profiel }) {
   );
 }
 
+// Scrollpositie van de projectboom, buiten React: de boom is je navigatie
+// en moet blijven staan — ook als de sidebar hermonteert (profielwissel van
+// de actieve tab) of de elementen-sectie eronder verschijnt.
+let _projectScroll = 0;
+
 function Sidebar() {
   useSyncExternalStore(abonneerOpProfieltypen, profieltypenVersie);
   const profielen = getProfieltypen();
+  const scrollRef = React.useRef(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTop = _projectScroll;
+    const onScroll = () => {
+      _projectScroll = el.scrollTop;
+    };
+    el.addEventListener("scroll", onScroll);
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
   const mappen = useModellerenStore((s) => s.mappen);
   const nieuweMap = useModellerenStore((s) => s.nieuweMap);
   const plaatsDiagram = useModellerenStore((s) => s.plaatsDiagram);
@@ -686,8 +766,14 @@ function Sidebar() {
   const tabs = useModellerenStore((s) => s.tabs);
   const verplaatsMap = useModellerenStore((s) => s.verplaatsMap);
   const rootMappen = Object.values(mappen).filter((m) => !m.ouderId);
-  // Droppen op "Niet ingedeeld" haalt een regel uit zijn map.
-  const drop = useDrop({ [PLAATSING_MIME]: (key) => plaatsDiagram(key, null) });
+  // Droppen op "Niet ingedeeld" haalt een diagram uit zijn map. Elementen
+  // niet: die hebben geen "niet ingedeeld"-plek (verwijderen kan wél, via
+  // het contextmenu — met bevestiging).
+  const drop = useDrop({
+    [PLAATSING_MIME]: (key) => {
+      if (!isElementKey(key)) plaatsDiagram(key, null);
+    },
+  });
   // Droppen op de "Mappen"-kop hangt een map terug aan de wortel.
   const dropWortel = useDrop({ [MAP_MIME]: (id) => verplaatsMap(id, null) });
 
@@ -704,7 +790,7 @@ function Sidebar() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
-      <div className="studio-project" style={{ flex: 1, overflow: "auto", minHeight: 0 }}>
+      <div ref={scrollRef} className="studio-project" style={{ flex: 1, overflow: "auto", minHeight: 0 }}>
         <div
           className={"studio-project__kop" + (dropWortel.over ? " is-dropdoel" : "")}
           {...dropWortel.props}
@@ -904,14 +990,72 @@ function Main() {
   );
 }
 
+/**
+ * Eigenschappen-paneel van een diagram (naam bewerkbaar; type readonly —
+ * net als mappen zijn diagrammen "superprofiel"-achtige elementen met
+ * eigen properties; er kan hier altijd meer bij).
+ */
+function DiagramEigenschappen({ profielId, diagramId }) {
+  const profiel = getProfieltype(profielId);
+  const diagram = profiel ? profiel.useStore((s) => s.diagrams[diagramId]) : null;
+  const selecteerDiagram = useModellerenStore((s) => s.selecteerDiagram);
+  if (!profiel || !diagram) return null;
+  const rij = { display: "flex", flexDirection: "row", alignItems: "center", gap: 8, padding: "4px 0", fontSize: 13 };
+  const readonly = { flex: 1, color: "var(--s-fg)", display: "inline-flex", alignItems: "center", gap: 6 };
+  return (
+    <div style={{ padding: 12, color: "var(--s-fg)" }}>
+      <div style={{ fontWeight: 700, marginBottom: 2 }}>{diagram.naam}</div>
+      <div style={{ fontSize: 11, color: "var(--s-fg-muted)", marginBottom: 10 }}>
+        {profiel.diagramTerm === "diagram" ? "Diagram" : `${profiel.diagramTerm} (diagram)`}
+      </div>
+      <label style={rij}>
+        <span style={{ width: 60, color: "var(--s-fg-muted)" }}>naam</span>
+        <input
+          key={diagram.id + diagram.naam}
+          type="text"
+          defaultValue={diagram.naam}
+          onBlur={(e) => {
+            const naam = e.target.value.trim();
+            if (naam && naam !== diagram.naam) profiel.useStore.getState().renameDiagram(diagram.id, naam);
+          }}
+          onKeyDown={(e) => e.key === "Enter" && e.target.blur()}
+          style={{ flex: 1, font: "inherit", fontSize: 13, padding: "3px 6px", border: "1px solid var(--s-border)", borderRadius: 5, background: "transparent", color: "var(--s-fg)" }}
+        />
+      </label>
+      <div style={rij}>
+        <span style={{ width: 60, color: "var(--s-fg-muted)" }}>type</span>
+        <span style={readonly}>
+          <ProfielIcoon profiel={profiel} /> {profiel.label}
+          <code style={{ fontSize: 11, color: "var(--s-fg-muted)" }}>({diagram.diagramType || profiel.descriptor.id})</code>
+        </span>
+      </div>
+      <div style={rij}>
+        <span style={{ width: 60, color: "var(--s-fg-muted)" }}>inhoud</span>
+        <span style={readonly}>{(diagram.nodes || []).length} element(en) op dit diagram</span>
+      </div>
+      <button
+        type="button"
+        onClick={() => selecteerDiagram(null)}
+        style={{ marginTop: 10, font: "inherit", fontSize: 12, padding: "3px 10px", border: "1px solid var(--s-border)", borderRadius: 5, background: "transparent", color: "var(--s-fg-muted)", cursor: "pointer" }}
+      >
+        sluit eigenschappen
+      </button>
+    </div>
+  );
+}
+
 // ── Inspector + Provider: volgen het profiel van de actieve tab ────
 function Inspector() {
   const actieveTab = useModellerenStore((s) => s.actieveTab);
   const tabs = useModellerenStore((s) => s.tabs);
   const mapSelectie = useModellerenStore((s) => s.mapSelectie);
-  // Een geselecteerde map wint: mappen zijn structuur-elementen met eigen
-  // eigenschappen (naam, kleur) — consolidatieplan, "superprofiel"-spoor.
+  const diagramSelectie = useModellerenStore((s) => s.diagramSelectie);
+  // Een geselecteerde map of diagram wint: structuur-elementen met eigen
+  // eigenschappen (naam, kleur, type) — consolidatieplan, "superprofiel"-spoor.
   if (mapSelectie) return <MapEigenschappen mapId={mapSelectie} />;
+  if (diagramSelectie) {
+    return <DiagramEigenschappen profielId={diagramSelectie.profielId} diagramId={diagramSelectie.diagramId} />;
+  }
   const tab = tabs.find((t) => t.id === actieveTab) || null;
   const profiel = tab ? getProfieltype(tab.profielId) : null;
   const ProfielInspector = profiel?.Inspector;
@@ -932,6 +1076,19 @@ function Provider({ children }) {
   const tab = tabs.find((t) => t.id === actieveTab) || null;
   const profiel = tab ? getProfieltype(tab.profielId) : null;
   const P = profiel?.Provider || Fragment;
+  // Element geselecteerd (canvas of boom) → map-/diagram-eigenschappen
+  // loslaten, anders blijven die de inspector bezet houden en lijkt elke
+  // element-klik dood.
+  useEffect(
+    () =>
+      menuBus.on("studio:element-geselecteerd", () => {
+        const s = useModellerenStore.getState();
+        if (s.mapSelectie || s.diagramSelectie) {
+          useModellerenStore.setState({ mapSelectie: null, diagramSelectie: null });
+        }
+      }),
+    []
+  );
   return <P key={profiel?.id || "leeg"}>{children}</P>;
 }
 

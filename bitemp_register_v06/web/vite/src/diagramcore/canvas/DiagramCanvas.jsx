@@ -323,18 +323,36 @@ function CanvasBinnenkant({
     // canvas-selectie. Ongewijzigde prop = gewone rebuild: selectie behouden.
     const selectiePropGewijzigd = selectiePropRef.current !== selectieId;
     selectiePropRef.current = selectieId;
+    // Alleen een échte, nog niet geselecteerde node op dit diagram
+    // rechtvaardigt het vervangen van de canvas-selectie (programmatische
+    // selectie vanuit bv. de projectboom). Connector-ids (geselecteerd via
+    // edge of ASOC-anker), al geselecteerde nodes (gewone canvas-klik) en
+    // elementen die hier niet staan laten de canvas met rust — de
+    // echo-demping in handleSelectionChange voorkomt dat een oude selectie
+    // de context alsnog overschrijft. (Breder ingrijpen liet de selectie
+    // oscilleren.)
+    const gedekt = nodes.some(
+      (n) => n.selected && (n.id === selectieId || n.id === ANKER_PREFIX + selectieId)
+    );
+    const opDitDiagram = flowNodes.some((n) => n.id === selectieId);
+    const programmatisch = selectiePropGewijzigd && !!selectieId && opDitDiagram && !gedekt;
+    // Programmatische selectie van een element dat hier níet staat: haal dan
+    // de oude node-highlight weg — anders lopen boom en canvas uiteen en
+    // "sterft" een klik op de nog geselecteerde node (React Flow meldt geen
+    // wijziging). Edges blijven met rust (zie flipper-les hierboven).
+    const programmatischElders = selectiePropGewijzigd && !!selectieId && !opDitDiagram && !gedekt;
     setNodes((huidige) => {
       const perIdHuidig = new Map(huidige.map((n) => [n.id, n]));
       let geselecteerd = new Set(huidige.filter((n) => n.selected).map((n) => n.id));
-      if (selectiePropGewijzigd && !(selectieId && geselecteerd.has(selectieId))) {
-        // Vervang de selectie door het (eventueel elders wonende) element;
-        // staat het niet op dit diagram, dan deselecteert de canvas. De
+      if (programmatisch) {
+        // Programmatische selectie (bv. klik in de projectboom) wint: de
         // handtekening vooraf melden zodat de React Flow-echo van deze
         // wijziging de context niet overschrijft.
-        geselecteerd = new Set(
-          selectieId && flowNodes.some((n) => n.id === selectieId) ? [selectieId] : []
-        );
-        gemeldeSelectieRef.current = selectieSig([...geselecteerd]);
+        geselecteerd = new Set([selectieId]);
+        gemeldeSelectieRef.current = selectieSig([selectieId]);
+      } else if (programmatischElders && geselecteerd.size) {
+        geselecteerd = new Set();
+        gemeldeSelectieRef.current = selectieSig([]);
       } else {
         // Programmatische selectie (bv. net geplaatst element) ook markeren,
         // anders "verliest" de inspector het element bij de eerstvolgende rebuild.
@@ -359,9 +377,12 @@ function CanvasBinnenkant({
         };
       });
     });
-    // Programmatische element-selectie vervangt ook een hangende
-    // edge-selectie (anders meldt die zich later alsnog bij de context).
-    if (selectiePropGewijzigd && selectieId) {
+    // Alleen bij zo'n echte node-vervanging ruimen we ook een hangende
+    // edge-selectie op (anders meldt die zich later alsnog bij de context).
+    // Bij edge-/connector-selecties en gewone canvas-kliks blijven de edges
+    // met rust — deselecteren van de zojuist aangeklikte edge liet de
+    // selectie flipperen.
+    if (programmatisch) {
       setEdges((hd) =>
         hd.some((e) => e.selected) ? hd.map((e) => (e.selected ? { ...e, selected: false } : e)) : hd
       );
@@ -432,6 +453,28 @@ function CanvasBinnenkant({
       return flowEdges.map((e) => (geselecteerd.has(e.id) ? { ...e, selected: true } : e));
     });
   }, [diagram, gematerialiseerd, bewerkbaar, setEdges, onLabelOffset, onKnikken, maten]);
+
+  // Directe kliks altijd melden, óók als React Flow geen selectie-wijziging
+  // ziet (node stond intern nog geselecteerd terwijl de inspector inmiddels
+  // iets anders toonde via de projectboom — de klik leek dan "dood").
+  const handleNodeClick = useCallback(
+    (_e, node) => {
+      if (!onSelectElement || !node) return;
+      const id = node.id.startsWith(ANKER_PREFIX) ? node.id.slice(ANKER_PREFIX.length) : node.id;
+      gemeldeSelectieRef.current = selectieSig([node.id]);
+      onSelectElement(elements[id] || null);
+    },
+    [onSelectElement, elements]
+  );
+  const handleEdgeClick = useCallback(
+    (_e, edge) => {
+      if (!onSelectElement || !edge) return;
+      const connectorId = edge.data?.connectorId;
+      gemeldeSelectieRef.current = selectieSig([], [edge.id]);
+      onSelectElement(connectorId ? elements[connectorId] || null : null);
+    },
+    [onSelectElement, elements]
+  );
 
   const handleSelectionChange = useCallback(
     ({ nodes: sel, edges: selEdges }) => {
@@ -713,6 +756,8 @@ function CanvasBinnenkant({
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onSelectionChange={handleSelectionChange}
+      onNodeClick={handleNodeClick}
+      onEdgeClick={handleEdgeClick}
       onNodeDragStop={handleNodeDragStop}
       onConnect={handleConnect}
       isValidConnection={isValidConnection}

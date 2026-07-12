@@ -312,13 +312,32 @@ activiteiten-tabel in `docs/STUDIO.md`.
    mappen incl. kleur + plaatsing + open-stand); werkbestand/API volgt.
 4. 🔶 De per-profiel-secties staan als "Niet ingedeeld" onder de mappenboom
    en tonen alleen nog niet-geplaatste diagrammen.
-5. Bediening (2026-07-12): **inline hernoemen** van mappen (dubbelklik of
-   ✎ → invoerveld, Enter/blur = opslaan, Esc = annuleren), **rechtsklik-
-   contextmenu** op mappen (hernoemen/nieuwe submap/eigenschappen/
-   verwijderen), diagram-regels (openen/uit de map halen) en element-regels
-   (selecteer/uit de map halen), en **map-eigenschappen in de inspector**
-   (klik op de mapnaam of contextmenu → Eigenschappen: naam + kleur; de
-   kleur kleurt de map-stip in de boom).
+5. Bediening (2026-07-12): **inline hernoemen** van mappen én elementen
+   (dubbelklik of contextmenu → invoerveld; Enter/blur = opslaan, Esc =
+   annuleren), **rechtsklik-contextmenu** op mappen (hernoemen/nieuwe
+   submap/eigenschappen/verwijderen), diagram-regels (openen/eigenschappen/
+   uit de map halen) en element-regels (selecteer/hernoemen/verwijderen
+   uit model), en **map-eigenschappen in de inspector** (naam + kleur).
+6. **Klikmodel (sessiebesluit 2026-07-12, Sparx-conventie):** klik op een
+   boomregel = **eigenschappen** in de inspector (map, diagram én element);
+   **dubbelklik** op een diagram = openen (tab). Klik op een element
+   focust het bovendien op een **open** diagram waar het op staat (wisselt
+   hooguit tussen open tabs — er wordt niets heropend; staat het nergens
+   open, dan alleen eigenschappen of niets bij een inactief profiel).
+   Elementen kennen géén "uit de map halen" (waar zou hij heen moeten?) —
+   wel **verwijderen uit het model**, achter een bevestiging met
+   Ctrl+Z-vangnet; ook terugslepen naar "Niet ingedeeld" is voor elementen
+   geblokkeerd. Connectoren (associatie, ASOC) zijn nu ook naar de boom te
+   slepen. Toekomstwens: rechtsklik → **"zoek op diagram(men)"**.
+7. Denkpunten focus-doorlevering (sessie 2026-07-12), mogelijk
+   **configureerbaar** maken zoals tools het verschillend doen:
+   (a) boom → diagram (EA: dubbelklik; enkelklik werkt alleen in de boom),
+   (b) diagram → boom (Archi: vanzelf; EA: expliciet "find in tree"),
+   (c) element → inspector (vanzelf, overal — zo werkt het nu).
+   Idee daarbij: klik op een lége canvas toont de **diagram-eigenschappen**
+   (klik op een element de element-eigenschappen).
+   De boom-scrollpositie blijft staan bij tabwissel/hermontage
+   (navigatie-anker; gebouwd 2026-07-12).
 
 **Concept-besluit: een diagram is geen map (2026-07-12).** Een diagram
 *toont* elementen alleen; het maakt het diagram niet uit waar ze in de boom
@@ -328,14 +347,18 @@ dus nooit hiërarchie-onderdeel zijn: in de projectboom is het een gewoon
 chevron-kolom, nooit kinderen). Elementen wonen onder een package (profiel-
 hiërarchie) of onder een map.
 
-**Mappen als "superprofiel"-elementen (sessie 2026-07-12):** mappen zijn
-structuur-elementen die boven de profielen staan — conceptueel een
-*superprofiel* met het map-elementtype, de map∋map-relatie en properties
-(naam, kleur). Besluit voorlopig: **hardcoded structuurelement, maar
-data-vormig** ({id, naam, kleur, ouderId} in de store), zodat een later
-superprofiel-descriptor het kan overnemen zonder migratie. Het superprofiel
-zelf bouwen wordt actueel zodra fase 4 (kruisverbanden) toch
-profiel-overstijgende elementtypen afdwingt. Verwant open punt: de
+**Mappen én diagrammen als "superprofiel"-elementen (sessie 2026-07-12):**
+mappen en diagrammen zijn structuur-elementen die boven de profielen staan —
+conceptueel een *superprofiel* met het map- en diagram-elementtype, de
+map∋map-relatie en hun properties. Beide hebben **eigenschappen in de
+inspector**: mappen naam + kleur; diagrammen naam (bewerkbaar), type
+(readonly: profiel + diagramType-id) en inhoud (aantal elementen op het
+diagram) — via rechtsklik → Eigenschappen; er kan altijd meer bij. Besluit
+voorlopig: **hardcoded structuurelementen, maar data-vormig** (map:
+{id, naam, kleur, ouderId}; diagram: het bestaande diagram-record in de
+profiel-store), zodat een later superprofiel-descriptor ze kan overnemen
+zonder migratie. Het superprofiel zelf bouwen wordt actueel zodra fase 4
+(kruisverbanden) toch profiel-overstijgende elementtypen afdwingt. Verwant open punt: de
 **package-dualiteit** (een UML-/canoniek-package is element én map, zoals in
 EA) — voorlopig behandelen we een package als element bínnen zijn profiel;
 hoe map en package zich verhouden is een denkpunt voor de gebruiker.

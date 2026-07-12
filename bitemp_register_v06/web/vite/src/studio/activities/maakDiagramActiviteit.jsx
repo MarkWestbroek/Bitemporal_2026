@@ -210,6 +210,13 @@ export function maakDiagramActiviteit(opties) {
       useStore.temporal.getState().clear();
     }, [herlaad]);
 
+    // Meld element-selecties aan de buitenwereld: de Modelleren-inspector
+    // laat dan zijn map-/diagram-eigenschappen los (die wonnen anders van
+    // élke element-klik — de inspector leek dood).
+    useEffect(() => {
+      if (selectieId) menuBus.emit("studio:element-geselecteerd");
+    }, [selectieId]);
+
     // Menubalk-acties via de menuBus.
     useEffect(() => {
       const af = [
@@ -915,7 +922,9 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     const [sleepDoel, setSleepDoel] = useState(null);
     const SLEEP_MIME = "application/studio05-element";
     const sleepProps = (el, et) => ({
-      draggable: !et?.isConnector,
+      // Ook connectoren (associatie, ASOC) zijn versleepbaar — naar de
+      // Modelleren-projectboom; binnen de browser landen ze nergens.
+      draggable: true,
       onDragStart: (e) => {
         e.dataTransfer.setData(SLEEP_MIME, JSON.stringify({ elementId: el.id }));
         e.dataTransfer.setData("text/plain", el.naam || el.id);
@@ -944,7 +953,9 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
               if (!rauw) return;
               try {
                 const { elementId } = JSON.parse(rauw);
-                if (elementId) verhangNaarContainer(useStore, elementId, el.id);
+                // Connectoren horen niet in een container verhangen te worden.
+                const bronEt = elementTypesById[elements[elementId]?.elementType];
+                if (elementId && !bronEt?.isConnector) verhangNaarContainer(useStore, elementId, el.id);
               } catch {
                 /* geen geldig sleep-pakketje */
               }
@@ -1429,8 +1440,12 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     // (mini-icoon of stereotype-tekst renderen ze allebei al).
     const [typering, setTypering] = useState(leesTypering);
     const [shapeSetId, setShapeSetId] = useState(leesShapeSet);
-    useEffect(
-      () =>
+    // N.B. beide abonnementen in één effect-body. (Hier zat een venijnige
+    // bug: de typering-subscribe stond per ongeluk op de deps-positie van
+    // useEffect, waardoor hij bij élke render opnieuw registreerde en nooit
+    // opruimde — handler-lek + React-warning "final argument is not an array".)
+    useEffect(() => {
+      const af = [
         menuBus.on(ev("shape-set"), (setId) => {
           try {
             window.localStorage.setItem(shapeSetSleutel, setId || "");
@@ -1450,8 +1465,9 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           // Zonder ververs blijft het menu-vinkje op de vórige stand hangen.
           setTimeout(() => menuBus.emit("menu:ververs"), 0);
         }),
-      []
-    );
+      ];
+      return () => af.forEach((off) => off());
+    }, []);
 
     // Spiegel het studio-thema naar body[data-ide-theme] zolang deze activiteit
     // actief is: hergebruikte umleditor-componenten (o.a. de CEL-ExpressieEditor)
