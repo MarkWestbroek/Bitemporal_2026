@@ -289,6 +289,21 @@ activiteiten-tabel in `docs/STUDIO.md`.
    overstijgend aspect een expliciete plek geven in de nieuwe structuur
    (zie ook "algemene aspecten" bovenin dit plan).
 
+   **Meerdere documenten per klassieke editor (2026-07-13):** BPMN en DMN
+   hebben `documentenBeheer` — ＋ in de sectie (en LegeStaat) maakt een
+   nieuw document, rechtsklik → Verwijderen… gooit er een weg, en elk
+   document heeft zijn **eigen inhoud** (BPMN-XML resp. DRD-XML+beslistabel),
+   per document bewaard in localStorage en gewisseld bij tab-/documentwissel
+   via een *documentkoppeling* ({haal, zet}) die de Provider van de
+   activiteit registreert (`activiteitAlsProfieltype`:
+   `registreerDocumentKoppeling`). De elementen van zo'n document leven in
+   de eigen editor (bpmn.io/dmn-js), níet in de projectboom — bewust; de
+   IDE v1 en Berichtdefinities blijven één vast document (de IDE heeft zijn
+   eigen elementen-tree en bewerkt hét model). Vervolg-idee (sessie
+   2026-07-13): het metamodel zo uitbreiden dat BPMN gewoon op de eigen
+   motor getekend kan worden; en de BPMN/DMN-documentinhoud meenemen in het
+   project-werkbestand.
+
 ### Fase 3 — Projectbrowser (weken) — v0 gebouwd 2026-07-12
 > **Vooraf (2026-07-12): visuele identiteit is nu data.** Kleur en embleem
 > per profieltype zijn bewerkbaar in **Studio-instellingen → Profieltypen**

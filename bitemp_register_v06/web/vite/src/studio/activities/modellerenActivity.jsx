@@ -110,6 +110,12 @@ export const useModellerenStore = create((set, get) => ({
   /** Maak de tab actief én zet het diagram actief in zijn profiel-store. */
   activeer: (id) => {
     const tab = get().tabs.find((t) => t.id === id);
+    // Profielwissel op komst? Laat de vertrekkende klassieke editor zijn
+    // actieve document eerst bewaren (de editor leeft nog tot de remount).
+    const vorige = get().tabs.find((t) => t.id === get().actieveTab);
+    if (vorige && tab && vorige.profielId !== tab.profielId) {
+      getProfieltype(vorige.profielId)?.useStore.getState().bewaarActieveInhoud?.();
+    }
     set((s) => {
       const next = { ...s, actieveTab: id };
       schrijfOpslag(next);
@@ -391,6 +397,21 @@ function DiagramRegel({ profiel, diagram, inMap = false }) {
         }),
       },
       ...(inMap ? [{ sep: true }, { label: "Uit de map halen", onClick: () => verplaats(null) }] : []),
+      // Klassieke editors met documentenbeheer (BPMN/DMN): document weggooien.
+      ...(profiel.documentenBeheer
+        ? [
+            { sep: true },
+            {
+              label: "Verwijderen…",
+              onClick: () => {
+                if (window.confirm(`"${diagram.naam}" verwijderen? De inhoud van dit document gaat verloren.`)) {
+                  profiel.useStore.getState().verwijderDiagram(diagram.id);
+                  plaatsDiagram(id, null);
+                }
+              },
+            },
+          ]
+        : []),
     ]);
   return (
     <button
@@ -1359,7 +1380,7 @@ function DiagramEigenschappen({ profielId, diagramId }) {
           <code style={{ fontSize: 11, color: "var(--s-fg-muted)" }}>({diagram.diagramType || profiel.descriptor.id})</code>
         </span>
       </div>
-      {!profiel.vasteDocumenten && (
+      {!profiel.klassiek && (
         <div style={rij}>
           <span style={{ width: 60, color: "var(--s-fg-muted)" }}>inhoud</span>
           <span style={readonly}>{(diagram.nodes || []).length} element(en) op dit diagram</span>
@@ -1454,9 +1475,9 @@ function exporteerProject() {
   const s = useModellerenStore.getState();
   const profielen = {};
   for (const p of getProfieltypen()) {
-    // Vaste documenten (klassieke editors via de shim) hebben hun inhoud
-    // in eigen stores/backends — niets te exporteren hier.
-    if (p.vasteDocumenten) continue;
+    // Klassieke editors (shim) hebben hun inhoud in eigen stores/opslag —
+    // niets te exporteren hier (BPMN/DMN-documentinhoud volgt later).
+    if (p.klassiek) continue;
     const st = p.useStore.getState();
     if (!Object.keys(st.elements).length && !Object.keys(st.diagrams).length) continue;
     profielen[p.id] = {

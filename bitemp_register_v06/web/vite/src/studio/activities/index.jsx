@@ -114,13 +114,17 @@ registreerActiviteitAlsProfieltype(umlActivity, {
   documenten: [{ id: "uml-model", naam: "Canoniek model IDE (v1)" }],
   eigenSchil: true,
 });
+// BPMN en DMN: meerdere documenten, elk met eigen (per document bewaarde)
+// inhoud — de elementen leven in bpmn.io/dmn-js, niet in de projectboom.
 registreerActiviteitAlsProfieltype(dmnActivity, {
   kleur: "#a78bfa",
   documenten: [{ id: "dmn-model", naam: "DMN-model (DRD + tabel)" }],
+  documentenBeheer: true,
 });
 registreerActiviteitAlsProfieltype(bpmnActivity, {
   kleur: "#f472b6",
   documenten: [{ id: "bpmn-proces", naam: "BPMN-proces" }],
+  documentenBeheer: true,
 });
 registreerActiviteitAlsProfieltype(berichtActivity, {
   kleur: "#34d399",

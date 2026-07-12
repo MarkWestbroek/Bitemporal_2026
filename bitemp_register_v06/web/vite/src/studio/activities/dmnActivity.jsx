@@ -20,6 +20,7 @@ import DmnPropertiesPanel from "../../dmn/DmnPropertiesPanel";
 import { IconDMN } from "../icons";
 import { menuBus } from "../menuBus";
 import { apiBase, downloadJson, downloadTekst } from "../studioUtils";
+import { registreerDocumentKoppeling } from "./activiteitAlsProfieltype.jsx";
 
 const Ctx = createContext(null);
 
@@ -57,6 +58,26 @@ function DmnProvider({ children }) {
     ];
     return () => af.forEach((off) => off());
   }, [activeTab]);
+
+  // Documentkoppeling voor de Modelleren-host: meerdere DMN-documenten,
+  // per document bewaard (inhoud = DRD-XML + beslistabel; null = starter).
+  useEffect(
+    () =>
+      registreerDocumentKoppeling("dmn", {
+        haal: async () => ({
+          xml: (await modelerRef.current?.exportXML()) || null,
+          tabel: tableRef.current,
+        }),
+        zet: async (inhoud) => {
+          setTable(inhoud?.tabel || nieuweBeslistabel("Bepaal ingezetene-status"));
+          setAfgeleidVoorstel(null);
+          try {
+            await modelerRef.current?.importXML(inhoud?.xml || STARTER_DMN_XML);
+          } catch { /* ongeldige XML in opslag — starter blijft staan */ }
+        },
+      }),
+    []
+  );
 
   const handleViewChange = useCallback((view) => {
     // Update de lijst met beschikbare views wanneer de Modeler views verandert
