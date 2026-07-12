@@ -71,6 +71,20 @@ const tabId = (profielId, diagramId) => `${profielId}::${diagramId}`;
 
 const opgeslagen = leesOpslag();
 
+// ── Undo/redo voor de projectstructuur (mappen + plaatsingen) ───────
+// Eigen stapel, los van de model-undo per profiel: Ctrl+Z met de focus in
+// de boom draait boom-acties terug (map verslept, plaatsing, hernoemen, …),
+// Ctrl+Z op de canvas blijft de model-undo van het profiel.
+const _structuurVerleden = [];
+const _structuurToekomst = [];
+const structuurFoto = (s) => ({ mappen: s.mappen, plaatsing: s.plaatsing });
+/** Vastleggen vóór een structuur-wijziging (wist de redo-stapel). */
+const legStructuurVast = (s) => {
+  _structuurVerleden.push(structuurFoto(s));
+  if (_structuurVerleden.length > 60) _structuurVerleden.shift();
+  _structuurToekomst.length = 0;
+};
+
 export const useModellerenStore = create((set, get) => ({
   /** @type {{id:string, profielId:string, diagramId:string}[]} */
   tabs: opgeslagen.tabs || [],
@@ -139,6 +153,7 @@ export const useModellerenStore = create((set, get) => ({
   nieuweMap: (naam, ouderId = null) => {
     const id = `map_${Date.now()}`;
     set((s) => {
+      legStructuurVast(s);
       // volgorde = handmatige sortering per niveau; nieuw komt achteraan.
       const mappen = { ...s.mappen, [id]: { id, naam, ouderId, volgorde: Date.now() } };
       const next = { ...s, mappen };
@@ -160,6 +175,7 @@ export const useModellerenStore = create((set, get) => ({
       const buurIdx = idx + (richting === "omhoog" ? -1 : 1);
       const buur = broers[buurIdx];
       if (!buur) return {};
+      legStructuurVast(s);
       const mappen = {
         ...s.mappen,
         [id]: { ...m, volgorde: buur.volgorde || 0 },
@@ -173,7 +189,8 @@ export const useModellerenStore = create((set, get) => ({
   hernoemMap: (id, naam) =>
     set((s) => {
       const m = s.mappen[id];
-      if (!m) return {};
+      if (!m || m.naam === naam) return {};
+      legStructuurVast(s);
       const mappen = { ...s.mappen, [id]: { ...m, naam } };
       const next = { ...s, mappen };
       schrijfOpslag(next);
@@ -185,6 +202,7 @@ export const useModellerenStore = create((set, get) => ({
     set((s) => {
       const m = s.mappen[id];
       if (!m) return {};
+      legStructuurVast(s);
       const mappen = { ...s.mappen, [id]: { ...m, kleur: kleur || undefined } };
       const next = { ...s, mappen };
       schrijfOpslag(next);
@@ -226,6 +244,7 @@ export const useModellerenStore = create((set, get) => ({
     set((s) => {
       const weg = s.mappen[id];
       if (!weg) return {};
+      legStructuurVast(s);
       if (s.mapSelectie === id) queueMicrotask(() => useModellerenStore.setState({ mapSelectie: null }));
       const mappen = {};
       for (const [k, m] of Object.entries(s.mappen)) {
@@ -263,6 +282,7 @@ export const useModellerenStore = create((set, get) => ({
         cursor = s.mappen[cursor]?.ouderId || null;
       }
       // Van niveau gewisseld → achteraan in de nieuwe ouder.
+      legStructuurVast(s);
       const mappen = { ...s.mappen, [id]: { ...m, ouderId: ouderId || null, volgorde: Date.now() } };
       const next = { ...s, mappen };
       schrijfOpslag(next);
@@ -272,12 +292,34 @@ export const useModellerenStore = create((set, get) => ({
   /** Plaats (of ont-plaats met mapId null) een diagram in een map. */
   plaatsDiagram: (key, mapId) =>
     set((s) => {
+      if ((s.plaatsing[key] || null) === (mapId || null)) return {};
+      legStructuurVast(s);
       const plaatsing = { ...s.plaatsing };
       if (mapId) plaatsing[key] = mapId;
       else delete plaatsing[key];
       const next = { ...s, plaatsing };
       schrijfOpslag(next);
       return { plaatsing };
+    }),
+
+  /** Ctrl+Z / Ctrl+Y op de boom: structuur-undo/redo (mappen + plaatsing). */
+  structuurUndo: () =>
+    set((s) => {
+      const vorige = _structuurVerleden.pop();
+      if (!vorige) return {};
+      _structuurToekomst.push(structuurFoto(s));
+      const next = { ...s, ...vorige };
+      schrijfOpslag(next);
+      return vorige;
+    }),
+  structuurRedo: () =>
+    set((s) => {
+      const volgende = _structuurToekomst.pop();
+      if (!volgende) return {};
+      _structuurVerleden.push(structuurFoto(s));
+      const next = { ...s, ...volgende };
+      schrijfOpslag(next);
+      return volgende;
     }),
 }));
 
@@ -767,16 +809,21 @@ function Map_({ map, diepte }) {
     [PLAATSING_MIME]: (data) => data.split("\n").forEach((key) => plaatsDiagram(key, map.id)),
     // Andere map: verhangen (met cyclus-check in de store).
     [MAP_MIME]: (id) => verplaatsMap(id, map.id),
-    // Element uit de ElementenBrowser (van het actieve tab-profiel). Een
+    // Element(en) uit de ElementenBrowser (van het actieve tab-profiel);
+    // een Ctrl-klik-multiselectie komt als bundel (elementIds). Een
     // hiërarchie-kind (GE) kan niet los geplaatst worden: we plaatsen zijn
     // top-voorouder (ENT) — de kinderen reizen als boomregels vanzelf mee.
     [ELEMENT_MIME]: (rauw) => {
       try {
-        const { elementId } = JSON.parse(rauw);
+        const { elementId, elementIds } = JSON.parse(rauw);
         const { profiel } = actieveTabInfo();
-        if (!elementId || !profiel) return;
+        if (!profiel) return;
+        const ids = elementIds?.length ? elementIds : elementId ? [elementId] : [];
+        if (!ids.length) return;
         const { ouderVan } = bepaalHierarchie(profiel, profiel.useStore.getState().elements);
-        plaatsDiagram(elementKey(profiel.id, topVoorouder(ouderVan, elementId)), map.id);
+        for (const id of new Set(ids.map((eid) => topVoorouder(ouderVan, eid)))) {
+          plaatsDiagram(elementKey(profiel.id, id), map.id);
+        }
       } catch { /* ignore */ }
     },
   });
@@ -1011,8 +1058,41 @@ function Sidebar() {
     if (naam) nieuweMap(naam);
   };
 
+  // Ctrl+Z / Ctrl+Y met de focus in de boom = structuur-undo/redo.
+  // stopPropagation zodat de model-undo van het actieve profiel (globale
+  // keydown-listener) niet óók afgaat.
+  const structuurUndo = useModellerenStore((s) => s.structuurUndo);
+  const structuurRedo = useModellerenStore((s) => s.structuurRedo);
+  const onKey = (e) => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    const doel = e.target;
+    if (doel && (doel.tagName === "INPUT" || doel.tagName === "TEXTAREA" || doel.isContentEditable)) return;
+    const k = e.key.toLowerCase();
+    if (k === "z" && !e.shiftKey) {
+      e.preventDefault();
+      e.stopPropagation();
+      structuurUndo();
+    } else if (k === "y" || (k === "z" && e.shiftKey)) {
+      e.preventDefault();
+      e.stopPropagation();
+      structuurRedo();
+    }
+  };
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0, outline: "none" }}
+      onKeyDown={onKey}
+      // Elke muisklik in de boom legt de toetsenbord-focus óp de boom, zodat
+      // Ctrl+Z/Ctrl+Y daar landen (een klik op een span/mapnaam focust
+      // anders niets en de toetsen vielen op <body>). Invoervelden houden
+      // hun eigen focus.
+      tabIndex={-1}
+      onMouseDown={(e) => {
+        if (e.target.closest && e.target.closest("input, textarea")) return;
+        e.currentTarget.focus({ preventScroll: true });
+      }}
+    >
       <div
         ref={scrollRef}
         className="studio-project"

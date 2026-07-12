@@ -347,6 +347,14 @@ activiteiten-tabel in `docs/STUDIO.md`.
      open, scrollt ernaartoe en laat de regel oplichten (via de
      top-voorouder; menuBus "studio:zoek-in-boom"). Element zonder
      map-plek: no-op (vervolg: elementen-boom laten oplichten).
+   - **Structuur-undo (Ctrl+Z/Ctrl+Y in de boom)**: eigen undo/redo-stapel
+     voor mappen + plaatsingen (verslepen, hernoemen, kleur, volgorde,
+     aanmaken/verwijderen, plaatsen), los van de model-undo per profiel —
+     de boom vangt de focus bij elke muisklik, en stopPropagation houdt de
+     canvas-undo erbuiten.
+   - **Ctrl-klik multiselect óók in de elementen-onderboom** (0.5-browser):
+     gemarkeerde elementen slepen als bundel naar een map (elementIds in
+     het sleep-pakketje; top-voorouder per element).
 8. Denkpunten focus-doorlevering (sessie 2026-07-12), mogelijk
    **configureerbaar** maken zoals tools het verschillend doen:
    (a) boom → diagram (EA: dubbelklik; enkelklik werkt alleen in de boom),

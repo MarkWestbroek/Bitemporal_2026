@@ -217,11 +217,11 @@
 .studio-ctxmenu__leeg { padding: 6px 10px; font-size: 12px; color: var(--s-fg-muted); font-style: italic; }
 .studio-ctxmenu__item { white-space: pre; } /* inspringing in "Verplaats naar" */
 
-/* Ctrl-klik multiselectie in de projectboom. */
+/* Ctrl-klik multiselectie in de projectboom (duidelijk zichtbaar). */
 .studio-project__diagram.is-multi {
   outline: 1.5px solid var(--s-accent, #4f46e5);
   outline-offset: -1.5px;
-  background: var(--s-hover);
+  background: rgba(99, 102, 241, 0.22);
 }
 
 /* "Zoek in projectboom": regel licht even op. */

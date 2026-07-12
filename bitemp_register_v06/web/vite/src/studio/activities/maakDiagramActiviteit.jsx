@@ -843,6 +843,8 @@ export function maakDiagramActiviteit(opties) {
     const { selectieId, setSelectieId, layoutApiRef } = useContext(Ctx);
     const [zoek, setZoek] = useState("");
     const [dicht, setDicht] = useState({});
+    // Ctrl-klik multiselect: samen (als bundel) naar de projectboom slepen.
+    const [multiIds, setMultiIds] = useState(() => new Set());
     // In-/uitklappen van boomrijen (per element-id, alleen deze sessie).
     const [ingeklapt, setIngeklapt] = useState({});
     // Rechtsklik-menu op boomrijen (vgl. de IDE-ProjectBrowser).
@@ -1069,7 +1071,25 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
         <div key={el.id}>
           <div
             {...sleepProps(el, et)}
-            onClick={() => {
+            onDragStart={(e) => {
+              // Multiselectie sleept als bundel (elementIds); enkel element
+              // blijft compatibel via elementId.
+              const ids = multiIds.has(el.id) ? [...multiIds] : [el.id];
+              e.dataTransfer.setData(SLEEP_MIME, JSON.stringify({ elementId: el.id, elementIds: ids }));
+              e.dataTransfer.setData("text/plain", el.naam || el.id);
+              e.dataTransfer.effectAllowed = "copyMove";
+            }}
+            onClick={(e) => {
+              if (e.ctrlKey || e.metaKey) {
+                setMultiIds((prev) => {
+                  const n = new Set(prev);
+                  if (n.has(el.id)) n.delete(el.id);
+                  else n.add(el.id);
+                  return n;
+                });
+                return;
+              }
+              if (multiIds.size) setMultiIds(new Set());
               setSelectieId(el.id);
               if (zichtbaar) layoutApiRef.current?.focusNode?.(el.id);
             }}
@@ -1083,8 +1103,18 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
               borderRadius: 6,
               cursor: "pointer",
               color: zichtbaar ? "var(--s-fg)" : "var(--s-fg-muted)",
-              background: el.id === selectieId ? "var(--s-hover)" : "transparent",
-              outline: sleepDoel === el.id ? "1px dashed var(--s-accent, #6366f1)" : "none",
+              background: multiIds.has(el.id)
+                ? "rgba(99, 102, 241, 0.22)"
+                : el.id === selectieId
+                  ? "var(--s-hover)"
+                  : "transparent",
+              outline:
+                sleepDoel === el.id
+                  ? "1px dashed var(--s-accent, #6366f1)"
+                  : multiIds.has(el.id)
+                    ? "1.5px solid var(--s-accent, #6366f1)"
+                    : "none",
+              outlineOffset: -1.5,
             }}
           >
             <span
