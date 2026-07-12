@@ -302,6 +302,25 @@ export const useModellerenStore = create((set, get) => ({
       return { plaatsing };
     }),
 
+  /** Vervang de projectstructuur (project-werkbestand-import). */
+  laadStructuur: ({ mappen, plaatsing, tabs, actieveTab }) =>
+    set((s) => {
+      legStructuurVast(s);
+      const next = {
+        ...s,
+        mappen: mappen || {},
+        plaatsing: plaatsing || {},
+        tabs: tabs || [],
+        actieveTab: actieveTab || null,
+        mapSelectie: null,
+        diagramSelectie: null,
+        multiSelectie: [],
+      };
+      schrijfOpslag(next);
+      menuBus.emit("menu:ververs");
+      return next;
+    }),
+
   /** Ctrl+Z / Ctrl+Y op de boom: structuur-undo/redo (mappen + plaatsing). */
   structuurUndo: () =>
     set((s) => {
@@ -1400,12 +1419,119 @@ function Provider({ children }) {
   return <P key={profiel?.id || "leeg"}>{children}</P>;
 }
 
-/** Menubalk = de menu's van het profiel van de actieve tab. */
+// ── Project-werkbestand: de hele boom + alle profiel-sandboxes als JSON ──
+// Eerste trede van "projectstructuur voorbij localStorage" (fase 3.3):
+// deelbaar, back-upbaar, en de vorm die straks naar de API kan.
+
+function exporteerProject() {
+  const s = useModellerenStore.getState();
+  const profielen = {};
+  for (const p of getProfieltypen()) {
+    const st = p.useStore.getState();
+    if (!Object.keys(st.elements).length && !Object.keys(st.diagrams).length) continue;
+    profielen[p.id] = {
+      diagramTypeId: st.diagramTypeId,
+      elements: st.elements,
+      // Viewports terug in de diagram-entries: laadModel splitst ze weer af.
+      diagrams: Object.fromEntries(
+        Object.entries(st.diagrams).map(([id, d]) => [
+          id,
+          st.viewports?.[id] ? { ...d, viewport: st.viewports[id] } : d,
+        ])
+      ),
+      actiefDiagramId: st.actiefDiagramId,
+      meta: st.meta,
+    };
+  }
+  const data = {
+    formaat: "studio-project",
+    versie: 1,
+    geexporteerd: new Date().toISOString(),
+    structuur: { mappen: s.mappen, plaatsing: s.plaatsing },
+    tabs: s.tabs,
+    actieveTab: s.actieveTab,
+    profielen,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `studio-project-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importeerProjectTekst(tekst) {
+  let data;
+  try {
+    data = JSON.parse(tekst);
+  } catch {
+    window.alert("Dit is geen geldig JSON-bestand.");
+    return;
+  }
+  if (data?.formaat !== "studio-project") {
+    window.alert("Dit is geen project-werkbestand (formaat 'studio-project' ontbreekt).");
+    return;
+  }
+  const profielIds = Object.keys(data.profielen || {});
+  const onbekend = profielIds.filter((pid) => !getProfieltype(pid));
+  if (
+    !window.confirm(
+      "Project importeren?\n\nDit vervangt de projectstructuur (mappen, plaatsingen, tabs) én de inhoud van deze profielen:\n" +
+        `  ${profielIds.filter((pid) => getProfieltype(pid)).join(", ") || "(geen)"}` +
+        (onbekend.length ? `\n\nOnbekend hier (overgeslagen): ${onbekend.join(", ")}` : "")
+    )
+  ) {
+    return;
+  }
+  for (const [pid, inhoud] of Object.entries(data.profielen || {})) {
+    const p = getProfieltype(pid);
+    if (!p) continue;
+    p.useStore.getState().laadModel(inhoud);
+    p.useStore.temporal?.getState().clear();
+  }
+  // Tabs alleen behouden als hun profiel + diagram na de import bestaan.
+  const tabs = (data.tabs || []).filter((t) => {
+    const p = getProfieltype(t.profielId);
+    return p && !!p.useStore.getState().diagrams[t.diagramId];
+  });
+  useModellerenStore.getState().laadStructuur({
+    mappen: data.structuur?.mappen,
+    plaatsing: data.structuur?.plaatsing,
+    tabs,
+    actieveTab: tabs.some((t) => t.id === data.actieveTab) ? data.actieveTab : tabs[0]?.id || null,
+  });
+}
+
+function kiesEnImporteerProject() {
+  const inp = document.createElement("input");
+  inp.type = "file";
+  inp.accept = "application/json,.json";
+  inp.onchange = () => {
+    const f = inp.files?.[0];
+    if (!f) return;
+    f.text().then(importeerProjectTekst).catch((e) => window.alert(`Lezen mislukt: ${e}`));
+  };
+  inp.click();
+}
+
+/** Menubalk = eigen Project-menu + de menu's van het profiel van de actieve tab. */
 function menus(ctx) {
+  const projectMenu = {
+    id: "project",
+    label: "Project",
+    items: [
+      { id: "proj-export", label: "Exporteer project (structuur + modellen)…", onClick: exporteerProject },
+      { id: "proj-import", label: "Importeer project…", onClick: kiesEnImporteerProject },
+    ],
+  };
   const { profiel } = actieveTabInfo();
-  if (!profiel) return [];
-  const ruw = typeof profiel.menus === "function" ? profiel.menus(ctx) : profiel.menus;
-  return Array.isArray(ruw) ? ruw : [];
+  const ruw = profiel
+    ? typeof profiel.menus === "function"
+      ? profiel.menus(ctx)
+      : profiel.menus
+    : [];
+  return [projectMenu, ...(Array.isArray(ruw) ? ruw : [])];
 }
 
 export default {

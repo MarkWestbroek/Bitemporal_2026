@@ -250,6 +250,16 @@ te wijzigen.
 > **elementen** zijn uit de elementen-boom **naar mappen te slepen** en
 > een klik erop heropent zonodig een tab van hun profiel en selecteert ze
 > in de inspector (menuBus `<profiel>:selecteer-element`).
+>
+> **Project-werkbestand (2026-07-12):** menu **Project →
+> Exporteer/Importeer project…** — één JSON ("studio-project" v1) met de
+> projectstructuur (mappen, plaatsingen, tabs) én de inhoud van alle
+> niet-lege profiel-sandboxes; import vervangt na bevestiging (onbekende
+> profielen overgeslagen). Verder: klikmodel (klik = eigenschappen,
+> dubbelklik = openen), structuur-undo (Ctrl+Z/Y in de boom, los van de
+> model-undo), Ctrl-klik-multiselect (boom én elementen-browser, bundel-
+> sleep), contextmenu's met "Verplaats naar ▸", handmatige mapvolgorde,
+> auto-scroll bij slepen en "Zoek in projectboom" vanaf de canvas.
 
 | Groep        | Functie (label)    | Status   | Hergebruikt                        |
 |--------------|--------------------|----------|------------------------------------|

@@ -309,7 +309,16 @@ activiteiten-tabel in `docs/STUDIO.md`.
    **GE verhangen naar een andere ENT** als bewuste model-operatie achter
    een waarschuwing (raakt alle diagrammen — die moeten worden nagelopen).
 3. 🔶 Projectstructuur persistent in localStorage (`studio-modelleren`:
-   mappen incl. kleur + plaatsing + open-stand); werkbestand/API volgt.
+   mappen incl. kleur + plaatsing + open-stand). **Project-werkbestand
+   (2026-07-12):** menu **Project → Exporteer/Importeer project…** in
+   Modelleren — één JSON (formaat "studio-project" v1) met de structuur
+   (mappen + plaatsingen + tabs) én de volledige inhoud van alle
+   niet-lege profiel-sandboxes (elements/diagrams incl. viewports/meta).
+   Import vervangt na bevestiging; onbekende profielen worden gemeld en
+   overgeslagen; tabs worden gefilterd op bestaande diagrammen; de
+   undo-histories worden gewist. Hiermee is een project deelbaar en niet
+   aan localStorage gebonden — en dit is de vorm die straks naar de API
+   kan (API-persistentie is het resterende deel van deze stap).
 4. 🔶 De per-profiel-secties staan als "Niet ingedeeld" onder de mappenboom
    en tonen alleen nog niet-geplaatste diagrammen.
 5. Bediening (2026-07-12): **inline hernoemen** van mappen én elementen
