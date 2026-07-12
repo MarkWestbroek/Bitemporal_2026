@@ -215,6 +215,9 @@ export function maakDiagramActiviteit(opties) {
       const af = [
         menuBus.on(ev("undo"), () => useStore.temporal.getState().undo()),
         menuBus.on(ev("redo"), () => useStore.temporal.getState().redo()),
+        // Externe selectie (bv. klik op een element in de Modelleren-
+        // projectboom): selecteer in de inspector van dit profiel.
+        menuBus.on(ev("selecteer-element"), (elementId) => setSelectieId(elementId || null)),
         menuBus.on(ev("nieuw-diagram"), () => {
           const naam = window.prompt(`Naam van het nieuwe ${diagramTerm}:`, `Nieuw ${diagramTerm}`);
           if (!naam) return;

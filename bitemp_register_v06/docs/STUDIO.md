@@ -245,6 +245,11 @@ te wijzigen.
 > mappenboom staat de **elementen-boom van het actieve tab-profiel** (de
 > bestaande 0.5-ElementenBrowser: zoekveld, hiërarchie, ＋ naar het actieve
 > diagram) — per profieltype geregistreerd en wisselend met de tab.
+> Mappen zijn te **hernoemen** (✎/dubbelklik) en zelf te **verslepen**
+> (nesten, of via de "Mappen"-kop terug naar de wortel; cycli geweigerd);
+> **elementen** zijn uit de elementen-boom **naar mappen te slepen** en
+> een klik erop heropent zonodig een tab van hun profiel en selecteert ze
+> in de inspector (menuBus `<profiel>:selecteer-element`).
 
 | Groep        | Functie (label)    | Status   | Hergebruikt                        |
 |--------------|--------------------|----------|------------------------------------|

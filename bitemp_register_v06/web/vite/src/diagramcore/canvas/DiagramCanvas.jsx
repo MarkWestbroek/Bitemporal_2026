@@ -18,7 +18,7 @@
  * Edges = geïmporteerde presentatie-edges (diagram.edges, fase 1-adapter)
  *       + gematerialiseerde connector-elementen (materialiseerConnectoren).
  */
-import { useMemo, useCallback, useEffect, useImperativeHandle, useState } from "react";
+import { useMemo, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -198,6 +198,16 @@ function CanvasBinnenkant({
   // (posities gaan bij dragstop via onNodePositie terug).
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
 
+  // Programmatische selectie (bv. klik in een projectboom) vs. canvas-echo:
+  // selectiePropRef ziet wanneer de selectieId-prop wijzigt; gemeldeSelectieRef
+  // onthoudt de laatst gemelde/gezette selectie-handtekening zodat
+  // handleSelectionChange geen oude canvas-selectie terug de context in duwt
+  // (dat hield elke nieuwe boomselectie op de eerste geselecteerde vast).
+  const selectiePropRef = useRef(selectieId);
+  const gemeldeSelectieRef = useRef("");
+  const selectieSig = (nodeIds, edgeIds = []) =>
+    nodeIds.slice().sort().join("|") + "//" + edgeIds.slice().sort().join("|");
+
   // Gemeten node-maten (React Flow): de kortste-weg-keuze rekent daarmee in
   // plaats van met de 200×80-schatting — anders kiest hij bij brede/lage
   // nodes de verkeerde zijde (Marks normaliseer-melding, 2026-07-04).
@@ -308,14 +318,30 @@ function CanvasBinnenkant({
     // ("trying to drag a node that is not initialized") bij slepen tijdens
     // dat venster, en incidenteel een (transient) leeg canvas doordat de
     // hermeting alles verborg.
+    // Wijziging van de selectieId-prop = programmatische selectie (boom,
+    // inspector, net geplaatst element): die wint dan van de bewaarde
+    // canvas-selectie. Ongewijzigde prop = gewone rebuild: selectie behouden.
+    const selectiePropGewijzigd = selectiePropRef.current !== selectieId;
+    selectiePropRef.current = selectieId;
     setNodes((huidige) => {
       const perIdHuidig = new Map(huidige.map((n) => [n.id, n]));
-      const geselecteerd = new Set(huidige.filter((n) => n.selected).map((n) => n.id));
-      // Programmatische selectie (bv. net geplaatst element) ook markeren,
-      // anders "verliest" de inspector het element bij de eerstvolgende rebuild.
-      if (selectieId && !huidige.length) geselecteerd.add(selectieId);
-      if (selectieId && flowNodes.some((n) => n.id === selectieId) && geselecteerd.size === 0) {
-        geselecteerd.add(selectieId);
+      let geselecteerd = new Set(huidige.filter((n) => n.selected).map((n) => n.id));
+      if (selectiePropGewijzigd && !(selectieId && geselecteerd.has(selectieId))) {
+        // Vervang de selectie door het (eventueel elders wonende) element;
+        // staat het niet op dit diagram, dan deselecteert de canvas. De
+        // handtekening vooraf melden zodat de React Flow-echo van deze
+        // wijziging de context niet overschrijft.
+        geselecteerd = new Set(
+          selectieId && flowNodes.some((n) => n.id === selectieId) ? [selectieId] : []
+        );
+        gemeldeSelectieRef.current = selectieSig([...geselecteerd]);
+      } else {
+        // Programmatische selectie (bv. net geplaatst element) ook markeren,
+        // anders "verliest" de inspector het element bij de eerstvolgende rebuild.
+        if (selectieId && !huidige.length) geselecteerd.add(selectieId);
+        if (selectieId && flowNodes.some((n) => n.id === selectieId) && geselecteerd.size === 0) {
+          geselecteerd.add(selectieId);
+        }
       }
       return flowNodes.map((n) => {
         const oud = perIdHuidig.get(n.id);
@@ -333,6 +359,13 @@ function CanvasBinnenkant({
         };
       });
     });
+    // Programmatische element-selectie vervangt ook een hangende
+    // edge-selectie (anders meldt die zich later alsnog bij de context).
+    if (selectiePropGewijzigd && selectieId) {
+      setEdges((hd) =>
+        hd.some((e) => e.selected) ? hd.map((e) => (e.selected ? { ...e, selected: false } : e)) : hd
+      );
+    }
   }, [diagram, elements, lookups, gematerialiseerd, verrijk, setNodes, bewerkbaar, onNodeSize, selectieId]);
 
   // Edges óók als interne React Flow-state: edge-selectie loopt (net als bij
@@ -403,6 +436,13 @@ function CanvasBinnenkant({
   const handleSelectionChange = useCallback(
     ({ nodes: sel, edges: selEdges }) => {
       if (!onSelectElement) return;
+      // Echo-demping: React Flow meldt de selectie ook na node-rebuilds
+      // (nieuwe objecten, zelfde selectie). Alleen échte wijzigingen
+      // doorgeven, anders overschrijft de oude canvas-selectie elke
+      // programmatische selectie uit de projectboom.
+      const sig = selectieSig((sel || []).map((n) => n.id), (selEdges || []).map((e) => e.id));
+      if (sig === gemeldeSelectieRef.current) return;
+      gemeldeSelectieRef.current = sig;
       if (sel?.length) {
         const eerste = sel[0];
         // Anker aangeklikt → selecteer de achterliggende connector.

@@ -167,7 +167,43 @@
   color: var(--s-fg);
 }
 .studio-project__mapkop.is-dropdoel,
-.studio-project__kop--los.is-dropdoel { outline: 1.5px dashed var(--s-accent, #4f46e5); outline-offset: -1px; background: var(--s-hover); }
+.studio-project__kop.is-dropdoel { outline: 1.5px dashed var(--s-accent, #4f46e5); outline-offset: -1px; background: var(--s-hover); }
+.studio-project__mapkop { cursor: grab; }
+.studio-project__mapkop:active { cursor: grabbing; }
+.studio-project__mapkop.is-selectie { background: var(--s-hover); }
+.studio-project__mapstip { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 auto; }
+.studio-project__mapnaam-invoer {
+  flex: 1; min-width: 0;
+  font: inherit; font-size: 13px; font-weight: 600;
+  padding: 1px 4px;
+  border: 1px solid var(--s-accent, #4f46e5); border-radius: 4px;
+  background: var(--s-panel); color: var(--s-fg);
+  outline: none;
+}
+/* Element-regels (incl. hiërarchie-kinderen) in een map. */
+.studio-project__elementrij { display: flex; align-items: center; min-width: 0; }
+.studio-project__elementrij .studio-project__caret { flex: 0 0 18px; }
+.studio-project__elementrij .studio-project__diagram { flex: 1; padding-left: 4px; }
+
+/* ── Contextmenu in de projectboom ────────────────────────── */
+.studio-ctxmenu {
+  position: fixed; z-index: 300;
+  min-width: 180px;
+  padding: 4px;
+  background: var(--s-panel);
+  border: 1px solid var(--s-border); border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+.studio-ctxmenu__item {
+  display: block; width: 100%; box-sizing: border-box;
+  padding: 6px 10px;
+  font: inherit; font-size: 13px; text-align: left;
+  color: var(--s-fg);
+  background: transparent; border: none; border-radius: 5px;
+  cursor: pointer;
+}
+.studio-ctxmenu__item:hover { background: var(--s-accent, #4f46e5); color: #fff; }
+.studio-ctxmenu__sep { height: 1px; margin: 4px 6px; background: var(--s-border); }
 .studio-project__mapkop .studio-project__nieuw { visibility: hidden; }
 .studio-project__mapkop:hover .studio-project__nieuw { visibility: visible; }
 .studio-project__caret {

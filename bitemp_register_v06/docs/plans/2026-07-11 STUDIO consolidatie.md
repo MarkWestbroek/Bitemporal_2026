@@ -282,22 +282,64 @@ activiteiten-tabel in `docs/STUDIO.md`.
 > `icons.jsx`). Overrides werken direct door in projectbrowser en tabs
 > (`ProfielIcoon.jsx`).
 
-1. 🔶 v0 gebouwd: vrije mappen (Sparx-model) in de Modelleren-browser —
-   maken (＋ én "＋ Nieuwe map"-knop)/hernoemen (dubbelklik)/verwijderen
-   (inhoud valt terug naar de ouder), vrij nesten, **drag-and-drop** van
-   diagrammen naar mappen en terug naar "Niet ingedeeld"; geplaatste
-   diagrammen tonen hun profiel-icoon. Nog niet: elementen ín de
-   mappenboom, zoeken over de boom, virtualisatie, mappen slepen.
+1. 🔶 v1 gebouwd: vrije mappen (Sparx-model) in de Modelleren-browser —
+   maken (＋ én "＋ Nieuwe map"-knop), **hernoemen** (✎-knop of dubbelklik),
+   verwijderen (inhoud valt terug naar de ouder), vrij nesten, en **mappen
+   zelf verslepen** (naar een andere map, of op de "Mappen"-kop terug naar
+   de wortel; cyclus-drops worden geweigerd). Diagrammen slepen naar mappen
+   en terug naar "Niet ingedeeld"; geplaatste regels tonen hun
+   profiel-/elementtype-icoon. Nog niet: zoeken over de boom,
+   virtualisatie, volgorde binnen een map.
 2. 🔶 Elementen (2026-07-12): onder de mappenboom staat de **elementen-boom
-   van het profiel van de actieve tab** — de bestaande 0.5-ElementenBrowser
-   (zoekveld, hiërarchie, ＋ naar het actieve diagram, selectie in de
-   inspector), per profieltype geregistreerd in het profieltypeRegistry en
-   wisselend met de tab. Eigendom-vs-voorkomen over de héle boom (elementen
-   in mappen) is het vervolg.
+   van het profiel van de actieve tab** (bestaande 0.5-ElementenBrowser,
+   per profieltype geregistreerd, wisselt met de tab). Elementen zijn
+   daaruit **naar mappen te slepen** (eigendom-plek in de boom, met
+   elementtype-icoon); klik op zo'n element heropent zonodig een tab van
+   zijn profiel (liefst een diagram waar het op staat) en **selecteert het
+   in de inspector** (menuBus `<profiel>:selecteer-element`). Terugslepen
+   naar "Niet ingedeeld" haalt de plaatsing weg.
+   **Hiërarchie volgt mee (sessiebesluit 2026-07-12):** een geplaatst
+   element toont zijn hiërarchie-kinderen (GE's onder hun ENT, compositie)
+   automatisch als geneste boomregels — zelfde regels als de
+   ElementenBrowser (`descriptor.hierarchie` incl. `omgekeerd`, de
+   `hierarchieParen`-hook én `standaardDichtInBoom` als chevron-beginstand).
+   Een kind apart naar een map slepen plaatst zijn **top-voorouder** (een GE
+   kan niet onder zijn ENT vandaan). Vervolg: volledige eigendom-vs-
+   voorkomen (alle elementen ín de boom), "toon op diagram…"-navigatie, en
+   **GE verhangen naar een andere ENT** als bewuste model-operatie achter
+   een waarschuwing (raakt alle diagrammen — die moeten worden nagelopen).
 3. 🔶 Projectstructuur persistent in localStorage (`studio-modelleren`:
-   mappen + plaatsing + open-stand); werkbestand/API volgt.
+   mappen incl. kleur + plaatsing + open-stand); werkbestand/API volgt.
 4. 🔶 De per-profiel-secties staan als "Niet ingedeeld" onder de mappenboom
    en tonen alleen nog niet-geplaatste diagrammen.
+5. Bediening (2026-07-12): **inline hernoemen** van mappen (dubbelklik of
+   ✎ → invoerveld, Enter/blur = opslaan, Esc = annuleren), **rechtsklik-
+   contextmenu** op mappen (hernoemen/nieuwe submap/eigenschappen/
+   verwijderen), diagram-regels (openen/uit de map halen) en element-regels
+   (selecteer/uit de map halen), en **map-eigenschappen in de inspector**
+   (klik op de mapnaam of contextmenu → Eigenschappen: naam + kleur; de
+   kleur kleurt de map-stip in de boom).
+
+**Concept-besluit: een diagram is geen map (2026-07-12).** Een diagram
+*toont* elementen alleen; het maakt het diagram niet uit waar ze in de boom
+staan, en elementen staan typisch op meerdere diagrammen. Een diagram kan
+dus nooit hiërarchie-onderdeel zijn: in de projectboom is het een gewoon
+**blad-element**, visueel exact gelijkwaardig aan element-regels (zelfde
+chevron-kolom, nooit kinderen). Elementen wonen onder een package (profiel-
+hiërarchie) of onder een map.
+
+**Mappen als "superprofiel"-elementen (sessie 2026-07-12):** mappen zijn
+structuur-elementen die boven de profielen staan — conceptueel een
+*superprofiel* met het map-elementtype, de map∋map-relatie en properties
+(naam, kleur). Besluit voorlopig: **hardcoded structuurelement, maar
+data-vormig** ({id, naam, kleur, ouderId} in de store), zodat een later
+superprofiel-descriptor het kan overnemen zonder migratie. Het superprofiel
+zelf bouwen wordt actueel zodra fase 4 (kruisverbanden) toch
+profiel-overstijgende elementtypen afdwingt. Verwant open punt: de
+**package-dualiteit** (een UML-/canoniek-package is element én map, zoals in
+EA) — voorlopig behandelen we een package als element bínnen zijn profiel;
+hoe map en package zich verhouden is een denkpunt voor de gebruiker.
+Nog gewenst (fase 3-vervolg): **multi-select** in beide bomen.
 
 ### Fase 4 — Kruisverbanden (nieuw, na 2–3)
 1. Trace-links tussen profieltypen als eigen diagramtype; bij twee
