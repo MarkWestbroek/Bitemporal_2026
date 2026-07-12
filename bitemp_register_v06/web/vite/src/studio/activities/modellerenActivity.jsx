@@ -139,13 +139,36 @@ export const useModellerenStore = create((set, get) => ({
   nieuweMap: (naam, ouderId = null) => {
     const id = `map_${Date.now()}`;
     set((s) => {
-      const mappen = { ...s.mappen, [id]: { id, naam, ouderId } };
+      // volgorde = handmatige sortering per niveau; nieuw komt achteraan.
+      const mappen = { ...s.mappen, [id]: { id, naam, ouderId, volgorde: Date.now() } };
       const next = { ...s, mappen };
       schrijfOpslag(next);
       return { mappen };
     });
     return id;
   },
+
+  /** Schuif een map één plek omhoog/omlaag tussen zijn broertjes. */
+  schuifMap: (id, richting) =>
+    set((s) => {
+      const m = s.mappen[id];
+      if (!m) return {};
+      const broers = Object.values(s.mappen)
+        .filter((x) => (x.ouderId || null) === (m.ouderId || null))
+        .sort((a, b) => (a.volgorde || 0) - (b.volgorde || 0));
+      const idx = broers.findIndex((x) => x.id === id);
+      const buurIdx = idx + (richting === "omhoog" ? -1 : 1);
+      const buur = broers[buurIdx];
+      if (!buur) return {};
+      const mappen = {
+        ...s.mappen,
+        [id]: { ...m, volgorde: buur.volgorde || 0 },
+        [buur.id]: { ...buur, volgorde: m.volgorde || 0 },
+      };
+      const next = { ...s, mappen };
+      schrijfOpslag(next);
+      return { mappen };
+    }),
 
   hernoemMap: (id, naam) =>
     set((s) => {
@@ -176,6 +199,27 @@ export const useModellerenStore = create((set, get) => ({
   diagramSelectie: null,
   selecteerDiagram: (profielId, diagramId) =>
     set({ diagramSelectie: profielId ? { profielId, diagramId } : null, mapSelectie: null }),
+
+  /** Ctrl-klik multiselect in de boom: set van plaatsing-sleutels. */
+  multiSelectie: [],
+  toggleMulti: (key) =>
+    set((s) => ({
+      multiSelectie: s.multiSelectie.includes(key)
+        ? s.multiSelectie.filter((k) => k !== key)
+        : [...s.multiSelectie, key],
+    })),
+  wisMulti: () => set((s) => (s.multiSelectie.length ? { multiSelectie: [] } : {})),
+
+  /** Kort oplichtende boomregel ("Zoek in projectboom"). */
+  flitsSleutel: null,
+  flits: (sleutel) => {
+    set({ flitsSleutel: sleutel });
+    setTimeout(() => {
+      if (useModellerenStore.getState().flitsSleutel === sleutel) {
+        useModellerenStore.setState({ flitsSleutel: null });
+      }
+    }, 1800);
+  },
 
   /** Verwijder een map; submappen en plaatsingen vallen naar de ouder. */
   verwijderMap: (id) =>
@@ -218,7 +262,8 @@ export const useModellerenStore = create((set, get) => ({
         if (cursor === id) return {};
         cursor = s.mappen[cursor]?.ouderId || null;
       }
-      const mappen = { ...s.mappen, [id]: { ...m, ouderId: ouderId || null } };
+      // Van niveau gewisseld → achteraan in de nieuwe ouder.
+      const mappen = { ...s.mappen, [id]: { ...m, ouderId: ouderId || null, volgorde: Date.now() } };
       const next = { ...s, mappen };
       schrijfOpslag(next);
       return { mappen };
@@ -257,23 +302,56 @@ function DiagramRegel({ profiel, diagram, inMap = false }) {
   const id = tabId(profiel.id, diagram.id);
   const stijl = effectieveStijl(profiel);
   const selecteerDiagram = useModellerenStore((s) => s.selecteerDiagram);
+  const toggleMulti = useModellerenStore((s) => s.toggleMulti);
+  const wisMulti = useModellerenStore((s) => s.wisMulti);
+  const inMulti = useModellerenStore((s) => s.multiSelectie.includes(id));
+  // "Geselecteerd" (eigenschappen in de inspector) is iets anders dan
+  // "open als tab" — de open tab krijgt een subtiel accentstreepje, de
+  // selectie de blauwe rij.
+  const isSelectie = useModellerenStore(
+    (s) =>
+      !!s.diagramSelectie &&
+      s.diagramSelectie.profielId === profiel.id &&
+      s.diagramSelectie.diagramId === diagram.id
+  );
+  const verplaats = (mapId) =>
+    meeTeNemen(id).forEach((k) => {
+      if (mapId || !isElementKey(k)) plaatsDiagram(k, mapId);
+    });
   const ctx = (e) =>
     openCtxMenu(e, [
       { label: "Openen", onClick: () => openTab(profiel.id, diagram.id) },
       { label: "Eigenschappen", onClick: () => selecteerDiagram(profiel.id, diagram.id) },
-      ...(inMap ? [{ sep: true }, { label: "Uit de map halen", onClick: () => plaatsDiagram(id, null) }] : []),
+      {
+        label: "Verplaats naar",
+        items: verplaatsNaarItems(verplaats, {
+          bovenaan: inMap ? { label: "(Niet ingedeeld)" } : null,
+        }),
+      },
+      ...(inMap ? [{ sep: true }, { label: "Uit de map halen", onClick: () => verplaats(null) }] : []),
     ]);
   return (
     <button
       type="button"
-      className={"studio-project__diagram" + (id === actieveTab ? " is-actief" : "")}
-      onClick={() => selecteerDiagram(profiel.id, diagram.id)}
+      className={
+        "studio-project__diagram" +
+        (id === actieveTab ? " is-actief" : "") +
+        (isSelectie ? " is-selectie" : "") +
+        (inMulti ? " is-multi" : "")
+      }
+      onClick={(e) => {
+        if (e.ctrlKey || e.metaKey) toggleMulti(id);
+        else {
+          wisMulti();
+          selecteerDiagram(profiel.id, diagram.id);
+        }
+      }}
       onDoubleClick={() => openTab(profiel.id, diagram.id)}
       onContextMenu={ctx}
-      title={`${diagram.naam} — ${profiel.label} (klik = eigenschappen, dubbelklik = openen)`}
+      title={`${diagram.naam} — ${profiel.label} (klik = eigenschappen, dubbelklik = openen, Ctrl+klik = meervoudig)`}
       draggable
       onDragStart={(e) => {
-        e.dataTransfer.setData(PLAATSING_MIME, id);
+        e.dataTransfer.setData(PLAATSING_MIME, meeTeNemen(id).join("\n"));
         e.dataTransfer.effectAllowed = "move";
       }}
     >
@@ -360,7 +438,11 @@ function topVoorouder(ouderVan, elementId) {
 }
 
 // ── Contextmenu (rechtsklik in de boom) ─────────────────────────────
+// Een item mag `items: [...]` dragen: klikken opent die lijst in hetzelfde
+// menu (drill-down met ‹ terug) — gebruikt voor "Verplaats naar ▸".
 function ContextMenu({ menu, sluit }) {
+  const [sub, setSub] = React.useState(null);
+  useEffect(() => setSub(null), [menu]);
   useEffect(() => {
     if (!menu) return;
     const onDown = () => sluit();
@@ -373,14 +455,30 @@ function ContextMenu({ menu, sluit }) {
     };
   }, [menu, sluit]);
   if (!menu) return null;
+  const items = sub ? sub.items : menu.items;
   return (
     <div className="studio-ctxmenu" style={{ left: menu.x, top: menu.y }} onMouseDown={(e) => e.stopPropagation()}>
-      {menu.items.map((it, i) =>
+      {sub && (
+        <button type="button" className="studio-ctxmenu__item studio-ctxmenu__terug" onClick={() => setSub(null)}>
+          ‹ {sub.label}
+        </button>
+      )}
+      {items.length === 0 && <div className="studio-ctxmenu__leeg">geen opties</div>}
+      {items.map((it, i) =>
         it.sep ? (
           <div key={`sep-${i}`} className="studio-ctxmenu__sep" />
-        ) : (
+        ) : it.items ? (
           <button
             key={it.label}
+            type="button"
+            className="studio-ctxmenu__item"
+            onClick={() => setSub(it)}
+          >
+            {it.label} <span style={{ float: "right", opacity: 0.6 }}>▸</span>
+          </button>
+        ) : (
+          <button
+            key={it.label + i}
             type="button"
             className="studio-ctxmenu__item"
             onClick={() => {
@@ -404,6 +502,56 @@ const openCtxMenu = (e, items) => {
   useCtxMenu.setState({ menu: { x: e.clientX, y: e.clientY, items } });
 };
 
+/** Mappen op handmatige volgorde (Omhoog/Omlaag in het contextmenu). */
+const opVolgorde = (a, b) => (a.volgorde || 0) - (b.volgorde || 0);
+
+/**
+ * Submenu-items "Verplaats naar ▸": alle mappen (ingesprongen op diepte),
+ * optioneel "(wortel)" of "(Niet ingedeeld)" bovenaan, en met uitsluitingen
+ * (bv. een map zelf + zijn nazaten). `doe(mapId|null)` voert de zet uit.
+ */
+function verplaatsNaarItems(doe, { bovenaan = null, uitgesloten = new Set() } = {}) {
+  const { mappen } = useModellerenStore.getState();
+  const items = bovenaan ? [{ label: bovenaan.label, onClick: () => doe(null) }] : [];
+  const loop = (ouderId, diepte) => {
+    Object.values(mappen)
+      .filter((m) => (m.ouderId || null) === ouderId)
+      .sort(opVolgorde)
+      .forEach((m) => {
+        if (!uitgesloten.has(m.id)) {
+          items.push({ label: `${"  ".repeat(diepte)}📁 ${m.naam}`, onClick: () => doe(m.id) });
+        }
+        // Nazaten van een uitgesloten map zijn ook uitgesloten (cyclus).
+        if (!uitgesloten.has(m.id)) loop(m.id, diepte + 1);
+      });
+  };
+  loop(null, 0);
+  return items;
+}
+
+/** Alle nazaat-map-ids van een map (voor uitsluiting bij verplaatsen). */
+function nazatenVan(mappen, id) {
+  const uit = new Set([id]);
+  let gegroeid = true;
+  while (gegroeid) {
+    gegroeid = false;
+    for (const m of Object.values(mappen)) {
+      if (m.ouderId && uit.has(m.ouderId) && !uit.has(m.id)) {
+        uit.add(m.id);
+        gegroeid = true;
+      }
+    }
+  }
+  return uit;
+}
+
+/** Sleutels die meegaan bij slepen/verplaatsen: de multiselectie als de
+ *  aangeklikte regel erin zit, anders alleen die regel. */
+function meeTeNemen(sleutel) {
+  const { multiSelectie } = useModellerenStore.getState();
+  return multiSelectie.includes(sleutel) ? multiSelectie : [sleutel];
+}
+
 /**
  * Element-regel in een map (eigendom-plek; het element woont hier éénmaal).
  * Hiërarchie-kinderen (GE's onder hun ENT, compositie) reizen automatisch
@@ -413,6 +561,14 @@ const openCtxMenu = (e, items) => {
 function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
   const elements = profiel.useStore((s) => s.elements);
   const plaatsDiagram = useModellerenStore((s) => s.plaatsDiagram);
+  const toggleMulti = useModellerenStore((s) => s.toggleMulti);
+  const wisMulti = useModellerenStore((s) => s.wisMulti);
+  const inMulti = useModellerenStore((s) => !!sleutel && s.multiSelectie.includes(sleutel));
+  const flitst = useModellerenStore((s) => !!sleutel && s.flitsSleutel === sleutel);
+  const rijRef = React.useRef(null);
+  useEffect(() => {
+    if (flitst) rijRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [flitst]);
   const element = elements[elementId];
   const et = element
     ? (profiel.descriptor.elementTypes || []).find((t) => t.id === element.elementType)
@@ -480,13 +636,27 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
     openCtxMenu(e, [
       { label: "Selecteer in inspector", onClick: selecteer },
       { label: "Hernoemen", onClick: () => setBewerk(true) },
+      ...(sleutel
+        ? [
+            {
+              label: "Verplaats naar",
+              items: verplaatsNaarItems((mapId) => {
+                if (mapId) meeTeNemen(sleutel).forEach((k) => plaatsDiagram(k, mapId));
+              }),
+            },
+          ]
+        : []),
       { sep: true },
       { label: "Verwijderen uit model…", onClick: verwijderUitModel },
     ]);
 
   return (
     <div>
-      <div className="studio-project__elementrij" style={{ paddingLeft: diepte ? diepte * 12 : 0 }}>
+      <div
+        ref={rijRef}
+        className={"studio-project__elementrij" + (flitst ? " is-flits" : "")}
+        style={{ paddingLeft: diepte ? diepte * 12 : 0 }}
+      >
         {kinderen.length > 0 ? (
           <button type="button" className="studio-project__caret" onClick={() => setDicht(!isDicht)}>
             {isDicht ? "▸" : "▾"}
@@ -509,15 +679,21 @@ function ElementRegel({ profiel, elementId, sleutel, diepte = 0 }) {
         ) : (
           <button
             type="button"
-            className="studio-project__diagram studio-project__element"
-            onClick={selecteer}
+            className={"studio-project__diagram studio-project__element" + (inMulti ? " is-multi" : "")}
+            onClick={(e) => {
+              if (sleutel && (e.ctrlKey || e.metaKey)) toggleMulti(sleutel);
+              else {
+                wisMulti();
+                selecteer();
+              }
+            }}
             onDoubleClick={() => setBewerk(true)}
             onContextMenu={ctx}
             title={`${element.naam || elementId} — ${et?.label || "element"} (${profiel.label})`}
             draggable={!!sleutel}
             onDragStart={(e) => {
               if (!sleutel) return;
-              e.dataTransfer.setData(PLAATSING_MIME, sleutel);
+              e.dataTransfer.setData(PLAATSING_MIME, meeTeNemen(sleutel).join("\n"));
               e.dataTransfer.effectAllowed = "move";
             }}
           >
@@ -579,7 +755,7 @@ function Map_({ map, diepte }) {
   const verplaatsMap = useModellerenStore((s) => s.verplaatsMap);
 
   const open = mapOpen[map.id] ?? true;
-  const kinderen = Object.values(mappen).filter((m) => m.ouderId === map.id);
+  const kinderen = Object.values(mappen).filter((m) => m.ouderId === map.id).sort(opVolgorde);
   const inhoud = Object.entries(plaatsing)
     .filter(([, mapId]) => mapId === map.id)
     .map(([k]) => k);
@@ -587,8 +763,8 @@ function Map_({ map, diepte }) {
   const mapSelectie = useModellerenStore((s) => s.mapSelectie);
   const [bewerk, setBewerk] = React.useState(false);
   const drop = useDrop({
-    // Boomregel (diagram of element) die al een plaatsing-sleutel heeft.
-    [PLAATSING_MIME]: (key) => plaatsDiagram(key, map.id),
+    // Boomregel(s): één sleutel, of de hele multiselectie (regel per regel).
+    [PLAATSING_MIME]: (data) => data.split("\n").forEach((key) => plaatsDiagram(key, map.id)),
     // Andere map: verhangen (met cyclus-check in de store).
     [MAP_MIME]: (id) => verplaatsMap(id, map.id),
     // Element uit de ElementenBrowser (van het actieve tab-profiel). Een
@@ -614,11 +790,22 @@ function Map_({ map, diepte }) {
       verwijderMap(map.id);
     }
   };
+  const schuifMap = useModellerenStore((s) => s.schuifMap);
   const ctx = (e) =>
     openCtxMenu(e, [
       { label: "Hernoemen", onClick: () => setBewerk(true) },
       { label: "Nieuwe submap…", onClick: nieuweSubmap },
       { label: "Eigenschappen", onClick: () => selecteerMap(map.id) },
+      { sep: true },
+      { label: "Omhoog", onClick: () => schuifMap(map.id, "omhoog") },
+      { label: "Omlaag", onClick: () => schuifMap(map.id, "omlaag") },
+      {
+        label: "Verplaats naar",
+        items: verplaatsNaarItems((mapId) => verplaatsMap(map.id, mapId), {
+          bovenaan: map.ouderId ? { label: "(wortel)" } : null,
+          uitgesloten: nazatenVan(useModellerenStore.getState().mappen, map.id),
+        }),
+      },
       { sep: true },
       { label: "Verwijderen…", onClick: verwijder },
     ]);
@@ -765,17 +952,53 @@ function Sidebar() {
   const actieveTab = useModellerenStore((s) => s.actieveTab);
   const tabs = useModellerenStore((s) => s.tabs);
   const verplaatsMap = useModellerenStore((s) => s.verplaatsMap);
-  const rootMappen = Object.values(mappen).filter((m) => !m.ouderId);
-  // Droppen op "Niet ingedeeld" haalt een diagram uit zijn map. Elementen
+  const rootMappen = Object.values(mappen).filter((m) => !m.ouderId).sort(opVolgorde);
+  // Droppen op "Niet ingedeeld" haalt diagrammen uit hun map. Elementen
   // niet: die hebben geen "niet ingedeeld"-plek (verwijderen kan wél, via
   // het contextmenu — met bevestiging).
   const drop = useDrop({
-    [PLAATSING_MIME]: (key) => {
-      if (!isElementKey(key)) plaatsDiagram(key, null);
-    },
+    [PLAATSING_MIME]: (data) =>
+      data.split("\n").forEach((key) => {
+        if (!isElementKey(key)) plaatsDiagram(key, null);
+      }),
   });
   // Droppen op de "Mappen"-kop hangt een map terug aan de wortel.
   const dropWortel = useDrop({ [MAP_MIME]: (id) => verplaatsMap(id, null) });
+
+  // Auto-scroll tijdens slepen: met "iets in de hand" tegen de boven- of
+  // onderrand duwen scrollt de boom mee (anders zijn hoger gelegen mappen
+  // onbereikbaar als sleepdoel).
+  const dragScroll = (e) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    if (e.clientY < r.top + 40) el.scrollTop -= 14;
+    else if (e.clientY > r.bottom - 40) el.scrollTop += 14;
+  };
+
+  // "Zoek in projectboom" (rechtsklik op een canvas-element): klap de
+  // map-keten open en laat de regel even oplichten.
+  useEffect(
+    () =>
+      menuBus.on("studio:zoek-in-boom", ({ profielId, elementId } = {}) => {
+        const p = getProfieltype(profielId);
+        if (!p || !elementId) return;
+        const { ouderVan } = bepaalHierarchie(p, p.useStore.getState().elements);
+        const sleutel = elementKey(profielId, topVoorouder(ouderVan, elementId));
+        const s = useModellerenStore.getState();
+        const mapId = s.plaatsing[sleutel];
+        if (!mapId) return; // element woont (nog) niet in een map
+        const mapOpen = { ...s.mapOpen };
+        let cursor = mapId;
+        while (cursor) {
+          mapOpen[cursor] = true;
+          cursor = s.mappen[cursor]?.ouderId || null;
+        }
+        useModellerenStore.setState({ mapOpen });
+        s.flits(sleutel);
+      }),
+    []
+  );
 
   // Elementen-boom van het profiel van de actieve tab (vereist diens
   // Provider — die wrapt alle slots, dus ook deze sidebar).
@@ -790,7 +1013,12 @@ function Sidebar() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
-      <div ref={scrollRef} className="studio-project" style={{ flex: 1, overflow: "auto", minHeight: 0 }}>
+      <div
+        ref={scrollRef}
+        className="studio-project"
+        style={{ flex: 1, overflow: "auto", minHeight: 0 }}
+        onDragOver={dragScroll}
+      >
         <div
           className={"studio-project__kop" + (dropWortel.over ? " is-dropdoel" : "")}
           {...dropWortel.props}

@@ -329,7 +329,25 @@ activiteiten-tabel in `docs/STUDIO.md`.
    Ctrl+Z-vangnet; ook terugslepen naar "Niet ingedeeld" is voor elementen
    geblokkeerd. Connectoren (associatie, ASOC) zijn nu ook naar de boom te
    slepen. Toekomstwens: rechtsklik → **"zoek op diagram(men)"**.
-7. Denkpunten focus-doorlevering (sessie 2026-07-12), mogelijk
+7. Boom-bediening ronde 2 (2026-07-12):
+   - **Auto-scroll tijdens slepen**: tegen de boven-/onderrand van de boom
+     duwen "met iets in de hand" scrollt mee (hoger gelegen mappen waren
+     anders onbereikbaar als sleepdoel).
+   - **Contextmenu → "Verplaats naar ▸"** (drill-down-submenu met alle
+     mappen, ingesprongen op diepte) op diagrammen, elementen én mappen
+     zelf (met "(wortel)"/"(Niet ingedeeld)" waar van toepassing en
+     cyclus-uitsluiting). Dit dekt ook het geval waar slepen onhandig is;
+     knippen/plakken (Ctrl+X/V) blijft een optie voor later.
+   - **Handmatige mapvolgorde**: contextmenu Omhoog/Omlaag per niveau
+     (volgorde-veld; nieuw of verplaatst = achteraan). Later eventueel
+     slepen-tussen-twee-mappen met invoegindicator.
+   - **Ctrl-klik multiselect** op diagram-/element-regels: samen slepen
+     naar een map én samen "Verplaats naar". Shift-bereik nog niet.
+   - **Canvas-rechtsklik → "Zoek in projectboom"**: klapt de map-keten
+     open, scrollt ernaartoe en laat de regel oplichten (via de
+     top-voorouder; menuBus "studio:zoek-in-boom"). Element zonder
+     map-plek: no-op (vervolg: elementen-boom laten oplichten).
+8. Denkpunten focus-doorlevering (sessie 2026-07-12), mogelijk
    **configureerbaar** maken zoals tools het verschillend doen:
    (a) boom → diagram (EA: dubbelklik; enkelklik werkt alleen in de boom),
    (b) diagram → boom (Archi: vanzelf; EA: expliciet "find in tree"),

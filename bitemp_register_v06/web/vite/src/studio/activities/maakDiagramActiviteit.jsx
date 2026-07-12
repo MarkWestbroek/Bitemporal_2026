@@ -1551,6 +1551,15 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                 { sep: true },
                 { kop: true, label: "Element" },
                 {
+                  id: "zoek-in-boom",
+                  label: "Zoek in projectboom",
+                  icoon: "🔎",
+                  // De Modelleren-activiteit luistert (map-keten openklappen
+                  // + regel laten oplichten); elders is dit een no-op.
+                  onClick: () =>
+                    menuBus.emit("studio:zoek-in-boom", { profielId: id, elementId: nodeId }),
+                },
+                {
                   id: "naar-voren",
                   label: "Naar voorgrond",
                   icoon: "⬆",

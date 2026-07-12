@@ -153,7 +153,16 @@
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .studio-project__diagram:hover { background: var(--s-hover); }
-.studio-project__diagram.is-actief { background: var(--s-accent, #4f46e5); color: #fff; }
+/* Open als tab: subtiel (accentstreepje + vet) — géén selectie. */
+.studio-project__diagram.is-actief {
+  font-weight: 600;
+  box-shadow: inset 2.5px 0 0 var(--s-accent, #4f46e5);
+}
+/* Geselecteerd (eigenschappen in de inspector): de blauwe rij. */
+.studio-project__diagram.is-selectie { background: var(--s-accent, #4f46e5); color: #fff; }
+.studio-project__mapkop.is-selectie { background: var(--s-accent, #4f46e5); color: #fff; }
+.studio-project__mapkop.is-selectie .studio-project__caret,
+.studio-project__mapkop.is-selectie .studio-project__nieuw { color: #dbeafe; }
 .studio-project__regel-profiel { display: inline-flex; margin-right: 6px; vertical-align: -2px; }
 .studio-project__regel-profiel svg { width: 13px; height: 13px; }
 
@@ -204,6 +213,23 @@
 }
 .studio-ctxmenu__item:hover { background: var(--s-accent, #4f46e5); color: #fff; }
 .studio-ctxmenu__sep { height: 1px; margin: 4px 6px; background: var(--s-border); }
+.studio-ctxmenu__terug { font-weight: 600; color: var(--s-fg-muted); }
+.studio-ctxmenu__leeg { padding: 6px 10px; font-size: 12px; color: var(--s-fg-muted); font-style: italic; }
+.studio-ctxmenu__item { white-space: pre; } /* inspringing in "Verplaats naar" */
+
+/* Ctrl-klik multiselectie in de projectboom. */
+.studio-project__diagram.is-multi {
+  outline: 1.5px solid var(--s-accent, #4f46e5);
+  outline-offset: -1.5px;
+  background: var(--s-hover);
+}
+
+/* "Zoek in projectboom": regel licht even op. */
+@keyframes studio-flits {
+  0%, 60% { background: #f59e0b55; }
+  100% { background: transparent; }
+}
+.studio-project__elementrij.is-flits { animation: studio-flits 1.8s ease-out; border-radius: 6px; }
 .studio-project__mapkop .studio-project__nieuw { visibility: hidden; }
 .studio-project__mapkop:hover .studio-project__nieuw { visibility: visible; }
 .studio-project__caret {
