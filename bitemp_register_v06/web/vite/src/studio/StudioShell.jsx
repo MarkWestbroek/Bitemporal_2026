@@ -20,6 +20,7 @@ import useUIStore from "../store/useUIStore";
 import ActivityBar from "./ActivityBar";
 import SidePanel from "./SidePanel";
 import MenuBar from "./MenuBar";
+import CommandPalette from "./CommandPalette";
 import { buildMenus } from "./buildMenus";
 import { menuBus } from "./menuBus";
 import { OmniumMark } from "./icons";
@@ -118,11 +119,21 @@ export default function StudioShell() {
       links={
         <span className="studio-menubar__brand">
           {actief.label}
-          {actief.status === "concept" && (
-            <span className="studio-topbar__concept" style={{ marginLeft: 8 }}>concept</span>
+          {actief.status && (
+            <span className="studio-topbar__status" style={{ marginLeft: 8 }}>{actief.status}</span>
           )}
         </span>
       }
+    />
+  );
+
+  // Opdrachtenpalet (Ctrl+K) — altijd gemount, beheert zijn eigen open-stand.
+  const palette = (
+    <CommandPalette
+      menus={menus}
+      activiteiten={activiteiten}
+      actiefId={actief.id}
+      setActief={setActief}
     />
   );
 
@@ -132,6 +143,7 @@ export default function StudioShell() {
     return (
       <div className="studio" data-studio-theme={theme}>
         {menubar}
+        {palette}
         <div className="studio-shell-row">
           <ActivityBar activiteiten={activiteiten} />
           <div className="studio-main">
@@ -151,6 +163,7 @@ export default function StudioShell() {
   return (
     <div className="studio" data-studio-theme={theme}>
       {menubar}
+      {palette}
       <div className="studio-shell-row">
         <ActivityBar activiteiten={activiteiten} />
 
@@ -168,8 +181,8 @@ export default function StudioShell() {
                 </button>
               )}
               <span className="studio-topbar__titel">{actief.label}</span>
-              {actief.status === "concept" && (
-                <span className="studio-topbar__concept">concept</span>
+              {actief.status && (
+                <span className="studio-topbar__status">{actief.status}</span>
               )}
             </div>
             <div className="studio-topbar__right">

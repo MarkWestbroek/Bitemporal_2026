@@ -88,7 +88,7 @@ volgorde komt volledig uit het `activityRegistry`.
 ```js
 {
   id, label, icon,            // identiteit + iconenbalk
-  groep,                      // visuele groepering ("modelleren" | "diensten" | "data")
+  groep,                      // groepering ("modelleren" | "diensten" | "data" | "beheer")
   Provider?,                  // optioneel: deelt state tussen de slots via context
   Sidebar?,                   // links (tree-browser). null → geen linkerpaneel
   Main,                       // midden (editor/canvas) — verplicht
@@ -96,7 +96,9 @@ volgorde komt volledig uit het `activityRegistry`.
   sidebarLabel?, inspectorLabel?,
   fullMain?,                  // true → activiteit brengt eigen volledige layout mee
   menus?,                     // array of (ctx)=>array: extra/override menubalk-menu's
-  status?,                    // bv. "concept" voor nog-te-bouwen functies
+  status?,                    // "preview" (in aanbouw, bruikbaar) of "concept"
+                              // (nog te maken) — getoond als badge in topbar/menu
+  verborgenInBalk?,           // true → niet in de activity bar, wél in Ga naar
 }
 ```
 
@@ -196,29 +198,105 @@ te wijzigen.
 
 ## Geregistreerde activiteiten
 
-| Groep        | Functie            | Status   | Hergebruikt                        |
+> **Consolidatie fase 0 (2026-07-11):** zie het
+> [consolidatieplan](plans/2026-07-11%20STUDIO%20consolidatie.md). Labels dragen
+> geen bouwfase meer ("(0.5)"/"(concept)") — status is een **badge** (topbar +
+> Ga naar-menu; open ringetje = preview, gevulde stip = concept op een
+> balk-icoon). **Concept-activiteiten staan niet meer in de activity bar**: een
+> icoon dat een lege pagina opent is een valse belofte; ze blijven bereikbaar
+> via **Ga naar** (gedempt, met badge). Het Ga naar-menu heeft **groepskoppen**
+> (Modelleren · Diensten · Data · Beheer), de balk-tooltips noemen de groep, en
+> de **beheer-groep zit onderaan** de balk (VS Code-tandwielpatroon).
+>
+> **Consolidatie fase 1 (2026-07-11) — configureerbare complexiteit:**
+> **Studio-instellingen → Activiteiten** bepaalt per gebruiker (localStorage)
+> wat de balk toont: activiteiten aan/uit, **★ favorieten** (gepind bovenin,
+> in pinvolgorde, met amber scheidingslijn) en de **Labs**-schakelaar (uit →
+> preview-activiteiten uit de balk; favorieten winnen van Labs-uit). Alles
+> blijft bereikbaar via Ga naar en het **opdrachtenpalet** (`Ctrl+K`, ook via
+> Ga naar → Opdrachtenpalet…): één zoekveld over alle activiteiten én de
+> menubalk-acties van de actieve activiteit ("Menu › Submenu › Item").
+> Componenten: `CommandPalette.jsx`, `ActiviteitenInstellingen.jsx`; state in
+> `useStudioStore` (`balkVerborgen`, `labsAan`, `favorieten`).
+>
+> **Consolidatie fase 2 (2026-07-11) — Modelleren als één ingang:** nieuwe
+> activiteit **Modelleren** (bovenaan de balk, preview) met een
+> **projectbrowser** (per profieltype zijn diagrammen, ＋ voor nieuw) en een
+> **tab-host**: open diagrammen als tabs met profiel-icoon en accentkleur,
+> persist per browser; inspector en menubalk volgen het profiel van de
+> actieve tab. Onder water: `studio/profieltypeRegistry.js` — elk
+> `maakDiagramActiviteit`-profiel (groep "modelleren", incl. live
+> meta-editor-profielen) registreert zich met zijn store, slots, menu's en
+> `kleur`. De losse profiel-activiteiten blijven bestaan en delen dezelfde
+> store: de inhoud is identiek, hoe je hem ook opent. Zie
+> `activities/modellerenActivity.jsx`.
+>
+> **Consolidatie fase 3 v0 (2026-07-12) — vrije mappen + bewerkbare
+> profielstijl:** de Modelleren-browser heeft nu een **vrije mappenboom**
+> (Sparx-principe: de indeling is van de gebruiker) — mappen maken/nesten,
+> hernoemen via dubbelklik, verwijderen (inhoud valt terug naar de ouder),
+> en diagrammen **slepen** naar mappen of terug naar "Niet ingedeeld";
+> geplaatste diagrammen dragen hun profiel-icoon. Structuur persist in
+> localStorage. Daarnaast is de **visuele identiteit per profieltype
+> bewerkbaar**: Studio-instellingen → **Profieltypen** (kleurkiezer +
+> embleem 1–3 tekens + herstel) als override op de code-defaults —
+> `profieltypeRegistry.zetStijlOverride`/`effectieveStijl` +
+> `ProfielIcoon.jsx`, direct zichtbaar in browser en tabs. Onder de
+> mappenboom staat de **elementen-boom van het actieve tab-profiel** (de
+> bestaande 0.5-ElementenBrowser: zoekveld, hiërarchie, ＋ naar het actieve
+> diagram) — per profieltype geregistreerd en wisselend met de tab.
+> Mappen zijn te **hernoemen** (✎/dubbelklik) en zelf te **verslepen**
+> (nesten, of via de "Mappen"-kop terug naar de wortel; cycli geweigerd);
+> **elementen** zijn uit de elementen-boom **naar mappen te slepen** en
+> een klik erop heropent zonodig een tab van hun profiel en selecteert ze
+> in de inspector (menuBus `<profiel>:selecteer-element`).
+>
+> **Fase 2-sluitstuk (2026-07-12):** ook de **klassieke editors** staan in
+> de Modelleren-browser en openen als tab — dmn-js (DRD+tabel), BPMN,
+> Berichtdefinities en de klassieke UML-IDE — via
+> `activities/activiteitAlsProfieltype.jsx` (store-façade met vaste
+> documenten; de eigen sidebar van de activiteit verschijnt in het
+> ondervak van de browser; niet in de project-export).
+>
+> **Project-werkbestand (2026-07-12):** menu **Project →
+> Exporteer/Importeer project…** — één JSON ("studio-project" v1) met de
+> projectstructuur (mappen, plaatsingen, tabs) én de inhoud van alle
+> niet-lege profiel-sandboxes; import vervangt na bevestiging (onbekende
+> profielen overgeslagen). Verder: klikmodel (klik = eigenschappen,
+> dubbelklik = openen), structuur-undo (Ctrl+Z/Y in de boom, los van de
+> model-undo), Ctrl-klik-multiselect (boom én elementen-browser, bundel-
+> sleep), contextmenu's met "Verplaats naar ▸", handmatige mapvolgorde,
+> auto-scroll bij slepen en "Zoek in projectboom" vanaf de canvas.
+
+| Groep        | Functie (label)    | Status   | Hergebruikt                        |
 |--------------|--------------------|----------|------------------------------------|
 | modelleren   | UML-model          | actief   | `IdePage` (FlexLayout, fullMain)   |
-| modelleren   | Diagrammen (0.5)   | preview  | `diagramcore` + `diagramprofielen/canoniek-uml` (bewerkbare sandbox) |
-| modelleren   | UML (0.5)          | preview  | `diagramcore` + `diagramprofielen/puur-uml` (fase 5-lakmoesproef) |
-| modelleren   | OAS (0.5)          | preview  | `diagramcore` + `diagramprofielen/oas31` (fase 5-vuurproef) |
-| modelleren   | Profiel (0.5)      | preview  | meta-editor: eigen profielen maken en live registreren (plan §8.9) |
-| modelleren   | Profiel-ontwerp (0.5) | preview | meta-editor trede 2: profielen tékenen en genereren (plan §8.9) |
-| modelleren   | DMN-tabellen       | actief   | `dmn/DmnTableEditor` + ModelPicker |
+| modelleren   | Canoniek model     | preview  | `diagramcore` + `diagramprofielen/canoniek-uml` (bewerkbare sandbox; heette "Diagrammen (0.5)") |
+| modelleren   | UML                | preview  | `diagramcore` + `diagramprofielen/puur-uml` (fase 5-lakmoesproef) |
+| modelleren   | OAS                | preview  | `diagramcore` + `diagramprofielen/oas31` (fase 5-vuurproef) |
+| modelleren   | MIM                | preview  | `diagramcore` + `diagramprofielen/mim12` (MIM 1.2, pas-toe-of-leg-uit) |
+| modelleren   | DMN-beslissingen   | actief   | `dmn/DmnTableEditor` + dmn-js DRD + ModelPicker (heette "DMN-tabellen") |
+| modelleren   | DMN DRD            | preview  | `diagramcore` + `diagramprofielen/dmn-drd` — **niet in de balk** (één DMN-ingang; via Ga naar) |
 | modelleren   | BPMN-processen     | actief   | `bpmn/BpmnEditor` + ModelPicker    |
 | modelleren   | Berichtdefinities  | actief   | `bericht/BerichttypeEditor`        |
-| diensten     | API's              | concept  | placeholder                        |
-| diensten     | Toegangverlening   | concept  | placeholder (FTV/PBAC)             |
-| data         | Rollen             | concept  | placeholder                        |
-| data         | Referentielijsten  | concept  | placeholder                        |
+| diensten     | API's              | concept  | placeholder — alleen via Ga naar   |
+| diensten     | Toegangverlening   | concept  | placeholder (FTV/PBAC) — alleen via Ga naar |
+| data         | Rollen             | concept  | placeholder — alleen via Ga naar   |
+| data         | Referentielijsten  | concept  | placeholder — alleen via Ga naar   |
+| beheer       | Profiel-editor     | preview  | meta-editor trede 1 (JSON, plan §8.9; heette "Profiel (0.5)") |
+| beheer       | Profiel-ontwerp    | preview  | meta-editor trede 2: profielen tékenen en genereren (plan §8.9) |
+| beheer       | Studio-instellingen| actief   | vorm-/icoon-galerij + eigen data-shapes |
 
-DMN-modellering komt later bij de UML-activiteit (zelfde IDE), zoals gewenst.
+De profiel-editors zijn gereedschap (geen modelleeractiviteit) en staan daarom
+in de beheer-groep. Zelfgemaakte profielen (meta-editor) registreren als
+preview-activiteit in de modelleren-groep. DMN-modellering komt later bij de
+UML-activiteit (zelfde IDE), zoals gewenst.
 
-### Diagrammen (0.5) — de generieke diagram-motor (bewerkbare sandbox)
+### Canoniek model — de generieke diagram-motor (bewerkbare sandbox)
 
 > Toegevoegd: 2026-07-03 (fase 1+2 van [`STUDIO-05-diagramcore-plan.md`](STUDIO-05-diagramcore-plan.md)).
 
-De activiteit **Diagrammen (0.5)** draait op de nieuwe generieke motor
+De activiteit **Canoniek model** (tot 2026-07-11 "Diagrammen (0.5)") draait op de nieuwe generieke motor
 (`src/diagramcore/` + profiel `src/diagramprofielen/canoniek-uml/`) en is sinds
 fase 2 een **bewerkbare sandbox**:
 

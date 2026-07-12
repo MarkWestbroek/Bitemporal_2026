@@ -39,6 +39,7 @@ import React, {
   Suspense,
 } from "react";
 import { menuBus } from "../menuBus";
+import { registreerProfieltype } from "../profieltypeRegistry";
 import useUIStore from "../../store/useUIStore";
 import { createDiagramStore } from "../../diagramcore/model/createDiagramStore.js";
 import { UITLIJN_MODES } from "../../diagramcore/layout/uitlijnen.js";
@@ -78,6 +79,13 @@ export function maakDiagramActiviteit(opties) {
     menuLabel,
     previewTekst = "Bewerkbare sandbox — wijzigingen blijven lokaal.",
     status = "preview",
+    groep = "modelleren",
+    // true → niet in de activity bar; alleen bereikbaar via menu Ga naar
+    // (bv. de 0.5-DRD zolang DMN één ingang in de balk heeft).
+    verborgenInBalk = false,
+    // Accentkleur van het profieltype (tab-streepje en sectie-stip in de
+    // Modelleren-projectbrowser). Optioneel; zonder kleur een neutrale stip.
+    kleur,
     devHookNaam,
     koppeling = null,
     // Activiteit-eigen menu-acties bovenin het hoofdmenu:
@@ -202,11 +210,21 @@ export function maakDiagramActiviteit(opties) {
       useStore.temporal.getState().clear();
     }, [herlaad]);
 
+    // Meld element-selecties aan de buitenwereld: de Modelleren-inspector
+    // laat dan zijn map-/diagram-eigenschappen los (die wonnen anders van
+    // élke element-klik — de inspector leek dood).
+    useEffect(() => {
+      if (selectieId) menuBus.emit("studio:element-geselecteerd");
+    }, [selectieId]);
+
     // Menubalk-acties via de menuBus.
     useEffect(() => {
       const af = [
         menuBus.on(ev("undo"), () => useStore.temporal.getState().undo()),
         menuBus.on(ev("redo"), () => useStore.temporal.getState().redo()),
+        // Externe selectie (bv. klik op een element in de Modelleren-
+        // projectboom): selecteer in de inspector van dit profiel.
+        menuBus.on(ev("selecteer-element"), (elementId) => setSelectieId(elementId || null)),
         menuBus.on(ev("nieuw-diagram"), () => {
           const naam = window.prompt(`Naam van het nieuwe ${diagramTerm}:`, `Nieuw ${diagramTerm}`);
           if (!naam) return;
@@ -825,6 +843,8 @@ export function maakDiagramActiviteit(opties) {
     const { selectieId, setSelectieId, layoutApiRef } = useContext(Ctx);
     const [zoek, setZoek] = useState("");
     const [dicht, setDicht] = useState({});
+    // Ctrl-klik multiselect: samen (als bundel) naar de projectboom slepen.
+    const [multiIds, setMultiIds] = useState(() => new Set());
     // In-/uitklappen van boomrijen (per element-id, alleen deze sessie).
     const [ingeklapt, setIngeklapt] = useState({});
     // Rechtsklik-menu op boomrijen (vgl. de IDE-ProjectBrowser).
@@ -904,7 +924,9 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     const [sleepDoel, setSleepDoel] = useState(null);
     const SLEEP_MIME = "application/studio05-element";
     const sleepProps = (el, et) => ({
-      draggable: !et?.isConnector,
+      // Ook connectoren (associatie, ASOC) zijn versleepbaar — naar de
+      // Modelleren-projectboom; binnen de browser landen ze nergens.
+      draggable: true,
       onDragStart: (e) => {
         e.dataTransfer.setData(SLEEP_MIME, JSON.stringify({ elementId: el.id }));
         e.dataTransfer.setData("text/plain", el.naam || el.id);
@@ -933,7 +955,9 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
               if (!rauw) return;
               try {
                 const { elementId } = JSON.parse(rauw);
-                if (elementId) verhangNaarContainer(useStore, elementId, el.id);
+                // Connectoren horen niet in een container verhangen te worden.
+                const bronEt = elementTypesById[elements[elementId]?.elementType];
+                if (elementId && !bronEt?.isConnector) verhangNaarContainer(useStore, elementId, el.id);
               } catch {
                 /* geen geldig sleep-pakketje */
               }
@@ -1047,7 +1071,25 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
         <div key={el.id}>
           <div
             {...sleepProps(el, et)}
-            onClick={() => {
+            onDragStart={(e) => {
+              // Multiselectie sleept als bundel (elementIds); enkel element
+              // blijft compatibel via elementId.
+              const ids = multiIds.has(el.id) ? [...multiIds] : [el.id];
+              e.dataTransfer.setData(SLEEP_MIME, JSON.stringify({ elementId: el.id, elementIds: ids }));
+              e.dataTransfer.setData("text/plain", el.naam || el.id);
+              e.dataTransfer.effectAllowed = "copyMove";
+            }}
+            onClick={(e) => {
+              if (e.ctrlKey || e.metaKey) {
+                setMultiIds((prev) => {
+                  const n = new Set(prev);
+                  if (n.has(el.id)) n.delete(el.id);
+                  else n.add(el.id);
+                  return n;
+                });
+                return;
+              }
+              if (multiIds.size) setMultiIds(new Set());
               setSelectieId(el.id);
               if (zichtbaar) layoutApiRef.current?.focusNode?.(el.id);
             }}
@@ -1061,8 +1103,18 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
               borderRadius: 6,
               cursor: "pointer",
               color: zichtbaar ? "var(--s-fg)" : "var(--s-fg-muted)",
-              background: el.id === selectieId ? "var(--s-hover)" : "transparent",
-              outline: sleepDoel === el.id ? "1px dashed var(--s-accent, #6366f1)" : "none",
+              background: multiIds.has(el.id)
+                ? "rgba(99, 102, 241, 0.22)"
+                : el.id === selectieId
+                  ? "var(--s-hover)"
+                  : "transparent",
+              outline:
+                sleepDoel === el.id
+                  ? "1px dashed var(--s-accent, #6366f1)"
+                  : multiIds.has(el.id)
+                    ? "1.5px solid var(--s-accent, #6366f1)"
+                    : "none",
+              outlineOffset: -1.5,
             }}
           >
             <span
@@ -1418,8 +1470,12 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     // (mini-icoon of stereotype-tekst renderen ze allebei al).
     const [typering, setTypering] = useState(leesTypering);
     const [shapeSetId, setShapeSetId] = useState(leesShapeSet);
-    useEffect(
-      () =>
+    // N.B. beide abonnementen in één effect-body. (Hier zat een venijnige
+    // bug: de typering-subscribe stond per ongeluk op de deps-positie van
+    // useEffect, waardoor hij bij élke render opnieuw registreerde en nooit
+    // opruimde — handler-lek + React-warning "final argument is not an array".)
+    useEffect(() => {
+      const af = [
         menuBus.on(ev("shape-set"), (setId) => {
           try {
             window.localStorage.setItem(shapeSetSleutel, setId || "");
@@ -1439,8 +1495,9 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           // Zonder ververs blijft het menu-vinkje op de vórige stand hangen.
           setTimeout(() => menuBus.emit("menu:ververs"), 0);
         }),
-      []
-    );
+      ];
+      return () => af.forEach((off) => off());
+    }, []);
 
     // Spiegel het studio-thema naar body[data-ide-theme] zolang deze activiteit
     // actief is: hergebruikte umleditor-componenten (o.a. de CEL-ExpressieEditor)
@@ -1523,6 +1580,15 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
               const items = [
                 { sep: true },
                 { kop: true, label: "Element" },
+                {
+                  id: "zoek-in-boom",
+                  label: "Zoek in projectboom",
+                  icoon: "🔎",
+                  // De Modelleren-activiteit luistert (map-keten openklappen
+                  // + regel laten oplichten); elders is dit een no-op.
+                  onClick: () =>
+                    menuBus.emit("studio:zoek-in-boom", { profielId: id, elementId: nodeId }),
+                },
                 {
                   id: "naar-voren",
                   label: "Naar voorgrond",
@@ -2248,12 +2314,38 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     },
   ];
 
+  // Fase 2: meld dit profiel bij het profieltype-register, zodat de
+  // "Modelleren"-activiteit het in haar projectbrowser + tab-host kan tonen.
+  // Zelfde store en componenten — de inhoud is identiek, hoe je hem ook opent.
+  // Alleen modelleerprofielen; gereedschap (groep "beheer", zoals de
+  // profiel-ontwerper) hoort niet in de projectbrowser.
+  if (groep === "modelleren") {
+    registreerProfieltype({
+      id,
+      label,
+      icon,
+      kleur,
+      useStore,
+      descriptor,
+      Provider,
+      Main,
+      Inspector,
+      // De elementen-boom (zoekveld, hiërarchie, ＋ naar actief diagram).
+      // Vereist de Provider van dit profiel als voorouder (context).
+      ElementenBrowser,
+      menus,
+      menuPrefix,
+      diagramTerm,
+    });
+  }
+
   return {
     id,
     label,
     icon,
-    groep: "modelleren",
+    groep,
     status,
+    verborgenInBalk,
     Provider,
     Sidebar,
     Main,

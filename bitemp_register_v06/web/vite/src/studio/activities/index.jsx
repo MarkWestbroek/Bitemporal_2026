@@ -4,16 +4,21 @@
  * De volgorde hieronder bepaalt de volgorde van de iconen in de activity bar.
  * Een nieuwe functie toevoegen = hier één descriptor toevoegen (of importeren).
  *
- * Groepen:
- *   "modelleren" → UML, DMN, BPMN, Berichten
+ * Groepen (consolidatieplan 2026-07-11, fase 0):
+ *   "modelleren" → UML, canoniek model, OAS, MIM, DMN, BPMN, Berichten
  *   "diensten"   → API's, Toegangverlening
  *   "data"       → Rollen, Referentielijsten
+ *   "beheer"     → profiel-gereedschap + Studio-instellingen (onderaan de balk)
+ *
+ * Activiteiten met status "concept" of verborgenInBalk: true staan niet in de
+ * activity bar, maar blijven bereikbaar via menu Ga naar.
  */
 import { registreerActiviteiten } from "../activityRegistry";
 import { maakPlaceholderActiviteit } from "./PlaceholderActivity";
 import { IconAPI, IconToegang, IconRollen, IconReferentielijst } from "../icons";
 
 import umlActivity from "./umlActivity";
+import modellerenActivity from "./modellerenActivity";
 import diagramActivity from "./diagramActivity";
 import puurUmlActivity from "./puurUmlActivity";
 import oasActivity from "./oasActivity";
@@ -71,17 +76,18 @@ const referentielijstenActivity = maakPlaceholderActiviteit({
   voorbeeldItems: [],
 });
 
+import { registreerActiviteitAlsProfieltype } from "./activiteitAlsProfieltype.jsx";
+
 registreerActiviteiten([
   // modelleren
+  modellerenActivity, // fase 2: één ingang — projectbrowser + diagram-tabs over alle profielen
   umlActivity,
-  diagramActivity, // Studio 0.5 preview (canoniek-uml op de generieke motor)
-  puurUmlActivity, // Studio 0.5: tweede profiel (fase 5-lakmoesproef)
-  oasActivity, // Studio 0.5: derde profiel (OAS 3.1, fase 5-vuurproef)
-  mimActivity, // Studio 0.5: vijfde profiel (MIM 1.2, pas-toe-of-leg-uit)
-  profielActivity, // Studio 0.5: meta-editor trede 1 (JSON, §8.9)
-  profielOntwerpActivity, // Studio 0.5: meta-editor trede 2 (tekenen, §8.9)
+  diagramActivity, // "Canoniek model" — canoniek-uml op de generieke motor (preview)
+  puurUmlActivity, // "UML" — tweede profiel (preview)
+  oasActivity, // "OAS" — derde profiel, OAS 3.0/3.1 (preview)
+  mimActivity, // "MIM" — vijfde profiel, MIM 1.2 (preview)
   dmnActivity,
-  dmnDrdActivity, // Studio 0.5: vierde profiel (DMN DRD)
+  dmnDrdActivity, // "DMN DRD" — vierde profiel (preview, niet in de balk)
   bpmnActivity,
   berichtActivity,
   // diensten
@@ -90,6 +96,33 @@ registreerActiviteiten([
   // data
   rollenActivity,
   referentielijstenActivity,
-  // beheer
+  // beheer (onderaan de balk)
+  profielActivity, // "Profiel-editor" — meta-editor trede 1 (JSON, §8.9)
+  profielOntwerpActivity, // "Profiel-ontwerp" — meta-editor trede 2 (tekenen, §8.9)
   studioInstellingenActivity, // globale vorm-/icoon-galerij (P07-vervolg)
 ]);
+
+// ── Fase 2-sluitstuk: klassieke editors ook in de Modelleren-tab-host ──
+// Andere motor (dmn-js/bpmn/FlexLayout) → als profieltype met vaste
+// documenten; de eigen sidebar verschijnt in het ondervak van de browser.
+// De "UML-model"-activiteit implementeert het canonieke metamodel
+// (ENT/GE/REL), niet puur UML — in de projectboom heet zij dus naar wat
+// ze is: de Canoniek model IDE (v1), de publiceer-/genereer-plek.
+registreerActiviteitAlsProfieltype(umlActivity, {
+  label: "Canoniek model IDE",
+  kleur: "#475569",
+  documenten: [{ id: "uml-model", naam: "Canoniek model IDE (v1)" }],
+  eigenSchil: true,
+});
+registreerActiviteitAlsProfieltype(dmnActivity, {
+  kleur: "#a78bfa",
+  documenten: [{ id: "dmn-model", naam: "DMN-model (DRD + tabel)" }],
+});
+registreerActiviteitAlsProfieltype(bpmnActivity, {
+  kleur: "#f472b6",
+  documenten: [{ id: "bpmn-proces", naam: "BPMN-proces" }],
+});
+registreerActiviteitAlsProfieltype(berichtActivity, {
+  kleur: "#34d399",
+  documenten: [{ id: "berichtdefinities", naam: "Berichtdefinities" }],
+});

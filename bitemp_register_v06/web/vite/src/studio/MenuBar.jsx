@@ -8,11 +8,16 @@
  * Menu-model:
  *   menus: [
  *     { id, label, items: [
- *        { id, label, onClick, shortcut?, disabled?, checked? }      // gewoon item
+ *        { id, label, onClick, shortcut?, disabled?, checked?,
+ *          badge?, muted? }                                          // gewoon item
  *        { id, label, items: [ … ] }                                 // submenu (flyout)
  *        { type: "separator" }
+ *        { type: "kop", label }                                      // groepskop (niet klikbaar)
  *     ]}
  *   ]
+ *
+ * `badge` (bv. "preview"/"concept") verschijnt als label-chip achter het item;
+ * `muted` dempt het item visueel maar laat het klikbaar (anders dan disabled).
  *
  * Bediening: klik op een titel opent het menu; bewegen over andere titels wisselt
  * (zoals een desktop-menubalk); een item met `items` opent een flyout-submenu bij
@@ -29,6 +34,13 @@ function Dropdown({ items, onKies, flyout = false }) {
       {(items || []).map((item, i) => {
         if (item.type === "separator") {
           return <div key={`sep-${i}`} className="studio-menubar__sep" />;
+        }
+        if (item.type === "kop") {
+          return (
+            <div key={`kop-${i}`} className="studio-menubar__kop" role="presentation">
+              {item.label}
+            </div>
+          );
         }
         const heeftSub = Array.isArray(item.items) && item.items.length > 0;
         if (heeftSub) {
@@ -61,12 +73,17 @@ function Dropdown({ items, onKies, flyout = false }) {
             key={item.id || i}
             type="button"
             role="menuitem"
-            className={"studio-menubar__entry" + (item.disabled ? " is-disabled" : "")}
+            className={
+              "studio-menubar__entry" +
+              (item.disabled ? " is-disabled" : "") +
+              (item.muted ? " is-muted" : "")
+            }
             onClick={() => onKies(item)}
             disabled={item.disabled}
           >
             <span className="studio-menubar__check">{item.checked ? "✓" : ""}</span>
             <span className="studio-menubar__label">{item.label}</span>
+            {item.badge && <span className="studio-menubar__badge">{item.badge}</span>}
             {item.shortcut && <span className="studio-menubar__shortcut">{item.shortcut}</span>}
           </button>
         );

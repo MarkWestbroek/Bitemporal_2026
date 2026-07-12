@@ -16,6 +16,16 @@ const base = {
   strokeLinejoin: "round",
 };
 
+/** Modelleren: projectbrowser-boom met diagramknopen (fase 2-tab-host). */
+export const IconModelleren = (p) => (
+  <svg {...base} {...p}>
+    <path d="M5 3v18" />
+    <path d="M5 8h4M5 15h4" />
+    <rect x="11" y="5" width="9" height="6" rx="1" />
+    <rect x="11" y="13" width="9" height="6" rx="1" />
+  </svg>
+);
+
 export const IconUML = (p) => (
   <svg {...base} {...p}>
     <rect x="3" y="3" width="8" height="6" rx="1" />

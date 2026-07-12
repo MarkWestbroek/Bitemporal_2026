@@ -286,9 +286,11 @@ function ProfielInspector() {
 
 export default {
   id: "profiel05",
-  label: "Profiel (0.5)",
+  label: "Profiel-editor",
   icon: <IconProfiel05 />,
-  groep: "modelleren",
+  // Gereedschap, geen modelleeractiviteit: hoort bij beheer/instellingen
+  // (consolidatieplan 2026-07-11, §2 — Instellingen bevat de profiel-editors).
+  groep: "beheer",
   status: "preview",
   Provider: ProfielProvider,
   Sidebar: ProfielSidebar,

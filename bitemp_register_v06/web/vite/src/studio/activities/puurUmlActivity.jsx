@@ -12,14 +12,15 @@ registreerPuurUml();
 
 export default maakDiagramActiviteit({
   id: "puurUml05",
-  label: "UML (0.5)",
+  label: "UML",
   icon: <IconUML05 />,
   descriptor: puurUmlDiagramType,
   maakElement,
   persistKey: "studio05-puur-uml",
   taakbalkSleutel: "studio05-taakbalken-puur-uml",
   menuPrefix: "u05",
-  menuLabel: "UML (0.5)",
+  menuLabel: "UML",
+  kleur: "#60a5fa",
   previewTekst: "Puur UML-klassediagram — tweede profiel (fase 5-lakmoesproef), lege sandbox.",
   devHookNaam: "__puurUml05Store",
 });

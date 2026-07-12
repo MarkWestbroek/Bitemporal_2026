@@ -30,9 +30,25 @@
  *     inspectorLabel?: string
  *     fullMain?:     boolean  // true → activiteit brengt eigen volledige layout mee
  *                             //        (shell toont géén eigen zijpanelen)
- *     status?:       string   // bv. "concept" voor nog-te-maken functies
+ *     status?:       string   // "preview" (in aanbouw, bruikbaar) of "concept"
+ *                             // (nog te maken). Getoond als badge; concepten
+ *                             // staan niet in de activity bar.
+ *     verborgenInBalk?: boolean // true → niet in de activity bar, wel in Ga naar
  *   }
  */
+
+/** Weergavenamen van de groepen (volgorde = balkvolgorde; "beheer" onderaan). */
+export const GROEP_LABELS = {
+  modelleren: "Modelleren",
+  diensten: "Diensten",
+  data: "Data",
+  beheer: "Beheer",
+};
+
+/** Weergavenaam van een groep (valt terug op de sleutel zelf). */
+export function groepLabel(groep) {
+  return GROEP_LABELS[groep] || groep || "";
+}
 
 const _activiteiten = [];
 const _index = new Map();

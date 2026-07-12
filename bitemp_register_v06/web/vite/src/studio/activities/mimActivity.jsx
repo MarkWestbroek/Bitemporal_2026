@@ -19,14 +19,15 @@ registreerMim12();
 
 export default maakDiagramActiviteit({
   id: "mim05",
-  label: "MIM (0.5)",
+  label: "MIM",
   icon: <IconMIM05 />,
   descriptor: mim12DiagramType,
   maakElement,
   persistKey: "studio05-mim12",
   taakbalkSleutel: "studio05-taakbalken-mim12",
   menuPrefix: "mim05",
-  menuLabel: "MIM (0.5)",
+  menuLabel: "MIM",
+  kleur: "#f59e0b",
   previewTekst: "MIM 1.2-informatiemodellen (Geonovum, pas-toe-of-leg-uit) — vijfde profiel.",
   devHookNaam: "__mim05Store",
   koppeling: {

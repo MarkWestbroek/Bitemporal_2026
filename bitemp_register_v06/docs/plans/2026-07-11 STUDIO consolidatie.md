@@ -217,42 +217,203 @@ Kernbesluiten daarbij:
 
 Elke fase is los shipbaar; fase 0–1 raken geen editor-code.
 
-### Fase 0 — Opruimen (dagen, quick wins)
-1. Labels ontdoen van "(0.5)"/"(concept)"; status wordt een badge
-   ("preview"/"concept") via het bestaande `status`-veld.
-2. Studio-instellingen naar de onderkant van de balk (⚙, eigen sectie).
-3. Concept-placeholders **uit de balk**; alleen bereikbaar via Ga naar,
-   gedempt weergegeven met concept-badge.
-4. Eén DMN-ingang: "DMN-tabellen" en "DRD (0.5)" samenvoegen (het
-   DRD+Tabel-tabpatroon bestaat al in `dmnActivity`).
-5. Groepskoppen/tooltips in de balk en in Ga naar (modelleren · software ·
-   data · instellingen) zodat de indeling zichtbaar is.
+### Fase 0 — Opruimen (dagen, quick wins) — ✅ gebouwd 2026-07-11
+Branch `feat/studio-consolidatie-fase0`; zie ook de bijgewerkte
+activiteiten-tabel in `docs/STUDIO.md`.
 
-### Fase 1 — Zichtbaarheid & palette (week)
-1. Instellingen-paneel "Activiteiten": per gebruiker aan/uit + Labs-toggle
-   (persist in `useStudioStore`).
-2. Favorieten/pins bovenin de balk.
-3. Command palette (Ctrl+K) over activiteiten + menu-acties.
+1. ✅ Labels ontdoen van "(0.5)"/"(concept)"; status is een badge
+   ("preview"/"concept") in topbar en Ga naar; op een balk-icoon een open
+   ringetje (preview). Nieuwe namen: "Diagrammen (0.5)" → **Canoniek
+   model**, "Profiel (0.5)" → **Profiel-editor**, "DMN-tabellen" →
+   **DMN-beslissingen** (er zit immers ook een DRD-tab in).
+2. ✅ Beheer-groep (Profiel-editor, Profiel-ontwerp, Studio-instellingen)
+   onderaan de balk via een flex-spacer (VS Code-tandwielpatroon). De
+   profiel-editors verhuisden daarbij van "modelleren" naar "beheer" —
+   het zijn gereedschappen, vooruitlopend op de Instellingen-ingang (§2).
+3. ✅ Concept-placeholders uit de balk (`status: "concept"` wordt
+   gefilterd); in Ga naar gedempt + concept-badge, wél aanklikbaar.
+4. ✅ Eén DMN-ingang in de balk: de 0.5-DRD kreeg `verborgenInBalk: true`
+   (nieuw descriptor-veld) en heet "DMN DRD" in Ga naar. Echte
+   samenvoeging (0.5-DRD als tab in de DMN-activiteit) is fase 2-werk —
+   de twee draaien op verschillende motoren.
+5. ✅ Groepskoppen in Ga naar (Modelleren · Diensten · Data · Beheer,
+   `{type:"kop"}` in het menu-itemmodel) en groepsnaam in de
+   balk-tooltips.
 
-### Fase 2 — Profieltype-registry & diagram-tabs (weken)
-1. Profieltype-contract definiëren; bestaande activiteit-descriptors
-   mappen naar profieltypen (adapters, editors ongewijzigd).
-2. Main van "Modelleren" wordt tab-host: meerdere open diagrammen,
-   tab-icoon/kleur per profieltype, open-diagrammen persist.
-3. `fullMain`-uitzondering van de UML-IDE verkleinen of de klassieke IDE
-   achter Labs zetten zodra 0.5 pariteit heeft.
+### Fase 1 — Zichtbaarheid & palette (week) — ✅ gebouwd 2026-07-11
+1. ✅ Instellingen-paneel "Activiteiten" (in Studio-instellingen, bovenaan):
+   per activiteit aan/uit + Labs-toggle (uit → previews niet in de balk),
+   persist in `useStudioStore` (localStorage). Concepten en
+   `verborgenInBalk`-activiteiten zijn er zichtbaar maar niet instelbaar
+   ("alleen via Ga naar").
+2. ✅ Favorieten: ★ pint een activiteit bovenin de balk (pinvolgorde,
+   amber scheidingslijn); favorieten winnen van Labs-uit en verschijnen
+   niet dubbel in hun groep.
+3. ✅ Opdrachtenpalet (Ctrl+K, en Ga naar → Opdrachtenpalet…): zoekt over
+   alle activiteiten (ook wat niet in de balk staat) plus de
+   menubalk-acties van de actieve activiteit, inclusief submenu's;
+   dezelfde onClick's als de menubalk (`CommandPalette.jsx`).
 
-### Fase 3 — Projectbrowser (weken)
-1. Eén boom met vrije mappen (Sparx-model: de indeling is van de gebruiker)
-   over alle profieltypen heen — mappen, diagrammen én elementen door
-   elkaar, elementen met hun kinderen (constraints, attributen);
-   drag-and-drop, hernoemen, zoeken. Gevirtualiseerd (react-arborist is er
-   al) — de eigen Sparx-repo's tonen honderden knopen per project.
-2. Eigendom vs. voorkomen: element woont éénmaal in de boom, verschijnt op
-   n diagrammen; vanuit de boom toevoegen aan het actieve diagram (＋,
-   bestaand 0.5-gedrag) en "toon op diagram…"-navigatie andersom.
-3. Projectstructuur persistent (eerst localStorage/werkbestand, dan API).
-4. De losse per-profiel-sidebars worden secties/filters binnen die boom.
+### Fase 2 — Profieltype-registry & diagram-tabs (weken) — grotendeels ✅ 2026-07-11
+1. ✅ Profieltype-registry (`studio/profieltypeRegistry.js`): id, label,
+   icoon, **kleur**, store, descriptor, slots en menu's per profiel.
+   `maakDiagramActiviteit` registreert automatisch (alleen groep
+   "modelleren" — gereedschap zoals de profiel-ontwerper hoort er niet in);
+   dynamische meta-editor-profielen doen dus vanzelf mee.
+2. ✅ Nieuwe activiteit **"Modelleren"** (bovenaan de balk, preview):
+   sidebar = projectbrowser v0 (per profieltype zijn diagrammen, ＋ voor
+   nieuw), Main = **tab-host** (open diagrammen als tabs met profiel-icoon
+   en accentkleur; persist in localStorage; een elders verwijderd diagram
+   sluit zijn eigen tab), inspector én menubalk volgen het profiel van de
+   actieve tab. Zelfde stores en componenten als de losse
+   profiel-activiteiten — de inhoud is identiek, hoe je hem ook opent.
+3. ✅ (2026-07-12) **Klassieke editors in de tab-host**: dmn-js (DRD+tabel),
+   BPMN, Berichtdefinities én de klassieke UML-IDE (FlexLayout) staan als
+   profieltypen in de Modelleren-browser via
+   `activiteitAlsProfieltype.jsx` — een shim die een klassieke activiteit
+   een minimale store-façade met **vaste documenten** geeft (geen ＋,
+   niet in de project-export; hun inhoud leeft in eigen stores/backends).
+   Documenten openen als tab, menubalk en inspector volgen mee, en de
+   eigen sidebar van de activiteit (bv. DmnTreeBrowser + ModelPicker)
+   verschijnt in het ondervak van de projectbrowser. Ook deze documenten
+   zijn in mappen te plaatsen. De klassieke IDE heet in de boom **"Canoniek
+   model IDE (v1)"** (sessiebesluit 2026-07-12: zij implementeert het
+   canonieke metamodel, niet puur UML, en is de publiceer-/genereer-plek);
+   zij is gemarkeerd met `eigenSchil` — de host klapt zijn zijpanelen dan
+   **automatisch in** (en herstelt ze bij een gewone tab; handmatig
+   heropenen kan altijd via de topbar-knoppen/rails). Rest: de losse
+   activiteiten uit de balk nemen zodra "Modelleren" de standaard is (kan
+   per gebruiker al via de fase 1-instellingen), de klassieke IDE achter
+   Labs zodra 0.5 pariteit heeft, en de **genereer-functionaliteit**
+   (publiceren/rebuild vanuit de IDE, OAS-export, …) als profiel-
+   overstijgend aspect een expliciete plek geven in de nieuwe structuur
+   (zie ook "algemene aspecten" bovenin dit plan).
+
+### Fase 3 — Projectbrowser (weken) — v0 gebouwd 2026-07-12
+> **Vooraf (2026-07-12): visuele identiteit is nu data.** Kleur en embleem
+> per profieltype zijn bewerkbaar in **Studio-instellingen → Profieltypen**
+> (kleurkiezer + embleem-tekst + herstel), als gebruikers-override
+> (localStorage, `profieltypeRegistry`: `zetStijlOverride`/`effectieveStijl`)
+> bovenop de code-defaults (`kleur:` in het descriptor-bestand, icoon in
+> `icons.jsx`). Overrides werken direct door in projectbrowser en tabs
+> (`ProfielIcoon.jsx`).
+
+1. 🔶 v1 gebouwd: vrije mappen (Sparx-model) in de Modelleren-browser —
+   maken (＋ én "＋ Nieuwe map"-knop), **hernoemen** (✎-knop of dubbelklik),
+   verwijderen (inhoud valt terug naar de ouder), vrij nesten, en **mappen
+   zelf verslepen** (naar een andere map, of op de "Mappen"-kop terug naar
+   de wortel; cyclus-drops worden geweigerd). Diagrammen slepen naar mappen
+   en terug naar "Niet ingedeeld"; geplaatste regels tonen hun
+   profiel-/elementtype-icoon. Nog niet: zoeken over de boom,
+   virtualisatie, volgorde binnen een map.
+2. 🔶 Elementen (2026-07-12): onder de mappenboom staat de **elementen-boom
+   van het profiel van de actieve tab** (bestaande 0.5-ElementenBrowser,
+   per profieltype geregistreerd, wisselt met de tab). Elementen zijn
+   daaruit **naar mappen te slepen** (eigendom-plek in de boom, met
+   elementtype-icoon); klik op zo'n element heropent zonodig een tab van
+   zijn profiel (liefst een diagram waar het op staat) en **selecteert het
+   in de inspector** (menuBus `<profiel>:selecteer-element`). Terugslepen
+   naar "Niet ingedeeld" haalt de plaatsing weg.
+   **Hiërarchie volgt mee (sessiebesluit 2026-07-12):** een geplaatst
+   element toont zijn hiërarchie-kinderen (GE's onder hun ENT, compositie)
+   automatisch als geneste boomregels — zelfde regels als de
+   ElementenBrowser (`descriptor.hierarchie` incl. `omgekeerd`, de
+   `hierarchieParen`-hook én `standaardDichtInBoom` als chevron-beginstand).
+   Een kind apart naar een map slepen plaatst zijn **top-voorouder** (een GE
+   kan niet onder zijn ENT vandaan). Vervolg: volledige eigendom-vs-
+   voorkomen (alle elementen ín de boom), "toon op diagram…"-navigatie, en
+   **GE verhangen naar een andere ENT** als bewuste model-operatie achter
+   een waarschuwing (raakt alle diagrammen — die moeten worden nagelopen).
+3. 🔶 Projectstructuur persistent in localStorage (`studio-modelleren`:
+   mappen incl. kleur + plaatsing + open-stand). **Project-werkbestand
+   (2026-07-12):** menu **Project → Exporteer/Importeer project…** in
+   Modelleren — één JSON (formaat "studio-project" v1) met de structuur
+   (mappen + plaatsingen + tabs) én de volledige inhoud van alle
+   niet-lege profiel-sandboxes (elements/diagrams incl. viewports/meta).
+   Import vervangt na bevestiging; onbekende profielen worden gemeld en
+   overgeslagen; tabs worden gefilterd op bestaande diagrammen; de
+   undo-histories worden gewist. Hiermee is een project deelbaar en niet
+   aan localStorage gebonden — en dit is de vorm die straks naar de API
+   kan (API-persistentie is het resterende deel van deze stap).
+4. 🔶 De per-profiel-secties staan als "Niet ingedeeld" onder de mappenboom
+   en tonen alleen nog niet-geplaatste diagrammen.
+5. Bediening (2026-07-12): **inline hernoemen** van mappen én elementen
+   (dubbelklik of contextmenu → invoerveld; Enter/blur = opslaan, Esc =
+   annuleren), **rechtsklik-contextmenu** op mappen (hernoemen/nieuwe
+   submap/eigenschappen/verwijderen), diagram-regels (openen/eigenschappen/
+   uit de map halen) en element-regels (selecteer/hernoemen/verwijderen
+   uit model), en **map-eigenschappen in de inspector** (naam + kleur).
+6. **Klikmodel (sessiebesluit 2026-07-12, Sparx-conventie):** klik op een
+   boomregel = **eigenschappen** in de inspector (map, diagram én element);
+   **dubbelklik** op een diagram = openen (tab). Klik op een element
+   focust het bovendien op een **open** diagram waar het op staat (wisselt
+   hooguit tussen open tabs — er wordt niets heropend; staat het nergens
+   open, dan alleen eigenschappen of niets bij een inactief profiel).
+   Elementen kennen géén "uit de map halen" (waar zou hij heen moeten?) —
+   wel **verwijderen uit het model**, achter een bevestiging met
+   Ctrl+Z-vangnet; ook terugslepen naar "Niet ingedeeld" is voor elementen
+   geblokkeerd. Connectoren (associatie, ASOC) zijn nu ook naar de boom te
+   slepen. Toekomstwens: rechtsklik → **"zoek op diagram(men)"**.
+7. Boom-bediening ronde 2 (2026-07-12):
+   - **Auto-scroll tijdens slepen**: tegen de boven-/onderrand van de boom
+     duwen "met iets in de hand" scrollt mee (hoger gelegen mappen waren
+     anders onbereikbaar als sleepdoel).
+   - **Contextmenu → "Verplaats naar ▸"** (drill-down-submenu met alle
+     mappen, ingesprongen op diepte) op diagrammen, elementen én mappen
+     zelf (met "(wortel)"/"(Niet ingedeeld)" waar van toepassing en
+     cyclus-uitsluiting). Dit dekt ook het geval waar slepen onhandig is;
+     knippen/plakken (Ctrl+X/V) blijft een optie voor later.
+   - **Handmatige mapvolgorde**: contextmenu Omhoog/Omlaag per niveau
+     (volgorde-veld; nieuw of verplaatst = achteraan). Later eventueel
+     slepen-tussen-twee-mappen met invoegindicator.
+   - **Ctrl-klik multiselect** op diagram-/element-regels: samen slepen
+     naar een map én samen "Verplaats naar". Shift-bereik nog niet.
+   - **Canvas-rechtsklik → "Zoek in projectboom"**: klapt de map-keten
+     open, scrollt ernaartoe en laat de regel oplichten (via de
+     top-voorouder; menuBus "studio:zoek-in-boom"). Element zonder
+     map-plek: no-op (vervolg: elementen-boom laten oplichten).
+   - **Structuur-undo (Ctrl+Z/Ctrl+Y in de boom)**: eigen undo/redo-stapel
+     voor mappen + plaatsingen (verslepen, hernoemen, kleur, volgorde,
+     aanmaken/verwijderen, plaatsen), los van de model-undo per profiel —
+     de boom vangt de focus bij elke muisklik, en stopPropagation houdt de
+     canvas-undo erbuiten.
+   - **Ctrl-klik multiselect óók in de elementen-onderboom** (0.5-browser):
+     gemarkeerde elementen slepen als bundel naar een map (elementIds in
+     het sleep-pakketje; top-voorouder per element).
+8. Denkpunten focus-doorlevering (sessie 2026-07-12), mogelijk
+   **configureerbaar** maken zoals tools het verschillend doen:
+   (a) boom → diagram (EA: dubbelklik; enkelklik werkt alleen in de boom),
+   (b) diagram → boom (Archi: vanzelf; EA: expliciet "find in tree"),
+   (c) element → inspector (vanzelf, overal — zo werkt het nu).
+   Idee daarbij: klik op een lége canvas toont de **diagram-eigenschappen**
+   (klik op een element de element-eigenschappen).
+   De boom-scrollpositie blijft staan bij tabwissel/hermontage
+   (navigatie-anker; gebouwd 2026-07-12).
+
+**Concept-besluit: een diagram is geen map (2026-07-12).** Een diagram
+*toont* elementen alleen; het maakt het diagram niet uit waar ze in de boom
+staan, en elementen staan typisch op meerdere diagrammen. Een diagram kan
+dus nooit hiërarchie-onderdeel zijn: in de projectboom is het een gewoon
+**blad-element**, visueel exact gelijkwaardig aan element-regels (zelfde
+chevron-kolom, nooit kinderen). Elementen wonen onder een package (profiel-
+hiërarchie) of onder een map.
+
+**Mappen én diagrammen als "superprofiel"-elementen (sessie 2026-07-12):**
+mappen en diagrammen zijn structuur-elementen die boven de profielen staan —
+conceptueel een *superprofiel* met het map- en diagram-elementtype, de
+map∋map-relatie en hun properties. Beide hebben **eigenschappen in de
+inspector**: mappen naam + kleur; diagrammen naam (bewerkbaar), type
+(readonly: profiel + diagramType-id) en inhoud (aantal elementen op het
+diagram) — via rechtsklik → Eigenschappen; er kan altijd meer bij. Besluit
+voorlopig: **hardcoded structuurelementen, maar data-vormig** (map:
+{id, naam, kleur, ouderId}; diagram: het bestaande diagram-record in de
+profiel-store), zodat een later superprofiel-descriptor ze kan overnemen
+zonder migratie. Het superprofiel zelf bouwen wordt actueel zodra fase 4
+(kruisverbanden) toch profiel-overstijgende elementtypen afdwingt. Verwant open punt: de
+**package-dualiteit** (een UML-/canoniek-package is element én map, zoals in
+EA) — voorlopig behandelen we een package als element bínnen zijn profiel;
+hoe map en package zich verhouden is een denkpunt voor de gebruiker.
+Nog gewenst (fase 3-vervolg): **multi-select** in beide bomen.
 
 ### Fase 4 — Kruisverbanden (nieuw, na 2–3)
 1. Trace-links tussen profieltypen als eigen diagramtype; bij twee

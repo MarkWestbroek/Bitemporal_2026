@@ -95,6 +95,278 @@
 .studio-menubar__shortcut { color: var(--s-fg-muted); font-size: 11px; }
 .studio-menubar__entry:hover:not(.is-disabled) .studio-menubar__shortcut { color: #dbeafe; }
 .studio-menubar__sep { height: 1px; margin: 4px 6px; background: var(--s-border); }
+/* Groepskop in een dropdown (bv. Ga naar: Modelleren / Diensten / Data / Beheer). */
+.studio-menubar__kop {
+  padding: 6px 10px 2px;
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .06em;
+  color: var(--s-fg-muted);
+  user-select: none;
+}
+.studio-menubar__kop:not(:first-child) { margin-top: 4px; border-top: 1px solid var(--s-border); padding-top: 8px; }
+/* Status-chip achter een menu-item (preview/concept). */
+.studio-menubar__badge {
+  font-size: 9px; text-transform: uppercase; letter-spacing: .04em;
+  color: #f59e0b; border: 1px solid #f59e0b55; border-radius: 4px;
+  padding: 0 4px; margin-left: 8px;
+}
+/* Gedempt maar klikbaar (concept-activiteiten in Ga naar). */
+.studio-menubar__entry.is-muted .studio-menubar__label { opacity: .55; }
+.studio-menubar__entry.is-muted:hover .studio-menubar__label { opacity: 1; }
+
+/* Embleem-override van een profieltype (1–3 tekens i.p.v. icoon). */
+.studio-profiel-embleem {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px;
+  font-weight: 700; letter-spacing: .02em; line-height: 1;
+}
+
+/* ── Modelleren: projectbrowser (sidebar) ─────────────────── */
+.studio-project { padding: 6px 4px; font-size: 13px; }
+.studio-project__sectie { margin-bottom: 10px; }
+.studio-project__kop {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 6px;
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .05em;
+  color: var(--s-fg-muted);
+}
+.studio-project__stip { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+.studio-project__icoon { display: inline-flex; }
+.studio-project__icoon svg { width: 14px; height: 14px; }
+.studio-project__naam { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.studio-project__nieuw {
+  width: 20px; height: 20px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: none; border-radius: 4px;
+  color: var(--s-fg-muted); font-size: 12px; cursor: pointer;
+}
+.studio-project__nieuw:hover { background: var(--s-hover); color: var(--s-fg); }
+.studio-project__leeg { padding: 2px 10px 2px 26px; color: var(--s-fg-muted); font-size: 12px; font-style: italic; }
+.studio-project__diagram {
+  display: block; width: 100%; box-sizing: border-box;
+  padding: 3px 10px 3px 26px;
+  font: inherit; font-size: 13px; text-align: left;
+  color: var(--s-fg);
+  background: transparent; border: none; border-radius: 5px;
+  cursor: pointer;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.studio-project__diagram:hover { background: var(--s-hover); }
+/* Open als tab: subtiel (accentstreepje + vet) — géén selectie. */
+.studio-project__diagram.is-actief {
+  font-weight: 600;
+  box-shadow: inset 2.5px 0 0 var(--s-accent, #4f46e5);
+}
+/* Geselecteerd (eigenschappen in de inspector): de blauwe rij. */
+.studio-project__diagram.is-selectie { background: var(--s-accent, #4f46e5); color: #fff; }
+.studio-project__mapkop.is-selectie { background: var(--s-accent, #4f46e5); color: #fff; }
+.studio-project__mapkop.is-selectie .studio-project__caret,
+.studio-project__mapkop.is-selectie .studio-project__nieuw { color: #dbeafe; }
+.studio-project__regel-profiel { display: inline-flex; margin-right: 6px; vertical-align: -2px; }
+.studio-project__regel-profiel svg { width: 13px; height: 13px; }
+
+/* Vrije mappen (fase 3 v0) */
+.studio-project__map { margin-bottom: 2px; }
+.studio-project__mapkop {
+  display: flex; align-items: center; gap: 4px;
+  padding: 2px 6px 2px 2px;
+  border-radius: 5px;
+  font-size: 13px; font-weight: 600;
+  color: var(--s-fg);
+}
+.studio-project__mapkop.is-dropdoel,
+.studio-project__kop.is-dropdoel { outline: 1.5px dashed var(--s-accent, #4f46e5); outline-offset: -1px; background: var(--s-hover); }
+.studio-project__mapkop { cursor: grab; }
+.studio-project__mapkop:active { cursor: grabbing; }
+.studio-project__mapkop.is-selectie { background: var(--s-hover); }
+.studio-project__mapstip { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 auto; }
+.studio-project__mapnaam-invoer {
+  flex: 1; min-width: 0;
+  font: inherit; font-size: 13px; font-weight: 600;
+  padding: 1px 4px;
+  border: 1px solid var(--s-accent, #4f46e5); border-radius: 4px;
+  background: var(--s-panel); color: var(--s-fg);
+  outline: none;
+}
+/* Element-regels (incl. hiërarchie-kinderen) in een map. */
+.studio-project__elementrij { display: flex; align-items: center; min-width: 0; }
+.studio-project__elementrij .studio-project__caret { flex: 0 0 18px; }
+.studio-project__elementrij .studio-project__diagram { flex: 1; padding-left: 4px; }
+
+/* ── Contextmenu in de projectboom ────────────────────────── */
+.studio-ctxmenu {
+  position: fixed; z-index: 300;
+  min-width: 180px;
+  padding: 4px;
+  background: var(--s-panel);
+  border: 1px solid var(--s-border); border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+.studio-ctxmenu__item {
+  display: block; width: 100%; box-sizing: border-box;
+  padding: 6px 10px;
+  font: inherit; font-size: 13px; text-align: left;
+  color: var(--s-fg);
+  background: transparent; border: none; border-radius: 5px;
+  cursor: pointer;
+}
+.studio-ctxmenu__item:hover { background: var(--s-accent, #4f46e5); color: #fff; }
+.studio-ctxmenu__sep { height: 1px; margin: 4px 6px; background: var(--s-border); }
+.studio-ctxmenu__terug { font-weight: 600; color: var(--s-fg-muted); }
+.studio-ctxmenu__leeg { padding: 6px 10px; font-size: 12px; color: var(--s-fg-muted); font-style: italic; }
+.studio-ctxmenu__item { white-space: pre; } /* inspringing in "Verplaats naar" */
+
+/* Ctrl-klik multiselectie in de projectboom (duidelijk zichtbaar). */
+.studio-project__diagram.is-multi {
+  outline: 1.5px solid var(--s-accent, #4f46e5);
+  outline-offset: -1.5px;
+  background: rgba(99, 102, 241, 0.22);
+}
+
+/* "Zoek in projectboom": regel licht even op. */
+@keyframes studio-flits {
+  0%, 60% { background: #f59e0b55; }
+  100% { background: transparent; }
+}
+.studio-project__elementrij.is-flits { animation: studio-flits 1.8s ease-out; border-radius: 6px; }
+.studio-project__mapkop .studio-project__nieuw { visibility: hidden; }
+.studio-project__mapkop:hover .studio-project__nieuw { visibility: visible; }
+.studio-project__caret {
+  width: 18px; height: 18px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: none; color: var(--s-fg-muted);
+  font-size: 10px; cursor: pointer;
+}
+.studio-project__mapnaam { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: default; }
+.studio-project__map .studio-project__diagram { padding-left: 22px; }
+.studio-project__map .studio-project__leeg { padding-left: 22px; }
+.studio-project__kop--los { margin-top: 12px; border-top: 1px solid var(--s-border); padding-top: 8px; border-radius: 0; }
+.studio-project__grote-knop {
+  display: block; width: calc(100% - 12px); box-sizing: border-box;
+  margin: 2px 6px 8px;
+  padding: 5px 10px;
+  font: inherit; font-size: 12px;
+  color: var(--s-fg);
+  background: var(--s-panel); border: 1px dashed var(--s-border); border-radius: 6px;
+  cursor: pointer; text-align: center;
+}
+.studio-project__grote-knop:hover { background: var(--s-hover); border-style: solid; }
+
+/* Elementen-boom van het actieve tab-profiel, onder de mappenboom. */
+.studio-project__elementen {
+  flex: 0 0 45%;
+  min-height: 0;
+  display: flex; flex-direction: column;
+  border-top: 1px solid var(--s-border);
+}
+.studio-project__elementen-kop {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 8px 3px;
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .05em;
+  color: var(--s-fg-muted);
+}
+.studio-project__elementen-kop svg { width: 13px; height: 13px; }
+
+/* ── Modelleren: tab-host (main) ──────────────────────────── */
+.studio-modelleren { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+.studio-modelleren__inhoud { flex: 1; min-height: 0; position: relative; }
+.studio-tabbalk {
+  flex: 0 0 auto;
+  display: flex; align-items: stretch; gap: 1px;
+  padding: 0 4px;
+  background: var(--s-panel-head);
+  border-bottom: 1px solid var(--s-border);
+  overflow-x: auto;
+}
+.studio-tab {
+  display: inline-flex; align-items: center;
+  border-top: 2px solid transparent;
+  border-right: 1px solid var(--s-border);
+  color: var(--s-fg-muted);
+  max-width: 220px;
+}
+.studio-tab.is-actief { background: var(--s-canvas); color: var(--s-fg); }
+.studio-tab__kies {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 4px 6px 10px;
+  font: inherit; font-size: 12px;
+  color: inherit; background: transparent; border: none; cursor: pointer;
+  min-width: 0;
+}
+.studio-tab__icoon { display: inline-flex; flex: 0 0 auto; }
+.studio-tab__icoon svg { width: 14px; height: 14px; }
+.studio-tab__naam { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.studio-tab__sluit {
+  width: 18px; height: 18px; margin: 0 4px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px; line-height: 1;
+  color: var(--s-fg-muted); background: transparent; border: none; border-radius: 4px;
+  cursor: pointer;
+}
+.studio-tab__sluit:hover { background: var(--s-hover); color: var(--s-fg); }
+.studio-modelleren__leeg { padding: 32px; color: var(--s-fg-muted); max-width: 560px; }
+.studio-modelleren__leeg-knoppen { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.studio-modelleren__leeg-knop {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 12px;
+  font: inherit; font-size: 13px;
+  color: var(--s-fg);
+  background: var(--s-panel); border: 1px solid var(--s-border); border-radius: 8px;
+  cursor: pointer;
+}
+.studio-modelleren__leeg-knop:hover { background: var(--s-hover); }
+.studio-modelleren__leeg-knop svg { width: 16px; height: 16px; }
+
+/* ── Opdrachtenpalet (Ctrl+K) ─────────────────────────────── */
+.studio-palette-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex; justify-content: center; align-items: flex-start;
+  padding-top: 12vh;
+}
+.studio-palette {
+  width: min(560px, 90vw);
+  background: var(--s-panel);
+  color: var(--s-fg);
+  border: 1px solid var(--s-border);
+  border-radius: 10px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+.studio-palette__input {
+  width: 100%; box-sizing: border-box;
+  padding: 12px 14px;
+  font: inherit; font-size: 14px;
+  color: var(--s-fg);
+  background: transparent;
+  border: none; border-bottom: 1px solid var(--s-border);
+  outline: none;
+}
+.studio-palette__lijst { max-height: 46vh; overflow-y: auto; padding: 6px; }
+.studio-palette__leeg { padding: 14px; color: var(--s-fg-muted); font-size: 13px; }
+.studio-palette__item {
+  width: 100%; box-sizing: border-box;
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px;
+  font: inherit; font-size: 13px; text-align: left;
+  color: var(--s-fg);
+  background: transparent; border: none; border-radius: 6px;
+  cursor: pointer;
+}
+.studio-palette__item.is-selectie { background: var(--s-accent, #4f46e5); color: #fff; }
+.studio-palette__item.is-selectie .studio-palette__categorie,
+.studio-palette__item.is-selectie .studio-palette__shortcut { color: #dbeafe; }
+.studio-palette__categorie {
+  flex: 0 0 auto;
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .05em;
+  color: var(--s-fg-muted);
+  min-width: 64px;
+}
+.studio-palette__label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.studio-palette__shortcut { color: var(--s-fg-muted); font-size: 11px; }
 .studio-menubar__right { display: flex; align-items: center; padding: 0 10px; margin-left: auto; }
 .studio-menubar__brand { font-size: 12px; font-weight: 600; color: var(--s-bar-fg); display: inline-flex; align-items: center; }
 
@@ -144,14 +416,24 @@
   border-radius: 0 6px 6px 0;
 }
 .studio-activitybar__icon { display: inline-flex; }
+/* Status-stip op een balk-icoon: preview = open ringetje, concept = gevuld. */
 .studio-activitybar__badge {
-  position: absolute; top: 6px; right: 6px;
-  color: #f59e0b; font-size: 14px; line-height: 1;
+  position: absolute; top: 7px; right: 7px;
+  width: 7px; height: 7px; border-radius: 50%;
 }
+.studio-activitybar__badge--preview {
+  border: 1.5px solid #f59e0b;
+  background: transparent;
+}
+.studio-activitybar__badge--concept { background: #f59e0b; }
 .studio-activitybar__sep {
   width: 28px; height: 1px; margin: 6px 0;
   background: var(--s-border);
 }
+/* Scheiding onder de favorieten-sectie: iets nadrukkelijker (amber). */
+.studio-activitybar__sep--fav { background: #f59e0b66; }
+/* Duwt de beheer-groep (⚙ e.d.) naar de onderkant van de balk. */
+.studio-activitybar__spacer { flex: 1; }
 
 /* ── Main column ──────────────────────────────────────────── */
 .studio-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
@@ -167,7 +449,7 @@
 }
 .studio-topbar__left, .studio-topbar__right { display: flex; align-items: center; gap: 6px; }
 .studio-topbar__titel { font-size: 13px; font-weight: 600; }
-.studio-topbar__concept {
+.studio-topbar__status {
   font-size: 10px; text-transform: uppercase; letter-spacing: .04em;
   color: #f59e0b; border: 1px solid #f59e0b55; border-radius: 4px; padding: 1px 5px;
 }
