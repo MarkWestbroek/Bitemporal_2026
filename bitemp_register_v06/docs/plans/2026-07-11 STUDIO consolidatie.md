@@ -267,11 +267,27 @@ activiteiten-tabel in `docs/STUDIO.md`.
    sluit zijn eigen tab), inspector én menubalk volgen het profiel van de
    actieve tab. Zelfde stores en componenten als de losse
    profiel-activiteiten — de inhoud is identiek, hoe je hem ook opent.
-3. ⬜ `fullMain`-uitzondering van de UML-IDE verkleinen of de klassieke IDE
-   achter Labs zetten zodra 0.5 pariteit heeft. Ook nog open: dmn-js/bpmn-
-   berichten als profieltypen in de host (andere motor), en de losse
-   0.5-profiel-activiteiten uit de balk nemen zodra "Modelleren" volwassen
-   is (via de fase 1-zichtbaarheidsinstellingen kan dat nu al per gebruiker).
+3. ✅ (2026-07-12) **Klassieke editors in de tab-host**: dmn-js (DRD+tabel),
+   BPMN, Berichtdefinities én de klassieke UML-IDE (FlexLayout) staan als
+   profieltypen in de Modelleren-browser via
+   `activiteitAlsProfieltype.jsx` — een shim die een klassieke activiteit
+   een minimale store-façade met **vaste documenten** geeft (geen ＋,
+   niet in de project-export; hun inhoud leeft in eigen stores/backends).
+   Documenten openen als tab, menubalk en inspector volgen mee, en de
+   eigen sidebar van de activiteit (bv. DmnTreeBrowser + ModelPicker)
+   verschijnt in het ondervak van de projectbrowser. Ook deze documenten
+   zijn in mappen te plaatsen. De klassieke IDE heet in de boom **"Canoniek
+   model IDE (v1)"** (sessiebesluit 2026-07-12: zij implementeert het
+   canonieke metamodel, niet puur UML, en is de publiceer-/genereer-plek);
+   zij is gemarkeerd met `eigenSchil` — de host klapt zijn zijpanelen dan
+   **automatisch in** (en herstelt ze bij een gewone tab; handmatig
+   heropenen kan altijd via de topbar-knoppen/rails). Rest: de losse
+   activiteiten uit de balk nemen zodra "Modelleren" de standaard is (kan
+   per gebruiker al via de fase 1-instellingen), de klassieke IDE achter
+   Labs zodra 0.5 pariteit heeft, en de **genereer-functionaliteit**
+   (publiceren/rebuild vanuit de IDE, OAS-export, …) als profiel-
+   overstijgend aspect een expliciete plek geven in de nieuwe structuur
+   (zie ook "algemene aspecten" bovenin dit plan).
 
 ### Fase 3 — Projectbrowser (weken) — v0 gebouwd 2026-07-12
 > **Vooraf (2026-07-12): visuele identiteit is nu data.** Kleur en embleem

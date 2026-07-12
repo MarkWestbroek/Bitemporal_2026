@@ -251,6 +251,13 @@ te wijzigen.
 > een klik erop heropent zonodig een tab van hun profiel en selecteert ze
 > in de inspector (menuBus `<profiel>:selecteer-element`).
 >
+> **Fase 2-sluitstuk (2026-07-12):** ook de **klassieke editors** staan in
+> de Modelleren-browser en openen als tab — dmn-js (DRD+tabel), BPMN,
+> Berichtdefinities en de klassieke UML-IDE — via
+> `activities/activiteitAlsProfieltype.jsx` (store-façade met vaste
+> documenten; de eigen sidebar van de activiteit verschijnt in het
+> ondervak van de browser; niet in de project-export).
+>
 > **Project-werkbestand (2026-07-12):** menu **Project →
 > Exporteer/Importeer project…** — één JSON ("studio-project" v1) met de
 > projectstructuur (mappen, plaatsingen, tabs) én de inhoud van alle

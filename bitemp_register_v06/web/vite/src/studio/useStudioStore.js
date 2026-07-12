@@ -153,6 +153,19 @@ const useStudioStore = create((set) => ({
       return { favorieten, balkVerborgen };
     }),
 
+  /**
+   * Paneelstand van een activiteit programmatisch zetten (bv. Modelleren
+   * dat zijn zijpanelen inklapt voor een editor met eigen schil).
+   */
+  zetPaneelStand: (activiteitId, patch) =>
+    set((s) => {
+      const huidig = s.paneelStand[activiteitId] || {};
+      const paneelStand = { ...s.paneelStand, [activiteitId]: { ...huidig, ...patch } };
+      const next = { ...s, paneelStand };
+      schrijfOpslag(next);
+      return { paneelStand };
+    }),
+
   /** Expliciet zetten (gebruikt door de splitter / resize). */
   setSidebarWidth: (px) =>
     set((s) => {

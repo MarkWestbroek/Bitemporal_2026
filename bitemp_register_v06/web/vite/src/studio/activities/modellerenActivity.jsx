@@ -18,6 +18,7 @@
 import React, { Fragment, useEffect, useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { menuBus } from "../menuBus";
+import useStudioStore from "../useStudioStore";
 import { IconModelleren } from "../icons";
 import {
   getProfieltypen,
@@ -981,9 +982,11 @@ function ProfielSectie({ profiel }) {
         <span className="studio-project__stip" style={{ background: stijl.kleur || "var(--s-fg-muted)" }} />
         <span className="studio-project__icoon"><ProfielIcoon profiel={profiel} /></span>
         <span className="studio-project__naam">{profiel.label}</span>
-        <button type="button" className="studio-project__nieuw" onClick={nieuw} title={`Nieuw ${profiel.diagramTerm}`}>
-          ＋
-        </button>
+        {!profiel.vasteDocumenten && (
+          <button type="button" className="studio-project__nieuw" onClick={nieuw} title={`Nieuw ${profiel.diagramTerm}`}>
+            ＋
+          </button>
+        )}
       </div>
       {entries.length === 0 && <div className="studio-project__leeg">geen {profiel.diagramTerm}men</div>}
       {entries.map((d) => (
@@ -1270,7 +1273,7 @@ function LegeStaat() {
         met een nieuw diagram in een van de profielen:
       </p>
       <div className="studio-modelleren__leeg-knoppen">
-        {profielen.map((p) => (
+        {profielen.filter((p) => !p.vasteDocumenten).map((p) => (
           <button
             key={p.id}
             type="button"
@@ -1356,10 +1359,12 @@ function DiagramEigenschappen({ profielId, diagramId }) {
           <code style={{ fontSize: 11, color: "var(--s-fg-muted)" }}>({diagram.diagramType || profiel.descriptor.id})</code>
         </span>
       </div>
-      <div style={rij}>
-        <span style={{ width: 60, color: "var(--s-fg-muted)" }}>inhoud</span>
-        <span style={readonly}>{(diagram.nodes || []).length} element(en) op dit diagram</span>
-      </div>
+      {!profiel.vasteDocumenten && (
+        <div style={rij}>
+          <span style={{ width: 60, color: "var(--s-fg-muted)" }}>inhoud</span>
+          <span style={readonly}>{(diagram.nodes || []).length} element(en) op dit diagram</span>
+        </div>
+      )}
       <button
         type="button"
         onClick={() => selecteerDiagram(null)}
@@ -1397,12 +1402,34 @@ function Inspector() {
  * abonnementen). key = profiel-id: wisselen van profiel hermonteert de
  * editor netjes.
  */
+// Bewaart of wíj de panelen sloten (voor een editor met eigen schil), zodat
+// we ze bij het verlaten van die tab weer terugzetten — maar een handmatige
+// keuze van de gebruiker niet overschrijven.
+let _panelenGeslotenDoorSchil = null;
+
 function Provider({ children }) {
   const actieveTab = useModellerenStore((s) => s.actieveTab);
   const tabs = useModellerenStore((s) => s.tabs);
   const tab = tabs.find((t) => t.id === actieveTab) || null;
   const profiel = tab ? getProfieltype(tab.profielId) : null;
   const P = profiel?.Provider || Fragment;
+  // Editor met eigen schil (bv. de Canoniek model IDE, FlexLayout): klap de
+  // host-zijpanelen automatisch in; terug bij een gewone tab.
+  const eigenSchil = !!profiel?.eigenSchil;
+  useEffect(() => {
+    const st = useStudioStore.getState();
+    const stand = st.paneelStand["modelleren"] || {};
+    if (eigenSchil) {
+      const open = { sidebar: stand.sidebar ?? true, inspector: stand.inspector ?? true };
+      if (open.sidebar || open.inspector) {
+        _panelenGeslotenDoorSchil = open;
+        st.zetPaneelStand("modelleren", { sidebar: false, inspector: false });
+      }
+    } else if (_panelenGeslotenDoorSchil) {
+      st.zetPaneelStand("modelleren", _panelenGeslotenDoorSchil);
+      _panelenGeslotenDoorSchil = null;
+    }
+  }, [eigenSchil]);
   // Element geselecteerd (canvas of boom) → map-/diagram-eigenschappen
   // loslaten, anders blijven die de inspector bezet houden en lijkt elke
   // element-klik dood.
@@ -1427,6 +1454,9 @@ function exporteerProject() {
   const s = useModellerenStore.getState();
   const profielen = {};
   for (const p of getProfieltypen()) {
+    // Vaste documenten (klassieke editors via de shim) hebben hun inhoud
+    // in eigen stores/backends — niets te exporteren hier.
+    if (p.vasteDocumenten) continue;
     const st = p.useStore.getState();
     if (!Object.keys(st.elements).length && !Object.keys(st.diagrams).length) continue;
     profielen[p.id] = {

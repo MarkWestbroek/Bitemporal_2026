@@ -76,6 +76,8 @@ const referentielijstenActivity = maakPlaceholderActiviteit({
   voorbeeldItems: [],
 });
 
+import { registreerActiviteitAlsProfieltype } from "./activiteitAlsProfieltype.jsx";
+
 registreerActiviteiten([
   // modelleren
   modellerenActivity, // fase 2: één ingang — projectbrowser + diagram-tabs over alle profielen
@@ -99,3 +101,28 @@ registreerActiviteiten([
   profielOntwerpActivity, // "Profiel-ontwerp" — meta-editor trede 2 (tekenen, §8.9)
   studioInstellingenActivity, // globale vorm-/icoon-galerij (P07-vervolg)
 ]);
+
+// ── Fase 2-sluitstuk: klassieke editors ook in de Modelleren-tab-host ──
+// Andere motor (dmn-js/bpmn/FlexLayout) → als profieltype met vaste
+// documenten; de eigen sidebar verschijnt in het ondervak van de browser.
+// De "UML-model"-activiteit implementeert het canonieke metamodel
+// (ENT/GE/REL), niet puur UML — in de projectboom heet zij dus naar wat
+// ze is: de Canoniek model IDE (v1), de publiceer-/genereer-plek.
+registreerActiviteitAlsProfieltype(umlActivity, {
+  label: "Canoniek model IDE",
+  kleur: "#475569",
+  documenten: [{ id: "uml-model", naam: "Canoniek model IDE (v1)" }],
+  eigenSchil: true,
+});
+registreerActiviteitAlsProfieltype(dmnActivity, {
+  kleur: "#a78bfa",
+  documenten: [{ id: "dmn-model", naam: "DMN-model (DRD + tabel)" }],
+});
+registreerActiviteitAlsProfieltype(bpmnActivity, {
+  kleur: "#f472b6",
+  documenten: [{ id: "bpmn-proces", naam: "BPMN-proces" }],
+});
+registreerActiviteitAlsProfieltype(berichtActivity, {
+  kleur: "#34d399",
+  documenten: [{ id: "berichtdefinities", naam: "Berichtdefinities" }],
+});
