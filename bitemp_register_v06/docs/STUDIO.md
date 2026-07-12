@@ -230,6 +230,21 @@ te wijzigen.
 > `kleur`. De losse profiel-activiteiten blijven bestaan en delen dezelfde
 > store: de inhoud is identiek, hoe je hem ook opent. Zie
 > `activities/modellerenActivity.jsx`.
+>
+> **Consolidatie fase 3 v0 (2026-07-12) — vrije mappen + bewerkbare
+> profielstijl:** de Modelleren-browser heeft nu een **vrije mappenboom**
+> (Sparx-principe: de indeling is van de gebruiker) — mappen maken/nesten,
+> hernoemen via dubbelklik, verwijderen (inhoud valt terug naar de ouder),
+> en diagrammen **slepen** naar mappen of terug naar "Niet ingedeeld";
+> geplaatste diagrammen dragen hun profiel-icoon. Structuur persist in
+> localStorage. Daarnaast is de **visuele identiteit per profieltype
+> bewerkbaar**: Studio-instellingen → **Profieltypen** (kleurkiezer +
+> embleem 1–3 tekens + herstel) als override op de code-defaults —
+> `profieltypeRegistry.zetStijlOverride`/`effectieveStijl` +
+> `ProfielIcoon.jsx`, direct zichtbaar in browser en tabs. Onder de
+> mappenboom staat de **elementen-boom van het actieve tab-profiel** (de
+> bestaande 0.5-ElementenBrowser: zoekveld, hiërarchie, ＋ naar het actieve
+> diagram) — per profieltype geregistreerd en wisselend met de tab.
 
 | Groep        | Functie (label)    | Status   | Hergebruikt                        |
 |--------------|--------------------|----------|------------------------------------|

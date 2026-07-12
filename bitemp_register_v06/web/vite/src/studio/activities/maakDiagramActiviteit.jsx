@@ -2272,6 +2272,9 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
       Provider,
       Main,
       Inspector,
+      // De elementen-boom (zoekveld, hiërarchie, ＋ naar actief diagram).
+      // Vereist de Provider van dit profiel als voorouder (context).
+      ElementenBrowser,
       menus,
       menuPrefix,
       diagramTerm,

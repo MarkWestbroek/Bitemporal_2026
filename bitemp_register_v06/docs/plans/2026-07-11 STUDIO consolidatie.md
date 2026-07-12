@@ -273,17 +273,31 @@ activiteiten-tabel in `docs/STUDIO.md`.
    0.5-profiel-activiteiten uit de balk nemen zodra "Modelleren" volwassen
    is (via de fase 1-zichtbaarheidsinstellingen kan dat nu al per gebruiker).
 
-### Fase 3 — Projectbrowser (weken)
-1. Eén boom met vrije mappen (Sparx-model: de indeling is van de gebruiker)
-   over alle profieltypen heen — mappen, diagrammen én elementen door
-   elkaar, elementen met hun kinderen (constraints, attributen);
-   drag-and-drop, hernoemen, zoeken. Gevirtualiseerd (react-arborist is er
-   al) — de eigen Sparx-repo's tonen honderden knopen per project.
-2. Eigendom vs. voorkomen: element woont éénmaal in de boom, verschijnt op
-   n diagrammen; vanuit de boom toevoegen aan het actieve diagram (＋,
-   bestaand 0.5-gedrag) en "toon op diagram…"-navigatie andersom.
-3. Projectstructuur persistent (eerst localStorage/werkbestand, dan API).
-4. De losse per-profiel-sidebars worden secties/filters binnen die boom.
+### Fase 3 — Projectbrowser (weken) — v0 gebouwd 2026-07-12
+> **Vooraf (2026-07-12): visuele identiteit is nu data.** Kleur en embleem
+> per profieltype zijn bewerkbaar in **Studio-instellingen → Profieltypen**
+> (kleurkiezer + embleem-tekst + herstel), als gebruikers-override
+> (localStorage, `profieltypeRegistry`: `zetStijlOverride`/`effectieveStijl`)
+> bovenop de code-defaults (`kleur:` in het descriptor-bestand, icoon in
+> `icons.jsx`). Overrides werken direct door in projectbrowser en tabs
+> (`ProfielIcoon.jsx`).
+
+1. 🔶 v0 gebouwd: vrije mappen (Sparx-model) in de Modelleren-browser —
+   maken (＋ én "＋ Nieuwe map"-knop)/hernoemen (dubbelklik)/verwijderen
+   (inhoud valt terug naar de ouder), vrij nesten, **drag-and-drop** van
+   diagrammen naar mappen en terug naar "Niet ingedeeld"; geplaatste
+   diagrammen tonen hun profiel-icoon. Nog niet: elementen ín de
+   mappenboom, zoeken over de boom, virtualisatie, mappen slepen.
+2. 🔶 Elementen (2026-07-12): onder de mappenboom staat de **elementen-boom
+   van het profiel van de actieve tab** — de bestaande 0.5-ElementenBrowser
+   (zoekveld, hiërarchie, ＋ naar het actieve diagram, selectie in de
+   inspector), per profieltype geregistreerd in het profieltypeRegistry en
+   wisselend met de tab. Eigendom-vs-voorkomen over de héle boom (elementen
+   in mappen) is het vervolg.
+3. 🔶 Projectstructuur persistent in localStorage (`studio-modelleren`:
+   mappen + plaatsing + open-stand); werkbestand/API volgt.
+4. 🔶 De per-profiel-secties staan als "Niet ingedeeld" onder de mappenboom
+   en tonen alleen nog niet-geplaatste diagrammen.
 
 ### Fase 4 — Kruisverbanden (nieuw, na 2–3)
 1. Trace-links tussen profieltypen als eigen diagramtype; bij twee

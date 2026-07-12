@@ -65,3 +65,54 @@ export function getProfieltypen() {
 export function getProfieltype(id) {
   return _index.get(id);
 }
+
+// ── Stijl-overrides (Studio-instellingen → Profieltypen) ────────────
+//
+// De kleur en het icoon van een profieltype zijn *defaults in code*
+// (descriptor-bestand / icons.jsx). Hier ligt de bewerkbare gebruikers-
+// laag eroverheen: per profiel-id een { kleur?, embleem? } in
+// localStorage. `effectieveStijl` levert wat de UI toont; een embleem
+// (1–3 tekens) vervangt het icoon, zoals bij meta-editor-profielen.
+
+const STIJL_KEY = "studio-profieltype-stijl";
+
+function leesStijlen() {
+  try {
+    const raw = localStorage.getItem(STIJL_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return {};
+}
+
+let _stijlen = leesStijlen();
+
+/** Alle overrides: { [profielId]: { kleur?, embleem? } }. */
+export function getStijlOverrides() {
+  return _stijlen;
+}
+
+/** Zet (of wis met lege waarden) de override van één profieltype. */
+export function zetStijlOverride(profielId, { kleur, embleem } = {}) {
+  const schoon = {};
+  if (kleur) schoon.kleur = kleur;
+  if (embleem && embleem.trim()) schoon.embleem = embleem.trim().slice(0, 3);
+  if (Object.keys(schoon).length) _stijlen = { ..._stijlen, [profielId]: schoon };
+  else {
+    const { [profielId]: _weg, ...rest } = _stijlen;
+    _stijlen = rest;
+  }
+  try {
+    localStorage.setItem(STIJL_KEY, JSON.stringify(_stijlen));
+  } catch { /* ignore */ }
+  _versie += 1;
+  _luisteraars.forEach((fn) => fn());
+}
+
+/**
+ * Effectieve stijl van een profieltype: override wint van de descriptor.
+ * @returns {{ kleur: string|undefined, embleem: string|undefined }}
+ */
+export function effectieveStijl(profiel) {
+  const o = _stijlen[profiel?.id] || {};
+  return { kleur: o.kleur || profiel?.kleur, embleem: o.embleem };
+}

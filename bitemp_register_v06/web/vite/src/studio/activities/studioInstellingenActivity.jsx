@@ -25,6 +25,7 @@ import { leesIconen, bewaarIcoon, verwijderIcoon } from "./iconenRegistratie.js"
 import SilhouetTekenaar, { polygonNaarPunten, puntenNaarPad } from "./silhouetTekenaar.jsx";
 import { extraheerSilhouet } from "./silhouetExtractie.js";
 import ActiviteitenInstellingen from "../ActiviteitenInstellingen.jsx";
+import ProfieltypenInstellingen from "../ProfieltypenInstellingen.jsx";
 
 const METHOD_DRAW_URL = `${import.meta.env.BASE_URL}method-draw/index.html`;
 
@@ -449,6 +450,16 @@ function Main() {
       </div>
       <div style={sectie}>
         <ActiviteitenInstellingen />
+      </div>
+
+      <div style={{ padding: "12px 16px 0", borderTop: "1px solid var(--s-border, #cbd5e1)" }}>
+        <h2 style={{ margin: "0 0 2px" }}>Profieltypen</h2>
+        <p style={{ margin: 0, color: "var(--s-fg-muted, #64748b)", fontSize: 13 }}>
+          De visuele identiteit per modelleerprofiel — kleur en embleem, als override op de code-defaults.
+        </p>
+      </div>
+      <div style={sectie}>
+        <ProfieltypenInstellingen />
       </div>
 
       <div style={{ padding: "12px 16px 0", borderTop: "1px solid var(--s-border, #cbd5e1)" }}>
