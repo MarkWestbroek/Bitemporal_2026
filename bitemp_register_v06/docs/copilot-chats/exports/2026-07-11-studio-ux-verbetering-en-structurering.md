@@ -1881,3 +1881,79 @@ Nu registratie garanderen via index.jsx:
 > 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\index.jsx
 > 🔧 `PowerShell` — Build (check circular import + syntax)
 
+**🤖 Claude:**
+
+Build slaagt (geen circulaire-import-probleem). Nu verifiëren met Playwright.
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `PowerShell` — Run transform framework verification
+
+**🤖 Claude:**
+
+Alle drie de richtingen werken end-to-end. Even de screenshot, dan plan bijwerken, tests, commit.
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+
+**🤖 Claude:**
+
+De boom toont alle drie: Bronmap, Kopiemap (met kopie), Importmap (met import). Nu plan bijwerken, tests, commit.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-11 STUDIO consolidatie.md
+> 🔧 `Grep` — register-build is een speciaal geval|Genereren als aspect
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-11 STUDIO consolidatie.md
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-11 STUDIO consolidatie.md
+> 🔧 `PowerShell` — Run unit tests
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `PowerShell` — Commit transformeren framework
+> 🔧 `TodoWrite` — takenlijst bijgewerkt
+> 🔧 `Bash` — noop
+> 🔧 `ToolSearch`
+> 🔧 `TaskStop`
+
+**🤖 Claude:**
+
+Beide features zijn gebouwd, geverifieerd en gecommit op `feat/studio-koppelingen-en-opruiming`. Ik heb de dev-server gestopt.
+
+## Kruisverbanden-matrix (commit 9658d07)
+
+- **Symbool per soort in de cel** — UML-achtige glyphs: realiseert = gestippeld + holle driehoek, komt voort uit = gestippeld + open pijl, genereert = vol + gevulde pijl, heeft te maken met = doorgetrokken lijn. Met een legenda in de sidebar. (Realisatie/dependency-symbolen sluiten inderdaad aan bij wat je in UML/canoniek al kent.)
+- **Rechtsklik op een cel** → soort wijzigen, **richting omdraaien**, verwijderen. Linkerklik legt/wist met de sidebar-soort.
+- **Richting** volgens jouw principe: de **kolom is bovenliggend, de rij onderliggend**; default rij→kolom, alleen *genereert* default andersom (kolom genereert rij). Per cel om te draaien; de inspector toont de gerichte relatie met een ⇄-knop. Geverifieerd incl. migratie van je bestaande links.
+
+Wat ik **niet** heb gebouwd (bewust apart gescoped): de **grafische kruisverband-diagram** (je punten 4 en 5). Dat is de zwaarste bouw — elementen uit meerdere profiel-stores op één canvas, met een Verbinding-taskbar van traceer-relatietypen en een "genereer diagram uit deze matrix"-knop die een plek in de boom vraagt. Je ontwerp daarvoor staat compleet in het plan; het verdient een eigen ronde.
+
+## Transformeren-raamwerk (commit c429d5a)
+
+Precies jouw model: transformeren als generieke term met drie richtingen, op de **map als model-eenheid**.
+- **`registreerTransformatie({id, label, richting, profielTypes, run})`** — specifieke generatoren sluiten aan zonder dat het scherm hun werking kent.
+- **Generiek modal-scherm** via **rechtsklik op een map → "Transformeren…"** én **menu Project → Transformeren…**. Toont de map, de profielen erin, de richting, de aangesloten generatoren en de bron/doel.
+- **Drie werkende, generieke generatoren**: export (map → JSON), import (JSON-map-export → in deze map), transform (kopieer map-inhoud → nieuwe/bestaande map). Bron/doel volgens jouw regels: import heeft een bron nodig, export een doel, transform een doelmap. Alle drie end-to-end getest (export→transform→import round-trip).
+
+Nog te doen (genoteerd): API als bron/doel (nu bestand), element-selectie (nu "alle in de map"), en de échte generatoren die hierop aansluiten — OAS-export, canoniek→MIM, en de **register-build** (extern, maar aangeroepen als intern aspect). Op je menu-vraag: ik heb het onder **Project** gezet i.p.v. een apart "Transformeren"-menu — zeg het als je een eigen menu wilt.
+
+## Eén ding om te checken
+
+Bij het committen van het transformeren-raamwerk zijn twee bestanden meegegaan die in je working tree stonden: `docs/extern/…Bitemporal Stores v0.1….pdf` en een copilot-chat-export. Ze zaten los in de map; `git add -A` pakte ze mee. Als dat niet de bedoeling was, kan ik ze uit de historie halen — laat maar weten.
+
+De branch staat nu op 5 commits sinds main (multi-doc, balk-opruiming, matrix, transformeren). Zal ik hem naar main brengen zoals de vorige keer, of eerst nog verder?
+
+---
+
+## 👤 Gebruiker (28)
+
+- Wil je het bitemporal stores document uit de commit halen?
+- kun je de relaties een hoekje geven? En ook de omgekeerde vorm ook ontwerpen? Zie img 
+- Kunnen we deze symbolen ook opnemen in de settings?
+
+# transformeren
+- naam vd nieuwe map: de plaats moet ook gekozen worden -> misschien altijd de map-kiezer en daarboven een veld "nieuwe map in ...". Als het niet ingevuld is, gaat het in de gekozen map, anders in de nieuwe map in de gekozen map.
+- importeren: dan kan dezelfde doelmaplogica gebruiken
+
+-> ergo:
+- ik zou bovenaan de actie kiezen: importeren - transformeren - exporteren (let op, deze volgorde)
+- dan een subonderdeel `bron`, met afh. van de actie:
+    - een map
+    - een bestand of een API
+- dan een subonderdeel 'doel' met hetzelfde, waarbij daar bij `map` (als die er is) extra is: `nieuwe mapnaam in gekozen map`
+
+Misschien als je via het hoofdmenu of rechtsklikmenu al kiest tussen I/T/E, ga je direct naar 1 van de 3 vormen, dus vervalt de keuze tussen I/T/E bovenaan.
+
+Je mag het ook naar main brengen. Wil je dan het bitemporele document daarvoor of daarna los naar main committen?
+

@@ -37,3 +37,4 @@
 | E02 |  | Bron uiteinde vastzetten ook met de muis mogelijk | pakken, lostrekken, vastzetten op andere plek |
 | E03 |  | Aantal handles kunnen vergroten | Nu alleen NOZW, maar ook daartussenin. Misschien handle-size iets verkleinen. |
 | E04 |  | Handle rondje kunnen verbergen | Of alleen zichtbaar |
+| E05 |  | copy selectie naar clipboard (als svg?)  | |
