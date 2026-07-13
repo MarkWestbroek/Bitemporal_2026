@@ -251,18 +251,6 @@ te wijzigen.
 > een klik erop heropent zonodig een tab van hun profiel en selecteert ze
 > in de inspector (menuBus `<profiel>:selecteer-element`).
 >
-> **Diagram-export als afbeelding (2026-07-14):** rechtsklik op de canvas →
-> **Exporteren** — "Kopieer (selectie/diagram) als afbeelding" (PNG naar het
-> klembord, voor plakken in chat/Word), "Download PNG" en "Download SVG".
-> Exporteert de selectie als er iets geselecteerd is, anders het hele diagram
-> (strak om de inhoud, met de canvas-achtergrond zodat tekst leesbaar blijft;
-> connectie-handles en canvas-chrome vallen weg). `diagramcore/export/
-> exporteerCanvas.js` (html-to-image) + `layoutApi.exporteerAfbeelding`.
-> **Voorkeuren** (achtergrond: canvas-thema/wit/transparant, PNG-schaal 1–4×,
-> marge) staan in Studio-instellingen → **Diagram-export**
-> (`exportInstellingen.js` + `ExportInstellingen.jsx`); het menu blijft de
-> drie schone acties.
->
 > **Fase 2-sluitstuk (2026-07-12):** ook de **klassieke editors** staan in
 > de Modelleren-browser en openen als tab — dmn-js (DRD+tabel), BPMN,
 > Berichtdefinities en de klassieke UML-IDE — via
@@ -528,6 +516,46 @@ fase 2 een **bewerkbare sandbox**:
   optreedt. Na de fase 4-update een bestaande sandbox eerst verversen via
   "Herlaad uit UML-model" — anders missen de `bron`-bijlagen die de export
   verliesvrij maken.
+
+## Diagram exporteren als afbeelding
+
+> Toegevoegd: 2026-07-14. Geldt voor elk diagramcore-canvas (Modelleren én de
+> losse 0.5-activiteiten).
+
+**Rechtsklik op de canvas → sectie Exporteren** biedt drie acties:
+
+- **Kopieer als afbeelding** — PNG naar het **klembord** (voor plakken in een
+  chat of Word/document; PNG is het formaat dat overal betrouwbaar plakt).
+- **Download PNG** en **Download SVG** — naar je downloads. SVG is vector,
+  ideaal voor markdown of verdere bewerking.
+
+Er wordt de **selectie** geëxporteerd als er iets geselecteerd is, anders het
+**hele diagram**. Het beeld wordt strak om de inhoud bijgesneden (met marge),
+met de canvas-achtergrond zodat lichte tekst op het donkere thema leesbaar
+blijft; connectie-handles en canvas-chrome (minimap, controls, raster) vallen
+weg.
+
+### Voorkeuren — Studio-instellingen → Diagram-export
+
+- **Achtergrond**: *Canvas (thema)* · *Wit* · *Transparant*. Let op:
+  transparant + donker thema geeft lichte tekst — kies dan Wit of Canvas.
+- **Schaal (PNG)**: 1–4× (hoger = scherper/groter, bv. voor print). SVG negeert
+  de schaal (vector).
+- **Marge**: pixels rondom de inhoud.
+
+Zo stel je het één keer in; het contextmenu blijft de drie schone acties.
+
+### Implementatie
+
+- `diagramcore/export/exporteerCanvas.js` — `exporteerViewport(...)` op basis
+  van **html-to-image** (`toPng`/`toSvg`): `getNodesBounds` bepaalt het
+  kader, de viewport wordt op zoom 1 met een vaste marge verschoven, een
+  `filter` laat de chrome weg.
+- `DiagramCanvas` stelt `layoutApi.exporteerAfbeelding({ formaat,
+  alleenSelectie, doel, achtergrondModus, schaal, marge })` beschikbaar
+  (imperatief); het canvas-contextmenu (`maakDiagramActiviteit`) roept dit aan
+  en leest de voorkeuren uit `studio/exportInstellingen.js`
+  (UI: `studio/ExportInstellingen.jsx`).
 
 ## DMN-activiteit: DRD + Tabel met dmn-js
 
