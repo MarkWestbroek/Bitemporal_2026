@@ -1,10 +1,16 @@
 /**
  * TransformatiePaneel — het generieke transformeer-scherm (modal).
  *
- * Opent vanuit rechtsklik op een map ("Transformeren…") of het Transformeren-
- * menu. Kies richting (import/export/transform), een aangesloten generator, en
- * de bron/doel — en voer uit. Zie transformatieRegistry.js voor het contract
- * en transformaties.js voor de ingebouwde generatoren.
+ * Opbouw (sessiebesluit 2026-07-13):
+ *   1. Actie: Importeren · Transformeren · Exporteren (in die volgorde).
+ *      Wordt de actie al via het (rechtsklik-/hoofd)menu gekozen, dan opent
+ *      het scherm direct in die vorm en vervalt deze keuze bovenaan.
+ *   2. Bron — afhankelijk van de actie: een map, of een bestand/API.
+ *   3. Doel — idem; bij een map is er extra een veld
+ *      "nieuwe (sub)map in de gekozen map" (leeg = de gekozen map zelf).
+ *
+ * Zie transformatieRegistry.js (contract) en transformaties.js (ingebouwde
+ * generatoren). Aangesloten generatoren krijgen bronMap/doelMap of bron/doel.
  */
 import React from "react";
 import { create } from "zustand";
@@ -16,54 +22,84 @@ import { getProfieltype } from "../profieltypeRegistry";
 export const useTransformStore = create((set) => ({
   open: false,
   mapId: null,
-  openen: (mapId) => set({ open: true, mapId: mapId || null }),
+  actie: null,
+  /** @param {string|null} mapId @param {"import"|"export"|"transform"|null} actie */
+  openen: (mapId = null, actie = null) => set({ open: true, mapId: mapId || null, actie: actie || null }),
   sluiten: () => set({ open: false }),
 }));
 
-const RICHTINGEN = [
-  { id: "import", label: "Importeren", uitleg: "van buiten (bestand/API) naar deze map" },
-  { id: "export", label: "Exporteren", uitleg: "van deze map naar buiten (bestand/API)" },
-  { id: "transform", label: "Transformeren", uitleg: "van deze map naar een (andere) map" },
+const ACTIES = [
+  { id: "import", label: "Importeren", uitleg: "van buiten (bestand/API) naar een map" },
+  { id: "transform", label: "Transformeren", uitleg: "van een map naar een (andere) map" },
+  { id: "export", label: "Exporteren", uitleg: "van een map naar buiten (bestand/API)" },
 ];
 
 const veld = { font: "inherit", fontSize: 13, padding: "5px 8px", borderRadius: 6, border: "1px solid var(--s-border)", background: "var(--s-panel)", color: "var(--s-fg)" };
 const knop = { font: "inherit", fontSize: 13, padding: "6px 12px", borderRadius: 6, border: "1px solid var(--s-border)", background: "var(--s-panel-head)", color: "var(--s-fg)", cursor: "pointer" };
+const kopje = { fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".05em", color: "var(--s-fg-muted)", margin: "10px 0 4px" };
+
+/** Doel-map met optioneel een nieuwe (sub)map erin. */
+function DoelMapKiezer({ mappen, doelMapId, setDoelMapId, nieuweNaam, setNieuweNaam }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <select value={doelMapId} onChange={(e) => setDoelMapId(e.target.value)} style={{ ...veld, width: "100%" }}>
+        <option value="">— kies een map —</option>
+        {Object.values(mappen).map((m) => (
+          <option key={m.id} value={m.id}>{m.naam}</option>
+        ))}
+      </select>
+      <input
+        value={nieuweNaam}
+        onChange={(e) => setNieuweNaam(e.target.value)}
+        placeholder="nieuwe (sub)map in de gekozen map — leeg = de gekozen map zelf"
+        style={{ ...veld, width: "100%" }}
+      />
+    </div>
+  );
+}
 
 export default function TransformatiePaneel() {
   const open = useTransformStore((s) => s.open);
   const mapId = useTransformStore((s) => s.mapId);
+  const actie = useTransformStore((s) => s.actie);
   const sluiten = useTransformStore((s) => s.sluiten);
   const mappen = useModellerenStore((s) => s.mappen);
 
-  const [gekozenMap, setGekozenMap] = React.useState(mapId);
-  const [richting, setRichting] = React.useState("export");
+  // Afgeleid van de actie zodat er geen render-race is: is de actie via het
+  // menu gekozen (vasteActie), dan wint die; anders de tab-keuze.
+  const [richtingState, setRichtingState] = React.useState("import");
+  const vasteActie = !!actie;
+  const richting = actie || richtingState;
   const [generatorId, setGeneratorId] = React.useState(null);
+  const [bronMapId, setBronMapId] = React.useState("");
   const [bestandTekst, setBestandTekst] = React.useState(null);
   const [bestandNaam, setBestandNaam] = React.useState(null);
-  const [doelMode, setDoelMode] = React.useState("nieuw");
   const [doelMapId, setDoelMapId] = React.useState("");
-  const [nieuweMapNaam, setNieuweMapNaam] = React.useState("");
+  const [doelNieuweNaam, setDoelNieuweNaam] = React.useState("");
   const [bezig, setBezig] = React.useState(false);
   const [klaar, setKlaar] = React.useState(null);
 
   React.useEffect(() => {
-    if (open) {
-      setGekozenMap(mapId);
-      setGeneratorId(null);
-      setBestandTekst(null);
-      setBestandNaam(null);
-      setKlaar(null);
-    }
-  }, [open, mapId]);
+    if (!open) return;
+    const a = actie || "import";
+    setRichtingState(a);
+    setGeneratorId(null);
+    setBestandTekst(null);
+    setBestandNaam(null);
+    setDoelNieuweNaam("");
+    setKlaar(null);
+    // De aangewezen map vult de relevante kant: bij import het doel, anders de bron.
+    if (a === "import") { setDoelMapId(mapId || ""); setBronMapId(""); }
+    else { setBronMapId(mapId || ""); setDoelMapId(""); }
+  }, [open, mapId, actie]);
 
   if (!open) return null;
 
-  const actieveMap = gekozenMap || null;
-  const mapNaam = actieveMap ? mappen[actieveMap]?.naam : null;
-  const profielen = actieveMap ? mapProfielen(actieveMap) : [];
-  const generatoren = getTransformaties(richting, profielen.length ? profielen : null);
+  // Profielen van de bron-map bepalen welke export/transform-generatoren gelden.
+  const bronProfielen = bronMapId ? mapProfielen(bronMapId) : [];
+  const filter = richting === "import" ? null : (bronProfielen.length ? bronProfielen : null);
+  const generatoren = getTransformaties(richting, filter);
   const gekozen = generatoren.find((g) => g.id === generatorId) || null;
-  const doelMappen = Object.values(mappen).filter((m) => m.id !== actieveMap);
 
   const kiesBestand = () => {
     const inp = document.createElement("input");
@@ -72,29 +108,39 @@ export default function TransformatiePaneel() {
     inp.onchange = () => {
       const f = inp.files?.[0];
       if (!f) return;
-      f.text().then((t) => {
-        setBestandTekst(t);
-        setBestandNaam(f.name);
-      });
+      f.text().then((t) => { setBestandTekst(t); setBestandNaam(f.name); });
     };
     inp.click();
   };
 
+  const doelGekozen = !!(doelMapId || doelNieuweNaam.trim());
   const kanUitvoeren =
-    actieveMap &&
     gekozen &&
-    (richting !== "import" || bestandTekst) &&
-    (richting !== "transform" || (doelMode === "nieuw" ? nieuweMapNaam.trim() : doelMapId));
+    (richting === "import" ? bestandTekst && doelGekozen : true) &&
+    (richting === "export" ? bronMapId : true) &&
+    (richting === "transform" ? bronMapId && doelGekozen : true);
+
+  /** Resolveert de doelmap: nieuwe (sub)map aanmaken als er een naam staat. */
+  const resolveerDoelMap = () => {
+    if (doelNieuweNaam.trim()) return useModellerenStore.getState().nieuweMap(doelNieuweNaam.trim(), doelMapId || null);
+    return doelMapId || null;
+  };
 
   const uitvoeren = async () => {
     if (!kanUitvoeren) return;
     setBezig(true);
     setKlaar(null);
     try {
-      const context = { mapId: actieveMap, mapNaam, richting, profielen };
-      if (richting === "import") context.bron = { type: "file", tekst: bestandTekst, naam: bestandNaam };
-      if (richting === "transform") {
-        context.doel = doelMode === "nieuw" ? { type: "nieuweMap", naam: nieuweMapNaam.trim() } : { type: "map", mapId: doelMapId };
+      const context = { richting };
+      if (richting === "import") {
+        context.bron = { type: "file", tekst: bestandTekst, naam: bestandNaam };
+        context.doelMap = resolveerDoelMap();
+      } else if (richting === "export") {
+        context.bronMap = bronMapId;
+        context.mapNaam = mappen[bronMapId]?.naam;
+      } else {
+        context.bronMap = bronMapId;
+        context.doelMap = resolveerDoelMap();
       }
       await gekozen.run(context);
       setKlaar("Gelukt.");
@@ -105,104 +151,105 @@ export default function TransformatiePaneel() {
     }
   };
 
+  const bronMapNaam = bronMapId ? mappen[bronMapId]?.naam : null;
+
   return (
     <div
       style={{ position: "fixed", inset: 0, zIndex: 260, background: "rgba(0,0,0,0.35)", display: "flex", justifyContent: "center", alignItems: "flex-start", paddingTop: "8vh" }}
       onMouseDown={sluiten}
     >
       <div
-        style={{ width: "min(620px, 92vw)", maxHeight: "80vh", overflow: "auto", background: "var(--s-panel)", color: "var(--s-fg)", border: "1px solid var(--s-border)", borderRadius: 10, boxShadow: "0 16px 48px rgba(0,0,0,0.4)", padding: 16 }}
+        style={{ width: "min(600px, 92vw)", maxHeight: "82vh", overflow: "auto", background: "var(--s-panel)", color: "var(--s-fg)", border: "1px solid var(--s-border)", borderRadius: 10, boxShadow: "0 16px 48px rgba(0,0,0,0.4)", padding: 16 }}
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
           <h2 style={{ margin: 0, fontSize: 16 }}>Transformeren</h2>
           <button type="button" onClick={sluiten} style={{ ...knop, padding: "2px 8px" }}>×</button>
         </div>
 
-        {/* Map-keuze (indien niet vooraf gekozen) + inhoud */}
-        <label style={{ display: "block", fontSize: 12, color: "var(--s-fg-muted)", marginBottom: 8 }}>
-          Map
-          <select value={actieveMap || ""} onChange={(e) => setGekozenMap(e.target.value || null)} style={{ ...veld, display: "block", width: "100%", marginTop: 3 }}>
-            <option value="">— kies een map —</option>
+        {/* 1. Actie */}
+        {vasteActie ? (
+          <p style={{ margin: "0 0 6px", fontSize: 13, fontWeight: 600 }}>
+            {ACTIES.find((a) => a.id === richting)?.label}
+            <span style={{ fontWeight: 400, color: "var(--s-fg-muted)" }}> — {ACTIES.find((a) => a.id === richting)?.uitleg}</span>
+          </p>
+        ) : (
+          <>
+            <div style={{ display: "flex", gap: 6, margin: "4px 0 4px" }}>
+              {ACTIES.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => { setRichtingState(a.id); setGeneratorId(null); setKlaar(null); }}
+                  style={{ ...knop, flex: 1, fontWeight: richting === a.id ? 700 : 400, borderColor: richting === a.id ? "var(--s-accent, #4f46e5)" : "var(--s-border)", background: richting === a.id ? "var(--s-hover)" : "var(--s-panel-head)" }}
+                >
+                  {a.label}
+                </button>
+              ))}
+            </div>
+            <p style={{ margin: "0 0 4px", fontSize: 12, color: "var(--s-fg-muted)" }}>
+              {ACTIES.find((a) => a.id === richting)?.uitleg}.
+            </p>
+          </>
+        )}
+
+        {/* 2. Bron */}
+        <div style={kopje}>Bron</div>
+        {richting === "import" ? (
+          <div style={{ fontSize: 13 }}>
+            <button type="button" style={knop} onClick={kiesBestand}>Kies bestand…</button>
+            {bestandNaam && <span style={{ marginLeft: 8, color: "var(--s-fg-muted)" }}>{bestandNaam}</span>}
+            <label style={{ display: "block", marginTop: 4, color: "var(--s-fg-muted)", fontSize: 12 }}>
+              <input type="radio" disabled /> API (binnenkort)
+            </label>
+          </div>
+        ) : (
+          <select value={bronMapId} onChange={(e) => setBronMapId(e.target.value)} style={{ ...veld, width: "100%" }}>
+            <option value="">— kies bron-map —</option>
             {Object.values(mappen).map((m) => (
               <option key={m.id} value={m.id}>{m.naam}</option>
             ))}
           </select>
-        </label>
-        {actieveMap && (
-          <p style={{ margin: "0 0 10px", fontSize: 12, color: "var(--s-fg-muted)" }}>
-            Profielen in deze map: {profielen.length ? profielen.map((pid) => getProfieltype(pid)?.label || pid).join(", ") : "— (nog leeg)"}
+        )}
+        {bronMapId && richting !== "import" && (
+          <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--s-fg-muted)" }}>
+            Profielen in {bronMapNaam}: {bronProfielen.length ? bronProfielen.map((pid) => getProfieltype(pid)?.label || pid).join(", ") : "— (nog leeg)"}
           </p>
         )}
 
-        {/* Richting */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
-          {RICHTINGEN.map((r) => (
-            <button
-              key={r.id}
-              type="button"
-              onClick={() => { setRichting(r.id); setGeneratorId(null); setKlaar(null); }}
-              title={r.uitleg}
-              style={{ ...knop, flex: 1, fontWeight: richting === r.id ? 700 : 400, borderColor: richting === r.id ? "var(--s-accent, #4f46e5)" : "var(--s-border)", background: richting === r.id ? "var(--s-hover)" : "var(--s-panel-head)" }}
-            >
-              {r.label}
-            </button>
-          ))}
-        </div>
-        <p style={{ margin: "0 0 10px", fontSize: 12, color: "var(--s-fg-muted)" }}>
-          {RICHTINGEN.find((r) => r.id === richting).uitleg}.
-        </p>
-
-        {/* Generator-keuze */}
-        <div style={{ marginBottom: 10 }}>
-          {generatoren.length === 0 ? (
-            <p style={{ fontSize: 12, color: "var(--s-fg-muted)", fontStyle: "italic" }}>
-              Nog geen {richting}-transformatie aangesloten voor deze profielen.
-            </p>
-          ) : (
-            generatoren.map((g) => (
-              <label key={g.id} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "4px 0", fontSize: 13, cursor: "pointer" }}>
-                <input type="radio" name="gen" checked={generatorId === g.id} onChange={() => setGeneratorId(g.id)} style={{ marginTop: 3 }} />
-                <span>
-                  {g.label}
-                  {g.toelichting && <span style={{ display: "block", fontSize: 11, color: "var(--s-fg-muted)" }}>{g.toelichting}</span>}
-                </span>
-              </label>
-            ))
-          )}
-        </div>
-
-        {/* Bron/doel per richting */}
-        {gekozen && richting === "import" && (
-          <div style={{ marginBottom: 10, fontSize: 13 }}>
-            <button type="button" style={knop} onClick={kiesBestand}>Kies bestand…</button>
-            {bestandNaam && <span style={{ marginLeft: 8, color: "var(--s-fg-muted)" }}>{bestandNaam}</span>}
-            <span style={{ display: "block", fontSize: 12, color: "var(--s-fg-muted)", marginTop: 4 }}>Doel: deze map ({mapNaam}).</span>
+        {/* 3. Doel */}
+        <div style={kopje}>Doel</div>
+        {richting === "export" ? (
+          <div style={{ fontSize: 13, color: "var(--s-fg-muted)" }}>
+            bestand (download)
+            <label style={{ display: "block", marginTop: 4, fontSize: 12 }}>
+              <input type="radio" disabled /> API (binnenkort)
+            </label>
           </div>
-        )}
-        {gekozen && richting === "export" && (
-          <p style={{ marginBottom: 10, fontSize: 12, color: "var(--s-fg-muted)" }}>Bron: deze map ({mapNaam}). Doel: bestand (download).</p>
-        )}
-        {gekozen && richting === "transform" && (
-          <div style={{ marginBottom: 10, fontSize: 13 }}>
-            <div style={{ display: "flex", gap: 12, marginBottom: 6 }}>
-              <label style={{ cursor: "pointer" }}><input type="radio" checked={doelMode === "nieuw"} onChange={() => setDoelMode("nieuw")} /> nieuwe map</label>
-              <label style={{ cursor: "pointer" }}><input type="radio" checked={doelMode === "bestaand"} onChange={() => setDoelMode("bestaand")} /> bestaande map</label>
-            </div>
-            {doelMode === "nieuw" ? (
-              <input value={nieuweMapNaam} onChange={(e) => setNieuweMapNaam(e.target.value)} placeholder="naam van de nieuwe map" style={{ ...veld, width: "100%" }} />
-            ) : (
-              <select value={doelMapId} onChange={(e) => setDoelMapId(e.target.value)} style={{ ...veld, width: "100%" }}>
-                <option value="">— kies doelmap —</option>
-                {doelMappen.map((m) => (
-                  <option key={m.id} value={m.id}>{m.naam}</option>
-                ))}
-              </select>
-            )}
-          </div>
+        ) : (
+          <DoelMapKiezer mappen={mappen} doelMapId={doelMapId} setDoelMapId={setDoelMapId} nieuweNaam={doelNieuweNaam} setNieuweNaam={setDoelNieuweNaam} />
         )}
 
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
+        {/* Generator */}
+        <div style={kopje}>Transformatie</div>
+        {generatoren.length === 0 ? (
+          <p style={{ fontSize: 12, color: "var(--s-fg-muted)", fontStyle: "italic" }}>
+            Nog geen {ACTIES.find((a) => a.id === richting)?.label.toLowerCase()}-transformatie aangesloten
+            {richting !== "import" && bronMapId ? " voor deze profielen" : ""}.
+          </p>
+        ) : (
+          generatoren.map((g) => (
+            <label key={g.id} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "4px 0", fontSize: 13, cursor: "pointer" }}>
+              <input type="radio" name="gen" checked={generatorId === g.id} onChange={() => setGeneratorId(g.id)} style={{ marginTop: 3 }} />
+              <span>
+                {g.label}
+                {g.toelichting && <span style={{ display: "block", fontSize: 11, color: "var(--s-fg-muted)" }}>{g.toelichting}</span>}
+              </span>
+            </label>
+          ))
+        )}
+
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 14 }}>
           <button type="button" onClick={uitvoeren} disabled={!kanUitvoeren || bezig} style={{ ...knop, fontWeight: 600, opacity: !kanUitvoeren || bezig ? 0.5 : 1, cursor: !kanUitvoeren || bezig ? "default" : "pointer" }}>
             {bezig ? "Bezig…" : "Uitvoeren"}
           </button>

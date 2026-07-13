@@ -45,42 +45,50 @@ export const TRACE_TYPEN = [
 export const TRACE_SOORTEN = TRACE_TYPEN.map((t) => t.soort);
 const TRACE_BY_SOORT = Object.fromEntries(TRACE_TYPEN.map((t) => [t.soort, t]));
 
-/** Klein UML-achtig relatiesymbool; pijl wijst van → naar (rechts = rij→kolom). */
-export function TraceGlyph({ soort, omgekeerd = false, size = 22 }) {
+/**
+ * Klein UML-achtig relatiesymbool met een **hoekje** (orthogonale elleboog,
+ * zoals een matrix-verbinding rij→kolom loopt: eerst opzij, dan omhoog).
+ * De pijlkop zit aan de *naar*-zijde: standaard bovenaan (rij→kolom),
+ * omgekeerd links (kolom→rij). Kopstijl per soort: realisatie = holle
+ * driehoek, afhankelijk = open pijl, generatie = gevulde pijl, associatie =
+ * geen kop.
+ */
+export function TraceGlyph({ soort, omgekeerd = false, size = 24 }) {
   const t = TRACE_BY_SOORT[soort] || {};
   const w = size;
-  const h = Math.round(size * 0.62);
-  const mid = h / 2;
-  const tip = w - 2;
-  const basis = w - 9;
+  const h = Math.round(size * 0.82);
+  const sx = w / 24;
+  const sy = h / 20;
+  const P = (x, y) => `${(x * sx).toFixed(1)} ${(y * sy).toFixed(1)}`;
   const gestippeld = t.stijl === "realisatie" || t.stijl === "afhankelijk";
-  const inhoud = (
-    <g
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.4"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      transform={omgekeerd ? `translate(${w},0) scale(-1,1)` : undefined}
-    >
-      <line x1="2" y1={mid} x2={t.stijl === "associatie" ? tip : basis} y2={mid} strokeDasharray={gestippeld ? "3 2" : undefined} />
-      {t.stijl === "realisatie" && (
-        <path d={`M${tip} ${mid} L${basis} ${mid - 4} L${basis} ${mid + 4} Z`} />
-      )}
-      {t.stijl === "generatie" && (
-        <path d={`M${tip} ${mid} L${basis} ${mid - 4} L${basis} ${mid + 4} Z`} fill="currentColor" />
-      )}
-      {t.stijl === "afhankelijk" && (
-        <>
-          <line x1={tip} y1={mid} x2={basis} y2={mid - 4} />
-          <line x1={tip} y1={mid} x2={basis} y2={mid + 4} />
-        </>
-      )}
-    </g>
-  );
+  // Elleboog: L(3,15) → hoek(15,15) → T(15,4).
+  const lijn = `M ${P(3, 15)} L ${P(15, 15)} L ${P(15, 4)}`;
+  let head = null;
+  if (t.stijl !== "associatie") {
+    if (!omgekeerd) {
+      // kop bovenaan (T), wijst omhoog
+      head =
+        t.stijl === "afhankelijk" ? (
+          <path d={`M ${P(11.5, 9)} L ${P(15, 4)} L ${P(18.5, 9)}`} fill="none" />
+        ) : (
+          <path d={`M ${P(15, 4)} L ${P(11.5, 10)} L ${P(18.5, 10)} Z`} fill={t.stijl === "generatie" ? "currentColor" : "none"} />
+        );
+    } else {
+      // kop links (L), wijst naar links (naar de rij)
+      head =
+        t.stijl === "afhankelijk" ? (
+          <path d={`M ${P(8, 11)} L ${P(3, 15)} L ${P(8, 19)}`} fill="none" />
+        ) : (
+          <path d={`M ${P(3, 15)} L ${P(9, 11.5)} L ${P(9, 18.5)} Z`} fill={t.stijl === "generatie" ? "currentColor" : "none"} />
+        );
+    }
+  }
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ display: "block" }} aria-hidden>
-      {inhoud}
+      <g fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+        <path d={lijn} strokeDasharray={gestippeld ? "3 2" : undefined} />
+        {head}
+      </g>
     </svg>
   );
 }

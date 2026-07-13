@@ -924,7 +924,14 @@ function Map_({ map, diepte }) {
       { label: "Hernoemen", onClick: () => setBewerk(true) },
       { label: "Eigenschappen", onClick: () => selecteerMap(map.id) },
       { sep: true },
-      { label: "Transformeren…", onClick: () => useTransformStore.getState().openen(map.id) },
+      {
+        label: "Transformeren",
+        items: [
+          { label: "Importeren…", onClick: () => useTransformStore.getState().openen(map.id, "import") },
+          { label: "Transformeren…", onClick: () => useTransformStore.getState().openen(map.id, "transform") },
+          { label: "Exporteren…", onClick: () => useTransformStore.getState().openen(map.id, "export") },
+        ],
+      },
       { sep: true },
       { label: "Omhoog", onClick: () => schuifMap(map.id, "omhoog") },
       { label: "Omlaag", onClick: () => schuifMap(map.id, "omlaag") },

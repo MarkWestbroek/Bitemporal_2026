@@ -460,11 +460,14 @@ aspect**, die onder water de bestaande publiceer/rebuild-API aanroept.
 
 **Raamwerk gebouwd (2026-07-13):** `transformatieRegistry.js`
 (`registreerTransformatie({id, label, richting, profielTypes, run})`) + het
-generieke scherm `TransformatiePaneel.jsx` (modal), bereikbaar via
-**rechtsklik op een map → "Transformeren…"** en via **menu Project →
-Transformeren…**. Het scherm toont de gekozen map, de profielen die erin
-voorkomen, de richting (import/export/transform), de aangesloten generatoren
-en de bron/doel. `transformaties.js` levert map-helpers (`mapInhoud`,
+generieke scherm `TransformatiePaneel.jsx` (modal). Opbouw: **actie**
+(Importeren · Transformeren · Exporteren — in die volgorde) → **bron** →
+**doel**; bij een map-doel is er extra een veld *"nieuwe (sub)map in de
+gekozen map"* (leeg = de gekozen map zelf), ook voor import. Bereikbaar via
+**rechtsklik op een map → Transformeren ▸ (Importeren/Transformeren/
+Exporteren)** — dan opent het scherm direct in die vorm zonder actie-keuze —
+en via **menu Project → Transformeren…** (met actie-keuze). De aangewezen
+map vult de relevante kant (import = doel, anders = bron). `transformaties.js` levert map-helpers (`mapInhoud`,
 `collectMapModel` — de map als model-eenheid) plus drie ingebouwde,
 generieke generatoren: **export** (map → JSON-bestand), **import**
 (JSON-map-export → in deze map) en **transform** (kopieer map-inhoud →
@@ -512,7 +515,14 @@ sequence (grootste gat: as-semantiek + activations).
    de inspector toont alle links (over alle profielparen) met verwijderen.
    **Soorten tracering (2026-07-13):** nieuwe links krijgen een gekozen
    soort — *komt voort uit*, *heeft te maken met*, *genereert*,
-   *realiseert* — zichtbaar in de inspector.
+   *realiseert* — met een **relatiesymbool met hoekje** (orthogonale
+   elleboog rij→kolom) per cel; UML-achtige koppen (holle driehoek /
+   open pijl / gevulde pijl / geen). **Rechtsklik op een cel**: soort
+   wijzigen, richting omdraaien, verwijderen. **Richting** rij↔kolom
+   (kolom bovenliggend; genereert default kolom→rij), met de kop aan de
+   *naar*-zijde en een omgekeerde vorm. Een **legenda met beide richtingen**
+   staat in Studio-instellingen → Kruisverband-symbolen (nu vast, later
+   bewerkbaar).
    **Ontwerp grafische variant (sessiebesluit 2026-07-13):** een diagram
    van het type **'kruisverband'** dat élk soort element accepteert — géén
    "Maken"-taakbalk (elementen ontstaan in hun eigen profiel), wél een

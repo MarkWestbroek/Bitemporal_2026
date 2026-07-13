@@ -87,8 +87,8 @@ registreerTransformatie({
   richting: "export",
   profielTypes: "*",
   toelichting: "Bundelt de inhoud van deze map als één JSON — deelbaar en te herimporteren.",
-  run: async ({ mapId, mapNaam }) => {
-    const model = collectMapModel(mapId);
+  run: async ({ bronMap, mapNaam }) => {
+    const model = collectMapModel(bronMap);
     const data = { formaat: "studio-map-export", versie: 1, map: mapNaam, geexporteerd: new Date().toISOString(), profielen: model };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -106,8 +106,8 @@ registreerTransformatie({
   label: "JSON-map-export → in deze map",
   richting: "import",
   profielTypes: "*",
-  toelichting: "Leest een eerder geëxporteerde map-JSON en voegt de inhoud aan deze map toe.",
-  run: async ({ mapId, bron }) => {
+  toelichting: "Leest een eerder geëxporteerde map-JSON en voegt de inhoud aan de doelmap toe.",
+  run: async ({ doelMap, bron }) => {
     const tekst = bron?.tekst;
     if (!tekst) return;
     let data;
@@ -134,7 +134,7 @@ registreerTransformatie({
       for (const d of Object.values(inhoud.diagrams || {})) {
         const nieuwId = versId(d.id);
         st.addDiagram({ ...d, id: nieuwId, naam: `${d.naam} (import)` });
-        ms.plaatsDiagram(`${profielId}::${nieuwId}`, mapId);
+        ms.plaatsDiagram(`${profielId}::${nieuwId}`, doelMap);
       }
     }
   },
@@ -147,14 +147,11 @@ registreerTransformatie({
   richting: "transform",
   profielTypes: "*",
   toelichting: "Dupliceert de elementen en diagrammen van deze map (met verse id's) naar de doelmap.",
-  run: async ({ mapId, doel }) => {
+  run: async ({ bronMap, doelMap }) => {
     const ms = useModellerenStore.getState();
-    let doelMapId = doel?.mapId;
-    if (doel?.type === "nieuweMap") {
-      doelMapId = ms.nieuweMap(doel.naam || "Kopie");
-    }
-    if (!doelMapId) return;
-    const model = collectMapModel(mapId);
+    const doelMapId = doelMap;
+    if (!doelMapId || !bronMap) return;
+    const model = collectMapModel(bronMap);
     for (const [profielId, inhoud] of Object.entries(model)) {
       const p = getProfieltype(profielId);
       if (!p) continue;
