@@ -28,6 +28,7 @@ export default maakDiagramActiviteit({
   menuPrefix: "mim05",
   menuLabel: "MIM",
   kleur: "#f59e0b",
+  standaardVerborgen: true, // gedekt door de Modelleren-host
   previewTekst: "MIM 1.2-informatiemodellen (Geonovum, pas-toe-of-leg-uit) — vijfde profiel.",
   devHookNaam: "__mim05Store",
   koppeling: {

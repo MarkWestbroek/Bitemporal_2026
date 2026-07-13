@@ -26,6 +26,15 @@ export const IconModelleren = (p) => (
   </svg>
 );
 
+/** Koppelingen: twee werelden met een trace-link ertussen. */
+export const IconKoppeling = (p) => (
+  <svg {...base} {...p}>
+    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    <path d="M10 10l4 4" strokeDasharray="2.5 2" />
+  </svg>
+);
+
 export const IconUML = (p) => (
   <svg {...base} {...p}>
     <rect x="3" y="3" width="8" height="6" rx="1" />
@@ -196,10 +205,15 @@ export const OmniumMark = ({ size = 22, ...p }) => (
   </svg>
 );
 
+// Tandwiel: kern + ring + korte dikke tanden op de ring (dunne lange
+// spaken lazen als zon).
 export const IconInstellingen = (p) => (
   <svg {...base} {...p}>
-    <circle cx="12" cy="12" r="3.2" />
-    <path d="M12 2.2v2.4M12 19.4v2.4M4.1 4.1l1.7 1.7M18.2 18.2l1.7 1.7M2.2 12h2.4M19.4 12h2.4M4.1 19.9l1.7-1.7M18.2 5.8l1.7-1.7" />
+    <circle cx="12" cy="12" r="2.6" />
+    <circle cx="12" cy="12" r="5.8" />
+    <g strokeWidth="3.2">
+      <path d="M12 3.4v1.4M12 19.2v1.4M3.4 12h1.4M19.2 12h1.4M5.9 5.9l1 1M17.1 17.1l1 1M5.9 18.1l1-1M17.1 6.9l1-1" />
+    </g>
   </svg>
 );
 

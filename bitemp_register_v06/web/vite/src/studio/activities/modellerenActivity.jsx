@@ -19,6 +19,7 @@ import React, { Fragment, useEffect, useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { menuBus } from "../menuBus";
 import useStudioStore from "../useStudioStore";
+import { useKruisStore } from "./koppelingenActivity.jsx";
 import { IconModelleren } from "../icons";
 import {
   getProfieltypen,
@@ -525,7 +526,19 @@ function topVoorouder(ouderVan, elementId) {
 // menu (drill-down met ‹ terug) — gebruikt voor "Verplaats naar ▸".
 function ContextMenu({ menu, sluit }) {
   const [sub, setSub] = React.useState(null);
+  const menuRef = React.useRef(null);
   useEffect(() => setSub(null), [menu]);
+  // Binnen het venster blijven: naar boven/links schuiven als het menu
+  // anders uit beeld loopt (lange lijsten scrollen bovendien intern).
+  React.useLayoutEffect(() => {
+    const el = menuRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const boven = Math.max(8, Math.min(menu?.y ?? 0, window.innerHeight - r.height - 8));
+    const links = Math.max(8, Math.min(menu?.x ?? 0, window.innerWidth - r.width - 8));
+    el.style.top = `${boven}px`;
+    el.style.left = `${links}px`;
+  }, [menu, sub]);
   useEffect(() => {
     if (!menu) return;
     const onDown = () => sluit();
@@ -540,7 +553,7 @@ function ContextMenu({ menu, sluit }) {
   if (!menu) return null;
   const items = sub ? sub.items : menu.items;
   return (
-    <div className="studio-ctxmenu" style={{ left: menu.x, top: menu.y }} onMouseDown={(e) => e.stopPropagation()}>
+    <div ref={menuRef} className="studio-ctxmenu" style={{ left: menu.x, top: menu.y }} onMouseDown={(e) => e.stopPropagation()}>
       {sub && (
         <button type="button" className="studio-ctxmenu__item studio-ctxmenu__terug" onClick={() => setSub(null)}>
           ‹ {sub.label}
@@ -610,6 +623,30 @@ function verplaatsNaarItems(doe, { bovenaan = null, uitgesloten = new Set() } = 
   };
   loop(null, 0);
   return items;
+}
+
+/**
+ * Submenu-items "Nieuw diagram ▸": één per profieltype dat documenten kan
+ * aanmaken; het nieuwe diagram landt meteen in de gegeven map (of los).
+ */
+function nieuwDiagramItems(mapId) {
+  return getProfieltypen()
+    .filter((p) => !p.vasteDocumenten)
+    .map((p) => ({
+      label: p.label,
+      onClick: () => {
+        const naam = window.prompt(
+          `Naam van het nieuwe ${p.diagramTerm} (${p.label}):`,
+          `Nieuw ${p.diagramTerm}`
+        );
+        if (!naam) return;
+        const id = `${p.menuPrefix}_${Date.now()}`;
+        p.useStore.getState().addDiagram({ id, naam, diagramType: p.descriptor.id });
+        const s = useModellerenStore.getState();
+        if (mapId) s.plaatsDiagram(tabId(p.id, id), mapId);
+        s.openTab(p.id, id);
+      },
+    }));
 }
 
 /** Alle nazaat-map-ids van een map (voor uitsluiting bij verplaatsen). */
@@ -881,8 +918,9 @@ function Map_({ map, diepte }) {
   const schuifMap = useModellerenStore((s) => s.schuifMap);
   const ctx = (e) =>
     openCtxMenu(e, [
-      { label: "Hernoemen", onClick: () => setBewerk(true) },
+      { label: "Nieuw diagram", items: nieuwDiagramItems(map.id) },
       { label: "Nieuwe submap…", onClick: nieuweSubmap },
+      { label: "Hernoemen", onClick: () => setBewerk(true) },
       { label: "Eigenschappen", onClick: () => selecteerMap(map.id) },
       { sep: true },
       { label: "Omhoog", onClick: () => schuifMap(map.id, "omhoog") },
@@ -1501,6 +1539,7 @@ function exporteerProject() {
     structuur: { mappen: s.mappen, plaatsing: s.plaatsing },
     tabs: s.tabs,
     actieveTab: s.actieveTab,
+    kruisverbanden: useKruisStore.getState().links,
     profielen,
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -1552,6 +1591,9 @@ function importeerProjectTekst(tekst) {
     tabs,
     actieveTab: tabs.some((t) => t.id === data.actieveTab) ? data.actieveTab : tabs[0]?.id || null,
   });
+  if (Array.isArray(data.kruisverbanden)) {
+    useKruisStore.getState().laadLinks(data.kruisverbanden);
+  }
 }
 
 function kiesEnImporteerProject() {

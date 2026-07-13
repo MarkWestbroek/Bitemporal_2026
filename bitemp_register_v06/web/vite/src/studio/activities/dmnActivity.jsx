@@ -367,6 +367,7 @@ function DmnInspector() {
 export default {
   id: "dmn",
   label: "DMN-beslissingen",
+  standaardVerborgen: true, // gedekt door de Modelleren-host
   icon: <IconDMN />,
   groep: "modelleren",
   Provider: DmnProvider,

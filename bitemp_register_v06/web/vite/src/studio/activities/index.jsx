@@ -19,6 +19,7 @@ import { IconAPI, IconToegang, IconRollen, IconReferentielijst } from "../icons"
 
 import umlActivity from "./umlActivity";
 import modellerenActivity from "./modellerenActivity";
+import koppelingenActivity from "./koppelingenActivity";
 import diagramActivity from "./diagramActivity";
 import puurUmlActivity from "./puurUmlActivity";
 import oasActivity from "./oasActivity";
@@ -81,6 +82,7 @@ import { registreerActiviteitAlsProfieltype } from "./activiteitAlsProfieltype.j
 registreerActiviteiten([
   // modelleren
   modellerenActivity, // fase 2: één ingang — projectbrowser + diagram-tabs over alle profielen
+  koppelingenActivity, // fase 4 v0: kruisverbanden tussen profieltypen (matrix)
   umlActivity,
   diagramActivity, // "Canoniek model" — canoniek-uml op de generieke motor (preview)
   puurUmlActivity, // "UML" — tweede profiel (preview)

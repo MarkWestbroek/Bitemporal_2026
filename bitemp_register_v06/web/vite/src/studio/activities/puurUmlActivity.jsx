@@ -21,6 +21,7 @@ export default maakDiagramActiviteit({
   menuPrefix: "u05",
   menuLabel: "UML",
   kleur: "#60a5fa",
+  standaardVerborgen: true, // gedekt door de Modelleren-host
   previewTekst: "Puur UML-klassediagram — tweede profiel (fase 5-lakmoesproef), lege sandbox.",
   devHookNaam: "__puurUml05Store",
 });
