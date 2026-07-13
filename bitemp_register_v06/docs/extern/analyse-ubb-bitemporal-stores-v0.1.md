@@ -67,7 +67,7 @@ Legenda: ✅ aanwezig/geïmplementeerd · 🟡 ontwerp/gedeeltelijk · ⬜ gat.
 | **4.4 Publish** | **projections**, persistent i.v.m. herhaalbaarheid | `full_*` (REST/GraphQL) leest de store direct; geen aparte projectie-store | 🟡 |
 | **4.5/4.6 Transition, Notes** | groeipad; "availability is geen derde as" | tweeassig ontwerp bevestigt dit; cross-register tijdreizen sluit aan op "één systeem z'n systeemtijd is het volgende z'n data" | ✅ conceptueel |
 | **5 Provenance** | *lineage*: effect → command + **processorversie** → zaak/artefact/wet | alleen `bron` + `bron_kenmerk` op registratie (≈ transitiestap 1) | 🟡 begin |
-| **6 Doubt** | feedbackrapport → onderzoek → markeren onder onderzoek → correctie-effecten | niet aanwezig — voorstel: 4e registratiesoort (§5) | ⬜ → voorstel |
+| **6 Doubt** | feedbackrapport → onderzoek → markeren onder onderzoek → correctie-effecten | niet aanwezig — voorstel: annotatie + registratietype (§5) | ⬜ → voorstel |
 | **7 Bitemporal operations** (stub) | Create/Change/Correct/End/Reinstate/Revive/Withdraw/Erase | grotendeels gedekt door opvoer/afvoer/correctie/ongedaanmaking (mapping §6) | ✅/🟡 |
 | **8 APIs** (stub) | commands + publication | wij hebben een concreet patroon → **§8 voorstel** | 🟡 → voorstel |
 | **9 Design I — concepts** (stub) | identiteit, **granulariteit tussen BCNF en 6NF**, gaps/overlaps, pattern-velden | Hub+_Data (instelbare granulariteit per GE); materiële plumbing op hub-niveau | ✅ sterk |
@@ -114,23 +114,24 @@ ongedaanmaking modelleren als een *nieuw* effect, of als het nullen van afgeleid
 
 **Antwoord: ja — dat is een goede eerste snit, en het model nodigt er zelfs toe uit.** Onze
 `RegistratietypeEnum` is nu exact `{registratie, correctie, ongedaanmaking}`. Een vierde waarde
-`twijfel` (open onderzoek) — met een tegenhanger voor afronding — sluit naadloos aan. Twee
+`betwijfeling` (open onderzoek) — met een tegenhanger voor afronding — sluit naadloos aan. Twee
 belangrijke verfijningen:
+
+> **Verfijnd besluit (2026-07-13):** betwijfeling wordt gemodelleerd als een eigen **`Annotatie`**
+> (parallel aan `Wijziging`, met een aparte tabel), gedragen door een registratie van het nieuwe
+> type `betwijfeling`. Zie het uitgewerkte plan: `../ontwerp-annotatie-betwijfeling.md`
+> (status: plan — wacht op een backend-revisie die eerst naar `main` gemerget moet worden).
 
 ### 5.1 Twijfel is een annotatie, geen mutatie
 
 Correctie en ongedaanmaking *veranderen de geldende waarde*. Twijfel doet dat níét: de waarde
 **blijft staan**, maar krijgt een markering "onder onderzoek". Pas de *afronding* van het onderzoek
 leidt tot een echte mutatie — en dat is dan gewoon een **correctie** (of een "twijfel ongegrond"/
-opheffing die niets aan de data verandert). Voorgesteld model:
-
-- `registratietype = "twijfel"` opent een onderzoek en hangt een **markering** aan de betwijfelde
-  representatie(s). De markering is een lichte overlay (status + verwijzing naar het onderzoek/de
-  zaak), niet een nieuwe `_Data`-versie.
-- Afronding: een `correctie` (met `corrigeert_registratie_id`), óf een aparte `opheffing_twijfel`
-  die de markering sluit zonder de waarde te raken.
-- Het onderzoek/rapport zelf leeft, net als bij UBB, **buiten** het register (als zaak); binnen het
-  register bewaren we alleen de markering + verwijzing.
+opheffing die niets aan de data verandert). Zie het uitgewerkte model in
+`../ontwerp-annotatie-betwijfeling.md`: een registratie van type `betwijfeling` draagt één of meer
+`Annotatie`-kinderen (type `twijfel`) die naar de betwijfelde representatie(s) wijzen zonder ze te
+muteren. Afronding: onterecht → `ongedaanmaking`; terecht → opvolgende `correctie` die *naar
+aanleiding van* de betwijfeling is gedaan (aparte trigger-relatie, niet `corrigeert`).
 
 Dit is dus *parallel aan* correctie/ongedaanmaking qua plek in het commandomodel, maar *asymmetrisch*
 qua effect: het produceert geen nieuwe standing record, maar een status op een bestaande.
@@ -220,7 +221,7 @@ Alle schrijfacties lopen via één registratie-endpoint met een uniforme envelop
 POST /registratie/
 {
   "registratie": {
-    "registratietype": "registratie",      // | correctie | ongedaanmaking | (twijfel)
+    "registratietype": "registratie",      // | correctie | ongedaanmaking | betwijfeling
     "bron": "operaton",
     "bron_kenmerk": "pi-8f3c…",
     "opmerking": "…",
@@ -247,9 +248,10 @@ publicatie). GraphQL-equivalenten: mutations `registreer` / `corrigeer` / `maak_
   Provenance (H5) hangen we aan de registratie; per-subsectie afwijkende herkomst/ingangsdatum
   (UBB's "complexe commando's met subsecties") past op onze `wijzigingen[]`-structuur — elk element
   kan een eigen materiële `aanvang` en in de toekomst een eigen bron dragen.
-- **8.1.2 Conversational APIs — impact van twijfel** ⬜ — nieuw `registratietype: "twijfel"` (§5)
-  plus een terugkoppelkanaal: het register meldt "regel X gebruikte data onder onderzoek → severity
-  verlaagd"; de ambtenaar beslist over overrulen. Dit is een dialoog, geen enkel commando.
+- **8.1.2 Conversational APIs — impact van twijfel** ⬜ — nieuw `registratietype: "betwijfeling"`
+  met `Annotatie`-kinderen (§5) plus een terugkoppelkanaal: het register meldt "regel X gebruikte
+  data onder onderzoek → severity verlaagd"; de ambtenaar beslist over overrulen. Dit is een dialoog,
+  geen enkel commando.
 - **8.1.3 Business transactions — impact van correcties** ✅ (fundament) — onze registratie ís al de
   atomische transactie. Omdat we niet álle correcties vooraf kunnen kennen (UBB's punt), is onze
   low-level opvoer/afvoer-primitiven-set binnen een `correctie`-wrapper de generieke achterdeur.
@@ -308,7 +310,7 @@ publicatie). GraphQL-equivalenten: mutations `registreer` / `corrigeer` / `maak_
 | # | Actie | Type |
 |---|-------|------|
 | 1 | Trillian/Arthur-voorbeeld (e1–e20) als integratietest/seed implementeren | bouw |
-| 2 | `registratietype: "twijfel"` + markering-overlay ontwerpen (§5) | ontwerp |
+| 2 | `Annotatie` + `registratietype: "betwijfeling"` (zie `../ontwerp-annotatie-betwijfeling.md`) | ontwerp/bouw |
 | 3 | Provenance uitbreiden: processor-/schemaversie-koppeling aan wijziging (§7) | ontwerp |
 | 4 | Repeatable question: consistentiepunt + token (§8.2.1) op de backlog | onderzoek |
 | 5 | Business-function-commandolaag boven de primitieven (§8.1.1) | ontwerp |
@@ -317,6 +319,7 @@ publicatie). GraphQL-equivalenten: mutations `registreer` / `corrigeer` / `maak_
 
 ---
 
-*Zie ook:* `bitemporele-registers-vergelijking-v0.1.md` (genormaliseerd vs. één-tabel),
-`registratie-patronen.md` (sequence diagrams van de registratie-API),
-`trusted-documents.md` (PEP-laag voor mutations), `autoriseren/autoriseren.md` (PBAC).
+*Zie ook:* `../ontwerp-annotatie-betwijfeling.md` (Annotatie/betwijfeling-plan),
+`../bitemporele-registers-vergelijking-v0.1.md` (genormaliseerd vs. één-tabel),
+`../registratie-patronen.md` (sequence diagrams van de registratie-API),
+`../trusted-documents.md` (PEP-laag voor mutations), `../autoriseren/autoriseren.md` (PBAC).
