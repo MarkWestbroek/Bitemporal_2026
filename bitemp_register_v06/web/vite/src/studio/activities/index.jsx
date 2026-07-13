@@ -78,6 +78,8 @@ const referentielijstenActivity = maakPlaceholderActiviteit({
 });
 
 import { registreerActiviteitAlsProfieltype } from "./activiteitAlsProfieltype.jsx";
+// Side-effect: registreert de ingebouwde transformaties (import/export/transform).
+import "./transformaties.js";
 
 registreerActiviteiten([
   // modelleren

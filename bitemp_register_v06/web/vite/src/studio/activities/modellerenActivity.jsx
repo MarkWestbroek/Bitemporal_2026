@@ -20,6 +20,7 @@ import { create } from "zustand";
 import { menuBus } from "../menuBus";
 import useStudioStore from "../useStudioStore";
 import { useKruisStore } from "./koppelingenActivity.jsx";
+import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.jsx";
 import { IconModelleren } from "../icons";
 import {
   getProfieltypen,
@@ -923,6 +924,8 @@ function Map_({ map, diepte }) {
       { label: "Hernoemen", onClick: () => setBewerk(true) },
       { label: "Eigenschappen", onClick: () => selecteerMap(map.id) },
       { sep: true },
+      { label: "Transformeren…", onClick: () => useTransformStore.getState().openen(map.id) },
+      { sep: true },
       { label: "Omhoog", onClick: () => schuifMap(map.id, "omhoog") },
       { label: "Omlaag", onClick: () => schuifMap(map.id, "omlaag") },
       {
@@ -1375,6 +1378,7 @@ function Main() {
       <div className="studio-modelleren__inhoud">
         {ProfielMain ? <ProfielMain /> : <LegeStaat />}
       </div>
+      <TransformatiePaneel />
     </div>
   );
 }
@@ -1616,6 +1620,8 @@ function menus(ctx) {
     items: [
       { id: "proj-export", label: "Exporteer project (structuur + modellen)…", onClick: exporteerProject },
       { id: "proj-import", label: "Importeer project…", onClick: kiesEnImporteerProject },
+      { type: "separator" },
+      { id: "proj-transform", label: "Transformeren…", onClick: () => useTransformStore.getState().openen(null) },
     ],
   };
   const { profiel } = actieveTabInfo();

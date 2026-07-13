@@ -456,10 +456,22 @@ van een generatie. Drie richtingen van hetzelfde aspect:
 
 De **register-build** is een speciaal geval van (3) met een *externe*
 generator: beschouw de generator als extern, maar de **aanroep als intern
-aspect** — "Genereer ▸" op een map/profiel, die onder water de bestaande
-publiceer/rebuild-API aanroept. UI-richting: contextmenu op een map →
-"Genereer ▸" met de generatoren die de profieltypen van de inhoud aanbieden
-(descriptor-hook `generatoren?: [{id, label, run(model)}]`). Nog te bouwen.
+aspect**, die onder water de bestaande publiceer/rebuild-API aanroept.
+
+**Raamwerk gebouwd (2026-07-13):** `transformatieRegistry.js`
+(`registreerTransformatie({id, label, richting, profielTypes, run})`) + het
+generieke scherm `TransformatiePaneel.jsx` (modal), bereikbaar via
+**rechtsklik op een map → "Transformeren…"** en via **menu Project →
+Transformeren…**. Het scherm toont de gekozen map, de profielen die erin
+voorkomen, de richting (import/export/transform), de aangesloten generatoren
+en de bron/doel. `transformaties.js` levert map-helpers (`mapInhoud`,
+`collectMapModel` — de map als model-eenheid) plus drie ingebouwde,
+generieke generatoren: **export** (map → JSON-bestand), **import**
+(JSON-map-export → in deze map) en **transform** (kopieer map-inhoud →
+nieuwe/bestaande map, met verse id's). Specifieke generatoren (OAS-export,
+MIM-transformatie, register-build) sluiten hierop aan met een
+`registreerTransformatie`-aanroep — nog te doen; ook: API als bron/doel
+(nu alleen bestand) en element-selectie (nu "alle in de map").
 
 ### Metamodel-verkenning: gedragsdiagrammen (sequence, activity, state machine, BPMN) — sessie 2026-07-13
 
