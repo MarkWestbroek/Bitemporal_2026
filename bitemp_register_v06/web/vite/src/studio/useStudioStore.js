@@ -113,18 +113,15 @@ const useStudioStore = create((set) => ({
     }),
 
   /**
-   * Toon/verberg een activiteit in de balk. Verbergen haalt hem ook uit de
-   * favorieten (anders spreken de instellingen elkaar tegen).
+   * Toon/verberg een activiteit in de balk — expliciet (tri-state opslag):
+   * true = verborgen, false = zichtbaar, afwezig = descriptor-default
+   * (`standaardVerborgen`, bv. de losse editors die Modelleren al dekt).
+   * Verbergen haalt hem ook uit de favorieten.
    */
-  toggleBalkZichtbaar: (id) =>
+  zetBalkZichtbaar: (id, zichtbaar) =>
     set((s) => {
-      const balkVerborgen = { ...s.balkVerborgen };
-      let favorieten = s.favorieten;
-      if (balkVerborgen[id]) delete balkVerborgen[id];
-      else {
-        balkVerborgen[id] = true;
-        favorieten = favorieten.filter((f) => f !== id);
-      }
+      const balkVerborgen = { ...s.balkVerborgen, [id]: !zichtbaar };
+      const favorieten = zichtbaar ? s.favorieten : s.favorieten.filter((f) => f !== id);
       const next = { ...s, balkVerborgen, favorieten };
       schrijfOpslag(next);
       return { balkVerborgen, favorieten };
@@ -146,7 +143,8 @@ const useStudioStore = create((set) => ({
         favorieten = s.favorieten.filter((f) => f !== id);
       } else {
         favorieten = [...s.favorieten, id];
-        delete balkVerborgen[id];
+        // Expliciet zichtbaar (wint van een standaardVerborgen-default).
+        balkVerborgen[id] = false;
       }
       const next = { ...s, favorieten, balkVerborgen };
       schrijfOpslag(next);

@@ -74,7 +74,7 @@ export default function ActiviteitenInstellingen() {
   const balkVerborgen = useStudioStore((s) => s.balkVerborgen);
   const labsAan = useStudioStore((s) => s.labsAan);
   const favorieten = useStudioStore((s) => s.favorieten);
-  const toggleBalkZichtbaar = useStudioStore((s) => s.toggleBalkZichtbaar);
+  const zetBalkZichtbaar = useStudioStore((s) => s.zetBalkZichtbaar);
   const toggleLabs = useStudioStore((s) => s.toggleLabs);
   const toggleFavoriet = useStudioStore((s) => s.toggleFavoriet);
 
@@ -115,7 +115,8 @@ export default function ActiviteitenInstellingen() {
           {g.items.map((a) => {
             const nietInstelbaar = a.status === "concept" || a.verborgenInBalk;
             const favoriet = favorieten.includes(a.id);
-            const zichtbaarUit = !!balkVerborgen[a.id];
+            // Tri-state: gebruikerskeuze wint van de descriptor-default.
+            const zichtbaarUit = !!(balkVerborgen[a.id] ?? a.standaardVerborgen);
             return (
               <div key={a.id} style={rijStijl}>
                 <button
@@ -154,7 +155,7 @@ export default function ActiviteitenInstellingen() {
                     style={{ margin: 0 }}
                     disabled={nietInstelbaar}
                     checked={!nietInstelbaar && !zichtbaarUit}
-                    onChange={() => toggleBalkZichtbaar(a.id)}
+                    onChange={(e) => zetBalkZichtbaar(a.id, e.target.checked)}
                   />
                   <span style={{ display: "inline-flex", width: 18, justifyContent: "center" }}>{a.icon}</span>
                   {a.label}

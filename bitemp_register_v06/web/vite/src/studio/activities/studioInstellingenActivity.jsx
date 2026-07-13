@@ -11,7 +11,7 @@
  *      git-persistent zijn en overal bruikbaar worden (galerij, PE-kiezers,
  *      shape-sets) — zonder code te schrijven.
  */
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { IconInstellingen } from "../icons";
 // Side-effect: registreert alle basis-shapes én de data-shapes in de registry,
 // zodat de galerij de volledige registry toont ook zonder geopende canvas.
@@ -26,6 +26,29 @@ import SilhouetTekenaar, { polygonNaarPunten, puntenNaarPad } from "./silhouetTe
 import { extraheerSilhouet } from "./silhouetExtractie.js";
 import ActiviteitenInstellingen from "../ActiviteitenInstellingen.jsx";
 import ProfieltypenInstellingen from "../ProfieltypenInstellingen.jsx";
+import { TRACE_TYPEN, TraceGlyph } from "./koppelingenActivity.jsx";
+
+/** Legenda van de trace-relatiesymbolen (beide richtingen). Nu vast; later bewerkbaar. */
+function KruisverbandSymbolen() {
+  const cel = { display: "flex", alignItems: "center", justifyContent: "center", width: 46, height: 30, border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, color: "var(--s-fg)" };
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: "6px 14px", alignItems: "center", fontSize: 13, maxWidth: 420 }}>
+      <div style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)" }}>soort</div>
+      <div style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)", textAlign: "center" }}>rij → kolom</div>
+      <div style={{ fontSize: 11, color: "var(--s-fg-muted, #64748b)", textAlign: "center" }}>kolom → rij</div>
+      {TRACE_TYPEN.map((t) => (
+        <React.Fragment key={t.soort}>
+          <div>
+            {t.soort}
+            {t.defaultOmgekeerd && <span style={{ color: "var(--s-fg-muted, #64748b)", fontSize: 11 }}> (default kolom→rij)</span>}
+          </div>
+          <div style={cel}><TraceGlyph soort={t.soort} omgekeerd={false} size={26} /></div>
+          <div style={cel}><TraceGlyph soort={t.soort} omgekeerd size={26} /></div>
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
 
 const METHOD_DRAW_URL = `${import.meta.env.BASE_URL}method-draw/index.html`;
 
@@ -460,6 +483,16 @@ function Main() {
       </div>
       <div style={sectie}>
         <ProfieltypenInstellingen />
+      </div>
+
+      <div style={{ padding: "12px 16px 0", borderTop: "1px solid var(--s-border, #cbd5e1)" }}>
+        <h2 style={{ margin: "0 0 2px" }}>Kruisverband-symbolen</h2>
+        <p style={{ margin: 0, color: "var(--s-fg-muted, #64748b)", fontSize: 13 }}>
+          De relatiesymbolen in de Koppelingen-matrix — voor beide richtingen (kolom is bovenliggend).
+        </p>
+      </div>
+      <div style={sectie}>
+        <KruisverbandSymbolen />
       </div>
 
       <div style={{ padding: "12px 16px 0", borderTop: "1px solid var(--s-border, #cbd5e1)" }}>

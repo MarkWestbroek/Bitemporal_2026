@@ -84,6 +84,7 @@ function BerichtInspector() {
 export default {
   id: "bericht",
   label: "Berichtdefinities",
+  standaardVerborgen: true, // gedekt door de Modelleren-host
   icon: <IconBericht />,
   groep: "modelleren",
   Provider: BerichtProvider,

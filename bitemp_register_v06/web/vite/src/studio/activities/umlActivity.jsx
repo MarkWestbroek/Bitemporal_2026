@@ -134,6 +134,7 @@ function umlMenus(ctx) {
 export default {
   id: "uml",
   label: "UML-model",
+  standaardVerborgen: true, // gedekt door de Modelleren-host (Canoniek model IDE v1)
   icon: <IconUML />,
   groep: "modelleren",
   fullMain: true,

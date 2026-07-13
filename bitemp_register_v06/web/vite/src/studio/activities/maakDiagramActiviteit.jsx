@@ -83,6 +83,10 @@ export function maakDiagramActiviteit(opties) {
     // true → niet in de activity bar; alleen bereikbaar via menu Ga naar
     // (bv. de 0.5-DRD zolang DMN één ingang in de balk heeft).
     verborgenInBalk = false,
+    // true → default niet in de balk; de gebruiker kan hem via Studio-
+    // instellingen → Activiteiten weer aanzetten. Voor losse editors die
+    // de Modelleren-host al dekt.
+    standaardVerborgen = false,
     // Accentkleur van het profieltype (tab-streepje en sectie-stip in de
     // Modelleren-projectbrowser). Optioneel; zonder kleur een neutrale stip.
     kleur,
@@ -2346,6 +2350,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
     groep,
     status,
     verborgenInBalk,
+    standaardVerborgen,
     Provider,
     Sidebar,
     Main,

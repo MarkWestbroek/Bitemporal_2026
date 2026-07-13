@@ -154,6 +154,7 @@ function BpmnInspector() {
 export default {
   id: "bpmn",
   label: "BPMN-processen",
+  standaardVerborgen: true, // gedekt door de Modelleren-host
   icon: <IconBPMN />,
   groep: "modelleren",
   Provider: BpmnProvider,

@@ -289,6 +289,17 @@ activiteiten-tabel in `docs/STUDIO.md`.
    overstijgend aspect een expliciete plek geven in de nieuwe structuur
    (zie ook "algemene aspecten" bovenin dit plan).
 
+   **Opgeruimde balk (2026-07-13):** alle losse editors die de
+   Modelleren-host dekt (UML-model/IDE v1, Canoniek model, UML, OAS, MIM,
+   DMN, BPMN, Berichtdefinities) hebben `standaardVerborgen: true` — ze
+   staan default niet meer in de activity bar, maar zijn per gebruiker weer
+   aan te zetten via Studio-instellingen → Activiteiten (tri-state:
+   gebruikerskeuze wint van de default) en blijven altijd in Ga naar/palet.
+   De balk toont zo standaard: Modelleren, Koppelingen, eigen
+   meta-editor-profielen, en de beheer-groep. Verder: **rechtsklik op een
+   map → "Nieuw diagram ▸"** met typekeuze over álle profieltypen (ook de
+   klassieke editors); het nieuwe diagram landt meteen in die map.
+
    **Meerdere documenten per klassieke editor (2026-07-13):** BPMN en DMN
    hebben `documentenBeheer` — ＋ in de sectie (en LegeStaat) maakt een
    nieuw document, rechtsklik → Verwijderen… gooit er een weg, en elk
@@ -430,13 +441,98 @@ EA) — voorlopig behandelen we een package als element bínnen zijn profiel;
 hoe map en package zich verhouden is een denkpunt voor de gebruiker.
 Nog gewenst (fase 3-vervolg): **multi-select** in beide bomen.
 
-### Fase 4 — Kruisverbanden (nieuw, na 2–3)
-1. Trace-links tussen profieltypen als eigen diagramtype; bij twee
-   profieltypen weergegeven als **matrix** (model × proces, model × API,
-   bericht × model). Concreet gat dat dit vult (zichtbaar in de eigen
-   Sparx-repo's): hetzelfde concept in twee werelden — UML `Taak` naast
-   MIM `«Objecttype» Taak` — staat nu als handmatige duplicatie in mappen,
-   zonder vastgelegde relatie.
+### Genereren als aspect (sessie 2026-07-13)
+
+Genereren hoort niet bij één activiteit maar is een **optioneel,
+configureerbaar aspect van een profieltype × map**: de map is (als in EA) de
+logische eenheid waar elementen leven die samen een model vormen — de basis
+van een generatie. Drie richtingen van hetzelfde aspect:
+
+1. **import** — van buiten naar model (OAS/XMI/MIM-import bestaat al);
+2. **transformeren** — van model naar model (bv. canoniek → MIM, bestaat als
+   "Zet canoniek model om naar MIM"; kruisverbanden kunnen de herkomst
+   vastleggen);
+3. **export/genereren** — van model naar buiten (OAS-export, V3-publicatie).
+
+De **register-build** is een speciaal geval van (3) met een *externe*
+generator: beschouw de generator als extern, maar de **aanroep als intern
+aspect**, die onder water de bestaande publiceer/rebuild-API aanroept.
+
+**Raamwerk gebouwd (2026-07-13):** `transformatieRegistry.js`
+(`registreerTransformatie({id, label, richting, profielTypes, run})`) + het
+generieke scherm `TransformatiePaneel.jsx` (modal). Opbouw: **actie**
+(Importeren · Transformeren · Exporteren — in die volgorde) → **bron** →
+**doel**; bij een map-doel is er extra een veld *"nieuwe (sub)map in de
+gekozen map"* (leeg = de gekozen map zelf), ook voor import. Bereikbaar via
+**rechtsklik op een map → Transformeren ▸ (Importeren/Transformeren/
+Exporteren)** — dan opent het scherm direct in die vorm zonder actie-keuze —
+en via **menu Project → Transformeren…** (met actie-keuze). De aangewezen
+map vult de relevante kant (import = doel, anders = bron). `transformaties.js` levert map-helpers (`mapInhoud`,
+`collectMapModel` — de map als model-eenheid) plus drie ingebouwde,
+generieke generatoren: **export** (map → JSON-bestand), **import**
+(JSON-map-export → in deze map) en **transform** (kopieer map-inhoud →
+nieuwe/bestaande map, met verse id's). Specifieke generatoren (OAS-export,
+MIM-transformatie, register-build) sluiten hierop aan met een
+`registreerTransformatie`-aanroep — nog te doen; ook: API als bron/doel
+(nu alleen bestand) en element-selectie (nu "alle in de map").
+
+### Metamodel-verkenning: gedragsdiagrammen (sequence, activity, state machine, BPMN) — sessie 2026-07-13
+
+Wat komt het diagramcore-metamodel tekort om deze als gewone profielen te
+tekenen?
+
+1. **Geordende voorkomens langs een as** — sequence: lifelines zijn kolommen
+   en de verticale volgorde van messages ís semantiek. Nodig: een
+   as-/volgorde-begrip per diagramtype (positie → orde), plus
+   layout-constraints ("lifeline blijft verticaal", "message horizontaal").
+2. **Semantische containers/lanes** — pools/lanes (BPMN), fragments
+   (alt/loop), composite states, activity-partities. `containerVoor` en het
+   kader bestaan, maar zonder lane-layout en zonder betekenis (lidmaatschap
+   → attribuut, bv. "uitgevoerd door").
+3. **Rand-aanhechting** — BPMN boundary-events en state entry/exit-points
+   zijn elementen die óp de rand van een ander element wonen. Het metamodel
+   mist "aanhechtpunten"/poorten op elementen.
+4. **Connector→connector en sub-shapes** — messages die aan activation-bars
+   hangen (sub-shape op een lifeline), en pijlen naar een pijl. ASOC-anker
+   is een begin, maar activations zijn geordende sub-voorkomens.
+5. **Validatieregels per diagramtype** — één startevent, geen zwevende
+   states, enz. De validatie-hook staat al op de todo; gedragsprofielen
+   maken hem noodzakelijk.
+6. Wat er al ís: element-op-meerdere-diagrammen, verbindingsregels 1..*,
+   markers/lijnvormen, hiërarchie, edgePresentatie — structuurdiagrammen
+   dekken we; het gat is vooral (1)–(4).
+
+Kandidaat-volgorde: state machine (kleinste gat: containers + validatie) →
+activity (lanes + geordende flow) → BPMN (boundary events + pools) →
+sequence (grootste gat: as-semantiek + activations).
+
+### Fase 4 — Kruisverbanden (nieuw, na 2–3) — v0 gebouwd 2026-07-13
+1. 🔶 v0: nieuwe activiteit **"Koppelingen"** (naast Modelleren) — kies een
+   bron- en doelprofieltype en vink kruisverbanden aan in een **matrix**
+   (zoekvelden per as; klassieke editors doen nog niet mee — hun elementen
+   leven buiten de profiel-stores). Links persisteren in localStorage
+   (`studio-kruisverbanden`) en reizen mee in het **project-werkbestand**;
+   de inspector toont alle links (over alle profielparen) met verwijderen.
+   **Soorten tracering (2026-07-13):** nieuwe links krijgen een gekozen
+   soort — *komt voort uit*, *heeft te maken met*, *genereert*,
+   *realiseert* — met een **relatiesymbool met hoekje** (orthogonale
+   elleboog rij→kolom) per cel; UML-achtige koppen (holle driehoek /
+   open pijl / gevulde pijl / geen). **Rechtsklik op een cel**: soort
+   wijzigen, richting omdraaien, verwijderen. **Richting** rij↔kolom
+   (kolom bovenliggend; genereert default kolom→rij), met de kop aan de
+   *naar*-zijde en een omgekeerde vorm. Een **legenda met beide richtingen**
+   staat in Studio-instellingen → Kruisverband-symbolen (nu vast, later
+   bewerkbaar).
+   **Ontwerp grafische variant (sessiebesluit 2026-07-13):** een diagram
+   van het type **'kruisverband'** dat élk soort element accepteert — géén
+   "Maken"-taakbalk (elementen ontstaan in hun eigen profiel), wél een
+   "Verbinding"-taakbalk met de traceer-relatietypen; je trekt een
+   traceer-relatie van element X naar element Y. (Alternatief — een vrij
+   diagramtype met aan te zetten crosslink-functionaliteit, polymorfe
+   diagrammen — is bewust láter.) Overig vervolg: "traceer naar…" vanuit
+   de projectboom en het superprofiel als formele drager. Concreet gat dat dit vult (zichtbaar in de eigen Sparx-repo's):
+   hetzelfde concept in twee werelden — UML `Taak` naast MIM `«Objecttype»
+   Taak` — stond als handmatige duplicatie zonder vastgelegde relatie.
 2. Cross-profiel-diagram: elementen uit meerdere profieltypen op één canvas —
    de profieltype-registry uit fase 2 is hiervoor de voorwaarde.
 
@@ -460,3 +556,9 @@ Nog gewenst (fase 3-vervolg): **multi-select** in beide bomen.
   lijst/grid-sidebar, Koppelingen een matrix-lijst. De consistentie zit in de
   vaste plekken (sidebar links, inspector rechts, aspecten in de menubalk),
   niet in identieke inhoud.
+
+## addendum
+### losliggende eindjes en ideeen
+#### modeller
+1. tabs kunnen verschuiven
+2. bpmn.io elementen properties ook tonen (is wellicht alleen tijdelijk, maar kan ook een algemene feature zijn voor een custom, extern gecodeerd, profieltype editor)

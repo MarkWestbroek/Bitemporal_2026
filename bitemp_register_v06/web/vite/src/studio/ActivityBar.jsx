@@ -67,7 +67,9 @@ export default function ActivityBar({ activiteiten }) {
     (a) =>
       a.status !== "concept" &&
       !a.verborgenInBalk &&
-      !balkVerborgen[a.id] &&
+      // Tri-state: gebruikerskeuze wint van de descriptor-default
+      // (standaardVerborgen — bv. losse editors die Modelleren al dekt).
+      !(balkVerborgen[a.id] ?? a.standaardVerborgen) &&
       (labsAan || a.status !== "preview" || favorietenSet.has(a.id))
   );
 
