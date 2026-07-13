@@ -40,7 +40,14 @@ import React, {
 } from "react";
 import { menuBus } from "../menuBus";
 import { registreerProfieltype } from "../profieltypeRegistry";
+import { useExportInstellingen } from "../exportInstellingen.js";
 import useUIStore from "../../store/useUIStore";
+
+/** Huidige export-voorkeuren → opties voor layoutApi.exporteerAfbeelding. */
+const leesExportOpties = () => {
+  const s = useExportInstellingen.getState();
+  return { achtergrondModus: s.achtergrond, schaal: s.schaal, marge: s.marge };
+};
 import { createDiagramStore } from "../../diagramcore/model/createDiagramStore.js";
 import { UITLIJN_MODES } from "../../diagramcore/layout/uitlijnen.js";
 import { ANKER_PREFIX } from "../../diagramcore/canvas/materialiseerConnectoren.js";
@@ -1608,7 +1615,9 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           : []),
         { id: "normaliseer", label: "Normaliseer relaties", icoon: "↔", onClick: () => menuBus.emit(ev("normaliseer")) },
         { id: "snap", label: "Snap nodes naar grid", icoon: UITLIJN_ICONEN.snap, onClick: () => layoutApiRef.current?.snapRaster() },
-        // Exporteren: selectie als er iets geselecteerd is, anders het hele diagram.
+        // Exporteren: selectie als er iets geselecteerd is, anders het hele
+        // diagram. Achtergrond/schaal/marge komen uit Studio-instellingen →
+        // Diagram-export (bij klik uitgelezen).
         { sep: true },
         { kop: true, label: "Exporteren" },
         {
@@ -1616,12 +1625,12 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           label: (selectieAantal >= 1 ? "Kopieer selectie" : "Kopieer diagram") + " als afbeelding",
           icoon: "📋",
           onClick: async () => {
-            const r = await layoutApiRef.current?.exporteerAfbeelding({ formaat: "png", alleenSelectie: selectieAantal >= 1, doel: "clipboard" });
+            const r = await layoutApiRef.current?.exporteerAfbeelding({ formaat: "png", alleenSelectie: selectieAantal >= 1, doel: "clipboard", ...leesExportOpties() });
             if (r && !r.ok) window.alert(`Kopiëren mislukt: ${r.reden}. Gebruik anders "Download PNG".`);
           },
         },
-        { id: "exp-png", label: "Download PNG", icoon: "🖼", onClick: () => layoutApiRef.current?.exporteerAfbeelding({ formaat: "png", alleenSelectie: selectieAantal >= 1 }) },
-        { id: "exp-svg", label: "Download SVG", icoon: "❖", onClick: () => layoutApiRef.current?.exporteerAfbeelding({ formaat: "svg", alleenSelectie: selectieAantal >= 1 }) },
+        { id: "exp-png", label: "Download PNG", icoon: "🖼", onClick: () => layoutApiRef.current?.exporteerAfbeelding({ formaat: "png", alleenSelectie: selectieAantal >= 1, ...leesExportOpties() }) },
+        { id: "exp-svg", label: "Download SVG", icoon: "❖", onClick: () => layoutApiRef.current?.exporteerAfbeelding({ formaat: "svg", alleenSelectie: selectieAantal >= 1, ...leesExportOpties() }) },
         // Rechtsklik op een element-node: z-order (L01) en gelijke maat (L02).
         ...(nodeId
           ? (() => {

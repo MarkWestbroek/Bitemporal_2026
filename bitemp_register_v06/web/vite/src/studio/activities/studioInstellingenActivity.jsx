@@ -26,6 +26,7 @@ import SilhouetTekenaar, { polygonNaarPunten, puntenNaarPad } from "./silhouetTe
 import { extraheerSilhouet } from "./silhouetExtractie.js";
 import ActiviteitenInstellingen from "../ActiviteitenInstellingen.jsx";
 import ProfieltypenInstellingen from "../ProfieltypenInstellingen.jsx";
+import ExportInstellingen from "../ExportInstellingen.jsx";
 import { TRACE_TYPEN, TraceGlyph } from "./koppelingenActivity.jsx";
 
 /** Legenda van de trace-relatiesymbolen (beide richtingen). Nu vast; later bewerkbaar. */
@@ -493,6 +494,16 @@ function Main() {
       </div>
       <div style={sectie}>
         <KruisverbandSymbolen />
+      </div>
+
+      <div style={{ padding: "12px 16px 0", borderTop: "1px solid var(--s-border, #cbd5e1)" }}>
+        <h2 style={{ margin: "0 0 2px" }}>Diagram-export</h2>
+        <p style={{ margin: 0, color: "var(--s-fg-muted, #64748b)", fontSize: 13 }}>
+          Standaardinstellingen voor het exporteren van een diagram/selectie als afbeelding.
+        </p>
+      </div>
+      <div style={sectie}>
+        <ExportInstellingen />
       </div>
 
       <div style={{ padding: "12px 16px 0", borderTop: "1px solid var(--s-border, #cbd5e1)" }}>

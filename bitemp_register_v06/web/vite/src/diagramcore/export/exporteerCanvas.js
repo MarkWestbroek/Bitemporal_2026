@@ -10,8 +10,6 @@
  */
 import { toPng, toSvg } from "html-to-image";
 
-const PADDING = 24;
-
 /** Sla React Flow-chrome over bij het serialiseren (incl. connectie-handles). */
 function neemMee(node) {
   if (!(node instanceof Element) || !node.classList) return true;
@@ -36,13 +34,13 @@ function download(dataUrl, naam) {
  *   naam: bestandsnaam zonder extensie
  * @returns {Promise<{ok:boolean, doel?:string, reden?:string}>}
  */
-export async function exporteerViewport({ viewportEl, bounds, formaat = "png", doel = "download", achtergrond, naam = "diagram" }) {
+export async function exporteerViewport({ viewportEl, bounds, formaat = "png", doel = "download", achtergrond, naam = "diagram", marge = 24, schaal = 2 }) {
   if (!viewportEl || !bounds || !bounds.width || !bounds.height) return { ok: false, reden: "niets te exporteren" };
-  const w = Math.ceil(bounds.width + PADDING * 2);
-  const h = Math.ceil(bounds.height + PADDING * 2);
+  const w = Math.ceil(bounds.width + marge * 2);
+  const h = Math.ceil(bounds.height + marge * 2);
   // Render op zoom 1 met een vaste pixelmarge: verschuif zó dat de linker-
-  // bovenhoek van de inhoud op (PADDING, PADDING) landt.
-  const t = { x: -bounds.x + PADDING, y: -bounds.y + PADDING, zoom: 1 };
+  // bovenhoek van de inhoud op (marge, marge) landt.
+  const t = { x: -bounds.x + marge, y: -bounds.y + marge, zoom: 1 };
   const opties = {
     width: w,
     height: h,
@@ -54,7 +52,7 @@ export async function exporteerViewport({ viewportEl, bounds, formaat = "png", d
       transform: `translate(${t.x}px, ${t.y}px) scale(${t.zoom})`,
     },
   };
-  const dataUrl = formaat === "svg" ? await toSvg(viewportEl, opties) : await toPng(viewportEl, { ...opties, pixelRatio: 2 });
+  const dataUrl = formaat === "svg" ? await toSvg(viewportEl, opties) : await toPng(viewportEl, { ...opties, pixelRatio: schaal });
 
   if (doel === "clipboard") {
     // Klembord accepteert betrouwbaar PNG (voor plakken in chat/docs).

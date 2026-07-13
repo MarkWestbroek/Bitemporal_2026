@@ -747,16 +747,16 @@ function CanvasBinnenkant({
          * naar het klembord (PNG). `alleenSelectie` valt terug op het hele
          * diagram als er niets geselecteerd is.
          */
-        exporteerAfbeelding: async ({ formaat = "png", alleenSelectie = false, doel = "download" } = {}) => {
+        exporteerAfbeelding: async ({ formaat = "png", alleenSelectie = false, doel = "download", achtergrondModus = "canvas", schaal = 2, marge = 24 } = {}) => {
           const zichtbaar = getNodes().filter((n) => !n.hidden);
           const sel = zichtbaar.filter((n) => n.selected);
           const nodes = alleenSelectie && sel.length ? sel : zichtbaar;
           if (!nodes.length) return { ok: false, reden: "geen elementen op het diagram" };
           const root = rfStoreApi.getState().domNode;
           const viewportEl = root?.querySelector(".react-flow__viewport");
-          // De .react-flow-root is transparant; de canvas-kleur zit op een
-          // voorouder. Zoek de eerste ondoorzichtige achtergrond zodat lichte
-          // tekst (donker thema) leesbaar blijft; val terug op wit.
+          // Achtergrond: canvas-kleur (de .react-flow-root is transparant; de
+          // kleur zit op een voorouder — zoek de eerste ondoorzichtige zodat
+          // lichte tekst op donker thema leesbaar blijft), wit of transparant.
           const opaakBg = (el) => {
             for (let n = el; n; n = n.parentElement) {
               const bg = getComputedStyle(n).backgroundColor;
@@ -764,7 +764,14 @@ function CanvasBinnenkant({
             }
             return "#ffffff";
           };
-          const achtergrond = root ? opaakBg(root) : "#ffffff";
+          const achtergrond =
+            achtergrondModus === "transparant"
+              ? undefined
+              : achtergrondModus === "wit"
+                ? "#ffffff"
+                : root
+                  ? opaakBg(root)
+                  : "#ffffff";
           const naam =
             `${(diagram?.naam || "diagram").replace(/[^\w-]+/g, "_")}` +
             (alleenSelectie && sel.length ? "-selectie" : "");
@@ -775,6 +782,8 @@ function CanvasBinnenkant({
             doel,
             achtergrond,
             naam,
+            schaal,
+            marge,
           });
         },
       };

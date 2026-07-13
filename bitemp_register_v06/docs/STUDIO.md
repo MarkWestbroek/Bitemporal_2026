@@ -258,6 +258,10 @@ te wijzigen.
 > (strak om de inhoud, met de canvas-achtergrond zodat tekst leesbaar blijft;
 > connectie-handles en canvas-chrome vallen weg). `diagramcore/export/
 > exporteerCanvas.js` (html-to-image) + `layoutApi.exporteerAfbeelding`.
+> **Voorkeuren** (achtergrond: canvas-thema/wit/transparant, PNG-schaal 1–4×,
+> marge) staan in Studio-instellingen → **Diagram-export**
+> (`exportInstellingen.js` + `ExportInstellingen.jsx`); het menu blijft de
+> drie schone acties.
 >
 > **Fase 2-sluitstuk (2026-07-12):** ook de **klassieke editors** staan in
 > de Modelleren-browser en openen als tab — dmn-js (DRD+tabel), BPMN,
