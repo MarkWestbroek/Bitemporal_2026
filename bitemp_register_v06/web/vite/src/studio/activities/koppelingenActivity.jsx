@@ -31,6 +31,9 @@ import {
 } from "../profieltypeRegistry";
 import ProfielIcoon from "../ProfielIcoon.jsx";
 import { IconKoppeling } from "../icons";
+// Circulaire import (grafisch ↔ activity): veilig omdat het pas bij render
+// gebruikt wordt, niet tijdens module-evaluatie.
+import KoppelingenGrafisch from "./koppelingenGrafisch.jsx";
 
 // ── Trace-typen: soort + symbool + default-richting ─────────────────
 // `stijl` stuurt het symbool (UML-achtig): realisatie = gestippeld + holle
@@ -108,12 +111,25 @@ function bewaar(state) {
   try {
     localStorage.setItem(
       LS_KEY,
-      JSON.stringify({ links: state.links, bronId: state.bronId, doelId: state.doelId, soort: state.soort })
+      JSON.stringify({
+        links: state.links,
+        bronId: state.bronId,
+        doelId: state.doelId,
+        soort: state.soort,
+        weergave: state.weergave,
+        posities: state.posities,
+        losseNodes: state.losseNodes,
+      })
     );
   } catch { /* ignore */ }
 }
 
-const refKey = (r) => `${r.profielId}::${r.elementId}`;
+export const refKey = (r) => `${r.profielId}::${r.elementId}`;
+/** Ref uit een refKey. */
+export const refUit = (key) => {
+  const i = key.indexOf("::");
+  return { profielId: key.slice(0, i), elementId: key.slice(i + 2) };
+};
 /** Cel-id (richting-onafhankelijk): altijd rij##kolom. */
 const cellKey = (rij, kolom) => `${refKey(rij)}##${refKey(kolom)}`;
 
@@ -142,6 +158,12 @@ export const useKruisStore = create((set) => ({
   bronId: opgeslagen.bronId || null,
   doelId: opgeslagen.doelId || null,
   soort: opgeslagen.soort || "heeft te maken met",
+  /** "matrix" | "grafisch" */
+  weergave: opgeslagen.weergave || "matrix",
+  /** { [refKey]: {x,y} } — knooppositie in de grafische view */
+  posities: opgeslagen.posities || {},
+  /** refKeys die zonder link op het grafische canvas staan */
+  losseNodes: opgeslagen.losseNodes || [],
 
   zetKeuze: (patch) =>
     set((s) => {
@@ -206,6 +228,63 @@ export const useKruisStore = create((set) => ({
       const next = { ...s, links: genormaliseerd };
       bewaar(next);
       return { links: genormaliseerd };
+    }),
+
+  // ── Grafische view ────────────────────────────────────────────────
+  zetWeergave: (weergave) =>
+    set((s) => {
+      const next = { ...s, weergave };
+      bewaar(next);
+      return { weergave };
+    }),
+
+  /**
+   * Leg (grafisch) een gerichte link van → naar met een soort. Anders dan de
+   * matrix is de richting hier expliciet: van = rij, naar = kolom, omgekeerd
+   * blijft false (de getekende pijl is de bedoelde richting).
+   */
+  legLink: (van, naar, soort) =>
+    set((s) => {
+      if (refKey(van) === refKey(naar)) return {};
+      const id = cellKey(van, naar);
+      let links;
+      if (s.links.some((l) => l.id === id)) {
+        links = s.links.map((l) => (l.id === id ? { ...l, soort } : l));
+      } else {
+        links = [...s.links, { id, rij: van, kolom: naar, soort, omgekeerd: false }];
+      }
+      const next = { ...s, links };
+      bewaar(next);
+      return { links };
+    }),
+
+  /** Voeg een element als los knooppunt aan het grafische canvas toe. */
+  voegNodeToe: (ref, positie) =>
+    set((s) => {
+      const key = refKey(ref);
+      const losseNodes = s.losseNodes.includes(key) ? s.losseNodes : [...s.losseNodes, key];
+      const posities = positie ? { ...s.posities, [key]: positie } : s.posities;
+      const next = { ...s, losseNodes, posities };
+      bewaar(next);
+      return { losseNodes, posities };
+    }),
+
+  /** Verwijder een knoop van het canvas (én de losse-node-registratie). */
+  verwijderNode: (key) =>
+    set((s) => {
+      const losseNodes = s.losseNodes.filter((k) => k !== key);
+      const { [key]: _weg, ...posities } = s.posities;
+      const next = { ...s, losseNodes, posities };
+      bewaar(next);
+      return { losseNodes, posities };
+    }),
+
+  zetPositie: (key, positie) =>
+    set((s) => {
+      const posities = { ...s.posities, [key]: positie };
+      const next = { ...s, posities };
+      bewaar(next);
+      return { posities };
     }),
 }));
 
@@ -446,8 +525,33 @@ function MatrixInhoud({ bron, doel }) {
   );
 }
 
-function Main() {
-  useSyncExternalStore(abonneerOpProfieltypen, profieltypenVersie);
+function WeergaveToggle() {
+  const weergave = useKruisStore((s) => s.weergave);
+  const zetWeergave = useKruisStore((s) => s.zetWeergave);
+  const knop = (id, label) => (
+    <button
+      type="button"
+      onClick={() => zetWeergave(id)}
+      style={{
+        font: "inherit", fontSize: 12, padding: "3px 12px", cursor: "pointer",
+        border: "1px solid var(--s-border)", color: "var(--s-fg)",
+        background: weergave === id ? "var(--s-hover)" : "transparent",
+        fontWeight: weergave === id ? 700 : 400,
+        borderColor: weergave === id ? "var(--s-accent, #4f46e5)" : "var(--s-border)",
+      }}
+    >
+      {label}
+    </button>
+  );
+  return (
+    <div style={{ display: "flex", gap: 0, padding: 8, borderBottom: "1px solid var(--s-border)" }}>
+      {knop("matrix", "Matrix")}
+      {knop("grafisch", "Grafisch")}
+    </div>
+  );
+}
+
+function MatrixWeergave() {
   const bronId = useKruisStore((s) => s.bronId);
   const doelId = useKruisStore((s) => s.doelId);
   const bron = bronId ? getProfieltype(bronId) : null;
@@ -463,6 +567,19 @@ function Main() {
     );
   }
   return <MatrixInhoud key={`${bron.id}::${doel.id}`} bron={bron} doel={doel} />;
+}
+
+function Main() {
+  useSyncExternalStore(abonneerOpProfieltypen, profieltypenVersie);
+  const weergave = useKruisStore((s) => s.weergave);
+  return (
+    <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column" }}>
+      <WeergaveToggle />
+      <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
+        {weergave === "grafisch" ? <KoppelingenGrafisch /> : <MatrixWeergave />}
+      </div>
+    </div>
+  );
 }
 
 // ── Inspector: alle links, met richting + verwijderen ───────────────

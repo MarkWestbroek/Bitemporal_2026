@@ -530,18 +530,22 @@ sequence (grootste gat: as-semantiek + activations).
    *naar*-zijde en een omgekeerde vorm. Een **legenda met beide richtingen**
    staat in Studio-instellingen → Kruisverband-symbolen (nu vast, later
    bewerkbaar).
-   **Ontwerp grafische variant (sessiebesluit 2026-07-13):** een diagram
-   van het type **'kruisverband'** dat élk soort element accepteert — géén
-   "Maken"-taakbalk (elementen ontstaan in hun eigen profiel), wél een
-   "Verbinding"-taakbalk met de traceer-relatietypen; je trekt een
-   traceer-relatie van element X naar element Y. (Alternatief — een vrij
-   diagramtype met aan te zetten crosslink-functionaliteit, polymorfe
-   diagrammen — is bewust láter.) Overig vervolg: "traceer naar…" vanuit
-   de projectboom en het superprofiel als formele drager. Concreet gat dat dit vult (zichtbaar in de eigen Sparx-repo's):
-   hetzelfde concept in twee werelden — UML `Taak` naast MIM `«Objecttype»
-   Taak` — stond als handmatige duplicatie zonder vastgelegde relatie.
-2. Cross-profiel-diagram: elementen uit meerdere profieltypen op één canvas —
-   de profieltype-registry uit fase 2 is hiervoor de voorwaarde.
+   **Grafische variant gebouwd (2026-07-14):** naast de matrix heeft
+   Koppelingen nu een **Grafisch**-tab (toggle) — een vrij React
+   Flow-canvas (`koppelingenGrafisch.jsx`) dat elementen uit
+   *verschillende* profielen als gekleurde knopen toont (profiel-icoon +
+   naam) en de trace-relaties als gerichte lijnen (soort als label). Géén
+   "Maken"-taakbalk; wél een soort-keuze bovenaan en een **element-picker
+   (＋ knoop)**. **Verbinden = link leggen**: sleep van de bron- naar de
+   doelstip → er ontstaat een link met de gekozen soort (van→naar =
+   getekende richting). Rechtsklik op een lijn → soort/richting/verwijderen;
+   Delete wist. Knoop-posities, losse knopen en de weergavekeuze bewaart de
+   kruis-store (localStorage). Zo is het **concept-gat** gevuld: hetzelfde
+   concept in twee werelden — UML `Taak` naast MIM `«Objecttype» Taak` —
+   staat nu als vastgelegde, zichtbare relatie i.p.v. handmatige duplicatie.
+   Vervolg: het trace-symbool (met hoekje) óp de lijn i.p.v. tekstlabel,
+   "traceer naar…" vanuit de projectboom, en het superprofiel als formele
+   drager.
 
 ### Fase 5 — Werkruimteprofielen (SaaS-voorbereiding)
 1. Benoemde gebruikersprofielen (bv. kijker / analist / expert) als bundel
