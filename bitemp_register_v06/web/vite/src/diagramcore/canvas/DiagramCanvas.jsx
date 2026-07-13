@@ -30,7 +30,9 @@ import {
   useReactFlow,
   useStore as useRFStore,
   useStoreApi,
+  getNodesBounds,
 } from "@xyflow/react";
+import { exporteerViewport } from "../export/exporteerCanvas.js";
 import "@xyflow/react/dist/style.css";
 import "../styles/diagramcore.css";
 import "../shapes/basisShapes.jsx"; // registreert de standaard-shapes
@@ -740,9 +742,44 @@ function CanvasBinnenkant({
             strategie.run({ flowNodes, flowEdges: edges, selectieIds, elements, diagram })
           );
         },
+        /**
+         * Exporteer het diagram (of de selectie) naar PNG/SVG — download of
+         * naar het klembord (PNG). `alleenSelectie` valt terug op het hele
+         * diagram als er niets geselecteerd is.
+         */
+        exporteerAfbeelding: async ({ formaat = "png", alleenSelectie = false, doel = "download" } = {}) => {
+          const zichtbaar = getNodes().filter((n) => !n.hidden);
+          const sel = zichtbaar.filter((n) => n.selected);
+          const nodes = alleenSelectie && sel.length ? sel : zichtbaar;
+          if (!nodes.length) return { ok: false, reden: "geen elementen op het diagram" };
+          const root = rfStoreApi.getState().domNode;
+          const viewportEl = root?.querySelector(".react-flow__viewport");
+          // De .react-flow-root is transparant; de canvas-kleur zit op een
+          // voorouder. Zoek de eerste ondoorzichtige achtergrond zodat lichte
+          // tekst (donker thema) leesbaar blijft; val terug op wit.
+          const opaakBg = (el) => {
+            for (let n = el; n; n = n.parentElement) {
+              const bg = getComputedStyle(n).backgroundColor;
+              if (bg && bg !== "transparent" && !/rgba\(\s*0,\s*0,\s*0,\s*0\s*\)/.test(bg)) return bg;
+            }
+            return "#ffffff";
+          };
+          const achtergrond = root ? opaakBg(root) : "#ffffff";
+          const naam =
+            `${(diagram?.naam || "diagram").replace(/[^\w-]+/g, "_")}` +
+            (alleenSelectie && sel.length ? "-selectie" : "");
+          return exporteerViewport({
+            viewportEl,
+            bounds: getNodesBounds(nodes),
+            formaat,
+            doel,
+            achtergrond,
+            naam,
+          });
+        },
       };
     },
-    [getNodes, screenToFlowPosition, edges, elements, diagram, onNodePosities]
+    [getNodes, screenToFlowPosition, edges, elements, diagram, onNodePosities, rfStoreApi]
   );
 
   return (
@@ -787,7 +824,16 @@ function CanvasBinnenkant({
       {contextMenu && (
         <div
           className="dc-contextmenu"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
+          ref={(el) => {
+            if (!el) return;
+            // Binnen het venster houden (lange menu's scrollen intern).
+            const r = el.getBoundingClientRect();
+            const maxTop = window.innerHeight - r.height - 8;
+            const maxLeft = window.innerWidth - r.width - 8;
+            if (contextMenu.y > maxTop) el.style.top = `${Math.max(8, maxTop)}px`;
+            if (contextMenu.x > maxLeft) el.style.left = `${Math.max(8, maxLeft)}px`;
+          }}
+          style={{ left: contextMenu.x, top: contextMenu.y, maxHeight: "calc(100vh - 16px)", overflowY: "auto" }}
           onContextMenu={(e) => e.preventDefault()}
         >
           {contextMenu.items.map((item, i) =>

@@ -1608,6 +1608,20 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           : []),
         { id: "normaliseer", label: "Normaliseer relaties", icoon: "↔", onClick: () => menuBus.emit(ev("normaliseer")) },
         { id: "snap", label: "Snap nodes naar grid", icoon: UITLIJN_ICONEN.snap, onClick: () => layoutApiRef.current?.snapRaster() },
+        // Exporteren: selectie als er iets geselecteerd is, anders het hele diagram.
+        { sep: true },
+        { kop: true, label: "Exporteren" },
+        {
+          id: "exp-clip",
+          label: (selectieAantal >= 1 ? "Kopieer selectie" : "Kopieer diagram") + " als afbeelding",
+          icoon: "📋",
+          onClick: async () => {
+            const r = await layoutApiRef.current?.exporteerAfbeelding({ formaat: "png", alleenSelectie: selectieAantal >= 1, doel: "clipboard" });
+            if (r && !r.ok) window.alert(`Kopiëren mislukt: ${r.reden}. Gebruik anders "Download PNG".`);
+          },
+        },
+        { id: "exp-png", label: "Download PNG", icoon: "🖼", onClick: () => layoutApiRef.current?.exporteerAfbeelding({ formaat: "png", alleenSelectie: selectieAantal >= 1 }) },
+        { id: "exp-svg", label: "Download SVG", icoon: "❖", onClick: () => layoutApiRef.current?.exporteerAfbeelding({ formaat: "svg", alleenSelectie: selectieAantal >= 1 }) },
         // Rechtsklik op een element-node: z-order (L01) en gelijke maat (L02).
         ...(nodeId
           ? (() => {

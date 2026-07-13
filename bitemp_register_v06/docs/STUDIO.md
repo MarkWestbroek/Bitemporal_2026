@@ -251,6 +251,14 @@ te wijzigen.
 > een klik erop heropent zonodig een tab van hun profiel en selecteert ze
 > in de inspector (menuBus `<profiel>:selecteer-element`).
 >
+> **Diagram-export als afbeelding (2026-07-14):** rechtsklik op de canvas →
+> **Exporteren** — "Kopieer (selectie/diagram) als afbeelding" (PNG naar het
+> klembord, voor plakken in chat/Word), "Download PNG" en "Download SVG".
+> Exporteert de selectie als er iets geselecteerd is, anders het hele diagram
+> (strak om de inhoud, met de canvas-achtergrond zodat tekst leesbaar blijft;
+> connectie-handles en canvas-chrome vallen weg). `diagramcore/export/
+> exporteerCanvas.js` (html-to-image) + `layoutApi.exporteerAfbeelding`.
+>
 > **Fase 2-sluitstuk (2026-07-12):** ook de **klassieke editors** staan in
 > de Modelleren-browser en openen als tab — dmn-js (DRD+tabel), BPMN,
 > Berichtdefinities en de klassieke UML-IDE — via
