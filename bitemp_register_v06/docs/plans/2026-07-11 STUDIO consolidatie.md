@@ -478,10 +478,14 @@ map vult de relevante kant (import = doel, anders = bron). `transformaties.js` l
 `collectMapModel` — de map als model-eenheid) plus drie ingebouwde,
 generieke generatoren: **export** (map → JSON-bestand), **import**
 (JSON-map-export → in deze map) en **transform** (kopieer map-inhoud →
-nieuwe/bestaande map, met verse id's). Specifieke generatoren (OAS-export,
-MIM-transformatie, register-build) sluiten hierop aan met een
-`registreerTransformatie`-aanroep — nog te doen; ook: API als bron/doel
-(nu alleen bestand) en element-selectie (nu "alle in de map").
+nieuwe/bestaande map, met verse id's). **Map → Markdown-overzicht
+(2026-07-14):** een echte export-generator die de map als leesbaar
+datamodel-document schrijft — per profiel de elementen (met hun velden),
+de diagrammen en de kruisverbanden waarvan beide uiteinden in de map zitten
+(mooi voor documentatie/plakken in markdown). Nog te doen: OAS-export,
+MIM-transformatie en de **register-build** (extern, intern aangeroepen) als
+generatoren; API als bron/doel (nu alleen bestand) en element-selectie (nu
+"alle in de map").
 
 ### Metamodel-verkenning: gedragsdiagrammen (sequence, activity, state machine, BPMN) — sessie 2026-07-13
 

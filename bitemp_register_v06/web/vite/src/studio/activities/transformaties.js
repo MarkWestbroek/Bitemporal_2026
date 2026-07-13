@@ -9,6 +9,7 @@
 import { registreerTransformatie } from "./transformatieRegistry.js";
 import { getProfieltype } from "../profieltypeRegistry";
 import { useModellerenStore } from "./modellerenActivity.jsx";
+import { useKruisStore, refKey, vanNaar } from "./koppelingenActivity.jsx";
 
 let _teller = 0;
 const versId = (voor) => `${voor}__t${Date.now()}_${_teller++}`;
@@ -95,6 +96,93 @@ registreerTransformatie({
     const a = document.createElement("a");
     a.href = url;
     a.download = `map-${(mapNaam || "export").replace(/\s+/g, "_")}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+});
+
+// ── Markdown-overzicht: een leesbaar datamodel-document uit de map ──
+function veldnamen(el) {
+  const namen = [];
+  for (const c of el.compartimenten || []) {
+    for (const v of c.velden || []) if (v?.naam) namen.push(v.naam);
+  }
+  return namen;
+}
+
+function markdownVanMap(mapId, mapNaam) {
+  const model = collectMapModel(mapId);
+  const regels = [`# Map: ${mapNaam || "(naamloos)"}`, ""];
+
+  // Alle in de map betrokken element-refs (voor de kruisverband-filter).
+  const inMap = new Set();
+
+  for (const [profielId, inhoud] of Object.entries(model)) {
+    const p = getProfieltype(profielId);
+    if (!p) continue;
+    const typen = Object.fromEntries((p.descriptor.elementTypes || []).map((t) => [t.id, t]));
+    const elementen = Object.values(inhoud.elements || {});
+    for (const el of elementen) inMap.add(`${profielId}::${el.id}`);
+
+    regels.push(`## ${p.label}`, "");
+
+    // Niet-connector-elementen, gegroepeerd per elementtype.
+    const perType = {};
+    for (const el of elementen) {
+      const et = typen[el.elementType];
+      if (et?.isConnector) continue;
+      (perType[et?.label || el.elementType] ??= []).push(el);
+    }
+    for (const [typeLabel, els] of Object.entries(perType).sort()) {
+      regels.push(`### ${typeLabel}`, "");
+      for (const el of els.sort((a, b) => (a.naam || a.id).localeCompare(b.naam || b.id))) {
+        regels.push(`- **${el.naam || el.id}**`);
+        for (const vn of veldnamen(el)) regels.push(`  - ${vn}`);
+      }
+      regels.push("");
+    }
+
+    // Diagrammen.
+    const diagrammen = Object.values(inhoud.diagrams || {});
+    if (diagrammen.length) {
+      regels.push(`### Diagrammen`, "");
+      for (const d of diagrammen) regels.push(`- ${d.naam} (${(d.nodes || []).length} elementen)`);
+      regels.push("");
+    }
+  }
+
+  // Kruisverbanden waarvan beide uiteinden in de map zitten.
+  const links = useKruisStore.getState().links.filter((l) => {
+    const { van, naar } = vanNaar(l);
+    return inMap.has(refKey(van)) && inMap.has(refKey(naar));
+  });
+  if (links.length) {
+    regels.push(`## Kruisverbanden`, "");
+    for (const l of links) {
+      const { van, naar } = vanNaar(l);
+      const vn = getProfieltype(van.profielId)?.useStore.getState().elements[van.elementId]?.naam || van.elementId;
+      const nn = getProfieltype(naar.profielId)?.useStore.getState().elements[naar.elementId]?.naam || naar.elementId;
+      regels.push(`- ${vn} — *${l.soort}* → ${nn}`);
+    }
+    regels.push("");
+  }
+
+  return regels.join("\n");
+}
+
+registreerTransformatie({
+  id: "export-map-markdown",
+  label: "Map → Markdown-overzicht",
+  richting: "export",
+  profielTypes: "*",
+  toelichting: "Genereert een leesbaar document: elementen (met velden), diagrammen en kruisverbanden.",
+  run: async ({ bronMap, mapNaam }) => {
+    const md = markdownVanMap(bronMap, mapNaam);
+    const blob = new Blob([md], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${(mapNaam || "overzicht").replace(/\s+/g, "_")}.md`;
     a.click();
     URL.revokeObjectURL(url);
   },
