@@ -562,3 +562,4 @@ sequence (grootste gat: as-semantiek + activations).
 #### modeller
 1. tabs kunnen verschuiven
 2. bpmn.io elementen properties ook tonen (is wellicht alleen tijdelijk, maar kan ook een algemene feature zijn voor een custom, extern gecodeerd, profieltype editor)
+3. zie STUDIO ideas", o.a. meerdere handles en copy to clipboard (svg?)

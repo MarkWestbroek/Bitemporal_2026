@@ -32,6 +32,12 @@ Wijzigingstype   : opvoer | afvoer                                            (o
 Annotatietype    : twijfel                                                    (nieuw, uitbreidbaar)
 ```
 
+![Studio-schets: Annotatie parallel aan Wijziging onder de compositie van Registratie; Annotatietype `twijfel`, Registratietype `betwijfeling`, met Werkmap/Werkstap als drager van het onderzoek](ontwerpgedachten/annotaties.png)
+
+*Schets in Omnium Studio: `Annotatie` hangt (net als `Wijziging`) onder de compositie van
+`Registratie` en wijst naar een `{Representatie}`. Rechts draagt een `Werkstap` (onder een
+`Werkmap`) de registratie — óók het onderzoek waarin de betwijfeling wordt onderzocht (zie §4).*
+
 ---
 
 ## 2. Datamodel
