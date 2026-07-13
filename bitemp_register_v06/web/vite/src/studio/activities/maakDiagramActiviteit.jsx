@@ -840,7 +840,7 @@ export function maakDiagramActiviteit(opties) {
    * het actieve diagram (in het zichtbare viewport-midden); rechtsklik =
    * acties (toevoegen/losmaken/verwijderen — vgl. de IDE-ProjectBrowser).
    */
-  function ElementenBrowser() {
+  function ElementenBrowser({ verbergIds } = {}) {
     const elements = useStore((s) => s.elements);
     const diagrams = useStore((s) => s.diagrams);
     const actiefDiagram = useStore((s) => s.actiefDiagramId);
@@ -849,6 +849,27 @@ export function maakDiagramActiviteit(opties) {
     const [dicht, setDicht] = useState({});
     // Ctrl-klik multiselect: samen (als bundel) naar de projectboom slepen.
     const [multiIds, setMultiIds] = useState(() => new Set());
+    // Gedeelde multiselect-handlers (tree-rijen én connector-groep-items).
+    const multiDragStart = (el) => (e) => {
+      const ids = multiIds.has(el.id) ? [...multiIds] : [el.id];
+      e.dataTransfer.setData(SLEEP_MIME, JSON.stringify({ elementId: el.id, elementIds: ids }));
+      e.dataTransfer.setData("text/plain", el.naam || el.id);
+      e.dataTransfer.effectAllowed = "copyMove";
+    };
+    const multiClick = (el, zichtbaar) => (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        setMultiIds((prev) => {
+          const n = new Set(prev);
+          if (n.has(el.id)) n.delete(el.id);
+          else n.add(el.id);
+          return n;
+        });
+        return;
+      }
+      if (multiIds.size) setMultiIds(new Set());
+      setSelectieId(el.id);
+      if (zichtbaar) layoutApiRef.current?.focusNode?.(el.id);
+    };
     // In-/uitklappen van boomrijen (per element-id, alleen deze sessie).
     const [ingeklapt, setIngeklapt] = useState({});
     // Rechtsklik-menu op boomrijen (vgl. de IDE-ProjectBrowser).
@@ -989,6 +1010,10 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           (!ergens.has(el.id) && !(el.source && el.target))
       );
     }
+    // Elementen die al in een map van de projectboom geplaatst zijn (+ hun
+    // hiërarchie-nazaten) verdwijnen uit deze pool: de boom is de eigendom-
+    // plek, de browser is de nog-niet-ingedeelde rest (Modelleren-host).
+    if (verbergIds?.size) bronElementen = bronElementen.filter((el) => !verbergIds.has(el.id));
     const inbegrepen = new Map(bronElementen.map((el) => [el.id, el]));
     const term = zoek.trim().toLowerCase();
     // E01/P02: met één of meer hierarchie-connectortypen in de descriptor
@@ -1258,10 +1283,8 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                     <div
                       key={el.id}
                       {...sleepProps(el, et)}
-                      onClick={() => {
-                        setSelectieId(el.id);
-                        if (zichtbaar) layoutApiRef.current?.focusNode?.(el.id);
-                      }}
+                      onDragStart={multiDragStart(el)}
+                      onClick={multiClick(el, zichtbaar)}
                       onContextMenu={(e) => openRijMenu(e, el, et, zichtbaar)}
                       title={zichtbaar ? el.naam || el.id : `${el.naam || el.id} — niet op dit diagram`}
                       style={{
@@ -1272,8 +1295,18 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                         borderRadius: 6,
                         cursor: "pointer",
                         color: zichtbaar ? "var(--s-fg)" : "var(--s-fg-muted)",
-                        background: el.id === selectieId ? "var(--s-hover)" : "transparent",
-                        outline: sleepDoel === el.id ? "1px dashed var(--s-accent, #6366f1)" : "none",
+                        background: multiIds.has(el.id)
+                          ? "rgba(99, 102, 241, 0.22)"
+                          : el.id === selectieId
+                            ? "var(--s-hover)"
+                            : "transparent",
+                        outline:
+                          sleepDoel === el.id
+                            ? "1px dashed var(--s-accent, #6366f1)"
+                            : multiIds.has(el.id)
+                              ? "1.5px solid var(--s-accent, #6366f1)"
+                              : "none",
+                        outlineOffset: -1.5,
                       }}
                     >
                       <span

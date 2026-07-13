@@ -1227,12 +1227,39 @@ function Sidebar() {
             <ProfielIcoon profiel={profiel} />
             <span className="studio-project__naam">{profiel.label}</span>
           </div>
-          <Browser />
+          <ElementenBrowserMetFilter profiel={profiel} Browser={Browser} />
         </div>
       )}
       <BoomContextMenu />
     </div>
   );
+}
+
+/**
+ * Rendert de elementen-browser van het actieve profiel, maar verbergt de
+ * elementen (+ hun hiërarchie-nazaten) die al in een map van de projectboom
+ * geplaatst zijn: de boom is de eigendom-plek, de browser toont de rest.
+ * Eigen component (met stabiele hooks per profiel) zodat de filter meebeweegt
+ * met zowel de plaatsing als het model.
+ */
+function ElementenBrowserMetFilter({ profiel, Browser }) {
+  const elements = profiel.useStore((s) => s.elements);
+  const plaatsing = useModellerenStore((s) => s.plaatsing);
+  const verbergIds = React.useMemo(() => {
+    const set = new Set();
+    const { kinderenVan } = bepaalHierarchie(profiel, elements);
+    const voegMetNazaten = (id) => {
+      if (set.has(id)) return;
+      set.add(id);
+      for (const kind of kinderenVan.get(id) || []) voegMetNazaten(kind);
+    };
+    const prefix = `el::${profiel.id}::`;
+    for (const key of Object.keys(plaatsing)) {
+      if (key.startsWith(prefix)) voegMetNazaten(key.slice(prefix.length));
+    }
+    return set;
+  }, [profiel, elements, plaatsing]);
+  return <Browser verbergIds={verbergIds} />;
 }
 
 function BoomContextMenu() {

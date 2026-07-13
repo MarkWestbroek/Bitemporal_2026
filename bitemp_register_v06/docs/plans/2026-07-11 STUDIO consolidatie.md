@@ -346,7 +346,14 @@ activiteiten-tabel in `docs/STUDIO.md`.
    ElementenBrowser (`descriptor.hierarchie` incl. `omgekeerd`, de
    `hierarchieParen`-hook én `standaardDichtInBoom` als chevron-beginstand).
    Een kind apart naar een map slepen plaatst zijn **top-voorouder** (een GE
-   kan niet onder zijn ENT vandaan). Vervolg: volledige eigendom-vs-
+   kan niet onder zijn ENT vandaan).
+   **Eigendom-pool (2026-07-14):** de ElementenBrowser toont voortaan alleen
+   de **nog niet ingedeelde** elementen — geplaatste elementen én hun
+   hiërarchie-nazaten verdwijnen eruit (via de nieuwe `verbergIds`-prop,
+   berekend door de Modelleren-host uit de plaatsing). Ook **connectoren
+   (associatie/ASOC) in de groepen** zijn nu ctrl-klik-multiselecteerbaar en
+   slepen als bundel mee — zodat een associatie met haar klassen in één zet
+   in een map landt. Vervolg: volledige eigendom-vs-
    voorkomen (alle elementen ín de boom), "toon op diagram…"-navigatie, en
    **GE verhangen naar een andere ENT** als bewuste model-operatie achter
    een waarschuwing (raakt alle diagrammen — die moeten worden nagelopen).
