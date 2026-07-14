@@ -1957,3 +1957,744 @@ Misschien als je via het hoofdmenu of rechtsklikmenu al kiest tussen I/T/E, ga j
 
 Je mag het ook naar main brengen. Wil je dan het bitemporele document daarvoor of daarna los naar main committen?
 
+**🤖 Claude:**
+
+Ik pak alles op. Eerst de git-opschoning: de PDF uit de feature-commit halen (blijft in de working tree), zodat ik hem straks los naar main kan committen.
+> 🔧 `PowerShell` — Remove PDF from feature commit, keep in working tree
+
+**🤖 Claude:**
+
+PDF is uit de feature-commit. Even kijken welke bestanden nu los staan (de analyse hoort bij de PDF mee):
+> 🔧 `PowerShell` — List untracked files and docs/extern contents
+
+**🤖 Claude:**
+
+De analyse (`analyse-ubb-bitemporal-stores-v0.1.md`) gaat straks mee met de PDF naar main. Nu de inhoudelijke wijzigingen. Eerst de trace-symbolen met een hoekje + omgekeerde vorm.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\koppelingenActivity.jsx
+
+**🤖 Claude:**
+
+Nu deze symbolen opnemen in de settings. Ik zoek de plek in Studio-instellingen.
+> 🔧 `Grep` — ProfieltypenInstellingen|<h2 style=\{\{ margin: "0 0 2px" \}\}>Vormen
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\studioInstellingenActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\studioInstellingenActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\studioInstellingenActivity.jsx
+> 🔧 `Grep` — ^import React|^import \{ useEffect
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\studioInstellingenActivity.jsx
+
+**🤖 Claude:**
+
+Nu de transform-modal herstructureren (actie-volgorde I/T/E, bron/doel-structuur, nieuwe-submap-in-gekozen-map, directe modus vanuit menu). Eerst de store + modal.
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\TransformatiePaneel.jsx
+
+**🤖 Claude:**
+
+Nu de generatoren aanpassen aan bronMap/doelMap.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\transformaties.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\transformaties.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\transformaties.js
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\transformaties.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\transformaties.js
+
+**🤖 Claude:**
+
+Nu het rechtsklik-menu op de map: "Transformeren" wordt een submenu met directe modus.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\modellerenActivity.jsx
+> 🔧 `PowerShell` — Build
+> 🔧 `PowerShell` — Start dev server
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `PowerShell` — Run ronde-4 verification
+
+**🤖 Claude:**
+
+Bijna alles groen, maar de actie-tabs tonen in directe modus terwijl ze verborgen moeten zijn. Even de screenshots bekijken om te zien wat er gebeurt.
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+
+**🤖 Claude:**
+
+De transform + nieuwe-submap werkt (R4Kopie is submap van R4Bron met de kopie erin). De actie-tabs tonen kort door een render-race; ik leid `vasteActie`/`richting` direct af van de actie zodat het niet meer flikkert.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\TransformatiePaneel.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\TransformatiePaneel.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\TransformatiePaneel.jsx
+> 🔧 `PowerShell` — Build after refactor
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `PowerShell` — Check vaste-actie behavior
+
+**🤖 Claude:**
+
+Nu correct: directe modus zonder tabs, generieke modus met tabs in volgorde I/T/E. Even de symbool-screenshots bekijken.
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+
+**🤖 Claude:**
+
+De hoekje-symbolen zien er goed uit, beide richtingen. Even de matrix.
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+
+**🤖 Claude:**
+
+De matrix-cel toont de hoekje-glyph netjes. Tests draaien, plan bijwerken, committen.
+> 🔧 `PowerShell` — Run unit tests
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-11 STUDIO consolidatie.md
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-11 STUDIO consolidatie.md
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+
+**🤖 Claude:**
+
+Ik commit alleen de code + het plan (niet de losse PDF/analyse/chat-exports).
+> 🔧 `PowerShell` — Stage only studio src + plan, commit
+> 🔧 `PowerShell` — Stage studio src + plan from repo root, commit
+
+**🤖 Claude:**
+
+Gecommit (6 bestanden; de losse chat-exports/PDF bleven buiten). Nu de branch naar main mergen, dan de PDF + analyse los committen.
+> 🔧 `PowerShell` — Merge feature branch into main
+
+**🤖 Claude:**
+
+Er is een lokaal gewijzigde chat-export die de checkout blokkeert. Ik stash die tijdelijk, merge, en zet hem terug.
+> 🔧 `PowerShell` — Stash modified chat export, checkout main, merge
+> 🔧 `PowerShell` — Restore stashed chat export modification
+
+**🤖 Claude:**
+
+Main staat op de merge (5fc5a65). Nu tests op main, dan de PDF + analyse los committen, dan pushen.
+> 🔧 `PowerShell` — Run unit tests on merged main
+> 🔧 `TaskStop`
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `PowerShell` — Commit PDF + analysis as separate docs commit
+> 🔧 `PowerShell` — Show recent commits and push main
+
+**🤖 Claude:**
+
+Alles gebouwd, geverifieerd, en op main gezet — **origin/main staat op 6ffa877** (de push slaagde; de rode tekst is alleen PowerShell die git's voortgang doorgeeft). Per punt:
+
+## Git
+- De **Bitemporal-PDF is uit de feature-commit** gehaald en samen met de **analyse** (`analyse-ubb-bitemporal-stores-v0.1.md`) als **losse docs-commit** (6ffa877) op main gezet, ná de merge — precies zoals gevraagd. De losse chat-exports in `copilot-chats/` heb ik met rust gelaten (nog untracked in je working tree).
+
+## Kruisverbanden
+- **Hoekje in de symbolen**: de relaties zijn nu orthogonale ellebogen (rij→kolom: eerst opzij, dan omhoog), met UML-koppen (holle driehoek = realiseert, open pijl = komt voort uit, gevulde pijl = genereert, geen kop = heeft te maken met).
+- **Omgekeerde vorm ontworpen**: de kop zit aan de *naar*-zijde — bovenaan bij rij→kolom, links bij kolom→rij. Beide vormen getekend en getest.
+- **In de settings**: Studio-instellingen → **Kruisverband-symbolen** toont alle vier de soorten in **beide richtingen** (zie screenshot; nu vast, later bewerkbaar).
+
+## Transformeren (herstructureerd naar jouw model)
+- Volgorde bovenaan: **Importeren · Transformeren · Exporteren**.
+- **Bron** en **doel** als aparte secties; bij een map-doel het veld **"nieuwe (sub)map in de gekozen map"** (leeg = de gekozen map zelf). Import gebruikt exact dezelfde doel-maplogica.
+- **Directe modus**: rechtsklik op een map → **Transformeren ▸ (Importeren/Transformeren/Exporteren)** opent meteen in die vorm, zonder actie-keuze bovenaan. Via **Project-menu → Transformeren…** krijg je wél de keuze (in de juiste volgorde). Getest: 0 tabs in directe modus, 3 tabs in generieke modus, en de nieuwe-submap-transform maakt `R4Kopie` netjes als submap van `R4Bron`.
+
+296 tests + build groen; alles op main gepusht. De branch `feat/studio-koppelingen-en-opruiming` blijft als referentie staan.
+
+Wat bewust open blijft (staat in het plan): de **grafische kruisverband-diagram** (het zware cross-store-canvas werk), **API** als bron/doel (nu bestand), en **element-selectie** in de transformatie (nu "alle in de map"). En de metamodel-uitbreiding voor gedragsdiagrammen. Zeg maar waar je heen wilt.
+
+---
+
+## 👤 Gebruiker (29)
+
+Nog een klein ding in de UI: ik kan elementen onder een diagram kiezen en naar de projectboom slepen, maar:
+- ze blijven onderin ook staan.
+- associatie wil niet mee
+
+**🤖 Claude:**
+
+Twee dingen om te fixen. Ik kijk eerst hoe de elementen-browser groepen (o.a. Associatie) rendert en hoe geplaatste elementen bepaald worden.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\maakDiagramActiviteit.jsx
+
+**🤖 Claude:**
+
+Ik reproduceer eerst het associatie-probleem en implementeer de filter. Even de dev-server starten.
+> 🔧 `PowerShell` — Start dev server
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `PowerShell` — Reproduce association drag issue
+> 🔧 `PowerShell` — Reproduce from vite dir
+
+**🤖 Claude:**
+
+Twee dingen bevestigd: Klasse A blijft in de browser, en de associatie-rij is niet draggable. Ik kijk naar de huidige `sleepProps` en groep-rendering.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\maakDiagramActiviteit.jsx
+
+**🤖 Claude:**
+
+Even direct de DOM inspecteren om te zien waarom de associatie-rij niet draggable is.
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `PowerShell` — Probe association row DOM
+
+**🤖 Claude:**
+
+De associatie-rij ís draggable (`draggable="true"`) — mijn vorige repro klapte de groep per ongeluk dicht. Laat ik de échte drag-drop testen zonder die toggle.
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `PowerShell` — Test association drag to map
+
+**🤖 Claude:**
+
+Aha — een enkele associatie-drag wérkt wel (getest). Het probleem zit in **multiselect**: de connectoren staan in een aparte groep die niet multi-selecteerbaar is, dus bij een meervoudige sleep blijft de associatie achter. Ik unificeer de groep-items met de tree-items (ctrl-klik + bundel-drag), en implementeer de filter voor geplaatste elementen. Even de Rij-multiselect-code bekijken.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\maakDiagramActiviteit.jsx
+
+**🤖 Claude:**
+
+Ik implementeer beide fixes: (1) groep-items multiselecteerbaar + bundel-drag (associatie mee), en (2) geplaatste elementen (+ nazaten) uit de browser filteren. Eerst de multiselect-helpers en de `verbergIds`-prop in de browser.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\maakDiagramActiviteit.jsx
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\maakDiagramActiviteit.jsx
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\maakDiagramActiviteit.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\maakDiagramActiviteit.jsx
+
+**🤖 Claude:**
+
+Nu de connector-groep-items multiselecteerbaar maken (met bundel-drag en highlight).
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\maakDiagramActiviteit.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\maakDiagramActiviteit.jsx
+
+**🤖 Claude:**
+
+Nu de Modelleren-sidebar: bereken de te-verbergen ids en geef ze door. Ik maak er een eigen component voor.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\modellerenActivity.jsx
+> 🔧 `Grep` — const Browser = profiel\?\.ElementenBrowser;|<Browser />|studio-project__elementen-kop
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\modellerenActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\modellerenActivity.jsx
+> 🔧 `PowerShell` — Build
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `PowerShell` — Run fixes verification
+
+**🤖 Claude:**
+
+Beide fixes werken: geplaatste elementen (+ nazaat Kind) verdwijnen uit de browser, en de associatie gaat mee in een multiselect-drag. Even de screenshot, dan tests, commit, merge.
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+
+**🤖 Claude:**
+
+Precies het eigendom-model: alles in de map, browser toont "Geen elementen" want alles is ingedeeld. Tests, plan-notitie, commit.
+> 🔧 `PowerShell` — Run unit tests
+> 🔧 `Grep` — wisselt met de tab\)\. Elementen zijn
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-11 STUDIO consolidatie.md
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-11 STUDIO consolidatie.md
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `PowerShell` — Check branch and stage fix files
+
+**🤖 Claude:**
+
+Ik ben op main. Deze twee kleine fixes commit ik direct en push ik.
+> 🔧 `PowerShell` — Commit fixes on main and push
+> 🔧 `TaskStop`
+
+**🤖 Claude:**
+
+Beide gefixt, geverifieerd en op main (ff17fc8, gepusht). Dev-server gestopt.
+
+**1. Geplaatste elementen blijven niet meer onderin.** De ELEMENTEN-browser toont voortaan alleen de **nog niet ingedeelde** elementen — zodra je iets in een map plaatst, verdwijnt het (én zijn hiërarchie-nazaten) uit de pool. De boom is de eigendom-plek, de browser de rest. Getest met "Ouder" (die "Kind" als compositie-kind heeft): na het slepen zijn beide weg uit de browser en staan ze genest in de map; toen alles ingedeeld was, stond er netjes "Geen elementen".
+
+**2. Associatie gaat nu mee.** Het bleek een multiselect-kwestie: een enkele associatie slepen wérkte al, maar de connectoren stonden in een aparte groep die niet ctrl-klik-multiselecteerbaar was — dus bij een meervoudige sleep bleef de associatie achter. De groep-items zijn nu gelijkgetrokken met de tree-rijen: ctrl-klik markeert ze (blauw) en ze slepen als bundel mee. Getest: KA + KB + associatie "kentX" samen geselecteerd en gesleept → alle drie in de map.
+
+Klein neveneffect om te weten: nu geplaatste elementen uit de browser verdwijnen, zit de "＋ toevoegen aan diagram"-knop daar ook niet meer voor die elementen. Vanuit de map kun je ze wel aanklikken (selecteert/focust op een open diagram), maar een expliciete "toon op diagram / voeg toe" vanuit de map is er nog niet — dat is de logische volgende stap in het eigendom-vs-voorkomen-spoor, samen met de grafische kruisverband-diagram en de metamodel-uitbreiding voor gedragsdiagrammen. 296 tests + build groen.
+
+---
+
+## 👤 Gebruiker (30)
+
+Cool!
+
+Kleine vraag tussendoor: is een selectie op het canvas gemakkelijk te exporteren naar het clipboard (als svg), zodat ik het kan plakken in een chat of document?
+
+Ide: selectie - bewaar als svg of png (bestand). Mag even simpel naar downloads.
+
+Als het moeilijk is: onthouden, anders: kan dat tussendoor?
+
+**🤖 Claude:**
+
+Goeie vraag — laat me eerst even de haalbaarheid checken (welke tools er al zijn, hoe de canvas/selectie in elkaar zit) voordat ik iets beloof.
+> 🔧 `Bash` — Check image-export deps and vendoring approach
+
+**🤖 Claude:**
+
+Snelle conclusie vooraf: het is **goed te doen**, met één kanttekening over het klembord. Even de bouwstenen checken en de standaard-aanpak proberen.
+
+Kort over de haalbaarheid:
+- **Downloaden als PNG/SVG**: makkelijk. De React Flow-canvas heeft een bekende recept-aanpak (via `html-to-image`), ~40 regels.
+- **SVG naar klembord om in chat/Word te plakken**: onbetrouwbaar — de meeste apps plakken SVG als *tekst*, niet als afbeelding. Wat wél overal werkt is **PNG naar klembord** (`ClipboardItem`). Dus mijn voorstel: SVG als *download* (top voor markdown/vector) + **PNG naar klembord** voor plakken in chat/docs.
+
+De enige drempel is één dependency (`html-to-image`, pure JS, ~30KB). Even kijken of installeren hier werkt:
+> 🔧 `Bash` — Try installing html-to-image
+
+**🤖 Claude:**
+
+`html-to-image` staat erin (1.11.13, pure JS — de audit-warnings zijn bestaand in de repo, niet hiervan). Nu de export-logica. Ik kijk hoe de canvas zijn imperatieve API blootstelt.
+> 🔧 `Grep` — useImperativeHandle|layoutApi|getNodes|useReactFlow|getNodesBounds|screenToFlowPosition
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\DiagramCanvas.jsx
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\DiagramCanvas.jsx
+
+**🤖 Claude:**
+
+Nu de exporteer-logica. Ik bekijk de canvas-render om de viewport te vinden en de imperatieve API uit te breiden.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\DiagramCanvas.jsx
+> 🔧 `Grep` — rfStoreApi
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\export\exporteerCanvas.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\DiagramCanvas.jsx
+
+**🤖 Claude:**
+
+Nu de imperatieve export-methode toevoegen. Ik zoek een goede plek in de `useImperativeHandle`-return.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\DiagramCanvas.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\DiagramCanvas.jsx
+
+**🤖 Claude:**
+
+Nu inhaken in het canvas-contextmenu. Ik zoek de plek na de algemene items (normaliseer/snap).
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\maakDiagramActiviteit.jsx
+> 🔧 `Grep` — id: "snap", label: "Snap nodes naar grid"
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\maakDiagramActiviteit.jsx
+> 🔧 `PowerShell` — Build with export feature
+> 🔧 `PowerShell` — Start dev server
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `PowerShell` — Run export verification
+
+**🤖 Claude:**
+
+Het contextmenu is lang; bij een rechtsklik onderin vallen de export-items buiten beeld. Ik klik hoger.
+> 🔧 `Edit` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `PowerShell` — Rerun export verification (menu higher)
+
+**🤖 Claude:**
+
+Het dc-contextmenu klemt niet binnen beeld (echte UX-bug ook). Ik voeg clamping toe, net als bij het projectboom-menu.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\DiagramCanvas.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\DiagramCanvas.jsx
+> 🔧 `PowerShell` — Build and rerun export verification
+> 🔧 `Edit` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `PowerShell` — Rerun export verification
+
+**🤖 Claude:**
+
+De download komt niet — waarschijnlijk gooit `toPng` een fout die niet zichtbaar wordt. Ik debug met console/error-capture en roep de export direct aan.
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `PowerShell` — Debug export with console capture
+
+**🤖 Claude:**
+
+Twee dingen: de `.react-flow`-achtergrond is transparant (bg zit op een voorouder), en het menu botste met het rechterpaneel. Ik zoek de eerste ondoorzichtige voorouder-achtergrond, en klik in de test meer naar het midden.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\DiagramCanvas.jsx
+> 🔧 `Edit` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `PowerShell` — Build and rerun export verification
+
+**🤖 Claude:**
+
+Alles werkt: PNG (geldig), SVG (geldig), en PNG naar klembord (`image/png`). Even de geëxporteerde PNG bekijken of de tekst leesbaar is op de achtergrond.
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+
+**🤖 Claude:**
+
+De marges kloppen niet: `getViewportForBounds`' padding-parameter is een ratio, geen pixels (ik gaf 24 = 2400%). Ik reken de transform gewoon zelf uit op zoom 1 met een vaste pixelmarge.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\export\exporteerCanvas.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\DiagramCanvas.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\DiagramCanvas.jsx
+> 🔧 `PowerShell` — Rebuild and rerun export verify (tight bounds)
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+
+**🤖 Claude:**
+
+Netjes strak nu, met leesbare tekst op de canvas-achtergrond. De connectie-handles (witte bolletjes) zijn nog zichtbaar — die zijn canvas-chrome, niet model-inhoud. Ik filter ze eruit voor een schonere export.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\export\exporteerCanvas.js
+> 🔧 `PowerShell` — Rebuild and reverify (no handles)
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+
+**🤖 Claude:**
+
+Schone export — geen handles, strak, leesbaar; SVG ook kleiner. Tests draaien, plan-notitie, committen.
+> 🔧 `Bash` — Confirm dep in package.json and run tests
+
+**🤖 Claude:**
+
+`html-to-image` staat erin (html2canvas was er al). Even de tests apart draaien.
+> 🔧 `Bash` — Run unit tests
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\STUDIO.md
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `PowerShell` — Stage export feature files
+> 🔧 `PowerShell` — Commit and push export feature
+> 🔧 `TaskStop`
+
+**🤖 Claude:**
+
+Kon tussendoor — het is gebouwd, geverifieerd en staat op main (4b8638b, gepusht).
+
+**Wat je nu kunt:** rechtsklik op de canvas → sectie **Exporteren** met drie acties:
+- **Kopieer als afbeelding** → PNG naar het klembord (plak direct in een chat of Word/doc).
+- **Download PNG** en **Download SVG** → naar je downloads.
+
+Het exporteert je **selectie** als er iets geselecteerd is, anders het **hele diagram** — strak om de inhoud, met de canvas-achtergrond zodat de tekst leesbaar blijft (belangrijk op het donkere thema), en zonder de connectie-handles en canvas-chrome. Zie de voorbeeld-PNG hierboven: twee klasses, schoon bijgesneden.
+
+**Over je specifieke vraag (SVG naar klembord):** dat heb ik bewust *niet* zo gedaan, omdat het onbetrouwbaar is — de meeste chat/doc-apps plakken SVG als tekst, niet als afbeelding. Daarom: **PNG naar klembord** voor plakken (werkt overal), en **SVG als download** voor vector/markdown. Zo heb je het beste van beide.
+
+Twee kleine bijvangsten meegenomen:
+- Het canvas-contextmenu **klemt nu binnen het venster** en scrolt bij lange lijsten (het liep eerder onderaan uit beeld — kwam ik tegen tijdens het testen).
+- Eén nieuwe dependency (`html-to-image`, pure JS) — dat is de standaard React Flow-aanpak voor beeld-export.
+
+296 tests + build groen. Werkt in zowel Modelleren als de losse diagram-activiteiten (zelfde canvas). Wil je later ook een keuze voor **witte/transparante achtergrond** of een **schaalfactor** (bijv. 3× voor scherpe print), dan is dat een kleine toevoeging — zeg het maar.
+
+---
+
+## 👤 Gebruiker (31)
+
+hoe zou je die toevoeging instellen? In de settings? Dan graag! In het rechtsklik menu? Zie ik nog niet voor me, wil je dat schetsen?
+
+**🤖 Claude:**
+
+Goeie vraag. Mijn advies: **de configuratie in de settings** (zet je één keer), en het **rechtsklik-menu simpel houden** (3 acties die die instellingen gebruiken). Ter vergelijking eerst even het rechtsklik-alternatief geschetst, en waarom ik het niet zou doen:
+
+```
+Exporteren
+  Kopieer als afbeelding
+  Download PNG   ▸   1× / 2× ✓ / 3×
+  Download SVG
+  ──────────────
+  Achtergrond    ▸   Canvas (thema) ✓ / Wit / Transparant
+```
+
+Nadeel: geneste submenu's bij élke export, en je stelt telkens opnieuw hetzelfde in. Rommelig. Dus: **settings voor de opties, menu blijft de drie schone acties.** Ik bouw de settings-variant.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\export\exporteerCanvas.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\export\exporteerCanvas.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\DiagramCanvas.jsx
+
+**🤖 Claude:**
+
+Nu de export-instellingen-store en het menu dat ze leest.
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\exportInstellingen.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\maakDiagramActiviteit.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\maakDiagramActiviteit.jsx
+
+**🤖 Claude:**
+
+Nu de settings-sectie. Ik maak het component en haak het in Studio-instellingen.
+
+**🤖 Claude:**
+
+API Error: Connection closed mid-response. The response above may be incomplete.
+
+---
+
+## 👤 Gebruiker (32)
+
+de chat hing. Wil je verder?
+
+**🤖 Claude:**
+
+Ja — ik was net de export-settings aan het bouwen. De store en het menu lezen de voorkeuren al; alleen de settings-UI en het inhaken ontbreken nog. Even checken wat er precies staat en of het nog bouwt:
+> 🔧 `Bash` — Check working tree and branch state
+
+**🤖 Claude:**
+
+Alles staat er nog. Ik maak de settings-sectie en haak hem in Studio-instellingen.
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\ExportInstellingen.jsx
+
+**🤖 Claude:**
+
+Nu inhaken in Studio-instellingen, na de Kruisverband-symbolen-sectie.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\studioInstellingenActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\studioInstellingenActivity.jsx
+> 🔧 `Bash` — Build
+> 🔧 `Bash` — Start dev server and get URL
+> 🔧 `Bash` — Get dev server port
+> 🔧 `Bash` — Inspect dev log
+
+**🤖 Claude:**
+
+Dev-server draait op 5175. Ik verifieer: settings-sectie rendert, en de achtergrond-keuze beïnvloedt de export.
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `Bash` — Check pngjs availability
+
+**🤖 Claude:**
+
+Geen pngjs — ik lees de hoekpixel via de browser (canvas) in plaats van een extra dep.
+> 🔧 `Edit` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `Edit` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `Bash` — Run export-settings verification
+
+**🤖 Claude:**
+
+De log-regels missen een `await` (hoekPixel is nu async). Ik fix dat.
+> 🔧 `Bash` — Add await to hoekPixel calls
+> 🔧 `Bash` — Rerun export-settings verification
+
+**🤖 Claude:**
+
+Werkt: instelling persist, "Wit" → witte hoek (255,255,255,255), "Transparant" → alpha 0. Even de settings-screenshot, dan tests + commit.
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+
+**🤖 Claude:**
+
+De settings-sectie ziet er goed uit. Tests draaien en committen.
+> 🔧 `Bash` — Run unit tests
+> 🔧 `Bash` — Run unit tests (show totals)
+> 🔧 `Bash` — Stage export-settings files
+> 🔧 `Bash` — Confirm ExportInstellingen.jsx staged
+
+**🤖 Claude:**
+
+Beide bestanden staan klaar. Ik commit en push, en werk de doc even bij.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\STUDIO.md
+> 🔧 `Bash` — Commit and push export settings
+> 🔧 `Bash` — Stop dev server
+
+**🤖 Claude:**
+
+Klaar en op main (cc22408, gepusht). De export-configuratie zit nu waar je hem wilde: **in de settings**, met het menu schoon.
+
+**Studio-instellingen → Diagram-export:**
+- **Achtergrond**: Canvas (thema) / Wit / Transparant
+- **Schaal (PNG)**: 1× – 4× (hoger = scherper/groter, voor print)
+- **Marge**: px rondom de inhoud
+
+Je zet het één keer; rechtsklik → Exporteren gebruikt die voorkeuren. Geverifieerd end-to-end: instelling persist, "Wit" geeft een witte hoekpixel (255,255,255,255), "Transparant" geeft alpha 0. Zie de screenshot van de sectie hierboven.
+
+Waarom niet in het rechtsklik-menu (zoals ik schetste): geneste submenu's bij elke export-actie worden rommelig en je stelt telkens hetzelfde opnieuw in. Settings = één keer instellen, menu blijft de drie acties (Kopieer / Download PNG / Download SVG). Als je later tóch een snelle override in het menu wilt (bijv. "Download PNG 3×" als losse regel), is dat een kleine toevoeging — maar dit dekt vermoedelijk je hele behoefte.
+
+Kleine let-op die ook in de settings-tekst staat: transparant + donker thema geeft lichte tekst die op een witte ondergrond onzichtbaar wordt — kies dan Wit of Canvas. 296 tests + build groen.
+
+---
+
+## 👤 Gebruiker (33)
+
+okee, dank. Wil je dit documenteren op de logische plek (STUDIO.md?)
+
+waar waren we ook alweer voor mijn tussendoor vraag?
+
+**🤖 Claude:**
+
+Ik heb de export-feature bij de vorige commits al in STUDIO.md gezet — laat me even checken of dat compleet en op de logische plek staat, en het desnoods netter maken.
+> 🔧 `Bash` — Locate export docs in STUDIO.md
+
+**🤖 Claude:**
+
+De export staat nu als blockquote-addendum tussen de fase-addenda — een beetje verstopt. Ik zet er een eigen sectie voor op een logische plek. Even de kopstructuur bekijken.
+> 🔧 `Bash` — List STUDIO.md headings
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\STUDIO.md
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\STUDIO.md
+
+**🤖 Claude:**
+
+Nu een eigen sectie op een logische plek (na de canvas-motor, vóór de DMN-sectie).
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\STUDIO.md
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\STUDIO.md
+> 🔧 `Bash` — Commit and push docs
+
+**🤖 Claude:**
+
+Gedocumenteerd en gepusht (56dd675). Ik heb er in [STUDIO.md](bitemp_register_v06/docs/STUDIO.md) een **eigen sectie "Diagram exporteren als afbeelding"** van gemaakt (vóór de DMN-sectie, bij de canvas-onderwerpen) i.p.v. de verstopte blockquote — met de drie acties, de voorkeuren, en een implementatie-blokje.
+
+## Waar we waren vóór je export-vraag
+
+De laatste inhoudelijke stap was de twee **projectboom-fixes** (geplaatste elementen verdwijnen uit de browser + associaties gaan mee in een multiselect-drag). Daarvóór landden de grote features **kruisverbanden-matrix** en het **transformeren-raamwerk**.
+
+We stonden dus op een natuurlijk beslismoment: welke grote brok als volgende. De openstaande kandidaten uit het plan (`docs/plans/2026-07-11 STUDIO consolidatie.md`):
+
+1. **Grafische kruisverband-diagram** — jouw ontwerp staat er al (diagram van type 'kruisverband', elk element accepteert, Verbinding-taskbar met traceer-relaties). Zwaarste stuk: elementen uit meerdere profiel-stores op één canvas.
+2. **Echte transformatie-generatoren** aansluiten op het raamwerk: OAS-export, canoniek→MIM, en de **register-build** (extern, maar intern aangeroepen). Plus **API als bron/doel** (nu alleen bestand) en **element-selectie** (nu "alles in de map").
+3. **Metamodel-uitbreiding voor gedragsdiagrammen** (state machine → activity → BPMN → sequence), met de gat-analyse die al in het plan staat.
+4. Kleinere vervolgen: **"toon op diagram…"**-navigatie vanuit de boom (eigendom-vs-voorkomen), shift-bereikselectie, mapvolgorde via slepen.
+
+Mijn advies voor de meeste demo-waarde: **(2) een echte generator** (bijv. register-build of OAS-export) zodat het transformeren-raamwerk iets tastbaars doet, óf **(1) de grafische kruisverbanden** als je het visuele verhaal wilt versterken. Zeg maar waar je heen wilt.
+
+---
+
+## 👤 Gebruiker (34)
+
+Eerst 1, maar het is redelijk onafhankelijk van elkaar, dus je mag ook 2 doen en tussendoor committen. Want ik moet slapen. (het is officieel al dinsdag)
+Mooist is denk ik beiden op een branch. Dan zie ik het morgen.
+
+Als je je verveelt: state machine?
+
+**🤖 Claude:**
+
+Helder — ik ga autonoom door op een branch: eerst (1) de grafische kruisverband-diagram, dan (2) een echte transformatie-generator, met commits ertussen. Alles blijft op de branch zodat je het morgen kunt bekijken. Slaap lekker.
+
+Ik maak de branch en zet een todo-lijst op.
+> 🔧 `Bash` — Create working branch
+> 🔧 `TodoWrite` — takenlijst bijgewerkt
+
+**🤖 Claude:**
+
+Eerst de store uitbreiden met posities, losse nodes, weergave en een grafische link-actie.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\koppelingenActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\koppelingenActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\koppelingenActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\koppelingenActivity.jsx
+
+**🤖 Claude:**
+
+Nu de grafische view zelf. Ik maak een nieuw bestand met een React Flow-canvas.
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\koppelingenGrafisch.jsx
+
+**🤖 Claude:**
+
+Nu de view-toggle en de conditionele render in Koppelingen. Ik pas `Main` aan.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\koppelingenActivity.jsx
+> 🔧 `Grep` — ^function Main\(\)|return <MatrixInhoud key
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\koppelingenActivity.jsx
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\koppelingenActivity.jsx
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\koppelingenActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\koppelingenActivity.jsx
+> 🔧 `Bash` — Build to check circular import + syntax
+
+**🤖 Claude:**
+
+Build slaagt (geen circulaire-import-probleem). Ik start de dev-server en verifieer de grafische view.
+> 🔧 `Bash` — Start dev server
+> 🔧 `Bash` — Get dev port
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `Bash` — Run graphical view verification
+
+**🤖 Claude:**
+
+Verbinden lukte niet (0 edges). De rest werkt (toggles, knopen, positie-persist, weergave-persist). Even de screenshot bekijken en de connect-drag verfijnen (loslaten op de doel-handle i.p.v. het midden).
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+
+**🤖 Claude:**
+
+De view ziet er goed uit. Alleen de connect-drag moet op de doel-handle loslaten. Ik verfijn dat stukje van de test.
+> 🔧 `Edit` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `Bash` — Rerun graphical verification (precise handle)
+
+**🤖 Claude:**
+
+Alles werkt nu: verbinden legt een link, edge-contextmenu wijzigt de soort, posities/weergave persist. Ik update het plan, draai tests en commit deel (1).
+> 🔧 `Bash` — Find fase-4 graphical section in plan
+> 🔧 `Bash` — Find graphical variant note in plan
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-11 STUDIO consolidatie.md
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-11 STUDIO consolidatie.md
+> 🔧 `Bash` — Run unit tests
+> 🔧 `Bash` — Commit graphical kruisverband view
+
+**🤖 Claude:**
+
+Deel (1) gecommit. Nu (2): een echte, profiel-specifieke generator. Ik bouw **"Map → Markdown-overzicht"** — genereert een leesbaar datamodel-document uit de map (elementen met velden, diagrammen, én de kruisverbanden). Dat is zelf-standig, echt nuttig (documentatie), en toont het generator-patroon met betekenisvolle output.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\transformaties.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\transformaties.js
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\transformaties.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\transformaties.js
+> 🔧 `Bash` — Build with markdown generator
+
+**🤖 Claude:**
+
+Build ok. Ik verifieer de Markdown-export end-to-end.
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `Bash` — Run markdown export verification
+
+**🤖 Claude:**
+
+De Markdown-export werkt perfect — een echt leesbaar datamodel-document. Todos bijwerken, plan noteren, tests, commit (2).
+> 🔧 `TodoWrite` — takenlijst bijgewerkt
+> 🔧 `Bash` — Find generators note in plan
+> 🔧 `Bash` — Find generator note lines
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-11 STUDIO consolidatie.md
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-11 STUDIO consolidatie.md
+> 🔧 `Bash` — Run unit tests
+> 🔧 `Bash` — Commit markdown generator
+
+**🤖 Claude:**
+
+(1) en (2) staan op de branch. Nu de bonus: een **state machine-profiel**. Ik bekijk eerst een bestaand profiel als referentie (structuur, shapes, connectoren).
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramprofielen\puur-uml\index.js
+
+**🤖 Claude:**
+
+Nu de beschikbare shapes checken (voor begin/eind-toestand en de state-box).
+> 🔧 `Bash` — List available shapes and markers
+
+**🤖 Claude:**
+
+Ik bekijk hoe een shape gedefinieerd wordt (bol als voorbeeld), zodat ik begin/eind-toestand-shapes kan maken.
+> 🔧 `Bash` — Find shape registration structure
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\shapes\basisShapes.jsx
+
+**🤖 Claude:**
+
+Ik bouw een state machine-profiel v0: begin/toestand/eind + transitie. Eerst twee custom shapes (begin-punt, eind-ring), dan de descriptor, dan de activiteit.
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramprofielen\statemachine\shapes.jsx
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramprofielen\statemachine\index.js
+
+**🤖 Claude:**
+
+Nu de activiteit + een icoon, en registratie.
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\statemachineActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\icons.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\index.jsx
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\index.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\index.jsx
+> 🔧 `Bash` — Build with state machine profile
+
+**🤖 Claude:**
+
+Build ok. Ik verifieer het state machine-profiel (rendert het, verbinden werkt).
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+> 🔧 `Bash` — Run state machine verification
+
+**🤖 Claude:**
+
+Twee dingetjes: transities naar begin/eind renderen niet (onzichtbare handles blokkeren de edge), en het transitie-label komt niet door. Ik onderzoek het label-mechanisme.
+> 🔧 `Bash` — Find edgeLabels handling in core
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\materialiseerConnectoren.js
+
+**🤖 Claude:**
+
+Twee fixes in het profiel: het label-hook moet `kaal` teruggeven (niet `midden`), en begin/eind mogen geen onzichtbare handles hebben (anders hechten de transities niet).
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramprofielen\statemachine\index.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramprofielen\statemachine\index.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramprofielen\statemachine\index.js
+> 🔧 `Bash` — Rebuild and rerun state machine verify
+
+**🤖 Claude:**
+
+Label werkt nu, maar transities naar begin/eind renderen nog niet (1 i.p.v. 3 edges). Ik kijk hoe ElementNode handles rendert voor custom shapes.
+> 🔧 `Bash` — Inspect ElementNode handle rendering
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\ElementNode.jsx
+
+**🤖 Claude:**
+
+De custom shapes renderen `children` niet — daar zitten de handles in. Ik fix dat en zet begin/eind op niet-resizebaar.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramprofielen\statemachine\shapes.jsx
+> 🔧 `Bash` — Locate begin/eind for resizebaar edit
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramprofielen\statemachine\index.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramprofielen\statemachine\index.js
+> 🔧 `Bash` — Rebuild and rerun state machine verify
+
+**🤖 Claude:**
+
+Nu 3 transities, label, shapes, registratie — allemaal goed. Even de screenshot bekijken.
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\29405840-acab-4ca9-840a-de0fc8a1b319\scratch...
+
+**🤖 Claude:**
+
+Het state machine-profiel werkt: begin → toestand(en) → eind met transities, correcte Maken/Verbinding-taakbalken, en de verbindingsregels dwingen de basisvalidatie af (begin alleen bron, eind alleen doel). Ik werk het plan bij, draai tests en commit.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-11 STUDIO consolidatie.md
+> 🔧 `Bash` — Find candidate-order line
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-11 STUDIO consolidatie.md
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-11 STUDIO consolidatie.md
+> 🔧 `Bash` — Run unit tests
+> 🔧 `Bash` — Commit state machine profile
+> 🔧 `TodoWrite` — takenlijst bijgewerkt
+
+**🤖 Claude:**
+
+Alle drie de stukken staan op de branch. Ik push hem zodat je het morgen kunt bekijken, en stop de dev-server.
+> 🔧 `Bash` — Show branch commits and push branch
+> 🔧 `Bash` — Stop dev server, confirm branch
+> 🔧 `TodoWrite` — takenlijst bijgewerkt
+
+**🤖 Claude:**
+
+Klaar voor vannacht. Alles staat op **branch `feat/studio-kruisverband-grafisch-en-generatoren`** (gepusht, niet naar main — jij bekijkt het morgen). Drie commits, elk apart geverifieerd; 296 tests + build groen.
+
+## Wat er staat
+
+**1. Grafische kruisverband-diagram** (169b1db) — precies jouw ontwerp
+- Koppelingen heeft nu een **Matrix / Grafisch**-toggle. De grafische view is een vrij React Flow-canvas met elementen uit *verschillende* profielen als gekleurde knopen (profiel-icoon + naam) en de trace-relaties als gerichte lijnen (soort als label).
+- **Verbinden = link leggen**: sleep van de bron- naar de doelstip → er ontstaat een link met de gekozen soort (getekende richting = van→naar). Géén Maken-taakbalk; wél een soort-keuze en een **＋ knoop**-picker.
+- Rechtsklik op een lijn → soort/richting/verwijderen; Delete wist. Posities, losse knopen en de weergavekeuze persist. Deelt dezelfde `useKruisStore` als de matrix — twee views op dezelfde links.
+
+**2. Echte transformatie-generator: "Map → Markdown-overzicht"** (db99204)
+- De eerste profiel-overstijgende generator die iets tastbaars doet: een leesbaar datamodel-document uit een map — per profiel de elementen mét hun velden, de diagrammen, en de kruisverbanden waarvan beide uiteinden in de map zitten. Download als `.md`, mooi om in markdown/docs te plakken. Bewijst het generator-aansluitpatroon met betekenisvolle output.
+
+**3. Bonus — State machine-profiel v0** (785e49d)
+- Het eerste gedragsprofiel op de motor: **begin** (gevulde stip), **toestand** (afgeronde box met entry/do/exit-compartiment), **eind** (ring met kern), en **transitie** (gerichte lijn met "trigger [guard] / effect"-label). De verbindingsregels dwingen de basisvalidatie af (begin geen inkomende, eind geen uitgaande). Twee kleine custom shapes + een descriptor — verder geen motor-wijziging. Zichtbaar in Modelleren en via Ga naar (standaard verborgen in de balk, zoals de andere 0.5-profielen).
+
+## Twee dingen om morgen te weten
+- De grafische view gebruikt nu een **tekstlabel** voor de soort; het hoekje-symbool óp de lijn (zoals in de matrix) is een genoteerd vervolg.
+- Het state machine-profiel is bewust **v0**: composite states (containers), keuze/junction en regio's/history staan nog open — dat zijn de grotere metamodel-gaten die ook voor activity/BPMN/sequence gelden.
+
+Alles is gedocumenteerd in het plandocument. Slaap lekker — merge naar main kan morgen als het bevalt.
+
