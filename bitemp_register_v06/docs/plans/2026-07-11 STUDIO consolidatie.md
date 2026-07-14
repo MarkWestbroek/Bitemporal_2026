@@ -478,10 +478,14 @@ map vult de relevante kant (import = doel, anders = bron). `transformaties.js` l
 `collectMapModel` — de map als model-eenheid) plus drie ingebouwde,
 generieke generatoren: **export** (map → JSON-bestand), **import**
 (JSON-map-export → in deze map) en **transform** (kopieer map-inhoud →
-nieuwe/bestaande map, met verse id's). Specifieke generatoren (OAS-export,
-MIM-transformatie, register-build) sluiten hierop aan met een
-`registreerTransformatie`-aanroep — nog te doen; ook: API als bron/doel
-(nu alleen bestand) en element-selectie (nu "alle in de map").
+nieuwe/bestaande map, met verse id's). **Map → Markdown-overzicht
+(2026-07-14):** een echte export-generator die de map als leesbaar
+datamodel-document schrijft — per profiel de elementen (met hun velden),
+de diagrammen en de kruisverbanden waarvan beide uiteinden in de map zitten
+(mooi voor documentatie/plakken in markdown). Nog te doen: OAS-export,
+MIM-transformatie en de **register-build** (extern, intern aangeroepen) als
+generatoren; API als bron/doel (nu alleen bestand) en element-selectie (nu
+"alle in de map").
 
 ### Metamodel-verkenning: gedragsdiagrammen (sequence, activity, state machine, BPMN) — sessie 2026-07-13
 
@@ -513,6 +517,19 @@ Kandidaat-volgorde: state machine (kleinste gat: containers + validatie) →
 activity (lanes + geordende flow) → BPMN (boundary events + pools) →
 sequence (grootste gat: as-semantiek + activations).
 
+**State machine v0 gebouwd (2026-07-14):** het eerste gedragsprofiel op de
+motor — `diagramprofielen/statemachine/` (+ `statemachineActivity.jsx`).
+Elementtypen: **begin** (gevulde stip, eigen shape `sm-begin`), **toestand**
+(afgeronde box met activiteiten-compartiment entry/do/exit), **eind** (ring
+met kern, `sm-eind`), notitie. Connector **transitie** (gerichte lijn, label
+"trigger [guard] / effect" via de `edgeLabels`-hook). De **verbindingsregels**
+leveren de basisvalidatie: transitie-bron ∈ {begin, toestand}, -doel ∈
+{toestand, eind} (begin geen inkomende, eind geen uitgaande). Bewust nog niet
+(de gat-punten hierboven): samengestelde toestanden (containers), keuze/
+junction, regio's/history. Bewijst dat het metamodel gedragsdiagrammen aankan
+met alleen een descriptor + twee kleine shapes; de grotere gaten (1–4) blijven
+staan voor activity/BPMN/sequence.
+
 ### Fase 4 — Kruisverbanden (nieuw, na 2–3) — v0 gebouwd 2026-07-13
 1. 🔶 v0: nieuwe activiteit **"Koppelingen"** (naast Modelleren) — kies een
    bron- en doelprofieltype en vink kruisverbanden aan in een **matrix**
@@ -530,18 +547,22 @@ sequence (grootste gat: as-semantiek + activations).
    *naar*-zijde en een omgekeerde vorm. Een **legenda met beide richtingen**
    staat in Studio-instellingen → Kruisverband-symbolen (nu vast, later
    bewerkbaar).
-   **Ontwerp grafische variant (sessiebesluit 2026-07-13):** een diagram
-   van het type **'kruisverband'** dat élk soort element accepteert — géén
-   "Maken"-taakbalk (elementen ontstaan in hun eigen profiel), wél een
-   "Verbinding"-taakbalk met de traceer-relatietypen; je trekt een
-   traceer-relatie van element X naar element Y. (Alternatief — een vrij
-   diagramtype met aan te zetten crosslink-functionaliteit, polymorfe
-   diagrammen — is bewust láter.) Overig vervolg: "traceer naar…" vanuit
-   de projectboom en het superprofiel als formele drager. Concreet gat dat dit vult (zichtbaar in de eigen Sparx-repo's):
-   hetzelfde concept in twee werelden — UML `Taak` naast MIM `«Objecttype»
-   Taak` — stond als handmatige duplicatie zonder vastgelegde relatie.
-2. Cross-profiel-diagram: elementen uit meerdere profieltypen op één canvas —
-   de profieltype-registry uit fase 2 is hiervoor de voorwaarde.
+   **Grafische variant gebouwd (2026-07-14):** naast de matrix heeft
+   Koppelingen nu een **Grafisch**-tab (toggle) — een vrij React
+   Flow-canvas (`koppelingenGrafisch.jsx`) dat elementen uit
+   *verschillende* profielen als gekleurde knopen toont (profiel-icoon +
+   naam) en de trace-relaties als gerichte lijnen (soort als label). Géén
+   "Maken"-taakbalk; wél een soort-keuze bovenaan en een **element-picker
+   (＋ knoop)**. **Verbinden = link leggen**: sleep van de bron- naar de
+   doelstip → er ontstaat een link met de gekozen soort (van→naar =
+   getekende richting). Rechtsklik op een lijn → soort/richting/verwijderen;
+   Delete wist. Knoop-posities, losse knopen en de weergavekeuze bewaart de
+   kruis-store (localStorage). Zo is het **concept-gat** gevuld: hetzelfde
+   concept in twee werelden — UML `Taak` naast MIM `«Objecttype» Taak` —
+   staat nu als vastgelegde, zichtbare relatie i.p.v. handmatige duplicatie.
+   Vervolg: het trace-symbool (met hoekje) óp de lijn i.p.v. tekstlabel,
+   "traceer naar…" vanuit de projectboom, en het superprofiel als formele
+   drager.
 
 ### Fase 5 — Werkruimteprofielen (SaaS-voorbereiding)
 1. Benoemde gebruikersprofielen (bv. kijker / analist / expert) als bundel
