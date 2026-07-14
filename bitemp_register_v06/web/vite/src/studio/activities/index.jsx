@@ -27,6 +27,7 @@ import profielActivity from "./profielActivity";
 import profielOntwerpActivity from "./profielOntwerpActivity";
 import dmnActivity from "./dmnActivity";
 import dmnDrdActivity from "./dmnDrdActivity";
+import statemachineActivity from "./statemachineActivity";
 // Data-shapes globaal registreren bij startup (side-effect), zodat ze in
 // elk profiel beschikbaar zijn.
 import "./vormenRegistratie.js";
@@ -90,6 +91,7 @@ registreerActiviteiten([
   puurUmlActivity, // "UML" — tweede profiel (preview)
   oasActivity, // "OAS" — derde profiel, OAS 3.0/3.1 (preview)
   mimActivity, // "MIM" — vijfde profiel, MIM 1.2 (preview)
+  statemachineActivity, // "State machine" — gedragsdiagram-verkenning (preview)
   dmnActivity,
   dmnDrdActivity, // "DMN DRD" — vierde profiel (preview, niet in de balk)
   bpmnActivity,

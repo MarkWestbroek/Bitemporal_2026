@@ -517,6 +517,19 @@ Kandidaat-volgorde: state machine (kleinste gat: containers + validatie) →
 activity (lanes + geordende flow) → BPMN (boundary events + pools) →
 sequence (grootste gat: as-semantiek + activations).
 
+**State machine v0 gebouwd (2026-07-14):** het eerste gedragsprofiel op de
+motor — `diagramprofielen/statemachine/` (+ `statemachineActivity.jsx`).
+Elementtypen: **begin** (gevulde stip, eigen shape `sm-begin`), **toestand**
+(afgeronde box met activiteiten-compartiment entry/do/exit), **eind** (ring
+met kern, `sm-eind`), notitie. Connector **transitie** (gerichte lijn, label
+"trigger [guard] / effect" via de `edgeLabels`-hook). De **verbindingsregels**
+leveren de basisvalidatie: transitie-bron ∈ {begin, toestand}, -doel ∈
+{toestand, eind} (begin geen inkomende, eind geen uitgaande). Bewust nog niet
+(de gat-punten hierboven): samengestelde toestanden (containers), keuze/
+junction, regio's/history. Bewijst dat het metamodel gedragsdiagrammen aankan
+met alleen een descriptor + twee kleine shapes; de grotere gaten (1–4) blijven
+staan voor activity/BPMN/sequence.
+
 ### Fase 4 — Kruisverbanden (nieuw, na 2–3) — v0 gebouwd 2026-07-13
 1. 🔶 v0: nieuwe activiteit **"Koppelingen"** (naast Modelleren) — kies een
    bron- en doelprofieltype en vink kruisverbanden aan in een **matrix**

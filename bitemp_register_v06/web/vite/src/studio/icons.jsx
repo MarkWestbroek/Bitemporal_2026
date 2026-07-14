@@ -26,6 +26,16 @@ export const IconModelleren = (p) => (
   </svg>
 );
 
+/** State machine: begin-stip → toestand → eind, met transities. */
+export const IconStateMachine = (p) => (
+  <svg {...base} {...p}>
+    <circle cx="4" cy="6" r="1.6" fill="currentColor" stroke="none" />
+    <rect x="9" y="3.5" width="11" height="5" rx="2.5" />
+    <rect x="4" y="15" width="11" height="5" rx="2.5" />
+    <path d="M6 7.5l3 -0.5M13 8.5v6" />
+  </svg>
+);
+
 /** Koppelingen: twee werelden met een trace-link ertussen. */
 export const IconKoppeling = (p) => (
   <svg {...base} {...p}>
