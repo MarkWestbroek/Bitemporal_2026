@@ -36,6 +36,15 @@ export const IconStateMachine = (p) => (
   </svg>
 );
 
+/** Use case: actor (strekfiguur) naast een use case-ellips. */
+export const IconUseCase = (p) => (
+  <svg {...base} {...p}>
+    <circle cx="6" cy="5" r="2" />
+    <path d="M6 7v5M3 9h6M6 12l-2.5 5M6 12l2.5 5" />
+    <ellipse cx="16.5" cy="10" rx="5" ry="3.2" />
+  </svg>
+);
+
 /** Koppelingen: twee werelden met een trace-link ertussen. */
 export const IconKoppeling = (p) => (
   <svg {...base} {...p}>
