@@ -43,7 +43,7 @@ export function useFormulierDefinitie(doeltype) {
 
         // Zoek de actieve standaard-definitie voor dit doeltype.
         const match = items.find((full) => {
-          if (!full) return false;
+          if (!full || full.afvoer) return false; // afgevoerde definitie telt niet mee
           const metaData = vindActueleData(full, "formulier_definitie_metas");
           return (
             metaData?.doeltype === doeltype &&

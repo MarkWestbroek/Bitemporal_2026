@@ -43,6 +43,7 @@ export function bouwCustomVeldMapping({
   parentTypeMeta = null,
   parentJSONKey = null,
   platSla = platSlaHubItems,
+  afgeleideWaarden = {},
 }) {
   const velden = [];
   const values = {};
@@ -122,6 +123,28 @@ export function bouwCustomVeldMapping({
       const volPad = padVan(typeMeta?.typenaam, rol, naam);
       const waarde = actueel && actueel[naam] != null ? actueel[naam] : undefined;
       registreer({ naam, veldDef: v, info, waarde, volPad });
+    }
+  }
+
+  // ── Entiteit-eigen read-only velden (F46) ──
+  // Geen invoer/opslag: het entiteit-id (waarde uit de full-respons) en afgeleide/
+  // weergavevelden (waarde via CEL, aangeleverd in `afgeleideWaarden`). Alleen op
+  // vol pad geregistreerd; geen veldNaarGE (worden nooit opgeslagen).
+  const entNaam = typeMeta?.typenaam;
+  if (entNaam) {
+    const idKolom = typeMeta?.idKolom || "id";
+    if (entity?.[idKolom] != null) {
+      const volPad = padVan(entNaam, idKolom);
+      velden.push({ naam: volPad, type: "integer", readonly: true });
+      values[volPad] = entity[idKolom];
+    }
+    for (const av of safeArray(typeMeta?.afgeleideVelden)) {
+      const naam = av?.naam;
+      if (!naam) continue;
+      const volPad = padVan(entNaam, naam);
+      velden.push({ naam: volPad, type: av.type || av.goType || "string", readonly: true });
+      const w = afgeleideWaarden?.[naam];
+      if (w != null) values[volPad] = w;
     }
   }
 

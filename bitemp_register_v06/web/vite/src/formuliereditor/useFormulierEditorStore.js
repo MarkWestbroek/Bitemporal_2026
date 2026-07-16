@@ -35,6 +35,9 @@ export const useFormulierEditorStore = create((set, get) => ({
   /** metadata van de definitie zelf */
   meta: { naam: "", doeltype: "", beschrijving: "", definitieVersie: "0.1", status: "concept", isStandaard: false },
   geladenId: null, // id van een geladen bestaande definitie (null = nieuw)
+  geladenMetaRelId: null,
+  geladenLayoutRelId: null,
+  opslagTeller: 0, // bumpt bij elke geslaagde opslag → index kan herladen
   historie: [],
   toekomst: [],
   saveBusy: false,
@@ -70,7 +73,7 @@ export const useFormulierEditorStore = create((set, get) => ({
    * Laad een bestaande FormulierDefinitie in de editor.
    * @param {{ layoutJson: string, meta: object, veldInfo: object, id?: number }} def
    */
-  laadDefinitie({ layoutJson, meta = {}, veldInfo = {}, id = null }) {
+  laadDefinitie({ layoutJson, meta = {}, veldInfo = {}, id = null, metaRelId = null, layoutRelId = null }) {
     const { root, fout } = parseLayout(layoutJson);
     if (fout || !root) return { fout: fout || "Kon layout niet lezen." };
     set({
@@ -85,6 +88,8 @@ export const useFormulierEditorStore = create((set, get) => ({
         isStandaard: meta.isStandaard === true || meta.is_standaard === true || meta.is_standaard === "true",
       },
       geladenId: id,
+      geladenMetaRelId: metaRelId,
+      geladenLayoutRelId: layoutRelId,
       selectieId: null,
       historie: [],
       toekomst: [],
@@ -226,18 +231,20 @@ export const useFormulierEditorStore = create((set, get) => ({
   },
 
   reset() {
-    set({ root: nieuwFormulier(), selectieId: null, geladenId: null, veldInfo: {}, meta: { naam: "", doeltype: "", beschrijving: "", definitieVersie: "0.1", status: "concept", isStandaard: false }, historie: [], toekomst: [], saveResultaat: null, melding: null });
+    set({ root: nieuwFormulier(), selectieId: null, geladenId: null, geladenMetaRelId: null, geladenLayoutRelId: null, veldInfo: {}, meta: { naam: "", doeltype: "", beschrijving: "", definitieVersie: "0.1", status: "concept", isStandaard: false }, historie: [], toekomst: [], saveResultaat: null, melding: null });
   },
 
   /** Sla de definitie op als nieuwe FormulierDefinitie in het register. */
   async saveNaarRegister(baseUrl) {
-    const { meta, saveBusy } = get();
+    const { meta, saveBusy, geladenId, geladenMetaRelId, geladenLayoutRelId } = get();
     if (saveBusy) return;
     set({ saveBusy: true, saveResultaat: null });
     try {
-      const { id, gedegradeerd } = await saveFormulierDefinitie(baseUrl, { meta, layoutJson: get().json(false) });
+      const geladen = geladenId != null ? { id: geladenId, metaRelId: geladenMetaRelId, layoutRelId: geladenLayoutRelId } : null;
+      const { id, gedegradeerd, bijgewerkt } = await saveFormulierDefinitie(baseUrl, { meta, layoutJson: get().json(false), geladen });
       const extra = gedegradeerd > 0 ? ` · ${gedegradeerd} eerdere standaard gedegradeerd` : "";
-      set({ saveResultaat: { type: "succes", text: `Opgeslagen als FormulierDefinitie #${id}${extra}` }, geladenId: id });
+      const actie = bijgewerkt ? "Bijgewerkt" : "Opgeslagen als";
+      set({ saveResultaat: { type: "succes", text: `${actie} FormulierDefinitie #${id}${extra}` }, geladenId: id, opslagTeller: get().opslagTeller + 1 });
     } catch (e) {
       set({ saveResultaat: { type: "fout", text: e.message } });
     } finally {

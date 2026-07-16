@@ -277,8 +277,9 @@ export function maakDiagramActiviteit(opties) {
         af.push(
           menuBus.on(ev("zet-terug"), () => {
             const ok = window.confirm(
-              "Dit vervangt het model in de klassieke UML-activiteit door de sandbox.\n" +
-                "Het oude model in die activiteit gaat verloren (de API blijft onaangeroerd). Doorgaan?"
+              koppeling.zetTerugBevestiging ||
+                "Dit vervangt het model in de klassieke UML-activiteit door de sandbox.\n" +
+                  "Het oude model in die activiteit gaat verloren (de API blijft onaangeroerd). Doorgaan?"
             );
             if (!ok) return;
             const overgeslagen = koppeling.zetTerugNaarModel(useStore.getState());
@@ -2313,7 +2314,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           ? [{ id: `${menuPrefix}-herlaad`, label: koppeling.herlaadLabel || "Herlaad uit UML-model…", onClick: () => menuBus.emit(ev("herlaad")) }]
           : []),
         ...(koppeling?.zetTerugNaarModel
-          ? [{ id: `${menuPrefix}-zet-terug`, label: "Zet terug naar UML-model…", onClick: () => menuBus.emit(ev("zet-terug")) }]
+          ? [{ id: `${menuPrefix}-zet-terug`, label: koppeling.zetTerugLabel || "Zet terug naar UML-model…", onClick: () => menuBus.emit(ev("zet-terug")) }]
           : []),
         { type: "separator" },
         ...(descriptor.layouts?.length

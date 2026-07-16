@@ -37,6 +37,7 @@ import mimActivity from "./mimActivity";
 import bpmnActivity from "./bpmnActivity";
 import berichtActivity from "./berichtActivity";
 import formulierActivity from "./formulierActivity";
+import formulierDiagramActivity from "./formulierDiagramActivity";
 
 // ── Nog te bouwen functies: uniforme placeholder met de drie-slot-structuur ──
 const apiActivity = maakPlaceholderActiviteit({
@@ -93,6 +94,7 @@ registreerActiviteiten([
   oasActivity, // "OAS" — derde profiel, OAS 3.0/3.1 (preview)
   mimActivity, // "MIM" — vijfde profiel, MIM 1.2 (preview)
   statemachineActivity, // "State machine" — gedragsdiagram-verkenning (preview)
+  formulierDiagramActivity, // "Formulier (diagram)" — formulier-profiel, dogfood (F48 P1; niet in de balk)
   dmnActivity,
   dmnDrdActivity, // "DMN DRD" — vierde profiel (preview, niet in de balk)
   bpmnActivity,
