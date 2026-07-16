@@ -5,7 +5,7 @@ from __future__ import annotations
 Export VS Code Copilot Chat sessies naar leesbare Markdown bestanden.
 
 Zoekt de JSONL chat-sessiebestanden in VS Code's workspace storage
-en converteert ze naar Markdown in docs/copilot-chats/exports/.
+en converteert ze naar Markdown in docs/ai-chats/exports/.
 
 Gebruik:
     python3 scripts/export-copilot-chats.py
@@ -336,7 +336,7 @@ def main():
     project_root = os.path.dirname(script_dir)  # bitemp_register_v06/
     repo_root = os.path.dirname(project_root)   # Bitemporal_2026/
 
-    export_dir = os.path.join(project_root, "docs", "copilot-chats", "exports")
+    export_dir = os.path.join(project_root, "docs", "ai-chats", "exports")
     os.makedirs(export_dir, exist_ok=True)
 
     # Zoek workspace storage dirs

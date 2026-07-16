@@ -2,7 +2,7 @@
 
 Alle noemenswaardige wijzigingen aan de web-frontend (`web/vite/`: Studio-werkbank,
 inhoud-editor, publicatie, IDE). Formaat: [Keep a Changelog](https://keepachangelog.com);
-versionering volgens [`docs/VERSIONERING.md`](../docs/VERSIONERING.md) (prefix `studio/`).
+versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `studio/`).
 
 De single source of truth voor het nummer is `package.json` `"version"`.
 

@@ -23,13 +23,13 @@ relevante `README.md`. Liefst Nederlands, in lijn met de bestaande docs.
 ## Belangrijke chats archiveren
 
 Bewaar betekenisvolle AI-chats (Copilot én Claude) als markdown in
-`bitemp_register_v06/docs/copilot-chats/` (volg `doc/copilot-chats/` als het werk daar speelt):
+`bitemp_register_v06/docs/ai-chats/` (volg `doc/copilot-chats/` als het werk daar speelt):
 
 - **Volledige transcript** → `exports/`, **korte samenvatting** → `summaries/`
   (template: `templates/chat-summary-template.md`).
 - Naamconventie: `YYYY-MM-DD-onderwerp-korte-context`, kleine letters + koppeltekens,
   **dezelfde stamnaam** voor export en samenvatting. Datum eerst (natuurlijke sortering).
-- Vermeld in de export dat het een **Claude**-sessie is (de map heet historisch `copilot-chats`).
+- Vermeld in de export dat het een **Claude**-sessie is (de map heette historisch `copilot-chats`, nu `ai-chats`).
 - **Wel** bewaren: architectuur-/datamodel-/ontwerpkeuzes, belangrijke bugfix-redeneringen,
   branding-/productbeslissingen. **Niet** bewaren: korte Q&A zonder projectimpact, exploratie
   zonder uitkomst.
@@ -39,7 +39,7 @@ Bewaar betekenisvolle AI-chats (Copilot én Claude) als markdown in
 
 > **Let op — chat-backups zijn normaal.** De gebruiker back-upt chats af en toe met een script
 > (soms ook via de GitHub-UI, commit-titel `Create <bestand>.md`). Zo verschijnt er een
-> chat-export in `docs/copilot-chats/exports/` — vaak de *huidige* chat, op de branch waarop je
+> chat-export in `docs/ai-chats/exports/` — vaak de *huidige* chat, op de branch waarop je
 > staat. Dat is legitiem en mag meecommitten; verbaas je er niet over en zie het niet aan voor
 > een onverwachte/vreemde wijziging.
 

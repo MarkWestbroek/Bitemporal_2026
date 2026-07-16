@@ -28,7 +28,7 @@ Houd rekening met de MetaRegistry, dynamische schema/API-aanpak en documentatiep
 ## Bestaande bronnen met extra chatcontext
 
 - `prompts.txt`
-- `bitemp_register_v06/docs/copilot-chats/`
+- `bitemp_register_v06/docs/ai-chats/`
 - `bitemp_register_v06/json/instructies schrijven code voor registratie handler (1).txt`
 - `bitemporal_go_API_v05/json/instructies schrijven code voor registratie handler (1).txt`
 

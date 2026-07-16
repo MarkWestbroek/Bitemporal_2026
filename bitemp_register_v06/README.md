@@ -109,7 +109,7 @@ Individuele lijsten (Landenlijst, EU-Lidstaten, etc.) zijn **records** in de tab
 | GET | `/full/landen/:id` | Volledig land met GE's |
 | GET | `/landenlijst_landen` | Alle LandenlijstLand koppelrecords |
 
-Zie `docs/copilot-chats/plans/2026-03-29 referentielijsten PLAN.md` voor het volledige implementatieplan en alle endpoints.
+Zie `docs/ai-chats/plans/2026-03-29 referentielijsten PLAN.md` voor het volledige implementatieplan en alle endpoints.
 
 ### OpenAPI 3.1 & Interactieve documentatie
 
@@ -821,7 +821,7 @@ Deregister U5 and register U6 for entity A:
 
 24 *Referentielijsten* ✅ DONE (maart 2026)
 - Generieke Referentielijst-klasse met instantie-records geïmplementeerd
-- Zie [Implementatieplan](docs/copilot-chats/plans/2026-03-29%20referentielijsten%20PLAN.md) voor details
+- Zie [Implementatieplan](docs/ai-chats/plans/2026-03-29%20referentielijsten%20PLAN.md) voor details
 - Landenlijst (concrete struct) → Referentielijst (generieke entiteit) met instantie-records
 - Referentielijstnaam + Referentielijstomschrijving als GE's (hub+data)
 - LandenlijstLand als items-relatie (referentielijst_items) gebonden aan instantie "Landenlijst"

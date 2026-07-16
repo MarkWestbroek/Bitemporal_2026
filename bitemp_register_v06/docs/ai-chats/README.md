@@ -1,6 +1,7 @@
-# Copilot Chat Archief (v06)
+# AI-chat Archief (v06)
 
-Deze map is de vervanger voor online chat-sync: je bewaart belangrijke chats als bestanden in Git.
+Deze map (voorheen `copilot-chats`) is de vervanger voor online chat-sync: je bewaart belangrijke
+chats (Copilot én Claude) als bestanden in Git.
 
 Voor automatische export en synchronisatie via Git, zie ook `../copilot-chat-sync.md`.
 

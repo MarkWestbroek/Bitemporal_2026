@@ -3,7 +3,7 @@
 > Dit is het chronologische wijzigingslog voor de **backend** en overkoepelende wijzigingen.
 > Frontend/Studio heeft een eigen log in [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md); de
 > generator in [`cmd/codegen/CHANGELOG.md`](cmd/codegen/CHANGELOG.md). Versionering-conventie:
-> [`docs/VERSIONERING.md`](docs/VERSIONERING.md) — backend-tags gebruiken de prefix `api/`
+> [`docs/versiebeheer.md`](docs/versiebeheer.md) — backend-tags gebruiken de prefix `api/`
 > (baseline `api/v0.5.0` op `main`). Entries hieronder zijn deels gemengd FE/BE (historisch).
 
 ---

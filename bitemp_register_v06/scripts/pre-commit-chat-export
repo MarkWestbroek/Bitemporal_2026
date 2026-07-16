@@ -1,5 +1,5 @@
 #!/bin/sh
-# Pre-commit hook: exporteer Copilot Chat sessies naar docs/copilot-chats/exports/
+# Pre-commit hook: exporteer Copilot Chat sessies naar docs/ai-chats/exports/
 #
 # Dit script draait automatisch voor elke commit en exporteert nieuwe/gewijzigde
 # chat-sessies naar Markdown bestanden in de repo, zodat ze via git gesynchroniseerd
@@ -42,7 +42,7 @@ echo "[chat-export] Copilot chats exporteren..."
 cd "$REPO_ROOT/bitemp_register_v06" && sh -c "$PYTHON_CMD scripts/export-copilot-chats.py"
 
 # Voeg nieuwe exports toe aan de huidige commit
-EXPORT_DIR="$REPO_ROOT/bitemp_register_v06/docs/copilot-chats/exports"
+EXPORT_DIR="$REPO_ROOT/bitemp_register_v06/docs/ai-chats/exports"
 if [ -d "$EXPORT_DIR" ]; then
     git add "$EXPORT_DIR"/*.md 2>/dev/null
 fi

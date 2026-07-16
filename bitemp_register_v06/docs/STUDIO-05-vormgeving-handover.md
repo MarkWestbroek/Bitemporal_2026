@@ -77,7 +77,7 @@ zijn geïmplementeerd. Samenvatting:
   per gebruiker bewaard). De stereotype-teksten staan als officiële
   MIM-termen in de descriptor voor de tekst-stand. Bestaande profielen
   veranderen niet (default "tekst" = oude gedrag).
-- Chatverslag: `copilot-chats/summaries/2026-07-05-vormgevingssessie-iconen-en-tokens-v2.md`.
+- Chatverslag: `ai-chats/summaries/2026-07-05-vormgevingssessie-iconen-en-tokens-v2.md`.
 
 ## Doel van de sessie
 

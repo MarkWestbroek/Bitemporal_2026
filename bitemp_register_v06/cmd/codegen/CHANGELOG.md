@@ -4,7 +4,7 @@ Noemenswaardige wijzigingen aan de generator (`cmd/codegen/`), die uit het canon
 (V3/MetaRegistry) de Go-modellen, input-structs, methods en metaregistry genereert.
 
 Formaat: [Keep a Changelog](https://keepachangelog.com); versionering volgens
-[`docs/VERSIONERING.md`](../../docs/VERSIONERING.md) (prefix `codegen/`).
+[`docs/versiebeheer.md`](../../docs/versiebeheer.md) (prefix `codegen/`).
 
 ## [codegen/v0.1.0] — 2026-07-14  _(baseline op `main`)_
 - Eerste expliciete versie-ankerpunt voor de generator. De generator bestond al langer maar
