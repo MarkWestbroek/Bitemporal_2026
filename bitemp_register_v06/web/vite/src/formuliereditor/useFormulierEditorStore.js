@@ -38,6 +38,7 @@ export const useFormulierEditorStore = create((set, get) => ({
   toekomst: [],
   saveBusy: false,
   saveResultaat: null, // { type: "succes"|"fout", text }
+  melding: null, // transiente info bij een pick (bv. geweigerd veld)
 
   // ── interne helper: snapshot vóór wijziging ──
   _push(nieuweRoot) {
@@ -75,6 +76,20 @@ export const useFormulierEditorStore = create((set, get) => ({
   voegVeldToe(ref) {
     if (!ref?.veldpad) return;
     const { root, selectieId, veldInfo, meta } = get();
+
+    // Weiger niet-invulbare velden (F46).
+    // - Plumbing (id/rel_id/versie): nooit een invulveld.
+    // - Afgeleide velden: read-only weergave; nog niet als (read-only) veld
+    //   ondersteund op het formulier → voorlopig weigeren met uitleg.
+    if (["id", "rel_id", "versie"].includes(ref.veldnaam)) {
+      set({ melding: { type: "info", text: `${ref.veldpad} is een technisch veld (geen invoer) — overgeslagen.` } });
+      return;
+    }
+    if (ref.afgeleid) {
+      set({ melding: { type: "info", text: `${ref.veldpad} is een afgeleid (read-only) veld — read-only weergave volgt later (F46).` } });
+      return;
+    }
+
     // Doeltype automatisch afleiden uit het eerste gekozen veld (nodig bij opslaan).
     if (!meta.doeltype && ref.entiteit) set({ meta: { ...meta, doeltype: ref.entiteit } });
     const infoEntry = {
@@ -88,17 +103,22 @@ export const useFormulierEditorStore = create((set, get) => ({
       momentvoorkomen: ref.momentvoorkomen || "",
     };
 
-    // 1) Pick van het collectie-veld zelf (array-typed entiteitveld, bv.
-    //    "bijdragen") → maak/selecteer een lege `lijst` met dit pad als bron.
+    // 1) Pick van een collectie-veld (array-typed entiteitveld, bv. "producten").
+    //    Meervoudig → lege `lijst`; enkelvoudig → een `groep` gebonden aan het GE
+    //    (de invuller vult één sub-record; leaf-velden komen er als vol pad in).
     if (ref.format === "array" && ref.veldpad) {
-      const bestaand = vindLijstMetBron(root, ref.veldpad);
-      if (bestaand) {
-        set({ selectieId: bestaand._id });
+      if (ref.momentvoorkomen === "meervoudig") {
+        const bestaand = vindLijstMetBron(root, ref.veldpad);
+        if (bestaand) { set({ selectieId: bestaand._id, melding: null }); return; }
+        const lijst = nieuwElement("lijst", { bron: ref.veldpad, label: ref.veldnaam });
+        get()._push(voegToe(root, bepaalDoelContainer(root, selectieId), lijst));
+        set({ selectieId: lijst._id, melding: null });
         return;
       }
-      const lijst = nieuwElement("lijst", { bron: ref.veldpad, label: ref.veldnaam });
-      get()._push(voegToe(root, bepaalDoelContainer(root, selectieId), lijst));
-      set({ selectieId: lijst._id });
+      // enkelvoudig collectie-veld → groep
+      const groep = nieuwElement("groep", { label: ref.veldnaam, context: ref.veldpad });
+      get()._push(voegToe(root, bepaalDoelContainer(root, selectieId), groep));
+      set({ selectieId: groep._id, melding: null });
       return;
     }
 
@@ -127,7 +147,7 @@ export const useFormulierEditorStore = create((set, get) => ({
     }
 
     get()._push(nieuweRoot);
-    set({ veldInfo: { ...veldInfo, [ref.veldpad]: infoEntry }, selectieId: nieuweSelectie });
+    set({ veldInfo: { ...veldInfo, [ref.veldpad]: infoEntry }, selectieId: nieuweSelectie, melding: null });
   },
 
   /** Voeg een groep/rij/conditioneel toe (leeg). */

@@ -136,11 +136,25 @@ export function bouwModelTree(types, { includeAfgeleid = true, tDimensie = "form
         });
       });
 
+      // Eigen velden van de entiteit zelf (o.a. id + de collectie-velden per
+      // onderliggende, format "array"). Verrijk de collectie-velden met de
+      // momentvoorkomen van hun onderliggende, zodat de editor enkelvoudig vs.
+      // meervoudig kan onderscheiden bij een pick van het collectie-veld.
+      const mvPerRol = {};
+      safeArray(ent.onderliggende).forEach((o) => {
+        const rol = o.jsonRolnaam || o.rolnaam;
+        if (rol) mvPerRol[rol] = o.momentvoorkomen || "";
+      });
+      const eigenVelden = veldKnopenVan(ent, { entiteitTypenaam: ent.typenaam, rol: "" });
+      eigenVelden.forEach((knoop) => {
+        const mv = mvPerRol[knoop.ref?.veldnaam];
+        if (mv) knoop.ref.momentvoorkomen = mv;
+      });
+
       ontvang(ent.domein).entiteiten.push({
         kind: "entiteit",
         type: ent,
-        // Eigen velden van de entiteit zelf (zeldzaam, maar mogelijk).
-        velden: veldKnopenVan(ent, { entiteitTypenaam: ent.typenaam, rol: "" }),
+        velden: eigenVelden,
         kinderen,
       });
     });

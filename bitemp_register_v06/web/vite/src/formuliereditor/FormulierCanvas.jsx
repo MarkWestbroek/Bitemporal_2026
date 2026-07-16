@@ -86,6 +86,7 @@ export default function FormulierCanvas() {
   const saveNaarRegister = useFormulierEditorStore((s) => s.saveNaarRegister);
   const saveBusy = useFormulierEditorStore((s) => s.saveBusy);
   const saveResultaat = useFormulierEditorStore((s) => s.saveResultaat);
+  const melding = useFormulierEditorStore((s) => s.melding);
 
   const [previewWaarden, setPreviewWaarden] = useState({});
   const previewVelden = useMemo(() => bouwPreviewVelden(veldInfo), [veldInfo]);
@@ -117,6 +118,11 @@ export default function FormulierCanvas() {
         {saveResultaat && (
           <div style={{ padding: "6px 10px", fontSize: 12, color: saveResultaat.type === "fout" ? "#dc2626" : "#15803d", borderBottom: "1px solid var(--s-border, #e2e8f0)" }}>
             {saveResultaat.type === "fout" ? "⚠ " : "✓ "}{saveResultaat.text}
+          </div>
+        )}
+        {melding && (
+          <div style={{ padding: "6px 10px", fontSize: 12, color: "#b45309", borderBottom: "1px solid var(--s-border, #e2e8f0)" }}>
+            ⓘ {melding.text}
           </div>
         )}
         <div style={{ flex: 1, overflow: "auto", padding: 10 }} onClick={() => useFormulierEditorStore.getState().selecteer(null)}>
