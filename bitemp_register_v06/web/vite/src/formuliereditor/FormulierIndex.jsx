@@ -27,6 +27,7 @@ export default function FormulierIndex() {
   const { baseUrl, typeMetaByTypenaam } = useSchema();
   const laadDefinitie = useFormulierEditorStore((s) => s.laadDefinitie);
   const geladenId = useFormulierEditorStore((s) => s.geladenId);
+  const opslagTeller = useFormulierEditorStore((s) => s.opslagTeller);
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -44,7 +45,9 @@ export default function FormulierIndex() {
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((lijst) => {
         if (cancelled) return;
-        const rows = safeArray(lijst?.["formulier definities"]).map((full) => {
+        const rows = safeArray(lijst?.["formulier definities"])
+          .filter((full) => full && !full.afvoer) // afgevoerde definities uitsluiten
+          .map((full) => {
           const meta = actueleData(full, "formulier_definitie_metas") || {};
           const layout = actueleData(full, "formulier_definitie_layouts") || {};
           return {
@@ -56,6 +59,8 @@ export default function FormulierIndex() {
             beschrijving: meta.beschrijving || "",
             versie: layout.definitie_versie || "",
             layoutJson: layout.layout_json || "",
+            metaRelId: meta.rel_id ?? null,
+            layoutRelId: layout.rel_id ?? null,
           };
         });
         setItems(rows);
@@ -63,7 +68,7 @@ export default function FormulierIndex() {
       })
       .catch((e) => { if (!cancelled) { setError(e.message); setLoading(false); } });
     return () => { cancelled = true; };
-  }, [baseUrl, herlaad]);
+  }, [baseUrl, herlaad, opslagTeller]);
 
   const groepen = useMemo(() => {
     const q = filter.trim().toLowerCase();
@@ -87,6 +92,8 @@ export default function FormulierIndex() {
       meta: { naam: it.naam, doeltype: it.doeltype, beschrijving: it.beschrijving, definitieVersie: it.versie, status: it.status, isStandaard: it.isStandaard },
       veldInfo,
       id: it.id,
+      metaRelId: it.metaRelId,
+      layoutRelId: it.layoutRelId,
     });
   }
 

@@ -19,7 +19,7 @@ function vandaagISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export async function saveFormulierDefinitie(baseUrl, { meta, layoutJson }) {
+export async function saveFormulierDefinitie(baseUrl, { meta, layoutJson, geladen = null }) {
   const naam = String(meta?.naam || "").trim();
   const doeltype = String(meta?.doeltype || "").trim();
   if (!naam) throw new Error("Geef de definitie eerst een naam (inspector).");
@@ -28,34 +28,43 @@ export async function saveFormulierDefinitie(baseUrl, { meta, layoutJson }) {
     throw new Error("Het formulier is nog leeg.");
   }
 
-  const idRes = await fetch(`${baseUrl}/api/viz/entiteit/FormulierDefinitie/max-id`);
-  if (!idRes.ok) throw new Error(`Kon nieuw ID niet ophalen (HTTP ${idRes.status}).`);
-  const { nextId } = await idRes.json();
-  if (!nextId) throw new Error("Ongeldig nieuw ID ontvangen.");
-
   const status = String(meta?.status || "concept");
   const isStandaard = meta?.isStandaard === true;
+  const versie = String(meta?.definitieVersie || "0.1");
+  // TODO: update-in-place (nieuwe versie van een geladen definitie) vergt exact
+  // dezelfde versioning-payload als RepresentatieFormulier (incl. de eigen idKolom
+  // van het meta/layout-record, niet alleen rel_id). Zonder dat ontstaan dubbele
+  // hubs → voorlopig altijd een nieuwe definitie aanmaken (veilig).
+  const bijwerken = false && geladen?.id != null;
 
-  const wijzigingen = [
-    { opvoer: { formulierdefinitie: { id: nextId } } },
-    { opvoer: { formulierdefinitie_meta: {
-      formulierdefinitie_id: nextId,
-      naam,
-      beschrijving: String(meta?.beschrijving || ""),
-      doeltype,
-      status,
-      is_standaard: isStandaard,
-    } } },
-    { opvoer: { layout: {
-      formulierdefinitie_id: nextId,
-      layout_json: layoutJson,
-      definitie_versie: String(meta?.definitieVersie || "0.1"),
-    } } },
-    { opvoer: { formulierdefinitie_aanvang: {
-      formulierdefinitie_id: nextId,
-      datum: vandaagISO(),
-    } } },
-  ];
+  let doelId;
+  let wijzigingen;
+
+  if (bijwerken) {
+    // Bestaande definitie bijwerken → nieuwe versie van meta + layout (zelfde id).
+    doelId = geladen.id;
+    const metaPayload = { formulierdefinitie_id: doelId, naam, beschrijving: String(meta?.beschrijving || ""), doeltype, status, is_standaard: isStandaard };
+    if (geladen.metaRelId != null) metaPayload.rel_id = geladen.metaRelId;
+    const layoutPayload = { formulierdefinitie_id: doelId, layout_json: layoutJson, definitie_versie: versie };
+    if (geladen.layoutRelId != null) layoutPayload.rel_id = geladen.layoutRelId;
+    wijzigingen = [
+      { opvoer: { formulierdefinitie_meta: metaPayload } },
+      { opvoer: { layout: layoutPayload } },
+    ];
+  } else {
+    // Nieuwe definitie aanmaken.
+    const idRes = await fetch(`${baseUrl}/api/viz/entiteit/FormulierDefinitie/max-id`);
+    if (!idRes.ok) throw new Error(`Kon nieuw ID niet ophalen (HTTP ${idRes.status}).`);
+    const { nextId } = await idRes.json();
+    if (!nextId) throw new Error("Ongeldig nieuw ID ontvangen.");
+    doelId = nextId;
+    wijzigingen = [
+      { opvoer: { formulierdefinitie: { id: doelId } } },
+      { opvoer: { formulierdefinitie_meta: { formulierdefinitie_id: doelId, naam, beschrijving: String(meta?.beschrijving || ""), doeltype, status, is_standaard: isStandaard } } },
+      { opvoer: { layout: { formulierdefinitie_id: doelId, layout_json: layoutJson, definitie_versie: versie } } },
+      { opvoer: { formulierdefinitie_aanvang: { formulierdefinitie_id: doelId, datum: vandaagISO() } } },
+    ];
+  }
 
   const res = await fetch(`${baseUrl}/registratie/`, {
     method: "POST",
@@ -73,9 +82,9 @@ export async function saveFormulierDefinitie(baseUrl, { meta, layoutJson }) {
   // Max. 1 actieve standaard per doeltype: degradeer andere actieve standaarden.
   let gedegradeerd = 0;
   if (isStandaard && status === "actief") {
-    gedegradeerd = await degradeerAndereStandaarden(baseUrl, doeltype, nextId).catch(() => 0);
+    gedegradeerd = await degradeerAndereStandaarden(baseUrl, doeltype, doelId).catch(() => 0);
   }
-  return { id: nextId, gedegradeerd };
+  return { id: doelId, gedegradeerd, bijgewerkt: bijwerken };
 }
 
 /** Actueel (niet-afgevoerd) meta-record + rel_id uit een full-definitie. */
@@ -100,7 +109,7 @@ export async function degradeerAndereStandaarden(baseUrl, doeltype, behoudId) {
   const items = Array.isArray(lijst?.["formulier definities"]) ? lijst["formulier definities"] : [];
   const wijzigingen = [];
   for (const full of items) {
-    if (full.id === behoudId) continue;
+    if (full.id === behoudId || full.afvoer) continue; // sla afgevoerde over
     const m = actueleMeta(full);
     if (!m) continue;
     const std = m.is_standaard === true || m.is_standaard === "true";
