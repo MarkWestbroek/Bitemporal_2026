@@ -1,7 +1,14 @@
 # Plan — Formulier-profiel op de diagram-motor ("eat your own dogfood")
 
 > **Opgesteld**: 2026-07-16 (idee van Mark, avondsessie)
-> **Status**: ontwerp — nog niet gebouwd
+> **Status**: **P1 gebouwd** (2026-07-16): profiel `diagramprofielen/formulier/` (containers als
+> nodes met veld-compartimenten, `bevat`-connector ◆ met volgorde-index, hiërarchie in de
+> elementen-boom), pure adapter `layoutNaarFormulierModel` (5/5 unit-tests) en activiteit
+> **"Formulier (diagram)"** (`formulierDiagramActivity`, standaard verborgen — via *Ga naar*).
+> `herlaadUitModel` projecteert de definitie uit de formulier-editor-store: laad een formulier
+> in de Formulieren-activiteit → open het diagram → "Herlaad uit model" — letterlijk twee
+> controls op hetzelfde model. P2 (bewerken + publiceren) en de gefilterde projectboom (§5b)
+> zijn open.
 > **Relatie**: bouwt voort op `2026-07-16 Formulier-editor Studio-activiteit (plan).md` (F41/F43–F47)
 > en op de profiel-machinerie van STUDIO-05 (diagramcore, profielen, kruisverbanden, meta-editor §8.9).
 
@@ -81,6 +88,25 @@ Aandachtspunten:
 - **P3 — één documentmodel.** De bestaande formulier-editor (palette/boom/preview) wordt een
   tweede *control* op hetzelfde profieldocument; de aparte FormulierIndex kan dan opgaan in
   de projectboom-variant. Live preview blijft — dat is de kracht van de formulier-editor.
+
+## 5b. Aanvullingen (Mark, 2026-07-16)
+
+- **Gefilterde projectboom.** Er komt behoefte aan een boom-optie die filtert op soort:
+  alleen formulieren, of formulieren + entiteiten. Die gefilterde boom landt in de
+  formulieren-activiteit als browser van de beschikbare definities (vervangt op termijn de
+  losse `FormulierIndex`).
+- **Persistentie-/bitemporaliteits-spectrum.** Niet alle modelelementen leven gelijk:
+  1. *Formulierdefs* leven **direct in de DB** met eigen bitemporele tabellen (zelf ook
+     dogfood: FormulierDefinitie is een gemodelleerde entiteit).
+  2. *Canoniek-modelelementen* (ENT/GE/REL/reflijst/…) leven óók in de DB maar anders:
+     als **metamodel-definitie** én als **geïnstantieerde tabellen** — dat laatste is
+     secundair (gerealiseerde output van de generator-transformatie).
+  3. *Overige profielelementen* (BPMN/DMN/state machine/…) zitten **niet** in de DB
+     (alleen project-werkbestand).
+  Het profiel/de boom moet dit verschil kennen (bv. per documentsoort een andere
+  bron/refresh/publiceer-semantiek).
+- **Picker ↔ boom.** Mogelijk merget de veld-picker t.z.t. gewoon met de projectboom
+  (één boom, één mentaal model). Nog geen besluit — gevoel.
 
 ## 6. Risico's / open punten
 

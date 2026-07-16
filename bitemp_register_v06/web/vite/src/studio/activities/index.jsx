@@ -37,6 +37,7 @@ import mimActivity from "./mimActivity";
 import bpmnActivity from "./bpmnActivity";
 import berichtActivity from "./berichtActivity";
 import formulierActivity from "./formulierActivity";
+import formulierDiagramActivity from "./formulierDiagramActivity";
 
 // ── Nog te bouwen functies: uniforme placeholder met de drie-slot-structuur ──
 const apiActivity = maakPlaceholderActiviteit({
@@ -105,6 +106,7 @@ registreerActiviteiten([
   referentielijstenActivity,
   // presentatie
   formulierActivity, // visuele FormulierDefinitie-editor (F41)
+  formulierDiagramActivity, // formulier-profiel op de diagram-motor (F48 P1, dogfood)
   // beheer (onderaan de balk)
   profielActivity, // "Profiel-editor" — meta-editor trede 1 (JSON, §8.9)
   profielOntwerpActivity, // "Profiel-ontwerp" — meta-editor trede 2 (tekenen, §8.9)
