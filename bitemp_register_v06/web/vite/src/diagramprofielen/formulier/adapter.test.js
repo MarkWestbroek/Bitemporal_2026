@@ -83,3 +83,35 @@ test("string-als (legacy) wordt nietleeg-conditie; lege layout → leeg model", 
   const m2 = layoutNaarFormulierModel(null);
   assert.equal(Object.keys(m2.elements).length, 0);
 });
+
+// ── P2: reverse + round-trip ─────────────────────────────────────────────
+import { formulierModelNaarLayout } from "./adapter.js";
+
+test("round-trip: layout → model → layout is verliesvrij", () => {
+  const m = layoutNaarFormulierModel(layout, meta);
+  const terug = formulierModelNaarLayout(m);
+  assert.deepEqual(terug.layout, layout);
+  assert.deepEqual(terug.meta, meta);
+});
+
+test("reverse: volgorde gereconstrueerd uit indices (veld tussen containers)", () => {
+  const gemengd = {
+    type: "formulier",
+    elementen: [
+      { type: "veld", veld: "A.b.x" },
+      { type: "groep", label: "G", elementen: [] },
+      { type: "veld", veld: "A.b.y" },
+    ],
+  };
+  const terug = formulierModelNaarLayout(layoutNaarFormulierModel(gemengd, {}));
+  assert.deepEqual(terug.layout.elementen.map((e) => e.type), ["veld", "groep", "veld"]);
+  assert.equal(terug.layout.elementen[2].veld, "A.b.y");
+});
+
+test("reverse: notities genegeerd, geen formulier-root → layout null", () => {
+  const m = layoutNaarFormulierModel(layout, meta);
+  m.elements["noot"] = { id: "noot", elementType: "notitie", data: { tekst: "x" }, compartimenten: [] };
+  const terug = formulierModelNaarLayout(m);
+  assert.deepEqual(terug.layout, layout, "notitie verandert de layout niet");
+  assert.equal(formulierModelNaarLayout({ elements: {} }).layout, null);
+});

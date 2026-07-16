@@ -147,3 +147,108 @@ export function layoutNaarFormulierModel(root, meta = {}) {
     meta: meta && Object.keys(meta).length ? { ...meta } : null,
   };
 }
+
+/** Nummer uit een volgorde-string (fallback voor elementen zonder index). */
+function volgordeVan(waarde, fallback) {
+  const n = Number(waarde);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+/**
+ * formulierModelNaarLayout — omgekeerde richting (P2): coreModel → layout-boom
+ * + definitie-meta. Volgorde wordt gereconstrueerd uit de `volgorde`-indices
+ * (compartiment-velden en `bevat`-connectoren, samengevoegd per ouder);
+ * elementen zonder index sorteren achteraan in aanmaakvolgorde.
+ *
+ * Naam-conventie terug: de node-titel van groep/lijst wordt het `label`,
+ * behalve als hij gelijk is aan de default ("Groep", de bron of "Lijst").
+ *
+ * @param {{elements?: Record<string, Object>}} coreState
+ * @returns {{ layout: Object|null, meta: Object }}
+ */
+export function formulierModelNaarLayout(coreState) {
+  const elements = coreState?.elements || {};
+  const kinderenPerOuder = {};
+  for (const el of Object.values(elements)) {
+    if (el.elementType !== "bevat" || !el.source || !el.target) continue;
+    (kinderenPerOuder[el.source] ||= []).push({ id: el.target, volgorde: el.data?.volgorde });
+  }
+
+  const bezocht = new Set();
+
+  function bouw(el, extraIndex) {
+    if (!el || bezocht.has(el.id)) return null; // cyclus-/dubbelguard
+    bezocht.add(el.id);
+    const d = el.data || {};
+
+    const compVelden = (
+      (el.compartimenten || []).find((c) => c.compartmentType === "velden")?.velden || []
+    ).map((v, i) => ({
+      volgorde: volgordeVan(v.data?.volgorde, 1e6 + i),
+      el: {
+        type: "veld",
+        veld: v.data?.veld || "",
+        ...(v.data?.label ? { label: v.data.label } : {}),
+        ...(v.data?.breedte ? { breedte: v.data.breedte } : {}),
+        ...(v.data?.widget ? { widget: v.data.widget } : {}),
+        ...(v.data?.readonly ? { readonly: true } : {}),
+      },
+    }));
+
+    const subs = (kinderenPerOuder[el.id] || []).map((k, i) => ({
+      volgorde: volgordeVan(k.volgorde, 2e6 + i),
+      el: bouw(elements[k.id], i),
+    })).filter((x) => x.el);
+
+    const kinderen = [...compVelden, ...subs].sort((a, b) => a.volgorde - b.volgorde).map((x) => x.el);
+
+    switch (el.elementType) {
+      case "formulier":
+        return { type: "formulier", elementen: kinderen };
+      case "groep":
+        return {
+          type: "groep",
+          ...(el.naam && el.naam !== "Groep" ? { label: el.naam } : {}),
+          ...(d.context ? { context: d.context } : {}),
+          elementen: kinderen,
+        };
+      case "rij":
+        return { type: "rij", ...(d.richting ? { richting: d.richting } : {}), elementen: kinderen };
+      case "lijst":
+        return {
+          type: "lijst",
+          bron: d.bron || "",
+          ...(el.naam && el.naam !== "Lijst" && el.naam !== d.bron ? { label: el.naam } : {}),
+          ...(d.min != null && d.min !== "" ? { min: Number(d.min) } : {}),
+          ...(d.max != null && d.max !== "" ? { max: Number(d.max) } : {}),
+          elementen: kinderen,
+        };
+      case "conditioneel":
+        return {
+          type: "conditioneel",
+          conditie: {
+            veld: d.conditieVeld || "",
+            op: d.conditieOp || "nietleeg",
+            ...(d.conditieWaarde != null && d.conditieWaarde !== "" ? { waarde: d.conditieWaarde } : {}),
+          },
+          dan: kinderen,
+        };
+      default:
+        return null; // notities e.d. horen niet in de layout
+    }
+  }
+
+  const root = Object.values(elements).find((e) => e.elementType === "formulier");
+  const layout = root ? bouw(root, 0) : null;
+  const rd = root?.data || {};
+  const meta = root
+    ? {
+        naam: root.naam || "",
+        ...(rd.doeltype ? { doeltype: rd.doeltype } : {}),
+        ...(rd.status ? { status: rd.status } : {}),
+        ...(rd.isStandaard ? { isStandaard: true } : {}),
+        ...(rd.definitieVersie ? { definitieVersie: rd.definitieVersie } : {}),
+      }
+    : {};
+  return { layout, meta };
+}

@@ -14,10 +14,33 @@ import {
   formulierDiagramType,
   maakElement,
 } from "../../diagramprofielen/formulier/index.js";
-import { layoutNaarFormulierModel } from "../../diagramprofielen/formulier/adapter.js";
+import { layoutNaarFormulierModel, formulierModelNaarLayout } from "../../diagramprofielen/formulier/adapter.js";
 import { serializeLayout } from "../../formuliereditor/layoutModel.js";
+import { bouwVeldInfoUitLayout } from "../../formuliereditor/schemaResolve.js";
 import { useFormulierEditorStore } from "../../formuliereditor/useFormulierEditorStore.js";
+import { apiBase } from "../studioUtils";
 import { maakDiagramActiviteit } from "./maakDiagramActiviteit.jsx";
+
+/**
+ * Verrijk de veldInfo van de formulier-editor async uit het schema, zodat de
+ * preview daar ook velden kent die op het diagram zijn toegevoegd. Best-effort:
+ * bij een fout blijft de bestaande veldInfo staan.
+ */
+async function verrijkVeldInfo(layout) {
+  try {
+    const res = await fetch(`${apiBase()}/api/schema/model/code`);
+    if (!res.ok) return;
+    const types = await res.json();
+    const lijst = Array.isArray(types) ? types : types?.types || [];
+    const byTypenaam = {};
+    for (const t of lijst) if (t?.typenaam) byTypenaam[t.typenaam] = t;
+    const nieuw = bouwVeldInfoUitLayout(layout, byTypenaam);
+    const st = useFormulierEditorStore.getState();
+    useFormulierEditorStore.setState({ veldInfo: { ...st.veldInfo, ...nieuw } });
+  } catch {
+    /* offline of geen backend: bestaande veldInfo volstaat */
+  }
+}
 
 registreerFormulierProfiel();
 
@@ -42,5 +65,29 @@ export default maakDiagramActiviteit({
       const st = useFormulierEditorStore.getState();
       return layoutNaarFormulierModel(serializeLayout(st.root), st.meta);
     },
+    herlaadLabel: "Herlaad uit formulier-editor…",
+    // P2: terugschrijven — diagram → layout → formulier-editor-store. Publiceren
+    // naar het register blijft via de editor ("Opslaan", incl. update-in-place);
+    // zo blijft er één bewezen schrijfpad en een review-moment (preview).
+    zetTerugNaarModel: (coreState) => {
+      const { layout, meta } = formulierModelNaarLayout(coreState);
+      if (!layout) return ["Geen formulier-element gevonden op het diagram."];
+      const st = useFormulierEditorStore.getState();
+      const { fout } = st.laadDefinitie({
+        layoutJson: JSON.stringify(layout),
+        meta,
+        veldInfo: st.veldInfo, // behoud bekende velddefs; async verrijkt hieronder
+        id: st.geladenId,
+        metaRelId: st.geladenMetaRelId,
+        layoutRelId: st.geladenLayoutRelId,
+      });
+      if (fout) return [fout];
+      verrijkVeldInfo(layout);
+      return [];
+    },
+    zetTerugLabel: "Zet terug naar formulier-editor…",
+    zetTerugBevestiging:
+      "Dit vervangt het formulier in de Formulieren-activiteit door dit diagram.\n" +
+      "Controleer het daar (preview) en sla het daar op naar het register. Doorgaan?",
   },
 });
