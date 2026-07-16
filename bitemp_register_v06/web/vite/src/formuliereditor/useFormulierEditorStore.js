@@ -34,6 +34,7 @@ export const useFormulierEditorStore = create((set, get) => ({
   veldInfo: {},
   /** metadata van de definitie zelf */
   meta: { naam: "", doeltype: "", beschrijving: "", definitieVersie: "0.1" },
+  geladenId: null, // id van een geladen bestaande definitie (null = nieuw)
   historie: [],
   toekomst: [],
   saveBusy: false,
@@ -61,6 +62,32 @@ export const useFormulierEditorStore = create((set, get) => ({
       historie: [],
       toekomst: [],
       ...(veldInfo ? { veldInfo } : {}),
+    });
+    return { fout: null };
+  },
+
+  /**
+   * Laad een bestaande FormulierDefinitie in de editor.
+   * @param {{ layoutJson: string, meta: object, veldInfo: object, id?: number }} def
+   */
+  laadDefinitie({ layoutJson, meta = {}, veldInfo = {}, id = null }) {
+    const { root, fout } = parseLayout(layoutJson);
+    if (fout || !root) return { fout: fout || "Kon layout niet lezen." };
+    set({
+      root,
+      veldInfo,
+      meta: {
+        naam: meta.naam || "",
+        doeltype: meta.doeltype || "",
+        beschrijving: meta.beschrijving || "",
+        definitieVersie: meta.definitieVersie || meta.definitie_versie || "0.1",
+      },
+      geladenId: id,
+      selectieId: null,
+      historie: [],
+      toekomst: [],
+      saveResultaat: null,
+      melding: null,
     });
     return { fout: null };
   },
@@ -201,7 +228,7 @@ export const useFormulierEditorStore = create((set, get) => ({
   },
 
   reset() {
-    set({ root: nieuwFormulier(), selectieId: null, historie: [], toekomst: [], saveResultaat: null });
+    set({ root: nieuwFormulier(), selectieId: null, geladenId: null, veldInfo: {}, meta: { naam: "", doeltype: "", beschrijving: "", definitieVersie: "0.1" }, historie: [], toekomst: [], saveResultaat: null, melding: null });
   },
 
   /** Sla de definitie op als nieuwe FormulierDefinitie in het register. */

@@ -8,7 +8,7 @@
  *
  * Zie docs/plans/2026-07-16 Formulier-editor Studio-activiteit (plan).md (F41).
  */
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { ModelPicker } from "../../modelpicker";
 import { IconFormulier } from "../icons";
 import { menuBus } from "../menuBus";
@@ -18,6 +18,7 @@ import { useFormulierEditorStore } from "../../formuliereditor/useFormulierEdito
 import { serializeLayout } from "../../formuliereditor/layoutModel";
 import FormulierCanvas from "../../formuliereditor/FormulierCanvas";
 import FormulierInspector from "../../formuliereditor/FormulierInspector";
+import FormulierIndex from "../../formuliereditor/FormulierIndex";
 
 function FormulierProvider({ children }) {
   // Menubalk-acties via de menuBus (de store is een module-singleton).
@@ -51,15 +52,44 @@ function FormulierProvider({ children }) {
 function FormulierSidebar() {
   const voegVeldToe = useFormulierEditorStore((s) => s.voegVeldToe);
   const onPick = useCallback((ref) => voegVeldToe(ref), [voegVeldToe]);
+  const [tab, setTab] = useState("formulieren"); // "formulieren" | "velden"
+
+  const tabBtn = (id, label) => (
+    <button
+      type="button"
+      onClick={() => setTab(id)}
+      style={{
+        flex: 1, padding: "6px 4px", fontSize: 12, cursor: "pointer", border: "none",
+        borderBottom: "2px solid " + (tab === id ? "var(--s-accent, #6366f1)" : "transparent"),
+        background: "transparent", color: tab === id ? "var(--s-fg, inherit)" : "var(--s-fg-muted, #94a3b8)",
+        fontWeight: tab === id ? 600 : 400,
+      }}
+    >
+      {label}
+    </button>
+  );
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <p style={{ margin: 0, padding: "8px 10px", fontSize: 12, color: "var(--s-fg-muted)" }}>
-        Kies (dubbelklik / +) een veld om het aan het formulier toe te voegen. Het komt in de
-        geselecteerde groep terecht.
-      </p>
-      <div style={{ flex: 1, minHeight: 0 }}>
-        <ModelPicker baseUrl={apiBase()} onPick={onPick} expandEntiteiten />
+      <div style={{ display: "flex", borderBottom: "1px solid var(--s-border, #e2e8f0)" }}>
+        {tabBtn("formulieren", "Formulieren")}
+        {tabBtn("velden", "Velden")}
       </div>
+      {tab === "formulieren" ? (
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <FormulierIndex />
+        </div>
+      ) : (
+        <>
+          <p style={{ margin: 0, padding: "8px 10px", fontSize: 12, color: "var(--s-fg-muted)" }}>
+            Kies (dubbelklik / +) een veld om het aan het formulier toe te voegen. Het komt in de
+            geselecteerde groep terecht.
+          </p>
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <ModelPicker baseUrl={apiBase()} onPick={onPick} expandEntiteiten />
+          </div>
+        </>
+      )}
     </div>
   );
 }
