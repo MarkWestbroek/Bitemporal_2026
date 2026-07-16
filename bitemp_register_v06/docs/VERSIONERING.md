@@ -62,3 +62,71 @@ dat, en forceert `git branch -D` het (met opzet).
 
 - Generatie **v06**, release **`0.2.1`** — nog **niet getagd** op `main`.
 - Eerstvolgende actie: `main` taggen als **`v0.2.1`** zodat de huidige stand een vast ankerpunt heeft.
+
+---
+
+## 7. Meerdere componenten (monorepo)
+
+> Toegevoegd 2026-07-16. De conventie in §1–§6 ging uit van één semver voor "de app".
+> De repo bevat in werkelijkheid **meerdere onafhankelijk te versioneren componenten**.
+
+**Belangrijk (git-mechanica):** een git-tag wijst altijd naar een **hele-repo-commit** —
+je kunt géén submap taggen. De monorepo-oplossing is een **prefixed tag** per component:
+`component/vMAJOR.MINOR.PATCH`. De tag snapshot nog steeds de hele repo; de prefix zégt op
+welk component het nummer slaat.
+
+| Component | Map | Bron-van-waarheid | Tag-prefix |
+|-----------|-----|-------------------|------------|
+| Frontend / **Studio** | `web/vite/` (Studio + inhoud-editor + publicatie + IDE) | `package.json` `"version"` | `studio/` |
+| **Backend** (Go API) | Go-code buiten `web/` (`model/`, `handlers/`, `dynql/`, `dbsetup/`, …) | git-tag (evt. later een `VERSION`-bestand) | `api/` |
+| **Generator** (codegen) | `cmd/codegen/` | git-tag | `codegen/` |
+
+**Slash, geen hyphen.** We schrijven `studio/v0.4.0`, niet `studio-v0.4.0`. Redenen:
+- Git behandelt `/` als ref-hiërarchie (`refs/tags/studio/…`), dus `git tag -l 'studio/*'`
+  filtert per component als een map.
+- `submap/vX.Y.Z` (slash) is bovendien het formaat dat **Go-module-tooling vereist** voor
+  sub-module-tags — relevant in deze Go-monorepo.
+- Alternatieven `component@1.2.3` (npm/changesets) en `component-v1.2.3` bestaan, maar slash
+  is dominant in monorepos (Go, Nx) en het meest "map-achtig".
+
+Filteren/inspecteren:
+```sh
+git tag -l 'studio/*'              # alle Studio-releases
+git describe --tags --match 'api/*' # dichtstbijzijnde backend-versie vanaf HEAD
+```
+
+Componenten bewegen onafhankelijk en mogen op dezelfde óf verschillende commits getagd worden.
+Conventional-commit-scopes (`feat(studio):`, `fix(api):`, `feat(codegen):`) maken per-component
+filteren en changelog-generatie mogelijk.
+
+**Grandfathered:** de kale tags `v0.2.1` (was de FE-brede release) en `v0.5-fase-4` (v05-generatie)
+blijven staan; het prefixed schema geldt vanaf nu.
+
+### 7.1 Retroactieve ankerpunten (2026-07-16)
+
+**Studio (FE)** — logische mijlpalen uit de historie (`git log -- web/vite/src/studio`):
+
+| Tag | Datum | Commit | Mijlpaal |
+|-----|-------|--------|----------|
+| `studio/v0.1.0` | 2026-06-17 | `baaffae` | Raamwerk: VS Code-schil, activity-registry, eerste activiteiten |
+| `studio/v0.2.0` | 2026-07-12 | `78afc70` | Consolidatie fase 0–2: Modelleren-tab-host, projectboom, structuur-undo, shape-editor |
+| `studio/v0.2.1` | 2026-07-13 | `b645190` | 07-13-features (Koppelingen-matrix, transformeren-raamwerk) + Prism-fix + versionering-conventie (= bestaande `v0.2.1`) |
+| `studio/v0.3.0` | 2026-07-14 | `10c69f9` | Kruisverband grafisch + transformatie-generatoren + state-machine-profiel + beeld-export |
+| `studio/v0.4.0` | 2026-07-16 | *bij merge van `feat/formulier-editor-studio`* | Visuele FormulierDefinitie-editor (palette→canvas→preview, DB-save, meervoudigheid/`lijst`, runtime-integratie) |
+
+De anker-datums zijn pragmatisch: `v0.2.1` bundelt enkele 07-13-features die strikt genomen een
+minor waren — het nummer stond echter al vast. Nummers mogen bij herziening wijzigen.
+
+**Backend** — `api/v0.5.0` als baseline op `main` (`10c69f9`). Vóór deze baseline: gezamenlijke,
+gemengde FE/BE-historie; niet per component te reconstrueren (zie `git log`).
+
+**Generator** — `codegen/v0.1.0` als baseline op `main` (`10c69f9`).
+
+### 7.2 Release-logs (per component)
+
+- `web/vite/CHANGELOG.md` — FE/Studio (secties per `studio/vX`).
+- `RELEASE.md` (repo-root van v06) — backend/overall chronologisch log (bestaand).
+- `cmd/codegen/CHANGELOG.md` — generator.
+
+Formaat: [Keep a Changelog](https://keepachangelog.com). Elke tag/Release verwijst naar zijn
+changelog-sectie.

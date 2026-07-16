@@ -1,4 +1,14 @@
-﻿## Operaton-provenance op Registratie + PoC Process Engine v2 (2026-05-21)
+﻿# Release-/wijzigingslog — Backend (Go API) & overall
+
+> Dit is het chronologische wijzigingslog voor de **backend** en overkoepelende wijzigingen.
+> Frontend/Studio heeft een eigen log in [`web/vite/CHANGELOG.md`](web/vite/CHANGELOG.md); de
+> generator in [`cmd/codegen/CHANGELOG.md`](cmd/codegen/CHANGELOG.md). Versionering-conventie:
+> [`docs/VERSIONERING.md`](docs/VERSIONERING.md) — backend-tags gebruiken de prefix `api/`
+> (baseline `api/v0.5.0` op `main`). Entries hieronder zijn deels gemengd FE/BE (historisch).
+
+---
+
+## Operaton-provenance op Registratie + PoC Process Engine v2 (2026-05-21)
 
 Twee gekoppelde wijzigingen: (1) `bron`/`bron_kenmerk` velden op `Registratie` in bitemp v06, en (2) de Go-worker en BPMN v2-flow in `process_engine_v01`.
 

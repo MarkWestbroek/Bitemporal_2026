@@ -1,9 +1,9 @@
 .env.docker
 
-# Gecompileerde Go-binaries (root-niveau)
-app
-bitemp-go-api
-codegen
+# Gecompileerde Go-binaries (root-niveau; geankerd zodat bv. cmd/codegen/ niet meevalt)
+/app
+/bitemp-go-api
+/codegen
 
 # Local debug/temp artifacts
 __debug_bin*
