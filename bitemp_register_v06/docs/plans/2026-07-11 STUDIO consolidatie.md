@@ -591,3 +591,31 @@ staan voor activity/BPMN/sequence.
 1. tabs kunnen verschuiven
 2. bpmn.io elementen properties ook tonen (is wellicht alleen tijdelijk, maar kan ook een algemene feature zijn voor een custom, extern gecodeerd, profieltype editor)
 3. zie STUDIO ideas", o.a. meerdere handles en copy to clipboard (svg?)
+
+#### bugfixes & UX (sessie 2026-07-16/17, branch `fix/statemachine-handles`)
+1. **State machine-shapes**: begin/eind-pseudotoestanden werden overwoekerd
+   door de acht standaard-handles (mini-vorm ~22px). Punt-vormige nodes
+   (class `dc-punt-node`) hebben nu handles die onzichtbaar zijn tot hover/
+   selectie — de vorm is weer zichtbaar. Herbruikbaar voor junction/keuze.
+2. **`.dc-node` was content-box** → de shape stak ~padding+rand buiten zijn
+   React Flow-node uit (overflow rechts, boven/onder-handles links van het
+   visuele midden = "scheve vorm"). Nu `box-sizing: border-box`: shape vult
+   de node exact en staat gecentreerd (geldt voor alle generieke profielen).
+3. **"Nieuw diagram" bij koppeling-profielen (canoniek/MIM) deed niets**: de
+   auto-herlaad-guard checkte alleen `elements`, niet `diagrams`, dus een net
+   aangemaakt (nog leeg) diagram werd bij de volgende mount/reload weer
+   overschreven door `laadModel`. Guard telt nu ook `diagrams` mee.
+4. **`window.prompt` → gedeelde naam-modal** (`src/studio/naamDialog.jsx`,
+   `vraagNaam()`, host in de shell). Prompts worden door sommige browsers
+   onderdrukt; de modal is robuust en uitbreidbaar. Gebruikt door de losse
+   diagram-activiteit én de drie aanmaak-plekken in de Modelleren-host.
+
+**Backlog (voor later):**
+- **Export-afbeelding neemt selectie-opmaak mee.** De PNG/SVG-export toont —
+  afhankelijk van hoe je selecteert — de blauwe selectie-rand en de vierkante
+  resize-handles (baked-in). Bij export de selectie tijdelijk opheffen of de
+  selectie-chrome uitsluiten uit de te serialiseren DOM (vgl. de `neemMee`-
+  filter in `exporteerCanvas.js`, die minimap/controls/handles al weglaat —
+  de selectie-outline/­resizer ontbreekt daar nog).
+- **Overige `window.prompt`-plekken** (diagram/map hernoemen, nieuwe map, en
+  losse panelen) kunnen ook via `vraagNaam` — nu triviaal.
