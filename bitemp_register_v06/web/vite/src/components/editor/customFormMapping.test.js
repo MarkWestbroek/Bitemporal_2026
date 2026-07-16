@@ -163,6 +163,23 @@ test("mapping: registreert korte naam én vol pad; collision → korte naam = ee
   assert.equal(veldNaarGE["naam"].childMeta.typenaam, "Initiatief_Product");
 });
 
+test("mapping: entiteit-id + afgeleide velden read-only op vol pad (F46)", () => {
+  const { customValues, customVelden, veldNaarGE } = bouwCustomVeldMapping({
+    entity: { id: 38, producten: [] },
+    typeMeta: { typenaam: "Initiatief", idKolom: "id", afgeleideVelden: [{ naam: "weergavenaam", type: "string", afleidingsregelTaal: "cel", afleidingsregel: "x" }] },
+    onderliggende: [],
+    typeMetaByTypenaam: {},
+    afgeleideWaarden: { weergavenaam: "Signalen" },
+    platSla: (x) => x,
+  });
+  assert.equal(customValues["Initiatief.id"], 38, "id-waarde uit entity");
+  assert.equal(customValues["Initiatief.weergavenaam"], "Signalen", "afgeleide waarde uit afgeleideWaarden");
+  assert.ok(customVelden.find((v) => v.naam === "Initiatief.id" && v.readonly), "id is read-only velddef");
+  assert.ok(customVelden.find((v) => v.naam === "Initiatief.weergavenaam" && v.readonly), "afgeleide is read-only velddef");
+  // Geen veldNaarGE → worden nooit opgeslagen
+  assert.equal(veldNaarGE["Initiatief.id"], undefined);
+});
+
 test("mapping: meervoudig GE → array onder bron + isMeervoudig", () => {
   const platSla = (items) => items;
   const typeMetaByTypenaam = {

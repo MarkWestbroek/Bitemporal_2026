@@ -180,13 +180,9 @@ export default function EntiteitFormulier() {
 
   useEffect(() => { fetchEntity(); }, [fetchEntity]);
 
-  // Weergaveveld berekening voor de hoofd-entiteit
-  const weergaveTekst = useMemo(() => {
-    if (!entity || !typeMeta) return "";
-    const afgVelden = safeArray(typeMeta?.afgeleideVelden)
-      .filter((av) => av.isWeergaveVeld || av.weergaveVeld);
-    if (afgVelden.length === 0) return "";
-
+  // Gedeelde CEL-context van de hoofd-entiteit (voor afgeleide/weergavevelden).
+  const celCtx = useMemo(() => {
+    if (!entity || !typeMeta) return null;
     const onderliggende = safeArray(typeMeta?.onderliggende);
     const childGroups = onderliggende.map((child) => {
       const childMeta = typeMetaByTypenaam?.[child.doeltype];
@@ -217,13 +213,30 @@ export default function EntiteitFormulier() {
 
       return { doeltype: child.doeltype, rolnaam: child.rolnaam, items: enrichedItems, typeMeta: childMeta };
     });
+    return bouwCelContext(childGroups, typeMetaByTypenaam);
+  }, [entity, typeMeta, typeMetaByTypenaam, entityRefCache]);
 
-    const ctx = bouwCelContext(childGroups, typeMetaByTypenaam);
-    return afgVelden
-      .map((av) => av.afleidingsregelTaal === "cel" ? evalueerCelExpressie(av.afleidingsregel, ctx) : null)
+  // Alle afgeleide velden van de hoofd-entiteit → { naam: waarde } (o.a. read-only weergave).
+  const afgeleideWaarden = useMemo(() => {
+    if (!celCtx) return {};
+    const map = {};
+    for (const av of safeArray(typeMeta?.afgeleideVelden)) {
+      if (av?.afleidingsregelTaal === "cel" && av.afleidingsregel && av.naam) {
+        const v = evalueerCelExpressie(av.afleidingsregel, celCtx);
+        if (v != null && String(v).trim() !== "") map[av.naam] = v;
+      }
+    }
+    return map;
+  }, [celCtx, typeMeta]);
+
+  // Weergaveveld-tekst = de isWeergaveVeld-afgeleiden samengevoegd.
+  const weergaveTekst = useMemo(() => {
+    return safeArray(typeMeta?.afgeleideVelden)
+      .filter((av) => av.isWeergaveVeld || av.weergaveVeld)
+      .map((av) => afgeleideWaarden[av.naam])
       .filter((v) => v != null && String(v).trim() !== "")
       .join(" | ");
-  }, [entity, typeMeta, typeMetaByTypenaam, entityRefCache]);
+  }, [afgeleideWaarden, typeMeta]);
 
   // ── Ref-FK weergavenamen ophalen ──────────────────────────────────────
   // Wanneer een GE een veld heeft met `ref: "Gemeente"` (of andere ref.lijst items),
@@ -383,9 +396,9 @@ export default function EntiteitFormulier() {
   const { customVelden, customValues, veldNaarGE } = useMemo(() => {
     if (!customLayout || !entity) return { customVelden: [], customValues: {}, veldNaarGE: {} };
     return bouwCustomVeldMapping({
-      entity, typeMeta, onderliggende, typeMetaByTypenaam, parentTypeMeta, parentJSONKey,
+      entity, typeMeta, onderliggende, typeMetaByTypenaam, parentTypeMeta, parentJSONKey, afgeleideWaarden,
     });
-  }, [customLayout, entity, onderliggende, typeMetaByTypenaam, parentTypeMeta, parentJSONKey, typeMeta]);
+  }, [customLayout, entity, onderliggende, typeMetaByTypenaam, parentTypeMeta, parentJSONKey, typeMeta, afgeleideWaarden]);
 
   // ── Cross-GE save: groepeer gewijzigde velden per GE en stuur één registratie ──
   const handleCustomOpslaan = useCallback(async () => {
