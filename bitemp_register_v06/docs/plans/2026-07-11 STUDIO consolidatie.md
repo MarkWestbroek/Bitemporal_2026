@@ -530,6 +530,23 @@ junction, regio's/history. Bewijst dat het metamodel gedragsdiagrammen aankan
 met alleen een descriptor + twee kleine shapes; de grotere gaten (1–4) blijven
 staan voor activity/BPMN/sequence.
 
+**Primitieven gebouwd + SM v1 + Use case (2026-07-17, branch
+`feat/diagramcore-gedrag-primitieven`):** de twee gedeelde motor-primitieven
+uit `STUDIO-05-gedragsdiagrammen.md` §3 zitten in de core —
+**rand-aanhechting** (`elementType.randElement`: element klikt vast op de
+omtrek van een gastheer en beweegt mee; dekt gat 3 — entry/exit, pins,
+boundary events) en **gedragsverwijzing** (`elementType.gedragsVerwijzing` +
+datatype `diagram-verwijzing`: dubbelklik opent het gekoppelde diagram, ook
+als tab in Modelleren; dekt het doorklik-deel van gat 2). **State machine
+v1** gebruikt beide: keuze/junction/historie (Ⓗ/Ⓗ*), samengestelde toestand
+(container via `containerVoor`, zoals packages), submachine (doorklik, ⧉),
+entry/exit-points (rand). Daarnaast een nieuw **Use case-profiel**
+(actor/use case/systeemkader + associatie/«include»/«extend»/generalisatie)
+als kleinste declaratie-profiel. Open: as-semantiek (sequence), lanes mét
+betekenis, regio's, activations, validatie-hook. Vervolg + bredere
+notatie-roadmap (ArchiMate/C4/SysML/ERD/OWL/mindmap):
+`docs/plans/2026-07-17 ArchiMate en verdere notaties (plan).md`.
+
 ### Fase 4 — Kruisverbanden (nieuw, na 2–3) — v0 gebouwd 2026-07-13
 1. 🔶 v0: nieuwe activiteit **"Koppelingen"** (naast Modelleren) — kies een
    bron- en doelprofieltype en vink kruisverbanden aan in een **matrix**
