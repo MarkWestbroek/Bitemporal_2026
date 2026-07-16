@@ -77,6 +77,60 @@ test("save: leeg verplicht veld → fout", () => {
   );
 });
 
+// ── Lijst (meervoudig) save ──
+function bijdrageInfo() {
+  return {
+    childMeta: { typenaam: "Initiatief_Bijdrage", veldnaam: "bijdrage", entiteitIDKolom: "initiatief_id", idKolom: "" },
+    dataMeta: { velden: [{ naam: "toelichting" }, { naam: "score" }] },
+    entTypenaam: "Initiatief", rol: "bijdragen", isMeervoudig: true,
+  };
+}
+const BRON = "Initiatief.bijdragen";
+const origItems = [
+  { rel_id: 1, initiatief_id: 38, toelichting: "A", score: "1", opvoer: "t" },
+  { rel_id: 2, initiatief_id: 38, toelichting: "B", score: "2", opvoer: "t" },
+];
+
+test("lijst-save: gewijzigd bestaand item → opvoer met rel_id", () => {
+  const { wijzigingen } = bouwCustomWijzigingen({
+    customEditValues: { [BRON]: [ { rel_id: 1, initiatief_id: 38, toelichting: "A2", score: "1" }, { rel_id: 2, initiatief_id: 38, toelichting: "B", score: "2" } ] },
+    customValues: { [BRON]: origItems },
+    veldNaarGE: { [BRON]: bijdrageInfo() },
+    id: 38, coerce,
+  });
+  assert.deepEqual(wijzigingen, [{ opvoer: { bijdrage: { initiatief_id: 38, rel_id: 1, toelichting: "A2", score: "1" } } }]);
+});
+
+test("lijst-save: nieuw item (geen rel_id) → opvoer zonder rel_id", () => {
+  const { wijzigingen } = bouwCustomWijzigingen({
+    customEditValues: { [BRON]: [ ...origItems, { toelichting: "C", score: "3" } ] },
+    customValues: { [BRON]: origItems },
+    veldNaarGE: { [BRON]: bijdrageInfo() },
+    id: 38, coerce,
+  });
+  assert.deepEqual(wijzigingen, [{ opvoer: { bijdrage: { initiatief_id: 38, toelichting: "C", score: "3" } } }]);
+});
+
+test("lijst-save: verwijderd item → afvoer", () => {
+  const { wijzigingen } = bouwCustomWijzigingen({
+    customEditValues: { [BRON]: [ { rel_id: 1, initiatief_id: 38, toelichting: "A", score: "1" } ] },
+    customValues: { [BRON]: origItems },
+    veldNaarGE: { [BRON]: bijdrageInfo() },
+    id: 38, coerce,
+  });
+  assert.deepEqual(wijzigingen, [{ afvoer: { bijdrage: { initiatief_id: 38, rel_id: 2 } } }]);
+});
+
+test("lijst-save: geen wijziging → geenWijzigingen", () => {
+  const r = bouwCustomWijzigingen({
+    customEditValues: { [BRON]: origItems.map((x) => ({ ...x })) },
+    customValues: { [BRON]: origItems },
+    veldNaarGE: { [BRON]: bijdrageInfo() },
+    id: 38, coerce,
+  });
+  assert.equal(r.geenWijzigingen, true);
+});
+
 test("mapping: registreert korte naam én vol pad; collision → korte naam = eerste GE", () => {
   const platSla = (items) => items; // items zijn al 'plat' in de test
   const typeMetaByTypenaam = {
@@ -107,4 +161,29 @@ test("mapping: registreert korte naam én vol pad; collision → korte naam = ee
   assert.equal(veldNaarGE["Initiatief.beoordelingen.naam"].childMeta.typenaam, "Initiatief_Beoordeling");
   // Korte naam 'naam' = eerste GE (Product) — legacy-gedrag behouden
   assert.equal(veldNaarGE["naam"].childMeta.typenaam, "Initiatief_Product");
+});
+
+test("mapping: meervoudig GE → array onder bron + isMeervoudig", () => {
+  const platSla = (items) => items;
+  const typeMetaByTypenaam = {
+    Initiatief_Bijdrage: { typenaam: "Initiatief_Bijdrage", veldnaam: "bijdrage", entiteitIDKolom: "initiatief_id",
+      onderliggende: [{ doeltype: "Initiatief_Bijdrage_Data" }] },
+    Initiatief_Bijdrage_Data: { ge_subtype: "data", velden: [{ naam: "toelichting" }, { naam: "score" }] },
+  };
+  const entity = {
+    bijdragen: [
+      { rel_id: 1, initiatief_id: 38, toelichting: "A", score: "1", opvoer: "t" },
+      { rel_id: 2, initiatief_id: 38, toelichting: "B", score: "2", opvoer: "t" },
+      { rel_id: 3, initiatief_id: 38, toelichting: "weg", opvoer: "t", afvoer: "t2" }, // afgevoerd → niet mee
+    ],
+  };
+  const onderliggende = [{ doeltype: "Initiatief_Bijdrage", jsonRolnaam: "bijdragen", rolnaam: "bijdragen", momentvoorkomen: "meervoudig" }];
+  const { customValues, veldNaarGE } = bouwCustomVeldMapping({
+    entity, typeMeta: { typenaam: "Initiatief" }, onderliggende, typeMetaByTypenaam, platSla,
+  });
+  const arr = customValues["Initiatief.bijdragen"];
+  assert.ok(Array.isArray(arr));
+  assert.equal(arr.length, 2, "alleen actuele (niet-afgevoerde) items");
+  assert.equal(arr[0].toelichting, "A");
+  assert.equal(veldNaarGE["Initiatief.bijdragen"].isMeervoudig, true);
 });

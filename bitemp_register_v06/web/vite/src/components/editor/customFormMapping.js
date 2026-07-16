@@ -103,6 +103,16 @@ export function bouwCustomVeldMapping({
     const rol = child.jsonRolnaam || child.rolnaam || "";
     const info = { childMeta, dataMeta, actueel, bronVelden, entTypenaam: typeMeta?.typenaam, rol };
 
+    // Meervoudig GE → ook als array onder de bron (voor het `lijst`-element).
+    // De items zijn de actuele (opgevoerde, niet-afgevoerde) platgeslagen records;
+    // hun veld-keys zijn de korte namen = relatieve adressering binnen de lijst.
+    if (String(child.momentvoorkomen || "").toLowerCase() === "meervoudig") {
+      const actueleItems = flat.filter((i) => i?.opvoer && !i?.afvoer);
+      const bron = padVan(typeMeta?.typenaam, rol);
+      values[bron] = actueleItems;
+      geMapping[bron] = { childMeta, dataMeta, bronVelden, entTypenaam: typeMeta?.typenaam, rol, isMeervoudig: true };
+    }
+
     for (const v of bronVelden) {
       const naam = v?.naam;
       if (!naam) continue;
@@ -132,8 +142,22 @@ export function bouwCustomVeldMapping({
  * @throws {Error} bij een leeg verplicht veld
  */
 export function bouwCustomWijzigingen({ customEditValues, customValues, veldNaarGE, id, coerce }) {
+  // Splits scalar-edits (platte velden) en array-edits (lijst/meervoudig).
+  const flatEdits = {};
+  const lijstWijzigingen = [];
+  for (const [key, waarde] of Object.entries(customEditValues || {})) {
+    if (Array.isArray(waarde)) {
+      const info = veldNaarGE?.[key];
+      if (info?.isMeervoudig) {
+        lijstWijzigingen.push(...bouwLijstWijzigingen(info, safeArray(customValues?.[key]), waarde, id, coerce));
+      }
+    } else {
+      flatEdits[key] = waarde;
+    }
+  }
+
   const geGroepen = {};
-  for (const [veldnaam, waarde] of Object.entries(customEditValues || {})) {
+  for (const [veldnaam, waarde] of Object.entries(flatEdits)) {
     const orig = customValues?.[veldnaam];
     if (String(waarde ?? "") === String(orig ?? "")) continue;
     const ge = veldNaarGE?.[veldnaam];
@@ -143,7 +167,9 @@ export function bouwCustomWijzigingen({ customEditValues, customValues, veldNaar
   }
 
   const keys = Object.keys(geGroepen);
-  if (keys.length === 0) return { wijzigingen: [], geenWijzigingen: true };
+  if (keys.length === 0 && lijstWijzigingen.length === 0) {
+    return { wijzigingen: [], geenWijzigingen: true };
+  }
 
   const wijzigingen = [];
   // Parent-wijzigingen eerst (TPT: parent-record moet bestaan).
@@ -177,9 +203,7 @@ export function bouwCustomWijzigingen({ customEditValues, customValues, veldNaar
 
       // Bewerkte waarde: vol pad heeft voorrang op korte naam (voorkomt cross-talk).
       const volPad = padVan(info.entTypenaam, info.rol, naam);
-      const edited = customEditValues?.[volPad] !== undefined
-        ? customEditValues[volPad]
-        : customEditValues?.[naam];
+      const edited = flatEdits[volPad] !== undefined ? flatEdits[volPad] : flatEdits[naam];
       const original = info.actueel?.[naam];
       const raw = edited !== undefined ? edited : original;
       if (raw === "" || raw === null || raw === undefined) {
@@ -192,5 +216,76 @@ export function bouwCustomWijzigingen({ customEditValues, customValues, veldNaar
     wijzigingen.push({ opvoer: { [veldnaamKey]: payload } });
   }
 
-  return { wijzigingen, geenWijzigingen: false };
+  // Lijst-wijzigingen (per-item opvoer/afvoer) achteraan.
+  wijzigingen.push(...lijstWijzigingen);
+
+  return { wijzigingen, geenWijzigingen: wijzigingen.length === 0 };
+}
+
+/**
+ * bouwLijstWijzigingen — diff van een meervoudige (lijst) GE: per item een
+ * opvoer (nieuw of gewijzigd) en per verwijderd item een afvoer.
+ *
+ * Items worden gematcht op rel_id (of idKolom). Nieuwe items hebben geen sleutel.
+ */
+function bouwLijstWijzigingen(info, origArray, editedArray, id, coerce) {
+  const wijzigingen = [];
+  const hubMeta = info.childMeta;
+  const veldnaamKey = hubMeta.veldnaam || hubMeta.padnaam;
+  const idKolom = hubMeta.idKolom;
+  const entKolom = hubMeta.entiteitIDKolom;
+  const bronVelden = safeArray(info.dataMeta?.velden || hubMeta?.velden);
+
+  const sleutelVan = (it) =>
+    it?.rel_id != null ? `rel:${it.rel_id}` : (idKolom && it?.[idKolom] != null ? `id:${it[idKolom]}` : null);
+
+  const origBySleutel = new Map();
+  for (const it of safeArray(origArray)) {
+    const s = sleutelVan(it);
+    if (s) origBySleutel.set(s, it);
+  }
+
+  const behouden = new Set();
+  for (const item of safeArray(editedArray)) {
+    const s = sleutelVan(item);
+    if (s) behouden.add(s);
+    const orig = s ? origBySleutel.get(s) : null;
+
+    const payload = {};
+    if (entKolom && id) payload[entKolom] = Number(id);
+    if (orig) {
+      if (item.rel_id != null) payload.rel_id = item.rel_id;
+      if (idKolom && item[idKolom] != null) payload[idKolom] = item[idKolom];
+    }
+
+    let gewijzigd = !orig; // nieuw item = altijd schrijven
+    for (const v of bronVelden) {
+      const naam = v?.naam;
+      if (!naam) continue;
+      if (["opvoer", "afvoer", "versie"].includes(naam)) continue;
+      if (entKolom && naam === entKolom) continue;
+      if (v.autoIncrement) continue;
+      const raw = item[naam];
+      if (raw === "" || raw === null || raw === undefined) {
+        if (v.verplicht && !orig) throw new Error(`${naam} is verplicht.`);
+        continue;
+      }
+      if (!orig || String(raw ?? "") !== String(orig[naam] ?? "")) gewijzigd = true;
+      payload[naam] = coerce ? coerce(raw, v, naam) : raw;
+    }
+
+    if (gewijzigd) wijzigingen.push({ opvoer: { [veldnaamKey]: payload } });
+  }
+
+  // Verwijderde items → afvoer.
+  for (const [s, orig] of origBySleutel) {
+    if (behouden.has(s)) continue;
+    const sleutel = {};
+    if (entKolom && id) sleutel[entKolom] = Number(id);
+    if (orig.rel_id != null) sleutel.rel_id = orig.rel_id;
+    if (idKolom && orig[idKolom] != null) sleutel[idKolom] = orig[idKolom];
+    wijzigingen.push({ afvoer: { [veldnaamKey]: sleutel } });
+  }
+
+  return wijzigingen;
 }
