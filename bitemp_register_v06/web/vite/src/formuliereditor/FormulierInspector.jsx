@@ -141,6 +141,10 @@ export default function FormulierInspector() {
           <Regel label="Beschrijving (helptekst)">
             <input style={veldStijl} value={el.beschrijving || ""} onChange={(e) => update(el._id, { beschrijving: e.target.value })} />
           </Regel>
+          <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10, fontSize: 12.5, cursor: "pointer" }}>
+            <input type="checkbox" checked={!!el.readonly} onChange={(e) => update(el._id, { readonly: e.target.checked })} />
+            Alleen-lezen (read-only)
+          </label>
           {veldInfo[el.veld] && (
             <div style={{ marginTop: 12, fontSize: 11.5, color: "var(--s-fg-muted, #64748b)", lineHeight: 1.6 }}>
               <div>type: <b>{veldInfo[el.veld].type || "string"}</b>{veldInfo[el.veld].format ? ` (${veldInfo[el.veld].format})` : ""}</div>

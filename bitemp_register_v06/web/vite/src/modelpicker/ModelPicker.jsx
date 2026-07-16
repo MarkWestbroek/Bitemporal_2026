@@ -198,10 +198,11 @@ export default function ModelPicker({
   const [zoekterm, setZoekterm] = useState("");
   const [tDimensie, setTDimensie] = useState("formeel");
   const [toonAfgeleid, setToonAfgeleid] = useState(includeAfgeleid);
+  const [toonTechnisch, setToonTechnisch] = useState(false);
 
   const tree = useMemo(
-    () => bouwModelTree(types, { includeAfgeleid: toonAfgeleid, tDimensie, hiddenDomains }),
-    [types, toonAfgeleid, tDimensie, hiddenDomains]
+    () => bouwModelTree(types, { includeAfgeleid: toonAfgeleid, includeTechnisch: toonTechnisch, tDimensie, hiddenDomains }),
+    [types, toonAfgeleid, toonTechnisch, tDimensie, hiddenDomains]
   );
   const zichtbaar = useMemo(() => filterTree(tree, zoekterm), [tree, zoekterm]);
 
@@ -246,6 +247,14 @@ export default function ModelPicker({
               onChange={(e) => setToonAfgeleid(e.target.checked)}
             />
             afgeleide velden
+          </label>
+          <label className="mp-toggle" title="Technische velden (id, rel_id, versie, FK's) — plumbing, standaard verborgen">
+            <input
+              type="checkbox"
+              checked={toonTechnisch}
+              onChange={(e) => setToonTechnisch(e.target.checked)}
+            />
+            technische velden
           </label>
         </div>
       </div>

@@ -106,18 +106,10 @@ export const useFormulierEditorStore = create((set, get) => ({
     if (!ref?.veldpad) return;
     const { root, selectieId, veldInfo, meta } = get();
 
-    // Weiger niet-invulbare velden (F46).
-    // - Plumbing (id/rel_id/versie): nooit een invulveld.
-    // - Afgeleide velden: read-only weergave; nog niet als (read-only) veld
-    //   ondersteund op het formulier → voorlopig weigeren met uitleg.
-    if (["id", "rel_id", "versie"].includes(ref.veldnaam)) {
-      set({ melding: { type: "info", text: `${ref.veldpad} is een technisch veld (geen invoer) — overgeslagen.` } });
-      return;
-    }
-    if (ref.afgeleid) {
-      set({ melding: { type: "info", text: `${ref.veldpad} is een afgeleid (read-only) veld — read-only weergave volgt later (F46).` } });
-      return;
-    }
+    // F46: technische velden (id/rel_id/versie/FK) en afgeleide velden zijn geen
+    // invulvelden → toevoegen als **read-only** (nuttig in testfase), niet blokkeren.
+    const isTechnisch = ["id", "rel_id", "versie"].includes(ref.veldnaam) || /_id$/.test(ref.veldnaam || "");
+    const readonly = ref.afgeleid || isTechnisch;
 
     // Doeltype automatisch afleiden uit het eerste gekozen veld (nodig bij opslaan).
     if (!meta.doeltype && ref.entiteit) set({ meta: { ...meta, doeltype: ref.entiteit } });
@@ -158,7 +150,7 @@ export const useFormulierEditorStore = create((set, get) => ({
     //    (bron = entiteit.rol). Binnen de lijst adresseren velden RELATIEF
     //    (alleen de veldnaam); de veldInfo blijft op het volle pad gekeyed.
     if (ref.momentvoorkomen === "meervoudig" && ref.gepad) {
-      const veldEl = nieuwElement("veld", { veld: ref.veldnaam });
+      const veldEl = nieuwElement("veld", { veld: ref.veldnaam, ...(readonly ? { readonly: true } : {}) });
       const bestaand = vindLijstMetBron(root, ref.gepad);
       if (bestaand) {
         nieuweRoot = voegToe(root, bestaand._id, veldEl);
@@ -170,13 +162,17 @@ export const useFormulierEditorStore = create((set, get) => ({
       nieuweSelectie = veldEl._id;
     } else {
       // 3) Enkelvoudig veld → plat op het volle pad.
-      const el = nieuwElement("veld", { veld: ref.veldpad });
+      const el = nieuwElement("veld", { veld: ref.veldpad, ...(readonly ? { readonly: true } : {}) });
       nieuweRoot = voegToe(root, bepaalDoelContainer(root, selectieId), el);
       nieuweSelectie = el._id;
     }
 
     get()._push(nieuweRoot);
-    set({ veldInfo: { ...veldInfo, [ref.veldpad]: infoEntry }, selectieId: nieuweSelectie, melding: null });
+    set({
+      veldInfo: { ...veldInfo, [ref.veldpad]: infoEntry },
+      selectieId: nieuweSelectie,
+      melding: readonly ? { type: "info", text: `${ref.veldpad} toegevoegd als alleen-lezen veld.` } : null,
+    });
   },
 
   /** Voeg een groep/rij/conditioneel toe (leeg). */

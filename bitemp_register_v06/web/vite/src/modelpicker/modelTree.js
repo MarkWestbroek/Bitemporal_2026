@@ -67,7 +67,16 @@ export function fieldRefKey(ref) {
  * @param {string} opties.tDimensie         "formeel" | "materieel" voor emitted refs
  * @returns {Array} domeinen: [{ naam, entiteiten: [{ type, velden, kinderen }] }]
  */
-export function bouwModelTree(types, { includeAfgeleid = true, tDimensie = "formeel", hiddenDomains = [] } = {}) {
+/**
+ * Is dit een technisch/plumbing veld (gegenereerde id's)? Deze staan niet in het
+ * getekende model (wél in de metaregistry) en zijn standaard verborgen in de picker.
+ */
+export function isTechnischVeldnaam(naam) {
+  const n = String(naam || "").toLowerCase();
+  return n === "id" || n === "rel_id" || n === "versie" || n.endsWith("_id");
+}
+
+export function bouwModelTree(types, { includeAfgeleid = true, includeTechnisch = false, tDimensie = "formeel", hiddenDomains = [] } = {}) {
   const verborgen = new Set(safeArray(hiddenDomains).map(normDomein));
   const lijst = safeArray(types);
   const byTypenaam = new Map();
@@ -79,6 +88,7 @@ export function bouwModelTree(types, { includeAfgeleid = true, tDimensie = "form
   const veldKnopenVan = (type, { entiteitTypenaam, rol, momentvoorkomen }) => {
     const knopen = [];
     safeArray(type?.velden).forEach((veld) => {
+      if (!includeTechnisch && isTechnischVeldnaam(veld?.naam)) return; // plumbing standaard verbergen
       knopen.push({
         kind: "veld",
         ref: maakFieldRef({ veld, ownerTypenaam: type.typenaam, entiteitTypenaam, rol, afgeleid: false, tDimensie, momentvoorkomen }),

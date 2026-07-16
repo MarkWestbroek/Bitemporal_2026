@@ -105,7 +105,7 @@ export default function CustomFormulierRenderer({
               value={sVal?.[element.veld] ?? ""}
               onChange={(val) => sOnChange(element.veld, val)}
               error={errors[lookupNaam]}
-              readOnly={readOnly}
+              readOnly={readOnly || element.readonly}
               widgetOverride={bepaalWidgetOverride(typeMeta, lookupNaam, element.widget)}
               labelOverride={element.label}
             />
