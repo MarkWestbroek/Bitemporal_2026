@@ -227,6 +227,14 @@ export const IconInstellingen = (p) => (
   </svg>
 );
 
+/** Formulieren: een formulier met velden en een invulregel. */
+export const IconFormulier = (p) => (
+  <svg {...base} {...p}>
+    <rect x="4" y="3" width="16" height="18" rx="2" />
+    <path d="M8 8h8M8 12h8M8 16h4" />
+  </svg>
+);
+
 export const IconChevronLeft = (p) => (
   <svg {...base} width={16} height={16} {...p}>
     <path d="m15 18-6-6 6-6" />

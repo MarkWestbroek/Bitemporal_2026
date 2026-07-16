@@ -84,22 +84,28 @@ export default function CustomFormulierRenderer({
             </div>
           );
         }
+        const veldMetOverride = element.beschrijving
+          ? { ...veldDef, description: element.beschrijving }
+          : veldDef;
         return (
           <div key={index} style={element.breedte ? {} : undefined}>
             <SchemaFormField
-              veld={veldDef}
+              veld={veldMetOverride}
               value={values?.[element.veld] ?? ""}
               onChange={(val) => onChange(element.veld, val)}
               error={errors[element.veld]}
               readOnly={readOnly}
               widgetOverride={bepaalWidgetOverride(typeMeta, element.veld, element.widget)}
+              labelOverride={element.label}
             />
           </div>
         );
       }
 
       case "conditioneel": {
-        const zichtbaar = evalueerConditie(element.als, values);
+        const zichtbaar = element.conditie
+          ? evalueerConditieObject(element.conditie, values)
+          : evalueerConditie(element.als, values);
         if (!zichtbaar) return null;
         return (
           <div key={index}>
@@ -151,4 +157,23 @@ function evalueerConditie(expressie, values) {
   // veld → truthy
   const val = values?.[trimmed];
   return val != null && val !== "" && val !== "false";
+}
+
+/**
+ * Evalueer een datagedreven conditie-object tegen de huidige waarden.
+ * Vorm: { veld: "ENT.GE.veld", op: "==" | "!=" | "leeg" | "nietleeg", waarde? }
+ * Robuuster dan de string-vorm en makkelijker te bouwen in de visuele editor.
+ */
+export function evalueerConditieObject(conditie, values) {
+  if (!conditie || typeof conditie !== "object") return true;
+  const { veld, op = "nietleeg", waarde } = conditie;
+  const actueel = values?.[veld];
+  const isLeeg = actueel == null || actueel === "" || actueel === "false";
+  switch (op) {
+    case "leeg": return isLeeg;
+    case "nietleeg": return !isLeeg;
+    case "==": return String(actueel ?? "") === String(waarde ?? "");
+    case "!=": return String(actueel ?? "") !== String(waarde ?? "");
+    default: return true;
+  }
 }
