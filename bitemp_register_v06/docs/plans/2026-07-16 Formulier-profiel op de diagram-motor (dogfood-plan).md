@@ -7,8 +7,12 @@
 > **"Formulier (diagram)"** (`formulierDiagramActivity`, standaard verborgen — via *Ga naar*).
 > `herlaadUitModel` projecteert de definitie uit de formulier-editor-store: laad een formulier
 > in de Formulieren-activiteit → open het diagram → "Herlaad uit model" — letterlijk twee
-> controls op hetzelfde model. P2 (bewerken + publiceren) en de gefilterde projectboom (§5b)
-> zijn open.
+> controls op hetzelfde model. **P2 gebouwd** (2026-07-17): reverse adapter
+> `formulierModelNaarLayout` (round-trip verliesvrij, 8/8 tests) + menu "Zet terug naar
+> formulier-editor…" (behoudt geladen id → Opslaan werkt bij; veldInfo async verrijkt).
+> Publiceren blijft via de editor (één schrijfpad + review). Index kreeg inklapbare
+> entiteit-groepen + versielijst per definitie (F45-light). Open: gefilterde projectboom
+> (§5b), P3 (één documentmodel), kruisverband-traces in de matrix.
 > **Relatie**: bouwt voort op `2026-07-16 Formulier-editor Studio-activiteit (plan).md` (F41/F43–F47)
 > en op de profiel-machinerie van STUDIO-05 (diagramcore, profielen, kruisverbanden, meta-editor §8.9).
 
