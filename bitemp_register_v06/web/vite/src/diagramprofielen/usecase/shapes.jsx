@@ -15,6 +15,7 @@ function ActorShape({ element, selected, children }) {
   const lijn = selected ? "var(--dc-selectie, #2563eb)" : DONKER;
   return (
     <div
+      className="dc-zacht-handles"
       style={{
         width: 64,
         position: "relative",
@@ -60,6 +61,7 @@ function EllipsShape({ element, elementType, selected, children }) {
   const vulling = element?.data?.kleur || elementType?.kleur || "#e0f2fe";
   return (
     <div
+      className="dc-zacht-handles"
       style={{
         width: "100%",
         height: "100%",

@@ -305,6 +305,20 @@
 .dc-canvas .dc-punt-node .react-flow__handle-top { top: -8px; }
 .dc-canvas .dc-punt-node .react-flow__handle-bottom { bottom: -8px; }
 
+/* Zachte handles: voor sierlijke shapes (actor, use case-ellips) waar de
+   standaard 10px-stippen te zwaar ogen — klein en gedempt tot hover/selectie,
+   op álle vier de zijden (de standaardregel dempt alleen links/rechts). */
+.dc-canvas .dc-zacht-handles .react-flow__handle {
+  width: 8px;
+  height: 8px;
+  opacity: 0.35;
+  transition: opacity 0.15s;
+}
+.dc-canvas .react-flow__node:hover .dc-zacht-handles .react-flow__handle,
+.dc-canvas .react-flow__node.selected .dc-zacht-handles .react-flow__handle {
+  opacity: 1;
+}
+
 /* Gedragsverwijzing (§3.2): hoek-badge op nodes met een gekoppeld diagram
    (submachine state, call-activity). Dubbelklik opent dat diagram. */
 .dc-gedrag-badge {
