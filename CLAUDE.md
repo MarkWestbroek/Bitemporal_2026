@@ -37,6 +37,12 @@ Bewaar betekenisvolle AI-chats (Copilot én Claude) als markdown in
 - Doe dit wanneer de gebruiker erom vraagt of wanneer een chat tot concrete code-/ontwerp-
   beslissingen leidde. Zie `bitemp_register_v06/docs/copilot-chat-sync.md` voor de export-hook.
 
+> **Let op — chat-backups zijn normaal.** De gebruiker back-upt chats af en toe met een script
+> (soms ook via de GitHub-UI, commit-titel `Create <bestand>.md`). Zo verschijnt er een
+> chat-export in `docs/copilot-chats/exports/` — vaak de *huidige* chat, op de branch waarop je
+> staat. Dat is legitiem en mag meecommitten; verbaas je er niet over en zie het niet aan voor
+> een onverwachte/vreemde wijziging.
+
 ## Git
 
 - Commit of push **alleen** als de gebruiker erom vraagt. Werk niet rechtstreeks op `main`
