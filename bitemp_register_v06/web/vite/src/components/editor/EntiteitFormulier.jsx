@@ -7,6 +7,7 @@ import RepresentatieFormulier from "./RepresentatieFormulier";
 import { useFormulierDefinitie } from "../../hooks/useFormulierDefinitie";
 import CustomFormulierRenderer from "./CustomFormulierRenderer";
 import { coercedWaardeVoorVeld } from "../actions/ActionFormParts";
+import { bouwCustomVeldMapping, bouwCustomWijzigingen } from "./customFormMapping";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -381,63 +382,9 @@ export default function EntiteitFormulier() {
   // zodat we bij opslaan weten welk veld bij welk GE hoort (cross-GE save).
   const { customVelden, customValues, veldNaarGE } = useMemo(() => {
     if (!customLayout || !entity) return { customVelden: [], customValues: {}, veldNaarGE: {} };
-    const velden = [];
-    const values = {};
-    const geMapping = {};
-    const gezien = new Set();
-
-    // Geërfde velden (van parent-entiteit via TPT) — vóór eigen GE-velden
-    if (parentTypeMeta && parentJSONKey) {
-      const parentData = entity[parentJSONKey];
-      const geerfdeVeldenRaw = safeArray(typeMeta?.geerfdeVelden);
-      const skipNamen = new Set(["opvoer", "afvoer"]);
-      for (const v of geerfdeVeldenRaw) {
-        const naam = v?.naam;
-        if (!naam || gezien.has(naam)) continue;
-        if (skipNamen.has(naam.toLowerCase())) continue;
-        if (v.autoIncrement) continue;
-        if (naam.toLowerCase() === String(parentTypeMeta?.idKolom || "id").toLowerCase()) continue;
-        if (naam === "versie" || naam === "rel_id") continue;
-        gezien.add(naam);
-        velden.push(v);
-        geMapping[naam] = { childMeta: parentTypeMeta, dataMeta: null, actueel: parentData, bronVelden: geerfdeVeldenRaw, isParentVeld: true };
-      }
-      if (parentData) {
-        for (const v of geerfdeVeldenRaw) {
-          if (v?.naam && parentData[v.naam] != null) values[v.naam] = parentData[v.naam];
-        }
-      }
-    }
-
-    for (const child of onderliggende) {
-      const childMeta = typeMetaByTypenaam?.[child.doeltype];
-      if (!childMeta) continue;
-      const dataChild = safeArray(childMeta?.onderliggende).find((c) => {
-        const cm = typeMetaByTypenaam?.[c.doeltype];
-        return cm?.ge_subtype === "data";
-      });
-      const dataMeta = dataChild ? typeMetaByTypenaam?.[dataChild.doeltype] : null;
-      const bronVelden = safeArray(dataMeta?.velden || childMeta?.velden);
-      const rawItems = safeArray(entity[child.jsonRolnaam] || entity[child.rolnaam]);
-      const flat = platSlaHubItems(rawItems, childMeta, typeMetaByTypenaam);
-      const actueel = flat.find((item) => item?.opvoer && !item?.afvoer);
-      for (const v of bronVelden) {
-        const naam = v?.naam;
-        if (!naam || gezien.has(naam)) continue;
-        if (["opvoer", "afvoer", "versie"].includes(naam)) continue;
-        if (childMeta.entiteitIDKolom && naam === childMeta.entiteitIDKolom) continue;
-        if (v.autoIncrement) continue;
-        gezien.add(naam);
-        velden.push(v);
-        geMapping[naam] = { childMeta, dataMeta, actueel, bronVelden };
-      }
-      if (actueel) {
-        for (const v of bronVelden) {
-          if (v?.naam && actueel[v.naam] != null) values[v.naam] = actueel[v.naam];
-        }
-      }
-    }
-    return { customVelden: velden, customValues: values, veldNaarGE: geMapping };
+    return bouwCustomVeldMapping({
+      entity, typeMeta, onderliggende, typeMetaByTypenaam, parentTypeMeta, parentJSONKey,
+    });
   }, [customLayout, entity, onderliggende, typeMetaByTypenaam, parentTypeMeta, parentJSONKey, typeMeta]);
 
   // ── Cross-GE save: groepeer gewijzigde velden per GE en stuur één registratie ──
@@ -445,73 +392,12 @@ export default function EntiteitFormulier() {
     setCustomBusy(true);
     setCustomFeedback(null);
     try {
-      const geGroepen = {};
-      for (const [veldnaam, waarde] of Object.entries(customEditValues)) {
-        const origWaarde = customValues[veldnaam];
-        if (String(waarde ?? "") === String(origWaarde ?? "")) continue;
-        const ge = veldNaarGE[veldnaam];
-        if (!ge) continue;
-        const key = ge.childMeta.typenaam;
-        if (!geGroepen[key]) {
-          geGroepen[key] = { ...ge, gewijzigdeVelden: {} };
-        }
-        geGroepen[key].gewijzigdeVelden[veldnaam] = waarde;
-      }
-
-      const geKeys = Object.keys(geGroepen);
-      if (geKeys.length === 0) {
+      const { wijzigingen, geenWijzigingen } = bouwCustomWijzigingen({
+        customEditValues, customValues, veldNaarGE, id, coerce: coercedWaardeVoorVeld,
+      });
+      if (geenWijzigingen) {
         setCustomFeedback({ type: "succes", text: "Geen wijzigingen." });
         return;
-      }
-
-      const wijzigingen = [];
-      // Parent wijzigingen komen EERST (TPT: ensureParentRecordBijOpvoer vindt het record dan al)
-      const sortedGroepen = Object.values(geGroepen).sort((a, b) => (a.isParentVeld ? -1 : 0) - (b.isParentVeld ? -1 : 0));
-      for (const info of sortedGroepen) {
-        const hubMeta = info.childMeta;
-        const veldnaamKey = hubMeta.veldnaam || hubMeta.padnaam;
-        const payload = {};
-
-        if (info.isParentVeld) {
-          // Parent entiteit: shared PK = child entity's ID (TPT patroon)
-          const idKolom = hubMeta?.idKolom || "id";
-          if (id) payload[idKolom] = Number(id);
-        } else {
-          if (hubMeta.entiteitIDKolom && id) {
-            payload[hubMeta.entiteitIDKolom] = Number(id);
-          }
-          if (info.actueel?.rel_id != null) {
-            payload.rel_id = info.actueel.rel_id;
-          }
-          if (hubMeta.idKolom && info.actueel?.[hubMeta.idKolom] != null) {
-            payload[hubMeta.idKolom] = info.actueel[hubMeta.idKolom];
-          }
-        }
-
-        const bronVelden = safeArray(info.isParentVeld ? info.bronVelden : (info.dataMeta?.velden || hubMeta?.velden));
-        for (const v of bronVelden) {
-          const naam = v?.naam;
-          if (!naam) continue;
-          if (["opvoer", "afvoer", "versie"].includes(naam)) continue;
-          if (info.isParentVeld) {
-            // Skip parent ID kolom (al handmatig gezet als shared PK)
-            if (naam.toLowerCase() === String(hubMeta?.idKolom || "id").toLowerCase()) continue;
-          } else {
-            if (hubMeta.entiteitIDKolom && naam === hubMeta.entiteitIDKolom) continue;
-          }
-          if (v.autoIncrement) continue;
-
-          const edited = customEditValues[naam];
-          const original = info.actueel?.[naam];
-          const raw = edited !== undefined ? edited : original;
-          if (raw === "" || raw === null || raw === undefined) {
-            if (v.verplicht) throw new Error(`${naam} is verplicht.`);
-            continue;
-          }
-          payload[naam] = coercedWaardeVoorVeld(raw, v, naam);
-        }
-
-        wijzigingen.push({ opvoer: { [veldnaamKey]: payload } });
       }
 
       const res = await fetch(`${baseUrl}/registratie/`, {

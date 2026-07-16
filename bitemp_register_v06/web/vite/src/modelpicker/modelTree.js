@@ -30,13 +30,16 @@ function normDomein(value) {
 }
 
 /** Bouw een FieldRef uit een veld-DTO. */
-export function maakFieldRef({ veld, ownerTypenaam, entiteitTypenaam, rol, afgeleid, tDimensie }) {
+export function maakFieldRef({ veld, ownerTypenaam, entiteitTypenaam, rol, afgeleid, tDimensie, momentvoorkomen }) {
   const veldnaam = veld?.naam || "";
   const padDelen = [entiteitTypenaam || ownerTypenaam, rol, veldnaam].filter(Boolean);
   return {
     typenaam: ownerTypenaam,
     veldnaam,
     veldpad: padDelen.join("."),
+    // Pad naar het bovenliggende GE/relatie (entiteit.rol) — het "adres" van de lijst
+    // waartoe dit veld hoort; nodig om meervoudige velden in een lijst te wrappen.
+    gepad: [entiteitTypenaam || ownerTypenaam, rol].filter(Boolean).join("."),
     entiteit: entiteitTypenaam || ownerTypenaam,
     datatype: veld?.datatype || "",
     type: veld?.type || "",
@@ -45,6 +48,7 @@ export function maakFieldRef({ veld, ownerTypenaam, entiteitTypenaam, rol, afgel
     ref: veld?.ref || "",
     afgeleid: Boolean(afgeleid),
     tDimensie: tDimensie || "formeel",
+    momentvoorkomen: momentvoorkomen || "",
   };
 }
 
@@ -72,12 +76,12 @@ export function bouwModelTree(types, { includeAfgeleid = true, tDimensie = "form
   });
 
   // Velden + afgeleide velden van één type → FieldRef-knopen.
-  const veldKnopenVan = (type, { entiteitTypenaam, rol }) => {
+  const veldKnopenVan = (type, { entiteitTypenaam, rol, momentvoorkomen }) => {
     const knopen = [];
     safeArray(type?.velden).forEach((veld) => {
       knopen.push({
         kind: "veld",
-        ref: maakFieldRef({ veld, ownerTypenaam: type.typenaam, entiteitTypenaam, rol, afgeleid: false, tDimensie }),
+        ref: maakFieldRef({ veld, ownerTypenaam: type.typenaam, entiteitTypenaam, rol, afgeleid: false, tDimensie, momentvoorkomen }),
       });
     });
     if (includeAfgeleid) {
@@ -91,6 +95,7 @@ export function bouwModelTree(types, { includeAfgeleid = true, tDimensie = "form
             rol,
             afgeleid: true,
             tDimensie,
+            momentvoorkomen,
           }),
           afleidingsregel: av.afleidingsregel || "",
           afleidingsregelTaal: av.afleidingsregelTaal || "",
@@ -126,6 +131,7 @@ export function bouwModelTree(types, { includeAfgeleid = true, tDimensie = "form
           velden: veldKnopenVan(childType, {
             entiteitTypenaam: ent.typenaam,
             rol: child.jsonRolnaam || child.rolnaam,
+            momentvoorkomen: child.momentvoorkomen || "",
           }),
         });
       });

@@ -978,7 +978,7 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | F27 | ✅ useFormulierDefinitie hook (fetch actieve FormulierDefinitie voor een doeltype) | F1-Q1Q2Q3 Fase B |
 | F28 | ✅ EntiteitFormulier integratie: toggle custom/standaard weergave bij actieve FormulierDefinitie | F1-Q1Q2Q3 Fase B |
 | F29 | ✅ Custom formulier: editable modus met cross-GE save (één registratie, meerdere GE-wijzigingen) | F1-Q1Q2Q3 Fase B vervolg |
-| F30 | Visuele FormulierDefinitie layout-editor (drag-and-drop veldindeling) | F1-Q1Q2Q3 Fase B vervolg |
+| F30 | Visuele FormulierDefinitie layout-editor (drag-and-drop veldindeling) → **plan**: `plans/2026-07-16 Formulier-editor Studio-activiteit (plan).md` (zie F41) | F1-Q1Q2Q3 Fase B vervolg |
 | F34 | ✅ JSON- en Markdown-widget: side-by-side editor + live preview, full-width grid spanning, `widget: "json"` en `widget: "markdown"` in layout | inhoud-editor-technisch.md |
 | F41 | ✅ CEL evaluator uitbreiding met lijstoperaties: `celEvaluator.js` herschreven met tokenizer-ondersteuning voor `>=`, `<=`, `>`, `<`, `[`, `]`, `,`; parser met `parsePostfix` voor `.field`, `.method(args)`, `[key]`; lambda-methoden `filter(x, pred)`, `map`, `exists`, `all`; `size()`; `evaluate()` voor `index`, `methodcall`, `gt/gte/lt/lte`. `bouwCelContext` exposeert nu full actieve lijst onder `group.rolnaam` (naast enkelvoudig via `klassenaam`) zodat expressies als `Lijst.filter(x, x.veld == "v")[0].veld` werken. `childWeergave()` in `EntiteitFormulier` omgezet van minimale `ctx[klassenaam]` naar `bouwCelContext` voor uniforme lijstondersteuning. (2026-05-12) | CEL-evaluatie-js.md |
 | F42 | ✅ Afgeleide velden kennis2-domein: `AfgeleideVelden` in `kennis2_metaregistry.go` gevuld voor `Kennisartikel` (`nl-titel` via `KennisartikelTaalvarianten.filter(...)`), `KennisartikelTaalvariant` (`taal` en `titel` via enkelvoudige GE-klassenaam), `Trefwoord` (`nl-trefwoord` via `Trefwoordtaalvarianten.filter(t, t.taal == "nl")[0].woord`). Alle met `IsWeergaveVeld: true`. (2026-05-12) | afgeleide-velden.md |
@@ -987,13 +987,17 @@ Geen expliciete TODOs in de IDE .jsx/.js bestanden gevonden.
 | F37 | Inhoud.html (content editor): export data als Bootstrap / replay file / sql | nieuw |
 | F38 | zelfde loading en filtering als de publicatie pagina | nieuw  |
 | F39 | validatie bij opvoer waarden |   |
-| F40 | edit widgets |   |
+| F40 | edit widgets — invoer-widgets per datatype (default + afwijkbaar), incl. rijke widgets zoals geo-kaart-picker voor `GeoPunt`. Widget-register (pluggable) opgenomen in F41-plan §4c. | zie F41 |
+| F41 | 🟢 Visuele formulier-definitie editor — **P1-MVP gebouwd** (2026-07-16, branch `feat/formulier-editor-studio`): nieuwe Omnium Studio-activiteit "Formulieren" (palette=ModelPicker · canvas=dnd-kit · inspector · live-preview via CustomFormulierRenderer). Fasen P1 (editor+label/conditie-uitbreiding, geen backend), P2 (regels + virtuele/voorinvul-velden), P3 (=F42 wizard). Veld-adressering wordt **padgebaseerd** (`ENT.GE.veld`, universeel model-adres zoals CEL/berichten/DMN) i.p.v. kale namen (GE-namen niet uniek), met `context`-shorthand + legacy-fallback. Layout-vocabulaire verder uitgebreid met `label`/object-`conditie`/`virtueelVeld`/`regel`/`zetWaarde`, backwards compatible. Activiteit in nieuwe balkgroep **"presentatie"**. Meegenomen: **domein** als primaire context + **cross-domein** formulieren (klant/onderwerp/geo), **databronnen** (referentielijsten als keuze-bron via RefCombobox), en **widget-register** incl. rijke widgets (geo-kaart-picker → raakt F40). **P1 gebouwd**: module `web/vite/src/formuliereditor/` (layoutModel + test, store, canvas, inspector, preview) + `studio/activities/formulierActivity.jsx`; renderer-uitbreiding label/beschrijving/object-conditie. Geverifieerd (unit 7/7 + build + Playwright-smoke). **Ook gebouwd (2026-07-16)**: DB-save (opslaan als nieuwe FormulierDefinitie via max-id + opvoer, knop/menu, geverifieerd tegen backend); **meervoudigheid via `lijst`-element** (auto-wrap van meervoudige velden, array-collectieveld → lege lijst, herhaalbare sectie in de renderer; `momentvoorkomen` op de FieldRef); **runtime-integratie in `EntiteitFormulier`**: mapping/save geëxtraheerd naar pure `customFormMapping.js` (11 unit-tests), veld-adressering op korte naam **én** vol pad (nieuwe editor-defs werken in de echte inhoud-editor, legacy ongewijzigd — Playwright-regressie groen), en **`lijst` runtime-save** (meervoudige GE's laden als array + per-item opvoer/afvoer). Doeltype vult automatisch uit het eerste veld. **Open**: nieuwe versie van bestaande definitie (laden-uit-DB + legacy-resolver), doeltype-gebonden palette-filter, dnd-kit. (2026-07-16) | `plans/2026-07-16 Formulier-editor Studio-activiteit (plan).md` |
+| F42 | Formulier invul-wizard — = P3 van F41-plan (stap-modus over dezelfde definitie, checkvragen als navigatie-gate; UX-ref SurveyJS) | zie F41 |
+| F43 | Formulieren laden / index / organiseren per entiteit |   |
+| F44 | Relatie met projectboom: formulierdef in boom bij root entiteit? | aparte boom? |   |
+| F45 | Versies van formulieren zichtbaar in formulierboom? |   |
+| F46 | Canoniek model browser (geldt op meer plekken): verbergen niet invulbare velden als id, rel_id | N.B. alleen-lezen velden zoals weergavevelden wel in de browser, maar resulteren nooit in een invulveld    |
 | F |  |   |
-
 | F |  |   |
-
 | F |  |   |
-
+| F |  |   |
 | F |  |   |
 
 

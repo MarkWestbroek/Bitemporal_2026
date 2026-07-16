@@ -42,6 +42,7 @@ export const GROEP_LABELS = {
   modelleren: "Modelleren",
   diensten: "Diensten",
   data: "Data",
+  presentatie: "Presentatie",
   beheer: "Beheer",
 };
 

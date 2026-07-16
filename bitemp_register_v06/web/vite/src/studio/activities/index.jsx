@@ -36,6 +36,7 @@ import studioInstellingenActivity from "./studioInstellingenActivity";
 import mimActivity from "./mimActivity";
 import bpmnActivity from "./bpmnActivity";
 import berichtActivity from "./berichtActivity";
+import formulierActivity from "./formulierActivity";
 
 // ── Nog te bouwen functies: uniforme placeholder met de drie-slot-structuur ──
 const apiActivity = maakPlaceholderActiviteit({
@@ -102,6 +103,8 @@ registreerActiviteiten([
   // data
   rollenActivity,
   referentielijstenActivity,
+  // presentatie
+  formulierActivity, // visuele FormulierDefinitie-editor (F41)
   // beheer (onderaan de balk)
   profielActivity, // "Profiel-editor" — meta-editor trede 1 (JSON, §8.9)
   profielOntwerpActivity, // "Profiel-ontwerp" — meta-editor trede 2 (tekenen, §8.9)
