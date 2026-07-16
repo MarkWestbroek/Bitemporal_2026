@@ -15,6 +15,7 @@ const TYPE_KLEUR = {
   formulier: "#64748b",
   groep: "#6366f1",
   rij: "#0ea5e9",
+  lijst: "#0d9488",
   veld: "#16a34a",
   conditioneel: "#d97706",
 };
@@ -98,6 +99,7 @@ export default function FormulierCanvas() {
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", padding: 10, borderBottom: "1px solid var(--s-border, #e2e8f0)" }}>
           <button type="button" style={werkBtn} onClick={() => voegContainerToe("groep")}>+ Groep</button>
           <button type="button" style={werkBtn} onClick={() => voegContainerToe("rij")}>+ Rij</button>
+          <button type="button" style={werkBtn} onClick={() => voegContainerToe("lijst")}>+ Lijst</button>
           <button type="button" style={werkBtn} onClick={() => voegContainerToe("conditioneel")}>+ Conditioneel</button>
           <span style={{ flex: 1 }} />
           <button type="button" style={werkBtn} onClick={undo} title="Ongedaan maken">↶</button>
@@ -134,7 +136,7 @@ export default function FormulierCanvas() {
         <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5, color: "var(--s-fg-muted, #94a3b8)", marginBottom: 8 }}>
           Live preview{meta.naam ? ` · ${meta.naam}` : ""}
         </div>
-        {previewVelden.length === 0 ? (
+        {kinderen(root).length === 0 ? (
           <div style={{ color: "var(--s-fg-muted, #94a3b8)", fontSize: 13 }}>
             Kies velden uit het canoniek model (links) om het formulier op te bouwen.
           </div>

@@ -10,8 +10,10 @@ import {
   updateElement,
   verplaats,
   vindElement,
+  vindLijstMetBron,
   valideer,
   kinderen,
+  isContainer,
 } from "./layoutModel.js";
 
 test("parse + serialize is lossless en stript interne id's", () => {
@@ -70,6 +72,31 @@ test("verwijder haalt element weg, root blijft", () => {
   root = voegToe(root, root._id, v);
   root = verwijder(root, v._id);
   assert.equal(kinderen(root).length, 0);
+});
+
+test("lijst is een container en vindLijstMetBron vindt op bron", () => {
+  let root = nieuwFormulier();
+  const lijst = nieuwElement("lijst", { bron: "Initiatief.bijdragen", label: "bijdragen" });
+  assert.ok(isContainer(lijst), "lijst is container");
+  root = voegToe(root, root._id, lijst);
+  root = voegToe(root, lijst._id, nieuwElement("veld", { veld: "toelichting" }));
+  const gevonden = vindLijstMetBron(root, "Initiatief.bijdragen");
+  assert.ok(gevonden, "lijst gevonden op bron");
+  assert.equal(kinderen(gevonden).length, 1);
+  assert.equal(kinderen(gevonden)[0].veld, "toelichting");
+  assert.equal(vindLijstMetBron(root, "X.y"), null);
+});
+
+test("lijst overleeft parse+serialize met relatieve velden", () => {
+  const bron = {
+    type: "formulier",
+    elementen: [
+      { type: "lijst", bron: "Initiatief.bijdragen", label: "Bijdragen",
+        elementen: [{ type: "veld", veld: "toelichting" }, { type: "veld", veld: "score" }] },
+    ],
+  };
+  const { root } = parseLayout(bron);
+  assert.deepEqual(serializeLayout(root), bron);
 });
 
 test("valideer vlagt dubbele paden en onbekende paden", () => {

@@ -26,7 +26,7 @@ function nieuwId() {
 }
 
 /** Containertypes die een `elementen`-array hebben. */
-const CONTAINER_MET_ELEMENTEN = new Set(["formulier", "groep", "rij"]);
+const CONTAINER_MET_ELEMENTEN = new Set(["formulier", "groep", "rij", "lijst"]);
 
 /** Kan dit elementtype kinderen bevatten? */
 export function isContainer(el) {
@@ -129,6 +129,15 @@ export function vindElement(root, id) {
   let gevonden = null;
   wandel(root, (el, parent, index) => {
     if (el._id === id) gevonden = { element: el, parent, index };
+  });
+  return gevonden;
+}
+
+/** Vind een bestaand `lijst`-element met de gegeven bron (entiteit.rol), of null. */
+export function vindLijstMetBron(root, bron) {
+  let gevonden = null;
+  wandel(root, (el) => {
+    if (el.type === "lijst" && el.bron === bron) gevonden = el;
   });
   return gevonden;
 }
@@ -236,6 +245,7 @@ export function elementLabel(el) {
     case "formulier": return "Formulier";
     case "groep": return el.label ? `Groep · ${el.label}` : "Groep";
     case "rij": return "Rij";
+    case "lijst": return `Lijst · ${el.label || el.bron || "?"} (meervoudig)`;
     case "veld": return el.label ? `${el.label} (${el.veld})` : (el.veld || "veld");
     case "conditioneel": return `Conditioneel · ${el.conditie ? beschrijfConditie(el.conditie) : (el.als || "?")}`;
     default: return el.type;

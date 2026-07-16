@@ -11,6 +11,11 @@ import { bepaalWidgetOverride } from "./widgetOverrides";
  *  - { type: "rij", elementen: [...] }               → horizontal flex row
  *  - { type: "veld", veld: "veldnaam", breedte: "50%" } → enkel invoerveld
  *  - { type: "conditioneel", als: "veld == 'waarde'", dan: [...] } → conditionele zichtbaarheid
+ *  - { type: "lijst", bron: "ENT.GE", label, elementen: [...] } → herhaalbare sectie (meervoudig)
+ *
+ * Adressering: `veld` verwijst naar een veld-def in `velden` (op `naam`). Binnen
+ * een `lijst` zijn veld-verwijzingen RELATIEF aan `bron`: de def-lookup gebruikt
+ * `bron.veld`, terwijl de waarde in het item-object onder de relatieve naam leeft.
  *
  * Props:
  *  - layout:    geparsed layout-object (root element)
@@ -37,14 +42,17 @@ export default function CustomFormulierRenderer({
     if (v?.naam) veldenByNaam[v.naam] = v;
   });
 
-  function renderElement(element, index) {
+  // scope = { values, onChange, padContext } — top-level is de flat prop-scope;
+  // een lijst-rij levert een item-scope (relatieve velden + row-onChange).
+  function renderElement(element, index, scope) {
     if (!element) return null;
+    const { values: sVal, onChange: sOnChange, padContext } = scope;
 
     switch (element.type) {
       case "formulier":
         return (
           <div key={index} className="cg-custom-formulier">
-            {(element.elementen || []).map((child, i) => renderElement(child, i))}
+            {(element.elementen || []).map((child, i) => renderElement(child, i, scope))}
           </div>
         );
 
@@ -60,7 +68,7 @@ export default function CustomFormulierRenderer({
                 {element.label}
               </legend>
             )}
-            {(element.elementen || []).map((child, i) => renderElement(child, i))}
+            {(element.elementen || []).map((child, i) => renderElement(child, i, scope))}
           </fieldset>
         );
 
@@ -69,18 +77,21 @@ export default function CustomFormulierRenderer({
           <div key={index} style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
             {(element.elementen || []).map((child, i) => (
               <div key={i} style={{ flex: child.breedte ? `0 0 ${child.breedte}` : "1 1 0", minWidth: 0 }}>
-                {renderElement(child, i)}
+                {renderElement(child, i, scope)}
               </div>
             ))}
           </div>
         );
 
       case "veld": {
-        const veldDef = veldenByNaam[element.veld];
+        // Def-lookup op het volle pad (padContext + relatieve naam); waarde en
+        // onChange op de relatieve/scope-naam.
+        const lookupNaam = padContext ? `${padContext}.${element.veld}` : element.veld;
+        const veldDef = veldenByNaam[lookupNaam] || veldenByNaam[element.veld];
         if (!veldDef) {
           return (
             <div key={index} style={{ color: "var(--cg-fout, red)", marginBottom: "0.75rem" }}>
-              Onbekend veld: <code>{element.veld}</code>
+              Onbekend veld: <code>{lookupNaam}</code>
             </div>
           );
         }
@@ -91,11 +102,11 @@ export default function CustomFormulierRenderer({
           <div key={index} style={element.breedte ? {} : undefined}>
             <SchemaFormField
               veld={veldMetOverride}
-              value={values?.[element.veld] ?? ""}
-              onChange={(val) => onChange(element.veld, val)}
-              error={errors[element.veld]}
+              value={sVal?.[element.veld] ?? ""}
+              onChange={(val) => sOnChange(element.veld, val)}
+              error={errors[lookupNaam]}
               readOnly={readOnly}
-              widgetOverride={bepaalWidgetOverride(typeMeta, element.veld, element.widget)}
+              widgetOverride={bepaalWidgetOverride(typeMeta, lookupNaam, element.widget)}
               labelOverride={element.label}
             />
           </div>
@@ -104,13 +115,54 @@ export default function CustomFormulierRenderer({
 
       case "conditioneel": {
         const zichtbaar = element.conditie
-          ? evalueerConditieObject(element.conditie, values)
-          : evalueerConditie(element.als, values);
+          ? evalueerConditieObject(element.conditie, sVal)
+          : evalueerConditie(element.als, sVal);
         if (!zichtbaar) return null;
         return (
           <div key={index}>
-            {(element.dan || []).map((child, i) => renderElement(child, i))}
+            {(element.dan || []).map((child, i) => renderElement(child, i, scope))}
           </div>
+        );
+      }
+
+      case "lijst": {
+        // Meervoudig: array van item-objecten onder `values[bron]`.
+        const bron = element.bron;
+        const rijen = Array.isArray(values?.[bron]) ? values[bron] : [];
+        const template = element.elementen || [];
+        const zetRijen = (nieuw) => onChange(bron, nieuw);
+        return (
+          <fieldset key={index} className="cg-form-section" style={{ marginBottom: "1rem", padding: "0.75rem", border: "1px dashed var(--cg-rand, #ccc)", borderRadius: "6px" }}>
+            <legend className="utrecht-heading-3" style={{ fontSize: "1rem", fontWeight: 600, padding: "0 0.5rem" }}>
+              {element.label || bron} <span style={{ fontWeight: 400, fontSize: "0.8em", color: "var(--cg-donkergrijs, #666)" }}>(meervoudig)</span>
+            </legend>
+            {rijen.length === 0 && (
+              <div style={{ color: "var(--cg-donkergrijs, #666)", fontSize: "0.875rem", marginBottom: "0.5rem" }}>Nog geen items.</div>
+            )}
+            {rijen.map((rij, ri) => {
+              const rowScope = {
+                values: rij,
+                onChange: (leaf, val) => zetRijen(rijen.map((r, j) => (j === ri ? { ...r, [leaf]: val } : r))),
+                padContext: bron,
+              };
+              return (
+                <div key={ri} style={{ position: "relative", border: "1px solid var(--cg-rand, #e2e8f0)", borderRadius: "6px", padding: "0.5rem 0.75rem", marginBottom: "0.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.25rem" }}>
+                    <span style={{ fontSize: "0.75rem", color: "var(--cg-donkergrijs, #666)" }}>#{ri + 1}</span>
+                    {!readOnly && (
+                      <button type="button" onClick={() => zetRijen(rijen.filter((_, j) => j !== ri))} style={{ border: "none", background: "none", color: "var(--cg-fout, #dc2626)", cursor: "pointer", fontSize: "0.9rem" }} title="Verwijder item">✕</button>
+                    )}
+                  </div>
+                  {template.map((child, ci) => renderElement(child, ci, rowScope))}
+                </div>
+              );
+            })}
+            {!readOnly && (
+              <button type="button" onClick={() => zetRijen([...rijen, {}])} className="utrecht-button utrecht-button--secondary-action" style={{ fontSize: "0.8125rem", padding: "0.25rem 0.75rem" }}>
+                ＋ {element.label || "item"} toevoegen
+              </button>
+            )}
+          </fieldset>
         );
       }
 
@@ -119,7 +171,7 @@ export default function CustomFormulierRenderer({
     }
   }
 
-  return renderElement(layout, 0);
+  return renderElement(layout, 0, { values, onChange, padContext: null });
 }
 
 /**

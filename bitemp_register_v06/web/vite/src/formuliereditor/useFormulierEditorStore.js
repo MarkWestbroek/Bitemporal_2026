@@ -19,6 +19,7 @@ import {
   updateElement,
   verplaats,
   vindElement,
+  vindLijstMetBron,
   isContainer,
   valideer,
 } from "./layoutModel";
@@ -74,25 +75,57 @@ export const useFormulierEditorStore = create((set, get) => ({
   voegVeldToe(ref) {
     if (!ref?.veldpad) return;
     const { root, selectieId, veldInfo } = get();
-    const parentId = bepaalDoelContainer(root, selectieId);
-    const el = nieuwElement("veld", { veld: ref.veldpad });
-    get()._push(voegToe(root, parentId, el));
-    // model-metadata onthouden voor preview/inspector
-    set({
-      veldInfo: {
-        ...veldInfo,
-        [ref.veldpad]: {
-          veldnaam: ref.veldnaam,
-          entiteit: ref.entiteit,
-          datatype: ref.datatype || "",
-          type: ref.type || "string",
-          format: ref.format || "",
-          enum: Array.isArray(ref.enum) ? ref.enum : [],
-          ref: ref.ref || "",
-        },
-      },
-      selectieId: el._id,
-    });
+    const infoEntry = {
+      veldnaam: ref.veldnaam,
+      entiteit: ref.entiteit,
+      datatype: ref.datatype || "",
+      type: ref.type || "string",
+      format: ref.format || "",
+      enum: Array.isArray(ref.enum) ? ref.enum : [],
+      ref: ref.ref || "",
+      momentvoorkomen: ref.momentvoorkomen || "",
+    };
+
+    // 1) Pick van het collectie-veld zelf (array-typed entiteitveld, bv.
+    //    "bijdragen") → maak/selecteer een lege `lijst` met dit pad als bron.
+    if (ref.format === "array" && ref.veldpad) {
+      const bestaand = vindLijstMetBron(root, ref.veldpad);
+      if (bestaand) {
+        set({ selectieId: bestaand._id });
+        return;
+      }
+      const lijst = nieuwElement("lijst", { bron: ref.veldpad, label: ref.veldnaam });
+      get()._push(voegToe(root, bepaalDoelContainer(root, selectieId), lijst));
+      set({ selectieId: lijst._id });
+      return;
+    }
+
+    let nieuweRoot;
+    let nieuweSelectie;
+
+    // 2) Blad-veld uit een meervoudig GE → in een `lijst` gebonden aan het GE
+    //    (bron = entiteit.rol). Binnen de lijst adresseren velden RELATIEF
+    //    (alleen de veldnaam); de veldInfo blijft op het volle pad gekeyed.
+    if (ref.momentvoorkomen === "meervoudig" && ref.gepad) {
+      const veldEl = nieuwElement("veld", { veld: ref.veldnaam });
+      const bestaand = vindLijstMetBron(root, ref.gepad);
+      if (bestaand) {
+        nieuweRoot = voegToe(root, bestaand._id, veldEl);
+      } else {
+        const lijst = nieuwElement("lijst", { bron: ref.gepad, label: ref.gepad.split(".").pop() });
+        lijst.elementen.push(veldEl);
+        nieuweRoot = voegToe(root, bepaalDoelContainer(root, selectieId), lijst);
+      }
+      nieuweSelectie = veldEl._id;
+    } else {
+      // 3) Enkelvoudig veld → plat op het volle pad.
+      const el = nieuwElement("veld", { veld: ref.veldpad });
+      nieuweRoot = voegToe(root, bepaalDoelContainer(root, selectieId), el);
+      nieuweSelectie = el._id;
+    }
+
+    get()._push(nieuweRoot);
+    set({ veldInfo: { ...veldInfo, [ref.veldpad]: infoEntry }, selectieId: nieuweSelectie });
   },
 
   /** Voeg een groep/rij/conditioneel toe (leeg). */

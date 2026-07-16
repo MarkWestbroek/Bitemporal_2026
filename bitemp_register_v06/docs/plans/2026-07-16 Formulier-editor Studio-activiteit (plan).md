@@ -19,15 +19,27 @@ Verificatie: `layoutModel.test.js` (7/7), productie-build groen, en een Playwrig
 De smoke ving één bug: de preview crashte zonder `<SchemaProvider>` — nu wrapt de
 activiteit-Provider de slots in `SchemaProvider baseUrl={apiBase()}`.
 
-**Nog open (vervolg binnen P1 → P2):**
-- **DB-opslaan** van de definitie als nieuwe `FormulierDefinitie_Layout`-versie
-  (`saveFormulierDefinitie.js`); nu alleen export/kopieer/import van layout-JSON via het menu.
-- **Doeltype-gebonden palette**: nu toont de palette het hele model; koppel aan het gekozen
-  `doeltype` + betrokken domeinen (§4a-bis) en filter/markeer.
-- **EntiteitFormulier path-keying**: `customVelden`/`veldNaarGE` in de runtime nog op kale naam
-  → migreren naar pad (§5 stap 6), zodat de echte cross-GE-save collisions uit elkaar houdt.
-- **dnd-kit** i.p.v. de huidige ↑/↓-knoppen voor herordenen/nesten.
-- **Legacy-resolver** voor bestaande kale-naam-definities (het Initiatief-voorbeeld).
+**Ook gebouwd (2026-07-16, vervolgcommits):**
+- **DB-opslaan** — `saveFormulierDefinitie.js` schrijft de definitie weg als nieuwe
+  `FormulierDefinitie` (nextId via max-id-endpoint → opvoer hub/meta/layout/aanvang);
+  "Opslaan"-knop + menu-item + statusfeedback. Geverifieerd tegen de echte backend
+  (definitie aangemaakt + opgeruimd) en UI-validatie (Playwright).
+- **Meervoudigheid — `lijst`-element** (§4a-quater): `momentvoorkomen` gesurfacet op de
+  FieldRef (`modelTree.js`); een blad-veld uit een meervoudig GE wrapt automatisch in een
+  `lijst` (relatieve adressering), en een pick van het array-collectieveld maakt een lege
+  `lijst` met dat pad als bron. `CustomFormulierRenderer` rendert `lijst` als herhaalbare
+  sectie (item toevoegen/verwijderen); `+ Lijst`-knop + inspector. Geverifieerd: unit 9/9,
+  build, Playwright (lijst maken + item toevoegen in preview) + regressie op het platte pad.
+
+**Nog open:**
+- **`lijst` runtime-save**: de per-item cross-GE-save in `EntiteitFormulier` (echte
+  entiteit-data) is nog niet aangepast — een lijst-gebaseerde definitie rendert in de
+  preview, maar wordt op een echt record nog niet opgeslagen/geladen. Volgende increment.
+- **Nieuwe versie van bestaande definitie**: nu maakt opslaan telkens een nieuwe definitie;
+  laden-uit-DB + nieuwe Layout-versie is follow-up.
+- **Doeltype-gebonden palette**: koppel aan `doeltype` + betrokken domeinen (§4a-bis).
+- **EntiteitFormulier path-keying** (§5 stap 6) voor de flat velden.
+- **dnd-kit** i.p.v. ↑/↓-knoppen; **legacy-resolver** voor kale-naam-definities.
 
 ---
 

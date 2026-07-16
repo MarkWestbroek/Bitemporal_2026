@@ -30,18 +30,22 @@ export function bouwPreviewVelden(veldInfo) {
  * overbodig label bevat (leeg = veldnaam blijft gelden, model is de bron).
  */
 export function previewLayout(root, veldInfo) {
-  return mapEl(root, veldInfo || {});
+  return mapEl(root, veldInfo || {}, null);
 }
 
-function mapEl(el, veldInfo) {
+function mapEl(el, veldInfo, padContext) {
   const kopie = { ...el };
   if (el.type === "veld" && !el.label) {
-    const kort = veldInfo[el.veld]?.veldnaam;
+    // Binnen een lijst is el.veld relatief; het volle pad = padContext + veld.
+    const volPad = padContext ? `${padContext}.${el.veld}` : el.veld;
+    const kort = veldInfo[volPad]?.veldnaam || veldInfo[el.veld]?.veldnaam;
     if (kort) kopie.label = kort;
   }
   const sleutel = kinderSleutel(el);
   if (sleutel && Array.isArray(el[sleutel])) {
-    kopie[sleutel] = el[sleutel].map((k) => mapEl(k, veldInfo));
+    // Een lijst zet de pad-context voor zijn kinderen.
+    const kindContext = el.type === "lijst" ? el.bron : padContext;
+    kopie[sleutel] = el[sleutel].map((k) => mapEl(k, veldInfo, kindContext));
   }
   return kopie;
 }

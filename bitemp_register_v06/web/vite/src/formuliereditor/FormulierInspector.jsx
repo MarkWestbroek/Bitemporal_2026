@@ -145,6 +145,21 @@ export default function FormulierInspector() {
           Een rij plaatst zijn velden naast elkaar. Zet per veld een breedte (bv. 50%).
         </p>
       )}
+
+      {el.type === "lijst" && (
+        <>
+          <p style={{ fontSize: 12, color: "var(--s-fg-muted, #94a3b8)", margin: "2px 0 4px" }}>
+            Herhaalbare sectie voor een <b>meervoudig</b> GE/relatie. De invuller kan 0..N items
+            toevoegen. Velden hierbinnen adresseren relatief aan de bron.
+          </p>
+          <Regel label="Label">
+            <input style={veldStijl} value={el.label || ""} onChange={(e) => update(el._id, { label: e.target.value })} />
+          </Regel>
+          <Regel label="Bron (ENT.GE — meervoudig pad)">
+            <input style={{ ...veldStijl, fontFamily: "monospace" }} value={el.bron || ""} onChange={(e) => update(el._id, { bron: e.target.value })} placeholder="bv. Initiatief.bijdragen" />
+          </Regel>
+        </>
+      )}
     </div>
   );
 }
