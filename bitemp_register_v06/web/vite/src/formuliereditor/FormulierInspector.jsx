@@ -59,6 +59,22 @@ export default function FormulierInspector() {
         <Regel label="Definitie-versie">
           <input style={veldStijl} value={meta.definitieVersie} onChange={(e) => setMeta({ definitieVersie: e.target.value })} />
         </Regel>
+        <Regel label="Status">
+          <select style={veldStijl} value={meta.status || "concept"} onChange={(e) => setMeta({ status: e.target.value })}>
+            <option value="concept">concept</option>
+            <option value="actief">actief</option>
+            <option value="inactief">inactief</option>
+          </select>
+        </Regel>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 12, fontSize: 12.5, cursor: "pointer" }}>
+          <input type="checkbox" checked={!!meta.isStandaard} onChange={(e) => setMeta({ isStandaard: e.target.checked })} />
+          Standaardformulier voor dit doeltype
+        </label>
+        {meta.isStandaard && meta.status === "actief" && (
+          <p style={{ margin: "4px 0 0", fontSize: 11.5, color: "var(--s-fg-muted, #94a3b8)" }}>
+            Bij opslaan wordt een eventueel ander actief standaardformulier voor «{meta.doeltype || "…"}» automatisch gedegradeerd (max. 1 standaard per doeltype).
+          </p>
+        )}
         <p style={{ marginTop: 14, fontSize: 12, color: "var(--s-fg-muted, #94a3b8)" }}>
           Selecteer een element in de structuur om het te bewerken.
         </p>

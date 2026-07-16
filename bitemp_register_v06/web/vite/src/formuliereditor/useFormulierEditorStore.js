@@ -33,7 +33,7 @@ export const useFormulierEditorStore = create((set, get) => ({
   /** map veldpad → FieldRef-achtige metadata { veldnaam, datatype, type, format, enum, ref, entiteit } */
   veldInfo: {},
   /** metadata van de definitie zelf */
-  meta: { naam: "", doeltype: "", beschrijving: "", definitieVersie: "0.1" },
+  meta: { naam: "", doeltype: "", beschrijving: "", definitieVersie: "0.1", status: "concept", isStandaard: false },
   geladenId: null, // id van een geladen bestaande definitie (null = nieuw)
   historie: [],
   toekomst: [],
@@ -81,6 +81,8 @@ export const useFormulierEditorStore = create((set, get) => ({
         doeltype: meta.doeltype || "",
         beschrijving: meta.beschrijving || "",
         definitieVersie: meta.definitieVersie || meta.definitie_versie || "0.1",
+        status: meta.status || "concept",
+        isStandaard: meta.isStandaard === true || meta.is_standaard === true || meta.is_standaard === "true",
       },
       geladenId: id,
       selectieId: null,
@@ -228,7 +230,7 @@ export const useFormulierEditorStore = create((set, get) => ({
   },
 
   reset() {
-    set({ root: nieuwFormulier(), selectieId: null, geladenId: null, veldInfo: {}, meta: { naam: "", doeltype: "", beschrijving: "", definitieVersie: "0.1" }, historie: [], toekomst: [], saveResultaat: null, melding: null });
+    set({ root: nieuwFormulier(), selectieId: null, geladenId: null, veldInfo: {}, meta: { naam: "", doeltype: "", beschrijving: "", definitieVersie: "0.1", status: "concept", isStandaard: false }, historie: [], toekomst: [], saveResultaat: null, melding: null });
   },
 
   /** Sla de definitie op als nieuwe FormulierDefinitie in het register. */
@@ -237,8 +239,9 @@ export const useFormulierEditorStore = create((set, get) => ({
     if (saveBusy) return;
     set({ saveBusy: true, saveResultaat: null });
     try {
-      const { id } = await saveFormulierDefinitie(baseUrl, { meta, layoutJson: get().json(false) });
-      set({ saveResultaat: { type: "succes", text: `Opgeslagen als FormulierDefinitie #${id}` } });
+      const { id, gedegradeerd } = await saveFormulierDefinitie(baseUrl, { meta, layoutJson: get().json(false) });
+      const extra = gedegradeerd > 0 ? ` · ${gedegradeerd} eerdere standaard gedegradeerd` : "";
+      set({ saveResultaat: { type: "succes", text: `Opgeslagen als FormulierDefinitie #${id}${extra}` }, geladenId: id });
     } catch (e) {
       set({ saveResultaat: { type: "fout", text: e.message } });
     } finally {

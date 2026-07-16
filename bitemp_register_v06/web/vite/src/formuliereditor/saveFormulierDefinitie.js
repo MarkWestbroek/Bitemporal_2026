@@ -33,6 +33,9 @@ export async function saveFormulierDefinitie(baseUrl, { meta, layoutJson }) {
   const { nextId } = await idRes.json();
   if (!nextId) throw new Error("Ongeldig nieuw ID ontvangen.");
 
+  const status = String(meta?.status || "concept");
+  const isStandaard = meta?.isStandaard === true;
+
   const wijzigingen = [
     { opvoer: { formulierdefinitie: { id: nextId } } },
     { opvoer: { formulierdefinitie_meta: {
@@ -40,8 +43,8 @@ export async function saveFormulierDefinitie(baseUrl, { meta, layoutJson }) {
       naam,
       beschrijving: String(meta?.beschrijving || ""),
       doeltype,
-      status: "actief",
-      is_standaard: true,
+      status,
+      is_standaard: isStandaard,
     } } },
     { opvoer: { layout: {
       formulierdefinitie_id: nextId,
@@ -66,5 +69,62 @@ export async function saveFormulierDefinitie(baseUrl, { meta, layoutJson }) {
     const tekst = await res.text().catch(() => "");
     throw new Error(`Opslaan mislukt (HTTP ${res.status}): ${tekst.slice(0, 300)}`);
   }
-  return { id: nextId };
+
+  // Max. 1 actieve standaard per doeltype: degradeer andere actieve standaarden.
+  let gedegradeerd = 0;
+  if (isStandaard && status === "actief") {
+    gedegradeerd = await degradeerAndereStandaarden(baseUrl, doeltype, nextId).catch(() => 0);
+  }
+  return { id: nextId, gedegradeerd };
+}
+
+/** Actueel (niet-afgevoerd) meta-record + rel_id uit een full-definitie. */
+function actueleMeta(full) {
+  for (const hub of Array.isArray(full?.formulier_definitie_metas) ? full.formulier_definitie_metas : []) {
+    const relId = hub?.rel_id;
+    const data = Array.isArray(hub?.data) ? hub.data : [];
+    const actueel = data.find((d) => d?.opvoer && !d?.afvoer) || data[data.length - 1];
+    if (actueel) return { ...actueel, rel_id: actueel.rel_id ?? relId };
+  }
+  return null;
+}
+
+/**
+ * Zet is_standaard=false op alle ANDERE actieve standaard-definities voor
+ * hetzelfde doeltype (behalve `behoudId`). Retourneert het aantal gedegradeerd.
+ */
+export async function degradeerAndereStandaarden(baseUrl, doeltype, behoudId) {
+  const res = await fetch(`${baseUrl}/full/formulier_definities`);
+  if (!res.ok) return 0;
+  const lijst = await res.json();
+  const items = Array.isArray(lijst?.["formulier definities"]) ? lijst["formulier definities"] : [];
+  const wijzigingen = [];
+  for (const full of items) {
+    if (full.id === behoudId) continue;
+    const m = actueleMeta(full);
+    if (!m) continue;
+    const std = m.is_standaard === true || m.is_standaard === "true";
+    if (m.doeltype === doeltype && m.status === "actief" && std) {
+      const payload = {
+        formulierdefinitie_id: full.id,
+        naam: m.naam,
+        beschrijving: m.beschrijving || "",
+        doeltype: m.doeltype,
+        status: m.status,
+        is_standaard: false,
+      };
+      if (m.rel_id != null) payload.rel_id = m.rel_id;
+      wijzigingen.push({ opvoer: { formulierdefinitie_meta: payload } });
+    }
+  }
+  if (wijzigingen.length === 0) return 0;
+  const post = await fetch(`${baseUrl}/registratie/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      registratie: { registratietype: "registratie", opmerking: "Degradeer eerdere standaardformulieren" },
+      wijzigingen,
+    }),
+  });
+  return post.ok ? wijzigingen.length : 0;
 }
