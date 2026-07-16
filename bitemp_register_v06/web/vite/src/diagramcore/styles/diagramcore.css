@@ -295,6 +295,16 @@
   opacity: 0.7;
 }
 
+/* De handles liggen standaard half óver de rand; op een mini-vorm (junction
+   16px) dekken vier hover-handles dan de hele kern af — elke grijppoging
+   startte een verbinding i.p.v. een verplaatsing ("bloemetjes-effect").
+   Daarom liggen ze op punt-nodes net búiten de vorm: de kern blijft vrij
+   om te slepen, verbinden kan vanaf de uitstekende stippen. */
+.dc-canvas .dc-punt-node .react-flow__handle-left { left: -8px; }
+.dc-canvas .dc-punt-node .react-flow__handle-right { right: -8px; }
+.dc-canvas .dc-punt-node .react-flow__handle-top { top: -8px; }
+.dc-canvas .dc-punt-node .react-flow__handle-bottom { bottom: -8px; }
+
 /* Gedragsverwijzing (§3.2): hoek-badge op nodes met een gekoppeld diagram
    (submachine state, call-activity). Dubbelklik opent dat diagram. */
 .dc-gedrag-badge {
