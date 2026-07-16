@@ -35,6 +35,8 @@ export default function FormulierIndex() {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("");
   const [herlaad, setHerlaad] = useState(0);
+  const [dichtGroepen, setDichtGroepen] = useState({}); // { doeltype: true } = ingeklapt
+  const [versiesOpen, setVersiesOpen] = useState({}); // { defId: true } = versielijst uitgeklapt
 
   useEffect(() => {
     // baseUrl mag "" zijn (same-origin relatief) — dus niet op falsy guarden.
@@ -62,6 +64,16 @@ export default function FormulierIndex() {
             layoutJson: layout.layout_json || "",
             metaRelId: meta.rel_id ?? null,
             layoutRelId: layout.rel_id ?? null,
+            // F45-light: alle layout-versies (bitemporele historie uit de full-respons).
+            versies: safeArray(full.formulier_definitie_layouts)
+              .flatMap((hub) => safeArray(hub?.data))
+              .map((d) => ({
+                versie: d.versie,
+                definitieVersie: d.definitie_versie || "",
+                opvoer: d.opvoer || "",
+                afvoer: d.afvoer || "",
+              }))
+              .sort((a, b) => (a.versie ?? 0) - (b.versie ?? 0)),
           };
         });
         setItems(rows);
@@ -142,10 +154,14 @@ export default function FormulierIndex() {
         )}
         {groepen.map(([doeltype, defs]) => (
           <div key={doeltype} style={{ marginBottom: 8 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, color: "var(--s-fg-muted, #64748b)", padding: "4px 6px" }}>
-              {doeltype} <span style={{ fontWeight: 400 }}>({defs.length})</span>
-            </div>
-            {defs.map((it) => {
+            <button
+              type="button"
+              onClick={() => setDichtGroepen((p) => ({ ...p, [doeltype]: !p[doeltype] }))}
+              style={{ display: "block", width: "100%", textAlign: "left", border: "none", background: "transparent", cursor: "pointer", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4, color: "var(--s-fg-muted, #64748b)", padding: "4px 6px" }}
+            >
+              {dichtGroepen[doeltype] ? "▸" : "▾"} {doeltype} <span style={{ fontWeight: 400 }}>({defs.length})</span>
+            </button>
+            {!dichtGroepen[doeltype] && defs.map((it) => {
               const actief = geladenId === it.id;
               return (
                 <div
@@ -168,6 +184,14 @@ export default function FormulierIndex() {
                       {it.versie && `v${it.versie}`}{it.status ? ` · ${it.status}` : ""}{it.isStandaard ? " · ★" : ""}
                     </span>
                   </button>
+                  {it.versies.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setVersiesOpen((p) => ({ ...p, [it.id]: !p[it.id] })); }}
+                      title={`${it.versies.length} layout-versies`}
+                      style={{ flex: "0 0 auto", border: "none", background: "transparent", color: "var(--s-fg-muted, #94a3b8)", cursor: "pointer", fontSize: 10.5, padding: "4px 2px" }}
+                    >{versiesOpen[it.id] ? "⌄" : "▸"}{it.versies.length}</button>
+                  )}
                   <button
                     type="button"
                     onClick={(e) => verwijder(it, e)}
@@ -177,6 +201,22 @@ export default function FormulierIndex() {
                 </div>
               );
             })}
+            {/* F45-light: uitgeklapte versielijst (bitemporele layout-historie) */}
+            {!dichtGroepen[doeltype] && defs.map((it) =>
+              versiesOpen[it.id] ? (
+                <div key={`v${it.id}`} style={{ margin: "0 6px 6px 18px", borderLeft: "2px solid var(--s-border, #e2e8f0)", paddingLeft: 8 }}>
+                  {it.versies.map((v, i) => {
+                    const actueel = v.opvoer && !v.afvoer;
+                    return (
+                      <div key={i} style={{ fontSize: 11, padding: "2px 0", color: actueel ? "inherit" : "var(--s-fg-muted, #94a3b8)" }}>
+                        v{v.definitieVersie || "?"} <span style={{ opacity: 0.7 }}>({v.versie ?? i + 1})</span>
+                        {actueel ? " · actueel" : v.afvoer ? " · vervangen" : ""}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : null
+            )}
           </div>
         ))}
       </div>
