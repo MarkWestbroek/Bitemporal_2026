@@ -24,6 +24,7 @@ function FormulierProvider({ children }) {
   useEffect(() => {
     const af = [
       menuBus.on("formulier:nieuw", () => useFormulierEditorStore.getState().reset()),
+      menuBus.on("formulier:opslaan", () => useFormulierEditorStore.getState().saveNaarRegister(apiBase())),
       menuBus.on("formulier:export", () => {
         const st = useFormulierEditorStore.getState();
         const naam = (st.meta.naam || "formulierdefinitie").replace(/\s+/g, "_");
@@ -81,6 +82,7 @@ export default {
       label: "Formulier",
       items: [
         { id: "formulier-nieuw", label: "Nieuw formulier", onClick: () => menuBus.emit("formulier:nieuw") },
+        { id: "formulier-opslaan", label: "Opslaan naar register…", onClick: () => menuBus.emit("formulier:opslaan") },
         { type: "separator" },
         { id: "formulier-importeer", label: "Importeer layout-JSON…", onClick: () => menuBus.emit("formulier:importeer") },
         { id: "formulier-kopieer", label: "Kopieer layout-JSON", onClick: () => menuBus.emit("formulier:kopieer") },

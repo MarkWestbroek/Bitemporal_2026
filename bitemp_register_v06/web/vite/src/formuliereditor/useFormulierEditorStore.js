@@ -22,6 +22,7 @@ import {
   isContainer,
   valideer,
 } from "./layoutModel";
+import { saveFormulierDefinitie } from "./saveFormulierDefinitie";
 
 const MAX_HISTORIE = 50;
 
@@ -34,6 +35,8 @@ export const useFormulierEditorStore = create((set, get) => ({
   meta: { naam: "", doeltype: "", beschrijving: "", definitieVersie: "0.1" },
   historie: [],
   toekomst: [],
+  saveBusy: false,
+  saveResultaat: null, // { type: "succes"|"fout", text }
 
   // ── interne helper: snapshot vóór wijziging ──
   _push(nieuweRoot) {
@@ -143,7 +146,22 @@ export const useFormulierEditorStore = create((set, get) => ({
   },
 
   reset() {
-    set({ root: nieuwFormulier(), selectieId: null, historie: [], toekomst: [] });
+    set({ root: nieuwFormulier(), selectieId: null, historie: [], toekomst: [], saveResultaat: null });
+  },
+
+  /** Sla de definitie op als nieuwe FormulierDefinitie in het register. */
+  async saveNaarRegister(baseUrl) {
+    const { meta, saveBusy } = get();
+    if (saveBusy) return;
+    set({ saveBusy: true, saveResultaat: null });
+    try {
+      const { id } = await saveFormulierDefinitie(baseUrl, { meta, layoutJson: get().json(false) });
+      set({ saveResultaat: { type: "succes", text: `Opgeslagen als FormulierDefinitie #${id}` } });
+    } catch (e) {
+      set({ saveResultaat: { type: "fout", text: e.message } });
+    } finally {
+      set({ saveBusy: false });
+    }
   },
 
   // ── afgeleiden ──

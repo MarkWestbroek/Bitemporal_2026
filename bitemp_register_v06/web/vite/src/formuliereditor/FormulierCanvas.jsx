@@ -9,6 +9,7 @@ import { useFormulierEditorStore } from "./useFormulierEditorStore";
 import { kinderen, elementLabel, isContainer } from "./layoutModel";
 import { bouwPreviewVelden, previewLayout } from "./preview";
 import CustomFormulierRenderer from "../components/editor/CustomFormulierRenderer";
+import { apiBase } from "../shared/apiBase.js";
 
 const TYPE_KLEUR = {
   formulier: "#64748b",
@@ -81,6 +82,9 @@ export default function FormulierCanvas() {
   const undo = useFormulierEditorStore((s) => s.undo);
   const redo = useFormulierEditorStore((s) => s.redo);
   const meldingen = useFormulierEditorStore((s) => s.meldingen);
+  const saveNaarRegister = useFormulierEditorStore((s) => s.saveNaarRegister);
+  const saveBusy = useFormulierEditorStore((s) => s.saveBusy);
+  const saveResultaat = useFormulierEditorStore((s) => s.saveResultaat);
 
   const [previewWaarden, setPreviewWaarden] = useState({});
   const previewVelden = useMemo(() => bouwPreviewVelden(veldInfo), [veldInfo]);
@@ -98,7 +102,21 @@ export default function FormulierCanvas() {
           <span style={{ flex: 1 }} />
           <button type="button" style={werkBtn} onClick={undo} title="Ongedaan maken">↶</button>
           <button type="button" style={werkBtn} onClick={redo} title="Opnieuw">↷</button>
+          <button
+            type="button"
+            style={{ ...werkBtn, background: "var(--s-accent, #6366f1)", color: "#fff", borderColor: "transparent" }}
+            onClick={() => saveNaarRegister(apiBase())}
+            disabled={saveBusy}
+            title="Sla op als nieuwe FormulierDefinitie in het register"
+          >
+            {saveBusy ? "Opslaan…" : "💾 Opslaan"}
+          </button>
         </div>
+        {saveResultaat && (
+          <div style={{ padding: "6px 10px", fontSize: 12, color: saveResultaat.type === "fout" ? "#dc2626" : "#15803d", borderBottom: "1px solid var(--s-border, #e2e8f0)" }}>
+            {saveResultaat.type === "fout" ? "⚠ " : "✓ "}{saveResultaat.text}
+          </div>
+        )}
         <div style={{ flex: 1, overflow: "auto", padding: 10 }} onClick={() => useFormulierEditorStore.getState().selecteer(null)}>
           <BoomRij el={root} diepte={0} />
         </div>
