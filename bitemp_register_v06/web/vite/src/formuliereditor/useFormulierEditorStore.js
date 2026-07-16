@@ -74,7 +74,9 @@ export const useFormulierEditorStore = create((set, get) => ({
    */
   voegVeldToe(ref) {
     if (!ref?.veldpad) return;
-    const { root, selectieId, veldInfo } = get();
+    const { root, selectieId, veldInfo, meta } = get();
+    // Doeltype automatisch afleiden uit het eerste gekozen veld (nodig bij opslaan).
+    if (!meta.doeltype && ref.entiteit) set({ meta: { ...meta, doeltype: ref.entiteit } });
     const infoEntry = {
       veldnaam: ref.veldnaam,
       entiteit: ref.entiteit,

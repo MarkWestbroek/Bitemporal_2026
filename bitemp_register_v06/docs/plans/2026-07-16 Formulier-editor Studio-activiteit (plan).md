@@ -31,15 +31,23 @@ activiteit-Provider de slots in `SchemaProvider baseUrl={apiBase()}`.
   sectie (item toevoegen/verwijderen); `+ Lijst`-knop + inspector. Geverifieerd: unit 9/9,
   build, Playwright (lijst maken + item toevoegen in preview) + regressie op het platte pad.
 
+**Ook gebouwd (2026-07-16, runtime-integratie):**
+- **EntiteitFormulier path-keying + pure module** (§5 stap 6): mapping/save geëxtraheerd naar
+  `customFormMapping.js` (pure, unit-getest). Elk veld nu op **korte naam én vol pad**
+  geregistreerd → definities van de nieuwe editor (volle paden) werken in de echte inhoud-editor,
+  legacy korte-naam-definities ongewijzigd. Playwright-regressie op Initiatief #38 groen.
+- **`lijst` runtime**: meervoudige GE's laden als array onder hun bron; per-item **opslaan**
+  (opvoer nieuw/gewijzigd met rel_id, afvoer bij verwijderen) via `bouwCustomWijzigingen`.
+  Unit-getest. Een lijst-gebaseerde definitie is nu op een echt record te tonen én op te slaan.
+
 **Nog open:**
-- **`lijst` runtime-save**: de per-item cross-GE-save in `EntiteitFormulier` (echte
-  entiteit-data) is nog niet aangepast — een lijst-gebaseerde definitie rendert in de
-  preview, maar wordt op een echt record nog niet opgeslagen/geladen. Volgende increment.
 - **Nieuwe versie van bestaande definitie**: nu maakt opslaan telkens een nieuwe definitie;
-  laden-uit-DB + nieuwe Layout-versie is follow-up.
-- **Doeltype-gebonden palette**: koppel aan `doeltype` + betrokken domeinen (§4a-bis).
-- **EntiteitFormulier path-keying** (§5 stap 6) voor de flat velden.
-- **dnd-kit** i.p.v. ↑/↓-knoppen; **legacy-resolver** voor kale-naam-definities.
+  laden-uit-DB + nieuwe Layout-versie is follow-up (vergt een legacy-resolver voor korte-naam-defs).
+- **Doeltype-gebonden palette**: palette filteren op het gekozen `doeltype` + betrokken domeinen
+  (§4a-bis). Nu vult de editor het doeltype automatisch uit het eerste gekozen veld.
+- **dnd-kit** i.p.v. ↑/↓-knoppen; **legacy-resolver** voor kale-naam-definities in de editor.
+- **Real-data lijst-render** end-to-end verifiëren zonder de bestaande standaard-def te verstoren
+  (nu gedekt door unit-tests + preview-render).
 
 ---
 
