@@ -1,20 +1,28 @@
 // @ts-check
 /**
- * statemachine — een UML state machine-profiel op de generieke diagram-motor
- * (metamodel-verkenning gedragsdiagrammen, sessie 2026-07-13: state machine
- * heeft het kleinste gat). v0:
+ * statemachine — een UML state machine-profiel op de generieke diagram-motor.
  *
- *   - **Begin** (initiële pseudotoestand, gevulde stip)
- *   - **Toestand** (State, afgeronde box met activiteiten-compartiment:
- *     entry/do/exit)
- *   - **Eind** (finale toestand, ring met kern)
- *   - **Transitie** (gerichte lijn met trigger [guard] / effect als label)
+ * v0 (metamodel-verkenning gedragsdiagrammen, sessie 2026-07-13): begin,
+ * toestand (met entry/do/exit-activiteiten), eind en transitie ("trigger
+ * [guard] / effect"). v1 (sessie 2026-07-17) vult de bekende gaten met de
+ * twee gedragsdiagram-primitieven uit STUDIO-05-gedragsdiagrammen.md:
  *
- * De verbindingsregels leggen de basisvalidatie vast: een transitie vertrekt
- * uit een begin of toestand en komt aan bij een toestand of eind (begin heeft
- * geen inkomende, eind geen uitgaande). Bewust nog niet (bekende gaten uit de
- * verkenning): samengestelde toestanden (containers), keuze/junction, regio's
- * en history — die vragen om lane-/container-layout en extra validatie.
+ *   - **keuze** (choice, ruit), **junction** (stip) en **historie** (Ⓗ/Ⓗ*,
+ *     `data.diep`) — vrije pseudostates, pure declaratie;
+ *   - **samengestelde toestand** — container (containerVoor "bevat", zoals
+ *     packages in het canoniek model): toestanden erin slepen legt het
+ *     bevat-lidmaatschap;
+ *   - **submachine** — gedragsverwijzing (§3.2): `data.gedragDiagramId`
+ *     verwijst naar een ander state machine-diagram; dubbelklik opent het
+ *     (⧉-badge op de node);
+ *   - **entry/exit-point** — rand-elementen (§3.1): ze klikken vast op de
+ *     omtrek van een (samengestelde/submachine-)toestand en bewegen mee.
+ *
+ * De verbindingsregels leggen de basisvalidatie vast: begin heeft geen
+ * inkomende transitie, eind geen uitgaande. Entry/exit zijn bewust zowel
+ * bron als doel (buiten→entry→binnen, binnen→exit→buiten); strakkere
+ * richtingsvalidatie is een taak voor de validatie-hook (bekende todo).
+ * Regio's (parallelle deelmachines) blijven open — dat vraagt lane-layout.
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 import { registreerStateMachineShapes } from "./shapes.jsx";
@@ -31,8 +39,15 @@ const fieldTypes = [
 ];
 
 const KLEUR_VELD = { key: "kleur", datatype: "colour" };
-const TOESTANDEN = ["begin", "toestand"];
-const DOELEN = ["toestand", "eind"];
+
+// Wat kan een transitie verlaten/bereiken. Begin alleen bron, eind alleen
+// doel; de pseudostates en (samengestelde/submachine-)toestanden allebei.
+const TUSSEN = ["toestand", "composiet", "submachine", "keuze", "junction", "historie", "entry", "exit"];
+const BRONNEN = ["begin", ...TUSSEN];
+const DOELEN = [...TUSSEN, "eind"];
+
+/** Rand-elementen (§3.1) wonen op de rand van deze gastheren. */
+const RAND_OUDERS = ["toestand", "composiet", "submachine"];
 
 /** @type {import("../../diagramcore/types/schema.js").ElementType[]} */
 const elementTypes = [
@@ -63,6 +78,74 @@ const elementTypes = [
     properties: [],
   },
   {
+    id: "composiet",
+    label: "Samengestelde toestand",
+    kort: "⊞TS",
+    shape: "sm-composiet",
+    // Container zoals een package: toestanden erin slepen legt "bevat".
+    containerVoor: "bevat",
+    achtergrond: true,
+    properties: [KLEUR_VELD],
+  },
+  {
+    id: "submachine",
+    label: "Submachine",
+    kort: "∞TS",
+    shape: "rounded",
+    kleur: "#e0e7ff",
+    // Gedragsverwijzing (§3.2): verwijst naar een ander SM-diagram;
+    // dubbelklik opent het (de node toont een ⧉-badge).
+    gedragsVerwijzing: true,
+    properties: [
+      { key: "gedragDiagramId", label: "verwijst naar", datatype: "diagram-verwijzing" },
+      KLEUR_VELD,
+    ],
+  },
+  {
+    id: "keuze",
+    label: "Keuze",
+    kort: "◇",
+    shape: "sm-keuze",
+    resizebaar: false,
+    properties: [],
+  },
+  {
+    id: "junction",
+    label: "Junction",
+    kort: "•",
+    shape: "sm-junction",
+    resizebaar: false,
+    properties: [],
+  },
+  {
+    id: "historie",
+    label: "Historie",
+    kort: "H",
+    shape: "sm-historie",
+    resizebaar: false,
+    // diep = H* (herstelt de volledige geneste configuratie).
+    properties: [{ key: "diep", label: "diep (H*)", datatype: "boolean" }],
+  },
+  {
+    id: "entry",
+    label: "Entry-point",
+    kort: "◦→",
+    shape: "sm-entry",
+    resizebaar: false,
+    // Rand-element (§3.1): klikt vast op de omtrek van een toestand.
+    randElement: { ouderTypes: RAND_OUDERS },
+    properties: [],
+  },
+  {
+    id: "exit",
+    label: "Exit-point",
+    kort: "⊗→",
+    shape: "sm-exit",
+    resizebaar: false,
+    randElement: { ouderTypes: RAND_OUDERS },
+    properties: [],
+  },
+  {
     id: "notitie",
     label: "Notitie",
     kort: "NOT",
@@ -71,14 +154,14 @@ const elementTypes = [
     properties: [{ key: "tekst", datatype: "tekst" }, KLEUR_VELD],
   },
 
-  // ── Connector ──────────────────────────────────────────────────────────
+  // ── Connectoren ────────────────────────────────────────────────────────
   {
     id: "transitie",
     label: "Transitie",
     kort: "→",
     shape: "edge",
     isConnector: true,
-    bron: { elementTypes: TOESTANDEN },
+    bron: { elementTypes: BRONNEN },
     doel: { elementTypes: DOELEN },
     edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: "#475569", markerEnd: "pijl-open" },
     properties: [
@@ -100,6 +183,19 @@ const elementTypes = [
         return { kaal: [{ zijde: "midden", delen: [{ tekst, soort: "constraint" }] }] };
       },
     },
+  },
+  {
+    // Lidmaatschap van een samengestelde toestand — subtiele stippellijn,
+    // zelfde patroon als "Bevat (package)" in het canoniek model. Meestal
+    // is de lijn visueel overbodig (het kind ligt ín de container).
+    id: "bevat",
+    label: "Bevat (toestand)",
+    kort: "⊞ ∋",
+    shape: "edge",
+    isConnector: true,
+    bron: { elementTypes: ["composiet"] },
+    doel: { elementTypes: ["begin", "eind", ...TUSSEN, "notitie"] },
+    edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#cbd5e1" },
   },
 ];
 
@@ -123,9 +219,10 @@ export function maakElement(elementTypeId) {
   const et = elementTypes.find((t) => t.id === elementTypeId);
   if (!et || et.isConnector) return null;
   _teller += 1;
+  const NAAMLOOS = new Set(["begin", "eind", "keuze", "junction", "historie", "entry", "exit", "notitie"]);
   const element = {
     id: `sm_${Date.now()}_${_teller}`,
-    naam: et.id === "toestand" ? "Toestand" : "",
+    naam: NAAMLOOS.has(et.id) ? "" : et.label,
     elementType: et.id,
     compartimenten: [],
     data: {},
