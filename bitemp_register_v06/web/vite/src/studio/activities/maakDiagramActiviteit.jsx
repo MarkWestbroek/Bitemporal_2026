@@ -192,6 +192,8 @@ export function maakDiagramActiviteit(opties) {
     const [importWacht, setImportWacht] = useState(null);
     // Export-keuzedialoog: {naam} zolang de gebruiker bereik/naam kiest.
     const [exportWacht, setExportWacht] = useState(null);
+    // Nieuw-diagram-modal: {naam} zolang de gebruiker de naam kiest.
+    const [nieuwDiagram, setNieuwDiagram] = useState(null);
     // Imperatieve layout-API van de canvas (uitlijnen/snap/auto-layout/viewport).
     const layoutApiRef = useRef(null);
 
@@ -215,7 +217,17 @@ export function maakDiagramActiviteit(opties) {
     // Daarna altijd de undo-history wissen: de persist-rehydratie telt anders
     // als eerste undo-stap, waardoor ver terug-undo'en het canvas leegmaakte.
     useEffect(() => {
-      if (koppeling?.herlaadUitModel && Object.keys(useStore.getState().elements).length === 0) {
+      const s = useStore.getState();
+      // Alleen de allereerste keer spiegelen: als de (persistente) sandbox nog
+      // helemaal leeg is. Ook `diagrams` meetellen — een net aangemaakt maar nog
+      // leeg diagram voegt géén elements toe, dus met alleen de elements-check
+      // wiste deze herlaad dat diagram bij de volgende mount/reload weer weg
+      // (bug: "Nieuw diagram" leek bij canoniek/MIM niets te doen).
+      if (
+        koppeling?.herlaadUitModel &&
+        Object.keys(s.elements).length === 0 &&
+        Object.keys(s.diagrams).length === 0
+      ) {
         herlaad(false);
       }
       useStore.temporal.getState().clear();
@@ -237,13 +249,17 @@ export function maakDiagramActiviteit(opties) {
         // projectboom): selecteer in de inspector van dit profiel.
         menuBus.on(ev("selecteer-element"), (elementId) => setSelectieId(elementId || null)),
         menuBus.on(ev("nieuw-diagram"), () => {
-          const naam = window.prompt(`Naam van het nieuwe ${diagramTerm}:`, `Nieuw ${diagramTerm}`);
-          if (!naam) return;
-          useStore.getState().addDiagram({
-            id: `${menuPrefix}_${Date.now()}`,
-            naam,
-            diagramType: descriptor.id,
-          });
+          // Bewust géén window.prompt: sommige browsers onderdrukken
+          // dialoogvensters (na "voorkom extra dialoogvensters") → dan gaf
+          // prompt stil null terug en leek "Nieuw diagram" niets te doen.
+          // In plaats daarvan een eigen modal (uitbreidbaar). Standaardnaam
+          // uniek t.o.v. bestaande diagrammen.
+          const bestaand = new Set(
+            Object.values(useStore.getState().diagrams).map((d) => d.naam)
+          );
+          let naam = `Nieuw ${diagramTerm}`;
+          for (let n = 2; bestaand.has(naam); n++) naam = `Nieuw ${diagramTerm} ${n}`;
+          setNieuwDiagram({ naam });
         }),
       ];
       if (koppeling?.herlaadUitModel) {
@@ -632,6 +648,18 @@ export function maakDiagramActiviteit(opties) {
 
     const Dialogen = koppeling?.DialogenComponent || null;
 
+    /** Maak het diagram met de gekozen naam en selecteer het. */
+    const maakDiagram = (naam) => {
+      const schoon = (naam || "").trim();
+      if (!schoon) return;
+      useStore.getState().addDiagram({
+        id: `${menuPrefix}_${Date.now()}`,
+        naam: schoon,
+        diagramType: descriptor.id,
+      });
+      setNieuwDiagram(null);
+    };
+
     return (
       <Ctx.Provider
         value={{
@@ -785,6 +813,74 @@ export function maakDiagramActiviteit(opties) {
               <button className="dc-mini-knop" onClick={() => setExportWacht(null)}>
                 Annuleren
               </button>
+            </div>
+          </div>
+        )}
+        {nieuwDiagram && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(15, 23, 42, 0.45)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 10000,
+            }}
+            onClick={(e) => e.target === e.currentTarget && setNieuwDiagram(null)}
+          >
+            <div
+              style={{
+                background: "var(--s-panel, #fff)",
+                color: "var(--s-fg, #1e293b)",
+                border: "1px solid var(--s-border, #cbd5e1)",
+                borderRadius: 10,
+                boxShadow: "0 12px 40px rgba(15, 23, 42, 0.25)",
+                width: 380,
+                maxWidth: "92vw",
+                padding: "14px 16px",
+                fontSize: 13,
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+              }}
+            >
+              <strong>Nieuw {diagramTerm}</strong>
+              <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12 }}>
+                Naam
+                <input
+                  type="text"
+                  autoFocus
+                  value={nieuwDiagram.naam}
+                  onChange={(e) => setNieuwDiagram({ naam: e.target.value })}
+                  onFocus={(e) => e.target.select()}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") maakDiagram(nieuwDiagram.naam);
+                    else if (e.key === "Escape") setNieuwDiagram(null);
+                  }}
+                  style={{
+                    font: "inherit",
+                    fontSize: 13,
+                    padding: "4px 8px",
+                    border: "1px solid var(--s-border, #cbd5e1)",
+                    borderRadius: 6,
+                    background: "transparent",
+                    color: "var(--s-fg)",
+                  }}
+                />
+              </label>
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                <button className="dc-mini-knop" onClick={() => setNieuwDiagram(null)}>
+                  Annuleren
+                </button>
+                <button
+                  className="dc-mini-knop"
+                  disabled={!nieuwDiagram.naam.trim()}
+                  onClick={() => maakDiagram(nieuwDiagram.naam)}
+                >
+                  Aanmaken
+                </button>
+              </div>
             </div>
           </div>
         )}
