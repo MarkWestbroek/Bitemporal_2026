@@ -94,6 +94,7 @@ registreerActiviteiten([
   oasActivity, // "OAS" — derde profiel, OAS 3.0/3.1 (preview)
   mimActivity, // "MIM" — vijfde profiel, MIM 1.2 (preview)
   statemachineActivity, // "State machine" — gedragsdiagram-verkenning (preview)
+  formulierDiagramActivity, // "Formulier (diagram)" — formulier-profiel, dogfood (F48 P1; niet in de balk)
   dmnActivity,
   dmnDrdActivity, // "DMN DRD" — vierde profiel (preview, niet in de balk)
   bpmnActivity,
@@ -106,7 +107,6 @@ registreerActiviteiten([
   referentielijstenActivity,
   // presentatie
   formulierActivity, // visuele FormulierDefinitie-editor (F41)
-  formulierDiagramActivity, // formulier-profiel op de diagram-motor (F48 P1, dogfood)
   // beheer (onderaan de balk)
   profielActivity, // "Profiel-editor" — meta-editor trede 1 (JSON, §8.9)
   profielOntwerpActivity, // "Profiel-ontwerp" — meta-editor trede 2 (tekenen, §8.9)
