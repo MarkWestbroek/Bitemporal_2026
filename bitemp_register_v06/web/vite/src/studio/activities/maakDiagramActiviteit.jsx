@@ -2059,6 +2059,25 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                   onContainerDrop={(elementId, containerId) =>
                     verhangNaarContainer(useStore, elementId, containerId)
                   }
+                  onRandAanhechting={(elementId, ouderId, positie) => {
+                    // Rand-aanhechting (§3.1): gastheer op het element zelf
+                    // (model-feit), relatieve/vrije positie op het diagram.
+                    const s = useStore.getState();
+                    const el = s.elements[elementId];
+                    if (!el) return;
+                    s.updateElement(elementId, { data: { randVan: ouderId || null } });
+                    s.updateNodePosition(diagram.id, elementId, positie);
+                  }}
+                  onNodeDoubleClick={(element) => {
+                    // Gedragsverwijzing (§3.2): dubbelklik opent het
+                    // gekoppelde diagram — hier (actief diagram) én in de
+                    // Modelleren-host (tab, via de bus; luistert die niet,
+                    // dan is de emit onschadelijk).
+                    const doelId = element?.data?.gedragDiagramId;
+                    if (!doelId || !useStore.getState().diagrams[doelId]) return;
+                    useStore.getState().setActiefDiagram(doelId);
+                    menuBus.emit("studio:open-diagram", { profielId: id, diagramId: doelId });
+                  }}
                   shapeSet={
                     (descriptor.shapeSets || []).find((set) => set.id === shapeSetId)?.shapes || null
                   }

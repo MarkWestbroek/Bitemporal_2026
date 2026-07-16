@@ -295,6 +295,19 @@
   opacity: 0.7;
 }
 
+/* Gedragsverwijzing (§3.2): hoek-badge op nodes met een gekoppeld diagram
+   (submachine state, call-activity). Dubbelklik opent dat diagram. */
+.dc-gedrag-badge {
+  position: absolute;
+  right: 3px;
+  bottom: 1px;
+  font-size: 11px;
+  line-height: 1;
+  color: #6366f1;
+  pointer-events: none;
+  user-select: none;
+}
+
 /* === Edge-labels === */
 
 .dc-edge-label {
