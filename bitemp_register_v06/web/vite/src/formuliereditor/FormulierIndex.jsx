@@ -26,6 +26,7 @@ function actueleData(fullEntity, geJsonNaam) {
 export default function FormulierIndex() {
   const { baseUrl, typeMetaByTypenaam } = useSchema();
   const laadDefinitie = useFormulierEditorStore((s) => s.laadDefinitie);
+  const reset = useFormulierEditorStore((s) => s.reset);
   const geladenId = useFormulierEditorStore((s) => s.geladenId);
   const opslagTeller = useFormulierEditorStore((s) => s.opslagTeller);
 
@@ -97,17 +98,41 @@ export default function FormulierIndex() {
     });
   }
 
+  async function verwijder(it, e) {
+    e.stopPropagation();
+    if (!window.confirm(`FormulierDefinitie "${it.naam}" (#${it.id}) verwijderen (afvoeren)?`)) return;
+    try {
+      const res = await fetch(`${baseUrl}/registratie/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ registratie: { registratietype: "registratie" }, wijzigingen: [{ afvoer: { formulierdefinitie: { id: it.id } } }] }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (geladenId === it.id) reset();
+      setHerlaad((n) => n + 1);
+    } catch (err) {
+      window.alert(`Verwijderen mislukt: ${err.message}`);
+    }
+  }
+
+  const knopStijl = { border: "1px solid var(--s-border, #cbd5e1)", background: "var(--s-bg, #fff)", color: "var(--s-fg, #1e293b)", borderRadius: 5, padding: "3px 7px", cursor: "pointer", fontSize: 12 };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
-      <div style={{ padding: "8px 10px", display: "flex", gap: 6, alignItems: "center" }}>
+      <div style={{ padding: "8px 10px 4px", display: "flex", gap: 6 }}>
+        <button type="button" onClick={() => reset()} title="Nieuw leeg formulier"
+          style={{ ...knopStijl, flex: 1, fontWeight: 600, background: "var(--s-accent, #6366f1)", color: "#fff", borderColor: "transparent" }}>
+          ＋ Nieuw formulier
+        </button>
+      </div>
+      <div style={{ padding: "0 10px 8px", display: "flex", gap: 6, alignItems: "center" }}>
         <input
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder="Filter op naam of entiteit…"
           style={{ flex: 1, minWidth: 0, padding: "4px 6px", fontSize: 12, border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 5, background: "var(--s-bg, #fff)", color: "inherit" }}
         />
-        <button type="button" title="Herladen" onClick={() => setHerlaad((n) => n + 1)}
-          style={{ border: "1px solid var(--s-border, #cbd5e1)", background: "var(--s-bg, #fff)", color: "var(--s-fg, #1e293b)", borderRadius: 5, padding: "3px 7px", cursor: "pointer", fontSize: 12 }}>↻</button>
+        <button type="button" title="Herladen" onClick={() => setHerlaad((n) => n + 1)} style={knopStijl}>↻</button>
       </div>
       <div style={{ flex: 1, overflow: "auto", padding: "0 6px 8px" }}>
         {loading && <div style={{ padding: 10, fontSize: 12, color: "var(--s-fg-muted, #94a3b8)" }}>Laden…</div>}
@@ -123,23 +148,33 @@ export default function FormulierIndex() {
             {defs.map((it) => {
               const actief = geladenId === it.id;
               return (
-                <button
+                <div
                   key={it.id}
-                  type="button"
-                  onClick={() => laad(it)}
-                  title={it.beschrijving || it.naam}
+                  className="fi-rij"
                   style={{
-                    display: "block", width: "100%", textAlign: "left", cursor: "pointer",
-                    padding: "5px 8px", marginBottom: 2, borderRadius: 5, fontSize: 12.5,
+                    display: "flex", alignItems: "center", marginBottom: 2, borderRadius: 5,
                     border: "1px solid " + (actief ? "var(--s-accent, #6366f1)" : "transparent"),
-                    background: actief ? "var(--s-accent-bg, #e0e7ff)" : "transparent", color: "inherit",
+                    background: actief ? "var(--s-accent-bg, #e0e7ff)" : "transparent",
                   }}
                 >
-                  <span style={{ fontWeight: 500 }}>{it.naam}</span>
-                  <span style={{ float: "right", fontSize: 10.5, color: "var(--s-fg-muted, #94a3b8)" }}>
-                    {it.versie && `v${it.versie}`}{it.status ? ` · ${it.status}` : ""}{it.isStandaard ? " · ★" : ""}
-                  </span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => laad(it)}
+                    title={it.beschrijving || it.naam}
+                    style={{ flex: 1, minWidth: 0, textAlign: "left", cursor: "pointer", padding: "5px 8px", border: "none", background: "transparent", color: "inherit", fontSize: 12.5 }}
+                  >
+                    <span style={{ fontWeight: 500 }}>{it.naam}</span>
+                    <span style={{ float: "right", fontSize: 10.5, color: "var(--s-fg-muted, #94a3b8)" }}>
+                      {it.versie && `v${it.versie}`}{it.status ? ` · ${it.status}` : ""}{it.isStandaard ? " · ★" : ""}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => verwijder(it, e)}
+                    title="Verwijderen (afvoeren)"
+                    style={{ flex: "0 0 auto", border: "none", background: "transparent", color: "var(--s-fg-muted, #94a3b8)", cursor: "pointer", fontSize: 12, padding: "4px 7px" }}
+                  >✕</button>
+                </div>
               );
             })}
           </div>

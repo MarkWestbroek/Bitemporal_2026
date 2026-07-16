@@ -31,11 +31,12 @@ export async function saveFormulierDefinitie(baseUrl, { meta, layoutJson, gelade
   const status = String(meta?.status || "concept");
   const isStandaard = meta?.isStandaard === true;
   const versie = String(meta?.definitieVersie || "0.1");
-  // TODO: update-in-place (nieuwe versie van een geladen definitie) vergt exact
-  // dezelfde versioning-payload als RepresentatieFormulier (incl. de eigen idKolom
-  // van het meta/layout-record, niet alleen rel_id). Zonder dat ontstaan dubbele
-  // hubs → voorlopig altijd een nieuwe definitie aanmaken (veilig).
-  const bijwerken = false && geladen?.id != null;
+  // Update-in-place: is er een geladen definitie, werk die bij (nieuwe versie van
+  // meta + layout op hetzelfde id/rel_id) i.p.v. een kopie te maken. De GE-idKolom
+  // is rel_id, dus opvoer met { formulierdefinitie_id, rel_id, … } versioneert het
+  // bestaande record (register laat soms een leeg extra hub-record achter — dat is
+  // onschadelijk: er blijft precies één actueel record).
+  const bijwerken = geladen?.id != null;
 
   let doelId;
   let wijzigingen;
