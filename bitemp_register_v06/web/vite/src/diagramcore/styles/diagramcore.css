@@ -60,6 +60,11 @@
   min-width: 180px;
   width: 100%;
   height: 100%;
+  /* border-box: padding + rand tellen mee in width/height, zodat de shape
+     precies zijn React Flow-node vult i.p.v. eroverheen te steken. Zonder dit
+     werd de shape ~padding+rand breder dan de node → overflow naar rechts en
+     boven/onder-handles links van het visuele midden (scheve vorm). */
+  box-sizing: border-box;
   border: 2px solid #94a3b8;
   border-radius: 8px;
   font-size: 12px;
@@ -271,6 +276,23 @@
 .dc-canvas .dc-node:hover .react-flow__handle-left,
 .dc-canvas .dc-node:hover .react-flow__handle-right {
   opacity: 1;
+}
+
+/* Punt-vormige nodes (begin/eind, en straks junction/keuze): een mini-vorm
+   van ~22px. De acht standaard-handles (10px op elke rand) overwoekeren zo'n
+   bolletje volledig — de vorm zelf verdwijnt en de handles steken ver buiten
+   de kern uit. Daarom houden we ze onzichtbaar tot je de node aanwijst of
+   selecteert; connecteren blijft werken (alleen de opacity verandert). */
+.dc-canvas .dc-punt-node .react-flow__handle {
+  width: 7px;
+  height: 7px;
+  border-width: 1.5px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.dc-canvas .react-flow__node:hover .dc-punt-node .react-flow__handle,
+.dc-canvas .react-flow__node.selected .dc-punt-node .react-flow__handle {
+  opacity: 0.7;
 }
 
 /* === Edge-labels === */

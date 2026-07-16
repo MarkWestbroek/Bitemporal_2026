@@ -39,6 +39,7 @@ import React, {
   Suspense,
 } from "react";
 import { menuBus } from "../menuBus";
+import { vraagNaam } from "../naamDialog.jsx";
 import { registreerProfieltype } from "../profieltypeRegistry";
 import { useExportInstellingen } from "../exportInstellingen.js";
 import useUIStore from "../../store/useUIStore";
@@ -215,7 +216,17 @@ export function maakDiagramActiviteit(opties) {
     // Daarna altijd de undo-history wissen: de persist-rehydratie telt anders
     // als eerste undo-stap, waardoor ver terug-undo'en het canvas leegmaakte.
     useEffect(() => {
-      if (koppeling?.herlaadUitModel && Object.keys(useStore.getState().elements).length === 0) {
+      const s = useStore.getState();
+      // Alleen de allereerste keer spiegelen: als de (persistente) sandbox nog
+      // helemaal leeg is. Ook `diagrams` meetellen — een net aangemaakt maar nog
+      // leeg diagram voegt géén elements toe, dus met alleen de elements-check
+      // wiste deze herlaad dat diagram bij de volgende mount/reload weer weg
+      // (bug: "Nieuw diagram" leek bij canoniek/MIM niets te doen).
+      if (
+        koppeling?.herlaadUitModel &&
+        Object.keys(s.elements).length === 0 &&
+        Object.keys(s.diagrams).length === 0
+      ) {
         herlaad(false);
       }
       useStore.temporal.getState().clear();
@@ -236,8 +247,20 @@ export function maakDiagramActiviteit(opties) {
         // Externe selectie (bv. klik op een element in de Modelleren-
         // projectboom): selecteer in de inspector van dit profiel.
         menuBus.on(ev("selecteer-element"), (elementId) => setSelectieId(elementId || null)),
-        menuBus.on(ev("nieuw-diagram"), () => {
-          const naam = window.prompt(`Naam van het nieuwe ${diagramTerm}:`, `Nieuw ${diagramTerm}`);
+        menuBus.on(ev("nieuw-diagram"), async () => {
+          // Via de gedeelde naam-modal (vraagNaam) i.p.v. window.prompt: dat
+          // werd door sommige browsers onderdrukt waardoor "Nieuw diagram"
+          // stil mislukte. Standaardnaam uniek t.o.v. bestaande diagrammen.
+          const bestaand = new Set(
+            Object.values(useStore.getState().diagrams).map((d) => d.naam)
+          );
+          let voorstel = `Nieuw ${diagramTerm}`;
+          for (let n = 2; bestaand.has(voorstel); n++) voorstel = `Nieuw ${diagramTerm} ${n}`;
+          const naam = await vraagNaam({
+            titel: `Nieuw ${diagramTerm}`,
+            waarde: voorstel,
+            bevestig: "Aanmaken",
+          });
           if (!naam) return;
           useStore.getState().addDiagram({
             id: `${menuPrefix}_${Date.now()}`,

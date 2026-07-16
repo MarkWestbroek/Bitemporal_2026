@@ -18,6 +18,7 @@
 import React, { Fragment, useEffect, useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { menuBus } from "../menuBus";
+import { vraagNaam } from "../naamDialog.jsx";
 import useStudioStore from "../useStudioStore";
 import { useKruisStore } from "./koppelingenActivity.jsx";
 import TransformatiePaneel, { useTransformStore } from "./TransformatiePaneel.jsx";
@@ -635,11 +636,12 @@ function nieuwDiagramItems(mapId) {
     .filter((p) => !p.vasteDocumenten)
     .map((p) => ({
       label: p.label,
-      onClick: () => {
-        const naam = window.prompt(
-          `Naam van het nieuwe ${p.diagramTerm} (${p.label}):`,
-          `Nieuw ${p.diagramTerm}`
-        );
+      onClick: async () => {
+        const naam = await vraagNaam({
+          titel: `Nieuw ${p.diagramTerm} (${p.label})`,
+          waarde: `Nieuw ${p.diagramTerm}`,
+          bevestig: "Aanmaken",
+        });
         if (!naam) return;
         const id = `${p.menuPrefix}_${Date.now()}`;
         p.useStore.getState().addDiagram({ id, naam, diagramType: p.descriptor.id });
@@ -1033,11 +1035,12 @@ function ProfielSectie({ profiel }) {
 
   // Alleen wat nog niet in een map is geplaatst.
   const entries = Object.values(diagrams).filter((d) => !plaatsing[tabId(profiel.id, d.id)]);
-  const nieuw = () => {
-    const naam = window.prompt(
-      `Naam van het nieuwe ${profiel.diagramTerm}:`,
-      `Nieuw ${profiel.diagramTerm}`
-    );
+  const nieuw = async () => {
+    const naam = await vraagNaam({
+      titel: `Nieuw ${profiel.diagramTerm}`,
+      waarde: `Nieuw ${profiel.diagramTerm}`,
+      bevestig: "Aanmaken",
+    });
     if (!naam) return;
     const id = `${profiel.menuPrefix}_${Date.now()}`;
     profiel.useStore.getState().addDiagram({ id, naam, diagramType: profiel.descriptor.id });
@@ -1374,8 +1377,12 @@ function LegeStaat() {
             key={p.id}
             type="button"
             className="studio-modelleren__leeg-knop"
-            onClick={() => {
-              const naam = window.prompt(`Naam van het nieuwe ${p.diagramTerm}:`, `Nieuw ${p.diagramTerm}`);
+            onClick={async () => {
+              const naam = await vraagNaam({
+                titel: `Nieuw ${p.diagramTerm}`,
+                waarde: `Nieuw ${p.diagramTerm}`,
+                bevestig: "Aanmaken",
+              });
               if (!naam) return;
               const id = `${p.menuPrefix}_${Date.now()}`;
               p.useStore.getState().addDiagram({ id, naam, diagramType: p.descriptor.id });

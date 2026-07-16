@@ -14,6 +14,7 @@ function BeginShape({ selected, children }) {
   const rand = selected ? "var(--dc-selectie, #2563eb)" : DONKER;
   return (
     <div
+      className="dc-punt-node"
       style={{
         width: 22,
         height: 22,
@@ -33,6 +34,7 @@ function EindShape({ selected, children }) {
   const rand = selected ? "var(--dc-selectie, #2563eb)" : DONKER;
   return (
     <div
+      className="dc-punt-node"
       style={{
         width: 24,
         height: 24,

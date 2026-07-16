@@ -24,6 +24,7 @@ import CommandPalette from "./CommandPalette";
 import { buildMenus } from "./buildMenus";
 import { menuBus } from "./menuBus";
 import { OmniumMark } from "./icons";
+import { NaamDialogHost } from "./naamDialog";
 
 function ThemaKnop() {
   const theme = useUIStore((s) => s.theme);
@@ -144,6 +145,7 @@ export default function StudioShell() {
       <div className="studio" data-studio-theme={theme}>
         {menubar}
         {palette}
+        <NaamDialogHost />
         <div className="studio-shell-row">
           <ActivityBar activiteiten={activiteiten} />
           <div className="studio-main">
@@ -164,6 +166,7 @@ export default function StudioShell() {
     <div className="studio" data-studio-theme={theme}>
       {menubar}
       {palette}
+      <NaamDialogHost />
       <div className="studio-shell-row">
         <ActivityBar activiteiten={activiteiten} />
 
