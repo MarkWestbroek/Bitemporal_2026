@@ -7,6 +7,12 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+- **Sequence-profiel (v0)**: levenslijnen (smalle hoge node met naam-kop);
+  punten (occurrences) en activaties als rand-elementen die op de lijn
+  klemmen en meebewegen; sync/async/retour-berichten;
+  alt/opt/loop/par-fragmenten. Volgorde = y-positie (as-primitief = v1).
+- Core: `elementType.minBreedte`/`minHoogte` voor de NodeResizer
+  (smalle balken zoals activaties resizen nu correct).
 - **BPMN-profiel op de eigen motor (v0)**: taak, subproces (doorklik), events
   met soort (bericht/timer/fout/signaal), boundary events op het
   rand-primitief, gateways ×/+/○, lane, data-object; sequence flow met

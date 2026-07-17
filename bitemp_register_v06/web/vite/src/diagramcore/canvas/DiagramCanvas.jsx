@@ -569,17 +569,23 @@ function CanvasBinnenkant({
         const gastheer = kandidaten[0];
         const gw = gastheer.measured?.width ?? 200;
         const gh = gastheer.measured?.height ?? 80;
-        // Projecteer het middelpunt op de omtrek: eerst in het rect klemmen,
-        // dan naar de dichtstbijzijnde zijde duwen.
         let px = Math.min(Math.max(midden.x - gastheer.position.x, 0), gw);
         let py = Math.min(Math.max(midden.y - gastheer.position.y, 0), gh);
-        const afstanden = [
-          { d: px, zet: () => (px = 0) },
-          { d: gw - px, zet: () => (px = gw) },
-          { d: py, zet: () => (py = 0) },
-          { d: gh - py, zet: () => (py = gh) },
-        ];
-        afstanden.sort((a, b) => a.d - b.d)[0].zet();
+        if (elementType.randElement.klem === "as") {
+          // Klem op de verticale as (lijn-achtige gastheren, bv. een
+          // sequence-levenslijn): x gecentreerd, y vrij langs de lijn.
+          px = gw / 2;
+        } else {
+          // Projecteer het middelpunt op de omtrek: naar de dichtstbijzijnde
+          // zijde duwen (boundary events, entry/exit-points, pins).
+          const afstanden = [
+            { d: px, zet: () => (px = 0) },
+            { d: gw - px, zet: () => (px = gw) },
+            { d: py, zet: () => (py = 0) },
+            { d: gh - py, zet: () => (py = gh) },
+          ];
+          afstanden.sort((a, b) => a.d - b.d)[0].zet();
+        }
         onRandAanhechting(node.id, gastheer.id, { x: px - w / 2, y: py - h / 2 });
         return true;
       }

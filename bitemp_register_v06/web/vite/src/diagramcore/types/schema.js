@@ -113,6 +113,8 @@
  *   (ook per element via data.randStijl); geldt voor class-box, chip en package
  * @property {"standaard"|"onzichtbaar"} [handleStijl] - aansluitpunten tonen of niet
  * @property {boolean} [resizebaar]         - default true; false → geen NodeResizer
+ * @property {number} [minBreedte]          - resize-minimum (default 180) — bv. smalle balken
+ * @property {number} [minHoogte]           - resize-minimum (default 56)
  * @property {boolean} [achtergrond]        - true → rendert onder de andere nodes (boundaries/kaders)
  * @property {string} [kort]                - korte knop-tekst voor de "Maken"-taakbalk (bv. "ENT")
  * @property {boolean} [isConnector]
@@ -120,7 +122,7 @@
  *   container (bv. package); een element erin slepen (canvas of boom) legt
  *   die lidmaatschaps-connector, "Losmaken uit …" haalt hem weer weg.
  *   Containers sorteren bovenaan in de elementen-boom
- * @property {{ouderTypes: string[]}} [randElement] - rand-aanhechting
+ * @property {{ouderTypes: string[], klem?: "rand"|"as"}} [randElement] - rand-aanhechting
  *   (gedragsdiagram-primitief §3.1): dit element woont óp de rand van een
  *   gastheer-element (BPMN boundary-event, state entry/exit-point, activity
  *   pin). `ouderTypes` = element-typen waaraan het mag hechten. Aanhechten =

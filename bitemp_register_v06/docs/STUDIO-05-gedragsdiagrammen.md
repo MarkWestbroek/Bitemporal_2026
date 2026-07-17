@@ -23,11 +23,19 @@
 > samenvoeging, fork/join (balk), object nodes, **pins als
 > rand-elementen**, **aanroep (CallBehaviorAction) met doorklik** en
 > partities als containers; controle- en objectstroom gescheiden,
-> "[guard]"-labels. Nog open uit de verkenning: as-/volgorde-semantiek
-> (sequence), lanes met betekenis (lane-layout), regio's,
-> connector→connector (activations) en de validatie-hook. Vervolgplan:
-> `docs/plans/2026-07-17 ArchiMate en verdere notaties (plan).md` —
-> daarin is BPMN-op-eigen-motor de volgende gedragsstap.
+> "[guard]"-labels. Daarna volgden **BPMN v0 op de eigen motor** (events
+> incl. boundary op §3.1, gateways, lanes, subproces-doorklik) en —
+> verrassend — **sequence v0**: het rand-primitief bleek ook dáár de
+> mechaniek te dragen. De levenslijn is een bewust smalle, hoge node (de
+> stippellijn; de naam-kop hangt er via overflow boven); **punten
+> (occurrences) en activaties zijn rand-elementen** die op de lijn klemmen,
+> er verticaal langs schuiven en meebewegen met de levenslijn; berichten
+> (sync/async/retour) verbinden punt↔activatie; alt/opt/loop/par-fragmenten
+> als kaders. Nog open uit de verkenning: het échte **as-primitief**
+> (y-positie is nu volgorde-op-de-hand: geen auto-ordening, geen
+> horizontaal-constraint, geen doorschuiven), lanes met betekenis
+> (lane-layout), regio's en de validatie-hook. Vervolgplan:
+> `docs/plans/2026-07-17 ArchiMate en verdere notaties (plan).md`.
 
 Dit document legt de richting vast voor sequence-, activity-, state-machine- en
 BPMN-diagrammen op de generieke diagram-motor (`diagramcore`), met bijzondere aandacht
