@@ -66,8 +66,10 @@ function ElementNode({ id, data, selected }) {
     >
       {magResizen && (
         <NodeResizer
-          minWidth={180}
-          minHeight={56}
+          // Minimum-maten uit het elementtype (bv. smalle activatie-balken in
+          // een sequence-diagram); default de klassieke box-minima.
+          minWidth={elementType.minBreedte ?? 180}
+          minHeight={elementType.minHoogte ?? 56}
           isVisible={!!selected}
           lineStyle={{ borderColor: "#2563eb" }}
           handleStyle={{ width: 10, height: 10, borderRadius: 3, borderColor: "#2563eb", background: "#ffffff" }}

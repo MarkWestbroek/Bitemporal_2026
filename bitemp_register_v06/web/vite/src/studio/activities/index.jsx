@@ -32,6 +32,7 @@ import usecaseActivity from "./usecaseActivity";
 import activityActivity from "./activityActivity";
 import bpmnMotorActivity from "./bpmnMotorActivity";
 import archimateActivity from "./archimateActivity";
+import sequenceActivity from "./sequenceActivity";
 // Data-shapes globaal registreren bij startup (side-effect), zodat ze in
 // elk profiel beschikbaar zijn.
 import "./vormenRegistratie.js";
@@ -102,6 +103,7 @@ registreerActiviteiten([
   activityActivity, // "Activity" — acties/fork/pins/partities (preview)
   bpmnMotorActivity, // "BPMN" — eigen motor: events/gateways/boundary (preview)
   archimateActivity, // "ArchiMate" — vier lagen, elf relaties (preview)
+  sequenceActivity, // "Sequence" — levenslijnen op het rand-primitief (preview)
   formulierDiagramActivity, // "Formulier (diagram)" — formulier-profiel, dogfood (F48 P1; niet in de balk)
   dmnActivity,
   dmnDrdActivity, // "DMN DRD" — vierde profiel (preview, niet in de balk)

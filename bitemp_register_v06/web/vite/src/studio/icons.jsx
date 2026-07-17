@@ -45,6 +45,16 @@ export const IconUseCase = (p) => (
   </svg>
 );
 
+/** Sequence: twee levenslijnen met een bericht ertussen. */
+export const IconSequence = (p) => (
+  <svg {...base} {...p}>
+    <rect x="3" y="3" width="6" height="4" rx="1" />
+    <rect x="15" y="3" width="6" height="4" rx="1" />
+    <path d="M6 7v13M18 7v13" strokeDasharray="2.6 2.2" />
+    <path d="M6 12h10.5M14.5 10l2 2-2 2" />
+  </svg>
+);
+
 /** ArchiMate: drie gelaagde vlakken (business/application/technology). */
 export const IconArchiMate = (p) => (
   <svg {...base} {...p}>

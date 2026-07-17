@@ -113,6 +113,8 @@
  *   (ook per element via data.randStijl); geldt voor class-box, chip en package
  * @property {"standaard"|"onzichtbaar"} [handleStijl] - aansluitpunten tonen of niet
  * @property {boolean} [resizebaar]         - default true; false → geen NodeResizer
+ * @property {number} [minBreedte]          - resize-minimum (default 180) — bv. smalle balken
+ * @property {number} [minHoogte]           - resize-minimum (default 56)
  * @property {boolean} [achtergrond]        - true → rendert onder de andere nodes (boundaries/kaders)
  * @property {string} [kort]                - korte knop-tekst voor de "Maken"-taakbalk (bv. "ENT")
  * @property {boolean} [isConnector]

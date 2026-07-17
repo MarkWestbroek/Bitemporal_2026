@@ -92,6 +92,35 @@ const GLYPHS = {
         <line x1="2.5" y1="4.4" x2="11.5" y2="4.4" />
       </>
     )),
+  // ── sequence ──
+  "seq-levenslijn": (m) =>
+    basis(m, (
+      <>
+        <rect x="3.5" y="1.5" width="7" height="3.4" />
+        <line x1="7" y1="4.9" x2="7" y2="12.5" strokeDasharray="2 1.6" />
+      </>
+    )),
+  "seq-punt": (m) =>
+    basis(m, (
+      <>
+        <line x1="7" y1="1.5" x2="7" y2="12.5" strokeDasharray="2 1.6" />
+        <circle cx="7" cy="7" r="2.4" fill="var(--s-panel, #fff)" />
+      </>
+    )),
+  "seq-activatie": (m) =>
+    basis(m, (
+      <>
+        <line x1="7" y1="1.5" x2="7" y2="12.5" strokeDasharray="2 1.6" />
+        <rect x="5.4" y="4.5" width="3.2" height="5.5" fill="var(--s-panel, #fff)" />
+      </>
+    )),
+  "seq-fragment": (m) =>
+    basis(m, (
+      <>
+        <rect x="1.5" y="2" width="11" height="10" />
+        <path d="M1.5 5.5 H6 L7.2 4 V2" />
+      </>
+    )),
   // ── use case ──
   "uc-actor": (m) =>
     basis(m, (
