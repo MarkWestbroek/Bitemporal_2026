@@ -45,6 +45,16 @@ export const IconUseCase = (p) => (
   </svg>
 );
 
+/** Activity: actie → beslissing (ruit) met vertakking. */
+export const IconActivity = (p) => (
+  <svg {...base} {...p}>
+    <rect x="3" y="3.5" width="10" height="5.5" rx="2.7" />
+    <path d="M8 9v3.5" />
+    <path d="M8 12.5 L11.5 16 L8 19.5 L4.5 16 Z" />
+    <path d="M11.5 16h6M17.5 16v-6" />
+  </svg>
+);
+
 /** Koppelingen: twee werelden met een trace-link ertussen. */
 export const IconKoppeling = (p) => (
   <svg {...base} {...p}>
