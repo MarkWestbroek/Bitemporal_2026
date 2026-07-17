@@ -25,6 +25,7 @@
  * Regio's (parallelle deelmachines) blijven open — dat vraagt lane-layout.
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
+import { registreerGedragTypeIconen } from "../gedragTypeIconen.jsx";
 import { registreerStateMachineShapes } from "./shapes.jsx";
 
 export const STATEMACHINE_ID = "statemachine";
@@ -54,7 +55,8 @@ const elementTypes = [
   {
     id: "begin",
     label: "Begin",
-    kort: "●",
+    kort: "Begin",
+    icoon: "gedrag-begin",
     shape: "sm-begin",
     resizebaar: false,
     properties: [],
@@ -63,6 +65,7 @@ const elementTypes = [
     id: "toestand",
     label: "Toestand",
     kort: "TS",
+    icoon: "gedrag-toestand",
     shape: "rounded",
     kleur: "#fef9c3",
     properties: [KLEUR_VELD],
@@ -72,7 +75,8 @@ const elementTypes = [
   {
     id: "eind",
     label: "Eind",
-    kort: "◉",
+    kort: "Eind",
+    icoon: "gedrag-eind",
     shape: "sm-eind",
     resizebaar: false,
     properties: [],
@@ -80,7 +84,8 @@ const elementTypes = [
   {
     id: "composiet",
     label: "Samengestelde toestand",
-    kort: "⊞TS",
+    kort: "Comp",
+    icoon: "gedrag-composiet",
     shape: "sm-composiet",
     // Container zoals een package: toestanden erin slepen legt "bevat".
     containerVoor: "bevat",
@@ -90,7 +95,8 @@ const elementTypes = [
   {
     id: "submachine",
     label: "Submachine",
-    kort: "∞TS",
+    kort: "Subm",
+    icoon: "gedrag-submachine",
     shape: "rounded",
     kleur: "#e0e7ff",
     // Gedragsverwijzing (§3.2): verwijst naar een ander SM-diagram;
@@ -104,7 +110,8 @@ const elementTypes = [
   {
     id: "keuze",
     label: "Keuze",
-    kort: "◇",
+    kort: "Keuze",
+    icoon: "gedrag-ruit",
     shape: "sm-keuze",
     resizebaar: false,
     properties: [],
@@ -112,7 +119,8 @@ const elementTypes = [
   {
     id: "junction",
     label: "Junction",
-    kort: "•",
+    kort: "Junctie",
+    icoon: "gedrag-junction",
     shape: "sm-junction",
     resizebaar: false,
     properties: [],
@@ -120,7 +128,8 @@ const elementTypes = [
   {
     id: "historie",
     label: "Historie",
-    kort: "H",
+    kort: "Hist",
+    icoon: "gedrag-historie",
     shape: "sm-historie",
     resizebaar: false,
     // diep = H* (herstelt de volledige geneste configuratie).
@@ -129,7 +138,8 @@ const elementTypes = [
   {
     id: "entry",
     label: "Entry-point",
-    kort: "◦→",
+    kort: "Entry",
+    icoon: "gedrag-entry",
     shape: "sm-entry",
     resizebaar: false,
     // Rand-element (§3.1): klikt vast op de omtrek van een toestand.
@@ -139,7 +149,8 @@ const elementTypes = [
   {
     id: "exit",
     label: "Exit-point",
-    kort: "⊗→",
+    kort: "Exit",
+    icoon: "gedrag-exit",
     shape: "sm-exit",
     resizebaar: false,
     randElement: { ouderTypes: RAND_OUDERS },
@@ -233,6 +244,7 @@ export function maakElement(elementTypeId) {
 
 /** Idempotente registratie (veilig bij HMR/dubbele import). */
 export function registreerStateMachine() {
+  registreerGedragTypeIconen();
   registreerStateMachineShapes();
   if (!getDiagramType(STATEMACHINE_ID)) {
     registreerDiagramType(statemachineDiagramType);

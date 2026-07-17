@@ -26,6 +26,7 @@
  * actie") zijn voor de validatie-hook.
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
+import { registreerGedragTypeIconen } from "../gedragTypeIconen.jsx";
 import { registreerActivityShapes } from "./shapes.jsx";
 
 export const ACTIVITY_ID = "activity";
@@ -43,7 +44,8 @@ const elementTypes = [
   {
     id: "begin",
     label: "Begin",
-    kort: "●",
+    kort: "Begin",
+    icoon: "gedrag-begin",
     shape: "act-begin",
     resizebaar: false,
     properties: [],
@@ -51,7 +53,8 @@ const elementTypes = [
   {
     id: "actie",
     label: "Actie",
-    kort: "ACT",
+    kort: "Actie",
+    icoon: "gedrag-toestand",
     shape: "rounded",
     kleur: "#dbeafe",
     properties: [KLEUR_VELD],
@@ -59,7 +62,8 @@ const elementTypes = [
   {
     id: "aanroep",
     label: "Aanroep",
-    kort: "⧉ACT",
+    kort: "Aanroep",
+    icoon: "gedrag-submachine",
     shape: "rounded",
     kleur: "#e0e7ff",
     // CallBehaviorAction (§3.2): verwijst naar een ander activity-diagram.
@@ -72,7 +76,8 @@ const elementTypes = [
   {
     id: "beslissing",
     label: "Beslissing/samenvoeging",
-    kort: "◇",
+    kort: "Keuze",
+    icoon: "gedrag-ruit",
     shape: "act-beslissing",
     resizebaar: false,
     properties: [],
@@ -80,7 +85,8 @@ const elementTypes = [
   {
     id: "fork",
     label: "Fork/join",
-    kort: "▬",
+    kort: "Fork",
+    icoon: "gedrag-fork",
     shape: "act-fork",
     resizebaar: false,
     // verticaal = staande balk (parallelle stromen naast elkaar).
@@ -89,7 +95,8 @@ const elementTypes = [
   {
     id: "object",
     label: "Object",
-    kort: "OBJ",
+    kort: "Object",
+    icoon: "gedrag-object",
     shape: "act-object",
     kleur: "#f1f5f9",
     properties: [KLEUR_VELD],
@@ -97,7 +104,8 @@ const elementTypes = [
   {
     id: "pin",
     label: "Pin",
-    kort: "▫",
+    kort: "Pin",
+    icoon: "gedrag-pin",
     shape: "act-pin",
     resizebaar: false,
     // Rand-element (§3.1): klikt vast op de omtrek van een actie/aanroep.
@@ -107,7 +115,8 @@ const elementTypes = [
   {
     id: "partitie",
     label: "Partitie",
-    kort: "LANE",
+    kort: "Lane",
+    icoon: "gedrag-lane",
     shape: "act-partitie",
     // Swimlane als container: leden erin slepen legt "bevat".
     containerVoor: "bevat",
@@ -117,7 +126,8 @@ const elementTypes = [
   {
     id: "eind",
     label: "Eind",
-    kort: "◉",
+    kort: "Eind",
+    icoon: "gedrag-eind",
     shape: "act-eind",
     resizebaar: false,
     properties: [],
@@ -125,7 +135,8 @@ const elementTypes = [
   {
     id: "flow-eind",
     label: "Flow-eind",
-    kort: "⊗",
+    kort: "Flow",
+    icoon: "gedrag-flow-eind",
     shape: "act-flow-eind",
     resizebaar: false,
     properties: [],
@@ -220,6 +231,7 @@ export function maakElement(elementTypeId) {
 
 /** Idempotente registratie (veilig bij HMR/dubbele import). */
 export function registreerActivity() {
+  registreerGedragTypeIconen();
   registreerActivityShapes();
   if (!getDiagramType(ACTIVITY_ID)) {
     registreerDiagramType(activityDiagramType);

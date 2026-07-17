@@ -18,6 +18,7 @@
  * generalisatie alleen binnen dezelfde soort.
  */
 import { registreerDiagramType, getDiagramType } from "../../diagramcore/types/typeRegistry.js";
+import { registreerGedragTypeIconen } from "../gedragTypeIconen.jsx";
 import { registreerUseCaseShapes } from "./shapes.jsx";
 
 export const USECASE_ID = "usecase";
@@ -34,7 +35,8 @@ const elementTypes = [
   {
     id: "actor",
     label: "Actor",
-    kort: "ACT",
+    kort: "Actor",
+    icoon: "uc-actor",
     shape: "uc-actor",
     resizebaar: false,
     properties: [],
@@ -43,6 +45,7 @@ const elementTypes = [
     id: "usecase",
     label: "Use case",
     kort: "UC",
+    icoon: "uc-usecase",
     shape: "uc-ellips",
     kleur: "#e0f2fe",
     properties: [KLEUR_VELD],
@@ -50,7 +53,8 @@ const elementTypes = [
   {
     id: "systeem",
     label: "Systeemkader",
-    kort: "SYS",
+    kort: "Systeem",
+    icoon: "uc-systeem",
     shape: "uc-systeem",
     // Container zoals een package: use cases erin slepen legt "bevat".
     containerVoor: "bevat",
@@ -158,6 +162,7 @@ export function maakElement(elementTypeId) {
 
 /** Idempotente registratie (veilig bij HMR/dubbele import). */
 export function registreerUseCase() {
+  registreerGedragTypeIconen();
   registreerUseCaseShapes();
   if (!getDiagramType(USECASE_ID)) {
     registreerDiagramType(usecaseDiagramType);
