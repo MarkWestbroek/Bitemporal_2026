@@ -18,6 +18,7 @@
  */
 import React from "react";
 import { registreerShape } from "../../diagramcore/shapes/shapeRegistry.js";
+import { resolveerElementRef } from "../../studio/elementVerwijzing.jsx";
 
 const DONKER = "#334155";
 const KOP_BREED = 148;
@@ -25,6 +26,11 @@ const KOP_BREED = 148;
 /** Levenslijn: smalle hoge node (de lijn), met de naam-kop erbovenop. */
 function LevenslijnShape({ element, selected, children }) {
   const rand = selected ? "var(--dc-selectie, #2563eb)" : "#94a3b8";
+  // Getypeerd object (instantie-van): kop toont "naam:Type" onderstreept —
+  // de UML-objectnotatie. Onvindbaar type → naam + ⚠ (verwijderd/hernoemd).
+  const ref = element?.data?.instantieVan;
+  const type = ref ? resolveerElementRef(ref) : null;
+  const kop = element?.naam || (type ? "" : "(levenslijn)");
   return (
     <div style={{ width: 14, height: "100%", minHeight: 260, position: "relative" }}>
       {/* De gestippelde lijn zelf (gecentreerd in de smalle node). */}
@@ -53,7 +59,14 @@ function LevenslijnShape({ element, selected, children }) {
           whiteSpace: "nowrap",
         }}
       >
-        {element?.naam || "(levenslijn)"}
+        {ref ? (
+          <span style={{ textDecoration: "underline" }}>
+            {kop}
+            {type ? `:${type.label}` : " ⚠"}
+          </span>
+        ) : (
+          kop
+        )}
       </div>
       {children}
     </div>

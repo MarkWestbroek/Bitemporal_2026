@@ -38,14 +38,26 @@ const elementTypes = [
   {
     id: "levenslijn",
     label: "Levenslijn",
-    omschrijving: "Deelnemer aan de interactie; sleep punten/activaties op de lijn.",
+    omschrijving: "Deelnemer aan de interactie — een object. Typeer hem via 'instantie van' of door een element uit de boom op de lijn te droppen.",
     kort: "Lijn",
     icoon: "seq-levenslijn",
     shape: "seq-levenslijn",
     // Hoogte rekbaar (lijn langer maken); de breedte blijft praktisch 14px.
     minBreedte: 14,
     minHoogte: 200,
-    properties: [KLEUR_VELD],
+    properties: [
+      // Instantie-van (ontwerp "Sequence hermetisch" §1): het type van dit
+      // object, uit welk profiel dan ook. De kop rendert dan naam:Type.
+      { key: "instantieVan", label: "instantie van", datatype: "element-verwijzing" },
+      KLEUR_VELD,
+    ],
+    hooks: {
+      /** Element uit de boom op de lijn gedropt → typeer de levenslijn. */
+      ontvangtDrop: (element, ref, { updateElement }) => {
+        if (!ref?.profielId || !ref?.elementId) return;
+        updateElement(element.id, { data: { instantieVan: { profielId: ref.profielId, elementId: ref.elementId } } });
+      },
+    },
   },
   {
     id: "punt",
@@ -117,6 +129,24 @@ const elementTypes = [
     bron: { elementTypes: AANHECHT },
     doel: { elementTypes: AANHECHT },
     edgePresentatie,
+    // Hermetisch (ontwerp §2): het bericht is een operatie van het type van
+    // de doel-levenslijn (keten doel-punt → levenslijn → instantieVan),
+    // met vrije argumenten. Zonder getypeerde levenslijn: vrije naam.
+    properties: [
+      { key: "operatie", label: "operatie", datatype: "operatie-keuze" },
+      { key: "argumenten", label: "argumenten", datatype: "string" },
+    ],
+    hooks: {
+      /** Label: operatie(argumenten) — de gekozen operatie wint van de naam. */
+      edgeLabels: (conn) => {
+        const op = conn.data?.operatie;
+        if (!op?.naam) return {};
+        const args = conn.data?.argumenten;
+        // Signaturen ("doe(x): y") niet dubbel van haakjes voorzien.
+        const tekst = op.naam.includes("(") ? op.naam : `${op.naam}(${args || ""})`;
+        return { kaal: [{ zijde: "midden", delen: [{ tekst, soort: "naam" }] }] };
+      },
+    },
   })),
 ];
 

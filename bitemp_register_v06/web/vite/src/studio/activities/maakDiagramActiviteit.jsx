@@ -41,6 +41,10 @@ import React, {
 import { menuBus } from "../menuBus";
 import useStudioStore from "../useStudioStore";
 import { vraagNaam } from "../naamDialog.jsx";
+// Side-effect: registreert de datatypes "element-verwijzing" en
+// "operatie-keuze" (instantie-van-concept) op het core-koppelvlak.
+import "../elementVerwijzing.jsx";
+import { ELEMENT_REF_MIME as REF_MIME } from "../../diagramcore/canvas/externDrop.js";
 import { registreerProfieltype } from "../profieltypeRegistry";
 import { useExportInstellingen } from "../exportInstellingen.js";
 import useUIStore from "../../store/useUIStore";
@@ -116,6 +120,10 @@ export function maakDiagramActiviteit(opties) {
     // { id, label, Component }. De Component krijgt { useStore } als props.
     // Bv. het shape-set-matrixpaneel van de profiel-editor.
     onderPaneel = null,
+    // OperatieResolver-facet (ontwerp "Sequence hermetisch" §2):
+    // (element, elements) => [{id, naam, …}] — welke operaties dit profiel
+    // voor een element aanbiedt (UML-operaties, OAS-operations, …).
+    operatiesVan = null,
   } = opties;
 
   const ev = (naam) => `${menuPrefix}:${naam}`;
@@ -885,6 +893,9 @@ export function maakDiagramActiviteit(opties) {
     const multiDragStart = (el) => (e) => {
       const ids = multiIds.has(el.id) ? [...multiIds] : [el.id];
       e.dataTransfer.setData(SLEEP_MIME, JSON.stringify({ elementId: el.id, elementIds: ids }));
+      // Cross-profiel referentie (instantie-van-concept): mét profiel-id,
+      // zodat een ander profiel de drop kan duiden (bv. levenslijn typeren).
+      e.dataTransfer.setData(REF_MIME, JSON.stringify({ profielId: id, elementId: el.id }));
       e.dataTransfer.setData("text/plain", el.naam || el.id);
       e.dataTransfer.effectAllowed = "copyMove";
     };
@@ -986,6 +997,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
       draggable: true,
       onDragStart: (e) => {
         e.dataTransfer.setData(SLEEP_MIME, JSON.stringify({ elementId: el.id }));
+        e.dataTransfer.setData(REF_MIME, JSON.stringify({ profielId: id, elementId: el.id }));
         e.dataTransfer.setData("text/plain", el.naam || el.id);
         // Les uit de IDE: alléén "move" laat sommige browsers geen
         // drop-event vuren — copyMove houdt beide routes open.
@@ -2083,6 +2095,20 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                     useStore.getState().setActiefDiagram(doelId);
                     menuBus.emit("studio:open-diagram", { profielId: id, diagramId: doelId });
                   }}
+                  onExternDrop={(nodeId, ref, positie) => {
+                    // Cross-profiel drop (instantie-van-concept): het
+                    // elementtype van de geraakte node beslist via zijn
+                    // ontvangtDrop-hook (bv. levenslijn typeren).
+                    const s = useStore.getState();
+                    const el = nodeId ? s.elements[nodeId] : null;
+                    const et = el ? elementTypesById[el.elementType] : null;
+                    if (el && et?.hooks?.ontvangtDrop) {
+                      et.hooks.ontvangtDrop(el, ref, {
+                        updateElement: s.updateElement,
+                        positie,
+                      });
+                    }
+                  }}
                   shapeSet={
                     (descriptor.shapeSets || []).find((set) => set.id === shapeSetId)?.shapes || null
                   }
@@ -2445,6 +2471,8 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
       menus,
       menuPrefix,
       diagramTerm,
+      // OperatieResolver-facet: operaties van een element in dit profiel.
+      operatiesVan,
     });
   }
 

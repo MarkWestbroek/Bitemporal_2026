@@ -7,6 +7,14 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+- **Sequence v1 — hermetisch minimum** (ontwerp "Sequence hermetisch" §5.1):
+  getypeerde levenslijnen via het nieuwe cross-profiel **instantie-van**-concept
+  (datatype "element-verwijzing"; kop toont `naam:Type` onderstreept; element
+  uit de boom op de lijn droppen typeert hem), **OperatieResolver-facet** per
+  profieltype (puur-UML-operaties, OAS-operations) en **operatie-keuze op
+  berichten** (label = signatuur, met argumenten-veld).
+- Core: `onExternDrop` op de canvas + `ELEMENT_REF_MIME` (cross-profiel
+  drag-and-drop referenties) + descriptor-hook `hooks.ontvangtDrop`.
 - **Sequence-profiel (v0)**: levenslijnen (smalle hoge node met naam-kop);
   punten (occurrences) en activaties als rand-elementen die op de lijn
   klemmen en meebewegen; sync/async/retour-berichten;

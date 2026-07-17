@@ -577,6 +577,31 @@ export function maakElement(elementTypeId) {
   return element;
 }
 
+/**
+ * OperatieResolver-facet (ontwerp "Sequence hermetisch" §2): OAS-operations
+ * als operaties. Een «operation»-element biedt zichzelf aan ("GET /pad");
+ * elk ander element (bv. een schema of api-kader) biedt de operations aan
+ * die er via een connector aan hangen.
+ */
+export function operatiesVan(element, elements) {
+  const maak = (el) => ({
+    id: el.id,
+    naam: el.naam || `${el.data?.method || ""} ${el.data?.pad || ""}`.trim() || el.id,
+  });
+  if (!element) return [];
+  if (element.elementType === "operatie") return [maak(element)];
+  const buren = new Set();
+  for (const el of Object.values(elements || {})) {
+    if (!el.source || !el.target) continue;
+    if (el.source === element.id) buren.add(el.target);
+    if (el.target === element.id) buren.add(el.source);
+  }
+  return [...buren]
+    .map((id) => elements[id])
+    .filter((el) => el?.elementType === "operatie")
+    .map(maak);
+}
+
 /** Idempotente registratie (veilig bij HMR/dubbele import). */
 export function registreerOas31() {
   if (!getDiagramType(OAS31_ID)) {
