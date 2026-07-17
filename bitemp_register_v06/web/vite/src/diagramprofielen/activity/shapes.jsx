@@ -115,7 +115,6 @@ function ObjectShape({ element, elementType, selected, children }) {
   const rand = selected ? "var(--dc-selectie, #2563eb)" : "#94a3b8";
   return (
     <div
-      className="dc-zacht-handles"
       style={{
         width: "100%",
         height: "100%",

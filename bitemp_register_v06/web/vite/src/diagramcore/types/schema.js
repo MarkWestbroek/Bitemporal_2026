@@ -100,6 +100,7 @@
  * @typedef {Object} ElementType
  * @property {string} id
  * @property {string} label
+ * @property {string} [omschrijving]        - één-regel-uitleg (taakbalk-tooltip)
  * @property {string} shape                 - ShapeType-id (bv. "class-box", "chip", "knip-box", "note", "boundary")
  * @property {string} [stereotype]          - headerregel, bv. "«entiteit»"
  * @property {string} [kleur]               - default; instantie kan overriden

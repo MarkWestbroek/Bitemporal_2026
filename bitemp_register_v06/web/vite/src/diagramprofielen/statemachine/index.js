@@ -55,6 +55,7 @@ const elementTypes = [
   {
     id: "begin",
     label: "Begin",
+    omschrijving: "Startpunt van de machine — alleen uitgaande transities.",
     kort: "Begin",
     icoon: "gedrag-begin",
     shape: "sm-begin",
@@ -64,6 +65,7 @@ const elementTypes = [
   {
     id: "toestand",
     label: "Toestand",
+    omschrijving: "Toestand van het systeem, met entry/do/exit-activiteiten.",
     kort: "TS",
     icoon: "gedrag-toestand",
     shape: "rounded",
@@ -75,6 +77,7 @@ const elementTypes = [
   {
     id: "eind",
     label: "Eind",
+    omschrijving: "Eindtoestand: de machine is klaar — alleen inkomende transities.",
     kort: "Eind",
     icoon: "gedrag-eind",
     shape: "sm-eind",
@@ -84,6 +87,7 @@ const elementTypes = [
   {
     id: "composiet",
     label: "Samengestelde toestand",
+    omschrijving: "Samengestelde toestand: sleep deel-toestanden erin.",
     kort: "Comp",
     icoon: "gedrag-composiet",
     shape: "sm-composiet",
@@ -95,6 +99,7 @@ const elementTypes = [
   {
     id: "submachine",
     label: "Submachine",
+    omschrijving: "Verwijst naar een andere state machine; dubbelklik opent het diagram.",
     kort: "Subm",
     icoon: "gedrag-submachine",
     shape: "rounded",
@@ -110,6 +115,7 @@ const elementTypes = [
   {
     id: "keuze",
     label: "Keuze",
+    omschrijving: "Dynamische keuze: guards bepalen welke uitgaande transitie volgt.",
     kort: "Keuze",
     icoon: "gedrag-ruit",
     shape: "sm-keuze",
@@ -119,6 +125,7 @@ const elementTypes = [
   {
     id: "junction",
     label: "Junction",
+    omschrijving: "Statisch knooppunt om transities samen te voegen of te splitsen.",
     kort: "Junctie",
     icoon: "gedrag-junction",
     shape: "sm-junction",
@@ -128,6 +135,7 @@ const elementTypes = [
   {
     id: "historie",
     label: "Historie",
+    omschrijving: "Herinnert de laatst actieve deel-toestand (H; vinkje 'diep' = H*).",
     kort: "Hist",
     icoon: "gedrag-historie",
     shape: "sm-historie",
@@ -138,6 +146,7 @@ const elementTypes = [
   {
     id: "entry",
     label: "Entry-point",
+    omschrijving: "Entry-point: sleep hem op de rand van een toestand — nette binnenkomst.",
     kort: "Entry",
     icoon: "gedrag-entry",
     shape: "sm-entry",
@@ -149,6 +158,7 @@ const elementTypes = [
   {
     id: "exit",
     label: "Exit-point",
+    omschrijving: "Exit-point: sleep hem op de rand van een toestand — nette uitgang.",
     kort: "Exit",
     icoon: "gedrag-exit",
     shape: "sm-exit",
@@ -159,6 +169,7 @@ const elementTypes = [
   {
     id: "notitie",
     label: "Notitie",
+    omschrijving: "Vrije notitie op het diagram.",
     kort: "NOT",
     shape: "note",
     handleStijl: "onzichtbaar",
@@ -169,6 +180,7 @@ const elementTypes = [
   {
     id: "transitie",
     label: "Transitie",
+    omschrijving: "Overgang tussen toestanden: trigger [guard] / effect.",
     kort: "→",
     shape: "edge",
     isConnector: true,
@@ -201,12 +213,13 @@ const elementTypes = [
     // is de lijn visueel overbodig (het kind ligt ín de container).
     id: "bevat",
     label: "Bevat (toestand)",
+    omschrijving: "Lidmaatschap van een samengestelde toestand (verborgen zolang het lid erin ligt).",
     kort: "⊞ ∋",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: ["composiet"] },
     doel: { elementTypes: ["begin", "eind", ...TUSSEN, "notitie"] },
-    edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#cbd5e1" },
+    edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#cbd5e1", verbergBijNesting: true },
   },
 ];
 

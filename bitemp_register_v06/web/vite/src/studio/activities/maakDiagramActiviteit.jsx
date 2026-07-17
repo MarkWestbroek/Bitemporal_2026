@@ -39,6 +39,7 @@ import React, {
   Suspense,
 } from "react";
 import { menuBus } from "../menuBus";
+import useStudioStore from "../useStudioStore";
 import { vraagNaam } from "../naamDialog.jsx";
 import { registreerProfieltype } from "../profieltypeRegistry";
 import { useExportInstellingen } from "../exportInstellingen.js";
@@ -1585,6 +1586,8 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
       taakbalkSleutel,
       taakbalkDefaults
     );
+    // Eigen taakbalk-tooltips (naam + uitleg) — toggle in Studio-instellingen.
+    const tooltipsAan = useStudioStore((s) => s.tooltipsAan);
 
     // Menubalk → layout-acties.
     useEffect(() => {
@@ -1913,6 +1916,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
               </span>
             ),
             titel: `Nieuw: ${et.label}`,
+            uitleg: et.omschrijving || null,
             onClick: () => plaatsNieuwElement(et.id),
           }));
       } else if (balk.acties === "connectorTypes") {
@@ -1928,6 +1932,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
               </span>
             ),
             titel: `Verbindingsmodus: ${et.label} (klik nogmaals voor automatisch)`,
+            uitleg: et.omschrijving || null,
             actief: verbindingsType === et.id,
             onClick: () => setVerbindingsType(verbindingsType === et.id ? null : et.id),
           }));
@@ -2096,6 +2101,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                     breedte={voorkeuren[b.id]?.breedte}
                     onPositie={(p) => zetPositie(b.id, p)}
                     onBreedte={(breedte) => zetBreedte(b.id, breedte)}
+                    tooltips={tooltipsAan}
                   />
                 ))}
             </>

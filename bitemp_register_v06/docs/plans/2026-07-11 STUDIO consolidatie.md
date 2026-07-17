@@ -630,9 +630,15 @@ notatie-roadmap (ArchiMate/C4/SysML/ERD/OWL/mindmap):
 **Backlog (voor later):**
 - **Export-afbeelding neemt selectie-opmaak mee.** De PNG/SVG-export toont —
   afhankelijk van hoe je selecteert — de blauwe selectie-rand en de vierkante
-  resize-handles (baked-in). Bij export de selectie tijdelijk opheffen of de
+  resize-hoekjes (baked-in). Bij export de selectie tijdelijk opheffen of de
   selectie-chrome uitsluiten uit de te serialiseren DOM (vgl. de `neemMee`-
-  filter in `exporteerCanvas.js`, die minimap/controls/handles al weglaat —
-  de selectie-outline/­resizer ontbreekt daar nog).
+  filter in `exporteerCanvas.js`, die minimap/controls/**handles** al weglaat
+  — de resterende chrome is dus de selectie-outline + de
+  `react-flow__resize-control`-hoekjes; die horen ook in de filter).
 - **Overige `window.prompt`-plekken** (diagram/map hernoemen, nieuwe map, en
   losse panelen) kunnen ook via `vraagNaam` — nu triviaal.
+- **"Meer handles op een element"** (STUDIO ideas): de clash met
+  afleidings-ruis is sinds 2026-07-17 grotendeels weg — handles zijn overal
+  gedempt tot je de node nadert (hover/selectie). Meer aansluitpunten per
+  zijde kan dus zonder visuele straf; alleen de handle-id-ruimte
+  (source/target × zijde × index) en de kortste-weg-keuze moeten mee.

@@ -257,24 +257,22 @@
 
 /* === Handles === */
 
+/* Handles zijn hulpchrome, geen diagraminhoud — zeker in gedragsdiagrammen
+   waar rondjes óók symbolen zijn (begin/eind/junction) leidden de zware
+   witte stippen af. Daarom overal: klein (8px), licht van kleur en gedempt;
+   pas als je de node nadert (hover) of selecteert lichten ze op. */
 .dc-canvas .react-flow__handle {
-  width: 10px;
-  height: 10px;
-  border: 2px solid #475569;
-  background: #ffffff;
-  border-radius: 50%;
-}
-
-.dc-canvas .dc-node .react-flow__handle-left,
-.dc-canvas .dc-node .react-flow__handle-right {
   width: 8px;
   height: 8px;
-  opacity: 0.35;
+  border: 1.5px solid #64748b;
+  background: #ffffff;
+  border-radius: 50%;
+  opacity: 0.3;
   transition: opacity 0.15s;
 }
 
-.dc-canvas .dc-node:hover .react-flow__handle-left,
-.dc-canvas .dc-node:hover .react-flow__handle-right {
+.dc-canvas .react-flow__node:hover .react-flow__handle,
+.dc-canvas .react-flow__node.selected .react-flow__handle {
   opacity: 1;
 }
 
@@ -305,18 +303,31 @@
 .dc-canvas .dc-punt-node .react-flow__handle-top { top: -8px; }
 .dc-canvas .dc-punt-node .react-flow__handle-bottom { bottom: -8px; }
 
-/* Zachte handles: voor sierlijke shapes (actor, use case-ellips) waar de
-   standaard 10px-stippen te zwaar ogen — klein en gedempt tot hover/selectie,
-   op álle vier de zijden (de standaardregel dempt alleen links/rechts). */
-.dc-canvas .dc-zacht-handles .react-flow__handle {
-  width: 8px;
-  height: 8px;
-  opacity: 0.35;
-  transition: opacity 0.15s;
+/* Eigen taakbalk-tooltip (i.p.v. de kleine native title): naam + uitleg,
+   direct leesbaar. Toggle in Studio-instellingen → Taakbalken. */
+.dc-taakbalk-tooltip {
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 300;
+  max-width: 280px;
+  padding: 7px 11px;
+  background: var(--s-panel, #ffffff);
+  color: var(--s-fg, #1e293b);
+  border: 1px solid var(--s-border, #cbd5e1);
+  border-radius: 8px;
+  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.22);
+  font-size: 12.5px;
+  line-height: 1.35;
+  pointer-events: none;
 }
-.dc-canvas .react-flow__node:hover .dc-zacht-handles .react-flow__handle,
-.dc-canvas .react-flow__node.selected .dc-zacht-handles .react-flow__handle {
-  opacity: 1;
+
+.dc-taakbalk-tooltip-titel {
+  font-weight: 700;
+}
+
+.dc-taakbalk-tooltip-uitleg {
+  margin-top: 2px;
+  color: var(--s-fg-muted, #64748b);
 }
 
 /* Gedragsverwijzing (§3.2): hoek-badge op nodes met een gekoppeld diagram

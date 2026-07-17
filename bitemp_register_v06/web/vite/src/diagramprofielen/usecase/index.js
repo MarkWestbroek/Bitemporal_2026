@@ -35,6 +35,7 @@ const elementTypes = [
   {
     id: "actor",
     label: "Actor",
+    omschrijving: "Rol buiten het systeem die ermee interacteert.",
     kort: "Actor",
     icoon: "uc-actor",
     shape: "uc-actor",
@@ -44,6 +45,7 @@ const elementTypes = [
   {
     id: "usecase",
     label: "Use case",
+    omschrijving: "Samenhangend stuk functionaliteit met waarde voor een actor.",
     kort: "UC",
     icoon: "uc-usecase",
     shape: "uc-ellips",
@@ -53,6 +55,7 @@ const elementTypes = [
   {
     id: "systeem",
     label: "Systeemkader",
+    omschrijving: "Systeemgrens: sleep de use cases van dit systeem erin.",
     kort: "Systeem",
     icoon: "uc-systeem",
     shape: "uc-systeem",
@@ -64,6 +67,7 @@ const elementTypes = [
   {
     id: "notitie",
     label: "Notitie",
+    omschrijving: "Vrije notitie op het diagram.",
     kort: "NOT",
     shape: "note",
     handleStijl: "onzichtbaar",
@@ -74,6 +78,7 @@ const elementTypes = [
   {
     id: "associatie",
     label: "Associatie",
+    omschrijving: "De actor neemt deel aan de use case.",
     kort: "—",
     shape: "edge",
     isConnector: true,
@@ -84,6 +89,7 @@ const elementTypes = [
   {
     id: "include",
     label: "Include",
+    omschrijving: "De basis-use case omvat de geïncludeerde altijd.",
     kort: "«i»",
     shape: "edge",
     isConnector: true,
@@ -95,6 +101,7 @@ const elementTypes = [
   {
     id: "extend",
     label: "Extend",
+    omschrijving: "Optionele uitbreiding die invoegt op de basis-use case.",
     kort: "«e»",
     shape: "edge",
     isConnector: true,
@@ -106,6 +113,7 @@ const elementTypes = [
   {
     id: "generalisatie",
     label: "Generalisatie",
+    omschrijving: "Specialisatie tussen actoren of tussen use cases.",
     kort: "▷",
     shape: "edge",
     isConnector: true,
@@ -120,12 +128,13 @@ const elementTypes = [
     // Lidmaatschap van het systeemkader — subtiel; het kind ligt er visueel al in.
     id: "bevat",
     label: "Bevat (systeem)",
+    omschrijving: "Lidmaatschap van het systeemkader; verborgen zolang het lid erin ligt.",
     kort: "SYS ∋",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: ["systeem"] },
     doel: { elementTypes: ["usecase", "notitie"] },
-    edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#cbd5e1" },
+    edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#cbd5e1", verbergBijNesting: true },
   },
 ];
 

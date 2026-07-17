@@ -44,6 +44,7 @@ const elementTypes = [
   {
     id: "begin",
     label: "Begin",
+    omschrijving: "Startpunt van de flow — alleen uitgaande controlestromen.",
     kort: "Begin",
     icoon: "gedrag-begin",
     shape: "act-begin",
@@ -53,6 +54,7 @@ const elementTypes = [
   {
     id: "actie",
     label: "Actie",
+    omschrijving: "Eén stap in het proces.",
     kort: "Actie",
     icoon: "gedrag-toestand",
     shape: "rounded",
@@ -62,6 +64,7 @@ const elementTypes = [
   {
     id: "aanroep",
     label: "Aanroep",
+    omschrijving: "Roept een ander activity-diagram aan; dubbelklik opent het.",
     kort: "Aanroep",
     icoon: "gedrag-submachine",
     shape: "rounded",
@@ -76,6 +79,7 @@ const elementTypes = [
   {
     id: "beslissing",
     label: "Beslissing/samenvoeging",
+    omschrijving: "Beslissing (guards op de uitgaande stromen) of samenvoeging.",
     kort: "Keuze",
     icoon: "gedrag-ruit",
     shape: "act-beslissing",
@@ -85,6 +89,7 @@ const elementTypes = [
   {
     id: "fork",
     label: "Fork/join",
+    omschrijving: "Splitst of synchroniseert parallelle stromen (vinkje: verticaal).",
     kort: "Fork",
     icoon: "gedrag-fork",
     shape: "act-fork",
@@ -95,6 +100,7 @@ const elementTypes = [
   {
     id: "object",
     label: "Object",
+    omschrijving: "Object node: gegevens die tussen acties stromen.",
     kort: "Object",
     icoon: "gedrag-object",
     shape: "act-object",
@@ -104,6 +110,7 @@ const elementTypes = [
   {
     id: "pin",
     label: "Pin",
+    omschrijving: "In-/output-pin: sleep hem op de rand van een actie (objectstroom).",
     kort: "Pin",
     icoon: "gedrag-pin",
     shape: "act-pin",
@@ -115,6 +122,7 @@ const elementTypes = [
   {
     id: "partitie",
     label: "Partitie",
+    omschrijving: "Swimlane: wie of wat voert de acties uit — sleep leden erin.",
     kort: "Lane",
     icoon: "gedrag-lane",
     shape: "act-partitie",
@@ -126,6 +134,7 @@ const elementTypes = [
   {
     id: "eind",
     label: "Eind",
+    omschrijving: "Einde van de hele activity.",
     kort: "Eind",
     icoon: "gedrag-eind",
     shape: "act-eind",
@@ -135,6 +144,7 @@ const elementTypes = [
   {
     id: "flow-eind",
     label: "Flow-eind",
+    omschrijving: "Beëindigt alleen deze stroom, niet de hele activity.",
     kort: "Flow",
     icoon: "gedrag-flow-eind",
     shape: "act-flow-eind",
@@ -144,6 +154,7 @@ const elementTypes = [
   {
     id: "notitie",
     label: "Notitie",
+    omschrijving: "Vrije notitie op het diagram.",
     kort: "NOT",
     shape: "note",
     handleStijl: "onzichtbaar",
@@ -154,6 +165,7 @@ const elementTypes = [
   {
     id: "controlestroom",
     label: "Controlestroom",
+    omschrijving: "Volgorde tussen acties; optioneel met [guard].",
     kort: "→",
     shape: "edge",
     isConnector: true,
@@ -173,6 +185,7 @@ const elementTypes = [
   {
     id: "objectstroom",
     label: "Objectstroom",
+    omschrijving: "Gegevensstroom tussen acties, objecten en pins.",
     kort: "⇢",
     shape: "edge",
     isConnector: true,
@@ -186,6 +199,7 @@ const elementTypes = [
     // het lid ligt visueel al ín de lane.
     id: "bevat",
     label: "Bevat (partitie)",
+    omschrijving: "Partitie-lidmaatschap ('uitgevoerd door'); verborgen zolang het lid erin ligt.",
     kort: "LANE ∋",
     shape: "edge",
     isConnector: true,
@@ -193,7 +207,7 @@ const elementTypes = [
     doel: {
       elementTypes: ["begin", "actie", "aanroep", "beslissing", "fork", "object", "eind", "flow-eind", "partitie", "notitie"],
     },
-    edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#cbd5e1" },
+    edgePresentatie: { lijn: "dash-4-3", vorm: "hoekig", kleur: "#cbd5e1", verbergBijNesting: true },
   },
 ];
 
