@@ -267,6 +267,20 @@ te wijzigen.
 > model-undo), Ctrl-klik-multiselect (boom én elementen-browser, bundel-
 > sleep), contextmenu's met "Verplaats naar ▸", handmatige mapvolgorde,
 > auto-scroll bij slepen en "Zoek in projectboom" vanaf de canvas.
+>
+> **Gedragsdiagram-primitieven (2026-07-17):** de motor kent twee nieuwe
+> declaratieve primitieven (zie
+> [`STUDIO-05-gedragsdiagrammen.md`](STUDIO-05-gedragsdiagrammen.md)) —
+> **rand-aanhechting** (`elementType.randElement`: element klikt vast op de
+> omtrek van een gastheer en beweegt mee; entry/exit-points, straks pins en
+> BPMN boundary-events) en **gedragsverwijzing**
+> (`elementType.gedragsVerwijzing` + datatype `diagram-verwijzing`:
+> dubbelklik op de node opent het gekoppelde diagram, in Modelleren als tab;
+> ⧉-badge). **State machine v1** gebruikt beide (keuze/junction/historie,
+> samengestelde toestand als container, submachine met doorklik, entry/exit);
+> nieuw profiel **Use case** (actor/use case/systeemkader,
+> associatie/«include»/«extend»/generalisatie). Notatie-roadmap:
+> [`plans/2026-07-17 ArchiMate en verdere notaties (plan).md`](plans/2026-07-17%20ArchiMate%20en%20verdere%20notaties%20(plan).md).
 
 | Groep        | Functie (label)    | Status   | Hergebruikt                        |
 |--------------|--------------------|----------|------------------------------------|
@@ -275,6 +289,9 @@ te wijzigen.
 | modelleren   | UML                | preview  | `diagramcore` + `diagramprofielen/puur-uml` (fase 5-lakmoesproef) |
 | modelleren   | OAS                | preview  | `diagramcore` + `diagramprofielen/oas31` (fase 5-vuurproef) |
 | modelleren   | MIM                | preview  | `diagramcore` + `diagramprofielen/mim12` (MIM 1.2, pas-toe-of-leg-uit) |
+| modelleren   | State machine      | preview  | `diagramcore` + `diagramprofielen/statemachine` (v1: pseudostates, composiet, submachine, entry/exit) — **niet in de balk** |
+| modelleren   | Use case           | preview  | `diagramcore` + `diagramprofielen/usecase` (actor/use case/systeemkader) — **niet in de balk** |
+| modelleren   | Activity           | preview  | `diagramcore` + `diagramprofielen/activity` (acties, fork/join, pins, aanroep-doorklik, partities) — **niet in de balk** |
 | modelleren   | DMN-beslissingen   | actief   | `dmn/DmnTableEditor` + dmn-js DRD + ModelPicker (heette "DMN-tabellen") |
 | modelleren   | DMN DRD            | preview  | `diagramcore` + `diagramprofielen/dmn-drd` — **niet in de balk** (één DMN-ingang; via Ga naar) |
 | modelleren   | BPMN-processen     | actief   | `bpmn/BpmnEditor` + ModelPicker    |

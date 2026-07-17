@@ -28,6 +28,8 @@ import profielOntwerpActivity from "./profielOntwerpActivity";
 import dmnActivity from "./dmnActivity";
 import dmnDrdActivity from "./dmnDrdActivity";
 import statemachineActivity from "./statemachineActivity";
+import usecaseActivity from "./usecaseActivity";
+import activityActivity from "./activityActivity";
 // Data-shapes globaal registreren bij startup (side-effect), zodat ze in
 // elk profiel beschikbaar zijn.
 import "./vormenRegistratie.js";
@@ -94,6 +96,8 @@ registreerActiviteiten([
   oasActivity, // "OAS" — derde profiel, OAS 3.0/3.1 (preview)
   mimActivity, // "MIM" — vijfde profiel, MIM 1.2 (preview)
   statemachineActivity, // "State machine" — gedragsdiagram-verkenning (preview)
+  usecaseActivity, // "Use case" — actoren/use cases/systeemkader (preview)
+  activityActivity, // "Activity" — acties/fork/pins/partities (preview)
   formulierDiagramActivity, // "Formulier (diagram)" — formulier-profiel, dogfood (F48 P1; niet in de balk)
   dmnActivity,
   dmnDrdActivity, // "DMN DRD" — vierde profiel (preview, niet in de balk)

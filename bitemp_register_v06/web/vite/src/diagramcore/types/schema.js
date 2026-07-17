@@ -100,6 +100,7 @@
  * @typedef {Object} ElementType
  * @property {string} id
  * @property {string} label
+ * @property {string} [omschrijving]        - één-regel-uitleg (taakbalk-tooltip)
  * @property {string} shape                 - ShapeType-id (bv. "class-box", "chip", "knip-box", "note", "boundary")
  * @property {string} [stereotype]          - headerregel, bv. "«entiteit»"
  * @property {string} [kleur]               - default; instantie kan overriden
@@ -116,6 +117,18 @@
  *   container (bv. package); een element erin slepen (canvas of boom) legt
  *   die lidmaatschaps-connector, "Losmaken uit …" haalt hem weer weg.
  *   Containers sorteren bovenaan in de elementen-boom
+ * @property {{ouderTypes: string[]}} [randElement] - rand-aanhechting
+ *   (gedragsdiagram-primitief §3.1): dit element woont óp de rand van een
+ *   gastheer-element (BPMN boundary-event, state entry/exit-point, activity
+ *   pin). `ouderTypes` = element-typen waaraan het mag hechten. Aanhechten =
+ *   het element op/naast de rand van een gastheer slepen; het klikt dan vast
+ *   op de omtrek en beweegt mee (element.data.randVan = gastheer-id; de
+ *   diagram-positie is dan relatief aan de gastheer). Wegslepen = losmaken.
+ * @property {boolean} [gedragsVerwijzing]  - behavior-reference
+ *   (gedragsdiagram-primitief §3.2): dit element kan naar een ander diagram
+ *   verwijzen (submachine state, BPMN call-activity). De verwijzing leeft in
+ *   element.data.gedragDiagramId (property-datatype "diagram-verwijzing");
+ *   dubbelklik op de node opent dat diagram (nieuwe tab in Modelleren).
  * @property {boolean} [standaardDichtInBoom] - boomrijen van dit type beginnen
  *   ingeklapt (zoals mappen in een verkenner); de chevron-klik wint daarna
  * @property {ConnectorEindpunt} [bron]     - verplicht als isConnector

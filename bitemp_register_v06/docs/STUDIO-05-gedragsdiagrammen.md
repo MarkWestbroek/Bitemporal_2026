@@ -1,10 +1,33 @@
 # Studio — gedragsdiagrammen op de diagram-motor
 
-> Datum: 2026-07-14
-> Status: **verkenning / richting.** Bouwt voort op de sectie
+> Datum: 2026-07-14 · **bijgewerkt 2026-07-17**
+> Status: **richting → deels gebouwd.** Bouwt voort op de sectie
 > "Metamodel-verkenning: gedragsdiagrammen" in `docs/plans/2026-07-11 STUDIO consolidatie.md`
 > en op het eerste gedragsprofiel: **State machine v0** (`785e49d`,
 > `web/vite/src/diagramprofielen/statemachine/`).
+>
+> **Stand 2026-07-17 (branch `feat/diagramcore-gedrag-primitieven`):** de twee
+> primitieven uit §3 zijn **gebouwd** —
+> **§3.1 rand-aanhechting** als `elementType.randElement` (aanhechten =
+> op/naast de omtrek slepen → vastklikken op de dichtstbijzijnde zijde,
+> meebewegen via React Flow-parentId, wegslepen = losmaken) en
+> **§3.2 gedragsverwijzing** als `elementType.gedragsVerwijzing` +
+> property-datatype `diagram-verwijzing` (dubbelklik opent het gekoppelde
+> diagram; in de Modelleren-host als tab via menuBus "studio:open-diagram";
+> ⧉-badge op de node). Bewijsvoering: **State machine v1** (keuze, junction,
+> historie Ⓗ/Ⓗ*, samengestelde toestand als container, submachine met
+> doorklik, entry/exit-points op de rand) en het **Use case-profiel**
+> (kleinste declaratie-profiel: actor/use case/systeemkader,
+> associatie/«include»/«extend»/generalisatie). Direct daarna is ook het
+> **Activity-profiel** gebouwd (stap 3 uit §5): acties, beslissing/
+> samenvoeging, fork/join (balk), object nodes, **pins als
+> rand-elementen**, **aanroep (CallBehaviorAction) met doorklik** en
+> partities als containers; controle- en objectstroom gescheiden,
+> "[guard]"-labels. Nog open uit de verkenning: as-/volgorde-semantiek
+> (sequence), lanes met betekenis (lane-layout), regio's,
+> connector→connector (activations) en de validatie-hook. Vervolgplan:
+> `docs/plans/2026-07-17 ArchiMate en verdere notaties (plan).md` —
+> daarin is BPMN-op-eigen-motor de volgende gedragsstap.
 
 Dit document legt de richting vast voor sequence-, activity-, state-machine- en
 BPMN-diagrammen op de generieke diagram-motor (`diagramcore`), met bijzondere aandacht

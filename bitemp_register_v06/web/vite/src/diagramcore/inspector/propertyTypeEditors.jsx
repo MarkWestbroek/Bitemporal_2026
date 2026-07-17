@@ -139,12 +139,38 @@ function IcoonKeuzeEditor({ regel, waarde, onChange }) {
   );
 }
 
+/**
+ * Diagram-kiezer (gedragsdiagram-primitief §3.2): keuzelijst over de
+ * diagrammen van het profiel (context.diagrams) — voor gedragsverwijzingen
+ * zoals een submachine state of call-activity. De waarde is het diagram-id;
+ * dubbelklik op de node opent dat diagram.
+ */
+function DiagramVerwijzingEditor({ regel, waarde, onChange, context }) {
+  const diagrams = Object.values(context?.diagrams || {});
+  const bestaat = !waarde || diagrams.some((d) => d.id === waarde);
+  return (
+    <select
+      value={waarde || ""}
+      title={regel.label || regel.key}
+      onChange={(e) => onChange(e.target.value || null)}
+      style={{ flex: 1, minWidth: 0, font: "inherit", fontSize: 12, padding: "3px 4px", border: "1px solid var(--s-border, #cbd5e1)", borderRadius: 6, background: "var(--s-panel, #fff)", color: "var(--s-fg, #1e293b)" }}
+    >
+      <option value="">(geen)</option>
+      {!bestaat && <option value={waarde}>(verwijderd diagram: {waarde})</option>}
+      {diagrams.map((d) => (
+        <option key={d.id} value={d.id}>{d.naam || d.id}</option>
+      ))}
+    </select>
+  );
+}
+
 registreerPropertyTypeEditor("string", StringEditor);
 registreerPropertyTypeEditor("shape-keuze", ShapeKeuzeEditor);
 registreerPropertyTypeEditor("icoon-keuze", IcoonKeuzeEditor);
 registreerPropertyTypeEditor("tekst", TekstEditor);
 registreerPropertyTypeEditor("boolean", BooleanEditor);
 registreerPropertyTypeEditor("colour", ColourEditor);
+registreerPropertyTypeEditor("diagram-verwijzing", DiagramVerwijzingEditor);
 
 // ── VerwijzingsKiezer: keuzelijst + minibrowser op ReferenceResolvers ──────
 

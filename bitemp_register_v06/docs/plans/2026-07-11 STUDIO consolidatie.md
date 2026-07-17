@@ -530,6 +530,23 @@ junction, regio's/history. Bewijst dat het metamodel gedragsdiagrammen aankan
 met alleen een descriptor + twee kleine shapes; de grotere gaten (1–4) blijven
 staan voor activity/BPMN/sequence.
 
+**Primitieven gebouwd + SM v1 + Use case (2026-07-17, branch
+`feat/diagramcore-gedrag-primitieven`):** de twee gedeelde motor-primitieven
+uit `STUDIO-05-gedragsdiagrammen.md` §3 zitten in de core —
+**rand-aanhechting** (`elementType.randElement`: element klikt vast op de
+omtrek van een gastheer en beweegt mee; dekt gat 3 — entry/exit, pins,
+boundary events) en **gedragsverwijzing** (`elementType.gedragsVerwijzing` +
+datatype `diagram-verwijzing`: dubbelklik opent het gekoppelde diagram, ook
+als tab in Modelleren; dekt het doorklik-deel van gat 2). **State machine
+v1** gebruikt beide: keuze/junction/historie (Ⓗ/Ⓗ*), samengestelde toestand
+(container via `containerVoor`, zoals packages), submachine (doorklik, ⧉),
+entry/exit-points (rand). Daarnaast een nieuw **Use case-profiel**
+(actor/use case/systeemkader + associatie/«include»/«extend»/generalisatie)
+als kleinste declaratie-profiel. Open: as-semantiek (sequence), lanes mét
+betekenis, regio's, activations, validatie-hook. Vervolg + bredere
+notatie-roadmap (ArchiMate/C4/SysML/ERD/OWL/mindmap):
+`docs/plans/2026-07-17 ArchiMate en verdere notaties (plan).md`.
+
 ### Fase 4 — Kruisverbanden (nieuw, na 2–3) — v0 gebouwd 2026-07-13
 1. 🔶 v0: nieuwe activiteit **"Koppelingen"** (naast Modelleren) — kies een
    bron- en doelprofieltype en vink kruisverbanden aan in een **matrix**
@@ -613,9 +630,15 @@ staan voor activity/BPMN/sequence.
 **Backlog (voor later):**
 - **Export-afbeelding neemt selectie-opmaak mee.** De PNG/SVG-export toont —
   afhankelijk van hoe je selecteert — de blauwe selectie-rand en de vierkante
-  resize-handles (baked-in). Bij export de selectie tijdelijk opheffen of de
+  resize-hoekjes (baked-in). Bij export de selectie tijdelijk opheffen of de
   selectie-chrome uitsluiten uit de te serialiseren DOM (vgl. de `neemMee`-
-  filter in `exporteerCanvas.js`, die minimap/controls/handles al weglaat —
-  de selectie-outline/­resizer ontbreekt daar nog).
+  filter in `exporteerCanvas.js`, die minimap/controls/**handles** al weglaat
+  — de resterende chrome is dus de selectie-outline + de
+  `react-flow__resize-control`-hoekjes; die horen ook in de filter).
 - **Overige `window.prompt`-plekken** (diagram/map hernoemen, nieuwe map, en
   losse panelen) kunnen ook via `vraagNaam` — nu triviaal.
+- **"Meer handles op een element"** (STUDIO ideas): de clash met
+  afleidings-ruis is sinds 2026-07-17 grotendeels weg — handles zijn overal
+  gedempt tot je de node nadert (hover/selectie). Meer aansluitpunten per
+  zijde kan dus zonder visuele straf; alleen de handle-id-ruimte
+  (source/target × zijde × index) en de kortste-weg-keuze moeten mee.

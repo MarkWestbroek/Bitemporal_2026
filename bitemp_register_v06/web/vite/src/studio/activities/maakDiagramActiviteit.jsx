@@ -39,6 +39,7 @@ import React, {
   Suspense,
 } from "react";
 import { menuBus } from "../menuBus";
+import useStudioStore from "../useStudioStore";
 import { vraagNaam } from "../naamDialog.jsx";
 import { registreerProfieltype } from "../profieltypeRegistry";
 import { useExportInstellingen } from "../exportInstellingen.js";
@@ -1585,6 +1586,8 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
       taakbalkSleutel,
       taakbalkDefaults
     );
+    // Eigen taakbalk-tooltips (naam + uitleg) — toggle in Studio-instellingen.
+    const tooltipsAan = useStudioStore((s) => s.tooltipsAan);
 
     // Menubalk → layout-acties.
     useEffect(() => {
@@ -1913,6 +1916,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
               </span>
             ),
             titel: `Nieuw: ${et.label}`,
+            uitleg: et.omschrijving || null,
             onClick: () => plaatsNieuwElement(et.id),
           }));
       } else if (balk.acties === "connectorTypes") {
@@ -1928,6 +1932,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
               </span>
             ),
             titel: `Verbindingsmodus: ${et.label} (klik nogmaals voor automatisch)`,
+            uitleg: et.omschrijving || null,
             actief: verbindingsType === et.id,
             onClick: () => setVerbindingsType(verbindingsType === et.id ? null : et.id),
           }));
@@ -2059,6 +2064,25 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                   onContainerDrop={(elementId, containerId) =>
                     verhangNaarContainer(useStore, elementId, containerId)
                   }
+                  onRandAanhechting={(elementId, ouderId, positie) => {
+                    // Rand-aanhechting (§3.1): gastheer op het element zelf
+                    // (model-feit), relatieve/vrije positie op het diagram.
+                    const s = useStore.getState();
+                    const el = s.elements[elementId];
+                    if (!el) return;
+                    s.updateElement(elementId, { data: { randVan: ouderId || null } });
+                    s.updateNodePosition(diagram.id, elementId, positie);
+                  }}
+                  onNodeDoubleClick={(element) => {
+                    // Gedragsverwijzing (§3.2): dubbelklik opent het
+                    // gekoppelde diagram — hier (actief diagram) én in de
+                    // Modelleren-host (tab, via de bus; luistert die niet,
+                    // dan is de emit onschadelijk).
+                    const doelId = element?.data?.gedragDiagramId;
+                    if (!doelId || !useStore.getState().diagrams[doelId]) return;
+                    useStore.getState().setActiefDiagram(doelId);
+                    menuBus.emit("studio:open-diagram", { profielId: id, diagramId: doelId });
+                  }}
                   shapeSet={
                     (descriptor.shapeSets || []).find((set) => set.id === shapeSetId)?.shapes || null
                   }
@@ -2077,6 +2101,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
                     breedte={voorkeuren[b.id]?.breedte}
                     onPositie={(p) => zetPositie(b.id, p)}
                     onBreedte={(breedte) => zetBreedte(b.id, breedte)}
+                    tooltips={tooltipsAan}
                   />
                 ))}
             </>

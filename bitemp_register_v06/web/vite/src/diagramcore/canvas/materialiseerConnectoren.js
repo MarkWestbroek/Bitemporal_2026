@@ -136,7 +136,22 @@ export function materialiseerConnectoren(elements, diagram, elementTypesById, ma
       // Zelf-lus (oortje): standaard hoekig en van boven naar rechts —
       // de kortste weg is bij één punt betekenisloos.
       const isLus = el.source === el.target;
+      // Lidmaatschaps-lijnen (edgePresentatie.verbergBijNesting): de lijn is
+      // ruis zolang het lid geometrisch ín zijn container ligt — de nesting
+      // toont de relatie al. Ligt het lid erbuiten, dan is de lijn juist
+      // informatief en blijft hij zichtbaar (vgl. EA/Archi-nesting).
+      let verborgen = false;
+      if (basisPresentatie.verbergBijNesting && !isLus) {
+        const bw = bronRef?.size?.width ?? maten?.[el.source]?.width ?? 200;
+        const bh = bronRef?.size?.height ?? maten?.[el.source]?.height ?? 80;
+        verborgen =
+          doelMid.x >= bronRef.position.x &&
+          doelMid.x <= bronRef.position.x + bw &&
+          doelMid.y >= bronRef.position.y &&
+          doelMid.y <= bronRef.position.y + bh;
+      }
       edges.push({
+        ...(verborgen ? { hidden: true } : {}),
         id: `conn:${el.id}`,
         source: el.source,
         target: el.target,

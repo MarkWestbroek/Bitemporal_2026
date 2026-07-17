@@ -257,24 +257,22 @@
 
 /* === Handles === */
 
+/* Handles zijn hulpchrome, geen diagraminhoud — zeker in gedragsdiagrammen
+   waar rondjes óók symbolen zijn (begin/eind/junction) leidden de zware
+   witte stippen af. Daarom overal: klein (8px), licht van kleur en gedempt;
+   pas als je de node nadert (hover) of selecteert lichten ze op. */
 .dc-canvas .react-flow__handle {
-  width: 10px;
-  height: 10px;
-  border: 2px solid #475569;
-  background: #ffffff;
-  border-radius: 50%;
-}
-
-.dc-canvas .dc-node .react-flow__handle-left,
-.dc-canvas .dc-node .react-flow__handle-right {
   width: 8px;
   height: 8px;
-  opacity: 0.35;
+  border: 1.5px solid #64748b;
+  background: #ffffff;
+  border-radius: 50%;
+  opacity: 0.3;
   transition: opacity 0.15s;
 }
 
-.dc-canvas .dc-node:hover .react-flow__handle-left,
-.dc-canvas .dc-node:hover .react-flow__handle-right {
+.dc-canvas .react-flow__node:hover .react-flow__handle,
+.dc-canvas .react-flow__node.selected .react-flow__handle {
   opacity: 1;
 }
 
@@ -293,6 +291,56 @@
 .dc-canvas .react-flow__node:hover .dc-punt-node .react-flow__handle,
 .dc-canvas .react-flow__node.selected .dc-punt-node .react-flow__handle {
   opacity: 0.7;
+}
+
+/* De handles liggen standaard half óver de rand; op een mini-vorm (junction
+   16px) dekken vier hover-handles dan de hele kern af — elke grijppoging
+   startte een verbinding i.p.v. een verplaatsing ("bloemetjes-effect").
+   Daarom liggen ze op punt-nodes net búiten de vorm: de kern blijft vrij
+   om te slepen, verbinden kan vanaf de uitstekende stippen. */
+.dc-canvas .dc-punt-node .react-flow__handle-left { left: -8px; }
+.dc-canvas .dc-punt-node .react-flow__handle-right { right: -8px; }
+.dc-canvas .dc-punt-node .react-flow__handle-top { top: -8px; }
+.dc-canvas .dc-punt-node .react-flow__handle-bottom { bottom: -8px; }
+
+/* Eigen taakbalk-tooltip (i.p.v. de kleine native title): naam + uitleg,
+   direct leesbaar. Toggle in Studio-instellingen → Taakbalken. */
+.dc-taakbalk-tooltip {
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 300;
+  max-width: 280px;
+  padding: 7px 11px;
+  background: var(--s-panel, #ffffff);
+  color: var(--s-fg, #1e293b);
+  border: 1px solid var(--s-border, #cbd5e1);
+  border-radius: 8px;
+  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.22);
+  font-size: 12.5px;
+  line-height: 1.35;
+  pointer-events: none;
+}
+
+.dc-taakbalk-tooltip-titel {
+  font-weight: 700;
+}
+
+.dc-taakbalk-tooltip-uitleg {
+  margin-top: 2px;
+  color: var(--s-fg-muted, #64748b);
+}
+
+/* Gedragsverwijzing (§3.2): hoek-badge op nodes met een gekoppeld diagram
+   (submachine state, call-activity). Dubbelklik opent dat diagram. */
+.dc-gedrag-badge {
+  position: absolute;
+  right: 3px;
+  bottom: 1px;
+  font-size: 11px;
+  line-height: 1;
+  color: #6366f1;
+  pointer-events: none;
+  user-select: none;
 }
 
 /* === Edge-labels === */

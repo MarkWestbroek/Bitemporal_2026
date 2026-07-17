@@ -51,6 +51,10 @@ function ElementNode({ id, data, selected }) {
   if (!Shape) return null;
 
   const magResizen = bewerkbaar && elementType.resizebaar !== false;
+  // Gedragsverwijzing (§3.2): een gevulde verwijzing toont een ⧉-badge in de
+  // hoek — dubbelklik opent het gerefereerde diagram. Generiek in de node
+  // (via children in de shape-root), zodat élke shape hem meekrijgt.
+  const heeftGedrag = elementType.gedragsVerwijzing && element.data?.gedragDiagramId;
 
   return (
     <Shape
@@ -71,6 +75,11 @@ function ElementNode({ id, data, selected }) {
             onResize?.(id, { width: Math.round(params.width), height: Math.round(params.height) })
           }
         />
+      )}
+      {heeftGedrag && (
+        <span className="dc-gedrag-badge" title="Dubbelklik: open het gekoppelde diagram">
+          ⧉
+        </span>
       )}
       <StandaardHandles stijl={elementType.handleStijl} />
     </Shape>
