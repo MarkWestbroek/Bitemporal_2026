@@ -7,8 +7,43 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
-- Visuele FormulierDefinitie-editor is gebouwd op branch `feat/formulier-editor-studio`
-  en wordt bij merge `studio/v0.4.0` (zie hieronder).
+
+## [studio/v0.5.0] — 2026-07-17  _(bij merge van `feat/diagramcore-gedrag-primitieven`)_
+### Toegevoegd
+- **Gedragsdiagram-primitieven in de diagram-motor** (STUDIO-05-gedragsdiagrammen §3):
+  - **rand-aanhechting** (`elementType.randElement`): elementen die vastklikken op de
+    omtrek van een gastheer en meebewegen (entry/exit-points, pins; straks BPMN
+    boundary-events);
+  - **gedragsverwijzing** (`elementType.gedragsVerwijzing` + property-datatype
+    `diagram-verwijzing`): dubbelklik opent het gekoppelde diagram (ook als tab in
+    Modelleren), ⧉-badge op de node.
+- **State machine v1**: keuze, junction, historie (Ⓗ/Ⓗ*), samengestelde toestand
+  (container), submachine met doorklik, entry/exit-points op de rand.
+- **Use case-profiel** (nieuw): actor, use case, systeemkader;
+  associatie/«include»/«extend»/generalisatie.
+- **Activity-profiel** (nieuw): acties, beslissing/samenvoeging, fork/join,
+  object nodes, pins (rand), aanroep (CallBehaviorAction, doorklik), partities;
+  controle- vs objectstroom, "[guard]"-labels.
+- **Sprekende taakbalken**: eigen vorm-glyphs per elementtype
+  (`gedragTypeIconen.jsx`, koppelvlak plan §8.6a) + **eigen tooltips** met naam
+  en één-regel-omschrijving (`ElementType.omschrijving`); toggle in
+  Studio-instellingen → Taakbalken.
+- **Gedeelde naam-modal** (`vraagNaam`) vervangt `window.prompt` bij
+  diagram-aanmaak (ook in de Modelleren-host).
+- Plan: **ArchiMate en verdere notaties** (ArchiMate v0–v2, C4, SysML, ERD, OWL,
+  mindmap) — `docs/plans/2026-07-17 ArchiMate en verdere notaties (plan).md`.
+### Gewijzigd
+- Handles zijn hulpchrome: overal klein en gedempt tot hover/selectie; op
+  punt-nodes (junction e.d.) liggen ze búiten de vorm — kern blijft sleepbaar.
+- Lidmaatschaps-lijnen (bevat) verbergen zichzelf zolang het lid geometrisch
+  ín zijn container ligt (`edgePresentatie.verbergBijNesting`).
+### Opgelost
+- "Nieuw diagram" deed niets bij koppeling-profielen (canoniek/MIM): de
+  auto-herlaad-guard telde alleen `elements`, waardoor een net aangemaakt leeg
+  diagram werd overschreven; guard telt nu ook `diagrams`.
+- `.dc-node` was content-box → shapes staken buiten hun node (scheve handles);
+  nu border-box, exact gevuld en gecentreerd.
+- Begin/eind-pseudotoestanden werden overwoekerd door de standaard-handles.
 
 ## [studio/v0.4.0] — 2026-07-16  _(bij merge van `feat/formulier-editor-studio`)_
 ### Toegevoegd
