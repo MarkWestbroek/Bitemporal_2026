@@ -56,7 +56,7 @@ const elementTypes = [
     shape: "seq-punt",
     resizebaar: false,
     // Rand-element (§3.1): klemt op de (smalle) levenslijn-node = op de lijn.
-    randElement: { ouderTypes: ["levenslijn"] },
+    randElement: { ouderTypes: ["levenslijn"], klem: "as" },
     properties: [],
   },
   {
@@ -68,7 +68,7 @@ const elementTypes = [
     shape: "seq-activatie",
     minBreedte: 14,
     minHoogte: 44,
-    randElement: { ouderTypes: ["levenslijn"] },
+    randElement: { ouderTypes: ["levenslijn"], klem: "as" },
     properties: [],
   },
   {

@@ -122,7 +122,7 @@
  *   container (bv. package); een element erin slepen (canvas of boom) legt
  *   die lidmaatschaps-connector, "Losmaken uit …" haalt hem weer weg.
  *   Containers sorteren bovenaan in de elementen-boom
- * @property {{ouderTypes: string[]}} [randElement] - rand-aanhechting
+ * @property {{ouderTypes: string[], klem?: "rand"|"as"}} [randElement] - rand-aanhechting
  *   (gedragsdiagram-primitief §3.1): dit element woont óp de rand van een
  *   gastheer-element (BPMN boundary-event, state entry/exit-point, activity
  *   pin). `ouderTypes` = element-typen waaraan het mag hechten. Aanhechten =
