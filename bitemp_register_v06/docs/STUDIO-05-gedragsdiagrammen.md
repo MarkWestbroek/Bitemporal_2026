@@ -18,10 +18,16 @@
 > historie Ⓗ/Ⓗ*, samengestelde toestand als container, submachine met
 > doorklik, entry/exit-points op de rand) en het **Use case-profiel**
 > (kleinste declaratie-profiel: actor/use case/systeemkader,
-> associatie/«include»/«extend»/generalisatie). Nog open uit de verkenning:
-> as-/volgorde-semantiek (sequence), lanes met betekenis, regio's,
+> associatie/«include»/«extend»/generalisatie). Direct daarna is ook het
+> **Activity-profiel** gebouwd (stap 3 uit §5): acties, beslissing/
+> samenvoeging, fork/join (balk), object nodes, **pins als
+> rand-elementen**, **aanroep (CallBehaviorAction) met doorklik** en
+> partities als containers; controle- en objectstroom gescheiden,
+> "[guard]"-labels. Nog open uit de verkenning: as-/volgorde-semantiek
+> (sequence), lanes met betekenis (lane-layout), regio's,
 > connector→connector (activations) en de validatie-hook. Vervolgplan:
-> `docs/plans/2026-07-17 ArchiMate en verdere notaties (plan).md`.
+> `docs/plans/2026-07-17 ArchiMate en verdere notaties (plan).md` —
+> daarin is BPMN-op-eigen-motor de volgende gedragsstap.
 
 Dit document legt de richting vast voor sequence-, activity-, state-machine- en
 BPMN-diagrammen op de generieke diagram-motor (`diagramcore`), met bijzondere aandacht
