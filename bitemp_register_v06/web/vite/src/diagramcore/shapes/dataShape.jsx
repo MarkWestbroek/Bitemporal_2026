@@ -84,7 +84,7 @@ export function maakDataShapeComponent(def) {
           <div className="dc-stereotype">{d.stereotype || elementType.stereotype || ""}</div>
           <div className={"dc-naam" + (d.abstract ? " is-abstract" : "")}>{element.naam || "(naamloos)"}</div>
         </div>
-        <CompartimentLijst element={element} fieldTypesById={fieldTypesById} compartmentTypesById={compartmentTypesById} />
+        <CompartimentLijst element={element} elementType={elementType} fieldTypesById={fieldTypesById} compartmentTypesById={compartmentTypesById} />
       </>
     );
 

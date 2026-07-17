@@ -348,7 +348,15 @@ export function operatiesVan(element) {
   const et = elementTypes.find((t) => t.id === element?.elementType);
   const idx = (et?.compartments || []).findIndex((c) => c.id === "operaties");
   if (idx < 0) return [];
-  return (element.compartimenten?.[idx]?.velden || [])
+  // De inspector schrijft compartimenten met een compartmentType-id (in
+  // aanmaakvolgorde!) — dáárop matchen; index alleen als fallback voor
+  // ongetypeerde (hand-/testdata) compartimenten.
+  const comp =
+    (element.compartimenten || []).find((c) => c.compartmentType === "operaties") ||
+    ((element.compartimenten?.[idx]?.compartmentType ?? null) === null
+      ? element.compartimenten?.[idx]
+      : null);
+  return (comp?.velden || [])
     .filter((v) => v?.naam)
     .map((v, i) => ({ id: `${element.id}:op:${i}`, naam: v.naam, retour: v.typeLabel || null }));
 }
