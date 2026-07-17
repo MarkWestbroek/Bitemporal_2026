@@ -7,6 +7,14 @@ versionering volgens [`docs/versiebeheer.md`](../docs/versiebeheer.md) (prefix `
 De single source of truth voor het nummer is `package.json` `"version"`.
 
 ## [Unreleased]
+- **BPMN-profiel op de eigen motor (v0)**: taak, subproces (doorklik), events
+  met soort (bericht/timer/fout/signaal), boundary events op het
+  rand-primitief, gateways ×/+/○, lane, data-object; sequence flow met
+  [conditie], message flow. Naast de bestaande bpmn.io-activiteit.
+- **ArchiMate-profiel (v0)**: ~22 elementtypen over vier lagen in de
+  laag-kleuren (archimate-box met type-icoon rechtsboven), junction (en/of)
+  en alle elf relaties; geldigheidsmatrix volgt in v1.
+- Core: property-datatype **"keuze"** (select over `PropertyType.opties`).
 
 ## [studio/v0.5.0] — 2026-07-17  _(bij merge van `feat/diagramcore-gedrag-primitieven`)_
 ### Toegevoegd

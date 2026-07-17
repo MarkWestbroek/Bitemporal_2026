@@ -292,6 +292,8 @@ te wijzigen.
 | modelleren   | State machine      | preview  | `diagramcore` + `diagramprofielen/statemachine` (v1: pseudostates, composiet, submachine, entry/exit) — **niet in de balk** |
 | modelleren   | Use case           | preview  | `diagramcore` + `diagramprofielen/usecase` (actor/use case/systeemkader) — **niet in de balk** |
 | modelleren   | Activity           | preview  | `diagramcore` + `diagramprofielen/activity` (acties, fork/join, pins, aanroep-doorklik, partities) — **niet in de balk** |
+| modelleren   | BPMN               | preview  | `diagramcore` + `diagramprofielen/bpmn` (eigen motor: events incl. boundary, gateways, lanes; naast de bpmn.io-activiteit) — **niet in de balk** |
+| modelleren   | ArchiMate          | preview  | `diagramcore` + `diagramprofielen/archimate` (v0: vier lagen, elf relaties) — **niet in de balk** |
 | modelleren   | DMN-beslissingen   | actief   | `dmn/DmnTableEditor` + dmn-js DRD + ModelPicker (heette "DMN-tabellen") |
 | modelleren   | DMN DRD            | preview  | `diagramcore` + `diagramprofielen/dmn-drd` — **niet in de balk** (één DMN-ingang; via Ga naar) |
 | modelleren   | BPMN-processen     | actief   | `bpmn/BpmnEditor` + ModelPicker    |
