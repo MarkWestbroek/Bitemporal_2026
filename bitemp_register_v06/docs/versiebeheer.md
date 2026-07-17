@@ -58,10 +58,11 @@ volledige diff en discussie. Merged branches opruimen is dus veilig en houdt de 
 Alleen een **niet-gemergede** branch verwijderen verweest commits — daarom weigert `git branch -d`
 dat, en forceert `git branch -D` het (met opzet).
 
-## 6. Huidige stand & eerstvolgende actie
+## 6. Huidige stand
 
-- Generatie **v06**, release **`0.2.1`** — nog **niet getagd** op `main`.
-- Eerstvolgende actie: `main` taggen als **`v0.2.1`** zodat de huidige stand een vast ankerpunt heeft.
+- Generatie **v06**; Studio-release = `web/vite/package.json` (bron van waarheid),
+  getagd met prefix `studio/` (§7). Laatst getagd: **`studio/v0.5.0`**
+  (2026-07-17, gedragsdiagram-mijlpaal); zie `web/vite/CHANGELOG.md`.
 
 ---
 

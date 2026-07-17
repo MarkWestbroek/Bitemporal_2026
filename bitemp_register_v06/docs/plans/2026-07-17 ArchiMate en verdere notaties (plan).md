@@ -1,10 +1,26 @@
 # ArchiMate op de diagram-motor — plan (+ verkenning SysML, OWL, ERD, mindmap, C4)
 
-> Datum: 2026-07-17 (autonome nachtsessie)
-> Status: **plan/ontwerp — nog niet gebouwd.**
+> Datum: 2026-07-17 (autonome nachtsessie) · **bijgewerkt 2026-07-17 (avond)**
+> Status: **v0 gebouwd** (§3 fase 1 ✅) — plus **BPMN v0** op de eigen motor.
 > Bouwt voort op `docs/STUDIO-05-gedragsdiagrammen.md` en de twee inmiddels
 > gebouwde motor-primitieven: **rand-aanhechting** (`randElement`, §3.1) en
 > **gedragsverwijzing** (`gedragsVerwijzing` + dubbelklik, §3.2).
+>
+> **Stand na de bouw-sessie:**
+> - **ArchiMate v0** (`diagramprofielen/archimate/` + `archimateActivity`):
+>   ~22 elementtypen over Business/Application/Technology/Motivation in de
+>   laag-kleuren, één `archimate-box`-shape met het type-icoon rechtsboven
+>   (gedrag = ronde hoeken), junction (en/of), en alle **elf relaties** op
+>   bestaande markers — toegang met lezen/schrijven-keuze, beïnvloeding met
+>   +/−-label, stroom met naam-label. Regels bewust permissief; **v1 =
+>   geldigheidsmatrix als datatabel** (§2.3/§3.2 hieronder) — nog open.
+> - **BPMN v0** (`diagramprofielen/bpmn/` + `bpmnMotorActivity`): taak,
+>   subproces (doorklik §3.2), start/tussen/eind-events met soort
+>   (bericht/timer/fout/signaal), **boundary events op het rand-primitief**
+>   (niet-onderbrekend = gestippeld), gateways ×/+/○, lane-container,
+>   data-object; sequence flow met [conditie], message flow (permissief).
+>   Pools/collaboration = v1, zoals gepland.
+> - Nieuw core-datatype **"keuze"** (select over `PropertyType.opties`).
 
 ## 1. Waarom ArchiMate past bij deze motor
 

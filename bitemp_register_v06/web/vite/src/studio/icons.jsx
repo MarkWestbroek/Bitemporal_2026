@@ -45,6 +45,15 @@ export const IconUseCase = (p) => (
   </svg>
 );
 
+/** ArchiMate: drie gelaagde vlakken (business/application/technology). */
+export const IconArchiMate = (p) => (
+  <svg {...base} {...p}>
+    <rect x="3" y="3" width="18" height="4.6" rx="1" />
+    <rect x="3" y="9.7" width="18" height="4.6" rx="1" />
+    <rect x="3" y="16.4" width="18" height="4.6" rx="1" />
+  </svg>
+);
+
 /** Activity: actie → beslissing (ruit) met vertakking. */
 export const IconActivity = (p) => (
   <svg {...base} {...p}>

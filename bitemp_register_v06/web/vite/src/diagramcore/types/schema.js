@@ -46,7 +46,10 @@
  * @typedef {Object} PropertyType
  * @property {string} key                  - waar de waarde leeft (veld.naam of data[key])
  * @property {string} [label]
- * @property {string} [datatype]           - "string" (default) | "tekst" | "boolean" | "colour" | profiel-eigen
+ * @property {string} [datatype]           - "string" (default) | "tekst" | "boolean" | "colour" |
+ *   "keuze" | "diagram-verwijzing" | profiel-eigen
+ * @property {{waarde: string, label: string}[]} [opties] - bij datatype "keuze":
+ *   de vaste lijst (bv. BPMN-event-soorten, ArchiMate-access lezen/schrijven)
  * @property {boolean} [verplicht]
  * @property {string[]} [referenceTypes]   - ReferenceType-ids; kandidaten via resolvers
  */
