@@ -15,6 +15,19 @@
 | G04 | | | |
 | G05 | | | |
 
+## Project browser, Tree
+| PB01 | elementen ook first citizen in PB| zoals in IDE | |
+| PB02 | element | rechtsklik : vind op diagrammen -> modal met klikbare diagrammenlijst | | |
+| PB0 | | | |
+| PB0 | | | |
+| PB0 | | | |
+| PB10 | diagram verwijderen (met rechtsklik | bewerken menu) | | |
+| PB11 | diagram rechtsklik: verplaats alle element uit dit diagram naar de boom | een ordenings-feature | |
+| PB0 | | | |
+| PB0 | | | |
+| PB0 | | | |
+| PB0 | | | |
+
 
 ## Profiel-editor
 | # | Status | Item | Bron |
