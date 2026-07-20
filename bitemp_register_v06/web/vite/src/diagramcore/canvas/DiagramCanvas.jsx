@@ -14,6 +14,9 @@
  *   onVerbind?         — ({connectorType, source, target, sourceHandle, targetHandle}) => void
  *   onVerwijder?       — (elementIds: string[]) => void      (Delete op selectie)
  *   onViewport?        — ({x,y,zoom}) => void                (na pannen/zoomen)
+ *   onRandAanhechting? — (elementId, ouderId|null, {x,y}) => void — rand-element
+ *                        aangehecht (positie relatief) of losgemaakt (absoluut)
+ *   onNodeDoubleClick? — (element) => void — bv. gedragsverwijzing openen
  *
  * Edges = geïmporteerde presentatie-edges (diagram.edges, fase 1-adapter)
  *       + gematerialiseerde connector-elementen (materialiseerConnectoren).
@@ -125,6 +128,8 @@ function CanvasBinnenkant({
   onLabelOffset,
   onKnikken,
   onContainerDrop,
+  onRandAanhechting,
+  onNodeDoubleClick,
   shapeSet,
   layoutApiRef,
   bouwContextMenu,
@@ -166,7 +171,7 @@ function CanvasBinnenkant({
     }
     return { ...basis, elementTypesById: overlay };
   }, [diagramType, shapeSet]);
-  const { getNodes, screenToFlowPosition, getViewport, setViewport } = useReactFlow();
+  const { getNodes, getInternalNode, screenToFlowPosition, getViewport, setViewport } = useReactFlow();
   const rfStoreApi = useStoreApi();
   // Contextmenu (rechtsklik): positie in schermcoördinaten, of null.
   const [contextMenu, setContextMenu] = useState(null);
@@ -237,6 +242,9 @@ function CanvasBinnenkant({
   );
 
   useEffect(() => {
+    // Element-ids op dít diagram — een rand-element (randVan) kan alleen
+    // parent-relatief renderen als zijn gastheer hier ook staat.
+    const opDiagram = new Set((diagram?.nodes || []).map((n) => n.elementId));
     const flowNodes = (diagram?.nodes || [])
       .map((ref) => {
         const element = elements[ref.elementId];
@@ -251,10 +259,18 @@ function CanvasBinnenkant({
         ) {
           return null;
         }
+        // Rand-aanhechting (§3.1): een aangehecht rand-element rendert als
+        // React Flow-kind van zijn gastheer (position = relatief) en beweegt
+        // dus automatisch mee. De aanhechting zelf gebeurt in dragstop.
+        const randVan =
+          elementType.randElement && element.data?.randVan && opDiagram.has(element.data.randVan)
+            ? element.data.randVan
+            : null;
         return {
           id: ref.elementId,
           type: "element",
           position: ref.position || { x: 0, y: 0 },
+          ...(randVan ? { parentId: randVan, zIndex: 20 } : {}),
           // Grootte per diagram-lidmaatschap (metamodel: Position.elementSize)
           ...(ref.size ? { style: { width: ref.size.width, height: ref.size.height } } : {}),
           // Achtergrond-elementen (kaders) starten diep onder de rest (-10);
@@ -274,6 +290,9 @@ function CanvasBinnenkant({
         };
       })
       .filter(Boolean);
+    // React Flow eist ouders vóór kinderen in de array (één niveau volstaat:
+    // rand-elementen hechten aan top-level nodes).
+    flowNodes.sort((a, b) => (a.parentId ? 1 : 0) - (b.parentId ? 1 : 0));
 
     // Synthetische nodes uit de connector-materialisatie: ankers (klein
     // rondje op de lijn) en auto-geplaatste connector-boxen zonder eigen
@@ -376,6 +395,9 @@ function CanvasBinnenkant({
           zIndex: n.zIndex,
           data: n.data,
           selected,
+          // Rand-aanhechting: expliciet overnemen — `...oud` zou een net
+          // toegekende parent wissen (of een losgemaakte juist vasthouden).
+          parentId: n.parentId,
         };
       });
     });
@@ -506,12 +528,85 @@ function CanvasBinnenkant({
     [onSelectElement, elements]
   );
 
+  /**
+   * Rand-aanhechting (§3.1) bij dragstop van een enkel rand-element:
+   *  - middelpunt binnen (gastheer-rect + marge) → klik vast op de omtrek
+   *    (relatieve positie) en meld { ouderId, positie };
+   *  - was aangehecht maar buiten elke gastheer → losmaken (absolute positie).
+   * Retourneert true als de aanhechting de positie-persist overneemt.
+   */
+  const verwerkRandAanhechting = useCallback(
+    (node) => {
+      const elementType = node?.data?.elementType;
+      if (!elementType?.randElement || !onRandAanhechting) return false;
+      const MARGE = 28;
+      const intern = getInternalNode(node.id);
+      const abs = intern?.internals?.positionAbsolute || node.position;
+      const w = node.measured?.width ?? 24;
+      const h = node.measured?.height ?? 24;
+      const midden = { x: abs.x + w / 2, y: abs.y + h / 2 };
+      const ouderTypes = new Set(elementType.randElement.ouderTypes || []);
+      // Kandidaat-gastheren: juiste type, middelpunt binnen rect+marge.
+      const kandidaten = getNodes().filter((k) => {
+        if (k.id === node.id || k.parentId) return false;
+        if (!ouderTypes.has(k.data?.element?.elementType)) return false;
+        const kw = k.measured?.width ?? 200;
+        const kh = k.measured?.height ?? 80;
+        return (
+          midden.x >= k.position.x - MARGE &&
+          midden.x <= k.position.x + kw + MARGE &&
+          midden.y >= k.position.y - MARGE &&
+          midden.y <= k.position.y + kh + MARGE
+        );
+      });
+      if (kandidaten.length) {
+        // Kleinste (binnenste) wint, net als bij containers.
+        kandidaten.sort(
+          (a, b) =>
+            (a.measured?.width ?? 200) * (a.measured?.height ?? 80) -
+            (b.measured?.width ?? 200) * (b.measured?.height ?? 80)
+        );
+        const gastheer = kandidaten[0];
+        const gw = gastheer.measured?.width ?? 200;
+        const gh = gastheer.measured?.height ?? 80;
+        let px = Math.min(Math.max(midden.x - gastheer.position.x, 0), gw);
+        let py = Math.min(Math.max(midden.y - gastheer.position.y, 0), gh);
+        if (elementType.randElement.klem === "as") {
+          // Klem op de verticale as (lijn-achtige gastheren, bv. een
+          // sequence-levenslijn): x gecentreerd, y vrij langs de lijn.
+          px = gw / 2;
+        } else {
+          // Projecteer het middelpunt op de omtrek: naar de dichtstbijzijnde
+          // zijde duwen (boundary events, entry/exit-points, pins).
+          const afstanden = [
+            { d: px, zet: () => (px = 0) },
+            { d: gw - px, zet: () => (px = gw) },
+            { d: py, zet: () => (py = 0) },
+            { d: gh - py, zet: () => (py = gh) },
+          ];
+          afstanden.sort((a, b) => a.d - b.d)[0].zet();
+        }
+        onRandAanhechting(node.id, gastheer.id, { x: px - w / 2, y: py - h / 2 });
+        return true;
+      }
+      if (node.data?.element?.data?.randVan) {
+        // Losgesleept: terug naar een vrije (absolute) positie.
+        onRandAanhechting(node.id, null, abs);
+        return true;
+      }
+      return false;
+    },
+    [onRandAanhechting, getNodes, getInternalNode]
+  );
+
   const handleNodeDragStop = useCallback(
     (_ev, node, nodes) => {
       if (!bewerkbaar) return;
       // Bij multi-drag geeft React Flow álle meegesleepte nodes als derde
       // argument — alleen `node` persisteren liet de rest terugspringen.
       const gesleept = nodes?.length ? nodes : node ? [node] : [];
+      // Rand-element (enkel gesleept): aanhechten/losmaken persisteert zelf.
+      if (gesleept.length === 1 && verwerkRandAanhechting(gesleept[0])) return;
       if (gesleept.length > 1 && onNodePosities) {
         const record = {};
         for (const n of gesleept) if (n?.id) record[n.id] = n.position;
@@ -552,7 +647,20 @@ function CanvasBinnenkant({
         }
       }
     },
-    [bewerkbaar, onNodePositie, onNodePosities, onContainerDrop, getNodes, lookups]
+    [bewerkbaar, onNodePositie, onNodePosities, onContainerDrop, getNodes, lookups, verwerkRandAanhechting]
+  );
+
+  // Dubbelklik op een node: gedragsverwijzing (§3.2) — de activiteit opent
+  // het gerefereerde diagram (data.gedragDiagramId). Generiek doorgegeven;
+  // de activiteit beslist wat "openen" betekent (tab, actief diagram, …).
+  const handleNodeDoubleClick = useCallback(
+    (_ev, node) => {
+      if (!onNodeDoubleClick) return;
+      const id = node.id.startsWith(ANKER_PREFIX) ? node.id.slice(ANKER_PREFIX.length) : node.id;
+      const element = elements[id];
+      if (element) onNodeDoubleClick(element);
+    },
+    [onNodeDoubleClick, elements]
   );
 
   const isValidConnection = useCallback(
@@ -810,6 +918,7 @@ function CanvasBinnenkant({
       onNodesDelete={handleNodesDelete}
       onEdgesDelete={handleEdgesDelete}
       onEdgeDoubleClick={handleEdgeDoubleClick}
+      onNodeDoubleClick={handleNodeDoubleClick}
       onPaneContextMenu={openContextMenu}
       onNodeContextMenu={openContextMenu}
       onEdgeContextMenu={openContextMenu}

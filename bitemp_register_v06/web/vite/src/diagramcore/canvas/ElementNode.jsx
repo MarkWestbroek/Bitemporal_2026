@@ -51,6 +51,10 @@ function ElementNode({ id, data, selected }) {
   if (!Shape) return null;
 
   const magResizen = bewerkbaar && elementType.resizebaar !== false;
+  // Gedragsverwijzing (§3.2): een gevulde verwijzing toont een ⧉-badge in de
+  // hoek — dubbelklik opent het gerefereerde diagram. Generiek in de node
+  // (via children in de shape-root), zodat élke shape hem meekrijgt.
+  const heeftGedrag = elementType.gedragsVerwijzing && element.data?.gedragDiagramId;
 
   return (
     <Shape
@@ -62,8 +66,10 @@ function ElementNode({ id, data, selected }) {
     >
       {magResizen && (
         <NodeResizer
-          minWidth={180}
-          minHeight={56}
+          // Minimum-maten uit het elementtype (bv. smalle activatie-balken in
+          // een sequence-diagram); default de klassieke box-minima.
+          minWidth={elementType.minBreedte ?? 180}
+          minHeight={elementType.minHoogte ?? 56}
           isVisible={!!selected}
           lineStyle={{ borderColor: "#2563eb" }}
           handleStyle={{ width: 10, height: 10, borderRadius: 3, borderColor: "#2563eb", background: "#ffffff" }}
@@ -71,6 +77,11 @@ function ElementNode({ id, data, selected }) {
             onResize?.(id, { width: Math.round(params.width), height: Math.round(params.height) })
           }
         />
+      )}
+      {heeftGedrag && (
+        <span className="dc-gedrag-badge" title="Dubbelklik: open het gekoppelde diagram">
+          ⧉
+        </span>
       )}
       <StandaardHandles stijl={elementType.handleStijl} />
     </Shape>

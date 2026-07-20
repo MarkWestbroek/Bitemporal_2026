@@ -36,6 +36,44 @@ export const IconStateMachine = (p) => (
   </svg>
 );
 
+/** Use case: actor (strekfiguur) naast een use case-ellips. */
+export const IconUseCase = (p) => (
+  <svg {...base} {...p}>
+    <circle cx="6" cy="5" r="2" />
+    <path d="M6 7v5M3 9h6M6 12l-2.5 5M6 12l2.5 5" />
+    <ellipse cx="16.5" cy="10" rx="5" ry="3.2" />
+  </svg>
+);
+
+/** Sequence: twee levenslijnen met een bericht ertussen. */
+export const IconSequence = (p) => (
+  <svg {...base} {...p}>
+    <rect x="3" y="3" width="6" height="4" rx="1" />
+    <rect x="15" y="3" width="6" height="4" rx="1" />
+    <path d="M6 7v13M18 7v13" strokeDasharray="2.6 2.2" />
+    <path d="M6 12h10.5M14.5 10l2 2-2 2" />
+  </svg>
+);
+
+/** ArchiMate: drie gelaagde vlakken (business/application/technology). */
+export const IconArchiMate = (p) => (
+  <svg {...base} {...p}>
+    <rect x="3" y="3" width="18" height="4.6" rx="1" />
+    <rect x="3" y="9.7" width="18" height="4.6" rx="1" />
+    <rect x="3" y="16.4" width="18" height="4.6" rx="1" />
+  </svg>
+);
+
+/** Activity: actie → beslissing (ruit) met vertakking. */
+export const IconActivity = (p) => (
+  <svg {...base} {...p}>
+    <rect x="3" y="3.5" width="10" height="5.5" rx="2.7" />
+    <path d="M8 9v3.5" />
+    <path d="M8 12.5 L11.5 16 L8 19.5 L4.5 16 Z" />
+    <path d="M11.5 16h6M17.5 16v-6" />
+  </svg>
+);
+
 /** Koppelingen: twee werelden met een trace-link ertussen. */
 export const IconKoppeling = (p) => (
   <svg {...base} {...p}>

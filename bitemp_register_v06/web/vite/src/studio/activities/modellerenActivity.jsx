@@ -352,6 +352,17 @@ export const useModellerenStore = create((set, get) => ({
     }),
 }));
 
+// Gedragsverwijzing (gedragsdiagram-primitief §3.2): dubbelklik op bv. een
+// submachine state of call-activity opent het gekoppelde diagram. De canvas-
+// activiteit emit "studio:open-diagram"; hier (module-niveau, dus altijd
+// actief) vertalen we dat naar een tab in de Modelleren-host. Buiten de host
+// zet de activiteit zelf al het actieve diagram; de tab staat dan alvast
+// klaar voor wie naar Modelleren wisselt.
+menuBus.on("studio:open-diagram", ({ profielId, diagramId } = {}) => {
+  if (!profielId || !diagramId) return;
+  useModellerenStore.getState().openTab(profielId, diagramId);
+});
+
 /** Actieve tab + bijbehorend profieltype (of nulls). */
 function actieveTabInfo() {
   const s = useModellerenStore.getState();

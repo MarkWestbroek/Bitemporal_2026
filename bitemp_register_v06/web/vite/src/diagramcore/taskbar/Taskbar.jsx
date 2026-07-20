@@ -11,8 +11,13 @@
  * smal & hoog te maken (de knoppen wrappen). Slepen is geclamped aan de
  * canvas-container zodat een balk nooit onbereikbaar buiten beeld raakt.
  *
- * Actie-model: { id, label, icoon?, titel?, actief?, onClick } — dezelfde
- * ActionType-gedachte als menu-items.
+ * Actie-model: { id, label, icoon?, titel?, uitleg?, actief?, onClick } —
+ * dezelfde ActionType-gedachte als menu-items. `uitleg` is een optionele
+ * één-regel-omschrijving voor de eigen tooltip.
+ *
+ * Tooltips: met `tooltips` (prop, default true) toont de balk een eigen
+ * tooltip — groter en direct leesbaar dan de native title, mét de uitleg.
+ * Uitgeschakeld (Studio-instellingen) valt hij terug op het title-attribuut.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -61,8 +66,35 @@ export function useTaakbalkVoorkeuren(opslagSleutel, defaults) {
   return { voorkeuren, zetZichtbaar, zetPositie, zetBreedte };
 }
 
-export function Taskbar({ label, acties, positie, breedte, onPositie, onBreedte }) {
+export function Taskbar({ label, acties, positie, breedte, onPositie, onBreedte, tooltips = true }) {
   const ref = useRef(null);
+
+  // Eigen tooltip: {titel, uitleg, x, y} na een korte hover (250ms).
+  const [tip, setTip] = useState(null);
+  const tipTimer = useRef(null);
+  const toonTip = useCallback(
+    (ev, a) => {
+      if (!tooltips) return;
+      const r = ev.currentTarget.getBoundingClientRect();
+      clearTimeout(tipTimer.current);
+      tipTimer.current = setTimeout(
+        () =>
+          setTip({
+            titel: a.titel || a.label,
+            uitleg: a.uitleg || null,
+            x: r.left + r.width / 2,
+            y: r.bottom + 8,
+          }),
+        250
+      );
+    },
+    [tooltips]
+  );
+  const verbergTip = useCallback(() => {
+    clearTimeout(tipTimer.current);
+    setTip(null);
+  }, []);
+  useEffect(() => () => clearTimeout(tipTimer.current), []);
 
   // Verslepen via de titelbalk, geclamped aan de parent-container zodat de
   // balk altijd (deels) zichtbaar en pakbaar blijft.
@@ -126,14 +158,36 @@ export function Taskbar({ label, acties, positie, breedte, onPositie, onBreedte 
               className={
                 "dc-taakbalk-knop" + (a.actief ? " is-actief" : "") + (a.icoon ? " is-icoon" : "")
               }
-              title={a.titel || a.label}
-              onClick={a.onClick}
+              // Eigen tooltip aan → geen native title erbovenop (dubbel).
+              title={tooltips ? undefined : a.titel || a.label}
+              onClick={(ev) => {
+                verbergTip();
+                a.onClick?.(ev);
+              }}
+              onPointerEnter={(ev) => toonTip(ev, a)}
+              onPointerLeave={verbergTip}
             >
               {a.icoon || a.label}
             </button>
           )
         )}
       </div>
+      {tip && (
+        <div
+          className="dc-taakbalk-tooltip"
+          ref={(el) => {
+            if (!el) return;
+            // Binnen het venster houden (links/rechts).
+            const r = el.getBoundingClientRect();
+            if (r.right > window.innerWidth - 8) el.style.left = `${window.innerWidth - 8 - r.width / 2}px`;
+            if (r.left < 8) el.style.left = `${8 + r.width / 2}px`;
+          }}
+          style={{ left: tip.x, top: tip.y }}
+        >
+          <div className="dc-taakbalk-tooltip-titel">{tip.titel}</div>
+          {tip.uitleg && <div className="dc-taakbalk-tooltip-uitleg">{tip.uitleg}</div>}
+        </div>
+      )}
     </div>
   );
 }

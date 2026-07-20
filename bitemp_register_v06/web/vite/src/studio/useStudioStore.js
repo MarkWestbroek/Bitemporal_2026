@@ -29,6 +29,7 @@ function schrijfOpslag(state) {
         balkVerborgen: state.balkVerborgen,
         labsAan: state.labsAan,
         favorieten: state.favorieten,
+        tooltipsAan: state.tooltipsAan,
       })
     );
   } catch { /* ignore */ }
@@ -58,6 +59,15 @@ const useStudioStore = create((set) => ({
   labsAan: opgeslagen.labsAan ?? true,
   /** Gepinde activiteiten, bovenin de balk (volgorde = pinvolgorde). */
   favorieten: opgeslagen.favorieten || [],
+  /** Eigen taakbalk-tooltips (naam + omschrijving); uit → native title. */
+  tooltipsAan: opgeslagen.tooltipsAan ?? true,
+
+  toggleTooltips: () =>
+    set((s) => {
+      const next = { ...s, tooltipsAan: !s.tooltipsAan };
+      schrijfOpslag(next);
+      return { tooltipsAan: next.tooltipsAan };
+    }),
 
   setActief: (id) =>
     set((s) => {
