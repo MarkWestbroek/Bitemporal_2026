@@ -1,0 +1,24 @@
+/* toegangActivity.css — zinsontleding-kleuren voor de Toegangsspraak-editor.
+ *
+ * Elke element-soort uit de parser-spans krijgt een eigen tint (op de lichte
+ * "studio-paper"-ondergrond van de editor): subject groen, gegevens geel,
+ * waarde blauw, vergelijking paars, handeling oranje, plicht zeegroen; de
+ * modaliteit (mag/niet) alleen vet — die draagt de betekenis al in het woord.
+ */
+.ts-sem {
+  border-radius: 3px;
+  padding: 0 1px;
+}
+.ts-sem-subject { background: #d3f2d4; }
+.ts-sem-gegevens { background: #fdf0a8; }
+.ts-sem-waarde { background: #c9e5ff; }
+.ts-sem-operator { background: #ecdcf7; }
+.ts-sem-actie { background: #ffe1c7; }
+.ts-sem-plicht { background: #d2f0ea; }
+.ts-sem-modaliteit { font-weight: 700; }
+
+/* Dubbelgeklikte gegevens-keten: groepering met een kader. */
+.ts-sem-actief {
+  outline: 2px solid #6366f1;
+  outline-offset: 1px;
+}
