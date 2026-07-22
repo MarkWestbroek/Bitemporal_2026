@@ -60,7 +60,7 @@ Beleid "Inzage inkomen bij schuldhulp".
 
   Begrippen.
     Een schuldhulpverlener is: iemand met rol "schuldhulpverlener".
-    De inkomensgegevens zijn: de gegevens natuurlijk-persoon.inkomen.
+    Inkomensgegevens zijn: alle gegevens van het inkomen van een natuurlijk persoon.
 
   Regel "inzage bij lopend dossier".
     Een schuldhulpverlener mag de inkomensgegevens bekijken
@@ -120,6 +120,23 @@ De jeugddossiers zijn: de gegevens dossier waarvan betrokkene.leeftijd kleiner i
 Begrippen zijn de leesbare naam voor een verzameling; regels verwijzen ernaar met
 lidwoord + naam. Dit spiegelt SBVR: eerst vocabulaire, dan regels.
 
+Aanvullingen (2026-07-23, n.a.v. werkgroep-gebruik):
+
+- **Het lidwoord in het definiendum is optioneel.** Onbepaalde termen zijn in
+  definities gangbaar Nederlands — "*Mail* is: …", "*Inkomensgegevens* zijn: …",
+  zoals bij massanamen (water, lucht). Ook de verwijzing in een regel mag dan
+  kaal: "… mag *mail* bekijken". In van-ketens blíjft het lidwoord verplicht;
+  daar is het een grammaticaal anker.
+- **De dubbele punt na "is"/"zijn" is bij het parsen optioneel**; de canonieke
+  vorm heeft hem wél (herformatteren vult hem aan). Consequentie: een
+  begripsnaam kan zelf de woorden "is" of "zijn" niet bevatten.
+- **Congruentie**: "alle gegevens van" accepteert een volledige van-keten,
+  zodat een meervoudig begrip een meervoudige definitie krijgt —
+  "Inkomensgegevens **zijn**: **alle gegevens** van het inkomen van een
+  natuurlijk persoon" (i.p.v. het incongruente "… zijn: het inkomen van …").
+  Het pad van zo'n gegevensgroep krijgt alle segmenten met hoofdletter
+  (`NatuurlijkPersoon.Inkomen`), er is immers geen veld-blad.
+
 ### 4.3 Regels
 
 ```
@@ -156,11 +173,14 @@ metamodel omgekeerd volgt** (van blad naar wortel). De afspraken:
   dus altijd in de leesvorm te tonen.
 - Dezelfde van-keten werkt op de ankers: *het doel **van** de aanvraag*,
   *het werkgebied **van** de aanvrager*, *de leeftijd **van** de betrokkene*.
-- Met metamodel-resolutie (schema-API) kan een keten later **verkort** worden
-  zolang die eenduidig is: "de achternaam van een natuurlijk persoon" mag het
+- Met metamodel-resolutie (schema-API) kan een keten **verkort** worden zolang
+  die eenduidig is: "de achternaam van een natuurlijk persoon" mag het
   tussenliggende "de naam" overslaan als er maar één veld `achternaam` onder
   `NatuurlijkPersoon` bestaat; bij dubbelzinnigheid eist de editor de volledige
-  keten. (Nog niet geïmplementeerd; v0 gebruikt de volledige keten.)
+  keten en somt hij de kandidaten op. Geïmplementeerd in `metamodel.js`
+  (2026-07-23): de resolutie levert bovendien de juiste schrijfwijze van het
+  registerpad (de casing van het metamodel wint) en de ODRL-uitvoer gebruikt
+  die geresolvede paden.
 
 ### 4.4 Voorwaarden — zonder en/of-ambiguïteit
 
@@ -177,6 +197,18 @@ als aan precies één van de volgende voorwaarden is voldaan:      → XOR (xone
 
 Opsommingen mogen genest worden (een voorwaarde kan zelf weer een opsomming zijn),
 waarmee elke boolese combinatie uitdrukbaar is — maar altijd visueel ondubbelzinnig.
+
+**Woordvolgorde (besluit 2026-07-23).** Nederlands zet het werkwoord in een
+bijzin achteraan. De taal volgt dat: na "als" en "waarvan" is de
+**bijzinsvolgorde** canoniek ("als de taal van een trefwoord niet "nl" **is**",
+"als de achternaam met "A" **begint**"), in opsommings-bullets de
+**stellingsvorm** ("de taal van een trefwoord **is niet** "nl"" — een bullet is
+een stelling). De parser accepteert beide volgordes overal en normaliseert per
+context; beide parsen naar exact dezelfde AST. Technisch: in de bijzinsvorm
+wordt het werkwoord aan het einde naar voren gehaald en de stellingsvorm
+opnieuw geparst; de grens tussen linksterm en operator-rest ("niet", "kleiner",
+"geheel", …) wordt uit het operator-register afgeleid, zodat domeinprofielen
+automatisch meedoen.
 
 Een **voorwaarde** is: `<pad of waarde> <vergelijking> <pad of waarde>`.
 Beide kanten mogen een pad zijn, met vaste, leesbare **ankerwoorden** voor de context:
@@ -436,6 +468,9 @@ Regel "corrigeren met verantwoording".
 
 ## 12. Implementatiestatus (v0 — 2026-07-22, branch `feat/toegangsspraak`)
 
+> Compacte functionele + technische beschrijving van het gebouwde:
+> `docs/TOEGANGSSPRAAK.md`. Dit hoofdstuk houdt de besluiten en de status bij.
+
 Eerste werkende versie, in de Studio-activiteit **Toegangverlening** (status
 concept, alleen via *Ga naar*):
 
@@ -446,14 +481,118 @@ concept, alleen via *Ga naar*):
 | Renderer (AST → canonieke van-vorm) | `web/vite/src/toegangsspraak/renderer.js` | ✅ round-trip getest (render ∘ parse = identiteit) |
 | ODRL JSON-LD-mapping (NLGov-subset) | `web/vite/src/toegangsspraak/odrl.js` | ✅ Permission/Prohibition, LogicalConstraint, Duty, Party-/AssetCollection |
 | Unit tests (node --test) | `web/vite/src/toegangsspraak/toegangsspraak.test.js` | ✅ 11 tests |
-| Studio-activiteit (editor + ModelPicker-drop + ODRL-inspector) | `web/vite/src/studio/activities/toegangActivity.jsx` | ✅ v0: highlighting, foutenpaneel, canonieke leesweergave, ODRL-export |
+| Studio-activiteit (editor + ModelPicker-drop + ODRL-inspector) | `web/vite/src/studio/activities/toegangActivity.jsx` | ✅ v0: highlighting, foutenpaneel, canonieke leesweergave, ODRL-export, autocomplete |
+| Metamodel-koppeling: keten-resolutie (met verkorting), typebewaking, autocomplete-suggesties | `web/vite/src/toegangsspraak/metamodel.js` | ✅ v0 (2026-07-23) — zie hieronder |
 
-Bewust nog niet in v0 (volgorde van oppakken):
+### 12.0 Metamodel-koppeling (2026-07-23)
 
-1. **Metamodel-typebewaking** (§5.3) — operator×veldtype-controle via de
-   schema-API, met klare-taal foutmeldingen; plus keten-verkorting (§4.7).
-2. **Autocomplete** in de editor (patroon van de CEL-`ExpressieEditor`).
-3. **Existentie-voorwaarden** ("er is een lopend dossier voor de betrokkene").
-4. **Nette plicht-subgrammatica** (nu: sjabloonzinnen uit het plichtenregister).
-5. **Bitemporele opslag** van beleidsteksten als registerentiteit (whitepaper
+`metamodel.js` is puur (geen fetch): de aanroeper stopt er een veldenlijst in
+(bv. FieldRefs uit `modelpicker/bouwModelTree`, of straks een andere doorsnede
+van de **universele projectboom** — gefilterd op domein of zelfs een ander
+model). Autocomplete en controle beperken zich vanzelf tot die doorsnede.
+
+- **Keten-resolutie met verkorting** (§4.7): van-ketens worden opgezocht in de
+  echte veldpaden; eenduidig verkort mag, dubbelzinnig eist de volledige keten
+  met de kandidaten in de foutmelding. De metamodel-casing wint; de
+  ODRL-uitvoer gebruikt de geresolvede paden.
+- **Typebewaking** (§5.3): operator × veldtype ("begint met" alleen op tekst,
+  met hint "gebruik 'is kleiner dan'"), literal × veldtype (datum vs getal) en
+  enum-bewaking (toegestane waarden in de melding). Meldingen verschijnen in
+  de editor als niet-blokkerende "Controle"-regels.
+- **Autocomplete, twee kanten op**: vooruit (partieel woord → van-vormen) en
+  **achterstevoren** — typ "de naam van " en alle bases (typen/ketens) die
+  zo'n veld of gegevensgroep hebben worden voorgesteld; bij een dubbelzinnig
+  blad per kandidaat de onderscheidende rest. Labels tonen het **overslabare
+  deel van de keten tussen haakjes**: "de achternaam van (de naam van) een
+  natuurlijk persoon". Elke suggestie heeft een korte en een volledige variant.
+  Toetsen (IDE-conventie, 2026-07-23): **Tab bladert** door de chips,
+  **Ctrl+Space voegt de korte vorm in**, **Shift+Ctrl+Space de volledige
+  keten** (klik / shift-klik idem); zonder suggesties opent Ctrl+Space ze en
+  blijft Tab gewoon inspringen. Bronnen naast het metamodel: begrippen,
+  handelingen, operator-zinnen en plichten.
+- **Zinsontleding in de editor** (2026-07-23): de parser levert naast de AST
+  een platte lijst *spans* — bronposities per element-soort (subject,
+  gegevens, vergelijking, waarde, handeling, plicht, modaliteit). Achter de
+  schakelaar "Ontleding" kleurt de editor de zinsdelen (subject groen,
+  gegevens geel, waarde blauw, …). **Dubbelklik op een gegevens-keten**
+  groepeert hem met een kader, toont het geresolvede registerpad in een
+  infobalk en **focust het exacte element in de modelboom** — de boom blijft
+  staan (context zichtbaar), alleen de bevattende takken klappen open, het
+  element wordt gemarkeerd en in beeld gescrold (`ModelPicker` kreeg daarvoor
+  een optionele `focusVeldpad`-prop; er is ook een `externeZoekterm`-prop
+  voor flows die wél willen filteren).
+- **Editor-gedrag** (2026-07-23, n.a.v. gebruik): staat de caret **binnen een
+  bestaande gegevens-keten**, dan vervangen suggesties de **hele keten**
+  (nooit invoegen middenin); zonder metamodel-treffers verschijnen er daar
+  geen suggesties. Bij vooruit-aanvullen wordt een al getypt lidwoord
+  meevervangen (geen "de de achternaam …"). Invoegingen (autocomplete, drop,
+  herformatteren, voorbeeld laden) lopen via het native edit-mechanisme,
+  zodat **Ctrl+Z** gewoon werkt.
+- **Woordvolgorde**: bijzinsvolgorde na "als"/"waarvan", stellingsvorm in
+  opsommingen — zie het besluit in §4.4.
+
+### 12.1 Hoe de interpreter werkt
+
+De "interpreter" is strikt genomen een **vertaler**: hij voert geen beleid uit
+(dat doet de PDP), maar vertaalt tekst ↔ AST ↔ ODRL. Vier kleine modules in
+`web/vite/src/toegangsspraak/`, plain JavaScript zonder dependencies, in het
+idioom van `shared/celEvaluator.js` (handgeschreven, geen parser-generator):
+
+| Module | Rol |
+|---|---|
+| `woorden.js` | taalhulpjes: CamelCase ↔ woorden, lidwoorden, NL-datums, slugs |
+| `operatoren.js` | de registers: vergelijkingen, handelingen, plichten (uitbreidbaar per domeinprofiel) |
+| `parser.js` | tokenizer + recursive-descent parser → AST, + semantische validatie |
+| `renderer.js` | AST → canonieke tekst (van-vorm) |
+| `odrl.js` | AST → ODRL JSON-LD (NLGov-subset) |
+
+```mermaid
+flowchart TD
+    T["Toegangsspraak-tekst"] --> TOK["Tokenizer\n(woorden, strings, getallen, paden,\nleestekens, bullets mét insprong)"]
+    TOK --> P["Parser — recursive descent\néén functie per grammatica-regel:\nparseBeleid → parseBegrip / parseRegel\n→ parseWat / parseVoorwaardeblok\n→ parseVoorwaarde → parseTerm → parseVerwijzing"]
+    OPS["Operator-/actie-/\nplichtenregister\n(kern + domeinprofielen)"] -.->|"longest match\nop operator-zinnen"| P
+    P -->|"parsefout"| F["Fout in klare taal\n(regel + kolom)"]
+    P --> AST["AST\n(beleid, begrippen, regels,\nvoorwaardeblokken, verwijzingen)"]
+    AST --> V{"Validatie\nbegrippen bekend?"}
+    V -->|"nee"| F
+    V -->|"ja"| R["Renderer\ncanonieke van-vorm"]
+    V -->|"ja"| O["ODRL JSON-LD\n(NLGov-profiel)"]
+    R -->|"round-trip:\nparse(render(b)) = b"| P
+    O --> RT["Register Toegangsbeleid\n(bitemporeel; fase 2)"]
+    O --> VERT["Vertalers → Rego/Cedar\n(fase 3)"]
+```
+
+Drie ontwerpkeuzes die het simpel houden:
+
+1. **De grammatica is LL(1)-achtig**: op elk punt bepaalt (hooguit een paar
+   woorden) vooruitkijken welke regel geldt — vandaar dat elke grammatica-regel
+   één gewone functie is die tokens consumeert en een AST-knoop teruggeeft.
+2. **Operatoren zijn data, geen grammatica**: de parser vraagt op elk
+   voorwaarde-punt aan het register "begint hier een operator-zin?"
+   (langste eerst, zodat *is kleiner dan* wint van *is*). Domeinprofielen
+   (geo) registreren alleen data.
+3. **Nesting via insprong**: opsommings-bullets dragen hun insprong mee uit de
+   tokenizer; geneste blokken zijn gewoon recursie met een dieper-insprong-eis.
+
+Nog niet gedaan (volgorde van oppakken):
+
+1. **Existentie-voorwaarden** ("er is een lopend dossier voor de betrokkene").
+2. **Nette plicht-subgrammatica** (nu: sjabloonzinnen uit het plichtenregister).
+3. **Doorsnede-keuze voor autocomplete/controle** — het canoniek model links
+   filteren op domein (of een andere doorsnede uit de universele projectboom)
+   en die doorsnede als veldenlijst in `maakVeldIndex` stoppen.
+4. **Bitemporele opslag** van beleidsteksten als registerentiteit (whitepaper
    fase 2) en de vertalers naar Rego/Cedar (fase 3).
+5. **Lidwoord + telbaarheid als metamodel-metadata** (naast het bestaande
+   meervoud). Leg het **lidwoord** vast ("de"/"het" — dat weten
+   Nederlandstaligen wél; het grammaticale geslacht m/v/o niet, en de taal
+   heeft alleen het lidwoord nodig), plus **telbaarheid**: kan het woord met
+   "een" (telbaar), of is het een massanaam/niet-telbaar ("mail", "post",
+   "informatie") die in de van-vorm kaal blijft ("van mail" i.p.v. "van een
+   mail")? Invullen bij nieuwe ENT/GE's; bestaand model eenmalig design-time
+   aanvullen met een woordenlijst-dataset (OpenTaal-woordenlijst of een
+   nl.wiktionary-dump bevatten genus/telbaarheid; Woordenlijst.org/Taalunie
+   heeft geen publieke API) — géén runtime-woordenboek-API in het register.
+   De heuristiek in `lidwoordVoor` (woordenlijst + het-achtervoegsels
+   -je/-isme/-ment/-sel/-um, met uitzonderingen als "datum") blijft de
+   terugval.

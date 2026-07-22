@@ -66,3 +66,106 @@ Het document bevat verder een compacte EBNF-grammatica (LL(1)-parseerbaar, dus g
 
 Grootste openstaande punt om vroeg af te bakenen: existentie-voorwaarden zoals "er is een lopend dossier" — die vergen een PIP-bevraging en zijn de moeilijkste categorie voor v1. Als je wilt, werk ik als vervolgstap de parser + renderer met round-trip-tests uit als klein TS-pakket, of eerst de plicht-subgrammatica.
 
+---
+
+## 👤 Gebruiker (2)
+
+Ja, mooi!
+
+Wat betreft "De MetaRegistry doet de typebewaking": autocomplete en drag en drop behoren tot toekomstige mogelijkheden, denk ik. We hebben al een soort autocomplete in de CEL editor en drag en drop in de DMN editor gemaakt. Dus vanuit het metamodel (de projectboom) gegeventypen droppen. 
+
+Is de ietwat formele NatuurlijkPersoon.naam.achternaam of shorthand NP.achternaam toegestaan, of maken we daar "de achternaam van een natuurlijk persoon" van? Dat laatste is eigenlijk mooier. Dan is het woord `van` een grammatica element geworden, dat aggregatie / compositie in het model omgekeerd volgt.
+
+Wil je een begin maken? Dat mag in de (nu inactieve) Toegangsverlening activiteit in Omnium.
+
+**🤖 Claude:**
+
+Mooi! Eens met je "van"-intuïtie — daar kom ik zo op terug. Eerst verken ik de codebase: de Toegangverlening-activiteit, de Studio-activiteitenstructuur, en de CEL-editor (voor de autocomplete-patronen).
+> 🔧 `Agent` — Verken Studio Toegangverlening activiteit
+> 🔧 `ToolSearch`
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\dmnActivity.jsx
+> 🔧 `TodoWrite` — takenlijst bijgewerkt
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\index.jsx
+> 🔧 `PowerShell` — Create feature branch feat/toegangsspraak
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\shared\celEvaluator.test.js
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\toegangsspraak\operatoren.js
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\toegangsspraak\woorden.js
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\toegangsspraak\parser.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\toegangsspraak\parser.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\toegangsspraak\parser.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\toegangsspraak\parser.js
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\toegangsspraak\renderer.js
+> 🔧 `TodoWrite` — takenlijst bijgewerkt
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\toegangsspraak\odrl.js
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\toegangsspraak\index.js
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\toegangsspraak\voorbeeld.js
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\toegangsspraak\toegangsspraak.test.js
+
+**🤖 Claude:**
+
+Tests draaien:
+> 🔧 `PowerShell` — Run toegangsspraak unit tests
+> 🔧 `TodoWrite` — takenlijst bijgewerkt
+> 🔧 `Grep` — export|FIELDREF_MIME
+> 🔧 `Grep` — import.*prism|from "react-simple-code-editor"|highlight
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\umleditor\components\panels\ExpressieEditor.jsx
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\modelpicker\ModelPicker.jsx
+
+**🤖 Claude:**
+
+Alles duidelijk. Nu de activiteit zelf:
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\toegangActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\index.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\index.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\index.jsx
+
+**🤖 Claude:**
+
+Nu de volledige testsuite en een productie-build om te controleren dat alles integreert:
+> 🔧 `PowerShell` — Run full unit test suite
+> 🔧 `Bash` — Run full unit test suite via bash
+> 🔧 `Bash` — Run all unit tests with expanded glob
+> 🔧 `Bash` — Vite production build to verify integration
+> 🔧 `Bash` — Check build output for errors
+> 🔧 `Grep` — Toegang|toegang
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\STUDIO.md
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-22 Klare-taal Toegangsbeleid — Toegangsspraak...
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-22 Klare-taal Toegangsbeleid — Toegangsspraak...
+> 🔧 `Bash` — Check for soft hyphen in doc
+> 🔧 `Grep` — searchParams|activiteit=|URLSearchParams
+> 🔧 `Bash` — Check for soft hyphen in doc
+> 🔧 `Grep` — persist|localStorage|activeId
+> 🔧 `Bash` — Locate AssetCollection line and count soft hyphens in doc
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-22 Klare-taal Toegangsbeleid — Toegangsspraak...
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\useStudioStore.js
+> 🔧 `Bash` — Start Vite dev server on port 5175 in background
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\7826109e-ab4a-4e69-bece-03b5845659b3\scratch...
+> 🔧 `Bash` — Run Playwright smoke test of Toegangverlening activity
+> 🔧 `Bash` — Run smoke test from web/vite with local Playwright
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\7826109e-ab4a-4e69-bece-03b5845659b3\scratch...
+> 🔧 `Edit` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\7826109e-ab4a-4e69-bece-03b5845659b3\scratch...
+> 🔧 `Bash` — Re-run smoke test with correct base URL
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\7826109e-ab4a-4e69-bece-03b5845659b3\scratch...
+> 🔧 `PowerShell` — Stop own Vite dev server on port 5175 (process tree)
+> 🔧 `TodoWrite` — takenlijst bijgewerkt
+> 🔧 `PowerShell` — Show working tree changes
+
+**🤖 Claude:**
+
+Klaar — het begin staat, en het werkt. Alle 344 unit tests slagen (waarvan 11 nieuwe), de build is groen, en ik heb de activiteit in de browser gecontroleerd: de Toegangsspraak-editor draait in de Toegangverlening-activiteit (nog steeds CONCEPT, alleen via *Ga naar*), op branch `feat/toegangsspraak` (niet gecommit, zoals afgesproken).
+
+**Het "van"-besluit** — ik heb je voorstel overgenomen, met één nuance:
+
+- **De van-vorm is de canonieke leesvorm**: *"de achternaam van de naam van een natuurlijk persoon"*. Het woord "van" is een grammatica-element dat de compositie in het metamodel omgekeerd volgt (blad → wortel), en werkt ook op de ankers: *het doel **van** de aanvraag*, *het werkgebied **van** de aanvrager*.
+- **Het pad blijft de canonieke interne vorm** (AST, ODRL `nlgov:registerpad`). De parser accepteert `NatuurlijkPersoon.Naam.achternaam` als technische shorthand — precies wat drag & drop uit de projectboom oplevert — maar de renderer schrijft **altijd** de van-vorm terug. Zo is alles in het register gegarandeerd leesbaar, hoe het ook binnenkwam.
+- Voor later (met metamodel-resolutie): de keten mag verkort worden zolang die eenduidig is — *"de achternaam van een natuurlijk persoon"* mag "de naam" overslaan als er maar één `achternaam` onder `NatuurlijkPersoon` bestaat. Vastgelegd in §4.7 van het [ontwerpdocument](bitemp_register_v06/docs/plans/2026-07-22%20Klare-taal%20Toegangsbeleid%20—%20Toegangsspraak%20(ontwerp).md).
+
+**Wat er gebouwd is:**
+
+- [Taalkern `toegangsspraak/`](bitemp_register_v06/web/vite/src/toegangsspraak/) — tokenizer + handgeschreven recursive-descent parser (zelfde idioom als de CEL-evaluator, geen nieuwe dependency), renderer naar de canonieke van-vorm, en de ODRL JSON-LD-mapping op de NLGov-subset. Dekt: kop (geldigheid/grondslag/doel), Begrippen (rolgroepen en gegevensverzamelingen), regels met `mag`/`mag niet`, geneste opsommingen (en/of/precies één), plichten, en het uitbreidbare operator-register — het geo-profiel zit erin als registreerbaar voorbeeld.
+- [Studio-activiteit `toegangActivity.jsx`](bitemp_register_v06/web/vite/src/studio/activities/toegangActivity.jsx) — naar het DMN-patroon: sidebar met de **ModelPicker** (klik of sleep een veld en de van-vorm wordt op de cursor ingevoegd), editor met syntax-highlighting en een foutenpaneel in klare taal, tab "Canonieke vorm" als leesweergave, ODRL live in de inspector, en een Beleid-menu (voorbeeld laden, herformatteren, ODRL-export).
+- [Tests](bitemp_register_v06/web/vite/src/toegangsspraak/toegangsspraak.test.js) — inclusief de harde round-trip-eis uit het ontwerp: `render(parse(t))` is exact het canonieke voorbeeld, en `parse(render(b))` is structureel gelijk aan `b`, ook voor geneste blokken.
+- Docs: §4.7 (van-besluit) en §12 (implementatiestatus) in het ontwerpdoc, en de activiteitentabel in [STUDIO.md](bitemp_register_v06/docs/STUDIO.md).
+
+Autocomplete en de begeleide slot-editor heb ik conform je opmerking als vervolgstap gemarkeerd (§12) — de drop uit de projectboom werkt al wel. Logische volgende stap is de metamodel-typebewaking via de schema-API (operator × veldtype, plus de keten-verkorting), dan wordt de 404 in de sidebar bij een draaiende backend meteen zinvol. Ik zag trouwens dat je chat-backupscript intussen een export van dit gesprek heeft klaargezet in `docs/ai-chats/exports/` — die kan gewoon mee als je commit.
+
