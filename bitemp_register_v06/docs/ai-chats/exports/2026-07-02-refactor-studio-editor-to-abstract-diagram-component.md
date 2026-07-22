@@ -6962,3 +6962,326 @@ Gefixt en gecommit (`23dd575`). Per punt:
 
 Getest: 275/275 unit, build groen, en alle e2e's groen (silhouet, icoon-in-MD, polygon→MD, blanco-icoon-leeg, plus regressie op polygon-tekenaar en icoon-import). Je eigen `mijn-vorm.json`/`mijn-icoon.json`/`ster.json` heb ik bewust níét meegecommit — dat zijn je speel-artefacten; commit ze zelf als je ze wilt bewaren. Nog niets gepusht/gemerged.
 
+---
+
+## 👤 Gebruiker (115)
+
+ja, wil je de Kleine tekenaar met krommen proberen te maken? Nu is ie wel erg vierkant en niet zo nuttig.
+
+**🤖 Claude:**
+
+Ja! Dat is de goede volgende stap — de tekenaar produceert nu een vierkante polygon; ik maak er een echte silhouet-editor van met krommen. Aanpak: elk punt wordt **rond of hoekig** (klik een punt om te wisselen), en de tekenaar levert een SVG-**pad** op dat via de bestaande silhouet-renderer meerekt — met béziers. Zo wordt hij net zo bruikbaar als Method Draw voor simpel werk.
+
+Laat me het plannen en bouwen:
+> 🔧 `TodoWrite` — takenlijst bijgewerkt
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\silhouetTekenaar.jsx
+
+**🤖 Claude:**
+
+Now delete the old file and rewire the import + VormEditor. Let me update the import and find the integration points:
+> 🔧 `Bash` — Remove old polygonTekenaar file
+> 🔧 `Grep` — PolygonTekenaar|puntenNaarPolygon|polygonNaarPunten|✏ polygon|teken silhouet|setTeken|teken &&|const \[teken
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\studioInstellingenActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\studioInstellingenActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\studioInstellingenActivity.jsx
+
+**🤖 Claude:**
+
+Now the tekenaar render — produce a silhouet path instead of clipPath:
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\studioInstellingenActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\studioInstellingenActivity.jsx
+
+**🤖 Claude:**
+
+Before adding a unit test, let me check whether the test runner can import `.jsx` (JSX) files, so I know if `puntenNaarPad` needs extracting to a pure module:
+> 🔧 `Bash` — Check test runner JSX handling
+
+**🤖 Claude:**
+
+No JSX transform in tests. I'll extract the pure functions into `silhouetPad.js` so they're testable. Create it and slim the tekenaar:
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\silhouetPad.js
+
+**🤖 Claude:**
+
+Now slim the tekenaar to import from the pure module:
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\silhouetTekenaar.jsx
+
+**🤖 Claude:**
+
+Now the unit test:
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\silhouetPad.test.js
+> 🔧 `Bash` — Run unit tests including new silhouetPad test
+
+**🤖 Claude:**
+
+279/279 (+4). Now rewrite the tekenaar e2e for the new silhouet-path + rond-punt flow, and fix the md-extra button label:
+> 🔧 `Write` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\4725390d-bc25-4d1b-953a-c3a17ff83bdd\scratch...
+> 🔧 `Bash` — Update md-extra button selector to tekenaar
+
+**🤖 Claude:**
+
+Now start the server and run the full e2e set + build:
+> 🔧 `Bash` — Start server and run tekenaar e2e
+
+**🤖 Claude:**
+
+Too-broad selector — it caught the gallery preview of your existing `mijn-vorm` (which has a silhouet). Let me scope the checks to the tekenaar's own canvas:
+> 🔧 `Edit` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\4725390d-bc25-4d1b-953a-c3a17ff83bdd\scratch...
+> 🔧 `Bash` — Rerun tekenaar e2e
+
+**🤖 Claude:**
+
+Tekenaar works with curves. Let me run the rest of the e2es + build, and screenshot a curved shape to eyeball it:
+> 🔧 `Bash` — Run remaining e2es and build
+> 🔧 `Bash` — Rerun methoddraw e2e with full output
+
+**🤖 Claude:**
+
+All green individually (the batch hiccup was transient). Let me screenshot a curved shape to eyeball the béziers before committing:
+> 🔧 `Bash` — Screenshot a rounded blob in the tekenaar
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\4725390d-bc25-4d1b-953a-c3a17ff83bdd\scratch...
+
+**🤖 Claude:**
+
+The rounded blob renders as a smooth closed curve through the points (hollow = rounded). Curves work. Let me stop the server, update docs, and commit:
+> 🔧 `Bash` — Stop dev server
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\STUDIO-05-diagramcore-plan.md
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\STUDIO-05-diagramcore-plan.md
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\STUDIO-05-diagramcore-plan.md
+
+**🤖 Claude:**
+
+Let me fix the now-superseded lines in the older "polygon-tekenaar" paragraph:
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\STUDIO-05-diagramcore-plan.md
+> 🔧 `Bash` — Stage tekenaar rewrite and show staged set
+
+**🤖 Claude:**
+
+Git tracked the rename (R058). Clean staged set. Committing:
+> 🔧 `Bash` — Commit curve tekenaar
+> 🔧 `TodoWrite` — takenlijst bijgewerkt
+
+**🤖 Claude:**
+
+Klaar en gecommit (`c8f24fc`). De kleine tekenaar is nu een echte curve-editor.
+
+**Wat er nieuw is**
+- Elk punt is **rond of hoekig** — **klik op een punt** om te wisselen. Ronde punten worden holle handvatten, hoekpunten gevuld.
+- De tekenaar levert nu een gesloten **SVG-pad met krommen** op (Catmull-Rom-achtige raaklijnen voor ronde punten, rechte segmenten tussen hoekpunten) in plaats van een `polygon()`. Ik heb even een blob getekend met alle punten rond — dat rendert als een vloeiende ovaal, dus de béziers kloppen.
+- Interactie: sleep = verplaatsen, **rechtsklik = punt wissen**, plus **wis alles** en **undo/redo** (Ctrl+Z/Y). De klik-vs-sleep-detectie zorgt dat een korte klik toggelt en een sleep verplaatst.
+
+**Hoe het past in de rest**
+- Output = `silhouet: { inner:<path>, box:[0,0,100,100], punten }` en rendert via dezelfde silhouet-renderer als de Method Draw-vormen. Standaard **vult** het de node-box; met de keuze naast `● silhouet` kun je op **verhouding behouden** zetten.
+- Het `punten`-veld laat de tekenaar zijn eigen vormen terugladen en verder bewerken. Oude polygon-vormen (`clipPath`) laden ook in (als hoekpunten). Een Method Draw-silhouet heeft geen `punten`, dus dan opent de tekenaar leeg — dat is bewust (een vrij MD-pad is niet als losse punten te bewerken).
+- De pure padlogica zit in `silhouetPad.js` en is unit-getest.
+
+**Getest:** 279/279 unit (+4 padtests), build groen, en alle e2e's groen (tekenaar met een rond punt → git-silhouet met 1 rond punt; Method Draw-silhouet; icoon-in-MD + tekenaar→MD + blanco-icoon-leeg; icoon-import).
+
+Knopnaam is nu **"✏ tekenaar"** (was "polygon"). Nog niets gepusht/gemerged.
+
+Eén eerlijke beperking: de gladheid is automatisch (één vaste factor), er zijn geen losse bézier-handvatten per punt. Voor "simpel werk" is dat prima en simpel te bedienen; wil je later fijnere controle (handvatten slepen), dan is dat een aparte uitbreiding — maar dan zit je qua complexiteit al dicht bij wat Method Draw je nu al geeft.
+
+---
+
+## 👤 Gebruiker (116)
+
+kleine vraag: de vite server is na het werk steeds gestopt en moet ik (her)starten. Is dat bewust?
+
+**🤖 Claude:**
+
+Ja, bewust — maar met een botte bijwerking die ik kan verbeteren.
+
+Waarom ik 'm stop: voor de Playwright-e2e's start ik zelf een vite dev-server (op **poort 5174**), en na afloop ruim ik die op. Dat doe ik expliciet omdat blijven-draaiende achtergrondservers eerder problemen gaven (weet je nog, die "spontane splitsing" met twee stray servers). Dus opruimen is netjes bedoeld.
+
+Het probleem: mijn stop-commando is te grof. Het killt **elk** node-proces waarvan de commandline `*vite*` bevat — dus als jij zelf óók een dev-server had draaien (waarschijnlijk óók op 5174, de default), sneuvelt die mee. Vandaar dat je steeds moet herstarten.
+
+Beter, en dat doe ik voortaan:
+1. **eigen poort** voor mijn e2e-runs (bijv. 5175), zodat ik niet met jouw 5174 bots;
+2. alleen **het proces dat ik zelf startte** afsluiten (op PID), niet alles wat "vite" heet.
+
+Dan blijft jouw server ongemoeid. Wil je liever dat ik mijn testserver na afloop gewoon **laat draaien** (op 5175), dan kun je 'm ook meteen gebruiken — zeg maar wat je prettiger vindt. Standaard houd ik 'm apart en ruim ik alleen mijn eigen op.
+
+---
+
+## 👤 Gebruiker (117)
+
+- ja graag zo doen
+- ruim de server na gebruik maar op idd
+- vraag over de tekenaar
+Als ik een punt erbij klik, komt het op een bepaalde plek erbij, niet daar waar ik klik. Zie img 1 en img 2. Ik klik rechtsboven.
+
+**🤖 Claude:**
+
+Drie dingen: (1+2) e2e-server voortaan op eigen poort + alleen mijn eigen proces opruimen — genoteerd en ik leg het vast zodat het blijft gelden. (3) De bug: nieuwe punten worden altíjd achteraan de lijst geplakt, dus ze verbinden tussen het láátste en eerste punt in plaats van bij je klik → vandaar die kruising. Fix: het punt invoegen op de dichtstbijzijnde rand.
+
+Eerst de memory zodat het serverbeleid blijft gelden:
+> 🔧 `Write` — C:\Users\User\.claude\projects\d--Git-Bitemporal-2026\memory\e2e-dev-server-handling.md
+> 🔧 `Read` — C:\Users\User\.claude\projects\d--Git-Bitemporal-2026\memory\MEMORY.md
+> 🔧 `Edit` — C:\Users\User\.claude\projects\d--Git-Bitemporal-2026\memory\MEMORY.md
+
+**🤖 Claude:**
+
+Now the fix — nearest-edge insertion. Add the pure helper:
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\silhouetPad.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\silhouetTekenaar.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\silhouetTekenaar.jsx
+
+**🤖 Claude:**
+
+Now add a unit test for `invoegIndex`:
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\silhouetPad.test.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\silhouetPad.test.js
+> 🔧 `Bash` — Run unit tests with new invoegIndex test
+
+**🤖 Claude:**
+
+280/280 (+1). Now let me verify end-to-end using the **new server policy** — dedicated port 5175, and I'll stop only that server afterward. First update the e2e scripts to 5175:
+> 🔧 `Bash` — Point e2e scripts at port 5175
+> 🔧 `Bash` — Start server on 5175 and run tekenaar e2e
+
+**🤖 Claude:**
+
+Now a visual check of the actual bug — draw a blob, add a point at the top-right, confirm it inserts there without crossing:
+> 🔧 `Bash` — Screenshot before/after adding a point on an edge
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\4725390d-bc25-4d1b-953a-c3a17ff83bdd\scratch...
+
+**🤖 Claude:**
+
+The point now inserts on the nearest edge (top), shape stays clean — bug fixed. Let me build, then stop **only** my 5175 server (per the new policy), and commit:
+> 🔧 `Bash` — Build and stop only the 5175 server
+
+**🤖 Claude:**
+
+Verified: stopped only the 5175 listener (your own server on 5174, if any, untouched). Now commit the fix:
+> 🔧 `Bash` — Commit nearest-edge insertion fix
+
+**🤖 Claude:**
+
+Alle drie geregeld.
+
+**1 & 2 — server.** Genoteerd én vastgelegd in mijn geheugen, zodat het ook in volgende sessies geldt: e2e-testserver draait voortaan op **poort 5175** (niet jouw 5174), ik sluit na afloop **alleen dat proces** af (op de poort/PID, geen brede `kill *vite*`), en ik ruim 'm wél op. Deze ronde meteen zo gedaan — jouw eventuele server op 5174 is niet aangeraakt.
+
+**3 — de bug.** Precies wat je zag: een nieuw punt werd altijd *achteraan* de puntenlijst geplakt, dus het verbond tussen het láátste en het eerste punt in plaats van bij je klik → die kruising. Nu berekent de tekenaar de **dichtstbijzijnde rand** en voegt het punt daar in. Ik heb het visueel bevestigd: bij een achthoek een punt op de bovenrand toegevoegd → het verschijnt netjes bovenaan, vorm blijft schoon, geen kruising.
+
+Getest: 280/280 unit (+1 test voor de invoeglogica), build groen, tekenaar-e2e groen. Gecommit als `2f7a2f0`. Nog niets gepusht/gemerged.
+
+---
+
+## 👤 Gebruiker (118)
+
+ik heb de neiuwe vorm "tekenaar-experiment" gemaakt. Getekend, en toen de naam gewijzigd naar "omgevouwen hoekje".
+
+Nu blijft ie echter op "tekenaar-experiment" staan tussen de ingebouwde shapes.
+
+En waarom staat ie uberhaupt daar: nu staan vormen dubbel.
+
+**🤖 Claude:**
+
+Twee dingen spelen hier, en het tweede legt het eerste uit. Laat me de galerij-code bekijken:
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\studioInstellingenActivity.jsx
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\studioInstellingenActivity.jsx
+
+**🤖 Claude:**
+
+Nu is het duidelijk. Twee dingen, en het tweede verklaart het eerste:
+
+1. **Dubbel**: de galerij **"Ingebouwde shapes"** toont de héle gedeelde registry — inclusief je eigen vormen (met "(eigen)"). Die staan dus zowel in "Eigen vormen" (bewerkbaar) als daaronder nogmaals.
+2. **Blijft "tekenaar-experiment"**: die onderste galerij labelt op **`id`**, en de id ligt vast bij het aanmaken (`tekenaar-experiment`). Naam wijzigen verandert alleen het `label`, niet de id — vandaar dat de onderste kaart op de oude naam blijft staan.
+
+De schone oplossing: eigen vormen/iconen niet nóg eens in de "ingebouwde" galerijen tonen (ze hebben hun eigen sectie). Laat me de exacte regels zien en aanpassen:
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\studioInstellingenActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\studioInstellingenActivity.jsx
+
+**🤖 Claude:**
+
+Now clean up the dead "(eigen)" tags (no eigen ids remain there) and align the heading:
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\studioInstellingenActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\studioInstellingenActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\studioInstellingenActivity.jsx
+
+**🤖 Claude:**
+
+Now build and verify (on port 5175) that eigen vormen appear only once — not among the built-in shapes:
+> 🔧 `Bash` — Build, start 5175, verify no duplication
+
+**🤖 Claude:**
+
+Bevestigd: geen overlap meer — eigen vormen staan nu alleen in "Eigen vormen". Server stoppen (alleen mijn 5175) en committen:
+> 🔧 `Bash` — Stop 5175 and commit dedup fix
+
+**🤖 Claude:**
+
+Opgelost en gecommit (`e2b8036`).
+
+**Waarom het dubbel stond.** De galerij **"Ingebouwde shapes"** (en "Alle iconen") toonde de héle gedeelde registry — inclusief je eigen vormen, met een "(eigen)"-label. Die staan al in de sectie **"Eigen vormen"** erboven, dus ze verschenen twee keer. Nu filter ik je eigen vormen/iconen daar weg: ze staan nog maar op één plek (hun eigen sectie), en samen vormen de secties nog steeds de volledige registry. "Alle iconen" heet nu "Ingebouwde iconen" voor de consistentie.
+
+**Waarom het op "tekenaar-experiment" bleef staan.** Die onderste galerij labelde op **`id`**, en de id ligt vast bij het aanmaken. Naam wijzigen verandert alleen het **`label`** (de weergavenaam), niet de id — dat is bewust, want de id is de sleutel/verwijzing (en de bestandsnaam `tekenaar-experiment.json`). Hem meeveranderen zou verwijzingen breken en het oude bestand wees maken. In de sectie "Eigen vormen" zie je nu correct je nieuwe naam **"omgevouwen hoekje"** als titel; de `tekenaar-experiment ✎` eronder is puur de technische id.
+
+Wil je dat de id/bestandsnaam tóch de nieuwe naam volgt, dan is de veilige weg: verwijderen en opnieuw aanmaken onder de gewenste naam. Kan ik desgewenst ook een "dupliceer als nieuwe naam"-knopje voor maken.
+
+Geverifieerd: 280/280 unit, build groen, en een check die bevestigt dat er geen overlap meer is tussen de eigen en ingebouwde galerij. Server draaide op 5175 en heb ik daarna netjes alleen zelf afgesloten (jouw 5174 ongemoeid).
+
+Los daarvan: in `web/vite/vormen/` staat nog een test-restant `e2e-md.json` van mij (een gecrashte e2e-run heeft 'm laten staan). Die en je speel-vormen (`mijn-vorm.json`, `tekenaar-experiment.json`) heb ik niet gecommit — ruim ze op zoals je wilt.
+
+---
+
+## 👤 Gebruiker (119)
+
+Alles is goed. Wil je de branch terug naar Main mergen?
+
+**🤖 Claude:**
+
+Leuk. Even de staat checken vóór ik merge — met name de losse working-copy bestanden (je speel-vormen + dat e2e-restant) mogen niet mee, en ik wil zien wat er precies naar `main` gaat:
+> 🔧 `Bash` — Inspect branch, status, and merge relationship to main
+
+**🤖 Claude:**
+
+Staat is goed: werktree is schoon op één untracked bestand na (`docs/plans/2026-07-11 STUDIO consolidatie.md` — dat blijft ongemoeid). Belangrijk punt: `main` is intussen verder gelopen (de OAS 3.1-merge), dus dit wordt een **echte merge** (geen fast-forward). Ik merge lokaal met een merge-commit, check op conflicten, en push niet tenzij je dat vraagt.
+> 🔧 `Bash` — Check for overlapping files between branch and main since divergence
+
+**🤖 Claude:**
+
+Begrepen — dat plan-bestand van de andere chat mag mee. Ik commit het even op de branch (dan gaat het mee in de merge). Eerst kijken wat erin staat (en checken op secrets, conform de afspraken):
+> 🔧 `Bash` — Inspect the plan doc content and scan for secrets
+
+**🤖 Claude:**
+
+Prima — een UX-/consolidatie-plan voor Studio, geen secrets. Ik commit het op de branch en merge dan:
+> 🔧 `Bash` — Commit the plan doc on the branch
+
+**🤖 Claude:**
+
+Werktree schoon, plan-doc zit nu op de branch. Nu de merge naar `main` (merge-commit, `--no-ff`):
+> 🔧 `Bash` — Checkout main and merge the feature branch
+
+**🤖 Claude:**
+
+Merge geslaagd, geen conflicten. Even een sanity-check op de gemergede `main` (tests + build), zodat de OAS-wijzigingen en het studio-werk samen goed bouwen:
+> 🔧 `Bash` — Verify merge and run tests + build on merged main
+
+**🤖 Claude:**
+
+Gemerged en gecheckt — alles groen.
+
+**Resultaat**
+- Merge-commit `1366801` op `main`, **geen conflicten** (branch en main raakten geen overlappende bestanden).
+- Op de gemergede `main`: **296/296 unit-tests** groen (jouw studio-werk + de OAS-tests van main samen), **build groen**.
+- Werktree schoon.
+
+**Nog niet gepusht.** Lokale `main` staat nu **18 commits vóór** `origin/main`. Ik push niet zonder jouw seintje — **zal ik `main` naar origin pushen?**
+
+Een paar dingen om te weten:
+- De branch `feat/studio05-shape-editor` bestaat nog. Na een eventuele push kan ik 'm opruimen (lokaal + remote) als je wilt.
+- Meegegaan naar main: alle shape-editor-commits, het UX-consolidatieplan (`docs/plans/2026-07-11 STUDIO consolidatie.md`), en de eigen vormen die op de branch waren gecommit (`mijn-vorm`, `ruit`, `ster`, `zeshoek`, `pijl-naar-rechts`).
+- **Niet** meegegaan (nog untracked, dus bewust buiten de merge): mijn test-restant `vormen/e2e-md.json` en je laatste speel-vorm `vormen/tekenaar-experiment.json` (de "omgevouwen hoekje"). Wil je die laatste tóch bewaren in main, dan commit ik 'm even apart — al blijft z'n id dan `tekenaar-experiment`.
+
+---
+
+## 👤 Gebruiker (120)
+
+Nee, super. Het is goed zo. Ik heb zelf gepusht. Dank!
+
+**🤖 Claude:**
+
+Top, graag gedaan! 🎉 Studio 0.5 shape-editor staat op main. Fijn weekend met de omgevouwen hoekjes en muzieknoten — roep maar als je verder wilt met de UX-consolidatie of de curve-tekenaar-handvatten.
+

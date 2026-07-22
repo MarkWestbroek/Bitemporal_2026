@@ -15,7 +15,7 @@
  */
 import { registreerActiviteiten } from "../activityRegistry";
 import { maakPlaceholderActiviteit } from "./PlaceholderActivity";
-import { IconAPI, IconToegang, IconRollen, IconReferentielijst } from "../icons";
+import { IconAPI, IconRollen, IconReferentielijst } from "../icons";
 
 import umlActivity from "./umlActivity";
 import modellerenActivity from "./modellerenActivity";
@@ -43,6 +43,7 @@ import bpmnActivity from "./bpmnActivity";
 import berichtActivity from "./berichtActivity";
 import formulierActivity from "./formulierActivity";
 import formulierDiagramActivity from "./formulierDiagramActivity";
+import toegangActivity from "./toegangActivity";
 
 // ── Nog te bouwen functies: uniforme placeholder met de drie-slot-structuur ──
 const apiActivity = maakPlaceholderActiviteit({
@@ -52,16 +53,6 @@ const apiActivity = maakPlaceholderActiviteit({
   groep: "diensten",
   sidebarLabel: "API's",
   toelichting: "Beheer van API-definities (OpenAPI 3.1) bovenop het canoniek model.",
-  voorbeeldItems: [],
-});
-
-const toegangActivity = maakPlaceholderActiviteit({
-  id: "toegang",
-  label: "Toegangverlening",
-  icon: <IconToegang />,
-  groep: "diensten",
-  sidebarLabel: "Policies (FTV)",
-  toelichting: "PBAC/FTV-policies (PIP/PAP/PDP/PEP, XACML 3.0) voor toegangverlening.",
   voorbeeldItems: [],
 });
 
