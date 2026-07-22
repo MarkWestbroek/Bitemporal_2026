@@ -12,8 +12,8 @@
  * Conflictregel vast: verbod gaat vóór toestemming, default deny.
  */
 import { vindActie, vindOperator } from "./operatoren.js";
-import { verwijzingNaarPad } from "./parser.js";
-import { slug, woordenNaarVeldnaam, woordenNaarTypenaam } from "./woorden.js";
+import { verwijzingNaarPad, verwijzingNaarGroepPad } from "./parser.js";
+import { slug, woordenNaarVeldnaam } from "./woorden.js";
 
 const NLGOV_CONTEXT = { nlgov: "https://standaarden.overheid.nl/odrl/terms/" };
 const PROFIEL = "https://standaarden.overheid.nl/odrl/profile/toegangsbeleid";
@@ -38,7 +38,9 @@ function ketenNaarSubpad(keten) {
 function operandId(verwijzing) {
   const { basis, keten } = verwijzing;
   if (basis.soort === "type") {
-    return `nlgov:veldwaarde:${verwijzingNaarPad(verwijzing)}`;
+    // Een door metamodel.js geresolved pad (juiste casing, verkorte keten
+    // aangevuld) wint van de naïeve afleiding.
+    return `nlgov:veldwaarde:${verwijzing.pad || verwijzingNaarPad(verwijzing)}`;
   }
   const subpad = ketenNaarSubpad(keten);
   if (basis.anker === "aanvraag") {
@@ -111,10 +113,12 @@ function watNaarTarget(wat, watBegrippen) {
     return watBegrippen.get(wat.naam.toLowerCase()) || null;
   }
   if (wat.soort === "alle") {
-    const typenaam = woordenNaarTypenaam(wat.basis.woorden);
-    return { "@type": "Asset", uid: `nlgov:register:${typenaam}` };
+    const pad = wat.verwijzing.pad || verwijzingNaarGroepPad(wat.verwijzing);
+    // Anker-basis ("alle gegevens van de betrokkene") heeft geen registerpad.
+    const uid = pad ? `nlgov:register:${pad}` : `nlgov:${wat.verwijzing.basis.anker}`;
+    return { "@type": "Asset", uid };
   }
-  return { "@type": "Asset", uid: `nlgov:register:${verwijzingNaarPad(wat)}` };
+  return { "@type": "Asset", uid: `nlgov:register:${wat.pad || verwijzingNaarPad(wat)}` };
 }
 
 function wieNaarAssignee(wie, wieBegrippen) {

@@ -45,8 +45,8 @@ function renderWie(wie) {
 }
 
 function renderWat(wat) {
-  if (wat.soort === "begrip") return `${wat.lidwoord} ${wat.naam}`;
-  if (wat.soort === "alle") return `alle gegevens van ${renderGroep(wat.basis)}`;
+  if (wat.soort === "begrip") return wat.lidwoord ? `${wat.lidwoord} ${wat.naam}` : wat.naam;
+  if (wat.soort === "alle") return `alle gegevens van ${renderVerwijzing(wat.verwijzing)}`;
   return renderVerwijzing(wat);
 }
 
@@ -59,14 +59,30 @@ function renderTerm(term) {
   return renderVerwijzing(term);
 }
 
-export function renderVoorwaarde(voorwaarde) {
+/**
+ * Voorwaarde → tekst, in twee woordvolgordes:
+ *   "stelling" (opsommingen): de taal van een trefwoord is niet "nl"
+ *   "bijzin"   (na als/waarvan): de taal van een trefwoord niet "nl" is
+ * In de bijzinsvorm schuift het werkwoord (eerste woord van de operator-zin)
+ * naar het einde — correcte Nederlandse bijzinsvolgorde.
+ */
+export function renderVoorwaarde(voorwaarde, vorm = "stelling") {
   const op = vindOperator(voorwaarde.operator);
   const zin = op ? op.zin : voorwaarde.operator;
   const links = renderTerm(voorwaarde.links);
-  if (op?.unair) return `${links} ${zin}`;
-  if (op?.lijst) return `${links} ${zin} (${voorwaarde.lijst.map(renderTerm).join(", ")})`;
-  if (op?.tussen) return `${links} ${zin} ${renderTerm(voorwaarde.rechts)} en ${renderTerm(voorwaarde.rechts2)}`;
-  return `${links} ${zin} ${renderTerm(voorwaarde.rechts)}`;
+  const rechtsdelen = op?.lijst
+    ? `(${voorwaarde.lijst.map(renderTerm).join(", ")})`
+    : op?.tussen
+      ? `${renderTerm(voorwaarde.rechts)} en ${renderTerm(voorwaarde.rechts2)}`
+      : op?.unair
+        ? ""
+        : renderTerm(voorwaarde.rechts);
+
+  if (vorm === "bijzin" && op) {
+    const [werkwoord, ...rest] = zin.split(" ");
+    return [links, ...rest, rechtsdelen, werkwoord].filter(Boolean).join(" ");
+  }
+  return [links, zin, rechtsdelen].filter(Boolean).join(" ");
 }
 
 /**
@@ -92,7 +108,7 @@ function renderRegel(regel) {
 
   if (regel.voorwaarden) {
     if (regel.voorwaarden.soort === "voorwaarde") {
-      rgls.push(`    als ${renderVoorwaarde(regel.voorwaarden)}`);
+      rgls.push(`    als ${renderVoorwaarde(regel.voorwaarden, "bijzin")}`);
     } else {
       rgls.push(`    als ${KWANTOR_KOP[regel.voorwaarden.soort]}`);
       renderBlok(regel.voorwaarden, 6, rgls);
@@ -111,11 +127,13 @@ function renderRegel(regel) {
 }
 
 function renderBegrip(begrip) {
+  // Onbepaalde termen ("Mail", "Inkomensgegevens") hebben geen lidwoord.
+  const onderwerp = cap(begrip.lidwoord ? `${begrip.lidwoord} ${begrip.naam}` : begrip.naam);
   if (begrip.soort === "wie") {
-    return `    ${cap(begrip.lidwoord)} ${begrip.naam} is: iemand met ${renderKenmerken(begrip.kenmerken)}.`;
+    return `    ${onderwerp} is: iemand met ${renderKenmerken(begrip.kenmerken)}.`;
   }
-  const waarvan = begrip.waarvan ? ` waarvan ${renderVoorwaarde(begrip.waarvan)}` : "";
-  return `    ${cap(begrip.lidwoord)} ${begrip.naam} ${begrip.werkwoord}: ${renderWat(begrip.wat)}${waarvan}.`;
+  const waarvan = begrip.waarvan ? ` waarvan ${renderVoorwaarde(begrip.waarvan, "bijzin")}` : "";
+  return `    ${onderwerp} ${begrip.werkwoord}: ${renderWat(begrip.wat)}${waarvan}.`;
 }
 
 /** Beleid-AST → canonieke Toegangsspraak-tekst. */

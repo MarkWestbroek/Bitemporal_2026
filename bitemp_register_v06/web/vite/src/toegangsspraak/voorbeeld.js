@@ -10,7 +10,7 @@ export const VOORBEELD_BELEID = `Beleid "Inzage inkomen bij schuldhulp".
 
   Begrippen.
     Een schuldhulpverlener is: iemand met rol "schuldhulpverlener".
-    De inkomensgegevens zijn: het inkomen van een natuurlijk persoon.
+    Inkomensgegevens zijn: alle gegevens van het inkomen van een natuurlijk persoon.
 
   Regel "inzage bij lopend dossier".
     Een schuldhulpverlener mag de inkomensgegevens bekijken

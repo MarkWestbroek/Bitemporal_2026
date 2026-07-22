@@ -18,6 +18,9 @@ test("voorbeeldbeleid parset foutloos met de verwachte structuur", () => {
   assert.equal(beleid.begrippen.length, 2);
   assert.equal(beleid.begrippen[0].soort, "wie");
   assert.deepEqual(beleid.begrippen[0].kenmerken, [{ kenmerk: "rol", waarde: "schuldhulpverlener" }]);
+  // "Inkomensgegevens zijn: …" — onbepaalde term, zonder lidwoord.
+  assert.equal(beleid.begrippen[1].lidwoord, null);
+  assert.equal(beleid.begrippen[1].wat.soort, "alle");
   assert.equal(beleid.regels.length, 2);
 
   const [inzage, verbod] = beleid.regels;
@@ -103,6 +106,98 @@ test("geneste opsomming (en > of) parset en wordt in ODRL een LogicalConstraint"
   const opnieuw = parseBeleid(renderBeleid(beleid));
   assert.ok(opnieuw.ok);
   assert.deepEqual(opnieuw.beleid, beleid);
+});
+
+test("onbepaalde term zonder dubbele punt parset; canoniek krijgt de dubbele punt", () => {
+  const tekst = `Beleid "Contact".
+
+  Begrippen.
+    Mail is de email van de persoonscontactgegevens van een persoon.
+
+  Regel "mail bekijken".
+    Een beheerder mag mail bekijken.
+`;
+  const { ok, beleid, fouten } = parseBeleid(tekst);
+  assert.deepEqual(fouten, []);
+  assert.ok(ok);
+  assert.equal(beleid.begrippen[0].lidwoord, null);
+  assert.equal(beleid.begrippen[0].naam, "Mail");
+  assert.deepEqual(beleid.regels[0].wat, { soort: "begrip", lidwoord: null, naam: "mail" });
+
+  const canoniek = renderBeleid(beleid);
+  assert.match(canoniek, /Mail is: de email van de persoonscontactgegevens van een persoon\./);
+  assert.match(canoniek, /mag mail bekijken\./);
+  // Canonieke vorm blijft round-trip-stabiel.
+  const opnieuw = parseBeleid(canoniek);
+  assert.ok(opnieuw.ok);
+  assert.equal(renderBeleid(opnieuw.beleid), canoniek);
+});
+
+test("'alle gegevens van' met van-keten geeft een gegevensgroep-pad met hoofdletters", () => {
+  const { beleid } = parseBeleid(VOORBEELD_BELEID);
+  const odrl = naarOdrl(beleid);
+  // Congruente definitie: "Inkomensgegevens zijn: alle gegevens van het
+  // inkomen van een natuurlijk persoon." → groep, geen veld-blad.
+  assert.equal(odrl.permission[0].target.source, "nlgov:register:NatuurlijkPersoon.Inkomen");
+});
+
+test("bijzinsvolgorde na 'als': beide volgordes parsen naar dezelfde AST; canoniek is de bijzin", () => {
+  const bijzin = `Beleid "Taal".
+
+  Regel "geen export".
+    Een beheerder mag NatuurlijkPersoon.Naam.achternaam niet exporteren
+    als de taal van een trefwoord niet "nl" is.
+`;
+  const stelling = bijzin.replace('de taal van een trefwoord niet "nl" is', 'de taal van een trefwoord is niet "nl"');
+
+  const a = parseBeleid(bijzin);
+  const b = parseBeleid(stelling);
+  assert.ok(a.ok);
+  assert.ok(b.ok);
+  assert.deepEqual(a.beleid, b.beleid);
+  assert.equal(a.beleid.regels[0].voorwaarden.operator, "neq");
+
+  // De canonieke vorm gebruikt de bijzinsvolgorde na "als" …
+  assert.match(renderBeleid(a.beleid), /als de taal van een trefwoord niet "nl" is\./);
+  // … en blijft round-trip-stabiel.
+  const canoniek = renderBeleid(a.beleid);
+  assert.equal(renderBeleid(parseBeleid(canoniek).beleid), canoniek);
+});
+
+test("bijzinsvolgorde met gesplitste operator: '… met \"A\" begint' en '… kleiner dan 18 is'", () => {
+  const tekst = `Beleid "Bijzinnen".
+
+  Regel "a".
+    Een beheerder mag NatuurlijkPersoon.Naam.achternaam bekijken
+    als de achternaam van de naam van de betrokkene met "A" begint.
+
+  Regel "b".
+    Een beheerder mag NatuurlijkPersoon.Naam.achternaam bekijken
+    als de leeftijd van de betrokkene kleiner dan 18 is.
+`;
+  const { ok, beleid, fouten } = parseBeleid(tekst);
+  assert.deepEqual(fouten, []);
+  assert.ok(ok);
+  assert.equal(beleid.regels[0].voorwaarden.operator, "begintMet");
+  assert.equal(beleid.regels[1].voorwaarden.operator, "lt");
+  // In een opsomming blijft de stellingsvorm de canonieke vorm.
+  const canoniek = renderBeleid(beleid);
+  assert.equal(renderBeleid(parseBeleid(canoniek).beleid), canoniek);
+});
+
+test("spans: de parser levert bronposities per element-soort", () => {
+  const { spans } = parseBeleid(VOORBEELD_BELEID);
+  const soorten = new Set(spans.map((s) => s.soort));
+  for (const verwacht of ["subject", "gegevens", "actie", "operator", "waarde", "plicht", "modaliteit"]) {
+    assert.ok(soorten.has(verwacht), `span-soort "${verwacht}" ontbreekt`);
+  }
+  // Posities kloppen met de brontekst.
+  for (const span of spans.filter((s) => s.soort === "actie")) {
+    assert.match(VOORBEELD_BELEID.slice(span.van, span.tot), /^(bekijken|exporteren)$/);
+  }
+  const gegevens = spans.find((s) => s.soort === "gegevens" && s.verwijzing);
+  assert.ok(gegevens);
+  assert.equal(VOORBEELD_BELEID.slice(gegevens.van, gegevens.tot), "het inkomen van een natuurlijk persoon");
 });
 
 test("mag niet wordt een ODRL prohibition; mag een permission", () => {

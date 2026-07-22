@@ -29,16 +29,31 @@ export function woordenNaarVeldnaam(woorden) {
     .join("");
 }
 
-// Kleine het-lijst voor gegenereerde van-vormen (bv. na drag & drop van een
-// veld). Bij geparste tekst bewaart de AST het lidwoord van de auteur, dus
-// deze lijst hoeft nooit compleet te zijn.
+// Lidwoord-bepaling voor gegenereerde van-vormen (drag & drop, autocomplete).
+// Bij geparste tekst bewaart de AST het lidwoord van de auteur, dus dit hoeft
+// nooit perfect te zijn: een woordenlijst + achtervoegsel-heuristiek. De echte
+// oplossing is lidwoord/geslacht als metadata in het metamodel (naast het
+// meervoud dat er al is) — zie ontwerpdoc §12.
 const HET_WOORDEN = new Set([
   "doel", "inkomen", "werkgebied", "tijdstip", "kanaal", "logboek",
-  "nummer", "adres", "kenmerk", "besluit", "dossier",
+  "nummer", "adres", "kenmerk", "besluit", "dossier", "overlijden",
+  "huwelijk", "gezag", "verblijf", "document", "bedrag", "land", "geslacht",
 ]);
 
+// Achtervoegsels die (vrijwel) altijd onzijdig zijn: verkleinwoorden en
+// -isme/-ment/-sel/-um; al het andere valt terug op "de" (meervouden zijn
+// sowieso "de", en "de" is bij twijfel het minst storend).
+const HET_SUFFIX = /(?:je|isme|ment|sel|um)$/;
+
+// Uitzonderingen op de achtervoegsel-regel ("de datum", ondanks -um).
+const DE_WOORDEN = new Set(["datum", "kolom"]);
+
 export function lidwoordVoor(woord) {
-  return HET_WOORDEN.has(String(woord).toLowerCase()) ? "het" : "de";
+  const w = String(woord).toLowerCase();
+  if (DE_WOORDEN.has(w)) return "de";
+  if (HET_WOORDEN.has(w)) return "het";
+  if (HET_SUFFIX.test(w)) return "het";
+  return "de";
 }
 
 /** "Inzage inkomen bij schuldhulp" → "inzage-inkomen-bij-schuldhulp" */

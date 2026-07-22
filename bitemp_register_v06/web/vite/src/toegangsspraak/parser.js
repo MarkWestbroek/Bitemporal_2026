@@ -11,6 +11,16 @@
  * vorm en wordt als technische shorthand ook geaccepteerd (handig bij drag &
  * drop uit de projectboom); de renderer schrijft altijd de van-vorm terug.
  *
+ * Woordvolgorde in voorwaarden: beide volgordes worden geaccepteerd —
+ *   stelling : "de taal van een trefwoord is niet "nl""
+ *   bijzin   : "de taal van een trefwoord niet "nl" is"
+ * De canonieke vorm is de stellingsvorm in opsommingen en de bijzinsvorm na
+ * "als"/"waarvan" (zie renderer.js).
+ *
+ * Naast de AST levert de parser een platte lijst `spans` op: bronposities per
+ * element-soort (subject, gegevens, handeling, operator, waarde, plicht,
+ * modaliteit) voor zinsontleding-weergave in de editor.
+ *
  * Handgeschreven parser (geen parser-generator), zelfde idioom als
  * shared/celEvaluator.js.
  */
@@ -36,14 +46,22 @@ export class ParseFout extends Error {
 
 function tokeniseer(tekst) {
   const tokens = [];
-  const lijnen = String(tekst).split(/\r\n?|\n/);
+  const bron = String(tekst);
+  const lijnen = bron.split(/\r\n?|\n/);
+  const delims = bron.match(/\r\n?|\n/g) || [];
+  let lijnStart = 0;
   for (let r = 0; r < lijnen.length; r++) {
     const lijn = lijnen[r];
+    const duw = (soort, waarde, kolom, lengte) => {
+      const van = lijnStart + kolom - 1;
+      tokens.push({ soort, waarde, regel: r + 1, kolom, van, tot: van + lengte });
+    };
     let i = /^[ \t]*/.exec(lijn)[0].length;
     // Opsommingsstreepje aan het begin van de regel draagt zijn insprong mee —
     // daarmee wordt nesting van voorwaardeblokken bepaald.
     if (lijn[i] === "-" && (i + 1 >= lijn.length || lijn[i + 1] === " ")) {
-      tokens.push({ soort: "bullet", waarde: "-", regel: r + 1, kolom: i + 1, indent: i });
+      duw("bullet", "-", i + 1, 1);
+      tokens[tokens.length - 1].indent = i;
       i += 1;
     }
     while (i < lijn.length) {
@@ -55,33 +73,34 @@ function tokeniseer(tekst) {
         let buf = "";
         while (j < lijn.length && !['"', "“", "”"].includes(lijn[j])) { buf += lijn[j]; j += 1; }
         if (j >= lijn.length) throw new ParseFout("Tekst tussen aanhalingstekens is niet afgesloten.", r + 1, kolom);
-        tokens.push({ soort: "string", waarde: buf, regel: r + 1, kolom });
+        duw("string", buf, kolom, buf.length + 2);
         i = j + 1;
         continue;
       }
       let m;
       if ((m = RE_GETAL.exec(lijn.slice(i)))) {
-        tokens.push({ soort: "getal", waarde: m[0], regel: r + 1, kolom });
+        duw("getal", m[0], kolom, m[0].length);
         i += m[0].length;
         continue;
       }
       if ((m = RE_PAD.exec(lijn.slice(i)))) {
-        tokens.push({ soort: "pad", waarde: m[0], regel: r + 1, kolom });
+        duw("pad", m[0], kolom, m[0].length);
         i += m[0].length;
         continue;
       }
       if ((m = RE_WOORD.exec(lijn.slice(i)))) {
-        tokens.push({ soort: "woord", waarde: m[0], regel: r + 1, kolom });
+        duw("woord", m[0], kolom, m[0].length);
         i += m[0].length;
         continue;
       }
       if (".:;(),".includes(ch)) {
-        tokens.push({ soort: "leesteken", waarde: ch, regel: r + 1, kolom });
+        duw("leesteken", ch, kolom, 1);
         i += 1;
         continue;
       }
       throw new ParseFout(`Onverwacht teken "${ch}".`, r + 1, kolom);
     }
+    lijnStart += lijn.length + (delims[r]?.length || 0);
   }
   return tokens;
 }
@@ -100,6 +119,8 @@ class Parser {
   constructor(tokens) {
     this.ts = tokens;
     this.i = 0;
+    // Bronposities per element-soort, voor zinsontleding in de editor.
+    this.spans = [];
   }
 
   kijk(n = 0) { return this.ts[this.i + n] || null; }
@@ -113,6 +134,12 @@ class Parser {
   fout(bericht, token) {
     const t = token || this.kijk() || this.ts[this.ts.length - 1];
     throw new ParseFout(bericht, t ? t.regel : 1, t ? t.kolom : 1);
+  }
+
+  /** Registreer een bronbereik van token `vanTok` t/m `totTok` (inclusief). */
+  markeer(soort, vanTok, totTok, extra) {
+    if (!vanTok || !totTok) return;
+    this.spans.push({ soort, van: vanTok.van, tot: totTok.tot, ...(extra || {}) });
   }
 
   pakWoord(bericht, ...opties) {
@@ -140,6 +167,22 @@ class Parser {
     if (enDanTeken && !this.isTeken(this.kijk(woorden.length), enDanTeken)) return false;
     this.i += woorden.length + (enDanTeken ? 1 : 0);
     return true;
+  }
+
+  /**
+   * Is dit woord het eerste rest-woord van een operator-zin (het deel na het
+   * werkwoord)? In de bijzinsvolgorde staat dat deel direct na de linksterm
+   * ("… niet "nl" is", "… kleiner dan 18 is") — de verwijzing moet daar dus
+   * stoppen. Afgeleid uit het register, zodat domeinprofielen meedoen.
+   */
+  bijzinsGrens(t) {
+    if (!t || t.soort !== "woord") return false;
+    const w = t.waarde.toLowerCase();
+    for (const op of geefOperatoren()) {
+      const woorden = op.zin.split(" ");
+      if (woorden.length > 1 && woorden[1] === w) return true;
+    }
+    return false;
   }
 
   /** Kijkt of er op de huidige positie een operator-zin begint (zonder consumeren). */
@@ -242,14 +285,20 @@ class Parser {
   // ── Begrippen ──
 
   parseBegrip() {
-    const lidwoord = this.pakWoord("Een begrip begint met Een, De of Het.", ...LIDWOORDEN).toLowerCase();
+    // Het lidwoord is optioneel: onbepaalde termen zijn in definities gangbaar
+    // ("Mail is …", "Inkomensgegevens zijn …", zoals water of lucht). De naam
+    // eindigt bij het eerste "is"/"zijn"; een naam kan die woorden dus zelf
+    // niet bevatten. De dubbele punt is bij het parsen optioneel, de canonieke
+    // vorm heeft hem wél (herformatteren vult hem aan).
+    let lidwoord = null;
+    if (this.isWoord(this.kijk(), ...LIDWOORDEN)) lidwoord = this.pak().waarde.toLowerCase();
     const naamWoorden = [];
-    while (this.kijk() && !(this.isWoord(this.kijk(), "is", "zijn") && this.isTeken(this.kijk(1), ":"))) {
+    while (this.kijk() && !this.isWoord(this.kijk(), "is", "zijn")) {
       naamWoorden.push(this.pakWoord("De naam van het begrip bestaat uit woorden."));
     }
     if (!naamWoorden.length) this.fout("Het begrip heeft nog geen naam.");
     const werkwoord = this.pakWoord('Na de naam hoort "is:" of "zijn:".', "is", "zijn").toLowerCase();
-    this.pakTeken(":", 'Na "is" of "zijn" hoort een dubbele punt.');
+    if (this.isTeken(this.kijk(), ":")) this.pak();
 
     if (this.isWoord(this.kijk(), "iemand")) {
       this.pak();
@@ -294,8 +343,12 @@ class Parser {
     const naam = this.pakString('Na "Regel" hoort de naam tussen aanhalingstekens.');
     this.pakTeken(".", "De regelkop eindigt met een punt.");
 
+    const wieStart = this.kijk();
     const wie = this.parseWie();
+    this.markeer("subject", wieStart, this.ts[this.i - 1]);
+    const magTok = this.kijk();
     this.pakWoord('Na het subject hoort "mag" (of "mag … niet").', "mag");
+    this.markeer("modaliteit", magTok, magTok);
 
     // Verzamel de tokens tot "als", "waarbij" of "." — het laatste woord is de
     // handeling, met daarvoor eventueel "niet".
@@ -314,13 +367,17 @@ class Parser {
       const bekend = geefActies().map((a) => a.woord).join(", ");
       this.fout(`Onbekende handeling "${actie}". Bekende handelingen: ${bekend}.`, actieToken);
     }
+    this.markeer("actie", actieToken, actieToken);
     let verbod = false;
     let watEinde = watTokens.length - 1;
     if (watEinde > 0 && watTokens[watEinde - 1].soort === "woord" && watTokens[watEinde - 1].waarde.toLowerCase() === "niet") {
       verbod = true;
       watEinde -= 1;
+      this.markeer("modaliteit", watTokens[watEinde], watTokens[watEinde]);
     }
-    const wat = new Parser(watTokens.slice(0, watEinde)).parseWatVolledig();
+    const sub = new Parser(watTokens.slice(0, watEinde));
+    const wat = sub.parseWatVolledig();
+    this.spans.push(...sub.spans);
 
     let voorwaarden = null;
     if (this.isWoord(this.kijk(), "als")) {
@@ -367,34 +424,44 @@ class Parser {
   parseWat(stop) {
     const t = this.kijk();
     if (!t) this.fout("Hier hoort een gegevens-omschrijving.");
-    // "alle gegevens van een <type>"
+    // "alle gegevens van <verwijzing>" — de verwijzing mag een volledige
+    // van-keten zijn ("alle gegevens van het inkomen van een natuurlijk
+    // persoon"), zodat definities congruent blijven (meervoud = meervoud).
     if (this.matchWoorden(["alle", "gegevens", "van"])) {
-      const basis = this.parseBasisGroep();
-      return { soort: "alle", basis };
+      const verwijzing = this.parseVerwijzing(stop);
+      return { soort: "alle", verwijzing };
     }
     // technisch pad als shorthand
     if (t.soort === "pad") {
       this.pak();
-      return { soort: "verwijzing", ...padNaarVerwijzing(t.waarde) };
+      const verwijzing = { soort: "verwijzing", ...padNaarVerwijzing(t.waarde) };
+      this.markeer("gegevens", t, t, { verwijzing });
+      return verwijzing;
     }
     // "de gegevens NatuurlijkPersoon.Inkomen" (technische tussenvorm)
     if (this.isWoord(t, "de") && this.isWoord(this.kijk(1), "gegevens") && this.kijk(2)?.soort === "pad") {
       this.i += 2;
-      const pad = this.pak().waarde;
-      return { soort: "verwijzing", ...padNaarVerwijzing(pad) };
+      const padTok = this.pak();
+      const verwijzing = { soort: "verwijzing", ...padNaarVerwijzing(padTok.waarde) };
+      this.markeer("gegevens", t, padTok, { verwijzing });
+      return verwijzing;
     }
     // van-vorm of begripsnaam
     const heeftVan = this.bevatVanVoorStop(stop);
     if (heeftVan) {
       const verwijzing = this.parseVerwijzing(stop);
-      return { soort: "verwijzing", ...verwijzing };
+      return { soort: "verwijzing", keten: verwijzing.keten, basis: verwijzing.basis };
     }
-    const lidwoord = this.pakWoord("De gegevens-omschrijving begint met De, Het of Een.", ...LIDWOORDEN).toLowerCase();
+    // Begripsverwijzing — het lidwoord is ook hier optioneel ("mag mail bekijken").
+    const startTok = this.kijk();
+    let lidwoord = null;
+    if (this.isWoord(this.kijk(), ...LIDWOORDEN)) lidwoord = this.pak().waarde.toLowerCase();
     const woorden = [];
     while (this.kijk() && this.kijk().soort === "woord" && !stop()) {
       woorden.push(this.pak().waarde);
     }
     if (!woorden.length) this.fout("De gegevens-omschrijving heeft nog geen naam.");
+    this.markeer("gegevens", startTok, this.ts[this.i - 1], { begrip: woorden.join(" ") });
     return { soort: "begrip", lidwoord, naam: woorden.join(" ") };
   }
 
@@ -460,14 +527,53 @@ class Parser {
     return { soort, items };
   }
 
+  /**
+   * Eén voorwaarde, in beide woordvolgordes:
+   *   stelling : links OPERATOR rechts        ("… is niet "nl"")
+   *   bijzin   : links rest rechts WERKWOORD  ("… niet "nl" is")
+   * De bijzinsvorm wordt herkend door het werkwoord aan het einde naar voren
+   * te halen en de stellingsvorm opnieuw te parsen.
+   */
   parseVoorwaarde(stop) {
     const links = this.parseTerm(stop);
+    if (this.operatorOpKomst()) {
+      return this.parseOperatorEnRechts(links, stop);
+    }
+    // Bijzinsvolgorde: verzamel tot het stop-punt; het laatste woord is het
+    // werkwoord ("is", "begint", "ligt", "valt", …).
+    const rest = [];
+    while (this.kijk() && !stop()) rest.push(this.pak());
+    const laatste = rest[rest.length - 1];
+    if (!rest.length || laatste.soort !== "woord") {
+      const bekend = geefOperatoren().slice(0, 5).map((o) => `"${o.zin}"`).join(", ");
+      this.fout(`Hier hoort een vergelijking, bijvoorbeeld ${bekend}, …`);
+    }
+    const sub = new Parser([laatste, ...rest.slice(0, -1)]);
+    let voorwaarde;
+    try {
+      voorwaarde = sub.parseOperatorEnRechts(links, () => !sub.kijk());
+    } catch {
+      const bekend = geefOperatoren().slice(0, 5).map((o) => `"${o.zin}"`).join(", ");
+      this.fout(`Hier hoort een vergelijking (in stelling- of bijzinsvolgorde), bijvoorbeeld ${bekend}, …`, rest[0]);
+    }
+    if (sub.kijk()) {
+      this.fout(`Onverwachte tekst in de voorwaarde: "${sub.kijk().waarde}".`, sub.kijk());
+    }
+    this.spans.push(...sub.spans);
+    return voorwaarde;
+  }
+
+  parseOperatorEnRechts(links, stop) {
     const op = this.operatorOpKomst();
     if (!op) {
-      const bekend = geefOperatoren().map((o) => `"${o.zin}"`).join(", ");
-      this.fout(`Hier hoort een vergelijking, bijvoorbeeld ${bekend}.`);
+      const bekend = geefOperatoren().slice(0, 5).map((o) => `"${o.zin}"`).join(", ");
+      this.fout(`Hier hoort een vergelijking, bijvoorbeeld ${bekend}, …`);
     }
-    this.i += op.zin.split(" ").length;
+    const opLengte = op.zin.split(" ").length;
+    for (let n = 0; n < opLengte; n++) {
+      this.markeer("operator", this.kijk(n), this.kijk(n));
+    }
+    this.i += opLengte;
     const voorwaarde = { soort: "voorwaarde", links, operator: op.canoniek, rechts: null, rechts2: null, lijst: null };
     if (op.unair) return voorwaarde;
     if (op.lijst) {
@@ -494,17 +600,29 @@ class Parser {
   parseTerm(stop) {
     const t = this.kijk();
     if (!t) this.fout("Hier hoort een waarde of een verwijzing naar gegevens.");
-    if (t.soort === "string") { this.pak(); return { soort: "literal", type: "tekst", waarde: t.waarde }; }
+    if (t.soort === "string") {
+      this.pak();
+      this.markeer("waarde", t, t);
+      return { soort: "literal", type: "tekst", waarde: t.waarde };
+    }
     if (t.soort === "getal") {
       const maand = this.kijk(1);
       const jaar = this.kijk(2);
       if (maand?.soort === "woord" && isMaand(maand.waarde) && jaar?.soort === "getal") {
-        return { soort: "literal", type: "datum", waarde: this.parseDatum() };
+        const iso = this.parseDatum();
+        this.markeer("waarde", t, jaar);
+        return { soort: "literal", type: "datum", waarde: iso };
       }
       this.pak();
+      this.markeer("waarde", t, t);
       return { soort: "literal", type: "getal", waarde: Number(t.waarde) };
     }
-    if (t.soort === "pad") { this.pak(); return { soort: "verwijzing", ...padNaarVerwijzing(t.waarde) }; }
+    if (t.soort === "pad") {
+      this.pak();
+      const verwijzing = { soort: "verwijzing", ...padNaarVerwijzing(t.waarde) };
+      this.markeer("gegevens", t, t, { verwijzing });
+      return verwijzing;
+    }
     return { soort: "verwijzing", ...this.parseVerwijzing(stop) };
   }
 
@@ -514,6 +632,7 @@ class Parser {
    * kenmerkketen, van buiten naar binnen.
    */
   parseVerwijzing(stop) {
+    const startTok = this.kijk();
     const groepen = [];
     for (;;) {
       const groep = this.parseBasisGroep(stop);
@@ -528,7 +647,9 @@ class Parser {
     } else {
       basis = { soort: "type", lidwoord: laatste.lidwoord, woorden: laatste.woorden.map((w) => w.toLowerCase()) };
     }
-    return { keten: groepen, basis };
+    const verwijzing = { keten: groepen, basis };
+    this.markeer("gegevens", startTok, this.ts[this.i - 1], { verwijzing });
+    return verwijzing;
   }
 
   parseBasisGroep(stop) {
@@ -538,6 +659,7 @@ class Parser {
       this.kijk() && this.kijk().soort === "woord" &&
       !this.isWoord(this.kijk(), "van") &&
       !this.operatorOpKomst() &&
+      !this.bijzinsGrens(this.kijk()) &&
       !(stop && stop())
     ) {
       woorden.push(this.pak().waarde);
@@ -560,6 +682,7 @@ class Parser {
       const bekend = geefPlichten().map((p) => `"${p.zin}"`).join("; ");
       this.fout(`Onbekende verplichting "${zin}". Bekende verplichtingen: ${bekend}.`, eerste);
     }
+    this.markeer("plicht", eerste, this.ts[this.i - 1]);
     return { zin: plicht.zin, nlgov: plicht.nlgov };
   }
 }
@@ -598,18 +721,35 @@ export function verwijzingNaarPad(verwijzing) {
   return [woordenNaarTypenaam(verwijzing.basis.woorden), ...segmenten].join(".");
 }
 
+/**
+ * Verwijzing → registerpad voor een gegevensgroep ("alle gegevens van …"):
+ * alle segmenten zijn dan entiteit/GE-rollen en krijgen een hoofdletter
+ * (NatuurlijkPersoon.Inkomen), er is geen veld-blad.
+ */
+export function verwijzingNaarGroepPad(verwijzing) {
+  if (verwijzing.basis.soort !== "type") return null;
+  const binnenNaarBuiten = verwijzing.keten.slice().reverse();
+  return [
+    woordenNaarTypenaam(verwijzing.basis.woorden),
+    ...binnenNaarBuiten.map((groep) => woordenNaarTypenaam(groep.woorden)),
+  ].join(".");
+}
+
 // ── Publieke ingang ──────────────────────────────────────────────────────────
 
 /**
  * Parseer een Toegangsspraak-tekst.
- * @returns {{ ok: boolean, beleid: object|null, fouten: Array<{bericht, regel, kolom}> }}
+ * @returns {{ ok, beleid, fouten, spans }} — `spans` zijn bronposities per
+ * element-soort (subject, gegevens, actie, operator, waarde, plicht,
+ * modaliteit) voor zinsontleding-weergave; los van de AST zodat de AST
+ * positie-onafhankelijk blijft (round-trip-vergelijkbaar).
  */
 export function parseBeleid(tekst) {
   let tokens;
   try {
     tokens = tokeniseer(tekst);
   } catch (e) {
-    if (e instanceof ParseFout) return { ok: false, beleid: null, fouten: [naarFout(e)] };
+    if (e instanceof ParseFout) return { ok: false, beleid: null, fouten: [naarFout(e)], spans: [] };
     throw e;
   }
   const parser = new Parser(tokens);
@@ -617,11 +757,12 @@ export function parseBeleid(tekst) {
   try {
     beleid = parser.parseBeleid();
   } catch (e) {
-    if (e instanceof ParseFout) return { ok: false, beleid: null, fouten: [naarFout(e)] };
+    if (e instanceof ParseFout) return { ok: false, beleid: null, fouten: [naarFout(e)], spans: [] };
     throw e;
   }
   const fouten = valideerBeleid(beleid);
-  return { ok: fouten.length === 0, beleid, fouten };
+  const spans = parser.spans.sort((a, b) => a.van - b.van);
+  return { ok: fouten.length === 0, beleid, fouten, spans };
 }
 
 function naarFout(e) {

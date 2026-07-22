@@ -9,9 +9,14 @@
  *   renderBeleid(beleid)→ canonieke klare-taaltekst (van-vorm)
  *   naarOdrl(beleid)    → ODRL JSON-LD (NLGov-profiel)
  */
-export { parseBeleid, valideerBeleid, padNaarVerwijzing, verwijzingNaarPad, ParseFout, ANKERS } from "./parser.js";
+export { parseBeleid, valideerBeleid, padNaarVerwijzing, verwijzingNaarPad, verwijzingNaarGroepPad, ParseFout, ANKERS } from "./parser.js";
 export { renderBeleid, renderVerwijzing, renderVoorwaarde } from "./renderer.js";
 export { naarOdrl } from "./odrl.js";
+export {
+  maakVeldIndex, resolveerBeleid, resolveerVerwijzing, resolveerGroep,
+  bepaalWaardetype, suggereerVanVormen, suggereerBases,
+} from "./metamodel.js";
+export { bepaalSuggesties } from "./editorSuggesties.js";
 export {
   registreerOperatoren, resetOperatoren, geefOperatoren, GEO_OPERATOREN,
   registreerActies, geefActies, registreerPlichten, geefPlichten,

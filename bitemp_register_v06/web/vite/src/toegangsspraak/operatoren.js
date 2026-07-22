@@ -15,30 +15,32 @@
 // unair      : geen rechterterm ("… is bekend")
 // lijst      : rechterterm is een opsomming tussen haakjes ("is een van (…)")
 // tussen     : twee rechtertermen ("ligt tussen … en …")
+// typen      : waardetypen waarop de vergelijking past (weggelaten = alle);
+//              gebruikt door de metamodel-typebewaking (metamodel.js)
 const KERN_OPERATOREN = [
   { zin: "is een van", canoniek: "isAnyOf", odrl: "odrl:isAnyOf", lijst: true },
   { zin: "is onderdeel van", canoniek: "isPartOf", odrl: "odrl:isPartOf" },
-  { zin: "is groter dan", canoniek: "gt", odrl: "odrl:gt" },
-  { zin: "is kleiner dan", canoniek: "lt", odrl: "odrl:lt" },
-  { zin: "is ten minste", canoniek: "gteq", odrl: "odrl:gteq" },
-  { zin: "is ten hoogste", canoniek: "lteq", odrl: "odrl:lteq" },
+  { zin: "is groter dan", canoniek: "gt", odrl: "odrl:gt", typen: ["getal", "datum"] },
+  { zin: "is kleiner dan", canoniek: "lt", odrl: "odrl:lt", typen: ["getal", "datum"] },
+  { zin: "is ten minste", canoniek: "gteq", odrl: "odrl:gteq", typen: ["getal", "datum"] },
+  { zin: "is ten hoogste", canoniek: "lteq", odrl: "odrl:lteq", typen: ["getal", "datum"] },
   { zin: "is niet", canoniek: "neq", odrl: "odrl:neq" },
   { zin: "is bekend", canoniek: "isBekend", odrl: "nlgov:isBekend", unair: true },
   { zin: "is onbekend", canoniek: "isOnbekend", odrl: "nlgov:isOnbekend", unair: true },
   { zin: "is", canoniek: "eq", odrl: "odrl:eq" },
-  { zin: "begint met", canoniek: "begintMet", odrl: "nlgov:begintMet" },
-  { zin: "eindigt op", canoniek: "eindigtOp", odrl: "nlgov:eindigtOp" },
-  { zin: "bevat", canoniek: "bevat", odrl: "nlgov:bevat" },
-  { zin: "ligt tussen", canoniek: "tussen", odrl: "nlgov:tussen", tussen: true },
+  { zin: "begint met", canoniek: "begintMet", odrl: "nlgov:begintMet", typen: ["tekst"] },
+  { zin: "eindigt op", canoniek: "eindigtOp", odrl: "nlgov:eindigtOp", typen: ["tekst"] },
+  { zin: "bevat", canoniek: "bevat", odrl: "nlgov:bevat", typen: ["tekst"] },
+  { zin: "ligt tussen", canoniek: "tussen", odrl: "nlgov:tussen", tussen: true, typen: ["getal", "datum"] },
 ];
 
 // Geo-domeinprofiel — als voorbeeld van uitbreidbaarheid meegeleverd, maar
 // niet standaard actief: een activiteit/omgeving registreert het expliciet.
 export const GEO_OPERATOREN = [
-  { zin: "valt geheel binnen", canoniek: "geoBinnen", odrl: "geo:within" },
-  { zin: "valt deels binnen", canoniek: "geoOverlapt", odrl: "geo:intersects" },
-  { zin: "overlapt", canoniek: "geoOverlapt", odrl: "geo:intersects" },
-  { zin: "raakt", canoniek: "geoRaakt", odrl: "geo:touches" },
+  { zin: "valt geheel binnen", canoniek: "geoBinnen", odrl: "geo:within", typen: ["geometrie"] },
+  { zin: "valt deels binnen", canoniek: "geoOverlapt", odrl: "geo:intersects", typen: ["geometrie"] },
+  { zin: "overlapt", canoniek: "geoOverlapt", odrl: "geo:intersects", typen: ["geometrie"] },
+  { zin: "raakt", canoniek: "geoRaakt", odrl: "geo:touches", typen: ["geometrie"] },
 ];
 
 let operatoren = [...KERN_OPERATOREN];
