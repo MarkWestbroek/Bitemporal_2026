@@ -39,3 +39,63 @@
   outline: 2px solid #6366f1;
   outline-offset: 1px;
 }
+
+/* ── Diagram-tab (toegangsregel-profiel, read-only v1) ─────────────────── */
+.trd-root {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  color: #1c2333;
+}
+.trd-beleid-kop { display: flex; flex-direction: column; gap: 8px; }
+.trd-beleid-naam { margin: 0; font-size: 16px; }
+.trd-beleid-meta, .trd-begrippen { display: flex; flex-wrap: wrap; gap: 6px; }
+.trd-kaart {
+  border: 1px solid #dde3ee;
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 860px;
+}
+.trd-kaart-kop { display: flex; align-items: center; gap: 10px; }
+.trd-kaart-naam { font-weight: 650; }
+.trd-modaliteit {
+  margin-left: auto;
+  font-weight: 700;
+  font-size: 12px;
+  border: 1.5px solid;
+  border-radius: 999px;
+  padding: 1px 10px;
+}
+.trd-keten { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.trd-pijl { color: #64748b; font-size: 12px; white-space: nowrap; }
+.trd-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(28, 35, 51, 0.18);
+  border-radius: 8px;
+  padding: 3px 9px;
+  line-height: 1.45;
+}
+.trd-verwijs-badge { font-size: 11px; opacity: 0.75; }
+.trd-sectie { display: flex; align-items: flex-start; gap: 10px; }
+.trd-sectie-label { color: #475569; font-weight: 600; padding-top: 4px; min-width: 52px; }
+.trd-poort-blok { display: flex; flex-direction: column; gap: 6px; }
+.trd-takken {
+  margin-left: 14px;
+  padding-left: 12px;
+  border-left: 2px solid #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.trd-voorwaarde { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.trd-plichten { display: flex; flex-wrap: wrap; gap: 6px; }
+.trd-voetnoot { margin: 4px 0 0; font-size: 11.5px; color: #64748b; max-width: 860px; }

@@ -38,7 +38,13 @@ import {
 import { IconToegang } from "../icons";
 import { menuBus } from "../menuBus";
 import { apiBase, downloadJson } from "../studioUtils";
+import ToegangDiagram from "./ToegangDiagram.jsx";
+import { registreerToegangsregelProfiel } from "../../diagramprofielen/toegangsregel/index.js";
 import "./toegangActivity.css";
+
+// Het toegangsregel-profiel (diagram als derde projectie) op de motor
+// registreren; idempotent, veilig bij HMR.
+registreerToegangsregelProfiel();
 
 // ── Prism-grammar voor Toegangsspraak (eenmalig registreren) ─────────────────
 function registreerToegangsspraakGrammar() {
@@ -138,6 +144,8 @@ function ToegangProvider({ children }) {
     () => (resultaat.beleid ? renderBeleid(resultaat.beleid) : null),
     [resultaat]
   );
+  // Voor weergaven (diagram): met geresolvede registerpaden waar beschikbaar.
+  const beleidVoorWeergave = geresolved?.beleid || resultaat.beleid;
 
   // Verse waarden voor menu-acties zonder de listeners te herbinden.
   const ref = useRef({});
@@ -248,7 +256,8 @@ function ToegangProvider({ children }) {
     <Ctx.Provider
       value={{
         tekst, setTekst, activeTab, setActiveTab, ontleding, setOntleding,
-        resultaat, controleFouten, odrl, canoniek, editorWrapRef, invoegOpCursor,
+        resultaat, controleFouten, odrl, canoniek, beleidVoorWeergave,
+        editorWrapRef, invoegOpCursor,
         suggesties, setSuggesties, actieveIndex, setActieveIndex,
         bijwerkSuggesties, pasSuggestieToe, actieveGegevens, setActieveGegevens,
         toonGegevensOpPositie, focusVeldpad,
@@ -346,7 +355,8 @@ function SuggestieBalk({ suggesties, actieveIndex, onKies }) {
 function ToegangMain() {
   const {
     tekst, setTekst, activeTab, setActiveTab, ontleding, setOntleding,
-    resultaat, controleFouten, canoniek, editorWrapRef, invoegOpCursor,
+    resultaat, controleFouten, canoniek, beleidVoorWeergave,
+    editorWrapRef, invoegOpCursor,
     suggesties, setSuggesties, actieveIndex, setActieveIndex,
     bijwerkSuggesties, pasSuggestieToe, actieveGegevens, setActieveGegevens,
     toonGegevensOpPositie,
@@ -448,6 +458,12 @@ function ToegangMain() {
           Canonieke vorm
         </button>
         <button
+          className={"studio-tab" + (activeTab === "diagram" ? " is-actief" : "")}
+          onClick={() => setActiveTab("diagram")}
+        >
+          Diagram
+        </button>
+        <button
           className={"studio-tab" + (ontleding ? " is-actief" : "")}
           onClick={() => setOntleding((v) => !v)}
           title="Kleur de elementen van elke zin: subject, gegevens, vergelijking, waarde, handeling, plicht"
@@ -503,6 +519,16 @@ function ToegangMain() {
               <FoutenPaneel fouten={resultaat.fouten} controleFouten={controleFouten} />
             )}
           </>
+        ) : activeTab === "diagram" ? (
+          <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+            {resultaat.ok ? (
+              <ToegangDiagram beleid={beleidVoorWeergave} />
+            ) : (
+              <p style={{ fontSize: 13, padding: 14 }}>
+                De tekst bevat nog fouten; los die eerst op om het diagram te zien.
+              </p>
+            )}
+          </div>
         ) : (
           <div style={{ flex: 1, minHeight: 0, overflow: "auto", padding: 14 }}>
             {canoniek ? (
