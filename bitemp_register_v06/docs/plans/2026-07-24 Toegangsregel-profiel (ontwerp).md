@@ -34,19 +34,19 @@ kleur aan gegeven. Die kleurcodering wordt **de huisstijl van het profiel**:
 wat in de tekst geel is, is in het diagram geel. Eén visuele taal, twee
 weergaven.
 
-| Profiel-elementtype | Uit AST | ODRL | Kleur (= ontleding) | Vorm (voorstel) |
+| Profiel-elementtype | Uit AST | ODRL | Kleur (= ontleding) | Vorm (gebouwd, 2026-07-24 — zie ontwerp-antwoord) |
 |---|---|---|---|---|
-| **Policy** (top-level) | beleid (kop) | Policy (Set) | indigo-tint | kopkaart: naam, geldigheid, grondslag, doel; `omvat` (aggregatie) naar regels |
-| **Map** | — (ordening) | — | neutraal | folder/package; `bevat`-hiërarchie voor de projectboom |
-| **Toegangsregel** | regel | Permission / Prohibition | band groen / rood | kaart met modaliteitsband links; verbod extra: ⃠-icoon |
-| **Subject** | wie (begrip/kenmerken) | assignee (PartyCollection) | groen | afgeronde rechthoek, personen-icoon |
-| **Handeling** | actie | action (nlgov:) | oranje | pil |
-| **Gegevensselectie** | wat (verwijzing/alle/begrip) | target (Asset/-Collection) | geel | afgeronde rechthoek; label = van-vorm; ⚓-badge bij anker |
-| **Voorwaardepoort** | blok en/of/xof | LogicalConstraint | paars (rand) | poort-knoop "alle" / "ten minste één" / "precies één", boomvormig |
-| **Voorwaarde** | voorwaarde | Constraint | paars | kader: term — vergelijking — term |
-| **Waarde** | literal | rightOperand | blauw | label (tekst/getal/datum) |
-| **Plicht** | plicht | Duty | zeegroen | vlag/badge aan de regelkaart |
-| **Begrip** | begripsdefinitie | Party-/AssetCollection | groen/geel, gestippelde rand | definitie-knoop — of extern, zie §4 |
+| **Policy** (top-level) | beleid (kop) | Policy (Set) | indigo-tint | **kaft** (`tr-kaft`): kopkaart met boekrug; subregel geldigheid · doel |
+| **Map** | — (ordening) | — | neutraal | **hangmap** (bestaande `package`-shape); `bevat`-hiërarchie voor de projectboom |
+| **Toegangsregel** | regel | Permission / Prohibition | band groen / rood | **regelkaart** (`tr-regelkaart`): modaliteitsband links; verbod = gearceerde band + ⃠ + "mag niet" (nooit alleen kleur) |
+| **Subject** | wie (begrip/kenmerken) | assignee (PartyCollection) | groen | **naambadge** (`tr-badge`): clip-inkeping + persoon-icoon |
+| **Handeling** | actie | action (nlgov:) | oranje | **pijlblok** (`tr-pijlblok`): chevron — het werkwoord duwt de zin vooruit |
+| **Gegevensselectie** | wat (verwijzing/alle/begrip) | target (Asset/-Collection) | geel | **cilinder** (`tr-cilinder`); ▦-badge zodra er een cross-profiel-verwijzing is |
+| **Voorwaardepoort** | blok en/of/xof | LogicalConstraint | paars (rand) | **ruit** (`tr-poort`, BPMN-taal): + alle / ○ ten minste één / × precies één, soort-label eronder |
+| **Voorwaarde** | voorwaarde | Constraint | paars | **vergelijkingsstrook** (`tr-vergelijking`): links · teken · rechts |
+| **Waarde** | literal | rightOperand | blauw | label (tekst/getal/datum) — binnen de vergelijkingsstrook |
+| **Plicht** | plicht | Duty | zeegroen | **vaandel** (`tr-vaandel`): zwaluwstaart + ⚑ |
+| **Begrip** | begripsdefinitie | Party-/AssetCollection | groen/geel, gestippelde rand | **tag** (`tr-tag`): label met oogje, gestippeld — of extern, zie §4 |
 
 ### Metamodel-weergave
 
@@ -214,4 +214,4 @@ naam + IRI is snel gevuld), maar het doel-plaatje is de motivatielaag.
 | Bewerken: tekst-first of gelijkwaardig? | ✔ v1 tekst-first (diagram read-only), daarna gelijkwaardig — de round-trip-gedachte |
 | Waar wonen begrippen definitief? | ArchiMate Business Object; wordt met de werkgroep afgestemd maar lijkt het gezondst, zeker gezien de band met **GEMMA** (grotendeels ArchiMate) |
 | Eén regel per kaart of hele policy per diagram? | ✔ policy = diagram, regel = kaart erin; **elementen zijn herbruikbaar over diagrammen** |
-| Verbod-notatie | rode band + ⃠, maar **checken op kleurenblindheid** — anders optioneel een tekstlabel ("verbod") erbij; vorm (band + icoon) draagt de betekenis dus nooit alleen kleur |
+| Verbod-notatie | rode band + ⃠, maar **checken op kleurenblindheid** — anders optioneel een tekstlabel ("verbod") erbij; vorm (band + icoon) draagt de betekenis dus nooit alleen kleur. **✔ Uitgevoerd (2026-07-24, vormentaal):** verbod = *diagonaal gearceerde* band + ⃠ + tekst "mag niet"; toestemming = effen band + "mag". De arcering maakt het verschil ook zonder kleur zichtbaar (deuteranopie/protanopie zien groen en rood als vrijwel dezelfde tint). Botsende pastel-paren (subject-groen ↔ plicht-zeegroen ↔ selectie-geel) kregen de sterkst verschillende silhouetten (badge / vaandel / cilinder); het palet zelf blijft ongewijzigd — het is gekoppeld aan de tekst-ontleding |
