@@ -118,6 +118,8 @@ const elementTypes = [
     kort: "◇",
     shape: "tr-poort",
     icoon: "tr-poort",
+    // Vaste ruit (48px): resizen is zinloos en de box moet de vorm blijven.
+    resizebaar: false,
     kleur: KLEUREN.operator,
     properties: [
       { key: "soort", label: "soort (alle / ten minste één / precies één)", datatype: "string", verplicht: true },

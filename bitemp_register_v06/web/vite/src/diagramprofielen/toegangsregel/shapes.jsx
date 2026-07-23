@@ -323,34 +323,46 @@ function poortSymbool(soort) {
   return "+";
 }
 
-/** Voorwaardepoort: ruit met symbool, naam eronder. Ruit blijft vierkant. */
+/**
+ * Voorwaardepoort: ruit met symbool. De node-box is precies de ruit (zoals
+ * de bol-shape: box = kern), zodat handles strak op de ruitpunten zitten en
+ * uitlijnen op het zichtbare midden rekent; het soort-label hangt als
+ * decoratie ónder de box (pointer-events: none, telt niet mee in de maat).
+ */
 function PoortShape({ element, elementType, selected, children }) {
   const rand = selected ? "var(--dc-selectie, #2563eb)" : "#9333ea";
   const soort = element?.data?.soort || "alle";
+  const MAAT = 48;
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        minWidth: 96,
-        minHeight: 76,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 3,
-        position: "relative",
-        cursor: "grab",
-      }}
-    >
+    <div style={{ width: MAAT, height: MAAT, position: "relative", cursor: "grab" }}>
       {children}
-      <svg width="44" height="44" viewBox="0 0 44 44" style={{ flexShrink: 0, filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.12))" }}>
-        <path d="M22 2 42 22 22 42 2 22Z" fill={vulKleur(element, elementType, "#ecdcf7")} stroke={rand} strokeWidth="1.6" strokeLinejoin="round" />
-        <text x="22" y="28.5" textAnchor="middle" fontSize="19" fontWeight="700" fill="#6b21a8">
+      <svg
+        width={MAAT}
+        height={MAAT}
+        viewBox="0 0 48 48"
+        style={{ display: "block", filter: "drop-shadow(0 1px 2px rgba(0, 0, 0, 0.12))" }}
+      >
+        <path d="M24 2 46 24 24 46 2 24Z" fill={vulKleur(element, elementType, "#ecdcf7")} stroke={rand} strokeWidth="1.6" strokeLinejoin="round" />
+        <text x="24" y="31" textAnchor="middle" fontSize="20" fontWeight="700" fill="#6b21a8">
           {poortSymbool(soort)}
         </text>
       </svg>
-      <div style={{ fontSize: 9.5, fontWeight: 600, color: "#7e22ce" }}>{soort}</div>
+      <div
+        style={{
+          position: "absolute",
+          top: "100%",
+          left: "50%",
+          transform: "translateX(-50%)",
+          marginTop: 3,
+          fontSize: 9.5,
+          fontWeight: 600,
+          color: "#7e22ce",
+          whiteSpace: "nowrap",
+          pointerEvents: "none",
+        }}
+      >
+        {soort}
+      </div>
     </div>
   );
 }
