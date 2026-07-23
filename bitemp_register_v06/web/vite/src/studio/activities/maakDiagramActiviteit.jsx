@@ -1956,7 +1956,7 @@ Beschikbaar: ${namen.join(", ")}`, namen[0]);
           id: m.mode,
           label: m.label,
           icoon: UITLIJN_ICONEN[m.mode],
-          titel: `${m.titel} (selectie — Ctrl+klik)`,
+          titel: `${m.titel} (selectie: Shift+sleep een kader)`,
           onClick: () => layoutApiRef.current?.lijnUit(m.mode),
         };
         return i === 3 || i === 6 ? [{ id: `sep-${i}`, sep: true }, knop] : [knop];
