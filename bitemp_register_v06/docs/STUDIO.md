@@ -300,7 +300,7 @@ te wijzigen.
 | modelleren   | BPMN-processen     | actief   | `bpmn/BpmnEditor` + ModelPicker    |
 | modelleren   | Berichtdefinities  | actief   | `bericht/BerichttypeEditor`        |
 | diensten     | API's              | concept  | placeholder — alleen via Ga naar   |
-| diensten     | Toegangverlening   | concept  | Toegangsspraak-editor v0 (`toegangsspraak/` + `toegangActivity`) — alleen via Ga naar |
+| diensten     | Toegangverlening   | preview  | Toegangsspraak-editor (`toegangsspraak/` + `toegangActivity`): klare taal, ontleding, autocomplete, Diagram-tab (toegangsregel-profiel), ODRL |
 | data         | Rollen             | concept  | placeholder — alleen via Ga naar   |
 | data         | Referentielijsten  | concept  | placeholder — alleen via Ga naar   |
 | beheer       | Profiel-editor     | preview  | meta-editor trede 1 (JSON, plan §8.9; heette "Profiel (0.5)") |

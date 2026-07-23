@@ -40,6 +40,8 @@ import { menuBus } from "../menuBus";
 import { apiBase, downloadJson } from "../studioUtils";
 import ToegangDiagram from "./ToegangDiagram.jsx";
 import { registreerToegangsregelProfiel } from "../../diagramprofielen/toegangsregel/index.js";
+import { beleidNaarDiagramModel, kruisverbandenUit } from "../../diagramprofielen/toegangsregel/adapter.js";
+import { useKruisStore } from "./koppelingenActivity.jsx";
 import "./toegangActivity.css";
 
 // Het toegangsregel-profiel (diagram als derde projectie) op de motor
@@ -149,7 +151,7 @@ function ToegangProvider({ children }) {
 
   // Verse waarden voor menu-acties zonder de listeners te herbinden.
   const ref = useRef({});
-  ref.current = { tekst, resultaat, odrl, canoniek };
+  ref.current = { tekst, resultaat, odrl, canoniek, beleidVoorWeergave };
 
   const vindTextarea = useCallback(
     () => editorWrapRef.current?.querySelector("textarea"),
@@ -247,6 +249,17 @@ function ToegangProvider({ children }) {
         if (odrl) {
           downloadJson(odrl, `${(resultaat.beleid?.naam || "beleid").replace(/\s+/g, "_")}.odrl.json`);
         }
+      }),
+      // Stap 3 (v0): de cross-profiel verwijzingen van het huidige beleid als
+      // kruisverbanden in de Koppelingen-activiteit registreren (dedup op cel).
+      menuBus.on("toegang:kruisverbanden", () => {
+        const beleid = ref.current.beleidVoorWeergave;
+        if (!beleid) return;
+        const nieuwe = kruisverbandenUit(beleidNaarDiagramModel(beleid));
+        const store = useKruisStore.getState();
+        const celVan = (l) => `${l.rij.profielId}::${l.rij.elementId}##${l.kolom.profielId}::${l.kolom.elementId}`;
+        const bestaand = new Set(store.links.map(celVan));
+        store.laadLinks([...store.links, ...nieuwe.filter((l) => !bestaand.has(celVan(l)))]);
       }),
     ];
     return () => af.forEach((off) => off());
@@ -590,7 +603,7 @@ export default {
   label: "Toegangverlening",
   icon: <IconToegang />,
   groep: "diensten",
-  status: "concept", // nog alleen via Ga naar / opdrachtenpalet
+  status: "preview", // zichtbaar in de activity bar (met preview-badge)
   Provider: ToegangProvider,
   Sidebar: ToegangSidebar,
   Main: ToegangMain,
@@ -606,6 +619,7 @@ export default {
         { id: "toegang-herformatteer", label: "Herformatteer (canonieke vorm)", onClick: () => menuBus.emit("toegang:herformatteer") },
         { type: "separator" },
         { id: "toegang-odrl", label: "Exporteer ODRL (JSON-LD)…", onClick: () => menuBus.emit("toegang:odrl") },
+        { id: "toegang-kruisverbanden", label: "Kruisverbanden registreren (Koppelingen)", onClick: () => menuBus.emit("toegang:kruisverbanden") },
       ],
     },
   ],

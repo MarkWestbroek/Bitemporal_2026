@@ -36,7 +36,8 @@ weergaven.
 
 | Profiel-elementtype | Uit AST | ODRL | Kleur (= ontleding) | Vorm (voorstel) |
 |---|---|---|---|---|
-| **Toegangsbeleid** | beleid | Policy (Set) | — | diagramkader met kopvakken (naam, geldigheid, grondslag, doel) |
+| **Policy** (top-level) | beleid (kop) | Policy (Set) | indigo-tint | kopkaart: naam, geldigheid, grondslag, doel; `omvat` (aggregatie) naar regels |
+| **Map** | — (ordening) | — | neutraal | folder/package; `bevat`-hiërarchie voor de projectboom |
 | **Toegangsregel** | regel | Permission / Prohibition | band groen / rood | kaart met modaliteitsband links; verbod extra: ⃠-icoon |
 | **Subject** | wie (begrip/kenmerken) | assignee (PartyCollection) | groen | afgeronde rechthoek, personen-icoon |
 | **Handeling** | actie | action (nlgov:) | oranje | pil |
@@ -46,6 +47,38 @@ weergaven.
 | **Waarde** | literal | rightOperand | blauw | label (tekst/getal/datum) |
 | **Plicht** | plicht | Duty | zeegroen | vlag/badge aan de regelkaart |
 | **Begrip** | begripsdefinitie | Party-/AssetCollection | groen/geel, gestippelde rand | definitie-knoop — of extern, zie §4 |
+
+### Metamodel-weergave
+
+Het profiel zelf, gemodelleerd en uitgelijnd op de motor (2026-07-24):
+
+![Metamodel van het toegangsregel-profiel](../diagrammen/Toegangsregel.svg)
+
+De «elementtype»-klassen met hun eigenschappen en de connectoren
+(wie/doet/op/als/tak/waarbij/verwijst naar) — de definitie-kant, complementair
+aan de regelkaarten (de instantie-kant) in de Diagram-tab. Nog toe te voegen
+aan de tekening: `policy`, `map` en de connectoren `omvat`/`bevat` (zie
+hieronder).
+
+### Policy, hergebruik en ordening (besluit 2026-07-24)
+
+- **`policy` is het top-level elementtype**: draagt de naam, geldigheid,
+  grondslag en doel. Cross-links (wet → ArchiMate Constraint, doel → Goal)
+  hangen aan dit niveau — en kunnen desgewenst óók aan een individuele regel.
+  Naamgeving: werknaam **policy** ("beleid" heeft geen meervoud; de
+  verzameling heet gewoon *policies*).
+- **Regels zijn herbruikbaar**: `policy —omvat→ toegangsregel` is bewust
+  **aggregatie** (open ruit), geen compositie — één regel kan door meerdere
+  policies worden omvat, zoals elementen ook over diagrammen herbruikbaar
+  zijn. Er is dus géén eigendoms-hiërarchie policy→regel.
+- **`map`** (folder/package) ordent policies, regels en begrippen in de
+  projectboom; `map —bevat→ …` is wél de hiërarchie-connector van het
+  profiel (compositie, alleen voor ordening).
+- **Opslag van de verzameling policies**: v1 leeft alles in de projectboom
+  via het profiel (zoals alles waarvan een profiel bestaat, in het
+  project-werkbestand). De duurzame vorm is fase 2 van de whitepaper: de
+  policy als bitemporele registerentiteit (het ODRL-plan §5 beschrijft dat
+  model al — daar heet de tabel ook gewoon `beleid`, enkelvoud).
 
 ### Schets van een regelkaart
 
@@ -153,8 +186,13 @@ naam + IRI is snel gevuld), maar het doel-plaatje is de motivatielaag.
    "mag niet ⃠" — betekenis nooit alleen in kleur), kernzin-keten,
    voorwaardeboom met poorten, plicht-vlaggen, begrippen gestippeld,
    ▦-badge + tooltip voor de cross-profiel verwijzing.
-3. **Cross-profiel bindingen**: Gegevensselectie ↔ canoniek model via de
-   bestaande resolutie; registreren in de koppelingen-matrix.
+3. 🔶 **Cross-profiel bindingen** (v0, 2026-07-24): `kruisverbandenUit()`
+   in de adapter zet de (profiel, element)-verwijzingen om naar
+   koppelingen-links ("komt voort uit", rij = toegangsregel-element,
+   kolom = doelelement), en de menu-actie *Kruisverbanden registreren*
+   schrijft ze gededupliceerd in de Koppelingen-store. De elementIds zijn
+   nog pad-/naam-gebaseerd; resolutie naar echte projectboom-elementen
+   volgt wanneer het profiel in de boom landt (stap 4).
 4. **Diagram → AST**: bewerken in het diagram (element droppen = van-vorm
    invoegen; poort omzetten = kwantor wisselen), met de tekst als bron van
    waarheid zolang de round-trip niet compleet is; dan ook op de echte

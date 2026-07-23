@@ -40,6 +40,34 @@ const VERWIJZING_VELDEN = [
 /** @type {import("../../diagramcore/types/schema.js").ElementType[]} */
 const elementTypes = [
   {
+    // Top-level element: de policy (het toegangsbeleid als geheel). Draagt de
+    // naam, geldigheid, grondslag en doel; cross-links (wet → ArchiMate
+    // Constraint, doel → Goal) hangen aan dít niveau — en desgewenst ook aan
+    // een individuele regel. Werknaam "policy": "beleid" heeft geen meervoud.
+    id: "policy",
+    label: "Policy",
+    kort: "POL",
+    shape: "rect",
+    kleur: "#e0e7ff",
+    properties: [
+      { key: "geldigVanaf", label: "geldig vanaf", datatype: "string" },
+      { key: "geldigTot", label: "geldig tot", datatype: "string" },
+      { key: "grondslag", label: "grondslag (wet)", datatype: "string" },
+      { key: "doel", label: "doelbinding", datatype: "string" },
+      KLEUR_VELD,
+    ],
+  },
+  {
+    // Ordening in de projectboom: regels zijn herbruikbaar (aggregatie, geen
+    // compositie), dus een map/package helpt om policies en regels te ordenen.
+    id: "map",
+    label: "Map",
+    kort: "MAP",
+    shape: "rect",
+    kleur: "#f1f5f9",
+    properties: [KLEUR_VELD],
+  },
+  {
     id: "toegangsregel",
     label: "Toegangsregel",
     kort: "REG",
@@ -124,6 +152,31 @@ const elementTypes = [
     ],
   },
 
+  // ── Connectoren: structuur ─────────────────────────────────────────────────
+  {
+    // Aggregatie (open ruit), bewust géén compositie: een regel kan door
+    // meerdere policies worden omvat en is dus herbruikbaar.
+    id: "omvat",
+    label: "omvat",
+    kort: "◇",
+    shape: "edge",
+    isConnector: true,
+    bron: { elementTypes: ["policy"] },
+    doel: { elementTypes: ["toegangsregel"] },
+    edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: KLEUREN.structuur, markerStart: "ruit-open" },
+  },
+  {
+    // Map-ordening voor de projectboom (hierarchie-connector).
+    id: "bevat",
+    label: "bevat",
+    kort: "◆",
+    shape: "edge",
+    isConnector: true,
+    bron: { elementTypes: ["map"] },
+    doel: { elementTypes: ["map", "policy", "toegangsregel", "begrip"] },
+    edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: KLEUREN.structuur, markerStart: "ruit" },
+  },
+
   // ── Connectoren: de zinsdelen van de kernzin ───────────────────────────────
   {
     id: "wie",
@@ -204,6 +257,7 @@ export const toegangsregelDiagramType = {
   label: "Toegangsregel",
   style: "uml-klassiek",
   elementTypes,
+  hierarchie: ["bevat"],
   taakbalken: [
     { id: "maken", label: "Maken", acties: "elementTypes" },
     { id: "verbinding", label: "Verbinding", acties: "connectorTypes" },

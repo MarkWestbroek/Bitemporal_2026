@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { parseBeleid, VOORBEELD_BELEID } from "../../toegangsspraak/index.js";
-import { beleidNaarDiagramModel, PROFIEL_CANONIEK } from "./adapter.js";
+import { beleidNaarDiagramModel, kruisverbandenUit, PROFIEL_CANONIEK } from "./adapter.js";
 import { registreerToegangsregelProfiel, toegangsregelDiagramType } from "./index.js";
 import { getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 
@@ -12,9 +12,13 @@ test("profieldefinitie registreert geldig op de motor (typecontract)", () => {
   assert.ok(type);
   assert.equal(type.label, "Toegangsregel");
   const ids = toegangsregelDiagramType.elementTypes.map((et) => et.id);
-  for (const verwacht of ["toegangsregel", "subject", "handeling", "gegevensselectie", "voorwaardepoort", "voorwaarde", "plicht", "begrip"]) {
+  for (const verwacht of ["policy", "map", "toegangsregel", "subject", "handeling", "gegevensselectie", "voorwaardepoort", "voorwaarde", "plicht", "begrip"]) {
     assert.ok(ids.includes(verwacht), `elementtype "${verwacht}" ontbreekt`);
   }
+  // Map-ordening is de hiërarchie; policy → regel is aggregatie (herbruikbaar).
+  assert.deepEqual(toegangsregelDiagramType.hierarchie, ["bevat"]);
+  const omvat = toegangsregelDiagramType.elementTypes.find((et) => et.id === "omvat");
+  assert.equal(omvat.edgePresentatie.markerStart, "ruit-open");
 });
 
 test("adapter: voorbeeldbeleid → deterministisch profielmodel", () => {
@@ -24,6 +28,11 @@ test("adapter: voorbeeldbeleid → deterministisch profielmodel", () => {
   assert.deepEqual(model, nogEens); // geen klok/random → stabiel
 
   const per = (type) => model.elementen.filter((e) => e.elementType === type);
+  // Top-level policy met kop-gegevens; regels hangen eraan met "omvat".
+  assert.equal(per("policy").length, 1);
+  assert.equal(per("policy")[0].naam, "Inzage inkomen bij schuldhulp");
+  assert.equal(per("policy")[0].data.geldigVanaf, "2026-05-01");
+  assert.equal(model.connectoren.filter((c) => c.elementType === "omvat").length, 2);
   assert.equal(per("toegangsregel").length, 2);
   assert.equal(per("begrip").length, 2);
   assert.equal(per("subject").length, 2);
@@ -64,6 +73,18 @@ test("adapter: cross-profiel verwijzing is een paar (profiel, element) met canon
   const selectie = model.elementen.find((e) => e.elementType === "gegevensselectie");
   assert.equal(selectie.data.verwijzingsprofiel, PROFIEL_CANONIEK);
   assert.equal(selectie.data.verwijzingselement, "Organisatie.Organisatienamen.naam");
+});
+
+test("kruisverbanden (stap 3 v0): verwijzingen worden koppelingen-links, gededupliceerd", () => {
+  const { beleid } = parseBeleid(VOORBEELD_BELEID);
+  const links = kruisverbandenUit(beleidNaarDiagramModel(beleid));
+  // Alleen het begrip "Inkomensgegevens" draagt een registerpad-verwijzing.
+  assert.equal(links.length, 1);
+  assert.deepEqual(links[0], {
+    rij: { profielId: "toegangsregel", elementId: "Inkomensgegevens" },
+    kolom: { profielId: PROFIEL_CANONIEK, elementId: "NatuurlijkPersoon.Inkomen" },
+    soort: "komt voort uit",
+  });
 });
 
 test("adapter: geneste opsomming wordt een poortenboom met tak-connectoren", () => {

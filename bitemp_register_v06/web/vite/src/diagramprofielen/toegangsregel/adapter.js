@@ -81,6 +81,15 @@ export function beleidNaarDiagramModel(beleid) {
     });
   };
 
+  // Top-level: de policy zelf. Regels hangen eraan met "omvat" (aggregatie) —
+  // herbruikbaar over policies, geen compositie.
+  const policy = nieuw("policy", beleid.naam, {
+    geldigVanaf: beleid.geldigVanaf || "",
+    geldigTot: beleid.geldigTot || "",
+    grondslag: beleid.grondslag || "",
+    doel: beleid.doel || "",
+  });
+
   // Begrippen — herbruikbare definitie-elementen.
   const begripPerNaam = new Map();
   for (const begrip of beleid.begrippen) {
@@ -118,6 +127,7 @@ export function beleidNaarDiagramModel(beleid) {
     const kaart = nieuw("toegangsregel", regel.naam, {
       modaliteit: regel.verbod ? "mag niet" : "mag",
     });
+    verbind("omvat", policy, kaart);
 
     const subject = nieuw("subject", wieTekst(regel.wie), regel.wie.soort === "iemand"
       ? { kenmerken: regel.wie.kenmerken.map((k) => `${k.kenmerk}="${k.waarde}"`).join(", ") }
@@ -143,4 +153,32 @@ export function beleidNaarDiagramModel(beleid) {
   }
 
   return { elementen, connectoren };
+}
+
+// ── Kruisverbanden (stap 3, v0) ──────────────────────────────────────────────
+
+/**
+ * De cross-profiel verwijzingen van een profielmodel als kruisverband-links
+ * in het formaat van de Koppelingen-activiteit: rij = het toegangsregel-
+ * element (onderliggend), kolom = het element in het andere profiel
+ * (bovenliggend), soort "komt voort uit". elementIds zijn leesbaar (naam
+ * resp. registerpad); resolutie naar echte projectboom-elementen volgt
+ * wanneer het profiel in de boom landt.
+ */
+export function kruisverbandenUit(model) {
+  const links = [];
+  const gezien = new Set();
+  for (const element of model.elementen) {
+    const { verwijzingsprofiel, verwijzingselement } = element.data || {};
+    if (!verwijzingsprofiel || !verwijzingselement) continue;
+    const sleutel = `${element.naam}##${verwijzingsprofiel}::${verwijzingselement}`;
+    if (gezien.has(sleutel)) continue;
+    gezien.add(sleutel);
+    links.push({
+      rij: { profielId: "toegangsregel", elementId: element.naam },
+      kolom: { profielId: verwijzingsprofiel, elementId: verwijzingselement },
+      soort: "komt voort uit",
+    });
+  }
+  return links;
 }
