@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 import { parseBeleid, VOORBEELD_BELEID } from "../../toegangsspraak/index.js";
 import {
-  beleidNaarDiagramModel, kruisverbandenUit, naarCoreModel,
+  beleidNaarDiagramModel, kruisverbandenUit, naarCoreModel, mergeCoreModel,
   PROFIEL_CANONIEK, PROFIELTYPE_TOEGANGSREGELS, DIAGRAM_ID,
 } from "./adapter.js";
 import { registreerToegangsregelProfiel, toegangsregelDiagramType } from "./index.js";
@@ -116,6 +116,100 @@ test("naarCoreModel (stap 4): store-vorm met connectoren als source/target en be
   const kaart = model.elementen.find((e) => e.elementType === "toegangsregel");
   const wie = model.connectoren.find((c) => c.elementType === "wie" && c.van === kaart.id);
   assert.equal(posVan(wie.naar).y, posVan(kaart.id).y);
+});
+
+test("ids zijn inhouds-stabiel: iets toevoegen verandert de ids van de rest niet", () => {
+  const { beleid: a } = parseBeleid(VOORBEELD_BELEID);
+  // Voeg midden in het beleid een begrip én een regel toe.
+  const uitgebreid = VOORBEELD_BELEID
+    .replace(
+      "    Inkomensgegevens zijn:",
+      "    Adresgegevens zijn: alle gegevens van het adres van een natuurlijk persoon.\n    Inkomensgegevens zijn:"
+    )
+    .replace(
+      '  Regel "geen export".',
+      '  Regel "adres inzien".\n    Een schuldhulpverlener mag de adresgegevens bekijken.\n\n  Regel "geen export".'
+    );
+  const { ok, beleid: b } = parseBeleid(uitgebreid);
+  assert.ok(ok);
+
+  const idsVan = (model) => new Map(model.elementen.map((e) => [e.id, e.naam]));
+  const oud = idsVan(beleidNaarDiagramModel(a));
+  const nieuw = idsVan(beleidNaarDiagramModel(b));
+  for (const [id, naam] of oud) {
+    assert.ok(nieuw.has(id), `id "${id}" (${naam}) veranderde door de toevoeging`);
+  }
+  // En de leesbaarheid: regel-ids dragen de regelnaam.
+  assert.ok(nieuw.has("trg:reg:geen-export"));
+  assert.ok(nieuw.has("trg:def:adresgegevens"));
+});
+
+test("mergeCoreModel: de layout is heilig bij herpubliceren", () => {
+  const { beleid: a } = parseBeleid(VOORBEELD_BELEID);
+  const eerste = naarCoreModel(beleidNaarDiagramModel(a), { diagramNaam: a.naam });
+
+  // Simuleer gebruikerswerk: kaart versleept + eigen notitie + pan/zoom.
+  const kaartId = "trg:reg:inzage-bij-lopend-dossier";
+  const bestaandDiagram = eerste.diagrams[DIAGRAM_ID];
+  const bestaand = {
+    elements: {
+      ...eerste.elements,
+      user_notitie: { id: "user_notitie", naam: "Notitie", elementType: "plicht", compartimenten: [], data: { tekst: "check!" } },
+    },
+    diagrams: {
+      [DIAGRAM_ID]: {
+        ...bestaandDiagram,
+        nodes: [
+          ...bestaandDiagram.nodes.map((n) =>
+            n.elementId === kaartId ? { ...n, position: { x: 999, y: 777 }, size: { width: 320, height: 90 } } : n
+          ),
+          { elementId: "user_notitie", position: { x: 5, y: 5 } },
+        ],
+      },
+    },
+    viewports: { [DIAGRAM_ID]: { x: 12, y: 34, zoom: 1.5 } },
+    actiefDiagramId: DIAGRAM_ID,
+    meta: null,
+  };
+
+  // Nieuwe tekst: regel "geen export" weg, begrip erbij.
+  const aangepast = VOORBEELD_BELEID
+    .replace(/\n  Regel "geen export"\.\n    Een schuldhulpverlener mag de inkomensgegevens niet exporteren\.\n/, "\n")
+    .replace(
+      "    Inkomensgegevens zijn:",
+      "    Adresgegevens zijn: alle gegevens van het adres van een natuurlijk persoon.\n    Inkomensgegevens zijn:"
+    );
+  const { ok, beleid: b } = parseBeleid(aangepast);
+  assert.ok(ok);
+  const merged = mergeCoreModel(bestaand, naarCoreModel(beleidNaarDiagramModel(b), { diagramNaam: b.naam }));
+
+  const nodes = new Map(merged.diagrams[DIAGRAM_ID].nodes.map((n) => [n.elementId, n]));
+  // Versleepte kaart: positie én afmeting behouden.
+  assert.deepEqual(nodes.get(kaartId).position, { x: 999, y: 777 });
+  assert.deepEqual(nodes.get(kaartId).size, { width: 320, height: 90 });
+  // Eigen notitie blijft, mét node.
+  assert.ok(merged.elements.user_notitie);
+  assert.deepEqual(nodes.get("user_notitie").position, { x: 5, y: 5 });
+  // Verwijderde regel is weg (element + node + connectoren).
+  assert.equal(merged.elements["trg:reg:geen-export"], undefined);
+  assert.equal(nodes.get("trg:reg:geen-export"), undefined);
+  assert.ok(!Object.values(merged.elements).some((el) => el.source === "trg:reg:geen-export" || el.target === "trg:reg:geen-export"));
+  // Nieuw begrip is er, met een positie.
+  assert.ok(merged.elements["trg:def:adresgegevens"]);
+  assert.ok(nodes.get("trg:def:adresgegevens").position);
+  // Pan/zoom blijft (viewport reist mee het diagram in).
+  assert.deepEqual(merged.diagrams[DIAGRAM_ID].viewport, { x: 12, y: 34, zoom: 1.5 });
+});
+
+test("naarCoreModel: connectoren dragen hun type-label als lijnnaam", () => {
+  const { beleid } = parseBeleid(VOORBEELD_BELEID);
+  const core = naarCoreModel(beleidNaarDiagramModel(beleid));
+  const labels = new Set(
+    Object.values(core.elements).filter((el) => el.source && el.target).map((el) => el.naam)
+  );
+  for (const verwacht of ["omvat", "wie", "doet", "op", "als", "waarbij", "verwijst naar"]) {
+    assert.ok(labels.has(verwacht), `lijnlabel "${verwacht}" ontbreekt`);
+  }
 });
 
 test("adapter: geneste opsomming wordt een poortenboom met tak-connectoren", () => {

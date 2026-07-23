@@ -15,6 +15,8 @@ import {
   renderVerwijzing, renderVoorwaarde, verwijzingNaarPad, verwijzingNaarGroepPad,
   geefActies, geefOperatoren,
 } from "../../toegangsspraak/index.js";
+import { slug } from "../../toegangsspraak/woorden.js";
+import { toegangsregelDiagramType } from "./index.js";
 
 export const PROFIEL_CANONIEK = "canoniek-model";
 /** Profieltype-id van de motor-activiteit (toegangsregelsActivity). */
@@ -63,20 +65,31 @@ export function watVerwijzing(wat) {
 /**
  * @returns {{ elementen: Array, connectoren: Array }} elementen/connectoren in
  * de vocabulaire van het toegangsregel-profiel (elementType-ids uit index.js).
+ *
+ * Ids zijn **inhouds-gebaseerd en stabiel** (`trg:…`): een element toevoegen
+ * of weghalen verandert de ids van de rest niet. Daardoor kan de publicatie
+ * naar de motor-store de handmatige layout behouden (mergeCoreModel) en
+ * wijzen kruisverbanden over publicaties heen naar hetzelfde element.
  */
 export function beleidNaarDiagramModel(beleid) {
   const elementen = [];
   const connectoren = [];
-  let n = 0;
-  const nieuw = (elementType, naam, data = {}) => {
-    n += 1;
-    const element = { id: `trg_${n}`, elementType, naam, data };
+  const gebruikt = new Set();
+  const uniek = (id) => {
+    let kandidaat = id;
+    let n = 2;
+    while (gebruikt.has(kandidaat)) kandidaat = `${id}-${n++}`;
+    gebruikt.add(kandidaat);
+    return kandidaat;
+  };
+  const nieuw = (id, elementType, naam, data = {}) => {
+    const element = { id: uniek(id), elementType, naam, data };
     elementen.push(element);
     return element;
   };
   const verbind = (elementType, van, naar) => {
     connectoren.push({
-      id: `trg_c${connectoren.length + 1}`,
+      id: `trg:c:${elementType}:${van.id}>${naar.id}`,
       elementType,
       van: van.id,
       naar: naar.id,
@@ -84,8 +97,9 @@ export function beleidNaarDiagramModel(beleid) {
   };
 
   // Top-level: de policy zelf. Regels hangen eraan met "omvat" (aggregatie) —
-  // herbruikbaar over policies, geen compositie.
-  const policy = nieuw("policy", beleid.naam, {
+  // herbruikbaar over policies, geen compositie. Vast id: hernoemen van het
+  // beleid verplaatst niets.
+  const policy = nieuw("trg:policy", "policy", beleid.naam, {
     geldigVanaf: beleid.geldigVanaf || "",
     geldigTot: beleid.geldigTot || "",
     grondslag: beleid.grondslag || "",
@@ -102,13 +116,14 @@ export function beleidNaarDiagramModel(beleid) {
       data.definitie = watTekst(begrip.wat);
       Object.assign(data, watVerwijzing(begrip.wat) || {});
     }
-    const element = nieuw("begrip", begrip.naam, data);
+    const element = nieuw(`trg:def:${slug(begrip.naam)}`, "begrip", begrip.naam, data);
     begripPerNaam.set(begrip.naam.toLowerCase(), element);
   }
 
-  const voorwaardeBoom = (knoop, ouder, connector) => {
+  const voorwaardeBoom = (basisId, knoop, ouder, connector, pad) => {
+    const eigenId = `${basisId}:als${pad.length ? ":" + pad.join(".") : ""}`;
     if (knoop.soort === "voorwaarde") {
-      const element = nieuw("voorwaarde", renderVoorwaarde(knoop), {
+      const element = nieuw(eigenId, "voorwaarde", renderVoorwaarde(knoop), {
         links: termTekst(knoop.links),
         vergelijking: operatorZin(knoop.operator),
         rechts: knoop.lijst
@@ -120,18 +135,18 @@ export function beleidNaarDiagramModel(beleid) {
       verbind(connector, ouder, element);
       return;
     }
-    const poort = nieuw("voorwaardepoort", KWANTOR_LABEL[knoop.soort], { soort: KWANTOR_LABEL[knoop.soort] });
+    const poort = nieuw(eigenId, "voorwaardepoort", KWANTOR_LABEL[knoop.soort], { soort: KWANTOR_LABEL[knoop.soort] });
     verbind(connector, ouder, poort);
-    for (const item of knoop.items) voorwaardeBoom(item, poort, "tak");
+    knoop.items.forEach((item, i) => voorwaardeBoom(basisId, item, poort, "tak", [...pad, i + 1]));
   };
 
   for (const regel of beleid.regels) {
-    const kaart = nieuw("toegangsregel", regel.naam, {
-      modaliteit: regel.verbod ? "mag niet" : "mag",
-    });
+    const basisId = uniek(`trg:reg:${slug(regel.naam)}`);
+    const kaart = { id: basisId, elementType: "toegangsregel", naam: regel.naam, data: { modaliteit: regel.verbod ? "mag niet" : "mag" } };
+    elementen.push(kaart);
     verbind("omvat", policy, kaart);
 
-    const subject = nieuw("subject", wieTekst(regel.wie), regel.wie.soort === "iemand"
+    const subject = nieuw(`${basisId}:wie`, "subject", wieTekst(regel.wie), regel.wie.soort === "iemand"
       ? { kenmerken: regel.wie.kenmerken.map((k) => `${k.kenmerk}="${k.waarde}"`).join(", ") }
       : { rol: regel.wie.naam });
     verbind("wie", kaart, subject);
@@ -139,19 +154,19 @@ export function beleidNaarDiagramModel(beleid) {
     if (wieBegrip) verbind("verwijst-naar", subject, wieBegrip);
 
     const nlgov = geefActies().find((a) => a.woord === regel.actie)?.nlgov || "";
-    const handeling = nieuw("handeling", regel.actie, { nlgov });
+    const handeling = nieuw(`${basisId}:doet`, "handeling", regel.actie, { nlgov });
     verbind("doet", subject, handeling);
 
-    const gegevens = nieuw("gegevensselectie", watTekst(regel.wat), watVerwijzing(regel.wat) || {});
+    const gegevens = nieuw(`${basisId}:op`, "gegevensselectie", watTekst(regel.wat), watVerwijzing(regel.wat) || {});
     verbind("op", handeling, gegevens);
     const watBegrip = regel.wat.soort === "begrip" && begripPerNaam.get(regel.wat.naam.toLowerCase());
     if (watBegrip) verbind("verwijst-naar", gegevens, watBegrip);
 
-    if (regel.voorwaarden) voorwaardeBoom(regel.voorwaarden, kaart, "als");
-    for (const plicht of regel.plichten) {
-      const element = nieuw("plicht", plicht.zin, { nlgov: plicht.nlgov });
+    if (regel.voorwaarden) voorwaardeBoom(basisId, regel.voorwaarden, kaart, "als", []);
+    regel.plichten.forEach((plicht, i) => {
+      const element = nieuw(`${basisId}:plicht:${i + 1}`, "plicht", plicht.zin, { nlgov: plicht.nlgov });
       verbind("waarbij", kaart, element);
-    }
+    });
   }
 
   return { elementen, connectoren };
@@ -168,12 +183,22 @@ export const DIAGRAM_ID = "trg_overzicht";
  * beginstand — op de canvas is daarna alles sleepbaar.
  */
 export function naarCoreModel(model, { diagramNaam = "Toegangsbeleid" } = {}) {
+  // Connector-naam = het type-label; de canvas toont el.naam als lijnlabel.
+  const typeLabel = new Map(toegangsregelDiagramType.elementTypes.map((et) => [et.id, et.label]));
   const elements = {};
   for (const e of model.elementen) {
     elements[e.id] = { id: e.id, naam: e.naam, elementType: e.elementType, compartimenten: [], data: e.data || {} };
   }
   for (const c of model.connectoren) {
-    elements[c.id] = { id: c.id, naam: "", elementType: c.elementType, source: c.van, target: c.naar, compartimenten: [], data: {} };
+    elements[c.id] = {
+      id: c.id,
+      naam: typeLabel.get(c.elementType) || c.elementType,
+      elementType: c.elementType,
+      source: c.van,
+      target: c.naar,
+      compartimenten: [],
+      data: {},
+    };
   }
 
   // Opzoekhulpen over de connectoren.
@@ -232,6 +257,74 @@ export function naarCoreModel(model, { diagramNaam = "Toegangsbeleid" } = {}) {
     },
     actiefDiagramId: DIAGRAM_ID,
     meta: null,
+  };
+}
+
+/**
+ * Merge een nieuwe publicatie met de bestaande store-inhoud: **de layout is
+ * heilig**. Regels:
+ *  - Adapter-beheerde elementen (id `trg:…`) worden vervangen door de nieuwe
+ *    stand: wat uit de tekst verdween, verdwijnt (dat is geen layout-verlies);
+ *    wat bleef, behoudt zijn node (positie, afmeting, ankers) op het diagram.
+ *  - Gebruikers-elementen (notities, handmatig getekende elementen/lijnen)
+ *    blijven staan, incl. hun nodes; alleen lijnen naar verdwenen elementen
+ *    worden opgeruimd.
+ *  - Andere (handgemaakte) diagrammen en alle viewports (pan/zoom) blijven.
+ *
+ * @param bestaand {{elements, diagrams, viewports, actiefDiagramId, meta}} —
+ *   de huidige store-state.
+ * @param nieuw het resultaat van naarCoreModel().
+ */
+export function mergeCoreModel(bestaand, nieuw) {
+  // Adapter-beheerd: de stabiele inhouds-ids (trg:…) én de oude
+  // volgnummer-ids (trg_1/trg_c1) van eerdere publicaties — anders zou een
+  // oud gepubliceerd model bij de eerste merge verdubbelen. Handwerk via de
+  // taakbalk (trg_nieuw_…) is juist géén adapter-bezit en blijft staan.
+  const isAdapterId = (id) => /^trg:/.test(id) || /^trg_c?\d+$/.test(id);
+
+  const elements = {};
+  for (const [id, el] of Object.entries(bestaand.elements || {})) {
+    if (!isAdapterId(id)) elements[id] = el;
+  }
+  Object.assign(elements, nieuw.elements);
+  // Lijnen (van wie dan ook) waarvan een uiteinde verdween: opruimen.
+  for (const [id, el] of Object.entries(elements)) {
+    if (el.source && el.target && !(elements[el.source] && elements[el.target])) delete elements[id];
+  }
+
+  const diagrams = {};
+  for (const [id, diagram] of Object.entries(bestaand.diagrams || {})) {
+    diagrams[id] = { ...diagram };
+  }
+  const nieuwDiagram = nieuw.diagrams[DIAGRAM_ID];
+  const oud = diagrams[DIAGRAM_ID];
+  if (oud) {
+    const oudeNodes = new Map((oud.nodes || []).map((node) => [node.elementId, node]));
+    const nodes = nieuwDiagram.nodes.map((node) => oudeNodes.get(node.elementId) || node);
+    for (const node of oud.nodes || []) {
+      if (!isAdapterId(node.elementId) && elements[node.elementId] && !nodes.some((n) => n.elementId === node.elementId)) {
+        nodes.push(node);
+      }
+    }
+    diagrams[DIAGRAM_ID] = { ...oud, nodes };
+  } else {
+    diagrams[DIAGRAM_ID] = nieuwDiagram;
+  }
+  for (const [id, diagram] of Object.entries(diagrams)) {
+    const nodes = (diagram.nodes || []).filter((node) => elements[node.elementId]);
+    // Viewport terug in het diagram stoppen: laadModel splitst hem er weer af
+    // (anders zou herpubliceren pan/zoom resetten).
+    const viewport = bestaand.viewports?.[id];
+    diagrams[id] = { ...diagram, nodes, ...(viewport ? { viewport } : {}) };
+  }
+
+  return {
+    diagramTypeId: nieuw.diagramTypeId,
+    elements,
+    diagrams,
+    actiefDiagramId:
+      bestaand.actiefDiagramId && diagrams[bestaand.actiefDiagramId] ? bestaand.actiefDiagramId : DIAGRAM_ID,
+    meta: nieuw.meta ?? bestaand.meta ?? null,
   };
 }
 

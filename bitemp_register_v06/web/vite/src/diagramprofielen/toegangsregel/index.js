@@ -196,7 +196,7 @@ const elementTypes = [
     isConnector: true,
     bron: { elementTypes: ["toegangsregel", "subject"] },
     doel: { elementTypes: ["handeling"] },
-    edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: KLEUREN.structuur, markerEnd: "pijl" },
+    edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: KLEUREN.structuur, markerEnd: "pijl-dicht" },
   },
   {
     id: "op",
@@ -206,7 +206,7 @@ const elementTypes = [
     isConnector: true,
     bron: { elementTypes: ["toegangsregel", "handeling"] },
     doel: { elementTypes: ["gegevensselectie"] },
-    edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: KLEUREN.structuur, markerEnd: "pijl" },
+    edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: KLEUREN.structuur, markerEnd: "pijl-dicht" },
   },
   {
     id: "als",
@@ -216,7 +216,7 @@ const elementTypes = [
     isConnector: true,
     bron: { elementTypes: ["toegangsregel"] },
     doel: { elementTypes: ["voorwaardepoort", "voorwaarde"] },
-    edgePresentatie: { lijn: "dashed", vorm: "hoekig", kleur: KLEUREN.structuur },
+    edgePresentatie: { lijn: "dash-6-3", vorm: "hoekig", kleur: KLEUREN.structuur },
   },
   {
     id: "tak",
@@ -236,7 +236,7 @@ const elementTypes = [
     isConnector: true,
     bron: { elementTypes: ["toegangsregel"] },
     doel: { elementTypes: ["plicht"] },
-    edgePresentatie: { lijn: "dashed", vorm: "hoekig", kleur: KLEUREN.structuur },
+    edgePresentatie: { lijn: "dash-6-3", vorm: "hoekig", kleur: KLEUREN.structuur },
   },
   {
     id: "verwijst-naar",
@@ -248,7 +248,7 @@ const elementTypes = [
     // (canoniek model, ArchiMate) lopen via de verwijzings-properties.
     bron: { elementTypes: ["gegevensselectie", "subject", "begrip"] },
     doel: { elementTypes: ["begrip"] },
-    edgePresentatie: { lijn: "dotted", vorm: "hoekig", kleur: KLEUREN.structuur, markerEnd: "pijl" },
+    edgePresentatie: { lijn: "dash-4-4", vorm: "hoekig", kleur: KLEUREN.structuur, markerEnd: "pijl-open" },
   },
 ];
 

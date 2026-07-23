@@ -40,7 +40,7 @@ import { menuBus } from "../menuBus";
 import { apiBase, downloadJson } from "../studioUtils";
 import ToegangDiagram from "./ToegangDiagram.jsx";
 import { registreerToegangsregelProfiel } from "../../diagramprofielen/toegangsregel/index.js";
-import { beleidNaarDiagramModel, kruisverbandenUit, naarCoreModel, PROFIELTYPE_TOEGANGSREGELS } from "../../diagramprofielen/toegangsregel/adapter.js";
+import { beleidNaarDiagramModel, kruisverbandenUit, naarCoreModel, mergeCoreModel, PROFIELTYPE_TOEGANGSREGELS } from "../../diagramprofielen/toegangsregel/adapter.js";
 import { useKruisStore } from "./koppelingenActivity.jsx";
 import { getProfieltype } from "../profieltypeRegistry";
 import "./toegangActivity.css";
@@ -252,16 +252,21 @@ function ToegangProvider({ children }) {
         }
       }),
       // Stap 4: publiceer het beleid als diagram-model naar de motor-store
-      // van het toegangsregel-profiel (projectboom + canvas). Vervangt het
-      // model daar — de tekst is de bron van waarheid (tekst-first).
+      // van het toegangsregel-profiel (projectboom + canvas). De tekst is de
+      // bron van waarheid voor de INHOUD; de LAYOUT is heilig — bestaande
+      // posities/afmetingen, eigen notities, extra diagrammen en pan/zoom
+      // blijven staan (mergeCoreModel; ids zijn inhouds-stabiel).
       menuBus.on("toegang:publiceer", () => {
         const beleid = ref.current.beleidVoorWeergave;
         if (!beleid) return;
         const profiel = getProfieltype(PROFIELTYPE_TOEGANGSREGELS);
         if (!profiel?.useStore) return;
-        profiel.useStore.getState().laadModel(
-          naarCoreModel(beleidNaarDiagramModel(beleid), { diagramNaam: beleid.naam })
-        );
+        const st = profiel.useStore.getState();
+        const nieuw = naarCoreModel(beleidNaarDiagramModel(beleid), { diagramNaam: beleid.naam });
+        st.laadModel(mergeCoreModel(
+          { elements: st.elements, diagrams: st.diagrams, viewports: st.viewports, actiefDiagramId: st.actiefDiagramId, meta: st.meta },
+          nieuw
+        ));
       }),
       // Stap 3 (v0): de cross-profiel verwijzingen van het huidige beleid als
       // kruisverbanden in de Koppelingen-activiteit registreren (dedup op cel).
@@ -632,7 +637,7 @@ export default {
         { id: "toegang-herformatteer", label: "Herformatteer (canonieke vorm)", onClick: () => menuBus.emit("toegang:herformatteer") },
         { type: "separator" },
         { id: "toegang-odrl", label: "Exporteer ODRL (JSON-LD)…", onClick: () => menuBus.emit("toegang:odrl") },
-        { id: "toegang-publiceer", label: "Publiceer naar Modelleren (vervangt diagram-model)", onClick: () => menuBus.emit("toegang:publiceer") },
+        { id: "toegang-publiceer", label: "Publiceer naar Modelleren (layout blijft behouden)", onClick: () => menuBus.emit("toegang:publiceer") },
         { id: "toegang-kruisverbanden", label: "Kruisverbanden registreren (Koppelingen)", onClick: () => menuBus.emit("toegang:kruisverbanden") },
       ],
     },
