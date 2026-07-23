@@ -188,16 +188,27 @@ test("bijzinsvolgorde met gesplitste operator: '… met \"A\" begint' en '… kl
 test("spans: de parser levert bronposities per element-soort", () => {
   const { spans } = parseBeleid(VOORBEELD_BELEID);
   const soorten = new Set(spans.map((s) => s.soort));
-  for (const verwacht of ["subject", "gegevens", "actie", "operator", "waarde", "plicht", "modaliteit"]) {
+  for (const verwacht of ["subject", "gegevens", "actie", "operator", "waarde", "plicht", "modaliteit", "structuur"]) {
     assert.ok(soorten.has(verwacht), `span-soort "${verwacht}" ontbreekt`);
   }
   // Posities kloppen met de brontekst.
   for (const span of spans.filter((s) => s.soort === "actie")) {
     assert.match(VOORBEELD_BELEID.slice(span.van, span.tot), /^(bekijken|exporteren)$/);
   }
+  // "alle gegevens van …" krijgt een buitenste span over het geheel.
   const gegevens = spans.find((s) => s.soort === "gegevens" && s.verwijzing);
   assert.ok(gegevens);
-  assert.equal(VOORBEELD_BELEID.slice(gegevens.van, gegevens.tot), "het inkomen van een natuurlijk persoon");
+  assert.equal(
+    VOORBEELD_BELEID.slice(gegevens.van, gegevens.tot),
+    "alle gegevens van het inkomen van een natuurlijk persoon"
+  );
+  // Bij het verbod ("mag … niet exporteren") kleuren mag én niet als ontkenning.
+  const ontkenningen = spans.filter((s) => s.soort === "modaliteit" && s.ontkenning);
+  assert.equal(ontkenningen.length, 2);
+  assert.deepEqual(
+    ontkenningen.map((s) => VOORBEELD_BELEID.slice(s.van, s.tot)).sort(),
+    ["mag", "niet"]
+  );
 });
 
 test("mag niet wordt een ODRL prohibition; mag een permission", () => {

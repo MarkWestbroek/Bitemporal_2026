@@ -95,7 +95,8 @@ function ontleedHtml(tekst, spans, actieveSpan) {
     if (span.van < pos || span.tot > tekst.length) continue;
     html += escapeHtml(tekst.slice(pos, span.van));
     const actief = span === actieveSpan ? " ts-sem-actief" : "";
-    html += `<span class="ts-sem ts-sem-${span.soort}${actief}">${escapeHtml(tekst.slice(span.van, span.tot))}</span>`;
+    const ontkenning = span.ontkenning ? " ts-sem-ontkenning" : "";
+    html += `<span class="ts-sem ts-sem-${span.soort}${ontkenning}${actief}">${escapeHtml(tekst.slice(span.van, span.tot))}</span>`;
     pos = span.tot;
   }
   return html + escapeHtml(tekst.slice(pos));
@@ -361,6 +362,13 @@ function ToegangMain() {
     [ontleding, resultaat, tekst, actieveGegevens]
   );
 
+  // De canonieke leesweergave krijgt dezelfde ontleding: de canonieke tekst
+  // parset per definitie, dus de spans komen uit een verse parse ervan.
+  const canoniekSpans = useMemo(
+    () => (ontleding && canoniek ? parseBeleid(canoniek).spans : null),
+    [ontleding, canoniek]
+  );
+
   const onDrop = useCallback(
     (e) => {
       const data = e.dataTransfer.getData(FIELDREF_MIME);
@@ -498,9 +506,16 @@ function ToegangMain() {
         ) : (
           <div style={{ flex: 1, minHeight: 0, overflow: "auto", padding: 14 }}>
             {canoniek ? (
-              <pre style={{ margin: 0, fontFamily: "ui-monospace, SFMono-Regular, Consolas, monospace", fontSize: 13, lineHeight: 1.6 }}>
-                {canoniek}
-              </pre>
+              canoniekSpans?.length ? (
+                <pre
+                  style={{ margin: 0, fontFamily: "ui-monospace, SFMono-Regular, Consolas, monospace", fontSize: 13, lineHeight: 1.6 }}
+                  dangerouslySetInnerHTML={{ __html: ontleedHtml(canoniek, canoniekSpans, null) }}
+                />
+              ) : (
+                <pre style={{ margin: 0, fontFamily: "ui-monospace, SFMono-Regular, Consolas, monospace", fontSize: 13, lineHeight: 1.6 }}>
+                  {canoniek}
+                </pre>
+              )
             ) : (
               <p style={{ fontSize: 13 }}>
                 De tekst bevat nog fouten; los die eerst op om de canonieke vorm te zien.

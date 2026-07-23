@@ -205,7 +205,9 @@ class Parser {
       naam: "", geldigVanaf: null, geldigTot: null, grondslag: null, doel: null,
       begrippen: [], regels: [],
     };
+    const beleidTok = this.kijk();
     this.pakWoord('Een beleidstekst begint met: Beleid "<naam>".', "beleid");
+    this.markeer("structuur", beleidTok, beleidTok);
     beleid.naam = this.pakString("Na Beleid hoort de naam tussen aanhalingstekens.");
     this.pakTeken(".", "De beleidsregel eindigt met een punt.");
 
@@ -214,19 +216,24 @@ class Parser {
       const t = this.kijk();
       if (this.isWoord(t, "geldig")) {
         this.pak();
+        const vanafTok = this.kijk();
         this.pakWoord('Na "Geldig" hoort "vanaf".', "vanaf");
+        this.markeer("structuur", t, vanafTok);
         beleid.geldigVanaf = this.parseDatum();
         if (this.isWoord(this.kijk(), "tot")) {
-          this.pak();
+          const totTok = this.pak();
+          this.markeer("structuur", totTok, totTok);
           beleid.geldigTot = this.parseDatum();
         }
         this.pakTeken(".", "De geldigheidsregel eindigt met een punt.");
       } else if (this.isWoord(t, "grondslag")) {
         this.pak();
+        this.markeer("structuur", t, t);
         this.pakTeken(":", 'Na "Grondslag" hoort een dubbele punt.');
         beleid.grondslag = this.pakTekstTotPunt();
       } else if (this.isWoord(t, "doel")) {
         this.pak();
+        this.markeer("structuur", t, t);
         this.pakTeken(":", 'Na "Doel" hoort een dubbele punt.');
         beleid.doel = this.pakString("Het doel staat tussen aanhalingstekens.");
         this.pakTeken(".", "De doelregel eindigt met een punt.");
@@ -236,7 +243,8 @@ class Parser {
     }
 
     if (this.isWoord(this.kijk(), "begrippen")) {
-      this.pak();
+      const begrippenTok = this.pak();
+      this.markeer("structuur", begrippenTok, begrippenTok);
       this.pakTeken(".", 'Na "Begrippen" hoort een punt.');
       while (this.kijk() && !this.isWoord(this.kijk(), "regel")) {
         beleid.begrippen.push(this.parseBegrip());
@@ -297,7 +305,9 @@ class Parser {
       naamWoorden.push(this.pakWoord("De naam van het begrip bestaat uit woorden."));
     }
     if (!naamWoorden.length) this.fout("Het begrip heeft nog geen naam.");
+    const wwTok = this.kijk();
     const werkwoord = this.pakWoord('Na de naam hoort "is:" of "zijn:".', "is", "zijn").toLowerCase();
+    this.markeer("structuur", wwTok, wwTok);
     if (this.isTeken(this.kijk(), ":")) this.pak();
 
     if (this.isWoord(this.kijk(), "iemand")) {
@@ -310,7 +320,8 @@ class Parser {
     const wat = this.parseWat(() => this.isWoord(this.kijk(), "waarvan") || this.isTeken(this.kijk(), "."));
     let waarvan = null;
     if (this.isWoord(this.kijk(), "waarvan")) {
-      this.pak();
+      const waarvanTok = this.pak();
+      this.markeer("structuur", waarvanTok, waarvanTok);
       waarvan = this.parseVoorwaarde(() => this.isTeken(this.kijk(), "."));
     }
     this.pakTeken(".", "Een begrip eindigt met een punt.");
@@ -339,7 +350,9 @@ class Parser {
   // ── Regels ──
 
   parseRegel() {
+    const regelTok = this.kijk();
     this.pakWoord("", "regel");
+    this.markeer("structuur", regelTok, regelTok);
     const naam = this.pakString('Na "Regel" hoort de naam tussen aanhalingstekens.');
     this.pakTeken(".", "De regelkop eindigt met een punt.");
 
@@ -349,6 +362,8 @@ class Parser {
     const magTok = this.kijk();
     this.pakWoord('Na het subject hoort "mag" (of "mag … niet").', "mag");
     this.markeer("modaliteit", magTok, magTok);
+    // Referentie bewaren: bij een verbod kleurt ook "mag" als ontkenning mee.
+    const magSpan = this.spans[this.spans.length - 1];
 
     // Verzamel de tokens tot "als", "waarbij" of "." — het laatste woord is de
     // handeling, met daarvoor eventueel "niet".
@@ -373,7 +388,8 @@ class Parser {
     if (watEinde > 0 && watTokens[watEinde - 1].soort === "woord" && watTokens[watEinde - 1].waarde.toLowerCase() === "niet") {
       verbod = true;
       watEinde -= 1;
-      this.markeer("modaliteit", watTokens[watEinde], watTokens[watEinde]);
+      this.markeer("modaliteit", watTokens[watEinde], watTokens[watEinde], { ontkenning: true });
+      magSpan.ontkenning = true;
     }
     const sub = new Parser(watTokens.slice(0, watEinde));
     const wat = sub.parseWatVolledig();
@@ -381,13 +397,15 @@ class Parser {
 
     let voorwaarden = null;
     if (this.isWoord(this.kijk(), "als")) {
-      this.pak();
+      const alsTok = this.pak();
+      this.markeer("structuur", alsTok, alsTok);
       voorwaarden = this.parseVoorwaardeblok();
     }
 
     const plichten = [];
     if (this.isWoord(this.kijk(), "waarbij")) {
-      this.pak();
+      const waarbijTok = this.pak();
+      this.markeer("structuur", waarbijTok, waarbijTok);
       this.pakTeken(":", 'Na "waarbij" hoort een dubbele punt.');
       for (;;) {
         plichten.push(this.parsePlicht());
@@ -427,8 +445,12 @@ class Parser {
     // "alle gegevens van <verwijzing>" — de verwijzing mag een volledige
     // van-keten zijn ("alle gegevens van het inkomen van een natuurlijk
     // persoon"), zodat definities congruent blijven (meervoud = meervoud).
+    const alleTok = this.kijk();
     if (this.matchWoorden(["alle", "gegevens", "van"])) {
       const verwijzing = this.parseVerwijzing(stop);
+      // Buitenste span dekt "alle gegevens van …" als geheel (de binnenste
+      // verwijzing-span valt erbinnen en wijkt bij het renderen).
+      this.markeer("gegevens", alleTok, this.ts[this.i - 1], { verwijzing });
       return { soort: "alle", verwijzing };
     }
     // technisch pad als shorthand
@@ -484,6 +506,7 @@ class Parser {
     for (const kw of KWANTOREN) {
       const start = this.i;
       if (this.matchWoorden(kw.woorden, ":")) {
+        this.markeer("structuur", this.ts[start], this.ts[this.i - 1]);
         return this.parseOpsomming(kw.soort);
       }
       this.i = start;
@@ -509,7 +532,11 @@ class Parser {
       let genest = null;
       for (const kw of KWANTOREN) {
         const start = this.i;
-        if (this.matchWoorden(kw.woorden, ":")) { genest = kw.soort; break; }
+        if (this.matchWoorden(kw.woorden, ":")) {
+          this.markeer("structuur", this.ts[start], this.ts[this.i - 1]);
+          genest = kw.soort;
+          break;
+        }
         this.i = start;
       }
       if (genest) {

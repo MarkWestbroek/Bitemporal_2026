@@ -15,7 +15,24 @@
 .ts-sem-operator { background: #ecdcf7; }
 .ts-sem-actie { background: #ffe1c7; }
 .ts-sem-plicht { background: #d2f0ea; }
-.ts-sem-modaliteit { font-weight: 700; }
+
+/* Modaliteit: mag = groen onderstreept; bij een verbod kleuren "mag" én
+   "niet" rood mee (ts-sem-ontkenning). */
+.ts-sem-modaliteit {
+  font-weight: 700;
+  text-decoration: underline 2px #16a34a;
+  text-underline-offset: 2px;
+}
+.ts-sem-modaliteit.ts-sem-ontkenning {
+  color: #b91c1c;
+  text-decoration-color: #dc2626;
+}
+
+/* Structuurwoorden van de taal (Beleid, Regel, als, waarbij, opsommingskoppen …) */
+.ts-sem-structuur {
+  color: #475569;
+  font-weight: 600;
+}
 
 /* Dubbelgeklikte gegevens-keten: groepering met een kader. */
 .ts-sem-actief {
