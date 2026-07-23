@@ -47,7 +47,8 @@ const elementTypes = [
     id: "policy",
     label: "Policy",
     kort: "POL",
-    shape: "rect",
+    shape: "tr-kaft",
+    icoon: "tr-policy",
     kleur: "#e0e7ff",
     properties: [
       { key: "geldigVanaf", label: "geldig vanaf", datatype: "string" },
@@ -63,7 +64,8 @@ const elementTypes = [
     id: "map",
     label: "Map",
     kort: "MAP",
-    shape: "rect",
+    shape: "package",
+    icoon: "tr-map",
     kleur: "#f1f5f9",
     properties: [KLEUR_VELD],
   },
@@ -71,7 +73,8 @@ const elementTypes = [
     id: "toegangsregel",
     label: "Toegangsregel",
     kort: "REG",
-    shape: "rect",
+    shape: "tr-regelkaart",
+    icoon: "tr-regel",
     kleur: "#f8fafc",
     properties: [
       { key: "modaliteit", label: "modaliteit (mag / mag niet)", datatype: "string", verplicht: true },
@@ -82,7 +85,8 @@ const elementTypes = [
     id: "subject",
     label: "Subject",
     kort: "WIE",
-    shape: "rect",
+    shape: "tr-badge",
+    icoon: "tr-subject",
     kleur: KLEUREN.subject,
     properties: [
       { key: "rol", label: "rol", datatype: "string" },
@@ -94,7 +98,8 @@ const elementTypes = [
     id: "handeling",
     label: "Handeling",
     kort: "DOE",
-    shape: "rect",
+    shape: "tr-pijlblok",
+    icoon: "tr-handeling",
     kleur: KLEUREN.actie,
     properties: [{ key: "nlgov", label: "NLGov-actie", datatype: "string" }, KLEUR_VELD],
   },
@@ -102,7 +107,8 @@ const elementTypes = [
     id: "gegevensselectie",
     label: "Gegevensselectie",
     kort: "GEG",
-    shape: "rect",
+    shape: "tr-cilinder",
+    icoon: "tr-gegevens",
     kleur: KLEUREN.gegevens,
     properties: [...VERWIJZING_VELDEN, KLEUR_VELD],
   },
@@ -110,7 +116,8 @@ const elementTypes = [
     id: "voorwaardepoort",
     label: "Voorwaardepoort",
     kort: "◇",
-    shape: "rect",
+    shape: "tr-poort",
+    icoon: "tr-poort",
     kleur: KLEUREN.operator,
     properties: [
       { key: "soort", label: "soort (alle / ten minste één / precies één)", datatype: "string", verplicht: true },
@@ -121,7 +128,8 @@ const elementTypes = [
     id: "voorwaarde",
     label: "Voorwaarde",
     kort: "ALS",
-    shape: "rect",
+    shape: "tr-vergelijking",
+    icoon: "tr-voorwaarde",
     kleur: KLEUREN.operator,
     properties: [
       { key: "links", label: "linksterm", datatype: "string" },
@@ -134,7 +142,8 @@ const elementTypes = [
     id: "plicht",
     label: "Plicht",
     kort: "⚑",
-    shape: "note",
+    shape: "tr-vaandel",
+    icoon: "tr-plicht",
     kleur: KLEUREN.plicht,
     properties: [{ key: "nlgov", label: "NLGov-plicht", datatype: "string" }, KLEUR_VELD],
   },
@@ -142,7 +151,8 @@ const elementTypes = [
     id: "begrip",
     label: "Begrip",
     kort: "DEF",
-    shape: "rect",
+    shape: "tr-tag",
+    icoon: "tr-begrip",
     kleur: KLEUREN.begrip,
     properties: [
       { key: "soort", label: "soort (wie / wat)", datatype: "string" },
@@ -181,42 +191,65 @@ const elementTypes = [
   {
     id: "wie",
     label: "wie",
-    kort: "wie",
+    kort: "▶",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: ["toegangsregel"] },
     doel: { elementTypes: ["subject"] },
-    edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: KLEUREN.structuur },
+    edgePresentatie: {
+      lijn: "solid",
+      vorm: "hoekig",
+      kleur: KLEUREN.structuur,
+      dikte: 2,
+      markerEnd: "pijl-dicht",
+    },
   },
   {
     id: "doet",
     label: "doet",
-    kort: "doet",
+    kort: "▶",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: ["toegangsregel", "subject"] },
     doel: { elementTypes: ["handeling"] },
-    edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: KLEUREN.structuur, markerEnd: "pijl-dicht" },
+    edgePresentatie: {
+      lijn: "solid",
+      vorm: "hoekig",
+      kleur: KLEUREN.structuur,
+      dikte: 2,
+      markerEnd: "pijl-dicht",
+    },
   },
   {
     id: "op",
     label: "op",
-    kort: "op",
+    kort: "▶",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: ["toegangsregel", "handeling"] },
     doel: { elementTypes: ["gegevensselectie"] },
-    edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: KLEUREN.structuur, markerEnd: "pijl-dicht" },
+    edgePresentatie: {
+      lijn: "solid",
+      vorm: "hoekig",
+      kleur: KLEUREN.structuur,
+      dikte: 2,
+      markerEnd: "pijl-dicht",
+    },
   },
   {
     id: "als",
     label: "als",
-    kort: "als",
+    kort: "⇢",
     shape: "edge",
     isConnector: true,
     bron: { elementTypes: ["toegangsregel"] },
     doel: { elementTypes: ["voorwaardepoort", "voorwaarde"] },
-    edgePresentatie: { lijn: "dash-6-3", vorm: "hoekig", kleur: KLEUREN.structuur },
+    edgePresentatie: {
+      lijn: "dash-6-3",
+      vorm: "hoekig",
+      kleur: KLEUREN.structuur,
+      markerEnd: "pijl-open",
+    },
   },
   {
     id: "tak",
@@ -226,7 +259,7 @@ const elementTypes = [
     isConnector: true,
     bron: { elementTypes: ["voorwaardepoort"] },
     doel: { elementTypes: ["voorwaardepoort", "voorwaarde"] },
-    edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: KLEUREN.structuur },
+    edgePresentatie: { lijn: "solid", vorm: "hoekig", kleur: KLEUREN.structuur, dikte: 1.2 },
   },
   {
     id: "waarbij",
@@ -236,7 +269,12 @@ const elementTypes = [
     isConnector: true,
     bron: { elementTypes: ["toegangsregel"] },
     doel: { elementTypes: ["plicht"] },
-    edgePresentatie: { lijn: "dash-6-3", vorm: "hoekig", kleur: KLEUREN.structuur },
+    edgePresentatie: {
+      lijn: "dash-6-3",
+      vorm: "hoekig",
+      kleur: KLEUREN.structuur,
+      markerEnd: "bol",
+    },
   },
   {
     id: "verwijst-naar",
@@ -248,7 +286,12 @@ const elementTypes = [
     // (canoniek model, ArchiMate) lopen via de verwijzings-properties.
     bron: { elementTypes: ["gegevensselectie", "subject", "begrip"] },
     doel: { elementTypes: ["begrip"] },
-    edgePresentatie: { lijn: "dash-4-4", vorm: "hoekig", kleur: KLEUREN.structuur, markerEnd: "pijl-open" },
+    edgePresentatie: {
+      lijn: "dash-4-4",
+      vorm: "hoekig",
+      kleur: KLEUREN.structuur,
+      markerEnd: "pijl-open",
+    },
   },
 ];
 
@@ -265,7 +308,10 @@ export const toegangsregelDiagramType = {
   layouts: [],
 };
 
-/** Idempotente registratie (veilig bij HMR/dubbele import). */
+/** Idempotente registratie (veilig bij HMR/dubbele import).
+ *  De vormentaal (shapes.jsx + iconen.jsx, Implementatie-domein) wordt
+ *  door de activiteiten geregistreerd — dit bestand blijft jsx-vrij
+ *  zodat de node-tests het kunnen importeren. */
 export function registreerToegangsregelProfiel() {
   if (!getDiagramType(TOEGANGSREGEL_ID)) {
     registreerDiagramType(toegangsregelDiagramType);
@@ -284,6 +330,11 @@ export function maakElement(elementTypeId) {
     naam: et.label,
     elementType: et.id,
     compartimenten: [],
-    data: et.id === "toegangsregel" ? { modaliteit: "mag" } : {},
+    data:
+      et.id === "toegangsregel"
+        ? { modaliteit: "mag" }
+        : et.id === "voorwaardepoort"
+          ? { soort: "alle" }
+          : {},
   };
 }
