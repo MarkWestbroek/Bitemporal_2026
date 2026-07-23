@@ -193,10 +193,16 @@ naam + IRI is snel gevuld), maar het doel-plaatje is de motivatielaag.
    schrijft ze gededupliceerd in de Koppelingen-store. De elementIds zijn
    nog pad-/naam-gebaseerd; resolutie naar echte projectboom-elementen
    volgt wanneer het profiel in de boom landt (stap 4).
-4. **Diagram → AST**: bewerken in het diagram (element droppen = van-vorm
-   invoegen; poort omzetten = kwantor wisselen), met de tekst als bron van
-   waarheid zolang de round-trip niet compleet is; dan ook op de echte
-   motor-canvas (slepen/schalen).
+4. 🔶 **Op de motor + projectboom** (v1, 2026-07-24): het profiel is een
+   volwaardige diagram-activiteit — `toegangsregelsActivity` via
+   `maakDiagramActiviteit` (canvas met slepen/schalen, eigen persistente
+   store, taakbalken uit de profieldefinitie, en automatisch in de
+   Modelleren-projectboom incl. `bevat`-hiërarchie). De Toegangverlening-
+   editor publiceert het beleid ernaartoe (menu Beleid → *Publiceer naar
+   Modelleren*; `naarCoreModel` in de adapter zet het profielmodel om naar
+   de store-vorm met een deterministische beginlayout). Tekst-first:
+   publiceren vervángt het diagram-model; de terugweg (diagram → AST,
+   round-trip) is het resterende deel van deze stap.
 5. **ArchiMate-koppeling**: begrippen als Business Objects, grondslagen als
    Constraints, doelen als Goals; relaties in de koppelingen-matrix.
 

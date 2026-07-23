@@ -17,6 +17,8 @@ import {
 } from "../../toegangsspraak/index.js";
 
 export const PROFIEL_CANONIEK = "canoniek-model";
+/** Profieltype-id van de motor-activiteit (toegangsregelsActivity). */
+export const PROFIELTYPE_TOEGANGSREGELS = "toegangsregels";
 
 // ── Teksthulpen (gedeeld met de diagram-weergave) ────────────────────────────
 
@@ -155,15 +157,95 @@ export function beleidNaarDiagramModel(beleid) {
   return { elementen, connectoren };
 }
 
+// ── Profielmodel → core-model (stap 4: de motor-store) ───────────────────────
+
+export const DIAGRAM_ID = "trg_overzicht";
+
+/**
+ * Zet het profielmodel om naar de vorm die `createDiagramStore.laadModel`
+ * verwacht: één `elements`-map (connectoren zijn elementen met source/target)
+ * en één diagram met beginposities. De layout is een deterministische
+ * beginstand — op de canvas is daarna alles sleepbaar.
+ */
+export function naarCoreModel(model, { diagramNaam = "Toegangsbeleid" } = {}) {
+  const elements = {};
+  for (const e of model.elementen) {
+    elements[e.id] = { id: e.id, naam: e.naam, elementType: e.elementType, compartimenten: [], data: e.data || {} };
+  }
+  for (const c of model.connectoren) {
+    elements[c.id] = { id: c.id, naam: "", elementType: c.elementType, source: c.van, target: c.naar, compartimenten: [], data: {} };
+  }
+
+  // Opzoekhulpen over de connectoren.
+  const uit = (vanId, soort) => model.connectoren.filter((c) => c.elementType === soort && c.van === vanId).map((c) => c.naar);
+
+  const posities = new Map();
+  const zet = (id, x, y) => { if (id && !posities.has(id)) posities.set(id, { x, y }); };
+
+  // Kop: policy linksboven, begrippen ernaast.
+  const policy = model.elementen.find((e) => e.elementType === "policy");
+  if (policy) zet(policy.id, 40, 40);
+  model.elementen.filter((e) => e.elementType === "begrip").forEach((b, i) => zet(b.id, 360 + i * 320, 40));
+
+  // Per regel een blok: kernzin-keten op één rij, voorwaardeboom eronder,
+  // plichten links onder de kaart.
+  const kaarten = model.elementen.filter((e) => e.elementType === "toegangsregel");
+  kaarten.forEach((kaart, r) => {
+    const basisY = 240 + r * 460;
+    zet(kaart.id, 40, basisY);
+    const subject = uit(kaart.id, "wie")[0];
+    zet(subject, 340, basisY);
+    const handeling = subject ? uit(subject, "doet")[0] : null;
+    zet(handeling, 660, basisY);
+    const gegevens = handeling ? uit(handeling, "op")[0] : null;
+    zet(gegevens, 940, basisY);
+
+    // Voorwaardeboom: diepte → kolom, volgorde → rij.
+    let vwRij = 0;
+    const plaatsVoorwaarde = (id, diepte) => {
+      zet(id, 340 + diepte * 300, basisY + 150 + vwRij * 110);
+      vwRij += 1;
+      for (const kind of uit(id, "tak")) plaatsVoorwaarde(kind, diepte + 1);
+    };
+    for (const top of uit(kaart.id, "als")) plaatsVoorwaarde(top, 0);
+
+    uit(kaart.id, "waarbij").forEach((p, i) => zet(p, 40, basisY + 150 + i * 110));
+  });
+
+  // Vangnet voor alles zonder positie.
+  let rest = 0;
+  for (const e of model.elementen) {
+    if (!posities.has(e.id)) { zet(e.id, 40 + (rest % 5) * 300, 40 + 120 * Math.floor(rest / 5)); rest += 1; }
+  }
+
+  return {
+    diagramTypeId: "toegangsregel",
+    elements,
+    diagrams: {
+      [DIAGRAM_ID]: {
+        id: DIAGRAM_ID,
+        naam: diagramNaam,
+        diagramType: "toegangsregel",
+        nodes: model.elementen.map((e) => ({ elementId: e.id, position: posities.get(e.id) })),
+        edges: [],
+      },
+    },
+    actiefDiagramId: DIAGRAM_ID,
+    meta: null,
+  };
+}
+
 // ── Kruisverbanden (stap 3, v0) ──────────────────────────────────────────────
 
 /**
  * De cross-profiel verwijzingen van een profielmodel als kruisverband-links
  * in het formaat van de Koppelingen-activiteit: rij = het toegangsregel-
  * element (onderliggend), kolom = het element in het andere profiel
- * (bovenliggend), soort "komt voort uit". elementIds zijn leesbaar (naam
- * resp. registerpad); resolutie naar echte projectboom-elementen volgt
- * wanneer het profiel in de boom landt.
+ * (bovenliggend), soort "komt voort uit". De rij gebruikt de échte
+ * element-ids van het gepubliceerde diagram-model (adapter is
+ * deterministisch, dus publiceren en registreren wijzen naar hetzelfde
+ * element); de kolom is nog pad-gebaseerd tot het canoniek model per
+ * element aanspreekbaar is.
  */
 export function kruisverbandenUit(model) {
   const links = [];
@@ -171,11 +253,11 @@ export function kruisverbandenUit(model) {
   for (const element of model.elementen) {
     const { verwijzingsprofiel, verwijzingselement } = element.data || {};
     if (!verwijzingsprofiel || !verwijzingselement) continue;
-    const sleutel = `${element.naam}##${verwijzingsprofiel}::${verwijzingselement}`;
+    const sleutel = `${element.id}##${verwijzingsprofiel}::${verwijzingselement}`;
     if (gezien.has(sleutel)) continue;
     gezien.add(sleutel);
     links.push({
-      rij: { profielId: "toegangsregel", elementId: element.naam },
+      rij: { profielId: PROFIELTYPE_TOEGANGSREGELS, elementId: element.id },
       kolom: { profielId: verwijzingsprofiel, elementId: verwijzingselement },
       soort: "komt voort uit",
     });

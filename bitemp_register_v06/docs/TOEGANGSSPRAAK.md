@@ -127,9 +127,13 @@ projecties van dezelfde AST. Round-trip is een geteste wet:
 
 Daarnaast: `diagramprofielen/toegangsregel/` — het **toegangsregel-profiel**
 op de generieke motor (elementtypen + connectoren, ontleding-kleuren als
-profielstijl) met `adapter.js` (AST → profielmodel, deterministisch) en de
-read-only diagramweergave `studio/activities/ToegangDiagram.jsx`. Ontwerp en
-stappenplan: `docs/plans/2026-07-24 Toegangsregel-profiel (ontwerp).md`.
+profielstijl) met `adapter.js` (AST → profielmodel → core-model,
+deterministisch), de read-only diagramweergave
+`studio/activities/ToegangDiagram.jsx` én de volwaardige motor-activiteit
+`studio/activities/toegangsregelsActivity.jsx` (canvas + projectboom; vul via
+menu Beleid → *Publiceer naar Modelleren* in de Toegangverlening-editor).
+Ontwerp en stappenplan: `docs/plans/2026-07-24 Toegangsregel-profiel
+(ontwerp).md`.
 
 Ontwerpkeuzes: LL(1)-achtige grammatica (één functie per regel), operatoren
 als data (longest match; bijzins-grenswoorden afgeleid uit het register),

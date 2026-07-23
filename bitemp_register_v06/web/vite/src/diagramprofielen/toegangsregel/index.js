@@ -271,3 +271,19 @@ export function registreerToegangsregelProfiel() {
     registreerDiagramType(toegangsregelDiagramType);
   }
 }
+
+let _teller = 0;
+
+/** Nieuw (niet-connector-)element van het gegeven type (voor de canvas-taakbalk). */
+export function maakElement(elementTypeId) {
+  const et = elementTypes.find((t) => t.id === elementTypeId);
+  if (!et || et.isConnector) return null;
+  _teller += 1;
+  return {
+    id: `trg_nieuw_${Date.now()}_${_teller}`,
+    naam: et.label,
+    elementType: et.id,
+    compartimenten: [],
+    data: et.id === "toegangsregel" ? { modaliteit: "mag" } : {},
+  };
+}

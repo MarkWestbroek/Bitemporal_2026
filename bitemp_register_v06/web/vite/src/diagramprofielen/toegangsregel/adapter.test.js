@@ -2,7 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { parseBeleid, VOORBEELD_BELEID } from "../../toegangsspraak/index.js";
-import { beleidNaarDiagramModel, kruisverbandenUit, PROFIEL_CANONIEK } from "./adapter.js";
+import {
+  beleidNaarDiagramModel, kruisverbandenUit, naarCoreModel,
+  PROFIEL_CANONIEK, PROFIELTYPE_TOEGANGSREGELS, DIAGRAM_ID,
+} from "./adapter.js";
 import { registreerToegangsregelProfiel, toegangsregelDiagramType } from "./index.js";
 import { getDiagramType } from "../../diagramcore/types/typeRegistry.js";
 
@@ -75,16 +78,44 @@ test("adapter: cross-profiel verwijzing is een paar (profiel, element) met canon
   assert.equal(selectie.data.verwijzingselement, "Organisatie.Organisatienamen.naam");
 });
 
-test("kruisverbanden (stap 3 v0): verwijzingen worden koppelingen-links, gededupliceerd", () => {
+test("kruisverbanden (stap 3): verwijzingen worden koppelingen-links met echte element-ids", () => {
   const { beleid } = parseBeleid(VOORBEELD_BELEID);
-  const links = kruisverbandenUit(beleidNaarDiagramModel(beleid));
+  const model = beleidNaarDiagramModel(beleid);
+  const links = kruisverbandenUit(model);
   // Alleen het begrip "Inkomensgegevens" draagt een registerpad-verwijzing.
   assert.equal(links.length, 1);
+  const begrip = model.elementen.find((e) => e.naam === "Inkomensgegevens");
   assert.deepEqual(links[0], {
-    rij: { profielId: "toegangsregel", elementId: "Inkomensgegevens" },
+    rij: { profielId: PROFIELTYPE_TOEGANGSREGELS, elementId: begrip.id },
     kolom: { profielId: PROFIEL_CANONIEK, elementId: "NatuurlijkPersoon.Inkomen" },
     soort: "komt voort uit",
   });
+});
+
+test("naarCoreModel (stap 4): store-vorm met connectoren als source/target en beginposities", () => {
+  const { beleid } = parseBeleid(VOORBEELD_BELEID);
+  const model = beleidNaarDiagramModel(beleid);
+  const core = naarCoreModel(model, { diagramNaam: beleid.naam });
+
+  assert.equal(core.diagramTypeId, "toegangsregel");
+  // Elementen én connectoren in één elements-map.
+  assert.equal(Object.keys(core.elements).length, model.elementen.length + model.connectoren.length);
+  const connector = core.elements[model.connectoren[0].id];
+  assert.equal(connector.source, model.connectoren[0].van);
+  assert.equal(connector.target, model.connectoren[0].naar);
+
+  // Eén diagram met een node + positie voor elk element.
+  const diagram = core.diagrams[DIAGRAM_ID];
+  assert.equal(diagram.naam, "Inzage inkomen bij schuldhulp");
+  assert.equal(diagram.nodes.length, model.elementen.length);
+  for (const node of diagram.nodes) {
+    assert.ok(Number.isFinite(node.position?.x) && Number.isFinite(node.position?.y), `node ${node.elementId} mist een positie`);
+  }
+  // Kernzin-keten op één rij: subject, handeling en gegevens delen de y van de kaart.
+  const posVan = (id) => diagram.nodes.find((n) => n.elementId === id).position;
+  const kaart = model.elementen.find((e) => e.elementType === "toegangsregel");
+  const wie = model.connectoren.find((c) => c.elementType === "wie" && c.van === kaart.id);
+  assert.equal(posVan(wie.naar).y, posVan(kaart.id).y);
 });
 
 test("adapter: geneste opsomming wordt een poortenboom met tak-connectoren", () => {

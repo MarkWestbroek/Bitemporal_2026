@@ -40,8 +40,9 @@ import { menuBus } from "../menuBus";
 import { apiBase, downloadJson } from "../studioUtils";
 import ToegangDiagram from "./ToegangDiagram.jsx";
 import { registreerToegangsregelProfiel } from "../../diagramprofielen/toegangsregel/index.js";
-import { beleidNaarDiagramModel, kruisverbandenUit } from "../../diagramprofielen/toegangsregel/adapter.js";
+import { beleidNaarDiagramModel, kruisverbandenUit, naarCoreModel, PROFIELTYPE_TOEGANGSREGELS } from "../../diagramprofielen/toegangsregel/adapter.js";
 import { useKruisStore } from "./koppelingenActivity.jsx";
+import { getProfieltype } from "../profieltypeRegistry";
 import "./toegangActivity.css";
 
 // Het toegangsregel-profiel (diagram als derde projectie) op de motor
@@ -249,6 +250,18 @@ function ToegangProvider({ children }) {
         if (odrl) {
           downloadJson(odrl, `${(resultaat.beleid?.naam || "beleid").replace(/\s+/g, "_")}.odrl.json`);
         }
+      }),
+      // Stap 4: publiceer het beleid als diagram-model naar de motor-store
+      // van het toegangsregel-profiel (projectboom + canvas). Vervangt het
+      // model daar — de tekst is de bron van waarheid (tekst-first).
+      menuBus.on("toegang:publiceer", () => {
+        const beleid = ref.current.beleidVoorWeergave;
+        if (!beleid) return;
+        const profiel = getProfieltype(PROFIELTYPE_TOEGANGSREGELS);
+        if (!profiel?.useStore) return;
+        profiel.useStore.getState().laadModel(
+          naarCoreModel(beleidNaarDiagramModel(beleid), { diagramNaam: beleid.naam })
+        );
       }),
       // Stap 3 (v0): de cross-profiel verwijzingen van het huidige beleid als
       // kruisverbanden in de Koppelingen-activiteit registreren (dedup op cel).
@@ -619,6 +632,7 @@ export default {
         { id: "toegang-herformatteer", label: "Herformatteer (canonieke vorm)", onClick: () => menuBus.emit("toegang:herformatteer") },
         { type: "separator" },
         { id: "toegang-odrl", label: "Exporteer ODRL (JSON-LD)…", onClick: () => menuBus.emit("toegang:odrl") },
+        { id: "toegang-publiceer", label: "Publiceer naar Modelleren (vervangt diagram-model)", onClick: () => menuBus.emit("toegang:publiceer") },
         { id: "toegang-kruisverbanden", label: "Kruisverbanden registreren (Koppelingen)", onClick: () => menuBus.emit("toegang:kruisverbanden") },
       ],
     },

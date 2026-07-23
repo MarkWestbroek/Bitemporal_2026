@@ -44,6 +44,7 @@ import berichtActivity from "./berichtActivity";
 import formulierActivity from "./formulierActivity";
 import formulierDiagramActivity from "./formulierDiagramActivity";
 import toegangActivity from "./toegangActivity";
+import toegangsregelsActivity from "./toegangsregelsActivity";
 
 // ── Nog te bouwen functies: uniforme placeholder met de drie-slot-structuur ──
 const apiActivity = maakPlaceholderActiviteit({
@@ -96,6 +97,7 @@ registreerActiviteiten([
   archimateActivity, // "ArchiMate" — vier lagen, elf relaties (preview)
   sequenceActivity, // "Sequence" — levenslijnen op het rand-primitief (preview)
   formulierDiagramActivity, // "Formulier (diagram)" — formulier-profiel, dogfood (F48 P1; niet in de balk)
+  toegangsregelsActivity, // "Toegangsregels" — toegangsregel-profiel op de motor (via Modelleren-host)
   dmnActivity,
   dmnDrdActivity, // "DMN DRD" — vierde profiel (preview, niet in de balk)
   bpmnActivity,
