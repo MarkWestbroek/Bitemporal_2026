@@ -514,7 +514,10 @@ model). Autocomplete en controle beperken zich vanzelf tot die doorsnede.
   een platte lijst *spans* — bronposities per element-soort (subject,
   gegevens, vergelijking, waarde, handeling, plicht, modaliteit). Achter de
   schakelaar "Ontleding" kleurt de editor de zinsdelen (subject groen,
-  gegevens geel, waarde blauw, …). **Dubbelklik op een gegevens-keten**
+  gegevens geel, waarde blauw, …; 2026-07-24: ook structuurwoorden — Beleid,
+  Regel, als, waarbij, opsommingskoppen — en de modaliteit onderstreept:
+  groen bij "mag", rood bij "mag … niet"; de Canonieke vorm-tab wordt met
+  dezelfde ontleding weergegeven). **Dubbelklik op een gegevens-keten**
   groepeert hem met een kader, toont het geresolvede registerpad in een
   infobalk en **focust het exacte element in de modelboom** — de boom blijft
   staan (context zichtbaar), alleen de bevattende takken klappen open, het
@@ -576,6 +579,10 @@ Drie ontwerpkeuzes die het simpel houden:
 
 Nog niet gedaan (volgorde van oppakken):
 
+0. **Toegangsregel-profiel** — visuele vorm van regels op de generieke
+   diagram-motor, met cross-profiel verwijzingen naar het canoniek model en
+   ArchiMate (begrippen, grondslagen). Ontwerp:
+   `2026-07-24 Toegangsregel-profiel (ontwerp).md`.
 1. **Existentie-voorwaarden** ("er is een lopend dossier voor de betrokkene").
 2. **Nette plicht-subgrammatica** (nu: sjabloonzinnen uit het plichtenregister).
 3. **Doorsnede-keuze voor autocomplete/controle** — het canoniek model links
