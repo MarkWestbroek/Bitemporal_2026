@@ -66,7 +66,9 @@ Beleid "Inzage inkomen bij schuldhulp".
 ### De editor (Omnium Studio → Toegangverlening, status concept)
 
 - **Live parsen** met foutmeldingen in klare taal (regel + kolom) en een
-  statusregel; tab "Canonieke vorm" toont de geherformatteerde tekst;
+  statusregel; tab "Canonieke vorm" toont de geherformatteerde tekst (met
+  dezelfde ontleding); tab "Diagram" toont de regels als read-only
+  regelkaarten (toegangsregel-profiel, zelfde kleuren);
   menu Beleid: voorbeeld laden, herformatteren, ODRL-export.
 - **Zinsontleding** (schakelaar): zinsdelen krijgen kleur — subject groen,
   gegevens geel, waarde blauw, vergelijking paars, handeling oranje, plicht
@@ -122,6 +124,12 @@ projecties van dezelfde AST. Round-trip is een geteste wet:
 | `metamodel.js` | veldindex over de schema-API-velden; keten-resolutie (verkorting, dubbelzinnigheids-fouten, metamodel-casing); typebewaking; `suggereerVanVormen`/`suggereerBases` |
 | `editorSuggesties.js` | autocomplete-context: binnen-keten (span-vervanging), achterstevoren, vooruit (met lidwoord-meevervanging) |
 | `voorbeeld.js` | canoniek voorbeeldbeleid (round-trip-anker) |
+
+Daarnaast: `diagramprofielen/toegangsregel/` — het **toegangsregel-profiel**
+op de generieke motor (elementtypen + connectoren, ontleding-kleuren als
+profielstijl) met `adapter.js` (AST → profielmodel, deterministisch) en de
+read-only diagramweergave `studio/activities/ToegangDiagram.jsx`. Ontwerp en
+stappenplan: `docs/plans/2026-07-24 Toegangsregel-profiel (ontwerp).md`.
 
 Ontwerpkeuzes: LL(1)-achtige grammatica (één functie per regel), operatoren
 als data (longest match; bijzins-grenswoorden afgeleid uit het register),

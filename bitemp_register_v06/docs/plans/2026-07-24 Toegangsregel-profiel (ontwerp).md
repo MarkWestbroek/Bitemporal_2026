@@ -1,7 +1,7 @@
 # Toegangsregel-profiel — visuele vorm van Toegangsspraak (ontwerp)
 
 **Datum:** 2026-07-24
-**Status:** denkrichting / ontwerpvoorstel (nog niet gebouwd)
+**Status:** stap 1–2 gebouwd (v1); stap 3–5 open
 **Bouwt op:** `2026-07-22 Klare-taal Toegangsbeleid — Toegangsspraak (ontwerp).md`,
 `docs/TOEGANGSSPRAAK.md`, de diagramprofielen op de generieke motor en de
 koppelingen-activiteit (kruisverbanden tussen profieltypen).
@@ -139,17 +139,26 @@ naam + IRI is snel gevuld), maar het doel-plaatje is de motivatielaag.
 - **Formulier-profiel als precedent**: dat dogfood-traject (formulier op de
   diagram-motor) is de mal voor "bestaande structuur → profiel".
 
-## 6. Stappenplan (voorstel)
+## 6. Stappenplan
 
-1. **Profieldefinitie**: elementtypen + relaties uit §2/§3 als
-   profieldefinitie op de motor; kleuren = ontledingspalet.
-2. **AST → diagram**: deterministische afbeelding (regelkaart + voorwaarde-
-   boom); eerst read-only ("Diagram"-tab als derde projectie).
+1. ✅ **Profieldefinitie** (2026-07-24): `diagramprofielen/toegangsregel/`
+   registreert op de motor (typecontract-gevalideerd) — acht elementtypen,
+   zeven connectoren, kleuren = ontledingspalet (`KLEUREN`, één bron);
+   verwijzingen als properties (verwijzingsprofiel, verwijzingselement).
+2. ✅ **AST → diagram** (2026-07-24): `adapter.js` beeldt de AST
+   deterministisch af op het profielmodel (elementen + connectoren, stabiele
+   ids, getest incl. poortenboom en kernzin-keten). De **"Diagram"-tab** in
+   de Toegangverlening-activiteit rendert de regelkaarten read-only
+   (`ToegangDiagram.jsx`): modaliteitsband mét tekstlabel ("mag" /
+   "mag niet ⃠" — betekenis nooit alleen in kleur), kernzin-keten,
+   voorwaardeboom met poorten, plicht-vlaggen, begrippen gestippeld,
+   ▦-badge + tooltip voor de cross-profiel verwijzing.
 3. **Cross-profiel bindingen**: Gegevensselectie ↔ canoniek model via de
    bestaande resolutie; registreren in de koppelingen-matrix.
 4. **Diagram → AST**: bewerken in het diagram (element droppen = van-vorm
    invoegen; poort omzetten = kwantor wisselen), met de tekst als bron van
-   waarheid zolang de round-trip niet compleet is.
+   waarheid zolang de round-trip niet compleet is; dan ook op de echte
+   motor-canvas (slepen/schalen).
 5. **ArchiMate-koppeling**: begrippen als Business Objects, grondslagen als
    Constraints, doelen als Goals; relaties in de koppelingen-matrix.
 
