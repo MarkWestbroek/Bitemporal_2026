@@ -106,10 +106,16 @@ export function beleidNaarDiagramModel(beleid) {
     doel: beleid.doel || "",
   });
 
-  // Begrippen — herbruikbare definitie-elementen.
+  // Begrippen — herbruikbare definitie-elementen. Werkwoord en lidwoord gaan
+  // mee in de data zodat de terugweg (diagram → tekst) de definitieregel
+  // exact kan reconstrueren.
   const begripPerNaam = new Map();
   for (const begrip of beleid.begrippen) {
-    const data = { soort: begrip.soort };
+    const data = {
+      soort: begrip.soort,
+      werkwoord: begrip.werkwoord || "is",
+      lidwoord: begrip.lidwoord || "",
+    };
     if (begrip.soort === "wie") {
       data.definitie = `iemand met ${begrip.kenmerken.map((k) => `${k.kenmerk} "${k.waarde}"`).join(" en ")}`;
     } else {

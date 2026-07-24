@@ -193,16 +193,21 @@ naam + IRI is snel gevuld), maar het doel-plaatje is de motivatielaag.
    schrijft ze gededupliceerd in de Koppelingen-store. De elementIds zijn
    nog pad-/naam-gebaseerd; resolutie naar echte projectboom-elementen
    volgt wanneer het profiel in de boom landt (stap 4).
-4. 🔶 **Op de motor + projectboom** (v1, 2026-07-24): het profiel is een
-   volwaardige diagram-activiteit — `toegangsregelsActivity` via
+4. ✅ **Op de motor + projectboom, mét terugweg** (2026-07-24): het profiel
+   is een volwaardige diagram-activiteit — `toegangsregelsActivity` via
    `maakDiagramActiviteit` (canvas met slepen/schalen, eigen persistente
    store, taakbalken uit de profieldefinitie, en automatisch in de
-   Modelleren-projectboom incl. `bevat`-hiërarchie). De Toegangverlening-
-   editor publiceert het beleid ernaartoe (menu Beleid → *Publiceer naar
-   Modelleren*; `naarCoreModel` in de adapter zet het profielmodel om naar
-   de store-vorm met een deterministische beginlayout). Tekst-first:
-   publiceren vervángt het diagram-model; de terugweg (diagram → AST,
-   round-trip) is het resterende deel van deze stap.
+   Modelleren-projectboom incl. `bevat`-hiërarchie). Heen: *Publiceer naar
+   Modelleren* (`naarCoreModel` + `mergeCoreModel` — **layout heilig**:
+   posities, notities, extra diagrammen en pan/zoom blijven staan). Terug:
+   *Lees terug uit Modelleren* (`terugweg.js`) — de element-namen in het
+   model zíjn canonieke taalfragmenten, dus de tekst wordt gereconstrueerd
+   en door de bestaande parser genormaliseerd en bewaakt. Gouden test:
+   tekst → model → tekst is verliesvrij; canvas-bewerkingen (hernoemen,
+   voorwaarden bijtekenen) worden taal; onvolledige canvas-regels worden
+   overgeslagen met een melding; kapotte invoer wordt een gewone parsefout
+   in de editor. Bewerken kan dus in **drie** vormen: tekst, canvas en
+   (read-only) de Diagram-tab.
 5. 🔶 **ArchiMate-koppeling** (v0, 2026-07-24): menu Beleid → *Koppel aan
    ArchiMate*. `archimateKoppeling.js` beeldt af: wat-begrip → **Business
    object**, wie-begrip → **Business rol**, grondslag → **Constraint**

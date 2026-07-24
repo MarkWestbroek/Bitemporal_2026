@@ -126,12 +126,15 @@ projecties van dezelfde AST. Round-trip is een geteste wet:
 | `voorbeeld.js` | canoniek voorbeeldbeleid (round-trip-anker) |
 
 Daarnaast: `diagramprofielen/toegangsregel/` — het **toegangsregel-profiel**
-op de generieke motor (elementtypen + connectoren, ontleding-kleuren als
-profielstijl) met `adapter.js` (AST → profielmodel → core-model,
-deterministisch), de read-only diagramweergave
-`studio/activities/ToegangDiagram.jsx` én de volwaardige motor-activiteit
-`studio/activities/toegangsregelsActivity.jsx` (canvas + projectboom; vul via
-menu Beleid → *Publiceer naar Modelleren* in de Toegangverlening-editor).
+op de generieke motor (vormentaal + ontleding-kleuren als profielstijl) met
+`adapter.js` (AST → profielmodel → core-model, stabiele ids, layout-behoudende
+merge), `terugweg.js` (diagram-model → tekst: de volledige round-trip),
+`archimateKoppeling.js` (begrippen/grondslag/doel → Business object/rol,
+Constraint, Goal + kruisverbanden), de diagramweergave
+`studio/activities/ToegangDiagram.jsx` (zelfde vormen) én de motor-activiteit
+`studio/activities/toegangsregelsActivity.jsx` (canvas + projectboom).
+Menu Beleid: *Publiceer naar Modelleren* (layout blijft behouden), *Lees
+terug uit Modelleren*, *Kruisverbanden registreren*, *Koppel aan ArchiMate*.
 Ontwerp en stappenplan: `docs/plans/2026-07-24 Toegangsregel-profiel
 (ontwerp).md`.
 

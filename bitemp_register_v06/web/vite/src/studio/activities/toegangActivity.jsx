@@ -44,6 +44,7 @@ import { registreerToegangsregelShapes } from "../../diagramprofielen/toegangsre
 import { registreerToegangsregelIconen } from "../../diagramprofielen/toegangsregel/iconen.jsx";
 import { beleidNaarDiagramModel, kruisverbandenUit, naarCoreModel, mergeCoreModel, PROFIELTYPE_TOEGANGSREGELS } from "../../diagramprofielen/toegangsregel/adapter.js";
 import { koppelArchimate, PROFIELTYPE_ARCHIMATE } from "../../diagramprofielen/toegangsregel/archimateKoppeling.js";
+import { terugNaarTekst } from "../../diagramprofielen/toegangsregel/terugweg.js";
 import { useKruisStore } from "./koppelingenActivity.jsx";
 import { getProfieltype } from "../profieltypeRegistry";
 import "./toegangActivity.css";
@@ -126,6 +127,7 @@ function ToegangProvider({ children }) {
   const [actieveIndex, setActieveIndex] = useState(0);
   const [actieveGegevens, setActieveGegevens] = useState(null); // span na dubbelklik
   const [focusVeldpad, setFocusVeldpad] = useState(null); // exact element in de modelboom
+  const [terugMeldingen, setTerugMeldingen] = useState([]); // van "Lees terug uit Modelleren"
   const editorWrapRef = useRef(null);
   // Na een programmatische invoeging even geen suggesties heropenen.
   const onderdrukRef = useRef(false);
@@ -287,6 +289,23 @@ function ToegangProvider({ children }) {
         if (!beleid) return;
         voegKruisverbandenToe(kruisverbandenUit(beleidNaarDiagramModel(beleid)));
       }),
+      // De terugweg (stap 4, sluitstuk): reconstrueer de tekst uit het
+      // diagram-model. Canvas-bewerkingen worden taal; wat niet klopt wordt
+      // een gewone parsefout in de editor. Vervangt de tekst (Ctrl+Z kan);
+      // onvolledige canvas-regels worden overgeslagen en gemeld.
+      menuBus.on("toegang:teruglezen", () => {
+        const profiel = getProfieltype(PROFIELTYPE_TOEGANGSREGELS);
+        if (!profiel?.useStore) return;
+        const { tekst, meldingen } = terugNaarTekst(profiel.useStore.getState());
+        if (tekst != null) {
+          const terug = parseBeleid(tekst);
+          const nieuw = terug.ok ? renderBeleid(terug.beleid) : tekst;
+          const ta = vindTextarea();
+          if (ta) invoegOpCursor(nieuw, 0, { van: 0, tot: ta.value.length });
+          else setTekst(nieuw);
+        }
+        setTerugMeldingen(meldingen);
+      }),
       // Stap 5: begrippen → Business object/rol, grondslag → Constraint en
       // doel → Goal in het ArchiMate-model (additief: bestaande elementen met
       // dezelfde naam worden hergebruikt, er wordt nooit iets verwijderd),
@@ -315,7 +334,7 @@ function ToegangProvider({ children }) {
         editorWrapRef, invoegOpCursor,
         suggesties, setSuggesties, actieveIndex, setActieveIndex,
         bijwerkSuggesties, pasSuggestieToe, actieveGegevens, setActieveGegevens,
-        toonGegevensOpPositie, focusVeldpad,
+        toonGegevensOpPositie, focusVeldpad, terugMeldingen, setTerugMeldingen,
       }}
     >
       {children}
@@ -344,7 +363,7 @@ function ToegangSidebar() {
   );
 }
 
-function FoutenPaneel({ fouten, controleFouten }) {
+function FoutenPaneel({ fouten, controleFouten, terugMeldingen = [] }) {
   return (
     <div
       style={{
@@ -369,6 +388,12 @@ function FoutenPaneel({ fouten, controleFouten }) {
         <div key={`c${i}`} style={{ marginBottom: 4 }}>
           <span style={{ color: "#f59e0b", fontWeight: 600 }}>Controle: </span>
           {fout.bericht}
+        </div>
+      ))}
+      {terugMeldingen.map((melding, i) => (
+        <div key={`t${i}`} style={{ marginBottom: 4 }}>
+          <span style={{ color: "#f59e0b", fontWeight: 600 }}>Teruglezen: </span>
+          {melding}
         </div>
       ))}
     </div>
@@ -414,7 +439,7 @@ function ToegangMain() {
     editorWrapRef, invoegOpCursor,
     suggesties, setSuggesties, actieveIndex, setActieveIndex,
     bijwerkSuggesties, pasSuggestieToe, actieveGegevens, setActieveGegevens,
-    toonGegevensOpPositie,
+    toonGegevensOpPositie, terugMeldingen,
   } = useContext(Ctx);
 
   const highlight = useCallback(
@@ -570,8 +595,8 @@ function ToegangMain() {
             {suggesties.length > 0 && (
               <SuggestieBalk suggesties={suggesties} actieveIndex={actieveIndex} onKies={pasSuggestieToe} />
             )}
-            {(!resultaat.ok || controleFouten.length > 0) && (
-              <FoutenPaneel fouten={resultaat.fouten} controleFouten={controleFouten} />
+            {(!resultaat.ok || controleFouten.length > 0 || terugMeldingen.length > 0) && (
+              <FoutenPaneel fouten={resultaat.fouten} controleFouten={controleFouten} terugMeldingen={terugMeldingen} />
             )}
           </>
         ) : activeTab === "diagram" ? (
@@ -662,6 +687,7 @@ export default {
         { type: "separator" },
         { id: "toegang-odrl", label: "Exporteer ODRL (JSON-LD)…", onClick: () => menuBus.emit("toegang:odrl") },
         { id: "toegang-publiceer", label: "Publiceer naar Modelleren (layout blijft behouden)", onClick: () => menuBus.emit("toegang:publiceer") },
+        { id: "toegang-teruglezen", label: "Lees terug uit Modelleren (vervangt tekst; Ctrl+Z kan)", onClick: () => menuBus.emit("toegang:teruglezen") },
         { id: "toegang-kruisverbanden", label: "Kruisverbanden registreren (Koppelingen)", onClick: () => menuBus.emit("toegang:kruisverbanden") },
         { id: "toegang-archimate", label: "Koppel aan ArchiMate (begrippen, grondslag, doel)", onClick: () => menuBus.emit("toegang:archimate") },
       ],
