@@ -55,6 +55,8 @@ Beleid "Inzage inkomen bij schuldhulp".
 - **Voorwaarden zonder en/of-ambiguïteit**: meerdere voorwaarden gaan in een
   opsomming ("aan alle / aan ten minste één van / aan precies één van de
   volgende voorwaarden is voldaan"), nestbaar.
+- **Existentie**: "er is [geen] een lopend dossier [voor de betrokkene]" —
+  in ODRL een PIP-vraag (`nlgov:bestaat:…`); de runtime beantwoordt hem.
 - **Nederlandse woordvolgorde**: na "als"/"waarvan" de bijzinsvolgorde
   ("… niet "nl" **is**"), in opsommingen de stellingsvorm; beide worden
   geaccepteerd, herformatteren normaliseert.

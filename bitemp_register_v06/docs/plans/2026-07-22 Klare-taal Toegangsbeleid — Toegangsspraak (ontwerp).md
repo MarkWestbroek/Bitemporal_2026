@@ -577,14 +577,41 @@ Drie ontwerpkeuzes die het simpel houden:
 3. **Nesting via insprong**: opsommings-bullets dragen hun insprong mee uit de
    tokenizer; geneste blokken zijn gewoon recursie met een dieper-insprong-eis.
 
+Gedaan sinds v0:
+
+- ✅ **Toegangsregel-profiel** (stap 1–5, zie
+  `2026-07-24 Toegangsregel-profiel (ontwerp).md`): vormentaal, motor-canvas
+  + projectboom, layout-behoudende publicatie, terugweg (volledige
+  round-trip), kruisverbanden en ArchiMate-koppeling.
+- ✅ **Existentie-voorwaarden** (2026-07-24): "er is [geen] een lopend
+  dossier [voor de betrokkene]" — stelling én bijzin, ODRL als PIP-vraag
+  (`nlgov:bestaat:…`, `nlgov:voor`). De runtime-beantwoording (PIP) is
+  fase 2/3-werk.
+
+### 12.2 Voorstel plicht-subgrammatica (werkgroep-besluit gevraagd)
+
+Nu zijn plichten sjabloonzinnen uit het register (de hele zin is de term).
+Voorstel voor een echte subgrammatica — lijdende vorm, één patroon:
+
+> **\<onderwerp\> wordt/worden \<deelwoord\> [\<voorzetsel\> \<bepaling\>]
+> [binnen \<n\> \<eenheid\>]**
+> bv. "elke raadpleging wordt vastgelegd in het logboek",
+> "de gegevens worden gepseudonimiseerd", "de betrokkene wordt geïnformeerd
+> binnen 30 dagen".
+
+- Het **deelwoord** bepaalt de NLGov-plicht via het register (vastgelegd →
+  `nlgov:log`, gepseudonimiseerd → `nlgov:pseudonimiseer`, geïnformeerd →
+  `nlgov:informeer`) — registreren per deelwoord in plaats van per zin.
+- Onderwerp en bepaling worden ODRL-duty-verfijningen (`nlgov:onderwerp`,
+  `nlgov:doelwit`); "binnen n dagen" wordt een constraint op de duty
+  (`odrl:elapsedTime`).
+- Werkgroepvraag: volstaat de lijdende vorm (leest als verplichting op het
+  systeem), of ook de gebiedende ("log elke raadpleging")? Voorstel:
+  alleen lijdend als canoniek.
+
 Nog niet gedaan (volgorde van oppakken):
 
-0. **Toegangsregel-profiel** — visuele vorm van regels op de generieke
-   diagram-motor, met cross-profiel verwijzingen naar het canoniek model en
-   ArchiMate (begrippen, grondslagen). Ontwerp:
-   `2026-07-24 Toegangsregel-profiel (ontwerp).md`.
-1. **Existentie-voorwaarden** ("er is een lopend dossier voor de betrokkene").
-2. **Nette plicht-subgrammatica** (nu: sjabloonzinnen uit het plichtenregister).
+2. **Plicht-subgrammatica implementeren** na werkgroep-besluit over §12.2.
 3. **Doorsnede-keuze voor autocomplete/controle** — het canoniek model links
    filteren op domein (of een andere doorsnede uit de universele projectboom)
    en die doorsnede als veldenlijst in `maakVeldIndex` stoppen.

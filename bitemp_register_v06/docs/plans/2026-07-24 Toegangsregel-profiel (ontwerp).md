@@ -186,13 +186,15 @@ naam + IRI is snel gevuld), maar het doel-plaatje is de motivatielaag.
    "mag niet ⃠" — betekenis nooit alleen in kleur), kernzin-keten,
    voorwaardeboom met poorten, plicht-vlaggen, begrippen gestippeld,
    ▦-badge + tooltip voor de cross-profiel verwijzing.
-3. 🔶 **Cross-profiel bindingen** (v0, 2026-07-24): `kruisverbandenUit()`
-   in de adapter zet de (profiel, element)-verwijzingen om naar
-   koppelingen-links ("komt voort uit", rij = toegangsregel-element,
-   kolom = doelelement), en de menu-actie *Kruisverbanden registreren*
-   schrijft ze gededupliceerd in de Koppelingen-store. De elementIds zijn
-   nog pad-/naam-gebaseerd; resolutie naar echte projectboom-elementen
-   volgt wanneer het profiel in de boom landt (stap 4).
+3. ✅ **Cross-profiel bindingen** (2026-07-24): `kruisverbandenUit()` zet de
+   (profiel, element)-verwijzingen om naar koppelingen-links; de rij-kant
+   gebruikt de echte element-ids van het gepubliceerde model, en de
+   kolom-kant wordt met `canoniekResolutie.js` geresolved naar échte
+   elementen van het canoniek profiel op de motor (diagram05) — de GE als
+   die verbonden aan de entiteit te vinden is, anders de entiteit
+   (velden zijn compartiment-regels, geen koppelbare elementen; de
+   veld-granulariteit blijft in de data van het toegangsregel-element).
+   Wat niet te resolven is, blijft pad-gebaseerd staan.
 4. ✅ **Op de motor + projectboom, mét terugweg** (2026-07-24): het profiel
    is een volwaardige diagram-activiteit — `toegangsregelsActivity` via
    `maakDiagramActiviteit` (canvas met slepen/schalen, eigen persistente

@@ -45,6 +45,8 @@ import { registreerToegangsregelIconen } from "../../diagramprofielen/toegangsre
 import { beleidNaarDiagramModel, kruisverbandenUit, naarCoreModel, mergeCoreModel, PROFIELTYPE_TOEGANGSREGELS } from "../../diagramprofielen/toegangsregel/adapter.js";
 import { koppelArchimate, PROFIELTYPE_ARCHIMATE } from "../../diagramprofielen/toegangsregel/archimateKoppeling.js";
 import { terugNaarTekst } from "../../diagramprofielen/toegangsregel/terugweg.js";
+import { resolveerKolommen, PROFIELTYPE_CANONIEK_MOTOR } from "../../diagramprofielen/toegangsregel/canoniekResolutie.js";
+import { PROFIEL_CANONIEK } from "../../diagramprofielen/toegangsregel/adapter.js";
 import { useKruisStore } from "./koppelingenActivity.jsx";
 import { getProfieltype } from "../profieltypeRegistry";
 import "./toegangActivity.css";
@@ -287,7 +289,15 @@ function ToegangProvider({ children }) {
       menuBus.on("toegang:kruisverbanden", () => {
         const beleid = ref.current.beleidVoorWeergave;
         if (!beleid) return;
-        voegKruisverbandenToe(kruisverbandenUit(beleidNaarDiagramModel(beleid)));
+        let links = kruisverbandenUit(beleidNaarDiagramModel(beleid));
+        // Stap 3-rest: pad-gebaseerde canoniek-kolommen waar mogelijk
+        // resolven naar echte elementen van het canoniek profiel op de
+        // motor; wat niet vindbaar is, blijft pad-gebaseerd staan.
+        const canoniek = getProfieltype(PROFIELTYPE_CANONIEK_MOTOR);
+        if (canoniek?.useStore) {
+          links = resolveerKolommen(links, PROFIEL_CANONIEK, canoniek.useStore.getState());
+        }
+        voegKruisverbandenToe(links);
       }),
       // De terugweg (stap 4, sluitstuk): reconstrueer de tekst uit het
       // diagram-model. Canvas-bewerkingen worden taal; wat niet klopt wordt
