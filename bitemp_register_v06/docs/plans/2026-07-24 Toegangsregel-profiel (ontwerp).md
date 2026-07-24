@@ -221,6 +221,25 @@ naam + IRI is snel gevuld), maar het doel-plaatje is de motivatielaag.
    is de keten wet → beleid → regel zichtbaar. Rest van deze stap:
    nesting/relaties ín het ArchiMate-diagram zelf en de GEMMA-afstemming.
 
+### Vervolg: droppen uit de projectboom op een gegevensselectie (2026-07-24)
+
+Wens: een canoniek-element uit de projectboom op een gegevensselectie-node
+op de canvas droppen → koppeling (verwijzing + kruisverband). Analyse:
+
+- **GE-/entiteit-niveau kan zonder voorwerk**: die staan als elementen in de
+  boom (de ElementenBrowser sleept al met een element-MIME) en de
+  kolom-resolutie kent ze. Alleen de drop-afhandeling op de canvas ontbreekt
+  — die raakt `DiagramCanvas` (diagramcore) en wacht op een rustig moment
+  daar (de canvas was in bewerking tijdens dit besluit).
+- **Attribuut-/veld-niveau vereist inderdaad eerst boom-werk**: velden zijn
+  compartiment-regels, geen elementen — de projectboom stopt bij de GE. Twee
+  routes: (a) compartiment-velden als sleepbare sub-knopen in de
+  ElementenBrowser tonen (FieldRef als payload, zoals de ModelPicker al
+  doet), of (b) de bestaande **ModelPicker** (kent velden + drag met
+  `application/x-canoniek-fieldref`) als sleepbron naast de canvas. Route
+  (b) is er morgen; route (a) is de projectboom-wens en past bij de
+  universele-projectboom-lijn.
+
 ## 7. Open vragen — besluiten 2026-07-24
 
 | Vraag | Besluit |
