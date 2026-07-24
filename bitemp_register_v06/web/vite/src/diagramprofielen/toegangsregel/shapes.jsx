@@ -1,6 +1,6 @@
 /**
  * Toegangsregel-shapes — de vormentaal uit het ontwerp-antwoord op de
- * designbrief (docs/plans/2026-07-25 … vormentaal (ontwerp-antwoord).md).
+ * designbrief (docs/plans/2026-07-24 … vormentaal (ontwerp-antwoord).md).
  *
  * Leidend idee: het diagram is de Toegangsspraak-zin, elk zinsdeel krijgt
  * een silhouet dat zijn rol naspeelt — herkenbaar zónder kleurkennis:

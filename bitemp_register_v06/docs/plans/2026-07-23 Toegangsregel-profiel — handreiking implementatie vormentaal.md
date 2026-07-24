@@ -2,7 +2,7 @@
 
 **Voor:** de sessie die het ontwerpantwoord op de designbrief implementeert
 **Branch:** `feat/toegangsspraak` (niet naar main; commit-stijl: zie `git log`)
-**Brief:** `2026-07-25 Toegangsregel-profiel — designbrief vormentaal.md`
+**Brief:** `2026-07-23 Toegangsregel-profiel — designbrief vormentaal.md`
 
 ## Waar te bouwen
 
@@ -38,7 +38,7 @@ naar *Toegangsregels* → diagram openen.
 ## Na afloop
 
 - Ontwerpantwoord archiveren naast de brief (zelfde map, zelfde datumstijl).
-- Keuzes kort bijschrijven in `2026-07-24 Toegangsregel-profiel (ontwerp).md`
+- Keuzes kort bijschrijven in `2026-07-23 Toegangsregel-profiel (ontwerp).md`
   (§2-tabel: kolom "Vorm" actualiseren; §7 kleurenblind-besluit).
 - Niet pushen; committen op de branch mag (Co-Authored-By-regel zoals in de
   bestaande commits).

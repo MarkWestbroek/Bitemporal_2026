@@ -1,9 +1,9 @@
 /**
  * ToegangDiagram — read-only diagramweergave van een Toegangsbeleid (stap 2
- * van "2026-07-24 Toegangsregel-profiel (ontwerp)").
+ * van "2026-07-23 Toegangsregel-profiel (ontwerp)").
  *
  * Derde projectie van dezelfde AST — en sinds de vormentaal (ontwerp-antwoord
- * 2026-07-25) spreekt deze tab dezelfde taal als de motor-canvas: de weergave
+ * 2026-07-24) spreekt deze tab dezelfde taal als de motor-canvas: de weergave
  * rendert het adapter-profielmodel met de geregistreerde profiel-shapes
  * (kaft, regelkaart, badge, pijlblok, cilinder, poort, vergelijkingsstrook,
  * vaandel, tag). Eén vormenbron, twee plekken.

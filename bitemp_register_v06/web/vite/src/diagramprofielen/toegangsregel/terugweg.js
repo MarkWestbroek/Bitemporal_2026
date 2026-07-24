@@ -1,7 +1,7 @@
 // @ts-check
 /**
  * terugweg — diagram-model → Toegangsspraak-tekst (het sluitstuk van stap 4,
- * "2026-07-24 Toegangsregel-profiel (ontwerp)").
+ * "2026-07-23 Toegangsregel-profiel (ontwerp)").
  *
  * De truc: de element-namen in het profielmodel zíjn al canonieke
  * taalfragmenten ("een schuldhulpverlener", "de inkomensgegevens",

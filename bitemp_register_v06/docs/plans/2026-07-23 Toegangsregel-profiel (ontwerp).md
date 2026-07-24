@@ -1,6 +1,6 @@
 # Toegangsregel-profiel — visuele vorm van Toegangsspraak (ontwerp)
 
-**Datum:** 2026-07-24
+**Datum:** 2026-07-23 (laatst bijgewerkt 2026-07-24)
 **Status:** stap 1–2 gebouwd (v1); stap 3–5 open
 **Bouwt op:** `2026-07-22 Klare-taal Toegangsbeleid — Toegangsspraak (ontwerp).md`,
 `docs/TOEGANGSSPRAAK.md`, de diagramprofielen op de generieke motor en de
@@ -50,7 +50,7 @@ weergaven.
 
 ### Metamodel-weergave
 
-Het profiel zelf, gemodelleerd en uitgelijnd op de motor (2026-07-24):
+Het profiel zelf, gemodelleerd en uitgelijnd op de motor (2026-07-23):
 
 ![Metamodel van het toegangsregel-profiel](../diagrammen/Toegangsregel.svg)
 
@@ -60,7 +60,7 @@ aan de regelkaarten (de instantie-kant) in de Diagram-tab. Nog toe te voegen
 aan de tekening: `policy`, `map` en de connectoren `omvat`/`bevat` (zie
 hieronder).
 
-### Policy, hergebruik en ordening (besluit 2026-07-24)
+### Policy, hergebruik en ordening (besluit 2026-07-23)
 
 - **`policy` is het top-level elementtype**: draagt de naam, geldigheid,
   grondslag en doel. Cross-links (wet → ArchiMate Constraint, doel → Goal)
@@ -174,11 +174,11 @@ naam + IRI is snel gevuld), maar het doel-plaatje is de motivatielaag.
 
 ## 6. Stappenplan
 
-1. ✅ **Profieldefinitie** (2026-07-24): `diagramprofielen/toegangsregel/`
+1. ✅ **Profieldefinitie** (2026-07-23): `diagramprofielen/toegangsregel/`
    registreert op de motor (typecontract-gevalideerd) — acht elementtypen,
    zeven connectoren, kleuren = ontledingspalet (`KLEUREN`, één bron);
    verwijzingen als properties (verwijzingsprofiel, verwijzingselement).
-2. ✅ **AST → diagram** (2026-07-24): `adapter.js` beeldt de AST
+2. ✅ **AST → diagram** (2026-07-23): `adapter.js` beeldt de AST
    deterministisch af op het profielmodel (elementen + connectoren, stabiele
    ids, getest incl. poortenboom en kernzin-keten). De **"Diagram"-tab** in
    de Toegangverlening-activiteit rendert de regelkaarten read-only
@@ -240,7 +240,7 @@ op de canvas droppen → koppeling (verwijzing + kruisverband). Analyse:
   (b) is er morgen; route (a) is de projectboom-wens en past bij de
   universele-projectboom-lijn.
 
-## 7. Open vragen — besluiten 2026-07-24
+## 7. Open vragen — besluiten 2026-07-23
 
 | Vraag | Besluit |
 |---|---|

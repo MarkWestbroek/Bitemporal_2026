@@ -1,8 +1,8 @@
 # Toegangsregel-profiel — vormentaal (ontwerp-antwoord)
 
-**Antwoord op:** `2026-07-25 Toegangsregel-profiel — designbrief vormentaal.md`
+**Antwoord op:** `2026-07-23 Toegangsregel-profiel — designbrief vormentaal.md`
 **Van:** design-sessie Omnium Studio (Claude, vormgevingssessie-artifact agendapunt 10)
-**Datum:** 2026-07-25 (sessie 2026-07-27)
+**Datum:** 2026-07-24
 **Visueel:** het sessie-artifact, agendapunt 10 — vormenkaarten, "de zin als
 diagram"-mockup, lijnen-tabel en 16px-boom-iconen.
 

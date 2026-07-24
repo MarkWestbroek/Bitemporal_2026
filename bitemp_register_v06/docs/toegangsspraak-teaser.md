@@ -125,5 +125,5 @@ round-trip-garantie, en de bestaande standaarden blijven onaangetast.
 
 *Meer lezen: `docs/TOEGANGSSPRAAK.md` (functioneel + technisch),
 `docs/plans/2026-07-22 Klare-taal Toegangsbeleid — Toegangsspraak
-(ontwerp).md` (taal en besluiten) en `docs/plans/2026-07-24
+(ontwerp).md` (taal en besluiten) en `docs/plans/2026-07-23
 Toegangsregel-profiel (ontwerp).md` (het diagramprofiel).*

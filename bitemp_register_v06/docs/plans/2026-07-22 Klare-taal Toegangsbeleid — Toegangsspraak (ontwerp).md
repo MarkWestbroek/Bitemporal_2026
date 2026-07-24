@@ -514,7 +514,7 @@ model). Autocomplete en controle beperken zich vanzelf tot die doorsnede.
   een platte lijst *spans* — bronposities per element-soort (subject,
   gegevens, vergelijking, waarde, handeling, plicht, modaliteit). Achter de
   schakelaar "Ontleding" kleurt de editor de zinsdelen (subject groen,
-  gegevens geel, waarde blauw, …; 2026-07-24: ook structuurwoorden — Beleid,
+  gegevens geel, waarde blauw, …; 2026-07-23: ook structuurwoorden — Beleid,
   Regel, als, waarbij, opsommingskoppen — en de modaliteit onderstreept:
   groen bij "mag", rood bij "mag … niet"; de Canonieke vorm-tab wordt met
   dezelfde ontleding weergegeven). **Dubbelklik op een gegevens-keten**
@@ -580,7 +580,7 @@ Drie ontwerpkeuzes die het simpel houden:
 Gedaan sinds v0:
 
 - ✅ **Toegangsregel-profiel** (stap 1–5, zie
-  `2026-07-24 Toegangsregel-profiel (ontwerp).md`): vormentaal, motor-canvas
+  `2026-07-23 Toegangsregel-profiel (ontwerp).md`): vormentaal, motor-canvas
   + projectboom, layout-behoudende publicatie, terugweg (volledige
   round-trip), kruisverbanden en ArchiMate-koppeling.
 - ✅ **Existentie-voorwaarden** (2026-07-24): "er is [geen] een lopend

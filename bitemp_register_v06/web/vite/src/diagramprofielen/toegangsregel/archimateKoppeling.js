@@ -1,6 +1,6 @@
 // @ts-check
 /**
- * archimateKoppeling — stap 5 van "2026-07-24 Toegangsregel-profiel (ontwerp)":
+ * archimateKoppeling — stap 5 van "2026-07-23 Toegangsregel-profiel (ontwerp)":
  * begrippen, grondslag en doel van een Toegangsbeleid landen in het
  * ArchiMate-model, met kruisverbanden ernaartoe.
  *

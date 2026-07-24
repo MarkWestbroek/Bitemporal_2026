@@ -1,7 +1,7 @@
 // @ts-check
 /**
  * toegangsregel — Toegangsspraak-regels als diagramprofiel (stap 1 van het
- * plan "2026-07-24 Toegangsregel-profiel (ontwerp)").
+ * plan "2026-07-23 Toegangsregel-profiel (ontwerp)").
  *
  * Het diagram is de derde projectie van dezelfde AST (naast klare taal en
  * ODRL): beleid = diagram, regel = kaart erin. De kleuren zijn dezelfde als

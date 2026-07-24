@@ -2,8 +2,8 @@
 
 **Voor:** design-agent (Omnium Studio-huisstijlcontext)
 **Van:** werkgroep Register Toegangsbeleid / Toegangsspraak-team
-**Datum:** 2026-07-25
-**Context vooraf lezen:** `2026-07-24 Toegangsregel-profiel (ontwerp).md` (§2
+**Datum:** 2026-07-23
+**Context vooraf lezen:** `2026-07-23 Toegangsregel-profiel (ontwerp).md` (§2
 elementtypen, §7 besluiten), `docs/diagrammen/Toegangsregel.svg` (metamodel),
 `docs/TOEGANGSSPRAAK.md` (§1 wat de taal is).
 
