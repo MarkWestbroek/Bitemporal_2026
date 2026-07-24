@@ -56,8 +56,6 @@ function KaftShape({ element, elementType, selected, children }) {
       style={{
         width: "100%",
         height: "100%",
-        minWidth: 170,
-        minHeight: 54,
         border: `1.5px solid ${rand}`,
         borderRadius: 4,
         background: vulKleur(element, elementType, "#e0e7ff"),
@@ -82,7 +80,7 @@ function KaftShape({ element, elementType, selected, children }) {
           borderRight: `1.5px solid ${rand}`,
         }}
       />
-      <div style={{ flex: 1, padding: "6px 10px 6px 19px", minWidth: 0 }}>
+      <div style={{ flex: 1, padding: "9px 10px 9px 19px", minWidth: 0 }}>
         <Naam element={element} />
         {(element?.data?.geldigVanaf || element?.data?.doel) && (
           <div style={{ fontSize: 9.5, color: "#475569", textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -112,8 +110,6 @@ function RegelkaartShape({ element, elementType, selected, children }) {
       style={{
         width: "100%",
         height: "100%",
-        minWidth: 180,
-        minHeight: 54,
         border: `1.5px solid ${rand}`,
         borderRadius: 10,
         background: vulKleur(element, elementType, "#ffffff"),
@@ -137,7 +133,7 @@ function RegelkaartShape({ element, elementType, selected, children }) {
           borderRight: `1px solid ${verbod ? "#dc2626" : "#15803d"}`,
         }}
       />
-      <div style={{ padding: "5px 10px 6px 20px" }}>
+      <div style={{ padding: "7px 10px 9px 20px" }}>
         <div
           style={{
             display: "flex",
@@ -171,8 +167,6 @@ function BadgeShape({ element, elementType, selected, children }) {
       style={{
         width: "100%",
         height: "100%",
-        minWidth: 160,
-        minHeight: 48,
         border: `1.5px solid ${rand}`,
         borderRadius: 11,
         background: vulKleur(element, elementType),
@@ -180,7 +174,7 @@ function BadgeShape({ element, elementType, selected, children }) {
         display: "flex",
         alignItems: "center",
         gap: 6,
-        padding: "6px 10px 6px 8px",
+        padding: "11px 10px 11px 8px",
         cursor: "grab",
         boxShadow: "0 1px 4px rgba(0, 0, 0, 0.1)",
       }}
@@ -221,8 +215,6 @@ function PijlblokShape({ element, elementType, selected, children }) {
       style={{
         width: "100%",
         height: "100%",
-        minWidth: 130,
-        minHeight: 44,
         position: "relative",
         cursor: "grab",
         filter: "drop-shadow(0 1px 3px rgba(0, 0, 0, 0.12))",
@@ -246,7 +238,7 @@ function PijlblokShape({ element, elementType, selected, children }) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: `0 ${PUNT + 8}px 0 10px`,
+          padding: `11px ${PUNT + 8}px 11px 10px`,
         }}
       >
         <Naam element={element} maat={12} />
@@ -265,8 +257,6 @@ function CilinderShape({ element, elementType, selected, children }) {
       style={{
         width: "100%",
         height: "100%",
-        minWidth: 140,
-        minHeight: 56,
         position: "relative",
         cursor: "grab",
         filter: "drop-shadow(0 1px 3px rgba(0, 0, 0, 0.12))",
@@ -306,7 +296,7 @@ function CilinderShape({ element, elementType, selected, children }) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: "12px 14px 4px",
+          padding: "18px 14px 12px",
         }}
       >
         <Naam element={element} maat={12} />
@@ -377,8 +367,6 @@ function VergelijkingShape({ element, elementType, selected, children }) {
       style={{
         width: "100%",
         height: "100%",
-        minWidth: 150,
-        minHeight: 34,
         border: `1.3px solid ${rand}`,
         borderRadius: 999,
         background: vulKleur(element, elementType, "#ecdcf7"),
@@ -387,7 +375,7 @@ function VergelijkingShape({ element, elementType, selected, children }) {
         alignItems: "center",
         justifyContent: "center",
         gap: 7,
-        padding: "3px 16px",
+        padding: "8px 16px",
         cursor: "grab",
         fontSize: 11,
         color: "#1e293b",
@@ -417,8 +405,6 @@ function VaandelShape({ element, elementType, selected, children }) {
       style={{
         width: "100%",
         height: "100%",
-        minWidth: 140,
-        minHeight: 44,
         position: "relative",
         cursor: "grab",
         filter: "drop-shadow(0 1px 3px rgba(0, 0, 0, 0.12))",
@@ -435,7 +421,7 @@ function VaandelShape({ element, elementType, selected, children }) {
           display: "flex",
           alignItems: "center",
           gap: 6,
-          padding: `0 ${STAART + 8}px 0 10px`,
+          padding: `11px ${STAART + 8}px 11px 10px`,
         }}
       >
         <svg width="14" height="15" viewBox="0 0 14 15" fill="none" stroke="#0f766e" strokeWidth="1.5" strokeLinejoin="round" style={{ flexShrink: 0 }}>
@@ -458,8 +444,6 @@ function TagShape({ element, elementType, selected, children }) {
       style={{
         width: "100%",
         height: "100%",
-        minWidth: 150,
-        minHeight: 40,
         position: "relative",
         display: "flex",
         alignItems: "center",
@@ -495,7 +479,7 @@ function TagShape({ element, elementType, selected, children }) {
           display: "flex",
           alignItems: "center",
           gap: 6,
-          padding: "4px 10px 4px 10px",
+          padding: "9px 10px 9px 10px",
         }}
       >
         <span
