@@ -735,18 +735,33 @@ function CanvasBinnenkant({
       if (!bouwContextMenu) return;
       ev.preventDefault();
       const selectieAantal = getNodes().filter((n) => n.selected).length;
+      // Rechtsklik op een node bínnen een selectie komt binnen als
+      // selectie-menu (doelwit = array) — vis dan de node onder de cursor
+      // uit de DOM, zodat node-acties ("Zelfde maat als dit element",
+      // z-order) óók met een actieve selectie beschikbaar blijven.
+      let doel = doelwit;
+      if (Array.isArray(doelwit) || !doelwit?.id) {
+        // elementsFromPoint prikt door de selectie-overlay heen naar de
+        // node die er ónder ligt.
+        const onder = document
+          .elementsFromPoint(ev.clientX, ev.clientY)
+          .map((el) => el.closest?.(".react-flow__node"))
+          .find(Boolean);
+        const domId = onder?.getAttribute("data-id");
+        doel = domId ? getNodes().find((n) => n.id === domId) : null;
+      }
       // Op een connector (edge of gematerialiseerde box/anker) krijgt de
       // activiteit het connector-id — voor connector-acties zoals lijnvorm.
       const connectorId =
-        doelwit?.data?.connectorId ||
-        (doelwit?.data?.elementType?.isConnector ? doelwit.id : null) ||
-        (typeof doelwit?.id === "string" && doelwit.id.startsWith(ANKER_PREFIX)
-          ? doelwit.id.slice(ANKER_PREFIX.length)
+        doel?.data?.connectorId ||
+        (doel?.data?.elementType?.isConnector ? doel.id : null) ||
+        (typeof doel?.id === "string" && doel.id.startsWith(ANKER_PREFIX)
+          ? doel.id.slice(ANKER_PREFIX.length)
           : null);
       // Gewone element-node (geen connector/anker): voor node-acties zoals
       // z-order en "zelfde maat als deze".
       const nodeId =
-        !connectorId && doelwit?.position && doelwit?.data?.element ? doelwit.id : null;
+        !connectorId && doel?.position && doel?.data?.element ? doel.id : null;
       const items = bouwContextMenu({ selectieAantal, connectorId, nodeId });
       if (items?.length) setContextMenu({ x: ev.clientX, y: ev.clientY, items });
     },
@@ -907,6 +922,11 @@ function CanvasBinnenkant({
       edges={edges}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
+      // Kader-selectie (Shift+slepen) selecteert alles wat het kader RAAKT.
+      // React Flow's default is "full" (alleen volledig omsloten nodes) —
+      // in een vol diagram vangt een krap kader dan stilletjes níets en
+      // lijkt uitlijnen kapot ("er gebeurt niks").
+      selectionMode="partial"
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onSelectionChange={handleSelectionChange}
