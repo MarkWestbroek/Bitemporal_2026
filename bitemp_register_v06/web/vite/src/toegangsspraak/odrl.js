@@ -63,6 +63,19 @@ function termNaarRechts(term) {
 }
 
 function constraintVanVoorwaarde(v) {
+  // Existentie: een PIP-vraag ("bestaat er …?") als constraint. De runtime
+  // (PDP/PIP) beantwoordt hem; het register beschrijft alleen wát er moet
+  // bestaan en voor wie.
+  if (v.operator === "bestaat") {
+    const e = v.existentie;
+    const constraint = {
+      leftOperand: { "@id": `nlgov:bestaat:${woordenNaarVeldnaam(e.woorden)}` },
+      operator: e.ontkenning ? "neq" : "eq",
+      rightOperand: true,
+    };
+    if (e.voor) constraint["nlgov:voor"] = { "@id": operandId(e.voor) };
+    return constraint;
+  }
   const constraint = {
     leftOperand: { "@id": operandId(v.links) },
     operator: operatorNaam(v.operator),

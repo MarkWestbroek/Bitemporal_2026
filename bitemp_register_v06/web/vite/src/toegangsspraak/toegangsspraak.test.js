@@ -211,6 +211,72 @@ test("spans: de parser levert bronposities per element-soort", () => {
   );
 });
 
+test("existentie-voorwaarden: 'er is … voor …' in beide volgordes, met ODRL-mapping", () => {
+  // De whitepaper-zin, in bijzinsvolgorde (canoniek na "als").
+  const tekst = `Beleid "Schuldhulp".
+
+  Regel "inzage bij lopend dossier".
+    Een schuldhulpverlener mag alle gegevens van een dossier bekijken
+    als er een lopend dossier voor de betrokkene is.
+`;
+  const a = parseBeleid(tekst);
+  assert.deepEqual(a.fouten, []);
+  assert.ok(a.ok);
+  const voorwaarde = a.beleid.regels[0].voorwaarden;
+  assert.equal(voorwaarde.operator, "bestaat");
+  assert.deepEqual(voorwaarde.existentie.woorden, ["lopend", "dossier"]);
+  assert.equal(voorwaarde.existentie.ontkenning, false);
+  assert.equal(voorwaarde.existentie.voor.basis.anker, "betrokkene");
+
+  // Stellingsvorm parset naar dezelfde AST.
+  const b = parseBeleid(tekst.replace(
+    "als er een lopend dossier voor de betrokkene is.",
+    "als er is een lopend dossier voor de betrokkene."
+  ));
+  assert.ok(b.ok);
+  assert.deepEqual(b.beleid, a.beleid);
+
+  // Canoniek: bijzin na "als", en round-trip-stabiel.
+  const canoniek = renderBeleid(a.beleid);
+  assert.match(canoniek, /als er een lopend dossier voor de betrokkene is\./);
+  assert.equal(renderBeleid(parseBeleid(canoniek).beleid), canoniek);
+
+  // ODRL: een PIP-vraag als constraint.
+  const constraint = naarOdrl(a.beleid).permission[0].constraint[0];
+  assert.deepEqual(constraint, {
+    leftOperand: { "@id": "nlgov:bestaat:lopendDossier" },
+    operator: "eq",
+    rightOperand: true,
+    "nlgov:voor": { "@id": "nlgov:betrokkene" },
+  });
+});
+
+test("existentie met ontkenning en in een opsomming (stellingsvorm)", () => {
+  const tekst = `Beleid "Schuldhulp".
+
+  Regel "r".
+    Een schuldhulpverlener mag alle gegevens van een dossier bekijken
+    als aan alle volgende voorwaarden is voldaan:
+      - er is een lopend dossier voor de betrokkene;
+      - er is geen bewindvoering voor de betrokkene.
+`;
+  const { ok, beleid, fouten } = parseBeleid(tekst);
+  assert.deepEqual(fouten, []);
+  assert.ok(ok);
+  const [wel, niet] = beleid.regels[0].voorwaarden.items;
+  assert.equal(wel.existentie.ontkenning, false);
+  assert.equal(niet.existentie.ontkenning, true);
+  assert.deepEqual(niet.existentie.woorden, ["bewindvoering"]);
+
+  const canoniek = renderBeleid(beleid);
+  assert.match(canoniek, /- er is een lopend dossier voor de betrokkene;/);
+  assert.match(canoniek, /- er is geen bewindvoering voor de betrokkene\./);
+  assert.equal(renderBeleid(parseBeleid(canoniek).beleid), canoniek);
+
+  const constraints = naarOdrl(beleid).permission[0].constraint;
+  assert.equal(constraints[1].operator, "neq");
+});
+
 test("mag niet wordt een ODRL prohibition; mag een permission", () => {
   const { beleid } = parseBeleid(VOORBEELD_BELEID);
   const odrl = naarOdrl(beleid);

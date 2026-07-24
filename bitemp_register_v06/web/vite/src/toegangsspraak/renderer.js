@@ -67,6 +67,16 @@ function renderTerm(term) {
  * naar het einde — correcte Nederlandse bijzinsvolgorde.
  */
 export function renderVoorwaarde(voorwaarde, vorm = "stelling") {
+  // Existentie: "er is [geen] … [voor …]" (stelling) / "er … is" (bijzin).
+  if (voorwaarde.operator === "bestaat") {
+    const e = voorwaarde.existentie;
+    const kern = [
+      e.ontkenning ? "geen" : e.lidwoord,
+      e.woorden.join(" "),
+      e.voor ? `voor ${renderVerwijzing(e.voor)}` : null,
+    ].filter(Boolean).join(" ");
+    return vorm === "bijzin" ? `er ${kern} is` : `er is ${kern}`;
+  }
   const op = vindOperator(voorwaarde.operator);
   const zin = op ? op.zin : voorwaarde.operator;
   const links = renderTerm(voorwaarde.links);

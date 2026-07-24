@@ -562,6 +562,11 @@ class Parser {
    * te halen en de stellingsvorm opnieuw te parsen.
    */
   parseVoorwaarde(stop) {
+    // Existentie: "er is [geen] een lopend dossier [voor de betrokkene]"
+    // (stelling) of "er [geen] … [voor …] is" (bijzin).
+    if (this.isWoord(this.kijk(), "er")) {
+      return this.parseExistentie(stop);
+    }
     const links = this.parseTerm(stop);
     if (this.operatorOpKomst()) {
       return this.parseOperatorEnRechts(links, stop);
@@ -588,6 +593,70 @@ class Parser {
     }
     this.spans.push(...sub.spans);
     return voorwaarde;
+  }
+
+  /**
+   * Existentie-voorwaarde — vraagt runtime een PIP-antwoord ("bestaat er …?").
+   *   stelling : er is [geen] een lopend dossier [voor <verwijzing>]
+   *   bijzin   : er [geen] een lopend dossier [voor <verwijzing>] is
+   * AST: { soort:"voorwaarde", operator:"bestaat", existentie:{ ontkenning,
+   * lidwoord, woorden, voor } } — links/rechts blijven leeg.
+   */
+  parseExistentie(stop) {
+    const erTok = this.pak(); // "er"
+    let bijzin = true;
+    if (this.isWoord(this.kijk(), "is")) {
+      const isTok = this.pak();
+      this.markeer("operator", erTok, isTok);
+      bijzin = false;
+    }
+    let ontkenning = false;
+    if (this.isWoord(this.kijk(), "geen")) {
+      const geenTok = this.pak();
+      this.markeer("operator", geenTok, geenTok, { ontkenning: true });
+      ontkenning = true;
+    }
+    let lidwoord = null;
+    if (this.isWoord(this.kijk(), ...LIDWOORDEN)) lidwoord = this.pak().waarde.toLowerCase();
+
+    const startTok = this.kijk();
+    const woorden = [];
+    while (
+      this.kijk() && this.kijk().soort === "woord" &&
+      !this.isWoord(this.kijk(), "voor") &&
+      !(bijzin && this.isWoord(this.kijk(), "is") && (!this.kijk(1) || this.eindigtNa(1, stop))) &&
+      !stop()
+    ) {
+      woorden.push(this.pak().waarde);
+    }
+    if (!woorden.length) this.fout('Na "er is" hoort wat er moet bestaan, bijvoorbeeld: een lopend dossier.');
+    this.markeer("gegevens", startTok, this.ts[this.i - 1]);
+
+    let voor = null;
+    if (this.isWoord(this.kijk(), "voor")) {
+      this.pak();
+      voor = { soort: "verwijzing", ...this.parseVerwijzing(() => (bijzin && this.isWoord(this.kijk(), "is")) || stop()) };
+    }
+    if (bijzin) {
+      this.pakWoord('Een existentie in de bijzinsvolgorde eindigt op "is" ("… als er een lopend dossier voor de betrokkene is").', "is");
+      this.markeer("operator", erTok, erTok);
+      this.markeer("operator", this.ts[this.i - 1], this.ts[this.i - 1]);
+    }
+    return {
+      soort: "voorwaarde",
+      operator: "bestaat",
+      existentie: { ontkenning, lidwoord, woorden, voor },
+      links: null, rechts: null, rechts2: null, lijst: null,
+    };
+  }
+
+  /** Kijkt of positie n het stop-punt raakt (hulp voor de bijzin-detectie). */
+  eindigtNa(n, stop) {
+    const start = this.i;
+    this.i += n;
+    const klaar = stop();
+    this.i = start;
+    return klaar;
   }
 
   parseOperatorEnRechts(links, stop) {

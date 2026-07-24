@@ -280,6 +280,9 @@ export function resolveerBeleid(beleid, index) {
     resolveerTerm(v.rechts, context);
     resolveerTerm(v.rechts2, context);
     (v.lijst || []).forEach((t) => resolveerTerm(t, context));
+    // Existentie: alleen de voor-verwijzing is resolvebaar; de omschrijving
+    // ("een lopend dossier") is een PIP-vraag, geen registerpad.
+    if (v.existentie?.voor) resolveerTerm(v.existentie.voor, context);
     if (!linksVeld) return;
 
     const linksTekst = `"${renderVerwijzing(v.links)}"`;
