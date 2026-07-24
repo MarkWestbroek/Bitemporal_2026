@@ -66,6 +66,9 @@ const ELEMENTEN = [
   ["goal", "Goal", MOTIVATION, "am-goal", false, "Beoogd resultaat (doel) van een stakeholder."],
   ["principle", "Principle", MOTIVATION, "am-principle", false, "Algemene ontwerpuitspraak die richting geeft."],
   ["requirement", "Requirement", MOTIVATION, "am-requirement", false, "Concrete eis aan het systeem of de architectuur."],
+  // ArchiMate 3: Constraint is een specialisatie van Requirement — een
+  // opgelegde beperking, bv. wet- en regelgeving (grondslag van toegangsbeleid).
+  ["constraint", "Constraint", MOTIVATION, "am-requirement", false, "Opgelegde beperking op realisatie (bv. wet- en regelgeving)."],
 ];
 
 const ALLE_IDS = [...ELEMENTEN.map(([id]) => id), "junction"];

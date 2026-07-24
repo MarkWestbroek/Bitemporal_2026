@@ -203,8 +203,16 @@ naam + IRI is snel gevuld), maar het doel-plaatje is de motivatielaag.
    de store-vorm met een deterministische beginlayout). Tekst-first:
    publiceren vervángt het diagram-model; de terugweg (diagram → AST,
    round-trip) is het resterende deel van deze stap.
-5. **ArchiMate-koppeling**: begrippen als Business Objects, grondslagen als
-   Constraints, doelen als Goals; relaties in de koppelingen-matrix.
+5. 🔶 **ArchiMate-koppeling** (v0, 2026-07-24): menu Beleid → *Koppel aan
+   ArchiMate*. `archimateKoppeling.js` beeldt af: wat-begrip → **Business
+   object**, wie-begrip → **Business rol**, grondslag → **Constraint**
+   (nieuw toegevoegd aan het archimate-profiel, ArchiMate 3-motivatielaag),
+   doel → **Goal**. Additief: bestaande ArchiMate-elementen met dezelfde
+   naam/soort worden hergebruikt, er wordt nooit iets verwijderd. De
+   kruisverbanden landen in de Koppelingen-matrix: begrip *komt voort uit*
+   BO/rol, policy *komt voort uit* Constraint en *realiseert* Goal — daarmee
+   is de keten wet → beleid → regel zichtbaar. Rest van deze stap:
+   nesting/relaties ín het ArchiMate-diagram zelf en de GEMMA-afstemming.
 
 ## 7. Open vragen — besluiten 2026-07-24
 

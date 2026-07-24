@@ -43,6 +43,7 @@ import { registreerToegangsregelProfiel } from "../../diagramprofielen/toegangsr
 import { registreerToegangsregelShapes } from "../../diagramprofielen/toegangsregel/shapes.jsx";
 import { registreerToegangsregelIconen } from "../../diagramprofielen/toegangsregel/iconen.jsx";
 import { beleidNaarDiagramModel, kruisverbandenUit, naarCoreModel, mergeCoreModel, PROFIELTYPE_TOEGANGSREGELS } from "../../diagramprofielen/toegangsregel/adapter.js";
+import { koppelArchimate, PROFIELTYPE_ARCHIMATE } from "../../diagramprofielen/toegangsregel/archimateKoppeling.js";
 import { useKruisStore } from "./koppelingenActivity.jsx";
 import { getProfieltype } from "../profieltypeRegistry";
 import "./toegangActivity.css";
@@ -235,6 +236,13 @@ function ToegangProvider({ children }) {
   }, [veldIndex]);
 
   useEffect(() => {
+    // Kruisverbanden gededupliceerd bijschrijven in de Koppelingen-store.
+    const voegKruisverbandenToe = (nieuwe) => {
+      const store = useKruisStore.getState();
+      const celVan = (l) => `${l.rij.profielId}::${l.rij.elementId}##${l.kolom.profielId}::${l.kolom.elementId}`;
+      const bestaand = new Set(store.links.map(celVan));
+      store.laadLinks([...store.links, ...nieuwe.filter((l) => !bestaand.has(celVan(l)))]);
+    };
     const af = [
       // Vervang de tekst via het edit-mechanisme zodat ook dit undo-baar is.
       menuBus.on("toegang:voorbeeld", () => {
@@ -277,11 +285,23 @@ function ToegangProvider({ children }) {
       menuBus.on("toegang:kruisverbanden", () => {
         const beleid = ref.current.beleidVoorWeergave;
         if (!beleid) return;
-        const nieuwe = kruisverbandenUit(beleidNaarDiagramModel(beleid));
-        const store = useKruisStore.getState();
-        const celVan = (l) => `${l.rij.profielId}::${l.rij.elementId}##${l.kolom.profielId}::${l.kolom.elementId}`;
-        const bestaand = new Set(store.links.map(celVan));
-        store.laadLinks([...store.links, ...nieuwe.filter((l) => !bestaand.has(celVan(l)))]);
+        voegKruisverbandenToe(kruisverbandenUit(beleidNaarDiagramModel(beleid)));
+      }),
+      // Stap 5: begrippen → Business object/rol, grondslag → Constraint en
+      // doel → Goal in het ArchiMate-model (additief: bestaande elementen met
+      // dezelfde naam worden hergebruikt, er wordt nooit iets verwijderd),
+      // plus de kruisverbanden ernaartoe.
+      menuBus.on("toegang:archimate", () => {
+        const beleid = ref.current.beleidVoorWeergave;
+        if (!beleid) return;
+        const profiel = getProfieltype(PROFIELTYPE_ARCHIMATE);
+        if (!profiel?.useStore) return;
+        const st = profiel.useStore.getState();
+        const { toeTeVoegen, links } = koppelArchimate(beleid, Object.values(st.elements || {}));
+        for (const el of toeTeVoegen) {
+          st.addElement({ ...el, compartimenten: [], data: {} });
+        }
+        voegKruisverbandenToe(links);
       }),
     ];
     return () => af.forEach((off) => off());
@@ -643,6 +663,7 @@ export default {
         { id: "toegang-odrl", label: "Exporteer ODRL (JSON-LD)…", onClick: () => menuBus.emit("toegang:odrl") },
         { id: "toegang-publiceer", label: "Publiceer naar Modelleren (layout blijft behouden)", onClick: () => menuBus.emit("toegang:publiceer") },
         { id: "toegang-kruisverbanden", label: "Kruisverbanden registreren (Koppelingen)", onClick: () => menuBus.emit("toegang:kruisverbanden") },
+        { id: "toegang-archimate", label: "Koppel aan ArchiMate (begrippen, grondslag, doel)", onClick: () => menuBus.emit("toegang:archimate") },
       ],
     },
   ],
