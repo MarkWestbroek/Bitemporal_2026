@@ -201,14 +201,20 @@ test("mergeCoreModel: de layout is heilig bij herpubliceren", () => {
   assert.deepEqual(merged.diagrams[DIAGRAM_ID].viewport, { x: 12, y: 34, zoom: 1.5 });
 });
 
-test("naarCoreModel: connectoren dragen hun type-label als lijnnaam", () => {
+test("naarCoreModel: alleen structuur-lijnen dragen een label; de kernzin-keten niet", () => {
   const { beleid } = parseBeleid(VOORBEELD_BELEID);
   const core = naarCoreModel(beleidNaarDiagramModel(beleid));
-  const labels = new Set(
-    Object.values(core.elements).filter((el) => el.source && el.target).map((el) => el.naam)
-  );
-  for (const verwacht of ["omvat", "wie", "doet", "op", "als", "waarbij", "verwijst naar"]) {
+  const connectoren = Object.values(core.elements).filter((el) => el.source && el.target);
+  const labels = new Set(connectoren.map((el) => el.naam).filter(Boolean));
+  for (const verwacht of ["omvat", "als", "waarbij", "verwijst naar"]) {
     assert.ok(labels.has(verwacht), `lijnlabel "${verwacht}" ontbreekt`);
+  }
+  // De vormen vertellen wie-doet-op al: geen labels op de keten en de takken.
+  for (const stil of ["wie", "doet", "op", "tak"]) {
+    assert.ok(
+      connectoren.filter((el) => el.elementType === stil).every((el) => el.naam === ""),
+      `"${stil}" hoort geen lijnlabel te dragen`
+    );
   }
 });
 

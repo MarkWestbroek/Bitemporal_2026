@@ -182,6 +182,11 @@ export const DIAGRAM_ID = "trg_overzicht";
  * en één diagram met beginposities. De layout is een deterministische
  * beginstand — op de canvas is daarna alles sleepbaar.
  */
+// Alleen structuur-lijnen dragen een label: daar volgt de betekenis niet uit
+// de vormen. De kernzin-keten (wie/doet/op) en de boomtakken vertellen hun
+// verhaal al via badge → chevron → cilinder resp. de poort-ruit.
+const LIJNEN_MET_LABEL = new Set(["omvat", "bevat", "als", "waarbij", "verwijst-naar"]);
+
 export function naarCoreModel(model, { diagramNaam = "Toegangsbeleid" } = {}) {
   // Connector-naam = het type-label; de canvas toont el.naam als lijnlabel.
   const typeLabel = new Map(toegangsregelDiagramType.elementTypes.map((et) => [et.id, et.label]));
@@ -192,7 +197,7 @@ export function naarCoreModel(model, { diagramNaam = "Toegangsbeleid" } = {}) {
   for (const c of model.connectoren) {
     elements[c.id] = {
       id: c.id,
-      naam: typeLabel.get(c.elementType) || c.elementType,
+      naam: LIJNEN_MET_LABEL.has(c.elementType) ? typeLabel.get(c.elementType) || c.elementType : "",
       elementType: c.elementType,
       source: c.van,
       target: c.naar,

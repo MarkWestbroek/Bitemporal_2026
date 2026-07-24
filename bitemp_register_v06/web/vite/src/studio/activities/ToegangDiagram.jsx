@@ -2,165 +2,162 @@
  * ToegangDiagram — read-only diagramweergave van een Toegangsbeleid (stap 2
  * van "2026-07-24 Toegangsregel-profiel (ontwerp)").
  *
- * Derde projectie van dezelfde AST: beleid = diagram, regel = kaart. De
- * kleuren komen uit het toegangsregel-profiel (= het ontleding-palet), de
- * teksthulpen uit de adapter — de weergave en het profielmodel delen dus één
- * bron. v1 is tekst-first: hier alleen kijken; bewerken gebeurt in de
- * Tekst-tab. Slepen/schalen komt met de integratie op de generieke motor.
+ * Derde projectie van dezelfde AST — en sinds de vormentaal (ontwerp-antwoord
+ * 2026-07-25) spreekt deze tab dezelfde taal als de motor-canvas: de weergave
+ * rendert het adapter-profielmodel met de geregistreerde profiel-shapes
+ * (kaft, regelkaart, badge, pijlblok, cilinder, poort, vergelijkingsstrook,
+ * vaandel, tag). Eén vormenbron, twee plekken.
  *
- * Toegankelijkheid: modaliteit wordt nooit alléén met kleur uitgedrukt — de
- * band draagt ook het label "mag" / "mag niet ⃠" (kleurenblind-veilig).
+ * v1 is tekst-first: hier alleen kijken; bewerken gebeurt in de Tekst-tab of
+ * (na Publiceer naar Modelleren) op de motor-canvas.
  */
-import React from "react";
-import { KLEUREN } from "../../diagramprofielen/toegangsregel/index.js";
-import {
-  wieTekst, watTekst, termTekst, operatorZin, KWANTOR_LABEL, watVerwijzing,
-} from "../../diagramprofielen/toegangsregel/adapter.js";
-import { isoNaarNlDatum } from "../../toegangsspraak/woorden.js";
+import React, { useMemo } from "react";
+import { getShape } from "../../diagramcore/shapes/shapeRegistry.js";
+import { toegangsregelDiagramType } from "../../diagramprofielen/toegangsregel/index.js";
+import { registreerToegangsregelShapes } from "../../diagramprofielen/toegangsregel/shapes.jsx";
+import { beleidNaarDiagramModel } from "../../diagramprofielen/toegangsregel/adapter.js";
 
-function Chip({ kleur, children, title, gestippeld }) {
+registreerToegangsregelShapes();
+
+const ELEMENTTYPE = new Map(toegangsregelDiagramType.elementTypes.map((et) => [et.id, et]));
+
+/** Breedte-schatting voor tekstdragende vormen (de canvas rekent zelf; hier schatten we). */
+function breedte(tekst, { basis = 90, perTeken = 7.2, max = 560 } = {}) {
+  return Math.min(max, Math.round(basis + String(tekst || "").length * perTeken));
+}
+
+/** Eén profiel-shape in een vaste maat (de shapes vullen hun container). */
+function Vorm({ element, w, h, title }) {
+  const elementType = ELEMENTTYPE.get(element.elementType);
+  const Shape = getShape(elementType?.shape);
+  if (!Shape) return <span title={title}>{element.naam}</span>;
   return (
-    <span className="trd-chip" title={title} style={{ background: kleur, borderStyle: gestippeld ? "dashed" : "solid" }}>
-      {children}
-    </span>
-  );
-}
-
-function Pijl({ label }) {
-  return <span className="trd-pijl">—{label}→</span>;
-}
-
-function TermChip({ term }) {
-  if (!term) return null;
-  const isVerwijzing = term.soort === "verwijzing";
-  return <Chip kleur={isVerwijzing ? KLEUREN.gegevens : KLEUREN.waarde}>{termTekst(term)}</Chip>;
-}
-
-function VoorwaardeRij({ voorwaarde }) {
-  return (
-    <div className="trd-voorwaarde">
-      <TermChip term={voorwaarde.links} />
-      <Chip kleur={KLEUREN.operator}>{operatorZin(voorwaarde.operator)}</Chip>
-      {voorwaarde.lijst ? (
-        <Chip kleur={KLEUREN.waarde}>({voorwaarde.lijst.map(termTekst).join(", ")})</Chip>
-      ) : voorwaarde.rechts2 ? (
-        <>
-          <TermChip term={voorwaarde.rechts} />
-          <span className="trd-pijl">en</span>
-          <TermChip term={voorwaarde.rechts2} />
-        </>
-      ) : (
-        <TermChip term={voorwaarde.rechts} />
-      )}
+    <div style={{ width: w, height: h, position: "relative", flexShrink: 0 }} title={title}>
+      <Shape element={element} elementType={elementType} selected={false} />
     </div>
   );
 }
 
-function VoorwaardeBoom({ knoop }) {
-  if (knoop.soort === "voorwaarde") return <VoorwaardeRij voorwaarde={knoop} />;
-  return (
-    <div className="trd-poort-blok">
-      <Chip kleur={KLEUREN.operator}>◇ {KWANTOR_LABEL[knoop.soort]}</Chip>
-      <div className="trd-takken">
-        {knoop.items.map((item, i) => (
-          <div key={i} className="trd-tak">
-            <VoorwaardeBoom knoop={item} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function RegelKaart({ regel }) {
-  const verbod = regel.verbod;
-  const bandKleur = verbod ? KLEUREN.verbod : KLEUREN.toestemming;
-  const verwijzing = watVerwijzing(regel.wat);
-  return (
-    <section className="trd-kaart" style={{ borderLeft: `6px solid ${bandKleur}` }}>
-      <header className="trd-kaart-kop">
-        <span className="trd-kaart-naam">Regel “{regel.naam}”</span>
-        <span className="trd-modaliteit" style={{ color: bandKleur, borderColor: bandKleur }}>
-          {verbod ? "mag niet ⃠" : "mag"}
-        </span>
-      </header>
-      <div className="trd-keten">
-        <Chip kleur={KLEUREN.subject}>{wieTekst(regel.wie)}</Chip>
-        <Pijl label={verbod ? "mag niet" : "mag"} />
-        <Chip kleur={KLEUREN.actie}>{regel.actie}</Chip>
-        <Pijl label="op" />
-        <Chip
-          kleur={KLEUREN.gegevens}
-          title={verwijzing ? `${verwijzing.verwijzingsprofiel} · ${verwijzing.verwijzingselement}` : undefined}
-        >
-          {watTekst(regel.wat)}
-          {verwijzing && <span className="trd-verwijs-badge" title="cross-profiel verwijzing">▦</span>}
-        </Chip>
-      </div>
-      {regel.voorwaarden && (
-        <div className="trd-sectie">
-          <span className="trd-sectie-label">als</span>
-          <VoorwaardeBoom knoop={regel.voorwaarden} />
-        </div>
-      )}
-      {regel.plichten.length > 0 && (
-        <div className="trd-sectie">
-          <span className="trd-sectie-label">waarbij</span>
-          <div className="trd-plichten">
-            {regel.plichten.map((plicht, i) => (
-              <Chip key={i} kleur={KLEUREN.plicht} title={plicht.nlgov}>⚑ {plicht.zin}</Chip>
-            ))}
-          </div>
-        </div>
-      )}
-    </section>
-  );
+function Pijl() {
+  return <span className="trd-pijl">⟶</span>;
 }
 
 export default function ToegangDiagram({ beleid }) {
+  const model = useMemo(() => beleidNaarDiagramModel(beleid), [beleid]);
+  const elementen = useMemo(() => new Map(model.elementen.map((e) => [e.id, e])), [model]);
+  const uit = (vanId, soort) =>
+    model.connectoren.filter((c) => c.elementType === soort && c.van === vanId).map((c) => elementen.get(c.naar));
+
+  const policy = model.elementen.find((e) => e.elementType === "policy");
+  const begrippen = model.elementen.filter((e) => e.elementType === "begrip");
+  const kaarten = model.elementen.filter((e) => e.elementType === "toegangsregel");
+
+  const VoorwaardeBoom = ({ knoop }) => {
+    if (!knoop) return null;
+    if (knoop.elementType === "voorwaarde") {
+      const d = knoop.data || {};
+      const tekst = `${d.links || ""} ${d.vergelijking || ""} ${d.rechts || ""}`;
+      return <Vorm element={knoop} w={breedte(tekst, { basis: 70 })} h={40} />;
+    }
+    return (
+      <div className="trd-poort-blok">
+        {/* De poort-shape hangt zijn soort-label onder de box; ruimte laten. */}
+        <div style={{ marginBottom: 16 }}>
+          <Vorm element={knoop} w={48} h={48} />
+        </div>
+        <div className="trd-takken">
+          {uit(knoop.id, "tak").map((kind) => (
+            <div key={kind.id} className="trd-tak">
+              <VoorwaardeBoom knoop={kind} />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const RegelBlok = ({ kaart }) => {
+    const subject = uit(kaart.id, "wie")[0];
+    const handeling = subject && uit(subject.id, "doet")[0];
+    const gegevens = handeling && uit(handeling.id, "op")[0];
+    const voorwaarden = uit(kaart.id, "als");
+    const plichten = uit(kaart.id, "waarbij");
+    const verwijzing = gegevens?.data?.verwijzingselement
+      ? `${gegevens.data.verwijzingsprofiel} · ${gegevens.data.verwijzingselement}`
+      : undefined;
+    return (
+      <section className="trd-kaart">
+        <div className="trd-keten">
+          <Vorm element={kaart} w={breedte(kaart.naam, { basis: 110 })} h={56} />
+          {subject && (
+            <>
+              <Pijl />
+              <Vorm element={subject} w={breedte(subject.naam, { basis: 70 })} h={48} />
+            </>
+          )}
+          {handeling && (
+            <>
+              <Pijl />
+              <Vorm element={handeling} w={breedte(handeling.naam, { basis: 66 })} h={44} />
+            </>
+          )}
+          {gegevens && (
+            <>
+              <Pijl />
+              <Vorm element={gegevens} w={breedte(gegevens.naam, { basis: 66 })} h={54} title={verwijzing} />
+            </>
+          )}
+        </div>
+        {voorwaarden.length > 0 && (
+          <div className="trd-sectie">
+            <span className="trd-sectie-label">als</span>
+            <div>
+              {voorwaarden.map((top) => (
+                <VoorwaardeBoom key={top.id} knoop={top} />
+              ))}
+            </div>
+          </div>
+        )}
+        {plichten.length > 0 && (
+          <div className="trd-sectie">
+            <span className="trd-sectie-label">waarbij</span>
+            <div className="trd-plichten">
+              {plichten.map((plicht) => (
+                <Vorm key={plicht.id} element={plicht} w={breedte(plicht.naam, { basis: 70 })} h={44} title={plicht.data?.nlgov} />
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+    );
+  };
+
   return (
     <div className="trd-root">
-      <header className="trd-beleid-kop">
-        <h2 className="trd-beleid-naam">Beleid “{beleid.naam}”</h2>
-        <div className="trd-beleid-meta">
-          {beleid.geldigVanaf && (
-            <Chip kleur="#f1f5f9">
-              Geldig vanaf {isoNaarNlDatum(beleid.geldigVanaf)}
-              {beleid.geldigTot ? ` tot ${isoNaarNlDatum(beleid.geldigTot)}` : ""}
-            </Chip>
-          )}
-          {beleid.grondslag && <Chip kleur="#f1f5f9" title="grondslag (→ ArchiMate Constraint)">§ {beleid.grondslag}</Chip>}
-          {beleid.doel && <Chip kleur="#f1f5f9" title="doelbinding (→ ArchiMate Goal)">doel: “{beleid.doel}”</Chip>}
-        </div>
-      </header>
+      {policy && <Vorm element={policy} w={breedte(policy.naam, { basis: 140 })} h={64} />}
 
-      {beleid.begrippen.length > 0 && (
+      {begrippen.length > 0 && (
         <div className="trd-begrippen">
-          {beleid.begrippen.map((begrip, i) => (
-            <Chip
-              key={i}
-              kleur={KLEUREN.begrip}
-              gestippeld
-              title={begrip.soort === "wie" ? "rolgroep-begrip" : "gegevens-begrip"}
-            >
-              <b>{begrip.naam}</b>
-              {" = "}
-              {begrip.soort === "wie"
-                ? `iemand met ${begrip.kenmerken.map((k) => `${k.kenmerk} "${k.waarde}"`).join(" en ")}`
-                : watTekst(begrip.wat)}
-            </Chip>
+          {begrippen.map((begrip) => (
+            <Vorm
+              key={begrip.id}
+              element={begrip}
+              w={breedte(begrip.naam, { basis: 80 })}
+              h={40}
+              title={begrip.data?.definitie}
+            />
           ))}
         </div>
       )}
 
-      {beleid.regels.map((regel, i) => (
-        <RegelKaart key={i} regel={regel} />
+      {kaarten.map((kaart) => (
+        <RegelBlok key={kaart.id} kaart={kaart} />
       ))}
 
       <p className="trd-voetnoot">
-        Read-only projectie van dezelfde regels als de tekst (tekst-first, v1).
-        Slepen, schalen en bewerken volgen met de integratie op de generieke
-        diagram-motor.
+        Read-only projectie met de vormentaal van het toegangsregel-profiel
+        (zelfde vormen als de motor-canvas). Bewerken: in de Tekst-tab, of na
+        “Publiceer naar Modelleren” sleepbaar op de canvas.
       </p>
     </div>
   );
