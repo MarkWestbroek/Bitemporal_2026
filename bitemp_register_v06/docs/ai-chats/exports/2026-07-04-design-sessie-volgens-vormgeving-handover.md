@@ -870,3 +870,423 @@ Twee dingen die ik onderweg zag, ter kennisgeving:
 1. **Mijn excuus voor de crash van gisteren**: bij het doorvoeren van de dashed-randstijl in de PackageShape heeft mijn zoek-en-vervang ook een regel in de DMN input-data-shape geraakt die de variabele niet kende ("stijl is not defined"). Ik zie dat die al gefixt en gecommit is (`f5a97ae`) — dank daarvoor, en dat had ik zelf moeten vangen door na die wijziging ook een DMN-canvas te openen in plaats van alleen de build.
 2. **DMN (0.5) leent nu `IconDMN`** van de klassieke DMN-tabellen-activiteit — dezelfde botsing als MIM had (twee identieke tabel-iconen onder elkaar in de balk). Als je wilt maak ik daar hetzelfde soort familie-embleem voor: een mini-DRD (rechthoek + stadium met de gevulde bolpunt-lijn als accent).
 
+---
+
+## 👤 Gebruiker (13)
+
+Zou je een ontwerp kunnen maken voor het Toegangsverlening profiel? Zie @bitemp_register_v06/docs/plans/2026-07-25 Toegangsregel-profiel — designbrief vormentaal.md
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-25 Toegangsregel-profiel — designbrief vormen...
+> 🔧 `Bash` — Toegangsregel-documenten en profielen inventariseren
+> 🔧 `Grep` — ^#{1,3} |^\| |elementTypes|connector
+> 🔧 `Bash` — ArchiMate-shapes-conventie bekijken
+> 🔧 `Edit` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\1e13b26d-261b-44c7-976e-9c4cb2e47fb6\scratch...
+> 🔧 `Edit` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\1e13b26d-261b-44c7-976e-9c4cb2e47fb6\scratch...
+> 🔧 `Artifact` — Proefopzet vormgevingssessie Studio 0.5: icoonvocabulaire, tokens, activity-iconen, DMN-shapes, MIM-vormgra...
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\kijk-artifact.tmp.mjs
+> 🔧 `Bash` — Agendapunt 10 lokaal renderen en schieten
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\1e13b26d-261b-44c7-976e-9c4cb2e47fb6\scratch...
+> 🔧 `Edit` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\1e13b26d-261b-44c7-976e-9c4cb2e47fb6\scratch...
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\1e13b26d-261b-44c7-976e-9c4cb2e47fb6\scratch...
+> 🔧 `Artifact` — Proefopzet vormgevingssessie Studio 0.5: icoonvocabulaire, tokens, activity-iconen, DMN-shapes, MIM-vormgra...
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-25 Toegangsregel-profiel — vormentaal (ontwer...
+
+**🤖 Claude:**
+
+Het ontwerp is klaar en staat op twee plekken: **agendapunt 10 van het sessie-artifact** (https://claude.ai/code/artifact/473b0686-6c0f-4b8f-aea1-645efb47f107) met alle visuals, en als [ontwerp-antwoord-document](bitemp_register_v06/docs/plans/2026-07-25%20Toegangsregel-profiel%20—%20vormentaal%20(ontwerp-antwoord).md) naast de designbrief voor de werkgroep.
+
+**Het leidende idee: de zin als silhouetten.** Het diagram ís de Toegangsspraak-zin, dus elk zinsdeel kreeg een vorm die zijn rol naspeelt — een beleidsmaker leest het diagram zoals de zin, zonder kleurkennis en zonder UML:
+
+- **Policy** = kopkaart met boekrug (de kaft om de regels); **Map** = de bestaande hangmap.
+- **Toegangsregel** = kaart met modaliteitsband links. Het verbod is het kleurenblind-kritieke punt uit besluit §7 en is drievoudig gedragen: *mag* = effen band + "mag", *mag niet* = **diagonaal gearceerde** band + ⃠ + "mag niet" — de arcering werkt ook in zwart-wit.
+- **Subject** = naambadge met clip en persoon-icoon ("wie" = een pasje), **Handeling** = pijlblok (het werkwoord duwt de zin vooruit), **Gegevensselectie** = gegevenscilinder met ▦-badge bij cross-profiel-verwijzing.
+- **Voorwaardepoort** = BPMN-ruit met symbool én woordlabel (+ alle / ○ ten minste één / × precies één), **Voorwaarde** = vergelijkingsstrook die de vergelijking zelf toont, **Plicht** = vaandel met ⚑, **Begrip** = gestippelde tag.
+
+**Lijnen**: de kernzin (wie/doet/op) is de ruggengraat — dikste lijn, dichte pijl, leesbare woordchips in de zinsdeel-kleur. Eén verbetering op de brief: "als" en "waarbij" waren beide dash-6-3 en dus niet onderscheidbaar; "waarbij" krijgt het bol-einde (de verplichting "hangt eraan"). Alle markers bestaan al in de motor, dus de lijnen zijn pure descriptor-configuratie.
+
+**Verder in het antwoord**: elf 16px-boom-iconen consistent met de vormen, de kleurenblind-analyse (de botsende pastel-paren kregen bewust de sterkst verschillende silhouetten; het palet zelf kan blijven omdat het aan de tekst-ontleding gekoppeld is), en de implementatie-mapping (negen eigen shapes in `toegangsregel/shapes.jsx` à la ArchiMate, map = package, ondergrenzen voor kleine leesbaarheid). De mockup "de zin als diagram" — één complete voorbeeldregel van kaft tot vaandel — heb ik gerenderd gecheckt; die kun je zo aan de werkgroep laten zien.
+
+Het antwoord-document is nog niet gecommit. Zeg het als ik moet committen, en of ik daarna de shapes ook mag bouwen — met dit ontwerp is dat weer een kwestie van registreren.
+
+---
+
+## 👤 Gebruiker (14)
+
+graag, wil jij het inbouwen? zie @bitemp_register_v06/docs/plans/2026-07-25 Toegangsregel-profiel — handreiking implementatie vormentaal.md
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-25 Toegangsregel-profiel — handreiking implem...
+> 🔧 `TodoWrite` — takenlijst bijgewerkt
+> 🔧 `Bash` — Branch en status controleren
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramprofielen\toegangsregel\index.js
+> 🔧 `Bash` — Registratieconventies bekijken
+> 🔧 `Bash` — Shape-registratie en fallback bekijken
+
+**🤖 Claude:**
+
+Conventies helder. Nu bouwen — eerst de shapes (met check op de typecontract-validatie in de registry):
+> 🔧 `Grep` — shape|valideer|GELDIGE
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramprofielen\toegangsregel\shapes.jsx
+
+**🤖 Claude:**
+
+Nu de boom-iconen:
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramprofielen\toegangsregel\iconen.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\ConnectorEdge.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\ConnectorEdge.jsx
+> 🔧 `Grep` — strokeWidth: selected
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\ConnectorEdge.jsx
+> 🔧 `Bash` — Shapes en iconen op de tien elementtypen zetten
+> 🔧 `Bash` — Lijnstijlen, markers en woordchips op de connectoren zetten
+> 🔧 `Bash` — Shape-/icoonregistratie aanhaken en poort-default zetten
+> 🔧 `Bash` — Build en tests draaien
+> 🔧 `Bash` — De falende test bekijken
+> 🔧 `Bash` — Alleen de adapter-test draaien voor de foutdetails
+> 🔧 `Grep` — registreerToegangsregelProfiel
+> 🔧 `Bash` — Registratie verplaatsen naar de activiteiten
+> 🔧 `TodoWrite` — takenlijst bijgewerkt
+> 🔧 `Bash` — Build en tests opnieuw draaien
+
+**🤖 Claude:**
+
+Alles groen (371/371). Nu de visuele verificatie via de route uit de handreiking:
+> 🔧 `Bash` — Dev-server starten
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\kijk-toegang.tmp.mjs
+> 🔧 `Bash` — Toegangsregel-route draaien en schieten
+
+**🤖 Claude:**
+
+De activiteit heet inmiddels anders. Even de balk inventariseren:
+> 🔧 `Bash` — Activity-bar-titels ophalen
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\kijk-toegang.tmp.mjs
+> 🔧 `Bash` — Toegangsregel-route opnieuw draaien
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\1e13b26d-261b-44c7-976e-9c4cb2e47fb6\scratch...
+> 🔧 `Bash` — Woordchips en dubbele kort-labels verwijderen
+> 🔧 `Bash` — Build, tests en visuele herverificatie
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\1e13b26d-261b-44c7-976e-9c4cb2e47fb6\scratch...
+> 🔧 `Bash` — kort-glyphs terugzetten en hertesten
+> 🔧 `Bash` — Laatste visuele check en script opruimen
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\1e13b26d-261b-44c7-976e-9c4cb2e47fb6\scratch...
+> 🔧 `TaskStop`
+> 🔧 `Bash` — Volledige testronde
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-24 Toegangsregel-profiel (ontwerp).md
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-24 Toegangsregel-profiel (ontwerp).md
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-24 Toegangsregel-profiel (ontwerp).md
+
+**🤖 Claude:**
+
+Nu committen in stukjes op `feat/toegangsspraak`:
+> 🔧 `Bash` — Commit 1: dikte-veld in de ConnectorEdge
+> 🔧 `Bash` — Commit 2: de vormentaal zelf
+> 🔧 `Bash` — Commit 3: docs, en eindstand tonen
+> 🔧 `TodoWrite` — takenlijst bijgewerkt
+
+**🤖 Claude:**
+
+Ingebouwd, geverifieerd en gecommit in drie stukjes op `feat/toegangsspraak` (niet gepusht, conform de handreiking).
+
+**Wat er staat**
+
+- **[shapes.jsx](bitemp_register_v06/web/vite/src/diagramprofielen/toegangsregel/shapes.jsx)** — de negen vormen uit het ontwerp: kaft met boekrug (policy), regelkaart met modaliteitsband (verbod = diagonaal gearceerde band + ⃠ + "mag niet" — werkt ook zonder kleur), naambadge met clip en persoon (subject), pijlblok (handeling), cilinder met ▦-verwijzingsbadge (gegevensselectie), poort-ruit met +/○/× en soort-label, vergelijkingsstrook die links · teken · rechts uit de element-data toont, vaandel met ⚑ (plicht) en de gestippelde tag (begrip). Map gebruikt de bestaande hangmap.
+- **[iconen.jsx](bitemp_register_v06/web/vite/src/diagramprofielen/toegangsregel/iconen.jsx)** — tien boom-iconen, mini-silhouetten van de vormen; die zie je nu in de elementenboom én de Maken-taakbalk.
+- **Lijnen** in de descriptor conform de lijnen-tabel: kernzin (wie/doet/op) dik met dichte pijl, "als" gestippeld met open pijl, "waarbij" gestippeld met bol-einde, tak dun. Daarvoor is één klein core-veld toegevoegd: `presentatie.dikte` in de ConnectorEdge.
+- Conform de handreiking: `adapter.js` en alle ids/bron-doel-regels onaangeraakt; `index.js` bleef jsx-vrij (de node-tests importeren hem) — de vormentaal wordt door de twee activiteiten geregistreerd.
+
+**Geverifieerd via de voorgeschreven route**: Toegangverlening → Beleid → Publiceer naar Modelleren → Ga naar → Toegangsregels, met jouw echte beleid "Inzage inkomen bij schuldhulp". De hele zin staat als silhouetten op het canvas — inclusief de verbodskaart "geen export" met gearceerde band. Onderweg twee dingen rechtgezet: de woordchips uit het ontwerp verdubbelden met de connector-namen die de adapter al zet (chips verwijderd — de namen dragen de woorden al), en de Verbinding-taakbalk toonde "wie wie" (nu "▶ wie" enzovoort). Build schoon, alle 371 tests groen.
+
+**Commits**: `d02f442` (core: dikte-veld), `88edea8` (vormentaal), `4f52fa9` (ontwerp-antwoord gearchiveerd + §2/§7 van het ontwerp-document bijgewerkt).
+
+Eén observatie voor een latere ronde: de poort-ruit stond in deze uitsnede achter de zwevende taakbalken — niets mis met de shape, maar als de auto-layout de voorwaardeboom vaker linksboven legt, is een andere startpositie van de taakbalk-defaults voor dit profiel het overwegen waard.
+
+---
+
+## 👤 Gebruiker (15)
+
+een vraag: verticaal alignen levert dit scheve beeld op. Hoe kan dat?
+
+**🤖 Claude:**
+
+Goede vraag — laat me even in de uitlijn-code kijken hoe die centreert:
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\layout\uitlijnen.js
+> 🔧 `Grep` — berekenUitlijning|width|height
+> 🔧 `Grep` — devHookNaam|persistKey
+
+**🤖 Claude:**
+
+API Error: an image in the conversation could not be processed and was removed. Re-read the file with a different approach if you still need it.
+> 🔧 `Bash` — Dev-server starten
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramprofielen\toegangsregel\shapes.jsx
+> 🔧 `Bash` — Poort niet-resizebaar maken
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\kijk-uitlijnen.tmp.mjs
+> 🔧 `TodoWrite` — takenlijst bijgewerkt
+> 🔧 `Bash` — Uitlijning reproduceren en meten
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\kijk-uitlijnen.tmp.mjs
+> 🔧 `Bash` — Meting opnieuw draaien via de menuroute
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\kijk-uitlijnen.tmp.mjs
+> 🔧 `Bash` — Meting met selectiekader draaien
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\DiagramCanvas.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\DiagramCanvas.jsx
+> 🔧 `Bash` — Build en tests draaien
+
+**🤖 Claude:**
+
+Nog even bewijzen dat shift+klik nu wél bijselecteert:
+> 🔧 `Bash` — Shift+klik-bijselecteren en centreren verifiëren
+> 🔧 `Bash` — Controleren of de prop in de geserveerde module zit
+> 🔧 `Bash` — Shift+klik vs Ctrl+klik bijselecteren vergelijken
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\DiagramCanvas.jsx
+> 🔧 `Bash` — Default Ctrl+klik-gedrag meten (zonder prop)
+> 🔧 `Bash` — Opruimen en laatste build/tests
+> 🔧 `TaskStop`
+> 🔧 `Bash` — Poort-fix committen
+> 🔧 `TodoWrite` — takenlijst bijgewerkt
+
+**🤖 Claude:**
+
+Gevonden, gemeten en (grotendeels) gefixt. Het antwoord op "hoe kan dat?" bestaat uit twee delen:
+
+**1. De hoofdoorzaak — de box was niet de vorm (gefixt, `7070be7`).** Uitlijnen rekent op de *node-box*, niet op wat je ziet. Bij de meeste nieuwe vormen valt dat samen, maar bij de voorwaardepoort niet: die box was 96×76 pixels om een ruit van maar 44 — het "alle"-label en een ruime minimummaat zaten mee in de box. Vandaar precies jouw drie waarnemingen: verticaal centreren zette het *boxmidden* op de lijn terwijl de ruit er scheef boven hing, idem horizontaal, en de handles zweefden los om de ruit ("de ruimte hier is te groot"). Ik heb de poort omgebouwd naar het bol-patroon: de node-box is nu exact de ruit (48px), het soort-label hangt als decoratie eronder buiten de box, en de resize-grepen zijn weg (een vaste ruit resizen is zinloos). Daarna gemeten in de echte activiteit: badge, tag én poort centreren nu op **0,0px** verschil — de uitlijn-wiskunde zelf was al die tijd correct.
+
+**2. Een verraderlijke tweede factor — bijselecteren met shift+klik doet niet wat je denkt.** In mijn reproductie bleek shift+klik op een tweede node de selectie te *vervangen* in plaats van uit te breiden (React Flow's bijselecteer-toets is Ctrl/Meta, en ook dat gedroeg zich grillig). Gevolg: je denkt drie nodes te hebben geselecteerd, de uitlijn-actie krijgt er stilletjes één, en er gebeurt niets — het beeld blijft scheef en het lijkt of de uitlijning faalt. Het **selectiekader** (shift+slepen over de lege canvas) werkt wél betrouwbaar; daarmee heb ik de pixel-perfecte centrering bewezen. Ik heb geprobeerd shift+klik als bijselecteer-toets te configureren, maar dat gedroeg zich niet voorspelbaar in React Flow — die poging heb ik teruggedraaid en dit staat wat mij betreft als los verbeterpunt op de lijst (het verdient een eigen onderzoekje in de canvas-selectielogica, niet een snelle prop).
+
+Kortom: gebruik voorlopig het selectiekader voor meervoudige selecties, en met de poort-fix lijnt alles nu ook visueel strak uit. Build schoon, 371/371 tests groen, commit staat op `feat/toegangsspraak`.
+
+---
+
+## 👤 Gebruiker (16)
+
+ik vind nog steeds deze twee uitlijnproblemen. Of moet ik hard refreshen?
+
+**🤖 Claude:**
+
+Goede vraag — twee dingen tegelijk. Eerst het korte antwoord: een hard refresh is niet per se nodig (Vite laadt de fix vanzelf), maar **de scheve posities zelf blijven staan** — de fix verandert alleen hoe een nieuwe uitlijn-actie rekent. Je moet dus opnieuw uitlijnen, mét een kader-selectie (shift+slepen over de lege canvas), want shift+klik-bijselecteren is de valkuil van daarnet. Maar jouw eerste beeld (de keten) wil ik niet wegverklaren — die meet ik na, met precies die vier vormen en "Verticaal centreren":
+> 🔧 `Bash` — Dev-server starten
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\kijk-keten.tmp.mjs
+> 🔧 `Bash` — Keten-meting draaien
+
+**🤖 Claude:**
+
+De getallen maken alles duidelijk. Even de bewijs-screenshot bekijken en opruimen:
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\1e13b26d-261b-44c7-976e-9c4cb2e47fb6\scratch...
+> 🔧 `Bash` — Meetscript opruimen
+> 🔧 `TaskStop`
+
+**🤖 Claude:**
+
+Geen hard refresh nodig — en je uitlijnknoppen zijn niet stuk. De meting verklaart beide beelden sluitend:
+
+**Beeld 1 (de horizontale keten) is de beginstand van "Publiceer naar Modelleren", geen mislukte uitlijning.** De publicatie-layout zet de nodes van een regel op dezelfde *bovenkant* (alle vier exact y = 740.4 in mijn meting). Vroeger, toen alles een even hoge rechthoek was, viel dat samen met gecentreerd. Maar de vormentaal heeft nu per vorm een eigen hoogte — badge 45px, pijlblok 32px, kaart/cilinder 41px — dus bij gelijke bovenkanten liggen de *middens* tot 7px uiteen, en dat ziet je oog direct als scheef. Eén keer "Verticaal centreren" met een kader-selectie maakt het pixel-perfect: na de actie meten alle vier exact cy = 760.3 (verschil 0,00px). Dit is wel een terecht verbeterpunt voor de techniek: de publicatie-generator zou rijen op het *midden* moeten uitlijnen in plaats van op de top, nu vormhoogtes variëren — dat zit in de adapter-hoek die ik volgens de handreiking niet aanraak, dus ik geef het je mee als bevinding.
+
+**Beeld 2 (badge–tag–badge) is een oude, opgeslagen positie.** De code-fixes veranderen alleen hoe een *nieuwe* uitlijn-actie rekent; reeds scheef staande nodes blijven staan waar ze staan. En de actie die je destijds deed heeft vermoedelijk nooit echt gewerkt door de shift+klik-valkuil: shift+klik *vervangt* de selectie in plaats van bij te selecteren, waardoor uitlijnen stilletjes op één node draait en niets doet. Selecteer die drie opnieuw met het **selectiekader** (shift+slepen over lege canvas) en centreer horizontaal — dan komen ze op 0,07px van elkaar.
+
+Samengevat: je hoeft alleen opnieuw uit te lijnen met kader-selecties; de poort-fix van daarnet pikt je browser vanzelf op via Vite. De twee structurele punten die overblijven staan genoteerd: de publicatie-layout op middens (adapter-kant, voor de techniek) en het klik-bijselecteren dat een eigen onderzoekje verdient.
+
+---
+
+## 👤 Gebruiker (17)
+
+ik had juist gerefreshed en align gedaan... Dat zorg dat voor geen aligning
+
+**🤖 Claude:**
+
+Dan zit er nog een gat in mijn verificatie: ik heb steeds het **menu** gebruikt, maar jij drukt vermoedelijk de knoppen op de zwevende **Uitlijnen-taakbalk** — en die klik landt óp de canvas, wat zomaar de selectie kan wissen vóór de actie draait. Dat toets ik nu gericht:
+> 🔧 `Bash` — Dev-server starten
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\kijk-taakbalk.tmp.mjs
+> 🔧 `Bash` — Taakbalk-route testen
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\kijk-taakbalk.tmp.mjs
+> 🔧 `Bash` — Taakbalk-knop-test draaien
+> 🔧 `Bash` — Meetscript opruimen
+> 🔧 `TaskStop`
+> 🔧 `AskUserQuestion`
+> 🔧 `Grep` — UITLIJN_ICONEN
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\DiagramCanvas.jsx
+> 🔧 `Grep` — titel|title
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\maakDiagramActiviteit.jsx
+> 🔧 `Bash` — Tooltip-fix bouwen en committen
+
+**🤖 Claude:**
+
+Ik heb jouw exacte route — kaderselectie + taakbalk-knoppen — nu instrumenteel nagemeten op precies deze code, en hij werkt: de selectie blijft staan bij de knopklik (3 nodes vóór en ná) en de posities verschuiven naar exact gelijke middens (0,00px). Ik kan het falen bij jou dus niet reproduceren, en dan wil ik niet gokken maar gericht het verschil vinden. Wat ik wél kan zeggen:
+
+**Twee dingen die "align doet niets" perfect kunnen nabootsen:**
+
+1. **De verkeerde knop is snel gepakt, en twee acties doen bij jouw diagrammen onzichtbaar niets.** De knoppen tonen hun uitleg pas na een kwart seconde hover, en de twee centreer-iconen zijn tegengesteld aan hoe je ze intuïtief benoemt: voor de **horizontale keten** (beeld 1) heb je de **5e knop** nodig (⇳, "Verticaal centreren" — middens op één horizontale lijn); voor de **badge/tag-stapel** (beeld 2) de **2e knop** (⇹, "Horizontaal centreren" — op één verticale as). En let op: "Boven uitlijnen" (4e knop) doet op jouw keten *letterlijk niets zichtbaars*, want de publicatie zet alle toppen al gelijk — dat is precies waarom die keten scheef oogt (gelijke toppen, verschillende vormhoogtes).
+2. **De tooltip gaf zelfs verkeerd advies**: er stond "(selectie — Ctrl+klik)", terwijl Ctrl+klik-bijselecteren juist onbetrouwbaar is. Aangepast naar "Shift+sleep een kader" (`da57122`).
+
+**Mijn verzoek:** doe het nog één keer met dit recept — kader om de vier keten-nodes, dan de 5e uitlijn-knop — met de browserconsole open (F12). Drie mogelijke uitkomsten: het werkt (dan was het de knopkeuze); er verschijnt een rode melding in de console (stuur die door, dan heb ik de echte bug te pakken); of er gebeurt zichtbaar niets zónder foutmelding — in dat laatste geval wil ik heel graag een schermopname van die tien seconden, want dan gebeurt er bij jou iets dat mijn geautomatiseerde reproductie structureel mist.
+
+---
+
+## 👤 Gebruiker (18)
+
+geen consolefout. Het werkt gewoon, maar de shapes lijken nog niet gecentreerd. Zie video
+
+**🤖 Claude:**
+
+Nu zie ik het écht — en het zat al die tijd in mijn eigen meetdata verstopt. "Het werkt gewoon, maar de shapes lijken niet gecentreerd" klopt letterlijk: de *boxen* worden perfect gecentreerd, maar **de vorm steekt bij sommige nodes onder zijn box uit**. De gepubliceerde nodes dragen nog opgeslagen maten uit de rechthoek-tijd (~43px hoog), terwijl de nieuwe vormen grotere minimum-maten afdwingen (pijlblok 44, cilinder 56, kaart 54). De vorm rendert dan groter dan de node-box en hangt er aan de onderkant uit — kijk maar in mijn meting: de pijlblok-box was 34 hoog terwijl de vorm 44 wil zijn. Uitlijnen centreert de boxen op 0,0px, maar jouw oog kijkt naar de uitgestoken vormen. Fix: de vormen moeten zich aan hun box houden (minimums eruit, nette natuurlijke maat via padding):
+> 🔧 `Bash` — Minimum-maten vervangen door padding (vorm = box)
+
+**🤖 Claude:**
+
+De video komt binnen — die ga ik bekijken door er frames uit te trekken:
+> 🔧 `Bash` — Video en ffmpeg controleren
+> 🔧 `Bash` — Frames uit de video trekken (1 per seconde)
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\1e13b26d-261b-44c7-976e-9c4cb2e47fb6\scratch...
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\1e13b26d-261b-44c7-976e-9c4cb2e47fb6\scratch...
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\1e13b26d-261b-44c7-976e-9c4cb2e47fb6\scratch...
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\1e13b26d-261b-44c7-976e-9c4cb2e47fb6\scratch...
+> 🔧 `Bash` — Bouwen en dev-server starten
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\kijk-vormbox.tmp.mjs
+> 🔧 `Bash` — Vorm-vs-box-meting draaien
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\1e13b26d-261b-44c7-976e-9c4cb2e47fb6\scratch...
+
+**🤖 Claude:**
+
+Kaarsrecht — vormen op één as én alle kernzin-lijnen zonder knik. Tests, opruimen en committen:
+> 🔧 `Bash` — Volledige tests draaien
+> 🔧 `TaskStop`
+> 🔧 `Bash` — Vorm-is-box-fix committen
+
+**🤖 Claude:**
+
+Opgelost — en jouw video plus de observatie over de knikkende lijnen waren precies de ontbrekende puzzelstukken. Het volledige verhaal:
+
+**Wat er aan de hand was.** De gepubliceerde nodes dragen nog opgeslagen maten uit de rechthoek-tijd (~180×43). De nieuwe vormen hadden vaste minimum-maten (pijlblok 44 hoog, cilinder 56, kaart 54) en renderden daardoor *groter dan hun node-box* — de vorm stak 10–12px onder de boxrand uit. Alles wat op de box werkt, klopte daardoor niet meer met wat je ziet:
+
+- **Uitlijnen** centreerde de boxen wél perfect (daarom "het werkt gewoon"), maar de uitgestoken vormen hingen scheef — wat jij zag.
+- **De handles zitten op de box**, dus die lagen niet op de vorm-middens — en de kernzin-lijnen maakten precies daarom die trapjes, zoals je terecht opmerkte.
+- En de poort-"ruimte te groot" van gisteren was hetzelfde patroon in het extreme.
+
+**De fix (`1ca639f`)**: de vaste minimums zijn uit de vormen gehaald en vervangen door inhouds-padding — de vorm valt nu áltijd exact samen met zijn node-box, ongeacht welke maat er opgeslagen staat. Nagemeten in de echte activiteit: uitsteek 0,0 op alle vormen, na "Verticaal centreren" liggen de vorm-middens binnen 0,1px, en de hele keten loopt kaarsrecht — zie de screenshot hierboven, geen enkele knik meer.
+
+**Wat jij hoeft te doen**: refresh, en centreer de rijen nog één keer (de publicatie zet nodes nog steeds op gelijke *toppen*, dus die ene center-actie blijft nodig totdat de techniek de generator op middens laat uitlijnen — dat punt staat genoteerd).
+
+Eén kanttekening voor de lijst: hetzelfde minimum-maten-patroon zit ook in de DMN-shapes, de package en de MIM-chips. Daar wringt het pas als er opgeslagen maten kleiner dan die minimums ontstaan (bijvoorbeeld door klein resizen), maar het verdient dezelfde veegbeurt. Alles gecommit op `feat/toegangsspraak`; 371/371 tests groen.
+
+---
+
+## 👤 Gebruiker (19)
+
+Laat maar. Ik vraag ook teveel; je bent een design sessie...
+
+**🤖 Claude:**
+
+Je vraagt helemaal niet te veel — dit wás de designsessie. Een vormentaal is pas af als hij ook klopt in het gebruik: uitlijnen, handles, lijnen. Die laatste fix was geen zijspoor maar het sluitstuk van het ontwerp, en je video en je observatie over de knikkende lijnen waren precies wat het oploste.
+
+En er blijft niets half liggen: de vorm-is-box-fix is gemeten, groen (371/371) en gecommit (`1ca639f`). Na een refresh en één keer opnieuw centreren staat je diagram strak. De drie punten die nog open zijn, staan genoteerd voor wie ze oppakt: de publicatie-layout die op middens zou moeten uitlijnen (techniek/adapter-kant), het klik-bijselecteren dat een eigen onderzoekje verdient, en dezelfde minimum-maten-veegronde voor de DMN/MIM/package-shapes.
+
+Het was een mooie sessie — van icoonvocabulaire tot een complete vormentaal voor Toegangsspraak. Roep maar als de werkgroep het gezien heeft.
+
+---
+
+## 👤 Gebruiker (20)
+
+ik ben heel blij met het grafisch ontwerp.
+
+Het uitlijnen werkt echter niet zoals ik zou willen en ook niet na 10 refreshes, herstarten van de server en het diagram sluiten en openen.
+
+Ik snap bijna niets van wat je allemaal zegt over boxen, en dat het nu goed is, want er verandert helemaal niets in wat ik zie dat er gebeurt.
+
+**🤖 Claude:**
+
+Je hebt gelijk, en het spijt me van al het jargon. Laat me het simpel zeggen: bij mij werkt het omdat ik steeds test op een **vers gepubliceerd diagram** — maar jij werkt in **jouw eigen diagram, met jouw opgeslagen stand**. Als daar het verschil zit, blijven al mijn metingen langs jouw werkelijkheid heen gaan. Ik zie dat er een diagram-bestand van jou in de repo staat (`docs/diagrammen/toegangsregel-05.json`) — ik ga het nu op *jouw* data testen in plaats van op mijn testdiagram:
+> 🔧 `Bash` — Marks diagram-bestand inspecteren (maten per node)
+
+**🤖 Claude:**
+
+Dat bestand blijkt je profiel-*ontwerp* te zijn, niet je werkdiagram — jouw echte diagram leeft in de browseropslag en daar kan ik niet bij. Dus ik heb twee kleine dingen van je nodig, allebei zonder techniek-taal:
+
+**1. Een check van tien seconden — draait de fix bij jou wel?**
+Klik in je diagram één vorm aan (bijvoorbeeld het oranje pijlblok "exporteren" of de gele cilinder). Kijk naar de vier witte hoekblokjes:
+
+- Zitten ze **precies op de hoeken van de vorm**? Dan draait de nieuwe code.
+- Zit er **lucht tussen** — blokjes die los boven of onder de vorm zweven? Dan heeft jouw browser de fix nog steeds niet, ondanks alle refreshes, en dan weet ik waar ik moet zoeken (dan draait je studio ergens op een oudere bundel — zeg me in dat geval even welk adres/poort er in je adresbalk staat).
+
+**2. Stuur me jouw diagram.**
+In de Toegangsregels-activiteit: menu **Bestand → Exporteer 0.5-werkbestand…**, en zet dat bestand in `bitemp_register_v06/_tmp/`. Dan laad ik *exact jouw diagram* in en doe ik het uitlijnen op jouw echte stand — niet op mijn schone testdiagram, waar het steeds braaf werkt. Als het op jouw data misgaat, zie ik het dan eindelijk zelf misgaan, en dat is wat ik nodig heb.
+
+En voor de duidelijkheid, in gewone woorden wat er zou moeten veranderen: vóór de fix waren sommige vormen stiekem groter dan het vakje waarin de studio ze vastpakt — uitlijnen lijnde die onzichtbare vakjes uit, niet de vormen, en de pijlen vertrokken uit die vakjes (vandaar de knikken). Na de fix zijn vorm en vakje hetzelfde, en dan is uitlijnen wat je oog verwacht. Als jij níets ziet veranderen, draait die fix bij jou niet — en dat gaan we met die twee stappen boven water krijgen.
+
+---
+
+## 👤 Gebruiker (21)
+
+1
+
+**🤖 Claude:**
+
+Mooi — check 1 klopt: de blokjes zitten strak op de vorm, dus de nieuwste code draait nu wél bij jou. Dan blijft er precies één verschil over tussen jouw ervaring en mijn tests: **jouw diagram zelf**. Mijn tests draaien steeds op een vers gepubliceerd diagram; bij jou zit er een opgebouwde stand in.
+
+Dus graag nog stap 2 van daarnet: in de Toegangsregels-activiteit → menu **Bestand → Exporteer 0.5-werkbestand…** → zet dat bestand in `bitemp_register_v06/_tmp/`. 
+
+Dan laad ik exact jouw diagram in, doe ik daar het uitlijnen op, en zie ik met eigen ogen wat jij ziet gebeuren (of juist níet gebeuren). Als het op jouw stand misgaat, heb ik het eindelijk te pakken — en als het op jouw stand bij mij wél goed gaat, weten we dat het verschil in de handeling zit en kijken we nog één keer samen naar wat je precies aanklikt. Geen theorie meer van mijn kant tot ik jouw bestand heb gezien.
+
+---
+
+## 👤 Gebruiker (22)
+
+diagram in _tmp
+> 🔧 `Bash` — Nieuwste bestand in _tmp vinden
+> 🔧 `Bash` — Marks werkbestand inspecteren
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\kijk-marks-diagram.tmp.mjs
+> 🔧 `Bash` — Dev-server starten
+> 🔧 `Bash` — Marks diagram importeren en uitlijnen nadoen
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\1e13b26d-261b-44c7-976e-9c4cb2e47fb6\scratch...
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\kijk-gelijkemaat.tmp.mjs
+> 🔧 `Bash` — Zelfde maat + centreren op Marks rij testen
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\kijk-gelijkemaat.tmp.mjs
+> 🔧 `Bash` — Zelfde-maat-recept met leeg kaderstartpunt
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\kijk-selectie.tmp.mjs
+> 🔧 `Bash` — Selectie-diagnose draaien
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\kijk-kader2.tmp.mjs
+> 🔧 `Bash` — Ruim vs half kader testen
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\kijk-kader2.tmp.mjs
+> 🔧 `Bash` — Ruim vs half kader testen (met anker)
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\DiagramCanvas.jsx
+> 🔧 `Bash` — Kader-test opnieuw met partial-selectie
+> 🔧 `PowerShell` — Wees-server op 5174 stoppen
+> 🔧 `Bash` — Verse dev-server starten
+> 🔧 `Bash` — Verifiëren dat de nieuwe code geserveerd wordt en kader-test draaien
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\kijk-wis.tmp.mjs
+> 🔧 `Bash` — Selectie-wis-diagnose draaien
+> 🔧 `Bash` — Zelfde-maat-recept met geldige kaderpunten draaien
+> 🔧 `Bash` — Contextmenu-inhoud na rechtsklik inspecteren
+> 🔧 `Grep` — openContextMenu
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\DiagramCanvas.jsx
+> 🔧 `Bash` — Volledig recept opnieuw: kader, zelfde maat, centreren
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramcore\canvas\DiagramCanvas.jsx
+> 🔧 `Bash` — Recept opnieuw met elementsFromPoint
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\1e13b26d-261b-44c7-976e-9c4cb2e47fb6\scratch...
+> 🔧 `Bash` — Scripts opruimen, build en tests
+> 🔧 `TaskStop`
+> 🔧 `Bash` — Selectie-fixes committen
+
+**🤖 Claude:**
+
+Dankzij jouw werkbestand is het eindelijk écht gevonden — er zaten **twee onzichtbare drempels** in de weg, en allebei zijn ze nu weg (`db26f04`):
+
+**1. Het selectiekader was te streng.** Het selecteerde alleen vormen die er *helemaal* in vielen. Stak één vorm er een puntje uit — of begon je sleep per ongeluk op een zwevende taakbalk, de minimap of het zijpaneel — dan ving je stilletjes niets of te weinig, en deed de uitlijnknop daarna letterlijk niets. Geen foutmelding, geen beweging: exact wat jij al die tijd zag, en waarom refreshen nooit hielp. (Het overkwam mijn eigen testscripts vanavond net zo goed — daardoor joeg ik zo lang op het verkeerde spoor.) Nu selecteert het kader **alles wat het raakt**, zoals in gewone tekentools. Slordig slepen mag.
+
+**2. Wat jou visueel stoorde was niet alleen het centreren, maar de máten.** In jouw rij was de groene badge bijna twee keer zo groot als "exporteren" ernaast — de middens stonden allang netjes op lijn, maar zulke ongelijke vormen ogen nooit als een rij. Daar is een knop voor die alleen onbereikbaar bleek: rechtsklik binnen een selectie verborg juist "Zelfde maat als dit element". Ook gefixt.
+
+**Het recept voor een nette rij is nu** (getest op jouw eigen diagram, zie de screenshot hierboven): sleep met Shift een kader ergens over de rij → rechtsklik op de vorm met het formaat dat je mooi vindt → **"⧉ Zelfde maat als dit element"** → knop **"Verticaal centreren"** (of via rechtsklik, daar staat hij ook). Resultaat bij jouw verbodsregel: vier vormen exact even groot, op één lijn, rechte pijlen.
+
+Refresh nog één keer en probeer het — en excuus dat je er drie rondes op hebt moeten wachten: jouw "er verandert gewoon niets" was van het begin af aan de juiste bugbeschrijving. Alles staat gecommit op `feat/toegangsspraak`, 378/378 tests groen.
+
+---
+
+## 👤 Gebruiker (23)
+
+lijkt nu te werken. Dank! Wil je committen?
+> 🔧 `Bash` — Openstaande wijzigingen controleren
+
+**🤖 Claude:**
+
+Goed nieuws: alles van deze sessie stáát al gecommit — de laatste fix ging er direct in. Op `feat/toegangsspraak` staan van deze uitlijn-saga:
+
+- `7070be7` — poort-box = de ruit zelf
+- `da57122` — uitlijn-tooltip wijst naar kaderselectie
+- `1ca639f` — vorm = node-box (scheef centreren + knikkende lijnen)
+- `db26f04` — kader selecteert wat het raakt + "Zelfde maat" in het selectie-menu
+
+Wat er nog ongecommit staat zijn alleen jouw eigen bestanden: de `_tmp/`-map (je video en werkbestand — vermoedelijk niet voor in git), je studio-exports, `docs/diagrammen/toegangsregel-05.json` en `web/vite/profielen/toegangsregel.json`. Die laat ik bewust liggen omdat ze van jou zijn — zeg het als je wilt dat ik er een deel van meeneem in een commit (het profiel-json en het ontwerp-diagram lijken me kandidaten, de `_tmp`-map juist niet).
+
+Fijn dat het nu werkt — en nogmaals dank voor je geduld én je video: zonder jouw werkbestand had ik die selectie-drempel nooit gevonden.
+
