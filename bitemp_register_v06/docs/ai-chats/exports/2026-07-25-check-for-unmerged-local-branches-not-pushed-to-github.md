@@ -308,4 +308,157 @@ Precies de vraag die nog openstond. Je 4 exports vallen uiteen in twee groepen �
 
 Beide veiliggesteld en schoon. Nu de werkkopie vrijmaken en overschakelen naar main.
 > 🔧 `Bash` — Clean working tree and switch to main
+> 🔧 `Bash` — Restore the longer chat export on main
+> 🔧 `Bash` — Commit the two chat exports on main
+> 🔧 `Bash` — Push main and delete the merged branch
+> 🔧 `Bash` — Final verification of repository state
+
+**🤖 Claude:**
+
+Beide vragen afgehandeld.
+
+**`feat/formulier-meta-standaard`:** er viel niets te mergen — de branch zat al volledig in main (nul unieke commits). Alleen opgeruimd, lokaal en op de remote.
+
+**De 4 chat-exports:** die vielen niet in één categorie, dus ik heb ze uitgesplitst voordat ik iets committe:
+
+| Bestand | Situatie | Actie |
+|---|---|---|
+| `2026-07-11-studio-ux…` | lokaal gewijzigd, maar inhoud identiek aan main | niets — stond er al |
+| `2026-07-19-document-metamodel-v3…` | untracked, identiek aan main | niets — stond er al |
+| `2026-07-22-…toegangsbeleid` | main + 48 regels aangevuld aan het eind | aanvulling gecommit |
+| `2026-07-25-…unmerged-local-branches` | nieuw (deze sessie) | gecommit |
+
+De eerste twee waren met de merges van PR #12/#13 al op main beland; het script had ze lokaal opnieuw weggeschreven. Alleen de laatste twee bevatten echt nieuw materiaal: commit `8fe64305` op main, gepusht. Voor het 07-22-bestand heb ik geverifieerd dat de eerste 1494 regels byte-voor-byte gelijk waren, dus het is puur aangevuld en er is niets overschreven. Beide bestanden zijn langs een secret-scan gehaald: schoon.
+
+Eén ding bewust **niet** gedaan: `docs/ai-chats/summaries/` heeft nog geen samenvatting voor 22-07 en 25-07, terwijl CLAUDE.md die naast elke export verwacht. Zeg het als ik die alsnog moet schrijven — de 22-07 (ontwerp van de leesbare beleidstaal) is inhoudelijk de moeite waard.
+
+Eindstand: main op `8fe64305`, werkkopie schoon, en `chore/be-code-review` is het enige dat nog ongemerged staat — precies zoals je wilde, klaar om onderweg te testen. Geen enkele commit bestaat alleen lokaal.
+
+Terzijde: de worktree `Bitemporal_2026_gedrag` is uit de lijst verdwenen, dus die heb je zelf al opgeruimd na de merge.
+
+---
+
+## 👤 Gebruiker (10)
+
+worktree gedrag: klopt
+
+Wil je die samenvattingen schrijven?
+> 🔧 `Bash` — Read the summary template and list recent summaries
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\ai-chats\summaries\2026-07-11-oas31-volledig-profiel-en-oas...
+> 🔧 `Bash` — Get structure of the 07-22 export
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\ai-chats\exports\2026-07-22-ontwerpen-leesbare-policy-taal-...
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\ai-chats\exports\2026-07-22-ontwerpen-leesbare-policy-taal-...
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\ai-chats\exports\2026-07-22-ontwerpen-leesbare-policy-taal-...
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\ai-chats\exports\2026-07-22-ontwerpen-leesbare-policy-taal-...
+
+**🤖 Claude:**
+
+Ik heb de 22-07-sessie helemaal doorgelezen. Nu nog de feiten voor de metadata.
+> 🔧 `Bash` — Gather commit facts for the summaries
+
+**🤖 Claude:**
+
+Alles verzameld. Ik schrijf beide samenvattingen.
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\ai-chats\summaries\2026-07-22-ontwerpen-leesbare-policy-taa...
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\ai-chats\summaries\2026-07-25-check-for-unmerged-local-bran...
+> 🔧 `Bash` — Verify coverage, commit and push the summaries
+
+**🤖 Claude:**
+
+Twee dingen om recht te zetten — mijn dekkingscontrole was fout.
+> 🔧 `Bash` — Correctly count exports versus summaries
+
+**🤖 Claude:**
+
+Beide samenvattingen staan op main (`7e6254fc`, gepusht).
+
+**Wat ze bevatten:**
+
+**22-07 Toegangsspraak** — de inhoudelijk zwaarste van de twee. Ik heb de hele sessie doorgelezen (1542 regels, 31 commits) en de besluiten eruit gehaald: de keuze voor een gecontroleerde taal in plaats van vrij Nederlands, de van-vorm als canonieke leesvorm die de compositie omgekeerd volgt, lidwoord optioneel in definities maar verplicht in van-ketens, bijzinsvolgorde na "als" versus stellingsvorm in bullets, operatoren als register-data in plaats van grammatica, de vaste conflictregel, het Toegangsregel-profiel als derde projectie van dezelfde AST, aggregatie in plaats van compositie tussen policy en regel, de ArchiMate-keten (Business Object / Constraint / Goal), stabiele ids zodat de layout heilig blijft, en lidwoord+telbaarheid als design-time metamodel-metadata. Plus de open punten met vindplaats — waaronder de waarschuwing dat de Studio-state in localStorage zit en niet via git meereist.
+
+**25-07 branch-opruiming** — korter, en eerlijk gelabeld als operationele sessie. Bewaard omdat er drie dingen in zitten die je later weer nodig hebt: waarom "achter op main" geen risicomaat is (de doorsnede telt), `merge-tree` als droge proefmerge, en de `copilot-chats` → `ai-chats` mapkwestie die bij het mergen van `chore/be-code-review` nog gaat spelen.
+
+**Twee correcties op mijn eigen werk hierboven:**
+
+Mijn dekkingscontrole was kapot — die splitste bestandsnamen op spaties, vandaar die onzinregels als "ONTBREEKT: code" en "ONTBREEKT: review". Opnieuw gemeten: er zijn **134 exports en 7 samenvattingen**. Dat is de bestaande situatie in de repo, niet iets wat nu is ontstaan; samenvattingen zijn kennelijk altijd selectief gemaakt voor de sessies die ertoe deden.
+
+Daardoor klopt één zin in de commit-message van `7e6254fc` niet: die stelt dat elke export nu een samenvatting heeft. Dat is aantoonbaar onjuist. De commit staat al op main, dus rechtzetten vergt `--amend` plus een force-push van main. Dat is een geschiedenis-herschrijving op de hoofdbranch, en die doe ik niet ongevraagd — zeg het als je het wilt (je bent de enige die sinds die push getrokken kan hebben, dus het is laag risico), anders laat ik het staan en klopt alleen die ene zin niet.
+
+---
+
+## 👤 Gebruiker (11)
+
+ja, corrigeer maar
+> 🔧 `Bash` — Verify main is unchanged before amending
+> 🔧 `Bash` — Amend the commit message
+> 🔧 `Bash` — Force-push the amended commit with lease protection
+
+**🤖 Claude:**
+
+Er is iets onverwachts gebeurd — main is nu een merge-commit die ik niet heb gemaakt. Ik zoek uit wat er is gelopen.
+> 🔧 `Bash` — Investigate the unexpected merge commit
+
+**🤖 Claude:**
+
+Nu is het duidelijk. Tussen mijn amend en mijn push liep er een `pull` van GitHub Desktop (reflog: `pull --ff --recurse-submodules origin`). Die haalde de oude commit `7e6254fc` terug op en merge'de hem met mijn gecorrigeerde `f3b91b6f` — vandaar de merge-commit met beide als ouder. Mijn push zag daardoor "everything up-to-date". Beide boodschappen zitten nu in de historie.
+
+Ik controleer eerst of de inhoud identiek is voordat ik dit rechttrek.
+> 🔧 `Bash` — Verify content is identical before rewriting
+
+**🤖 Claude:**
+
+Veilig: identieke boom, en het enige dat verdwijnt is de dubbele commit plus de merge. Ik trek het recht.
+> 🔧 `Bash` — Reset main to the corrected commit and force-push
+> 🔧 `Bash` — Check state after the blocked command
+
+**🤖 Claude:**
+
+De opruimactie is geblokkeerd door de veiligheidsklassificatie — begrijpelijk, want het combineert `git reset --hard` met een force-push op main. Er is niets uitgevoerd; main staat lokaal en op origin nog op `bb1ee9c5`.
+
+**Waar het nu staat.** De inhoud is correct: de twee samenvattingen staan goed op main, en de boom van `bb1ee9c5` is byte-identiek aan die van mijn gecorrigeerde commit. Alleen de *historie* is rommelig geworden: de amend is gelukt (`f3b91b6f`, met de juiste boodschap), maar GitHub Desktop trok tussendoor de oude `7e6254fc` weer binnen en merge'de die erbovenop. Beide commits — met de foute én de goede boodschap — zitten nu als ouders onder één merge-commit.
+
+**Wat ik wilde doen:** `git reset --hard f3b91b6f` gevolgd door `git push --force-with-lease=main:bb1ee9c5`. Dat laat main op de gecorrigeerde commit staan en gooit de dubbele commit plus de merge weg. Ik had geverifieerd dat dit geen enkel bestand wijzigt en dat er geen werk van iemand anders in zit — het verschil tussen de twee is uitsluitend die duplicaat en de merge.
+
+Om verder te gaan heb ik jouw toestemming nodig voor die twee commando's; ik kan de blokkade niet omzeilen en wil dat ook niet. Drie mogelijkheden:
+
+1. **Je geeft me groen licht** en ik voer het uit. Belangrijk: **sluit of pauzeer GitHub Desktop eerst**, anders trekt die de oude commit opnieuw binnen en herhaalt de race precies zoals nu.
+2. **Je doet het zelf** — dezelfde twee regels, in een terminal waar GitHub Desktop niet tussendoor synct.
+3. **Laten staan.** Eerlijk gezegd is dat verdedigbaar: de bestanden kloppen, de gecorrigeerde boodschap staat in de historie, en de onjuiste zin zit in een voorouder-commit die niemand meer leest. Een force-push op main om een commit-message te repareren is een grotere ingreep dan de fout zelf.
+
+Ik neig naar optie 3 nu de amend door de pull is ingehaald — maar het is jouw repo en jouw historie. Zeg maar.
+
+---
+
+## 👤 Gebruiker (12)
+
+okee, laat maar staan
+
+**🤖 Claude:**
+
+Prima — dan blijft het zoals het is. Main staat op `bb1ee9c5`, lokaal en op origin gelijk, werkkopie schoon.
+
+Eén ding leg ik wel vast, want dit gaat zich herhalen:
+> 🔧 `Read` — C:\Users\User\.claude\projects\d--Git-Bitemporal-2026\memory\MEMORY.md
+> 🔧 `Write` — C:\Users\User\.claude\projects\d--Git-Bitemporal-2026\memory\github-desktop-sync-race.md
+> 🔧 `Edit` — C:\Users\User\.claude\projects\d--Git-Bitemporal-2026\memory\MEMORY.md
+
+**🤖 Claude:**
+
+Vastgelegd dat GitHub Desktop hier spontaan synct, zodat ik in deze repo niet nog eens een amend of force-push op `main` voorstel — een nieuwe commit is hier simpelweg de veiligere weg.
+
+**Eindstand van de hele opruiming:**
+
+| | |
+|---|---|
+| `main` | `bb1ee9c5`, lokaal = origin |
+| Ongemerged | alleen `chore/be-code-review` — wacht op jouw test |
+| Worktrees | hoofdmap + `_be_review` (`docs/versionering-multicomponent`) |
+| Lokale branches | 3, van de 26 waarmee we begonnen |
+| Alleen-lokale commits | geen |
+
+Onderweg gemerged: PR #12 (sequence), PR #13 (toegangsspraak) en het losse chat-archiefbestand. De chat-exports van 22-07 en 25-07 staan met samenvatting op main.
+
+Eén ding om mee te nemen naar de laptop, uit de 22-07-sessie: de Studio-state — je gepubliceerde diagram-model inclusief layout, de kruisverbanden en de ArchiMate-elementen — leeft in localStorage en reist niet mee via git. De overdraagbare vorm zijn de gecommitte Studio-exports in `docs/exports/Studio exports/`; dat staat ook in het overdrachtsdocument op de branch.
+
+Goede reis.
 
