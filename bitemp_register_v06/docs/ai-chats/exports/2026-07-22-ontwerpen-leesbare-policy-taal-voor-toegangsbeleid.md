@@ -1492,3 +1492,51 @@ Daarbij zijn álle verwijzingen meegetrokken (docs, code-headers, de teaser) en 
 
 Nog onbeheerd in je werkboom: `bitemp_register_v06/_tmp/` en `web/vite/profielen/toegangsregel.json` — die laat ik als jouw werkbestanden staan (zeg het als de `_tmp/` in de gitignore mag).
 
+---
+
+## 👤 Gebruiker (24)
+
+Een vraag: zouden we het werk tot nu toe naar main kunnen mergen? Of lijkt het je beter nog wat dingen af te ronden voordat we dat doen?
+
+Ik werk de komende weken op mijn laptop, dus sowieso moeten we een overdrachtsbestandje hebben.
+
+**🤖 Claude:**
+
+Goede vragen — en eerst even kijken waar de werkboom nu staat, want de bestanden ogen alsof er van branch gewisseld is:
+> 🔧 `Bash` — Check branch state and divergence from main
+> 🔧 `Bash` — Trial merge main + feat/toegangsspraak (no worktree changes)
+> 🔧 `Bash` — Add temp worktree for feat/toegangsspraak
+> 🔧 `Bash` — Check design-session worktree status
+
+**🤖 Claude:**
+
+Schoon, met één nieuwe backup-commit van jou erbovenop. Ik schrijf het overdrachtsbestand daar:
+> 🔧 `Write` — D:\Git\Bitemporal_2026_gedrag\bitemp_register_v06\docs\plans\2026-07-24 Overdracht Toegangsspraak (laptop).md
+> 🔧 `Bash` — Commit overdracht doc on feat/toegangsspraak
+
+**🤖 Claude:**
+
+Beide vragen beantwoord, met bewijs:
+
+## Kunnen we naar main mergen? **Ja — nu is een goed moment.**
+
+Ik heb het niet op gevoel gedaan maar gecheckt met een proef-merge (`git merge-tree main feat/toegangsspraak`): **schoon, nul conflicten** — ook al is main intussen doorbewogen met sequence-v1 en diagramcore-fixes. Inhoudelijk is de branch een afgerond geheel: 383 tests groen, build groen, alle sporen (taal, editor, profiel, round-trip, koppelingen, ArchiMate) gedocumenteerd afgesloten, en wat open staat is écht vervolgwerk (plicht-grammatica wacht op een werkgroep-besluit, drop-op-canvas wacht op rustig canvas-gebied) — geen half werk dat je op main zou binnenhalen. Er is dus niets dat ik eerst nog zou willen afronden.
+
+Mijn voorstel voor de volgorde — en die valt mooi samen met je laptop-plan:
+
+1. `git push -u origin feat/toegangsspraak` — dit **is** meteen je overdracht naar de laptop, plus een backup;
+2. PR naar main zoals gebruikelijk in deze repo, mergen wanneer jou het uitkomt.
+
+Beide zijn naar-buiten-acties, dus die laat ik aan jou (of zeg het, dan doe ik de push).
+
+## Het overdrachtsbestand staat klaar
+
+`docs/plans/2026-07-24 Overdracht Toegangsspraak (laptop).md`, gecommit op de branch (`b8a84b5a` — in de `Bitemporal_2026_gedrag`-worktree, waar `feat/toegangsspraak` uitgecheckt staat; je hoofd-checkout op `feat/formulier-meta-standaard` heb ik niet aangeraakt). Erin:
+
+- de stand in één alinea + het merge-advies met de proef-merge-uitkomst;
+- **hoe je op de laptop start** (checkout, npm install, dev-server, de test-eigenaardigheid op Windows);
+- de belangrijkste valkuil, dik aangezet: **de Studio-state reist niet mee via git** — het gepubliceerde diagram-model (inclusief je layout!), kruisverbanden en ArchiMate-elementen leven in localStorage van déze machine. De overdraagbare vorm zijn je Studio-exports die al gecommit staan (`docs/exports/Studio exports/`, o.a. "2026-07-23 alles studio.json") — die importeer je op de laptop; en de beleidstekst zelf is altijd reproduceerbaar via *Publiceer naar Modelleren*;
+- de openstaande punten met vindplaats, de kaart van alle docs en code, en de praktische afspraken (worktrees, commit-stijl, poort 5175 voor rooktests).
+
+Eén observatie tot slot: je `7263b809 "backup filetjes Studio"`-commit stond er al netjes op — dus samen met de exports-commits is je Studio-werk van deze dagen ook echt aan boord van de branch.
+
