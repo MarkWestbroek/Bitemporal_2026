@@ -1606,3 +1606,1203 @@ Ik heb het script **backward-compatible** gemaakt: het zoekt nu `ai-chats` én `
 
 Wil je dat ik (a) `_VScode-scripts` als repo bekijk en de scriptfix daar commit, en/of (b) de Copilot-kant ook naar `ai-chats` laat wijzen zodat alles op één plek staat?
 
+---
+
+## 👤 Gebruiker (13)
+
+dit was tussendoor. Kun je de status van het werk aan de formulieren editor samenvatten? En even kijken naar de @bitemp_register_v06/docs/BACKLOG.md F43-F46 ?
+
+**🤖 Claude:**
+
+Even de status ophalen en de backlog-items F43–F46 bekijken.
+> 🔧 `Bash` — Confirm branch and formulier files on main
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\BACKLOG.md
+
+**🤖 Claude:**
+
+Alles staat op `main` (merge `feca1dd`, tag `studio/v0.4.0`, gepusht). Hier de stand.
+
+## Status — formulier-editor
+
+**Klaar en werkend, end-to-end op echte data:**
+- **Ontwerpen** in Studio-activiteit "Formulieren" (groep *Presentatie*): palette (canoniek model) → veld met padadressering `ENT.GE.veld` → structuur-boom (groep/rij/lijst/conditioneel, schuiven, verwijderen, undo/redo) → inspector → **live preview**.
+- **Opslaan** als nieuwe `FormulierDefinitie` in het register (knop + menu; geverifieerd tegen de backend).
+- **Meervoudigheid** via het `lijst`-element: meervoudige GE's laden als herhaalbare sectie en per item opslaan (nieuw/gewijzigd → opvoer, verwijderd → afvoer).
+- **Runtime-integratie** in de échte inhoud-editor: veld-adressering op korte naam **én** vol pad, zodat nieuwe editor-definities daar werken terwijl bestaande (korte-naam) definities ongewijzigd blijven.
+
+**Bestanden:** `web/vite/src/formuliereditor/` (layoutModel(+test), store, canvas, inspector, preview, saveFormulierDefinitie) · `studio/activities/formulierActivity.jsx` · `components/editor/customFormMapping.js(+test)` · renderer-uitbreidingen in `CustomFormulierRenderer`/`SchemaFormField`.
+
+**Verificatie:** unit-tests (layoutModel + customFormMapping 11/11), productie-build, en Playwright-smokes voor elke UI-flow + regressie op Initiatief #38 (die ving onderweg een echte bug: ontbrekende `SchemaProvider`).
+
+**Nog open (in plan + backlog):**
+- Bestaande definitie **laden/bewerken → nieuwe versie** (vereist een legacy-resolver-keuze — mijn eerdere gok: waarschuwen + jou laten kiezen bij ambiguë korte naam).
+- **Doeltype-gebonden palette-filter**; **dnd-kit** i.p.v. ↑/↓-knoppen.
+- P2 (regels + virtuele/voorinvul-velden) en P3 = **F42** invul-wizard.
+
+Plan: [plans/2026-07-16 Formulier-editor Studio-activiteit (plan).md](bitemp_register_v06/docs/plans/2026-07-16%20Formulier-editor%20Studio-activiteit%20(plan).md).
+
+## F43–F46 — jouw vervolgideeën
+
+Ik lees ze zo, met hoe ze aansluiten:
+
+- **F43 — Formulieren laden / index / organiseren per entiteit.** Dit is feitelijk de bovenste "nog open" post: een **overzicht van bestaande definities** (per doeltype/entiteit) om ze te openen en te bewerken. Prerequisite voor "nieuwe versie van bestaande". Mooie eerste vervolgstap; combineert met de legacy-resolver.
+
+- **F44 — Formulierdef in de projectboom bij de root-entiteit? (aparte boom?)** Navigatie-vraag: hangen formulieren *onder de entiteit* in de modelboom, of krijgen ze een **eigen boom** in de activiteit-sidebar? Mijn voorkeur: een **eigen "Formulieren"-index** (dat ís F43) als sidebar-boom, gegroepeerd per doeltype — en optioneel een verwijzing vanuit de entiteit. Eén bron, minder verwarring.
+
+- **F45 — Versies van formulieren zichtbaar in de formulierboom?** Omdat `FormulierDefinitie` bitemporeel is, heeft elke definitie versies (`definitie_versie` + registratie-historie). In de F43-index kun je die versies uitklappen. Zit logisch vast aan F43/F44 → ik zou ze als één cluster "formulier-beheer" oppakken.
+
+- **F46 — Canoniek-model-browser: niet-invulbare velden (id, rel_id) verbergen; read-only velden (weergavevelden) wél tonen maar nooit als invulveld.** Dit is een **ModelPicker-verfijning** die "op meer plekken" geldt (berichten, DMN, formulieren). Twee dingen: (a) plumbing als `id`/`rel_id` niet als kiesbaar veld tonen; (b) afgeleide/weergavevelden tonen als **read-only** — kiesbaar voor weergave, maar in het formulier nooit een bewerkbaar inputveld. Raakt direct de formulier-palette én is los bruikbaar.
+
+**Mijn suggestie voor volgorde:** F43+F45 (+F44-keuze) samen als "formulier-beheer/index met versies" — dat maakt de editor pas echt rond (openen/bewerken/versioneren). F46 is een kleinere, brede verbetering die ik er goed tussendoor kan meenemen omdat de palette al centraal staat.
+
+Wil je dat ik hier een kort vervolgplan (F43–F46) voor schrijf, of pak ik meteen F43 (formulier-index + laden) op?
+
+---
+
+## 👤 Gebruiker (14)
+
+runtime integratie: ik probeer test 01
+maar:
+
+**🤖 Claude:**
+
+Duidelijke bugs — en het is precies F46 + een fout in mijn lijst-logica. Laat me het eerst bevestigen tegen het schema (de eigen velden van Initiatief en de momentvoorkomens).
+> 🔧 `Bash` — Inspect Initiatief own fields + momentvoorkomen
+
+**🤖 Claude:**
+
+Bevestigd — mijn diagnose klopt precies:
+
+- **`Initiatief.id`** (entiteit-id, plumbing) en **`Initiatief.weergavenaam`** (een *afgeleid* veld) zijn wél kiesbaar, maar zijn geen invulvelden → de mapping kent ze niet → **"Onbekend veld"**. Dat is exact jouw **F46**.
+- **`planningen`/`producten`** zijn **enkelvoudig**, maar mijn code maakte er een **lijst (meervoudig)** van, puur omdat het entiteitveld `format: array` heeft. Dat is een bug: `bijdragen` is wél meervoudig, die twee niet.
+
+Ik fix dit op een branch. Kernpunten: (1) `momentvoorkomen` meegeven aan de collectie-velden zodat enkelvoudig → **groep** en meervoudig → **lijst**; (2) plumbing (`id`/`rel_id`) en afgeleide velden niet als invulveld toevoegen (met melding). Ik begin.
+> 🔧 `Bash` — Create fix branch
+
+**🤖 Claude:**
+
+Fix A — `momentvoorkomen` op de entiteit-collectievelden. Ik lees de huidige modelTree (met de gemergede formulier-wijzigingen).
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\modelpicker\modelTree.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\modelpicker\modelTree.js
+
+**🤖 Claude:**
+
+Fix B + C in de store. Ik lees de huidige `voegVeldToe`.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\useFormulierEditorStore.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\useFormulierEditorStore.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\useFormulierEditorStore.js
+
+**🤖 Claude:**
+
+Nu de melding wissen bij een geslaagde toevoeging (laatste `set`).
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\useFormulierEditorStore.js
+
+**🤖 Claude:**
+
+Nu de melding tonen in de canvas.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierCanvas.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierCanvas.jsx
+
+**🤖 Claude:**
+
+Build om te bevestigen dat het compileert.
+> 🔧 `Bash` — Build after fixes
+
+**🤖 Claude:**
+
+Build groen. Ik verifieer het gedrag in de app (producten→groep, bijdragen→lijst, id→geweigerd). Server starten.
+> 🔧 `Bash` — Start dev server for fix verification
+> 🔧 `Bash` — Confirm server port + backend
+> 🔧 `Bash` — Verify pick fixes in app
+
+**🤖 Claude:**
+
+Alle fixes geverifieerd in de app:
+- `producten` (enkelvoudig) → **groep** (niet meer onterecht "meervoudig") ✓
+- `bijdragen` (meervoudig) → **lijst** ✓
+- `Initiatief.id` → **geweigerd** met melding "technisch veld" (geen "Onbekend veld" meer) ✓
+
+Ik stop de server en commit op de fix-branch.
+> 🔧 `Bash` — Stop server, commit fix
+
+**🤖 Claude:**
+
+Even opletten: bij het committen liep automatisch een **chat-backup** mee (de pre-commit-hook), die een grote export in de **root** `doc/copilot-chats/` zette en die is via `git add -A` in mijn fix-commit beland. Dat wil ik niet mengen met de code-fix. Ik split het netjes.
+> 🔧 `Bash` — Undo commit, inspect staged files
+
+**🤖 Claude:**
+
+Ik zie het: er zijn nu twee chat-exports — een **update** in `ai-chats/exports/` (dat is de Claude-backup die dankzij mijn fix nu correct in `ai-chats` landt — goed nieuws!) en een **duplicaat** in de root `doc/copilot-chats/` (van de oude root-pijplijn). Waarschijnlijk draait er een pre-commit-hook. Even checken vóór ik verder commit, anders vervuilt elke commit opnieuw.
+> 🔧 `Bash` — Inspect pre-commit hook
+
+**🤖 Claude:**
+
+**Geen actieve hook** — de chat-bestanden stonden al in de working tree (van eerdere backup-runs), `git add -A` veegde ze mee. En nu snap ik het duplicaat: de root-`doc/copilot-chats/`-kopie is een **fallback-artefact** — die ontstond in het venster tussen mijn hernoeming en de script-fix (het Claude-script vond `copilot-chats` niet en viel terug op root). De correcte kopie staat nu in `ai-chats`. Even checken of die root-map verder leeg is, dan opruimen.
+> 🔧 `Bash` — Check root doc/copilot-chats tracked state and duplicate identity
+
+**🤖 Claude:**
+
+Belangrijke correctie op mijn aanname: de root `doc/copilot-chats/` is **geen vers artefact** — het is een gevestigd archief met historie sinds maart (aparte pijplijn). Dus niet iets om te verwijderen. Er zijn echt **twee archieven**. Goed nieuws: de `ai-chats`-versie is een **update** — dat bewijst dat het Claude-script na mijn fix nu correct naar `ai-chats` schrijft.
+
+Ik houd de **code-fix schoon** en laat de chat-backups aan jouw eigen workflow.
+> 🔧 `Bash` — Unstage chat backups, keep code staged
+
+**🤖 Claude:**
+
+Nu alleen de 3 code-bestanden gestaged. Ik commit de fix.
+> 🔧 `Bash` — Commit clean code fix
+
+**🤖 Claude:**
+
+Opgelost en geverifieerd. De code-fix is een schone commit (3 bestanden); de chat-backups liet ik ongemoeid voor je eigen workflow.
+
+## Fixes (branch `fix/formulier-veld-picks`)
+
+1. **Enkelvoudig ≠ meervoudig.** Het collectie-veld droeg geen `momentvoorkomen`. `modelTree` geeft die nu mee vanuit de onderliggende, en `voegVeldToe` maakt:
+   - enkelvoudig (planningen, producten, …) → een **groep**;
+   - meervoudig (bijdragen, …) → een **lijst**.
+2. **F46 — plumbing & afgeleid geweigerd.** `id`/`rel_id`/`versie` en afgeleide velden (`weergavenaam`) worden niet meer als invulveld toegevoegd; je krijgt een melding i.p.v. "Onbekend veld".
+
+Geverifieerd in de app (Playwright): `producten`→groep, `bijdragen`→lijst, `Initiatief.id`→geweigerd. Build groen.
+
+**Werkwijze nu:** pick je `producten`, dan krijg je een lege **groep "producten"**; de productvelden voeg je toe door in de palette het **Product-GE uit te klappen** en de bladvelden (naam, omschrijving, …) te kiezen — die landen als vol pad in je formulier. (Een leuke nicety voor later: een collectie-pick meteen vullen met álle GE-velden.)
+
+## Nog open (F46-rest)
+Afgeleide velden (weergavevelden) **read-only tónen** op het formulier — je F46-wens "wel in de browser, nooit een invulveld" — dat vraagt dat de mapping hun berekende waarde levert en de renderer ze read-only toont. Aparte follow-up.
+
+## Over de chat-backups (even melden)
+- De **Claude-backup landt nu correct in `ai-chats/`** — dat was een *update* in de fix-run, dus de script-reparatie werkt. 👍
+- Mijn aanname klopte niet: de root `doc/copilot-chats/` is **geen artefact** maar een gevestigd, apart archief (historie sinds maart). Die kreeg óók een kopie van deze chat. De **twee-archieven-situatie** bestond al vóór mij; de "gelijktrekken naar één `ai-chats`" staat nog open als je dat wilt.
+- Er staan nu **twee chat-export-bestanden ongecommit** in je working tree (ai-chats + root doc) — die laat ik voor je backup-workflow; ze zitten **niet** in mijn code-commit.
+
+De fix staat op branch `fix/formulier-veld-picks`, nog niet op `main`. **Zal ik 'm mergen naar `main` en pushen** zodat je verder kunt testen met test 01? En daarna pak ik desgewenst de F46-read-only-afgeleide of het archief-gelijktrekken op — jouw keuze.
+
+---
+
+## 👤 Gebruiker (15)
+
+veld picks: ik zie geen verschil in gedrag nog.
+
+"vereist een legacy-resolver-keuze — mijn eerdere gok: waarschuwen + jou laten kiezen bij ambiguë korte naam" kun je dat uitleggen? Ik snap het nog niet.
+
+"Doeltype-gebonden palette-filter; dnd-kit i.p.v. ↑/↓-knoppen" idem: is dat slepen naar een andere plek ipv pijltjes? Kun je ook iets van niveau veranderen (niet genest onder bijv. een conditie, maar in de root?)
+
+F43: ja, gewoon een lijst met filter van beschikbare formulier*Definities* (niet de ingevulde formulieren zelf, die leven ergens anders uiteindelijk, of helemaal nergens, alleen de data)
+
+F44 Ja, ik twijfelde. Maar ik denk dat formulieren teveel een andere laag zijn dan de modellen. Ze leunen erop, maar maken geen deel uit van het model. Dus een aparte boom. Graag met filter. 
+Probleem nu is wel dat we twee bomen hebben: die in de IDE nog en de nieuwe. Maar het zit in Studio, dus de nieuwe gebruiken. Daar zitten dan echter de domeinen nog niet echt in.... Entiteitnamen zijn liefst echter toch ook uniek over domeinen heen, dus laten we die gebruiken als identificator van de hoofdentiteit die onderhanden is van de formulierdefinitie.
+
+F45 ok
+F46 het is ook niet zo dat het ID niet kiesbaar moet zijn. In test-fase wil je dat graag wel als readonly veld op een formulier hebben. In principe zijn technische id's echter geen onderdeel van een functionele uiting, zoals een formulier.
+
+Over de browser ook: in het getekende model staan ook geen id, rel_id en versie. Die zijn plumbing. Staan wel in de metaregistry. Ik denk dat dit soort gegenereerde id's (hoewel ENT-id wel opgegeven wordt in de registratie) in de picker standaard uit moet staan, maar aangezet moeten kunnen worden.
+
+**🤖 Claude:**
+
+Belangrijkste eerst: **je ziet geen verschil omdat de fix nog op de branch `fix/formulier-veld-picks` staat, niet op `main`.** Jouw dev-server draait vanaf `main`. Ik merge 'm nu naar `main` en push, dan zie je het na een pull/herstart.
+> 🔧 `Bash` — Merge fix to main and push
+
+**🤖 Claude:**
+
+Gemerged naar `main` en gepusht (`ff8af53..510bce1`). Na een pull + herstart van je dev-server zie je: `producten`→groep, `bijdragen`→lijst, en `id` geweigerd. Nu je vragen — en ik verwerk je F43–F46-beslissingen in de backlog.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\BACKLOG.md
+> 🔧 `Bash` — Commit + push backlog refinement
+
+**🤖 Claude:**
+
+Backlog bijgewerkt en gepusht. Nu je vragen, helder uitgelegd.
+
+## Legacy-resolver — wat het is
+
+Het draait om **hoe een veld wordt aangesproken** in de opgeslagen definitie:
+- De **nieuwe editor** schrijft **volledige paden**: `{"veld":"Initiatief.producten.naam"}`.
+- **Oude definities** (zoals het bestaande Initiatief-voorbeeld) schrijven **korte namen**: `{"veld":"naam"}`.
+
+Zolang je een *nieuwe* definitie maakt is er niks aan de hand. Het probleem ontstaat pas als je een **oude definitie wilt inladen om te bewerken** (F43): de editor moet dan per korte naam uitzoeken bij welk GE die hoort, om er weer een vol pad van te maken. Maar korte namen zijn **niet uniek** — `naam` bestaat bij Product én bij Beoordeling. Dus `naam` is **ambigu**.
+
+De "legacy-resolver" is dat vertaalstukje (korte naam → vol pad) bij het laden. Bij een ambigue naam zijn er drie opties:
+- **(a)** automatisch de eerste kiezen — snel, maar kan het verkeerde GE pakken;
+- **(b)** waarschuwen en jou laten kiezen welk GE — veilig; **mijn voorkeur**;
+- **(c)** oude definities alleen read-only tonen, alleen nieuwe (vol-pad) bewerken.
+
+Kortom: alleen nodig om **bestaande** definities te bewerken. Nieuwe zijn al eenduidig.
+
+## dnd-kit + van niveau veranderen
+
+Ja, precies: **dnd-kit = slepen** i.p.v. de ↑/↓-pijltjes. En je tweede vraag raakt de kern:
+- **Nu (pijltjes):** je verschuift alleen **binnen dezelfde ouder/hetzelfde niveau**. Je kunt een element **niet** uit een conditioneel blok naar de root slepen, of ín een groep.
+- **Met dnd-kit:** je sleept een element overal heen — in/uit groepen, rijen, lijsten, condities, of terug naar de root. Dus **ja, van niveau veranderen** is precies wat dnd-kit toevoegt (en wat nu ontbreekt).
+- **Tussenoplossing zonder dnd-kit:** ik kan sneller een paar knop-acties toevoegen ("naar root", "een niveau omhoog/omlaag") als je dat eerder wilt dan de volledige sleep-UX.
+
+## F43–F46 — jouw input verwerkt (backlog bijgewerkt)
+
+- **F43** — helder: index/lijst met filter van *definities* (niet de ingevulde data). ✓
+- **F44** — genoteerd als **aparte boom in Studio** (formulieren = andere laag, leunen op het model maar horen er niet bij), met filter, en **geïdentificeerd op entiteitnaam** (uniek over domeinen). Terecht punt over de twee bomen (IDE + Studio) — in Studio pakken we de nieuwe; domeinen zitten daar nog niet echt in, dus entiteitnaam als sleutel is precies goed. ✓
+- **F45** — versies uitklapbaar in die boom. ✓
+- **F46** — belangrijke nuance van jou: **id is niet "niet-kiesbaar"**; in testfase wil je 'm juist als **read-only** veld kunnen tonen. Technische id's/rel_id/versie zijn plumbing (staan niet in het getekende model, wél in de metaregistry) → in de picker **standaard uit, met een toggle om ze aan te zetten**; en gekozen → **read-only veld**, nooit bewerkbaar. Idem afgeleide/weergavevelden.
+
+  ⚠️ **Let op — mijn huidige fix is een interim:** die **blokkeert** id/afgeleid nu hard (om "Onbekend veld" te voorkomen). Dat is dus nog **niet** wat je uiteindelijk wilt (toggle + read-only). Ik heb het als zodanig in de backlog gezet.
+
+## Wat wil je als volgende?
+
+Mijn suggestie, in oplopende grootte:
+1. **F46-proper** — picker-toggle voor technische velden + **read-only velden** op het formulier (id/afgeleid tonen i.p.v. blokkeren). Sluit direct aan op wat je net zei.
+2. **F43/F44/F45 samen** — de aparte formulier-index/boom met filter, versies, en openen/bewerken (met de legacy-resolver, optie b).
+3. **dnd-kit** of eerst de tussen-knoppen voor niveau-verplaatsen.
+
+Waar wil je dat ik me op richt? Mijn advies: **F46-proper eerst** (klein, direct zichtbaar, en het maakt je testfase-workflow met read-only id's mogelijk), daarna het F43/F44-cluster.
+
+---
+
+## 👤 Gebruiker (16)
+
+-legacy-resolver -> er is maar 1 legacy formulier en dat stelt niks voor. Laat dus maar zitten.
+- dnd: ja, super!
+
+volgorde: op zich 2 handiger om te starten, want ik kan nu een bestaand formulier niet inladen, dus moet steeds beginnen bij nul.
+
+dan 1, dan 3?
+
+**🤖 Claude:**
+
+Helder:
+- **Legacy-resolver: geschrapt** (1 triviaal formulier — niet de moeite). Loading ondersteunt dan gewoon de vol-pad-definities die de editor zelf maakt.
+- **dnd: top.**
+- **Volgorde: F43 (laden/index) → F46-proper → dnd-kit.** Eens — zonder laden begin je steeds bij nul, dus dat eerst.
+
+Ik start **F43**: een bestaande definitie kunnen inladen + een formulier-index (aparte boom in Studio, per entiteit, met filter). Branch aan, dan bouwen.
+> 🔧 `Bash` — Create F43 branch
+
+**🤖 Claude:**
+
+Eerst de helper die `veldInfo` reconstrueert uit een layout + schema (vol-pad → velddef).
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\schemaResolve.js
+
+**🤖 Claude:**
+
+Nu de store-actie om een definitie te laden.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\useFormulierEditorStore.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\useFormulierEditorStore.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\useFormulierEditorStore.js
+
+**🤖 Claude:**
+
+Nu de formulier-index (aparte boom in Studio, per entiteit, met filter + laden bij klik).
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierIndex.jsx
+
+**🤖 Claude:**
+
+Nu de sidebar tweeledig maken: tab "Formulieren" (index) + "Velden" (palette).
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\formulierActivity.jsx
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\formulierActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\formulierActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\formulierActivity.jsx
+
+**🤖 Claude:**
+
+Sidebar heeft nu tabs. Ik voeg een unit-test toe voor `schemaResolve` (de kern-reconstructie) en build.
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\schemaResolve.test.js
+> 🔧 `Bash` — Run schemaResolve tests + build
+
+**🤖 Claude:**
+
+Node-test faalt op de extensieloze import (Vite tolereert het, node niet). Ik voeg `.js` toe.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\schemaResolve.js
+> 🔧 `Bash` — Re-run schemaResolve tests
+
+**🤖 Claude:**
+
+5/5 groen. Nu end-to-end: ik maak een **full-path** test-definitie (is_standaard=false, wegwerp), laad 'm via de index in de app, check dat 'ie schoon rendert, en ruim op. Server starten.
+> 🔧 `Bash` — Build + start dev server
+> 🔧 `Bash` — Confirm server + backend
+
+**🤖 Claude:**
+
+Server up. Ik draai de end-to-end verificatie (maak → laad via index → check → opruimen).
+> 🔧 `Bash` — End-to-end: create, load via index, verify, cleanup
+
+**🤖 Claude:**
+
+Een route-handler crashte (waarschijnlijk een pending request tijdens het sluiten). Mogelijk bleef er een test-def hangen. Ik check + ruim op, en maak de handler robuust.
+> 🔧 `Bash` — Check for leftover test defs
+
+**🤖 Claude:**
+
+id 4 is de leftover van deze run (afvoer liep niet door de crash); id 2 is al entiteit-afgevoerd; **id 3 is niet-ZZZ en niet afgevoerd — waarschijnlijk jouw "test 01", die laat ik met rust.** Ik ruim id 4 op en draai opnieuw met een robuuste route-handler.
+> 🔧 `Bash` — Cleanup id4, inspect id3
+
+**🤖 Claude:**
+
+Bevestigd: **id 3 = jouw "Initiatief test 01"** (Initiatief, actief, is_standaard). Die laat ik met rust. Ik draai de verificatie opnieuw met een robuuste route-handler en opruimen vóór het sluiten.
+> 🔧 `Bash` — Re-run index load verification robustly
+
+**🤖 Claude:**
+
+De def verscheen niet in de index (timeout). Ik debug met een screenshot + check of de index-tab/inhoud rendert.
+> 🔧 `Bash` — Debug index rendering
+
+**🤖 Claude:**
+
+De sidebar/tabs renderen wél, maar de index toont "Geen definities" met een 404. De `/full/formulier_definities`-fetch faalt. Ik log de exacte request/response om te zien waarom.
+> 🔧 `Bash` — Trace formulier_definities fetch
+
+**🤖 Claude:**
+
+Gevonden: de fetch **vuurt nooit**. Mijn `FormulierIndex` had `if (!baseUrl) return;` — maar `baseUrl` is `""` (lege string = same-origin relatief, in Studio), en `""` is falsy → de effect stopt. Fout guard. Ik fix het.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierIndex.jsx
+
+**🤖 Claude:**
+
+Guard gefixt. Ik draai de end-to-end laad-verificatie opnieuw.
+> 🔧 `Bash` — Re-run index load verification
+
+**🤖 Claude:**
+
+Nog steeds niet gevonden. Ik check of de index nu wél definities toont (HMR toegepast?).
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\508e3e41-2017-4825-8b53-1c6f843e2952\scratch...
+
+**🤖 Claude:**
+
+De fetch vuurt nu (guard-fix werkt via HMR), maar krijgt **HTTP 404**. Ik trace of mijn Playwright-proxy de `/full`-request wel afvangt of dat 'ie naar de dev-server (404) lekt.
+> 🔧 `Bash` — Test regex, vite proxy, endpoints
+
+**🤖 Claude:**
+
+Regex matcht, geen Vite-proxy voor `/full` (dus 5175/full=404), 8082/full=200. Mijn Playwright-proxy zou dit moeten afvangen (deed het in de eerdere inhoud-editor-test). Ik trace nu of de handler wél vuurt voor `formulier_definities`.
+> 🔧 `Bash` — Trace proxy hit for formulier_definities
+
+**🤖 Claude:**
+
+Geen output — het script crashte waarschijnlijk vóór het loggen. Ik draai zonder filter.
+> 🔧 `Bash` — Robust trace with counters
+
+**🤖 Claude:**
+
+Zelfs geen crash-log — mogelijk is de dev-server gestopt of het script faalt bij import. Ik check de server en draai zonder grep.
+> 🔧 `Bash` — Check server + minimal playwright
+
+**🤖 Claude:**
+
+De server draait en Playwright werkt; mijn debug-scripts crashten stil (waarschijnlijk de route-handler die het proces doodt vóór het loggen). Ik schrijf het resultaat naar een bestand i.p.v. stdout, met een bulletproof handler.
+> 🔧 `Bash` — Trace with file output, bulletproof handler
+
+**🤖 Claude:**
+
+Node 24 doodt het proces bij een unhandled rejection uit een route-handler. Ik voeg een guard toe.
+> 🔧 `Bash` — Trace with rejection guards
+
+**🤖 Claude:**
+
+Dit is een Playwright/Node-24-harnas­probleem (de studio-pagina maakt veel requests; `networkidle` + route-proxy hangt), **geen productbug**. Cruciaal inzicht: **jij hebt "test 01" via de editor opgeslagen** (id 3 bestaat) — dus jouw omgeving routeert `/api` en `/registratie` wél naar de backend, en dan doet `/full` dat ook. De index zal in jouw omgeving dus gewoon laden. Ik probeer het lokaal nog één keer strak (geen networkidle, harde exit).
+> 🔧 `Bash` — Tight load verification with hard exit
+
+**🤖 Claude:**
+
+Genoeg harnas-gevecht — de zware studio-pagina + Playwright-route-proxy hangt lokaal, dat is geen productprobleem. **De kritieke fix ís bevestigd:** vóór de guard-fix toonde de index "Geen definities" (fetch vuurde niet), erná "Fout: HTTP 404" (fetch vuurt, foutafhandeling werkt). Ik ruim leftover test-defs op, stop de server, build en commit.
+> 🔧 `Bash` — Cleanup test defs, stop server, build
+
+**🤖 Claude:**
+
+Opgeruimd, server gestopt, build groen. Ik commit de F43-code (zonder de chat-backups mee te nemen).
+> 🔧 `Bash` — Commit F43 feature
+
+**🤖 Claude:**
+
+Ik ruim een achtergebleven debug-bestand op, en merge F43 naar `main` + push zodat je het in je eigen omgeving kunt uitproberen.
+> 🔧 `Bash` — Clean debug file, merge F43 to main, push
+
+**🤖 Claude:**
+
+**F43 gemerged naar `main` + gepusht** (`7c640e7..5961134`). Na een pull + herstart kun je het proberen.
+
+## Wat F43 toevoegt
+
+De sidebar in de Formulieren-activiteit heeft nu **twee tabs**:
+- **Formulieren** (nieuw, standaard actief) — een **lijst met filter** van bestaande `FormulierDefinities`, **gegroepeerd per hoofdentiteit** (doeltype, jouw F44-keuze). Elke regel toont naam, versie, status, en ★ voor de standaard. **Klik = laad die definitie in de editor** (structuur + preview + metadata).
+- **Velden** — de bestaande palette om velden toe te voegen.
+
+Zo begin je niet meer bij nul: open een bestaande, pas aan, sla op.
+
+**Onder de motorkap:** `schemaResolve` reconstrueert bij het laden de veld-info uit het canoniek model (vol pad `ENT.GE.veld` + relatieve lijst-velden), zodat preview/inspector de velddefs kennen. Geen legacy-resolver (korte-naam-definities worden overgeslagen — zoals afgesproken).
+
+## Eerlijk over de verificatie
+- **Unit-getest**: `schemaResolve` 5/5. **Build** groen. De **index rendert** (tabs + filter, screenshot bevestigd) en de **fetch vuurt** (ik ving en fixte onderweg een echte bug: de index guardde op een lege `baseUrl` en deed daardoor niks — nu opgelost).
+- **Wat ik lokaal níet schoon kon automatiseren**: de browser-klik-om-te-laden. De zware studio-pagina + mijn Playwright-proxy hangt in dit lokale opzet. Maar: **jij hebt "test 01" via de editor opgeslagen**, dus jouw omgeving routeert de backend-calls — daar zal de index dus gewoon laden. Kun je het even proberen? Als de lijst leeg blijft of een fout geeft, stuur me wat je ziet.
+
+Klein detail: je bestaande **"Initiatief voorbeeldformulier"** (id 1) gebruikt nog korte namen → dat laadt met "Onbekend veld" (geen resolver). Definities die de nieuwe editor maakt (vol pad, zoals je "test 01") laden schoon.
+
+## Volgende
+Volgens je volgorde: **F43 ✓ → nu F46-proper** (technische velden standaard uit in de picker + met toggle aan; en id/afgeleide als **read-only** veld i.p.v. blokkeren) → daarna **dnd-kit**.
+
+Zal ik doorgaan met **F46-proper**? Of wil je eerst F43 in je eigen omgeving uitproberen en terugkoppelen?
+
+---
+
+## 👤 Gebruiker (17)
+
+- formulierdefs laden vanuit de index
+- formulierdef eigenschappen bevatten nog niet alles:
+   - status en isStandaard missen.
+    - van de actieve formdefs, zou er eigenlijk altijd maar 1 standaard mogen zijn per entiteittype (doeltype). Is dat iets dat de formdef editor kan oplossen?
+
+En ga maar door
+
+**🤖 Claude:**
+
+Heldere punten:
+1. **Laden vanuit de index** werkt — top.
+2. **status + is_standaard ontbreken** in de editor-eigenschappen — klopt, die moet ik toevoegen (nu hardcodeert de save `actief`/`true`).
+3. **Max 1 standaard per doeltype** — ja, dat kan de editor oplossen: bij opslaan als standaard de vorige standaard voor hetzelfde doeltype automatisch **degraderen**. Dat bouw ik erin.
+
+Branch aan, dan bouwen.
+> 🔧 `Bash` — Create branch for meta + standaard
+
+**🤖 Claude:**
+
+Store: `status` + `isStandaard` toevoegen aan meta.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\useFormulierEditorStore.js
+
+**🤖 Claude:**
+
+Nu `laadDefinitie` de status + isStandaard laten overnemen.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\useFormulierEditorStore.js
+
+**🤖 Claude:**
+
+Nu de inspector-velden voor status + is_standaard.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierInspector.jsx
+
+**🤖 Claude:**
+
+Nu de save: `status`/`isStandaard` gebruiken en de degradeer-logica toevoegen. Ik lees het huidige bestand.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\saveFormulierDefinitie.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\saveFormulierDefinitie.js
+
+**🤖 Claude:**
+
+De degradeer-uitkomst in de save-feedback tonen.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\useFormulierEditorStore.js
+
+**🤖 Claude:**
+
+FormulierIndex: status + isStandaard meegeven bij laden.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierIndex.jsx
+
+**🤖 Claude:**
+
+Build + de degradeer-logica direct tegen de backend verifiëren (2 standaarden maken → degradeer → check → opruimen).
+> 🔧 `Bash` — Build + verify demote logic against backend
+
+**🤖 Claude:**
+
+Degradeer-logica **geverifieerd tegen de backend** (A std=true→false, B blijft true, PASS). Build groen. Ik commit, merge naar `main` en push.
+> 🔧 `Bash` — Commit, merge, push meta+standaard
+
+**🤖 Claude:**
+
+Klaar en gepusht (`5961134..082b76a`). Even samengevat wat er net live ging, dan ga ik door met F46.
+
+**Zojuist toegevoegd (F43-afronding):**
+- **status** (concept/actief/inactief) en **is_standaard** in de editor-eigenschappen — laden én opslaan nemen ze nu mee (voorheen hardcodeerde de save `actief`/`true`).
+- **Max 1 standaard per doeltype**: sla je op als *actief standaardformulier*, dan degradeert de editor automatisch een eventueel ander actief standaardformulier voor hetzelfde doeltype (met melding in de feedback). **Geverifieerd tegen de backend** (2 standaarden → precies 1 blijft).
+
+Nu **F46**. Ik begin met deel 1: technische velden (id/rel_id/versie) **standaard verbergen in de picker, met een toggle**. Ik bekijk de ModelPicker-besturing.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\modelpicker\ModelPicker.jsx
+
+**🤖 Claude:**
+
+F46-1: technische velden filteren in de model-boom + toggle. Eerst `modelTree`.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\modelpicker\modelTree.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\modelpicker\modelTree.js
+
+**🤖 Claude:**
+
+Nu de toggle in ModelPicker.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\modelpicker\ModelPicker.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\modelpicker\ModelPicker.jsx
+
+**🤖 Claude:**
+
+F46-2: technische/afgeleide velden niet meer blokkeren maar als **read-only** toevoegen. Ik pas `voegVeldToe` aan.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\useFormulierEditorStore.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\useFormulierEditorStore.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\useFormulierEditorStore.js
+
+**🤖 Claude:**
+
+Nu de renderer per-veld read-only laten respecteren.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\components\editor\CustomFormulierRenderer.jsx
+
+**🤖 Claude:**
+
+Nu een read-only-toggle in de inspector voor een veld.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierInspector.jsx
+
+**🤖 Claude:**
+
+Een informatieve melding tonen bij read-only toevoegen.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\useFormulierEditorStore.js
+
+**🤖 Claude:**
+
+Build om te bevestigen dat het compileert.
+> 🔧 `Bash` — Build + run unit tests
+
+**🤖 Claude:**
+
+Build groen, 25/25 tests. Ik voeg een deterministische test toe voor het technische-velden-filter (i.p.v. de wispelturige studio-Playwright).
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\modelpicker\modelTree.technisch.test.js
+> 🔧 `Bash` — Run modelTree technical filter tests
+
+**🤖 Claude:**
+
+3/3 groen. Ik commit F46 (palette-toggle + read-only), merge en push.
+> 🔧 `Bash` — Commit, merge, push F46
+
+**🤖 Claude:**
+
+F46 gebouwd en gepusht (`082b76a..2f71a09`). Klein procesdingetje: dit belandde rechtstreeks op `main` (ik was vergeten een branch te maken) — de code is wel getest en groen, dus geen kwaad, maar even transparant.
+
+## F46 — wat er nu is
+
+**Picker (geldt overal — formulieren, berichten, DMN):**
+- Technische velden (**id, rel_id, versie, FK's**) staan nu **standaard verborgen**. Een nieuwe toggle **"technische velden"** zet ze aan wanneer je ze nodig hebt.
+
+**Formulier-editor:**
+- Technische en afgeleide velden worden niet meer geweigerd, maar **als read-only veld toegevoegd** (met melding). De inspector heeft een **"Alleen-lezen"-toggle** per veld, en de preview rendert read-only.
+
+Verificatie: filter-logica 3/3, alle unit-tests **25/25**, build groen.
+
+## Eerlijke caveat (runtime)
+Read-only werkt nu in de **editor-preview**. In de **echte inhoud-editor** tonen `id`/afgeleide velden hun waarde nog niet — daarvoor moet `customFormMapping` die leveren (entiteit-id + afgeleide berekening). Dat is de laatste stap om jouw "read-only id in testfase op een écht formulier" volledig te maken. Losse follow-up.
+
+## Stand van de afgesproken volgorde
+- **F43** (index + laden + status/is_standaard + max-1-standaard) ✓
+- **F46** (picker-toggle + read-only in editor) ✓ — runtime-read-only nog open
+- **dnd-kit** (slepen + van niveau veranderen) — als laatste
+
+Er is nu veel bijgekomen (index, laden, metadata, standaard-regel, picker-toggle, read-only). **Wil je dit eerst even uitproberen** in je eigen omgeving (pull + herstart), of ga ik door met **dnd-kit**? Mijn advies: even testen — dan weet je of de basis lekker zit voordat ik de sleep-UX erop bouw. Maar zeg maar; ik ga graag door.
+
+---
+
+## 👤 Gebruiker (18)
+
+kleine vraag/opmerking over customFormMapping:
+- wat versta je daaronder?
+- weet dat de GraphQL API al weergavevelden ondersteunt als het goed is. Vermoedelijk de fullXXX API's ook, maar daar ben ik niet zeker van.
+
+Ik heb het uitgeprobeerd, denk ik, gewoon op localhost:5174. Je mag wel door. Is het gecommit?
+
+**🤖 Claude:**
+
+Goede vragen. Even twee dingen checken (git-status en of de full-API die weergavevelden al teruggeeft), dan leg ik `customFormMapping` uit.
+> 🔧 `Bash` — Check git state + full API for weergavenaam
+
+**🤖 Claude:**
+
+Twee bevindingen:
+1. **Alles is gecommit en gepusht** (`origin/main` = `2f71a09`). De enige "M" is jouw eigen parallelle `BACKLOG.md`-edit — die laat ik voor je.
+2. **De full REST-API geeft `weergavenaam` NIET terug** (wel `id`). Dus je vermoeden klopt half: **GraphQL** ondersteunt weergavevelden, maar de `/full/...`-API (die de inhoud-editor gebruikt) niet. Wél belangrijk: de frontend **berekent weergavevelden al zelf** met CEL (`EntiteitFormulier` doet dit voor `weergaveTekst`).
+
+## Wat is `customFormMapping`?
+
+Het is de module [customFormMapping.js](bitemp_register_v06/web/vite/src/components/editor/customFormMapping.js) die ik uit `EntiteitFormulier` haalde. Het is de **lijm tussen de geneste bitemporele GE-data van een entiteit en de platte velden van je custom-formulier**. Twee taken:
+- **Laden**: uit de `/full/...`-respons + de layout bouwt het `velden`/`values`/`veldNaarGE` die de renderer nodig heeft.
+- **Opslaan**: het bouwt de cross-GE registratie-wijzigingen.
+
+Het verzamelt nu alleen **GE-velden** (+ parent). Daarom kent het `Initiatief.id` en `Initiatief.weergavenaam` niet → "Onbekend veld" in de echte editor. Dát is de runtime-follow-up.
+
+Goed nieuws: **`id` zit wél in de full-respons** → read-only id is een quick win. Ik bouw dat nu (afgeleide velden read-only komt via de bestaande CEL-berekening als aparte stap).
+
+Ik bekijk het einde van de mapping-functie om het toe te voegen.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\components\editor\customFormMapping.js
+
+**🤖 Claude:**
+
+Ik voeg entiteit-eigen read-only velden toe aan de mapping: **id** (waarde uit de full-respons) en **afgeleide velden** (waarde via CEL, als optionele parameter die `EntiteitFormulier` levert).
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\components\editor\customFormMapping.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\components\editor\customFormMapping.js
+
+**🤖 Claude:**
+
+`id` werkt nu direct (waarde uit de full-respons). Voor afgeleide velden moet `EntiteitFormulier` de CEL-waarden leveren. Ik bekijk de bestaande `weergaveTekst`-berekening om die te hergebruiken.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\components\editor\EntiteitFormulier.jsx
+
+**🤖 Claude:**
+
+Ik refactor: één gedeelde CEL-context, en daaruit zowel `weergaveTekst` als een `afgeleideWaarden`-map die ik aan de mapping meegeef.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\components\editor\EntiteitFormulier.jsx
+
+**🤖 Claude:**
+
+Nu `afgeleideWaarden` aan de mapping doorgeven.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\components\editor\EntiteitFormulier.jsx
+
+**🤖 Claude:**
+
+Nu een unit-test voor de entiteit-id + afgeleide read-only registratie, en build.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\components\editor\customFormMapping.test.js
+> 🔧 `Bash` — Run customFormMapping tests + build
+
+**🤖 Claude:**
+
+12/12 tests, build groen. De `EntiteitFormulier`-refactor (weergaveTekst) is gedrag-behoudend + additief; ik doe een regressiecheck op de echte inhoud-editor (die betrouwbaar draaide, i.t.t. de studio-pagina).
+> 🔧 `Bash` — Regression check inhoud-editor after refactor
+
+**🤖 Claude:**
+
+De harnas hapert weer. Ik check eerst of de server draait en op welke poort.
+> 🔧 `Bash` — Find running dev server
+
+**🤖 Claude:**
+
+5175 draait wel; de zware pagina + route-proxy hangt gewoon in dit lokale opzet — dat blijft een harnas-kwestie, geen productbug. De `EntiteitFormulier`-wijziging is een gedrag-behoudende refactor (weergaveTekst levert dezelfde output) + additieve read-only velden, en is unit-getest (12/12) + build groen. Ik stop de server en commit de runtime-completering.
+> 🔧 `Bash` — Stop server, commit F46 runtime, push
+
+**🤖 Claude:**
+
+Gecommit en gepusht (`2f71a09..a8ba748`) — **F46 is nu compleet**.
+
+## Antwoorden op je vragen
+- **`customFormMapping`**: de lijm tussen de geneste bitemporele GE-data en de platte formuliervelden (bouwt bij laden `velden`/`values`, en bij opslaan de cross-GE-wijzigingen). Zie uitleg hierboven.
+- **Weergavevelden via API**: de `/full`-REST-API geeft `weergavenaam` **niet** terug (wel `id`) — dus je vermoeden gold voor GraphQL, niet voor de full-API. Maar de frontend berekent afgeleide velden al zelf met CEL; **dat heb ik nu benut**.
+- **Gecommit?** Ja — alles staat op `origin/main` (`a8ba748`). Alleen jouw eigen `BACKLOG.md`-edit staat nog lokaal (jouw workflow).
+
+## F46 runtime — net toegevoegd
+`id` en afgeleide/weergavevelden tonen nu hun waarde **read-only in de échte inhoud-editor** (niet alleen in de preview):
+- **id** → waarde uit de `/full`-respons;
+- **afgeleide velden** → waarde via de bestaande CEL-berekening (nieuwe `afgeleideWaarden` die `EntiteitFormulier` aan de mapping geeft).
+
+Zo werkt jouw "id read-only in testfase op een écht formulier" nu. Geverifieerd: unit-tests **12/12** + build. (De browser-regressie kreeg ik lokaal niet betrouwbaar geautomatiseerd — de zware pagina + proxy hangt — maar het is een gedrag-behoudende refactor + additief.)
+
+## Stand
+- **F43** ✓ · **F46** ✓ (picker-toggle + editor + runtime read-only) · **dnd-kit** — nog te doen (laatste van de afgesproken volgorde).
+
+Je draait op **localhost:5174** (dat routeert de backend, dus alles werkt daar). **Mijn advies: pull + test nu even** — vooral of de read-only id/weergavenaam netjes tonen op een formulier, en of het laden/opslaan/standaard-regel lekker zit. Dan bouw ik daarna **dnd-kit** (slepen + van niveau veranderen) op een basis waarvan je weet dat 'ie klopt.
+
+Zal ik doorgaan met dnd-kit, of wil je eerst terugkoppelen na een testronde?
+
+---
+
+## 👤 Gebruiker (19)
+
+actief zetten van een formdef lijkt niet te werken
+Standaard maken ook niet dan
+
+**🤖 Claude:**
+
+Even diagnosticeren — ik kijk wat er nu in de DB staat (statussen, is_standaard, aantal), zodat ik zie wat je actie opleverde.
+> 🔧 `Bash` — Inspect current formulier definitions state
+
+**🤖 Claude:**
+
+Ik zie meteen twee dingen:
+
+1. **Mijn test-troep vervuilt jouw data** — #10, #11, #12 zijn achtergebleven `ZZZ test-load`-defs (doeltype **Initiatief**, deels actief+standaard) van mijn vastgelopen Playwright-runs. #11 is zelfs actief+standaard voor Initiatief → die kan de inhoud-editor als "de" standaard voor Initiatief oppakken i.p.v. de jouwe. **Excuses, dat ruim ik direct op.**
+
+2. **De waarschijnlijke echte oorzaak**: de Studio-editor **maakt bij Opslaan altijd een nieuwe definitie** (nooit de geladen bijwerken). Laad je test01, zet 'm actief/standaard en sla op → er komt een *kopie*; de originele blijft ongewijzigd. Dat is het openstaande "nieuwe versie van bestaande"-punt.
+
+Eerst opruimen:
+> 🔧 `Bash` — Clean up ZZZ test pollution
+
+**🤖 Claude:**
+
+Cleanup gedaan (#10/#11/#12 afgevoerd). **En je insight is raak** — dat is waarschijnlijk de kern: **afgevoerde defs worden niet uitgefilterd**. Een afgevoerde def houdt zijn meta-record (status/is_standaard blijven "actief/standaard" staan, want de entiteit-afvoer cascadeert niet naar de meta). Zowel mijn **FormulierIndex** als de bestaande **useFormulierDefinitie** (inhoud-editor) kijken alleen naar het meta-record, niet naar `entiteit.afvoer` → afgevoerde spookdefinities tellen mee. Dáárom "werkt actief/standaard niet": de inhoud-editor pakt een afgevoerd spook op.
+
+Ik fix het op de drie plekken.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierIndex.jsx
+
+**🤖 Claude:**
+
+Er stapelen zich meldingen op (nieuwe maken, actief/standaard, spoken). Die hangen samen. Ik pak ze samen aan. Eerst de afgevoerd-filter afmaken in de andere twee plekken.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\hooks\useFormulierDefinitie.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\hooks\useFormulierDefinitie.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\saveFormulierDefinitie.js
+
+**🤖 Claude:**
+
+Afgevoerd-filter staat op alle 3 plekken. Nu de andere twee: **nieuwe def maken / index ververst niet** en **bewerken maakt een kopie i.p.v. bijwerken**. Die pak ik samen: index auto-refresh na opslaan + opslaan werkt een geladen def bij (nieuwe versie) i.p.v. een kopie. Store-uitbreiding eerst.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\useFormulierEditorStore.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\useFormulierEditorStore.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\useFormulierEditorStore.js
+
+**🤖 Claude:**
+
+Nu `saveNaarRegister`: geladen-info doorgeven + index-teller bumpen.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\useFormulierEditorStore.js
+
+**🤖 Claude:**
+
+Nu de save-functie: create-vs-update-tak. Ik lees de huidige signatuur + body.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\saveFormulierDefinitie.js
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\saveFormulierDefinitie.js
+
+**🤖 Claude:**
+
+Nu FormulierIndex: rel_id's meegeven + herladen na opslaan. Ik lees het huidige bestand.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierIndex.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierIndex.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierIndex.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierIndex.jsx
+
+**🤖 Claude:**
+
+Nu build + de update-flow tegen de backend verifiëren (versioneert opvoer-met-rel_id correct, of maakt het duplicaten?).
+> 🔧 `Bash` — Build + verify update-in-place against backend
+
+**🤖 Claude:**
+
+De update-in-place werkt **grotendeels** (actuele waarden kloppen: status actief, naam v2, layout met omschrijving), maar maakt een **2e hub** voor meta én layout i.p.v. de bestaande te versioneren. Dat is verkeerde register-semantiek. Ik kijk hoe de inhoud-editor (`RepresentatieFormulier`) een enkelvoudig GE correct versioneert.
+> 🔧 `Grep` — opvoer|rel_id|idKolom|registratie/|wijziging|correctie
+
+**🤖 Claude:**
+
+De inhoud-editor (`RepresentatieFormulier`, regels 306–311) neemt bij versioneren óók de **eigen idKolom** van het record mee, niet alleen rel_id — dat miste ik, vandaar de dubbele hubs. Correct versioneren vergt meer register-precisie. Om **geen buggy update te shippen**, zet ik de update-in-place voorlopig uit (altijd nieuw aanmaken = veilig/bewezen) en houd ik de echte fixes (spook-filter + index-refresh). Update-in-place wordt een nette follow-up.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\saveFormulierDefinitie.js
+
+**🤖 Claude:**
+
+Build + verifiëren dat create nog werkt en dat afgevoerde defs niet meer als actieve standaard meetellen.
+> 🔧 `Bash` — Build + verify create-only + afgevoerd standaard state
+
+**🤖 Claude:**
+
+Belangrijk resultaat: **na de opruiming is er nu géén actieve standaard-def voor Initiatief** (test01 #3 is actief maar `is_standaard=false`; #1 is inactief). Dat verklaart de rest: de inhoud-editor had geen (of een spook-)standaard voor Initiatief. Met de spook-filter + opgeruimde troep kun je er nu één instellen en blijft die staan.
+
+Create-only werkt (update-in-place veilig uit). Ik commit de fixes.
+> 🔧 `Bash` — Commit + push afgevoerd fixes
+
+**🤖 Claude:**
+
+Gepusht (`a8ba748..10ea35f`). Je insight over de afgevoerde ZZZ-defs was precies goed — dat was de kern. Hier de samenvatting.
+
+## Wat er mis was (en nu gefixt)
+
+**1. "actief/standaard werkt niet" → afgevoerde spookdefinities.**
+Een afgevoerde FormulierDefinitie houdt zijn meta-record: status/`is_standaard` blijven op "actief/standaard" staan, want de entiteit-afvoer cascadeert niet naar de meta. Zowel mijn nieuwe index als de bestaande `useFormulierDefinitie` (inhoud-editor) keken alleen naar het meta-record, niet naar `entiteit.afvoer` → **afgevoerde spoken telden mee als de actieve standaard**. Nu overal gefilterd op `!afvoer`.
+
+**Bovendien: mijn test-troep vervuilde je data.** Vastgelopen Playwright-runs lieten actieve `ZZZ`-defs voor doeltype **Initiatief** achter (o.a. #11 actief+standaard). Die "wonnen" van jouw defs. **Excuses — opgeruimd** (#10/#11/#12 afgevoerd).
+
+**2. "nieuwe formdef maken kan niet" → index ververste niet.** Na opslaan bleef de lijst hangen. Nu **ververst de index automatisch** na een opslag. (En: een naam is verplicht — anders krijg je een melding.)
+
+**3. Bewerken maakte een kopie.** Klopt: opslaan maakte altijd een nieuwe def. Ik had update-in-place gebouwd, maar dat maakte **dubbele hubs** (verkeerde register-versioning — de inhoud-editor neemt óók de eigen idKolom mee, niet alleen rel_id). Om geen bug te shippen heb ik het **veilig uitgezet**: opslaan maakt nu een nieuwe def. Echte in-place update is een nette follow-up.
+
+## Belangrijk voor nu
+Na de opruiming is er **géén actieve standaard voor Initiatief** meer (test01 #3 is actief maar `is_standaard=false`; #1 is inactief). Dus:
+- **Pull + herstart**, en zet **test01 op is_standaard** (via de inhoud-editor "Wijzigen" op de Meta, of door in de Studio-editor een def als actief+standaard op te slaan). Dat blijft nu staan — geen spoken meer.
+
+## Over je F45-opmerking
+"Bitemporele historie in een treeview is niet triviaal" — helemaal eens. Een volledige bitemporele boom is complex; realistischer is een **eenvoudige versielijst** per definitie (definitie_versie + opvoer-tijdstippen), uitklapbaar. Dat noteer ik zo voor F45.
+
+Wil je eerst even testen of actief/standaard nu blijft plakken? Daarna kan ik (a) de echte **update-in-place** goed doen (idKolom-versioning zoals `RepresentatieFormulier`), of (b) door met **dnd-kit**. Jouw keuze.
+
+---
+
+## 👤 Gebruiker (20)
+
+ik snap het niet. Ik kijk volgens mij wel naar de laatste versie. Of zit ik in de verkeerde branch?
+
+**🤖 Claude:**
+
+Even geruststellen — laat me de exacte git-stand ophalen zodat ik je precies kan zeggen wat je ziet.
+> 🔧 `Bash` — Show branch, sync state, recent commits, changes
+
+**🤖 Claude:**
+
+Goed nieuws: **je zit precies goed.** Even ontrafeld:
+
+## Je bent op de laatste versie ✓
+- **Branch: `main`** — de juiste.
+- `lokaal voor: 0 | origin voor: 0` → je lokale `main` is **exact gelijk** aan origin. Je hebt **alle** commits, inclusief de laatste fix `10ea35f` ("sluit afgevoerde definities uit + index ververst"). Niks te pullen, niks mist.
+
+Dus qua **code** ben je helemaal bij. (We werken trouwens in dezelfde lokale repo, dus mijn commits staan meteen bij jou — je hoeft nooit te pullen voor mijn werk.)
+
+## Die "3 gewijzigde bestanden" zijn geen code
+Dat is waar je van in de war raakt. Het zijn **geen** code-wijzigingen maar losse werkbestanden:
+1. `BACKLOG.md` — jouw eigen edit.
+2. `ai-chats/exports/2026-07-15-…md` — een **chat-backup** (je backup-script schreef 'm bij).
+3. `doc/copilot-chats/exports/2026-07-15-…md` — dezelfde chat-backup, maar in het **oude root-archief** (dat tweede archief bestaat nog).
+
+Die staan gewoon "unstaged" te wachten; ze zeggen **niets** over of je de nieuwste code hebt. Je mag ze committen (via je backup-workflow) of laten staan.
+
+## Waarom het tóch "oud" kan lijken
+Als de **draaiende app** op localhost:5174 de fixes niet toont, komt dat **niet** door git/branch, maar doordat de **dev-server nog de oude build draait**. De nieuwe code staat op schijf, maar de server moet 'm herladen:
+- Draait de Vite dev-server? Dan pakt HMR meestal wijzigingen op, maar na veel wijzigingen is een **herstart** (stop + `npm run dev`) het zekerst.
+- Draai je een **productie-build** (`vite build`)? Dan moet je opnieuw builden.
+
+**Kort:** git = 100% bij; herstart even je dev-server op 5174 en test dan (zet test01 op is_standaard). Zie je het dan nog niet, stuur een seintje — dan kijk ik mee.
+
+---
+
+## 👤 Gebruiker (21)
+
+okee, ik denk ik kijk naar de meest recente, maar:
+- elke wijziging maakt een nieuwe formdef 
+- deze records zijn open, niet afgesloten
+
+Ik zou, parallel aan de IDE en projectboom iets verwachten van rechtsklik verwijder en hernoem. En een expliciete nieuwe formulierdefinitie knop of + ergens.
+
+We hebben er geen mappen (dat is de plek voor de rechtsklik - nieuw). Is het een idee ook hier mappen te introduceren als ordeningsmechanisme. Vrij in te delen?
+
+**🤖 Claude:**
+
+Nu zie ik het scherp: **elke wijziging maakt een nieuwe def** (#15/#16/#17 zijn duplicaten van "Initiatief voorbeeldformulier" uit jouw edits), en er staat nog troep open. Dit is dé prioriteit: **update-in-place goed doen** zodat bewerken een nieuwe *versie* maakt i.p.v. een kopie. Plus delete/nieuw-knop. Ik bekijk hoe `RepresentatieFormulier` een GE correct versioneert (dat pad werkt bewezen).
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\components\editor\RepresentatieFormulier.jsx
+
+**🤖 Claude:**
+
+Ik moet weten of het meta/layout-record een eigen `idKolom` heeft. Ik dump een echt meta-record + het schema.
+> 🔧 `Bash` — Inspect meta/layout record structure + schema idKolom
+
+**🤖 Claude:**
+
+Cruciaal: **idKolom = rel_id** voor beide GE's. Dus mijn payload (`formulierdefinitie_id` + `rel_id` + velden) is feitelijk correct — gelijk aan `RepresentatieFormulier`. De eerdere "dubbele hubs" is dus verdacht; misschien telde mijn test verkeerd. Ik test de rauwe versioning-opvoer nauwkeurig.
+> 🔧 `Bash` — Raw versioning test for meta opvoer
+
+**🤖 Claude:**
+
+De versioning **werkt wél**: hub rel_id=1 kreeg 2 versies, actueel = "RAW-v2" actief. De "meta-hubs=2" is verdacht (de loop crashte op een 2e element zonder `data` → geen cleanup). Ik kijk defensief wat dat 2e element is.
+> 🔧 `Bash` — Defensive inspection of meta hubs after update
+
+**🤖 Claude:**
+
+**Opgelost — update-in-place werkt wél correct!** Er is precies **1 actueel meta-record** (rel_id=1, 2 versies, actueel = RAW-v2). Die "2e hub" (rel_id=2) is een **leeg spook** (data-len=0, geen actueel) — cosmetisch raar maar functioneel onschadelijk. Mijn eerdere paniek over "dubbele hubs" was onterecht. Ik zet update-in-place weer aan.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\saveFormulierDefinitie.js
+
+**🤖 Claude:**
+
+Nu build + de update-flow via de functie verifiëren (1 actueel meta + 1 actueel layout, bijgewerkte waarden, zelfde id).
+> 🔧 `Bash` — Verify update-in-place end-to-end
+
+**🤖 Claude:**
+
+**Update-in-place werkt nu perfect**: bewerken van een geladen def → **1 actueel meta + 1 actueel layout**, bijgewerkte waarden, **zelfde id** (geen kopie meer). Nu de UX-wensen: **+ Nieuw**-knop en **verwijderen** in de index.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierIndex.jsx
+
+**🤖 Claude:**
+
+Ik voeg een verwijder-functie toe, een **+ Nieuw**-knop in de header, en een ✕ per rij. Ik lees het huidige header + rij-render.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierIndex.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierIndex.jsx
+
+**🤖 Claude:**
+
+Nu de rij herstructureren: klikbare naam + ✕ verwijderknop (geen geneste buttons).
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierIndex.jsx
+
+**🤖 Claude:**
+
+Build.
+> 🔧 `Bash` — Build + unit tests
+
+**🤖 Claude:**
+
+29/29 tests. Ik ruim mijn open ZZZ-testdefs op (jouw "voorbeeldformulier"-duplicaten #15/#16/#17 laat ik staan — die kun je nu zelf met de ✕ verwijderen).
+> 🔧 `Bash` — Clean remaining open ZZZ defs
+
+**🤖 Claude:**
+
+DB is nu schoon van mijn troep. Ik commit update-in-place + de index-knoppen.
+> 🔧 `Bash` — Commit + push update-in-place + index buttons
+
+**🤖 Claude:**
+
+Gepusht (`10ea35f..a675033`). Dit lost je belangrijkste punt op.
+
+## Wat er nu werkt (na pull + herstart)
+
+**1. Bewerken maakt geen kopie meer** — de kern van je klacht. Laad je een definitie, wijzig je 'm en sla je op, dan wordt **die definitie bijgewerkt** (nieuwe versie van meta + layout, zelfde id). Geverifieerd tegen de backend: na een update precies **1 actueel meta- én layout-record** met de nieuwe waarden. (De oorzaak van mijn eerdere twijfel: het register laat soms een *leeg* extra hub-record achter — dat is onschadelijk, er blijft één actueel record.)
+
+**2. ＋ Nieuw formulier** — knop bovenaan de index; reset naar een leeg formulier (create-modus). Daarna maakt Opslaan wél een nieuwe def.
+
+**3. Verwijderen** — een **✕ per rij** in de index (met bevestiging → afvoeren). Zo kun je nu zelf je duplicaat-"voorbeeldformulier"-en (#15/#16/#17) opruimen. Mijn eigen `ZZZ`-testtroep heb ik al afgevoerd.
+
+**Hernoemen** kan al: laad → naam wijzigen in de inspector → opslaan (werkt nu bij). Een echt rechtsklik-menu (hernoem/verwijder zoals in de IDE) is nog een verfijning; zeg maar als je dat expliciet wilt.
+
+## Mappen als vrije ordening — goed idee, maar het raakt het model
+
+Nu groepeert de index **per hoofdentiteit** (doeltype). Vrije mappen (zoals de projectboom) zijn een extra laag daaroverheen. Twee routes:
+- **Netjes/gedeeld**: een `map`-veld (vrij pad, bijv. `Klant/Aanmeldingen`) toevoegen aan `FormulierDefinitie_Meta` (model + codegen) → de index groepeert dan op map. Wordt met de definitie meegeslagen, dus gedeeld en bitemporeel.
+- **Snel/lokaal**: mappen alleen in de browser (localStorage) — geen backend-wijziging, maar niet gedeeld.
+
+Mijn advies: de **`map`-veld-route** (het hoort echt bij de definitie). Klein model-uitbreidinkje. Maar dat is een aparte stap — wil je dat, dan plan ik 't.
+
+## Stand
+- Update-in-place ✓ · Nieuw-knop ✓ · Verwijderen ✓
+- Nog open: rechtsklik-menu (polish), **mappen** (jouw idee, model-veld), **dnd-kit**, en de echte in-place-**historie/versies** in de boom (F45 — bewust simpel: een versielijst, geen volle bitemporele boom).
+
+Pull + herstart, en probeer: laad test01 → wijzig → opslaan (moet dezelfde def bijwerken), en ruim je duplicaten op met ✕. Werkt dat? Dan pak ik daarna jouw voorkeur op (mappen, dnd-kit, of rechtsklik-menu).
+
+---
+
+## 👤 Gebruiker (22)
+
+ik heb een idee.... eat you own dogfood-ish.
+
+De layout.json heeft een formaat. Dat is eigenlijk de formulierdefinitie. Daar kun je een metamodel van maken. Een profiel dus. Dan kun je vervolgens zo'n profiel zien of editen in de modelleereditor...  Op een diagram.
+
+Het verandert niets aan de formdef. Het is alleen ook een modelleerbaar ding geworden.
+
+De form-def-editor is nog steeds een andere control op hetzelfde model....
+
+Is dat iets? 
+
+Dan is de formdef browser wellicht gewoon een alternatieve projectboom met alleen formdefs erin.
+
+Ik denk dat je er daar meer van zou kunnen krijgen.
+
+**🤖 Claude:**
+
+Dit is een sterk idee — en het klikt verdacht precies op machinerie die er al ligt. Laat me eerst even de backlog-staat checken (je hebt daar lokale edits staan die ik niet wil overschrijven), dan leg ik het vast.
+> 🔧 `Bash` — Inspect user's pending BACKLOG edit
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramprofielen\mim12\index.js
+> 🔧 `Grep` — registreerDiagramType\(|nodeTypes|connectorTypes|boomconfig|documentTypes|kindType|bevat|id: \"
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-16 Formulier-profiel op de diagram-motor (dog...
+
+**🤖 Claude:**
+
+Nu de backlog-regel F48 (na jouw F47).
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\BACKLOG.md
+> 🔧 `Bash` — Commit + push dogfood plan
+
+**🤖 Claude:**
+
+Plan geschreven, gecommit en gepusht (`a675033..7156d1f`): [plans/2026-07-16 Formulier-profiel op de diagram-motor (dogfood-plan).md](bitemp_register_v06/docs/plans/2026-07-16%20Formulier-profiel%20op%20de%20diagram-motor%20(dogfood-plan).md) + backlog **F48** (en jouw F47 eraan gekoppeld).
+
+## Mijn beoordeling: ja, dit is echt iets
+
+Het idee klikt verdacht precies op machinerie die er al ligt — ik heb het profiel-contract gecheckt en alle bouwstenen bestaan:
+
+1. **Uniformiteit gratis.** Formdefs als documenten in de Modelleren-boom krijgen cadeau: projectboom, **vrije mappen** (bestaat al! — dat lost je eerdere mappen-wens op zónder model-wijziging), undo, inspector, auto-layout, beeld-export.
+2. **Kruisverbanden = impactanalyse.** `veld → ENT.GE.veld` is precies een trace-link voor de kruisverbanden-matrix (fase 4). *"Welke formulieren raken `producten.naam`?"* wordt een query. Dit is m.i. de grootste inhoudelijke winst.
+3. **Zelfde devloop.** Ontwerpen in Studio → publiceren naar het register. `saveFormulierDefinitie` (incl. de update-in-place van vanavond) ís die publiceer-stap al. Symmetrie met model→MetaRegistry.
+4. En het profiel-mechanisme heeft al wat we nodig hebben: `containerVoor`/`hierarchie` voor de nesting, en **resolvers met `referenceTypes`** (zoals MIM's typekandidaten) voor de veldpad-referentie.
+
+**De ene harde regel** (les uit je eigen DMN-afweging, backlog 0.0.1): **het register blijft de bron van waarheid**; het Studio-document is werkkopie, met een lossless adapter en expliciete import/publiceer via het transformaties-raamwerk — geen stille twee-bronnen-sync. En je zei het zelf al goed: de formulier-editor blijft gewoon bestaan als *andere control* — het diagram is structuur + verbanden, de preview blijft bij de formulier-control.
+
+**Jouw F47 (kolommen)** past er netjes in: kolom als tweede layout-container (of een richting-property op rij) in hetzelfde profiel.
+
+**Fasering in het plan:** P1 read-only projectie (profiel + import, formdefs in de boom, traces zichtbaar) → P2 bewerken + publiceren → P3 één documentmodel waar beide controls op werken.
+
+Eén eerlijke kanttekening: dit is *richting*, en de kleinere UX-punten op de bestaande editor (dnd-kit, F46-restjes) blijven de kortste route naar dagelijks gebruik. Wil je dat ik **P1 als prototype** ga bouwen (profiel + import-transformatie, read-only), of eerst de lopende editor-verbeteringen afmaken?
+
+---
+
+## 👤 Gebruiker (23)
+
+Ja, ik denk dat dit de korste klap is om formulieren gelijkvormig te maken met de andere views op het landschap.
+
+Wat ik wel denk dat nodig gaat zijn is een *gefilterde projectboom* optie: een boom met enkel formulieren, of enkele formulieren en entiteiten. Zoiets. Die kan dan landen in de formuliereditor activiteit als browser van de beschikbare formulierdefinities.
+
+Bitemporaliteit en persistentie van model elementen verschilt wel:
+- de formulierdefs leven als eerste direct in de DB. Ze hebben hun eigen bitemporele tabellen. (ook dogfed)
+- de canoniek model elementen (ENT, GE, REL, REFLIJST, enz.) ook, maar op een andere manier, namelijk ofwel als metamodel definitie, en als geinstantieerde tabellen. Maar dat laatste is secundair: dat is de gerealiseerde output op basis van de transformatie van het canoniek model. (De generator.)
+- De andere elementen zitten gewoonweg niet in de database.
+
+De picker merget t.z.t dan wellicht ook wel gewoon met de boom. Ik weet dat nog niet. Dit is een gevoel.
+
+**🤖 Claude:**
+
+Helder — P1 wordt het. Je drie observaties (gefilterde projectboom, het persistentie-spectrum, picker-merge als gevoel) leg ik eerst vast in het plan, dan begin ik te bouwen. Eerst verkennen hoe het kleinste recente profiel (state machine) en het transformatie-raamwerk in elkaar zitten.
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-16 Formulier-profiel op de diagram-motor (dog...
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\statemachineActivity.jsx
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramprofielen\statemachine\index.js
+
+**🤖 Claude:**
+
+Het profiel-contract is helder. Nu de fabriek en het transformatie-raamwerk.
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\maakDiagramActiviteit.jsx
+> 🔧 `Grep` — registreerTransformatie|export function|richting|import|contract|apply|uitvoeren
+> 🔧 `Grep` — herlaadUitModel|importBestand|vervangModel|setCoreModel|laadModel|zetModel
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\maakDiagramActiviteit.jsx
+> 🔧 `Grep` — laadModel|voegDiagramNode|diagrams\[|nodes:|addDiagram|maakDiagram\b|posities|node = \{|x:|y:
+
+**🤖 Claude:**
+
+Bijna compleet beeld. De MIM-adapter is het perfecte sjabloon voor mijn adapter — even de connector-vorm checken.
+> 🔧 `Grep` — bron|doel|elementType|compartimenten|nodes.push|elements\[|position
+> 🔧 `Read` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramprofielen\mim12\adapter.js
+> 🔧 `Bash` — Branch + list available edge markers
+
+**🤖 Claude:**
+
+Alles bekend. Ik schrijf het profiel, de adapter (puur + getest) en de activiteit.
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramprofielen\formulier\index.js
+
+**🤖 Claude:**
+
+Nu de pure adapter (layout_json → coreModel).
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramprofielen\formulier\adapter.js
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\diagramprofielen\formulier\adapter.test.js
+> 🔧 `Bash` — Run adapter tests
+
+**🤖 Claude:**
+
+5/5 groen. Nu de activiteit + registratie.
+> 🔧 `Write` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\formulierDiagramActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\index.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\index.jsx
+> 🔧 `Bash` — Build with new profile activity
+> 🔧 `Bash` — Start dev server
+> 🔧 `Bash` — Smoke: open Formulier (diagram) via Ga naar
+> 🔧 `Bash` — Smoke via stdout
+
+**🤖 Claude:**
+
+Activiteit opent (menu + taakbalk, geen fouten); alleen de type-labels vond ik niet in de tekst — waarschijnlijk iconen. Screenshot bekijken.
+> 🔧 `Read` — C:\Users\User\AppData\Local\Temp\claude\d--Git-Bitemporal-2026\508e3e41-2017-4825-8b53-1c6f843e2952\scratch...
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-16 Formulier-profiel op de diagram-motor (dog...
+> 🔧 `Bash` — Stop server, commit F48 P1
+> 🔧 `Bash` — Merge P1 to main and push
+
+**🤖 Claude:**
+
+**F48 P1 staat op `main` en is gepusht** (`48add77`). Dogfood geserveerd.
+
+## Wat er gebouwd is
+
+**Profiel** ([diagramprofielen/formulier/](bitemp_register_v06/web/vite/src/diagramprofielen/formulier/)):
+- Containers (formulier · groep · rij · lijst · conditioneel) als nodes met **veld-compartimenten** (veldpad/label/breedte/widget/readonly — het veldpad is straks de kruisverband-trace).
+- Nesting via **◆ Bevat**-connector, mét `volgorde`-index zodat P2 de formulier-volgorde lossless kan terugschrijven. Hiërarchie werkt in de elementen-boom.
+- Jouw **F47** heeft alvast een landingsplek: `rij` heeft een `richting`-property (rij/kolom).
+
+**Adapter** — puur `layoutNaarFormulierModel` (layout_json + meta → coreModel incl. boom-layout-posities; legacy string-`als` → conditie-object). **5/5 unit-tests.**
+
+**Activiteit "Formulier (diagram)"** — via de bestaande fabriek, dus gratis: inspector, undo, auto-layout, uitlijnen, beeld-export, diagrammen-paneel. Standaard verborgen (via **Ga naar**). En de kern: `herlaadUitModel` projecteert **de definitie die in de Formulieren-activiteit geladen is** — letterlijk jouw "andere control op hetzelfde model".
+
+**Zo probeer je het:** Formulieren-activiteit → laad een def uit de index → *Ga naar* → **Formulier (diagram)** → menu *Formulier-diagram → Herlaad uit model*. Geverifieerd in de app (screenshot: taakbalken FRM/GRP/RIJ/LST/ALS, ◆ Bevat, projectie rendert).
+
+## Jouw drie observaties → vastgelegd in het plan (§5b)
+- **Gefilterde projectboom** (alleen formulieren / formulieren+entiteiten) als browser in de formulieren-activiteit.
+- **Persistentie-spectrum**: formdefs direct-bitemporeel in de DB · canoniek model als metamodel-definitie + gegenereerde tabellen (secundair) · overige profielen alleen project-werkbestand. De boom moet per documentsoort andere bron/publiceer-semantiek kennen.
+- **Picker ↔ boom merge**: genoteerd als gevoel, geen besluit.
+
+## Volgende stappen (open)
+1. **P2**: terugschrijven (diagram → layout_json → `saveFormulierDefinitie`) + kruisverband-traces naar het canoniek model.
+2. **Gefilterde projectboom** als vervanger van de losse FormulierIndex.
+3. De eerder geparkeerde punten: dnd-kit in de formulier-editor, F46-restjes.
+
+Kleine observatie: er kwam tussendoor een commit van jou binnen (`ab0a189`) — netjes meegenomen in de push. Waar wil je morgen mee verder — P2 (terugschrijven + traces), of eerst de gefilterde boom?
+
+---
+
+## 👤 Gebruiker (24)
+
+Waarom staat formulier (diagram) nu apart van modelleren in nog een modelleren rubriek in de settings?
+
+**🤖 Claude:**
+
+Goede vangst — dat is een volgorde-effect: de instellingen-lijst groepeert op **aaneengesloten** `groep`-waarden in registratievolgorde. De fabriek geeft "Formulier (diagram)" `groep: "modelleren"`, maar ik registreerde 'm ná Formulieren (`presentatie`) → er ontstaat een tweede MODELLEREN-kopje. Even checken of de fabriek een groep-override accepteert.
+> 🔧 `Grep` — groep
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\index.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\index.jsx
+> 🔧 `Bash` — Build, commit, push grouping fix
+
+**🤖 Claude:**
+
+Gefixt en gepusht (`5435492`).
+
+## Waarom het gebeurde
+De instellingen-lijst (en de activity bar) groepeert op **aaneengesloten `groep`-waarden in registratievolgorde** — er is geen globale sortering per groep. Ik had "Formulier (diagram)" in de registratielijst direct ná "Formulieren" (groep *presentatie*) gezet, terwijl de diagram-fabriek 'm groep *modelleren* geeft. Resultaat: `…modelleren… → presentatie → modelleren` = een tweede MODELLEREN-kopje.
+
+## De fix
+Registratie verplaatst naar het **modelleren-blok**, naast State machine en de andere profielen. Nu staat 'ie gewoon in de ene MODELLEREN-rubriek.
+
+Bewuste keuze om de groep *niet* op "presentatie" te zetten: alleen activiteiten met groep `modelleren` worden als **profieltype in de Modelleren-host** geregistreerd — en dat is precies wat we voor F48 nodig hebben (formdefs als documenten in de projectboom, de gefilterde boom van §5b). Het is ook consistent: het is een *profiel op de motor*, net als OAS/MIM/State machine; de Formulieren-activiteit (de editor-control) blijft de presentatie-ingang.
+
+Na een refresh zie je 't goed staan. Verder met P2 (terugschrijven + kruisverband-traces) of eerst de gefilterde projectboom?
+
+---
+
+## 👤 Gebruiker (25)
+
+Ja, ik moet zo slapen. Heb je mij nodig? Wil je beide achter elkaar doen? Tussendoor zelf testen en committen? Dan kijk ik morgen goed naar beiden.
+
+Als je daarna nog iets kunt doen, graag!
+
+**🤖 Claude:**
+
+Nee, ik heb je niet nodig — slaap lekker! Ik doe beide achter elkaar (P2 terugschrijven, dan de gefilterde boom), test en commit tussendoor, en pak daarna nog wat extra's als het lukt. Eerst de contracten checken: hoe roept de fabriek `zetTerugNaarModel` aan, en wat is de schema-map-vorm.
+> 🔧 `Grep` — zetTerugNaarModel
+> 🔧 `Grep` — typeMetaByTypenaam|\.typenaam
+> 🔧 `Bash` — Branch + append reverse adapter
+> 🔧 `Bash` — Append round-trip tests + run
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\maakDiagramActiviteit.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\maakDiagramActiviteit.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\formulierDiagramActivity.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\studio\activities\formulierDiagramActivity.jsx
+> 🔧 `Bash` — Build + smoke menu items
+> 🔧 `Bash` — Commit P2, merge, push
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierIndex.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierIndex.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierIndex.jsx
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\web\vite\src\formuliereditor\FormulierIndex.jsx
+> 🔧 `Bash` — Build index tree upgrade
+> 🔧 `Bash` — Commit + push index tree
+> 🔧 `Edit` — d:\Git\Bitemporal_2026\bitemp_register_v06\docs\plans\2026-07-16 Formulier-profiel op de diagram-motor (dog...
+> 🔧 `Bash` — Commit plan status, push
+
+**🤖 Claude:**
+
+Klaar voor vannacht — alles staat op `main` en is gepusht. Hier je ochtendrapport:
+
+## Wat er af is (3 commits vannacht)
+
+**1. F48 P2 — terugschrijven (de round-trip is rond).** `9a8a892`
+- Reverse adapter `formulierModelNaarLayout`: diagram → layout-boom + meta, met **volgorde-reconstructie** uit de volgorde-indices. **Round-trip layout→model→layout is verliesvrij** (8/8 adapter-tests).
+- Menu **"Zet terug naar formulier-editor…"** in de diagram-activiteit: schrijft het diagram naar de formulier-editor-store, **met behoud van het geladen id** — dus "Opslaan" daar werkt de bestaande definitie bij (geen kopie). veldInfo wordt async verrijkt uit het schema zodat de preview ook nieuw-getekende velden kent.
+- Bewuste keuze: **publiceren blijft via de editor** — één bewezen schrijfpad, en je ziet de preview vóór je opslaat.
+- Bijvangst: de fabriek-teksten ("Zet terug naar UML-model") zijn nu per activiteit configureerbaar.
+
+**De volledige loop is nu:** index → laad def → bewerk in editor óf op het diagram → zet terug → preview → opslaan (bijwerken) → index ververst.
+
+**2. Index als boom + versies (F45-light).** `a88551e`
+- Entiteit-groepen zijn **inklapbaar** (eerste stap richting jouw gefilterde projectboom).
+- Per definitie een **uitklapbare versielijst** (▸N naast de ✕): `definitie_versie` per bitemporele versie met actueel/vervangen — rechtstreeks uit de full-respons, bewust een simpele lijst (geen volle bitemporele boom).
+
+**3. Plan bijgewerkt** met de P2-status. `4f46116`
+
+## Verificatie
+Adapter-tests 8/8, productie-builds groen, en app-smokes (activiteit opent, beide menu-items aanwezig, geen paginafouten). De volledige zet-terug-flow met echte backend heb ik niet browser-geautomatiseerd (bekende harnas-beperking) — de adapter-kern is unit-gedekt; **test morgen vooral: laad test01 → diagram → herlaad → wijzig iets → zet terug → preview klopt → opslaan.**
+
+## Niet meer gedaan (bewust)
+- **dnd-kit** en de **gefilterde projectboom als vervanger van de index** — te groot om nog netjes af te ronden; staan open in plan/backlog.
+- P3 (één documentmodel) en kruisverband-traces in de matrix.
+
+Welterusten gehad — kijk morgen vooral kritisch naar de round-trip en de versielijst. 🌙
+
+---
+
+## 👤 Gebruiker (26)
+
+is alles al naar main gemerget?
+> 🔧 `Bash` — Check merge and push state
+> 🔧 `Bash` — Inspect unmerged branches
+
+**🤖 Claude:**
+
+**Al mijn werk van vannacht: ja, alles zit in `main` en is gepusht** (lokaal = origin, werkboom schoon). De feature-branches van de formulier-editor/profiel zijn allemaal gemerged.
+
+Er staan nog **twee branches buiten `main`**, maar die zijn niet van deze sessie — het zijn aparte worktrees:
+
+| Branch | Worktree | Inhoud | Status |
+|---|---|---|---|
+| `fix/statemachine-handles` | `D:\Git\Bitemporal_2026_sm` | 4 commits van 16-07: statemachine begin/eind-shapes vs handles, box-sizing-fix, "Nieuw diagram"-modal (`vraagNaam`) | **Niet gemerged** — parallelle sessie/werk van jou |
+| `chore/be-code-review` | `D:\Git\Bitemporal_2026_be_review` | BE-code-review (o.a. N+1-perf-fix van 07-07) | **Niet gemerged** — bewust apart (ken ik uit mijn geheugen) |
+
+Let op bij `fix/statemachine-handles`: die raakt `diagramcore`/`maakDiagramActiviteit`-terrein waar ik vannacht óók in zat (de `zetTerugLabel`-parameters). Grote conflicten verwacht ik niet (andere plekken), maar bij het mergen van die branch even opletten.
+
+Wil je dat ik `fix/statemachine-handles` nu naar `main` merge (ik check dan eerst op conflicten), of laat je die bewust nog even staan?
+
+---
+
+## 👤 Gebruiker (27)
+
+ik vraag de chat die het geschreven heeft wel het te mergen
+
+**🤖 Claude:**
+
+Prima — dat is de nette route. Eén ding om die chat mee te geven: `main` is vannacht flink opgeschoven (o.a. wijzigingen in `maakDiagramActiviteit.jsx` — de configureerbare zet-terug/herlaad-teksten — plus twee nieuwe bestanden in `studio/activities/`). Dus: eerst `main` in die branch mergen of rebasen, dan pas naar `main` — de kans op conflicten is klein, maar `maakDiagramActiviteit.jsx` is de plek om even te checken.
+
+Voor de rest: alles van de formulier-lijn staat op `main` en is gepusht. Roep maar als ik verder kan met het volgende (gefilterde projectboom, dnd-kit, of P3).
+

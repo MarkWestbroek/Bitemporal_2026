@@ -15,6 +15,8 @@
  *                — de route van de lijn (§8.5c-familie); UML oogt
  *                herkenbaarder hoekig, grafen juist met krommen
  *   kleur:       basiskleur (selected → accent, tenzij `vasteKleur`)
+ *   dikte?:      lijndikte in px (default 1.5; selectie blijft 2.5) — bv. de
+ *                kernzin-keten van het toegangsregel-profiel op 2
  *   opacity?:    number
  *   markerStart: "ruit" | "ruit-open" | null — compositie- (◆) of
  *                aggregatie-ruit (◇) aan de bronzijde
@@ -503,7 +505,7 @@ function ConnectorEdge({
         }
         style={{
           stroke: kleur,
-          strokeWidth: selected ? 2.5 : 1.5,
+          strokeWidth: selected ? 2.5 : p.dikte || 1.5,
           strokeDasharray: DASHES[p.lijn] || undefined,
           strokeLinejoin: "round",
           opacity: p.opacity,

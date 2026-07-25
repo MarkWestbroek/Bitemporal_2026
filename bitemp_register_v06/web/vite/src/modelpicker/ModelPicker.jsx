@@ -19,7 +19,7 @@
  * Drag-and-drop: elk veld is een drag-source. De FieldRef wordt als JSON gezet
  * op MIME-type "application/x-canoniek-fieldref" (en als text/plain fallback).
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSchemaModel } from "./useSchemaModel";
 import { modelPickerConfig } from "./modelpicker.config.js";
 import { bouwModelTree, filterTree, fieldRefKey, safeArray } from "./modelTree";
@@ -27,8 +27,14 @@ import "./modelpicker.css";
 
 export const FIELDREF_MIME = "application/x-canoniek-fieldref";
 
-function VeldRij({ knoop, geselecteerd, onPick, multiSelect }) {
+function VeldRij({ knoop, geselecteerd, onPick, multiSelect, focus }) {
   const ref = knoop.ref;
+  const rijRef = useRef(null);
+
+  // Element-focus vanuit een editor ("toon in modelboom"): scroll in beeld.
+  useEffect(() => {
+    if (focus) rijRef.current?.scrollIntoView({ block: "nearest" });
+  }, [focus]);
 
   const onDragStart = (e) => {
     const payload = JSON.stringify(ref);
@@ -39,7 +45,8 @@ function VeldRij({ knoop, geselecteerd, onPick, multiSelect }) {
 
   return (
     <div
-      className={`mp-veld${geselecteerd ? " mp-selected" : ""}`}
+      ref={rijRef}
+      className={`mp-veld${geselecteerd ? " mp-selected" : ""}${focus ? " mp-focus" : ""}`}
       draggable
       onDragStart={onDragStart}
       title={knoop.afleidingsregel ? `${ref.veldpad}\n${knoop.afleidingsregelTaal}: ${knoop.afleidingsregel}` : ref.veldpad}
@@ -75,12 +82,20 @@ function VeldRij({ knoop, geselecteerd, onPick, multiSelect }) {
   );
 }
 
-function GERij({ ge, selectedKeys, onPick, multiSelect }) {
+function GERij({ ge, selectedKeys, onPick, multiSelect, focusVeldpad }) {
   const [open, setOpen] = useState(false);
   const heeftVelden = safeArray(ge.velden).length > 0;
+  // Element-focus: klap open als het gefocuste veld (of deze GE als groep,
+  // via het gepad) in deze tak zit; de rest van de boom blijft staan.
+  const eigenFocus = !!focusVeldpad && safeArray(ge.velden)[0]?.ref?.gepad === focusVeldpad;
+  const bevatFocus = !!focusVeldpad &&
+    (eigenFocus || safeArray(ge.velden).some((knoop) => knoop.ref?.veldpad === focusVeldpad));
+  useEffect(() => {
+    if (bevatFocus && !eigenFocus) setOpen(true);
+  }, [focusVeldpad]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="mp-ge">
-      <div className="mp-row" onClick={() => setOpen((v) => !v)}>
+      <div className={`mp-row${eigenFocus ? " mp-focus" : ""}`} onClick={() => setOpen((v) => !v)}>
         <span className="mp-caret">{heeftVelden ? (open ? "▾" : "▸") : "·"}</span>
         <span className="mp-ge-naam">{ge.rol}</span>
         <span className="mp-rol">
@@ -97,6 +112,7 @@ function GERij({ ge, selectedKeys, onPick, multiSelect }) {
               geselecteerd={selectedKeys.has(fieldRefKey(knoop.ref))}
               onPick={onPick}
               multiSelect={multiSelect}
+              focus={knoop.ref?.veldpad === focusVeldpad}
             />
           ))}
         </div>
@@ -105,8 +121,18 @@ function GERij({ ge, selectedKeys, onPick, multiSelect }) {
   );
 }
 
-function EntiteitRij({ ent, selectedKeys, onPick, multiSelect, defaultOpen }) {
+function entiteitBevat(ent, focusVeldpad) {
+  if (!focusVeldpad) return false;
+  const typenaam = ent.type?.typenaam || "";
+  return focusVeldpad === typenaam || focusVeldpad.startsWith(`${typenaam}.`);
+}
+
+function EntiteitRij({ ent, selectedKeys, onPick, multiSelect, defaultOpen, focusVeldpad }) {
   const [open, setOpen] = useState(Boolean(defaultOpen));
+  const bevatFocus = entiteitBevat(ent, focusVeldpad);
+  useEffect(() => {
+    if (bevatFocus) setOpen(true);
+  }, [focusVeldpad]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="mp-entiteit">
       <div className="mp-row" onClick={() => setOpen((v) => !v)}>
@@ -123,6 +149,7 @@ function EntiteitRij({ ent, selectedKeys, onPick, multiSelect, defaultOpen }) {
               geselecteerd={selectedKeys.has(fieldRefKey(knoop.ref))}
               onPick={onPick}
               multiSelect={multiSelect}
+              focus={knoop.ref?.veldpad === focusVeldpad}
             />
           ))}
           {safeArray(ent.kinderen).map((ge) => (
@@ -132,6 +159,7 @@ function EntiteitRij({ ent, selectedKeys, onPick, multiSelect, defaultOpen }) {
               selectedKeys={selectedKeys}
               onPick={onPick}
               multiSelect={multiSelect}
+              focusVeldpad={focusVeldpad}
             />
           ))}
         </div>
@@ -140,8 +168,12 @@ function EntiteitRij({ ent, selectedKeys, onPick, multiSelect, defaultOpen }) {
   );
 }
 
-function DomeinRij({ domein, selectedKeys, onPick, multiSelect, defaultOpen }) {
+function DomeinRij({ domein, selectedKeys, onPick, multiSelect, defaultOpen, focusVeldpad }) {
   const [open, setOpen] = useState(Boolean(defaultOpen));
+  const bevatFocus = !!focusVeldpad && domein.entiteiten.some((ent) => entiteitBevat(ent, focusVeldpad));
+  useEffect(() => {
+    if (bevatFocus) setOpen(true);
+  }, [focusVeldpad]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="mp-domein">
       <div className="mp-row" onClick={() => setOpen((v) => !v)}>
@@ -159,6 +191,7 @@ function DomeinRij({ domein, selectedKeys, onPick, multiSelect, defaultOpen }) {
               onPick={onPick}
               multiSelect={multiSelect}
               defaultOpen={defaultOpen}
+              focusVeldpad={focusVeldpad}
             />
           ))}
         </div>
@@ -181,6 +214,15 @@ function DomeinRij({ domein, selectedKeys, onPick, multiSelect, defaultOpen }) {
  * @param {boolean}  [props.expandDomeinen=false]   domeinen standaard uitgeklapt
  * @param {boolean}  [props.expandEntiteiten=false] entiteiten standaard uitgeklapt
  * @param {string[]} [props.hiddenDomains=[]]      domeinen die niet weergegeven mogen worden
+ * @param {string}   [props.externeZoekterm]       zet de zoekterm van buitenaf (bv. "toon in
+ *                                                 modelboom" vanuit een editor); de gebruiker
+ *                                                 kan daarna gewoon verder typen/wissen
+ * @param {string}   [props.focusVeldpad]          focus op één exact element ("Ent.rol.veld" of
+ *                                                 "Ent.rol" voor een GE): de bevattende takken
+ *                                                 klappen open, het element wordt gemarkeerd en
+ *                                                 in beeld gescrold — de rest van de boom (en de
+ *                                                 zoekterm) blijft staan, zodat de context
+ *                                                 zichtbaar blijft
  */
 export default function ModelPicker({
   baseUrl = "",
@@ -193,9 +235,14 @@ export default function ModelPicker({
   expandDomeinen = modelPickerConfig.defaultExpandDomeinen,
   expandEntiteiten = modelPickerConfig.defaultExpandEntiteiten,
   hiddenDomains = modelPickerConfig.hiddenDomains,
+  externeZoekterm = null,
+  focusVeldpad = null,
 }) {
   const { types, loading, error } = useSchemaModel({ baseUrl, injectedTypes });
   const [zoekterm, setZoekterm] = useState("");
+  useEffect(() => {
+    if (externeZoekterm != null) setZoekterm(externeZoekterm);
+  }, [externeZoekterm]);
   const [tDimensie, setTDimensie] = useState("formeel");
   const [toonAfgeleid, setToonAfgeleid] = useState(includeAfgeleid);
   const [toonTechnisch, setToonTechnisch] = useState(false);
@@ -275,6 +322,7 @@ export default function ModelPicker({
               onPick={onPick}
               multiSelect={multiSelect}
               defaultOpen={expandEntiteiten || Boolean(zoekterm)}
+              focusVeldpad={focusVeldpad}
             />
           ))}
       </div>

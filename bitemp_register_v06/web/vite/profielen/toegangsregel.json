@@ -1,0 +1,44 @@
+{
+  "layout": {
+    "elementDef:Policy#1": {
+      "x": -395,
+      "y": -178
+    },
+    "elementDef:Map#1": {
+      "x": -189,
+      "y": -488
+    },
+    "elementDef:Toegangsregel#1": {
+      "x": 0,
+      "y": -101
+    },
+    "elementDef:Subject#1": {
+      "x": -435,
+      "y": 146
+    },
+    "elementDef:Handeling#1": {
+      "x": 5,
+      "y": 117
+    },
+    "elementDef:Gegevensselectie#1": {
+      "x": 527,
+      "y": 105
+    },
+    "elementDef:Voorwaardepoort#1": {
+      "x": 624,
+      "y": -101
+    },
+    "elementDef:Voorwaarde#1": {
+      "x": 384,
+      "y": -299
+    },
+    "elementDef:Plicht#1": {
+      "x": -119,
+      "y": -299
+    },
+    "elementDef:Begrip#1": {
+      "x": 168,
+      "y": 323
+    }
+  }
+}

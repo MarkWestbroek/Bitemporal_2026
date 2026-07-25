@@ -1,0 +1,5 @@
+# Office-lockbestanden (ontstaan zolang een document open staat)
+**/~$*
+
+# Vite dependency-cache (dev-server artefact)
+.vite/
